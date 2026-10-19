@@ -26,6 +26,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -89,7 +90,7 @@ extern "C" unsigned char __cdecl BossActor_Index(unsigned tag) {
 // original 0x4949D0: the tagged actor's +0 loses bit 0x40. BossActor_Find's
 // answer is not tested (a Fatal here where the original faults).
 extern "C" void __cdecl BossActor_ClearBit40(unsigned tag) {
-    auto* const actor_rec = reinterpret_cast<records::SpriteObject*>(FoundOrAbort("BossActor_ClearBit40", tag));
+    auto* const actor_rec = rv::As<records::SpriteObject>(FoundOrAbort("BossActor_ClearBit40", tag));
     actor_rec->flags &= 0xBF;
 }
 
@@ -101,7 +102,7 @@ extern "C" void __cdecl BossActor_ClearBit40(unsigned tag) {
 // other `what` a missing actor is harmless in both.
 extern "C" void __cdecl BossActor_CopyFrom(unsigned tag, const unsigned char* from, unsigned what) {
     unsigned char* const p = BH_CALL(BossActor_Find)(tag);
-    auto* const actor_rec = reinterpret_cast<records::SpriteObject*>(p);
+    auto* const actor_rec = rv::As<records::SpriteObject>(p);
     const unsigned mode = what & 0xFF;
     if (mode > 1) return;
     if (p == nullptr)

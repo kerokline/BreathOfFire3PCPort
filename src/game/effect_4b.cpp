@@ -53,6 +53,7 @@
 #include "game/effect_4b_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -76,13 +77,6 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
-records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-// A setter's store through a typed field: the record's address is evaluated
-// before the value, as the setter call evaluates its arguments, and the value
-// goes through the setter's parameter type P.
-template <typename P, typename T>
-void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -573,15 +567,15 @@ extern "C" int __cdecl EffectKind88_ScreenAngle(const long* from, const long* to
 extern "C" void __cdecl EffectKind88_InitParticle(unsigned char* particle) {
     particle[3] = 1;
     particle[4] = 0;
-    SetUL(particle + 0xC, static_cast<std::uint32_t>(CurFx()->x));
-    SetUL(particle + 0x10, static_cast<std::uint32_t>(CurFx()->z));
-    SetUL(particle + 0x14, static_cast<std::uint32_t>(CurFx()->height));
+    SetUL(particle + 0xC, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetUL(particle + 0x10, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    SetUL(particle + 0x14, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height));
     unsigned char* s = S();
-    SetUL(particle + 0x1C, Sar(UL(s + 0xC) - static_cast<std::uint32_t>(AsFx(s)->x), 5));
+    SetUL(particle + 0x1C, Sar(UL(s + 0xC) - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), 5));
     s = S();
-    SetUL(particle + 0x20, Sar(UL(s + 0x10) - static_cast<std::uint32_t>(AsFx(s)->z), 5));
+    SetUL(particle + 0x20, Sar(UL(s + 0x10) - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 5));
     s = S();
-    SetUL(particle + 0x24, Sar(UL(s + 0x14) - static_cast<std::uint32_t>(AsFx(s)->height), 5));
+    SetUL(particle + 0x24, Sar(UL(s + 0x14) - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), 5));
     SetWord(particle + 8, 0x40);
     SetWord(particle + 0xA, 0x20);
     particle[5] = 0x20;
@@ -684,15 +678,15 @@ extern "C" void __cdecl EffectKind9D_Start(void) {
     const unsigned char request = Field_Request;
     if (request == 3 || request == 1) return;
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     unsigned char* const o = Sprite(s[0xB], "EffectKind9D_Start");
-    auto* const oo = reinterpret_cast<records::SpriteObject*>(o);
+    auto* const oo = rv::As<records::SpriteObject>(o);
     o[0x24] = static_cast<unsigned char>(o[0x24] | 8);
     oo->screen_x = Word(s + 0x2E);
     oo->screen_y = Word(s + 0x30);
     so->x = static_cast<std::uint32_t>(oo->x);
-    Store<U>(CurFx()->z, static_cast<std::uint32_t>(oo->z));
-    Store<U>(CurFx()->height, static_cast<std::uint32_t>(oo->height));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(oo->z));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(oo->height));
     S()[0x5F] = 0;
     S()[0x5E] = 0;
     S()[0x5D] = 0;
@@ -830,7 +824,7 @@ void Kind9DQuad(U x, U y, int top, int left, int right) {
     SetWord(q + 0x2A, tpage);
     SH_CALL(Gpu_SetSemiTrans)(q, 1);
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(so->x), static_cast<std::uint32_t>(so->z), 1, 0x54);
 }
 }  // namespace
@@ -862,9 +856,9 @@ extern "C" void __cdecl EffectKind9D_DrawGlow(unsigned long x, unsigned long y) 
 // kCentreY.
 extern "C" void __cdecl EffectKind9D_Project(float* out) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     unsigned char* const o = Sprite(s[0xB], "EffectKind9D_Project");
-    auto* const oo = reinterpret_cast<records::SpriteObject*>(o);
+    auto* const oo = rv::As<records::SpriteObject>(o);
     oo->screen_x = Word(s + 0x2E);
     oo->screen_y = Word(s + 0x30);
     short v[3];
@@ -873,7 +867,7 @@ extern "C" void __cdecl EffectKind9D_Project(float* out) {
     v[2] = static_cast<short>(-(SW(s + 0x3E) / 2));
     long depth;
     const long r = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(out), &depth);
-    CurFx()->depth = static_cast<U>(r);
+    rv::Current<records::EffectObject>()->depth = static_cast<U>(r);
     FldSub(&out[0], At(at::kCentreX), &out[0]);
     FldSub(&out[1], At(at::kCentreY), &out[1]);
 }
@@ -1007,7 +1001,7 @@ extern "C" void __cdecl EffectKindA4_MarkSprites(void) {
     unsigned char* const saved = Sprite_Current;
     for (unsigned i = 0; i < at::kSpriteCount; ++i) {
         unsigned char* const o = Sprite_Objects + at::kSpriteStride * i;
-        auto* const oo = reinterpret_cast<records::SpriteObject*>(o);
+        auto* const oo = rv::As<records::SpriteObject>(o);
         if ((SH_CALL(Scena15_RecordWord)(oo->column) & 0xFFFFu) == 0x261) {
             Sprite_Current = o;
             o[0x29] = 3;
@@ -1048,7 +1042,7 @@ extern "C" void __cdecl EffectKind8A_Lines(void) {
     S()[6] = 0;
     SetUL(S() + 0x18, 0x100000);
     SetUL(S() + 0xC, 0x100000);
-    CurFx()->height = 0;
+    rv::Current<records::EffectObject>()->height = 0;
     for (unsigned i = 0; i < at::kKind8ALineCount; ++i) {
         const U pair = at::kKind8ALines + 8 * i;
         SetUL(S() + 0x10, UL(At(pair)));

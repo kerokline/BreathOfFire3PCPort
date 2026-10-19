@@ -21,6 +21,7 @@
 #include "game/boss_sd.h"
 #include "game/boss_sd_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 
 namespace boss_sd {
@@ -252,7 +253,7 @@ void SeedK26(unsigned k) {
         break;
     case kHitSound: {
         // the signed word +0x108 against 0 (jle)
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
         enemy_rec->hp_change = bh::Often() ? BH_PICK(0, 1, 0xFFFF, 0x7FFF, 0x8000, 2) : bh::Next();
         break;
     }
@@ -270,7 +271,7 @@ void SeedK26(unsigned k) {
 // original jumps through the next .data dwords and ours aborts.
 void SettleK26() {
     for (unsigned i = 0; i < bh::at::kEnemyCount; ++i) {
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::EnemyAt(i));
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::EnemyAt(i));
         if (enemy_rec->state[0] >= 12) enemy_rec->state[0] = static_cast<unsigned char>(enemy_rec->state[0] % 12);
     }
 }

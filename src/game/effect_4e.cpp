@@ -44,6 +44,7 @@
 #include "game/effect_4e_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -61,13 +62,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
-records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-// A setter's store through a typed field: the record's address is evaluated
-// before the value, as the setter call evaluates its arguments, and the value
-// goes through the setter's parameter type P.
-template <typename P, typename T>
-void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SL(const unsigned char* p) { return Long(p); }
@@ -206,9 +200,9 @@ extern "C" void __cdecl EffectKind9B_Run(void) {
 // s16 << 16; the height +0x14 and its speed +0x20 = 0; +1 up.
 extern "C" void __cdecl EffectKind9B_Start(void) {
     unsigned char* s = S();
-    const long elevation = SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z);
+    const long elevation = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     s = S();
-    AsFx(s)->height = static_cast<U>(S16(static_cast<U>(elevation))) << 16;
+    rv::As<records::EffectObject>(s)->height = static_cast<U>(S16(static_cast<U>(elevation))) << 16;
     SetUL(S() + 0x14, 0);
     SetUL(S() + 0x20, 0);
     NextState();
@@ -305,12 +299,12 @@ extern "C" void __cdecl EffectKind9C_Run(void) {
 // (0x308000, 0x718000, 0xFEC00000); the glow's size word +0x2E and the trail's
 // shade +0x5D = 0; +9 = 8; +1 up.
 extern "C" void __cdecl EffectKind9C_Start(void) {
-    CurFx()->x = 0x308000;
-    CurFx()->z = 0x740000;
+    rv::Current<records::EffectObject>()->x = 0x308000;
+    rv::Current<records::EffectObject>()->z = 0x740000;
     unsigned char* s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     const long elevation = SH_CALL(AreaMap_Elevation)(so->x, so->z);
-    Store<U>(CurFx()->height, static_cast<U>(S16(static_cast<U>(elevation))) << 16);
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(S16(static_cast<U>(elevation))) << 16);
     SetUL(S() + 0xC, 0x308000);
     SetUL(S() + 0x10, 0x718000);
     SetUL(S() + 0x14, 0xFEC00000u);
@@ -831,9 +825,9 @@ extern "C" void __cdecl EffectKindA0_Rise(void) {
     S()[6] = 0;
     NextState();
     SH_CALL(EffectKindA0_ClearSparks)();
-    CurFx()->x = UL(S() + 0x64);
-    CurFx()->z = UL(S() + 0x68);
-    CurFx()->height = UL(S() + 0x6C);
+    rv::Current<records::EffectObject>()->x = UL(S() + 0x64);
+    rv::Current<records::EffectObject>()->z = UL(S() + 0x68);
+    rv::Current<records::EffectObject>()->height = UL(S() + 0x6C);
     for (unsigned i = 0; i < at::kShardRun; ++i) SH_CALL(EffectKindA0_InitShard)(Shard(i));
     for (unsigned i = at::kShardRun; i < at::kShardCount; ++i) {
         SetWord(Shard(i) + 0x28, 0);
@@ -1129,7 +1123,7 @@ extern "C" void __cdecl EffectKindA0_SpawnSpark(void) {
         unsigned char* const k = Spark(i);
         if (k[0] != 0) continue;
         const unsigned char* const s = S();
-        auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+        auto* const so = rv::AsConst<records::EffectObject>(s);
         k[0] = 1;
         k[1] = 0;
         k[2] = 0x10;
@@ -1171,9 +1165,9 @@ extern "C" unsigned char __cdecl EffectKindA0_StepSparks(void) {
 // shade +0x2A = 0x40, its speed +0x28 = (Rand & 2) + 3, its angles
 // +0x20..+0x25 = 0 (EffectKind64_InitShard's form; that one's shade is 0x20).
 extern "C" void __cdecl EffectKindA0_InitShard(unsigned char* shard) {
-    SetUL(shard, static_cast<std::uint32_t>(CurFx()->x));
-    SetUL(shard + 4, static_cast<std::uint32_t>(CurFx()->z));
-    SetUL(shard + 8, static_cast<std::uint32_t>(CurFx()->height));
+    SetUL(shard, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetUL(shard + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    SetUL(shard + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height));
     const U x = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
     const U y = (static_cast<U>(SH_CALL(Rand)()) & 0x7FFu) - 0x400u;
     const U z = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;

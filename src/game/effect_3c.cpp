@@ -44,6 +44,7 @@
 #include "game/effect_3c_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -63,13 +64,6 @@ using RecordFn = void (__cdecl*)(unsigned char*);
 using VoidFn = void (__cdecl*)();
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
-records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-// A setter's store through a typed field: the record's address is evaluated
-// before the value, as the setter call evaluates its arguments, and the value
-// goes through the setter's parameter type P.
-template <typename P, typename T>
-void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -290,9 +284,9 @@ extern "C" void __cdecl EffectKind6E_Fade(void) {
 // +0x34 / +0x38 / +0x3C; +0 1, +0x1C 0, +1 0, +0x24 (s16) 0x80, +3 0xC0,
 // +0x26 2, +2 0x20 (the life).
 extern "C" void __cdecl EffectKind6E_ShardInit(unsigned char* shard) {
-    SetUL(shard + 4, static_cast<std::uint32_t>(CurFx()->x));
-    SetUL(shard + 8, static_cast<std::uint32_t>(CurFx()->z));
-    const U y = static_cast<std::uint32_t>(CurFx()->height);
+    SetUL(shard + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetUL(shard + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    const U y = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height);
     shard[0] = 1;
     SetUL(shard + 0xC, y);
     SetUL(shard + 0x1C, 0);
@@ -538,9 +532,9 @@ extern "C" void __cdecl EffectKind6F_AlongZ(void) {
         s = S();
         SetUL(s + 0x1C, UL(s + 0x10) + 0x20000u);
         s = S();
-        AsFx(s)->x = UL(s + 0xC);
+        rv::As<records::EffectObject>(s)->x = UL(s + 0xC);
         s = S();
-        AsFx(s)->z = Half(UL(s + 0x1C) + UL(s + 0x10));
+        rv::As<records::EffectObject>(s)->z = Half(UL(s + 0x1C) + UL(s + 0x10));
         Kind6FSegments();
         s = S();
         SetUL(s + 0x10, UL(s + 0x1C));
@@ -570,9 +564,9 @@ extern "C" void __cdecl EffectKind6F_AlongX(void) {
         s = S();
         SetUL(s + 0x18, UL(s + 0xC) + 0x20000u);
         s = S();
-        AsFx(s)->x = Half(UL(s + 0x18) + UL(s + 0xC));
+        rv::As<records::EffectObject>(s)->x = Half(UL(s + 0x18) + UL(s + 0xC));
         s = S();
-        AsFx(s)->z = UL(s + 0x10);
+        rv::As<records::EffectObject>(s)->z = UL(s + 0x10);
         Kind6FSegments();
         s = S();
         SetUL(s + 0xC, UL(s + 0x18));
@@ -614,25 +608,25 @@ extern "C" void __cdecl EffectKind6F_PushParty(unsigned which) {
     for (unsigned i = 0; i < 4; ++i) {
         const U cell = At(cells + i)[0];
         if (sel == 0) {
-            CurFx()->x = 0x5C0000;
-            Store<U>(CurFx()->z, cell << 16);
+            rv::Current<records::EffectObject>()->x = 0x5C0000;
+            rv::Store<U>(rv::Current<records::EffectObject>()->z, cell << 16);
         } else {
-            Store<U>(CurFx()->x, cell << 16);
-            CurFx()->z = 0x440000;
+            rv::Store<U>(rv::Current<records::EffectObject>()->x, cell << 16);
+            rv::Current<records::EffectObject>()->z = 0x440000;
         }
         unsigned char* const s = S();
-        auto* const so = reinterpret_cast<records::EffectObject*>(s);
+        auto* const so = rv::As<records::EffectObject>(s);
         const unsigned char m = SH_CALL(Party_MemberAt)(so->x, so->z, 0);
         slot = (slot & 0xFFFFFF00u) | m;
         if (m == 0xFF) continue;
         if ((Field_ScriptFlags2 & 0x1400u) != 0) continue;
         if (Field_Request != 0) continue;
         unsigned char* const rec = Member(slot & 0xFFu, "EffectKind6F_PushParty");
-        auto* const reco = reinterpret_cast<records::PartyMember*>(rec);
+        auto* const reco = rv::As<records::PartyMember>(rec);
         if (sel == 0)
-            rec[8] = S32(static_cast<std::uint32_t>(CurFx()->x) - static_cast<std::uint32_t>(reco->x)) <= 0 ? 7 : 3;
+            rec[8] = S32(static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x) - static_cast<std::uint32_t>(reco->x)) <= 0 ? 7 : 3;
         else
-            rec[8] = S32(static_cast<std::uint32_t>(CurFx()->z) - static_cast<std::uint32_t>(reco->z)) <= 0 ? 1 : 5;
+            rec[8] = S32(static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z) - static_cast<std::uint32_t>(reco->z)) <= 0 ? 1 : 5;
         SH_CALL(Member_SetState2_8)(slot, 2);
     }
 }
@@ -649,7 +643,7 @@ extern "C" void __cdecl EffectKind6F_PushParty(unsigned which) {
 extern "C" void __cdecl EffectKind6F_DrawSegment(const long* a, const long* b) {
     DrawMode(1, 0x3C0, 0, 1);
     unsigned char* s = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(prim);
@@ -660,7 +654,7 @@ extern "C" void __cdecl EffectKind6F_DrawSegment(const long* a, const long* b) {
     prim[5] = Kind6FColour(1, "EffectKind6F_DrawSegment");
     prim[6] = Kind6FColour(2, "EffectKind6F_DrawSegment");
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x20);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0x20);
     const U dx = FldSubFtol(prim + 0x14, prim + 8);
     float fx, fy;
     Fild(S32(dx), &fx);
@@ -685,7 +679,7 @@ extern "C" void __cdecl EffectKind6F_DrawSegment(const long* a, const long* b) {
                                      S32(angle + 0xC00u));
     DrawMode(1, 0x3C0, 0, 0);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
 }
 
 // original 0x484D00 (ax, ay, wa, ta, bx, by, wb, tb - every one read as its low
@@ -726,7 +720,7 @@ extern "C" void __cdecl EffectKind6F_DrawRibbon(int ax, int ay, int wa, int ta, 
     q[0x24] = q[0x25] = q[0x26] = 0;
     q[0x34] = q[0x35] = q[0x36] = 0;
     unsigned char* s = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x44);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0x44);
     unsigned char* const q2 = q + 0x44;
     std::memcpy(q2, q, 0x44);
     const U t3 = t1 + 0x800u;
@@ -735,7 +729,7 @@ extern "C" void __cdecl EffectKind6F_DrawRibbon(int ax, int ay, int wa, int ta, 
     Fild(corner(SH_CALL(Math_Cos)(static_cast<int>(t2)), r2, x1), q2 + 0x38);
     Fild(corner(SH_CALL(Math_Sin)(static_cast<int>(t2)), r2, y1), q2 + 0x3C);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x44);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0x44);
 }
 
 // ===========================================================================
@@ -930,9 +924,9 @@ extern "C" void __cdecl EffectKind73B_Burst(void) {
 // +0xC its +0x34 / +0x38 / +0x3C); +0 1, +1 0, +0x14 (s16) 0x80, +3 0x40,
 // +0x16 7 (all three colour bits), +2 0x20 (the life).
 extern "C" void __cdecl EffectKind73_SparkInit(unsigned char* r) {
-    SetUL(r + 4, static_cast<std::uint32_t>(CurFx()->x));
-    SetUL(r + 8, static_cast<std::uint32_t>(CurFx()->z));
-    const U y = static_cast<std::uint32_t>(CurFx()->height);
+    SetUL(r + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetUL(r + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    const U y = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height);
     r[0] = 1;
     SetUL(r + 0xC, y);
     r[1] = 0;
@@ -1082,11 +1076,11 @@ extern "C" void __cdecl EffectKind74_Run(void) {
 // +0x20 (s16) 0, its width +0x24 0x1000000; +9 = 0x40, +1 up, sound 0x207.
 extern "C" void __cdecl EffectKind74_Start(void) {
     unsigned char* s = S();
-    SetUL(s + 0xC, static_cast<std::uint32_t>(AsFx(s)->x));
+    SetUL(s + 0xC, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
     s = S();
-    SetUL(s + 0x10, static_cast<std::uint32_t>(AsFx(s)->z));
+    SetUL(s + 0x10, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     s = S();
-    SetUL(s + 0x14, static_cast<std::uint32_t>(AsFx(s)->height));
+    SetUL(s + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     s = S();
     SetUL(s + 0x1C, UL(s + 0x14));
     SetWord(S() + 0x20, 0);

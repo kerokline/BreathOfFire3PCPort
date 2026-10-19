@@ -38,6 +38,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_6a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -55,7 +56,6 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
-const records::EffectObject* AsFx(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -296,7 +296,7 @@ extern "C" void __cdecl EffectKind18Sub2D_Draw(void) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, 0);
     {
         const unsigned char* const s = S();
-        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), -2, 0xC);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->z), -2, 0xC);
     }
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(p);
@@ -345,7 +345,7 @@ extern "C" void __cdecl EffectKind18Sub2D_Draw(void) {
         SH_CALL(Prim_SetTexture)((flip << 16) | (static_cast<U>(r[8]) << 21) | 0x1500117u, p, 1);
     }
     const unsigned char* const r = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(r)->x), static_cast<std::uint32_t>(AsFx(r)->z), -2, 0x48);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(r)->x), static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(r)->z), -2, 0x48);
 }
 
 // original 0x50C140 (hidden in E5G's 0x50BDC0): jmp [EffectKind18Sub2D_States

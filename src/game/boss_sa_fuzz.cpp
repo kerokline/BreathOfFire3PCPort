@@ -27,6 +27,7 @@
 #include "game/boss_sa.h"
 #include "game/boss_sa_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 
 namespace boss_sa {
@@ -88,7 +89,7 @@ void HookWord(U* a) {
 // quarter of the maximum (HP less the signed pending damage at, just above
 // and just below it; the damage negative sometimes).
 void SeedHp(bool quarter) {
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy());
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     if (!quarter) {
         if (bh::Half()) enemy_rec->hp = bh::Half() ? 0xFFFF : bh::Next() % 3 == 0 ? 0xFFFE : 0;
         return;
@@ -368,7 +369,7 @@ void SeedWeretigr(unsigned k) {
 // disturbance moving 0x939AD8 does not show a re-read). From the hash only.
 void DisturbWeretigr(U h) {
     if ((h >> 8) % 3 != 0) return;
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
     SetWord(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->cue_table)))), h >> 16);
 }
 

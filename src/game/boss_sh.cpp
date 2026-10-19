@@ -36,6 +36,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_sh_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -53,9 +54,7 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
-records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
 // Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
-records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
 unsigned char* PointerAt(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
@@ -106,10 +105,10 @@ void StoreHooks(U end, U exit, U event) {
 // its dword +0x114 |= 8; Sprite_Current +1 = 2; a tail jump to
 // Sprite_ScriptTick, whose al is the answer.
 unsigned char Enter(U fc, U hook, U f8) {
-    EnemyRec()->anim_table = S(fc);
-    EnemyRec()->event_hook = S(hook);
-    EnemyRec()->cue_table = S(f8);
-    auto* const enemy_rec = EnemyRec();
+    rv::As<records::BattleEnemy>(Enemy())->anim_table = S(fc);
+    rv::As<records::BattleEnemy>(Enemy())->event_hook = S(hook);
+    rv::As<records::BattleEnemy>(Enemy())->cue_table = S(f8);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_114 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
@@ -238,7 +237,7 @@ extern "C" void __cdecl Boss34_End(void) {
     }
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
         const U flags = static_cast<U>(Long(p + 0x90));
@@ -400,15 +399,15 @@ extern "C" unsigned long __cdecl BossAngler_AdvanceDispatch(unsigned long throug
 // not read); then (Sprite_Current read again for each) the dword +0x18 = +0x34
 // + 0x30000, the dword +0xC = 0x4000, +2 up.
 extern "C" void __cdecl BossAngler_AdvanceStart(void) {
-    const unsigned record = EnemyRec()->data_id;
+    const unsigned record = rv::As<records::BattleEnemy>(Enemy())->data_id;
     Sprite_Current[9] = At(at::kEnemyDataCount9 + 0x8C * record)[0];
     BH_CALL(BattleEnemy_SetAnimation)(2);
     BH_CALL(BattleEnemy_ScriptTick)();
     unsigned char* const s = Sprite_Current;
-    auto* const cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
     SetLong(s + 0x18, S(static_cast<U>(cur_enemy->x) + 0x30000u));
     SetLong(Sprite_Current + 0xC, 0x4000);
-    ScEnemy()->state[1] = static_cast<unsigned char>(ScEnemy()->state[1] + 1);
+    rv::Current<records::BattleEnemy>()->state[1] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[1] + 1);
 }
 
 // original 0x43E8C0: state 4 step 1. +9 down; at 0, 0x437450(the first word of
@@ -418,26 +417,26 @@ extern "C" void __cdecl BossAngler_AdvanceStart(void) {
 // BattleEnemy_ScriptTick, whose al is the answer.
 extern "C" unsigned char __cdecl BossAngler_Advance(void) {
     unsigned char* s = Sprite_Current;
-    records::BattleEnemy* cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    records::BattleEnemy* cur_enemy = rv::As<records::BattleEnemy>(s);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     s = Sprite_Current;
-    cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    cur_enemy = rv::As<records::BattleEnemy>(s);
     if (s[9] == 0) {
-        const unsigned sound = Word(At(static_cast<U>(static_cast<std::int32_t>(EnemyRec()->cue_table))));
+        const unsigned sound = Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table))));
         BH_AT(void (__cdecl*)(unsigned), at::kEnemySound)(sound);
         s = Sprite_Current;
-        cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+        cur_enemy = rv::As<records::BattleEnemy>(s);
     }
     cur_enemy->x = S(static_cast<U>(cur_enemy->x) + static_cast<U>(Long(s + 0xC)));
     s = Sprite_Current;
-    cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    cur_enemy = rv::As<records::BattleEnemy>(s);
     if (cur_enemy->x == Long(s + 0x18)) {
         BH_CALL(Battle_SetTargetFlag40)(B(at::kTarget));
         BH_AT(Handler, at::kEnemyActChance)();
         unsigned char* const t = Sprite_Current;
         SetLong(t + 0x18, S(static_cast<U>(Long(t + 0x18)) + 0xFFFD0000u));
-        ScEnemy()->state[0] = static_cast<unsigned char>(ScEnemy()->state[0] + 1);
-        ScEnemy()->state[1] = 0;
+        rv::Current<records::BattleEnemy>()->state[0] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[0] + 1);
+        rv::Current<records::BattleEnemy>()->state[1] = 0;
     }
     return BH_CALL(BattleEnemy_ScriptTick)();
 }
@@ -453,10 +452,10 @@ extern "C" unsigned long __cdecl BossAngler_RetreatDispatch(unsigned long throug
 // +2 up. Then a tail jump to BattleEnemy_ScriptTick (al the answer).
 extern "C" unsigned char __cdecl BossAngler_Retreat(void) {
     unsigned char* s = Sprite_Current;
-    records::BattleEnemy* cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    records::BattleEnemy* cur_enemy = rv::As<records::BattleEnemy>(s);
     cur_enemy->x = S(static_cast<U>(cur_enemy->x) - static_cast<U>(Long(s + 0xC)));
     s = Sprite_Current;
-    cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    cur_enemy = rv::As<records::BattleEnemy>(s);
     if (cur_enemy->x == Long(s + 0x18)) cur_enemy->state[1] = static_cast<unsigned char>(cur_enemy->state[1] + 1);
     return BH_CALL(BattleEnemy_ScriptTick)();
 }

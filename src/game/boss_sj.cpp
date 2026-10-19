@@ -33,6 +33,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_sj_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -55,9 +56,7 @@ using RoundHighFn = U (__cdecl*)(U, U);
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
-records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
 // Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
-records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
 unsigned char* Owner() { return At(BattleE2_Owner); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
@@ -125,10 +124,10 @@ void StoreHooks(U end, U exit, U event) {
 // +0x114 |= 8 - 0x939AD8 read for each; Sprite_Current +1 = 2; a tail jump to
 // Sprite_ScriptTick, whose al is the answer.
 unsigned char Enter(U fc, U f4, U f8) {
-    EnemyRec()->anim_table = S(fc);
-    EnemyRec()->event_hook = S(f4);
-    EnemyRec()->cue_table = S(f8);
-    auto* const enemy_rec = EnemyRec();
+    rv::As<records::BattleEnemy>(Enemy())->anim_table = S(fc);
+    rv::As<records::BattleEnemy>(Enemy())->event_hook = S(f4);
+    rv::As<records::BattleEnemy>(Enemy())->cue_table = S(f8);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_114 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
@@ -141,7 +140,7 @@ unsigned char Enter(U fc, U f4, U f8) {
 void PoseParty() {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
         const U flags = static_cast<U>(Long(p + 0x90));
@@ -268,9 +267,9 @@ extern "C" void __cdecl BossDLord_Death(void) {
     BH_CALL(Sprite_EnsureAnimation)(3);
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
-    auto* const enemy_rec = EnemyRec();
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_110 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
-    auto* const cur_enemy = ScEnemy();
+    auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     cur_enemy->flags &= 0xBF;
     cur_enemy->state[0] = 3;
     cur_enemy->state[1] = 0;
@@ -604,7 +603,7 @@ extern "C" void __cdecl BossMyriaFx_Follow(void) {
     {
         const unsigned char* const o = Owner();
         unsigned char* const s = Sprite_Current;
-        auto* const cur_task = reinterpret_cast<records::BattleTask*>(s);
+        auto* const cur_task = rv::As<records::BattleTask>(s);
         cur_task->flags = o[0];
         s[0x48] = o[0x48];
         SetLong(s + 0x40, Long(o + 0x40));

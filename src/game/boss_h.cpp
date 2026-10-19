@@ -37,6 +37,7 @@
 #include "game/boss_h_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -53,9 +54,7 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
-records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
 // Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
-records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
 void PutFloat(unsigned char* p, std::int32_t v) {
     const float f = static_cast<float>(v);   // fild / fstp: nearest, as cvtsi2ss
     std::memcpy(p, &f, sizeof f);
@@ -133,7 +132,7 @@ extern "C" unsigned char __cdecl BossOp_ScriptTick(void) { return BH_CALL(Sprite
 // 1): Sprite_ScriptTickOnce, and when it answers al not 0, Sprite_Current's
 // +1 (read after the call) = 2.
 extern "C" void __cdecl BossOp_EnterTick(void) {
-    if (BH_CALL(Sprite_ScriptTickOnce)() & 0xFF) ScEnemy()->state[0] = 2;
+    if (BH_CALL(Sprite_ScriptTickOnce)() & 0xFF) rv::Current<records::BattleEnemy>()->state[0] = 2;
 }
 
 // original 0x43B550: entry 4 (the death) of the +2 tables of kinds 2, 3, 6, 7,
@@ -143,9 +142,9 @@ extern "C" void __cdecl BossOp_EnterTick(void) {
 extern "C" void __cdecl BossOp_Death(void) {
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
-    auto* const enemy_rec = EnemyRec();
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_110 = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
-    auto* const cur_enemy = ScEnemy();
+    auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     cur_enemy->flags &= 0xBF;
     cur_enemy->state[0] = 3;
     cur_enemy->state[1] = 0;
@@ -192,7 +191,7 @@ extern "C" void __cdecl BossTorast_DeathFxStart(void) {
 extern "C" void __cdecl BossTorast_DeathFxFlash(void) {
     unsigned char* const s = Sprite_Current;
     if (s[9] == s[0xA]) {
-        const unsigned char* const c = KindColour(EnemyRec()->run_state);
+        const unsigned char* const c = KindColour(rv::As<records::BattleEnemy>(Enemy())->run_state);
         const U colour = (static_cast<U>(c[0] & 0xF8) << 7) + (static_cast<U>(c[1] & 0xF8) << 2) + (c[2] >> 3);
         BH_CALL(BattleWin_DrawTileRgb)(0, 0, 0xB, static_cast<int>(colour), 1);
         Sprite_Current[0xA] >>= 1;
@@ -277,14 +276,14 @@ extern "C" void __cdecl BossTorast_DrawRing(unsigned radius) {
         p[4] = 0xFF;
         p[5] = 0xFF;
         p[6] = 0xFF;
-        const unsigned char* const c = KindColour(EnemyRec()->run_state);
+        const unsigned char* const c = KindColour(rv::As<records::BattleEnemy>(Enemy())->run_state);
         p[0x14] = c[0];
         p[0x15] = c[1];
         p[0x16] = c[2];
         p[0x24] = c[0];
         p[0x25] = c[1];
         p[0x26] = c[2];
-        auto* const cur_enemy = ScEnemy();
+        auto* const cur_enemy = rv::Current<records::BattleEnemy>();
         const std::int32_t x = static_cast<std::int32_t>(cur_enemy->screen_x), y = static_cast<std::int32_t>(cur_enemy->screen_y);
         const unsigned j = (i + 1) & 0x1F;
         PutFloat(p + 0x08, x);
