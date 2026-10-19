@@ -346,9 +346,9 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
         }
     }
     {
-        records::PartyMember* const state = State();
-        const unsigned char speed = Bytes(state)[0x128];
-        Bytes(state)[0x128] = speed < 3 ? 3 : speed > 5 ? 5 : speed;
+        unsigned char* const state = Field_State;
+        const unsigned char speed = state[0x128];
+        state[0x128] = speed < 3 ? 3 : speed > 5 ? 5 : speed;
     }
     g.direction_to(static_cast<long>(px), static_cast<long>(pz), Sprite_Current + 8);
     unsigned char answer = g.step_ahead();
@@ -368,11 +368,11 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     // The leader's next position, to the half-cell: free for this member?
     const std::uint32_t nz = (leader->step_frames * static_cast<std::uint32_t>(leader->step_z) + static_cast<std::uint32_t>(leader->z)) & 0xFFFF8000u;
     const std::uint32_t nx = (leader->step_frames * static_cast<std::uint32_t>(leader->step_x) + static_cast<std::uint32_t>(leader->x)) & 0xFFFF8000u;
-    records::PartyMember* const saved = State();
+    unsigned char* const saved = Field_State;
     Field_State = Member(0);
     const long ground = g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
     const unsigned char blocked = g.blocked_at(static_cast<long>(nx), static_cast<long>(nz), Sprite_Current[0x70], ground);
-    Field_State = Bytes(saved);
+    Field_State = saved;
     if (blocked) return answer;
     Cur()->x = static_cast<std::int32_t>(nx);
     Cur()->z = static_cast<std::int32_t>(nz);
@@ -608,9 +608,9 @@ extern "C" unsigned char __cdecl Member_Idle(void) {
     records::PartyMember* const state = State();
     if (Field_ActorStates[state->char_index * kActorBytes] & 0x20) return 0;
     Bytes(state)[0x136] = static_cast<unsigned char>(Bytes(state)[0x136] + 1);
-    records::PartyMember* const s = State();
-    if (Bytes(s)[0x136] <= 0xF0) return 0;
-    Bytes(s)[0x136] = 0;
+    unsigned char* const s = Field_State;
+    if (s[0x136] <= 0xF0) return 0;
+    s[0x136] = 0;
     if (ObjTrio[0x137] == 9) return 0;
     if (Member((Cur()->member & 0xFFu) ^ 3u)[0x137] == 9) return 0;
     const unsigned pick = (static_cast<unsigned>(g.rand()) & 1u) + 1u;
@@ -681,8 +681,8 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
                 return g.cell_pair_turn(2, 4, 7, 0xA3) == 0 ? 1 : 0;
             }
             if ((k & 0xF0) == 0xA0) return g.cell_slope(8);
-            const records::PartyMember* const s = Cur();
-            const long ax = Half(static_cast<std::uint32_t>(static_cast<short>(Word(Bytes(s) + 0x36))) * 0x20000u + 0x10000u);
+            const unsigned char* const s = Sprite_Current;
+            const long ax = Half(static_cast<std::uint32_t>(static_cast<short>(Word(s + 0x36))) * 0x20000u + 0x10000u);
             const long az = static_cast<long>(High(ahead_z));
             const long r = g.object_at(ax, az, 1);
             if (Cell(0) == 0) return 3;
@@ -706,8 +706,8 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
             return g.cell_pair_turn(3, 5, 1, 0xA3) != 0 ? 0 : 3;
         }
         if ((k & 0xF0) == 0xA0) return g.cell_slope(8);
-        const records::PartyMember* const s = Cur();
-        const long az = Half(static_cast<std::uint32_t>(static_cast<short>(Word(Bytes(s) + 0x3A))) * 0x20000u + 0x10000u);
+        const unsigned char* const s = Sprite_Current;
+        const long az = Half(static_cast<std::uint32_t>(static_cast<short>(Word(s + 0x3A))) * 0x20000u + 0x10000u);
         const long ax = static_cast<long>(High(ahead_x));
         const long r = g.object_at(ax, az, 1);
         if (Cell(0) == 0) return 3;
@@ -902,21 +902,21 @@ extern "C" unsigned char __cdecl Field_CellPairTurn(unsigned a, unsigned b, unsi
 // the two cells beside the way there, then of the two one further on - each
 // as Field_CellKind of it from the sprite's own cell.
 extern "C" void __cdecl Field_ReadCells(unsigned x, unsigned z) {
-    const records::PartyMember* c = Cur();
-    Cell(1) = g.cell_kind(x, z, Word(Bytes(c) + 0x36), Word(Bytes(c) + 0x3A));
-    c = Cur();
-    Cell(2) = g.cell_kind(Word(Bytes(c) + 0x36), z, Word(Bytes(c) + 0x36), Word(Bytes(c) + 0x3A));
-    c = Cur();
-    Cell(3) = g.cell_kind(x, Word(Bytes(c) + 0x3A), Word(Bytes(c) + 0x36), Word(Bytes(c) + 0x3A));
-    c = Cur();
+    const unsigned char* c = Sprite_Current;
+    Cell(1) = g.cell_kind(x, z, Word(c + 0x36), Word(c + 0x3A));
+    c = Sprite_Current;
+    Cell(2) = g.cell_kind(Word(c + 0x36), z, Word(c + 0x36), Word(c + 0x3A));
+    c = Sprite_Current;
+    Cell(3) = g.cell_kind(x, Word(c + 0x3A), Word(c + 0x36), Word(c + 0x3A));
+    c = Sprite_Current;
     {
-        const unsigned x1 = static_cast<std::uint16_t>(Word(Bytes(c) + 0x36) + 1);
-        Cell(4) = g.cell_kind(x1, z, x1, Word(Bytes(c) + 0x3A));
+        const unsigned x1 = static_cast<std::uint16_t>(Word(c + 0x36) + 1);
+        Cell(4) = g.cell_kind(x1, z, x1, Word(c + 0x3A));
     }
-    c = Cur();
+    c = Sprite_Current;
     {
-        const unsigned z1 = static_cast<std::uint16_t>(Word(Bytes(c) + 0x3A) + 1);
-        Cell(5) = g.cell_kind(x, z1, Word(Bytes(c) + 0x36), z1);
+        const unsigned z1 = static_cast<std::uint16_t>(Word(c + 0x3A) + 1);
+        Cell(5) = g.cell_kind(x, z1, Word(c + 0x36), z1);
     }
 }
 
@@ -932,8 +932,8 @@ extern "C" void __cdecl Field_ReadCells(unsigned x, unsigned z) {
 // sprite, Field_State +0x138 bit 0 otherwise.
 extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned x0, unsigned z0) {
     const std::uint32_t X1 = High(x), Z1 = High(z), X0 = High(x0), Z0 = High(z0);
-    const records::PartyMember* const c = Cur();
-    const bool whole_x = Word(Bytes(c) + 0x34) == 0, whole_z = Word(Bytes(c) + 0x38) == 0, ground = Bytes(c)[0x70] == 0;
+    const unsigned char* const c = Sprite_Current;
+    const bool whole_x = Word(c + 0x34) == 0, whole_z = Word(c + 0x38) == 0, ground = c[0x70] == 0;
     const long px = whole_x == ground ? Half(X1 + X0) : static_cast<long>(X1);
     const long pz = whole_z == ground ? Half(Z1 + Z0) : static_cast<long>(Z1);
     const unsigned char to = g.byte_at(static_cast<short>(x), static_cast<short>(z));
@@ -954,8 +954,8 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
         return to;
     case 0x10:
         if (to == 0x11) {
-            const records::PartyMember* const s = Cur();
-            if (Address(Bytes(s)) == FieldEvent_Object905DA0_addr) return (Bytes(s)[0xB] & 1) ? 0 : 0xFF;
+            const unsigned char* const s = Sprite_Current;
+            if (Address(s) == FieldEvent_Object905DA0_addr) return (s[0xB] & 1) ? 0 : 0xFF;
             return (Field_State[0x138] & 1) ? 0 : 0xFF;
         }
         [[fallthrough]];

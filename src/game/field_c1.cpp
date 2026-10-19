@@ -463,43 +463,43 @@ void TwinStart(const char* who) {
     if (Cur()[3] == 0xFF) return;
     SpriteRec(Cur()[3], who)[0] = 1;
     Cur()[4] = SH_CALL(Sprite_FindFree)();
-    records::EffectObject* const self = Fx();
-    if (Bytes(self)[4] == 0xFF) {
-        SpriteRec(Bytes(self)[3], who)[0] = 0;
+    unsigned char* const self = Cur();
+    if (self[4] == 0xFF) {
+        SpriteRec(self[3], who)[0] = 0;
         return;
     }
-    SpriteRec(Bytes(self)[4], who)[0] = 1;
+    SpriteRec(self[4], who)[0] = 1;
     const auto* const op = At(kKind14 ? AddressOf(EffectKind14_Op) : AddressOf(EffectKind3C_Op));
-    SetWord(At(bof3::addr::DamageScratch), Bytes(self)[3]);
+    SetWord(At(bof3::addr::DamageScratch), self[3]);
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
         SH_CALL(Sprite_SetAnimationAt)(0x61, 0xC);
     } else {
         SH_CALL(EventOp_0x)(op);
     }
-    SetWord(At(bof3::addr::DamageScratch), Bytes(self)[4]);
+    SetWord(At(bof3::addr::DamageScratch), self[4]);
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
         SH_CALL(Sprite_SetAnimationAt)(0x61, 0xC);
     } else {
         SH_CALL(EventOp_0x)(op);
     }
-    Sprite_Current = Bytes(self);
+    Sprite_Current = self;
     const U d = kKind14 ? 0x1000u : 0xFFFFF000u;
-    records::SpriteObject* a = reinterpret_cast<records::SpriteObject*>(SpriteRec(Bytes(self)[3], who));
+    records::SpriteObject* a = reinterpret_cast<records::SpriteObject*>(SpriteRec(self[3], who));
     a->x = static_cast<U>(a->x) + d;
     a->z = static_cast<U>(a->z) - d;
-    records::SpriteObject* b = reinterpret_cast<records::SpriteObject*>(SpriteRec(Bytes(self)[4], who));
+    records::SpriteObject* b = reinterpret_cast<records::SpriteObject*>(SpriteRec(self[4], who));
     b->x = static_cast<U>(b->x) - d;
     b->z = static_cast<U>(b->z) + d;
-    a = reinterpret_cast<records::SpriteObject*>(SpriteRec(Bytes(self)[3], who));
+    a = reinterpret_cast<records::SpriteObject*>(SpriteRec(self[3], who));
     a->flags = static_cast<unsigned char>(a->flags | 0x20);
-    b = reinterpret_cast<records::SpriteObject*>(SpriteRec(Bytes(self)[4], who));
+    b = reinterpret_cast<records::SpriteObject*>(SpriteRec(self[4], who));
     b->flags = static_cast<unsigned char>(b->flags | 0x20);
-    SpriteRec(Bytes(self)[4], who)[0x5C] = 0;
-    SpriteRec(Bytes(self)[3], who)[0x5C] = 0;
-    SH_CALL(Sprite_SetTint)(SpriteRec(Bytes(self)[3], who), 0xF, 0, 0, 1);
-    SH_CALL(Sprite_SetTint)(SpriteRec(Bytes(self)[4], who), 0, 0, 0xF, 1);
+    SpriteRec(self[4], who)[0x5C] = 0;
+    SpriteRec(self[3], who)[0x5C] = 0;
+    SH_CALL(Sprite_SetTint)(SpriteRec(self[3], who), 0xF, 0, 0, 1);
+    SH_CALL(Sprite_SetTint)(SpriteRec(self[4], who), 0, 0, 0xF, 1);
     Fx()->timer = 4;
     Fx()->state = 1;
 }
@@ -863,11 +863,11 @@ extern "C" void __cdecl EffectKind17_Rest(void) {
 // cell +0x36, +0x3A), then AreaMap_SetByte(the cell, 0x10) - the block's
 // cell marked, what was there kept.
 extern "C" void __cdecl EffectKind17_TakeCell(void) {
-    records::EffectObject* o = Fx();
-    const unsigned char under = SH_CALL(AreaMap_ByteAt)(S16(Word(Bytes(o) + 0x36)), S16(Word(Bytes(o) + 0x3A)));
+    unsigned char* o = Cur();
+    const unsigned char under = SH_CALL(AreaMap_ByteAt)(S16(Word(o + 0x36)), S16(Word(o + 0x3A)));
     Cur()[0xB] = under;
-    o = Fx();
-    SH_CALL(AreaMap_SetByte)(Word(Bytes(o) + 0x36), Word(Bytes(o) + 0x3A), 0x10);
+    o = Cur();
+    SH_CALL(AreaMap_SetByte)(Word(o + 0x36), Word(o + 0x3A), 0x10);
 }
 
 // original 0x46B3C0 (E8 from _Grow and _Rest): the view's kind-2 point back

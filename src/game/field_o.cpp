@@ -992,9 +992,9 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, s
     SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Cur()->step_y >> 8));
     Cur()->step_y = static_cast<std::int32_t>(static_cast<U>(Cur()->step_y) + static_cast<U>(static_cast<short>(d)));
     const long ground = SH_CALL(AreaMap_Elevation)(Cur()->x, Cur()->z);
-    records::SpriteObject* const sc = Cur();
-    if (S16(static_cast<U>(ground)) > S16(Word(Bytes(sc) + 0x3E))) {
-        SetWord(Bytes(sc) + 0x3E, static_cast<U>(ground));
+    unsigned char* const sc = Sc();
+    if (S16(static_cast<U>(ground)) > S16(Word(sc + 0x3E))) {
+        SetWord(sc + 0x3E, static_cast<U>(ground));
         Sc()[4] = 0;
         return 0;
     }
@@ -1048,10 +1048,10 @@ namespace {
 // EventOp_3x / 4x / 7x / 6x / Ax's shared start: Sprite_Current and
 // Field_ActiveMember the next Sprite_Objects entry.
 unsigned char* Claim() {
-    records::SpriteObject* const o = Placed();
-    Sprite_Current = Bytes(o);
-    Field_ActiveMember = Bytes(o);
-    return Bytes(o);
+    unsigned char* const o = Object(Count());
+    Sprite_Current = o;
+    Field_ActiveMember = o;
+    return o;
 }
 // x, z into the sprite and into object +0x8C / +0x90 (+0x94 0), by the count
 // read again each time, as EventOp_1x's.
@@ -1230,8 +1230,8 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     Cur()->accel_z = 0;
     Cur()->accel_x = 0;
     {
-        records::SpriteObject* const sc = Cur();
-        Bytes(sc)[0x70] = PtrAt(Bytes(sc) + 0x54)[2];
+        unsigned char* const sc = Sc();
+        sc[0x70] = PtrAt(sc + 0x54)[2];
     }
     records::SpriteObject* const n = Placed();
     n->best_score = 0;
@@ -1245,20 +1245,20 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     Colour(0x80);
     Cur()->draw_mode = 2;
     if (Placed()->speed == 0) {
-        records::SpriteObject* sc = Cur();
-        SH_CALL(AreaMap_SetByte)(Word(Bytes(sc) + 0x36), Word(Bytes(sc) + 0x3A), 0x10);
-        sc = Cur();
-        if (Word(Bytes(sc) + 0x34) != 0) {
-            SH_CALL(AreaMap_SetByte)(static_cast<std::uint16_t>(Word(Bytes(sc) + 0x36) + 1), Word(Bytes(sc) + 0x3A), 0x10);
-            sc = Cur();
+        unsigned char* sc = Sc();
+        SH_CALL(AreaMap_SetByte)(Word(sc + 0x36), Word(sc + 0x3A), 0x10);
+        sc = Sc();
+        if (Word(sc + 0x34) != 0) {
+            SH_CALL(AreaMap_SetByte)(static_cast<std::uint16_t>(Word(sc + 0x36) + 1), Word(sc + 0x3A), 0x10);
+            sc = Sc();
         }
-        if (Word(Bytes(sc) + 0x38) != 0) {
-            SH_CALL(AreaMap_SetByte)(Word(Bytes(sc) + 0x36), static_cast<std::uint16_t>(Word(Bytes(sc) + 0x3A) + 1), 0x10);
-            sc = Cur();
+        if (Word(sc + 0x38) != 0) {
+            SH_CALL(AreaMap_SetByte)(Word(sc + 0x36), static_cast<std::uint16_t>(Word(sc + 0x3A) + 1), 0x10);
+            sc = Sc();
         }
-        if (Word(Bytes(sc) + 0x34) != 0 && Word(Bytes(sc) + 0x38) != 0)
-            SH_CALL(AreaMap_SetByte)(static_cast<std::uint16_t>(Word(Bytes(sc) + 0x36) + 1),
-                                     static_cast<std::uint16_t>(Word(Bytes(sc) + 0x3A) + 1), 0x10);
+        if (Word(sc + 0x34) != 0 && Word(sc + 0x38) != 0)
+            SH_CALL(AreaMap_SetByte)(static_cast<std::uint16_t>(Word(sc + 0x36) + 1),
+                                     static_cast<std::uint16_t>(Word(sc + 0x3A) + 1), 0x10);
     }
     BumpCount();
 }

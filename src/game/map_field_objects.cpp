@@ -123,7 +123,6 @@ unsigned char* Sprite() { return At(SpriteCurrent()); }
 
 // EventOp_8x's object, a Sprite_Objects record, typed (src/game/records.h).
 records::SpriteObject* Obj() { return reinterpret_cast<records::SpriteObject*>(Sprite()); }
-unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 // The slot a cell handler commits to: 6 when the record's top nibble is set
 // (kinds 0x10 and up), else Draw_OtSlot - zero-extended from its byte.
@@ -661,20 +660,20 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     }
     g.set_animation(Obj()->direction);
     {
-        records::SpriteObject* const s = Obj();
-        g.set_byte(Word(Bytes(s) + 0x36), Word(Bytes(s) + 0x3A), 0x10);
+        unsigned char* const s = Sprite();
+        g.set_byte(Word(s + 0x36), Word(s + 0x3A), 0x10);
     }
-    records::SpriteObject* s = Obj();
-    if (Word(Bytes(s) + 0x34) != 0) {
-        g.set_byte((Word(Bytes(s) + 0x36) + 1u) & 0xFFFFu, Word(Bytes(s) + 0x3A), 0x10);
-        s = Obj();
+    unsigned char* s = Sprite();
+    if (Word(s + 0x34) != 0) {
+        g.set_byte((Word(s + 0x36) + 1u) & 0xFFFFu, Word(s + 0x3A), 0x10);
+        s = Sprite();
     }
-    if (Word(Bytes(s) + 0x38) != 0) {
-        g.set_byte(Word(Bytes(s) + 0x36), (Word(Bytes(s) + 0x3A) + 1u) & 0xFFFFu, 0x10);
-        s = Obj();
+    if (Word(s + 0x38) != 0) {
+        g.set_byte(Word(s + 0x36), (Word(s + 0x3A) + 1u) & 0xFFFFu, 0x10);
+        s = Sprite();
     }
-    if (Word(Bytes(s) + 0x34) != 0 && Word(Bytes(s) + 0x38) != 0)
-        g.set_byte((Word(Bytes(s) + 0x36) + 1u) & 0xFFFFu, (Word(Bytes(s) + 0x3A) + 1u) & 0xFFFFu, 0x10);
+    if (Word(s + 0x34) != 0 && Word(s + 0x38) != 0)
+        g.set_byte((Word(s + 0x36) + 1u) & 0xFFFFu, (Word(s + 0x3A) + 1u) & 0xFFFFu, 0x10);
     SetWord(At(kScratchX), Word(At(kScratchX)) + 1u);
 }
 
