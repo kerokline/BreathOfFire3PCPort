@@ -109,15 +109,16 @@ void DrawMode(unsigned tp, unsigned abr, int x, int y, unsigned slot) {
 // original does - then Gfx_CommitPrim(2, 0x1C).
 void LossSprite(unsigned char shade, U xf, U yf, unsigned char u, unsigned char v, unsigned w, unsigned h) {
     unsigned char* const p = Packet();
+    auto* const sprt = rv::As<records::GpuSprt>(p);  // a SPRT: Gpu_SetSprt below starts it
     const unsigned clut = BH_CALL(Gpu_GetClut)(0, 0x1FA);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(sprt->clut, clut);
     Rgb(p, 4, shade);
-    SetLong(p + 8, static_cast<std::int32_t>(xf));
-    SetLong(p + 0xC, static_cast<std::int32_t>(yf));
+    rv::Store<float>(sprt->x, std::bit_cast<float>(static_cast<std::int32_t>(xf)));
+    rv::Store<float>(sprt->y, std::bit_cast<float>(static_cast<std::int32_t>(yf)));
     p[0x14] = u;
     p[0x15] = v;
-    SetWord(p + 0x18, w);
-    SetWord(p + 0x1A, h);
+    rv::Store<unsigned>(sprt->w, w);
+    rv::Store<unsigned>(sprt->h, h);
     BH_CALL(Gpu_SetSprt)(p);
     BH_CALL(Gfx_CommitPrim)(2, 0x1C);
 }
@@ -273,20 +274,20 @@ extern "C" void __cdecl BattleExtra_DrawPlus(int x_arg, int y_arg) {
     unsigned char* p = Packet();
     BH_CALL(Gpu_SetLineF2)(p);
     BH_CALL(Gpu_SetSemiTrans)(p, 1);
-    PutFloat(p + 8, x + 5);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->x0, x + 5);
     Rgb(p, 4, 0x80);
-    PutFloat(p + 0xC, y);
-    PutFloat(p + 0x14, x + 5);
-    PutFloat(p + 0x18, y + 10);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->y0, y);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->x1, x + 5);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->y1, y + 10);
     BH_CALL(Gfx_CommitPrim)(1, 0x20);
     p = Packet();
     BH_CALL(Gpu_SetLineF2)(p);
     BH_CALL(Gpu_SetSemiTrans)(p, 1);
-    PutFloat(p + 8, x);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->x0, x);
     Rgb(p, 4, 0x80);
-    PutFloat(p + 0xC, y + 5);
-    PutFloat(p + 0x14, x + 10);
-    PutFloat(p + 0x18, y + 5);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->y0, y + 5);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->x1, x + 10);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->y1, y + 5);
     BH_CALL(Gfx_CommitPrim)(1, 0x20);
 }
 
@@ -610,7 +611,7 @@ extern "C" void __cdecl Cmd_AutoBattle(void) {
             if (actor != 0xFF && !BH_CALL(Battle_ActorIsOut)(actor)) {
                 unsigned char* const m = Member(actor);
                 if (m[0x125] == 5)
-                    BH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kBe4ReturnItem)(m[0x12E], Word(m + 0x126));
+                    BH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kBe4ReturnItem)(m[0x12E], rv::As<records::PartyMember>(m)->queued_id);
             }
             i = (i + 1) & 0xFF;
         } while (static_cast<int>(i) < BattleActorCopies_EntryCount);
@@ -774,7 +775,7 @@ extern "C" void __cdecl BattleEnd_AwaitRestore(void) {
         auto* const member_rec = rv::As<records::PartyMember>(m);
         if (member_rec->flags & 1) {
             Sprite_Current = m;
-            BH_CALL(Sprite_AnimFromSet)(member_rec->animation, static_cast<std::uint16_t>(Word(m + 0x58) - 2), At(at::kAnimBuffer), 0x1800);
+            BH_CALL(Sprite_AnimFromSet)(member_rec->animation, static_cast<std::uint16_t>(member_rec->script_pos - 2), At(at::kAnimBuffer), 0x1800);
             count = B(at::kPartyCount);
         }
         ++i;
@@ -869,7 +870,7 @@ extern "C" unsigned short __cdecl Char_LevelUpGain(unsigned roster_arg, unsigned
     U sum = 0;
     for (;;) {
         sum += Word(At(at::kCharExpTable + (base + reached) * 8));
-        if (static_cast<std::int32_t>(sum) > Long(record + 0xC)) break;
+        if (static_cast<std::int32_t>(sum) > rv::As<records::CharRecord>(record)->exp) break;
         ++reached;
         if (reached >= 0x63) break;
     }
@@ -1001,9 +1002,9 @@ extern "C" void __cdecl BattleLoss_Restart(void) {
     BH_CALL(Sprite_ReleaseTint)(Member(1));
     BH_CALL(Sprite_ReleaseTint)(Member(2));
     BH_CALL(Window_ResetAll)();
-    B(0x904AE9) = 0;
-    B(0x904AE5) = 0;
-    B(0x904AAA) = 0;
+    BattleMisc_BannerKinds = 0;
+    BattleTurnSteps_MusicFlags = 0;
+    BattleActions_EventBattle = 0;
     B(0x904AA0) = 0;
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
@@ -1036,11 +1037,12 @@ extern "C" void __cdecl BattleLoss_DrawPanels(unsigned shade) {
 extern "C" void __cdecl BattleLoss_DrawBlack(void) {
     DrawMode(0, 0, 0x3C0, 0, 2);
     unsigned char* const p = Packet();
+    auto* const tile = rv::As<records::GpuTile>(p);  // a TILE: Gpu_SetTile
     BH_CALL(Gpu_SetTile)(p);
-    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));
-    SetLong(p + 0xC, 0);
-    SetLong(p + 0x14, std::bit_cast<std::int32_t>(Widescreen_FillWidth()));   // 0x43A00000 narrow
-    SetLong(p + 0x18, 0x43700000);
+    rv::Store<float>(tile->x, Widescreen_FillX());
+    rv::Store<float>(tile->y, std::bit_cast<float>(0));
+    rv::Store<float>(tile->w, Widescreen_FillWidth());   // 0x43A00000 narrow
+    rv::Store<float>(tile->h, std::bit_cast<float>(0x43700000));
     Rgb(p, 4, 0);
     BH_CALL(Gfx_CommitPrim)(2, 0x1C);
 }

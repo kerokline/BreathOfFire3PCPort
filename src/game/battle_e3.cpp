@@ -69,7 +69,6 @@ unsigned char* F() { return Field_State; }
 unsigned char* Enemy() { return PtrAt(at::kCurrentEnemy); }
 U ULong(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetULong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
-short SWord(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -384,7 +383,7 @@ extern "C" void __cdecl BattleObj_StateHit(void) { Run("BattleObj_StateHit", Add
 // Sprite_Current +0x4B, the word +0x140 = its word +0x58; +4 = 0, +2 = 1.
 extern "C" void __cdecl BattleObj_HitEnter(void) {
     F()[0x12F] = rv::As<records::PartyMember>(S())->animation;
-    SetWord(F() + 0x140, Word(S() + 0x58));
+    rv::Store<unsigned>(rv::As<records::PartyMember>(F())->saved_script_pos, rv::As<records::PartyMember>(S())->script_pos);
     rv::As<records::PartyMember>(S())->state4 = 0;
     rv::As<records::PartyMember>(S())->step = 1;
 }
@@ -434,8 +433,8 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
     BattleE3_HitSprite = s;
     B(at::kHitActor) = actor;
     SetPtrAt(at::kResult, f + 0x124);
-    SetWord(f + 0x124 + 4, 0);
-    SetWord(PtrAt(at::kResult) + 6, 0);
+    rv::Store<unsigned>(member_f->hp_change, 0);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(at::kResult))->ap_change, 0);
     PtrAt(at::kResult)[8] = 0;
     std::memcpy(At(at::kStatCopy), f + 0xA0, 32);
     if (member_f->status & 0x800) BattleDamage_TargetDef = 1;
@@ -452,7 +451,7 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
         // original had zeroed
         const U target = (Key(f) & 0xFFFFFF00u) | B(at::kHitActor);
         const short dealt = BH_CALL(Battle_ApplyDamage)(B(at::kActor), target);
-        SetWord(PtrAt(at::kResult) + 4, static_cast<unsigned short>(dealt));
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(at::kResult))->hp_change, static_cast<unsigned short>(dealt));
         kind = B(at::kActKind);
         f = F();
         member_f = rv::As<records::PartyMember>(f);
@@ -462,11 +461,11 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
-    if ((f[0x12C] & 1) && Word(f + 0x128) == 0) {
+    if ((f[0x12C] & 1) && static_cast<std::uint16_t>(member_f->hp_change) == 0) {
         rv::As<records::PartyMember>(S())->step = 3;
         return;
     }
-    if ((ULong(f + 0x130) & 0x200) == 0) {
+    if ((member_f->flags_130 & 0x200) == 0) {
         if (kind == 1) {
             BH_CALL(BattleObj_HitPose)();
             f = F();
@@ -486,12 +485,12 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
         }
     }
     if (f[0x12C] & 1) {
-        BH_CALL(Battle_SetDamagePopup)(Word(f + 0x128), rv::As<records::PartyMember>(S())->actor);
+        BH_CALL(Battle_SetDamagePopup)(static_cast<std::uint16_t>(member_f->hp_change), rv::As<records::PartyMember>(S())->actor);
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
     if (f[0x12C] & 2) {
-        BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup)(Word(f + 0x12A), rv::As<records::PartyMember>(S())->actor);
+        BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
@@ -499,7 +498,7 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
     f = F();
     member_f = rv::As<records::PartyMember>(f);
     SetWord(At(at::kStatusOr), 0);
-    if (SWord(f + 0x128) > 0) {
+    if (member_f->hp_change > 0) {
         if (member_f->hp == 0) {
             if (f[0x134] & 2)
                 f[0x91] |= 0x40;
@@ -513,7 +512,7 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
-    if (SWord(f + 0x128) < 0 || SWord(f + 0x12A) < 0) BH_CALL(Sound_PlayById)(0x206);
+    if (member_f->hp_change < 0 || member_f->ap_change < 0) BH_CALL(Sound_PlayById)(0x206);
     if ((Word(At(at::kRoundFlags)) & 0x2000) == 0) {
         if (B(at::kActKind) == 1) {
             BH_CALL(Battle_PlayHitSound)();
@@ -595,7 +594,7 @@ extern "C" void __cdecl BattleObj_HitStepStart(void) {
         S()[0xA] = 0;
         return;
     }
-    SetWord(f + 0x128, 0);
+    rv::Store<unsigned>(rv::As<records::PartyMember>(f)->hp_change, 0);
     SetULong(S() + 0xC, 0);
     SetULong(S() + 0x10, 0xFFFFE000u);
     BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocityC)(S());
@@ -636,7 +635,7 @@ extern "C" void __cdecl BattleObj_HitStepBack(void) {
     }
     unsigned char* const f = F();
     if (f[0x12C] & 0x10) {
-        BH_CALL(Battle_SetDamagePopup)(Word(f + 0x128), member_s->actor);
+        BH_CALL(Battle_SetDamagePopup)(static_cast<std::uint16_t>(rv::As<records::PartyMember>(f)->hp_change), member_s->actor);
         rv::As<records::PartyMember>(S())->state3 += 1;
         return;
     }
@@ -925,7 +924,7 @@ extern "C" void __cdecl BattleObj_HpDispatch(void) { Run("BattleObj_HpDispatch",
 extern "C" void __cdecl BattleObj_HpApply(void) {
     unsigned char* f = F();
     records::PartyMember* member_f = rv::As<records::PartyMember>(f);
-    const int change = SWord(f + 0x128);
+    const int change = member_f->hp_change;
     if (static_cast<int>(member_f->hp) <= change) {
         member_f->status = 0x4000;
         rv::As<records::PartyMember>(F())->hp = 0;
@@ -937,7 +936,7 @@ extern "C" void __cdecl BattleObj_HpApply(void) {
             BH_CALL(Sound_PlayById)(0x206);
         f = F();
         member_f = rv::As<records::PartyMember>(f);
-        member_f->hp = member_f->hp - Word(f + 0x128);
+        member_f->hp = member_f->hp - static_cast<std::uint16_t>(member_f->hp_change);
         f = F();
         member_f = rv::As<records::PartyMember>(f);
         if (member_f->hp > member_f->max_hp) member_f->hp = member_f->max_hp;
@@ -945,11 +944,11 @@ extern "C" void __cdecl BattleObj_HpApply(void) {
     f = F();
     member_f = rv::As<records::PartyMember>(f);
     if (f[0x12C] & 1) {
-        BH_CALL(Battle_SetDamagePopup)(Word(f + 0x128), rv::As<records::PartyMember>(S())->actor);
+        BH_CALL(Battle_SetDamagePopup)(static_cast<std::uint16_t>(member_f->hp_change), rv::As<records::PartyMember>(S())->actor);
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
-    if (f[0x12C] & 2) BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup)(Word(f + 0x12A), rv::As<records::PartyMember>(S())->actor);
+    if (f[0x12C] & 2) BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
     BH_CALL(BattleObj_ScriptTick)();
     rv::As<records::PartyMember>(S())->state3 += 1;
 }
@@ -991,9 +990,9 @@ extern "C" void __cdecl BattleObj_State10(void) { Run("BattleObj_State10", Addre
 extern "C" void __cdecl BattleObj_State10Task(void) {
     unsigned char* const t = TaskSlot("BattleObj_State10Task", BH_CALL(BattleTask_Create)(0, 5));
     const auto dx = static_cast<signed char>(At(at::kSpecialOffsets + 2 * rv::As<records::PartyMember>(F())->char_id)[0]);
-    SetWord(t + 0x2E, static_cast<unsigned>(static_cast<std::uint16_t>(rv::As<records::PartyMember>(S())->screen_x) - dx) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(t)->screen_x, static_cast<unsigned>(static_cast<std::uint16_t>(rv::As<records::PartyMember>(S())->screen_x) - dx) & 0xFFFF);
     const auto dy = static_cast<signed char>(At(at::kSpecialOffsets + 1 + 2 * rv::As<records::PartyMember>(F())->char_id)[0]);
-    SetWord(t + 0x30, static_cast<unsigned>(Word(S() + 0x30) - dy) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(t)->screen_y, static_cast<unsigned>(Word(S() + 0x30) - dy) & 0xFFFF);
     rv::As<records::PartyMember>(S())->step += 1;
 }
 

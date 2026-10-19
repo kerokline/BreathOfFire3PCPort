@@ -74,12 +74,6 @@ std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }
 short S16(unsigned v) { return static_cast<short>(static_cast<unsigned short>(v)); }
 unsigned Low(U v) { return v & 0xFF; }
 
-// fild dword / fstp dword: an int to the nearest float.
-void PutFloat(unsigned char* p, std::int32_t v) {
-    const float f = static_cast<float>(v);
-    std::memcpy(p, &f, sizeof f);
-}
-
 // The last-pushed entry of the battle message queue: ((write - 1) & 15) * 8.
 unsigned LastQueueEntry() { return ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8; }
 
@@ -185,7 +179,7 @@ void SlotHand() {
 
 // The equipped item's word (the member's +0x126: category << 8 | item) and its
 // flag byte, for the member choosing.
-unsigned MemberItem() { return Word(Party(rv::As<records::PartyMember>(MenuActor())->actor) + 0x126); }
+unsigned MemberItem() { return rv::As<records::PartyMember>(Party(rv::As<records::PartyMember>(MenuActor())->actor))->queued_id; }
 
 // A side's target by the flag byte: bit 0x20 the enemies (0x40), else the
 // party (0x80) - neg / sbb / and 0xC0 / add 0x80.
@@ -242,8 +236,9 @@ const unsigned char* OptionMessage(unsigned base) { return BH_CALL(Msg_SystemPtr
 // past the right edge); 0 while the fills are unarmed, as the fuzz compares.
 extern "C" void __cdecl BattleWin_DimScreen(void) {
     unsigned char* const p = TileHead();
-    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));
-    SetLong(p + 0xC, 0);
+    auto* const tile = rv::As<records::GpuTile>(p);  // TileHead started it with Gpu_SetTile
+    rv::Store<float>(tile->x, Widescreen_FillX());
+    rv::Store<float>(tile->y, std::bit_cast<float>(0));
     SetLong(p + 0x14, 0x44700000);   // 960.0f
     SetLong(p + 0x18, 0x43700000);   // 240.0f
     p[4] = 0x28;
@@ -262,10 +257,11 @@ extern "C" void __cdecl BattleWin_DrawTileTint(int x, int y, int size) {
     const unsigned char* const t = At(at::kTileSizes + (Low(static_cast<U>(size)) << 2));
     int sx = S16(static_cast<U>(x)), w = static_cast<int>(Word(t));
     Widescreen_BattleTile(Low(static_cast<U>(size)), sx, w);
-    PutFloat(p + 8, sx);
-    PutFloat(p + 0xC, S16(static_cast<U>(y)));
-    PutFloat(p + 0x14, w);
-    PutFloat(p + 0x18, Word(t + 2));
+    auto* const tile = rv::As<records::GpuTile>(p);  // TileHead started it with Gpu_SetTile
+    rv::Store<std::int32_t>(tile->x, sx);
+    rv::Store<std::int32_t>(tile->y, S16(static_cast<U>(y)));
+    rv::Store<std::int32_t>(tile->w, w);
+    rv::Store<std::int32_t>(tile->h, Word(t + 2));
     p[4] = B(at::kTint);
     p[5] = B(at::kTint + 1);
     p[6] = B(at::kTint + 2);
@@ -393,7 +389,7 @@ extern "C" void __cdecl Battle_SetHpChange(unsigned actor) {
     if (a <= 2) {
         unsigned char* const p = Party(a);
         auto* const member_rec = rv::As<records::PartyMember>(p);
-        if (p[0x90] & 0x80) SetWord(p + 0x128, tenth(member_rec->hp));
+        if (p[0x90] & 0x80) rv::Store<unsigned>(member_rec->hp_change, tenth(member_rec->hp));
         return;
     }
     unsigned char* const e = Enemy(a);
@@ -508,13 +504,14 @@ extern "C" void __cdecl Battle_WriteBackMember(unsigned member) {
     auto* const member_rec = rv::As<records::PartyMember>(Party(member));
     if ((member_rec->flags & 1) == 0) return;
     unsigned char* const r = CharRecord(member_rec->char_index);
-    SetWord(r + 0x18, member_rec->hp);
-    SetWord(r + 0x1A, member_rec->ap);
+    auto* const char_rec = rv::As<records::CharRecord>(r);  // 0x903A70 + 0xA4 n
+    rv::Store<unsigned>(char_rec->hp, member_rec->hp);
+    rv::Store<unsigned>(char_rec->ap, member_rec->ap);
     const unsigned char c = member_rec->survive;
     member_rec->status = member_rec->status & 0x60A0;
     const unsigned s = member_rec->status;
     r[0x1C] = c;
-    SetWord(r + 0x10, s);
+    rv::Store<unsigned>(char_rec->status, s);
 }
 
 // original 0x446B00 (PSX 0x801DD940): the target 0x904B44 among the enemies not
@@ -915,8 +912,8 @@ extern "C" void __cdecl BattleItemCmd_EquipUsePick(void) {
             member_rec->flags_130 = S32(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_130)) | 0x4000);
             unsigned char* const m2 = Party(actor[5]);
             const unsigned word = Word(At(BattleE4_Slots_addr + 0x10));
-            SetWord(m2 + 0x126, word);
-            SetWord(Command() + 2, word);
+            rv::Store<unsigned>(rv::As<records::PartyMember>(m2)->queued_id, word);
+            rv::Store<unsigned>(rv::As<records::ActionRecord>(Command())->action_id, word);
             const unsigned char item = Command()[2];
             const unsigned char category = Command()[3];
             const unsigned help = BH_CALL(Item_HelpMessage)(category, item);
@@ -1007,7 +1004,7 @@ extern "C" void __cdecl BattleItemCmd_EquipTargetBegin(void) {
 extern "C" void __cdecl BattleItemCmd_EquipPickEnemy(void) {
     unsigned char* const actor = MenuActor();
     const unsigned pad = Input_Pressed;
-    const unsigned word = Word(Party(actor[5]) + 0x126);
+    const unsigned word = rv::As<records::PartyMember>(Party(actor[5]))->queued_id;
     if (Field_CancelButtons & pad) {
         BattleE4_Step4 = 4;
         return;
@@ -1041,7 +1038,7 @@ extern "C" void __cdecl BattleItemCmd_EquipPickEnemy(void) {
 extern "C" void __cdecl BattleItemCmd_EquipPickMember(void) {
     unsigned char* const actor = MenuActor();
     const unsigned pad = Input_Pressed;
-    const unsigned word = Word(Party(actor[5]) + 0x126);
+    const unsigned word = rv::As<records::PartyMember>(Party(actor[5]))->queued_id;
     if (Field_CancelButtons & pad) {
         BattleE4_Step4 = 4;
         return;
@@ -1153,7 +1150,7 @@ extern "C" void __cdecl BattleItemCmd_EquipSideBegin(void) {
 extern "C" void __cdecl BattleItemCmd_EquipSidePick(void) {
     unsigned char* const actor = MenuActor();
     const unsigned pad = Input_Pressed;
-    const unsigned word = Word(Party(actor[5]) + 0x126);
+    const unsigned word = rv::As<records::PartyMember>(Party(actor[5]))->queued_id;
     if (Field_CancelButtons & pad) {
         BattleE4_Step4 = 3;
         return;
@@ -1384,7 +1381,7 @@ extern "C" void __cdecl Escape_Begin(void) {
     BH_CALL(LoadDatFile)(0xD1);
     for (unsigned k = 0; k < 3; ++k) {
         unsigned char* const p = Party(k);
-        if (p[0x125] == 5) BH_CALL(Battle_ReturnItem)(p[0x12E], Word(p + 0x126));
+        if (p[0x125] == 5) BH_CALL(Battle_ReturnItem)(p[0x12E], rv::As<records::PartyMember>(p)->queued_id);
     }
     if (B(at::kPartyCount) != 0) {
         for (unsigned char m = 0;;) {
