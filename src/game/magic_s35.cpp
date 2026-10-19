@@ -1243,10 +1243,11 @@ S35_EXPORT void __cdecl BenedictionChild_Start(void) {
     if (Sc()[9] != 0) return;
     {
         const unsigned char* const m = PartyRecord(Sc()[4]);
+        const records::PartyMember* const tm = reinterpret_cast<const records::PartyMember*>(m);
         Sc()[8] = m[8];
-        Store(ScTask()->x, Long(m + 0x34));
-        Store(ScTask()->y, Long(m + 0x38));
-        SetLong(Sc() + 0x3C, Long(m + 0x3C));
+        Store(ScTask()->x, tm->x);
+        Store(ScTask()->y, tm->z);
+        SetLong(Sc() + 0x3C, tm->height);
     }
     Sc()[0xB] = 0;
     Sc()[9] = 8;

@@ -598,10 +598,11 @@ S30_EXPORT void __cdecl Kaiser_ShowParty(void) {
     unsigned i = 0;
     do {
         unsigned char* const m = PartyRecord(i);
+        records::PartyMember* const tm = reinterpret_cast<records::PartyMember*>(m);
         Sprite_Current = m;
         m[0] = 1;
         MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(m[8] + 4));
-        if ((Word(m + 0x90) & 0x2080) != 0) MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sc()[8] + 0x18));
+        if ((tm->status & 0x2080) != 0) MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sc()[8] + 0x18));
         if ((m[0x91] & 8) != 0) MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sc()[8] + 0x30));
         if (MH_CALL(Battle_ActorIsOut)(i) != 0) MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sc()[8] + 0x1C));
         i = (i + 1) & 0xFF;

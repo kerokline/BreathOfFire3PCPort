@@ -99,6 +99,7 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // less 3, which a party index sends below the enemy records.
 unsigned char* PartyRec(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRec(int i) { return Mem(at::kEnemies + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
+records::BattleEnemy* EnemyRecTyped(int i) { return reinterpret_cast<records::BattleEnemy*>(EnemyRec(i)); }
 
 // The scratch words DamageScratch + k and the vertex scratch
 // Prim_VertexScratch + k (SVECTORs at +0, +8, +0x10, +0x18).
@@ -354,7 +355,7 @@ MS12_EXPORT void __cdecl Identify_End(void) {
 // is below it. A kind seen before shows (+4 1); else a hit on an enemy whose
 // +0x8F is not 0 (the target read again) marks the kind and shows; else +4 0.
 MS12_EXPORT void __cdecl Identify_Roll(void) {
-    const int enemy = static_cast<int>(Word(EnemyRec(static_cast<int>(TargetByte()) - 3) + 0x98));
+    const int enemy = static_cast<int>(EnemyRecTyped(static_cast<int>(TargetByte()) - 3)->level);
     const int actor = PartyRec(Mem(at::kActor)[0])[0x8A];
     const int d = actor - enemy;
     int chance = 0x10;
@@ -425,15 +426,16 @@ MS12_EXPORT void __cdecl Identify_DrawEnemy(void) {
     const unsigned char index = static_cast<unsigned char>(TargetByte() - 3);
     const unsigned text1 = CharCount(Text(kText1)) & 0xFFu;   // counted here, before the record is read, as the original
     unsigned char* const rec = EnemyRec(index);
+    records::BattleEnemy* const trec = reinterpret_cast<records::BattleEnemy*>(rec);
     if (rec[0x8F] != 0) {
         DrawCentred(rec + 0x80, 0x30, NameCount());
         DrawHeadingCounted(0, kText1, 0x44, text1);
         MH_AT(FnXY, bof3::addr::Identify_DrawElements)(0x66, 0x54);
         char number[12];
-        MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(Word(rec + 0x96)));
+        MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(trec->exp));
         DrawAt(0x70, 0x64, 5, reinterpret_cast<const unsigned char*>(number));
         DrawExpLabel();
-        MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(Word(rec + 0x94)));
+        MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(trec->zenny));
         DrawAt(0x70, 0x78, 5, reinterpret_cast<const unsigned char*>(number));
         DrawAt(0xB0, 0x78, 1, Text(kLabel2));
     } else {

@@ -114,6 +114,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 // The party records by the battle index, unchecked (the originals index
 // ObjTrio by the actor byte whatever it holds).
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+records::PartyMember* PartyRecordTyped(unsigned i) { return reinterpret_cast<records::PartyMember*>(PartyRecord(i)); }
 unsigned char* PoolRecord(unsigned i) { return Mem(WeretigerStreak_Pool_addr + i * kPoolStride); }
 unsigned char* PoolCurrent() { return Pointer(WeretigerStreak_Current_addr); }
 
@@ -236,8 +237,9 @@ S14_EXPORT void __cdecl Weretiger_FocusActor(void) {
     SetWord(Sc() + 0x3E, U(MapView_Elevation) & 0xFFFF);
     {
         const unsigned char* const record = PartyRecord(ActorIndex());
-        const std::int32_t x = Long(record + 0x34);
-        const std::int32_t z = Long(record + 0x38);
+        const records::PartyMember* const trecord = reinterpret_cast<const records::PartyMember*>(record);
+        const std::int32_t x = trecord->x;
+        const std::int32_t z = trecord->z;
         Field_Kind2X = x;
         Field_Kind2Z = z;
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
@@ -372,7 +374,7 @@ S14_EXPORT void __cdecl Weretiger_FadeIn(void) {
     MH_CALL(Sprite_ReleaseTint)(PartyRecord(ActorIndex()));
     MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(0x80D380 + (static_cast<std::uint32_t>(Sc()[5]) << 6))),
                                 0);
-    MH_CALL(Battle_StatusTint)(Word(PartyRecord(ActorIndex()) + 0x90));
+    MH_CALL(Battle_StatusTint)(PartyRecordTyped(ActorIndex())->status);
     MH_CALL(Sprite_SetClutStp)();
     Sc()[0] &= 0xBF;
     MH_CALL(Sound_PlayEffect)(0x102);
@@ -503,7 +505,7 @@ void PlaceImage(const Image& im, unsigned base, unsigned x, unsigned y, unsigned
 // STP bits; the task back.
 void PaletteImage(const Image& im, std::uint32_t palette, unsigned index) {
     MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(palette)), index);
-    MH_CALL(Battle_StatusTint)(Word(PartyRecord(ActorIndex()) + 0x90));
+    MH_CALL(Battle_StatusTint)(PartyRecordTyped(ActorIndex())->status);
     MH_CALL(Sprite_SetClutStp)();
     Sprite_Current = im.task;
 }

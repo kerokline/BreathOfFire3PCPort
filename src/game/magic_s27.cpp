@@ -899,6 +899,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_Draw(void) {
         for (unsigned e = 0; e < 8; ++e) {
             if ((MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) != 0) continue;
             const unsigned char* const r = EnemyRecord(e);
+            const records::BattleEnemy* const tr = reinterpret_cast<const records::BattleEnemy*>(r);
             unsigned char* s = Sc();
             s[0xB] = static_cast<unsigned char>(i);
             s[0xA] = static_cast<unsigned char>(e);
@@ -906,12 +907,12 @@ S27_EXPORT void __cdecl WhelpBreathFlames_Draw(void) {
             SetLong(s + 0x10, Long(offset + 4));
             MH_AT(PrimFn, raw::kTurnOffset)(s);
             s = Sc();
-            SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(r + 0x34)) +
+            SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(tr->x) +
                                                         static_cast<std::uint32_t>(Long(s + 0xC))));
             SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x10)) +
-                                                        static_cast<std::uint32_t>(Long(r + 0x38))));
+                                                        static_cast<std::uint32_t>(tr->z)));
             SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset + 8)) +
-                                                        static_cast<std::uint32_t>(Long(r + 0x3C))));
+                                                        static_cast<std::uint32_t>(tr->height)));
             s[8] = r[8];
             Call0(bof3::addr::WhelpBreathFlames_PushMatrix);
             Call0(bof3::addr::WhelpBreathFlames_DrawColumn);
@@ -1009,11 +1010,12 @@ S27_EXPORT void __cdecl WhelpBreathGlow_Draw(void) {
     for (unsigned e = 0; e < 8; ++e) {
         if ((MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) != 0) continue;
         const unsigned char* const r = EnemyRecord(e);
+        const records::BattleEnemy* const tr = reinterpret_cast<const records::BattleEnemy*>(r);
         unsigned char* const s = Sc();
         records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
         s[8] = r[8];
-        ts->x = Long(r + 0x34);
-        ts->y = Long(r + 0x38);
+        ts->x = tr->x;
+        ts->y = tr->z;
         SetWord(s + 0x3E, Word(r + 0x3E));
         MH_CALL(MagicFx_PushActorMatrix)();
         Call0(bof3::addr::WhelpBreathGlow_DrawFan);

@@ -117,6 +117,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 // The originals index the records by the battle index, unchecked: the party's
 // by the index, the enemy's by index - 3.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+records::PartyMember* PartyRecordTyped(unsigned i) { return reinterpret_cast<records::PartyMember*>(PartyRecord(i)); }
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
@@ -326,7 +327,7 @@ S33_EXPORT void __cdecl Accession_ApplyA(void) {
         MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<unsigned>(c[5]) << 6))),
                                     index);
     }
-    MH_CALL(Battle_StatusTint)(Word(PartyRecord(ActorIndex()) + 0x90));
+    MH_CALL(Battle_StatusTint)(PartyRecordTyped(ActorIndex())->status);
     MH_CALL(Sprite_SetClutStp)();
     MH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 4));
     Sprite_Current = saved;
@@ -393,20 +394,21 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     MH_CALL(Battle_ClearActorBit)(Mem(at::kActor)[0]);
     {
         unsigned char* const first = PartyRecord(0);
+        records::PartyMember* const tfirst = reinterpret_cast<records::PartyMember*>(first);
         const unsigned char* const from = PartyRecord(ActorIndex());
         const std::int32_t x = Long(Mem(BossSi_CentreX_addr));
         // rep movsd: 0x53 dwords, forward, one at a time
         for (unsigned k = 0; k < 0x14C; k += 4) SetLong(first + k, Long(from + k));
         const std::int32_t z = Long(Mem(BossSi_CentreZ_addr));
         first[5] = 0;
-        SetLong(first + 0x34, x);
-        SetLong(first + 0x38, z);
+        tfirst->x = x;
+        tfirst->z = z;
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
-        const std::int32_t z0 = Long(first + 0x38);
+        const std::int32_t z0 = tfirst->z;
         const std::int32_t cz = Long(Mem(BossSi_CentreZ_addr));
         SetWord(first + 0x3E, U(ground) & 0xFFFF);
         SetLong(Mem(at::kTasks + 0x34), Long(Mem(BossSi_CentreX_addr)));
-        const std::int32_t x0 = Long(first + 0x34);
+        const std::int32_t x0 = tfirst->x;
         SetLong(Mem(at::kTasks + 0x38), cz);
         const long ground0 = MH_CALL(AreaMap_Elevation)(x0, z0);
         const unsigned char was = Mem(0x904AB0)[0];
@@ -421,6 +423,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     }
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char* const m = PartyRecord(i);
+        const records::PartyMember* const tm = reinterpret_cast<const records::PartyMember*>(m);
         unsigned char* const w = Mem(kWindowRows + i * 0x24u);
         if ((m[0] & 1) == 0) continue;
         MH_CALL(Window_Alloc)(i + 0xD, 3);
@@ -431,10 +434,10 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         const unsigned side = ((U(Long(Mem(0x904AAC))) & 0xFF) ^ 2u) >> 1;
         const unsigned dx = static_cast<unsigned>(SignedByte(Mem(kSideOffsets + side * 2u)[0]) +
                                                   SignedByte(Mem(BattleWin_MemberTargetOffsets_addr + k)[0])) +
-                            Word(m + 0x2E);
+                            static_cast<std::uint16_t>(tm->screen_x);
         SetWord(w + 1, dx & 0xFFFF);
         const unsigned dy =
-            static_cast<unsigned>(SignedByte(Mem(BattleWin_MemberTargetOffsets_addr + k + 1)[0])) + Word(m + 0x30) +
+            static_cast<unsigned>(SignedByte(Mem(BattleWin_MemberTargetOffsets_addr + k + 1)[0])) + static_cast<std::uint16_t>(tm->screen_y) +
             0xCu;
         SetWord(w + 3, dy & 0xFFFF);
         w[7] = static_cast<unsigned char>(i);
@@ -456,7 +459,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         MH_CALL(Field_MemberSprite)(Mem(MoveScript_EffectArg_addr + 0xc + set * 3u)[0], 0);
     }
     LoadPaletteOfCurrent();
-    MH_CALL(Battle_StatusTint)(Word(PartyRecord(ActorIndex()) + 0x90));
+    MH_CALL(Battle_StatusTint)(PartyRecordTyped(ActorIndex())->status);
     MH_CALL(Sprite_SetClutStp)();
     MH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 4));
     Sprite_Current = saved;

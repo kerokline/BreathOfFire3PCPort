@@ -245,12 +245,13 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             unsigned char* const t = Task(index & 0xFF);
             records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
             const unsigned char* const e = Enemy(i);
+            const records::BattleEnemy* const te = reinterpret_cast<const records::BattleEnemy*>(e);
             tt->owner = PtrValue(sc);
             t[4] = sc[0xB];
             t[9] = nine;
-            tt->x = Long(e + 0x34);
-            tt->y = Long(e + 0x38);
-            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(e + 0x3C)) + 0x800000u));
+            tt->x = te->x;
+            tt->y = te->z;
+            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(te->height) + 0x800000u));
             SetWord(t + 0x3E, Word(t + 0x3E) + Mem(kEnemyLift + e[0xF0] * kEnemyLiftStride)[0]);
             Bump(sc[0xB], 1);
         }
@@ -263,12 +264,13 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             unsigned char* const t = Task(index & 0xFF);
             records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
             const unsigned char* const m = Member(i);
+            const records::PartyMember* const m_rec = reinterpret_cast<const records::PartyMember*>(m);
             tt->owner = PtrValue(sc);
             t[4] = sc[0xB];
             t[9] = nine;
-            tt->x = Long(m + 0x34);
-            tt->y = Long(m + 0x38);
-            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(m + 0x3C)) + 0x800000u));
+            tt->x = m_rec->x;
+            tt->y = m_rec->z;
+            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(m_rec->height) + 0x800000u));
             Bump(sc[0xB], 1);
         }
     }

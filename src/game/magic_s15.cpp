@@ -699,7 +699,8 @@ S15_EXPORT void __cdecl Foretell_Read(void) {
     for (unsigned i = 0; i < 8; ++i) {
         if (IsOut(i + 3)) continue;
         const unsigned char* const e = EnemyRecord(i + 3);
-        enemy_sum = static_cast<std::uint16_t>(enemy_sum + Word(e + 0x98));
+        const records::BattleEnemy* const te = reinterpret_cast<const records::BattleEnemy*>(e);
+        enemy_sum = static_cast<std::uint16_t>(enemy_sum + te->level);
         ++enemy_n;
         step = Band(Percent(e, 0xA4, 0xB0, "enemy", i), step, 0x18, kEnemyBands);
         score += static_cast<std::uint32_t>(step);
@@ -1402,7 +1403,8 @@ S15_EXPORT void __cdecl Influence_SpawnMarks(void) {
         if (ActorIndex() == index) continue;
         if (TargetIndex() == index) continue;
         const unsigned char* const e = EnemyRecord(index);
-        if (Word(e + 0xBA) > 1 && (e[0x92] & 0x20) == 0 && (Long(e + 0x114) & 0x4000) == 0) continue;
+        const records::BattleEnemy* const te = reinterpret_cast<const records::BattleEnemy*>(e);
+        if (te->intel > 1 && (e[0x92] & 0x20) == 0 && (static_cast<std::int32_t>(te->flags_114) & 0x4000) == 0) continue;
         SpawnMark(index, count);
     }
     for (unsigned i = 0; i < 3; ++i) {
@@ -1410,8 +1412,9 @@ S15_EXPORT void __cdecl Influence_SpawnMarks(void) {
         if (ActorIndex() == i) continue;
         if (TargetIndex() == i) continue;
         const unsigned char* const r = PartyRecord(i);
+        const records::PartyMember* const tr = reinterpret_cast<const records::PartyMember*>(r);
         const std::uint32_t bits = static_cast<std::uint32_t>(Long(r + 0x134));
-        if (Word(r + 0xAA) > 1 && (r[0x90] & 0x20) == 0 && (bits & 0x4000) == 0 && (bits & 1) == 0) continue;
+        if (tr->intel > 1 && (r[0x90] & 0x20) == 0 && (bits & 0x4000) == 0 && (bits & 1) == 0) continue;
         SpawnMark(i, count);
     }
 }
