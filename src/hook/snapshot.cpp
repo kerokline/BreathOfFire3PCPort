@@ -1046,6 +1046,8 @@ void Snapshot_RequestLoad(unsigned slot) {
     g_request = Request::Load;
 }
 
+const char* Snapshot_LastLine() { return g_overlay; }
+
 void Snapshot_Pending() {
     const Request request = g_request;
     if (request == Request::None) return;

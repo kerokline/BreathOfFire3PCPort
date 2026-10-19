@@ -20,10 +20,14 @@
 // those were in no function list: they are reached only through the jump
 // tables 0x6671F4, 0x66720C and 0x667228.
 //
-// Faithful: no divergence. Every call out goes through save_menu::g, so the
-// start-up fuzz can stand recorders in for the callees.
+// Faithful but for the quicksave round's draft B (the save list as
+// BISLPS0?.DAT, bounded at sixteen; SaveLists_Arm, BOF3X_ORIGINAL=SaveLists).
+// Every call out goes through save_menu::g, so the start-up fuzz can stand
+// recorders in for the callees.
 #include "hook/run_speed.h"
 #include "game/save_menu.h"
+
+#include <io.h>
 
 #include <cstdint>
 #include <cstring>
@@ -212,25 +216,54 @@ extern "C" int __cdecl Save_ReadFile(const char* path, unsigned size, int offset
     return 0;
 }
 
-// 0x4548B0 (docs/save-files.md). Save_Directory's 0x60 dwords zeroed; the
-// pattern BISLPS??.DAT searched with _findfirst into a _finddata_t on the
-// stack (name at +0x14, size at +0x10), 0 when nothing matches. Per match its
-// name - strlen + 1 bytes, unbounded - to entry +0 and its size to +0x14,
-// entries 0x18 apart, until _findnext answers non-zero; the count is
-// returned. Kept, both original defects: no _findclose (a search handle
-// leaks per call) and no bound on the table - a seventeenth match writes past
-// Save_Directory's sixteen entries, towards Save_Staging.
-extern "C" int __cdecl Save_ListFiles(void) {
-    for (U i = 0; i < 0x60; ++i) PutLong(at::kDirectory + i * 4, 0);
+// The quicksave round's draft B (docs/quicksave.md, section QM): the
+// listing and the summary read take their pattern and their tables, so the
+// quick menu (quick_menu.cpp) lists BISLPS1?.DAT into tables of its own; the
+// original's callers pass Save_Directory and the summaries at 0x905BC0, with
+// BISLPS0?.DAT for the original's BISLPS??.DAT - a quicksave's name[7] is a
+// hex digit too, so BISLPS10.DAT would read as save slot 0 - and the bound
+// the original never had: sixteen entries, the rest ignored and logged (a
+// seventeenth match wrote past Save_Directory towards Save_Staging). Both
+// switched on by SaveLists_Arm, after the fuzz has compared Capcom's
+// behaviour; BOF3X_ORIGINAL=SaveLists keeps the original's pattern and its
+// unbounded table.
+namespace {
+volatile unsigned char g_lists_split = 0;   // PatchBytes "SaveLists" sets it (SaveLists_Arm)
+constexpr const char* kSavePattern = "BISLPS0?.DAT";
+}  // namespace
+
+// 0x4548B0's body (docs/save-files.md). The table's 0x60 dwords zeroed; the
+// pattern searched with _findfirst into a _finddata_t on the stack (name at
+// +0x14, size at +0x10), 0 when nothing matches. Per match its name - strlen
+// + 1 bytes - to entry +0 and its size to +0x14, entries 0x18 apart, until
+// _findnext answers non-zero; the count is returned. Unbounded (the
+// original): no bound on the table or on a name. Bounded (draft B): a
+// seventeenth match and every one after it, and a name of 0x14 bytes or more
+// with its NUL (it would run into the entry's size), are not stored, each
+// logged. The search handle is closed only when `close` (the quick menu's);
+// the original's callers keep the original's leak.
+int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded, bool close) {
+    const U base = Addr(table);
+    for (U i = 0; i < 0x60; ++i) PutLong(base + i * 4, 0);
     unsigned char found[0x118];
-    const long handle = g.find_first(reinterpret_cast<const char*>(At(at::kListPattern)), found);
+    const long handle = g.find_first(pattern, found);
     if (handle == -1) return 0;
     int count = 0;
-    U entry = at::kDirectory;
+    U entry = base;
     do {
         const U name = Addr(found) + 0x14;
         U n = 0;
         while (At(name)[n] != 0) ++n;
+        if (bounded && static_cast<U>(count) == kListEntries) {
+            bof3::Log("save list   %s: %s is past the table's sixteen entries, not listed (draft B's bound)", pattern,
+                      reinterpret_cast<const char*>(At(name)));
+            continue;
+        }
+        if (bounded && n + 1 > 0x14) {
+            bof3::Log("save list   %s: %s is %u bytes, over an entry's 0x14 for a name; not listed (draft B's bound)",
+                      pattern, reinterpret_cast<const char*>(At(name)), static_cast<unsigned>(n + 1));
+            continue;
+        }
         CopyForward(entry, name, n + 1);
         U size;
         std::memcpy(&size, found + 0x10, sizeof size);
@@ -238,36 +271,69 @@ extern "C" int __cdecl Save_ListFiles(void) {
         entry += at::kDirectoryBytes;
         ++count;
     } while (g.find_next(handle, found) == 0);
+    if (close) _findclose(static_cast<intptr_t>(handle));
     return count;
 }
 
-// 0x588DC0 (docs/save-files.md). All sixteen summaries marked empty (+0x15 =
-// 0xFF); then for each slot 0..15 the first Save_Directory entry whose name
-// byte 7 is that slot's hex digit (0-9, A-F, a-f) is read - Save_ReadFile(its
-// name, 0x1C, 0xCA0), the result not tested - and Save_Staging's first 0x1C
-// bytes copied into the summary, the entry's index at +0x15. It rebuilds from
-// Save_Directory alone: DIV-0002's re-listing in Save_WriteFile is what keeps
-// a new save in it.
-extern "C" void __cdecl Save_ReadSummaries(void) {
-    for (U a = at::kSummaries + 0x15; a < at::kSummaries + 16 * at::kSummaryBytes + 0x15; a += at::kSummaryBytes)
-        PutByte(a, 0xFF);
+// 0x4548B0 (docs/save-files.md): the body above on Save_Directory - with the
+// original's BISLPS??.DAT (0x65289C) and no bound, or, armed, draft B's
+// BISLPS0?.DAT and the bound. Kept either way, the original's defect: no
+// _findclose (a search handle leaks per call).
+extern "C" int __cdecl Save_ListFiles(void) {
+    if (g_lists_split != 0) return save_menu::ListFiles(kSavePattern, At(at::kDirectory), true, false);
+    return save_menu::ListFiles(reinterpret_cast<const char*>(At(at::kListPattern)), At(at::kDirectory), false, false);
+}
+
+// 0x588DC0's body (docs/save-files.md). All sixteen summaries marked empty
+// (+0x15 = 0xFF); then for each slot 0..15 the first table entry whose name
+// byte 7 is that slot's hex digit (0-9, A-F, a-f) is read - `read(its name,
+// the summary)` - and the entry's index stored at +0x15. A read that answers
+// false leaves the slot empty (the quick menu's reader; the original's never
+// does).
+void save_menu::ReadSummaries(const unsigned char* table, unsigned char* summaries, SummaryRead read, void* context) {
+    const U dir = Addr(table), sums = Addr(summaries);
+    for (U a = sums + 0x15; a < sums + 16 * at::kSummaryBytes + 0x15; a += at::kSummaryBytes) PutByte(a, 0xFF);
     for (U slot = 0; slot < 16; ++slot) {
-        const U summary = at::kSummaries + slot * at::kSummaryBytes;
+        const U summary = sums + slot * at::kSummaryBytes;
         for (U n = 0; n < 16; ++n) {
-            const U c = Byte(at::kDirectory + n * at::kDirectoryBytes + 7);
+            const U c = Byte(dir + n * at::kDirectoryBytes + 7);
             U v;
             if (c >= 0x30 && c <= 0x39) v = c - 0x30;
             else if (c >= 0x41 && c <= 0x46) v = c - 0x37;
             else if (c >= 0x61 && c <= 0x66) v = c - 0x57;
             else continue;
             if (v != slot) continue;
-            g.read_file(reinterpret_cast<const char*>(At(at::kDirectory + n * at::kDirectoryBytes)), at::kSummaryBytes,
-                        static_cast<int>(at::kSummaryAt));
-            for (U i = 0; i < 7; ++i) PutLong(summary + i * 4, Long(at::kStaging + i * 4));
-            PutByte(summary + 0x15, n);
+            if (read(reinterpret_cast<const char*>(At(dir + n * at::kDirectoryBytes)), At(summary), context))
+                PutByte(summary + 0x15, n);
             break;
         }
     }
+}
+
+namespace {
+// The original's read: Save_ReadFile(name, 0x1C, 0xCA0), its result not
+// tested, and Save_Staging's first 0x1C bytes copied into the summary.
+bool StagedRead(const char* name, unsigned char* summary, void*) {
+    g.read_file(name, at::kSummaryBytes, static_cast<int>(at::kSummaryAt));
+    for (U i = 0; i < 7; ++i) PutLong(Addr(summary) + i * 4, Long(at::kStaging + i * 4));
+    return true;
+}
+}  // namespace
+
+// 0x588DC0 (docs/save-files.md): the body above on Save_Directory and the
+// summaries at 0x905BC0, through Save_ReadFile and Save_Staging. Kept: the
+// read's answer is not tested, so a file that will not open leaves the
+// summary whatever Save_Staging held. It rebuilds from Save_Directory alone:
+// DIV-0002's re-listing in Save_WriteFile is what keeps a new save in it.
+extern "C" void __cdecl Save_ReadSummaries(void) {
+    save_menu::ReadSummaries(At(at::kDirectory), At(at::kSummaries), &StagedRead, nullptr);
+}
+
+void SaveLists_Arm() {
+    static const std::uint8_t was = 0, is = 1;
+    const bool on = bof3::PatchBytes("SaveLists", Addr(&g_lists_split), &was, &is, 1);
+    bof3::Log("SaveLists   the save lists split (quicksave draft B): %s",
+              on ? "the saves listed as BISLPS0?.DAT, sixteen at most" : "off (BOF3X_ORIGINAL): BISLPS??.DAT, unbounded");
 }
 
 // ============================================================================
@@ -693,19 +759,28 @@ extern "C" void __cdecl TitleMenu_DrawFrame(void) {
 // dword with only its low byte advanced (`add cl, bl`) - then the cursor
 // 0x573CE0(x + 0x10, y + 6 + 56 (cursor - first), 0xD1, 0x34, highlight, 6).
 // The first slot and the cursor are read again for each.
-extern "C" void __cdecl SaveMenu_DrawSlots(int x, int y, unsigned highlight) {
+// The body takes the summaries and the two words (the quicksave round's QM:
+// the quick menu passes its own listing, first-shown and cursor - ours, not
+// the game's - and the original's callers reach it through the entry below).
+void save_menu::DrawSlotsOver(int x, int y, unsigned highlight, const unsigned char* summaries,
+                              const volatile U* top_word, const volatile U* cursor_word) {
     const int left = x + 0x10;
     for (U i = 0; i < 3; ++i) {
-        const U first = Long(at::kSlotTop);
+        const U first = *top_word;
         const U n = first + i;
-        const U summary = at::kSummaries + n * at::kSummaryBytes;
+        const U summary = Addr(summaries) + n * at::kSummaryBytes;
         const unsigned char* const s = Byte(summary + 0x15) != 0xFF ? At(summary) : nullptr;
         const U slot = (first & 0xFFFFFF00u) | ((first + i) & 0xFF);
         g.slot_draw(slot, left, static_cast<int>(static_cast<U>(y) + i * 56 + 6), s);
     }
-    const U first = Long(at::kSlotTop);
-    const U cursor = Long(at::kSlot);
+    const U first = *top_word;
+    const U cursor = *cursor_word;
     g.slot_cursor(left, static_cast<int>((cursor * 56 - first * 56) + static_cast<U>(y) + 6), 0xD1, 0x34, highlight, 6);
+}
+
+extern "C" void __cdecl SaveMenu_DrawSlots(int x, int y, unsigned highlight) {
+    save_menu::DrawSlotsOver(x, y, highlight, At(at::kSummaries), reinterpret_cast<const volatile U*>(At(at::kSlotTop)),
+                             reinterpret_cast<const volatile U*>(At(at::kSlot)));
 }
 
 // ============================================================================

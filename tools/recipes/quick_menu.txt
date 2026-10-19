@@ -1,0 +1,63 @@
+# The quick menu (the quicksave round's QM, docs/quicksave.md 10): F5, a slot, Load.
+# worldMapAndAreaTransition.txt's frames 0..594 (the town save loaded, the
+# party standing on a path of area 7, as quick_worldMapAndAreaTransition*.txt
+# take it), then three quicksaves 20 frames apart (F6: slots 10, 11, 12 after
+# the rotation), F5, the cursor down to slot 1 (the second newest, taken at
+# recipe frame 615), confirm, Load - acted on at the confirm's release - and
+# 300 frames of the field after the restore. Confirm is pressed as the
+# loaded save's own word (@0x90358E, Field_ConfirmButtons), so the recipe
+# plays on every release. Pressed while paused, the pad words reach only the
+# menu (InputScript_PausedWord); WinMain's paused branch skips the latch.
+# Run from a harness game folder with no BISLPS1?.DAT: F6 writes there.
+# save town
+# The recorded route's header:
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+wait 60
+hold start 3
+wait 81
+hold start 3
+wait 45
+hold r2 4
+wait 78
+hold r2 4
+wait 15
+hold r2 5
+wait 32
+hold square 6
+hold square+down 1
+hold square+right+down 31
+hold square+right 1
+hold square 29
+hold square+up+right 27
+hold square+up+right+left 2
+hold square+up+left 40
+hold square+up+right 14
+hold square+up+right+left 1
+hold square+up+left 44
+hold square+up+right 4
+hold square+up+right+left 1
+hold square+up+left 29
+hold square+left 1
+hold square 2
+wait 15
+hold cross 15
+wait 2
+key f6
+wait 19
+key f6
+wait 19
+key f6
+wait 29
+mark quick menu: F5
+key f5
+wait 14
+hold down 2
+wait 6
+mark quick menu: confirm on slot 1
+hold @0x90358E 2
+wait 14
+mark quick menu: Load
+hold @0x90358E 2
+wait 300
