@@ -724,6 +724,16 @@ set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # (src/game/rdata_consts.cpp); no import of dinput.dll, which pad_read.cpp
 # loads itself.
 target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs dinput dxguid SDL3::SDL3-static)
+# A fixed load address (the owner, 2026-10-19; docs/quicksave.md 4a): a
+# quicksave's task stacks hold return addresses into this DLL and the span
+# holds pointers into it, so a quick-load is good only where the DLL sat at
+# the take. Without DYNAMIC_BASE the loader takes the preferred base,
+# 0x10000000 (clear of Capcom's range 0x400000..0x987000 and the draw pool's
+# candidates below 16 MB), whenever it is free. The relocation section is
+# KEPT: when the range is taken the loader still relocates rather than
+# failing to load (the hosted build inside BOF3.exe), and the quicksave's
+# header check refuses the mismatch.
+target_link_options(bof3x PRIVATE -Wl,--disable-dynamicbase -Wl,--image-base,0x10000000)
 
 # --- bof3x.exe, our own executable (docs/state3-design.md section 1.3) ------
 # Written by tools/make_exe.py, not linked: lld will not place a section

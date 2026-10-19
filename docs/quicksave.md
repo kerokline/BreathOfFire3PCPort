@@ -130,10 +130,43 @@ does not depend on any of it: a file refused for another build still has a
 save file's first `0x12B0` bytes, summary included, so the quick menu can
 draw it and a later "load as a plain save" needs no format change.
 
+**Trust.** A quicksave is this native process's own memory - the span, the
+task stacks with their return addresses into `bof3x.dll`, our statics -
+written straight back on a load, not an emulator's save state interpreted by
+a machine model. A doctored quicksave can therefore run anything. The build
+and DLL-base checks do not stop that: they catch an honest file from another
+build or process, not a hostile one. Treat a quicksave like a program: load
+your own, never one from someone else. Nothing more is built for it this
+round; [`IDEAS.md`](IDEAS.md) I46 holds the follow-up.
+
 **The restore**, once checked: the span and the pool written, the keep list
 put back, each participant's `Restore` in the file's order (a participant
 that reads past its record, or leaves bytes unread, is a Fatal), the task
 arena last, then the overlay line.
+
+## 4a. A build setting: `bof3x.dll` at a fixed address
+
+Not a change of the game's behaviour, so no ledger entry. The owner's call
+(2026-10-19), on census 2.2: `bof3x.dll` is linked **without
+`DYNAMIC_BASE`**, preferred base `0x10000000` (`CMakeLists.txt`,
+`-Wl,--disable-dynamicbase -Wl,--image-base,0x10000000`). A quicksave's task
+stacks hold return addresses into the DLL and the span holds pointers into
+it, so a quick-load is good only where the DLL sat at the take; with ASLR the
+same build loaded `0x510000` apart from two directories (SC). The
+**relocation section is kept** (`.reloc`, `0xEDAA0` bytes): when the range is
+taken the loader still relocates instead of failing to load - which matters
+for the hosted build inside `BOF3.exe` - and the header's DLL-base check
+refuses the mismatch either way. `0x10000000 + SizeOfImage 0x7073000` lies
+clear of Capcom's range `0x400000..0x987000` and of the draw pool's
+candidates below 16 MB.
+
+Measured 2026-10-19 (`objdump -p`; the base from the start-up line
+`inject ON Msg_SystemPtr ... -> ours`, the function at DLL + `0x46060`):
+before, `DllCharacteristics 0x0140` and a base of `0x5C2D0000` (q_sn's
+`launcher`, and the live runs' `this build ... at 0x5C2D0000`) and
+`0x54790000` (`launcher_st`) - two directories, two bases; after,
+`DllCharacteristics 0x0100` (NX only) and `0x10000000` from both directories
+and again from a third start of the first. Not measured: across a reboot.
 
 ## 5. The registry
 
@@ -158,6 +191,17 @@ overlay, none without), and DIV-0133/0134's "the release's words stand" flag
 with sigma's table rebuilt from the restored Config words
 (`sigma::SnapshotRestored`). Its record is about 4 KB (36 KB with an
 overlay).
+
+Sigma after a quick-load (RC's question): a save's load (`LoadMenu_Apply`,
+`sigma::LoadApplied`) clears "the release's words stand" - the save's words
+are loaded - and follows the table. A quick-load does not load a save: it
+puts back the Config words the span held at the take, the flag as it was at
+the take, and the table built from those words (`Follow`'s words 7 / 8 are in
+the span already). For a quicksave taken after a save's load - every one
+taken in play - that is exactly the state `LoadApplied` left; for one taken
+on the title before any load it is the release's words, as the title had
+them. So a fresh process that quick-loads (RC's cross form) ends in the
+take's sigma state, not the boot's.
 
 **Owed by stage B** (census 3 and 5): SP-A - `Sound_Banks`, `Sound_Channels`,
 the stream and its staging, the music sequencer, the fade's own statics;
@@ -210,7 +254,61 @@ both the harness copy and `build\`.
 
 ## 8. The in-process measurement
 
-SECTION_8_PLACEHOLDER
+Method (RC's `tools/quicksave_check.py` was still being built; done by hand,
+`qs_compare.py` in the harness scratch): a route plays, F6 at a frame,
+nothing pressed, F7 300 frames later, nothing pressed after; the run under
+`BOF3X_STATEHASH` (no skip list), `BOF3X_OPT=none BOF3X_LAYERING=0`, the exe
+host, an ini-less launcher in `C:\Users\kerok\q_sn`, a hard-linked copy of
+the PC install as the game folder. Each record after the restore is paired
+with the record before it of the same `Frame_Counter` (the counter goes
+back at a restore and the hash counts that as a new frame).
+
+**Town (worldMapAndAreaTransition's town save, standing; four runs, the last with the fixed base - the DLL at `0x10000000` in play, the same pages).** F6 at
+recipe frame 730 (`Frame_Counter` 731): `BISLPS10.DAT` **3,911,297 bytes** -
+the save half `0x12B0`, the header `0xA0`, the span `0x5DA000+0x3AD000`
+(3,854,336 bytes), the task arena `0x1ABB0C` down `0xBB0C` bytes (47,884: the
+committed part of the four slices), ST's record. `.rdata`'s FNV was the same
+at the load (`unchanged`). F7 at 1031 back to 731; the game ran on.
+300 frames paired; the frame of the restore itself equal on every page;
+**the first difference at `Frame_Counter` 732**, on 22 pages, every one of
+them inside a skip-list row:
+
+| Pages | What | Frames differing | Owner |
+|---|---|---|---|
+| `0x7CC000`..`0x7DE000` (19) | `Music_Staging`, then `Music_Events` .. `Music_Data`, `Snd_*` | 299 of 300 | SP-A |
+| `0x7CA000` | `D3d_Vertices`, `Font_TexCache`'s surface pointers | 198..299 | SP-G |
+| `0x6BC000` | `Sound_Channels`, `Sound_Banks` (and the overlay words) | 46..120 (the first frames) | SP-A |
+| `0x7F1000` | `Gfx_PacketPools` | 1..6 | per-frame (the draw) |
+| `0x7BF000`..`0x7C2000`, `0x7E1000` | the VRAM shadow, `Effect_Objects` .. `Input_Held` | 1 frame each, one run of four | timing: which frames were drawn (a late frame is not; uploads flush in the draw) |
+
+The raw dumps at `Frame_Counter` 740 before and after the restore
+(`BOF3X_STATEHASH_DUMP`, `statehash.py bytes`) differ in **one range: the
+73,728 bytes of `Music_Staging`** - every other byte of `.data` equal. So in
+the field the snapshot core restores the game's logic exactly; what differs
+is the stream's staging, which SP-A refills.
+
+**Combat (the combat route, mid-turn: F6 100 frames into the turn's 405-frame
+action).** F6 at `Frame_Counter` 1110, F7 at 1410 back to 1110. The pages that
+differed are the texture caches (`0x6C3000`, `0x6C6000`, `0x6C8000`:
+`Gfx_TexCache`, the device-state caches), `D3d_CellTexCache` (`0x7CB000`),
+the display page and the sound pages - all skip-list rows, SP-G's and
+SP-A's. Then, **73 frames after the restore, a crash in `DSOUND.dll+0x2DF88`**
+(writing `0x6B431460`, inside DirectSound's image) as the battle loaded
+`SND\091_03.DAT` for a spell's sound bank: the restored `Sound_Banks`
+records name DirectSound buffers released or replaced after the take.
+That is the audio participant's first job (SP-A), not a defect of the span;
+until it exists a quick-load across a sound-bank change is unsafe.
+
+**What a restore gets wrong today, and who owes it:**
+
+- SP-A: the music stream (its staging, the stream's events and decoder),
+  `Sound_Banks` and `Sound_Channels` - wrong sound at once, and the crash
+  above when a bank is reloaded after a restore.
+- SP-G: the texture caches (`Gfx_TexCache`, `Font_TexCache`,
+  `D3d_CellTexCache`), the device-state caches and the CLUT rows' contents -
+  textures as the moment before the load until they are re-uploaded.
+- Nothing seen in the game's logic: no page outside the skip list differed
+  in the town, and the byte dump agrees.
 
 ## 9. Ledger draft A (for the coordinator to number)
 
