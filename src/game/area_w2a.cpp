@@ -22,10 +22,12 @@
 #include "game/area_harness.h"
 #include "game/area_w2a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w2a::at;
 using area_harness::Mem;
@@ -85,8 +87,9 @@ void FlagsToggle(unsigned char* bits, unsigned index) {
 // original's (a list byte of 8 or more reads the next list).
 void SpawnAtMember(unsigned member, unsigned char kind, std::uint32_t kinds) {
     const unsigned char* const record = PartyAt(member);
-    const auto z = static_cast<short>(Word(record + 0x30));
-    const auto x = static_cast<short>(Word(record + 0x2E));
+    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
+    const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
     const unsigned char effect = B(kinds + B(Cond_Flags_addr + 0xd2 + member));
     Sprite_Current = PartyAt(member);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
@@ -264,7 +267,8 @@ extern "C" void __cdecl Area77_LeapStep(void) {
     }
     if (operand == 4) {
         const unsigned char* const cur = Sprite_Current;
-        const long ground = AH_CALL(AreaMap_Elevation)(Long(cur + 0x34), Long(cur + 0x38));
+        const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+        const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
         SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
         AH_CALL(Sprite_SetAnimation)(0);
     }
@@ -376,16 +380,19 @@ extern "C" void __cdecl Area79_ObjectState(void) {
 // state +4 back to 0.
 extern "C" void __cdecl Area79_StateSlide(void) {
     unsigned char* s = Sprite_Current;
+    auto* tS = reinterpret_cast<records::SpriteObject*>(s);
     if (s[0xA] == 0) {
         s[4] = 0;
         return;
     }
     const auto dx = static_cast<std::uint32_t>(static_cast<int>(static_cast<signed char>(B(Area79_SlideSteps_addr + (s[0xA] & 0xFu)))));
-    SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x34)) + (dx << 11)));
+    tS->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tS->x) + (dx << 11));
     s = Sprite_Current;
+    tS = reinterpret_cast<records::SpriteObject*>(s);
     const auto dz = static_cast<std::uint32_t>(-static_cast<int>(static_cast<signed char>(B(Area79_SlideSteps_addr + (s[0xA] & 0xFu)))));
-    SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x38)) + (dz << 11)));
+    tS->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(tS->z) + (dz << 11));
     s = Sprite_Current;
+    tS = reinterpret_cast<records::SpriteObject*>(s);
     s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
     AddWord(Field_State + 0x12E, -2);
 }
@@ -429,8 +436,8 @@ extern "C" void __cdecl Area81_ChoiceMessageCounter3or4(void) { ChoiceMessageCou
 extern "C" void __cdecl Area81_SpawnEffect27AtObject(void) {
     unsigned char* const e = SpawnEffectRecord(0x27);
     if (e == nullptr) return;
-    SetLong(e + 0x34, Long(Sprite_Current + 0x34));
-    SetLong(e + 0x38, Long(Sprite_Current + 0x38));
+    SetLong(e + 0x34, CurSprite()->x);
+    SetLong(e + 0x38, CurSprite()->z);
 }
 
 // original 0x40F5F0 (Area81_Handlers[1]; PSX 0x801F2D14): Camera_ShiftY -
@@ -456,7 +463,7 @@ extern "C" void __cdecl Area82_SkipByPose(void) {
 
 // original 0x40F640 (Area82_Handlers[1]; PSX 0x801F55F0): the running
 // object's dword +0x70 (the margin Party_MemberAt reads, docs/area_w1c.md) 5.
-extern "C" void __cdecl Area82_SetMargin5(void) { SetLong(Sprite_Current + 0x70, 5); }
+extern "C" void __cdecl Area82_SetMargin5(void) { CurSprite()->reach = 5; }
 
 // original 0x40F650 (Area82_Handlers[2]; PSX 0x801F5604): Field_State's byte
 // +0x89 tested three times, read again each time: 5 the script's position on
