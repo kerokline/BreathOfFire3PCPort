@@ -19,10 +19,12 @@
 #include "game/area_harness.h"
 #include "game/area_w1c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w1c::at;
 using area_harness::Mem;
@@ -85,7 +87,7 @@ void MoveScriptObject(unsigned char dir) {
             MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] | 0x80);
         }
     }
-    SetLong(Sprite_Current + 0x14, 0);
+    CurSprite()->step_y = 0;
     SetWord(Sprite_Current + 0x3E, 0x480);
 }
 
@@ -116,8 +118,9 @@ void ArmTail3(unsigned char sub) {
 // the table unchecked, as the original's.
 void SpawnAtMember(unsigned member, unsigned char kind) {
     const unsigned char* const record = PartyAt(member);
-    const auto z = static_cast<short>(Word(record + 0x30));
-    const auto x = static_cast<short>(Word(record + 0x2E));
+    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
+    const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
     const unsigned char effect = B(Area49_EffectKinds_addr + B(Cond_Flags_addr + 0xd2 + member));
     Sprite_Current = PartyAt(member);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
@@ -188,14 +191,14 @@ void MoveBlock(std::int32_t stop) {
     if (!AH_CALL(Area52_BlockCell)(&x, &z)) return;
     const unsigned char counter = B(at::kCounter3);
     if (counter == 0xA) {
-        if (Long(Sprite_Current + 0x34) == stop) return;
+        if (CurSprite()->x == stop) return;
         AH_CALL(Area52_DropColumn)(x, z);
         AddWord(MoveScript_Object + 0xA, 6);
         return;
     }
     if (counter != 0x14) return;
     AH_CALL(Area52_ShiftBlockX)(x, z);
-    if (Long(Sprite_Current + 0x34) != 0x858000) return;
+    if (CurSprite()->x != 0x858000) return;
     AddWord(MoveScript_Object + 0xA, 3);
     B(AreaW0c_TailState_addr) = 0x2D;
 }
@@ -207,15 +210,16 @@ void SpawnEffect48(std::int32_t x, std::int32_t z, unsigned char b) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
-    SetLong(e + 0x38, z);
-    const std::int32_t zz = Long(e + 0x38);
-    SetLong(e + 0x34, x);
-    const std::int32_t xx = Long(e + 0x34);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    tE->z = z;
+    const std::int32_t zz = tE->z;
+    tE->x = x;
+    const std::int32_t xx = tE->x;
     e[0] = 1;
     e[5] = 0x48;
     const auto ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(xx, zz));
     e[0xB] = b;
-    SetLong(e + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(ground)) << 8));
+    tE->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(ground)) << 8);
 }
 
 // Area 52's tail: a word timer 0x9039F6 counted down, below 4 the next state.
@@ -309,7 +313,7 @@ extern "C" void __cdecl Area48_MoveScriptObject1(void) { MoveScriptObject(1); }
 // word +0x8A = 0xFFFE.
 extern "C" void __cdecl Area48_PoseByCount(void) {
     Field_ActiveMember[0x83] = ByCount(6, 7, 8, 9);
-    SetWord(Field_ActiveMember + 0x8A, 0xFFFE);
+    reinterpret_cast<records::SpriteObject*>(Field_ActiveMember)->script_position = 0xFFFE;
 }
 
 // original 0x4092B0 (Area48_Choices[6] = Area48_Handlers[5]; PSX 0x801F4B40):
@@ -465,10 +469,11 @@ extern "C" void __cdecl Area49_EffectFrame(void) {
                         unsigned char dir = row[4];
                         if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), row[5])) dir ^= 4;
                         unsigned char* const cur = Sprite_Current;
+                        auto* const tCur = reinterpret_cast<records::EffectObject*>(cur);
                         if (cur[8] != dir) {
                             cur[8] = dir;
-                            SetLong(cur + 0xC, -Long(cur + 0xC));
-                            SetLong(cur + 0x10, -Long(cur + 0x10));
+                            tCur->step_x = -tCur->step_x;
+                            tCur->step_z = -tCur->step_z;
                             SetLong(cur + 0x14, -Long(cur + 0x14));
                             cur[9] = static_cast<unsigned char>(8 - cur[9]);
                         }
@@ -492,7 +497,8 @@ extern "C" void __cdecl Area49_EffectFrame(void) {
 // each bound the zone's byte << 16, signed compares; 0xFF for none.
 extern "C" unsigned char __cdecl Area49_MemberZone(unsigned member) {
     const unsigned char* const record = PartyAt(member & 0xFF);
-    const std::int32_t x = Long(record + 0x34), z = Long(record + 0x38);
+    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const std::int32_t x = tRecord->x, z = tRecord->z;
     for (unsigned i = 0; i < at::kArea49ZoneCount; ++i) {
         const unsigned char* const zone = Mem(Area49_Zones_addr + i * 6u);
         if (x < static_cast<std::int32_t>(zone[0] << 16) || x > static_cast<std::int32_t>(zone[2] << 16)) continue;
@@ -672,8 +678,9 @@ extern "C" unsigned char __cdecl Area50_Trigger43(unsigned char*, unsigned char*
 // 0x57C8A0(member, 1).
 extern "C" void __cdecl Area51_MemberAtObject(void) {
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     const unsigned char member =
-        AH_CALL(Party_MemberAt)(Long(cur + 0x34), Long(cur + 0x38), static_cast<unsigned>(Long(cur + 0x70)));
+        AH_CALL(Party_MemberAt)(tCur->x, tCur->z, static_cast<unsigned>(static_cast<std::int32_t>(tCur->reach)));
     if (member == 0xFF) return;
     if (Field_ScriptFlags2 & 0x1000) return;
     if (Field_Request != 0) return;
@@ -690,7 +697,8 @@ extern "C" void __cdecl Area51_PlaceAtMember(void) {
     SetLong(Sprite_Current + 0x34, Long(from + 0x34));
     SetLong(Sprite_Current + 0x38, Long(from + 0x38));
     const unsigned char* const cur = Sprite_Current;
-    const std::int32_t ground = AH_CALL(AreaMap_Elevation)(Long(cur + 0x34), Long(cur + 0x38));
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground - 0x40));
 }
 
@@ -734,10 +742,11 @@ extern "C" void __cdecl Area52_StashBlock(void) {
         return;
     }
     unsigned char* const cur = Sprite_Current;
-    const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(cur + 0x38)) - 0x8000u));
-    const std::uint16_t x = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(cur + 0x34)) - 0x8000u));
-    SetLong(cur + 0x18, 0);
-    SetLong(Sprite_Current + 0x1C, 0);
+    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) - 0x8000u));
+    const std::uint16_t x = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->x) - 0x8000u));
+    tCur->accel_x = 0;
+    CurSprite()->accel_z = 0;
     for (unsigned i = 0; i < 2; ++i) StashColumn(static_cast<std::uint16_t>(x + i), z, i * 8);
 }
 
@@ -753,10 +762,11 @@ extern "C" void __cdecl Area52_ShiftBlockZ(void) {
     SetLayer(x, z, 0);
     SetByte(x, z, Sprite_Current[0x18]);
     SetLayer(static_cast<std::uint16_t>(x + 1), z, 0);
-    SetByte(static_cast<std::uint16_t>(x + 1), z, Sar(Long(Sprite_Current + 0x18), 8));
+    SetByte(static_cast<std::uint16_t>(x + 1), z, Sar(CurSprite()->accel_x, 8));
     unsigned char* const cur = Sprite_Current;
-    SetLong(cur + 0x18, Long(cur + 0x1C));
-    SetLong(Sprite_Current + 0x1C, 0);
+    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur->accel_x = tCur->accel_z;
+    CurSprite()->accel_z = 0;
     z = static_cast<std::uint16_t>(z + 2);
     SetLayer(x, z, 0x10);
     unsigned char* p = Sprite_Current + 0x1C;
@@ -781,12 +791,13 @@ extern "C" void __cdecl Area52_ShiftBlockZ(void) {
 // the new z (high word of z less 0x8000) taken (StashColumn).
 extern "C" void __cdecl Area52_ResetBlock(void) {
     const unsigned char* const cur = Sprite_Current;
-    if (Long(cur + 0x34) != 0x118000 || Long(cur + 0x38) != 0x298000) return;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    if (tCur->x != 0x118000 || tCur->z != 0x298000) return;
     for (unsigned i = 0; i < 2; ++i) RestoreColumn(0x11 + i, 0x29, i * 8);
-    SetLong(Sprite_Current + 0x18, 0);
-    SetLong(Sprite_Current + 0x1C, 0);
-    SetLong(Sprite_Current + 0x38, 0x78000);
-    const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x38)) - 0x8000u));
+    CurSprite()->accel_x = 0;
+    CurSprite()->accel_z = 0;
+    CurSprite()->z = 0x78000;
+    const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(CurSprite()->z) - 0x8000u));
     for (unsigned i = 0; i < 2; ++i) StashColumn(0x11 + i, z, i * 8);
 }
 

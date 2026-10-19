@@ -29,10 +29,13 @@
 #include "game/area_harness.h"
 #include "game/area_w4d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 
 namespace at = area_w4d::at;
 using area_harness::Handler;
@@ -50,6 +53,7 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+records::EffectObject* TEffectAt(unsigned slot) { return reinterpret_cast<records::EffectObject*>(EffectAt(slot)); }
 // The high word of a 16.16 position, as the step hook reads it (a word at +2).
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
@@ -176,7 +180,7 @@ extern "C" void __cdecl Area185_ChoiceMessageByAnswer(void) { ChoiceMessageByAns
 extern "C" void __cdecl Area175_ClampXToKind2(void) {
     const std::int32_t x = Field_Kind2X;
     if (x > 0x2E0000) return;
-    SetLong(Sprite_Current + 0x34, x);
+    CurSprite()->x = x;
 }
 
 // original 0x429630 (choice 10 of all eleven): answer 0: message 0x6F, the
@@ -425,7 +429,7 @@ extern "C" void __cdecl Area185_DrawTileField(void) {
     SetLong(Mem(MapView_ScreenXY_addr), static_cast<std::int32_t>(0xC6440000u));
     SetLong(Mem(MapView_ScreenXY_addr + 4), static_cast<std::int32_t>(0xC6680000u));
     AH_CALL(Gpu_SetDrawMode)(first, 0, 1, 0xB5, 0);
-    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 1, 0xC);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 1, 0xC);
     U u = 0;
     std::int32_t row = 0;
     long depth = 0;
@@ -449,13 +453,13 @@ extern "C" void __cdecl Area185_DrawTileField(void) {
             SetWord(Mem(Prim_VertexScratch_addr + 4), static_cast<U>(-0x340 - (lift >> 5)));
             AH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr)), reinterpret_cast<unsigned long*>(tile + 8), &depth);
             AH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(tile + 0x10));
-            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 1, 0x14);
+            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 1, 0x14);
         }
         row -= 8;
         u += 0x10;
     } while (row > -0x100);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
-    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 1, 0xC);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 1, 0xC);
 }
 
 // ===========================================================================
@@ -471,14 +475,15 @@ extern "C" void __cdecl Area185_DrawTileField(void) {
 extern "C" void __cdecl Area175_SlideOrPlace(void) {
     const unsigned char request = Field_Request;
     unsigned char* const cur = Sprite_Current;
+    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
     if (request == 2) {
         SlideBy(cur, Area175_SlideSteps_addr, static_cast<U>(Frame_Counter));
         SlideZBy(Sprite_Current, Area175_SlideSteps_addr, static_cast<U>(Frame_Counter));
         MemberStep();
         return;
     }
-    SetLong(cur + 0x34, 0x2C0000);
-    SetLong(Sprite_Current + 0x38, 0x5C0000);
+    tCur->x = 0x2C0000;
+    CurSprite()->z = 0x5C0000;
     Sprite_Current[4] = 0;
 }
 
@@ -497,9 +502,9 @@ extern "C" void __cdecl Area175_SpawnEffect1F(void) {
     }
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 0x1F;
-    SetLong(EffectAt(cur[0xB]) + 0x34, 0x2E0000);
-    SetLong(EffectAt(cur[0xB]) + 0x38, 0x5C0000);
-    SetLong(EffectAt(cur[0xB]) + 0x3C, 0x1A00000);
+    TEffectAt(cur[0xB])->x = 0x2E0000;
+    TEffectAt(cur[0xB])->z = 0x5C0000;
+    TEffectAt(cur[0xB])->height = 0x1A00000;
 }
 
 // original 0x429440 (handler 4; PSX 0x801F4204): jmp [Sprite_Current[4] * 4
@@ -539,10 +544,11 @@ extern "C" void __cdecl Area175_SpawnEffect39(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = 0x39;
-    SetWord(e + 0x2E, Word(Sprite_Current + 0x2E));
-    SetWord(e + 0x30, Word(Sprite_Current + 0x30));
+    tE->screen_x = static_cast<std::uint16_t>(CurSprite()->screen_x);
+    tE->screen_y = static_cast<std::uint16_t>(CurSprite()->screen_y);
 }
 
 // original 0x429540 (handler 6; PSX 0x801F439C): the operand byte two past

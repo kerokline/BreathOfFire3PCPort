@@ -21,6 +21,7 @@
 #include "game/area_harness.h"
 #include "game/area_w3d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -30,6 +31,7 @@
 using bof3x::input::sigma::Sigma;
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3d::at;
 using area_harness::Mem;
@@ -107,7 +109,7 @@ void HeldMove(unsigned word, short least, unsigned char direction) {
     MoveScript_Object[7] = 2;
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    SetLong(Sprite_Current + 0x14, 0);
+    CurSprite()->step_y = 0;
     ScriptStep(0xFFFE);
 }
 
@@ -302,10 +304,10 @@ extern "C" void __cdecl Area135_HeldMove7(void) { HeldMove(0x36, 6, 7); }
 // there: Area135_FallTo(AreaMap_Elevation(x, z) + 0x280); none:
 // Area135_FallTo(the highest + 0x180).
 extern "C" void __cdecl Area135_FallToFloor(void) {
-    U z = static_cast<U>(Long(Sprite_Current + 0x38)) - 0x8000;
+    U z = static_cast<U>(CurSprite()->z) - 0x8000;
     U best = 0xFFFF8000u;
     for (unsigned row = 0; row < 2; ++row) {
-        U x = static_cast<U>(Long(Sprite_Current + 0x34)) - 0x18000;
+        U x = static_cast<U>(CurSprite()->x) - 0x18000;
         for (unsigned column = 0; column < 4; ++column) {
             MapView_HeightScale = 1;
             const auto ground = static_cast<U>(AH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z)));
@@ -315,10 +317,10 @@ extern "C" void __cdecl Area135_FallToFloor(void) {
         z += 0x10000;
     }
     const unsigned char found =
-        AH_CALL(Area135_ObjectAtCell)(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38));
+        AH_CALL(Area135_ObjectAtCell)(CurSprite()->x, CurSprite()->z);
     B(AreaW0c_TailSub_addr) = found;
     if (found != 0xFF) {
-        const long top = AH_CALL(AreaMap_Elevation)(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38));
+        const long top = AH_CALL(AreaMap_Elevation)(CurSprite()->x, CurSprite()->z);
         AH_CALL(Area135_FallTo)(static_cast<unsigned>(top + 0x280));
         return;
     }
@@ -349,14 +351,16 @@ extern "C" void __cdecl Area135_RestoreOnRequest5(void) {
 // passed (12 when none stopped it).
 extern "C" void __cdecl Area135_JumpByOccupied(void) {
     const unsigned char* cur = Sprite_Current;
+    const auto* tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     unsigned k = 0;
     for (; k < 4; ++k) {
         const U x = static_cast<U>(B(Area135_JumpCells_addr + k * 2)) << 16 | 0x8000;
         const U z = static_cast<U>(B(Area135_JumpCells_addr + k * 2 + 1)) << 16 | 0x8000;
-        if (static_cast<U>(Long(cur + 0x34)) != x) continue;
-        if (static_cast<U>(Long(cur + 0x38)) != z) continue;
+        if (static_cast<U>(tCur->x) != x) continue;
+        if (static_cast<U>(tCur->z) != z) continue;
         if (AH_CALL(Area135_ObjectAtCell)(static_cast<long>(x), static_cast<long>(z)) != 0xFF) break;
         cur = Sprite_Current;
+        tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     }
     ScriptStep(k * 3);
 }
@@ -375,7 +379,7 @@ extern "C" void __cdecl Area135_QueueRun(void) {
 extern "C" void __cdecl Area135_QueueStepZ(void) {
     const U n = AH_CALL(Area135_CountQueue)() & 0xFFu;
     Sprite_Current[8] = 5;
-    const std::int32_t step = Sar((n << 17) - static_cast<U>(Long(Sprite_Current + 0x38)) + 0xC8000, 15);
+    const std::int32_t step = Sar((n << 17) - static_cast<U>(CurSprite()->z) + 0xC8000, 15);
     MoveScript_Object[7] = static_cast<unsigned char>(step);
     unsigned char* object = MoveScript_Object;
     if (static_cast<signed char>(object[7]) < 0) {
@@ -385,7 +389,7 @@ extern "C" void __cdecl Area135_QueueStepZ(void) {
     }
     if (object[7] != 0) {
         AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-        SetLong(Sprite_Current + 0x14, 0);
+        CurSprite()->step_y = 0;
     }
     Sprite_Current[4] = static_cast<unsigned char>(Sprite_Current[4] + 1);
     ScriptStep(0xFFFE);
@@ -400,11 +404,11 @@ extern "C" void __cdecl Area135_QueueStepX(void) {
     if (n == 4) return;
     Sprite_Current[8] = 3;
     const U cell = static_cast<U>(B(Area135_QueueCells_addr + n)) << 16 | 0x8000;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(cell - static_cast<U>(Long(Sprite_Current + 0x34)), 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(cell - static_cast<U>(CurSprite()->x), 15));
     unsigned char* const object = MoveScript_Object;
     if (object[7] != 0) {
         AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-        SetLong(Sprite_Current + 0x14, 0);
+        CurSprite()->step_y = 0;
     }
     Sprite_Current[4] = 0;
 }
@@ -420,14 +424,14 @@ extern "C" void __cdecl Area135_WalkRun(void) {
 // +0x14 = 0, the state + 1, the script back 2.
 extern "C" void __cdecl Area135_WalkToX(void) {
     Sprite_Current[8] = 7;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(static_cast<U>(Long(Sprite_Current + 0x34)) - 0x1C8000, 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(static_cast<U>(CurSprite()->x) - 0x1C8000, 15));
     if (static_cast<signed char>(MoveScript_Object[7]) < 0) {
         Sprite_Current[8] = static_cast<unsigned char>(Sprite_Current[8] ^ 4);
         MoveScript_Object[7] = static_cast<unsigned char>(0u - MoveScript_Object[7]);
     }
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    SetLong(Sprite_Current + 0x14, 0);
+    CurSprite()->step_y = 0;
     Sprite_Current[4] = static_cast<unsigned char>(Sprite_Current[4] + 1);
     ScriptStep(0xFFFE);
 }
@@ -436,10 +440,10 @@ extern "C" void __cdecl Area135_WalkToX(void) {
 // (0x148000 - z) >> 15; MoveCmd_Move, +0x14 = 0, the state 0.
 extern "C" void __cdecl Area135_WalkToZ(void) {
     Sprite_Current[8] = 5;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(0x148000u - static_cast<U>(Long(Sprite_Current + 0x38)), 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(0x148000u - static_cast<U>(CurSprite()->z), 15));
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    SetLong(Sprite_Current + 0x14, 0);
+    CurSprite()->step_y = 0;
     Sprite_Current[4] = 0;
 }
 
@@ -456,9 +460,11 @@ extern "C" void __cdecl Area135_LiftDown(void) { Lift(0xFFFFFFFCu); }
 // script on by 1 (the running object read again); the state 0.
 extern "C" void __cdecl Area135_LiftDone(void) {
     unsigned char* cur = Sprite_Current;
-    if (Long(cur + 0x34) == 0x168000 && Long(cur + 0x38) == 0x128000) {
+    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    if (tCur->x == 0x168000 && tCur->z == 0x128000) {
         ScriptStep(1);
         cur = Sprite_Current;
+        tCur = reinterpret_cast<records::SpriteObject*>(cur);
     }
     cur[4] = 0;
 }
@@ -482,11 +488,12 @@ extern "C" void __cdecl Area135_SpawnCopy(void) {
     if (slot == 0xFF) return;
     AH_CALL(Area135_RestoreCells)();
     unsigned char* const self = Sprite_Current;
+    auto* const tSelf = reinterpret_cast<records::SpriteObject*>(self);
     const unsigned sub = B(AreaW0c_TailSub_addr);
     AH_CALL(EventOp_9x)(Mem(Area135_SpawnOps_addr + sub * at::kArea135SpawnOpStride));
-    SetLong(Sprite_Current + 0x34, Long(self + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(self + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(self + 0x3C));
+    SetLong(Sprite_Current + 0x34, tSelf->x);
+    SetLong(Sprite_Current + 0x38, tSelf->z);
+    SetLong(Sprite_Current + 0x3C, tSelf->height);
     Sprite_Current = self;
     AH_AT(void (__cdecl*)(), area_w3d::kEngine46D710)();
     Sprite_Current[0xA] = Sprite_Current[9];
@@ -682,9 +689,10 @@ extern "C" void __cdecl Area135_Tail18(void) {
         }
         B(AreaW0c_TailState_addr) = 0x1C;
         unsigned char* const o = ObjectAt(kWho, sub);
+        auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
         o[1] = 7;
-        SetLong(o + 0x18, 0);
-        SetLong(o + 0x1C, 5);
+        tO->accel_x = 0;
+        tO->accel_z = 5;
         AddWord(o + 0x8A, 3);
         return;
     }
@@ -796,11 +804,12 @@ extern "C" unsigned char __cdecl Area135_ObjectAtCell(long x, long z) {
     const unsigned char* const self = Sprite_Current;
     for (unsigned i = 0; i < at::kObjectCount; ++i) {
         const unsigned char* const o = Mem(Sprite_Objects_addr + i * at::kObjectStride);
+        const auto* const tO = reinterpret_cast<const records::SpriteObject*>(o);
         if (!(o[0] & 1)) continue;
         if (o == self) continue;
         if (o[6] != 0xA) continue;
-        if (Long(o + 0x34) != x) continue;
-        if (Long(o + 0x38) != z) continue;
+        if (tO->x != x) continue;
+        if (tO->z != z) continue;
         return static_cast<unsigned char>(i);
     }
     return 0xFF;
@@ -827,8 +836,9 @@ extern "C" void __cdecl Area135_StampCells(void) {
         return;
     }
     unsigned char* const cur = Sprite_Current;
-    const U x = static_cast<U>(Long(cur + 0x34)) - 0x8000;
-    const U z = static_cast<U>(Long(cur + 0x38)) - 0x8000;
+    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    const U x = static_cast<U>(tCur->x) - 0x8000;
+    const U z = static_cast<U>(tCur->z) - 0x8000;
     const unsigned cx = (x >> 16) & 0xFFFF;
     SetLong(cur + 0x20, 0);
     for (unsigned k = 0; k < 2; ++k) {

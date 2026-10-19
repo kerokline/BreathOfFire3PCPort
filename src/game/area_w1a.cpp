@@ -22,10 +22,12 @@
 #include "game/area_harness.h"
 #include "game/area_w1a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w1a::at;
 using area_harness::Mem;
@@ -79,6 +81,7 @@ void SpawnForMember(U list, U record) {
     Sprite_Current = Mem(record);
     Sprite_Current[0xB] = AH_CALL(Effect_FindFree)();
     unsigned char* const cur = Sprite_Current;
+    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
     if (cur[0xB] == 0xFF) return;
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 6;
@@ -86,8 +89,8 @@ void SpawnForMember(U list, U record) {
     SetLong(EffectAt(cur[0xB]) + 0xC, 0);
     const auto step = static_cast<signed char>(B(Area38_EffectBytes_addr + B(list)));
     SetLong(EffectAt(cur[0xB]) + 0x10, step);
-    SetWord(EffectAt(cur[0xB]) + 0x2E, Word(cur + 0x2E));
-    SetWord(EffectAt(cur[0xB]) + 0x30, Word(cur + 0x30));
+    SetWord(EffectAt(cur[0xB]) + 0x2E, static_cast<std::uint16_t>(tCur->screen_x));
+    SetWord(EffectAt(cur[0xB]) + 0x30, static_cast<std::uint16_t>(tCur->screen_y));
 }
 
 // Area 40's four lever choices (0x405810..0x4058D0): message 0xFFFF; answer
@@ -654,7 +657,7 @@ extern "C" void __cdecl Area41_Run(void) {
 // up (Area41_TintUp), then +0xA = 7 and state 1 (Sprite_Current read again
 // for each); the leader's word +0x12E less 2.
 extern "C" void __cdecl Area41_TintStart(void) {
-    SetLong(Sprite_Current + 0xC, 0x4000);
+    CurSprite()->step_x = 0x4000;
     AH_CALL(Area41_TintUp)();
     Sprite_Current[0xA] = 7;
     Sprite_Current[4] = 1;
@@ -672,7 +675,8 @@ extern "C" void __cdecl Area41_TintRise(void) {
 // fall (state 3) for 8.
 extern "C" void __cdecl Area41_Slide(void) {
     unsigned char* const cur = Sprite_Current;
-    AddLong(cur + 0x34, static_cast<U>(Long(cur + 0xC)));
+    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    AddLong(cur + 0x34, static_cast<U>(tCur->step_x));
     CountDown(3);
 }
 

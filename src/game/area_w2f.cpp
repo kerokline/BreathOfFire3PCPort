@@ -25,10 +25,12 @@
 #include "game/area_harness.h"
 #include "game/area_w2f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w2f::at;
 using area_harness::Handler;
@@ -48,6 +50,7 @@ U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
 // Sprite_ObjectsExtra record k (0xA4 bytes; k not checked, as the originals).
 unsigned char* Extra(unsigned k) { return Mem(Sprite_ObjectsExtra_addr + k * at::kExtraStride); }
+records::SpriteObject* TExtra(unsigned k) { return reinterpret_cast<records::SpriteObject*>(Extra(k)); }
 // Party record m (ObjTrio, 0x14C bytes; m not checked).
 unsigned char* Record(unsigned m) { return Mem(ObjTrio_addr + m * at::kPartyStride); }
 // Field object k (Sprite_Objects, 0xA4 bytes).
@@ -139,7 +142,7 @@ bool Within2(std::int16_t v, unsigned lo) { return static_cast<std::uint16_t>(v 
 // The active member's script: +0x83 = script, word +0x8A = 0.
 void MemberScript(unsigned char script) {
     Field_ActiveMember[0x83] = script;
-    SetWord(Field_ActiveMember + 0x8A, 0);
+    reinterpret_cast<records::SpriteObject*>(Field_ActiveMember)->script_position = 0;
 }
 
 // Handlers 5 and 6: the running object put at the table's entry (extra
@@ -176,11 +179,12 @@ void PlaceRandomObject(U cells, U weights) {
     if (chosen < 8) {
         const unsigned pick = static_cast<unsigned char>(AH_CALL(Rand)() & 7);
         unsigned char* const object = ObjectAt(chosen);
+        auto* const tObject = reinterpret_cast<records::SpriteObject*>(object);
         const auto x = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2)) << 16);
         const auto z = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2 + 1)) << 16);
-        SetLong(object + 0x34, x);
-        SetLong(object + 0x38, z);
-        const long ground = AH_CALL(AreaMap_Elevation)(Long(object + 0x34), z);
+        tObject->x = x;
+        tObject->z = z;
+        const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         SetWord(object + 0x3E, static_cast<unsigned>(ground));
     }
     Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
@@ -314,7 +318,7 @@ extern "C" void __cdecl Area108_ScriptByFlags1E(void) {
     } else if (Test(0x1F)) {
         Field_ActiveMember[0x83] = 0x11;
     }
-    SetWord(Field_ActiveMember + 0x8A, 0xFFFE);
+    reinterpret_cast<records::SpriteObject*>(Field_ActiveMember)->script_position = 0xFFFE;
 }
 
 // original 0x416EC0 (area 108 +0x3C[8]; PSX 0x801F4A98): the active member's
@@ -393,13 +397,14 @@ extern "C" void __cdecl Area108_SpawnEffect51(void) {
         return;
     }
     unsigned char* const e = EffectAt(slot);
-    SetLong(e + 0x38, 0x418000);
-    SetLong(e + 0x34, 0x158000);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    tE->z = 0x418000;
+    tE->x = 0x158000;
     e[0] = 1;
     e[5] = 0x51;
     e[1] = 0xA;
-    const long ground = AH_CALL(AreaMap_Elevation)(Long(e + 0x34), Long(e + 0x38));
-    SetLong(e + 0x3C, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16));
+    const long ground = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
+    tE->height = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
 }
 
 // original 0x417100 (area 108 +0x3C[15] = +0x34[18]; PSX 0x801F4F0C):
@@ -473,8 +478,8 @@ extern "C" void __cdecl Area108_TailPlace(void) {
     switch (state) {
     case 0:
         if (DecTimer() != 0) return;
-        Field_Kind2X = Long(Extra(1) + 0x34);
-        Field_Kind2Z = Long(Extra(1) + 0x38);
+        Field_Kind2X = TExtra(1)->x;
+        Field_Kind2Z = TExtra(1)->z;
         MoveScript_F3Divisor = static_cast<short>(B(Field_MoveSpeeds_addr + 0x3) << 3);
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
         return;
@@ -511,12 +516,13 @@ extern "C" void __cdecl Area108_TailPlace(void) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot != 0xFF) {
             unsigned char* const e = EffectAt(slot);
-            SetLong(e + 0x38, 0x2F8000);
-            SetLong(e + 0x34, 0x218000);
+            auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+            tE->z = 0x2F8000;
+            tE->x = 0x218000;
             e[0] = 1;
             e[5] = 0x35;
-            const long ground = AH_CALL(AreaMap_Elevation)(Long(e + 0x34), Long(e + 0x38));
-            SetLong(e + 0x3C, static_cast<std::int16_t>(ground));
+            const long ground = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
+            tE->height = static_cast<std::int16_t>(ground);
         }
         B(Area108_Model_addr + 0x3) = static_cast<unsigned char>((B(Area108_Model_addr + 0x3) & 0xF1) | 0x41);
         SetWord(Mem(at::kTailTimer), 0x1E);
@@ -610,7 +616,7 @@ extern "C" void __cdecl Area111_ChoiceStartVar7(void) {
 
 // original 0x4176A0 (area 111 +0x3C[0]; PSX 0x801F3448): extra object 0's
 // dword +0x6C = extra object 1's.
-extern "C" void __cdecl Area111_CopyExtra6C(void) { SetLong(Extra(0) + 0x6C, Long(Extra(1) + 0x6C)); }
+extern "C" void __cdecl Area111_CopyExtra6C(void) { SetLong(Extra(0) + 0x6C, static_cast<std::int32_t>(TExtra(1)->angle[2])); }
 
 // original 0x4176B0 (area 111 +0x3C[1]; PSX 0x801F3460): the running
 // object's grid cell (x, z high words less 0xB / 0xB1, halved rounding down)
@@ -635,7 +641,7 @@ extern "C" void __cdecl Area111_SlideMark(void) {
         count = static_cast<unsigned char>(count + 4);
     }
     if (count != 0) MoveScript_Object[7] = static_cast<unsigned char>(count + 1);
-    SetLong(Sprite_Current + 0x14, 0);
+    CurSprite()->step_y = 0;
     AH_CALL(Area111_MarkCells)(x, z, 0);
     AH_CALL(Sound_PlayEffect)(0x203);
 }
@@ -663,7 +669,7 @@ extern "C" void __cdecl Area111_AttachAtLeaderCell(void) {
 // the running object's dword +0x18 (a byte shift, the count masked to 5
 // bits).
 extern "C" void __cdecl Area111_Counter3Bit(void) {
-    const unsigned shift = static_cast<U>(Long(Sprite_Current + 0x18)) & 31;
+    const unsigned shift = static_cast<U>(CurSprite()->accel_x) & 31;
     B(at::kCounter3) = static_cast<unsigned char>(0x10u << shift);
 }
 
@@ -759,7 +765,7 @@ extern "C" void __cdecl Area111_SlideAhead(void) {
     AH_CALL(MoveCmd_MoveKind2)(Sprite_Current[8]);
     MoveScript_FAWord = 0;
     MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] | 0x40);
-    SetLong(Sprite_Current + 0x14, 0);
+    CurSprite()->step_y = 0;
     SetWord(Sprite_Current + 0x3E, 0xFB00);
 }
 
@@ -1157,9 +1163,10 @@ extern "C" unsigned char __cdecl Area112_MemberNearBoxes(void) {
     const unsigned count = Field_MemberCount;
     for (unsigned m = 0; m < count; ++m) {
         const unsigned char* const r = Record(m);
+        const auto* const tR = reinterpret_cast<const records::PartyMember*>(r);
         const U n = r[9];
-        const U px = static_cast<U>(Long(r + 0xC)) * n + static_cast<U>(Long(r + 0x34));
-        const U pz = static_cast<U>(Long(r + 0x10)) * n + static_cast<U>(Long(r + 0x38));
+        const U px = static_cast<U>(tR->step_x) * n + static_cast<U>(tR->x);
+        const U pz = static_cast<U>(tR->step_z) * n + static_cast<U>(tR->z);
         const std::int32_t hx = static_cast<std::int32_t>(px) >> 16;
         const std::int32_t hz = static_cast<std::int32_t>(pz) >> 16;
         for (unsigned b = 0; b < at::kArea112BoxCount; ++b) {
@@ -1187,10 +1194,11 @@ extern "C" void __cdecl Area112_EffectRun(void) {
 // stack and handed to 0x4220D0 (area_w2f_callees.h).
 extern "C" void __cdecl Area112_EffectRing(void) {
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::EffectObject*>(cur);
     long point[4];
-    point[0] = Long(cur + 0x34);
-    point[1] = Long(cur + 0x38);
-    point[2] = Long(cur + 0x3C);
+    point[0] = tCur->x;
+    point[1] = tCur->z;
+    point[2] = tCur->height;
     point[3] = 0;
     AH_AT(void (__cdecl*)(const long*), at::kRingAt)(point);
 }

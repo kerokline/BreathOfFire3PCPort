@@ -19,6 +19,7 @@
 #include "game/area_harness.h"
 #include "game/area_w0a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -393,10 +394,11 @@ extern "C" void __cdecl Area10_SpawnEffect1C(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = Effect(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = 0x1C;
-    SetLong(e + 0x34, Long(Sprite_Current + 0x34));
-    SetLong(e + 0x38, Long(Sprite_Current + 0x38));
+    tE->x = Long(Sprite_Current + 0x34);
+    tE->z = Long(Sprite_Current + 0x38);
 }
 
 // ---- area 12 (descriptor 0x5E2AA8) -------------------------------------------

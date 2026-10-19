@@ -19,6 +19,7 @@
 #include "game/area_w2b.h"
 #include "game/area_w2b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace area_w2b {
@@ -209,6 +210,7 @@ void Seed86(unsigned k) {
         // and past the reach ((+0x70) + 2) << 15, on either side
         for (unsigned m = 0; m < 3; ++m) {
             unsigned char* const r = ah::PartyOf(static_cast<unsigned char>(m));
+            auto* const tR = reinterpret_cast<records::PartyMember*>(r);
             if (!ah::Often()) continue;
             r[0] = static_cast<unsigned char>(ah::Half() ? 1 : AH_PICK(0, 0x80, 0xFF));
             if (ah::Half()) r[0x70] = static_cast<unsigned char>(AH_PICK(0, 1, 0xFE, 0xFF, 0x10));
@@ -223,8 +225,8 @@ void Seed86(unsigned k) {
             // one axis sometimes far off, so the x test and the z test each decide
             const U fx = ah::Often() ? 0 : 0x800000;
             const U fz = fx != 0 || ah::Often() ? 0 : 0x800000;
-            SetLong(r + 0x34, static_cast<std::int32_t>(place(g_near_x) + fx - static_cast<U>(Long(r + 0xC)) * r[9]));
-            SetLong(r + 0x38, static_cast<std::int32_t>(place(g_near_z) + fz - static_cast<U>(Long(r + 0x10)) * r[9]));
+            tR->x = static_cast<std::int32_t>(place(g_near_x) + fx - static_cast<U>(tR->step_x) * r[9]);
+            tR->z = static_cast<std::int32_t>(place(g_near_z) + fz - static_cast<U>(tR->step_z) * r[9]);
         }
         if (ah::Half()) Field_MemberCount = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 0x80));
         break;

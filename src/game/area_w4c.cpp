@@ -27,10 +27,12 @@
 #include "game/area_harness.h"
 #include "game/area_w4c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w4c::at;
 using area_harness::Mem;
@@ -76,12 +78,13 @@ unsigned char ActiveMemberIndex() {
 // index byte, word +0x2E = `word2E`, word +0x30 = 0xA5.
 void Effect9D(const char* who, unsigned slot, unsigned char sub, unsigned char index, unsigned word2E) {
     unsigned char* const e = EffectAt(who, slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = 0x9D;
     e[6] = sub;
     e[0xB] = index;
-    SetWord(e + 0x2E, word2E);
-    SetWord(e + 0x30, 0xA5);
+    tE->screen_x = word2E;
+    tE->screen_y = 0xA5;
 }
 
 // Area 173's handlers 1 and 2: over the four (member byte, message) pairs, the
@@ -111,15 +114,16 @@ void EffectA2(const char* who, unsigned char state) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     Sprite_Current[0xB] = slot;
     unsigned char* const cur = Sprite_Current;
+    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
     if (cur[0xB] == 0xFF) {
         ScriptStep(0xFFFE);
         return;
     }
     EffectAt(who, cur[0xB])[0] = 1;
     EffectAt(who, cur[0xB])[5] = 0xA2;
-    SetLong(EffectAt(who, cur[0xB]) + 0x34, Long(cur + 0x34));
-    SetLong(EffectAt(who, cur[0xB]) + 0x38, Long(cur + 0x38));
-    SetLong(EffectAt(who, cur[0xB]) + 0x3C, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x3C)) + 0x1000000u));
+    SetLong(EffectAt(who, cur[0xB]) + 0x34, tCur->x);
+    SetLong(EffectAt(who, cur[0xB]) + 0x38, tCur->z);
+    SetLong(EffectAt(who, cur[0xB]) + 0x3C, static_cast<std::int32_t>(static_cast<U>(tCur->height) + 0x1000000u));
     EffectAt(who, cur[0xB])[1] = state;
 }
 
@@ -397,7 +401,7 @@ extern "C" void __cdecl Area174_ScriptAnimationAt(void) {
     const unsigned offset = Word(MoveScript_Object + 0xA);
     const unsigned char pose = script[offset + 3];
     const unsigned char animation = script[offset + 2];
-    const auto start = static_cast<unsigned short>(Word(Sprite_Current + 0x58) - 2u);
+    const auto start = static_cast<unsigned short>(CurSprite()->script_pos - 2u);
     AH_CALL(Sprite_SetAnimationAt)(animation, start);
     Sprite_Current[0x2A] = pose;
     ScriptStep(2);
@@ -408,7 +412,7 @@ extern "C" void __cdecl Area174_ScriptAnimationAt(void) {
 // at 2: Sprite_SetAnimationAt(the script's byte +2, 0), +0x2A = the script's
 // byte +3, the script on 2; else the script back 2.
 extern "C" void __cdecl Area174_ScriptAnimationOn2(void) {
-    if (Word(Sprite_Current + 0x58) != 2) {
+    if (CurSprite()->script_pos != 2) {
         ScriptStep(0xFFFE);
         return;
     }
@@ -441,17 +445,18 @@ extern "C" void __cdecl Area174_StepByScript(void) {
     const unsigned char limit = B(at::kStepLimit);
     const unsigned char b = script[offset + 2];
     unsigned char* const cur = Sprite_Current;
+    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
     if (limit < b) {
         const auto dx = static_cast<signed char>(B(Area174_StepDeltas_addr + (cur[0xA] & 0xF)));
-        SetLong(cur + 0x34, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x34)) + (static_cast<U>(dx) << 11)));
+        tCur->x = static_cast<std::int32_t>(static_cast<U>(tCur->x) + (static_cast<U>(dx) << 11));
         const auto dz = static_cast<signed char>(B(Area174_StepDeltas_addr + (cur[0xA] & 0xF)));
-        SetLong(cur + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x38)) + ((0u - static_cast<U>(dz)) << 11)));
+        tCur->z = static_cast<std::int32_t>(static_cast<U>(tCur->z) + ((0u - static_cast<U>(dz)) << 11));
         cur[0xA] = static_cast<unsigned char>(cur[0xA] - 1);
         AddWord(Field_State + 0x12E, 0xFFFE);
         return;
     }
-    SetLong(cur + 0x34, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x34)) & 0xFFFF8000u));
-    SetLong(cur + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x38)) & 0xFFFF8000u));
+    tCur->x = static_cast<std::int32_t>(static_cast<U>(tCur->x) & 0xFFFF8000u);
+    tCur->z = static_cast<std::int32_t>(static_cast<U>(tCur->z) & 0xFFFF8000u);
     ScriptStep(1);
 }
 

@@ -18,6 +18,7 @@
 #include "game/area_w3e.h"
 #include "game/area_w3e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace area_w3e {
@@ -455,13 +456,14 @@ void SeedCell140() {
     const unsigned rx = Word(r), rz = Word(r + 2);
     const unsigned m = ah::Next() % 3;
     unsigned char* const p = ah::PartyOf(static_cast<unsigned char>(m));
+    auto* const tP = reinterpret_cast<records::PartyMember*>(p);
     const unsigned n = ah::Next() % 4;
     p[9] = static_cast<unsigned char>(n);
     const unsigned dx = AH_PICK(0, 1, 0, 1, 2, 0xFFFF);
     const unsigned dz = AH_PICK(0, 1, 0, 1, 2, 0xFFFF);
-    const std::uint32_t sx = static_cast<std::uint32_t>(Long(p + 0xC)) * n, sz = static_cast<std::uint32_t>(Long(p + 0x10)) * n;
-    SetLong(p + 0x34, static_cast<std::int32_t>(At16(rx + dx, ah::Next()) - sx));
-    SetLong(p + 0x38, static_cast<std::int32_t>(At16(rz + dz, ah::Next()) - sz));
+    const std::uint32_t sx = static_cast<std::uint32_t>(tP->step_x) * n, sz = static_cast<std::uint32_t>(tP->step_z) * n;
+    tP->x = static_cast<std::int32_t>(At16(rx + dx, ah::Next()) - sx);
+    tP->z = static_cast<std::int32_t>(At16(rz + dz, ah::Next()) - sz);
 }
 void Seed140(unsigned k) {
     Common(140, k);

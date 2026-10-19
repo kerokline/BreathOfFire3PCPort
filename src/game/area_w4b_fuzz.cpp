@@ -17,6 +17,7 @@
 #include "game/area_w4b.h"
 #include "game/area_w4b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace area_w4b {
@@ -564,22 +565,23 @@ U Exact(U v) {
 void SeedMembers(U rects) {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const record = ah::PartyOf(static_cast<unsigned char>(m));
+        auto* const tRecord = reinterpret_cast<records::PartyMember*>(record);
         const unsigned char* const r = ah::Mem(rects + (ah::Next() % 2) * at::kRectStride);
         if (ah::Often()) {
             const U edge = static_cast<U>(ah::Half() ? r[0] : r[2]) << 16;
             const U mid = (static_cast<U>(r[0] + r[2]) << 15) + (ah::Next() & 0xFFFF);
-            SetLong(record + 0x34, static_cast<std::int32_t>(ah::Half() ? mid : edge + ah::Next() % 3 - 1));
+            tRecord->x = static_cast<std::int32_t>(ah::Half() ? mid : edge + ah::Next() % 3 - 1);
         }
         if (ah::Often()) {
             const U edge = static_cast<U>(ah::Half() ? r[1] : r[3]) << 16;
             const U mid = (static_cast<U>(r[1] + r[3]) << 15) + (ah::Next() & 0xFFFF);
-            SetLong(record + 0x38, static_cast<std::int32_t>(ah::Half() ? mid : edge + ah::Next() % 3 - 1));
+            tRecord->z = static_cast<std::int32_t>(ah::Half() ? mid : edge + ah::Next() % 3 - 1);
         }
         if (ah::Half()) record[8] = r[4];
         if (ah::Half()) record[9] = 0;
         // a position inside with the sign bit set (the compares are signed)
-        if (ah::Next() % 6 == 0) SetLong(record + 0x34, static_cast<std::int32_t>((static_cast<U>(r[0] + 1) << 16) | 0x80000000u));
-        if (ah::Next() % 6 == 0) SetLong(record + 0x38, static_cast<std::int32_t>((static_cast<U>(r[1] + 1) << 16) | 0x80000000u));
+        if (ah::Next() % 6 == 0) tRecord->x = static_cast<std::int32_t>((static_cast<U>(r[0] + 1) << 16) | 0x80000000u);
+        if (ah::Next() % 6 == 0) tRecord->z = static_cast<std::int32_t>((static_cast<U>(r[1] + 1) << 16) | 0x80000000u);
     }
     if (ah::Half()) Sprite_Current[0xB] = static_cast<unsigned char>(ah::Next() & 7);
     if (ah::Often()) Field_ScriptFlags2 = static_cast<unsigned short>(ah::Next() & (ah::Half() ? 7 : 0xFFFF));

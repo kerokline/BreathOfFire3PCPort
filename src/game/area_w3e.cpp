@@ -21,10 +21,12 @@
 #include "game/area_harness.h"
 #include "game/area_w3e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3e::at;
 using area_harness::Handler;
@@ -125,9 +127,11 @@ void ChoiceMessage(U table) {
 // (+0xC to x, +0x10 to z, dwords), then the three shade bytes +0x5D..+0x5F.
 void DriftStep() {
     unsigned char* cur = Sprite_Current;
-    SetLong(cur + 0x34, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x34)) + static_cast<U>(Long(cur + 0xC))));
+    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur->x = static_cast<std::int32_t>(static_cast<U>(tCur->x) + static_cast<U>(tCur->step_x));
     cur = Sprite_Current;
-    SetLong(cur + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x38)) + static_cast<U>(Long(cur + 0x10))));
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur->z = static_cast<std::int32_t>(static_cast<U>(tCur->z) + static_cast<U>(tCur->step_z));
 }
 
 }  // namespace
@@ -157,8 +161,9 @@ extern "C" void __cdecl Area136_ChoiceMessage3(void) { ChoiceMessage(Area136_Cho
 // (the object read again after the call).
 extern "C" void __cdecl Area136_MoveUntilLimit(void) {
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     const U step = static_cast<U>(Long(Mem(Field_DirectionSteps_addr + (cur[8] & 7u) * 8 + 4)));
-    const U ahead = step + static_cast<U>(Long(cur + 0x38));
+    const U ahead = step + static_cast<U>(tCur->z);
     const U limit = static_cast<U>(B(Area136_ZLimits_addr + B(AreaW0c_TailSub_addr))) << 16;
     if (ahead > limit) return;
     MoveScript_Object[7] = 1;
@@ -531,9 +536,10 @@ extern "C" unsigned char __cdecl Area140_CellHook(long x, long z) {
         const std::uint16_t rx = Word(r), rz = Word(r + 2);
         for (unsigned m = 0; m < count; ++m) {
             const unsigned char* const p = Mem(ObjTrio_addr + m * at::kPartyStride);
+            const auto* const tP = reinterpret_cast<const records::PartyMember*>(p);
             const U n = p[9];
-            const U px = static_cast<U>(Long(p + 0xC)) * n + static_cast<U>(Long(p + 0x34));
-            const U pz = static_cast<U>(Long(p + 0x10)) * n + static_cast<U>(Long(p + 0x38));
+            const U px = static_cast<U>(tP->step_x) * n + static_cast<U>(tP->x);
+            const U pz = static_cast<U>(tP->step_z) * n + static_cast<U>(tP->z);
             if (static_cast<std::uint16_t>((pz >> 16) - rz) < 2 && static_cast<std::uint16_t>((px >> 16) - rx) < 2) {
                 ArmTail(0x29, 0xA);
                 return 0;
@@ -546,10 +552,11 @@ extern "C" unsigned char __cdecl Area140_CellHook(long x, long z) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot != 0xFF) {
             unsigned char* const fx = EffectAt(slot);
+            auto* const tFx = reinterpret_cast<records::EffectObject*>(fx);
             fx[0] = 1;
             fx[5] = 0x71;
-            SetLong(fx + 0x34, static_cast<std::int32_t>(static_cast<U>(e[0]) << 16));
-            SetLong(fx + 0x38, static_cast<std::int32_t>(static_cast<U>(e[1]) << 16));
+            tFx->x = static_cast<std::int32_t>(static_cast<U>(e[0]) << 16);
+            tFx->z = static_cast<std::int32_t>(static_cast<U>(e[1]) << 16);
             fx[0xB] = e[3];
         }
     }
@@ -621,7 +628,7 @@ extern "C" void __cdecl Area141_ShadeOff(void) {
 // in direction +8: MoveCmd_MoveKind2 when Sprite_Current is Sprite_Kind2,
 // else MoveCmd_Move(the script object, it).
 extern "C" void __cdecl Area141_MoveToX45(void) {
-    const std::int32_t d = static_cast<std::int32_t>(static_cast<U>(Long(Sprite_Current + 0x34)) - 0x450000u) >> 15;
+    const std::int32_t d = static_cast<std::int32_t>(static_cast<U>(CurSprite()->x) - 0x450000u) >> 15;
     if (d == 0) return;
     MoveScript_Object[7] = static_cast<unsigned char>(d < 0 ? -d : d);
     Sprite_Current[8] = 7;

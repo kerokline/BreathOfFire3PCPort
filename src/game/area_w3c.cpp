@@ -21,11 +21,13 @@
 #include "game/area_harness.h"
 #include "game/area_w3c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3c::at;
 using area_harness::Mem;
@@ -74,11 +76,12 @@ void PlaceRandomObject(U cells, U weights) {
     if (chosen < 8) {
         const unsigned pick = static_cast<unsigned char>(AH_CALL(Rand)() & 7);
         unsigned char* const object = ObjectAt(chosen);
+        auto* const tObject = reinterpret_cast<records::SpriteObject*>(object);
         const auto x = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2)) << 16);
         const auto z = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2 + 1)) << 16);
-        SetLong(object + 0x34, x);
-        SetLong(object + 0x38, z);
-        const long ground = AH_CALL(AreaMap_Elevation)(Long(object + 0x34), z);
+        tObject->x = x;
+        tObject->z = z;
+        const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         SetWord(object + 0x3E, static_cast<unsigned>(ground));
     }
     Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
@@ -93,8 +96,9 @@ void PlaceRandomObject(U cells, U weights) {
 // .data). Area 94's handlers' shape (area_w2c.cpp's SpawnAt).
 void SpawnAtMember(unsigned member, unsigned char kind, U args) {
     const unsigned char* const record = PartyAt(member);
-    const auto z = static_cast<short>(Word(record + 0x30));
-    const auto x = static_cast<short>(Word(record + 0x2E));
+    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
+    const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
     const unsigned char effect = B(args + B(Cond_Flags_addr + 0xd2 + member));
     Sprite_Current = PartyAt(member);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
@@ -109,12 +113,13 @@ void EffectAtObject(unsigned char kind, bool clear1) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = kind;
     if (clear1) e[1] = 0;
-    SetLong(e + 0x34, Long(Sprite_Current + 0x34));
-    SetLong(e + 0x38, Long(Sprite_Current + 0x38));
-    SetLong(e + 0x3C, Long(Sprite_Current + 0x3C));
+    tE->x = Long(Sprite_Current + 0x34);
+    tE->z = Long(Sprite_Current + 0x38);
+    tE->height = Long(Sprite_Current + 0x3C);
 }
 
 // The patch chain the inits of areas 94 and 128 apply: from AreaMap_Header
@@ -139,10 +144,11 @@ void EffectAtCell(unsigned char kind, std::int32_t x, std::int32_t z, int b1, in
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
-    SetLong(e + 0x38, z);
-    const std::int32_t zz = Long(e + 0x38);
-    SetLong(e + 0x34, x);
-    const std::int32_t xx = Long(e + 0x34);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    tE->z = z;
+    const std::int32_t zz = tE->z;
+    tE->x = x;
+    const std::int32_t xx = tE->x;
     e[0] = 1;
     e[5] = kind;
     if (b1 >= 0) e[1] = static_cast<unsigned char>(b1);
@@ -150,11 +156,11 @@ void EffectAtCell(unsigned char kind, std::int32_t x, std::int32_t z, int b1, in
     const long ground = AH_CALL(AreaMap_Elevation)(xx, zz);
     const U y = static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ground)) + lift);
     if (shift != 0) {
-        const U moved = static_cast<U>(Long(e + 0x34)) + static_cast<U>(shift);
-        SetLong(e + 0x3C, static_cast<std::int32_t>(y << 16));
-        SetLong(e + 0x34, static_cast<std::int32_t>(moved));
+        const U moved = static_cast<U>(tE->x) + static_cast<U>(shift);
+        tE->height = static_cast<std::int32_t>(y << 16);
+        tE->x = static_cast<std::int32_t>(moved);
     } else {
-        SetLong(e + 0x3C, static_cast<std::int32_t>(y << 16));
+        tE->height = static_cast<std::int32_t>(y << 16);
     }
 }
 
@@ -225,12 +231,12 @@ extern "C" void __cdecl Area128_ChoiceArmTail56(void) {
 // Field_State's byte +0x89 is 2, else 0x80000; +8 = 1. Sprite_Current is read
 // again for every store.
 extern "C" void __cdecl Area128_PlaceObject(void) {
-    SetLong(Sprite_Current + 0x34, 0x4E8000);
-    SetLong(Sprite_Current + 0x3C, 0);
+    CurSprite()->x = 0x4E8000;
+    CurSprite()->height = 0;
     if (Field_State[0x89] == 2)
-        SetLong(Sprite_Current + 0x38, 0x88000);
+        CurSprite()->z = 0x88000;
     else
-        SetLong(Sprite_Current + 0x38, 0x80000);
+        CurSprite()->z = 0x80000;
     Sprite_Current[8] = 1;
 }
 

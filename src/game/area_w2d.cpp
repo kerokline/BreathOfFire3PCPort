@@ -22,10 +22,12 @@
 #include "game/area_harness.h"
 #include "game/area_w2d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w2d::at;
 using area_harness::Handler;
@@ -110,10 +112,11 @@ void SpawnAt46(unsigned char kind) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = kind;
-    SetLong(e + 0x34, 0x460000);
-    SetLong(e + 0x38, 0x340000);
+    tE->x = 0x460000;
+    tE->z = 0x340000;
 }
 // Area 100's handlers 6 and 7: Cond_ByteFE 1, MoveCmd_TestFB(0x4A, 0x2F),
 // then the effect.
@@ -176,11 +179,12 @@ extern "C" void __cdecl Area95_SpawnEffect37(void) {
         return;
     }
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = 0x37;
-    SetLong(e + 0x34, 0x410000);
-    SetLong(e + 0x38, 0x3C8000);
-    SetLong(e + 0x3C, 0x2000000);
+    tE->x = 0x410000;
+    tE->z = 0x3C8000;
+    tE->height = 0x2000000;
     SetWord(e + 0x2C, 0x58);
     e[9] = 1;
     e[6] = 0;
@@ -204,15 +208,17 @@ extern "C" void __cdecl Area95_LeapArc(void) {
     MoveScript_Object[7] = 1;
     AH_CALL(MoveCmd_Move)(MoveScript_Object, 5);
     const unsigned char* cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     const U n = cur[9];
-    const U x = static_cast<U>(Long(cur + 0xC)) * n + static_cast<U>(Long(cur + 0x34));
-    const U z = static_cast<U>(Long(cur + 0x10)) * n + static_cast<U>(Long(cur + 0x38));
+    const U x = static_cast<U>(tCur->step_x) * n + static_cast<U>(tCur->x);
+    const U z = static_cast<U>(tCur->step_z) * n + static_cast<U>(tCur->z);
     const auto ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z)));
     unsigned char* const obj = Sprite_Current;
+    auto* const tObj = reinterpret_cast<records::SpriteObject*>(obj);
     const std::int32_t rise = static_cast<std::int32_t>(ground) - static_cast<std::int16_t>(Word(obj + 0x3E)) + 0xE0;
     const unsigned frames = obj[9];
     if (frames == 0) bof3::Fatal("Area95_LeapArc: +9 is 0, the original's idiv faults");
-    SetLong(obj + 0x14, rise / static_cast<std::int32_t>(frames));
+    tObj->step_y = rise / static_cast<std::int32_t>(frames);
     SetLong(Mem(MoveScript_PartyRecords_addr + 4), 0x40);
     B(MoveScript_PartyRecords_addr + 1) = Sprite_Current[9];
 }
@@ -358,12 +364,13 @@ extern "C" void __cdecl Area98_ChoiceArmTail45(void) {
 extern "C" void __cdecl Area98_SpawnEffect37(void) {
     Sprite_Current[0xB] = AH_CALL(Effect_FindFree)();
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     if (cur[0xB] == 0xFF) return;
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 0x37;
-    SetLong(EffectAt(cur[0xB]) + 0x34, Long(cur + 0x34));
-    SetLong(EffectAt(cur[0xB]) + 0x38, Long(cur + 0x38));
-    SetLong(EffectAt(cur[0xB]) + 0x3C, Long(cur + 0x3C));
+    SetLong(EffectAt(cur[0xB]) + 0x34, tCur->x);
+    SetLong(EffectAt(cur[0xB]) + 0x38, tCur->z);
+    SetLong(EffectAt(cur[0xB]) + 0x3C, tCur->height);
     SetWord(EffectAt(cur[0xB]) + 0x2C, 0x11D);
     EffectAt(cur[0xB])[6] = 0;
     EffectAt(cur[0xB])[7] = 0;
@@ -500,15 +507,17 @@ extern "C" void __cdecl Area99_LeapStart(void) {
     Sprite_Current[0xB] = 3;
     if (speed == 0) bof3::Fatal("Area99_LeapStart: Field_MoveSpeeds[3] is 0, the original's idiv faults");
     Sprite_Current[0xA] = static_cast<unsigned char>(16 / static_cast<int>(speed));
-    SetLong(Sprite_Current + 0x14, 0x4200);
+    CurSprite()->step_y = 0x4200;
     unsigned char* cur = Sprite_Current;
+    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
     std::int32_t d = static_cast<std::int32_t>(cur[0xA]) * 4;
     if (d == 0) bof3::Fatal("Area99_LeapStart: 16 / Field_MoveSpeeds[3] is 0, the original's idiv faults");
-    SetLong(cur + 0xC, 0x20000 / d);
+    tCur->step_x = 0x20000 / d;
     cur = Sprite_Current;
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
     d = static_cast<std::int32_t>(cur[0xA]) * 4;
     if (d == 0) bof3::Fatal("Area99_LeapStart: 16 / Field_MoveSpeeds[3] is 0, the original's idiv faults");
-    SetLong(cur + 0x10, -0x18000 / d);
+    tCur->step_z = -0x18000 / d;
     Sprite_Current[0xA] = 0xE;
     Sprite_Current[4] = 1;
     LeaderStep();
@@ -520,18 +529,24 @@ extern "C" void __cdecl Area99_LeapStart(void) {
 // else Field_State's word +0x12E - 2. Sprite_Current read again for each.
 extern "C" void __cdecl Area99_LeapStep(void) {
     unsigned char* cur = Sprite_Current;
-    AddLong(cur + 0x34, static_cast<U>(Long(cur + 0xC)));
+    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    AddLong(cur + 0x34, static_cast<U>(tCur->step_x));
     cur = Sprite_Current;
-    AddLong(cur + 0x38, static_cast<U>(Long(cur + 0x10)));
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    AddLong(cur + 0x38, static_cast<U>(tCur->step_z));
     cur = Sprite_Current;
-    AddWord(cur + 0x3E, static_cast<int>(static_cast<std::uint16_t>(static_cast<U>(Long(cur + 0x14) >> 8))));
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    AddWord(cur + 0x3E, static_cast<int>(static_cast<std::uint16_t>(static_cast<U>(tCur->step_y >> 8))));
     cur = Sprite_Current;
-    const std::int32_t rise = Long(cur + 0x14);
-    SetLong(cur + 0x14, static_cast<std::int32_t>(static_cast<U>(rise) - 0x700u));
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    const std::int32_t rise = tCur->step_y;
+    tCur->step_y = static_cast<std::int32_t>(static_cast<U>(rise) - 0x700u);
     cur = Sprite_Current;
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
     cur[0xA] = static_cast<unsigned char>(cur[0xA] - 1);
-    if (rise > 0 && Long(Sprite_Current + 0x14) < 0) AH_CALL(Sprite_EnsureAnimation)(0x51);
+    if (rise > 0 && CurSprite()->step_y < 0) AH_CALL(Sprite_EnsureAnimation)(0x51);
     cur = Sprite_Current;
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
     if (cur[0xA] < 1) {
         cur[4] = 0;
         return;
@@ -745,10 +760,11 @@ extern "C" void __cdecl Area100_EffectB7Run(void) {
 // (area_w2d_callees.h).
 extern "C" void __cdecl Area100_EffectB7Ring(void) {
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::EffectObject*>(cur);
     long point[4];
-    point[0] = Long(cur + 0x34);
-    point[1] = Long(cur + 0x38);
-    point[2] = Long(cur + 0x3C);
+    point[0] = tCur->x;
+    point[1] = tCur->z;
+    point[2] = tCur->height;
     point[3] = 0;
     AH_AT(void (__cdecl*)(const long*), at::kRingAt)(point);
 }
@@ -811,7 +827,8 @@ extern "C" void __cdecl Area103_ShakeElevation(void) {
 // word +0x3E = the ground at its (x, z) (the object read again).
 extern "C" void __cdecl Area103_Ground(void) {
     const unsigned char* const cur = Sprite_Current;
-    const long ground = AH_CALL(AreaMap_Elevation)(Long(cur + 0x34), Long(cur + 0x38));
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
 }
 
@@ -825,12 +842,14 @@ extern "C" void __cdecl Area103_SpawnEffect4D(void) {
         return;
     }
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = 0x4D;
-    SetLong(e + 0x34, Long(cur + 0x34));
-    SetLong(e + 0x38, Long(cur + 0x38));
-    SetLong(e + 0x3C, Long(cur + 0x3C));
+    tE->x = tCur->x;
+    tE->z = tCur->z;
+    tE->height = tCur->height;
 }
 
 // original 0x4146A0 (Field_ObjectTriggers id 35; a gap of the tool, area
