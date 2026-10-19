@@ -173,6 +173,10 @@ def main():
             w(f'inline constexpr unsigned {e["name"]}_count = {e["count"]};')
         else:
             w(f'#define {e["name"]} (*reinterpret_cast<{ty} *>({e["pc"]:#x}))')
+        # The macro above rewrites `bof3::addr::<name>` wherever it is spelled,
+        # so a typed entry's address is reached as <name>_addr instead (a
+        # harness's Mem(<name>_addr), a pointer form At(<name>_addr)).
+        w(f'inline constexpr std::uint32_t {e["name"]}_addr = {e["pc"]:#x};')
     w('')
 
     if a.retirable:

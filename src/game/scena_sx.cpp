@@ -499,9 +499,9 @@ extern "C" unsigned char __cdecl Inventory_Remove(unsigned category, unsigned it
 // the argument's). PSX Zenny_Sub 0x80166FCC (the sibling's name;
 // pairs_propagated "gap15").
 extern "C" unsigned char __cdecl Zenny_Sub(std::uint32_t amount) {
-    const auto money = static_cast<std::uint32_t>(Long(At(bof3::addr::Party_Zenny)));
+    const auto money = static_cast<std::uint32_t>(Party_Zenny);
     if (money < amount) return 0;
-    SetLong(At(bof3::addr::Party_Zenny), static_cast<std::int32_t>(money - amount));
+    Party_Zenny = money - amount;
     return 1;
 }
 
@@ -510,7 +510,7 @@ extern "C" unsigned char __cdecl Zenny_Sub(std::uint32_t amount) {
 // 9,999,999 it is 9,999,999 and al 0, else al 1. PSX Zenny_Add 0x80166FFC
 // (the sibling's name; pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl Zenny_Add(std::uint32_t amount, unsigned tally) {
-    unsigned char* const money = At(bof3::addr::Party_Zenny);
+    unsigned char* const money = At(Party_Zenny_addr);
     SetLong(money, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(money)) + amount));
     if (static_cast<unsigned char>(tally) == 0)
         SetLong(At(at::kZennyTally), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kZennyTally))) + amount));

@@ -384,7 +384,7 @@ void Seed(unsigned k) {
     SetLong(Mem(at::kBet), static_cast<std::int32_t>(PickOf(0, 1, 9, 10, 11, 50, 99, 100, 101, 127, 128, 0xFF, 999,
                                                             1000, 1001, 9999, 10000, 10001, 0xFFFFFFFFu, 0x80000000u,
                                                             sh::Next())));
-    SetLong(Mem(bof3::addr::Party_Zenny),
+    SetLong(Mem(Party_Zenny_addr),
             static_cast<std::int32_t>(PickOf(0, 1, 9, 50, 99, 100, 101, 499, 500, 501, 0x8000, 0xFFFF, 0x1FFFF, 0x10050,
                                              sh::Next())));
     for (unsigned i = 0; i < 3; ++i)
@@ -464,7 +464,7 @@ void MoveCell(U n) {
     case 3: B(at::kTurn) = static_cast<unsigned char>(1 + b % 8); break;
     case 4: B(at::kPhase + (b & 3) % 3) = static_cast<unsigned char>((b >> 2) % 14); break;
     case 5: SetLong(Mem(at::kBet), static_cast<std::int32_t>((b & 1) ? (b >> 1) % 2 * 10000 + v % 3 : v)); break;
-    case 6: SetLong(Mem(bof3::addr::Party_Zenny), static_cast<std::int32_t>(v)); break;
+    case 6: SetLong(Mem(Party_Zenny_addr), static_cast<std::int32_t>(v)); break;
     case 7: B(at::kCards + b % 0x2B) = static_cast<unsigned char>(1 + (v >> 8) % 9); break;
     case 8: B(at::kDigits + b % 3) = static_cast<unsigned char>(static_cast<int>((v >> 8) % 12) - 1); break;
     case 9: B((b & 1) ? at::kLost : at::kAgain) = static_cast<unsigned char>((b & 2) ? 0 : b); break;

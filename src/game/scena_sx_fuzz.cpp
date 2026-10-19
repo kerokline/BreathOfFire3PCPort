@@ -329,7 +329,7 @@ void Seed(unsigned k) {
     }
     case kZennySub:
     case kZennyAdd:
-        SetLong(Mem(bof3::addr::Party_Zenny),
+        SetLong(Mem(Party_Zenny_addr),
                 static_cast<std::int32_t>(PickOf(0, 100, sh::Next() % 10000, at::kZennyCap - sh::Next() % 1000, at::kZennyCap,
                                                   0xFFFFFFF0u + sh::Next() % 16, sh::Next())));
         break;
@@ -379,7 +379,7 @@ void Args(unsigned k, std::uint32_t* a) {
         break;
     case kZennySub:
     case kZennyAdd: {
-        const auto money = static_cast<std::uint32_t>(Long(Mem(bof3::addr::Party_Zenny)));
+        const auto money = static_cast<std::uint32_t>(Long(Mem(Party_Zenny_addr)));
         a[0] = PickOf(money, money + 1, money - 1, 0, sh::Next() % 10000, at::kZennyCap - money, at::kZennyCap - money + 1, sh::Next());
         a[1] = (a[1] & 0xFFFFFF00u) | (sh::Half() ? 0 : 1 + sh::Next() % 0xFF);
         break;

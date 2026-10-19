@@ -268,7 +268,7 @@ extern "C" void __cdecl Commu_DrawZennyBox(int x, int y) {
     SH_CALL(Commu_DrawFrame)(x, y);
     SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, Labels_Written(14) ? 0xFF : 3,
                          Labels_Written(14) ? Labels_Slot(14, 3) : Text(at::kZennyTitle));   // DIV-0064 group 14
-    SH_CALL(Crt_sprintf)(Buffer(), reinterpret_cast<const char*>(At(at::kFmtWide)), L(bof3::addr::Party_Zenny));
+    SH_CALL(Crt_sprintf)(Buffer(), reinterpret_cast<const char*>(At(at::kFmtWide)), Party_Zenny);
     SH_CALL(Text_DrawFont12)(x + 6, y + 0x18, 0, reinterpret_cast<const unsigned char*>(Buffer()));
     SH_CALL(Text_DrawAt)(x + 0x5A, y + 0x18, 0, 1, Text(at::kZennyUnit));
 }
@@ -564,7 +564,7 @@ extern "C" void __cdecl CommuHiLo_BetInput(void) {
                 v = 100;
                 SetL(at::kBet, 100);
             }
-            const U zenny = L(bof3::addr::Party_Zenny);
+            const U zenny = Party_Zenny;
             if (static_cast<U>(v) > zenny) SetL(at::kBet, static_cast<U>(static_cast<int>(static_cast<std::int16_t>(zenny))));
         }
     } else {
@@ -578,9 +578,9 @@ extern "C" void __cdecl CommuHiLo_BetInput(void) {
                 B(at::kSlide) = 4;
                 Sound(0x104);
                 const U stake = L(at::kBet);
-                const U zenny = L(bof3::addr::Party_Zenny);
+                const U zenny = Party_Zenny;
                 const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
-                SetL(bof3::addr::Party_Zenny, zenny - stake);
+                Party_Zenny = zenny - stake;
                 B(at::kStep) = step;
             }
         } else if (Field_CancelButtons & buttons) {
@@ -1144,9 +1144,9 @@ extern "C" void __cdecl CommuHitBlow_StartDispatch(void) {
 // 0x10), the stake box (0xCC, 0x3C, 0); 0x675F95 = 4, Sound 0x102, 0x939A3F
 // (read after) + 1.
 extern "C" void __cdecl CommuHitBlow_Start(void) {
-    const U zenny = L(bof3::addr::Party_Zenny);
+    const U zenny = Party_Zenny;
     SetL(at::kBet, 500);
-    SetL(bof3::addr::Party_Zenny, zenny - 500u);
+    Party_Zenny = zenny - 500u;
     for (int i = 0; i < 3;) {
         const auto v = static_cast<unsigned char>(SH_CALL(Commu_RandDigit)(9));
         B(at::kCards + i) = v;
