@@ -437,6 +437,66 @@ No site converted and no behaviour change.
   +0x3A / +0x3E (86), +0x14 and +0x20 (46), +0x34 / +0x38 read as words
   (30).
 
+### C1 as run (2026-10-19)
+
+The types of [`typed-data-stage-c.md`](typed-data-stage-c.md) section 3,
+one agent on `typed/c1` from `typed/c` 0e929409 (C0 merged), beside C3's
+entry work. Header and doc work, and the renames of existing typed uses;
+no raw site converted. The record is
+[`typed-records.md`](typed-records.md) sections 6 to 8.
+
+- **`SpriteHead`.** One struct for `+0x00..+0x7F`, and the five families
+  derive from it (`SpriteObject`, `PartyMember`, `EffectObject`,
+  `BattleEnemy`, `BattleTask`), so `p->field` is spelled as before. Read
+  byte by byte against every family's readers: the layout is one wherever
+  the sprite engine reads it; the families disagree at the handler bytes
+  `+5..+0xB`, the handler dwords `+0x18..+0x23`, and the popup task's
+  `+0x32` and `+0x60`. Those are anonymous unions of each family's own name
+  (`actor` / `kind` at `+5`, `type` / `param` / `runner` at `+6`, and so
+  on), so each family keeps its field; the dwords got neutral names
+  (`work_18`, `work_1c`, `work_20`). The 16.16 positions are unions with
+  their `u16` halves (`x_whole`, `z_whole`, `height_whole`, and `_frac`); a
+  throwaway conversion of 21 sites in `field_c1.cpp` / `field_c2.cpp` gated
+  `0 differ` and was reverted.
+- **The renames** (1,937 sites in 124 files): `BattleTask::y` -> `z`,
+  `vel_x` / `vel_y` -> `step_x` / `step_z`, `start_x` / `start_y` and
+  `SpriteObject::accel_x` / `accel_z` -> `work_18` / `work_1c`,
+  `BattleTask::param` -> `kind` and `kind` -> `runner`,
+  `WindowRecord::centre_x` / `centre_y` -> `x` / `y`,
+  `PartyMember::member` -> `actor`, `raised` -> `reach`,
+  `SpriteObject::pose` -> `flip`, `EffectObject::in_use` -> `flags`, and
+  the party's and enemy's `state[0..3]` -> `state` / `step` / `state3` /
+  `state4`; `WindowRecord::kind`'s comment from its writers. Each use was
+  found by compiling with the old name hidden and edited at the reported
+  column, so no homonym on another struct was touched.
+- **The gate caught one thing.** After the renames three objects differed:
+  where two branches store to different state bytes, the compiler merged
+  the stores through the array index, and could not through two named
+  fields. Seven stores in `EnemyOp_CastStart`, `BattleObj_CastStart` and
+  `Field_LeaderStand` are spelled `states[k]` (the head keeps the four
+  bytes as an array too); then `0 differ`.
+- **Views** (cast targets, `rv::As<T>`): `ScriptContext` (a field object's
+  `+0x80`, a member's `+0x124`), `MemberFieldTail` and `ActionRecord` (the
+  party tail in the field and in battle; the latter also the enemy's
+  `+0x104`), `BattleWindow` and `ItemListWindow`, `EffectWork` (the kinds'
+  own words at `+0xC`, `+0x10`, `+0x2E`, `+0x30`).
+- **New families:** `CharRecord` with `CharStatBlock`, `EncounterSlot`,
+  `CommunityRecord`, `CommunityBuilding`, `DamageScratch` (three views by
+  offset over the relocated PSX scratchpad: its readers give no offset one
+  meaning), base stat names in `PartyMember` and `BattleEnemy`; in two new
+  headers, the GPU packets and `SVector` (`records_gpu.h`) and eight effect
+  sub-pools (`records_effect.h`). Each named only as far as its readers
+  agree.
+- **What it unlocks:** about 6,200 of the 7,982 left-list rows with C1's
+  reasons (`typed-records.md` 8 has the table by type, the traps and the
+  `symbols.toml` entries SG could type with these structs).
+- **Checks:** the three headers compile standalone with `-std=c++20 -Wall
+  -Wextra` and under `#pragma pack(1)`, 656 offsets and sizes asserted; the
+  tree builds; `codegen_same.py` against the `main` 56d81b42 build: 640
+  objects compared, 0 differ; `data_census.py --check` 27,408, unchanged;
+  `typed_left.py --check` current after regenerating six rows whose keys
+  named `->member` (their reasons carried).
+
 ## 4. Stage C
 
 Staged in [`typed-data-stage-c.md`](typed-data-stage-c.md): C0 the
