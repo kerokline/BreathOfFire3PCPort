@@ -96,7 +96,7 @@ void Lever(unsigned flag) {
     const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     SetMessage(0xFFFF);
     if (answer != 0) return;
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0x20)), flag);
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0x20), flag);
     AH_CALL(Area40_SetGate)();
     AH_CALL(Sound_PlayEffect)(0x203);
 }
@@ -170,10 +170,10 @@ extern "C" void __cdecl Area38_SetCellsC0(void) {
 
 // original 0x405410 (Area38_Handlers[2]; PSX 0x801F2C94): party-list byte
 // 0x904063, party record 1.
-extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember((Cond_Flags_addr + 0xd3), (Field_Members_addr + 0x4)); }
+extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(Cond_Flags_addr + 0xd3, Field_Members_addr + 0x4); }
 
 // original 0x4054D0 (Area38_Handlers[3]; PSX 0x801F2E60): 0x904064, record 2.
-extern "C" void __cdecl Area38_SpawnEffectMember2(void) { SpawnForMember((Cond_Flags_addr + 0xd4), (ObjTrio_addr + 0x298)); }
+extern "C" void __cdecl Area38_SpawnEffectMember2(void) { SpawnForMember(Cond_Flags_addr + 0xd4, ObjTrio_addr + 0x298); }
 
 // ===========================================================================
 // Area 39 (descriptor 0x5F3E60): eleven handlers of its own and a two-state
@@ -268,7 +268,7 @@ extern "C" void __cdecl Area39_FadeOutMusic(void) { AH_CALL(Music_FadeOutStop)(0
 
 // original 0x405760 (Area39_Handlers[14]; PSX 0x801F2F94): counter 1 = the
 // first party-list byte is not 4.
-extern "C" void __cdecl Area39_Counter1Not4(void) { B(at::kCounter1) = B((Cond_Flags_addr + 0xd2)) != 4 ? 1 : 0; }
+extern "C" void __cdecl Area39_Counter1Not4(void) { B(at::kCounter1) = B(Cond_Flags_addr + 0xd2) != 4 ? 1 : 0; }
 
 // ===========================================================================
 // Area 40 (descriptor 0x5F4BD8): ten choices (two of them the handlers), an
@@ -303,7 +303,7 @@ extern "C" void __cdecl Area40_ChoiceFlag5(void) {
     const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     unsigned char* const row = Ptr(AreaW0c_FlagRow_addr);
     SetMessage(0xFFFF);
-    B((MoveScript_PartyRecords_addr + 0x65)) = answer != 0 ? 0x1E : 0x1C;
+    B(MoveScript_PartyRecords_addr + 0x65) = answer != 0 ? 0x1E : 0x1C;
     AH_CALL(Flags_Set)(row, 5);
     const unsigned char status = Field_StatusBits;
     Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xFF77);
@@ -321,7 +321,7 @@ extern "C" void __cdecl Area40_ChoiceLever8(void) { Lever(8); }
 // low nibble of 0x903FB1) at 5 open the gate (its 28 cells 0, al 1); any
 // other closes it (0xA4, al 0).
 extern "C" unsigned char __cdecl Area40_SetGate(void) {
-    if ((B((Cond_Flags_addr + 0x21)) & 0xF) == 5) {
+    if ((B(Cond_Flags_addr + 0x21) & 0xF) == 5) {
         Gate(0);
         return 1;
     }
@@ -340,7 +340,7 @@ extern "C" void __cdecl Area40_ChoiceTail16(void) {
         TailOff();
         return;
     }
-    if (B((ObjTrio_addr + 0x89)) == 2) {
+    if (B(ObjTrio_addr + 0x89) == 2) {
         SetMessage(0x3C);
         return;
     }
@@ -361,7 +361,7 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
     switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
     case 0:
         AH_CALL(ScriptFlags_Clear40)();
-        if (AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), 0x27) != 0) {
+        if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x27) != 0) {
             B(AreaW0c_TailState_addr) = 0xA;
             break;
         }
@@ -401,7 +401,7 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
 extern "C" unsigned char __cdecl Area40_ArriveHook(unsigned long x, unsigned long z) {
     if (Cond_ByteFD != 6) return 0;
     if (Field_State[0x2B] != 0) return 0;
-    if (AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), 0x27) != 0) return 0;
+    if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x27) != 0) return 0;
     if (B(AreaW0a_TailKind_addr) != 0x10) return 0;
     AH_CALL(Area40_ClearGrid)();
     const auto cx = static_cast<std::uint16_t>(x >> 16), cz = static_cast<std::uint16_t>(z >> 16);
@@ -467,7 +467,7 @@ extern "C" unsigned char __cdecl Area40_PuzzleSolved(void) {
     for (unsigned r = 0; r < at::kGridSide; ++r)
         for (unsigned c = 0; c < at::kGridSide; ++c)
             if (AH_CALL(Area40_TileLit)(at::kGridX + c, at::kGridZ + r) != B(Area40_Pattern_addr + r * 4 + c)) return 0;
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x27);
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x27);
     SetByte(0x92, 0x1C, 0xA1);
     SetByte(0x93, 0x1C, 0xA1);
     SetByte(0x92, 0x1D, 0xC0);
@@ -493,7 +493,7 @@ extern "C" void __cdecl Area40_ClearGrid(void) {
 // new high word with z's low word above it, z's new high word with two bytes
 // of the caller's frame above it (read in 16 bits).
 extern "C" void __cdecl Area40_MarkBehind(unsigned long x, unsigned long z) {
-    const unsigned d = B((ObjTrio_addr + 0x8)) & 7;
+    const unsigned d = B(ObjTrio_addr + 0x8) & 7;
     const auto sx = static_cast<std::int16_t>(static_cast<signed char>(B(at::kCellDelta + d * 2)));
     const auto sz = static_cast<std::int16_t>(static_cast<signed char>(B(at::kCellDelta + d * 2 + 1)));
     const auto cx = static_cast<std::uint16_t>((x >> 16) - static_cast<std::uint16_t>(sx));
@@ -541,10 +541,10 @@ extern "C" void __cdecl Area40_DrawGrid(void) {
 // 12, flag 0x27 and counter 0 cleared. From zone 4: the pattern's cells lit.
 extern "C" void __cdecl Area40_Init(void) {
     if (Cond_ByteFD != 1) {
-        B((Cond_Flags_addr + 0x21)) = static_cast<unsigned char>(B((Cond_Flags_addr + 0x21)) & 0xF0);
+        B(Cond_Flags_addr + 0x21) = static_cast<unsigned char>(B(Cond_Flags_addr + 0x21) & 0xF0);
         Gate(0xA4);
     }
-    if (Cond_ByteFD == 6 && AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), 0x27) == 0) {
+    if (Cond_ByteFD == 6 && AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x27) == 0) {
         SetByte(0x92, 0x1D, 0);
         SetByte(0x93, 0x1D, 0);
         SetByte(0x92, 0x1C, 0x50);
@@ -553,7 +553,7 @@ extern "C" void __cdecl Area40_Init(void) {
     if (B(AreaW1a_EntryZone_addr) == 6) {
         if (Cond_ByteFD != 2) return;
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFFF);
-        AH_CALL(Flags_Clear)(Mem((Cond_Flags_addr + 0xa0)), 0x27);
+        AH_CALL(Flags_Clear)(Mem(Cond_Flags_addr + 0xa0), 0x27);
         B(at::kCounter0) = 0;
     }
     if (B(AreaW1a_EntryZone_addr) != 4) return;
@@ -716,7 +716,7 @@ extern "C" unsigned char __cdecl Area41_Trigger29(unsigned char*, unsigned char*
 // byte 0x5F5F2D + the object's +0x86 names (Area41_TriggerFlags for 59, 60;
 // the flags argument is not read), sound 0x201; al 0.
 extern "C" unsigned char __cdecl Area41_TriggerFlag(unsigned char* object, unsigned char*) {
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), B(at::kArea41TriggerBase + object[0x86]));
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), B(at::kArea41TriggerBase + object[0x86]));
     AH_CALL(Sound_PlayEffect)(0x201);
     return 0;
 }

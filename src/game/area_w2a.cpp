@@ -87,7 +87,7 @@ void SpawnAtMember(unsigned member, unsigned char kind, std::uint32_t kinds) {
     const unsigned char* const record = PartyAt(member);
     const auto z = static_cast<short>(Word(record + 0x30));
     const auto x = static_cast<short>(Word(record + 0x2E));
-    const unsigned char effect = B(kinds + B((Cond_Flags_addr + 0xd2) + member));
+    const unsigned char effect = B(kinds + B(Cond_Flags_addr + 0xd2 + member));
     Sprite_Current = PartyAt(member);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;
@@ -140,16 +140,16 @@ extern "C" unsigned char __cdecl Area76_StepDisarmTail5(void) {
 // Story flag 0x1C set: 0. Else its story flag toggled (0x57C160),
 // Sound_PlayEffect(0x201), 0x469FE0(0xF), answer 1.
 extern "C" int __cdecl Area77_CellHook(long x, long z) {
-    if (AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0x30)), 0x2C)) return 0;
-    const unsigned char pose = B((ObjTrio_addr + 0x8));
+    if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0x30), 0x2C)) return 0;
+    const unsigned char pose = B(ObjTrio_addr + 0x8);
     unsigned i = 0;
     for (; i < at::kArea77CellSwitchCount; ++i) {
         const unsigned char* const r = Mem(Area77_CellSwitches_addr + i * 4u);
         if (static_cast<unsigned char>(x) == r[0] && static_cast<unsigned char>(z) == r[1] && r[2] == pose) break;
     }
     if (i == at::kArea77CellSwitchCount) return 0;
-    if (AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), 0x1C)) return 0;
-    FlagsToggle(Mem((Cond_Flags_addr + 0xa0)), B(Area77_CellSwitches_addr + i * 4u + 3));
+    if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x1C)) return 0;
+    FlagsToggle(Mem(Cond_Flags_addr + 0xa0), B(Area77_CellSwitches_addr + i * 4u + 3));
     AH_CALL(Sound_PlayEffect)(0x201);
     AH_AT(void (__cdecl*)(unsigned), at::kSpawnKind4)(0xF);
     return 1;
@@ -192,17 +192,17 @@ extern "C" void __cdecl Area77_ClearByteFE(void) {
 // 6, 7, 8; PSX 0x801F5AAC, 0x801F5B2C, 0x801F5C00, 0x801F5C80, 0x801F5D00):
 // SpawnAtMember with lists A..E.
 extern "C" void __cdecl Area77_Spawn3AtMember0ListA(void) { SpawnAtMember(0, 3, Area77_EffectKindsA_addr); }
-extern "C" void __cdecl Area77_Spawn4AtMember0ListB(void) { SpawnAtMember(0, 4, (Area77_EffectKindsA_addr + 0x8)); }
-extern "C" void __cdecl Area77_Spawn2AtMember0ListC(void) { SpawnAtMember(0, 2, (Area77_EffectKindsA_addr + 0x10)); }
-extern "C" void __cdecl Area77_Spawn3AtMember1ListD(void) { SpawnAtMember(1, 3, (Area77_EffectKindsA_addr + 0x18)); }
-extern "C" void __cdecl Area77_Spawn3AtMember2ListE(void) { SpawnAtMember(2, 3, (Area77_EffectKindsA_addr + 0x20)); }
+extern "C" void __cdecl Area77_Spawn4AtMember0ListB(void) { SpawnAtMember(0, 4, Area77_EffectKindsA_addr + 0x8); }
+extern "C" void __cdecl Area77_Spawn2AtMember0ListC(void) { SpawnAtMember(0, 2, Area77_EffectKindsA_addr + 0x10); }
+extern "C" void __cdecl Area77_Spawn3AtMember1ListD(void) { SpawnAtMember(1, 3, Area77_EffectKindsA_addr + 0x18); }
+extern "C" void __cdecl Area77_Spawn3AtMember2ListE(void) { SpawnAtMember(2, 3, Area77_EffectKindsA_addr + 0x20); }
 
 // original 0x40EDA0 (Area77_Handlers[4]; PSX 0x801F5BAC): Inventory_Remove(1,
 // 0x47, 1) - the original pushes a fourth word, 0, that the callee never reads.
 extern "C" void __cdecl Area77_RemoveItem47(void) { AH_CALL(Inventory_Remove)(1, 0x47, 1); }
 
 // original 0x40EDC0 (Area77_Handlers[5]; PSX 0x801F5BD8): story flag 4 set.
-extern "C" void __cdecl Area77_SetFlag4(void) { AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 4); }
+extern "C" void __cdecl Area77_SetFlag4(void) { AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 4); }
 
 // original 0x40EEC0 (Area77_Handlers[9]; PSX 0x801F5D80): Camera_ShiftY -
 // 0x14, MapView_Redraw 2, Sound_PlayEffect(0x200).
@@ -220,8 +220,8 @@ extern "C" void __cdecl Area77_Spawn4AtMember0List0(void) { SpawnAtMember(0, 4, 
 
 // originals 0x40EFD0, 0x40F020 (handlers 15, 16; PSX 0x801F5F84,
 // 0x801F6004): SpawnAtMember for member 0 by lists F and G.
-extern "C" void __cdecl Area77_Spawn1AtMember0ListF(void) { SpawnAtMember(0, 1, (Area77_EffectKindsA_addr + 0x28)); }
-extern "C" void __cdecl Area77_Spawn3AtMember0ListG(void) { SpawnAtMember(0, 3, (Area77_EffectKindsA_addr + 0x30)); }
+extern "C" void __cdecl Area77_Spawn1AtMember0ListF(void) { SpawnAtMember(0, 1, Area77_EffectKindsA_addr + 0x28); }
+extern "C" void __cdecl Area77_Spawn3AtMember0ListG(void) { SpawnAtMember(0, 3, Area77_EffectKindsA_addr + 0x30); }
 
 // original 0x40F140 (called by handlers 17 and 18): a free effect record of
 // kind `kind` (its low byte), +0 = 1. The answer is unread.
@@ -309,8 +309,8 @@ extern "C" void __cdecl Area78_ChoiceResetScene(void) {
         B(at::kCounter1) = 0;
         B(at::kCounter2) = 0;
         B(at::kCounter3) = 0;
-        B((MoveScript_PartyRecords_addr + 0x65)) = 0;
-        SetWord(Mem((MoveScript_PartyRecords_addr + 0x66)), 0);
+        B(MoveScript_PartyRecords_addr + 0x65) = 0;
+        SetWord(Mem(MoveScript_PartyRecords_addr + 0x66), 0);
         MoveScript_Var7 = 0xE;
     } else if (answer == 1) {
         B(at::kCounter0) = 0;
@@ -486,8 +486,8 @@ extern "C" void __cdecl Area82_OpenMessageByRowFlag4(void) {
 extern "C" void __cdecl Area84_SetFlag31At5(void) {
     unsigned char* const member = Field_ActiveMember;
     member[0x80] = static_cast<unsigned char>(member[0x80] & 0xFE);
-    if (B((ObjTrio_addr + 0x89)) != 5) return;
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x31);
+    if (B(ObjTrio_addr + 0x89) != 5) return;
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x31);
     AH_CALL(MoveCmd_TestFB)(9, 0x10);
     Sprite_Current[0] = 0;
 }

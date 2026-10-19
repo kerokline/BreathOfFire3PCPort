@@ -264,7 +264,7 @@ void Disturb(U h) {
     case 5: ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(h >> 16)); break;
     case 6: ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(h >> 16)); break;
     case 7: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
-    case 8: B((Cond_Flags_addr + 0xd2) + (h >> 16) % 3) = static_cast<unsigned char>(h & 0x40000 ? v : (h & 0x80000 ? 0 : 4)); break;
+    case 8: B(Cond_Flags_addr + 0xd2 + (h >> 16) % 3) = static_cast<unsigned char>(h & 0x40000 ? v : (h & 0x80000 ? 0 : 4)); break;
     case 9: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ (h & 0x10000 ? 0x1000 : 0x8)); break;
     case 10: ah::SetPointer(MoveScript_Object_addr, ah::Object(h >> 16)); break;
     default: Gfx_BufferIndex = static_cast<unsigned char>(h & 0x10000 ? Gfx_BufferIndex ^ 1 : v); break;
@@ -347,7 +347,7 @@ void Seed39(unsigned k) {
         if (ah::Half()) B(at::kKeyItems + ah::Next() % at::kKeyItemCount) = 0xE;
         break;
     case k39Counter:
-        if (ah::Often()) B((Cond_Flags_addr + 0xd2)) = static_cast<unsigned char>(AH_PICK(4, 4, 3, 5, 0x84, 0));
+        if (ah::Often()) B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(AH_PICK(4, 4, 3, 5, 0x84, 0));
         break;
     default: break;
     }
@@ -437,11 +437,11 @@ void Seed40(unsigned k) {
         break;
     case k40Flag5: case k40LeverB: case k40LeverA: case k40Lever9: case k40Lever8: SeedAnswer(); break;
     case k40Gate:
-        if (ah::Often()) B((Cond_Flags_addr + 0x21)) = static_cast<unsigned char>((ah::Next() & 0xF0) | AH_PICK(5, 5, 4, 6, 0xD, 0x7));
+        if (ah::Often()) B(Cond_Flags_addr + 0x21) = static_cast<unsigned char>((ah::Next() & 0xF0) | AH_PICK(5, 5, 4, 6, 0xD, 0x7));
         break;
     case k40Tail16:
         SeedAnswer();
-        if (ah::Often()) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
+        if (ah::Often()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
         if (ah::Often()) B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(AH_PICK(0, 0, 0x10, 1));
         break;
     case k40Tail:
@@ -468,7 +468,7 @@ void Seed40(unsigned k) {
         break;
     case k40TileLit: PlantRuns(); break;
     case k40Behind:
-        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(ah::Next() % 8 | (ah::Half() ? 0 : ah::Next() & 0xF8));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(ah::Next() % 8 | (ah::Half() ? 0 : ah::Next() & 0xF8));
         break;
     case k40Draw:
         if (ah::Half()) Gfx_BufferIndex = static_cast<unsigned char>(ah::Next() % 2);

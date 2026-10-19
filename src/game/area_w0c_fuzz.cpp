@@ -341,16 +341,16 @@ void Seed36(unsigned k) {
         // half the rounds every test passes but at most one, drawn to fail
         if (ah::Half()) {
             Cond_ByteFD = 2;
-            B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
-            ah::Mem((Cond_Flags_addr + 0xa0))[0x33 >> 3] |= 1u << (0x33 & 7); // for the record: Flags_Test is a recorder
+            B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
+            ah::Mem(Cond_Flags_addr + 0xa0)[0x33 >> 3] |= 1u << (0x33 & 7); // for the record: Flags_Test is a recorder
             if (ah::Half()) {
                 if (ah::Half()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(1, 3, 0x82));
-                else B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
+                else B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
             }
             break;
         }
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
-        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
         break;
     case k36Run: Sprite_Current[1] = static_cast<unsigned char>(ah::Next() % 2); break;
     default: break;

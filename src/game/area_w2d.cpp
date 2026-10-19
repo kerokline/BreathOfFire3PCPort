@@ -47,7 +47,7 @@ unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEff
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
-unsigned char* StoryFlags() { return Mem((Cond_Flags_addr + 0xa0)); }
+unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
 
@@ -156,7 +156,7 @@ extern "C" void __cdecl Area95_WaitEffectAtCell(void) {
         ScriptStep(-2);
         return;
     }
-    if (B((ObjTrio_addr + 0x137)) != 0) {
+    if (B(ObjTrio_addr + 0x137) != 0) {
         ScriptStep(-2);
         AH_CALL(ScriptFlags_Set40)();
         return;
@@ -259,7 +259,7 @@ extern "C" void __cdecl Area96_FaceBack(void) {
 // the ground at the leader's (x, z), sign-extended; MapView_Elevation already
 // there: 0x20 lower, else set to it; MapView_Redraw + 2 either way.
 extern "C" void __cdecl Area96_SnapElevation(void) {
-    const long ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(Long(Mem((ObjTrio_addr + 0x34))), Long(Mem((ObjTrio_addr + 0x38)))));
+    const long ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(Long(Mem(ObjTrio_addr + 0x34)), Long(Mem(ObjTrio_addr + 0x38))));
     const long now = MapView_Elevation;
     MapView_Elevation = now == ground ? now - 0x20 : ground;
     MapView_Redraw = static_cast<unsigned char>(MapView_Redraw + 2);
@@ -292,7 +292,7 @@ extern "C" void __cdecl Area97_TailWaitCounter3(void) {
 // 1 or 2, and key item 5 not held: tail kind 13 armed (state 0, counter 3 =
 // 1), al 1. Else al 0.
 extern "C" unsigned char __cdecl Area97_StepHook(long x, long z) {
-    const unsigned char pose = B((ObjTrio_addr + 0x8));
+    const unsigned char pose = B(ObjTrio_addr + 0x8);
     if (z > 0x3A0000) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x30) >= 3) return 0;
     if (pose != 0 && pose != 1 && pose != 2) return 0;
@@ -383,8 +383,8 @@ extern "C" void __cdecl Area98_InitCells(void) {
 // Field_ChangeArea(0x62, 0x380000, 0x2C0000, 1); the tail disarmed.
 extern "C" void __cdecl Area98_TailChangeArea62(void) {
     if (B(AreaW0c_TailState_addr) != 0 || Field_Request == 2) return;
-    const std::int32_t x = Long(Mem((ObjTrio_addr + 0x34)));
-    const std::int32_t z = Long(Mem((ObjTrio_addr + 0x38)));
+    const std::int32_t x = Long(Mem(ObjTrio_addr + 0x34));
+    const std::int32_t z = Long(Mem(ObjTrio_addr + 0x38));
     const unsigned short area = Game_AreaNumber;
     SetLong(Mem(AreaW2d_ReturnPoint_addr), x);
     SetLong(Mem(AreaW2d_ReturnPoint_addr + 4), z);
@@ -495,7 +495,7 @@ extern "C" void __cdecl Area99_RunLeap(void) {
 // above 16, faults; ours aborts); then +0xA = 0xE, state 1; Field_State's
 // word +0x12E - 2. Sprite_Current read again for every store.
 extern "C" void __cdecl Area99_LeapStart(void) {
-    const unsigned speed = B((Field_MoveSpeeds_addr + 0x3));
+    const unsigned speed = B(Field_MoveSpeeds_addr + 0x3);
     Sprite_Current[9] = 0;
     Sprite_Current[0xB] = 3;
     if (speed == 0) bof3::Fatal("Area99_LeapStart: Field_MoveSpeeds[3] is 0, the original's idiv faults");
@@ -548,7 +548,7 @@ extern "C" void __cdecl Area99_ToggleRowFlag1F(void) { FlagsToggle(FlagRow(), 0x
 // 0x50.
 extern "C" void __cdecl Area99_InitCell(void) {
     if (Cond_ByteFD != 1) return;
-    unsigned char* const row = Mem((Cond_Flags_addr + 0x18));
+    unsigned char* const row = Mem(Cond_Flags_addr + 0x18);
     if (AH_CALL(Flags_Test)(row, 0x1C) != 0 && AH_CALL(Flags_Test)(row, 0x1D) == 0) {
         SetByte(0x23, 0x4F, 0x51);
         return;
@@ -692,7 +692,7 @@ extern "C" unsigned char __cdecl Area100_StepHook(long x, long z) {
     if (AH_CALL(Flags_Test)(StoryFlags(), 0x33) == 0) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x45) >= 3) return 0;
     if (static_cast<std::uint16_t>(High(z) - 0x33) >= 3) return 0;
-    const unsigned char pose = B((ObjTrio_addr + 0x8));
+    const unsigned char pose = B(ObjTrio_addr + 0x8);
     if (pose != 0 && pose != 7 && pose != 6) return 0;
     B(at::kCounter0) = 0;
     AH_CALL(Party_DropIn)(0);

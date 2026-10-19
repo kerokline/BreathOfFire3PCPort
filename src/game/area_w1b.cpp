@@ -52,7 +52,7 @@ using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-unsigned char* Bank() { return At((Cond_Flags_addr + 0xa0)); }
+unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
 unsigned char& B(U address) { return At(address)[0]; }
 signed char TailState() { return AreaW0c_TailState; }
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
@@ -293,8 +293,8 @@ extern "C" void __cdecl Area42_TimerTail(void) {
         return;
     case 5:
         if ((EffectAt(AreaW0c_TailSub)[0] & 1) != 0) return;
-        Field_Kind2X = Long(At((ObjTrio_addr + 0x34)));
-        Field_Kind2Z = Long(At((ObjTrio_addr + 0x38)));
+        Field_Kind2X = Long(At(ObjTrio_addr + 0x34));
+        Field_Kind2Z = Long(At(ObjTrio_addr + 0x38));
         MoveScript_F3Divisor = 0x40;
         AreaW0c_TailState = 6;
         return;
@@ -522,7 +522,7 @@ extern "C" void __cdecl Area44_Init(void) {
     if (fd != 1) return;
     const unsigned a = GateA(), b = GateB();
     unsigned char* const e0 = At(Sprite_ObjectsExtra_addr);
-    unsigned char* const e1 = At((Sprite_ObjectsExtra_addr + 0xa4));
+    unsigned char* const e1 = At(Sprite_ObjectsExtra_addr + 0xa4);
     SetWord(e0 + 0x34, 0x8000);
     SetWord(e0 + 0x38, 0x8000);
     SetWord(e1 + 0x34, 0x8000);
@@ -876,8 +876,8 @@ extern "C" void __cdecl Area45_PlaceMessage(void) {
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At((ObjTrio_addr + 0x3a))));
-    const auto x = static_cast<short>(Word(At((ObjTrio_addr + 0x36))));
+    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
+    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
@@ -886,8 +886,8 @@ extern "C" void __cdecl Area45_PlaceMessage(void) {
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(Area45_PlaceMessages_addr + static_cast<U>(index * 2)))));
     } else {
-        const unsigned cx = Word(At((ObjTrio_addr + 0x36)));
-        const unsigned cz = Word(At((ObjTrio_addr + 0x3a)));
+        const unsigned cx = Word(At(ObjTrio_addr + 0x36));
+        const unsigned cz = Word(At(ObjTrio_addr + 0x3a));
         U cell = Area45_Cells_addr;
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
@@ -928,8 +928,8 @@ extern "C" void __cdecl Area45_PlaceMessage(void) {
 // 0x5F7654 by +1 (read after the calls; ours aborts past its five entries).
 extern "C" void __cdecl Area45_PlateRun(void) {
     const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At((ObjTrio_addr + 0x10)))) + static_cast<U>(Long(At((ObjTrio_addr + 0x38))));
-    const U xs = steps * static_cast<U>(Long(At((ObjTrio_addr + 0xc)))) + static_cast<U>(Long(At((ObjTrio_addr + 0x34))));
+    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
+    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     SetLong(Cur() + 0xC, x);
@@ -1187,11 +1187,11 @@ extern "C" void __cdecl Area45_DrawFrame(int x, int y) {
                                                        static_cast<short>(Word(At(at::kLeaderCellZ))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite45)(x + 0x30, y, 1);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite45), Area45_Buttons_addr, 6, static_cast<U>(Long(At((Gfx_UnpackScratch_addr + 0x1f000)))), x + 0x38, y + 8,
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite45), Area45_Buttons_addr, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite45)(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite45), Area45_Buttons_addr, 8, static_cast<U>(Long(At((Gfx_UnpackScratch_addr + 0x1f00c)))), x + 0x38, y + 0x10,
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite45), Area45_Buttons_addr, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
                                             static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
@@ -1267,8 +1267,8 @@ extern "C" void __cdecl Area45_Record8Place(void) {
     Cur()[0x29] = 5;
     SetLong(Cur() + 0xC, dir(Cur(), 0));
     SetLong(Cur() + 0x10, dir(Cur(), 2));
-    SetLong(Cur() + 0x34, Long(At((ObjTrio_addr + 0x34))));
-    SetLong(Cur() + 0x38, Long(At((ObjTrio_addr + 0x38))));
+    SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
+    SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
@@ -1424,9 +1424,9 @@ extern "C" void __cdecl Area45_DrawDrift(void) {
             SetWord(q + 0x16, 0x78CB);
             SetWord(q + 0x26, 0x5B);
             q[4] = q[5] = q[6] = 0x28;
-            const U m = At((Area45_DriftUV_addr + 0x8) + static_cast<U>(e))[0];
+            const U m = At(Area45_DriftUV_addr + 0x8 + static_cast<U>(e))[0];
             const U ubase = At(Area45_DriftUV_addr + static_cast<U>(e))[0];
-            const U vbase = At((Area45_DriftUV_addr + 0x4) + static_cast<U>(e))[0];
+            const U vbase = At(Area45_DriftUV_addr + 0x4 + static_cast<U>(e))[0];
             const U scroll = (Word(Cur() + 0x38) * m) >> 16;
             const U ui = static_cast<U>(i), uj = static_cast<U>(j);
             q[0x14] = static_cast<unsigned char>(ui * m + ubase);

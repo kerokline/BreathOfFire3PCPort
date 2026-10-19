@@ -213,7 +213,7 @@ std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
     if (n & 2) {
         // all seven flags (bit 7 either way), one of them clear, or any
         static const unsigned char kRow[] = {0x7F, 0xFF, 0x7F, 0xFF, 0x3F, 0xBF, 0x7E, 0x5F, 0x77, 0};
-        B((Cond_Flags_addr + 0x18) + 1) = n & 4 ? static_cast<unsigned char>(n >> 16) : kRow[(n >> 16) % 10];
+        B(Cond_Flags_addr + 0x18 + 1) = n & 4 ? static_cast<unsigned char>(n >> 16) : kRow[(n >> 16) % 10];
     }
     return answer;
 }
@@ -307,7 +307,7 @@ void Disturb(std::uint32_t h) {
     case 2: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 4); break;
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 4: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
-    case 5: B((Cond_Flags_addr + 0x18) + 1) = static_cast<unsigned char>(h & 0x100 ? 0x7F : v); break;
+    case 5: B(Cond_Flags_addr + 0x18 + 1) = static_cast<unsigned char>(h & 0x100 ? 0x7F : v); break;
     default: B(at::kCounter3) = v; break;
     }
 }
@@ -341,8 +341,8 @@ void Seed56(unsigned k) {
     switch (k) {
     case k56PoseIfAll:
         // the seven flags all set half the time (bit 7 either way), else one clear or anything
-        if (ah::Half()) B((Cond_Flags_addr + 0x18) + 1) = static_cast<unsigned char>(ah::Half() ? 0x7F : 0xFF);
-        else if (ah::Half()) B((Cond_Flags_addr + 0x18) + 1) = static_cast<unsigned char>(0x7F & ~(1u << ah::Next() % 7));
+        if (ah::Half()) B(Cond_Flags_addr + 0x18 + 1) = static_cast<unsigned char>(ah::Half() ? 0x7F : 0xFF);
+        else if (ah::Half()) B(Cond_Flags_addr + 0x18 + 1) = static_cast<unsigned char>(0x7F & ~(1u << ah::Next() % 7));
         SeedAnswer();
         break;
     case k56FallRun:
@@ -367,7 +367,7 @@ void Seed57(unsigned k) {
     switch (k) {
     case k57Choice: SeedAnswer(); break;
     case k57Spawn2: case k57Spawn4:
-        if (ah::Often()) B((Cond_Flags_addr + 0xd2)) = static_cast<unsigned char>(ah::Next() % 8);
+        if (ah::Often()) B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(ah::Next() % 8);
         break;
     default: break;
     }
@@ -382,16 +382,16 @@ void Seed59(unsigned k) {
         // half the rounds every test passes but at most one, drawn to fail
         if (ah::Half()) {
             Cond_ByteFD = 2;
-            B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
-            ah::Mem((Cond_Flags_addr + 0xa0))[0x33 >> 3] |= 1u << (0x33 & 7); // for the record: Flags_Test is a recorder
+            B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
+            ah::Mem(Cond_Flags_addr + 0xa0)[0x33 >> 3] |= 1u << (0x33 & 7); // for the record: Flags_Test is a recorder
             if (ah::Half()) {
                 if (ah::Half()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(1, 3, 0x82));
-                else B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
+                else B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
             }
             break;
         }
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
-        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
         break;
     case k59Run:
         if (ah::Half()) Sprite_Current = EffectRecord(ah::Next());
@@ -438,7 +438,7 @@ void Seed61(unsigned k) {
 void Seed62(unsigned k) {
     Common();
     if (k == k62Arm) {
-        if (ah::Half()) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(AH_PICK(6, 6, 5, 7, 0x86));
+        if (ah::Half()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(AH_PICK(6, 6, 5, 7, 0x86));
         return;
     }
     // the tail: each state, its neighbours and the out-of-range sides; then

@@ -175,7 +175,7 @@ extern "C" void __cdecl Area02_ChoiceArmTail(void) {
     else if (row == 1) Mem(AreaW0c_TailSub_addr)[0] = 4;
     else return;
     Mem(AreaW0a_TailKind_addr)[0] = 5;
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x1E);
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x1E);
 }
 
 // ---- area 3 (descriptor 0x5DDB40) --------------------------------------------
@@ -235,7 +235,7 @@ extern "C" void __cdecl Area04_ChoiceArmTail(void) {
     else if (row == 1) Mem(AreaW0c_TailSub_addr)[0] = 1;
     else return;
     Mem(AreaW0a_TailKind_addr)[0] = 5;
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x1F);
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x1F);
 }
 
 // ---- area 5 (descriptor 0x5DF6A0) --------------------------------------------
@@ -368,8 +368,8 @@ extern "C" void __cdecl Area08_CameraShiftXLess(void) {
 // original 0x401620 / 0x401630 (area 8's handlers 10 / 11; PSX 0x801F45FC /
 // 0x801F4618): field object 6's x (the dword Sprite_Objects + 6 * 0xA4 +
 // 0x34) 0x800 more / less.
-extern "C" void __cdecl Area08_Object6XMore(void) { SetLong(Mem((Sprite_Objects_addr + 0x40c)), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem((Sprite_Objects_addr + 0x40c)))) + 0x800u)); }
-extern "C" void __cdecl Area08_Object6XLess(void) { SetLong(Mem((Sprite_Objects_addr + 0x40c)), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem((Sprite_Objects_addr + 0x40c)))) - 0x800u)); }
+extern "C" void __cdecl Area08_Object6XMore(void) { SetLong(Mem(Sprite_Objects_addr + 0x40c), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(Sprite_Objects_addr + 0x40c))) + 0x800u)); }
+extern "C" void __cdecl Area08_Object6XLess(void) { SetLong(Mem(Sprite_Objects_addr + 0x40c), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(Sprite_Objects_addr + 0x40c))) - 0x800u)); }
 
 // original 0x401640 (area 8's handler 12 and choice 13, area 3's handler 0;
 // PSX 0x801F4634 as area 8's, 0x801F2D30 as area 3's): the four cells
@@ -508,7 +508,7 @@ extern "C" void __cdecl Area15_StateCount(void) {
     const unsigned char count = Sprite_Current[0xA];
     Sprite_Current[0xA] = static_cast<unsigned char>(count - 1);
     if (count == 0) Sprite_Current[4] = 0;
-    if (Word(Mem((MoveScript_PartyRecords_addr + 0x66))) == 0) {
+    if (Word(Mem(MoveScript_PartyRecords_addr + 0x66)) == 0) {
         Sprite_Current[4] = 0;
         Sprite_Current[0xA] = 0;
         return;

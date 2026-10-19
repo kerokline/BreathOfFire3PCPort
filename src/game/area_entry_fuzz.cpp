@@ -328,7 +328,7 @@ Args Generate(unsigned k, State& input) {
         else members = n + Next() % 3 - 1;
         Field_MemberCount = static_cast<unsigned char>(members & 0xFF);
         for (unsigned i = 0; i < 6; ++i)
-            if (Often()) At((Cond_Flags_addr + 0xd2))[i] = 0xFF;
+            if (Often()) At(Cond_Flags_addr + 0xd2)[i] = 0xFF;
         for (unsigned i = 0; i < n; ++i) {
             const unsigned r = Next() % 4;
             if (r == 0) p[1 + i] = 0x80;

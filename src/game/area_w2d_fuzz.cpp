@@ -198,8 +198,8 @@ unsigned char* FocusRecord(std::uint32_t v) {
 // the harness's disturbance and after a louder stand-in moves the object.
 void Settle() {
     if (Running(95, k95Leap) && Sprite_Current[9] == 0) Sprite_Current[9] = 1;
-    const unsigned speed = B((Field_MoveSpeeds_addr + 0x3));
-    if (speed == 0 || speed > 16) B((Field_MoveSpeeds_addr + 0x3)) = static_cast<unsigned char>(1 + speed % 16);
+    const unsigned speed = B(Field_MoveSpeeds_addr + 0x3);
+    if (speed == 0 || speed > 16) B(Field_MoveSpeeds_addr + 0x3) = static_cast<unsigned char>(1 + speed % 16);
 }
 
 // ---- the stand-ins the group lists ----
@@ -314,7 +314,7 @@ void Common(int area, unsigned k) {
     ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
     ah::SetPointer(MoveScript_Object_addr, ScriptRecord(ah::Next()));
     ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(ah::Next()));
-    B((Field_MoveSpeeds_addr + 0x3)) = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 2, 3, 4, 5, 8, 15, 16) : 1 + ah::Next() % 16);
+    B(Field_MoveSpeeds_addr + 0x3) = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 2, 3, 4, 5, 8, 15, 16) : 1 + ah::Next() % 16);
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -329,7 +329,7 @@ void Disturb(std::uint32_t h) {
     case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
     case 6: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
-    case 7: B((Field_MoveSpeeds_addr + 0x3)) = static_cast<unsigned char>(1 + v % 16); break;
+    case 7: B(Field_MoveSpeeds_addr + 0x3) = static_cast<unsigned char>(1 + v % 16); break;
     default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 6); break;
     }
 }
@@ -387,7 +387,7 @@ void SeedEffectsAtCell() {
         default: break;
         }
     }
-    if (ah::Half()) B((ObjTrio_addr + 0x137)) = 0;
+    if (ah::Half()) B(ObjTrio_addr + 0x137) = 0;
 }
 
 void Seed95(unsigned k) {
@@ -435,7 +435,7 @@ void Seed97(unsigned k) {
         if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(2, 2, 1, 3, 0, 0x82));
         break;
     case k97Step:
-        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 7, 0x80, 0x81));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 7, 0x80, 0x81));
         break;
     default: break;
     }
@@ -512,7 +512,7 @@ void Seed100(unsigned k) {
     }
     case k100Step:
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(3, 3, 2, 4, 0x83));
-        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 1, 5, 8, 0x80));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 1, 5, 8, 0x80));
         break;
     case k100EffRun:
         Sprite_Current = EffectRecord(ah::Next() % 4);

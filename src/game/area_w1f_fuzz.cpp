@@ -452,7 +452,7 @@ void Seed68(unsigned k) {
         break;
     case k68Spawn4M1: case k68Spawn4M2: case k68Spawn1M1: case k68Spawn1M2: case k68Spawn3M1: case k68Spawn3M2:
         for (unsigned m = 1; m < 3; ++m)
-            if (ah::Often()) B((Cond_Flags_addr + 0xd2) + m) = static_cast<unsigned char>(ah::Next() % 12);
+            if (ah::Often()) B(Cond_Flags_addr + 0xd2 + m) = static_cast<unsigned char>(ah::Next() % 12);
         break;
     default: break;
     }
@@ -487,9 +487,9 @@ void Seed74(unsigned k) {
         break;
     case k74Push:
         // each gate passed four times in five, so the move is reached often
-        if (ah::Next() % 5) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(AH_PICK(2, 2, 2, 1, 3, 0x82));
+        if (ah::Next() % 5) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(AH_PICK(2, 2, 2, 1, 3, 0x82));
         if (ah::Next() % 5) Sprite_Current[9] = 0;
-        if (ah::Next() % 5) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>((B((ObjTrio_addr + 0x8)) & 0xF8) | AH_PICK(5, 1, 5, 1, 5, 1, 0, 3, 4, 6));
+        if (ah::Next() % 5) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>((B(ObjTrio_addr + 0x8) & 0xF8) | AH_PICK(5, 1, 5, 1, 5, 1, 0, 3, 4, 6));
         break;
     default: break;
     }

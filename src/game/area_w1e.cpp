@@ -121,8 +121,8 @@ extern "C" void __cdecl Area65_PlaceMessage(void) {
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At((ObjTrio_addr + 0x3a))));
-    const auto x = static_cast<short>(Word(At((ObjTrio_addr + 0x36))));
+    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
+    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
@@ -131,8 +131,8 @@ extern "C" void __cdecl Area65_PlaceMessage(void) {
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(Area65_PlaceMessages_addr + static_cast<U>(index * 2)))));
     } else {
-        const unsigned cx = Word(At((ObjTrio_addr + 0x36)));
-        const unsigned cz = Word(At((ObjTrio_addr + 0x3a)));
+        const unsigned cx = Word(At(ObjTrio_addr + 0x36));
+        const unsigned cz = Word(At(ObjTrio_addr + 0x3a));
         U cell = Area65_Cells_addr;
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
@@ -173,8 +173,8 @@ extern "C" void __cdecl Area65_PlaceMessage(void) {
 // 0x604880 by +1 (read after the calls; ours aborts past its five entries).
 extern "C" void __cdecl Area65_PlateRun(void) {
     const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At((ObjTrio_addr + 0x10)))) + static_cast<U>(Long(At((ObjTrio_addr + 0x38))));
-    const U xs = steps * static_cast<U>(Long(At((ObjTrio_addr + 0xc)))) + static_cast<U>(Long(At((ObjTrio_addr + 0x34))));
+    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
+    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     SetLong(Cur() + 0xC, x);
@@ -433,11 +433,11 @@ extern "C" void __cdecl Area65_DrawFrame(int x, int y) {
                                                        static_cast<short>(Word(At(at::kLeaderCellZ))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x30, y, 1);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65), Area65_Buttons_addr, 6, static_cast<U>(Long(At((Gfx_UnpackScratch_addr + 0x1f000)))), x + 0x38, y + 8,
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65), Area65_Buttons_addr, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65), Area65_Buttons_addr, 8, static_cast<U>(Long(At((Gfx_UnpackScratch_addr + 0x1f00c)))), x + 0x38, y + 0x10,
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65), Area65_Buttons_addr, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
                                             static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
@@ -514,8 +514,8 @@ extern "C" void __cdecl Area65_Record8Place(void) {
     Cur()[0x29] = 5;
     SetLong(Cur() + 0xC, dir(Cur(), 0));
     SetLong(Cur() + 0x10, dir(Cur(), 2));
-    SetLong(Cur() + 0x34, Long(At((ObjTrio_addr + 0x34))));
-    SetLong(Cur() + 0x38, Long(At((ObjTrio_addr + 0x38))));
+    SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
+    SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
@@ -690,9 +690,9 @@ extern "C" void __cdecl Area65_DrawDrift(void) {
             SetWord(q + 0x16, 0x78CB);
             SetWord(q + 0x26, 0x5B);
             q[4] = q[5] = q[6] = 0x28;
-            const U m = At((Area65_DriftUV_addr + 0x8) + static_cast<U>(e))[0];
+            const U m = At(Area65_DriftUV_addr + 0x8 + static_cast<U>(e))[0];
             const U ubase = At(Area65_DriftUV_addr + static_cast<U>(e))[0];
-            const U vbase = At((Area65_DriftUV_addr + 0x4) + static_cast<U>(e))[0];
+            const U vbase = At(Area65_DriftUV_addr + 0x4 + static_cast<U>(e))[0];
             const U scroll = (Word(Cur() + 0x38) * m) >> 16;
             const U ui = static_cast<U>(i), uj = static_cast<U>(j);
             q[0x14] = static_cast<unsigned char>(ui * m + ubase);
@@ -754,7 +754,7 @@ extern "C" void __cdecl Area67_SetBit24(void) { Cur()[0x24] = static_cast<unsign
 
 // original 0x40CAC0 (handler 1, also area 131's; PSX 0x801F3EE4): field object
 // 0's +0x34 (Sprite_Objects 0x7DEEB4, 16.16) += 0x800.
-extern "C" void __cdecl Area67_Object0XUp(void) { AddLong(At((Sprite_Objects_addr + 0x34)), 0x800); }
+extern "C" void __cdecl Area67_Object0XUp(void) { AddLong(At(Sprite_Objects_addr + 0x34), 0x800); }
 
 // original 0x40CAD0 (handler 2; PSX 0x801F3F00): Effect_FindFree; a slot: its
 // record +0 = 1, kind +5 = 0x2D, +0x34 / +0x38 = the running object's
@@ -820,15 +820,15 @@ extern "C" void __cdecl Area67_Member2Spawn1(void) { MemberSpawn(2, 1, Area67_Sp
 
 // original 0x40CDE0 (handler 12, also area 131's; PSX 0x801F4424): field
 // object 0's +0x34 -= 0x800.
-extern "C" void __cdecl Area67_Object0XDown(void) { AddLong(At((Sprite_Objects_addr + 0x34)), static_cast<U>(-0x800)); }
+extern "C" void __cdecl Area67_Object0XDown(void) { AddLong(At(Sprite_Objects_addr + 0x34), static_cast<U>(-0x800)); }
 
 // original 0x40CDF0 (handler 13; PSX 0x801F4440): field object 1's +0x34
 // (0x7DEF58) += 0x800.
-extern "C" void __cdecl Area67_Object1XUp(void) { AddLong(At((Sprite_Objects_addr + 0xd8)), 0x800); }
+extern "C" void __cdecl Area67_Object1XUp(void) { AddLong(At(Sprite_Objects_addr + 0xd8), 0x800); }
 
 // original 0x40CE00 (handler 14; PSX 0x801F445C): field object 1's +0x34 -=
 // 0x800.
-extern "C" void __cdecl Area67_Object1XDown(void) { AddLong(At((Sprite_Objects_addr + 0xd8)), static_cast<U>(-0x800)); }
+extern "C" void __cdecl Area67_Object1XDown(void) { AddLong(At(Sprite_Objects_addr + 0xd8), static_cast<U>(-0x800)); }
 
 // original 0x40CE10 (handler 15, also handlers of areas 7, 19 and 130 - one
 // body, in area 67's block; PSX 0x801F4478): Music_FadeOutStop(10).

@@ -148,8 +148,8 @@ unsigned TimerWord() {
 void Seed42(unsigned k) {
     SeedActiveMember();
     // the leader's effect-state index inside the table, its entry 1 most of the time
-    if (ah::Often()) Mem((ObjTrio_addr + 0x89))[0] = static_cast<unsigned char>(ah::Next() % 24);
-    if (ah::Often()) Mem(MoveScript_EffectState_addr + Mem((ObjTrio_addr + 0x89))[0] % 24)[0] = static_cast<unsigned char>(ah::Often() ? 1 : AH_PICK(0, 2, 0x81));
+    if (ah::Often()) Mem(ObjTrio_addr + 0x89)[0] = static_cast<unsigned char>(ah::Next() % 24);
+    if (ah::Often()) Mem(MoveScript_EffectState_addr + Mem(ObjTrio_addr + 0x89)[0] % 24)[0] = static_cast<unsigned char>(ah::Often() ? 1 : AH_PICK(0, 2, 0x81));
     Mem(Area42_Rank_addr)[0] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 3 : ah::Next());
     SetWord(Mem(at::kTailTimer), TimerWord());
     Mem(AreaW0c_TailSub_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 1, 2, 0x3C, 0xFF) : ah::Next());
@@ -314,14 +314,14 @@ void Seed44(unsigned k) {
     case k44Switch: {
         g_switch44 = ah::Next() % 4;
         const unsigned char* const r = Mem(Area44_Switches_addr + g_switch44 * 5);
-        Mem((ObjTrio_addr + 0x8))[0] = static_cast<unsigned char>(ah::Often() ? r[2] & 0xF : ah::Next());
+        Mem(ObjTrio_addr + 0x8)[0] = static_cast<unsigned char>(ah::Often() ? r[2] & 0xF : ah::Next());
         break;
     }
     case k44TailA:
     case k44TailB:
         Mem(AreaW0c_TailState_addr)[0] = TailState({0, 0, 1, 1, 10, 10, 11, 11, 20, 20});
         if (ah::Often()) Mem(Sprite_ObjectsExtra_addr)[9] = 0;
-        if (ah::Often()) Mem((Sprite_ObjectsExtra_addr + 0xa4))[9] = 0;
+        if (ah::Often()) Mem(Sprite_ObjectsExtra_addr + 0xa4)[9] = 0;
         break;
     default:
         break;
@@ -562,8 +562,8 @@ unsigned char* Obj() { return Sprite_Current; }
 // The leader's cell words as bytes, and one Area45_Cells record planted with
 // them (the search has no bound), a sentinel in the last record.
 void PlantCell(bool random_place) {
-    unsigned char* const cx = Mem((ObjTrio_addr + 0x36));
-    unsigned char* const cz = Mem((ObjTrio_addr + 0x3a));
+    unsigned char* const cx = Mem(ObjTrio_addr + 0x36);
+    unsigned char* const cz = Mem(ObjTrio_addr + 0x3a);
     cx[1] = 0;
     cz[1] = 0;
     const U n = (at::kA45CellsEnd - Area45_Cells_addr) / 4;
@@ -630,7 +630,7 @@ void Seed45(unsigned k) {
         if (ah::Often()) SetWord(Mem(Area45_PlaceMessages_addr + (ah::Next() % 11) * 0x20), Word(Mem(AreaW0b_Place_addr)));
         // the found cell's id one of the three sets', or none
         unsigned char* cell = Mem(Area45_Cells_addr);
-        while (!(cell[0] == Mem((ObjTrio_addr + 0x36))[0] && cell[1] == Mem((ObjTrio_addr + 0x3a))[0])) cell += 4;
+        while (!(cell[0] == Mem(ObjTrio_addr + 0x36)[0] && cell[1] == Mem(ObjTrio_addr + 0x3a)[0])) cell += 4;
         if (ah::Often()) cell[3] = Mem(Area45_NameSets_addr + (ah::Next() % 3) * 5)[0];
         // items held or not, now and then a list ended early
         for (unsigned i = 0; i < 0x74; ++i)
@@ -640,7 +640,7 @@ void Seed45(unsigned k) {
     }
     case kPlateRun:
         if (ah::Half()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 ^ 0x1000);
-        if (ah::Half()) Mem((ObjTrio_addr + 0x9))[0] = static_cast<unsigned char>(AH_PICK(0, 1, 0xFF, 0x80));
+        if (ah::Half()) Mem(ObjTrio_addr + 0x9)[0] = static_cast<unsigned char>(AH_PICK(0, 1, 0xFF, 0x80));
         break;
     case kPlateShow:
         o[0xB] = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 1, 1, 2, 3, 4, 0, 5) : ah::Next());
@@ -693,15 +693,15 @@ void Seed45(unsigned k) {
     case kDrawSprite:
         Draw_PassFlags = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 2, 8, 0x10, 0x1B, 4, 0x20, 0xE4) : ah::Next());
         // the button words with a bit of one entry's mask, or none
-        if (ah::Often()) SetLong(Mem((Gfx_UnpackScratch_addr + 0x1f000)), static_cast<std::int32_t>(Word(Mem(Area45_Buttons_addr + (ah::Next() % 6) * 4)) | (ah::Next() & 0xFFFF0000u)));
+        if (ah::Often()) SetLong(Mem(Gfx_UnpackScratch_addr + 0x1f000), static_cast<std::int32_t>(Word(Mem(Area45_Buttons_addr + (ah::Next() % 6) * 4)) | (ah::Next() & 0xFFFF0000u)));
         if (ah::Half()) {
             // a word only the eighth entry answers, when it has such bits
             U others = 0;
             for (U e = 0; e < 7; ++e) others |= Word(Mem(Area45_Buttons_addr + e * 4));
             const U only = Word(Mem(Area45_Buttons_addr + 7 * 4)) & ~others;
-            if (only != 0) SetLong(Mem((Gfx_UnpackScratch_addr + 0x1f00c)), static_cast<std::int32_t>(only | (ah::Next() & 0xFFFF0000u)));
-        } else if (ah::Often()) SetLong(Mem((Gfx_UnpackScratch_addr + 0x1f00c)), static_cast<std::int32_t>(Word(Mem(Area45_Buttons_addr + (ah::Half() ? 6 + ah::Next() % 2 : ah::Next() % 8) * 4)) | (ah::Next() & 0xFFFF0000u)));
-        if (ah::Half()) SetLong(Mem((Gfx_UnpackScratch_addr + 0x1f000)), 0);
+            if (only != 0) SetLong(Mem(Gfx_UnpackScratch_addr + 0x1f00c), static_cast<std::int32_t>(only | (ah::Next() & 0xFFFF0000u)));
+        } else if (ah::Often()) SetLong(Mem(Gfx_UnpackScratch_addr + 0x1f00c), static_cast<std::int32_t>(Word(Mem(Area45_Buttons_addr + (ah::Half() ? 6 + ah::Next() % 2 : ah::Next() % 8) * 4)) | (ah::Next() & 0xFFFF0000u)));
+        if (ah::Half()) SetLong(Mem(Gfx_UnpackScratch_addr + 0x1f000), 0);
         if (ah::Half()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x1000u);
         if (ah::Half()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x4000u);
         if (ah::Half()) Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(AH_PICK(0xC, 0x8C, 0xB, 0xFF));
@@ -721,7 +721,7 @@ void Seed45(unsigned k) {
         if (ah::Half()) o[2] = 0;
         if (ah::Often()) Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags | 4);
         o[0xB] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 3, 2, 3, 0, 1, 4, 5) : ah::Next());
-        const unsigned height = Mem((AreaMap_Header_addr + 0x1))[0];
+        const unsigned height = Mem(AreaMap_Header_addr + 0x1)[0];
         if (ah::Half()) SetWord(o + 0x3A, height + AH_PICK(8, 9, 7, 0, 0x7FFF));
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));

@@ -79,10 +79,10 @@ void Tail4(unsigned char sub) {
 // `flag` set; when flags 0x6D..0x70 are all set, flag 0x71 too (area 34's
 // trigger 51 is the same with 0x6D). Answers 0 in al.
 unsigned char FlagsGather(unsigned flag) {
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), flag);
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), flag);
     for (unsigned f = 0x6D; f <= 0x70; ++f)
-        if (!AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), f)) return 0;
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x71);
+        if (!AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), f)) return 0;
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x71);
     return 0;
 }
 
@@ -107,7 +107,7 @@ void ChoicePoseFlag(unsigned char pose_on, unsigned char flag_on, unsigned flag)
     const unsigned char answer = Answer();
     SetMessage(0xFFFF);
     if (answer == pose_on) LeaderPose27();
-    if (Answer() == flag_on) AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0x18)), flag);
+    if (Answer() == flag_on) AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0x18), flag);
     if (Answer() == 2) return;
     AH_CALL(Sound_PlayEffect)(0x208);
 }
@@ -127,7 +127,7 @@ void FieldStatePace() { AddWord(Field_State + 0x12E, -2); }
 void SpawnAtLeader(unsigned char kind, std::uint32_t kinds) {
     const auto z = static_cast<short>(Word(Mem(ObjTrio_addr + 0x30)));
     const auto x = static_cast<short>(Word(Mem(ObjTrio_addr + 0x2E)));
-    const unsigned char list = B((Cond_Flags_addr + 0xd2));
+    const unsigned char list = B(Cond_Flags_addr + 0xd2);
     Sprite_Current = ObjTrio;
     const unsigned char effect = B(kinds + list);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
@@ -169,7 +169,7 @@ void PlaceOneObject(std::uint32_t positions, std::uint32_t weights) {
         const long ground = AH_CALL(AreaMap_Elevation)(Long(object + 0x34), z);
         SetWord(object + 0x3E, static_cast<unsigned>(ground));
     }
-    Field_EdgeBits = static_cast<unsigned short>(Long(Mem((ObjTrio_addr + 0x134))) - 5);
+    Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
 
 }  // namespace
@@ -285,7 +285,7 @@ extern "C" void __cdecl Area56_ChoicePoseIfAllFlags(void) {
     SetMessage(0xFFFF);
     if (answer != 0) return;
     AH_CALL(Sound_PlayEffect)(0x208);
-    if ((B((Cond_Flags_addr + 0x18) + 1) & 0x7F) != 0x7F) return;
+    if ((B(Cond_Flags_addr + 0x18 + 1) & 0x7F) != 0x7F) return;
     LeaderPose27();
 }
 
@@ -408,10 +408,10 @@ extern "C" void __cdecl Area59_SetCells(void) { SetCells59(0xC0, 0xA1); }
 // z 0x29 for 0x23.
 extern "C" int __cdecl Area59_StepHook(long x, long z) {
     if (Cond_ByteFD != 2) return 0;
-    if (!AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), 0x33)) return 0;
+    if (!AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x33)) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(x) >> 16) - 0x46) >= 3) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(z) >> 16) - 0x29) >= 3) return 0;
-    const unsigned char pose = B((ObjTrio_addr + 0x8));
+    const unsigned char pose = B(ObjTrio_addr + 0x8);
     if (pose != 0 && pose != 7 && pose != 6) return 0;
     B(at::kCounter0) = 0;
     AH_CALL(Party_DropIn)(0);
@@ -515,7 +515,7 @@ extern "C" unsigned char __cdecl Area61_Trigger21(unsigned char*, unsigned char*
 // +0x8A one on.
 extern "C" void __cdecl Area62_ArmTailGiveItem(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
-    if (B((ObjTrio_addr + 0x89)) != 6) return;
+    if (B(ObjTrio_addr + 0x89) != 6) return;
     AH_CALL(ScriptFlags_Set40)();
     unsigned char* const member = Field_ActiveMember;
     B(AreaW0a_TailKind_addr) = 0x2A;
@@ -545,7 +545,7 @@ extern "C" void __cdecl Area62_TailGiveItem59(void) {
         if (AH_CALL(Inventory_Add)(0, 0x59, 1) != 0) {
             AH_CALL(Sound_PlayEffect)(0x106);
             AH_CALL(Msg_OpenSystem)(2);
-            AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x68);
+            AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x68);
         } else {
             AH_CALL(Msg_OpenSystem)(3);
         }

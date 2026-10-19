@@ -343,8 +343,8 @@ void Seed48(unsigned k) {
     case k48Choice: SeedAnswer(); break;
     case k48ToggleD: case k48Bump: {
         // the leader's index inside MoveScript_EffectState, its byte 1 half the time
-        if (ah::Often()) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(ah::Next() % 24);
-        if (ah::Half()) B(MoveScript_EffectState_addr + B((ObjTrio_addr + 0x89)) % 24) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
+        if (ah::Often()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(ah::Next() % 24);
+        if (ah::Half()) B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89) % 24) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
         SeedCount();
         break;
     }
@@ -422,7 +422,7 @@ void SeedSwitch(std::uint32_t table, unsigned stride, unsigned count, unsigned c
     g_switch = ah::Mem(table + (ah::Next() % count) * stride);
     g_switch_off = ah::Half() ? 1 + ah::Next() % 3 : 0;
     const auto pose = static_cast<unsigned char>(g_switch[2] & pose_mask);
-    B((ObjTrio_addr + 0x8)) = g_switch_off == 3 ? static_cast<unsigned char>(pose + (ah::Half() ? 1 : 0x10)) : pose;
+    B(ObjTrio_addr + 0x8) = g_switch_off == 3 ? static_cast<unsigned char>(pose + (ah::Half() ? 1 : 0x10)) : pose;
 }
 void CellArgs(std::uint32_t* a) {
     if (!g_switch) return;
@@ -461,14 +461,14 @@ void Seed49(unsigned k) {
         for (unsigned m = 0; m < 3; ++m)
             if (ah::Often()) PlaceInZone(m);
         break;
-    case k49Counter1: if (ah::Half()) B((Cond_Flags_addr + 0xd2) + 1) = 4; break;
-    case k49Counter2: if (ah::Half()) B((Cond_Flags_addr + 0xd2) + 2) = 4; break;
+    case k49Counter1: if (ah::Half()) B(Cond_Flags_addr + 0xd2 + 1) = 4; break;
+    case k49Counter2: if (ah::Half()) B(Cond_Flags_addr + 0xd2 + 2) = 4; break;
     case k49Spawn0: case k49Spawn1: case k49Spawn2: case k49Spawn3:
         for (unsigned m = 0; m < 3; ++m)
-            if (ah::Often()) B((Cond_Flags_addr + 0xd2) + m) = static_cast<unsigned char>(ah::Next() % 8);
+            if (ah::Often()) B(Cond_Flags_addr + 0xd2 + m) = static_cast<unsigned char>(ah::Next() % 8);
         break;
-    case k49Spawn6C: if (ah::Half()) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85)); break;
-    case k49Run5: case k49Run6: if (ah::Half()) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(AH_PICK(6, 6, 5, 7, 0x86)); break;
+    case k49Spawn6C: if (ah::Half()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85)); break;
+    case k49Run5: case k49Run6: if (ah::Half()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(AH_PICK(6, 6, 5, 7, 0x86)); break;
     default: break;
     }
 }
@@ -529,7 +529,7 @@ void Seed51(unsigned k) {
     case k51Choice: SeedAnswer(); break;
     case k51Tint: {
         // the two flags in all four ways (the bits set for the record: Flags_Test is a recorder), and the chain
-        unsigned char* const flags = ah::Mem((Cond_Flags_addr + 0x70) + 2);
+        unsigned char* const flags = ah::Mem(Cond_Flags_addr + 0x70 + 2);
         flags[0] = static_cast<unsigned char>((flags[0] & ~0x18u) | (ah::Next() & 0x18u));
         Chain();
         break;

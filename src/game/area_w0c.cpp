@@ -111,7 +111,7 @@ void RunDropInTail(const DropInTail& t) {
     case 0:
         if (Field_Request == 2) return;
         AH_CALL(ScriptFlags_Set40)();
-        AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), t.flag);
+        AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), t.flag);
         B(AreaW0c_TailState_addr) = 1;
         return;
     case 1:
@@ -137,7 +137,7 @@ void RunDropInTail(const DropInTail& t) {
         if (B(at::kCounter3) != 0x31) return;
         B(at::kCounter3) = 0;
         AH_CALL(ScriptFlags_Clear40)();
-        AH_CALL(Flags_Clear)(Mem((Cond_Flags_addr + 0xa0)), t.flag);
+        AH_CALL(Flags_Clear)(Mem(Cond_Flags_addr + 0xa0), t.flag);
         B(AreaW0a_TailKind_addr) = 0;
         B(AreaW0c_TailState_addr) = 0;
         return;
@@ -157,7 +157,7 @@ void SetCounters(unsigned char n) {
     B(at::kCounter2) = 0;
     B(at::kCounter3) = 0;
     MoveScript_Var7 = 4;
-    B((MoveScript_PartyRecords_addr + 0x65)) = 0x14;
+    B(MoveScript_PartyRecords_addr + 0x65) = 0x14;
 }
 
 // Area 37's paired choice handlers: "ask" (answer 0: message `yes`; else
@@ -447,8 +447,8 @@ extern "C" void __cdecl Area33_Record08Start(void) {
     const auto StepZ = [&] { return S16(Mem(WorldMap33_Record08Steps_addr + 2 + cur[8] * 4u)); };
     SetLong(cur + 0xC, StepX());
     SetLong(cur + 0x10, StepZ());
-    SetLong(cur + 0x34, Long(Mem((ObjTrio_addr + 0x34))));
-    SetLong(cur + 0x38, Long(Mem((ObjTrio_addr + 0x38))));
+    SetLong(cur + 0x34, Long(Mem(ObjTrio_addr + 0x34)));
+    SetLong(cur + 0x38, Long(Mem(ObjTrio_addr + 0x38)));
     if (cur[6] != 0) {
         AddWord(cur + 0x36, -static_cast<std::int16_t>(StepX() >> 13));
         AddWord(cur + 0x3A, -static_cast<std::int16_t>(StepZ() >> 13));
@@ -517,7 +517,7 @@ extern "C" void __cdecl Area34_ChoiceTail5(void) {
     if (answer == 0 || answer == 1) {
         B(AreaW0c_TailSub_addr) = answer == 0 ? 5 : 4;
         B(AreaW0a_TailKind_addr) = 5;
-        AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x1E);
+        AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x1E);
     }
     if (B(AreaW0c_ChoiceAnswer_addr) == 2) return;
     if (static_cast<unsigned char>(Cond_ByteFA) != 8) return;
@@ -527,7 +527,7 @@ extern "C" void __cdecl Area34_ChoiceTail5(void) {
     AH_CALL(ScriptFlags_Set40)();
     AH_CALL(Party_DropIn)(2);
     MoveScript_Var7 = 2;
-    B((MoveScript_PartyRecords_addr + 0x65)) = 0;
+    B(MoveScript_PartyRecords_addr + 0x65) = 0;
 }
 
 // original 0x404DE0 (Area34_Choices[1] = Area34_Handlers[0]; PSX
@@ -552,10 +552,10 @@ extern "C" void __cdecl Area34_SpawnEffect51(void) {
 // story flag 0x6D set; when flags 0x6D..0x70 are all set, flag 0x71 too.
 // Answers 0 in al.
 extern "C" unsigned char __cdecl Area34_Trigger51(unsigned char*, unsigned char*) {
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x6D);
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x6D);
     for (unsigned flag = 0x6D; flag <= 0x70; ++flag)
-        if (!AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), flag)) return 0;
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x71);
+        if (!AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), flag)) return 0;
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x71);
     return 0;
 }
 
@@ -587,10 +587,10 @@ extern "C" void __cdecl Area35_HideObject(void) {
 // 7: counter 0 = 0, Party_DropIn(0), answer 1. Otherwise 0.
 extern "C" int __cdecl Area36_StepHook(long x, long z) {
     if (Cond_ByteFD != 2) return 0;
-    if (!AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), 0x33)) return 0;
+    if (!AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x33)) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(x) >> 16) - 0x46) >= 3) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(z) >> 16) - 0x23) >= 3) return 0;
-    const unsigned char pose = B((ObjTrio_addr + 0x8));
+    const unsigned char pose = B(ObjTrio_addr + 0x8);
     if (pose != 0 && pose != 7 && pose != 6) return 0;
     B(at::kCounter0) = 0;
     AH_CALL(Party_DropIn)(0);
@@ -673,7 +673,7 @@ extern "C" void __cdecl Area37_TailLeave(void) {
     switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
     case 0: {
         if (Field_Request == 2) return;
-        AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x72);
+        AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x72);
         AH_CALL(Field_ChangeArea)(0x25, 0x2C8000, 0x270000, 1);
         const auto next = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
         B(AreaW0c_PendingKind_addr) = 0xFE;

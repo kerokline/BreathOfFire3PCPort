@@ -181,7 +181,7 @@ std::uint32_t MovesScriptObject(const std::uint32_t*, std::uint32_t answer) {
 }
 std::uint32_t MovesPose(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if ((n & 3) == 0) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(n >> 8);
+    if ((n & 3) == 0) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 
@@ -240,10 +240,10 @@ void Disturb(std::uint32_t h) {
     case 0: B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(h & 0x100 ? 5 : v); break;
     case 1: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 2: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
-    case 3: B((ObjTrio_addr + 0x8)) = v; break;
-    case 4: B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(h & 0x100 ? 5 : v); break;
+    case 3: B(ObjTrio_addr + 0x8) = v; break;
+    case 4: B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(h & 0x100 ? 5 : v); break;
     case 5: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 8); break;
-    case 6: B((Cond_Flags_addr + 0xd2) + (h >> 16) % 3) = static_cast<unsigned char>(v % 8); break;
+    case 6: B(Cond_Flags_addr + 0xd2 + (h >> 16) % 3) = static_cast<unsigned char>(v % 8); break;
     default: B(Cond_ByteFE_addr) = v; break;
     }
 }
@@ -275,7 +275,7 @@ void SeedSwitch() {
     g_switch = ah::Mem(Area77_CellSwitches_addr + (ah::Next() % at::kArea77CellSwitchCount) * 4u);
     g_switch_off = ah::Half() ? 1 + ah::Next() % 3 : 0;
     const unsigned char pose = g_switch[2];
-    B((ObjTrio_addr + 0x8)) = g_switch_off == 3 ? static_cast<unsigned char>(pose + (ah::Half() ? 1 : 0xFF)) : pose;
+    B(ObjTrio_addr + 0x8) = g_switch_off == 3 ? static_cast<unsigned char>(pose + (ah::Half() ? 1 : 0xFF)) : pose;
 }
 void CellArgs(std::uint32_t* a) {
     if (!g_switch) return;
@@ -323,7 +323,7 @@ void Seed77(unsigned k) {
     case k77SpawnA: case k77SpawnB: case k77SpawnC: case k77SpawnD: case k77SpawnE: case k77Spawn0M1: case k77Spawn0M2:
     case k77Spawn0M0: case k77SpawnF: case k77SpawnG:
         for (unsigned m = 0; m < 3; ++m)
-            if (ah::Often()) B((Cond_Flags_addr + 0xd2) + m) = static_cast<unsigned char>(ah::Next() % 8);
+            if (ah::Often()) B(Cond_Flags_addr + 0xd2 + m) = static_cast<unsigned char>(ah::Next() % 8);
         break;
     case k77Leap: SeedLeap(); break;
     default: break;
@@ -383,7 +383,7 @@ void Seed82(unsigned k) {
 // ---- area 84 ----
 void Seed84(unsigned) {
     Common();
-    if (ah::Often()) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
+    if (ah::Often()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
 }
 
 void RunArea(int area, const ah::Clone* clones, unsigned n, void (*seed)(unsigned), void (*args)(unsigned, std::uint32_t*),

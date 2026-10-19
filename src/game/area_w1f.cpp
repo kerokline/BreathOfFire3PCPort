@@ -82,7 +82,7 @@ void SpawnAtMember(unsigned member, unsigned char kind, std::uint32_t kinds) {
     const unsigned char* const record = PartyAt(member);
     const auto z = static_cast<short>(Word(record + 0x30));
     const auto x = static_cast<short>(Word(record + 0x2E));
-    const unsigned char effect = B(kinds + B((Cond_Flags_addr + 0xd2) + member));
+    const unsigned char effect = B(kinds + B(Cond_Flags_addr + 0xd2 + member));
     Sprite_Current = PartyAt(member);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;
@@ -143,7 +143,7 @@ void PlaceRandomObject(std::uint32_t cells, std::uint32_t weights) {
         const long ground = AH_CALL(AreaMap_Elevation)(Long(object + 0x34), z);
         SetWord(object + 0x3E, static_cast<unsigned>(ground));
     }
-    Field_EdgeBits = static_cast<unsigned short>(Long(Mem((ObjTrio_addr + 0x134))) - 5);
+    Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
 
 // ---- area 75 ----
@@ -389,9 +389,9 @@ extern "C" void __cdecl Area74_ChoiceAnswer94(void) {
 extern "C" void __cdecl Area74_PushToggleRow7(void) {
     unsigned char* const member = Field_ActiveMember;
     member[0x80] = static_cast<unsigned char>(member[0x80] & 0xFE);
-    if (B((ObjTrio_addr + 0x89)) != 2) return;
+    if (B(ObjTrio_addr + 0x89) != 2) return;
     unsigned char* const cur = Sprite_Current;
-    const auto dir = static_cast<unsigned char>(B((ObjTrio_addr + 0x8)) & 7);
+    const auto dir = static_cast<unsigned char>(B(ObjTrio_addr + 0x8) & 7);
     if (cur[9] != 0) return;
     if (dir != 5 && dir != 1) return;
     cur[8] = dir;
@@ -399,14 +399,14 @@ extern "C" void __cdecl Area74_PushToggleRow7(void) {
     Field_ActiveMember[0x87] = 3;
     AH_CALL(MoveCmd_Move)(MoveScript_Object, dir);
     if (dir == 5) {
-        if (AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0x38)), 6) != 0)
-            AH_CALL(Flags_Clear)(Mem((Cond_Flags_addr + 0x38)), 6);
+        if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0x38), 6) != 0)
+            AH_CALL(Flags_Clear)(Mem(Cond_Flags_addr + 0x38), 6);
         else
-            AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0x38)), 5);
+            AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0x38), 5);
     } else {
-        AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0x38)), 6);
+        AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0x38), 6);
     }
-    AH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Long(Mem((ObjTrio_addr + 0x2c))) + 0x100));
+    AH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x2c)) + 0x100));
 }
 
 // original 0x40D790 (Area74_Handlers[1]; PSX 0x801F2E74; also named three
@@ -625,10 +625,10 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         B(AreaW0c_TailState_addr) = cl;
         break;
     case 2: {
-        AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x41);
+        AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x41);
         AH_CALL(Field_ChangeArea)(0x4B, 0x170000, 0x190000, 0x82);
         B(AreaW1f_MusicCurrent_addr) = 0x58;
-        const unsigned char set = AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0x50)), 1);
+        const unsigned char set = AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0x50), 1);
         cl = 3;
         B(AreaW0c_TailState_addr) = cl;
         B(at::kCounter0) = set != 0 ? 0x13 : 0;
@@ -754,7 +754,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         cl = 0x1F;
         B(AreaW0c_TailState_addr) = cl;
         AddWord(ObjectAt(a) + 0x8A, 1);
-        AddWord(Mem((ObjTrio_addr + 0x12e)), 1);
+        AddWord(Mem(ObjTrio_addr + 0x12e), 1);
         break;
     }
     case 0x1F:
@@ -784,7 +784,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         B(AreaW0c_TailState_addr) = cl;
         break;
     case 0x22:
-        AH_CALL(Flags_Clear)(Mem((Cond_Flags_addr + 0xa0)), 0x41);
+        AH_CALL(Flags_Clear)(Mem(Cond_Flags_addr + 0xa0), 0x41);
         AH_CALL(Field_ChangeArea)(0x4B, 0x198000, 0x1B8000, 0x83);
         cl = 0x23;
         B(AreaW0c_TailState_addr) = cl;
@@ -809,7 +809,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
 // flag 2, with x at 0x1B0000 or less (signed) and z's high word in
 // 0x38..0x3B: ScriptFlags_Set40, counter 3 = 0xA, al 1. Else al 0.
 extern "C" int __cdecl Area75_StepHook(long x, long z) {
-    if (AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0x50)), 2) != 0) return 0;
+    if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0x50), 2) != 0) return 0;
     if (x > 0x1B0000) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(z) >> 16) - 0x38) >= 4) return 0;
     AH_CALL(ScriptFlags_Set40)();
@@ -946,7 +946,7 @@ extern "C" void __cdecl Area75_PhasePlay(void) {
 // original 0x40E3C0 (Area75_Phases[3]): Cond row 10's flag 1 set, the tail
 // state 0x1E.
 extern "C" void __cdecl Area75_PhaseMissed(void) {
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0x50)), 1);
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0x50), 1);
     B(AreaW0c_TailState_addr) = 0x1E;
 }
 
@@ -955,14 +955,14 @@ extern "C" void __cdecl Area75_PhaseMissed(void) {
 // the run step 0; object B's +0x83 = 4 and word +0x8A = 0; MoveScript_Var7 5;
 // object A's +0x83 = 5 and word +0x8A = 0; Party_DropIn(5); counter 0 = 0x1E.
 extern "C" void __cdecl Area75_PhaseReached(void) {
-    AH_CALL(Flags_Clear)(Mem((Cond_Flags_addr + 0xa0)), 0x41);
+    AH_CALL(Flags_Clear)(Mem(Cond_Flags_addr + 0xa0), 0x41);
     if (Cond_ByteFA != 0xA) return;
-    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0x50)), 0);
+    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0x50), 0);
     const unsigned b = B(AreaW1f_ObjectB_addr);
     const unsigned a = B(at::kObjectA);
     B(AreaW0a_TailKind_addr) = 0;
     B(AreaW0c_TailState_addr) = 0;
-    B((MoveScript_PartyRecords_addr + 0x65)) = 0;
+    B(MoveScript_PartyRecords_addr + 0x65) = 0;
     unsigned char* const object_b = ObjectAt(b);
     object_b[0x83] = 4;
     SetWord(object_b + 0x8A, 0);
@@ -1007,7 +1007,7 @@ extern "C" void __cdecl Area75_PlayerPress(void) {
     const unsigned slot = B(AreaW1f_PlayerEffect_addr);
     DropCounter(AreaW1f_PlayerCounter_addr, r);
     Sprite_Current = Mem(ObjTrio_addr);
-    B((ObjTrio_addr + 0x4a)) = 1;
+    B(ObjTrio_addr + 0x4a) = 1;
     DrainEffect(slot);
     AH_CALL(Sprite_ScriptTick)();
     B(AreaW1f_IdleFrames_addr) = 0;
@@ -1022,7 +1022,7 @@ extern "C" void __cdecl Area75_EarlyPress(void) {
     if (!Pressed20()) return;
     Sprite_Current = Mem(ObjTrio_addr);
     const unsigned slot = B(AreaW1f_PlayerEffect_addr);
-    B((ObjTrio_addr + 0x4a)) = 1;
+    B(ObjTrio_addr + 0x4a) = 1;
     DrainEffect(slot);
     AH_CALL(Sprite_ScriptTick)();
     B(AreaW1f_EarlyPresses_addr) = static_cast<unsigned char>(B(AreaW1f_EarlyPresses_addr) + 1);

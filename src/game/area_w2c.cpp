@@ -40,7 +40,7 @@ unsigned char& B(U address) { return *Mem(address); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
-unsigned char* StoryFlags() { return Mem((Cond_Flags_addr + 0xa0)); }
+unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // Effect_Objects record `slot` (0x80 bytes).
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
 // The choice's answer as the choices read it with movsx.
@@ -58,7 +58,7 @@ void RunStep(unsigned char var7, unsigned char step) {
     B(at::kCounter1) = 0;
     B(at::kCounter2) = 0;
     B(at::kCounter3) = 0;
-    B((MoveScript_PartyRecords_addr + 0x65)) = step;
+    B(MoveScript_PartyRecords_addr + 0x65) = step;
     B(MoveScript_Var7_addr) = var7;
 }
 
@@ -187,7 +187,7 @@ extern "C" void __cdecl Area91_ObjectRun(void) {
 // that store), Sound_PlayEffect(0x201); not 0: ScriptFlags_Set40 and
 // Sprite_Current +4 (the state) + 1.
 extern "C" void __cdecl Area91_State0CheckItem57(void) {
-    const unsigned char list = B((Cond_Flags_addr + 0xd2));
+    const unsigned char list = B(Cond_Flags_addr + 0xd2);
     if (list != 6 && list != 3) {
         Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
         return;
@@ -207,7 +207,7 @@ extern "C" void __cdecl Area91_State0CheckItem57(void) {
 // Sound_PlayEffect(0x200), then Sprite_Current (read again for each) +0xA = 0,
 // +0xB = 0, +4 + 1.
 extern "C" void __cdecl Area91_State1Arm(void) {
-    if (B((ObjTrio_addr + 0x137)) != 0) return;
+    if (B(ObjTrio_addr + 0x137) != 0) return;
     AH_CALL(Sound_PlayEffect)(0x200);
     Sprite_Current[0xA] = 0;
     Sprite_Current[0xB] = 0;
@@ -490,13 +490,13 @@ extern "C" void __cdecl Area92_ChoiceRunStep(void) {
 // original 0x412940 (area 92 +0x34[1]): the message word by the s8 answer;
 // answer (byte) 0: the scene start with MoveScript_Var7 8 and step 0.
 extern "C" void __cdecl Area92_ChoiceRun0(void) {
-    SetMessage(MessageAt((Area92_ChoiceMessages_addr + 0xc), Answer()));
+    SetMessage(MessageAt(Area92_ChoiceMessages_addr + 0xc, Answer()));
     if (B(AreaW0c_ChoiceAnswer_addr) == 0) RunStep(8, 0);
 }
 
 // original 0x412990 (area 92 +0x34[2]): the same with step 0x28.
 extern "C" void __cdecl Area92_ChoiceRun28(void) {
-    SetMessage(MessageAt((Area92_ChoiceMessages_addr + 0x10), Answer()));
+    SetMessage(MessageAt(Area92_ChoiceMessages_addr + 0x10, Answer()));
     if (B(AreaW0c_ChoiceAnswer_addr) == 0) RunStep(8, 0x28);
 }
 
@@ -505,7 +505,7 @@ extern "C" void __cdecl Area92_ChoiceRun28(void) {
 // chapter row's flag 0x1B clear - step 0x12, set - step 0x23.
 extern "C" void __cdecl Area92_ChoiceRunByFlag1B(void) {
     const int answer = Answer();
-    SetMessage(MessageAt((Area92_ChoiceMessages_addr + 0x14), answer));
+    SetMessage(MessageAt(Area92_ChoiceMessages_addr + 0x14, answer));
     if (answer == 0) {
         RunStep(7, 0x3C);
     } else if (answer == 1) {
@@ -519,35 +519,35 @@ extern "C" void __cdecl Area92_ChoiceRunByFlag1B(void) {
 // original 0x412AA0 (area 92 +0x3C[0] = +0x34[4], PSX 0x801F2E9C): an effect
 // of kind 4 at party record 0, its third byte Area92_EffectArgs4 by the first
 // party list byte.
-extern "C" void __cdecl Area92_SpawnKind4AtMember0(void) { SpawnInline(ObjTrio_addr, 4, Area92_EffectArgs4_addr, (Cond_Flags_addr + 0xd2)); }
+extern "C" void __cdecl Area92_SpawnKind4AtMember0(void) { SpawnInline(ObjTrio_addr, 4, Area92_EffectArgs4_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x412B50 (+0x3C[1], PSX 0x801F304C): kind 3 at record 0 by list 0,
 // Area92_EffectArgs3.
-extern "C" void __cdecl Area92_SpawnKind3AtMember0(void) { SpawnInline(ObjTrio_addr, 3, Area92_EffectArgs3_addr, (Cond_Flags_addr + 0xd2)); }
+extern "C" void __cdecl Area92_SpawnKind3AtMember0(void) { SpawnInline(ObjTrio_addr, 3, Area92_EffectArgs3_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x412C00 (+0x3C[2], PSX 0x801F31FC): kind 3 at record 1 by list 1.
 extern "C" void __cdecl Area92_SpawnKind3AtMember1(void) {
-    SpawnInline(ObjTrio_addr + at::kPartyStride, 3, Area92_EffectArgs3_addr, (Cond_Flags_addr + 0xd3));
+    SpawnInline(ObjTrio_addr + at::kPartyStride, 3, Area92_EffectArgs3_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x412CB0 (+0x3C[3], PSX 0x801F33AC): kind 3 at record 2 by list 2
 // (read as a dword, masked to its byte).
 extern "C" void __cdecl Area92_SpawnKind3AtMember2(void) {
-    SpawnInline(ObjTrio_addr + 2 * at::kPartyStride, 3, Area92_EffectArgs3_addr, (Cond_Flags_addr + 0xd4));
+    SpawnInline(ObjTrio_addr + 2 * at::kPartyStride, 3, Area92_EffectArgs3_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x412D70 (+0x3C[4], PSX 0x801F355C): kind 1 at record 0 by list 0,
 // Area92_EffectArgs1.
-extern "C" void __cdecl Area92_SpawnKind1AtMember0(void) { SpawnInline(ObjTrio_addr, 1, Area92_EffectArgs1_addr, (Cond_Flags_addr + 0xd2)); }
+extern "C" void __cdecl Area92_SpawnKind1AtMember0(void) { SpawnInline(ObjTrio_addr, 1, Area92_EffectArgs1_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x412E20 (+0x3C[5], PSX 0x801F3708): kind 1 at record 1 by list 1.
 extern "C" void __cdecl Area92_SpawnKind1AtMember1(void) {
-    SpawnInline(ObjTrio_addr + at::kPartyStride, 1, Area92_EffectArgs1_addr, (Cond_Flags_addr + 0xd3));
+    SpawnInline(ObjTrio_addr + at::kPartyStride, 1, Area92_EffectArgs1_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x412ED0 (+0x3C[6], PSX 0x801F38B4): kind 1 at record 2 by list 2.
 extern "C" void __cdecl Area92_SpawnKind1AtMember2(void) {
-    SpawnInline(ObjTrio_addr + 2 * at::kPartyStride, 1, Area92_EffectArgs1_addr, (Cond_Flags_addr + 0xd4));
+    SpawnInline(ObjTrio_addr + 2 * at::kPartyStride, 1, Area92_EffectArgs1_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x412F90 (+0x3C[7] = +0x34[11], PSX 0x801F3A60): Music_Play(0x3D, 8).
@@ -573,13 +573,13 @@ extern "C" void __cdecl Area94_ChoiceMessage0(void) { SetMessage(MessageAt(Area9
 
 // original 0x412FE0 (+0x34[1] = +0x3C[14], PSX 0x801F2C30): the same, its
 // second list.
-extern "C" void __cdecl Area94_ChoiceMessage1(void) { SetMessage(MessageAt((Area94_ChoiceMessages_addr + 0xc), Answer())); }
+extern "C" void __cdecl Area94_ChoiceMessage1(void) { SetMessage(MessageAt(Area94_ChoiceMessages_addr + 0xc, Answer())); }
 
 // original 0x413000 (+0x34[2] = +0x3C[15], PSX 0x801F2C5C): the message word;
 // answer 1: the chapter row's flag 0x15 set.
 extern "C" void __cdecl Area94_ChoiceSetFlag15(void) {
     const int answer = Answer();
-    SetMessage(MessageAt((Area94_ChoiceMessages_addr + 0x18), answer));
+    SetMessage(MessageAt(Area94_ChoiceMessages_addr + 0x18, answer));
     if (answer == 1) AH_CALL(Flags_Set)(FlagRow(), 0x15);
 }
 
@@ -589,7 +589,7 @@ extern "C" void __cdecl Area94_ChoiceSetFlag15(void) {
 // step 0x32.
 extern "C" void __cdecl Area94_ChoiceRunByFlags16(void) {
     const int answer = Answer();
-    SetMessage(MessageAt((Area94_ChoiceMessages_addr + 0x1c), answer));
+    SetMessage(MessageAt(Area94_ChoiceMessages_addr + 0x1c, answer));
     if (answer != 1) return;
     if (AH_CALL(Flags_Test)(FlagRow(), 0x16) == 0) {
         AH_CALL(Flags_Set)(FlagRow(), 0x16);
@@ -606,7 +606,7 @@ extern "C" void __cdecl Area94_ChoiceRunByFlags16(void) {
 // flag 0x20 clear - MoveScript_Var7 9, step 0; set - step 2.
 extern "C" void __cdecl Area94_ChoiceRunByFlag20(void) {
     const int answer = Answer();
-    SetMessage(MessageAt((Area94_ChoiceMessages_addr + 0x20), answer));
+    SetMessage(MessageAt(Area94_ChoiceMessages_addr + 0x20, answer));
     if (answer == 1) {
         RunStep(7, 0x32);
     } else if (answer == 2) {
@@ -619,20 +619,20 @@ extern "C" void __cdecl Area94_ChoiceRunByFlag20(void) {
 
 // original 0x4131D0 (+0x3C[0], PSX 0x801F2ED0): Effect_Spawn kind 2 at party
 // record 0 by list 0, Area94_EffectArgsA.
-extern "C" void __cdecl Area94_SpawnKind2AtMember0(void) { SpawnAt(ObjTrio_addr, 2, Area94_EffectArgsA_addr, (Cond_Flags_addr + 0xd2)); }
+extern "C" void __cdecl Area94_SpawnKind2AtMember0(void) { SpawnAt(ObjTrio_addr, 2, Area94_EffectArgsA_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x413220 (+0x3C[1], PSX 0x801F2F50): kind 3 at record 1, args A.
 extern "C" void __cdecl Area94_SpawnKind3AtMember1(void) {
-    SpawnAt(ObjTrio_addr + at::kPartyStride, 3, Area94_EffectArgsA_addr, (Cond_Flags_addr + 0xd3));
+    SpawnAt(ObjTrio_addr + at::kPartyStride, 3, Area94_EffectArgsA_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x413270 (+0x3C[2], PSX 0x801F2FD0): kind 3 at record 2, args A.
 extern "C" void __cdecl Area94_SpawnKind3AtMember2(void) {
-    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 3, Area94_EffectArgsA_addr, (Cond_Flags_addr + 0xd4));
+    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 3, Area94_EffectArgsA_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x4132C0 (+0x3C[3], PSX 0x801F3050): kind 4 at record 0, args B.
-extern "C" void __cdecl Area94_SpawnKind4AtMember0(void) { SpawnAt(ObjTrio_addr, 4, Area94_EffectArgsB_addr, (Cond_Flags_addr + 0xd2)); }
+extern "C" void __cdecl Area94_SpawnKind4AtMember0(void) { SpawnAt(ObjTrio_addr, 4, Area94_EffectArgsB_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x413310 (+0x3C[4], PSX 0x801F30D0): the map cells (0x52, 0x32..0x34)
 // zeroed.
@@ -644,29 +644,29 @@ extern "C" void __cdecl Area94_ClearCells(void) {
 
 // original 0x413340 (+0x3C[5], PSX 0x801F3118): kind 1 at record 1, args C.
 extern "C" void __cdecl Area94_SpawnKind1AtMember1(void) {
-    SpawnAt(ObjTrio_addr + at::kPartyStride, 1, Area94_EffectArgsC_addr, (Cond_Flags_addr + 0xd3));
+    SpawnAt(ObjTrio_addr + at::kPartyStride, 1, Area94_EffectArgsC_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x413390 (+0x3C[6], PSX 0x801F3198): kind 1 at record 2, args C.
 extern "C" void __cdecl Area94_SpawnKind1AtMember2(void) {
-    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 1, Area94_EffectArgsC_addr, (Cond_Flags_addr + 0xd4));
+    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 1, Area94_EffectArgsC_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x4133E0 (+0x3C[7], PSX 0x801F3218; also area 131 +0x3C[8] and area
 // 133 +0x3C[3]): counter 1 = the leader's byte +8.
-extern "C" void __cdecl Area94_Counter1FromLeaderPose(void) { B(at::kCounter1) = B((ObjTrio_addr + 0x8)); }
+extern "C" void __cdecl Area94_Counter1FromLeaderPose(void) { B(at::kCounter1) = B(ObjTrio_addr + 0x8); }
 
 // original 0x4133F0 (+0x3C[8], PSX 0x801F3230): kind 3 at record 0, args D.
-extern "C" void __cdecl Area94_SpawnKind3AtMember0(void) { SpawnAt(ObjTrio_addr, 3, Area94_EffectArgsD_addr, (Cond_Flags_addr + 0xd2)); }
+extern "C" void __cdecl Area94_SpawnKind3AtMember0(void) { SpawnAt(ObjTrio_addr, 3, Area94_EffectArgsD_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x413440 (+0x3C[9], PSX 0x801F32B0): kind 4 at record 1, args B.
 extern "C" void __cdecl Area94_SpawnKind4AtMember1(void) {
-    SpawnAt(ObjTrio_addr + at::kPartyStride, 4, Area94_EffectArgsB_addr, (Cond_Flags_addr + 0xd3));
+    SpawnAt(ObjTrio_addr + at::kPartyStride, 4, Area94_EffectArgsB_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x413490 (+0x3C[10], PSX 0x801F3330): kind 4 at record 2, args B.
 extern "C" void __cdecl Area94_SpawnKind4AtMember2(void) {
-    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 4, Area94_EffectArgsB_addr, (Cond_Flags_addr + 0xd4));
+    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 4, Area94_EffectArgsB_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x4134E0 (+0x3C[11], PSX 0x801F33B0): KeyItem_Add(7), then the
@@ -677,7 +677,7 @@ extern "C" void __cdecl Area94_GiveKeyItem7(void) {
 }
 
 // original 0x413500 (+0x3C[12], PSX 0x801F33E0): kind 4 at record 0, args E.
-extern "C" void __cdecl Area94_SpawnKind4AtMember0E(void) { SpawnAt(ObjTrio_addr, 4, Area94_EffectArgsE_addr, (Cond_Flags_addr + 0xd2)); }
+extern "C" void __cdecl Area94_SpawnKind4AtMember0E(void) { SpawnAt(ObjTrio_addr, 4, Area94_EffectArgsE_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x413550 (+0x40, PSX 0x801F3460): the previous area (u16 0x802290)
 // 0x79: story flag 0x42 set, 0x43 cleared, then the patch chain applied - from

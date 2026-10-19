@@ -347,7 +347,7 @@ void Common() {
     ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
     ah::SetPointer(MoveScript_Object_addr, ScriptRecord(ah::Next()));
     ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(ah::Next()));
-    ah::SetPointer((Area108_Model_addr + 0x4), g_points + (ah::Next() % 4) * 4);
+    ah::SetPointer(Area108_Model_addr + 0x4, g_points + (ah::Next() % 4) * 4);
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -401,7 +401,7 @@ void Seed108(unsigned k) {
     switch (k) {
     case k108Arm5: case k108ArmA: SeedAnswer(); break;
     case k108Scene: {
-        if (ah::Often()) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(ah::Often() ? 2 : AH_PICK(1, 3, 0x82));
+        if (ah::Often()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(ah::Often() ? 2 : AH_PICK(1, 3, 0x82));
         if (ah::Often()) {
             // one of the five places, or one field off it
             const unsigned p = ah::Next() % at::kArea108PlaceCount;
@@ -415,7 +415,7 @@ void Seed108(unsigned k) {
             }
             SetWord(ExtraRecord(1) + 0x36, x);
             SetWord(ExtraRecord(1) + 0x3A, z);
-            B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>((ah::Half() ? 0 : ah::Next() & 0xF8) | (d & 7));
+            B(ObjTrio_addr + 0x8) = static_cast<unsigned char>((ah::Half() ? 0 : ah::Next() & 0xF8) | (d & 7));
         }
         SeedMemberStrips();
         break;
@@ -425,7 +425,7 @@ void Seed108(unsigned k) {
         break;
     case k108Effect5: {
         const auto index = static_cast<unsigned char>(ah::Often() ? ah::Next() % 0x18 : ah::Next());
-        B((ObjTrio_addr + 0x89)) = index;
+        B(ObjTrio_addr + 0x89) = index;
         if (index < 0x18 && ah::Half()) B(0x66972C + index) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
         break;
     }
@@ -441,7 +441,7 @@ void Seed108(unsigned k) {
         break;
     case k108Hook:
         // the cells' direction is 7 in the image; the pose compared whole
-        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(7, 7, 7, 6, 0, 0x17, 0x87));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(7, 7, 7, 6, 0, 0x17, 0x87));
         break;
     case k108Tail: {
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5, 6, 9, 0, 1, 2, 3, 4, 5, 9, 0xA, 0xFF, 0x80, 7));
@@ -515,8 +515,8 @@ void SeedCurrentCell(int lo, int hi) {
 }
 // The leader at a grid cell.
 void SeedLeaderCell(int lo, int hi) {
-    SetWord(ah::Mem((ObjTrio_addr + 0x36)), CellWord(0xB, lo, hi));
-    SetWord(ah::Mem((ObjTrio_addr + 0x3a)), CellWord(0xB1, lo, hi));
+    SetWord(ah::Mem(ObjTrio_addr + 0x36), CellWord(0xB, lo, hi));
+    SetWord(ah::Mem(ObjTrio_addr + 0x3a), CellWord(0xB1, lo, hi));
 }
 // The grid cell's nibble set to `nib`: the byte (col >> 1) + row * 4, low for
 // an odd column (the originals' halving toward 0 of a cell >= 0).
@@ -524,8 +524,8 @@ void SetNibble(int col, int row, unsigned nib) {
     unsigned char& b = Grid()[(col >> 1) + row * 4];
     b = static_cast<unsigned char>(col & 1 ? (b & 0xF0) | nib : (b & 0x0F) | nib << 4);
 }
-int LeaderCol() { return (static_cast<std::int16_t>(Word(ah::Mem((ObjTrio_addr + 0x36)))) - 0xB) / 2; }
-int LeaderRow() { return (static_cast<std::int16_t>(Word(ah::Mem((ObjTrio_addr + 0x3a)))) - 0xB1) / 2; }
+int LeaderCol() { return (static_cast<std::int16_t>(Word(ah::Mem(ObjTrio_addr + 0x36))) - 0xB) / 2; }
+int LeaderRow() { return (static_cast<std::int16_t>(Word(ah::Mem(ObjTrio_addr + 0x3a))) - 0xB1) / 2; }
 
 void Seed111(unsigned k) {
     Common();
@@ -664,10 +664,10 @@ void Seed112(unsigned k) {
     case k112Flags34: case k112Message13: case k112ClearFlags: SeedAnswer(); break;
     case k112Step:
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(3, 3, 3, 2, 4, 0x83));
-        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 0, 7, 6, 1, 5, 8, 0x80, 3));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 0, 7, 6, 1, 5, 8, 0x80, 3));
         break;
     case k112CellHook:
-        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(3, 0, 1, 2, 4, 7, 0x83));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(3, 0, 1, 2, 4, 7, 0x83));
         break;
     case k112NearBoxes:
         SeedNearBoxes();

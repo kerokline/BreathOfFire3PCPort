@@ -272,7 +272,7 @@ void Seed(unsigned k) {
         break;
     case 0x401AA0:
         if (ah::Often()) cur[0xA] = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0xFF, 0x80));
-        if (ah::Half()) SetWord(ah::Mem((MoveScript_PartyRecords_addr + 0x66)), AH_PICK(0, 0, 1, 0xFFFF, 0x100));
+        if (ah::Half()) SetWord(ah::Mem(MoveScript_PartyRecords_addr + 0x66), AH_PICK(0, 0, 1, 0xFFFF, 0x100));
         break;
     default: break;
     }
@@ -290,7 +290,7 @@ void Disturb(std::uint32_t h) {
     case 2: ah::Mem(AreaW0a_TailKind_addr)[0] = static_cast<unsigned char>(v); break;
     case 3: ah::Mem(AreaW0c_TailSub_addr)[0] = static_cast<unsigned char>(v); break;
     case 4: ah::Mem(at::kEffectSlot)[0] = static_cast<unsigned char>(v); break;
-    case 5: SetWord(ah::Mem((MoveScript_PartyRecords_addr + 0x66)), v & 1 ? 0 : v >> 4); break;
+    case 5: SetWord(ah::Mem(MoveScript_PartyRecords_addr + 0x66), v & 1 ? 0 : v >> 4); break;
     case 6: ah::Mem(Effect_Objects_addr + (v >> 4) % (at::kEffectCount * at::kEffectStride))[0] = static_cast<unsigned char>(v); break;
     case 7: ah::Mem(g_zones15 + (v >> 4) % 0x18)[0] = static_cast<unsigned char>(v); break;
     case 8: SetWord(ah::Mem(Camera_ShiftX_addr + (v & 2)), v >> 4); break;

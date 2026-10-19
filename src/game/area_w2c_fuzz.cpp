@@ -170,7 +170,7 @@ U MovesRow(const U*, U answer) {
 }
 U MovesRowBool(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>((Cond_Flags_addr + 0xa0) + (n >> 8) % 0x20));
+    if (n & 1) SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + (n >> 8) % 0x20));
     return answer;
 }
 
@@ -252,7 +252,7 @@ U PersEffect(const U* a, U answer) {
     if (a[1] == MapView_ScreenXY_addr) {
         const float x = SomeFloat(ah::Noise()), y = SomeFloat(ah::Noise());
         std::memcpy(ah::Mem(MapView_ScreenXY_addr), &x, sizeof x);
-        std::memcpy(ah::Mem((MapView_ScreenXY_addr + 0x4)), &y, sizeof y);
+        std::memcpy(ah::Mem(MapView_ScreenXY_addr + 0x4), &y, sizeof y);
     }
     return answer;
 }
@@ -374,10 +374,10 @@ void Seed91(unsigned k) {
         break;
     case k91Run: o[4] = static_cast<unsigned char>(ah::Next() % at::kArea91StateCount); break;
     case k91S0:
-        B((Cond_Flags_addr + 0xd2)) = static_cast<unsigned char>(ah::Often() ? AH_PICK(6, 3, 6, 3, 2, 4, 5, 7, 0, 0xFF) : ah::Next());
+        B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(ah::Often() ? AH_PICK(6, 3, 6, 3, 2, 4, 5, 7, 0, 0xFF) : ah::Next());
         break;
     case k91S1:
-        if (ah::Often()) B((ObjTrio_addr + 0x137)) = 0;
+        if (ah::Often()) B(ObjTrio_addr + 0x137) = 0;
         break;
     case k91S2:
         o[0xA] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0x1D, 0x1D, 0x1C, 0x1E, 0x1F, 0xFF, 0x9D) : ah::Next());
@@ -424,8 +424,8 @@ void Disturb91(U h) {
     case 1: ah::SetPointer(Field_ActiveMember_addr, SomeRecord(h >> 16)); break;
     case 2: Field_Kind2Hold = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 3: Gfx_PacketNext = g_packets + (v % 16) * 4; break;
-    case 4: B((ObjTrio_addr + 0x137)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
-    default: B((Cond_Flags_addr + 0xd2)) = static_cast<unsigned char>(v & 1 ? 6 : v); break;
+    case 4: B(ObjTrio_addr + 0x137) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
+    default: B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(v & 1 ? 6 : v); break;
     }
 }
 // ===========================================================================
@@ -450,9 +450,9 @@ const ah::Region kRegions92[] = {
 void Seed92(unsigned k) {
     switch (k) {
     case k92Step: case k92Run0: case k92Run28: case k92Flag1B: SeedAnswer(); break;
-    case k92Spawn4M0: case k92Spawn3M0: case k92Spawn1M0: SeedList((Cond_Flags_addr + 0xd2)); break;
-    case k92Spawn3M1: case k92Spawn1M1: SeedList((Cond_Flags_addr + 0xd3)); break;
-    case k92Spawn3M2: case k92Spawn1M2: SeedList((Cond_Flags_addr + 0xd4)); break;
+    case k92Spawn4M0: case k92Spawn3M0: case k92Spawn1M0: SeedList(Cond_Flags_addr + 0xd2); break;
+    case k92Spawn3M1: case k92Spawn1M1: SeedList(Cond_Flags_addr + 0xd3); break;
+    case k92Spawn3M2: case k92Spawn1M2: SeedList(Cond_Flags_addr + 0xd4); break;
     default: break;
     }
 }
@@ -462,9 +462,9 @@ void Args92(unsigned k, std::uint32_t* a) {
 void Disturb92(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 3) {
-    case 0: B((Cond_Flags_addr + 0xd2) + (v % 3)) = static_cast<unsigned char>(v % 8); break;
+    case 0: B(Cond_Flags_addr + 0xd2 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
     case 1: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 5); break;
-    default: SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>((Cond_Flags_addr + 0xa0) + v % 0x20)); break;
+    default: SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + v % 0x20)); break;
     }
 }
 
@@ -518,9 +518,9 @@ void SeedChain() {
 void Seed94(unsigned k) {
     switch (k) {
     case k94Msg0: case k94Msg1: case k94Flag15: case k94Flags16: case k94Flag20: SeedAnswer(); break;
-    case k94S2M0: case k94S4M0: case k94S3M0: case k94S4M0E: SeedList((Cond_Flags_addr + 0xd2)); break;
-    case k94S3M1: case k94S1M1: case k94S4M1: SeedList((Cond_Flags_addr + 0xd3)); break;
-    case k94S3M2: case k94S1M2: case k94S4M2: SeedList((Cond_Flags_addr + 0xd4)); break;
+    case k94S2M0: case k94S4M0: case k94S3M0: case k94S4M0E: SeedList(Cond_Flags_addr + 0xd2); break;
+    case k94S3M1: case k94S1M1: case k94S4M1: SeedList(Cond_Flags_addr + 0xd3); break;
+    case k94S3M2: case k94S1M2: case k94S4M2: SeedList(Cond_Flags_addr + 0xd4); break;
     case k94Init:
         SetWord(ah::Mem(AreaW2c_LastArea_addr), ah::Often() ? 0x79 : AH_PICK(0x78, 0x7A, 0x179, 0x7900, 0));
         SeedChain();
@@ -531,9 +531,9 @@ void Seed94(unsigned k) {
 void Disturb94(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 3) {
-    case 0: B((Cond_Flags_addr + 0xd2) + (v % 3)) = static_cast<unsigned char>(v % 8); break;
+    case 0: B(Cond_Flags_addr + 0xd2 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
     case 1: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 5); break;
-    default: SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>((Cond_Flags_addr + 0xa0) + v % 0x20)); break;
+    default: SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + v % 0x20)); break;
     }
 }
 #undef W2C_OURS

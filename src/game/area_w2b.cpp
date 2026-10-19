@@ -60,7 +60,7 @@ using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-unsigned char* Bank() { return At((Cond_Flags_addr + 0xa0)); }
+unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
 unsigned char* PartyRecord(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
 
 // A state handler read from an area's .data table in place, as the
@@ -228,11 +228,11 @@ extern "C" void __cdecl Area85_ClutShift(int delta) {
         return v > 0x1F ? 0x1Fu : static_cast<U>(v);
     };
     for (U n = 0; n < 0x100; ++n) {
-        const U word = Word(At((Gfx_ClutStripSource_addr + 0xc00) + n * 2));
+        const U word = Word(At(Gfx_ClutStripSource_addr + 0xc00 + n * 2));
         const U r = channel(word & 0x1F);
         const U g = channel((word >> 5) & 0x1F);
         const U b = channel((word >> 10) & 0x1F);
-        SetWord(At((Gfx_ClutStrip_addr + 0xc00) + n * 2), (((b << 5) | g) << 5) | (word & 0x8000) | r);
+        SetWord(At(Gfx_ClutStrip_addr + 0xc00 + n * 2), (((b << 5) | g) << 5) | (word & 0x8000) | r);
     }
     Gfx_ClutStripDirty = 1;
 }
@@ -356,8 +356,8 @@ void PlaceMessage(const WorldMapTables& t) {
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At((ObjTrio_addr + 0x3a))));
-    const auto x = static_cast<short>(Word(At((ObjTrio_addr + 0x36))));
+    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
+    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
@@ -366,8 +366,8 @@ void PlaceMessage(const WorldMapTables& t) {
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(t.place_messages + static_cast<U>(index * 2)))));
     } else {
-        const unsigned cx = Word(At((ObjTrio_addr + 0x36)));
-        const unsigned cz = Word(At((ObjTrio_addr + 0x3a)));
+        const unsigned cx = Word(At(ObjTrio_addr + 0x36));
+        const unsigned cz = Word(At(ObjTrio_addr + 0x3a));
         U cell = t.cells;
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
@@ -404,8 +404,8 @@ void PlaceMessage(const WorldMapTables& t) {
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
     const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At((ObjTrio_addr + 0x10)))) + static_cast<U>(Long(At((ObjTrio_addr + 0x38))));
-    const U xs = steps * static_cast<U>(Long(At((ObjTrio_addr + 0xc)))) + static_cast<U>(Long(At((ObjTrio_addr + 0x34))));
+    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
+    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     SetLong(Cur() + 0xC, x);
@@ -632,11 +632,11 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
                                                        static_cast<short>(Word(At(at::kLeaderCellZ))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
-    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At((Gfx_UnpackScratch_addr + 0x1f000)))), x + 0x38, y + 8,
+    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At((Gfx_UnpackScratch_addr + 0x1f00c)))), x + 0x38, y + 0x10,
+    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
                                             static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
@@ -705,8 +705,8 @@ void Record8Place(const WorldMapTables& t) {
     Cur()[0x29] = 5;
     SetLong(Cur() + 0xC, dir(Cur(), 0));
     SetLong(Cur() + 0x10, dir(Cur(), 2));
-    SetLong(Cur() + 0x34, Long(At((ObjTrio_addr + 0x34))));
-    SetLong(Cur() + 0x38, Long(At((ObjTrio_addr + 0x38))));
+    SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
+    SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
