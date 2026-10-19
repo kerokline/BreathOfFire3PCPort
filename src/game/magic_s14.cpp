@@ -52,27 +52,27 @@ using move_script::Word;
 // of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again after every
 // call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // MAGIC064's streak pool in .bss: 0xC0 records of 0x1C bytes (+0 live, +1 the
 // step, +2 an angle word, +4 / +8 the centre, +0xC / +0x10 two radii 16.16,
 // +0x14 / +0x18 their growth), the record being run, and MAGIC066's four ring
 // phases after it.
-constexpr std::uint32_t kPool = 0x683288;
+// kPool: now WeretigerStreak_Pool (symbols.toml).
 constexpr std::uint32_t kPoolStride = 0x1C;
 constexpr unsigned kPoolCount = 0xC0;
-constexpr std::uint32_t kPoolCurrent = 0x684788;
-constexpr std::uint32_t kRingPhases = 0x68478C;
+// kPoolCurrent: now WeretigerStreak_Current (symbols.toml).
+// kRingPhases: now TsunamiRing_Phases (symbols.toml).
 
 // Overlay .data read in place (addresses only; the values are the exe's).
-constexpr std::uint32_t kStreakOffsets = 0x65ABF8;    // 2 signed bytes (x, y) a facing
-constexpr std::uint32_t kImageUV = 0x65AC10;          // 4 bytes an image: u at +0, v at +2
-constexpr std::uint32_t kRingOffsets = 0x65AC54;      // 3 of (x, z, y) dwords
+// kStreakOffsets: now WeretigerStreak_Offsets (symbols.toml). 2 signed bytes (x, y) a facing
+// kImageUV: now WeretigerImage_UV (symbols.toml). 4 bytes an image: u at +0, v at +2
+// kRingOffsets: now TsunamiRing_Offsets (symbols.toml). 3 of (x, z, y) dwords
 
-constexpr std::uint32_t kFrameCounter = 0x937F94;
+// kFrameCounter: now Frame_Counter (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
 
@@ -81,9 +81,9 @@ short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -108,9 +108,9 @@ void PutFloat(unsigned char* at, int v) {
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 // The party records by the battle index, unchecked (the originals index
 // ObjTrio by the actor byte whatever it holds).
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
-unsigned char* PoolRecord(unsigned i) { return Mem(kPool + i * kPoolStride); }
-unsigned char* PoolCurrent() { return Pointer(kPoolCurrent); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* PoolRecord(unsigned i) { return Mem(WeretigerStreak_Pool_addr + i * kPoolStride); }
+unsigned char* PoolCurrent() { return Pointer(WeretigerStreak_Current_addr); }
 
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
 
@@ -562,7 +562,7 @@ S14_EXPORT void __cdecl WeretigerBurst_Run(void) {
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const record = PoolRecord(i);
         if (record[0] == 0) continue;
-        SetLong(Mem(kPoolCurrent), static_cast<std::int32_t>(Key(record)));
+        SetLong(Mem(WeretigerStreak_Current_addr), static_cast<std::int32_t>(Key(record)));
         Call0(bof3::addr::WeretigerStreak_Run);
     }
 }
@@ -587,7 +587,7 @@ S14_EXPORT void __cdecl WeretigerBurst_Emit(void) {
 // it is 0x18 or more the owner's +2 on (the parent's step 4 ends) and +2 on.
 S14_EXPORT void __cdecl WeretigerBurst_Grow(void) {
     Call0(bof3::addr::WeretigerStreak_Alloc6);
-    if (Mem(kFrameCounter)[0] & 1) return;
+    if (Mem(Frame_Counter_addr)[0] & 1) return;
     unsigned char* const s = Sc();
     const unsigned char size = s[0xB];
     if (size >= 0x18) {
@@ -651,12 +651,12 @@ S14_EXPORT void __cdecl WeretigerStreak_Start(void) {
     SetLong(PoolCurrent() + 0x18, 0x19800);
     {
         const unsigned char* const record = PartyRecord(ActorIndex());
-        const int dx = static_cast<signed char>(Mem(kStreakOffsets + 2u * record[8])[0]);
+        const int dx = static_cast<signed char>(Mem(WeretigerStreak_Offsets_addr + 2u * record[8])[0]);
         SetLong(PoolCurrent() + 4, dx + S16(record + 0x2E));
     }
     {
         const unsigned char* const record = PartyRecord(ActorIndex());
-        const int dy = static_cast<signed char>(Mem(kStreakOffsets + 1 + 2u * record[8])[0]);
+        const int dy = static_cast<signed char>(Mem(WeretigerStreak_Offsets_addr + 1 + 2u * record[8])[0]);
         SetLong(PoolCurrent() + 8, dy + S16(record + 0x30));
     }
     Inc(PoolCurrent()[1]);
@@ -812,8 +812,8 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     const unsigned char which = static_cast<unsigned char>(image);
     PutFloat(p + 8, S16(Sc() + 0x2E) - (which > 1 ? 0x28 : 0x20));
     PutFloat(p + 0xC, S16(Sc() + 0x30) - 0x40);
-    p[0x14] = Mem(kImageUV + 4u * which)[0];
-    p[0x15] = Mem(kImageUV + 2 + 4u * which)[0];
+    p[0x14] = Mem(WeretigerImage_UV_addr + 4u * which)[0];
+    p[0x15] = Mem(WeretigerImage_UV_addr + 2 + 4u * which)[0];
     SetWord(p + 0x18, 0x50);
     SetWord(p + 0x1A, 0x48);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -1160,7 +1160,7 @@ S14_EXPORT void __cdecl TsunamiRings_Run(void) {
 // original 0x4B6180: the four ring phases (0x68478C) 0, +9 0, +2 on.
 S14_EXPORT void __cdecl TsunamiRings_Start(void) {
     unsigned char* const s = Sc();
-    SetLong(Mem(kRingPhases), 0);
+    SetLong(Mem(TsunamiRing_Phases_addr), 0);
     s[9] = 0;
     Inc(Sc()[2]);
 }
@@ -1186,7 +1186,7 @@ namespace {
 // on its side, the position its +0x34 / +0x38 / +0x3C plus the height's
 // offsets; the ring's matrix, its quads, the matrix popped.
 void RingAt(unsigned height, unsigned index, const unsigned char* actor) {
-    const unsigned char* const offset = Mem(kRingOffsets + 0xC * height);
+    const unsigned char* const offset = Mem(TsunamiRing_Offsets_addr + 0xC * height);
     Sc()[0xB] = static_cast<unsigned char>(height);
     Sc()[0xA] = static_cast<unsigned char>(index);
     SetLong(Sc() + 0x34, static_cast<std::int32_t>(U(Long(offset)) + U(Long(actor + 0x34))));
@@ -1219,7 +1219,7 @@ S14_EXPORT void __cdecl TsunamiRings_Draw(void) {
     {
         const unsigned char* const s = Sc();
         for (unsigned j = 0, c = 0; c < 0xC; c += 3, ++j) {
-            unsigned char& phase = Mem(kRingPhases + j)[0];
+            unsigned char& phase = Mem(TsunamiRing_Phases_addr + j)[0];
             if (c < s[9]) Inc(phase);
             if (s[2] == 1) phase &= 0xF;
         }
@@ -1235,12 +1235,12 @@ S14_EXPORT void __cdecl TsunamiRings_Draw(void) {
 S14_EXPORT void __cdecl TsunamiRing_DrawQuads(void) {
     for (unsigned j = 0, c = 0; c < 0xC; c += 3, ++j) {
         if (static_cast<int>(c) >= static_cast<int>(Sc()[9])) continue;
-        if (Mem(kRingPhases + j)[0] >= 0x10) continue;
+        if (Mem(TsunamiRing_Phases_addr + j)[0] >= 0x10) continue;
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyFT4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         {
-            const unsigned b = Mem(kRingPhases + j)[0];
+            const unsigned b = Mem(TsunamiRing_Phases_addr + j)[0];
             SetSW(0, b * 4 + 0x32);
             SetSW(4, b * 15);
         }
@@ -1262,7 +1262,7 @@ S14_EXPORT void __cdecl TsunamiRing_DrawQuads(void) {
         p[0x35] = 0x20;
         p[0x44] = 0x20;
         p[0x45] = 0x20;
-        const unsigned shade = (0x41u - ((static_cast<unsigned>(Mem(kRingPhases + j)[0]) >> 1) << 2)) & 0xFFFF;
+        const unsigned shade = (0x41u - ((static_cast<unsigned>(Mem(TsunamiRing_Phases_addr + j)[0]) >> 1) << 2)) & 0xFFFF;
         SetSW(2, shade);
         p[4] = static_cast<unsigned char>(shade);
         p[5] = SB(2);

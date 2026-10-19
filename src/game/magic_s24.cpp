@@ -71,11 +71,11 @@ inline void PutFloat(unsigned char* p, int v) {
 }
 inline void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 inline void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
-inline unsigned char* Owner() { return Pointer(at::kOwner); }
+inline unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 inline unsigned char* TaskSlot(unsigned index) { return Mem(at::kTasks + (index & 0xFFu) * at::kTaskStride); }
 inline unsigned char* Mote(unsigned index) { return Mem(cell::kMotePool + (index & 0xFFu) * cell::kMoteStride); }
-inline unsigned char* SparkRec(unsigned index) { return Mem(cell::kSparkPool + (index & 0xFFu) * cell::kSparkStride); }
-inline unsigned char* Spark() { return Pointer(cell::kSparkCurrent); }
+inline unsigned char* SparkRec(unsigned index) { return Mem(Fx106_SparkPool_addr + (index & 0xFFu) * cell::kSparkStride); }
+inline unsigned char* Spark() { return Pointer(Fx106_SparkCurrent_addr); }
 
 // A .data table of handlers, read in place as the original reads it (during
 // the fuzz its entries are the harness's recorders).
@@ -95,9 +95,10 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 // The scratch words (DamageScratch): radii at +0 / +2, then colours or angles.
 constexpr std::uint32_t kR = cell::kScratch, kR2 = cell::kScratch + 2;
 constexpr std::uint32_t kW4 = cell::kScratch + 4, kW6 = cell::kScratch + 6, kW8 = cell::kScratch + 8;
-constexpr std::uint32_t kWA = cell::kScratch + 0xA, kWC = cell::kScratch + 0xC, kWE = cell::kScratch + 0xE;
+// kWC: now Scratch_Swap (symbols.toml).
+constexpr std::uint32_t kWA = cell::kScratch + 0xA, kWE = cell::kScratch + 0xE;
 // The four SVECTORs of Prim_VertexScratch, as the originals name them: a (+0), b (+8), c (+0x10), d (+0x18).
-constexpr std::uint32_t kA = cell::kVertices, kB = cell::kVertices + 8, kC = cell::kVertices + 0x10, kD = cell::kVertices + 0x18;
+constexpr std::uint32_t kA = Prim_VertexScratch_addr, kB = Prim_VertexScratch_addr + 8, kC = Prim_VertexScratch_addr + 0x10, kD = Prim_VertexScratch_addr + 0x18;
 
 const short* Vec(std::uint32_t address) { return reinterpret_cast<const short*>(Mem(address)); }
 float* Xy(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*>(prim + offset); }
@@ -140,7 +141,7 @@ void PointOf(short v[3], std::int32_t x, std::int32_t z, short height) {
 // which matters when the new slot is the current one.
 unsigned char* SpawnRingChild(unsigned parameter, unsigned phase, unsigned index, unsigned char spin) {
     unsigned char* const t = TaskSlot(MH_CALL(BattleTask_Create)(1, parameter));
-    const std::int32_t dx = Long(Mem(tbl::kChildOffsets + 8 * index));
+    const std::int32_t dx = Long(Mem(Fx104_ChildOffsets_addr + 8 * index));
     unsigned char* const sc = Sprite_Current;
     SetPtr(t + 0x80, sc);
     t[1] = static_cast<unsigned char>(phase);
@@ -148,7 +149,7 @@ unsigned char* SpawnRingChild(unsigned parameter, unsigned phase, unsigned index
     t[9] = 0;
     t[0xA] = spin;
     SetLong(sc + 0xC, dx);
-    SetLong(Sprite_Current + 0x10, Long(Mem(tbl::kChildOffsets + 8 * index + 4)));
+    SetLong(Sprite_Current + 0x10, Long(Mem(Fx104_ChildOffsets_addr + 8 * index + 4)));
     TurnByFacing(Sprite_Current);
     const unsigned char* const s = Sprite_Current;
     SetLong(t + 0x34, Add(Long(s + 0xC), Field_Kind2X));
@@ -183,7 +184,7 @@ S24_EXPORT void __cdecl Fx104_Task(void) {
 S24_EXPORT void __cdecl Fx104_Start(void) {
     const unsigned char target = Mem(at::kTarget)[0];
     const unsigned char actor = Mem(at::kActor)[0];
-    unsigned char facing = Pointer(cell::kActorRecord)[8];
+    unsigned char facing = Pointer(MagicS23_ActorSprite_addr)[8];
     if (((target & 0x40) != 0) == (actor < 3)) facing ^= 2;
     Sprite_Current[8] = facing;
     CentreOnTargets();
@@ -230,7 +231,7 @@ S24_EXPORT void __cdecl Fx104_End(void) {
 S24_EXPORT void __cdecl Fx104_Child(void) {
     const unsigned phase = Sprite_Current[1];
     if (phase >= 2) bof3::Fatal("Fx104_Child: +1 %u, past Fx104_ChildPhases' two", phase);
-    DataPhase(tbl::kChildPhases104, phase)();
+    DataPhase(Fx104_ChildPhases_addr, phase)();
 }
 
 // original 0x4D0750: a whirl. +2 through Fx104_WhirlPhases (0x65B870, four,
@@ -239,7 +240,7 @@ S24_EXPORT void __cdecl Fx104_Child(void) {
 S24_EXPORT void __cdecl Fx104_Whirl(void) {
     const unsigned phase = Sprite_Current[2];
     if (phase >= 4) bof3::Fatal("Fx104_Whirl: +2 %u, past Fx104_WhirlPhases' four", phase);
-    DataPhase(tbl::kWhirlPhases, phase)();
+    DataPhase(Fx104_WhirlPhases_addr, phase)();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     magic_harness::Phase(bof3::addr::Fx104_PushMatrix)();
@@ -592,7 +593,7 @@ S24_EXPORT void __cdecl Fx104_Burst(void) {
     MH_CALL(Gfx_CommitPrim)(4, 0xC);
     const unsigned phase = Sprite_Current[2];
     if (phase >= 2) bof3::Fatal("Fx104_Burst: +2 %u, past Fx104_BurstPhases' two", phase);
-    DataPhase(tbl::kBurstPhases, phase)();
+    DataPhase(Fx104_BurstPhases_addr, phase)();
     DrawMode(0x35);
     MH_CALL(Gfx_CommitPrim)(4, 0xC);
 }
@@ -731,16 +732,16 @@ S24_EXPORT void __cdecl Fx105_Task(void) {
     if (phase >= 2) bof3::Fatal("Fx105_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const task = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < cell::kMotes; ++i) {
         unsigned char* const m = Mote(i);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = Long(m + 0x80);
         Sprite_Current = m;
-        SetLong(Mem(at::kOwner), its);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         magic_harness::Phase(bof3::addr::Fx105_Mote)();
         magic_harness::Phase(bof3::addr::Fx105_MoteDraw)();
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = task;
     }
 }
@@ -783,8 +784,8 @@ S24_EXPORT void __cdecl Fx105_Start(void) {
         Bump(s[0xB]);
     }
     for (unsigned i = 0; i < 16; ++i)
-        SetWord(Mem(cell::kClutRow + 2 * i), Word(Mem(cell::kClutSource + 2 * i)) | 0x8000u);
-    SetWord(Mem(cell::kClutRow), 0);
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 2 * i)) | 0x8000u);
+    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), 0);
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
     Bump(Sprite_Current[1]);
@@ -795,7 +796,7 @@ S24_EXPORT void __cdecl Fx105_Start(void) {
 S24_EXPORT void __cdecl Fx105_Child(void) {
     const unsigned phase = Sprite_Current[1];
     if (phase >= 1) bof3::Fatal("Fx105_Child: +1 %u, past Fx105_ChildPhases' one", phase);
-    DataPhase(tbl::kChildPhases105, phase)();
+    DataPhase(Fx105_ChildPhases_addr, phase)();
 }
 
 // original 0x4D18E0: an orb. +2 through a four-entry stack table - OrbStart,
@@ -822,9 +823,9 @@ S24_EXPORT void __cdecl Fx105_OrbStart(void) {
     SetLong(Sprite_Current + 0x38, Long(Owner() + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
     unsigned char* sc = Sprite_Current;
-    SetLong(sc + 0xC, Add(G16(tbl::kOrbAngles + 2u * sc[4]), Long(Owner() + 0xC)));
+    SetLong(sc + 0xC, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), Long(Owner() + 0xC)));
     sc = Sprite_Current;
-    SetLong(sc + 0x10, Add(G16(tbl::kOrbAngles + 2 + 2u * sc[4]), Long(Owner() + 0xC)));
+    SetLong(sc + 0x10, Add(G16(Fx105_OrbAngles_addr + 2 + 2u * sc[4]), Long(Owner() + 0xC)));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0;
@@ -890,7 +891,7 @@ S24_EXPORT void __cdecl Fx105_PushMatrix(void) {
 // ordering row of its first corner, draw mode 0x35.
 S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
     const unsigned char* const sc = Sprite_Current;
-    const std::uint32_t colours = tbl::kOrbColours + 3u * sc[4];
+    const std::uint32_t colours = Fx105_OrbColours_addr + 3u * sc[4];
     for (unsigned j = 0; j < 6; ++j) {
         const unsigned char c = Mem(colours + j)[0];
         Put16(kW4 + 2 * j, c - (c >> 6) * sc[0xA]);
@@ -953,13 +954,13 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         p[5] = Mem(kW6)[0];
         p[6] = Mem(kW8)[0];
         p[0x14] = Mem(kWA)[0];
-        p[0x15] = Mem(kWC)[0];
+        p[0x15] = Mem(Scratch_Swap_addr)[0];
         p[0x16] = Mem(kWE)[0];
         p[0x24] = Mem(kW4)[0];
         p[0x25] = Mem(kW6)[0];
         p[0x26] = Mem(kW8)[0];
         p[0x34] = Mem(kWA)[0];
-        p[0x35] = Mem(kWC)[0];
+        p[0x35] = Mem(Scratch_Swap_addr)[0];
         p[0x36] = Mem(kWE)[0];
         Project4(p);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0x44);
@@ -971,7 +972,7 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
 S24_EXPORT void __cdecl Fx105_Mote(void) {
     const unsigned phase = Sprite_Current[1];
     if (phase >= 1) bof3::Fatal("Fx105_Mote: +1 %u, past Fx105_MotePhases' one", phase);
-    DataPhase(tbl::kMotePhases, phase)();
+    DataPhase(Fx105_MotePhases_addr, phase)();
 }
 
 // original 0x4D1F50: with the sprite bank 0x9039D8 the effects' (0x8E3580),
@@ -979,11 +980,11 @@ S24_EXPORT void __cdecl Fx105_Mote(void) {
 // BattleActor_UpdateScreenXY; the bank back to 0x8B3580.
 S24_EXPORT void __cdecl Fx105_MoteRun(void) {
     const unsigned phase = Sprite_Current[2];
-    SetLong(Mem(cell::kSpriteBank), 0x8E3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     if (phase >= 2) bof3::Fatal("Fx105_MoteRun: +2 %u, past Fx105_MoteRunPhases' two", phase);
-    DataPhase(tbl::kMoteRunPhases, phase)();
+    DataPhase(Fx105_MoteRunPhases_addr, phase)();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetLong(Mem(cell::kSpriteBank), 0x8B3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 // original 0x4D1F80: a mote's start. Height offset sin(+9 << 6) * 3 >> 4
@@ -1101,8 +1102,8 @@ S24_EXPORT void __cdecl Fx105_MoteDraw(void) {
         MH_CALL(Gfx_CommitPrim)(Sprite_Current[0x29], 0xC);
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetSprt)(p);
-        SetWord(p + 0x18, Mem(tbl::kMoteSizes)[(part[0] & 0xF) * 2]);
-        SetWord(p + 0x1A, Mem(tbl::kMoteSizes + 1)[(part[0] & 0xF) * 2]);
+        SetWord(p + 0x18, Mem(Fx105_MoteSizes_addr)[(part[0] & 0xF) * 2]);
+        SetWord(p + 0x1A, Mem(Fx105_MoteSizes_addr + 1)[(part[0] & 0xF) * 2]);
         p[0x14] = part[3];
         const unsigned char v = part[4];
         const unsigned char row = Sprite_Current[0x26];
@@ -1135,15 +1136,15 @@ S24_EXPORT void __cdecl Fx106_Task(void) {
     const unsigned phase = Sprite_Current[1];
     if (phase >= 2) bof3::Fatal("Fx106_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < cell::kSparks; ++i) {
         unsigned char* const k = SparkRec(i);
         if ((k[0] & 1) == 0) continue;
         const std::int32_t its = Long(k + 0x1C);
-        SetPtr(Mem(cell::kSparkCurrent), k);
-        SetLong(Mem(at::kOwner), its);
+        SetPtr(Mem(Fx106_SparkCurrent_addr), k);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         magic_harness::Phase(bof3::addr::Fx106_Spark)();
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
     }
 }
 
@@ -1160,9 +1161,9 @@ S24_EXPORT void __cdecl Fx106_Start(void) {
         k[1] = 0;
         k[2] = 0;
     }
-    SetLong(Sprite_Current + 0x34, Long(Pointer(at::kSource) + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(Pointer(at::kSource) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Add(Long(Pointer(at::kSource) + 0x3C), 0x1000000));
+    SetLong(Sprite_Current + 0x34, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
+    SetLong(Sprite_Current + 0x38, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
+    SetLong(Sprite_Current + 0x3C, Add(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C), 0x1000000));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
     Bump(Sprite_Current[1]);
@@ -1188,7 +1189,7 @@ S24_EXPORT void __cdecl Fx106_Start(void) {
 S24_EXPORT void __cdecl Fx106_Spark(void) {
     const unsigned phase = Spark()[1];
     if (phase >= 1) bof3::Fatal("Fx106_Spark: +1 %u, past Fx106_SparkPhases' one", phase);
-    DataPhase(tbl::kSparkPhases, phase)();
+    DataPhase(Fx106_SparkPhases_addr, phase)();
 }
 
 // original 0x4D25E0: +2 through Fx106_SparkRunPhases (0x65B8E4, four,
@@ -1197,7 +1198,7 @@ S24_EXPORT void __cdecl Fx106_Spark(void) {
 S24_EXPORT void __cdecl Fx106_SparkRun(void) {
     const unsigned phase = Spark()[2];
     if (phase >= 4) bof3::Fatal("Fx106_SparkRun: +2 %u, past Fx106_SparkRunPhases' four", phase);
-    DataPhase(tbl::kSparkRunPhases, phase)();
+    DataPhase(Fx106_SparkRunPhases_addr, phase)();
     const unsigned char* const k = Spark();
     if (k[0] == 0 || k[2] == 0) return;
     magic_harness::Phase(bof3::addr::Fx106_PushMatrix)();
@@ -1343,19 +1344,19 @@ S24_EXPORT void __cdecl Fx106_DrawSpark(void) {
                                 0xC);
     k = Spark();
     Put16(kWA, k[5] * k[9]);
-    Put16(kWC, k[6] * k[9]);
+    Put16(Scratch_Swap_addr, k[6] * k[9]);
     Put16(kWE, k[7] * k[9]);
     Put16(kA + 4, 0);
     Put16(kA + 2, 0);
     Put16(kA, 0);
     for (unsigned j = 0; j < 4; ++j) {
         k = Spark();
-        Put16(kR, G16(tbl::kShardTables + 2 * j));
-        Put16(kR2, G16(tbl::kShardTables + 8 + 2 * j));
-        Put16(kW4, G16(tbl::kShardTables + 0x10 + 2 * j));
+        Put16(kR, G16(Fx106_ShardTables_addr + 2 * j));
+        Put16(kR2, G16(Fx106_ShardTables_addr + 8 + 2 * j));
+        Put16(kW4, G16(Fx106_ShardTables_addr + 0x10 + 2 * j));
         unsigned char* const p = Gfx_PacketNext;
-        Put16(kW6, G16(tbl::kShardTables + 0x18 + 2 * j));
-        const unsigned char tilt = Mem(tbl::kShardTables + 0x20 + j)[0];
+        Put16(kW6, G16(Fx106_ShardTables_addr + 0x18 + 2 * j));
+        const unsigned char tilt = Mem(Fx106_ShardTables_addr + 0x20 + j)[0];
         Put16(kW8, ((k[0xB] + tilt) & 0xF) << 8);
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -1373,13 +1374,13 @@ S24_EXPORT void __cdecl Fx106_DrawSpark(void) {
         Put16(kC + 4, t);
         Project3(p);
         p[4] = Mem(kWE)[0];
-        p[5] = Mem(kWC)[0];
+        p[5] = Mem(Scratch_Swap_addr)[0];
         p[6] = Mem(kWA)[0];
         p[0x14] = Mem(kWA)[0];
-        p[0x15] = Mem(kWC)[0];
+        p[0x15] = Mem(Scratch_Swap_addr)[0];
         p[0x16] = Mem(kWE)[0];
         p[0x24] = Mem(kWA)[0];
-        p[0x25] = Mem(kWC)[0];
+        p[0x25] = Mem(Scratch_Swap_addr)[0];
         p[0x26] = Mem(kWE)[0];
         k = Spark();
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(k + 0x10)), static_cast<unsigned long>(Long(k + 0x14)),

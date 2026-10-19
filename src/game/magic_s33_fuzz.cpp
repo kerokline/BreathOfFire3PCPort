@@ -238,8 +238,12 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kFrameSet = 0x9039D8, kCentre = 0x903780,
-                        kFormation = 0x904B89, kPartySet = 0x90412C, kMembers = 0x939B00;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kCentre: now BossSi_CentreX (symbols.toml).
+// kFormation: now BattlePhases_B89 (symbols.toml).
+// kPartySet: now AreaW0b_PartySet (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kMembers = 0x939B00;
 
 // The kinds 0x904B89 may hold where MAGIC151 reads a pointer by it: the 26
 // pointer pairs of 0x64E9BC but the three that are null (10, 19, 20).
@@ -271,7 +275,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
@@ -290,7 +294,7 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
 std::uint32_t WindowEffect(const std::uint32_t* a, std::uint32_t answer) {
     const unsigned member = (a[0] & 0xFF) - 0xD;
     if (member < 3 && mh::Noise() % 2 == 0) {
-        unsigned char* const m = mh::Mem(mh::at::kParty + member * mh::at::kPartyStride);
+        unsigned char* const m = mh::Mem(ObjTrio_addr + member * mh::at::kPartyStride);
         static const unsigned kFields[] = {8, 0x89, 0x2E, 0x30};
         m[kFields[mh::Noise() % 4]] = static_cast<unsigned char>(mh::Noise());
     }
@@ -300,7 +304,7 @@ std::uint32_t WindowEffect(const std::uint32_t* a, std::uint32_t answer) {
 // AreaMap_Elevation: party record 0's +0x34 / +0x38 moved half the time
 // (Accession_ApplyB reads them back after it).
 std::uint32_t ElevationEffect(const std::uint32_t*, std::uint32_t answer) {
-    if (mh::Noise() % 2 == 0) SetLong(mh::Mem(mh::at::kParty + 0x34 + 4 * (mh::Noise() & 1)), static_cast<std::int32_t>(mh::Noise()));
+    if (mh::Noise() % 2 == 0) SetLong(mh::Mem(ObjTrio_addr + 0x34 + 4 * (mh::Noise() & 1)), static_cast<std::int32_t>(mh::Noise()));
     return answer;
 }
 
@@ -375,30 +379,30 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
-    {kVertex, 0x20},                      // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                     // 0x903850.., Scratch_Swap at +0xC
-    {kFrameSet, 4},                       // the frame-offset table pointer the blades swap
+    {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the blades swap
     {0x80E980, 0x20},                     // Gfx_ClutStripSource row 26, its first 16 words
     {0x812980, 0x20},                     // Gfx_ClutStrip row 26, its first 16 words
-    {kCentre, 8},                         // the fight's centre
+    {BossSi_CentreX_addr, 8},             // the fight's centre
     {0x904B50, 0x50},                     // the battle bytes past the harness's: 0x904B79, 0x904B89, 0x904B8A, 0x904B8F
-    {kPartySet, 4},                       // the party set
+    {AreaW0b_PartySet_addr, 4},           // the party set
     {kMembers, 0x400},                    // 0x939B07 / 0x939C05 / 0x939C10 + 0x14C per member
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Party(unsigned i) { return mh::Mem(mh::at::kParty + i * mh::at::kPartyStride); }
+unsigned char* Party(unsigned i) { return mh::Mem(ObjTrio_addr + i * mh::at::kPartyStride); }
 
 // The group's cells a recorder may move (the harness's case 14).
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
-    case 3: SetLong(mh::Mem(kCentre + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
-    case 4: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 3: SetLong(mh::Mem(BossSi_CentreX_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
+    case 4: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 5: {
         static const unsigned kFields[] = {0x0C, 0x10, 0x14, 0x3E, 0x40, 0x44, 0x5D, 0x5E};
         SetWord(Sc() + kFields[v % 8], h >> 16);
@@ -411,7 +415,7 @@ void Disturb(std::uint32_t h) {
     }
     case 7: {
         // 0x904B89 is read through a pointer only before any call
-        static const std::uint32_t kCells[] = {0x904B79, kFormation, kPartySet, 0x904AB0, 0x904AAC, 0x904B8A};
+        static const std::uint32_t kCells[] = {0x904B79, BattlePhases_B89_addr, AreaW0b_PartySet_addr, 0x904AB0, 0x904AAC, 0x904B8A};
         mh::Mem(kCells[v % 6])[0] = Byte(h >> 24);
         break;
     }
@@ -439,9 +443,9 @@ void Settle() {
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     g_blade_run = k == kMightyChopBlade_Run;
-    unsigned char* const owner = mh::Pointer(mh::at::kOwner);
+    unsigned char* const owner = mh::Pointer(BattleE2_Owner_addr);
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::Mem(kFormation)[0] = kKinds[mh::Next() % (sizeof kKinds)];
+    mh::Mem(BattlePhases_B89_addr)[0] = kKinds[mh::Next() % (sizeof kKinds)];
     if (mh::Often()) sc[8] = Byte(mh::Next() % 4);
     if (mh::Half()) sc[0] = 0;
     switch (k) {
@@ -462,7 +466,7 @@ void Seed(unsigned k) {
     case kMightyChopChild_Task: sc[1] = Byte(mh::Next() % 2); break;
     // MAGIC151's task
     case kAccession_Start:
-        if (mh::Often()) mh::Mem(kFormation)[0] = Byte(MH_PICK(3, 0xB, 0xD));
+        if (mh::Often()) mh::Mem(BattlePhases_B89_addr)[0] = Byte(MH_PICK(3, 0xB, 0xD));
         if (mh::Often()) mh::Mem(mh::at::kTarget)[0] = Byte(mh::Next() % 3);
         if (mh::Half()) Party(mh::Mem(mh::at::kTarget)[0] % 5)[0x89] = 0;
         break;

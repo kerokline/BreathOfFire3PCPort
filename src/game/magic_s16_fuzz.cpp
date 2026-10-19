@@ -317,10 +317,10 @@ constexpr std::uint32_t kPoolsLo = 0x685D98, kPoolsHi = 0x68A530 + 0x100 * kStri
 constexpr mh::Region kData[] = {{0x65AE2C, 0xF4}, {0x65AF24, 0xF4}, {0x65B01C, 0xC4}, {0x65B0E8, 0xC4}};
 
 alignas(16) unsigned char g_prims[0x100];
-constexpr std::uint32_t kPacketNext = 0x7E0670;
+// kPacketNext: now Gfx_PacketNext (symbols.toml).
 constexpr std::uint32_t kScratch = 0x903850;
 constexpr std::uint32_t kEnemyState = 0x93BCD9;   // Magic073_CountReacting's (0x93B961 + 0x128 * 3)
-constexpr std::uint32_t kPastEnemies = at::kEnemies + 8 * at::kEnemyStride;
+// kPastEnemies: now BattleWindows_MsgHead (symbols.toml).
 
 mh::Region g_regions[10];
 
@@ -399,14 +399,14 @@ void Seed(unsigned k) {
     case kActorStart:
         if (mh::Half()) sc[9] = 1;
         sc[4] = static_cast<unsigned char>(mh::Next() % 11);
-        if (mh::Often()) mh::Pointer(at::kOwner)[4] = static_cast<unsigned char>(mh::Next() % 2);
+        if (mh::Often()) mh::Pointer(BattleE2_Owner_addr)[4] = static_cast<unsigned char>(mh::Next() % 2);
         break;
     case kWaitStep4: sc[0xB] = static_cast<unsigned char>(MH_PICK(3, 4, 5, 6, 0x85, 0)); break;
     case kCount:
         for (unsigned i = 0; i < 8; ++i)
             if (mh::Half()) mh::Mem(kEnemyState + i * at::kEnemyStride)[0] = 6;
         for (unsigned i = 0; i < 3; ++i)
-            if (mh::Half()) mh::Mem(at::kParty + 1 + i * at::kPartyStride)[0] = 6;
+            if (mh::Half()) mh::Mem(ObjTrio_addr + 1 + i * at::kPartyStride)[0] = 6;
         break;
     case kTint:
     case kUntint:
@@ -478,7 +478,7 @@ void CheckAnswers() {
     const bof3::CloneCall count_calls[] = {{0x16, reinterpret_cast<const void*>(&::Battle_ActorIsOut), 0x4456C0},
                                            {0x48, reinterpret_cast<const void*>(&::Battle_ActorIsOut), 0x4456C0}};
     // the bytes they read and write, kept and put back
-    const mh::Region kept_at[] = {{kPoolsLo, kPoolsHi - kPoolsLo}, {at::kParty, 3 * at::kPartyStride}, {at::kEnemies, 11 * at::kEnemyStride}};
+    const mh::Region kept_at[] = {{kPoolsLo, kPoolsHi - kPoolsLo}, {ObjTrio_addr, 3 * at::kPartyStride}, {at::kEnemies, 11 * at::kEnemyStride}};
     static unsigned char kept[kPoolsHi - kPoolsLo + 3 * 0x14C + 11 * 0x128];
     static unsigned char after_theirs[kPoolsHi - kPoolsLo];
     static unsigned char g_state_in[kPoolsHi - kPoolsLo];
@@ -524,10 +524,10 @@ void SelfTest() {
     g_regions[r++] = {kPoolsLo, kPoolsHi - kPoolsLo};
     for (const mh::Region& d : kData) g_regions[r++] = d;
     g_regions[r++] = {0x7E0700, 0xC00};                       // MoveScript_TintRecords, by an unbounded +0xA
-    g_regions[r++] = {kPacketNext, 4};                        // Gfx_PacketNext
+    g_regions[r++] = {Gfx_PacketNext_addr, 4};                // Gfx_PacketNext
     g_regions[r++] = {Key(g_prims), sizeof g_prims};
     g_regions[r++] = {kScratch, 0x10};
-    g_regions[r++] = {kPastEnemies, 3 * at::kEnemyStride};    // records 8..10: 0x4BBCE0's reach
+    g_regions[r++] = {BattleWindows_MsgHead_addr, 3 * at::kEnemyStride}; // records 8..10: 0x4BBCE0's reach
     const mh::Group group = {
         "magic_s16", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], g_regions, r, &Seed, &Disturb, 2000,

@@ -52,28 +52,28 @@ using move_script::Word;
 // Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again after every
 // call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 // The dword the sprite children point at a sprite bank while their phase
 // runs (0x8E3580 / 0x813580), and put back to 0x8B3580 after.
-constexpr std::uint32_t kSpriteBank = 0x9039D8;
+// kSpriteBank: now BattleE2_AnimSet (symbols.toml).
 // MAGIC131's mote pool: 48 records of 0x2C bytes, and the cell holding the
 // mote being run (KaiserMote_Pool, KaiserMote_Current).
-constexpr std::uint32_t kMotePool = 0x6A4E38;
+// kMotePool: now KaiserMote_Pool (symbols.toml).
 constexpr std::uint32_t kMoteStride = 0x2C;
 constexpr unsigned kMotes = 48;
-constexpr std::uint32_t kMoteCurrent = 0x6A5678;
+// kMoteCurrent: now KaiserMote_Current (symbols.toml).
 // The battle bytes MAGIC131 reads beyond the harness's: 0x904AAC (the
 // battle's facing, battle region), 0x904B89 (read by the engine as the
 // form index, docs/magic_lib.md), 0x90412C (the loaded party set,
 // docs/field-event.md), and the table of file-index tables by 0x904B89.
 constexpr std::uint32_t kFacing = 0x904AAC;
-constexpr std::uint32_t kForm = 0x904B89;
-constexpr std::uint32_t kPartySet = 0x90412C;
+// kForm: now BattlePhases_B89 (symbols.toml).
+// kPartySet: now AreaW0b_PartySet (symbols.toml).
 constexpr std::uint32_t kSetFiles = 0x64E9BC;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Cur() { return Pointer(kMoteCurrent); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Cur() { return Pointer(KaiserMote_Current_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
@@ -81,10 +81,10 @@ short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -126,8 +126,8 @@ std::uint16_t Ftol16(std::uint32_t bits) {
 }
 
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
-unsigned char* Mote(unsigned i) { return Mem(kMotePool + i * kMoteStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* Mote(unsigned i) { return Mem(KaiserMote_Pool_addr + i * kMoteStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -252,11 +252,11 @@ S30_EXPORT void __cdecl VenomChild_Task(void) {
 // 0x9039D8 at 0x8E3580 around its phase (+2 through VenomSprite_Phases, four
 // entries); Sprite_UpdateScreen while +0 bit 0 and +2 are set.
 S30_EXPORT void __cdecl VenomSprite_Run(void) {
-    SetLong(Mem(kSpriteBank), 0x8E3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     Entry("VenomSprite_Run", Addr(VenomSprite_Phases), 4, Sc()[2])();
     const unsigned char* const sc = Sc();
     if ((sc[0] & 1) != 0 && sc[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kSpriteBank), 0x8B3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 // original 0x4E45A0: the sprite at screen (0xDC, 0x6E), its control fields,
@@ -445,14 +445,14 @@ S30_EXPORT void __cdecl Kaiser_Task(void) {
     magic_harness::Phase(kPhases[phase])();
     DrawMode(Gfx_PacketNext, 0x55);
     Commit(2, 0xC);
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kMotes; ++i) {
         unsigned char* const m = Mote(i);
         if ((m[0] & 1) == 0) continue;
-        SetLong(Mem(kMoteCurrent), PtrValue(m));
-        SetLong(Mem(at::kOwner), Long(m + 0x28));
+        SetLong(Mem(KaiserMote_Current_addr), PtrValue(m));
+        SetLong(Mem(BattleE2_Owner_addr), Long(m + 0x28));
         Call0(bof3::addr::KaiserMote_Task);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
     }
     DrawMode(Gfx_PacketNext, 0x15);
     Commit(2, 0xC);
@@ -491,7 +491,7 @@ S30_EXPORT void __cdecl Kaiser_Start(void) {
 S30_EXPORT void __cdecl Kaiser_LoadFormFile(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    const unsigned form = Mem(kForm)[0];
+    const unsigned form = Mem(BattlePhases_B89_addr)[0];
     MH_CALL(LoadDatFile)(form == 7 ? 0x228 : form == 8 ? 0x227 : 0x229);
     Inc(Sc()[1]);
 }
@@ -546,13 +546,13 @@ S30_EXPORT void __cdecl Kaiser_ReloadParty(void) {
     }
     if (found) {
         const auto bit = [] { return (Mem(kFacing)[0] & 2) != 0; };
-        if (Mem(kPartySet)[0] == 7) MH_CALL(LoadDatFile)(bit() ? 0x126 : 0x122);
-        if (Mem(kPartySet)[0] == 0xD) MH_CALL(LoadDatFile)(bit() ? 0x127 : 0x123);
-        if (Mem(kPartySet)[0] == 0xE) MH_CALL(LoadDatFile)(bit() ? 0x128 : 0x124);
-        if (Mem(kPartySet)[0] == 0xF) MH_CALL(LoadDatFile)(bit() ? 0x129 : 0x125);
+        if (Mem(AreaW0b_PartySet_addr)[0] == 7) MH_CALL(LoadDatFile)(bit() ? 0x126 : 0x122);
+        if (Mem(AreaW0b_PartySet_addr)[0] == 0xD) MH_CALL(LoadDatFile)(bit() ? 0x127 : 0x123);
+        if (Mem(AreaW0b_PartySet_addr)[0] == 0xE) MH_CALL(LoadDatFile)(bit() ? 0x128 : 0x124);
+        if (Mem(AreaW0b_PartySet_addr)[0] == 0xF) MH_CALL(LoadDatFile)(bit() ? 0x129 : 0x125);
     } else {
         const unsigned mode = (Mem(kFacing)[0] & 2) != 0 ? 2 : 1;
-        MH_CALL(PartySet_Select)(Mem(kPartySet)[0] & 0x7Fu, mode);
+        MH_CALL(PartySet_Select)(Mem(AreaW0b_PartySet_addr)[0] & 0x7Fu, mode);
     }
     Inc(Sc()[1]);
 }
@@ -563,8 +563,8 @@ S30_EXPORT void __cdecl Kaiser_ReloadParty(void) {
 S30_EXPORT void __cdecl Kaiser_LoadSetFile(void) {
     if (MH_CALL(File_LoadDone)() == 0) return;
     const unsigned half = (Mem(kFacing)[0] & 2) != 0 ? 4 : 0;
-    const unsigned set = Mem(kPartySet)[0];
-    const unsigned form = Mem(kForm)[0];
+    const unsigned set = Mem(AreaW0b_PartySet_addr)[0];
+    const unsigned form = Mem(BattlePhases_B89_addr)[0];
     const std::uint32_t table = static_cast<std::uint32_t>(Long(Mem(kSetFiles + form * 8 + half)));
     // The original reads through the entry unchecked; a null one faults.
     if (table == 0)
@@ -620,7 +620,7 @@ S30_EXPORT void __cdecl KaiserChild_Task(void) {
 // 0x21) from the source at row 1 + +4 with the stp bit, +4 up by 9 and back
 // to 0x21 past 0x7A.
 S30_EXPORT void __cdecl KaiserSprite_Run(void) {
-    SetLong(Mem(kSpriteBank), 0x813580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x813580);
     Entry("KaiserSprite_Run", Addr(KaiserSprite_Phases), 8, Sc()[2])();
     const unsigned char* const sc = Sc();
     if (sc[0] != 0 && sc[2] != 0) {
@@ -635,7 +635,7 @@ S30_EXPORT void __cdecl KaiserSprite_Run(void) {
             if (Sc()[4] > 0x7A) Sc()[4] = 0x21;
         }
     }
-    SetLong(Mem(kSpriteBank), 0x8B3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 namespace {

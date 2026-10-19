@@ -60,16 +60,16 @@ using move_script::Word;
 // function) and the four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF).
 // Both are read again after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kEventBattle = 0x904AAA;   // u8: not 0 in an event battle
-constexpr std::uint32_t kBattleB2 = 0x904AB2;      // u8: a battle byte Foretell_Read adds in (not read further)
+// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle
+// kBattleB2: now BattleActorCopies_EnemyCount (symbols.toml). u8: a battle byte Foretell_Read adds in (not read further)
 
 // The overlays' own .data (read in place, as the originals read it).
-constexpr std::uint32_t kForetellBias = 0x65ACB7;   // Foretell_Bias + 7: s8, by party count - enemy count
-constexpr std::uint32_t kForetellTiles = 0x65ACBC;  // Foretell_TileColours: six entries of three words
-constexpr std::uint32_t kInfluencePoints = 0x65AD30;   // Influence_TrianglePoints: four u8 angles
+// kForetellBias: now Foretell_Bias[7] (symbols.toml). Foretell_Bias + 7: s8, by party count - enemy count
+// kForetellTiles: now Foretell_TileColours (symbols.toml). Foretell_TileColours: six entries of three words
+// kInfluencePoints: now Influence_TrianglePoints (symbols.toml). Influence_TrianglePoints: four u8 angles
 
 // The height tables InfluenceMark_Start lifts its quad by: a party member's
 // (two bytes by its +0x89, the first when its +8 is 0 or 1) and an enemy
@@ -79,7 +79,7 @@ constexpr std::uint32_t kEnemyLift = 0x8C564F;
 constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
 unsigned TargetIndex() { return static_cast<unsigned>(Long(Mem(at::kTarget))) & 0xFF; }
@@ -91,9 +91,9 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -120,7 +120,7 @@ void PutFloat(unsigned char* at, int v) {
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3 (a party index lands below the enemy records).
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
@@ -268,7 +268,7 @@ S15_EXPORT void __cdecl Chill_Start(void) {
         Gfx_ClutStrip[0x1A10 + k] = Gfx_ClutStripSource[0x1A10 + k];
     }
     Gfx_ClutStripDirty = 1;
-    if (Mem(kEventBattle)[0] == 0) return;
+    if (Mem(BattleActions_EventBattle_addr)[0] == 0) return;
     if (EnemyRecord(ActorIndex())[0x100] != 0x29) return;
     const unsigned slot = NewTask(0x13);
     unsigned char* const child = TaskSlot(slot);
@@ -693,7 +693,7 @@ S15_EXPORT void __cdecl Foretell_Read(void) {
         step = Band(Percent(e, 0xA4, 0xB0, "enemy", i), step, 0x18, kEnemyBands);
         score += static_cast<std::uint32_t>(step);
     }
-    score += (static_cast<std::uint32_t>(Mem(kBattleB2)[0]) - enemy_n) * 8u;
+    score += (static_cast<std::uint32_t>(Mem(BattleActorCopies_EnemyCount_addr)[0]) - enemy_n) * 8u;
     if (party_n == 0) bof3::Fatal("Foretell_Read: no member counted, the original's idiv faults");
     if (enemy_n == 0) bof3::Fatal("Foretell_Read: no enemy counted, the original's idiv faults");
     const int mean_party = static_cast<short>(party_sum) / static_cast<int>(party_n);
@@ -708,7 +708,7 @@ S15_EXPORT void __cdecl Foretell_Read(void) {
     for (const auto& l : kLevels)
         if (diff <= l.at_most) level = l.value;
     const int bias = static_cast<signed char>(
-        Mem(kForetellBias + static_cast<std::uint32_t>(static_cast<int>(party_n) - static_cast<int>(enemy_n)))[0]);
+        Mem(Foretell_Bias_addr + 0x7 + static_cast<std::uint32_t>(static_cast<int>(party_n) - static_cast<int>(enemy_n)))[0]);
     score += static_cast<std::uint32_t>(bias + level);
     short s16 = static_cast<short>(score);
     if (s16 < 0) {
@@ -755,7 +755,7 @@ S15_EXPORT void __cdecl Foretell_Show(void) {
 // done flag and the task freed; else while +9 is above 0 (signed) +9 down by
 // 8 and the tiles drawn.
 S15_EXPORT void __cdecl Foretell_End(void) {
-    if (Mem(at::kMessageUp)[0] == 0) {
+    if (Mem(BattleE1_MessageUp_addr)[0] == 0) {
         Mem(at::kFlags)[0] |= 4;
         MH_CALL(BattleTask_FreeCurrent)();
         return;
@@ -787,7 +787,7 @@ S15_EXPORT void __cdecl Foretell_DrawTiles(void) {
         SetSD(0, static_cast<std::uint32_t>(SD(0)) + 10u);
         SetLong(p + 0x14, kW);
         SetLong(p + 0x18, kH);
-        const unsigned char* const colour = Mem(kForetellTiles + 6 * k);
+        const unsigned char* const colour = Mem(Foretell_TileColours_addr + 6 * k);
         p[4] = colour[0];
         p[5] = colour[2];
         p[6] = colour[4];
@@ -934,7 +934,7 @@ S15_EXPORT void __cdecl Influence_Task(void) {
 // 0x100. BattleTask_Create's 0xFF is not tested.
 S15_EXPORT void __cdecl Influence_Start(void) {
     {
-        const unsigned char* const source = Pointer(at::kSource);
+        const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
         SetWord(Sc() + 0x2E, Word(source + 0x2E));
         SetWord(Sc() + 0x30, Word(source + 0x30));
     }
@@ -1247,7 +1247,7 @@ S15_EXPORT void __cdecl Influence_DrawTriangles(void) {
             SetSW(8, 0x80u - static_cast<unsigned>(s[9]) * 6);
         }
     }
-    const unsigned char* const points = Mem(kInfluencePoints);
+    const unsigned char* const points = Mem(Influence_TrianglePoints_addr);
     for (int k = 0, angle = 0; angle < 0x1000; ++k, angle += 0x400) {
         int v = MH_CALL(Math_Sin)(angle);
         SetSW(0xC, static_cast<unsigned>(Mul12(v, SS(0))) + Word(Sc() + 0x2E));

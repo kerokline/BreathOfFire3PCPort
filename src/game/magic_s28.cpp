@@ -53,18 +53,18 @@ using move_script::Word;
 // bolt keeps its moving point there). All are read again after every call, as
 // the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 void AddSW(unsigned k, unsigned v) { SetSW(k, SW(k) + v); }
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 unsigned char U8(int v) { return static_cast<unsigned char>(v); }
@@ -99,22 +99,22 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 
 // The two pools the tasks of MAGIC123 and MAGIC124 run themselves: records of
 // the task slots' 0x84 bytes (+0 bit 0 in use, +1 the kind, +0x80 the owner).
-constexpr std::uint32_t kMotePool = 0x69ACC8;    // BreathMote_Pool: 90 records
+// kMotePool: now BreathMote_Pool (symbols.toml). BreathMote_Pool: 90 records
 constexpr unsigned kMotes = 90;
-constexpr std::uint32_t kBoltPool = 0x69DB30;    // ThunderPool: 64 records
+// kBoltPool: now ThunderPool (symbols.toml). ThunderPool: 64 records
 constexpr unsigned kBolts = 64;
 unsigned char* Record(std::uint32_t pool, unsigned k) { return Mem(pool + k * at::kTaskStride); }
 
 // The .data tables the dispatchers read in place, index unchecked by the
 // originals (ours aborts past each).
-constexpr std::uint32_t kBeamPhases = 0x65BB48;    // BreathBeam_Task, by +1: one entry
-constexpr std::uint32_t kBeamSteps = 0x65BB4C;     // BreathBeam_Run, by +2: five
-constexpr std::uint32_t kMoteKinds = 0x65BB60;     // IcePool_Dispatch, by +1: two
-constexpr std::uint32_t kMoteSteps = 0x65BB68;     // BreathMote_Task, by +2: four
-constexpr std::uint32_t kMoteAngles = 0x65BB78;    // seven angle steps (u8) the mote draws walk
-constexpr std::uint32_t kBoltKinds = 0x65BB80;     // ThunderPool_Dispatch, by +1: two
-constexpr std::uint32_t kBoltSteps = 0x65BB88;     // ThunderBolt_Task, by +2: four
-constexpr std::uint32_t kSparkSteps = 0x65BB98;    // ThunderSpark_Task, by +2: three
+// kBeamPhases: now BreathBeam_Phases (symbols.toml). BreathBeam_Task, by +1: one entry
+// kBeamSteps: now BreathBeam_Steps (symbols.toml). BreathBeam_Run, by +2: five
+// kMoteKinds: now IcePool_Kinds (symbols.toml). IcePool_Dispatch, by +1: two
+// kMoteSteps: now BreathMote_Steps (symbols.toml). BreathMote_Task, by +2: four
+// kMoteAngles: now BreathMote_Angles (symbols.toml). seven angle steps (u8) the mote draws walk
+// kBoltKinds: now ThunderPool_Kinds (symbols.toml). ThunderPool_Dispatch, by +1: two
+// kBoltSteps: now ThunderBolt_Steps (symbols.toml). ThunderBolt_Task, by +2: four
+// kSparkSteps: now ThunderSpark_Steps (symbols.toml). ThunderSpark_Task, by +2: three
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -134,15 +134,15 @@ using VoidFn = void (__cdecl*)();
 // back after each. The task and the owner are read once, before the loop.
 void RunPool(std::uint32_t pool, unsigned n, void (__cdecl* dispatch)()) {
     unsigned char* const task = Sc();
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < n; ++i) {
         unsigned char* const rec = Record(pool, i);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t its = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(at::kOwner), its);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         dispatch();
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = task;
     }
 }
@@ -254,13 +254,13 @@ S28_EXPORT void __cdecl Firebreath_Start(void) {
 
 // original 0x4DD9F0: the beam's kind-1 task (0x38), a jmp through
 // BreathBeam_Phases (one entry, BreathBeam_Run) by +1.
-S28_EXPORT void __cdecl BreathBeam_Task(void) { CallCell("BreathBeam_Task", kBeamPhases, Sc()[1], 1); }
+S28_EXPORT void __cdecl BreathBeam_Task(void) { CallCell("BreathBeam_Task", BreathBeam_Phases_addr, Sc()[1], 1); }
 
 // original 0x4DDA10: a call through BreathBeam_Steps (five entries: Aim,
 // Widen, Hit, Hold, Fade) by +2; then, unless the owner's +0xB is 0xFF or +2
 // is 0, the glow band and the textured band.
 S28_EXPORT void __cdecl BreathBeam_Run(void) {
-    CallCell("BreathBeam_Run", kBeamSteps, Sc()[2], 5);
+    CallCell("BreathBeam_Run", BreathBeam_Steps_addr, Sc()[2], 5);
     if (Owner()[0xB] == 0xFF) return;
     if (Sc()[2] == 0) return;
     MH_CALL(BreathBeam_DrawGlow)();
@@ -482,7 +482,7 @@ S28_EXPORT void __cdecl Icebreath_Task(void) {
     if (phase >= 2) PastTable("Icebreath_Task", phase, 2);
     magic_harness::Phase(kPhases[phase])();
     DrawMode(0x35);
-    RunPool(kMotePool, kMotes, MH_CALL(IcePool_Dispatch));
+    RunPool(BreathMote_Pool_addr, kMotes, MH_CALL(IcePool_Dispatch));
     DrawMode(0x15);
 }
 
@@ -493,7 +493,7 @@ S28_EXPORT void __cdecl Icebreath_Task(void) {
 // +1 i & 1, +9 (i / 4) x 3 + 1) counted in +0xB; sound 0x102; the target
 // flags 0x10; +9 0, +1 on. The pool's answer is used unchecked.
 S28_EXPORT void __cdecl Icebreath_Start(void) {
-    ClearPool(kMotePool, kMotes);
+    ClearPool(BreathMote_Pool_addr, kMotes);
     Sc()[8] = Owner()[8];
     MH_CALL(MagicFx_CenterOnSide)();
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -513,7 +513,7 @@ S28_EXPORT void __cdecl Icebreath_Start(void) {
     for (unsigned i = 0; i < kMotes; ++i) {
         const unsigned k = MH_CALL(IcePool_Alloc)() & 0xFFu;
         unsigned char* const self = Sc();
-        unsigned char* const rec = Record(kMotePool, k);
+        unsigned char* const rec = Record(BreathMote_Pool_addr, k);
         SetLong(rec + 0x80, static_cast<std::int32_t>(Addr(self)));
         rec[1] = U8(i & 1);
         rec[9] = U8((i >> 2) * 3 + 1);
@@ -527,11 +527,11 @@ S28_EXPORT void __cdecl Icebreath_Start(void) {
 
 // original 0x4DEB80: a jmp through IcePool_Kinds (two entries, both
 // BreathMote_Task) by +1.
-S28_EXPORT void __cdecl IcePool_Dispatch(void) { CallCell("IcePool_Dispatch", kMoteKinds, Sc()[1], 2); }
+S28_EXPORT void __cdecl IcePool_Dispatch(void) { CallCell("IcePool_Dispatch", IcePool_Kinds_addr, Sc()[1], 2); }
 
 // original 0x4DEBA0: a jmp through BreathMote_Steps (four entries: Launch,
 // Fly, Burst, Free) by +2.
-S28_EXPORT void __cdecl BreathMote_Task(void) { CallCell("BreathMote_Task", kMoteSteps, Sc()[2], 4); }
+S28_EXPORT void __cdecl BreathMote_Task(void) { CallCell("BreathMote_Task", BreathMote_Steps_addr, Sc()[2], 4); }
 
 // original 0x4DEBC0: +9 down; at 0 the mote starts at the owner's screen point
 // (+0x2E / +0x30), its heading the owner's +0x14 plus or minus Rand & 0xFF
@@ -624,7 +624,7 @@ S28_EXPORT void __cdecl BreathMote_Free(void) {
 }
 
 // The angle of a mote's corner j: (BreathMote_Angles[j] + +9) & 0x3F, << 6.
-unsigned MoteAngle(unsigned j) { return ((Mem(kMoteAngles + j)[0] + Sc()[9]) & 0x3Fu) << 6; }
+unsigned MoteAngle(unsigned j) { return ((Mem(BreathMote_Angles_addr + j)[0] + Sc()[9]) & 0x3Fu) << 6; }
 // A corner at radius r (a scratch word) from the mote's point (+6 / +8) along
 // the angle in the scratch +4.
 void MoteCorner(unsigned char* p, unsigned off, unsigned r, bool angle_fresh, unsigned angle) {
@@ -730,7 +730,7 @@ S28_EXPORT void __cdecl BreathMote_DrawBurst(void) {
 
 // original 0x4DF450: the first mote record without bit 0, marked, its index
 // answered; 0xFF when all 90 are in use. Only al is the original's answer.
-S28_EXPORT unsigned char __cdecl IcePool_Alloc(void) { return Alloc(kMotePool, kMotes); }
+S28_EXPORT unsigned char __cdecl IcePool_Alloc(void) { return Alloc(BreathMote_Pool_addr, kMotes); }
 
 // ===========================================================================
 // MAGIC124 (row 124, ThundrBreath read one id down)
@@ -746,7 +746,7 @@ S28_EXPORT void __cdecl Thunderbreath_Task(void) {
     if (phase >= 4) PastTable("Thunderbreath_Task", phase, 4);
     magic_harness::Phase(kPhases[phase])();
     DrawMode(0x35);
-    RunPool(kBoltPool, kBolts, MH_CALL(ThunderPool_Dispatch));
+    RunPool(ThunderPool_addr, kBolts, MH_CALL(ThunderPool_Dispatch));
     MH_CALL(Thunderbreath_DrawOrb)();
     DrawMode(0x15);
 }
@@ -757,7 +757,7 @@ S28_EXPORT void __cdecl Thunderbreath_Task(void) {
 // task, +1 0, +4 i, +0xB 0, +9 i x 4 + 1) counted in +0xB; sound 0x100. The
 // pool's answer is used unchecked.
 S28_EXPORT void __cdecl Thunderbreath_Start(void) {
-    ClearPool(kBoltPool, kBolts);
+    ClearPool(ThunderPool_addr, kBolts);
     Sc()[8] = Owner()[8];
     CopyOwnerPosition();
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -771,7 +771,7 @@ S28_EXPORT void __cdecl Thunderbreath_Start(void) {
     for (unsigned i = 0; i < 0x20; ++i) {
         const unsigned k = MH_CALL(ThunderPool_Alloc)() & 0xFFu;
         unsigned char* const self = Sc();
-        unsigned char* const rec = Record(kBoltPool, k);
+        unsigned char* const rec = Record(ThunderPool_addr, k);
         SetLong(rec + 0x80, static_cast<std::int32_t>(Addr(self)));
         rec[1] = 0;
         rec[4] = U8(i);
@@ -830,7 +830,7 @@ extern "C" __attribute__((naked)) void __cdecl Port_DroppedCall(unsigned char) {
 
 // original 0x4DF830: a jmp through ThunderPool_Kinds (two entries:
 // ThunderBolt_Task, ThunderSpark_Task) by +1.
-S28_EXPORT void __cdecl ThunderPool_Dispatch(void) { CallCell("ThunderPool_Dispatch", kBoltKinds, Sc()[1], 2); }
+S28_EXPORT void __cdecl ThunderPool_Dispatch(void) { CallCell("ThunderPool_Dispatch", ThunderPool_Kinds_addr, Sc()[1], 2); }
 
 // original 0x4DF850: a call through ThunderBolt_Steps (four entries: Aim,
 // Grow, Flicker, Fade) by +2; then, while +0 and +2 are set, +0xB up and the
@@ -838,7 +838,7 @@ S28_EXPORT void __cdecl ThunderPool_Dispatch(void) { CallCell("ThunderPool_Dispa
 // spark (a pool record, kind 1, +0x80 the owner, at the bolt's end point, the
 // scratch +8 / +0xA) counted in the owner's +0xB, unless the pool is full.
 S28_EXPORT void __cdecl ThunderBolt_Task(void) {
-    CallCell("ThunderBolt_Task", kBoltSteps, Sc()[2], 4);
+    CallCell("ThunderBolt_Task", ThunderBolt_Steps_addr, Sc()[2], 4);
     if (Sc()[0] == 0 || Sc()[2] == 0) return;
     Inc(Sc()[0xB]);
     MH_CALL(ThunderBolt_Draw)();
@@ -846,7 +846,7 @@ S28_EXPORT void __cdecl ThunderBolt_Task(void) {
     if ((sc[0xB] & 3) != 0 || sc[2] != 1 || sc[0xA] == 0) return;
     const unsigned char k = MH_CALL(ThunderPool_Alloc)();
     if (k == 0xFF) return;
-    unsigned char* const rec = Record(kBoltPool, k);
+    unsigned char* const rec = Record(ThunderPool_addr, k);
     const std::uint16_t x = SW(8);
     unsigned char* const owner = Owner();
     SetLong(rec + 0x80, static_cast<std::int32_t>(Addr(owner)));
@@ -978,7 +978,7 @@ S28_EXPORT void __cdecl ThunderBolt_Draw(void) {
     int s = Sin((phase & 0x1F) << 7);
     int across = static_cast<short>(Sar(Shl(s, 2), 12));
     s = Sin(bend);
-    SetSW(8, static_cast<unsigned>(Sar(Mul(s, across), 12) + Long(Mem(kV))));
+    SetSW(8, static_cast<unsigned>(Sar(Mul(s, across), 12) + Long(Mem(Prim_VertexScratch_addr))));
     s = Cos(bend);
     SetSW(0xA, static_cast<unsigned>(Sar(Mul(s, across), 12)) + VW(2));
     SetSW(4, static_cast<unsigned>(Ratan2(SS(0xC) - SS(8), SS(0xE) - SS(0xA)) - 0x400));
@@ -1004,7 +1004,7 @@ S28_EXPORT void __cdecl ThunderBolt_Draw(void) {
         s = Sin(static_cast<int>(wobble_at));
         across = static_cast<short>(Sar(Mul(bow, s), 12));
         s = Sin(bend);
-        SetSW(8, static_cast<unsigned>(Sar(Mul(s, across), 12) + Long(Mem(kV))));
+        SetSW(8, static_cast<unsigned>(Sar(Mul(s, across), 12) + Long(Mem(Prim_VertexScratch_addr))));
         s = Cos(bend);
         const unsigned prev_heading = SW(4);
         SetSW(0xA, static_cast<unsigned>(Sar(Mul(s, across), 12)) + VW(2));
@@ -1087,7 +1087,7 @@ S28_EXPORT void __cdecl ThunderBolt_Draw(void) {
 // original 0x4E0470: a call through ThunderSpark_Steps (three entries: Start,
 // Grow, Fade) by +2; then, while +0 and +2 are set, the fan and the ring.
 S28_EXPORT void __cdecl ThunderSpark_Task(void) {
-    CallCell("ThunderSpark_Task", kSparkSteps, Sc()[2], 3);
+    CallCell("ThunderSpark_Task", ThunderSpark_Steps_addr, Sc()[2], 3);
     if (Sc()[0] == 0 || Sc()[2] == 0) return;
     MH_CALL(ThunderSpark_DrawFan)();
     MH_CALL(ThunderSpark_DrawRing)();
@@ -1203,7 +1203,7 @@ S28_EXPORT void __cdecl ThunderSpark_DrawRing(void) {
 
 // original 0x4E08B0: the first bolt record without bit 0, marked, its index
 // answered; 0xFF when all 64 are in use. Only al is the original's answer.
-S28_EXPORT unsigned char __cdecl ThunderPool_Alloc(void) { return Alloc(kBoltPool, kBolts); }
+S28_EXPORT unsigned char __cdecl ThunderPool_Alloc(void) { return Alloc(ThunderPool_addr, kBolts); }
 
 void MagicS28_Inject() {
     if (bof3::WantsShadow("magic_s28")) magic_s28::SelfTest();

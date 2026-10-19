@@ -300,8 +300,8 @@ const mh::Callee kCallees[] = {
 #undef S23_RAW
 
 const mh::DataTable kDataTables[] = {
-    {at::kFunnelTypes, 1}, {at::kFunnelPhases, 4}, {at::kSpiralTypes, 1}, {at::kSpiralPhases, 5},
-    {at::kSimoonTypes, 3}, {at::kDomePhases, 3},   {at::kDustPhases, 4},  {at::kFanPhases, 4},
+    {FxFunnel_Types_addr, 1}, {FxFunnel_Phases_addr, 4}, {FxSpiral_Types_addr, 1}, {FxSpiral_Phases_addr, 5},
+    {SimoonFx_Types_addr, 3}, {SimoonDome_Phases_addr, 3},   {SimoonDust_Phases_addr, 4},  {SimoonFan_Phases_addr, 4},
 };
 
 // The primitives the draws build: Gfx_PacketNext is put inside, and moved
@@ -310,27 +310,27 @@ const mh::DataTable kDataTables[] = {
 constexpr unsigned kPrimBytes = 0x400;
 alignas(16) unsigned char g_prims[kPrimBytes];
 
-constexpr std::uint32_t kGte = 0x7DE428;          // Gte_RampFar .. Gte_Depth: the whole GTE state
+// kGte: now Gte_RampFar (symbols.toml). Gte_RampFar .. Gte_Depth: the whole GTE state
 constexpr std::uint32_t kGteSize = 0x380;
-constexpr std::uint32_t kGteDepth = 0x7DE450;     // Gte_MatrixDepth: kept 0..0x15 (a negative one writes below the stack)
-constexpr std::uint32_t kPacketNext = 0x7E0670;   // Gfx_PacketNext
+// kGteDepth: now Gte_MatrixDepth (symbols.toml). Gte_MatrixDepth: kept 0..0x15 (a negative one writes below the stack)
+// kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 
 const mh::Region kRegions[] = {
     {0x903800, 4},                    // Camera_ShiftY
     {at::kR, 0x10},                   // the effect scratch 0x903850..0x90385F
-    {at::kV0, 0x20},                  // Prim_VertexScratch
-    {kGte, kGteSize},
+    {Prim_VertexScratch_addr, 0x20},  // Prim_VertexScratch
+    {Gte_RampFar_addr, kGteSize},
     {0x905E40, 0x30},                 // Camera_Matrix, the view's cell words, MapView_Redraw
-    {kPacketNext, 4},
+    {Gfx_PacketNext_addr, 4},
     {0, kPrimBytes},                  // g_prims: its address is filled in by SelfTest
     {0x695990, 0x2A4},                // Quake's .bss
-    {at::kSpriteObjects, 30 * 0xA4},
-    {at::kSpriteExtra, 4 * 0xA4},
-    {at::kEffectObjects, 20 * 0x80},
-    {at::kMapCells, at::kMapCellsEnd - at::kMapCells},
-    {at::kArea - 4, 0x800},           // the loaded area's first 0x800 bytes: header, cell runs, corners
-    {at::kClutRow, 0x40},
-    {at::kClutSource, 0x40},
+    {Sprite_Objects_addr, 30 * 0xA4},
+    {Sprite_ObjectsExtra_addr, 4 * 0xA4},
+    {Effect_Objects_addr, 20 * 0x80},
+    {MapView_Cells_addr, at::kMapCellsEnd - MapView_Cells_addr},
+    {AreaMap_Header_addr - 4, 0x800}, // the loaded area's first 0x800 bytes: header, cell runs, corners
+    {Gfx_ClutStrip_addr + 0x3400, 0x40},
+    {Gfx_ClutStripSource_addr + 0x3400, 0x40},
 };
 mh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
 
@@ -343,44 +343,44 @@ unsigned char* Sc() { return Sprite_Current; }
 // walks switch or any. The area's width and height 0..16, so that Quake_Heave
 // stays in the region.
 void SeedArea() {
-    unsigned char* const area = mh::Mem(at::kArea);
+    unsigned char* const area = mh::Mem(AreaMap_Header_addr);
     area[0] = static_cast<unsigned char>(mh::Next() % 17);
     area[1] = static_cast<unsigned char>(mh::Next() % 17);
     const std::uint32_t base = 0x80 + mh::Next() % 0x40;
-    SetWord(mh::Mem(at::kAreaCellBase), base);
-    std::memset(mh::Mem(at::kMapCells), 0, at::kMapCellsEnd - at::kMapCells);
+    SetWord(mh::Mem(AreaMap_CellBase_addr), base);
+    std::memset(mh::Mem(MapView_Cells_addr), 0, at::kMapCellsEnd - MapView_Cells_addr);
     for (unsigned b = 0; b < 4; ++b) {
         const std::uint32_t index = 0x100 + 0x30 * b;
         const unsigned n = 1 + mh::Next() % 8;
-        SetWord(mh::Mem(at::kArea + (index - 1) * 4 + 2), n);
+        SetWord(mh::Mem(AreaMap_Header_addr + (index - 1) * 4 + 2), n);
         for (unsigned pos = 0; pos + 1 < n;) {
             unsigned step = 1 + mh::Next() % 3;
             if (step > n - 1 - pos) step = n - 1 - pos;
-            unsigned char* const e = mh::Mem(at::kArea + (index + pos) * 4);
+            unsigned char* const e = mh::Mem(AreaMap_Header_addr + (index + pos) * 4);
             e[2] = static_cast<unsigned char>(step);
             e[3] = static_cast<unsigned char>(MH_PICK(0, 0x21, 0x22, 0x27, 0x28, 0x29, 0x2A, 0x2B, mh::Next() & 0xFF));
             pos += step;
         }
         const unsigned cells = mh::Next() % 4;
         for (unsigned c = 0; c < cells; ++c)
-            SetWord(mh::Mem(at::kMapCells + 2 * (mh::Next() % 1568)), index - base);
+            SetWord(mh::Mem(MapView_Cells_addr + 2 * (mh::Next() % 1568)), index - base);
     }
 }
 
 void Seed(unsigned k) {
     // every function: the pointers the draws and Quake follow put inside
     Gfx_PacketNext = g_prims + 4 * (mh::Next() % 16);
-    mh::SetPointer(at::kActorSprite, mh::SpriteRecord(mh::Next()));
-    SetLong(mh::Mem(kGteDepth), static_cast<std::int32_t>(mh::Next() % 0x16));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
+    SetLong(mh::Mem(Gte_MatrixDepth_addr), static_cast<std::int32_t>(mh::Next() % 0x16));
     SeedArea();
-    mh::Mem(at::kQuakeFacing)[0] = static_cast<unsigned char>(mh::Next() % 4);
-    SetWord(mh::Mem(at::kQuakeX), MH_PICK(0, 1, 2, 3, 5, 8, 12, 15, 16, static_cast<std::uint32_t>(-1),
+    mh::Mem(MagicS23_QuakeFacing_addr)[0] = static_cast<unsigned char>(mh::Next() % 4);
+    SetWord(mh::Mem(MagicS23_QuakeX_addr), MH_PICK(0, 1, 2, 3, 5, 8, 12, 15, 16, static_cast<std::uint32_t>(-1),
                                           static_cast<std::uint32_t>(-4), static_cast<std::uint32_t>(-15), 0x7FFF, 0x8000));
-    SetWord(mh::Mem(at::kQuakeY), MH_PICK(0, 1, 2, 3, 5, 8, 12, 15, 16, static_cast<std::uint32_t>(-1),
+    SetWord(mh::Mem(MagicS23_QuakeY_addr), MH_PICK(0, 1, 2, 3, 5, 8, 12, 15, 16, static_cast<std::uint32_t>(-1),
                                           static_cast<std::uint32_t>(-4), static_cast<std::uint32_t>(-15), 0x7FFF, 0x8000));
     if (mh::Half())
         mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>((mh::Next() % 11) | MH_PICK(0, 0x40, 0x80, 0xC0));
-    mh::Mem(at::kEventBattle)[0] = static_cast<unsigned char>(
+    mh::Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(
         MH_PICK(0x1C, 0x23, 0x2F, 0x34, 0x1B, 0x1D, 0x22, 0x24, 0x2E, 0x30, 0x33, 0x35, 0, mh::Next() & 0xFF));
 
     unsigned char* const sc = Sc();
@@ -434,7 +434,7 @@ void Seed(unsigned k) {
             if (mh::Often()) SetWord(mh::Mem(at::kQuakeEnemyZ + 2 * i), 0xFF + mh::Next() % 3);
         sc[9] = pick(MH_PICK(0x5A, 0x59, 0x5B, mh::Next()));
         if (mh::Half()) std::memset(mh::Mem(at::kQuakeLift), 0, 0xF0);
-        if (mh::Half()) mh::Mem(at::kArea)[mh::Next() & 1] = 0;
+        if (mh::Half()) mh::Mem(AreaMap_Header_addr)[mh::Next() & 1] = 0;
         break;
     case kSimoon_Wait: if (mh::Half()) sc[0xB] = 0; break;
     case kSimoonDome_Grow: sc[9] = pick(MH_PICK(3, 4, 5, 7, 8, mh::Next())); break;
@@ -456,8 +456,8 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = g_prims + 4 * (v % 16); break;
     case 1: SetWord(mh::Mem(at::kR + 2 * (v % 8)), h >> 16); break;
-    case 2: SetWord(mh::Mem(at::kV0 + 2 * (v % 16)), h >> 16); break;
-    case 3: mh::Mem(at::kQuakeHover)[0] = static_cast<unsigned char>(v & 1); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
+    case 3: mh::Mem(MagicS23_QuakeHover_addr)[0] = static_cast<unsigned char>(v & 1); break;
     case 4: SetWord(mh::Mem(at::kQuakeEnemyZ + 2 * (v % 8)), h >> 16); break;
     case 5: SetWord(mh::Mem(at::kQuakeEnemyUp + 2 * (v % 8)), h >> 16); break;
     case 6: SetWord(mh::Mem(at::kQuakeSpriteZ + 2 * (v % 30)), h >> 16); break;

@@ -50,11 +50,11 @@ using move_script::Word;
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
@@ -63,10 +63,10 @@ unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, std::uint32_t v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 void AddSW(unsigned k, std::uint32_t v) { SetSW(k, SW(k) + v); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, std::uint32_t v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, std::uint32_t v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -769,11 +769,11 @@ S27_EXPORT void __cdecl WhelpBreathSprite_Run(void) {
         bof3::addr::WhelpBreathFlames_Grow,  bof3::addr::WhelpBreathFlames_End, bof3::addr::WhelpBreathGlow_Grow,
         bof3::addr::WhelpBreathGlow_Hold,    bof3::addr::WhelpBreathGlow_End};
     ModeCommit(3, 0x15);
-    SetLong(Mem(raw::kSpriteBank), static_cast<std::int32_t>(raw::kBankEffects));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(raw::kBankEffects));
     const unsigned phase = Sc()[2];
     if (phase >= 8) PastTable("WhelpBreathSprite_Run", phase, 8);
     magic_harness::Phase(kPhases[phase])();
-    SetLong(Mem(raw::kSpriteBank), static_cast<std::int32_t>(raw::kBankDefault));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(raw::kBankDefault));
 }
 
 // original 0x4DB7F0: the sprite at its owner (direction byte, position);

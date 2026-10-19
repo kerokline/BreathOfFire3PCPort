@@ -266,7 +266,7 @@ constexpr std::uint32_t kStride = 0x84;
 // The pools and 256 slots past pool B's start: an alloc's stand-in answers
 // any byte (the original's 0xFF included), and the untested ones write there.
 constexpr std::uint32_t kPoolsSize = (kPoolB - kPools) + 0x100 * kStride;
-constexpr std::uint32_t kTints = 0x7E0700;     // MoveScript_TintRecords, 12 bytes; any byte indexes them
+// kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12 bytes; any byte indexes them
 constexpr std::uint32_t kAbility = 0x904B80;
 constexpr std::uint32_t kEnemyLift = 0x8C564F;   // + 0x8C * an enemy's type +0xF0
 
@@ -274,7 +274,7 @@ constexpr std::uint32_t kEnemyLift = 0x8C564F;   // + 0x8C * an enemy's type +0x
 const mh::Region kRegions[] = {
     {kPools, kPoolsSize},
     {0x7E0670, 4},                      // Gfx_PacketNext
-    {kTints, 0x100 * 12},
+    {MoveScript_TintRecords_addr, 0x100 * 12},
     {0x903850, 0x10},                   // the scratch
     {0x9037A0, 0x20},                   // Prim_VertexScratch
     {0x80B580, 0x20},                   // Gfx_ClutStripSource (MAGIC087's row)
@@ -307,7 +307,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < 0x80; ++i)
         mh::SetPointer(kPools + i * kStride + 0x80, mh::Half() ? mh::TaskAt(mh::Next()) : mh::SpriteRecord(mh::Next()));
     unsigned char* const sc = Sc();
-    unsigned char* const owner = mh::Pointer(mh::at::kOwner);
+    unsigned char* const owner = mh::Pointer(BattleE2_Owner_addr);
     // The target's side bit (0x40: the enemies) for the four that test it
     // (the harness's disturbance leaves the enemy records alone while the
     // byte is past 10).
@@ -370,7 +370,7 @@ void Seed(unsigned k) {
     case kM092PoolAlloc: FillPool(kPoolB, 0x30); break;
     case kM088TintOn: if (mh::Half()) sc[9] = 1; break;
     case kM088Darken: if (mh::Half()) sc[9] = 1; break;
-    case kM088Lighten: if (mh::Half()) mh::Mem(kTints + sc[0xA] * 12u)[2] = 0xFF; break;
+    case kM088Lighten: if (mh::Half()) mh::Mem(MoveScript_TintRecords_addr + sc[0xA] * 12u)[2] = 0xFF; break;
     case kM088Apply: if (mh::Half()) sc[0xB] = 0; break;
     case kM088Variant: {
         mh::Mem(0x904B35)[0] = Byte(mh::Half() ? 4 : MH_PICK(3, 5, 0));

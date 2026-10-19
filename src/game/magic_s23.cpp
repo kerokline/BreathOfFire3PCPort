@@ -51,7 +51,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(hat::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
 short Get(std::uint32_t address) { return static_cast<short>(Word(Mem(address))); }
 void Put(std::uint32_t address, int v) { SetWord(Mem(address), static_cast<unsigned>(v)); }
@@ -78,12 +78,12 @@ float* At(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*
 // screen points; the depth answer and the flag word are the caller's locals.
 void Project4(unsigned char* prim, unsigned a, unsigned b, unsigned c, unsigned d) {
     long depth = 0;
-    MH_CALL(Gte_RotTransPers4)(Vertex(at::kV0), Vertex(at::kV1), Vertex(at::kV2), Vertex(at::kV3), At(prim, a), At(prim, b),
+    MH_CALL(Gte_RotTransPers4)(Vertex(Prim_VertexScratch_addr), Vertex(Prim_VertexScratch_addr + 0x8), Vertex(Prim_VertexScratch_addr + 0x10), Vertex(Prim_VertexScratch_addr + 0x18), At(prim, a), At(prim, b),
                                At(prim, c), At(prim, d), &depth);
 }
 void Project3(unsigned char* prim) {
     long depth = 0;
-    MH_CALL(Gte_RotTransPers3)(Vertex(at::kV0), Vertex(at::kV1), Vertex(at::kV2), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
+    MH_CALL(Gte_RotTransPers3)(Vertex(Prim_VertexScratch_addr), Vertex(Prim_VertexScratch_addr + 0x8), Vertex(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
                                &depth);
 }
 // Three bytes of a vertex's colour, from the low byte of a scratch word.
@@ -151,7 +151,7 @@ unsigned char* TargetRecord() {
 unsigned char Facing() {
     const bool bit = (Mem(hat::kTarget)[0] & 0x40) != 0;
     const bool party = Mem(hat::kActor)[0] < 3;
-    const unsigned char f = Pointer(at::kActorSprite)[8];
+    const unsigned char f = Pointer(MagicS23_ActorSprite_addr)[8];
     return bit == party ? static_cast<unsigned char>(f ^ 2) : f;
 }
 
@@ -161,12 +161,12 @@ unsigned char Facing() {
 // dword's byte +2; `map` switches the top byte (the polygon code) of each.
 // A run whose steps do not land on its end is not checked, as the original.
 void Walk(void (*map)(unsigned char*)) {
-    for (std::uint32_t cell = at::kMapCells; cell < at::kMapCellsEnd; cell += 2) {
+    for (std::uint32_t cell = MapView_Cells_addr; cell < at::kMapCellsEnd; cell += 2) {
         const unsigned c = Word(Mem(cell));
         if (c == 0) continue;
-        const std::uint32_t index = c + (static_cast<std::uint32_t>(Long(Mem(at::kAreaCellBase))) & 0xFFFF);
-        const std::uint32_t n = static_cast<std::uint32_t>(Long(Mem(at::kArea - 4 + index * 4))) >> 16;
-        std::uint32_t p = at::kArea + index * 4;
+        const std::uint32_t index = c + (static_cast<std::uint32_t>(Long(Mem(AreaMap_CellBase_addr))) & 0xFFFF);
+        const std::uint32_t n = static_cast<std::uint32_t>(Long(Mem(AreaMap_Header_addr - 4 + index * 4))) >> 16;
+        std::uint32_t p = AreaMap_Header_addr + index * 4;
         const std::uint32_t end = p + n * 4 - 4;
         while (p != end) {
             map(Mem(p));
@@ -200,7 +200,7 @@ long Ground(const unsigned char* at_position) {
 
 // Quake_Heave's idiv by a Quake_Divisors byte: the original faults on 0.
 int Divide(int n, unsigned d) {
-    if (d == 0) bof3::Fatal("Quake_Heave: a divisor of 0 (facing byte %u reads past Quake_Divisors)", Byte(at::kQuakeFacing));
+    if (d == 0) bof3::Fatal("Quake_Heave: a divisor of 0 (facing byte %u reads past Quake_Divisors)", Byte(MagicS23_QuakeFacing_addr));
     return n / static_cast<int>(d);
 }
 void AddByte(std::uint32_t address, int v) { Mem(address)[0] = static_cast<unsigned char>(Mem(address)[0] + v); }
@@ -230,7 +230,7 @@ S23_EXPORT void __cdecl Cyclone_Start(void) {
     Sc()[8] = Owner()[8];
     SetLong(Sc() + 0x34, Long(Owner() + 0x34));
     SetLong(Sc() + 0x38, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Pointer(hat::kSource) + 0x3C));
+    SetLong(Sc() + 0x3C, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
     Sc()[9] = 0;
     Sc()[0xB] = 0;
     Bump(Sc()[1]);
@@ -255,13 +255,13 @@ S23_EXPORT void __cdecl Cyclone_Wait(void) {
 
 // original 0x4CCAA0: the funnel (kind 1, 0x0A): jmp [FxFunnel_Types + 4 * +1],
 // read in place, unchecked.
-S23_EXPORT void __cdecl FxFunnel_Dispatch(void) { Entry(at::kFunnelTypes, Sc()[1])(); }
+S23_EXPORT void __cdecl FxFunnel_Dispatch(void) { Entry(FxFunnel_Types_addr, Sc()[1])(); }
 
 // original 0x4CCAC0: FxFunnel_Types[0]. Its phase +2 through FxFunnel_Phases
 // (read in place, unchecked); then, alive and past phase 0, the funnel under
 // its own matrix and the ground ring under a second.
 S23_EXPORT void __cdecl FxFunnel_Task(void) {
-    Entry(at::kFunnelPhases, Sc()[2])();
+    Entry(FxFunnel_Phases_addr, Sc()[2])();
     const unsigned char* const sc = Sc();
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(FxFunnel_PushMatrix)();
@@ -432,31 +432,31 @@ S23_EXPORT void __cdecl FxFunnel_Draw(void) {
         Put(at::kW6, sc[0xA]);
         const int first = (Byte(at::kW8) & 0x3F) << 6;
         Put(at::kWA, first);
-        Put(at::kV1, SinOf(first, at::kR));
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, at::kR));
     }
-    Put(at::kV1 + 2, CosOf(Get(at::kWA), at::kR));
-    Put(at::kV3, SinOf(Get(at::kWA), at::kR2));
-    Put(at::kV3 + 2, CosOf(Get(at::kWA), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kWA), at::kR));
+    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kWA), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kWA), at::kR2));
     for (int i = 1, angle = 0x40; angle < 0x800; ++i, angle += 0x40) {
         const int a = ((Byte(at::kW8) + i) & 0x3F) << 6;
         const unsigned char* const r = Sc() + 0x1C;
         Put(at::kWA, a);
         const int s = Sin(angle);
         const int outer = (Imul(s, Long(r) / 2) >> 12) + Word(r);
-        Put(at::kV0, Get(at::kV1));
-        Put(at::kV0 + 2, Get(at::kV1 + 2));
+        Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
+        Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
         Put(at::kR, outer);
-        Put(at::kV0 + 4, 0);
-        Put(at::kV1, SinOf(Get(at::kWA), at::kR));
-        Put(at::kV1 + 2, CosOf(Get(at::kWA), at::kR));
-        Put(at::kV1 + 4, 0);
-        Put(at::kV2, Get(at::kV3));
-        Put(at::kV2 + 2, Get(at::kV3 + 2));
-        Put(at::kV2 + 4, 0);
-        Put(at::kV3, SinOf(Get(at::kWA), at::kR2));
-        Put(at::kV3 + 2, CosOf(Get(at::kWA), at::kR2));
+        Put(Prim_VertexScratch_addr + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(at::kWA), at::kR));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kWA), at::kR));
+        Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x10, Get(Prim_VertexScratch_addr + 0x18));
+        Put(Prim_VertexScratch_addr + 0x10 + 2, Get(Prim_VertexScratch_addr + 0x18 + 2));
+        Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kWA), at::kR2));
+        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kWA), at::kR2));
         unsigned char* const prim = Gfx_PacketNext;
-        Put(at::kV3 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         Shade(prim, 4, at::kW4);
@@ -503,30 +503,30 @@ S23_EXPORT void __cdecl FxFunnel_DrawGround(void) {
         Put(at::kW4, sc[0xA] * 2);
         const int first = (Byte(at::kW8) & 0x3F) << 6;
         Put(at::kWA, first);
-        Put(at::kV1, SinOf(first, at::kR));
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, at::kR));
     }
-    Put(at::kV1 + 2, CosOf(Get(at::kWA), at::kR));
-    Put(at::kV3, SinOf(Get(at::kWA), at::kR2));
-    Put(at::kV3 + 2, CosOf(Get(at::kWA), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kWA), at::kR));
+    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kWA), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kWA), at::kR2));
     for (int i = 1, angle = 0x40; angle < 0x800; ++i, angle += 0x40) {
         Put(at::kWA, ((Byte(at::kW8) + i) & 0x3F) << 6);
         const int s = Sin(angle);
         const short inner = Get(at::kR2);
-        Put(at::kV0 + 4, 0);
+        Put(Prim_VertexScratch_addr + 4, 0);
         const int outer = (Imul(s, inner / 2) >> 12) + inner;
-        Put(at::kV0, Get(at::kV1));
-        Put(at::kV0 + 2, Get(at::kV1 + 2));
+        Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
+        Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
         Put(at::kR, outer);
-        Put(at::kV1, SinOf(Get(at::kWA), at::kR));
-        Put(at::kV1 + 2, CosOf(Get(at::kWA), at::kR));
-        Put(at::kV1 + 4, 0);
-        Put(at::kV2, Get(at::kV3));
-        Put(at::kV2 + 2, Get(at::kV3 + 2));
-        Put(at::kV2 + 4, 0);
-        Put(at::kV3, SinOf(Get(at::kWA), at::kR2));
-        Put(at::kV3 + 2, CosOf(Get(at::kWA), at::kR2));
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(at::kWA), at::kR));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kWA), at::kR));
+        Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x10, Get(Prim_VertexScratch_addr + 0x18));
+        Put(Prim_VertexScratch_addr + 0x10 + 2, Get(Prim_VertexScratch_addr + 0x18 + 2));
+        Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kWA), at::kR2));
+        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kWA), at::kR2));
         unsigned char* const prim = Gfx_PacketNext;
-        Put(at::kV3 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         Shade(prim, 4, at::kW4);
@@ -612,22 +612,22 @@ S23_EXPORT void __cdecl Typhoon_DrawFan(void) {
         Put(at::kR, (Shl(s, 4) >> 12) + 0x80);
         Put(at::kW8, sc[0xA] * 6);
     }
-    Put(at::kV2, SinOf(0, at::kR));
-    Put(at::kV2 + 2, CosOf(0, at::kR));
+    Put(Prim_VertexScratch_addr + 0x10, SinOf(0, at::kR));
+    Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(0, at::kR));
     for (int angle = 0x200; angle < 0x1200; angle += 0x200) {
         unsigned char* const prim = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        const short x = Get(at::kV2), y = Get(at::kV2 + 2);
-        Put(at::kV0, 0);
-        Put(at::kV0 + 2, 0);
-        Put(at::kV1, x);
-        Put(at::kV1 + 2, y);
-        Put(at::kV2, SinOf(angle, at::kR));
-        Put(at::kV2 + 2, CosOf(angle, at::kR));
-        Put(at::kV2 + 4, 0);
-        Put(at::kV1 + 4, 0);
-        Put(at::kV0 + 4, 0);
+        const short x = Get(Prim_VertexScratch_addr + 0x10), y = Get(Prim_VertexScratch_addr + 0x10 + 2);
+        Put(Prim_VertexScratch_addr, 0);
+        Put(Prim_VertexScratch_addr + 2, 0);
+        Put(Prim_VertexScratch_addr + 0x8, x);
+        Put(Prim_VertexScratch_addr + 0x8 + 2, y);
+        Put(Prim_VertexScratch_addr + 0x10, SinOf(angle, at::kR));
+        Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(angle, at::kR));
+        Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
+        Put(Prim_VertexScratch_addr + 4, 0);
         Project3(prim);
         MH_CALL(Gte_PrimDepths3_10B)(prim);
         Shade(prim, 4, at::kW8);
@@ -641,13 +641,13 @@ S23_EXPORT void __cdecl Typhoon_DrawFan(void) {
 
 // original 0x4CDA00: the spiral (kind 1, 0x1B): jmp [FxSpiral_Types + 4 * +1],
 // read in place, unchecked.
-S23_EXPORT void __cdecl FxSpiral_Dispatch(void) { Entry(at::kSpiralTypes, Sc()[1])(); }
+S23_EXPORT void __cdecl FxSpiral_Dispatch(void) { Entry(FxSpiral_Types_addr, Sc()[1])(); }
 
 // original 0x4CDA20: FxSpiral_Types[0]. Its phase +2 through FxSpiral_Phases
 // (read in place, unchecked); then, alive and past phase 0, the band under
 // its own matrix.
 S23_EXPORT void __cdecl FxSpiral_Task(void) {
-    Entry(at::kSpiralPhases, Sc()[2])();
+    Entry(FxSpiral_Phases_addr, Sc()[2])();
     const unsigned char* const sc = Sc();
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(FxSpiral_PushMatrix)();
@@ -674,7 +674,7 @@ S23_EXPORT void __cdecl FxSpiral_Wait(void) {
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Word(Mem(at::kSpiralTurns + 2u * s[4]))) << 8));
+        SetLong(s + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Word(Mem(FxSpiral_Turns_addr + 2u * s[4]))) << 8));
     }
     SetLong(Sc() + 0x10, 0x60);
     SetLong(Sc() + 0x14, 0x20);
@@ -715,7 +715,7 @@ S23_EXPORT void __cdecl FxSpiral_Hold(void) {
         MH_CALL(Sound_PlayById)(0x101);
         sc = Sc();
     }
-    sc[0xB] = Byte(at::kSpiralTilts + 2u * sc[8]);
+    sc[0xB] = Byte(FxSpiral_Tilts_addr + 2u * sc[8]);
     SetLong(Sc() + 0x10, 0x80);
     SetLong(Sc() + 0x14, 0x80);
     SetLong(Sc() + 0x1C, 0x18);
@@ -792,32 +792,32 @@ S23_EXPORT void __cdecl FxSpiral_Draw(void) {
         Put(at::kW4, sc[0xB]);
         const int first = (sc[0xB] & 0x3F) << 6;
         Put(at::kW6, first);
-        Put(at::kV1, SinOf(first, at::kR));
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, at::kR));
     }
-    Put(at::kV1 + 2, CosOf(Get(at::kW6), at::kR));
-    Put(at::kV3, SinOf(Get(at::kW6), at::kR2));
-    Put(at::kV3 + 2, CosOf(Get(at::kW6), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kW6), at::kR));
+    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kW6), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kW6), at::kR2));
     for (int i = 1, angle = 0x40; angle < 0x800; ++i, angle += 0x40) {
         Put(at::kW6, ((Byte(at::kW4) + i) & 0x3F) << 6);
         const int s = Sin(angle);
         {
             const unsigned char* const sc = Sc();
             const int outer = (Imul(s, Long(sc + 0x14)) >> 12) + Word(sc + 0x10);
-            Put(at::kV0, Get(at::kV1));
-            Put(at::kV0 + 2, Get(at::kV1 + 2));
+            Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
+            Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
             Put(at::kR, outer);
         }
-        Put(at::kV0 + 4, 0);
-        Put(at::kV1, SinOf(Get(at::kW6), at::kR));
-        Put(at::kV1 + 2, CosOf(Get(at::kW6), at::kR));
-        Put(at::kV1 + 4, 0);
-        Put(at::kV2, Get(at::kV3));
-        Put(at::kV2 + 2, Get(at::kV3 + 2));
-        Put(at::kV2 + 4, 0);
-        Put(at::kV3, SinOf(Get(at::kW6), at::kR2));
-        Put(at::kV3 + 2, CosOf(Get(at::kW6), at::kR2));
+        Put(Prim_VertexScratch_addr + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(at::kW6), at::kR));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kW6), at::kR));
+        Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x10, Get(Prim_VertexScratch_addr + 0x18));
+        Put(Prim_VertexScratch_addr + 0x10 + 2, Get(Prim_VertexScratch_addr + 0x18 + 2));
+        Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kW6), at::kR2));
+        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kW6), at::kR2));
         unsigned char* const prim = Gfx_PacketNext;
-        Put(at::kV3 + 4, 0);
+        Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         {
@@ -860,13 +860,13 @@ S23_EXPORT void __cdecl Quake_Task(void) {
 // original's jump); sound 0x100; on.
 S23_EXPORT void __cdecl Quake_Start(void) {
     const unsigned char facing = Facing();
-    Mem(at::kQuakeFacing)[0] = facing;
+    Mem(MagicS23_QuakeFacing_addr)[0] = facing;
     {
-        const unsigned f = Byte(at::kQuakeFacing);
-        const int dx = static_cast<signed char>(Byte(at::kQuakeOffsets + 2 * f));
-        const int dy = static_cast<signed char>(Byte(at::kQuakeOffsets + 2 * f + 1));
-        Put(at::kQuakeX, dx + Word(Mem(at::kCameraCellX)));
-        Put(at::kQuakeY, dy + Word(Mem(at::kCameraCellY)));
+        const unsigned f = Byte(MagicS23_QuakeFacing_addr);
+        const int dx = static_cast<signed char>(Byte(Quake_FacingOffsets_addr + 2 * f));
+        const int dy = static_cast<signed char>(Byte(Quake_FacingOffsets_addr + 2 * f + 1));
+        Put(MagicS23_QuakeX_addr, dx + Word(Mem(at::kCameraCellX)));
+        Put(MagicS23_QuakeY_addr, dy + Word(Mem(at::kCameraCellY)));
     }
     Sc()[0xB] = 0;
     Sc()[9] = 0;
@@ -885,28 +885,28 @@ S23_EXPORT void __cdecl Quake_Start(void) {
         Put(at::kQuakeEnemyUp + 2 * i, height - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 30; ++i) {
-        const unsigned char* const o = Mem(at::kSpriteObjects + 0xA4 * i);
+        const unsigned char* const o = Mem(Sprite_Objects_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
         Put(at::kQuakeSpriteZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 4; ++i) {
-        const unsigned char* const o = Mem(at::kSpriteExtra + 0xA4 * i);
+        const unsigned char* const o = Mem(Sprite_ObjectsExtra_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
         Put(at::kQuakeExtraZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 20; ++i) {
-        const unsigned char* const o = Mem(at::kEffectObjects + 0x80 * i);
+        const unsigned char* const o = Mem(Effect_Objects_addr + 0x80 * i);
         if (o[0] == 0 || o[5] != 0x17) continue;
         const long ground = Ground(o);
         Put(at::kQuakeEffectZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
     }
     Walk(&Semi);
     std::memset(Mem(at::kQuakeLift), 0, 0xFF);
-    switch (Byte(at::kEventBattle)) {
-    case 0x1C: case 0x23: case 0x2F: case 0x34: Mem(at::kQuakeHover)[0] = 1; break;
-    default: Mem(at::kQuakeHover)[0] = 0; break;
+    switch (Byte(BattleActions_EventBattle_addr)) {
+    case 0x1C: case 0x23: case 0x2F: case 0x34: Mem(MagicS23_QuakeHover_addr)[0] = 1; break;
+    default: Mem(MagicS23_QuakeHover_addr)[0] = 0; break;
     }
     MH_CALL(Sound_PlayById)(0x100);
     Bump(Sc()[1]);
@@ -925,7 +925,7 @@ S23_EXPORT void __cdecl Quake_Rumble(void) {
     }
     const int odd = static_cast<int>(Frame_Counter & 1);
     MapView_Redraw = 2;
-    Put(at::kShiftY, (2 * odd - 1) * (sc[9] >> 1));
+    Put(Camera_ShiftY_addr, (2 * odd - 1) * (sc[9] >> 1));
 }
 
 // original 0x4CE500: the heave. For each of 16 columns i the lift
@@ -949,22 +949,22 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
         const int s2 = Sin(((Sc()[9] + 2 * i + 2) * 128) & 0xFFF);
         const int s3 = Sin(((Sc()[9] + 2 * i + 1) * 128) & 0xFFF);
         const int fall = (i != 15 ? 1 : 0) * ((s2 >> 8) - (s3 >> 8));
-        const bool across = (Byte(at::kQuakeFacing) & 1) != 0;
+        const bool across = (Byte(MagicS23_QuakeFacing_addr) & 1) != 0;
         for (int j = 0; j < 14; ++j) {
-            const std::uint32_t area = static_cast<std::uint32_t>(Long(Mem(at::kArea)));
+            const std::uint32_t area = static_cast<std::uint32_t>(Long(Mem(AreaMap_Header_addr)));
             const int width = static_cast<int>(area & 0xFF), height = static_cast<int>((area >> 8) & 0xFF);
-            const int first_row = Get(at::kQuakeY);
+            const int first_row = Get(MagicS23_QuakeY_addr);
             const int row = first_row + (across ? j : i);
             if (row < 0 || row >= height) continue;
-            const int col = Get(at::kQuakeX) + (across ? i : j);
+            const int col = Get(MagicS23_QuakeX_addr) + (across ? i : j);
             if (col < 0 || col >= width) continue;
-            const unsigned row_of_divisors = (Byte(at::kQuakeFacing) >> 1) * 15u;
+            const unsigned row_of_divisors = (Byte(MagicS23_QuakeFacing_addr) >> 1) * 15u;
             const std::uint32_t corner =
-                at::kAreaCorners + 4u * static_cast<std::uint32_t>(Imul(static_cast<int>(Long(Mem(at::kArea)) & 0xFF), row) + col);
-            const unsigned d0 = Byte(at::kQuakeDivisors + row_of_divisors + static_cast<unsigned>(j));
+                AreaMap_Corners_addr + 4u * static_cast<std::uint32_t>(Imul(static_cast<int>(Long(Mem(AreaMap_Header_addr)) & 0xFF), row) + col);
+            const unsigned d0 = Byte(Quake_Divisors_addr + row_of_divisors + static_cast<unsigned>(j));
             const int raised = Divide(lift, d0);
             AddByte(corner, raised);
-            const unsigned d1 = Byte(at::kQuakeDivisors + row_of_divisors + static_cast<unsigned>(j) + 1);
+            const unsigned d1 = Byte(Quake_Divisors_addr + row_of_divisors + static_cast<unsigned>(j) + 1);
             AddByte(corner + (across ? 2 : 1), Divide(lift, d1));
             AddByte(corner + (across ? 1 : 2), Divide(fall, d0));
             AddByte(corner + 3, Divide(fall, d1));
@@ -985,7 +985,7 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
         for (unsigned i = 0; i < 8; ++i) {
             if (MH_CALL(Battle_ActorIsOut)(i + 3) != 0) continue;
             const unsigned char* const slot = Slot(3 + i);
-            if (Byte(at::kQuakeHover) != 0) {
+            if (Byte(MagicS23_QuakeHover_addr) != 0) {
                 const short kept = Get(at::kQuakeEnemyZ + 2 * i);
                 const short ground = static_cast<short>(Ground(slot));
                 if (kept > ground) {
@@ -999,19 +999,19 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
         }
     }
     for (unsigned i = 0; i < 30; ++i) {
-        unsigned char* const o = Mem(at::kSpriteObjects + 0xA4 * i);
+        unsigned char* const o = Mem(Sprite_Objects_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
         SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeSpriteZ + 2 * i)));
     }
     for (unsigned i = 0; i < 4; ++i) {
-        unsigned char* const o = Mem(at::kSpriteExtra + 0xA4 * i);
+        unsigned char* const o = Mem(Sprite_ObjectsExtra_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
         SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeExtraZ + 2 * i)));
     }
     for (unsigned i = 0; i < 20; ++i) {
-        unsigned char* const o = Mem(at::kEffectObjects + 0x80 * i);
+        unsigned char* const o = Mem(Effect_Objects_addr + 0x80 * i);
         if (o[0] == 0 || o[5] != 0x17) continue;
         const long ground = Ground(o);
         SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEffectZ + 2 * i)));
@@ -1019,7 +1019,7 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
     const int odd = static_cast<int>(Frame_Counter & 1);
     unsigned char* const sc = Sc();
     MapView_Redraw = 2;
-    Put(at::kShiftY, (odd << 4) - 8);
+    Put(Camera_ShiftY_addr, (odd << 4) - 8);
     Bump(sc[9]);
     for (std::uint32_t row = 0; row < 16; ++row)
         for (std::uint32_t j = 0; j < 14; ++j)
@@ -1033,7 +1033,7 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
 // redrawn.
 S23_EXPORT void __cdecl Quake_End(void) {
     Walk(&Opaque);
-    Put(at::kShiftY, 0);
+    Put(Camera_ShiftY_addr, 0);
     MH_CALL(Battle_SetTargetFlag40)(Mem(hat::kTarget)[0]);
     Mem(hat::kFlags)[0] = static_cast<unsigned char>(Mem(hat::kFlags)[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
@@ -1081,12 +1081,12 @@ S23_EXPORT void __cdecl Simoon_Start(void) {
         t[1] = 0;
         Bump(sc[0xB]);
     }
-    for (std::uint32_t a = at::kClutRow + 2; a < at::kClutRow + 0x20; a += 2) {
+    for (std::uint32_t a = Gfx_ClutStrip_addr + 0x3400 + 2; a < (Gfx_ClutStrip_addr + 0x3400) + 0x20; a += 2) {
         SetWord(Mem(a), Word(Mem(a - 0x4000)) | 0x8000u);
         SetWord(Mem(a + 0x20), Word(Mem(a + 0x20 - 0x4000)) | 0x8000u);
     }
-    SetWord(Mem(at::kClutRow), 0);
-    SetWord(Mem(at::kClutRow + 0x20), 0);
+    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), 0);
+    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 0x20), 0);
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
     Bump(Sc()[1]);
@@ -1102,13 +1102,13 @@ S23_EXPORT void __cdecl Simoon_Wait(void) {
 
 // original 0x4CF770: the effect (kind 1, 0x2D): jmp [SimoonFx_Types + 4 *
 // +1], read in place, unchecked.
-S23_EXPORT void __cdecl SimoonFx_Dispatch(void) { Entry(at::kSimoonTypes, Sc()[1])(); }
+S23_EXPORT void __cdecl SimoonFx_Dispatch(void) { Entry(SimoonFx_Types_addr, Sc()[1])(); }
 
 // original 0x4CF790: SimoonFx_Types[0]. Its phase +2 through
 // SimoonDome_Phases (read in place, unchecked); alive and past phase 0, the
 // dome under the actor's matrix.
 S23_EXPORT void __cdecl SimoonDome_Task(void) {
-    Entry(at::kDomePhases, Sc()[2])();
+    Entry(SimoonDome_Phases_addr, Sc()[2])();
     const unsigned char* const sc = Sc();
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -1119,7 +1119,7 @@ S23_EXPORT void __cdecl SimoonDome_Task(void) {
 // original 0x4CF7D0: SimoonDome_Phases[0]. The source's x / z and height;
 // +9 and +0xA 0; on.
 S23_EXPORT void __cdecl SimoonDome_Start(void) {
-    const unsigned char* const src = Pointer(hat::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SetLong(Sc() + 0x34, Long(src + 0x34));
     SetLong(Sc() + 0x38, Long(src + 0x38));
     SetWord(Sc() + 0x3E, Word(src + 0x3E));
@@ -1181,34 +1181,34 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
         const int lower = top - 0x80;
         Put(at::kR2, CosOf(lower, at::kR));
         Put(at::kW4, CosOf(top, at::kR));
-        Put(at::kV1, SinOf(0, at::kR2));
-        Put(at::kV1 + 2, CosOf(0, at::kR2));
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(0, at::kR2));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(0, at::kR2));
         {
             const int z = SinOf(lower, at::kR);
-            Put(at::kV0 + 4, z);
-            Put(at::kV1 + 4, z);
+            Put(Prim_VertexScratch_addr + 4, z);
+            Put(Prim_VertexScratch_addr + 0x8 + 4, z);
         }
-        Put(at::kV3, SinOf(0, at::kW4));
-        Put(at::kV3 + 2, CosOf(0, at::kW4));
+        Put(Prim_VertexScratch_addr + 0x18, SinOf(0, at::kW4));
+        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(0, at::kW4));
         {
             const int z = SinOf(top, at::kR);
-            Put(at::kV2 + 4, z);
-            Put(at::kV3 + 4, z);
+            Put(Prim_VertexScratch_addr + 0x10 + 4, z);
+            Put(Prim_VertexScratch_addr + 0x18 + 4, z);
         }
         const unsigned char v_low = static_cast<unsigned char>((band + 0x14) << 1);
         const unsigned char v_high = static_cast<unsigned char>((band + 0x15) << 1);
         for (int j = 1, a = 0x80; a < 0x1080; ++j, a += 0x80) {
-            Put(at::kV0, Get(at::kV1));
-            Put(at::kV0 + 2, Get(at::kV1 + 2));
-            Put(at::kV1, SinOf(a, at::kR2));
-            Put(at::kV1 + 2, CosOf(a, at::kR2));
-            Put(at::kV2, Get(at::kV3));
-            Put(at::kV2 + 2, Get(at::kV3 + 2));
-            Put(at::kV3, SinOf(a, at::kW4));
+            Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
+            Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
+            Put(Prim_VertexScratch_addr + 0x8, SinOf(a, at::kR2));
+            Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(a, at::kR2));
+            Put(Prim_VertexScratch_addr + 0x10, Get(Prim_VertexScratch_addr + 0x18));
+            Put(Prim_VertexScratch_addr + 0x10 + 2, Get(Prim_VertexScratch_addr + 0x18 + 2));
+            Put(Prim_VertexScratch_addr + 0x18, SinOf(a, at::kW4));
             const int y = CosOf(a, at::kW4);
             const unsigned char* const sc = Sc();
-            Put(at::kV3 + 2, y);
-            const std::int32_t x = Shl(Get(at::kV3), 9) + Long(sc + 0x34);
+            Put(Prim_VertexScratch_addr + 0x18 + 2, y);
+            const std::int32_t x = Shl(Get(Prim_VertexScratch_addr + 0x18), 9) + Long(sc + 0x34);
             const std::int32_t z = Shl(static_cast<short>(y), 9) + Long(sc + 0x38);
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
@@ -1242,7 +1242,7 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
 // SimoonDust_Phases (read in place, unchecked); alive and past phase 0, the
 // dust drawn (a tail jmp in the original).
 S23_EXPORT void __cdecl SimoonDust_Task(void) {
-    Entry(at::kDustPhases, Sc()[2])();
+    Entry(SimoonDust_Phases_addr, Sc()[2])();
     const unsigned char* const sc = Sc();
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(SimoonDust_Draw)();
@@ -1254,11 +1254,11 @@ S23_EXPORT void __cdecl SimoonDust_Task(void) {
 S23_EXPORT void __cdecl SimoonDust_Wait(void) {
     Bump(Sc()[9], -1);
     if (Sc()[9] != 0) return;
-    const unsigned char* const src = Pointer(hat::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     for (unsigned k = 0; k < 3; ++k) {
         unsigned char* const sc = Sc();
         const std::int32_t base = Long(src + 0x34 + 4 * k);
-        SetLong(sc + 0x34 + 4 * k, Long(Mem(at::kDustOffsets + 4 * k + 12u * sc[0xB])) + base);
+        SetLong(sc + 0x34 + 4 * k, Long(Mem(SimoonDust_Offsets_addr + 4 * k + 12u * sc[0xB])) + base);
     }
     Sc()[9] = 0;
     Sc()[0xA] = 0;
@@ -1308,7 +1308,7 @@ S23_EXPORT void __cdecl SimoonDust_Fall(void) {
 // One corner of the dust's quad: sin / cos of the angle by the size, plus
 // the screen point, as floats.
 void DustCorner(unsigned char* prim, unsigned offset, unsigned angle_of_life) {
-    const int x = SinOf(static_cast<int>(angle_of_life), at::kR) + Get(at::kWC);
+    const int x = SinOf(static_cast<int>(angle_of_life), at::kR) + Get(Scratch_Swap_addr);
     const float fx = static_cast<float>(x);
     std::memcpy(prim + offset, &fx, sizeof fx);
 }
@@ -1335,7 +1335,7 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
         Put(at::kW6, sc[0xA] << 3);
         Put(at::kW8, sc[0xA] * 7);
         Put(at::kWA, sc[0xA] << 2);
-        Put(at::kWC, Word(sc + 0x2E));
+        Put(Scratch_Swap_addr, Word(sc + 0x2E));
         Put(at::kWE, Word(sc + 0x30));
     }
     static constexpr unsigned kX[4] = {8, 0x1C, 0x30, 0x44};
@@ -1372,7 +1372,7 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
 // 0x4AE0D0 / 0x4AE0F0); alive and past phase 0, the fan under the actor's
 // matrix.
 S23_EXPORT void __cdecl SimoonFan_Task(void) {
-    Entry(at::kFanPhases, Sc()[2])();
+    Entry(SimoonFan_Phases_addr, Sc()[2])();
     const unsigned char* const sc = Sc();
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -1383,7 +1383,7 @@ S23_EXPORT void __cdecl SimoonFan_Task(void) {
 // original 0x4D0240: SimoonFan_Phases[0]. The source's position; +9 and
 // +0xA 0; on.
 S23_EXPORT void __cdecl SimoonFan_Start(void) {
-    const unsigned char* const src = Pointer(hat::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SetLong(Sc() + 0x34, Long(src + 0x34));
     SetLong(Sc() + 0x38, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
@@ -1419,22 +1419,22 @@ S23_EXPORT void __cdecl SimoonFan_Draw(void) {
     }
     Put(at::kW6, sc[0xA] << 3);
     Put(at::kW8, sc[0xA] * 6);
-    Put(at::kV2, SinOf(0, at::kR));
-    Put(at::kV2 + 2, CosOf(0, at::kR));
-    Put(at::kV2 + 4, 0);
-    Put(at::kV1 + 4, 0);
-    Put(at::kV0 + 4, 0);
+    Put(Prim_VertexScratch_addr + 0x10, SinOf(0, at::kR));
+    Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(0, at::kR));
+    Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
+    Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
+    Put(Prim_VertexScratch_addr + 4, 0);
     for (int angle = 0x100; angle < 0x1100; angle += 0x100) {
         unsigned char* const prim = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        const short x = Get(at::kV2), y = Get(at::kV2 + 2);
-        Put(at::kV0, 0);
-        Put(at::kV0 + 2, 0);
-        Put(at::kV1, x);
-        Put(at::kV1 + 2, y);
-        Put(at::kV2, SinOf(angle, at::kR));
-        Put(at::kV2 + 2, CosOf(angle, at::kR));
+        const short x = Get(Prim_VertexScratch_addr + 0x10), y = Get(Prim_VertexScratch_addr + 0x10 + 2);
+        Put(Prim_VertexScratch_addr, 0);
+        Put(Prim_VertexScratch_addr + 2, 0);
+        Put(Prim_VertexScratch_addr + 0x8, x);
+        Put(Prim_VertexScratch_addr + 0x8 + 2, y);
+        Put(Prim_VertexScratch_addr + 0x10, SinOf(angle, at::kR));
+        Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(angle, at::kR));
         prim[4] = Byte(at::kW8);
         prim[5] = Byte(at::kW6);
         prim[6] = Byte(at::kW6);

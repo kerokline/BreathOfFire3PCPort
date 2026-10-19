@@ -230,10 +230,14 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kPool = 0x683288, kPoolCurrent = 0x684788,
-                        kRingPhases = 0x68478C, kFrameCounter = 0x937F94;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kPool: now WeretigerStreak_Pool (symbols.toml).
+// kPoolCurrent: now WeretigerStreak_Current (symbols.toml).
+// kRingPhases: now TsunamiRing_Phases (symbols.toml).
+// kFrameCounter: now Frame_Counter (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
 constexpr unsigned kPoolCount = 0xC0, kPoolStride = 0x1C;
-unsigned char* PoolRecord(unsigned i) { return mh::Mem(kPool + (i % kPoolCount) * kPoolStride); }
+unsigned char* PoolRecord(unsigned i) { return mh::Mem(WeretigerStreak_Pool_addr + (i % kPoolCount) * kPoolStride); }
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
 
@@ -346,7 +350,7 @@ const mh::Callee kCallees[] = {
     // this group's own, called directly (the streak run logs the pool's
     // current record it was called for)
     {S14_RAW(0x4B4B90), 0, {}, kP, 0, 0},
-    {S14_RAW(0x4B4BD0), 0, {kPoolCurrent}, kP, 0, 0},
+    {S14_RAW(0x4B4BD0), 0, {WeretigerStreak_Current_addr}, kP, 0, 0},
     {S14_RAW(0x4B50A0), 4, {kU16, kU16, kU16, kU16}, kG, 0, 0},
     {S14_RAW(0x4B5240), 3, {kU8, kU8, kU8}, kG, 0, 0},
     {S14_RAW(0x4B5350), 0, {}, kP, 0, 0},
@@ -365,12 +369,12 @@ const mh::DataTable kTables[] = {{0x65AC00, 4}, {0x65AC2C, 2}, {0x65AC34, 5}, {0
 mh::Region g_regions[] = {
     {0x7E0670, 0x1C},                     // Gfx_PacketNext .. MapView_Origin
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
-    {kVertex, 0x20},                      // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                     // 0x903850..
     {0x905E60, 0x10},                     // Field_Kind2Z / X, MapView_Redraw
     {0x905EB0, 0x100},                    // the head of the entries Weretiger_ResetMapView clears
     {0x929E00, 0x130},                    // their tail; MapView_Focus*, _Elevation, _Column, _Row
-    {kPool, 0x1508},                      // the streak pool, its current record, the ring phases
+    {WeretigerStreak_Pool_addr, 0x1508},  // the streak pool, its current record, the ring phases
     {0x80B980, 0x40},                     // Gfx_ClutStripSource row 2's first 32 words (16 written)
     {0x80F980, 0x40},                     // Gfx_ClutStrip the same
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
@@ -388,19 +392,19 @@ mh::Region g_regions[] = {
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return mh::Pointer(mh::at::kOwner); }
+unsigned char* Owner() { return mh::Pointer(BattleE2_Owner_addr); }
 
 // The group's cells a recorder may move (the harness's case 14).
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 9) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: mh::Mem(kScratch + v % 16)[0] = Byte(h >> 24); break;
     case 3: SetLong(mh::Mem(0x905E60 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
-    case 4: mh::SetPointer(kPoolCurrent, PoolRecord(v)); break;
+    case 4: mh::SetPointer(WeretigerStreak_Current_addr, PoolRecord(v)); break;
     case 5: PoolRecord(v)[(h >> 24) % kPoolStride] = Byte(h >> 16); break;
-    case 6: mh::Mem(kRingPhases + v % 4)[0] = Byte(h >> 24); break;
+    case 6: mh::Mem(TsunamiRing_Phases_addr + v % 4)[0] = Byte(h >> 24); break;
     case 7: {
         static const unsigned kFields[] = {0x10, 0x14, 0x34, 0x38, 0x3E};
         SetWord(Sc() + kFields[v % 5], h >> 16);
@@ -430,7 +434,7 @@ void FreePool(unsigned one_in) {
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kPoolCurrent, PoolRecord(mh::Next()));
+    mh::SetPointer(WeretigerStreak_Current_addr, PoolRecord(mh::Next()));
     if (mh::Half()) sc[0] = 0;
     switch (k) {
     // the dispatchers: inside their tables
@@ -441,7 +445,7 @@ void Seed(unsigned k) {
     case kWeretigerCopy_Run: case kWeretigerImage_Run: case kTsunamiRings_Run: sc[2] = Byte(mh::Next() % 3); break;
     case kWeretigerCopy_Step: sc[3] = Byte(mh::Next() % 2); break;
     case kWeretigerDim_Run: sc[2] = Byte(mh::Next() % 4); break;
-    case kWeretigerStreak_Run: mh::Pointer(kPoolCurrent)[1] = Byte(mh::Next() % 2); break;
+    case kWeretigerStreak_Run: mh::Pointer(WeretigerStreak_Current_addr)[1] = Byte(mh::Next() % 2); break;
     case kWeretigerBurst_Run:
         sc[2] = Byte(mh::Next() % 5);
         FreePool(MH_PICK(2, 8, 64));
@@ -458,7 +462,7 @@ void Seed(unsigned k) {
         break;
     case kWeretigerBurst_Emit: case kTsunami_Rings: case kTsunamiWave_Advance: Near(sc[9], 1); break;
     case kWeretigerBurst_Grow:
-        if (mh::Often()) mh::Mem(kFrameCounter)[0] &= 0xFE;
+        if (mh::Often()) mh::Mem(Frame_Counter_addr)[0] &= 0xFE;
         Near(sc[0xB], 0x17);
         break;
     case kWeretigerBurst_WaitOwner: case kWeretigerDim_WaitOwner:
@@ -481,7 +485,7 @@ void Seed(unsigned k) {
     case kWeretigerStreak_Start: if (mh::Often()) ActorRecord()[8] = Byte(mh::Next() % 4); break;
     case kWeretigerStreak_Draw: {
         // the second radius's whole part either side of 0x1C0 after its growth
-        unsigned char* const r = mh::Pointer(kPoolCurrent);
+        unsigned char* const r = mh::Pointer(WeretigerStreak_Current_addr);
         if (mh::Often()) {
             const std::uint32_t grow = mh::Next() % 0x30000;
             SetLong(r + 0x18, static_cast<std::int32_t>(grow));
@@ -506,7 +510,7 @@ void Seed(unsigned k) {
     case kTsunamiRing_DrawQuads:
         if (mh::Often()) sc[9] = Byte(mh::Next() % 16);
         for (unsigned j = 0; j < 4; ++j)
-            if (mh::Often()) mh::Mem(kRingPhases + j)[0] = Byte(mh::Next() % 0x14);
+            if (mh::Often()) mh::Mem(TsunamiRing_Phases_addr + j)[0] = Byte(mh::Next() % 0x14);
         break;
     default: break;
     }

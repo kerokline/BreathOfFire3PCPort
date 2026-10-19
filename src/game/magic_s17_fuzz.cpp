@@ -172,7 +172,7 @@ void __cdecl RecUpdateScreen() {
     mh::Stir();
 }
 void __cdecl RecMoteDispatch() {
-    mh::Record(bof3::addr::ReviveMote_Dispatch, Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(mh::at::kOwner))),
+    mh::Record(bof3::addr::ReviveMote_Dispatch, Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_Owner_addr))),
                Sprite_Current[1], 0);
     mh::Stir();
 }
@@ -409,7 +409,7 @@ void Seed(unsigned k) {
     g_limit1 = g_limit2 = 0;
     g_ratan_hint = mh::Next();
     unsigned char* const sc = Sprite_Current;
-    unsigned char* const owner = mh::Pointer(mh::at::kOwner);
+    unsigned char* const owner = mh::Pointer(BattleE2_Owner_addr);
     switch (k) {
     case kPurifyTask: sc[1] = static_cast<unsigned char>(mh::Next() % 3); break;
     case kPurifyGlow:

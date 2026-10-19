@@ -53,25 +53,25 @@ using move_script::Word;
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kCentreX = 0x903780;       // i32: the fight's centre (field_hidden_callees.h)
-constexpr std::uint32_t kCentreZ = 0x903784;
-constexpr std::uint32_t kFormation = 0x904B89;     // u8: magic_lib's kFormation; indexes the tables below
-constexpr std::uint32_t kPartySet = 0x90412C;      // u8: the loaded party set (field_event_callees.h)
-constexpr std::uint32_t kPalette = 0x904B79;       // u8: the palette index Sprite_LoadPalette is given
-constexpr std::uint32_t kFrameSet = 0x9039D8;      // the sprite frame-offset table pointer (sprite_pose.h)
+// kCentreX: now BossSi_CentreX (symbols.toml). i32: the fight's centre (field_hidden_callees.h)
+// kCentreZ: now BossSi_CentreZ (symbols.toml).
+// kFormation: now BattlePhases_B89 (symbols.toml). u8: magic_lib's kFormation; indexes the tables below
+// kPartySet: now AreaW0b_PartySet (symbols.toml). u8: the loaded party set (field_event_callees.h)
+// kPalette: now BattleE6_FormGroup (symbols.toml). u8: the palette index Sprite_LoadPalette is given
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
 constexpr std::uint32_t kBannerText = 0x904EA0;    // char[]: the banner's text
 constexpr std::uint32_t kBannerIds = 0x64ECB0;     // u8 by 0x904B89: the system message id
 constexpr std::uint32_t kFormFiles = 0x64E9BC;     // two u16 * by 0x904B89 (stride 8): the DAT ids by party set
-constexpr std::uint32_t kPalettes = 0x80D380;      // Gfx_ClutStripSource row 0x1B4: 64 bytes a sprite slot
-constexpr std::uint32_t kSetMembers = 0x669750;    // u8[3] by party set: the members
-constexpr std::uint32_t kMemberOffsets = 0x64DF70; // BattleWin_MemberTargetOffsets: s8 pairs by (column + 4 row)
+// kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). Gfx_ClutStripSource row 0x1B4: 64 bytes a sprite slot
+// kSetMembers: now MoveScript_EffectArg[0xc] (symbols.toml). u8[3] by party set: the members
+// kMemberOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). BattleWin_MemberTargetOffsets: s8 pairs by (column + 4 row)
 constexpr std::uint32_t kSideOffsets = 0x64E2BC;   // s8 by (0x904AAC ^ 2) >> 1 (stride 2)
-constexpr std::uint32_t kSparkAngles = 0x65BEA0;   // u8 pairs by the spark's +4: its two angles
+// kSparkAngles: now AccessionSpark_Angles (symbols.toml). u8 pairs by the spark's +4: its two angles
 // Per member, stride 0x14C, beside the party records.
 constexpr std::uint32_t kMemberClut = 0x939B07;    // u8: the member's +0x27 kept
 constexpr std::uint32_t kMemberB05 = 0x939C05;     // u8
@@ -79,7 +79,7 @@ constexpr std::uint32_t kMemberC10 = 0x939C10;     // u32
 constexpr std::uint32_t kWindowRows = 0x803337;    // the battle windows 0xD.. (Window_Alloc's records +3, stride 0x24)
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
 
@@ -88,11 +88,11 @@ short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 void AddVW(unsigned k, unsigned v) { SetVW(k, VW(k) + v); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
@@ -111,7 +111,7 @@ int SignedByte(unsigned char b) { return static_cast<signed char>(b); }
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the party's
 // by the index, the enemy's by index - 3.
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
@@ -169,8 +169,8 @@ void LinkAtSprite(unsigned size) {
 }
 void LoadPaletteOfCurrent() {
     const unsigned char* const c = Sprite_Current;
-    const unsigned char index = Mem(kPalette)[0];
-    MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(kPalettes + (static_cast<unsigned>(c[5]) << 6))),
+    const unsigned char index = Mem(BattleE6_FormGroup_addr)[0];
+    MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<unsigned>(c[5]) << 6))),
                                 index);
 }
 
@@ -196,7 +196,7 @@ unsigned char* Child44(unsigned char phase) {
 // its first pointer for an owner facing 0 or 1, else its second.
 const unsigned char* FormTable() {
     const unsigned facing = Owner()[8];
-    const unsigned kind = Mem(kFormation)[0];
+    const unsigned kind = Mem(BattlePhases_B89_addr)[0];
     const std::uint32_t cell = kFormFiles + kind * 8u + (facing == 0 || facing == 1 ? 0u : 4u);
     return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(U(Long(Mem(cell)))));
 }
@@ -224,13 +224,13 @@ S33_EXPORT void __cdecl Accession_Task(void) {
 // target's party +0x89 is 0, else 0x1E; +1 on.
 S33_EXPORT void __cdecl Accession_Start(void) {
     MH_AT(Fn0, kResetActor)();
-    const unsigned kind = Mem(kFormation)[0];
+    const unsigned kind = Mem(BattlePhases_B89_addr)[0];
     Mem(0x8031F3)[0] = 1;
     const unsigned id = Mem(kBannerIds + kind)[0];
     const unsigned char* const text = MH_CALL(Msg_SystemPtr)(id);
     MH_CALL(Str_CopyN)(reinterpret_cast<char*>(Mem(kBannerText)), reinterpret_cast<const char*>(text), 8);
     MH_CALL(BattleBanner_Add)(1, 1, 0, 0x3C, reinterpret_cast<const char*>(Mem(kBannerText)));
-    const unsigned again = Mem(kFormation)[0];
+    const unsigned again = Mem(BattlePhases_B89_addr)[0];
     if (again == 3 || again == 0xB || again == 0xD) Inc(Sc()[2]);
     Sc()[9] = PartyRecord(TargetByte())[0x89] == 0 ? 3 : 0x1E;
     Inc(Sc()[1]);
@@ -293,7 +293,7 @@ S33_EXPORT void __cdecl Accession_ActorScript(void) {
 S33_EXPORT void __cdecl Accession_LoadFormA(void) {
     if (Sc()[0xB] != 1) return;
     const unsigned char* const table = FormTable();
-    const unsigned set = static_cast<unsigned>(Long(Mem(kPartySet))) & 0xFF;
+    const unsigned set = static_cast<unsigned>(Long(Mem(AreaW0b_PartySet_addr))) & 0xFF;
     MH_CALL(LoadDatFile)(static_cast<int>(Word(table + set * 2u)));
     Inc(Sc()[3]);
 }
@@ -313,10 +313,10 @@ S33_EXPORT void __cdecl Accession_ApplyA(void) {
     MH_CALL(Sprite_ReleaseTint)(rec);
     {
         const unsigned a = ActorIndex();
-        const unsigned char index = Mem(kPalette)[0];
+        const unsigned char index = Mem(BattleE6_FormGroup_addr)[0];
         Mem(kMemberClut + a * at::kPartyStride)[0] = PartyRecord(a)[0x27];
         const unsigned char* const c = Sprite_Current;
-        MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(kPalettes + (static_cast<unsigned>(c[5]) << 6))),
+        MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<unsigned>(c[5]) << 6))),
                                     index);
     }
     MH_CALL(Battle_StatusTint)(Word(PartyRecord(ActorIndex()) + 0x90));
@@ -387,18 +387,18 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     {
         unsigned char* const first = PartyRecord(0);
         const unsigned char* const from = PartyRecord(ActorIndex());
-        const std::int32_t x = Long(Mem(kCentreX));
+        const std::int32_t x = Long(Mem(BossSi_CentreX_addr));
         // rep movsd: 0x53 dwords, forward, one at a time
         for (unsigned k = 0; k < 0x14C; k += 4) SetLong(first + k, Long(from + k));
-        const std::int32_t z = Long(Mem(kCentreZ));
+        const std::int32_t z = Long(Mem(BossSi_CentreZ_addr));
         first[5] = 0;
         SetLong(first + 0x34, x);
         SetLong(first + 0x38, z);
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
         const std::int32_t z0 = Long(first + 0x38);
-        const std::int32_t cz = Long(Mem(kCentreZ));
+        const std::int32_t cz = Long(Mem(BossSi_CentreZ_addr));
         SetWord(first + 0x3E, U(ground) & 0xFFFF);
-        SetLong(Mem(at::kTasks + 0x34), Long(Mem(kCentreX)));
+        SetLong(Mem(at::kTasks + 0x34), Long(Mem(BossSi_CentreX_addr)));
         const std::int32_t x0 = Long(first + 0x34);
         SetLong(Mem(at::kTasks + 0x38), cz);
         const long ground0 = MH_CALL(AreaMap_Elevation)(x0, z0);
@@ -423,11 +423,11 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         const unsigned k = (column + row * 4u) * 2u;
         const unsigned side = ((U(Long(Mem(0x904AAC))) & 0xFF) ^ 2u) >> 1;
         const unsigned dx = static_cast<unsigned>(SignedByte(Mem(kSideOffsets + side * 2u)[0]) +
-                                                  SignedByte(Mem(kMemberOffsets + k)[0])) +
+                                                  SignedByte(Mem(BattleWin_MemberTargetOffsets_addr + k)[0])) +
                             Word(m + 0x2E);
         SetWord(w + 1, dx & 0xFFFF);
         const unsigned dy =
-            static_cast<unsigned>(SignedByte(Mem(kMemberOffsets + k + 1)[0])) + Word(m + 0x30) +
+            static_cast<unsigned>(SignedByte(Mem(BattleWin_MemberTargetOffsets_addr + k + 1)[0])) + Word(m + 0x30) +
             0xCu;
         SetWord(w + 3, dy & 0xFFFF);
         w[7] = static_cast<unsigned char>(i);
@@ -445,8 +445,8 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     MH_CALL(Battle_SetActorBit)(rec[5]);
     Sprite_Current[0] &= 0xBF;
     {
-        const unsigned set = static_cast<unsigned>(Long(Mem(kPartySet))) & 0xFF;
-        MH_CALL(Field_MemberSprite)(Mem(kSetMembers + set * 3u)[0], 0);
+        const unsigned set = static_cast<unsigned>(Long(Mem(AreaW0b_PartySet_addr))) & 0xFF;
+        MH_CALL(Field_MemberSprite)(Mem(MoveScript_EffectArg_addr + 0xc + set * 3u)[0], 0);
     }
     LoadPaletteOfCurrent();
     MH_CALL(Battle_StatusTint)(Word(PartyRecord(ActorIndex()) + 0x90));
@@ -495,9 +495,9 @@ S33_EXPORT void __cdecl AccessionCtl_Run(void) {
 // ground; +0xB 0, +9 4, +2 on; a bolt child (+1 2, +9 1) counted in +0xB;
 // sound 0x102.
 S33_EXPORT void __cdecl AccessionCtl_Start(void) {
-    Sc()[8] = Pointer(at::kSource)[8];
-    SetLong(Sc() + 0x34, Long(Mem(kCentreX)));
-    SetLong(Sc() + 0x38, Long(Mem(kCentreZ)));
+    Sc()[8] = Pointer(BattleOdds_ActorObject_addr)[8];
+    SetLong(Sc() + 0x34, Long(Mem(BossSi_CentreX_addr)));
+    SetLong(Sc() + 0x38, Long(Mem(BossSi_CentreZ_addr)));
     {
         const unsigned char* const s = Sc();
         const long ground = MH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
@@ -829,7 +829,7 @@ S33_EXPORT void __cdecl AccessionSpark_Run(void) {
     AddB(Sc()[9], 2);
     {
         const unsigned char* const s = Sc();
-        const unsigned char* const pair = Mem(kSparkAngles + static_cast<unsigned>(s[4]) * 2u);
+        const unsigned char* const pair = Mem(AccessionSpark_Angles_addr + static_cast<unsigned>(s[4]) * 2u);
         Call2(bof3::addr::AccessionSpark_Draw, static_cast<unsigned char>(pair[0] + s[9]), pair[1]);
     }
     MH_CALL(Gte_PopMatrix)();
@@ -1294,7 +1294,7 @@ S33_EXPORT void __cdecl MightyChop_Start(void) {
 // counted in +0xB; +1 on.
 S33_EXPORT void __cdecl MightyChop_Throw(void) {
     if (Sc()[0xB] != 0) return;
-    const unsigned char* const source = Pointer(at::kSource);
+    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = source[8];
     SetLong(Sc() + 0xC, 0);
     SetLong(Sc() + 0x10, static_cast<std::int32_t>(0xFFFE8000u));
@@ -1345,7 +1345,7 @@ S33_EXPORT void __cdecl MightyChopBlade_Run(void) {
                                                 bof3::addr::MightyChopBlade_Shrink, bof3::addr::MightyChopBlade_Sink};
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     MH_CALL(Gfx_CommitPrim)(3, 0xC);
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("MightyChopBlade_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
@@ -1353,7 +1353,7 @@ S33_EXPORT void __cdecl MightyChopBlade_Run(void) {
         const unsigned char* const s = Sc();
         if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
     }
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4ED390: +9 down; at 0 the blade starts: the owner's direction;

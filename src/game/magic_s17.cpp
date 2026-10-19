@@ -51,34 +51,34 @@ constexpr std::uint32_t kScratchA = 0x903850;       // DamageScratch (the PSX sc
 constexpr std::uint32_t kScratchB = 0x903854;
 constexpr std::uint32_t kShade = 0x903856;          // u16: a shade the draws copy to their primitives
 constexpr std::uint32_t kRgb = 0x903858;            // three u16 at +0 / +2 / +4
-constexpr std::uint32_t kVertex = 0x9037A0;         // Prim_VertexScratch: four SVECTORs, 8 bytes apart
+// kVertex: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch: four SVECTORs, 8 bytes apart
 constexpr std::uint32_t kFrameSet = 0x9039D8;       // the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
 constexpr std::uint32_t kActingKind = 0x904B35;     // u8: 4 an ability
 constexpr std::uint32_t kAbility = 0x904B80;        // u16: the ability id
-constexpr std::uint32_t kTints = 0x7E0700;          // MoveScript_TintRecords: 12 bytes each, +2..+4 r g b
-constexpr std::uint32_t kClutRow26 = 0x812980;      // Gfx_ClutStrip row 26 (VRAM row 506)
-constexpr std::uint32_t kClutRow26Source = 0x80E980;
-constexpr std::uint32_t kClutRow2 = 0x80F980;       // Gfx_ClutStrip row 2 (VRAM row 482)
-constexpr std::uint32_t kClutRow2Source = 0x80B980;
+// kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords: 12 bytes each, +2..+4 r g b
+// kClutRow26: now Gfx_ClutStrip[0x1a00] (symbols.toml). Gfx_ClutStrip row 26 (VRAM row 506)
+// kClutRow26Source: now Gfx_ClutStripSource[0x1a00] (symbols.toml).
+// kClutRow2: now Gfx_ClutStrip[0x200] (symbols.toml). Gfx_ClutStrip row 2 (VRAM row 482)
+// kClutRow2Source: now Gfx_ClutStripSource[0x200] (symbols.toml).
 
 // MAGIC077's mote pool: 64 of 0x84 bytes, +0 bit 0 in use.
-constexpr std::uint32_t kMotePool = 0x68C0B8;
+// kMotePool: now ReviveMote_Pool (symbols.toml).
 constexpr std::uint32_t kMoteStride = 0x84;
 constexpr unsigned kMotes = 0x40;
 
 // The .data tables, read in place.
-constexpr std::uint32_t kPurifyMoteTypes = 0x65B1B4;    // 1 entry by +1
-constexpr std::uint32_t kPurifyMotePhases = 0x65B1B8;   // 2 entries by +2
-constexpr std::uint32_t kHaloTypes = 0x65B1C0;          // 1 entry by +1
-constexpr std::uint32_t kHaloPhases = 0x65B1C4;         // 4 entries by +2
-constexpr std::uint32_t kHaloMoteCounts = 0x65B1D4;     // u8 by the halo's +4
-constexpr std::uint32_t kMoteTypes = 0x65B1D8;          // 1 entry by +1
-constexpr std::uint32_t kLeechOrbTypes = 0x65B1DC;      // 2 entries by +1
-constexpr std::uint32_t kShellPhases = 0x65B1E4;        // 7 entries by +2
-constexpr std::uint32_t kShellAngles = 0x65B200;        // eleven dwords: the shell's longitudes, then latitudes
-constexpr std::uint32_t kOrbPhases = 0x65B228;          // 6 entries by +2
+// kPurifyMoteTypes: now PurifyMote_Types (symbols.toml). 1 entry by +1
+// kPurifyMotePhases: now PurifyMote_Phases (symbols.toml). 2 entries by +2
+// kHaloTypes: now ReviveHalo_Types (symbols.toml). 1 entry by +1
+// kHaloPhases: now ReviveHalo_Phases (symbols.toml). 4 entries by +2
+// kHaloMoteCounts: now ReviveHalo_MoteCounts (symbols.toml). u8 by the halo's +4
+// kMoteTypes: now ReviveMote_Types (symbols.toml). 1 entry by +1
+// kLeechOrbTypes: now LeechOrb_Types (symbols.toml). 2 entries by +1
+// kShellPhases: now LeechShell_Phases (symbols.toml). 7 entries by +2
+// kShellAngles: now LeechShell_Angles (symbols.toml). eleven dwords: the shell's longitudes, then latitudes
+// kOrbPhases: now LeechOrb_Phases (symbols.toml). 6 entries by +2
 
 // Callees other groups own, ours now, by name: the effect library's
 // MagicFx_LinkByDepth (through SortFn: the depths as long *), _StepToward,
@@ -90,14 +90,14 @@ using SortFn = void (__cdecl*)(std::uint32_t, std::uint32_t, long*, unsigned cha
 void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 unsigned char* Task(unsigned slot) { return Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride); }
-unsigned char* Mote(unsigned i) { return Mem(kMotePool + (i & 0xFF) * kMoteStride); }
-unsigned char* Tint(unsigned i) { return Mem(kTints + (i & 0xFF) * 12u); }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+unsigned char* Mote(unsigned i) { return Mem(ReviveMote_Pool_addr + (i & 0xFF) * kMoteStride); }
+unsigned char* Tint(unsigned i) { return Mem(MoveScript_TintRecords_addr + (i & 0xFF) * 12u); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 std::int32_t Table(std::uint32_t at) { return Long(Mem(at)); }
-short* V(unsigned k) { return reinterpret_cast<short*>(Mem(kVertex + k)); }
-unsigned char* VB(unsigned k) { return Mem(kVertex + k); }
+short* V(unsigned k) { return reinterpret_cast<short*>(Mem(Prim_VertexScratch_addr + k)); }
+unsigned char* VB(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
 float* F(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
 // A .data table's entry, read in place, the index unchecked (as the
@@ -198,7 +198,7 @@ MS17_EXPORT void __cdecl Purify_Start(void) {
     MH_CALL(Sprite_ReleaseTint)(src);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(src, 0, 0, 0, 1);
     Sprite_Current[0xA] = tint;
-    for (unsigned i = 0; i < 0x10; ++i) SetWord(Mem(kClutRow26 + 2 * i), Word(Mem(kClutRow26Source + 2 * i)));
+    for (unsigned i = 0; i < 0x10; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 2 * i)));
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
 }
@@ -228,18 +228,18 @@ MS17_EXPORT void __cdecl Purify_Fade(void) {
 
 // original 0x4BCDF0: the mote (kind 1, parameter 0x25): a jmp through
 // PurifyMote_Types 0x65B1B4 by +1, read in place (one entry).
-MS17_EXPORT void __cdecl PurifyMote_Dispatch(void) { Entry(kPurifyMoteTypes, Sprite_Current[1])(); }
+MS17_EXPORT void __cdecl PurifyMote_Dispatch(void) { Entry(PurifyMote_Types_addr, Sprite_Current[1])(); }
 
 // original 0x4BCE10: with the frame-offset table 0x9039D8 the effects'
 // (0x8E3580), a call through PurifyMote_Phases 0x65B1B8 by +2, read in place
 // (two entries); then while it lives and is placed (+0, +2 not 0) its
 // sprite's screen update; the battle's table (0x8B3580) back.
 MS17_EXPORT void __cdecl PurifyMote_Task(void) {
-    SetLong(Mem(kFrameSet), kFrameSetEffect);
-    Entry(kPurifyMotePhases, Sprite_Current[2])();
+    SetLong(Mem(BattleE2_AnimSet_addr), kFrameSetEffect);
+    Entry(PurifyMote_Phases_addr, Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] != 0 && sc[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kFrameSet), kFrameSetBattle);
+    SetLong(Mem(BattleE2_AnimSet_addr), kFrameSetBattle);
 }
 
 // original 0x4BCE50: +9 down; at 0 the mote placed round its owner - angle
@@ -304,15 +304,15 @@ MS17_EXPORT void __cdecl Revive_Task(void) {
     if (phase >= 6) bof3::Fatal("Revive_Task: phase %u, past the six-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const saved = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kMotes; ++i) {
         unsigned char* const m = Mote(i);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = Long(m + 0x80);
         Sprite_Current = m;
-        SetLong(Mem(at::kOwner), its);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         MH_CALL(ReviveMote_Dispatch)();
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = saved;
     }
 }
@@ -349,10 +349,10 @@ MS17_EXPORT void __cdecl Revive_Start(void) {
     t[9] = 1;
     Bump(sc[0xB]);
     MH_CALL(Sound_PlayById)(0x100);
-    for (unsigned i = 0; i < 0x100; ++i) SetWord(Mem(kClutRow26 + 2 * i), Word(Mem(kClutRow26Source + 2 * i)) | 0x8000u);
-    for (unsigned i = 0; i < 0x10; ++i) SetWord(Mem(kClutRow2 + 2 * i), Word(Mem(kClutRow2Source + 2 * i)) | 0x8000u);
-    SetWord(Mem(kClutRow26), Word(Mem(kClutRow26Source)));
-    SetWord(Mem(kClutRow2), Word(Mem(kClutRow2Source)));
+    for (unsigned i = 0; i < 0x100; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 2 * i)) | 0x8000u);
+    for (unsigned i = 0; i < 0x10; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x400 + 2 * i)) | 0x8000u);
+    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), Word(Mem(Gfx_ClutStripSource_addr + 0x3400)));
+    SetWord(Mem(Gfx_ClutStrip_addr + 0x400), Word(Mem(Gfx_ClutStripSource_addr + 0x400)));
     Gfx_ClutStripDirty = 1;
 }
 
@@ -400,14 +400,14 @@ MS17_EXPORT unsigned char __cdecl Revive_IsStrong(void) {
 
 // original 0x4BD2B0: the halo (kind 1, parameter 0x62): a jmp through
 // ReviveHalo_Types 0x65B1C0 by +1, read in place (one entry).
-MS17_EXPORT void __cdecl ReviveHalo_Dispatch(void) { Entry(kHaloTypes, Sprite_Current[1])(); }
+MS17_EXPORT void __cdecl ReviveHalo_Dispatch(void) { Entry(ReviveHalo_Types_addr, Sprite_Current[1])(); }
 
 // original 0x4BD2D0: a call through ReviveHalo_Phases 0x65B1C4 by +2, read in
 // place (four entries: ReviveHalo_Wait, ReviveHalo_Spawn, MagicFx_WaitA,
 // MAGIC060's 0x4B1740); then while it lives and has started (+0, +2 not 0)
 // its screen point and its draw (a tail jmp).
 MS17_EXPORT void __cdecl ReviveHalo_Task(void) {
-    Entry(kHaloPhases, Sprite_Current[2])();
+    Entry(ReviveHalo_Phases_addr, Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -438,12 +438,12 @@ MS17_EXPORT void __cdecl ReviveHalo_Spawn(void) {
     Bump(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x10) return;
     unsigned char number = 0;
-    if (Mem(kHaloMoteCounts + Sprite_Current[4])[0] != 0) {
+    if (Mem(ReviveHalo_MoteCounts_addr + Sprite_Current[4])[0] != 0) {
         do {
             const unsigned char index = MH_CALL(ReviveMote_Alloc)();
             if (index != 0xFF) {
                 unsigned char* const m = Mote(index);
-                SetLong(m + 0x80, Long(Mem(at::kOwner)));
+                SetLong(m + 0x80, Long(Mem(BattleE2_Owner_addr)));
                 m[1] = 0;
                 m[0xB] = number;
                 const int r = MH_CALL(Rand)();
@@ -451,7 +451,7 @@ MS17_EXPORT void __cdecl ReviveHalo_Spawn(void) {
                 Bump(Owner()[0xB]);
             }
             ++number;
-        } while (number < Mem(kHaloMoteCounts + Sprite_Current[4])[0]);
+        } while (number < Mem(ReviveHalo_MoteCounts_addr + Sprite_Current[4])[0]);
     }
     Bump(Sprite_Current[2]);
 }
@@ -516,7 +516,7 @@ MS17_EXPORT void __cdecl ReviveHalo_Draw(void) {
 
 // original 0x4BD5C0: a mote: a jmp through ReviveMote_Types 0x65B1D8 by +1,
 // read in place (one entry).
-MS17_EXPORT void __cdecl ReviveMote_Dispatch(void) { Entry(kMoteTypes, Sprite_Current[1])(); }
+MS17_EXPORT void __cdecl ReviveMote_Dispatch(void) { Entry(ReviveMote_Types_addr, Sprite_Current[1])(); }
 
 // original 0x4BD5E0: its phase +2 through a three-entry table on its stack -
 // ReviveMote_Launch, MAGIC169's 0x4F1A40, ReviveMote_Rise; 3..255 would call
@@ -706,7 +706,7 @@ MS17_EXPORT void __cdecl Leech_WaitOrbs(void) {
 // original 0x4BDC40: a child (kind 1, parameter 0xD): a jmp through
 // LeechOrb_Types 0x65B1DC by +1, read in place (LeechShell_Task,
 // LeechOrb_Task).
-MS17_EXPORT void __cdecl LeechOrb_Dispatch(void) { Entry(kLeechOrbTypes, Sprite_Current[1])(); }
+MS17_EXPORT void __cdecl LeechOrb_Dispatch(void) { Entry(LeechOrb_Types_addr, Sprite_Current[1])(); }
 
 // original 0x4BDC60: the shell. Between two draw modes (tpage 0x35, slot 4):
 // before phase 3 its spin +0xC from the frame counter ((low byte & 0x3F) <<
@@ -721,7 +721,7 @@ MS17_EXPORT void __cdecl LeechShell_Task(void) {
         SetLong(sc + 0xC, (frame & 0xFF) == 0x40 ? 0x1000 : static_cast<std::int32_t>((frame & 0x3F) << 6));
         sc = Sprite_Current;
     }
-    Entry(kShellPhases, sc[2])();
+    Entry(LeechShell_Phases_addr, sc[2])();
     if (Owner()[0xB] != 0xFF) {
         MH_CALL(LeechShell_PushMatrix)();
         MH_CALL(LeechShell_Draw)();
@@ -843,7 +843,7 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
     long line_depths[12];
     long projected;
     unsigned d = 0;
-    for (std::uint32_t lat = kShellAngles + 0x20; lat < kShellAngles + 0x28; lat += 4) {
+    for (std::uint32_t lat = LeechShell_Angles_addr + 0x20; lat < LeechShell_Angles_addr + 0x28; lat += 4) {
         // the band's first edge, at longitude 0x180
         SetWord(VB(8), static_cast<unsigned>(M(Cos(Table(lat - 4)), H())));
         int s = Sin(Table(lat - 4));
@@ -864,7 +864,7 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
         c = Sin(0x180);
         SetWord(VB(0x1C), static_cast<unsigned>(M(t, c)));
         unsigned number = 1;
-        for (std::uint32_t lon = kShellAngles + 4; lon < kShellAngles + 0x1C; lon += 4, ++number, ++d) {
+        for (std::uint32_t lon = LeechShell_Angles_addr + 4; lon < LeechShell_Angles_addr + 0x1C; lon += 4, ++number, ++d) {
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyF4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -897,9 +897,9 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
         }
     }
     unsigned base = 0;
-    for (std::uint32_t lat = kShellAngles + 0x1C; lat < kShellAngles + 0x2C; lat += 8, base += 2) {
+    for (std::uint32_t lat = LeechShell_Angles_addr + 0x1C; lat < LeechShell_Angles_addr + 0x2C; lat += 8, base += 2) {
         unsigned n = 0;
-        for (std::uint32_t lon = kShellAngles + 0xC; lon < kShellAngles + 0x24; lon += 0xC, ++n) {
+        for (std::uint32_t lon = LeechShell_Angles_addr + 0xC; lon < LeechShell_Angles_addr + 0x24; lon += 0xC, ++n) {
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyF4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -989,7 +989,7 @@ MS17_EXPORT void __cdecl LeechOrb_Task(void) {
         MH_CALL(LeechOrb_DrawRings)();
         MH_CALL(Gte_PopMatrix)();
     }
-    Entry(kOrbPhases, Sprite_Current[2])();
+    Entry(LeechOrb_Phases_addr, Sprite_Current[2])();
     ModeCommit4();
 }
 

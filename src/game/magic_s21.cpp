@@ -49,26 +49,26 @@ using move_script::Word;
 // The pool of flame columns and sparks MAGIC093's task runs (32 of the task
 // slots' 0x84 bytes: +0 bit 0 in use, +1 the kind, +0x80 the owner), and the
 // 56 signed jitter bytes MAGIC095's start fills, straight after it.
-constexpr std::uint32_t kPool = 0x6948D8;
+// kPool: now FlamePool (symbols.toml).
 constexpr unsigned kPoolSlots = 32;
-constexpr std::uint32_t kJitter = 0x695958;
+// kJitter: now Iceblast_Jitter (symbols.toml).
 
 // The .data handler tables, read in place by their dispatchers (index
 // unchecked, as the originals: a byte past the table reads the next one).
-constexpr std::uint32_t kScorchPhases = 0x65B604;     // FxScorch_Dispatch, by +1: one entry
-constexpr std::uint32_t kScorchSteps = 0x65B608;      // FxScorch_Run, by +2: three
-constexpr std::uint32_t kPoolTypes = 0x65B614;        // FlamePool_Dispatch, by +1: two
-constexpr std::uint32_t kColumnPhases = 0x65B61C;     // FlameColumn_Task, by +2: four
-constexpr std::uint32_t kSparkPhases = 0x65B62C;      // FlameSpark_Task, by +2: four
-constexpr std::uint32_t kRingPhases = 0x65B63C;       // FrostRing_Task, by +1: four
-constexpr std::uint32_t kShardPhases = 0x65B64C;      // IceShard_Task, by +1: two
+// kScorchPhases: now FxScorch_Phases (symbols.toml). FxScorch_Dispatch, by +1: one entry
+// kScorchSteps: now FxScorch_Steps (symbols.toml). FxScorch_Run, by +2: three
+// kPoolTypes: now FlamePool_Types (symbols.toml). FlamePool_Dispatch, by +1: two
+// kColumnPhases: now FlameColumn_Phases (symbols.toml). FlameColumn_Task, by +2: four
+// kSparkPhases: now FlameSpark_Phases (symbols.toml). FlameSpark_Task, by +2: four
+// kRingPhases: now FrostRing_Phases (symbols.toml). FrostRing_Task, by +1: four
+// kShardPhases: now IceShard_Phases (symbols.toml). IceShard_Task, by +1: two
 
 // The PC's copy of the PSX scratchpad (DamageScratch) and Prim_VertexScratch:
 // four SVECTORs 8 bytes apart, A0 / A8 / B0 / B8.
 constexpr std::uint32_t kScratch = 0x903850;
-constexpr std::uint32_t kVertex = 0x9037A0;
+// kVertex: now Prim_VertexScratch (symbols.toml).
 unsigned char* Scr(unsigned off) { return Mem(kScratch + off); }
-unsigned char* Vtx(unsigned off) { return Mem(kVertex + off); }
+unsigned char* Vtx(unsigned off) { return Mem(Prim_VertexScratch_addr + off); }
 const short* VtxP(unsigned off) { return reinterpret_cast<const short*>(Vtx(off)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t L(std::uint32_t address) { return Long(Mem(address)); }
@@ -99,7 +99,7 @@ std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpre
 
 // An actor's record as the originals index them: 0..2 the party (stride
 // 0x14C), else an enemy (index - 3, stride 0x128), none of it checked.
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
 // The target's record by its byte: the original reads the byte, then the
 // dword at 0x904B44 again and indexes by its low byte.
@@ -154,15 +154,15 @@ MS21_EXPORT void __cdecl Inferno_Task(void) {
     if (phase >= 2) bof3::Fatal("Inferno_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const task = Sprite_Current;
-    const std::int32_t owner = L(at::kOwner);
+    const std::int32_t owner = L(BattleE2_Owner_addr);
     for (unsigned i = 0; i < kPoolSlots; ++i) {
-        unsigned char* const slot = Mem(kPool + i * at::kTaskStride);
+        unsigned char* const slot = Mem(FlamePool_addr + i * at::kTaskStride);
         if ((slot[0] & 1) == 0) continue;
         const std::int32_t its = Long(slot + 0x80);
         Sprite_Current = slot;
-        SetLong(Mem(at::kOwner), its);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         MH_CALL(FlamePool_Dispatch)();
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = task;
     }
 }
@@ -178,7 +178,7 @@ MS21_EXPORT void __cdecl Inferno_Task(void) {
 // Gfx_ClutStripDirty; sound 0x100. The pool's answer is used unchecked (0xFF
 // with every slot in use: a write past the pool).
 MS21_EXPORT void __cdecl Inferno_Start(void) {
-    for (std::uint32_t p = kPool + 1; p < kPool + kPoolSlots * at::kTaskStride + 1; p += at::kTaskStride) {
+    for (std::uint32_t p = FlamePool_addr + 1; p < FlamePool_addr + kPoolSlots * at::kTaskStride + 1; p += at::kTaskStride) {
         Mem(p)[-1] = 0;
         Mem(p)[0] = 0;
         Mem(p)[1] = 0;
@@ -202,7 +202,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
     }
     for (unsigned i = 0; i < 8; ++i) {
         const unsigned k = MH_CALL(FlamePool_Alloc)();
-        unsigned char* const slot = Mem(kPool + k * at::kTaskStride);
+        unsigned char* const slot = Mem(FlamePool_addr + k * at::kTaskStride);
         unsigned char* const sc = Sprite_Current;
         SetLong(slot + 0x80, static_cast<std::int32_t>(Addr(sc)));
         slot[1] = 0;
@@ -211,7 +211,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
     }
     for (unsigned i = 0; i < 16; ++i) {
         const unsigned k = MH_CALL(FlamePool_Alloc)();
-        unsigned char* const slot = Mem(kPool + k * at::kTaskStride);
+        unsigned char* const slot = Mem(FlamePool_addr + k * at::kTaskStride);
         unsigned char* const sc = Sprite_Current;
         SetLong(slot + 0x80, static_cast<std::int32_t>(Addr(sc)));
         slot[1] = 1;
@@ -239,7 +239,7 @@ MS21_EXPORT void __cdecl Inferno_End(void) {
 MS21_EXPORT unsigned char __cdecl FlamePool_Alloc(void) {
     unsigned char i = 0;
     do {
-        unsigned char* const s = Mem(kPool + i * at::kTaskStride);
+        unsigned char* const s = Mem(FlamePool_addr + i * at::kTaskStride);
         if ((s[0] & 1) == 0) {
             s[0] = static_cast<unsigned char>(s[0] | 1);
             return i;
@@ -276,10 +276,10 @@ MS21_EXPORT void __cdecl Inferno_TargetCentre(void) {
 // --- the scorch child (kind 1, parameter 0x4D) ---------------------------------
 
 // original 0x4C6560: jmp [0x65B604 + 4 * +1] - one entry, FxScorch_Run.
-MS21_EXPORT void __cdecl FxScorch_Dispatch(void) { CallCell(kScorchPhases, Sprite_Current[1]); }
+MS21_EXPORT void __cdecl FxScorch_Dispatch(void) { CallCell(FxScorch_Phases_addr, Sprite_Current[1]); }
 
 // original 0x4C6580: jmp [0x65B608 + 4 * +2] - Delay, Hit, Free.
-MS21_EXPORT void __cdecl FxScorch_Run(void) { CallCell(kScorchSteps, Sprite_Current[2]); }
+MS21_EXPORT void __cdecl FxScorch_Run(void) { CallCell(FxScorch_Steps_addr, Sprite_Current[2]); }
 
 // original 0x4C65A0: +9 down; at 0 the record of its actor (+3: an enemy's
 // index with the target byte's bit 0x40, else a party member's) has its tint
@@ -305,7 +305,7 @@ MS21_EXPORT void __cdecl FxScorch_Delay(void) {
 // original 0x4C6650: held while the owner's +0xB (its flames) is 8 or more;
 // then the actor's flag 0x40, its tint released, it flashed; the step on.
 MS21_EXPORT void __cdecl FxScorch_Hit(void) {
-    if (Pointer(at::kOwner)[0xB] >= 8) return;
+    if (Pointer(BattleE2_Owner_addr)[0xB] >= 8) return;
     const bool enemies = (Mem(at::kTarget)[0] & 0x40) != 0;
     const unsigned char i = Sprite_Current[3];
     if (enemies) {
@@ -322,7 +322,7 @@ MS21_EXPORT void __cdecl FxScorch_Hit(void) {
 
 // original 0x4C66F0: the owner's +9 (its scorches) down; free.
 MS21_EXPORT void __cdecl FxScorch_Free(void) {
-    Bump(Pointer(at::kOwner)[9], -1);
+    Bump(Pointer(BattleE2_Owner_addr)[9], -1);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -330,13 +330,13 @@ MS21_EXPORT void __cdecl FxScorch_Free(void) {
 
 // original 0x4C6700: jmp [0x65B614 + 4 * +1] - FlameColumn_Task,
 // FlameSpark_Task.
-MS21_EXPORT void __cdecl FlamePool_Dispatch(void) { CallCell(kPoolTypes, Sprite_Current[1]); }
+MS21_EXPORT void __cdecl FlamePool_Dispatch(void) { CallCell(FlamePool_Types_addr, Sprite_Current[1]); }
 
 // original 0x4C6720: the column's step through [0x65B61C + 4 * +2], its +0xB
 // (the flicker) up; while it lives past its first step, the disc and the
 // band under the actor's matrix.
 MS21_EXPORT void __cdecl FlameColumn_Task(void) {
-    CallCell(kColumnPhases, Sprite_Current[2]);
+    CallCell(FlameColumn_Phases_addr, Sprite_Current[2]);
     Bump(Sprite_Current[0xB]);
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
@@ -352,9 +352,9 @@ static void ColumnPlace() {
     const unsigned char* sc = Sprite_Current;
     SetWord(Scr(0xA), static_cast<unsigned>((sc[4] & 7) << 9));
     const int s = MH_CALL(Math_Sin)(S16(Scr(0xA)));
-    SetLong(Sprite_Current + 0x34, (Mul(s, S16(Scr(0))) >> 3) + Long(Pointer(at::kOwner) + 0x34));
+    SetLong(Sprite_Current + 0x34, (Mul(s, S16(Scr(0))) >> 3) + Long(Pointer(BattleE2_Owner_addr) + 0x34));
     const int c = MH_CALL(Math_Cos)(S16(Scr(0xA)));
-    SetLong(Sprite_Current + 0x38, (Mul(c, S16(Scr(0))) >> 3) + Long(Pointer(at::kOwner) + 0x38));
+    SetLong(Sprite_Current + 0x38, (Mul(c, S16(Scr(0))) >> 3) + Long(Pointer(BattleE2_Owner_addr) + 0x38));
 }
 
 // original 0x4C6770: +0xA = (Rand & 3) << 4; the radius 0xC0 - +0xA; placed
@@ -365,7 +365,7 @@ MS21_EXPORT void __cdecl FlameColumn_Start(void) {
     Sprite_Current[0xA] = U8((r & 3) << 4);
     SetWord(Scr(0), 0xC0u - Sprite_Current[0xA]);
     ColumnPlace();
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(at::kOwner) + 0x3C));
+    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     const int r2 = MH_CALL(Rand)();
     Sprite_Current[0xB] = U8(r2);
     Sprite_Current[9] = 0;
@@ -385,14 +385,14 @@ MS21_EXPORT void __cdecl FlameColumn_Grow(void) {
 
 // original 0x4C68F0: held until the owner's +0xB (its flames) is 8.
 MS21_EXPORT void __cdecl FlameColumn_Hold(void) {
-    if (Pointer(at::kOwner)[0xB] == 8) Bump(Sprite_Current[2]);
+    if (Pointer(BattleE2_Owner_addr)[0xB] == 8) Bump(Sprite_Current[2]);
 }
 
 // original 0x4C6910: +9 down; at 0 the owner's +0xB down and the slot freed.
 MS21_EXPORT void __cdecl FlameColumn_Fade(void) {
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
-    Bump(Pointer(at::kOwner)[0xB], -1);
+    Bump(Pointer(BattleE2_Owner_addr)[0xB], -1);
     MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
@@ -497,7 +497,7 @@ MS21_EXPORT void __cdecl FlameColumn_DrawBand(void) {
 // original 0x4C6D80: the spark's step through [0x65B62C + 4 * +2]; while it
 // lives past its first step, its screen point and its quads.
 MS21_EXPORT void __cdecl FlameSpark_Task(void) {
-    CallCell(kSparkPhases, Sprite_Current[2]);
+    CallCell(FlameSpark_Phases_addr, Sprite_Current[2]);
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -512,9 +512,9 @@ MS21_EXPORT void __cdecl FlameSpark_Start(void) {
     Bump(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
     if (sc[9] != 0) return;
-    SetLong(sc + 0x34, Long(Pointer(at::kOwner) + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(Pointer(at::kOwner) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(at::kOwner) + 0x3C));
+    SetLong(sc + 0x34, Long(Pointer(BattleE2_Owner_addr) + 0x34));
+    SetLong(Sprite_Current + 0x38, Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     SetWord(Scr(0), 0x100);
     const int r = MH_CALL(Rand)();
     unsigned char* const x = Sprite_Current + 0x34;
@@ -558,7 +558,7 @@ MS21_EXPORT void __cdecl FlameSpark_Fade(void) {
     Bump(Sprite_Current[0xA], -1);
     Bump(Sprite_Current[0xB], -1);
     if (Sprite_Current[0xB] != 0) return;
-    Bump(Pointer(at::kOwner)[0xB], -1);
+    Bump(Pointer(BattleE2_Owner_addr)[0xB], -1);
     MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
@@ -648,7 +648,7 @@ MS21_EXPORT void __cdecl Frost_Task(void) {
 // it with the source's actor byte and position; +0xB 0; the phase on; sound
 // 0x100.
 MS21_EXPORT void __cdecl Frost_Start(void) {
-    unsigned char* const src = Pointer(at::kSource);
+    unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SetLong(Sprite_Current + 0x34, Long(src + 0x34));
     SetLong(Sprite_Current + 0x38, Long(src + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
@@ -671,7 +671,7 @@ MS21_EXPORT void __cdecl Frost_Start(void) {
 // has set +0xB to 0xFF, the target's tint released, it flashed, its flag
 // 0x40, the done flag, free.
 MS21_EXPORT void __cdecl Frost_Wait(void) {
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SetWord(Sprite_Current + 0x2E, Word(src + 0x2E));
     SetWord(Sprite_Current + 0x30, Word(src + 0x30) - 0x10u);
     if (Sprite_Current[0xB] != 0xFF) return;
@@ -688,8 +688,8 @@ MS21_EXPORT void __cdecl Frost_Wait(void) {
 // owner's +0xB is 0xFF, the shards and the disc under its own matrix; then
 // always a draw mode (0x15) committed to slot 3.
 MS21_EXPORT void __cdecl FrostRing_Task(void) {
-    CallCell(kRingPhases, Sprite_Current[1]);
-    if (Pointer(at::kOwner)[0xB] != 0xFF) {
+    CallCell(FrostRing_Phases_addr, Sprite_Current[1]);
+    if (Pointer(BattleE2_Owner_addr)[0xB] != 0xFF) {
         MH_CALL(FrostRing_PushMatrix)();
         MH_CALL(FrostRing_DrawShards)();
         MH_CALL(FrostRing_DrawDisc)();
@@ -740,7 +740,7 @@ MS21_EXPORT void __cdecl FrostRing_Spin(void) {
 MS21_EXPORT void __cdecl FrostRing_Fade(void) {
     Bump(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x20) return;
-    Pointer(at::kOwner)[0xB] = 0xFF;
+    Pointer(BattleE2_Owner_addr)[0xB] = 0xFF;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -891,17 +891,17 @@ MS21_EXPORT void __cdecl FrostRing_DrawDisc(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        PutF(p, 8, S16(Pointer(at::kOwner) + 0x2E));
-        PutF(p, 0xC, S16(Pointer(at::kOwner) + 0x30));
+        PutF(p, 8, S16(Pointer(BattleE2_Owner_addr) + 0x2E));
+        PutF(p, 0xC, S16(Pointer(BattleE2_Owner_addr) + 0x30));
         int v = MH_CALL(Math_Sin)(a);
-        PutF(p, 0x18, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(at::kOwner) + 0x2E));
+        PutF(p, 0x18, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(BattleE2_Owner_addr) + 0x2E));
         v = MH_CALL(Math_Cos)(a);
         a += 0x80;
-        PutF(p, 0x1C, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(at::kOwner) + 0x30));
+        PutF(p, 0x1C, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(BattleE2_Owner_addr) + 0x30));
         v = MH_CALL(Math_Sin)(a);
-        PutF(p, 0x28, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(at::kOwner) + 0x2E));
+        PutF(p, 0x28, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(BattleE2_Owner_addr) + 0x2E));
         v = MH_CALL(Math_Cos)(a);
-        const std::int32_t y2 = (Mul(v, L(kScratch)) >> 12) + S16(Pointer(at::kOwner) + 0x30);
+        const std::int32_t y2 = (Mul(v, L(kScratch)) >> 12) + S16(Pointer(BattleE2_Owner_addr) + 0x30);
         p[4] = 0x20;
         p[5] = 0x20;
         p[6] = 0xC0;
@@ -935,7 +935,7 @@ MS21_EXPORT void __cdecl Iceblast_Task(void) {
 // owned by it with the source's actor byte and the task's position, +9
 // 0x30 - 4 i (the delay), +0xA 0, +0xB i; sound 0x100; +9, +0xA 0; on.
 MS21_EXPORT void __cdecl Iceblast_Start(void) {
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SetWord(Sprite_Current + 0x2E, Word(src + 0x2E));
     SetWord(Sprite_Current + 0x30, Word(src + 0x30));
     SetLong(Sprite_Current + 0x34, Long(src + 0x34));
@@ -947,7 +947,7 @@ MS21_EXPORT void __cdecl Iceblast_Start(void) {
             v = U8(-(MH_CALL(Rand)() & 0xF));
         else
             v = U8(MH_CALL(Rand)() & 0xF);
-        Mem(kJitter + i)[0] = v;
+        Mem(Iceblast_Jitter_addr + i)[0] = v;
     }
     for (unsigned i = 0; i < 12; ++i) {
         const unsigned k = MH_CALL(BattleTask_Create)(1, 0x17);
@@ -1037,15 +1037,15 @@ static Spire SpireRow(int i) {
 }
 static void SpireColumn(int i, const Spire& s, int a, unsigned idx) {
     SetLong(Scr(4), s.base0);
-    SetLong(Scr(0), static_cast<signed char>(Mem(kJitter + idx)[0]) + s.base0);
+    SetLong(Scr(0), static_cast<signed char>(Mem(Iceblast_Jitter_addr + idx)[0]) + s.base0);
     SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(kScratch)) >> 12));
     SetWord(Vtx(2), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), L(kScratch)) >> 12));
-    SetWord(Vtx(4), static_cast<unsigned>(s.h0 - static_cast<signed char>(Mem(kJitter + idx)[0])));
+    SetWord(Vtx(4), static_cast<unsigned>(s.h0 - static_cast<signed char>(Mem(Iceblast_Jitter_addr + idx)[0])));
     SetLong(Scr(4), s.base1);
-    SetLong(Scr(0), static_cast<signed char>(Mem(kJitter + idx + 8)[0]) + s.base1);
+    SetLong(Scr(0), static_cast<signed char>(Mem(Iceblast_Jitter_addr + idx + 8)[0]) + s.base1);
     SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(kScratch)) >> 12));
     const int c = MH_CALL(Math_Cos)(a);
-    const signed char j1 = static_cast<signed char>(Mem(kJitter + idx + 8)[0]);
+    const signed char j1 = static_cast<signed char>(Mem(Iceblast_Jitter_addr + idx + 8)[0]);
     SetWord(Vtx(0xA), static_cast<unsigned>(Mul(c, L(kScratch)) >> 12));
     SetWord(Vtx(0xC), static_cast<unsigned>(s.h1 - j1));
     if (i == 5) {
@@ -1253,14 +1253,14 @@ MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
 // + 4 * +1] - IceShard_Wait, IceShard_Run.
 MS21_EXPORT void __cdecl IceShard_Task(void) {
     MH_CALL(MagicFx_PushActorMatrix)();
-    CallCell(kShardPhases, Sprite_Current[1]);
+    CallCell(IceShard_Phases_addr, Sprite_Current[1]);
     MH_CALL(Gte_PopMatrix)();
 }
 
 // original 0x4C8990: held until the owner's phase is 3 (Iceblast_Sink); then
 // +9 (its delay) down, at 0 the phase on.
 MS21_EXPORT void __cdecl IceShard_Wait(void) {
-    if (Pointer(at::kOwner)[1] != 3) return;
+    if (Pointer(BattleE2_Owner_addr)[1] != 3) return;
     Bump(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
     if (sc[9] == 0) Bump(sc[1]);
@@ -1291,7 +1291,7 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         sc = Sprite_Current;
         SetLong(Scr(4), base);
         const int col = (k / 8) & 7;
-        const unsigned char* const jit = Mem(kJitter + static_cast<std::uint32_t>(col + h * 8));
+        const unsigned char* const jit = Mem(Iceblast_Jitter_addr + static_cast<std::uint32_t>(col + h * 8));
         std::int32_t radius = static_cast<signed char>(jit[0]) + base;
         SetLong(Scr(0), radius);
         if (sc[0xA] != 0)
@@ -1305,7 +1305,7 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         std::uint16_t py = static_cast<std::uint16_t>(lift - static_cast<signed char>(jit[0]));
         const unsigned char* const s2 = Sprite_Current;
         if (s2[0xB] & 1) py = static_cast<std::uint16_t>(py - 0x24);
-        const std::uint16_t j = static_cast<std::uint16_t>(static_cast<signed char>(Mem(kJitter + static_cast<std::uint32_t>(h + k))[0]));
+        const std::uint16_t j = static_cast<std::uint16_t>(static_cast<signed char>(Mem(Iceblast_Jitter_addr + static_cast<std::uint32_t>(h + k))[0]));
         py = static_cast<std::uint16_t>(py + j);
         px = static_cast<std::uint16_t>(px + j);
         pz = static_cast<std::uint16_t>(pz + j);

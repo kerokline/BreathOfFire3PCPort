@@ -47,9 +47,9 @@ template <typename F> std::uint32_t KF(F f) { return K(reinterpret_cast<const vo
 constexpr unsigned kPrimBytes = 0x1000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 
-constexpr std::uint32_t kPool = 0x6948D8;   // 32 slots of 0x84, then the 56 jitter bytes
+// kPool: now FlamePool (symbols.toml). 32 slots of 0x84, then the 56 jitter bytes
 constexpr std::uint32_t kPoolBytes = 32 * 0x84 + 0x40;
-constexpr std::uint32_t kJitter = 0x695958;
+// kJitter: now Iceblast_Jitter (symbols.toml).
 
 // --- the clone table ------------------------------------------------------------
 
@@ -213,7 +213,7 @@ const mh::DataTable kTables[] = {
 };
 
 const mh::Region kRegions[] = {
-    {kPool, kPoolBytes},
+    {FlamePool_addr, kPoolBytes},
     {0x9037A0, 0x20},                  // Prim_VertexScratch
     {0x903850, 0x10},                  // DamageScratch
     {0x80E980, 0x200},                 // the CLUT strip's buffer
@@ -371,7 +371,7 @@ const mh::Callee kCallees[] = {
 // --- the seed and the group's disturbance ----------------------------------------------
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return mh::Pointer(at::kOwner); }
+unsigned char* Owner() { return mh::Pointer(BattleE2_Owner_addr); }
 unsigned char Near(unsigned v) { return static_cast<unsigned char>(mh::Half() ? v : v + (mh::Next() % 3) - 1); }
 void AllTargets() {
     if (mh::Half()) mh::Mem(at::kTarget)[0] = static_cast<unsigned char>(0x40 | (mh::Next() % 11));
@@ -382,7 +382,7 @@ void Seed(unsigned k) {
     Gfx_PacketNext = g_prims + 0x10 * (mh::Next() % 4);
     // the pool's owners inside what the disturbance may write through
     for (unsigned i = 0; i < 32; ++i) {
-        unsigned char* const slot = mh::Mem(kPool + i * 0x84);
+        unsigned char* const slot = mh::Mem(FlamePool_addr + i * 0x84);
         const std::uint32_t v = mh::Next();
         move_script::SetLong(slot + 0x80, static_cast<std::int32_t>(K(v & 4 ? mh::SpriteRecord(v) : mh::TaskAt(v >> 3))));
     }
@@ -443,13 +443,13 @@ void Seed(unsigned k) {
         break;
     case kFlamePoolAlloc:
         for (unsigned i = 0; i < 32; ++i) {
-            unsigned char* const slot = mh::Mem(kPool + i * 0x84);
+            unsigned char* const slot = mh::Mem(FlamePool_addr + i * 0x84);
             slot[0] = static_cast<unsigned char>(mh::Next() % 5 ? slot[0] | 1 : slot[0] & ~1u);
         }
         if (mh::Next() % 4 == 0) {
             // every slot in use, or all but the last
-            for (unsigned i = 0; i < 32; ++i) mh::Mem(kPool + i * 0x84)[0] |= 1;
-            if (mh::Half()) mh::Mem(kPool + 31 * 0x84)[0] &= ~1u;
+            for (unsigned i = 0; i < 32; ++i) mh::Mem(FlamePool_addr + i * 0x84)[0] |= 1;
+            if (mh::Half()) mh::Mem(FlamePool_addr + 31 * 0x84)[0] &= ~1u;
         }
         break;
     case kFrostWait:
@@ -506,8 +506,8 @@ void Seed(unsigned k) {
             sc[0xB] = 0;
             sc[0xA] = 0;
             sc[9] = static_cast<unsigned char>(1 + mh::Next() % 8);
-            std::memset(mh::Mem(kJitter), 0, 5);
-            std::memset(mh::Mem(kJitter + 5), static_cast<unsigned char>(-4 * sc[9]), 0x38 - 5);
+            std::memset(mh::Mem(Iceblast_Jitter_addr), 0, 5);
+            std::memset(mh::Mem(Iceblast_Jitter_addr + 5), static_cast<unsigned char>(-4 * sc[9]), 0x38 - 5);
         }
         break;
     default:
@@ -523,8 +523,8 @@ void Disturb(std::uint32_t h) {
     case 0: Gfx_PacketNext = g_prims + 4 * (v % 64); break;
     case 1: move_script::SetWord(mh::Mem(0x903850 + 2 * (v % 8)), h >> 20); break;
     case 2: move_script::SetWord(mh::Mem(0x9037A0 + 2 * (v % 16)), h >> 20); break;
-    case 3: mh::Mem(kJitter + v % 0x38)[0] = static_cast<unsigned char>(h >> 24); break;
-    default: mh::Mem(kPool + (v % 32) * 0x84 + (h >> 24) % 0x14)[0] = static_cast<unsigned char>(h >> 12); break;
+    case 3: mh::Mem(Iceblast_Jitter_addr + v % 0x38)[0] = static_cast<unsigned char>(h >> 24); break;
+    default: mh::Mem(FlamePool_addr + (v % 32) * 0x84 + (h >> 24) % 0x14)[0] = static_cast<unsigned char>(h >> 12); break;
     }
 }
 

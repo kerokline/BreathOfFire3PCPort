@@ -50,11 +50,11 @@ using move_script::Word;
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
@@ -64,11 +64,11 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 void AddVW(unsigned k, unsigned v) { SetVW(k, VW(k) + v); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -87,7 +87,7 @@ void PutFloat(unsigned char* at, int v) {
 
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }

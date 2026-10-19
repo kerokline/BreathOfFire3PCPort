@@ -228,10 +228,17 @@ static_assert(kCount == sizeof kClones / sizeof kClones[0], "one enum entry a cl
 
 // --- the state ----------------------------------------------------------------
 
-constexpr std::uint32_t kScratch = 0x903850, kVertices = 0x9037A0, kPacketNext = 0x7E0670, kSpriteBank = 0x9039D8;
-constexpr std::uint32_t kMotePool = 0x6A4E38, kMoteStride = 0x2C, kMoteCurrent = 0x6A5678;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+// kPacketNext: now Gfx_PacketNext (symbols.toml).
+// kSpriteBank: now BattleE2_AnimSet (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
+// kMotePool: now KaiserMote_Pool (symbols.toml).
+// kMoteCurrent: now KaiserMote_Current (symbols.toml).
+constexpr std::uint32_t kMoteStride = 0x2C;
 constexpr unsigned kMotes = 48;
-constexpr std::uint32_t kFacing = 0x904AAC, kForm = 0x904B89, kPartySet = 0x90412C, kMemberCount = 0x929EC0;
+// kForm: now BattlePhases_B89 (symbols.toml).
+// kPartySet: now AreaW0b_PartySet (symbols.toml).
+constexpr std::uint32_t kFacing = 0x904AAC, kMemberCount = 0x929EC0;
 
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -240,23 +247,23 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 // in this buffer (and moved between them by the disturbance).
 alignas(16) unsigned char g_packets[0x200];
 unsigned char* PacketAt(unsigned k) { return g_packets + (k & 3) * 0x40; }
-unsigned char* Mote(unsigned i) { return mh::Mem(kMotePool + i * kMoteStride); }
+unsigned char* Mote(unsigned i) { return mh::Mem(KaiserMote_Pool_addr + i * kMoteStride); }
 
 const mh::Region kRegions[] = {
     {kScratch, 0x10},
-    {kVertices, 0x20},
-    {kPacketNext, 4},
+    {Prim_VertexScratch_addr, 0x20},
+    {Gfx_PacketNext_addr, 4},
     {Key(g_packets), sizeof g_packets},
-    {kSpriteBank, 4},
+    {BattleE2_AnimSet_addr, 4},
     {0x80F980, 0x200},              // Gfx_ClutStrip row 1 (KaiserSprite_Run's nine at 0x80F9C2 inside)
     {0x812980, 0x200},              // Gfx_ClutStrip row 26
     {0x80B980, 0x220},              // Gfx_ClutStripSource row 1, and the 0x107 words the sprite cycle reads
     {0x80E980, 0x200},              // Gfx_ClutStripSource row 26
-    {kMotePool, kMotes * kMoteStride + 4},   // KaiserMote_Pool and KaiserMote_Current
+    {KaiserMote_Pool_addr, kMotes * kMoteStride + 4}, // KaiserMote_Pool and KaiserMote_Current
     {0x905E60, 8},                  // Field_Kind2Z, Field_Kind2X
     {kMemberCount, 4},              // Field_MemberCount
     {0x904B88, 4},                  // 0x904B89
-    {kPartySet, 4},                 // the loaded party set
+    {AreaW0b_PartySet_addr, 4},     // the loaded party set
 };
 
 // --- the callees the standard set lacks ---------------------------------------
@@ -306,7 +313,7 @@ std::uint32_t DepthEffect(const std::uint32_t* a, std::uint32_t answer) {
 // put it back after: only a callee between sees it, so Sprite_UpdateScreen
 // (standard, listed here for this) logs it.
 std::uint32_t BankSeen(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(kSpriteBank))));
+    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 
@@ -344,10 +351,10 @@ const mh::Callee kCallees[] = {
     {S30_RAW(0x4E59A0), 0, {}, mh::Answer::kPhase, 0, 0},                     // KaiserFlash_Draw
     {S30_RAW(0x4E5B40), 0, {}, mh::Answer::kPhase, 0, 0},                     // KaiserPillar_Draw
     {S30_RAW(0x4E5FB0), 0, {}, mh::Answer::kPhase, 0, 0},                     // KaiserRing_Draw
-    {S30_RAW(0x4E6200), 0, {kMoteCurrent}, mh::Answer::kPhase, 0, 0},         // KaiserMote_Task
-    {S30_RAW(0x4E68B0), 0, {kMoteCurrent}, mh::Answer::kPhase, 0, 0},         // KaiserMote_UpdateScreenXY
-    {S30_RAW(0x4E6670), 0, {kMoteCurrent}, mh::Answer::kPhase, 0, 0},         // KaiserMote_Draw
-    {S30_RAW(0x4E6880), 0, {kMoteCurrent}, mh::Answer::kPhase, 0, 0},         // KaiserMote_Free
+    {S30_RAW(0x4E6200), 0, {KaiserMote_Current_addr}, mh::Answer::kPhase, 0, 0}, // KaiserMote_Task
+    {S30_RAW(0x4E68B0), 0, {KaiserMote_Current_addr}, mh::Answer::kPhase, 0, 0}, // KaiserMote_UpdateScreenXY
+    {S30_RAW(0x4E6670), 0, {KaiserMote_Current_addr}, mh::Answer::kPhase, 0, 0}, // KaiserMote_Draw
+    {S30_RAW(0x4E6880), 0, {KaiserMote_Current_addr}, mh::Answer::kPhase, 0, 0}, // KaiserMote_Free
     {S30_RAW(0x4E6830), 0, {}, mh::Answer::kByte, 0xFF, 0x2F},                // KaiserMote_Alloc: none, or 0..47
 };
 #undef S30_OURS
@@ -380,21 +387,21 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFF;
     const auto word = static_cast<std::uint16_t>(h >> 16);
     switch ((h >> 8) % 11) {
-    case 0: mh::SetPointer(kPacketNext, PacketAt(v)); break;
+    case 0: mh::SetPointer(Gfx_PacketNext_addr, PacketAt(v)); break;
     case 1: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
-    case 2: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
-    case 3: mh::SetPointer(kMoteCurrent, Mote(v % kMotes)); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
+    case 3: mh::SetPointer(KaiserMote_Current_addr, Mote(v % kMotes)); break;
     case 4: {
         // a field of the current mote, never its owner +0x28
         static const unsigned kFields[] = {0, 5, 6, 7, 0xC, 0xD, 0x14, 0x18, 0x1E, 0x20, 0x22, 0x26};
-        mh::Pointer(kMoteCurrent)[kFields[v % 12]] = static_cast<unsigned char>(word);
+        mh::Pointer(KaiserMote_Current_addr)[kFields[v % 12]] = static_cast<unsigned char>(word);
         break;
     }
     case 5: SetWord(mh::Mem(0x905E60 + (v % 4) * 2), word); break;
     case 6: mh::Mem(kFacing)[0] = static_cast<unsigned char>(word); break;
-    case 7: mh::Mem(kPartySet)[0] = PartySetValue(h >> 16); break;
-    case 8: mh::Mem(kMemberCount)[0] = static_cast<unsigned char>(word % 5); break;
-    case 9: mh::Mem(kForm)[0] = Form(h >> 16); break;
+    case 7: mh::Mem(AreaW0b_PartySet_addr)[0] = PartySetValue(h >> 16); break;
+    case 8: mh::Mem(Field_MemberCount_addr)[0] = static_cast<unsigned char>(word % 5); break;
+    case 9: mh::Mem(BattlePhases_B89_addr)[0] = Form(h >> 16); break;
     case 10: {
         static const unsigned kFields[] = {4, 0xC, 0xE, 0x10, 0x14, 0x15, 0x18, 0x1C, 0x2E, 0x2F, 0x31, 0x5D};
         Sc()[kFields[v % 12]] = static_cast<unsigned char>(word);
@@ -406,16 +413,16 @@ void Disturb(std::uint32_t h) {
 
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
-    mh::SetPointer(kPacketNext, PacketAt(mh::Next()));
+    mh::SetPointer(Gfx_PacketNext_addr, PacketAt(mh::Next()));
     for (unsigned i = 0; i < kMotes; ++i) {
         const std::uint32_t o = mh::Next();
-        mh::SetPointer(kMotePool + i * kMoteStride + 0x28, o & 4 ? mh::SpriteRecord(o & 1) : mh::TaskAt(o));
+        mh::SetPointer(KaiserMote_Pool_addr + i * kMoteStride + 0x28, o & 4 ? mh::SpriteRecord(o & 1) : mh::TaskAt(o));
     }
-    mh::SetPointer(kMoteCurrent, Mote(mh::Next() % kMotes));
-    unsigned char* const cur = mh::Pointer(kMoteCurrent);
-    mh::Mem(kForm)[0] = Form(mh::Next());
-    mh::Mem(kPartySet)[0] = PartySetValue(mh::Next());
-    mh::Mem(kMemberCount)[0] = static_cast<unsigned char>(mh::Next() % 5);
+    mh::SetPointer(KaiserMote_Current_addr, Mote(mh::Next() % kMotes));
+    unsigned char* const cur = mh::Pointer(KaiserMote_Current_addr);
+    mh::Mem(BattlePhases_B89_addr)[0] = Form(mh::Next());
+    mh::Mem(AreaW0b_PartySet_addr)[0] = PartySetValue(mh::Next());
+    mh::Mem(Field_MemberCount_addr)[0] = static_cast<unsigned char>(mh::Next() % 5);
     if (mh::Often()) mh::Mem(kFacing)[0] = static_cast<unsigned char>(mh::Next() % 4);
     const auto low = [](unsigned n) { return static_cast<unsigned char>(1 + mh::Next() % n); };
     switch (k) {
@@ -452,7 +459,7 @@ void Seed(unsigned k) {
     case kKaiserSprite_Glide: case kKaiserSprite_Brake: case kKaiserSprite_Tick: case kKaiserSprite_Breathe:
     case kKaiserSprite_Leave:
         if (mh::Often()) sc[9] = low(2);
-        if (k == kKaiser_LoadFormFile && mh::Often()) mh::Mem(kForm)[0] = static_cast<unsigned char>(MH_PICK(7, 8, 9, 0));
+        if (k == kKaiser_LoadFormFile && mh::Often()) mh::Mem(BattlePhases_B89_addr)[0] = static_cast<unsigned char>(MH_PICK(7, 8, 9, 0));
         if (k == kKaiser_ReloadParty)
             for (unsigned i = 0; i < 5; ++i) {
                 unsigned char* const m = mh::PartyOf(static_cast<unsigned char>(i));
@@ -478,7 +485,7 @@ void Seed(unsigned k) {
         if (mh::Often()) sc[0xA] = low(2);
         break;
     case kMagicFx_CountUp9By2: if (mh::Often()) sc[9] = static_cast<unsigned char>(MH_PICK(0xC, 0xE, 0xF)); break;
-    case kKaiserFlash_WaitLoad: if (mh::Half()) mh::Pointer(mh::at::kOwner)[9] = 0; break;
+    case kKaiserFlash_WaitLoad: if (mh::Half()) mh::Pointer(BattleE2_Owner_addr)[9] = 0; break;
     case kKaiserPillar_Grow: if (mh::Often()) sc[9] = static_cast<unsigned char>(MH_PICK(0x38, 0x3C, 0x3E)); break;
     case kKaiserPillar_Fade: if (mh::Often()) sc[0x5D] = static_cast<unsigned char>(MH_PICK(4, 8, 6)); break;
     case kKaiserRing_Grow: if (mh::Often()) SetLong(sc + 0x14, static_cast<std::int32_t>(MH_PICK(0x1C0, 0x1E0, 0x1F0))); break;
