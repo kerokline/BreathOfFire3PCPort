@@ -484,7 +484,7 @@ extern "C" void __cdecl EffectKind97_Run(void) {
 
 // original 0x48D090 (state 0): the ring's size word +0x2E 0; +9 = 8; +1 up.
 extern "C" void __cdecl EffectKind97_Start(void) {
-    SetWord(S() + 0x2E, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
     S()[9] = 8;
     Step();
 }
@@ -494,14 +494,14 @@ extern "C" void __cdecl EffectKind97_Start(void) {
 // read's).
 void Kind97Ring() {
     unsigned char* const s = S();
-    SH_CALL(EffectKind97_DrawRing)(reinterpret_cast<const long*>(s + 0x34), Word(s + 0x2E), 7);
+    SH_CALL(EffectKind97_DrawRing)(reinterpret_cast<const long*>(s + 0x34), rv::As<records::EffectWork>(s)->work_2e, 7);
 }
 
 // original 0x48D0B0 (state 1): the size +0x2E up 0x18; the ring; +9 down; at 0
 // +9 = 0x40 and +1 up.
 extern "C" void __cdecl EffectKind97_Grow(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x2E, Word(s + 0x2E) + 0x18u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_2e + 0x18u);
     Kind97Ring();
     if (CountDown()) {
         S()[9] = 0x40;
@@ -829,7 +829,7 @@ extern "C" void __cdecl EffectKind98_Run(void) {
 // original 0x48D2B0 (state 0): the flash level +0xC 0; +9 = 0x20; +1 up;
 // Draw_PassFlags 0.
 extern "C" void __cdecl EffectKind98_Start(void) {
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     S()[9] = 0x20;
     Step();
     Draw_PassFlags = 0;
@@ -840,13 +840,13 @@ extern "C" void __cdecl EffectKind98_Start(void) {
 // +0xC and +0x10 0x100, +9 = 0x10, +1 up, Draw_PassFlags 0x1F.
 extern "C" void __cdecl EffectKind98_Flash(void) {
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0xC) + 8u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c + 8u);
     s = S();
-    SH_CALL(EffectKind98_DrawFlash)(static_cast<int>(UL(s + 0xC)));
+    SH_CALL(EffectKind98_DrawFlash)(static_cast<int>(rv::As<records::EffectWork>(s)->work_0c));
     if (!CountDown()) return;
-    SetWord(S() + 0x32, 0x140);
-    SetUL(S() + 0xC, 0x100);
-    SetUL(S() + 0x10, 0x100);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x140);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x100);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0x100);
     S()[9] = 0x10;
     Step();
     Draw_PassFlags = 0x1F;
@@ -870,7 +870,7 @@ void Kind98Project() {
 // EffectKind98_DrawBurst(+0x32, +0xC, +0x10), Sprite_Current read once.
 void Kind98Burst() {
     const unsigned char* const s = S();
-    SH_CALL(EffectKind98_DrawBurst)(Word(s + 0x32), Word(s + 0xC), Word(s + 0x10));
+    SH_CALL(EffectKind98_DrawBurst)(rv::As<records::EffectObject>(s)->draw_key, Word(s + 0xC), Word(s + 0x10));
 }
 
 // original 0x48D360 (state 2): the point projected; the rim level +0x10 down
@@ -878,7 +878,7 @@ void Kind98Burst() {
 extern "C" void __cdecl EffectKind98_Rise(void) {
     Kind98Project();
     unsigned char* const s = S();
-    SetUL(s + 0x10, UL(s + 0x10) - 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, rv::As<records::EffectWork>(s)->work_10 - 0x10u);
     Kind98Burst();
     if (CountDown()) {
         S()[9] = 0x10;
@@ -892,9 +892,9 @@ extern "C" void __cdecl EffectKind98_Rise(void) {
 extern "C" void __cdecl EffectKind98_Fall(void) {
     Kind98Project();
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0xC) - 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 0x10u);
     s = S();
-    SetWord(s + 0x32, Word(s + 0x32) + 0xFFECu);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->draw_key + 0xFFECu);
     Kind98Burst();
     if (CountDown()) SH_CALL(Effect_Release)();
 }

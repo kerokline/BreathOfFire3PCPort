@@ -220,12 +220,12 @@ extern "C" void __cdecl EffectKind22_SpawnArms(void) {
         e[0] = 1;
         e[6] = 0;
         e[5] = 0x21;
-        SetUL(e + 0xC, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
-        SetUL(e + 0x10, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_0c, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_10, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
         const U height = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height);
-        SetUL(e + 0x14, height);
-        SetWord(e + 0x58, 6);
-        SetWord(e + 0x5A, 0);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->step_y, height);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->script_pos, 6);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->frame_word, 0);
         SetWord(e + 0x5E, 0);
         SetWord(e + 0x5C, 0x333u * i);
     }
@@ -347,8 +347,8 @@ extern "C" void __cdecl EffectKind25_Start(void) {
         SH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
     rv::Current<records::EffectObject>()->depth = static_cast<U>(answer);
     const auto* const screen = reinterpret_cast<const unsigned char*>(MapView_ScreenXY);
-    SetWord(S() + 0x2E, Ftol16(screen));
-    SetWord(S() + 0x30, Ftol16(screen + 4));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, Ftol16(screen));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, Ftol16(screen + 4));
     S()[9] = 0;
     NextState();
 }
@@ -358,7 +358,7 @@ extern "C" void __cdecl EffectKind25_Start(void) {
 // +1 up.
 extern "C" void __cdecl EffectKind25_Grow(void) {
     const unsigned char* const s = S();
-    SH_CALL(EffectKind25_DrawDisc)(Word(s + 0x2E), Word(s + 0x30), s[9], 0x80, 0);
+    SH_CALL(EffectKind25_DrawDisc)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, s[9], 0x80, 0);
     unsigned char* t = S();
     t[9] = static_cast<unsigned char>(t[9] + 0xF);
     t = S();
@@ -372,7 +372,7 @@ extern "C" void __cdecl EffectKind25_Grow(void) {
 // down, at 0 +9 = 0x3C and +1 up.
 extern "C" void __cdecl EffectKind25_Glow(void) {
     const unsigned char* const s = S();
-    SH_CALL(EffectKind25_DrawDisc)(Word(s + 0x2E), Word(s + 0x30), 0x3Cu + (s[9] & 1u), 0x80, 0);
+    SH_CALL(EffectKind25_DrawDisc)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, 0x3Cu + (s[9] & 1u), 0x80, 0);
     if (S()[9] == 0xD7) SH_CALL(Sound_PlayEffect)(0x208);
     CountDown(0x3C);
 }
@@ -381,7 +381,7 @@ extern "C" void __cdecl EffectKind25_Glow(void) {
 // centre 0x80 and the rim 0; +9 down; below 0 (s8), +1 up.
 extern "C" void __cdecl EffectKind25_Shrink(void) {
     const unsigned char* const s = S();
-    SH_CALL(EffectKind25_DrawDisc)(Word(s + 0x2E), Word(s + 0x30), s[9], 0x80, 0);
+    SH_CALL(EffectKind25_DrawDisc)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, s[9], 0x80, 0);
     unsigned char* t = S();
     t[9] = static_cast<unsigned char>(t[9] - 1);
     t = S();
@@ -441,7 +441,7 @@ extern "C" void __cdecl EffectKind26_Run(void) { Dispatch("EffectKind26_Run", Ad
 
 // original 0x46FE80 (state 0): the dword +0xC = 0, +1 up.
 extern "C" void __cdecl EffectKind26_Start(void) {
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     NextState();
 }
 
@@ -453,9 +453,9 @@ extern "C" void __cdecl EffectKind26_Widen(void) {
     auto* const so = rv::AsConst<records::EffectObject>(s);
     SH_CALL(EffectKind26_DrawBand)(so->x, so->z, so->height, Word(s + 0xC));
     unsigned char* t = S();
-    SetUL(t + 0xC, UL(t + 0xC) + 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(t)->work_0c, rv::As<records::EffectWork>(t)->work_0c + 0x10u);
     t = S();
-    if (static_cast<std::int32_t>(UL(t + 0xC)) <= 0x500) return;
+    if (static_cast<std::int32_t>(rv::As<records::EffectWork>(t)->work_0c) <= 0x500) return;
     t[1] = static_cast<unsigned char>(t[1] + 1);
 }
 
@@ -569,7 +569,7 @@ extern "C" void __cdecl EffectKind27_Run(void) { Dispatch("EffectKind27_Run", Ad
 
 // original 0x46FF00 (state 0): the dword +0xC = 0x1000 frames, +1 up.
 extern "C" void __cdecl EffectKind27_Start(void) {
-    SetUL(S() + 0xC, 0x1000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x1000);
     NextState();
 }
 
@@ -595,9 +595,9 @@ extern "C" void __cdecl EffectKind27_Emit(void) {
         }
     }
     unsigned char* t = S();
-    SetUL(t + 0xC, UL(t + 0xC) - 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(t)->work_0c, rv::As<records::EffectWork>(t)->work_0c - 1u);
     t = S();
-    if (UL(t + 0xC) != 0) return;
+    if (rv::As<records::EffectWork>(t)->work_0c != 0) return;
     t[1] = static_cast<unsigned char>(t[1] + 1);
 }
 

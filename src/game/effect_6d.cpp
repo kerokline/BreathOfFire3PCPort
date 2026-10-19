@@ -182,7 +182,7 @@ U Window(U x, U wh) {
 // A slide of +0x30 by `by`; answers +0x30 (signed, read again).
 std::int32_t Slide(U by) {
     unsigned char* const s = S();
-    SetWord(s + 0x30, Word(s + 0x30) + by);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 + by);
     return S16(S() + 0x30);
 }
 // Closed: the sound unless a message is up (Field_Request), +2 = 1 (read after
@@ -265,11 +265,11 @@ extern "C" void __cdecl EffectKind18Sub5C_Place(void) {
     unsigned char* const s = S();
     const U v = Variant("EffectKind18Sub5C_Place", s, at::kSub5CVariants);
     s[0xB] = static_cast<unsigned char>(v);
-    SetWord(s + 0x36, At(at::kSub5CCells + 2 * v)[0]);
-    SetWord(s + 0x3A, At(at::kSub5CCells + 2 * v + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(at::kSub5CCells + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(at::kSub5CCells + 2 * v + 1)[0]);
     s[8] = At(at::kSub5CFlags + v)[0];
     SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), s[8]);
-    SetWord(S() + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     StepUp();
     Sub5CPair(1);
 }
@@ -342,7 +342,7 @@ extern "C" void __cdecl EffectKind18Sub5C_Close(void) {
 extern "C" void __cdecl EffectKind18Sub5E_Draw(void) {
     unsigned char* const v = Vertices();
     unsigned char* const mode = Gfx_PacketNext;
-    const U y = (static_cast<U>(Word(S() + 0x3A)) << 7) - 0x3FC0u;
+    const U y = (static_cast<U>(rv::As<records::EffectObject>(S())->z_whole) << 7) - 0x3FC0u;
     SetWord(v + 0x1A, y);
     SetWord(v + 0x12, y);
     SetWord(v + 0xA, y);
@@ -356,7 +356,7 @@ extern "C" void __cdecl EffectKind18Sub5E_Draw(void) {
         unsigned char* const s = S();
         const U sign = S8U(At(at::kSub5ESides)[i]);
         const long y0 = Ground(v + 2);
-        const U slid = Word(s + 0x30) * sign + (static_cast<U>(Word(s + 0x36)) << 7);
+        const U slid = rv::As<records::EffectWork>(s)->work_30 * sign + (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7);
         SetWord(v + 0x10, slid - 0x3F40u);
         SetWord(v, slid - 0x3F40u);
         SetWord(v + 0x18, slid - 0x4040u);
@@ -387,12 +387,12 @@ extern "C" void __cdecl EffectKind18Sub5E_Run(void) {
 // already at the cell (within half a cell of its centre along z, on it or the
 // next along x): +0x30 0xC0, +2 = 3. The draw.
 extern "C" void __cdecl EffectKind18Sub5E_Start(void) {
-    SetWord(S() + 0x3E, 0xFF80u);
-    SetWord(S() + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, 0xFF80u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     StepUp();
     unsigned char* const s = S();
     if (LeaderAt(s, true, 0x8000, 0x10000)) {
-        SetWord(s + 0x30, 0xC0);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0xC0);
         S()[2] = 3;
     }
     SH_CALL(EffectKind18Sub5E_Draw)();
@@ -451,23 +451,23 @@ extern "C" void __cdecl EffectKind18Sub5D_Draw(void) {
     {
         unsigned char* const s = S();
         if (s[8] != 0) {
-            const U y = (static_cast<U>(Word(s + 0x3A)) << 7) - 0x3FC0u;
+            const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) - 0x3FC0u;
             SetWord(v + 0x1A, y);
             SetWord(v + 0x12, y);
             SetWord(v + 0xA, y);
             SetWord(v + 2, y);
         } else {
-            const U x = (static_cast<U>(Word(s + 0x36)) << 7) - 0x3FC0u;
+            const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - 0x3FC0u;
             SetWord(v + 0x18, x);
             SetWord(v + 0x10, x);
             SetWord(v + 8, x);
             SetWord(v, x);
         }
-        const U top = Word(s + 0x3E) - Word(s + 0x2E);
+        const U top = rv::As<records::EffectObject>(s)->height_whole - rv::As<records::EffectWork>(s)->work_2e;
         SetWord(v + 0xC, top);
         SetWord(v + 4, top);
-        SetWord(v + 0x1C, Word(s + 0x3E));
-        SetWord(v + 0x14, Word(s + 0x3E));
+        SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->height_whole);
+        SetWord(v + 0x14, rv::As<records::EffectObject>(s)->height_whole);
     }
     for (U side = 0; side < 2; ++side) {
         PanelMode();
@@ -477,15 +477,15 @@ extern "C" void __cdecl EffectKind18Sub5D_Draw(void) {
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         unsigned char* const s = S();
         const U sign = S8U(At(at::kSub5DSides)[side]);
-        const U slide = Word(s + 0x30) * sign;
+        const U slide = rv::As<records::EffectWork>(s)->work_30 * sign;
         if (s[8] != 0) {
-            const U x = (side + Word(s + 0x36)) << 7;
+            const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
             SetWord(v + 0x10, x - slide - 0x4040u);
             SetWord(v, x - slide - 0x4040u);
             SetWord(v + 0x18, x - slide - 0x3FC0u);
             SetWord(v + 8, x - slide - 0x3FC0u);
         } else {
-            const U y = (Word(s + 0x3A) - side) << 7;
+            const U y = (rv::As<records::EffectObject>(s)->z_whole - side) << 7;
             SetWord(v + 0x12, y + slide - 0x3F40u);
             SetWord(v + 2, y + slide - 0x3F40u);
             SetWord(v + 0x1A, y + slide - 0x3FC0u);
@@ -494,7 +494,7 @@ extern "C" void __cdecl EffectKind18Sub5D_Draw(void) {
         Project(p);
         {
             unsigned char* const r = S();
-            SH_CALL(Prim_SetTexture)((UL(r + 0x20) + side) | (static_cast<U>(r[8]) << 21), p, 1);
+            SH_CALL(Prim_SetTexture)((static_cast<std::uint32_t>(rv::As<records::EffectObject>(r)->work_20) + side) | (static_cast<U>(r[8]) << 21), p, 1);
         }
         Link(-1, 0x48);
     }
@@ -512,17 +512,17 @@ extern "C" void __cdecl EffectKind18Sub5D_Run(void) {
 // cell (the axis +8 names first): +0x30 0x80, +2 = 3. The draw.
 extern "C" void __cdecl EffectKind18Sub5D_Place(void) {
     unsigned char* const s = S();
-    s[8] = Word(s + 0x3A) == 0 ? 1 : 0;
+    s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
     const U v = Variant("EffectKind18Sub5D_Place", s, at::kSub5DVariants);
-    SetWord(s + 0x36, At(at::kSub5DCells + 2 * v)[0]);
-    SetWord(s + 0x3A, At(at::kSub5DCells + 2 * v + 1)[0]);
-    SetWord(s + 0x3E, Word(At(at::kSub5DLifts + 2 * v)));
-    SetUL(s + 0x20, UL(at::kSub5DTextures + 4 * v));
-    SetWord(s + 0x2E, Word(At(at::kSub5DHeights + 2 * v)));
-    SetWord(s + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(at::kSub5DCells + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(at::kSub5DCells + 2 * v + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(at::kSub5DLifts + 2 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20, UL(at::kSub5DTextures + 4 * v));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, Word(At(at::kSub5DHeights + 2 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     s[2] = static_cast<unsigned char>(s[2] + 1);
     if (LeaderAt(s, s[8] != 0, 0x8000, 0x10000)) {
-        SetWord(s + 0x30, 0x80);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0x80);
         s[2] = 3;
     }
     SH_CALL(EffectKind18Sub5D_Draw)();
@@ -1270,7 +1270,7 @@ extern "C" void __cdecl EffectKind18Sub64_Run(void) {
 namespace {
 // The enemy record +0xC holds (Place stores it): its bytes +1 and +2, read
 // again for every test.
-const unsigned char* Watched() { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(S() + 0xC))); }
+const unsigned char* Watched() { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectWork>(S())->work_0c)); }
 bool WatchedIs(unsigned char a, unsigned char b) {
     const unsigned char* const r = Watched();
     return r[1] == a && r[2] == b;
@@ -1287,7 +1287,7 @@ extern "C" void __cdecl EffectKind18Sub64_Place(void) {
     const U v = Variant("EffectKind18Sub64_Place", s, at::kSub64Variants);
     so->x = static_cast<U>(At(at::kSub64Cells + 2 * v)[0]) << 16;
     so->z = static_cast<U>(At(at::kSub64Cells + 2 * v + 1)[0]) << 16;
-    SetUL(s + 0xC, at::kEnemyRecords + at::kEnemyStride * v);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, at::kEnemyRecords + at::kEnemyStride * v);
     s[9] = 0;
     s[0xA] = 0;
     s[2] = static_cast<unsigned char>(s[2] + 1);

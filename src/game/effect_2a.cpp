@@ -292,20 +292,20 @@ unsigned char* Member(const char* who, unsigned m) {
 // above it, the beam drawn and the row pushed.
 void Row2A() {
     const unsigned char* const s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(s + 0xC), Long(s + 0x10));
-    SetUL(S() + 0x20, (static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) + 0x100u) << 16);
+    const long ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, (static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) + 0x100u) << 16);
     unsigned char* const t = S();
-    SetUL(t + 0x14, UL(t + 0x20));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(t)->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(t)->work_20));
     const unsigned char* const u = S();
     SH_CALL(EffectKind2A_DrawBeam)(reinterpret_cast<const long*>(u + 0xC), reinterpret_cast<const long*>(u + 0x18));
     SH_CALL(EffectKind2A_PushParty)();
 }
 
 void RowPoints2A(U z) {
-    SetUL(S() + 0xC, 0x608000);
-    SetUL(S() + 0x18, 0x6B8000);
-    SetUL(S() + 0x1C, z);
-    SetUL(S() + 0x10, z);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x608000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, 0x6B8000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, z);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, z);
 }
 
 // ===========================================================================
@@ -340,12 +340,12 @@ extern "C" void __cdecl EffectKind28_Run(void) { Dispatch("EffectKind28_Run", Ad
 // clear, 2 once it is set.
 extern "C" void __cdecl EffectKind28_Start(void) {
     const unsigned char* const s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(s + 0xC), Long(s + 0x10));
+    const long ground = SH_CALL(AreaMap_Elevation)(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10));
     const U height = (static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) + 0x100u) << 16;
-    SetUL(S() + 0x14, height);
-    SetUL(S() + 0x20, height);
-    SetWord(S() + 0x3E, static_cast<U>(ground));
-    SetUL(S() + 0x70, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, height);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, height);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(ground));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->reach, 0);
     const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xB);
     S()[1] = set == 0 ? 1 : 2;
 }
@@ -707,9 +707,9 @@ extern "C" void __cdecl EffectKind2B_Run(void) {
 // original 0x471960 (state 0): the words +0x2E (the radius) = 0x100, +0x30 (the
 // rise) = 0, +0x32 (a count) = 0x18; +1 up.
 extern "C" void __cdecl EffectKind2B_Start(void) {
-    SetWord(S() + 0x2E, 0x100);
-    SetWord(S() + 0x30, 0);
-    SetWord(S() + 0x32, 0x18);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0x100);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x18);
     NextState();
 }
 
@@ -719,9 +719,9 @@ extern "C" void __cdecl EffectKind2B_Start(void) {
 extern "C" void __cdecl EffectKind2B_Rise(void) {
     AddWord(S() + 0x30, 0x80);
     AddWord(S() + 0x32, 0xFFFFu);
-    if (Word(S() + 0x32) != 0) return;
+    if (rv::As<records::EffectObject>(S())->draw_key != 0) return;
     SH_CALL(EffectShards_Clear)();
-    SetWord(S() + 0x32, 0x12C);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x12C);
     NextState();
     SH_CALL(Sound_PlayEffect)(0x209);
 }
@@ -739,7 +739,7 @@ extern "C" void __cdecl EffectKind2B_Specks(void) {
 // 0x10 and +1 up.
 extern "C" void __cdecl EffectKind2B_Settle(void) {
     if (SH_CALL(EffectSpecks_Move)() != 0) return;
-    SetWord(S() + 0x32, 0x10);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x10);
     NextState();
 }
 
@@ -748,7 +748,7 @@ extern "C" void __cdecl EffectKind2B_Settle(void) {
 extern "C" void __cdecl EffectKind2B_Shrink(void) {
     AddWord(S() + 0x2E, 0xFFF0u);
     AddWord(S() + 0x32, 0xFFFFu);
-    if (Word(S() + 0x32) != 0) return;
+    if (rv::As<records::EffectObject>(S())->draw_key != 0) return;
     SH_CALL(Effect_Release)();
 }
 
@@ -773,12 +773,12 @@ extern "C" void __cdecl EffectKind2B_Draw(void) {
         {
             const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(u)));
             const unsigned char* const s = S();
-            point[0] = static_cast<long>(Sar(c * static_cast<U>(SW(s + 0x2E)), 4) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->x));
+            point[0] = static_cast<long>(Sar(c * static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e))), 4) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->x));
         }
         {
             const U n = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(u)));
             const unsigned char* const s = S();
-            point[1] = static_cast<long>(Sar(n * static_cast<U>(SW(s + 0x2E)), 4) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->z));
+            point[1] = static_cast<long>(Sar(n * static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e))), 4) + static_cast<std::uint32_t>(rv::AsConst<records::EffectObject>(s)->z));
             point[2] = rv::AsConst<records::EffectObject>(s)->height;
         }
         SH_CALL(EffectGte_ProjectPoint)(point, ground);
@@ -918,7 +918,7 @@ extern "C" void __cdecl EffectKind2C_Start(void) {
         SetUL(pt + 8, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 8);
     }
     SH_CALL(EffectSparks_Clear)();
-    SetUL(S() + 0xC, 0x200);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x200);
     NextState();
 }
 
@@ -947,9 +947,9 @@ extern "C" void __cdecl EffectKind2C_Emit(void) {
     SparkCentreFromExtra();
     SH_CALL(EffectSparks_Move)();
     unsigned char* t = S();
-    SetUL(t + 0xC, UL(t + 0xC) - 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(t)->work_0c, rv::As<records::EffectWork>(t)->work_0c - 1u);
     t = S();
-    if (UL(t + 0xC) == 0) t[1] = static_cast<unsigned char>(t[1] + 1);
+    if (rv::As<records::EffectWork>(t)->work_0c == 0) t[1] = static_cast<unsigned char>(t[1] + 1);
 }
 
 // original 0x4721A0 (0xA0 bytes): EffectGte_LoadMapCamera; each spark alive (+0x25
@@ -1111,7 +1111,7 @@ extern "C" void __cdecl EffectKind2E_Burst(void) {
         r[0x25] = 0x40;
     }
     SH_CALL(EffectSparks_Move)();
-    SetUL(S() + 0xC, 0x40);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x40);
 }
 
 // ===========================================================================

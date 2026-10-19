@@ -367,8 +367,8 @@ extern "C" void __cdecl EffectKind18Sub20_Draw(void) {
         SetWord(v + 0x18, kFar);
         SetWord(v + 0x10, kFar);
         s = S();
-        SetWord(v + 0x1C, Word(s + 0x3C));
-        SetWord(v + 0x14, Word(s + 0x3C));
+        SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->height_frac);
+        SetWord(v + 0x14, rv::As<records::EffectObject>(s)->height_frac);
         SH_CALL(Gte_RotTransPers4)(vertex(3), vertex(1), vertex(2), vertex(0), reinterpret_cast<float*>(p + 8),
                                    reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                    reinterpret_cast<float*>(p + 0x38), &depth);
@@ -925,7 +925,7 @@ extern "C" void __cdecl EffectKind5B_Start(void) {
     B(at::kArea75EffectSlots + slot) =
         static_cast<unsigned char>(static_cast<std::int32_t>(AddressOf(s) - AddressOf(Effect_Objects)) >> 7);
     s[0xA] = 0x80;
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     S()[6] = 0x1E;
     S()[0x5D] = 0x80;
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
@@ -936,7 +936,7 @@ extern "C" void __cdecl EffectKind5B_Start(void) {
 extern "C" void __cdecl EffectKind5B_Glow(void) {
     unsigned char* const s = S();
     s[0xA] = static_cast<unsigned char>(s[0xA] + s[0xC]);
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     SH_CALL(EffectKind5B_DrawBeam)(S()[6], 0);
 }
 

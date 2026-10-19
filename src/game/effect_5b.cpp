@@ -248,18 +248,18 @@ void Sub0ECells(unsigned char value) {
 // (the original adds the byte +8 to x and +8 == 0 to z).
 void GateCells(unsigned char value) {
     unsigned char* s = S();
-    *Cell(SW(s + 0x36), SW(s + 0x3A)) = value;
+    *Cell(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole))) = value;
     s = S();
     const unsigned b8 = s[8];
-    *Cell(SW(s + 0x36) + static_cast<I>(b8), SW(s + 0x3A) + (b8 == 0 ? 1 : 0)) = value;
+    *Cell(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)) + static_cast<I>(b8), static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole)) + (b8 == 0 ? 1 : 0)) = value;
 }
 
 // Sub-kind 0x4F's two cells: (x, z) and (x, z + 1).
 void Gate4FCells(unsigned char value) {
     unsigned char* s = S();
-    *Cell(SW(s + 0x36), SW(s + 0x3A)) = value;
+    *Cell(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole))) = value;
     s = S();
-    *Cell(SW(s + 0x36), SW(s + 0x3A) + 1) = value;
+    *Cell(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole)) + 1) = value;
 }
 
 // A VRAM move of an 8 x 0x78 column: the rect at (frame + 1) * 8 + `from`,
@@ -303,12 +303,12 @@ extern "C" void __cdecl EffectKind18Sub0D_Run(void) {
 // moved and +2 3; else the column's frame 0 and +2 1.
 extern "C" void __cdecl EffectKind18Sub0D_Start(void) {
     S()[9] = 0;
-    if (Word(S() + 0x36) == 0 && SH_CALL(Flags_Test)(Flags(), 0xD)) {
+    if (rv::As<records::EffectObject>(S())->x_whole == 0 && SH_CALL(Flags_Test)(Flags(), 0xD)) {
         SH_CALL(EffectKind18Sub0D_MoveFrame)(0, 3);
         S()[2] = 3;
         return;
     }
-    SH_CALL(EffectKind18Sub0D_MoveFrame)(SW(S() + 0x36), 0);
+    SH_CALL(EffectKind18Sub0D_MoveFrame)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole)), 0);
     S()[2] = 1;
 }
 
@@ -316,8 +316,8 @@ extern "C" void __cdecl EffectKind18Sub0D_Start(void) {
 // with area 48's count not 0: sound 0x20D, +9 0, +2 up. Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub0D_Wait(void) {
     // +0x36 read again after the test, as the original reads Sprite_Current again
-    const bool lit = (Word(S() + 0x36) == 0 && SH_CALL(Flags_Test)(Flags(), 0xD) != 0) ||
-                     (Word(S() + 0x36) != 0 && AreaW1c_Count48 != 0);
+    const bool lit = (rv::As<records::EffectObject>(S())->x_whole == 0 && SH_CALL(Flags_Test)(Flags(), 0xD) != 0) ||
+                     (rv::As<records::EffectObject>(S())->x_whole != 0 && AreaW1c_Count48 != 0);
     if (!lit) return;
     SH_CALL(Sound_PlayEffect)(0x20D);
     S()[9] = 0;
@@ -329,9 +329,9 @@ extern "C" void __cdecl EffectKind18Sub0D_Wait(void) {
 extern "C" void __cdecl EffectKind18Sub0D_Open(void) {
     unsigned char* const s = S();
     const unsigned frame = Byte("EffectKind18Sub0D_Open", at::kSub0DOpenFrames, at::kSub0DArray, s[9] >> 1);
-    SH_CALL(EffectKind18Sub0D_MoveFrame)(SW(s + 0x36), frame);
+    SH_CALL(EffectKind18Sub0D_MoveFrame)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), frame);
     Step(4, true, -1);
-    SH_CALL(EffectKind18Sub0D_DrawGlow)(SW(S() + 0x36));
+    SH_CALL(EffectKind18Sub0D_DrawGlow)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole)));
 }
 
 // original 0x4FF460 (state 3): the light stays while its condition holds
@@ -339,10 +339,10 @@ extern "C" void __cdecl EffectKind18Sub0D_Open(void) {
 // up; +9 up, past 0x40: +9 0 and, on an odd Rand, +2 5; the glow.
 extern "C" void __cdecl EffectKind18Sub0D_Idle(void) {
     bool off;
-    if (Word(S() + 0x36) == 0) {
+    if (rv::As<records::EffectObject>(S())->x_whole == 0) {
         const unsigned char set = SH_CALL(Flags_Test)(Flags(), 0xD);
         if (set == 0) off = true;
-        else if (Word(S() + 0x36) == 0) off = false;
+        else if (rv::As<records::EffectObject>(S())->x_whole == 0) off = false;
         else off = AreaW1c_Count48 == 0;
     } else {
         off = AreaW1c_Count48 == 0;
@@ -357,7 +357,7 @@ extern "C" void __cdecl EffectKind18Sub0D_Idle(void) {
         S()[9] = 0;
         if (SH_CALL(Rand)() & 1) S()[2] = 5;
     }
-    SH_CALL(EffectKind18Sub0D_DrawGlow)(SW(S() + 0x36));
+    SH_CALL(EffectKind18Sub0D_DrawGlow)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole)));
 }
 
 // original 0x4FF4F0 (state 4): the frame _ShutFrames[+9 / 3] moved; +9 up, past
@@ -365,7 +365,7 @@ extern "C" void __cdecl EffectKind18Sub0D_Idle(void) {
 extern "C" void __cdecl EffectKind18Sub0D_Shut(void) {
     unsigned char* const s = S();
     const unsigned frame = Byte("EffectKind18Sub0D_Shut", at::kSub0DShutFrames, at::kSub0DArray, s[9] / 3u);
-    SH_CALL(EffectKind18Sub0D_MoveFrame)(SW(s + 0x36), frame);
+    SH_CALL(EffectKind18Sub0D_MoveFrame)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), frame);
     Step(3, false, 1);
 }
 
@@ -374,9 +374,9 @@ extern "C" void __cdecl EffectKind18Sub0D_Shut(void) {
 extern "C" void __cdecl EffectKind18Sub0D_Flash(void) {
     unsigned char* const s = S();
     const unsigned frame = Byte("EffectKind18Sub0D_Flash", at::kSub0DFlashFrames, at::kSub0DArray, s[9] >> 1);
-    SH_CALL(EffectKind18Sub0D_MoveFrame)(SW(s + 0x36), frame);
+    SH_CALL(EffectKind18Sub0D_MoveFrame)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), frame);
     Step(6, true, 3);
-    SH_CALL(EffectKind18Sub0D_DrawGlow)(SW(S() + 0x36));
+    SH_CALL(EffectKind18Sub0D_DrawGlow)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole)));
 }
 
 // original 0x4FF5A0 (column, frame): Gpu_SetDrawMove of the rect ((frame + 1) *
@@ -564,7 +564,7 @@ extern "C" void __cdecl EffectKind18Sub0B_DrawTiles(int height, unsigned long co
 
 namespace {
 unsigned Sub0CFlag(const char* who) {
-    return Byte(who, at::kSub0CFlags, at::kSub0CFlagCount, static_cast<U>(SW(S() + 0x36)));
+    return Byte(who, at::kSub0CFlags, at::kSub0CFlagCount, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole))));
 }
 }  // namespace
 
@@ -637,7 +637,7 @@ extern "C" void __cdecl EffectKind18Sub0C_Flash(void) {
 extern "C" void __cdecl EffectKind18Sub0C_MoveFrame(unsigned frame) {
     const U offset = static_cast<U>(Halve(static_cast<I>((frame + 1) << 4)));
     const U to = Byte("EffectKind18Sub0C_MoveFrame", at::kSub0CColumns, at::kSub0CColumnCount,
-                      static_cast<U>(SW(S() + 0x36))) + 0x1C0u;
+                      static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole)))) + 0x1C0u;
     MoveColumn(offset + 0x1C0, to);
 }
 
@@ -655,7 +655,7 @@ extern "C" void __cdecl EffectKind18Sub0E_Run(void) {
 // gate's cells 0x50 and +2 5; set: the cells 0xA1, +2 up and, with the leader
 // at the gate, +0x30 0xFF00 and +2 3. The gate drawn.
 extern "C" void __cdecl EffectKind18Sub0E_Start(void) {
-    SetWord(S() + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     if (!SH_CALL(Flags_Test)(Row9(), 0xC)) {
         Sub0ECells(0x50);
         S()[2] = 5;
@@ -665,7 +665,7 @@ extern "C" void __cdecl EffectKind18Sub0E_Start(void) {
     Sub0ECells(0xA1);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
     if (Sub0ENear(0x8000, 0x10000)) {
-        SetWord(S() + 0x30, 0xFF00);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0xFF00);
         S()[2] = 3;
     }
     SH_CALL(EffectKind18Sub0E_DrawGate)();
@@ -690,8 +690,8 @@ extern "C" void __cdecl EffectKind18Sub0E_Wait(void) {
 // A tail jump to the draw.
 extern "C" void __cdecl EffectKind18Sub0E_Lower(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x30, Word(s + 0x30) - 0x20u);
-    if (SW(S() + 0x30) <= -0x100) S()[2] = static_cast<unsigned char>(S()[2] + 1);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 - 0x20u);
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(S())->work_30)) <= -0x100) S()[2] = static_cast<unsigned char>(S()[2] + 1);
     SH_CALL(EffectKind18Sub0E_DrawGate)();
 }
 
@@ -708,8 +708,8 @@ extern "C" void __cdecl EffectKind18Sub0E_Open(void) {
 // 1, sound 0x201 (Field_Request 0 only) and the draw again.
 extern "C" void __cdecl EffectKind18Sub0E_Raise(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x30, Word(s + 0x30) + 0x20u);
-    if (SW(S() + 0x30) < 0) {
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 + 0x20u);
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(S())->work_30)) < 0) {
         SH_CALL(EffectKind18Sub0E_DrawGate)();
         return;
     }
@@ -878,17 +878,17 @@ extern "C" void __cdecl EffectKind18Sub13_Rise(void) {
 extern "C" void __cdecl EffectKind18Sub13_DrawPanel(unsigned long texture, int height) {
     const unsigned char* const s = S();
     const U h = static_cast<U>(height);
-    const U x = (Word(s + 0x36) << 7) - 0x3FC0u;
+    const U x = (rv::As<records::EffectObject>(s)->x_whole << 7) - 0x3FC0u;
     SetV(3, 0, x);
     SetV(2, 0, x);
     SetV(1, 0, x);
     SetV(0, 0, x);
-    const U zn = (Word(s + 0x3A) << 7) + h - 0x4008u;
+    const U zn = (rv::As<records::EffectObject>(s)->z_whole << 7) + h - 0x4008u;
     const U xi = static_cast<U>(static_cast<std::int16_t>(x) + 0x4000) << 9;
     const U zi = static_cast<U>(static_cast<std::int16_t>(zn) + 0x4000) << 9;
     SetV(2, 1, zn);
     SetV(0, 1, zn);
-    const U zf = (Word(s + 0x3A) << 7) - h - 0x3FF8u;
+    const U zf = (rv::As<records::EffectObject>(s)->z_whole << 7) - h - 0x3FF8u;
     SetV(3, 1, zf);
     SetV(1, 1, zf);
     const long e1 = SH_CALL(AreaMap_Elevation)(static_cast<long>(xi), static_cast<long>(zi));
@@ -1006,7 +1006,7 @@ extern "C" void __cdecl EffectKind18Sub0F_Start(void) {
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
     unsigned char* const s = S();
     if (GateNear(s, 0x8000, 0x10000)) {
-        SetWord(s + 0x30, 0xFF00);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0xFF00);
         S()[2] = 3;
     }
     SH_CALL(EffectKind18Sub0F_DrawGate)(0);
@@ -1031,8 +1031,8 @@ extern "C" void __cdecl EffectKind18Sub0F_Wait(void) {
 // (s16): +2 up. The gate drawn flat.
 extern "C" void __cdecl EffectKind18Sub0F_Lower(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x30, Word(s + 0x30) - 0x20u);
-    if (SW(S() + 0x30) <= -0x100) S()[2] = static_cast<unsigned char>(S()[2] + 1);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 - 0x20u);
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(S())->work_30)) <= -0x100) S()[2] = static_cast<unsigned char>(S()[2] + 1);
     SH_CALL(EffectKind18Sub0F_DrawGate)(0);
 }
 
@@ -1049,8 +1049,8 @@ extern "C" void __cdecl EffectKind18Sub0F_Open(void) {
 // done; else sound 0x201 (Field_Request 0 only), +2 1 and drawn flat.
 extern "C" void __cdecl EffectKind18Sub0F_Raise(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x30, Word(s + 0x30) + 0x20u);
-    if (SW(S() + 0x30) < 0) {
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 + 0x20u);
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(S())->work_30)) < 0) {
         SH_CALL(EffectKind18Sub0F_DrawGate)(0);
         return;
     }
@@ -1089,27 +1089,27 @@ extern "C" void __cdecl EffectKind18Sub0F_DrawGate(int ground) {
     const unsigned char* const s = S();
     U vx, vz;
     if (s[8] != 0) {
-        vz = (Word(s + 0x3A) << 7) - 0x3FC0u;
+        vz = (rv::As<records::EffectObject>(s)->z_whole << 7) - 0x3FC0u;
         SetV(3, 1, vz);
         SetV(2, 1, vz);
         SetV(1, 1, vz);
         SetV(0, 1, vz);
-        vx = (Word(s + 0x36) << 7) - Word(s + 0x30) - 0x3F40u;
+        vx = (rv::As<records::EffectObject>(s)->x_whole << 7) - rv::As<records::EffectWork>(s)->work_30 - 0x3F40u;
         SetV(2, 0, vx);
         SetV(0, 0, vx);
-        const U x1 = (Word(s + 0x36) << 7) - Word(s + 0x30) - 0x4040u;
+        const U x1 = (rv::As<records::EffectObject>(s)->x_whole << 7) - rv::As<records::EffectWork>(s)->work_30 - 0x4040u;
         SetV(3, 0, x1);
         SetV(1, 0, x1);
     } else {
-        vx = (Word(s + 0x36) << 7) - 0x3FC0u;
+        vx = (rv::As<records::EffectObject>(s)->x_whole << 7) - 0x3FC0u;
         SetV(3, 0, vx);
         SetV(2, 0, vx);
         SetV(1, 0, vx);
         SetV(0, 0, vx);
-        vz = (Word(s + 0x3A) << 7) + Word(s + 0x30) - 0x3F40u;
+        vz = (rv::As<records::EffectObject>(s)->z_whole << 7) + rv::As<records::EffectWork>(s)->work_30 - 0x3F40u;
         SetV(2, 1, vz);
         SetV(0, 1, vz);
-        const U z1 = (Word(s + 0x3A) << 7) + Word(s + 0x30) - 0x4040u;
+        const U z1 = (rv::As<records::EffectObject>(s)->z_whole << 7) + rv::As<records::EffectWork>(s)->work_30 - 0x4040u;
         SetV(3, 1, z1);
         SetV(1, 1, z1);
     }
@@ -1117,26 +1117,26 @@ extern "C" void __cdecl EffectKind18Sub0F_DrawGate(int ground) {
         const U z0 = static_cast<U>(static_cast<std::int16_t>(vz) + 0x4000) << 9;
         const U x0 = static_cast<U>(static_cast<std::int16_t>(vx) + 0x4000) << 9;
         const long e1 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x0), static_cast<long>(z0));
-        SetV(0, 2, (0u - static_cast<U>(Half(e1))) - Word(S() + 0x3E) - 0x140u);
+        SetV(0, 2, (0u - static_cast<U>(Half(e1))) - rv::As<records::EffectObject>(S())->height_whole - 0x140u);
         const long e2 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x0), static_cast<long>(z0));
         const U z1 = static_cast<U>(VS(1, 1) + 0x4000) << 9;
         const U x1 = static_cast<U>(VS(1, 0) + 0x4000) << 9;
-        SetV(2, 2, (0u - static_cast<U>(Half(e2))) - Word(S() + 0x3E));
+        SetV(2, 2, (0u - static_cast<U>(Half(e2))) - rv::As<records::EffectObject>(S())->height_whole);
         const long e3 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
-        SetV(1, 2, (0u - static_cast<U>(Half(e3))) - Word(S() + 0x3E) - 0x140u);
+        SetV(1, 2, (0u - static_cast<U>(Half(e3))) - rv::As<records::EffectObject>(S())->height_whole - 0x140u);
         const long e4 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
-        SetV(3, 2, (0u - static_cast<U>(Half(e4))) - Word(S() + 0x3E));
+        SetV(3, 2, (0u - static_cast<U>(Half(e4))) - rv::As<records::EffectObject>(S())->height_whole);
     } else {
-        const U head = Word(s + 0x32) - 0x140u;
+        const U head = rv::As<records::EffectObject>(s)->draw_key - 0x140u;
         SetV(1, 2, head);
         SetV(0, 2, head);
-        SetV(3, 2, Word(s + 0x32));
-        SetV(2, 2, Word(s + 0x32));
+        SetV(3, 2, rv::As<records::EffectObject>(s)->draw_key);
+        SetV(2, 2, rv::As<records::EffectObject>(s)->draw_key);
     }
     Project4(prim, 0x10);
     SH_CALL(Gte_PrimDepths4_10)(prim);
     const unsigned char* const r = S();
-    const U texture = ((static_cast<U>(r[8]) * 41u) << 16 | static_cast<U>(SW(r + 0x2E))) | 0x26500000u;
+    const U texture = ((static_cast<U>(r[8]) * 41u) << 16 | static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(r)->work_2e)))) | 0x26500000u;
     SH_CALL(Prim_SetTexture)(texture, prim, 1);
     SH_CALL(Gfx_CommitPrim)(6, 0x48);
 }
@@ -1157,12 +1157,12 @@ extern "C" void __cdecl EffectKind18Sub4F_Start(void) {
     Gate4FCells(0x52);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
     const unsigned char* const s = S();
-    const I x = SW(s + 0x36), z = SW(s + 0x3A);
+    const I x = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), z = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole));
     if (GateNearXZ(x, z, false, 0x8000, 0x10000)) {
         *Cell(x, z) = 0xA1;
         const unsigned char* const r = S();
-        *Cell(SW(r + 0x36), SW(r + 0x3A) + 1) = 0xA1;
-        SetWord(S() + 0x30, 0xFF00);
+        *Cell(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(r)->x_whole)), static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(r)->z_whole)) + 1) = 0xA1;
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0xFF00);
         S()[2] = 3;
     }
     SH_CALL(EffectKind18Sub0F_DrawGate)(0);
@@ -1185,11 +1185,11 @@ extern "C" void __cdecl EffectKind18Sub4F_Wait(void) {
 extern "C" void __cdecl EffectKind18Sub4F_Open(void) {
     const unsigned char* const s = S();
     if (Cond_ByteFE != s[0xA]) {
-        const I x = SW(s + 0x36), z = SW(s + 0x3A);
+        const I x = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), z = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole));
         if (!GateNearXZ(x, z, false, 0x20000, 0x20000)) {
             *Cell(x, z) = 0x52;
             const unsigned char* const r = S();
-            *Cell(SW(r + 0x36), SW(r + 0x3A) + 1) = 0x52;
+            *Cell(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(r)->x_whole)), static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(r)->z_whole)) + 1) = 0x52;
             S()[2] = 4;
         }
     }

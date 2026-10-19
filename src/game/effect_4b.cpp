@@ -571,11 +571,11 @@ extern "C" void __cdecl EffectKind88_InitParticle(unsigned char* particle) {
     SetUL(particle + 0x10, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
     SetUL(particle + 0x14, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height));
     unsigned char* s = S();
-    SetUL(particle + 0x1C, Sar(UL(s + 0xC) - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), 5));
+    SetUL(particle + 0x1C, Sar(rv::As<records::EffectWork>(s)->work_0c - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), 5));
     s = S();
-    SetUL(particle + 0x20, Sar(UL(s + 0x10) - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 5));
+    SetUL(particle + 0x20, Sar(rv::As<records::EffectWork>(s)->work_10 - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 5));
     s = S();
-    SetUL(particle + 0x24, Sar(UL(s + 0x14) - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), 5));
+    SetUL(particle + 0x24, Sar(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y) - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), 5));
     SetWord(particle + 8, 0x40);
     SetWord(particle + 0xA, 0x20);
     particle[5] = 0x20;
@@ -682,8 +682,8 @@ extern "C" void __cdecl EffectKind9D_Start(void) {
     unsigned char* const o = Sprite(s[0xB], "EffectKind9D_Start");
     auto* const oo = rv::As<records::SpriteObject>(o);
     o[0x24] = static_cast<unsigned char>(o[0x24] | 8);
-    oo->screen_x = Word(s + 0x2E);
-    oo->screen_y = Word(s + 0x30);
+    oo->screen_x = rv::As<records::EffectWork>(s)->work_2e;
+    oo->screen_y = rv::As<records::EffectWork>(s)->work_30;
     so->x = static_cast<std::uint32_t>(oo->x);
     rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(oo->z));
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(oo->height));
@@ -859,12 +859,12 @@ extern "C" void __cdecl EffectKind9D_Project(float* out) {
     auto* const so = rv::As<records::EffectObject>(s);
     unsigned char* const o = Sprite(s[0xB], "EffectKind9D_Project");
     auto* const oo = rv::As<records::SpriteObject>(o);
-    oo->screen_x = Word(s + 0x2E);
-    oo->screen_y = Word(s + 0x30);
+    oo->screen_x = rv::As<records::EffectWork>(s)->work_2e;
+    oo->screen_y = rv::As<records::EffectWork>(s)->work_30;
     short v[3];
     v[0] = static_cast<short>(Sar(static_cast<std::uint32_t>(so->x), 9) - 0x4000u);
     v[1] = static_cast<short>(Sar(static_cast<std::uint32_t>(so->z), 9) - 0x4000u);
-    v[2] = static_cast<short>(-(SW(s + 0x3E) / 2));
+    v[2] = static_cast<short>(-(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->height_whole)) / 2));
     long depth;
     const long r = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(out), &depth);
     rv::Current<records::EffectObject>()->depth = static_cast<U>(r);
@@ -1040,17 +1040,17 @@ extern "C" void __cdecl EffectKind8A_Block(void) {
 // (EffectKind8A_DrawSegment(+0xC, +0x18)). Story flag 0x91 set: +1 = 2.
 extern "C" void __cdecl EffectKind8A_Lines(void) {
     S()[6] = 0;
-    SetUL(S() + 0x18, 0x100000);
-    SetUL(S() + 0xC, 0x100000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, 0x100000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x100000);
     rv::Current<records::EffectObject>()->height = 0;
     for (unsigned i = 0; i < at::kKind8ALineCount; ++i) {
         const U pair = at::kKind8ALines + 8 * i;
-        SetUL(S() + 0x10, UL(At(pair)));
-        SetUL(S() + 0x1C, UL(At(pair + 4)));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, UL(At(pair)));
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, UL(At(pair + 4)));
         unsigned char* s = S();
-        SetUL(s + 0x20, static_cast<U>(SW(s + 0x3E) + 0x80) << 16);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->height_whole)) + 0x80) << 16);
         s = S();
-        SetUL(s + 0x14, UL(s + 0x20));
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20));
         s = S();
         SH_CALL(EffectKind8A_DrawSegment)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
     }
@@ -1089,7 +1089,7 @@ unsigned char Kind8AColour(unsigned byte, const char* who) {
 extern "C" void __cdecl EffectKind8A_DrawSegment(const long* a, const long* b) {
     DrawMode(1, 0x3C0, 0, 1);
     unsigned char* s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0xC), UL(s + 0x10), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_10, 1, 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(prim);
@@ -1100,7 +1100,7 @@ extern "C" void __cdecl EffectKind8A_DrawSegment(const long* a, const long* b) {
     prim[5] = Kind8AColour(1, "EffectKind8A_DrawSegment");
     prim[6] = Kind8AColour(2, "EffectKind8A_DrawSegment");
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0xC), UL(s + 0x10), 1, 0x20);
+    SH_CALL(MapView_LinkPrimAt)(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_10, 1, 0x20);
     const U dx = FldSubFtol(prim + 0x14, prim + 8);
     float fx, fy;
     Fild(S32(dx), &fx);
@@ -1164,7 +1164,7 @@ extern "C" void __cdecl EffectKind8A_DrawRibbon(int ax, int ay, int wa, int ta, 
     q[0x24] = q[0x25] = q[0x26] = 0;
     q[0x34] = q[0x35] = q[0x36] = 0;
     unsigned char* s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0xC), UL(s + 0x10), 1, 0x44);
+    SH_CALL(MapView_LinkPrimAt)(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_10, 1, 0x44);
     unsigned char* const q2 = q + 0x44;
     std::memcpy(q2, q, 0x44);
     const U t3 = t1 + 0x800u;
@@ -1173,7 +1173,7 @@ extern "C" void __cdecl EffectKind8A_DrawRibbon(int ax, int ay, int wa, int ta, 
     Fild(corner(SH_CALL(Math_Cos)(static_cast<int>(t2)), r2, x1), q2 + 0x38);
     Fild(corner(SH_CALL(Math_Sin)(static_cast<int>(t2)), r2, y1), q2 + 0x3C);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0xC), UL(s + 0x10), 1, 0x44);
+    SH_CALL(MapView_LinkPrimAt)(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_10, 1, 0x44);
 }
 
 // ===========================================================================

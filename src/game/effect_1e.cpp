@@ -297,7 +297,7 @@ extern "C" void __cdecl LeaderPanel_S2Wait(void) {
 extern "C" void __cdecl LeaderPanel_S2Anim(void) {
     Tick();
     unsigned char* const s = S();
-    if (Word(s + 0x58) != 6) return;
+    if (rv::As<records::PartyMember>(s)->script_pos != 6) return;
     Effect_Objects[1] = static_cast<unsigned char>(Effect_Objects[1] + 1);
     s[0xB] = 0;
     S()[7] = 0;

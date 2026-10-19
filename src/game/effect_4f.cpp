@@ -478,8 +478,8 @@ extern "C" void __cdecl EffectKindAE_Sink(void) {
 // original 0x4928C0 (state 2): the width +0x2E up 0x40, the height +0x30 down
 // 0x40; drawn; +9 down, at 0 +9 = 2, +1 up.
 extern "C" void __cdecl EffectKindAE_Widen(void) {
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 0x40u);
-    SetWord(S() + 0x30, Word(S() + 0x30) + 0xFFC0u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e + 0x40u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, rv::As<records::EffectWork>(S())->work_30 + 0xFFC0u);
     SH_CALL(EffectKindAE_Draw)();
     if (!CountDown()) return;
     S()[9] = 2;
@@ -489,8 +489,8 @@ extern "C" void __cdecl EffectKindAE_Widen(void) {
 // original 0x492900 (state 3): the width down 0x40, the height up 0x40; drawn;
 // +9 down, at 0 +9 = 0x10, +1 up.
 extern "C" void __cdecl EffectKindAE_Narrow(void) {
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 0xFFC0u);
-    SetWord(S() + 0x30, Word(S() + 0x30) + 0x40u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e + 0xFFC0u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, rv::As<records::EffectWork>(S())->work_30 + 0x40u);
     SH_CALL(EffectKindAE_Draw)();
     if (!CountDown()) return;
     S()[9] = 0x10;
@@ -500,8 +500,8 @@ extern "C" void __cdecl EffectKindAE_Narrow(void) {
 // original 0x492940 (state 4): the width and the height down 0x10; drawn; +9
 // down, at 0 Effect_Release (a tail jmp).
 extern "C" void __cdecl EffectKindAE_Shrink(void) {
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 0xFFF0u);
-    SetWord(S() + 0x30, Word(S() + 0x30) + 0xFFF0u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e + 0xFFF0u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, rv::As<records::EffectWork>(S())->work_30 + 0xFFF0u);
     SH_CALL(EffectKindAE_Draw)();
     if (CountDown()) SH_CALL(Effect_Release)();
 }
@@ -514,7 +514,7 @@ extern "C" void __cdecl EffectKindAE_Draw(void) {
     unsigned char* const s = S();
     alignas(4) unsigned char point[12];
     Copy12(point, s + 0x34);
-    SH_CALL(Effect_DrawEllipse)(Point(point), Word(s + 0x2E), Word(s + 0x30), Word(s + 0x32), 0xC0, 0);
+    SH_CALL(Effect_DrawEllipse)(Point(point), rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectObject>(s)->draw_key, 0xC0, 0);
 }
 
 // original 0x493090 (cdecl; EffectKindAE_Draw's and EffectKind20_Draw's): the
@@ -665,7 +665,7 @@ extern "C" void __cdecl EffectKindB0_Run(void) {
 // original 0x492A70 (state 0): the word +0x2E = 0x12C, +9 = 0; the bars
 // cleared; +1 up.
 extern "C" void __cdecl EffectKindB0_Start(void) {
-    SetWord(S() + 0x2E, 0x12C);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0x12C);
     S()[9] = 0;
     SH_CALL(EffectKindB0_ClearBars)();
     NextState();
@@ -814,7 +814,7 @@ extern "C" void __cdecl EffectKindB9_Run(void) {
 // 0x4901D0(+0x64, +0x2E, 6)); +9 down, at 0 +9 = 0x80, +1 up and
 // Sound_PlayEffect(0x214).
 extern "C" void __cdecl EffectKindB9_Grow(void) {
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 0x20u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e + 0x20u);
     Glow(S());
     if (!CountDown()) return;
     S()[9] = 0x80;
@@ -835,17 +835,17 @@ extern "C" void __cdecl EffectKindB9_Hold(void) {
 // (EffectKind64_ClearSparks); the record's point +0x34.. the glow's; the 16
 // shards at 0x92C040 started (EffectKind64_InitShard); Sound_PlayEffect(0x215).
 extern "C" void __cdecl EffectKindB9_Rise(void) {
-    SetUL(S() + 0x6C, UL(S() + 0x6C) + 0xC0000u);
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 0xFFFAu);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], rv::As<records::EffectObject>(S())->angle[2] + 0xC0000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e + 0xFFFAu);
     Glow(S());
     if (!CountDown()) return;
     S()[9] = 0x20;
     S()[6] = 0;
     NextState();
     SH_CALL(EffectKind64_ClearSparks)();
-    rv::Current<records::EffectObject>()->x = UL(S() + 0x64);
-    rv::Current<records::EffectObject>()->z = UL(S() + 0x68);
-    rv::Current<records::EffectObject>()->height = UL(S() + 0x6C);
+    rv::Current<records::EffectObject>()->x = rv::As<records::EffectObject>(S())->angle[0];
+    rv::Current<records::EffectObject>()->z = rv::As<records::EffectObject>(S())->angle[1];
+    rv::Current<records::EffectObject>()->height = rv::As<records::EffectObject>(S())->angle[2];
     for (U i = 0; i < at::kShardCount; ++i) SH_CALL(EffectKind64_InitShard)(Shard(i));
     SH_CALL(Sound_PlayEffect)(0x215);
 }
@@ -860,11 +860,11 @@ extern "C" void __cdecl EffectKindB9_Burst(void) {
     SH_CALL(EffectKindB9_StepSparks)();
     if (!CountDown()) return;
     unsigned char* const s = S();
-    SetUL(s + 0x18, UL(s + 0x64));
-    SetUL(S() + 0x1C, UL(S() + 0x68));
-    SetUL(S() + 0x20, UL(S() + 0x6C));
-    SetUL(S() + 0xC, 0xFFFFF000u);
-    SetUL(S() + 0x10, 0xFFFFFC00u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18, rv::As<records::EffectObject>(s)->angle[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, rv::As<records::EffectObject>(S())->angle[1]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, rv::As<records::EffectObject>(S())->angle[2]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0xFFFFF000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0xFFFFFC00u);
     NextState();
 }
 
@@ -887,12 +887,12 @@ extern "C" void __cdecl EffectKindB9_Fly(void) {
     SH_CALL(EffectKindB9_DrawShards)();
     unsigned char* const s = S();
     SH_CALL(EffectKindB9_DrawTrail)(Point(s + 0x18), Point(s + 0x34), 0x40);
-    SetUL(S() + 0xC, UL(S() + 0xC) + 0xFFFFF800u);
-    SetUL(S() + 0x10, UL(S() + 0x10) + 0xFFFFFE00u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, rv::As<records::EffectWork>(S())->work_0c + 0xFFFFF800u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, rv::As<records::EffectWork>(S())->work_10 + 0xFFFFFE00u);
     unsigned char* t = S();
-    SetUL(t + 0x18, UL(t + 0x18) + UL(t + 0xC));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(t)->work_18, static_cast<std::uint32_t>(rv::As<records::EffectObject>(t)->work_18) + rv::As<records::EffectWork>(t)->work_0c);
     t = S();
-    SetUL(t + 0x1C, UL(t + 0x1C) + UL(t + 0x10));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(t)->work_1c, static_cast<std::uint32_t>(rv::As<records::EffectObject>(t)->work_1c) + rv::As<records::EffectWork>(t)->work_10);
     S()[3] = static_cast<unsigned char>(S()[3] + 0xFC);
     if (!CountDown()) return;
     S()[9] = 0x10;
@@ -1138,7 +1138,7 @@ extern "C" void __cdecl EffectKindBA_Run(void) {
 
 // original 0x493E30 (state 0): the word +0x2E = 0; +1 up; Sound_PlayEffect(0x215).
 extern "C" void __cdecl EffectKindBA_Start(void) {
-    SetWord(S() + 0x2E, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
     NextState();
     SH_CALL(Sound_PlayEffect)(0x215);
 }

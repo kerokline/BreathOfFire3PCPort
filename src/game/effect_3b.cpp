@@ -195,7 +195,7 @@ void PointVector(const unsigned char* s, short* v) {
 // x, z = sin(0x903854, re-read) * the scratch + the parent's z - no shift.
 void Orbit(U radius) {
     SetUL(at::kScale, radius);
-    const U angle = (UL(S() + 0xC) & 0x7F) << 5;
+    const U angle = (rv::As<records::EffectWork>(S())->work_0c & 0x7F) << 5;
     SetUL(at::kAngle, angle);
     const int c = SH_CALL(Math_Cos)(static_cast<int>(angle));
     rv::Store<U>(rv::Current<records::EffectObject>()->x, Mul(c, UL(at::kScale)) + UL(Parent() + 0x34));
@@ -211,9 +211,9 @@ void PlaceOnOrbit(U start, U radius) {
     s[0xB] = static_cast<unsigned char>(r & 0xF);
     s[9] = 0;
     s[0xA] = 0;
-    SetUL(s + 0xC, (static_cast<U>(s[4]) << 5) + start);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, (static_cast<U>(s[4]) << 5) + start);
     Orbit(radius);
-    SetWord(S() + 0x3E, Word(Parent() + 0x3E));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, Word(Parent() + 0x3E));
     S()[3] = static_cast<unsigned char>(S()[3] + 1);
 }
 
@@ -269,8 +269,8 @@ extern "C" void __cdecl EffectKind63_Start(void) {
     rv::Current<records::EffectObject>()->x = 0x240000;
     rv::Current<records::EffectObject>()->z = 0x418000;
     const long h = SH_CALL(AreaMap_Elevation)(rv::Current<records::EffectObject>()->x, rv::Current<records::EffectObject>()->z);
-    SetWord(S() + 0x3E, static_cast<U>(h));
-    SetUL(S() + 0x18, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(h));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, 0);
     S()[0x5C] = 0x3D;
     S()[1] = 1;
     S()[0x5F] = 0;
@@ -285,9 +285,9 @@ extern "C" void __cdecl EffectKind63_Grow(void) {
     ProjectHere();
     SH_CALL(EffectKind63_DrawDisc)(Word(S() + 0x18), 0xFF, S()[0x5C]);
     unsigned char* const s = S();
-    SetUL(s + 0x18, UL(s + 0x18) + 5);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) + 5);
     s[0x5C] = static_cast<unsigned char>(s[0x5C] + 2);
-    if (static_cast<std::int32_t>(UL(s + 0x18)) > 0x190) {
+    if (static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18)) > 0x190) {
         s[9] = 0xF;
         s[1] = static_cast<unsigned char>(s[1] + 1);
     }
@@ -316,9 +316,9 @@ extern "C" void __cdecl EffectKind63_Shrink(void) {
     ScreenTint();
     SH_CALL(EffectKind63_RefreshSprites)();
     unsigned char* const s = S();
-    SetUL(s + 0x18, UL(s + 0x18) - 10);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) - 10);
     s[0x5C] = static_cast<unsigned char>(s[0x5C] - 2);
-    if (static_cast<std::int32_t>(UL(s + 0x18)) > 0) return;
+    if (static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18)) > 0) return;
     B(at::kCounter) = static_cast<unsigned char>(B(at::kCounter) + 1);
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
@@ -529,9 +529,9 @@ extern "C" void __cdecl EffectKind67_SpawnKind13(void) {
     unsigned char* const e = Spawned("EffectKind67_SpawnKind13", UL(at::kScale));
     e[0] = 1;
     e[5] = 0x13;
-    SetUL(e + 0x64, 0xFFFFFC7Au);
-    SetUL(e + 0x68, angle);
-    SetUL(e + 0x6C, 0xE2);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->angle[0], 0xFFFFFC7Au);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->angle[1], angle);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->angle[2], 0xE2);
     e[9] = 0x1E;
 }
 
@@ -652,7 +652,7 @@ extern "C" void __cdecl EffectKind69_Part0Place(void) {
     so->x = UL(Parent() + 0x34);
     so->z = UL(Parent() + 0x38);
     const long h = SH_CALL(AreaMap_Elevation)(rv::Current<records::EffectObject>()->x, rv::Current<records::EffectObject>()->z);
-    SetWord(S() + 0x3E, static_cast<U>(h));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(h));
     S()[3] = static_cast<unsigned char>(S()[3] + 1);
 }
 
@@ -702,7 +702,7 @@ extern "C" void __cdecl EffectKind69_Part1Grow(void) {
 extern "C" void __cdecl EffectKind69_Part1Orbit(void) {
     unsigned char* const s = S();
     s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
-    SetUL(s + 0xC, UL(s + 0xC) + 1);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c + 1);
     Orbit(0x20);
     unsigned char* const t = S();
     t[9] = static_cast<unsigned char>(t[9] - 1);
@@ -714,7 +714,7 @@ extern "C" void __cdecl EffectKind69_Part1Orbit(void) {
 extern "C" void __cdecl EffectKind69_Part1Fade(void) {
     unsigned char* const s = S();
     s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
-    SetUL(s + 0xC, UL(s + 0xC) + 1);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c + 1);
     Orbit(0x20);
     Fade(1);
 }
@@ -912,7 +912,7 @@ extern "C" void __cdecl EffectKind69_Part2Grow(void) { Rise(0x10); }
 extern "C" void __cdecl EffectKind69_Part2Orbit(void) {
     unsigned char* const s = S();
     s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
-    SetUL(s + 0xC, UL(s + 0xC) + 1);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c + 1);
     Orbit(0x10);
     unsigned char* const t = S();
     t[9] = static_cast<unsigned char>(t[9] - 1);
@@ -925,7 +925,7 @@ extern "C" void __cdecl EffectKind69_Part2Orbit(void) {
 extern "C" void __cdecl EffectKind69_Part2Fade(void) {
     unsigned char* const s = S();
     s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
-    SetUL(s + 0xC, UL(s + 0xC) + 1);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c + 1);
     Orbit(0x18);
     Fade(2);
 }
@@ -946,18 +946,18 @@ extern "C" void __cdecl EffectKind69_DrawGlow(void) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        Fild(S16(Word(S() + 0x2E)), p + 8);
-        Fild(S16(Word(S() + 0x30)), p + 0xC);
+        Fild(S16(rv::As<records::EffectWork>(S())->work_2e), p + 8);
+        Fild(S16(rv::As<records::EffectWork>(S())->work_30), p + 0xC);
         // each answer scaled by DamageScratch read after its call
         int t = SH_CALL(Math_Sin)(static_cast<int>(a));
-        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(Word(S() + 0x2E)), p + 0x18);
+        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(rv::As<records::EffectWork>(S())->work_2e), p + 0x18);
         t = SH_CALL(Math_Cos)(static_cast<int>(a));
-        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(Word(S() + 0x30)), p + 0x1C);
+        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(rv::As<records::EffectWork>(S())->work_30), p + 0x1C);
         a += 0x200;
         t = SH_CALL(Math_Sin)(static_cast<int>(a));
-        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(Word(S() + 0x2E)), p + 0x28);
+        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(rv::As<records::EffectWork>(S())->work_2e), p + 0x28);
         t = SH_CALL(Math_Cos)(static_cast<int>(a));
-        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(Word(S() + 0x30)), p + 0x2C);
+        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(rv::As<records::EffectWork>(S())->work_30), p + 0x2C);
         const unsigned char level = S()[0xA];
         p[4] = static_cast<unsigned char>(level << 3);
         p[5] = static_cast<unsigned char>(level << 3);
@@ -985,8 +985,8 @@ extern "C" void __cdecl EffectKind69_UpdateScreenXY(void) {
     long depth;
     SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 8), &depth);
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
-    SetWord(S() + 0x2E, FldFtol(p + 8));
-    SetWord(S() + 0x30, FldFtol(p + 0xC));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, FldFtol(p + 8));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, FldFtol(p + 0xC));
 }
 
 // ===========================================================================

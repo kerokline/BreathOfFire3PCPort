@@ -193,8 +193,8 @@ void Place(unsigned char b29, unsigned char b2A, unsigned x, unsigned y) {
     s[0x24] = 0x80;
     s[0x29] = b29;
     s[0x2A] = b2A;
-    SetWord(s + 0x2E, x);
-    SetWord(s + 0x30, y);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, x);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, y);
     s[0x48] = 0;
     s[0x5D] = s[0x5E] = s[0x5F] = 0;
 }
@@ -335,8 +335,8 @@ extern "C" void __cdecl EffectKind0F_Child0Second() {
     s[9] = 0;
     s[0xA] = 0;
     s[6] = 0;
-    SetLong(s + 0xC, 0);
-    SetLong(s + 0x18, 4);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->work_18, 4);
     SH_CALL(Sprite_SetAnimation)(0);
     s = Sc();
     s[3] = static_cast<unsigned char>(s[3] + 1);
@@ -372,8 +372,8 @@ extern "C" void __cdecl EffectKind0F_Child1Start() {
     s[9] = 0;
     s[0xA] = 0;
     s[6] = 0;
-    SetLong(s + 0xC, 0);
-    SetLong(s + 0x18, 4);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->work_18, 4);
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
 
@@ -391,8 +391,8 @@ extern "C" void __cdecl EffectKind0F_Child1Meter() {
     if (s[9] == 0) {
         if (at_(3 * s[0xA]) == 0xFF) {
             s[0xA] = at_(3 * s[0xA] + 1);
-            SetLong(s + 0xC, 0);
-            SetLong(s + 0x18, 4);
+            rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, 0);
+            rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->work_18, 4);
             s[6] = 0;
         }
         SH_CALL(Sprite_SetAnimation)(at_(3 * Sc()[0xA]));
@@ -412,15 +412,15 @@ extern "C" void __cdecl EffectKind0F_Child1Meter() {
     s = Sc();
     const unsigned char mode = at_(3 * s[0xA] - 1);
     if (mode == 0) {
-        SetLong(s + 0xC, static_cast<std::int32_t>(static_cast<U>(Long(s + 0xC)) + static_cast<U>(Long(s + 0x18))));
-        if (Long(s + 0x18) > 0) {
-            if (Long(s + 0xC) > 0x60) {
-                SetLong(s + 0xC, 0x60);
-                SetLong(s + 0x18, static_cast<std::int32_t>(0u - static_cast<U>(Long(s + 0x18))));
+        rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c)) + static_cast<U>(rv::As<records::EffectObject>(s)->work_18)));
+        if (rv::As<records::EffectObject>(s)->work_18 > 0) {
+            if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) > 0x60) {
+                rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, 0x60);
+                rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->work_18, static_cast<std::int32_t>(0u - static_cast<U>(rv::As<records::EffectObject>(s)->work_18)));
             }
-        } else if (Long(s + 0xC) < 0) {
-            SetLong(s + 0xC, 0);
-            SetLong(s + 0x18, static_cast<std::int32_t>(0u - static_cast<U>(Long(s + 0x18))));
+        } else if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) < 0) {
+            rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, 0);
+            rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->work_18, static_cast<std::int32_t>(0u - static_cast<U>(rv::As<records::EffectObject>(s)->work_18)));
         }
     } else if (mode == 1 && (Frame_Counter & 1) == 0) {
         s[6] = static_cast<unsigned char>(s[6] + 1);
@@ -503,8 +503,8 @@ extern "C" void __cdecl EffectKind0F_Child2Fade() {
     s[0x29] = 0;
     s[0x2A] = 0;
     s[0x48] = 2;
-    SetLong(s + 0x40, 0x8000);
-    SetLong(s + 0x44, 0x8000);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->scale_x, 0x8000);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->scale_y, 0x8000);
     s[0x5D] = s[0x5E] = s[0x5F] = 0;
     s[9] = 0x40;
     s[6] = 0;
@@ -613,8 +613,8 @@ extern "C" void __cdecl EffectKind0F_Child4Start() {
     s[9] = 0;
     s[0xA] = 0;
     s[6] = 0;
-    SetLong(s + 0xC, 0x6A);
-    SetLong(s + 0x10, 0x6A);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, 0x6A);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_10, 0x6A);
     s[0x4B] = 0xFF;
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
@@ -631,10 +631,10 @@ signed char MoveByte(U script, int index, const char* who) {
 }
 void MoveCursor(U script, const char* who) {
     unsigned char* s = Sc();
-    SetLong(s + 0xC, static_cast<std::int32_t>(static_cast<U>(Long(s + 0xC)) +
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c)) +
                                                static_cast<U>(static_cast<std::int32_t>(MoveByte(script, 4 * s[0xA] - 2, who)))));
     s = Sc();
-    SetLong(s + 0x10, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x10)) +
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_10, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10)) +
                                                 static_cast<U>(static_cast<std::int32_t>(MoveByte(script, 4 * s[0xA] - 1, who)))));
     s = Sc();
     s[6] = static_cast<unsigned char>(s[6] - static_cast<unsigned char>(MoveByte(script, 4 * s[0xA] - 2, who)));
@@ -677,13 +677,13 @@ extern "C" void __cdecl EffectKind0F_DrawCursorPanel(unsigned down) {
     DrawSprite(0x16, 1, 0xBC, 0x96);
     DrawSprite(0x11, 1, 0x36, 0x9C);
     unsigned char* s = Sc();
-    std::int32_t v = Long(s + 0xC);
-    SetLong(s + 0xC, v < 0x39 ? 0x39 : (v > 0x79 ? 0x79 : v));
+    std::int32_t v = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, v < 0x39 ? 0x39 : (v > 0x79 ? 0x79 : v));
     s = Sc();
-    v = Long(s + 0x10);
-    SetLong(s + 0x10, v < 0x41 ? 0x41 : (v > 0x94 ? 0x94 : v));
+    v = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_10, v < 0x41 ? 0x41 : (v > 0x94 ? 0x94 : v));
     s = Sc();
-    const std::int32_t cx = Long(s + 0xC), cy = Long(s + 0x10);
+    const std::int32_t cx = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), cy = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10);
     const U outside = (cy >= cx && cy <= cx + 0x20) ? 0u : 1u;
     Call6(at::kE1aRange, Word(s + 0xC), 0xB3, 0x20, static_cast<unsigned char>((s[6] & 7) << 1), 1, outside);
     Call4(at::kE1aMarker, Word(Sc() + 0x10), 0xB3, (down & 0xFF) == 0 ? 0u : 1u, 1);
@@ -709,8 +709,8 @@ extern "C" void __cdecl EffectKind0F_Child5Move() {
         if (at_(4 * s[0xA]) == 0xFF) {
             s[0xA] = at_(4 * s[0xA] + 1);
             s[0xB] = 0x37;
-            SetLong(s + 0xC, 0x6A);
-            SetLong(s + 0x10, 0x6A);
+            rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, 0x6A);
+            rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_10, 0x6A);
         }
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(at_(4 * Sc()[0xA]) & 0x7F));
         s = Sc();
@@ -830,9 +830,9 @@ extern "C" void __cdecl EffectKind0F_DrawMessageList(int x, int y) {
     }
     SH_CALL(Menu_DrawBox)(x, y + 6, 0xF2, 0xE, 0, Style());
     SH_CALL(Menu_DrawBox)(x, y + 0x94, 0xF2, 0xB, 0x30, Style());
-    DrawAt(x + 0x3D, y + 6, 0, 0xFF, Pool(WordOf(EffectKind0F_RuleTitleIds_addr, at::kTitleCount, Word(Sc() + 0x3C), kWho)));
+    DrawAt(x + 0x3D, y + 6, 0, 0xFF, Pool(WordOf(EffectKind0F_RuleTitleIds_addr, at::kTitleCount, rv::As<records::EffectObject>(Sc())->height_frac, kWho)));
     SH_CALL(EffectKind0F_DrawListFrame)(x, y);
-    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(EffectKind0F_PageFormat_addr)), Word(Sc() + 0x3C) + 1u);
+    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(EffectKind0F_PageFormat_addr)), rv::As<records::EffectObject>(Sc())->height_frac + 1u);
     SH_CALL(Text_DrawFont8)(x + 0xCA, y + 0x92, 0, Text(at::kPrint));
 }
 
@@ -903,7 +903,7 @@ extern "C" void __cdecl EffectKind0F_DrawCountHeader() {
     DrawSprite(0x12, 1, 0xF0, 0x42);
     SH_CALL(Text_DrawFont12)(0x119, 0x45, 0, Text(EffectKind0F_CountLabel_addr));
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat),
-                         static_cast<int>(static_cast<short>(Word(Sc() + 0x3E))) + 1);
+                         static_cast<int>(static_cast<short>(rv::As<records::EffectObject>(Sc())->height_whole)) + 1);
     if (B(at::kPrint) == 0x20) B(at::kPrint) = 0x20;
     DrawAt(0xF7, 0x45, 0, 2, Text(at::kPrint));
 }
@@ -979,10 +979,10 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
     for (unsigned n = 0; n < 0x80; ++n) {
         if (Category(B(at::kItemIds + n), kWho) != 0xB) continue;
         unsigned char* s = Sc();
-        if (Long(s + 0xC) == static_cast<std::int32_t>(drawn)) SetWord(s + 0x36, n);
+        if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, n);
         s = Sc();
         const int row = y + 13 * static_cast<int>(drawn);
-        if (ObjTrio[4] == 2 && (s[7] & 1) == 0 && Long(s + 0xC) == static_cast<std::int32_t>(drawn)) {
+        if (ObjTrio[4] == 2 && (s[7] & 1) == 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) {
             DrawAt(x + 5, row + 0x19, 7, NameCount(), AccessoryName(B(at::kItemIds + n)));
             DrawAt(x + 5, row + 0x17, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
             const unsigned char count = B(at::kItemCounts + n);
@@ -1002,9 +1002,9 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
         ++drawn;
     }
     unsigned char* s = Sc();
-    SetLong(s + 0x18, static_cast<std::int32_t>(drawn));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->work_18, static_cast<std::int32_t>(drawn));
     s = Sc();
-    if (Long(s + 0xC) >= Long(s + 0x18)) SetLong(s + 0xC, Long(s + 0x18) == 0 ? 0 : Long(s + 0x18) - 1);
+    if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) >= rv::As<records::EffectObject>(s)->work_18) rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectObject>(s)->work_18 == 0 ? 0 : rv::As<records::EffectObject>(s)->work_18 - 1);
     SH_CALL(EffectKind0F_DrawItemFrame)(x, y);
     SH_CALL(EffectKind0F_DrawScrollMark)(x + 0x80, y + 0x1C, 0x72);
     DrawHeading(0, x + 0x35, y + 7, 3, EffectKind0F_PanelTitles_addr);
@@ -1071,7 +1071,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
         if (seen >= static_cast<std::int32_t>(top) && drawn < count) {
             s = Sc();
             const int row = y + 13 * static_cast<int>(drawn) + offset;
-            if (ObjTrio[4] == 2 && (s[7] & 1) != 0 && Long(s + 0x10) == static_cast<std::int32_t>(drawn)) {
+            if (ObjTrio[4] == 2 && (s[7] & 1) != 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10) == static_cast<std::int32_t>(drawn)) {
                 DrawAt(x + 5, row, 7, NameCount(), AccessoryName(id));
                 DrawAt(x + 5, row - 2, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
                 const unsigned char c = B(at::kItemCounts + n);
@@ -1089,16 +1089,16 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
                 }
             }
             s = Sc();
-            if (Long(s + 0x10) == static_cast<std::int32_t>(drawn)) SetWord(s + 0x3A, n);
+            if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10) == static_cast<std::int32_t>(drawn)) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, n);
             ++drawn;
         }
         ++seen;
     }
     s = Sc();
-    SetLong(s + 0x1C, seen - 1);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(s)->work_1c, seen - 1);
     s = Sc();
-    if (Long(s + 0x10) >= static_cast<std::int32_t>(drawn))
-        SetLong(s + 0x10, Long(s + 0x1C) == 0 || drawn == 0 ? 0 : static_cast<std::int32_t>(drawn - 1));
+    if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10) >= static_cast<std::int32_t>(drawn))
+        rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_10, rv::As<records::EffectObject>(s)->work_1c == 0 || drawn == 0 ? 0 : static_cast<std::int32_t>(drawn - 1));
     SH_CALL(EffectKind0F_DrawItemFrame)(x, y);
     int total = 0;
     for (unsigned n = 0; n < 0x80; ++n)
@@ -1152,7 +1152,7 @@ extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
         DrawAt(x + 0x1C, y + 0x28, Sc()[7] & 2, NameCount(), AccessoryName(CharStats_ExtraItem));
     }
     DrawHeading(3, x + 0x2A, y + 0x47, 5, EffectKind0F_PanelTitles_addr + 0xd);
-    const std::uint16_t message = Word(Sc() + 0x2C);
+    const std::uint16_t message = rv::As<records::EffectObject>(Sc())->column;
     if (message != 0xFFFF) DrawAt(0x19, 0x9A, 0, 0xFF, Pool(message));
 }
 
@@ -1389,8 +1389,8 @@ extern "C" void __cdecl EffectKind92_Follow() {
     unsigned char* const o = Sprite_Objects + at::kSpriteStride * n;
     auto* const oo = rv::As<records::SpriteObject>(o);
     if ((s[0] & 0x40) == 0) {
-        oo->screen_x = static_cast<std::uint16_t>(oo->screen_x) + Word(s + 0x2E);
-        oo->screen_y = static_cast<std::uint16_t>(oo->screen_y) + Word(s + 0x30);
+        oo->screen_x = static_cast<std::uint16_t>(oo->screen_x) + rv::As<records::EffectWork>(s)->work_2e;
+        oo->screen_y = static_cast<std::uint16_t>(oo->screen_y) + rv::As<records::EffectWork>(s)->work_30;
         o[0x29] = s[0x29];
     }
     if ((o[0] & 1) == 0) SH_CALL(Effect_Release)();

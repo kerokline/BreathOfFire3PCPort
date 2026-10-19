@@ -103,10 +103,10 @@ void NextState() {
 // record as read then in *out).
 bool CountDownC(unsigned char** out) {
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0xC) - 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 1u);
     s = S();
     *out = s;
-    return UL(s + 0xC) == 0;
+    return rv::As<records::EffectWork>(s)->work_0c == 0;
 }
 // The byte +9 down one; true at 0.
 bool CountDown9(unsigned char** out) {
@@ -145,7 +145,7 @@ void SpiralStart(unsigned turn) {
     SetUL(At(EffectKind30_Shards_addr + 0x524 + 8), height);
     SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralInit)(At(EffectKind30_Shards_addr + 0x524));
     s = S();
-    SetUL(s + 0xC, 0x28);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0x28);
     NextStep();
 }
 // States 8 and 10's frame: the spiral (0x6761CC) stepped and drawn (0x479B70);
@@ -202,7 +202,7 @@ extern "C" void __cdecl EffectKind48_State7_Start(void) {
     SetUL(At(Effect2e_RingRecord_addr + 8), static_cast<std::uint32_t>(so->height));
     SetWord(At(Effect2e_RingRecord_addr + 0x10), 0);
     s[9] = 0;
-    SetUL(S() + 0xC, 0x5F);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x5F);
     NextStep();
 }
 
@@ -277,7 +277,7 @@ extern "C" void __cdecl EffectKind48_State9_Start(void) {
     AtLeader();
     Ground(0);
     SH_AT(void (__cdecl*)(), at::kSparksInit)();
-    SetUL(S() + 0xC, 0x28);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x28);
     S()[6] = 1;
     NextStep();
 }
@@ -340,7 +340,7 @@ extern "C" void __cdecl EffectKind48_State11_Start(void) {
     AtLeader();
     Ground(0);
     SH_CALL(EffectSphere_Build)();
-    SetUL(S() + 0xC, 0x78);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x78);
     NextStep();
 }
 
@@ -379,10 +379,10 @@ extern "C" void __cdecl EffectKind48_State12_Travel(void) {
     BurstFrame();
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    AddLong(s + 0x34, UL(s + 0xC));
-    AddLong(s + 0x38, UL(s + 0x10));
-    AddLong(s + 0x3C, UL(s + 0x14));
-    if (static_cast<std::uint32_t>(so->x) != UL(s + 0x18) || static_cast<std::uint32_t>(so->z) != UL(s + 0x1C)) return;
+    AddLong(s + 0x34, rv::As<records::EffectWork>(s)->work_0c);
+    AddLong(s + 0x38, rv::As<records::EffectWork>(s)->work_10);
+    AddLong(s + 0x3C, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y));
+    if (static_cast<std::uint32_t>(so->x) != static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) || static_cast<std::uint32_t>(so->z) != static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c)) return;
     s[9] = 0x2F;
     s[2] = static_cast<unsigned char>(s[2] + 1);
 }
@@ -575,7 +575,7 @@ extern "C" void __cdecl EffectKind4A_Start(void) {
     rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(At(Sprite_Objects_addr + 0xd8)));
     rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
     rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(At(Sprite_Objects_addr + 0xd8 + 8)));
-    SetUL(S() + 0xC, 0xB4);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0xB4);
     SH_CALL(EffectKind4A_TrailInit)();
     NextState();
 }
@@ -589,7 +589,7 @@ extern "C" void __cdecl EffectKind4A_Follow(void) {
     SH_CALL(Gte_PushMatrix)();
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    if (UL(s + 0xC) == 0xA5) Effect2e_TrailSpin = 1;
+    if (rv::As<records::EffectWork>(s)->work_0c == 0xA5) Effect2e_TrailSpin = 1;
     if (SL(s + 0xC) > 0x5A) {
         so->x = UL(At(Sprite_Objects_addr + 0xd8));
         rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
@@ -761,7 +761,7 @@ extern "C" void __cdecl EffectKind4B_Start(void) {
     SH_CALL(Gte_PushMatrix)();
     for (unsigned i = 0; i < at::kDebrisCount; ++i) SH_CALL(EffectKind4B_DebrisInit)(At(at::kDebris + at::kDebrisStride * i));
     SH_CALL(Gte_PopMatrix)();
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     NextState();
 }
 
@@ -842,7 +842,7 @@ extern "C" void __cdecl EffectKind4C_Start(void) {
     rv::Current<records::EffectObject>()->x = 0x740000;
     rv::Current<records::EffectObject>()->z = 0x60000;
     Ground(0);
-    SetUL(S() + 0xC, 0x12C);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x12C);
     NextState();
 }
 
@@ -859,8 +859,8 @@ extern "C" void __cdecl EffectKind4C_Crackle(void) {
         SH_CALL(EffectKind4C_DrawSpark)();
         s = S();
     }
-    SetUL(s + 0xC, UL(s + 0xC) - 1u);
-    if (UL(S() + 0xC) != 0) return;
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 1u);
+    if (rv::As<records::EffectWork>(S())->work_0c != 0) return;
     SH_CALL(Effect_Release)();
 }
 
@@ -910,10 +910,10 @@ extern "C" void __cdecl EffectKind4D_Run(void) {
 extern "C" void __cdecl EffectKind4D_Start(void) {
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    SetUL(s + 0xC, static_cast<std::uint32_t>(so->x));
-    SetUL(s + 0x10, static_cast<std::uint32_t>(so->z));
-    SetUL(s + 0x14, static_cast<std::uint32_t>(so->height));
-    SetUL(s + 0x1C, UL(s + 0x14));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<std::uint32_t>(so->x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, static_cast<std::uint32_t>(so->z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, static_cast<std::uint32_t>(so->height));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y));
     SetWord(s + 0x20, 0);
     SetUL(s + 0x24, 0x1000000);
     s[9] = 0x3C;
@@ -927,7 +927,7 @@ extern "C" void __cdecl EffectKind4D_Start(void) {
 extern "C" void __cdecl EffectKind4D_Rise(void) {
     unsigned char* const s = S();
     AddLong(s + 0x1C, 0x1000000u);
-    const U most = UL(s + 0x14) + 0x8000000u;
+    const U most = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y) + 0x8000000u;
     if (SL(s + 0x1C) > static_cast<std::int32_t>(most)) SetUL(s + 0x1C, most);
     AddWord(s + 0x20, 0xFE00u);
     SH_CALL(EffectKind4D_DrawColumn)();
@@ -965,9 +965,9 @@ extern "C" void __cdecl EffectKind4D_DrawColumn(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     const unsigned char* s = S();
     U turn = Word(s + 0x20);
-    const U x0 = UL(s + 0xC);
-    const U z0 = UL(s + 0x10);
-    U y = UL(s + 0x14);
+    const U x0 = rv::As<records::EffectWork>(s)->work_0c;
+    const U z0 = rv::As<records::EffectWork>(s)->work_10;
+    U y = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y);
     long ring[3];
     float lower[3];
     float upper[3];
@@ -986,7 +986,7 @@ extern "C" void __cdecl EffectKind4D_DrawColumn(void) {
     };
     project(static_cast<int>(turn & 0xFFFFu));
     s = S();
-    if (!(static_cast<std::int32_t>(y) < static_cast<std::int32_t>(UL(s + 0x1C) + 0x1000000u))) return;
+    if (!(static_cast<std::int32_t>(y) < static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x1000000u))) return;
     do {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(prim);
@@ -1011,7 +1011,7 @@ extern "C" void __cdecl EffectKind4D_DrawColumn(void) {
         SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0, 0x1E7));
         SH_CALL(Gfx_CommitPrim)(1, 0x48);
         s = S();
-    } while (static_cast<std::int32_t>(y) < static_cast<std::int32_t>(UL(s + 0x1C) + 0x1000000u));
+    } while (static_cast<std::int32_t>(y) < static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x1000000u));
 }
 
 // ===========================================================================
