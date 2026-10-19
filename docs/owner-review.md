@@ -266,7 +266,8 @@ checkout's `analysis/` (never in the tree).
 - **A ja-JP layer, D280**: **yes, all of kinds 7..16** from the Japan disc
   (DIV-0015 / 0018 / 0019 / 0020 / 0064 / 0069 extended).
 - **The fishing crash, D279**: **both** - kind 16 through the ja-JP layer, and
-  the scroller declining an empty line (a code DIV).
+  the scroller declining an empty line (a code DIV). **Built** 2026-10-18:
+  DIV-0144 and DIV-0069's amendment, `install-gap/d279`.
 - **Inventory Q6, the wrap clicks**: **clamp now** in the decoder when the
   banks are derived (a DIV; the 76 banks no longer equal the PC's).
 - **Set 8's verb**: **confirmed** - keep `Quit` (DIV-0101 amended).

@@ -127,6 +127,15 @@ namespace sg = bof3x::input::sigma;
 char g_lines[kLineCount][kLineRoom];
 char g_tabs[kTabCount][kTabRoom];
 char g_heads[kHeadCount][kHeadRoom];
+// D279 (2026-10-18): tag 4, the disc's own three button labels (a Japanese
+// disc's; tools/loc_build.py convert_fishing_ja), one character each by the
+// label byte's entry (circle, cross, triangle), read by Label() in place of
+// 0x66A2FC's string once armed (FishingText_Arm, so effect_1a's fuzz compares
+// Capcom's reads).
+constexpr unsigned kDiscLabelCount = 3;            // tools/loc_build.py FISH_LABEL_COUNT
+constexpr unsigned kDiscLabelRoom = 8;             // tools/loc_build.py FISH_LABEL_ROOM
+char g_disc_labels[kDiscLabelCount][kDiscLabelRoom];
+bool g_disc_labels_armed = false;
 bool g_on = false;
 // PatchBytes "FishingLabelSigma" (DIV-0136), set by FishingText_Arm.
 unsigned char g_label_sigma = 0;
@@ -417,6 +426,35 @@ void ApplyHeadings(const std::uint8_t* payload, std::uint32_t size) {
     bof3::Log("DIV-0069: %u of %u fishing headings (D286)", (unsigned)written, (unsigned)kHeadCount);
 }
 
+// Tag 4 (D279): three NUL-ended one-character strings into g_disc_labels (an
+// empty one keeps 0x66A2FC's string). Nothing in the image is re-aimed: the
+// Config cell 0x461C00 reads the same table and is D280's, not this.
+void ApplyDiscLabels(const std::uint8_t* payload, std::uint32_t size) {
+    const std::uint8_t* p = payload;
+    const std::uint8_t* const end = payload + size;
+    if (p >= end || *p++ != kDiscLabelCount)
+        bof3::Fatal("fishing labels chunk: count is not %u", (unsigned)kDiscLabelCount);
+    std::uint32_t written = 0;
+    for (std::uint32_t i = 0; i < kDiscLabelCount; ++i) {
+        const auto* s = reinterpret_cast<const char*>(p);
+        while (p < end && *p) ++p;
+        if (p >= end) bof3::Fatal("fishing labels chunk: ran out inside string %u", (unsigned)i);
+        ++p;
+        const std::size_t len = std::strlen(s);
+        if (len + 1 > kDiscLabelRoom)
+            bof3::Fatal("fishing labels chunk: string %u is %u bytes, the buffer holds %u", (unsigned)i,
+                        (unsigned)len + 1, (unsigned)kDiscLabelRoom);
+        const std::size_t first = (static_cast<unsigned char>(s[0]) & 0x80) != 0 ? 2 : 1;
+        if (len != 0 && len != first)
+            bof3::Fatal("fishing labels chunk: string %u is %u bytes, not one character", (unsigned)i, (unsigned)len);
+        std::memset(g_disc_labels[i], 0, kDiscLabelRoom);
+        std::memcpy(g_disc_labels[i], s, len);
+        if (len != 0) ++written;
+    }
+    if (p != end) bof3::Fatal("fishing labels chunk: %u bytes left over", (unsigned)(end - p));
+    bof3::Log("DIV-0069: %u of %u fishing labels (D279)", (unsigned)written, (unsigned)kDiscLabelCount);
+}
+
 void FishingText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
     if (tag == 1)
         Repoint("lines", payload, size, kLineCount, &g_lines[0][0], kLineRoom, kLineRecords, 8, kLineShipped);
@@ -424,8 +462,16 @@ void FishingText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint
         Repoint("tabs", payload, size, kTabCount, &g_tabs[0][0], kTabRoom, kTabTable, 4, kTabShipped);
     else if (tag == 3)
         ApplyHeadings(payload, size);
+    else if (tag == 4)
+        ApplyDiscLabels(payload, size);
     else
-        bof3::Fatal("fishing chunk tag is 0x%X: 1 the lines, 2 the tabs, 3 the headings", (unsigned)tag);
+        bof3::Fatal("fishing chunk tag is 0x%X: 1 the lines, 2 the tabs, 3 the headings, 4 the labels", (unsigned)tag);
+}
+
+const unsigned char* FishingText_DiscLabel(unsigned entry) {
+    if (entry >= kEntries) bof3::Fatal("FishingText_DiscLabel: entry %u, past the six buttons", entry);
+    if (!g_disc_labels_armed || entry >= kDiscLabelCount || g_disc_labels[entry][0] == 0) return nullptr;
+    return reinterpret_cast<const unsigned char*>(g_disc_labels[entry]);
 }
 
 const unsigned char* FishingText_Heading(unsigned i) {
@@ -437,6 +483,8 @@ const unsigned char* FishingText_Heading(unsigned i) {
 void FishingText_Arm() {
     g_on = Lang_Latin();
     if (g_on) bof3::Log("DIV-0069: the fishing text's Latin layout armed");
+    // D279: the disc's labels (tag 4, a Japanese layer's) from here on.
+    g_disc_labels_armed = true;
     // D313: the terms of the image's line pens, before the self-test reads them.
     g_image_release = ImageRelease(g_image_how);
     // DIV-0136: after sigma::Arm, which InjectAll calls first.

@@ -1313,6 +1313,12 @@ extern "C" void __cdecl Panel_DrawWindowEdges(int x, int y, int w, int h, unsign
     SH_CALL(Gfx_CommitPrim)(2, 0x2C);
 }
 
+namespace {
+unsigned g_glyph_calls = 0;   // DIV-0144's self-test (effect_1a.cpp) counts the calls that reach the draw
+}  // namespace
+
+unsigned EffectKind0F_GlyphCalls() { return g_glyph_calls; }
+
 // original 0x469AD0 (clut, text, width, x): a code-0x6C glyph primitive at the
 // cursor (read once, before Gpu_SetCode6C): the glyph of the text's first
 // character (two bytes with bit 7: ((b0 & 0x7F) << 8) + b1, else b0 - 0x26) to
@@ -1325,8 +1331,17 @@ extern "C" void __cdecl Panel_DrawWindowEdges(int x, int y, int w, int h, unsign
 // makes glyph 0x20 - 0x26 = 0xFFFA of it, far past the font (Capcom's lines
 // hold no one-byte space; the disc's English ones do - the crash the live check
 // met at the first banner, 2026-10-03). The callers move the pen themselves.
+//
+// DIVERGENCE DIV-0144 (D279): with "FishingLowGlyph" armed (FishingEmpty_Arm,
+// after every self-test) a one-byte code below 0x26 draws nothing, under any
+// layer. Its glyph c - 0x26 wraps to 0xFFDA.. past the font. A NUL is the
+// character of an empty string (the label behind 0x66A2FC and the lines on a
+// Japanese disc-built image that no layer wrote), a space what a Japanese
+// layer's fishing line holds. The PC's own strings hold neither.
 extern "C" void __cdecl EffectKind0F_DrawGlyph(unsigned clut, const unsigned char* text, unsigned width, int x) {
+    ++g_glyph_calls;
     if (FishingText_On() && text[0] == 0x20) return;
+    if (FishingEmpty_LowGlyphNone() && text[0] < 0x26) return;
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetCode6C)(p);
     const unsigned char c0 = text[0];

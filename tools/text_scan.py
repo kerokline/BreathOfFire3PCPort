@@ -203,7 +203,8 @@ def write_sheets(game, found, out):
 # and 16 are built from a Western PlayStation disc only ("Latin": en-US,
 # en-150, fr-FR, de-DE; a Japanese disc leaves them as shipped, a PSP disc
 # builds part of kind 15 and no Config); kind 5 and kind 14 from every disc,
-# and kind 15's group 15 (the Identify panel) from a Japanese disc too.
+# and kind 15's group 15 (the Identify panel) and kind 16's lines, tabs and
+# labels (D279, 2026-10-18) from a Japanese disc too.
 LATIN = "Latin"
 ALL = "all"
 
@@ -221,8 +222,8 @@ COVER = [
     (0x669CE0, 0x669CE8, "kind 10 the whelp's name slot (DIV-0020)", LATIN, "src/game/char_names.cpp", "0x669CE0"),
     (0x669CD8, 0x669CE0, "kind 11 Manillo (DIV-0020)", LATIN, "src/game/char_names.cpp", "0x669CD8"),
     (0x669D7C, 0x669DE0, "kind 12 battle banner messages (DIV-0052)", LATIN, "src/game/battle_text.cpp", "0x669D7C"),
-    (0x669FC0, 0x66A070, "kind 16 fishing lines (DIV-0069)", LATIN, "src/game/fishing_text.cpp", "0x669FC0"),
-    (0x66A070, 0x66A088, "kind 16 fishing tabs (DIV-0069)", LATIN, "src/game/fishing_text.cpp", "0x66A070"),
+    (0x669FC0, 0x66A070, "kind 16 fishing lines (DIV-0069)", LATIN + ", ja-JP", "src/game/fishing_text.cpp", "0x669FC0"),
+    (0x66A070, 0x66A088, "kind 16 fishing tabs (DIV-0069)", LATIN + ", ja-JP", "src/game/fishing_text.cpp", "0x66A070"),
     (0x66A3F0, 0x66A448, "kind 14 F9 pause lines (DIV-0038, the port's own)", ALL, "src/game/pause_text.cpp", "0x66A3F0"),
     (0x66A1F8, 0x66A200, "not drawn under a Latin overlay (DIV-0083)", LATIN, "src/game/rest_2h.cpp", "0x66A1F8"),
 ]

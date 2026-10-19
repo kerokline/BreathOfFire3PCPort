@@ -3233,6 +3233,205 @@ def convert_fishing(game, disc):
     return [], []
 
 
+# D279 (2026-10-18): the Japanese disc's fishing text, for a `ja-JP` layer
+# (DIV-0069 amended). A Japanese disc's module is found by its own readers,
+# never by the PC's bytes (the PSX-twin method, docs/psx-twin-check.md):
+#
+#   - the lines and the button labels by EffectKind0F_LineNext's twin, which
+#     reads a text's label byte (+8 of its 12-byte record), takes three times
+#     it into the label table (`lui` / `addiu` of its address) and reads the
+#     label's pen at +2 of the same 3-byte entry, then draws the entry's
+#     character (PSX-JP 0x801D3CF0..0x801D3D18, five such draws). The thirteen
+#     records end where the label table starts;
+#   - the tabs by EffectKind0F_DrawToggles' twin: three draws of a base and
+#     two displacements of it, each with `addiu $a3, $zero, n`, the characters
+#     drawn (PSX-JP 0x801D7CF8..0x801D7D48: counts 2, 3, 2, the PC's, at +0,
+#     +4, +8).
+#
+# Tag 4 is the three labels (one character each, the label byte's entry:
+# circle, cross, triangle on Japan's buttons), drawn by our LineNext /
+# LineScroll / LineFade in place of the 0x66A2FC string a Japanese image has
+# no bytes for (D279's second path). A PSP disc's fishing code is the PSP's
+# own (in BOOT.BIN, a reader this does not read); its EMIs keep the Japanese
+# build's overlays, so the module is read there and its words checked to be
+# the ones BOOT.BIN's data holds.
+FISH_LABEL_COUNT, FISH_LABEL_STRIDE, FISH_LABEL_ROOM = 3, 3, 8   # src/game/fishing_text.cpp's label buffers
+FISH_LINE_STRIDE = 12
+
+
+def lui_sites(words):
+    """(k, op, address) of each `addiu` / `lw` / `lbu` whose base register a
+    `lui` set at most eight words before: the address its immediate makes
+    with the `lui`'s (an index added to the register is not followed)."""
+    luis, out = {}, []
+    for k, w in enumerate(words):
+        op = w >> 26
+        if op == 0x0F:
+            luis[(w >> 16) & 31] = (k, (w & 0xFFFF) << 16)
+            continue
+        rs = (w >> 21) & 31
+        if op in (0x09, 0x23, 0x24) and rs in luis and k - luis[rs][0] <= 8:
+            imm = w & 0xFFFF
+            out.append((k, op, (luis[rs][1] + (imm - 0x10000 if imm & 0x8000 else imm)) & 0xFFFFFFFF))
+    return out
+
+
+def fishing_label_reader(sec, dest):
+    """(records, labels) - the section offsets of the line records and the
+    label table - off EffectKind0F_LineNext's twin, or None: an `addiu` of the
+    label table L with an `lbu` of L + 2 (the pen) within four words, and an
+    `lbu` of A + 8 (the text's label byte) in the eight words before it. Every
+    such draw must name the same pair, the records ending at L."""
+    if len(sec) < 0x1000:
+        return None
+    s = lui_sites(struct.unpack_from("<%dI" % (len(sec) // 4), sec))
+    pairs = set()
+    for k1, op1, L in s:
+        if op1 != 0x09:
+            continue
+        if not any(op == 0x24 and v == L + 2 and abs(k - k1) <= 4 for k, op, v in s):
+            continue
+        for k, op, v in s:
+            if op == 0x24 and k1 - 8 <= k < k1 and v != L + 2:
+                pairs.add((v - 8, L))
+    if len(pairs) != 1:
+        return None
+    a, l = pairs.pop()
+    if l - a != FISH_LINE_COUNT * FISH_LINE_STRIDE or not dest <= a < l < dest + len(sec):
+        return None
+    return a - dest, l - dest
+
+
+def fishing_counted_tabs(sec, dest):
+    """[(section offset, characters)] of the three tabs off
+    EffectKind0F_DrawToggles' twin, or None: `addiu $a3, $zero, n0` within
+    three words before `lui r; addiu r, r, lo` (the base), then twice an
+    `addiu $a3, $zero, n` within twelve words with an `addiu x, r, d` (0 < d <
+    0x40) within two words of it. Every such run must give the same three."""
+    words = struct.unpack_from("<%dI" % (len(sec) // 4), sec)
+    is_a3 = lambda w: w >> 26 == 0x09 and (w >> 21) & 31 == 0 and (w >> 16) & 31 == 7
+    found = set()
+    for k in range(3, len(words) - 1):
+        w, nxt = words[k], words[k + 1]
+        if w >> 26 != 0x0F:
+            continue
+        r = (w >> 16) & 31
+        if nxt >> 26 != 0x09 or (nxt >> 21) & 31 != r or (nxt >> 16) & 31 != r:
+            continue
+        lo = nxt & 0xFFFF
+        base = (((w & 0xFFFF) << 16) + (lo - 0x10000 if lo & 0x8000 else lo)) & 0xFFFFFFFF
+        n0 = next((words[j] & 0xFFFF for j in range(k - 1, k - 4, -1) if is_a3(words[j])), None)
+        if n0 is None or not dest <= base < dest + len(sec):
+            continue
+        tabs, j = [(base - dest, n0)], k + 2
+        while len(tabs) < 3:
+            a3 = next((i for i in range(j, min(len(words), j + 12)) if is_a3(words[i])), None)
+            if a3 is None:
+                break
+            d = next((words[i] & 0xFFFF for i in range(a3 - 2, a3 + 3)
+                      if words[i] >> 26 == 0x09 and (words[i] >> 21) & 31 == r and 0 < words[i] & 0xFFFF < 0x40), None)
+            if d is None:
+                break
+            tabs.append((base - dest + d, words[a3] & 0xFFFF))
+            j = a3 + 1
+        if len(tabs) == 3:
+            found.add(tuple(tabs))
+    return list(found.pop()) if len(found) == 1 else None
+
+
+def ja_chars(sec, at, chars, room):
+    """The bytes of `chars` characters at `at` (a lead byte's code is two),
+    stopping at a NUL and never past `room` bytes; None if they run past."""
+    i = at
+    for _ in range(chars):
+        if i >= at + room or i >= len(sec) or sec[i] == 0:
+            break
+        i += 2 if sec[i] in LEAD else 1
+    return sec[at:i] if i <= at + room else None
+
+
+def ja_fishing_modules(disc):
+    """(name, bytes) of every fishing area's module on a Japanese disc: each
+    WORLDnn/AREAnnn.EMI - on a PSP disc too, whose EMIs are the Japanese
+    build's overlays (region-diff.md 5)."""
+    for name in sorted(disc.files):
+        if "/WORLD" in name and name.endswith(".EMI"):
+            yield name, disc.read(name)
+
+
+def convert_fishing_ja(disc):
+    """[(kind, tag, payload)] and a report: kind 16 tags 1 (the lines), 2 (the
+    tabs) and 4 (the labels) from the first module whose LineNext twin names
+    its tables. Needs donor_ja (the codes are encoded for the ja-JP font)."""
+    if not donor_ja:
+        raise SystemExit("fishing (Japanese): not a Japanese disc")
+    boot_data = disc.boot()[disc.text_end:] if is_psp(disc) else None
+    for name, blob in ja_fishing_modules(disc):
+        for dest, sec in emi_sections(blob):
+            if not dest & 0x80000000:
+                continue
+            got = fishing_label_reader(sec, dest)
+            if got is None:
+                continue
+            first, labels = got
+            words = []           # the disc's own bytes of each string, for the PSP check
+
+            def encoded(raw, what):
+                out = encode_text(raw) if raw else None
+                if out is None:
+                    raise SystemExit("fishing (Japanese): %s %s holds a code the ja-JP font has not: %s"
+                                     % (name, what, raw.hex(" ")))
+                words.append(raw)
+                return out
+            payload = bytearray([FISH_LINE_COUNT])
+            for i in range(FISH_LINE_COUNT):
+                count, ptr = struct.unpack_from("<II", sec, first + FISH_LINE_STRIDE * i)
+                at = ptr - dest
+                if not 0 <= at < len(sec) or not 0 < count < FISH_LINE_ROOM:
+                    raise SystemExit("fishing (Japanese): %s line %d points at 0x%08X, %d bytes" % (name, i, ptr, count))
+                # The Japanese count is the characters (a lead byte's code one), not the bytes.
+                raw = ja_chars(sec, at, count, FISH_LINE_ROOM)
+                if raw is None:
+                    raise SystemExit("fishing (Japanese): %s line %d runs past %d bytes" % (name, i, FISH_LINE_ROOM))
+                out = encoded(raw, "line %d" % i)
+                if len(out) + 1 > FISH_LINE_ROOM:
+                    raise SystemExit("fishing (Japanese): %s line %d is %d bytes encoded" % (name, i, len(out)))
+                payload += out + b"\0"
+            chunks, report = [(KIND_FISHING, 1, bytes(payload))], ["%d lines" % FISH_LINE_COUNT]
+            payload = bytearray([FISH_LABEL_COUNT])
+            for i in range(FISH_LABEL_COUNT):
+                raw = ja_chars(sec, labels + FISH_LABEL_STRIDE * i, 1, FISH_LABEL_STRIDE - 1)
+                out = encoded(raw, "label %d" % i)
+                if len(out) + 1 > FISH_LABEL_ROOM:
+                    raise SystemExit("fishing (Japanese): %s label %d is %d bytes encoded" % (name, i, len(out)))
+                payload += out + b"\0"
+            chunks.append((KIND_FISHING, 4, bytes(payload)))
+            report.append("%d labels" % FISH_LABEL_COUNT)
+            tabs = fishing_counted_tabs(sec, dest)
+            if tabs:
+                payload = bytearray([3])
+                for i, (at, chars) in enumerate(tabs):
+                    room = (tabs[i + 1][0] - at) if i + 1 < len(tabs) else FISH_TAB_ROOM
+                    raw = ja_chars(sec, at, chars, room)
+                    out = encoded(raw, "tab %d" % i) if raw is not None else None
+                    if out is None or len(out) + 1 > FISH_TAB_ROOM:
+                        raise SystemExit("fishing (Japanese): %s tab %d does not convert" % (name, i))
+                    payload += out + b"\0"
+                chunks.append((KIND_FISHING, 2, bytes(payload)))
+                report.append("3 tabs")
+            else:
+                report.append("no tabs found")
+            if boot_data is not None:
+                missing = [w.hex(" ") for w in words if w not in boot_data]
+                if missing:
+                    raise SystemExit("fishing (Japanese): %s's words are not all BOOT.BIN's (%d not found)"
+                                     % (name, len(missing)))
+                report.append("the words BOOT.BIN's")
+            report.append("from %s, records 0x%08X" % (name, dest + first))
+            return chunks, report
+    return [], []
+
+
 # The battle banner's twelve messages (DIV-0052, src/game/battle_text.cpp): the
 # PC's pointer table at MESSAGE_TABLE, read only by 0x44A8E0 and, for message
 # 1, 0x44A990. The US BATTLE.EMI has the same twelve as 13-byte slots, found
@@ -4274,6 +4473,11 @@ def build_all(args, disc_path):
         print("config, verbs, character names, merchant, battle labels and messages: "
               "not built for a Japanese disc")
         start_emi = None
+        if not args.only:
+            # D279: the fishing banner's lines, labels and tabs, by the module's own readers.
+            fishing, report = convert_fishing_ja(disc)
+            overlays["FIRST.DAT"] += fishing
+            print("fishing: " + (", ".join(report) if report else "not found on this disc"))
     if start_emi and not args.only:
         if is_psp(disc):
             # BOOT.BIN's Config screen is the PSP's own, not the PlayStation's
@@ -4780,6 +4984,57 @@ def selftest_buttons():
           "the argument range refused")
 
 
+def selftest_fishing_ja():
+    """D279's readers on synthetic code (no game data): the line records and
+    the labels by a LineNext-shaped label draw, the tabs by a
+    DrawToggles-shaped run, and the counts read as characters; a second draw
+    naming another table, and records that do not end at the label table,
+    are refused."""
+    base, zero, v0, v1, a0, a1, a3, at, s1 = 0x801D0000, 0, 2, 3, 4, 5, 7, 1, 17
+    lui = lambda rt, imm: (0x0F << 26) | (rt << 16) | (imm & 0xFFFF)
+    addiu = lambda rt, rs, imm: (0x09 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+    lbu = lambda rt, rs, imm: (0x24 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+    addu = lambda rd, rs, rt: (rs << 21) | (rt << 16) | (rd << 11) | 0x21
+    sll = lambda rd, rt, sa: (rt << 16) | (rd << 11) | (sa << 6)
+    jal = lambda target: (0x03 << 26) | ((target >> 2) & 0x3FFFFFF)
+    hi = lambda a: (a + 0x8000) >> 16
+    records = base + 0x2000
+    labels = records + FISH_LINE_COUNT * FISH_LINE_STRIDE
+
+    def label_draw(table):
+        return [lui(at, hi(records + 8)), addu(at, at, v1), lbu(v0, at, records + 8), sll(a1, v0, 1), addu(a1, a1, v0),
+                lui(v0, hi(table)), addiu(v0, v0, table), lui(at, hi(table + 2)), addu(at, at, a1),
+                lbu(a0, at, table + 2), jal(base + 0x800), addu(a1, a1, v0), 0, 0]
+    tabs_at = base + 0x2200
+
+    def tab_run():
+        return [addiu(a3, zero, 2), lui(s1, hi(tabs_at)), addiu(s1, s1, tabs_at), jal(base + 0x900), 0, 0,
+                addiu(a3, zero, 3), addiu(v0, s1, 4), jal(base + 0x900), 0, 0, addiu(a3, zero, 2), addiu(s1, s1, 8),
+                jal(base + 0x900), 0]
+
+    def section(code):
+        blob = bytearray(0x2400)
+        blob[:4 * len(code)] = struct.pack("<%dI" % len(code), *code)
+        for i in range(FISH_LINE_COUNT):
+            struct.pack_into("<IIBB", blob, records - base + FISH_LINE_STRIDE * i, 3, base + 0x2100, 0, 12)
+        blob[0x2100:0x2106] = b"\x12\x01a\x15\x02\0"   # three characters, the first and last two-byte codes
+        blob[tabs_at - base:tabs_at - base + 12] = b"\x12\x01\x12\x02ab\0\0\x12\x03c\0"
+        return bytes(blob)
+    sec = section(label_draw(labels) * 3 + tab_run() * 2)
+    if fishing_label_reader(sec, base) != (records - base, labels - base):
+        raise SystemExit("selftest: fishing_label_reader gave %s" % (fishing_label_reader(sec, base),))
+    if fishing_counted_tabs(sec, base) != [(tabs_at - base, 2), (tabs_at - base + 4, 3), (tabs_at - base + 8, 2)]:
+        raise SystemExit("selftest: fishing_counted_tabs gave %s" % (fishing_counted_tabs(sec, base),))
+    if ja_chars(sec, 0x2100, 3, FISH_LINE_ROOM) != b"\x12\x01a\x15\x02" or ja_chars(sec, 0x2100, 3, 4) is not None:
+        raise SystemExit("selftest: ja_chars")
+    if fishing_label_reader(section(label_draw(labels) + label_draw(labels + 0x30)), base) is not None:
+        raise SystemExit("selftest: fishing_label_reader took two label tables")
+    if fishing_label_reader(section(label_draw(labels + 4)), base) is not None:
+        raise SystemExit("selftest: fishing_label_reader took records that do not end at the label table")
+    print("  fishing (Japanese): the records and labels by the label draw, the tabs by their counted draws, counts in "
+          "characters; two tables and a gap refused")
+
+
 def cmd_selftest(args):
     selftest_empty_records()
     selftest_rules()
@@ -4787,6 +5042,7 @@ def cmd_selftest(args):
     selftest_config_psp()
     selftest_code_labels()
     selftest_buttons()
+    selftest_fishing_ja()
     print("loc_build selftest: ok")
     return 0
 

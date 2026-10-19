@@ -1445,6 +1445,9 @@ void InjectAll() {
                                 // page - after every module's self-test, whose frame-draw fuzzes all ran the original's
     AreaKeepStoppingNone_Arm(); // DIV-0143 (issue #88): an area change keeping a track that is fading to a stop
                                 // keeps none - after every module's self-test, which all ran Capcom's keep
+    FishingEmpty_Arm();         // DIV-0144 (D279): the fishing banner declines an empty line and a one-byte code below
+                                // 0x26 - after every module's self-test, which all compared Capcom's draws; before
+                                // FishingText_Arm, so its self-test (fishing_empty) reads the original's label
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

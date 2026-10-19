@@ -50,6 +50,11 @@ using U = std::uint32_t;
 using move_script::At;
 
 unsigned char* S() { return Sprite_Current; }
+
+// DIV-0144 (D279): 1 through PatchBytes("FishingEmptyLine") / ("FishingLowGlyph")
+// in FishingEmpty_Arm, after every module's self-test.
+std::uint8_t g_empty_line_none = 0;
+std::uint8_t g_low_glyph_none = 0;
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U L(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
 U L(U a) { return L(At(a)); }
@@ -148,7 +153,11 @@ struct LabelDraw {
 LabelDraw Label(const char* who, unsigned index) {
     const unsigned line = Line(who, B(Text(who, index) + 4));
     const FishingLabel l = FishingText_LabelOf(index, line);
-    return {l.pen, FishingText_On() ? Key(FishingText_Label(l.entry)) : L(at::kLabelTexts + 4 * l.entry)};
+    if (FishingText_On()) return {l.pen, Key(FishingText_Label(l.entry))};
+    // DIV-0069 (D279): a Japanese layer's own label, the disc's module's, where
+    // its tag 4 gave one; else 0x66A2FC's string, the original's read.
+    if (const unsigned char* disc = FishingText_DiscLabel(l.entry)) return {l.pen, Key(disc)};
+    return {l.pen, L(at::kLabelTexts + 4 * l.entry)};
 }
 // Kind 0xF's row table 0x653C04: nine rows of four bytes, by +6 and a column.
 U RowByte(const char* who, unsigned row, unsigned column) {
@@ -1478,6 +1487,18 @@ extern "C" void __cdecl EffectKind0F_LineType(void) {
             eax = Key(a);
             c = S();
         }
+    } else if (g_empty_line_none && TextAt(L(c + 0x50))[0] == 0) {
+        // DIVERGENCE DIV-0144 (D279): an empty line types no cursor glyph. The
+        // cursor rests on a NUL here only when the line has no character (at
+        // the last one's NUL the branch above has set the pause and gone on),
+        // and the original draws that NUL as glyph 0 - 0x26 = 0xFFDA, past the
+        // font: garbage, or an access violation in Font_UnpackGlyph. The PC's
+        // thirteen lines are never empty; a Japanese disc-built image's are,
+        // when no layer writes them.
+        if (c[0x49] != 0)
+            bof3::Fatal("%s: the cursor is on a NUL with %u characters typed - an empty line has none "
+                        "(docs/known-defects.md D279)", kWho, (unsigned)c[0x49]);
+        return;
     } else if (FishingText_On()) {
         // DIV-0069: the flip cursor as wide as the character's advance A, its
         // right edge at 0x125 as the original's (12 wide at 2 * left + 0x119):
@@ -2018,4 +2039,116 @@ void Effect1A_Inject() {
     BOF3_INJECT(EffectKind1A_PanelBack);
     BOF3_INJECT(EffectKind1A_PanelOut);
     BOF3_INJECT(EffectKind1A_Reset);
+}
+
+// DIVERGENCE DIV-0144 (D279): the fishing banner declines an empty string.
+namespace {
+
+// BOF3X_SHADOW=fishing_empty: an empty line and a NUL label planted in the
+// image (text record 1 and the six 0x66A2FC entries, restored after), a
+// record of ours as Sprite_Current; nothing may be drawn - Gfx_PacketNext
+// unmoved - and the calls that reach EffectKind0F_DrawGlyph are counted, so
+// the scroller's switch is seen to stop its call and the glyph's switch to
+// decline the label's. Run before FishingText_Arm: the label is then the
+// original's read (the line byte's 0x66A2FC entry), not an icon or a disc's.
+void FishingEmptySelfTest() {
+    constexpr unsigned kText = 1;   // not the cast's text 0, whose label reads word 7
+    unsigned char* const record = At(at::kKind0FTexts + 8 * kText);
+    unsigned char saved_record[8], saved_labels[24];
+    std::memcpy(saved_record, record, sizeof saved_record);
+    std::memcpy(saved_labels, At(at::kLabelTexts), sizeof saved_labels);
+    unsigned char* const saved_current = Sprite_Current;
+    unsigned char* const saved_packet = Gfx_PacketNext;
+    const std::uint8_t saved_line = g_empty_line_none, saved_glyph = g_low_glyph_none;
+    static const unsigned char kEmpty[4] = {0, 0, 0, 0};
+    static const unsigned char kSpace[2] = {0x20, 0};
+    SetL(record, Key(kEmpty));
+    record[4] = 0;   // line byte 0: the label is entry 0
+    record[5] = 1;   // its pause
+    for (unsigned e = 0; e < 6; ++e) SetL(At(at::kLabelTexts + 4 * e), Key(kEmpty));
+    unsigned char object[0x80];
+    unsigned bad = 0, cases = 0;
+    auto check = [&](bool ok, const char* what, unsigned got, unsigned want) {
+        ++cases;
+        if (ok) return;
+        ++bad;
+        bof3::Log("shadow      fishing_empty MISMATCH %s: %u, expected %u", what, got, want);
+    };
+    auto start = [&](unsigned char state, unsigned char wait, unsigned char line_wait) {
+        std::memset(object, 0, sizeof object);
+        object[0] = 1;
+        object[1] = state;
+        object[5] = 0xF;
+        object[9] = wait;
+        object[0xA] = line_wait;
+        object[0x4B] = kText;
+        SetL(object + 0x50, Key(kEmpty));
+        SetW(object + 0x2E, 0x125);
+        Sprite_Current = object;
+    };
+    auto run = [&](void (*state)(), const char* what, unsigned want_calls) {
+        const unsigned calls = EffectKind0F_GlyphCalls();
+        state();
+        check(Gfx_PacketNext == saved_packet, what, Gfx_PacketNext == saved_packet ? 0 : 1, 0);
+        check(EffectKind0F_GlyphCalls() - calls == want_calls, what, EffectKind0F_GlyphCalls() - calls, want_calls);
+    };
+    g_empty_line_none = 1;
+    g_low_glyph_none = 1;
+    // LineType 0x466310 typing an empty line: no cursor glyph is asked for.
+    start(9, 6, 0);
+    run(EffectKind0F_LineType, "LineType over an empty line (both on): packet / calls", 0);
+    check(object[1] == 9 && object[0x49] == 0, "LineType over an empty line: the state", object[1], 9);
+    // Its last frame: the whole line typed at once, the pause set, the next state.
+    start(9, 1, 0);
+    run(EffectKind0F_LineType, "LineType's last frame over an empty line: packet / calls", 0);
+    check(object[1] == 10 && object[0x49] == 0 && object[9] == 1, "LineType's last frame: the state, +0x49, +9",
+          object[1], 10);
+    // The control: the scroller's switch off, the call reaches the draw, which
+    // declines the NUL.
+    g_empty_line_none = 0;
+    start(9, 6, 0);
+    run(EffectKind0F_LineType, "LineType over an empty line (the scroller's switch off): packet / calls", 1);
+    g_empty_line_none = 1;
+    // LineNext 0x466460 while the label waits: the label's NUL reaches the
+    // draw (0x66A2FC's entry 0), which draws nothing.
+    start(10, 6, 6);
+    run(EffectKind0F_LineNext, "LineNext's label over a NUL label: packet / calls", 1);
+    check(object[0xA] == 5, "LineNext's label wait", object[0xA], 5);
+    // The draw itself (0x469AD0, which Inject aimed at ours): a NUL and a space.
+    const unsigned before = EffectKind0F_GlyphCalls();
+    MessageLine(0, Key(kEmpty), 0xC, 0x100);
+    MessageLine(0, Key(kSpace), 0xC, 0x100);
+    check(Gfx_PacketNext == saved_packet, "DrawGlyph of a NUL and a space: packet", 1, 0);
+    check(EffectKind0F_GlyphCalls() - before == 2, "DrawGlyph of a NUL and a space: calls",
+          EffectKind0F_GlyphCalls() - before, 2);
+    std::memcpy(record, saved_record, sizeof saved_record);
+    std::memcpy(At(at::kLabelTexts), saved_labels, sizeof saved_labels);
+    Sprite_Current = saved_current;
+    g_empty_line_none = saved_line;
+    g_low_glyph_none = saved_glyph;
+    bof3::Log("shadow      fishing_empty DIV-0144 self-test: an empty line typed (two frames) and its control, a NUL "
+              "label, a NUL and a space drawn: %u checks, nothing drawn, %u MISMATCHES",
+              cases, bad);
+    if (bad) bof3::Fatal("fishing_empty DIV-0144 self-test: %u mismatches (bof3x.log)", bad);
+}
+
+}  // namespace
+
+bool FishingEmpty_LowGlyphNone() { return g_low_glyph_none != 0; }
+
+void FishingEmpty_Arm() {
+    static const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("FishingEmptyLine", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_empty_line_none)),
+                     &was, &is, 1);
+    bof3::PatchBytes("FishingLowGlyph", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_low_glyph_none)),
+                     &was, &is, 1);
+    bof3::Log("DIV-0144    the fishing banner draws no glyph for an empty line (%s) nor for a one-byte code below "
+              "0x26 (%s)", g_empty_line_none ? "on" : "OFF", g_low_glyph_none ? "on" : "OFF");
+    if (!bof3::WantsShadow("fishing_empty")) return;
+    if (!bof3::IsEnabled(bof3::addr::EffectKind0F_DrawGlyph)) {
+        bof3::Log("shadow      fishing_empty DIV-0144 self-test: not run, EffectKind0F_DrawGlyph is Capcom's "
+                  "(BOF3X_ORIGINAL), which draws the planted NUL");
+        return;
+    }
+    FishingEmptySelfTest();
 }

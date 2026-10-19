@@ -26,6 +26,25 @@ void FishingText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint
 // overlay; nullptr otherwise (the draw then reads the shipped field).
 const unsigned char* FishingText_Heading(unsigned i);
 
+// D279 (2026-10-18): the disc's own label for entry `entry` (0..5 of 0x66A2FC's
+// order) as a kind-16 tag-4 chunk gave it - a Japanese disc's fishing module's
+// three, circle, cross and triangle, in the ja-JP font's codes - once armed
+// (FishingText_Arm); nullptr otherwise, and for entries 3..5, which no
+// module's table holds (the draw then reads 0x66A2FC's string).
+const unsigned char* FishingText_DiscLabel(unsigned entry);
+
+// DIV-0144 (D279): the kind-0xF banner's empty-text guard, armed after every
+// module's self-test (effect_1a's and effect_1b's fuzz compare Capcom's draws).
+// Two switches: "FishingEmptyLine" - EffectKind0F_LineType draws no cursor
+// glyph over an empty line - and "FishingLowGlyph" - EffectKind0F_DrawGlyph
+// draws nothing for a one-byte code below 0x26 (a NUL, a space), whose glyph
+// c - 0x26 wraps past the font. Under BOF3X_SHADOW=fishing_empty a self-test
+// plants an empty line and a NUL label and checks nothing is drawn. Defined in
+// src/game/effect_1a.cpp.
+void FishingEmpty_Arm();
+bool FishingEmpty_LowGlyphNone();          // effect_1a.cpp: the second switch's state
+unsigned EffectKind0F_GlyphCalls();        // effect_1b.cpp: calls into ours EffectKind0F_DrawGlyph so far
+
 // Arms the layout under a Latin overlay (Lang_Latin). Called from InjectAll
 // after every module's self-test, so effect_1a's and effect_1b's fuzz compare
 // Capcom's layout; nothing here changes while it is off.

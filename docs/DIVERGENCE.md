@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 143 entries, DIV-0001..0143, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 144 entries, DIV-0001..0144, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4438,6 +4438,48 @@ designed in rather than bolted on.
   `C:\Users\kerok\g_la`, labels doc 7). **Owed the owner's eye:** those
   captures; the French tabs still overrun their boxes (unchanged here).
   *Reversible:* play without `BOF3X_LANG`, or with an overlay built before.
+- **Amended 2026-10-18 (D279, branch `install-gap/d279`): the Japanese layer
+  carries kind 16, and the banner's labels.** *Original:* `loc_build.py`
+  built kind 16 for Latin discs only, so a `ja-JP` layer left the thirteen
+  lines, the three tabs and the label strings behind `0x66A2FC` as shipped:
+  the port's Chinese on the PC, zero on a Japanese disc-built image (D279's
+  two paths, D280). *New:* `convert_fishing_ja` reads a Japanese disc's
+  fishing module by its own readers, never by the PC's bytes. The line
+  records and the label table come from `EffectKind0F_LineNext`'s twin (an
+  `lbu` of a text's label byte at `+8`, three times it into the table's
+  `lui` / `addiu`, the pen at `+2`; PSX-JP `0x801D3CF0..0x801D3D18`, five
+  such draws, one pair of addresses; the records end at the table). The
+  tabs come from `EffectKind0F_DrawToggles`' twin (three counted draws of
+  one base and two displacements; PSX-JP `0x801D7CF8..`, counts 2, 3, 2 at
+  `+0`, `+4`, `+8`, the PC's counts). A Japanese line's record count is its
+  characters, a lead byte's code one, not its bytes. The strings are encoded
+  for the `ja-JP` font as the dialogue is (`encode_text`: the JP sheet's
+  cells, `0xFF` the space `0x20`). Chunk kind 16 tags 1 and 2 as before, and
+  a new tag 4: the module's three labels, one character each, by the label
+  byte's entry (circle, cross, triangle: the JP icon codes `0x15 0x08..0x0A`,
+  their pens 2, 1, 6 the PC's). `fishing_text.cpp` keeps tag 4 in buffers of
+  ours, and once `FishingText_Arm` has run, `Label()` (not under a Latin
+  layer) draws them in place of `0x66A2FC`'s string. The table itself is not
+  re-aimed: the Config cell `0x461C00` reads it too, and that is D280's.
+  Entries 3..5 (square, L1, R1, drawn only when sigma moves a button) have
+  no module copy and keep `0x66A2FC`'s string (zero on a Japanese disc-built
+  image, which DIV-0144 then declines). PSX-JP from `WORLD00/AREA030.EMI`
+  section 4 (`AREA089`, `AREA129` the same); PSP-JP from its own UMD's
+  `AREA030.EMI`, the Japanese build's overlay, section 4 byte-identical to
+  PSX-JP's. Every word read there is checked to be in PSP-JP's `BOOT.BIN`
+  data too (it is), so the words are the PSP's own; its `BOOT.BIN` code is
+  the PSP's and is not read. The 12-unit layout stays: `Lang_Latin` is false
+  under `ja-JP`, and the JP glyphs are 12 units. *Why:* D279's second fix
+  (the owner, 2026-10-13: "both"), and the part of D280 the banner needs.
+  Under `ja-JP` on the PC the banner, the tabs and the labels change from
+  the port's Chinese to the Japanese disc's words. *Verification:*
+  `loc_build.py selftest` (the two readers and the character count on
+  synthetic code; two label tables and a gap refused); `loc_build.py all`
+  over the five PSX discs into a PC copy (`ja-JP`: `13 lines, 3 labels, 3
+  tabs, from BIN/WORLD00/AREA030.EMI, records 0x801E1EA0`; the Latin
+  discs' `13 lines, 3 tabs, 4 headings` as before); the live runs in
+  [`known-defects.md`](known-defects.md) D279. *Reversible:* an overlay
+  built before, or `BOF3X_LANG=original`.
 - **Reversible?** play without `BOF3X_LANG` (or `BOF3X_LANG=original`): no
   chunk, and the layout is never armed. `BOF3X_ORIGINAL` on any of the
   draws named above leaves Capcom's, which reads the re-aimed pointers
@@ -8905,3 +8947,69 @@ designed in rather than bolted on.
   - Not heard yet.
 - **Reversible?** `BOF3X_ORIGINAL=AreaKeepStoppingNone` (Capcom's keep),
   or `BOF3X_ORIGINAL=Area_PickMusic`.
+
+### The fishing banner draws no glyph for an empty line, nor for a one-byte code below 0x26
+
+- **ID:** DIV-0144
+- **Date:** 2026-10-18
+- **Subsystem:** the fishing spot's banner (`EffectKind0F_LineType` `0x466310`,
+  ours in `src/game/effect_1a.cpp`; `EffectKind0F_DrawGlyph` `0x469AD0`, ours
+  in `src/game/effect_1b.cpp`; [`known-defects.md`](known-defects.md) D279)
+- **Tier:** Sensible - a guard. The original turns an empty string into a
+  glyph past the font. The data the PC ships never asks it to.
+- **Original behaviour:** while a character is being typed, `LineType` draws
+  the character under its cursor (`+0x50`) through `DrawGlyph` before it
+  counts the string, so an empty line draws its NUL. `DrawGlyph`'s one-byte
+  branch makes the glyph `c - 0x26`: a NUL becomes `0xFFDA`, a space
+  `0xFFFA`, a cell about 18.9 MB past the glyph table. That is garbage on the
+  screen, or an access violation in `Font_UnpackGlyph` when the read lands on
+  unmapped memory. The banner's button label (the one-character string behind
+  `0x66A2FC`, drawn by `LineNext`, `LineScroll` and `LineFade`) reaches the
+  same branch. On a Japanese disc-built image no layer wrote either, and
+  PSX-JP crashed at the fishing spot on every run of the live end batch,
+  PSP-JP on one run in five.
+- **New behaviour:** two switches, armed after every module's self-test.
+  - `FishingEmptyLine`: `LineType` with its cursor on a NUL draws no cursor
+    glyph and returns (nothing is typed yet: `+0x49` is 0). In that state the
+    cursor rests on a NUL only when the line has no character; at a line's
+    last NUL the other branch has already set the pause and moved on. A NUL
+    with characters typed is a Fatal (it cannot happen).
+  - `FishingLowGlyph`: `DrawGlyph` draws nothing for a one-byte code below
+    `0x26`, under any layer. That is a NUL, and the space a Japanese layer's
+    lines hold (the disc's word separator `0xFF` is the PC's `0x20`).
+    DIV-0069's rule, a space draws nothing under a Latin layer, is unchanged
+    beside it.
+
+  The PC's own strings are never empty and hold no one-byte code below
+  `0x26`, so nothing they draw changes.
+- **Rationale:** the owner's decision of 2026-10-13, confirmed 2026-10-18:
+  fix D279 both ways. One is a Japanese layer that writes the words
+  (DIV-0069's amendment of the same day). The other is this guard, which
+  keeps any empty string from reaching the font. It covers a layer built
+  before the fix, a disc whose module is not found, and the label entries no
+  module holds (square, L1 and R1, drawn only for a moved button).
+- **Also in the PSX version?** The PlayStation's strings are its own disc's,
+  and none is empty there, so the question does not arise. The twin's typing
+  state was not read for this. The guard is the port's.
+- **Verification:**
+  - `BOF3X_SHADOW=fishing_empty` (new; it runs in `FishingEmpty_Arm`, before
+    `FishingText_Arm`, so the label is the original's read). An empty line is
+    planted in text record 1 and a NUL in all six `0x66A2FC` entries, with a
+    record of ours as `Sprite_Current`. `LineType` over the empty line (a
+    typing frame and the last frame), `LineNext`'s label, and `DrawGlyph` of
+    a NUL and of a space leave `Gfx_PacketNext` where it was. The calls that
+    reach `DrawGlyph` are counted: none from `LineType`, one from
+    `LineNext`'s label (declined there). The control, with
+    `FishingEmptyLine` off, reaches the draw once. 13 checks, 0 mismatches.
+  - effect_1a's and effect_1b's fuzz run before the switches, so they still
+    compare Capcom's draws: `BOF3X_SHADOW='*'` hosted under `ja-JP` and
+    under `original`, each `inject: 10087 ours`, 1,086 `MISMATCHES` lines
+    all 0, no `FATAL`.
+  - Live: `caughFish` to its end on psx-jp (3 runs) and psp-jp (4 runs), no
+    crash (before: every psx-jp run, one psp-jp run in five); on the PC
+    install with `en-US` the run with both switches off is pixel-equal to
+    the run with them on, 129 of 129 frames
+    ([`known-defects.md`](known-defects.md) D279).
+- **Reversible?** `BOF3X_ORIGINAL=FishingEmptyLine` and / or
+  `BOF3X_ORIGINAL=FishingLowGlyph` (the original's draws; on a Japanese
+  disc-only install with a layer built before the fix the crash comes back).
