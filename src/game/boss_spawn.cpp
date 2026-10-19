@@ -26,6 +26,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -88,8 +89,8 @@ extern "C" unsigned char __cdecl BossActor_Index(unsigned tag) {
 // original 0x4949D0: the tagged actor's +0 loses bit 0x40. BossActor_Find's
 // answer is not tested (a Fatal here where the original faults).
 extern "C" void __cdecl BossActor_ClearBit40(unsigned tag) {
-    unsigned char* const p = FoundOrAbort("BossActor_ClearBit40", tag);
-    p[0] &= 0xBF;
+    auto* const actor_rec = reinterpret_cast<records::SpriteObject*>(FoundOrAbort("BossActor_ClearBit40", tag));
+    actor_rec->flags &= 0xBF;
 }
 
 // original 0x4949F0: onto the tagged actor, by what's low byte - 0: from's
@@ -100,6 +101,7 @@ extern "C" void __cdecl BossActor_ClearBit40(unsigned tag) {
 // other `what` a missing actor is harmless in both.
 extern "C" void __cdecl BossActor_CopyFrom(unsigned tag, const unsigned char* from, unsigned what) {
     unsigned char* const p = BH_CALL(BossActor_Find)(tag);
+    auto* const actor_rec = reinterpret_cast<records::SpriteObject*>(p);
     const unsigned mode = what & 0xFF;
     if (mode > 1) return;
     if (p == nullptr)
@@ -107,17 +109,17 @@ extern "C" void __cdecl BossActor_CopyFrom(unsigned tag, const unsigned char* fr
                     "BossActor_Find answers (docs/boss_h.md section 6)",
                     tag & 0xFF);
     if (mode == 1) {
-        SetLong(p + 0x34, Long(from + 0x34));
-        SetLong(p + 0x38, Long(from + 0x38));
-        SetLong(p + 0x3C, Long(from + 0x3C));
+        actor_rec->x = Long(from + 0x34);
+        actor_rec->z = Long(from + 0x38);
+        actor_rec->height = Long(from + 0x3C);
         return;
     }
-    p[0x4B] = from[0x4B];
-    SetLong(p + 0x50, Long(from + 0x50));
-    SetLong(p + 0x54, Long(from + 0x54));
-    SetWord(p + 0x58, Word(from + 0x58));
-    SetWord(p + 0x5A, Word(from + 0x5A));
-    p[7] |= 0x20;
+    actor_rec->animation = from[0x4B];
+    actor_rec->script = Long(from + 0x50);
+    actor_rec->frames = Long(from + 0x54);
+    actor_rec->script_pos = Word(from + 0x58);
+    actor_rec->frame_word = Word(from + 0x5A);
+    actor_rec->flags2 |= 0x20;
 }
 
 // original 0x494A60: the tagged actor's bytes +0..+4 zeroed (a Fatal where
