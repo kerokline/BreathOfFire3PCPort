@@ -309,8 +309,8 @@ extern "C" void __cdecl Window_Kind2List() {
         const unsigned char* const record = Ptr(at::kCurrent);
         const unsigned char* const xy = At(at::kSetXY + set * 6);
         const auto dy = static_cast<std::uint16_t>(Word(xy + 4) * static_cast<std::uint16_t>(i));
-        const auto y = static_cast<std::uint16_t>(dy + (S16(Word(record + 6)) >> 4) + Word(xy + 2));
-        const auto x = static_cast<std::uint16_t>((S16(Word(record + 4)) >> 4) + Word(xy));
+        const auto y = static_cast<std::uint16_t>(dy + (S16(Win(record)->centre_y) >> 4) + Word(xy + 2));
+        const auto x = static_cast<std::uint16_t>((S16(Win(record)->centre_x) >> 4) + Word(xy));
         text = g.text_immediate(x, y, text);
         ++i;
         if (i > MenuWindows_ListCount) break;
