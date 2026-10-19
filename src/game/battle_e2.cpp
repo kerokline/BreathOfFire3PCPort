@@ -319,21 +319,20 @@ namespace {
 void RestoreBody(const char* who, unsigned char* o, bool keep8) {
     auto* const owner_rec = rv::As<records::PartyMember>(o);
     auto rec = [&]() { return Rec(who, owner_rec->member); };
-    auto recm = [&]() { return rv::As<records::PartyMember>(rec()); };
-    const unsigned char kept8 = recm()->direction;
+    const unsigned char kept8 = rv::As<records::PartyMember>(rec())->direction;
     {
         unsigned char* const to = rec();
         const unsigned char* const from = At(at::kBackup + static_cast<U>(owner_rec->member) * at::kPartyStride);
         for (unsigned k = 0; k < at::kPartyStride; k += 4) SetLong(to + k, Long(from + k));   // rep movsd, forward
     }
-    recm()->state[0] = 6;
-    recm()->state[1] = 4;
-    recm()->state[2] = 4;
-    recm()->state[3] = 1;
-    if (keep8) recm()->direction = kept8;
+    rv::As<records::PartyMember>(rec())->state[0] = 6;
+    rv::As<records::PartyMember>(rec())->state[1] = 4;
+    rv::As<records::PartyMember>(rec())->state[2] = 4;
+    rv::As<records::PartyMember>(rec())->state[3] = 1;
+    if (keep8) rv::As<records::PartyMember>(rec())->direction = kept8;
     rec()[0x48] = 2;
     SetUL(rec() + 0x40, 0);
-    recm()->flags_130 = static_cast<U>(recm()->flags_130) | 0x2000;
+    rv::As<records::PartyMember>(rec())->flags_130 = static_cast<U>(rv::As<records::PartyMember>(rec())->flags_130) | 0x2000;
     SetUL(Task(owner_rec->member) + 0x34, UL(At(at::kMemberPositions + static_cast<U>(owner_rec->member) * 8)));
     SetUL(Task(owner_rec->member) + 0x38, UL(At(at::kMemberPositions + 4 + static_cast<U>(owner_rec->member) * 8)));
     {
@@ -342,9 +341,9 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
         const long ground = BH_CALL(AreaMap_Elevation)(task_rec->x, Long(t + 0x38));
         SetUL(Task(owner_rec->member) + 0x3C, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
     }
-    const unsigned char character = recm()->char_id;
+    const unsigned char character = rv::As<records::PartyMember>(rec())->char_id;
     if (character == 7 || character == 0) {
-        recm()->ap = BattleE2_KeptAp;
+        rv::As<records::PartyMember>(rec())->ap = BattleE2_KeptAp;
         SetWord(rec() + 0x90, BattleE2_KeptStatus);
         {
             unsigned char* const r = rec();
