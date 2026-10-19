@@ -445,7 +445,7 @@ void QuickMenu_AfterPoint() {
     constexpr char kRefused[] = "Quickload refused: ";
     if (std::strncmp(line, kRefused, sizeof kRefused - 1) == 0) {
         // Refused, the game untouched: the menu stays, with the reason.
-        std::snprintf(g_refusal, sizeof g_refusal, "REFUSED: %s", line + sizeof kRefused - 1);
+        std::snprintf(g_refusal, sizeof g_refusal, "REFUSED - %s", line + sizeof kRefused - 1);
         for (char* c = g_refusal; *c; ++c)
             if (*c >= 'a' && *c <= 'z') *c = static_cast<char>(*c - 'a' + 'A');
         bof3::Log("quickmenu   BISLPS%02X.DAT not loaded (%s); the menu stays open", g_loading_slot, line);

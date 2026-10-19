@@ -412,7 +412,7 @@ The switch: `SaveLists`, a `PatchBytes` of a flag of ours set by
   holds the take's `Game_Paused`, 0 (a take is never made paused: F6's
   `WM_KEYDOWN` ends a pause first, and the menu takes F6), so the menu
   closes and `Sound_ResumeAll` runs. **Refused** ("Quickload refused: ...",
-  the game untouched): the menu stays, with `REFUSED: <the reason>` above the
+  the game untouched): the menu stays, with `REFUSED - <the reason>` (the 8 x 8 font draws a colon as one dot) above the
   slots. The core's overlay line alone would not show: with our back buffer
   the loop's `Overlay` writes it to the log, not the screen.
 
@@ -448,8 +448,20 @@ line `Show` last wrote (`g_overlay`).
   3 quicksaves listed`; down, confirm: `LOAD` / `BACK` beside slot 1;
   confirm: `Load of BISLPS11.DAT asked at Frame_Counter 727`, then `F7
   BISLPS11.DAT restored at Frame_Counter 728: back to Frame_Counter 637` -
-  the second take, as slot 1 should be; the field ran on.
-- Captures (outside the tree): `C:\Users\kerok\q_qm\caps`.
+  the second take, as slot 1 should be; then `closed ... (BISLPS11.DAT
+  loaded: Quickload)` and the field ran on. Measured twice (the second run
+  with the menu's load as built: open and paused through the point).
+- **A refused load** (the same route; a copy of the save in slot 0 put in
+  the harness game folder as `BISLPS10.DAT`: a save half with no snapshot):
+  F5 `open, 1 quicksave listed`, slot 0 drawn from its summary; Load: `F7
+  BISLPS10.DAT refused: no snapshot - a save file with no snapshot after it`,
+  `not loaded (...); the menu stays open`, the reason drawn above the slots;
+  cancel closed it at `Frame_Counter` 656.
+- Captures (outside the tree), `C:\Users\kerok\q_qm\caps`: `run1b\qm_empty`
+  (an empty list), `qm_three` (three listed), `qm_choice`, `qm_loading` /
+  `qm_loaded` (the field after the load); `run2\qm_refused_list`,
+  `qm_refused`, `qm_refused_closed`. The refusal capture predates the
+  separator's change from a colon to a dash.
 
 ### QM.4 Ledger draft B (for the coordinator to number)
 
