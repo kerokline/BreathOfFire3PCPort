@@ -1205,17 +1205,17 @@ extern "C" void __cdecl Window_Kind1Layout(void) {
     const U n13 = 13u * lines;
     r = Cur();
     rv::As<records::WindowRecord>(r)->y = ((r[0xB] >> 1) - (n13 >> 1) + 0x78u) << 4;
-    SetWord(Cur() + 0x18, 0x30);
+    rv::Store<std::uint32_t>(rv::As<records::WindowRecord>(Cur())->settled_x, 0x30);
     {
         const int sum = MenuWindows_ListCount + static_cast<int>(n13);
-        SetWord(Cur() + 0x1A, static_cast<U>(0x78 - sum / 2));
+        rv::Store<std::uint32_t>(rv::As<records::WindowRecord>(Cur())->settled_y, static_cast<U>(0x78 - sum / 2));
     }
-    SetWord(Cur() + 0x10, 0);
-    SetWord(Cur() + 0x12, 0);
+    rv::Store<std::uint32_t>(rv::As<records::WindowRecord>(Cur())->width, 0);
+    rv::Store<std::uint32_t>(rv::As<records::WindowRecord>(Cur())->height, 0);
     r = Cur();
-    SetWord(r + 0x14, (static_cast<U>(r[0xA]) << 4) / 5);
+    rv::As<records::WindowRecord>(r)->width_step = (static_cast<U>(r[0xA]) << 4) / 5;
     r = Cur();
-    SetWord(r + 0x16, (static_cast<U>(r[0xB]) << 4) / 5);
+    rv::As<records::WindowRecord>(r)->height_step = (static_cast<U>(r[0xB]) << 4) / 5;
     const int last = MenuWindows_ListCount;
     const auto top = static_cast<unsigned char>(0x7C - static_cast<unsigned char>((last + static_cast<int>(n13)) / 2));
     if (last < 0) return;
@@ -1491,9 +1491,9 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
     SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(rec[0x10] & 2 ? kListPieces2 : kListPieces0), 1);
     SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(rec[0x10] & 1 ? kListPieces3 : kListPieces1), 1);
     {
-        const U w = Word(rec + 0x10);
-        if ((w & 0xF0) == 0) SetWord(rec + 0x10, 0);
-        else SetWord(rec + 0x10, w - 0x10);
+        const U w = rv::As<records::ItemListWindow>(rec)->arrows;
+        if ((w & 0xF0) == 0) rv::As<records::ItemListWindow>(rec)->arrows = 0;
+        else rv::As<records::ItemListWindow>(rec)->arrows = w - 0x10;
     }
     for (unsigned i = 0; i < 10; ++i) Piece(Wx(rec) + static_cast<int>(8 * i + 0x28), Wy(rec), 1);
     for (unsigned i = 0; i < 15; ++i) Piece(Wx(rec), Wy(rec) + static_cast<int>(8 * i + 0x18), 4);

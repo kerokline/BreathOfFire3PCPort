@@ -578,7 +578,7 @@ extern "C" void __cdecl CommuSim_TickKind9(void) {
             if (r[0] == 0) continue;
             if (r[1] != b + 1) continue;
             const unsigned char level = Bld(b)[1];
-            if (Rest4a_Clock - UL(r + 4) < (level + 1u) * 6u) {
+            if (Rest4a_Clock - rv::As<records::CommunityRecord>(r)->stamp < (level + 1u) * 6u) {
                 r[2] = 1;
                 continue;
             }
@@ -655,7 +655,7 @@ extern "C" void __cdecl CommuSim_TickKindD(void) {
                 ++tier;
                 if (p >= at::kPriceTiersEnd) break;
             }
-            const U stamp = UL(r + 4);
+            const U stamp = rv::As<records::CommunityRecord>(r)->stamp;
             if (Rest4a_Clock - stamp < Word(At(at::kPriceTiers + 6 * tier + 2))) continue;
             r[3] = static_cast<unsigned char>(status & 0xF);
             if (flags & 8) {
@@ -744,7 +744,7 @@ extern "C" void __cdecl CommuSim_AddRecord(void) {
     unsigned char* const rec = Rec(r);
     rec[0] = 1;
     rec[1] = 0;
-    SetUL(rec + 4, Rest4a_Clock);
+    rv::As<records::CommunityRecord>(rec)->stamp = Rest4a_Clock;
     rec[2] = 0;
     unsigned char* const copy = At(at::kRecordCopies + 5u * r);
     SetUL(copy, UL(at::kRecordTraits + at::kTraitStride * r));
@@ -1034,7 +1034,7 @@ extern "C" void __cdecl CommuPose_Kind7(unsigned object) {
 extern "C" void __cdecl CommuPose_Kind8(unsigned record, unsigned object, unsigned building) {
     const U r = record & 0xFFu;
     Sprite_Current[6] = 1;
-    const U age = Rest4a_Clock - UL(Rec(r) + 4);
+    const U age = Rest4a_Clock - rv::As<records::CommunityRecord>(Rec(r))->stamp;
     const U row = age < 0x14 ? 0 : (age < 0x28 ? 1 : 2);
     const U index = Count(building & 0xFFu) + 3 * row;
     SetWord(Pose(object & 0xFFu), Word(At(at::kOfferWords + 2 * index)));

@@ -20,6 +20,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "game/rest_2c_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -940,7 +942,7 @@ extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
 extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, unsigned slot) {
     SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(BattleDraw_Colour));
     const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
-    const unsigned char id = B(r + 9);
+    const unsigned char id = rv::As<records::CharRecord>(At(r))->char_id;
     const unsigned shade = (B(r + 0x10) >> 6) & 2;
     SH_CALL(MasterPanel_DrawFace)(x + 0x56, y + 2, id, shade);
     SH_CALL(Text_DrawAt)(x + 0x14, y + 3, 0, 5, At(r));
@@ -956,13 +958,13 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     const auto* const left = reinterpret_cast<const char*>(At(at::kFmtLeft));
     const auto* const right = reinterpret_cast<const char*>(At(at::kFmtRight));
     int colour = (B(r + 0x11) & 0x20) ? 4 : 0;
-    const unsigned hp = Word(At(r + 0x18));
+    const unsigned hp = rv::As<records::CharRecord>(At(r))->hp;
     if (hp <= 1) colour = 2;
     SH_CALL(Crt_sprintf)(buffer, left, hp);
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x1F, colour, text);
     SH_CALL(Crt_sprintf)(buffer, right, static_cast<unsigned>(Word(At(r + 0x20))));
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x1F, 0, text);
-    const unsigned ap = Word(At(r + 0x1A));
+    const unsigned ap = rv::As<records::CharRecord>(At(r))->ap;
     colour = ap <= static_cast<unsigned>(Word(At(r + 0x22)) >> 2) ? 4 : 0;
     if (ap == 0) colour = 2;
     SH_CALL(Crt_sprintf)(buffer, left, ap);
@@ -970,7 +972,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     SH_CALL(Crt_sprintf)(buffer, right, static_cast<unsigned>(Word(At(r + 0x22))));
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x27, 0, text);
     SH_CALL(Menu_DrawPieces)(x, y, At(at::kMemberPieces), 0);
-    const U exp = L(r + 0xC);
+    const U exp = static_cast<U>(rv::As<records::CharRecord>(At(r))->exp);
     const unsigned level = B(r + 0xA);
     SH_CALL(MasterPanel_DrawExpBar)(x + 0x14, y + 0x12, record, level, exp);
     SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr)), 0, 0, 0xF, 0);

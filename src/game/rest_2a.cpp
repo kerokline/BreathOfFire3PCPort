@@ -236,15 +236,15 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
 extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
     const unsigned slot = MoveScript_EffectState[member & 0xFF];
     unsigned char* const rec = Record(slot);
-    const unsigned max = Word(rec + 0x20);
-    const unsigned hp = Word(rec + 0x18);
+    const unsigned max = rv::As<records::CharRecord>(rec)->stats.max_hp;
+    const unsigned hp = rv::As<records::CharRecord>(rec)->hp;
     if (hp >= max) return;
     const unsigned sum = (hp + amount) & 0xFFFF;
-    SetWord(rec + 0x18, sum > max ? max : sum);
+    rv::As<records::CharRecord>(rec)->hp = sum > max ? max : sum;
     unsigned char* const fs = Field_State;
     unsigned char* const actor = Record(fs[0x148]);
-    if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) return;
-    SetWord(actor + 0x10, Word(actor + 0x10) & 0xDFFF);
+    if (rv::As<records::CharRecord>(actor)->hp <= (rv::As<records::CharRecord>(actor)->stats.max_hp >> 2)) return;
+    rv::As<records::CharRecord>(actor)->status = rv::As<records::CharRecord>(actor)->status & 0xDFFF;
     rv::As<records::PartyMember>(fs)->status = rv::As<records::PartyMember>(fs)->status & 0xDFFF;
 }
 
@@ -256,10 +256,10 @@ extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
 extern "C" unsigned __cdecl Char_LoseAp(unsigned amount, unsigned member) {
     const unsigned slot = MoveScript_EffectState[member & 0xFF];
     unsigned char* const rec = Record(slot);
-    const unsigned ap = Word(rec + 0x1A);
+    const unsigned ap = rv::As<records::CharRecord>(rec)->ap;
     unsigned took = amount;
     if (ap <= (amount & 0xFFFF)) took = ap - 1;
-    SetWord(rec + 0x1A, ap - took);
+    rv::As<records::CharRecord>(rec)->ap = ap - took;
     return took;
 }
 
