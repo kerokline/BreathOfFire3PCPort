@@ -800,8 +800,8 @@ constexpr U kWideYFloat = 0x5C4244, kNarrowYFloat = 0x5C4238;
 // The float an `fcomp dword ptr [mem]` operand names: the two above, or
 // DIV-0041's four as widescreen.cpp holds them.
 float Bound(U operand_at) {
-    if (operand_at == at::kWideYAt) return Fl(kWideYFloat);
-    if (operand_at == at::kNarrowYAt) return Fl(kNarrowYFloat);
+    if (operand_at == at::kWideYAt) return AreaMapBD_WideYBound;
+    if (operand_at == at::kNarrowYAt) return AreaMapBD_NarrowYBound;
     return Fl(Widescreen_RangeOperand(operand_at));
 }
 }  // namespace

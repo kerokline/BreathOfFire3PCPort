@@ -100,12 +100,12 @@ constexpr U kEquipTops = 0x939880;     // the equip item list's top by slot + 6 
 constexpr U kItemCursors = 0x939898;   // the Items list's cursor by category
 constexpr U kItemTops = 0x9398B8;      // and its top
 constexpr U kAbilityCursors = 0x9398C0;  // the ability list's cursor by type + 4 member
-constexpr U kViewCursor = 0x939892;    // the ability view's cursor
-constexpr U kViewTop = 0x9398CC;       // and its top
+// kViewCursor: now Rest2e_AbilityViewCursor (symbols.toml). the ability view's cursor
+// kViewTop: now Rest2e_AbilityViewTop (symbols.toml). and its top
 constexpr U kPreview = 0x6BDFA8;       // the six previewed equipment bytes
-constexpr U kEquipCursor = 0x6BDFAF;   // FieldEquip_TopMenu's cursor
-constexpr U kAbilityResult = 0x6BDFB6; // the last ability's answer
-constexpr U kAbilityCursor = 0x6BDFB7; // FieldAbility_TopMenu's cursor
+// kEquipCursor: now Rest2e_EquipCursor (symbols.toml). FieldEquip_TopMenu's cursor
+// kAbilityResult: now Rest2e_AbilityResult (symbols.toml). the last ability's answer
+// kAbilityCursor: now Rest2e_AbilityCursor (symbols.toml). FieldAbility_TopMenu's cursor
 
 // --- the helpers ------------------------------------------------------------------------
 
@@ -803,7 +803,7 @@ extern "C" void __cdecl FieldEquip_Open(void) {
     SH_CALL(FieldEquip_InitWindows)();
     Sound(0x102);
     const auto state = static_cast<UC>(FieldS_State + 1);
-    B(kEquipCursor) = 0;
+    Rest2e_EquipCursor = 0;
     B(kTimer) = 5;
     FieldS_State = state;
 }
@@ -819,7 +819,7 @@ extern "C" void __cdecl FieldMenu_CountdownState(void) {
 // original 0x58C340: FieldEquip_States[2] - the four-entry menu.
 extern "C" void __cdecl FieldEquip_TopMenu(void) {
     Backdrop();
-    const int c = S8(B(kEquipCursor));
+    const int c = Rest2e_EquipCursor;
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_TopHelp)) + 2 * c));
     const U x = L(0x803314) + static_cast<U>(48 * c);
     SetW(0x8032FC, help);
@@ -831,13 +831,13 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
     B(0x80331B) = 0xFF;
     B(0x803341) = 1;
     const U repeat = AutoRepeat(pressed);
-    const UC was = B(kEquipCursor);
-    const UC cl = TurnFour(kEquipCursor, repeat);
+    const UC was = static_cast<unsigned char>(Rest2e_EquipCursor);
+    const UC cl = TurnFour(Rest2e_EquipCursor_addr, repeat);
     if (was != cl) Sound(0x101);
     const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x104);
-        B(0x80331B) = B(kEquipCursor);
+        B(0x80331B) = static_cast<unsigned char>(Rest2e_EquipCursor);
         const auto state = static_cast<UC>(FieldS_State + 1);
         B(0x803454) = 0;
         FieldS_State = state;
@@ -878,10 +878,10 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
         if (static_cast<int>(B(0x803340)) > static_cast<int>(n) - 1) B(0x803340) = 0;
     }
     if (S8(was) != static_cast<int>(B(0x803340))) Sound(0x101);
-    if (B(kEquipCursor) == 1) SH_CALL(FieldEquip_BestByPower)(B(0x803340));
-    if (B(kEquipCursor) == 2) SH_CALL(FieldEquip_BestByOrder)(B(0x803340));
+    if (static_cast<unsigned char>(Rest2e_EquipCursor) == 1) SH_CALL(FieldEquip_BestByPower)(B(0x803340));
+    if (static_cast<unsigned char>(Rest2e_EquipCursor) == 2) SH_CALL(FieldEquip_BestByOrder)(B(0x803340));
     SH_CALL(TextRecord_Set)(0, 8, Record(PartyRecord(B(0x803340))));
-    const int c = S8(B(kEquipCursor));
+    const int c = Rest2e_EquipCursor;
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_MemberHelp)) + 2 * c));
     const UC flag = B(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_MemberFlags)) + 2 * c));
     const U p = Input_Pressed;
@@ -889,7 +889,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
     B(0x803341) = flag;
     if (Confirmed(p)) {
         Sound(0x103);
-        const UC cursor = B(kEquipCursor);
+        const UC cursor = static_cast<unsigned char>(Rest2e_EquipCursor);
         if (cursor == 0) {
             Sound(0x102);
             UC k = 0;
@@ -1259,14 +1259,14 @@ extern "C" void __cdecl FieldAbility_Open(void) {
     const UC member = B(0x905BA1);
     B(kTimer) = 5;
     BattleActorCopies_ItemActor = member;
-    B(kAbilityCursor) = 0;
+    Rest2e_AbilityCursor = 0;
     FieldS_State = state;
 }
 
 // original 0x58D820: FieldAbility_States[2] - the four-entry menu.
 extern "C" void __cdecl FieldAbility_TopMenu(void) {
     Backdrop();
-    const int c = S8(B(kAbilityCursor));
+    const int c = static_cast<signed char>(Rest2e_AbilityCursor);
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldAbility_TopHelp)) + 4 * c));
     const U x = L(0x803314) + static_cast<U>(48 * c);
     SetW(0x8032FC, help);
@@ -1278,17 +1278,17 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
     SetW(0x80345A, y);
     B(0x80331B) = 0xFF;
     const U repeat = AutoRepeat(pressed);
-    const UC was = B(kAbilityCursor);
-    UC cl = TurnFour(kAbilityCursor, repeat);
+    const UC was = Rest2e_AbilityCursor;
+    UC cl = TurnFour(Rest2e_AbilityCursor_addr, repeat);
     if (was != cl) {
         Sound(0x101);
-        cl = B(kAbilityCursor);
+        cl = Rest2e_AbilityCursor;
     }
     const U p = Input_Pressed;
     if (Confirmed(p)) {
         B(0x80331B) = cl;
         Sound(0x104);
-        const UC chosen = B(kAbilityCursor);
+        const UC chosen = Rest2e_AbilityCursor;
         if (chosen == 1) {
             const auto state = static_cast<UC>(FieldS_State + 5);
             FieldS_Step = 0;
@@ -1322,7 +1322,7 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
 // original 0x58D9C0: FieldAbility_States[3] - the member and the list type.
 extern "C" void __cdecl FieldAbility_PickMember(void) {
     Backdrop();
-    const UC cursor = B(kAbilityCursor);
+    const UC cursor = Rest2e_AbilityCursor;
     const UC window = B(0x8031F3);
     B(0x803454) = 0;
     B(0x8033A8) = cursor != 0 ? 3 : 1;
@@ -1345,7 +1345,7 @@ extern "C" void __cdecl FieldAbility_PickMember(void) {
     const UC n = PartyCount();
     const UC was = B(0x8033AA);
     MoveAbilityMember(repeat, n);
-    if (B(kAbilityCursor) == 2) {
+    if (Rest2e_AbilityCursor == 2) {
         SetW(0x8033B0, 1);
     } else {
         SetW(0x8033B0, 0);
@@ -1405,7 +1405,7 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
     const U repeat = AutoRepeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     UC al, cl;
     bool turned = false;
-    if (B(kAbilityCursor) != 2) turned = TurnType(repeat, cl);
+    if (Rest2e_AbilityCursor != 2) turned = TurnType(repeat, cl);
     if (turned) {
         const int m = BattleActorCopies_ItemActor;
         al = B(static_cast<U>(static_cast<int>(kAbilityCursors + cl) + 4 * m));
@@ -1443,7 +1443,7 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
             Sound(0x107);
             return;
         }
-        if (B(kAbilityCursor) != 0) {
+        if (Rest2e_AbilityCursor != 0) {
             const UC mode = B(0x8033A8);
             const UC user = B(0x8033AA);
             const UC can = SH_CALL(Skill_CanUse)(mode, user, ability);
@@ -1472,7 +1472,7 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
             const UC used = again[B(0x8033AC)];
             const UC user = PartyRecord(B(0x8033AA));
             const UC answer = AbilityUse(user, 0, used);
-            B(kAbilityResult) = answer;
+            Rest2e_AbilityResult = answer;
             Sound(answer == 1 || answer == 5 ? 0x109 : 0x107);
             return;
         }
@@ -1544,7 +1544,7 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
         const UC target = PartyRecord(FieldS_Column);
         const UC user = PartyRecord(B(0x8033AA));
         const UC answer = AbilityUse(user, target, used);
-        B(kAbilityResult) = answer;
+        Rest2e_AbilityResult = answer;
         Sound(answer == 1 || answer == 5 ? 0x109 : 0x107);
         return;
     }
@@ -1820,8 +1820,8 @@ extern "C" void __cdecl FieldAbility_ViewOpen(void) {
     B(kTimer) = t;
     if (t != 0) return;
     SH_AT(Handler, at::kAbilityViewWindow)();
-    const UC cursor = B(kViewCursor);
-    const UC top = B(kViewTop);
+    const UC cursor = Rest2e_AbilityViewCursor;
+    const UC top = Rest2e_AbilityViewTop;
     B(0x8033CF) = cursor;
     B(0x8033CE) = top;
     Sound(0x102);
@@ -1854,8 +1854,8 @@ extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     const UC was = B(0x8033CF);
     UC cl, al;
     Scroll(repeat, kViewScroll, cl, al);
-    B(kViewCursor) = cl;
-    B(kViewTop) = al;
+    Rest2e_AbilityViewCursor = cl;
+    Rest2e_AbilityViewTop = al;
     if (was != cl) Sound(0x100);
     if (!Cancelled(static_cast<std::uint32_t>(Input_Pressed))) return;
     Sound(0x106);

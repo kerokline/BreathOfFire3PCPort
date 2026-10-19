@@ -48,7 +48,7 @@ constexpr unsigned kEffectCount = 20;
 // kObjectsAt: now Sprite_Objects (symbols.toml). Sprite_Objects
 // kExtraAt: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 constexpr U kEffectStride = 0x80;
-constexpr U kPanelPose = 0x6BC716;     // the leader panel's cells (docs/effect_1e.md section 1)
+// kPanelPose: now Effect1e_BiteHeld (symbols.toml). the leader panel's cells (docs/effect_1e.md section 1)
 // kPanelCounter: now Effect1e_Choice (symbols.toml).
 // kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
@@ -952,7 +952,7 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
 // Field_State +0x89 0: Sprite_SetAnimationAt(0xA, 2), else
 // Sprite_SetAnimation(0xB); +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Begin(void) {
-    At(kPanelPose)[0] = 0;
+    Effect1e_BiteHeld = 0;
     Effect1e_Choice = 0;
     Effect1e_Blink = 0;
     Sc()[0x29] = 5;
