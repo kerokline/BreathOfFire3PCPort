@@ -260,27 +260,29 @@ src/game/area_w1b_fuzz.cpp	730	0x3A	family	Word(o + 0x3A): o = Obj(): Seed45 has
 src/game/area_w1c.cpp	89	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
 src/game/area_w1c.cpp	177	0x18	family	Long(Sprite_Current + 0x18): Sprite_Current: RestoreColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
 src/game/area_w1c.cpp	179	0x1C	family	Long(Sprite_Current + 0x1C): Sprite_Current: RestoreColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	472	0x14	field-missing	SetLong(cur + 0x14): EffectObject +0x14 width 4
-src/game/area_w1c.cpp	472	0x14	field-missing	Long(cur + 0x14): EffectObject +0x14 width 4
-src/game/area_w1c.cpp	690	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
-src/game/area_w1c.cpp	690	0x34	family	Long(from + 0x34): from = Field_ActiveMember - 0x668: family not established
-src/game/area_w1c.cpp	691	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
-src/game/area_w1c.cpp	691	0x38	family	Long(from + 0x38): from = Field_ActiveMember - 0x668: family not established
-src/game/area_w1c.cpp	694	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
-src/game/area_w1c.cpp	714	0xC	family	SetLong(entry + 12): entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u: family not established
-src/game/area_w1c.cpp	715	0x8	family	SetLong(entry + 8): entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u: family not established
-src/game/area_w1c.cpp	804	0x34	family	Long(Sprite_Current + 0x34): Sprite_Current: Area52_BlockCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	805	0x38	family	Long(Sprite_Current + 0x38): Sprite_Current: Area52_BlockCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	826	0x18	family	SetLong(cur + 0x18): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	826	0x18	family	Long(cur + 0x18): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	828	0x1C	family	SetLong(cur + 0x1C): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	828	0x1C	family	Long(cur + 0x1C): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	850	0x18	family	SetLong(Sprite_Current + 0x18): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	850	0x18	family	Long(Sprite_Current + 0x18): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	851	0x1C	family	SetLong(Sprite_Current + 0x1C): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	851	0x1C	family	Long(Sprite_Current + 0x1C): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
-src/game/area_w1c.cpp	901	0x36	width	Word(record + 0x36): PartyMember +0x36 width 2
-src/game/area_w1c.cpp	902	0x3A	width	Word(record + 0x3A): PartyMember +0x3A width 2
+src/game/area_w1c.cpp	474	0xC	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md area: cur is the party record PartyAt(m) here, not an EffectObject
+src/game/area_w1c.cpp	475	0x10	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md area: cur is the party record PartyAt(m) here, not an EffectObject
+src/game/area_w1c.cpp	476	0x14	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md area: cur is the party record PartyAt(m) here, not an EffectObject (+0x14 beside the two reverted sites; the row said 472 before)
+src/game/area_w1c.cpp	476	0x14	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md area: cur is the party record PartyAt(m) here, not an EffectObject (+0x14 beside the two reverted sites; the row said 472 before)
+src/game/area_w1c.cpp	689	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w1c.cpp	689	0x34	family	Long(from + 0x34): from = Field_ActiveMember - 0x668: family not established
+src/game/area_w1c.cpp	690	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w1c.cpp	690	0x38	family	Long(from + 0x38): from = Field_ActiveMember - 0x668: family not established
+src/game/area_w1c.cpp	693	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1c.cpp	713	0xC	family	SetLong(entry + 12): entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u: family not established
+src/game/area_w1c.cpp	714	0x8	family	SetLong(entry + 8): entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u: family not established
+src/game/area_w1c.cpp	803	0x34	family	Long(Sprite_Current + 0x34): Sprite_Current: Area52_BlockCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	804	0x38	family	Long(Sprite_Current + 0x38): Sprite_Current: Area52_BlockCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	825	0x18	family	SetLong(cur + 0x18): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	825	0x18	family	Long(cur + 0x18): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	827	0x1C	family	SetLong(cur + 0x1C): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	827	0x1C	family	Long(cur + 0x1C): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	849	0x18	family	SetLong(Sprite_Current + 0x18): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	849	0x18	family	Long(Sprite_Current + 0x18): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	850	0x1C	family	SetLong(Sprite_Current + 0x1C): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	850	0x1C	family	Long(Sprite_Current + 0x1C): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	900	0x36	width	Word(record + 0x36): PartyMember +0x36 width 2
+src/game/area_w1c.cpp	901	0x3A	width	Word(record + 0x3A): PartyMember +0x3A width 2
 src/game/area_w1c_fuzz.cpp	228	0x34	family	Long(Sprite_Current + 0x34): Sprite_Current: BlockCellEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
 src/game/area_w1c_fuzz.cpp	230	0x38	family	Long(Sprite_Current + 0x38): Sprite_Current: BlockCellEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
 src/game/area_w1c_fuzz.cpp	240	0x34	family	SetLong(Sprite_Current + 0x34): Sprite_Current: ShiftXEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)

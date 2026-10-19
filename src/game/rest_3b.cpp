@@ -468,7 +468,7 @@ extern "C" void __cdecl EffectSlot06_HpThirdHit(void) {
     } else {
         const U share = BH_AT(U1, at::kHpShare)(3);
         const unsigned t = B(at::kTarget);
-        SetWord(Result() + 4, static_cast<std::uint16_t>(share - EnemyRec(Enemy(t))->def));
+        SetWord(Result() + 4, static_cast<std::uint16_t>(share - Word(Enemy(t) + 0xB6)));
     }
     if (S16(Word(Result() + 4)) < 0) SetWord(Result() + 4, 0);
 }

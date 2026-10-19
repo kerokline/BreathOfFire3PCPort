@@ -548,8 +548,13 @@ src/game/field_event.cpp	130	0x3e	width	PartyMember +0x3e read as 2 bytes; recor
 src/game/field_event.cpp	295	0xa	no-family	`context`: a script context (object +0x80 or member +0x124)
 src/game/field_event.cpp	324	0x4	no-family	`bank`: an animation bank
 src/game/field_event.cpp	328	-	computed	offset computed at run time: offsets + (index & 0xFF) * 4u
+src/game/field_event.cpp	432	0x2C	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	435	0x2C	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
 src/game/field_event.cpp	436	-	computed	offset computed at run time: At(at::kBankTable) + index * 4u
-src/game/field_event.cpp	436	0x4c	pad	PartyMember +0x4c is padding in records.h
+src/game/field_event.cpp	436	0x4C	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	446	0x70	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	450	0x70	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	452	0x29	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
 src/game/field_event.cpp	481	0x40	pad	PartyMember +0x40 is padding in records.h
 src/game/field_event.cpp	482	0x44	pad	PartyMember +0x44 is padding in records.h
 src/game/field_event.cpp	518	0x4	no-family	`offset`: a bank offset table

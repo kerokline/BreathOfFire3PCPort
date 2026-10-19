@@ -381,6 +381,8 @@ src/game/magic_lib.cpp	418	0x3E	field-missing	BattleTask +0x3E is padding in rec
 src/game/magic_lib.cpp	432	0x3E	field-missing	BattleTask +0x3E is padding in records.h (no reader named it); the magic task uses it (Word, 2 bytes)
 src/game/magic_lib.cpp	492	0x34	family	an actor pointer (the owner 0x93B940, the source, the caster, or party-or-enemy by index): PartyMember or BattleEnemy or a task, no one struct
 src/game/magic_lib.cpp	493	0x38	family	an actor pointer (the owner 0x93B940, the source, the caster, or party-or-enemy by index): PartyMember or BattleEnemy or a task, no one struct
+src/game/magic_lib.cpp	498	0x34	audit-family	C:/Users/kerok/v_typed/b1_audit_magic.md W1: MagicFx_CenterOnSide also runs on enemy object 7 (Boss38_Setup), not only a BattleTask
+src/game/magic_lib.cpp	499	0x38	audit-family	C:/Users/kerok/v_typed/b1_audit_magic.md W1: MagicFx_CenterOnSide also runs on enemy object 7 (Boss38_Setup), not only a BattleTask
 src/game/magic_lib.cpp	500	0x3E	field-missing	BattleTask +0x3E is padding in records.h (no reader named it); the magic task uses it (SetWord, 2 bytes)
 src/game/magic_lib_fuzz.cpp	287	0x3E	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)
 src/game/magic_lib_fuzz.cpp	292	0x3E	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)

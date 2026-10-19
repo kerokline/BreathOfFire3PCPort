@@ -429,11 +429,11 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
     while (row[column] != member)
         if (++column >= 3) break;
     g.release_tint(Sprite_Current);
-    Self()->column = column;
+    SetWord(Sprite_Current + 0x2C, column);
     {
-        records::PartyMember* const c = Self();
-        const unsigned index = c->column;
-        SetLong(Bytes(c) + 0x4C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kBankTable) + index * 4u)) + at::kBankTable));
+        unsigned char* const c = Sprite_Current;
+        const unsigned index = Word(c + 0x2C);
+        SetLong(c + 0x4C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kBankTable) + index * 4u)) + at::kBankTable));
     }
     Sprite_Current[0x24] = 1;
     Sprite_Current[0x27] = static_cast<unsigned char>(slot + 0x78);
@@ -442,14 +442,14 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
     Sprite_Current[0x26] = static_cast<unsigned char>(slot * 0x50);
     Sprite_Current[0x2B] = At(MoveScript_EffectState_addr + 0xc)[member];
     {
-        records::PartyMember* const c = Self();
-        c->raised = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(c->raised)) & 0xFFFFFF00u);
+        unsigned char* const c = Sprite_Current;
+        SetLong(c + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(c + 0x70)) & 0xFFFFFF00u));
     }
     {
-        records::PartyMember* const c = Self();
-        c->raised = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(c->raised)) | (Bytes(c)[0x2B] != 0 ? 1u : 0u));
+        unsigned char* const c = Sprite_Current;
+        SetLong(c + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(c + 0x70)) | (c[0x2B] != 0 ? 1u : 0u)));
     }
-    Self()->ot_slot = Draw_OtSlot;
+    Sprite_Current[0x29] = Draw_OtSlot;
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5F] = 0;

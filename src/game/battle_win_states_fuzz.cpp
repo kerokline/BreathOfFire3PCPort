@@ -409,7 +409,7 @@ void Fix(unsigned k) {
     for (unsigned e = 0; e < 6; ++e)
         if (reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80)->max_hp == 0) reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80)->max_hp = 1 + Next() % 0xFFFF;
     for (unsigned m = 0; m < 5; ++m)
-        if (reinterpret_cast<records::PartyMember*>(Member(m))->max_hp == 0) reinterpret_cast<records::PartyMember*>(Member(m))->max_hp = 1 + Next() % 0xFFFF;
+        if (Word(Member(m) + 0xA0) == 0) SetWord(Member(m) + 0xA0, 1 + Next() % 0xFFFF);
 }
 
 // A value against its top: 0, the gauge's floor (55 v < top), a quarter
@@ -436,16 +436,16 @@ void SeedEnemy(unsigned e) {
     At(at::kEnemies + at::kEnemyStride * e - 0x78)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next());
 }
 void SeedMember(unsigned m, bool ap_top_zero_often) {
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(Member(m));
+    unsigned char* const r = Member(m);
     const unsigned top = Top();
-    member_rec->max_hp = top;
-    member_rec->hp = Against(top);
+    SetWord(r + 0xA0, top);
+    SetWord(r + 0x98, Against(top));
     const unsigned ap = ap_top_zero_often && Half() ? 0 : Top();
-    member_rec->max_ap = ap;
-    member_rec->ap = ap ? Against(ap) : Next() & 0xFFFF;
-    member_rec->status = Next() & 0xFFFF;
-    member_rec->direction = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 6);
-    member_rec->char_id = static_cast<unsigned char>(Often() ? Next() % 11 : Next());
+    SetWord(r + 0xA2, ap);
+    SetWord(r + 0x9A, ap ? Against(ap) : Next() & 0xFFFF);
+    SetWord(r + 0x90, Next() & 0xFFFF);
+    r[8] = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 6);
+    r[0x89] = static_cast<unsigned char>(Often() ? Next() % 11 : Next());
 }
 
 void Seed(unsigned k) {

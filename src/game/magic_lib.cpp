@@ -495,8 +495,8 @@ MLIB_EXPORT void __cdecl MagicFx_CenterOnSide(void) {
         ++n;
     }
     if (n == 0) bof3::Fatal("MagicFx_CenterOnSide: every actor of the side is out - the original divides by zero");
-    Store(ScTask()->x, I32(static_cast<std::uint32_t>(I32(sx) / n) << 9));
-    Store(ScTask()->y, I32(static_cast<std::uint32_t>(I32(sz) / n) << 9));
+    SetLong(Sprite_Current + 0x34, I32(static_cast<std::uint32_t>(I32(sx) / n) << 9));
+    SetLong(Sprite_Current + 0x38, I32(static_cast<std::uint32_t>(I32(sz) / n) << 9));
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(I32(sy) / n));
 }
 

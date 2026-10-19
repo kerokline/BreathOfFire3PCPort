@@ -684,13 +684,16 @@ src/game/battle_setup_fuzz.cpp	144	(i <= 2 ? at::kPHpChange : at::kEHpChange)	fa
 src/game/battle_setup_fuzz.cpp	145	(i <= 2 ? at::kPHpChange : at::kEHpChange)	family	no record family established for this pointer here (via=Obj)
 src/game/battle_setup_fuzz.cpp	163	at::kPStatus	family	no record family established for this pointer here (param)
 src/game/battle_setup_fuzz.cpp	164	at::kEStatus	family	no record family established for this pointer here (param)
-src/game/battle_setup_fuzz.cpp	362	(i <= 2 ? at::kPFlags : at::kEFlags)	family	no record family established for this pointer here (via=Obj)
-src/game/battle_setup_fuzz.cpp	363	(i <= 2 ? at::kPStatus : at::kEStatus)	family	no record family established for this pointer here (via=Obj)
-src/game/battle_setup_fuzz.cpp	405	at::kPHp	gate	PartyMember->hp typed changed the object
-src/game/battle_setup_fuzz.cpp	464	(i <= 2 ? at::kPAgi : at::kEAgi)	family	no record family established for this pointer here (via=Obj)
-src/game/battle_setup_fuzz.cpp	466	(i <= 2 ? at::kPAgi : at::kEAgi)	family	no record family established for this pointer here (via=Obj)
-src/game/battle_setup_fuzz.cpp	477	(actor <= 2 ? at::kPStatus : at::kEStatus)	family	no record family established for this pointer here (via=Obj)
-src/game/battle_setup_fuzz.cpp	484	at::kPAgi	gate	PartyMember->agi typed changed the object
+src/game/battle_setup_fuzz.cpp	346	0x142	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_setup_fuzz.cpp	347	0x143	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_setup_fuzz.cpp	361	(i <= 2 ? at::kPFlags : at::kEFlags)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	362	(i <= 2 ? at::kPStatus : at::kEStatus)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	404	at::kPHp	gate	PartyMember->hp typed changed the object
+src/game/battle_setup_fuzz.cpp	435	0x142	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_setup_fuzz.cpp	463	(i <= 2 ? at::kPAgi : at::kEAgi)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	465	(i <= 2 ? at::kPAgi : at::kEAgi)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	476	(actor <= 2 ? at::kPStatus : at::kEStatus)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	483	at::kPAgi	gate	PartyMember->agi typed changed the object
 src/game/battle_sprites.cpp	104	2	not-record	not one of the nine records.h families (via=Ptr)
 src/game/battle_sprites.cpp	268	4	not-record	not one of the nine records.h families (via=ActionRecord)
 src/game/battle_sprites.cpp	486	0x126	union	PartyMember +0x126 w2
@@ -757,6 +760,10 @@ src/game/battle_turn_steps.cpp	488	0x10	not-record	not one of the nine records.h
 src/game/battle_turn_steps_fuzz.cpp	182	at::kStatus	gate	PartyMember->status typed changed the object
 src/game/battle_turn_steps_fuzz.cpp	219	0x18	family	no record family established for this pointer here (param)
 src/game/battle_turn_steps_fuzz.cpp	220	0x10	family	no record family established for this pointer here (param)
+src/game/battle_turn_steps_fuzz.cpp	453	0x148	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_turn_steps_fuzz.cpp	502	0x89	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_turn_steps_fuzz.cpp	503	0x89	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_turn_steps_fuzz.cpp	537	0x148	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
 src/game/battle_win_states.cpp	381	0x14	union	WindowRecord +0x14 w2
 src/game/battle_win_states.cpp	383	0x1C	union	WindowRecord +0x1C w2
 src/game/battle_win_states.cpp	413	-	family	no record family established for this pointer here (table=0x93b9e0)
@@ -766,6 +773,14 @@ src/game/battle_win_states.cpp	449	0x14	union	WindowRecord +0x14 w2
 src/game/battle_win_states.cpp	451	0x1C	union	WindowRecord +0x1C w2
 src/game/battle_win_states.cpp	467	0x16	union	WindowRecord +0x16 w2
 src/game/battle_win_states.cpp	469	0x1E	union	WindowRecord +0x1E w2
+src/game/battle_win_states_fuzz.cpp	412	0xA0	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_win_states_fuzz.cpp	441	0xA0	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_win_states_fuzz.cpp	442	0x98	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_win_states_fuzz.cpp	444	0xA2	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_win_states_fuzz.cpp	445	0x9A	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_win_states_fuzz.cpp	446	0x90	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_win_states_fuzz.cpp	447	0x8	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_win_states_fuzz.cpp	448	0x89	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
 src/game/battle_window_draw.cpp	182	0x16	not-record	not one of the nine records.h families (via=Next)
 src/game/battle_window_draw.cpp	188	0x18	not-record	not one of the nine records.h families (via=Next)
 src/game/battle_window_draw.cpp	189	0x1A	not-record	not one of the nine records.h families (via=Next)
@@ -787,16 +802,20 @@ src/game/battle_window_draw.cpp	341	0x18	not-record	not one of the nine records.
 src/game/battle_window_draw.cpp	343	0x1A	not-record	not one of the nine records.h families (via=Next)
 src/game/battle_window_draw.cpp	345	0x16	not-record	not one of the nine records.h families (via=Next)
 src/game/battle_window_draw.cpp	465	0x1A	family	no record family established for this pointer here (table=0x802dc0;stride=0x14c)
-src/game/battle_window_draw_fuzz.cpp	280	0x1A	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
-src/game/battle_window_draw_fuzz.cpp	461	0x1A	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
-src/game/battle_window_draw_fuzz.cpp	577	0x14	not-record	not one of the nine records.h families (via=Ability)
+src/game/battle_window_draw_fuzz.cpp	279	0x1A	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_window_draw_fuzz.cpp	460	0x1A	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_window_draw_fuzz.cpp	466	0x1A	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_window_draw_fuzz.cpp	575	0x14	not-record	not one of the nine records.h families (via=Ability)
 src/game/battle_windows.cpp	238	0x126	union	PartyMember +0x126 w2
 src/game/battle_windows.cpp	424	0x26	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
 src/game/battle_windows.cpp	426	0x16	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
 src/game/battle_windows.cpp	494	0xF	family	no record family established for this pointer here (param)
 src/game/battle_windows.cpp	602	0x10	union	WindowRecord +0x10 w2
 src/game/battle_windows.cpp	605	0x12	union	WindowRecord +0x12 w2
-src/game/battle_windows_fuzz.cpp	587	0x126	union	PartyMember +0x126 w2
+src/game/battle_windows_fuzz.cpp	540	0x90	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_windows_fuzz.cpp	542	0xA2	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_windows_fuzz.cpp	545	0x9A	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)
+src/game/battle_windows_fuzz.cpp	585	0x126	union	PartyMember +0x126 w2
 src/game/boss_h.cpp	75	4 * state	family	no record family established for this pointer here (param)
 src/game/boss_h.cpp	81	3 * (kind - 8)	not-record	not one of the nine records.h families (via=AddressOf)
 src/game/boss_h.cpp	218	0x40	family	no record family established for this pointer here (base=Sprite_Current)

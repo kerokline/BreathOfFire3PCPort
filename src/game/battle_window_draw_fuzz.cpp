@@ -25,7 +25,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_window_draw_callees.h"
 #include "game/move_script_bytes.h"
-#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include <windows.h>
@@ -464,8 +463,7 @@ void Fix() {
     }
     for (unsigned m = 0; m < 4; ++m) {
         unsigned char* const w = At(at::kWorking + m * at::kWorkingStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(w - 0x80);
-        if (Often()) member_rec->ap = Half() ? 0 : Next() % 21;
+        if (Often()) SetWord(w + 0x1A, Half() ? 0 : Next() % 21);
         if (Often()) w[0x1E] = static_cast<unsigned char>(3 + Next() % 4);
         for (unsigned s = 0x16; s <= 0x17; ++s)
             if (Often()) w[s] = static_cast<unsigned char>(0x18 + Next() % 4);

@@ -343,9 +343,8 @@ void SeedActors() {
     static const unsigned kSmall[] = {0, 1, 2, 3, 4, 5, 6, 0xFF};
     for (unsigned i = 0; i <= 10; ++i) {
         unsigned char* const p = P(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
-        if (Often()) member_rec->count_4000 = static_cast<unsigned char>(Pick(kSmall, 8));
-        if (Often()) member_rec->count_800 = static_cast<unsigned char>(Pick(kSmall, 8));
+        if (Often()) p[at::kPCount4000] = static_cast<unsigned char>(Pick(kSmall, 8));
+        if (Often()) p[at::kPCount800] = static_cast<unsigned char>(Pick(kSmall, 8));
         if (i > 2) {
             unsigned char* const e = E(i);
             auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
@@ -433,7 +432,7 @@ Args Seed(unsigned k) {
         for (unsigned i = 0; i <= 10; ++i) {
             unsigned char* const o = Obj(i);
             if (Often()) o[(i <= 2 ? at::kPFlags : at::kEFlags) + 1] = static_cast<unsigned char>(Next() | 0x40);
-            if (Often()) reinterpret_cast<records::PartyMember*>(P(i))->count_4000 = static_cast<unsigned char>(Half() ? 3 : 2 + Next() % 3);
+            if (Often()) P(i)[at::kPCount4000] = static_cast<unsigned char>(Half() ? 3 : 2 + Next() % 3);
             if (i > 2 && Half()) E(i)[at::kECount4000] = static_cast<unsigned char>(Half() ? 3 : Next());
         }
         break;

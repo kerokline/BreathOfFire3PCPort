@@ -489,6 +489,7 @@ src/game/rest_3b.cpp	429	+0x4	union	the result record *0x904B60: party +0x124 / 
 src/game/rest_3b.cpp	446	+0x4	union	the result record *0x904B60: party +0x124 / enemy +0x104, the union tail (typed-records.md 3 item 3)
 src/game/rest_3b.cpp	467	+0x4	union	the result record *0x904B60: party +0x124 / enemy +0x104, the union tail (typed-records.md 3 item 3)
 src/game/rest_3b.cpp	471	+0x4	union	the result record *0x904B60: party +0x124 / enemy +0x104, the union tail (typed-records.md 3 item 3)
+src/game/rest_3b.cpp	471	0xB6	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 2: the target byte t is either side; Enemy(t) for t < 3 lands in the task slots
 src/game/rest_3b.cpp	473	+0x4	union	the result record *0x904B60: party +0x124 / enemy +0x104, the union tail (typed-records.md 3 item 3)
 src/game/rest_3b.cpp	473	+0x4	union	the result record *0x904B60: party +0x124 / enemy +0x104, the union tail (typed-records.md 3 item 3)
 src/game/rest_3b.cpp	482	+0x4	union	the result record *0x904B60: party +0x124 / enemy +0x104, the union tail (typed-records.md 3 item 3)

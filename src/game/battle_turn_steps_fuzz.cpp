@@ -450,7 +450,7 @@ void SetPtr(std::uint32_t at, const void* p) { SetLong(At(at), static_cast<std::
 // runs to it), each member's CharacterRecord index, the hooks.
 void Fix() {
     B(at::kMembers) = static_cast<unsigned char>(Next() % 5);
-    for (unsigned i = 0; i < 5; ++i) reinterpret_cast<records::PartyMember*>(Member(i))->char_index = static_cast<unsigned char>(Next() % 10);
+    for (unsigned i = 0; i < 5; ++i) Member(i)[at::kRecord] = static_cast<unsigned char>(Next() % 10);
     SetPtr(BattleHook_End_addr, reinterpret_cast<const void*>(&StubHookEnd));
     SetPtr(BattleHook_Exit_addr, reinterpret_cast<const void*>(&StubHookExit));
     SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHookEvent));
@@ -498,10 +498,9 @@ void Seed(unsigned k) {
         B(BossSb_Countdown_addr) = static_cast<unsigned char>(Half() ? Next() % (count + 1) : Pick(kCursorAt, 7));
         for (unsigned i = 0; i < 5; ++i) {
             unsigned char* const m = Member(i);
-            auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
             if (Often()) m[at::kFlags] = static_cast<unsigned char>((m[at::kFlags] & ~3u) | (Half() ? 0 : Next() % 4));
-            if (Half()) member_rec->char_id = 4;
-            else if (Half()) member_rec->char_id = static_cast<unsigned char>(Next() % 9);
+            if (Half()) m[at::kCharId] = 4;
+            else if (Half()) m[at::kCharId] = static_cast<unsigned char>(Next() % 9);
             if (Half()) m[at::kFlags2 + 1] &= 0xDF;
         }
         break;
@@ -534,9 +533,8 @@ void Seed(unsigned k) {
     case kFinishK:
         for (unsigned i = 0; i < 5; ++i) {
             unsigned char* const m = Member(i);
-            auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
             if (Half()) m[at::kStatus + 1] ^= 0x40;
-            unsigned char* const r = At(at::kRecords + member_rec->char_index * at::kRecordStride);
+            unsigned char* const r = At(at::kRecords + m[at::kRecord] * at::kRecordStride);
             static const unsigned kCounts[] = {0, 3, 4, 4, 5, 5, 6, 0xFF};
             if (Often()) r[0x1E] = static_cast<unsigned char>(Pick(kCounts, 8));
         }

@@ -469,11 +469,10 @@ extern "C" void __cdecl Area49_EffectFrame(void) {
                         unsigned char dir = row[4];
                         if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), row[5])) dir ^= 4;
                         unsigned char* const cur = Sprite_Current;
-                        auto* const tCur = reinterpret_cast<records::EffectObject*>(cur);
                         if (cur[8] != dir) {
                             cur[8] = dir;
-                            tCur->step_x = -tCur->step_x;
-                            tCur->step_z = -tCur->step_z;
+                            SetLong(cur + 0xC, -Long(cur + 0xC));
+                            SetLong(cur + 0x10, -Long(cur + 0x10));
                             SetLong(cur + 0x14, -Long(cur + 0x14));
                             cur[9] = static_cast<unsigned char>(8 - cur[9]);
                         }
