@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sc0_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -37,7 +38,6 @@ void SetW(uint32_t a, unsigned v) { move_script::SetWord(At(a), v); }
 uint32_t L(uint32_t a) { return static_cast<uint32_t>(move_script::Long(At(a))); }
 void SetL(uint32_t a, uint32_t v) { move_script::SetLong(At(a), static_cast<int32_t>(v)); }
 void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<int32_t>(v)); }
-uint32_t L(const unsigned char* p) { return static_cast<uint32_t>(move_script::Long(p)); }
 
 // The chapter's flag row, as the original reads it: the pointer afresh.
 unsigned char* Row() { return At(AreaW0c_FlagRow); }
@@ -67,6 +67,10 @@ bool TakeSlot() {
     return slot != 0xFF;
 }
 unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<uint32_t>(B(kSlot)) << 7)); }
+
+// The typed views of the record pointers (docs/typed-records.md). Fx() is an
+// effect object (Effect_Objects).
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 
 // A kind-0x13 effect at (x, y, z) with +9 = mode: the shape every run of this
 // chapter places after TakeSlot.
@@ -162,8 +166,8 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
                 e[5] = 0x10;
                 SetL(e + 0x18, 2);
                 SetL(e + 0x1C, 2);
-                SetL(e + 0xC, 3);
-                SetL(e + 0x10, 1);
+                Fx(e)->step_x = 3;
+                Fx(e)->step_z = 1;
             }
             const unsigned char again = B(kByte4A);
             Camera_Angles[2] = static_cast<std::uint16_t>(Camera_Angles[2]) + 0xFEABu;
@@ -606,10 +610,10 @@ extern "C" void __cdecl Scena00_Run5(void) {
             unsigned char* const e = SlotRecord();
             e[0] = 1;
             e[5] = 0x1E;
-            SetL(e + 0x34, L(0x802D74));
-            SetL(e + 0x38, L(0x802D78));
-            const long y = SH_CALL(AreaMap_Elevation)(static_cast<long>(L(e + 0x34)), static_cast<long>(L(e + 0x38)));
-            SetL(e + 0x3C, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))) << 16);
+            Fx(e)->x = L(0x802D74);
+            Fx(e)->z = L(0x802D78);
+            const long y = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(Fx(e)->x)), static_cast<long>(static_cast<uint32_t>(Fx(e)->z)));
+            Fx(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))) << 16;
             e[0x29] = 0;
         }
         const unsigned char c = B(kCounter);

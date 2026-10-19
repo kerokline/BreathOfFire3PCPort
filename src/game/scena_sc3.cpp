@@ -27,6 +27,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sc3_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -42,6 +43,13 @@ using move_script::SetWord;
 using move_script::Word;
 
 using Handler = void (__cdecl*)();
+
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 using ObjectHandler = std::uint32_t (__cdecl*)(unsigned char* object, unsigned char* bank);
 
 // --- the cells --------------------------------------------------------------
@@ -974,9 +982,9 @@ extern "C" void __cdecl Scena03_Scene7(void) {
     case 6:
         if (C0() != 0x16) return;
         if (unsigned char* const e = TakeKeptEffect(0x22)) {
-            SetLong(e + 0x34, 0x230000);
-            SetLong(e + 0x38, 0x4F0000);
-            SetLong(e + 0x3C, 0x4800000);
+            Fx(e)->x = 0x230000;
+            Fx(e)->z = 0x4F0000;
+            Fx(e)->height = 0x4800000;
         }
         SetStep(7);
         return;
@@ -1248,19 +1256,19 @@ extern "C" unsigned char __cdecl Scena03_SpawnAtMember(unsigned char member) {
     cur()[0] = 1;
     SetLong(cur() + 0x34, Long(At(ObjTrio_addr + m + 0x34)) + 0x8000);
     const std::int32_t z = Long(At(ObjTrio_addr + m + 0x38));
-    SetLong(rec + 0x8C, Long(cur() + 0x34));
-    SetLong(cur() + 0x38, z);
-    SetLong(rec + 0x90, Long(cur() + 0x38));
-    SetLong(rec + 0x94, 0);
-    const long elevation = SH_CALL(AreaMap_Elevation)(Long(cur() + 0x34), Long(cur() + 0x38));
+    Spr(rec)->target_x = Spr(cur())->x;
+    Spr(cur())->z = z;
+    Spr(rec)->target_z = Spr(cur())->z;
+    Spr(rec)->best_score = 0;
+    const long elevation = SH_CALL(AreaMap_Elevation)(Spr(cur())->x, Spr(cur())->z);
     SetWord(cur() + 0x3E, static_cast<unsigned>(elevation));
     cur()[1] = 4;
     cur()[2] = 0;
     cur()[8] = 0;
     cur()[6] = 0;
-    SetWord(rec + 0x9A, 0);
-    SetWord(rec + 0x98, 0);
-    SetWord(rec + 0x88, 0);
+    Spr(rec)->half_d = 0;
+    Spr(rec)->half_w = 0;
+    Spr(rec)->trigger_word = 0;
     rec[0x83] = 2;
     rec[0x84] = 2;
     const unsigned char flags = 0x88;

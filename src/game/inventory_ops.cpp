@@ -26,6 +26,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/inventory_ops_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -92,6 +93,13 @@ unsigned char* Member(u32 m) { return At(at::kMembers + 4 * m); }   // +0 placed
 unsigned char* Enemy(u32 k) { return At(at::kEnemies + at::kEnemyStride * k); }
 unsigned char* Kind(u32 kind) { return At(at::kKinds + at::kKindStride * kind); }
 unsigned char* Obj(u32 i) { return ObjTrio + at::kObjStride * i; }
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use, as the original does. Party() is a party
+// member (ObjTrio, Field_State). Fx() is an effect object (Effect_Objects).
+static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+static records::PartyMember* Party(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 unsigned char& Byte(u32 address) { return *At(address); }
 
 i32 CentreX() { return static_cast<std::int32_t>(BossSi_CentreX); }
@@ -652,12 +660,12 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             fx[0] = 1;
             fx[5] = 6;
             fx[6] = 1;
-            SetWord(fx + 0x2E, Word(obj + 0x2E));
-            SetWord(fx + 0x30, Word(obj + 0x30));
+            Fx(fx)->screen_x = static_cast<std::uint16_t>(Party(obj)->screen_x);
+            Fx(fx)->screen_y = static_cast<std::uint16_t>(Party(obj)->screen_y);
             const u32 id = obj[0x89];
             Obj(0)[0xB] = e;
-            SetLong(fx + 0xC, At(at::kAlertOffsets)[2 * id]);
-            SetLong(fx + 0x10, At(at::kAlertOffsets)[2 * id + 1]);
+            Fx(fx)->step_x = At(at::kAlertOffsets)[2 * id];
+            Fx(fx)->step_z = At(at::kAlertOffsets)[2 * id + 1];
         }
         ++count;
     }
@@ -770,7 +778,7 @@ extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
                     Sprite_Current[0x29] = Draw_OtSlot;
                     SetLong(Sprite_Current + 0x34, Long(PosX(k)));
                     SetLong(Sprite_Current + 0x38, Long(PosZ(k)));
-                    const long ground = g.ground_at(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38));
+                    const long ground = g.ground_at(SC()->x, SC()->z);
                     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
                     Sprite_Current[0x48] = 0;
                     Sprite_Current[0xB] = 1;
@@ -813,9 +821,9 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
         unsigned char* const obj = Obj(i);
         Field_State = obj;
         Sprite_Current = obj;
-        SetLong(obj + 0x34, Long(PosX(i)));
+        Party(obj)->x = Long(PosX(i));
         SetLong(Sprite_Current + 0x38, Long(PosZ(i)));
-        const long ground = g.ground_at(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38));
+        const long ground = g.ground_at(SC()->x, SC()->z);
         SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
         Sprite_Current[0xB] = 0;
         const u32 record = Field_State[0x148];

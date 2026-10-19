@@ -12,6 +12,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "game/window_task_callees.h"
 #include "hook/detour.h"
@@ -40,6 +41,12 @@ unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
         *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
 }
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
+// typed: +8..+0x1F mean something else in each handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 // DIV-0041 (psp-widescreen-placements.md 2.6, the owner's answer of
 // 2026-10-12): the side placements move out to the wide frame's edges. The
@@ -442,8 +449,8 @@ int HalfStep(const unsigned char* r, unsigned offset) {
 // and Window_DrawOutline keep only the low 16 bits of the first two and the
 // low byte of the last two, so what the original leaves in the upper halves
 // of the registers it pushes never reaches either.
-int RecX(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 4)) >> 4; }
-int RecY(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 6)) >> 4; }
+int RecX(const unsigned char* r) { return static_cast<std::int16_t>(Win(r)->centre_x) >> 4; }
+int RecY(const unsigned char* r) { return static_cast<std::int16_t>(Win(r)->centre_y) >> 4; }
 int RecW(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x10)) >> 4; }
 int RecH(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x12)) >> 4; }
 
@@ -466,10 +473,10 @@ extern "C" void __cdecl Window_Grow(void) {
     unsigned char* r = Rec();
     SetWord(r + 0x10, Word(r + 0x10) + Word(r + 0x14));
     r = Rec();
-    SetWord(r + 4, Word(r + 4) - static_cast<unsigned>(HalfStep(r, 0x14)));
+    Win(r)->centre_x = Win(r)->centre_x - static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
     if (RecW(r) > r[0xA]) {
-        SetWord(r + 4, SettledX(r));
+        Win(r)->centre_x = SettledX(r);
         r = Rec();
         settled = 1;
         SetWord(r + 0x10, r[0xA] << 4);
@@ -477,10 +484,10 @@ extern "C" void __cdecl Window_Grow(void) {
     }
     SetWord(r + 0x12, Word(r + 0x12) + Word(r + 0x16));
     r = Rec();
-    SetWord(r + 6, Word(r + 6) - static_cast<unsigned>(HalfStep(r, 0x16)));
+    Win(r)->centre_y = Win(r)->centre_y - static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
     if (RecH(r) > r[0xB]) {
-        SetWord(r + 6, SettledY(r));
+        Win(r)->centre_y = SettledY(r);
         r = Rec();
         SetWord(r + 0x12, r[0xB] << 4);
         r = Rec();
@@ -513,7 +520,7 @@ extern "C" void __cdecl Window_Shrink(void) {
     unsigned char* r = Rec();
     SetWord(r + 0x10, Word(r + 0x10) - Word(r + 0x14));
     r = Rec();
-    SetWord(r + 4, Word(r + 4) + static_cast<unsigned>(HalfStep(r, 0x14)));
+    Win(r)->centre_x = Win(r)->centre_x + static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
     if (static_cast<std::int16_t>(Word(r + 0x10)) < 0) {
         const unsigned half = r[0xA] >> 1;
@@ -530,7 +537,7 @@ extern "C" void __cdecl Window_Shrink(void) {
             place = SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + half;
             break;
         }
-        SetWord(r + 4, place << 4);
+        Win(r)->centre_x = place << 4;
         r = Rec();
         settled = 1;
         SetWord(r + 0x10, 0);
@@ -538,7 +545,7 @@ extern "C" void __cdecl Window_Shrink(void) {
     }
     SetWord(r + 0x12, Word(r + 0x12) - Word(r + 0x16));
     r = Rec();
-    SetWord(r + 6, Word(r + 6) + static_cast<unsigned>(HalfStep(r, 0x16)));
+    Win(r)->centre_y = Win(r)->centre_y + static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
     if (static_cast<std::int16_t>(Word(r + 0x12)) < 0) {
         const unsigned half = r[0xB] >> 1;
@@ -555,7 +562,7 @@ extern "C" void __cdecl Window_Shrink(void) {
             place = Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + half;
             break;
         }
-        SetWord(r + 6, place << 4);
+        Win(r)->centre_y = place << 4;
         r = Rec();
         ++settled;
         SetWord(r + 0x12, 0);

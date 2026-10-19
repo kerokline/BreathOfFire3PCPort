@@ -23,6 +23,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/menu_draw_helpers_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -34,6 +35,11 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160). Only +0..+7 are typed: +8..+0x1F mean something else in each
+// handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
 
 U Address(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U XY(int x, int y) { return static_cast<std::uint16_t>(x) | static_cast<U>(static_cast<std::uint16_t>(y)) << 16; }
@@ -359,7 +365,7 @@ void Seed(unsigned k) {
     case kCursor: r[0xA] = static_cast<unsigned char>(Often() ? Next() % 4 : Next()); break;
     case kMoneyUp: {
         static const int kY[] = {-4, -3, -5, -20, -19, -21, -36, 0, 0x10, 0x7FF0};
-        SetWord(r + 6, Often() ? static_cast<std::uint16_t>(kY[Next() % 10]) : static_cast<std::uint16_t>(Next()));
+        Win(r)->centre_y = Often() ? static_cast<std::uint16_t>(kY[Next() % 10]) : static_cast<std::uint16_t>(Next());
         break;
     }
     case kLeft: {
@@ -367,21 +373,21 @@ void Seed(unsigned k) {
         const int bound = Often() ? kBound[Next() % 7] : static_cast<short>(Next());
         const U imm = (Next() % 2 ? 0xFFFF0000u : Next() & 0xFFFF0000u) | static_cast<std::uint16_t>(bound);
         std::memcpy(g_bound, &imm, 4);
-        SetWord(r + 4, Around(bound, -0x20));
+        Win(r)->centre_x = Around(bound, -0x20);
         break;
     }
-    case kMemberUp: SetWord(r + 6, Around(0x3E, -0x10)); break;
+    case kMemberUp: Win(r)->centre_y = Around(0x3E, -0x10); break;
     case kMemberDown: {
         r[0xA] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
-        SetWord(r + 6, Around(r[0xA] * 0x36 + 0x3E, 0x10));
+        Win(r)->centre_y = Around(r[0xA] * 0x36 + 0x3E, 0x10);
         break;
     }
-    case kEquipIn: SetWord(r + 4, Around(0xF, 0x20)); break;
-    case kBuy84: SetWord(r + 4, Around(0x84, -0x20)); break;
-    case kBuy46: SetWord(r + 4, Around(0x46, -0x20)); break;
-    case kItemIn: SetWord(r + 4, Around(0x4B, -0x20)); break;
-    case kBattleRight: SetWord(r + 4, Around(0x53, 0x20)); break;
-    case kBattleSkillIn: SetWord(r + 4, Around(0x53, -0x20)); break;
+    case kEquipIn: Win(r)->centre_x = Around(0xF, 0x20); break;
+    case kBuy84: Win(r)->centre_x = Around(0x84, -0x20); break;
+    case kBuy46: Win(r)->centre_x = Around(0x46, -0x20); break;
+    case kItemIn: Win(r)->centre_x = Around(0x4B, -0x20); break;
+    case kBattleRight: Win(r)->centre_x = Around(0x53, 0x20); break;
+    case kBattleSkillIn: Win(r)->centre_x = Around(0x53, -0x20); break;
     default: break;
     }
 }

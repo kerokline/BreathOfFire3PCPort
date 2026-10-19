@@ -19,6 +19,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/event_leader_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -30,6 +31,12 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
+
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record.
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
@@ -592,8 +599,8 @@ Args Seed(unsigned k) {
             const std::uint32_t dx = static_cast<std::uint32_t>(Field_DirectionSteps[d * 2]) * n;
             const std::uint32_t dz = static_cast<std::uint32_t>(Field_DirectionSteps[d * 2 + 1]) * n;
             const std::uint32_t edge = Half() ? 0x20000u : (static_cast<std::uint32_t>(AreaMap_Header[Next() % 2]) - 3u) << 16;
-            if (Half()) SetLong(sc + 0x34, static_cast<std::int32_t>(edge - dx));
-            else SetLong(sc + 0x38, static_cast<std::int32_t>(edge - dz));
+            if (Half()) Spr(sc)->x = static_cast<std::int32_t>(edge - dx);
+            else Spr(sc)->z = static_cast<std::int32_t>(edge - dz);
         }
         break;
     }

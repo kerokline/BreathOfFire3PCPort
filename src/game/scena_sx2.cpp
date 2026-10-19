@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sx2_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -40,6 +41,12 @@ using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
+
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record.
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 using move_script::Word;
 
 std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
@@ -134,7 +141,7 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
     }
     SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(zd + U(z)));
     unsigned char* const s = Sprite_Current;
-    const long ground = SH_CALL(MapView_GroundAt)(Long(s + 0x34), Long(s + 0x38));
+    const long ground = SH_CALL(MapView_GroundAt)(Spr(s)->x, Spr(s)->z);
     SetWord(Sprite_Current + 0x3E, static_cast<std::uint32_t>(ground));
 }
 
