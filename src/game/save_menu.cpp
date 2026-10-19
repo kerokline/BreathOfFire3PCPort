@@ -799,7 +799,7 @@ void save_menu::DrawSlotsOver(int x, int y, unsigned highlight, const unsigned c
 
 extern "C" void __cdecl SaveMenu_DrawSlots(int x, int y, unsigned highlight) {
     save_menu::DrawSlotsOver(x, y, highlight, At(at::kSummaries), reinterpret_cast<const volatile U*>(At(at::kSlotTop)),
-                             reinterpret_cast<const volatile U*>(At(at::kSlot)));
+                             reinterpret_cast<const volatile U*>(At(Rest2c_Slot_addr)));
 }
 
 // ============================================================================

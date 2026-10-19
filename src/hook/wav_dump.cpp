@@ -77,7 +77,7 @@ namespace {
 
 constexpr unsigned kRate = 44100;
 constexpr unsigned kChannels = 2;
-constexpr std::uint32_t kCreateSlot = 0x5C4014;          // DSOUND.dll #1 (DirectSoundCreate), exe_host.cpp kSlots
+// kCreateSlot: now Imp_DirectSoundCreate (symbols.toml). DSOUND.dll #1 (DirectSoundCreate), exe_host.cpp kSlots
 constexpr double kCapcomFrameMs = 33.334;                // double at 0x5C4218, Capcom's WinMain
 constexpr double kOurFrameMs = 1001.0 / 30.0;            // DIV-0047
 constexpr unsigned kFlushFrames = 15;                    // header and data on disk every half second
@@ -636,18 +636,18 @@ void WavDump_Start() {
         Log("wav         BOF3X_SPEED=%s: the logic frames outrun the device, so the music's queue runs dry (counted as "
             "underrun samples); effects are mixed as ever", speed);
 
-    void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(kCreateSlot));
+    void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(Imp_DirectSoundCreate_addr));
     HMODULE dsound = GetModuleHandleA("dsound.dll");
     void* const real = dsound ? reinterpret_cast<void*>(GetProcAddress(dsound, MAKEINTRESOURCEA(1))) : nullptr;
     if (!real) Fatal("wav: DSOUND.dll is not loaded, or has no DirectSoundCreate (#1)");
     if (*slot != real)
-        Fatal("wav: the import slot 0x%08X holds %p, not DSOUND.dll's DirectSoundCreate %p", static_cast<unsigned>(kCreateSlot),
+        Fatal("wav: the import slot 0x%08X holds %p, not DSOUND.dll's DirectSoundCreate %p", static_cast<unsigned>(Imp_DirectSoundCreate_addr),
               *slot, real);
     g_real_create = reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(real);
     PatchSlot(slot, reinterpret_cast<void*>(&HookDirectSoundCreate));
     g_on = true;
     Log("wav         BOF3X_WAV_DIR %s, label %s: DirectSoundCreate's slot 0x%08X hooked; a logic frame is %.4f ms "
-        "(%s WinMain)", Utf8Path(g_dir.c_str()).text, Utf8Path(g_label.c_str()).text, static_cast<unsigned>(kCreateSlot),
+        "(%s WinMain)", Utf8Path(g_dir.c_str()).text, Utf8Path(g_label.c_str()).text, static_cast<unsigned>(Imp_DirectSoundCreate_addr),
         g_frame_ms, g_frame_ms == kCapcomFrameMs ? "Capcom's" : "our");
 }
 

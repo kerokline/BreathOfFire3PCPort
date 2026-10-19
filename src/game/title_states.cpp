@@ -32,7 +32,7 @@ constexpr std::uint32_t kPlayClock = 0x9040C8;      // four bytes zeroed startin
 constexpr std::uint32_t kScenarioBytes = 0x8034E0;  // Cond_ByteFA and the nine bytes after it (PSX 0x8014686C)
 // kScenarioFlags: now AreaW0c_FlagRow (symbols.toml). the address of the chapter's Cond_Flags dword (PSX 0x80146868)
 // kSubState: now ScenaSc7_DrawPool (symbols.toml). the dispatcher 0x56D8B0's bytes (PSX 0x801448E4)
-constexpr std::uint32_t kSubInitTable = 0x662CD8;   // 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
+// kSubInitTable: now Scenario_SubInitTable (symbols.toml). 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, where they go (PSX 0x80144F24)
 constexpr std::uint32_t kDemoEntry = bof3::addr::Field_Task;      // task 0's entry for the demo (the field task)
 constexpr std::uint32_t kMenuEntry = bof3::addr::TitleTask_Run;      // task 0's entry for the title menu
@@ -447,7 +447,7 @@ extern "C" void __cdecl Scenario_SubInit(void) {
     s[5] = 0;
     s[1] = 0;
     SetWord(s + 8, 0);
-    for (unsigned i = 0; i < 16; i += 4) SetLong(At(Cond_Flags_addr + 0xa0 + i), Long(At(kSubInitTable + i)));
+    for (unsigned i = 0; i < 16; i += 4) SetLong(At(Cond_Flags_addr + 0xa0 + i), Long(At(Scenario_SubInitTable_addr + i)));
 }
 
 namespace {
@@ -689,7 +689,7 @@ const Region kRegions[] = {
     {0x903F90 - 0x400, 0x808},          // Cond_Flags - 0x400: every chapter's dword, the story flags,
                                         // the play clock, the party combination and the music track
     {0x904EFC, 2},                      // Game_AreaNumber
-    {kSubInitTable, 0x10},
+    {Scenario_SubInitTable_addr, 0x10},
 };
 constexpr unsigned kRegionBytes = 0x48 + 4 + 1 + 1 + 0x10 + 4 + 0x10 + 0x808 + 2 + 0x10;
 

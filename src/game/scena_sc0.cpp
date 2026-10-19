@@ -722,7 +722,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
     if (step > 0x32) return;
     switch (step) {
     case 0:
-        Step(B(kStartSteps + Cond_ByteFD));
+        Step(B(Scena00_StartSteps_addr + Cond_ByteFD));
         return;
     case 0xA:
         SH_CALL(ScriptFlags_Set40)();
