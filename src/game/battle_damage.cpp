@@ -567,7 +567,7 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
 // below its byte +0x8C and neither of its second flags' bits 0..1 is set; a
 // heal (0 or less) is added up to max HP, reaching it sets shown bit 2. An
 // enemy the same without the overkill test, and an HP of 0xFFFF takes
-// nothing. Last, a party attacker whose weapon kind (+0x138) is 5, for a
+// nothing. Last, a party attacker whose character index (+0x148) is 5, for a
 // non-zero amount: weapon 'J' / 'L' / 'O' inflicts 0x40 / 8 / 0x20 through
 // 0x44F1D0 unless 0x44FA70 says it was resisted. Returns the amount.
 extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) {

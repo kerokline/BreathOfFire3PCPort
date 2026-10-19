@@ -96,7 +96,7 @@ void Disturb() {
     case 5: r[party ? at::kPFlags2 : at::kEFlags2] ^= static_cast<unsigned char>(bit); break;
     case 6: r[party ? at::kPStatus : at::kEStatus] ^= static_cast<unsigned char>(bit); break;
     case 7: if (party) r[at::kPWeapon] = static_cast<unsigned char>("JLO\x13\x16"[(h >> 26) % 5]); break;
-    case 8: if (party) r[at::kPWeaponKind] = static_cast<unsigned char>(v & 1 ? 5 : v); else r[at::kEFamily] = v & 1 ? 4 : 1; break;
+    case 8: if (party) r[at::kPCharIndex] = static_cast<unsigned char>(v & 1 ? 5 : v); else r[at::kEFamily] = v & 1 ? 4 : 1; break;
     case 9: r[party ? at::kPSurvive : at::kEHoly] = v; break;
     case 10: At(bof3::addr::DamageScratch)[0] ^= static_cast<unsigned char>(bit); break;
     case 11: At(at::kBattleFlags)[0] ^= 0x80; break;
@@ -464,7 +464,7 @@ void SeedActor(unsigned a) {
     if (Half()) SetWord(r + (party ? at::kPStatus : at::kEStatus), Half() ? 0 : Next() & Next());
     if (Often()) (party ? r[at::kPPresent] : r[at::kEPresent]) |= 1;
     if (party) {
-        if (Half()) r[at::kPWeaponKind] = 5;
+        if (Half()) r[at::kPCharIndex] = 5;
         if (Half()) r[at::kPWeapon] = static_cast<unsigned char>("JLO\x13\x17\x33\x16\x35\x40"[Next() % 9]);
         if (Half()) r[at::kPSurvive] = static_cast<unsigned char>(Next() % 8);
         if (Half()) r[at::kPHoly] = static_cast<unsigned char>(Next() % 8);
@@ -554,7 +554,7 @@ Args Seed(unsigned k) {
         if (k == kApplyK && Half()) {
             // a party attacker whose weapon's element rolls apply
             x.actor[0] = Next() % 3;
-            PartyAt(x.actor[0])[at::kPWeaponKind] = 5;
+            PartyAt(x.actor[0])[at::kPCharIndex] = 5;
             PartyAt(x.actor[0])[at::kPWeapon] = static_cast<unsigned char>("JLO"[Next() % 3]);
         }
         if (k == kCalcK && Half()) {
