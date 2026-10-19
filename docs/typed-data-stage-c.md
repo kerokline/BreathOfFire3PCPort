@@ -16,8 +16,10 @@ sites they unlock. Still no behaviour change, and no ledger entry.
 
 `analysis/data_census.tsv` on `typed/b1`: **27,394 sites**, of which 10,347
 are global, 15,219 record and 1,828 raw address. The record sites B1 left
-are in the seven `analysis/typed_b1_<group>_left.tsv` files, each with its
-reason. Totals across the groups (15,228 rows, with reasons normalised;
+were in seven `analysis/typed_b1_<group>_left.tsv` files, each with its
+reason; since C0 they are rows of the one `analysis/typed_left.tsv`
+(`tools/typed_left.py`, keyed by place rather than line, `source` column
+`b1-<group>`). Totals across the groups (15,228 rows, with reasons normalised;
 counts are rows, not census sites):
 
 | Reason | Rows | What unlocks it |
@@ -33,7 +35,8 @@ counts are rows, not census sites):
 | gate | 270 | C0's `Store()` and C2's typed locals; mostly the assignment-order case below |
 | order, accessor, audit-family, other | 149 | case by case |
 
-Global sites B0 left (`analysis/typed_b0_left.tsv`): 9,135 on an address with
+Global sites B0 left (`analysis/typed_b0_left.tsv`, now `typed_left.tsv`'s
+`b0` rows): 9,135 on an address with
 no `[[data]]` entry, 685 inside an entry, 576 at another width than the
 entry, 351 on an untyped entry, 219 bound or size names.
 
