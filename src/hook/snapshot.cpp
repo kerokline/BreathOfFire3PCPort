@@ -56,11 +56,6 @@ using U = std::uint32_t;
 constexpr U kSaveHalf = 0x12B0;
 constexpr U kSummaryAt = 0xCA0;
 constexpr U kSummaryBytes = 0x1C;
-// The save menu's slot word: Save_BuildBlock copies its summary into this
-// slot's list entry and ours aborts past 16 (rest_2c.cpp SummaryOf); F12's
-// Save_QuickWrite sets it to 0 first, and so does the take (the span is put
-// back afterwards, so the game never sees either write).
-constexpr U kSaveSlotWord = 0x9036D4;
 
 // The task arena: four slices of 0x4000 below Task_StackTop (task_sched.cpp,
 // Task_Create: slot k's stack top is Task_StackTop - k * 0x4000).
@@ -163,9 +158,6 @@ constexpr Kept kKept[] = {
     {0x7CC344, 4, "Dd_StageSurface"},
     {0x7CC350, 4, "D3d_Device"},
 };
-// The toolchain's FILE* table: no file is open between frames (every reader
-// closes in its call), and a take with one open is refused.
-constexpr U kFileSlots = 0x7DE3E4, kFileSlotCount = 16;
 constexpr std::size_t kKeptCount = sizeof kKept / sizeof kKept[0];
 
 unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
@@ -326,9 +318,12 @@ using SaveHalfFn = void (*)(unsigned char* to);
 // The game's save half: F12's block, built as Save_QuickWrite builds it (slot
 // 0), copied out of the staging buffer. Through Capcom's address, so its
 // BOF3X_ORIGINAL switch holds. The take puts the span back afterwards.
+// Rest2c_Slot is the save menu's slot word: Save_BuildBlock copies its
+// summary into this slot's list entry and ours aborts past 16 (rest_2c.cpp
+// SummaryOf); F12's Save_QuickWrite sets it to 0 first, and so does the take
+// (the span is put back afterwards, so the game never sees either write).
 void GameSaveHalf(unsigned char* to) {
-    const U zero = 0;
-    std::memcpy(At(kSaveSlotWord), &zero, 4);
+    Rest2c_Slot = 0;
     orig::Save_BuildBlock();
     std::memcpy(to, Save_Staging, kSaveHalf);
 }
@@ -672,14 +667,12 @@ void Show(const std::string& text) {
     Overlay_Frames = kOverlayFrames;
 }
 
-// The toolchain's FILE* slots: all empty between frames, or the take is
-// refused (a file open across a restore would be another process's handle).
+// The toolchain's FILE* slots (File_Slots): all empty between frames, as
+// every reader closes in its call, or the take is refused (a file open across
+// a restore would be another process's handle).
 bool FilesClosed() {
-    for (U i = 0; i < kFileSlotCount; ++i) {
-        U v;
-        std::memcpy(&v, At(kFileSlots + 4 * i), 4);
-        if (v != 0) return false;
-    }
+    for (U i = 0; i < File_Slots_count; ++i)
+        if (File_Slots[i] != nullptr) return false;
     return true;
 }
 
@@ -687,7 +680,7 @@ bool FilesClosed() {
 void DoTake() {
     if (!FilesClosed()) {
         Log("quicksave   F6 at Frame_Counter %u refused: a file is open in File_Slots (0x%08X) between frames",
-            static_cast<U>(Frame_Counter), kFileSlots);
+            static_cast<U>(Frame_Counter), File_Slots_addr);
         Show("Quicksave refused: a file is open");
         return;
     }
@@ -1084,7 +1077,6 @@ void Snapshot_Inject() {
                        Va(Gfx_ClutRows),       Va(D3d_DeviceDesc),  Va(&Dd_DirectDraw),  Va(&Dd_StageSurface),
                        Va(&D3d_Device)};
     static_assert(sizeof names / sizeof names[0] == kKeptCount, "a symbol for every kept range");
-    if (Va(File_Slots) != kFileSlots) Fatal("snapshot: kFileSlots 0x%08X, symbols.toml's File_Slots 0x%08X", kFileSlots, Va(File_Slots));
     for (std::size_t i = 0; i < kKeptCount; ++i)
         if (names[i] != kKept[i].at)
             Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's 0x%08X", kKept[i].name, kKept[i].at, names[i]);

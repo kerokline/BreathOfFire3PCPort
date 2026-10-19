@@ -322,7 +322,7 @@ void save_menu::ReadSummaries(const unsigned char* table, unsigned char* summari
             else if (c >= 0x61 && c <= 0x66) v = c - 0x57;
             else continue;
             if (v != slot) continue;
-            if (read(reinterpret_cast<const char*>(At(dir + n * at::kDirectoryBytes)), At(summary), context))
+            if (read(Dir(dir + n * at::kDirectoryBytes)->name, At(summary), context))
                 Sum(summary)->dir_index = n;
             break;
         }
@@ -791,7 +791,7 @@ void save_menu::DrawSlotsOver(int x, int y, unsigned highlight, const unsigned c
         const U first = *top_word;
         const U n = first + i;
         const U summary = Addr(summaries) + n * at::kSummaryBytes;
-        const unsigned char* const s = Byte(summary + 0x15) != 0xFF ? At(summary) : nullptr;
+        const unsigned char* const s = Sum(summary)->dir_index != 0xFF ? At(summary) : nullptr;
         const U slot = (first & 0xFFFFFF00u) | ((first + i) & 0xFF);
         g.slot_draw(slot, left, static_cast<int>(static_cast<U>(y) + i * 56 + 6), s);
     }
