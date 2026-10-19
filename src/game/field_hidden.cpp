@@ -112,6 +112,7 @@ unsigned char* Bytes(records::EffectObject* p) { return reinterpret_cast<unsigne
 unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
 const unsigned char* Bytes(const records::PartyMember* p) { return reinterpret_cast<const unsigned char*>(p); }
 unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
+records::EffectObject* EffectRec(unsigned index) { return reinterpret_cast<records::EffectObject*>(Effect(index)); }
 // A pointer the original keeps in a dword, read afresh.
 unsigned char* PtrIn(const unsigned char* at) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(at))));
@@ -162,19 +163,19 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
             c->state[1] = 0;
             break;
         }
-        Effect(Bytes(c)[0xB])[0] = 1;
-        Effect(Bytes(c)[0xB])[5] = 6;
-        Effect(Bytes(c)[0xB])[6] = 1;
-        SetLong(Effect(Bytes(c)[0xB]) + 0xC, 0);
+        EffectRec(Bytes(c)[0xB])->in_use = 1;
+        EffectRec(Bytes(c)[0xB])->kind = 6;
+        EffectRec(Bytes(c)[0xB])->param = 1;
+        EffectRec(Bytes(c)[0xB])->step_x = 0;
         const unsigned arg = static_cast<unsigned char>(MoveScript_EffectArg[State()->char_id]);
-        SetLong(Effect(Bytes(c)[0xB]) + 0x10, static_cast<std::int32_t>(arg));
+        EffectRec(Bytes(c)[0xB])->step_z = static_cast<std::int32_t>(arg);
         SetWord(Effect(Bytes(c)[0xB]) + 0x2E, static_cast<std::uint16_t>(c->screen_x));
         SetWord(Effect(Bytes(c)[0xB]) + 0x30, static_cast<std::uint16_t>(c->screen_y));
         c->state[1] = 2;
         break;
     }
     case 2:
-        if (Effect(Bytes(s)[0xB])[0] == 0) s->state[1] = 0;
+        if (EffectRec(Bytes(s)[0xB])->in_use == 0) s->state[1] = 0;
         break;
     default:
         break;

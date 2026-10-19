@@ -84,6 +84,7 @@ unsigned char* Object(unsigned i) { return Sprite_Objects + i * at::kSpriteStrid
 records::PartyMember* Self() { return reinterpret_cast<records::PartyMember*>(Sc()); }
 unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
 unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
+records::PartyMember* Party(unsigned i) { return reinterpret_cast<records::PartyMember*>(Member(i)); }
 short S16(std::uint32_t v) { return static_cast<short>(v); }
 
 // `cdq / xor / sub`: the absolute value with the original's wrap (the most
@@ -807,13 +808,13 @@ extern "C" void __cdecl Party_PlaceAtSlots(void) {
     const unsigned n = Field_MemberCount;
     for (unsigned i = 0; i < n; ++i) {
         SetLong(Member(i) + 0x34, L(at::kSlotPositions + 8 * i));
-        SetLong(Member(i) + 0x38, L(at::kSlotPositions + 8 * i + 4));
+        Party(i)->z = L(at::kSlotPositions + 8 * i + 4);
     }
     unsigned k = 0;
-    while (k < n && Member(k)[0x89] != Cond_Flags[0xd2]) ++k;
+    while (k < n && Party(k)->char_id != Cond_Flags[0xd2]) ++k;
     if (BattleTurnSteps_MusicFlags & 2) return;
     MoveScript_F3Divisor = 0x20;
-    const std::int32_t x = Long(Member(k) + 0x34), z = Long(Member(k) + 0x38);
+    const std::int32_t x = Party(k)->x, z = Party(k)->z;
     const std::int32_t dx = Abs32(static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) - static_cast<std::uint32_t>(x)));
     Field_Kind2X = x;
     const std::int32_t dz = Abs32(static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) - static_cast<std::uint32_t>(z)));
@@ -864,9 +865,9 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     unsigned char count = Field_MemberCount;
     const unsigned n = count;
     if (n > 0) {
-        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX + 4 * i), Long(Member(i) + 0x34));
-        for (unsigned j = 0; j < n; ++j) SetLong(Member(j) + 0x34, L(at::kCellX + 4 * ListSlot(Member(j)[0x89], n)));
-        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX + 4 * i), Long(Member(i) + 0x38));
+        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX + 4 * i), Party(i)->x);
+        for (unsigned j = 0; j < n; ++j) Party(j)->x = L(at::kCellX + 4 * ListSlot(Party(j)->char_id, n));
+        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX + 4 * i), Party(i)->z);
         unsigned members = n;
         for (unsigned j = 0; j < members; ++j) {
             records::PartyMember* const m = reinterpret_cast<records::PartyMember*>(Member(j));
