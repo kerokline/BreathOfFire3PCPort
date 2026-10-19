@@ -452,10 +452,10 @@ void Seed(unsigned k) {
     SetWord(Mem(Field_CancelButtons_addr), PickOf(0x40, 0x40, 0x1000, sh::Next()));
     SetWord(Mem(Input_Pressed_addr), PickOf(0, 0, 0x20, 0x40, 0x60, 0x1000, 0x2000, 0x4000, 0x8000, 0x5000, 0xA000, 0x1020, sh::Next()));
     // the formation build's limits by the members' bits
-    B(0x904061) = static_cast<unsigned char>(PickOf(0x3F, 0x15, 0x2A, 0, sh::Next()));
+    B(Cond_Flags_addr + 0xd1) = static_cast<unsigned char>(PickOf(0x3F, 0x15, 0x2A, 0, sh::Next()));
     // the trade's s8 cells
-    B(0x6BE08C) = static_cast<unsigned char>(PickOf(0, 1, 2, 9, 0x10, 0x11, 0xFF, sh::Next()));
-    B(0x6BE08E) = static_cast<unsigned char>(PickOf(1, 2, 0x7F, 0x80, 0xFF, sh::Next()));
+    B(Effect1g_TradePick_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 9, 0x10, 0x11, 0xFF, sh::Next()));
+    B(Effect1g_TradeQuantity_addr) = static_cast<unsigned char>(PickOf(1, 2, 0x7F, 0x80, 0xFF, sh::Next()));
     // Stat_AddClampedTo: the word at the cap or 0 or one from either
     g_cap = PickOf(999, 0x7FFF, 0xFFFF, 0x8000, 1, 0, sh::Next()) | (sh::Half() ? sh::Next() & 0xFFFF0000u : 0);
     g_delta = PickOf(1, 0xFFFF, 0, 0x7FFF, 0x8000, 0x10, 0xFFF0, 2, 0xFFFE, sh::Next() & 0xFFFF) | (sh::Next() & 0xFFFF0000u);

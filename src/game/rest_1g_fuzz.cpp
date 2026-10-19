@@ -402,7 +402,7 @@ unsigned Entries(unsigned k) {
     }
 }
 
-unsigned char KindByte(unsigned kind, unsigned at) { return Mem(0x66A690 + 36 * kind + at)[0]; }
+unsigned char KindByte(unsigned kind, unsigned at) { return Mem(Fish_Kinds_addr + 36 * kind + at)[0]; }
 
 // Fish_AdjustStrength's delta, drawn by the seed (so that the strength word can
 // be planted at its negation) and handed over by Args.

@@ -380,15 +380,15 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     B(0x903A02) = B(0x90384A);
     PutL(0x903A08, L(0x802D74));
     PutL(0x903A0C, L(0x802D78));
-    B(0x903A07) = B(0x802D48);
-    PutL(0x90469C, L(0x903580));
+    B(0x903A07) = ObjTrio[8];
+    SaveMenu_SavedButtons = L(0x903580);
     PutL(0x9046A4, L(0x903588));
     B(0x903A03) = B(0x90384B);
     PutL(0x9046A8, L(0x90358C));
-    PutW(0x903A04, Game_AreaNumber);
+    FieldModes_Pending = Game_AreaNumber;
     PutL(0x9046A0, L(0x903584));
     const unsigned record = B(at::kMemberRecord + Cond_Flags[0xd2]);
-    PutW(0x9046AC, Word(At(0x903590)));
+    PutW(0x9046AC, Field_CancelButtons);
     PutW(0x903A50, 0);
     const U name = at::kRecords + (g_summary_record0 ? 0u : record) * at::kRecordStride;   // DIV-0076
     SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(at::kSummary)), reinterpret_cast<const char*>(At(name)), 5);
@@ -397,11 +397,11 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     B(0x904688) = B(0x903A7A);
     PutL(0x90468C, L(0x9040C8));
     B(0x904689) = static_cast<unsigned char>(BattleDraw_Colour);
-    B(0x90468A) = B(0x903A5B);
+    B(0x90468A) = FieldS_Backdrop;
     PutL(0x904690, L(0x903A7C));
     const unsigned char flag = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x92);
     B(0x904694) = flag;
-    B(0x90412D) = B(0x9039A2);
+    SaveMenu_ScriptFlagsSaved = B(0x9039A2);
     U sum = 0;
     for (U i = 0; i < at::kBlockBytes; ++i) {
         const unsigned char v = B(at::kBlock + i);

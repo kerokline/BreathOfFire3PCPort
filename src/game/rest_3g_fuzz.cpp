@@ -362,7 +362,7 @@ void Seed(unsigned k) {
     if (k == kFrameBD) {
         // the angles the view was drawn at: the same half the time, one word off otherwise
         unsigned char* const drawn = Mem(Camera_AnglesDrawn_addr);
-        std::memcpy(drawn, Mem(0x929EC8), 8);
+        std::memcpy(drawn, Mem(Camera_Angles_addr), 8);
         if (!sh::Half()) drawn[(sh::Next() % 3) * 2] ^= static_cast<unsigned char>(1 + sh::Next() % 0xFF);
         if (sh::Half()) MapView_Redraw = 0;
     }
@@ -416,7 +416,7 @@ void Disturb(U h) {
     case 8: SetWord(Mem((v & 1) ? at::kOriginX : at::kOriginZ), v >> 1); break;
     case 9: Mem(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(v); break;
     case 10: SetWord(Mem(Prim_VertexScratch_addr + 2 * ((v & 3) % 3)), v >> 2); break;
-    case 11: PutFloat(Mem(0x903820 + 4 * (v & 1)), static_cast<float>(static_cast<int>((v >> 1) % 1000) - 500)); break;
+    case 11: PutFloat(Mem(MapView_ScreenXY_addr + 4 * (v & 1)), static_cast<float>(static_cast<int>((v >> 1) % 1000) - 500)); break;
     default: break;
     }
 }

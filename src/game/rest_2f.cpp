@@ -138,7 +138,6 @@ constexpr U kUsedFormat = 0x6639C8;  // "%3d/%3d"
 unsigned char& B(U address) { return At(address)[0]; }
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
-signed char Sb(U address) { return static_cast<signed char>(At(address)[0]); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // Window record n's byte / word at `at`.
 U Rec(unsigned n, unsigned at) { return kWindows + kWindowStride * n + at; }
@@ -1114,12 +1113,12 @@ extern "C" unsigned char __cdecl AbilityList_CountSet(unsigned member, unsigned 
 // up again with 0x6BE08C's low nibble.
 extern "C" void __cdecl ItemTrade_TakeNeeds(void) {
     for (U k = 0; k < 3; ++k) {
-        const int c = Sb(0x6BE08C);
-        const U row = 10u * B(0x905B88);
+        const int c = Effect1g_TradePick;
+        const U row = 10u * AreaEntry_PendingFlags;
         const U kind = B(kTradeKinds + static_cast<U>(c) + row);
         if (B(kTradeNeeds + 8 * kind + k) == 0xFF) return;
         const auto q = static_cast<signed char>(B(kTradeNeeds + 8 * kind + 3 + k));
-        const U count = static_cast<U>(static_cast<std::uint16_t>(q * Sb(0x6BE08E)));
+        const U count = static_cast<U>(static_cast<std::uint16_t>(q * Effect1g_TradeQuantity));
         const U kind2 = B(kTradeKinds + (static_cast<U>(c) & 0xF) + row);
         const U item = static_cast<unsigned char>(B(kTradeNeeds + k + 8 * kind2) + 0x38);
         SH_CALL(Inventory_Remove)(0, item, count);

@@ -374,7 +374,7 @@ void SeedRecords() {
         rv::As<records::CharRecord>(r)->ap = PickOf(0, 1, ap_max >> 2, (ap_max >> 2) + 1, (ap_max >> 2) - 1u, sh::Next());
     }
     Mem(Rest2h_Window1Master_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 17, sh::Next()));
-    for (unsigned i = 0; i < 6; ++i) Mem(0x904062 + i)[0] = static_cast<unsigned char>(sh::Often() ? GoodId() : sh::Next());
+    for (unsigned i = 0; i < 6; ++i) Mem(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(sh::Often() ? GoodId() : sh::Next());
 }
 
 // A master's requirement list's skills placed (or not) in the slots and the shared list.

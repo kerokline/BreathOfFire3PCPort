@@ -410,8 +410,8 @@ void SeedWindowStep(unsigned char* s) {
 // Input_Pressed / Input_Held: nothing, one of the bits the states test, or any.
 void SeedInput() {
     static const U kBits[] = {0, 0x10, 0x20, 0x40, 0x1000, 0x4000, 0x1010, 0x4020, 0x5000, 0x1040};
-    SetWord(Mem(0x7E1BEC), sh::Half() ? kBits[sh::Next() % 10] : sh::Next());
-    SetWord(Mem(0x7E1BE8), PickOf(0, 0, 1, sh::Next()));
+    SetWord(Mem(Input_Pressed_addr), sh::Half() ? kBits[sh::Next() % 10] : sh::Next());
+    SetWord(Mem(Input_Held_addr), PickOf(0, 0, 1, sh::Next()));
 }
 // The counts at 0x903A10: 0..5 and about 100.
 void SeedCounts() {
@@ -489,7 +489,7 @@ void Disturb(U h) {
     case 1: if (sh::InRegions(s, 0x80)) s[0xA] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
     case 2: if (sh::InRegions(s, 0x80)) s[6] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
     case 3: Mem((v & 1) ? Rest3e_GlowSounded_addr : Rest3e_RiseSounded_addr)[0] = static_cast<unsigned char>((v & 2) ? 0 : v >> 2); break;
-    case 4: SetWord(Mem(0x7E1BEC), v & 0x5070u); break;
+    case 4: SetWord(Mem(Input_Pressed_addr), v & 0x5070u); break;
     case 5: if (sh::InRegions(s, 0x80)) s[2] = static_cast<unsigned char>(v); break;
     default: break;
     }
