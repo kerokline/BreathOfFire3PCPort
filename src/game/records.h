@@ -165,7 +165,7 @@ struct PartyMember {
     std::uint8_t count_40;  // +0x144 zeroed with flag 0x40 (battle_setup kPCount40); battle_damage kPCharge, the attack charge
     std::uint8_t count_80;  // +0x145 zeroed with flag 0x80 (battle_setup kPCount80); battle_damage kPCharge2, the ability charge
     unsigned char pad_146[0x2];  // +0x146, +0x147: unread
-    std::uint8_t char_index;  // +0x148 the character record's index, in the field and in battle (area_entry_callees.h kRecCharacterIndex; effect_3a_callees.h kMemberFlag; battle_e3.cpp:684,723; battle_e4.cpp:126; battle_e6.cpp:318). battle_damage_callees.h kPWeaponKind (0x138 from 0x802D50) is this byte: Battle_CalcDamage's rule is "character index 5", the name a misnomer (docs/typed-records.md 3)
+    std::uint8_t char_index;  // +0x148 the character record's index, in the field and in battle (area_entry_callees.h kRecCharacterIndex; effect_3a_callees.h kMemberFlag; battle_e3.cpp:684,723; battle_e4.cpp:126; battle_e6.cpp:318). battle_damage_callees.h kPCharIndex (0x138 from 0x802D50; kPWeaponKind until stage B1) is this byte: Battle_CalcDamage's rule is "character index 5" (docs/typed-records.md 3)
     std::uint8_t tint;  // +0x149 field: the running script's tint record, MoveScript_TintRecords by it (area_w1a.cpp:134)
     unsigned char pad_14A[0x2];  // +0x14A, +0x14B: unread
 };

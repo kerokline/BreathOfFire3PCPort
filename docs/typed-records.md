@@ -113,15 +113,15 @@ was applied. Items 1, 2, 4 and 5 below are settled by it.
      `CharRecord(f[0x148])` (`battle_e3.cpp:684`, `:723`),
      `CharRecord(p[0x148])` (`battle_e4.cpp:126`) and
      `kCharRecords + member[0x148] * kCharStride` (`battle_e6.cpp:318`).
-   - `battle_damage_callees.h`'s `kPWeaponKind` is a misnomer for this byte.
-     Its value is `0x138`, and the party pointer it is used on is
-     `Party(a)` = `0x802D50 + a * 0x14C` (`battle_damage.cpp:93`), which is
-     `0x10` past the records at `0x802D40`; so `Battle_CalcDamage`'s
-     `p[at::kPWeaponKind] == 5` (`battle_damage.cpp:615`) reads record
-     `+0x148`. The weapon-element rule applies when the attacker's character
-     index is 5.
-   - The field stays `char_index`. Renaming the constant (to `kPCharIndex`,
-     say) and rewording its comment is stage B's; it is not changed here.
+   - `battle_damage_callees.h`'s `kPCharIndex` (named `kPWeaponKind`, a
+     misnomer, until stage B1 renamed it) is this byte. Its value is
+     `0x138`, and the party pointer it is used on is `Party(a)` =
+     `0x802D50 + a * 0x14C` (`battle_damage.cpp:95`), which is `0x10` past
+     the records at `0x802D40`; so `Battle_CalcDamage`'s character-index
+     test, now `pr->char_index == 5` on the record's own start
+     (`battle_damage.cpp:634`), reads record `+0x148`. The weapon-element
+     rule applies when the attacker's character index is 5.
+   - The field stays `char_index`.
 2. **The two flag dwords: settled; there is no conflict.**
    `battle_setup_callees.h`'s `kPFlags = 0x134` and `kEFlags = 0x114` are
    `battle_damage`'s `kPFlags2` / `kEFlags2` (working `0x124 + 0x10` and
@@ -358,7 +358,7 @@ Padding:
 | `+0x143` | u8 | `count_800` | (battle_setup kPCount800) |
 | `+0x144` | u8 | `count_40` | zeroed with flag 0x40 (battle_setup kPCount40); battle_damage kPCharge, the attack charge |
 | `+0x145` | u8 | `count_80` | zeroed with flag 0x80 (battle_setup kPCount80); battle_damage kPCharge2, the ability charge |
-| `+0x148` | u8 | `char_index` | the character record's index, in the field and in battle (area_entry_callees.h kRecCharacterIndex; effect_3a_callees.h kMemberFlag; battle_e3.cpp:684,723; battle_e4.cpp:126; battle_e6.cpp:318). battle_damage_callees.h kPWeaponKind (0x138 from 0x802D50) is this byte: Battle_CalcDamage's rule is "character index 5", the name a misnomer (docs/typed-records.md 3) |
+| `+0x148` | u8 | `char_index` | the character record's index, in the field and in battle (area_entry_callees.h kRecCharacterIndex; effect_3a_callees.h kMemberFlag; battle_e3.cpp:684,723; battle_e4.cpp:126; battle_e6.cpp:318). battle_damage_callees.h kPCharIndex (0x138 from 0x802D50; kPWeaponKind until stage B1) is this byte: Battle_CalcDamage's rule is "character index 5" (docs/typed-records.md 3) |
 | `+0x149` | u8 | `tint` | field: the running script's tint record, MoveScript_TintRecords by it (area_w1a.cpp:134) |
 
 Padding:
