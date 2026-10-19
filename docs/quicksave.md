@@ -507,7 +507,22 @@ The rest of each dump's differences are SN's overlay and SP-G's rows
 (`Gfx_ClutRows`, `Gfx_TexCache`, `D3d_CellTexCache`, `D3d_Vertices`,
 `Gpu_DispEnv` / `Gpu_DrawEnv`).
 
-**The music's position** (WAV_RESULT_PLACEHOLDER)
+**The music's position.** `quick_combat` again with `BOF3X_WAV_DIR` (the
+dump goes on through the counter's jump back; its clock is the run's frames,
+`docs/wav-dump.md` 1). The take held battle track 151 at heard sample
+695,899, folded to 695,808 (the frame's start); the restore started it there
+(`asked 695808`). The dump's half-second windows from k = 0 to 285 in steps
+of 15, after the take against after the restore, cross-correlated over +-1 s
+(`scratch\wav_lag.py` and an inline loop): every window where the music is
+alone peaks at **lag +3,140 samples (71.2 ms) with correlation 1.000** (k =
+30..105, 150, 255) - the same music sample for sample, 71 ms later after the
+restore than after the take; windows carrying the battle's effects peak at
+lag 0 (the replayed effects land on the same frames). **Within a buffer's
+length** (the ring's 36,864 samples, 836 ms) and within a fifth of a half.
+The 3,140 is the dump's measure of where the device's play cursor stood
+against the dump's own model of the queue at the take (the resume takes the
+cursor; the dump plays the queue at the frames' pace), plus the 91 samples
+of the frame floor; not separated further.
 
 Run folders, logs, dumps and crash dumps: `C:\Users\kerok\q_spa\runs\`
 (`base_*`, `after_*`, `after_*_3` with the dumps); the scripts in
