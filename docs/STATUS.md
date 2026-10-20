@@ -8,6 +8,15 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**2026-10-20** (`fix/d266-title-mark` and `docs/handoff-1020`, merged as PRs #98 and #99): a
+Western disc-only install draws its disc's title mark (D266, DIV-0101's `titlemark` rule) and rolls its own release's
+staff roll (DIV-0148, D323: the roll differs by release - US, PAL, Japan = PC - and follows the language played, as
+kind 17 of a Western layer, since `.data`'s pointer words stay the PC's). The recipes are regenerated with the second pairing
+pass's rows (`gap` rows 49..74 per build); what is left before `BOF3X_EXEIMAGE_STRICT=1` can be the default is framed
+in [`exe-gap-round.md`](exe-gap-round.md). The quicksave refuses a load across the original Chinese and a translation
+(PR #96). The ten state-hash pairs are re-recorded (`cn_<route>_orig3`); ours differs from them only by ledgered
+changes, each shown with the change off ([`state-hash.md`](state-hash.md) 6).
+
 **The typed-data round, 2026-10-19..20** ([`typed-data-round.md`](typed-data-round.md), IDEAS I44 stages 1 and 2): our
 code's reads of Capcom's data image become named, typed accesses, with **no behaviour change**; the proof throughout is
 `tools/codegen_same.py`, every object disassembling the same as the baseline build's, so no run of the game was needed.
@@ -16,7 +25,7 @@ code's reads of Capcom's data image become named, typed accesses, with **no beha
 (`tools/data_census.py`, a CI ratchet), every global site by `tools/typed_convert.py` and the record sites by seven
 file groups, each part re-derived by an independent agent and a family audit after; raw data sites 50,943 -> 27,394.
 The PR also carried the install-gap round's second pairing pass ([`install-gap-pairs.md`](install-gap-pairs.md) 8).
-**Stage C is built on `typed/c`** (from `main` 56d81b42; unpushed, its PR after the owner's smoke run;
+**Stage C is built on `typed/c`** (from `main` 56d81b42, `main` 61023304 merged in; unpushed, its PR after the owner's smoke run;
 [`typed-data-stage-c.md`](typed-data-stage-c.md), each step as run in the round doc's section 3): C0 one shared
 views header (`src/game/record_views.h`) in place of seven dialects of per-file helpers; C1 the types (a shared
 0x80-byte `SpriteHead` the five sprite families derive from, the audits' renames, views for fields that change
@@ -28,7 +37,7 @@ generated `GameData` struct (0x37B000 bytes from 0x5C4000, 2,965 members, each a
 `symbols.toml`), and the strict CI rule (`data_census.py --strict`: a raw site in `src/game` fails unless
 `analysis/typed_left.tsv` lists it with a reason; 27,327 exceptions). Every typing pass had a read-only family audit
 by other agents (the gate cannot see a pointer typed as the wrong struct), and C2's and C4's findings went through a
-fix branch. The census reads **27,390**: up from 18,630 after C4's fix branch because it now counts `<Name>_addr` accessor
+fix branch. The census reads **27,389** (27,390 before main's PRs #96 and #98 were merged in): up from 18,630 after C4's fix branch because it now counts `<Name>_addr` accessor
 spellings and `rv::Bytes` subscripts too, a wider count, not a regression; every site has a reason.
 
 **The quicksave round, 2026-10-19** (`quicksave/round`, merged as PR #95; [`quicksave-round.md`](quicksave-round.md),
@@ -40,9 +49,9 @@ load screen (DIV-0145..0147); the save list is split from the quicksaves and bou
 two by-design words) and by 22 pixel-equal capture pairs over six routes, two conditions, the PC, US disc-only and
 PSP-EU installs and wide mode, in-process and across processes. Not yet played by the owner.
 
-**`main` is `b3498050`** (2026-10-20: PR #96, the quicksave's language guard, and PR #98, D266's title mark and
-DIV-0148, over `56d81b42`: the typed-data round's stages A and B, PR #94, and the quicksave round, PR #95); `typed/c`
-has it merged. Before that, `19180e63`: the button round (PR #85, below) and the event battles' own music on
+**`main` is `61023304`** (2026-10-20: PR #96, the quicksave's language guard; PR #98, D266's title mark and DIV-0148;
+PR #99, the day's docs - over `56d81b42`: the typed-data round's stages A and B, PR #94, and the quicksave round,
+PR #95); `typed/c` has it merged. Before that, `19180e63`: the button round (PR #85, below) and the event battles' own music on
 disc-only installs (PR #86, D316); sprites flagged for capture drawn into VRAM, restoring Amalgam's melt (PR #87, D317 /
 DIV-0142); Ryu's dream silent as on the PlayStation (PR #90, D318 / DIV-0143); the install-gap round (PR #91,
 [`install-gap-round.md`](install-gap-round.md): disc-built images from the player's discs, the read watch, D279 and

@@ -1,6 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-20: `main` is `b3498050` (PRs #94..#96 and #98 merged; `typed/c` has it merged); the typed-data round's stage C is built on `typed/c`, unpushed: the owner's smoke run, then its PR, item 0)
+**Status:** IN PROGRESS (2026-10-20: `main` is `61023304` (PRs #94..#96, #98 and #99 merged); the typed-data round's
+stage C is built on `typed/c` with `main` merged in, unpushed: the owner's smoke run, then its PR, item 0)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,20 +15,24 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged since PR #43: the game's own code is
-all ours). `main` was `56d81b42` on 2026-10-19: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw
-data sites to 27,394, the machine code identical; the census's CI ratchet; the install-gap round's second pairing
-pass) and the quicksave round (PR #95: F6 / F7 / the F5 menu, DIV-0145..0147, D322; not yet played). Since then PR #96
-(the quicksave's language guard, IDEAS I47) and PR #98 (D266's title mark, DIV-0148): `main` is `b3498050`; PR #99
-(docs/handoff-1020) rewrites this file and STATUS for that day's other work. Before `19180e63`: the button round
-(PR #85), the event battles' music (PR #86), Amalgam's melt (PR #87), Ryu's dream (PR #90), the install-gap round
-(PR #91), the jukebox's recorded streams (PR #92). **The typed-data round's stage C is built on `typed/c`**
+**10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
+`main` is `61023304`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
+to 27,394, the machine code identical; `tools/data_census.py` the CI ratchet), the quicksave round (PR #95: F6 / F7 /
+the F5 menu, DIV-0145..0147, D322), the quicksave's language guard (PR #96: the original Chinese against a
+translation refused before a byte is written; one translation into another kept, IDEAS I47), D266 and DIV-0148
+(PR #98) and the day's docs (PR #99). **2026-10-20** ([`exe-gap-round.md`](exe-gap-round.md) frames what is left of
+the disc-built image): D266's title mark from the disc (DIV-0101's `titlemark` rule), each Western release's own
+staff roll following the language (DIV-0148, D323), the recipes regenerated with the second pairing pass's rows, the
+ten state-hash pairs re-recorded (`cn_<route>_orig3` / `_orig3b`) and every difference of ours against them traced
+to a ledgered change. **Layers built before DIV-0148 carry no roll**: rebuild a Western language (`importer.py
+build`, or `loc_build.py all --discs` for an install's `DAT\<tag>.*.DAT`) to get the release's credits. **The
+typed-data round's stage C is built on `typed/c`**
 ([`typed-data-stage-c.md`](typed-data-stage-c.md); each step as run in [`typed-data-round.md`](typed-data-round.md)
 3): C0 one shared views header, C1 the types (the shared 0x80-byte `SpriteHead`, renames, views, new structs), C2 the
 sites they unlock by seven groups, C3 the module-only entries and a naming pass, C4 the tables as `records::` arrays,
 the scratch block renamed `SharedScratch` with its per-function names as typed per-file aliases (the owner's calls),
 the generated `GameData` struct (0x37B000 bytes, 2,965 members) and the strict CI rule (`data_census.py --strict`,
-27,327 exceptions). Family audits after C2 and C4, each with a fix branch. The census reads 27,390, a wider count
+27,327 exceptions). Family audits after C2 and C4, each with a fix branch. The census reads 27,389, a wider count
 (the `<Name>_addr` and `rv::Bytes` spellings now count), not a regression, every site with a reason; **the machine
 code is identical to `main`'s throughout** (`tools/codegen_same.py`, 640 objects, `0 differ` at every merge).
 Quicksave owed: the owner's play, their call on drawing F6 / F7's confirmation (logged only, as F12's is, DIV-0032),
@@ -40,13 +45,12 @@ hosted cross form).
    coordinator's docs; [`typed-data-stage-c.md`](typed-data-stage-c.md) 8 call 2). On the owner's machine (agents may
    not run the game here): the headless `BOF3X_SHADOW='*'` self-test and one state-hash route, both from a plain copy
    of `build/` as the install-gap round's end batch ran them ([`install-gap-round.md`](install-gap-round.md) 6). The
-   machine code is identical to `main` b3498050 object by object, so this is a formality, but it is the only check
+   machine code is identical to `main` 61023304 object by object (#99 changed only docs), so this is a formality, but it is the only check
    that runs the game. Then the PR: no behaviour change, no ledger entry; every non-merge commit signed off (read
-   `git log --format=%B main..typed/c` first). `origin/main` b3498050 (PRs #96, #98) is merged into `typed/c`
-   (2026-10-20; gate baseline `.claude/worktrees/typed-baseline-c2`, 0 differ; census 27,389; DIV-0148's one new raw
-   site, `scena_sc15.cpp` RollEntry's `L(kRollLines + 4u * i)`, listed `gate`: `Scena17_RollLines[i]` changes
-   `Scena17_ScrollRoll`). If PR #99 merges first, merge it too: STATUS, HANDOFF, owner-review, IDEAS and README will
-   conflict - take #99's and re-apply the typed-data paragraphs. **Two calls for the owner**, from the C4 audit
+   `git log --format=%B main..typed/c` first). `main` (`b3498050`, PRs #96 and #98, then `61023304`, PR #99) is
+   merged into `typed/c` (2026-10-20; gate baseline `.claude/worktrees/typed-baseline-c2`, a build of `b3498050`,
+   0 differ; census 27,389; DIV-0148's one new raw site, `scena_sc15.cpp` RollEntry's `L(kRollLines + 4u * i)`,
+   listed `gate`: `Scena17_RollLines[i]` changes `Scena17_ScrollRoll`). **Two calls for the owner**, from the C4 audit
    ([`owner-review.md`](owner-review.md) "2026-10-20, typed-data stage C"): `rest_4a`'s `kEnemyHp` against
    `records.h`'s `intel` at the same offset, and `Save_Directory`'s count. **The method that held** (stage C's
    section 1): `tools/codegen_same.py` against a baseline build after every batch, `0 differ`; after every typing
@@ -56,198 +60,103 @@ hosted cross form).
    scripts); of stages A and B: `C:\Users\kerok\b1\`, `C:\Users\kerok\v_typed\`, `C:\Users\kerok\v_pairs` and
    `g_pairs`. The worktrees are listed under "In flight".
 
-   **Owed from the button round (PR #85), the owner:** (a) record the minigame starts from RC's placed saves,
-   `C:\Users\kerok\b_rc\saves\` (`chop8`, `well68`, `rope75`, `tower112`, `ram121`, `dock128`, `crane135`: the six
-   minigames and the dock's parts menu; [`button-routes.md`](button-routes.md) 5), with `BOF3X_RECORD`, then the
-   identity and swapped runs of each - the only live evidence DIV-0137, DIV-0139's minigame tests and DIV-0140 lack;
-   (b) look at the contact sheets, `C:\Users\kerok\b_rc\sheets_round\`; (c) `Scena19_Run0`'s R1, left as it is,
-   undecided ([`button-tests.md`](button-tests.md) 2.4). [`owner-review.md`](owner-review.md) "2026-10-17, the button
-   unification round" has the list. **Still owed from PR #81, the owner's eye:** the launcher's stale-install prompt
-   in a real start; the PSP-only title in play (captured at 4:3, 16:9, 21:9); D310's screens and the hi-lo payouts in
-   play.
+1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
+   - **Quicksaves** (DIV-0145..0147): not played yet; whether F6 / F7 get an on-screen line (logged only today, as
+     F12's is, DIV-0032); IDEAS I47 (one translation's quicksave loaded under another) when they want it.
+   - **From the button round (PR #85):** record the minigame starts from `C:\Users\kerok\b_rc\saves\` with
+     `BOF3X_RECORD` ([`button-routes.md`](button-routes.md) 5); the contact sheets `C:\Users\kerok\b_rc\sheets_round\`;
+     `Scena19_Run0`'s R1. **From PR #81:** the stale-install prompt in a real start, the PSP-only title in play, D310.
+   - The ultrawide round's and the away day's looks, listens and calls (owner-review's 2026-10-14 and 2026-10-13
+     sections); Peco's EXP table (item 9).
 
-1. **The owner's answers** ([`owner-review.md`](owner-review.md)): first "2026-10-14, the ultrawide round" - look at
-   the faster slide (not yet seen), the 21:9 left message box, the terrain margin 167 at 21:9, two `dolphinBoss` plant
-   frames; decide the remaining 16:9 band rows (census 3's list and ST's 14 sites the shape cannot move: move out,
-   hide or leave), the faerie through the table (D300, Capcom's; FY's rule), the gene crystal (D242, Capcom's,
-   accepted for now), the narrow areas 31 / 90 / 53, the patch cells (D295, leave unless seen), RG - the ring for far
-   cameras (D292, I37), the six other effects the GTE fix changes, effect kind 0x51's grab, the mote and the column's
-   sound (D293, D294), the two sweeps (I38). Then "2026-10-13, the away day": look (the eye batch q1..q7, the arena
-   sheets, the D56 capture, the labels sheet, the Japanese world map), listen (`analysis/listen-1013` a / b / c), and
-   decide (inventory Q6 / Q7; member 2's bank, Ryu's byte, member 1; the Western weakness row; the hi-lo count; the US
-   title layout; a ja-JP layer for kinds 7..16 and the fishing crash; D255's fix; set 8 confirmed; the key icons'
-   five; the `combatGroup` / `sortScreens` saves; the Western title mark). Each answer goes to the ledger or the
-   defect list; then the rows to the policy mechanism (`recipes/prefer.toml`).
-   Also: **the ending's backdrop** (`wide/ending-backdrop`, DIV-0127, D302, [`ending-backdrop.md`](ending-backdrop.md); unpushed, 2026-10-14): the owner saw the captures and approved; their eye on the mirrored bands in play, then the PR. The launcher page that uses the scene: built 2026-10-15 from the owner's mock-ups (`launcher/title-page`, [`launcher-settings.md`](launcher-settings.md) 2a; unpushed) - their eye on it, then the PR.
+2. **The exe-gap round** ([`exe-gap-round.md`](exe-gap-round.md), framed, not staged): what is left between a
+   disc-built image and `BOF3X_EXEIMAGE_STRICT=1` as the default - 49..74 `gap` rows per build, STRICT narrowed to a
+   reviewed list, D280's `ja-JP` kinds 7..15 (answered yes, not built), the owner's open rows (the empty save slot
+   first), psp-jp's read-watch coverage now that D321 is fixed. Stage 0 and D266 are done (item 0). Staging it is the
+   owner's word.
 
-2. **The stale state-hash pairs** ([`nue-regression-1013.md`](nue-regression-1013.md)): the Nue signal of 2026-10-13
-   was a stale pair (re-recorded as `cn_cutsceneAndNue_orig2` / `_orig2b`) and DIV-0092 by design. **Left:** the
-   other nine `cn_<route>_orig2` pairs are stale the same way (save-slot records in page `0x905000`) - about 45
-   minutes on a quiet machine to re-record, per [`state-hash.md`](state-hash.md) 6; any recipe that writes a slot
-   stales them again (slot 6 is `balioAndSunder_2`'s by design), so a fixed staged save list in `input_run.py` is the
-   durable fix (a design change, the owner's call). The ultrawide round compared wide against ours narrow from the same
-   hour, which sidesteps this. `bossAndFlash` meets DIV-0092 too (event battle 8, track 33) and has no pair.
+3. **The state hash after 2026-10-20** ([`state-hash.md`](state-hash.md) 6): **the ten route pairs re-recorded 2026-10-20** as `cn_<route>_orig3` /
+   `_orig3b` (main's build `84e43c32`, 173 ranges, the same conditions as the `orig2` pairs) and ours checked against
+   each (`cn_<route>_a1020`): combat and shop identical on every tick; the rest differ only by ledgered changes,
+   each confirmed by a hosted run of ours with the change switched off - DIV-0092 (the area's music after a load:
+   field_menu and dragonTransform then identical; cutsceneAndNue and menu_screens the same four pages), the button
+   round's glyphs into VRAM (caughFish by DIV-0138 alone, a bisect over 19 switches; worldMapAndAreaTransition by
+   DIV-0135 alone; masterAndManillo by the glyph set together, not by DIV-0138 or DIV-0140 alone - which one is
+   open), and on whelpBoss DIV-0092 with DIV-0143 then one page, `Sound_Banks`' buffer pointers (heap addresses, raw
+   dumps at tick 10,000: the `Sound_Channels` class, a skip-list candidate). A few VRAM and sound pages at tick 3
+   came in one run of five and are noise. Scripts and checks: `C:\Users\kerok\bof3x-runs\away1020`.
 
-3. **Open technical items, no owner needed:**
+4. **Open technical items, no owner needed:**
    - **The ultrawide round's own** ([`ultrawide-round.md`](ultrawide-round.md) 5b and the group docs): the six
-     `# save` headers D298 names (`bridgeWalk`, `fairyVillage`, `identify`, `ninaWalkBehindBlock`, `tarmanLogic`,
-     `vaccinationAndFireScene` take the save of their own name, as census 3's scratch copies did); the band census's
-     two follow-ups (D299: the `field_frame.cpp` hook line for type-`0x0A` sprites, the void channel at the renderer
-     seam) and a `+0x83` column naming a census row's script; a log line for case zero's north steps (census 4 had
-     to read them from dumps); a `gameover` hash at 1 and 2 against narrow for D285; the four CPU readers of the grab
-     (D297, a GPU readback); `inject_all.cpp`'s comments at `MenuDrawHelpers_Inject`, `Rest2G_Inject`,
-     `Rest2H_Inject` and `Rest2F_Inject` still say those modules read DIV-0041's widened slide bound back - since the
-     faster slide they read Capcom's ([`ultrawide-slides.md`](ultrawide-slides.md) 9).
+     `# save` headers D298 names; the band census's two follow-ups (D299) and a `+0x83` column naming a census row's
+     script; a log line for case zero's north steps; a `gameover` hash at 1 and 2 against narrow for D285; the four
+     CPU readers of the grab (D297); `inject_all.cpp`'s comments at `MenuDrawHelpers_Inject`, `Rest2G_Inject`,
+     `Rest2H_Inject` and `Rest2F_Inject` ([`ultrawide-slides.md`](ultrawide-slides.md) 9).
    - **The all-calls tracer stalls** a hosted run before any recipe frame (D276,
-     [`hidden-start-scan.md`](hidden-start-scan.md) 8): `pc_hidden_reached.json` is still the 2026-09-21 reach, the
-     199 new hidden starts untraced. Bisect the DLL.
-   - **The image's map fault left:** D266 (the Western title mark's width, a `twin` from `GAME.EMI#1` - after the
-     owner's yes; D267 and D268 fixed 2026-10-17).
-   - **The US title layout** (D277, [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md) 3.1): waits on the owner's call.
-   - **The JP world map's camera** (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3): the PSX twin read, JP
-     against US `GAME.EMI`'s world-map camera set-up, and a raw dump of `0x905000`'s page at tick 1095. The owner's
-     hypothesis: a change Capcom made after the first Japanese release (the PC and the PSP both draw the wide view).
-   - **Groups 17 and 18 from PSP-EU and ja-JP** ([`labels-1013.md`](labels-1013.md) 7): not built (the layout lives in
-     the PSP's Allegrex code; Japanese names exceed the 5-byte copy).
-   - **The PSP ELF's second map** is not worth building (187 bytes, [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
-     5.4).
-   - **The `_pre1013` entry lists** in `analysis/` (`pc_funcs_pre1013.json`, `pc_hidden_pre1013.json`, ...): kept
-     beside the replaced ones ([`hidden-start-scan.md`](hidden-start-scan.md) 8); remove once nothing reads them.
-   - D270 fixed by DIV-0121 - the owner's look owed, and whether such a field has another way out; D284 (area 23's
-     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed, FR / DE too since the install-gap round
-     ([`install-gap-labels.md`](install-gap-labels.md)); D287 (the launcher's clipped lines); D289 fixed by the same round (the owner's
-     confirmation of DIV-0064's amendment pending).
+     [`hidden-start-scan.md`](hidden-start-scan.md) 8): bisect the DLL.
+   - **The JP world map's camera** (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3).
+   - **Groups 17 and 18 from PSP-EU and ja-JP** ([`labels-1013.md`](labels-1013.md) 7): not built.
+   - **The `_pre1013` entry lists** in `analysis/`: remove once nothing reads them.
+   - D270's look owed; D284 and D285 not traced; D287 (the launcher's clipped lines); DIV-0064's amendment pending
+     the owner's confirmation.
 
-4. **The install-gap round: merged as PR #91** ([`install-gap-round.md`](install-gap-round.md), its status line).
-   Stage A (RD, PB, OT, TW, LA, RW) and stage B (PT, CW, FP) placed the census's P1 items 7 and 8, P2 items 11..13,
-   the P4 rows and most of P3's reach: the `gap` rows went from 104..125 per PSX build to 58..78, and from 92 / 93 per
-   PSP build to 54 / 52. **Its live end batch ran 2026-10-18 evening** (that doc's 6): the self-tests pass on every
-   install kind, and the gate and the eleven routes show no game-state difference the round made. Defender stopped
-   none of its launcher copies (plain copies of `build/`); detections that evening were all another agent's. The
-   new placement kinds are DIV-0101's amendment; also DIV-0103, DIV-0069 and DIV-0064; D319 fixed, D320 open. **Left:**
-   - **RW's watch re-run on the merged code** ([`install-gap-reads.md`](install-gap-reads.md) 8). Then I43 step 4,
-     `BOF3X_EXEIMAGE_STRICT=1` as the default, once no row read in play is still zero except the owner's two
-     (D266's title mark, the empty save slot; a DIV-0101 amendment);
-   - **the unpaired rows: a second pass ran 2026-10-19 on `typed/b1`, merged in PR #94** ([`install-gap-pairs.md`](install-gap-pairs.md)
-     8, independently re-derived): 385 new `psx` pairs and 125 `psx_overlay` fields; `BossDolphin_Sounds` and the
-     `Scena04` row place on every build, `BossGaist_Anims+0x2` and `BossTorch_Sounds` on psx-jp only (the twin's body
-     matches three functions in `BOSS035#16`; a `build_twins` tie-break is the follow-up). **The recipes were not
-     regenerated in the branch**: regenerate them after the PR merges (expect four new `immref` rows on psx-jp, two on
-     each other build). Still unplaced: `Area115_Directions`, `Area121_BandHeights`, `Area135_EffectKinds` (a run
-     offset by leading zeros, `Area141_CellEntries`' shape), `Scena02_EffectX`, `Scena03_Bob4` / `Bob2`,
-     `LinkedObjectD_Amounts`, and the five rows no code reads;
-   - the rows under `find_imm`'s four-byte floor (`EffectKind75_States+0xC`, `BoneDanceShake_Counts`,
-     `GameMode3_Steps+0xC`); the `EffectKind18Sub*` rows whose twins' bytes differ;
-   - **the census's remaining NEEDS FIX items** ([`install-gap-census.md`](install-gap-census.md) 8.4..8.6): song 166
-     on the disc-only installs (D320, P2), the importer's 165 rule after a render; `CommuMusic_CloseSteps+0x68`'s
-     glyphs; P3's tail as listed there.
-
-     The owner's calls are in [`owner-review.md`](owner-review.md) "2026-10-18, the install-gap round".
-   Regenerate after any tool change (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,
-   `exe_tables.py gaps`, `exe_tables.py recipe`, the seven discs) and check with `tools/exe_scan.py`.
-
-5. **The follow-up round: disc-only and PSP polish** (not staged). Done: D254, D255, D256, D282. Still open: what
-   is left on PSP-EU's image ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6: 39 ranges, the
-   `BOOT.BIN`-reader class); the disc-only round's own leftovers ([`disc-only-round.md`](disc-only-round.md) 5); the
-   PSP-EU Config screen (D246) and the PAL banks (D257), the owner's.
+5. **The follow-up round: disc-only and PSP polish** (not staged): PSP-EU's image's 39 ranges
+   ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6); [`disc-only-round.md`](disc-only-round.md) 5; D246 and
+   D257, the owner's. D320 (song 166 on disc-only installs) is open.
 
 6. **The staged localisation PR**: the empty save slot blank as the US disc draws it (`0x669CCC`) and IDEAS I34, the
-   name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's to answer
-   first). Not launched.
+   name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's first).
+   The exe-gap round needs its answer too (item 2).
 
 7. **Work that needs no owner** (each doc's own list is the authority):
-   [`exe-import-engine.md`](exe-import-engine.md) 5's remainder (the effect state tables' twins); [`cache-read.md`](cache-read.md)
-   10 (the MP3s in the cache, an ini key for `BOF3X_CACHE_DATA`); the music's long-fade row as a design
-   ([`music-open-ends.md`](music-open-ends.md) 4) and `SsUtKeyOnV` read before the sound effects move; the loop rows
-   `084`, `109`, `130` not rendered ([`wav-dump.md`](wav-dump.md) 5); the exe's remaining Chinese, the definite list
-   in [`exe-chinese-remaining.md`](exe-chinese-remaining.md) 3 and 7's "left open". The three disc-only language
-   gaps of the old item 6 are closed (that doc 6).
+   [`exe-import-engine.md`](exe-import-engine.md) 5's remainder; [`cache-read.md`](cache-read.md) 10; the music's
+   long-fade row ([`music-open-ends.md`](music-open-ends.md) 4) and `SsUtKeyOnV`; the loop rows `084`, `109`, `130`
+   ([`wav-dump.md`](wav-dump.md) 5); the exe's remaining Chinese
+   ([`exe-chinese-remaining.md`](exe-chinese-remaining.md) 3 and 7).
 
-8. **Small, left over:** the controls still thin ([`round-14-cleanup.md`](round-14-cleanup.md) 4's last
-   paragraph); the 61 run-time raw calls ([`round-13-cleanup.md`](round-13-cleanup.md) 1.3, a decision); E2E's 19
-   `EffectKind48_State7..12_*` names, which E2D's three-state table makes unreachable
-   ([`round-13-review.md`](round-13-review.md) 3); the PSP's eleven map-band changes unread (region-diff 6); Capcom's
-   type-1 routine not located; DIV-0041's wider terrain margin as the creator of the bridge's edge cells, unmeasured;
-   `Sprite_FlashClut`'s row mask; seven older hosts still covering an owned start in `entries_logic.txt`;
-   `importer.py verify` on a US-only cache reports `opt/area4-walls` `AREA004.DAT` slot 6 "composed with the layer, not
-   the recipe's"; `dragonMenu`'s frame 720 pop-up differs from its reference (together again at 780, probably
-   timing).
+8. **Small, left over:** [`round-14-cleanup.md`](round-14-cleanup.md) 4's last paragraph; the 61 run-time raw calls
+   ([`round-13-cleanup.md`](round-13-cleanup.md) 1.3); E2E's 19 unreachable names
+   ([`round-13-review.md`](round-13-review.md) 3); the PSP's eleven map-band changes; Capcom's type-1 routine;
+   DIV-0041's terrain margin at the bridge's edge cells; `Sprite_FlashClut`'s row mask; seven older hosts in
+   `entries_logic.txt`; `importer.py verify`'s `opt/area4-walls` note on a US-only cache; `dragonMenu`'s frame 720.
 
-9. **Revisit: the PSP's Peco level table is a repair, not a rebalance** (read 2026-10-16, chat only; owner's call).
-   DIV-0104 / DIV-0111, [`exe-tables-by-build.md`](exe-tables-by-build.md) 4.4, [`psp-only-build.md`](psp-only-build.md)
-   4 and [`opt-layers.md`](opt-layers.md) call roster index 6's 249 differing `Char_ExpTable` bytes a PSP balance
-   change at Extension tier. Decoded row by row (PC `bof3/BOF3.exe` against `game/cache/opt/psp-tables/exe/place.bin`
-   laid at its `place.toml` ranges), they are **one row inserted**: the PSP adds a level-36 row, and every PC / PSX
-   row from 36 on is the PSP's row one level higher; the PSX's last row (level 99) is all zero, the only zero final
-   row of the seven characters. Abilities (`+6` / `+7`) stay put. Roster index 6 is Peco (New Game's record order,
-   DIVERGENCE.md DIV-0020's original behaviour). The inserted step is the ~1.1x ratio the curve keeps on both sides of it, where
-   the PSX's 35 -> 36 step is about twice that. Consequences on the PSX / PC, by `Char_LevelUpGain`'s (`0x432170`)
-   reading: Peco cannot sit at level 98 (the 98 and 99 sums are equal, so 97 goes to 99), he ends with one level's
-   bundle of stat gains less than the PSP's, and from 36 to 97 each bundle comes a level early and cheaper. Every
-   PSX build holds the same table, so by the PSX-twin rule it is Capcom's defect, which the PSP fixed. **To do:**
-   (a) the owner decides whether it becomes a Sensible-tier repair on every install, not only an option
-   (`psp-tables`) and a PSP-only base; (b) reword those entries from "rebalance" to "a missing row restored";
-   (c) name the six gain stats (labels system messages `0xC, 0xD, 8, 9, 0xA, 0xB`, `battle_e7.cpp`'s
-   `BattleResultWin_DrawLevelUp`; not checked); (d) see Peco level 97 -> 99 in play to confirm the skip.
-   **A second gap the PSP left** (the same day): every character's EXP steps grow in fixed ratio phases (x2, x1.5,
-   x1.25, then x1.125; Peco alone also has a x1.1 phase from 26 to 40), and nowhere is a step the square of its
-   phase's ratio except Peco's two: 35 -> 36 on the PSX (x1.1 squared, the row the PSP restored) and 41 -> 42 on the
-   PSP (x1.125 squared, also 40 -> 41 on the PSX), which no build fills. The EXP alone says a row is missing there;
-   Peco's stat gains come in irregular spurts, so they cannot say whether the stats are missing too. Also: Peco's
-   level-1 row is empty where the six others carry an ability at `+6`, the same on every build (design or slip,
-   the owner's to say). The other six tables are equal on every build and show neither pattern. Scripts: session
-   9c821506's scratchpad (`scan.py`, `phase.py`, `cad.py`).
+9. **Revisit: the PSP's Peco level table is a repair, not a rebalance** (read 2026-10-16; owner's call). DIV-0104 /
+   DIV-0111 and their docs call roster index 6's 249 differing `Char_ExpTable` bytes a PSP balance change; decoded
+   row by row they are **one row inserted** (the PSP adds a level-36 row; the PSX's last row is all zero), Capcom's
+   defect by the PSX-twin rule, which the PSP fixed. **To do:** (a) the owner decides whether it becomes a
+   Sensible-tier repair on every install; (b) reword those entries; (c) name the six gain stats; (d) see Peco 97 -> 99
+   in play. A second gap (41 -> 42 on the PSP) and Peco's empty level-1 ability are in the same reading (session
+   9c821506's scratchpad).
 
-10. **After the first signed release** (`v0.1.0-alpha.3`, signed by `release.yml` through Trusted Signing since PR #72):
-   submit the binaries' hashes as false positives to Microsoft and Avira; jsign's jar is still pinned by version
-   only, not by hash ([`releases/README.md`](releases/README.md) "Signing").
+10. **After the first signed release** (`v0.1.0-alpha.3`): submit the binaries' hashes as false positives to
+   Microsoft and Avira; pin jsign's jar by hash ([`releases/README.md`](releases/README.md) "Signing").
 
 **Older open items** (one line each; the pointer holds the detail):
 
-- **The owner's older checks** (move to `owner-review.md`): DIV-0063 in game (the gene with a partner down); the
-  compass needle (DIV-0044) and the sky's bands (DIV-0041) on the world map; the wide game over in a fight, the
-  trees at the field's edges, a held pad input across a video's start (DIV-0066); the Config screen under an
-  overlay; French, German and Japanese in game (`AREA065`, German `AREA121`); DIV-0064's labels (status words,
-  the battle's stat panel, the shops' `WEAPON` / `ARMOR`, the French pages); [`USER_CHECKS.md`](USER_CHECKS.md)'s
-  list (item 8 among them).
-- **The layering (DIV-0071):** on by default; a launcher key not built; why the owner's PlayStation emulator shots
-  look less cut than the PC's is unmeasured ([`sprite-draw-order.md`](sprite-draw-order.md) 19).
-- **The fix wave's questions** ([`yes-no-prompts.md`](yes-no-prompts.md) 6): whether `ItemTrade_Confirm`'s
-  per-item prompt gets DIV-0027's stops; the two masters-screen headers' PlayStation text. The stray frame line
-  at window scale 1 (D198) is Capcom's renderer, not fixed.
-- **Round eleven's open set-ups** ([`round-11-cleanup.md`](round-11-cleanup.md)): D166 a fix candidate, D167 the
-  owner's question; [`round-10-cleanup.md`](round-10-cleanup.md)'s remaining items (the `SH_CALL` form, the
-  world-map body shared once, D143's five copies); the group docs' contradictions written into D89..D161, one read
-  each.
-- **Localisation** ([`dialogue-localisation.md`](dialogue-localisation.md) 6 and 8): Japanese, the exe's own
-  strings still Chinese (Config, verbs, default names, battle labels); French / German, the message slots whose
-  European pointers leave their block and the accented enemy names over 8 bytes; the turn counter, the Skill Ink
-  label, the shop's master / apprentice words and the shop and tactics strings; the seven character-at-a-time
-  `Text_DrawAt` callers still at 12 px. Furigana is IDEAS I21. The owner's decision: its own branch and effort.
-- **Widescreen's debts** ([`widescreen.md`](widescreen.md) 4, 5): the state hash with `BOF3X_WIDE=1` and `=2` is done
-  (the ultrawide round) and 3b's culls are classed ([`ultrawide-culls.md`](ultrawide-culls.md)); left: the sky
-  `0x571C85`, the message-box table, the corner pop at margin 100.
-- **[`new-code-audit.md`](new-code-audit.md)**: eight bugs confirmed by reading and not seen in game, ten unchecked
-  reports, six questions; A1 and A2 the owner's. The lifter's first run on `BOF3.exe`
-  ([`lifter-feasibility.md`](lifter-feasibility.md) 7).
-- **`analysis/pairs_propagated.json`**: `0x445A30` / `0x44B9F0` swapped, `0x44F030` paired to the wrong twin
-  ([`battle_damage.md`](battle_damage.md)); then [`attract-remaining.md`](attract-remaining.md) 5.1's divergence
-  map (never the `call-disputed` tier) and the name import as `hypothesis`.
-- **The first receipt** ([`STATUS.md`](STATUS.md) open decisions): the evidence exists (`attract_diff.py`,
-  `mem_dump.py --compare`, the state hash, the route A/Bs).
-- **IDEAS:** I13 save states (for what no route replays: bosses, event battles); I15's live look toggle key and
-  I19 curvature; I18 closed by the owner (F12 unchanged; the quicksave is F6, DIV-0145); I45 shrink the quicksave files; I46 what loading one trusts.
+- **The owner's older checks** (move to `owner-review.md`): DIV-0063 in game; the compass needle (DIV-0044) and the
+  sky's bands (DIV-0041); the wide game over in a fight, the trees at the field's edges, a held pad input across a
+  video's start (DIV-0066); the Config screen under an overlay; French, German and Japanese in game; DIV-0064's
+  labels; [`USER_CHECKS.md`](USER_CHECKS.md)'s list.
+- **The layering (DIV-0071):** on by default; a launcher key not built
+  ([`sprite-draw-order.md`](sprite-draw-order.md) 19).
+- **The fix wave's questions** ([`yes-no-prompts.md`](yes-no-prompts.md) 6); D198 is Capcom's renderer, not fixed.
+- **Round eleven's open set-ups** ([`round-11-cleanup.md`](round-11-cleanup.md)); [`round-10-cleanup.md`](round-10-cleanup.md)'s
+  remaining items.
+- **Localisation** ([`dialogue-localisation.md`](dialogue-localisation.md) 6 and 8); furigana is IDEAS I21.
+- **Widescreen's debts** ([`widescreen.md`](widescreen.md) 4, 5): the sky `0x571C85`, the message-box table, the corner
+  pop at margin 100.
+- **[`new-code-audit.md`](new-code-audit.md)**: eight bugs confirmed by reading, ten unchecked reports, six
+  questions; A1 and A2 the owner's. The lifter's first run ([`lifter-feasibility.md`](lifter-feasibility.md) 7).
+- **`analysis/pairs_propagated.json`**'s three wrong pairs ([`battle_damage.md`](battle_damage.md)); then
+  [`attract-remaining.md`](attract-remaining.md) 5.1.
+- **The first receipt** ([`STATUS.md`](STATUS.md) open decisions).
+- **IDEAS:** I13; I15's look toggle key and I19; I45 shrink the quicksave files; I46 what loading one trusts; I47
+  quick-loading across translations.
 - **The display overhaul's owed checks** ([`display-overhaul.md`](display-overhaul.md) 5,
-  [`window-modes.md`](window-modes.md) 6): `rb1`'s edge pixels (`BOF3X_PIXEL_OFFSET`), SatPixie's tuning by hand,
-  the title-bar drag under `BOF3X_BACKGROUND=0`, sprite edges at k = 3 / 6. Not built, loud if reached: a `Lock`
-  of the primary or back buffer, sub-rectangle locks, depth / fog / lighting, the back buffer's `GetDC`.
-- **Stage 2's regression check** ([`attract-mode.md`](attract-mode.md) 6): which of `MsgBox_Step`'s 23 control
-  codes the attract's messages use; the draw-order list checked in the real game (I14 level 1,
-  [`sprite-draw-order.md`](sprite-draw-order.md) 5, 6).
-- **The asset path** ([`asset-loading-path.md`](asset-loading-path.md) 4): the 32 callers of `LoadDatFile`, the
-  value-sequence search for the dropped PSX sections; for I1, `0x5806F0` and the options bytes at block `+0x78`.
-- **Obligations** ([`STATUS.md`](STATUS.md)): contact TheRealBiggs; write findings back to the sibling (the `0x0C`
-  answer, `Rand` not matching). Unknown though ours: what `SpriteCell_Add` `0x5A6790`'s 8-byte records are.
+  [`window-modes.md`](window-modes.md) 6).
+- **Stage 2's regression check** ([`attract-mode.md`](attract-mode.md) 6).
+- **The asset path** ([`asset-loading-path.md`](asset-loading-path.md) 4).
+- **Obligations** ([`STATUS.md`](STATUS.md)): contact TheRealBiggs; write findings back to the sibling.
 
 ## How to run things
 
@@ -332,6 +241,9 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
+- **2026-10-20's branches**: `fix/d266-title-mark` (`.claude/worktrees/d266`), `docs/handoff-1020`
+  (`.claude/worktrees/handoff-1020`) and `quicksave/lang-guard` (`.claude/worktrees/lang-guard`) are merged (PRs #98,
+  #99, #96): removable.
 - **The typed-data round's stage C** (2026-10-19..20), all under `.claude/worktrees/`: `typed-c` (`typed/c`, the
   PR's branch), `typed-baseline-c` (a detached `main` `56d81b42` build: the gate's reference until main was merged) and
   `typed-baseline-c2` (detached `b3498050`, the gate's reference now; keep it until the PR merges), `agent-c4` (`typed/c4`, merged), `agent-c4fix` (`typed/c4-fix`, merged), `audit-c4` (detached `f56ed9a8`,
@@ -339,45 +251,32 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   `agent-c2fix`, `agent-c3e`, `agent-c3n` (branches `typed/c0`, `typed/c1`, `typed/c2-<group>`, `typed/c2-fix`,
   `typed/c3-entries`, `typed/c3-naming`): all merged into `typed/c`; removable after the PR merges. Scratch:
   `C:\Users\kerok\c_typed`.
-- **Stages A and B's worktrees** (merged as PR #94; `git cherry main` shows no commit missing from `main` on
-  `typed/b1`, `typed/integration`, `typed/census`, `typed/records`, `typed/globals`, `pairs/unpaired`,
-  `typed/b0-globals`, `typed/b1-audit-fix`): `typed-b1`, `typed-integration`, `typed-baseline` (the detached
-  `19180e63` build, the gate's reference for A and B, no longer needed) and the stage A, fix, B0 and B1 agents'
-  `agent-*` worktrees, plus the session-`eb87db8c` scratchpad's `sd` (`typed/records`). Removable at the owner's word.
-- **The quicksave round's** `agent-a10bb1b1f874af08e` (`quicksave/typed`) and the baseline `C:\Users\kerok\q_typed\base`
-  (detached `6422dee2`): merged in PR #95; removable.
-- **The install-gap round's worktrees** (`agent-*` on `install-gap/*`, and `scratchpad/coord` of session
-  `14ea0433`): merged in PR #91; removable.
-- **`wide/ultrawide-round`** (a worktree in session `6d500aac`'s scratchpad `uw/`): merged as PR #60. Its
-  group branches `wide/ba`, `cf`, `dp`, `eb1`, `eb2`, `eb2b`, `eb3`, `fy`, `grab`, `ld`, `lr`, `pd`, `rn`, `rn2`, `sl`,
-  `ss`, `st`, `st2`, `st3`, `uc`, `uc2`, `uw` (most with a worktree under `.claude/worktrees/`): all merged;
-  removable.
-- **The fifteen away-day worktrees** under `.claude/worktrees/` and their branches `away/1013-*`: merged in PR #58;
-  removable at the owner's word.
-  Also there from 2026-10-12: `worktree-agent-ae288769dd06909be` (the D260..D263 fix agent's, merged in PR #57).
-- **The junction `C:\Users\kerok\lbl13`** (the labels agent's): safe to delete.
-- **Scratch outside the tree:** the A/B/C roots `C:\Users\kerok\ab`, `abj`, `abu`, `abv`, `abx` (game-derived, never
-  in the tree); the owner's scratch disc-only installs `C:\b3g` (US) and `C:\b3p` (PSP-EU), built before `wmrec` -
-  rebuild with the current tools or remove. A `balioAndSunder_2` run may still be running from the session scratch
-  `d56/L2` (it restores slot 0 when done). Older: `music/event-battle-restart`'s scratch worktree (the
-  session-`3186ef2f` scratchpad's `evb/`, an untracked `cfg.out` - look before removing); `claude/ecstatic-mccarthy-t8bg37`,
-  the owner's to delete.
+- **The merged rounds' worktrees** under `.claude/worktrees/` and the session scratchpads: the typed A/B agents
+  (`typed/b1` merged as PR #94), the quicksave agents (PR #95), install-gap (PR #91), the ultrawide groups (PR #60),
+  the away-day `away/1013-*` (PR #58), `worktree-agent-ae288769dd06909be` (PR #57): removable at the owner's word.
+  Classify with `git cherry`, not an ancestry check (Traps).
+- **2026-10-20's scratch, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\away1020` (launcher copies
+  `L\` (main's build) and `L2\` (the D266 branch's), the game folder `g\` hard-linked from `bof3\`, the runs, the
+  checks, the chain scripts); `D:\bof3x-runs\away1020` (the US and EU disc-only caches `c_us`, `c_eu` and installs
+  `g_us`, `g_eu`, built by the D266 branch); **`D:\bof3x-runs\discs`, the seven discs extracted** - `CDImage\` now
+  holds them zipped, and `recipes/abc-installs.toml` still names `{main}/CDImage/*.cue` (Traps).
+- **Older scratch:** the A/B/C roots `C:\Users\kerok\ab`, `abj`, `abu`, `abv`, `abx`, `g_*`; the owner's scratch
+  disc-only installs `C:\b3g` and `C:\b3p` (built before `wmrec`: rebuild or remove); the junction
+  `C:\Users\kerok\lbl13`; `music/event-battle-restart`'s scratch worktree (session `3186ef2f`'s `evb/`, an untracked
+  `cfg.out`); `claude/ecstatic-mccarthy-t8bg37`, the owner's to delete.
 - **Other sessions work in the main checkout**: check `git status` and the branch before a commit there, and never
   build in `build/` while its game runs.
 
 Local only, gitignored, worth keeping:
 
-- `bof3/BOF3.CFG`, `build/bof3x.ini` (the owner's; do not edit); the owner's saves `bof3/BISLPS*.DAT`, theirs to
-  play in; **the recipes' saves are `tools/recipe_saves/*.DAT`**, swapped into slot 0 for a run by `input_run.py`
-  ([`input-script.md`](input-script.md) §1a). Gitignored, so a fresh clone re-imports them from the owner's slots.
-- `analysis/statehash/` - the state-hash references (`cn_<route>_orig2` / `_orig2b`, the overlay pairs
-  `en_<route>_sh3a` / `_sh3b`, `attract_r14_orig*`); `analysis/calltrace/` - the frame-hash references and the
-  reach traces; `analysis/attract/orig_a.tsv` (the oracle's reference); `analysis/memdump/clutref_*` (its `clut`
-  row stale - Traps).
-- `analysis/cache/pc-plus-us` (the PC install, the US disc and both PSP images); `bof3/DAT/<tag>.*.DAT` (rebuilt by
-  `loc_build.py all --discs`); `analysis/font/`; `analysis/shots/` - every capture and sheet sent to the owner.
-- `CDImage/` - the owner's PSX discs (USA, Japan, Germany, France) and two PSP images. Never commit; extract to
-  scratch.
+- `bof3/BOF3.CFG`, `build/bof3x.ini` (the owner's; do not edit); the owner's saves `bof3/BISLPS*.DAT`; **the
+  recipes' saves are `tools/recipe_saves/*.DAT`** ([`input-script.md`](input-script.md) §1a).
+- `analysis/statehash/` - **the route pairs `cn_<route>_orig3` / `_orig3b` (2026-10-20)**, the older `_orig2` pairs,
+  the overlay pairs `en_<route>_sh3a` / `_sh3b`, `attract_r14_orig*`; `analysis/calltrace/`;
+  `analysis/attract/orig_a.tsv`; `analysis/memdump/clutref_*`.
+- `analysis/cache/pc-plus-us`; `bof3/DAT/<tag>.*.DAT`; `analysis/font/`; `analysis/shots/` - every capture and sheet
+  sent to the owner (2026-10-20: `d266-title-mark-1020/`, `ending-roll-1020/`).
+- `CDImage/` - the owner's PSX discs (USA, Japan, Germany, France) and two PSP images, zipped. Never commit.
 
 ## Traps already paid for
 
@@ -385,6 +284,26 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 - **Capcom's WndProc freezes an unfocused game** (2026-10-13, [`wav-dump.md`](wav-dump.md) 4a): an all-original side
   run with `--no-front` made 2,404 frames in ten minutes. Such a side wants `--original '*,-Game_Clock,-Game_WndProc'`.
+  **Paid again 2026-10-20:** the state-hash pairs' Capcom side (`*,-Game_Clock`, as section 4 of
+  [`state-hash.md`](state-hash.md) records them) stops writing the moment any other game window takes the focus - a
+  side run beside a reference chain cost 10 minutes until the window was activated by PID. Run nothing with a window
+  beside a reference recording, or give the focus back (`WScript.Shell.AppActivate(<pid>)`). The hash is per tick, so
+  a pause costs time, not data.
+- **`CDImage\` holds the discs zipped** (found so 2026-10-20; when they were zipped is not recorded): every tool that takes `--disc` /
+  `--source` wants a `.cue` / `.bin` or `.iso`, and `recipes/abc-installs.toml` names `{main}/CDImage/*.cue`. An
+  extracted copy is at `D:\bof3x-runs\discs` (the seven, by Python's `zipfile`); point the tools there, or extract
+  again into a root of your own.
+- **A script named after a standard module shadows it** (2026-10-20): a `bisect.py` in a scratch root ran whenever a
+  Python script started from that folder imported anything that imports `bisect` (Pillow does) - twice a second,
+  untracked bisect chain, racing the real one on the same launcher folder and slot 0 of `bof3\`, holding the folder so three
+  queued control runs failed at once (`bof3x.log cannot be removed: a game of this launcher folder is still running`).
+  Before trusting a chain's results, list `python.exe` by command line and stop strays by exact PID, letting a running
+  `input_run.py` end on its own so slot 0 comes back.
+- **The ending's roll is not in `.data` under a Western language** (2026-10-20, DIV-0148): its lines come from the
+  layer's kind 17. A layer built before that has none and rolls the Japanese credits on a PC install, D323's
+  patchwork on a Western disc-only one. Rebuild the language.
+- **`bof3\` is the tooling's install since 2026-10-15** (the owner plays from `game\`): its slot 0 held the recipe save
+  `camping.DAT` after 2026-10-20's slot race. Recipes swap slot 0 there freely; the owner's saves are `game\`'s.
 - **A title-start recipe with no `# save` lands on CONFIG in a harness folder** (2026-10-13,
   [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md)): the recipe presses for a cursor that starts on LOAD GAME, which it
   does only when a save exists; the harness's game folders have none. Give it a save or a `--save`.
