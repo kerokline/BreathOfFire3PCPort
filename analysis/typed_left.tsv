@@ -448,8 +448,6 @@ src/game/area_w1f.cpp	Area75_MarkObjectB	global	B	at::kOtherEffect	0	0x93c34e	-	
 src/game/area_w1f.cpp	Area75_SpawnFive	global	Mem	at::kScratch	0	0x903850	-	no-entry	at::kScratch 0x903850 -	b0
 src/game/area_w1f.cpp	Area75_FlyStep	record	Word	cur + 0x14	0	-	base=Sprite_Current	width	Word(cur + 0x14): SpriteObject +0x14 width 2	b1-area
 src/game/area_w1f.cpp	Area75_DrainEffects	global	B	at::kOtherEffect	0	0x93c34e	-	no-entry	at::kOtherEffect 0x93c34e -	b0
-src/game/area_w1f.cpp	Area75_DrainEffects	record	SetLong	e + 0xC	0	-	table=0x93c34e	family	SetLong(e + 0xC): e reassigned in its scope to another value	b1-area
-src/game/area_w1f.cpp	Area75_DrainEffects	record	Long	e + 0xC	0	-	table=0x93c34e	family	Long(e + 0xC): e reassigned in its scope to another value	b1-area
 src/game/area_w1f.cpp	Area75_DrainEffects	global	B	at::kCounter0	0	0x903848	-	no-entry	at::kCounter0 0x903848 -	b0
 src/game/area_w1f.cpp	Area75_ChoiceStart14	global	B	at::kCounter0	0	0x903848	-	no-entry	at::kCounter0 0x903848 -	b0
 src/game/area_w1f.cpp	Area75_ChoiceStartF	global	Mem	at::kTailTimer	0	0x9039f6	-	no-entry	at::kTailTimer 0x9039f6 -	b0
@@ -6448,6 +6446,9 @@ src/game/effect_3d.cpp	EffectKind77_DrawCount	global	P	at::kTallyFormat	0	0x6530
 src/game/effect_3d.cpp	EffectKind77_DrawCount	global	P	at::kText	0	0x904ba0	-	no-entry	at::kText 0x904ba0 -	b0
 src/game/effect_3d.cpp	EffectKind77_DrawCount	global	B	at::kTally	0	0x939a00	-	no-entry	at::kTally 0x939a00 -	b0
 src/game/effect_3d.cpp	EffectKind77_DrawCount	global	P	at::kText	1	0x904ba0	-	no-entry	at::kText 0x904ba0 -	b0
+src/game/effect_3d.cpp	EffectKind78_Start	global	W	at::kObject2Turn	0	0x7deffa	-	-	-	-
+src/game/effect_3d.cpp	EffectKind78_Grow	global	W	at::kObject2Turn	0	0x7deffa	-	-	-	-
+src/game/effect_3d.cpp	EffectKind78_Spin	global	W	at::kObject2Turn	0	0x7deffa	-	-	-	-
 src/game/effect_3d.cpp	EffectKind78_Spin	record	W	s + 0x10	0	-	via=S	width	W(s + 0x10): EffectObject 0x10 via W; the access width or position is not the field's (a half of a dword field, or a wider read)	b1-effect
 src/game/effect_3d.cpp	EffectKind78_Spin	record	W	s + 0xC	0	-	via=S	width	W(s + 0xc): EffectObject 0xc via W; the access width or position is not the field's (a half of a dword field, or a wider read)	b1-effect
 src/game/effect_3d.cpp	EffectKind7D_Start	global	-	at::kDials	0	0x675dc8	-	no-entry	at::kDials 0x675dc8 -	b0
@@ -8107,6 +8108,7 @@ src/game/effect_6c.cpp	EffectKind18Sub44_Draw	record	SetUL	p + 0x3C	1	-	base=Gfx
 src/game/effect_6c.cpp	EffectKind18Sub44_Draw	record	SetD	p + 0x38	0	-	base=Gfx_PacketNext	family	SetD(p + 0x38): local p: several declarations	b1-effect
 src/game/effect_6c.cpp	EffectKind18Sub44_Draw	record	SetWord	p + 0x16	1	-	base=Gfx_PacketNext	family	SetWord(p + 0x16): local p: several declarations	b1-effect
 src/game/effect_6c.cpp	EffectKind18Sub44_Draw	record	SetWord	p + 0x26	1	-	base=Gfx_PacketNext	family	SetWord(p + 0x26): local p: several declarations	b1-effect
+src/game/effect_6c.cpp	EffectKind18Sub44_Draw	record	Word	Vertices() + 8	0	-	via=Vertices	-	-	-
 src/game/effect_6c.cpp	EffectKind18Sub44_Draw	global	At	at::kSkyXs	0	0x65ee80	-	no-entry	at::kSkyXs 0x65ee80 -	b0
 src/game/effect_6c.cpp	EffectKind18Sub44_Draw	record	SetD	p + 8	1	-	-	family	SetD(p + 0x8): local p: several declarations	b1-effect
 src/game/effect_6c.cpp	EffectKind18Sub44_Draw	record	SetUL	p + 0xC	3	-	-	family	SetUL(p + 0xc): local p: several declarations	b1-effect
@@ -10276,7 +10278,7 @@ src/game/magic_lib.cpp	MagicFx_ApplyBuff	global	Mem	kResultTarget	2	0x904b54	-	n
 src/game/magic_lib.cpp	MagicFx_BuffPopup	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_lib.cpp	MagicFx_BuffPopup	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_lib.cpp	MagicFx_BuffPopup	record	SetLong	t + 0x80	0	-	table=0x93a000;stride=0x84	expr	BattleTask::owner: the local t is made inline (unsigned char* const t = Mem(at::kTasks + (slot & 0xFF) * at::kTaskStr), not by a helper the converter reads	b1-magic
-src/game/magic_lib.cpp	MagicFx_NearSprite3D	record	Word	other + 0x3E	0	-	param	family	a function parameter (other) whose callers pass more than one family, or that no doc fixes	b1-magic
+src/game/magic_lib.cpp	MagicFx_NearSprite3D	record	Word	other + 0x3E	0	-	-	family	a function parameter (other) whose callers pass more than one family, or that no doc fixes	b1-magic
 src/game/magic_lib.cpp	MagicFx_CenterOnSide	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_lib.cpp	BattleActor_FxSizeB	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_lib.cpp	BattleActor_FxSizeB	global	Mem	kEnemyFxSizeB	0	0x8c5653	-	no-entry	kEnemyFxSizeB 0x8c5653 -	b0
