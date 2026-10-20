@@ -13721,8 +13721,11 @@ src/game/rest_1g.cpp	LeaderPanel_S1Box3In	global	L	kPoolWordStage1	0	0x803600	-	
 src/game/rest_1g.cpp	LeaderPanel_S1Box3In	global	At	kPools	0	0x803580	-	no-entry	kPools 0x803580 -	b0
 src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	W	kPoolWordData	0	0x803642	-	no-entry	kPoolWordData 0x803642 -	b0
 src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	At	kPools	0	0x803580	-	no-entry	kPools 0x803580 -	b0
+src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	W	kEff6Shown	0	0x7e151e	-	gate	W / SetW through AddrOf(&kEff6Page): 96008c61 found any typed spelling of these three reads changed the code (the s16 read of the page word, then the store); the census counts them since the C4 audit (C F2)	c4-fix
 src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	L	kPoolWordRule	0	0x803660	-	no-entry	kPoolWordRule 0x803660 -	b0
 src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	At	kPools	0	0x803580	-	no-entry	kPools 0x803580 -	b0
+src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	W	kEff6Page	0	0x7e151c	-	gate	W / SetW through AddrOf(&kEff6Page): 96008c61 found any typed spelling of these three reads changed the code (the s16 read of the page word, then the store); the census counts them since the C4 audit (C F2)	c4-fix
+src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	SetW	kEff6Page	0	0x7e151c	-	gate	W / SetW through AddrOf(&kEff6Page): 96008c61 found any typed spelling of these three reads changed the code (the s16 read of the page word, then the store); the census counts them since the C4 audit (C F2)	c4-fix
 src/game/rest_1g.cpp	LeaderPanel_S11Switch	global	B	kDrawMode	0	0x93985c	-	inside-entry	kDrawMode 0x93985c Effect1g_TradeState	b0
 src/game/rest_1g.cpp	LeaderPanel_S11Switch	global	B	kDrawMode	1	0x93985c	-	inside-entry	kDrawMode 0x93985c Effect1g_TradeState	b0
 src/game/rest_1g.cpp	LeaderPanel_S11Switch	global	B	kDrawMode	2	0x93985c	-	inside-entry	kDrawMode 0x93985c Effect1g_TradeState	b0
@@ -16223,6 +16226,12 @@ src/game/rest_4c.cpp	CommuHiLo_OpenFade	global	SetL	at::kCards	1	0x675f98	-	no-e
 src/game/rest_4c.cpp	CommuHiLo_OpenFade	global	At	at::kCards	0	0x675f98	-	no-entry	at::kCards 0x675f98 -	b0
 src/game/rest_4c.cpp	CommuHiLo_Intro	global	SetL	at::kBet	0	0x675f88	-	no-entry	at::kBet 0x675f88 -	b0
 src/game/rest_4c.cpp	CommuHiLo_BetInput	global	B	at::kBet	0	0x675f88	-	no-entry	at::kBet 0x675f88 -	b0
+src/game/rest_4c.cpp	CommuHiLo_BetInput	global	reinterpret_cast	at::kDigits	0	0x903850	-	index	reinterpret_cast<unsigned char*>(&at::kDigits)[i]: SharedScratch's first three bytes as the digits (ones, tens, hundreds) by the cursor i, a dynamic index into bytes SharedScratch names by width only (96008c61's spelling of B(at::kDigits + i)); counted since the C4 audit (C F2)	c4-fix
+src/game/rest_4c.cpp	CommuHiLo_BetInput	global	reinterpret_cast	at::kDigits	1	0x903850	-	index	reinterpret_cast<unsigned char*>(&at::kDigits)[i]: SharedScratch's first three bytes as the digits (ones, tens, hundreds) by the cursor i, a dynamic index into bytes SharedScratch names by width only (96008c61's spelling of B(at::kDigits + i)); counted since the C4 audit (C F2)	c4-fix
+src/game/rest_4c.cpp	CommuHiLo_BetInput	global	reinterpret_cast	at::kDigits	2	0x903850	-	index	reinterpret_cast<unsigned char*>(&at::kDigits)[i]: SharedScratch's first three bytes as the digits (ones, tens, hundreds) by the cursor i, a dynamic index into bytes SharedScratch names by width only (96008c61's spelling of B(at::kDigits + i)); counted since the C4 audit (C F2)	c4-fix
+src/game/rest_4c.cpp	CommuHiLo_BetInput	global	reinterpret_cast	at::kDigits	3	0x903850	-	index	reinterpret_cast<unsigned char*>(&at::kDigits)[i]: SharedScratch's first three bytes as the digits (ones, tens, hundreds) by the cursor i, a dynamic index into bytes SharedScratch names by width only (96008c61's spelling of B(at::kDigits + i)); counted since the C4 audit (C F2)	c4-fix
+src/game/rest_4c.cpp	CommuHiLo_BetInput	global	reinterpret_cast	at::kDigits	4	0x903850	-	index	reinterpret_cast<unsigned char*>(&at::kDigits)[i]: SharedScratch's first three bytes as the digits (ones, tens, hundreds) by the cursor i, a dynamic index into bytes SharedScratch names by width only (96008c61's spelling of B(at::kDigits + i)); counted since the C4 audit (C F2)	c4-fix
+src/game/rest_4c.cpp	CommuHiLo_BetInput	global	reinterpret_cast	at::kDigits	5	0x903850	-	index	reinterpret_cast<unsigned char*>(&at::kDigits)[i]: SharedScratch's first three bytes as the digits (ones, tens, hundreds) by the cursor i, a dynamic index into bytes SharedScratch names by width only (96008c61's spelling of B(at::kDigits + i)); counted since the C4 audit (C F2)	c4-fix
 src/game/rest_4c.cpp	CommuHiLo_BetInput	global	SetL	at::kBet	0	0x675f88	-	no-entry	at::kBet 0x675f88 -	b0
 src/game/rest_4c.cpp	CommuHiLo_BetInput	global	SetL	at::kBet	1	0x675f88	-	no-entry	at::kBet 0x675f88 -	b0
 src/game/rest_4c.cpp	CommuHiLo_BetInput	global	SetL	at::kBet	2	0x675f88	-	no-entry	at::kBet 0x675f88 -	b0

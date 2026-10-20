@@ -146,6 +146,21 @@ Before section 5's fixes the first passed.
     the one value `src/` gives the name. A constant reached through a
     differently-named alias of an `at` namespace (`hat::kTarget` in
     `magic_s23.cpp`, 17 sites) is counted here.
+  - A typed alias in a `namespace at` (`inline auto& kPendingX =
+    SharedScratch.d_10;`, stage C4) is a reference, not an address: an
+    `at::kX` whose own module (the explicit namespace, the file, its stem)
+    makes it an alias is typed and not counted. In the wider tiers (the
+    include closure, the enclosing namespace, any definition) another
+    module's alias of the same name is passed over and the constants there
+    answer (C4 audit C, a doubt: the rule had fired in every tier). An
+    `inline auto&` outside a `namespace at` is not an `at::` name.
+  - A typed name's address taken back for a raw access: `AddrOf(&kX)`
+    (rest_1g's file-local helper, its three W / SetW reads) and
+    `reinterpret_cast<T*>(&kX)[i]`
+    (rest_4c's six digit bytes), counted as a global at the alias's address
+    (its definition read: `Name`, `Name.f`, `Name[i].f`, or
+    `rv::As<records::T>(rv::Bytes(&Name[i]))->f`). Since the C4 audit (C F2);
+    before it these 9 sites were raw and uncounted.
   - One site per argument: a data constant inside a nested accessor
     (`Word(Mem(kS) + 4)`'s `Mem(kS)`) is that accessor's site, and the outer
     call is classified by what is left (here a record, `via=Mem`).

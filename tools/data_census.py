@@ -343,8 +343,61 @@ CONST_BRACE = re.compile(r'\b(?:inline\s+)?(?:static\s+)?constexpr\s+[\w:]+\s+(k
 # A typed alias in a `namespace at` (stage C4: `inline auto& kPendingX =
 # SharedScratch.d_10;`): the name is a reference to a typed global, not an
 # address, so a site spelling it is typed and resolve_at answers no value.
+# The pattern finds every `inline auto& kX = <name>`; collect_constants keeps
+# the ones inside a `namespace at` (an alias elsewhere is no `at::kX`).
 REF_ALIAS = re.compile(r'\binline\s+auto\s*&\s*(k\w*)\s*=\s*[A-Za-z_]')
 _REF_ALIASES = collections.defaultdict(list)
+# The address of a typed name taken back for a raw access (C4 audit C F2):
+# `W(AddrOf(&kEff6Shown))`, `reinterpret_cast<unsigned char*>(&at::kDigits)[i]`.
+# Still raw sites, counted as globals at the name's address.
+ADDR_OF = re.compile(r'(?<![\w:])AddrOf\s*\(\s*&\s*((?:\w+::)*)(k\w+)\s*\)')
+CAST_OF = re.compile(r'\breinterpret_cast\s*<[^<>;]*\*\s*>\s*\(\s*&\s*((?:\w+::)*)(k\w+)\s*\)\s*\[')
+# a typed alias's right-hand side: Name, Name.f, Name[i].f, or a view of a
+# record of Name: rv::As<records::T>(rv::Bytes(&Name[i]))->f
+ALIAS_DEF = r'\binline\s+auto\s*&\s*%s\s*=\s*([^;]+);'
+ALIAS_RHS = re.compile(r'(\w+)(?:\[(0x[0-9A-Fa-f]+|\d+)\])?(?:\.(\w+))?')
+ALIAS_VIEW = re.compile(r'rv::As<records::(\w+)>\(rv::Bytes\(&(\w+)(?:\[(0x[0-9A-Fa-f]+|\d+)\])?\)\)->(\w+)')
+
+
+def field_offset(ctype, field):
+    hits = [x[0] for x in record_sizes.fields(ctype) if x[1] == field]
+    return hits[0] if len(hits) == 1 else None
+
+
+def alias_address(f, name, syms):
+    """The address a typed alias `inline auto& kX = ...` names, from its
+    definition in f or f's include closure; None if not read."""
+    for g in [f] + include_closure(f, _by_rel):
+        m = re.search(ALIAS_DEF % re.escape(name), g.code)
+        if not m:
+            continue
+        rhs = ' '.join(m.group(1).split())
+        vm = ALIAS_VIEW.fullmatch(rhs)
+        if vm:
+            view, entry, idx, fld = vm.groups()
+            if entry not in syms.names or entry not in syms.ctypes:
+                return None
+            off = field_offset('records::' + view, fld)
+            if off is None:
+                return None
+            return syms.names[entry] + int(idx or '0', 0) * ctype_size(syms.ctypes[entry]) + off
+        am = ALIAS_RHS.fullmatch(rhs)
+        if am:
+            entry, idx, fld = am.groups()
+            if entry not in syms.names:
+                return None
+            base = syms.names[entry]
+            ct = syms.ctypes.get(entry, '')
+            if idx:
+                base += int(idx, 0) * ctype_size(ct)
+            if fld:
+                off = field_offset(ct, fld) if ct.startswith('records::') else None
+                if off is None:
+                    return None
+                base += off
+            return base
+        return None
+    return None
 
 
 def collect_constants(files, sym_env):
@@ -387,7 +440,8 @@ def collect_constants(files, sym_env):
     _REF_ALIASES.clear()
     for f in files:
         for m in REF_ALIAS.finditer(f.code):
-            _REF_ALIASES[m.group(1)].append((f, 'REF', f.ns_at(m.start()), line_of(f.starts, m.start())))
+            if f.in_at_namespace(m.start()):
+                _REF_ALIASES[m.group(1)].append((f, 'REF', f.ns_at(m.start()), line_of(f.starts, m.start())))
     return globals_env
 
 
@@ -456,6 +510,7 @@ class Symbols:
         # data address all the same). Not a record base: `B(Name_addr + k)`
         # is not counted (docs/typed-data-census.md 4).
         self.addr_names = {e['name'] + '_addr': e['pc'] for e in self.data + t.get('block', []) if 'ctype' in e}
+        self.ctypes = {e['name']: e['ctype'] for e in self.data + t.get('block', []) if 'ctype' in e}
         self.extents = []
         for e in self.data:
             size = ctype_size(e.get('ctype', ''))
@@ -596,18 +651,23 @@ def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
         want_ns = p.split('::')[-1] + '::at'
     elif 'at' in f.aliases:
         want_ns = '::'.join(f.aliases['at'].split('::')[-2:])
+    # (candidates, whether a typed alias among them decides the name): an
+    # alias decides only in the name's own namespace, file or stem; in a wider
+    # tier it is another module's alias, and the constants there answer
     tiers = []
     if want_ns:
-        tiers.append([c for c in cands if c[2].endswith(want_ns) or c[2] == want_ns])
-    tiers.append([c for c in cands if c[0] is f])
+        tiers.append(([c for c in cands if c[2].endswith(want_ns) or c[2] == want_ns], True))
+    tiers.append(([c for c in cands if c[0] is f], True))
     stem = re.sub(r'(_fuzz)?\.\w+$', '', os.path.basename(f.rel))
-    tiers.append([c for c in cands if re.sub(r'(_callees|_fuzz)?\.\w+$', '', os.path.basename(c[0].rel)) == stem])
+    tiers.append(([c for c in cands if re.sub(r'(_callees|_fuzz)?\.\w+$', '', os.path.basename(c[0].rel)) == stem], True))
     closure = {g.rel for g in include_closure(f, by_rel)}
-    tiers.append([c for c in cands if c[0].rel in closure])
+    tiers.append(([c for c in cands if c[0].rel in closure], False))
     enc = f.ns_at(pos).split('::')[0]
-    tiers.append([c for c in cands if c[2].split('::')[0] == enc])
-    tiers.append(cands)
-    for t in tiers:
+    tiers.append(([c for c in cands if c[2].split('::')[0] == enc], False))
+    tiers.append((cands, False))
+    for t, ref_decides in tiers:
+        if not ref_decides:
+            t = [c for c in t if c[1] != 'REF']
         vals = {c[1] for c in t if c[1] is not None}
         if 'REF' in vals:
             # a typed alias is what this name is, here: no address
@@ -864,6 +924,21 @@ def scan(files, syms):
             fam = stride_family(f, ident, ln, env, lambda tm, k: at_value(tm), syms)
             sites.append((f.rel, ln, 'record', name, expr, '-', fam,
                           '-', '-', '-', fuzz))
+        # a typed name's address taken back for a raw access (AddrOf(&kX),
+        # reinterpret_cast<T*>(&kX)[i]): raw, at the alias's address
+        for rx, acc0 in ((ADDR_OF, 'AddrOf'), (CAST_OF, 'reinterpret_cast')):
+            for m in rx.finditer(code):
+                v = alias_address(f, m.group(2), syms)
+                ln = line_of(f.starts, m.start())
+                pre = code[f.starts[ln - 1]:m.start()]
+                wrap = re.search(r'(\w+)\s*\(\s*$', pre)
+                acc = wrap.group(1) if wrap and acc0 == 'AddrOf' else acc0
+                name = m.group(1) + m.group(2)
+                if v is None:
+                    sites.append((f.rel, ln, 'global', acc, name, 'ambiguous', '-', '-', '-', '-', fuzz))
+                    continue
+                cov, dname, ctype = syms.cover(v)
+                sites.append((f.rel, ln, 'global', acc, name, f'{v:#x}', '-', cov, dname, ctype, fuzz))
     sites.sort(key=lambda s: (s[0], s[1], s[2], s[4]))
 
     # constant map: every `namespace at` constant (scope `at`), and every other
