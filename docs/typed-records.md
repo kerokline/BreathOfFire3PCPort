@@ -270,8 +270,9 @@ at offset 0, the derived members after it). Every head offset is asserted on
 `SpriteHead` itself, which is standard-layout. `EffectObject` adds nothing,
 so it is standard-layout too.
 
-`BattleEnemy::kind` (`+0x8C`) hides the head's `kind` (`+5`, the effect's
-and the task's): on an enemy, `->kind` is `+0x8C`, as before.
+`BattleEnemy::kind` (`+0x8C`) hid the head's `kind` (`+5`, the effect's
+and the task's); C3's naming pass renamed it `enemy_kind` (`EnemyData::kind`'s
+copy), so on an enemy `->kind` is now the head's `+5` union member.
 
 ### 6.2 What the readers say, byte by byte
 
@@ -396,9 +397,9 @@ family, so a view's names do not leak onto the family's other readers.
   constants in `battle_setup_callees.h` and `battle_damage_callees.h`
   (`kPHpChange` / `kEHpChange` and the rest) give the same offsets from both
   bases. Its names are new and neutral (`command`, `command_kind`,
-  `action_id`); the families' own spellings (`PartyMember::queued_kind`,
-  `BattleEnemy::command` - the same byte, `+1` - and `result_head`) stay
-  until C3's naming pass.
+  `action_id`); the families' own spellings were brought to them in C3's
+  naming pass (`PartyMember::queued_kind` and `BattleEnemy::command`, the
+  `+1` byte, are `command_kind`; `BattleEnemy::result_head` is `command`).
 - **`BattleWindow`** and **`ItemListWindow`** (0x24 each): the battle
   windows' layout (`battle_win_states.md` 2, all of it) and the item list's
   (`menu-windows.md` 2's first column). The buy and sell lists read `+0xA..+0xD`
@@ -514,8 +515,8 @@ name.
   `sprite->digit_phase`, `enemy->runner` all compile; each is right only on
   the family its comment names. The family audit after C2 should check every
   union member's use against its family (the gate cannot).
-- **`BattleEnemy::kind` is `+0x8C`.** The head's `kind` (`+5`) is hidden on
-  an enemy; an enemy's `+5` is `actor`.
+- **`BattleEnemy::enemy_kind` is `+0x8C`** (`kind` until C3's naming pass,
+  which hid the head's `kind` at `+5`); an enemy's `+5` is `actor`.
 - **State bytes merged through an index** (section 6.3): if the gate refuses
   `p->state` / `p->step`, try `p->states[k]`.
 - **`SVector` is signed.** A `Word(v + 2)` read is unsigned; `v->y` is
@@ -692,7 +693,7 @@ Padding:
 | `+0xC8` | u16 | `base_agi` | record +0x48 |
 | `+0xCA` | u16 | `base_intel` | record +0x4A |
 | `+0x124` | u8 | `command` | battle: the command auto-battle gives (docs/battle_e4.md); field: the script context's first byte (area_entry_callees.h kRecContext). ActionRecord::command / MemberFieldTail::context |
-| `+0x125` | u8 | `queued_kind` | 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand) |
+| `+0x125` | u8 | `command_kind` | ActionRecord::command_kind (was queued_kind; C3 naming): 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand) |
 | `+0x126` | u16 | `queued_id` | category << 8 / id, or the ability id (battle_setup kPQueuedItem; battle_damage kPCommandId) |
 | `+0x128` | s16 | `hp_change` | battle: the result record's +4, read signed (battle_setup kPHpChange; battle_e3.cpp:486,499,898 SWord); field: its low byte the walking speed (member-sprites 2) |
 | `+0x12A` | s16 | `ap_change` | battle: the result record's +6, read signed (battle_setup kPApChange; battle_e3.cpp:499) |
@@ -734,7 +735,7 @@ No members of its own: every byte is `SpriteHead`'s.
 | off | type | field | source |
 |---|---|---|---|
 | `+0x80` | char[12] | `name` | from EnemyData +0 (battle_sprites.md 3) |
-| `+0x8C` | u8 | `kind` | EnemyData +0xC; grouped by Battle_OpenEnemyNames (battle_sprites.cpp) |
+| `+0x8C` | u8 | `enemy_kind` | EnemyData::kind (+0xC); was kind, which hid the head's kind at +5 (C3 naming); grouped by Battle_OpenEnemyNames (battle_sprites.cpp) |
 | `+0x8D` | u8 | `family` | EnemyData +0xD (battle_damage kEFamily) |
 | `+0x8E` | u8 | `odds_index` | EnemyData +0xE (Battle_CopyEnemyData) |
 | `+0x8F` | u8 | `kind_flag` | Battle_EnemyKindFlag (Battle_SetupEnemy) |
@@ -747,7 +748,9 @@ No members of its own: every byte is `SpriteHead`'s.
 | `+0x9C` | u8[8] | `abilities` | EnemyData +0x1C (Battle_CopyEnemyData) |
 | `+0xA4` | u16 | `hp` | (battle_setup kEHp; battle_damage kEHp) |
 | `+0xA6` | u16 | `ap` | (battle_damage kEAp) |
+| `+0xA8` | u16 | `item_a8` | EnemyData +0x30's low word (Battle_CopyEnemyData): an item word, Identify_DrawEnemy hands it to Identify_DrawItem (magic_s12.cpp:448) (C3 naming) |
 | `+0xAA` | u8 | `steal_row` | the steal-rate row, SkillSteal_RateTable[+0xAA], unbounded (magic_steal.cpp SkillSteal_Roll; magic_steal.md) |
+| `+0xAC` | u16 | `item_ac` | EnemyData +0x34's low word: the second item word Identify_DrawEnemy hands to Identify_DrawItem (magic_s12.cpp:450) (C3 naming) |
 | `+0xB0` | u16 | `max_hp` | (battle_setup kEMaxHp) |
 | `+0xB2` | u16 | `max_ap` | (battle_damage kEMaxAp) |
 | `+0xB4` | u16 | `atk` | the stat copy's +4 (battle_damage kAttackerAtk; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4)) |
@@ -771,8 +774,8 @@ No members of its own: every byte is `SpriteHead`'s.
 | `+0xFC` | u32 | `anim_table` | address of the animation bytes (battle_flow.cpp BattleEnemy_SetAnimation) |
 | `+0x100` | u8 | `run_state` | indexes the state table 0x64B084 (battle_flow.md); EnemyData +0x88 |
 | `+0x101` | u8 | `hit_class` | EnemyData +0x89; the hit-sound class (battle_sprites.cpp:534 Battle_PlayHitSound) |
-| `+0x104` | u8 | `result_head` | the result / action record's first byte: 0x904B60 points here (battle_actions.cpp SetEnemyBlock; battle_actions.md; enemy_ai_ops.md); the party's is +0x124 |
-| `+0x105` | u8 | `command` | (battle_damage kECommand) |
+| `+0x104` | u8 | `command` | ActionRecord::command, the action record's first byte (was result_head; C3 naming): 0x904B60 points here (battle_actions.cpp SetEnemyBlock; battle_actions.md; enemy_ai_ops.md); the party's is +0x124 |
+| `+0x105` | u8 | `command_kind` | ActionRecord::command_kind: 5 an item, 4 an ability (battle_damage kECommand); was command (C3 naming) |
 | `+0x106` | u16 | `ability` | the ability id, one of +0x9C by Rand() & 7 (battle_e2.cpp:828,866; battle_e2.md BattleEnemy_PickAction) |
 | `+0x108` | s16 | `hp_change` | the result record's +4, signed (battle_setup kEHpChange; battle_e2.cpp:1133; boss_sd.cpp:404; boss_sa.cpp:394; battle_e2.md "the s16 +0x108") |
 | `+0x10A` | s16 | `ap_change` | the result record's +6, signed like +0x108 (battle_setup kEApChange) |
@@ -786,8 +789,8 @@ No members of its own: every byte is `SpriteHead`'s.
 
 Padding:
 
-- EnemyData +0x30 dword copied here (Battle_CopyEnemyData), unnamed
-- the rest of the EnemyData +0x30 / +0x34 dwords; +0xAE raised with +0xAA, each once by the marker bits of +0xAB / +0xAF (rest_3c.md Effect_EnemyRaiseAAAE); not named
+- +0xAB: the rest of the EnemyData +0x30 dword; its marker bit raises +0xAA once (rest_3c.md Effect_EnemyRaiseAAAE); not named
+- +0xAE, +0xAF: the rest of the EnemyData +0x34 dword; +0xAE raised with +0xAA, each once by the marker bits of +0xAB / +0xAF (rest_3c.md Effect_EnemyRaiseAAAE); not named
 - the stat copy's +0xC..+0xE; not named
 - the rest of the stat block copy (+0xC5..+0xC7 the last resistance bytes, Battle_CopyEnemyData; +0xC8.. the percentage bytes as the character record's +0x38..); not named
 - the rest of the base copy (+0xDF.. the resistance bytes, Battle_CopyEnemyData); not named
@@ -926,8 +929,8 @@ Padding:
 
 | off | type | field | source |
 |---|---|---|---|
-| `+0x00` | u8 | `command` | the command: auto-battle gives 3 (battle_e4.md AutoBattle_FillCommands); PartyMember::command, BattleEnemy::result_head |
-| `+0x01` | u8 | `command_kind` | 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand / kECommand); PartyMember::queued_kind, BattleEnemy::command |
+| `+0x00` | u8 | `command` | the command: auto-battle gives 3 (battle_e4.md AutoBattle_FillCommands); PartyMember::command, BattleEnemy::command |
+| `+0x01` | u8 | `command_kind` | 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand / kECommand); PartyMember::command_kind, BattleEnemy::command_kind |
 | `+0x02` | u16 | `action_id` | the action id (battle_actions.md): category << 8 / id or the ability id (battle_setup kPQueuedItem; battle_damage kPCommandId); the enemy's ability (battle_e2.cpp:828,866). PartyMember::queued_id, BattleEnemy::ability |
 | `+0x04` | s16 | `hp_change` | read signed (battle_setup kPHpChange / kEHpChange; battle_e3.cpp:486; battle_e2.cpp:1133) |
 | `+0x06` | s16 | `ap_change` | (kPApChange / kEApChange) |

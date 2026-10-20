@@ -845,7 +845,7 @@ extern "C" void __cdecl Battle_CopyEnemyData(unsigned slot, unsigned id) {
     SetLong(dst, Long(src));
     SetLong(dst + 4, Long(src + 4));
     SetLong(dst + 8, Long(src + 8));
-    to_rec->kind = from_rec->kind;
+    to_rec->enemy_kind = from_rec->kind;
     to_rec->family = from_rec->family;
     to_rec->odds_index = from_rec->odds_index;
     to_rec->flags_90 = from_rec->flags;
@@ -919,7 +919,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
         for (unsigned e = 0, left = enemies; left; --left, ++e) {
             auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(e));
             if (!(enemy_rec->flags & 1)) continue;
-            const std::uint16_t k = enemy_rec->kind;
+            const std::uint16_t k = enemy_rec->enemy_kind;
             unsigned c = 0;
             while (c < listed && kinds[c] != k) ++c;
             if (c < listed) {
@@ -964,7 +964,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
         std::uint16_t row = y;
         if (BattleActorCopies_EnemyCount)
             for (unsigned char e = 0; left;) {
-                if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->kind) {
+                if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->enemy_kind) {
                     set_count(k, count(k) - 1u);
                     g.window_open(static_cast<unsigned char>(0xC - shown), 3);
                     unsigned char* const w = At(at::kWindows + 0x1B0 - shown * at::kWindowStride);

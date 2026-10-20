@@ -933,10 +933,10 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
         reinterpret_cast<boss_harness::Hook>(static_cast<std::uintptr_t>(static_cast<U>(enemy_rec->event_hook)))(0);
     }
     if (B(at::kTarget) == 0xFF) {
-        enemy_rec->command = 0;
+        enemy_rec->command_kind = 0;
         B(at::kActKind) = 0;
     } else {
-        enemy_rec->command = B(at::kActKind);
+        enemy_rec->command_kind = B(at::kActKind);
     }
 }
 

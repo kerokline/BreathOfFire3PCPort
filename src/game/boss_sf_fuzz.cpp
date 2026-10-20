@@ -187,7 +187,7 @@ void Disturb(U h) {
     case 6: B(BattleMisc_BannerKinds_addr) ^= 2; break;
     case 7: {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
-        enemy_rec->command = static_cast<unsigned char>(v & 1 ? 4 : v >> 1);
+        enemy_rec->command_kind = static_cast<unsigned char>(v & 1 ? 4 : v >> 1);
         break;
     }
     default: Mem(at::kEnemyData + (v % 8) * at::kEnemyDataStride)[0x8A + (v >> 8) % 2] = static_cast<unsigned char>(v >> 4); break;
@@ -451,7 +451,7 @@ void SeedK62(unsigned k) {
     SetWord(Mem(BossSa_EndCount_addr), bh::Often() ? BH_PICK(0, 3, 5, 8, 4, 6, 7, 0x103) : bh::Next());
     B(at::kRoundFlags) = static_cast<unsigned char>(bh::Half() ? B(at::kRoundFlags) | 4 : B(at::kRoundFlags) & 0xFB);
     auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
-    enemy_rec->command = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
+    enemy_rec->command_kind = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
     if (bh::Next() % 6 == 0) B(EventBattle_Id_addr) = 0;
     if (k == kMy8Dispatch && bh::Often()) Sprite_Current[1] = 8;
 }

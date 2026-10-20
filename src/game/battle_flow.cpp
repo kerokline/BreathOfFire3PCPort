@@ -345,7 +345,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_EnemyDefeated
     if (left == 0) BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 2);
     if ((Long(At(at::kRoundFlags)) & 0x4000) != 0 && BattleFlow_ActorAt == Sprite_Current[5])
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xBFFF);
-    g.set_flag_bit(rv::As<records::BattleEnemy>(Enemy())->kind);
+    g.set_flag_bit(rv::As<records::BattleEnemy>(Enemy())->enemy_kind);
     g.release_tint(Sprite_Current);
     e = Enemy();
     enemy_rec = rv::As<records::BattleEnemy>(e);

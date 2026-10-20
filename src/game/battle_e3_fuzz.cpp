@@ -214,7 +214,7 @@ void SeedEO(unsigned k) {
     unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     enemy_rec->data_id = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 8);
-    enemy_rec->command = static_cast<unsigned char>(Flip() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
+    enemy_rec->command_kind = static_cast<unsigned char>(Flip() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
     Bit(e + 0x90, 8);
     if (bh::Next() % 3 == 0) B(EventBattle_Id_addr) = 0;
     Sprite_Current[9] = Counter();
@@ -247,7 +247,7 @@ void DisturbEO(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 7) {
     case 0: SetWord(Mem(at::kAbility), v % 256); break;
-    case 1: rv::As<records::BattleEnemy>(Enemy())->command = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
+    case 1: rv::As<records::BattleEnemy>(Enemy())->command_kind = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 2: Enemy()[0x90] ^= 8; break;
     case 3: B(EventBattle_Id_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 4: B(BattleE2_EnemiesLeft_addr) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;

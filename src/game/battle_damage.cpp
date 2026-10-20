@@ -311,7 +311,7 @@ extern "C" void __cdecl Battle_ClearCommands() {
     }
     for (unsigned a = 3; a < 11; ++a) {
         auto* const er = rv::As<records::BattleEnemy>(Enemy(a) + at::kEObject);
-        er->command = 0;
+        er->command_kind = 0;
         er->flags_110 = 0;
     }
 }
@@ -354,7 +354,7 @@ extern "C" void __cdecl Battle_RemoveFromTurnOrder(unsigned actor) {
         pr->flags_134 = S32(U32(static_cast<std::int32_t>(pr->flags_134)) & ~4u);
     } else {
         auto* const er = rv::As<records::BattleEnemy>(Enemy(actor) + at::kEObject);
-        er->command = 0;
+        er->command_kind = 0;
         er->flags_110 = S32(U32(static_cast<std::int32_t>(er->flags_110)) & ~2u);
     }
     for (unsigned k = 0; k < BattleDamage_TurnCount; ++k)

@@ -173,7 +173,7 @@ extern "C" unsigned __cdecl EnemyOp_CastDispatch(unsigned passed) {
 extern "C" unsigned char __cdecl EnemyOp_CastStart(void) {
     if (BH_CALL(File_LoadDone)() == 0) return 0;
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
-    if (enemy_rec->command == 4) {
+    if (enemy_rec->command_kind == 4) {
         if (EventBattle_Id != 0) {
             const unsigned key = static_cast<unsigned char>(enemy_rec->run_state + 0x20);
             const bool loaded = BH_CALL(Battle_LoadSoundByKey)(key, BattleE3_SoundSet) != 0;
@@ -231,12 +231,12 @@ extern "C" void __cdecl EnemyOp_CastDoneDispatch(void) {
 // nobody reads it - EnemyOp_CastDoneDispatch drops it.)
 extern "C" void __cdecl EnemyOp_CastDoneCost(void) {
     records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(Enemy());
-    if (enemy_rec->command == 4) {
+    if (enemy_rec->command_kind == 4) {
         enemy_rec->ap = enemy_rec->ap - BattleE3_Cost;
         enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     }
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) | 0x800);
-    enemy_rec->command = 0;
+    enemy_rec->command_kind = 0;
     if ((AbilityWord4() & 0x800) == 0) BH_CALL(BattleEnemy_ScriptTickOnce)();
     rv::As<records::BattleEnemy>(S())->step += 1;
 }
@@ -349,7 +349,7 @@ extern "C" void __cdecl EnemyOp_EndAction(void) {
     BH_CALL(Battle_ClearActorBit)(rv::As<records::BattleEnemy>(S())->actor);
     unsigned char* const e = Enemy();
     SetULong(e + 0x110, ULong(e + 0x110) & ~0x200u);
-    if ((B(at::kRoundFlags) & 0x40) == 0) rv::As<records::BattleEnemy>(Enemy())->command = 0;
+    if ((B(at::kRoundFlags) & 0x40) == 0) rv::As<records::BattleEnemy>(Enemy())->command_kind = 0;
 }
 
 // original 0x4376F0: with 0x939AD8's +0x90 bit 3 and Rand's bit 0, 0x904AA8 |=

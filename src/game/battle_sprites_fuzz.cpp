@@ -526,7 +526,7 @@ void SeedRound(unsigned regions) {
         unsigned char* const e = At(at::kEnemies + k * at::kEnemyStride);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         SeedSprite(e);
-        enemy_rec->kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
+        enemy_rec->enemy_kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
         static const unsigned char kClasses[] = {0, 5, 6, 7, 0xFF};
         e[0xC7] = Half() ? Pick(kClasses) : static_cast<unsigned char>(Next());
     }
@@ -555,7 +555,7 @@ void SeedEightKinds() {
     for (unsigned k = 0; k < 8; ++k) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(At(at::kEnemies + k * at::kEnemyStride));
         enemy_rec->flags |= 1;
-        enemy_rec->kind = static_cast<unsigned char>(0x10 + k);
+        enemy_rec->enemy_kind = static_cast<unsigned char>(0x10 + k);
     }
 }
 

@@ -682,7 +682,7 @@ extern "C" unsigned __cdecl BossMyria_State7Dispatch(unsigned passed) {
 extern "C" unsigned char __cdecl BossMyria_State7Start(void) {
     if (BH_CALL(File_LoadDone)() == 0) return 0;
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
-    if (enemy_rec->command == 4) {
+    if (enemy_rec->command_kind == 4) {
         if (EventBattle_Id != 0) {
             const unsigned key = static_cast<unsigned char>(enemy_rec->run_state + 0x20);
             if (BH_CALL(Battle_LoadSoundByKey)(key, BattleE3_SoundSet) != 0)
@@ -773,12 +773,12 @@ extern "C" void __cdecl BossMyria_State8Tick(void) {
 extern "C" void __cdecl BossMyria_State8Cost(void) {
     BH_CALL(BattleEnemy_ScriptTickOnce)();
     records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(Enemy());
-    if (enemy_rec->command == 4) {
+    if (enemy_rec->command_kind == 4) {
         enemy_rec->ap = enemy_rec->ap - BattleE3_Cost;
         enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     }
     B(at::kRoundFlagsHi) |= 8;
-    enemy_rec->command = 0;
+    enemy_rec->command_kind = 0;
     rv::Current<records::BattleEnemy>()->step += 1;
 }
 
