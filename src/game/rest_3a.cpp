@@ -470,9 +470,9 @@ namespace {
 // BattleWin_DrawTileTint(0, 0, 0xB).
 void TintTile() {
     const unsigned char v = Sc()[9];
-    B(at::kTint + 2) = v;
-    B(at::kTint + 1) = v;
-    B(at::kTint + 0) = v;
+    DamageScratch.b_02 = v;
+    DamageScratch.b_01 = v;
+    DamageScratch.b_00 = v;
     BH_CALL(BattleWin_DrawTileTint)(0, 0, 0xB);
 }
 }  // namespace

@@ -989,7 +989,7 @@ extern "C" void __cdecl Area121_LeaderStep(void) {
     if ((Field_InputFlags & 1) != 0) {
         o = Cur();
         if (AH_CALL(AreaMap_ByteAt)(static_cast<short>(rv::As<records::SpriteHead>(o)->x_whole), static_cast<short>(rv::As<records::SpriteHead>(o)->z_whole)) == 0xAF) {
-            AH_CALL(Field_ChangeArea)(AreaW0b_Place, Long(At(at::kPendingX)), static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
+            AH_CALL(Field_ChangeArea)(AreaW0b_Place, DamageScratch.d_10, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
             Area_EnterTransition = 0xC;
             return;

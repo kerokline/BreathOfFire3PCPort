@@ -83,8 +83,8 @@ std::int32_t AddL(std::int32_t a, std::uint32_t b) { return static_cast<std::int
 // scratch Prim_VertexScratch + k: three SVECTORs at +0, +8, +0x10, +0x18.
 constexpr std::uint32_t kDs = DamageScratch_addr;
 // kVx: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
-short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
-void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }
+short Ds(unsigned k) { return static_cast<short>(Word(Mem(DamageScratch_addr + k))); }
+void SetDs(unsigned k, unsigned v) { SetWord(Mem(DamageScratch_addr + k), v); }
 short Vx(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
 void SetVx(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v); }
 const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }

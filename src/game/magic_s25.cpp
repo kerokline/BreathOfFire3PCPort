@@ -73,7 +73,7 @@ using move_script::Word;
 constexpr std::uint32_t kScratch = 0x903850;
 unsigned char* V(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(V(k)); }
-unsigned char* S(unsigned k) { return Mem(kScratch + k); }
+unsigned char* S(unsigned k) { return Mem(DamageScratch_addr + k); }
 std::int32_t SL(unsigned k) { return Long(S(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 

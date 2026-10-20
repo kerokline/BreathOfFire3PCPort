@@ -106,7 +106,7 @@ unsigned char* Cur() { return *reinterpret_cast<unsigned char**>(At(BattleItems_
 unsigned char* Actor() { return *reinterpret_cast<unsigned char**>(At(BattleE2_Owner_addr)); }
 
 // The scratch words: DamageScratch + k, and the vertex scratch + k.
-unsigned char* Scr(unsigned k) { return At(at::kScratch + k); }
+unsigned char* Scr(unsigned k) { return At(DamageScratch_addr + k); }
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 unsigned char* Vtx(unsigned k) { return At(Prim_VertexScratch_addr + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }

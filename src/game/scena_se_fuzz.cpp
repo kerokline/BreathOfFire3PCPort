@@ -129,7 +129,7 @@ void Disturb(std::uint32_t h) {
     case 0: SetWord(Mem(at::kCount), v % at::kObjectCount); break;
     case 1: Sprite_Current = Object(v); break;
     case 2: g_op[v % 17] = static_cast<unsigned char>(h >> 16); break;
-    case 3: SetWord(Mem(at::kBank), h >> 16); break;
+    case 3: SetWord(Mem(DamageScratch_addr + 0x2), h >> 16); break;
     default: break;
     }
 }

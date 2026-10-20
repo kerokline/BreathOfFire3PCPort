@@ -370,7 +370,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 0x1C},                     // Gfx_PacketNext .. MapView_Origin
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850..
+    {DamageScratch_addr, 0x10},           // 0x903850..
     {0x905E60, 0x10},                     // Field_Kind2Z / X, MapView_Redraw
     {0x905EB0, 0x100},                    // the head of the entries Weretiger_ResetMapView clears
     {0x929E00, 0x130},                    // their tail; MapView_Focus*, _Elevation, _Column, _Row
@@ -400,7 +400,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 9) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: mh::Mem(kScratch + v % 16)[0] = Byte(h >> 24); break;
+    case 2: mh::Mem(DamageScratch_addr + v % 16)[0] = Byte(h >> 24); break;
     case 3: SetLong(mh::Mem(0x905E60 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
     case 4: mh::SetPointer(WeretigerStreak_Current_addr, PoolRecord(v)); break;
     case 5: PoolRecord(v)[(h >> 24) % kPoolStride] = Byte(h >> 16); break;

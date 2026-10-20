@@ -114,11 +114,11 @@ constexpr std::uint32_t kFlagsLo = 0x9039A2, kFlagsHi = 0x9039A3, kFlags2Lo = 0x
 // The count and the bank word (event_script.cpp's terms).
 short Count() {
     short v;
-    std::memcpy(&v, At(at::kScratch), sizeof v);
+    std::memcpy(&v, At(DamageScratch_addr), sizeof v);
     return v;
 }
-void SetCount(unsigned v) { SetWord(At(at::kScratch), v); }
-unsigned short Bank() { return Word(At(at::kScratch2)); }
+void SetCount(unsigned v) { DamageScratch.w_00 = v; }
+unsigned short Bank() { return DamageScratch.w_02; }
 
 unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 unsigned char* Extra(int n) { return rv::Bytes(&Sprite_ObjectsExtra[n]); }
@@ -187,7 +187,7 @@ extern "C" void __cdecl EventOp_5x(const unsigned char* op) {
     unsigned char* const o = Object(Count());
     Sprite_Current = o;
     Field_ActiveMember = o;
-    SetWord(At(at::kScratch2), static_cast<unsigned>(op[1]) << 8 | op[2]);
+    DamageScratch.w_02 = static_cast<unsigned>(op[1]) << 8 | op[2];
     g.reset();
     g.set_bank(Bank());
     Sprite_Current[0] = 1;
@@ -247,7 +247,7 @@ extern "C" void __cdecl EventOp_9x(const unsigned char* op) {
     unsigned char* const o = Object(Count());
     Sprite_Current = o;
     Field_ActiveMember = o;
-    SetWord(At(at::kScratch2), static_cast<unsigned>(op[1]) << 8 | op[2]);
+    DamageScratch.w_02 = static_cast<unsigned>(op[1]) << 8 | op[2];
     g.reset();
     g.set_bank(Bank());
     Sprite_Current[0] = 1;
@@ -369,7 +369,7 @@ extern "C" void __cdecl Field_LeaderWalk(void) {
             } else if (g.encounter_due()) {
                 g.encounter_area();
                 unsigned char* const sc = Sprite_Current;
-                SetLong(At(at::kExitX), 0x190000);
+                DamageScratch.d_10 = 0x190000;
                 AreaEntry_PendingZ = 0x190000;
                 AreaEntry_PendingFlags = 4;
                 sc[6] = 4;
@@ -482,13 +482,13 @@ extern "C" unsigned char __cdecl Field_LeaderStepTick(void) {
 // Field_LeaderStepTarget; pointer-less, found by its three calls (the list
 // had it inside 0x52E160's 0x420 bytes).
 extern "C" void __cdecl Field_LeaderStepCell(void) {
-    const unsigned short x = Word(At(at::kTargetX) + 2);
+    const unsigned short x = DamageScratch.w_0a;
     unsigned char* const sc = Sprite_Current;
-    SetWord(At(at::kCellX), x);
-    if (Word(At(at::kTargetX)) != 0 && WalkX(sc[8]) > 0) SetWord(At(at::kCellX), x + 1u);
+    DamageScratch.w_04 = x;
+    if (DamageScratch.w_08 != 0 && WalkX(sc[8]) > 0) DamageScratch.w_04 = x + 1u;
     const unsigned short z = Word(At(Scratch_Swap_addr) + 2);
-    SetWord(At(at::kCellZ), z);
-    if (Word(At(Scratch_Swap_addr)) != 0 && WalkZ(sc[8]) > 0) SetWord(At(at::kCellZ), z + 1u);
+    DamageScratch.w_06 = z;
+    if (Word(At(Scratch_Swap_addr)) != 0 && WalkZ(sc[8]) > 0) DamageScratch.w_06 = z + 1u;
 }
 
 // original 0x52E160: where this step goes, and what lies there (PSX
@@ -525,12 +525,12 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
         const std::uint32_t dz = static_cast<std::uint32_t>(WalkZ(d)) * n * static_cast<std::uint32_t>(speed);
         if (sc[0x70] == 0) {
             x = dx + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x);
-            SetLong(At(at::kTargetX), static_cast<std::int32_t>(x));
+            DamageScratch.d_08 = static_cast<std::int32_t>(x);
             z = dz + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z);
             Scratch_Swap = static_cast<std::int32_t>(z);
         } else {
             x = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x) + 2 * dx;
-            SetLong(At(at::kTargetX), static_cast<std::int32_t>(x));
+            DamageScratch.d_08 = static_cast<std::int32_t>(x);
             z = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z) + 2 * dz;
             Scratch_Swap = static_cast<std::int32_t>(z);
         }
@@ -542,16 +542,16 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
             code = 0;
         }
         z = Scratch_Swap;
-        x = static_cast<std::uint32_t>(Long(At(at::kTargetX)));
+        x = static_cast<std::uint32_t>(DamageScratch.d_08);
     }
-    const auto link = [] { return g.link_at(Word(At(at::kCellX)), Word(At(at::kCellZ))); };
+    const auto link = [] { return g.link_at(DamageScratch.w_04, DamageScratch.w_06); };
     switch (code) {
     case 0: return 1;
     case 2: {
         const auto slope = static_cast<short>(g.slope_at(static_cast<long>(x), static_cast<long>(z),
                                                           DirectionInPointer(Sprite_Current)));
         g.step_cell();
-        if (Byte(at::kScratch) == 0) {
+        if (DamageScratch.b_00 == 0) {
             const int rise = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole) - slope;
             if (std::abs(rise) > 0x80) {
                 if (!link()) Field_Request = 5;
@@ -566,7 +566,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
         if (slope > 0x40) {
             if (!link() && Sprite_Current == At(ObjTrio_addr)) {
                 if (g.test_fb(rv::Current<records::SpriteHead>()->x_whole, rv::Current<records::SpriteHead>()->z_whole)) {
-                    g.play_effect(Word(At(at::kStepSounds) + At(at::kScratch)[1] * 2u));
+                    g.play_effect(Word(At(at::kStepSounds) + DamageScratch.b_01 * 2u));
                     g.ensure_animation(static_cast<unsigned char>((Sprite_Current[8] >> 1) + 0x10));
                 } else {
                     g.ensure_animation(Sprite_Current[8]);
@@ -584,14 +584,14 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
     case 3: {
         const auto slope = static_cast<short>(g.slope_at(static_cast<long>(x), static_cast<long>(z),
                                                           DirectionInPointer(Sprite_Current)));
-        if (Byte(at::kScratch) == 0) return 0;
+        if (DamageScratch.b_00 == 0) return 0;
         if (slope > 0x40) {
             unsigned char* const sc = Sprite_Current;
             MoveScript_F3Divisor = 0;
             sc[8] = facing;
             return 1;
         }
-        g.ground_at(Long(At(at::kTargetX)), static_cast<std::int32_t>(Scratch_Swap));
+        g.ground_at(DamageScratch.d_08, static_cast<std::int32_t>(Scratch_Swap));
         return 0;
     }
     case 4:
@@ -912,7 +912,7 @@ extern "C" unsigned char __cdecl Field_LeaderTalkTest(void) {
         g.talk_to(object);
         return 1;
     }
-    if (g.cell_around(0x51) && g.cell_hook(Word(At(at::kScratch)), Word(At(at::kScratch2)))) {
+    if (g.cell_around(0x51) && g.cell_hook(DamageScratch.w_00, DamageScratch.w_02)) {
         g.leader_animation(Sprite_Current[8]);
         Sprite_Current[2] = 0;
         return 1;
@@ -1005,10 +1005,10 @@ extern "C" unsigned char __cdecl Field_CellAround(unsigned cell) {
 }
 
 namespace {
-unsigned short W0() { return Word(At(at::kScratch)); }
-unsigned short W2() { return Word(At(at::kScratch2)); }
-void SetW0(unsigned v) { SetWord(At(at::kScratch), v); }
-void SetW2(unsigned v) { SetWord(At(at::kScratch2), v); }
+unsigned short W0() { return DamageScratch.w_00; }
+unsigned short W2() { return DamageScratch.w_02; }
+void SetW0(unsigned v) { DamageScratch.w_00 = v; }
+void SetW2(unsigned v) { DamageScratch.w_02 = v; }
 // The leader turned to face a cell found by an even direction's probe.
 unsigned char TurnFromEven(unsigned char a, unsigned char b, unsigned char to_ab, unsigned char other) {
     unsigned char* const sc = Sprite_Current;
@@ -1212,7 +1212,7 @@ extern "C" unsigned char __cdecl Field_LeaderCellEvent(void) {
         g.exit_from_cell();
         const unsigned kind = AreaEntry_PendingFlags;
         const long z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-        const long x = Long(At(at::kExitX));
+        const long x = DamageScratch.d_10;
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xEFFF);
         g.change_area(AreaW0b_Place, x, z, kind);
         return 1;
@@ -1238,7 +1238,7 @@ extern "C" unsigned char __cdecl Field_LeaderCellEvent(void) {
         SetLong(back + 4, z);
         const long exit_z = static_cast<std::int32_t>(AreaEntry_PendingZ);
         SetWord(back + 8, area);
-        const long exit_x = Long(At(at::kExitX));
+        const long exit_x = DamageScratch.d_10;
         g.change_area(AreaW0b_Place, exit_x, exit_z, kind);
         return 1;
     }

@@ -91,7 +91,7 @@ std::int32_t Idiv(std::int32_t dividend, std::int32_t divisor) {
     return quotient;
 }
 // DamageScratch's first byte: 0x5725C0 leaves 1 there on a slope.
-unsigned char ScratchByte() { return At(DamageScratch_addr)[0]; }
+unsigned char ScratchByte() { return DamageScratch.b_00; }
 // The low byte of an actor record's state word (Field_ActorStates + n * 0xA4),
 // n a whole byte as the original's.
 unsigned char& ActorState(unsigned n) { return At(0x903A80u + n * kRecordSize)[0]; }

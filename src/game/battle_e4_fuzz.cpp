@@ -220,7 +220,7 @@ const bh::Region kRegions[] = {
     {0x904060, 0x10},                  // 0x904065..0x904067
     {Character_IndexById_addr, 0x18}, // Character_IndexById
     {at::kPreview, 8},
-    {at::kTint, 4},
+    {DamageScratch_addr, 4},
     {0x904EFC, 4},                     // MoveScript_FAWord
     {Field_Kind2Z_addr, 8},            // Field_Kind2Z, Field_Kind2X
     {at::kRepeatLatch, 4},

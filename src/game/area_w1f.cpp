@@ -321,10 +321,10 @@ extern "C" void __cdecl Area69_GlideStep(void) { GlideStep(Area69_GlideSteps_add
 // Sound_PlayEffect(0x207).
 extern "C" void __cdecl Area71_SpawnEffect3C(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kScratch) = slot;
+    B(DamageScratch_addr) = slot;
     if (slot == 0xFF) return;
     const unsigned char member = ObjectIndex(Field_ActiveMember);
-    unsigned char* const e = EffectAt(B(at::kScratch));
+    unsigned char* const e = EffectAt(B(DamageScratch_addr));
     e[0] = 1;
     e[5] = 0x3C;
     e[0xB] = member;
@@ -335,9 +335,9 @@ extern "C" void __cdecl Area71_SpawnEffect3C(void) {
 // +0 = 1 and kind 0x25, no member, no sound.
 extern "C" void __cdecl Area71_SpawnEffect25(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kScratch) = slot;
+    B(DamageScratch_addr) = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = EffectAt(B(at::kScratch));
+    unsigned char* const e = EffectAt(B(DamageScratch_addr));
     e[0] = 1;
     e[5] = 0x25;
 }
@@ -488,7 +488,7 @@ extern "C" void __cdecl Area75_SpawnFive(void) {
     std::uint32_t op = Area75_SpawnOps_addr;
     for (unsigned char i = 0; i < 5; ++i, op += at::kArea75SpawnOpStride) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(at::kScratch), slot);
+        SetWord(Mem(DamageScratch_addr), slot);
         if (slot == 0xFF) continue;
         AH_CALL(EventOp_0x)(Mem(op));
         const std::int32_t x = tSelf->x;

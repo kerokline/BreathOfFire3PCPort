@@ -116,7 +116,7 @@ unsigned char Turned(unsigned char d, unsigned base) {
 // A direction byte turned and masked: (d + n) & 7, as `add` / `sub` and `and 7`.
 void Turn(int n) { Sprite_Current[8] = static_cast<unsigned char>((Sprite_Current[8] + n) & 7); }
 
-unsigned char Sloped() { return At(kSloped)[0]; }
+unsigned char Sloped() { return DamageScratch.b_00; }
 
 // Bit 0 of +0x80 of the object Sprite_ObjectAt found: Sprite_Objects 0..0x1D,
 // Sprite_ObjectsExtra 0x1E..0x21 (Sprite_ObjectAt answers those or 0xFF). The

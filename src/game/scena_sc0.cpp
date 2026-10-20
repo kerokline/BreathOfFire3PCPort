@@ -64,10 +64,10 @@ uint32_t CodeAt(uint32_t table, int index, const char* who) {
 // as the original reads it (a dword masked to its byte).
 bool TakeSlot() {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    B(kSlot) = slot;
+    DamageScratch.b_00 = slot;
     return slot != 0xFF;
 }
-unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<uint32_t>(B(kSlot)) << 7)); }
+unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<std::uint32_t>(DamageScratch.b_00) << 7)); }
 
 // The record views (game/record_views.h): rv::As<records::EffectObject>(p) is
 // given effect objects (Effect_Objects).

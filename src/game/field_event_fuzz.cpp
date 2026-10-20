@@ -290,7 +290,7 @@ unsigned char __cdecl StubFind(unsigned a, unsigned b, unsigned c) {
     }
 }
 void __cdecl StubSelect(unsigned set, unsigned mode) { Record(44, set & 0xFF, mode & 0xFF); Disturb(44); }
-void __cdecl StubSetError() { Record(45, Word(At(at::kFindIds)), At(at::kFindIds)[2]); }
+void __cdecl StubSetError() { Record(45, Word(At(DamageScratch_addr)), At(DamageScratch_addr)[2]); }
 void __cdecl StubLoadDat(int file) { Record(46, static_cast<std::uint32_t>(file)); Disturb(46); }
 void __cdecl StubHeightCheck() {
     Record(47, Address(Sprite_Current));
@@ -508,7 +508,7 @@ void AimTable(void* copy, const Clone& c, std::uint32_t at, std::uint8_t op, std
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
-    {at::kFindIds, 0x40},
+    {DamageScratch_addr, 0x40},
     {Address(&Field_ScriptFlags), 2},
     {CharacterRecords_addr, kActors * kActorBytes},
     {Cond_Flags_addr + 0xd2, 6},

@@ -1001,10 +1001,10 @@ S06_EXPORT void __cdecl Magic020_DrawFade(void) {
     PutU32(p + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // kF320 narrow
     PutU32(p + 0x18, kF240);
     const unsigned grey = (static_cast<unsigned>(Sc()[9]) * 15u) & 0xFFFF;
-    SetWord(Mem(kShade), grey);
+    SetWord(Mem(DamageScratch_addr + 0x2), grey);
     p[4] = static_cast<unsigned char>(grey);
-    p[5] = Mem(kShade)[0];
-    p[6] = Mem(kShade)[0];
+    p[5] = Mem(DamageScratch_addr + 0x2)[0];
+    p[6] = Mem(DamageScratch_addr + 0x2)[0];
     MH_CALL(Gfx_CommitPrim)(2, 0x1C);
     DrawMode(0x15, 2);
 }

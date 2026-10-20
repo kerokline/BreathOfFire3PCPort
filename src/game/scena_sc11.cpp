@@ -113,7 +113,7 @@ void CopyName(const unsigned char* name) {
 // The slot just taken (kSlot, read back): live, `kind`, at (x, Camera_Angles[1], z),
 // +9 = `nine`.
 unsigned char* Place(unsigned char kind, std::int32_t x, std::int32_t z, unsigned char nine) {
-    unsigned char* const e = EffectRecord(B(kSlot));
+    unsigned char* const e = EffectRecord(DamageScratch.b_00);
     e[0] = 1;
     e[5] = kind;
     SetLong(e + 0x64, x);
@@ -126,7 +126,7 @@ unsigned char* Place(unsigned char kind, std::int32_t x, std::int32_t z, unsigne
 // Effect_FindFree into kSlot; false when none is free (0xFF).
 bool TakeSlot() {
     const unsigned char s = FindFree();
-    B(kSlot) = s;
+    DamageScratch.b_00 = s;
     return s != 0xFF;
 }
 
@@ -544,7 +544,7 @@ SC11_EXPORT void __cdecl Scena11_Scene4(void) {
             return;
         }
         if (!TakeSlot()) return;
-        unsigned char* const e = EffectRecord(B(kSlot));
+        unsigned char* const e = EffectRecord(DamageScratch.b_00);
         e[0] = 1;
         e[5] = 0x34;
         rv::As<records::EffectObject>(e)->x = 0x250000;
@@ -552,7 +552,7 @@ SC11_EXPORT void __cdecl Scena11_Scene4(void) {
         rv::As<records::EffectObject>(e)->height = 0x5000000;
         const unsigned roll = static_cast<unsigned>(SH_CALL(Rand)()) & 0xFu;
         const unsigned char kind = Scena11_EffectRolls[roll];
-        EffectRecord(B(kSlot))[1] = kind;
+        EffectRecord(DamageScratch.b_00)[1] = kind;
         switch (kind) {
         case 0:
         case 4:
@@ -562,7 +562,7 @@ SC11_EXPORT void __cdecl Scena11_Scene4(void) {
             MoveScript_PartyRecords[0x65] = 1;
             return;
         case 5:
-            SH_CALL(Scena11_EffectAnimate)(B(kSlot));
+            SH_CALL(Scena11_EffectAnimate)(DamageScratch.b_00);
             MoveScript_PartyRecords[0x65] = 5;
             return;
         default:
@@ -677,12 +677,12 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         return;
     case 6:
         if (TakeSlot()) {
-            unsigned char* const e = EffectRecord(B(kSlot));
+            unsigned char* const e = EffectRecord(DamageScratch.b_00);
             e[0] = 1;
             e[5] = 0x8C;
         }
         if (TakeSlot()) {
-            unsigned char* const e = EffectRecord(B(kSlot));
+            unsigned char* const e = EffectRecord(DamageScratch.b_00);
             e[0] = 1;
             e[5] = 0x8B;
         }
@@ -1033,7 +1033,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
     case 6:
         if (B(kCounter0) != 4) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = B(kSlot);
+        B(kCounter3) = DamageScratch.b_00;
         MoveScript_PartyRecords[0x65] = 7;
         Place(0x13, -0x2EC, 0x200, 0xA);
         return;
@@ -1086,13 +1086,13 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         Camera_Distance = static_cast<short>(Camera_Distance + 0xF880);
         MapView_Redraw = 2;
         if (TakeSlot()) {
-            B(kCounter3) = B(kSlot);
+            B(kCounter3) = DamageScratch.b_00;
             MoveScript_PartyRecords[0x65] = 0xF;
             Place(0x13, -0x3C8, 0x258, 4);
         }
         SH_CALL(MoveCmd_TestFB)(0x53, 0x1B);
         if (TakeSlot()) {
-            unsigned char* const e = EffectRecord(B(kSlot));
+            unsigned char* const e = EffectRecord(DamageScratch.b_00);
             e[0] = 1;
             e[5] = 0x18;
             e[1] = 0x5F;
@@ -1120,7 +1120,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
     case 18: {
         if (B(kCounter0) != 2) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = B(kSlot);
+        B(kCounter3) = DamageScratch.b_00;
         MoveScript_PartyRecords[0x65] = 0x13;
         unsigned char* const e = Place(0x31, -0x370, 0x258, 0x3C);
         rv::As<records::EffectObject>(e)->step_x = 0x580;
@@ -1135,7 +1135,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
     case 20:
         if (B(kCounter0) != 4) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = B(kSlot);
+        B(kCounter3) = DamageScratch.b_00;
         MoveScript_PartyRecords[0x65] = 0x15;
         Place(0x13, -0x256, 0xE2, 0x3C);
         return;
@@ -1144,7 +1144,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         if (EffectLive(B(kCounter3))) return;
         B(kCounter3) = 0;
         if (!TakeSlot()) return;
-        B(kCounter3) = B(kSlot);
+        B(kCounter3) = DamageScratch.b_00;
         MoveScript_PartyRecords[0x65] = 0x16;
         unsigned char* const e = Place(0x31, -0x386, 0xE2, 0x3C);
         rv::As<records::EffectObject>(e)->step_x = 0;

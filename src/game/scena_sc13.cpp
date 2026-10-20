@@ -453,10 +453,10 @@ static void SpawnPair(std::uint32_t first, std::uint32_t second) {
         Sprite(a)[0] = 0;
         return;
     }
-    W(at::kSlotWord) = a;
+    DamageScratch.w_00 = a;
     Sprite(b)[0] = 1;
     SH_CALL(EventOp_6x)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(first)));
-    W(at::kSlotWord) = b;
+    DamageScratch.w_00 = b;
     SH_CALL(EventOp_6x)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(second)));
 }
 
@@ -745,7 +745,7 @@ SC13_EXPORT void __cdecl Scena13_Run5(void) {
         return;
     case 2: {
         std::uint32_t a = xobj1->angle[2];
-        W(at::kSlotWord) = static_cast<std::uint16_t>(a & 0xFFF);
+        DamageScratch.w_00 = static_cast<std::uint16_t>(a & 0xFFF);
         const std::uint32_t held = D(at::kInputHeld);
         bool turned = false;
         if (held & 0x2000) {
@@ -764,7 +764,7 @@ SC13_EXPORT void __cdecl Scena13_Run5(void) {
     }
     case 3: {
         const std::uint16_t a = static_cast<std::uint16_t>(xobj1->angle[2] & 0xFFF);
-        W(at::kSlotWord) = a;
+        DamageScratch.w_00 = a;
         SetStep(a <= 0x4E0 && a >= 0x4A0 ? 0xA : 5);
         return;
     }
@@ -1016,16 +1016,16 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
 SC13_EXPORT void __cdecl Scena13_Caption(unsigned index, unsigned seconds) {
     const std::uint16_t total = static_cast<std::uint16_t>((seconds & 0xFF) * 30 - 1);
     W(at::kCaptionIndex) = static_cast<std::uint16_t>(index);
-    W(at::kCaptionTotal) = total;
+    DamageScratch.w_02 = total;
     const std::uint16_t clock = static_cast<std::uint16_t>(total - Timer());
-    W(at::kSlotWord) = clock;
+    DamageScratch.w_00 = clock;
     if (clock >= total) {
         if (clock == total) SH_CALL(ClutStrip_Restore)();
         return;
     }
     const std::uint32_t text = at::kCaptionText + 2 + W(at::kCaptionText + 2 * (index & 0xFFFF));
     SH_CALL(Text_DrawAt)(0x50, 0x3C, 0, 0xFF, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(text)));
-    const std::uint16_t now = W(at::kSlotWord);
+    const std::uint16_t now = DamageScratch.w_00;
     if (now < 0x20) {
         SH_CALL(ClutStrip_FadeTo)(now & 0xFF);
         return;
@@ -1034,8 +1034,8 @@ SC13_EXPORT void __cdecl Scena13_Caption(unsigned index, unsigned seconds) {
         SH_CALL(ClutStrip_Restore)();
         return;
     }
-    if (static_cast<std::int32_t>(W(at::kSlotWord)) <= static_cast<std::int32_t>(W(at::kCaptionTotal)) - 0x20) return;
-    SH_CALL(ClutStrip_FadeTo)(static_cast<unsigned char>(B(at::kCaptionTotal) - B(at::kSlotWord)));
+    if (DamageScratch.w_00 <= DamageScratch.w_02 - 0x20) return;
+    SH_CALL(ClutStrip_FadeTo)(static_cast<unsigned char>(DamageScratch.b_02 - DamageScratch.b_00));
 }
 
 // Run 7's countdown after a caption: while the timer is not 0, one less and
@@ -1336,7 +1336,7 @@ SC13_EXPORT unsigned char __cdecl Scena13_StepHook(int x, int z) {
         if (FD() != 2) return 0;
         if ((x16 & 0xFFFF) != 0x25) return 0;
         if (!In(z16, 0x1D, 2)) return 0;
-        B(at::kSlotWord) = facing;
+        DamageScratch.b_00 = facing;
         if (facing != 6 && facing != 7 && facing != 0) return 0;
         if (!Flag(0x1B)) {
             Set40();
@@ -2444,14 +2444,14 @@ SC13_EXPORT void __cdecl Scena14_Run6(void) {
         if (Counter(0) != 0x12) return;
         const unsigned char n = Field_MemberCount;
         SetStep(0xC);
-        B(at::kSlotWord) = 0;
+        DamageScratch.b_00 = 0;
         for (unsigned char m = 0; m < n;) {
             if (B(at::kLeaderName + m * at::kTrioStride) == 4) {
                 DropIn(6);
                 return;
             }
             ++m;
-            B(at::kSlotWord) = m;
+            DamageScratch.b_00 = m;
         }
         DropIn(7);
         return;
@@ -2630,9 +2630,9 @@ static void RestoreRecords() {
         c->status = 0;
     }
     const unsigned char n = Field_MemberCount;
-    B(at::kSlotWord) = 1;
+    DamageScratch.b_00 = 1;
     if (n <= 1) return;
-    B(at::kSlotWord) = n;
+    DamageScratch.b_00 = n;
     for (unsigned j = 0; j + 1 < n; ++j) {
         const unsigned char c = B(at::kPartyList + 1 + j);
         const unsigned char idx = B(at::kEffectState + c);

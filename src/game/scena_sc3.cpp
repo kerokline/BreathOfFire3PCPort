@@ -108,9 +108,9 @@ void EventObjFace() { SH_AT(void (__cdecl*)(), scena_sc3::kEventObjFace)(); }
 // back as a dword's low byte, as the originals have it.
 unsigned char* TakeEffect(unsigned char kind) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    Byte(at::kSlot) = slot;
+    DamageScratch.b_00 = slot;
     if (slot == 0xFF) return nullptr;
-    unsigned char* const e = At(Effect_Objects_addr + ((static_cast<std::uint32_t>(Long(At(at::kSlot))) & 0xFF) << 7));
+    unsigned char* const e = At(Effect_Objects_addr + ((static_cast<std::uint32_t>(DamageScratch.d_00) & 0xFF) << 7));
     e[0] = 1;
     e[5] = kind;
     return e;
@@ -2162,7 +2162,7 @@ namespace {
 // The leader's +8 into the byte 0x903850; true unless it is 4, 5 or 6.
 bool LeaderFree() {
     const unsigned char k = ObjTrio[0].direction;
-    Byte(at::kSlot) = k;
+    DamageScratch.b_00 = k;
     return k != 6 && k != 5 && k != 4;
 }
 }  // namespace

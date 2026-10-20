@@ -71,11 +71,11 @@ unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
-short SS(unsigned k) { return static_cast<short>(Word(Mem(kS + k))); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
+std::int32_t SD(unsigned k) { return Long(Mem(DamageScratch_addr + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(DamageScratch_addr + k), static_cast<std::int32_t>(v)); }
+short SS(unsigned k) { return static_cast<short>(Word(Mem(DamageScratch_addr + k))); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(DamageScratch_addr + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(DamageScratch_addr + k)[0]; }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }

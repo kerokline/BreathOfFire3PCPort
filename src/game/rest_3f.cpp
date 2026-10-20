@@ -441,16 +441,16 @@ extern "C" void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned un
 // (next, next, 0x20), next Rand & 0x3F kept; committed 0x24 to slot 2.
 extern "C" void __cdecl EffectKind69_DrawLines(void) {
     unsigned char* s = S();
-    SetUL(At(at::kLineAmp), 0x40);
-    SetUL(At(at::kLineAngle), ((s[0xB] + 2u) & 0xFu) << 8);
+    DamageScratch.d_00 = 0x40;
+    DamageScratch.d_04 = ((s[0xB] + 2u) & 0xFu) << 8;
     Scratch_Swap = s[0xA];
-    SetUL(At(at::kLineShade), static_cast<U>(SH_CALL(Rand)()) & 0x3Fu);
+    DamageScratch.d_08 = static_cast<U>(SH_CALL(Rand)()) & 0x3Fu;
     unsigned char* const v = reinterpret_cast<unsigned char*>(Prim_VertexScratch);
     {
-        const U angle = UL(At(at::kLineAngle));
+        const U angle = static_cast<std::uint32_t>(DamageScratch.d_04);
         SetWord(v, 0);
         const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle)));
-        SetWord(v + 2, Sar(sn * UL(At(at::kLineAmp)), 12));
+        SetWord(v + 2, Sar(sn * static_cast<std::uint32_t>(DamageScratch.d_00), 12));
         SetWord(v + 4, 0);
     }
     if (static_cast<std::int32_t>(Scratch_Swap) <= 1) return;
@@ -464,25 +464,25 @@ extern "C" void __cdecl EffectKind69_DrawLines(void) {
         SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 8), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
         if ((SH_CALL(Rand)() & 1) != 0)
-            SetUL(At(at::kLineAmp), (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu) + 0x80u);
+            DamageScratch.d_00 = (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu) + 0x80u;
         else
-            SetUL(At(at::kLineAmp), 0x80u - (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu));
+            DamageScratch.d_00 = 0x80u - (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu);
         s = S();
         const U angle = ((s[0xB] + i + 2u) & 0xFu) << 8;
         SetWord(v, 0);
-        SetUL(At(at::kLineAngle), angle);
+        DamageScratch.d_04 = angle;
         const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle)));
-        SetWord(v + 2, Sar(sn * UL(At(at::kLineAmp)), 12));
+        SetWord(v + 2, Sar(sn * static_cast<std::uint32_t>(DamageScratch.d_00), 12));
         SetWord(v + 4, (0u - i) << 6);
         SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 0x18), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x20));
-        p[4] = At(at::kLineShade)[0];
-        p[5] = At(at::kLineShade)[0];
+        p[4] = DamageScratch.b_08;
+        p[5] = DamageScratch.b_08;
         p[6] = 0x20;
         const U next = static_cast<U>(SH_CALL(Rand)()) & 0x3Fu;
-        SetUL(At(at::kLineShade), next);
+        DamageScratch.d_08 = next;
         p[0x14] = static_cast<unsigned char>(next);
-        p[0x15] = At(at::kLineShade)[0];
+        p[0x15] = DamageScratch.b_08;
         p[0x16] = 0x20;
         SH_CALL(Gfx_CommitPrim)(2, 0x24);
         if (!(static_cast<std::int32_t>(i + 1) < static_cast<std::int32_t>(Scratch_Swap))) break;

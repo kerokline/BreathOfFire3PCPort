@@ -753,7 +753,7 @@ extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
 // count indexes the ids unchecked; the row is returned as a byte, and a row
 // of 0xFF would go on to the next column (unreachable: rows stop at 0x13).
 extern "C" unsigned char __cdecl PartySet_Find(unsigned a, unsigned b, unsigned c) {
-    unsigned char* const ids = At(at::kFindIds);
+    unsigned char* const ids = At(DamageScratch_addr);
     const unsigned char current = AreaW0b_PartySet;
     ids[0] = static_cast<unsigned char>(a);
     ids[1] = static_cast<unsigned char>(b);

@@ -383,11 +383,11 @@ extern "C" int __cdecl Battle_ScaleDamage(unsigned attacker, unsigned target, in
     const int roll = g.rand();
     m = Mul(m, s) >> 8;
     std::int32_t v = Mul(Long(At(bof3::addr::Battle_DamageVarianceTable + 4 * (U32(roll) & 7))), m) >> 8;
-    unsigned scratch = Word(At(DamageScratch_addr));
+    unsigned scratch = DamageScratch.w_00;
     if (scratch & 0x1F) {
         const short affinity = static_cast<short>(g.element_affinity(target, scratch));
         v = Mul(affinity, v) / 100;
-        scratch = Word(At(DamageScratch_addr));
+        scratch = DamageScratch.w_00;
     }
     if (scratch & 0x20) {
         const unsigned holy = (target & 0xFF) <= 2 ? rv::As<records::PartyMember>(Party(target) - 0x10)->holy : rv::As<records::BattleEnemy>(Enemy(target) + at::kEObject)->holy;

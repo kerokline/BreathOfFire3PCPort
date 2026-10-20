@@ -250,7 +250,7 @@ unsigned char* PacketAt(unsigned k) { return g_packets + (k & 3) * 0x40; }
 unsigned char* Mote(unsigned i) { return mh::Mem(KaiserMote_Pool_addr + i * kMoteStride); }
 
 const mh::Region kRegions[] = {
-    {kScratch, 0x10},
+    {DamageScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {Gfx_PacketNext_addr, 4},
     {Key(g_packets), sizeof g_packets},
@@ -388,7 +388,7 @@ void Disturb(std::uint32_t h) {
     const auto word = static_cast<std::uint16_t>(h >> 16);
     switch ((h >> 8) % 11) {
     case 0: mh::SetPointer(Gfx_PacketNext_addr, PacketAt(v)); break;
-    case 1: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
+    case 1: SetWord(mh::Mem(DamageScratch_addr + (v % 8) * 2), word); break;
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: mh::SetPointer(KaiserMote_Current_addr, Mote(v % kMotes)); break;
     case 4: {

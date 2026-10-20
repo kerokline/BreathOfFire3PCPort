@@ -243,9 +243,9 @@ extern "C" void __cdecl EffectKind4F_Start(void) {
         return;
     }
     Sprite(self[4], who)[0] = 1;
-    SetWord(At(DamageScratch_addr), self[3]);
+    DamageScratch.w_00 = self[3];
     SH_CALL(EventOp_0x)(EffectKind4F_Op);
-    SetWord(At(DamageScratch_addr), self[4]);
+    DamageScratch.w_00 = self[4];
     SH_CALL(EventOp_0x)(EffectKind4F_Op);
     Sprite_Current = self;
     unsigned char* a = Sprite(self[3], who);

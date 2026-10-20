@@ -61,13 +61,13 @@ short Count() {
     std::memcpy(&v, At(DamageScratch_addr), sizeof v);
     return v;
 }
-void SetCount(unsigned v) { SetWord(At(DamageScratch_addr), v); }
+void SetCount(unsigned v) { DamageScratch.w_00 = v; }
 unsigned short Bank() {
     unsigned short v;
     std::memcpy(&v, At(DamageScratch_addr) + 2, sizeof v);
     return v;
 }
-void SetBank(unsigned v) { SetWord(At(DamageScratch_addr) + 2, v); }
+void SetBank(unsigned v) { DamageScratch.w_02 = v; }
 
 // Data these read that symbols.toml does not name.
 // kBlockFlags: now Field_StatusBits (symbols.toml). bit 6: ScriptFlags_Set40 / Clear40 (object_kinds.cpp)

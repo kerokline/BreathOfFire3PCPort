@@ -121,8 +121,8 @@ void PutFloat(unsigned char* at, int v) {
 
 int Sin(int a) { return MH_CALL(Math_Sin)(a); }
 int Cos(int a) { return MH_CALL(Math_Cos)(a); }
-std::int32_t R() { return Long(Mem(kScratchA)); }
-std::int32_t H() { return Long(Mem(kScratchB)); }
+std::int32_t R() { return Long(Mem(DamageScratch_addr)); }
+std::int32_t H() { return Long(Mem(DamageScratch_addr + 0x4)); }
 
 // Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, tpage, 0) and its commit.
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
@@ -148,16 +148,16 @@ void TargetDone() {
 // A mote's position round the owner: +0x34 / +0x38 = the owner's plus
 // sin / cos of the angle (word 0x903854) times the radius +0xC, each 32-bit.
 void Orbit() {
-    const int s = Sin(S16(Mem(kScratchB)));
+    const int s = Sin(S16(Mem(DamageScratch_addr + 0x4)));
     unsigned char* sc = Sprite_Current;
     rv::Store(rv::As<records::BattleTask>(sc)->x, Wrap(static_cast<std::uint32_t>(s) * static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) +
                             static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
-    const int c = Cos(S16(Mem(kScratchB)));
+    const int c = Cos(S16(Mem(DamageScratch_addr + 0x4)));
     sc = Sprite_Current;
     rv::Store(rv::As<records::BattleTask>(sc)->z, Wrap(static_cast<std::uint32_t>(c) * static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) +
                             static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
 }
-void MoteAngle() { SetWord(Mem(kScratchB), static_cast<unsigned>((Sprite_Current[0xB] & 0xF) << 8)); }
+void MoteAngle() { SetWord(Mem(DamageScratch_addr + 0x4), static_cast<unsigned>((Sprite_Current[0xB] & 0xF) << 8)); }
 
 }  // namespace
 
@@ -257,11 +257,11 @@ MS17_EXPORT void __cdecl PurifyMote_Place(void) {
     unsigned char* sc = Sprite_Current;
     if (sc[9] != 0) return;
     const int angle = (sc[0xB] & 7) << 9;
-    SetLong(Mem(kScratchA), angle);
+    SetLong(Mem(DamageScratch_addr), angle);
     const int s = Sin(angle);
     const int dx = static_cast<int>((static_cast<std::uint32_t>(s) * 5u) << 13) >> 12;
     rv::Store(rv::Current<records::BattleTask>()->x, Wrap(static_cast<std::uint32_t>(dx) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
-    const int c = Cos(Long(Mem(kScratchA)));
+    const int c = Cos(Long(Mem(DamageScratch_addr)));
     const int dz = static_cast<int>((static_cast<std::uint32_t>(c) * 5u) << 13) >> 12;
     rv::Store(rv::Current<records::BattleTask>()->z, Wrap(static_cast<std::uint32_t>(dz) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + 0x180u);
@@ -481,7 +481,7 @@ MS17_EXPORT void __cdecl ReviveHalo_Draw(void) {
         height = 0x40;
         half = 0x18;
     }
-    SetWord(Mem(kShade), static_cast<unsigned>(sc[9]) << 3);
+    SetWord(Mem(DamageScratch_addr + 0x6), static_cast<unsigned>(sc[9]) << 3);
     unsigned char* const p = Gfx_PacketNext;
     const int x = S16(sc + 0x2E);
     const int y = S16(sc + 0x30);
@@ -516,9 +516,9 @@ MS17_EXPORT void __cdecl ReviveHalo_Draw(void) {
         p[0x44] = 0xA8;
         p[0x45] = 0x48;
     }
-    p[4] = Mem(kShade)[0];
-    p[5] = Mem(kShade)[0];
-    p[6] = Mem(kShade)[0];
+    p[4] = Mem(DamageScratch_addr + 0x6)[0];
+    p[5] = Mem(DamageScratch_addr + 0x6)[0];
+    p[6] = Mem(DamageScratch_addr + 0x6)[0];
     LinkAtActor(1, 0x48);
 }
 
@@ -609,11 +609,11 @@ MS17_EXPORT void __cdecl ReviveMote_Draw(void) {
     const unsigned char* const sc = Sprite_Current;
     const int x = S16(sc + 0x2E);
     const int y = S16(sc + 0x30);
-    SetWord(Mem(kScratchA), 8);
-    SetWord(Mem(kShade), sc[9] * 12u);
-    SetWord(Mem(kRgb), static_cast<unsigned>(static_cast<signed char>(sc[0x5D]) * sc[9]));
-    SetWord(Mem(kRgb + 2), static_cast<unsigned>(static_cast<signed char>(sc[0x5E]) * sc[9]));
-    SetWord(Mem(kRgb + 4), static_cast<unsigned>(static_cast<signed char>(sc[0x5F]) * sc[9]));
+    SetWord(Mem(DamageScratch_addr), 8);
+    SetWord(Mem(DamageScratch_addr + 0x6), sc[9] * 12u);
+    SetWord(Mem(DamageScratch_addr + 0x8), static_cast<unsigned>(static_cast<signed char>(sc[0x5D]) * sc[9]));
+    SetWord(Mem(DamageScratch_addr + 0x8 + 2), static_cast<unsigned>(static_cast<signed char>(sc[0x5E]) * sc[9]));
+    SetWord(Mem(DamageScratch_addr + 0x8 + 4), static_cast<unsigned>(static_cast<signed char>(sc[0x5F]) * sc[9]));
     unsigned char centre[8];
     PutFloat(centre, x);
     PutFloat(centre + 4, y);
@@ -624,23 +624,23 @@ MS17_EXPORT void __cdecl ReviveMote_Draw(void) {
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         std::memcpy(p + 8, centre, 8);
         int v = Sin(a);
-        PutFloat(p + 0x18, M(v, S16(Mem(kScratchA))) + x);
+        PutFloat(p + 0x18, M(v, S16(Mem(DamageScratch_addr))) + x);
         v = Cos(a);
-        PutFloat(p + 0x1C, M(v, S16(Mem(kScratchA))) + y);
+        PutFloat(p + 0x1C, M(v, S16(Mem(DamageScratch_addr))) + y);
         a += 0x200;
         v = Sin(a);
-        PutFloat(p + 0x28, M(v, S16(Mem(kScratchA))) + x);
+        PutFloat(p + 0x28, M(v, S16(Mem(DamageScratch_addr))) + x);
         v = Cos(a);
-        PutFloat(p + 0x2C, M(v, S16(Mem(kScratchA))) + y);
-        p[4] = Mem(kShade)[0];
-        p[5] = Mem(kShade)[0];
-        p[6] = Mem(kShade)[0];
-        p[0x14] = Mem(kRgb)[0];
-        p[0x15] = Mem(kRgb + 2)[0];
-        p[0x16] = Mem(kRgb + 4)[0];
-        p[0x24] = Mem(kRgb)[0];
-        p[0x25] = Mem(kRgb + 2)[0];
-        p[0x26] = Mem(kRgb + 4)[0];
+        PutFloat(p + 0x2C, M(v, S16(Mem(DamageScratch_addr))) + y);
+        p[4] = Mem(DamageScratch_addr + 0x6)[0];
+        p[5] = Mem(DamageScratch_addr + 0x6)[0];
+        p[6] = Mem(DamageScratch_addr + 0x6)[0];
+        p[0x14] = Mem(DamageScratch_addr + 0x8)[0];
+        p[0x15] = Mem(DamageScratch_addr + 0x8 + 2)[0];
+        p[0x16] = Mem(DamageScratch_addr + 0x8 + 4)[0];
+        p[0x24] = Mem(DamageScratch_addr + 0x8)[0];
+        p[0x25] = Mem(DamageScratch_addr + 0x8 + 2)[0];
+        p[0x26] = Mem(DamageScratch_addr + 0x8 + 4)[0];
         LinkAtActor(2, 0x34);
     }
 }
@@ -846,8 +846,8 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
     DrawMode(0xB5);
     LinkAtActor(2, 0xC);
     const unsigned char* sc = Sprite_Current;
-    SetLong(Mem(kScratchA), sc[9] * 10);
-    SetLong(Mem(kScratchB), sc[9] * 7);
+    SetLong(Mem(DamageScratch_addr), sc[9] * 10);
+    SetLong(Mem(DamageScratch_addr + 0x4), sc[9] * 7);
     unsigned char* const first = Gfx_PacketNext;
     unsigned char* const line_base = first + 0x380;
     unsigned char* lines = line_base;
@@ -1070,7 +1070,7 @@ MS17_EXPORT void __cdecl LeechOrb_End(void) {
 // and the quad, both sorted at the orb moved by its far edge's x / y << 9;
 // red (0x80, 0x10, 0x10), from phase 5 fading by +0xA.
 MS17_EXPORT void __cdecl LeechOrb_DrawRings(void) {
-    SetLong(Mem(kScratchA), Sprite_Current[9] << 2);
+    SetLong(Mem(DamageScratch_addr), Sprite_Current[9] << 2);
     int lat = 0x400;
     for (;;) {
         int c = Cos(lat);

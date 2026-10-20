@@ -484,7 +484,7 @@ extern "C" void __cdecl Area135_SpawnRun(void) {
 extern "C" void __cdecl Area135_SpawnCopy(void) {
     ScriptStep(0xFFFE);
     const unsigned char slot = AH_CALL(Sprite_FindFree)();
-    SetWord(Mem(at::kScratch), slot);
+    SetWord(Mem(DamageScratch_addr), slot);
     if (slot == 0xFF) return;
     AH_CALL(Area135_RestoreCells)();
     unsigned char* const self = Sprite_Current;

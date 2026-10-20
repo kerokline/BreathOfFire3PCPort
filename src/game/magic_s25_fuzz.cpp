@@ -311,7 +311,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                       // Gfx_PacketNext
     {0, kPrimBytes},                     // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},     // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                    // 0x903850.., Scratch_Swap at +0xC
+    {DamageScratch_addr, 0x10},          // 0x903850.., Scratch_Swap at +0xC
     {0x905E60, 8},                       // Field_Kind2Z, Field_Kind2X
     {0x905B89, 1},                       // Gfx_BufferIndex
     {BattleE2_AnimSet_addr, 4},          // the sprite bank pointer SpellRagnarok_SpriteChild swaps
@@ -363,8 +363,8 @@ void Disturb(std::uint32_t h) {
     case 2:
         // the dword at 0x903850 is SpellConfuse_DrawRays' loop counter: only
         // its low byte, and small, or the loop runs for ever
-        if (v % 16 < 4) mh::Mem(kScratch)[0] = static_cast<unsigned char>((h >> 24) & 0x3F);
-        else mh::Mem(kScratch + v % 16)[0] = static_cast<unsigned char>(h >> 24);
+        if (v % 16 < 4) mh::Mem(DamageScratch_addr)[0] = static_cast<unsigned char>((h >> 24) & 0x3F);
+        else mh::Mem(DamageScratch_addr + v % 16)[0] = static_cast<unsigned char>(h >> 24);
         break;
     case 3: SetLong(mh::Mem(0x905E60 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
     case 4: mh::Mem(kSideCorner)[0] = static_cast<unsigned char>(v & 3); break;

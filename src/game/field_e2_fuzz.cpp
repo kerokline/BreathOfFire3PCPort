@@ -538,7 +538,7 @@ void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF, w = (h >> 16) & 0xFF;
     switch (sh::DisturbCase(h, 9)) {
     case 0: Field_State = sh::ObjectOf(v); break;
-    case 1: B(field_e2::at::kEffectSlot) = static_cast<unsigned char>(v & 1 ? 0 : w); break;
+    case 1: B(DamageScratch_addr) = static_cast<unsigned char>(v & 1 ? 0 : w); break;
     case 2: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 24); break;
     case 3: B(Effect1g_TradePick_addr) = static_cast<unsigned char>(w); break;
     case 4: B(Effect1g_TradeQuantity_addr) = static_cast<unsigned char>(v % 100); break;
@@ -654,7 +654,7 @@ void Seed(unsigned k) {
         const U height = move_script::Word(s + 0x3E);
         move_script::SetWord(g_ground, PickOf(height + offset, height, height + 0x10 + offset, height - 0x10, sh::Next()));
     }
-    B(at::kEffectSlot) = static_cast<unsigned char>(sh::Often() ? 0 : 1 + sh::Next() % 0xFF);
+    B(DamageScratch_addr) = static_cast<unsigned char>(sh::Often() ? 0 : 1 + sh::Next() % 0xFF);
     switch (k) {
     case kCallB:
         Cond_ByteFA = static_cast<signed char>(PickOf(6, 9));
@@ -703,7 +703,7 @@ void Seed(unsigned k) {
             if (same && sh::Next() % 8 != 0) g_grid[i] = code;
             else g_grid[i] = static_cast<unsigned char>(PickOf(code ^ 0x0F, code ^ 0x01, 0x20 + sh::Next() % 0x10, sh::Next()));
         }
-        B(at::kEffectSlot) = code;   // Args reads the code from here (the state is taken before the arguments)
+        B(DamageScratch_addr) = code; // Args reads the code from here (the state is taken before the arguments)
         break;
     }
     case kHopFlight:
@@ -833,7 +833,7 @@ void Args(unsigned k, U* a) {
     case kCellsNone:
         a[0] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
         a[1] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
-        a[2] = hi | B(at::kEffectSlot);
+        a[2] = hi | B(DamageScratch_addr);
         a[3] = (a[3] & 0xFFFFFF00u) | (sh::Half() ? 0 : 1 + sh::Next() % 0xFF);
         break;
     case kWayBlocked:

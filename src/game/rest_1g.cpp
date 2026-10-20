@@ -567,7 +567,7 @@ extern "C" void __cdecl LeaderPanel_Effect3Mode(unsigned mode) {
 // 0x903850 = 0.
 extern "C" void __cdecl LeaderPanel_HoldTest(void) {
     if (Input_Pressed & 0x4000) {
-        B(kHoldFlag) = 1;
+        DamageScratch.b_00 = 1;
         S()[0xA] = 8;
         return;
     }
@@ -575,11 +575,11 @@ extern "C" void __cdecl LeaderPanel_HoldTest(void) {
         unsigned char* const s = S();
         if (s[0xA] != 0) {
             s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
-            B(kHoldFlag) = 1;
+            DamageScratch.b_00 = 1;
             return;
         }
     }
-    B(kHoldFlag) = 0;
+    DamageScratch.b_00 = 0;
 }
 
 // original 0x52B330: (Input_Pressed & buttons)'s low word not 0:

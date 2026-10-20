@@ -60,9 +60,9 @@ unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 
-short SS(unsigned k) { return static_cast<short>(Word(Mem(kS + k))); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+short SS(unsigned k) { return static_cast<short>(Word(Mem(DamageScratch_addr + k))); }
+unsigned char SB(unsigned k) { return Mem(DamageScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(DamageScratch_addr + k), v & 0xFFFF); }
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }

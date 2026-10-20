@@ -176,7 +176,7 @@ extern "C" void __cdecl GameMode3_Leave(void) {
             AreaW3g_HealByte =
                 static_cast<unsigned char>((At(at::kFacingJitter)[r & 3] + ObjTrio[0].direction) & 0xF);
             const unsigned place = AreaW0b_Place;
-            const U px = UL(at::kPendingX), pz = AreaEntry_PendingZ;
+            const U px = static_cast<std::uint32_t>(DamageScratch.d_10), pz = AreaEntry_PendingZ;
             SH_CALL(Field_ChangeArea)(place, I(px), I(pz), AreaEntry_PendingFlags);
         } else {
             AreaW3c_CampFlag = 0;

@@ -101,7 +101,7 @@ void SideProbe(unsigned d, U row) {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(Long(At(row)));
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(Long(At(row + 4)));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(DamageScratch_addr)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (DamageScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     unsigned char* const c = S();
     if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
@@ -180,7 +180,7 @@ void Form2Begin() {
     asm volatile("" : "+r"(upper));
     const U direction = upper | s[8];
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);   // its answer unused
-    if (At(DamageScratch_addr)[0] != 0 && rise > 0x40) {
+    if (DamageScratch.b_00 != 0 && rise > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x46));
         ++S()[2];
     } else {

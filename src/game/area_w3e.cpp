@@ -459,7 +459,7 @@ extern "C" void __cdecl Area140_Tail41(void) {
     case 2: {
         if (Field_Request != 0) return;
         const unsigned held = Input_Held;
-        SetWord(Mem(at::kScratch850), held);
+        SetWord(Mem(DamageScratch_addr), held);
         Input_Held = static_cast<unsigned short>((B(Area140_ButtonRemap_addr + (held >> 12)) << 12) | (held & 0xFFF));
         return;
     }
@@ -947,7 +947,7 @@ extern "C" void __cdecl Area141_PaintCells(const unsigned char* run, unsigned on
 // the event ops' object word 0x903850 = its index, the event op on `script`.
 static void PlaceOn(unsigned char slot, U script, bool op6x) {
     ObjectAt(slot)[0] = 1;
-    SetWord(Mem(at::kScratch850), slot);
+    SetWord(Mem(DamageScratch_addr), slot);
     if (op6x)
         AH_CALL(EventOp_6x)(Mem(script));
     else
@@ -970,14 +970,14 @@ static bool TwoFree(unsigned char& a, unsigned char& b) {
 // The pair's placement as the originals order it: 0x903850 = a, b live, the
 // op on `first` (for a); [animation]; 0x903850 = b, the op on `second`.
 static void PlacePair(unsigned char a, unsigned char b, U first, U second, bool op6x, int anim_a, int anim_b) {
-    SetWord(Mem(at::kScratch850), a);
+    SetWord(Mem(DamageScratch_addr), a);
     ObjectAt(b)[0] = 1;
     if (op6x)
         AH_CALL(EventOp_6x)(Mem(first));
     else
         AH_CALL(EventOp_0x)(Mem(first));
     if (anim_a >= 0) AH_CALL(Sprite_SetAnimationAt)(static_cast<unsigned char>(anim_a), 0);
-    SetWord(Mem(at::kScratch850), b);
+    SetWord(Mem(DamageScratch_addr), b);
     if (op6x)
         AH_CALL(EventOp_6x)(Mem(second));
     else

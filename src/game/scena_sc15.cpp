@@ -981,12 +981,12 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
 SC15_EXPORT void __cdecl Scena15_EventObjects(void) {
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
-        SetW(kSlotWord, s);
+        DamageScratch.w_00 = s;
         if (s != 0xFF) SH_CALL(EventOp_0x)(At(Scena15_EventOps_addr + 0x11u * i));
     }
     for (unsigned i = 0; i < 2; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
-        SetW(kSlotWord, s);
+        DamageScratch.w_00 = s;
         if (s != 0xFF) SH_CALL(EventOp_6x)(At(Scena15_EventOps_addr + 0x38 + 0x10u * i));
     }
 }

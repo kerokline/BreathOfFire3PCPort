@@ -347,7 +347,7 @@ const mh::DataTable kTables[] = {{0x65B358, 2}, {0x65BC30, 5}, {0x65BC44, 4}};
 const mh::Region kRegions[] = {
     {Gfx_PacketNext_addr, 4},
     {Key(g_packets), sizeof g_packets},
-    {kS, 0x10},
+    {DamageScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 4},
     {BattleE2_AnimSet_addr, 4},
     {0x903802, 2},                          // Camera_ShiftY
@@ -501,7 +501,7 @@ void Disturb(std::uint32_t h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     switch ((h >> 8) % 7) {
     case 0: mh::SetPointer(Gfx_PacketNext_addr, PacketAt(v)); break;
-    case 1: SetWord(mh::Mem(kS + 2 * (v % 8)), h >> 16); break;
+    case 1: SetWord(mh::Mem(DamageScratch_addr + 2 * (v % 8)), h >> 16); break;
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 2)), h >> 16); break;
     case 3:
         // half the time the streak being drawn, its points

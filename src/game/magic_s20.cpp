@@ -123,7 +123,7 @@ constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 // MagicFx_ApplyBuff, S32's WallOfFire_DrawDisc and WallOfFireSpark_Draw.
 using VoidFn = void (__cdecl*)();
 
-unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
+unsigned char* Scr(unsigned k) { return Mem(DamageScratch_addr + k); }
 unsigned char* Vtx(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }

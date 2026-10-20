@@ -522,38 +522,38 @@ C3_EXPORT void __cdecl Magic111Wash_Draw(void) {
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     FullScreen(p, 0x18, 0x1C, 0x28, 0x2C, 0x38, 0x3C);
 
-    unsigned a = SetAngle(kAngleA, Sc()[0xC], 0);
-    SetAngle(kAngleB, Sc()[0x10], 0);
+    unsigned a = SetAngle(DamageScratch_addr, Sc()[0xC], 0);
+    SetAngle(DamageScratch_addr + 0x2, Sc()[0x10], 0);
     unsigned char c0 = Pulse(static_cast<short>(a));
-    unsigned char c1 = Pulse(AngleWord(kAngleB));
-    unsigned char c2 = Pulse(AngleWord(kAngleB));
+    unsigned char c1 = Pulse(AngleWord(DamageScratch_addr + 0x2));
+    unsigned char c2 = Pulse(AngleWord(DamageScratch_addr + 0x2));
     p[4] = c0;
     p[5] = c1;
     p[6] = c2;
 
-    SetAngle(kAngleA, Sc()[0xC], 0xF);
-    unsigned b = SetAngle(kAngleB, Sc()[0x10], 0xF);
+    SetAngle(DamageScratch_addr, Sc()[0xC], 0xF);
+    unsigned b = SetAngle(DamageScratch_addr + 0x2, Sc()[0x10], 0xF);
     c0 = Pulse(static_cast<short>(b));
-    c1 = Pulse(AngleWord(kAngleA));
-    c2 = Pulse(AngleWord(kAngleB));
+    c1 = Pulse(AngleWord(DamageScratch_addr));
+    c2 = Pulse(AngleWord(DamageScratch_addr + 0x2));
     p[0x14] = c0;
     p[0x15] = c1;
     p[0x16] = c2;
 
-    SetAngle(kAngleA, Sc()[0xC], 0x1F);
-    b = SetAngle(kAngleB, Sc()[0x10], 0x1F);
+    SetAngle(DamageScratch_addr, Sc()[0xC], 0x1F);
+    b = SetAngle(DamageScratch_addr + 0x2, Sc()[0x10], 0x1F);
     c0 = Pulse(static_cast<short>(b));
-    c1 = Pulse(AngleWord(kAngleB));
-    c2 = Pulse(AngleWord(kAngleA));
+    c1 = Pulse(AngleWord(DamageScratch_addr + 0x2));
+    c2 = Pulse(AngleWord(DamageScratch_addr));
     p[0x24] = c0;
     p[0x25] = c1;
     p[0x26] = c2;
 
-    a = SetAngle(kAngleA, Sc()[0xC], 0x100 - 0x11);
-    SetAngle(kAngleB, Sc()[0x10], 0x100 - 0x11);
+    a = SetAngle(DamageScratch_addr, Sc()[0xC], 0x100 - 0x11);
+    SetAngle(DamageScratch_addr + 0x2, Sc()[0x10], 0x100 - 0x11);
     c0 = Pulse(static_cast<short>(a));
-    c1 = Pulse(AngleWord(kAngleA));
-    c2 = Pulse(AngleWord(kAngleB));
+    c1 = Pulse(AngleWord(DamageScratch_addr));
+    c2 = Pulse(AngleWord(DamageScratch_addr + 0x2));
     p[0x34] = c0;
     p[0x35] = c1;
     p[0x36] = c2;

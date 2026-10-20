@@ -105,9 +105,9 @@ short Count() {
     std::memcpy(&v, At(DamageScratch_addr), sizeof v);
     return v;
 }
-unsigned short Bank() { return Word(At(DamageScratch_addr) + 2); }
-void SetBank(unsigned v) { SetWord(At(DamageScratch_addr) + 2, v); }
-void BumpCount() { SetWord(At(DamageScratch_addr), static_cast<unsigned>(Count() + 1)); }
+unsigned short Bank() { return DamageScratch.w_02; }
+void SetBank(unsigned v) { DamageScratch.w_02 = v; }
+void BumpCount() { DamageScratch.w_00 = static_cast<unsigned>(Count() + 1); }
 unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 
 // A placement's x or z: the whole part and the half (0x8000) when `half` is not 0.

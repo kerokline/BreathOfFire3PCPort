@@ -274,7 +274,7 @@ unsigned char* PacketAt(unsigned k) { return g_packets + (k & 3) * 0x40; }
 // kVertices: now Prim_VertexScratch (symbols.toml).
 constexpr std::uint32_t kScratch = 0x903850;
 const mh::Region kRegions[] = {
-    {kScratch, 0x10},
+    {DamageScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
@@ -297,7 +297,7 @@ void Disturb(std::uint32_t h) {
     case 0: mh::SetPointer(0x7E0670, PacketAt(v)); break;
     case 1: {
         const unsigned k = (v % 8) * 2;
-        SetWord(mh::Mem(kScratch + k), k == 8 ? word % 24 : k == 0xC ? 1 + word % 23 : k == 0xE ? 0 : word);
+        SetWord(mh::Mem(DamageScratch_addr + k), k == 8 ? word % 24 : k == 0xC ? 1 + word % 23 : k == 0xE ? 0 : word);
         break;
     }
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;

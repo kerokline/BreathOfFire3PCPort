@@ -126,7 +126,7 @@ void SideProbe(unsigned d) {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(DamageScratch_addr)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (DamageScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = Sprite_Current;
     if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
@@ -163,7 +163,7 @@ void FormBegin() {
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(Sprite_Current + 0x3E)));
     const unsigned direction = Sprite_Current[8];
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);
-    if (At(DamageScratch_addr)[0] != 0 && rise > 0x40) {
+    if (DamageScratch.b_00 != 0 && rise > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(Pose(Sprite_Current[8], 0x46));
         ++Sprite_Current[2];
     } else {

@@ -293,7 +293,7 @@ std::uint32_t StirScratch(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t r = mh::Noise();
     if (r % 3 != 0) return answer;
     const auto v = static_cast<std::uint16_t>(mh::Noise() >> 16);
-    if (r & 0x100) SetWord(mh::Mem(kScratch + 2 * ((r >> 12) % 8)), v);
+    if (r & 0x100) SetWord(mh::Mem(DamageScratch_addr + 2 * ((r >> 12) % 8)), v);
     else SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * ((r >> 12) % 16)), v);
     return answer;
 }
@@ -413,7 +413,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850..
+    {DamageScratch_addr, 0x10},           // 0x903850..
     {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the Run steps swap
     {MagmaBreath_Pool_addr, kMagmaBytes}, // MagmaBreath_Pool
     {GeoBreath_Pool_addr, kGeoBytes},     // GeoBreath_Pool
@@ -443,7 +443,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
+    case 2: SetWord(mh::Mem(DamageScratch_addr + 2 * (v % 8)), h >> 16); break;
     case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 4:
         if (v & 1) MagmaRecord(v >> 1)[0] ^= 1;

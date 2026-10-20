@@ -112,11 +112,11 @@ void LoadMusic(unsigned track) {
 // is free.
 bool TakeEffect() {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    At(at::kEffectSlot)[0] = slot;
+    DamageScratch.b_00 = slot;
     return slot != 0xFF;
 }
 // The record of the slot 0x903850 holds, read back as the original does.
-unsigned char* Effect() { return rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
+unsigned char* Effect() { return rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(DamageScratch.b_00) << 7); }
 
 // The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
 // views a
@@ -928,7 +928,7 @@ extern "C" void __cdecl Scena02_Scene09(void) {
     case 2: {
         if (Counter(0) != 0xA2) return;
         if (!TakeEffect()) return;
-        Counter(3) = At(at::kEffectSlot)[0];
+        Counter(3) = DamageScratch.b_00;
         SetStep(3);
         const int x = Camera_Angles[0];
         unsigned char* const e = Effect();

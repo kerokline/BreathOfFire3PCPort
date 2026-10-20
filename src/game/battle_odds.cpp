@@ -105,7 +105,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
             return eax;
         }
     }
-    Window4_Index = At(DamageScratch_addr)[0];
+    Window4_Index = DamageScratch.b_00;
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
 }
 
@@ -131,7 +131,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
         if (eax & 0xFF) At(kWin0State)[0] = 2;
         return eax;
     }
-    Window0_ParamA = At(DamageScratch_addr)[0];
+    Window0_ParamA = DamageScratch.b_00;
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
 }
 

@@ -526,10 +526,10 @@ extern "C" void __cdecl CommuHiLo_BetDispatch(void) {
 // ours aborts outside 0..2 where it does.
 extern "C" void __cdecl CommuHiLo_BetInput(void) {
     const int low = static_cast<signed char>(B(at::kBet));
-    B(at::kDigits + 2) = static_cast<unsigned char>(low / 100);
+    DamageScratch.b_02 = static_cast<unsigned char>(low / 100);
     const int rest = static_cast<signed char>(static_cast<unsigned char>(low % 100));
-    B(at::kDigits + 1) = static_cast<unsigned char>(rest / 10);
-    B(at::kDigits) = static_cast<unsigned char>(rest % 10);
+    DamageScratch.b_01 = static_cast<unsigned char>(rest / 10);
+    DamageScratch.b_00 = static_cast<unsigned char>(rest % 10);
     const unsigned pressed = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF000u);
     if ((pressed & 0xFFFF) != 0) {
         Sound(0x100);
@@ -554,7 +554,7 @@ extern "C" void __cdecl CommuHiLo_BetInput(void) {
             B(at::kDigits + i) = d;
             if (static_cast<signed char>(d) > 9) B(at::kDigits + i) = 0;
         }
-        const int stake = S8(at::kDigits + 2) * 100 + S8(at::kDigits + 1) * 10 + S8(at::kDigits);
+        const int stake = static_cast<signed char>(DamageScratch.b_02) * 100 + static_cast<signed char>(DamageScratch.b_01) * 10 + static_cast<signed char>(DamageScratch.b_00);
         SetL(at::kBet, static_cast<U>(stake));
         if (stake < 0) {
             SetL(at::kBet, 0);

@@ -402,7 +402,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850..
+    {DamageScratch_addr, 0x10},           // 0x903850..
     {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the children swap
     {Camera_Angles_addr, 2},              // Camera_Angles[0]
     {Field_State_addr, 4},                // Field_State
@@ -432,7 +432,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
+    case 2: SetWord(mh::Mem(DamageScratch_addr + 2 * (v % 8)), h >> 16); break;
     case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 4: SetWord(mh::Mem(Camera_Angles_addr), h >> 16); break;
     case 5: PoolRecord(v)[0] ^= 1; break;

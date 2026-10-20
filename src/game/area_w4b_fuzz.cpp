@@ -295,7 +295,7 @@ U FindFreeEffect(const U*, U answer) {
     if (n & 1) SetMember(n >> 4);
     if (n & 2) SetWord(ah::Mem(at::kMessage), n >> 16);
     if (n & 4) SetWord(ah::Mem(Camera_Angles_addr + 0x2), n >> 12);
-    if (n & 8) B(at::kScratch) = static_cast<unsigned char>(n >> 20);
+    if (n & 8) B(DamageScratch_addr) = static_cast<unsigned char>(n >> 20);
     return answer;
 }
 // Sound_PlayEffect and the engine's 0x486D60: area 170's init reads the
@@ -323,7 +323,7 @@ U SetByteEffect(const U*, U answer) {
 U ByteAtEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) answer = (answer & 0xFFFFFF00u) | 0x89u;
-    if ((n & 0x30) == 0x30) B(at::kScratch) = static_cast<unsigned char>(n >> 20);
+    if ((n & 0x30) == 0x30) B(DamageScratch_addr) = static_cast<unsigned char>(n >> 20);
     return answer;
 }
 // The rectangle searches: Field_State (read again when marking) and the
@@ -502,7 +502,7 @@ void Disturb(U h) {
     case 7: SetWord(ah::Mem(Transition_Busy_addr), h & 0x100 ? 0 : v); break;
     case 8: B(Field_Kind2Hold_addr) = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
     case 9: B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(h & 0x100 ? 2 + v % 2 : v); break;
-    case 10: B(at::kScratch) = static_cast<unsigned char>(h & 0x100 ? v % 2 : v); break;
+    case 10: B(DamageScratch_addr) = static_cast<unsigned char>(h & 0x100 ? v % 2 : v); break;
     case 11: B(ObjTrio_addr + 0x89) = h & 0x100 ? k89[v % 3] : v; break;
     case 12: B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(h & 0x100 ? 0x33 : v); break;
     default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 5); break;

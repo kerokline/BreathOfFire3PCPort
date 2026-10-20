@@ -629,7 +629,7 @@ extern "C" unsigned char __cdecl ClutMap_Mark(unsigned kind, unsigned owner, uns
         answer = g.clut_owner(owner);
         fill = 0xFF;
     }
-    unsigned char* const cells = At(at::kClutMap + At(at::kCells)[0] * 16u + At(at::kCells)[1]);
+    unsigned char* const cells = At(at::kClutMap + DamageScratch.b_00 * 16u + DamageScratch.b_01);
     unsigned n;
     switch (kind & 0xFF) {
     case 0: n = 1; break;
@@ -660,8 +660,8 @@ extern "C" unsigned char __cdecl ClutMap_FindFree(unsigned kind) {
     for (unsigned row = 0; row < 4; ++row)
         for (unsigned cell = 0; cell < 16; ++cell) {
             if (map[row * 16 + cell] != 0xFF) continue;
-            At(at::kCells)[1] = static_cast<unsigned char>(cell);
-            At(at::kCells)[0] = static_cast<unsigned char>(row);
+            DamageScratch.b_01 = static_cast<unsigned char>(cell);
+            DamageScratch.b_00 = static_cast<unsigned char>(row);
             switch (kind & 0xFF) {
             case 0: return static_cast<unsigned char>((row + 0xC) * 16 + cell);
             case 1:
@@ -690,8 +690,8 @@ extern "C" unsigned char __cdecl ClutMap_FindOwner(unsigned owner) {
     for (unsigned row = 0; row < 4; ++row)
         for (unsigned cell = 0; cell < 16; ++cell)
             if (At(at::kClutMap)[row * 16 + cell] == o) {
-                At(at::kCells)[0] = static_cast<unsigned char>(row);
-                At(at::kCells)[1] = static_cast<unsigned char>(cell);
+                DamageScratch.b_00 = static_cast<unsigned char>(row);
+                DamageScratch.b_01 = static_cast<unsigned char>(cell);
                 return o;
             }
     return 0xFF;

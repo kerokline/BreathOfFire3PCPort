@@ -101,7 +101,7 @@ long SlopeAt(U x, U z, unsigned direction) {
     return SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);
 }
 // AreaMap_Slope's "sloped" byte, which the callers read straight after MapView_SlopeAt.
-bool Sloped() { return B(at::kSloped) != 0; }
+bool Sloped() { return DamageScratch.b_00 != 0; }
 
 // The state-1 reset the steps end with: +1 = 1, +2 = +3 = 0 (each through
 // Sprite_Current read again, as the originals store).

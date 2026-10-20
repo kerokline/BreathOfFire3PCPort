@@ -58,10 +58,10 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* M() { return SuddenDeath_CurrentMote; }
 unsigned char* MoteAt(unsigned i) { return SuddenDeath_Motes + i * kMoteStride; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(DamageScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(DamageScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(DamageScratch_addr + k), v & 0xFFFF); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 

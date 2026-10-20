@@ -416,7 +416,7 @@ extern "C" void __cdecl BattleBanner_Dispatch(void) {
             if (entry[0] == 0) continue;
             if (entry[3] != layer) continue;
             if (BattleMisc_BannerKinds & entry[1]) continue;
-            At(DamageScratch_addr)[0] = static_cast<unsigned char>(i);
+            DamageScratch.b_00 = static_cast<unsigned char>(i);
             const U kind = entry[1];
             if (kind >= 5) bof3::Fatal("banner entry %u has kind %u; the original's stack table holds five", i, kind);
             g.banner[kind]();
