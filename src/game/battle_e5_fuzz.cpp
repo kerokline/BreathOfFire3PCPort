@@ -23,6 +23,7 @@
 #include "game/battle_e5_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -188,7 +189,7 @@ U DragonTaskEffect(const U*, U) {
 // its maximum) and clear it after the pop-up: the pop-ups' stand-ins note the
 // byte as they are called, so the mark is compared, not wiped.
 U PopupEffect(const U*, U answer) {
-    bh::Note(bh::Pointer(0x904B40)[8]);
+    bh::Note(bh::Pointer(BattleSprites_Action_addr)[8]);
     return answer;
 }
 
@@ -261,12 +262,9 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     const U* v = often.begin();
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
-unsigned char* Enemy(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned n) { return Mem(Battle_Enemies_addr + (n % 8) * at::kEnemyStride); }
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
 unsigned char* Win(U window) { return Mem(window); }
-records::BattleEnemy* EnemyRec(unsigned n) { return reinterpret_cast<records::BattleEnemy*>(Enemy(n)); }
-records::PartyMember* MemberRec(unsigned n) { return reinterpret_cast<records::PartyMember*>(Member(n)); }
-records::WindowRecord* WinRec(U window) { return reinterpret_cast<records::WindowRecord*>(Win(window)); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 
 // The keys: the confirm and cancel masks single bits, the pressed word one of
@@ -309,17 +307,17 @@ void DragonFrame() {
     Mem(BattleActions_ApCost_addr)[0] = Byte({0, 1, 8, 0x20, 0xFF});
     SetWord(Mem(at::kAsk), Word16({0, 1, 2, 0x100}));
     Slots();
-    Cursor(BattleE4_Slots_addr, 4, 3);
-    Cursor(BattleE4_Hand_addr, 10, 3);
-    for (U w : {at::kWin4, BattleE4_List_addr, BattleE4_Cands_addr, BattleE4_Slots_addr, BattleE4_Hand_addr, BattleE4_Above_addr}) {
-        WinRec(w)->in_use = static_cast<unsigned char>(bh::Half() ? WinRec(w)->in_use & 0xFE : WinRec(w)->in_use | 1);
-        WinRec(w)->state = Byte({0, 0, 1, 2});
+    Cursor(Window18_addr, 4, 3);
+    Cursor(Window19_addr, 10, 3);
+    for (U w : {WindowRecords_addr + 0x90, Window16_addr, Window17_addr, Window18_addr, Window19_addr, Window21_addr}) {
+        rv::As<records::WindowRecord>(Win(w))->in_use = static_cast<unsigned char>(bh::Half() ? rv::As<records::WindowRecord>(Win(w))->in_use & 0xFE : rv::As<records::WindowRecord>(Win(w))->in_use | 1);
+        rv::As<records::WindowRecord>(Win(w))->state = Byte({0, 0, 1, 2});
     }
-    SetWord(Win(BattleE4_Slots_addr) + 4, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
-    SetWord(Win(BattleE4_Hand_addr) + 4, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Win(Window18_addr))->x, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Win(Window19_addr))->x, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
     unsigned char* const actor = bh::Pointer(BattleE4_MenuActor_addr);
     actor[5] = Byte({0, 1, 2});
-    SetWord(Member(actor[5]) + 0x9A, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
+    rv::Store<unsigned>(rv::As<records::PartyMember>(Member(actor[5]))->ap, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
     SetWord(actor + 0x9A, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
 }
 
@@ -328,18 +326,18 @@ void Seed(unsigned k) {
     switch (c.base) {
     case 0x44B240: {   // EnemyAI_OtherRowsDone: the enemy's script in the area block, rows 0x63 or not
         g_enemy = bh::Next() % 8;   // the callers' loop 0..7; past the eight the objects run off the image's end 0x93F000
-        auto* const enemy_rec = EnemyRec(g_enemy);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(g_enemy));
         enemy_rec->data_id = static_cast<unsigned char>(bh::Next() % 7);
         for (unsigned i = 0; i < 4; ++i)
             Mem(at::kAiScripts + enemy_rec->data_id * 0x8C + i * 16)[0] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? 0x63 : bh::Next());
         break;
     }
     case 0x44B320: {   // EnemyAI_CondElement: +0x108, the acting kind, the actor, the ability, the weapons
-        SetWord(bh::Pointer(BattleE3_CurrentEnemy_addr) + 0x108, Word16({0, 0, 1, 0x100}));
+        rv::Store<unsigned>(rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr))->hp_change, Word16({0, 0, 1, 0x100}));
         Mem(at::kActingKind)[0] = Byte({4, 4, 1, 1, 0, 2, 5, 0x81});
         Mem(at::kActor)[0] = Byte({0, 1, 2, 3, 0x80});
         SetWord(Mem(at::kAbility), Word16({0, 1, 0x10, 0x4E, 0xA3, 0xC0}));
-        for (unsigned m = 0; m < 3; ++m) MemberRec(m)->weapon = static_cast<unsigned char>(bh::Next() % 0x80);
+        for (unsigned m = 0; m < 3; ++m) rv::As<records::PartyMember>(Member(m))->weapon = static_cast<unsigned char>(bh::Next() % 0x80);
         break;
     }
     case 0x44B3A0: {   // EnemyAI_ApplyAction: the row (kind 0..8 and past), HP, the message count at its end
@@ -362,8 +360,8 @@ void Seed(unsigned k) {
             unsigned char* const e = Enemy(n);
             for (U at_ : {0xA4u, 0xA6u, 0xD4u, 0xD6u, 0xD8u, 0xDAu, 0x98u})
                 SetWord(e + at_, Word16({0, 1, 99, 100, 999, 1000, 9999, 0xFFFF}));
-            SetWord(e + 0xD0, Word16({0, 99, 100, 999, 0xFFFF}));
-            SetWord(e + 0xD2, Word16({0, 99, 100, 999, 0xFFFF}));
+            rv::Store<unsigned>(rv::As<records::BattleEnemy>(e)->base_max_hp, Word16({0, 99, 100, 999, 0xFFFF}));
+            rv::Store<unsigned>(rv::As<records::BattleEnemy>(e)->base_max_ap, Word16({0, 99, 100, 999, 0xFFFF}));
         }
         break;
     }
@@ -374,7 +372,7 @@ void Seed(unsigned k) {
             q[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 11);
             SetWord(q + 2, Word16({1, 2, 3, 2}));
         }
-        for (unsigned n = 0; n < 11; ++n) Mem(at::kEnemies + n * at::kEnemyStride + 0x8C)[0] = Byte({0, 1, 1, 2});
+        for (unsigned n = 0; n < 11; ++n) Mem(Battle_Enemies_addr + n * at::kEnemyStride + 0x8C)[0] = Byte({0, 1, 1, 2});
         break;
     }
     case 0x44C3D0:
@@ -383,7 +381,7 @@ void Seed(unsigned k) {
         Mem(at::kTarget)[0] = static_cast<unsigned char>(bh::Next() % 11);   // 0..10: past 10 the objects run off the image
         Mem(at::kActor)[0] = static_cast<unsigned char>(bh::Next() % 11);
         for (unsigned m = 0; m < 3; ++m) {
-            auto* const member = MemberRec(m);
+            auto* const member = rv::As<records::PartyMember>(Member(m));
             member->flags_130 = static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u);
             const U max_hp = Word16({1, 100, 999, 9999}), max_ap = Word16({1, 50, 999});
             member->max_hp = max_hp;
@@ -392,7 +390,7 @@ void Seed(unsigned k) {
             member->ap = bh::Half() ? max_ap - bh::Next() % 4 : bh::Next();
         }
         for (unsigned n = 0; n < 8; ++n) {
-            auto* const enemy_rec = EnemyRec(n);
+            auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(n));
             enemy_rec->flags_110 = static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u);
             const U max_hp = Word16({1, 100, 999, 9999}), max_ap = Word16({1, 50, 999});
             enemy_rec->max_hp = max_hp;
@@ -464,7 +462,7 @@ void Disturb(U h) {
     case 5: Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(b % 5); break;
     case 6: Mem(at::kMsgCount)[0] = b; break;
     case 7: SetWord(Mem(at::kAsk), b & 3); break;
-    case 8: SetWord(Mem(b & 1 ? BattleE4_Slots_addr + 0x10 : BattleE4_Hand_addr + 0x10), (b >> 1) % 4); break;
+    case 8: SetWord(Mem(b & 1 ? Window18_addr + 0x10 : Window19_addr + 0x10), (b >> 1) % 4); break;
     case 9: Mem(at::kTarget)[0] = static_cast<unsigned char>(b % 11); break;
     case 10: Mem(at::kActor)[0] = static_cast<unsigned char>(b % 11); break;
     default:

@@ -252,7 +252,7 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
         MapView_BuildFlags |= 1;
         return;
     }
-    short* const s = Prim_VertexScratch;
+    short* const s = reinterpret_cast<short*>(Prim_VertexScratch);
     s[0] = static_cast<short>((static_cast<std::uint32_t>(cell[0]) << 7) - 0x4040u);
     s[1] = static_cast<short>((static_cast<std::uint32_t>(cell[1]) << 7) - 0x4040u);
     unsigned char* corner = Corners() + (cell[1] * Width() + cell[0]) * 4u;
@@ -356,9 +356,9 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
                (Draw_OtSlot == 6 || (Draw_OtSlot == 4 && static_cast<int>(layer) > threshold))) {
         // The draw table, keyed by layer and the cell's lowest corner (each
         // byte's sign flipped, so the lowest s8 is the smallest byte). Each
-        // new minimum passes through DamageScratch's byte, as the original
+        // new minimum passes through SharedScratch's byte, as the original
         // keeps it there.
-        auto* const scratch = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(bof3::addr::DamageScratch));
+        auto* const scratch = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(SharedScratch_addr));
         const unsigned char* const c = MapView_CornerPtr;
         *scratch = static_cast<unsigned char>(c[0] ^ 0x80);
         for (unsigned k = 1; k < 4; ++k) {
@@ -459,7 +459,7 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
 //     count and for the next row's first column - Scratch_Swap being the
 //     game's all-purpose temporary, anything a cell's callees leave there
 //     changes the view;
-//   - the draw-table key's minimum passes through DamageScratch's byte, and
+//   - the draw-table key's minimum passes through SharedScratch's byte, and
 //     a cell's corner pointer through MapView_CornerPtr, both globals;
 //   - the side items are allocated only for a new item, and an item's +0x7E
 //     and +0x8E are otherwise used as they stand;

@@ -229,7 +229,7 @@ whole.
 `0x903850`. Read to its end (2026-09-22, `0x2A0` bytes, no calls, every jump
 internal) it is not: it shares the grid and cell lookup and the corner sums,
 but returns **how steep the ground is**, and stores in scratch byte 0
-(`DamageScratch`, the PSX scratchpad's first byte) 1 for sloped and 0 for
+(`SharedScratch`, the PSX scratchpad's first byte) 1 for sloped and 0 for
 flat or outside the grid. The three callers read (`0x46B611`, `0x518784`,
 `MoveCmd_Move` `0x578CC3`) test that byte straight after the call.
 

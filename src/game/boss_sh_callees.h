@@ -44,7 +44,7 @@ using U = std::uint32_t;
 constexpr U kFlags = 0x904AA8;            // u16: the round flags (bit 1 cleared by Gaist's hook, bit 2 the action's done flag, bit 15 read)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (set-up 34: bit 0 the member put first, bit 1 the ability given)
 constexpr U kRoundSlot = 0x904AE2;        // u8: the turn order's cursor (0x446700 decrements it)
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bit 3 set by set-up 34's end hook
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bit 3 set by set-up 34's end hook
 constexpr U kActor = 0x904B34;            // u8: the acting actor (0..2 a member, 3..10 an enemy)
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (battle_actions.md)
 constexpr U kAction = 0x904B40;           // unsigned char *: the action record set-up 34's hook writes +1 and +2 of
@@ -58,23 +58,23 @@ constexpr U kWord80 = 0x904B80;           // u16: set to 0x40 beside the action 
 constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
 
 // --- set-up 34's member pick ------------------------------------------------------
-// kPickId: now MoveScript_EffectState[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
+// kPickId: now Character_IndexById[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
 // kPicked: now BossSh_Picked (symbols.toml). u8 (read once as a dword): the member whose +0x148 matched; only set-up 34 writes it
-// kPartyTag: now Field_Members (symbols.toml). member 0's +0x148 (ObjTrio stride 0x14C; symbols.toml's Field_Members)
+// kPartyTag: now ObjTrio (symbols.toml). member 0's +0x148, ObjTrio[0].char_index (stride 0x14C; Field_Members until stage C4)
 // kParty: now ObjTrio (symbols.toml). ObjTrio
 constexpr U kPartyStride = 0x14C;
-// kPartyFlags91: now ObjTrio[0x91] (symbols.toml). member 0's +0x91 (bit 0x20 read by set-up 34's event hook)
+// kPartyFlags91: now ObjTrio_addr + 0x91 (symbols.toml). member 0's +0x91 (bit 0x20 read by set-up 34's event hook)
 
 // --- the enemies (0x93B960 + n * 0x128) ---------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
-constexpr U kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr U kEnemyStride = 0x128;
 // kEnemy0X: now BossSb_Enemy0Pose (symbols.toml). enemy 0's word +0x58 (set-up 34's exit copies it)
-// kEnemy0Y: now BossSh_Enemy0Y (symbols.toml). enemy 0's word +0x5A
+// kEnemy0Y: now Battle_Enemies[0].frame_word (symbols.toml). enemy 0's word +0x5A
 constexpr U kEnemyDataCount9 = 0x8C5652;  // the area's enemy data records' byte +0x8A (stride 0x8C): the count step 4 starts with
 
 // --- the effect task slots (BattleTask_Create's) -----------------------------------
-constexpr U kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 

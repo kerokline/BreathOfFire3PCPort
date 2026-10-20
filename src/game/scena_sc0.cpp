@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc0_callees.h"
 #include "game/scenario_harness.h"
@@ -40,7 +41,7 @@ void SetL(uint32_t a, uint32_t v) { move_script::SetLong(At(a), static_cast<int3
 void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<int32_t>(v)); }
 
 // The chapter's flag row, as the original reads it: the pointer afresh.
-unsigned char* Row() { return At(AreaW0c_FlagRow); }
+unsigned char* Row() { return At(Chapter_FlagRow); }
 
 constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
 
@@ -63,14 +64,13 @@ uint32_t CodeAt(uint32_t table, int index, const char* who) {
 // as the original reads it (a dword masked to its byte).
 bool TakeSlot() {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    B(kSlot) = slot;
+    kSlot = slot;
     return slot != 0xFF;
 }
-unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<uint32_t>(B(kSlot)) << 7)); }
+unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<std::uint32_t>(kSlot) << 7)); }
 
-// The typed views of the record pointers (docs/typed-records.md). Fx() is an
-// effect object (Effect_Objects).
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// The record views (game/record_views.h): rv::As<records::EffectObject>(p) is
+// given effect objects (Effect_Objects).
 
 // A kind-0x13 effect at (x, y, z) with +9 = mode: the shape every run of this
 // chapter places after TakeSlot.
@@ -155,6 +155,9 @@ extern "C" void __cdecl Scena00_Start(void) {
 // 1) the pass flags 0, the flag, state 2 and run 3 and return; else
 // Party_DropIn(0) and run 9.
 extern "C" void __cdecl Scena00_EnterArea(void) {
+    auto* const obj0 = Sprite_Objects;
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
+    auto* const xobj3 = &Sprite_ObjectsExtra[3];
     if (Game_AreaNumber == 1) {
         SH_CALL(Party_DropIn)(0);
         const unsigned char n = B(kByte4A);
@@ -164,19 +167,19 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
                 unsigned char* const e = SlotRecord();
                 e[0] = 1;
                 e[5] = 0x10;
-                SetL(e + 0x18, 2);
-                SetL(e + 0x1C, 2);
-                Fx(e)->step_x = 3;
-                Fx(e)->step_z = 1;
+                rv::Store<uint32_t>(rv::As<records::EffectObject>(e)->work_18, 2);   // the kind's own dwords +0x18 / +0x1C
+                rv::Store<uint32_t>(rv::As<records::EffectObject>(e)->work_1c, 2);
+                rv::As<records::EffectObject>(e)->step_x = 3;
+                rv::As<records::EffectObject>(e)->step_z = 1;
             }
             const unsigned char again = B(kByte4A);
             Camera_Angles[2] = static_cast<std::uint16_t>(Camera_Angles[2]) + 0xFEABu;
             clear = again != 3;
         } else if (n == 3) {
             Camera_Angles[2] = static_cast<std::uint16_t>(Camera_Angles[2]) + 0x155u;
-            SetL(0x802204, 1);
-            SetL(0x802208, 4);
-            B(0x8021ED) = 7;
+            rv::Store<uint32_t>(xobj3->work_18, 1);
+            rv::Store<uint32_t>(xobj3->work_1c, 4);
+            xobj3->state = 7;
             clear = false;
         } else {
             clear = true;
@@ -203,10 +206,10 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
     }
     SH_CALL(Scena00_Area18)();
     if (Game_AreaNumber == 0x19) {
-        SetL(0x7DEE98, 2);
-        SetL(0x7DEE9C, 2);
-        SetL(0x802160, 1);
-        SetL(0x802164, 3);
+        rv::Store<uint32_t>(obj0->work_18, 2);
+        rv::Store<uint32_t>(obj0->work_1c, 2);
+        rv::Store<uint32_t>(xobj2->work_18, 1);
+        rv::Store<uint32_t>(xobj2->work_1c, 3);
         SH_CALL(Sound_PlayEffect)(0x200);
         Run(0xB);
         Timer(0x14);
@@ -239,6 +242,7 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
 // flag. Else once (flag 10): the flag, Party_DropIn(0), the kind-2 object to
 // (0x260000, 0x1B8000).
 extern "C" void __cdecl Scena00_Area02(void) {
+    auto* const member0 = ObjTrio;
     if (Game_AreaNumber != 2) return;
     if (SH_CALL(Flags_Test)(Row(), 2) == 0) {
         SetL(kCounter, 0);
@@ -248,8 +252,8 @@ extern "C" void __cdecl Scena00_Area02(void) {
         if (TakeSlot()) Kind13(Camera_Angles[0] - 0xAA, Camera_Angles[1], Camera_Angles[2], 0x40);
         SH_CALL(ObjTrio_SetBit40)();
         unsigned char* const row = Row();
-        SetL(0x802D74, 0x330000);
-        SetL(0x802D78, 0x400000);
+        rv::Store<uint32_t>(member0->x, 0x330000);
+        rv::Store<uint32_t>(member0->z, 0x400000);
         SH_CALL(Flags_Set)(row, 2);
         return;
     }
@@ -337,7 +341,7 @@ extern "C" void __cdecl Scena00_Run(void) {
 extern "C" void __cdecl Scena00_Run2(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SH_CALL(Msg_OpenScript)(0x10);
         Field_Request = 2;
         SH_CALL(Music_Play)(6, 8);
@@ -362,7 +366,7 @@ extern "C" void __cdecl Scena00_Run2(void) {
         Step(3);
         return;
     case 3:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         SH_CALL(Msg_OpenScript)(0x11);
         Field_Request = 2;
@@ -386,7 +390,7 @@ extern "C" void __cdecl Scena00_Run2(void) {
     case 7:
         if (B(kByte4B) != 0x60) return;
         SH_CALL(Field_ChangeArea)(0x1F, 0x70000, 0x140000, 0);
-        B(0x937F98) = 0xFF;
+        Area_EnterTransition = 0xFF;
         SH_CALL(Music_FadeOutStop)(0x40);
         Run(3);
         Step(0);
@@ -401,6 +405,8 @@ extern "C" void __cdecl Scena00_Run2(void) {
 // sprite and the kind-2 sprite 0x1E0000 back, 0x7E068A back 0x1E, the focus
 // to 0x6200, then the view shift (a tail jump in the original).
 extern "C" void __cdecl Scena00_Run3(void) {
+    auto* const kind2 = &Sprite_Kind2;
+    auto* const xobj0 = Sprite_ObjectsExtra;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (B(kByte4A) != 0x30) return;
@@ -415,13 +421,13 @@ extern "C" void __cdecl Scena00_Run3(void) {
             return;
         }
         if (static_cast<std::uint32_t>(MapView_FocusZ) != 0x4400) return;
-        const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = L(0x802038);
-        SetW(0x7E068A, W(0x7E068A) - 0x1Eu);
+        const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = static_cast<uint32_t>(xobj0->z);
+        MapView_Origin[1] = static_cast<std::uint16_t>(MapView_Origin[1]) - 0x1Eu;
         Field_Kind2Z = z - 0x1E0000;
-        const uint32_t k = L(0x7E0978);
+        const uint32_t k = static_cast<uint32_t>(kind2->z);
         MapView_FocusZ = 0x6200;
-        SetL(0x802038, s - 0x1E0000);
-        SetL(0x7E0978, k - 0x1E0000);
+        rv::Store<uint32_t>(xobj0->z, s - 0x1E0000);
+        rv::Store<uint32_t>(kind2->z, k - 0x1E0000);
         ViewShift();
         return;
     }
@@ -449,7 +455,7 @@ extern "C" void __cdecl Scena00_Run3(void) {
 extern "C" void __cdecl Scena00_Run4(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SH_CALL(Msg_OpenScript)(1);
         Field_Request = 2;
         Step(1);
@@ -511,7 +517,7 @@ extern "C" void __cdecl Scena00_Run4(void) {
         Step(9);
         return;
     case 9:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         SH_CALL(Msg_OpenScript)(4);
         Field_Request = 2;
@@ -536,6 +542,9 @@ extern "C" void __cdecl Scena00_Run4(void) {
 // Scena00_Shake[frame & 15] * 4 while 0x90384A counts down; 14 shakes the
 // sprite records' +0x34 / +0x38 by the table's value << 11.
 extern "C" void __cdecl Scena00_Run5(void) {
+    auto* const member0 = ObjTrio;
+    auto* const obj2 = &Sprite_Objects[2];
+    auto* const xobj0 = Sprite_ObjectsExtra;
     uint32_t frame = Frame_Counter;
     if (static_cast<unsigned char>(MoveScript_PartyRecords[0x65] - 4) < 3 && (frame & 0xF) == 0) {
         const int r = SH_CALL(Rand)();
@@ -560,7 +569,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
         const std::uint16_t t = W(kTimer);
         if (t == 0) {
             Camera_Distance = 0;
-            B(0x905E69) = 2;   // MapView_Redraw
+            MapView_Redraw = 2;
             Step(3);
             return;
         }
@@ -585,7 +594,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
         const unsigned char n = B(kByte4A);
         if (n == 0) return;
         const auto d = static_cast<std::uint16_t>(static_cast<signed char>(B(kShake + (frame & 0xF))) * 4);
-        SetW(0x80203E, W(0x80203E) + d);
+        rv::Store<unsigned>(xobj0->height_whole, static_cast<std::uint16_t>(xobj0->height_whole) + d);
         B(kByte4A) = static_cast<unsigned char>(n - 1);
         return;
     }
@@ -598,7 +607,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
         if (n == 0) return;
         B(kByte4A) = static_cast<unsigned char>(n - 1);
         const auto d = static_cast<std::uint16_t>(static_cast<signed char>(B(kShake + (frame & 0xF))) * 4);
-        SetW(0x80203E, W(0x80203E) + d);
+        rv::Store<unsigned>(xobj0->height_whole, static_cast<std::uint16_t>(xobj0->height_whole) + d);
         return;
     }
     case 6: {
@@ -610,10 +619,10 @@ extern "C" void __cdecl Scena00_Run5(void) {
             unsigned char* const e = SlotRecord();
             e[0] = 1;
             e[5] = 0x1E;
-            Fx(e)->x = L(0x802D74);
-            Fx(e)->z = L(0x802D78);
-            const long y = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(Fx(e)->x)), static_cast<long>(static_cast<uint32_t>(Fx(e)->z)));
-            Fx(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))) << 16;
+            rv::As<records::EffectObject>(e)->x = static_cast<uint32_t>(member0->x);
+            rv::As<records::EffectObject>(e)->z = static_cast<uint32_t>(member0->z);
+            const long y = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x)), static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->z)));
+            rv::As<records::EffectObject>(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))) << 16;
             e[0x29] = 0;
         }
         const unsigned char c = B(kCounter);
@@ -633,7 +642,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
     case 8:
         if (W(kTimer) != 0) {
             Timer(W(kTimer) - 1u);
-            if (MoveScript_WaitWordDA != 0) return;
+            if (Transition_Busy != 0) return;
             Draw_PassFlags = 0;
             return;
         }
@@ -653,12 +662,12 @@ extern "C" void __cdecl Scena00_Run5(void) {
         }
         SH_CALL(Flags_Set)(Row(), 4);
         SH_CALL(Field_ChangeArea)(0x18, 0x630000, 0x110000, 3);
-        B(0x937F98) = 9;
-        B(0x904EE0) = 0xFF;
+        Area_EnterTransition = 9;
+        ModeFlow_AreaTransition = 0xFF;
         Step(0xB);
         return;
     case 0xB:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         B(kCounter) = 1;
         Step(0xC);
         return;
@@ -679,17 +688,17 @@ extern "C" void __cdecl Scena00_Run5(void) {
             return;
         }
         const uint32_t k = MoveScript_PartyRecords[0x66] & 0xF;
-        const uint32_t z = L(0x7DF000);
+        const uint32_t z = static_cast<uint32_t>(obj2->z);
         const uint32_t d = static_cast<uint32_t>(static_cast<int32_t>(static_cast<signed char>(B(kShake + k)))) << 11;
-        const uint32_t x = L(0x7DEFFC) + d;
+        const uint32_t x = static_cast<uint32_t>(obj2->x) + d;
         Timer(W(kTimer) - 1u);
-        SetL(0x7DEFFC, x);
-        SetL(0x7DF000, z - d);
+        rv::Store<uint32_t>(obj2->x, x);
+        rv::Store<uint32_t>(obj2->z, z - d);
         return;
     }
     case 0xF: {
         if (B(kCounter) != 7) return;
-        const uint32_t z = L(0x802D78), x = L(0x802D74);
+        const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 1);
         EventBattle(1);
         SH_CALL(Flags_Set)(Row(), 5);
@@ -718,11 +727,12 @@ extern "C" void __cdecl Scena00_Run5(void) {
 // and step 0 - 0xD counts before the call, 0x17 / 0x21 after); 0x32 goes to
 // area 0x1F. Every other step to 0x32 nothing.
 extern "C" void __cdecl Scena00_Run6(void) {
+    auto* const member0 = ObjTrio;
     const unsigned step = MoveScript_PartyRecords[0x65];
     if (step > 0x32) return;
     switch (step) {
     case 0:
-        Step(B(kStartSteps + Cond_ByteFD));
+        Step(B(Scena00_StartSteps_addr + Cond_ByteFD));
         return;
     case 0xA:
         SH_CALL(ScriptFlags_Set40)();
@@ -732,7 +742,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         return;
     case 0xB: {
         if (B(kCounter) != 0xB) return;
-        const uint32_t z = L(0x802D78), x = L(0x802D74);
+        const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 4);
         EventBattle(4);
         Step(0xC);
@@ -745,7 +755,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         Run(0);
         return;
     case 0x14:
-        if (ObjTrio[1] == 2) return;
+        if (ObjTrio[0].state == 2) return;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Party_DropIn)(4);
         SH_CALL(Flags_Set)(Row(), 8);
@@ -753,7 +763,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         return;
     case 0x15: {
         if (B(kCounter) != 5) return;
-        const uint32_t z = L(0x802D78), x = L(0x802D74);
+        const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 5);
         EventBattle(5);
         Step(0x16);
@@ -768,7 +778,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         return;
     }
     case 0x1E:
-        if (ObjTrio[1] == 2) return;
+        if (ObjTrio[0].state == 2) return;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Party_DropIn)(5);
         SH_CALL(Flags_Set)(Row(), 9);
@@ -776,7 +786,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         return;
     case 0x1F: {
         if (B(kCounter) != 4) return;
-        const uint32_t z = L(0x802D78), x = L(0x802D74);
+        const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 6);
         EventBattle(6);
         Step(0x20);
@@ -784,7 +794,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
     }
     case 0x32:
         SH_CALL(Field_ChangeArea)(0x1F, 0x40000, 0x240000, 1);
-        B(0x904CD0) = 4;
+        AreaW1f_MusicCurrent = 4;
         Run(0);
         Step(0);
         return;
@@ -801,6 +811,8 @@ extern "C" void __cdecl Scena00_Run6(void) {
 // 0x20-frame pull (distance - 0x24 a frame); music 4 on the counter 0x24;
 // area 0x1F on 0x25.
 extern "C" void __cdecl Scena00_Run7(void) {
+    auto* const kind2 = &Sprite_Kind2;
+    auto* const member0 = ObjTrio;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         B(kCounter) = 0xA;
@@ -810,7 +822,7 @@ extern "C" void __cdecl Scena00_Run7(void) {
         return;
     case 1: {
         if (B(kCounter) != 0xD) return;
-        const uint32_t z = L(0x802D78), x = L(0x802D74);
+        const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 7);
         EventBattle(7);
         Step(2);
@@ -827,12 +839,12 @@ extern "C" void __cdecl Scena00_Run7(void) {
         B(kCounter) = 0x1E;
         Draw_PassFlags = 0x1F;
         SH_CALL(Transition_Start)(3);
-        SetL(0x7E0974, 0x2F0000);
+        rv::Store<uint32_t>(kind2->x, 0x2F0000);
         Field_Kind2X = 0x2F0000;
-        SetL(0x7E0978, 0x1D0000);
+        rv::Store<uint32_t>(kind2->z, 0x1D0000);
         Field_Kind2Z = 0x1D0000;
         SH_CALL(Field_ViewReset)();
-        SetL(0x7E097C, 0x5800000);
+        rv::Store<uint32_t>(kind2->height, 0x5800000);
         SH_CALL(MapView_SetElevation)(0x580);
         Camera_Angles[0] = 0xFCF6;
         Camera_Angles[2] = 0x180;
@@ -841,11 +853,11 @@ extern "C" void __cdecl Scena00_Run7(void) {
         Step(5);
         return;
     case 5:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Timer(W(kTimer) - 1u);
         if (W(kTimer) != 0) return;
         SH_CALL(Kind2_Place)(2);
-        SetL(0x7E097C, 0x5800000);
+        rv::Store<uint32_t>(kind2->height, 0x5800000);
         SH_CALL(MapView_SetElevation)(0x580);
         if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFD56u), Camera_Angles[1], 0x200, 0x20);
         Timer(0x20);
@@ -915,6 +927,7 @@ extern "C" void __cdecl Scena00_Run9(void) {
 // coordinates, and at 0x90384A 3 after the timer area 1; the camera turned to
 // 0xF, then 0x90384A 4; at 9 script flag bit 7 cleared, area 0x19 and run 11.
 extern "C" void __cdecl Scena00_Run10(void) {
+    auto* const xobj3 = &Sprite_ObjectsExtra[3];
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (TurnCamera(0x2D, 0xA) != 0) return;
@@ -923,8 +936,8 @@ extern "C" void __cdecl Scena00_Run10(void) {
         return;
     case 1:
         if (B(kByte4A) & 1) {
-            SetL(0x802220, (static_cast<uint32_t>(SH_CALL(Rand)() & 7) + 0x69D) << 10);
-            SetL(0x802224, (static_cast<uint32_t>(SH_CALL(Rand)() & 7) + 0x55D) << 10);
+            rv::Store<uint32_t>(xobj3->x, (static_cast<uint32_t>(SH_CALL(Rand)() & 7) + 0x69D) << 10);
+            rv::Store<uint32_t>(xobj3->z, (static_cast<uint32_t>(SH_CALL(Rand)() & 7) + 0x55D) << 10);
         }
         if (B(kByte4A) != 3) return;
         if (W(kTimer) != 0) {
@@ -957,23 +970,24 @@ extern "C" void __cdecl Scena00_Run10(void) {
 // and down / up (0x4000 / 0x1000), the sprite words 0x8021AC / 0x8021B0 by
 // 0x40 with them, then sound 0x204.
 extern "C" void __cdecl Scena00_Steer(void) {
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
     move_script::SetWord(Corner("Scena00_Steer"), 0);
     if (B(kInput + 1) & 0x20) {
         SetW(L(kCorner), W(L(kCorner)) + 2u);
-        SetL(0x8021AC, L(0x8021AC) + 0x40);
+        rv::Store<uint32_t>(xobj2->angle[0], static_cast<uint32_t>(xobj2->angle[0]) + 0x40);
     }
     if (B(kInput + 1) & 0x80) {
         SetW(L(kCorner), W(L(kCorner)) - 2u);
-        SetL(0x8021AC, L(0x8021AC) - 0x40);
+        rv::Store<uint32_t>(xobj2->angle[0], static_cast<uint32_t>(xobj2->angle[0]) - 0x40);
     }
     SetW(L(kCorner) + 2, 0);
     if (B(kInput + 1) & 0x40) {
         SetW(L(kCorner) + 2, W(L(kCorner) + 2) + 2u);
-        SetL(0x8021B0, L(0x8021B0) + 0x40);
+        rv::Store<uint32_t>(xobj2->angle[1], static_cast<uint32_t>(xobj2->angle[1]) + 0x40);
     }
     if (B(kInput + 1) & 0x10) {
         SetW(L(kCorner) + 2, W(L(kCorner) + 2) - 2u);
-        SetL(0x8021B0, L(0x8021B0) - 0x40);
+        rv::Store<uint32_t>(xobj2->angle[1], static_cast<uint32_t>(xobj2->angle[1]) - 0x40);
     }
     SH_CALL(Sound_PlayEffect)(0x204);
 }
@@ -986,17 +1000,23 @@ extern "C" void __cdecl Scena00_Steer(void) {
 // animating sprite 0 through Scena00_InputAnims), a random wobble of the
 // corner words, and at the end area 9 with ObjTrio 0's +0x24 bit 5 cleared.
 extern "C" void __cdecl Scena00_Run11(void) {
+    auto* const kind2 = &Sprite_Kind2;
+    auto* const member0 = ObjTrio;
+    auto* const obj0 = Sprite_Objects;
+    auto* const xobj0 = Sprite_ObjectsExtra;
+    auto* const xobj1 = &Sprite_ObjectsExtra[1];
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
     if ((B(0x937F94) & 0x1F) == 0) B(kByte4B) = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
     if (B(kByte4A) < 0x14 && static_cast<std::uint32_t>(MapView_FocusZ) == 0x5000) {
-        const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = L(0x802038);
-        SetW(0x7E068A, W(0x7E068A) + 0x20u);
+        const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = static_cast<uint32_t>(xobj0->z);
+        MapView_Origin[1] = static_cast<std::uint16_t>(MapView_Origin[1]) + 0x20u;
         Field_Kind2Z = z + 0x200000;
-        const uint32_t s2 = L(0x8020DC);
-        SetL(0x802038, s + 0x200000);
-        const uint32_t k = L(0x7E0978);
+        const uint32_t s2 = static_cast<uint32_t>(xobj1->z);
+        rv::Store<uint32_t>(xobj0->z, s + 0x200000);
+        const uint32_t k = static_cast<uint32_t>(kind2->z);
         MapView_FocusZ = 0x3000;
-        SetL(0x8020DC, s2 + 0x200000);
-        SetL(0x7E0978, k + 0x200000);
+        rv::Store<uint32_t>(xobj1->z, s2 + 0x200000);
+        rv::Store<uint32_t>(kind2->z, k + 0x200000);
         ViewShift();
     }
     switch (MoveScript_PartyRecords[0x65]) {
@@ -1032,9 +1052,9 @@ extern "C" void __cdecl Scena00_Run11(void) {
         return;
     }
     case 5: {
-        if (L(0x8021AC) != 0 || L(0x8021B0) != 0) {
-            SetL(0x8021AC, 0);
-            SetL(0x8021B0, 0);
+        if (static_cast<uint32_t>(xobj2->angle[0]) != 0 || static_cast<uint32_t>(xobj2->angle[1]) != 0) {
+            rv::Store<uint32_t>(xobj2->angle[0], 0);
+            rv::Store<uint32_t>(xobj2->angle[1], 0);
         }
         bool check = true;
         if (B(kInput + 1) & 0xF0) {
@@ -1045,8 +1065,8 @@ extern "C" void __cdecl Scena00_Run11(void) {
             const uint32_t i = (static_cast<std::uint32_t>(Input_Pressed) >> 12) << 1;
             if (B(kInputAnims + i) != 0) {
                 const unsigned char animation = B(kInputAnims + i + 1);
-                Sprite_Current = Sprite_Objects;
-                B(0x7DEE88) = animation;
+                Sprite_Current = rv::Bytes(Sprite_Objects);
+                obj0->direction = animation;
                 EnsureAnimation(animation);
             }
         } else {
@@ -1080,18 +1100,18 @@ extern "C" void __cdecl Scena00_Run11(void) {
             SetW(L(kCorner) + 2, static_cast<unsigned>((r & 7) - 3));
         }
         const uint32_t p = L(kCorner);
-        SetL(0x8021AC, S(p) >= 0 ? 0x40u : 0xFFFFFFC0u);
-        SetL(0x8021B0, S(p + 2) >= 0 ? 0x40u : 0xFFFFFFC0u);
+        rv::Store<uint32_t>(xobj2->angle[0], S(p) >= 0 ? 0x40u : 0xFFFFFFC0u);
+        rv::Store<uint32_t>(xobj2->angle[1], S(p + 2) >= 0 ? 0x40u : 0xFFFFFFC0u);
         if ((B(0x937F94) & 3) == 0) {
-            const auto animation = static_cast<unsigned char>((B(0x7DEE88) + 1) & 3);
-            Sprite_Current = Sprite_Objects;
-            B(0x7DEE88) = animation;
+            const auto animation = static_cast<unsigned char>((obj0->direction + 1) & 3);
+            Sprite_Current = rv::Bytes(Sprite_Objects);
+            obj0->direction = animation;
             EnsureAnimation((p & 0xFFFFFF00u) | animation);
         }
         SH_CALL(Sound_PlayEffect)(0x204);
         if (B(kByte4A) != 0x15) return;
-        SetL(0x8021AC, 0);
-        SetL(0x8021B0, 0);
+        rv::Store<uint32_t>(xobj2->angle[0], 0);
+        rv::Store<uint32_t>(xobj2->angle[1], 0);
         Step(7);
         return;
     }
@@ -1104,11 +1124,11 @@ extern "C" void __cdecl Scena00_Run11(void) {
         Step(9);
         return;
     case 9: {
-        if (MoveScript_WaitWordDA != 0) return;
-        const auto bits = static_cast<unsigned char>(B(0x802D64) & 0xDF);
+        if (Transition_Busy != 0) return;
+        const auto bits = static_cast<unsigned char>(member0->draw_flags & 0xDF);
         Field_ScriptFlags = Field_ScriptFlags & 0xFFB7u;
         Draw_PassFlags = 0;
-        B(0x802D64) = bits;
+        member0->draw_flags = bits;
         SH_CALL(Field_ChangeArea)(9, 0x570000, 0x40000, 7);
         Status80();
         return;

@@ -22,6 +22,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_4a.h"
 #include "game/rest_4a_callees.h"
@@ -32,9 +33,6 @@
 namespace rest_4a {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -153,7 +151,7 @@ const sh::Clone kEnemy[] = {
 
 enum : unsigned {
     kAutoCheck, kLiveMember, kActionIs0E, kAutoFixed, kOtherMember, kRunSlot, kClutCopy, kAreaEnter, kQueueAreas,
-    kPopulation, kMood, Rest4a_LevelLit_addr, FieldE2_LevelA_addr, kTick5, kTick9, kTickD, kTickB, kAddRecord, kRemoveRecord, kSumsAB,
+    kPopulation, kMood, kSimLevelLit, kSimLevelDark, kTick5, kTick9, kTickD, kTickB, kAddRecord, kRemoveRecord, kSumsAB,
     kRollOffers, kPlaceObjects, kPlaceLoose, kPlaceResident, kPose0, kPose4, kPose5, kPose6, kPose7, kPose8, kPose9,
     kPoseA, kPoseB, kPoseC, kPoseD, kTrig01, kTrig09, kTrig02, kTrig03, kTrig04, kTrig05, kTrig06, kTrig07, kTrig08,
     kTrig10, kTrig61, kTrig11, kCount
@@ -312,8 +310,8 @@ const sh::Region kRegions[] = {
 
 // --- the seed ------------------------------------------------------------------
 
-unsigned char* Rec(U i) { return Mem(at::kRecords + 8 * i); }
-unsigned char* Bld(U b) { return Mem(at::kBuildings + 8 * b); }
+unsigned char* Rec(U i) { return Mem(Community_Records_addr + 8 * i); }
+unsigned char* Bld(U b) { return Mem(Community_Buildings_addr + 8 * b); }
 
 // The community, as the simulation leaves it: up to 24 records in use (the
 // objects stay inside Sprite_Objects), each +1 a building 1..8 or a loose kind
@@ -404,13 +402,13 @@ void SeedBattle() {
     SetUL(Mem(at::kBattleFlags), sh::Next() | (sh::Often() ? 0x4000u : 0));
     Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 10, sh::Next() % 11));
     Mem(at::kAutoMode)[0] = static_cast<unsigned char>(PickOf(4, 4, 3, 5, sh::Next()));
-    Mem(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, sh::Next()));
+    Mem(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, sh::Next()));
     for (U e = 0; e < 8; ++e) {
         unsigned char* const rec = Mem(0x93B960 + at::kEnemyStride * e);
-        EnemyRec(rec)->intel = PickOf(0, 1, 2, sh::Next());
+        rv::As<records::BattleEnemy>(rec)->intel = PickOf(0, 1, 2, sh::Next());
         rec[0x92] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
-        EnemyRec(rec)->flags_114 = sh::Half() ? 0 : sh::Next();
-        EnemyRec(rec)->ability = sh::Next() % 0x100;
+        rv::As<records::BattleEnemy>(rec)->flags_114 = sh::Half() ? 0 : sh::Next();
+        rv::As<records::BattleEnemy>(rec)->ability = sh::Next() % 0x100;
     }
     for (U m = 0; m < 3; ++m) {
         SetWord(Mem(ObjTrio_addr + 0x126 + at::kMemberStride * m), PickOf(0xE, 0x128, 0xF, 0x127, 0, sh::Next()));
@@ -443,8 +441,8 @@ void SeedAutoTarget() {
     Mem(at::kAutoMode)[0] = 4;
     g_actor = 5 + sh::Next() % 6;   // an enemy 5..10, never the forced actor
     unsigned char* const rec = Mem(0x93B960 + at::kEnemyStride * (g_actor - 3));
-    EnemyRec(rec)->intel = PickOf(0, 1);
-    EnemyRec(rec)->ability = AbilityBit4(sh::Next());
+    rv::As<records::BattleEnemy>(rec)->intel = PickOf(0, 1);
+    rv::As<records::BattleEnemy>(rec)->ability = AbilityBit4(sh::Next());
 }
 
 // CommuSim_TickKindD's boundaries, half its rounds: building 0 of kind 0xD
@@ -516,7 +514,7 @@ void Seed(unsigned k) {
         for (unsigned j = 0; j < 4; ++j) {
             unsigned char* const o = sh::SpriteRecord(j);
             o[5] = static_cast<unsigned char>(sh::Next() % at::kRecordCount);
-            SetUL(o + 0x1C, sh::Next() % 50);
+            rv::As<records::SpriteObject>(o)->work_1c = sh::Next() % 50;
         }
     }
     if (k >= kPlaceLoose && k <= kPoseD) {
@@ -596,7 +594,7 @@ void Disturb(U h) {
     case 5: Mem((v & 1) ? at::kEventCount : Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
     case 6:
         Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>((v >> 1) % 11);
-        Mem(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(v & 1);
+        Mem(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(v & 1);
         break;
     case 7: Mem(at::kResidentCounts + (v % 8))[0] = static_cast<unsigned char>((v >> 3) % 4); break;
     case 8: SetWord(Mem(at::kOfferWords + 2 * (v % 9)), 0x9Bu + (v >> 4) % 26); break;

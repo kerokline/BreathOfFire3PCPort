@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_2b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -50,7 +51,6 @@ using U = std::uint32_t;
 using Handler = void (__cdecl*)();
 
 unsigned char* Cur() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SW(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -290,11 +290,11 @@ extern "C" void __cdecl EffectKind33_Run(void) {
 // the record's point +0x34..+0x3C, its radius +0x1C 0; +9 0xA, +1 up.
 extern "C" void __cdecl EffectKind33_Start(void) {
     unsigned char* const s = Cur();
-    SetUL(s + 0xC, static_cast<std::uint32_t>(CurFx()->x));
-    SetUL(s + 0x10, static_cast<std::uint32_t>(CurFx()->z));
-    const U height = static_cast<std::uint32_t>(CurFx()->height);
-    SetUL(s + 0x1C, 0);
-    SetUL(s + 0x14, height);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    const U height = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, height);
     Cur()[9] = 0xA;
     unsigned char* const t = Cur();
     t[1] = static_cast<unsigned char>(t[1] + 1);
@@ -305,8 +305,8 @@ extern "C" void __cdecl EffectKind33_Start(void) {
 // read before the call); +9 down 1 - at 0, Sound_PlayEffect(0x20D) and +1 up.
 extern "C" void __cdecl EffectKind33_Grow(void) {
     unsigned char* const s = Cur();
-    SH_CALL(EffectKind33_DrawDisc)(reinterpret_cast<const long*>(s + 0xC), static_cast<long>(UL(s + 0x1C)));
-    SetUL(s + 0x1C, UL(s + 0x1C) + 0x1199u);
+    SH_CALL(EffectKind33_DrawDisc)(reinterpret_cast<const long*>(s + 0xC), static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x1199u);
     unsigned char* t = Cur();
     t[9] = static_cast<unsigned char>(t[9] - 1);
     if (Cur()[9] != 0) return;
@@ -403,7 +403,7 @@ extern "C" void __cdecl EffectKind35_Burst(void) {
 // original 0x473800 (EffectKind35_States[2]): Sprite_ObjectsExtra[1]'s +0 = 0
 // (the model's record freed); Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind35_FreeModel(void) {
-    Sprite_ObjectsExtra[0xa4] = 0;
+    Sprite_ObjectsExtra[1].flags = 0;
     SH_CALL(Effect_Release)();
 }
 
@@ -482,8 +482,8 @@ extern "C" void __cdecl EffectKind35_ShardQuad(unsigned char* shard) {
     std::memcpy(prim + 0x30, &screen[2], 4);
     std::memcpy(prim + 0x20, &screen[2], 4);
     std::memcpy(prim + 0x10, &screen[2], 4);
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 2, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(0, 2, 0x2C0, 0x100));
     prim[4] = shard[3];
     prim[5] = shard[3];
     prim[6] = shard[3];
@@ -541,7 +541,7 @@ extern "C" void __cdecl EffectKind35_ShardFade(void) {
 // +0x10..+0x15 0; then the copy's twelve vertex words made relative to the
 // centre.
 extern "C" void __cdecl EffectKind35_SplitModel(void) {
-    U src = UL(At(Sprite_ObjectsExtra_addr + 0xf4));
+    U src = Sprite_ObjectsExtra[1].script;
     for (U i = 0; i < at::kPiece35Count; ++i) {
         unsigned char* const d = At(at::kCopies35 + 0x28 * i);
         unsigned char* const r = At(EffectKind30_Shards_addr + 0x280 + 0x18 * i);
@@ -568,7 +568,7 @@ extern "C" void __cdecl EffectKind35_SplitModel(void) {
 // face, the piece)); the model's faces from Sprite_ObjectsExtra[1] +0x50 read
 // once.
 extern "C" void __cdecl EffectKind35_StepPieces(void) {
-    const U model = UL(At(Sprite_ObjectsExtra_addr + 0xf4));
+    const U model = Sprite_ObjectsExtra[1].script;
     for (U i = 0; i < at::kPiece35Count; ++i) {
         unsigned char* const r = At(EffectKind30_Shards_addr + 0x280 + 0x18 * i);
         const U vx = Word(r + 8);
@@ -727,7 +727,7 @@ extern "C" void __cdecl EffectKind39_Start(void) {
 // pushed with the upper half the register held: only the words are read).
 static void Kind39Disc() {
     const unsigned char* const s = Cur();
-    SH_CALL(EffectKind39_DrawDisc)(Word(s + 0x2E), Word(s + 0x30), s[9]);
+    SH_CALL(EffectKind39_DrawDisc)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, s[9]);
 }
 
 // original 0x473FE0 (EffectKind39_States[1]): the fan drawn; +9 up 1 - past
@@ -825,7 +825,7 @@ static void Kind3BGlow(unsigned offset) {
     Mode(1, 0x380, 0x100, 1);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned char* const s = Cur();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     const long point[3] = {so->x, so->z, so->height};
     SH_CALL(EffectKind3B_DrawGlow)(point, static_cast<U>(s[offset]) << 2, 0x80, 0);
 }
@@ -962,7 +962,7 @@ extern "C" void __cdecl EffectKind3B_DrawSpiral(unsigned char* spiral) {
 // shade 0, angle 0x1000 * i / 3.
 extern "C" void __cdecl EffectKind3B_InitSpirals(void) {
     const unsigned char* const s = Cur();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     for (U i = 0; i < at::kSpiralCount; ++i) {
         unsigned char* const r = At(EffectKind30_Shards_addr + at::kSpiralStride * i);
         SetUL(r + 0, static_cast<std::uint32_t>(so->x));
@@ -994,7 +994,7 @@ extern "C" void __cdecl EffectKind3D_Run(void) {
 // original 0x474960 (EffectKind3D_States[0]): the timer +0xC (a dword) 0x3C,
 // +1 up.
 extern "C" void __cdecl EffectKind3D_Start(void) {
-    SetUL(Cur() + 0xC, 0x3C);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(Cur())->work_0c, 0x3C);
     unsigned char* const s = Cur();
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
@@ -1003,10 +1003,10 @@ extern "C" void __cdecl EffectKind3D_Start(void) {
 // timer 0x230, the rings cleared (EffectKind3D_RingsClear), +1 up.
 extern "C" void __cdecl EffectKind3D_Wait(void) {
     unsigned char* s = Cur();
-    SetUL(s + 0xC, UL(s + 0xC) - 1);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 1);
     s = Cur();
-    if (UL(s + 0xC) != 0) return;
-    SetUL(s + 0xC, 0x230);
+    if (rv::As<records::EffectWork>(s)->work_0c != 0) return;
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0x230);
     SH_CALL(EffectKind3D_RingsClear)();
     s = Cur();
     s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -1021,10 +1021,10 @@ extern "C" void __cdecl EffectKind3D_Glow(void) {
     SH_CALL(EffectKind3D_RingsStep)();
     if ((Frame_Counter & 7u) == 0) SH_CALL(EffectKind3D_RingSpawn)();
     unsigned char* s = Cur();
-    SetUL(s + 0xC, UL(s + 0xC) - 1);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 1);
     s = Cur();
-    if (UL(s + 0xC) != 0) return;
-    SetUL(s + 0xC, 0x10);
+    if (rv::As<records::EffectWork>(s)->work_0c != 0) return;
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0x10);
     s = Cur();
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
@@ -1034,9 +1034,9 @@ extern "C" void __cdecl EffectKind3D_Glow(void) {
 // in use, Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind3D_Fade(void) {
     unsigned char* s = Cur();
-    const auto timer = static_cast<std::int32_t>(UL(s + 0xC));
+    const auto timer = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c);
     if (timer > 0) {
-        SetUL(s + 0xC, static_cast<U>(timer - 1));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<U>(timer - 1));
         s = Cur();
     }
     SH_CALL(EffectKind3D_DrawGlow)((Word(s + 0xC) << 3) & 0xFFFFu);

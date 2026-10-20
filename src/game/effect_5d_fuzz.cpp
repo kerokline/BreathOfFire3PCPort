@@ -416,7 +416,7 @@ void Seed(unsigned k) {
     }
     // the party members' actor bytes (Field_ActorStates' index, read unchecked)
     for (unsigned m = 0; m < at::kMemberCount; ++m)
-        if (sh::Half()) ObjTrio[at::kMemberStride * m + 0x148] = static_cast<unsigned char>(sh::Next() % 8);
+        if (sh::Half()) ObjTrio[m].char_index = static_cast<unsigned char>(sh::Next() % 8);
     switch (k) {
     case k22SetMap:
     case k22Start:

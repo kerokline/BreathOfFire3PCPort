@@ -53,12 +53,12 @@ constexpr U kPressed = 0x7E1BEC;       // Input_Pressed, u16 (the inn's chooser 
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons, u16
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons, u16
 
-// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour (Config), a CLUT row
+// kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row
 constexpr U kMsgFlags = 0x7DEE44;      // the text layer's flag word; bit 1 read as "the system message is done"
 constexpr U kText = 0x904BA0;          // the shared print buffer
 constexpr U kFormatD = 0x5E10C0;       // "%d"
 // kZenny: now Party_Zenny (symbols.toml). u32: the party's zenny
-// kFade: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA, u16: non-zero while a transition runs
+// kFade: now Transition_Busy (symbols.toml). Transition_Busy, u16: non-zero while a transition runs
 constexpr U kRepeatLatch = 0x7E01B8;   // u16: Input_AutoRepeat's latch
 // kRepeatTimer: now ItemUse_RepeatTimer (symbols.toml). u16: Input_AutoRepeat's timer
 constexpr U kSlot = 0x9036D4;          // u32: the save cursor, 0..15

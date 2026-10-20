@@ -271,7 +271,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < cell::kSparks; ++i) mh::SetPointer(Fx106_SparkPool_addr + i * cell::kSparkStride + 0x1C, AnOwner(mh::Next()));
     for (unsigned t = 0; t < 4; ++t) {
         unsigned char* const task = mh::TaskAt(t);
-        mh::SetPointer(mh::at::kTasks + t * mh::at::kTaskStride + 0x54, g_frames);
+        mh::SetPointer(BattleTask_Slots_addr + t * mh::at::kTaskStride + 0x54, g_frames);
         SetWord(task + 0x5A, mh::Next() % 0x40);
         g_frames[task[0x5A]] = static_cast<unsigned char>(mh::Next() % 7);
     }

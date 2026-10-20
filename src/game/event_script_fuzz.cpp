@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/event_script_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -92,13 +93,13 @@ alignas(4) unsigned char g_arm[2];              // an if's else and depth bytes
 alignas(4) std::uint32_t g_result;              // a function's result, as a region
 
 constexpr int kFirstObject = -4, kObjects = 38;   // Sprite_Objects -4..33: counts a stand-in may leave
-unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
+unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 short Count() {
     short v;
-    std::memcpy(&v, At(bof3::addr::DamageScratch), sizeof v);
+    std::memcpy(&v, At(SharedScratch_addr), sizeof v);
     return v;
 }
-void SetCount(int v) { SetWord(At(bof3::addr::DamageScratch), static_cast<unsigned>(v)); }
+void SetCount(int v) { SetWord(At(SharedScratch_addr), static_cast<unsigned>(v)); }
 
 // A count as a stand-in may leave it: most often in range, sometimes at the
 // edges of the placements' test, never outside the objects the fuzz owns.
@@ -265,7 +266,7 @@ void __cdecl StubRun(const unsigned char* script) {
     const std::uint32_t h = Hash(17);
     g_run_count = h % 4 == 0 ? static_cast<int>(30 + (h >> 4) % 3) : PickCount(h >> 4);
     SetCount(g_run_count);
-    SetWord(At(bof3::addr::DamageScratch) + 2, h >> 16);
+    SetWord(At(SharedScratch_addr) + 2, h >> 16);
 }
 unsigned char __cdecl StubFlagsTest(const unsigned char* bits, unsigned index) {
     Record(0x139, Address(bits), index & 0xFF);
@@ -640,9 +641,9 @@ void SeedObject(unsigned char* o) {
 void SelfTestPlacements() {
     constexpr unsigned kRounds = 20000;
     unsigned char* const objects = Object(kFirstObject);
-    const Region r[] = {R(objects, kObjects * 0xA4), R(Sprite_ObjectsExtra, 8 * 0xA4), R(MoveScript_PartyRecords, 0x1000),
-                        R(At(bof3::addr::DamageScratch), 4), R(&Sprite_Current, 4), R(&Field_ActiveMember, 4),
-                        R(Sprite_Kind2, Sprite_Kind2_count), R(&Game_AreaNumber, 2), R(g_script, 0x40),
+    const Region r[] = {R(objects, kObjects * 0xA4), R(rv::Bytes(Sprite_ObjectsExtra), 8 * 0xA4), R(MoveScript_PartyRecords, 0x1000),
+                        R(At(SharedScratch_addr), 4), R(&Sprite_Current, 4), R(&Field_ActiveMember, 4),
+                        R(rv::Bytes(&Sprite_Kind2), sizeof(records::SpriteObject)), R(&Game_AreaNumber, 2), R(g_script, 0x40),
                         R(g_entries), R(g_result)};
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);
@@ -653,7 +654,7 @@ void SelfTestPlacements() {
         for (unsigned round = 0; round < kRounds; ++round) {
             Randomize(r, n);
             for (int i = kFirstObject; i < kFirstObject + kObjects; ++i) SeedObject(Object(i));
-            for (unsigned i = 0; i < 8; ++i) SeedObject(Sprite_ObjectsExtra + i * 0xA4);
+            for (unsigned i = 0; i < 8; ++i) SeedObject(rv::Bytes(&Sprite_ObjectsExtra[i]));
             static const int kCount[] = {29, 30, 31, 0, 1, 0x7FFF, 100};
             SetCount(OneIn(3) ? kCount[Next() % 7] : static_cast<int>(Next() % 32));
             Game_AreaNumber = static_cast<unsigned short>(Next() % Area_Descriptors_count);
@@ -753,7 +754,7 @@ void SelfTestPlacements() {
 void SelfTestFlags() {
     constexpr unsigned kRounds = 20000;
     const Region r[] = {R(g_bits), R(g_script, 0x10), R(MoveScript_PartyRecords, 0x80), R(&EventScript_FlagBank, 2),
-                        R(Cond_Flags, 0x820), R(&Field_ScriptFlags, 2), R(ObjTrio, 0x299), R(g_result)};
+                        R(Cond_Flags, 0x820), R(&Field_ScriptFlags, 2), R(rv::Bytes(ObjTrio), 0x299), R(g_result)};
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);
     const Fn kFnsHere[] = {kFlagsSet, kFlagsClear, kFlagsTest, kCondFA, kCondFlag, kCondFD, kSet40, kSetBit40};

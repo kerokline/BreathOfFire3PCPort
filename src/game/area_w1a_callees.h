@@ -37,7 +37,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 // The scratch word the field's event ops take an object index from
 // (docs/event-ops.md); area 40 stores a free index and a button word there.
-constexpr std::uint32_t kScratchWord = 0x903850;
+constexpr std::uint32_t kScratchWord = SharedScratch_addr;
 // The byte after MoveScript_Var7 (area 40's choice 0 sets it).
 constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The story flags (Flags_Set / Flags_Test's bank), the lever flags' row
@@ -46,7 +46,7 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kLeverRow: now Cond_Flags[0x20] (symbols.toml).
 // kLeverNibble: now Cond_Flags[0x21] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The party lists' first bytes (Cond_Flags' tail): the members in the party.
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
@@ -60,10 +60,10 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 constexpr std::uint32_t kEntryZone = 0x905E68;
 // The leader's record (ObjTrio): its +8 (direction), +0x89; records 1, 2.
 constexpr std::uint32_t kLeader = 0x802D40;
-// kLeaderByte8: now ObjTrio[8] (symbols.toml).
-// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
-// kPartyRecord1: now Field_Members[4] (symbols.toml).
-// kPartyRecord2: now ObjTrio[0x298] (symbols.toml).
+// kLeaderByte8: now ObjTrio[0].direction (symbols.toml).
+// kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
+// kPartyRecord1: now ObjTrio (symbols.toml). record 1 (ObjTrio_addr + 0x14C; Field_Members[4] until stage C4).
+// kPartyRecord2: now ObjTrio[2] (symbols.toml).
 // The cell step per direction: two signed bytes (x, z), 2 bytes apart
 // (event_ops_callees.h's kCellDelta).
 constexpr std::uint32_t kCellDelta = 0x66971C;

@@ -34,21 +34,23 @@ constexpr std::uint32_t kEncounterAreasEnd = 0x660AB8;
 // kBlockingCells: now Field_BlockingCells (symbols.toml). cell codes that block, 0xFF-ended
 // The party (field-event.md section 2).
 constexpr std::uint32_t kMemberStride = 0x14C;
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34 / +0x38 (dwords), +0x3E (word)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml).
-constexpr std::uint32_t kActorRecords = 0x903A70;    // stride 0xA4
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio +0x34 / +0x38 (dwords), +0x3E (word)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml).
+// kActorRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). the first 3-byte party list
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes per party slot (field-event.md)
 // The step's scratch (event_ops_callees.h's terms).
-constexpr std::uint32_t kScratch = 0x903850;         // u8: MapView_SlopeAt's "a slope" byte
-constexpr std::uint32_t kScratch2 = 0x903852;        // u16: the found spot's ground
-constexpr std::uint32_t kTargetX = 0x903858;         // s32 each: the found spot
+inline auto& kScratch = SharedScratch.b_00;  // u8: MapView_SlopeAt's "a slope" byte
+constexpr std::uint32_t kScratch_addr = SharedScratch_addr; // kScratch's address, for the raw accessors that take one
+inline auto& kScratch2 = SharedScratch.w_02;        // u16: the found spot's ground
+inline auto& kTargetX = SharedScratch.d_08;         // s32 each: the found spot
+constexpr std::uint32_t kTargetX_addr = SharedScratch_addr + 0x8; // kTargetX's address, for the raw accessors that take one
 // kTargetZ: now Scratch_Swap (symbols.toml).
 // Field_ChangeArea's arguments as the step's exits leave them (event_ops).
 // kExitArea: now AreaW0b_Place (symbols.toml). u16
-constexpr std::uint32_t kExitX = 0x903860;           // s32
+inline auto& kExitX = SharedScratch.d_10;           // s32
 // kExitZ: now AreaEntry_PendingZ (symbols.toml). s32
 // kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8
 constexpr std::uint32_t kReturnPoint = 0x904148;     // x, z dwords, the area word at +8, a byte at +0xA
@@ -56,7 +58,7 @@ constexpr std::uint32_t kReturnPoint = 0x904148;     // x, z dwords, the area wo
 // kEdgeX: now MoveScript_TintRecords[0x21c] (symbols.toml). s32 each
 // kEdgeZ: now MoveScript_TintRecords[0x220] (symbols.toml).
 // kLandByte: now ModeFlow_AreaTransition (symbols.toml). u8, 0 on the 0xAF exit
-// kLandMode: now AreaW0c_PendingKind (symbols.toml). u8, 0xC on the 0xAF exit
+// kLandMode: now Area_EnterTransition (symbols.toml). u8, 0xC on the 0xAF exit
 // kButtonConfirm: now Gfx_UnpackScratch[0x1f000] (symbols.toml). u16 (input-script.md section 4)
 // The pending walk-in (Area_Enter's 0x904EF0.., symbols.toml 0x533710).
 // kPendingFlag: now EventLeader_PendingFlag (symbols.toml). u8
@@ -67,7 +69,7 @@ constexpr std::uint32_t kReturnPoint = 0x904148;     // x, z dwords, the area wo
 constexpr std::uint32_t kPassageFlags = 0x90410C;    // bits by the entry's +4 (Flags_Test / Flags_Set)
 // kPassageCount: now Rest4a_CountD (symbols.toml). s32, one more per content taken
 // kPartySet: now AreaW0b_PartySet (symbols.toml). u8, & 0x7F the row (field-event.md)
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (battle_flow_callees.h)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8 (battle_flow_callees.h)
 // Field_ScriptFlags' high byte and Field_ScriptFlags2's two, tested and set by
 // byte as the original does.
 constexpr std::uint32_t kFlagsHi = 0x9039A3;

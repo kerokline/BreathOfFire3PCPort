@@ -77,7 +77,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 constexpr unsigned kRecordBytes = 0x140;
 alignas(16) unsigned char g_records[2][kRecordBytes];
 
-unsigned char* TaskAt(unsigned k) { return At(at::kTasks + (k % 4) * at::kTaskStride); }
+unsigned char* TaskAt(unsigned k) { return At(BattleTask_Slots_addr + (k % 4) * at::kTaskStride); }
 unsigned char* SparkleAt(unsigned k) { return At(at::kSparklePool + (k % 4) * at::kSparkleStride); }
 void SetPointer(std::uint32_t cell, const void* p) { SetLong(At(cell), static_cast<std::int32_t>(Address(p))); }
 unsigned char* Pointer(std::uint32_t cell) {
@@ -85,7 +85,7 @@ unsigned char* Pointer(std::uint32_t cell) {
 }
 unsigned char* OwnerFor(unsigned v) { return v & 4 ? g_records[v & 1] : TaskAt(v); }
 unsigned char* TargetEnemy() {
-    return At(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(At(at::kTarget)[0]) - 3) * 0x128));
+    return At(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(At(at::kTarget)[0]) - 3) * 0x128));
 }
 
 // Every cell below is one some function reads again after a call.
@@ -433,14 +433,14 @@ const DataTable kDataTables[] = {
 
 struct Region { std::uint32_t at, size; };
 Region g_regions[] = {
-    {at::kTasks, at::kTaskCount * at::kTaskStride},             // the task slots
+    {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride},  // the task slots
     {0x93B8C0, 0xA0},                                           // 0x93B8C4 the current slot, 0x93B940 the owner, and
                                                                 // the fields an enemy index of 2 reads (0x93B8E0..)
     {0x937F88, 0x10},                                           // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter
     {at::kFlags, 0xA8},                                         // 0x904AA8..0x904B50: flags, actor, target, source
     {BattleE1_MessageUp_addr, 4},
     {ObjTrio_addr, 5 * at::kPartyStride},                       // actors 0..4
-    {at::kEnemies, 8 * at::kEnemyStride},                       // targets 3..10
+    {Battle_Enemies_addr, 8 * at::kEnemyStride},                // targets 3..10
     {Steal_RateTable_addr, 8},
     {Sparkle_CountByKind_addr, 0x10},                           // counts and delays
     {at::kSparklePool, at::kSparkles * at::kSparkleStride + 4}, // the pool and the current pointer

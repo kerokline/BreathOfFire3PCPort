@@ -40,9 +40,9 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // The story flags (Flags_Set / Flags_Test's bank) and the row pointer the
 // chapters' flag tests take (Cond_Flags + 8 * chapter; docs/field-modes.md).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The pending area kind (docs/mode-flow.md: 0xFE only Draw_PassFlags 0).
-// kPendingKind: now AreaW0c_PendingKind (symbols.toml).
+// kPendingKind: now Area_EnterTransition (symbols.toml).
 // The pending place word the world map keeps (docs/worldmap_area.md).
 constexpr std::uint32_t kPlace = 0x937F82;
 // A byte area 37's choices set to 6 beside the message they open; no reader
@@ -53,9 +53,9 @@ constexpr std::uint32_t kRecord0Byte9 = 0x903A79;
 // The leader's record (ObjTrio): byte +8, the step words +0x34 / +0x38, the
 // dword +0x134.
 constexpr std::uint32_t kLeader = 0x802D40;
-// kLeaderByte8: now ObjTrio[8] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderByte8: now ObjTrio[0].direction (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // Effect_Objects' stride (records of 0x80 bytes).
 constexpr std::uint32_t kEffectStride = 0x80;
 // Named cells, by address for the fuzz's regions and the one subtraction
@@ -65,7 +65,7 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kSpriteObjectsExtra: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 
 // --- the areas' tables (symbols.toml [[data]]) ---

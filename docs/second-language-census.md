@@ -9,7 +9,7 @@ The reading-row round ([`reading-row-round.md`](reading-row-round.md), on
 `docs/reading-row-staging` until it merges) puts a half-height row above each
 text row of the dialogue box. One use is a **second language**: the same
 message from another held language layer, re-flowed into the reading rows
-(IDEAS I45). This document answers the round's worry with numbers - when the
+(IDEAS I50). This document answers the round's worry with numbers - when the
 second script is longer than the main one, how often does it overflow the two
 reading rows a page can hold, at 1/2 and at 2/3 - and drafts the pairing rule
 group SB builds from.

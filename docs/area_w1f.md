@@ -269,7 +269,7 @@ state tables `Area68_GlideStatesA` / `B`, `Area69_GlideStates`,
 - **Regions beyond the field frame:** `Effect_Objects` records 0..3, the
   active member, script object and focus object pointers, the mark, area
   75's 20 bytes, `Input_Pressed`, `Draw_PassFlags`,
-  `MoveScript_WaitWordDA`, the music byte, `Gfx_PacketNext` and the fuzz's
+  `Transition_Busy`, the music byte, `Gfx_PacketNext` and the fuzz's
   512-byte packet buffer, areas 72 and 73's weights (34 regions, 17,291
   bytes).
 - **Every round:** the active member at a field object, a party record or

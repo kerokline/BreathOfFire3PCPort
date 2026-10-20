@@ -75,7 +75,7 @@ void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
 // The device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(0x7CC350)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 
 using Com1 = long(__stdcall*)(void*);

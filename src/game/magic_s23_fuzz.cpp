@@ -317,7 +317,7 @@ constexpr std::uint32_t kGteSize = 0x380;
 
 const mh::Region kRegions[] = {
     {0x903800, 4},                    // Camera_ShiftY
-    {at::kR, 0x10},                   // the effect scratch 0x903850..0x90385F
+    {at::kR, 0x10},       // the effect scratch 0x903850..0x90385F
     {Prim_VertexScratch_addr, 0x20},  // Prim_VertexScratch
     {Gte_RampFar_addr, kGteSize},
     {0x905E40, 0x30},                 // Camera_Matrix, the view's cell words, MapView_Redraw
@@ -380,7 +380,7 @@ void Seed(unsigned k) {
                                           static_cast<std::uint32_t>(-4), static_cast<std::uint32_t>(-15), 0x7FFF, 0x8000));
     if (mh::Half())
         mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>((mh::Next() % 11) | MH_PICK(0, 0x40, 0x80, 0xC0));
-    mh::Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(
+    mh::Mem(EventBattle_Id_addr)[0] = static_cast<unsigned char>(
         MH_PICK(0x1C, 0x23, 0x2F, 0x34, 0x1B, 0x1D, 0x22, 0x24, 0x2E, 0x30, 0x33, 0x35, 0, mh::Next() & 0xFF));
 
     unsigned char* const sc = Sc();

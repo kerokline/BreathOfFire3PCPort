@@ -37,6 +37,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_calls_callees.h"
 #include "game/scenario_harness.h"
@@ -55,13 +56,13 @@ void Leave(unsigned id) { SH_AT(void (__cdecl*)(unsigned), at::kLeave)(id); }
 void Palettes() { SH_AT(void (__cdecl*)(), at::kPalettes)(); }
 
 // Field member i (ObjTrio + 0x14C i, unchecked) and its character id +0x89.
-unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 unsigned char MemberId(unsigned i) { return At(ObjTrio_addr + 0x89 + i * at::kMemberStride)[0]; }
 
-// The character record of MoveScript_EffectState[k] (CharacterRecords, 0xA4
+// The character record of Character_IndexById[k] (CharacterRecords, 0xA4
 // each; the byte found unchecked), the index read at the call.
 unsigned char* RecordOf(unsigned k) {
-    return At(bof3::addr::CharacterRecords + MoveScript_EffectState[k] * at::kRecordStride);
+    return At(CharacterRecords_addr + Character_IndexById[k] * at::kRecordStride);
 }
 
 // Both 3-byte party lists 0x904062..0x904067 to 0xFF.
@@ -77,9 +78,9 @@ void EmptyLists() {
 extern "C" void __cdecl scena_calls_SaveAndLeave(std::uint32_t ecx);
 extern "C" void __cdecl scena_calls_LeaveAllParty7(std::uint32_t ecx);
 
-// original 0x5198F0 (0x49 bytes; 1 A[0]): the record of MoveScript_EffectState[10]
+// original 0x5198F0 (0x49 bytes; 1 A[0]): the record of Character_IndexById[10]
 // (Char_WhelpSlot) loses +0xB bit 0 before the load; the record of
-// MoveScript_EffectState[9], read after it, gets +9 = 9.
+// Character_IndexById[9], read after it, gets +9 = 9.
 extern "C" void __cdecl Scena01_Set934Party9(void) {
     unsigned char* const out = RecordOf(10);
     out[0xB] = static_cast<unsigned char>(out[0xB] & 0xFE);
@@ -89,7 +90,7 @@ extern "C" void __cdecl Scena01_Set934Party9(void) {
     Join(9);
 }
 
-// original 0x519940 (0x42 bytes; 1 A[1]): the record of MoveScript_EffectState[0]
+// original 0x519940 (0x42 bytes; 1 A[1]): the record of Character_IndexById[0]
 // gets +9 = 0 before the load.
 extern "C" void __cdecl Scena01_Party034(void) {
     RecordOf(0)[9] = 0;
@@ -111,7 +112,7 @@ extern "C" void __cdecl ScenaCall_Leave4(void) {
     Palettes();
 }
 
-// original 0x5199B0 (0x49 bytes; 2 B[1]): the records of MoveScript_EffectState[4]
+// original 0x5199B0 (0x49 bytes; 2 B[1]): the records of Character_IndexById[4]
 // and [3] lose +0xB bit 0, then members 4 and 3 leave; tail 0x533E00.
 extern "C" void __cdecl Scena02_Leave43(void) {
     unsigned char* const a = RecordOf(4);
@@ -162,7 +163,7 @@ extern "C" void __cdecl ScenaCall_Party015(void) {
     Join(5);
 }
 
-// original 0x519AE0 (0x35 bytes; 5 A[0]): the record of MoveScript_EffectState[6]
+// original 0x519AE0 (0x35 bytes; 5 A[0]): the record of Character_IndexById[6]
 // gains +0xB bit 0; the field members reloaded from the first list; 5, 1 and 6
 // join.
 extern "C" void __cdecl Scena05_ReloadJoin516(void) {
@@ -346,7 +347,7 @@ extern "C" void __cdecl Scena07_Party012(void) {
 extern "C" void __cdecl Scena07_LeaveThird(void) { Leave(MemberId(2)); }
 
 // original 0x519E20 (0x78 bytes; 7 B[1]): member 2 leaves; then the records of
-// MoveScript_EffectState[1], [5], [6] and [2] lose +0xB bit 0, each index read
+// Character_IndexById[1], [5], [6] and [2] lose +0xB bit 0, each index read
 // after the call. No palettes.
 extern "C" void __cdecl Scena07_Leave2Out1562(void) {
     Leave(2);
@@ -366,7 +367,7 @@ extern "C" void __cdecl Scena08_Set72APartyA(void) {
 }
 
 // original 0x519ED0 (0x25 bytes; 8 A[1]): the party emptied, the record of
-// MoveScript_EffectState[10] (Char_WhelpSlot) loses +0xB bit 0, member 7 joins.
+// Character_IndexById[10] (Char_WhelpSlot) loses +0xB bit 0, member 7 joins.
 extern "C" void __cdecl Scena08_Party7(void) {
     unsigned char* const r = RecordOf(10);
     Field_MemberCount = 0;
@@ -659,7 +660,7 @@ extern "C" void __cdecl Scena10_RestoreSaved(void) {
 }
 
 // original 0x51A490 (0x24 bytes; 10 B[0]): the record of
-// MoveScript_EffectState[5] loses +0xB bit 0; member 5 leaves; tail 0x533E00.
+// Character_IndexById[5] loses +0xB bit 0; member 5 leaves; tail 0x533E00.
 extern "C" void __cdecl Scena10_Leave5(void) {
     unsigned char* const r = RecordOf(5);
     r[0xB] = static_cast<unsigned char>(r[0xB] & 0xFE);
@@ -832,7 +833,7 @@ extern "C" void __cdecl Scena14_SaveLeaveAllPartyA(void) {
 }
 
 // original 0x51A890 (0x46 bytes; 14 A[4]): the record of
-// MoveScript_EffectState[10] (Char_WhelpSlot) loses +0xB bit 0 before the
+// Character_IndexById[10] (Char_WhelpSlot) loses +0xB bit 0 before the
 // load; the party (7, 4, 8); tail 0x533E00.
 extern "C" void __cdecl Scena14_Out10Party748(void) {
     unsigned char* const r = RecordOf(10);

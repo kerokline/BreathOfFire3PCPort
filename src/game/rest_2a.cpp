@@ -22,6 +22,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2a_callees.h"
 #include "game/scenario_harness.h"
@@ -30,13 +31,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
-[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace at = rest_2a::at;
 using U = std::uint32_t;
@@ -60,18 +54,18 @@ constexpr unsigned kEffectCount = 20;
 // the pool (rest_2a::at::kEffectNone, inside Gfx_PacketPools), read in place;
 // any other byte no code of this band stores, and ours aborts.
 const unsigned char* EffectRead(unsigned index, const char* who) {
-    if (index < kEffectCount) return Effect_Objects + index * kEffectStride;
+    if (index < kEffectCount) return rv::Bytes(&Effect_Objects[index]);
     if (index == 0xFF) return At(Gfx_PacketPools_addr + 0x7560);
     bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads at 0x%X", who, index,
-                static_cast<unsigned>(Addr(Effect_Objects) + index * kEffectStride));
+                static_cast<unsigned>(Addr(rv::Bytes(Effect_Objects)) + index * kEffectStride));
     return nullptr;
 }
 // The same for a write: only 0..19 (the spawns test 0xFF first).
 unsigned char* EffectWrite(unsigned index, const char* who) {
     if (index >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes at 0x%X", who, index,
-                    static_cast<unsigned>(Addr(Effect_Objects) + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+                    static_cast<unsigned>(Addr(rv::Bytes(Effect_Objects)) + index * kEffectStride));
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // A dispatcher's `call [esp + 4 * Sprite_Current[4]]` through the table it
@@ -92,7 +86,7 @@ void Dispatch(const U* states, unsigned count, const char* who) {
 // is never 0, so the call is unconditional. It pushes eax whole, the upper
 // bytes Rand's answer; Sprite_FaceDirection reads the byte.
 void FaceAwayFromLeader() {
-    const unsigned char lead = ObjTrio[8];
+    const unsigned char lead = ObjTrio[0].direction;
     SH_CALL(Sprite_FaceDirection)(static_cast<unsigned char>((lead ^ 0xFC) & 7));
 }
 
@@ -114,7 +108,7 @@ void EndEvent(const unsigned char* s) {
 // sar 6, the sign added) - the member need not lie in the array.
 U MemberSpriteIndex() {
     const auto offset = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) -
-                                                  Addr(Sprite_Objects));
+                                                  Addr(rv::Bytes(Sprite_Objects)));
     return static_cast<U>(offset / static_cast<std::int32_t>(kSpriteStride));
 }
 
@@ -174,7 +168,7 @@ void RollBody(const Roll& r) {
 }
 
 // CharacterRecords' record n (stride 0xA4), unchecked as the originals index it.
-unsigned char* Record(unsigned n) { return At(bof3::addr::CharacterRecords + n * at::kRecordStride); }
+unsigned char* Record(unsigned n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
 
 // The states each Run builds on its stack, in the order it stores them.
 const U kStatesA[] = {bof3::addr::LinkedObjectA_Roll, bof3::addr::LinkedObject_Show2, bof3::addr::LinkedObject_Show5,
@@ -200,7 +194,7 @@ const U kStatesD[] = {bof3::addr::LinkedObjectD_Roll,        bof3::addr::LinkedO
 // left at the last live record.
 extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
     for (unsigned k = 0; k < 30; ++k) {
-        unsigned char* const rec = Sprite_Objects + k * kSpriteStride;
+        unsigned char* const rec = rv::Bytes(&Sprite_Objects[k]);
         Sprite_Current = rec;
         if (!(rec[0] & 1)) continue;
         if (rec[6] != 9) {
@@ -216,7 +210,7 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
         const unsigned count = At(at::kBankCount)[0];
         const unsigned char* const records = reinterpret_cast<const unsigned char*>(
             static_cast<std::uintptr_t>(static_cast<U>(Long(At(MoveScript_TintRecords_addr + 0x180)))));
-        const unsigned bank_byte = SpriteRec(s)->column;
+        const unsigned bank_byte = rv::As<records::SpriteObject>(s)->column;
         unsigned i = 0;
         while (i < count && records[i * 8 + 7] != bank_byte) ++i;
         const unsigned bank = Word(records + (i & 0xFF) * 8);
@@ -232,7 +226,7 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
 }
 
 // original 0x5373F0 (PSX 0x80168954, pairs_propagated call-anchored): the
-// member byte's record (MoveScript_EffectState, unchecked, as Char_LoseHp):
+// member byte's record (Character_IndexById, unchecked, as Char_LoseHp):
 // with HP +0x18 below its maximum +0x20 (u16), HP = (HP + amount) as a u16,
 // held at the maximum (a sum past 0xFFFF wraps first, as the original's
 // 16-bit compare has it). Then, only then, the record Field_State +0x148
@@ -240,18 +234,18 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
 // word +0x10 and of Field_State's word +0x90. Its eax is no answer (a
 // record offset); Field_EquipTick reads none.
 extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
-    const unsigned slot = MoveScript_EffectState[member & 0xFF];
+    const unsigned slot = Character_IndexById[member & 0xFF];
     unsigned char* const rec = Record(slot);
-    const unsigned max = Word(rec + 0x20);
-    const unsigned hp = Word(rec + 0x18);
+    const unsigned max = rv::As<records::CharRecord>(rec)->stats.max_hp;
+    const unsigned hp = rv::As<records::CharRecord>(rec)->hp;
     if (hp >= max) return;
     const unsigned sum = (hp + amount) & 0xFFFF;
-    SetWord(rec + 0x18, sum > max ? max : sum);
+    rv::As<records::CharRecord>(rec)->hp = sum > max ? max : sum;
     unsigned char* const fs = Field_State;
     unsigned char* const actor = Record(fs[0x148]);
-    if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) return;
-    SetWord(actor + 0x10, Word(actor + 0x10) & 0xDFFF);
-    MemberRec(fs)->status = MemberRec(fs)->status & 0xDFFF;
+    if (rv::As<records::CharRecord>(actor)->hp <= (rv::As<records::CharRecord>(actor)->stats.max_hp >> 2)) return;
+    rv::As<records::CharRecord>(actor)->status = rv::As<records::CharRecord>(actor)->status & 0xDFFF;
+    rv::As<records::PartyMember>(fs)->status = rv::As<records::PartyMember>(fs)->status & 0xDFFF;
 }
 
 // original 0x537500 (PSX 0x80168BC0, pairs_propagated call): the member
@@ -260,12 +254,12 @@ extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
 // amount whole, or AP - 1 (0xFFFFFFFF at AP 0). Char_LoseHp without its
 // actor test.
 extern "C" unsigned __cdecl Char_LoseAp(unsigned amount, unsigned member) {
-    const unsigned slot = MoveScript_EffectState[member & 0xFF];
+    const unsigned slot = Character_IndexById[member & 0xFF];
     unsigned char* const rec = Record(slot);
-    const unsigned ap = Word(rec + 0x1A);
+    const unsigned ap = rv::As<records::CharRecord>(rec)->ap;
     unsigned took = amount;
     if (ap <= (amount & 0xFFFF)) took = ap - 1;
-    SetWord(rec + 0x1A, ap - took);
+    rv::As<records::CharRecord>(rec)->ap = ap - took;
     return took;
 }
 
@@ -434,20 +428,20 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
     EffectWrite(*index, who)[0] = 1;
     EffectWrite(*index, who)[5] = 0x19;
     EffectWrite(*index, who)[6] = static_cast<unsigned char>(sub);
-    SetLong(EffectWrite(*index, who) + 0xC, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(EffectWrite(*index, who))->work_0c, 0);
     const unsigned char rise = SH_CALL(LinkedObject_EffectRise)();
-    SetLong(EffectWrite(*index, who) + 0x10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(EffectWrite(*index, who))->work_10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
     const unsigned char* const c = Sprite_Current;
-    EffectRec(EffectWrite(*index, who))->x = SpriteRec(c)->x;
-    EffectRec(EffectWrite(*index, who))->z = SpriteRec(c)->z;
-    EffectRec(EffectWrite(*index, who))->height = SpriteRec(c)->height;
+    rv::As<records::EffectObject>(EffectWrite(*index, who))->x = rv::As<records::SpriteObject>(c)->x;
+    rv::As<records::EffectObject>(EffectWrite(*index, who))->z = rv::As<records::SpriteObject>(c)->z;
+    rv::As<records::EffectObject>(EffectWrite(*index, who))->height = rv::As<records::SpriteObject>(c)->height;
 }
 
 // original 0x537EA0: (s8)(Sprite_Current +0x30 - the leader's +0x30, bytes)
 // / 28 (a signed division: imul by 0x92492493, add, sar 4, the sign added);
 // negative, shifted left 2 (al only). Answers al.
 extern "C" unsigned char __cdecl LinkedObject_EffectRise(void) {
-    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - ObjTrio[0x30]));
+    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - rv::Bytes(ObjTrio)[0x30]));
     const auto q = static_cast<unsigned char>(static_cast<int>(d) / 28);
     return static_cast<signed char>(q) < 0 ? static_cast<unsigned char>(q << 2) : q;
 }

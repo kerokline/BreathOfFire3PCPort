@@ -20,6 +20,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/scenario_harness.h"
@@ -28,9 +29,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 using U = std::uint32_t;
 using move_script::At;
@@ -62,7 +60,7 @@ Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
                     count, static_cast<unsigned>(table), static_cast<unsigned>(cell));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(cell)))));
 }
-void ByForm(U table, unsigned count, const char* who) { CodeAt(table, count, MemberRec(S())->column, who)(); }
+void ByForm(U table, unsigned count, const char* who) { CodeAt(table, count, rv::As<records::PartyMember>(S())->column, who)(); }
 void ByState(U table, unsigned count, const char* who) { CodeAt(table, count, S()[2], who)(); }
 void ByStep(U table, unsigned count, const char* who) { CodeAt(table, count, S()[3], who)(); }
 
@@ -86,7 +84,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
     if (index >= kEffectCount)
         bof3::Fatal("%s: effect object index 0x%X is past Effect_Objects' 20 records; the original writes 0x%X unchecked", who,
                     index, static_cast<unsigned>(0x7E11E0 + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // Bit 0 of +0x80 of the object Sprite_ObjectAt found: below 0x1E Sprite_Objects,
@@ -99,8 +97,8 @@ void MarkObject(unsigned char found, bool is_signed, const char* who) {
     if (i < 0 || i >= static_cast<int>(kObjectsAll))
         bof3::Fatal("%s: Sprite_ObjectAt's answer 0x%X is past the 34 objects; the original marks it unchecked", who,
                     static_cast<unsigned>(found));
-    if (i < static_cast<int>(kObjects)) Sprite_Objects[i * kObjectStride + 0x80] |= 1;
-    else Sprite_ObjectsExtra[(i - kObjects) * kObjectStride + 0x80] |= 1;
+    if (i < static_cast<int>(kObjects)) Sprite_Objects[i].context |= 1;
+    else Sprite_ObjectsExtra[i - kObjects].context |= 1;
 }
 
 // An even direction +8 turned one eighth back (-1, & 7); when `probe` answers
@@ -123,13 +121,13 @@ template <typename P> void TurnUntil(P probe) {
 // 0x40 signed) and the ground above the sprite's height word: +0x2B = 0.
 void ProbeSide(unsigned d) {
     const unsigned char* s = S();
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = S();
-    if (static_cast<short>(Word(s + 0x3E)) < static_cast<short>(ground)) S()[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) S()[0x2B] = 0;
 }
 
 // 0x51D790 / 0x51DF10 (PartyAction5_Form0Begin's code).
@@ -137,10 +135,10 @@ void Begin() {
     TurnUntil([] { return SH_CALL(PartyAction_TargetAhead)(); });
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(bof3::addr::DamageScratch)[0] != 0 && static_cast<short>(slope) > 0x40) {
+    if (SharedScratch.b_00 != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x46));
         ++S()[2];
     } else {
@@ -162,7 +160,7 @@ struct Ahead {
 Ahead TwoAhead() {
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    return {static_cast<U>(MemberRec(s)->x) + 2u * StepX(d), static_cast<U>(MemberRec(s)->z) + 2u * StepZ(d)};
+    return {static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d), static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d)};
 }
 
 // The cell handler on the point's cell; when it answers 0, on the cell one on
@@ -412,7 +410,7 @@ extern "C" void __cdecl PartyAction4_Form1Begin(void) { Form1Begin("PartyAction4
 // one on, Sprite_Current re-read after the sound.
 extern "C" void __cdecl PartyAction_SpawnKind3A(void) {
     SH_CALL(Sprite_ScriptTick)();
-    if (Word(S() + 0x58) != 0xA) return;
+    if (rv::As<records::PartyMember>(S())->script_pos != 0xA) return;
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     S()[0xB] = slot;
     unsigned char* const s = S();

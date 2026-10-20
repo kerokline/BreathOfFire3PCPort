@@ -23,6 +23,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/menu_draw_helpers_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -36,10 +37,10 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The typed view of a window record (docs/typed-records.md; WindowRecords
+// rv::As<records::WindowRecord>(p) views a window record
+// (docs/typed-records.md; WindowRecords
 // 0x803160). Only +0..+7 are typed: +8..+0x1F mean something else in each
 // handler (typed-records 3).
-static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
 
 U Address(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U XY(int x, int y) { return static_cast<std::uint16_t>(x) | static_cast<U>(static_cast<std::uint16_t>(y)) << 16; }
@@ -70,17 +71,17 @@ void Disturb() {
     const U h = Hash();
     if (h % 3 == 0) return;
     if (h % 23 == 0) {
-        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(at::kRecords + ((h >> 8) % 22u) * 0x24u));
+        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(WindowRecords_addr + ((h >> 8) % 22u) * 0x24u));
         return;
     }
     static const unsigned kField[] = {3, 4, 5, 6, 7, 0xA, 0xB, 0xC, 0x10, 0x11};
     unsigned char* const w = At(static_cast<U>(Long(At(BattleWinStates_Current_addr))));
     const auto v = static_cast<unsigned char>(h >> 12);
     switch ((h >> 4) % 8) {
-    case 0: At(BattleDraw_Colour_addr)[0] = v; break;
+    case 0: At(Config_WindowColour_addr)[0] = v; break;
     case 1: At(Party_Zenny_addr + ((h >> 20) & 3))[0] = v; break;
     case 2: At(Cond_Flags_addr + 0xd2 + ((h >> 20) % 3))[0] = v; break;
-    case 3: At(MoveScript_EffectState_addr + ((h >> 20) & 0xFF))[0] = v; break;
+    case 3: At(Character_IndexById_addr + ((h >> 20) & 0xFF))[0] = v; break;
     default: w[kField[(h >> 20) % 10]] = v; break;
     }
 }
@@ -288,11 +289,11 @@ const Clone kClones[kCount] = {
 
 struct Region { U at, size; };
 const Region kRegions[] = {
-    {at::kRecords, 0x318},       // the 22 window records
+    {WindowRecords_addr, 0x318}, // the 22 window records
     {BattleWinStates_Current_addr, 4}, // the record running (Fix puts it on one of the 22)
-    {BattleDraw_Colour_addr, 1},
+    {Config_WindowColour_addr, 1},
     {Party_Zenny_addr, 0x10A},   // the zenny, and the party list with every byte +0xA can reach
-    {MoveScript_EffectState_addr, 0x100}, // the member map, every byte a party-list byte can reach
+    {Character_IndexById_addr, 0x100}, // the member map, every byte a party-list byte can reach
 };
 constexpr unsigned kRegionBytes = 0x318 + 4 + 1 + 0x10A + 0x100;
 
@@ -365,7 +366,7 @@ void Seed(unsigned k) {
     case kCursor: r[0xA] = static_cast<unsigned char>(Often() ? Next() % 4 : Next()); break;
     case kMoneyUp: {
         static const int kY[] = {-4, -3, -5, -20, -19, -21, -36, 0, 0x10, 0x7FF0};
-        Win(r)->centre_y = Often() ? static_cast<std::uint16_t>(kY[Next() % 10]) : static_cast<std::uint16_t>(Next());
+        rv::As<records::WindowRecord>(r)->y = Often() ? static_cast<std::uint16_t>(kY[Next() % 10]) : static_cast<std::uint16_t>(Next());
         break;
     }
     case kLeft: {
@@ -373,21 +374,21 @@ void Seed(unsigned k) {
         const int bound = Often() ? kBound[Next() % 7] : static_cast<short>(Next());
         const U imm = (Next() % 2 ? 0xFFFF0000u : Next() & 0xFFFF0000u) | static_cast<std::uint16_t>(bound);
         std::memcpy(g_bound, &imm, 4);
-        Win(r)->centre_x = Around(bound, -0x20);
+        rv::As<records::WindowRecord>(r)->x = Around(bound, -0x20);
         break;
     }
-    case kMemberUp: Win(r)->centre_y = Around(0x3E, -0x10); break;
+    case kMemberUp: rv::As<records::WindowRecord>(r)->y = Around(0x3E, -0x10); break;
     case kMemberDown: {
         r[0xA] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
-        Win(r)->centre_y = Around(r[0xA] * 0x36 + 0x3E, 0x10);
+        rv::As<records::WindowRecord>(r)->y = Around(r[0xA] * 0x36 + 0x3E, 0x10);
         break;
     }
-    case kEquipIn: Win(r)->centre_x = Around(0xF, 0x20); break;
-    case kBuy84: Win(r)->centre_x = Around(0x84, -0x20); break;
-    case kBuy46: Win(r)->centre_x = Around(0x46, -0x20); break;
-    case kItemIn: Win(r)->centre_x = Around(0x4B, -0x20); break;
-    case kBattleRight: Win(r)->centre_x = Around(0x53, 0x20); break;
-    case kBattleSkillIn: Win(r)->centre_x = Around(0x53, -0x20); break;
+    case kEquipIn: rv::As<records::WindowRecord>(r)->x = Around(0xF, 0x20); break;
+    case kBuy84: rv::As<records::WindowRecord>(r)->x = Around(0x84, -0x20); break;
+    case kBuy46: rv::As<records::WindowRecord>(r)->x = Around(0x46, -0x20); break;
+    case kItemIn: rv::As<records::WindowRecord>(r)->x = Around(0x4B, -0x20); break;
+    case kBattleRight: rv::As<records::WindowRecord>(r)->x = Around(0x53, 0x20); break;
+    case kBattleSkillIn: rv::As<records::WindowRecord>(r)->x = Around(0x53, -0x20); break;
     default: break;
     }
 }
@@ -405,7 +406,7 @@ void Cover(unsigned k, const State& in, const State& out) {
     }
     if (std::memcmp(in.memory + 0x318, out.memory + 0x318, 4) != 0) ++g_cover.repointed;
     const U record = static_cast<U>(Long(in.memory + 0x318));
-    const unsigned slot = (record - at::kRecords) / 0x24u;
+    const unsigned slot = (record - WindowRecords_addr) / 0x24u;
     if (slot < 22 && out.log_n == 0 && k != kH7 && k != kH8) {   // a slide: no call out
         if (in.memory[slot * 0x24 + 3] != 0 && out.memory[slot * 0x24 + 3] == 0) ++g_cover.stopped;
         else ++g_cover.moving;
@@ -452,7 +453,7 @@ void SelfTest() {
         std::memset(input.log, 0, sizeof input.log);
         input.log_n = 0;
         Apply(input);
-        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(at::kRecords + (Next() % 22u) * 0x24u));
+        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(WindowRecords_addr + (Next() % 22u) * 0x24u));
         Seed(k);
         g_seed = Next();
         Capture(input);

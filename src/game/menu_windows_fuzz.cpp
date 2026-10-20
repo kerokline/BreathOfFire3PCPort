@@ -122,7 +122,7 @@ void Disturb() {
     if (h % 4 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 16) {
-    case 0: At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(v); break;
+    case 0: At(Config_WindowColour_addr)[0] = static_cast<unsigned char>(v); break;
     case 1: At(FieldS_Answer_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v & 1); break;
     case 2: At(Input_Pressed_addr + (v & 1))[0] = static_cast<unsigned char>(h >> 20); break;
     case 3: At(MenuWindows_ListCount_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 9) - 1); break;
@@ -147,7 +147,7 @@ void Disturb() {
     }
     case 8: g_buf.list[0] = static_cast<unsigned char>(v % 14); break;
     case 9: {
-        unsigned char* const r = At(at::kCharRecords + (v % 8) * at::kCharStride);
+        unsigned char* const r = At(CharacterRecords_addr + (v % 8) * at::kCharStride);
         static const unsigned kFields[] = {9, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29};
         r[kFields[(h >> 20) % 13]] = static_cast<unsigned char>(h >> 24);
         break;
@@ -630,7 +630,7 @@ const Region kRegions[] = {
     {0x8034E0, 4},                                 // Cond_ByteFA
     {0x903580, 0x14},                              // the menu, confirm and cancel buttons
     {0x903A50, 0x20},                              // the window colour 0x903A5A
-    {at::kCharRecords, 10 * at::kCharStride},      // the records (and two past the eight)
+    {CharacterRecords_addr, 10 * at::kCharStride}, // the records (and two past the eight)
     {0x904030, 0x40},                              // the gold, the party lists
     {0x904150, 0x490},                             // the inventory's ids and counts
     {at::kPrintBuf, 0x40},                         // the sprintf buffer

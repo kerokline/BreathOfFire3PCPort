@@ -30,6 +30,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -46,12 +47,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 
 // `imul` (the 32-bit product wraps) then an arithmetic shift.
@@ -70,9 +67,9 @@ void PutFloat(unsigned char* at, int v) {
 float AsFloat(int v) { return static_cast<float>(v); }
 void PutFloatBits(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 
-// The scratch words MAGIC111's wash keeps its angles in: DamageScratch
+// The scratch words MAGIC111's wash keeps its angles in: SharedScratch
 // 0x903850 and 0x903852, read back after every Math_Sin as the original does.
-constexpr std::uint32_t kAngleA = 0x903850;
+constexpr std::uint32_t kAngleA = SharedScratch_addr;
 constexpr std::uint32_t kAngleB = 0x903852;
 
 // Capcom's, unnamed, in no group: fild the argument, fsqrt, tail jmp to the
@@ -146,23 +143,23 @@ C3_EXPORT void __cdecl Magic002_Task(void) {
 C3_EXPORT void __cdecl Magic002_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(3, 1) & 0xFFu;
     unsigned char* const ball = TaskSlot(slot);
-    records::BattleTask* const tball = reinterpret_cast<records::BattleTask*>(ball);
+    records::BattleTask* const tball = rv::As<records::BattleTask>(ball);
     const int x0 = static_cast<short>(Word(Mem(ObjTrio_addr + 0x2E)));
     const int y0 = static_cast<short>(Word(Mem(ObjTrio_addr + 0x30)));
     ball[1] = 0;
-    tball->vel_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(x0) << 16);
-    tball->vel_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(y0) << 16);
+    tball->step_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(x0) << 16);
+    tball->step_z = static_cast<std::int32_t>(static_cast<std::uint32_t>(y0) << 16);
     const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
-    SetLong(ball + 0x14, 0);
-    tball->start_x = 0x28;
+    rv::Store(tball->step_y, 0);
+    tball->work_18 = 0x28;
     ball[9] = 0;
-    const int dx = static_cast<short>(Word(source + 0x2E)) - x0;
-    tball->start_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(dx) << 16) / 10;
+    const int dx = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(source)->screen_x)) - x0;
+    tball->work_1c = static_cast<std::int32_t>(static_cast<std::uint32_t>(dx) << 16) / 10;
     const int dy = static_cast<short>(Word(source + 0x30)) - y0;
-    SetLong(ball + 0x20, static_cast<std::int32_t>(static_cast<std::uint32_t>(dy) << 16) / 10);
+    rv::Store(tball->work_20, static_cast<std::int32_t>(static_cast<std::uint32_t>(dy) << 16) / 10);
     SetLong(ball + 0x60, 0x100);
-    SetWord(ball + 0x58, 0x100);
-    SetLong(Pointer(BattleFlow_TaskCurrent_addr) + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
+    rv::Store<unsigned>(tball->script_pos, 0x100);
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(Pointer(BattleFlow_TaskCurrent_addr))->owner, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
     Inc(Sc()[1]);
 }
 
@@ -170,7 +167,7 @@ C3_EXPORT void __cdecl Magic002_Start(void) {
 // +0x80) reaches 0x28.
 C3_EXPORT void __cdecl Magic002_Wait(void) {
     const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
-    const auto* const ball = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(slot + 0x80))));
+    const auto* const ball = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::BattleTask>(slot)->owner));
     if (ball[9] < 0x28) return;
     Inc(Sc()[1]);
 }
@@ -192,9 +189,9 @@ namespace {
 // the draw reads 16 bits of each, and 8 of the turn).
 void DrawBall() {
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
-    MH_AT(BallDrawFn, bof3::addr::Magic002Ball_Draw)(ts->vel_x >> 16, ts->vel_y >> 16, ts->start_x >> 1,
-                                                    Word(s + 0x14), Word(s + 0x60), Word(s + 0x58));
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
+    MH_AT(BallDrawFn, bof3::addr::Magic002Ball_Draw)(ts->step_x >> 16, ts->step_z >> 16, ts->work_18 >> 1,
+                                                    static_cast<std::uint16_t>(ts->step_y), Word(s + 0x60), ts->script_pos);
 }
 
 }  // namespace
@@ -204,11 +201,11 @@ void DrawBall() {
 // +9 is past 10.
 C3_EXPORT void __cdecl Magic002Ball_Fly(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-    SetLong(s + 0x14, AddU(Long(s + 0x14), 0x100));
-    ts->start_x = AddU(ts->start_x, 4);
-    ts->vel_x = AddU(ts->vel_x, ts->start_y);
-    ts->vel_y = AddU(ts->vel_y, Long(s + 0x20));
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+    rv::Store(ts->step_y, AddU(ts->step_y, 0x100));
+    ts->work_18 = AddU(ts->work_18, 4);
+    ts->step_x = AddU(ts->step_x, ts->work_1c);
+    ts->step_z = AddU(ts->step_z, ts->work_20);
     Inc(s[9]);
     DrawBall();
     if (Sc()[9] > 10) Inc(Sc()[1]);
@@ -219,8 +216,8 @@ C3_EXPORT void __cdecl Magic002Ball_Fly(void) {
 C3_EXPORT void __cdecl Magic002Ball_Shatter(void) {
     unsigned char* const s = Sc();
     SetLong(s + 0x60, AddU(Long(s + 0x60), 4));
-    SetWord(s + 0x58, Word(s + 0x58) + 0xFFF8u);
-    SetLong(s + 0x14, AddU(Long(s + 0x14), 0x20));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->script_pos, rv::As<records::BattleTask>(s)->script_pos + 0xFFF8u);
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, AddU(rv::As<records::BattleTask>(s)->step_y, 0x20));
     Inc(s[9]);
     DrawBall();
     if (Sc()[9] > 0x28) MH_CALL(BattleTask_FreeCurrent)();
@@ -369,20 +366,20 @@ C3_EXPORT void __cdecl Magic111_Task(void) {
 // +1 = 2. Sounds 0x100 and 0x101; the owner's +0 bit 0x40 set.
 C3_EXPORT void __cdecl Magic111_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Inc(Sc()[1]);
     unsigned slot = MH_CALL(BattleTask_Create)(1, 0x57) & 0xFFu;
     const unsigned actor = Mem(at::kActor)[0];
     const unsigned char* const record =
-        actor <= 2 ? Mem(ObjTrio_addr + actor * at::kPartyStride) : Mem(at::kEnemies + (actor - 3) * at::kEnemyStride);
+        actor <= 2 ? Mem(ObjTrio_addr + actor * at::kPartyStride) : Mem(Battle_Enemies_addr + (actor - 3) * at::kEnemyStride);
     unsigned char* child = TaskSlot(slot);
     std::memmove(child, record, 0x80);
     unsigned char* self = Sc();
-    SetLong(child + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self)));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(child)->owner, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self)));
     child[1] = 0;
     child[2] = 0;
     child[6] = 1;
@@ -392,7 +389,7 @@ C3_EXPORT void __cdecl Magic111_Start(void) {
         slot = MH_CALL(BattleTask_Create)(1, 0x57) & 0xFFu;
         child = TaskSlot(slot);
         self = Sc();
-        SetLong(child + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self)));
+        rv::Store<std::int32_t>(rv::As<records::BattleTask>(child)->owner, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self)));
         child[1] = static_cast<unsigned char>(kind);
         Inc(self[0xB]);
     }
@@ -460,8 +457,8 @@ C3_EXPORT void __cdecl Magic111Wash_Run(void) {
     if (step >= 4) PastTable("Magic111Wash_Run", step, 4);
     magic_harness::Phase(kSteps[step])();
     if (Sc()[0] == 0) return;
-    Store(ScTask()->vel_x, AddU(ScTask()->vel_x, 1));
-    Store(ScTask()->vel_y, AddU(ScTask()->vel_y, 1));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, AddU(rv::Current<records::BattleTask>()->step_x, 1));
+    rv::Store(rv::Current<records::BattleTask>()->step_z, AddU(rv::Current<records::BattleTask>()->step_z, 1));
     Call0(bof3::addr::Magic111Wash_Draw);
 }
 
@@ -469,8 +466,8 @@ C3_EXPORT void __cdecl Magic111Wash_Run(void) {
 // +0xA 0x3C, +2 on.
 C3_EXPORT void __cdecl Magic111Wash_Start(void) {
     const std::uint32_t r = static_cast<std::uint32_t>(MH_CALL(Rand)());
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(r & 0x3F));
-    Store(ScTask()->vel_y, AddU(ScTask()->vel_x, 0x1F));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(r & 0x3F));
+    rv::Store(rv::Current<records::BattleTask>()->step_z, AddU(rv::Current<records::BattleTask>()->step_x, 0x1F));
     Sc()[9] = 0;
     Sc()[0xA] = 0x3C;
     Inc(Sc()[2]);

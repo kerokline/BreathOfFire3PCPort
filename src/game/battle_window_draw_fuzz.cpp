@@ -105,7 +105,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 12) {
     case 0: At(at::kPartyCount)[0] = static_cast<unsigned char>(v); break;
-    case 1: At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 17) - 8); break;
+    case 1: At(Config_WindowColour_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 17) - 8); break;
     case 2: {
         // a character of the print buffer, never its tail (Fix keeps 0x30.. 0)
         unsigned char* const b = At(at::kPrintBuf);
@@ -119,7 +119,7 @@ void Disturb() {
         break;
     }
     case 4: {
-        unsigned char* const r = At(at::kCharRecords + ((h >> 20) % 10) * at::kCharStride);
+        unsigned char* const r = At(CharacterRecords_addr + ((h >> 20) % 10) * at::kCharStride);
         static const unsigned kFields[] = {0x1A, 0x1B, 0x16, 0x17};
         r[kFields[(h >> 24) % 4]] = static_cast<unsigned char>(v % 3 == 0 ? v : v % 8);
         break;
@@ -132,7 +132,7 @@ void Disturb() {
     }
     case 6: At(Rest3c_Byte660_addr + (v & 3))[0] = static_cast<unsigned char>(v & 4 ? h >> 24 : 0); break;
     case 7: At(ModeFlow_CountdownA_addr + (v & 3))[0] = static_cast<unsigned char>(v & 4 ? h >> 24 : 0); break;
-    case 8: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(0x24 + v % 3); break;
+    case 8: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(0x24 + v % 3); break;
     default: break;
     }
 }
@@ -147,7 +147,7 @@ std::uint32_t Lo8(unsigned v) { return v & 0xFF; }
 // Window_Alloc as msgbox.cpp has it: claims the record when its first byte is 0.
 unsigned __cdecl StubAlloc(unsigned slot, unsigned kind) {
     Record(1, slot, kind);
-    unsigned char* const rec = At(at::kWindows + (slot & 0xFF) * at::kWindowStride);
+    unsigned char* const rec = At(WindowRecords_addr + (slot & 0xFF) * at::kWindowStride);
     unsigned answer = slot | 0xFFu;
     if (rec[0] == 0) {
         rec[0] = 1;
@@ -274,7 +274,7 @@ unsigned char __cdecl StubApCost(unsigned member, unsigned id, unsigned battle) 
     // (only inside the regions the rounds put back: 10 records, 4 working)
     if (Hash() % 3 == 0 && (member & 0xFF) < ((battle & 0xFF) == 0 ? 10u : 4u)) {
         const unsigned m = member & 0xFF;
-        unsigned char* const r = (battle & 0xFF) == 0 ? At(at::kCharRecords + m * at::kCharStride)
+        unsigned char* const r = (battle & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride)
                                                       : At(at::kWorking + m * at::kWorkingStride);
         SetWord(r + 0x1A, (Hash() >> 8) % 21);
         ++g_log_n;   // a different stream for the answer below
@@ -379,19 +379,19 @@ static_assert(kAbilityList + 1 == kCount, "the index list and the clone list dis
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kWindows, 22 * at::kWindowStride},                 // WindowRecords
+    {WindowRecords_addr, 22 * at::kWindowStride},           // WindowRecords
     {0x7E0670, 4},                                          // Gfx_PacketNext (into our pool)
     {at::kWorking, 4 * at::kWorkingStride},                 // the party's working records
-    {at::kCharRecords, 10 * at::kCharStride},               // CharacterRecords
+    {CharacterRecords_addr, 10 * at::kCharStride},          // CharacterRecords
     {0x903A50, 0x20},                                       // the window colour 0x903A5A
     {0x904040, 0x40},                                       // the party lists 0x904062
     {0x904650, 0x20},                                       // the flag words 0x90465C, 0x904660
     {0x904AA0, 0x20},                                       // 0x904AAA, the party size 0x904AB0
     {at::kPrintBuf, 0x40},                                  // the sprintf buffer
-    {MoveScript_EffectState_addr, 0x18},                    // character -> record
+    {Character_IndexById_addr, 0x18},                    // character -> record
     {at::kAbilities, 0x100 * at::kAbilityStride},           // the ability table
     {Gfx_ClutStripSource_addr + 0x208 - 0x200, 0x500},      // the CLUT shadow around the rows seeded
-    {at::kEnemies - 3 * at::kEnemyStride, 11 * at::kEnemyStride},  // enemies -3 .. 7
+    {Battle_Enemies_addr + 0x80 - 3 * at::kEnemyStride, 11 * at::kEnemyStride}, // enemies -3 .. 7
     // the shapes, the tile sizes, window 1's x table - around the ":" format
     // at 0x64E320, which a random byte could turn into a conversion that
     // reads an argument never passed
@@ -431,10 +431,10 @@ void Apply(const State& s) {
     g_log_n = 0;
 }
 
-unsigned char* Window(unsigned slot) { return At(at::kWindows + slot * at::kWindowStride); }
+unsigned char* Window(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowStride); }
 unsigned char* Ability(unsigned id) { return At(at::kAbilities + (id & 0xFF) * at::kAbilityStride); }
 unsigned char* Enemy(std::int32_t index) {
-    return At(at::kEnemies + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride)));
+    return At(Battle_Enemies_addr + 0x80 + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride)));
 }
 
 // Random bytes put back inside what the functions can safely be handed: the
@@ -444,11 +444,11 @@ void Fix() {
     Gfx_PacketNext = g_buf.pool + Next() % 0x40;
     unsigned char* const buf = At(at::kPrintBuf);
     std::memset(buf + 0x20, 0, 0x20);
-    if (Often()) At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(Next() % 17) - 8);
+    if (Often()) At(Config_WindowColour_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(Next() % 17) - 8);
     for (unsigned k = 0; k < 8; ++k)
         if (Often()) At(Cond_Flags_addr + 0xd2 + k)[0] = static_cast<unsigned char>(Next() % 0x18);
     for (unsigned k = 0; k < 0x18; ++k)
-        if (Often()) At(MoveScript_EffectState_addr + k)[0] = static_cast<unsigned char>(Next() % 10);
+        if (Often()) At(Character_IndexById_addr + k)[0] = static_cast<unsigned char>(Next() % 10);
     for (unsigned k = 0; k < kNames; ++k) {
         const unsigned len = Next() % (kNameBytes - 1);
         for (unsigned i = 0; i < len; ++i) g_buf.names[k][i] = static_cast<unsigned char>(0x21 + Next() % 0xDE);
@@ -456,7 +456,7 @@ void Fix() {
     }
     // AP and cost bytes near each other, the accessory bytes near 0x19 / 0x1A
     for (unsigned m = 0; m < 10; ++m) {
-        unsigned char* const r = At(at::kCharRecords + m * at::kCharStride);
+        unsigned char* const r = At(CharacterRecords_addr + m * at::kCharStride);
         if (Often()) SetWord(r + 0x1A, Next() % 21);
         for (unsigned s = 0x16; s <= 0x17; ++s)
             if (Often()) r[s] = static_cast<unsigned char>(0x18 + Next() % 4);
@@ -472,7 +472,7 @@ void Fix() {
         if (Often()) At(Rest3c_Byte660_addr + k)[0] = 0;
         if (Often()) At(ModeFlow_CountdownA_addr + k)[0] = 0;
     }
-    if (Half()) At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(0x24 + Next() % 3);
+    if (Half()) At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(0x24 + Next() % 3);
     // windows 5..12: actors 0..10, a state of 0..4, kinds of 0..2
     for (unsigned k = 5; k <= 12; ++k) {
         Window(k)[0xA] = static_cast<unsigned char>(Next() % 11);
@@ -618,7 +618,7 @@ void Cover(unsigned k, const State& in, const State& out, std::uint32_t result, 
 // live input before the passes run.
 void CoverApCost(const Args& args) {
     const unsigned m = args.a[0] & 0xFF;
-    const unsigned char* const r = (args.a[2] & 0xFF) == 0 ? At(at::kCharRecords + m * at::kCharStride)
+    const unsigned char* const r = (args.a[2] & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride)
                                                            : At(at::kWorking + m * at::kWorkingStride);
     if (r[0x16] == 0x1A || r[0x17] == 0x1A) ++g_cover.cost_half;
     else if (r[0x16] == 0x19 || r[0x17] == 0x19) ++g_cover.cost_quarter;

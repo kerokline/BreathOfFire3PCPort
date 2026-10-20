@@ -22,6 +22,7 @@
 #include "game/area_w3f.h"
 #include "game/area_w3f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w3f {
@@ -243,7 +244,7 @@ U FindFreeEffect(const U*, U answer) {
 U GroundEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) MoveCurrent(n >> 4);
-    if (n & 2) answer = (answer & 0xFFFF0000u) | ((Word(Sprite_Current + 0x3E) + (n >> 8) % 3 - 1) & 0xFFFFu);
+    if (n & 2) answer = (answer & 0xFFFF0000u) | ((rv::Current<records::SpriteHead>()->height_whole + (n >> 8) % 3 - 1) & 0xFFFFu);
     return answer;
 }
 // Item_NamePtr answers the fuzz's name buffer, filled.
@@ -342,7 +343,7 @@ ah::Region g_regions143[] = {
     {MoveScript_Object_addr, 4},
     {AreaW1a_FocusObject_addr, 4},
     {AreaW0c_AnswerMark_addr, 3}, // 0x9398CF .. 0x9398D1
-    {ScenaSc7_EventFlags_addr, 4},
+    {Gene_Bits_addr, 4},
     {Cond_ByteFE_addr, 1},
     {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},      // g_packets
@@ -354,7 +355,7 @@ const ah::Region kRegions144[] = {
     {Effect_Objects_addr, at::kEffectCount * at::kEffectStride},
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {Sprite_Kind2_addr, at::kObjectStride},
 };
 ah::Region g_regions145[] = {
@@ -365,7 +366,7 @@ ah::Region g_regions145[] = {
     {at::kTextRecords, 16},
     {Field_Kind2Hold_addr, 1},
     {Camera_Angles_addr + 0x2 - 2, 6}, // Camera_Angles
-    {MoveScript_WaitWordDA_addr, 2},
+    {Transition_Busy_addr, 2},
     {Cond_ByteFE_addr, 1},
     {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},      // g_packets
@@ -388,7 +389,7 @@ void Common(int area, unsigned k) {
     ah::SetPointer(MoveScript_Object_addr, ScriptRecord(ah::Next()));
     ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(ah::Next()));
     SetMember(ah::Next());
-    ah::SetPointer(AreaW0c_FlagRow_addr, ah::Mem(Cond_Flags_addr + (ah::Next() % 24) * 8));
+    ah::SetPointer(Chapter_FlagRow_addr, ah::Mem(Cond_Flags_addr + (ah::Next() % 24) * 8));
     SetPacketNext(ah::Next());
 }
 
@@ -404,7 +405,7 @@ void Disturb(U h) {
     case 4: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
     case 5: SetMember(h >> 12); break;
     case 6: Field_Kind2Hold = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
-    case 7: MoveScript_WaitWordDA = static_cast<unsigned short>(h & 0x100 ? 0 : v); break;
+    case 7: Transition_Busy = static_cast<unsigned short>(h & 0x100 ? 0 : v); break;
     case 8: Cond_ByteFE = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
     default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 3); break;
     }
@@ -453,7 +454,7 @@ void Seed143(unsigned k) {
     switch (k) {
     case k143Ask52:
         SeedAnswer();
-        if (ah::Often()) SetLong(ah::Mem(ScenaSc7_EventFlags_addr), static_cast<std::int32_t>(AH_PICK(0x3FFFF, 0x3FFFF, 0x3FFFE, 0x7FFFF, 0x13FFFF, 0x8003FFFF, 0x2FFFF)));
+        if (ah::Often()) SetLong(ah::Mem(Gene_Bits_addr), static_cast<std::int32_t>(AH_PICK(0x3FFFF, 0x3FFFF, 0x3FFFE, 0x7FFFF, 0x13FFFF, 0x8003FFFF, 0x2FFFF)));
         break;
     case k143Mark3: case k143Mark5: case k143Ask54: case k143Msg49: SeedAnswer(); break;
     case k143Run8:
@@ -499,7 +500,7 @@ void Args143(unsigned k, std::uint32_t* a) {
 void SeedZ(U target) {
     if (!ah::Often()) return;
     static const std::int32_t kOff[] = {0, 1, 0x7FFF, 0x8000, -1, -0x8000, -0x8001, 0x10000, -0x10000, 0x7FFFFF};
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(target - static_cast<U>(kOff[ah::Next() % 10])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(target - static_cast<U>(kOff[ah::Next() % 10])));
 }
 void Seed144(unsigned k) {
     Common(144, k);
@@ -532,7 +533,7 @@ void Seed145(unsigned k) {
         }
         break;
     case k145DropFall:
-        if (ah::Half()) SetLong(Sprite_Current + 0x20, static_cast<std::int32_t>(AH_PICK(0, 1, 0xFFFFFFF8u, 0x80000000u, 0x7FFFFFFF)));
+        if (ah::Half()) rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_20, static_cast<std::int32_t>(AH_PICK(0, 1, 0xFFFFFFF8u, 0x80000000u, 0x7FFFFFFF)));
         break;
     case k145ByMember1: SeedMemberKeys(Area145_MemberKeys1_addr); break;
     case k145ByMember5: SeedMemberKeys(Area145_MemberKeys5_addr); break;
@@ -558,7 +559,7 @@ void Seed145(unsigned k) {
         case 0xC: SetWord(ah::Mem(at::kTailTimer), AH_PICK(0, 4, 5, 0x36, 0x37, 0xFFFF, 0x104)); break;
         case 0x15: case 0x20: Field_Kind2Hold = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0x80)); break;
         case 0x1A: case 0x21: case 0x24: SetWord(ah::Mem(at::kTailTimer), on ? 0 : AH_PICK(1, 2, 0x100, 0xFFFF)); break;
-        case 0x1F: case 0x23: MoveScript_WaitWordDA = static_cast<unsigned short>(on ? 0 : AH_PICK(1, 0x100, 0xFFFF)); break;
+        case 0x1F: case 0x23: Transition_Busy = static_cast<unsigned short>(on ? 0 : AH_PICK(1, 0x100, 0xFFFF)); break;
         default: break;
         }
         break;

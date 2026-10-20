@@ -65,7 +65,7 @@ rule ([`README.md`](README.md)) here too.
 | I18 | F12 before shipping: disable it, or make it a true quicksave | game behaviour | HIGH / MEDIUM | open |
 | I19 | Screen curvature for the SatPixie look | look | HIGH | open |
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
-| I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | **staged 2026-10-20** as the reading-row round ([`reading-row-round.md`](reading-row-round.md), issue #97) with I45; its own branch and playtesting (owner, 2026-09-24) |
+| I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | **staged 2026-10-20** as the reading-row round ([`reading-row-round.md`](reading-row-round.md), issue #97) with I50; its own branch and playtesting (owner, 2026-09-24) |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
 | I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | **built** 2026-10-06..11 (DIV-0081 the loops, DIV-0087 the disc's music, DIV-0091 minimp3, heard); method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26). **Asked for first, 2026-10-04**: the owner wants to hear the MP3s against the sequences before the MP3 decoder's fate is decided ([`platform-layers-plan.md`](platform-layers-plan.md) section 5) |
 | I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | **built 2026-09-27..28** in round ten's first three waves - every chapter bank ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) |
@@ -88,7 +88,7 @@ rule ([`README.md`](README.md)) here too.
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
 | I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | **partly built** 2026-10-15: every step timed; the movie, PSX sound and language layers reused when unchanged (adding a disc 89 s, not 372); the PSP's conversions left |
 | I43 | Settle every gap of a disc-built exe image: each of the ranges where the PC's `.data` has a value and the image leaves zero (`recipes/exe-gaps.tsv`; for the EU disc 188 ranges, 2,561 bytes on `main` the day it opened) placed from a disc, filled by an engine rule, or shown never read - first by placing a region from the pointers that point into it | tooling / engine | HIGH | **step 1 built** 2026-10-16 (the owner asked), from the forest sprite of a PSX-only install: the importer places a region from the pointers into it (gap ranges EU 185 to 177, the sprite fixed); steps 2..4 open |
-| I45 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **staged 2026-10-20** in the reading-row round ([`reading-row-round.md`](reading-row-round.md)); from issue #97 (the owner, 2026-10-20) |
+| I50 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **staged 2026-10-20** in the reading-row round ([`reading-row-round.md`](reading-row-round.md)); from issue #97 (the owner, 2026-10-20) |
 
 ---
 
@@ -1891,10 +1891,12 @@ _(2026-10-20) step 2 measured, steps 3 and 4 framed_: the read watch found only 
 **Ask (2026-10-17, the owner):** if we want to move closer to a fully
 reconstructed source, what is the next code step?
 **Kind:** engine / tooling
-**Status (2026-10-19):** stages 1 and 2 IN PROGRESS: stages A and B of
-[`typed-data-round.md`](typed-data-round.md) run on `typed/b1` (50,943 raw
-data sites down to 27,394, machine code identical to `main`); stage C staged
-in [`typed-data-stage-c.md`](typed-data-stage-c.md).
+**Status (2026-10-20):** stages 1 and 2 IN PROGRESS: stages A and B of
+[`typed-data-round.md`](typed-data-round.md) merged as PR #94 (50,943 raw
+data sites down to 27,394, machine code identical to `main`); stage C
+([`typed-data-stage-c.md`](typed-data-stage-c.md)) built on `typed/c`, the
+machine code identical again (the typed tables, `GameData`, the strict CI
+rule; every raw site left has a reason), its PR after the owner's smoke run.
 **Feasibility:** HIGH for stages 1 and 2 (mechanical, no behaviour change,
 parallel by file group); MEDIUM for stage 3 (a loader change, proved by the
 state hash). **Gated on:** nothing for stage 1; stage 3 on the state hash
@@ -2068,8 +2070,66 @@ the disc in the running one. Read from the code on 2026-10-20, not played.
 ### Outcome
 _(2026-10-20) open; logged at the owner's word, nothing measured._
 
+## I48 — A comment-cleanup round after the typed-data round
+
+**Ask (2026-10-20, the owner):** the typed-data round left a lot of
+retire notes and stale comments; worth a cleanup round at some point, not
+now.
+**Kind:** tooling / source   **Feasibility:** HIGH   **Gated on:** the
+typed-data round's stage C merged; the owner's word to pick it up.
+
+Every time stages B and C retired a module's constant for its
+`symbols.toml` name, the converter left a note where the constant was, in
+the form `// kX: now Name[i].field (symbols.toml).`, so a reader of the old
+docs could still find the module's word. Measured on `typed/c` `2a208d56`
+(a scan of `src/` for comment lines of that shape): **4,714 retire notes in
+338 files**, 389 of them in fuzz files; 92 files carry twenty or more (the
+most, `scena_sc7_callees.h`, 67). 14 name a symbol `symbols.toml` no longer
+has (renamed since the note was written). Besides them, comments written
+for the module's own constants and helpers that the stages removed: 40
+comment lines still name an `at::kX` constant, 4 of them a constant
+defined nowhere now; the per-module header comments that describe the
+retired constants or the old per-file view helpers are not counted.
+
+### What to measure first
+- The notes by kind: a constant whose name says what the symbol does not
+  (worth keeping as one line in the entry's `note`, or a typed alias as C4
+  did for the scratch block), against one that only repeats the symbol.
+- Which docs cite a module constant by name, so a note's removal does not
+  orphan a doc's search (`grep` of `docs/` for each `kX`).
+
+### Options when picked up, none chosen
+- Drop the notes whose constant's name is the symbol's or adds nothing;
+  move the rest's word into the entry's `note` in `symbols.toml`; one
+  tool, gated by `tools/codegen_same.py` (comments only, so `0 differ` by
+  construction) and the census's `--check`.
+- Keep the notes, and only fix the stale ones (the 14, the `at::kX`
+  comments, the header comments).
+- Leave them: they cost reading time, not correctness.
+
+### Outcome
+_(2026-10-20) open; logged at the owner's word, nothing changed._
+
+## I49 — What `Battle_AutoTargetCheck`'s `+0xBA` test means
+
+**Status:** open (2026-10-20, logged at the owner's word: "maybe leave a note in ideas to check it again later").
+
+**What.** `Battle_AutoTargetCheck` (`src/game/rest_4a.cpp`) keeps a forced target only while the enemy record's
+u16 at `+0xBA` is above 1 (with `+0x92` bit 5 and `+0x114` bit 14 clear). The module called that word `kEnemyHp`;
+`records.h` calls `+0xBA` `BattleEnemy::intel`, the stat copy's `+0xA`, which the damage code reads as INT
+(`battle_damage` kAttackerInt / kTargetInt) and `BattleEnemy_PickAction` tests for `<= 1`; HP is `+0xA4`. The C4
+audit (slice B) found the two names disagree; the owner had the constant renamed `kEnemyIntel` on 2026-10-20.
+`magic_steal.md` R22's "speed" at `+0xBA` is a third reading (its code reads `+0xB8`).
+
+**The check.** An INT gate on an auto-target is an odd rule, so confirm the field by measurement: the writers of
+`+0xBA` (`Battle_CopyEnemyData`, `EnemyAI_ScaleStat`), the PSX twin's test (psx-twin-check.md), and a live read of
+`+0xBA` against a known enemy's stats. If it is not INT, the struct's name and both readers' docs change together.
+
+### Outcome
+_(2026-10-20) open; the rename is done, the meaning unconfirmed._
+
 ---
-## I45 — A second language in the row above the text
+## I50 — A second language in the row above the text
 
 **Ask (2026-10-20, the owner, from GitHub issue #97 and a Reddit request):**
 beside furigana (I21), let two languages run in step: the message the player

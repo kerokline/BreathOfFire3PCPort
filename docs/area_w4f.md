@@ -75,7 +75,7 @@ extent; the `ja` makes every other state (and every negative one) nothing:
 
 - 0: message `0x6D`, `Field_Request` 2, state 1 (1 waits for the message).
 - 2 (unless `Field_Request` is 2): `Transition_Start(0)`, state 3.
-- 3 (once `MoveScript_WaitWordDA` is 0): `Draw_PassFlags` 0,
+- 3 (once `Transition_Busy` is 0): `Draw_PassFlags` 0,
   `Sound_StopMusic`, `Area192_RestoreCharacters`, `Sound_LoadStream(0)`,
   state 4.
 - 4 (once `Sound_StreamDone`): story flag `0x82`; `Field_StatusBits` (read
@@ -328,7 +328,7 @@ spawner), though its states sit in area 199's data.
 - **Regions beyond the field frame**, per area (the harness puts back only
   its regions, so every cell a seed, stand-in or the disturbance writes is
   one): the focus object, flag row, active member and script object pointers
-  and `MoveScript_WaitWordDA` in every area; area 192 the eight character
+  and `Transition_Busy` in every area; area 192 the eight character
   records (`0x520` bytes), `0x929EC1`, `0x9036D0`, `Draw_PassFlags`; area 193
   the last three and `0x937F98`; area 196 `Cond_ByteFE`; areas 197 and 198
   all twenty `Effect_Objects` records and the record an unchecked slot of

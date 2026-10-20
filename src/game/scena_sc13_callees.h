@@ -44,15 +44,16 @@ namespace at {
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: the scenes' word timer
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
-constexpr std::uint32_t kSlotWord = 0x903850;   // u16: an object or effect slot, a caption's clock
-constexpr std::uint32_t kCaptionTotal = 0x903852;  // u16: a caption's length in frames, less one
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
+inline auto& kSlotWord = SharedScratch;  // u16: an object or effect slot, a caption's clock
+constexpr std::uint32_t kSlotWord_addr = SharedScratch_addr; // kSlotWord's address, for the raw accessors that take one
+inline auto& kCaptionTotal = SharedScratch.w_02;  // u16: a caption's length in frames, less one
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Test / Set as a literal
 // kArea: now Game_AreaNumber (symbols.toml). u16 Game_AreaNumber
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 constexpr std::uint32_t kScriptFlags = 0x9039A2;   // u16 Field_ScriptFlags
 // kRequest: now Field_Request (symbols.toml). Field_Request
-// kWait: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA
+// kWait: now Transition_Busy (symbols.toml). u16 Transition_Busy
 // kMusicCurrent: now AreaW1f_MusicCurrent (symbols.toml). u8: Music_Play returns at once while its track equals it
 constexpr std::uint32_t kMusicTrack = 0x904131; // Music_Track (Cond_Flags + 0x1A1)
 // kCondFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
@@ -72,23 +73,23 @@ constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 // kOrigin: now MapView_Origin (symbols.toml). u16 MapView_Origin
 // kKind2Z: now Field_Kind2Z (symbols.toml). s32 Field_Kind2Z
 constexpr std::uint32_t kKind2X = 0x905E64;     // s32 Field_Kind2X
-constexpr std::uint32_t kKind2 = 0x7E0940;      // Sprite_Kind2: +0x34 x, +0x38 z, +0x3E the elevation
-constexpr std::uint32_t kExtra0 = 0x802000;     // Sprite_ObjectsExtra record 0: +0x34 x, +0x38 z, +0x3E
-constexpr std::uint32_t kExtra1Angle = 0x802110;   // s32 Sprite_ObjectsExtra record 1 + 0x6C: run 5's dial
+// kKind2: now Sprite_Kind2 on records::SpriteHead.
+// kExtra0: now Sprite_ObjectsExtra record 0 on records::SpriteObject.
+// kExtra1Angle: now Sprite_ObjectsExtra record 1 angle[2] (records::SpriteObject).
 // kExtraWord: now AreaW2c_LastArea (symbols.toml). u16 just past Sprite_ObjectsExtra: tested 0x70 / 0x91
 // kClut: now Gfx_ClutStrip (symbols.toml). Gfx_ClutStrip: 0x2000 16-bit colours
 constexpr unsigned kClutWords = 0x2000;
 // kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty
 // kFrame: now Frame_Counter (symbols.toml). Frame_Counter
-// kSpriteMode: now AreaW0c_PendingKind (symbols.toml). a byte the runs set 1 / 0xFF before an area change
+// kSpriteMode: now Area_EnterTransition (symbols.toml). a byte the runs set 1 / 0xFF before an area change
 // kEntryByte: now ModeFlow_AreaTransition (symbols.toml). a byte the runs set 0 / 0xFF before an area change
 constexpr std::uint32_t kTrio = 0x802D40;       // ObjTrio: three records of 0x14C
 constexpr std::uint32_t kTrioStride = 0x14C;
-// kFacing: now ObjTrio[8] (symbols.toml). u8 ObjTrio record 0 + 8: the leader's facing
+// kFacing: now ObjTrio[0].direction (symbols.toml). u8 ObjTrio record 0 + 8: the leader's facing
 constexpr std::uint32_t kLeaderName = 0x802DC9; // u8 ObjTrio record 0 + 0x89: who leads
-constexpr std::uint32_t kTrioX = 0x802D74;      // s32 ObjTrio record 0 + 0x34
-constexpr std::uint32_t kTrioY = 0x802D78;      // s32 ObjTrio record 0 + 0x38
-constexpr std::uint32_t kTrioZ = 0x802D7C;      // s32 ObjTrio record 0 + 0x3C
+// kTrioX: now ObjTrio record 0 x (records::PartyMember).
+// kTrioY: now ObjTrio record 0 z (records::PartyMember).
+// kTrioZ: now ObjTrio record 0 height (records::PartyMember).
 constexpr std::uint32_t kEffectArg = 0x669744;  // MoveScript_EffectArg, by the leader byte
 constexpr std::uint32_t kPendingKind = 0x9039F3;   // three bytes an object handler arms: 0x2C, 0, 0x11
 constexpr std::uint32_t kInputHeld = 0x7E1BE8;  // Input_Held (dword read)
@@ -97,10 +98,10 @@ constexpr std::uint32_t kCaptionText = 0x803580;   // u16 offsets, then the capt
 constexpr std::uint32_t kCaptionIndex = 0x7DEE48;  // u16: the caption Scena13_Caption draws
 // kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount
 constexpr std::uint32_t kPartyList = 0x904062;  // the party list bytes (Cond_Flags + 0xD2)
-constexpr std::uint32_t kEffectState = 0x66972C;   // MoveScript_EffectState: a record index by member
+constexpr std::uint32_t kEffectState = 0x66972C;   // Character_IndexById: a record index by member
 constexpr std::uint32_t kRecords = 0x903A70;    // the eight records of 0xA4 (0x533E50's pass)
 constexpr std::uint32_t kRecordStride = 0xA4;
-// kRecordIndex: now MoveScript_EffectState[8] (symbols.toml). u8: which of them run 2 / run 3 of chapter 14 touch
+// kRecordIndex: now Character_IndexById[8] (symbols.toml). u8: which of them run 2 / run 3 of chapter 14 touch
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). s16 MoveScript_F3Divisor
 // kViewByte: now ScenaSc6_Load10 (symbols.toml). a byte chapter 14's run 7 sets 1
 // kOtSlot: now Draw_OtSlot (symbols.toml). Draw_OtSlot

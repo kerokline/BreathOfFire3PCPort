@@ -71,7 +71,7 @@ U Watched() {
     h = Fnv(h, g_cmd, sizeof g_cmd);
     h = Fnv(h, g_act, sizeof g_act);
     h = Fnv(h, At(at::kRepeatLatch), 2);
-    h = Fnv(h, At(at::kWindow4State), 1);
+    h = Fnv(h, At(WindowRecords_addr + 0x93), 1);
     h = Fnv(h, At(0x8033A0), 0x80);   // the item window's record and its cursor fields
     h = Fnv(h, At(BattleActorCopies_ItemActor_addr), 1);
     h = Fnv(h, At(0x93C2A0), 0xA0);   // the message queue
@@ -90,14 +90,14 @@ void Disturb() {
     case 1: B(BattleE4_Step4_addr) = static_cast<unsigned char>(v % 5); break;
     case 2: SetPtr(BattleActorCopies_Command_addr, g_cmd + v % 0x10); break;
     case 3: SetPtr(BattleE4_MenuActor_addr, v % 4 == 0 ? static_cast<const void*>(Cmd()) : g_act + v % 0x10); break;
-    case 4: B(BattleActorCopies_ItemPage_addr) = static_cast<unsigned char>(v % 3 == 0 ? v : v % 5); break;
-    case 5: B(at::kItemCursor) = static_cast<unsigned char>(v % 3 == 0 ? v : v % 12); break;
+    case 4: B(Window16_Page_addr) = static_cast<unsigned char>(v % 3 == 0 ? v : v % 5); break;
+    case 5: B(WindowRecords_addr + 0x24c) = static_cast<unsigned char>(v % 3 == 0 ? v : v % 12); break;
     case 6: B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(v); break;
     case 7: B(BattleActorCopies_QueueWrite_addr) = static_cast<unsigned char>(v); break;
-    case 8: SetWord(At(BattleActorCopies_ItemScrollMotion_addr), v % 2 ? 0 : w); break;
+    case 8: SetWord(At(Window16_Scroll_addr), v % 2 ? 0 : w); break;
     case 9: SetWord(At(Input_Pressed_addr), w); break;
     case 10: SetWord(At(v % 2 ? Field_CancelButtons_addr : Field_ConfirmButtons_addr), v % 3 == 0 ? 0 : 1u << (w % 16)); break;
-    case 11: B(BattleActorCopies_EnemyCount_addr) = static_cast<unsigned char>(v % 9); break;
+    case 11: B(Battle_EnemyCount_addr) = static_cast<unsigned char>(v % 9); break;
     case 12: B(at::kPartyCount) = static_cast<unsigned char>(v % 5); break;
     case 13: Cmd()[0] = static_cast<unsigned char>(v); break;
     case 14: g_list[w % sizeof g_list] = static_cast<unsigned char>(v % 4 == 0 ? 0x97 : v); break;
@@ -107,12 +107,12 @@ void Disturb() {
         B(at::kItemRecords + id * at::kItemRecordSize) = static_cast<unsigned char>(v);
         break;
     }
-    case 16: SetWord(At(at::kItemScroll), v % 2 ? v % 9 : w); break;
+    case 16: SetWord(At(WindowRecords_addr + 0x250), v % 2 ? v % 9 : w); break;
     case 17: B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>(v); break;
-    case 18: B(BattleActorCopies_ItemOwner_addr) = static_cast<unsigned char>(v); break;
+    case 18: B(Window16_Owner_addr) = static_cast<unsigned char>(v); break;
     case 19: SetWord(Cmd() + 2, v % 3 == 0 ? 0x97 : v); break;
     case 20: SetLong(Cmd() + 0x10, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
-    default: B(BattleActorCopies_ItemState_addr) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    default: B(Window16_State_addr) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     }
 }
 
@@ -168,8 +168,8 @@ U __cdecl StubPlayEffect(U id) {
         const unsigned char v = static_cast<unsigned char>(h >> 16);
         switch ((h >> 24) % 4) {
         case 0: B(BattleActorCopies_ItemActor_addr) = v; break;
-        case 1: B(BattleActorCopies_ItemPage_addr) = static_cast<unsigned char>(v % 5); break;
-        case 2: B(at::kItemCursor) = static_cast<unsigned char>(v % 12); break;
+        case 1: B(Window16_Page_addr) = static_cast<unsigned char>(v % 5); break;
+        case 2: B(WindowRecords_addr + 0x24c) = static_cast<unsigned char>(v % 12); break;
         default: MoveCommand(); break;
         }
     }
@@ -182,7 +182,7 @@ U __cdecl StubSetupForActor() { Record(7, Watched()); MoveCommand(); Disturb(); 
 // stays inside it.
 U __cdecl StubAbilityList(U member, U type, U battle) {
     Record(8, member & 0xFF, type & 0xFF, battle & 0xFF, Watched());
-    if (Moves()) B(at::kItemCursor) = static_cast<unsigned char>(Hash() >> 16);
+    if (Moves()) B(WindowRecords_addr + 0x24c) = static_cast<unsigned char>(Hash() >> 16);
     Disturb();
     return Address(g_list + (Hash() >> 8) % 0x100);
 }
@@ -269,7 +269,7 @@ constexpr Call kItemPartyCalls[] = {{0x31, 0x461EB0}, {0x47, 0x591E50},  {0x79, 
 constexpr Call kItemConfirmCalls[] = {{0x6, 0x587740}, {0x49, 0x449FE0}};
 
 enum : unsigned {
-    kTargetDispatch, kShowPrompt, kPickDispatch, kBegin, kPickEnemy, Field_ConfirmButtons_addr, kItemDispatch, kOpenDispatch, kOpenWindow,
+    kTargetDispatch, kShowPrompt, kPickDispatch, kBegin, kPickEnemy, kTargetConfirm, kItemDispatch, kOpenDispatch, kOpenWindow,
     kBrowse, kChoose, kTargetDispatch2, kTargetBegin, kItemPickEnemy, kItemPickParty, kItemConfirm, kCount
 };
 
@@ -364,8 +364,8 @@ void Fix() {
     for (unsigned char& b : g_list) if (Next() % 4 == 0) b = 0x97;
     B(BattleE4_Step3_addr) = static_cast<unsigned char>(Next() % 6);
     B(BattleE4_Step4_addr) = static_cast<unsigned char>(Next() % 5);
-    if (Often()) B(BattleActorCopies_ItemState_addr) = 0;
-    if (Half()) SetWord(At(BattleActorCopies_ItemScrollMotion_addr), 0);
+    if (Often()) B(Window16_State_addr) = 0;
+    if (Half()) SetWord(At(Window16_Scroll_addr), 0);
 }
 
 // Buttons: none, the cancel set, the confirm set, both, anything.
@@ -389,7 +389,7 @@ void SeedTarget() {
     static const unsigned char kTargets[] = {0, 1, 2, 3, 4, 10, 0x7F, 0x80, 0x81, 0xFF, 0xFE};
     if (Often()) Cmd()[0] = Pick(kTargets);
     static const unsigned char kCounts[] = {0, 1, 2, 3, 4, 5, 8, 0xFF};
-    if (Often()) B(BattleActorCopies_EnemyCount_addr) = Pick(kCounts);
+    if (Often()) B(Battle_EnemyCount_addr) = Pick(kCounts);
     if (Often()) B(at::kPartyCount) = Pick(kCounts);
 }
 
@@ -417,16 +417,16 @@ void Seed(unsigned k) {
         static const U kFlags[] = {2, 0x20002, 0, 0x20000, 0xFFFFFFFFu, 0xFFFDFFFFu};
         SetLong(Cmd() + 0x10, static_cast<std::int32_t>(Often() ? Pick(kFlags) : Next()));
         static const unsigned char kPages[] = {0, 1, 2, 3, 4, 0x7F, 0x80, 0xFF};
-        B(BattleActorCopies_ItemPage_addr) = Pick(kPages);
+        B(Window16_Page_addr) = Pick(kPages);
         static const std::uint16_t kScrolls[] = {0, 1, 2, 3, 4, 6, 7, 8, 9, 0xFFFF, 0xFFFD, 0xFFFC, 0xFFFB, 0x7FFF, 0x8000};
-        if (Often()) SetWord(At(at::kItemScroll), Pick(kScrolls));
+        if (Often()) SetWord(At(WindowRecords_addr + 0x250), Pick(kScrolls));
         // the cursor at the edges of what is shown - the scroll row, one either
         // side of it, the last row shown and one past it - or at 0, 8, 9
         static const int kFromScroll[] = {-1, 0, 1, 6, 7};
         static const unsigned char kCursors[] = {0, 1, 8, 9, 10, 0xFF, 0x80};
-        if (Often()) B(at::kItemCursor) = Half() ? static_cast<unsigned char>(B(at::kItemScroll) + Pick(kFromScroll)) : Pick(kCursors);
-        if (Often()) B(BattleActorCopies_ItemState_addr) = 0;
-        if (Often()) SetWord(At(BattleActorCopies_ItemScrollMotion_addr), 0);
+        if (Often()) B(WindowRecords_addr + 0x24c) = Half() ? static_cast<unsigned char>(B(WindowRecords_addr + 0x250) + Pick(kFromScroll)) : Pick(kCursors);
+        if (Often()) B(Window16_State_addr) = 0;
+        if (Often()) SetWord(At(Window16_Scroll_addr), 0);
         if (k == kBrowse && Half()) {
             // the window's own buttons: one cancel bit, one confirm bit apart
             // from it, and one of them pressed
@@ -466,7 +466,7 @@ void Cover(unsigned k, const State& in, const State& out) {
             if (out.log[i].a == 0x107) ++g_cover.browse_refused;
         }
         if (Byte(out, BattleE4_Step2_addr) == 7 && Byte(in, BattleE4_Step2_addr) != 7) ++g_cover.browse_97;
-        const unsigned before = Byte(in, BattleActorCopies_ItemPage_addr), after = Byte(out, BattleActorCopies_ItemPage_addr);
+        const unsigned before = Byte(in, Window16_Page_addr), after = Byte(out, Window16_Page_addr);
         if ((before == 0 && after == 3) || (before == 3 && after == 0)) ++g_cover.page_wrap;
     }
 }

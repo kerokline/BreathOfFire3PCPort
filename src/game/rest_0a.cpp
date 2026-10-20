@@ -16,6 +16,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -60,27 +61,22 @@ const unsigned char* EffectByArgument(unsigned index, const char* who) {
     if (i >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads 0x%X unchecked", who, i,
                     static_cast<unsigned>(Effect_Objects_addr + i * kEffectStride));
-    return Effect_Objects + i * kEffectStride;
+    return rv::Bytes(Effect_Objects) + i * kEffectStride;
 }
 
-const unsigned char* Member(unsigned m) { return At(Field_Members_addr + 0x4 + (m - 1) * kMemberStride); }
+const unsigned char* Member(unsigned m) { return At(ObjTrio_addr + 0x14c + (m - 1) * kMemberStride); }
 
 bool MapTarget(unsigned char b) { return b == 0xF2; }
 bool MapBlocked(unsigned char b) { return b == 0xF0 || b == 0xF1 || b == 0xF4 || b == 0xF6 || b == 0xF7; }
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 // The two steps ahead of Sprite_Current (x + 2 * step, z + 2 * step), read
 // before any call: 0x51C390's and 0x522560's point.
 void TwoAhead(U& x, U& z) {
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
-    z = static_cast<U>(MemberRec(s)->z) + 2u * StepZ(d);
+    x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
+    z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
 }
 
 // 0x524DA0's side probe in direction d (3 or 5): the point one step that way
@@ -89,13 +85,13 @@ void TwoAhead(U& x, U& z) {
 // height word (both s16): +0x2B = 0.
 void SideProbe(unsigned d) {
     const unsigned char* s = Sprite_Current;
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = Sprite_Current;
-    if (static_cast<short>(Word(s + 0x3E)) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
 
 }  // namespace
@@ -125,10 +121,10 @@ extern "C" unsigned char __cdecl PartyAction_TargetAhead(void) {
 extern "C" unsigned char __cdecl PartyAction_MemberBeyondEffect(unsigned index) {
     const unsigned char* const e = EffectByArgument(index, "PartyAction_MemberBeyondEffect (0x51C6A0)");
     const unsigned d = Sprite_Current[8];
-    const U x = static_cast<U>(EffectRec(e)->x) + 2u * StepX(d);
-    const U z = static_cast<U>(EffectRec(e)->z) + 2u * StepZ(d);
+    const U x = static_cast<U>(rv::As<records::EffectObject>(e)->x) + 2u * StepX(d);
+    const U z = static_cast<U>(rv::As<records::EffectObject>(e)->z) + 2u * StepZ(d);
     for (unsigned m = 1; m < Field_MemberCount; ++m)
-        if (SH_CALL(Sprite_PointInReach)(static_cast<int>(x), static_cast<int>(z), static_cast<short>(Word(e + 0x3E)), 1,
+        if (SH_CALL(Sprite_PointInReach)(static_cast<int>(x), static_cast<int>(z), static_cast<short>(rv::As<records::EffectObject>(e)->height_whole), 1,
                                          Member(m)) != 0)
             return 1;
     return 0;
@@ -140,8 +136,8 @@ extern "C" unsigned char __cdecl PartyAction_MemberBeyondEffect(unsigned index) 
 extern "C" unsigned char __cdecl PartyAction_MemberOnEffect(unsigned index) {
     for (unsigned m = 1; m < Field_MemberCount; ++m) {
         const unsigned char* const e = EffectByArgument(index, "PartyAction_MemberOnEffect (0x51DD70)");
-        const auto height = static_cast<short>(static_cast<std::uint16_t>(Word(e + 0x3E) + 0x200));
-        if (SH_CALL(Sprite_PointInReach)(EffectRec(e)->x, EffectRec(e)->z, height, 1, Member(m)) != 0) return 1;
+        const auto height = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::EffectObject>(e)->height_whole + 0x200));
+        if (SH_CALL(Sprite_PointInReach)(rv::As<records::EffectObject>(e)->x, rv::As<records::EffectObject>(e)->z, height, 1, Member(m)) != 0) return 1;
     }
     return 0;
 }
@@ -158,16 +154,16 @@ extern "C" unsigned char __cdecl PartyAction_Kind30Ahead(void) {
     if (state[0x89] != 2 || (state[0x138] & 1) != 0) return 0xFF;
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     for (unsigned i = 0; i < kEffectCount; ++i) {
-        const unsigned char* const e = Effect_Objects + i * kEffectStride;
+        const unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
         if (e[0] == 0 || e[5] != 0x30) continue;
         if (SH_CALL(Sprite_PointInReach)(static_cast<int>(x), static_cast<int>(z),
-                                         static_cast<short>(Word(Sprite_Current + 0x3E)), 1, e) == 0)
+                                         static_cast<short>(rv::As<records::PartyMember>(Sprite_Current)->height_whole), 1, e) == 0)
             continue;
-        if (EffectRec(e)->x == MemberRec(Sprite_Current)->x) return static_cast<unsigned char>(i);
-        if (EffectRec(e)->z == MemberRec(Sprite_Current)->z) return static_cast<unsigned char>(i);
+        if (rv::As<records::EffectObject>(e)->x == rv::Current<records::PartyMember>()->x) return static_cast<unsigned char>(i);
+        if (rv::As<records::EffectObject>(e)->z == rv::Current<records::PartyMember>()->z) return static_cast<unsigned char>(i);
     }
     return 0xFF;
 }
@@ -198,15 +194,15 @@ extern "C" unsigned char __cdecl PartyAction_BlockedAhead(void) {
 extern "C" void __cdecl Effect_SpawnAtCellHigh(unsigned state, unsigned x, unsigned z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect_Objects + slot * kEffectStride;
+    unsigned char* const e = rv::Bytes(Effect_Objects) + slot * kEffectStride;
     e[0] = 1;
     e[5] = 0x34;
     e[1] = static_cast<unsigned char>(state);
-    EffectRec(e)->x = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
+    rv::As<records::EffectObject>(e)->x = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
     const auto zz = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
-    EffectRec(e)->z = zz;
-    const long ground = SH_CALL(AreaMap_Elevation)(EffectRec(e)->x, zz);
-    SetWord(e + 0x3E, static_cast<unsigned>(ground) + 0x200);
+    rv::As<records::EffectObject>(e)->z = zz;
+    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
+    rv::As<records::EffectObject>(e)->height_whole = static_cast<unsigned>(ground) + 0x200;
     e[0xB] = 1;
 }
 

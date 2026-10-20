@@ -73,12 +73,12 @@ constexpr std::uint32_t kGridText = 0x66A32C;       // 3 pointers to strings (in
 // kStyleColours: now Gfx_ClutStripSource[0x114] (symbols.toml). the window styles' colour words, 0x40 bytes a style
 
 // --- cells ---
-// kStyle: now BattleDraw_Colour (symbols.toml). the window style byte (Menu_DrawBox's colour)
-// kLeader3: now ObjTrio[3] (symbols.toml). ObjTrio (the leader's record) +3
-// kLeader4: now ObjTrio[4] (symbols.toml). ObjTrio +4
-// kRecord6State: now Effect_Objects[0x301] (symbols.toml). Effect_Objects record 6: +1
-// kRecord6Hold: now Effect_Objects[0x308] (symbols.toml). record 6: +8
-// kRecord3Y: now Effect_Objects[0x1b0] (symbols.toml). record 3: dword +0x30 (the glyph row's y)
+// kStyle: now Config_WindowColour (symbols.toml). the window style byte (Menu_DrawBox's colour)
+// kLeader3: now ObjTrio[0].state3 (symbols.toml). ObjTrio (the leader's record) +3
+// kLeader4: now ObjTrio[0].state4 (symbols.toml). ObjTrio +4
+// kRecord6State: now Effect_Objects[6].state (symbols.toml). Effect_Objects record 6: +1
+// kRecord6Hold: now Effect_Objects_addr + 0x308 (symbols.toml). record 6: +8
+// kRecord3Y: now Effect_Objects_addr + 0x1b0 (symbols.toml). record 3: dword +0x30 (the glyph row's y)
 constexpr std::uint32_t kItemIds = 0x9042D4;        // the accessories' inventory ids, 0x80 bytes (docs/menu-windows.md)
 constexpr std::uint32_t kItemCounts = 0x9044D4;     // their counts, 0x80 bytes
 constexpr std::uint32_t kEquipA = 0x904130;         // two accessory ids the equipped panel prints

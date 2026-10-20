@@ -31,6 +31,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc6_callees.h"
 #include "game/scenario_harness.h"
@@ -52,8 +53,6 @@ using scena_sc6::ZennyFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-std::uint16_t& W(unsigned char* p) { return W(Addr(p)); }
 std::int32_t Get32(const unsigned char* p) {
     std::int32_t v;
     std::memcpy(&v, p, 4);
@@ -71,7 +70,7 @@ void SetState(unsigned char v) { MoveScript_PartyRecords[0x62] = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool Waiting() { return MoveScript_WaitWordDA != 0; }
+bool Waiting() { return Transition_Busy != 0; }
 bool Busy() { return Request() == 2; }   // a message still open
 void SetMusicByte(unsigned char v) { AreaW1f_MusicCurrent = v; }
 void ScriptOr8() { B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | 8); }       // or byte
@@ -89,7 +88,7 @@ void ClearCounters123() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 unsigned char* Story() { return &Cond_Flags[0xa0]; }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 bool StoryFlag(unsigned i) { return SH_CALL(Flags_Test)(Story(), i) != 0; }
@@ -141,7 +140,7 @@ void EndRunAll() {
     SetRun(0);
 }
 
-// The character record of MoveScript_EffectState[k] (the member's), its +0xB.
+// The character record of Character_IndexById[k] (the member's), its +0xB.
 unsigned char& RecordB(unsigned k) {
     const unsigned member = B(at::kEffectState + k);
     return B(at::kCharRecords + at::kCharStride * member + 0xB);
@@ -149,24 +148,24 @@ unsigned char& RecordB(unsigned k) {
 
 unsigned char* Effect(unsigned slot) { return &B(at::kEffects + (slot & 0xFFu) * at::kEffectStride); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 std::int32_t Angle(std::uint32_t a) { return static_cast<std::int16_t>(W(a)); }
 
 // Effect_FindFree into the slot byte 0x903850 (stored before it is tested);
 // false for none (0xFF).
 bool TakeSlot() {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    B(at::kEffectSlot) = slot;
+    at::kEffectSlot = slot;
     return slot != 0xFF;
 }
 // The slot byte's record: live, a kind, at (x, y, z), a life at +9.
 void Place(unsigned char kind, std::int32_t x, std::int32_t y, std::int32_t z, unsigned char life) {
-    unsigned char* const e = Effect(B(at::kEffectSlot));
+    unsigned char* const e = Effect(at::kEffectSlot);
     e[0] = 1;
     e[5] = kind;
     Put32(e + 0x64, x);
@@ -212,8 +211,8 @@ void MemberEffect(std::uint32_t object, unsigned char six, std::uint32_t member)
     Effect(s[0xB])[6] = six;
     Put32(Effect(s[0xB]) + 0xC, 0);
     Put32(Effect(s[0xB]) + 0x10, static_cast<signed char>(B(at::kMemberBytes + B(member))));
-    Fx(Effect(s[0xB]))->screen_x = Spr(s)->screen_x;
-    Fx(Effect(s[0xB]))->screen_y = Spr(s)->screen_y;
+    rv::As<records::EffectObject>(Effect(s[0xB]))->screen_x = rv::As<records::SpriteObject>(s)->screen_x;
+    rv::As<records::EffectObject>(Effect(s[0xB]))->screen_y = rv::As<records::SpriteObject>(s)->screen_y;
 }
 
 // A table entry read in place, the index checked against the table.
@@ -257,19 +256,20 @@ SC6_EXPORT void __cdecl Scena06_Start(void) {
 SC6_EXPORT void __cdecl Scena06_GuestRecord(void) {
     const unsigned char* const t = &Scena06_GuestStats[0];
     unsigned char* const r = &B(at::kRecord7);
-    W(r + 0x18) = t[0];
+    auto* const c = rv::As<records::CharRecord>(r);   // character record 7, CharacterRecords 0x903A70 + 7 * 0xA4
+    c->hp = t[0];
     r[0x12] = t[6];
     r[0x15] = t[7];
-    W(r + 0x20) = t[1];
-    W(r + 0x40) = t[1];
-    W(r + 0x24) = t[2];
-    W(r + 0x44) = t[2];
-    W(r + 0x26) = t[3];
-    W(r + 0x46) = t[3];
-    W(r + 0x28) = t[4];
-    W(r + 0x48) = t[4];
-    W(r + 0x2A) = t[5];
-    W(r + 0x4A) = t[5];
+    c->stats.max_hp = t[1];
+    c->base.max_hp = t[1];
+    c->stats.atk = t[2];
+    c->base.atk = t[2];
+    c->stats.def = t[3];
+    c->base.def = t[3];
+    c->stats.agi = t[4];
+    c->base.agi = t[4];
+    c->stats.intel = t[5];
+    c->base.intel = t[5];
 }
 
 // original 0x54E3B0: the call-table entries by the selector Cond_Flags
@@ -539,7 +539,7 @@ SC6_EXPORT void __cdecl Scena06_Run02(void) {
         return;
     case 10: {
         if (Busy()) return;
-        const unsigned lead = ObjTrio[8];
+        const unsigned lead = ObjTrio[0].direction;
         SetCounter(0, 0xF);
         if (lead == 2) DropIn(4);
         else if (lead == 3) DropIn(5);
@@ -561,7 +561,7 @@ SC6_EXPORT void __cdecl Scena06_Run02(void) {
     case 16:
         if (Counter(0) != 0x1A) return;
         if (!TakeSlot()) return;
-        SetCounter(1, B(at::kEffectSlot));
+        SetCounter(1, at::kEffectSlot);
         SetStep(0x11);
         Place(0x13, Camera_Angles[0], Camera_Angles[1], 0x3C, 0x3C);
         return;
@@ -604,7 +604,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         if (!TakeSlot()) return;
         SetStep(4);
         Place(0x31, Camera_Angles[0], Camera_Angles[1], 0x124, 0x5A);
-        Put32(Effect(B(at::kEffectSlot)) + 0xC, 0x700);
+        Put32(Effect(at::kEffectSlot) + 0xC, 0x700);
         return;
     }
     case 4:
@@ -667,7 +667,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         return;
     case 14: {
         if (Counter(0) != 0x32) return;
-        const unsigned member6 = MoveScript_EffectState[6];
+        const unsigned member6 = Character_IndexById[6];
         ScriptXor8();
         SetStep(0xF);
         B(at::kCharRecords + at::kCharStride * member6 + 0xB) |= 1;
@@ -685,6 +685,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
 
 // original 0x54B6C0: run 4, steps 0..7, 0xA..0xC, 0x14..0x16, 0x1E, 0x1F.
 SC6_EXPORT void __cdecl Scena06_Run04(void) {
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         Say(0xD);
@@ -698,7 +699,7 @@ SC6_EXPORT void __cdecl Scena06_Run04(void) {
     case 2:
         if (Counter(0) != 1) return;
         Field_Kind2X = 0x350000;
-        Field_Kind2Z = D(at::kLead38);
+        Field_Kind2Z = static_cast<std::uint32_t>(member0->z);
         MoveScript_F3Divisor = 0x20;
         SetStep(3);
         return;
@@ -818,6 +819,7 @@ SC6_EXPORT void __cdecl Scena06_Run05(void) {
 // As the original has it: step 6 moves Camera_Distance by -0x40 a frame for
 // 0x12 frames, counted in counter 3.
 SC6_EXPORT void __cdecl Scena06_Run06(void) {
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         DropIn(3);
@@ -870,7 +872,7 @@ SC6_EXPORT void __cdecl Scena06_Run06(void) {
         if (Counter(0) != 0x13) return;
         Kind2(0);
         if (!TakeSlot()) return;
-        SetCounter(3, B(at::kEffectSlot));
+        SetCounter(3, at::kEffectSlot);
         SetStep(8);
         Place(0x13, -0x2AA, Camera_Angles[1], 0x200, 0x1E);
         return;
@@ -900,8 +902,8 @@ SC6_EXPORT void __cdecl Scena06_Run06(void) {
         return;
     case 21:
         if (Counter(0) != 4) return;
-        Field_Kind2X = D(at::kLead34);
-        Field_Kind2Z = D(at::kLead38);
+        Field_Kind2X = static_cast<std::uint32_t>(member0->x);
+        Field_Kind2Z = static_cast<std::uint32_t>(member0->z);
         MoveScript_F3Divisor = 0x20;
         SetStep(0x16);
         return;
@@ -958,7 +960,8 @@ void Run07Leave() {
 }
 // Character record 7's two equipment bytes both set: `yes`, else `no`.
 unsigned char GuestEquipped(unsigned char yes, unsigned char no) {
-    return B(at::kRecord7 + 0x12) != 0 && B(at::kRecord7 + 0x15) != 0 ? yes : no;
+    const auto* const c = rv::AsConst<records::CharRecord>(&B(at::kRecord7));   // character record 7
+    return c->weapon != 0 && c->armour[2] != 0 ? yes : no;
 }
 // The request 7 with the byte 0x904C9F `v`, the pass flags 0, a step.
 void Request7(unsigned char v, bool pass, unsigned char step) {
@@ -1138,7 +1141,7 @@ namespace {
 // the second party list's Field_MemberCount bytes copied to 0x939A10, that
 // list reset to (0, 0xFF, 0xFF), the old count to 0x939A02, the count 1.
 void SortParty() {
-    unsigned char* const trio = &ObjTrio[0];
+    unsigned char* const trio = &rv::Bytes(ObjTrio)[0];
     for (unsigned i = 1; i <= 2; ++i) {
         unsigned char* const a = trio + at::kObjStride * (i - 1);
         for (unsigned j = i; j < 3; ++j) {
@@ -1831,14 +1834,14 @@ SC6_EXPORT void __cdecl Scena06_Run15(void) {
     case 0x0C:
         if (Counter(0) != 0x2D) return;
         if (!TakeSlot()) return;
-        SetCounter(3, B(at::kEffectSlot));
+        SetCounter(3, at::kEffectSlot);
         SetStep(0xD);
         Place(0x13, -0x32E, Camera_Angles[1], Angle(at::kAngle2), 0x50);
         return;
     case 0x0D:
         if (Effect(Counter(3))[0] != 0) return;
         if (!TakeSlot()) return;
-        SetCounter(3, B(at::kEffectSlot));
+        SetCounter(3, at::kEffectSlot);
         SetStep(0xE);
         Place(0x13, -0x2AA, Camera_Angles[1], Angle(at::kAngle2), 0x28);
         return;
@@ -1936,7 +1939,7 @@ SC6_EXPORT void __cdecl Scena06_Run16(void) {
         return;
     case 0x01:
         if (Counter(0) != 0x1F) return;
-        Gift(1, at::kRecord7 + 0x12, 0x20, at::kTextRecords, 0x94, 0x22);
+        Gift(1, CharacterRecords_addr + 0x47c + 0x12, 0x20, at::kTextRecords, 0x94, 0x22);
         return;
     case 0x0A:
         if (Busy()) return;
@@ -1945,7 +1948,7 @@ SC6_EXPORT void __cdecl Scena06_Run16(void) {
         return;
     case 0x0C:
         if (Counter(0) != 0x24) return;
-        Gift(2, at::kRecord7 + 0x15, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
+        Gift(2, CharacterRecords_addr + 0x47c + 0x15, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
         return;
     case 0x14:
         SH_CALL(Msg_OpenSystem)(1);
@@ -2029,7 +2032,7 @@ SC6_EXPORT void __cdecl Scena06_Run17(void) {
 // triggered: Scena06_Objects[object +0x86] (object, the flag bits' pointer).
 // 0x56D6D0 does not read the answer.
 SC6_EXPORT void __cdecl Scena06_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena06_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena06_ObjectTrigger")))(object, bits);
@@ -2165,16 +2168,16 @@ SC6_EXPORT unsigned char __cdecl Scena06_LeapAir(unsigned char* object, unsigned
     unsigned char* s = Sprite();
     Put32(s + 0x34, Get32(s + 0x34) + Get32(s + 0xC));
     Put32(s + 0x38, Get32(s + 0x38) + Get32(s + 0x10));
-    W(s + 0x3E) = static_cast<std::uint16_t>(W(s + 0x3E) + (Get32(s + 0x14) >> 8));
+    rv::As<records::SpriteHead>(s)->height_whole = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(s)->height_whole + (Get32(s + 0x14) >> 8));
     const std::int32_t before = Get32(s + 0x14);
     Put32(s + 0x14, before + static_cast<std::int16_t>(gravity));
     s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
     const long ground = SH_CALL(AreaMap_Elevation)(Get32(s + 0x34), Get32(s + 0x38));
     s = Sprite();
     if (Get32(s + 0x14) < 0) {
-        const int top = static_cast<std::int16_t>(W(s + 0x3E)) + 0x240;
+        const int top = static_cast<std::int16_t>(rv::As<records::SpriteHead>(s)->height_whole) + 0x240;
         if (static_cast<std::int16_t>(ground) > top) {
-            W(s + 0x3E) = static_cast<std::uint16_t>(ground + 0x240);
+            rv::As<records::SpriteHead>(s)->height_whole = static_cast<std::uint16_t>(ground + 0x240);
             s = Sprite();
         }
     }
@@ -2205,16 +2208,16 @@ SC6_EXPORT unsigned char __cdecl Scena06_LeapAir(unsigned char* object, unsigned
 SC6_EXPORT unsigned char __cdecl Scena06_LeapLand(unsigned char*, unsigned, unsigned, unsigned, unsigned gravity,
                                                   unsigned, unsigned) {
     unsigned char* const s = Sprite();
-    const std::uint16_t height = W(s + 0x3E);
+    const std::uint16_t height = rv::As<records::SpriteHead>(s)->height_whole;
     const long ground = SH_CALL(AreaMap_Elevation)(Get32(s + 0x34), Get32(s + 0x38));
     if (static_cast<std::int16_t>(ground) < static_cast<std::int16_t>(height) - 0x240) {
-        W(s + 0x3E) = static_cast<std::uint16_t>((Get32(Sprite() + 0x14) >> 8) + height);
+        rv::As<records::SpriteHead>(s)->height_whole = static_cast<std::uint16_t>((Get32(Sprite() + 0x14) >> 8) + height);
         unsigned char* const n = Sprite();
         Put32(n + 0x14, Get32(n + 0x14) + static_cast<std::int16_t>(gravity));
         return 1;
     }
     const long again = SH_CALL(AreaMap_Elevation)(Get32(Sprite() + 0x34), Get32(Sprite() + 0x38));
-    W(Sprite() + 0x3E) = static_cast<std::uint16_t>(again + 0x240);
+    rv::As<records::SpriteHead>(Sprite())->height_whole = static_cast<std::uint16_t>(again + 0x240);
     Sprite()[4] = 0;
     return 0;
 }

@@ -22,6 +22,8 @@
 #include "game/labels.h"
 #include "game/mode_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -101,7 +103,7 @@ void ClearCounters() { for (unsigned i = 0; i < 4; ++i) Counter(i) = 0; }
 void SetStep5(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void SetRun(int v) { MoveScript_Var7 = static_cast<signed char>(v); }
 // The flag bits, the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return g.flags_test(Bank(), n) != 0; }
 void SetFlag(unsigned n) { g.flags_set(Bank(), n); }
 // Takes an effect slot and, when there is one, marks its record live as kind
@@ -109,9 +111,9 @@ void SetFlag(unsigned n) { g.flags_set(Bank(), n); }
 // record indexed by the stored byte read back.
 bool PlaceEffect(unsigned char kind) {
     const unsigned char slot = g.effect_find();
-    At(at::kEffectSlot)[0] = slot;
+    at::kEffectSlot.b_00 = slot;
     if (slot == 0xFF) return false;
-    unsigned char* const e = Effect_Objects + ((static_cast<std::uint32_t>(Long(At(at::kEffectSlot))) & 0xFF) << 7);
+    unsigned char* const e = rv::Bytes(Effect_Objects) + ((static_cast<std::uint32_t>(at::kEffectSlot.d_00) & 0xFF) << 7);
     e[0] = 1;
     e[5] = kind;
     return true;
@@ -240,7 +242,7 @@ extern "C" void __cdecl GameMode_Shop(void) { Entry(GameMode_ShopSteps_addr, Gam
 extern "C" void __cdecl Shop_Open(void) {
     const signed char index = static_cast<signed char>(ModeStates_ShopObject);
     if (index >= 0) {
-        unsigned char* const o = Sprite_Objects + static_cast<std::uint32_t>(static_cast<int>(index)) * 0xA4u;
+        unsigned char* const o = rv::Bytes(Sprite_Objects) + static_cast<std::uint32_t>(static_cast<int>(index)) * 0xA4u;
         Sprite_Current = o;
         if (Long(o + 0x18) == 9) {
             Game_Mode = 2;
@@ -336,7 +338,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_Frame(void) {
 
 // original 0x496830 (no PSX twin paired): Field_WaitTransition with the menu's
 // frame - called by mode 3's steps 0 and 2 after Transition_Start(3) / (2).
-// Loop: a frame's sleep; with MoveScript_WaitWordDA 0 and `run` 0, one more
+// Loop: a frame's sleep; with Transition_Busy 0 and `run` 0, one more
 // sleep and return; else Menu_Frame, and return once the word is 0.
 //
 // As the original has it: `run` is the argument's byte, read once, and
@@ -345,12 +347,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_WaitTransition(
     const unsigned char run = SlotByte(run_argument);
     for (;;) {
         g.sleep(1);
-        if (MoveScript_WaitWordDA == 0 && run == 0) {
+        if (Transition_Busy == 0 && run == 0) {
             g.sleep(1);
             return;
         }
         g.menu_frame();
-        if (MoveScript_WaitWordDA == 0) return;
+        if (Transition_Busy == 0) return;
     }
 }
 
@@ -442,7 +444,7 @@ extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned co
                 // overlay, from its 8 x 8 set.
                 if (const unsigned small = Labels_SmallGlyph(p)) glyph = small;
             }
-            SetWord(Gfx_PacketNext + 0x16, glyph);
+            rv::Store<unsigned>(rv::As<records::GpuGlyph>(Gfx_PacketNext)->glyph, glyph);
             g.emit_glyph(pen_x, pen_y, 8, static_cast<int>(8 - v), static_cast<int>(u), static_cast<int>(v), clut);
             pen_x += 8;
         }

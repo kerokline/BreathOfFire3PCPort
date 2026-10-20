@@ -44,11 +44,11 @@ constexpr U kActorMayAct = bof3::addr::Battle_AutoTargetCheck;      // R4A's (ro
 
 // --- the battle bytes (the harness's 0x904AA0..0x904BA0) ----------------------
 constexpr U kRoundFlags = 0x904AA8;       // u16 / u32: the round flags (0x400, 0x4000, 0x8000 read here)
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle, 0 none
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle, 0 none
 // kTapCommand: now BattleE5_GeneRow (symbols.toml). u8: 0xFF none (battle_phases_callees.h kTapCommand)
 constexpr U kPartyCount = 0x904AB0;       // u8 (read as a dword, the low byte): members in the fight
-// kPartyIn: now BattleSprites_PartyPick (symbols.toml). u8: members counted in
-// kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8
+// kPartyIn: now Battle_PartyStanding (symbols.toml). u8: members counted in
+// kEnemiesLeft: now Battle_EnemiesLeft (symbols.toml). u8
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the action's kind (1 attack, 2, 3, 4 an ability)
 constexpr U kTarget = 0x904B44;           // u8: the target, 0xFF none
@@ -71,21 +71,22 @@ constexpr U kBackupFlags = 0x939C14;      // kBackup + 0x134
 constexpr U kBackupBit40 = 0x939B71;      // kBackup + 0x91 (bit 0x40 tested)
 
 // --- the enemies' objects (0x93B960, stride 0x128) -----------------------------
-constexpr U kEnemies = 0x93B960, kEnemyStride = 0x128;
+// kEnemies: now Battle_Enemies (symbols.toml).
+constexpr U kEnemyStride = 0x128;
 
 // --- the task slots (0x93A000, stride 0x84; +0x80 the owner) --------------------
 constexpr U kTasks = 0x93A000, kTaskStride = 0x84;
 constexpr U kOwner = 0x93B940;            // the running slot's owner (a pointer)
-constexpr U kEnemyCurrent = 0x939AD8;     // the current enemy (a pointer)
+// kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). the current enemy (a pointer)
 
 // --- the window records (WindowRecords 0x803160, stride 0x24) ------------------
-// kWindow1Count: now Rest3a_Win1Slot (symbols.toml). record 1 (0x803184) +0xA: the party count
+// kWindow1Count: now Window1_ParamA (symbols.toml). record 1 (0x803184) +0xA: the party count
 constexpr U kWindow1X = 0x803188;         // record 1 +4 (u16): x by the count
 constexpr U kPartyGauges = 0x80333F;      // record 13 + i (0x803334 + 0x24 i) +0xB / +0xC: HP / AP gauge bytes
 constexpr U kPartyValues = 0x803348;      // the same records +0x14 / +0x16: u16 HP, u16 AP
-// kWindow18: now BattleE4_Slots (symbols.toml). record 18: +0 in use, +4 / +6 x, y, +0x12 a row base (s16), +0x1E its copy
-// kWindow19: now BattleE4_Hand (symbols.toml). record 19: the same fields
-// kWindow21: now BattleE4_Above (symbols.toml). record 21: +0 in use, +4 / +6 x, y
+// kWindow18: now Window18 (symbols.toml). record 18: +0 in use, +4 / +6 x, y, +0x12 a row base (s16), +0x1E its copy
+// kWindow19: now Window19 (symbols.toml). record 19: the same fields
+// kWindow21: now Window21 (symbols.toml). record 21: +0 in use, +4 / +6 x, y
 
 // --- the pointer the sprite pose pool lives at while a task draws --------------
 // kAnimSet: now BattleE2_AnimSet (symbols.toml).

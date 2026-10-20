@@ -11,22 +11,22 @@ namespace rest_2g {
 namespace at {
 
 // The window records (WindowRecords, 22 of 0x24) and the one being run.
-constexpr std::uint32_t kWindows = 0x803160;
+// kWindows: now WindowRecords (symbols.toml).
 constexpr std::uint32_t kWindowStride = 0x24;
 constexpr unsigned kWindowCount = 22;
 // kCurrent: now BattleWinStates_Current (symbols.toml). the record Field_RunTaskRecords is running
 constexpr std::uint32_t kRecord4X = 0x8031F4;         // window record 4's +4 (the field menu's first member panel)
 
 // The window style byte (Menu_DrawBox's colour) and the party list the panels read.
-// kColour: now BattleDraw_Colour (symbols.toml).
+// kColour: now Config_WindowColour (symbols.toml).
 constexpr std::uint32_t kParty = 0x904062;            // the party's three character ids, then the reserve's
-constexpr std::uint32_t kMemberRecord = 0x66972C;     // the character-to-record byte (MoveScript_EffectState in symbols.toml; docs/menu_lists.md section 8)
+constexpr std::uint32_t kMemberRecord = 0x66972C;     // the character-to-record byte (Character_IndexById in symbols.toml; docs/menu_lists.md section 8)
 
 // The battle party's field objects (ObjTrio, 0x14C each): +0x89 the character id.
 constexpr std::uint32_t kObjTrio = 0x802D40;
 constexpr std::uint32_t kObjStride = 0x14C;
 // The character records (CharacterRecords, 0xA4 each): +0xA the level, +0xC the EXP.
-constexpr std::uint32_t kCharRecords = 0x903A70;
+// kCharRecords: now CharacterRecords (symbols.toml).
 constexpr std::uint32_t kCharStride = 0xA4;
 // Char_ExpTable: 99 rows of 8 bytes a roster index, the first word of a row the
 // EXP its level takes.
@@ -36,7 +36,7 @@ constexpr std::uint32_t kExpTable = 0x658F48;
 // eighteen cells (a byte each, 0 empty); the battle task pool 0x93A000, 48 of 0x84.
 constexpr std::uint32_t kGridWords = 0x939820;
 constexpr std::uint32_t kGridCells = 0x939A60;
-constexpr std::uint32_t kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 

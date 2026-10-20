@@ -77,7 +77,7 @@ A scene's shape is [`field-modes.md`](field-modes.md)'s: a switch on the
 step byte `0x8034E5` - through a jump table, or a byte table into one, or a
 `sub`/`dec` chain for two or three steps - each step waiting on counter 0
 (`0x903848`, which the field scripts' counter ops move), the message box
-(`Field_Request` 2 while it is up), the wait word `MoveScript_WaitWordDA`,
+(`Field_Request` 2 while it is up), the wait word `Transition_Busy`,
 `Field_Kind2Hold`, a flag, the timer `0x8034E6` or the leader's position,
 then doing one thing and setting the next step; the last step clears the
 counters and sets the run and step to 0.

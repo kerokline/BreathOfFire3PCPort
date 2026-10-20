@@ -29,6 +29,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_turn_steps_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/psp_code.h"
 #include "hook/detour.h"
@@ -82,7 +83,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + (i & 0xFF) * at::kPartyStride); }
-records::PartyMember* MemberRec(unsigned i) { return reinterpret_cast<records::PartyMember*>(Member(i)); }
 bool Yes(unsigned al) { return (al & 0xFFu) != 0; }
 unsigned char& B(std::uint32_t address) { return *At(address); }
 // `inc byte ptr [m]` / `dec byte ptr [m]`: read, step, store, as one.
@@ -150,7 +150,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Check
         }
     }
     for (unsigned i = 0; i < 2; ++i) Member(i)[at::kFlags + 1] &= 0x7F;
-    for (unsigned i = 0; i < 7; ++i) At(at::kEnemy + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
+    for (unsigned i = 0; i < 7; ++i) At(Battle_Enemies_addr + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
     SetLong(At(at::kRounds), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kRounds))) + 1));
     BattlePhases_B7A = 0;
     g.tick_counters();
@@ -246,12 +246,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Statu
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextRound() {
     for (unsigned i = 0x10; i < 0x18; ++i)
         if (Long(At(0x803500 + i * 4)) != 0) return;
-    if (BattleActions_EventBattle != 0) {
+    if (EventBattle_Id != 0) {
         const auto hook = reinterpret_cast<unsigned (__cdecl*)(int)>(
             BattleHook_Event);
         if ((hook(2) & 0xFF) == 0xFF) return;
     }
-    if (BattleActions_BattleEnd != 0 && !psp_code::DuelLossGoesOn(BattleActions_EventBattle, BattleActions_BattleEnd)) {
+    if (Battle_EndFlags != 0 && !psp_code::DuelLossGoesOn(EventBattle_Id, Battle_EndFlags)) {
         B(at::kRoundFlags) &= 0xEF;
         for (unsigned w : {0u, 3u, 1u, 11u, 10u, 9u, 8u, 7u, 6u, 5u, 4u}) B(at::kWindows + w * at::kWindowStride) = 0;
         B(at::kPhase) = 5;
@@ -267,7 +267,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
     }
     g.clear_commands();
     for (unsigned i = 0; i <= 2; ++i)
-        if (!Yes(g.actor_is_out(i))) MemberRec(i)->state[0] = 2;
+        if (!Yes(g.actor_is_out(i))) rv::As<records::PartyMember>(Member(i))->state = 2;
     B(at::kRoundFlags) &= 0xF7;
     BattlePhases_Initiative = 0;
     B(at::kPhase) = 1;
@@ -319,12 +319,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_StartMembe
             if (!Yes(out) && (Member(cursor)[at::kFlags] & 3) != 0) {
                 Member(cursor)[at::kFlags2 + 1] |= 0x20;
                 unsigned parameter = 0xB;
-                if (MemberRec(cursor)->char_id != 4) {
+                if (rv::As<records::PartyMember>(Member(cursor))->char_id != 4) {
                     for (unsigned k = 0; k < 3; ++k) At(at::kCopies + k * at::kPartyStride)[at::kFlags] &= 0xFE;
                     parameter = 0xC;
                 }
                 const unsigned task = g.task_create(0, parameter) & 0xFF;
-                SetLong(At(at::kTasks + task * at::kTaskSize + 0x80),
+                SetLong(At(BattleTask_Slots_addr + task * at::kTaskSize + 0x80),
                         static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Member(BossSb_Countdown))));
                 Inc(BossSb_Countdown_addr);
                 break;
@@ -359,12 +359,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
         --*At(BattleE4_Step2_addr);
         return;
     }
-    unsigned end = BattleActions_BattleEnd;
+    unsigned end = Battle_EndFlags;
     if ((end & 1) == 0) {
         if (count != 0) {
             for (unsigned i = 0;;) {
                 unsigned char* const m = Member(i);
-                auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+                auto* const member_rec = rv::As<records::PartyMember>(m);
                 Sprite_Current = m;
                 if (m[at::kStatus + 1] & 8) {
                     member_rec->hp = member_rec->max_hp;
@@ -378,11 +378,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
                 i = (i + 1) & 0xFF;
                 if (i >= B(at::kMembers)) break;
             }
-            end = BattleActions_BattleEnd;
+            end = Battle_EndFlags;
         }
         BattleFlow_AnimGate = 0;
     }
-    if (BattleActions_EventBattle == 0) {
+    if (EventBattle_Id == 0) {
         if (end & 1) BattleActions_Step = 2;
         if (end & 2) BattleActions_Step = 1;
     }
@@ -406,8 +406,8 @@ extern "C" void __cdecl BattleEnd_WinStep() {
 // 0x904AA2 on.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_WinBegin() {
     for (unsigned i = 0; i < 3; ++i)
-        if (MemberRec(i)->flags & 1) MemberRec(i)->state[0] = 2;
-    if ((BattleTurnSteps_MusicFlags & 0x40) == 0) {
+        if (rv::As<records::PartyMember>(Member(i))->flags & 1) rv::As<records::PartyMember>(Member(i))->state = 2;
+    if ((EventBattle_Flags & 0x40) == 0) {
         g.fade_out(10);
         g.music_play(0xA5, 10);
     }
@@ -460,9 +460,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_WriteBackPart
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_ExitHook() {
     if (g.load_done() == 0) return;
     reinterpret_cast<Step>(BattleHook_Exit)();
-    if ((BattleTurnSteps_MusicFlags & 0x40) == 0) {
+    if ((EventBattle_Flags & 0x40) == 0) {
         g.fade_out(10);
-        if (Music_Track == 0xFF) BattleActions_BattleEnd |= 8;
+        if (Music_Track == 0xFF) Battle_EndFlags |= 8;
     }
     Inc(BattleE4_Step2_addr);
 }
@@ -479,13 +479,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
     if (B(at::kMembers) != 0) {
         for (unsigned i = 0;;) {
             const unsigned char* const m = Member(i);
-            auto* const member_rec = reinterpret_cast<const records::PartyMember*>(m);
+            auto* const member_rec = rv::AsConst<records::PartyMember>(m);
             if (m[at::kStatus + 1] & 0x40) {
-                unsigned char* const r = At(at::kRecords + member_rec->char_index * at::kRecordStride);
-                SetWord(r + 0x18, 1);
+                unsigned char* const r = At(CharacterRecords_addr + member_rec->char_index * at::kRecordStride);
+                auto* const char_rec = rv::As<records::CharRecord>(r);  // 0x903A70 + 0xA4 n
+                static_assert(at::kRecordStride == sizeof(records::CharRecord));
+                rv::Store<unsigned>(char_rec->hp, 1);
                 r[0x1C] = 1;
                 if (r[0x1E] < 5) ++r[0x1E];
-                SetWord(r + 0x10, Word(r + 0x10) & 0xBFFF);
+                rv::Store<unsigned>(char_rec->status, char_rec->status & 0xBFFF);
                 r[0xB] &= 0xFB;
                 g.recalc_stats(r);
             }

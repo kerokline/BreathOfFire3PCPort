@@ -31,7 +31,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;      // the counter byte three aft
                                                    // then 31 angle words at +0x400 and the width word +0x43E - 0x440
                                                    // bytes inside EffectKind30_Shards' extent (not named: it overlaps)
 constexpr std::uint32_t kTrailSize = 0x92C49E;     // the trail's width word (+0x43E)
-// kExtra0Point: now Sprite_ObjectsExtra[0x34] (symbols.toml). Sprite_ObjectsExtra[0] +0x34: x, z, height (three dwords)
+// kExtra0Point: now Sprite_ObjectsExtra[0].x (symbols.toml). Sprite_ObjectsExtra[0] +0x34: x, z, height (three dwords)
 constexpr std::uint32_t kEffectStride = 0x80;      // Effect_Objects' records
 constexpr unsigned kEffects = 20;                  // Effect_Objects' twenty
 constexpr std::uint32_t kSpriteStride = 0xA4;      // Sprite_Objects' and Sprite_ObjectsExtra's records

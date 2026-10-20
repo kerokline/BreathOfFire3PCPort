@@ -46,14 +46,14 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // the chapters' flag calls take (Cond_Flags + 8 * chapter; docs/field-modes.md).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow6: now Cond_Flags[0x30] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // The leader's record (ObjTrio): byte +8 (the pose the cell hook compares),
 // byte +0x89 (area 84's handler tests it).
 constexpr std::uint32_t kLeader = 0x802D40;
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Effect_Objects' stride (records of 0x80 bytes).
 constexpr std::uint32_t kEffectStride = 0x80;

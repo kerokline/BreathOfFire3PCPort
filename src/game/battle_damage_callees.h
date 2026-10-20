@@ -18,7 +18,7 @@ namespace at {
 // The party: ObjTrio 0x802D40, three objects 0x14C apart, the working record
 // (PartyWorkingRecords 0x802D50) at +0x10 of each. Offsets below are the
 // working record's, so the object's first byte is -0x10.
-// kParty: now ObjTrio[0x10] (symbols.toml).
+// kParty: now ObjTrio[0].step_z (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr int kPPresent = -0x10;     // u8, bit 0: in the battle
 constexpr int kPCureId = -0x0B;      // u8, what 0x44F4B0 is handed when a status is cured
@@ -70,9 +70,9 @@ constexpr std::uint32_t kTurnWork = 0x939A80;      // 11 x (s16 value, u16 actor
 // The battle state (PSX 0x801462E4.., the same order).
 constexpr std::uint32_t kBattleFlags = 0x904AA8;   // u8, bit 7 (PSX 0x801462E4)
 constexpr std::uint32_t kPartyCount = 0x904AB0;    // u8 (PSX 0x801462EC)
-// kAiByteB1: now BattleSprites_PartyPick (symbols.toml). u8, AI opcodes 0x1D / 0x1E
-// kAiByteB2: now BattleActorCopies_EnemyCount (symbols.toml). u8, AI opcodes 0xF / 0x1F
-// kAiByteB3: now BattleE2_EnemiesLeft (symbols.toml). u8, AI opcodes 0xF / 0x10 / 0x1F / 0x20
+// kAiByteB1: now Battle_PartyStanding (symbols.toml). u8, AI opcodes 0x1D / 0x1E
+// kAiByteB2: now Battle_EnemyCount (symbols.toml). u8, AI opcodes 0xF / 0x1F
+// kAiByteB3: now Battle_EnemiesLeft (symbols.toml). u8, AI opcodes 0xF / 0x10 / 0x1F / 0x20
 constexpr std::uint32_t kEntryOrder = 0x904AB6;    // 3 actor bytes, 0xFF-ended (PSX 0x801462F2)
 // kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). u8 (PSX 0x801462FF)
 constexpr std::uint32_t kTurnOrder = 0x904ACC;     // 11 actor bytes (PSX 0x80146308)

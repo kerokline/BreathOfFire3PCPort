@@ -235,7 +235,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kPoolCurrent: now WeretigerStreak_Current (symbols.toml).
 // kRingPhases: now TsunamiRing_Phases (symbols.toml).
 // kFrameCounter: now Frame_Counter (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 constexpr unsigned kPoolCount = 0xC0, kPoolStride = 0x1C;
 unsigned char* PoolRecord(unsigned i) { return mh::Mem(WeretigerStreak_Pool_addr + (i % kPoolCount) * kPoolStride); }
 
@@ -370,7 +370,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 0x1C},                     // Gfx_PacketNext .. MapView_Origin
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850..
+    {kScratch, 0x10},           // 0x903850..
     {0x905E60, 0x10},                     // Field_Kind2Z / X, MapView_Redraw
     {0x905EB0, 0x100},                    // the head of the entries Weretiger_ResetMapView clears
     {0x929E00, 0x130},                    // their tail; MapView_Focus*, _Elevation, _Column, _Row

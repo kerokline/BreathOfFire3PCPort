@@ -32,10 +32,10 @@ using U = std::uint32_t;
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 // kWhoFell: now BossSe_Script (symbols.toml). u8: set-ups 18..20 keep here which of enemies 1 (bit 1) and 2 (bit 0) fell
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win
 constexpr U kActKind = 0x904B35;          // u8: the action kind (1 attack, 4 ability, 5 item)
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
 
 // The field's move-script counter 0 (0x903848..0x90384B are MoveScript's four
 // counters, symbols.toml at 0x57C460): set-ups 17 and 21's end hooks set it on
@@ -54,9 +54,9 @@ constexpr U kCounter0 = 0x903848;
 // kKeptA4: now BossSd_KeptA4 (symbols.toml).
 
 // --- the enemies' objects (0x93B960 + n * 0x128) the set-ups read -----------
-constexpr U kEnemy0 = 0x93B960;
-constexpr U kEnemy1 = 0x93BA88;
-constexpr U kEnemy2 = 0x93BBB0;
+// kEnemy0: now Battle_Enemies (symbols.toml).
+// kEnemy1: now Battle_Enemies[1] (symbols.toml).
+// kEnemy2: now Battle_Enemies[2] (symbols.toml).
 constexpr U kEnemy0Status = 0x93B9F2;     // enemy 0's +0x92 (a dword read; +0x93 bit 0x40 tested)
 // kEnemy1Status: now BossH_Enemy1Status (symbols.toml). enemy 1's +0x92
 // kEnemy2Status: now BossH_Enemy2Status (symbols.toml). enemy 2's +0x92
@@ -66,15 +66,15 @@ constexpr U kEnemy0A6 = 0x93BA06;         // enemy 0's +0xA6
 // kEnemy2Hp: now BossSd_Enemy2Hp (symbols.toml). enemy 2's +0xA4
 constexpr U kEnemy0X = 0x93B994;          // enemy 0's +0x34 / +0x38, and the word +0x3E
 constexpr U kEnemy0Z = 0x93B998;
-// kEnemy0Ground: now BossH_Enemy0Ground (symbols.toml).
+// kEnemy0Ground: now Battle_Enemies[0].height_whole (symbols.toml).
 
 // --- the party (ObjTrio, stride 0x14C) -----------------------------------------
-// kPartyFlags: now ObjTrio[0x90] (symbols.toml). member 0's +0x90 (bit 0x10 set by set-up 21's event hook)
+// kPartyFlags: now ObjTrio[0].status (symbols.toml). member 0's +0x90 (bit 0x10 set by set-up 21's event hook)
 constexpr U kPartyStride = 0x14C;
 constexpr U kEnemyStride = 0x128;
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). +0x38
-// kLeaderGround: now ObjTrio[0x3e] (symbols.toml). +0x3E
+// kLeaderX: now ObjTrio[0].x (symbols.toml). the leader's +0x34
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). +0x38
+// kLeaderGround: now ObjTrio[0].height_whole (symbols.toml). +0x3E
 
 // --- the literals the set-ups store (their own functions and BH's) ----------------
 constexpr U kBareRetZero = bof3::addr::BareRetZero;      // BareRetZero (BH)

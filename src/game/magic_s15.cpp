@@ -38,7 +38,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -56,16 +58,16 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC; words or dwords by
 // function) and the four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF).
 // Both are read again after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle
-// kBattleB2: now BattleActorCopies_EnemyCount (symbols.toml). u8: a battle byte Foretell_Read adds in (not read further)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle
+// kBattleB2: now Battle_EnemyCount (symbols.toml). u8: a battle byte Foretell_Read adds in (not read further)
 
 // The overlays' own .data (read in place, as the originals read it).
 // kForetellBias: now Foretell_Bias[7] (symbols.toml). Foretell_Bias + 7: s8, by party count - enemy count
@@ -80,10 +82,6 @@ constexpr std::uint32_t kEnemyLift = 0x8C564F;
 constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
@@ -122,12 +120,12 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3 (a party index lands below the enemy records).
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -185,8 +183,8 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 void PushTurnedMatrix(const unsigned char* s, short turn) {
     const short rot[4] = {0, 0, turn, 0};
     short v[4];
-    v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((rv::As<records::SpriteHead>(s)->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((rv::As<records::SpriteHead>(s)->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;
@@ -207,16 +205,16 @@ void PushTurnedMatrix(const unsigned char* s, short turn) {
 void MarkAt(const unsigned char* record, unsigned index, unsigned parameter) {
     const unsigned slot = NewTask(parameter);
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
-    const std::int32_t x = Long(record + 0x34);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
+    const std::int32_t x = rv::As<records::SpriteHead>(record)->x;
     unsigned char* const s = Sc();
     tchild->owner = static_cast<std::int32_t>(Key(s));
     child[1] = 2;
     child[3] = static_cast<unsigned char>(index);
     child[4] = 5;
     tchild->x = x;
-    tchild->y = Long(record + 0x38);
-    SetLong(child + 0x3C, Long(record + 0x3C));
+    tchild->z = rv::As<records::SpriteHead>(record)->z;
+    rv::Store(tchild->height, rv::As<records::SpriteHead>(record)->height);
     Inc(s[0xB]);
 }
 
@@ -255,7 +253,7 @@ S15_EXPORT void __cdecl Chill_Start(void) {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = static_cast<std::int32_t>(Key(s));
         child[1] = 0;
         child[8] = owner[8];
@@ -265,7 +263,7 @@ S15_EXPORT void __cdecl Chill_Start(void) {
         const unsigned slot = NewTask(0x13);
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = static_cast<std::int32_t>(Key(s));
         child[1] = 1;
         Inc(s[0xB]);
@@ -276,7 +274,7 @@ S15_EXPORT void __cdecl Chill_Start(void) {
         Gfx_ClutStrip[0x1A10 + k] = Gfx_ClutStripSource[0x1A10 + k];
     }
     Gfx_ClutStripDirty = 1;
-    if (Mem(BattleActions_EventBattle_addr)[0] == 0) return;
+    if (Mem(EventBattle_Id_addr)[0] == 0) return;
     if (EnemyRecord(ActorIndex())[0x100] != 0x29) return;
     const unsigned slot = NewTask(0x13);
     unsigned char* const child = TaskSlot(slot);
@@ -351,23 +349,23 @@ S15_EXPORT void __cdecl ChillRay_Run(void) {
 // +0x14 0x2FFF, +0xB 0x34, +9 0, +0xA 0x10, +2 on.
 S15_EXPORT void __cdecl ChillRay_Start(void) {
     MH_CALL(MagicFx_CenterOnSide)();
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(0xFFFC0000u));
-    ScTask()->vel_y = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0xFFFC0000u));
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     {
         unsigned char* const t = Sc();
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
-        tt->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_x) +
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
+        tt->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->step_x) +
                                                     static_cast<std::uint32_t>(Field_Kind2X));
     }
     {
         unsigned char* const t = Sc();
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
-        tt->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_y) +
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
+        tt->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->step_z) +
                                                     static_cast<std::uint32_t>(Field_Kind2Z));
     }
     MH_CALL(Sound_PlayEffect)(0x100);
-    SetLong(Sc() + 0x14, 0x2FFF);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x2FFF);
     Sc()[0xB] = 0x34;
     Sc()[9] = 0;
     Sc()[0xA] = 0x10;
@@ -494,9 +492,9 @@ S15_EXPORT void __cdecl ChillRay_Draw(void) {
             for (unsigned k : {0x2Du, 0x2Eu, 0x40u, 0x41u, 0x42u}) p[k] = SB(2);
         }
         const unsigned tpage = MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100);
-        SetWord(p + 0x2A, tpage);
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, tpage);
         const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1E2);
-        SetWord(p + 0x16, clut);
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, clut);
         {
             const std::uint32_t scroll = ~(static_cast<std::uint32_t>(Frame_Counter) * 2u) + static_cast<std::uint32_t>(i);
             SetSW(0xE, (0x54u - (scroll & 0x3Fu)) * 3u);
@@ -621,13 +619,13 @@ S15_EXPORT void __cdecl Foretell_Task(void) {
 // +0x3C); one child (kind 1, 0x1C, +1 0, +0x80 this task); +0xB 1, +1 on.
 S15_EXPORT void __cdecl Foretell_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     const unsigned slot = NewTask(0x1C);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = static_cast<std::int32_t>(Key(s));
     child[1] = 0;
     s[0xB] = 1;
@@ -699,13 +697,13 @@ S15_EXPORT void __cdecl Foretell_Read(void) {
     for (unsigned i = 0; i < 8; ++i) {
         if (IsOut(i + 3)) continue;
         const unsigned char* const e = EnemyRecord(i + 3);
-        const records::BattleEnemy* const te = reinterpret_cast<const records::BattleEnemy*>(e);
+        const records::BattleEnemy* const te = rv::AsConst<records::BattleEnemy>(e);
         enemy_sum = static_cast<std::uint16_t>(enemy_sum + te->level);
         ++enemy_n;
         step = Band(Percent(e, 0xA4, 0xB0, "enemy", i), step, 0x18, kEnemyBands);
         score += static_cast<std::uint32_t>(step);
     }
-    score += (static_cast<std::uint32_t>(Mem(BattleActorCopies_EnemyCount_addr)[0]) - enemy_n) * 8u;
+    score += (static_cast<std::uint32_t>(Mem(Battle_EnemyCount_addr)[0]) - enemy_n) * 8u;
     if (party_n == 0) bof3::Fatal("Foretell_Read: no member counted, the original's idiv faults");
     if (enemy_n == 0) bof3::Fatal("Foretell_Read: no enemy counted, the original's idiv faults");
     const int mean_party = static_cast<short>(party_sum) / static_cast<int>(party_n);
@@ -842,9 +840,9 @@ S15_EXPORT void __cdecl ForetellOrb_Run(void) {
 // +0xB 0, +9 0xF, +0xA 3, +2 on.
 S15_EXPORT void __cdecl ForetellOrb_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x2000000u));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0x2000000u));
     MH_CALL(BattleActor_UpdateScreenXY)();
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[0xB] = 0;
@@ -913,9 +911,9 @@ S15_EXPORT void __cdecl ForetellOrb_Draw(void) {
     p[6] = 0x80;
     PutFloat(p + 0x3C, S16(Sc() + 0x30) + 0xC);
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1E0);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
     p[0x14] = Sc()[0xB];
     p[0x15] = 0x24;
     p[0x25] = 0x24;
@@ -947,8 +945,8 @@ S15_EXPORT void __cdecl Influence_Task(void) {
 S15_EXPORT void __cdecl Influence_Start(void) {
     {
         const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
-        SetWord(Sc() + 0x2E, Word(source + 0x2E));
-        SetWord(Sc() + 0x30, Word(source + 0x30));
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(source)->screen_x));
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(source)->screen_y));
     }
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -956,7 +954,7 @@ S15_EXPORT void __cdecl Influence_Start(void) {
         for (unsigned n = 0; n < 3; ++n) {
             const unsigned slot = NewTask(0x39);
             unsigned char* const child = TaskSlot(slot);
-            records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+            records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
             unsigned char* const s = Sc();
             tchild->owner = static_cast<std::int32_t>(Key(s));
             child[1] = static_cast<unsigned char>(side);
@@ -1014,9 +1012,9 @@ S15_EXPORT void __cdecl InfluenceRight_Run(void) {
 S15_EXPORT void __cdecl InfluenceRight_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    ScTask()->vel_x = 0xB;
-    SetWord(Sc() + 0x2E, Word(Owner() + 0x2E) + 0x37u);
-    SetWord(Sc() + 0x30, Word(Owner() + 0x30) - 0x10u);
+    rv::Current<records::BattleTask>()->step_x = 0xB;
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x) + 0x37u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
     Sc()[0xA] = 0x20;
     Inc(Sc()[2]);
@@ -1026,12 +1024,12 @@ S15_EXPORT void __cdecl InfluenceRight_Launch(void) {
 // it; at 0 the first child (+0xB 0) plays sound 0x103 and goes on, the others
 // count the owner's +0xB down and free themselves.
 S15_EXPORT void __cdecl InfluenceRight_Slide(void) {
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(ScTask()->vel_x) - 1u));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) - 1u));
     {
         unsigned char* const s = Sc();
-        SetWord(s + 0x2E, Word(s + 0x2E) - Word(s + 0xC));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) - static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
     }
-    if (ScTask()->vel_x != 0) return;
+    if (rv::Current<records::BattleTask>()->step_x != 0) return;
     if (Sc()[0xB] == 0) {
         MH_CALL(Sound_PlayById)(0x103);
         Inc(Sc()[2]);
@@ -1099,9 +1097,9 @@ S15_EXPORT void __cdecl InfluenceLeft_Run(void) {
 S15_EXPORT void __cdecl InfluenceLeft_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    ScTask()->vel_x = 0xB;
-    SetWord(Sc() + 0x2E, Word(Owner() + 0x2E) - 0x37u);
-    SetWord(Sc() + 0x30, Word(Owner() + 0x30) - 0x10u);
+    rv::Current<records::BattleTask>()->step_x = 0xB;
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x) - 0x37u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
     Sc()[0xA] = 0x20;
     Inc(Sc()[2]);
@@ -1110,12 +1108,12 @@ S15_EXPORT void __cdecl InfluenceLeft_Launch(void) {
 // original 0x4B8260: the slide +0xC down by 1 and the x right by it; at 0 the
 // owner's +0xB down and the task freed.
 S15_EXPORT void __cdecl InfluenceLeft_Slide(void) {
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(ScTask()->vel_x) - 1u));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) - 1u));
     {
         unsigned char* const s = Sc();
-        SetWord(s + 0x2E, Word(s + 0x2E) + Word(s + 0xC));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) + static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
     }
-    if (ScTask()->vel_x != 0) return;
+    if (rv::Current<records::BattleTask>()->step_x != 0) return;
     Dec(Owner()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -1150,8 +1148,8 @@ S15_EXPORT void __cdecl InfluenceMark_Start(void) {
     MH_CALL(Sprite_ReleaseTint)(sprite);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(sprite, 0, 0, 0, 1);
     Sc()[0xA] = tint;
-    SetWord(Sc() + 0x2E, Word(sprite + 0x2E) - 0x20u);
-    SetWord(Sc() + 0x30, Word(sprite + 0x30) - 0xCu);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(sprite + 0x2E) - 0x20u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(sprite + 0x30) - 0xCu);
     unsigned char* const s = Sc();
     const unsigned index = s[0xB];
     unsigned lift;
@@ -1161,7 +1159,7 @@ S15_EXPORT void __cdecl InfluenceMark_Start(void) {
     } else {
         lift = Mem(kEnemyLift + EnemyRecord(index)[0xF0] * kEnemyLiftStride)[0];
     }
-    SetWord(s + 0x30, Word(s + 0x30) - lift);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y) - lift);
     Sc()[9] = 0;
     Inc(Sc()[2]);
 }
@@ -1217,9 +1215,9 @@ S15_EXPORT void __cdecl InfluenceMark_Draw(void) {
     PutFloat(p + 0x38, S16(Sc() + 0x2E) + 0x30);
     PutFloat(p + 0x3C, S16(Sc() + 0x30) + Sc()[0xA]);
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 0, 0x380, 0x100);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0x20, 0x1FA);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
     p[0x14] = 0;
     p[0x15] = 0x20;
     p[0x24] = 0x40;
@@ -1263,9 +1261,9 @@ S15_EXPORT void __cdecl Influence_DrawTriangles(void) {
     const unsigned char* const points = Mem(Influence_TrianglePoints_addr);
     for (int k = 0, angle = 0; angle < 0x1000; ++k, angle += 0x400) {
         int v = MH_CALL(Math_Sin)(angle);
-        SetSW(0xC, static_cast<unsigned>(Mul12(v, SS(0))) + Word(Sc() + 0x2E));
+        SetSW(0xC, static_cast<unsigned>(Mul12(v, SS(0))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
         v = MH_CALL(Math_Cos)(angle);
-        SetSW(0xE, static_cast<unsigned>(Mul12(v, SS(0))) + Word(Sc() + 0x30));
+        SetSW(0xE, static_cast<unsigned>(Mul12(v, SS(0))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
         const unsigned turn = static_cast<unsigned>(k) << 4;
         for (unsigned j = 0; j < 3; ++j) {
             unsigned char* const p = Gfx_PacketNext;
@@ -1307,8 +1305,8 @@ S15_EXPORT void __cdecl Influence_DrawRing(void) {
     {
         const unsigned char* const s = Sc();
         SetSW(0, s[0xA]);
-        SetSW(0xC, Word(s + 0x2E));
-        SetSW(0xE, Word(s + 0x30));
+        SetSW(0xC, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(0xE, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
         SetSW(6, s[2] < 2 ? FadeShade(s) : 0x80u);
     }
     for (unsigned i = 0; i < 0x40; ++i) {
@@ -1346,8 +1344,8 @@ S15_EXPORT void __cdecl Influence_DrawCross(void) {
     const unsigned char* const s = Sc();
     SetSW(6, 0x80);
     unsigned char* p = Gfx_PacketNext;
-    SetSW(0xC, Word(s + 0x2E));
-    SetSW(0xE, Word(s + 0x30));
+    SetSW(0xC, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetSW(0xE, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     MH_CALL(Gpu_SetLineF2)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     PutFloat(p + 8, SS(0xC) - 4);
@@ -1378,7 +1376,7 @@ namespace {
 void SpawnMark(unsigned index, unsigned& count) {
     const unsigned slot = NewTask(0x39);
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     unsigned char* const owner = Owner();
     tchild->owner = static_cast<std::int32_t>(Key(owner));
     child[1] = 2;
@@ -1403,7 +1401,7 @@ S15_EXPORT void __cdecl Influence_SpawnMarks(void) {
         if (ActorIndex() == index) continue;
         if (TargetIndex() == index) continue;
         const unsigned char* const e = EnemyRecord(index);
-        const records::BattleEnemy* const te = reinterpret_cast<const records::BattleEnemy*>(e);
+        const records::BattleEnemy* const te = rv::AsConst<records::BattleEnemy>(e);
         if (te->intel > 1 && (e[0x92] & 0x20) == 0 && (static_cast<std::int32_t>(te->flags_114) & 0x4000) == 0) continue;
         SpawnMark(index, count);
     }
@@ -1412,7 +1410,7 @@ S15_EXPORT void __cdecl Influence_SpawnMarks(void) {
         if (ActorIndex() == i) continue;
         if (TargetIndex() == i) continue;
         const unsigned char* const r = PartyRecord(i);
-        const records::PartyMember* const tr = reinterpret_cast<const records::PartyMember*>(r);
+        const records::PartyMember* const tr = rv::AsConst<records::PartyMember>(r);
         const std::uint32_t bits = static_cast<std::uint32_t>(Long(r + 0x134));
         if (tr->intel > 1 && (r[0x90] & 0x20) == 0 && (bits & 0x4000) == 0 && (bits & 1) == 0) continue;
         SpawnMark(i, count);

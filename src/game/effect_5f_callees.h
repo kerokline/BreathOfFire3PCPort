@@ -9,8 +9,8 @@
 namespace effect_5f::at {
 
 // --- the leader: ObjTrio record 0's point (ObjTrio + 0x34 / + 0x38, 16.16) ----
-constexpr std::uint32_t kLeaderX = 0x802D74;
-constexpr std::uint32_t kLeaderZ = 0x802D78;
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
 constexpr std::uint32_t kObjTrioStride = 0x14C;   // ObjTrio's records
 constexpr unsigned kObjTrioCount = 3;
 
@@ -20,9 +20,9 @@ constexpr unsigned kObjTrioCount = 3;
 // --- the vertex scratch: Prim_VertexScratch's four vertices of three s16 and a
 // pad (8 bytes each) ---------------------------------------------------------
 // kV0: now Prim_VertexScratch (symbols.toml).
-// kV1: now Prim_VertexScratch[4] (symbols.toml).
-// kV2: now Prim_VertexScratch[8] (symbols.toml).
-// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
+// kV1: now Prim_VertexScratch[1] (symbols.toml).
+// kV2: now Prim_VertexScratch[2] (symbols.toml).
+// kV3: now Prim_VertexScratch[3] (symbols.toml).
 
 // --- sub-kind 0x27's placements, by the record's starting +0x36 (two) --------
 constexpr std::uint32_t kSub27Height = 0x65E8A4;   // u16 x2: the record's +0x3E

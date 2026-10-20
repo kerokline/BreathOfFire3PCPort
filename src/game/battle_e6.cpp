@@ -33,6 +33,7 @@
 #include "game/battle_e6_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -64,13 +65,10 @@ void SetF(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 // The party's records and the enemies' objects as the originals index them:
 // unchecked (an actor past 2 reaches past the three members, as there).
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + (member & 0xFFu) * at::kPartyStride); }
-unsigned char* Enemy(unsigned index) { return At(at::kEnemies + index * at::kEnemyStride); }
+unsigned char* Enemy(unsigned index) { return At(Battle_Enemies_addr + index * at::kEnemyStride); }
 unsigned Actor() { return B(at::kActor); }
 unsigned char* Owner() { return At(BattleE2_Owner); }
-records::PartyMember* PartyRec(unsigned member) { return reinterpret_cast<records::PartyMember*>(Party(member)); }
-records::BattleEnemy* EnemyRec(unsigned index) { return reinterpret_cast<records::BattleEnemy*>(Enemy(index)); }
 // Sprite_Current in the effect tasks is the task slot (docs/battle_e6.md 2.3).
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
 
 // The three pure percent helpers nobody owns: (value * percent) / 100 clamped.
 using Percent = U (__cdecl*)(U value, std::int32_t percent);
@@ -93,7 +91,7 @@ void BackUpParty() {
 // record's byte +0x1E, + 5) / 10; 0x939EE0 keeps the value, 0x939EE2 the
 // member's u16 +0xC4 as it was.
 void FirstStat(unsigned char* member, const unsigned char* character, std::uint16_t value) {
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(member);
+    auto* const member_rec = rv::As<records::PartyMember>(member);
     SetWord(At(at::kStatDeltas), value);
     const std::int32_t cut = (static_cast<std::int32_t>(character[0x1E]) * S16(value) + 5) / 10;
     const auto stat = static_cast<std::uint16_t>(L(At(at::kStatDeltas)) - static_cast<U>(cut));
@@ -200,8 +198,8 @@ void CheckEntries(const char* who, const unsigned char* record, unsigned first, 
 // original 0x451480 (the gene history's step table 0x64ED50, entry 6, by
 // 0x904AA4): windows 18 and 19's +3 = 4 and 2, 0x904AA3 = 3, 0x904AA4 = 2.
 extern "C" void __cdecl DragonHistory_Leave(void) {
-    BattleE6_Window18State = 4;
-    BattleE6_Window19State = 2;
+    WindowRecords[18].state = 4;
+    WindowRecords[19].state = 2;
     BattleE4_Step3 = 3;
     BattleE4_Step4 = 2;
 }
@@ -219,7 +217,7 @@ extern "C" void __cdecl DragonHistory_Leave(void) {
 extern "C" void __cdecl DragonForm_Transform(void) {
     {
         unsigned char* const member = Party(Actor());
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(member);
+        auto* const member_rec = rv::As<records::PartyMember>(member);
         const unsigned who = Actor();
         SetL(member + 0x138, 0);
         SetL(member + 0x13C, 0);
@@ -227,7 +225,7 @@ extern "C" void __cdecl DragonForm_Transform(void) {
         member_rec->flags_134 = static_cast<U>(member_rec->flags_134) & 0xFFFB84FFu;
         BH_CALL(Battle_RecalcStats)(who);
     }
-    auto* const member_rec = PartyRec(Actor());
+    auto* const member_rec = rv::As<records::PartyMember>(Party(Actor()));
     BattleE6_FormCode = 0;
     BattleE6_FormGroupWork = 0;
     member_rec->flags_134 = static_cast<U>(member_rec->flags_134) | 2;
@@ -237,10 +235,10 @@ extern "C" void __cdecl DragonForm_Transform(void) {
         form = static_cast<unsigned char>(form + 4);
         BattleE6_FormCode = form;
         if (form == 8) {
-            auto* const member_rec = PartyRec(Actor());
+            auto* const member_rec = rv::As<records::PartyMember>(Party(Actor()));
             member_rec->flags_134 = static_cast<U>(member_rec->flags_134) | 0x10000;
         } else if (form == 7 || form == 4) {
-            auto* const member_rec = PartyRec(Actor());
+            auto* const member_rec = rv::As<records::PartyMember>(Party(Actor()));
             member_rec->flags_134 = static_cast<U>(member_rec->flags_134) | 0x20000;
         }
     } else {
@@ -302,7 +300,7 @@ extern "C" unsigned char __cdecl DragonForm_RecipeSlotHeld(unsigned recipe, unsi
 extern "C" unsigned char __cdecl DragonForm_TryPartyRecipe(void) {
     const unsigned count = BattleE5_GeneCount;
     if (count == 0) return 0;
-    const unsigned char size = BattleSprites_PartyPick;
+    const unsigned char size = Battle_PartyStanding;
     for (unsigned i = 0; i < count; ++i)
         if (B(at::kGenes + i) == 0x10 && size == 3) return BH_CALL(DragonForm_PartyRecipe)();
     return 0;
@@ -322,8 +320,9 @@ extern "C" unsigned char __cdecl DragonForm_TryPartyRecipe(void) {
 extern "C" void __cdecl DragonForm_Mix(unsigned) {
     BackUpParty();
     unsigned char* const member = Party(Actor());
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(member);
-    const unsigned char* const character = At(at::kCharRecords + member_rec->char_index * at::kCharStride);
+    auto* const member_rec = rv::As<records::PartyMember>(member);
+    const unsigned char* const character = At(CharacterRecords_addr + member_rec->char_index * at::kCharStride);
+    static_assert(at::kCharStride == sizeof(records::CharRecord));
     unsigned char* const sums = At(at::kMixSums);
     for (unsigned i = 0; i < 14; ++i) sums[i] = 0;
     const unsigned count = BattleE5_GeneCount;
@@ -364,7 +363,7 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
         const unsigned column = At(at::kShiftColumns)[BattleE6_FormCode * 5];
         const auto sum = static_cast<std::uint16_t>(S8(shift) + static_cast<std::int32_t>(column));
         std::uint16_t value = 1;
-        if (S16(sum) > 0) value = static_cast<std::uint16_t>(Percent9999(Word(character + 0x40), S16(sum) * 10));
+        if (S16(sum) > 0) value = static_cast<std::uint16_t>(Percent9999(rv::As<records::CharRecord>(character)->base.max_hp, S16(sum) * 10));
         FirstStat(member, character, value);
     }
     // the other four: 0 below 1; the old value's cell takes the change
@@ -507,16 +506,17 @@ extern "C" unsigned char __cdecl DragonForm_AddAbilityRow(unsigned row, unsigned
 extern "C" void __cdecl DragonForm_ApplyRecipe(unsigned recipe) {
     BackUpParty();
     unsigned char* const member = Party(Actor());
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(member);
+    auto* const member_rec = rv::As<records::PartyMember>(member);
     const unsigned r = recipe & 0xFF;
     const unsigned char* const row = At(at::kRecipeStats + r * 14);
-    const unsigned char* const character = At(at::kCharRecords + member_rec->char_index * at::kCharStride);
+    const unsigned char* const character = At(CharacterRecords_addr + member_rec->char_index * at::kCharStride);
+    static_assert(at::kCharStride == sizeof(records::CharRecord));
     FirstStat(member, character,
-              static_cast<std::uint16_t>(Percent9999(Word(character + 0x40), static_cast<std::int32_t>(row[0]) * 10)));
+              static_cast<std::uint16_t>(Percent9999(rv::As<records::CharRecord>(character)->base.max_hp, static_cast<std::int32_t>(row[0]) * 10)));
     // RecipeStat's first store is the old value: the first stat left it at 0x939EE2 already
     {
-        const auto v = static_cast<std::uint16_t>(Percent999(Word(member + 0xC4), static_cast<std::int32_t>(row[1]) * 10));
-        SetWord(member + 0xC4, v);
+        const auto v = static_cast<std::uint16_t>(Percent999(member_rec->base_atk, static_cast<std::int32_t>(row[1]) * 10));
+        rv::Store<unsigned>(member_rec->base_atk, v);
         member_rec->atk = v;
         SetWord(At(at::kStatDeltas + 2), static_cast<std::uint16_t>(v - Word(At(at::kStatDeltas + 2))));
     }
@@ -550,7 +550,7 @@ extern "C" unsigned char __cdecl DragonForm_PartyRecipe(void) {
     for (unsigned m = 0; m < 3; ++m) {
         if (B(at::kActor) == m) continue;
         if (BH_CALL(Battle_ActorIsOut)(m) != 0) continue;
-        found[n++] = PartyRec(m)->char_id;
+        found[n++] = rv::As<records::PartyMember>(Party(m))->char_id;
     }
     if (n < 2) return 0;   // DIV-0063: no pair to try
     unsigned char key = found[0], other = found[1];
@@ -616,10 +616,10 @@ extern "C" void __cdecl BattleFxDash_Dispatch(void) { TaskDispatch("BattleFxDash
 // +0xB = 0x10; on.
 extern "C" void __cdecl BattleFxDash_Start(void) {
     unsigned char* const s = Sprite_Current;
-    SetL(s + 0x20, L(s + 0x3C) + 0x4000000u);
+    rv::Store<U>(rv::As<records::BattleTask>(s)->work_20, static_cast<U>(rv::As<records::BattleTask>(s)->height) + 0x4000000u);
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x38));
     Sprite_Current[0xB] = 0x10;
-    ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+    rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
 }
 
 // original 0x4526F0: state 1: when BattleObj_ScriptTickOnce answers, pose
@@ -627,7 +627,7 @@ extern "C" void __cdecl BattleFxDash_Start(void) {
 extern "C" void __cdecl BattleFxDash_WaitPose(void) {
     if (BH_CALL(BattleObj_ScriptTickOnce)() == 0) return;
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x3C));
-    ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+    rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
 }
 
 // original 0x452720: state 2: +0x3C up 0x1000000 while below +0x20; there,
@@ -636,10 +636,10 @@ extern "C" void __cdecl BattleFxDash_WaitPose(void) {
 // member), pose +8 + 0x40, on. A tail jump to BattleObj_ScriptTickOnce.
 extern "C" unsigned char __cdecl BattleFxDash_Rise(void) {
     unsigned char* const s = Sprite_Current;
-    auto* const cur_task = reinterpret_cast<records::BattleTask*>(s);
-    const auto z = static_cast<std::int32_t>(L(s + 0x3C));
-    if (z < static_cast<std::int32_t>(L(s + 0x20))) {
-        SetL(s + 0x3C, static_cast<U>(z) + 0x1000000u);
+    auto* const cur_task = rv::As<records::BattleTask>(s);
+    const auto z = cur_task->height;
+    if (z < cur_task->work_20) {
+        rv::Store<U>(cur_task->height, static_cast<U>(z) + 0x1000000u);
     } else {
         unsigned side;
         if (B(at::kTarget) >= 3) {
@@ -649,12 +649,12 @@ extern "C" unsigned char __cdecl BattleFxDash_Rise(void) {
         } else {
             s[8] ^= 2;
             side = B(at::kFormTable) ^ 2u;
-            ScTask()->x = static_cast<U>(S8(At(at::kDashSides)[side * 2])) + static_cast<std::uint32_t>(Field_Kind2X);
+            rv::Current<records::BattleTask>()->x = static_cast<U>(S8(At(at::kDashSides)[side * 2])) + static_cast<std::uint32_t>(Field_Kind2X);
             side = B(at::kFormTable) ^ 2u;
         }
-        SetL(Sprite_Current + 0x38, static_cast<U>(S8(At(at::kDashSides)[side * 2 + 1])) + static_cast<std::uint32_t>(Field_Kind2Z));
+        rv::Store<U>(rv::Current<records::BattleTask>()->z, static_cast<U>(S8(At(at::kDashSides)[side * 2 + 1])) + static_cast<std::uint32_t>(Field_Kind2Z));
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x40));
-        ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+        rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
     }
     return BH_CALL(BattleObj_ScriptTickOnce)();
 }
@@ -669,12 +669,12 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 0x12);
     if (slot != 0xFF) {
         unsigned char* const s = Sprite_Current;
-        unsigned char* const t = At(at::kTasks + slot * at::kTaskStride);
-        auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+        unsigned char* const t = At(BattleTask_Slots_addr + slot * at::kTaskStride);
+        auto* const task_rec = rv::As<records::BattleTask>(t);
         for (U i = 0; i < 0x80; i += 4) SetL(t + i, L(s + i));
         task_rec->flags &= 0xBF;
-        task_rec->kind = 0;
-        task_rec->param = 0x12;
+        task_rec->runner = 0;
+        task_rec->kind = 0x12;
         task_rec->state = 0;
         t[2] = 0;
         t[3] = 0;
@@ -695,7 +695,7 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
     if (near != 0) {
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x44));
         BH_CALL(Battle_SetTargetFlag40)(B(at::kTarget));
-        ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+        rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
     }
     return BH_CALL(BattleObj_ScriptTickOnce)();
 }
@@ -707,12 +707,12 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
 extern "C" unsigned char __cdecl BattleFxDash_Return(void) {
     const unsigned char ticked = BH_CALL(BattleObj_ScriptTickOnce)();
     if (ticked == 0) return ticked;
-    SetL(Sprite_Current + 0xC, Sixteenth(static_cast<U>(PartyRec(Actor())->x), static_cast<U>(ScTask()->x)));
-    SetL(Sprite_Current + 0x10, Sixteenth(static_cast<U>(PartyRec(Actor())->z), L(Sprite_Current + 0x38)));
-    SetL(Sprite_Current + 0x14, 0x40);
-    SetL(Sprite_Current + 0x20, 0xFFFFFFF8u);
-    SetL(Sprite_Current + 0x18, Sixteenth(static_cast<U>(PartyRec(Actor())->height), L(Sprite_Current + 0x3C)));
-    ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+    rv::Store<U>(rv::Current<records::BattleTask>()->step_x, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(Party(Actor()))->x), static_cast<U>(rv::Current<records::BattleTask>()->x)));
+    rv::Store<U>(rv::Current<records::BattleTask>()->step_z, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(Party(Actor()))->z), static_cast<U>(rv::Current<records::BattleTask>()->z)));
+    rv::Store<U>(rv::Current<records::BattleTask>()->step_y, 0x40);
+    rv::Store<U>(rv::Current<records::BattleTask>()->work_20, 0xFFFFFFF8u);
+    rv::Store<U>(rv::Current<records::BattleTask>()->work_18, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(Party(Actor()))->height), static_cast<U>(rv::Current<records::BattleTask>()->height)));
+    rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
     return BH_CALL(BattleObj_ScriptTickOnce)();
 }
 
@@ -721,23 +721,23 @@ extern "C" unsigned char __cdecl BattleFxDash_Return(void) {
 // at +0x14 == -0x40 on. A tail jump to BattleObj_ScriptTickOnce.
 extern "C" unsigned char __cdecl BattleFxDash_Arc(void) {
     unsigned char* s = Sprite_Current;
-    records::BattleTask* cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetL(s + 0x34, static_cast<U>(cur_task->x) + L(s + 0xC));
+    records::BattleTask* cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<U>(cur_task->x, static_cast<U>(cur_task->x) + static_cast<U>(cur_task->step_x));
     s = Sprite_Current;
-    cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetL(s + 0x38, L(s + 0x38) + L(s + 0x10));
+    cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<U>(cur_task->z, static_cast<U>(cur_task->z) + static_cast<U>(cur_task->step_z));
     s = Sprite_Current;
-    cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetWord(s + 0x3E, static_cast<std::uint16_t>(Word(s + 0x3E) + Word(s + 0x14)));
+    cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<unsigned>(cur_task->height_whole, static_cast<std::uint16_t>(cur_task->height_whole + Word(s + 0x14)));
     s = Sprite_Current;
-    cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetL(s + 0x3C, L(s + 0x3C) + L(s + 0x18));
+    cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<U>(cur_task->height, static_cast<U>(cur_task->height) + static_cast<U>(cur_task->work_18));
     s = Sprite_Current;
-    cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetL(s + 0x14, L(s + 0x14) + L(s + 0x20));
+    cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<U>(cur_task->step_y, static_cast<U>(cur_task->step_y) + static_cast<U>(cur_task->work_20));
     s = Sprite_Current;
-    cur_task = reinterpret_cast<records::BattleTask*>(s);
-    if (L(s + 0x14) == 0xFFFFFFC0u) cur_task->state = static_cast<unsigned char>(cur_task->state + 1);
+    cur_task = rv::As<records::BattleTask>(s);
+    if (static_cast<U>(cur_task->step_y) == 0xFFFFFFC0u) cur_task->state = static_cast<unsigned char>(cur_task->state + 1);
     return BH_CALL(BattleObj_ScriptTickOnce)();
 }
 
@@ -745,7 +745,7 @@ extern "C" unsigned char __cdecl BattleFxDash_Arc(void) {
 // given pose +8 + 4 as Sprite_Current, which is put back; a tail jump to
 // BattleTask_FreeCurrent.
 extern "C" void __cdecl BattleFxDash_Land(void) {
-    auto* const member_rec = PartyRec(Actor());
+    auto* const member_rec = rv::As<records::PartyMember>(Party(Actor()));
     unsigned char* const self = Sprite_Current;
     member_rec->flags &= 0xBF;
     unsigned char* const owner = Owner();
@@ -765,7 +765,7 @@ extern "C" void __cdecl BattleFxPose_Start(void) {
     BH_CALL(BattleObj_ScriptTickOnce)();
     Sprite_Current[0x29] = 3;
     Sprite_Current[9] = 8;
-    ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+    rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
 }
 
 // original 0x452B40: state 1: BattleObj_ScriptTickOnce (not read); the slot
@@ -784,13 +784,13 @@ extern "C" void __cdecl BattleFxTrail_Dispatch(void) { TaskDispatch("BattleFxTra
 // +0x5F, +0x5E = +0xB * 0xF0 (a byte), +9 = 8, on; a tail jump to
 // Sprite_ScriptTickOnce.
 extern "C" unsigned char __cdecl BattleFxTrail_Start(void) {
-    ScTask()->flags |= 0x20;
+    rv::Current<records::BattleTask>()->flags |= 0x20;
     Sprite_Current[0x5C] = 3;
     Sprite_Current[0x5D] = static_cast<unsigned char>(Sprite_Current[0xB] * 0xF0u);
     Sprite_Current[0x5F] = static_cast<unsigned char>(Sprite_Current[0xB] * 0xF0u);
     Sprite_Current[0x5E] = static_cast<unsigned char>(Sprite_Current[0xB] * 0xF0u);
     Sprite_Current[9] = 8;
-    ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+    rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
     return BH_CALL(Sprite_ScriptTickOnce)();
 }
 
@@ -815,7 +815,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
     } else {
         index = (actor - 3) & 0xFF;
         unsigned char* const e = Enemy(index);
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         for (unsigned i = 0; i < 4; ++i)
             SetWord(e + 0xB4 + 2 * i,
                     static_cast<std::uint16_t>(Percent999(Word(e + 0xD4 + 2 * i), S8(e[0x118 + i]) * 2 + 100)));
@@ -831,7 +831,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
         enemy_rec->atk = static_cast<std::uint16_t>(Percent999(enemy_rec->atk, 100));
         enemy_rec->def = static_cast<std::uint16_t>(Percent999(enemy_rec->def, 100));
     }
-    auto* const enemy_rec = EnemyRec(index);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(index));
     if (static_cast<U>(enemy_rec->flags_114) & 0x800) enemy_rec->holy = 0;
     if (static_cast<U>(enemy_rec->flags_114) & 0x2000) enemy_rec->elements[0] = 0;
 }
@@ -845,7 +845,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
 // bit 11 zeroes +0xB4, bit 13 +0xAF; +0xA4 and +0xA6 through 0x446F20(v, 100).
 extern "C" void __cdecl Battle_RecalcMemberStats(unsigned char* view, unsigned member) {
     unsigned char* const r = Party(member);
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(r);
+    auto* const member_rec = rv::As<records::PartyMember>(r);
     for (unsigned i = 0; i < 4; ++i)
         SetWord(view + 0x24 + 2 * i,
                 static_cast<std::uint16_t>(Percent999(Word(view + 0x44 + 2 * i), S8(r[0x138 + i]) * 2 + 100)));
@@ -895,12 +895,12 @@ extern "C" void __cdecl Battle_RecalcMemberStats(unsigned char* view, unsigned m
 extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     if (BH_CALL(Battle_ActorIsOut)(member) != 0) return 0;
     unsigned char* const r = Party(member);
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(r);
+    auto* const member_rec = rv::As<records::PartyMember>(r);
     if (!(r[0x130] & 1)) return 0;
     if (r[0x124] != B(at::kActor)) return 0;
     if (BH_CALL(Battle_ActionBitSet)(At(BattleSprites_Action)[2]) != 0) return 0;
     if (BH_CALL(Battle_MemberListFull)(member) != 0) return 0;
-    const U table = MoveScript_EffectState[member_rec->char_id] == 6 ? at::kRollOddsB : at::kRollOdds;
+    const U table = Character_IndexById[member_rec->char_id] == 6 ? at::kRollOddsB : at::kRollOdds;
     const unsigned id = Word(At(BattleSprites_Action) + 2);
     const unsigned nibble = At(at::kActionRows + id * at::kActionRowStride)[0] >> 4;
     const unsigned odds = At(table)[nibble];
@@ -936,8 +936,8 @@ extern "C" unsigned char __cdecl Battle_MemberListFull(unsigned member) {
 // = 1) with bit 3 and not bit 5; else 0.
 extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 1);
-    unsigned char* const t = At(at::kTasks + slot * at::kTaskStride);
-    auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+    unsigned char* const t = At(BattleTask_Slots_addr + slot * at::kTaskStride);
+    auto* const task_rec = rv::As<records::BattleTask>(t);
     t[0xB] = 1;
     const unsigned who = actor & 0xFF;
     unsigned char bits;
@@ -945,15 +945,15 @@ extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
         bits = Party(who)[0x12C];
         task_rec->owner = Addr(Party(who));
     } else {
-        bits = EnemyRec(who - 3)->shown;
+        bits = rv::As<records::BattleEnemy>(Enemy(who - 3))->shown;
         task_rec->owner = Addr(Enemy(who - 3));
     }
     const std::int32_t value = S16(amount);
     if (value < 0) {
-        SetL(t + 0x60, static_cast<U>(-value));
+        rv::Store<U>(task_rec->value, static_cast<U>(-value));
         task_rec->clut = 1;
     } else {
-        SetL(t + 0x60, static_cast<U>(value));
+        rv::Store<U>(task_rec->value, static_cast<U>(value));
         task_rec->clut = 2;
     }
     if (!(bits & 2)) {

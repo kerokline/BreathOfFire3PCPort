@@ -162,14 +162,14 @@ as the original. The count is not limited to `ObjTrio`'s three records.
 `ObjTrio_SwapFields(a, b, keep)`; then for record a and then b: made
 `Field_State` and `Sprite_Current`; `Field_MemberSprite(+0x89, slot)`; its
 `+0x80` (0xA4 bytes) copied from the character record
-`0x903A70 + MoveScript_EffectState[+0x89] * 0xA4`; `+0x148` set to
-`MoveScript_EffectState[+0x89]` read again **after** the copy, which has just
+`0x903A70 + Character_IndexById[+0x89] * 0xA4`; `+0x148` set to
+`Character_IndexById[+0x89]` read again **after** the copy, which has just
 put the character record's `+9` there. On the PSX the same field is `+0x79`
 and the copied byte the record's `+5`: the PC's character record has a 9-byte
 name where the PSX has 5 ([`save-interchange.md`](save-interchange.md)
 section 2), so both read the record's own member byte - consistent, not a slip.
 
-`MoveScript_EffectState` (`0x66972C`) is, by this use, the member-to-character
+`Character_IndexById` (`0x66972C`) is, by this use, the member-to-character
 index: its first 24 bytes are `0..7`, and eight records of `0xA4` from
 `0x903A70` end exactly at `Cond_Flags` (`0x903F90`). The name was given by an
 op that indexes it the same way; a rename is left to whoever owns that entry.

@@ -1,0 +1,82 @@
+# The 74 scalars stage A (group SG) placed inside [[block]] records: each is a field of the
+# record family, marked field_of / field_offset in symbols.toml (tools/gen_symbols.py). Stage C1's
+# struct names the field; the entry goes once its sites read the struct (docs/typed-data-stage-c.md 5).
+# Two of the 74 (0x93BABC, 0x93BAE0) lie in the 0x80-byte sprite object between two EnemyWorkingRecords
+# records: fields of BattleEnemy 1 (0x93B960 + 0x128 n), which has no [[block]], so they are not marked.
+# readers_typed: files spelling the entry's typed macro; readers_addr: files spelling only <name>_addr.
+# Addresses and names only.
+address	block	record	offset	width	ctype	entry	readers_typed	readers_addr
+0x7DEE41	MsgBoxState	0	0x1	1	unsigned char	ItemUse_SubState	src/game/item_use.cpp;src/game/item_use_callees.h;src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE42	MsgBoxState	0	0x2	1	unsigned char	Msgbox_EffectKind	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE43	MsgBoxState	0	0x3	1	unsigned char	Msgbox_EffectPhase	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE46	MsgBoxState	0	0x6	1	unsigned char	Msgbox_Delay	src/game/effect_2g.cpp;src/game/effect_2g_callees.h;src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE47	MsgBoxState	0	0x7	1	unsigned char	Msgbox_SubCount	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE4A	MsgBoxState	0	0xA	2	unsigned short	Msgbox_EffectTimer	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE4C	MsgBoxState	0	0xC	4	unsigned long	Msgbox_Base	src/game/menu_windows.cpp;src/game/menu_windows_callees.h;src/game/msgbox.cpp	-
+0x7DEE50	MsgBoxState	0	0x10	4	unsigned long	MenuWindows_ListText	src/game/menu_windows.cpp;src/game/msgbox.cpp;src/game/rest_2f.cpp;src/game/rest_2f_fuzz.cpp	-
+0x7DEE54	MsgBoxState	0	0x14	4	unsigned long	Msgbox_Resume	-	-
+0x7DEE58	MsgBoxState	0	0x18	1	unsigned char	ItemUse_ColorHigh	src/game/item_use.cpp;src/game/item_use_callees.h;src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE59	MsgBoxState	0	0x19	1	unsigned char	Msgbox_StepCount	src/game/msgbox.cpp	-
+0x7DEE5A	MsgBoxState	0	0x1A	1	signed char	Msgbox_OffsetX	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE5B	MsgBoxState	0	0x1B	1	signed char	Msgbox_OffsetY	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE5E	MsgBoxState	0	0x1E	2	unsigned short	Msgbox_PenY	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE62	MsgBoxState	0	0x22	2	unsigned short	Msgbox_OriginY	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE64	MsgBoxState	0	0x24	1	unsigned char	ItemUse_ChoiceId	src/game/item_use.cpp;src/game/item_use_callees.h;src/game/mode_states.cpp;src/game/mode_states_callees.h;src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE65	MsgBoxState	0	0x25	1	unsigned char	MenuWindows_ListSet	src/game/menu_windows.cpp;src/game/menu_windows_callees.h;src/game/mode_states.cpp;src/game/mode_states_callees.h;src/game/msgbox.cpp;src/game/msgbox_callees.h;src/game/window_task.cpp	-
+0x7DEE66	MsgBoxState	0	0x26	1	signed char	MenuWindows_ListCount	src/game/menu_windows.cpp;src/game/menu_windows_callees.h;src/game/msgbox.cpp;src/game/rest_2f.cpp	-
+0x7DEE67	MsgBoxState	0	0x27	1	signed char	AreaW0c_ChoiceAnswer	src/game/area_w0a_callees.h;src/game/area_w0b.cpp;src/game/area_w0b_callees.h;src/game/area_w0c_callees.h;src/game/area_w1a_callees.h;src/game/area_w1b.cpp;src/game/area_w1b_callees.h;src/game/area_w1c_callees.h;src/game/area_w1d_callees.h;src/game/area_w1e.cpp;src/game/area_w1e_callees.h;src/game/area_w1f_callees.h;src/game/area_w2a_callees.h;src/game/area_w2c_callees.h;src/game/area_w2d_callees.h;src/game/area_w2f_callees.h;src/game/area_w3a.cpp;src/game/area_w3a_callees.h;src/game/area_w3a_fuzz.cpp;src/game/area_w3b.cpp;src/game/area_w3b_callees.h;src/game/area_w3c_callees.h;src/game/area_w3d_callees.h;src/game/area_w3e_callees.h;src/game/area_w3f_callees.h;src/game/area_w3g.cpp;src/game/area_w3g_callees.h;src/game/area_w3g_fuzz.cpp;src/game/area_w4a.cpp;src/game/area_w4a_callees.h;src/game/area_w4b_callees.h;src/game/area_w4c_callees.h;src/game/area_w4d_callees.h;src/game/area_w4e_callees.h;src/game/area_w4f_callees.h;src/game/item_use.cpp;src/game/mode_states.cpp;src/game/mode_states_callees.h;src/game/msgbox.cpp;src/game/msgbox_callees.h;src/game/rest_2f.cpp;src/game/rest_2f_fuzz.cpp	-
+0x7DEE6A	MsgBoxState	0	0x2A	2	unsigned short	Msgbox_EffectWait	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x7DEE6E	MsgBoxState	0	0x2E	1	unsigned char	Msgbox_Placement	src/game/msgbox.cpp;src/game/msgbox_callees.h;src/game/window_task.cpp	-
+0x803168	WindowRecords	0	0x8	1	unsigned char	Window0_Category	src/game/rest_3a.cpp;src/game/rest_3a_callees.h	-
+0x80316A	WindowRecords	0	0xA	1	unsigned char	Window0_ParamA	src/game/battle_odds.cpp;src/game/battle_odds_callees.h;src/game/msgbox.cpp;src/game/msgbox_callees.h;src/game/rest_4e.cpp;src/game/rest_4e_fuzz.cpp	-
+0x80316C	WindowRecords	0	0xC	1	unsigned char	Window0_Cursor	src/game/rest_3a.cpp;src/game/rest_3a_callees.h;src/game/rest_4e.cpp;src/game/rest_4e_fuzz.cpp	-
+0x80316D	WindowRecords	0	0xD	1	unsigned char	Window0_Item	src/game/rest_3a.cpp;src/game/rest_3a_callees.h	-
+0x80316F	WindowRecords	0	0xF	1	unsigned char	Window0_Pass	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x803170	WindowRecords	0	0x10	2	unsigned short	Window0_Arrows	src/game/rest_4e.cpp;src/game/shop_states2.cpp;src/game/shop_states2_callees.h	-
+0x803184	WindowRecords	1	0x0	1	unsigned char	Window1	src/game/rest_2b.cpp;src/game/rest_4e.cpp	-
+0x803186	WindowRecords	1	0x2	1	unsigned char	Window1_Kind	src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x803187	WindowRecords	1	0x3	1	unsigned char	Window1_State	src/game/item_use.cpp;src/game/item_use_callees.h;src/game/msgbox.cpp;src/game/msgbox_callees.h	-
+0x80318E	WindowRecords	1	0xA	1	unsigned char	Window1_ParamA	src/game/battle_e2.cpp;src/game/battle_e2_callees.h;src/game/rest_3a.cpp;src/game/rest_3a_callees.h	-
+0x803191	WindowRecords	1	0xD	1	unsigned char	Window1_Master	src/game/rest_2h.cpp;src/game/rest_2h_callees.h	-
+0x8031A8	WindowRecords	2	0x0	1	unsigned char	Window2	src/game/rest_2b.cpp	-
+0x8031AB	WindowRecords	2	0x3	1	unsigned char	Window2_State	src/game/rest_3b.cpp;src/game/rest_3b_callees.h	-
+0x8031FA	WindowRecords	4	0xA	1	unsigned char	Window4_Index	src/game/battle_odds.cpp;src/game/battle_odds_callees.h	-
+0x80325C	WindowRecords	7	0x0	1	unsigned char	Window7	-	-
+0x803280	WindowRecords	8	0x0	1	unsigned char	Window8	-	-
+0x8032A4	WindowRecords	9	0x0	1	unsigned char	Window9	-	-
+0x8032C8	WindowRecords	10	0x0	1	unsigned char	Window10	-	-
+0x8033A0	WindowRecords	16	0x0	1	unsigned char	Window16	src/game/battle_e4.cpp;src/game/battle_e5.cpp;src/game/battle_misc_callees.h	-
+0x8033A3	WindowRecords	16	0x3	1	unsigned char	Window16_State	src/game/battle_actor_copies.cpp;src/game/battle_actor_copies_callees.h;src/game/rest_3b.cpp;src/game/rest_3b_callees.h	-
+0x8033A6	WindowRecords	16	0x6	2	unsigned short	Window16_Y	src/game/battle_actor_copies.cpp;src/game/battle_actor_copies_callees.h	-
+0x8033A9	WindowRecords	16	0x9	1	unsigned char	Window16_PageCue	src/game/battle_actor_copies.cpp;src/game/battle_actor_copies_callees.h	-
+0x8033AA	WindowRecords	16	0xA	1	unsigned char	Window16_Owner	src/game/battle_actor_copies.cpp;src/game/battle_actor_copies_callees.h	-
+0x8033AB	WindowRecords	16	0xB	1	unsigned char	Window16_Page	src/game/battle_actor_copies.cpp;src/game/battle_actor_copies_callees.h;src/game/battle_misc.cpp;src/game/rest_3b.cpp;src/game/rest_3b_callees.h	-
+0x8033B2	WindowRecords	16	0x12	2	unsigned short	Window16_Scroll	src/game/battle_actor_copies.cpp;src/game/battle_actor_copies_callees.h	-
+0x8033C4	WindowRecords	17	0x0	1	unsigned char	Window17	src/game/battle_e4.cpp;src/game/battle_e5.cpp	-
+0x8033E8	WindowRecords	18	0x0	1	unsigned char	Window18	src/game/battle_e2_callees.h;src/game/battle_e4.cpp;src/game/battle_e5.cpp	-
+0x8033EB	WindowRecords	18	0x3	1	unsigned char	Window18_State	src/game/battle_e6.cpp;src/game/battle_e6_callees.h	-
+0x80340C	WindowRecords	19	0x0	1	unsigned char	Window19	src/game/battle_actor_copies.cpp;src/game/battle_actor_copies_callees.h;src/game/battle_e2_callees.h;src/game/battle_e4.cpp;src/game/battle_e5.cpp;src/game/battle_menu_states_callees.h;src/game/battle_misc.cpp;src/game/battle_misc_callees.h	-
+0x80340F	WindowRecords	19	0x3	1	unsigned char	Window19_State	src/game/battle_e6.cpp;src/game/battle_e6_callees.h	-
+0x803412	WindowRecords	19	0x6	2	unsigned short	Window19_Y	src/game/battle_actor_copies.cpp;src/game/battle_actor_copies_callees.h	-
+0x803433	WindowRecords	20	0x3	1	unsigned char	Window20_State	src/game/boss_sf.cpp;src/game/boss_sf_callees.h	-
+0x803454	WindowRecords	21	0x0	1	unsigned char	Window21	src/game/battle_e1.cpp;src/game/battle_e1_callees.h;src/game/battle_e2.cpp;src/game/battle_e2_callees.h;src/game/battle_e4.cpp;src/game/battle_e5.cpp;src/game/battle_menu_states_callees.h;src/game/shop_states2.cpp;src/game/shop_states2_callees.h	-
+0x80345A	WindowRecords	21	0x6	2	unsigned short	Window21_Y	src/game/shop_states2.cpp	-
+0x903DAF	CharacterRecords	5	0xB	1	unsigned char	ScenaSc5_BitsDAF	src/game/scena_sc5.cpp;src/game/scena_sc5_callees.h	-
+0x903DB6	CharacterRecords	5	0x12	1	unsigned char	AreaW4b_GateKey	src/game/area_w4b_callees.h	-
+0x903E53	CharacterRecords	6	0xB	1	unsigned char	ScenaSc5_BitsE53	src/game/scena_sc5.cpp;src/game/scena_sc5_callees.h	-
+0x903EFE	CharacterRecords	7	0x12	1	unsigned char	Rest3a_GuestEquip	src/game/battle_e1_callees.h;src/game/rest_3a.cpp	-
+0x903F01	CharacterRecords	7	0x15	1	unsigned char	BattleE1_GuestEquipB	src/game/battle_e1_callees.h	-
+0x903F0C	CharacterRecords	7	0x20	2	unsigned short	BossSe_CarryHp	src/game/boss_se.cpp;src/game/boss_se_callees.h	-
+0x903F10	CharacterRecords	7	0x24	2	unsigned short	BossSe_CarryB4	src/game/battle_e1_callees.h;src/game/boss_se.cpp;src/game/boss_se_callees.h	-
+0x903F12	CharacterRecords	7	0x26	2	unsigned short	BossSe_CarryB6	src/game/battle_e1_callees.h;src/game/boss_se.cpp;src/game/boss_se_callees.h	-
+0x903F2C	CharacterRecords	7	0x40	2	unsigned short	BattleE1_GuestHpBase	src/game/battle_e1_callees.h	-
+0x903F30	CharacterRecords	7	0x44	2	unsigned short	BattleE1_GuestStat44	src/game/battle_e1_callees.h	-
+0x903F32	CharacterRecords	7	0x46	2	unsigned short	BattleE1_GuestStat46	src/game/battle_e1_callees.h	-
+0x903F6A	CharacterRecords	7	0x7E	1	unsigned char	AreaW3c_ItemPick	src/game/area_w3c_callees.h;src/game/rest_2b.cpp	-
+0x93BABC	BattleEnemy (no [[block]]: the sprite object of 0x93B960 + 0x128 n)	1	0x34	4	unsigned long	BossSb_Enemy1Place	src/game/boss_sb.cpp;src/game/boss_sb_callees.h	-
+0x93BAE0	BattleEnemy (no [[block]]: the sprite object of 0x93B960 + 0x128 n)	1	0x58	2	unsigned short	BossSb_Enemy1Pose	src/game/boss_sb_callees.h	-
+0x93BB1A	EnemyWorkingRecords	1	0x12	4	unsigned long	BossH_Enemy1Status	src/game/boss_h_callees.h;src/game/boss_sd.cpp;src/game/boss_sd_callees.h;src/game/boss_sf.cpp;src/game/boss_sf_callees.h;src/game/effect_5c_callees.h	-
+0x93BB2C	EnemyWorkingRecords	1	0x24	2	unsigned short	BossSb_Enemy1Hp	src/game/boss_sb.cpp;src/game/boss_sb_callees.h;src/game/boss_sd.cpp;src/game/boss_sd_callees.h	-
+0x93BB38	EnemyWorkingRecords	1	0x30	2	unsigned short	BossSb_Enemy1B0	src/game/boss_sb.cpp;src/game/boss_sb_callees.h	-
+0x93BC42	EnemyWorkingRecords	2	0x12	4	unsigned long	BossH_Enemy2Status	src/game/boss_h_callees.h;src/game/boss_sd.cpp;src/game/boss_sd_callees.h	-
+0x93BC54	EnemyWorkingRecords	2	0x24	2	unsigned short	BossSd_Enemy2Hp	src/game/boss_sd.cpp;src/game/boss_sd_callees.h	-

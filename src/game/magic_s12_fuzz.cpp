@@ -201,10 +201,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kTints: now MoveScript_TintRecords (symbols.toml).
 // kInput: now Input_Pressed (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850,
-                        kSeenBits = 0x9040A8,
-                        kAbility = 0x904B80,
-                        kAbilityStep = 0x65C4DB;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr std::uint32_t kSeenBits = 0x9040A8, kAbility = 0x904B80, kAbilityStep = 0x65C4DB;
 
 // Celerity_ApplyStat's stat, chosen by the seed with the cell it moves.
 unsigned g_stat = 0;
@@ -320,7 +318,7 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},        // Gfx_PacketNext
     {0, kPrimBytes},      // g_prims (filled in at start-up)
-    {kScratch, 0x10},     // DamageScratch 0x903850..0x90385F
+    {kScratch, 0x10}, // SharedScratch 0x903850..0x90385F
     {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
     {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords (the record index is a byte)
     {0x80E980, 0x40},     // Celerity_Start's CLUT strip, from
@@ -351,7 +349,7 @@ void Disturb(std::uint32_t h) {
         // own record disturbance)
         const unsigned t = mh::Mem(mh::at::kTarget)[0];
         if (t >= 3 && t <= 10)
-            mh::Mem(mh::at::kEnemies + (t - 3) * mh::at::kEnemyStride + 0x8F)[0] = (h >> 16) & 1 ? 0 : Byte(h >> 24);
+            mh::Mem(Battle_Enemies_addr + (t - 3) * mh::at::kEnemyStride + 0x8F)[0] = (h >> 16) & 1 ? 0 : Byte(h >> 24);
         break;
     }
     default: break;
@@ -364,7 +362,7 @@ void Near(unsigned char& b, unsigned before) {
     if (mh::Half()) b = Byte(before + (mh::Half() ? 1u : 0u));
 }
 unsigned char* PartyRec(unsigned i) { return mh::Mem(ObjTrio_addr + i * mh::at::kPartyStride); }
-unsigned char* EnemyRec(int i) { return mh::Mem(mh::at::kEnemies + static_cast<std::uint32_t>(i) * mh::at::kEnemyStride); }
+unsigned char* EnemyRec(int i) { return mh::Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(i) * mh::at::kEnemyStride); }
 unsigned char& Target() { return mh::Mem(mh::at::kTarget)[0]; }
 // A target on the enemy side (3..10) or the party's (0..2).
 void EnemyTarget() { Target() = Byte(3 + mh::Next() % 8); }

@@ -19,6 +19,8 @@
 #include "game/area_harness.h"
 #include "game/area_w0a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -58,7 +60,7 @@ unsigned char* Effect(std::uint32_t slot_dword) { return Mem(Effect_Objects_addr
 // original's 16-bit add.
 void MoveScriptPos(unsigned delta) {
     unsigned char* const object = MoveScript_Object;
-    SetWord(object + 0xA, Word(object + 0xA) + delta);
+    rv::Store<unsigned>(rv::As<records::ScriptContext>(object)->position, rv::As<records::ScriptContext>(object)->position + delta);
 }
 
 void SetCells(const unsigned char (*cells)[3], unsigned n) {
@@ -160,7 +162,7 @@ extern "C" void __cdecl Area01_SpawnEffectB(void) {
     unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(at::kEffectSlot))));
     e[0] = 1;
     e[5] = 0xB;
-    SetLong(e + 0x1C, 5);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_1c, 5);
     e[7] = 3;
 }
 
@@ -394,11 +396,11 @@ extern "C" void __cdecl Area10_SpawnEffect1C(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = Effect(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x1C;
-    tE->x = Long(Sprite_Current + 0x34);
-    tE->z = Long(Sprite_Current + 0x38);
+    tE->x = rv::Current<records::SpriteHead>()->x;
+    tE->z = rv::Current<records::SpriteHead>()->z;
 }
 
 // ---- area 12 (descriptor 0x5E2AA8) -------------------------------------------
@@ -407,7 +409,7 @@ extern "C" void __cdecl Area10_SpawnEffect1C(void) {
 // the bank at [0x929ED0] is set, the script position 2 back (the op runs
 // again), MoveScript_Object read after the call.
 extern "C" void __cdecl Area12_WaitFlagE(void) {
-    const auto bank = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
+    const auto bank = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
     if (AH_CALL(Flags_Test)(bank, 0xE)) return;
     MoveScriptPos(0xFFFE);
 }
@@ -444,7 +446,7 @@ extern "C" void __cdecl Area13_SkipUnlessLeader8(void) {
 // Sprite_Current[8]).
 extern "C" void __cdecl Area13_WalkToX(void) {
     unsigned char* const object = Sprite_Current;
-    const std::uint32_t distance = 0x1C8000u - static_cast<std::uint32_t>(Long(object + 0x34));
+    const std::uint32_t distance = 0x1C8000u - static_cast<std::uint32_t>(rv::As<records::SpriteHead>(object)->x);
     object[8] = static_cast<std::int32_t>(distance) >= 0 ? 3 : 7;
     MoveScript_Object[7] = Steps(distance);
     unsigned char* const script = MoveScript_Object;
@@ -458,7 +460,7 @@ extern "C" void __cdecl Area13_WalkToX(void) {
 // Sprite_Current[8]).
 extern "C" void __cdecl Area13_WalkToZ(void) {
     unsigned char* const object = Sprite_Current;
-    const std::uint32_t z = static_cast<std::uint32_t>(Long(object + 0x38));
+    const std::uint32_t z = static_cast<std::uint32_t>(rv::As<records::SpriteHead>(object)->z);
     object[8] = 1;
     MoveScript_Object[7] = Steps(0x20000u - z);
     unsigned char* const script = MoveScript_Object;

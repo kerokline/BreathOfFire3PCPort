@@ -63,7 +63,7 @@ Capcom's port, read, not measured further.
 | `0x416D60` | `Area108_PlaceAtCellA` | `0x71` | handler 5 (PSX `0x801F4918`) | kHandler | the running object's words `+0x36` / `+0x34` / `+0x3A` / `+0x38` from `Area108_PlaceCellsA[extra object 1's +0x83 - 1]` (an x byte, `0x8000` when a flag byte is set, a z byte, the same) |
 | `0x416DE0` | `Area108_PlaceAtCellB` | `0x71` | handler 6 (PSX `0x801F4998`) | kHandler | the same over `Area108_PlaceCellsB` |
 | `0x416E60` | `Area108_ScriptByFlags1E` | `0x5E` | handler 7 (PSX `0x801F4A18`) | kHandler | story flag `0x1E`: the active member's script `+0x83` = `0x12`; else flag `0x1F`: `0x11`; its word `+0x8A` = `0xFFFE` either way |
-| `0x416EC0` | `Area108_FlagIfEffectState5` | `0x46` | handler 8 (PSX `0x801F4A98`) | kHandler | the active member's `+0x80` bit 0 cleared; `MoveScript_EffectState[the leader's +0x89]` at 5: story flag `0x30`, `MoveCmd_TestFB(1, 0xB)`, the running object's `+0` = 0 |
+| `0x416EC0` | `Area108_FlagIfEffectState5` | `0x46` | handler 8 (PSX `0x801F4A98`) | kHandler | the active member's `+0x80` bit 0 cleared; `Character_IndexById[the leader's +0x89]` at 5: story flag `0x30`, `MoveCmd_TestFB(1, 0xB)`, the running object's `+0` = 0 |
 | `0x416F10` | `Area108_FadeRun` | `0x12` | handler 9 (PSX `0x801F4B14`) | kHandler | `jmp [Area108_FadeStates + Sprite_Current[4] * 4]` |
 | `0x416F30` | `Area108_FadeBegin` | `0x7A` | `Area108_FadeStates[0]` | kState | `Sprite_SetTint(the running object, 0, 0, 0, 1)` to the active member's `+0x9F`; `+0` bit `0x20` set and `0x40` cleared, `+0x5C` = 1, `+0x5F` / `+0x5E` / `+0x5D` = `0x80`, state `+4` = 1; the member's script position `- 2` |
 | `0x416FB0` | `Area108_FadeStep` | `0xA8` | `Area108_FadeStates[1]` | kState | each of `+0x5D`, `+0x5E`, `+0x5F` below `0xD0` (signed bytes) `+ 1`; all three at `0xD0`: `Tint_Release(the member's +0x9F)`, `+0` bit `0x20` cleared, `+0x5C..+0x5F` and the state 0; else the member's position `- 2` |
@@ -338,7 +338,7 @@ as areas 63, 64, 72 and 73's were; its call sites are the tool's less
   `Area108_Model` and **the fuzz's own point buffer** (`0x1440` bytes: the
   round points `Area108_Model`'s pointer into it, since the image's points
   at 33 records of the area's `.data` and a count can reach 127),
-  `MoveScript_EffectState`, the mark, the byte `0x9045F4`, area 110's cells
+  `Character_IndexById`, the mark, the byte `0x9045F4`, area 110's cells
   and weights, area 111's grid (and the four bytes after it), its grid start
   and cell bytes.
 - **Every round:** the active member at one of the four extra objects (half
@@ -350,7 +350,7 @@ as areas 63, 64, 72 and 73's were; its call sites are the tool's less
   of the five places or one field off, the leader's direction with high
   bits, the other members' high words on and beside each strip's bounds, a
   member count of 0, 9 or 10 a thirty-sixth of the time; the place index
-  1..9, 0 and `0xA`; `MoveScript_EffectState` at the leader's id 5 half the
+  1..9, 0 and `0xA`; `Character_IndexById` at the leader's id 5 half the
   time; the fade bytes at `0xCF` / `0xD0` / `0xD1` and their sign edge, all
   three at `0xD0` half the time; `Field_Request` 5 and beside; the cell
   hook's cell one of the four or one off (bytes, anything above), the pose 7
@@ -838,7 +838,7 @@ Described, not fixed:
   leader's cell as bytes (`Area111_AttachAtLeaderCell`,
   `Area111_ArmTailAtLeaderCell`: up to `0x675C00 + 0x7F + 0x3FC`); the place
   tables by extra object 1's `+0x83 - 1` (`Area108_PlaceAtCellA` / `B`; a 0
-  reads entry `0xFF`); `MoveScript_EffectState` (24 bytes) by the leader's
+  reads entry `0xFF`); `Character_IndexById` (24 bytes) by the leader's
   `+0x89` byte (`Area108_FlagIfEffectState5`); party records past the
   member count's three (`Area108_PlaceScene`, `Area112_TalkByMember`,
   `Area112_MemberNearBoxes`; 1..3 in the field).

@@ -178,11 +178,11 @@ U FxEffectAhead(const U*, U answer) {
     const U n = sh::Noise();
     return WithAl(answer, n % 2 ? 0xFF : (n >> 8) % 20);
 }
-// MapView_SlopeAt: DamageScratch's flag 0 a third of the time; the slope's low
+// MapView_SlopeAt: SharedScratch's flag 0 a third of the time; the slope's low
 // word on either side of 0x40.
 U FxSlope(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const flag = sh::Mem(bof3::addr::DamageScratch);
+    unsigned char* const flag = sh::Mem(SharedScratch_addr);
     if (sh::InRegions(flag, 1)) flag[0] = static_cast<unsigned char>(n % 3 == 0 ? 0 : (n >> 2) % 4 ? 1 : 1 + (n >> 4) % 0xFF);
     static const U kWords[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x0140, 0xFFC0};
     const U m = sh::Noise();
@@ -358,7 +358,7 @@ void Disturb(U h) {
     case 3: s[0x2B] = static_cast<unsigned char>(v); break;
     case 4: s[0xA] = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
     case 5: SetWord(s + 0x2C, v >> 3); break;
-    case 6: sh::Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 6: sh::Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 7: {
         unsigned char* const e = Effect(v % 20);
         e[(v >> 5) & 1] = static_cast<unsigned char>((v >> 6) & 1 ? 1 : v >> 7);

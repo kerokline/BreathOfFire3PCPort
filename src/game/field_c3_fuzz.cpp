@@ -174,7 +174,7 @@ const sh::Clone kClones[] = {
 
 enum : unsigned {
     kMode11, kMode8a, kMode8b, kOpE7, kApproach, kAvoid, kBest, kFadeOutStart, kFadeOutStep, kFadeInStart, kFadeInStep,
-    kScriptMove, kAlign, kNext, kStep, MoveScript_WaitWordDA_addr, kShadeLower, kShadeFade, kAttached, kHop, kHopBegin, kHopLaunch, kHopRise,
+    kScriptMove, kAlign, kNext, kStep, Transition_Busy_addr, kShadeLower, kShadeFade, kAttached, kHop, kHopBegin, kHopLaunch, kHopRise,
     kHopFall, kHopLand, kVertical, kUp, kUpBegin, kUpOut, kUpArrive, kUpIn, kUpWait5, kUpWait6, kUpEnd, kDown,
     kDownBegin, kDownWait1, kDownWait2, kDownWait3, kDownWait4, kDownOut, kDownArrive, kDownIn, kDownLand, kVShade,
     kJumpExit, kJumpBegin, kJumpOut, kJumpArrive, kJumpShade, kJumpIn, kTileD0, kTileBegin, kTileMove, kTileExit,
@@ -211,10 +211,10 @@ U SlopeEffect(const U* a, U answer) {
     if (m % 3 == 0 && (direction == 3 || direction == 5)) {
         unsigned char* const w = Sc() + (direction == 5 ? 0x34 : 0x38);
         if (sh::InRegions(w, 2)) SetWord(w, Word(w) != 0 ? 0u : ((m >> 8) | 1u) & 0xFFFFu);
-        Mem(at::kSloped)[0] = 1;
+        Mem(at::kSloped_addr)[0] = 1;
         return (answer & 0xFFFF0000u) | 0x41;
     }
-    Mem(at::kSloped)[0] = static_cast<unsigned char>(h % 3 ? 1 : 0);
+    Mem(at::kSloped_addr)[0] = static_cast<unsigned char>(h % 3 ? 1 : 0);
     if ((h >> 4) & 1) return (answer & 0xFFFF0000u) | (0x3F + (h >> 8) % 3);
     return answer;
 }
@@ -378,7 +378,7 @@ void Seed(unsigned k) {
     // the active member one of the four records, its tint index inside the region
     Field_ActiveMember = sh::SpriteRecord(sh::Next());
     Field_ActiveMember[0x9F] = static_cast<unsigned char>(sh::Next() % kTints);
-    Mem(at::kSloped)[0] = static_cast<unsigned char>(sh::Half() ? 0 : 1);
+    Mem(at::kSloped_addr)[0] = static_cast<unsigned char>(sh::Half() ? 0 : 1);
     Field_Request = static_cast<unsigned char>(PickOf(2, 5, 0, sh::Next()));
     Field_StatusBits = static_cast<unsigned char>(sh::Next());
     SetWord(reinterpret_cast<unsigned char*>(&Input_Held),
@@ -467,7 +467,7 @@ void Disturb(U h) {
     case 3: s[5] = static_cast<unsigned char>(b & 1 ? 0 : b); break;
     case 4: Field_State[0x124] = b; break;
     case 5: Field_State[0x12B] = static_cast<unsigned char>(b & 1); break;
-    case 6: Mem(at::kSloped)[0] = static_cast<unsigned char>(b & 1); break;
+    case 6: Mem(at::kSloped_addr)[0] = static_cast<unsigned char>(b & 1); break;
     case 7: SetWord(s + 0x3E, h >> 8); break;
     case 8: SetLong(s + 0x14, static_cast<std::int32_t>(h >> 4)); break;
     case 9: SetWord(s + ((h >> 8) & 1 ? 0x34 : 0x38), b & 1 ? 0u : h >> 12); break;

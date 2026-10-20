@@ -136,7 +136,7 @@ weigh that by:
 - **Touches and calls**: the named data the run references (by
   `analysis/pc_xref.json`) and the named functions it calls, by count. The
   large runs read plainly: `0x4A33E0`..`0x4FB6E4` (nine runs of twenty or more, 834 functions)
-  touch `DamageScratch`, `Sprite_Current` and `Math_Sin` / `Math_Cos` and set
+  touch `SharedScratch`, `Sprite_Current` and `Math_Sin` / `Math_Cos` and set
   primitives - the shape of the paired `BMAGIC` code; `0x53D3B0`..`0x56AD79`
   (six runs, 213) touch `WindowRecords`, `MoveScript_Var7` and
   `Field_Request` and call `Msg_OpenScript`, `Party_DropIn` and
@@ -195,7 +195,7 @@ By the numbers, in the order the work can be checked, not the order of size:
    reached by casting it. There is no route that reaches many at once; but
    they share one shape (the hints separate them from everything else at
    0.6+), so this is the candidate for a **class harness** - one fuzz set-up
-   with recording stand-ins for the primitive setters and `DamageScratch`,
+   with recording stand-ins for the primitive setters and `SharedScratch`,
    run across the block - with a live check per spell as the cheats
    (DIV-0045) allow. A wave of *tooling* before a wave of functions.
 6. **The area overlays - 1,765 paired across five worlds, ~10 per area.**

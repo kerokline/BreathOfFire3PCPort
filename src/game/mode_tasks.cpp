@@ -11,6 +11,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -121,7 +123,7 @@ extern "C" void __cdecl Title_CheckStart(void) {
     if (Title_StartArmed == 0) return;
     if (!(Input_Pressed & 0x800)) return;
     if (g.load_done() == 0) return;
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     if (TaskZeroState() != 0) return;
     if (Title_State <= 2) {
         Title_Timer = 1;
@@ -162,9 +164,9 @@ extern "C" unsigned char* __cdecl Title_Sprite(int x, int y, unsigned index, uns
     const unsigned char* const entry = Title_Sprites + (index & 0xFF) * 10u;
     prim[0x14] = entry[0];
     prim[0x15] = entry[2];
-    SetWord(prim + 0x18, Word(entry + 4));
-    SetWord(prim + 0x1A, Word(entry + 6));
-    SetWord(prim + 0x16, static_cast<unsigned>(Word(entry + 8)) << 6);
+    rv::As<records::GpuSprt>(prim)->w = Word(entry + 4);
+    rv::As<records::GpuSprt>(prim)->h = Word(entry + 6);
+    rv::As<records::GpuSprt>(prim)->clut = static_cast<unsigned>(Word(entry + 8)) << 6;
     g.commit(slot, 0x1C);
     return prim;
 }
@@ -296,9 +298,9 @@ extern "C" void __cdecl GameMode_Field(void) {
         At(kBattleBytes)[0] = 0;
         At(kBattleBytes)[1] = 0;
         At(kBattleBytes)[2] = 0;
-        ObjTrio[0xb] = 0;
-        Field_Members[0xf] = 0;
-        ObjTrio[0x2a3] = 0;
+        rv::Bytes(ObjTrio)[0xb] = 0;
+        rv::Bytes(&ObjTrio[1])[0xb] = 0;
+        rv::Bytes(&ObjTrio[2])[0xb] = 0;
         Game_Step = 0;
         Rest4a_Clock = static_cast<std::int32_t>(static_cast<std::uint32_t>(count) + 1u);
         return;
@@ -565,7 +567,7 @@ constexpr move_script::Table kFieldTable = {0x22, 0x198, 9};
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {bof3::addr::Task_Records, 0x48},   // task 0's state, Field_Request, Game_Mode / Game_Step,
-                                        // task 1's words, MoveScript_WaitWordDA
+                                        // task 1's words, Transition_Busy
     {static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Input_Pressed)), 2},
     {Music_Track_addr - 1, 8},          // the track and the battle count
     {kBattleBytes, 4},
@@ -635,7 +637,7 @@ void Seed(unsigned k) {
         if (Often()) Title_StartArmed = static_cast<unsigned char>(Next() % 4 ? 1 : Next());
         else Title_StartArmed = 0;
         if (Often()) Input_Pressed = static_cast<std::uint16_t>(Input_Pressed | 0x800);
-        if (Often()) MoveScript_WaitWordDA = 0;
+        if (Often()) Transition_Busy = 0;
         if (Often()) SetWord(At(bof3::addr::Task_Records), 0);
         Title_State = static_cast<std::uint16_t>(Next() % 3 ? Next() % 8 : Next());
         if (Often()) Title_Fade = 0;

@@ -40,7 +40,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // kFlagsA, save_menu_callees.h).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow3: now Cond_Flags[0x18] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 constexpr std::uint32_t kFlags904654 = 0x904654;
 // The return point Field_ChangeArea's callers keep (x, z dwords, the area
 // word at +8; event_ops_callees.h's kReturnPoint).
@@ -55,9 +55,9 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 // hooks compare), byte +0x137 (area 95's handler 0 tests it;
 // field_hidden_callees.h's kLeader137).
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
 constexpr std::uint32_t kLeader137 = 0x802E77;
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Field_MoveSpeeds + 3 (a byte): area 99's leap divides 16 by it.

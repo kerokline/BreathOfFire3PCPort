@@ -24,6 +24,7 @@
 #include "game/battle_e3_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 
 namespace battle_e3 {
@@ -144,7 +145,7 @@ const bh::Callee kCallees[] = {
 // seeds keep below 10).
 const bh::Region kRegions[] = {
     {at::kAbilityFlags0, 256 * at::kAbilityStride},
-    {0x903B24, at::kCharRecords + 10 * at::kCharStride - 0x903B24},
+    {0x903B24, CharacterRecords_addr + 10 * at::kCharStride - 0x903B24},
 };
 
 // The ability id: below 256 (the records in the region), its flag bits the
@@ -211,17 +212,17 @@ void SeedEO(unsigned k) {
     if (c.shape == S::kDispatch) bh::OtherStates(c.state_at, c.states);
     SeedAbility();
     unsigned char* const e = Enemy();
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     enemy_rec->data_id = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 8);
-    enemy_rec->command = static_cast<unsigned char>(Flip() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
+    enemy_rec->command_kind = static_cast<unsigned char>(Flip() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
     Bit(e + 0x90, 8);
-    if (bh::Next() % 3 == 0) B(BattleActions_EventBattle_addr) = 0;
+    if (bh::Next() % 3 == 0) B(EventBattle_Id_addr) = 0;
     Sprite_Current[9] = Counter();
     Sprite_Current[0xA] = Counter();
     Bit(Mem(at::kRoundFlags), 4);
     Bit(Mem(at::kRoundFlags), 0x40);
     if (k == kCastCue && Flip()) Sprite_Current[9] = 0;
-    if (k == kLeaveEnd) B(BattleE2_EnemiesLeft_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 0, 0xFF) : bh::Next());
+    if (k == kLeaveEnd) B(Battle_EnemiesLeft_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 0, 0xFF) : bh::Next());
     if (k == kCastDoneCost) B(BattleE3_Cost_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 0xFF, 0x80) : bh::Next());
 }
 
@@ -246,10 +247,10 @@ void DisturbEO(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 7) {
     case 0: SetWord(Mem(at::kAbility), v % 256); break;
-    case 1: reinterpret_cast<records::BattleEnemy*>(Enemy())->command = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
+    case 1: rv::As<records::BattleEnemy>(Enemy())->command_kind = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 2: Enemy()[0x90] ^= 8; break;
-    case 3: B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 4: B(BattleE2_EnemiesLeft_addr) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
+    case 3: B(EventBattle_Id_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 4: B(Battle_EnemiesLeft_addr) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
     case 5: B(BattleE3_Cost_addr) = static_cast<unsigned char>(v); break;
     default: B(at::kRoundFlags) ^= static_cast<unsigned char>(v & 1 ? 4 : 0x40); break;
     }
@@ -258,7 +259,7 @@ void DisturbEO(U h) {
 // disturbance (the harness's case 11 moves any byte of the enemy but its hooks
 // and kind): a record past them is read out of the area's block on both sides.
 void SettleEO() {
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy());
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->data_id &= 7;
 }
 
@@ -442,7 +443,7 @@ void SeedOBJ(unsigned k) {
         MemberByte(0x97, path == 3 || bh::Next() % 8 == 0 ? 0x18 : 0x19);
         MemberByte(0x95, path == 4 || bh::Next() % 8 == 0 ? 0x43 : 0x42);
         MemberBit(0x134, 1);
-        B(BattleSprites_PartyPick_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 3, 0) : bh::Next());
+        B(Battle_PartyStanding_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 3, 0) : bh::Next());
         Bit(Mem(at::kRoundFlags + 1), 0x40);
         if (Flip()) B(BattleFlow_ActorAt_addr) = Sprite_Current[5];
         break;
@@ -486,7 +487,7 @@ void SeedOBJ(unsigned k) {
     case kAllDown:
         for (unsigned i = 0; i < at::kPartyMax; ++i) {
             unsigned char* const m = bh::PartyOf(static_cast<unsigned char>(i));
-            auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+            auto* const member_rec = rv::As<records::PartyMember>(m);
             if (bh::Often()) member_rec->flags |= 1;
             member_rec->status = bh::Often() ? BH_PICK(0x4000, 0x0004, 0x4004, 0x4000, 0, 0x8000) : bh::Next() & 0xFFFF;
             if (bh::Often()) m[0x130] &= ~4;
@@ -521,7 +522,7 @@ void DisturbOBJ(U h) {
     case 6: B(at::kActKind) = static_cast<unsigned char>(v & 1 ? 1 + (v >> 1) % 5 : v >> 1); break;
     case 7: B(at::kRoundFlags + (v & 1)) ^= static_cast<unsigned char>(1u << ((v >> 1) % 8)); break;
     case 8: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 9: B(v & 1 ? BattleSprites_PartyPick_addr : BattleFlow_ActorAt_addr) = static_cast<unsigned char>(v & 2 ? (v >> 2) % 3 : v >> 2); break;
+    case 9: B(v & 1 ? Battle_PartyStanding_addr : BattleFlow_ActorAt_addr) = static_cast<unsigned char>(v & 2 ? (v >> 2) % 3 : v >> 2); break;
     case 10: SetWord(Mem(at::kAbility), v % 256); break;
     default: B(at::kPartyCount) = static_cast<unsigned char>(v % 4); break;
     }

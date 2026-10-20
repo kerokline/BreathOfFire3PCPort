@@ -34,15 +34,12 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Handler;
@@ -54,10 +51,10 @@ using move_script::SetWord;
 using move_script::Word;
 
 constexpr std::uint32_t kSparkleStride = 0x2C;
-constexpr std::uint32_t kScratch = 0x903850;       // s16 words +0 .. +0xE (DamageScratch's neighbourhood)
+constexpr std::uint32_t kScratch = SharedScratch_addr; // s16 words +0 .. +0xE (SharedScratch's neighbourhood)
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12-byte records
 constexpr std::uint32_t kEnemyState = 0x93BCD9;    // what 0x4BBCE0 reads: 0x93B961 + 0x128 * 3 (docs/magic_s16.md section 6)
-// kPartyState: now ObjTrio[1] (symbols.toml). a member's +1
+// kPartyState: now ObjTrio[0].state (symbols.toml). a member's +1
 
 // A sparkle's fields (battle_items_callees.h names them for MAGIC070's pool).
 constexpr unsigned kFlags = 0, kType = 1, kPhase = 2, kShade = 3, kKind = 4, kTimer = 5, kCount = 6, kLimit = 7;
@@ -123,7 +120,7 @@ void PutFloat(unsigned char* a, int v) {
 // stride 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor < 3) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
 }
 
 // ===========================================================================
@@ -170,11 +167,11 @@ void Launch(const Pool& p) {
     Bump(c[kTimer], -1);
     c = Cur(p);
     if (c[kTimer] != 0) return;
-    SetLong(c + 0x14, Long(Owner() + 0x34));
-    SetLong(Cur(p) + 0x18, Long(Owner() + 0x38));
-    SetLong(Cur(p) + 0x1C, Long(Owner() + 0x3C));
-    SetWord(Cur(p) + kX, Word(Owner() + 0x2E));
-    SetWord(Cur(p) + kY, Word(Owner() + 0x30));
+    SetLong(c + 0x14, rv::As<records::SpriteHead>(Owner())->x);
+    SetLong(Cur(p) + 0x18, rv::As<records::SpriteHead>(Owner())->z);
+    SetLong(Cur(p) + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
+    SetWord(Cur(p) + kX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
+    SetWord(Cur(p) + kY, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     c = Cur(p);
     unsigned char* const x = c + kX;
     if (S16(Mem(p.offsets + (c[kLimit] & 0x1F) * 4)) < 0) {
@@ -483,9 +480,9 @@ void Spawn(const Pool& p, unsigned char kind) {
     Sprite_Current[4] = kind;
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sprite_Current[8] = src[8];
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
@@ -512,7 +509,7 @@ void SpawnOnActors(const Pool& p, unsigned char kind, unsigned parameter) {
     do {
         if (MH_CALL(Battle_ActorIsOut)(i) == 0) {
             const unsigned char slot = MH_CALL(BattleTask_Create)(1, parameter);
-            unsigned char* const t = Mem(at::kTasks + slot * at::kTaskStride);
+            unsigned char* const t = Mem(BattleTask_Slots_addr + slot * at::kTaskStride);
             unsigned char* const sc = Sprite_Current;
             SetLong(t + 0x80, PtrValue(sc));
             t[1] = 0;
@@ -536,9 +533,9 @@ void ActorStart(const Pool& p) {
     if (sc[9] != 0) return;
     const unsigned char* const rec = ActorRecord(sc[4]);
     sc[8] = rec[8];
-    Store(ScTask()->x, Long(rec + 0x34));
-    Store(ScTask()->y, Long(rec + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(rec + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(rec)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(rec)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(rec)->height);
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
@@ -646,7 +643,7 @@ MS16_EXPORT void __cdecl ActorFx_WaitStep4(void) {
 MS16_EXPORT unsigned char __cdecl Magic073_CountReacting(void) {
     unsigned char n = 0;
     for (unsigned char i = 0; i < 8; ++i)
-        if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(kEnemyState + i * at::kEnemyStride)[0] == 6)
+        if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(Battle_Enemies_addr + 0x379 + i * at::kEnemyStride)[0] == 6)
             ++n;
     for (unsigned char i = 0; i < 3; ++i)
         if (MH_CALL(Battle_ActorIsOut)(i) == 0 && Mem(ObjTrio_addr + 0x1 + i * at::kPartyStride)[0] == 6) ++n;

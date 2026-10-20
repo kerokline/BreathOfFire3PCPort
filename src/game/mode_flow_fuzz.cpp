@@ -123,7 +123,7 @@ void Disturb() {
     case 5: At(0x9039A3)[0] = static_cast<unsigned char>(v); break;   // Field_ScriptFlags' bit 11
     case 6: Field_InputFlags = static_cast<unsigned char>(v); break;
     case 7: Field_MemberCount = static_cast<unsigned char>(v % 5); break;
-    case 8: MoveScript_WaitWordDA = static_cast<std::uint16_t>(v % 2 ? 0 : v); break;
+    case 8: Transition_Busy = static_cast<std::uint16_t>(v % 2 ? 0 : v); break;
     case 9: Camera_Distance = static_cast<short>(v % 2 ? 0x5DC - 0x32 : static_cast<int>(h >> 16)); break;
     case 10: SetWord(At(0x929ECC), h >> 16); break;
     case 11: Cond_ByteFA = static_cast<signed char>(v % 2 ? 0xE + v % 4 : v); break;
@@ -132,7 +132,7 @@ void Disturb() {
     case 14: At(FieldModes_Pending_addr + (v % 12))[0] = static_cast<unsigned char>(h >> 20); break;
     case 15: At(AreaW1f_MusicCurrent_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : h >> 20); break;
     case 16: At(Music_Track_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : h >> 20); break;
-    case 17: At(AreaW0c_PendingKind_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFE : v % 3 == 1 ? 0xFF : h >> 20); break;
+    case 17: At(Area_EnterTransition_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFE : v % 3 == 1 ? 0xFF : h >> 20); break;
     case 18: At(at::kClock + v % 4)[0] = static_cast<unsigned char>(v % 2 ? 0 : h >> 20); break;
     case 19: Gfx_ClutStripDirty = static_cast<unsigned char>(v); break;
     case 20: Camera_Angles[0] = static_cast<short>(h >> 16); break;
@@ -577,7 +577,7 @@ void Fix() {
     Game_AreaNumber = static_cast<std::uint16_t>(Next() % kAreas);
     Field_MemberCount = static_cast<unsigned char>(Next() % 5);
     SetWord(At(ModeFlow_TransitionKind_addr), Next() % 21);
-    if (Often()) MoveScript_WaitWordDA = 0;
+    if (Often()) Transition_Busy = 0;
     for (unsigned a = 0; a < kAreas; ++a) {
         unsigned char* const d = g_desc[a];
         SetLong(d, static_cast<std::int32_t>(Address(g_script[a])));
@@ -600,8 +600,8 @@ Args Seed(unsigned k) {
     switch (k) {
     case kStart:
         args.a[0] = Garbage(0xFF, Next() % 22);
-        if (Often()) MoveScript_WaitWordDA = 0;
-        else if (Half()) MoveScript_WaitWordDA = 0x100;   // the high byte alone set
+        if (Often()) Transition_Busy = 0;
+        else if (Half()) Transition_Busy = 0x100;   // the high byte alone set
         break;
     case kFadeSub:
     case kFadeAdd:
@@ -632,14 +632,14 @@ Args Seed(unsigned k) {
         break;
     case kModeEnter: {
         static const unsigned char kKinds_[] = {0xFE, 0xFF, 0, 1, 0xA, 0x14};
-        At(AreaW0c_PendingKind_addr)[0] = Often() ? kKinds_[Next() % 6] : static_cast<unsigned char>(Next());
+        At(Area_EnterTransition_addr)[0] = Often() ? kKinds_[Next() % 6] : static_cast<unsigned char>(Next());
         Field_InputFlags = static_cast<unsigned char>(Often() ? Next() % 16 : Next());
         if (Half()) Game_AreaNumber = 0xBD;
         break;
     }
     case kWait:
         args.a[0] = Garbage(0xFF, Half() ? 0 : Next() % 3);
-        if (Half()) MoveScript_WaitWordDA = 0;
+        if (Half()) Transition_Busy = 0;
         break;
     case kClock: {
         unsigned char* const c = At(at::kClock);
@@ -740,7 +740,7 @@ void Cover(unsigned k, const State& in, const State& out, bool cut) {
     }
     case kModeEnter:
         if ((Byte(out, 0x66C7E8) | Byte(out, 0x66C7E9) << 8) == 8) ++g_cover.enter_mode8;
-        if (Byte(in, AreaW0c_PendingKind_addr) == 0xFE) ++g_cover.enter_fe;
+        if (Byte(in, Area_EnterTransition_addr) == 0xFE) ++g_cover.enter_fe;
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i) if (out.log[i].what == 10) ++g_cover.enter_transition;
         if (Byte(out, ModeFlow_AreaTransition_addr) == 0x14) ++g_cover.enter_bd;
         break;

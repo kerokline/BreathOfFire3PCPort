@@ -33,6 +33,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_fx_reached_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -46,10 +47,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 }  // namespace
@@ -106,12 +103,12 @@ std::int32_t PtrValue(const unsigned char* p) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
 // A task slot by its index, unchecked as the originals index it.
-unsigned char* Task(unsigned index) { return At(at::kTasks + index * at::kTaskStride); }
+unsigned char* Task(unsigned index) { return At(BattleTask_Slots_addr + index * at::kTaskStride); }
 unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
 // An enemy by the battle index (3 and up), as the originals compute it: the
 // index's byte minus 3, times 0x128 - below the records for 0..2.
 unsigned char* Enemy(unsigned char index) {
-    return At(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(index) - 3) * static_cast<int>(at::kEnemyStride)));
+    return At(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(index) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* Party(unsigned char index) { return At(ObjTrio_addr + index * at::kPartyStride); }
 // A .data dispatch table's entry, read as the original reads it.
@@ -122,9 +119,9 @@ Handler Entry(std::uint32_t table, unsigned index) {
 // three dwords +0x34 / +0x38 / +0x3C, Sprite_Current read again for each.
 void TakePosition(const unsigned char* from) {
     Sprite_Current[8] = from[8];
-    Store(ScTask()->x, Long(from + 0x34));
-    Store(ScTask()->y, Long(from + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(from)->height);
 }
 void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
 
@@ -147,7 +144,7 @@ MFX_EXPORT void __cdecl FxDiscFan_Task(void) {
     if (Sprite_Current[0] == 0) return;
     g.update_screen_xy();
     unsigned char* const sc = Sprite_Current;
-    SetWord(sc + 0x30, Word(sc + 0x30) - 0x10u);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->screen_y, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y) - 0x10u);
     g.draw_disc();
     g.push_matrix();
     g.draw_fan();
@@ -234,11 +231,11 @@ MFX_EXPORT void __cdecl FxRing_Task(void) {
 MFX_EXPORT void __cdecl FxRing_Wait(void) {
     Bump(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
-    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+    records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
-    tsc->x = Long(Ptr(at::kOwner) + 0x34);
-    Store(ScTask()->y, Long(Ptr(at::kOwner) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Ptr(at::kOwner) + 0x3C));
+    tsc->x = rv::As<records::SpriteHead>(Ptr(at::kOwner))->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Ptr(at::kOwner))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Ptr(at::kOwner))->height);
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0;
     Sprite_Current[0xB] = 0;
@@ -365,7 +362,7 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
         return;
     }
     Sprite_Current[0xA] = 0x38;
-    SetWord(Sprite_Current + 0x2C, item);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, item);
     unsigned char* const e2 = Enemy(Byte(at::kTarget));
     e2[at::kStealRate] = 0;
     SetWord(e2 + at::kStealItem, 0);

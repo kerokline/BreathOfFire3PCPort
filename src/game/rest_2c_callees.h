@@ -42,7 +42,7 @@ constexpr std::uint32_t kTimer = 0x929F04;       // a frame counter
 // kObject: now ModeStates_ShopObject (symbols.toml). the touched object (0xFF none, 0xFE the save point)
 // kKeptObject: now AreaW3c_Load0F (symbols.toml). the object Inn_Begin kept
 // kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount
-// kColour: now BattleDraw_Colour (symbols.toml). the window style byte
+// kColour: now Config_WindowColour (symbols.toml). the window style byte
 // kZenny: now Party_Zenny (symbols.toml). Party_Zenny
 // kPressed: now Input_Pressed (symbols.toml). Input_Pressed's low word
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
@@ -50,7 +50,7 @@ constexpr std::uint32_t kTimer = 0x929F04;       // a frame counter
 constexpr std::uint32_t kMsgFlags = 0x7DEE44;    // the message box's flags (bit 1: done)
 // kInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags
 // kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber (u16)
-// kWait: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA (u16)
+// kWait: now Transition_Busy (symbols.toml). Transition_Busy (u16)
 // kRequest: now Field_Request (symbols.toml). Field_Request (u8)
 // kSaveBack: now Rest2c_SaveBack (symbols.toml). the save menu's "saved" byte (FieldSave_End reads it)
 // kInnCursor: now ShopStates_Choice (symbols.toml). the inn prompt's cursor
@@ -71,7 +71,7 @@ constexpr std::uint32_t kBlockBytes = 0x10B0;
 constexpr std::uint32_t kStaging = 0x92A0E0;     // its copy; then 0xD50 bytes cleared (0x92B190..0x92BEE0)
 constexpr std::uint32_t kStagingClear = 0xD50;
 constexpr std::uint32_t kChecksum = 0x92A150;    // u16: the bytes' sum (the copy of the block's +0x70)
-constexpr std::uint32_t kMemberRecord = 0x66972C; // MoveScript_EffectState: a party id's record index
+constexpr std::uint32_t kMemberRecord = 0x66972C; // Character_IndexById: a party id's record index
 constexpr std::uint32_t kRecords = 0x903A70;     // the character records, 0xA4 each
 constexpr std::uint32_t kRecordStride = 0xA4;
 constexpr std::uint32_t kPartyList = 0x904062;   // the party's three ids
@@ -126,7 +126,7 @@ constexpr std::uint32_t kScaleTable = 0x663D7C;  // the scales the index reads (
 // kKind2Z: now Field_Kind2Z (symbols.toml). Field_Kind2Z
 
 // --- the windows (WindowRecords 0x803160, 0x24 each) ---------------------------------
-constexpr std::uint32_t kWindows = 0x803160;
+// kWindows: now WindowRecords (symbols.toml).
 constexpr std::uint32_t kWindowStride = 0x24;
 
 // --- callees another group of this wave owns, and the C runtime's ------------------

@@ -112,7 +112,7 @@ int Slide() { return Rest4d_Count; }
 
 // The title box both games open with: (0x14, 0x10 - 8 * slide), 0x118 by 0x13.
 void PanelBox(unsigned char slide) {
-    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 8 * static_cast<int>(slide), 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 8 * static_cast<int>(slide), 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
 }
 
 // The entry's three draws (BareRet, the box, BareRet), each `per` * the slide
@@ -172,7 +172,7 @@ U RecordName(unsigned index) {
 extern "C" void __cdecl CommuBoard_DrawRows(int x, int y, unsigned shown) {
     char* const buf = Scratch();
     const auto text = reinterpret_cast<const unsigned char*>(buf);
-    SH_CALL(Menu_DrawBox)(x, y, 0x52, 0x7A, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, y, 0x52, 0x7A, 0, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(CommuBoard_DrawFrame)(x, y);
     for (int row = 0; row < 8; ++row) {
         const unsigned k = static_cast<unsigned char>(row * 5 + 3);
@@ -270,7 +270,7 @@ extern "C" void __cdecl CommuDraw_FadeOut(void) {
 // track (Music_Track) kept at 0x675F90, Draw_PassFlags 0, the music faded out
 // over 10 and track 0x67 played over 8; state 1, step 0.
 extern "C" void __cdecl CommuDraw_MusicIn(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const unsigned char track = Music_Track;
     Draw_PassFlags = 0;
     Rest4d_KeptTrack = track;
@@ -468,7 +468,7 @@ extern "C" void __cdecl CommuDraw_WaitKey(void) {
 // jump); then the music faded out over 10, the kept track played over 8,
 // Draw_PassFlags 0x1F, Transition_Start(1), the step on.
 extern "C" void __cdecl CommuDraw_MusicBack(void) {
-    if (MoveScript_WaitWordDA != 0) {
+    if (Transition_Busy != 0) {
         SH_CALL(CommuDraw_DrawTitle)();
         return;
     }
@@ -482,7 +482,7 @@ extern "C" void __cdecl CommuDraw_MusicBack(void) {
 // original 0x45CE40, step 4: once the wait word is 0, message 0xE2,
 // Field_Request 2, the next state, step 0.
 extern "C" void __cdecl CommuDraw_Close(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Msg_OpenScript)(0xE2);
     const auto state = static_cast<unsigned char>(Rest4b_BoardState + 1);
     Field_Request = 2;
@@ -918,7 +918,7 @@ extern "C" void __cdecl CommuName_MemberPanelIn(void) {
     PanelBox(slide);
     unsigned char n = 0;
     unsigned record = 0;
-    for (U flags = at::kRecordFlags; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
+    for (U flags = CharacterRecords_addr + 0xb; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
         if ((B(flags) & 1) == 0) continue;
         const int y = 0x2B + 56 * (n >> 1);
         const int x = (n & 1) == 0 ? 0x20 - 40 * Slide() : 0xA8 + 40 * Slide();
@@ -990,7 +990,7 @@ extern "C" void __cdecl CommuName_MemberPanelOut(void) {
     PanelBox(slide);
     unsigned char n = 0;
     unsigned record = 0;
-    for (U flags = at::kRecordFlags; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
+    for (U flags = CharacterRecords_addr + 0xb; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
         if ((B(flags) & 1) == 0) continue;
         if (static_cast<int>(n) != S8(at::kCursor)) {
             const int y = 0x2B + 56 * (n >> 1);
@@ -1069,11 +1069,11 @@ extern "C" void __cdecl CommuName_MemberEntryIn(void) {
     if (Rest4d_Count != 0) return;
     for (unsigned i = 0; i < 5; ++i) {
         const unsigned record = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-        if (B(at::kRecords + at::kRecordStride * record + i) == 0) {
+        if (B(CharacterRecords_addr + at::kRecordStride * record + i) == 0) {
             B(at::kName + i) = 0x20;
         } else {
             const unsigned again = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-            B(at::kName + i) = B(at::kRecords + at::kRecordStride * again + i);
+            B(at::kName + i) = B(CharacterRecords_addr + at::kRecordStride * again + i);
         }
     }
     const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
@@ -1152,7 +1152,7 @@ extern "C" void __cdecl CommuName_MemberClose(void) {
     PanelBox(slide);
     unsigned char n = 0;
     unsigned record = 0;
-    for (U flags = at::kRecordFlags; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
+    for (U flags = CharacterRecords_addr + 0xb; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
         if ((B(flags) & 1) == 0) continue;
         const int y = 0x30 + 56 * (n >> 1);
         const int x = (n & 1) == 0 ? 0x18 - 40 * Slide() : 0xA8 + 40 * Slide();
@@ -1184,7 +1184,7 @@ extern "C" void __cdecl Commu_LeaveWhenClosed(void) {
 // not 0, counted in al (the original clears al alone; callers read al).
 extern "C" unsigned char __cdecl CommuName_CountSlots(void) {
     unsigned char n = 0;
-    for (U cell = at::kSlots; cell < at::kSlotsEnd; cell += 8)
+    for (U cell = Community_Records_addr; cell < at::kSlotsEnd; cell += 8)
         if (B(cell) != 0) n = static_cast<unsigned char>(n + 1);
     return n;
 }
@@ -1194,7 +1194,7 @@ extern "C" unsigned char __cdecl CommuName_CountSlots(void) {
 extern "C" unsigned __cdecl CommuName_NthSlot(unsigned n) {
     unsigned char seen = 0;
     unsigned index = 0;
-    for (U cell = at::kSlots; cell < at::kSlotsEnd; cell += 8, ++index) {
+    for (U cell = Community_Records_addr; cell < at::kSlotsEnd; cell += 8, ++index) {
         if (B(cell) == 0) continue;
         if (seen == static_cast<unsigned char>(n)) return index;
         seen = static_cast<unsigned char>(seen + 1);
@@ -1206,7 +1206,7 @@ extern "C" unsigned __cdecl CommuName_NthSlot(unsigned n) {
 // window colour), its frame, and R4E's piece 1 at (x + 8i + 7, y + 9) for each
 // cell in use.
 extern "C" void __cdecl CommuName_DrawSlotBar(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x, y, 0xAC, 0x1A, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, y, 0xAC, 0x1A, 0x80, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(CommuName_DrawSlotFrame)(x, y);
     const unsigned char n = SH_CALL(CommuName_CountSlots)();
     for (int i = 0; i < static_cast<int>(n); ++i) ListPiece(x + i * 8 + 7, y + 9, 1);
@@ -1237,7 +1237,7 @@ extern "C" void __cdecl CommuName_DrawSlotFrame(int x, int y) {
 // original 0x45E820: the header - the title box at (0x14, 0x10), and unless
 // 0x675F92 is 0xFFFF (read after the box) the message it names at (0x1B, 0x13).
 extern "C" void __cdecl CommuName_DrawHeader(void) {
-    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
     const unsigned id = Rest4d_Header;
     if (id == 0xFFFF) return;
     SH_CALL(Text_DrawAt)(0x1B, 0x13, 0, 0xFF, PoolText(at::kPoolWords, static_cast<int>(id)));

@@ -65,7 +65,7 @@ handler's eax to their own callers: 10 of `BattleFx_FreeTask`'s (`0x434910`,
 ### 1.1 The banner handlers
 
 `BattleBanner_Dispatch` (ours, `battle_misc.cpp`) sets `0x93B8C0` to the entry
-and `DamageScratch` to its index, then calls the kind's handler. The pool
+and `SharedScratch` to its index, then calls the kind's handler. The pool
 layout is `battle_misc.md` 1.1.
 
 **Kind 1** (`0x44A740`), the name banner (`BattleBanner_ShowName` sets entry 0
@@ -77,14 +77,14 @@ with kind 1):
    (through the pointer read again); `BattleBanner_NoneOfKind(1)`; when that
    answers al set, window record 4's `+3` (`0x8031F3`) = 0. eax is
    NoneOfKind's.
-4. Timer running: window record 4's `+0xA` (`0x8031FA`) = `DamageScratch`.
+4. Timer running: window record 4's `+0xA` (`0x8031FA`) = `SharedScratch`.
    eax is the entry.
 
 **Kind 2** (`0x44A7B0`), the same shape with three differences: the kind is
 or'ed into `0x904AE9` first, even for a timer of `0xFF`; it is never taken
 back out; the test is `NoneOfKind(4)`, after which window record 0's `+3`
 (`0x803163`) = 2. While the timer runs record 0's `+0xA` (`0x80316A`) gets
-`DamageScratch`. The decrement goes through `cx` (only the word stored).
+`SharedScratch`. The decrement goes through `cx` (only the word stored).
 
 Window records are `WindowRecords` (`0x803160`, `0x24` each).
 

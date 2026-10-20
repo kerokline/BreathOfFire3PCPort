@@ -146,7 +146,7 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
 
@@ -266,7 +266,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},           // Gfx_PacketNext
     {0, kPrimBytes},         // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},        // DamageScratch: the shadow's radius words +0 / +2
+    {kScratch, 0x10}, // SharedScratch: the shadow's radius words +0 / +2
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }

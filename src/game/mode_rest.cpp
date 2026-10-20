@@ -29,6 +29,8 @@
 #include "game/music_resume.h"
 #include "game/sound_rest.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -164,7 +166,7 @@ extern "C" void __cdecl GameMode3_Leave(void) {
         const unsigned char out = AreaW3c_CampFlag;
         MenuLists_CampChosen = 0;
         if (out == 0 && ((Field_InputFlags & 1) != 0 || Game_AreaNumber == at::kTripAnyArea)) {
-            const U x = UL(at::kLeaderX), z = UL(at::kLeaderZ);
+            const U x = static_cast<U>(ObjTrio[0].x), z = static_cast<U>(ObjTrio[0].z);
             const unsigned area = Game_AreaNumber;
             AreaW3c_CampFlag = 1;
             AreaW2d_ReturnPoint = x;
@@ -172,9 +174,9 @@ extern "C" void __cdecl GameMode3_Leave(void) {
             AreaW4d_ReturnArea = area;
             const U r = static_cast<U>(SH_CALL(Rand)());
             AreaW3g_HealByte =
-                static_cast<unsigned char>((At(at::kFacingJitter)[r & 3] + ObjTrio[8]) & 0xF);
+                static_cast<unsigned char>((At(at::kFacingJitter)[r & 3] + ObjTrio[0].direction) & 0xF);
             const unsigned place = AreaW0b_Place;
-            const U px = UL(at::kPendingX), pz = AreaEntry_PendingZ;
+            const U px = static_cast<std::uint32_t>(at::kPendingX), pz = AreaEntry_PendingZ;
             SH_CALL(Field_ChangeArea)(place, I(px), I(pz), AreaEntry_PendingFlags);
         } else {
             AreaW3c_CampFlag = 0;
@@ -245,7 +247,7 @@ extern "C" void __cdecl GameMode5_Turn(void) {
     BattleFrames();
     if (turned == 0) return;
     SH_CALL(Port_DroppedCall)(1);
-    const unsigned char flags = BattleTurnSteps_MusicFlags;
+    const unsigned char flags = EventBattle_Flags;
     U formation = UL(at::kFormation);
     if (!(flags & 1)) {
         const U i = (formation & 0xFF) * 2;
@@ -294,13 +296,13 @@ extern "C" void __cdecl GameMode5_Load(void) {
     // music takes over - our DLL's state, nothing written to the game's;
     // nothing remembered with the switch off (Capcom's rule, and the fuzz).
     music_resume::Remember();
-    if (!(BattleTurnSteps_MusicFlags & 0x40) && Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(0xA);
+    if (!(EventBattle_Flags & 0x40) && Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(0xA);
     unsigned track;
-    const unsigned char event = BattleActions_EventBattle;
+    const unsigned char event = EventBattle_Id;
     if (event != 0) {
         const unsigned asset = At(at::kEventAsset)[event * 4u];
         SH_CALL(LoadDatFile)(static_cast<int>(Word(At(at::kEventFile + asset * 4u))));
-        const unsigned again = At(at::kEventAsset)[BattleActions_EventBattle * 4u];
+        const unsigned again = At(at::kEventAsset)[EventBattle_Id * 4u];
         track = Word(At(at::kEventTrack + again * 4u));
     } else if (Cond_ByteFA < static_cast<int>(at::kChapterSplit)) {
         SH_CALL(LoadDatFile)(static_cast<int>(at::kBattleFileA));
@@ -359,14 +361,14 @@ extern "C" void __cdecl GameMode5_Leave(void) {
         Draw_OtSlot = 6;
         SH_CALL(Field_PartyLoad)(0);
         SH_CALL(Party_PlacesByList)();
-        const unsigned char flags = BattleTurnSteps_MusicFlags;
+        const unsigned char flags = EventBattle_Flags;
         Field_EdgeBits = 0;
         if (!(flags & 2)) {
             const long z = Field_Kind2Z, x = Field_Kind2X;
             const long height = SH_CALL(AreaMap_Elevation)(x, z);
             SH_CALL(MapView_SetElevation)(static_cast<int>(height));
         }
-        if (!(BattleTurnSteps_MusicFlags & 0x40) && !(BattleActions_BattleEnd & 8)) {
+        if (!(EventBattle_Flags & 0x40) && !(Battle_EndFlags & 8)) {
             unsigned char track = Music_Track;
             // DIV-0092: by now the fanfare's stopping fade (BattleEnd_ExitHook)
             // has left the track 0xFF, so Capcom's Music_Play(Music_Track) never
@@ -385,10 +387,10 @@ extern "C" void __cdecl GameMode5_Leave(void) {
                 // byte held the script's 29. So: the zone's table track for the
                 // leader's cell (what Area_PickMusic derives on an area change),
                 // from its top, with Capcom's fade. Only a random encounter resumes.
-                const unsigned char event = BattleActions_EventBattle;
+                const unsigned char event = EventBattle_Id;
                 if (event != 0) {
                     const unsigned char current = track;
-                    track = Area_ZoneTrack(Area_ZoneAt(ObjTrio[0x36], ObjTrio[0x3a]));
+                    track = Area_ZoneTrack(Area_ZoneAt(rv::Bytes(ObjTrio)[0x36], rv::Bytes(ObjTrio)[0x3a]));
                     AreaW1f_MusicCurrent = track;
                     bof3::Log("DIV-0092    event battle %u over: the zone's track %u from its top (the current byte held %u), no resume",
                               event, track, current);
@@ -399,8 +401,8 @@ extern "C" void __cdecl GameMode5_Leave(void) {
             if (track != 0xFF) SH_CALL(Music_Play)(track, resume ? music_resume::kResumeFadeFrames : 0xA);
         }
         music_resume::Forget();  // a remembered position is used here or not at all
-        BattleTurnSteps_MusicFlags = 0;
-        BattleActions_EventBattle = 0;
+        EventBattle_Flags = 0;
+        EventBattle_Id = 0;
         SH_CALL(Field_ZoneCounterRoll)(0);
         SH_CALL(Field_AfterBattleTally)();
         back = true;

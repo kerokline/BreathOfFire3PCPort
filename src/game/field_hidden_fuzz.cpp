@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_hidden_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -30,7 +31,7 @@ using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 constexpr std::uint32_t kMemberSize = 0x14C;
-unsigned char* Member(unsigned i) { return ObjTrio + (i % 3) * kMemberSize; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i % 3]); }
 void SetPtr(unsigned char* at, const void* p) { SetLong(at, static_cast<std::int32_t>(Address(p))); }
 unsigned char* Sc() { return Sprite_Current; }
 
@@ -85,7 +86,7 @@ void Disturb() {
     case 3: s[0xB] = static_cast<unsigned char>(v % 20); break;
     case 4: s[0xA] = static_cast<unsigned char>(v % 3); break;
     case 5: Field_Request = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 6: At(at::kScratch)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 6: At(at::kScratch_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 7: Field_State = Member(v); break;
     case 8: At(ObjTrio_addr + 0x137)[0] = static_cast<unsigned char>(v % 2 ? 8 : v); break;
     case 9: At(FieldHidden_Facing_addr)[0] = static_cast<unsigned char>(v % 3 ? v % 4 : v); break;
@@ -96,10 +97,10 @@ void Disturb() {
     case 14: SetWord(s + 0x58, v % 4); break;
     case 15: SetWord(s + 0x2C, v % 3); break;
     case 16: SetWord(s + 0x3E, h >> 16); break;
-    case 17: if (s[0xB] < 20) Effect_Objects[s[0xB] * 0x80u] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 17: if (s[0xB] < 20) Effect_Objects[s[0xB]].flags = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 18: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (v % 2 ? 2 : 4)); break;
     case 19: SetLong(At(at::kMemberPos + (w % 6) * 4), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
-    case 20: At(at::kEnemies + (w % 8) * at::kEnemyStride)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 20: At(Encounter_Slots_addr + (w % 8) * at::kEnemyStride)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 21: SetLong(s + (v % 2 ? 0x34 : 0x38), static_cast<std::int32_t>(h * 0x2545F491u)); break;
     case 22: At(v % 2 ? Encounter_Rows_addr + 8 + (w % 8) * 9 : Encounter_SlotChance_addr + w % 8)[0] = static_cast<unsigned char>(v % 17); break;
     default: g_src[w % kSrc] = static_cast<unsigned char>(v); break;
@@ -130,7 +131,7 @@ std::uint32_t __cdecl StubTargetAhead() {
 long __cdecl StubSlope(long x, long z, unsigned long d) {
     Record(7, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), d & 0xFF);
     const std::uint32_t h = Hash();
-    At(at::kScratch)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : (h >> 4) | 1);
+    At(at::kScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : (h >> 4) | 1);
     Disturb();
     static const std::uint32_t kEdges[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0x10040, 0xFFFF0041u, 0xFFFFFFFFu, 0x8041};
     const std::uint32_t k = Hash();
@@ -215,7 +216,7 @@ void __cdecl StubCopyFrames(unsigned frame, unsigned char* buffer, unsigned size
 long __cdecl StubElevation(long x, long z) {
     Record(23, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     if (Hash() % 2)
-        for (unsigned i = 0; i < 20; ++i) SetWord(Effect_Objects + i * 0x80u + 0x38, Hash() >> 16);
+        for (unsigned i = 0; i < 20; ++i) SetWord(rv::Bytes(&Effect_Objects[i]) + 0x38, Hash() >> 16);
     Disturb();
     return static_cast<long>(Hash());
 }
@@ -444,7 +445,7 @@ void Fix() {
         m[5] = static_cast<unsigned char>(Next() % 4);
         if (Often()) m[0x89] = static_cast<unsigned char>(Next() % 24);
     }
-    for (unsigned k = 0; k < 8; ++k) At(at::kEnemies + k * at::kEnemyStride + 1)[0] = static_cast<unsigned char>(Next() % 0x40);
+    for (unsigned k = 0; k < 8; ++k) At(Encounter_Slots_addr + k * at::kEnemyStride + 1)[0] = static_cast<unsigned char>(Next() % 0x40);
     if (Half()) Field_Request = 0;
 }
 
@@ -464,7 +465,7 @@ Args Seed(unsigned k) {
         static const unsigned char kSub[] = {0, 0, 1, 1, 1, 2, 2, 3, 0xFF};
         s[2] = kSub[Next() % 9];
         if (Half()) At(ObjTrio_addr + 0x137)[0] = 8;
-        if (Half()) Effect_Objects[s[0xB] * 0x80u] = 0;
+        if (Half()) Effect_Objects[s[0xB]].flags = 0;
         break;
     }
     case kFinish: {
@@ -534,7 +535,7 @@ Args Seed(unsigned k) {
             static const unsigned char kIds[] = {2, 6, 0, 1, 3, 5, 7};
             At(Cond_Flags_addr + 0xd5 + m)[0] = kIds[Next() % 7];
         }
-        for (unsigned e = 0; e < 8; ++e) At(at::kEnemies + e * at::kEnemyStride)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        for (unsigned e = 0; e < 8; ++e) At(Encounter_Slots_addr + e * at::kEnemyStride)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         break;
     }
     case kPickRow:

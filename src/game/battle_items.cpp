@@ -27,6 +27,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_items_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -104,7 +105,7 @@ void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v
 unsigned char* Cur() { return *reinterpret_cast<unsigned char**>(At(BattleItems_SparkleCurrent_addr)); }
 unsigned char* Actor() { return *reinterpret_cast<unsigned char**>(At(BattleE2_Owner_addr)); }
 
-// The scratch words: DamageScratch + k, and the vertex scratch + k.
+// The scratch words: SharedScratch + k, and the vertex scratch + k.
 unsigned char* Scr(unsigned k) { return At(at::kScratch + k); }
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 unsigned char* Vtx(unsigned k) { return At(Prim_VertexScratch_addr + k); }
@@ -595,8 +596,8 @@ extern "C" void __cdecl MagicFx_DrawRing(void) {
         p = Gfx_PacketNext;
         g.set_poly_gt4(p);
         g.set_semi(p, 1);
-        SetWord(p + 0x2A, g.get_tpage(0, 1, 0x340, 0x100));
-        SetWord(p + 0x16, g.get_clut(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, g.get_tpage(0, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, g.get_clut(0, 0x1FA));
         const auto u0 = static_cast<unsigned char>(i << 2);
         const auto u1 = static_cast<unsigned char>((i + 1) << 2);
         p[0x14] = u0;
@@ -702,7 +703,7 @@ extern "C" void __cdecl BattleActor_Flash(unsigned index) {
         if (r[0x90] & 0x80) g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
         return;
     }
-    unsigned char* const r = At(at::kEnemyRecords + (i - 3) * at::kEnemyStride);
+    unsigned char* const r = At(Battle_Enemies_addr + (i - 3) * at::kEnemyStride);
     if (r[0x92] & 0x80) g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
 }
 
@@ -720,8 +721,8 @@ extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
         if (static_cast<unsigned char>(second) != 0) g.actor_sound(second);
         return;
     }
-    auto* const enemy_rec = reinterpret_cast<const records::BattleEnemy*>(At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride));
-    if (BattleActions_EventBattle != 0) {
+    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride));
+    if (EventBattle_Id != 0) {
         const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
         g.enemy_sound(Word(cue));
     } else {
@@ -741,7 +742,7 @@ extern "C" unsigned char __cdecl BattleActor_FxSize(void) {
         if (r[0x134] & 2) return At(at::kFxSizeAltTable)[BattlePhases_B89];
         return At(at::kFxSizeTable)[r[0x89]];
     }
-    const unsigned char type = At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride + 0xF0)[0];
+    const unsigned char type = At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride + 0xF0)[0];
     return At(at::kEnemyFxSize + type * 0x8Cu)[0];
 }
 

@@ -10,7 +10,7 @@ after GitHub issue
 [kerokline/BreathOfFire3PCPort#97](https://github.com/kerokline/BreathOfFire3PCPort/issues/97)
 ("Second Script": furigana or a second language in the rendered script, from
 a Reddit request). The furigana half is IDEAS I21 (2026-09-24, "its own
-branch and playtesting"); the second-language half is IDEAS I45. Nothing
+branch and playtesting"); the second-language half is IDEAS I50. Nothing
 here is built, measured or in the ledger yet; every number below that is not
 cited is the sibling's or a guess, and says so.
 
@@ -331,7 +331,7 @@ section 1 before FB and RR launch:
    away-day branch holds the next number today), one for the reading row and the
    furigana layer, one for the second-language layer, one for the mod
    mechanism; the defects numbered; [`owner-review.md`](owner-review.md)
-   gets the calls below; I21 and I45 to built; the README row; HANDOFF.
+   gets the calls below; I21 and I50 to built; the README row; HANDOFF.
 
 ## 6. The owner's calls (asked here, answered in chat or `owner-review.md`)
 
@@ -379,7 +379,7 @@ which favour a Japanese main with an English second (SL 10).
 
 `C:\Users\kerok\r_ruby\BRIEF_<group>.md`, one per group (PR, FB, SL, ML;
 RR and SB when stage A's numbers are in). Each names the goal, the files it
-owns and must not touch, the docs to read first (this file; I21 and I45;
+owns and must not touch, the docs to read first (this file; I21 and I50;
 [`msgbox.md`](msgbox.md) 3; [`dialogue-localisation.md`](dialogue-localisation.md)
 1, 2 and 9; DIV-0005, DIV-0056, DIV-0057, DIV-0086; the sibling's
 `docs/FURIGANA.md` for FB and SL; [`install-sources.md`](install-sources.md)

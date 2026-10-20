@@ -21,12 +21,12 @@
 #include "game/area_harness.h"
 #include "game/area_w3e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3e::at;
 using area_harness::Handler;
@@ -42,13 +42,13 @@ void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p)
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`) and Sprite_Objects record `slot` (0xA4, likewise).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
-unsigned char* ObjectAt(unsigned slot) { return Sprite_Objects + slot * at::kObjectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
+unsigned char* ObjectAt(unsigned slot) { return rv::Bytes(Sprite_Objects) + slot * at::kObjectStride; }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 // The movement script's position (MoveScript_Object's word +0xA) moved by `v`.
 void ScriptStep(int v) { AddWord(MoveScript_Object + 0xA, v); }
 
@@ -86,8 +86,8 @@ unsigned FindCell(U table, unsigned count, unsigned stride, long x, long z) {
 // at the record's words +0x2E / +0x30; a slot answered: Sprite_Current's +0xB.
 void SpawnByCharacter(U record, U list, U table, unsigned char kind) {
     unsigned char* const r = Mem(record);
-    const auto x = static_cast<short>(Word(r + 0x2E));
-    const auto z = static_cast<short>(Word(r + 0x30));
+    const auto x = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(r)->screen_x));
+    const auto z = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(r)->screen_y));
     const unsigned char who = B(list);
     Sprite_Current = r;
     const auto b = static_cast<signed char>(B(table + who));
@@ -127,10 +127,10 @@ void ChoiceMessage(U table) {
 // (+0xC to x, +0x10 to z, dwords), then the three shade bytes +0x5D..+0x5F.
 void DriftStep() {
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* tCur = rv::As<records::SpriteObject>(cur);
     tCur->x = static_cast<std::int32_t>(static_cast<U>(tCur->x) + static_cast<U>(tCur->step_x));
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur = rv::As<records::SpriteObject>(cur);
     tCur->z = static_cast<std::int32_t>(static_cast<U>(tCur->z) + static_cast<U>(tCur->step_z));
 }
 
@@ -161,7 +161,7 @@ extern "C" void __cdecl Area136_ChoiceMessage3(void) { ChoiceMessage(Area136_Cho
 // (the object read again after the call).
 extern "C" void __cdecl Area136_MoveUntilLimit(void) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const U step = static_cast<U>(Long(Mem(Field_DirectionSteps_addr + (cur[8] & 7u) * 8 + 4)));
     const U ahead = step + static_cast<U>(tCur->z);
     const U limit = static_cast<U>(B(Area136_ZLimits_addr + B(AreaW0c_TailSub_addr))) << 16;
@@ -388,8 +388,8 @@ extern "C" void __cdecl Area140_FollowAndAct(void) {
     const unsigned char* const cur = Sprite_Current;
     const unsigned char d = cur[8];
     const unsigned char* const delta = Mem(at::kCellDelta + d * 2u);
-    const auto x = static_cast<std::uint16_t>(static_cast<signed char>(delta[0]) + Word(cur + 0x36));
-    const auto z = static_cast<std::uint16_t>(static_cast<signed char>(delta[1]) + Word(cur + 0x3A));
+    const auto x = static_cast<std::uint16_t>(static_cast<signed char>(delta[0]) + rv::As<records::SpriteObject>(cur)->x_whole);
+    const auto z = static_cast<std::uint16_t>(static_cast<signed char>(delta[1]) + rv::As<records::SpriteObject>(cur)->z_whole);
     if (B(ObjTrio_addr + 0x9) != 0 && B(ObjTrio_addr + 0x137) == 1) {
         if (AH_CALL(Area140_BlockedAhead)(x, z) == 0 && static_cast<std::uint16_t>(x - 0x44) < 0xD &&
             static_cast<std::uint16_t>(z - 6) < 0xB) {
@@ -536,7 +536,7 @@ extern "C" unsigned char __cdecl Area140_CellHook(long x, long z) {
         const std::uint16_t rx = Word(r), rz = Word(r + 2);
         for (unsigned m = 0; m < count; ++m) {
             const unsigned char* const p = Mem(ObjTrio_addr + m * at::kPartyStride);
-            const auto* const tP = reinterpret_cast<const records::PartyMember*>(p);
+            const auto* const tP = rv::AsConst<records::PartyMember>(p);
             const U n = p[9];
             const U px = static_cast<U>(tP->step_x) * n + static_cast<U>(tP->x);
             const U pz = static_cast<U>(tP->step_z) * n + static_cast<U>(tP->z);
@@ -552,7 +552,7 @@ extern "C" unsigned char __cdecl Area140_CellHook(long x, long z) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot != 0xFF) {
             unsigned char* const fx = EffectAt(slot);
-            auto* const tFx = reinterpret_cast<records::EffectObject*>(fx);
+            auto* const tFx = rv::As<records::EffectObject>(fx);
             fx[0] = 1;
             fx[5] = 0x71;
             tFx->x = static_cast<std::int32_t>(static_cast<U>(e[0]) << 16);
@@ -599,7 +599,7 @@ extern "C" void __cdecl Area140_Effect71Count(void) {
 extern "C" void __cdecl Area140_Effect71End(void) {
     AH_CALL(Flags_Clear)(StoryFlags(), Sprite_Current[0xB]);
     const unsigned char* const cur = Sprite_Current;
-    AH_CALL(MoveCmd_TestFB)(static_cast<short>(Word(cur + 0x36)), static_cast<short>(Word(cur + 0x3A)));
+    AH_CALL(MoveCmd_TestFB)(static_cast<short>(rv::As<records::EffectObject>(cur)->x_whole), static_cast<short>(rv::As<records::EffectObject>(cur)->z_whole));
     AH_CALL(Effect_Release)();
 }
 
@@ -628,12 +628,12 @@ extern "C" void __cdecl Area141_ShadeOff(void) {
 // in direction +8: MoveCmd_MoveKind2 when Sprite_Current is Sprite_Kind2,
 // else MoveCmd_Move(the script object, it).
 extern "C" void __cdecl Area141_MoveToX45(void) {
-    const std::int32_t d = static_cast<std::int32_t>(static_cast<U>(CurSprite()->x) - 0x450000u) >> 15;
+    const std::int32_t d = static_cast<std::int32_t>(static_cast<U>(rv::Current<records::SpriteObject>()->x) - 0x450000u) >> 15;
     if (d == 0) return;
     MoveScript_Object[7] = static_cast<unsigned char>(d < 0 ? -d : d);
     Sprite_Current[8] = 7;
     unsigned char* const cur = Sprite_Current;
-    if (cur == Sprite_Kind2) {
+    if (cur == rv::Bytes(&Sprite_Kind2)) {
         AH_CALL(MoveCmd_MoveKind2)(cur[8]);
         return;
     }
@@ -907,7 +907,7 @@ extern "C" unsigned char __cdecl Area141_CellHook(long x, long z) {
 // ScriptFlags_Set40, Party_HealJoined, tail kind 52 at state 0; 0xC002
 // ScriptFlags_Set40, tail kind 52 at state 0xA; any other nothing. al 0.
 extern "C" unsigned char __cdecl Area141_Trigger57(unsigned char* object, unsigned char*) {
-    switch (Word(object + 0x88)) {
+    switch (rv::As<records::SpriteObject>(object)->trigger_word) {
     case 0xC000:
         AH_CALL(Area141_PaintCells)(Mem(at::Run(0)), 0);
         AH_CALL(Area141_PaintCells)(Mem(at::Run(1)), 0);

@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -46,11 +47,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F) and the SVECTORs of Prim_VertexScratch
 // (0x9037A0..). Both are read again after every call, as the originals read
 // them.
-constexpr std::uint32_t kS = 0x903850;
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // MAGIC144's pool: 48 task-like records of 0x84 bytes (+0 bit 0 in use, +1
@@ -96,7 +97,7 @@ unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char* PoolRecord(unsigned i) { return Mem(WallOfFire_Pool_addr + i * kRecord); }
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
@@ -201,9 +202,9 @@ void BeamDrawMode() {
 // A task's position (+0x34, +0x38, +0x3C) from another's, read one dword at a
 // time as the originals read it.
 void CopyPosition(unsigned char* to, const unsigned char* from) {
-    SetLong(to + 0x34, Long(from + 0x34));
-    SetLong(to + 0x38, Long(from + 0x38));
-    SetLong(to + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::As<records::SpriteHead>(to)->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::As<records::SpriteHead>(to)->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::As<records::SpriteHead>(to)->height, rv::As<records::SpriteHead>(from)->height);
 }
 
 }  // namespace
@@ -224,7 +225,7 @@ S32_EXPORT void __cdecl WallOfFire_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const m = PoolRecord(i);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
@@ -252,7 +253,7 @@ S32_EXPORT void __cdecl WallOfFire_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x36) & 0xFFu;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = static_cast<std::int32_t>(Key(sc));
     child[1] = 0;
     CopyPosition(child, source);
@@ -292,7 +293,7 @@ S32_EXPORT void __cdecl WallOfFireChild_Spawn(void) {
         if (index == 0xFF) continue;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolRecord(index);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         tm->owner = static_cast<std::int32_t>(Key(sc));
         m[0] = static_cast<unsigned char>(m[0] | 0x41);
         m[1] = n != 0 ? 1 : 0;
@@ -479,8 +480,8 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         {
             const unsigned char* const s = Sc();
-            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y),
+            const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z),
                                         2, 0xC);
         }
         unsigned char* const p = Gfx_PacketNext;
@@ -508,8 +509,8 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         p[0x25] = 1;
         p[0x26] = 1;
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
                                     0x34);
     }
 }
@@ -558,10 +559,10 @@ S32_EXPORT void __cdecl EyeBeam_Task(void) {
 // the sparks cleared; +9 0x3C, +1 on; sound effect 0x100.
 S32_EXPORT void __cdecl EyeBeam_Start(void) {
     const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
-    const auto* caster = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(slot + 0x80))));
-    SetLong(Mem(EyeBeam_State_addr), Add(Long(caster + 0x34), 0x14000));
-    SetLong(Mem(EyeBeam_State_addr + 0x4), Long(caster + 0x38));
-    SetLong(Mem(EyeBeam_State_addr + 0x8), Add(Long(caster + 0x3C), 0x2C00000));
+    const auto* caster = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::BattleTask>(slot)->owner));
+    SetLong(Mem(EyeBeam_State_addr), Add(rv::As<records::SpriteHead>(caster)->x, 0x14000));
+    SetLong(Mem(EyeBeam_State_addr + 0x4), rv::As<records::SpriteHead>(caster)->z);
+    SetLong(Mem(EyeBeam_State_addr + 0x8), Add(rv::As<records::SpriteHead>(caster)->height, 0x2C00000));
     SetWord(Mem(EyeBeam_State_addr + 0x10), 0);
     SetWord(Mem(EyeBeam_State_addr + 0x12), 0);
     SetWord(Mem(EyeBeam_State_addr + 0x14), 0);

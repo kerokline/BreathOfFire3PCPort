@@ -24,29 +24,29 @@ using U = std::uint32_t;
 // --- the battle's cells -----------------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy EnemyRunAll is running (its object)
 constexpr U kFight = 0x904AAA;            // u8: the event battle
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win
 constexpr U kTarget = 0x904B44;           // u8: the battle's target
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 
 // --- the party's leader (ObjTrio + 0) ---------------------------------------
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). +0x34, 16.16
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). +0x38
-// kLeaderY: now ObjTrio[0x3c] (symbols.toml). +0x3C
-// kLeaderGround: now ObjTrio[0x3e] (symbols.toml). +0x3E: the word AreaMap_Elevation answers is stored here
+// kLeaderX: now ObjTrio[0].x (symbols.toml). +0x34, 16.16
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). +0x38
+// kLeaderY: now ObjTrio[0].height (symbols.toml). +0x3C
+// kLeaderGround: now ObjTrio[0].height_whole (symbols.toml). +0x3E: the word AreaMap_Elevation answers is stored here
 constexpr U kLeaderId = 0x802DC9;         // +0x89: the character id
-// kLeaderTarget: now ObjTrio[0x124] (symbols.toml). +0x124: the member's target
-// kLeaderFlags: now ObjTrio[0x134] (symbols.toml). +0x134: bit 1 copies its +0x3C to 0x939B1C
+// kLeaderTarget: now ObjTrio_addr + 0x124 (symbols.toml). +0x124: the member's target
+// kLeaderFlags: now ObjTrio_addr + 0x134 (symbols.toml). +0x134: bit 1 copies its +0x3C to 0x939B1C
 // kCameraY: now BossH_CameraY (symbols.toml). written from the leader's +0x3C (what reads it is not traced)
 
 // --- the enemies' objects (0x93B960 + n * 0x128) that BossMap_UpdateFromEnemies reads
 constexpr U kEnemy0X = 0x93B994;          // enemy 0's +0x34 / +0x38, and the word +0x3E
 constexpr U kEnemy0Z = 0x93B998;
-// kEnemy0Ground: now BossH_Enemy0Ground (symbols.toml).
-constexpr U kEnemy1 = 0x93BA88;           // enemy 1's object; +0x93 at 0x93BB1B
+// kEnemy0Ground: now Battle_Enemies[0].height_whole (symbols.toml).
+// kEnemy1: now Battle_Enemies[1] (symbols.toml). enemy 1's object; +0x93 at 0x93BB1B
 // kEnemy1Status: now BossH_Enemy1Status (symbols.toml). its +0x92 (the dword read; byte +0x93 tested)
-constexpr U kEnemy2 = 0x93BBB0;           // enemy 2's object
+// kEnemy2: now Battle_Enemies[2] (symbols.toml). enemy 2's object
 // kEnemy2Status: now BossH_Enemy2Status (symbols.toml). its +0x92
 
 // --- the loaded area block --------------------------------------------------

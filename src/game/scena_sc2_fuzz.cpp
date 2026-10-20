@@ -295,7 +295,7 @@ std::uint32_t Move(const std::uint32_t*, std::uint32_t answer) {
 
 // 0x590C90's effect: the eight member records noted.
 std::uint32_t NoteMembers(const std::uint32_t*, std::uint32_t answer) {
-    sh::Note(sh::HashBytes(sh::Mem(at::kMemberRecords), 8 * at::kMemberStride));
+    sh::Note(sh::HashBytes(sh::Mem(CharacterRecords_addr), 8 * at::kMemberStride));
     return answer;
 }
 
@@ -384,7 +384,7 @@ const sh::Region kRegions[] = {
     {at::kChoiceBits, 4},                 // the message box's choice bits
     {AreaW1f_MusicCurrent_addr, 1},       // 0x904CD0
     {AreaW2c_LastArea_addr, 2},           // the word just past Sprite_ObjectsExtra (area 0x10)
-    {at::kMemberRecords, 8 * at::kMemberStride},   // the eight member records (Scena02_StripMember)
+    {CharacterRecords_addr, 8 * at::kMemberStride}, // the eight member records (Scena02_StripMember)
 };
 
 // --- the seed ------------------------------------------------------------------
@@ -528,7 +528,7 @@ void Seed(unsigned k) {
     if (sh::Half()) M(at::kChoiceBits)[0] ^= 2;
     if (sh::Half()) M(0x8034E1)[0] ^= 1;                                            // Field_StatusBits bit 0
     if (sh::Half()) SetWordAt(AreaW2c_LastArea_addr, 0x5A);
-    if (sh::Half()) M(Field_Members_addr + 0x13b)[0] = 7;
+    if (sh::Half()) M(ObjTrio_addr + 0x283)[0] = 7;
     // The leader's cell (Scena02_Scene08 step 8, the door helpers, Scena02_Scene1A step 0x19).
     unsigned char* const lead = sh::ObjectOf(0);
     if (sh::Often()) move_script::SetWord(lead + 0x36, SH_PICK(4, 5, 8, 9, 0xC, 0xD, 0x44, 0x45, 0x46, 3, 0x47));

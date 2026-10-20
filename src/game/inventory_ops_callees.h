@@ -43,12 +43,12 @@ constexpr std::uint32_t kCameraOffsets = 0x669CB8;  // s16 x, z per facing
 constexpr std::uint32_t kFormation = 0x904060;    // u8: the party's formation (Encounter_PlaceParty's first argument)
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). u8 x 3: the party (event_ops' list)
 // kPartyList2: now Cond_Flags[0xd5] (symbols.toml). u8 x 3: the second list the placement reads
-// kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per member id: its actor record (symbols.toml's MoveScript_EffectState)
-constexpr std::uint32_t kRecords = 0x903A70;      // the actor records, 0xA4 each (Field_ActorStates is +0x10)
+// kMemberRecord: now Character_IndexById (symbols.toml). u8 per member id: its actor record (symbols.toml's Character_IndexById)
+// kRecords: now CharacterRecords (symbols.toml). the actor records, 0xA4 each (Field_ActorStates is +0x10)
 constexpr unsigned kRecordSize = 0xA4;
 constexpr std::uint32_t kBattleFacing = 0x904AAC; // u8: kFacing, copied by 0x591F30
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: Encounter_RollInitiative's 0 / 1 / 2
-// kBattleFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 2 skips the shade steps, bit 4 the script step
+// kBattleFlags: now EventBattle_Flags (symbols.toml). u8: bit 2 skips the shade steps, bit 4 the script step
 constexpr std::uint32_t kFaceTable = 0x660B3C;    // u8 per facing: the direction the party turns to
 constexpr std::uint32_t kSideSteps = 0x660B1C;    // s8 x, z per facing, in cells
 constexpr std::uint32_t kAlertOffsets = 0x660B24; // u8 x, y per member id: the alert effect's offset

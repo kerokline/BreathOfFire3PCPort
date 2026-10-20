@@ -32,6 +32,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/member_sprites_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -101,7 +102,7 @@ std::uint32_t Hash(std::uint32_t salt = 0) {
 unsigned char g_scratch[0x150];   // an object that is not a party member
 unsigned char g_out[4];           // Field_DirectionTo's destination when it is tested alone
 
-unsigned char* Member(unsigned i) { return ObjTrio + i * kMemberBytes; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 unsigned char* Cells() { return At(at::kCells); }
 // Sprite_Current may be any of the five, Field_State one of the four with +0x148.
 unsigned char* SpriteChoice(unsigned v) {
@@ -140,7 +141,7 @@ void Disturb(std::uint32_t salt) {
     const std::uint32_t h = Hash(salt);
     unsigned char* const c = Sprite_Current;
     switch (h % 28) {
-    case 0: ObjTrio[(h >> 8) % ObjTrio_count] = static_cast<unsigned char>(h >> 24); break;
+    case 0: rv::Bytes(ObjTrio)[(h >> 8) % (ObjTrio_count * sizeof(records::PartyMember))] = static_cast<unsigned char>(h >> 24); break;
     case 1: Sprite_Current = SpriteChoice(h >> 8); break;
     case 2: Field_State = StateChoice(h >> 8); break;
     case 3: Field_MemberCount = static_cast<unsigned char>((h >> 8) % 4); break;
@@ -148,7 +149,7 @@ void Disturb(std::uint32_t salt) {
     case 5: Field_ScriptFlags2 = static_cast<unsigned short>(h >> 12); break;
     case 6: Field_InputFlags = static_cast<unsigned char>(h >> 8); break;
     case 7: Field_Request = static_cast<unsigned char>((h >> 8) % 3 == 0 ? 0 : h >> 16); break;
-    case 8: At(at::kActorRecords)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
+    case 8: At(CharacterRecords_addr)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
     case 9: g_scratch[(h >> 8) % sizeof g_scratch] = static_cast<unsigned char>(h >> 24); break;
     case 10: At(FieldEvent_Object905DA0_addr)[(h >> 8) % 0xC8] = static_cast<unsigned char>(h >> 24); break;
     case 11: Cells()[(h >> 8) % 0x100] = static_cast<unsigned char>(h >> 24); break;
@@ -257,7 +258,7 @@ unsigned char __cdecl StubStepAhead() {
     if (h % 2) {   // near the sprite, or on it (as far as it is: the caller's tie)
         const unsigned char* const c = Sprite_Current;
         const bool on = Hash(243) % 3 == 0;
-        SetLong(At(at::kAimX), Long(c + 0x34) + (on ? 0 : static_cast<std::int32_t>(Hash(241) % 0x100000) - 0x80000));
+        SetLong(At(at::kAimX_addr), Long(c + 0x34) + (on ? 0 : static_cast<std::int32_t>(Hash(241) % 0x100000) - 0x80000));
         SetLong(At(Scratch_Swap_addr), Long(c + 0x38) + (on ? 0 : static_cast<std::int32_t>(Hash(242) % 0x100000) - 0x80000));
     }
     static const unsigned char kAnswers[] = {0, 1, 1, 1, 5, 6, 0xFF, 2};
@@ -522,10 +523,10 @@ void AimTable(void* copy, const Clone& c, std::uint32_t at, std::uint8_t op, std
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(ObjTrio), ObjTrio_count},
+    {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
     {at::kCells, 0x100},
     {Address(&Field_ScriptFlags), 2},
-    {at::kActorRecords, kActors * kActorBytes},
+    {CharacterRecords_addr, kActors * kActorBytes},
     {Address(&Field_InputFlags), 6},   // Field_InputFlags, a byte, Field_ScriptFlags2, Field_InputHeld
     {Address(&Field_State), 0xD0},     // Field_State, the object at 0x905DA0
     {Address(&Field_Request), 1},
@@ -536,7 +537,7 @@ const Region kRegions[] = {
     {Address(g_out), sizeof g_out},
 };
 constexpr unsigned kStateBytes =
-    ObjTrio_count + 0x100 + 2 + kActors * kActorBytes + 6 + 0xD0 + 1 + 1 + 1 + 4 + sizeof g_scratch + sizeof g_out;
+    (ObjTrio_count * sizeof(records::PartyMember)) + 0x100 + 2 + kActors * kActorBytes + 6 + 0xD0 + 1 + 1 + 1 + 4 + sizeof g_scratch + sizeof g_out;
 
 struct State {
     unsigned char memory[kStateBytes];
@@ -609,7 +610,7 @@ Args Seed(unsigned k) {
     case kFollow:
         Field_Request = static_cast<unsigned char>(OneIn(5) ? 9 : OneIn(2) ? 0 : Next());
         if (Next() % 4) Field_ScriptFlags2 &= 0xE3FF;
-        if (Half()) ObjTrio[1] = static_cast<unsigned char>(OneIn(3) ? 0xA : Next() % 16);
+        if (Half()) ObjTrio[0].state = static_cast<unsigned char>(OneIn(3) ? 0xA : Next() % 16);
         if (Half()) Field_State[0x89] = static_cast<unsigned char>(Half() ? 2 : Next() % 4);
         cur[8] = static_cast<unsigned char>(OneIn(8) ? Next() : Next() % 8);
         break;
@@ -662,7 +663,7 @@ Args Seed(unsigned k) {
         break;
     }
     case kIdle:
-        if (Half()) ObjTrio[0x137] = static_cast<unsigned char>(Next() % 3 + 8);
+        if (Half()) rv::Bytes(ObjTrio)[0x137] = static_cast<unsigned char>(Next() % 3 + 8);
         Field_Request = static_cast<unsigned char>(Half() ? 0 : Next());
         if (Half()) Field_State[0x136] = static_cast<unsigned char>(0xEF + Next() % 4);
         cur[5] = static_cast<unsigned char>(Half() ? 1 + Next() % 2 : Next() % 4);

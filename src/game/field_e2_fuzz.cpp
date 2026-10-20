@@ -538,7 +538,7 @@ void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF, w = (h >> 16) & 0xFF;
     switch (sh::DisturbCase(h, 9)) {
     case 0: Field_State = sh::ObjectOf(v); break;
-    case 1: B(field_e2::at::kEffectSlot) = static_cast<unsigned char>(v & 1 ? 0 : w); break;
+    case 1: B(field_e2::at::kEffectSlot_addr) = static_cast<unsigned char>(v & 1 ? 0 : w); break;
     case 2: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 24); break;
     case 3: B(Effect1g_TradePick_addr) = static_cast<unsigned char>(w); break;
     case 4: B(Effect1g_TradeQuantity_addr) = static_cast<unsigned char>(v % 100); break;
@@ -558,18 +558,18 @@ namespace at = field_e2::at;
 void SeedRecords() {
     // the eight records (kinds 4, 5, 0xB and others, a key, +3) and pairs naming them
     for (U r = 0; r < 8; ++r) {
-        unsigned char* const rec = Mem(at::kRecords + 8 * r);
+        unsigned char* const rec = Mem(Community_Buildings_addr + 8 * r);
         rec[0] = static_cast<unsigned char>(PickOf(4, 4, 5, 0xB, sh::Next() % 12));
         rec[1] = static_cast<unsigned char>(sh::Next() % 4);
         rec[3] = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFF);
     }
     for (U p = 0; p < 60; ++p) {
-        unsigned char* const pair = Mem(at::kPairs + 8 * p);
+        unsigned char* const pair = Mem(Community_Records_addr + 8 * p);
         pair[0] = static_cast<unsigned char>(sh::Next() % 4 == 0 ? 1 : 0);
         pair[1] = static_cast<unsigned char>(PickOf(0xA, 0xB, 1 + sh::Next() % 8, sh::Next() % 12));
     }
     if (sh::Half())
-        for (U p = 0; p < 60; ++p) Mem(at::kPairs + 8 * p)[0] = 0;   // no pair in use at all
+        for (U p = 0; p < 60; ++p) Mem(Community_Records_addr + 8 * p)[0] = 0; // no pair in use at all
 }
 
 void SeedParty() {
@@ -654,7 +654,7 @@ void Seed(unsigned k) {
         const U height = move_script::Word(s + 0x3E);
         move_script::SetWord(g_ground, PickOf(height + offset, height, height + 0x10 + offset, height - 0x10, sh::Next()));
     }
-    B(at::kEffectSlot) = static_cast<unsigned char>(sh::Often() ? 0 : 1 + sh::Next() % 0xFF);
+    B(at::kEffectSlot_addr) = static_cast<unsigned char>(sh::Often() ? 0 : 1 + sh::Next() % 0xFF);
     switch (k) {
     case kCallB:
         Cond_ByteFA = static_cast<signed char>(PickOf(6, 9));
@@ -689,7 +689,7 @@ void Seed(unsigned k) {
     }
     case kFloor:
         for (U r = 0; r < 8; ++r) {
-            const U rec = at::kCharRecords + r * at::kRecordStride;
+            const U rec = CharacterRecords_addr + r * at::kRecordStride;
             const U max = sh::Next() % 1000;
             SetW(rec + 0x20, max);
             SetW(rec + 0x18, PickOf(0, 1, max / 4, max / 4 + 1, max, sh::Next() % 1000));
@@ -703,7 +703,7 @@ void Seed(unsigned k) {
             if (same && sh::Next() % 8 != 0) g_grid[i] = code;
             else g_grid[i] = static_cast<unsigned char>(PickOf(code ^ 0x0F, code ^ 0x01, 0x20 + sh::Next() % 0x10, sh::Next()));
         }
-        B(at::kEffectSlot) = code;   // Args reads the code from here (the state is taken before the arguments)
+        B(at::kEffectSlot_addr) = code; // Args reads the code from here (the state is taken before the arguments)
         break;
     }
     case kHopFlight:
@@ -764,7 +764,7 @@ void Seed(unsigned k) {
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(sh::Next() % 8 == 0 ? sh::Next() : sh::Next() % states);
         B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
         Field_Request = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next() % 8);
-        SetW(MoveScript_WaitWordDA_addr, sh::Half() ? 0 : sh::Next());
+        SetW(Transition_Busy_addr, sh::Half() ? 0 : sh::Next());
         B(at::kCounterB) = static_cast<unsigned char>(PickOf(0x20, 0x31, sh::Next()));
         SetW(at::kTailTimer, PickOf(1, 2, sh::Next()));
         SetW(Game_Mode_addr, sh::Half() ? 2 : sh::Next());
@@ -814,7 +814,7 @@ void Seed(unsigned k) {
         SetW(0x7E1BEC, pressed);
         SetW(Field_ConfirmButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
         SetW(Field_CancelButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
-        SetW(MoveScript_WaitWordDA_addr, sh::Half() ? 0 : sh::Next());
+        SetW(Transition_Busy_addr, sh::Half() ? 0 : sh::Next());
         break;
     }
     default: break;
@@ -826,14 +826,14 @@ void Args(unsigned k, U* a) {
     const U hi = a[9] & 0xFFFFFF00u;
     switch (k) {
     case kCallB: a[0] = hi | (Cond_ByteFA == 6 ? sh::Next() % 8 : sh::Next() % 10); break;
-    case kUnpaired: a[0] = hi | Mem(at::kRecords + 1 + 8 * (sh::Next() % 8))[0]; break;
-    case kUnpairedKind: a[0] = hi | PickOf(4, 5, 0xB, Mem(at::kRecords + 8 * (sh::Next() % 8))[0]); break;
+    case kUnpaired: a[0] = hi | Mem(Community_Buildings_addr + 1 + 8 * (sh::Next() % 8))[0]; break;
+    case kUnpairedKind: a[0] = hi | PickOf(4, 5, 0xB, Mem(Community_Buildings_addr + 8 * (sh::Next() % 8))[0]); break;
     case kFloor: a[0] = hi | (sh::Next() % 9); break;
     case kCellsAll:
     case kCellsNone:
         a[0] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
         a[1] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
-        a[2] = hi | B(at::kEffectSlot);
+        a[2] = hi | B(at::kEffectSlot_addr);
         a[3] = (a[3] & 0xFFFFFF00u) | (sh::Half() ? 0 : 1 + sh::Next() % 0xFF);
         break;
     case kWayBlocked:

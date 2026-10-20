@@ -144,7 +144,7 @@ inline float X87IntSubDivInt(std::int32_t e, float k, std::int32_t n) {
 // --- the device --------------------------------------------------------------
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(0x7CC350)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com1 = long(__stdcall*)(void*);
 using Com3 = long(__stdcall*)(void*, U, U);

@@ -12,6 +12,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_1e.h"
 #include "game/effect_1e_callees.h"
 #include "game/move_script_bytes.h"
@@ -302,7 +303,7 @@ void Seed(unsigned k) {
     // kind stay in the save block's region) and its count near +9
     const unsigned pick = sh::Next() % at::kSpriteCount;
     Mem(Effect1a_PanelObject_addr)[0] = static_cast<unsigned char>(pick);
-    unsigned char* const p = Sprite_Objects + pick * at::kSpriteStride;
+    unsigned char* const p = rv::Bytes(&Sprite_Objects[pick]);
     p[6] = static_cast<unsigned char>(PickOf(0x16, 0x16, sh::Next() % 0x16, sh::Next() % 0x16, sh::Next() % 0x74));
     SetWord(p + 0x9C, PickOf(s[9], s[9] + 1u, s[9] - 1u, sh::Next() & 0xFF, sh::Next()));
     Mem(at::kBestCounts + p[6])[0] = static_cast<unsigned char>(PickOf(p[0x9C], p[0x9C] - 1u, p[0x9C] + 1u, 0, sh::Next()));
@@ -336,7 +337,7 @@ void Seed(unsigned k) {
     Input_Held = static_cast<unsigned short>(PickOf(0x20, 0x8000, 0x2000, 0xA000, 0x4000, 0xC000, 0x1000, 0x3000, 0, sh::Next()));
     Field_ConfirmButtons = static_cast<unsigned short>(PickOf(0x40, 0x43, 0x20, sh::Next()));
     Field_CancelButtons = static_cast<unsigned short>(PickOf(0x10, 0x20, 0x40, sh::Next()));
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
+    Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
     Field_Kind2Hold = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     Field_State[0x89] = static_cast<unsigned char>(PickOf(0, sh::Next()));
     sh::SetRandHint(PickOf(0, 1, 8, 0xF, sh::Next()));

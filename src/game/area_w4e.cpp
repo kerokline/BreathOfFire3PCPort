@@ -22,6 +22,7 @@
 #include "game/area_harness.h"
 #include "game/area_w4e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -47,7 +48,7 @@ unsigned char Answer() { return B(AreaW0c_ChoiceAnswer_addr); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 unsigned char* Row14() { return Mem(Cond_Flags_addr + 0x70); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 bool Test(const unsigned char* bits, unsigned index) { return AH_CALL(Flags_Test)(bits, index) != 0; }
 // The movement script's position (MoveScript_Object's word +0xA) back by 2.
 void ScriptBack2() { AddWord(MoveScript_Object + 0xA, -2); }
@@ -205,7 +206,7 @@ extern "C" void __cdecl Area188_ChoiceFocusPair(void) {
 // 2 (MoveScript_Object read again for each).
 extern "C" void __cdecl Area188_WalkWhileZUnder(void) {
     const unsigned char* const cur = Cur();
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const U v = static_cast<U>(Long(Mem(Field_DirectionSteps_addr + 0x4 + (cur[8] & 7u) * 8))) + static_cast<U>(tCur->z);
     const U limit = static_cast<U>(B(Area188_ZLimits_addr + B(AreaW0c_TailSub_addr))) << 16;
     if (v > limit) return;
@@ -265,7 +266,7 @@ extern "C" void __cdecl Area188_ClearCellsC(void) {
 extern "C" void __cdecl Area188_SpawnEffectB9(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const record = Effect_Objects + slot * at::kEffectStride;
+    unsigned char* const record = rv::Bytes(&Effect_Objects[slot]);
     record[0] = 1;
     record[5] = 0xB9;
 }
@@ -405,10 +406,10 @@ extern "C" void __cdecl Area189_LeaderStart(void) {
     MapView_Redraw = 4;
     SetAngleFB(((2u - again) & 0xF) << 8);
     cur = Cur();
-    Field_Kind2X = Long(cur + 0x34);
-    Field_Kind2Z = Long(cur + 0x38);
-    const short height = HeightAt(static_cast<U>(Long(cur + 0x34)), static_cast<U>(Long(cur + 0x38)));
-    SetLong(Cur() + 0x3C, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(height)) << 16));
+    Field_Kind2X = rv::As<records::SpriteHead>(cur)->x;
+    Field_Kind2Z = rv::As<records::SpriteHead>(cur)->z;
+    const short height = HeightAt(static_cast<U>(rv::As<records::SpriteHead>(cur)->x), static_cast<U>(Long(cur + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(height)) << 16));
     AH_CALL(Area189_ZeroSpeeds)();
     Cur()[0x24] = 0;
     Cur()[0x4B] = 0;
@@ -416,13 +417,13 @@ extern "C" void __cdecl Area189_LeaderStart(void) {
     std::int32_t pace = static_cast<std::int32_t>((static_cast<U>(AH_CALL(Rand)()) & 0x1F) + 0x96);
     const unsigned count = static_cast<unsigned>(AH_CALL(Party_Count)(0)) & 0xFF;
     for (unsigned i = 0; i < count; ++i) {
-        if (AH_CALL(Actor_EquipCount)(Field_Members[i * 0x14C], 3, 0x15) != 0) {
+        if (AH_CALL(Actor_EquipCount)(ObjTrio[i].char_index, 3, 0x15) != 0) {
             pace <<= 1;
             break;
         }
     }
     for (unsigned i = 0; i < count; ++i) {
-        if (AH_CALL(Actor_EquipCount)(Field_Members[i * 0x14C], 3, 0x14) != 0) {
+        if (AH_CALL(Actor_EquipCount)(ObjTrio[i].char_index, 3, 0x14) != 0) {
             pace >>= 1;
             break;
         }
@@ -448,20 +449,20 @@ extern "C" void __cdecl Area189_LeaderStart(void) {
 // word 0x8034E6 = 0x3C. Else +2 = 2.
 extern "C" void __cdecl Area189_LeaderProject(void) {
     auto scaled = [](U v) { return static_cast<short>((static_cast<std::int32_t>(((v - 1u) & 0xFFFFFFu) + 1u) >> 9) - 0x4000); };
-    Prim_VertexScratch[0] = scaled(static_cast<U>(Field_Kind2X));
-    Prim_VertexScratch[1] = scaled(static_cast<U>(Field_Kind2Z));
-    const auto y = static_cast<std::int32_t>(static_cast<std::int16_t>(Word(Cur() + 0x3E)));
-    Prim_VertexScratch[2] = static_cast<short>(-(y / 2));
+    Prim_VertexScratch[0].x = scaled(static_cast<U>(Field_Kind2X));
+    Prim_VertexScratch[0].y = scaled(static_cast<U>(Field_Kind2Z));
+    const auto y = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::Current<records::SpriteHead>()->height_whole));
+    Prim_VertexScratch[0].z = static_cast<short>(-(y / 2));
     long depth[2];
-    AH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth[1]);
+    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth[1]);
     AH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(Cur() + 0x7C));
     CopyFloatX87(Cur() + 0x78, Mem(MapView_ScreenXY_addr + 0x4));
-    SetLong(Cur() + 0x14, 1);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, 1);
     if (Test(Row14(), 9) && !Test(Row14(), 0xA)) {
-        Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] | 0x40);
+        Effect_Objects[0].flags = static_cast<unsigned char>(Effect_Objects[0].flags | 0x40);
         unsigned char* const cur = Cur();
         cur[2] = 3;
-        SetLong(cur + 0x10, -0x2000);
+        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_z, -0x2000);
         cur[9] = 0x78;
         SetWord(Mem(MoveScript_PartyRecords_addr + 0x66), 0x3C);
         return;
@@ -505,8 +506,8 @@ extern "C" void __cdecl Area189_LeaderControl(void) {
     AH_CALL(Area189_StepBegin)();
     const unsigned char* const cur = Cur();
     const U n = cur[9];
-    const std::int16_t bx = Block(static_cast<U>(Long(cur + 0xC)) * n + static_cast<U>(Long(cur + 0x34)));
-    const std::int16_t bz = Block(static_cast<U>(Long(cur + 0x10)) * n + static_cast<U>(Long(cur + 0x38)));
+    const std::int16_t bx = Block(static_cast<U>(rv::As<records::SpriteHead>(cur)->step_x) * n + static_cast<U>(rv::As<records::SpriteHead>(cur)->x));
+    const std::int16_t bz = Block(static_cast<U>(rv::As<records::SpriteHead>(cur)->step_z) * n + static_cast<U>(rv::As<records::SpriteHead>(cur)->z));
     if (bx >= 0x1000 && bx <= 0x1400 && bz >= 0x1800) {
         AH_CALL(Msg_OpenScript)(2);
         Field_Request = 2;
@@ -560,19 +561,19 @@ extern "C" void __cdecl Area189_LeaderTurn(void) {
 extern "C" void __cdecl Area189_StepBegin(void) {
     Cur()[9] = 8;
     unsigned char* cur = Cur();
-    SetLong(cur + 0xC, static_cast<std::int32_t>(static_cast<U>(Long(Mem(Area189_StepVectors_addr + cur[8] * 8u))) << 1));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_x, static_cast<std::int32_t>(static_cast<U>(Long(Mem(Area189_StepVectors_addr + cur[8] * 8u))) << 1));
     cur = Cur();
-    SetLong(cur + 0x10, static_cast<std::int32_t>(static_cast<U>(Long(Mem(Area189_StepVectors_addr + 4 + cur[8] * 8u))) << 1));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_z, static_cast<std::int32_t>(static_cast<U>(Long(Mem(Area189_StepVectors_addr + 4 + cur[8] * 8u))) << 1));
     cur = Cur();
     const U n = cur[9];
-    const U z = static_cast<U>(Long(cur + 0x10)) * n + static_cast<U>(Long(cur + 0x38));
-    const U x = static_cast<U>(Long(cur + 0xC)) * n + static_cast<U>(Long(cur + 0x34));
+    const U z = static_cast<U>(rv::As<records::SpriteHead>(cur)->step_z) * n + static_cast<U>(rv::As<records::SpriteHead>(cur)->z);
+    const U x = static_cast<U>(rv::As<records::SpriteHead>(cur)->step_x) * n + static_cast<U>(rv::As<records::SpriteHead>(cur)->x);
     const short height = HeightAt(x, z);
     unsigned char* const s = Cur();
-    const auto rise = static_cast<std::int32_t>((static_cast<U>(static_cast<std::int32_t>(height)) << 16) - static_cast<U>(Long(s + 0x3C)));
+    const auto rise = static_cast<std::int32_t>((static_cast<U>(static_cast<std::int32_t>(height)) << 16) - static_cast<U>(rv::As<records::SpriteHead>(s)->height));
     const unsigned steps = s[9];
     if (steps == 0) bof3::Fatal("Area189_StepBegin: the step count +9 is 0 after the height call (the original divides by it)");
-    SetLong(s + 0x14, rise / static_cast<std::int32_t>(steps));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(s)->step_y, rise / static_cast<std::int32_t>(steps));
 }
 
 // original 0x42AE30 (called by Area189_LeaderControl, Area189_LeaderStep): x
@@ -580,11 +581,11 @@ extern "C" void __cdecl Area189_StepBegin(void) {
 // MapView_Redraw 2.
 extern "C" void __cdecl Area189_StepMove(void) {
     unsigned char* const cur = Cur();
-    SetLong(cur + 0x34, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x34)) + static_cast<U>(Long(cur + 0xC))));
-    Field_Kind2X = Long(cur + 0x34);
-    SetLong(cur + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x38)) + static_cast<U>(Long(cur + 0x10))));
-    Field_Kind2Z = Long(cur + 0x38);
-    SetLong(cur + 0x3C, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x3C)) + static_cast<U>(Long(cur + 0x14))));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(cur)->x) + static_cast<U>(rv::As<records::SpriteHead>(cur)->step_x)));
+    Field_Kind2X = rv::As<records::SpriteHead>(cur)->x;
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(cur)->z) + static_cast<U>(rv::As<records::SpriteHead>(cur)->step_z)));
+    Field_Kind2Z = rv::As<records::SpriteHead>(cur)->z;
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->height, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(cur)->height) + static_cast<U>(rv::As<records::SpriteHead>(cur)->step_y)));
     MapView_Redraw = 2;
 }
 
@@ -630,8 +631,8 @@ extern "C" void __cdecl Area189_StepArrive(void) {
             if (reserve != 0) --reserve;
         }
         B(Cond_Flags_addr + 0xcf) = reserve;
-        B(AreaW3g_Byte929EC1_addr) = 0;
-        B(AreaW3g_Byte9036D0_addr) = 0;
+        B(Area189_StepsSinceEvent_addr) = 0;
+        B(Area189_EventsInRow_addr) = 0;
         if (reserve == 0) {
             AH_CALL(Msg_OpenScript)(1);
             Field_Request = 2;
@@ -641,22 +642,22 @@ extern "C" void __cdecl Area189_StepArrive(void) {
     } else {
         const U r = static_cast<U>(AH_CALL(Rand)()) & 7;
         const auto limit = static_cast<std::int32_t>(r + Cond_ByteFF * 20u + 7u);
-        const unsigned char steps = B(AreaW3g_Byte929EC1_addr);
+        const unsigned char steps = B(Area189_StepsSinceEvent_addr);
         if (static_cast<std::int32_t>(steps) < limit) {
-            B(AreaW3g_Byte929EC1_addr) = static_cast<unsigned char>(steps + 1);
+            B(Area189_StepsSinceEvent_addr) = static_cast<unsigned char>(steps + 1);
         } else {
-            const unsigned char events = B(AreaW3g_Byte9036D0_addr);
-            B(AreaW3g_Byte929EC1_addr) = 0;
+            const unsigned char events = B(Area189_EventsInRow_addr);
+            B(Area189_StepsSinceEvent_addr) = 0;
             if (events >= 4) {
                 AH_CALL(Area189_RaiseByte1E)();
                 Cond_ByteFE = 2;
                 AH_CALL(Sound_PlayEffect)(0x10B);
-                B(AreaW3g_Byte9036D0_addr) = 0;
+                B(Area189_EventsInRow_addr) = 0;
             } else {
                 AH_CALL(Area189_DrainHp)();
                 Cond_ByteFE = 1;
                 AH_CALL(Sound_PlayEffect)(0x108);
-                B(AreaW3g_Byte9036D0_addr) = static_cast<unsigned char>(B(AreaW3g_Byte9036D0_addr) + 1);
+                B(Area189_EventsInRow_addr) = static_cast<unsigned char>(B(Area189_EventsInRow_addr) + 1);
             }
         }
     }
@@ -676,7 +677,7 @@ extern "C" void __cdecl Area189_StepArrive(void) {
             return;
         }
     }
-    if (AH_CALL(Scenario_ArriveHook)(Long(cur + 0x34), Long(cur + 0x38)) != 0) {
+    if (AH_CALL(Scenario_ArriveHook)(rv::As<records::SpriteHead>(cur)->x, rv::As<records::SpriteHead>(cur)->z) != 0) {
         AH_CALL(Area189_LeaderHalt)();
         return;
     }
@@ -688,9 +689,9 @@ extern "C" void __cdecl Area189_StepArrive(void) {
     if (BlockWord(cur + 0x3A) <= 0xD00) AddWord(cur + 0x3A, 0x100);
     if (BlockWord(cur + 0x36) >= 0x1F00) AddWord(cur + 0x36, -0x100);
     if (BlockWord(cur + 0x3A) >= 0x1900) AddWord(cur + 0x3A, -0x100);
-    Field_Kind2X = Long(cur + 0x34);
+    Field_Kind2X = rv::As<records::SpriteHead>(cur)->x;
     const unsigned flags = Field_ScriptFlags;
-    Field_Kind2Z = Long(cur + 0x38);
+    Field_Kind2Z = rv::As<records::SpriteHead>(cur)->z;
     MapView_Redraw = 2;
     if ((flags & 0x20) == 0 && Field_EdgeBits >= Word(Mem(ObjTrio_addr + 0x134))) {
         // the pace's steps walked: the edge count 0; a flag for each of six
@@ -748,8 +749,8 @@ extern "C" unsigned char __cdecl Area189_ExitButton(void) {
     SetLong(Mem(at::kPendingX), static_cast<std::int32_t>(static_cast<U>(B(place + 1)) << 16));
     SetLong(Mem(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(static_cast<U>(B(place + 2)) << 16));
     const unsigned char* const cur = Cur();
-    SetLong(Mem(AreaW2d_ReturnPoint_addr), Long(cur + 0x34));
-    SetLong(Mem(AreaW4d_ReturnZ_addr), Long(cur + 0x38));
+    SetLong(Mem(AreaW2d_ReturnPoint_addr), rv::As<records::SpriteHead>(cur)->x);
+    SetLong(Mem(AreaW4d_ReturnZ_addr), rv::As<records::SpriteHead>(cur)->z);
     const unsigned char saved = B(at::kSavedCount);
     SetWord(Mem(AreaW4d_ReturnArea_addr), Game_AreaNumber);
     B(at::kSavedCount) = static_cast<unsigned char>(saved + 1);
@@ -775,9 +776,9 @@ extern "C" unsigned char __cdecl Area189_MenuButton(void) {
 // original 0x42B440 (called by Area189_LeaderStart, _StepArrive, _LeaderHalt):
 // +0xC, +0x10, +0x14 = 0.
 extern "C" void __cdecl Area189_ZeroSpeeds(void) {
-    SetLong(Cur() + 0xC, 0);
-    SetLong(Cur() + 0x10, 0);
-    SetLong(Cur() + 0x14, 0);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, 0);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, 0);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, 0);
 }
 
 // original 0x42B460 (called by Area189_LeaderControl): Input_Held bit 12:
@@ -811,7 +812,7 @@ extern "C" void __cdecl Area189_RaiseByte1E(void) {
         unsigned char& b = B(Field_ActorStates_addr + 0xe + r * at::kCharStride);
         if (b >= 9) continue;
         b = static_cast<unsigned char>(b + 1);
-        AH_CALL(Char_RecalcStats)(Mem(at::kCharRecords + r * at::kCharStride));
+        AH_CALL(Char_RecalcStats)(Mem(CharacterRecords_addr + r * at::kCharStride));
     }
 }
 
@@ -890,10 +891,10 @@ extern "C" void __cdecl Area191_RunScale(void) {
 extern "C" void __cdecl Area191_ScaleStart(void) {
     unsigned char* const cur = Cur();
     cur[0x48] = 2;
-    SetLong(cur + 0x40, 0x10000);
-    SetLong(cur + 0x44, 0x10000);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->scale_x, 0x10000);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->scale_y, 0x10000);
     cur[0xA] = 0xFF;
-    SetLong(cur + 0x70, 1);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->reach, 1);
     cur[0x5D] = 0x50;
     cur[0x5E] = 0x3C;
     cur[0x5F] = 0;
@@ -906,9 +907,9 @@ extern "C" void __cdecl Area191_ScaleStart(void) {
 // script back 2.
 static void ScaleTick(std::int32_t step, unsigned char flip) {
     unsigned char* const cur = Cur();
-    SetLong(cur + 0x34, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x34)) + static_cast<U>(Long(cur + 0xC))));
-    SetLong(cur + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x40)) + static_cast<U>(step)));
-    SetLong(cur + 0x44, static_cast<std::int32_t>(static_cast<U>(Long(cur + 0x44)) + static_cast<U>(step)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(cur)->x) + static_cast<U>(rv::As<records::SpriteHead>(cur)->step_x)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(cur)->scale_x) + static_cast<U>(step)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->scale_y, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(cur)->scale_y) + static_cast<U>(step)));
     cur[0xA] = static_cast<unsigned char>(cur[0xA] - 1);
     if ((cur[0xA] & 3) == 0) cur[4] = flip;
     if (cur[0xA] == 0) {
@@ -928,7 +929,7 @@ extern "C" void __cdecl Area191_ScaleShrink(void) { ScaleTick(-0x2000, 1); }
 // of 31 at +0x1D8 into a jump table of 8 at +0x1B8, both inside the extent;
 // the ja bounds it unsigned): 0 - message 0x6D, request 2, state 1 (which
 // does nothing: the message's choice moves it on). 2 - once Field_Request is
-// not 2: Transition_Start(0), state 3. 3 - once MoveScript_WaitWordDA is 0:
+// not 2: Transition_Start(0), state 3. 3 - once Transition_Busy is 0:
 // Draw_PassFlags 0, Sound_StopMusic, 0x42C2D0, Sound_LoadStream(0), state 4.
 // 4 - once Sound_StreamDone answers (all of eax): story flag 0x82, the walk's
 // word 0x90405C, 0x929EC1, 0x9036D0 0, its count + 1, Field_StatusBits bit 0,
@@ -952,7 +953,7 @@ extern "C" void __cdecl Area191_Tail53(void) {
         B(AreaW0c_TailState_addr) = 3;
         return;
     case 3:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         AH_CALL(Sound_StopMusic)();
         AH_AT(void (__cdecl*)(), at::kRestoreRecords)();
@@ -965,8 +966,8 @@ extern "C" void __cdecl Area191_Tail53(void) {
         const unsigned char count = B(at::kWalkCount);
         const unsigned char bits = Field_StatusBits;
         SetWord(Mem(Cond_Flags_addr + 0xcc), 0);
-        B(AreaW3g_Byte929EC1_addr) = 0;
-        B(AreaW3g_Byte9036D0_addr) = 0;
+        B(Area189_StepsSinceEvent_addr) = 0;
+        B(Area189_EventsInRow_addr) = 0;
         B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
         Field_StatusBits = static_cast<unsigned char>(bits | 1);
         B(AreaW0c_TailState_addr) = 0xA;
@@ -1029,7 +1030,7 @@ extern "C" unsigned char __cdecl Area191_StepHook(long x, long z) {
 // 0x567873, 0x5678B3, 0x5678F3 (SC13) and 0x56AEE1 (SC15)): the message a
 // member's talk opens. i = the index of the member byte (`who`'s low byte) in
 // Area191_TalkKeys (5 when none); a = i * 9; b = the walk count, at most 8; c
-// = the byte +0x1E of the actor record MoveScript_EffectState[who] names (both
+// = the byte +0x1E of the actor record Character_IndexById[who] names (both
 // unchecked). Cond_Flags row 14 bit 0xA set: Area191_TalkMessageB(a, who, b,
 // c). Else a + 8 for c from 8, + 7 for c above 4 with b below 7, else +
 // Area191_TalkSteps[b]; the word from Area191_TalkMessagesB (the chapter
@@ -1044,7 +1045,7 @@ extern "C" unsigned short __cdecl Area191_TalkMessage(unsigned who) {
     auto a = static_cast<unsigned char>(i * 9);
     unsigned char b = B(at::kWalkCount);
     if (b > 8) b = 8;
-    const unsigned char c = B(Field_ActorStates_addr + 0xe + MoveScript_EffectState[key] * at::kCharStride);
+    const unsigned char c = B(Field_ActorStates_addr + 0xe + Character_IndexById[key] * at::kCharStride);
     if (Test(Row14(), 0xA)) return AH_CALL(Area191_TalkMessageB)(a, who, b, c);
     if (c >= 8) {
         a = static_cast<unsigned char>(a + 8);
@@ -1071,7 +1072,7 @@ extern "C" unsigned short __cdecl Area191_TalkMessageB(unsigned a, unsigned who,
 // the chapter row's flag 5, nor with story flag 0x77. Else a list k by actor
 // record 0's byte +0x1E (read first): row 14 bit 0xA clear - 2 from 9, 1 from
 // 5, else the walk count at least 5; set - 2 from 5, else the count at least
-// 5. Six times: Sprite_FindFree to the word DamageScratch; not 0xFF:
+// 5. Six times: Sprite_FindFree to the word SharedScratch; not 0xFF:
 // EventOp_0x(Area191_ObjectLists[k] + 0x11 * n).
 extern "C" void __cdecl Area191_Init(void) {
     if (Cond_ByteFA == 0xE && Test(FlagRow(), 5)) return;
@@ -1099,8 +1100,8 @@ extern "C" void __cdecl Area191_Kind18Flag77(void) {
     if (!Test(StoryFlags(), 0x77)) return;
     const unsigned char count = B(at::kWalkCount);
     SetWord(Mem(Cond_Flags_addr + 0xcc), 0);
-    B(AreaW3g_Byte929EC1_addr) = 0;
-    B(AreaW3g_Byte9036D0_addr) = 0;
+    B(Area189_StepsSinceEvent_addr) = 0;
+    B(Area189_EventsInRow_addr) = 0;
     const unsigned char bits = Field_StatusBits;
     B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
     Field_StatusBits = static_cast<unsigned char>(bits | 1);

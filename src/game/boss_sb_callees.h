@@ -25,10 +25,10 @@ using U = std::uint32_t;
 constexpr U kPhase = 0x904AA0;            // u8: Battle_PhaseDispatch's phase
 // kStep: now BattleActions_Step (symbols.toml). u8: the phase's step
 // kCountdown: now BossSb_Countdown (symbols.toml). u8: a cursor or counter of the phase (B07's event hook counts it down)
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle
 // kPoseBits: now BossSe_Script (symbols.toml). u8: bit n per enemy slot n (BattleObj_StateInit reads it as a pose base)
-// kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win, 4 and 8 set here
+// kMusicFlags: now EventBattle_Flags (symbols.toml). u8
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win, 4 and 8 set here
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kCommandKind = 0x904B35;      // u8: the command's kind (4 read and written here)
 // kCommand: now BattleSprites_Action (symbols.toml). unsigned char *: the command; its word +2 the id
@@ -41,15 +41,15 @@ constexpr U kTarget = 0x904B44;           // u8: the target
 
 // --- the party's leader (ObjTrio + 0) ---------------------------------------
 // kLeader: now ObjTrio (symbols.toml). ObjTrio: B07's event hook makes it Sprite_Current
-// kLeaderHp: now ObjTrio[0x98] (symbols.toml). u16 +0x98: the leader's HP
-// kLeaderTarget: now ObjTrio[0x124] (symbols.toml). u8 +0x124: the member's target
-// kLeaderCmdKind: now ObjTrio[0x125] (symbols.toml). u8 +0x125: the member's command kind
-// kLeaderCmdId: now ObjTrio[0x126] (symbols.toml). u16 +0x126: the member's command id
-// kLeaderFlags: now ObjTrio[0x134] (symbols.toml). dword +0x134: bit 1 set and cleared by the event hooks
+// kLeaderHp: now ObjTrio[0].hp (symbols.toml). u16 +0x98: the leader's HP
+// kLeaderTarget: now ObjTrio_addr + 0x124 (symbols.toml). u8 +0x124: the member's target
+// kLeaderCmdKind: now ObjTrio_addr + 0x125 (symbols.toml). u8 +0x125: the member's command kind
+// kLeaderCmdId: now ObjTrio_addr + 0x126 (symbols.toml). u16 +0x126: the member's command id
+// kLeaderFlags: now ObjTrio_addr + 0x134 (symbols.toml). dword +0x134: bit 1 set and cleared by the event hooks
 
 // --- the enemies' objects (0x93B960 + n * 0x128) -----------------------------
-constexpr U kEnemy0 = 0x93B960;
-constexpr U kEnemy1 = 0x93BA88;
+// kEnemy0: now Battle_Enemies (symbols.toml).
+// kEnemy1: now Battle_Enemies[1] (symbols.toml).
 constexpr U kEnemy0Hp = 0x93BA04;         // enemy 0's u16 +0xA4
 constexpr U kEnemy0B0 = 0x93BA10;         // enemy 0's u16 +0xB0
 // kEnemy1Hp: now BossSb_Enemy1Hp (symbols.toml). enemy 1's u16 +0xA4

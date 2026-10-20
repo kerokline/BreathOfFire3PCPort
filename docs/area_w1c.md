@@ -39,7 +39,7 @@ message word).
 | PC | Name | Size | Root | Shape | What |
 |---|---|--:|---|---|---|
 | `0x408FF0` | `Area48_ChoiceCounterBOr1` | `0x41` | choice 0 | kChoice | message 0xFFFF; answer bit 0 clear: counter 0 = `0xB`, sound `0x205`; set: counter 0 = 1, `ScriptFlags_Clear40`, `MoveScript_Var7` and its step 0 |
-| `0x409040` | `Area48_ToggleFlagD` | `0x34` | choice 1 = handler 0 (PSX `0x801F4804`) | kHandler | the active member's `+0x80` bit 0 cleared; `MoveScript_EffectState[leader +0x89]` at 1: story flag `0xD` toggled (`0x57C160`) |
+| `0x409040` | `Area48_ToggleFlagD` | `0x34` | choice 1 = handler 0 (PSX `0x801F4804`) | kHandler | the active member's `+0x80` bit 0 cleared; `Character_IndexById[leader +0x89]` at 1: story flag `0xD` toggled (`0x57C160`) |
 | `0x409080` | `Area48_BumpCount` | `0x40` | choice 2 = handler 1 (PSX `0x801F4864`) | kHandler | the same test; the count `0x92BEE7` + 1 below 8, sound `0x20D` |
 | `0x4090C0` | `Area48_MoveScriptObject5` | `0xA3` | choice 3 = handler 2 (PSX `0x801F48DC`) | kHandler | direction 5; the script object's `+7` = count << 2; not 0: by `MoveScript_ObjectKind` 2 `MoveCmd_MoveKind2` (FA word 0, bit `0x40`), else `MoveCmd_Move` (bit `0x80`); `+0x14` 0, `+0x3E` `0x480` |
 | `0x409170` | `Area48_MoveScriptObject1` | `0xA3` | choice 4 = handler 3 (PSX `0x801F49C8`) | kHandler | the same, direction 1 |
@@ -188,7 +188,7 @@ rounds per function, the real descriptors and tables in place.
 - **Regions beyond the field frame:** `Effect_Objects` records 0..3, the
   active member and script object pointers, the chapter row pointer, the
   mark `0x9398CF`, area 48's two bytes, `0x9045FB`, `Camera_ShiftY`,
-  `MoveScript_EffectState` (24 bytes), area 52's extra objects (16 bytes of
+  `Character_IndexById` (24 bytes), area 52's extra objects (16 bytes of
   `.data`), and two dwords of the fuzz's own that `Area52_BlockCell`'s clone
   writes through (32 regions, 16,786 bytes).
 - **Every round:** `Field_ActiveMember` at one of the four party objects, a
@@ -197,7 +197,7 @@ rounds per function, the real descriptors and tables in place.
 - **Seeds:** the choice answer at each value a handler tests (0..3), its
   sign edge and above; area 48's count at each value its switches test and
   the byte edges (`0x3F`, `0x40`, `0x41`, `0xC0`, `0xFF`: the `<< 2` wraps);
-  `MoveScript_EffectState[leader +0x89]` 1 half the time; the sub-kind
+  `Character_IndexById[leader +0x89]` 1 half the time; the sub-kind
   0..3, `0xFF`; the arrive hook's words at each doorway, on it and one step
   off each edge, with a high byte (`0x117`: the compares are 16-bit), z
   exactly `0x58000` / `0xA8000`; the step hook's x at `0x4D8000` and beside;
@@ -450,7 +450,7 @@ Described, not fixed; each is kept faithfully (the reads stay inside
 - **Unchecked indexes into data.** `Area49_ChoiceMessageFlag3B` /
   `Area49_ChoiceMessage` index `Area49_ChoiceMessages` by the s8 answer
   (a negative answer reads before it); `Area48_ToggleFlagD` /
-  `Area48_BumpCount` index the 24-byte `MoveScript_EffectState` by the
+  `Area48_BumpCount` index the 24-byte `Character_IndexById` by the
   leader's `+0x89` byte; `Area49_SpawnAtMember*` index
   `Area49_EffectKinds` by a party list byte.
 - **`Area51_TintBackdrop`'s header walk never ends** on an entry of another

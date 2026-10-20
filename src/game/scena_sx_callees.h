@@ -34,13 +34,13 @@ constexpr std::uint32_t kPalettes = 0x80D380;         // 0x40 bytes a member slo
 constexpr std::uint32_t kRecordStride = 0xA4;         // CharacterRecords and Sprite_Objects alike
 constexpr std::uint32_t kObjStride = 0x14C;           // ObjTrio's records
 constexpr unsigned kSpriteCount = 30;                 // Sprite_Objects' entries
-// kKind2Speed: now Sprite_Kind2[0x84] (symbols.toml). Sprite_Kind2 +0x84: the index into Field_MoveSpeeds
-// kKind2Mode: now Sprite_Kind2[8] (symbols.toml). Sprite_Kind2 +8: 2 or 6 halve the ease's frames
+// kKind2Speed: now Sprite_Kind2.speed (symbols.toml). Sprite_Kind2 +0x84: the index into Field_MoveSpeeds
+// kKind2Mode: now Sprite_Kind2.direction (symbols.toml). Sprite_Kind2 +8: 2 or 6 halve the ease's frames
 // kEaseStep: now CameraTurn_Steps[2] (symbols.toml). s32: Camera_EaseAngleFB's 16.16 step a frame
 // kEaseAcc: now CameraTurn_Angles[2] (symbols.toml). s32: its 16.16 accumulator
 // kEaseLeft: now ScenaSx_EaseLeft (symbols.toml). s32: its frames left (0: idle)
 // kAngleFB: now Cond_AngleFB (symbols.toml). Cond_AngleFB, read and written as the s16 it is
-// kLeaderFacing: now ObjTrio[8] (symbols.toml). ObjTrio's first record +8: the leader's facing
+// kLeaderFacing: now ObjTrio[0].direction (symbols.toml). ObjTrio's first record +8: the leader's facing
 // kZennyTally: now Rest4a_CountC (symbols.toml). u32: Zenny_Add adds here too when its flag byte is 0
 constexpr std::uint32_t kKeyItems = 0x904554;         // 32 bytes: the key-item ids (Inventory_IdLists[4])
 constexpr std::uint32_t kAbilityShared = 0x904574;    // 128 bytes: the list AbilityList_Add fills when `shared`

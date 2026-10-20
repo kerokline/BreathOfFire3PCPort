@@ -39,7 +39,7 @@ namespace at {
 // commit; its readers were not read - a hypothesis: the target cursor's)
 // kPicking: now BattleE4_Picking (symbols.toml).
 constexpr std::uint32_t kPartyCount = 0x904AB0;  // read as a dword, its low byte used
-// kEnemyCount: now BattleActorCopies_EnemyCount (symbols.toml). u8
+// kEnemyCount: now Battle_EnemyCount (symbols.toml). u8
 // kCommandsChosen: now BattleActorCopies_EntryCount (symbols.toml). u8, one up for each command committed
 // The party item list's last page, top row and cursor, kept for its next
 // opening (ItemMenu_SetupForParty reads them back).
@@ -49,7 +49,7 @@ constexpr std::uint32_t kSavedList = 0x904605;
 // acting member's record (ObjTrio + 0x14C n: +1 its state, +5 its actor index,
 // +0x125 a byte).
 constexpr std::uint32_t kCommandRecord = 0x939FA0;
-constexpr std::uint32_t kActing = 0x939EC4;
+// kActing: now BattleE4_MenuActor (symbols.toml).
 // The party's records.
 // kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
@@ -64,9 +64,9 @@ constexpr std::uint32_t kRepeatLatch = 0x7E01B8;
 //   Record 21 (0x803454): opened by the list's up-at-the-top.
 //   Record 4 (0x8031F0): +0 cleared then.
 constexpr std::uint32_t kList = 0x8033A0;
-// kHand: now BattleE4_Hand (symbols.toml).
-// kAbove: now BattleE4_Above (symbols.toml).
-constexpr std::uint32_t kRecord4 = 0x8031F0;
+// kHand: now Window19 (symbols.toml).
+// kAbove: now Window21 (symbols.toml).
+// kRecord4: now WindowRecords[4] (symbols.toml).
 // The inventory lists by category: ids and counts, five pointers each
 // (0x904154 + 0x80 c and 0x904354 + 0x80 c for 0..3; docs/char-stats.md).
 constexpr std::uint32_t kInventoryIds = 0x656B00;

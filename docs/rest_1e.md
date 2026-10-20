@@ -83,7 +83,7 @@ zero-extended byte: direction 0 gives 0).
   subtraction); `MapView_SlopeAt` there, **its answer unused**, pushed `eax`
   whole - `al` the direction and the upper three bytes the sprite's own address
   (`mov eax, [Sprite_Current]; ...; mov al, [eax + 8]; push eax`). With
-  `DamageScratch`'s flag set and that rise, signed, above 0x40:
+  `SharedScratch`'s flag set and that rise, signed, above 0x40:
   `Sprite_EnsureAnimation(half turn + 0x46)` and `+2` one on. Otherwise `+0x2B =
   1`, the side probes in directions 3 and 5 (`PartyAction_SideProbes`' code,
   inline), `Sound_PlayEffect(u16 +0x2C + 0x100)`, `Sprite_EnsureAnimation(half
@@ -315,7 +315,7 @@ Latent defects described, not fixed:
 - **`Form2Begin` hands `MapView_SlopeAt` its own address as the direction's
   upper bytes** and ignores the slope's answer; for a direction of 10 or more
   `AreaMap_Slope` reads those bytes. The call's only effect the state reads is
-  `DamageScratch`'s flag. Reproduced.
+  `SharedScratch`'s flag. Reproduced.
 - **`AreaMap_Slope` reads past the direction's low byte** (`area_slope.cpp`,
   the both-halves path): it takes the height at `args[4 + n / 2]` for the low
   byte n, so n of 8 or 9 reads that byte itself, n of 10..15 the direction

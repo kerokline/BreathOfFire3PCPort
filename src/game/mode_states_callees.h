@@ -36,9 +36,9 @@ namespace at {
 // kPartyCombo: now AreaW0b_PartySet (symbols.toml). u8: the party combination; bit 7 set by Shop_Close
 // kLookTurn: now ModeStates_LookTurn (symbols.toml). u8: task 0's private +9, which way Look_Return turns the pitch
 // kLookButton: now Gfx_UnpackScratch[0x1f006] (symbols.toml). u16: the button map's word after Field_MenuButton
-// kFlagBank: now AreaW0c_FlagRow (symbols.toml). dword: the flag bits Flags_Test / Flags_Set are given
+// kFlagBank: now Chapter_FlagRow (symbols.toml). dword: the flag bits Flags_Test / Flags_Set are given
 constexpr std::uint32_t kCounters = 0x903848;       // u8 x 4: the script counters (MoveScript_CounterOps)
-constexpr std::uint32_t kEffectSlot = 0x903850;     // u8 (read back as a dword's low byte): the effect slot just taken
+inline auto& kEffectSlot = SharedScratch;  // u8 (read back as a dword's low byte): the effect slot just taken
 // kStep5: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
 // kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml). u16: the scene's timer
 // kChoiceId: now ItemUse_ChoiceId (symbols.toml). u8: the message box's choice id

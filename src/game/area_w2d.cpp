@@ -22,12 +22,13 @@
 #include "game/area_harness.h"
 #include "game/area_w2d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w2d::at;
 using area_harness::Handler;
@@ -44,14 +45,14 @@ void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(stati
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours
@@ -95,8 +96,8 @@ void Disarm() {
 // the script position + 2.
 void TurnAtCell() {
     unsigned char* const cur = Sprite_Current;
-    if (Word(cur + 0x3A) == 0x3A) {
-        const auto d = static_cast<std::uint16_t>(Word(cur + 0x36) - 0x40);
+    if (rv::As<records::SpriteObject>(cur)->z_whole == 0x3A) {
+        const auto d = static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->x_whole - 0x40);
         if (d == 0 || d == 2) {
             cur[8] = d == 0 ? 3 : 7;
             AH_CALL(Area95_TurnAndMove)();
@@ -112,7 +113,7 @@ void SpawnAt46(unsigned char kind) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = kind;
     tE->x = 0x460000;
@@ -153,7 +154,7 @@ extern "C" void __cdecl Area95_WaitEffectAtCell(void) {
     unsigned i = 0;
     for (; i < at::kEffectCount; ++i) {
         const unsigned char* const e = EffectAt(i);
-        if ((e[0] & 1) != 0 && Word(e + 0x36) == 0x41 && Word(e + 0x3A) == 0x3A) break;
+        if ((e[0] & 1) != 0 && rv::As<records::EffectObject>(e)->x_whole == 0x41 && rv::As<records::EffectObject>(e)->z_whole == 0x3A) break;
     }
     if (i != at::kEffectCount) {
         ScriptStep(-2);
@@ -179,13 +180,13 @@ extern "C" void __cdecl Area95_SpawnEffect37(void) {
         return;
     }
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x37;
     tE->x = 0x410000;
     tE->z = 0x3C8000;
     tE->height = 0x2000000;
-    SetWord(e + 0x2C, 0x58);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(e)->column, 0x58);
     e[9] = 1;
     e[6] = 0;
     e[7] = 0x12;
@@ -208,13 +209,13 @@ extern "C" void __cdecl Area95_LeapArc(void) {
     MoveScript_Object[7] = 1;
     AH_CALL(MoveCmd_Move)(MoveScript_Object, 5);
     const unsigned char* cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const U n = cur[9];
     const U x = static_cast<U>(tCur->step_x) * n + static_cast<U>(tCur->x);
     const U z = static_cast<U>(tCur->step_z) * n + static_cast<U>(tCur->z);
     const auto ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z)));
     unsigned char* const obj = Sprite_Current;
-    auto* const tObj = reinterpret_cast<records::SpriteObject*>(obj);
+    auto* const tObj = rv::As<records::SpriteObject>(obj);
     const std::int32_t rise = static_cast<std::int32_t>(ground) - static_cast<std::int16_t>(Word(obj + 0x3E)) + 0xE0;
     const unsigned frames = obj[9];
     if (frames == 0) bof3::Fatal("Area95_LeapArc: +9 is 0, the original's idiv faults");
@@ -364,14 +365,14 @@ extern "C" void __cdecl Area98_ChoiceArmTail45(void) {
 extern "C" void __cdecl Area98_SpawnEffect37(void) {
     Sprite_Current[0xB] = AH_CALL(Effect_FindFree)();
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     if (cur[0xB] == 0xFF) return;
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 0x37;
-    SetLong(EffectAt(cur[0xB]) + 0x34, tCur->x);
-    SetLong(EffectAt(cur[0xB]) + 0x38, tCur->z);
-    SetLong(EffectAt(cur[0xB]) + 0x3C, tCur->height);
-    SetWord(EffectAt(cur[0xB]) + 0x2C, 0x11D);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->x, tCur->x);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->z, tCur->z);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->height, tCur->height);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->column, 0x11D);
     EffectAt(cur[0xB])[6] = 0;
     EffectAt(cur[0xB])[7] = 0;
     EffectAt(cur[0xB])[0x29] = 2;
@@ -507,14 +508,14 @@ extern "C" void __cdecl Area99_LeapStart(void) {
     Sprite_Current[0xB] = 3;
     if (speed == 0) bof3::Fatal("Area99_LeapStart: Field_MoveSpeeds[3] is 0, the original's idiv faults");
     Sprite_Current[0xA] = static_cast<unsigned char>(16 / static_cast<int>(speed));
-    CurSprite()->step_y = 0x4200;
+    rv::Current<records::SpriteObject>()->step_y = 0x4200;
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* tCur = rv::As<records::SpriteObject>(cur);
     std::int32_t d = static_cast<std::int32_t>(cur[0xA]) * 4;
     if (d == 0) bof3::Fatal("Area99_LeapStart: 16 / Field_MoveSpeeds[3] is 0, the original's idiv faults");
     tCur->step_x = 0x20000 / d;
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur = rv::As<records::SpriteObject>(cur);
     d = static_cast<std::int32_t>(cur[0xA]) * 4;
     if (d == 0) bof3::Fatal("Area99_LeapStart: 16 / Field_MoveSpeeds[3] is 0, the original's idiv faults");
     tCur->step_z = -0x18000 / d;
@@ -529,24 +530,24 @@ extern "C" void __cdecl Area99_LeapStart(void) {
 // else Field_State's word +0x12E - 2. Sprite_Current read again for each.
 extern "C" void __cdecl Area99_LeapStep(void) {
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* tCur = rv::As<records::SpriteObject>(cur);
     AddLong(cur + 0x34, static_cast<U>(tCur->step_x));
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur = rv::As<records::SpriteObject>(cur);
     AddLong(cur + 0x38, static_cast<U>(tCur->step_z));
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur = rv::As<records::SpriteObject>(cur);
     AddWord(cur + 0x3E, static_cast<int>(static_cast<std::uint16_t>(static_cast<U>(tCur->step_y >> 8))));
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur = rv::As<records::SpriteObject>(cur);
     const std::int32_t rise = tCur->step_y;
     tCur->step_y = static_cast<std::int32_t>(static_cast<U>(rise) - 0x700u);
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur = rv::As<records::SpriteObject>(cur);
     cur[0xA] = static_cast<unsigned char>(cur[0xA] - 1);
-    if (rise > 0 && CurSprite()->step_y < 0) AH_CALL(Sprite_EnsureAnimation)(0x51);
+    if (rise > 0 && rv::Current<records::SpriteObject>()->step_y < 0) AH_CALL(Sprite_EnsureAnimation)(0x51);
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    tCur = rv::As<records::SpriteObject>(cur);
     if (cur[0xA] < 1) {
         cur[4] = 0;
         return;
@@ -760,7 +761,7 @@ extern "C" void __cdecl Area100_EffectB7Run(void) {
 // (area_w2d_callees.h).
 extern "C" void __cdecl Area100_EffectB7Ring(void) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::EffectObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
     long point[4];
     point[0] = tCur->x;
     point[1] = tCur->z;
@@ -827,9 +828,9 @@ extern "C" void __cdecl Area103_ShakeElevation(void) {
 // word +0x3E = the ground at its (x, z) (the object read again).
 extern "C" void __cdecl Area103_Ground(void) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground));
 }
 
 // original 0x414640 (area 103 +0x3C[5]; PSX 0x801F5834): Effect_FindFree; a
@@ -842,9 +843,9 @@ extern "C" void __cdecl Area103_SpawnEffect4D(void) {
         return;
     }
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x4D;
     tE->x = tCur->x;

@@ -35,6 +35,7 @@
 #include "game/area_harness.h"
 #include "game/area_w1b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/world_map.h"
 #include "hook/detour.h"
@@ -52,13 +53,11 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
 unsigned char& B(U address) { return At(address)[0]; }
 signed char TailState() { return AreaW0c_TailState; }
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 unsigned char* ActiveMember() { return Field_ActiveMember; }
 void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(static_cast<U>(Long(p)) + v)); }
 
@@ -112,12 +111,12 @@ extern "C" void __cdecl Area42_ChoiceMessage(void) {
 
 // original 0x406670 (area 42's handler 0, Area42_Handlers 0x5F6274; PSX
 // 0x801F3DBC): Field_ActiveMember's +0x80 bit 0 cleared; then, only when
-// MoveScript_EffectState[the leader's +0x89] is 1 and neither story flag 0xB
+// Character_IndexById[the leader's +0x89] is 1 and neither story flag 0xB
 // nor 0x11 is set: flag 0xB set, Field_ScriptFlags bit 5, and the mode tail
 // armed - kind 7 (0x9039F3), state 0xA, the countdown word 0x9039F6 = 0x384.
 extern "C" void __cdecl Area42_StartTimer(void) {
     ActiveMember()[0x80] = static_cast<unsigned char>(ActiveMember()[0x80] & 0xFE);
-    if (MoveScript_EffectState[ObjTrio[0x89]] != 1) return;
+    if (Character_IndexById[ObjTrio[0].char_id] != 1) return;
     if (AH_CALL(Flags_Test)(Bank(), 0xB) != 0) return;
     if (AH_CALL(Flags_Test)(Bank(), 0x11) != 0) return;
     AH_CALL(Flags_Set)(Bank(), 0xB);
@@ -136,18 +135,18 @@ extern "C" void __cdecl Area42_ClearMemberFlag(void) {
 namespace {
 // Area 42's handlers 2..5 (0x406710, 0x406780, 0x4067F0, 0x406860; one shape,
 // the flag 0x12..0x15): Field_ActiveMember's +0x80 bit 0 cleared; only when
-// MoveScript_EffectState[the leader's +0x89] is 1 and the flag is not yet
+// Character_IndexById[the leader's +0x89] is 1 and the flag is not yet
 // set: the flag set, Area42_CheckAll (its answer not read), and unless flag
 // 0xB is set, Field_ActiveMember's word +0x8A (read again) + 1.
 void Touch42(unsigned flag) {
     ActiveMember()[0x80] = static_cast<unsigned char>(ActiveMember()[0x80] & 0xFE);
-    if (MoveScript_EffectState[ObjTrio[0x89]] != 1) return;
+    if (Character_IndexById[ObjTrio[0].char_id] != 1) return;
     if (AH_CALL(Flags_Test)(Bank(), flag) != 0) return;
     AH_CALL(Flags_Set)(Bank(), flag);
     AH_AT(CheckAllFn, kCheckAll42)();
     if (AH_CALL(Flags_Test)(Bank(), 0xB) != 0) return;
     unsigned char* const m = ActiveMember();
-    SetWord(m + 0x8A, Word(m + 0x8A) + 1u);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(m)->script_position, rv::As<records::SpriteObject>(m)->script_position + 1u);
 }
 }  // namespace
 
@@ -183,7 +182,7 @@ extern "C" unsigned char __cdecl Area42_CheckAll(void) {
     unsigned char rank = low > 5 ? 2 : (low == 5 ? 1 : 0);
     Area42_Rank = rank;
     for (unsigned k = 0; k < 30; ++k) {
-        unsigned char* const o = Sprite_Objects + k * 0xA4u;
+        unsigned char* const o = rv::Bytes(&Sprite_Objects[k]);
         if ((o[0] & 1) == 0 || o[6] != 9 || static_cast<unsigned char>(o[5] - 0x5C) >= 3) continue;
         if (AH_CALL(Flags_Test)(At(at::kFlagsCC), static_cast<unsigned char>(rank + 0x5C)) != 0) {
             Sprite_Current = o;
@@ -228,9 +227,9 @@ void SpawnTurn(std::int32_t target) {
     unsigned char* const e = EffectAt(slot);
     e[0] = 1;
     e[5] = 0x13;
-    SetLong(e + 0x64, target);
-    SetLong(e + 0x68, a1);
-    SetLong(e + 0x6C, a2);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], target);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[1], a1);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[2], a2);
     e[9] = 0x10;
 }
 // Kind 7's two ends: F3, F4 and the countdown word zeroed.
@@ -296,8 +295,8 @@ extern "C" void __cdecl Area42_TimerTail(void) {
         return;
     case 5:
         if ((EffectAt(AreaW0c_TailSub)[0] & 1) != 0) return;
-        Field_Kind2X = Long(At(ObjTrio_addr + 0x34));
-        Field_Kind2Z = Long(At(ObjTrio_addr + 0x38));
+        Field_Kind2X = ObjTrio[0].x;
+        Field_Kind2Z = ObjTrio[0].z;
         MoveScript_F3Divisor = 0x40;
         AreaW0c_TailState = 6;
         return;
@@ -378,22 +377,22 @@ extern "C" void __cdecl Area42_Init(void) {
             if (i == 3) Area42_Rank = 2;
         }
         const auto found = static_cast<unsigned char>(AH_AT(unsigned (__cdecl*)(), area_w1b::kFreeObject)());
-        SetWord(At(at::kFoundSlot), found);
+        SetWord(At(at::kFoundSlot_addr), found);
         if (found != 0xFF) AH_CALL(EventOp_9x)(At(Area42_Placements_addr + Area42_Rank * 13u));
     }
     if (Cond_ByteFD != 1) return;
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kFoundSlot) = slot;
+    at::kFoundSlot = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = EffectAt(B(at::kFoundSlot));
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    unsigned char* const e = EffectAt(at::kFoundSlot);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x28;
     e[6] = 2;
     tE->step_x = 0x418000;
     tE->step_z = 0x108000;
-    SetLong(e + 0x18, 0x4D8000);
-    SetLong(e + 0x1C, 0x108000);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_18, 0x4D8000);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_1c, 0x108000);
 }
 
 // ===========================================================================
@@ -422,7 +421,7 @@ extern "C" void __cdecl Area43_TintStart(void) {
     Cur()[0x48] = 2;
     Cur()[4] = 1;
     unsigned char* const m = ActiveMember();
-    SetWord(m + 0x8A, Word(m + 0x8A) + 0xFFFEu);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(m)->script_position, rv::As<records::SpriteObject>(m)->script_position + 0xFFFEu);
 }
 
 // original 0x407020 (Area43_States 1): each tint byte +0x5D, +0x5E, +0x5F not
@@ -444,7 +443,7 @@ extern "C" void __cdecl Area43_TintSettle(void) {
         return;
     }
     unsigned char* const m = ActiveMember();
-    SetWord(m + 0x8A, Word(m + 0x8A) + 0xFFFEu);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(m)->script_position, rv::As<records::SpriteObject>(m)->script_position + 0xFFFEu);
 }
 
 // original 0x4070D0 (area 43's handler 1): Effect_FindFree to the byte
@@ -453,16 +452,16 @@ extern "C" void __cdecl Area43_TintSettle(void) {
 // +0x3C = Sprite_Current's + 0x800000.
 extern "C" void __cdecl Area43_SpawnEffect37(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kFoundSlot) = slot;
+    at::kFoundSlot = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = EffectAt(B(at::kFoundSlot));
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    unsigned char* const e = EffectAt(at::kFoundSlot);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x37;
-    SetWord(e + 0x2C, 0x64);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(e)->column, 0x64);
     e[9] = 1;
     const unsigned char* const o = Cur();
-    const auto* const tO = reinterpret_cast<const records::SpriteObject*>(o);
+    const auto* const tO = rv::AsConst<records::SpriteObject>(o);
     e[6] = 0;
     tE->x = tO->x;
     tE->z = tO->z;
@@ -478,8 +477,8 @@ extern "C" void __cdecl Area43_SetUpObject(void) {
     AH_CALL(Sprite_SetAnimationBank)(0x1BD);
     AH_CALL(Sprite_SetAnimation)(0);
     Cur()[0x2A] = 0;
-    CurSprite()->scale_x = 0xE000;
-    CurSprite()->scale_y = 0xE000;
+    rv::Current<records::SpriteObject>()->scale_x = 0xE000;
+    rv::Current<records::SpriteObject>()->scale_y = 0xE000;
     const unsigned char tint = AH_CALL(Sprite_SetTint)(Cur(), 0, 0, 0, 1);
     ActiveMember()[0x9F] = tint;
     Cur()[0x5C] = 1;
@@ -529,17 +528,17 @@ extern "C" void __cdecl Area44_Init(void) {
     const unsigned a = GateA(), b = GateB();
     unsigned char* const e0 = At(Sprite_ObjectsExtra_addr);
     unsigned char* const e1 = At(Sprite_ObjectsExtra_addr + 0xa4);
-    SetWord(e0 + 0x34, 0x8000);
-    SetWord(e0 + 0x38, 0x8000);
-    SetWord(e1 + 0x34, 0x8000);
-    SetWord(e0 + 0x36, At(Area44_Gate0_addr + a * 2)[0]);
-    SetWord(e0 + 0x3A, At(Area44_Gate0_addr + a * 2 + 1)[0]);
-    SetWord(e0 + 0x3E, 0x80);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e0)->x_frac, 0x8000);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e0)->z_frac, 0x8000);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e1)->x_frac, 0x8000);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e0)->x_whole, At(Area44_Gate0_addr + a * 2)[0]);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e0)->z_whole, At(Area44_Gate0_addr + a * 2 + 1)[0]);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e0)->height_whole, 0x80);
     e0[0x80] = static_cast<unsigned char>(e0[0x80] | 0x80);
-    SetWord(e1 + 0x38, 0x8000);
-    SetWord(e1 + 0x3E, 0x80);
-    SetWord(e1 + 0x36, At(Area44_Gate1_addr + b * 2)[0]);
-    SetWord(e1 + 0x3A, At(Area44_Gate1_addr + b * 2 + 1)[0]);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e1)->z_frac, 0x8000);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e1)->height_whole, 0x80);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e1)->x_whole, At(Area44_Gate1_addr + b * 2)[0]);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(e1)->z_whole, At(Area44_Gate1_addr + b * 2 + 1)[0]);
     e1[0x80] = static_cast<unsigned char>(e1[0x80] | 0x80);
     area_harness::Phase(kSetGates44)();
 }
@@ -613,7 +612,7 @@ extern "C" void __cdecl Area44_SetGates(void) {
 // ScriptFlags_Set40, the mode tail armed with the record's kind (8 or 9,
 // through a register) and state 0; al 1. None: al 0.
 extern "C" unsigned char __cdecl Area44_SwitchHook(unsigned x, unsigned z) {
-    const unsigned char facing = ObjTrio[8];
+    const unsigned char facing = ObjTrio[0].direction;
     U rec = Area44_Switches_addr;
     for (; rec < at::kA44SwitchesEnd; rec += 5) {
         const unsigned char* const r = At(rec);
@@ -670,7 +669,7 @@ extern "C" void __cdecl Area44_GateTailA(void) {
         AreaW0c_TailState = 0xA;
         return;
     case 1:
-        if (Sprite_ObjectsExtra[9] != 0) return;
+        if (Sprite_ObjectsExtra[0].step_frames != 0) return;
         area_harness::Phase(kSetGates44)();
         [[fallthrough]];
     case 0xA:
@@ -696,7 +695,7 @@ extern "C" void __cdecl Area44_GateTailA(void) {
         AreaW0c_TailState = 0x14;
         return;
     case 0xB:
-        if (Sprite_ObjectsExtra[0xad] != 0) return;
+        if (Sprite_ObjectsExtra[1].step_frames != 0) return;
         area_harness::Phase(kSetGates44)();
         AH_CALL(Sound_PlayEffect)(0x202);
         AreaW0c_TailState = 0x14;
@@ -729,7 +728,7 @@ extern "C" void __cdecl Area44_PushParty(unsigned direction, unsigned k) {
     if (d >= 8) bof3::Fatal("Area44_PushParty: direction %u is past Field_DirectionSteps' 8", d);
     if (slot >= 4) bof3::Fatal("Area44_PushParty: object %u is past Sprite_ObjectsExtra's 4", slot);
     unsigned char* const e = At(Sprite_ObjectsExtra_addr + slot * at::kExtraStride);
-    auto* const tE = reinterpret_cast<records::SpriteObject*>(e);
+    auto* const tE = rv::As<records::SpriteObject>(e);
     const std::int32_t sx = static_cast<std::int32_t>(Field_DirectionSteps[d * 2]);
     const std::int32_t sz = static_cast<std::int32_t>(Field_DirectionSteps[d * 2 + 1]);
     tE->step_x = sx >> 2;
@@ -744,15 +743,15 @@ extern "C" void __cdecl Area44_PushParty(unsigned direction, unsigned k) {
         if (static_cast<std::int32_t>(nearby) == static_cast<std::int32_t>(slot)) {
             unsigned char* o = Cur();
             if (o[9] != 0) {
-                AddLong(o + 0x34, static_cast<U>(Long(o + 0xC)) * o[9]);
+                AddLong(o + 0x34, static_cast<U>(rv::As<records::SpriteHead>(o)->step_x) * o[9]);
                 o = Cur();
-                AddLong(o + 0x38, static_cast<U>(Long(o + 0x10)) * o[9]);
+                AddLong(o + 0x38, static_cast<U>(rv::As<records::SpriteHead>(o)->step_z) * o[9]);
                 o = Cur();
-                AddLong(o + 0x3C, static_cast<U>(Long(o + 0x14)) * o[9]);
+                AddLong(o + 0x3C, static_cast<U>(rv::As<records::SpriteHead>(o)->step_y) * o[9]);
             }
-            SetLong(Cur() + 0xC, tE->step_x);
-            SetLong(Cur() + 0x10, tE->step_z);
-            SetLong(Cur() + 0x14, tE->step_y);
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, tE->step_x);
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, tE->step_z);
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, tE->step_y);
             Cur()[9] = 0x20;
             Cur()[1] = 1;
             Cur()[2] = 1;
@@ -802,7 +801,7 @@ extern "C" void __cdecl Area44_GateTailB(void) {
         AreaW0c_TailState = 0xA;
         return;
     case 1:
-        if (Sprite_ObjectsExtra[0xad] != 0) return;
+        if (Sprite_ObjectsExtra[1].step_frames != 0) return;
         area_harness::Phase(kSetGates44)();
         [[fallthrough]];
     case 0xA: {
@@ -834,7 +833,7 @@ extern "C" void __cdecl Area44_GateTailB(void) {
         return;
     }
     case 0xB:
-        if (Sprite_ObjectsExtra[9] != 0) return;
+        if (Sprite_ObjectsExtra[0].step_frames != 0) return;
         area_harness::Phase(kSetGates44)();
         AH_CALL(Sound_PlayEffect)(0x202);
         AreaW0c_TailState = 0x14;
@@ -883,8 +882,8 @@ extern "C" void __cdecl Area45_PlaceMessage(void) {
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
-    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
+    const auto z = static_cast<std::int16_t>(ObjTrio[0].z_whole);
+    const auto x = static_cast<std::int16_t>(ObjTrio[0].x_whole);
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
@@ -893,8 +892,8 @@ extern "C" void __cdecl Area45_PlaceMessage(void) {
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(Area45_PlaceMessages_addr + static_cast<U>(index * 2)))));
     } else {
-        const unsigned cx = Word(At(ObjTrio_addr + 0x36));
-        const unsigned cz = Word(At(ObjTrio_addr + 0x3a));
+        const unsigned cx = ObjTrio[0].x_whole;
+        const unsigned cz = ObjTrio[0].z_whole;
         U cell = Area45_Cells_addr;
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
@@ -934,13 +933,13 @@ extern "C" void __cdecl Area45_PlaceMessage(void) {
 // 0xAE 3, else Field_ScriptFlags2 bit 12 4, else 0; then Area45_PlateStates
 // 0x5F7654 by +1 (read after the calls; ours aborts past its five entries).
 extern "C" void __cdecl Area45_PlateRun(void) {
-    const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U steps = ObjTrio[0].step_frames;
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
-    SetLong(Cur() + 0xC, x);
-    SetLong(Cur() + 0x10, z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, z);
     unsigned char kind;
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) kind = 1;
     else if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA0) kind = 2;
@@ -979,7 +978,7 @@ extern "C" void __cdecl Area45_PlateShow(void) {
         const unsigned place = AreaW0b_Place;
         U entry = Area45_PlateAnims_addr;
         while (Word(At(entry)) != place) entry += 4;
-        SetLong(Cur() + 0x18, static_cast<std::int32_t>(place));
+        rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->work_18, static_cast<std::int32_t>(place));
         animation = At(entry + 2)[0];
     } else if (kind == 2) {
         animation = 3;
@@ -990,8 +989,8 @@ extern "C" void __cdecl Area45_PlateShow(void) {
     } else {
         return;
     }
-    SetLong(Cur() + 0x40, 0);
-    SetLong(Cur() + 0x44, 0x10000);
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_x, 0);
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_y, 0x10000);
     Cur()[0x48] = 2;
     Cur()[9] = 8;
     AH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(animation));
@@ -1003,7 +1002,7 @@ extern "C" void __cdecl Area45_PlateShow(void) {
 // then a tail jump to Sprite_QueueOverlay.
 extern "C" void __cdecl Area45_PlateGrow(void) {
     AH_CALL(WorldMap_PinSprite)();
-    SetLong(Cur() + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(Cur() + 0x40)) + 0x2000));
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::Current<records::EffectObject>()->scale_x) + 0x2000));
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     unsigned char* const o = Cur();
     if (o[9] == 0) {
@@ -1023,7 +1022,7 @@ extern "C" void __cdecl Area45_PlateHold(void) {
         unsigned char* const o = Cur();
         const unsigned shown = o[7];
         const bool leaves = o[0xB] != shown || Field_Request == 5 ||
-                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != AreaW0b_Place);
+                            (shown == 1 && static_cast<U>(rv::As<records::EffectObject>(o)->work_18) != AreaW0b_Place);
         if (leaves) {
             o[0x48] = 2;
             Cur()[9] = 8;
@@ -1039,7 +1038,7 @@ extern "C" void __cdecl Area45_PlateHold(void) {
 // else +0x48 = 0 and +1 = 1.
 extern "C" void __cdecl Area45_PlateShrink(void) {
     AH_CALL(WorldMap_PinSprite)();
-    SetLong(Cur() + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(Cur() + 0x40)) - 0x2000));
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::Current<records::EffectObject>()->scale_x) - 0x2000));
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     unsigned char* const o = Cur();
     if (o[9] != 0) {
@@ -1078,7 +1077,7 @@ extern "C" void __cdecl Area45_FrameStep(void) { StateEntry("Area45_FrameStep", 
 // original 0x408090 (Area45_FrameStates 1): the word +0x2E += 0x10; at 0x10
 // and above (s16) +2 + 1; then a tail jump to Area45_FrameHold.
 extern "C" void __cdecl Area45_FrameSlideIn(void) {
-    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) + 0x10u;
+    rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(kFrameHold45)();
@@ -1096,7 +1095,7 @@ extern "C" void __cdecl Area45_FrameHold(void) {
 // and below +2 = 0; unless the mode byte is 2, +2 = 1 (over the 0);
 // Area45_DrawFrame(0x10, y).
 extern "C" void __cdecl Area45_FrameSlideOut(void) {
-    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) - 0x10u;
+    rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -1119,7 +1118,7 @@ extern "C" void __cdecl Area45_BoxStep(void) { StateEntry("Area45_BoxStep", Area
 // Area45_DrawHud(0x5C, y) - the y pushed with the object pointer's high half
 // above the word, which the drawing never reads.
 extern "C" void __cdecl Area45_BoxSlideIn(void) {
-    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) - 10u;
+    rv::Current<records::EffectObject>()->screen_y = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_y) - 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) <= 0xC8) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
@@ -1157,7 +1156,7 @@ extern "C" void __cdecl Area45_BoxHold(void) {
 // +0xB), Field_Request is 2 or Field_ScriptFlags bit 8, +3 = 1;
 // Area45_DrawHud(0x5C, y).
 extern "C" void __cdecl Area45_BoxSlideOut(void) {
-    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) + 10u;
+    rv::Current<records::EffectObject>()->screen_y = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_y) + 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) >= 0xF0) {
         o[3] = 0;
@@ -1227,10 +1226,10 @@ extern "C" void __cdecl Area45_DrawSprite(int x, int y, unsigned index) {
     std::memcpy(prim + 8, &fx, 4);
     prim[4] = prim[5] = prim[6] = 0x80;
     std::memcpy(prim + 0xC, &fy, 4);
-    SetWord(prim + 0x16, 0x7B80);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->clut, 0x7B80);
     const unsigned char* const entry = At(Area45_Sprites_addr + (index & 0xFF) * 4u);
-    SetWord(prim + 0x18, entry[0]);
-    SetWord(prim + 0x1A, entry[1]);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->w, entry[0]);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->h, entry[1]);
     prim[0x14] = entry[2];
     prim[0x15] = entry[3];
     AH_CALL(Gfx_CommitPrim)(1, 0x1C);
@@ -1272,35 +1271,35 @@ extern "C" void __cdecl Area45_Record8Place(void) {
     Cur()[0x48] = 0;
     Cur()[0x24] = 0;
     Cur()[0x29] = 5;
-    SetLong(Cur() + 0xC, dir(Cur(), 0));
-    SetLong(Cur() + 0x10, dir(Cur(), 2));
-    SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
-    SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dir(Cur(), 0));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dir(Cur(), 2));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     unsigned char* o = Cur();
-    auto* tO = reinterpret_cast<records::EffectObject*>(o);
+    auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
-        SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(o)->x_whole, rv::As<records::EffectObject>(o)->x_whole - static_cast<unsigned>(dir(o, 0) >> 13));
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
-        SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 13));
+        tO = rv::As<records::EffectObject>(o);
+        rv::Store<unsigned>(rv::As<records::EffectObject>(o)->z_whole, rv::As<records::EffectObject>(o)->z_whole - static_cast<unsigned>(dir(o, 2) >> 13));
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
+        tO = rv::As<records::EffectObject>(o);
         const bool along_x = tO->step_x == 0;
         const unsigned step = o[6] == 1 ? 2u : 0xFFFEu;
-        if (along_x) SetWord(o + 0x36, Word(o + 0x36) + step);
-        else SetWord(o + 0x3A, Word(o + 0x3A) + step);
+        if (along_x) rv::Store<unsigned>(rv::As<records::EffectObject>(o)->x_whole, rv::As<records::EffectObject>(o)->x_whole + step);
+        else rv::Store<unsigned>(rv::As<records::EffectObject>(o)->z_whole, rv::As<records::EffectObject>(o)->z_whole + step);
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
+        tO = rv::As<records::EffectObject>(o);
     }
-    SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 9));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(o)->x_whole, rv::As<records::EffectObject>(o)->x_whole - static_cast<unsigned>(dir(o, 0) >> 9));
     o = Cur();
-    tO = reinterpret_cast<records::EffectObject*>(o);
-    SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 9));
+    tO = rv::As<records::EffectObject>(o);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(o)->z_whole, rv::As<records::EffectObject>(o)->z_whole - static_cast<unsigned>(dir(o, 2) >> 9));
     Cur()[0xB] = 0;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
     AH_CALL(Sprite_SetAnimation)(At(Area45_Record8Anims_addr + Cur()[8] * 2u)[0]);
     o = Cur();
-    tO = reinterpret_cast<records::EffectObject*>(o);
+    tO = rv::As<records::EffectObject>(o);
     o[0x2A] = At(Area45_Record8Anims_addr + 1 + o[8] * 2u)[0];
     AH_CALL(Sprite_UpdateScreen)();
 }
@@ -1318,7 +1317,7 @@ extern "C" void __cdecl Area45_Record4Run(void) { StateEntry("Area45_Record4Run"
 // to 0xA0 - AreaMap_Bytes + AreaMap_Header[0] * z + x; Sprite_SetAnimation(0)
 // and +1 = 1.
 extern "C" void __cdecl Area45_Record4MarkCell(void) {
-    if (At(at::kFlag3A79)[0] == 9 || (Field_StatusBits & 1) != 0) {
+    if (CharacterRecords[0].char_id == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }
@@ -1364,17 +1363,17 @@ extern "C" void __cdecl Area45_Record4Tick(void) {
 extern "C" void __cdecl Area45_DrawDrift(void) {
     unsigned char* o = Cur();
     if (o[2] == 0) {
-        SetWord(o + 0x3A, Word(o + 0x3A) + (Frame_Counter & 0xF));
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, rv::As<records::SpriteHead>(o)->z_whole + (Frame_Counter & 0xF));
         Cur()[2] = static_cast<unsigned char>(Cur()[2] + 1);
         o = Cur();
     }
     if ((Draw_PassFlags & 4) == 0) return;
     const std::int32_t b = o[0xB];
     const std::int32_t e = b - 2;
-    SetLong(o + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(o + 0x38)) + (static_cast<U>(b) << 10)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->z, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(o)->z) + (static_cast<U>(b) << 10)));
     o = Cur();
     if (S16(o + 0x3A) > AreaMap_Header[1] + 8) {
-        SetWord(o + 0x3A, 0xFFF8);
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, 0xFFF8);
         o = Cur();
     }
     std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
@@ -1393,21 +1392,21 @@ extern "C" void __cdecl Area45_DrawDrift(void) {
     std::int32_t r = 15 - static_cast<std::int32_t>(Frame_Counter & 0x1F);
     if (r < 0) r = -r;
     r += static_cast<std::int32_t>(static_cast<U>(side) << 8);
-    const std::int32_t cx = (Long(o + 0x34) >> 9) - 0x3FC0;
-    const std::int32_t cz = (Long(o + 0x38) >> 9) - 0x3FC0;
+    const std::int32_t cx = (rv::As<records::SpriteHead>(o)->x >> 9) - 0x3FC0;
+    const std::int32_t cz = (rv::As<records::SpriteHead>(o)->z >> 9) - 0x3FC0;
     unsigned char* const v = reinterpret_cast<unsigned char*>(Prim_VertexScratch);
-    SetWord(v + 4, 0xFD00);
-    SetWord(v + 0x12, static_cast<unsigned>(cz + r));
-    SetWord(v + 0x1A, static_cast<unsigned>(cz + r));
-    SetWord(v + 0x08, static_cast<unsigned>(cx + r));
-    SetWord(v + 0x18, static_cast<unsigned>(cx + r));
-    SetWord(v + 0x00, static_cast<unsigned>(cx - r));
-    SetWord(v + 0x10, static_cast<unsigned>(cx - r));
-    SetWord(v + 0x02, static_cast<unsigned>(cz - r));
-    SetWord(v + 0x0A, static_cast<unsigned>(cz - r));
-    SetWord(v + 0x0C, 0xFD00);
-    SetWord(v + 0x14, 0xFD00);
-    SetWord(v + 0x1C, 0xFD00);
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[0].z, 0xFD00);
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[2].y, static_cast<unsigned>(cz + r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[3].y, static_cast<unsigned>(cz + r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[1].x, static_cast<unsigned>(cx + r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[3].x, static_cast<unsigned>(cx + r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[0].x, static_cast<unsigned>(cx - r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[2].x, static_cast<unsigned>(cx - r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[0].y, static_cast<unsigned>(cz - r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[1].y, static_cast<unsigned>(cz - r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[1].z, 0xFD00);
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[2].z, 0xFD00);
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[3].z, 0xFD00);
     long depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
     using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
@@ -1434,13 +1433,13 @@ extern "C" void __cdecl Area45_DrawDrift(void) {
             std::memcpy(q + 0x18, item + 0x18, 12);
             std::memcpy(q + 0x28, item + 0x28, 12);
             std::memcpy(q + 0x38, item + 0x38, 12);
-            SetWord(q + 0x16, 0x78CB);
-            SetWord(q + 0x26, 0x5B);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(q)->clut, 0x78CB);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(q)->tpage, 0x5B);
             q[4] = q[5] = q[6] = 0x28;
             const U m = At(Area45_DriftUV_addr + 0x8 + static_cast<U>(e))[0];
             const U ubase = At(Area45_DriftUV_addr + static_cast<U>(e))[0];
             const U vbase = At(Area45_DriftUV_addr + 0x4 + static_cast<U>(e))[0];
-            const U scroll = (Word(Cur() + 0x38) * m) >> 16;
+            const U scroll = (rv::Current<records::SpriteHead>()->z_frac * m) >> 16;
             const U ui = static_cast<U>(i), uj = static_cast<U>(j);
             q[0x14] = static_cast<unsigned char>(ui * m + ubase);
             q[0x15] = static_cast<unsigned char>(uj * m - scroll + vbase);
@@ -1538,12 +1537,12 @@ extern "C" unsigned char __cdecl Area46_Trigger54(void) {
 // edx above it, which MapView_SetElevation never reads: ours passes the word
 // sign-extended); Camera_Angles[0] = 0xFB76, Camera_Angles[2] = 0xF8.
 extern "C" void __cdecl Area47_PlaceAtStart(void) {
-    CurSprite()->x = 0x120000;
+    rv::Current<records::SpriteObject>()->x = 0x120000;
     Field_Kind2X = 0x120000;
-    CurSprite()->z = 0x240000;
+    rv::Current<records::SpriteObject>()->z = 0x240000;
     Field_Kind2Z = 0x240000;
     AH_CALL(Field_ViewReset)();
-    SetWord(Cur() + 0x3E, 0x1220);
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, 0x1220);
     AH_CALL(MapView_SetElevation)(S16(Cur() + 0x3E));
     Camera_Angles[0] = static_cast<short>(0xFB76);
     Camera_Angles[2] = 0xF8;

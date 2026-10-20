@@ -31,7 +31,9 @@
 #include "game/magic_harness.h"
 #include "game/magic_s27_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -46,18 +48,14 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap its +0xC) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -89,8 +87,8 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 void SetPtr(unsigned char* at, const void* p) {
     SetLong(at, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
@@ -189,9 +187,9 @@ void LightClutRow(unsigned runs, const bool* stp) {
 
 // The task at its owner: +0x34 / +0x38 / +0x3C from the owner's.
 void AtOwner() {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
 }
 
 }  // namespace
@@ -226,9 +224,9 @@ S27_EXPORT void __cdecl Burn_Task(void) {
 // 0x100; +9 0, +1 on.
 S27_EXPORT void __cdecl Burn_Start(void) {
     const unsigned char* const src = Source();
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < 8; ++i) {
         const unsigned slot = NewTask(0x2F);
@@ -283,8 +281,8 @@ S27_EXPORT void __cdecl BurnFlame_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     AtOwner();
-    SetLong(Sc() + 0x14, 0);
-    SetLong(Sc() + 0x20, 8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Sc()[0xA] = 2;
     Sc()[0xB] = 0x10;
     Sc()[9] = 0x20;
@@ -296,9 +294,9 @@ namespace {
 // speed (dwords).
 void Climb() {
     unsigned char* const s = Sc();
-    SetLong(s + 0x20, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x20)) + s[0xA]));
-    SetLong(s + 0x14, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x14)) +
-                                                static_cast<std::uint32_t>(Long(s + 0x20))));
+    rv::Store(rv::As<records::BattleTask>(s)->work_20, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20) + s[0xA]));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y) +
+                                                static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20)));
 }
 }  // namespace
 
@@ -364,8 +362,8 @@ S27_EXPORT void __cdecl BurnFlame_Draw(void) {
         SetVW(0x1C, 0);
         const unsigned char* s = Sc();
         const std::uint32_t shift = static_cast<std::uint32_t>(static_cast<int>(VS(8))) << 9;
-        const std::uint32_t x = static_cast<std::uint32_t>(Long(s + 0x34)) + shift;
-        const std::uint32_t z = static_cast<std::uint32_t>(Long(s + 0x38)) + shift;
+        const std::uint32_t x = static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x) + shift;
+        const std::uint32_t z = static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z) + shift;
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -383,8 +381,8 @@ S27_EXPORT void __cdecl BurnFlame_Draw(void) {
         p[0x40] = SB(0xA);
         p[0x41] = SB(0xA);
         p[0x42] = SB(0xA);
-        SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
         const auto u0 = static_cast<unsigned char>(k << 3);
         const auto u1 = static_cast<unsigned char>((k + 1) << 3);
         s = Sc();
@@ -496,7 +494,7 @@ namespace {
 
 // The beams' aim, both spells (WhelpBreathBeam_Aim, DragonBreathBeam_Aim once
 // +9 runs out): the owner's direction byte; the task to the targets' centre
-// (MagicFx_CenterOnSide) and its screen point kept in DamageScratch +0xC /
+// (MagicFx_CenterOnSide) and its screen point kept in SharedScratch +0xC /
 // +0xE; MagicFx_FormationOffset; the task back at its owner, its screen point
 // moved by the words +0xC / +0x10 into +8 / +0xA; +0x14 the angle
 // Math_Ratan2(kept x - x, kept y - y) from there to the centre.
@@ -504,13 +502,13 @@ void Aim() {
     Sc()[8] = Owner()[8];
     MH_CALL(MagicFx_CenterOnSide)();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetSW(0xC, Word(Sc() + 0x2E));
-    SetSW(0xE, Word(Sc() + 0x30));
+    SetSW(0xC, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+    SetSW(0xE, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     MH_CALL(MagicFx_FormationOffset)();
     AtOwner();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + Word(Sc() + 0xC));
-    SetWord(Sc() + 0x30, Word(Sc() + 0x30) + Word(Sc() + 0x10));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_x));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_z));
     const unsigned char* const s = Sc();
     const short x = S16(s + 0x2E), y = S16(s + 0x30);
     SetSW(8, static_cast<std::uint16_t>(x));
@@ -520,7 +518,7 @@ void Aim() {
     const float first = static_cast<float>(SS(0xC) - x);
     const float second = static_cast<float>(SS(0xE) - y);
     const int angle = MH_CALL(Math_Ratan2)(first, second);
-    SetLong(Sc() + 0x14, angle);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, angle);
 }
 
 }  // namespace
@@ -641,7 +639,7 @@ S27_EXPORT void __cdecl WhelpBreathBeam_Grow(void) {
 
 namespace {
 
-// One step's width of the Whelp beam: DamageScratch +0 = (sin(angle) x step x
+// One step's width of the Whelp beam: SharedScratch +0 = (sin(angle) x step x
 // 2 >> 12) + base, divided by +0xB (signed, the original's idiv), plus 1.
 void BeamWidth(std::uint32_t angle, int step, int base) {
     const int v = Sin(static_cast<int>(angle));
@@ -690,9 +688,9 @@ S27_EXPORT void __cdecl WhelpBreathBeam_Draw(void) {
     ModeCommit(3, 0x35);
     {
         const unsigned char* const s = Sc();
-        SetSW(8, Word(s + 0x2E));
-        SetSW(0xA, Word(s + 0x30));
-        SetSW(2, Word(s + 0x14));
+        SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
+        SetSW(2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
     }
     for (int k = 1; k < Sc()[0xA] + 1; ++k) {
         SetSW(0xC, SW(8));
@@ -727,8 +725,8 @@ S27_EXPORT void __cdecl WhelpBreathBeam_Draw(void) {
         PutFloat(p + 0xC, SS(0xE));
         PutFloat(p + 0x30, SS(8));
         PutFloat(p + 0x34, SS(0xA));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
-        SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
         p[0x14] = 0x40;
         p[0x28] = 0x80;
         p[0x3C] = 0x40;
@@ -751,8 +749,8 @@ S27_EXPORT void __cdecl WhelpBreathBeam_Draw(void) {
         PutFloat(p + 0x20, SS(0xE));
         PutFloat(p + 0x44, SS(8));
         PutFloat(p + 0x48, SS(0xA));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
-        SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
         p[0x14] = 0;
         p[0x28] = 0x40;
         p[0x3C] = 0;
@@ -801,7 +799,7 @@ S27_EXPORT void __cdecl WhelpBreathSprite_Start(void) {
     s[0x2A] = static_cast<unsigned char>(Owner()[8] & 1);
     s[0x29] = 3;
     s[0x24] = 4;
-    SetWord(s + 0x2C, 0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 0;
     switch (s[0xB]) {
     case 0:
@@ -899,19 +897,19 @@ S27_EXPORT void __cdecl WhelpBreathFlames_Draw(void) {
         for (unsigned e = 0; e < 8; ++e) {
             if ((MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) != 0) continue;
             const unsigned char* const r = EnemyRecord(e);
-            const records::BattleEnemy* const tr = reinterpret_cast<const records::BattleEnemy*>(r);
+            const records::BattleEnemy* const tr = rv::AsConst<records::BattleEnemy>(r);
             unsigned char* s = Sc();
             s[0xB] = static_cast<unsigned char>(i);
             s[0xA] = static_cast<unsigned char>(e);
-            SetLong(s + 0xC, Long(offset));
-            SetLong(s + 0x10, Long(offset + 4));
+            rv::Store(rv::As<records::BattleTask>(s)->step_x, Long(offset));
+            rv::Store(rv::As<records::BattleTask>(s)->step_z, Long(offset + 4));
             MH_AT(PrimFn, raw::kTurnOffset)(s);
             s = Sc();
-            SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(tr->x) +
-                                                        static_cast<std::uint32_t>(Long(s + 0xC))));
-            SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x10)) +
+            rv::Store(rv::As<records::BattleTask>(s)->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(tr->x) +
+                                                        static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_x)));
+            rv::Store(rv::As<records::BattleTask>(s)->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_z) +
                                                         static_cast<std::uint32_t>(tr->z)));
-            SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset + 8)) +
+            rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset + 8)) +
                                                         static_cast<std::uint32_t>(tr->height)));
             s[8] = r[8];
             Call0(bof3::addr::WhelpBreathFlames_PushMatrix);
@@ -947,8 +945,8 @@ S27_EXPORT void __cdecl WhelpBreathFlames_DrawColumn(void) {
             SetVW(8 * c + 2, static_cast<std::uint32_t>(SinK(kCorners[c], 0)));
             SetVW(8 * c + 4, height);
         }
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
         p[0x14] = 8;
         p[0x15] = 0x40;
         p[0x24] = 0x28;
@@ -975,7 +973,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     short rot[4] = {0, 0, 0, 0};
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     switch (s[8]) {
     case 0: rot[1] = 0xC00; break;
     case 1: rot[0] = 0x400; break;
@@ -985,7 +983,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_PushMatrix(void) {
     }
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {
@@ -1010,13 +1008,13 @@ S27_EXPORT void __cdecl WhelpBreathGlow_Draw(void) {
     for (unsigned e = 0; e < 8; ++e) {
         if ((MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) != 0) continue;
         const unsigned char* const r = EnemyRecord(e);
-        const records::BattleEnemy* const tr = reinterpret_cast<const records::BattleEnemy*>(r);
+        const records::BattleEnemy* const tr = rv::AsConst<records::BattleEnemy>(r);
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         s[8] = r[8];
         ts->x = tr->x;
-        ts->y = tr->z;
-        SetWord(s + 0x3E, Word(r + 0x3E));
+        ts->z = tr->z;
+        rv::Store<unsigned>(ts->height_whole, tr->height_whole);
         MH_CALL(MagicFx_PushActorMatrix)();
         Call0(bof3::addr::WhelpBreathGlow_DrawFan);
         MH_CALL(Gte_PopMatrix)();
@@ -1141,7 +1139,7 @@ S27_EXPORT void __cdecl DragonBreathBeam_Aim(void) {
     Sc()[0x5D] = static_cast<unsigned char>(RandCall() & 1);
     Sc()[0x5E] = static_cast<unsigned char>(RandCall() & 3);
     Sc()[0x5F] = static_cast<unsigned char>(RandCall() & 3);
-    ScTask()->vel_x = 0;
+    rv::Current<records::BattleTask>()->step_x = 0;
     Sc()[4] = 0;
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
@@ -1174,9 +1172,9 @@ S27_EXPORT void __cdecl DragonBreathBeam_Brighten(void) {
 // original 0x4DC550: dword +0xC up; at 0x2E +2 on.
 S27_EXPORT void __cdecl DragonBreathBeam_Hold(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-    ts->vel_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->vel_x) + 1);
-    if (ScTask()->vel_x == 0x2E) Inc(Sc()[2]);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+    ts->step_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->step_x) + 1);
+    if (rv::Current<records::BattleTask>()->step_x == 0x2E) Inc(Sc()[2]);
 }
 
 // original 0x4DC570: +4 down by two; at 0 +2 on.
@@ -1197,7 +1195,7 @@ S27_EXPORT void __cdecl DragonBreathBeam_End(void) {
 
 namespace {
 
-// The Dragon beam's radii of one quad pair: DamageScratch +0 at the near end
+// The Dragon beam's radii of one quad pair: SharedScratch +0 at the near end
 // and +2 at the far, `base` (+0xB x 4, or +0xB x 4 + 0x10 for the outer pair)
 // or, over the first steps, `per` x step (near: step - 1 while it is below 4;
 // far: step while it is below 4); each plus its end's jitter.
@@ -1212,7 +1210,7 @@ void DragonRadii(unsigned base_add, unsigned per_add, int k, unsigned prev, unsi
     AddSW(0, prev);
     SetSW(2, far + cur);
 }
-// The four points of a Dragon quad: the side points at angle DamageScratch +4
+// The four points of a Dragon quad: the side points at angle SharedScratch +4
 // and radii +0 / +2 about the step's near (+0xC, +0xE) and far (+8, +0xA)
 // centres, at `near_at` and `far_at`; the centres themselves at `near_c` and
 // `far_c`.
@@ -1229,7 +1227,7 @@ void DragonCentres(unsigned char* p, unsigned near_c, unsigned far_c) {
     PutFloat(p + far_c + 4, SS(0xA));
 }
 // A point's shade: (s, s, s) on the centre line, (s, s / 4, s / 4) on the
-// edge, 1 on the outer edge; s the DamageScratch +6 word, / 4 signed.
+// edge, 1 on the outer edge; s the SharedScratch +6 word, / 4 signed.
 void ShadeFull(unsigned char* p, unsigned at) {
     p[at] = SB(6);
     p[at + 1] = SB(6);
@@ -1259,15 +1257,15 @@ S27_EXPORT void __cdecl DragonBreathBeam_Draw(void) {
     ModeCommit(3, 0x35);
     {
         const unsigned char* const s = Sc();
-        SetSW(8, Word(s + 0x2E));
-        SetSW(0xA, Word(s + 0x30));
+        SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
     unsigned cur = 0;
     for (int k = 1; k < Sc()[0xA] + 1; ++k) {
         SetSW(0xC, SW(8));
         SetSW(0xE, SW(0xA));
-        AddSW(8, static_cast<std::uint32_t>(Mul12(Sin(Long(Sc() + 0x14)), 12)));
-        AddSW(0xA, static_cast<std::uint32_t>(Mul12(Cos(Long(Sc() + 0x14)), 12)));
+        AddSW(8, static_cast<std::uint32_t>(Mul12(Sin(rv::Current<records::BattleTask>()->step_y), 12)));
+        AddSW(0xA, static_cast<std::uint32_t>(Mul12(Cos(rv::Current<records::BattleTask>()->step_y), 12)));
         {
             const unsigned char* const s = Sc();
             const unsigned b = s[0xB];
@@ -1342,7 +1340,7 @@ namespace {
 
 // DragonBreathBeam_DrawLinesA / B: a crackling line of 47 segments (POLY_F2
 // lines, semi-transparent) beside the beam, `side` 0x400 or -0x400 from its
-// angle. It starts `n` + 1 steps of 12 down the beam (DamageScratch +8 / +0xA,
+// angle. It starts `n` + 1 steps of 12 down the beam (SharedScratch +8 / +0xA,
 // kept in the vertex scratch +8 / +0xA), 32 units out; each segment walks
 // Rand & 7 along the beam (back to the kept point plus 12 once the walk
 // passes 12) and swings out by sin(segment x 0x40) x (0x10 + Rand & 3) >> 12;
@@ -1352,12 +1350,12 @@ void DrawLines(unsigned n, unsigned side) {
     ModeCommit(3, 0x35);
     {
         const unsigned char* const s = Sc();
-        SetSW(8, Word(s + 0x2E));
-        SetSW(0xA, Word(s + 0x30));
+        SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
     for (unsigned i = (n & 0xFF) + 1; i != 0; --i) {
-        AddSW(8, static_cast<std::uint32_t>(Mul12(Sin(Long(Sc() + 0x14)), 12)));
-        AddSW(0xA, static_cast<std::uint32_t>(Mul12(Cos(Long(Sc() + 0x14)), 12)));
+        AddSW(8, static_cast<std::uint32_t>(Mul12(Sin(rv::Current<records::BattleTask>()->step_y), 12)));
+        AddSW(0xA, static_cast<std::uint32_t>(Mul12(Cos(rv::Current<records::BattleTask>()->step_y), 12)));
     }
     SetVW(8, SW(8));
     SetVW(0xA, SW(0xA));
@@ -1381,7 +1379,7 @@ void DrawLines(unsigned n, unsigned side) {
         SetSW(0, step);
         if (walked < 12) {
             AddSW(8, static_cast<std::uint32_t>(SinK(Long(Sc() + 0x14), 0)));
-            AddSW(0xA, static_cast<std::uint32_t>(CosK(Long(Sc() + 0x14), 0)));
+            AddSW(0xA, static_cast<std::uint32_t>(CosK(rv::Current<records::BattleTask>()->step_y, 0)));
             SetSW(0xC, SinShlW(SS(4), 5, 8));
         } else {
             walked = 0;
@@ -1390,7 +1388,7 @@ void DrawLines(unsigned n, unsigned side) {
                 SetSW(8, static_cast<std::uint32_t>(Mul12(v, 12)) + VW(8));
             }
             {
-                const int c = Cos(Long(Sc() + 0x14));
+                const int c = Cos(rv::Current<records::BattleTask>()->step_y);
                 const std::uint16_t x = SW(8);
                 const std::uint32_t y = static_cast<std::uint32_t>(Mul12(c, 12)) + VW(0xA);
                 SetVW(8, x);

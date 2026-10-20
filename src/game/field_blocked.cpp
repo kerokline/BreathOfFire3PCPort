@@ -19,6 +19,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "hook/code_bytes.h"
@@ -31,8 +33,8 @@ std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t
 
 constexpr unsigned kObjectSize = 0xA4, kObjects = 30, kExtra = 4;   // Sprite_Objects, Sprite_ObjectsExtra
 constexpr unsigned kMemberSize = 0x14C;                             // ObjTrio's records
-static_assert(kObjectSize * kObjects == Sprite_Objects_count);
-static_assert(kObjectSize * kExtra == Sprite_ObjectsExtra_count);
+static_assert(kObjectSize * kObjects == (Sprite_Objects_count * sizeof(records::SpriteObject)));
+static_assert(kObjectSize * kExtra == (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)));
 
 // The high nibbles of an AreaMap_Bytes cell that stop a step, a bit each. The
 // original looks the nibble up in a byte table at 0x518660 (0 or 2: open,
@@ -243,7 +245,7 @@ extern "C" unsigned char __cdecl AreaMap_TooSteep(long x, long y) {
 // zero-extended as the original's eax is.
 extern "C" long __cdecl Field_ProbeHeight(long x, long y) {
     const long ground = g.elevation(x, y);
-    const auto own = static_cast<short>(Word(Sprite_Current + 0x3E));
+    const auto own = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole);
     const auto there = static_cast<short>(ground);
     int distance = own - there;
     if (distance < 0) distance = -distance;
@@ -259,16 +261,16 @@ extern "C" long __cdecl Field_ProbeHeight(long x, long y) {
 // caller reads it back (docs/field-blocked.md section 2), so ours does not.
 extern "C" unsigned char __cdecl Sprite_ObjectAt(long x, long y, unsigned margin) {
     const long h = g.probe(x, y);
-    const unsigned char found = FirstInReach(Sprite_Objects, kObjectSize, kObjects, nullptr, true, x, y, h, margin, 0);
+    const unsigned char found = FirstInReach(rv::Bytes(Sprite_Objects), kObjectSize, kObjects, nullptr, true, x, y, h, margin, 0);
     if (found != 0xFF) return found;
-    return FirstInReach(Sprite_ObjectsExtra, kObjectSize, kExtra, nullptr, true, x, y, h, margin, 0x1E);
+    return FirstInReach(rv::Bytes(Sprite_ObjectsExtra), kObjectSize, kExtra, nullptr, true, x, y, h, margin, 0x1E);
 }
 
 // original 0x531F10 (PSX 0x801BF0B8): the same over the party's records -
 // Field_MemberCount of ObjTrio's, re-read after each - without the +7 test.
 extern "C" unsigned char __cdecl Party_MemberAt(long x, long y, unsigned margin) {
     const long h = g.probe(x, y);
-    return FirstInReach(ObjTrio, kMemberSize, 0, &Field_MemberCount, false, x, y, h, margin, 0);
+    return FirstInReach(rv::Bytes(ObjTrio), kMemberSize, 0, &Field_MemberCount, false, x, y, h, margin, 0);
 }
 
 namespace {
@@ -312,10 +314,10 @@ unsigned char* Candidate(unsigned i) {
     if (i == 0) return g_sprite;
     if (i == 1) return g_object;
     i -= 2;
-    if (i < kObjects) return Sprite_Objects + i * kObjectSize;
+    if (i < kObjects) return rv::Bytes(Sprite_Objects) + i * kObjectSize;
     i -= kObjects;
-    if (i < kExtra) return Sprite_ObjectsExtra + i * kObjectSize;
-    return ObjTrio + (i - kExtra) * kMemberSize;
+    if (i < kExtra) return rv::Bytes(Sprite_ObjectsExtra) + i * kObjectSize;
+    return rv::Bytes(ObjTrio) + (i - kExtra) * kMemberSize;
 }
 std::uint32_t Id(const void* p) {
     for (unsigned i = 0; i < kCandidates; ++i)
@@ -477,7 +479,7 @@ const void* Ours(unsigned k) {
 }
 
 struct State {
-    unsigned char objects[Sprite_Objects_count], extra[Sprite_ObjectsExtra_count], members[kMemberSize * 3];
+    unsigned char objects[(Sprite_Objects_count * sizeof(records::SpriteObject))], extra[(Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))], members[kMemberSize * 3];
     unsigned char object[kBuf], sprite[kBuf];
     unsigned char scratch[4];
     unsigned char count;

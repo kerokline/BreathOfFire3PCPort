@@ -301,14 +301,14 @@ void Seed(unsigned k) {
     B(kCounters + 3) = static_cast<unsigned char>(sh::Next() % kEffectCount);   // the slot a scene waits on
     Mem(Effect_Objects_addr + 0x80u * B(kCounters + 3))[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : 1);
     if (sh::Half()) Field_Request = PickOf<std::uint8_t, 3>({0, 2, 8});
-    if (sh::Half()) MoveScript_WaitWordDA = 0;
+    if (sh::Half()) Transition_Busy = 0;
     if (sh::Half()) Field_Kind2Hold = 0;
     if (sh::Often()) Game_AreaNumber = PickOf(kAreas);
     // the party byte of area 0x65 (7..18, with its top bit sometimes)
-    if (sh::Often()) B(0x90412C) = static_cast<unsigned char>(6 + sh::Next() % 14 + (sh::Half() ? 0x80 : 0));
+    if (sh::Often()) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(6 + sh::Next() % 14 + (sh::Half() ? 0x80 : 0));
     // member 0's bytes: +8 (0, 6, 7 and others), +0x89 (6, 7 and others)
-    if (sh::Often()) B(0x802D48) = PickOf<std::uint8_t, 5>({0, 6, 7, 1, 8});
-    if (sh::Often()) B(0x802DC9) = PickOf<std::uint8_t, 4>({6, 7, 5, 8});
+    if (sh::Often()) B(ObjTrio_addr + 0x8) = PickOf<std::uint8_t, 5>({0, 6, 7, 1, 8});
+    if (sh::Often()) B(ObjTrio_addr + 0x89) = PickOf<std::uint8_t, 4>({6, 7, 5, 8});
     // the step, by the function's switch
     switch (k) {
     case kScene1:
@@ -322,7 +322,7 @@ void Seed(unsigned k) {
         sh::SetRandHint(sh::Next() & 0xF);
         if (sh::Half()) {   // the roll's step and the item step, with member 0's +0x89 they test
             B(MoveScript_PartyRecords_addr + 0x65) = sh::Half() ? 0 : 0x14;
-            B(0x802DC9) = sh::Often() ? (B(MoveScript_PartyRecords_addr + 0x65) ? 7 : 6) : 5;
+            B(ObjTrio_addr + 0x89) = sh::Often() ? (B(MoveScript_PartyRecords_addr + 0x65) ? 7 : 6) : 5;
         }
         break;
     case kScene5: B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps5); break;
@@ -338,7 +338,7 @@ void Seed(unsigned k) {
         if (sh::Half()) {   // area 0x65's start: counter 2 at 0, the party byte 7..18 (its top bit too)
             Game_AreaNumber = 0x65;
             B(kCounters + 2) = 0;
-            B(0x90412C) = static_cast<unsigned char>(6 + sh::Next() % 14 + (sh::Half() ? 0x80 : 0));
+            B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(6 + sh::Next() % 14 + (sh::Half() ? 0x80 : 0));
         } else if (sh::Half()) {   // area 0x83's counter 1: the elevation, then the area read afresh
             Game_AreaNumber = 0x83;
             B(kCounters + 2) = 1;
@@ -376,7 +376,7 @@ void Disturb(std::uint32_t h) {
     }
     case 0: B(kCounters + (h >> 12) % 3) = kCounter0s[(h >> 16) % (sizeof kCounter0s)]; break;
     case 1: Field_Request = static_cast<unsigned char>((h >> 12) % 3 == 0 ? 2 : 0); break;
-    case 2: MoveScript_WaitWordDA = static_cast<unsigned short>((h >> 12) & 1 ? 0 : h >> 16); break;
+    case 2: Transition_Busy = static_cast<unsigned short>((h >> 12) & 1 ? 0 : h >> 16); break;
     case 3: Field_Kind2Hold = static_cast<unsigned char>((h >> 12) & 1); break;
     case 4: Mem(Effect_Objects_addr + 0x80u * (B(kCounters + 3) % kEffectCount))[0] = static_cast<unsigned char>((h >> 12) & 1); break;
     default: break;

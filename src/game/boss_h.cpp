@@ -37,6 +37,7 @@
 #include "game/boss_h_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -52,10 +53,9 @@ using move_script::SetLong;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
-records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
-// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
-records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
+// Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
+// the slot in an effect task.
 void PutFloat(unsigned char* p, std::int32_t v) {
     const float f = static_cast<float>(v);   // fild / fstp: nearest, as cvtsi2ss
     std::memcpy(p, &f, sizeof f);
@@ -100,7 +100,7 @@ extern "C" unsigned char __cdecl BareRetZero(unsigned) { return 0; }
 // bit 1): the chapter's step 0x8034E5 = 5 and a tail jump to 0x446DE0 (the end
 // phase, step 1); otherwise to 0x446E00 (step 2).
 extern "C" void __cdecl BossHook_EndPickWay(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = 5;
         BH_AT(Handler, at::kEndWin)();
         return;
@@ -119,7 +119,7 @@ extern "C" void __cdecl BossHook_ExitActor0Bit40(void) { BH_CALL(BossActor_Clear
 // hook called with 0, 0x435BF5): when the leader's target byte +0x124 is 4,
 // the battle's target 0x904B44 = 5. The hook's word is not read.
 extern "C" void __cdecl BossHook_RetargetMember0(unsigned) {
-    if (ObjTrio[0x124] == 4) B(at::kTarget) = 5;
+    if (rv::Bytes(ObjTrio)[0x124] == 4) B(at::kTarget) = 5;
 }
 
 // --- the state helpers ---------------------------------------------------------------
@@ -133,7 +133,7 @@ extern "C" unsigned char __cdecl BossOp_ScriptTick(void) { return BH_CALL(Sprite
 // 1): Sprite_ScriptTickOnce, and when it answers al not 0, Sprite_Current's
 // +1 (read after the call) = 2.
 extern "C" void __cdecl BossOp_EnterTick(void) {
-    if (BH_CALL(Sprite_ScriptTickOnce)() & 0xFF) ScEnemy()->state[0] = 2;
+    if (BH_CALL(Sprite_ScriptTickOnce)() & 0xFF) rv::Current<records::BattleEnemy>()->state = 2;
 }
 
 // original 0x43B550: entry 4 (the death) of the +2 tables of kinds 2, 3, 6, 7,
@@ -143,13 +143,13 @@ extern "C" void __cdecl BossOp_EnterTick(void) {
 extern "C" void __cdecl BossOp_Death(void) {
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
-    auto* const enemy_rec = EnemyRec();
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_110 = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
-    auto* const cur_enemy = ScEnemy();
+    auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     cur_enemy->flags &= 0xBF;
-    cur_enemy->state[0] = 3;
-    cur_enemy->state[1] = 0;
-    cur_enemy->state[2] = 0;
+    cur_enemy->state = 3;
+    cur_enemy->step = 0;
+    cur_enemy->state3 = 0;
 }
 
 // --- kinds 8..11's death ---------------------------------------------------------------
@@ -192,7 +192,7 @@ extern "C" void __cdecl BossTorast_DeathFxStart(void) {
 extern "C" void __cdecl BossTorast_DeathFxFlash(void) {
     unsigned char* const s = Sprite_Current;
     if (s[9] == s[0xA]) {
-        const unsigned char* const c = KindColour(EnemyRec()->run_state);
+        const unsigned char* const c = KindColour(rv::As<records::BattleEnemy>(Enemy())->run_state);
         const U colour = (static_cast<U>(c[0] & 0xF8) << 7) + (static_cast<U>(c[1] & 0xF8) << 2) + (c[2] >> 3);
         BH_CALL(BattleWin_DrawTileRgb)(0, 0, 0xB, static_cast<int>(colour), 1);
         Sprite_Current[0xA] >>= 1;
@@ -277,14 +277,14 @@ extern "C" void __cdecl BossTorast_DrawRing(unsigned radius) {
         p[4] = 0xFF;
         p[5] = 0xFF;
         p[6] = 0xFF;
-        const unsigned char* const c = KindColour(EnemyRec()->run_state);
+        const unsigned char* const c = KindColour(rv::As<records::BattleEnemy>(Enemy())->run_state);
         p[0x14] = c[0];
         p[0x15] = c[1];
         p[0x16] = c[2];
         p[0x24] = c[0];
         p[0x25] = c[1];
         p[0x26] = c[2];
-        auto* const cur_enemy = ScEnemy();
+        auto* const cur_enemy = rv::Current<records::BattleEnemy>();
         const std::int32_t x = static_cast<std::int32_t>(cur_enemy->screen_x), y = static_cast<std::int32_t>(cur_enemy->screen_y);
         const unsigned j = (i + 1) & 0x1F;
         PutFloat(p + 0x08, x);
@@ -325,7 +325,7 @@ extern "C" void __cdecl BossMap_SetCorners(unsigned cell, unsigned value) {
 // function); any other id leaves it. Called by set-ups 18..20's hooks before
 // the battle ends.
 extern "C" void __cdecl Boss_SetByLeaderId(void) {
-    switch (ObjTrio[0x89]) {
+    switch (ObjTrio[0].char_id) {
     case 0: BossH_LeaderPick = 0x2C; break;
     case 1: BossH_LeaderPick = 0x2D; break;
     case 5: BossH_LeaderPick = 0x2E; break;
@@ -344,25 +344,25 @@ extern "C" void __cdecl Boss_SetByLeaderId(void) {
 // +0x134 bit 1, 0x939B1C = its +0x3C.
 extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
     const struct { U status, object; unsigned flag, cell; } kEnemies[] = {
-        {BossH_Enemy1Status_addr, at::kEnemy1, 0x34, 1},
-        {BossH_Enemy2Status_addr, at::kEnemy2, 0x33, 0},
+        {BossH_Enemy1Status_addr, Battle_Enemies_addr + 0x128, 0x34, 1},
+        {BossH_Enemy2Status_addr, Battle_Enemies_addr + 0x250, 0x33, 0},
     };
     for (const auto& e : kEnemies) {
         const unsigned status = At(e.status)[1];   // the dword's second byte: +0x93
         if (status & 0x40) continue;
         const bool up = (status & 0x20) != 0;
-        unsigned char* const bits = At(AreaW0c_FlagRow);
+        unsigned char* const bits = At(Chapter_FlagRow);
         if (up) BH_CALL(Flags_Set)(bits, e.flag);
         else BH_CALL(Flags_Clear)(bits, e.flag);
         Sprite_Current = At(e.object);
         BH_CALL(Sprite_EnsureAnimation)(up ? 3 : 2);
         BH_CALL(BossMap_SetCorners)(e.cell, up ? 1 : 0);
     }
-    const long ground = BH_CALL(AreaMap_Elevation)(Long(At(at::kEnemy0X)), Long(At(at::kEnemy0Z)));
-    BossH_Enemy0Ground = static_cast<unsigned>(ground) & 0xFFFF;
-    const long leader = BH_CALL(AreaMap_Elevation)(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
-    move_script::SetWord(At(ObjTrio_addr + 0x3e), static_cast<unsigned>(leader) & 0xFFFF);
-    if (ObjTrio[0x134] & 2) BossH_CameraY = Long(At(ObjTrio_addr + 0x3c));
+    const long ground = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
+    Battle_Enemies[0].height_whole = static_cast<unsigned>(ground) & 0xFFFF;
+    const long leader = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
+    ObjTrio[0].height_whole = static_cast<unsigned>(leader) & 0xFFFF;
+    if (rv::Bytes(ObjTrio)[0x134] & 2) BossH_CameraY = ObjTrio[0].height;
 }
 
 void BossH_Inject() {

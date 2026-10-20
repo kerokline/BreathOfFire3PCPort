@@ -19,6 +19,7 @@
 #include "game/area_011_callees.h"
 #include "game/area_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -50,7 +51,7 @@ extern "C" void __cdecl Area11_StepCameraDistance(void) {
 extern "C" void __cdecl Area11_SpawnEffect(void) {
     const unsigned member = Mem(Cond_Flags_addr + 0xd4)[0];
     const unsigned char* const leader = Mem(ObjTrio_addr);
-    const auto* const tLeader = reinterpret_cast<const records::PartyMember*>(leader);
+    const auto* const tLeader = rv::AsConst<records::PartyMember>(leader);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tLeader->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tLeader->screen_x));
     const unsigned char kind = Area11_EffectKinds[member];

@@ -38,6 +38,7 @@
 #include "game/lang_layout.h"
 #include "game/text_advance.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -91,13 +92,11 @@ int S8(std::uint32_t address) { return static_cast<signed char>(At(address)[0]);
 
 // Enemy slot t's record: 0x93B9E0 + 0x128 * (t - 3), the subtraction at full
 // width (0x597320, 0x597400 - `sub eax, 3` on the zero-extended byte).
-unsigned char* Enemy(unsigned slot) { return At(at::kEnemies + at::kEnemyStride * (slot - 3u)); }
+unsigned char* Enemy(unsigned slot) { return At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * (slot - 3u)); }
 // A party member's battle object, ObjTrio 0x802D40 + 0x14C * m.
 unsigned char* Member(unsigned m) { return At(ObjTrio_addr + at::kMemberStride * m); }
-records::WindowRecord* CurrentRec() { return reinterpret_cast<records::WindowRecord*>(Current()); }
-records::PartyMember* MemberRec(unsigned m) { return reinterpret_cast<records::PartyMember*>(Member(m)); }
-// Enemy() is +0x80 into the enemy object (EnemyWorkingRecords); the record starts 0x80 before.
-records::BattleEnemy* EnemyRec(unsigned slot) { return reinterpret_cast<records::BattleEnemy*>(Enemy(slot) - 0x80); }
+// Enemy() is +0x80 into the enemy object (EnemyWorkingRecords); the record, and
+// its typed view, starts 0x80 before.
 
 using Handler = void (__cdecl*)();
 void Run(std::uint32_t handler) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(handler))(); }
@@ -144,7 +143,7 @@ int SideDx(unsigned side) { return (side == 0 || side == 3) ? S8(at::kSideDx) : 
 // 3 the action banner 0x597200, 4 an enemy's gauge 0x597320, 5 a member's
 // gauges 0x5975D0, 6 and 7 group CM's 0x597C70 and 0x597D50.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_Run() {
-    const unsigned kind = CurrentRec()->kind;
+    const unsigned kind = rv::As<records::WindowRecord>(Current())->kind;
     if (kind >= 8) PastTable("BattleWin_Run", "kind", kind, 8);
     Run(g.kinds[kind]);
 }
@@ -152,28 +151,28 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_Run() {
 // original 0x597000: kind 0 (the party row) by its state +3: 0x597030,
 // 0x597070, 0x437CC0 (idle).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_PartyRowStates() {
-    const unsigned state = CurrentRec()->state;
+    const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_PartyRowStates", "state", state, 3);
     Run(g.party[state]);
 }
 
 // original 0x597090: kind 1 (the command cross): 0x5970C0, 0x597160, idle.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_CrossStates() {
-    const unsigned state = CurrentRec()->state;
+    const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_CrossStates", "state", state, 3);
     Run(g.cross[state]);
 }
 
 // original 0x5971B0: kind 2 (the command label): idle, 0x5971E0, idle.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_LabelStates() {
-    const unsigned state = CurrentRec()->state;
+    const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_LabelStates", "state", state, 3);
     Run(g.label[state]);
 }
 
 // original 0x597200: kind 3 (the action banner): idle, 0x597230, idle.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_BannerStates() {
-    const unsigned state = CurrentRec()->state;
+    const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_BannerStates", "state", state, 3);
     Run(g.banner[state]);
 }
@@ -185,12 +184,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_BannerStat
 // Battle_ActorIsOut(slot) and +0xD is 0 the state becomes 3 (idle); last the
 // enemy's low-HP flag. The record is re-read after each call.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_EnemyGaugeStates() {
-    const unsigned state = CurrentRec()->state;
+    const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 4) PastTable("BattleWin_EnemyGaugeStates", "state", state, 4);
     Run(g.enemy[state]);
     unsigned char* w = Current();
     unsigned char* e = Enemy(w[0xA]);
-    records::BattleEnemy* enemy_rec = reinterpret_cast<records::BattleEnemy*>(e - 0x80);
+    records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(e - 0x80);
     g.dispatch_kind(Addr(w + 0xB), Addr(e + 0x30), Addr(w + 0x1C), Addr(w + 0x14), Addr(e + 0x24), Addr(w + 0xD),
                     Addr(w + 0x18), Addr(w + 8));
     w = Current();
@@ -200,7 +199,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_EnemyGauge
     }
     w = Current();
     e = Enemy(w[0xA]);
-    enemy_rec = reinterpret_cast<records::BattleEnemy*>(e - 0x80);
+    enemy_rec = rv::As<records::BattleEnemy>(e - 0x80);
     LowFlag(e + 0x12, enemy_rec->hp, enemy_rec->max_hp);
 }
 
@@ -211,22 +210,22 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_EnemyGauge
 // Window_DispatchKind, then the member's low-HP flag (+0x90 bit 13). The
 // record is re-read after each call.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_MemberGaugeStates() {
-    const unsigned state = CurrentRec()->state;
+    const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_MemberGaugeStates", "state", state, 3);
     Run(g.member[state]);
     unsigned char* w = Current();
     unsigned char* m = Member(w[0xA]);
-    records::PartyMember* member_rec = reinterpret_cast<records::PartyMember*>(m);
+    records::PartyMember* member_rec = rv::As<records::PartyMember>(m);
     g.dispatch_kind(Addr(w + 0xB), Addr(m + 0xA0), Addr(w + 0x1C), Addr(w + 0x14), Addr(m + 0x98), Addr(w + 0xD),
                     Addr(w + 0x18), Addr(w + 8));
     w = Current();
     m = Member(w[0xA]);
-    member_rec = reinterpret_cast<records::PartyMember*>(m);
+    member_rec = rv::As<records::PartyMember>(m);
     g.dispatch_kind(Addr(w + 0xC), Addr(m + 0xA2), Addr(w + 0x1E), Addr(w + 0x16), Addr(m + 0x9A), Addr(w + 0xE),
                     Addr(w + 0x1A), Addr(w + 9));
     w = Current();
     m = Member(w[0xA]);
-    member_rec = reinterpret_cast<records::PartyMember*>(m);
+    member_rec = rv::As<records::PartyMember>(m);
     LowFlag(m + 0x90, member_rec->hp, member_rec->max_hp);
 }
 
@@ -236,22 +235,22 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_MemberGaug
 // original 0x597030: state 0 - the row slides up 4 a frame to y 0xC8 (a
 // signed word compare); on arriving, the state steps on. Drawn every frame.
 extern "C" void __cdecl BattleWin_PartyRowSlideIn() {
-    records::WindowRecord* win = CurrentRec();
-    const auto y = static_cast<std::int16_t>(win->centre_y);
+    records::WindowRecord* win = rv::As<records::WindowRecord>(Current());
+    const auto y = static_cast<std::int16_t>(win->y);
     if (y <= 0xC8) {
-        win->centre_y = 0xC8;
-        ++CurrentRec()->state;
+        win->y = 0xC8;
+        ++rv::As<records::WindowRecord>(Current())->state;
     } else {
-        win->centre_y = static_cast<unsigned>(y - 4);
+        win->y = static_cast<unsigned>(y - 4);
     }
-    win = CurrentRec();
-    g.party_status(win->centre_x, win->centre_y);
+    win = rv::As<records::WindowRecord>(Current());
+    g.party_status(win->x, win->y);
 }
 
 // original 0x597070: state 1 - the row drawn where it is.
 extern "C" void __cdecl BattleWin_PartyRowDraw() {
-    auto* const win = CurrentRec();
-    g.party_status(win->centre_x, win->centre_y);
+    auto* const win = rv::As<records::WindowRecord>(Current());
+    g.party_status(win->x, win->y);
 }
 
 // ===========================================================================
@@ -268,13 +267,13 @@ extern "C" void __cdecl BattleWin_CrossGrow() {
         const unsigned size = (0x10u - grow) & 0xFFu;
         const unsigned half = grow >> 1;
         const unsigned char* const arm = At(at::kCrossArms + 2 * i);
-        auto* const win = CurrentRec();
-        const unsigned y = win->centre_y + arm[1] + half;
-        const unsigned x = win->centre_x + arm[0] + half;
+        auto* const win = rv::As<records::WindowRecord>(Current());
+        const unsigned y = win->y + arm[1] + half;
+        const unsigned x = win->x + arm[0] + half;
         g.icon(i, x, y, size, size, 0x80);
     }
     if (At(at::kCrossGrow)[0] == 0) {
-        ++CurrentRec()->state;
+        ++rv::As<records::WindowRecord>(Current())->state;
         return;
     }
     for (unsigned i = 0; i < 7; ++i) --At(at::kCrossGrow + i)[0];
@@ -294,8 +293,8 @@ extern "C" void __cdecl BattleWin_CrossFrame() {
             *grow = static_cast<unsigned char>(*grow - 2);
         }
     }
-    auto* const win = CurrentRec();
-    g.command_cross(win->centre_x, win->centre_y);
+    auto* const win = rv::As<records::WindowRecord>(Current());
+    g.command_cross(win->x, win->y);
 }
 
 // ===========================================================================
@@ -338,28 +337,28 @@ unsigned BannerTextX(unsigned x, unsigned n, bool wide, const unsigned char* tex
 
 extern "C" void __cdecl BattleWin_BannerFrame() {
     unsigned char* w = Current();
-    records::WindowRecord* win = reinterpret_cast<records::WindowRecord*>(w);
+    records::WindowRecord* win = rv::As<records::WindowRecord>(w);
     const auto text = [](std::uint32_t off) {
         return At(static_cast<std::uint32_t>(Long(At(at::kBanners + 4 + off))));
     };
     const unsigned n = g.glyph_count(text(at::kBannerStride * w[0xA]));
     w = Current();
-    win = reinterpret_cast<records::WindowRecord*>(w);
+    win = rv::As<records::WindowRecord>(w);
     const std::uint32_t off = at::kBannerStride * w[0xA];
     const bool wide = At(at::kBanners + 2 + off)[0] != 0;
-    const unsigned x = win->centre_x, y = win->centre_y;
+    const unsigned x = win->x, y = win->y;
     if (wide) {
         g.medium_box(static_cast<std::uint16_t>(x - 0x10), y);
     } else {
         g.small_box(x, y);
     }
     w = Current();
-    win = reinterpret_cast<records::WindowRecord*>(w);
+    win = rv::As<records::WindowRecord>(w);
     const std::uint32_t o = at::kBannerStride * w[0xA];
     // eax: the record offset with its low byte replaced by the colour
     const unsigned colour = (o & ~0xFFu) | At(at::kBanners + 0xA + o)[0];
-    const unsigned ty = static_cast<std::uint16_t>(win->centre_y + 3);
-    const unsigned tx = static_cast<std::uint16_t>(BannerTextX(win->centre_x, n, wide, text(o)));
+    const unsigned ty = static_cast<std::uint16_t>(win->y + 3);
+    const unsigned tx = static_cast<std::uint16_t>(BannerTextX(win->x, n, wide, text(o)));
     g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), wide ? 0x12 : 8, text(o));
 }
 
@@ -371,18 +370,18 @@ extern "C" void __cdecl BattleWin_BannerFrame() {
 // +0x14 the HP, +0x1C the top, +0xD 0; the state steps on.
 extern "C" void __cdecl BattleWin_EnemyGaugeOpen() {
     unsigned char* w = Current();
-    auto* const enemy_rec = EnemyRec(w[0xA]);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(w[0xA]) - 0x80);
     w[0xB] = Gauge(enemy_rec->hp, enemy_rec->max_hp, "BattleWin_EnemyGaugeOpen");
     w = Current();
-    if (EnemyRec(w[0xA])->hp != 0 && w[0xB] == 0) {
+    if (rv::As<records::BattleEnemy>(Enemy(w[0xA]) - 0x80)->hp != 0 && w[0xB] == 0) {
         w[0xB] = 1;
         w = Current();
     }
-    SetWord(w + 0x14, EnemyRec(w[0xA])->hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_shown, rv::As<records::BattleEnemy>(Enemy(w[0xA]) - 0x80)->hp);
     w = Current();
-    SetWord(w + 0x1C, EnemyRec(w[0xA])->max_hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_top_shown, rv::As<records::BattleEnemy>(Enemy(w[0xA]) - 0x80)->max_hp);
     Current()[0xD] = 0;
-    ++CurrentRec()->state;
+    ++rv::As<records::WindowRecord>(Current())->state;
 }
 
 // original 0x5974C0: state 1 - the enemy's banner (BattleWin_DrawEnemyStatus
@@ -391,8 +390,8 @@ extern "C" void __cdecl BattleWin_EnemyGaugeOpen() {
 // (all enemies) steps it on too - both are tested, the target re-read.
 extern "C" void __cdecl BattleWin_EnemyGaugeFrame() {
     const unsigned char* w = Current();
-    auto* const win = reinterpret_cast<const records::WindowRecord*>(w);
-    g.enemy_status(win->centre_x, win->centre_y, w[0xA]);
+    auto* const win = rv::AsConst<records::WindowRecord>(w);
+    g.enemy_status(win->x, win->y, w[0xA]);
     if (!Choosing()) return;
     const unsigned char t = Target()[0];
     if (t == Current()[0xA]) g.flag_advance();
@@ -407,16 +406,16 @@ extern "C" void __cdecl BattleWin_EnemyGaugeFrame() {
 // this slot (no side bits) or all enemies (0x40), Window_RestoreAndBack.
 extern "C" void __cdecl BattleWin_EnemyTargetFrame() {
     unsigned char* w = Current();
-    records::WindowRecord* win = reinterpret_cast<records::WindowRecord*>(w);
+    records::WindowRecord* win = rv::As<records::WindowRecord>(w);
     const std::uint32_t off = at::kEnemyStride * ((w[0xA] - 3u) & 0xFFu);
-    const std::uint32_t e = at::kEnemies + off;
+    const std::uint32_t e = Battle_Enemies_addr + 0x80 + off;
     const int dx = SideDx(At(e - 0x78)[0]);
-    win->centre_x = static_cast<unsigned>(S8(e + 0x72) + Word(At(e - 0x52)) + dx);
+    win->x = static_cast<unsigned>(S8(e + 0x72) + Word(At(e - 0x52)) + dx);
     const unsigned y = static_cast<unsigned>(S8(e + 0x73) + Word(At(e - 0x50)) + 0xC);
-    CurrentRec()->centre_y = y;
+    rv::As<records::WindowRecord>(Current())->y = y;
     w = Current();
-    win = reinterpret_cast<records::WindowRecord*>(w);
-    g.target_enemy(win->centre_x, win->centre_y, w[0xA]);
+    win = rv::As<records::WindowRecord>(w);
+    g.target_enemy(win->x, win->y, w[0xA]);
     if (!Choosing()) {
         g.restore_back();
         return;
@@ -439,19 +438,19 @@ extern "C" void __cdecl BattleWin_EnemyTargetFrame() {
 // not 0 - +0x16, +0x1E, +0xE 0; the state steps on.
 extern "C" void __cdecl BattleWin_MemberGaugeOpen() {
     unsigned char* w = Current();
-    records::PartyMember* member_rec = MemberRec(w[0xA]);
+    records::PartyMember* member_rec = rv::As<records::PartyMember>(Member(w[0xA]));
     w[0xB] = Gauge(member_rec->hp, member_rec->max_hp, "BattleWin_MemberGaugeOpen");
     w = Current();
-    if (MemberRec(w[0xA])->hp != 0 && w[0xB] == 0) {
+    if (rv::As<records::PartyMember>(Member(w[0xA]))->hp != 0 && w[0xB] == 0) {
         w[0xB] = 1;
         w = Current();
     }
-    SetWord(w + 0x14, MemberRec(w[0xA])->hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_shown, rv::As<records::PartyMember>(Member(w[0xA]))->hp);
     w = Current();
-    SetWord(w + 0x1C, MemberRec(w[0xA])->max_hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_top_shown, rv::As<records::PartyMember>(Member(w[0xA]))->max_hp);
     Current()[0xD] = 0;
     unsigned char* const v = Current();
-    member_rec = MemberRec(v[0xA]);
+    member_rec = rv::As<records::PartyMember>(Member(v[0xA]));
     const unsigned top = member_rec->max_ap;
     if (top == 0) {
         v[0xC] = 0;
@@ -459,16 +458,16 @@ extern "C" void __cdecl BattleWin_MemberGaugeOpen() {
     } else {
         v[0xC] = static_cast<unsigned char>((55u * member_rec->ap) / top);
         w = Current();
-        if (MemberRec(w[0xA])->ap != 0 && w[0xC] == 0) {
+        if (rv::As<records::PartyMember>(Member(w[0xA]))->ap != 0 && w[0xC] == 0) {
             w[0xC] = 1;
             w = Current();
         }
     }
-    SetWord(w + 0x16, MemberRec(w[0xA])->ap);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->ap_shown, rv::As<records::PartyMember>(Member(w[0xA]))->ap);
     w = Current();
-    SetWord(w + 0x1E, MemberRec(w[0xA])->max_ap);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->ap_top_shown, rv::As<records::PartyMember>(Member(w[0xA]))->max_ap);
     Current()[0xE] = 0;
-    ++CurrentRec()->state;
+    ++rv::As<records::WindowRecord>(Current())->state;
 }
 
 // original 0x597850: state 1 - nothing drawn. While a target is chosen: when
@@ -494,31 +493,31 @@ extern "C" void __cdecl BattleWin_MemberGaugeWait() {
 // place is not put back.)
 extern "C" void __cdecl BattleWin_MemberTargetFrame() {
     unsigned char* w = Current();
-    records::WindowRecord* win = reinterpret_cast<records::WindowRecord*>(w);
-    const records::PartyMember* member_rec = MemberRec(w[0xA]);
+    records::WindowRecord* win = rv::As<records::WindowRecord>(w);
+    const records::PartyMember* member_rec = rv::As<records::PartyMember>(Member(w[0xA]));
     const unsigned id = member_rec->char_id, side = member_rec->direction;
     const int dx = SideDx(side);
     const std::uint32_t pair = BattleWin_MemberTargetOffsets_addr + 2 * (side + 4 * id);
-    win->centre_x = static_cast<unsigned>(S8(pair) + static_cast<std::uint16_t>(member_rec->screen_x) + dx);
+    win->x = static_cast<unsigned>(S8(pair) + static_cast<std::uint16_t>(member_rec->screen_x) + dx);
     w = Current();
-    win = reinterpret_cast<records::WindowRecord*>(w);
-    member_rec = MemberRec(w[0xA]);
-    win->centre_y = static_cast<unsigned>(static_cast<std::uint16_t>(member_rec->screen_y) + S8(pair + 1) + 0xC);
+    win = rv::As<records::WindowRecord>(w);
+    member_rec = rv::As<records::PartyMember>(Member(w[0xA]));
+    win->y = static_cast<unsigned>(static_cast<std::uint16_t>(member_rec->screen_y) + S8(pair + 1) + 0xC);
     if (!Choosing()) {
         Current()[0xF] = 0;
-        --CurrentRec()->state;
+        --rv::As<records::WindowRecord>(Current())->state;
         return;
     }
     const unsigned char t = Target()[0];
     w = Current();
-    win = reinterpret_cast<records::WindowRecord*>(w);
+    win = rv::As<records::WindowRecord>(w);
     const bool here = (t & 0xC0) == 0 ? t == w[0xA] : (t & 0x80) != 0;
     if (!here) {
         w[0xF] = 0;
-        --CurrentRec()->state;
+        --rv::As<records::WindowRecord>(Current())->state;
         return;
     }
-    g.target_member(win->centre_x, win->centre_y, w[0xA]);
+    g.target_member(win->x, win->y, w[0xA]);
 }
 
 // ===========================================================================

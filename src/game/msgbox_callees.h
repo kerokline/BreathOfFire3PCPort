@@ -52,19 +52,19 @@ constexpr std::uint32_t kEffectOff = 0x7DEE68;     // u16, the effect's own offs
 // kPlacement: now Msgbox_Placement (symbols.toml). u8, the argument of a leading 0x0C
 
 // --- Outside the block ----------------------------------------------------
-constexpr std::uint32_t kWindows = 0x803160;       // WindowRecords, stride 0x24; slot 1 is 0x803184
+// kWindows: now WindowRecords (symbols.toml). WindowRecords, stride 0x24; slot 1 is 0x803184
 constexpr std::uint32_t kWindow0State = 0x803163;  // u8, window 0's state byte
-constexpr std::uint32_t kWindow0X = 0x803164;      // s16 / s16, window 0's position
-constexpr std::uint32_t kWindow0Y = 0x803166;
-// kWindow0Rows: now BattleOdds_Win0Index (symbols.toml). u8, halved into the page-arrow's x
-// kWindow0Kind: now Msgbox_Window0Kind (symbols.toml). u8, set to 2 by MsgBox_Reset
-// kWindow1Kind: now Msgbox_Window1Kind (symbols.toml). u8, window 1's kind (1 a choice list, 2 a menu)
-// kWindow1State: now ItemUse_Window1State (symbols.toml). u8, window 1's state byte
+// kWindow0X: now WindowRecords record 0 x (records::WindowRecord).
+// kWindow0Y: now WindowRecords record 0 y (records::WindowRecord).
+// kWindow0Rows: now Window0_ParamA (symbols.toml). u8, halved into the page-arrow's x
+// kWindow0Kind: now Window0_Pass (symbols.toml). u8, set to 2 by MsgBox_Reset
+// kWindow1Kind: now Window1_Kind (symbols.toml). u8, window 1's kind (1 a choice list, 2 a menu)
+// kWindow1State: now Window1_State (symbols.toml). u8, window 1's state byte
 constexpr std::uint32_t kScriptPool = 0x803580;    // MessagePools, the script side
 constexpr std::uint32_t kPoolSelector = 0x803584;  // u32 inside the pool header: code 0x08's sub-pool
 constexpr std::uint32_t kTextRecords = 0x904CDF;   // Text_Records 0x904CE0 minus one (the tail's inc esi)
 constexpr std::uint32_t kCharRecords = 0x903A6F;   // CharacterRecords 0x903A70 minus one, stride 164
-// kNameIndex: now ObjTrio[0x89] (symbols.toml). u8, the member whose name control 0x03 substitutes
+// kNameIndex: now ObjTrio[0].char_id (symbols.toml). u8, the member whose name control 0x03 substitutes
 constexpr std::uint32_t kNameMap = 0x66972C;       // u8[], that member's record index
 constexpr std::uint32_t kSpeedTable = 0x658E94;    // u8[]: +0 held-fast, +1 normal, by the text-speed byte
 constexpr std::uint32_t kEffectTable = 0x658E98;   // 4-byte records: kind, s8 offset, u16 frames

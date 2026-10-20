@@ -80,7 +80,7 @@ of GetTPage's five pushes), and projects through EGT's `EffectGte_*` after
   up `Rand & 0xFF`. **The second argument is not read** (R3E's callers push
   0x20).
 - `EffectKind69_DrawLines` `0x4837B0` (void): in the relocated PSX scratchpad
-  (`DamageScratch` +0, +4, +8) and `Scratch_Swap` the amplitude 0x40, the angle
+  (`SharedScratch` +0, +4, +8) and `Scratch_Swap` the amplitude 0x40, the angle
   `((+0xB + 2) & 0xF) << 8`, a shade `Rand & 0x3F`, the count `+0xA`;
   `Prim_VertexScratch` `(0, Math_Sin(angle) * amplitude sar 12, 0)`. For `i`
   from 1 below the count (`Scratch_Swap` read again after every line): a draw
@@ -216,7 +216,7 @@ not copied here): the capture records `0x655208` (three of 8, room to
 `EffectKindA1_States`; ours aborts past three), the trail's half-widths
 `0x5C41B8` / `0x5C41C0` (.rdata floats). **Cells**: the wall vector `0x6762A0`
 (12 bytes), the pixel cells `0x6769B0..0x6769BB`, the particles `0x931980..`,
-the chapter's count `0x903848`, `DamageScratch` +0 / +4 / +8 and
+the chapter's count `0x903848`, `SharedScratch` +0 / +4 / +8 and
 `Scratch_Swap` (kind 0x69's lines), the bars at `EffectKind30_Shards`.
 
 ## 4. The fuzz (`rest_3f_fuzz.cpp`)

@@ -53,8 +53,8 @@ constexpr std::uint32_t kStep = 0x8034E5;       // u8: the scene's step
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: run 1's count-down
 // kCameraDistance: now Camera_Distance (symbols.toml). u16 Camera_Distance
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
-constexpr std::uint32_t kEffectSlot = 0x903850; // u8: the effect slot just taken
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
+inline auto& kEffectSlot = SharedScratch.b_00;  // u8: the effect slot just taken
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to the flag calls as a literal
 // kSelector: now AreaW0b_PartySet (symbols.toml). Cond_Flags + 0x19C: & 0x7F picks the call-table entries
 constexpr std::uint32_t kPartyBytes = 0x904062; // Cond_Flags + 0xD2: the three members' ids
@@ -63,7 +63,7 @@ constexpr std::uint32_t kPartyList2 = 0x904065; // Cond_Flags + 0xD5: the second
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 constexpr std::uint32_t kScriptFlags = 0x9039A2;   // u16 Field_ScriptFlags
 // kRequest: now Field_Request (symbols.toml). Field_Request
-// kWait: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA
+// kWait: now Transition_Busy (symbols.toml). u16 Transition_Busy
 // kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
 // kMusicByte: now AreaW1f_MusicCurrent (symbols.toml). u8: set 0xFF / 0x3C / 0x42 after an area change
 // kByte904C9F: now ScenaSc6_Byte904C9F (symbols.toml). u8: 0 or 1 with the request 7
@@ -82,12 +82,12 @@ constexpr std::uint32_t kAngle2 = 0x929ECC;     // s16 Cond_AngleFB
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). u16 MoveScript_F3Divisor
 // kObjTrio: now ObjTrio (symbols.toml). the party's three field objects, 0x14C each
 constexpr std::uint32_t kObjStride = 0x14C;
-constexpr std::uint32_t kLead34 = 0x802D74;      // s32 ObjTrio + 0x34
-constexpr std::uint32_t kLead38 = 0x802D78;      // s32 ObjTrio + 0x38
+// kLead34: now ObjTrio record 0 x (records::PartyMember).
+// kLead38: now ObjTrio record 0 z (records::PartyMember).
 constexpr std::uint32_t kBank7DEE44 = 0x7DEE44; // u8: run 12 step 8 waits for its bit 1
 constexpr std::uint32_t kCharRecords = 0x903A70;   // CharacterRecords: 8 of 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
-constexpr std::uint32_t kEffectState = 0x66972C;   // MoveScript_EffectState: the member -> record byte
+constexpr std::uint32_t kEffectState = 0x66972C;   // Character_IndexById: the member -> record byte
 constexpr std::uint32_t kRecord7 = 0x903A70 + 7 * 0xA4;   // character record 7 (0x903EEC)
 constexpr std::uint32_t kTextRecords = 0x904CE0;   // Text_Records: an item's name copied in, 16 bytes
 constexpr std::uint32_t kTempList = 0x939A10;   // run 8 copies the second party list here

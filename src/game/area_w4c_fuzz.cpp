@@ -21,6 +21,7 @@
 #include "game/area_w4c.h"
 #include "game/area_w4c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w4c {
@@ -250,7 +251,7 @@ void SeedAnswer() { B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH
 // it), and its +0xA small half the time.
 void SeedScript() {
     MoveScript_Object[3] = static_cast<unsigned char>(ah::Next() % g_scripts);
-    SetWord(MoveScript_Object + 0xA, ah::Half() ? ah::Next() % 0x40 : ah::Next());
+    rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, ah::Half() ? ah::Next() % 0x40 : ah::Next());
 }
 // The running script's bytes as the handlers read them (the image's).
 const unsigned char* Script() {
@@ -320,22 +321,22 @@ void Seed(unsigned slice_k) {
     case kWait5: case kRelease5: Field_Request = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0, 0x85)); break;
     case kFxState3: cur[0xB] = static_cast<unsigned char>(ah::Next() % at::kEffectCount); break;
     case kSink:
-        SetWord(cur + 0x3E, ah::Often() ? AH_PICK(0xA14, 0xA14, 0xA13, 0xA15, 0xA00, 0x14) : ah::Next());
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->height_whole, ah::Often() ? AH_PICK(0xA14, 0xA14, 0xA13, 0xA15, 0xA00, 0x14) : ah::Next());
         for (unsigned i = 0x5D; i <= 0x5F; ++i)
             if (ah::Often()) cur[i] = static_cast<unsigned char>(AH_PICK(0xBF, 0xC0, 0x80, 0x7F, 0xBE, 0xC1, 0, 0xFF, 0x40));
         break;
     case kAnimAt: case kAnimAt198: SeedScript(); break;
     case kAnimOn2: case kAnimOn2198:
         SeedScript();
-        SetWord(cur + 0x58, ah::Often() ? AH_PICK(2, 2, 1, 3, 0x102, 0) : ah::Next());
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->script_pos, ah::Often() ? AH_PICK(2, 2, 1, 3, 0x102, 0) : ah::Next());
         break;
     case kStep: {
         // Field_State's script (+0x130) inside the area block; the byte it
         // reads beside the limit byte 0x903848
         const U offset = ah::Half() ? ah::Next() % 0x800 : ah::Next() & 0xFFFF;
-        SetWord(MoveScript_Object + 0xA, offset);
+        rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, offset);
         const U script = 0x8CB580 + ah::Next() % 0x400;
-        SetLong(Field_State + 0x130, static_cast<std::int32_t>(script));
+        rv::Store<std::int32_t>(rv::As<records::MemberFieldTail>(Field_State + 0x124)->script, static_cast<std::int32_t>(script));
         if (script + offset + 2 < 0x8CB580 + 0x2000) {
             const auto b = static_cast<unsigned char>(ah::Next());
             B(script + offset + 2) = b;
@@ -346,7 +347,7 @@ void Seed(unsigned slice_k) {
     case kTurnRight: case kTurnLeft: {
         SeedScript();
         const unsigned char* const s = Script();
-        const unsigned char want = s[Word(MoveScript_Object + 0xA) + 2];
+        const unsigned char want = s[rv::As<records::ScriptContext>(MoveScript_Object)->position + 2];
         cur[8] = static_cast<unsigned char>(ah::Often() ? want + AH_PICK(0, 0, 1, 0xFF, 7, 8) : ah::Next());
         break;
     }

@@ -31,7 +31,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -48,11 +50,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
@@ -66,10 +68,6 @@ constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
 // kDomeHeight: now AuraBreathDome_Height (symbols.toml). AuraBreathDome_Height: 8 bytes, a texture height a band
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
@@ -103,10 +101,10 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The originals index the enemy records by the battle index - 3, unchecked.
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -170,8 +168,8 @@ void RestoreRow26Stp() {
 // 0x4000, (z sar 9) - 0x4000, (y + lift) sar 0x11; the fourth word the
 // original pushes is its own uninitialised stack, which the callee never reads.
 void StepTowardSource(const unsigned char* src, std::uint32_t lift, int speed) {
-    const std::uint32_t x = static_cast<std::uint32_t>((Long(src + 0x34) >> 9) - 0x4000);
-    const std::uint32_t z = static_cast<std::uint32_t>((Long(src + 0x38) >> 9) - 0x4000);
+    const std::uint32_t x = static_cast<std::uint32_t>((rv::As<records::SpriteHead>(src)->x >> 9) - 0x4000);
+    const std::uint32_t z = static_cast<std::uint32_t>((rv::As<records::SpriteHead>(src)->z >> 9) - 0x4000);
     const std::uint32_t y = static_cast<std::uint32_t>(I32(U32(src + 0x3C) + lift) >> 0x11);
     MH_CALL(MagicFx_StepTowardPoint)(x, z, y, 0, speed);
 }
@@ -182,16 +180,16 @@ void StepTowardSource(const unsigned char* src, std::uint32_t lift, int speed) {
 bool TurnedPast() {
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->vel_y = I32((U32(s + 0x10) & 0xFFF) - (U32(s + 0xC) & 0xFFF));
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->step_z = I32((U32(s + 0x10) & 0xFFF) - (U32(s + 0xC) & 0xFFF));
     }
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        const std::int32_t v = ts->vel_y;
-        if (v < 0) ts->vel_y = I32(0u - static_cast<std::uint32_t>(v));
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        const std::int32_t v = ts->step_z;
+        if (v < 0) ts->step_z = I32(0u - static_cast<std::uint32_t>(v));
     }
-    const std::int32_t v = ScTask()->vel_y;
+    const std::int32_t v = rv::Current<records::BattleTask>()->step_z;
     return v > 0x600 && v < 0xA00;
 }
 
@@ -220,16 +218,16 @@ S36_EXPORT void __cdecl MagicBall_Task(void) {
 // i + 1, +0xB i), each with +0x80 this task and counted in +0xB; sound 0x100.
 S36_EXPORT void __cdecl MagicBall_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned core = NewTask(0x51);
     {
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(core);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = I32(Key(s));
         child[1] = 0;
         Inc(s[0xB]);
@@ -238,7 +236,7 @@ S36_EXPORT void __cdecl MagicBall_Start(void) {
         const unsigned slot = NewTask(0x51);
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = I32(Key(s));
         child[1] = 1;
         child[4] = static_cast<unsigned char>(core);
@@ -323,11 +321,11 @@ S36_EXPORT void __cdecl MagicBallCore_Run(void) {
 // original 0x4F2220: the owner's point, 0x800000 higher; the heading +0xC the
 // angle to the source sprite (0x904B4C); +0xB, +9, +0xA 0; +2 on.
 S36_EXPORT void __cdecl MagicBallCore_Start(void) {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, I32(U32(Owner() + 0x3C) + 0x800000u));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, I32(U32(Owner() + 0x3C) + 0x800000u));
     const int angle = AngleTo(Pointer(BattleOdds_ActorObject_addr));
-    ScTask()->vel_x = angle;
+    rv::Current<records::BattleTask>()->step_x = angle;
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Sc()[0xA] = 0;
@@ -359,11 +357,11 @@ S36_EXPORT void __cdecl MagicBallCore_Fly(void) {
     StepTowardSource(src, 0x1000000u, 0x40);
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->vel_y = ts->vel_x;
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->step_z = ts->step_x;
     }
     const int angle = AngleTo(src);
-    ScTask()->vel_x = angle;
+    rv::Current<records::BattleTask>()->step_x = angle;
     if (MH_CALL(MagicFx_NearSprite)(src, 0x8000) != 0) {
         CoreHit();
         return;
@@ -413,11 +411,11 @@ S36_EXPORT void __cdecl MagicBallOrb_Run(void) {
 S36_EXPORT void __cdecl MagicBallOrb_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, I32(U32(Owner() + 0x3C) + 0x800000u));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, I32(U32(Owner() + 0x3C) + 0x800000u));
     const int angle = AngleTo(Pointer(BattleOdds_ActorObject_addr));
-    ScTask()->vel_x = angle;
+    rv::Current<records::BattleTask>()->step_x = angle;
     Sc()[9] = 0;
     Inc(Sc()[2]);
 }
@@ -434,11 +432,11 @@ S36_EXPORT void __cdecl MagicBallOrb_Fly(void) {
     StepTowardSource(src, 0x1000000u, 0x40);
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->vel_y = ts->vel_x;
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->step_z = ts->step_x;
     }
     const int angle = AngleTo(src);
-    ScTask()->vel_x = angle;
+    rv::Current<records::BattleTask>()->step_x = angle;
     unsigned char* const s = Sc();
     if (TaskSlot(s[4])[2] == 2) Inc(s[2]);
 }
@@ -673,16 +671,16 @@ S36_EXPORT void __cdecl Intimidate_Task(void) {
 // counted in +0xB; row 26 of the CLUT strip back; sound 0x100.
 S36_EXPORT void __cdecl Intimidate_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     for (unsigned i = 0; i < 2; ++i) {
         const unsigned slot = NewTask(0x18);
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = I32(Key(s));
         child[1] = 0;
         child[4] = static_cast<unsigned char>(i);
@@ -742,23 +740,23 @@ S36_EXPORT void __cdecl IntimidateTrail_Start(void) {
             dx = 0x10000;
         }
     }
-    Store(ScTask()->vel_x, I32(dx));
-    ScTask()->vel_y = 0;
-    SetLong(Sc() + 0x14, I32(dy));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, I32(dx));
+    rv::Current<records::BattleTask>()->step_z = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_y, I32(dy));
     Turn(Sc());
     for (unsigned k = 0; k < 3; ++k) {
         unsigned char* const s = Sc();
         SetLong(s + 0x34 + 4 * k, I32(U32(Owner() + 0x34 + 4 * k) + U32(s + 0xC + 4 * k)));
     }
     const int angle = AngleTo(src);
-    ScTask()->vel_x = angle;
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = angle;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sc();
-    SetWord(TrailPoint(s[4], 0), Word(s + 0x2E));
-    SetWord(TrailPoint(s[4], 0) + 2, Word(s + 0x30));
-    SetWord(TrailPoint(s[4], 1), Word(s + 0x2E));
-    SetWord(TrailPoint(s[4], 1) + 2, Word(s + 0x30));
+    SetWord(TrailPoint(s[4], 0), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetWord(TrailPoint(s[4], 0) + 2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
+    SetWord(TrailPoint(s[4], 1), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetWord(TrailPoint(s[4], 1) + 2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     s[0xB] = 0;
     Sc()[9] = 0x10;
     Sc()[0xA] = 1;
@@ -780,11 +778,11 @@ S36_EXPORT void __cdecl IntimidateTrail_Fly(void) {
     StepTowardSource(src, 0x800000u, 0xC0);
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->vel_y = ts->vel_x;
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->step_z = ts->step_x;
     }
     const int angle = AngleTo(src);
-    ScTask()->vel_x = angle;
+    rv::Current<records::BattleTask>()->step_x = angle;
     bool arrived;
     if (MH_CALL(MagicFx_NearSprite)(src, 0x8000) != 0) {
         arrived = true;
@@ -792,8 +790,8 @@ S36_EXPORT void __cdecl IntimidateTrail_Fly(void) {
         arrived = TurnedPast();
     }
     if (arrived) {
-        Store(ScTask()->x, Long(src + 0x34));
-        Store(ScTask()->y, Long(src + 0x38));
+        rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
         Inc(Sc()[2]);
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -805,15 +803,15 @@ S36_EXPORT void __cdecl IntimidateTrail_Fly(void) {
     if (Sc()[2] != 2) return;
     const unsigned slot = NewTask(0x18);
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     unsigned char* const owner = Owner();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = I32(Key(owner));
     child[1] = 1;
     tchild->x = ts->x;
-    tchild->y = ts->y;
-    SetLong(child + 0x3C, Long(s + 0x3C));
+    tchild->z = ts->z;
+    rv::Store(tchild->height, ts->height);
     Inc(owner[0xB]);
 }
 
@@ -872,7 +870,7 @@ void TrailShift(unsigned x, unsigned y) {
 // +0xB, the points to +0xA moved on.
 S36_EXPORT void __cdecl IntimidateTrail_Push(void) {
     const unsigned char* const s = Sc();
-    TrailShift(Word(s + 0x2E), Word(s + 0x30));
+    TrailShift(static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
 }
 
 // original 0x4F46D0: a gap (-1, -1) pushed onto the trail the same way.
@@ -1060,7 +1058,7 @@ S36_EXPORT void __cdecl IntimidateBurst_Start(void) {
     s[0x5C] = 0;
     s[0x2A] = 0;
     s[0x29] = 3;
-    SetWord(s + 0x2C, 0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 1;
     MH_CALL(Sprite_SetAnimation)(0);
     Sc()[9] = 0;
@@ -1141,15 +1139,15 @@ S36_EXPORT void __cdecl AuraBreath_Start(void) {
     SetLong(Mem(AuraBreath_Struck_addr), 0);
     SetLong(Mem(AuraBreath_Struck_addr + 4), 0);
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned slot = NewTask(0x67);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = I32(Key(s));
     child[1] = 0;
     child[9] = 1;
@@ -1186,13 +1184,13 @@ S36_EXPORT void __cdecl AuraBreathDome_Run(void) {
 // +0xA 4, +2 on.
 S36_EXPORT void __cdecl AuraBreathDome_Wait(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     Dec(s[9]);
     if (s[9] != 0) return;
     const unsigned char* const o = Owner();
-    ts->x = Long(o + 0x34);
-    ts->y = Long(o + 0x38);
-    SetLong(s + 0x3C, Long(o + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(o)->x;
+    ts->z = rv::As<records::SpriteHead>(o)->z;
+    rv::Store(ts->height, rv::As<records::SpriteHead>(o)->height);
     s[0x5D] = 0x10;
     s[9] = 0x10;
     s[0xA] = 4;
@@ -1305,17 +1303,17 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
             const int corner_x = static_cast<short>(VW(0x18));
             const int zv = Mul12(v, SS(4));
             const unsigned char* const s = Sc();
-            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+            const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             SetVW(0x1A, static_cast<unsigned>(zv));
             const int px = Add(static_cast<int>(static_cast<std::uint32_t>(corner_x) << 9), ts->x);
-            const int pz = Add(static_cast<int>(static_cast<std::uint32_t>(static_cast<short>(zv)) << 9), ts->y);
+            const int pz = Add(static_cast<int>(static_cast<std::uint32_t>(static_cast<short>(zv)) << 9), ts->z);
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(px), static_cast<unsigned long>(pz), 1, 0xC);
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyFT4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
-            SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
-            SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
             const unsigned char u = static_cast<unsigned char>(((j & 1) + half) << 6);
             const unsigned char tv = Mem(AuraBreathDome_V_addr + band)[0];
             const unsigned char bottom = static_cast<unsigned char>(tv + Mem(AuraBreathDome_Height_addr + band)[0] - 1);
@@ -1348,9 +1346,9 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
 // of eax. Also called by MAGIC058 (group S11's Sanctuary).
 S36_EXPORT int __cdecl AuraBreath_InReach(unsigned char* record) {
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     const std::uint32_t sx = static_cast<std::uint32_t>(ts->x >> 9);
-    const std::uint32_t sz = static_cast<std::uint32_t>(ts->y >> 9);
+    const std::uint32_t sz = static_cast<std::uint32_t>(ts->z >> 9);
     const std::uint32_t rx = static_cast<std::uint32_t>(Long(record + 0x34) >> 9);
     const std::uint32_t rz = static_cast<std::uint32_t>(Long(record + 0x38) >> 9);
     const std::uint32_t dx = rx - sx, dz = rz - sz;

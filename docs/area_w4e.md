@@ -212,7 +212,7 @@ Nine choices (`Area191_Choices` `0x647BA4`) and three handlers
 state 1 (state 1 does nothing; what moves it on is not read here - area
 191's choice 5 arms the kind at `0x1E`). 2 (once
 `Field_Request` is not 2) - `Transition_Start(0)`, state 3. 3 (once
-`MoveScript_WaitWordDA` is 0) - `Draw_PassFlags` 0, `Sound_StopMusic`,
+`Transition_Busy` is 0) - `Draw_PassFlags` 0, `Sound_StopMusic`,
 `0x42C2D0` (area 192's block: each actor record with `+0xB` bit 0 gets its words
 `+0x20` / `+0x22` at `+0x18` / `+0x1A` and `+0x10` 0, then each party
 member's actor record is copied to its party record), `Sound_LoadStream(0)`,
@@ -230,7 +230,7 @@ state (1, 5..9, `0xB..0x13`, `0x15..0x1D`, past `0x1E`, negative): nothing.
 **The talk** (`Area191_TalkMessage(who)`): i = the index of `who`'s low byte
 among `Area191_TalkKeys`' five (5 when none); a = 9i; b = the walk count
 `0x90405E`, at most 8; c = the max-HP scale `+0x1E` of the actor record
-`MoveScript_EffectState[who]` names (both indexes unchecked). With
+`Character_IndexById[who]` names (both indexes unchecked). With
 `Cond_Flags` row 14 bit `0xA`: `Area191_TalkMessageB(a, who, b, c)`. Else a +
 8 for c from 8, + 7 for c above 4 with b below 7, else +
 `Area191_TalkSteps[b]`; the byte of `Area191_TalkMessagesB` (the chapter
@@ -243,7 +243,7 @@ nothing with `Cond_ByteFA` `0xE` and the chapter row's flag 5, nor with story
 flag `0x77`. Else a list k by actor record 0's max-HP scale (read first):
 `Cond_Flags` row 14 bit `0xA` clear - 2 from 9, 1 from 5, else (the walk
 count at least 5); set - 2 from 5, else (the count at least 5). Six times:
-`Sprite_FindFree` to the word `DamageScratch`; not `0xFF`:
+`Sprite_FindFree` to the word `SharedScratch`; not `0xFF`:
 `EventOp_0x(Area191_ObjectLists[k] + 0x11 n)` (each list six 17-byte
 records).
 
@@ -318,7 +318,7 @@ place.
   `Draw_PassFlags`; `Cond_ByteFF` .. `Input_Held` .. `Input_Pressed`;
   `Prim_VertexScratch`; `MapView_ScreenXY`; the button words to
   `Field_MenuButton`; `0x929EC1`, `0x9036D0`; `Cond_ByteFE`; `Camera_Angles`
-  and `Cond_AngleFB`; eight `CharacterRecords`; `MoveScript_WaitWordDA`.
+  and `Cond_AngleFB`; eight `CharacterRecords`; `Transition_Busy`.
 - **Seeds:** the answer at each value a choice tests, 1, 2, a negative byte;
   `Cond_ByteFA` 11..13 and signed edges; the tails at every state their tables
   name, their neighbours, the states that do nothing, negative bytes, with
@@ -834,7 +834,7 @@ Described, not fixed:
   `Area189_StepBegin` indexes the sixteen vectors by the whole facing byte
   (`Area189_TurnInput` keeps it below 16; state 0 takes it from `0x904153`,
   which the jitter keeps below 16). `Area191_TalkMessage` indexes
-  `MoveScript_EffectState` and `CharacterRecords` by the member byte
+  `Character_IndexById` and `CharacterRecords` by the member byte
   unchecked, and a member not among its keys reads offsets 45..53 of
   `Area191_TalkMessagesA` / `B`, running into the next table. Every one stays
   in mapped memory (the largest, record 255's `+0x1E` at `0x90DDEA`, inside

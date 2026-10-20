@@ -148,7 +148,8 @@ constexpr mh::Answer kG = mh::Answer::kGarbage;
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kTurn = 0x446770;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr std::uint32_t kTurn = 0x446770;
 
 // --- the group's memory ----------------------------------------------------------
 
@@ -301,7 +302,7 @@ const mh::Region kRegions[] = {
     {Key(g_packets), sizeof g_packets},
     {Key(g_keys), sizeof g_keys},
     {Prim_VertexScratch_addr, 0x20},                 // Prim_VertexScratch
-    {kScratch, 0x10},                                // DamageScratch
+    {kScratch, 0x10},                      // SharedScratch
     {BattleE2_AnimSet_addr, 4},
     {0x905E60, 8},                                   // Field_Kind2Z, Field_Kind2X
     {Key(MoveScript_TintRecords), 0xC00},            // an unchecked byte index of 12-byte records

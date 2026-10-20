@@ -20,7 +20,7 @@ namespace window_task {
 namespace at {
 
 // The window records and the one the layer is running.
-constexpr std::uint32_t kRecords = 0x803160;        // 22 records of 0x24 bytes (symbols.toml block WindowRecords)
+// kRecords: now WindowRecords (symbols.toml). 22 records of 0x24 bytes (symbols.toml block WindowRecords)
 constexpr std::uint32_t kRecordsEnd = 0x803478;     // one past the last
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record Field_RunTaskRecords set
 // kPass: now BossSa_WindowPass (symbols.toml). u8: the pass Field_RunTaskRecords starts from
@@ -42,10 +42,11 @@ constexpr std::uint32_t kPlaceXY = 0x66AE10;        // MsgBox_PlacementTable, 4-
 // Field_ChangeArea's cells. The PSX keeps all of these in one block at
 // 0x80143F10..1F; the port scattered them (docs/window-task.md section 2).
 // kPendingArea: now AreaW0b_Place (symbols.toml). u16 (PSX 0x80143F10)
-constexpr std::uint32_t kPendingX = 0x903860;       // s32, 16.16 (PSX 0x80143F14)
+inline auto& kPendingX = SharedScratch.d_10;       // s32, 16.16 (PSX 0x80143F14)
+constexpr std::uint32_t kPendingX_addr = SharedScratch_addr + 0x10; // kPendingX's address, for the raw accessors that take one
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16 (PSX 0x80143F18)
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8 (PSX 0x80143F1C) - Gfx_BufferIndex is the byte after it
-// kPendingKind: now AreaW0c_PendingKind (symbols.toml). u8 (PSX 0x80143F1D, docs/field-modes.md section 4)
+// kPendingKind: now Area_EnterTransition (symbols.toml). u8 (PSX 0x80143F1D, docs/field-modes.md section 4)
 // kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml). u8: the track the next area wants (PSX 0x80143F1F)
 // kMusicTrack: now Music_Track (symbols.toml). u8: the track Music_Play last started, 0xFF none
 
@@ -53,7 +54,7 @@ constexpr std::uint32_t kAreaKinds = 0x66ADC0;      // 11 u16 area numbers Area_
 constexpr std::uint32_t kAreaKindsEnd = 0x66ADD6;
 // kZoneLists: now Area_StateRecords (symbols.toml). an 8-byte zone record list per area (field_event_callees.h)
 constexpr std::uint32_t kMusicSets = 0x669A48;      // 8-byte records: const u8 *list at +0, u8 count at +4
-// kClutRow: now BattleDraw_Colour (symbols.toml). s8: the window colour Window_DrawFrame builds a CLUT id from
+// kClutRow: now Config_WindowColour (symbols.toml). s8: the window colour Window_DrawFrame builds a CLUT id from
 
 }  // namespace at
 

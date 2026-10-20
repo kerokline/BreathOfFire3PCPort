@@ -39,7 +39,7 @@ namespace at {
 constexpr std::uint32_t kPartyCount = 0x904AB0;   // u8: party slots in the fight (PSX 0x801462EC)
 constexpr std::uint32_t kDropCount = 0x904AE7;    // u8 (PSX 0x80146323)
 constexpr std::uint32_t kBattleEnd = 0x904AE8;    // u8: |= 0x20 when a level-up was found
-// kExpTotal: now BattleFlow_ExpTotal (symbols.toml). dword (PSX 0x80146328)
+// kExpTotal: now Battle_ExpTotal (symbols.toml). dword (PSX 0x80146328)
 // kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml). dword (PSX 0x8014632C)
 constexpr std::uint32_t kDropItems = 0x904AF4;    // u16 x 16: category << 8 | item (PSX 0x80146330)
 constexpr std::uint32_t kDropCounts = 0x904B14;   // u8 x 16 (PSX 0x80146350)
@@ -62,7 +62,7 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 // The window records (0x803160 + 36 n, Window_Alloc 0x59E2D0): +0 taken,
 // +1 kind, +2 the kind handler's state, +3 its step; +4 / +6 x / y words,
 // +9 the height. Slot 1 is the EXP / zenny window, slot 0x15 the drops'.
-constexpr std::uint32_t kWindows = 0x803160;
+// kWindows: now WindowRecords (symbols.toml).
 constexpr std::uint32_t kWindowSize = 36;
 // kWindowCurrent: now BattleWinStates_Current (symbols.toml). the record the window task is running
 // Constant data in .data / .rdata.

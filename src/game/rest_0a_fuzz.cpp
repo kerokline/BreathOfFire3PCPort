@@ -19,6 +19,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/scenario_harness.h"
@@ -28,9 +29,6 @@
 namespace rest_0a {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -115,11 +113,11 @@ U FxFindFree(const U*, U answer) {
     const U n = sh::Noise();
     return WithAl(answer, n % 3 == 0 ? 0xFF : (n >> 4) % 20);
 }
-// MapView_SlopeAt: DamageScratch's flag byte 0 a third of the time, else not
+// MapView_SlopeAt: SharedScratch's flag byte 0 a third of the time, else not
 // 0; the slope's low word on either side of 0x40 and at the s16 limits.
 U FxSlope(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const flag = sh::Mem(bof3::addr::DamageScratch);
+    unsigned char* const flag = sh::Mem(SharedScratch_addr);
     if (sh::InRegions(flag, 1)) flag[0] = static_cast<unsigned char>(n % 3 == 0 ? 0 : (n >> 2) % 4 ? 1 : 1 + (n >> 4) % 0xFF);
     static const U kWords[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x0140, 0xFFC0, 0x1000};
     const U m = sh::Noise();
@@ -164,7 +162,7 @@ const sh::Callee kCallees[] = {
 
 // Beyond field mode's standard regions (which hold Sprite_Current and the
 // sprite records, ObjTrio, Field_State, Field_MemberCount, Effect_Objects and
-// DamageScratch's first bytes): Field_DirectionSteps, which all seven read
+// SharedScratch's first bytes): Field_DirectionSteps, which all seven read
 // (0x524DA0 its rows 3 and 5 by address), so that the seed can put every row's
 // boundaries in. .data, restored after the run as every region is.
 const sh::Region kRegions[] = {
@@ -223,8 +221,8 @@ void SeedEffects(bool line_up) {
         unsigned char* const e = Effect(i);
         e[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 1, sh::Next() | 1));
         e[5] = static_cast<unsigned char>(PickOf(0x30, 0x30, 0x30, 0x17, 0x31, 0x2F, sh::Next()));
-        EffectRec(e)->x = static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x34)) : Coordinate());
-        EffectRec(e)->z = static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x38)) : Coordinate());
+        rv::As<records::EffectObject>(e)->x = static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x34)) : Coordinate());
+        rv::As<records::EffectObject>(e)->z = static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x38)) : Coordinate());
         SetWord(e + 0x3E, Height());
     }
 }

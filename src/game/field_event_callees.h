@@ -20,20 +20,20 @@ namespace at {
 // kLeaderStates: now Field_LeaderStates (symbols.toml). 15 handlers, by Sprite_Current +1
 // kControlStates: now Field_LeaderControlSteps (symbols.toml). 3 handlers, by Sprite_Current +2
 // kPendingJumps: now Field_PendingJumps (symbols.toml). 4 handlers, by 0x904EF1
-// kZoneCounter: now ObjTrio[0x134] (symbols.toml). word, ObjTrio +0x134
-// kLeaderXHigh: now ObjTrio[0x36] (symbols.toml). ObjTrio +0x36, the integer x's low byte
-// kLeaderZHigh: now ObjTrio[0x3a] (symbols.toml). ObjTrio +0x3A
+// kZoneCounter: now ObjTrio_addr + 0x134 (symbols.toml). word, ObjTrio +0x134
+// kLeaderXHigh: now ObjTrio[0].x_whole (symbols.toml). ObjTrio +0x36, the integer x's low byte
+// kLeaderZHigh: now ObjTrio[0].z_whole (symbols.toml). ObjTrio +0x3A
 constexpr std::uint32_t kZoneBases = 0x660A24;        // 2 bytes a zone: base, most added
 // kZoneLists: now Area_StateRecords (symbols.toml). an 8-byte record list per area
 constexpr std::uint32_t kAnimationRemap = 0x6608D8;   // 2 bytes an animation
 constexpr std::uint32_t kPartyLists = 0x904062;       // two 3-byte lists of member ids, 0xFF-ended
 // kPartySetCurrent: now AreaW0b_PartySet (symbols.toml). the loaded party set; bit 7 from PartySet_Select mode 0
 // kPartySets: now MoveScript_EffectArg[0xc] (symbols.toml). 19 sorted rows of 3 member ids
-// kMemberFlags: now MoveScript_EffectState[0xc] (symbols.toml). a byte per member id, to sprite +0x2B
+// kMemberFlags: now Character_IndexById[0xc] (symbols.toml). a byte per member id, to sprite +0x2B
 constexpr std::uint32_t kBankTable = 0x813580;        // dword offsets from itself, by column
 // kPaletteBase: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes a slot, inside Gfx_ClutStripSource
-constexpr std::uint32_t kActorRecords = 0x903A70;     // 0xA4 bytes each; Field_ActorStates is +0x10 of the first
-constexpr std::uint32_t kFindIds = 0x903850;          // PartySet_Find's three ids, then its swap byte at +4
+// kActorRecords: now CharacterRecords (symbols.toml). 0xA4 bytes each; Field_ActorStates is +0x10 of the first
+constexpr std::uint32_t kFindIds = SharedScratch_addr; // PartySet_Find's three ids, then its swap byte at +4
 constexpr std::uint32_t kJoinState = 0x9045FC;        // two dwords and a byte, Party_JoinReset's
 // kFlagBits: now Cond_Flags[0xa0] (symbols.toml). the bit array Field_PartySetUp tests flag 0x77 in
 // kMemberOffsets: now Field_PlaceOffsets (symbols.toml). 8 bytes (dx, dz) per direction / 2

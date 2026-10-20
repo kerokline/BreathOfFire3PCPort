@@ -60,13 +60,13 @@ void Scribble(U at, unsigned n) {
 // object itself.
 unsigned char* MemberRecord(U v) {
     switch (v % 4) {
-    case 0: return Mem(0x802000 + (v >> 2) % 4 * 0xA4);
+    case 0: return Mem(Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4);
     case 1: return ah::Object(v >> 2);
     case 2: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     default: return Sprite_Current;
     }
 }
-unsigned char* FlagRowAt(U v) { return Mem(0x903F90 + 8 * (v % 0x3A)); }
+unsigned char* FlagRowAt(U v) { return Mem(Cond_Flags_addr + 8 * (v % 0x3A)); }
 
 // ===========================================================================
 // The effects: the callees whose callers read a cell again after the call
@@ -101,7 +101,7 @@ U TestEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) Cond_ByteFD = static_cast<unsigned char>(n & 2 ? 2 : 6);
     if (n & 4) B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(n & 8 ? 4 : 6);
-    if (n & 0x10) ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(n >> 8));
+    if (n & 0x10) ah::SetPointer(Chapter_FlagRow_addr, FlagRowAt(n >> 8));
     if (n & 0x20) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n & 0x40 ? 0xA : 0);
     return answer;
 }
@@ -126,7 +126,7 @@ U SetByteEffect(const U*, U answer) {
 // Inventory_Add: area 41's choice reads the row pointer again after it.
 U AddEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(n >> 8));
+    if (n & 1) ah::SetPointer(Chapter_FlagRow_addr, FlagRowAt(n >> 8));
     return answer;
 }
 // 0x57CD90: area 40's handler reads MoveScript_Object after it.
@@ -229,7 +229,7 @@ ah::Region g_regions[] = {
     {Effect_Objects_addr, 4 * at::kEffectStride},
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {AreaW1a_FocusObject_addr, 4},
     {AreaW0c_AnswerMark_addr, 1},
     {at::kKeyItems, at::kKeyItemCount},
@@ -247,7 +247,7 @@ void Common() {
     ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
     ah::SetPointer(MoveScript_Object_addr, ah::Half() ? ah::Object(ah::Next()) : ah::PartyOf(static_cast<unsigned char>(ah::Next())));
     ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(ah::Next()));
-    ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(ah::Next()));
+    ah::SetPointer(Chapter_FlagRow_addr, FlagRowAt(ah::Next()));
     Gfx_PacketNext = g_packets + (ah::Next() % 4) * 4;
 }
 
@@ -261,7 +261,7 @@ void Disturb(U h) {
     case 2: B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(h & 0x10000 ? v : (h & 0x20000 ? 4 : 6)); break;
     case 3: Game_AreaNumber = static_cast<unsigned short>(h & 0x10000 ? 0x28 : 0x29); break;
     case 4: Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ v); break;
-    case 5: ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(h >> 16)); break;
+    case 5: ah::SetPointer(Chapter_FlagRow_addr, FlagRowAt(h >> 16)); break;
     case 6: ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(h >> 16)); break;
     case 7: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 8: B(Cond_Flags_addr + 0xd2 + (h >> 16) % 3) = static_cast<unsigned char>(h & 0x40000 ? v : (h & 0x80000 ? 0 : 4)); break;

@@ -27,6 +27,7 @@
 #include "game/battle_e4_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -217,9 +218,9 @@ const bh::Callee kCallees[] = {
 const bh::Region kRegions[] = {
     {0x903B24, 0x903F90 - 0x903B24},   // CharacterRecords 1..7 (0x903A70 + 8 x 0xA4 = Cond_Flags)
     {0x904060, 0x10},                  // 0x904065..0x904067
-    {MoveScript_EffectState_addr, 0x18}, // MoveScript_EffectState
+    {Character_IndexById_addr, 0x18}, // Character_IndexById
     {at::kPreview, 8},
-    {at::kTint, 4},
+    {at::kTint_addr, 4},
     {0x904EFC, 4},                     // MoveScript_FAWord
     {Field_Kind2Z_addr, 8},            // Field_Kind2Z, Field_Kind2X
     {at::kRepeatLatch, 4},
@@ -236,7 +237,7 @@ unsigned char Byte(std::initializer_list<U> v) {
     return static_cast<unsigned char>(v.begin()[bh::Next() % v.size()]);
 }
 U Word16(std::initializer_list<U> v) { return v.begin()[bh::Next() % v.size()]; }
-unsigned char* Enemy(unsigned actor) { return M(at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned actor) { return M(Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 
 // The cells every function's indices go through, kept inside what the
 // regions hold (docs/battle_e4.md section 5): the members' +5 (their party
@@ -245,16 +246,16 @@ unsigned char* Enemy(unsigned actor) { return M(at::kEnemies + ((actor & 0xFF) -
 // and member, record 16's category.
 void Indices() {
     for (unsigned m = 0; m < 3; ++m) {
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(bh::PartyOf(static_cast<unsigned char>(m)));
-        member_rec->member = static_cast<unsigned char>(bh::Often() ? m : bh::Next() % 3);
+        auto* const member_rec = rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(m)));
+        member_rec->actor = static_cast<unsigned char>(bh::Often() ? m : bh::Next() % 3);
         member_rec->char_index = static_cast<unsigned char>(bh::Next() % 8);
         member_rec->char_id = static_cast<unsigned char>(bh::Next() % 8);
     }
     for (unsigned i = 0; i < 3; ++i) M(Cond_Flags_addr + 0xd5)[i] = static_cast<unsigned char>(bh::Next() % 8);
-    for (unsigned i = 0; i < 8; ++i) M(MoveScript_EffectState_addr)[i] = static_cast<unsigned char>(bh::Next() % 8);
-    M(BattleE4_Slots_addr + 0xA)[0] = static_cast<unsigned char>(bh::Next() % 6);
-    M(BattleE4_Slots_addr + 0xC)[0] = static_cast<unsigned char>(bh::Next() % 3);
-    M(BattleE4_List_addr + 0xA)[0] = static_cast<unsigned char>(bh::Next() % 5);
+    for (unsigned i = 0; i < 8; ++i) M(Character_IndexById_addr)[i] = static_cast<unsigned char>(bh::Next() % 8);
+    M(Window18_addr + 0xA)[0] = static_cast<unsigned char>(bh::Next() % 6);
+    M(Window18_addr + 0xC)[0] = static_cast<unsigned char>(bh::Next() % 3);
+    M(Window16_addr + 0xA)[0] = static_cast<unsigned char>(bh::Next() % 5);
 }
 
 // After every disturbance: the same cells a function reads again after a call
@@ -263,15 +264,15 @@ void Indices() {
 // inside their tables - the engine disturbance moves bytes of the current
 // window record and of Sprite_Current, which may be those.
 void Settle() {
-    unsigned char* const cursor = M(BattleE4_Slots_addr + 0xA);
+    unsigned char* const cursor = M(Window18_addr + 0xA);
     if (*cursor > 5) *cursor = static_cast<unsigned char>(*cursor % 6);
-    unsigned char* const member = M(BattleE4_Slots_addr + 0xC);
+    unsigned char* const member = M(Window18_addr + 0xC);
     if (*member > 2) *member = static_cast<unsigned char>(*member % 3);
-    unsigned char* const category = M(BattleE4_List_addr + 0xA);
+    unsigned char* const category = M(Window16_addr + 0xA);
     if (*category > 4) *category = static_cast<unsigned char>(*category % 5);
     for (unsigned m = 0; m < 3; ++m) {
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(bh::PartyOf(static_cast<unsigned char>(m)));
-        if (member_rec->member > 2) member_rec->member = static_cast<unsigned char>(member_rec->member % 3);
+        auto* const member_rec = rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(m)));
+        if (member_rec->actor > 2) member_rec->actor = static_cast<unsigned char>(member_rec->actor % 3);
     }
 }
 
@@ -292,14 +293,14 @@ void Buttons() {
 // The command states' windows: record 21's option and +3, record 18's +3 and
 // word +0x10, record 17's +3, top, cursor and item at their ends.
 void Windows() {
-    M(BattleE4_Above_addr + 0xA)[0] = Byte({0, 1, 0, 1, 2, 0xFF});
-    M(BattleE4_Above_addr + 3)[0] = Byte({0, 0, 1});
-    M(BattleE4_Slots_addr + 3)[0] = Byte({0, 0, 1, 2});
-    SetWord(M(BattleE4_Slots_addr + 0x10), bh::Half() ? 0 : bh::Next());
-    M(BattleE4_Cands_addr + 3)[0] = Byte({0, 0, 1});
-    M(BattleE4_Cands_addr + 0xA)[0] = Byte({0, 1, 6, 7, 8, 0x72, 0x73, 0x78, 0x79, bh::Next()});
-    M(BattleE4_Cands_addr + 0xB)[0] = Byte({0, 1, 6, 7, 8, 0x72, 0x7E, 0x7F, 0x80, bh::Next()});
-    M(BattleE4_Cands_addr + 0xD)[0] = Byte({0, 0, bh::Next()});
+    M(Window21_addr + 0xA)[0] = Byte({0, 1, 0, 1, 2, 0xFF});
+    M(Window21_addr + 3)[0] = Byte({0, 0, 1});
+    M(Window18_addr + 3)[0] = Byte({0, 0, 1, 2});
+    SetWord(M(Window18_addr + 0x10), bh::Half() ? 0 : bh::Next());
+    M(Window17_addr + 3)[0] = Byte({0, 0, 1});
+    M(Window17_addr + 0xA)[0] = Byte({0, 1, 6, 7, 8, 0x72, 0x73, 0x78, 0x79, bh::Next()});
+    M(Window17_addr + 0xB)[0] = Byte({0, 1, 6, 7, 8, 0x72, 0x7E, 0x7F, 0x80, bh::Next()});
+    M(Window17_addr + 0xD)[0] = Byte({0, 0, bh::Next()});
 }
 
 const bh::Clone* g_cur = nullptr;
@@ -311,8 +312,8 @@ void Seed(unsigned k) {
     Windows();
     // the counts every loop runs to: the party 0..3 (1..3 where it divides), the divisors at least 1
     M(at::kPartyCount)[0] = Byte({0, 1, 2, 3, 3, 3});
-    M(BattleSprites_PartyPick_addr)[0] = Byte({1, 1, 2, 3, 8});
-    M(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 2, 3, 8});
+    M(Battle_PartyStanding_addr)[0] = Byte({1, 1, 2, 3, 8});
+    M(Battle_EnemiesLeft_addr)[0] = Byte({1, 2, 3, 8});
     M(at::kFaceStep)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 4 : bh::Next());
     switch (base) {
     case 0x4463E0:   // divides by the count
@@ -326,7 +327,7 @@ void Seed(unsigned k) {
         break;
     case 0x446810: {
         unsigned char* const fs = Field_State;
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(fs);
+        auto* const member_rec = rv::As<records::PartyMember>(fs);
         M(at::kFlags)[0] = static_cast<unsigned char>(bh::Next() % 3 == 0 ? M(at::kFlags)[0] | 0x40 : M(at::kFlags)[0] & 0xBF);
         M(at::kActor)[0] = static_cast<unsigned char>(bh::Next() % 11);
         if (bh::Often()) fs[0x130] &= 0xFE;
@@ -351,14 +352,14 @@ void Seed(unsigned k) {
         break;
     case 0x446B00:   // equal +0x98 words, so the second pass has ties to break
         for (unsigned a = 3; a <= 10; ++a) {
-            auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy(a));
+            auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(a));
             enemy_rec->level = bh::Often() ? bh::Next() % 4 : bh::Next();
             if (bh::Half()) enemy_rec->hp = bh::Next() % 4;
         }
         break;
     case 0x446CB0:
         for (unsigned m = 0; m < 3; ++m) bh::PartyOf(static_cast<unsigned char>(m))[0x12D] = Byte({0, 1, 2, 3, 4, 0xFF});
-        for (unsigned a = 3; a <= 10; ++a) reinterpret_cast<records::BattleEnemy*>(Enemy(a))->counter = Byte({0, 1, 2, 3, 4, 0xFF});
+        for (unsigned a = 3; a <= 10; ++a) rv::As<records::BattleEnemy>(Enemy(a))->counter = Byte({0, 1, 2, 3, 4, 0xFF});
         break;
     case 0x446D90:   // counts at 99 here and there
         for (unsigned c = 0; c < 4; ++c) {
@@ -369,25 +370,25 @@ void Seed(unsigned k) {
         break;
     case 0x449BB0:   // it only reads the record: any character byte a third of the time (the mask's bit past 7)
         if (bh::Next() % 3 == 0)
-            for (unsigned i = 0; i < 8; ++i) M(MoveScript_EffectState_addr)[i] = static_cast<unsigned char>(bh::Next());
+            for (unsigned i = 0; i < 8; ++i) M(Character_IndexById_addr)[i] = static_cast<unsigned char>(bh::Next());
         break;
     case 0x449A00: {   // preview bytes: none, the same as worn, or another
-        const unsigned member = M(BattleE4_Slots_addr + 0xC)[0];
-        const unsigned char c = M(MoveScript_EffectState_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
-        const unsigned char* const r = M(at::kCharRecords + c * at::kCharStride);
+        const unsigned member = M(Window18_addr + 0xC)[0];
+        const unsigned char c = M(Character_IndexById_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
+        const unsigned char* const r = M(CharacterRecords_addr + c * at::kCharStride);
         for (unsigned i = 0; i < 6; ++i) M(at::kPreview + i)[0] = Byte({0, r[0x12 + i], r[0x12 + i], bh::Next()});
         break;
     }
     case 0x449C70: {   // the slot's item: none a third of the time
-        const unsigned member = M(BattleE4_Slots_addr + 0xC)[0];
-        const unsigned char c = M(MoveScript_EffectState_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
-        unsigned char* const r = M(at::kCharRecords + c * at::kCharStride);
-        if (bh::Next() % 3 == 0) r[0x12 + M(BattleE4_Slots_addr + 0xA)[0]] = 0;
-        if (bh::Next() % 4 == 0) M(BattleE4_Slots_addr + 0xA)[0] = 0;
+        const unsigned member = M(Window18_addr + 0xC)[0];
+        const unsigned char c = M(Character_IndexById_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
+        unsigned char* const r = M(CharacterRecords_addr + c * at::kCharStride);
+        if (bh::Next() % 3 == 0) r[0x12 + M(Window18_addr + 0xA)[0]] = 0;
+        if (bh::Next() % 4 == 0) M(Window18_addr + 0xA)[0] = 0;
         break;
     }
     case 0x44A010:
-        if (bh::Half()) M(BattleActions_EventBattle_addr)[0] = 0;
+        if (bh::Half()) M(EventBattle_Id_addr)[0] = 0;
         M(BattlePhases_AE6_addr)[0] = Byte({0, 1, 2, 3, 0xFF});
         M(BattlePhases_Initiative_addr)[0] = Byte({1, 0, bh::Next()});
         break;
@@ -421,7 +422,7 @@ void Args(unsigned k, U* a) {
     switch (g_cur[k].base) {
     case 0x445600: {
         a[0] = Garbage(3 + bh::Next() % 8);
-        const U pace = reinterpret_cast<records::BattleEnemy*>(Enemy(a[0]))->agi;
+        const U pace = rv::As<records::BattleEnemy>(Enemy(a[0]))->agi;
         a[1] = (bh::Half() ? bh::Next() & 0xFFFF0000u : 0) | (Word16({pace / 2, pace / 2 + 1, (pace + 1) / 2, bh::Next()}) & 0xFFFF);
         a[2] = (bh::Half() ? bh::Next() & 0xFFFF0000u : 0) | (Word16({pace, pace + 1, pace - 1, bh::Next()}) & 0xFFFF);
         break;
@@ -461,10 +462,10 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 7) {
     case 0: bh::PartyOf(static_cast<unsigned char>(b % 3))[5] = static_cast<unsigned char>((h >> 24) % 3); break;
-    case 1: SetWord(bh::PartyOf(static_cast<unsigned char>(b % 3)) + 0x126, h >> 12); break;
-    case 2: SetWord(M(BattleE4_Slots_addr + 0x10), b & 1 ? 0 : h >> 12); break;
-    case 3: M(BattleE4_Cands_addr + 0xD)[0] = b; break;
-    case 4: M(BattleE4_Above_addr + 0xA)[0] = b & 1; break;
+    case 1: rv::Store<unsigned>(rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(b % 3)))->queued_id, h >> 12); break;
+    case 2: SetWord(M(Window18_addr + 0x10), b & 1 ? 0 : h >> 12); break;
+    case 3: M(Window17_addr + 0xD)[0] = b; break;
+    case 4: M(Window21_addr + 0xA)[0] = b & 1; break;
     case 5: M(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
     default: M(Field_Kind2Hold_addr)[0] = b & 1; break;
     }

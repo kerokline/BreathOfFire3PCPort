@@ -300,14 +300,14 @@ void Seed(unsigned k) {
     // kind 0x96's index inside its table's eight (ours aborts past)
     Mem(Effect4d_Kind96Index_addr)[0] = static_cast<unsigned char>(PickOf(0, 6, 7, sh::Next() % 8));
     if (sh::Half()) Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(at::kKind97Cue, at::kKind9AEnd));
-    if (sh::Half()) MoveScript_WaitWordDA = 0;
+    if (sh::Half()) Transition_Busy = 0;
     switch (k) {
     case k91Wait:
         if (sh::Half()) Field_Request = 2;
         break;
     case k94Redraw:
         for (unsigned m = 0; m < at::kTrioCount; ++m)
-            ObjTrio[at::kTrioStride * m + at::kTrioBusy] = static_cast<unsigned char>(PickOf(7, 7, 6, 8, sh::Next()));
+            ObjTrio[m].char_id = static_cast<unsigned char>(PickOf(7, 7, 6, 8, sh::Next()));
         break;
     case k95Clock:
     case k95Finish: {

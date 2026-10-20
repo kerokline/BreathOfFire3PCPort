@@ -94,8 +94,8 @@ layer reads and writes:
 | +1 | u8 | the record **handler**, index into `Field_RunTaskRecords`' nine; never cleared |
 | +2 | u8 | the window **kind**, 0..2 |
 | +3 | u8 | the **state**, 0..4 |
-| +4 | u16 | centre x, 12.4 fixed |
-| +6 | u16 | centre y, 12.4 fixed |
+| +4 | u16 | x, the box's **left edge**, 12.4 fixed (`WindowRecord::x`; read here as the centre until the B1 audit) |
+| +6 | u16 | y, the box's **top edge**, 12.4 fixed |
 | +0xA | u8 | half-width, in pixels |
 | +0xB | u8 | half-height |
 | +0xD | u8 | flags: bit 0 "do not draw the frame", bit 1 "the narrow box" |
@@ -104,7 +104,7 @@ layer reads and writes:
 | +0x12 | u16 | current height, 12.4 |
 | +0x14 | u16 | width step a frame |
 | +0x16 | u16 | height step a frame |
-| +0x18, +0x1A | u16 | kind 1's settled centre |
+| +0x18, +0x1A | u16 | kind 1's settled place (left and top edges) |
 
 `0x905B84` holds the record the layer is running. **It is re-read from memory
 at every point the original re-reads it** — after every call out, and in most
@@ -137,14 +137,14 @@ waits for the box to answer 0, then zeroes the pass byte and frees the record.
 
 **Kind 1** draws its items at a fixed screen place: `0x596090` walks
 `0x7DEE66 + 1` items and draws each at x `0x3A`, y `[0x7DEE6F + i]`, through
-the text routine `0x5961C0`; `0x596120` draws the cursor. Its settled centre
+the text routine `0x5961C0`; `0x596120` draws the cursor. Its settled place
 while shrinking comes from the 8-byte records at `0x66ADFC` by `0x7DEE65`,
 where the grow takes it from the record's own `+0x18` / `+0x1A` — the two
 directions genuinely disagree, and both negative controls that make them agree
 are refused.
 
 **Kind 2** draws relative to its own window: `0x596020` places item `i` at the
-window's centre plus `0x66AE2C[set]`, with a per-set stride, and `0x5960D0`
+window's top-left (`+4`, `+6`) plus `0x66AE2C[set]`, with a per-set stride, and `0x5960D0`
 draws the cursor. Those five functions (`0x596020`, `0x596090`, `0x5960D0`,
 `0x596120`, `0x596330`) are **not read** and stay Capcom's; ours and the copies
 alike call them through a recording stand-in.
@@ -159,12 +159,12 @@ from the code as it is taken. Flag 2 gives a narrow 0x78 x 0x36 box from
 `(half-size << 4) / 5` in each axis, so **the box opens over five frames**.
 
 `Window_Grow` adds the step to the size and subtracts half of it (truncated
-toward zero) from the centre, so the box grows about its middle. When
-`(s16)(size >> 4)` passes the half-size byte the centre snaps to the settled
+toward zero) from the left / top edge, so the box grows about its middle.
+When `(s16)(size >> 4)` passes the half-size byte the edge snaps to the settled
 place and the size to `half << 4`. `Window_Shrink` is the mirror, except that
 its snap is to the settled place **plus half the half-size** — the box closes
 onto its own middle, not onto its left edge — and that the half-size is halved
-there as an unsigned byte, where the centre drift halves a signed word.
+there as an unsigned byte, where the edge's drift halves a signed word.
 
 Both draw `Window_DrawOutline` at the size this frame reached, unless flag 1
 is set, and both raise the state only when **both** axes settled in the same
@@ -285,12 +285,12 @@ that is not refused is information about the claim.
 | `Window_Kind0Open`: the box opens over four frames, not five | 1400 |
 | `Window_Kind0Open`: the wide box's half-width 0xC9, not 0xC8 | 696 |
 | `Window_Grow`: the x axis settles when it REACHES the half-size | 162 |
-| `Window_Grow`: the centre drifts the wrong way on x | 449 |
+| `Window_Grow`: the left edge drifts the wrong way on x | 449 |
 | `Window_Grow`: the record not re-read after the outline | 8 |
 | `Window_Grow`: the y axis sets the settle counter rather than incrementing it | 490 |
 | `Window_Grow`: kind 1's settled x from the list table, as the shrink takes it | 272 |
 | `Window_Shrink`: the x axis closes at zero, not below it | 40 |
-| `Window_Shrink`: the closing centre takes a quarter of the half-size | 549 |
+| `Window_Shrink`: the closing edge takes a quarter of the half-size | 549 |
 | `Window_Shrink`: the settled frame goes on to draw | 305 |
 | `Window_Shrink`: the message box runs for every kind, not kind 0 alone | 649 |
 | `Window_Shrink`: kind 1's settled x from the record, as the grow takes it | 256 |

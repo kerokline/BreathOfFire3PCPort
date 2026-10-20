@@ -231,7 +231,7 @@ static_assert(kCount == sizeof kClones / sizeof kClones[0], "one enum entry a cl
 // kVertices: now Prim_VertexScratch (symbols.toml).
 // kPacketNext: now Gfx_PacketNext (symbols.toml).
 // kSpriteBank: now BattleE2_AnimSet (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 // kMotePool: now KaiserMote_Pool (symbols.toml).
 // kMoteCurrent: now KaiserMote_Current (symbols.toml).
 constexpr std::uint32_t kMoteStride = 0x2C;

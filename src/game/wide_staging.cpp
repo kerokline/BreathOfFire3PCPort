@@ -12,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/band_census.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -30,13 +31,12 @@ using move_script::SetLong;
 using move_script::SetPos;
 using move_script::SetWord;
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 const unsigned char* Pointer(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
@@ -486,7 +486,7 @@ bool StepSite(unsigned char* context, const unsigned char* script, unsigned char
         // back and runs the op again): the sprite has not moved from where it
         // began, so that element is issued again.
         const Element& last = l->plan.e[l->next - 1];
-        if (last.steps != 0 && SC()->x == l->x && SC()->z == l->z) --l->next;
+        if (last.steps != 0 && rv::Current<records::SpriteObject>()->x == l->x && rv::Current<records::SpriteObject>()->z == l->z) --l->next;
         if (l->restore) {
             context[4] = l->speed;
             l->restore = false;
@@ -512,8 +512,8 @@ bool StepSite(unsigned char* context, const unsigned char* script, unsigned char
     }
     const Element e = l->plan.e[l->next];
     ++l->next;
-    l->x = SC()->x;
-    l->z = SC()->z;
+    l->x = rv::Current<records::SpriteObject>()->x;
+    l->z = rv::Current<records::SpriteObject>()->z;
     if (e.fast && g_fast_index != 0) {
         l->speed = context[4];
         l->restore = true;
@@ -554,8 +554,8 @@ void Placed0DSite(unsigned char* context, const unsigned char* script, unsigned 
         if (!StepDisplacement(context, dir & 7u, dx, dz)) return;
         const auto k = static_cast<std::int32_t>(Steps(s));
         unsigned char* const sprite = Sprite_Current;
-        Spr(sprite)->x = Spr(sprite)->x - k * dx;
-        Spr(sprite)->z = Spr(sprite)->z - k * dz;
+        rv::As<records::SpriteObject>(sprite)->x = rv::As<records::SpriteObject>(sprite)->x - k * dx;
+        rv::As<records::SpriteObject>(sprite)->z = rv::As<records::SpriteObject>(sprite)->z - k * dz;
         Live* l = Take(context);
         if (l->restore && l->area == area && context[4] == g_fast_index) context[4] = l->speed;
         *l = Live{};
@@ -575,10 +575,10 @@ void PlacedSite(const unsigned char* op) {
         const Site& s = kSites[i];
         if (s.shape != kIn || s.place != a || s.area != area) continue;
         unsigned char* const sprite = Sprite_Current;
-        const std::uint32_t at = Address(sprite), objects = Address(Sprite_Objects);
+        const std::uint32_t at = Address(sprite), objects = Address(rv::Bytes(Sprite_Objects));
         // The handler leaves its object current, its home (+0x8C / +0x90) where it put it.
         if (at < objects || at >= objects + 30u * 0xA4u || (at - objects) % 0xA4u != 0 || sprite[0x83] != s.index ||
-            Spr(sprite)->target_x != Spr(sprite)->x || Spr(sprite)->target_z != Spr(sprite)->z) {
+            rv::As<records::SpriteObject>(sprite)->target_x != rv::As<records::SpriteObject>(sprite)->x || rv::As<records::SpriteObject>(sprite)->target_z != rv::As<records::SpriteObject>(sprite)->z) {
             bof3::Log("DIV-0122    site %u: the placement op at %08X did not leave its object current (%08X); not moved", i,
                       a, at);
             return;
@@ -590,9 +590,9 @@ void PlacedSite(const unsigned char* op) {
         std::int32_t dx, dz;
         if (!StepDisplacement(context, dir & 7u, dx, dz)) return;
         const auto k = static_cast<std::int32_t>(Steps(s));
-        Spr(sprite)->x = Spr(sprite)->x - k * dx;
-        Spr(sprite)->z = Spr(sprite)->z - k * dz;
-        SetWord(sprite + 0x3E, static_cast<unsigned>(AreaMap_Elevation(Spr(sprite)->x, Spr(sprite)->z)));
+        rv::As<records::SpriteObject>(sprite)->x = rv::As<records::SpriteObject>(sprite)->x - k * dx;
+        rv::As<records::SpriteObject>(sprite)->z = rv::As<records::SpriteObject>(sprite)->z - k * dz;
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->height_whole, static_cast<unsigned>(AreaMap_Elevation(rv::As<records::SpriteObject>(sprite)->x, rv::As<records::SpriteObject>(sprite)->z)));
         Live* l = Take(context);
         // A placement sets the object afresh: its speed is the op's, never one a stale entry would put back.
         *l = Live{};
@@ -645,7 +645,7 @@ namespace {
 // exception list's key for it.
 bool Candidate(const unsigned char* sprite, unsigned& field, unsigned& index) {
     const std::uint32_t a = Address(sprite);
-    const std::uint32_t objects = Address(Sprite_Objects), extra = Address(Sprite_ObjectsExtra), trio = Address(ObjTrio);
+    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
     if (a >= objects && a < objects + 30u * 0xA4u && (a - objects) % 0xA4u == 0) {
         field = 0x10;
         index = sprite[0x83];
@@ -980,8 +980,8 @@ void SelfTest() {
         Placed(Pointer(kSites[0].place));
         unsigned char zero[16] = {};
         Check(std::memcmp(context, zero, sizeof context) == 0, "narrow: the hooks write nothing");
-        Check(!Hide(Sprite_Objects), "narrow: nothing hidden");
-        Check(!WouldHide(Sprite_Objects), "narrow: the census says not hidden");
+        Check(!Hide(rv::Bytes(Sprite_Objects)), "narrow: nothing hidden");
+        Check(!WouldHide(rv::Bytes(Sprite_Objects)), "narrow: the census says not hidden");
         g_staging = was_staging;
         g_hide = was_hide;
     }
@@ -1059,13 +1059,13 @@ void SelfTest() {
         }
         // The leader is never a candidate; the other two members and the objects are.
         unsigned field = 0, index = 0;
-        Check(!Candidate(ObjTrio, field, index), "the leader is not hidden");
-        Check(Candidate(ObjTrio + 0x14C, field, index) && field == 0 && index == 1, "member 1 is a candidate");
-        Check(Candidate(ObjTrio + 2 * 0x14C, field, index) && index == 2, "member 2 is a candidate");
-        Check(!Candidate(ObjTrio + 3 * 0x14C, field, index), "past the trio");
-        Check(Candidate(Sprite_Objects + 29 * 0xA4, field, index) && field == 0x10, "object 29");
-        Check(!Candidate(Sprite_Objects + 30 * 0xA4, field, index), "past object 29");
-        Check(!Candidate(Sprite_Kind2, field, index), "the kind-2 object is not hidden");
+        Check(!Candidate(rv::Bytes(ObjTrio), field, index), "the leader is not hidden");
+        Check(Candidate(rv::Bytes(&ObjTrio[1]), field, index) && field == 0 && index == 1, "member 1 is a candidate");
+        Check(Candidate(rv::Bytes(&ObjTrio[2]), field, index) && index == 2, "member 2 is a candidate");
+        Check(!Candidate(rv::Bytes(&ObjTrio[3]), field, index), "past the trio");
+        Check(Candidate(rv::Bytes(&Sprite_Objects[0x1d]), field, index) && field == 0x10, "object 29");
+        Check(!Candidate(rv::Bytes(&Sprite_Objects[0x1e]), field, index), "past object 29");
+        Check(!Candidate(rv::Bytes(&Sprite_Kind2), field, index), "the kind-2 object is not hidden");
         Check(!Excepted(0, 0x10, 0), "the exception list starts empty");
     }
     // 5. Case zero's table: each script's two west walks add north, its east walk south; 3 fewer steps a walk.

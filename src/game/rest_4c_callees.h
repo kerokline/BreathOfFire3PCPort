@@ -60,9 +60,10 @@ constexpr std::uint32_t kMusic = 0x675F90;      // u8 (read as a dword & 0xFF): 
 constexpr std::uint32_t kCards = 0x675F98;      // u8 x 9: the first game's nine values; the second's three digits
 constexpr std::uint32_t kPicks = 0x675FA1;      // u8 x 9: the first game's picks at +1..+8 (0 / 1)
 constexpr std::uint32_t kRecords = 0x675F9B;    // 8 x 5 bytes: the second game's guesses (3 digits, hits, blows)
-// The bet's three digits (DamageScratch's block, docs: hundreds, tens, ones).
-constexpr std::uint32_t kDigits = 0x903850;     // s8 x 3: ones +0, tens +1, hundreds +2
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox is handed
+// The bet's three digits (SharedScratch's block, docs: hundreds, tens, ones).
+inline auto& kDigits = SharedScratch;     // s8 x 3: ones +0, tens +1, hundreds +2
+constexpr std::uint32_t kDigits_addr = SharedScratch_addr; // kDigits's address, for the raw accessors that take one
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style Menu_DrawBox is handed
 constexpr std::uint32_t kTextB = 0x904D00;      // Text_Records' second record (sprintf and the prize name)
 
 // --- image tables read in place (.data / .rdata; their bytes are not copied here) --

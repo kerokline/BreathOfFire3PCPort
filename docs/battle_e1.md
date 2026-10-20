@@ -43,7 +43,7 @@ ours).
 
 | Address | Name | What |
 |---|---|---|
-| `0x42D7A0` | `BattleExtra_TallyOpen` | the backdrop and the tally; once no transition runs (`MoveScript_WaitWordDA`), `BattleExtra_ApplyTally`, `0x929F08` = 0, next step |
+| `0x42D7A0` | `BattleExtra_TallyOpen` | the backdrop and the tally; once no transition runs (`Transition_Busy`), `BattleExtra_ApplyTally`, `0x929F08` = 0, next step |
 | `0x42D7F0` | `BattleExtra_TallyCount` | counts `0x675E88[n]` up by `0x64ADD0[n]` to its target `0x675EA0[n]` (a press skips to it), then the next of six; after the sixth, a press gives `Transition_Start(2)` and the next step |
 | `0x42D880` | `BattleExtra_TallyClose` | once the transition is done, state 1 (`0x42D750`: `Window_ResetAll`, `Game_Step + 1`); else draws |
 | `0x42D8C0` | `BattleExtra_DrawTally(x, y)` | the window: box and border, title 0xE7, three rows of two labels (0xE8 + i, 0xEB + i) and two counters each (`Crt_sprintf` into `0x904BA0`, `Text_DrawFont12`) with a plus sign between, then 0xF0 and two 0xEF lines |
@@ -247,7 +247,7 @@ slots, 0 and + 1 from the slot input's cancel); `0x64AE48` 3
 
 **Regions** (after the engine frame's 27): the sprintf buffer `0x904BA0`
 (0x20; also where `0x904ABC + 0x904AB4` lands past the battle bytes), the
-tally's counters `0x675E88..0x675EC3`, `MoveScript_WaitWordDA`, character
+tally's counters `0x675E88..0x675EC3`, `Transition_Busy`, character
 records 1..7 past the engine frame's (`0x903B24..0x903F8F`), `0x939A04..0F`,
 `Text_Records` (0x40), the two CLUT runs (0x200 each), `0x90412C`, and the
 random picks' id tables `0x64AEC8..0x64AF07` (drawn, so every flags branch

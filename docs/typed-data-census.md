@@ -35,7 +35,7 @@ are after those fixes.
 | module constants outside any `namespace at` whose value is a data address | (in the 6,916's rule, not counted) | **2,019** definitions in 223 files; 1,333 (name, value) pairs over 1,060 distinct addresses | file-scope, module-namespace and function-local `constexpr kX = 0x...` (`msgbox_callees.h`, `scena_sc15.cpp`, `rest_4e.cpp`, ...); the round's "one name per address" rule covers them too |
 | ... addresses no `at` constant names | - | **675** (332 with no `[[data]]` entry, 331 with no `symbols.toml` name) | |
 | all distinct data addresses behind a constant | - | 3,222 (1,939 with no `symbols.toml` name) | the two maps together |
-| most names for one address | "up to a dozen" | 25 (`0x903850`, the `DamageScratch` block); 530 addresses carry two or more | `at` constants only |
+| most names for one address | "up to a dozen" | 25 (`0x903850`, the `SharedScratch` block); 530 addresses carry two or more | `at` constants only |
 | global sites: an `at::` reference or a module-constant reference to a data address | about 900 | **29,048** | 23,314 `at::` references (every reference, whatever wraps it: `B(` 7,796, `At(` 4,939, `Mem(` 2,614, a bare reference 2,913, ...) and 5,734 module-constant references in an accessor's address argument (`W(kScriptPool + 2 * index)`, `B(kShakeShift)`; `scena_sc15` 500, `msgbox` 356, `scena_sc11` 321, `rest_2b` 310, `rest_2e` 295) |
 | record sites: accessor on a pointer plus an offset | about 6,700 in 275 files | **20,067** in 484 files | the accessor vocabulary below, bare or namespace-qualified (`SetWord` 3,458, `SetLong` 3,155, `Long` 3,070, `Word` 2,934, `SetUL` / `UL` 2,822, ...); 14,109 on a local, 3,481 on a helper's result (`S() + 0x3C`), 1,546 an offset into a fixed record (`SB(4)` reading `kS + 4`), 931 on a `symbols.toml` pointer (`Sprite_Current + 0x38`) |
 | raw-address sites: accessor on a literal | - | **1,828** | `B(0x8031D8)`, `PutByte(0x803430, 0)`; `rest_2e` 530, `field_s` 328, `rest_2d` 140, `shop_states2` 133 |
@@ -110,23 +110,46 @@ SG reads the `const` rows with `kind = data` and `symbol = -` (1,608 of scope
 rows of its own files; the two together answer which module constants are
 retirable (the address has a `[[data]]` entry with a `ctype`).
 
-## 3. The CI rule
+## 3. The CI rules
 
-`.github/workflows/checks.yml`, job "Ledgers and symbols", step "The
-typed-data census's raw site count may not rise": `python
-tools/data_census.py --check` measures today's sites and fails when there are
-more than the committed table's `#count sites` line (50,943). A change that
+`.github/workflows/checks.yml`, job "Ledgers and symbols", two steps.
+
+**The ratchet**, step "The typed-data census's raw site count may not
+rise": `python tools/data_census.py --check` measures today's sites and
+fails when there are more than the committed table's `#count sites` line
+(27,390 since stage C4 part 2; 50,943 when it was built). A change that
 removes sites passes without touching the table; regenerate and commit the
-table to lower the ceiling (stage B's groups do so with each merge). A change
-that adds a raw access fails: use the `symbols.toml` name, or a typed
-record, instead. The rule only counts; the table's line numbers go stale with
-any edit and nothing compares them. The round doc's later rule (a raw
-accessor in `src/game` fails outright, after stage B) is not built.
+table to lower the ceiling. A change that adds a raw access fails: use the
+`symbols.toml` name, or a typed record, instead. The ratchet only counts;
+the table's line numbers go stale with any edit and nothing compares them.
 
-Checked 2026-10-19: one added `inline int CensusProbe() { return B(kMode) +
-B(kStep); }` in `rest_4e.cpp` (file-scope `kMode = 0x939A3E`) fails with
-50,945 against 50,943; one added `SB(4)` in `magic_s22.cpp` fails with 50,944.
-Before section 5's fixes the first passed.
+**The strict rule** (stage C4 part 2, 2026-10-20), step "Every raw data
+site in src/game is listed with a reason": `python tools/data_census.py
+--strict` measures the sites as `tools/typed_left.py` keys them (file,
+function, shape, accessor, expr, n - by place, not line) and fails
+
+- on a raw site in `src/game` with no row in `analysis/typed_left.tsv`,
+  or a row whose reason is `-`, printing its file, line and expression;
+- on a `src/game` row of the list whose key no longer measures (a stale
+  key), printing the key.
+
+The committed list is the exception list: 27,327 rows in `src/game` at the
+rule's introduction, every one with a reason (seams, harness and fuzz
+files, platform buffers, computed offsets, pointer forms, gate refusals,
+and the reasons stages B and C recorded per site; `typed_left.py`'s rows
+outside `src/game`, 63, are counted by the ratchet only). A new access
+that must stay raw is added by running `python tools/typed_left.py` and
+writing the reason into its row; a site that moved or became typed is
+dropped by the same regeneration (`typed_left.py` carries a reason across
+an edit that keeps the key, and across one that only changes `expr`).
+
+Checked 2026-10-19 (the ratchet): one added `inline int CensusProbe() {
+return B(kMode) + B(kStep); }` in `rest_4e.cpp` (file-scope `kMode =
+0x939A3E`) fails with 50,945 against 50,943; one added `SB(4)` in
+`magic_s22.cpp` fails with 50,944. Before section 5's fixes the first
+passed. Checked 2026-10-20 (the strict rule): the same `CensusProbe()`
+fails with two new sites, a `B(ObjTrio_addr + 0x3a)` with one, a list row
+duplicated with `n` 999 as a stale key; the tree as committed passes.
 
 ## 4. How a site is found, and what it misses
 
@@ -146,7 +169,33 @@ Before section 5's fixes the first passed.
     the one value `src/` gives the name. A constant reached through a
     differently-named alias of an `at` namespace (`hat::kTarget` in
     `magic_s23.cpp`, 17 sites) is counted here.
-  - One site per argument: a data constant inside a nested accessor
+  - A typed alias in a `namespace at` (`inline auto& kPendingX =
+    SharedScratch.d_10;`, stage C4) is a reference, not an address: an
+    `at::kX` whose own module (the explicit namespace, the file, its stem)
+    makes it an alias is typed and not counted. In the wider tiers (the
+    include closure, the enclosing namespace, any definition) another
+    module's alias of the same name is passed over and the constants there
+    answer (C4 audit C, a doubt: the rule had fired in every tier). An
+    `inline auto&` outside a `namespace at` is not an `at::` name.
+  - A typed name's address taken back for a raw access: `AddrOf(&kX)`
+    (rest_1g's file-local helper, its three W / SetW reads) and
+    `reinterpret_cast<T*>(&kX)[i]`
+    (rest_4c's six digit bytes), counted as a global at the alias's address
+    (its definition read: `Name`, `Name.f`, `Name[i].f`, or
+    `rv::As<records::T>(rv::Bytes(&Name[i]))->f`). Since the C4 audit (C F2);
+    before it these 9 sites were raw and uncounted.
+  - A typed entry's address spelled `<Name>_addr` in an accessor's address
+  argument, alone, plus an offset or plus an index (`B(ObjTrio_addr +
+  0x3a)`, `At(SharedScratch_addr)`, `Mem(Battle_Enemies_addr + i *
+  at::kEnemyStride)`): a global site at the entry's address plus the
+  offset when it is a constant. The owner's decision for the strict rule
+  (2026-10-20): these spellings are raw accesses. One inside another
+  call's parentheses (`Vertex(Prim_VertexScratch_addr + 8) + off`) stays
+  that helper's record site. The module companions of stage C4's aliases
+  (`kPendingX_addr = SharedScratch_addr + 0x10`) were counted already, as
+  module constants. Before stage C4 part 2 none of these counted: +8,459
+  sites (4,975 in fuzz and harness files).
+- One site per argument: a data constant inside a nested accessor
     (`Word(Mem(kS) + 4)`'s `Mem(kS)`) is that accessor's site, and the outer
     call is classified by what is left (here a record, `via=Mem`).
 - **Record**: a call to one of the accessors below, bare or
@@ -174,6 +223,10 @@ Before section 5's fixes the first passed.
   casts unless a definition says otherwise.
 - **Raw**: the same accessors with a first argument starting with a literal
   of six to eight hex digits inside the image and outside `.text`.
+- **A typed record's own bytes**: a subscript of `rv::Bytes(...)`
+  (`rv::Bytes(&Effect_Objects[6])[0x8]`, an offset its struct does not
+  name for this reader) is a record site, `family = base=<record>`. Since
+  stage C4 part 2: +301 sites.
 
 "Data address" is the image less `.text`, so the PE header's base counts: four
 module constants (`kImageBase`, `kExeLo`, `kImageLo` = `0x400000`, and
@@ -191,7 +244,8 @@ Not counted, by design or as a known gap:
   to a function, stored in a table): unlike `at::` references, only the
   accessor-wrapped ones are sites.
 - `B(bof3::addr::Name)` with no offset: about 114 by `grep` (an accessor
-  wrapping `addr::Name` alone). The name is typed; the access is not.
+  wrapping `addr::Name` alone). The name is typed; the access is not. (The
+  same access spelled `B(Name_addr)` is counted since stage C4 part 2.)
 - A `k` name with no constant value - a constant initialised at run time
   (`const U kHeader = at::AreaMap_HeaderAt();`) or a local pointer that
   happens to be called `k2` (`move_cmds.cpp`): 46 accessor calls start with

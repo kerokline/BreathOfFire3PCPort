@@ -236,7 +236,7 @@ void Move(U h) {
     case 11: B(Rest4d_EntryColumn_addr) = static_cast<unsigned char>(v); break;
     case 12: B(Rest4d_KeptTrack_addr) = static_cast<unsigned char>(v); break;
     case 13: B(at::kSlotNames + ((h >> 16) & 1 ? (h >> 17) % 20 : (h >> 17) % 300)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
-    case 14: B(at::kRecords + at::kRecordStride * ((h >> 16) % 7) + (v & 1 ? 0xB : (h >> 20) % 5)) ^= static_cast<unsigned char>(v | 1); break;
+    case 14: B(CharacterRecords_addr + at::kRecordStride * ((h >> 16) % 7) + (v & 1 ? 0xB : (h >> 20) % 5)) ^= static_cast<unsigned char>(v | 1); break;
     default: break;
     }
 }
@@ -442,7 +442,7 @@ void SeedCommu() {
     for (unsigned i = 1; i < 0x28; ++i) B(at::kName + i) = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next());
     for (unsigned c = 0; c < 4; ++c) B(at::kPicked + c) = static_cast<unsigned char>(sh::Next() % 10);
     Field_Request = static_cast<unsigned char>(PickOf(2, 2, 0, 1, sh::Next()));
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
+    Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
     // the record pointer: one of the scratch's, its +5 a slot mostly
     unsigned char* const record = sh::Scratch(0);
     record[5] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 60 : sh::Next());
@@ -452,16 +452,16 @@ void SeedCommu() {
 // The 60 slot cells half in use; the seven records' list bit half set.
 void SeedSlots() {
     const bool full = sh::Next() % 8 == 0;
-    for (U cell = at::kSlots; cell < at::kSlotsEnd; cell += 8)
+    for (U cell = Community_Records_addr; cell < at::kSlotsEnd; cell += 8)
         B(cell) = static_cast<unsigned char>(full || sh::Half() ? sh::Next() | 1 : 0);
     for (unsigned r = 0; r < 7; ++r) {
-        unsigned char& flags = B(at::kRecordFlags + at::kRecordStride * r);
+        unsigned char& flags = B(CharacterRecords_addr + 0xb + at::kRecordStride * r);
         flags = static_cast<unsigned char>(sh::Half() ? flags | 1 : flags & ~1u);
     }
     for (unsigned i = 0; i < 5 * 60; ++i)
         if (sh::Next() % 6 == 0) B(at::kSlotNames + i) = 0;
     for (unsigned r = 0; r < 7; ++r)
-        if (sh::Half()) B(at::kRecords + at::kRecordStride * r + sh::Next() % 5) = 0;
+        if (sh::Half()) B(CharacterRecords_addr + at::kRecordStride * r + sh::Next() % 5) = 0;
 }
 
 // MessagePools: the draw's 256 offsets and the header's first 0x100 pointing

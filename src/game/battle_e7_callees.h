@@ -30,15 +30,15 @@ constexpr std::uint32_t kList3OutBound = 0x599551;   // 0x143 in GeneWin_List3Sl
 
 // --- the cells (every one an address in BOF3.exe) ---------------------------
 // kWindowCurrent: now BattleWinStates_Current (symbols.toml). the window record a handler runs for
-// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour, a CLUT row
+// kColour: now Config_WindowColour (symbols.toml). s8: the window colour, a CLUT row
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). the CLUT shadow rows (64 bytes each)
-constexpr std::uint32_t kTasks = 0x93A000;           // BattleTask_Create's 48 slots of 0x84
+// kTasks: now BattleTask_Slots (symbols.toml). BattleTask_Create's 48 slots of 0x84
 constexpr std::uint32_t kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 // kMenuActor: now BattleE4_MenuActor (symbols.toml). the command menu's member (an ObjTrio record)
-// kPartyAp: now ObjTrio[0x9a] (symbols.toml). ObjTrio +0x9A (AP), stride 0x14C
+// kPartyAp: now ObjTrio[0].ap (symbols.toml). ObjTrio +0x9A (AP), stride 0x14C
 constexpr std::uint32_t kPartyStride = 0x14C;
-constexpr std::uint32_t kCharRecords = 0x903A70;     // CharacterRecords, stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr std::uint32_t kPrintBuf = 0x904BA0;        // the battle windows' sprintf buffer
 constexpr std::uint32_t kLevelBufs = 0x904D20;       // the level-up window's eight buffers of 0x20
@@ -48,7 +48,7 @@ constexpr std::uint32_t kLevelBufs = 0x904D20;       // the level-up window's ei
 // kGeneRow: now BattleE5_GeneRow (symbols.toml). 0xFF: the hand on the first box
 // kGeneColumn: now BattleE1_Roster (symbols.toml).
 // kApCost: now BattleActions_ApCost (symbols.toml). u8: the AP cost (battle_actions.md)
-// kDropCount: now BattleE7_DropCount (symbols.toml). u8: the drops listed
+// kDropCount: now Battle_DropCount (symbols.toml). u8: the drops listed
 constexpr std::uint32_t kDropItems = 0x904AF4;       // u16 x n: category << 8 | item
 constexpr std::uint32_t kDropCounts = 0x904B14;      // u8 x n
 constexpr std::uint32_t kGeneList = 0x904608;        // 4-byte rows: three cost indices (0xFF none), a form byte
@@ -67,7 +67,7 @@ constexpr std::uint32_t kEquipCategories = 0x66B5BC; // u8 x 6: the equipment sl
 constexpr std::uint32_t kEquipIcons = 0x66B5B4;      // u8 x 6
 // kFieldMember: now BattleActorCopies_ItemActor (symbols.toml). s8: BATE's member (0x904065's index)
 constexpr std::uint32_t kPartyOrder = 0x904065;      // u8 x n: the party's members
-constexpr std::uint32_t kMemberIds = 0x66972C;       // MoveScript_EffectState: a member byte by slot
+// kMemberIds: now Character_IndexById (symbols.toml). Character_IndexById: a member byte by slot
 
 // --- .data strings and piece lists (addresses only) -------------------------
 constexpr std::uint32_t kFmtNumber = 0x5E10C0;       // Area08_MessageFormat

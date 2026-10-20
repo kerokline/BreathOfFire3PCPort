@@ -26,6 +26,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/inventory_ops_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -77,9 +78,9 @@ void Record(u32 what, u32 a = 0, u32 b = 0, u32 c = 0, u32 d = 0, u32 e = 0) {
 }
 
 constexpr unsigned kObjects = 5;   // ObjTrio and the two slots after it that Encounter_RollInitiative walks
-unsigned char* Obj(unsigned i) { return ObjTrio + at::kObjStride * i; }
-unsigned char* EnemySlot(unsigned k) { return At(at::kEnemies + at::kEnemyStride * k); }
-unsigned char* ActorRecord(unsigned i) { return At(at::kRecords + at::kRecordSize * i); }
+unsigned char* Obj(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
+unsigned char* EnemySlot(unsigned k) { return At(Encounter_Slots_addr + at::kEnemyStride * k); }
+unsigned char* ActorRecord(unsigned i) { return At(CharacterRecords_addr + at::kRecordSize * i); }
 
 // Where Sprite_Current may point: the five objects or the placement's
 // scratch sprite. Field_State: the five objects.
@@ -132,8 +133,8 @@ void Disturb() {
     }
     case 15: At(Cond_Flags_addr + 0xd2 + w % 6)[0] = static_cast<unsigned char>(v % 12); break;
     case 16: SetWord(At(0x903800 + 2 * (w % 2)), v); break;   // Camera_ShiftX / ShiftY
-    case 17: SetWord(At(0x903840), v); break;                  // Camera_Distance
-    case 18: At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(v); break;
+    case 17: SetWord(At(Camera_Distance_addr), v); break;        // Camera_Distance
+    case 18: At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(v); break;
     default: SetLong(At(0x905E60 + 4 * (w & 1)), static_cast<std::int32_t>(v)); break;   // Field_Kind2Z / X
     }
 }
@@ -529,7 +530,7 @@ constexpr Region kRegionList[] = {
     {0x904AA0, 0x50},              // the battle's facing, the initiative, the battle flags
     {0x802D40, 0x680},             // ObjTrio and the two slots after it
     {0x7E11E0, 0xA00},             // Effect_Objects, 20 of them
-    {at::kRecords, 0x5F0},         // the actor records 0..8
+    {CharacterRecords_addr, 0x5F0}, // the actor records 0..8
     {Gfx_ClutStripSource_addr + 0x1e00, 0x8C0}, // the shade source and the saved copies, CLUTs 0..31
     {Gfx_ClutStrip_addr + 0x1e00, 0x800},
     {0x937F88, 0xC},               // Sprite_Current, Gfx_ClutStripDirty
@@ -728,7 +729,7 @@ Args Seed(unsigned k) {
             if (Half()) o[8] = At(at::kFaceTable)[At(at::kBattleFacing)[0]];
         }
         for (unsigned i = 0; i < 9; ++i) SetWord(ActorRecord(i) + 0x10, Half() ? 0x4000 : Next() & ~0x4000u);
-        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Half() ? 4 : Next() & ~4u);
+        At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Half() ? 4 : Next() & ~4u);
         break;
     case kToPlacesK:
         for (unsigned i = 0; i < kObjects; ++i) {
@@ -736,14 +737,14 @@ Args Seed(unsigned k) {
             o[0xB] = static_cast<unsigned char>(Pick({0, 1, 2, 3}));
             if (Often()) o[0x89] = At(Cond_Flags_addr + 0xd5)[Next() % 3];
         }
-        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 4 : Next() & ~4u);
+        At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 4 : Next() & ~4u);
         break;
     case kAtPlacesK:
         for (unsigned i = 0; i < 9; ++i) ActorRecord(i)[0x11] = static_cast<unsigned char>(Half() ? 0x40 : Next() & ~0x40u);
         break;
     case kScriptOnceK:
         for (unsigned i = 0; i < kObjects; ++i) Obj(i)[0xB] = static_cast<unsigned char>(Pick({0, 0, 1, 1, 2}));
-        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 0x10 : Next() & ~0x10u);
+        At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 0x10 : Next() & ~0x10u);
         break;
     case kShadeLowerK:
         for (unsigned i = 0x5D; i <= 0x5F; ++i)
@@ -801,7 +802,7 @@ void Cover(unsigned k, const Args& x, const State& in, const State& out, u32 res
     case kPlaceEnemiesK: {
         unsigned n = 0;
         for (unsigned e = 0; e < 8; ++e) {
-            const unsigned o = Offset(at::kEnemies + at::kEnemyStride * e);
+            const unsigned o = Offset(Encounter_Slots_addr + at::kEnemyStride * e);
             n += in.memory[o] != 0 && out.memory[o] == 0 ? 1u : 0u;
         }
         ++s[n < 2 ? n : 2];

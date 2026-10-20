@@ -34,6 +34,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_4f_callees.h"
 #include "game/scenario_harness.h"
@@ -46,11 +47,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
-[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace at = rest_4f::at;
 using U = std::uint32_t;
@@ -67,7 +63,6 @@ using DrawText = const unsigned char* (__cdecl*)(int, int, int, int, const unsig
 unsigned char* S() { return Sprite_Current; }
 unsigned char& B(U a) { return At(a)[0]; }
 U L(U a) { return static_cast<U>(Long(At(a))); }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 std::int32_t SL(const unsigned char* p) { return Long(p); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(U a) { return Word(At(a)); }
@@ -111,9 +106,9 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned index, const 
 // ===========================================================================
 
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
-void Backdrop() { SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(Config_Background); }
 // The banner box: (0x14, y, 0x118, 0x13) in the window style.
-void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour)); }
+void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour)); }
 // The banner's text, system message 0xBC + the cursor (s8), at (0x1C, 0x13).
 void TitleText(U id) {
     const unsigned char* const text = SH_CALL(Msg_SystemPtr)(id);
@@ -132,8 +127,8 @@ U RowState(unsigned row) {
     return cursor == static_cast<int>(row) ? (d & 0xFF) : 0;
 }
 void SetDefaults() {
-    BattleDraw_Colour = 0;
-    FieldS_Backdrop = 0;
+    Config_WindowColour = 0;
+    Config_Background = 0;
     Rest4f_Setting3 = 0;
     Rest4f_Setting5C = 0;
     BattleWinStates_LabelGate = 0;
@@ -175,14 +170,14 @@ extern "C" void __cdecl ConfigScreen_OpenFade(void) {
 
 // original 0x460CF0 (ConfigScreen_OpenStates[1]): the screen drawn at rest
 // (the backdrop, the banner box, the panel at (0x1C, 0x40), the top bar with no
-// button lit); once MoveScript_WaitWordDA is 0, the counter and 0x929F03 0 and
+// button lit); once Transition_Busy is 0, the counter and 0x929F03 0 and
 // the state on.
 extern "C" void __cdecl ConfigScreen_OpenWait(void) {
     Backdrop();
     TitleBox(0x10);
     SH_CALL(Config_DrawPanel)(0x1C, 0x40);
     SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26);
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const unsigned char st = FieldS_Step;
     B(at::kCounter) = 0;
     Rest2d_MenuSub = 0;
@@ -222,7 +217,7 @@ extern "C" void __cdecl ConfigScreen_SlideIn(void) {
 // 4, bit 0x800 leaves without a sound; elsewhere a cancel button leaves with the
 // two sounds.
 extern "C" void __cdecl ConfigScreen_TopBar(void) {
-    const unsigned char bd = FieldS_Backdrop;
+    const unsigned char bd = Config_Background;
     B(at::kCounter) = 0;
     SH_CALL(Menu_DrawBackdrop)(bd);
     TitleBox(0x10);
@@ -332,8 +327,8 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
         const U held = L(at::kPressedDword);
         switch (row) {
         case 0: StepSetting(ModeFlow_ConfigBytes_addr, 2, false); break;
-        case 1: StepSetting(BattleDraw_Colour_addr, 3, false); break;
-        case 2: StepSetting(FieldS_Backdrop_addr, 3, true); break;
+        case 1: StepSetting(Config_WindowColour_addr, 3, false); break;
+        case 2: StepSetting(Config_Background_addr, 3, true); break;
         case 3:
             if (held & 0xA000) {
                 Sound(0x101);
@@ -506,7 +501,7 @@ extern "C" void __cdecl ConfigScreen_SlideOut(void) {
 // original 0x4616F0 (cdecl (sel, x, y)): Menu_DrawButtonRow(x, y, set 6, sel,
 // the style byte - the callee's unused fifth).
 extern "C" void __cdecl ConfigScreen_DrawButtons(int sel, int x, int y) {
-    SH_CALL(Menu_DrawButtonRow)(x, y, 6, sel, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawButtonRow)(x, y, 6, sel, static_cast<unsigned char>(Config_WindowColour));
 }
 
 // original 0x461710 (cdecl (x, y)): the panel. The five settings read first (rows
@@ -515,7 +510,7 @@ extern "C" void __cdecl ConfigScreen_DrawButtons(int sel, int x, int y) {
 // menu_frame.cpp holds it); then for each row at (x + 5, y + 9 + 15 * row): Config_DrawRowLabel
 // and Config_DrawRowOptions, each with the row's state (RowState, read afresh).
 extern "C" void __cdecl Config_DrawPanel(int x, int y) {
-    const unsigned char settings[6] = {static_cast<unsigned char>(ModeFlow_ConfigBytes), static_cast<unsigned char>(BattleDraw_Colour), FieldS_Backdrop, Rest4f_Setting3, FieldE2_RunDefault, 0};
+    const unsigned char settings[6] = {static_cast<unsigned char>(ModeFlow_ConfigBytes), static_cast<unsigned char>(Config_WindowColour), Config_Background, Rest4f_Setting3, FieldE2_RunDefault, 0};
     SH_AT(Frame, MenuFrame_Draw())(x, y, 0x21, 0xD);
     const int x5 = x + 5;
     int row_y = y + 9;
@@ -592,7 +587,7 @@ extern "C" void __cdecl Config_DrawControllerPanel(int x, int y) {
 // (1, 0x20); unless DIV-0051's jump stands at 0x461BAC, a second at x16 + 0x53
 // with the first's two y floats copied as dwords.
 extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
-    const unsigned char style = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned char style = static_cast<unsigned char>(Config_WindowColour);
     const ConfigTextOperands& ops = ConfigText_Operands();   // at::kPadBoxWidth .. kPadSecondCell
     SH_CALL(Menu_DrawBox)(x, y, ops.box_width, 0x10, 0, style);
     const U r = static_cast<U>(row) & 0xFF;
@@ -665,9 +660,9 @@ extern "C" void __cdecl EffectKind07_DrawSprite(int semi) {
     SetUL(prim + 8, 0x42000000u);
     SetUL(prim + 0xC, 0x42000000u);
     prim[0x15] = 0x20;
-    SetWord(prim + 0x18, 0x100);
-    SetWord(prim + 0x1A, 0x6E8);
-    SetWord(prim + 0x16, 0x7A80);
+    rv::As<records::GpuSprt>(prim)->w = 0x100;
+    rv::As<records::GpuSprt>(prim)->h = 0x6E8;
+    rv::As<records::GpuSprt>(prim)->clut = 0x7A80;
     const unsigned char* const s = S();
     prim[4] = s[0x5D];
     prim[5] = s[0x5E];
@@ -712,11 +707,11 @@ extern "C" void __cdecl EffectKind07_FadeOut(void) {
 // 5, +1 = 1.
 extern "C" void __cdecl EffectKind08_Start(void) {
     unsigned char* s = S();
-    EffectRec(s)->x = 0xB0000;
-    EffectRec(s)->z = 0xF8000;
+    rv::As<records::EffectObject>(s)->x = 0xB0000;
+    rv::As<records::EffectObject>(s)->z = 0xF8000;
     const long e = SH_CALL(AreaMap_Elevation)(SL(s + 0x34), SL(s + 0x38));
     s = S();
-    SetWord(s + 0x3E, static_cast<U>(e));
+    rv::As<records::EffectObject>(s)->height_whole = static_cast<U>(e);
     s[0x29] = 5;
     s[1] = 1;
 }
@@ -762,7 +757,7 @@ const unsigned char* TraceObject(const char* who) {
         bof3::Fatal("%s: the object byte +6 is %u, past the thirty Sprite_Objects records - the original reads what "
                     "follows (docs/rest_4f.md section 7)",
                     who, idx);
-    return Sprite_Objects + idx * 0xA4u;
+    return rv::Bytes(&Sprite_Objects[idx]);
 }
 
 // One run of kind 8's line along z, in steps of 0x8000 (`dir` +1 or -1) from z to
@@ -807,8 +802,8 @@ void Run(Trace& t, std::int32_t target, U oh, int dir, bool back, U colour) {
 extern "C" void __cdecl EffectKind08_TraceLine(void) {
     const unsigned char* const s = S();
     const unsigned char* const o = TraceObject("EffectKind08_TraceLine");
-    Trace t{static_cast<std::uint32_t>(EffectRec(s)->x), static_cast<std::uint32_t>(EffectRec(s)->z), static_cast<std::uint32_t>(EffectRec(s)->height), static_cast<std::uint32_t>(EffectRec(s)->height)};
-    Run(t, SL(o + 0x38), static_cast<std::uint32_t>(SpriteRec(o)->height), +1, false, 0xC0C0C0);
+    Trace t{static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height)};
+    Run(t, SL(o + 0x38), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(o)->height), +1, false, 0xC0C0C0);
     if (B(at::kChapterByte4A) == 0x32) S()[1] = 2;
 }
 
@@ -821,8 +816,8 @@ extern "C" void __cdecl EffectKind08_TraceTwo(void) {
     const unsigned char* const s = S();
     const unsigned char* const o = TraceObject("EffectKind08_TraceTwo");
     const std::int32_t target = SL(o + 0x38);
-    const U oh = static_cast<std::uint32_t>(SpriteRec(o)->height);
-    Trace t{static_cast<std::uint32_t>(EffectRec(s)->x), static_cast<std::uint32_t>(EffectRec(s)->z), static_cast<std::uint32_t>(EffectRec(s)->height), 0};
+    const U oh = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(o)->height);
+    Trace t{static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), 0};
     Run(t, target, oh, +1, false, 0xC0C0C0);
     t.x = 0xB0000;
     t.z = 0x138000;
@@ -841,19 +836,19 @@ extern "C" void __cdecl EffectKind08_TraceTwo(void) {
 // +0x20, +0x1C, +0x18 0; +0xA, +0xB, +8, +7, +6 0; sound 0x20E; +1 = 1.
 extern "C" void __cdecl EffectKind09_Start(void) {
     unsigned char* s = S();
-    EffectRec(s)->x = 0x638000;
-    EffectRec(s)->z = 0xD0000;
-    SetWord(s + 0x3E, 0x300);
-    SetUL(s + 0x64, 0);
-    SetUL(s + 0x68, 0);
-    SetUL(s + 0x6C, 0);
+    rv::As<records::EffectObject>(s)->x = 0x638000;
+    rv::As<records::EffectObject>(s)->z = 0xD0000;
+    rv::As<records::EffectObject>(s)->height_whole = 0x300;
+    rv::As<records::EffectObject>(s)->angle[0] = 0;
+    rv::As<records::EffectObject>(s)->angle[1] = 0;
+    rv::As<records::EffectObject>(s)->angle[2] = 0;
     s[9] = 0x78;
     s[0x5F] = s[0x5E] = s[0x5D] = 0xFF;
-    SetUL(s + 0xC, 1);
-    SetUL(s + 0x10, 0);
-    SetUL(s + 0x20, 0);
-    SetUL(s + 0x1C, 0);
-    SetUL(s + 0x18, 0);
+    rv::As<records::EffectWork>(s)->work_0c = 1;
+    rv::As<records::EffectWork>(s)->work_10 = 0;
+    rv::As<records::EffectObject>(s)->work_20 = 0;
+    rv::As<records::EffectObject>(s)->work_1c = 0;
+    rv::As<records::EffectObject>(s)->work_18 = 0;
     s[0xA] = s[0xB] = s[8] = s[7] = s[6] = 0;
     Sound(0x20E);
     S()[1] = 1;
@@ -897,8 +892,8 @@ void GrowByte(unsigned off, unsigned step, unsigned mid, unsigned char next) {
 extern "C" void __cdecl EffectKind09_Open1(void) {
     Fans(1);
     unsigned char* const s = S();
-    SetUL(s + 0x18, UL(s + 0x18) + 8);
-    if (UL(S() + 0x18) != 0x60) return;
+    rv::As<records::EffectObject>(s)->work_18 = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) + 8;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18) != 0x60) return;
     Sound(0x20E);
     S()[1] = 2;
 }
@@ -908,9 +903,9 @@ extern "C" void __cdecl EffectKind09_Open1(void) {
 extern "C" void __cdecl EffectKind09_Open2(void) {
     Fans(2);
     unsigned char* const s = S();
-    SetUL(s + 0x1C, UL(s + 0x1C) + 0x10);
-    if (UL(S() + 0x1C) == 0x20) Sound(0x20E);
-    if (UL(S() + 0x1C) != 0xA0) return;
+    rv::As<records::EffectObject>(s)->work_1c = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x10;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c) == 0x20) Sound(0x20E);
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c) != 0xA0) return;
     Sound(0x20E);
     S()[1] = 3;
 }
@@ -955,9 +950,9 @@ extern "C" void __cdecl EffectKind09_Open7(void) {
 extern "C" void __cdecl EffectKind09_Open8(void) {
     Fans(8);
     unsigned char* const s = S();
-    SetUL(s + 0x20, UL(s + 0x20) + 8);
-    if (UL(S() + 0x20) == 0x10) Sound(0x20E);
-    if (UL(S() + 0x20) != 0x60) return;
+    rv::As<records::EffectObject>(s)->work_20 = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20) + 8;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20) == 0x10) Sound(0x20E);
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20) != 0x60) return;
     Sound(0x203);
     B(at::kChapterCount) = static_cast<unsigned char>(B(at::kChapterCount) + 1);
     S()[1] = 9;
@@ -974,10 +969,10 @@ extern "C" void __cdecl EffectKind09_Spin(void) {
     SH_CALL(EffectKind09_DrawBlades)();
     unsigned char* const s = S();
     const std::int32_t c = SL(s + 0xC);
-    if (c < 0x80) SetUL(s + 0xC, static_cast<U>(c) + 4);
+    if (c < 0x80) rv::As<records::EffectWork>(s)->work_0c = static_cast<U>(c) + 4;
     const std::int32_t d = SL(s + 0x10);
-    if (d < 0xB6) SetUL(s + 0x10, static_cast<U>(d) + 2);
-    else SetUL(s + 0x10, 0xB6);
+    if (d < 0xB6) rv::As<records::EffectWork>(s)->work_10 = static_cast<U>(d) + 2;
+    else rv::As<records::EffectWork>(s)->work_10 = 0xB6;
     s[9] = static_cast<unsigned char>(s[9] - 1);
 }
 
@@ -1020,13 +1015,13 @@ short Arm(int (__cdecl* f)(int), int angle, U len) {
 extern "C" void __cdecl EffectKind09_DrawBlades(void) {
     unsigned char* const s0 = S();
     const U n = static_cast<U>(s0[9]) << 12;
-    const U len = UL(s0 + 0xC);
-    const U angle = UL(s0 + 0x10);
+    const U len = rv::As<records::EffectWork>(s0)->work_0c;
+    const U angle = rv::As<records::EffectWork>(s0)->work_10;
     const U hi = static_cast<U>((static_cast<std::int64_t>(static_cast<std::int32_t>(n)) *
                                  static_cast<std::int64_t>(static_cast<std::int32_t>(0xB60B60B7u))) >> 32);
     U q = Sar(hi + n, 8);
     q += q >> 31;
-    SetUL(s0 + 0x6C, q);
+    rv::As<records::EffectObject>(s0)->angle[2] = q;
     const short c1 = Arm(SH_CALL(Math_Cos), static_cast<int>(angle), len);
     const short s1 = Arm(SH_CALL(Math_Sin), static_cast<int>(angle), len);
     const short reach = static_cast<short>(len << 4);
@@ -1047,7 +1042,7 @@ extern "C" void __cdecl EffectKind09_DrawBlades(void) {
         if (blade & 1) Triangle(odd0, odd1, odd2, colours);
         else Triangle(even0, even1, even2, colours);
         unsigned char* const s = S();
-        SetUL(s + 0x6C, UL(s + 0x6C) + 0xAA);
+        rv::As<records::EffectObject>(s)->angle[2] = rv::As<records::EffectObject>(s)->angle[2] + 0xAA;
     }
 }
 
@@ -1058,10 +1053,10 @@ extern "C" void __cdecl EffectKind09_DrawBlades(void) {
 // record current afterwards.
 extern "C" void __cdecl EffectKind09_DrawFan(int len, int a1, int a2, int a3) {
     unsigned char* const s0 = S();
-    const U k64 = UL(s0 + 0x64), k68 = UL(s0 + 0x68), k6C = UL(s0 + 0x6C), k70 = UL(s0 + 0x70);
-    SetUL(s0 + 0x64, static_cast<U>(a1));
-    SetUL(s0 + 0x68, static_cast<U>(a2));
-    SetUL(s0 + 0x6C, static_cast<U>(a3));
+    const U k64 = rv::As<records::EffectObject>(s0)->angle[0], k68 = rv::As<records::EffectObject>(s0)->angle[1], k6C = rv::As<records::EffectObject>(s0)->angle[2], k70 = rv::As<records::EffectObject>(s0)->reach;
+    rv::As<records::EffectObject>(s0)->angle[0] = static_cast<U>(a1);
+    rv::As<records::EffectObject>(s0)->angle[1] = static_cast<U>(a2);
+    rv::As<records::EffectObject>(s0)->angle[2] = static_cast<U>(a3);
     const short c = Arm(SH_CALL(Math_Cos), 0x4F, static_cast<U>(len));
     const short sn = Arm(SH_CALL(Math_Sin), 0x4F, static_cast<U>(len));
     const short v0[4] = {0, 0, 0, 0};
@@ -1073,10 +1068,10 @@ extern "C" void __cdecl EffectKind09_DrawFan(int len, int a1, int a2, int a3) {
         prim[0x24] = prim[0x25] = prim[0x26] = 0x64;
     });
     unsigned char* const s = S();
-    SetUL(s + 0x64, k64);
-    SetUL(s + 0x68, k68);
-    SetUL(s + 0x6C, k6C);
-    SetUL(s + 0x70, k70);
+    rv::As<records::EffectObject>(s)->angle[0] = k64;
+    rv::As<records::EffectObject>(s)->angle[1] = k68;
+    rv::As<records::EffectObject>(s)->angle[2] = k6C;
+    rv::As<records::EffectObject>(s)->reach = k70;
 }
 
 // ===========================================================================
@@ -1089,10 +1084,10 @@ extern "C" void __cdecl EffectKind09_DrawFan(int len, int a1, int a2, int a3) {
 extern "C" void __cdecl EffectKind0B_Start(void) {
     unsigned char* s = S();
     StF(s + 0x74, I(static_cast<U>(Rest4f_Kind0BOffset +
-                                   static_cast<std::int16_t>(W(at::kExtra0 + 0x2E)))));
+                                   Sprite_ObjectsExtra[0].screen_x)));
     StF(s + 0x78, I(static_cast<U>(static_cast<signed char>(B(at::kKind0BOffset + 1)) +
-                                   static_cast<std::int16_t>(W(at::kExtra0 + 0x30)))));
-    EffectRec(s)->depth_f = 0x3C23D70Au;
+                                   Sprite_ObjectsExtra[0].screen_y)));
+    rv::As<records::EffectObject>(s)->depth_f = 0x3C23D70Au;
     s[9] = 0;
     s[6] = 0x20;
     s[0x5F] = s[0x5E] = s[0x5D] = 0x80;
@@ -1156,18 +1151,18 @@ extern "C" void __cdecl EffectKind0B_Drop(void) {
 // byte +0x1C (x, z, and the height word +0x3E); +1 up.
 extern "C" void __cdecl EffectKind0B_Attach(void) {
     unsigned char* s = S();
-    EffectRec(s)->x = L(at::kExtra0 + 0x34);
-    EffectRec(s)->z = L(at::kExtra0 + 0x38);
-    EffectRec(s)->height = L(at::kExtra0 + 0x3C);
-    SetUL(s + 0x64, L(at::kExtra0 + 0x64));
-    SetUL(s + 0x68, L(at::kExtra0 + 0x68));
-    SetUL(s + 0x6C, L(at::kExtra0 + 0x6C));
+    rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x);
+    rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].z);
+    rv::As<records::EffectObject>(s)->height = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].height);
+    rv::As<records::EffectObject>(s)->angle[0] = Sprite_ObjectsExtra[0].angle[0];
+    rv::As<records::EffectObject>(s)->angle[1] = Sprite_ObjectsExtra[0].angle[1];
+    rv::As<records::EffectObject>(s)->angle[2] = Sprite_ObjectsExtra[0].angle[2];
     long out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, s[0x1C]);
     s = S();
-    EffectRec(s)->x = static_cast<std::uint32_t>(EffectRec(s)->x) + static_cast<U>(out[0]);
-    EffectRec(s)->z = static_cast<std::uint32_t>(EffectRec(s)->z) + static_cast<U>(out[1]);
-    SetWord(s + 0x3E, Word(s + 0x3E) + static_cast<U>(out[2]));
+    rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) + static_cast<U>(out[0]);
+    rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + static_cast<U>(out[1]);
+    rv::As<records::EffectObject>(s)->height_whole = rv::As<records::EffectObject>(s)->height_whole + static_cast<U>(out[2]);
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -1177,7 +1172,7 @@ extern "C" void __cdecl EffectKind0B_Attach(void) {
 // quad drawn. PSX twin 0x801F8AB8 (a SCENA overlay).
 extern "C" void __cdecl EffectKind0B_Follow(void) {
     unsigned char* s = S();
-    SetWord(s + 0x3E, Word(s + 0x3E) + 0x20);
+    rv::As<records::EffectObject>(s)->height_whole = rv::As<records::EffectObject>(s)->height_whole + 0x20;
     const long point[3] = {SL(s + 0x34), SL(s + 0x38), SL(s + 0x3C)};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     if (!Fade0B(4, 7)) {
@@ -1225,9 +1220,9 @@ extern "C" void __cdecl EffectKind0B_DrawQuad(void) {
     StF(prim + 0x20, depth);
     StF(prim + 0x10, depth);
     const unsigned clut = SH_CALL(Gpu_GetClut)(0xA0, 0x1E3);
-    SetWord(prim + 0x16, clut);
+    rv::As<records::GpuPolyFT4>(prim)->clut = clut;
     const unsigned page = SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100);
-    SetWord(prim + 0x26, page);
+    rv::As<records::GpuPolyFT4>(prim)->tpage = page;
     SH_CALL(Gpu_SetShadeTex)(prim, 0);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     if (Draw_PassFlags != 0) SH_CALL(Gfx_CommitPrim)(3, 0x48);
@@ -1248,7 +1243,7 @@ U Hi(const void* p) { return Key(p) & 0xFFFF0000u; }
 // Palette 0x7B: entries 1..30 the leader's palette (ObjTrio 0's +0x27) with bit
 // 15 set, entries 0 and 31 zero; Gfx_ClutStripDirty is set by the callers.
 void TintPalette() {
-    const U from = Gfx_ClutStrip_addr + 2 + static_cast<std::uint32_t>(ObjTrio[0x27]) * at::kClutBytes;
+    const U from = Gfx_ClutStrip_addr + 2 + static_cast<std::uint32_t>(ObjTrio[0].clut) * at::kClutBytes;
     for (U i = 0; i < 30; ++i) SetW(at::kClut7B + 2 + 2 * i, W(from + 2 * i) | 0x8000);
     Gfx_ClutStrip[0xf60] = 0;
     Gfx_ClutStrip[0xf7f] = 0;
@@ -1274,16 +1269,16 @@ bool Above38() { return static_cast<std::int16_t>(W(at::kKind02Word)) > 0x38; }
 // the colour 0; the panel's y +0x10 0xF0; +1 up.
 extern "C" void __cdecl EffectKind02_Start(void) {
     unsigned char* const s = S();
-    s[0x25] = ObjTrio[0x25];
-    s[0x26] = ObjTrio[0x26];
-    s[0x27] = ObjTrio[0x27];
-    s[0x28] = ObjTrio[0x28];
+    s[0x25] = ObjTrio[0].tex_slot;
+    s[0x26] = ObjTrio[0].tex_row;
+    s[0x27] = ObjTrio[0].clut;
+    s[0x28] = ObjTrio[0].clut_mode;
     s[0x29] = 2;
     s[0x24] = 0x80;
-    EffectRec(s)->screen_x = 0x39;
-    EffectRec(s)->screen_y = 0xC8;
+    rv::As<records::EffectObject>(s)->screen_x = 0x39;
+    rv::As<records::EffectObject>(s)->screen_y = 0xC8;
     s[0x48] = s[0x5C] = s[0x5D] = s[0x5E] = s[0x5F] = 0;
-    SetUL(s + 0x10, 0xF0);
+    rv::As<records::EffectWork>(s)->work_10 = 0xF0;
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -1291,9 +1286,9 @@ extern "C" void __cdecl EffectKind02_Start(void) {
 // held there and +1 up; EffectHud_Draw(0xC, y).
 extern "C" void __cdecl EffectKind02_SlideIn(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x10, UL(s + 0x10) + 0xFFFFFFF8u);
+    rv::As<records::EffectWork>(s)->work_10 = rv::As<records::EffectWork>(s)->work_10 + 0xFFFFFFF8u;
     if (SL(s + 0x10) < 0xAE) {
-        SetUL(s + 0x10, 0xAE);
+        rv::As<records::EffectWork>(s)->work_10 = 0xAE;
         s[1] = static_cast<unsigned char>(s[1] + 1);
     }
     Panel(Hi(s));
@@ -1310,9 +1305,9 @@ extern "C" void __cdecl EffectKind02_Body(void) {
 // there, +1 = 1, +2 = +3 = 0; the panel drawn.
 extern "C" void __cdecl EffectKind02_SlideOut(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x10, UL(s + 0x10) + 8);
+    rv::As<records::EffectWork>(s)->work_10 = rv::As<records::EffectWork>(s)->work_10 + 8;
     if (SL(s + 0x10) > 0xF0) {
-        SetUL(s + 0x10, 0xF0);
+        rv::As<records::EffectWork>(s)->work_10 = 0xF0;
         s[1] = 1;
         s[2] = s[3] = 0;
     }
@@ -1372,19 +1367,19 @@ extern "C" void __cdecl EffectKind02_Mode1Brighten(void) {
 // +0x5A copied; Sprite_QueueOverlay (a tail jmp).
 extern "C" void __cdecl EffectKind02_CopyLeader(void) {
     unsigned char* const s = S();
-    if (ObjTrio[2] == 1) {
+    if (ObjTrio[0].step == 1) {
         s[2] = 0;
         return;
     }
     if (Above38()) s[2] = 3;
-    s[0x2A] = ObjTrio[0x2a];
-    s[0x49] = ObjTrio[0x49];
-    s[0x4A] = ObjTrio[0x4a];
-    s[0x4B] = ObjTrio[0x4b];
-    SetUL(s + 0x50, L(at::kLeader + 0x50));
-    SetUL(s + 0x54, L(at::kLeader + 0x54));
-    SetWord(s + 0x58, W(at::kLeader + 0x58));
-    SetWord(s + 0x5A, W(at::kLeader + 0x5A));
+    s[0x2A] = ObjTrio[0].flip;
+    s[0x49] = ObjTrio[0].script_steps;
+    s[0x4A] = ObjTrio[0].script_hold;
+    s[0x4B] = ObjTrio[0].animation;
+    rv::As<records::EffectObject>(s)->script = ObjTrio[0].script;
+    rv::As<records::EffectObject>(s)->frames = ObjTrio[0].frames;
+    rv::As<records::EffectObject>(s)->script_pos = ObjTrio[0].script_pos;
+    rv::As<records::EffectObject>(s)->frame_word = ObjTrio[0].frame_word;
     SH_CALL(Sprite_QueueOverlay)();
 }
 
@@ -1422,7 +1417,7 @@ extern "C" void __cdecl EffectKind02_Mode3Darken(void) {
 // +3 = 0; else while the word 0x905E62 is below 0x38 (s16), +2 = 1 and +3 = 0.
 extern "C" void __cdecl EffectKind02_Mode3Wait(void) {
     unsigned char* const s = S();
-    if (ObjTrio[2] == 1) {
+    if (ObjTrio[0].step == 1) {
         s[2] = 0;
         s[3] = 0;
         return;

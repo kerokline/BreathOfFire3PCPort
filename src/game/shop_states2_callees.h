@@ -45,8 +45,8 @@ constexpr U kRate = 0x6BC8B4;         // u16: Shop_PriceRate's percentage
 // kMoney: now Party_Zenny (symbols.toml). u32: the party's zenny
 constexpr U kMoneyMax = 0x98967F;     // 9,999,999
 constexpr U kPartyList = 0x904062;    // u8 per member: the character
-constexpr U kRecordOf = 0x66972C;     // u8 per character: its record (symbols.toml's MoveScript_EffectState)
-constexpr U kCharRecords = 0x903A70;  // stride 0xA4
+constexpr U kRecordOf = 0x66972C;     // u8 per character: its record (symbols.toml's Character_IndexById)
+// kCharRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr U kCharStride = 0xA4;
 // The inventory's lists, by category 0..4: id bytes and count bytes.
 constexpr U kIdLists = 0x656B00;      // unsigned char *[5]
@@ -60,12 +60,12 @@ constexpr U kPressed = 0x7E1BEC;      // Input_Pressed (read as a word, twice as
 // the member panels, 0x803238 the slot box, 0x80325C the sell list, 0x803280
 // the buy list, 0x8032A4 the buy count, 0x8032C8 the sell count, 0x803430
 // the member hand, 0x803454 the cursor hand.
-// kHelp: now ShopStates2_Help (symbols.toml). u16: the help line's message
-constexpr U kMembers = 0x8031CC;      // 36-byte records, one per party member
+// kHelp: now Window0_Arrows (symbols.toml). u16: the help line's message
+// kMembers: now WindowRecords[3] (symbols.toml). 36-byte records, one per party member
 constexpr U kMemberStride = 36;
-// kHand: now BattleE4_Above (symbols.toml). u8 on / off, x at 0x803458, y at 0x80345A (u16)
-constexpr U kHandX = 0x803458;
-constexpr U kHandY = 0x80345A;
+// kHand: now Window21 (symbols.toml). u8 on / off, x at 0x803458, y at 0x80345A (u16)
+// kHandX: now WindowRecords record 21 x (records::WindowRecord).
+// kHandY: now WindowRecords record 21 y (records::WindowRecord).
 // The dispatch tables (symbols.toml [[data]]).
 // kStates: now ShopTrade_States (symbols.toml). ShopTrade_States: 5, by kState
 // kOpenSteps: now ShopTrade_OpenSteps (symbols.toml). 2, by kSub

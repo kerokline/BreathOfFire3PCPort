@@ -58,12 +58,12 @@ constexpr std::uint32_t kTextRecords = 0x904CE0;
 // write in it directly: +1..+3 (the state bytes area 56 sets before
 // MoveCmd_TestFB), +8 (the pose the step hook compares), +0x2E / +0x30 (the
 // cell words Effect_Spawn takes), +0x36 / +0x3A (the high words of x and z),
-// +0x89 (MoveScript_EffectState's index), the dword +0x134 (areas 63 / 64
+// +0x89 (Character_IndexById's index), the dword +0x134 (areas 63 / 64
 // store it less 5 to Field_EdgeBits).
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
-// kLeaderDword134: now ObjTrio[0x134] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
+// kLeaderDword134: now ObjTrio_addr + 0x134 (symbols.toml).
 // Named cells, by address for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
 // kEffectObjects: now Effect_Objects (symbols.toml). Effect_Objects, records of 0x80

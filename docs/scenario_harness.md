@@ -157,7 +157,7 @@ the table. `scena_sc0.cpp`'s `CodeAt` is the pattern.
   | `0x8034E0`, 0x14 | the chapter bytes: `Cond_ByteFA`, `Field_StatusBits`, state `E2`, run `E4` (`MoveScript_Var7`), step `E5`, timer `E6`, `E8`, .., `Cond_ByteFD` `F1` |
   | `0x903F90`, 0x108 | `Cond_Flags` (8-byte rows; the story flags `0x904030`, the party lists `0x904061..`) |
   | `0x929EC0`, 0x14 | `Field_MemberCount`, `Camera_Angles`, `Cond_AngleFB`, the row pointer `0x929ED0` |
-  | `0x66C810`, `0x66C7D8`, `0x904EFC` | the wait word `MoveScript_WaitWordDA`, `Field_Request`, `Game_AreaNumber` |
+  | `0x66C810`, `0x66C7D8`, `0x904EFC` | the wait word `Transition_Busy`, `Field_Request`, `Game_AreaNumber` |
   | `0x903840`, 0x20 | `Camera_Distance`, the chapters' counters `0x903848..0x90384B`, the effect slot `0x903850` |
   | `0x9039A0`, 8; `0x903A04`, 0x10 | `Field_ScriptFlags`; the pending area change |
   | `0x937F88`, 0x14 | `Sprite_Current`, `Gfx_ClutStripDirty`, `Frame_Counter`, `0x937F98` |
@@ -354,7 +354,7 @@ FS), `0x6BE080..` and `0x939850..` (FE2), `0x803480` `MoveScript_PartyRecords`
 the save block's words past `0x904160` (FE1, FE2). **Not a region, on
 purpose** (as `area_harness`'s): the image's tables - `Area_Descriptors`, the
 `NameTable_*`, `Field_DirectionSteps`, `Field_MoveSpeeds`,
-`MoveScript_EffectState`, `0x6696DC` / `0x6696E0` - which no field function
+`Character_IndexById`, `0x6696DC` / `0x6696E0` - which no field function
 writes; they stay in place and are read for real.
 
 **The field disturbance** (cases 10..13 of the 16, field mode only): a state

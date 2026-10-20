@@ -46,7 +46,7 @@ constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
 // kCondRow5: now Cond_Flags[0x28] (symbols.toml).
 // kCondRow9: now Cond_Flags[0x48] (symbols.toml).
 // kCondRow14: now Cond_Flags[0x70] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // A byte area 50's choice compares with 0x1E; no other reader read this round.
@@ -57,10 +57,10 @@ constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
 // The pending area word the world map and Field_ChangeArea keep.
 // kPendingArea: now AreaW0b_Place (symbols.toml).
 // The leader's record (ObjTrio): byte +8 (the pose the hooks compare), byte
-// +0x89 (MoveScript_EffectState's index, op 8C).
+// +0x89 (Character_IndexById's index, op 8C).
 constexpr std::uint32_t kLeader = 0x802D40;
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Area 48's own cells: a count 0..8 its handlers step and read
 // (0x92BEE7; MapView_ElevationOffset is 0x92BEE2, five bytes before), and a
@@ -78,7 +78,7 @@ constexpr std::uint32_t kSpriteObjects = 0x7DEE80;     // Sprite_Objects
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
 // kCameraShiftY: now Camera_ShiftY (symbols.toml). Camera_ShiftY
-// kEffectState: now MoveScript_EffectState (symbols.toml). MoveScript_EffectState (24 bytes)
+// kEffectState: now Character_IndexById (symbols.toml). Character_IndexById (24 bytes)
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 

@@ -35,6 +35,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_sx.h"
 #include "game/scena_sx_callees.h"
@@ -107,8 +108,8 @@ template <typename... T> std::uint32_t PickOf(T... v) {
     const std::uint32_t values[] = {static_cast<std::uint32_t>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-unsigned char* Rec(unsigned n) { return Mem(bof3::addr::CharacterRecords + (n & 7) * at::kRecordStride); }
-unsigned char* Obj(unsigned n) { return ObjTrio + (n % 3) * at::kObjStride; }
+unsigned char* Rec(unsigned n) { return Mem(CharacterRecords_addr + (n & 7) * at::kRecordStride); }
+unsigned char* Obj(unsigned n) { return rv::Bytes(&ObjTrio[n % 3]); }
 
 // Inventory_Remove's category, item and count, chosen by the seed.
 std::uint32_t g_inv[3];
@@ -185,7 +186,7 @@ const sh::Callee kCallees[] = {
 // Cond_AngleFB; Game_AreaNumber; Sprite_Current; Sprite_Kind2; ObjTrio and
 // Field_State; Sprite_Objects; MapView_Row / Column).
 const sh::Region kRegions[] = {
-    {bof3::addr::CharacterRecords, 8 * at::kRecordStride},
+    {CharacterRecords_addr, 8 * at::kRecordStride},
     {0x904098, 0x9045F4 - 0x904098},   // 0x904138; the inventory's lists, the key items, the shared ability list
     {0x904AA0, 0xB0},                  // the battle bytes: the formation 0x904AAC
     {BossSi_CentreX_addr, 8},
@@ -193,7 +194,7 @@ const sh::Region kRegions[] = {
     {Key(Gfx_ClutStrip), 0x4000},
     {CameraTurn_Steps_addr + 0x8, 4},
     {CameraTurn_Angles_addr + 0x8, 8},
-    {Key(ObjTrio) - at::kObjStride, at::kObjStride},   // Party_Remove at a count of 0 clears its +0
+    {Key(rv::Bytes(ObjTrio)) - at::kObjStride, at::kObjStride}, // Party_Remove at a count of 0 clears its +0
     {Key(g_cells), sizeof g_cells},
 };
 
@@ -283,9 +284,9 @@ void Seed(unsigned k) {
         break;
     case kFindFree:
         for (unsigned i = 0; i < at::kSpriteCount; ++i)
-            if (Sprite_Objects[i * at::kRecordStride] == 0) Sprite_Objects[i * at::kRecordStride] = 1;
-        if (sh::Often()) Sprite_Objects[(sh::Next() % at::kSpriteCount) * at::kRecordStride] = 0;
-        if (sh::Half()) Sprite_Objects[(sh::Next() % at::kSpriteCount) * at::kRecordStride] = 0;
+            if (Sprite_Objects[i].flags == 0) Sprite_Objects[i].flags = 1;
+        if (sh::Often()) Sprite_Objects[sh::Next() % at::kSpriteCount].flags = 0;
+        if (sh::Half()) Sprite_Objects[sh::Next() % at::kSpriteCount].flags = 0;
         break;
     case kAbility:
     case kKeyItem: {

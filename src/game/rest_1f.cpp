@@ -19,6 +19,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/scenario_harness.h"
@@ -27,9 +28,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 using U = std::uint32_t;
 using move_script::At;
@@ -42,7 +40,7 @@ using Pickup = unsigned char (__cdecl*)(unsigned, unsigned);
 
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs (x, z)
 constexpr U kCellOffsets = 0x66971C;   // two signed bytes a direction: the cell ahead
-constexpr U kCells = 0x903850;         // DamageScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
+constexpr U kCells = SharedScratch_addr; // SharedScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
 constexpr U kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 0x1E;   // Sprite_Objects; 0x1E.. Sprite_ObjectsExtra's four
 constexpr unsigned kEffectCount = 20;
@@ -50,7 +48,7 @@ constexpr unsigned kEffectCount = 20;
 // kObjectsAt: now Sprite_Objects (symbols.toml). Sprite_Objects
 // kExtraAt: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 constexpr U kEffectStride = 0x80;
-constexpr U kPanelPose = 0x6BC716;     // the leader panel's cells (docs/effect_1e.md section 1)
+// kPanelPose: now Fish_Nibbling (symbols.toml): rest_1g's "a fish is nibbling", its one reader Fish_Swim; this file only clears it
 // kPanelCounter: now Effect1e_Choice (symbols.toml).
 // kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
@@ -88,7 +86,7 @@ void ByStep(const char* who, const unsigned long* table, unsigned count) {
     Dispatch(who, "Sprite_Current +3", table, count, Sc()[3]);
 }
 void ByForm(const char* who, const unsigned long* table, unsigned count) {
-    Dispatch(who, "Sprite_Current's word +0x2C", table, count, MemberRec(Sc())->column);
+    Dispatch(who, "Sprite_Current's word +0x2C", table, count, rv::As<records::PartyMember>(Sc())->column);
 }
 
 // An Effect_Objects record by an index byte the original uses unchecked
@@ -98,7 +96,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes 0x%X "
                     "(docs/rest_1f.md section 7)",
                     who, index, static_cast<unsigned>(Effect_Objects_addr + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // The object Sprite_ObjectAt found gets bit 0 of its +0x80: 0..0x1D a
@@ -109,9 +107,9 @@ unsigned char* EffectAt(unsigned index, const char* who) {
 void MarkObject(unsigned char found, const char* who) {
     const int i = static_cast<signed char>(found);
     if (i >= 0 && i < static_cast<int>(kObjectCount))
-        Sprite_Objects[static_cast<unsigned>(i) * kObjectStride + 0x80] |= 1;
+        Sprite_Objects[static_cast<unsigned>(i)].context |= 1;
     else if (i >= static_cast<int>(kObjectCount) && i < static_cast<int>(kObjectCount) + 4)
-        Sprite_ObjectsExtra[static_cast<unsigned>(i - static_cast<int>(kObjectCount)) * kObjectStride + 0x80] |= 1;
+        Sprite_ObjectsExtra[static_cast<unsigned>(i - static_cast<int>(kObjectCount))].context |= 1;
     else
         bof3::Fatal("%s: Sprite_ObjectAt's answer 0x%02X is past Sprite_Objects' 30 and Sprite_ObjectsExtra's 4; the "
                     "original sets a bit at 0x%X (docs/rest_1f.md section 7)",
@@ -136,12 +134,12 @@ void CopyName(const unsigned char* name) {
 // above Sprite_Current's height word (s16 against s16): +0x2B = 0.
 void SideProbe(unsigned d) {
     const unsigned char* const s = Sc();
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
-    if (static_cast<short>(Word(Sc() + 0x3E)) < static_cast<short>(ground)) Sc()[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(Sc())->height_whole) < static_cast<short>(ground)) Sc()[0x2B] = 0;
 }
 
 // 0x523FF0 / 0x524490 / 0x524E90 (byte-identical): a form's state 0.
@@ -157,12 +155,12 @@ void BeginShape() {
         s = Sc();
     }
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(Sc() + 0x3E)));
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), Sc()[8]);
-    if (At(bof3::addr::DamageScratch)[0] != 0 && rise > 0x40) {
+    if (SharedScratch.b_00 != 0 && rise > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
     } else {
@@ -185,7 +183,7 @@ void ResolveShape(Pickup pickup, const char* who) {
     if (Sc()[0xA] == 0) {
         const unsigned char* const s = Sc();
         const unsigned d = s[8];
-        const U x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
+        const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
         const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
         if (found != 0xFF) MarkObject(found, who);
@@ -515,7 +513,7 @@ extern "C" void __cdecl PartyAction18_Form0Sub0Strike(void) {
             } else {
                 const unsigned char* const c = Sc();
                 const unsigned d = c[8];
-                const U x = static_cast<U>(MemberRec(c)->x) + 2u * StepX(d);
+                const U x = static_cast<U>(rv::As<records::PartyMember>(c)->x) + 2u * StepX(d);
                 const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZ(d);
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
                 if (found != 0xFF) {
@@ -600,17 +598,17 @@ extern "C" unsigned char __cdecl PartyAction18_CellStrike(unsigned x, unsigned z
 // (x, z), (x, zs), (x, zs + 1), (xs, z), (xs + 1, z), (x, zs - 1), (xs - 1, z).
 extern "C" void __cdecl Field_ReadCellsRaised(unsigned x, unsigned z, unsigned x0, unsigned z0) {
     Cell(1) = SH_CALL(Field_CellKind)(x, z, x0, z0);
-    std::uint16_t zs = Word(Sc() + 0x3A);
+    std::uint16_t zs = rv::As<records::PartyMember>(Sc())->z_whole;
     Cell(2) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
-    zs = W16(Word(Sc() + 0x3A) + 1);
+    zs = W16(rv::As<records::PartyMember>(Sc())->z_whole + 1);
     Cell(3) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
-    std::uint16_t xs = Word(Sc() + 0x36);
+    std::uint16_t xs = rv::As<records::PartyMember>(Sc())->x_whole;
     Cell(4) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
-    xs = W16(Word(Sc() + 0x36) + 1);
+    xs = W16(rv::As<records::PartyMember>(Sc())->x_whole + 1);
     Cell(5) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
-    zs = W16(Word(Sc() + 0x3A) - 1);
+    zs = W16(rv::As<records::PartyMember>(Sc())->z_whole - 1);
     Cell(6) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
-    xs = W16(Word(Sc() + 0x36) - 1);
+    xs = W16(rv::As<records::PartyMember>(Sc())->x_whole - 1);
     Cell(7) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
 }
 
@@ -714,7 +712,7 @@ extern "C" unsigned char __cdecl Field_SlopeBetween(unsigned x0, unsigned x1, un
 // turns it (2, 4, 3). xs / zs the sprite's cell words +0x36 / +0x3A.
 extern "C" void __cdecl Field_RaisedEdgeTurns(unsigned x, unsigned z) {
     if ((Sc()[8] & 1) == 0) {
-        const std::uint16_t zs = Word(Sc() + 0x3A);
+        const std::uint16_t zs = rv::As<records::PartyMember>(Sc())->z_whole;
         if (SH_CALL(Field_SlopeBetween)(x, x, zs, W16(zs + 1u), 1) != 0) SH_CALL(Field_TurnUnless)(4, 6, 5);
     }
     {
@@ -722,15 +720,15 @@ extern "C" void __cdecl Field_RaisedEdgeTurns(unsigned x, unsigned z) {
         const unsigned char facing = s[8];
         if ((facing & 1) == 0) {
             unsigned char r;
-            if ((facing & 4) == 0) r = SH_CALL(Field_SlopeBetween)(x, x, Word(s + 0x3A), z, 1);
-            else r = SH_CALL(Field_SlopeBetween)(x, x, z, W16(Word(s + 0x3A) + 1u), 1);
+            if ((facing & 4) == 0) r = SH_CALL(Field_SlopeBetween)(x, x, rv::As<records::PartyMember>(s)->z_whole, z, 1);
+            else r = SH_CALL(Field_SlopeBetween)(x, x, z, W16(rv::As<records::PartyMember>(s)->z_whole + 1u), 1);
             if (r != 0) SH_CALL(Field_TurnUnless)(4, 6, 5);
         }
     }
     {
         const unsigned char* const s = Sc();
         if ((s[8] & 1) == 0) {
-            const std::uint16_t xs = Word(s + 0x36);
+            const std::uint16_t xs = rv::As<records::PartyMember>(s)->x_whole;
             if (SH_CALL(Field_SlopeBetween)(xs, W16(xs + 1u), z, z, 3) != 0) SH_CALL(Field_TurnUnless)(2, 4, 3);
         }
     }
@@ -738,8 +736,8 @@ extern "C" void __cdecl Field_RaisedEdgeTurns(unsigned x, unsigned z) {
     const unsigned char facing = s[8];
     if (facing & 1) return;
     unsigned char r;
-    if (facing == 0 || facing == 6) r = SH_CALL(Field_SlopeBetween)(Word(s + 0x36), x, z, z, 3);
-    else r = SH_CALL(Field_SlopeBetween)(W16(Word(s + 0x36) + 1u), x, z, z, 3);
+    if (facing == 0 || facing == 6) r = SH_CALL(Field_SlopeBetween)(rv::As<records::PartyMember>(s)->x_whole, x, z, z, 3);
+    else r = SH_CALL(Field_SlopeBetween)(W16(rv::As<records::PartyMember>(s)->x_whole + 1u), x, z, z, 3);
     if (r != 0) SH_CALL(Field_TurnUnless)(2, 4, 3);
 }
 
@@ -784,22 +782,22 @@ unsigned char DiagEdge(const DiagSide& d, bool on_x, std::uint16_t ax, std::uint
     if ((k & 0xF0) == 0xA0) return SH_CALL(Field_CellSlope)(8);
     if (on_x) {
         // the z side: between (ax, ax) and the sprite's zs and zs + 1, then zs - 1, in direction 1
-        std::uint16_t zs = Word(Sc() + 0x3A);
+        std::uint16_t zs = rv::As<records::PartyMember>(Sc())->z_whole;
         if (SH_CALL(Field_SlopeBetween)(ax, ax, zs, W16(zs + 1u), 1) != 0) {
             Sc()[8] = static_cast<unsigned char>(d.to_first);
             return 1;
         }
-        zs = Word(Sc() + 0x3A);
+        zs = rv::As<records::PartyMember>(Sc())->z_whole;
         if (SH_CALL(Field_SlopeBetween)(ax, ax, zs, W16(zs - 1u), 1) == 0) return 3;
         Sc()[8] = static_cast<unsigned char>(d.to_second);
         return 1;
     }
-    std::uint16_t xs = Word(Sc() + 0x36);
+    std::uint16_t xs = rv::As<records::PartyMember>(Sc())->x_whole;
     if (SH_CALL(Field_SlopeBetween)(xs, W16(xs + 1u), az, az, 3) != 0) {
         Sc()[8] = static_cast<unsigned char>(d.to_first);
         return 1;
     }
-    xs = Word(Sc() + 0x36);
+    xs = rv::As<records::PartyMember>(Sc())->x_whole;
     if (SH_CALL(Field_SlopeBetween)(xs, W16(xs - 1u), az, az, 3) == 0) return 3;
     Sc()[8] = static_cast<unsigned char>(d.to_second);
     return 1;
@@ -822,21 +820,21 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
     if (Field_ScriptFlags & 0x400) return 1;
     const unsigned char* c = Sc();
     const unsigned char facing = c[8];
-    if (Word(c + 0x34) == 0 && Word(c + 0x38) == 0) return 1;
+    if (rv::As<records::PartyMember>(c)->x_frac == 0 && rv::As<records::PartyMember>(c)->z_frac == 0) return 1;
     const unsigned char* const offsets = At(kCellOffsets) + static_cast<unsigned>(facing) * 2u;
     const auto ox = static_cast<signed char>(offsets[0]);
     const auto oz = static_cast<signed char>(offsets[1]);
     const std::uint16_t dx = ox == 1 ? 2 : static_cast<std::uint16_t>(static_cast<short>(ox));
     const std::uint16_t dz = oz == 1 ? 2 : static_cast<std::uint16_t>(static_cast<short>(oz));
-    const std::uint16_t xs = Word(c + 0x36), zs = Word(c + 0x3A);
+    const std::uint16_t xs = rv::As<records::PartyMember>(c)->x_whole, zs = rv::As<records::PartyMember>(c)->z_whole;
     const std::uint16_t ax = W16(xs + dx), az = W16(zs + dz);
     SH_CALL(Field_ReadCellsRaised)(ax, az, W16(xs + (ox == 1 ? 1u : 0u)), W16(zs + (oz == 1 ? 1u : 0u)));
     c = Sc();
     const unsigned char dir = c[8];
     if ((dir & 1) == 0) {
         // Straight.
-        if (Word(c + 0x34) != 0) {
-            if (Word(c + 0x38) != 0) {
+        if (rv::As<records::PartyMember>(c)->x_frac != 0) {
+            if (rv::As<records::PartyMember>(c)->z_frac != 0) {
                 // Mid-cell on both axes: ahead and the two sides.
                 Cell(8) = SH_CALL(Field_CellClass5)(1, 2, 3, 4, 5);
                 Cell(9) = SH_CALL(Field_CellClass5)(4, 5, 0, 0, 0);
@@ -883,10 +881,10 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
                 return SH_CALL(Field_CellSlope)(8);
             }
             if (Sc()[8] & 1) return 3;
-            std::uint16_t z0 = Word(Sc() + 0x3A);
+            std::uint16_t z0 = rv::As<records::PartyMember>(Sc())->z_whole;
             if (SH_CALL(Field_SlopeBetween)(ax, ax, z0, W16(z0 + 1u), 1) != 0) SH_CALL(Field_TurnUnless)(4, 6, 5);
             if (Sc()[8] & 1) return 3;
-            z0 = Word(Sc() + 0x3A);
+            z0 = rv::As<records::PartyMember>(Sc())->z_whole;
             if (SH_CALL(Field_SlopeBetween)(ax, ax, z0, W16(z0 - 1u), 1) != 0) SH_CALL(Field_TurnUnless)(4, 6, 5);
             return 3;
         }
@@ -904,18 +902,18 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
             return SH_CALL(Field_CellSlope)(8);
         }
         if (now & 1) return 3;
-        std::uint16_t x0 = Word(Sc() + 0x36);
+        std::uint16_t x0 = rv::As<records::PartyMember>(Sc())->x_whole;
         if (SH_CALL(Field_SlopeBetween)(x0, W16(x0 + 1u), az, az, 3) != 0) SH_CALL(Field_TurnUnless)(2, 4, 3);
         if (Sc()[8] & 1) return 3;
-        x0 = Word(Sc() + 0x36);
+        x0 = rv::As<records::PartyMember>(Sc())->x_whole;
         if (SH_CALL(Field_SlopeBetween)(x0, W16(x0 - 1u), az, az, 3) == 0) return 3;
         SH_CALL(Field_TurnUnless)(2, 4, 3);
         return 3;
     }
 
     // Diagonal.
-    if (Word(c + 0x34) != 0) {
-        if (Word(c + 0x38) != 0) {
+    if (rv::As<records::PartyMember>(c)->x_frac != 0) {
+        if (rv::As<records::PartyMember>(c)->z_frac != 0) {
             const unsigned char k = (dir & 2) ? SH_CALL(Field_CellClass5)(2, 3, 0, 0, 0) : SH_CALL(Field_CellClass5)(4, 5, 0, 0, 0);
             Cell(8) = k;
             if (k == 0xB0) return 6;
@@ -925,10 +923,10 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
             const unsigned char* const s = Sc();
             unsigned char r;
             if (s[8] & 2) {
-                const std::uint16_t z0 = Word(s + 0x3A);
+                const std::uint16_t z0 = rv::As<records::PartyMember>(s)->z_whole;
                 r = SH_CALL(Field_SlopeBetween)(ax, ax, z0, W16(z0 + 1u), 1);
             } else {
-                const std::uint16_t x0 = Word(s + 0x36);
+                const std::uint16_t x0 = rv::As<records::PartyMember>(s)->x_whole;
                 r = SH_CALL(Field_SlopeBetween)(x0, W16(x0 + 1u), az, az, 3);
             }
             return r != 0 ? 0 : 3;
@@ -949,29 +947,29 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
 // ===========================================================================
 
 // original 0x5288C0 (0x75 bytes), LeaderPanel_Stage0Steps[0]: the panel's
-// pose byte 0x6BC716, its counter 0x6BC709 and the blink switch 0x939A28
+// Fish_Nibbling 0x6BC716 (once called its pose byte), its counter 0x6BC709 and the blink switch 0x939A28
 // cleared; +0x29 = 5; the height word +0x3E = AreaMap_Elevation(+0x34, +0x38);
 // Field_State +0x89 0: Sprite_SetAnimationAt(0xA, 2), else
 // Sprite_SetAnimation(0xB); +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Begin(void) {
-    At(kPanelPose)[0] = 0;
+    Fish_Nibbling = 0;
     Effect1e_Choice = 0;
     Effect1e_Blink = 0;
     Sc()[0x29] = 5;
     const unsigned char* const s = Sc();
-    const long height = SH_CALL(AreaMap_Elevation)(MemberRec(s)->x, MemberRec(s)->z);
-    SetWord(Sc() + 0x3E, static_cast<unsigned>(height));
+    const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::PartyMember>(s)->x, rv::As<records::PartyMember>(s)->z);
+    rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Sc())->height_whole, static_cast<unsigned>(height));
     if (Field_State[0x89] == 0) SH_CALL(Sprite_SetAnimationAt)(0xA, 2);
     else SH_CALL(Sprite_SetAnimation)(0xB);
     ++Sc()[3];
 }
 
 // original 0x528940 (0x26 bytes), LeaderPanel_Stage0Steps[1]: once the wait
-// word MoveScript_WaitWordDA is 0, effect record 4's +6 = 0 and its state +1
+// word Transition_Busy is 0, effect record 4's +6 = 0 and its state +1
 // one on, and +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Wait(void) {
-    if (MoveScript_WaitWordDA != 0) return;
-    unsigned char* const record4 = Effect_Objects + 4 * kEffectStride;
+    if (Transition_Busy != 0) return;
+    unsigned char* const record4 = rv::Bytes(&Effect_Objects[4]);
     const unsigned char state = record4[1];
     record4[6] = 0;
     record4[1] = static_cast<unsigned char>(state + 1);
@@ -982,8 +980,8 @@ extern "C" void __cdecl LeaderPanel_S0Wait(void) {
 // record 4's state +1 is 4, record 1's state +1 one on, +2 one on (stage 1)
 // and +3 = 0.
 extern "C" void __cdecl LeaderPanel_S0End(void) {
-    if (Effect_Objects[4 * kEffectStride + 1] != 4) return;
-    ++Effect_Objects[kEffectStride + 1];
+    if (Effect_Objects[4].state != 4) return;
+    ++Effect_Objects[1].state;
     ++Sc()[2];
     Sc()[3] = 0;
 }

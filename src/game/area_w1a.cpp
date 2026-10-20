@@ -22,12 +22,13 @@
 #include "game/area_harness.h"
 #include "game/area_w1a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w1a::at;
 using area_harness::Mem;
@@ -44,7 +45,7 @@ void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p)
 void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(static_cast<U>(Long(p)) + v)); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours
@@ -81,16 +82,16 @@ void SpawnForMember(U list, U record) {
     Sprite_Current = Mem(record);
     Sprite_Current[0xB] = AH_CALL(Effect_FindFree)();
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     if (cur[0xB] == 0xFF) return;
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 6;
     EffectAt(cur[0xB])[6] = 3;
-    SetLong(EffectAt(cur[0xB]) + 0xC, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->step_x, 0);
     const auto step = static_cast<signed char>(B(Area38_EffectBytes_addr + B(list)));
-    SetLong(EffectAt(cur[0xB]) + 0x10, step);
-    SetWord(EffectAt(cur[0xB]) + 0x2E, static_cast<std::uint16_t>(tCur->screen_x));
-    SetWord(EffectAt(cur[0xB]) + 0x30, static_cast<std::uint16_t>(tCur->screen_y));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->step_z, step);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->screen_x, static_cast<std::uint16_t>(tCur->screen_x));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->screen_y, static_cast<std::uint16_t>(tCur->screen_y));
 }
 
 // Area 40's four lever choices (0x405810..0x4058D0): message 0xFFFF; answer
@@ -132,7 +133,7 @@ bool InGrid(U x, U z) {
 // bytes +2..+4 moved by `d`, the index re-read for each.
 void TintBy(unsigned char d) {
     unsigned char* const cur = Sprite_Current;
-    AddLong(cur + 0x34, static_cast<U>(Long(cur + 0xC)));
+    AddLong(cur + 0x34, static_cast<U>(rv::As<records::SpriteHead>(cur)->step_x));
     unsigned char* const leader = Field_State;
     for (unsigned off = 2; off <= 4; ++off) MoveScript_TintRecords[leader[0x149] * 12u + off] += d;
 }
@@ -173,7 +174,7 @@ extern "C" void __cdecl Area38_SetCellsC0(void) {
 
 // original 0x405410 (Area38_Handlers[2]; PSX 0x801F2C94): party-list byte
 // 0x904063, party record 1.
-extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(Cond_Flags_addr + 0xd3, Field_Members_addr + 0x4); }
+extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(Cond_Flags_addr + 0xd3, ObjTrio_addr + 0x14c); }
 
 // original 0x4054D0 (Area38_Handlers[3]; PSX 0x801F2E60): 0x904064, record 2.
 extern "C" void __cdecl Area38_SpawnEffectMember2(void) { SpawnForMember(Cond_Flags_addr + 0xd4, ObjTrio_addr + 0x298); }
@@ -252,7 +253,7 @@ extern "C" void __cdecl Area39_PlayMusicA3(void) { AH_CALL(Music_Play)(0xA3, 8);
 
 // original 0x405710 (Area39_Handlers[11]; PSX 0x801F2EEC): Field_ScriptFlags'
 // low byte |= 8.
-extern "C" void __cdecl Area39_SetScriptFlag8(void) { B(0x9039A2) = static_cast<unsigned char>(B(0x9039A2) | 8); }
+extern "C" void __cdecl Area39_SetScriptFlag8(void) { B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) | 8); }
 
 // original 0x405720 (Area39_Handlers[12]; PSX 0x801F2F0C): the first key-item
 // byte of 0xE becomes 4; none: 0x591900(4), the key item 4 added.
@@ -304,7 +305,7 @@ extern "C" void __cdecl Area40_NudgeObject(void) {
 // Field_ScriptFlags bits 3 and 7 and Field_StatusBits bit 6 cleared.
 extern "C" void __cdecl Area40_ChoiceFlag5(void) {
     const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
-    unsigned char* const row = Ptr(AreaW0c_FlagRow_addr);
+    unsigned char* const row = Ptr(Chapter_FlagRow_addr);
     SetMessage(0xFFFF);
     B(MoveScript_PartyRecords_addr + 0x65) = answer != 0 ? 0x1E : 0x1C;
     AH_CALL(Flags_Set)(row, 5);
@@ -374,7 +375,7 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
         break;
     case 1:
         if (B(at::kCounter0) != 0x63) break;
-        B(0x9039A2) = static_cast<unsigned char>(B(0x9039A2) | 6);
+        B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) | 6);
         B(at::kCounter0) = 0;
         B(AreaW0c_TailState_addr) = 2;
         break;
@@ -610,10 +611,10 @@ extern "C" void __cdecl Area41_ChoiceGiveItem(void) {
     const auto index = static_cast<std::int32_t>(static_cast<signed char>(answer));
     SetMessage(Word(Mem(Area41_GiveMessages_addr + static_cast<U>(index) * 2u)));
     if (answer != 0) return;
-    if (AH_CALL(Flags_Test)(Ptr(AreaW0c_FlagRow_addr), 6) != 0) return;
+    if (AH_CALL(Flags_Test)(Ptr(Chapter_FlagRow_addr), 6) != 0) return;
     AH_CALL(Sound_PlayEffect)(0x106);
     AH_CALL(Inventory_Add)(0, 0x28, 1);   // the original pushes a fourth word, 0, never read
-    AH_CALL(Flags_Set)(Ptr(AreaW0c_FlagRow_addr), 6);
+    AH_CALL(Flags_Set)(Ptr(Chapter_FlagRow_addr), 6);
 }
 
 // original 0x4062E0 (Area41_Choices[4]): answer 0 with items 0x49, 0x3F, 0x27
@@ -657,7 +658,7 @@ extern "C" void __cdecl Area41_Run(void) {
 // up (Area41_TintUp), then +0xA = 7 and state 1 (Sprite_Current read again
 // for each); the leader's word +0x12E less 2.
 extern "C" void __cdecl Area41_TintStart(void) {
-    CurSprite()->step_x = 0x4000;
+    rv::Current<records::SpriteObject>()->step_x = 0x4000;
     AH_CALL(Area41_TintUp)();
     Sprite_Current[0xA] = 7;
     Sprite_Current[4] = 1;
@@ -675,7 +676,7 @@ extern "C" void __cdecl Area41_TintRise(void) {
 // fall (state 3) for 8.
 extern "C" void __cdecl Area41_Slide(void) {
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     AddLong(cur + 0x34, static_cast<U>(tCur->step_x));
     CountDown(3);
 }

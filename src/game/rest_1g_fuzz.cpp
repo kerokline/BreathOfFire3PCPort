@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_1g.h"
 #include "game/scenario_harness.h"
@@ -139,22 +140,22 @@ unsigned char* Sc() { return Sprite_Current; }
 
 // The cells (rest_1g.cpp's).
 // kEff0Flags: now Effect_Objects (symbols.toml).
-// kEff0State: now Effect_Objects[1] (symbols.toml).
-// kEff0Depth: now Effect_Objects[7] (symbols.toml).
-// kEff0X: now Effect_Objects[0x34] (symbols.toml).
-// kEff0Z: now Effect_Objects[0x38] (symbols.toml).
-// kEff0Height: now Effect_Objects[0x3e] (symbols.toml).
-// kEff1State: now Effect_Objects[0x81] (symbols.toml).
-// kEff3State: now Effect_Objects[0x181] (symbols.toml).
-// kEff4State: now Effect_Objects[0x201] (symbols.toml).
-// kEff5Frame: now Effect_Objects[0x290] (symbols.toml).
-// kEff5Level: now Effect_Objects[0x2b0] (symbols.toml).
-// kEff6State: now Effect_Objects[0x301] (symbols.toml).
-// kEff6Dir: now Effect_Objects[0x308] (symbols.toml).
-// kEff6Page: now Effect_Objects[0x33c] (symbols.toml).
-// kEff6Shown: now Effect_Objects[0x33e] (symbols.toml).
-// kLeaderStage: now ObjTrio[2] (symbols.toml).
-// kLeaderStep: now ObjTrio[3] (symbols.toml).
+// kEff0State: now Effect_Objects[0].state (symbols.toml).
+// kEff0Depth: now Effect_Objects_addr + 0x7 (symbols.toml).
+// kEff0X: now Effect_Objects[0].x (symbols.toml).
+// kEff0Z: now Effect_Objects[0].z (symbols.toml).
+// kEff0Height: now Effect_Objects[0].height_whole (symbols.toml).
+// kEff1State: now Effect_Objects[1].state (symbols.toml).
+// kEff3State: now Effect_Objects[3].state (symbols.toml).
+// kEff4State: now Effect_Objects[4].state (symbols.toml).
+// kEff5Frame: now Effect_Objects_addr + 0x290 (symbols.toml).
+// kEff5Level: now Effect_Objects_addr + 0x2b0 (symbols.toml).
+// kEff6State: now Effect_Objects[6].state (symbols.toml).
+// kEff6Dir: now Effect_Objects_addr + 0x308 (symbols.toml).
+// kEff6Page: now Effect_Objects_addr + 0x33c (symbols.toml).
+// kEff6Shown: now Effect_Objects_addr + 0x33e (symbols.toml).
+// kLeaderStage: now ObjTrio[0].step (symbols.toml).
+// kLeaderStep: now ObjTrio[0].state3 (symbols.toml).
 // kSpriteIndex: now Effect1a_PanelObject (symbols.toml).
 // kRecordA: now Effect1a_PanelScript (symbols.toml).
 // kRecordB: now Effect1a_PanelSet (symbols.toml).
@@ -164,12 +165,9 @@ unsigned char* Sc() { return Sprite_Current; }
 // kPose: now Effect1e_Pose (symbols.toml).
 // kSpot: now AreaEntry_PendingFlags (symbols.toml).
 // kActive: now Field_ActiveMember (symbols.toml).
-constexpr U kItemA = 0x904130,
-            kPressNow = 0x6BC717,
-            kComboStep = 0x6BC70C,
-            kComboTimer = 0x6BC710,
-            kBiteHeld = 0x6BC716,
-            kSpotCounts = 0x66A9CC;
+// kPressNow: now Effect1e_PressNow (symbols.toml).
+// kBiteHeld: now Fish_Nibbling (symbols.toml).
+constexpr U kItemA = 0x904130, kComboStep = 0x6BC70C, kComboTimer = 0x6BC710, kSpotCounts = 0x66A9CC;
 
 unsigned char* Active() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(Field_ActiveMember_addr))))); }
 unsigned char* RecordA() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(Effect1a_PanelScript_addr))))); }
@@ -202,7 +200,7 @@ U HeadingEffect(const U*, U answer) {
 }
 // LeaderPanel_PressLatch: 0x6BC717, which LeaderPanel_EffectsStep reads after it.
 U PressLatchEffect(const U*, U answer) {
-    Mem(kPressNow)[0] = static_cast<unsigned char>(sh::Noise() % 3);
+    Mem(Effect1e_PressNow_addr)[0] = static_cast<unsigned char>(sh::Noise() % 3);
     return answer;
 }
 // Louder on Fish_Hooked's and Fish_Swim's paths (2026-10-05, debt 18): their
@@ -405,7 +403,7 @@ unsigned Entries(unsigned k) {
     }
 }
 
-unsigned char KindByte(unsigned kind, unsigned at) { return Mem(0x66A690 + 36 * kind + at)[0]; }
+unsigned char KindByte(unsigned kind, unsigned at) { return Mem(Fish_Kinds_addr + 36 * kind + at)[0]; }
 
 // Fish_AdjustStrength's delta, drawn by the seed (so that the strength word can
 // be planted at its negation) and handed over by Args.
@@ -430,7 +428,7 @@ void SeedFor(unsigned k, unsigned char* s) {
             SetWord(s + 0x3E, sh::Half() ? (0u - level) * 0x100 - 0x20 : (0xFFFFFFFFu - level) * 0x100 + 0x20);
             sh::SetRandHint(PickOf(0x31, 0x35, 0x11, 0x15));
         }
-        Mem(kBiteHeld)[0] = 0;
+        Mem(Fish_Nibbling_addr)[0] = 0;
         break;
     case kApproach:
     case kInReach:
@@ -472,7 +470,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < 4; ++i) SeedFish(sh::SpriteRecord(i));
     // Fish_RunAll walks all 30: each in use or not, its state below the table's 7
     for (unsigned i = 4; i < 30; ++i) {
-        unsigned char* const r = Sprite_Objects + 0xA4 * i;
+        unsigned char* const r = rv::Bytes(&Sprite_Objects[i]);
         r[0] = static_cast<unsigned char>(PickOf(0, 0, 0x21, 0xA1, 1, sh::Next()));
         r[1] = static_cast<unsigned char>(sh::Next() % 7);
     }
@@ -506,14 +504,14 @@ void Seed(unsigned k) {
     Mem(CharStats_ExtraItem_addr)[0] = static_cast<unsigned char>(PickOf(0, 0x1C, 0x1D, 0x20, sh::Next()));
     Mem(kItemA)[0] = static_cast<unsigned char>(PickOf(0, 0x2E, 0x2F, 0x31, sh::Next()));
     Mem(Effect1e_Choice_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
-    Mem(kPressNow)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
+    Mem(Effect1e_PressNow_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
     for (unsigned i = 0; i < 4; ++i) {
         Mem(kComboStep + i)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, sh::Next() % 8));
         Mem(kComboTimer + i)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 3, 4, 5, 0xC, sh::Next()));
     }
     Mem(Effect1e_PoseWas_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
     Mem(Effect1e_Pose_addr)[0] = static_cast<unsigned char>(sh::Half() ? Mem(Effect1e_PoseWas_addr)[0] : PickOf(0, 1, 2, 3, sh::Next()));
-    Mem(kBiteHeld)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    Mem(Fish_Nibbling_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     // the effect records' cells, at their boundaries; record 0 near the fish
     Mem(Effect_Objects_addr)[0] = static_cast<unsigned char>(sh::Next());
     Mem(Effect_Objects_addr + 0x1)[0] = static_cast<unsigned char>(PickOf(4, 4, 5, 0, sh::Next()));
@@ -538,7 +536,7 @@ void Seed(unsigned k) {
     Field_Kind2Hold = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     Field_Kind2Z = static_cast<long>(PickOf(0x150000, 0x150000, 0x150001, 0x3C0000, sh::Next()));
     Frame_Counter = sh::Half() ? sh::Next() & ~0xFu : sh::Next();
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
+    Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
     Input_Pressed = static_cast<unsigned short>(PickOf(0x04, 0x10, 0x20, 0x40, 0x74, 0x24, 0x84, 0x2000, 0x8000, 0x4000,
                                                        0x1000, 0xA000, 0xE020, 0x60, 0, sh::Next()));
     Input_Held = static_cast<unsigned short>(PickOf(0x40, 0x4000, 0x4040, 0, sh::Next()));
@@ -581,8 +579,8 @@ void Disturb(U h) {
     case 7: Mem(Effect_Objects_addr + 0x1)[0] = static_cast<unsigned char>(b & 1 ? 4 : b); break;
     case 8: Mem(Effect1a_PanelObject_addr)[0] = static_cast<unsigned char>(b & 1 ? 0xFF : b % 30); break;
     case 9: Mem(ObjTrio_addr + 0x2)[0] = static_cast<unsigned char>(b & 1 ? 3 : b % 8); break;
-    case 10: Mem(kBiteHeld)[0] = static_cast<unsigned char>(b & 1); break;
-    case 11: Mem(kPressNow)[0] = static_cast<unsigned char>(b % 3); break;
+    case 10: Mem(Fish_Nibbling_addr)[0] = static_cast<unsigned char>(b & 1); break;
+    case 11: Mem(Effect1e_PressNow_addr)[0] = static_cast<unsigned char>(b % 3); break;
     case 12: SetLong(Mem(Effect_Objects_addr + 0x290), b & 1 ? -7 : static_cast<std::int32_t>(b >> 1)); break;
     case 13: Mem(Effect_Objects_addr + 0x201)[0] = static_cast<unsigned char>(b & 1 ? 0 : b); break;
     case 14: Field_Kind2Hold = static_cast<unsigned char>(b & 1 ? 0 : b); break;

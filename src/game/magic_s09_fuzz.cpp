@@ -224,14 +224,12 @@ unsigned char* PacketAt(unsigned k) { return g_packets + (k & 7) * 0x40; }
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
-// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kEventBattle: now EventBattle_Id (symbols.toml).
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
 // kMotePool: now ElemBreath_Motes (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850,
-                        kAbilityId = 0x904B80,
-                        kPoolBytes = 48 * 0x84,
-                        kPoolRecord255 = 0x67DE40 + 255 * 0x84;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr std::uint32_t kAbilityId = 0x904B80, kPoolBytes = 48 * 0x84, kPoolRecord255 = 0x67DE40 + 255 * 0x84;
 
 // Set by the seed for the functions they matter to.
 bool g_keep_slots = false;    // the four slots' +0xB stay below 155 (BoneDartShadow_Follow / _Fade)
@@ -297,7 +295,7 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
 std::uint32_t ElevationEffect(const std::uint32_t*, std::uint32_t answer) {
     const unsigned slot = Sprite_Current[0xB];
     if (slot >= 48 || mh::Noise() % 3 != 0) return answer;
-    return (answer & 0xFFFF0000u) | move_script::Word(mh::Mem(mh::at::kTasks + slot * mh::at::kTaskStride + 0x3E));
+    return (answer & 0xFFFF0000u) | move_script::Word(mh::Mem(BattleTask_Slots_addr + slot * mh::at::kTaskStride + 0x3E));
 }
 // DreamBreath_TargetHeight writes Sprite_Current's height; its stand-in too.
 std::uint32_t HeightEffect(const std::uint32_t*, std::uint32_t answer) {
@@ -456,7 +454,7 @@ void Disturb(std::uint32_t h) {
     case 5: SetWord(mh::Mem(kAbilityId), (v & 1) ? 0x32 : word); break;
     case 6: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 7:
-        if (v & 1) mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(v >> 1);
+        if (v & 1) mh::Mem(EventBattle_Id_addr)[0] = Byte(v >> 1);
         else mh::Pointer(BattleE3_CurrentEnemy_addr)[0x100] = (v & 2) ? 0x29 : Byte(v >> 2);
         break;
     case 8: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
@@ -505,7 +503,7 @@ void Seed(unsigned k) {
                                              : static_cast<const void*>(mh::SpriteRecord(mh::Next())));
     if (mh::Often()) mh::Pointer(BattleE3_CurrentEnemy_addr)[0x100] = 0x29;
     else if (mh::Half()) mh::Pointer(BattleE3_CurrentEnemy_addr)[0x100] = Near(0x29, 1, 1);
-    mh::Mem(BattleActions_EventBattle_addr)[0] = mh::Often() ? Byte(1 + mh::Next() % 0xFF) : 0;
+    mh::Mem(EventBattle_Id_addr)[0] = mh::Often() ? Byte(1 + mh::Next() % 0xFF) : 0;
     // the ability word: 0x32, 0x33, or 0x32 under a high byte not 0 (a byte
     // test would take it for 0x32)
     {
@@ -543,7 +541,7 @@ void Seed(unsigned k) {
         // the dart's step at, below and past the one awaited - written only for
         // a slot whose +2 lies inside the compared regions (below 67)
         if (sc[0xB] < 67 && mh::Often()) {
-            unsigned char* const dart = mh::Mem(mh::at::kTasks + sc[0xB] * mh::at::kTaskStride);
+            unsigned char* const dart = mh::Mem(BattleTask_Slots_addr + sc[0xB] * mh::at::kTaskStride);
             dart[2] = Near(k == kBoneDartShadow_Follow ? 2 : 3, 1, 1);
         }
         break;

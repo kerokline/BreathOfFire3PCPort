@@ -22,6 +22,7 @@
 #include "game/area_w2e.h"
 #include "game/area_w2e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w2e {
@@ -439,32 +440,32 @@ void SeedWm(unsigned k) {
     case kPlateGrow:
     case kPlateShrink:
         if (ah::Often()) o[9] = static_cast<unsigned char>(AH_PICK(1, 1, 2, 0, 0xFF, 0x80));
-        if (ah::Half()) SetLong(o + 0x40, static_cast<std::int32_t>(AH_PICK(0, 0xE000, 0x10000, 0xFFFFE000u, 0x7FFFF000)));
+        if (ah::Half()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->scale_x, static_cast<std::int32_t>(AH_PICK(0, 0xE000, 0x10000, 0xFFFFE000u, 0x7FFFF000)));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(5, 5, 2, 0));
         break;
     case kPlateHold:
         Game_Mode = static_cast<unsigned short>(ah::Often() ? AH_PICK(0, 2, 1, 0x101) : ah::Next());
         if (ah::Often()) o[7] = static_cast<unsigned char>(ah::Half() ? 1 : AH_PICK(0, 2, 3, 4));
         if (ah::Often()) o[0xB] = o[7];
-        if (ah::Often()) SetLong(o + 0x18, static_cast<std::int32_t>(Word(Mem(AreaW0b_Place_addr)) | (ah::Half() ? 0 : 0x10000u)));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_18, static_cast<std::int32_t>(Word(Mem(AreaW0b_Place_addr)) | (ah::Half() ? 0 : 0x10000u)));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 5, 2));
         break;
     case kHudRun: o[1] = static_cast<unsigned char>(ah::Next() % 2); break;
     case kFrameStep: o[2] = static_cast<unsigned char>(ah::Next() % 4); break;
     case kBoxStep: o[3] = static_cast<unsigned char>(ah::Next() % 4); break;
     case kFrameSlideIn:
-        if (ah::Often()) SetWord(o + 0x2E, AH_PICK(0, 0xFFFF, 1, 0xFFF0, 0x7FF0, 0x7FFF, 0xFFD0));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_x, AH_PICK(0, 0xFFFF, 1, 0xFFF0, 0x7FF0, 0x7FFF, 0xFFD0));
         B(AreaW0b_MapMode_addr) = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1) : ah::Next());
         break;
     case kFrameHold:
         B(AreaW0b_MapMode_addr) = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
         break;
     case kFrameSlideOut:
-        if (ah::Often()) SetWord(o + 0x2E, AH_PICK(0xFFE0, 0xFFE1, 0xFFDF, 0x8000, 0x800F, 0x8010, 0x10));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_x, AH_PICK(0xFFE0, 0xFFE1, 0xFFDF, 0x8000, 0x800F, 0x8010, 0x10));
         B(AreaW0b_MapMode_addr) = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
         break;
     case kBoxSlideIn:
-        if (ah::Often()) SetWord(o + 0x30, AH_PICK(0xD1, 0xD2, 0xD3, 0xF0, 0x800A, 0x8009, 0));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_y, AH_PICK(0xD1, 0xD2, 0xD3, 0xF0, 0x800A, 0x8009, 0));
         leave();
         break;
     case kBoxHold:
@@ -473,7 +474,7 @@ void SeedWm(unsigned k) {
         leave();
         break;
     case kBoxSlideOut:
-        if (ah::Often()) SetWord(o + 0x30, AH_PICK(0xE5, 0xE6, 0xE7, 0xC8, 0x7FF6, 0x7FF5));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_y, AH_PICK(0xE5, 0xE6, 0xE7, 0xC8, 0x7FF6, 0x7FF5));
         leave();
         break;
     case kDrawFrame:
@@ -562,10 +563,10 @@ const ah::Region kRegions104[] = {
     {Input_Held_addr, 4},
     {Field_ActorStates_addr, 4 * at::kActorStride},
     {ModeFlow_AreaTransition_addr, 1},
-    {AreaW0c_PendingKind_addr, 1},
+    {Area_EnterTransition_addr, 1},
     {MoveScript_FAWord_addr, 2},
     {Cond_ByteFE_addr, 1},
-    {BattleDraw_Colour_addr, 1},
+    {Config_WindowColour_addr, 1},
     {(Gfx_UnpackScratch_addr + 0x1f000), 0x10},
     {AreaW2c_LastArea_addr, 2},
     {MoveScript_Object_addr, 4},
@@ -682,7 +683,7 @@ void Seed104(unsigned k) {
         break;
     case kKind5CSpin:
         if (ah::Often()) o[9] = static_cast<unsigned char>(AH_PICK(1, 1, 2, 0, 8, 0xFF));
-        if (ah::Often()) SetLong(o + 0x14, static_cast<std::int32_t>(AH_PICK(0x40, 0xFFFFFFC0u, 0, 0x1000)));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_y, static_cast<std::int32_t>(AH_PICK(0x40, 0xFFFFFFC0u, 0, 0x1000)));
         break;
     case kKind5CRise:
         if (ah::Often()) o[0xA] = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 0x18, 0xFF));

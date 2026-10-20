@@ -31,7 +31,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -45,11 +47,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC; words or dwords by
 // function) and the four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF).
 // Both are read again after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 constexpr std::uint32_t kPartyCount = 0x904AB0;    // u8: the party's size
@@ -74,10 +76,6 @@ constexpr unsigned kBlessCount = 0x50;
 // kCureLifetimes: now CureMote_Lifetimes (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Cur() { return Pointer(CureMote_Current_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -124,7 +122,7 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The originals index the party records by a byte, unchecked.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* CureRecord(unsigned n) { return Mem(CureMote_Pool_addr + n * kCureStride); }
@@ -195,7 +193,7 @@ void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), dy, size);
 }
 // Linked at the sprite's +0x34 / +0x38 (the task's or the mote's).
-void LinkAt(const unsigned char* at, int dy, unsigned size) { Link(Long(at + 0x34), Long(at + 0x38), dy, size); }
+void LinkAt(const unsigned char* at, int dy, unsigned size) { Link(rv::As<records::SpriteHead>(at)->x, rv::As<records::SpriteHead>(at)->z, dy, size); }
 // Linked at a MAGIC168 mote's +0x14 / +0x18.
 void LinkCure(int dy, unsigned size) {
     const unsigned char* const r = Cur();
@@ -229,37 +227,37 @@ S35_EXPORT void __cdecl LastResort_Task(void) {
 S35_EXPORT void __cdecl LastResort_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = src[8];
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
     Inc(Sc()[1]);
     {
         unsigned char* const c = TaskSlot(NewTask(0x47));
-        records::BattleTask* const tc = reinterpret_cast<records::BattleTask*>(c);
+        records::BattleTask* const tc = rv::As<records::BattleTask>(c);
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         tc->owner = static_cast<std::int32_t>(Key(s));
         c[1] = 0;
         c[9] = 0;
         tc->x = ts->x;
-        tc->y = ts->y;
-        SetWord(c + 0x3E, Word(s + 0x3E));
+        tc->z = ts->z;
+        rv::Store<unsigned>(tc->height_whole, ts->height_whole);
         Inc(s[0xB]);
     }
     for (unsigned i = 0; i < 8; ++i) {
         unsigned char* const c = TaskSlot(NewTask(0x47));
-        records::BattleTask* const tc = reinterpret_cast<records::BattleTask*>(c);
+        records::BattleTask* const tc = rv::As<records::BattleTask>(c);
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         tc->owner = static_cast<std::int32_t>(Key(s));
         c[1] = 1;
         c[0xB] = static_cast<unsigned char>((i & 3) << 3);
         c[9] = static_cast<unsigned char>((i >> 2) * 0x28 + 0x11);
         tc->x = ts->x;
-        tc->y = ts->y;
-        SetLong(c + 0x3C, Long(s + 0x3C));
+        tc->z = ts->z;
+        rv::Store(tc->height, ts->height);
         Inc(s[0xB]);
     }
     MH_CALL(Sound_PlayById)(0x100);
@@ -506,8 +504,8 @@ S35_EXPORT void __cdecl LastResortBeam_DrawColumn(void) {
         }
         const std::int32_t half = DivPow2(top, 1);   // [esp+0x18]
         s = Sc();
-        const std::int32_t x = Add32(Shl(VS(0x18), 9), Long(s + 0x34));
-        const std::int32_t z = Add32(Shl(VS(0x1A), 9), Long(s + 0x38));
+        const std::int32_t x = Add32(Shl(VS(0x18), 9), rv::As<records::BattleTask>(s)->x);
+        const std::int32_t z = Add32(Shl(VS(0x1A), 9), rv::As<records::BattleTask>(s)->z);
         DrawMode(0x35);
         Link(x, z, 0, 0xC);
         unsigned char* p = Gfx_PacketNext;
@@ -697,8 +695,8 @@ S35_EXPORT void __cdecl LastResortBeam_DrawSparks(int k) {
         SetVW(4, static_cast<unsigned>(height));
         if (static_cast<short>(height) > 0) SetVW(4, 0);
         s = Sc();
-        const std::int32_t x = Add32(Shl(VS(0), 9), Long(s + 0x34));
-        const std::int32_t z = Add32(Shl(static_cast<short>(cy), 9), Long(s + 0x38));
+        const std::int32_t x = Add32(Shl(VS(0), 9), rv::As<records::BattleTask>(s)->x);
+        const std::int32_t z = Add32(Shl(static_cast<short>(cy), 9), rv::As<records::BattleTask>(s)->z);
         DrawMode(0x35);
         Link(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -760,9 +758,9 @@ S35_EXPORT void __cdecl Cure_Start(void) {
     {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         Sc()[8] = src[8];
-        Store(ScTask()->x, Long(src + 0x34));
-        Store(ScTask()->y, Long(src + 0x38));
-        SetLong(Sc() + 0x3C, Long(src + 0x3C));
+        rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+        rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sc()[0xB] = 0;
@@ -830,11 +828,11 @@ S35_EXPORT void __cdecl CureMote_Run(void) {
 S35_EXPORT void __cdecl CureMote_Wait(void) {
     Dec(Cur()[5]);
     if (Cur()[5] != 0) return;
-    SetLong(Cur() + 0x14, Long(Owner() + 0x34));
-    SetLong(Cur() + 0x18, Long(Owner() + 0x38));
-    SetLong(Cur() + 0x1C, Long(Owner() + 0x3C));
-    SetWord(Cur() + 0x20, Word(Owner() + 0x2E));
-    SetWord(Cur() + 0x22, Word(Owner() + 0x30));
+    SetLong(Cur() + 0x14, rv::As<records::SpriteHead>(Owner())->x);
+    SetLong(Cur() + 0x18, rv::As<records::SpriteHead>(Owner())->z);
+    SetLong(Cur() + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
+    SetWord(Cur() + 0x20, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
+    SetWord(Cur() + 0x22, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     {
         unsigned char* const x = Cur() + 0x20;
         const short dx = static_cast<short>(Word(Mem(CureMote_Offsets_addr + (Cur()[7] & 0x1Fu) * 4)));
@@ -1105,7 +1103,7 @@ S35_EXPORT void __cdecl Benediction_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned n = 0; n < kBlessCount; ++n) {
         unsigned char* const r = BlessRecord(n);
-        records::BattleTask* const tr = reinterpret_cast<records::BattleTask*>(r);
+        records::BattleTask* const tr = rv::As<records::BattleTask>(r);
         if ((r[0] & 1) == 0) continue;
         const std::int32_t mote_owner = static_cast<std::int32_t>(tr->owner);
         Sprite_Current = r;
@@ -1128,7 +1126,7 @@ S35_EXPORT void __cdecl Benediction_Start(void) {
         r[2] = 0;
     }
     MH_CALL(MagicFx_CenterOnSide)();
-    SetLong(Sc() + 0x3C, Add32(Long(Sc() + 0x3C), 0xC00000));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::Current<records::BattleTask>()->height, 0xC00000));
     for (unsigned k = 0x1A00; k < 0x1B00; ++k)
         Gfx_ClutStrip[k] = static_cast<unsigned short>(Gfx_ClutStripSource[k] | 0x8000);
     Gfx_ClutStrip[0x1A00] = Gfx_ClutStripSource[0x1A00];
@@ -1151,7 +1149,7 @@ S35_EXPORT void __cdecl Benediction_Spawn(void) {
         unsigned char n = 0;
         do {
             unsigned char* const c = TaskSlot(NewTask(8));
-            records::BattleTask* const tc = reinterpret_cast<records::BattleTask*>(c);
+            records::BattleTask* const tc = rv::As<records::BattleTask>(c);
             unsigned char* const s = Sc();
             tc->owner = static_cast<std::int32_t>(Key(s));
             c[1] = 0;
@@ -1198,8 +1196,8 @@ S35_EXPORT void __cdecl Benediction_DrawHalo(void) {
     PutFloat(p + 0x28, x - 0x38);
     PutFloat(p + 0x2C, y);
     PutFloat(p + 0x3C, y);
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
     p[0x14] = 8;
     p[0x15] = 8;
     p[0x25] = 8;
@@ -1243,11 +1241,11 @@ S35_EXPORT void __cdecl BenedictionChild_Start(void) {
     if (Sc()[9] != 0) return;
     {
         const unsigned char* const m = PartyRecord(Sc()[4]);
-        const records::PartyMember* const tm = reinterpret_cast<const records::PartyMember*>(m);
+        const records::PartyMember* const tm = rv::AsConst<records::PartyMember>(m);
         Sc()[8] = m[8];
-        Store(ScTask()->x, tm->x);
-        Store(ScTask()->y, tm->z);
-        SetLong(Sc() + 0x3C, tm->height);
+        rv::Store(rv::Current<records::BattleTask>()->x, tm->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, tm->z);
+        rv::Store(rv::Current<records::BattleTask>()->height, tm->height);
     }
     Sc()[0xB] = 0;
     Sc()[9] = 8;
@@ -1257,7 +1255,7 @@ S35_EXPORT void __cdecl BenedictionChild_Start(void) {
         const unsigned slot = Alloc(bof3::addr::BenedictionMote_Alloc);
         if (slot == 0xFF) continue;
         unsigned char* const r = BlessRecord(slot);
-        records::BattleTask* const tr = reinterpret_cast<records::BattleTask*>(r);
+        records::BattleTask* const tr = rv::As<records::BattleTask>(r);
         unsigned char* const s = Sc();
         tr->owner = static_cast<std::int32_t>(Key(s));
         r[1] = 0;
@@ -1358,25 +1356,25 @@ void BlessMoteOrbit() {
     {
         const int sn = MH_CALL(Math_Sin)(static_cast<short>(angle));
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->x = Add32(Mul32(sn, ts->vel_x), Long(Owner() + 0x34));
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->x = Add32(Mul32(sn, ts->step_x), rv::As<records::SpriteHead>(Owner())->x);
     }
     {
         const int cs = MH_CALL(Math_Cos)(SS(4));
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->y = Add32(Mul32(cs, ts->vel_x), Long(Owner() + 0x38));
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->z = Add32(Mul32(cs, ts->step_x), rv::As<records::SpriteHead>(Owner())->z);
     }
 }
 // The rise: while dword +0x20 is below +0x14 (signed), +0x14 -= +0x20 and
 // +0x3C += +0x14.
 void BlessMoteRise() {
     unsigned char* const s = Sc();
-    const std::int32_t d = Long(s + 0x20);
-    const std::int32_t h = Long(s + 0x14);
+    const std::int32_t d = rv::As<records::BattleTask>(s)->work_20;
+    const std::int32_t h = rv::As<records::BattleTask>(s)->step_y;
     if (d >= h) return;
-    SetLong(s + 0x14, Add32(h, -d));
-    SetLong(Sc() + 0x3C, Add32(Long(Sc() + 0x3C), Long(Sc() + 0x14)));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, Add32(h, -d));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::Current<records::BattleTask>()->height, rv::Current<records::BattleTask>()->step_y));
 }
 }  // namespace
 
@@ -1386,14 +1384,14 @@ void BlessMoteRise() {
 S35_EXPORT void __cdecl BenedictionMote_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    ScTask()->vel_x = 8;
+    rv::Current<records::BattleTask>()->step_x = 8;
     BlessMoteOrbit();
-    SetLong(Sc() + 0x3C, Add32(Long(Owner() + 0x3C), 0x800000));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::As<records::SpriteHead>(Owner())->height, 0x800000));
     {
         const std::uint32_t rnd = RandCall();
-        SetLong(Sc() + 0x14, static_cast<std::int32_t>(((rnd & 3) + 2) << 20));
+        rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<std::int32_t>(((rnd & 3) + 2) << 20));
     }
-    SetLong(Sc() + 0x20, DivPow2(Long(Sc() + 0x14), 4));
+    rv::Store(rv::Current<records::BattleTask>()->work_20, DivPow2(rv::Current<records::BattleTask>()->step_y, 4));
     for (unsigned k = 0x5D; k < 0x60; ++k) {
         const std::uint32_t rnd = RandCall();
         Sc()[k] = static_cast<unsigned char>((rnd & 7) + 6);
@@ -1406,7 +1404,7 @@ S35_EXPORT void __cdecl BenedictionMote_Launch(void) {
 // original 0x4F1A40: dword +0xC up by 2, the orbit, the rise; +9 up by 2, at
 // 0x10 +2 on. Also MAGIC077's (ReviveMote_Task's entry 1).
 S35_EXPORT void __cdecl BenedictionMote_Spiral(void) {
-    Store(ScTask()->vel_x, Add32(ScTask()->vel_x, 2));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Add32(rv::Current<records::BattleTask>()->step_x, 2));
     BlessMoteOrbit();
     BlessMoteRise();
     AddB(Sc()[9], 2);
@@ -1417,7 +1415,7 @@ S35_EXPORT void __cdecl BenedictionMote_Spiral(void) {
 // down, at 0 the owner's +0xB down and a tail jmp to MAGIC219's 0x4F6290 (the
 // pool slot's free).
 S35_EXPORT void __cdecl BenedictionMote_Fade(void) {
-    Store(ScTask()->vel_x, Add32(ScTask()->vel_x, 1));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Add32(rv::Current<records::BattleTask>()->step_x, 1));
     BlessMoteOrbit();
     BlessMoteRise();
     if ((Frame_Counter & 1) == 0) return;

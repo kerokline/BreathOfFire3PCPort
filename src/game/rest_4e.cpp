@@ -52,17 +52,17 @@ using Handler = void (__cdecl*)();
 // kMode: now Rest4b_BoardState (symbols.toml). u8: the facility's mode (the tables' index)
 // kNameMode: now Rest4c_Step (symbols.toml). u8: zeroed by the name commits (R4D's step)
 // kStep: now Rest4b_BoardStep (symbols.toml). u8: the mode's step
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style (Menu_DrawBox's colour)
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style (Menu_DrawBox's colour)
 // kFontPage: now Rest4f_Setting3 (symbols.toml). u8: 0 or not, which label CommuMusic_DrawList shows
 
 // The band's own cells 0x675F8C..0x675FDB.
 // kCursor: now Rest4c_Count (symbols.toml). u8: which name the commits write (the n-th in use)
 constexpr U kEdit = 0x675F98;          // u8 x 32: the name being edited (CommuName_MakeRandom clears 32)
 constexpr U kEditSize = 0x20;
-constexpr U kSavedTrack = 0x675FD0;    // u8: Music_Track when the list opened
-constexpr U kSlide = 0x675FD1;         // u8: the list's slide 4..0
-constexpr U kTrack = 0x675FD2;         // s16: the list's row, the track index
-constexpr U kItemSlide = 0x675FD4;     // u8: the item window's slide 0..4
+// kSavedTrack: now CommuMusic_SavedTrack (symbols.toml). u8: Music_Track when the list opened
+// kSlide: now CommuMusic_Slide (symbols.toml). u8: the list's slide 4..0
+// kTrack: now CommuMusic_Track (symbols.toml). s16: the list's row, the track index
+// kItemSlide: now CommuItem_Slide (symbols.toml). u8: the item window's slide 0..4
 constexpr U kPages = 0x675FD8;         // u8 x 3: the three lists' page counts
 constexpr U kPage = 0x675FDB;          // s8: the page shown, over the three lists
 
@@ -94,12 +94,12 @@ constexpr U kListCPairs = 0x904CA0;
 
 // WindowRecords 0 and 1 (0x24 each): the item window and its cursor.
 constexpr U kWin0 = 0x803160, kWin1 = 0x803184;
-constexpr U kWinOff = kWin0 + 3;       // u8: window 0 shut (the slide waits for 0)
-// kTab: now BattleOdds_Win0Index (symbols.toml). u8: the tab 0..3 (Inventory_IdLists' index)
-constexpr U kTop = kWin0 + 0xB;        // u8: the first row shown
-// kRow: now Rest3a_Win0Cursor (symbols.toml). u8: the row
-// kTabMove: now ShopStates2_Help (symbols.toml). u16: 0x31 / 0x32 when the tab moved
-constexpr U kScroll = kWin0 + 0x12;    // u16: 0xF0 / 0x10 while the list scrolls
+constexpr U kWinOff = WindowRecords_addr + 3; // u8: window 0 shut (the slide waits for 0)
+// kTab: now Window0_ParamA (symbols.toml). u8: the tab 0..3 (Inventory_IdLists' index)
+constexpr U kTop = WindowRecords_addr + 0xB; // u8: the first row shown
+// kRow: now Window0_Cursor (symbols.toml). u8: the row
+// kTabMove: now Window0_Arrows (symbols.toml). u16: 0x31 / 0x32 when the tab moved
+constexpr U kScroll = WindowRecords_addr + 0x12; // u16: 0xF0 / 0x10 while the list scrolls
 
 constexpr U kTextRecords = 0x904CE0;   // Text_Records (0x20 each)
 constexpr U kTextBuffer = 0x904BA0;    // the text scratch sprintf writes
@@ -110,7 +110,9 @@ constexpr U kPieces = 0x652EE4;        // 6 bytes a piece: u, v, w, h, clut x, c
 constexpr U kPortraits = 0x652F38;     // 4 bytes a portrait: u, v, clut x, clut row
 constexpr U kPanelPieces = 0x652F5C;   // the member panel's Menu_DrawPieces list
 constexpr U kTracks = 0x653098;        // u8 x 40: the list's tracks
-constexpr U kLabelA = 0x6530F0, kLabelB = 0x6530F4, kLabelC = 0x6530F8;   // pointers to three labels
+// kLabelA: now CommuMusic_LabelA (symbols.toml).
+// kLabelB: now CommuMusic_LabelB (symbols.toml).
+// kLabelC: now CommuMusic_LabelC (symbols.toml). pointers to three labels
 constexpr U kGlyphsA = 0x653144, kGlyphsB = 0x653148, kGlyphsC = 0x65314C;
 constexpr U kBars = 0x653210;          // 20 bytes an entry: its four bars' lengths
 constexpr U kPairMessages = 0x653180;  // 4 bytes a kind: the message id, a "name" word
@@ -152,7 +154,7 @@ unsigned char* EntryRecord(const char* who) {
     const unsigned e = AreaW0c_TailSub;
     if (e >= kEntryCount)
         bof3::Fatal("%s: the entry 0x9039F5 is %u, past the 60 of 0x9046D0 (docs/rest_4e.md section 7)", who, e);
-    return At(kEntries + 8 * e);
+    return At(Community_Records_addr + 8 * e);
 }
 
 // --- the callees ------------------------------------------------------------------------
@@ -164,7 +166,7 @@ void DrawMode(unsigned dtd, unsigned tpage, const short* window) {
 }
 void Grey(unsigned char* p) { p[4] = p[5] = p[6] = 0x80; }
 void OpenMessage(unsigned short id) { SH_CALL(Msg_OpenScript)(id); }
-void Box(int x, int y, int w, int h, int flags) { SH_CALL(Menu_DrawBox)(x, y, w, h, flags, static_cast<unsigned char>(BattleDraw_Colour)); }
+void Box(int x, int y, int w, int h, int flags) { SH_CALL(Menu_DrawBox)(x, y, w, h, flags, static_cast<unsigned char>(Config_WindowColour)); }
 
 // A colour that pulses with Frame_Counter's low byte: bit 3 set,
 // ((n & 6) << 5) + 0x3F; clear, ((~n & 6) << 5) + 0x3F.
@@ -363,7 +365,7 @@ extern "C" unsigned __cdecl CommuName_MakeRandom(void) {
 // CharacterRecords, unbounded: the panels are the seven records'.
 extern "C" void __cdecl CommuMember_DrawPanel(int x, int y, unsigned member, unsigned editing) {
     Box(x + 3, y + 3, 0x7D, 0x2D, 0);
-    const unsigned char* const record = At(kMembers + kMemberStride * (member & 0xFF));
+    const unsigned char* const record = At(CharacterRecords_addr + kMemberStride * (member & 0xFF));
     SH_CALL(CommuMember_DrawPortrait)(x + 6, y + 2, record[9], 0);
     const unsigned char* const name = (editing & 0xFF) == 0 ? record : At(kEdit);
     SH_CALL(Text_DrawAt)(x + 0x3B, y + 0x19, 0, 5, name);
@@ -549,7 +551,7 @@ extern "C" void __cdecl CommuName_CommitMember(void) {
             bof3::Fatal("CommuName_CommitMember (0x45F5A0): CommuMember_Nth answered %u, past the seven records - "
                         "the original writes past them (docs/rest_4e.md section 7)",
                         i);
-        return At(kMembers + kMemberStride * i);
+        return At(CharacterRecords_addr + kMemberStride * i);
     };
     const unsigned char* const old = member();
     SetL(kTextRecords, Get<U>(old, 0));
@@ -636,15 +638,15 @@ extern "C" void __cdecl CommuMusic_OpenDispatch(void) {
 // row 0, the slide 4, the step + 1.
 extern "C" void __cdecl CommuMusic_Open(void) {
     for (unsigned i = 0; i < kMemberCount; ++i) {
-        const unsigned char* const record = At(kMembers + kMemberStride * i);
+        const unsigned char* const record = At(CharacterRecords_addr + kMemberStride * i);
         unsigned char* const text = At(kTextRecords + 0x20 * i);
         Put<U>(text, 0, Get<U>(record, 0));
         Put<U>(text, 4, Get<U>(record, 4));
         text[8] = record[8];
     }
-    B(kSavedTrack) = Music_Track;
-    SetW(kTrack, 0);
-    B(kSlide) = 4;
+    CommuMusic_SavedTrack = Music_Track;
+    CommuMusic_Track = 0;
+    CommuMusic_Slide = 4;
     ++Rest4b_BoardStep;
 }
 
@@ -653,10 +655,10 @@ extern "C" void __cdecl CommuMusic_Open(void) {
 // original's y carries leftovers above its low word, which the list reads
 // alone.
 extern "C" void __cdecl CommuMusic_SlideIn(void) {
-    const auto slide = static_cast<unsigned char>(B(kSlide) - 1);
-    B(kSlide) = slide;
+    const auto slide = static_cast<unsigned char>(CommuMusic_Slide - 1);
+    CommuMusic_Slide = slide;
     SH_CALL(CommuMusic_DrawList)(0x32, 0x28 - 50 * slide);
-    if (B(kSlide) == 0) {
+    if (CommuMusic_Slide == 0) {
         const unsigned char mode = Rest4b_BoardState;
         Rest4b_BoardStep = 0;
         Rest4b_BoardState = static_cast<unsigned char>(mode + 1);
@@ -672,7 +674,7 @@ extern "C" void __cdecl CommuMusic_BrowseDispatch(void) {
 
 // The list's row, an index of the 40 tracks 0x653098 read signed; outside
 // them the original reads the bytes there, and so does ours (a read only).
-U TrackIndex() { return static_cast<U>(static_cast<int>(static_cast<short>(W(kTrack)))); }
+U TrackIndex() { return CommuMusic_Track; }
 
 // original 0x45F830: CommuMusic_BrowseSteps[0] - the pad: Input_AutoRepeat of
 // the pressed word & 0xA000 moves the row (down 0x2000 past the count wraps to
@@ -689,18 +691,18 @@ extern "C" void __cdecl CommuMusic_Browse(void) {
     const unsigned moved = SH_CALL(Input_AutoRepeat)(pressed);
     if ((moved & 0xFFFF) != 0) {
         if (moved & 0x2000) {
-            const auto row = static_cast<std::uint16_t>(W(kTrack) + 1);
-            SetW(kTrack, row);
+            const auto row = static_cast<std::uint16_t>(static_cast<std::uint32_t>(static_cast<std::uint16_t>(CommuMusic_Track)) + 1);
+            CommuMusic_Track = row;
             if (static_cast<short>(row) > static_cast<short>(count)) {
-                SetW(kTrack, 0);
+                CommuMusic_Track = 0;
                 SH_CALL(CommuMusic_DrawList)(0x32, 0x28);
                 return;
             }
         } else if (moved & 0x8000) {
-            const auto row = static_cast<std::uint16_t>(W(kTrack) - 1);
-            SetW(kTrack, row);
+            const auto row = static_cast<std::uint16_t>(static_cast<std::uint32_t>(static_cast<std::uint16_t>(CommuMusic_Track)) - 1);
+            CommuMusic_Track = row;
             if (static_cast<short>(row) < 0) {
-                SetW(kTrack, count);
+                CommuMusic_Track = count;
                 SH_CALL(CommuMusic_DrawList)(0x32, 0x28);
                 return;
             }
@@ -749,7 +751,7 @@ extern "C" void __cdecl CommuMusic_CloseDispatch(void) {
 // one kept: Music_FadeOutStop(10); the list drawn; the step + 1.
 extern "C" void __cdecl CommuMusic_CloseFade(void) {
     const unsigned char track = Music_Track;
-    if (track != 0xFF && track != B(kSavedTrack)) SH_CALL(Music_FadeOutStop)(10);
+    if (track != 0xFF && track != CommuMusic_SavedTrack) SH_CALL(Music_FadeOutStop)(10);
     SH_CALL(CommuMusic_DrawList)(0x32, 0x28);
     ++Rest4b_BoardStep;
 }
@@ -759,9 +761,9 @@ extern "C" void __cdecl CommuMusic_CloseFade(void) {
 // drawn.
 extern "C" void __cdecl CommuMusic_CloseRestore(void) {
     if (SH_CALL(File_LoadDone)() != 0) {
-        SH_CALL(Music_Play)(B(kSavedTrack), 8);
+        SH_CALL(Music_Play)(CommuMusic_SavedTrack, 8);
         const unsigned char step = Rest4b_BoardStep;
-        B(kSlide) = 0;
+        CommuMusic_Slide = 0;
         Rest4b_BoardStep = static_cast<unsigned char>(step + 1);
     }
     SH_CALL(CommuMusic_DrawList)(0x32, 0x28);
@@ -771,10 +773,10 @@ extern "C" void __cdecl CommuMusic_CloseRestore(void) {
 // drawn at (0x32, 0x28 - 50 slide); at 4 message 0x5A, the step + 1,
 // Field_Request 2 (CommuMusic_CloseSteps[3] is R4D's 0x45E6A0).
 extern "C" void __cdecl CommuMusic_SlideOut(void) {
-    const auto slide = static_cast<unsigned char>(B(kSlide) + 1);
-    B(kSlide) = slide;
+    const auto slide = static_cast<unsigned char>(CommuMusic_Slide + 1);
+    CommuMusic_Slide = slide;
     SH_CALL(CommuMusic_DrawList)(0x32, 0x28 - 50 * slide);
-    if (B(kSlide) == 4) {
+    if (CommuMusic_Slide == 4) {
         OpenMessage(0x5A);
         const unsigned char step = Rest4b_BoardStep;
         Field_Request = 2;
@@ -800,9 +802,9 @@ extern "C" void __cdecl CommuMusic_DrawList(int x, int y) {
     SH_CALL(Text_DrawAt)(x + 0x14, y + 0x17, colour, 0xFF, At(kScriptPool + W(kScriptPool + 2 * (0x271 + row))));
     Box(x + 0x48, y + 0x3C, 0x7C, 0xE, 1);
     SH_CALL(Menu_DrawOutlineNotched)(x + 0x48, y + 0x3C, 0x7C, 0xE, 1);
-    const U label = Rest4f_Setting3 == 0 ? L(kLabelA) : L(kLabelB);
+    const U label = Rest4f_Setting3 == 0 ? CommuMusic_LabelA : CommuMusic_LabelB;
     SH_CALL(CommuMusic_DrawLabel)(x + 0x10, y + 0x40, 0, At(label));
-    SH_CALL(CommuMusic_DrawLabel)(x + 0x20, y + 0x54, 0, At(L(kLabelC)));
+    SH_CALL(CommuMusic_DrawLabel)(x + 0x20, y + 0x54, 0, At(CommuMusic_LabelC));
     SH_CALL(Text_DrawFont8)(x + 0x44, y + 0x54, 0, At(kGlyphsC));
     SH_CALL(Text_DrawFont8)(x + 0x5C, y + 0x54, 3, At(kGlyphsB));
     SH_CALL(Text_DrawFont8)(x + 0x94, y + 0x54, 0, At(kGlyphsC));
@@ -920,7 +922,7 @@ extern "C" void __cdecl CommuItem_OpenWindow(void) {
     SH_CALL(Window_ResetAll)();
     SH_CALL(CommuItem_SetupWindow)();
     const unsigned char step = Rest4b_BoardStep;
-    B(kItemSlide) = 4;
+    CommuItem_Slide = 4;
     Rest4b_BoardStep = static_cast<unsigned char>(step + 1);
 }
 
@@ -930,7 +932,7 @@ extern "C" void __cdecl CommuItem_OpenWindow(void) {
 // its low word).
 void ItemFrame(unsigned char slide) {
     Box(0x14, 0x12 - 12 * slide, 0x118, 0x13, 0xF2);
-    SH_CALL(Menu_DrawOutlineNotched)(0x16, 0x14 - 12 * B(kItemSlide), 0x113, 0xF, 0);
+    SH_CALL(Menu_DrawOutlineNotched)(0x16, 0x14 - 12 * CommuItem_Slide, 0x113, 0xF, 0);
 }
 
 // Inventory_IdLists[tab]: five lists (0..3 by tab, then the key items); past
@@ -955,62 +957,62 @@ const unsigned char* ItemList(const char* who, unsigned tab) {
 // row's item, if any, then has its help line (Item_HelpMessage's system
 // message) at (0x1D, 0x15).
 extern "C" void __cdecl CommuItem_Choose(void) {
-    unsigned char slide = B(kItemSlide);
-    if (slide != 0) B(kItemSlide) = --slide;
+    unsigned char slide = CommuItem_Slide;
+    if (slide != 0) CommuItem_Slide = --slide;
     ItemFrame(slide);
-    if (B(kWinOff) != 0) return;
+    if (WindowRecords[0].state != 0) return;
     const U window_x = L(kWin0 + 4);
-    BattleE1_Win1 = 1;
+    WindowRecords[1].in_use = 1;
     SetW(kWin1 + 4, window_x + 7);
-    SetW(kWin1 + 6, 13u * (static_cast<std::uint32_t>(Rest3a_Win0Cursor) - B(kTop) + 2u) + W(kWin0 + 6));
+    SetW(kWin1 + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - B(kTop) + 2u) + static_cast<std::uint32_t>(WindowRecords[0].y));
     const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
     if (moved & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
-        const auto tab = static_cast<unsigned char>(BattleOdds_Win0Index - 1);
-        ShopStates2_Help = 0x32;
-        BattleOdds_Win0Index = tab;
-        if (static_cast<signed char>(tab) < 0) BattleOdds_Win0Index = 3;
+        const auto tab = static_cast<unsigned char>(Window0_ParamA - 1);
+        Window0_Arrows = 0x32;
+        Window0_ParamA = tab;
+        if (static_cast<signed char>(tab) < 0) Window0_ParamA = 3;
     } else if (moved & 0x2000) {
-        ShopStates2_Help = 0x31;
+        Window0_Arrows = 0x31;
         SH_CALL(Sound_PlayEffect)(0x101);
-        const auto tab = static_cast<unsigned char>(BattleOdds_Win0Index + 1);
-        BattleOdds_Win0Index = tab;
-        if (tab > 3) BattleOdds_Win0Index = 0;
+        const auto tab = static_cast<unsigned char>(Window0_ParamA + 1);
+        Window0_ParamA = tab;
+        if (tab > 3) Window0_ParamA = 0;
     }
-    unsigned char row = Rest3a_Win0Cursor;
+    unsigned char row = Window0_Cursor;
     const unsigned char was = row;
     if (moved & 0x1000) {
-        if (row != 0) Rest3a_Win0Cursor = --row;
+        if (row != 0) Window0_Cursor = --row;
         if (row < B(kTop)) SetW(kScroll, 0xF0);
     } else if (moved & 0x4000) {
-        if (row < 0x7F) Rest3a_Win0Cursor = ++row;
-        if (Rest3a_Win0Cursor >= static_cast<int>(B(kTop)) + 9) SetW(kScroll, 0x10);
+        if (row < 0x7F) Window0_Cursor = ++row;
+        if (Window0_Cursor >= static_cast<int>(B(kTop)) + 9) SetW(kScroll, 0x10);
     } else if (moved & Sigma(4)) {
         const unsigned char top = B(kTop);
         if (top == 0) {
             row = 0;
-            Rest3a_Win0Cursor = 0;
+            Window0_Cursor = 0;
         } else if (top < 9) {
             row = static_cast<unsigned char>(row - top);
             B(kTop) = 0;
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
         } else {
             row = static_cast<unsigned char>(row - 9);
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
             B(kTop) = static_cast<unsigned char>(top - 9);
         }
     } else if (moved & Sigma(8)) {
         const unsigned char top = B(kTop);
         if (top == 0x77) {
             row = 0x7F;
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
         } else if (top > 0x6E) {
             B(kTop) = 0x77;
             row = static_cast<unsigned char>(row + (0x77 - top));
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
         } else {
             row = static_cast<unsigned char>(row + 9);
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
             B(kTop) = static_cast<unsigned char>(top + 9);
         }
     }
@@ -1018,28 +1020,28 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     if (W(kScroll) != 0) return;
     const unsigned pressed = Input_Pressed;
     if (Field_CancelButtons & pressed) {
-        BattleE1_Win1 = 0;
-        B(kWinOff) = 1;
+        WindowRecords[1].in_use = 0;
+        WindowRecords[0].state = 1;
         SH_CALL(Sound_PlayEffect)(0x106);
         ++Rest4b_BoardStep;
     } else if (Field_ConfirmButtons & pressed) {
-        const unsigned char item = ItemList("CommuItem_Choose (0x45FE90)", BattleOdds_Win0Index)[Rest3a_Win0Cursor];
+        const unsigned char item = ItemList("CommuItem_Choose (0x45FE90)", Window0_ParamA)[Window0_Cursor];
         if (item == 0) {
             SH_CALL(Sound_PlayEffect)(0x107);
             return;
         }
         SH_CALL(Sound_PlayEffect)(0x105);
-        const unsigned char tab = BattleOdds_Win0Index;
+        const unsigned char tab = Window0_ParamA;
         unsigned char* const entry = EntryRecord("CommuItem_Choose (0x45FE90)");
-        B(kWinOff) = 1;
+        WindowRecords[0].state = 1;
         entry[2] = item;
         unsigned char* const again = EntryRecord("CommuItem_Choose (0x45FE90)");
-        BattleE1_Win1 = 0;
+        WindowRecords[1].in_use = 0;
         Rest4b_BoardStep = 4;
         again[3] = tab;
     }
-    const unsigned tab = BattleOdds_Win0Index;
-    const unsigned char shown = ItemList("CommuItem_Choose (0x45FE90)", tab)[Rest3a_Win0Cursor];
+    const unsigned tab = Window0_ParamA;
+    const unsigned char shown = ItemList("CommuItem_Choose (0x45FE90)", tab)[Window0_Cursor];
     if (shown == 0) return;
     const unsigned help = SH_CALL(Item_HelpMessage)(tab, shown);
     const unsigned char* const line = SH_CALL(Msg_SystemPtr)(help);
@@ -1049,10 +1051,10 @@ extern "C" void __cdecl CommuItem_Choose(void) {
 // The item window's slide up one (to 4), its frame, and whether window 0 has
 // shut (+3 0).
 bool ItemClosed() {
-    unsigned char slide = B(kItemSlide);
-    if (slide < 4) B(kItemSlide) = ++slide;
+    unsigned char slide = CommuItem_Slide;
+    if (slide < 4) CommuItem_Slide = ++slide;
     ItemFrame(slide);
-    return B(kWinOff) == 0;
+    return WindowRecords[0].state == 0;
 }
 
 // original 0x4601D0: CommuItem_Steps[3] (cancelled) - the window slides away;
@@ -1077,7 +1079,7 @@ extern "C" void __cdecl CommuItem_Cancel(void) {
 extern "C" void __cdecl CommuItem_Confirm(void) {
     if (!ItemClosed()) return;
     SH_CALL(Window_ResetAll)();
-    const unsigned char* const entry = At(kEntries + 8u * AreaW0c_TailSub);
+    const unsigned char* const entry = At(Community_Records_addr + 8u * AreaW0c_TailSub);
     const unsigned char tab = entry[3];
     const unsigned item = entry[2];
     unsigned char kind;
@@ -1097,7 +1099,7 @@ extern "C" void __cdecl CommuItem_Confirm(void) {
     std::memcpy(At(kTextRecords), name, 16);
     OpenMessage(0x61);
     const unsigned char step = Rest4b_BoardStep;
-    B(kItemSlide) = 0;
+    CommuItem_Slide = 0;
     Rest4b_BoardStep = static_cast<unsigned char>(step + 1);
     Field_Request = 2;
 }
@@ -1127,12 +1129,12 @@ extern "C" void __cdecl CommuItem_Refused(void) {
 // kind 2, +2 0, +3 2, at (-0xAA, 0x3E), tab, top and row 0, +0xD 0xFF, +8 / +9
 // 0, +0x10 / +0x12 0; 1: off, kind 2, +2 1, +3 0.
 extern "C" void __cdecl CommuItem_SetupWindow(void) {
-    B(kWin0 + 1) = 2;
-    B(kWin0 + 2) = 0;
-    B(kWin0 + 3) = 2;
-    B(kWin0) = 1;
-    SetW(kWin0 + 4, 0xFF56);
-    SetW(kWin0 + 6, 0x3E);
+    WindowRecords[0].handler = 2;
+    WindowRecords[0].kind = 0;
+    WindowRecords[0].state = 2;
+    WindowRecords[0].in_use = 1;
+    WindowRecords[0].x = 0xFF56;
+    WindowRecords[0].y = 0x3E;
     B(kWin0 + 0xA) = 0;
     B(kWin0 + 0xB) = 0;
     B(kWin0 + 0xC) = 0;
@@ -1144,7 +1146,7 @@ extern "C" void __cdecl CommuItem_SetupWindow(void) {
     B(kWin1 + 1) = 2;
     B(kWin1 + 2) = 1;
     B(kWin1 + 3) = 0;
-    BattleE1_Win1 = 0;
+    WindowRecords[1].in_use = 0;
 }
 
 // ===========================================================================
@@ -1168,7 +1170,7 @@ extern "C" void __cdecl CommuRank_Pages(void) {
     };
     B(kPages) = pages(Rest4a_RemovedCount, 7);
     B(kPages + 1) = pages(Rest4b_BusyA, 20);
-    B(kPage) = 0;
+    CommuList_Page = 0;
     B(kPages + 2) = pages(Rest4b_BusyB, 8);
     ++Rest4b_BoardState;
 }
@@ -1183,13 +1185,13 @@ extern "C" void __cdecl CommuRank_Pages(void) {
 // reads the low byte). Every count 0 or the page past their sum: the original
 // walks on through 0x675FDB and the bytes after; ours aborts.
 extern "C" void __cdecl CommuRank_Show(void) {
-    unsigned char left = B(kPage);
+    unsigned char left = static_cast<unsigned char>(CommuList_Page);
     unsigned list = 0;
     for (;;) {
         if (list >= 3)
             bof3::Fatal("CommuRank_Show (0x4605D0): the page 0x675FDB is %u, past the three lists' %u + %u + %u pages "
                         "- the original reads on past 0x675FDA (docs/rest_4e.md section 7)",
-                        B(kPage), B(kPages), B(kPages + 1), B(kPages + 2));
+                        static_cast<unsigned char>(CommuList_Page), B(kPages), B(kPages + 1), B(kPages + 2));
         const unsigned char count = B(kPages + list);
         if (left < count) break;
         left = static_cast<unsigned char>(left - count);
@@ -1205,17 +1207,17 @@ extern "C" void __cdecl CommuRank_Show(void) {
     const auto total = static_cast<unsigned char>(B(kPages + 2) + B(kPages + 1) + B(kPages));
     const unsigned pressed = Input_Pressed;
     if (pressed & 0x2000) {
-        const auto page = static_cast<unsigned char>(B(kPage) + 1);
-        B(kPage) = page;
-        if (static_cast<signed char>(page) >= static_cast<int>(total)) B(kPage) = 0;
+        const auto page = static_cast<unsigned char>(static_cast<unsigned char>(CommuList_Page) + 1);
+        CommuList_Page = page;
+        if (static_cast<signed char>(page) >= static_cast<int>(total)) CommuList_Page = 0;
     }
     if (pressed & 0x8000) {
-        const auto page = static_cast<unsigned char>(B(kPage) - 1);
-        B(kPage) = page;
+        const auto page = static_cast<unsigned char>(static_cast<unsigned char>(CommuList_Page) - 1);
+        CommuList_Page = page;
         if (static_cast<signed char>(page) < 0) B(kPage) = static_cast<unsigned char>(total - 1);
     }
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(kTextBuffer)), reinterpret_cast<const char*>(At(kPageFormat)),
-                         static_cast<int>(static_cast<signed char>(B(kPage))) + 1, static_cast<unsigned>(total));
+                         CommuList_Page + 1, static_cast<unsigned>(total));
     SH_CALL(Text_DrawFont8)(0xEE, 0x2C, 0, At(kTextBuffer));
     if (Input_Pressed & (Field_ConfirmButtons | Field_CancelButtons)) ++Rest4b_BoardState;
 }

@@ -291,7 +291,7 @@ compared, 0xEF..0xF9, 0, 0xFF), `Effect_FindFree`, `Field_EffectAhead`,
 / `_SpawnAtCellHigh` (byte, word, word), `AreaMap_ClearCell` (words),
 `Rand` (its low nibble at every edge the code compares: & 0xF against 7,
 0xB, 0xD, 0xF; & 7 against 5; & 3 against 0), `Field_GiveZenny`,
-`MapView_SlopeAt` (`DamageScratch`'s flag 0 a third of the time; the slope
+`MapView_SlopeAt` (`SharedScratch`'s flag 0 a third of the time; the slope
 word either side of 0x40), `MapView_GroundAt` (around the sprite's height),
 `Sprite_TurnSense` (0xFF / 1, any byte one in eight), `Member_ClearState`
 (byte), `Sprite_FlashClut`, and the group's own four cell helpers (`kFlag`,
@@ -340,7 +340,7 @@ there agree.
 
 **The disturbance** (the group's case, from its hash only): the sprite's
 direction, `+2` / `+3`, `+9..+0xB`, `+4` / `+5`, the form word, x or z,
-height; `Field_State +0x137` / `+0x138`; `DamageScratch`'s flag;
+height; `Field_State +0x137` / `+0x138`; `SharedScratch`'s flag;
 `Field_InputFlags` bit 1 or 2; a dword of `Text_Records`. The harness's own
 moves `Sprite_Current`, `Field_Request` and the rest of section 4 of its doc.
 

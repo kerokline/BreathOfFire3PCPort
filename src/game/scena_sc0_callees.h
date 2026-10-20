@@ -21,7 +21,7 @@ namespace scena_sc0 {
 // kRuns: now Scena00_Runs (symbols.toml). Scena00_Runs: 12 handlers by the s8 MoveScript_Var7
 // kObjectHooks: now Scena00_ObjectHooks (symbols.toml). Scena00_ObjectHooks: 1 handler by the object's +0x86
 constexpr std::uint32_t kShake = 0x660D20;        // Scena00_Shake: 16 s8 offsets by a 4-bit index
-constexpr std::uint32_t kStartSteps = 0x660D30;   // Scena00_StartSteps: run 6's first step by Cond_ByteFD
+// kStartSteps: now Scena00_StartSteps (symbols.toml). run 6's first step by Cond_ByteFD
 constexpr std::uint32_t kInputAnims = 0x660D38;   // Scena00_InputAnims: 16 pairs (animate?, animation) by input >> 12
 
 // --- the cells ----------------------------------------------------------------
@@ -30,13 +30,13 @@ constexpr std::uint32_t kInputAnims = 0x660D38;   // Scena00_InputAnims: 16 pair
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml).
 constexpr std::uint32_t kTimer = 0x8034E6;        // u16
 // kByteFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 constexpr std::uint32_t kCounter = 0x903848;      // dword; its low byte is waited on
 constexpr std::uint32_t kCount2 = 0x903849;
 constexpr std::uint32_t kByte4A = 0x90384A;
 constexpr std::uint32_t kByte4B = 0x90384B;
-constexpr std::uint32_t kSlot = 0x903850;         // the effect slot just taken
-// kWait: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+inline auto& kSlot = SharedScratch.b_00;  // the effect slot just taken
+// kWait: now Transition_Busy (symbols.toml). Transition_Busy
 // kRequest: now Field_Request (symbols.toml). Field_Request
 // kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags

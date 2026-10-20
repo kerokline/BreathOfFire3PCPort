@@ -38,7 +38,7 @@ constexpr U kNewStatusHi = 0x904B99;      // its high byte
 // --- the party (ObjTrio, stride 0x14C) and the enemies' objects (stride 0x128) ---
 // kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
-constexpr U kEnemies = 0x93B960;          // indexed as the originals do: (actor - 3) * 0x128
+// kEnemies: now Battle_Enemies (symbols.toml). indexed as the originals do: (actor - 3) * 0x128
 constexpr U kEnemyStride = 0x128;
 // the per-actor bytes Battle_InflictStatus clears (+9 of 0x84-byte records from
 // 0x93A000 by the actor, 0..10 inside BattleTask_Create's slots)

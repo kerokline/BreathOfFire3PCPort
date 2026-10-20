@@ -520,8 +520,8 @@ void SelfTestBuild(void (__cdecl* theirs)()) {
         R(MapView_Inset), R(MapView_Row), R(MapView_Column), R(Field_InputFlags), R(Cond_ByteFE), R(Cond_AngleFB),
         R(Camera_Distance), R(MapView_Origin, 4), R(&Field_Kind2Z, 8), R(MapView_BuildFlags), R(Gfx_BufferIndex),
         R(Draw_OtSlot), R(MapView_CellItems, MapView_CellItems_count), R(AreaMap_Header, 0x800),
-        R(Prim_VertexScratch, 0x20), R(MapView_CornerPtr), R(MapView_ScreenXY, 8),
-        R(At(bof3::addr::DamageScratch), 4), R(DrawItems, kItemBytes),
+        R(reinterpret_cast<short*>(Prim_VertexScratch), 0x20), R(MapView_CornerPtr), R(MapView_ScreenXY, 8),
+        R(At(SharedScratch_addr), 4), R(DrawItems, kItemBytes),
     };
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);
@@ -724,6 +724,11 @@ void SelfTestClutCycle(void (__cdecl* theirs)(const unsigned char*)) {
 
 // --- AreaMap_HeaderPass -------------------------------------------------------------------
 
+// The entries the mask (entry >> 24) & 0x7F reaches: 128, past the table's own four
+// (symbols.toml AreaMap_EntryHandlers count 4) into the tables after it, which the
+// fuzz overwrites with stand-ins and puts back.
+constexpr unsigned kMaskReach = 0x80;
+
 // A stand-in per entry of AreaMap_EntryHandlers the mask reaches. One may
 // lengthen its entry's step to 2, read after the call: the chain is laid out
 // so that either step lands on an entry or on a zero.
@@ -740,9 +745,9 @@ void SelfTestHeaderPass(void (__cdecl* theirs)()) {
     const Region r[] = {R(Draw_PassFlags), R(AreaMap_Header, kAreaBytes)};
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);
-    static unsigned long saved_handlers[AreaMap_EntryHandlers_count];
+    static unsigned long saved_handlers[kMaskReach];
     std::memcpy(saved_handlers, AreaMap_EntryHandlers, sizeof saved_handlers);
-    FillEntries(std::make_integer_sequence<unsigned, AreaMap_EntryHandlers_count>());
+    FillEntries(std::make_integer_sequence<unsigned, kMaskReach>());
     g_rng = 0x571AF001u;
     unsigned bad = 0, off = 0, empty = 0, calls = 0, high = 0;
     for (unsigned round = 0; round < kRounds; ++round) {

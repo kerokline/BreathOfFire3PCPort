@@ -31,7 +31,7 @@ constexpr std::uint32_t kCrossSel = 0x904AB4;      // u8 (read as a dword): the 
 constexpr std::uint32_t kCrossGrow = 0x904ABC;     // u8 x 5: each arm's growth; +5, +6 the two extras
 constexpr std::uint32_t kCrossExtra5 = 0x904AC1;
 constexpr std::uint32_t kCrossExtra6 = 0x904AC2;
-constexpr std::uint32_t kActor = 0x939EC4;         // the acting member's record pointer (+0x134 bit 1)
+// kActor: now BattleE4_MenuActor (symbols.toml). the acting member's record pointer (+0x134 bit 1)
 constexpr std::uint32_t kCrossArms = 0x64E2AC;     // (x, y) bytes per arm, 7 of them
 // kCommandBoxes: now Battle_CommandBoxes (symbols.toml). Battle_CommandBoxes: s16 x, y per command, stride 8
 // kCommandLabels: now Battle_CommandLabelPointers (symbols.toml). Battle_CommandLabelPointers: 7 pointers to 0x669D28 + 8 i
@@ -42,9 +42,9 @@ constexpr std::uint32_t kCurrent = 0x905B84;       // the window record Field_Ru
 // kMsgTail: now BattleActorCopies_QueueWrite (symbols.toml). u8: its write index
 constexpr std::uint32_t kMsgRing = 0x93C2C4;       // 8 bytes an entry: +0 the text pointer
 // kStateTable: now BattleObj_StateTable (symbols.toml). 27 handlers of a party object's state byte +1
-// kPoseFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8, bit 0x20
+// kPoseFlags: now EventBattle_Flags (symbols.toml). u8, bit 0x20
 constexpr std::uint32_t kBattleKind = 0x904AA0;    // u8, 5 = a kind with its own poses
-// kKindFlags: now BattleActions_BattleEnd (symbols.toml). u8, bit 1
+// kKindFlags: now Battle_EndFlags (symbols.toml). u8, bit 1
 constexpr std::uint32_t kPoseMode = 0x904AA8;      // u8, bit 0x10
 // kTickGate: now BattleFlow_AnimGate (symbols.toml). u8: 0x441180 / 0x4411B0 tick unless set
 constexpr std::uint32_t kSkillFlags = 0x65C4DD;    // 24 bytes a skill: bit 3 of this byte

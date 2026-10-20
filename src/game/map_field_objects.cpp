@@ -32,6 +32,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/map_field_objects_callees.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -121,8 +122,7 @@ U OtSlot() { return Byte(at::OtSlotAt()); }
 U SpriteCurrent() { return Dword(At(Sprite_Current_addr)); }
 unsigned char* Sprite() { return At(SpriteCurrent()); }
 
-// EventOp_8x's object, a Sprite_Objects record, typed (src/game/records.h).
-records::SpriteObject* Obj() { return reinterpret_cast<records::SpriteObject*>(Sprite()); }
+// EventOp_8x's object, Sprite(), is a Sprite_Objects record.
 
 // The slot a cell handler commits to: 6 when the record's top nibble is set
 // (kinds 0x10 and up), else Draw_OtSlot - zero-extended from its byte.
@@ -163,22 +163,22 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     const U rec = Dword(record);
     const U slot = HandlerSlot(rec);
     const U e = ((rec >> 24) & 0xFu) - 1u;
-    SetDword(At(kScratchX), (b1 - 0x81u) << 7);
-    SetDword(At(kScratchY), (b0 - 0x80u) << 7);
+    kScratchX.d_00 = (b1 - 0x81u) << 7;
+    kScratchY = (b0 - 0x80u) << 7;
     const U elevation = static_cast<U>(g.elevation(static_cast<long>((b1 << 16) - 0x10000u), static_cast<long>(b0 << 16)));
     const U h = static_cast<U>(-(static_cast<std::int32_t>(S16(elevation)) / 2));
-    const U x = Dword(At(kScratchX));
-    Prim_VertexScratch[0xc] = x;
-    Prim_VertexScratch[8] = x;
-    const U y = Dword(At(kScratchY));
-    Prim_VertexScratch[0xd] = y;
-    Prim_VertexScratch[9] = y;
-    SetDword(At(kScratchH), h);
+    const U x = static_cast<std::uint32_t>(kScratchX.d_00);
+    Prim_VertexScratch[3].x = x;
+    Prim_VertexScratch[2].x = x;
+    const U y = static_cast<std::uint32_t>(kScratchY);
+    Prim_VertexScratch[3].y = y;
+    Prim_VertexScratch[2].y = y;
+    kScratchH = h;
     const U top = h - Word(At(at::UprightHeightsAt() + e * 2u));
-    Prim_VertexScratch[0xe] = h;
-    Prim_VertexScratch[6] = h;
-    Prim_VertexScratch[0xa] = top;
-    Prim_VertexScratch[2] = top;
+    Prim_VertexScratch[3].z = h;
+    Prim_VertexScratch[1].z = h;
+    Prim_VertexScratch[2].z = top;
+    Prim_VertexScratch[0].z = top;
     long p = 0;
     g.rtp3(Vertex(Prim_VertexScratch_addr + 0x10), Vertex(Prim_VertexScratch_addr + 0x18), Vertex(Prim_VertexScratch_addr), FloatAt(MapView_ScreenXY_addr), FloatAt(Effect6c_OffsetX_addr),
            FloatAt(kScreen2), &p);
@@ -222,15 +222,15 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
             prim[0x45] = v23;
             prim[0x35] = v23;
             prim[6] = prim[5] = prim[4] = 0x80;
-            SetWord(prim + 0x16, (Byte(at::UprightClutAt() + e) >> 4) | 0x78C0u);
-            SetWord(prim + 0x26, 0x1B);
+            rv::As<records::GpuPolyFT4>(prim)->clut = (Byte(at::UprightClutAt() + e) >> 4) | 0x78C0u;
+            rv::As<records::GpuPolyFT4>(prim)->tpage = 0x1B;
             g.commit(slot, 0x48);
         }
         const U base = (i + e * 3u) * 2u;
-        const U vy = Dword(At(kScratchY));
+        const U vy = static_cast<std::uint32_t>(kScratchY);
         for (U v = 0; v < 4; ++v) {
             const U k = ((v >> 1) + base) * 2u;
-            SetWord(At(Prim_VertexScratch_addr + v * 8u), Word(At(at::UprightOffsetsXAt() + k)) + Dword(At(kScratchX)));
+            SetWord(At(Prim_VertexScratch_addr + v * 8u), Word(At(at::UprightOffsetsXAt() + k)) + static_cast<std::uint32_t>(kScratchX.d_00));
             SetWord(At(Prim_VertexScratch_addr + v * 8u + 2), Word(At(at::UprightOffsetsYAt() + k)) + vy);
         }
         g.rtp4(Vertex(Prim_VertexScratch_addr), Vertex(Prim_VertexScratch_addr + 0x8), Vertex(Prim_VertexScratch_addr + 0x10), Vertex(Prim_VertexScratch_addr + 0x18),
@@ -339,9 +339,9 @@ extern "C" void __cdecl MapCell_PatchThenStop(unsigned char* record, unsigned, u
 // slot and then the corner offsets over it again.
 extern "C" void __cdecl MapCell_DrawAnimated(const unsigned char* record, unsigned b1, unsigned b0) {
     if (g.test(Word(record)) == 0) return;
-    Prim_VertexScratch[0] = (S8(Dword(record + 4) >> 24) + ((b1 - 0x80u) << 6)) << 1;
-    Prim_VertexScratch[1] = (S8(Dword(record + 4) >> 16) + ((b0 - 0x80u) << 6)) << 1;
-    Prim_VertexScratch[2] = Word(record + 4);
+    Prim_VertexScratch[0].x = (S8(Dword(record + 4) >> 24) + ((b1 - 0x80u) << 6)) << 1;
+    Prim_VertexScratch[0].y = (S8(Dword(record + 4) >> 16) + ((b0 - 0x80u) << 6)) << 1;
+    Prim_VertexScratch[0].z = Word(record + 4);
     long depth = 0;
     const auto p = static_cast<std::int32_t>(
         g.rtp(Vertex(Prim_VertexScratch_addr), reinterpret_cast<unsigned long*>(At(MapView_ScreenXY_addr)), &depth));
@@ -459,8 +459,8 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     const bool lit = (highlight & 0xFFu) != 0;
     const U bl = lit ? 7u : 0u;
     U colour = bl;
-    g.draw_box(x + 3, y + 3, 0x7D, 0x30, static_cast<int>(highlight), static_cast<unsigned char>(BattleDraw_Colour));
-    unsigned char* const record = At(kCharRecords + (member & 0xFFu) * kCharStride);
+    g.draw_box(x + 3, y + 3, 0x7D, 0x30, static_cast<int>(highlight), static_cast<unsigned char>(Config_WindowColour));
+    unsigned char* const record = At(CharacterRecords_addr + (member & 0xFFu) * kCharStride);
     const U shade = lit ? 1u : ((record[0x10] >> 6) & 2u);
     g.item_icon(x + 0x56, y + 2, static_cast<int>(record[9]), static_cast<int>(shade));
     g.text_at(x + 0x14, y + 3, static_cast<int>(colour), 5, record);
@@ -468,7 +468,7 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
     g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormat3d)), record[0xA]);
     g.font8(x + 0x16, y + 0x17, static_cast<int>(colour), text);
-    const U flags = Word(record + 0x10);
+    const U flags = static_cast<U>(rv::As<records::CharRecord>(record)->status);
     U status = 0;
     if (flags & 0x80u) {
         if (flags & 0x20u) status = (Byte(at::FrameCounterAt()) & 0x20u) ? kStatusText0 : kStatusText1;
@@ -477,11 +477,11 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
         status = kStatusText1;
     }
     if (status != 0) g.tiny_font(x + 0x2E, y + 0x17, colour != 0 ? colour : 1u, 0x10, At(status));
-    const U hp = Word(record + 0x18);
-    if (hp < (Word(record + 0x20) >> 2)) SetWord(record + 0x10, Word(record + 0x10) | 0x2000u);
-    else SetWord(record + 0x10, Word(record + 0x10) & 0xDFFFu);
+    const U hp = static_cast<U>(rv::As<records::CharRecord>(record)->hp);
+    if (hp < (static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_hp) >> 2)) rv::As<records::CharRecord>(record)->status = static_cast<U>(rv::As<records::CharRecord>(record)->status) | 0x2000u;
+    else rv::As<records::CharRecord>(record)->status = static_cast<U>(rv::As<records::CharRecord>(record)->status) & 0xDFFFu;
     if (!lit) {
-        if (Word(record + 0x10) & 0x2000u) colour = 4;
+        if (static_cast<U>(rv::As<records::CharRecord>(record)->status) & 0x2000u) colour = 4;
         if (hp <= 1) colour = 2;
     } else {
         colour = 7;
@@ -489,22 +489,22 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), hp);
     g.font8(x + 0x16, y + 0x1F, static_cast<int>(colour), text);
     colour = lit ? 7u : (record[0x1E] != 0 ? 4u : 0u);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), Word(record + 0x20));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_hp));
     g.font8(x + 0x16, y + 0x1F, static_cast<int>(colour), text);
     colour = bl;
     if (!lit) {
-        const U ap = Word(record + 0x1A);
-        if (ap < (Word(record + 0x22) >> 2)) colour = 4;
+        const U ap = static_cast<U>(rv::As<records::CharRecord>(record)->ap);
+        if (ap < (static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_ap) >> 2)) colour = 4;
         if (ap == 0) colour = 2;
     } else {
         colour = 7;
     }
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), Word(record + 0x1A));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), static_cast<U>(rv::As<records::CharRecord>(record)->ap));
     g.font8(x + 0x16, y + 0x27, static_cast<int>(colour), text);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), Word(record + 0x22));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_ap));
     g.font8(x + 0x16, y + 0x27, static_cast<int>(bl), text);
     const U eax = g.pieces(x, y, At(Menu_MemberPieces_addr), 0);
-    const U exp = Dword(record + 0xC);
+    const U exp = static_cast<U>(rv::As<records::CharRecord>(record)->exp);
     const U level = (eax & 0xFFFFFF00u) | record[0xA];
     return g.exp_bar(x + 0x14, y + 0x12, member, level, exp);
 }
@@ -523,7 +523,7 @@ extern "C" unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned
     prim[0x15] = static_cast<unsigned char>(v << 3);
     SetFloat(prim + 0xC, static_cast<float>(static_cast<std::int32_t>(y & 0xFFFFu)));
     prim[0x14] = static_cast<unsigned char>(u << 3);
-    SetWord(prim + 0x16, clut);
+    rv::As<records::GpuSprt>(prim)->clut = clut;
     prim[6] = prim[5] = prim[4] = static_cast<unsigned char>(shade);
     g.set_semi(prim, 0);
     return g.commit(1, 0x18);
@@ -541,7 +541,7 @@ extern "C" unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned
 // off by eax's high word << 19, which Menu_DrawPieces' 16-bit piece draws do
 // not see.
 extern "C" unsigned long __cdecl Menu_DrawPlayTime(int x, int y) {
-    g.draw_box(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.draw_box(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
     char* const buffer = reinterpret_cast<char*>(At(kPrintBuf));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
     g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormat02d)), Byte(kClockHours));
@@ -618,63 +618,63 @@ extern "C" unsigned long __cdecl AreaMap_SetByte(unsigned long x, unsigned long 
 // +0x38, both when both); the index + 1. Sprite_Current is read again for
 // every access, as the original reads [0x937F88].
 extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
-    const U first = Word(At(kScratchX));
+    const U first = kScratchX.w_00;
     if (static_cast<std::int16_t>(first) >= 0x1E) return;
     const U object = Sprite_Objects_addr + S16(first) * kObjectStride;
     SetDword(At(Sprite_Current_addr), object);
     SetDword(At(Field_ActiveMember_addr), object);
-    SetWord(At(kScratchBank), (static_cast<U>(op[1]) << 8) | op[2]);
+    kScratchBank = (static_cast<U>(op[1]) << 8) | op[2];
     g.obj_reset();
-    g.set_bank(Word(At(kScratchBank)));
-    Obj()->flags = 1;
-    SetDword(Sprite() + 0x34, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
-    SetDword(At(Sprite_Objects_addr + 0x8c + S16(Word(At(kScratchX))) * kObjectStride), static_cast<U>(Obj()->x));
-    SetDword(Sprite() + 0x38, (static_cast<U>(op[7]) << 16) | (op[6] != 0 ? 0x8000u : 0u));
+    g.set_bank(static_cast<std::uint32_t>(kScratchBank));
+    rv::As<records::SpriteObject>(Sprite())->flags = 1;
+    rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->x, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
+    SetDword(At(Sprite_Objects_addr + 0x8c + static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride), static_cast<U>(rv::As<records::SpriteObject>(Sprite())->x));
+    rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->z, (static_cast<U>(op[7]) << 16) | (op[6] != 0 ? 0x8000u : 0u));
     {
-        records::SpriteObject* const s = Obj();
-        const U n = S16(Word(At(kScratchX))) * kObjectStride;
+        records::SpriteObject* const s = rv::As<records::SpriteObject>(Sprite());
+        const U n = static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride;
         SetDword(At(Sprite_Objects_addr + 0x90 + n), static_cast<U>(s->z));
         SetDword(At(Sprite_Objects_addr + 0x94 + n), 0);
         const long elevation = g.elevation(static_cast<long>(static_cast<U>(s->x)), static_cast<long>(static_cast<U>(s->z)));
-        SetWord(Sprite() + 0x3E, static_cast<U>(elevation));
+        rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->height_whole, static_cast<U>(elevation));
     }
-    Obj()->state = op[8];
+    rv::As<records::SpriteObject>(Sprite())->state = op[8];
     Sprite()[2] = op[0xA];
-    Obj()->direction = static_cast<unsigned char>(op[0] & 0xF);
-    Obj()->type = static_cast<unsigned char>(op[0] >> 4);
+    rv::As<records::SpriteObject>(Sprite())->direction = static_cast<unsigned char>(op[0] & 0xF);
+    rv::As<records::SpriteObject>(Sprite())->type = static_cast<unsigned char>(op[0] >> 4);
     {
-        const U n = S16(Word(At(kScratchX))) * kObjectStride;
+        const U n = static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride;
         SetWord(At(Sprite_Objects_addr + 0x88 + n), 0xFFFF);
         At(Sprite_Objects_addr + 0x84 + n)[0] = op[9];
         At(Sprite_Objects_addr + 0xa0 + n)[0] = 0x7F;
     }
     g.set_flags(op + 0xB);
-    if (op[3] & 0x80) Obj()->flags = static_cast<unsigned char>(Obj()->flags | 0x20);
-    Obj()->shade[0] = 0;
-    Obj()->shade[2] = 0;
-    Obj()->shade[1] = 0;
-    Obj()->draw_mode = static_cast<unsigned char>(op[3] & 0xF);
+    if (op[3] & 0x80) rv::As<records::SpriteObject>(Sprite())->flags = static_cast<unsigned char>(rv::As<records::SpriteObject>(Sprite())->flags | 0x20);
+    rv::As<records::SpriteObject>(Sprite())->shade[0] = 0;
+    rv::As<records::SpriteObject>(Sprite())->shade[2] = 0;
+    rv::As<records::SpriteObject>(Sprite())->shade[1] = 0;
+    rv::As<records::SpriteObject>(Sprite())->draw_mode = static_cast<unsigned char>(op[3] & 0xF);
     {
-        records::SpriteObject* const s = Obj();
-        s->pose = static_cast<unsigned char>((s->flags2 >> 4) & 1);
+        records::SpriteObject* const s = rv::As<records::SpriteObject>(Sprite());
+        s->flip = static_cast<unsigned char>((s->flags2 >> 4) & 1);
     }
-    g.set_animation(Obj()->direction);
+    g.set_animation(rv::As<records::SpriteObject>(Sprite())->direction);
     {
         unsigned char* const s = Sprite();
-        g.set_byte(Word(s + 0x36), Word(s + 0x3A), 0x10);
+        g.set_byte(static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole), static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole), 0x10);
     }
     unsigned char* s = Sprite();
-    if (Word(s + 0x34) != 0) {
-        g.set_byte((Word(s + 0x36) + 1u) & 0xFFFFu, Word(s + 0x3A), 0x10);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->x_frac) != 0) {
+        g.set_byte((static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole) + 1u) & 0xFFFFu, static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole), 0x10);
         s = Sprite();
     }
-    if (Word(s + 0x38) != 0) {
-        g.set_byte(Word(s + 0x36), (Word(s + 0x3A) + 1u) & 0xFFFFu, 0x10);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->z_frac) != 0) {
+        g.set_byte(static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole), (static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole) + 1u) & 0xFFFFu, 0x10);
         s = Sprite();
     }
-    if (Word(s + 0x34) != 0 && Word(s + 0x38) != 0)
-        g.set_byte((Word(s + 0x36) + 1u) & 0xFFFFu, (Word(s + 0x3A) + 1u) & 0xFFFFu, 0x10);
-    SetWord(At(kScratchX), Word(At(kScratchX)) + 1u);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->x_frac) != 0 && static_cast<U>(rv::As<records::SpriteObject>(s)->z_frac) != 0)
+        g.set_byte((static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole) + 1u) & 0xFFFFu, (static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole) + 1u) & 0xFFFFu, 0x10);
+    SharedScratch.w_00 = static_cast<std::uint32_t>(SharedScratch.w_00) + 1u;
 }
 
 // original 0x57C7A0 (PSX 0x8015CA48): Field_StatusBits &= ~0x40 and

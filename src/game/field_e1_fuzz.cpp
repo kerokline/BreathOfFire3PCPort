@@ -19,6 +19,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_e1.h"
 #include "game/field_e1_callees.h"
 #include "game/move_script_bytes.h"
@@ -39,8 +40,8 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 unsigned char& B(U a) { return sh::Mem(a)[0]; }
-unsigned char* Member(unsigned i) { return ObjTrio + (i % 3) * at::kObjStride; }
-unsigned char* Object(unsigned i) { return Sprite_Objects + i * at::kSpriteStride; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i % 3]); }
+unsigned char* Object(unsigned i) { return rv::Bytes(Sprite_Objects) + i * at::kSpriteStride; }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -323,7 +324,7 @@ void Seed(unsigned k) {
     Field_MemberCount = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 3 : sh::Next() % 4);
     B(EventLeader_PendingCount_addr) = static_cast<unsigned char>(sh::Next() % 3);
     if (IsLeaderState(k) || sh::Half()) {
-        unsigned char* const m = sh::Often() ? ObjTrio : Member(sh::Next());
+        unsigned char* const m = sh::Often() ? rv::Bytes(ObjTrio) : Member(sh::Next());
         Sprite_Current = m;
         Field_State = sh::Often() ? m : Member(sh::Next());
     }
@@ -356,7 +357,7 @@ void Seed(unsigned k) {
         B(at::kBlink) = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
         break;
     case kPath:
-        SetWord(ObjTrio + 0x3E, sh::Next() % 0x400);
+        SetWord(rv::Bytes(ObjTrio) + 0x3E, sh::Next() % 0x400);
         break;
     case kFormAction:
         Field_InputHeld = static_cast<unsigned short>(sh::Half() ? 0 : PickOf(1, 2, 0x8000, sh::Next()));
@@ -415,7 +416,7 @@ void Seed(unsigned k) {
     }
     case kPlaceSlots: {
         B(Cond_Flags_addr + 0xd2) = Member(sh::Next())[0x89];
-        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(sh::Next());
+        B(EventBattle_Flags_addr) = static_cast<unsigned char>(sh::Next());
         const unsigned m = sh::Next() % 3;
         const std::int32_t x = Long(sh::Mem(at::kSlotPositions + 8 * m)), z = Long(sh::Mem(at::kSlotPositions + 8 * m + 4));
         if (sh::Often()) {
@@ -426,7 +427,7 @@ void Seed(unsigned k) {
     }
     case kPlacesByList:
         for (unsigned i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd5 + i) = Member(sh::Often() ? i + sh::Next() % 2 : sh::Next())[0x89];
-        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(sh::Next());
+        B(EventBattle_Flags_addr) = static_cast<unsigned char>(sh::Next());
         break;
     case kPlaceOffset:
         for (unsigned i = 0; i < 3; ++i) Member(i)[0x70] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());

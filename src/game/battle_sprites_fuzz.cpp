@@ -15,7 +15,7 @@
 // The stand-ins answer what their callers test and disturb what their callers
 // read again after the call (the target byte, the counts, the action id,
 // record bytes, Sprite_Current and its bytes, the clut scratch) - and the
-// clut searches leave a row and a cell in DamageScratch, which ClutMap_Mark
+// clut searches leave a row and a cell in SharedScratch, which ClutMap_Mark
 // reads after them.
 //
 // The inputs are bounded, not the functions: actor indices stay inside the
@@ -31,6 +31,7 @@
 #include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -87,7 +88,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 
 unsigned char* PoolSprite(unsigned k) {
     k %= 12;
-    return k < 4 ? g_mine.sprites[k] : At(at::kEnemies + (k - 4) * at::kEnemyStride);
+    return k < 4 ? g_mine.sprites[k] : At(Battle_Enemies_addr + (k - 4) * at::kEnemyStride);
 }
 
 // Actor-ish values: an actor 0..10, or a side (0x40 and up).
@@ -112,7 +113,7 @@ void Disturb() {
     }
     case 4: {
         static const unsigned kOffsets[] = {0, 0x8C, 0xC7, 0x10C, 0x110, 0x101, 8, 1};
-        unsigned char* const e = At(at::kEnemies + ((h >> 20) % 8) * at::kEnemyStride);
+        unsigned char* const e = At(Battle_Enemies_addr + ((h >> 20) % 8) * at::kEnemyStride);
         const unsigned o = kOffsets[(h >> 24) % 8];
         e[o] = static_cast<unsigned char>(o == 0x8C ? v % 6 : v);
         break;
@@ -120,10 +121,10 @@ void Disturb() {
     case 5:
         switch ((h >> 20) % 5) {
         case 0: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 5); break;
-        case 1: At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
-        case 2: At(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(v % 3); break;
-        case 3: At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
-        default: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(v % 24); break;
+        case 1: At(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
+        case 2: At(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(v % 3); break;
+        case 3: At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
+        default: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 24); break;
         }
         break;
     case 6: Sprite_Current = PoolSprite(v); break;
@@ -131,7 +132,7 @@ void Disturb() {
         for (unsigned i = 0; i < 3; ++i) At(ObjTrio_addr + i * at::kPartyStride)[0x124] = static_cast<unsigned char>(3 + (v + i) % 8);
         break;
     case 7: SetWord(At(0x802E08 + ((h >> 20) % 3) * at::kPartyStride), h >> 16); break;
-    case 8: At(at::kCells)[(h >> 20) & 1] = static_cast<unsigned char>((h >> 20) & 1 ? v % 16 : v % 6); break;
+    case 8: At(at::kCells_addr)[(h >> 20) & 1] = static_cast<unsigned char>((h >> 20) & 1 ? v % 16 : v % 6); break;
     case 9: At(at::kClutMap)[v % 64] = static_cast<unsigned char>((h >> 20) % 3 ? 0xFF : v); break;
     case 10: {
         unsigned char* const s = Sprite_Current;
@@ -152,7 +153,7 @@ void Disturb() {
 enum Stub : unsigned {
     kActorOut, kRand, kMark, kInvPut, kItemClass, kPopupSlot, kAddClamped, kAddCap, kWindow, kPlayEffect, kElevation,
     kSetBank, kUpdateScreen, kChanceB, kActFlag, kSlotsFull, kCoinFlip, kAutoAllowed, kAutoFixed, kNoTarget, kOutAction,
-    kActionE, kPickParty, kPickEnemyA, kPickEnemyB, kClutMark, kClutFind, kClutOwner, kBossCommon, BattleActions_EventBattle_addr, kNormal,
+    kActionE, kPickParty, kPickEnemyA, kPickEnemyB, kClutMark, kClutFind, kClutOwner, kBossCommon, kBossEncounter, kNormal,
     kSetupEnemy, kCopyEnemy, kEnemyOffset, kKindFlag, kStubs
 };
 struct StubSpec { std::uint32_t target; std::uint32_t mask[4]; };
@@ -189,13 +190,13 @@ std::uint32_t Handle(unsigned id, std::uint32_t a, std::uint32_t b, std::uint32_
     case kClutFind:
     case kClutOwner:
         if (h % 4) {
-            At(at::kCells)[0] = static_cast<unsigned char>((h >> 8) % 6);
-            At(at::kCells)[1] = static_cast<unsigned char>((h >> 12) % 16);
+            At(at::kCells_addr)[0] = static_cast<unsigned char>((h >> 8) % 6);
+            At(at::kCells_addr)[1] = static_cast<unsigned char>((h >> 12) % 16);
         }
         break;
     case kWindow: {
-        unsigned char* const w = At(at::kWindows + (a & 0xFF) * at::kWindowStride);
-        auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+        unsigned char* const w = At(WindowRecords_addr + (a & 0xFF) * at::kWindowStride);
+        auto* const window_rec = rv::As<records::WindowRecord>(w);
         window_rec->in_use = 1;
         window_rec->handler = static_cast<unsigned char>(b);
         window_rec->kind = static_cast<unsigned char>(h >> 8);
@@ -277,7 +278,7 @@ Callees StubCallees() {
     c.clut_find = As<decltype(c.clut_find)>(kClutFind);
     c.clut_owner = As<decltype(c.clut_owner)>(kClutOwner);
     c.boss_common = As<decltype(c.boss_common)>(kBossCommon);
-    c.boss_encounter = As<decltype(c.boss_encounter)>(BattleActions_EventBattle_addr);
+    c.boss_encounter = As<decltype(c.boss_encounter)>(kBossEncounter);
     c.normal_encounter = As<decltype(c.normal_encounter)>(kNormal);
     c.setup_enemy = As<decltype(c.setup_enemy)>(kSetupEnemy);
     c.copy_enemy = As<decltype(c.copy_enemy)>(kCopyEnemy);
@@ -407,12 +408,12 @@ struct Span { std::uint32_t at, size; unsigned region; };
 const Span kSpans[] = {
     {ObjTrio_addr, 0xFC0, kRParty},               // three party records, over-indexed ones, the window records
     {0x904000, 0xC00, kRGlobals},                 // the battle globals and the two bit sets
-    {at::kPopups, 0x3600, kRBattle},              // the pop-ups and the enemy records
+    {BattleTask_Slots_addr, 0x3600, kRBattle},    // the pop-ups and the enemy records
     {0x7E06A0, 0xD60, kRTints},                   // the clut map and the tint records (and 64 records past them)
-    {at::kCells, 8, kRScratch},
+    {at::kCells_addr, 8, kRScratch},
     {Address(&Sprite_Current), 0xC, kRCurrent},   // Sprite_Current .. Gfx_ClutStripDirty
     {0x8C5580, 0x2680, kRData},                   // the enemy data, ids below 0x40
-    {at::kEncounter, 0x60, kREncounter},
+    {Encounter_Slots_addr, 0x60, kREncounter},
     {at::kActions, 0x3000, kRActions},            // action ids below 0x200
     {Address(Gfx_ClutStrip), 0x20400, kRStrip},
     {Address(&g_mine), sizeof(Mine), kRMine},
@@ -499,9 +500,9 @@ void SeedRound(unsigned regions) {
     At(at::kTarget)[0] = TargetValue();
     At(at::kActor)[0] = static_cast<unsigned char>(Next() % 11);
     At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 5);
-    At(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(Next() % 3);
-    At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 9 : 8);
-    At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
+    At(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(Next() % 3);
+    At(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 9 : 8);
+    At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
     At(at::kBoss)[0] = static_cast<unsigned char>(Half() ? 0 : Next() % kBossHandlers);
     At(at::kLayout)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
     At(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(Next() % 6);
@@ -509,12 +510,12 @@ void SeedRound(unsigned regions) {
     g_mine.field[0x92] = Often() ? Pick(kKinds) : static_cast<unsigned char>(Next());
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const p = At(ObjTrio_addr + i * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         static const unsigned char kClasses[] = {0, 5, 6, 7, 0xFF};
         p[0xB7] = Half() ? Pick(kClasses) : static_cast<unsigned char>(Next());
         p[0x124] = TargetValue();
         p[0x125] = static_cast<unsigned char>(Often() ? Next() % 7 : Next());
-        SetWord(p + 0x126, ActionId());
+        rv::Store<unsigned>(rv::As<records::PartyMember>(p)->queued_id, ActionId());
         std::uint32_t status = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~0x14001u;
         if (Rarely()) status |= 1;
         if (Rarely()) status |= Half() ? 0x4000 : 0x10000;
@@ -522,10 +523,10 @@ void SeedRound(unsigned regions) {
         if (Half()) p[0x90] &= 0xDF;
     }
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const e = At(at::kEnemies + k * at::kEnemyStride);
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        unsigned char* const e = At(Battle_Enemies_addr + k * at::kEnemyStride);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         SeedSprite(e);
-        enemy_rec->kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
+        enemy_rec->enemy_kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
         static const unsigned char kClasses[] = {0, 5, 6, 7, 0xFF};
         e[0xC7] = Half() ? Pick(kClasses) : static_cast<unsigned char>(Next());
     }
@@ -540,21 +541,21 @@ void SeedRound(unsigned regions) {
     if (Rarely())
         for (unsigned i = 0; i < 32; ++i) At(MoveScript_TintRecords_addr + i * 12)[0] |= 1; // every record taken
     SeedClutMap();
-    At(at::kCells)[0] = static_cast<unsigned char>(Next() % 6);
-    At(at::kCells)[1] = static_cast<unsigned char>(Next() % 16);
+    At(at::kCells_addr)[0] = static_cast<unsigned char>(Next() % 6);
+    At(at::kCells_addr)[1] = static_cast<unsigned char>(Next() % 16);
     Sprite_Current = PoolSprite(Next());
     if (regions & kREncounter)
-        for (unsigned r = 0; r < 8; ++r) At(at::kEncounter + r * 12)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
+        for (unsigned r = 0; r < 8; ++r) At(Encounter_Slots_addr + r * 12)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
 }
 
 // A round of Battle_OpenEnemyNames with eight living enemies of eight kinds:
 // the walk runs past the list (docs/battle_sprites.md section 1).
 void SeedEightKinds() {
-    At(BattleActorCopies_EnemyCount_addr)[0] = 8;
+    At(Battle_EnemyCount_addr)[0] = 8;
     for (unsigned k = 0; k < 8; ++k) {
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(At(at::kEnemies + k * at::kEnemyStride));
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(At(Battle_Enemies_addr + k * at::kEnemyStride));
         enemy_rec->flags |= 1;
-        enemy_rec->kind = static_cast<unsigned char>(0x10 + k);
+        enemy_rec->enemy_kind = static_cast<unsigned char>(0x10 + k);
     }
 }
 
@@ -601,7 +602,7 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
     }
     if (f == fAutoTarget && Often()) {   // the plain path to modes 4 and 5
         unsigned char* const p = At(ObjTrio_addr + (a[0] & 0xFF) * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         p[0x90] &= 0xDF;
         member_rec->flags_134 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~0x14001u);
         At(at::kBattleFlags)[0] &= 0xEF;
@@ -613,12 +614,12 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
     if (f == fEnemyNames && Rarely()) SeedEightKinds();
     if (f == fAnyF0)
         for (unsigned i = 0; i < 11; ++i) {
-            unsigned char* const r = i < 3 ? At(ObjTrio_addr + i * at::kPartyStride) : At(at::kEnemies + (i - 3) * at::kEnemyStride);
+            unsigned char* const r = i < 3 ? At(ObjTrio_addr + i * at::kPartyStride) : At(Battle_Enemies_addr + (i - 3) * at::kEnemyStride);
             if (Often()) r[i < 3 ? 0x130 : 0x110] &= 0x0F;
         }
     if (f == fAnyF0 && Half()) {   // one present member with bit 7 alone
         unsigned char* const p = At(ObjTrio_addr + (Next() % 3) * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         member_rec->flags |= 1;
         p[0x130] = 0x80;
     }
@@ -646,7 +647,7 @@ Result RunOne(unsigned f, void* theirs, unsigned rounds) {
         // does not; seeded 0 in every record so the comparison sees the rest (CheckRowDoneReset
         // below measures the difference itself).
         if (f == fCopyEnemy)
-            for (unsigned k = 0; k < 8; ++k) At(at::kEnemies + k * at::kEnemyStride)[0xF1] = 0;
+            for (unsigned k = 0; k < 8; ++k) At(Battle_Enemies_addr + k * at::kEnemyStride)[0xF1] = 0;
         g_seed = Next();
         std::uint32_t a[4];
         Arguments(f, a);
@@ -694,17 +695,17 @@ void CheckRowDoneReset(void* theirs) {
     unsigned checked = 0;
     for (unsigned slot = 0; slot < 8; ++slot) {
         SeedRound(kClones[fCopyEnemy].regions);
-        for (unsigned k = 0; k < 8; ++k) At(at::kEnemies + k * at::kEnemyStride)[0xF1] = 0xFF;
+        for (unsigned k = 0; k < 8; ++k) At(Battle_Enemies_addr + k * at::kEnemyStride)[0xF1] = 0xFF;
         std::memset(g_log, 0, sizeof g_log);
         g_log_n = 0;
         Capture(input, kClones[fCopyEnemy].regions);
         const std::uint32_t id = Next() % 0x40;
         Apply(input, kClones[fCopyEnemy].regions);
         reinterpret_cast<FnPtr>(theirs)(slot, id, 0, 0);
-        const unsigned theirs_byte = At(at::kEnemies + slot * at::kEnemyStride)[0xF1];
+        const unsigned theirs_byte = At(Battle_Enemies_addr + slot * at::kEnemyStride)[0xF1];
         Apply(input, kClones[fCopyEnemy].regions);
         reinterpret_cast<FnPtr>(const_cast<void*>(kOurs[fCopyEnemy]))(slot, id, 0, 0);
-        const unsigned ours_byte = At(at::kEnemies + slot * at::kEnemyStride)[0xF1];
+        const unsigned ours_byte = At(Battle_Enemies_addr + slot * at::kEnemyStride)[0xF1];
         if (theirs_byte != 0xFF)
             bof3::Fatal("battle_sprites Battle_CopyEnemyData (DIV-0082): the original cleared +0xF1 of slot %u to 0x%02X - the "
                         "entry's premise is wrong", slot, theirs_byte);

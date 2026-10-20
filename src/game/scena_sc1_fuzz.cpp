@@ -318,8 +318,8 @@ void Seed(unsigned k) {
     g_name = kClones[k].name;
     // Every round: the effect slot a real one, the member index 0..7, the
     // object hook's index in each object the kObject shape may pass.
-    M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(sh::Next()));
-    M(MoveScript_EffectState_addr + 0x4)[0] = static_cast<unsigned char>(sh::Next() % 8);
+    M(at::kEffectSlot_addr)[0] = static_cast<unsigned char>(EffectSlot(sh::Next()));
+    M(Character_IndexById_addr + 0x4)[0] = static_cast<unsigned char>(sh::Next() % 8);
     for (unsigned i = 0; i < 4; ++i) sh::SpriteRecord(i)[0x86] = static_cast<unsigned char>(sh::Next() % at::kObjectCount);
     if (sh::Half()) sh::SetPointer(0x937F88, sh::ObjectOf(sh::Next()));   // Sprite_Current at a party object
     // The waits, each on its boundary two in three.
@@ -406,7 +406,7 @@ void Disturb(std::uint32_t h) {
     }
     case 1: M(at::kCounters + ((h >> 11) & 3))[0] = static_cast<unsigned char>(b); break;
     case 2: M(0x929F12)[0] = static_cast<unsigned char>((h >> 11) & 1); break;
-    case 3: M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(h >> 11)); break;
+    case 3: M(at::kEffectSlot_addr)[0] = static_cast<unsigned char>(EffectSlot(h >> 11)); break;
     case 4: M(0x929EC0)[0] = static_cast<unsigned char>(2 + ((h >> 11) & 1)); break;
     case 5: SetWordAt(0x7E1BEC, (h >> 11) & 1 ? 0x40 : 0); break;
     case 6:   // Scena01_Scene0D steps 0xF and 0x12 read counter 3 again after the first end's calls
@@ -421,9 +421,9 @@ void Disturb(std::uint32_t h) {
 
 // After any disturbance: the cells a function indexes with after a call.
 void Settle() {
-    const unsigned char s = M(at::kEffectSlot)[0];
-    if (s != 0xFF && s >= 20) M(at::kEffectSlot)[0] = static_cast<unsigned char>(s % 20);
-    M(MoveScript_EffectState_addr + 0x4)[0] &= 7;
+    const unsigned char s = M(at::kEffectSlot_addr)[0];
+    if (s != 0xFF && s >= 20) M(at::kEffectSlot_addr)[0] = static_cast<unsigned char>(s % 20);
+    M(Character_IndexById_addr + 0x4)[0] &= 7;
 }
 
 }  // namespace

@@ -10,6 +10,7 @@
 #include "game/band_census.h"
 #include "game/layering.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -18,11 +19,9 @@ namespace {
 
 using namespace move_script;
 
-// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
 // record or another family whose first 0x80 bytes are a sprite object's (an
 // ObjTrio member, the kind-2 object), so only that part is named.
-records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -62,7 +61,7 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
     if (n >= 30) return;
     Sprite_OverlayListCount = static_cast<unsigned char>(n + 1);
     Sprite_OverlayList[n] = Sprite_Current;
-    if (Cur()->flags & 8) g.dropped(0);
+    if (rv::Current<records::SpriteHead>()->flags & 8) g.dropped(0);
 }
 
 // original 0x588F20: Sprite_Current's draw key, screen position and depth,
@@ -73,19 +72,22 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
 // range is tested; the float screen point is stored as the x87 moves it and
 // truncated as the CRT's _ftol does (see Ftol16); the PSX's call for a sprite
 // with flag bit 8 is Port_DroppedCall, a bare ret, on the PC.
+// Sprite_Current is any sprite head: effect handlers call this too
+// (field_c1.cpp, field_c2.cpp, EffectKind37_Play, rest_3f CaptureSprite), so
+// it reads as SpriteHead (C2 audit frs F2).
 extern "C" void __cdecl Sprite_UpdateScreen(void) {
-    records::SpriteObject* sprite = Cur();
+    records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     if (sprite->draw_flags & 0x80) {
         g.overlay();
         return;
     }
-    const unsigned x_whole = Word(Bytes(sprite) + 0x34) == 0, z_whole = Word(Bytes(sprite) + 0x38) == 0;
+    const unsigned x_whole = sprite->x_frac == 0, z_whole = sprite->z_frac == 0;
     const signed char adjust = Sprite_KeyAdjust[sprite->key_class * 3u + x_whole + z_whole];
-    const auto key = static_cast<std::uint16_t>(adjust - x_whole - z_whole + Word(Bytes(sprite) + 0x3A) + Word(Bytes(sprite) + 0x36) -
+    const auto key = static_cast<std::uint16_t>(adjust - x_whole - z_whole + sprite->z_whole + sprite->x_whole -
                                                 static_cast<std::uint16_t>(MapView_Origin[1]) -
                                                 static_cast<std::uint16_t>(MapView_Origin[0]) + 2);
     sprite->draw_key = key;
-    sprite = Cur();
+    sprite = rv::Current<records::SpriteHead>();
     const auto layer = static_cast<std::int16_t>(sprite->draw_key);
     if (layer < 0 || layer > 0x36) {   // off the map's layers: hidden
         sprite->flags |= 0x80;
@@ -96,28 +98,28 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     sprite->draw_key = static_cast<unsigned>((layer + later) & 0xFF) << 8;
     unsigned low;
     if (Draw_OtSlot == 4) {
-        sprite = Cur();
-        low = static_cast<unsigned>(Long(Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
+        sprite = rv::Current<records::SpriteHead>();
+        low = static_cast<unsigned>(Long(rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
     } else {
-        sprite = Cur();
-        low = ((Word(Bytes(sprite) + 0x3E) ^ 0xF01Fu) >> 5) & 0xFF;
+        sprite = rv::Current<records::SpriteHead>();
+        low = ((sprite->height_whole ^ 0xF01Fu) >> 5) & 0xFF;
     }
     sprite->draw_key = sprite->draw_key | low;
     g.inherit_key();
 
-    sprite = Cur();
+    sprite = rv::Current<records::SpriteHead>();
     short vertex[4];
     vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
     vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
-    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(Word(Bytes(sprite) + 0x3E)) / 2));
+    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(sprite->height_whole) / 2));
     unsigned long screen[2];
     long depth_cue;
     const long depth = g.project(vertex, screen, &depth_cue);
-    Cur()->depth = depth;
-    SetLong(Sprite_Current + 0x74, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
-    SetWord(Sprite_Current + 0x2E, Ftol16(static_cast<std::uint32_t>(screen[0])));
-    SetLong(Sprite_Current + 0x78, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
-    SetWord(Sprite_Current + 0x30, Ftol16(static_cast<std::uint32_t>(screen[1])));
+    rv::Current<records::SpriteHead>()->depth = depth;
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, Ftol16(static_cast<std::uint32_t>(screen[1])));
 
     const unsigned char n = Sprite_DrawListCount;
     if (n >= 0x28) return;
@@ -195,7 +197,7 @@ constexpr std::uint32_t kFtol = 0x5B9550;
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Kind2), Sprite_Kind2_count},
+    {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
     {Address(Sprite_DrawList), 40 * 4},
     {Address(&Sprite_DrawListCount), 1},
     {Address(Sprite_OverlayList), 30 * 4},
@@ -204,7 +206,7 @@ const Region kRegions[] = {
     {Address(&Draw_OtSlot), 1},
     {Address(&Draw_SortOnX), 1},
 };
-constexpr unsigned kRegionBytes = Sprite_Kind2_count + 160 + 1 + 120 + 1 + 4 + 1 + 1;
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 160 + 1 + 120 + 1 + 4 + 1 + 1;
 
 struct State {
     unsigned char memory[kRegionBytes];
@@ -249,7 +251,7 @@ void SelfTest(Fn theirs_update, Fn theirs_overlay) {
         const bool overlay_only = round % 4 == 3;
         auto* bytes = reinterpret_cast<unsigned char*>(&input);
         for (unsigned i = 0; i < offsetof(State, log); ++i) bytes[i] = static_cast<unsigned char>(Next());
-        input.current = Next() % 5 ? g_sprite : Sprite_Kind2;
+        input.current = Next() % 5 ? g_sprite : rv::Bytes(&Sprite_Kind2);
         g_seed = Next();
         Apply(input);
         unsigned char* const s = Sprite_Current;
@@ -271,10 +273,10 @@ void SelfTest(Fn theirs_update, Fn theirs_overlay) {
             (pass ? (overlay_only ? &Sprite_QueueOverlay : &Sprite_UpdateScreen) : (overlay_only ? theirs_overlay : theirs_update))();
             Capture(pass ? our_out : their_out);
         }
-        const auto key = static_cast<std::int16_t>(Word((their_out.current == g_sprite ? their_out.sprite : Sprite_Kind2) + 0x32));
+        const auto key = static_cast<std::int16_t>(Word((their_out.current == g_sprite ? their_out.sprite : rv::Bytes(&Sprite_Kind2)) + 0x32));
         in_range += !overlay_only && !(their_out.current[0] & 0x80) ? 1 : 0;
         (void)key;
-        listed += their_out.memory[Sprite_Kind2_count + 160] != input.memory[Sprite_Kind2_count + 160];
+        listed += their_out.memory[sizeof(records::SpriteObject) + 160] != input.memory[sizeof(records::SpriteObject) + 160];
         if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0 && ++bad <= 12)
             bof3::Log("shadow      sprite_screen self-test MISMATCH: round %u, %s, log %u / %u", round,
                       overlay_only ? "Sprite_QueueOverlay" : "Sprite_UpdateScreen", their_out.log_n, our_out.log_n);

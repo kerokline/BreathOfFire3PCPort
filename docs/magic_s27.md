@@ -168,7 +168,7 @@ others call directly (`kPhase`: each logs the task it ran for; the two line
 draws log their argument's low byte), and the eight entries of
 `WhelpBreathSprite_Phases`. It lists the six `.data` handler tables.
 
-**Regions.** Beyond the harness's own: DamageScratch `0x903850` and
+**Regions.** Beyond the harness's own: SharedScratch `0x903850` and
 `Prim_VertexScratch` `0x9037A0`; `Gfx_PacketNext` and a 1 KB packet buffer
 of the fuzz's own; CLUT row 26 and its source; the sprite bank cell
 `0x9039D8`; `WhelpBreathFlames_Ages`; MAGIC120's `.data` up to its handler

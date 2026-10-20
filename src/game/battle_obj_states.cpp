@@ -24,6 +24,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_obj_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -59,17 +60,14 @@ namespace {
 
 unsigned char* S() { return Sprite_Current; }
 unsigned char* F() { return Field_State; }
-unsigned char* Task(unsigned index) { return At(at::kTasks + index * at::kTaskSize); }
+unsigned char* Task(unsigned index) { return At(BattleTask_Slots_addr + index * at::kTaskSize); }
 // The party objects' states run on the member: Sprite_Current and Field_State are its record.
-records::PartyMember* SMember() { return reinterpret_cast<records::PartyMember*>(S()); }
-records::PartyMember* FMember() { return reinterpret_cast<records::PartyMember*>(F()); }
-records::BattleTask* TaskRec(unsigned index) { return reinterpret_cast<records::BattleTask*>(Task(index)); }
 // A code pointer out of one of the tables, called; the index is not checked
 // (a byte, as the original's).
 void Dispatch(const std::uint32_t* table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
-void Pose(unsigned add) { g.ensure_animation(static_cast<unsigned char>(SMember()->direction + add)); }
+void Pose(unsigned add) { g.ensure_animation(static_cast<unsigned char>(rv::As<records::PartyMember>(S())->direction + add)); }
 
 }  // namespace
 
@@ -83,17 +81,17 @@ void Pose(unsigned add) { g.ensure_animation(static_cast<unsigned char>(SMember(
 // +0x2B = 0, then the state 2 with +2..+4 zeroed.
 extern "C" void __cdecl BattleObj_StateInit(void) {
     for (unsigned o = 0xC; o <= 0x20; o += 4) SetLong(S() + o, 0);
-    SMember()->ot_slot = 4;
-    SMember()->direction = At(at::kPoseBase)[0];
+    rv::As<records::PartyMember>(S())->ot_slot = 4;
+    rv::As<records::PartyMember>(S())->direction = At(at::kPoseBase)[0];
     S()[0x48] = 0;
-    auto* const member_s = SMember();
+    auto* const member_s = rv::As<records::PartyMember>(S());
     const long h = g.elevation(member_s->x, member_s->z);
-    SetWord(S() + 0x3E, static_cast<unsigned>(h));
+    rv::Store<unsigned>(rv::As<records::PartyMember>(S())->height_whole, static_cast<unsigned>(h));
     S()[0x2B] = 0;
-    SMember()->state[0] = 2;
-    SMember()->state[1] = 0;
-    SMember()->state[2] = 0;
-    SMember()->state[3] = 0;
+    rv::As<records::PartyMember>(S())->state = 2;
+    rv::As<records::PartyMember>(S())->step = 0;
+    rv::As<records::PartyMember>(S())->state3 = 0;
+    rv::As<records::PartyMember>(S())->state4 = 0;
 }
 
 // ===========================================================================
@@ -105,7 +103,7 @@ extern "C" void __cdecl BattleObj_StateInit(void) {
 extern "C" void __cdecl BattleObj_StateStand(void) {
     g.pick_pose();
     g.tick();
-    SMember()->state[0] = static_cast<unsigned char>(SMember()->state[0] + 1);
+    rv::As<records::PartyMember>(S())->state = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->state + 1);
 }
 
 // original 0x441570 (PSX 0x801DF3AC): standing, each frame.
@@ -128,7 +126,7 @@ extern "C" void __cdecl BattleObj_StateStand(void) {
 // be 5); bit 5 of +0x90 clear skips the step and the position alike, but not
 // the tick.
 extern "C" void __cdecl BattleObj_StateIdle(void) {
-    Dispatch(g.idle_subs, SMember()->state[1]);
+    Dispatch(g.idle_subs, rv::As<records::PartyMember>(S())->step);
     S()[0x5F] = 0;
     S()[0x5E] = 0;
     S()[0x5D] = 0;
@@ -136,7 +134,7 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
     if (At(at::kPhase)[0] == 1) {
         if (BattleActions_Step > 1) {
             const unsigned member = BattleE4_AutoMember;
-            const unsigned char c = FMember()->char_id == At(ObjTrio_addr + member * at::kMemberSize + 0x89)[0] ? 0x78 : 0xE2;
+            const unsigned char c = rv::As<records::PartyMember>(F())->char_id == At(ObjTrio_addr + member * at::kMemberSize + 0x89)[0] ? 0x78 : 0xE2;
             S()[0x5F] = c;
             S()[0x5E] = c;
             S()[0x5D] = c;
@@ -146,42 +144,42 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
         phase5 = At(at::kPhase)[0] == 5;
     }
     unsigned char* const f = F();
-    auto* const member_f = reinterpret_cast<records::PartyMember*>(f);
+    auto* const member_f = rv::As<records::PartyMember>(f);
     if (phase5) {
         if ((Long(At(at::kRoundFlags)) & 0x8000) != 0 && (F()[0x134] & 2) != 0) {
-            SetLong(S() + 0x34, static_cast<std::int32_t>(BossSi_CentreX));
-            SetLong(S() + 0x38, static_cast<std::int32_t>(BossSi_CentreZ));
+            rv::Store<std::int32_t>(rv::As<records::PartyMember>(S())->x, static_cast<std::int32_t>(BossSi_CentreX));
+            rv::Store<std::int32_t>(rv::As<records::PartyMember>(S())->z, static_cast<std::int32_t>(BossSi_CentreZ));
         } else {
-            SMember()->x = TaskRec(SMember()->member)->x;
-            SetLong(S() + 0x38, Long(Task(SMember()->member) + 0x38));
+            rv::As<records::PartyMember>(S())->x = rv::As<records::BattleTask>(Task(rv::As<records::PartyMember>(S())->actor))->x;
+            rv::Store<std::int32_t>(rv::As<records::PartyMember>(S())->z, rv::As<records::BattleTask>(Task(rv::As<records::PartyMember>(S())->actor))->z);
         }
     } else if ((f[0x90] & 0x20) != 0) {
         unsigned char* const s = S();
-        auto* const member_s = reinterpret_cast<records::PartyMember*>(s);
+        auto* const member_s = rv::As<records::PartyMember>(s);
         bool flip;
         if ((static_cast<std::int32_t>(member_f->flags_130) & 0x800) != 0) {
-            Task(member_s->member)[9] = static_cast<unsigned char>(Task(member_s->member)[9] + 1);
-            flip = static_cast<signed char>(Task(member_s->member)[9]) >= 12;
+            Task(member_s->actor)[9] = static_cast<unsigned char>(Task(member_s->actor)[9] + 1);
+            flip = static_cast<signed char>(Task(member_s->actor)[9]) >= 12;
         } else {
-            Task(member_s->member)[9] = static_cast<unsigned char>(Task(member_s->member)[9] - 1);
-            flip = static_cast<signed char>(Task(member_s->member)[9]) <= -12;
+            Task(member_s->actor)[9] = static_cast<unsigned char>(Task(member_s->actor)[9] - 1);
+            flip = static_cast<signed char>(Task(member_s->actor)[9]) <= -12;
         }
-        records::PartyMember* member_p = reinterpret_cast<records::PartyMember*>(s);
+        records::PartyMember* member_p = rv::As<records::PartyMember>(s);
         if (flip) {
             member_f->flags_130 = static_cast<std::int32_t>(member_f->flags_130) ^ 0x800;
-            member_p = reinterpret_cast<records::PartyMember*>(S());
+            member_p = rv::As<records::PartyMember>(S());
         }
         const unsigned pose = member_p->direction;
-        unsigned char* const t = Task(member_p->member);
-        auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+        unsigned char* const t = Task(member_p->actor);
+        auto* const task_rec = rv::As<records::BattleTask>(t);
         const std::int32_t step = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<signed char>(t[9])) << 9);
         if (pose == 1 || pose == 3) member_p->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(step) + static_cast<std::uint32_t>(task_rec->x));
-        else member_p->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(step) + static_cast<std::uint32_t>(Long(t + 0x38)));
+        else member_p->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(step) + static_cast<std::uint32_t>(task_rec->z));
     } else {
         if ((static_cast<std::int32_t>(member_f->flags_130) & 0x1000) == 0) g.tick();
         return;
     }
-    if ((static_cast<std::int32_t>(FMember()->flags_130) & 0x1000) == 0) g.tick();
+    if ((static_cast<std::int32_t>(rv::As<records::PartyMember>(F())->flags_130) & 0x1000) == 0) g.tick();
 }
 
 // original 0x4417A0 (PSX 0x801DF71C), state 3's sub-state 0 (also slot 13 of
@@ -192,12 +190,12 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
 extern "C" void __cdecl BattleObj_IdleTintOn(void) {
     if (BattleE4_Picking == 0) return;
     unsigned char* const s = S();
-    auto* const member_s = reinterpret_cast<records::PartyMember*>(s);
+    auto* const member_s = rv::As<records::PartyMember>(s);
     const unsigned char target = At(BattleActorCopies_Command)[0];
-    if (target != member_s->member && (target & 0x80) == 0) return;
+    if (target != member_s->actor && (target & 0x80) == 0) return;
     const unsigned char r = g.set_tint(s, 0, 0, 0, 0);
     S()[7] = r;
-    SMember()->state[1] = 1;
+    rv::As<records::PartyMember>(S())->step = 1;
 }
 
 // original 0x4417F0 (PSX 0x801DF7A0), state 3's sub-state 1 (also slot 14):
@@ -209,18 +207,18 @@ extern "C" void __cdecl BattleObj_IdleTintOn(void) {
 // for each of the three stores.
 extern "C" void __cdecl BattleObj_IdleTintOff(void) {
     unsigned char* const s = S();
-    auto* const member_s = reinterpret_cast<records::PartyMember*>(s);
+    auto* const member_s = rv::As<records::PartyMember>(s);
     const unsigned char level = At(at::kTintLevel)[0];
     At(MoveScript_TintRecords_addr + 4 + s[7] * 12u)[0] = level;
     At(MoveScript_TintRecords_addr + 3 + s[7] * 12u)[0] = level;
     At(MoveScript_TintRecords_addr + 2 + s[7] * 12u)[0] = level;
     if (BattleE4_Picking != 0) {
         const unsigned char target = At(BattleActorCopies_Command)[0];
-        if (target == member_s->member) return;
+        if (target == member_s->actor) return;
         if (target & 0x80) return;
     }
     g.tint_release(s[7]);
-    SMember()->state[1] = 0;
+    rv::As<records::PartyMember>(S())->step = 0;
 }
 
 // ===========================================================================
@@ -235,7 +233,7 @@ extern "C" void __cdecl BattleObj_IdleTintOff(void) {
 // As the original has it: the character is not checked.
 extern "C" void __cdecl BattleObj_StateAttack(void) {
     unsigned char* const f = F();
-    auto* const member_f = reinterpret_cast<records::PartyMember*>(f);
+    auto* const member_f = rv::As<records::PartyMember>(f);
     if (f[0x134] & 1) {
         Dispatch(g.attack_special, 0);
         return;
@@ -253,15 +251,15 @@ extern "C" void __cdecl BattleObj_StateAttack(void) {
 // again for the second counter.
 extern "C" void __cdecl BattleObj_AttackStart(void) {
     if (F()[0x134] & 2) {
-        SMember()->step_frames = At(at::kAttackCountBy + BattlePhases_B89)[0];
+        rv::As<records::PartyMember>(S())->step_frames = At(at::kAttackCountBy + BattlePhases_B89)[0];
         S()[0xA] = At(at::kAttackCountBy + BattlePhases_B89)[0];
     } else {
-        SMember()->step_frames = At(at::kAttackCount + FMember()->char_id)[0];
-        S()[0xA] = At(at::kAttackCount + FMember()->char_id)[0];
+        rv::As<records::PartyMember>(S())->step_frames = At(at::kAttackCount + rv::As<records::PartyMember>(F())->char_id)[0];
+        S()[0xA] = At(at::kAttackCount + rv::As<records::PartyMember>(F())->char_id)[0];
     }
     Pose(0xC);
     g.tick();
-    SMember()->state[0] = static_cast<unsigned char>(SMember()->state[0] + 1);
+    rv::As<records::PartyMember>(S())->state = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->state + 1);
 }
 
 // ===========================================================================
@@ -270,7 +268,7 @@ extern "C" void __cdecl BattleObj_AttackStart(void) {
 
 // original 0x441930 (PSX 0x801DF9D0): a tail jump through 0x64E074 by the
 // sub-state +2 (0x441950, 0x4419D0), unchecked.
-extern "C" void __cdecl BattleObj_StateSwing(void) { Dispatch(g.swing_subs, SMember()->state[1]); }
+extern "C" void __cdecl BattleObj_StateSwing(void) { Dispatch(g.swing_subs, rv::As<records::PartyMember>(S())->step); }
 
 // original 0x441950 (PSX 0x801DFA14, paired as Battle_SwingCue_Step): one
 // script tick; the counter +9 down by one; at 0 the cue: 3 when
@@ -282,8 +280,8 @@ extern "C" void __cdecl BattleObj_StateSwing(void) { Dispatch(g.swing_subs, SMem
 // with the unsigned byte; Field_State is read after Rand.
 extern "C" void __cdecl BattleObj_SwingCue(void) {
     g.tick_once();
-    SMember()->step_frames = static_cast<unsigned char>(SMember()->step_frames - 1);
-    if (SMember()->step_frames != 0) return;
+    rv::As<records::PartyMember>(S())->step_frames = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->step_frames - 1);
+    if (rv::As<records::PartyMember>(S())->step_frames != 0) return;
     unsigned cue;
     if (g.roll_pending() != 0) {
         cue = 3;
@@ -298,7 +296,7 @@ extern "C" void __cdecl BattleObj_SwingCue(void) {
     }
     g.play_cue(cue);
     g.play_cue(4);
-    SMember()->state[1] = static_cast<unsigned char>(SMember()->state[1] + 1);
+    rv::As<records::PartyMember>(S())->step = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->step + 1);
 }
 
 // original 0x4419D0 (PSX 0x801DFB18): once a script tick answers non-zero -
@@ -319,7 +317,7 @@ extern "C" void __cdecl BattleObj_SwingEnd(void) {
 
 // original 0x4429E0 (PSX 0x801E1604): a tail jump through 0x64E0E4 by the
 // sub-state +2 (0x442A00, 0x442B20, 0x442B80), unchecked.
-extern "C" void __cdecl BattleObj_StateCast(void) { Dispatch(g.cast_subs, SMember()->state[1]); }
+extern "C" void __cdecl BattleObj_StateCast(void) { Dispatch(g.cast_subs, rv::As<records::PartyMember>(S())->step); }
 
 // original 0x442A00 (PSX 0x801E1648): once File_LoadDone answers non-zero.
 //   - The counter +9: for the action 4 (a skill) without +0x134 bit 1, 0 when
@@ -333,30 +331,30 @@ extern "C" void __cdecl BattleObj_StateCast(void) { Dispatch(g.cast_subs, SMembe
 extern "C" void __cdecl BattleObj_CastStart(void) {
     if (g.load_done() == 0) return;
     unsigned char* const f = F();
-    auto* const member_f = reinterpret_cast<records::PartyMember*>(f);
+    auto* const member_f = rv::As<records::PartyMember>(f);
     if (f[0x125] == 4) {
         if ((f[0x134] & 2) == 0) {
             const unsigned char set = BattleE3_SoundSet;
-            SMember()->step_frames = g.load_sound(member_f->char_id, set) != 0 ? 0 : 0x1E;
+            rv::As<records::PartyMember>(S())->step_frames = g.load_sound(member_f->char_id, set) != 0 ? 0 : 0x1E;
         } else {
             const unsigned char kind = BattlePhases_B89;
             if (kind == 4 || kind == 7 || kind == 8) {
                 const unsigned char set = BattleE3_SoundSet;
-                if (g.load_sound(member_f->char_id, set) != 0) SMember()->step_frames = 0;
+                if (g.load_sound(member_f->char_id, set) != 0) rv::As<records::PartyMember>(S())->step_frames = 0;
             }
         }
     } else {
-        SMember()->step_frames = 0;
+        rv::As<records::PartyMember>(S())->step_frames = 0;
     }
     const unsigned skill = Word(At(at::kSkillId));
     if ((At(at::kSkillWord + 1 + skill * 24)[0] & 8) == 0) {
         const unsigned char count = (F()[0x134] & 2) ? At(at::kCastCountBy + BattlePhases_B89)[0]
-                                                     : At(at::kCastCount + FMember()->char_id)[0];
-        SMember()->step_frames = count;
+                                                     : At(at::kCastCount + rv::As<records::PartyMember>(F())->char_id)[0];
+        rv::As<records::PartyMember>(S())->step_frames = count;
         Pose(0x2C);
-        SMember()->state[1] = static_cast<unsigned char>(SMember()->state[1] + 1);
+        rv::As<records::PartyMember>(S())->states[1] = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->states[1] + 1);
     } else {
-        SMember()->state[0] = static_cast<unsigned char>(SMember()->state[0] + 1);
+        rv::As<records::PartyMember>(S())->states[0] = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->states[0] + 1);
     }
     g.tick_once();
 }
@@ -366,7 +364,7 @@ extern "C" void __cdecl BattleObj_CastStart(void) {
 // 0x904B89 is none of 4, 7, 8; then the next sub-state. Either way a script
 // tick (a tail jump).
 extern "C" void __cdecl BattleObj_CastCue(void) {
-    auto* const member_s = SMember();
+    auto* const member_s = rv::As<records::PartyMember>(S());
     const unsigned char n = member_s->step_frames;
     if (n != 0) {
         member_s->step_frames = static_cast<unsigned char>(n - 1);
@@ -376,7 +374,7 @@ extern "C" void __cdecl BattleObj_CastCue(void) {
             const unsigned char kind = BattlePhases_B89;
             if (kind != 4 && kind != 7 && kind != 8) g.play_cue(3);
         }
-        SMember()->state[1] = static_cast<unsigned char>(SMember()->state[1] + 1);
+        rv::As<records::PartyMember>(S())->step = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->step + 1);
     }
     g.tick_once();
 }
@@ -385,9 +383,9 @@ extern "C" void __cdecl BattleObj_CastCue(void) {
 // the next state and the sub-state 0.
 extern "C" void __cdecl BattleObj_CastWait(void) {
     if (g.tick_once() == 0) return;
-    auto* const member_s = SMember();
-    member_s->state[0] = static_cast<unsigned char>(member_s->state[0] + 1);
-    SMember()->state[1] = 0;
+    auto* const member_s = rv::As<records::PartyMember>(S());
+    member_s->state = static_cast<unsigned char>(member_s->state + 1);
+    rv::As<records::PartyMember>(S())->step = 0;
 }
 
 // ===========================================================================
@@ -399,14 +397,14 @@ extern "C" void __cdecl BattleObj_CastWait(void) {
 // unchecked; then, when 0x904AA8 has bit 2, the action's end (from a second
 // chunk, 0x442C60, a tail jump to 0x442DD0).
 extern "C" void __cdecl BattleObj_StateCastDone(void) {
-    Dispatch(g.cast_done_subs, SMember()->state[1]);
+    Dispatch(g.cast_done_subs, rv::As<records::PartyMember>(S())->step);
     if (At(at::kRoundFlags)[0] & 4) g.end_action();
 }
 
 // original 0x442BC0 (PSX 0x801E1968): a script tick, the next sub-state.
 extern "C" void __cdecl BattleObj_CastDoneTick(void) {
     g.tick_once();
-    SMember()->state[1] = static_cast<unsigned char>(SMember()->state[1] + 1);
+    rv::As<records::PartyMember>(S())->step = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->step + 1);
 }
 
 // original 0x442BD0 (PSX 0x801E19A0, paired as Actor_SkillItemDone): for the
@@ -416,21 +414,21 @@ extern "C" void __cdecl BattleObj_CastDoneTick(void) {
 // the sub-state 4.
 extern "C" void __cdecl BattleObj_CastDone(void) {
     unsigned char* f = F();
-    records::PartyMember* member_f = reinterpret_cast<records::PartyMember*>(f);
+    records::PartyMember* member_f = rv::As<records::PartyMember>(f);
     if (f[0x125] == 4) {
         member_f->ap = member_f->ap - BattleE3_Cost;
         f = F();
-        member_f = reinterpret_cast<records::PartyMember*>(f);
+        member_f = rv::As<records::PartyMember>(f);
     }
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) | 0x800);
     f[0x125] = 0;
     const unsigned skill = Word(At(at::kSkillId));
     if (Word(At(at::kSkillWord + skill * 24)) & 0x800) {
-        SMember()->state[1] = static_cast<unsigned char>(SMember()->state[1] + 1);
+        rv::As<records::PartyMember>(S())->step = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->step + 1);
         return;
     }
     g.tick_once();
-    SMember()->state[1] = 4;
+    rv::As<records::PartyMember>(S())->step = 4;
 }
 
 // original 0x442C50 (PSX 0x801E1A88): a script tick; its answer into +0xB.
@@ -445,7 +443,7 @@ extern "C" void __cdecl BattleObj_CastDoneWait(void) {
 
 // original 0x442D60 (PSX 0x801E1C5C): a tail jump through 0x64E134 by the
 // sub-state +2 (0x442D80, 0x442DB0), unchecked.
-extern "C" void __cdecl BattleObj_State12(void) { Dispatch(g.state12_subs, SMember()->state[1]); }
+extern "C" void __cdecl BattleObj_State12(void) { Dispatch(g.state12_subs, rv::As<records::PartyMember>(S())->step); }
 
 // original 0x442D80 (PSX 0x801E1CA0): once File_LoadDone answers non-zero,
 // the pose +8 + 0x24, a script tick, the next sub-state.
@@ -453,15 +451,15 @@ extern "C" void __cdecl BattleObj_State12Pose(void) {
     if (g.load_done() == 0) return;
     Pose(0x24);
     g.tick_once();
-    SMember()->state[1] = static_cast<unsigned char>(SMember()->state[1] + 1);
+    rv::As<records::PartyMember>(S())->step = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->step + 1);
 }
 
 // original 0x442DB0 (PSX 0x801E1D0C): once a script tick answers non-zero,
 // state 8 with the sub-state 0.
 extern "C" void __cdecl BattleObj_State12Wait(void) {
     if (g.tick_once() == 0) return;
-    SMember()->state[0] = 8;
-    SMember()->state[1] = 0;
+    rv::As<records::PartyMember>(S())->state = 8;
+    rv::As<records::PartyMember>(S())->step = 0;
 }
 
 // ===========================================================================
@@ -473,12 +471,12 @@ extern "C" void __cdecl BattleObj_State12Wait(void) {
 // zeroed; Battle_ClearActorBit(+5); bit 9 of Field_State +0x130 cleared; the
 // action +0x125 cleared unless 0x904AA8 has bit 6.
 extern "C" void __cdecl BattleObj_EndAction(void) {
-    SMember()->state[0] = 2;
-    SMember()->state[1] = 0;
-    SMember()->state[2] = 0;
-    SMember()->state[3] = 0;
-    g.clear_actor_bit(SMember()->member);
-    auto* const member_f = FMember();
+    rv::As<records::PartyMember>(S())->state = 2;
+    rv::As<records::PartyMember>(S())->step = 0;
+    rv::As<records::PartyMember>(S())->state3 = 0;
+    rv::As<records::PartyMember>(S())->state4 = 0;
+    g.clear_actor_bit(rv::As<records::PartyMember>(S())->actor);
+    auto* const member_f = rv::As<records::PartyMember>(F());
     member_f->flags_130 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_f->flags_130)) & ~0x200u);
     if ((At(at::kRoundFlags)[0] & 0x40) == 0) F()[0x125] = 0;
 }

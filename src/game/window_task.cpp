@@ -12,6 +12,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "game/window_task_callees.h"
@@ -42,11 +43,10 @@ unsigned char* Rec() {
         *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
 }
 
-// The typed view of a window record (docs/typed-records.md; WindowRecords
+// rv::As<records::WindowRecord>(p) views a window record
+// (docs/typed-records.md; WindowRecords
 // 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
-static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 // DIV-0041 (psp-widescreen-placements.md 2.6, the owner's answer of
 // 2026-10-12): the side placements move out to the wide frame's edges. The
@@ -137,7 +137,7 @@ using namespace window_task;
 // 0x80143F10..1F, the port scattered them.
 extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned flags) {
     AreaW0b_Place = static_cast<std::uint16_t>(area);
-    SetLong(At(at::kPendingX), x);
+    at::kPendingX = x;
     AreaEntry_PendingZ = z;
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags);
     g.classify();
@@ -159,11 +159,11 @@ extern "C" void __cdecl Area_ClassifyPending(void) {
     unsigned n = 0;
     for (std::uint32_t p = at::kAreaKinds; p < at::kAreaKindsEnd; p += 2, ++n) {
         if (Word(At(p)) == pending) {
-            AreaW0c_PendingKind = 0xB;
+            Area_EnterTransition = 0xB;
             return;
         }
     }
-    if (n == 0xB) AreaW0c_PendingKind = 1;
+    if (n == 0xB) Area_EnterTransition = 1;
 }
 
 // original 0x595390 (PSX 0x801A1350): the zone byte +5 at (x, z) in the
@@ -275,7 +275,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
     unsigned pass = BossSa_WindowPass;
     if (pass > 2) return;
     do {
-        for (std::uint32_t a = at::kRecords; a < at::kRecordsEnd; a += 0x24) {
+        for (std::uint32_t a = WindowRecords_addr; a < at::kRecordsEnd; a += 0x24) {
             unsigned char* const record = At(a);
             if (record[0] == 0) {
                 Widescreen_SlideIdle(record);
@@ -286,7 +286,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
             const unsigned handler = record[1];
             if (handler >= 9)
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
-                            static_cast<unsigned>((a - at::kRecords) / 0x24), handler);
+                            static_cast<unsigned>((a - WindowRecords_addr) / 0x24), handler);
             Widescreen_SlideBefore(record);
             g.records[handler]();
             Widescreen_SlideAfter(record);
@@ -343,12 +343,12 @@ extern "C" void __cdecl Window_Kind2States(void) { RunState(g.kind2, "kind 2"); 
 // original 0x595520: kind 0's state 0. Takes the two high bits off the 0x0C
 // placement code into the record's flag byte +0xD - bit 7 means "do not draw
 // the frame" (flag 1), bit 6 means "the narrow box" (flag 2) - then sets the
-// box's half-size, its centre from the placement table, a zero current size,
+// box's half-size, its top-left (+4, +6) from the placement table, a zero current size,
 // and a step of a fifth of the half-size in each axis, so the box opens over
 // five frames. Then the state moves on.
 //
 // As the original has it: the placement byte is written back with the bit
-// cleared and read again for each table lookup; the centre is
+// cleared and read again for each table lookup; the top-left is
 // (table x + 0x3C) << 4 for the narrow box and (table x + 0x64) << 4 for the
 // wide one, and (table y + 0x1B) << 4 for both; the halving is an ordinary
 // signed divide by five of the half-size shifted up four. The record pointer
@@ -367,21 +367,21 @@ extern "C" void __cdecl Window_Kind0Open(void) {
         Rec()[0xD] |= 2;
         Rec()[0xA] = 0x78;
         Rec()[0xB] = 0x36;
-        SetWord(Rec() + 4, (SideX(At(at::kBoxAltXY)[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(at::kBoxAltXY)[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
         y = At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u];
     } else {
         Rec()[0xA] = 0xC8;
         Rec()[0xB] = 0x36;
-        SetWord(Rec() + 4, (SideX(At(at::kBoxXY)[Msgbox_Placement * 2u]) + 0x64u) << 4);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(at::kBoxXY)[Msgbox_Placement * 2u]) + 0x64u) << 4);
         y = At(at::kBoxXY)[Msgbox_Placement * 2u + 1u];
     }
-    SetWord(Rec() + 6, (y + 0x1Bu) << 4);
-    SetWord(Rec() + 0x10, 0);
-    SetWord(Rec() + 0x12, 0);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (y + 0x1Bu) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height, 0);
     unsigned char* r = Rec();
-    SetWord(r + 0x14, static_cast<unsigned>((static_cast<int>(r[0xA]) << 4) / 5));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width_step, static_cast<unsigned>((static_cast<int>(r[0xA]) << 4) / 5));
     r = Rec();
-    SetWord(r + 0x16, static_cast<unsigned>((static_cast<int>(r[0xB]) << 4) / 5));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height_step, static_cast<unsigned>((static_cast<int>(r[0xB]) << 4) / 5));
     ++Rec()[3];
 }
 
@@ -391,12 +391,12 @@ extern "C" void __cdecl Window_Kind0Open(void) {
 // and 0x66. It touches neither the flag byte +0xD nor the placement code's
 // two high bits.
 extern "C" void __cdecl Window_Kind2Open(void) {
-    SetWord(Rec() + 4, (SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + 0x23u) << 4);
-    SetWord(Rec() + 6, (Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
-    SetWord(Rec() + 0x10, 0);
-    SetWord(Rec() + 0x12, 0);
-    SetWord(Rec() + 0x14, 0xE3);
-    SetWord(Rec() + 0x16, 0x66);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + 0x23u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height, 0);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width_step, 0xE3);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height_step, 0x66);
     Rec()[0xA] = 0x47;
     Rec()[0xB] = 0x20;
     ++Rec()[3];
@@ -420,7 +420,7 @@ unsigned SettledX(const unsigned char* r) {
         return SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u]
                                        : At(at::kBoxXY)[Msgbox_Placement * 2u]) << 4;
     case 1:
-        return Word(r + 0x18) << 4;
+        return rv::As<records::WindowRecord>(r)->settled_x << 4;
     default:
         return SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) << 4;
     }
@@ -431,34 +431,34 @@ unsigned SettledY(const unsigned char* r) {
         return ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u]
                                   : At(at::kBoxXY)[Msgbox_Placement * 2u + 1u]) << 4;
     case 1:
-        return Word(r + 0x1A) << 4;
+        return rv::As<records::WindowRecord>(r)->settled_y << 4;
     default:
         return Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) << 4;
     }
 }
 
-// The centre's drift while an axis grows or shrinks: half the step, truncated
+// The left / top edge's drift while an axis grows or shrinks: half the step, truncated
 // toward zero, added on the shrink and subtracted on the grow, so that the
 // box stays centred on its settled position.
 int HalfStep(const unsigned char* r, unsigned offset) {
     return static_cast<int>(static_cast<std::int16_t>(Word(r + offset))) / 2;
 }
 
-// The four arguments every draw in this family is called with: the centre and
+// The four arguments every draw in this family is called with: the top-left and
 // the current size, each an arithmetic shift of the 12.4 word. Window_DrawFrame
 // and Window_DrawOutline keep only the low 16 bits of the first two and the
 // low byte of the last two, so what the original leaves in the upper halves
 // of the registers it pushes never reaches either.
-int RecX(const unsigned char* r) { return static_cast<std::int16_t>(Win(r)->centre_x) >> 4; }
-int RecY(const unsigned char* r) { return static_cast<std::int16_t>(Win(r)->centre_y) >> 4; }
-int RecW(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x10)) >> 4; }
-int RecH(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x12)) >> 4; }
+int RecX(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->x) >> 4; }
+int RecY(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->y) >> 4; }
+int RecW(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->width) >> 4; }
+int RecH(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->height) >> 4; }
 
 }  // namespace
 
 // original 0x595670: state 1 of all three kinds - the box growing. Each axis
-// grows by its step and its centre moves back half a step; when the size
-// passes the settled half-size the centre snaps to the settled place and the
+// grows by its step and its left / top edge moves back half a step; when the
+// size passes the settled half-size the edge snaps to the settled place and the
 // size to the settled size. With flag 1 clear the outline is drawn at the
 // size this frame reached; when BOTH axes settled this frame the state moves
 // on - and then without a draw, since the outline is drawn before the test.
@@ -471,25 +471,25 @@ int RecH(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x1
 extern "C" void __cdecl Window_Grow(void) {
     unsigned settled = 0;
     unsigned char* r = Rec();
-    SetWord(r + 0x10, Word(r + 0x10) + Word(r + 0x14));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width, rv::As<records::WindowRecord>(r)->width + rv::As<records::WindowRecord>(r)->width_step);
     r = Rec();
-    Win(r)->centre_x = Win(r)->centre_x - static_cast<unsigned>(HalfStep(r, 0x14));
+    rv::As<records::WindowRecord>(r)->x = rv::As<records::WindowRecord>(r)->x - static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
     if (RecW(r) > r[0xA]) {
-        Win(r)->centre_x = SettledX(r);
+        rv::As<records::WindowRecord>(r)->x = SettledX(r);
         r = Rec();
         settled = 1;
-        SetWord(r + 0x10, r[0xA] << 4);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width, r[0xA] << 4);
         r = Rec();
     }
-    SetWord(r + 0x12, Word(r + 0x12) + Word(r + 0x16));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height, rv::As<records::WindowRecord>(r)->height + rv::As<records::WindowRecord>(r)->height_step);
     r = Rec();
-    Win(r)->centre_y = Win(r)->centre_y - static_cast<unsigned>(HalfStep(r, 0x16));
+    rv::As<records::WindowRecord>(r)->y = rv::As<records::WindowRecord>(r)->y - static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
     if (RecH(r) > r[0xB]) {
-        Win(r)->centre_y = SettledY(r);
+        rv::As<records::WindowRecord>(r)->y = SettledY(r);
         r = Rec();
-        SetWord(r + 0x12, r[0xB] << 4);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height, r[0xB] << 4);
         r = Rec();
         ++settled;
     }
@@ -501,8 +501,8 @@ extern "C" void __cdecl Window_Grow(void) {
 }
 
 // original 0x595860: state 3 of all three kinds - the box shrinking, the
-// mirror of the grow. Each axis loses its step and its centre moves forward
-// half a step; when the size goes negative the centre snaps to the settled
+// mirror of the grow. Each axis loses its step and its edge moves forward
+// half a step; when the size goes negative the edge snaps to the settled
 // place PLUS half the box's own half-size - the box closes onto its own
 // middle, not onto its left edge - and the size to zero. When both axes are
 // done the state moves on and nothing more happens this frame; otherwise the
@@ -512,17 +512,17 @@ extern "C" void __cdecl Window_Grow(void) {
 // As the original has it: the "gone negative" test is `(s16)(size & 0xFFF0)
 // < 0`, and the mask cannot change the sign bit, so it is exactly `size < 0`;
 // the half-size is halved as an unsigned byte shift, not the signed halving
-// the centre drift uses; kind 1 takes its settled place from the 8-byte
+// the edge's drift uses; kind 1 takes its settled place from the 8-byte
 // records at 0x66ADFC by the list set 0x7DEE65, where the grow takes it from
 // the record's own +0x18 / +0x1A.
 extern "C" void __cdecl Window_Shrink(void) {
     unsigned settled = 0;
     unsigned char* r = Rec();
-    SetWord(r + 0x10, Word(r + 0x10) - Word(r + 0x14));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width, rv::As<records::WindowRecord>(r)->width - rv::As<records::WindowRecord>(r)->width_step);
     r = Rec();
-    Win(r)->centre_x = Win(r)->centre_x + static_cast<unsigned>(HalfStep(r, 0x14));
+    rv::As<records::WindowRecord>(r)->x = rv::As<records::WindowRecord>(r)->x + static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
-    if (static_cast<std::int16_t>(Word(r + 0x10)) < 0) {
+    if (static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->width) < 0) {
         const unsigned half = r[0xA] >> 1;
         unsigned place;
         switch (r[2]) {
@@ -537,17 +537,17 @@ extern "C" void __cdecl Window_Shrink(void) {
             place = SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + half;
             break;
         }
-        Win(r)->centre_x = place << 4;
+        rv::As<records::WindowRecord>(r)->x = place << 4;
         r = Rec();
         settled = 1;
-        SetWord(r + 0x10, 0);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width, 0);
         r = Rec();
     }
-    SetWord(r + 0x12, Word(r + 0x12) - Word(r + 0x16));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height, rv::As<records::WindowRecord>(r)->height - rv::As<records::WindowRecord>(r)->height_step);
     r = Rec();
-    Win(r)->centre_y = Win(r)->centre_y + static_cast<unsigned>(HalfStep(r, 0x16));
+    rv::As<records::WindowRecord>(r)->y = rv::As<records::WindowRecord>(r)->y + static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
-    if (static_cast<std::int16_t>(Word(r + 0x12)) < 0) {
+    if (static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->height) < 0) {
         const unsigned half = r[0xB] >> 1;
         unsigned place;
         switch (r[2]) {
@@ -562,10 +562,10 @@ extern "C" void __cdecl Window_Shrink(void) {
             place = Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + half;
             break;
         }
-        Win(r)->centre_y = place << 4;
+        rv::As<records::WindowRecord>(r)->y = place << 4;
         r = Rec();
         ++settled;
-        SetWord(r + 0x12, 0);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height, 0);
         r = Rec();
     }
     if (settled == 2) {
@@ -687,8 +687,8 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     // 3. the window's textured quad
     unsigned char* const quad = Gfx_PacketNext;
     g.set_poly_gt4(quad);
-    SetWord(quad + 0x2A, g.get_tpage(0, 0, 0x3C0, 0));
-    SetWord(quad + 0x16, g.get_clut(BattleDraw_Colour * 32 + 0x10, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->clut, g.get_clut(Config_WindowColour * 32 + 0x10, 0x1E1));
     const float fright = Flt(x + w + 1), fbottom = Flt(y + h + 1);
     PutFloat(quad + 8, fx);
     PutFloat(quad + 0xC, fy);

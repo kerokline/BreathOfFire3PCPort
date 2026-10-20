@@ -33,7 +33,7 @@ constexpr std::uint32_t kClutRow = 0x812980;       // Gfx_ClutStrip + 0x3400: st
 constexpr std::uint32_t kClutSource = 0x80E980;    // kClutRow - 0x4000
 
 // The scratch words the draws keep their radii, colours and vertices in.
-constexpr std::uint32_t kScratch = 0x903850;       // DamageScratch: words +0 .. +0xE
+constexpr std::uint32_t kScratch = 0x903850;       // SharedScratch: words +0 .. +0xE
 // kVertices: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch: four SVECTORs, +0 +8 +0x10 +0x18
 
 // MAGIC105's mote pool and MAGIC106's spark pool.

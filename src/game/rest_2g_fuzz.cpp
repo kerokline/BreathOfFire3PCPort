@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2g.h"
 #include "game/rest_2g_callees.h"
@@ -28,9 +29,6 @@
 namespace rest_2g {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -43,7 +41,7 @@ using U = std::uint32_t;
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U address) { return sh::Mem(address); }
-unsigned char* Rec(unsigned k) { return Mem(at::kWindows + at::kWindowStride * (k % at::kWindowCount)); }
+unsigned char* Rec(unsigned k) { return Mem(WindowRecords_addr + at::kWindowStride * (k % at::kWindowCount)); }
 unsigned char* Current() { return sh::Pointer(BattleWinStates_Current_addr); }
 U PickOf(std::initializer_list<U> v) { return *(v.begin() + sh::Next() % v.size()); }
 
@@ -211,11 +209,11 @@ const sh::DataTable kTables[] = {
 
 // --- the regions beyond the harness's field ones ----------------------------------------
 const sh::Region kRegions[] = {
-    {at::kWindows, at::kWindowCount * at::kWindowStride},   // WindowRecords 0x803160..0x803477
+    {WindowRecords_addr, at::kWindowCount * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x903A94, 0x903F90 - 0x903A94},                         // CharacterRecords past the style region
     {at::kGridWords, 0x24},                                  // the eighteen words GeneWin_GridOpen clears
     {at::kGridCells, 0x14},                                  // the eighteen grid cells
-    {at::kTasks, at::kTaskCount * at::kTaskStride},         // the battle task pool
+    {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride}, // the battle task pool
 };
 
 // --- the movers: what the functions read again after a call ------------------------------
@@ -229,8 +227,8 @@ void Move(U h) {
     switch (h % 14) {
     case 0:
     case 1: sh::SetPointer(BattleWinStates_Current_addr, Rec(b)); break;
-    case 2: if (in) WindowRec(r)->centre_x = b & 1 ? v & 0x1FF : v; break;
-    case 3: if (in) WindowRec(r)->centre_y = b & 1 ? v & 0xFF : v; break;
+    case 2: if (in) rv::As<records::WindowRecord>(r)->x = b & 1 ? v & 0x1FF : v; break;
+    case 3: if (in) rv::As<records::WindowRecord>(r)->y = b & 1 ? v & 0xFF : v; break;
     case 4: if (in) r[0xA] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
     case 5: if (in) r[0xB] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
     case 6: if (in) r[0xC] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
@@ -242,7 +240,7 @@ void Move(U h) {
     }
     case 9: if (in) SetLong(r + 0x20, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 10: Mem(Cond_Flags_addr + 0xd2 + b % 6)[0] = static_cast<unsigned char>(v % 9); break;
-    case 11: Mem(BattleDraw_Colour_addr)[0] = b; break;
+    case 11: Mem(Config_WindowColour_addr)[0] = b; break;
     case 12: Mem(at::kGridCells + b % 0x12)[0] ^= static_cast<unsigned char>(v | 1); break;
     case 13: if (in) r[3] = b; break;
     default: break;
@@ -274,9 +272,9 @@ U TaskMoving(const U* a, U answer) {
 // caller reads both after the call).
 U RosterMoving(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const rec = Mem(at::kCharRecords + at::kCharStride * (answer & 7));
+    unsigned char* const rec = Mem(CharacterRecords_addr + at::kCharStride * (answer & 7));
     if (n & 1) rec[0xA] = static_cast<unsigned char>(n >> 8);
-    if (n & 2) SetLong(rec + 0xC, static_cast<std::int32_t>(n >> 4) & 0xFFFFF);
+    if (n & 2) rv::As<records::CharRecord>(rec)->exp = static_cast<std::int32_t>(n >> 4) & 0xFFFFF;
     return answer;
 }
 
@@ -343,7 +341,7 @@ const sh::Callee kCallees[] = {
 int BoundOf(const Spec& s, const unsigned char* r) {
     switch (s.bound) {
     case kOperand32: return static_cast<short>(Long(Mem(s.operand)));
-    case kBesidePanel: return static_cast<short>(Word(Mem(at::kRecord4X))) + 0x78;
+    case kBesidePanel: return static_cast<short>(Word(Mem(WindowRecords_addr + 0x94))) + 0x78;
     case kPanelRow: return 0x36 * r[0xA] + 0x3E;
     case kRightColumn: return 75 * (r[0xB] & 1) + 0x140;
     case kLeftColumn: return 75 * ((r[0xB] & 1) + 2);
@@ -370,7 +368,7 @@ void Seed(unsigned k) {
     if (s.states) r[3] = static_cast<unsigned char>(sh::Next() % s.states);
     if (s.kinds) r[2] = static_cast<unsigned char>(sh::Next() % s.kinds);
     // record 4's x (MenuList_SlideLeftBesidePanel's bound)
-    SetWord(Mem(at::kRecord4X), PickOf({0x62, 0x10, 0x7F80, 0x8000, sh::Next()}));
+    SetWord(Mem(WindowRecords_addr + 0x94), PickOf({0x62, 0x10, 0x7F80, 0x8000, sh::Next()}));
     // the party, the grid cells, the battle party's ids
     for (unsigned i = 0; i < 6; ++i)
         Mem(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(sh::Next() % 5 ? sh::Next() % 9 : sh::Next());
@@ -379,9 +377,9 @@ void Seed(unsigned k) {
         Mem(ObjTrio_addr + 0x89 + at::kObjStride * i)[0] = static_cast<unsigned char>(sh::Next() % 4 ? sh::Next() % 9 : sh::Next());
     // the levels and the EXP the next level is compared with
     for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const c = Mem(at::kCharRecords + at::kCharStride * i);
+        unsigned char* const c = Mem(CharacterRecords_addr + at::kCharStride * i);
         c[0xA] = static_cast<unsigned char>(PickOf({1, 10, 50, 98, 99, 0, 0xFF, sh::Next() % 99}));
-        SetLong(c + 0xC, static_cast<std::int32_t>(PickOf({0, 1, 100, sh::Next() % 1000000, sh::Next()})));
+        rv::As<records::CharRecord>(c)->exp = static_cast<std::int32_t>(PickOf({0, 1, 100, sh::Next() % 1000000, sh::Next()}));
     }
     // a slide's word around its bound: one step before it, within two of the frame that reaches it
     // (the grid's slides compare before they move: around the bound itself)

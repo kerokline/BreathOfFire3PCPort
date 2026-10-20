@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/save_menu_callees.h"
 #include "game/title_menu.h"
@@ -110,14 +111,10 @@ U Long(U address) {
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutFloat(U address, float f) { std::memcpy(At(address), &f, sizeof f); }
 
-// The typed views of the record pointers (docs/typed-records.md): a save
+// The record views (game/record_views.h) used here: a save
 // summary (0x905BC0, 16 of 0x1C), a Save_Directory entry (0x929F40, 16 of
 // 0x18), Sprite_Current read afresh (below +0x80, the sprite head every
 // family shares) and Field_State, the leader's party record.
-static records::SaveSummary* Sum(U address) { return reinterpret_cast<records::SaveSummary*>(At(address)); }
-static records::SaveDirEntry* Dir(U address) { return reinterpret_cast<records::SaveDirEntry*>(At(address)); }
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::PartyMember* FS() { return reinterpret_cast<records::PartyMember*>(Field_State); }
 
 unsigned char* Packet() { return Gfx_PacketNext; }
 
@@ -137,8 +134,8 @@ void CopyForward(U dst, U src, U n) {
 // through the dispatch's `xor eax, eax`, ecx not); ours zero-extends. Group
 // Y's 0x575690 masks it (`and eax, 0xFF` at 0x575718).
 void LoadWindows() {
-    g.window_back(static_cast<std::uint32_t>(FieldS_Backdrop));
-    g.window_frame5(0x14, 0x12, 0x118, 0x13, static_cast<std::uint32_t>(static_cast<unsigned char>(BattleDraw_Colour)));
+    g.window_back(static_cast<std::uint32_t>(Config_Background));
+    g.window_frame5(0x14, 0x12, 0x118, 0x13, static_cast<std::uint32_t>(static_cast<unsigned char>(Config_WindowColour)));
 }
 // Text_DrawAt(0x1C, 0x15, 0, 0xFF, system message id).
 void LoadMessage(U id) { g.text_draw(0x1C, 0x15, 0, 0xFF, g.msg_ptr(id)); }
@@ -286,7 +283,7 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
         CopyForward(entry, name, n + 1);
         U size;
         std::memcpy(&size, found + 0x10, sizeof size);
-        Dir(entry)->size = size;
+        rv::As<records::SaveDirEntry>(At(entry))->size = size;
         entry += at::kDirectoryBytes;
         ++count;
     } while (g.find_next(handle, found) == 0);
@@ -299,8 +296,8 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
 // BISLPS0?.DAT and the bound. Kept either way, the original's defect: no
 // _findclose (a search handle leaks per call).
 extern "C" int __cdecl Save_ListFiles(void) {
-    if (g_lists_split != 0) return save_menu::ListFiles(kSavePattern, At(at::kDirectory), true, false);
-    return save_menu::ListFiles(reinterpret_cast<const char*>(At(at::kListPattern)), At(at::kDirectory), false, false);
+    if (g_lists_split != 0) return save_menu::ListFiles(kSavePattern, At(Save_Directory_addr), true, false);
+    return save_menu::ListFiles(reinterpret_cast<const char*>(At(at::kListPattern)), At(Save_Directory_addr), false, false);
 }
 
 // 0x588DC0's body (docs/save-files.md). All sixteen summaries marked empty
@@ -322,8 +319,8 @@ void save_menu::ReadSummaries(const unsigned char* table, unsigned char* summari
             else if (c >= 0x61 && c <= 0x66) v = c - 0x57;
             else continue;
             if (v != slot) continue;
-            if (read(Dir(dir + n * at::kDirectoryBytes)->name, At(summary), context))
-                Sum(summary)->dir_index = n;
+            if (read(rv::As<records::SaveDirEntry>(At(dir + n * at::kDirectoryBytes))->name, At(summary), context))
+                rv::As<records::SaveSummary>(At(summary))->dir_index = n;
             break;
         }
     }
@@ -345,7 +342,7 @@ bool StagedRead(const char* name, unsigned char* summary, void*) {
 // summary whatever Save_Staging held. It rebuilds from Save_Directory alone:
 // DIV-0002's re-listing in Save_WriteFile is what keeps a new save in it.
 extern "C" void __cdecl Save_ReadSummaries(void) {
-    save_menu::ReadSummaries(At(at::kDirectory), At(at::kSummaries), &StagedRead, nullptr);
+    save_menu::ReadSummaries(At(Save_Directory_addr), At(at::kSummaries), &StagedRead, nullptr);
 }
 
 void SaveLists_Arm() {
@@ -492,7 +489,7 @@ bool bof3::RunSpeed_StreamPlaying() {
 // byte.
 extern "C" void __cdecl Party_RestoreAll(unsigned full) {
     for (U i = 0; i < 8; ++i) {
-        const U record = at::kCharRecords + i * at::kCharStride;
+        const U record = CharacterRecords_addr + i * at::kCharStride;
         if ((full & 0xFF) != 0) {
             PutByte(record + 0x1E, 0);
             g.clear_status(i, 0xA0, 0);
@@ -520,7 +517,7 @@ extern "C" void __cdecl Party_RestoreAll(unsigned full) {
 // the hand's row is `movzx ax, byte`, over the upper half of the last
 // Text_DrawAt's result. Both vanish in a 16-bit y.
 extern "C" void __cdecl SaveMenu_DrawChoices(int x, int y) {
-    g.window_frame(x + 4, y + 4, 0x52, 0x48, 0, static_cast<std::uint32_t>(static_cast<unsigned char>(BattleDraw_Colour)));
+    g.window_frame(x + 4, y + 4, 0x52, 0x48, 0, static_cast<std::uint32_t>(static_cast<unsigned char>(Config_WindowColour)));
     g.window_box(x, y, 9, 8);
     const U high = static_cast<U>(x) & 0xFFFF0000u;
     U last = 0;
@@ -541,15 +538,15 @@ extern "C" void __cdecl Menu_DrawBlackScreen(void) {
     unsigned char* const p = Packet();
     g.set_tile(p);
     g.set_semi(p, 0);
-    const U q = Addr(p);
+    auto* const t = rv::As<records::GpuTile>(p);   // a TILE: Gpu_SetTile's packet
     const float wide = static_cast<float>(Widescreen_Live());   // DIV-0041: the black covers a wide picture whole
-    PutFloat(q + 8, 0.0f - wide);   // not -wide: that is -0.0f when wide is 0
-    PutLong(q + 0xC, 0);
-    PutFloat(q + 0x14, 320.0f + 2 * wide);
-    PutFloat(q + 0x18, 240.0f);
-    PutByte(q + 4, 0);
-    PutByte(q + 5, 0);
-    PutByte(q + 6, 0);
+    t->x = 0.0f - wide;   // not -wide: that is -0.0f when wide is 0
+    t->y = 0.0f;
+    t->w = 320.0f + 2 * wide;
+    t->h = 240.0f;
+    t->r = 0;
+    t->g = 0;
+    t->b = 0;
     g.commit(1, 0x1C);
 }
 
@@ -569,8 +566,9 @@ extern "C" void __cdecl Shop_PriceRate(unsigned short* rate) {
     if (static_cast<unsigned char>(g.party_count(0)) != 0) {
         for (;;) {
             const U record = Byte(at::kMembers + i * at::kMemberStride);
-            const U base = at::kCharRecords + record * at::kCharStride;
-            if (Byte(base + 0x16) == at::kDiscountItem || Byte(base + 0x17) == at::kDiscountItem) {
+            const U base = CharacterRecords_addr + record * at::kCharStride;
+            const auto* const c = rv::AsConst<records::CharRecord>(At(base));   // CharacterRecords 0x903A70, stride 0xA4
+            if (c->accessory[0] == at::kDiscountItem || c->accessory[1] == at::kDiscountItem) {
                 *rate = 0x50;
                 break;
             }
@@ -605,33 +603,42 @@ extern "C" unsigned __cdecl Shop_SellPrice(unsigned kind, unsigned item, unsigne
 // window records at 0x803160, 0x803184, 0x8031A8, 0x8031B2 and 0x803430 /
 // 0x803454, in the original's order.
 extern "C" void __cdecl Shop_InitWindows(void) {
-    PutByte(0x803163, 2);
-    PutByte(0x803187, 2);
-    PutByte(0x8031AA, 2);
-    PutByte(0x8031AB, 2);
+    // Window records 0, 1, 2, 20 and 21 of WindowRecords 0x803160, 0x24 apart
+    // (symbols.toml Window_Alloc): their shared bytes +0..+7 typed; record 0's
+    // +0x10 is the entry Window0_Arrows; records 2's and 20's +0xA / +0xB are
+    // the handler's own (WindowRecord's per-handler bytes), kept raw.
+    auto* const w0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const w1 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 1 * sizeof(records::WindowRecord));
+    auto* const w2 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 2 * sizeof(records::WindowRecord));
+    auto* const w20 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 20 * sizeof(records::WindowRecord));
+    auto* const w21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * sizeof(records::WindowRecord));
+    w0->state = 2;
+    w1->state = 2;
+    w2->kind = 2;
+    w2->state = 2;
     PutByte(0x8031B2, 3);
-    PutByte(0x803456, 3);
-    PutByte(0x803161, 7);
-    PutByte(0x803162, 0);
-    PutByte(0x803160, 1);
-    PutWord(0x803164, 0x14);
-    PutWord(0x803166, 0xFFEC);
-    PutWord(0x803170, 0);
-    PutByte(0x803185, 7);
-    PutByte(0x803186, 1);
-    PutByte(0x803184, 1);
-    PutWord(0x803188, 0xC6);
-    PutWord(0x80318A, 0xFFEC);
-    PutByte(0x8031A9, 7);
-    PutByte(0x8031A8, 1);
-    PutWord(0x8031AC, 0x66);
-    PutWord(0x8031AE, 0xFFEC);
+    w21->kind = 3;
+    w0->handler = 7;
+    w0->kind = 0;
+    w0->in_use = 1;
+    w0->x = 0x14;
+    w0->y = 0xFFEC;
+    Window0_Arrows = 0;
+    w1->handler = 7;
+    w1->kind = 1;
+    w1->in_use = 1;
+    w1->x = 0xC6;
+    w1->y = 0xFFEC;
+    w2->handler = 7;
+    w2->in_use = 1;
+    w2->x = 0x66;
+    w2->y = 0xFFEC;
     PutByte(0x8031B3, 0xFF);
-    PutByte(0x803455, 7);
-    PutByte(0x803454, 0);
-    PutByte(0x803431, 7);
-    PutByte(0x803432, 4);
-    PutByte(0x803430, 0);
+    w21->handler = 7;
+    w21->in_use = 0;
+    w20->handler = 7;
+    w20->kind = 4;
+    w20->in_use = 0;
     PutByte(0x80343A, 0);
     PutByte(0x80343B, 1);
 }
@@ -642,7 +649,7 @@ extern "C" void __cdecl Shop_InitWindows(void) {
 // 0x591B60(kind, item, 1, 0), then Inventory_Add(kind, the slot's old byte,
 // read after that call, 1, 0), then the item's low byte into the slot.
 extern "C" void __cdecl Shop_Equip(unsigned record, unsigned slot, unsigned item) {
-    const U base = at::kCharRecords + (record & 0xFF) * at::kCharStride;
+    const U base = CharacterRecords_addr + (record & 0xFF) * at::kCharStride;
     U offset = 0x12, kind = 1;
     switch ((slot & 0xFF) - 1) {
     case 0: offset = 0x13; kind = 2; break;
@@ -704,18 +711,18 @@ extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
         g.set_draw_mode(Packet(), 0, 0, glow_page, 0);
         g.commit(1, 0xC);
         unsigned char* const p = Packet();
-        const U q = Addr(p);
+        auto* const s = rv::As<records::GpuSprt>(p);   // a SPRT: Gpu_SetSprt's packet
         g.set_sprt(p);
-        PutByte(q + 0x14, 0);
-        PutWord(q + 0x1A, 0x20);
-        PutFloat(q + 8, fx);
-        PutFloat(q + 0xC, fy);
-        PutByte(q + 0x15, r << 5);
-        PutWord(q + 0x18, width);
-        PutWord(q + 0x16, g.get_clut(0, 0x1EB));
-        PutByte(q + 4, Byte(at::kRowBright + r) << 1);
-        PutByte(q + 5, Byte(at::kRowBright + r) << 1);
-        PutByte(q + 6, Byte(at::kRowBright + r) << 1);
+        s->u = 0;
+        s->h = 0x20;
+        s->x = fx;
+        s->y = fy;
+        rv::Store<U>(s->v, r << 5);
+        rv::Store<U>(s->w, width);
+        rv::Store<U>(s->clut, g.get_clut(0, 0x1EB));
+        rv::Store<U>(s->r, Byte(at::kRowBright + r) << 1);
+        rv::Store<U>(s->g, Byte(at::kRowBright + r) << 1);
+        rv::Store<U>(s->b, Byte(at::kRowBright + r) << 1);
         g.set_semi(p, glow & 0xFF);
         g.commit(1, 0x1C);
     }
@@ -723,18 +730,18 @@ extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
     g.set_draw_mode(Packet(), 0, 0, page, 0);
     g.commit(1, 0xC);
     unsigned char* const p = Packet();
-    const U q = Addr(p);
+    auto* const s = rv::As<records::GpuSprt>(p);   // a SPRT: Gpu_SetSprt's packet
     g.set_sprt(p);
-    PutByte(q + 0x14, 0);
-    PutByte(q + 0x15, r << 5);
-    PutWord(q + 0x1A, 0x20);
-    PutFloat(q + 8, fx);
-    PutFloat(q + 0xC, fy);
-    PutWord(q + 0x18, width);
-    PutWord(q + 0x16, g.get_clut(0x20, 0x1E3));
-    PutByte(q + 4, Byte(at::kRowBright + r));
-    PutByte(q + 5, Byte(at::kRowBright + r));
-    PutByte(q + 6, Byte(at::kRowBright + r));
+    s->u = 0;
+    rv::Store<U>(s->v, r << 5);
+    s->h = 0x20;
+    s->x = fx;
+    s->y = fy;
+    rv::Store<U>(s->w, width);
+    rv::Store<U>(s->clut, g.get_clut(0x20, 0x1E3));
+    rv::Store<U>(s->r, Byte(at::kRowBright + r));
+    rv::Store<U>(s->g, Byte(at::kRowBright + r));
+    rv::Store<U>(s->b, Byte(at::kRowBright + r));
     g.set_semi(p, glow & 0xFF);
     g.commit(1, 0x1C);
 }
@@ -745,19 +752,22 @@ extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
 // 6), then Gfx_CommitPrim(slot, 0x1C) - slot the whole dword.
 extern "C" void __cdecl TitleMenu_DrawPiece(int x, int y, unsigned index, unsigned slot) {
     unsigned char* const p = Packet();
+    auto* const s = rv::As<records::GpuSprt>(p);   // a SPRT: Gpu_SetSprt's packet
     const U q = Addr(p);
     g.set_sprt(p);
-    PutByte(q + 4, 0x20);
-    PutByte(q + 5, 0x20);
-    PutByte(q + 6, 0x20);
+    s->r = 0x20;
+    s->g = 0x20;
+    s->b = 0x20;
+    // The two floats by address: typed, the compiler pairs them into one
+    // vector store (codegen_same).
     PutFloat(q + 8, static_cast<float>(static_cast<short>(x)));
     PutFloat(q + 0xC, static_cast<float>(static_cast<short>(y)));
     const U e = at::kPieces + (index & 0xFF) * 10;
-    PutByte(q + 0x14, Byte(e));
-    PutByte(q + 0x15, Byte(e + 2));
-    PutWord(q + 0x18, Word(e + 4));
-    PutWord(q + 0x1A, Word(e + 6));
-    PutWord(q + 0x16, Word(e + 8) << 6);
+    rv::Store<U>(s->u, Byte(e));
+    rv::Store<U>(s->v, Byte(e + 2));
+    rv::Store<U>(s->w, Word(e + 4));
+    rv::Store<U>(s->h, Word(e + 6));
+    rv::Store<U>(s->clut, Word(e + 8) << 6);
     g.commit(slot, 0x1C);
 }
 
@@ -791,7 +801,7 @@ void save_menu::DrawSlotsOver(int x, int y, unsigned highlight, const unsigned c
         const U first = *top_word;
         const U n = first + i;
         const U summary = Addr(summaries) + n * at::kSummaryBytes;
-        const unsigned char* const s = Sum(summary)->dir_index != 0xFF ? At(summary) : nullptr;
+        const unsigned char* const s = rv::As<records::SaveSummary>(At(summary))->dir_index != 0xFF ? At(summary) : nullptr;
         const U slot = (first & 0xFFFFFF00u) | ((first + i) & 0xFF);
         g.slot_draw(slot, left, static_cast<int>(static_cast<U>(y) + i * 56 + 6), s);
     }
@@ -802,7 +812,7 @@ void save_menu::DrawSlotsOver(int x, int y, unsigned highlight, const unsigned c
 
 extern "C" void __cdecl SaveMenu_DrawSlots(int x, int y, unsigned highlight) {
     save_menu::DrawSlotsOver(x, y, highlight, At(at::kSummaries), reinterpret_cast<const volatile U*>(At(at::kSlotTop)),
-                             reinterpret_cast<const volatile U*>(At(at::kSlot)));
+                             reinterpret_cast<const volatile U*>(At(Rest2c_Slot_addr)));
 }
 
 // ============================================================================
@@ -858,17 +868,17 @@ extern "C" void __cdecl TitleFlow_Begin(void) {
     PutLong(at::kFieldState, ObjTrio_addr);
     PutLong(at::kSpriteCurrent, ObjTrio_addr);
     g.member_sprite(0, 0);
-    SC()->flags = 1;
-    FS()->char_id = 0;
-    SC()->screen_x = 0x10A;
-    SC()->screen_y = 0x51;
-    SC()->ot_slot = 0;
-    SC()->scale_mode = 0;
-    SC()->step_frames = 1;
-    SC()->draw_flags = 0x81;
-    SC()->type = 4;
-    SC()->step_frames = 0;
-    g.set_animation(static_cast<unsigned char>(static_cast<U>(SC()->type) + 8));
+    rv::Current<records::SpriteObject>()->flags = 1;
+    rv::As<records::PartyMember>(Field_State)->char_id = 0;
+    rv::Current<records::SpriteObject>()->screen_x = 0x10A;
+    rv::Current<records::SpriteObject>()->screen_y = 0x51;
+    rv::Current<records::SpriteObject>()->ot_slot = 0;
+    rv::Current<records::SpriteObject>()->scale_mode = 0;
+    rv::Current<records::SpriteObject>()->step_frames = 1;
+    rv::Current<records::SpriteObject>()->draw_flags = 0x81;
+    rv::Current<records::SpriteObject>()->type = 4;
+    rv::Current<records::SpriteObject>()->step_frames = 0;
+    g.set_animation(static_cast<unsigned char>(static_cast<U>(rv::Current<records::SpriteObject>()->type) + 8));
     AreaW0b_PartySet = 0xFF;
     const U any = g.list_files() != 0 ? 1 : 0;
     Game_Step = static_cast<std::uint32_t>(Game_Step) + 1;
@@ -975,7 +985,7 @@ extern "C" void __cdecl TitleMenu_Choose(void) {
 // cursor + 2 - the new game, the load, or the config screen - and state 0;
 // until then the frame and the rows.
 extern "C" void __cdecl TitleMenu_Leave(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         const U step = static_cast<U>(SaveMenu_Cursor + 2);
         SetState(0);
         Game_Step = step;
@@ -1022,7 +1032,7 @@ extern "C" void __cdecl LoadMenu_Open(void) {
     LoadWindows();
     LoadMessage(0xAC);
     g.draw_slots(0x20, 0x30, 1);
-    if (MoveScript_WaitWordDA == 0) SetState(State() + 1);
+    if (Transition_Busy == 0) SetState(State() + 1);
 }
 
 // 0x5881F0, state 2, choosing a slot: the same draw; then Input_AutoRepeat
@@ -1223,7 +1233,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         const U c0 = Byte(at::kGameBlock + 0x20);
         const U cond = Cond_Flags_addr + static_cast<U>(static_cast<int>(static_cast<signed char>(d0 & 0xFF)) * 8);
         const U c1 = Byte(at::kGameBlock + 0x21);
-        AreaW0c_FlagRow = cond;
+        Chapter_FlagRow = cond;
         const U c2 = Byte(at::kGameBlock + 0x22);
         PutByte(at::kCounters, c0);
         const U c3 = Byte(at::kGameBlock + 0x23);
@@ -1235,7 +1245,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         Game_Step = 5;
         SetState(0);
     }
-    if (MoveScript_WaitWordDA == 0) return;
+    if (Transition_Busy == 0) return;
     if (Long(at::kHeld) & 0x800) SaveMenu_DefaultPad = 1;
     LoadWindows();
     g.draw_slots(0x20, 0x30, 0);
@@ -1249,7 +1259,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
 // of its record - after a load too - and task 0 restarted at 0x495800, the
 // game's body (0x5A9976, which does not return).
 extern "C" void __cdecl TitleFlow_EnterGame(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const U cursor = static_cast<unsigned char>(SaveMenu_Cursor);
     FieldS_Step = 0;
     PutByte(at::kMenuStates + 1, 0);
@@ -1261,7 +1271,7 @@ extern "C" void __cdecl TitleFlow_EnterGame(void) {
     }
     for (U i = 0; i < 8; ++i) {
         g.roll_growth(i);
-        g.recalc(At(at::kCharRecords + i * at::kCharStride));
+        g.recalc(At(CharacterRecords_addr + i * at::kCharStride));
     }
     g.task_restart(at::kGameTask);
 }

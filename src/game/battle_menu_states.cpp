@@ -18,6 +18,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_menu_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -72,9 +73,11 @@ unsigned char* PtrAt(std::uint32_t address) {
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 // The command being built and the acting member's record, each re-read
 // wherever the original re-reads it.
+// 0x939FA0 points at the menu member's +0x124, its action record
+// (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return PtrAt(at::kCommandRecord); }
-unsigned char* Acting() { return PtrAt(at::kActing); }
-unsigned char* List() { return At(BattleE4_List_addr); }
+unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
+unsigned char* List() { return At(Window16_addr); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
 // the original has it - an index past the table reads the next one's.
 Handler Entry(std::uint32_t table, unsigned i) {
@@ -105,7 +108,7 @@ unsigned LastQueueEntry() { return ((BattleActorCopies_QueueWrite - 1u) & 0xF) *
 // second, after the first's sound).
 void StepEnemyTarget(unsigned repeat) {
     if (repeat & 0x2000) {
-        const long high = BattleActorCopies_EnemyCount + 2;
+        const long high = Battle_EnemyCount + 2;
         const long value = static_cast<long>(static_cast<signed char>(Command()[0])) + 1;
         const long wrapped = g.wrap_index(high, 3, value);
         const unsigned char target = g.default_target(static_cast<unsigned>(wrapped));
@@ -113,7 +116,7 @@ void StepEnemyTarget(unsigned repeat) {
         g.sound(0x101);
     }
     if (repeat & 0x8000) {
-        const long high = BattleActorCopies_EnemyCount + 2;
+        const long high = Battle_EnemyCount + 2;
         const long value = static_cast<long>(static_cast<signed char>(Command()[0])) - 1;
         const long wrapped = g.wrap_index(high, 3, value);
         const unsigned char target = g.prev_target(static_cast<unsigned>(wrapped));
@@ -176,7 +179,7 @@ extern "C" void __cdecl BattleAttackCmd_Confirm(void) {
     BattleE4_Picking = 0;
     command[1] = 0;
     command = Command();
-    SetLong(command + 0xC, Long(command + 0xC) | 1);
+    rv::Store<std::int32_t>(rv::As<records::ActionRecord>(command)->flags, static_cast<std::int32_t>(rv::As<records::ActionRecord>(command)->flags) | 1);
     Acting()[1] = 2;
     const unsigned char chosen = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     BattleActions_Step = 1;
@@ -253,18 +256,18 @@ extern "C" void __cdecl BattleItemCmd_OpenList(void) {
 // record 16's x and y and the pad are read after the calls before them.
 extern "C" void __cdecl BattleItemCmd_List(void) {
     unsigned char* const list = List();
-    auto* const list_window = reinterpret_cast<records::WindowRecord*>(list);
+    auto* const list_window = rv::As<records::WindowRecord>(list);
     if (list_window->state != 0) return;
     const unsigned actor = Acting()[5];
-    auto* const hand_window = reinterpret_cast<records::WindowRecord*>(At(BattleE4_Hand_addr));
+    auto* const hand_window = &WindowRecords[0x13];
     hand_window->in_use = 1;
-    hand_window->centre_x = static_cast<unsigned>(Long(list + 4)) + 7;
+    hand_window->x = static_cast<unsigned>(Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(At(ObjTrio_addr + actor * at::kMemberSize));
+    auto* const member_rec = rv::As<records::PartyMember>(At(ObjTrio_addr + actor * at::kMemberSize));
     member_rec->flags_130 = static_cast<std::int32_t>(member_rec->flags_130) & 0xBFFF;
     const unsigned cursor_row = list[0xC];
     const unsigned pressed = Input_Pressed & Sigma(0xF00C);
-    hand_window->centre_y = (cursor_row - top_row + 2) * 13 + list_window->centre_y;
+    hand_window->y = (cursor_row - top_row + 2) * 13 + list_window->y;
     const unsigned repeat = g.auto_repeat(pressed);
 
     if (repeat & 0x8000) {
@@ -340,17 +343,17 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     if (up && before == 0) {
         g.sound(0x100);
         const std::uint32_t x = static_cast<std::uint32_t>(Long(list + 4)) + 0x20;
-        const unsigned y = list_window->centre_y - 0x16u;
-        unsigned char* const above = At(BattleE4_Above_addr);
-        auto* const above_window = reinterpret_cast<records::WindowRecord*>(above);
+        const unsigned y = list_window->y - 0x16u;
+        unsigned char* const above = At(Window21_addr);
+        auto* const above_window = rv::As<records::WindowRecord>(above);
         above_window->handler = 8;
         above_window->kind = 5;
         above_window->in_use = 1;
-        above_window->centre_x = x;
-        above_window->centre_y = y;
+        above_window->x = x;
+        above_window->y = y;
         above[0xA] = 0;
         above[0xB] = 0xFF;
-        Byte(at::kRecord4) = 0;
+        WindowRecords[4].in_use = 0;
         BattleE4_Step3 = 6;
         return;
     }
@@ -374,7 +377,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
 
     const unsigned chosen_category = list[0xA];
     const unsigned chosen_item = ListItem();
-    SetWord(Command() + 2, (chosen_category << 8) + chosen_item);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(Command())->action_id, (chosen_category << 8) + chosen_item);
     const unsigned use_category = list[0xA];
     const unsigned use_item = Command()[2];
     const unsigned mode = list[8];

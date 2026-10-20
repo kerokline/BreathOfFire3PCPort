@@ -17,6 +17,7 @@
 #include "game/area_w4b.h"
 #include "game/area_w4b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -347,7 +348,7 @@ U TickEffect(const U*, U answer) {
 U GroundEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) MoveCurrent(n >> 4);
-    if (n & 2) answer = (answer & 0xFFFF0000u) | ((Word(Sprite_Current + 0x3E) + (n >> 8) % 3 - 1) & 0xFFFFu);
+    if (n & 2) answer = (answer & 0xFFFF0000u) | ((rv::Current<records::SpriteHead>()->height_whole + (n >> 8) % 3 - 1) & 0xFFFFu);
     return answer;
 }
 // Area172_SlideStep: writes the running object's +0, +4 and tint bytes
@@ -467,7 +468,7 @@ ah::Region g_regions[] = {
     {MoveScript_Object_addr, 4},
     {AreaW1a_FocusObject_addr, 4},
     {AreaW4b_GateKey_addr, 1},
-    {MoveScript_WaitWordDA_addr, 2},
+    {Transition_Busy_addr, 2},
     {Field_Kind2Hold_addr, 1},
     {Camera_Angles_addr, 6},
     {Field_MoveSpeeds_addr, 4},
@@ -498,7 +499,7 @@ void Disturb(U h) {
     case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
     case 6: SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
-    case 7: SetWord(ah::Mem(MoveScript_WaitWordDA_addr), h & 0x100 ? 0 : v); break;
+    case 7: SetWord(ah::Mem(Transition_Busy_addr), h & 0x100 ? 0 : v); break;
     case 8: B(Field_Kind2Hold_addr) = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
     case 9: B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(h & 0x100 ? 2 + v % 2 : v); break;
     case 10: B(at::kScratch) = static_cast<unsigned char>(h & 0x100 ? v % 2 : v); break;
@@ -536,7 +537,7 @@ unsigned WaitedWord(unsigned on) {
 // Field_Request 2 or not, half and half.
 void SeedRequest() { Field_Request = static_cast<unsigned char>(ah::Half() ? 2 : AH_PICK(0, 1, 3, 5, 0x82)); }
 // The DA wait word 0 two times in three.
-void SeedWait() { SetWord(ah::Mem(MoveScript_WaitWordDA_addr), ah::Often() ? 0 : AH_PICK(1, 0x100, 0xFFFF)); }
+void SeedWait() { SetWord(ah::Mem(Transition_Busy_addr), ah::Often() ? 0 : AH_PICK(1, 0x100, 0xFFFF)); }
 // A 16.16 word with the high word `high` and any low word.
 U At16(U high, U low) { return (high & 0xFFFF) << 16 | (low & 0xFFFF); }
 // A high word on or beside [lo, lo + 3): each inside, one either side, a
@@ -565,7 +566,7 @@ U Exact(U v) {
 void SeedMembers(U rects) {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const record = ah::PartyOf(static_cast<unsigned char>(m));
-        auto* const tRecord = reinterpret_cast<records::PartyMember*>(record);
+        auto* const tRecord = rv::As<records::PartyMember>(record);
         const unsigned char* const r = ah::Mem(rects + (ah::Next() % 2) * at::kRectStride);
         if (ah::Often()) {
             const U edge = static_cast<U>(ah::Half() ? r[0] : r[2]) << 16;
@@ -785,7 +786,7 @@ void Seed172(unsigned k) {
     case k172EffStart: case k172EffHold: Sprite_Current = EffectRecord(ah::Next() % 4); break;
     case k172EffGrow:
         Sprite_Current = EffectRecord(ah::Next() % 4);
-        if (ah::Often()) SetWord(Sprite_Current + 0x2E, AH_PICK(0x186, 0x187, 0x188, 0x190, 0x17C, 0x7FF8, 0xFFF6, 0));
+        if (ah::Often()) rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, AH_PICK(0x186, 0x187, 0x188, 0x190, 0x17C, 0x7FF8, 0xFFF6, 0));
         break;
     default: break;
     }

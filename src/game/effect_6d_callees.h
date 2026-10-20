@@ -10,16 +10,16 @@
 namespace effect_6d::at {
 
 // --- cells -------------------------------------------------------------------------
-constexpr std::uint32_t kLeaderX = 0x802D74;        // ObjTrio +0x34: the leader's x, 16.16
-constexpr std::uint32_t kLeaderZ = 0x802D78;        // ObjTrio +0x38: its z, 16.16
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio +0x34: the leader's x, 16.16
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). ObjTrio +0x38: its z, 16.16
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0: the bit row Flags_Set / _Clear take
 constexpr std::uint32_t kKind2ZCell = 0x905E62;     // Field_Kind2Z's high word (s16): sub-kind 0x62's first row
 constexpr std::uint32_t kKind2XCell = 0x905E66;     // Field_Kind2X's high word (s16): its first column
 constexpr std::uint32_t kCounter48 = 0x903848;      // the counter byte sub-kind 0x65's wait compares with 0xD
 constexpr std::uint32_t kBattleWord = 0x904AC8;     // a dword of the battle block sub-kind 0x64's watch scales
-// kExtra0Point: now Sprite_ObjectsExtra[0x34] (symbols.toml). Sprite_ObjectsExtra[0] +0x34 / +0x38 (16.16)
-// kExtra0Height: now Sprite_ObjectsExtra[0x3e] (symbols.toml). ... +0x3E: its height word, from the ground
-// kExtra0Word14: now Sprite_ObjectsExtra[0x14] (symbols.toml). ... +0x14: a dword sub-kind 0x62 clears
+// kExtra0Point: now Sprite_ObjectsExtra[0].x (symbols.toml). Sprite_ObjectsExtra[0] +0x34 / +0x38 (16.16)
+// kExtra0Height: now Sprite_ObjectsExtra[0].height_whole (symbols.toml). ... +0x3E: its height word, from the ground
+// kExtra0Word14: now Sprite_ObjectsExtra[0].step_y (symbols.toml). ... +0x14: a dword sub-kind 0x62 clears
 
 // --- sub-kind 0x61's tracks ----------------------------------------------------------
 // A ring of 32 entries of six bytes - two three-byte marks (cell x, cell z, a
@@ -28,7 +28,7 @@ constexpr std::uint32_t kTrackRing = 0x6BC644;
 constexpr unsigned kTrackEntries = 32;
 constexpr unsigned kTrackStride = 6;
 constexpr std::uint32_t kTrackHeads = 0x6BC704;     // a byte each (cleared as one word)
-// kFollowers: now Sprite_Objects[0xd8] (symbols.toml). Sprite_Objects[1] +0x34; [2] at + 0xA4
+// kFollowers: now Sprite_Objects[1].x (symbols.toml). Sprite_Objects[1] +0x34; [2] at + 0xA4
 constexpr unsigned kFollowerStride = 0xA4;
 constexpr unsigned kFollowerCount = 2;
 constexpr std::uint32_t kTrackTextures = 0x65F4E0;  // two bytes a follower: the two marks' texture bytes
@@ -69,7 +69,7 @@ constexpr unsigned kGlowQuads = 6;
 // --- sub-kind 0x64 ----------------------------------------------------------------------
 constexpr std::uint32_t kSub64Cells = 0x65F578;     // two bytes a variant: the cell x, z (room two)
 constexpr unsigned kSub64Variants = 2;
-constexpr std::uint32_t kEnemyRecords = 0x93BA88;   // the enemy records from the second (0x93B960 + 0x128)
+// kEnemyRecords: now Battle_Enemies[1] (symbols.toml). the enemy records from the second (0x93B960 + 0x128)
 constexpr unsigned kEnemyStride = 0x128;
 
 // --- sub-kind 0x65's CLUT rows ----------------------------------------------------------

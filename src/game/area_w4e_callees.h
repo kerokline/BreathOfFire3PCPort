@@ -37,7 +37,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // pointer the chapters' flag calls take (Cond_Flags + 8 * chapter).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow14: now Cond_Flags[0x70] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The focus object: the object whose talk ran last (area_w3f_callees.h's
 // kFocusObject); areas 188 and 191's choices store a byte pair at its +0x18
 // and +0x1C.
@@ -48,10 +48,10 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 // A mode byte area 188's init tests (1 or 4) and the byte +0x83 of
 // Sprite_ObjectsExtra's first record it sets.
 // kMode905E68: now AreaW1a_EntryZone (symbols.toml).
-// kExtra0Byte83: now Sprite_ObjectsExtra[0x83] (symbols.toml).
+// kExtra0Byte83: now Sprite_ObjectsExtra[0].area_script (symbols.toml).
 // The word the step-count of area 189's walk is compared with: the leader
 // record's +0x134 (ObjTrio 0x802D40 + 0x134), a pace the walk's start sets.
-// kLeaderPace: now ObjTrio[0x134] (symbols.toml).
+// kLeaderPace: now ObjTrio_addr + 0x134 (symbols.toml).
 // Area 189's walk counters: a frame word (0x1E0 and 0x3C0 mark it), the
 // byte after it counted up at 0x3C0, a byte the count adds 8 to and the
 // arrival counts down, the facing the walk's start takes (low nibble), and
@@ -67,8 +67,8 @@ constexpr std::uint32_t kSavedCount = 0x904152;
 // kWalkFacing: now AreaW3g_HealByte (symbols.toml).
 // Two bytes area 189's arrival counts with: steps since the last event and
 // events since the last big one.
-// kStepsSince: now AreaW3g_Byte929EC1 (symbols.toml).
-// kEventsSince: now AreaW3g_Byte9036D0 (symbols.toml).
+// kStepsSince: now Area189_StepsSinceEvent (symbols.toml).
+// kEventsSince: now Area189_EventsInRow (symbols.toml).
 // The pending area change Field_ChangeArea keeps: the area word, x and z
 // dwords, the flags byte (docs/area_w3b.md's kPlace, kPendingX / Z,
 // kChangeFlags).
@@ -88,7 +88,7 @@ constexpr std::uint32_t kChangeFlags = 0x905B88;
 // The party members' actor records (CharacterRecords 0x903A70, 0xA4 each):
 // the byte +0x1E areas 189 and 191 read and raise, and the words +0x18 (the
 // one area 189 lowers) and +0x40 (its bound); seven records are walked.
-constexpr std::uint32_t kCharRecords = 0x903A70;
+// kCharRecords: now CharacterRecords (symbols.toml).
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr unsigned kCharWalked = 7;
 // kCharByte1E: now Field_ActorStates[0xe] (symbols.toml).
@@ -112,8 +112,8 @@ constexpr std::uint32_t kInputHeld = 0x7E1BE8;         // Input_Held (Input_Pres
 // kVertexScratch: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch (three shorts)
 // kScreenXY: now MapView_ScreenXY (symbols.toml). MapView_ScreenXY (two floats)
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles; Cond_AngleFB 0x929ECC after
-// kWaitWordDA: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
-constexpr std::uint32_t kDamageScratch = 0x903850;     // DamageScratch (the slot word EventOp_0x reads)
+// kWaitWordDA: now Transition_Busy (symbols.toml). Transition_Busy
+constexpr std::uint32_t kDamageScratch = SharedScratch_addr; // SharedScratch (the slot word EventOp_0x reads)
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 

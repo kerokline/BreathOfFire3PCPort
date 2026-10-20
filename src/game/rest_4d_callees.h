@@ -67,14 +67,14 @@ constexpr std::uint32_t kPicked = 0x675FC0;       // the draw's four counts
 // kEntryA: now Rest4d_EntryA (symbols.toml). three bytes handed to BareRet
 // kEntryB: now Rest4d_EntryB (symbols.toml).
 // kEntryC: now Rest4d_EntryC (symbols.toml).
-constexpr std::uint32_t kSlots = 0x9046D0;        // 60 cells of 8: in use when the first byte is not 0
+// kSlots: now Community_Records (symbols.toml). 60 cells of 8: in use when the first byte is not 0
 constexpr std::uint32_t kSlotsEnd = 0x9048B0;
 constexpr std::uint32_t kSlotNames = 0x9048F0;    // 5 bytes a slot
-constexpr std::uint32_t kRecords = 0x903A70;      // the character records, 0xA4 each
+// kRecords: now CharacterRecords (symbols.toml). the character records, 0xA4 each
 constexpr std::uint32_t kRecordStride = 0xA4;
 constexpr std::uint32_t kRecordFlags = 0x903A7B;  // +0xB: bit 0 the record is in the party's list
 constexpr std::uint32_t kRecordFlagsEnd = 0x903EF7;   // 7 records
-// kColour: now BattleDraw_Colour (symbols.toml). the window style byte
+// kColour: now Config_WindowColour (symbols.toml). the window style byte
 // kPressed: now Input_Pressed (symbols.toml). Input_Pressed (u16)
 constexpr std::uint32_t kTextScratch = 0x904BA0;  // the text scratch
 constexpr std::uint32_t kTextRecords = 0x904CE0;  // Text_Records, 0x20 each

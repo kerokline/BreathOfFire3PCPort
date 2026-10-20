@@ -26,6 +26,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc13_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -64,7 +65,7 @@ void SetRun(unsigned char v) { MoveScript_Var7 = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool WaitClear() { return MoveScript_WaitWordDA == 0; }
+bool WaitClear() { return Transition_Busy == 0; }
 void ScriptAnd(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags & v); }
 std::uint16_t Timer() { return W(at::kTimer); }
 void SetTimer(std::uint16_t v) { W(at::kTimer) = v; }
@@ -77,7 +78,7 @@ void AddElevOffset(std::uint16_t v) { MapView_ElevationOffset = static_cast<std:
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 unsigned char* Story() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Cond_Flags_addr + 0xa0)); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
@@ -327,7 +328,7 @@ SC13_EXPORT void __cdecl Scena13_Run1(void) {
         SetCounter(0, 0);
         Set(0);
         ChangeArea(0x7E, 0x4E0000, 0x2C8000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(4);
         return;
@@ -422,7 +423,7 @@ SC13_EXPORT void __cdecl Scena13_Run2(void) {
         if (SH_CALL(Sound_StreamDone)() == 0) return;
         PartyPass();
         ChangeArea(0x97, 0x330000, 0x370000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0xB);
         return;
@@ -452,10 +453,10 @@ static void SpawnPair(std::uint32_t first, std::uint32_t second) {
         Sprite(a)[0] = 0;
         return;
     }
-    W(at::kSlotWord) = a;
+    at::kSlotWord.w_00 = a;
     Sprite(b)[0] = 1;
     SH_CALL(EventOp_6x)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(first)));
-    W(at::kSlotWord) = b;
+    at::kSlotWord.w_00 = b;
     SH_CALL(EventOp_6x)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(second)));
 }
 
@@ -470,6 +471,7 @@ SC13_EXPORT void __cdecl Scena13_SpawnPairB(void) { SpawnPair(Scena13_EventOps_a
 // original 0x562840: run 3, steps 0..5, 0xA..0xD, 0x14..0x18 (MSVC's
 // two-level switch: the byte table 0x562CD0 of 0x19, then 16 cases).
 SC13_EXPORT void __cdecl Scena13_Run3(void) {
+    auto* const kind2 = &Sprite_Kind2;
     switch (Step()) {
     case 0: {
         if (Counter(0) != 2) return;
@@ -527,10 +529,10 @@ SC13_EXPORT void __cdecl Scena13_Run3(void) {
     case 0xC: {
         if (Request() == 2) return;
         Field_Kind2X = 0xA0000;
-        D(at::kKind2 + 0x34) = 0xA0000;
+        kind2->x = 0xA0000;
         Field_Kind2Z = 0x620000;
-        D(at::kKind2 + 0x38) = 0x620000;
-        W(at::kKind2 + 0x3E) = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(0xA0000, 0x620000));
+        kind2->z = 0x620000;
+        kind2->height_whole = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(0xA0000, 0x620000));
         SH_CALL(Field_ViewReset)();
         Msg(0x19);
         SetRequest(2);
@@ -556,7 +558,7 @@ SC13_EXPORT void __cdecl Scena13_Run3(void) {
         if (Counter(0) != 1) return;
         Set40();
         ChangeArea(0x58, 0x130000, 0x250000, 0x80);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         SetStep(0x15);
         return;
     case 0x15:
@@ -599,6 +601,7 @@ SC13_EXPORT void __cdecl Scena13_Run3(void) {
 // 0x563070 of 0x20, then 17 cases). Its ebx holds 0x1F from the start: step
 // 0x1E stores it to Draw_PassFlags and the step (below).
 SC13_EXPORT void __cdecl Scena13_Run4(void) {
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         Say(0x12);
@@ -610,9 +613,9 @@ SC13_EXPORT void __cdecl Scena13_Run4(void) {
         return;
     case 0xA: {
         if (Counter(0) != 0x10) return;
-        const unsigned char arg = B(at::kEffectArg + ObjTrio[0x89]);
-        Scena13_Slot[0] = SH_CALL(Effect_SpawnAt)(4, 5, static_cast<signed char>(arg), static_cast<long>(D(at::kTrioX)),
-                                                  static_cast<long>(D(at::kTrioY)), static_cast<long>(D(at::kTrioZ)));
+        const unsigned char arg = B(at::kEffectArg + ObjTrio[0].char_id);
+        Scena13_Slot[0] = SH_CALL(Effect_SpawnAt)(4, 5, static_cast<signed char>(arg), static_cast<long>(static_cast<std::uint32_t>(member0->x)),
+                                                  static_cast<long>(static_cast<std::uint32_t>(member0->z)), static_cast<long>(static_cast<std::uint32_t>(member0->height)));
         SetStep(0xB);
         return;
     }
@@ -644,7 +647,7 @@ SC13_EXPORT void __cdecl Scena13_Run4(void) {
         Set(0xE);
         ChangeArea(0x58, 0x240000, 0x200000, 0x81);
         AreaW1f_MusicCurrent = 0xFF;
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         SetStep(0x18);
         return;
     case 0x18:
@@ -685,7 +688,7 @@ SC13_EXPORT void __cdecl Scena13_Run4(void) {
         SetCounter(0, 0);
         Set(0xF);
         ChangeArea(0x56, 0x100000, 0x98000, 3);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0x1E);
         return;
@@ -728,6 +731,7 @@ SC13_EXPORT void __cdecl Scena13_ToneLevels(unsigned angle) {
 // 0x2000 (up) or 0x8000 (down) is held, the two voices following it, until
 // Input_Pressed bit 0x20; 0x4A0..0x4E0 goes on to step 0xA, anything else to 5.
 SC13_EXPORT void __cdecl Scena13_Run5(void) {
+    auto* const xobj1 = &Sprite_ObjectsExtra[1];
     switch (Step()) {
     case 0:
         FadeOutStop(8);
@@ -736,12 +740,12 @@ SC13_EXPORT void __cdecl Scena13_Run5(void) {
         SetStep(1);
         return;
     case 1:
-        SH_CALL(Scena13_ToneLevels)(D(at::kExtra1Angle) & 0xFFF);
+        SH_CALL(Scena13_ToneLevels)(xobj1->angle[2] & 0xFFF);
         SetStep(2);
         return;
     case 2: {
-        std::uint32_t a = D(at::kExtra1Angle);
-        W(at::kSlotWord) = static_cast<std::uint16_t>(a & 0xFFF);
+        std::uint32_t a = xobj1->angle[2];
+        at::kSlotWord.w_00 = static_cast<std::uint16_t>(a & 0xFFF);
         const std::uint32_t held = D(at::kInputHeld);
         bool turned = false;
         if (held & 0x2000) {
@@ -752,15 +756,15 @@ SC13_EXPORT void __cdecl Scena13_Run5(void) {
             turned = true;
         }
         if (turned) {
-            D(at::kExtra1Angle) = a;
+            xobj1->angle[2] = a;
             SH_CALL(Scena13_ToneLevels)(a & 0xFFF);
         }
         if (B(at::kInputPressed) & Sigma(0x20)) SetStep(3);
         return;
     }
     case 3: {
-        const std::uint16_t a = static_cast<std::uint16_t>(D(at::kExtra1Angle) & 0xFFF);
-        W(at::kSlotWord) = a;
+        const std::uint16_t a = static_cast<std::uint16_t>(xobj1->angle[2] & 0xFFF);
+        at::kSlotWord.w_00 = a;
         SetStep(a <= 0x4E0 && a >= 0x4A0 ? 0xA : 5);
         return;
     }
@@ -864,7 +868,7 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
         Set(0x11);
         Set(0x21);
         ChangeArea(0x8F, 0x350000, 0x330000, 0x84);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         SetStep(5);
         return;
@@ -920,7 +924,7 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
         Clr(0x21);
         ChangeArea(0x8F, 0x90000, 0x4C0000, 0x85);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(0xD);
         return;
     case 0xD:
@@ -955,10 +959,10 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
         DropIn(7);
         const unsigned char* const o = reinterpret_cast<const unsigned char*>(AreaW1a_FocusObject);
         const std::uint32_t x = *reinterpret_cast<const std::uint32_t*>(o + 0x34);
-        D(at::kTrio + 2 * at::kTrioStride + 0x34) = x;
+        ObjTrio[2].x = x;
         const std::uint32_t z = *reinterpret_cast<const std::uint32_t*>(o + 0x38);
-        D(at::kTrio + 2 * at::kTrioStride + 0x38) = z;
-        W(at::kTrio + 2 * at::kTrioStride + 0x3E) =
+        ObjTrio[2].z = z;
+        ObjTrio[2].height_whole =
             static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<int>(x), static_cast<int>(z)));
         *reinterpret_cast<unsigned char*>(AreaW1a_FocusObject) = 0;
         SetStep(0x1A);
@@ -970,7 +974,7 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
         Clr(0x22);
         ChangeArea(0x8F, 0x78000, 0x508000, 0x88);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetPass(0);
         SetStep(0x1B);
         return;
@@ -1012,16 +1016,16 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
 SC13_EXPORT void __cdecl Scena13_Caption(unsigned index, unsigned seconds) {
     const std::uint16_t total = static_cast<std::uint16_t>((seconds & 0xFF) * 30 - 1);
     W(at::kCaptionIndex) = static_cast<std::uint16_t>(index);
-    W(at::kCaptionTotal) = total;
+    at::kCaptionTotal = total;
     const std::uint16_t clock = static_cast<std::uint16_t>(total - Timer());
-    W(at::kSlotWord) = clock;
+    at::kSlotWord.w_00 = clock;
     if (clock >= total) {
         if (clock == total) SH_CALL(ClutStrip_Restore)();
         return;
     }
     const std::uint32_t text = at::kCaptionText + 2 + W(at::kCaptionText + 2 * (index & 0xFFFF));
     SH_CALL(Text_DrawAt)(0x50, 0x3C, 0, 0xFF, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(text)));
-    const std::uint16_t now = W(at::kSlotWord);
+    const std::uint16_t now = at::kSlotWord.w_00;
     if (now < 0x20) {
         SH_CALL(ClutStrip_FadeTo)(now & 0xFF);
         return;
@@ -1030,8 +1034,8 @@ SC13_EXPORT void __cdecl Scena13_Caption(unsigned index, unsigned seconds) {
         SH_CALL(ClutStrip_Restore)();
         return;
     }
-    if (static_cast<std::int32_t>(W(at::kSlotWord)) <= static_cast<std::int32_t>(W(at::kCaptionTotal)) - 0x20) return;
-    SH_CALL(ClutStrip_FadeTo)(static_cast<unsigned char>(B(at::kCaptionTotal) - B(at::kSlotWord)));
+    if (at::kSlotWord.w_00 <= at::kCaptionTotal - 0x20) return;
+    SH_CALL(ClutStrip_FadeTo)(static_cast<unsigned char>(SharedScratch.b_02 - at::kSlotWord.b_00));
 }
 
 // Run 7's countdown after a caption: while the timer is not 0, one less and
@@ -1197,8 +1201,8 @@ SC13_EXPORT void __cdecl Scena13_Run8(void) {
     switch (Step()) {
     case 0:
         // ObjTrio records 1 and 2 + 0x137 (0x802FC3, 0x80310F) both 0
-        if (ObjTrio[0x283] != 0) return;
-        if (ObjTrio[0x3cf] != 0) return;
+        if (rv::Bytes(&ObjTrio[1])[0x137] != 0) return;
+        if (rv::Bytes(&ObjTrio[2])[0x137] != 0) return;
         DropIn(0xA);
         Set(0x1D);
         StopRun();
@@ -1240,7 +1244,7 @@ SC13_EXPORT void __cdecl Scena13_Run8(void) {
 // original 0x564120: slot 1, called by 0x56D6D0 with the object that
 // triggered: Scena13_Objects[object +0x86] (object, the flag bits' pointer).
 SC13_EXPORT void __cdecl Scena13_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena13_Objects_addr, static_cast<int>(index), at::kObjectCount13, "Scena13_ObjectTrigger")))(object, bits);
@@ -1304,46 +1308,46 @@ SC13_EXPORT unsigned char __cdecl Scena13_StepHook(int x, int z) {
     if (Area() == 0x70) {
         if (FD() != 4) return 0;
         if (!Flag(0xF) && In(x16, 0x36, 3) && In(z16, 0x32, 4)) {
-            facing = ObjTrio[8];
+            facing = ObjTrio[0].direction;
             if (facing != 0 && facing != 7 && facing != 6) return Hit(4, 0);
             loaded = true;
         }
     }
-    if (!loaded) facing = ObjTrio[8];
+    if (!loaded) facing = ObjTrio[0].direction;
     if (Area() == 0x7F) {
         if (FD() != 0) return 0;
         if (xw != 0x38000) return 0;
         if (!In(z16, 6, 3)) return 0;
         Set(6);
-        facing = ObjTrio[8];
+        facing = ObjTrio[0].direction;
     }
     if (Area() == 0x8F) {
         if (FD() == 0) {
             if (!Flag(0x14) && xw == 0x3B8000 && In(z16, 0x1F, 4)) return Hit(6, 0x14);
             if (Flag(0x1D) && !Flag(0x1E) && xw == 0x3B8000 && In(z16, 0x1F, 4)) return Hit(8, 5);
-            facing = ObjTrio[8];
+            facing = ObjTrio[0].direction;
         }
         if (FD() == 1) {
             if (!Flag(0x11) && xw == 0x428000 && In(z16, 0x64, 3)) return Hit(6, 0);
-            facing = ObjTrio[8];
+            facing = ObjTrio[0].direction;
         }
     }
     if (Area() == 0x90) {
         if (FD() != 2) return 0;
         if ((x16 & 0xFFFF) != 0x25) return 0;
         if (!In(z16, 0x1D, 2)) return 0;
-        B(at::kSlotWord) = facing;
+        at::kSlotWord.b_00 = facing;
         if (facing != 6 && facing != 7 && facing != 0) return 0;
         if (!Flag(0x1B)) {
             Set40();
             if (!Flag(0x18)) {
-                if (ObjTrio[0x89] == 2) DropIn(1);
+                if (ObjTrio[0].char_id == 2) DropIn(1);
             } else if (!Flag(0x19)) {
-                const unsigned char who = ObjTrio[0x89];
+                const unsigned char who = ObjTrio[0].char_id;
                 DropIn(who == 8 ? 4 : who == 5 ? 3 : 2);
             } else {
                 const bool third = Flag(0x1A);
-                const unsigned char who = ObjTrio[0x89];
+                const unsigned char who = ObjTrio[0].char_id;
                 if (!third) {
                     if (who != 7) DropIn(5);
                 } else if (who == 7) {
@@ -1355,7 +1359,7 @@ SC13_EXPORT unsigned char __cdecl Scena13_StepHook(int x, int z) {
         }
     }
     if (Area() == 0x91 && SH_CALL(Flags_Test)(Story(), 0x2D) != 0 && !Flag(0xB) && In(x16, 0xA, 2) && In(z16, 0x62, 3)) {
-        const unsigned char f = ObjTrio[8];
+        const unsigned char f = ObjTrio[0].direction;
         if (f == 0 || f == 7 || f == 6) {
             SetCounter(0, 0);
             DropIn(9);
@@ -1570,7 +1574,7 @@ static void EnterArea14Body() {
             }
         }
     }
-    if (Area() == 0xBD && Flag(1)) Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] | 0x40);
+    if (Area() == 0xBD && Flag(1)) Effect_Objects[0].flags = static_cast<unsigned char>(Effect_Objects[0].flags | 0x40);
     if (Area() == 0xBF) {
         if (FD() == 0 && Flag(5)) {
             if (!Flag(6)) {
@@ -1707,7 +1711,7 @@ SC13_EXPORT void __cdecl Scena14_Run1(void) {
         }
         SH_CALL(Flags_Set)(Story(), 0x8A);
         const unsigned char bits = static_cast<unsigned char>(Field_StatusBits & 0xFE);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         StopRun();
         Field_StatusBits = bits;
@@ -1729,9 +1733,9 @@ static void Shake4() { SH_CALL(Scena14_Shake)(4); }
 
 // The three party objects' +0x48 bytes (ObjTrio records 0..2) set to 1.
 static void TrioFlags48() {
-    ObjTrio[0x2e0] = 1;
-    ObjTrio[0x194] = 1;
-    ObjTrio[0x48] = 1;
+    ObjTrio[2].scale_mode = 1;
+    ObjTrio[1].scale_mode = 1;
+    ObjTrio[0].scale_mode = 1;
 }
 
 // original 0x565240: run 2, steps 0..8, 0xA..0x11, 0x14, 0x15, 0x19, 0x1D,
@@ -1848,7 +1852,7 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
     case 0xF:
         ChangeArea(0xBF, 0x490000, 0xD0000, 0x81);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(0x10);
         return;
     case 0x10:
@@ -1859,7 +1863,7 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
         return;
     case 0x11: {
         if (Counter(0) != 0) return;
-        const std::uint32_t r = static_cast<std::uint32_t>(MoveScript_EffectState[8]) * at::kRecordStride;
+        const std::uint32_t r = static_cast<std::uint32_t>(Character_IndexById[8]) * at::kRecordStride;
         B(at::kRecords + r + 0x1E) = 9;
         W(at::kRecords + r + 0x18) = 1;
         Clear40();
@@ -1876,7 +1880,7 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
         EndRun();
         return;
     case 0x19:
-        if (ObjTrio[0x137] != 0) return;         // 0x802E77
+        if (rv::Bytes(ObjTrio)[0x137] != 0) return; // 0x802E77
         Clear40();
         DropIn(3);
         Set(8);
@@ -1914,11 +1918,11 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
             Say(4);
             SetStep(0x23);
         }
-        ObjTrio[9] = static_cast<unsigned char>(ObjTrio[9] + 1);
+        ObjTrio[0].step_frames = static_cast<unsigned char>(ObjTrio[0].step_frames + 1);
         return;
     case 0x23:
         if (Request() != 2) SetStep(0x24);
-        ObjTrio[9] = static_cast<unsigned char>(ObjTrio[9] + 1);
+        ObjTrio[0].step_frames = static_cast<unsigned char>(ObjTrio[0].step_frames + 1);
         return;
     case 0x24: {
         ChangeArea(0x96, 0x1C8000, 0x148000, 5);
@@ -1939,8 +1943,8 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
 // Field_ChangeArea(0xC4, 0x298000, 0x168000, 0x80), ScriptFlags_Set40, run 2
 // step 0, Field_StatusBits bit 0 cleared.
 SC13_EXPORT void __cdecl Scena14_LeaveToC4(void) {
-    ObjTrio[0x170] = static_cast<unsigned char>(ObjTrio[0x170] & 0xFE);
-    ObjTrio[0x2bc] = static_cast<unsigned char>(ObjTrio[0x2bc] & 0xFE);
+    ObjTrio[1].draw_flags = static_cast<unsigned char>(ObjTrio[1].draw_flags & 0xFE);
+    ObjTrio[2].draw_flags = static_cast<unsigned char>(ObjTrio[2].draw_flags & 0xFE);
     ChangeArea(0xC4, 0x298000, 0x168000, 0x80);
     Set40();
     const unsigned char bits = static_cast<unsigned char>(Field_StatusBits & 0xFE);
@@ -1961,7 +1965,7 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
         if (Counter(0) != 8) return;
         Set(0xA);
         ChangeArea(0x96, 0x158000, 0x230000, 3);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 4;
         SetStep(2);
         return;
@@ -2005,7 +2009,7 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
         return;
     case 9:
         if (Request() == 2) return;
-        B(at::kRecords + static_cast<std::uint32_t>(MoveScript_EffectState[8]) * at::kRecordStride + 0x1E) = 0;
+        B(at::kRecords + static_cast<std::uint32_t>(Character_IndexById[8]) * at::kRecordStride + 0x1E) = 0;
         PartyPass();
         SH_CALL(Task_Sleep)(1);
         SetRequest(6);
@@ -2017,7 +2021,7 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
         SetCounter(0, 0);
         Set(0xC);
         ChangeArea(0x96, 0x3C0000, 0x390000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0xB);
         return;
@@ -2045,22 +2049,24 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
 // 0x56FCA0, and Sprite_ObjectsExtra record 0's +0x34 + 0x140000 with its
 // elevation +0x3E.
 SC13_EXPORT void __cdecl Scena14_ScrollView(void) {
+    auto* const kind2 = &Sprite_Kind2;
+    auto* const xobj0 = Sprite_ObjectsExtra;
     if (static_cast<std::uint32_t>(MapView_FocusX) != 0x77FF) return;
-    const std::uint32_t kx = D(at::kKind2 + 0x34);
+    const std::uint32_t kx = static_cast<std::uint32_t>(kind2->x);
     const std::uint32_t fx = static_cast<std::uint32_t>(Field_Kind2X);
     MapView_Origin[0] = static_cast<std::uint16_t>(static_cast<std::uint16_t>(MapView_Origin[0]) + 0x14);
-    D(at::kKind2 + 0x34) = kx + 0x140000;
+    kind2->x = kx + 0x140000;
     const std::uint32_t fz = static_cast<std::uint32_t>(Field_Kind2Z);
     MapView_FocusX = 0x63FF;
     Field_Kind2X = fx + 0x140000;
     const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(fx + 0x140000), static_cast<long>(fz));
-    W(at::kKind2 + 0x3E) = static_cast<std::uint16_t>(h);
+    kind2->height_whole = static_cast<std::uint16_t>(h);
     SH_CALL(MapView_SetElevation)(static_cast<int>(h));
     SH_AT(VoidFn, at::kViewShift)();
-    const std::uint32_t ex = D(at::kExtra0 + 0x34) + 0x140000;
-    const std::uint32_t ez = D(at::kExtra0 + 0x38);
-    D(at::kExtra0 + 0x34) = ex;
-    W(at::kExtra0 + 0x3E) = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(ex), static_cast<long>(ez)));
+    const std::uint32_t ex = static_cast<std::uint32_t>(xobj0->x) + 0x140000;
+    const std::uint32_t ez = static_cast<std::uint32_t>(xobj0->z);
+    xobj0->x = ex;
+    xobj0->height_whole = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(ex), static_cast<long>(ez)));
 }
 static void Scroll() { SH_CALL(Scena14_ScrollView)(); }
 
@@ -2108,7 +2114,7 @@ SC13_EXPORT void __cdecl Scena14_Run4(void) {
         SH_CALL(Flags_Set)(Story(), 0x46);
         ChangeArea(0x95, 0x1C0000, 0xC0000, 0x80);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0x27;
         SetStep(0xF);
         return;
@@ -2164,7 +2170,7 @@ SC13_EXPORT void __cdecl Scena14_Run4(void) {
         SetCounter(3, 0x20);
         ChangeArea(0xA7, 0x280000, 0x630000, 0x8A);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         SetStep(0x17);
         return;
@@ -2365,7 +2371,7 @@ static void Recall(unsigned short msg, unsigned char next) {
 static void Visit(unsigned area, int x, int z, unsigned flags, unsigned char next) {
     ChangeArea(area, x, z, flags);
     ModeFlow_AreaTransition = 0xFF;
-    AreaW0c_PendingKind = 0xFF;
+    Area_EnterTransition = 0xFF;
     AreaW1f_MusicCurrent = 0xFF;
     SetStep(next);
 }
@@ -2438,14 +2444,14 @@ SC13_EXPORT void __cdecl Scena14_Run6(void) {
         if (Counter(0) != 0x12) return;
         const unsigned char n = Field_MemberCount;
         SetStep(0xC);
-        B(at::kSlotWord) = 0;
+        at::kSlotWord.b_00 = 0;
         for (unsigned char m = 0; m < n;) {
             if (B(at::kLeaderName + m * at::kTrioStride) == 4) {
                 DropIn(6);
                 return;
             }
             ++m;
-            B(at::kSlotWord) = m;
+            at::kSlotWord.b_00 = m;
         }
         DropIn(7);
         return;
@@ -2467,7 +2473,7 @@ SC13_EXPORT void __cdecl Scena14_Run6(void) {
         if (Counter(0) != 0) return;
         Set(0x13);
         ChangeArea(0xB, 0x1E0000, 0xB0000, 0);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(0xF);
         return;
     case 0xF:
@@ -2555,7 +2561,7 @@ SC13_EXPORT void __cdecl Scena14_Run6(void) {
     case 0x43:
         if (Counter(0) != 0) return;
         ChangeArea(0x8D, 0x5F8000, 0xA8000, 0);
-        AreaW0c_PendingKind = 0xE;
+        Area_EnterTransition = 0xE;
         AreaW1f_MusicCurrent = 0xFF;
         SetStep(0x44);
         return;
@@ -2612,20 +2618,21 @@ static void Farewell(unsigned flag, unsigned member, std::uint32_t setup) {
 // Step 0x17's two copies: records 1..7 of the eight at 0x903A70 (+0xB bit 0
 // set: +0x1C = +0x2E, +0x18 = +0x20, +0x1A = +0x22, +0x10 = 0), then for the
 // members after the leader each ObjTrio record + 0x80 gets the 0xA4 bytes of
-// the record MoveScript_EffectState[party list byte] names.
+// the record Character_IndexById[party list byte] names.
 static void RestoreRecords() {
     for (unsigned r = 1; r < 8; ++r) {
-        const std::uint32_t p = at::kRecords + r * at::kRecordStride;
-        if ((B(p + 0xB) & 1) == 0) continue;
-        B(p + 0x1C) = B(p + 0x2E);
-        W(p + 0x18) = W(p + 0x20);
-        W(p + 0x1A) = W(p + 0x22);
-        W(p + 0x10) = 0;
+        const std::uint32_t p = CharacterRecords_addr + r * at::kRecordStride;
+        auto* const c = rv::As<records::CharRecord>(&B(p));   // CharacterRecords 0x903A70, stride 0xA4
+        if ((c->flags & 1) == 0) continue;
+        c->survive = c->stats.byte_0e;
+        c->hp = c->stats.max_hp;
+        c->ap = c->stats.max_ap;
+        c->status = 0;
     }
     const unsigned char n = Field_MemberCount;
-    B(at::kSlotWord) = 1;
+    at::kSlotWord.b_00 = 1;
     if (n <= 1) return;
-    B(at::kSlotWord) = n;
+    at::kSlotWord.b_00 = n;
     for (unsigned j = 0; j + 1 < n; ++j) {
         const unsigned char c = B(at::kPartyList + 1 + j);
         const unsigned char idx = B(at::kEffectState + c);
@@ -2781,7 +2788,7 @@ SC13_EXPORT void __cdecl Scena14_Run7(void) {
 // original 0x5677B0: slot 1 - Scena14_Objects[object +0x86] (object, the flag
 // bits' pointer).
 SC13_EXPORT void __cdecl Scena14_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena14_Objects_addr, static_cast<int>(index), at::kObjectCount14, "Scena14_ObjectTrigger")))(object, bits);
