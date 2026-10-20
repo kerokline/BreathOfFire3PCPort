@@ -128,7 +128,7 @@ unsigned char* PoolRecord(unsigned index) { return Mem(BonebreakMote_Pool_addr +
 // by index - 3.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -558,7 +558,7 @@ S07_EXPORT void __cdecl WarShout_Rally(void) {
     for (unsigned i = 0; i < count; ++i) {
         if (MH_CALL(Battle_ActorIsOut)(enemies ? i + 3 : i) != 0) continue;
         const unsigned slot = NewTask(0x59);
-        const unsigned char* const rec = enemies ? Mem(at::kEnemies + i * at::kEnemyStride) : PartyRecord(i);
+        const unsigned char* const rec = enemies ? Mem(Battle_Enemies_addr + i * at::kEnemyStride) : PartyRecord(i);
         const std::int32_t x = rv::As<records::SpriteHead>(rec)->x;
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);

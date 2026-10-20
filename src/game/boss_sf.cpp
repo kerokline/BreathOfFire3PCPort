@@ -175,7 +175,7 @@ extern "C" void __cdecl Boss27_Setup(void) { StoreHooks(bof3::addr::Boss27_End, 
 extern "C" unsigned char __cdecl Boss27_Event(unsigned code) {
     switch (code & 0xFF) {
     case 0: {
-        if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) {
+        if (static_cast<U>(Long(At(Battle_Enemies_addr + 0x92))) & 0x4000) {
             BossSe_Script |= 1;
             Battle_EndFlags |= 4;
             return 0;
@@ -202,7 +202,7 @@ extern "C" unsigned char __cdecl Boss27_Event(unsigned code) {
         const unsigned char script = BossSe_Script;
         if ((script & 0x10) == 0) return 0;
         BossSe_Script = static_cast<unsigned char>(script & 0xEF);
-        Sprite_Current = At(at::kEnemy1);
+        Sprite_Current = At(Battle_Enemies_addr + 0x128);
         BH_CALL(Sprite_EnsureAnimation)(0xC);
         BossSe_Script |= 8;
         return 0;
@@ -241,9 +241,9 @@ extern "C" void __cdecl Boss27_End(void) {
 // 0x904AAD (read again) bit 1, BossActor_CopyFrom(2, enemy 1, 0);
 // BossActor_ClearBit40(2).
 extern "C" void __cdecl Boss27_Exit(void) {
-    if (BossSe_Script & 1) BH_CALL(BossActor_CopyFrom)(1, At(at::kEnemies), 0);
+    if (BossSe_Script & 1) BH_CALL(BossActor_CopyFrom)(1, At(Battle_Enemies_addr), 0);
     BH_CALL(BossActor_ClearBit40)(1);
-    if (BossSe_Script & 2) BH_CALL(BossActor_CopyFrom)(2, At(at::kEnemy1), 0);
+    if (BossSe_Script & 2) BH_CALL(BossActor_CopyFrom)(2, At(Battle_Enemies_addr + 0x128), 0);
     BH_CALL(BossActor_ClearBit40)(2);
 }
 
@@ -837,13 +837,13 @@ extern "C" void __cdecl BossMyria_SpawnFxAndWait(unsigned state, unsigned part, 
 // byte.
 extern "C" void __cdecl BossMyria_SpawnFx(unsigned state, unsigned part) {
     unsigned char* const task = TaskSlot("BossMyria_SpawnFx", BH_CALL(BattleTask_Create)(3, 5) & 0xFF);
-    for (U i = 0; i < 0x80; i += 4) SetLong(task + i, Long(At(at::kEnemies + i)));
+    for (U i = 0; i < 0x80; i += 4) SetLong(task + i, Long(At(Battle_Enemies_addr + i)));
     task[1] = static_cast<unsigned char>(state);
     task[2] = 0;
     task[6] = 3;
     task[5] = 5;
     task[9] = 0;
-    SetCell(task + 0x80, at::kEnemies);
+    SetCell(task + 0x80, Battle_Enemies_addr);
     task[0x29] = static_cast<unsigned char>(part);
 }
 

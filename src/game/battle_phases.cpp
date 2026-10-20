@@ -73,7 +73,7 @@ void SetPtrAt(std::uint32_t address, const unsigned char* p) {
     SetLong(At(address), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
 unsigned char* Member(unsigned index) { return At(ObjTrio_addr + index * at::kMemberSize); }
-unsigned char* EnemyObject(unsigned index) { return At(at::kEnemies + index * at::kEnemySize); }
+unsigned char* EnemyObject(unsigned index) { return At(Battle_Enemies_addr + index * at::kEnemySize); }
 unsigned char* Window(unsigned index) { return At(at::kWindows + index * at::kWindowSize); }
 // The member the menu is for (0x939EC4) and its command record (0x939FA0),
 // each re-read wherever the original re-reads it.

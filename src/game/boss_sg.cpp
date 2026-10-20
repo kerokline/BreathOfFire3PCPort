@@ -149,7 +149,7 @@ void ActorZero(unsigned animation) {
 
 // An enemy object by a battle index (3..10 an enemy), as the originals index
 // it: 0x93B960 + (index - 3) * 0x128, wrapping - unchecked.
-unsigned char* EnemyByIndex(unsigned index) { return At(at::kEnemies + (index - 3u) * at::kEnemyStride); }
+unsigned char* EnemyByIndex(unsigned index) { return At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride); }
 
 }  // namespace
 

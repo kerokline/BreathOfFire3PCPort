@@ -132,7 +132,7 @@ unsigned char* PoolRecord(unsigned index) { return Mem(ElemBreath_Motes_addr + i
 // by index - 3.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -1072,7 +1072,7 @@ S09_EXPORT void __cdecl DreamBreath_TargetHeight(void) {
     if (target & 0x40) {
         for (unsigned i = 0; i < 8; ++i) {
             if ((MH_CALL(Battle_ActorIsOut)(i + 3) & 0xFF) != 0) continue;
-            SetSD(0, U(SD(0)) + U(S16(Mem(at::kEnemies + i * at::kEnemyStride + 0x3E))));
+            SetSD(0, U(SD(0)) + U(S16(Mem(Battle_Enemies_addr + i * at::kEnemyStride + 0x3E))));
             SetSD(4, U(SD(4)) + 1);
         }
     } else {

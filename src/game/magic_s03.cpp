@@ -110,9 +110,9 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot
 // (Blitz's bolts).
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyByBattleIndex(unsigned battle_index) {
-    return Mem(at::kEnemies + (battle_index - 3u) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (battle_index - 3u) * at::kEnemyStride);
 }
-unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* ActorRecord(unsigned a) { return a < 3 ? PartyRecord(a) : EnemyByBattleIndex(a); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }

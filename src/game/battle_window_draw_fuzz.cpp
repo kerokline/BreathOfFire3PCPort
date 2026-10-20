@@ -391,7 +391,7 @@ const Region kRegions[] = {
     {Character_IndexById_addr, 0x18},                    // character -> record
     {at::kAbilities, 0x100 * at::kAbilityStride},           // the ability table
     {Gfx_ClutStripSource_addr + 0x208 - 0x200, 0x500},      // the CLUT shadow around the rows seeded
-    {at::kEnemies - 3 * at::kEnemyStride, 11 * at::kEnemyStride},  // enemies -3 .. 7
+    {Battle_Enemies_addr + 0x80 - 3 * at::kEnemyStride, 11 * at::kEnemyStride}, // enemies -3 .. 7
     // the shapes, the tile sizes, window 1's x table - around the ":" format
     // at 0x64E320, which a random byte could turn into a conversion that
     // reads an argument never passed
@@ -434,7 +434,7 @@ void Apply(const State& s) {
 unsigned char* Window(unsigned slot) { return At(at::kWindows + slot * at::kWindowStride); }
 unsigned char* Ability(unsigned id) { return At(at::kAbilities + (id & 0xFF) * at::kAbilityStride); }
 unsigned char* Enemy(std::int32_t index) {
-    return At(at::kEnemies + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride)));
+    return At(Battle_Enemies_addr + 0x80 + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride)));
 }
 
 // Random bytes put back inside what the functions can safely be handed: the

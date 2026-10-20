@@ -34,7 +34,7 @@ using move_script::Word;
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char* PartyObj(unsigned i) { return At(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemy + i * at::kEnemyStride); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + i * at::kEnemyStride); }
 // The object of actor 0..10.
 unsigned char* ActorObj(unsigned a) { return a < 3 ? PartyObj(a) : EnemyObj(a - 3); }
 unsigned char* ActionOf(unsigned a) { return a < 3 ? PartyObj(a) + 0x124 : EnemyObj(a - 3) + 0x104; }

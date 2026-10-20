@@ -114,10 +114,10 @@ unsigned char* PoolRecord(unsigned index) { return Mem(Lavaburst_Pool_addr + ind
 // enemy records).
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 // MAGIC054's walk counts the enemies from 0.
-unsigned char* EnemyByOrder(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* EnemyByOrder(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }

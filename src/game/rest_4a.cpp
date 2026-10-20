@@ -116,13 +116,13 @@ extern "C" unsigned char __cdecl Battle_AutoTargetCheck(unsigned actor) {
         return 0;
     }
     const U e = at::kEnemyStride * (static_cast<U>(a) - 3);
-    if (Word(At(at::kEnemyHp + e)) > 1 && !(At(at::kEnemyStatus + e)[0] & 0x20) && !(UL(at::kEnemyFlags + e) & 0x4000))
+    if (Word(At(Battle_Enemies_addr + 0xba + e)) > 1 && !(At(Battle_Enemies_addr + 0x92 + e)[0] & 0x20) && !(UL(at::kEnemyFlags + e) & 0x4000))
         return 1;
     if (At(at::kAutoMode)[0] != 4) {
         At(at::kTarget)[0] = forced;
         return 0;
     }
-    const unsigned char bits = At(at::kAbilityFlags + at::kAbilityStride * Word(At(at::kEnemyAbility + e)))[0];
+    const unsigned char bits = At(at::kAbilityFlags + at::kAbilityStride * Word(At(Battle_Enemies_addr + 0x106 + e)))[0];
     if (bits & 0x10) {
         if (bits & 0x80) At(at::kTarget)[0] = 0xC0;
         else At(at::kTarget)[0] = forced >= 3 ? 0x80 : 0x40;

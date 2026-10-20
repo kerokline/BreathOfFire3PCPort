@@ -96,7 +96,7 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // (stride 0x14C), an enemy by its index (stride 0x128) - the battle index
 // less 3, which a party index sends below the enemy records.
 unsigned char* PartyRec(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyRec(int i) { return Mem(at::kEnemies + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
+unsigned char* EnemyRec(int i) { return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
 
 // The scratch words DamageScratch + k and the vertex scratch
 // Prim_VertexScratch + k (SVECTORs at +0, +8, +0x10, +0x18).

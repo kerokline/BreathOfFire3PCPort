@@ -321,7 +321,7 @@ const std::uint8_t kKinds[] = {0x18};
 // tests, layer 15's two last pointers and the buffer byte sub-kind 0x15's
 // commit reads.
 const sh::Region kRegions[] = {
-    {at::kEnemy0Bits, 4},
+    {Battle_Enemies_addr + 0x92, 4},
     {BossH_Enemy1Status_addr, 4},
     {DrawLayers_addr + 0x2f4, 0xC},
     {Key(&Gfx_BufferIndex), 1},
@@ -364,7 +364,7 @@ void Seed(unsigned k) {
         Game_Mode = 5;
         Game_Step = static_cast<unsigned short>(PickOf(5, 5, 4, 0x105));
     }
-    for (U bits : {at::kEnemy0Bits, BossH_Enemy1Status_addr})
+    for (U bits : {Battle_Enemies_addr + 0x92, BossH_Enemy1Status_addr})
         if (sh::Half()) SetLong(Mem(bits), static_cast<std::int32_t>(sh::Next() | (sh::Half() ? 0x4000u : 0u)));
     // Cond_ByteFA (the chapter the harness writes) at sub-kind 0x11's compare
     Cond_ByteFA = static_cast<signed char>(PickOf(7, 8, 6, 0, 0x80, 0x7F, sh::Next()));

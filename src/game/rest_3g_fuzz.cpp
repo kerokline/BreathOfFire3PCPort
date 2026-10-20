@@ -266,7 +266,7 @@ const std::uint8_t kKinds[] = {0xAC, 0xAD, 0xAE, 0xBA};
 constexpr U kItemsRegion = 48;   // draw items compared (0x90 each); AreaMapBD_BuildView keeps few cells a call
 const sh::Region kRegions[] = {
     {0x904AA0, 0x20},                       // the battle bytes: the event battle 0x904AAA, the formation 0x904AAC, 0x904AB2 / B3
-    {at::kEnemies, at::kEnemyStride * at::kEnemyCount},   // the eight enemy records
+    {Battle_Enemies_addr, at::kEnemyStride * at::kEnemyCount}, // the eight enemy records
     {Encounter_Rows_addr, 0x48},      // Encounter_Rows (8 rows of 9)
     {0x695990, 0x2A4},                      // Quake's .bss: the facing, the lift tables, the block's corner (magic_s23's region)
     {AreaW1f_MusicCurrent_addr, 4},         // the byte compared with Music_Track
@@ -435,7 +435,7 @@ void CheckPspMyriaItem() {
     struct Span { U at, size; };
     static constexpr Span kSpans[] = {
         {0x7DEE80, 30 * 0xA4},                          // Sprite_Objects
-        {at::kEnemies, at::kEnemyCount * at::kEnemyStride},
+        {Battle_Enemies_addr, at::kEnemyCount * at::kEnemyStride},
         {0x8C55C8, 8 * 0x8C},                           // the area's enemy data records
         {0x904AA0, 0x160},                              // the battle's globals
         {0x904EFC, 2},                                  // Game_AreaNumber

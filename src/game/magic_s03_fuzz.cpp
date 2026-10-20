@@ -271,7 +271,7 @@ std::uint32_t OutEffect(const std::uint32_t* a, std::uint32_t answer) {
     answer = StirAgain(a, answer);
     if (Fuzzing(kBlitzBolt_Seek) && (mh::Noise() & 1)) {
         const unsigned i = Sc()[4];
-        unsigned char* const rec = mh::Mem(mh::at::kTarget)[0] & 0x40 ? mh::Mem(mh::at::kEnemies + (i % 8) * mh::at::kEnemyStride)
+        unsigned char* const rec = mh::Mem(mh::at::kTarget)[0] & 0x40 ? mh::Mem(Battle_Enemies_addr + (i % 8) * mh::at::kEnemyStride)
                                                                        : mh::PartyOf(Byte(i % 5));
         mh::FillBytes(rec + 0x34, 12);
     }
@@ -437,7 +437,7 @@ void Seed(unsigned k) {
         if (k == kBlitzBolt_Next && mh::Half()) {
             const unsigned i = sc[4];
             unsigned char* const rec = mh::Mem(mh::at::kTarget)[0] & 0x40
-                                           ? mh::Mem(mh::at::kEnemies + i * mh::at::kEnemyStride)
+                                           ? mh::Mem(Battle_Enemies_addr + i * mh::at::kEnemyStride)
                                            : mh::PartyOf(Byte(i));
             rec[1] = 6;
         }

@@ -1410,7 +1410,7 @@ unsigned char* ObjectOf(unsigned k) { return Mem(ObjTrio_addr + (k % 3) * at::kO
 unsigned char* FlagRow() { return Pointer(Chapter_FlagRow_addr); }
 unsigned char* TaskAt(unsigned k) { return SpriteRecord(k); }
 unsigned char* EnemyOf(unsigned char target) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyOf(unsigned char actor) { return ObjectOf(actor); }
 unsigned char* Script() { return g_cursor[0]; }

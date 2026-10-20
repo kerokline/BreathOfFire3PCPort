@@ -62,7 +62,7 @@ U L(U address) { return static_cast<U>(Long(At(address))); }
 S32 S16(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + member * at::kPartyStride); }
-unsigned char* EnemyObj(unsigned n) { return At(at::kEnemies + n * at::kEnemyStride); }
+unsigned char* EnemyObj(unsigned n) { return At(Battle_Enemies_addr + n * at::kEnemyStride); }
 
 // The callees nobody owns yet, by address (battle_e5_callees.h).
 using Void0 = void (__cdecl*)();

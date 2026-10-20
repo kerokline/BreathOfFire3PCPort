@@ -132,7 +132,7 @@ unsigned char* PoolEntry(unsigned i) { return Mem(SuperComboHit_Pool_addr + i * 
 // index - 3.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 unsigned char* TargetRecord(unsigned t) { return t < 3 ? PartyRecord(t) : EnemyRecord(t); }
 unsigned char* ActorRecord(unsigned a) { return a <= 2 ? PartyRecord(a) : EnemyRecord(a); }

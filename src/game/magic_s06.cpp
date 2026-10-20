@@ -91,7 +91,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot
 // the enemy by index - 3, unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor < 3) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
 }
 // A battle actor's state byte +1, as the reaction steps read it.
 unsigned char ActorState(unsigned char actor) { return ActorRecord(actor)[1]; }

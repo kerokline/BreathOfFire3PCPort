@@ -703,7 +703,7 @@ extern "C" void __cdecl BattleActor_Flash(unsigned index) {
         if (r[0x90] & 0x80) g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
         return;
     }
-    unsigned char* const r = At(at::kEnemyRecords + (i - 3) * at::kEnemyStride);
+    unsigned char* const r = At(Battle_Enemies_addr + (i - 3) * at::kEnemyStride);
     if (r[0x92] & 0x80) g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
 }
 
@@ -721,7 +721,7 @@ extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
         if (static_cast<unsigned char>(second) != 0) g.actor_sound(second);
         return;
     }
-    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride));
+    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride));
     if (EventBattle_Id != 0) {
         const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
         g.enemy_sound(Word(cue));
@@ -742,7 +742,7 @@ extern "C" unsigned char __cdecl BattleActor_FxSize(void) {
         if (r[0x134] & 2) return At(at::kFxSizeAltTable)[BattlePhases_B89];
         return At(at::kFxSizeTable)[r[0x89]];
     }
-    const unsigned char type = At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride + 0xF0)[0];
+    const unsigned char type = At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride + 0xF0)[0];
     return At(at::kEnemyFxSize + type * 0x8Cu)[0];
 }
 

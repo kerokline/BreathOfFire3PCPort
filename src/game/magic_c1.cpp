@@ -93,7 +93,7 @@ std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpre
 // (i - 3) * 0x128 from 0x93B960 when the target byte has 0x40, else a party
 // member i * 0x14C from 0x802D40 - unchecked, 32-bit arithmetic.
 unsigned char* ActorRecord(bool enemies, unsigned i) {
-    return enemies ? Mem(at::kEnemies + (i - 3u) * at::kEnemyStride) : Mem(ObjTrio_addr + i * at::kPartyStride);
+    return enemies ? Mem(Battle_Enemies_addr + (i - 3u) * at::kEnemyStride) : Mem(ObjTrio_addr + i * at::kPartyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }

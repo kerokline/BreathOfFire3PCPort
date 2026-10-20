@@ -68,7 +68,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot
 // 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor <= 2) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
 }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {

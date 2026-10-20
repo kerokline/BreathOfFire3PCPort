@@ -108,7 +108,7 @@ unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
 // An enemy by the battle index (3 and up), as the originals compute it: the
 // index's byte minus 3, times 0x128 - below the records for 0..2.
 unsigned char* Enemy(unsigned char index) {
-    return At(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(index) - 3) * static_cast<int>(at::kEnemyStride)));
+    return At(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(index) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* Party(unsigned char index) { return At(ObjTrio_addr + index * at::kPartyStride); }
 // A .data dispatch table's entry, read as the original reads it.

@@ -88,7 +88,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 
 unsigned char* PoolSprite(unsigned k) {
     k %= 12;
-    return k < 4 ? g_mine.sprites[k] : At(at::kEnemies + (k - 4) * at::kEnemyStride);
+    return k < 4 ? g_mine.sprites[k] : At(Battle_Enemies_addr + (k - 4) * at::kEnemyStride);
 }
 
 // Actor-ish values: an actor 0..10, or a side (0x40 and up).
@@ -113,7 +113,7 @@ void Disturb() {
     }
     case 4: {
         static const unsigned kOffsets[] = {0, 0x8C, 0xC7, 0x10C, 0x110, 0x101, 8, 1};
-        unsigned char* const e = At(at::kEnemies + ((h >> 20) % 8) * at::kEnemyStride);
+        unsigned char* const e = At(Battle_Enemies_addr + ((h >> 20) % 8) * at::kEnemyStride);
         const unsigned o = kOffsets[(h >> 24) % 8];
         e[o] = static_cast<unsigned char>(o == 0x8C ? v % 6 : v);
         break;
@@ -523,7 +523,7 @@ void SeedRound(unsigned regions) {
         if (Half()) p[0x90] &= 0xDF;
     }
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const e = At(at::kEnemies + k * at::kEnemyStride);
+        unsigned char* const e = At(Battle_Enemies_addr + k * at::kEnemyStride);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         SeedSprite(e);
         enemy_rec->enemy_kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
@@ -553,7 +553,7 @@ void SeedRound(unsigned regions) {
 void SeedEightKinds() {
     At(Battle_EnemyCount_addr)[0] = 8;
     for (unsigned k = 0; k < 8; ++k) {
-        auto* const enemy_rec = rv::As<records::BattleEnemy>(At(at::kEnemies + k * at::kEnemyStride));
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(At(Battle_Enemies_addr + k * at::kEnemyStride));
         enemy_rec->flags |= 1;
         enemy_rec->enemy_kind = static_cast<unsigned char>(0x10 + k);
     }
@@ -614,7 +614,7 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
     if (f == fEnemyNames && Rarely()) SeedEightKinds();
     if (f == fAnyF0)
         for (unsigned i = 0; i < 11; ++i) {
-            unsigned char* const r = i < 3 ? At(ObjTrio_addr + i * at::kPartyStride) : At(at::kEnemies + (i - 3) * at::kEnemyStride);
+            unsigned char* const r = i < 3 ? At(ObjTrio_addr + i * at::kPartyStride) : At(Battle_Enemies_addr + (i - 3) * at::kEnemyStride);
             if (Often()) r[i < 3 ? 0x130 : 0x110] &= 0x0F;
         }
     if (f == fAnyF0 && Half()) {   // one present member with bit 7 alone
@@ -647,7 +647,7 @@ Result RunOne(unsigned f, void* theirs, unsigned rounds) {
         // does not; seeded 0 in every record so the comparison sees the rest (CheckRowDoneReset
         // below measures the difference itself).
         if (f == fCopyEnemy)
-            for (unsigned k = 0; k < 8; ++k) At(at::kEnemies + k * at::kEnemyStride)[0xF1] = 0;
+            for (unsigned k = 0; k < 8; ++k) At(Battle_Enemies_addr + k * at::kEnemyStride)[0xF1] = 0;
         g_seed = Next();
         std::uint32_t a[4];
         Arguments(f, a);
@@ -695,17 +695,17 @@ void CheckRowDoneReset(void* theirs) {
     unsigned checked = 0;
     for (unsigned slot = 0; slot < 8; ++slot) {
         SeedRound(kClones[fCopyEnemy].regions);
-        for (unsigned k = 0; k < 8; ++k) At(at::kEnemies + k * at::kEnemyStride)[0xF1] = 0xFF;
+        for (unsigned k = 0; k < 8; ++k) At(Battle_Enemies_addr + k * at::kEnemyStride)[0xF1] = 0xFF;
         std::memset(g_log, 0, sizeof g_log);
         g_log_n = 0;
         Capture(input, kClones[fCopyEnemy].regions);
         const std::uint32_t id = Next() % 0x40;
         Apply(input, kClones[fCopyEnemy].regions);
         reinterpret_cast<FnPtr>(theirs)(slot, id, 0, 0);
-        const unsigned theirs_byte = At(at::kEnemies + slot * at::kEnemyStride)[0xF1];
+        const unsigned theirs_byte = At(Battle_Enemies_addr + slot * at::kEnemyStride)[0xF1];
         Apply(input, kClones[fCopyEnemy].regions);
         reinterpret_cast<FnPtr>(const_cast<void*>(kOurs[fCopyEnemy]))(slot, id, 0, 0);
-        const unsigned ours_byte = At(at::kEnemies + slot * at::kEnemyStride)[0xF1];
+        const unsigned ours_byte = At(Battle_Enemies_addr + slot * at::kEnemyStride)[0xF1];
         if (theirs_byte != 0xFF)
             bof3::Fatal("battle_sprites Battle_CopyEnemyData (DIV-0082): the original cleared +0xF1 of slot %u to 0x%02X - the "
                         "entry's premise is wrong", slot, theirs_byte);

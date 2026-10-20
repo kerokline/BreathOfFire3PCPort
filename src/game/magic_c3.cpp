@@ -375,7 +375,7 @@ C3_EXPORT void __cdecl Magic111_Start(void) {
     unsigned slot = MH_CALL(BattleTask_Create)(1, 0x57) & 0xFFu;
     const unsigned actor = Mem(at::kActor)[0];
     const unsigned char* const record =
-        actor <= 2 ? Mem(ObjTrio_addr + actor * at::kPartyStride) : Mem(at::kEnemies + (actor - 3) * at::kEnemyStride);
+        actor <= 2 ? Mem(ObjTrio_addr + actor * at::kPartyStride) : Mem(Battle_Enemies_addr + (actor - 3) * at::kEnemyStride);
     unsigned char* child = TaskSlot(slot);
     std::memmove(child, record, 0x80);
     unsigned char* self = Sc();

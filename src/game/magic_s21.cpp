@@ -103,7 +103,7 @@ std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpre
 // An actor's record as the originals index them: 0..2 the party (stride
 // 0x14C), else an enemy (index - 3, stride 0x128), none of it checked.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 // The target's record by its byte: the original reads the byte, then the
 // dword at 0x904B44 again and indexes by its low byte.
 unsigned char* TargetRecord() {

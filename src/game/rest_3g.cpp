@@ -346,7 +346,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
         bof3::Fatal("Battle_PlaceBossActor: count %u, past the %u enemy records - the original writes past them "
                     "(docs/rest_3g.md section 7)",
                     n, at::kEnemyCount);
-    unsigned char* const e = At(at::kEnemies + at::kEnemyStride * n);
+    unsigned char* const e = At(Battle_Enemies_addr + at::kEnemyStride * n);
     for (unsigned i = 0; i < 0x80; i += 4) SetUL(e + i, UL(actor + i));
     Sprite_Current = e;
     unsigned char* const s = S();
@@ -372,9 +372,9 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[8] = static_cast<unsigned char>(At(at::kFormation)[0] ^ 2);
     s[0x48] = 0;
     SH_CALL(Battle_CopyEnemyData)(count, kind);
-    psp_code::MyriaItem(At(at::kEnemies + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
+    psp_code::MyriaItem(At(Battle_Enemies_addr + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
-    At(at::kEnemies + at::kEnemyStride * n + 0x8F)[0] = 0;
+    At(Battle_Enemies_addr + at::kEnemyStride * n + 0x8F)[0] = 0;
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);
     Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
@@ -383,7 +383,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
 // Escape_Leave): bytes +0..+4 of the eight enemy records 0.
 extern "C" void __cdecl BattleEnemy_ClearStates(void) {
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
-        unsigned char* const e = At(at::kEnemies + at::kEnemyStride * i);
+        unsigned char* const e = At(Battle_Enemies_addr + at::kEnemyStride * i);
         for (unsigned k = 0; k < 5; ++k) e[k] = 0;
     }
 }

@@ -85,7 +85,7 @@ unsigned char* Pointer(std::uint32_t cell) {
 }
 unsigned char* OwnerFor(unsigned v) { return v & 4 ? g_records[v & 1] : TaskAt(v); }
 unsigned char* TargetEnemy() {
-    return At(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(At(at::kTarget)[0]) - 3) * 0x128));
+    return At(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(At(at::kTarget)[0]) - 3) * 0x128));
 }
 
 // Every cell below is one some function reads again after a call.
@@ -440,7 +440,7 @@ Region g_regions[] = {
     {at::kFlags, 0xA8},                                         // 0x904AA8..0x904B50: flags, actor, target, source
     {BattleE1_MessageUp_addr, 4},
     {ObjTrio_addr, 5 * at::kPartyStride},                       // actors 0..4
-    {at::kEnemies, 8 * at::kEnemyStride},                       // targets 3..10
+    {Battle_Enemies_addr, 8 * at::kEnemyStride},                // targets 3..10
     {Steal_RateTable_addr, 8},
     {Sparkle_CountByKind_addr, 0x10},                           // counts and delays
     {at::kSparklePool, at::kSparkles * at::kSparkleStride + 4}, // the pool and the current pointer

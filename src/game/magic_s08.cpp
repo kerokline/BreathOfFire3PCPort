@@ -115,7 +115,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 // The enemy records by battle index - 3, unchecked, as the originals index them.
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 unsigned char* TintRecord(unsigned index) { return Mem(MoveScript_TintRecords_addr + index * 12u); }
 

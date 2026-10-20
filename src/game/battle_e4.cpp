@@ -66,7 +66,7 @@ unsigned char* Ptr(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 // actor byte (3..10: object actor - 3), as every original indexes them - the
 // byte alone, the product wrapping as 32-bit arithmetic does.
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + (member & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned actor) { return At(at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned actor) { return At(Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 unsigned char* CharRecord(unsigned index) { return At(at::kCharRecords + (index & 0xFF) * at::kCharStride); }
 unsigned char* MenuActor() { return Ptr(at::kMenuActor); }
 // 0x939FA0 points at the menu member's +0x124, its action record
@@ -1324,7 +1324,7 @@ extern "C" void __cdecl Escape_Roll(void) {
     U enemies = 0;
     for (unsigned a = 3; a <= 10; ++a) {
         const bool out = BH_CALL(Battle_ActorIsOut)(a) != 0;
-        if (!out) enemies += Word(At(at::kEnemies + a * at::kEnemyStride + 0xB8));
+        if (!out) enemies += Word(At(Battle_Enemies_addr + a * at::kEnemyStride + 0xB8));
     }
     const unsigned e_div = Battle_EnemiesLeft;
     if (e_div == 0)
@@ -1475,7 +1475,7 @@ extern "C" void __cdecl Escape_Leave(void) {
     if (Field_Kind2Hold != 0) return;
     const long e = BH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     BH_CALL(MapView_SetElevation)(static_cast<int>(e));
-    for (unsigned k = 0; k < 8; ++k) BH_CALL(Sprite_ReleaseTint)(At(at::kEnemies + k * at::kEnemyStride));
+    for (unsigned k = 0; k < 8; ++k) BH_CALL(Sprite_ReleaseTint)(At(Battle_Enemies_addr + k * at::kEnemyStride));
     BH_AT(VoidFn, at::kEnemiesClear)();
     BH_CALL(Battle_OpenMsgWindow)();
     const auto* const line = reinterpret_cast<const char*>(BH_CALL(Msg_SystemPtr)(0x10));
@@ -1536,7 +1536,7 @@ extern "C" void __cdecl Battle_MemberNameToText(unsigned member) {
 // working record's head) into Text_Records[0].
 extern "C" void __cdecl Battle_EnemyNameToText(unsigned actor) {
     BH_CALL(Str_CopyN)(reinterpret_cast<char*>(At(at::kTextRecord0)),
-                       reinterpret_cast<const char*>(At(at::kEnemyWork + ((actor & 0xFF) - 3u) * at::kEnemyStride)), 0xC);
+                       reinterpret_cast<const char*>(At(Battle_Enemies_addr + 0x80 + ((actor & 0xFF) - 3u) * at::kEnemyStride)), 0xC);
 }
 
 // original 0x44AA90 (PSX 0x801DEB80): a banner line - system message

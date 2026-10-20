@@ -86,7 +86,6 @@ site	src/game/area_entry_fuzz.cpp	304	record	SetWord	l + 2	-	stride=0xc	-	-	-	1
 site	src/game/area_harness.cpp	131	global	Mem	at::kMessage	0x7dee48	-	none	-	-	1
 site	src/game/area_harness.cpp	136	raw	Mem	0x903840 + (h >> 20) % 0x40	0x903840	-	exact	Camera_Distance	short	1
 site	src/game/area_harness.cpp	476	global	Mem	at::kMessage	0x7dee48	-	none	-	-	1
-site	src/game/area_harness.cpp	514	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/area_harness.cpp	590	record	Mem	d.at + d.stride * i	-	-	-	-	-	1
 site	src/game/area_harness.cpp	606	global	-	at::kMapBytes	0x905d94	-	exact	AreaMap_Bytes	const unsigned char *	1
 site	src/game/area_harness.cpp	608	global	-	at::kMemberCount	0x929ec0	-	exact	Field_MemberCount	unsigned char	1
@@ -1335,7 +1334,6 @@ site	src/game/area_w4f_fuzz.cpp	440	global	B	at::kCharRecords	0x903a70	-	exact	C
 site	src/game/area_w4f_fuzz.cpp	513	global	B	at::kCounter3	0x90384b	-	none	-	-	1
 site	src/game/area_w4f_fuzz.cpp	551	global	B	at::kCounter1	0x903849	-	none	-	-	1
 site	src/game/area_w4f_fuzz.cpp	565	global	B	at::kCounter0	0x903848	-	none	-	-	1
-site	src/game/battle_actions.cpp	92	global	At	at::kEnemy	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_actions.cpp	99	record	L	table + (index & 0xFF) * 4	-	-	-	-	-	0
 site	src/game/battle_actions.cpp	102	global	PtrAt	at::kEventHook	0x904b6c	-	exact	BattleHook_Event	unsigned long	0
 site	src/game/battle_actions.cpp	117	record	At	block + at::kBX	-	-	-	-	-	0
@@ -1429,7 +1427,6 @@ site	src/game/battle_actions.cpp	548	global	At	at::kRoundFlags	0x904aa8	-	none	-
 site	src/game/battle_actions.cpp	548	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_actions.cpp	562	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_actions.cpp	592	global	B	at::kMsgList	0x939fbc	-	none	-	-	0
-site	src/game/battle_actions.cpp	593	global	At	at::kEnemy	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_actions.cpp	594	global	At	at::kMsgList	0x939fbc	-	none	-	-	0
 site	src/game/battle_actions.cpp	624	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_actions.cpp	627	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
@@ -1446,7 +1443,6 @@ site	src/game/battle_actions.cpp	643	global	At	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/battle_actions.cpp	644	global	SetB	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_actions.cpp	645	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_actions.cpp	650	global	SetB	at::kBannerShown	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
-site	src/game/battle_actions_fuzz.cpp	37	global	At	at::kEnemy	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_actions_fuzz.cpp	111	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_actions_fuzz.cpp	112	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_actions_fuzz.cpp	113	global	SetPtr	at::kActor	0x904b34	-	none	-	-	1
@@ -1612,7 +1608,6 @@ site	src/game/battle_actor_copies_fuzz.cpp	435	global	-	at::kConfirm	0x90358e	-	
 site	src/game/battle_actor_copies_fuzz.cpp	510	record	At	t.at + 4 * i	-	-	-	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	515	record	SetPtr	t.at + 4 * i	-	-	-	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	561	record	At	t.at + 4 * i	-	-	-	-	-	1
-site	src/game/battle_damage.cpp	96	global	At	at::kEnemy	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	0
 site	src/game/battle_damage.cpp	141	global	At	at::kLevelRows	0x64e374	-	none	-	-	0
 site	src/game/battle_damage.cpp	217	record	SetWord	list + 4 * n	-	-	-	-	-	0
 site	src/game/battle_damage.cpp	218	record	SetWord	list + 4 * n + 2	-	-	-	-	-	0
@@ -1668,7 +1663,6 @@ site	src/game/battle_damage.cpp	871	record	Byte	bof3::addr::NameTable_Abilities 
 site	src/game/battle_damage.cpp	874	global	At	at::kHealTable	0x64e99c	-	exact	Skill_HealByHoly	-	0
 site	src/game/battle_damage.cpp	914	global	At	at::kAiScripts	0x8c5600	-	none	-	-	0
 site	src/game/battle_damage.cpp	916	global	At	at::kTurnCounter	0x904b90	-	none	-	-	0
-site	src/game/battle_damage_fuzz.cpp	74	global	At	at::kEnemy	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
 site	src/game/battle_damage_fuzz.cpp	102	global	At	at::kBattleFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_damage_fuzz.cpp	104	global	At	at::kCuredBits	0x904b9a	-	none	-	-	1
 site	src/game/battle_damage_fuzz.cpp	105	global	At	at::kAttackerAtk	0x939fe4	-	none	-	-	1
@@ -1680,7 +1674,6 @@ site	src/game/battle_damage_fuzz.cpp	236	global	At	at::kAttackerAtk	0x939fe4	-	n
 site	src/game/battle_damage_fuzz.cpp	292	record	SetWord	At(static_cast<std::uint32_t>(Long(At(BattleDamage_Result_ad	-	via=At	-	-	-	1
 site	src/game/battle_damage_fuzz.cpp	298	global	At	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/battle_damage_fuzz.cpp	417	global	-	at::kTurnWork	0x939a80	-	none	-	-	1
-site	src/game/battle_damage_fuzz.cpp	418	global	-	at::kEnemy	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
 site	src/game/battle_damage_fuzz.cpp	419	global	-	at::kAiScripts	0x8c5600	-	none	-	-	1
 site	src/game/battle_damage_fuzz.cpp	457	record	SetWord	r + (party ? at::kPHp : at::kEHp)	-	via=PartyAt	-	-	-	1
 site	src/game/battle_damage_fuzz.cpp	458	record	SetWord	r + (party ? at::kPAp : at::kEAp)	-	via=PartyAt	-	-	-	1
@@ -1706,7 +1699,6 @@ site	src/game/battle_damage_fuzz.cpp	576	global	At	at::kBattleFlags	0x904aa8	-	n
 site	src/game/battle_damage_fuzz.cpp	586	global	At	at::kAttackerAtk	0x939fe4	-	none	-	-	1
 site	src/game/battle_damage_fuzz.cpp	608	global	At	at::kAiScripts	0x8c5600	-	none	-	-	1
 site	src/game/battle_damage_fuzz.cpp	609	global	At	at::kTurnCounter	0x904b90	-	none	-	-	1
-site	src/game/battle_damage_fuzz.cpp	615	global	-	at::kEnemy	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
 site	src/game/battle_damage_fuzz.cpp	621	global	At	at::kActing	0x904b34	-	none	-	-	1
 site	src/game/battle_damage_fuzz.cpp	622	global	At	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/battle_damage_fuzz.cpp	623	global	At	at::kActing	0x904b34	-	none	-	-	1
@@ -1959,7 +1951,6 @@ site	src/game/battle_e1_fuzz.cpp	422	global	Mem	at::kActionId	0x904b80	-	none	-	
 site	src/game/battle_e1_fuzz.cpp	423	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_e2.cpp	62	global	PtrAt	at::kOwner	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
 site	src/game/battle_e2.cpp	63	global	PtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
-site	src/game/battle_e2.cpp	68	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_e2.cpp	126	record	At	table + 4 * state	-	-	-	-	-	0
 site	src/game/battle_e2.cpp	133	global	-	at::kAnimSetBattle	0x8c5d80	-	none	-	-	0
 site	src/game/battle_e2.cpp	135	global	-	at::kAnimSetField	0x8b3580	-	none	-	-	0
@@ -2176,7 +2167,6 @@ site	src/game/battle_e3_fuzz.cpp	522	global	B	at::kActKind	0x904b35	-	none	-	-	1
 site	src/game/battle_e3_fuzz.cpp	523	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_e3_fuzz.cpp	526	global	Mem	at::kAbility	0x904b80	-	none	-	-	1
 site	src/game/battle_e3_fuzz.cpp	527	global	B	at::kPartyCount	0x904ab0	-	none	-	-	1
-site	src/game/battle_e4.cpp	69	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_e4.cpp	70	global	At	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/battle_e4.cpp	71	global	Ptr	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
 site	src/game/battle_e4.cpp	74	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
@@ -2351,7 +2341,6 @@ site	src/game/battle_e4.cpp	1288	global	B	at::kSlots	0x8033e8	-	exact	Window18	u
 site	src/game/battle_e4.cpp	1289	global	-	at::kPreview	0x675f18	-	none	-	-	0
 site	src/game/battle_e4.cpp	1292	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
 site	src/game/battle_e4.cpp	1294	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
-site	src/game/battle_e4.cpp	1327	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_e4.cpp	1334	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1338	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1371	global	B	at::kFlee	0x93b8e0	-	none	-	-	0
@@ -2362,19 +2351,16 @@ site	src/game/battle_e4.cpp	1440	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1450	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1456	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e4.cpp	1457	global	B	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_e4.cpp	1478	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_e4.cpp	1492	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1509	global	B	at::kChanceRow	0x64e524	-	none	-	-	0
 site	src/game/battle_e4.cpp	1511	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1518	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1532	global	At	at::kTextRecord0	0x904ce0	-	exact	Text_Records	-	0
 site	src/game/battle_e4.cpp	1538	global	At	at::kTextRecord0	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/battle_e4.cpp	1539	global	At	at::kEnemyWork	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	0
 site	src/game/battle_e4.cpp	1546	global	At	at::kBannerLines	0x64e52c	-	none	-	-	0
 site	src/game/battle_e4_fuzz.cpp	222	global	-	at::kPreview	0x675f18	-	none	-	-	1
 site	src/game/battle_e4_fuzz.cpp	223	global	-	at::kTint	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/battle_e4_fuzz.cpp	226	global	-	at::kRepeatLatch	0x7e01b8	-	none	-	-	1
-site	src/game/battle_e4_fuzz.cpp	240	global	M	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_e4_fuzz.cpp	314	global	M	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_e4_fuzz.cpp	317	global	M	at::kFaceStep	0x904aac	-	none	-	-	1
 site	src/game/battle_e4_fuzz.cpp	320	global	M	at::kPartyCount	0x904ab0	-	none	-	-	1
@@ -2393,7 +2379,6 @@ site	src/game/battle_e4_fuzz.cpp	378	global	M	at::kCharRecords	0x903a70	-	exact	
 site	src/game/battle_e4_fuzz.cpp	379	global	M	at::kPreview	0x675f18	-	none	-	-	1
 site	src/game/battle_e4_fuzz.cpp	385	global	M	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/battle_e4_fuzz.cpp	469	global	M	at::kPartyCount	0x904ab0	-	none	-	-	1
-site	src/game/battle_e5.cpp	65	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_e5.cpp	102	global	B	at::kAiScripts	0x8c5600	-	none	-	-	0
 site	src/game/battle_e5.cpp	127	global	Ptr	at::kCurrentEnemy	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
 site	src/game/battle_e5.cpp	128	global	B	at::kActor	0x904b34	-	none	-	-	0
@@ -2534,7 +2519,6 @@ site	src/game/battle_e5.cpp	1193	global	SlotOf	at::kSlots	0x904608	-	none	-	-	0
 site	src/game/battle_e5.cpp	1202	global	SlotOf	at::kSlots	0x904608	-	none	-	-	0
 site	src/game/battle_e5_fuzz.cpp	241	global	-	at::kGeneFlags	0x939a60	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	242	global	-	at::kRepeatLatch	0x7e01b8	-	none	-	-	1
-site	src/game/battle_e5_fuzz.cpp	265	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_e5_fuzz.cpp	285	record	SetWord	Win(window) + 0x12	-	via=Win	-	-	-	1
 site	src/game/battle_e5_fuzz.cpp	286	record	SetWord	Win(window) + 0x10	-	via=Win	-	-	-	1
 site	src/game/battle_e5_fuzz.cpp	292	global	Mem	at::kSlots	0x904608	-	none	-	-	1
@@ -2555,7 +2539,6 @@ site	src/game/battle_e5_fuzz.cpp	353	record	SetWord	g_obj + 0x96	-	via=Enemy	-	-
 site	src/game/battle_e5_fuzz.cpp	362	record	SetWord	e + at_	-	via=Enemy	-	-	-	1
 site	src/game/battle_e5_fuzz.cpp	371	global	Mem	at::kEnemyMessages	0x939fc0	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	373	record	SetWord	q + 2	-	table=0x939fc0	-	-	-	1
-site	src/game/battle_e5_fuzz.cpp	375	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_e5_fuzz.cpp	381	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	382	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	408	raw	Mem	0x939EE0	0x939ee0	-	none	-	-	1
@@ -2564,7 +2547,6 @@ site	src/game/battle_e5_fuzz.cpp	464	global	Mem	at::kAsk	0x904b74	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	466	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	467	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	472	record	SetWord	g_obj + 0xA4	-	-	-	-	-	1
-site	src/game/battle_e6.cpp	68	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_e6.cpp	69	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_e6.cpp	84	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e6.cpp	86	global	At	at::kPartyBackup	0x939ae0	-	none	-	-	0
@@ -2803,7 +2785,6 @@ site	src/game/battle_e7_fuzz.cpp	305	global	Rows	at::kGeneList2	0x904620	-	none	
 site	src/game/battle_e7_fuzz.cpp	308	global	Rows	at::kGeneList2	0x904620	-	none	-	-	1
 site	src/game/battle_e7_fuzz.cpp	367	global	Mem	at::kGeneList	0x904608	-	none	-	-	1
 site	src/game/battle_flow.cpp	81	global	PtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
-site	src/game/battle_flow.cpp	84	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_flow.cpp	95	global	-	at::kItemRows	0x64b274	-	exact	ItemMagic_RowTables	-	0
 site	src/game/battle_flow.cpp	105	global	At	at::kLoadFlags	0x904aa9	-	none	-	-	0
 site	src/game/battle_flow.cpp	105	global	At	at::kLoadFlags	0x904aa9	-	none	-	-	0
@@ -2839,7 +2820,6 @@ site	src/game/battle_flow.cpp	508	global	At	at::kNumberFormat	0x64e324	-	none	-	
 site	src/game/battle_flow.cpp	508	global	At	at::kNumberText	0x904ba0	-	none	-	-	0
 site	src/game/battle_flow.cpp	515	global	At	at::kNumberText	0x904ba0	-	none	-	-	0
 site	src/game/battle_flow.cpp	537	global	At	at::kNumberText	0x904ba0	-	none	-	-	0
-site	src/game/battle_flow_fuzz.cpp	38	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_flow_fuzz.cpp	87	global	At	at::kPhase	0x904aa0	-	none	-	-	1
 site	src/game/battle_flow_fuzz.cpp	110	record	SetWord	e + slot	-	-	-	-	-	1
 site	src/game/battle_flow_fuzz.cpp	115	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	1
@@ -2888,7 +2868,6 @@ site	src/game/battle_flow_fuzz.cpp	652	global	-	at::kRoundFlags	0x904aa8	-	none	
 site	src/game/battle_flow_fuzz.cpp	661	global	-	at::kNumberText	0x904ba0	-	none	-	-	1
 site	src/game/battle_flow_fuzz.cpp	663	global	-	at::kNumberText	0x904ba0	-	none	-	-	1
 site	src/game/battle_fx_tasks.cpp	89	record	Long	slot + 0x80	-	-	-	-	-	0
-site	src/game/battle_fx_tasks.cpp	101	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_fx_tasks.cpp	147	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_fx_tasks.cpp	150	global	PtrAt	at::kMagicRows	0x64c2b8	-	exact	Magic_Rows	unsigned long	0
 site	src/game/battle_fx_tasks.cpp	189	record	Word	t + 0x60	-	via=Cur	-	-	-	0
@@ -2896,9 +2875,7 @@ site	src/game/battle_fx_tasks.cpp	222	record	Word	o + 0x2C	-	via=OwnerOf	-	-	-	0
 site	src/game/battle_fx_tasks.cpp	223	record	Word	o + 0x2E	-	via=OwnerOf	-	-	-	0
 site	src/game/battle_fx_tasks.cpp	226	record	Word	o + 0x2C	-	via=OwnerOf	-	-	-	0
 site	src/game/battle_fx_tasks.cpp	227	record	Word	o + 0x30	-	via=OwnerOf	-	-	-	0
-site	src/game/battle_fx_tasks.cpp	229	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_fx_tasks.cpp	230	record	Word	o + 0x2E	-	via=OwnerOf	-	-	-	0
-site	src/game/battle_fx_tasks.cpp	234	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_fx_tasks.cpp	235	record	Word	o + 0x30	-	via=OwnerOf	-	-	-	0
 site	src/game/battle_fx_tasks.cpp	338	global	-	at::kAnimSetBattle	0x8c5d80	-	none	-	-	0
 site	src/game/battle_fx_tasks.cpp	340	global	-	at::kAnimSetField	0x8b3580	-	none	-	-	0
@@ -2912,7 +2889,6 @@ site	src/game/battle_fx_tasks.cpp	427	global	PtrAt	at::kTaskOwner	0x93b940	-	exa
 site	src/game/battle_fx_tasks.cpp	428	global	At	at::kTurnGate	0x904b34	-	none	-	-	0
 site	src/game/battle_fx_tasks.cpp	433	global	PtrAt	at::kTaskOwner	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
 site	src/game/battle_fx_tasks.cpp	437	global	PtrAt	at::kTaskOwner	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
-site	src/game/battle_fx_tasks.cpp	438	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_fx_tasks.cpp	471	global	PtrAt	at::kTaskOwner	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
 site	src/game/battle_fx_tasks.cpp	475	global	PtrAt	at::kTaskOwner	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
 site	src/game/battle_fx_tasks.cpp	478	record	Word	o + c.offset	-	table=0x93b940	-	-	-	0
@@ -2921,7 +2897,6 @@ site	src/game/battle_fx_tasks.cpp	479	record	Long	o + c.offset	-	table=0x93b940	
 site	src/game/battle_fx_tasks.cpp	479	record	SetLong	sc + c.offset	-	via=Sc	-	-	-	0
 site	src/game/battle_fx_tasks.cpp	482	global	PtrAt	at::kTaskOwner	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
 site	src/game/battle_fx_tasks.cpp	483	global	At	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_fx_tasks_fuzz.cpp	38	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_fx_tasks_fuzz.cpp	43	record	Long	slot + 0x80	-	-	-	-	-	1
 site	src/game/battle_fx_tasks_fuzz.cpp	83	global	At	at::kPhase	0x904aa0	-	none	-	-	1
 site	src/game/battle_fx_tasks_fuzz.cpp	84	global	At	at::kRoundCount	0x904aa2	-	exact	BattleE4_Step2	unsigned char	1
@@ -2938,8 +2913,6 @@ site	src/game/battle_fx_tasks_fuzz.cpp	418	global	At	at::kPhase	0x904aa0	-	none	
 site	src/game/battle_fx_tasks_fuzz.cpp	421	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_fx_tasks_fuzz.cpp	421	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_fx_tasks_fuzz.cpp	423	global	At	at::kTurnGate	0x904b34	-	none	-	-	1
-site	src/game/battle_fx_tasks_fuzz.cpp	432	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/battle_fx_tasks_fuzz.cpp	433	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_fx_tasks_fuzz.cpp	440	global	At	at::kPhase	0x904aa0	-	none	-	-	1
 site	src/game/battle_items.cpp	109	global	At	at::kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/battle_items.cpp	193	global	At	at::kSparkleTypes	0x65ae28	-	none	-	-	0
@@ -2996,13 +2969,10 @@ site	src/game/battle_items.cpp	691	record	SetWord	Sprite_Current + 0x2E	-	base=S
 site	src/game/battle_items.cpp	691	record	Long	p + 8	-	base=Gfx_PacketNext	-	-	-	0
 site	src/game/battle_items.cpp	692	record	SetWord	Sprite_Current + 0x30	-	base=Sprite_Current	-	-	-	0
 site	src/game/battle_items.cpp	692	record	Long	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/battle_items.cpp	706	global	At	at::kEnemyRecords	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_items.cpp	716	global	At	at::kActorIndex	0x904b34	-	none	-	-	0
-site	src/game/battle_items.cpp	724	global	At	at::kEnemyRecords	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_items.cpp	739	global	At	at::kActorIndex	0x904b34	-	none	-	-	0
 site	src/game/battle_items.cpp	742	global	At	at::kFxSizeAltTable	0x65c3f8	-	none	-	-	0
 site	src/game/battle_items.cpp	743	global	At	at::kFxSizeTable	0x65c3ec	-	none	-	-	0
-site	src/game/battle_items.cpp	745	global	At	at::kEnemyRecords	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_items.cpp	746	global	At	at::kEnemyFxSize	0x8c5652	-	none	-	-	0
 site	src/game/battle_items_fuzz.cpp	93	global	At	at::kSparklePool	0x684790	-	none	-	-	1
 site	src/game/battle_items_fuzz.cpp	106	global	At	at::kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	1
@@ -3011,10 +2981,8 @@ site	src/game/battle_items_fuzz.cpp	532	global	-	at::kSparklePool	0x684790	-	non
 site	src/game/battle_items_fuzz.cpp	535	global	-	at::kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/battle_items_fuzz.cpp	537	global	-	at::kSparkleOffsets	0x65ad34	-	none	-	-	1
 site	src/game/battle_items_fuzz.cpp	540	global	-	at::kActorIndex	0x904b34	-	none	-	-	1
-site	src/game/battle_items_fuzz.cpp	544	global	-	at::kEnemyRecords	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_items_fuzz.cpp	552	global	-	at::kEnemyFxSize	0x8c5652	-	none	-	-	1
 site	src/game/battle_items_fuzz.cpp	588	global	At	at::kActorIndex	0x904b34	-	none	-	-	1
-site	src/game/battle_items_fuzz.cpp	590	global	SetPointer	at::kEnemyRecords	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_items_fuzz.cpp	591	global	SetPointer	at::kSparkleTypes	0x65ae28	-	none	-	-	1
 site	src/game/battle_items_fuzz.cpp	617	global	At	at::kSparkleOffsets	0x65ad34	-	none	-	-	1
 site	src/game/battle_items_fuzz.cpp	618	global	At	at::kSparkleOffsets	0x65ad34	-	none	-	-	1
@@ -3025,8 +2993,6 @@ site	src/game/battle_items_fuzz.cpp	650	record	SetWord	sc + 0x3E	-	base=Sprite_C
 site	src/game/battle_items_fuzz.cpp	651	record	SetLong	sc + 0x34	-	base=Sprite_Current	-	-	-	1
 site	src/game/battle_items_fuzz.cpp	659	global	At	at::kActorIndex	0x904b34	-	none	-	-	1
 site	src/game/battle_items_fuzz.cpp	660	global	At	at::kActorIndex	0x904b34	-	none	-	-	1
-site	src/game/battle_items_fuzz.cpp	666	global	At	at::kEnemyRecords	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/battle_items_fuzz.cpp	676	global	At	at::kEnemyRecords	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_menu_states.cpp	78	global	PtrAt	at::kCommandRecord	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/battle_menu_states.cpp	79	global	PtrAt	at::kActing	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
 site	src/game/battle_menu_states.cpp	84	record	At	table + 4 * i	-	-	-	-	-	0
@@ -3119,7 +3085,6 @@ site	src/game/battle_misc.cpp	603	record	At	actor + 0xA4	-	via=CurrentEnemy	-	-	
 site	src/game/battle_misc.cpp	604	record	At	actor + 0x108	-	via=CurrentEnemy	-	-	-	0
 site	src/game/battle_misc.cpp	643	record	At	object + 6	-	via=Sprite_ObjectsAt;stride=0xa4	-	-	-	0
 site	src/game/battle_misc_fuzz.cpp	221	record	At	object + (k < 3 ? 0x134 : 0x114)	-	stride=0x14c	-	-	-	1
-site	src/game/battle_misc_fuzz.cpp	231	global	At	kEnemyObjects	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_misc_fuzz.cpp	253	global	At	kItemWindowCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	1
 site	src/game/battle_misc_fuzz.cpp	278	record	At	g_script + ((h >> 8) % 4) * 16	-	-	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	279	global	At	kActingKind	0x904b35	-	none	-	-	1
@@ -3138,7 +3103,6 @@ site	src/game/battle_misc_fuzz.cpp	397	global	At	kScratch	0x903850	-	exact	Damag
 site	src/game/battle_misc_fuzz.cpp	593	global	At	kPulse	0x904ac8	-	none	-	-	1
 site	src/game/battle_misc_fuzz.cpp	606	record	At	record + 0x2C	-	via=Next	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	666	record	At	kParty + i * kPartyStride	-	param	-	-	-	1
-site	src/game/battle_misc_fuzz.cpp	671	global	At	kEnemyObjects	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_misc_fuzz.cpp	700	record	PutLong	g_lists + at	-	-	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	703	record	PutLong	g_lists + at	-	-	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	708	global	At	kSoundLists	0x6565bc	-	none	-	-	1
@@ -3151,7 +3115,6 @@ site	src/game/battle_misc_fuzz.cpp	884	global	At	kBanners	0x93b8e0	-	none	-	-	1
 site	src/game/battle_misc_fuzz.cpp	921	global	At	kMessages	0x669de0	-	none	-	-	1
 site	src/game/battle_misc_fuzz.cpp	954	record	At	suffix + k	-	via=Addr	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	955	record	At	suffix + slen	-	via=Addr	-	-	-	1
-site	src/game/battle_misc_fuzz.cpp	977	global	At	kEnemyObjects	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_misc_fuzz.cpp	986	record	PutWord	e + 0x108	-	-	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	987	record	PutWord	e + 0xA4	-	-	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	991	global	At	kActingKind	0x904b35	-	none	-	-	1
@@ -3237,7 +3200,6 @@ site	src/game/battle_odds_fuzz.cpp	442	record	At	GetLong(At(kSprite)) + 0xB	-	vi
 site	src/game/battle_odds_fuzz.cpp	452	record	At	s + 0xB	-	via=SomeObject	-	-	-	1
 site	src/game/battle_odds_fuzz.cpp	454	global	At	kFlagTarget	0x904b44	-	none	-	-	1
 site	src/game/battle_odds_fuzz.cpp	455	global	At	kRoundFlags	0x904aa8	-	none	-	-	1
-site	src/game/battle_phases.cpp	76	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_phases.cpp	77	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_phases.cpp	80	global	PtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
 site	src/game/battle_phases.cpp	81	global	PtrAt	at::kMenuRecord	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
@@ -3300,7 +3262,6 @@ site	src/game/battle_phases.cpp	641	record	SetLong	text + 8	-	table=0x904ce0	-	-
 site	src/game/battle_phases.cpp	652	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_phases.cpp	657	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_phases.cpp	659	global	B	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_phases_fuzz.cpp	39	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_phases_fuzz.cpp	40	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_phases_fuzz.cpp	79	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	79	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
@@ -3410,7 +3371,6 @@ site	src/game/battle_result_fuzz.cpp	579	global	-	at::kDropItems	0x904af4	-	none
 site	src/game/battle_result_fuzz.cpp	581	global	-	at::kDropCount	0x904ae7	-	exact	Battle_DropCount	unsigned char	1
 site	src/game/battle_result_fuzz.cpp	621	record	SetPtr	table + 4 * i	-	param	-	-	-	1
 site	src/game/battle_setup.cpp	120	global	At	at::kMsgWindow	0x803162	-	inside	WindowRecords+0x2	records::WindowRecord	0
-site	src/game/battle_setup.cpp	142	global	At	at::kEnemy	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_setup.cpp	170	global	At	at::kActing	0x904b34	-	none	-	-	0
 site	src/game/battle_setup.cpp	172	global	At	at::kAbility	0x904b80	-	none	-	-	0
 site	src/game/battle_setup.cpp	306	global	At	at::kItemQueue	0x904acc	-	none	-	-	0
@@ -3437,7 +3397,6 @@ site	src/game/battle_setup_fuzz.cpp	503	global	At	at::kItemQueue	0x904acc	-	none
 site	src/game/battle_setup_fuzz.cpp	505	global	At	at::kItemQueue	0x904acc	-	none	-	-	1
 site	src/game/battle_setup_fuzz.cpp	506	global	At	at::kItemQueue	0x904acc	-	none	-	-	1
 site	src/game/battle_setup_fuzz.cpp	518	global	At	at::kOpening	0x904b90	-	none	-	-	1
-site	src/game/battle_sprites.cpp	101	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_sprites.cpp	104	global	At	at::kActions	0x65c4d8	-	exact	NameTable_Abilities	-	0
 site	src/game/battle_sprites.cpp	108	global	At	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/battle_sprites.cpp	109	global	At	at::kTarget	0x904b44	-	none	-	-	0
@@ -3509,11 +3468,9 @@ site	src/game/battle_sprites.cpp	946	global	At	at::kLayout	0x904aac	-	none	-	-	0
 site	src/game/battle_sprites.cpp	947	global	At	at::kNamePlaces	0x656a34	-	none	-	-	0
 site	src/game/battle_sprites.cpp	948	global	At	at::kNamePlaces	0x656a34	-	none	-	-	0
 site	src/game/battle_sprites.cpp	970	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/battle_sprites_fuzz.cpp	91	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_sprites_fuzz.cpp	106	global	At	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	107	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	108	record	SetWord	g_mine.action + 2	-	-	-	-	-	1
-site	src/game/battle_sprites_fuzz.cpp	116	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_sprites_fuzz.cpp	123	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	134	raw	At	0x802E08 + ((h >> 20) % 3) * at::kPartyStride	0x802e08	-	inside	ObjTrio+0xc8	records::PartyMember	1
 site	src/game/battle_sprites_fuzz.cpp	135	global	At	at::kCells	0x903850	-	exact	DamageScratch	records::DamageScratch	1
@@ -3531,22 +3488,14 @@ site	src/game/battle_sprites_fuzz.cpp	501	global	At	at::kActor	0x904b34	-	none	-
 site	src/game/battle_sprites_fuzz.cpp	502	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	506	global	At	at::kBoss	0x904aaa	-	exact	EventBattle_Id	unsigned char	1
 site	src/game/battle_sprites_fuzz.cpp	507	global	At	at::kLayout	0x904aac	-	none	-	-	1
-site	src/game/battle_sprites_fuzz.cpp	526	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_sprites_fuzz.cpp	537	record	SetLong	rec + 8	-	stride=0xc	-	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	544	global	At	at::kCells	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/battle_sprites_fuzz.cpp	545	global	At	at::kCells	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/battle_sprites_fuzz.cpp	556	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_sprites_fuzz.cpp	580	global	At	at::kClutMap	0x7e06a0	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	596	global	At	at::kEnemyData	0x8c55c8	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	600	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	608	global	At	at::kBattleFlags	0x904aa8	-	none	-	-	1
-site	src/game/battle_sprites_fuzz.cpp	617	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/battle_sprites_fuzz.cpp	650	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/battle_sprites_fuzz.cpp	698	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/battle_sprites_fuzz.cpp	705	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/battle_sprites_fuzz.cpp	708	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_turn_steps.cpp	96	record	At	table + index * 4	-	-	-	-	-	0
-site	src/game/battle_turn_steps.cpp	153	global	At	at::kEnemy	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/battle_turn_steps.cpp	154	global	At	at::kRounds	0x904b90	-	none	-	-	0
 site	src/game/battle_turn_steps.cpp	154	global	At	at::kRounds	0x904b90	-	none	-	-	0
 site	src/game/battle_turn_steps.cpp	224	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
@@ -3572,7 +3521,6 @@ site	src/game/battle_turn_steps.cpp	484	global	At	at::kRecords	0x903a70	-	exact	
 site	src/game/battle_turn_steps.cpp	495	global	B	at::kMembers	0x904ab0	-	none	-	-	0
 site	src/game/battle_turn_steps.cpp	501	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_turn_steps_fuzz.cpp	89	global	B	at::kCopies	0x939ae0	-	none	-	-	1
-site	src/game/battle_turn_steps_fuzz.cpp	90	global	B	at::kEnemy	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_turn_steps_fuzz.cpp	124	global	B	at::kMembers	0x904ab0	-	none	-	-	1
 site	src/game/battle_turn_steps_fuzz.cpp	126	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_turn_steps_fuzz.cpp	170	global	B	at::kMembers	0x904ab0	-	none	-	-	1
@@ -3603,7 +3551,6 @@ site	src/game/battle_win_states.cpp	70	global	-	at::kKinds	0x8c55c8	-	none	-	-	0
 site	src/game/battle_win_states.cpp	70	global	-	at::kKinds	0x8c55c8	-	none	-	-	0
 site	src/game/battle_win_states.cpp	70	global	-	at::kKinds	0x8c55c8	-	none	-	-	0
 site	src/game/battle_win_states.cpp	71	global	-	at::kKinds	0x8c55c8	-	none	-	-	0
-site	src/game/battle_win_states.cpp	95	global	At	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	0
 site	src/game/battle_win_states.cpp	133	global	S8	at::kSideDx	0x64e2bc	-	none	-	-	0
 site	src/game/battle_win_states.cpp	266	global	At	at::kCrossGrow	0x904abc	-	none	-	-	0
 site	src/game/battle_win_states.cpp	269	global	At	at::kCrossArms	0x64e2ac	-	none	-	-	0
@@ -3615,17 +3562,14 @@ site	src/game/battle_win_states.cpp	307	global	At	at::kCrossSel	0x904ab4	-	none	
 site	src/game/battle_win_states.cpp	342	global	At	at::kBanners	0x93b8e0	-	none	-	-	0
 site	src/game/battle_win_states.cpp	348	global	At	at::kBanners	0x93b8e0	-	none	-	-	0
 site	src/game/battle_win_states.cpp	359	global	At	at::kBanners	0x93b8e0	-	none	-	-	0
-site	src/game/battle_win_states.cpp	411	global	-	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	0
-site	src/game/battle_win_states.cpp	412	record	At	e - 0x78	-	table=0x93b9e0	-	-	-	0
-site	src/game/battle_win_states.cpp	413	record	At	e - 0x52	-	table=0x93b9e0	-	-	-	0
-site	src/game/battle_win_states.cpp	414	record	At	e - 0x50	-	table=0x93b9e0	-	-	-	0
-site	src/game/battle_win_states_fuzz.cpp	93	global	At	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
+site	src/game/battle_win_states.cpp	412	record	At	e - 0x78	-	-	-	-	-	0
+site	src/game/battle_win_states.cpp	413	record	At	e - 0x52	-	-	-	-	-	0
+site	src/game/battle_win_states.cpp	414	record	At	e - 0x50	-	-	-	-	-	0
 site	src/game/battle_win_states_fuzz.cpp	134	global	At	at::kCrossSel	0x904ab4	-	none	-	-	1
 site	src/game/battle_win_states_fuzz.cpp	135	global	At	at::kCrossGrow	0x904abc	-	none	-	-	1
 site	src/game/battle_win_states_fuzz.cpp	146	global	At	at::kBanners	0x93b8e0	-	none	-	-	1
 site	src/game/battle_win_states_fuzz.cpp	413	record	Word	Member(m) + 0xA0	-	via=Member	-	-	-	1
 site	src/game/battle_win_states_fuzz.cpp	413	record	SetWord	Member(m) + 0xA0	-	via=Member	-	-	-	1
-site	src/game/battle_win_states_fuzz.cpp	437	global	At	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
 site	src/game/battle_win_states_fuzz.cpp	442	record	SetWord	r + 0xA0	-	via=Member	-	-	-	1
 site	src/game/battle_win_states_fuzz.cpp	443	record	SetWord	r + 0x98	-	via=Member	-	-	-	1
 site	src/game/battle_win_states_fuzz.cpp	445	record	SetWord	r + 0xA2	-	via=Member	-	-	-	1
@@ -3654,8 +3598,6 @@ site	src/game/battle_window_draw.cpp	229	global	At	at::kTileSizes	0x64e268	-	non
 site	src/game/battle_window_draw.cpp	235	record	Word	t + 2	-	table=0x64e268	-	-	-	0
 site	src/game/battle_window_draw.cpp	248	global	At	at::kTileSizes	0x64e268	-	none	-	-	0
 site	src/game/battle_window_draw.cpp	254	record	Word	t + 2	-	table=0x64e268	-	-	-	0
-site	src/game/battle_window_draw.cpp	409	global	At	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	0
-site	src/game/battle_window_draw.cpp	423	global	-	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	0
 site	src/game/battle_window_draw.cpp	454	global	At	at::kAbilities	0x65c4c8	-	exact	Ability_Records	-	0
 site	src/game/battle_window_draw.cpp	460	global	At	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/battle_window_draw.cpp	464	global	At	at::kWorking	0x802dc0	-	exact	Text_CurrentName	-	0
@@ -3681,13 +3623,11 @@ site	src/game/battle_window_draw_fuzz.cpp	384	global	-	at::kWorking	0x802dc0	-	e
 site	src/game/battle_window_draw_fuzz.cpp	385	global	-	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/battle_window_draw_fuzz.cpp	390	global	-	at::kPrintBuf	0x904ba0	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	392	global	-	at::kAbilities	0x65c4c8	-	exact	Ability_Records	-	1
-site	src/game/battle_window_draw_fuzz.cpp	394	global	-	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
 site	src/game/battle_window_draw_fuzz.cpp	398	global	-	at::kQuadShapes	0x64e148	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	399	global	-	at::kFmtNone	0x64e320	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	400	global	-	at::kSkillIcons	0x663d70	-	exact	Skill_KindIcons	-	1
 site	src/game/battle_window_draw_fuzz.cpp	434	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_window_draw_fuzz.cpp	435	global	At	at::kAbilities	0x65c4c8	-	exact	Ability_Records	-	1
-site	src/game/battle_window_draw_fuzz.cpp	437	global	At	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
 site	src/game/battle_window_draw_fuzz.cpp	445	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	459	global	At	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/battle_window_draw_fuzz.cpp	460	record	SetWord	r + 0x1A	-	table=0x903a70;stride=0xa4	-	-	-	1
@@ -3725,8 +3665,6 @@ site	src/game/battle_windows.cpp	347	global	-	at::kCrossExtra5	0x904ac1	-	none	-
 site	src/game/battle_windows.cpp	347	global	-	at::kCrossExtra6	0x904ac2	-	none	-	-	0
 site	src/game/battle_windows.cpp	350	global	At	at::kCrossArms	0x64e2ac	-	none	-	-	0
 site	src/game/battle_windows.cpp	495	record	At	enemy + 0xF	-	param	-	-	-	0
-site	src/game/battle_windows.cpp	516	global	-	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	0
-site	src/game/battle_windows.cpp	540	global	-	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	0
 site	src/game/battle_windows.cpp	575	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	0
 site	src/game/battle_windows.cpp	576	global	At	at::kSlash	0x64e31c	-	none	-	-	0
 site	src/game/battle_windows.cpp	642	global	At	at::kMsgRing	0x93c2c4	-	none	-	-	0
@@ -3734,7 +3672,6 @@ site	src/game/battle_windows_fuzz.cpp	125	global	At	at::kPartyCount	0x904ab0	-	n
 site	src/game/battle_windows_fuzz.cpp	126	global	At	at::kCrossSel	0x904ab4	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	127	global	At	at::kCrossGrow	0x904abc	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	134	global	At	at::kPartyBars	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	1
-site	src/game/battle_windows_fuzz.cpp	135	global	At	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
 site	src/game/battle_windows_fuzz.cpp	145	global	At	at::kMsgRing	0x93c2c4	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	147	global	At	at::kPartyBars	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	1
 site	src/game/battle_windows_fuzz.cpp	516	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
@@ -3746,7 +3683,6 @@ site	src/game/battle_windows_fuzz.cpp	579	global	At	at::kPoseMode	0x904aa8	-	non
 site	src/game/battle_windows_fuzz.cpp	596	global	At	at::kPartyBars	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	1
 site	src/game/battle_windows_fuzz.cpp	603	global	At	at::kCrossSel	0x904ab4	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	604	global	At	at::kCrossGrow	0x904abc	-	none	-	-	1
-site	src/game/battle_windows_fuzz.cpp	630	global	At	at::kEnemies	0x93b9e0	-	inside	Battle_Enemies+0x80	records::BattleEnemy	1
 site	src/game/battle_windows_fuzz.cpp	704	global	At	at::kSkillFlags	0x65c4dd	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	734	global	-	at::kKindHandlers	0x655350	-	exact	Effect_KindHandlers	unsigned long	1
 site	src/game/boss_h.cpp	75	record	At	table + 4 * state	-	param	-	-	-	0
@@ -3759,10 +3695,6 @@ site	src/game/boss_h.cpp	249	record	SetLong	s + off	-	base=Sprite_Current	-	-	-	
 site	src/game/boss_h.cpp	313	record	At	AddressOf(BossMap_CornerValues) + 4 * value	-	via=AddressOf	-	-	-	0
 site	src/game/boss_h.cpp	314	record	At	AddressOf(BossMap_CornerCells) + 2 * cell	-	via=AddressOf	-	-	-	0
 site	src/game/boss_h.cpp	315	record	At	AddressOf(BossMap_CornerCells) + 2 * cell + 1	-	via=AddressOf	-	-	-	0
-site	src/game/boss_h.cpp	347	global	-	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
-site	src/game/boss_h.cpp	348	global	-	at::kEnemy2	0x93bbb0	-	inside	Battle_Enemies+0x250	records::BattleEnemy	0
-site	src/game/boss_h.cpp	361	global	At	at::kEnemy0X	0x93b994	-	inside	Battle_Enemies+0x34	records::BattleEnemy	0
-site	src/game/boss_h.cpp	361	global	At	at::kEnemy0Z	0x93b998	-	inside	Battle_Enemies+0x38	records::BattleEnemy	0
 site	src/game/boss_h_fuzz.cpp	156	record	SetLong	s + 0x40	-	base=Sprite_Current	-	-	-	1
 site	src/game/boss_h_fuzz.cpp	157	record	SetLong	s + 0x44	-	base=Sprite_Current	-	-	-	1
 site	src/game/boss_harness.cpp	190	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
@@ -3780,12 +3712,9 @@ site	src/game/boss_harness.cpp	591	record	SetLong	s + 0x10	-	-	-	-	-	1
 site	src/game/boss_harness.cpp	591	record	SetLong	s + 0xC	-	-	-	-	-	1
 site	src/game/boss_harness.cpp	1040	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/boss_harness.cpp	1041	global	Mem	at::kActor	0x904b34	-	none	-	-	1
-site	src/game/boss_harness.cpp	1118	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/boss_harness.cpp	1120	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/boss_harness.cpp	1132	global	Mem	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/boss_harness.cpp	1137	global	-	at::kHookEnd	0x904b64	-	exact	BattleHook_End	unsigned long	1
 site	src/game/boss_harness.cpp	1235	record	Mem	d.at + d.stride * i	-	-	-	-	-	1
-site	src/game/boss_harness.cpp	1243	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/boss_harness.cpp	1246	global	-	at::kBattle	0x904aa0	-	none	-	-	1
 site	src/game/boss_harness.cpp	1262	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/boss_harness.cpp	1269	global	-	at::kModeBytes	0x929f00	-	exact	BattleE1_Mode	unsigned char	1
@@ -3802,22 +3731,16 @@ site	src/game/boss_sa.cpp	284	global	B	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/boss_sa.cpp	287	global	B	at::kActionKind	0x904b35	-	none	-	-	0
 site	src/game/boss_sa.cpp	287	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/boss_sa.cpp	287	record	Word	At(BattleSprites_Action) + 2	-	via=At	-	-	-	0
-site	src/game/boss_sa.cpp	288	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sa.cpp	288	global	-	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sa.cpp	289	record	At	enemy + 0xA4	-	-	-	-	-	0
 site	src/game/boss_sa.cpp	290	record	At	enemy + 0xB0	-	-	-	-	-	0
 site	src/game/boss_sa.cpp	299	global	B	at::kActionKind	0x904b35	-	none	-	-	0
 site	src/game/boss_sa.cpp	301	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/boss_sa.cpp	333	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sa.cpp	333	global	-	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sa.cpp	342	record	SetWord	Sprite_Current + 0x58	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sa.cpp	342	record	At	a.enemy + 0x58	-	-	-	-	-	0
 site	src/game/boss_sa.cpp	343	record	SetWord	Sprite_Current + 0x5A	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sa.cpp	343	record	At	a.enemy + 0x5A	-	-	-	-	-	0
-site	src/game/boss_sa.cpp	485	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sa.cpp	528	global	B	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/boss_sa.cpp	528	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sa.cpp	529	record	At	from + i	-	table=0x93b960;stride=0x128	-	-	-	0
+site	src/game/boss_sa.cpp	529	record	At	from + i	-	table=0x904b34;stride=0x128	-	-	-	0
 site	src/game/boss_sa.cpp	529	record	SetLong	task + i	-	stride=0x84	-	-	-	0
 site	src/game/boss_sa.cpp	538	record	SetLong	task + 0x80	-	stride=0x84	-	-	-	0
 site	src/game/boss_sa.cpp	563	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
@@ -3836,18 +3759,12 @@ site	src/game/boss_sb.cpp	123	global	B	at::kCommandKind	0x904b35	-	none	-	-	0
 site	src/game/boss_sb.cpp	124	record	Word	At(BattleSprites_Action) + 2	-	via=At	-	-	-	0
 site	src/game/boss_sb.cpp	136	global	B	at::kCommandKind	0x904b35	-	none	-	-	0
 site	src/game/boss_sb.cpp	138	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/boss_sb.cpp	147	global	At	at::kEnemy0Hp	0x93ba04	-	inside	Battle_Enemies+0xa4	records::BattleEnemy	0
-site	src/game/boss_sb.cpp	148	global	At	at::kEnemy0B0	0x93ba10	-	inside	Battle_Enemies+0xb0	records::BattleEnemy	0
 site	src/game/boss_sb.cpp	201	record	SetWord	Sprite_Current + 0x58	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sb.cpp	202	record	SetWord	Sprite_Current + 0x5A	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sb.cpp	202	record	At	pose + 2	-	param	-	-	-	0
-site	src/game/boss_sb.cpp	213	global	-	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sb.cpp	214	global	-	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sb.cpp	225	record	SetWord	Sprite_Current + 0x58	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sb.cpp	226	record	SetWord	Sprite_Current + 0x5A	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sb.cpp	233	global	B	at::kScriptVar3	0x903848	-	none	-	-	0
-site	src/game/boss_sb.cpp	368	global	-	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sb.cpp	369	global	-	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sb.cpp	370	record	SetLong	Sprite_Current + 0x34	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sb.cpp	371	record	SetLong	Sprite_Current + 0x38	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sb.cpp	372	record	SetLong	Sprite_Current + 0x3C	-	base=Sprite_Current	-	-	-	0
@@ -3868,9 +3785,7 @@ site	src/game/boss_sc.cpp	87	record	At	table + 4 * index	-	param	-	-	-	0
 site	src/game/boss_sc.cpp	130	global	B	at::kAction	0x904b35	-	none	-	-	0
 site	src/game/boss_sc.cpp	143	global	At	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/boss_sc.cpp	152	global	B	at::kMoveCounter	0x903848	-	none	-	-	0
-site	src/game/boss_sc.cpp	181	global	At	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	181	record	SetWord	Sprite_Current + 0x58	-	base=Sprite_Current	-	-	-	0
-site	src/game/boss_sc.cpp	182	global	At	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	182	record	SetWord	Sprite_Current + 0x5A	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sc.cpp	236	global	B	at::kRoundFlagsHi	0x904aa9	-	none	-	-	0
 site	src/game/boss_sc.cpp	248	record	Word	s + 0x20	-	base=Sprite_Current	-	-	-	0
@@ -3882,54 +3797,28 @@ site	src/game/boss_sc.cpp	532	global	B	at::kAction	0x904b35	-	none	-	-	0
 site	src/game/boss_sc.cpp	537	global	B	at::kAction	0x904b35	-	none	-	-	0
 site	src/game/boss_sc.cpp	542	global	B	at::kAction	0x904b35	-	none	-	-	0
 site	src/game/boss_sc.cpp	543	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/boss_sc.cpp	584	global	At	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sc.cpp	584	global	At	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	588	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/boss_sc.cpp	588	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/boss_sc.cpp	596	global	At	at::kEnemy2	0x93bbb0	-	inside	Battle_Enemies+0x250	records::BattleEnemy	0
-site	src/game/boss_sc.cpp	597	global	-	at::kEnemy2	0x93bbb0	-	inside	Battle_Enemies+0x250	records::BattleEnemy	0
-site	src/game/boss_sc.cpp	622	global	At	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sc.cpp	622	global	At	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	623	global	B	at::kMoveCounter	0x903848	-	none	-	-	0
-site	src/game/boss_sc.cpp	628	global	At	at::kEnemy2	0x93bbb0	-	inside	Battle_Enemies+0x250	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	634	global	B	at::kMoveCounter	0x903848	-	none	-	-	0
-site	src/game/boss_sc.cpp	666	global	At	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	666	record	SetWord	Sprite_Current + 0x58	-	base=Sprite_Current	-	-	-	0
-site	src/game/boss_sc.cpp	667	global	At	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	667	record	SetWord	Sprite_Current + 0x5A	-	base=Sprite_Current	-	-	-	0
-site	src/game/boss_sc.cpp	672	global	At	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	672	record	SetWord	Sprite_Current + 0x58	-	base=Sprite_Current	-	-	-	0
-site	src/game/boss_sc.cpp	673	global	At	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sc.cpp	673	record	SetWord	Sprite_Current + 0x5A	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sc.cpp	677	global	B	at::kMoveCounter	0x903848	-	none	-	-	0
 site	src/game/boss_sc_fuzz.cpp	215	global	-	at::kMoveCounter	0x903848	-	none	-	-	1
 site	src/game/boss_sc_fuzz.cpp	259	global	Mem	at::kMoveCounter	0x903848	-	none	-	-	1
 site	src/game/boss_sc_fuzz.cpp	265	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/boss_sc_fuzz.cpp	266	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
-site	src/game/boss_sc_fuzz.cpp	267	global	Mem	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/boss_sc_fuzz.cpp	268	global	Mem	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	1
 site	src/game/boss_sc_fuzz.cpp	285	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/boss_sc_fuzz.cpp	301	record	SetLong	s + 0x20	-	base=Sprite_Current	-	-	-	1
 site	src/game/boss_sc_fuzz.cpp	342	global	Mem	at::kMoveCounter	0x903848	-	none	-	-	1
 site	src/game/boss_sd.cpp	70	record	At	table + 4 * index	-	-	-	-	-	0
-site	src/game/boss_sd.cpp	157	global	At	at::kEnemy0Hp	0x93ba04	-	inside	Battle_Enemies+0xa4	records::BattleEnemy	0
-site	src/game/boss_sd.cpp	159	global	At	at::kEnemy0A6	0x93ba06	-	inside	Battle_Enemies+0xa6	records::BattleEnemy	0
-site	src/game/boss_sd.cpp	176	global	At	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	0
-site	src/game/boss_sd.cpp	194	global	At	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	0
-site	src/game/boss_sd.cpp	195	global	At	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sd.cpp	198	global	At	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
-site	src/game/boss_sd.cpp	200	global	At	at::kEnemy2	0x93bbb0	-	inside	Battle_Enemies+0x250	records::BattleEnemy	0
 site	src/game/boss_sd.cpp	208	global	B	at::kCounter0	0x903848	-	none	-	-	0
-site	src/game/boss_sd.cpp	227	global	At	at::kEnemy0X	0x93b994	-	inside	Battle_Enemies+0x34	records::BattleEnemy	0
-site	src/game/boss_sd.cpp	227	global	At	at::kEnemy0Z	0x93b998	-	inside	Battle_Enemies+0x38	records::BattleEnemy	0
 site	src/game/boss_sd.cpp	402	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/boss_sd.cpp	527	global	At	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	0
 site	src/game/boss_sd_fuzz.cpp	74	global	-	at::kCounter0	0x903848	-	none	-	-	1
-site	src/game/boss_sd_fuzz.cpp	101	global	Mem	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	1
-site	src/game/boss_sd_fuzz.cpp	104	global	-	at::kEnemy0Hp	0x93ba04	-	inside	Battle_Enemies+0xa4	records::BattleEnemy	1
 site	src/game/boss_sd_fuzz.cpp	201	record	SetWord	kept + 6	-	-	-	-	-	1
 site	src/game/boss_sd_fuzz.cpp	262	record	SetLong	s + 0x38	-	base=Sprite_Current	-	-	-	1
-site	src/game/boss_sd_fuzz.cpp	338	global	Mem	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	1
 site	src/game/boss_se.cpp	69	record	At	table + 4 * state	-	-	-	-	-	0
 site	src/game/boss_se.cpp	82	record	At	table + 4 * i	-	param	-	-	-	0
 site	src/game/boss_se.cpp	105	record	SetWord	Enemy() + 0xA4	-	via=Enemy	-	-	-	0
@@ -3956,15 +3845,9 @@ site	src/game/boss_se.cpp	494	global	B	at::kActKind	0x904b35	-	none	-	-	0
 site	src/game/boss_se.cpp	547	global	At	at::kTurn	0x904b90	-	none	-	-	0
 site	src/game/boss_se.cpp	557	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/boss_se.cpp	563	global	B	at::kFlags	0x904aa8	-	none	-	-	0
-site	src/game/boss_se.cpp	567	global	At	at::kEnemy0Hp	0x93ba04	-	inside	Battle_Enemies+0xa4	records::BattleEnemy	0
 site	src/game/boss_se.cpp	575	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/boss_se.cpp	580	global	B	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/boss_se.cpp	581	global	At	at::kEnemy0Flags	0x93ba70	-	inside	Battle_Enemies+0x110	records::BattleEnemy	0
-site	src/game/boss_se.cpp	586	global	B	at::kEnemy0Byte104	0x93ba64	-	inside	Battle_Enemies+0x104	records::BattleEnemy	0
-site	src/game/boss_se.cpp	587	global	At	at::kEnemy0Flags	0x93ba70	-	inside	Battle_Enemies+0x110	records::BattleEnemy	0
-site	src/game/boss_se.cpp	588	global	B	at::kEnemy0Byte105	0x93ba65	-	inside	Battle_Enemies+0x105	records::BattleEnemy	0
 site	src/game/boss_se.cpp	591	global	B	at::kOrder	0x904acc	-	none	-	-	0
-site	src/game/boss_se.cpp	601	global	At	at::kEnemy0	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_se.cpp	619	global	B	at::kActKind	0x904b35	-	none	-	-	0
 site	src/game/boss_se.cpp	628	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/boss_se.cpp	649	global	B	at::kFlags	0x904aa8	-	none	-	-	0
@@ -3972,13 +3855,6 @@ site	src/game/boss_se.cpp	653	global	At	at::kPartyCopyFrom	0x939a10	-	none	-	-	0
 site	src/game/boss_se.cpp	682	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/boss_se.cpp	683	global	B	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/boss_se.cpp	692	global	B	at::kEnemy0Flags	0x93ba70	-	inside	Battle_Enemies+0x110	records::BattleEnemy	0
-site	src/game/boss_se.cpp	696	global	At	at::kEnemy0Word108	0x93ba68	-	inside	Battle_Enemies+0x108	records::BattleEnemy	0
-site	src/game/boss_se.cpp	702	global	B	at::kEnemy0Flag8E	0x93b9ee	-	inside	Battle_Enemies+0x8e	records::BattleEnemy	0
-site	src/game/boss_se.cpp	703	global	At	at::kEnemy0Flags	0x93ba70	-	inside	Battle_Enemies+0x110	records::BattleEnemy	0
-site	src/game/boss_se.cpp	704	global	B	at::kEnemy0State1	0x93b961	-	inside	Battle_Enemies+0x1	records::BattleEnemy	0
-site	src/game/boss_se.cpp	705	global	At	at::kEnemy0Flags	0x93ba70	-	inside	Battle_Enemies+0x110	records::BattleEnemy	0
-site	src/game/boss_se.cpp	706	global	B	at::kEnemy0State2	0x93b962	-	inside	Battle_Enemies+0x2	records::BattleEnemy	0
-site	src/game/boss_se.cpp	707	global	B	at::kEnemy0Byte105	0x93ba65	-	inside	Battle_Enemies+0x105	records::BattleEnemy	0
 site	src/game/boss_se.cpp	711	global	At	at::kTurn	0x904b90	-	none	-	-	0
 site	src/game/boss_se.cpp	714	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/boss_se.cpp	734	record	Long	p + 0x90	-	stride=0x14c	-	-	-	0
@@ -3995,11 +3871,6 @@ site	src/game/boss_se_fuzz.cpp	405	global	B	at::kFlags	0x904aa8	-	none	-	-	1
 site	src/game/boss_se_fuzz.cpp	405	global	B	at::kFlags	0x904aa8	-	none	-	-	1
 site	src/game/boss_se_fuzz.cpp	433	global	B	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/boss_se_fuzz.cpp	436	global	B	at::kTarget	0x904b44	-	none	-	-	1
-site	src/game/boss_se_fuzz.cpp	438	global	Mem	at::kEnemy0Word108	0x93ba68	-	inside	Battle_Enemies+0x108	records::BattleEnemy	1
-site	src/game/boss_se_fuzz.cpp	439	global	B	at::kEnemy0Flags	0x93ba70	-	inside	Battle_Enemies+0x110	records::BattleEnemy	1
-site	src/game/boss_se_fuzz.cpp	439	global	B	at::kEnemy0Flags	0x93ba70	-	inside	Battle_Enemies+0x110	records::BattleEnemy	1
-site	src/game/boss_se_fuzz.cpp	439	global	B	at::kEnemy0Flags	0x93ba70	-	inside	Battle_Enemies+0x110	records::BattleEnemy	1
-site	src/game/boss_se_fuzz.cpp	441	global	B	at::kEnemy0Flag8E	0x93b9ee	-	inside	Battle_Enemies+0x8e	records::BattleEnemy	1
 site	src/game/boss_se_fuzz.cpp	442	global	Mem	at::kTurn	0x904b90	-	none	-	-	1
 site	src/game/boss_se_fuzz.cpp	444	global	B	at::kPhase	0x904aa0	-	none	-	-	1
 site	src/game/boss_sf.cpp	71	record	At	table + 4 * index	-	-	-	-	-	0
@@ -4014,13 +3885,9 @@ site	src/game/boss_sf.cpp	145	record	Long	s + 0x20	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sf.cpp	147	record	Long	s + 0x34	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sf.cpp	147	record	Long	s + 0x38	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sf.cpp	149	record	Word	Sprite_Current + 0x3E	-	base=Sprite_Current	-	-	-	0
-site	src/game/boss_sf.cpp	178	global	At	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	0
 site	src/game/boss_sf.cpp	189	global	B	at::kOrderBefore	0x904acb	-	none	-	-	0
-site	src/game/boss_sf.cpp	205	global	At	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sf.cpp	227	record	Long	p + 0x90	-	stride=0x14c	-	-	-	0
 site	src/game/boss_sf.cpp	230	global	At	at::kPoseSet	0x8c5d80	-	none	-	-	0
-site	src/game/boss_sf.cpp	244	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sf.cpp	246	global	At	at::kEnemy1	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/boss_sf.cpp	286	global	At	at::kTurn	0x904b90	-	none	-	-	0
 site	src/game/boss_sf.cpp	288	global	At	at::kTextRow1	0x904d00	-	none	-	-	0
 site	src/game/boss_sf.cpp	289	global	At	at::kTextRow1	0x904d00	-	none	-	-	0
@@ -4048,9 +3915,7 @@ site	src/game/boss_sf.cpp	790	global	At	at::kAbility	0x904b80	-	none	-	-	0
 site	src/game/boss_sf.cpp	791	global	AbilityByte	at::kAbilityFlags8	0x65c4dd	-	none	-	-	0
 site	src/game/boss_sf.cpp	810	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/boss_sf.cpp	811	global	At	at::kAbility	0x904b80	-	none	-	-	0
-site	src/game/boss_sf.cpp	840	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sf.cpp	840	record	SetLong	task + i	-	via=TaskSlot	-	-	-	0
-site	src/game/boss_sf.cpp	846	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sf_fuzz.cpp	97	record	Word	Sprite_Current + 0x3E	-	base=Sprite_Current	-	-	-	1
 site	src/game/boss_sf_fuzz.cpp	142	global	-	at::kScriptVar3	0x903848	-	none	-	-	1
 site	src/game/boss_sf_fuzz.cpp	160	global	-	at::kAbilityFlags4	0x65c4d8	-	exact	NameTable_Abilities	-	1
@@ -4059,9 +3924,6 @@ site	src/game/boss_sf_fuzz.cpp	165	record	Mem	base + id * at::kAbilityStride	-	t
 site	src/game/boss_sf_fuzz.cpp	183	global	Mem	at::kAbility	0x904b80	-	none	-	-	1
 site	src/game/boss_sf_fuzz.cpp	184	global	B	at::kActKind	0x904b35	-	none	-	-	1
 site	src/game/boss_sf_fuzz.cpp	193	global	Mem	at::kEnemyData	0x8c55c8	-	none	-	-	1
-site	src/game/boss_sf_fuzz.cpp	259	global	B	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	1
-site	src/game/boss_sf_fuzz.cpp	259	global	B	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	1
-site	src/game/boss_sf_fuzz.cpp	259	global	B	at::kEnemy0Status	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	1
 site	src/game/boss_sf_fuzz.cpp	264	global	B	at::kOrderBefore	0x904acb	-	none	-	-	1
 site	src/game/boss_sf_fuzz.cpp	292	global	B	at::kPhase	0x904aa0	-	none	-	-	1
 site	src/game/boss_sf_fuzz.cpp	293	global	Mem	at::kTurn	0x904b90	-	none	-	-	1
@@ -4075,7 +3937,6 @@ site	src/game/boss_sf_fuzz.cpp	452	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	
 site	src/game/boss_sf_fuzz.cpp	452	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/boss_sg.cpp	65	record	At	table + 4 * index	-	-	-	-	-	0
 site	src/game/boss_sg.cpp	100	record	At	table + 4 * state	-	param	-	-	-	0
-site	src/game/boss_sg.cpp	152	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sg.cpp	351	record	L	p + 0x90	-	stride=0x14c	-	-	-	0
 site	src/game/boss_sg.cpp	354	global	At	at::kPoseSet	0x8c5d80	-	none	-	-	0
 site	src/game/boss_sg.cpp	443	global	B	at::kTarget	0x904b44	-	none	-	-	0
@@ -4130,7 +3991,6 @@ site	src/game/boss_sh.cpp	435	global	B	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/boss_sh.cpp	469	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/boss_sh.cpp	469	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/boss_sh.cpp	495	global	B	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/boss_sh.cpp	497	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sh.cpp	588	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/boss_sh_fuzz.cpp	240	global	B	at::kFlags	0x904aa8	-	none	-	-	1
 site	src/game/boss_sh_fuzz.cpp	240	global	B	at::kFlags	0x904aa8	-	none	-	-	1
@@ -4145,13 +4005,11 @@ site	src/game/boss_sh_fuzz.cpp	387	global	B	bh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/boss_sh_fuzz.cpp	436	global	B	bh::at::kFlags	0x904aa8	-	none	-	-	1
 site	src/game/boss_si.cpp	73	record	At	table + 4 * index	-	-	-	-	-	0
 site	src/game/boss_si.cpp	215	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/boss_si.cpp	216	global	At	at::kEnemy7	0x93c178	-	inside	Battle_Enemies+0x818	records::BattleEnemy	0
 site	src/game/boss_si.cpp	221	record	Long	s + 0x34	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_si.cpp	223	record	Long	s + 0x38	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_si.cpp	230	global	B	at::kScriptVar3	0x903848	-	none	-	-	0
 site	src/game/boss_si.cpp	434	global	At	at::kEnemyDataCount	0x8c5652	-	none	-	-	0
 site	src/game/boss_si.cpp	449	global	B	at::kFlags	0x904aa8	-	none	-	-	0
-site	src/game/boss_si.cpp	489	global	B	at::kEnemy0Type	0x93ba50	-	inside	Battle_Enemies+0xf0	records::BattleEnemy	0
 site	src/game/boss_si.cpp	489	global	At	at::kEnemyDataCount	0x8c5652	-	none	-	-	0
 site	src/game/boss_si.cpp	494	record	SetWord	Sprite_Current + 0x2E	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_si.cpp	494	record	Word	Sprite_Current + 0x2E	-	base=Sprite_Current	-	-	-	0
@@ -4163,10 +4021,8 @@ site	src/game/boss_si_fuzz.cpp	82	record	SetLong	Sprite_Current + 0x38	-	base=Sp
 site	src/game/boss_si_fuzz.cpp	105	global	-	at::kScriptVar3	0x903848	-	none	-	-	1
 site	src/game/boss_si_fuzz.cpp	148	global	B	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/boss_si_fuzz.cpp	277	global	B	at::kFlags	0x904aa8	-	none	-	-	1
-site	src/game/boss_si_fuzz.cpp	295	global	Mem	at::kEnemy7	0x93c178	-	inside	Battle_Enemies+0x818	records::BattleEnemy	1
-site	src/game/boss_si_fuzz.cpp	298	record	SetLong	e7 + 0x34	-	table=0x93c178	-	-	-	1
-site	src/game/boss_si_fuzz.cpp	299	record	SetLong	e7 + 0x38	-	table=0x93c178	-	-	-	1
-site	src/game/boss_si_fuzz.cpp	363	global	B	at::kEnemy0Type	0x93ba50	-	inside	Battle_Enemies+0xf0	records::BattleEnemy	1
+site	src/game/boss_si_fuzz.cpp	298	record	SetLong	e7 + 0x34	-	-	-	-	-	1
+site	src/game/boss_si_fuzz.cpp	299	record	SetLong	e7 + 0x38	-	-	-	-	-	1
 site	src/game/boss_sj.cpp	78	record	At	table + 4 * state	-	-	-	-	-	0
 site	src/game/boss_sj.cpp	89	record	At	table + 4 * state	-	param	-	-	-	0
 site	src/game/boss_sj.cpp	101	record	At	table + 4 * i	-	param	-	-	-	0
@@ -4176,14 +4032,11 @@ site	src/game/boss_sj.cpp	175	record	SetLong	Sprite_Current + 0x3C	-	base=Sprite
 site	src/game/boss_sj.cpp	197	record	SetLong	Sprite_Current + 0x3C	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sj.cpp	230	record	Long	s + scale_at	-	base=Sprite_Current	-	-	-	0
 site	src/game/boss_sj.cpp	299	global	B	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/boss_sj.cpp	300	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/boss_sj.cpp	302	record	Long	from + i	-	table=0x93b960;stride=0x128	-	-	-	0
+site	src/game/boss_sj.cpp	302	record	Long	from + i	-	stride=0x128	-	-	-	0
 site	src/game/boss_sj.cpp	302	record	SetLong	to + i	-	stride=0x84	-	-	-	0
-site	src/game/boss_sj.cpp	362	global	B	at::kEnemy0Type	0x93ba50	-	inside	Battle_Enemies+0xf0	records::BattleEnemy	0
 site	src/game/boss_sj.cpp	363	global	At	at::kEnemyFxSize	0x8c5652	-	none	-	-	0
 site	src/game/boss_sj.cpp	387	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/boss_sj.cpp	418	global	B	at::kScriptVar3	0x903848	-	none	-	-	0
-site	src/game/boss_sj.cpp	456	global	S	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/boss_sj.cpp	610	record	Long	o + 0x40	-	via=Owner	-	-	-	0
 site	src/game/boss_sj.cpp	611	record	Long	o + 0x44	-	via=Owner	-	-	-	0
 site	src/game/boss_sj.cpp	615	record	Word	o + 0x2E	-	via=Owner	-	-	-	0
@@ -4194,7 +4047,6 @@ site	src/game/boss_sj_fuzz.cpp	141	global	B	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/boss_sj_fuzz.cpp	150	global	B	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/boss_sj_fuzz.cpp	171	record	SetLong	o + 0x40	-	via=Owner	-	-	-	1
 site	src/game/boss_sj_fuzz.cpp	172	record	SetLong	o + 0x44	-	via=Owner	-	-	-	1
-site	src/game/boss_sj_fuzz.cpp	179	global	B	at::kEnemy0Type	0x93ba50	-	inside	Battle_Enemies+0xf0	records::BattleEnemy	1
 site	src/game/boss_sj_fuzz.cpp	196	global	B	at::kFlags	0x904aa8	-	none	-	-	1
 site	src/game/boss_sj_fuzz.cpp	196	global	B	at::kFlags	0x904aa8	-	none	-	-	1
 site	src/game/boss_spawn.cpp	70	global	At	kEnemyData	0x8c55c8	-	none	-	-	0
@@ -7361,18 +7213,15 @@ site	src/game/effect_5c.cpp	1232	global	At	at::kKind2ZCell	0x905e62	-	inside	Fie
 site	src/game/effect_5c.cpp	1255	global	-	at::kPoolLimit	0x7f1bac	-	inside	Gfx_PacketPools+0xffac	unsigned char	0
 site	src/game/effect_5c.cpp	1459	global	At	at::kCounter	0x903848	-	none	-	-	0
 site	src/game/effect_5c.cpp	1480	global	At	at::kCounter	0x903848	-	none	-	-	0
-site	src/game/effect_5c.cpp	1540	global	EnemyWait	at::kEnemy0Bits	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	0
 site	src/game/effect_5c.cpp	1590	global	At	at::kCounter	0x903848	-	none	-	-	0
 site	src/game/effect_5c_fuzz.cpp	251	record	Long	s + 0x34	-	base=Sprite_Current	-	-	-	1
 site	src/game/effect_5c_fuzz.cpp	251	record	Long	s + 0x38	-	base=Sprite_Current	-	-	-	1
-site	src/game/effect_5c_fuzz.cpp	324	global	-	at::kEnemy0Bits	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	1
 site	src/game/effect_5c_fuzz.cpp	352	record	SetWord	e + 0x30	-	via=Rec	-	-	-	1
 site	src/game/effect_5c_fuzz.cpp	353	record	SetWord	e + 0x32	-	via=Rec	-	-	-	1
 site	src/game/effect_5c_fuzz.cpp	354	record	SetWord	e + 0x3A	-	via=Rec	-	-	-	1
 site	src/game/effect_5c_fuzz.cpp	355	record	SetWord	e + 0x36	-	via=Rec	-	-	-	1
 site	src/game/effect_5c_fuzz.cpp	356	record	SetLong	e + 0x3C	-	via=Rec	-	-	-	1
 site	src/game/effect_5c_fuzz.cpp	361	global	Mem	at::kCounter	0x903848	-	none	-	-	1
-site	src/game/effect_5c_fuzz.cpp	367	global	-	at::kEnemy0Bits	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	1
 site	src/game/effect_5c_fuzz.cpp	382	global	Mem	at::kKind2ZCell	0x905e62	-	inside	Field_Kind2Z+0x2	long	1
 site	src/game/effect_5c_fuzz.cpp	398	global	-	at::kPoolLimit	0x7f1bac	-	inside	Gfx_PacketPools+0xffac	unsigned char	1
 site	src/game/effect_5c_fuzz.cpp	441	record	SetWord	s + 0x30	-	base=Sprite_Current	-	-	-	1
@@ -8362,16 +8211,13 @@ site	src/game/effect_6d.cpp	1178	global	At	at::kGlowOrder	0x65f554	-	none	-	-	0
 site	src/game/effect_6d.cpp	1178	global	At	at::kGlowPoints	0x65f4e8	-	none	-	-	0
 site	src/game/effect_6d.cpp	1288	global	At	at::kSub64Cells	0x65f578	-	none	-	-	0
 site	src/game/effect_6d.cpp	1289	global	At	at::kSub64Cells	0x65f578	-	none	-	-	0
-site	src/game/effect_6d.cpp	1290	global	-	at::kEnemyRecords	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	0
 site	src/game/effect_6d.cpp	1316	global	UL	at::kBattleWord	0x904ac8	-	none	-	-	0
 site	src/game/effect_6d.cpp	1415	global	At	at::kCounter48	0x903848	-	none	-	-	0
 site	src/game/effect_6d_fuzz.cpp	196	record	Long	s + 8	-	base=Sprite_Current	-	-	-	1
 site	src/game/effect_6d_fuzz.cpp	197	record	Long	s + 0x30	-	base=Sprite_Current	-	-	-	1
 site	src/game/effect_6d_fuzz.cpp	233	global	-	at::kTrackRing	0x6bc644	-	none	-	-	1
 site	src/game/effect_6d_fuzz.cpp	234	global	-	at::kBattleWord	0x904ac8	-	none	-	-	1
-site	src/game/effect_6d_fuzz.cpp	235	global	-	at::kEnemyRecords	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	1
 site	src/game/effect_6d_fuzz.cpp	273	record	SetWord	e + 0x30	-	via=Rec	-	-	-	1
-site	src/game/effect_6d_fuzz.cpp	278	global	-	at::kEnemyRecords	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	1
 site	src/game/effect_6d_fuzz.cpp	278	record	SetLong	e + 0xC	-	via=Rec	-	-	-	1
 site	src/game/effect_6d_fuzz.cpp	279	record	SetLong	e + 0x38	-	via=Rec	-	-	-	1
 site	src/game/effect_6d_fuzz.cpp	283	record	SetWord	s + 0x36	-	base=Sprite_Current	-	-	-	1
@@ -8389,7 +8235,6 @@ site	src/game/effect_6d_fuzz.cpp	327	global	Mem	at::kTrackHeads	0x6bc704	-	none	
 site	src/game/effect_6d_fuzz.cpp	328	global	Mem	at::kTrackRing	0x6bc644	-	none	-	-	1
 site	src/game/effect_6d_fuzz.cpp	338	global	Mem	at::kKind2ZCell	0x905e62	-	inside	Field_Kind2Z+0x2	long	1
 site	src/game/effect_6d_fuzz.cpp	339	global	Mem	at::kKind2XCell	0x905e66	-	inside	Field_Kind2X+0x2	long	1
-site	src/game/effect_6d_fuzz.cpp	345	global	Mem	at::kEnemyRecords	0x93ba88	-	inside	Battle_Enemies+0x128	records::BattleEnemy	1
 site	src/game/effect_6d_fuzz.cpp	354	global	Mem	at::kCounter48	0x903848	-	none	-	-	1
 site	src/game/effect_6d_fuzz.cpp	398	record	SetWord	s + 0x30	-	base=Sprite_Current	-	-	-	1
 site	src/game/effect_6d_fuzz.cpp	402	record	SetWord	s + ((v & 1) ? 0x36 : 0x3A)	-	base=Sprite_Current	-	-	-	1
@@ -8445,7 +8290,6 @@ site	src/game/enemy_ai_ops.cpp	448	global	AbilityByte	at::kAbilityFlags8	0x65c4d
 site	src/game/enemy_ai_ops.cpp	449	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/enemy_ai_ops.cpp	449	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/enemy_ai_ops.cpp	496	record	Word	PtrIn(Enemy() + 0xF8) + 6	-	via=PtrIn	-	-	-	0
-site	src/game/enemy_ai_ops_fuzz.cpp	40	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/enemy_ai_ops_fuzz.cpp	102	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/enemy_ai_ops_fuzz.cpp	102	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/enemy_ai_ops_fuzz.cpp	107	global	At	at::kActionKind	0x904b35	-	none	-	-	1
@@ -9919,7 +9763,6 @@ site	src/game/magic_c1.cpp	66	global	Mem	kS	0x903850	-	exact	DamageScratch	recor
 site	src/game/magic_c1.cpp	67	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_c1.cpp	68	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_c1.cpp	69	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_c1.cpp	96	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_c1.cpp	135	record	Mem	table + 4 * phase	-	param	-	-	-	0
 site	src/game/magic_c1.cpp	249	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_c1.cpp	268	record	Word	Sc() + 0x30	-	via=Sc	-	-	-	0
@@ -10040,7 +9883,6 @@ site	src/game/magic_c2.cpp	925	record	SetLong	streak + 0x28	-	param	-	-	-	0
 site	src/game/magic_c2.cpp	926	record	SetLong	streak + 0x2C	-	param	-	-	-	0
 site	src/game/magic_c2.cpp	952	global	Mem	kSparks	0x6a2d38	-	exact	Holocaust_Sparks	-	0
 site	src/game/magic_c2.cpp	961	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_c2.cpp	996	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_c2.cpp	1014	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_c2.cpp	1019	record	SetSW	0xC	0x90385c	base=kS	-	-	-	0
 site	src/game/magic_c2.cpp	1020	record	SetSW	0xE	0x90385e	base=kS	-	-	-	0
@@ -10093,7 +9935,6 @@ site	src/game/magic_c3.cpp	194	record	Word	s + 0x60	-	via=Sc	-	-	-	0
 site	src/game/magic_c3.cpp	218	record	SetLong	s + 0x60	-	via=Sc	-	-	-	0
 site	src/game/magic_c3.cpp	218	record	Long	s + 0x60	-	via=Sc	-	-	-	0
 site	src/game/magic_c3.cpp	376	global	Mem	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/magic_c3.cpp	378	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_c3.cpp	407	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_c3.cpp	499	record	SetLong	p + 8	-	param	-	-	-	0
 site	src/game/magic_c3.cpp	500	record	SetLong	p + 0xC	-	param	-	-	-	0
@@ -10135,7 +9976,6 @@ site	src/game/magic_engine_fuzz.cpp	249	record	SetLong	sc + 0xC	-	base=Sprite_Cu
 site	src/game/magic_engine_fuzz.cpp	270	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_engine_fuzz.cpp	274	record	SetWord	sc + 0x3E	-	base=Sprite_Current	-	-	-	1
 site	src/game/magic_engine_fuzz.cpp	275	record	SetLong	sc + 0x20	-	base=Sprite_Current	-	-	-	1
-site	src/game/magic_fx_reached.cpp	111	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_fx_reached.cpp	116	record	At	table + 4 * index	-	param	-	-	-	0
 site	src/game/magic_fx_reached.cpp	165	global	Ptr	at::kSource	0x904b4c	-	exact	BattleOdds_ActorObject	unsigned long	0
 site	src/game/magic_fx_reached.cpp	171	record	SetLong	t + 0x80	-	via=Task	-	-	-	0
@@ -10181,13 +10021,11 @@ site	src/game/magic_fx_reached.cpp	562	global	Ptr	at::kSparkleCurrent	0x685d90	-
 site	src/game/magic_fx_reached.cpp	565	global	Ptr	at::kSparkleCurrent	0x685d90	-	exact	BattleItems_SparkleCurrent	unsigned long	0
 site	src/game/magic_fx_reached.cpp	590	global	At	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_fx_reached_fuzz.cpp	81	global	At	at::kSparklePool	0x684790	-	none	-	-	1
-site	src/game/magic_fx_reached_fuzz.cpp	88	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_fx_reached_fuzz.cpp	88	global	At	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_fx_reached_fuzz.cpp	102	global	At	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_fx_reached_fuzz.cpp	103	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_fx_reached_fuzz.cpp	105	global	At	at::kFlags	0x904aa8	-	none	-	-	1
 site	src/game/magic_fx_reached_fuzz.cpp	440	global	-	at::kFlags	0x904aa8	-	none	-	-	1
-site	src/game/magic_fx_reached_fuzz.cpp	443	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_fx_reached_fuzz.cpp	446	global	-	at::kSparklePool	0x684790	-	none	-	-	1
 site	src/game/magic_fx_reached_fuzz.cpp	483	global	At	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_fx_reached_fuzz.cpp	484	global	At	at::kActor	0x904b34	-	none	-	-	1
@@ -10205,10 +10043,7 @@ site	src/game/magic_harness.cpp	113	global	Mem	at::kFlags	0x904aa8	-	none	-	-	1
 site	src/game/magic_harness.cpp	134	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_harness.cpp	435	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_harness.cpp	436	global	Mem	at::kActor	0x904b34	-	none	-	-	1
-site	src/game/magic_harness.cpp	476	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_harness.cpp	562	global	-	at::kBattle	0x904aa0	-	none	-	-	1
-site	src/game/magic_harness.cpp	565	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/magic_lib.cpp	75	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_lib.cpp	286	global	Mem	kResultTarget	0x904b54	-	none	-	-	0
 site	src/game/magic_lib.cpp	289	global	Mem	kResultTarget	0x904b54	-	none	-	-	0
 site	src/game/magic_lib.cpp	298	global	Mem	kStatsCopy	0x939f80	-	none	-	-	0
@@ -10240,7 +10075,6 @@ site	src/game/magic_s01.cpp	61	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s01.cpp	63	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s01.cpp	64	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s01.cpp	65	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s01.cpp	123	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s01.cpp	126	record	Long	from + k	-	stride=0x14c	-	-	-	0
 site	src/game/magic_s01.cpp	126	record	SetLong	task + k	-	stride=0x84	-	-	-	0
 site	src/game/magic_s01.cpp	127	record	SetLong	task + 0x80	-	stride=0x84	-	-	-	0
@@ -10256,7 +10090,6 @@ site	src/game/magic_s01_fuzz.cpp	308	record	SetLong	sc + 0x20	-	param	-	-	-	1
 site	src/game/magic_s01_fuzz.cpp	309	record	SetLong	sc + 0x14	-	param	-	-	-	1
 site	src/game/magic_s02.cpp	110	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s02.cpp	111	global	Mem	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/magic_s02.cpp	135	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s02.cpp	193	record	SetWord	p + 0x26	-	param	-	-	-	0
 site	src/game/magic_s02.cpp	194	record	SetWord	p + 0x16	-	param	-	-	-	0
 site	src/game/magic_s02.cpp	345	global	Mem	kButtonTimes	0x65a504	-	none	-	-	0
@@ -10303,8 +10136,6 @@ site	src/game/magic_s03.cpp	76	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s03.cpp	77	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s03.cpp	78	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s03.cpp	79	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s03.cpp	113	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/magic_s03.cpp	115	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s03.cpp	168	record	SetSW	8	0x903858	base=kS	-	-	-	0
 site	src/game/magic_s03.cpp	174	record	Word	Sc() + 0x14	-	via=Sc	-	-	-	0
 site	src/game/magic_s03.cpp	190	record	SetSW	6	0x903856	base=kS	-	-	-	0
@@ -10352,7 +10183,6 @@ site	src/game/magic_s03.cpp	1093	record	SB	4	0x903854	base=kS	-	-	-	0
 site	src/game/magic_s03_fuzz.cpp	228	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_s03_fuzz.cpp	255	record	Long	task + 0x10	-	-	-	-	-	1
 site	src/game/magic_s03_fuzz.cpp	255	record	Long	task + 0xC	-	-	-	-	-	1
-site	src/game/magic_s03_fuzz.cpp	274	global	Mem	mh::at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_s03_fuzz.cpp	274	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_s03_fuzz.cpp	283	global	Mem	kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/magic_s03_fuzz.cpp	294	record	Long	Sc() + 0x10	-	via=Sc	-	-	-	1
@@ -10364,7 +10194,6 @@ site	src/game/magic_s03_fuzz.cpp	387	record	Byte	before + (mh::Half() ? 1u : 0u)
 site	src/game/magic_s03_fuzz.cpp	428	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_s03_fuzz.cpp	435	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_s03_fuzz.cpp	439	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
-site	src/game/magic_s03_fuzz.cpp	440	global	Mem	mh::at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_s04.cpp	71	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s04.cpp	72	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s04.cpp	74	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
@@ -10374,7 +10203,6 @@ site	src/game/magic_s04.cpp	77	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s04.cpp	78	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s04.cpp	103	record	Mem	Addr(SnapSpark_Pool) + i * kPoolStride	-	via=Addr	-	-	-	0
 site	src/game/magic_s04.cpp	141	record	Mem	table + 4 * phase	-	param	-	-	-	0
-site	src/game/magic_s04.cpp	202	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s04.cpp	289	record	SetLong	TaskSlot(slot) + 0x80	-	via=TaskSlot	-	-	-	0
 site	src/game/magic_s04.cpp	478	record	SetSD	8	0x903858	base=kS	-	-	-	0
 site	src/game/magic_s04.cpp	482	record	SetSD	0	0x903850	base=kS	-	-	-	0
@@ -10415,7 +10243,6 @@ site	src/game/magic_s04_fuzz.cpp	550	record	Long	src + 0x3C	-	-	-	-	-	1
 site	src/game/magic_s04_fuzz.cpp	551	record	SetLong	sc + 0x3C	-	via=Sc	-	-	-	1
 site	src/game/magic_s05.cpp	55	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s05.cpp	56	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_s05.cpp	71	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s05.cpp	131	record	Long	src + k	-	via=ActorRecord	-	-	-	0
 site	src/game/magic_s05.cpp	131	record	SetLong	t + k	-	via=TaskSlot	-	-	-	0
 site	src/game/magic_s05.cpp	197	record	SetLong	t + 0x80	-	via=SpawnImage	-	-	-	0
@@ -10429,7 +10256,6 @@ site	src/game/magic_s05_fuzz.cpp	209	global	Mem	mh::at::kActor	0x904b34	-	none	-
 site	src/game/magic_s06.cpp	79	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s06.cpp	80	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s06.cpp	82	global	Mem	kAbility	0x904b80	-	none	-	-	0
-site	src/game/magic_s06.cpp	94	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s06.cpp	114	record	Long	from + k	-	via=ActorRecord	-	-	-	0
 site	src/game/magic_s06.cpp	114	record	SetLong	to + k	-	via=TaskSlot	-	-	-	0
 site	src/game/magic_s06.cpp	1004	global	Mem	kShade	0x903852	-	inside	DamageScratch+0x2	records::DamageScratch	0
@@ -10449,7 +10275,6 @@ site	src/game/magic_s07.cpp	90	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s07.cpp	91	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s07.cpp	92	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s07.cpp	93	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s07.cpp	131	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s07.cpp	236	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s07.cpp	240	record	SetLong	child + k	-	via=TaskSlot	-	-	-	0
 site	src/game/magic_s07.cpp	240	record	Long	src + k	-	via=PartyRecord	-	-	-	0
@@ -10471,7 +10296,6 @@ site	src/game/magic_s07.cpp	498	record	SD	0	0x903850	base=kS	-	-	-	0
 site	src/game/magic_s07.cpp	502	record	SetSD	4	0x903854	base=kS	-	-	-	0
 site	src/game/magic_s07.cpp	503	record	SetSD	0	0x903850	base=kS	-	-	-	0
 site	src/game/magic_s07.cpp	505	record	SD	4	0x903854	base=kS	-	-	-	0
-site	src/game/magic_s07.cpp	561	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s07.cpp	613	record	SetSD	0	0x903850	base=kS	-	-	-	0
 site	src/game/magic_s07.cpp	616	record	SD	0	0x903850	base=kS	-	-	-	0
 site	src/game/magic_s07.cpp	619	record	SetSD	0	0x903850	base=kS	-	-	-	0
@@ -10563,7 +10387,6 @@ site	src/game/magic_s08.cpp	81	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s08.cpp	82	record	SW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s08.cpp	83	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s08.cpp	84	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s08.cpp	118	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s08.cpp	155	record	Mem	table + 4 * phase	-	param	-	-	-	0
 site	src/game/magic_s08.cpp	197	record	Mem	pool + i * 0x84u	-	param	-	-	-	0
 site	src/game/magic_s08.cpp	209	record	Mem	pool + i * 0x84u	-	param	-	-	-	0
@@ -10690,7 +10513,6 @@ site	src/game/magic_s09.cpp	97	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s09.cpp	98	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s09.cpp	99	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s09.cpp	100	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s09.cpp	135	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s09.cpp	251	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s09.cpp	255	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_s09.cpp	360	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
@@ -10722,7 +10544,6 @@ site	src/game/magic_s09.cpp	1028	record	SB	8	0x903858	base=kS	-	-	-	0
 site	src/game/magic_s09.cpp	1029	record	SB	8	0x903858	base=kS	-	-	-	0
 site	src/game/magic_s09.cpp	1070	record	SetSD	4	0x903854	base=kS	-	-	-	0
 site	src/game/magic_s09.cpp	1071	record	SetSD	0	0x903850	base=kS	-	-	-	0
-site	src/game/magic_s09.cpp	1075	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s09.cpp	1075	record	SetSD	0	0x903850	base=kS	-	-	-	0
 site	src/game/magic_s09.cpp	1075	record	SD	0	0x903850	base=kS	-	-	-	0
 site	src/game/magic_s09.cpp	1076	record	SetSD	4	0x903854	base=kS	-	-	-	0
@@ -10796,8 +10617,6 @@ site	src/game/magic_s10.cpp	85	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s10.cpp	86	record	SW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s10.cpp	87	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s10.cpp	88	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s10.cpp	117	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/magic_s10.cpp	120	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s10.cpp	130	record	Long	from + k	-	-	-	-	-	0
 site	src/game/magic_s10.cpp	130	record	SetLong	to + k	-	-	-	-	-	0
 site	src/game/magic_s10.cpp	229	record	Word	src + 0x30	-	-	-	-	-	0
@@ -10869,7 +10688,6 @@ site	src/game/magic_s11.cpp	101	global	Mem	kS	0x903850	-	exact	DamageScratch	rec
 site	src/game/magic_s11.cpp	102	record	SW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s11.cpp	103	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s11.cpp	104	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s11.cpp	135	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s11.cpp	150	record	Mem	table + 4 * index	-	-	-	-	-	0
 site	src/game/magic_s11.cpp	177	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_s11.cpp	177	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
@@ -10946,7 +10764,6 @@ site	src/game/magic_s11_fuzz.cpp	361	record	Byte	before + (mh::Half() ? 1u : 0u)
 site	src/game/magic_s11_fuzz.cpp	395	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_s11_fuzz.cpp	428	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_s12.cpp	86	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_s12.cpp	99	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s12.cpp	105	global	Mem	kDs	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s12.cpp	106	global	Mem	kDs	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s12.cpp	107	global	Mem	kDs	0x903850	-	exact	DamageScratch	records::DamageScratch	0
@@ -10984,9 +10801,7 @@ site	src/game/magic_s12.cpp	1080	record	Word	sc + 0x10	-	via=SC	-	-	-	0
 site	src/game/magic_s12_fuzz.cpp	343	global	Mem	kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/magic_s12_fuzz.cpp	347	global	Mem	kSeenBits	0x9040a8	-	none	-	-	1
 site	src/game/magic_s12_fuzz.cpp	352	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
-site	src/game/magic_s12_fuzz.cpp	354	global	Mem	mh::at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_s12_fuzz.cpp	364	record	Byte	before + (mh::Half() ? 1u : 0u)	-	param	-	-	-	1
-site	src/game/magic_s12_fuzz.cpp	367	global	Mem	mh::at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_s12_fuzz.cpp	368	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_s12_fuzz.cpp	377	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_s12_fuzz.cpp	383	record	SetWord	EnemyRec(static_cast<int>(Target()) - 3) + 0x98	-	via=EnemyRec	-	-	-	1
@@ -10998,7 +10813,6 @@ site	src/game/magic_s13.cpp	61	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s13.cpp	62	record	SW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s13.cpp	63	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s13.cpp	64	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s13.cpp	83	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s13.cpp	120	record	SetLong	m + 0x10	-	via=M	-	-	-	0
 site	src/game/magic_s13.cpp	125	record	SetLong	m + 0x14	-	via=M	-	-	-	0
 site	src/game/magic_s13.cpp	132	record	SetLong	M() + 0x10	-	via=M	-	-	-	0
@@ -11108,7 +10922,6 @@ site	src/game/magic_s14.cpp	1160	record	SB	2	0x903852	base=kS	-	-	-	0
 site	src/game/magic_s14.cpp	1162	record	SB	2	0x903852	base=kS	-	-	-	0
 site	src/game/magic_s14.cpp	1215	record	Long	offset + 4	-	-	-	-	-	0
 site	src/game/magic_s14.cpp	1216	record	Long	offset + 8	-	-	-	-	-	0
-site	src/game/magic_s14.cpp	1234	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s14.cpp	1266	record	SetSW	0	0x903850	base=kS	-	-	-	0
 site	src/game/magic_s14.cpp	1267	record	SetSW	4	0x903854	base=kS	-	-	-	0
 site	src/game/magic_s14.cpp	1275	record	SW	4	0x903854	base=kS	-	-	-	0
@@ -11133,7 +10946,6 @@ site	src/game/magic_s15.cpp	92	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s15.cpp	93	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s15.cpp	94	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s15.cpp	95	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s15.cpp	128	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s15.cpp	284	record	SetLong	child + k	-	via=TaskSlot	-	-	-	0
 site	src/game/magic_s15.cpp	284	record	Long	record + k	-	via=EnemyRecord	-	-	-	0
 site	src/game/magic_s15.cpp	435	record	SetSW	2	0x903852	base=kS	-	-	-	0
@@ -11253,7 +11065,6 @@ site	src/game/magic_s15_fuzz.cpp	515	raw	Mem	0x65ACB7 + static_cast<std::uint32_
 site	src/game/magic_s15_fuzz.cpp	532	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_s15_fuzz.cpp	532	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_s15_fuzz.cpp	548	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
-site	src/game/magic_s15_fuzz.cpp	549	global	Mem	mh::at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_s15_fuzz.cpp	613	record	SetWord	e + 0xBA	-	via=Enemy	-	-	-	1
 site	src/game/magic_s15_fuzz.cpp	615	record	SetLong	e + 0x114	-	via=Enemy	-	-	-	1
 site	src/game/magic_s15_fuzz.cpp	615	record	Long	e + 0x114	-	via=Enemy	-	-	-	1
@@ -11262,7 +11073,6 @@ site	src/game/magic_s15_fuzz.cpp	621	record	SetLong	r + 0x134	-	via=Member	-	-	-
 site	src/game/magic_s15_fuzz.cpp	621	record	Long	r + 0x134	-	via=Member	-	-	-	1
 site	src/game/magic_s16.cpp	104	record	Mem	p.pool + index * kSparkleStride	-	-	-	-	-	0
 site	src/game/magic_s16.cpp	107	global	Mem	kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s16.cpp	123	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s16.cpp	133	record	Mem	p.types + 4 * type	-	-	-	-	-	0
 site	src/game/magic_s16.cpp	170	record	SetLong	c + 0x14	-	via=Cur	-	-	-	0
 site	src/game/magic_s16.cpp	171	record	SetLong	Cur(p) + 0x18	-	via=Cur	-	-	-	0
@@ -11300,12 +11110,8 @@ site	src/game/magic_s16.cpp	514	record	SetLong	t + 0x80	-	stride=0x84	-	-	-	0
 site	src/game/magic_s16.cpp	596	record	Mem	table + 4 * index	-	-	-	-	-	0
 site	src/game/magic_s16.cpp	615	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_s16.cpp	615	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
-site	src/game/magic_s16.cpp	646	global	Mem	kEnemyState	0x93bcd9	-	inside	Battle_Enemies+0x379	records::BattleEnemy	0
 site	src/game/magic_s16_fuzz.cpp	394	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
-site	src/game/magic_s16_fuzz.cpp	407	global	Mem	kEnemyState	0x93bcd9	-	inside	Battle_Enemies+0x379	records::BattleEnemy	1
 site	src/game/magic_s16_fuzz.cpp	451	global	Mem	kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/magic_s16_fuzz.cpp	481	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/magic_s16_fuzz.cpp	498	global	Mem	kEnemyState	0x93bcd9	-	inside	Battle_Enemies+0x379	records::BattleEnemy	1
 site	src/game/magic_s16_fuzz.cpp	499	global	Mem	kPoolsLo	0x685d98	-	none	-	-	1
 site	src/game/magic_s16_fuzz.cpp	501	global	Mem	kPoolsLo	0x685d98	-	none	-	-	1
 site	src/game/magic_s16_fuzz.cpp	502	global	Mem	kPoolsLo	0x685d98	-	none	-	-	1
@@ -11377,7 +11183,6 @@ site	src/game/magic_s18_fuzz.cpp	268	record	SetLong	sc + 0xC	-	base=Sprite_Curre
 site	src/game/magic_s18_fuzz.cpp	285	global	Mem	kActionId	0x904b80	-	none	-	-	1
 site	src/game/magic_s18_fuzz.cpp	286	global	Mem	kCommandKind	0x904b35	-	none	-	-	1
 site	src/game/magic_s19.cpp	107	global	Mem	kPool	0x68fa78	-	none	-	-	0
-site	src/game/magic_s19.cpp	110	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s19.cpp	116	record	Mem	table + 4 * index	-	-	-	-	-	0
 site	src/game/magic_s19.cpp	221	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s19.cpp	229	raw	Mem	0x80E980 + 2 * n	0x80e980	-	inside	Gfx_ClutStripSource+0x3400	unsigned short	0
@@ -11448,7 +11253,6 @@ site	src/game/magic_s19_fuzz.cpp	626	raw	Mem	0x65B404	0x65b404	-	exact	ShieldSpa
 site	src/game/magic_s20.cpp	126	global	Mem	kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s20.cpp	131	global	Mem	kPoolA	0x6906d8	-	exact	Magic087_Motes	-	0
 site	src/game/magic_s20.cpp	132	global	Mem	kPoolB	0x693018	-	exact	Magic092_Motes	-	0
-site	src/game/magic_s20.cpp	133	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s20.cpp	135	raw	Mem	0x7E0700 + i * 12	0x7e0700	-	exact	MoveScript_TintRecords	unsigned char	0
 site	src/game/magic_s20.cpp	144	record	Mem	table + 4 * index	-	param	-	-	-	0
 site	src/game/magic_s20.cpp	237	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
@@ -11476,7 +11280,6 @@ site	src/game/magic_s20_fuzz.cpp	315	global	Mem	mh::at::kTarget	0x904b44	-	none	
 site	src/game/magic_s20_fuzz.cpp	376	raw	Mem	0x904B35	0x904b35	-	none	-	-	1
 site	src/game/magic_s20_fuzz.cpp	380	global	Mem	kAbility	0x904b80	-	none	-	-	1
 site	src/game/magic_s21.cpp	73	global	Mem	kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s21.cpp	106	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s21.cpp	110	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s21.cpp	111	global	L	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s21.cpp	116	record	L	table + 4 * index	-	param	-	-	-	0
@@ -11552,7 +11355,6 @@ site	src/game/magic_s22.cpp	65	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s22.cpp	66	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s22.cpp	67	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s22.cpp	68	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s22.cpp	92	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s22.cpp	266	record	SetLong	Sc() + first	-	via=Sc	-	-	-	0
 site	src/game/magic_s22.cpp	268	record	SetLong	Sc() + second	-	via=Sc	-	-	-	0
 site	src/game/magic_s22.cpp	272	record	SetLong	Sc() + first	-	via=Sc	-	-	-	0
@@ -12145,7 +11947,6 @@ site	src/game/magic_s27.cpp	65	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s27.cpp	66	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s27.cpp	67	record	SetSW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s27.cpp	67	record	SW	k	-	base=kS	-	-	-	0
-site	src/game/magic_s27.cpp	91	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s27.cpp	122	record	SW	add	-	base=kS	-	-	-	0
 site	src/game/magic_s27.cpp	126	record	SW	add	-	base=kS	-	-	-	0
 site	src/game/magic_s27.cpp	235	record	SetPtr	child + 0x80	-	via=TaskSlot	-	-	-	0
@@ -12518,7 +12319,6 @@ site	src/game/magic_s31.cpp	83	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s31.cpp	84	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s31.cpp	85	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s31.cpp	86	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s31.cpp	121	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s31.cpp	283	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s31.cpp	294	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_s31.cpp	430	record	SetSW	0	0x903850	base=kS	-	-	-	0
@@ -12651,7 +12451,6 @@ site	src/game/magic_s31_fuzz.cpp	426	raw	Mem	0x7E0700 + v % 0xC00	0x7e0700	-	exa
 site	src/game/magic_s31_fuzz.cpp	434	record	Byte	before + (mh::Half() ? 1u : 0u)	-	param	-	-	-	1
 site	src/game/magic_s31_fuzz.cpp	442	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_s31_fuzz.cpp	487	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
-site	src/game/magic_s31_fuzz.cpp	488	global	Mem	mh::at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/magic_s31_fuzz.cpp	494	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_s31_fuzz.cpp	495	record	Word	ActorRecord() + 0x30	-	via=ActorRecord	-	-	-	1
 site	src/game/magic_s31_fuzz.cpp	496	record	SetLong	sc + 0x1C	-	via=Sc	-	-	-	1
@@ -12694,7 +12493,6 @@ site	src/game/magic_s33.cpp	88	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s33.cpp	89	record	SW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s33.cpp	90	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s33.cpp	91	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s33.cpp	118	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s33.cpp	232	raw	Mem	0x8031F3	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/magic_s33.cpp	233	global	Mem	kBannerIds	0x64ecb0	-	none	-	-	0
 site	src/game/magic_s33.cpp	235	global	Mem	kBannerText	0x904ea0	-	none	-	-	0
@@ -12831,7 +12629,6 @@ site	src/game/magic_s34.cpp	91	global	Mem	kS	0x903850	-	exact	DamageScratch	reco
 site	src/game/magic_s34.cpp	92	record	SW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s34.cpp	93	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s34.cpp	94	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s34.cpp	124	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s34.cpp	173	record	Long	r + 0x14	-	via=Cur	-	-	-	0
 site	src/game/magic_s34.cpp	173	record	Long	r + 0x18	-	via=Cur	-	-	-	0
 site	src/game/magic_s34.cpp	181	record	Mem	pool + index * 0x84u	-	param	-	-	-	0
@@ -13085,7 +12882,6 @@ site	src/game/magic_s36.cpp	76	record	SW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s36.cpp	77	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s36.cpp	78	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s36.cpp	79	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/magic_s36.cpp	107	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s36.cpp	454	record	SetSW	4	0x903854	base=kS	-	-	-	0
 site	src/game/magic_s36.cpp	465	record	SB	k	-	base=kS	-	-	-	0
 site	src/game/magic_s36.cpp	497	record	SetSW	4	0x903854	base=kS	-	-	-	0
@@ -13281,7 +13077,6 @@ site	src/game/magic_s38.cpp	101	global	Mem	kS	0x903850	-	exact	DamageScratch	rec
 site	src/game/magic_s38.cpp	102	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s38.cpp	103	global	Mem	kS	0x903850	-	exact	DamageScratch	records::DamageScratch	0
 site	src/game/magic_s38.cpp	139	record	Mem	pool + index * 0x84u	-	param	-	-	-	0
-site	src/game/magic_s38.cpp	143	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_s38.cpp	305	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_s38.cpp	305	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_s38.cpp	345	record	SetLong	p + 8	-	base=Gfx_PacketNext	-	-	-	0
@@ -15858,7 +15653,6 @@ site	src/game/rest_3a.cpp	587	global	B	at::kMembers	0x802d40	-	exact	ObjTrio	rec
 site	src/game/rest_3a.cpp	588	global	B	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/rest_3a.cpp	721	global	L	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/rest_3a.cpp	739	record	At	table + set * 2	-	-	-	-	-	0
-site	src/game/rest_3a.cpp	785	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/rest_3a.cpp	828	global	At	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/rest_3a.cpp	831	global	B	at::kLevelDivisors	0x64b8b0	-	none	-	-	0
 site	src/game/rest_3a.cpp	833	global	B	at::kLevelDivisors	0x64b8b0	-	none	-	-	0
@@ -15881,7 +15675,6 @@ site	src/game/rest_3a_fuzz.cpp	388	record	SetWord	Sprite_Current + 0x2E	-	base=S
 site	src/game/rest_3a_fuzz.cpp	397	global	B	at::kChosen	0x675eb8	-	none	-	-	1
 site	src/game/rest_3a_fuzz.cpp	401	record	SetWord	Slot() + 0x10	-	via=Slot	-	-	-	1
 site	src/game/rest_3b.cpp	61	global	Ptr	at::kResult	0x904b60	-	exact	BattleDamage_Result	unsigned long	0
-site	src/game/rest_3b.cpp	68	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/rest_3b.cpp	69	global	At	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/rest_3b.cpp	70	global	At	at::kAbilityRows	0x65c4d8	-	exact	NameTable_Abilities	-	0
 site	src/game/rest_3b.cpp	91	record	L	table + 4 * state	-	-	-	-	-	0
@@ -15979,14 +15772,11 @@ site	src/game/rest_3b.cpp	751	global	B	at::kActingKind	0x904b35	-	none	-	-	0
 site	src/game/rest_3b.cpp	752	global	At	at::kAbility	0x904b80	-	none	-	-	0
 site	src/game/rest_3b_fuzz.cpp	216	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	217	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
-site	src/game/rest_3b_fuzz.cpp	230	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/rest_3b_fuzz.cpp	237	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	246	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
-site	src/game/rest_3b_fuzz.cpp	247	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/rest_3b_fuzz.cpp	255	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	256	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	312	global	-	at::kRepeatLatch	0x7e01b8	-	none	-	-	1
-site	src/game/rest_3b_fuzz.cpp	336	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/rest_3b_fuzz.cpp	355	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	356	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	373	global	Mem	at::kAbility	0x904b80	-	none	-	-	1
@@ -15998,7 +15788,6 @@ site	src/game/rest_3b_fuzz.cpp	442	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	443	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	444	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/rest_3c.cpp	60	global	Ptr	at::kResult	0x904b60	-	exact	BattleDamage_Result	unsigned long	0
-site	src/game/rest_3c.cpp	65	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/rest_3c.cpp	66	global	At	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/rest_3c.cpp	86	record	Word	Enemy(who - 3) + enemy_at	-	via=Enemy	-	-	-	0
 site	src/game/rest_3c.cpp	86	record	Word	Party(who) + party_at	-	via=Party	-	-	-	0
@@ -16112,9 +15901,7 @@ site	src/game/rest_3c.cpp	756	record	SetLong	r + base + 4	-	via=PartyWrite	-	-	-
 site	src/game/rest_3c.cpp	756	record	Long	r + base + 4	-	via=PartyWrite	-	-	-	0
 site	src/game/rest_3c_fuzz.cpp	177	global	-	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/rest_3c_fuzz.cpp	177	global	-	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
-site	src/game/rest_3c_fuzz.cpp	213	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/rest_3c_fuzz.cpp	261	global	-	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
-site	src/game/rest_3c_fuzz.cpp	272	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/rest_3c_fuzz.cpp	273	global	Mem	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/rest_3c_fuzz.cpp	301	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/rest_3c_fuzz.cpp	302	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
@@ -16128,7 +15915,6 @@ site	src/game/rest_3c_fuzz.cpp	352	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/rest_3c_fuzz.cpp	353	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/rest_3c_fuzz.cpp	355	global	Mem	at::kTurnOrder	0x904acc	-	none	-	-	1
 site	src/game/rest_3c_fuzz.cpp	364	global	Mem	at::kAttackerAtk	0x939fe4	-	none	-	-	1
-site	src/game/rest_3d.cpp	62	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/rest_3d.cpp	70	global	B	at::kPartySize	0x904ab0	-	none	-	-	0
 site	src/game/rest_3d.cpp	87	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/rest_3d.cpp	88	global	B	at::kTarget	0x904b54	-	none	-	-	0
@@ -16139,7 +15925,6 @@ site	src/game/rest_3d.cpp	124	record	W	table + 2u * c[0]	-	param	-	-	-	0
 site	src/game/rest_3d.cpp	125	record	W	table + 2u * c[1]	-	param	-	-	-	0
 site	src/game/rest_3d.cpp	126	record	W	table + 2u * c[2]	-	param	-	-	-	0
 site	src/game/rest_3d.cpp	160	global	W	at::kResistRates20	0x64e98c	-	exact	Battle_StatusResistRates20	short	0
-site	src/game/rest_3d.cpp	254	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/rest_3d.cpp	258	global	B	at::kNewStatus	0x904b98	-	none	-	-	0
 site	src/game/rest_3d.cpp	258	global	B	at::kNewStatus	0x904b98	-	none	-	-	0
 site	src/game/rest_3d.cpp	276	global	B	at::kActorTaskByte	0x93a009	-	inside	BattleTask_Slots+0x9	records::BattleTask	0
@@ -16160,8 +15945,6 @@ site	src/game/rest_3d.cpp	596	global	At	at::kAbility	0x904b80	-	none	-	-	0
 site	src/game/rest_3d_fuzz.cpp	171	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3d_fuzz.cpp	172	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3d_fuzz.cpp	185	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
-site	src/game/rest_3d_fuzz.cpp	187	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
-site	src/game/rest_3d_fuzz.cpp	265	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/rest_3d_fuzz.cpp	285	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/rest_3d_fuzz.cpp	286	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3d_fuzz.cpp	287	global	Mem	at::kAbility	0x904b80	-	none	-	-	1
@@ -16585,13 +16368,9 @@ site	src/game/rest_3g.cpp	186	record	SetUL	s + 0x14	-	via=S	-	-	-	0
 site	src/game/rest_3g.cpp	202	global	At	at::kCounter	0x903848	-	none	-	-	0
 site	src/game/rest_3g.cpp	274	record	SetUL	s + 0x14	-	via=S	-	-	-	0
 site	src/game/rest_3g.cpp	312	global	At	at::kEventRows	0x64ddee	-	none	-	-	0
-site	src/game/rest_3g.cpp	349	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/rest_3g.cpp	350	record	UL	actor + i	-	via=SH_CALL	-	-	-	0
-site	src/game/rest_3g.cpp	350	record	SetUL	e + i	-	table=0x93b960	-	-	-	0
+site	src/game/rest_3g.cpp	350	record	SetUL	e + i	-	-	-	-	-	0
 site	src/game/rest_3g.cpp	372	global	At	at::kFormation	0x904aac	-	none	-	-	0
-site	src/game/rest_3g.cpp	375	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/rest_3g.cpp	377	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/rest_3g.cpp	386	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/rest_3g.cpp	414	record	SetWord	rect + 2	-	-	-	-	-	0
 site	src/game/rest_3g.cpp	415	record	SetWord	rect + 4	-	-	-	-	-	0
 site	src/game/rest_3g.cpp	416	record	SetWord	rect + 6	-	-	-	-	-	0
@@ -16636,14 +16415,12 @@ site	src/game/rest_3g.cpp	922	global	SetUL	at::kLayerLast	0x802cf4	-	inside	Draw
 site	src/game/rest_3g.cpp	930	global	UL	at::kRows	0x903854	-	inside	DamageScratch+0x4	records::DamageScratch	0
 site	src/game/rest_3g.cpp	944	record	SetWord	quad + 0x26	-	param	-	-	-	0
 site	src/game/rest_3g.cpp	945	record	SetWord	quad + 0x16	-	param	-	-	-	0
-site	src/game/rest_3g_fuzz.cpp	269	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/rest_3g_fuzz.cpp	294	global	Mem	at::kCounter	0x903848	-	none	-	-	1
 site	src/game/rest_3g_fuzz.cpp	410	global	Mem	at::kCounter	0x903848	-	none	-	-	1
 site	src/game/rest_3g_fuzz.cpp	414	global	-	at::kColumns	0x903858	-	inside	DamageScratch+0x8	records::DamageScratch	1
 site	src/game/rest_3g_fuzz.cpp	414	global	-	at::kRows	0x903854	-	inside	DamageScratch+0x4	records::DamageScratch	1
 site	src/game/rest_3g_fuzz.cpp	416	global	-	at::kOriginX	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/rest_3g_fuzz.cpp	416	global	-	at::kOriginZ	0x903852	-	inside	DamageScratch+0x2	records::DamageScratch	1
-site	src/game/rest_3g_fuzz.cpp	438	global	-	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/rest_3g_fuzz.cpp	484	raw	At	0x7DEE80 + i * 0xA4	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	1
 site	src/game/rest_3g_fuzz.cpp	488	raw	At	0x7DEE80 + (next() % 30) * 0xA4	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	1
 site	src/game/rest_3g_fuzz.cpp	492	raw	At	0x904EFC	0x904efc	-	exact	Game_AreaNumber	unsigned short	1
@@ -16655,12 +16432,9 @@ site	src/game/rest_4a.cpp	67	global	At	at::kEvents	0x904ca0	-	none	-	-	0
 site	src/game/rest_4a.cpp	107	global	UL	at::kBattleFlags	0x904aa8	-	none	-	-	0
 site	src/game/rest_4a.cpp	115	global	At	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/rest_4a.cpp	119	global	UL	at::kEnemyFlags	0x93ba74	-	inside	Battle_Enemies+0x114	records::BattleEnemy	0
-site	src/game/rest_4a.cpp	119	global	At	at::kEnemyHp	0x93ba1a	-	inside	Battle_Enemies+0xba	records::BattleEnemy	0
-site	src/game/rest_4a.cpp	119	global	At	at::kEnemyStatus	0x93b9f2	-	inside	Battle_Enemies+0x92	records::BattleEnemy	0
 site	src/game/rest_4a.cpp	121	global	At	at::kAutoMode	0x904b35	-	none	-	-	0
 site	src/game/rest_4a.cpp	122	global	At	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/rest_4a.cpp	125	global	At	at::kAbilityFlags	0x65c4d8	-	exact	NameTable_Abilities	-	0
-site	src/game/rest_4a.cpp	125	global	At	at::kEnemyAbility	0x93ba66	-	inside	Battle_Enemies+0x106	records::BattleEnemy	0
 site	src/game/rest_4a.cpp	127	global	At	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/rest_4a.cpp	128	global	At	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/rest_4a.cpp	132	global	At	at::kTarget	0x904b44	-	none	-	-	0
@@ -18722,7 +18496,6 @@ site	src/game/scenario_harness.cpp	554	raw	Mem	0x903850	0x903850	-	exact	DamageS
 site	src/game/scenario_harness.cpp	554	raw	Mem	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/scenario_harness.cpp	1325	raw	Mem	0x929F24	0x929f24	-	exact	MapView_Row	short	1
 site	src/game/scenario_harness.cpp	1326	raw	Mem	0x929F20	0x929f20	-	exact	MapView_Column	short	1
-site	src/game/scenario_harness.cpp	1413	global	Mem	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/scenario_harness.cpp	1565	global	-	at::kTextBuffer	0x904ba0	-	none	-	-	1
 site	src/game/scenario_harness.cpp	1566	global	-	at::kSaveFlags	0x904098	-	none	-	-	1
 site	src/game/scenario_harness.cpp	1567	global	-	at::kSaveBytes	0x904560	-	none	-	-	1
@@ -23049,26 +22822,26 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19512
-#count sites_global	9656
-#count sites_global_at	7662
-#count sites_global_module	1994
+#count sites	19285
+#count sites_global	9429
+#count sites_global_at	7441
+#count sites_global_module	1988
 #count sites_record	8727
 #count sites_raw	1129
-#count sites_in_fuzz	4179
+#count sites_in_fuzz	4095
 #count files_with_sites	523
 #count files_with_record_sites	470
 #count record_sites_with_stride	699
-#count record_sites_with_table_or_base	3493
+#count record_sites_with_table_or_base	3486
 #count record_sites_on_named_pointer	198
 #count record_sites_on_helper_call	677
 #count record_sites_offset_into_constant	1546
 #count record_sites_via_helper	2430
 #count record_sites_param	661
-#count record_sites_family_unknown	1707
+#count record_sites_family_unknown	1713
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	2342
-#count global_sites_covered_inside	1120
+#count global_sites_covered_exact	2204
+#count global_sites_covered_inside	1031
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
 #count at_refs_struct_or_array	271

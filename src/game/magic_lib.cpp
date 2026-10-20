@@ -72,7 +72,7 @@ void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + (i - 3u) * at::kEnemyStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + (i - 3u) * at::kEnemyStride); }
 // An actor's record by the battle index, as the originals index it (0..2 the
 // party, 3.. an enemy; unchecked above).
 unsigned char* ActorRecord(unsigned i) { return i < 3 ? PartyRecord(i) : EnemyRecord(i); }

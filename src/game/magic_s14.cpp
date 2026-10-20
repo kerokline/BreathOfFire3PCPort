@@ -1231,7 +1231,7 @@ S14_EXPORT void __cdecl TsunamiRings_Draw(void) {
     for (unsigned height = 0; height < 3; ++height)
         for (unsigned e = 0; e < 8; ++e) {
             if (MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) continue;
-            RingAt(height, e, Mem(at::kEnemies + e * at::kEnemyStride));
+            RingAt(height, e, Mem(Battle_Enemies_addr + e * at::kEnemyStride));
         }
     for (unsigned height = 0; height < 3; ++height)
         for (unsigned m = 0; m < 3; ++m) {

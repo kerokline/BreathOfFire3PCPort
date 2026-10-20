@@ -782,7 +782,7 @@ unsigned char* EnemyByActor(unsigned actor, const char* who) {
         bof3::Fatal("%s: actor %u is no enemy (3..10) - the original runs BattleEnemy_SetAnimation on a record outside the "
                     "eight (docs/rest_3a.md section 7)",
                     who, actor & 0xFF);
-    return At(at::kEnemies + index * at::kEnemySize);
+    return At(Battle_Enemies_addr + index * at::kEnemySize);
 }
 }  // namespace
 

@@ -351,7 +351,7 @@ void Disturb(std::uint32_t h) {
         // own record disturbance)
         const unsigned t = mh::Mem(mh::at::kTarget)[0];
         if (t >= 3 && t <= 10)
-            mh::Mem(mh::at::kEnemies + (t - 3) * mh::at::kEnemyStride + 0x8F)[0] = (h >> 16) & 1 ? 0 : Byte(h >> 24);
+            mh::Mem(Battle_Enemies_addr + (t - 3) * mh::at::kEnemyStride + 0x8F)[0] = (h >> 16) & 1 ? 0 : Byte(h >> 24);
         break;
     }
     default: break;
@@ -364,7 +364,7 @@ void Near(unsigned char& b, unsigned before) {
     if (mh::Half()) b = Byte(before + (mh::Half() ? 1u : 0u));
 }
 unsigned char* PartyRec(unsigned i) { return mh::Mem(ObjTrio_addr + i * mh::at::kPartyStride); }
-unsigned char* EnemyRec(int i) { return mh::Mem(mh::at::kEnemies + static_cast<std::uint32_t>(i) * mh::at::kEnemyStride); }
+unsigned char* EnemyRec(int i) { return mh::Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(i) * mh::at::kEnemyStride); }
 unsigned char& Target() { return mh::Mem(mh::at::kTarget)[0]; }
 // A target on the enemy side (3..10) or the party's (0..2).
 void EnemyTarget() { Target() = Byte(3 + mh::Next() % 8); }

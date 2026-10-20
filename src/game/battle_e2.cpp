@@ -65,7 +65,7 @@ unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
 // enemy op runs on (docs/battle_e2.md 1.1, 1.3).
 // An enemy object and a party member by an actor's index, as the originals
 // address them (32-bit wrap: an index below its base reads below the array).
-unsigned char* EnemyObj(U index) { return At(at::kEnemies + index * at::kEnemyStride); }
+unsigned char* EnemyObj(U index) { return At(Battle_Enemies_addr + index * at::kEnemyStride); }
 unsigned char* Member(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
 unsigned char* Task(U slot) { return At(BattleTask_Slots_addr + slot * at::kTaskStride); }
 

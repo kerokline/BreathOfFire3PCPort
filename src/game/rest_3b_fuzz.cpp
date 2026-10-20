@@ -227,7 +227,7 @@ U AbilityListEffect(const U*, U) { return Key(bh::TextBuffer() + bh::Noise() % 0
 // below 3, else the enemy object byte - 3, the difference in 32 bits).
 unsigned char* Rec(unsigned n, U party_at, U enemy_at) {
     return n < 3 ? Mem(ObjTrio_addr + n * at::kPartyStride + party_at)
-                 : Mem(at::kEnemies + static_cast<U>(static_cast<std::int32_t>(n) - 3) * at::kEnemyStride + enemy_at);
+                 : Mem(Battle_Enemies_addr + static_cast<U>(static_cast<std::int32_t>(n) - 3) * at::kEnemyStride + enemy_at);
 }
 // Battle_CalcDamage answers, a third of the time, the target's HP less 1, 0
 // or plus 1 (slot 2 compares the delta with it: its boundary).
@@ -244,7 +244,7 @@ U ShareAtStatEffect(const U*, U answer) {
     const U n = bh::Noise();
     if (n % 3 != 0) return answer;
     const unsigned t = Mem(at::kTarget)[0];
-    const U v = move_script::Word(Mem(at::kEnemies + static_cast<U>(static_cast<std::int32_t>(t) - 3) * at::kEnemyStride + 0xB6));
+    const U v = move_script::Word(Mem(Battle_Enemies_addr + static_cast<U>(static_cast<std::int32_t>(t) - 3) * at::kEnemyStride + 0xB6));
     return (answer & 0xFFFF0000u) | ((v + (n >> 8) % 3 - 1) & 0xFFFF);
 }
 // Rand: 15 bits as the CRT's (the engine set's form), and the target moved
@@ -333,7 +333,7 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
-unsigned char* EnemyN(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
+unsigned char* EnemyN(unsigned n) { return Mem(Battle_Enemies_addr + (n % 8) * at::kEnemyStride); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 
 // The keys: the confirm and cancel masks single bits, the pressed word one of

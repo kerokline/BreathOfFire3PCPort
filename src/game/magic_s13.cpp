@@ -80,7 +80,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot
 // by index - 3.
 unsigned char* ActorRecord(unsigned a) {
     if (a < 3) return Mem(ObjTrio_addr + a * at::kPartyStride);
-    return Mem(at::kEnemies + (a - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (a - 3) * at::kEnemyStride);
 }
 
 unsigned RandByte() { return static_cast<unsigned>(MH_CALL(Rand)()) & 0xFFu; }

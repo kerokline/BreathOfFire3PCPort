@@ -993,7 +993,7 @@ C2_EXPORT void __cdecl HolocaustBeam_Run(void) {
 
 namespace {
 unsigned char* EnemyRecord(int i) {
-    return Mem(static_cast<std::uint32_t>(static_cast<int>(at::kEnemies) + i * static_cast<int>(at::kEnemyStride)));
+    return Mem(static_cast<std::uint32_t>(static_cast<int>(Battle_Enemies_addr) + i * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 }  // namespace

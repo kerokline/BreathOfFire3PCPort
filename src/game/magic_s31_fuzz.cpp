@@ -485,7 +485,7 @@ void Seed(unsigned k) {
         if (mh::Often()) mh::Mem(EventBattle_Id_addr)[0] = Byte(1 + mh::Next() % 0xFF);
         if (mh::Often()) {
             const unsigned a = mh::Mem(mh::at::kActor)[0];
-            mh::Mem(mh::at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(a) - 3) * 0x128) + 0x100)[0] = 0x29;
+            mh::Mem(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(a) - 3) * 0x128) + 0x100)[0] = 0x29;
         }
         break;
     // the shell: its y one step either side of the actor's limit

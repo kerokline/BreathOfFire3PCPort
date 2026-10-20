@@ -144,8 +144,8 @@ unsigned char Kind3Event(unsigned code) {
     case 0: EventRoundFlag(); break;
     case 1:
         if (LeaderCommand78()) {
-            SetWord(At(at::kEnemy0Hp), 1);
-            SetWord(At(at::kEnemy0B0), 1);
+            Battle_Enemies[0].hp = 1;
+            Battle_Enemies[0].max_hp = 1;
             BossSb_Enemy1Hp = 1;
             BossSb_Enemy1B0 = 1;
             rv::Bytes(ObjTrio)[0x134] &= 0xFD;
@@ -210,8 +210,8 @@ void ExitPosePair(unsigned tag0, unsigned char flip) {
         BH_CALL(BossActor_ClearBit40)(tag0 + 1);
         return;
     }
-    PoseActor(tag0, at::kEnemy0, BossSb_Enemy0Pose_addr, flip);
-    PoseActor(tag0 + 1, at::kEnemy1, BossSb_Enemy1Pose_addr, flip);
+    PoseActor(tag0, Battle_Enemies_addr, BossSb_Enemy0Pose_addr, flip);
+    PoseActor(tag0 + 1, Battle_Enemies_addr + 0x128, BossSb_Enemy1Pose_addr, flip);
 }
 
 // The exit hook of set-ups 8, 9, 10: actor `tag` shown, found, bank 0x83,
@@ -365,8 +365,8 @@ extern "C" void __cdecl Boss06_Exit(void) {
         BH_CALL(BossActor_ClearBit40)(5);
         return;
     }
-    PoseActor(4, at::kEnemy0, BossSb_Enemy0Pose_addr, 1);
-    PoseActor(5, at::kEnemy1, BossSb_Enemy1Pose_addr, 1);
+    PoseActor(4, Battle_Enemies_addr, BossSb_Enemy0Pose_addr, 1);
+    PoseActor(5, Battle_Enemies_addr + 0x128, BossSb_Enemy1Pose_addr, 1);
     SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(BossSb_Enemy1Place));
     SetLong(Sprite_Current + 0x38, Long(At(BossSb_Enemy1Place_addr + 4)));
     SetLong(Sprite_Current + 0x3C, Long(At(BossSb_Enemy1Place_addr + 8)));

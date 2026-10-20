@@ -98,7 +98,7 @@ namespace {
 
 // Actor records, indexed in 32 bits as the originals' lea chains do.
 unsigned char* Party(std::uint32_t i) { return At(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* Enemy(std::uint32_t i) { return At(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* Enemy(std::uint32_t i) { return At(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
 std::int32_t Address(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* ActionRecord(std::uint32_t action) { return At(at::kActions + action * at::kActionStride); }

@@ -139,7 +139,7 @@ extern "C" unsigned __cdecl Battle_ActorStanding(unsigned actor) {
         r = (member_rec->flags & 1) && (member_rec->status & 0x4944) == 0 ? 1 : 0;
     } else {
         offset = ((a - 3) & 0xFF) * at::kEnemyStride;
-        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(at::kEnemy + offset));
+        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(Battle_Enemies_addr + offset));
         r = (enemy_rec->flags & 1) && (enemy_rec->status & 0x4144) == 0 ? 1 : 0;
     }
     return (offset & ~0xFFu) | r;

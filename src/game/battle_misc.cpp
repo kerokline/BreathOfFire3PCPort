@@ -198,7 +198,7 @@ extern "C" void __cdecl Battle_InitActorContexts(void) {
         }
     }
     for (U i = 0; i < 8; ++i) {
-        const U object = kEnemyObjects + i * kEnemyStride;
+        const U object = Battle_Enemies_addr + i * kEnemyStride;
         if (At(object)[0] & 1) {
             SetSpriteCurrent(object);
             BattleE3_CurrentEnemy = object;
@@ -228,7 +228,7 @@ extern "C" unsigned long __cdecl Battle_SpawnActorCopies(void) {
             object = at::ObjTrioAt() + index * kPartyStride;
             if (!(At(object)[0] & 1) || (At(object + 0x134)[0] & 8)) continue;
         } else {
-            object = kEnemyObjects + (index - 3) * kEnemyStride;
+            object = Battle_Enemies_addr + (index - 3) * kEnemyStride;
             eax = g.actor_out(index);
             if ((eax & 0xFF) != 0 || (At(object + 0x114)[0] & 8)) continue;
         }

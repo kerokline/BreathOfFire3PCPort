@@ -285,7 +285,7 @@ extern "C" unsigned char __cdecl Boss01_Event(unsigned phase) {
         break;
     case 1:
         if (B(at::kActor) == 0 && B(at::kActionKind) == 4 && Word(At(BattleSprites_Action) + 2) == 0x78) {
-            for (const U enemy : {at::kEnemies, at::kEnemy1}) {
+            for (const U enemy : {Battle_Enemies_addr, Battle_Enemies_addr + 0x128}) {
                 SetWord(At(enemy + 0xA4), 1);
                 SetWord(At(enemy + 0xB0), 1);
             }
@@ -330,7 +330,7 @@ extern "C" void __cdecl Boss01_End(void) {
 // Sprite_SetAnimation(1 for tag 6, 0 for tag 7), then the actor's words
 // +0x58 / +0x5A the enemy's - Sprite_Current read again at each store.
 extern "C" void __cdecl Boss01_Exit(void) {
-    const struct { unsigned tag; U enemy; unsigned animation; } kActors[] = {{6, at::kEnemies, 1}, {7, at::kEnemy1, 0}};
+    const struct { unsigned tag; U enemy; unsigned animation; } kActors[] = {{6, Battle_Enemies_addr, 1}, {7, Battle_Enemies_addr + 0x128, 0}};
     for (const auto& a : kActors) {
         BH_CALL(BossActor_ClearBit40)(a.tag);
         BH_CALL(BossActor_CopyFrom)(a.tag, At(a.enemy), 1);
@@ -482,7 +482,7 @@ extern "C" void __cdecl Boss03_Setup(void) { SetHooks(at::kBoss03End, at::kExitA
 // BossActor_CopyFrom(0, enemy 0's object, 0) (its pose), counter 0x6D, track
 // 0x18, step 1; else step 2.
 extern "C" void __cdecl Boss03_End(void) {
-    EndByBits([] { BH_CALL(BossActor_CopyFrom)(0, At(at::kEnemies), 0); }, 0x6D, 0x18);
+    EndByBits([] { BH_CALL(BossActor_CopyFrom)(0, At(Battle_Enemies_addr), 0); }, 0x6D, 0x18);
 }
 
 // original 0x438270: Boss_SetupTable[39] - BattleHook_End
@@ -525,7 +525,7 @@ extern "C" void __cdecl BossWeretigr_State4Fx(void) {
                     "0x93A000 + %u * 0x84, past the pool (docs/boss_sa.md section 6)",
                     n, n);
     unsigned char* const task = At(BattleTask_Slots_addr + n * at::kTaskStride);
-    const U from = at::kEnemies + static_cast<U>(static_cast<std::int32_t>(B(at::kActor)) - 3) * at::kEnemyStride;
+    const U from = Battle_Enemies_addr + static_cast<U>(static_cast<std::int32_t>(B(at::kActor)) - 3) * at::kEnemyStride;
     for (U i = 0; i < 0x80; i += 4) SetLong(task + i, Long(At(from + i)));
     task[6] = 3;
     task[5] = 6;

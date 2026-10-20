@@ -178,8 +178,8 @@ extern "C" void __cdecl Boss11_Exit(void) {
     Sprite_Current = Actor("Boss11_Exit", 3);
     BH_CALL(Sprite_SetAnimationBank)(0x83);
     BH_CALL(Sprite_SetAnimation)(0);
-    SetWord(Sprite_Current + 0x58, Word(At(at::kEnemy0 + at::kEnemyPose)));
-    SetWord(Sprite_Current + 0x5A, Word(At(at::kEnemy0 + at::kEnemyPose + 2)));
+    SetWord(Sprite_Current + 0x58, Battle_Enemies[0].script_pos);
+    SetWord(Sprite_Current + 0x5A, Battle_Enemies[0].frame_word);
 }
 
 // ============================================================================
@@ -581,7 +581,7 @@ extern "C" void __cdecl Boss16_Setup(void) {
 extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
     switch (code & 0xFF) {
     case 0:
-        if ((L(At(at::kEnemy0 + at::kEnemyStatus)) & 0x2000) || (L(At(at::kEnemy1 + at::kEnemyStatus)) & 0x2000))
+        if ((L(At(Battle_Enemies_addr + at::kEnemyStatus)) & 0x2000) || (L(At(Battle_Enemies_addr + 0x128 + at::kEnemyStatus)) & 0x2000))
             BossSe_Script |= 8;
         return 0;
     case 1:
@@ -593,8 +593,8 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
         if (BossSc_WaitTurns != 0) return 0;
         NameBanner();
         BossSc_WaitTurns = 0;
-        Sprite_Current = At(at::kEnemy2);
-        BattleE3_CurrentEnemy = static_cast<std::int32_t>(at::kEnemy2);
+        Sprite_Current = At(Battle_Enemies_addr + 0x250);
+        BattleE3_CurrentEnemy = static_cast<std::int32_t>(Battle_Enemies_addr + 0x250);
         BH_CALL(Field_MemberSprite)(1, 1);
         rv::As<records::BattleEnemy>(Enemy())->anim_table = 0x64CCAC;
         Sprite_Current[0x29] = 4;
@@ -619,13 +619,13 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
 // applies - never adds theirs, and this store replaces whatever it did add.
 extern "C" void __cdecl Boss16_End(void) {
     if (Battle_EndFlags & 2) {
-        const U sum = (static_cast<U>(Word(At(at::kEnemy1 + at::kEnemyExp))) + Word(At(at::kEnemy0 + at::kEnemyExp))) * Cheats_ExpMultiplier();
+        const U sum = (static_cast<std::uint32_t>(Battle_Enemies[1].exp) + Battle_Enemies[0].exp) * Cheats_ExpMultiplier();
         B(at::kMoveCounter) = 0x14;
         Battle_ExpTotal = static_cast<std::int32_t>(sum);
         BH_AT(Handler, at::kEndWin)();
     } else {
         if (BossSe_Script & 0x40) {
-            Sprite_Current = At(at::kEnemy2);
+            Sprite_Current = At(Battle_Enemies_addr + 0x250);
             BH_CALL(Sprite_SetAnimationBank)(0xF9);
             Sprite_Current[0x24] &= 0xFE;
             Sprite_Current[0x2A] = 1;
@@ -663,14 +663,14 @@ extern "C" void __cdecl Boss16_Exit(void) {
         Sprite_Current = Actor("Boss16_Exit", 1);
         BH_CALL(Sprite_SetAnimationBank)(0xEF);
         BH_CALL(Sprite_SetAnimation)(0);
-        SetWord(Sprite_Current + 0x58, Word(At(at::kEnemy1 + at::kEnemyPose)));
-        SetWord(Sprite_Current + 0x5A, Word(At(at::kEnemy1 + at::kEnemyPose + 2)));
+        SetWord(Sprite_Current + 0x58, Battle_Enemies[1].script_pos);
+        SetWord(Sprite_Current + 0x5A, Battle_Enemies[1].frame_word);
         BH_CALL(BossActor_ClearBit40)(0);
         Sprite_Current = Actor("Boss16_Exit", 0);
         BH_CALL(Sprite_SetAnimationBank)(0xEE);
         BH_CALL(Sprite_SetAnimation)(0);
-        SetWord(Sprite_Current + 0x58, Word(At(at::kEnemy0 + at::kEnemyPose)));
-        SetWord(Sprite_Current + 0x5A, Word(At(at::kEnemy0 + at::kEnemyPose + 2)));
+        SetWord(Sprite_Current + 0x58, Battle_Enemies[0].script_pos);
+        SetWord(Sprite_Current + 0x5A, Battle_Enemies[0].frame_word);
     }
     BH_CALL(Scenario_CallA)(1);
     ObjTrio[1].flags |= 0x40;

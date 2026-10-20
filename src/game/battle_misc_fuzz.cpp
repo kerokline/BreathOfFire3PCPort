@@ -195,7 +195,7 @@ enum Test {
 // A valid object for Sprite_Current or the current enemy.
 // From a hash, not the fuzz's generator: a stand-in runs once per side, and
 // both sides must see the same disturbance.
-U SomeEnemy(U h) { return kEnemyObjects + (h % 8) * kEnemyStride; }
+U SomeEnemy(U h) { return Battle_Enemies_addr + (h % 8) * kEnemyStride; }
 U SomeObject(U h) {
     switch (h % 3) {
     case 0: return kParty + ((h >> 4) % 3) * kPartyStride;
@@ -216,7 +216,7 @@ U __cdecl StubAlloc(U kind, U mode) {
     if (g_test == kTestContexts || g_test == kTestCopies) {
         // a later actor's flag bits
         const U k = (h >> 8) % 11;
-        const U object = k < 3 ? kParty + k * kPartyStride : kEnemyObjects + (k - 3) * kEnemyStride;
+        const U object = k < 3 ? kParty + k * kPartyStride : Battle_Enemies_addr + (k - 3) * kEnemyStride;
         if (h % 4 == 1) At(object)[0] ^= 1;
         if (g_test == kTestCopies && h % 4 == 2) At(object + (k < 3 ? 0x134 : 0x114))[0] ^= 8;
     }
@@ -228,7 +228,7 @@ U __cdecl StubActorOut(U actor) {
     const U h = Mix(2);
     // the object's +0x114 is read after the call
     const U index = actor & 0xFF;
-    if (index >= 3 && index <= 10 && h % 5 == 0) At(kEnemyObjects + (index - 3) * kEnemyStride + 0x114)[0] ^= 8;
+    if (index >= 3 && index <= 10 && h % 5 == 0) At(Battle_Enemies_addr + (index - 3) * kEnemyStride + 0x114)[0] ^= 8;
     return ByteAnswer(2);
 }
 U __cdecl StubTint(U sprite, U r, U gg, U b, U a) {
@@ -339,7 +339,7 @@ U __cdecl StubInitContext() {
     Record(16, GetLong(At(kSprite)), GetLong(At(kFieldState)), GetLong(At(BattleE3_CurrentEnemy_addr)));
     const U h = Mix(22);
     const U k = (h >> 8) % 11;
-    const U object = k < 3 ? kParty + k * kPartyStride : kEnemyObjects + (k - 3) * kEnemyStride;
+    const U object = k < 3 ? kParty + k * kPartyStride : Battle_Enemies_addr + (k - 3) * kEnemyStride;
     if (h % 3 == 0) At(object)[0] ^= 1;
     return Mix(23);
 }
@@ -631,7 +631,7 @@ void PlanSlots(U low, U span) {
 }
 
 void FuzzContextOne(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{BattleTask_Slots_addr, kContextBytes}, {kSprite, 4}, {kParty, kPartyBytes}, {kEnemyObjects, kEnemyBytes},
+    const Region regions[] = {{BattleTask_Slots_addr, kContextBytes}, {kSprite, 4}, {kParty, kPartyBytes}, {Battle_Enemies_addr, kEnemyBytes},
                               {Addr(g_enemy), sizeof g_enemy}};
     g_test = kTestContextOne;
     for (unsigned r = 0; r < rounds; ++r) {
@@ -639,7 +639,7 @@ void FuzzContextOne(Tally& t, const void* clone, unsigned rounds) {
         if (r % 16 == 0) {
             FillRandom(BattleTask_Slots_addr, kContextBytes);
             FillRandom(kParty, kPartyBytes);
-            FillRandom(kEnemyObjects, kEnemyBytes);
+            FillRandom(Battle_Enemies_addr, kEnemyBytes);
             FillRandom(Addr(g_enemy), sizeof g_enemy);
         }
         const U slot = Next() % kFuzzSlots;
@@ -661,21 +661,21 @@ void FuzzContextOne(Tally& t, const void* clone, unsigned rounds) {
 
 void RandomActors(bool copies) {
     FillRandom(kParty, kPartyBytes);
-    FillRandom(kEnemyObjects, kEnemyBytes);
+    FillRandom(Battle_Enemies_addr, kEnemyBytes);
     for (U i = 0; i < 3; ++i) {
         unsigned char* const o = At(kParty + i * kPartyStride);
         o[0] = static_cast<unsigned char>((o[0] & ~1u) | (Next() % 4 != 0));
         if (copies) o[0x134] = static_cast<unsigned char>((o[0x134] & ~8u) | (Next() % 4 == 0 ? 8 : 0));
     }
     for (U i = 0; i < 8; ++i) {
-        unsigned char* const o = At(kEnemyObjects + i * kEnemyStride);
+        unsigned char* const o = At(Battle_Enemies_addr + i * kEnemyStride);
         o[0] = static_cast<unsigned char>((o[0] & ~1u) | (Next() % 2));
         if (copies) o[0x114] = static_cast<unsigned char>((o[0x114] & ~8u) | (Next() % 4 == 0 ? 8 : 0));
     }
 }
 
 void FuzzContexts(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{kParty, kPartyBytes}, {kEnemyObjects, kEnemyBytes}, {kSprite, 4}, {kFieldState, 4}, {BattleE3_CurrentEnemy_addr, 4}};
+    const Region regions[] = {{kParty, kPartyBytes}, {Battle_Enemies_addr, kEnemyBytes}, {kSprite, 4}, {kFieldState, 4}, {BattleE3_CurrentEnemy_addr, 4}};
     g_test = kTestContexts;
     PlanSlots(0, kFuzzSlots);
     for (unsigned r = 0; r < rounds; ++r) {
@@ -965,16 +965,16 @@ void FuzzName(Tally& t, const void* clone, unsigned rounds) {
 // The enemy and its script: fields the ops test seeded, rows' opcodes over the
 // whole range with the table's edges.
 void FuzzAi(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{BattleE3_CurrentEnemy_addr, 4}, {kAiScripts, kScriptBytes}, {kActingKind, 1}, {kEnemyObjects, kEnemyBytes},
+    const Region regions[] = {{BattleE3_CurrentEnemy_addr, 4}, {kAiScripts, kScriptBytes}, {kActingKind, 1}, {Battle_Enemies_addr, kEnemyBytes},
                               {Addr(g_enemy), sizeof g_enemy}};
     g_test = kTestAi;
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x1700000u + r;
         if (r % 32 == 0) {
-            FillRandom(kEnemyObjects, kEnemyBytes);
+            FillRandom(Battle_Enemies_addr, kEnemyBytes);
             FillRandom(Addr(g_enemy), sizeof g_enemy);
             // a stand-in may move the current enemy: its script is read at the next row
-            for (U i = 0; i < 8; ++i) At(kEnemyObjects + i * kEnemyStride + 0xF0)[0] = static_cast<unsigned char>(Next() % 16);
+            for (U i = 0; i < 8; ++i) At(Battle_Enemies_addr + i * kEnemyStride + 0xF0)[0] = static_cast<unsigned char>(Next() % 16);
             for (U k = 0; k < 4; ++k) g_enemy[0xF0 + k * 4] = static_cast<unsigned char>(Next() % 16);
         }
         const U enemy = Next() % 3 ? SomeEnemy() : Addr(g_enemy);

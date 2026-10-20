@@ -199,7 +199,7 @@ void GroundPoint(const unsigned char* s, short height, short* v) {
 // 0..2, else the enemy by index - 3, unchecked).
 unsigned char* ActorRecord(unsigned char a) {
     if (a < 3) return Mem(ObjTrio_addr + a * at::kPartyStride);
-    return Mem(at::kEnemies + (a - 3u) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (a - 3u) * at::kEnemyStride);
 }
 // A kind-1 child of parameter 0x23 made a copy of the acting actor's record's
 // first 0x80 bytes (`rep movsd`, forward): MAGIC015's images.

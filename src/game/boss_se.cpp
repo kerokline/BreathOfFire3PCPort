@@ -564,7 +564,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
             Message(0x1F);
             rv::Bytes(ObjTrio)[0x125] = 1;
             rv::Bytes(ObjTrio)[0xba] = 0x64;
-            SetWord(At(at::kEnemy0Hp), 1);
+            Battle_Enemies[0].hp = 1;
             break;
         default: break;
         }
@@ -578,14 +578,14 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         BossSe_Script = script;
     }
     if ((script & 0x10) == 0 && B(at::kPhase) == 3 && BattleActions_Step == 0) {
-        const U flags = static_cast<U>(Long(At(at::kEnemy0Flags))) | 2;
+        const U flags = Battle_Enemies[0].flags_110 | 2;
         rv::Bytes(ObjTrio)[0x124] = 3;
         rv::Bytes(ObjTrio)[0x125] = 1;
         rv::Bytes(ObjTrio)[0xbc] = 0x64;
         rv::Bytes(ObjTrio)[0xba] = 0;
-        B(at::kEnemy0Byte104) = 0;
-        SetLong(At(at::kEnemy0Flags), S(flags));
-        B(at::kEnemy0Byte105) = 2;
+        Battle_Enemies[0].command = 0;
+        Battle_Enemies[0].flags_110 = S(flags);
+        Battle_Enemies[0].command_kind = 2;
         BattleDamage_TurnCount = 7;
         static constexpr unsigned char kOrder[7] = {0, 3, 0, 3, 0, 3, 0};
         for (unsigned i = 0; i < 7; ++i) B(at::kOrder + i) = kOrder[i];
@@ -598,7 +598,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         return 0;
     }
     if ((script & 2) == 0) {
-        Sprite_Current = At(at::kEnemy0);
+        Sprite_Current = At(Battle_Enemies_addr);
         BH_CALL(BattleEnemy_SetAnimation)(8);
         BossSe_Script |= 2;
         return 0;
@@ -693,18 +693,18 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
             BattleE1_Count = static_cast<unsigned char>(BattleE1_Count + 1);
             return 0;
         }
-        const auto v = static_cast<std::int16_t>(Word(At(at::kEnemy0Word108)));
+        const auto v = Battle_Enemies[0].hp_change;
         if (v > 0)
             BattleE1_SumA = S(BattleE1_SumA + static_cast<U>(static_cast<std::int32_t>(v)));
         return 0;
     }
     case 1:
-        if (BossSe_RoundSlot == 1 && B(at::kEnemy0Flag8E) == 1) {
-            const U flags = static_cast<U>(Long(At(at::kEnemy0Flags))) | 2;
-            B(at::kEnemy0State1) = 2;
-            SetLong(At(at::kEnemy0Flags), S(flags));
-            B(at::kEnemy0State2) = 0;
-            B(at::kEnemy0Byte105) = 2;
+        if (BossSe_RoundSlot == 1 && Battle_Enemies[0].odds_index == 1) {
+            const U flags = Battle_Enemies[0].flags_110 | 2;
+            Battle_Enemies[0].state = 2;
+            Battle_Enemies[0].flags_110 = S(flags);
+            Battle_Enemies[0].step = 0;
+            Battle_Enemies[0].command_kind = 2;
         }
         return 0;
     case 2:

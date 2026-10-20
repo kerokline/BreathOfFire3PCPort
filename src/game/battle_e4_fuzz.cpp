@@ -237,7 +237,7 @@ unsigned char Byte(std::initializer_list<U> v) {
     return static_cast<unsigned char>(v.begin()[bh::Next() % v.size()]);
 }
 U Word16(std::initializer_list<U> v) { return v.begin()[bh::Next() % v.size()]; }
-unsigned char* Enemy(unsigned actor) { return M(at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned actor) { return M(Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 
 // The cells every function's indices go through, kept inside what the
 // regions hold (docs/battle_e4.md section 5): the members' +5 (their party

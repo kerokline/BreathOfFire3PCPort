@@ -494,7 +494,7 @@ extern "C" void __cdecl BossAngler_HookSpawnFx(unsigned) {
                     slot, slot);
     const std::int32_t actor = static_cast<std::int32_t>(B(at::kActor)) - 3;
     unsigned char* const to = At(BattleTask_Slots_addr + at::kTaskStride * slot);
-    const unsigned char* const from = At(static_cast<U>(static_cast<std::int32_t>(at::kEnemies) + actor * static_cast<std::int32_t>(at::kEnemyStride)));
+    const unsigned char* const from = At(static_cast<U>(static_cast<std::int32_t>(Battle_Enemies_addr) + actor * static_cast<std::int32_t>(at::kEnemyStride)));
     for (unsigned i = 0; i < 0x80; i += 4) {
         std::uint32_t d;
         std::memcpy(&d, from + i, 4);

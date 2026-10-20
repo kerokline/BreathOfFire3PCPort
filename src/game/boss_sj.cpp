@@ -297,7 +297,7 @@ extern "C" void __cdecl BossDLord_HookFx(unsigned) {
                     "0x80 bytes past the 48 slots (docs/boss_sj.md section 6)",
                     slot);
     const U actor = B(at::kActor);
-    const unsigned char* const from = At(at::kEnemies + (actor - 3u) * at::kEnemyStride);
+    const unsigned char* const from = At(Battle_Enemies_addr + (actor - 3u) * at::kEnemyStride);
     unsigned char* const to = At(BattleTask_Slots_addr + slot * at::kTaskStride);
     for (unsigned i = 0; i < 0x80; i += 4) SetLong(to + i, Long(from + i));
     to[1] = 0;
@@ -359,7 +359,7 @@ extern "C" void __cdecl BossDLordFx_StepDispatch(void) {
 // by one (Sprite_Current read after the calls).
 extern "C" void __cdecl BossDLordFx_Start(void) {
     Sprite_Current[0xB] = 0;
-    const unsigned type = B(at::kEnemy0Type);
+    const unsigned type = Battle_Enemies[0].data_id;
     Sprite_Current[9] = At(at::kEnemyFxSize + type * at::kEnemyDataStride)[0];
     BH_CALL(Sprite_SetAnimation)(4);
     BH_CALL(Sprite_ScriptTick)();
@@ -453,7 +453,7 @@ extern "C" void __cdecl Boss55_End(void) {
 // original 0x440830: slot 5: 0x939AD8 = enemy 0's object, then jmp
 // [BossMyriaFx_States + 4 * Sprite_Current +1] (7: states 0..6).
 extern "C" void __cdecl BossMyriaFx_Dispatch(void) {
-    BattleE3_CurrentEnemy = S(at::kEnemies);
+    BattleE3_CurrentEnemy = S(Battle_Enemies_addr);
     DispatchTask("BossMyriaFx_Dispatch", AddressOf(BossMyriaFx_States), 7);
 }
 

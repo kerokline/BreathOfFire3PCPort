@@ -344,8 +344,8 @@ extern "C" void __cdecl Boss_SetByLeaderId(void) {
 // +0x134 bit 1, 0x939B1C = its +0x3C.
 extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
     const struct { U status, object; unsigned flag, cell; } kEnemies[] = {
-        {BossH_Enemy1Status_addr, at::kEnemy1, 0x34, 1},
-        {BossH_Enemy2Status_addr, at::kEnemy2, 0x33, 0},
+        {BossH_Enemy1Status_addr, Battle_Enemies_addr + 0x128, 0x34, 1},
+        {BossH_Enemy2Status_addr, Battle_Enemies_addr + 0x250, 0x33, 0},
     };
     for (const auto& e : kEnemies) {
         const unsigned status = At(e.status)[1];   // the dword's second byte: +0x93
@@ -358,7 +358,7 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
         BH_CALL(Sprite_EnsureAnimation)(up ? 3 : 2);
         BH_CALL(BossMap_SetCorners)(e.cell, up ? 1 : 0);
     }
-    const long ground = BH_CALL(AreaMap_Elevation)(Long(At(at::kEnemy0X)), Long(At(at::kEnemy0Z)));
+    const long ground = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
     BossH_Enemy0Ground = static_cast<unsigned>(ground) & 0xFFFF;
     const long leader = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
     ObjTrio[0].height_whole = static_cast<unsigned>(leader) & 0xFFFF;

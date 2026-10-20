@@ -65,7 +65,7 @@ unsigned char* Result() { return Ptr(at::kResult); }
 // (0x93B960 + 0x128 (n - 3), the difference in 32 bits - a byte below 3
 // lands before the enemies). Neither is checked, as in the original.
 unsigned char* Party(unsigned n) { return At(ObjTrio_addr + (n & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned n) { return At(at::kEnemies + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned n) { return At(Battle_Enemies_addr + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
 unsigned char* CharRecord(unsigned roster) { return At(at::kCharRecords + (roster & 0xFF) * at::kCharStride); }
 unsigned char* AbilityRow(unsigned id) { return At(at::kAbilityRows + (id & 0xFFFF) * at::kAbilityStride); }
 

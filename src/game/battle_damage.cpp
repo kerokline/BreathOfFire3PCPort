@@ -93,7 +93,7 @@ using move_script::Word;
 // An actor byte: 0..2 the party, 3 and up the enemies. Both address the
 // working record by the byte alone, as the original does (`and eax, 0xFF`).
 unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + 0x10 + (actor & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned actor) { return At(Battle_Enemies_addr + 0x80 + ((actor & 0xFF) - 3) * at::kEnemyStride); }
 // Party(a) is +0x10 into the member record (0x802D50), Enemy(a) +0x80 into the
 // enemy object (0x93B9E0): their typed views start at the records'
 // starts, rv::As<records::PartyMember>(Party(a) - 0x10) and

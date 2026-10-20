@@ -65,7 +65,7 @@ void SetF(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 // The party's records and the enemies' objects as the originals index them:
 // unchecked (an actor past 2 reaches past the three members, as there).
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + (member & 0xFFu) * at::kPartyStride); }
-unsigned char* Enemy(unsigned index) { return At(at::kEnemies + index * at::kEnemyStride); }
+unsigned char* Enemy(unsigned index) { return At(Battle_Enemies_addr + index * at::kEnemyStride); }
 unsigned Actor() { return B(at::kActor); }
 unsigned char* Owner() { return At(BattleE2_Owner); }
 // Sprite_Current in the effect tasks is the task slot (docs/battle_e6.md 2.3).

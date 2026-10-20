@@ -130,7 +130,7 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 unsigned char* Task(unsigned index) { return Mem(BattleTask_Slots_addr + index * at::kTaskStride); }
 unsigned char* PoolA(unsigned index) { return Mem(kPoolA + index * kPoolStride); }
 unsigned char* PoolB(unsigned index) { return Mem(kPoolB + index * kPoolStride); }
-unsigned char* Enemy(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* Enemy(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* Member(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* Tint(unsigned i) { return Mem(0x7E0700 + i * 12); }   // MoveScript_TintRecords, unchecked
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }

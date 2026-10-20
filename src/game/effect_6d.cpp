@@ -1287,7 +1287,7 @@ extern "C" void __cdecl EffectKind18Sub64_Place(void) {
     const U v = Variant("EffectKind18Sub64_Place", s, at::kSub64Variants);
     so->x = static_cast<U>(At(at::kSub64Cells + 2 * v)[0]) << 16;
     so->z = static_cast<U>(At(at::kSub64Cells + 2 * v + 1)[0]) << 16;
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, at::kEnemyRecords + at::kEnemyStride * v);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, Battle_Enemies_addr + 0x128 + at::kEnemyStride * v);
     s[9] = 0;
     s[0xA] = 0;
     s[2] = static_cast<unsigned char>(s[2] + 1);

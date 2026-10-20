@@ -120,7 +120,7 @@ void PutFloat(unsigned char* a, int v) {
 // stride 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor < 3) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
 }
 
 // ===========================================================================
@@ -643,7 +643,7 @@ MS16_EXPORT void __cdecl ActorFx_WaitStep4(void) {
 MS16_EXPORT unsigned char __cdecl Magic073_CountReacting(void) {
     unsigned char n = 0;
     for (unsigned char i = 0; i < 8; ++i)
-        if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(kEnemyState + i * at::kEnemyStride)[0] == 6)
+        if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(Battle_Enemies_addr + 0x379 + i * at::kEnemyStride)[0] == 6)
             ++n;
     for (unsigned char i = 0; i < 3; ++i)
         if (MH_CALL(Battle_ActorIsOut)(i) == 0 && Mem(ObjTrio_addr + 0x1 + i * at::kPartyStride)[0] == 6) ++n;

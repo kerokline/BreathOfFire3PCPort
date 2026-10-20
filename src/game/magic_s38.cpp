@@ -140,7 +140,7 @@ unsigned char* PoolRecord(std::uint32_t pool, unsigned index) { return Mem(pool 
 // The side's records as MAGIC225 walks them: the party member i, the enemy i
 // (from 0).
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyByOrder(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* EnemyByOrder(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }

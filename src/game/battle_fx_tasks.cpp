@@ -98,7 +98,7 @@ unsigned char* Sc() { return Sprite_Current; }
 // original's 32-bit wrap.
 unsigned char* ActorFlagByte(unsigned actor) {
     if (actor <= 2) return At(ObjTrio_addr + 0x130 + actor * at::kMemberSize);
-    return At(at::kEnemies + 0x110 + (actor - 3u) * at::kEnemySize);
+    return At(Battle_Enemies_addr + 0x110 + (actor - 3u) * at::kEnemySize);
 }
 
 void CallIndex(const Handler* table, unsigned n, unsigned index, const char* who) {
@@ -226,12 +226,12 @@ extern "C" void __cdecl BattleFx_PopupStart(void) {
         k = Word(o + 0x2C) * 4u + o[8];
         rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + 1 + k * 2)[0])) + Word(o + 0x30));
     } else {
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(Battle_Enemies_addr + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x2E));
         s = Cur();
         o = OwnerOf(s);
         actor = o[5];
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(Battle_Enemies_addr + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x30));
     }
     unsigned char* d = Cur();
@@ -435,7 +435,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatchT
     } else {
         if (g.actor_is_out(arg) != 0) return;
         const unsigned now = PtrAt(at::kTaskOwner)[5];
-        if ((At(at::kEnemies + 0x92 + (now - 3u) * at::kEnemySize)[0] & 0x58) == 0) return;
+        if ((At(Battle_Enemies_addr + 0x92 + (now - 3u) * at::kEnemySize)[0] & 0x58) == 0) return;
     }
     rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
 }

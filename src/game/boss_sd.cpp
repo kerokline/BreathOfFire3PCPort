@@ -154,9 +154,9 @@ void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_
     }
     const unsigned hp1 = BossSb_Enemy1Hp;
     const unsigned hp2 = BossSd_Enemy2Hp;
-    const unsigned a4 = Word(At(at::kEnemy0Hp));
+    const unsigned a4 = Battle_Enemies[0].hp;
     BossSd_KeptHp1 = hp1;
-    const unsigned a6 = Word(At(at::kEnemy0A6));
+    const unsigned a6 = Battle_Enemies[0].ap;
     BossSd_KeptHp2 = hp2;
     BossSd_KeptA4 = a4;
     BossSd_KeptA6 = a6;
@@ -173,7 +173,7 @@ unsigned char EventAreaFight(unsigned code) {
         return 0;
     }
     if (phase != 0) return 0;
-    if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) Battle_EndFlags |= 2;
+    if (static_cast<U>(Long(At(Battle_Enemies_addr + 0x92))) & 0x4000) Battle_EndFlags |= 2;
     if (BossH_Enemy1Status & 0x4000) {
         BossSe_Script |= 2;
         Battle_EndFlags |= 2;
@@ -191,13 +191,13 @@ unsigned char EventAreaFight(unsigned code) {
 // loses bit 0x40; then actors 3 and 4 take enemies 1 and 2's poses (what 0)
 // and lose bit 0x40.
 void ExitAreaFight(unsigned tag) {
-    if (!(static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000)) {
-        BH_CALL(BossActor_CopyFrom)(tag, At(at::kEnemy0), 1);
+    if (!(static_cast<U>(Long(At(Battle_Enemies_addr + 0x92))) & 0x4000)) {
+        BH_CALL(BossActor_CopyFrom)(tag, At(Battle_Enemies_addr), 1);
         BH_CALL(BossActor_ClearBit40)(tag);
     }
-    BH_CALL(BossActor_CopyFrom)(3, At(at::kEnemy1), 0);
+    BH_CALL(BossActor_CopyFrom)(3, At(Battle_Enemies_addr + 0x128), 0);
     BH_CALL(BossActor_ClearBit40)(3);
-    BH_CALL(BossActor_CopyFrom)(4, At(at::kEnemy2), 0);
+    BH_CALL(BossActor_CopyFrom)(4, At(Battle_Enemies_addr + 0x250), 0);
     BH_CALL(BossActor_ClearBit40)(4);
 }
 
@@ -224,7 +224,7 @@ void DeathStates() {
 // The two ground words: enemy 0's +0x3E and the leader's, AreaMap_Elevation
 // of their (+0x34, +0x38).
 void GroundWords() {
-    const long e = BH_CALL(AreaMap_Elevation)(Long(At(at::kEnemy0X)), Long(At(at::kEnemy0Z)));
+    const long e = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
     BossH_Enemy0Ground = static_cast<unsigned>(e) & 0xFFFF;
     const long l = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
     ObjTrio[0].height_whole = static_cast<unsigned>(l) & 0xFFFF;
@@ -524,7 +524,7 @@ extern "C" unsigned char __cdecl Boss21_Event(unsigned code) {
             At(ObjTrio_addr + 0x90 + i * at::kPartyStride)[0] |= 0x10;
     for (unsigned i = 3; i <= 10; ++i)
         if ((BH_CALL(Battle_ActorIsOut)((code & 0xFFFFFF00u) | i) & 0xFF) == 0)
-            At(at::kEnemy0Status + (i - 3) * at::kEnemyStride)[0] |= 0x10;
+            At(Battle_Enemies_addr + 0x92 + (i - 3) * at::kEnemyStride)[0] |= 0x10;
     return 0;
 }
 

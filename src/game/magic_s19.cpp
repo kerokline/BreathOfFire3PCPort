@@ -107,7 +107,7 @@ void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 unsigned char* Pool(unsigned i) { return Mem(kPool + i * kPoolStride); }
 unsigned char* Task(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
 unsigned char* Tint(unsigned i) { return Mem(MoveScript_TintRecords_addr + 12 * i); }
-unsigned char* Enemy(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* Enemy(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* Member(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 

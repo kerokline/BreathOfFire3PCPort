@@ -37,7 +37,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + (i % at::kEnemyCount) * at::kEnemySize); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + (i % at::kEnemyCount) * at::kEnemySize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleE3_CurrentEnemy_addr)))); }
 

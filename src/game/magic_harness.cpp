@@ -473,7 +473,7 @@ unsigned char* Mem(std::uint32_t address) { return move_script::At(address); }
 unsigned char* TaskAt(unsigned k) { return Mem(BattleTask_Slots_addr + (k % 4) * at::kTaskStride); }
 unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* EnemyOf(unsigned char target) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyOf(unsigned char actor) { return Mem(ObjTrio_addr + actor * at::kPartyStride); }
 void SetPointer(std::uint32_t cell, const void* p) { move_script::SetLong(Mem(cell), static_cast<std::int32_t>(Key(p))); }
@@ -562,7 +562,7 @@ void Run(const Group& group) {
         {at::kBattle, at::kBattleSize},
         {BattleE1_MessageUp_addr, 4},
         {ObjTrio_addr, 5 * at::kPartyStride},
-        {at::kEnemies, 8 * at::kEnemyStride},
+        {Battle_Enemies_addr, 8 * at::kEnemyStride},
         {Key(g_records), sizeof g_records},
     };
     for (const Region& r : standard) g_regions[g_region_n++] = r;

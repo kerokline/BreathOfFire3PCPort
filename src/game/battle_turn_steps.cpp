@@ -150,7 +150,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Check
         }
     }
     for (unsigned i = 0; i < 2; ++i) Member(i)[at::kFlags + 1] &= 0x7F;
-    for (unsigned i = 0; i < 7; ++i) At(at::kEnemy + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
+    for (unsigned i = 0; i < 7; ++i) At(Battle_Enemies_addr + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
     SetLong(At(at::kRounds), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kRounds))) + 1));
     BattlePhases_B7A = 0;
     g.tick_counters();

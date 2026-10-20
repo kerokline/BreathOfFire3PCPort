@@ -59,7 +59,7 @@ S32 S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); 
 // whatever lies there, on both sides).
 bool IsMember(U actor) { return (actor & 0xFF) <= 2; }
 U PartyAt(U actor) { return ObjTrio_addr + (actor & 0xFF) * at::kPartyStride; }
-U EnemyAt(U actor) { return at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
+U EnemyAt(U actor) { return Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
 unsigned char* Party(U actor) { return At(PartyAt(actor)); }
 unsigned char* Enemy(U actor) { return At(EnemyAt(actor)); }
 
@@ -251,7 +251,7 @@ extern "C" unsigned char __cdecl Battle_LacksArmour(unsigned actor, unsigned ite
 extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
     const bool member = IsMember(target);
     const U offset = member ? (target & 0xFF) * at::kPartyStride : ((target & 0xFF) - 3u) * at::kEnemyStride;
-    const U record = (member ? ObjTrio_addr : at::kEnemies) + offset;
+    const U record = (member ? ObjTrio_addr : Battle_Enemies_addr) + offset;
     const U word_at = record + (member ? 0x90u : 0x92u);
     const U cur = W(word_at);
     const U s = status & 0xFF;

@@ -71,7 +71,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 }
 
 unsigned char* PartyAt(unsigned a) { return At(ObjTrio_addr + 0x10 + (a & 0xFF) * at::kPartyStride); }
-unsigned char* EnemyAt(unsigned a) { return At(at::kEnemy + ((a & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* EnemyAt(unsigned a) { return At(Battle_Enemies_addr + 0x80 + ((a & 0xFF) - 3) * at::kEnemyStride); }
 // PartyAt / EnemyAt point +0x10 / +0x80 into their records; their typed views
 // start at the records (PartyAt(a) - 0x10, EnemyAt(a) + at::kEObject).
 
@@ -415,7 +415,7 @@ void MakeRegions() {
     g_regions[1] = {DamageScratch_addr, 4};
     g_regions[2] = {0x904000, 0xC00};                  // 0x904060, the battle state 0x904AA8..0x904B9B
     g_regions[3] = {at::kTurnWork, 0x580};             // the turn work, the damage scratch stats 0x939F86..0x939FEB
-    g_regions[4] = {at::kEnemy - 0x80, 0xBA0};         // the enemy objects and records, room for actor 11
+    g_regions[4] = {Battle_Enemies_addr + 0x80 - 0x80, 0xBA0}; // the enemy objects and records, room for actor 11
     g_regions[5] = {at::kAiScripts, 0x900};            // AI scripts 0..15
     g_regions[6] = {Address(g_bufs), sizeof g_bufs};
 }
@@ -612,7 +612,7 @@ Args Seed(unsigned k) {
         if (Half()) At(BattleDamage_AiByteB97_addr)[0] = static_cast<unsigned char>(Next() % 2);
         break;
     case kRowDoneK: {
-        x.a[0] = Often() ? Address(EnemyAt(3 + Next() % 8) + at::kEObject) : at::kEnemy - 0x80 + Next() % 0xA00;
+        x.a[0] = Often() ? Address(EnemyAt(3 + Next() % 8) + at::kEObject) : (Battle_Enemies_addr + 0x80) - 0x80 + Next() % 0xA00;
         x.a[1] = Byte(Often() ? Next() % 10 : Next() % 40);
         break;
     }

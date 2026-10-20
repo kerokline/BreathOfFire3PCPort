@@ -132,7 +132,7 @@ void Disturb() {
         break;
     }
     case 6: At(at::kPartyBars + 36 * (v % 5) + (h >> 20) % 4)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
-    case 7: At(at::kEnemies + at::kEnemyStride * (v % 6) + 0xF)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 1 : byte); break;
+    case 7: At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * (v % 6) + 0xF)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 1 : byte); break;
     case 8: {
         unsigned char* const w = g_buf.windows[v % kWindows];
         w[3 + (h >> 20) % 0x10] = byte;
@@ -627,7 +627,7 @@ Args Seed(unsigned k) {
         args.a[1] = Coord();
         args.a[2] = Garbage(0xFF, 3 + (Often() ? Next() % 6 : Next() % 11));
         for (unsigned e = 0; e < 6; ++e)
-            At(at::kEnemies + at::kEnemyStride * e + 0xF)[0] = static_cast<unsigned char>(Half() ? 1 : Next());
+            At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * e + 0xF)[0] = static_cast<unsigned char>(Half() ? 1 : Next());
         SeedLineColour();
         break;
     case kTargetMember:

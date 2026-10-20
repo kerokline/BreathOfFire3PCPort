@@ -541,7 +541,7 @@ Region g_regions[] = {
     {BattlePhases_B89_addr, 1},
     {EventBattle_Id_addr, 1},
     {ObjTrio_addr, 3 * at::kPartyStride},
-    {at::kEnemyRecords, 8 * at::kEnemyStride},
+    {Battle_Enemies_addr, 8 * at::kEnemyStride},
     {0x905D98, 4},                                            // Field_State
     {0x7DE3BC, 4},                                            // Snd_Device
     {SndStream_Buffer_addr, 4},
@@ -587,7 +587,7 @@ void Fix(const void* const* types) {
     Gfx_PacketNext = PrimAt(Next());
     At(at::kActorIndex)[0] = static_cast<unsigned char>(Next() % 11);
     for (unsigned j = 0; j < 8; ++j)
-        SetPointer(at::kEnemyRecords + j * at::kEnemyStride + 0xF8, g_cues + Next() % 0x20);
+        SetPointer(Battle_Enemies_addr + j * at::kEnemyStride + 0xF8, g_cues + Next() % 0x20);
     for (unsigned t = 0; t < 4; ++t) SetPointer(at::kSparkleTypes + 4 * t, types[t]);
     SetPointer(Snd_Device_addr, Next() % 4 == 0 ? nullptr : &g_fake);
     SetPointer(SndStream_Buffer_addr, Next() % 4 == 0 ? nullptr : &g_fake);
@@ -663,7 +663,7 @@ Args Seed(unsigned k) {
             args.a[0] = Stale(0xFF, kIndex[Next() % 6]);
             const unsigned i = args.a[0] & 0xFF;
             unsigned char* const r = i < 3 ? At(ObjTrio_addr + i * at::kPartyStride)
-                                           : At(at::kEnemyRecords + (i - 3) * at::kEnemyStride);
+                                           : At(Battle_Enemies_addr + (i - 3) * at::kEnemyStride);
             if (Half()) r[i < 3 ? 0x90 : 0x92] ^= 0x80;
         }
         if (k == kSoundK) {
@@ -673,7 +673,7 @@ Args Seed(unsigned k) {
             At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         }
         if (k == kFxSizeK && index >= 3)   // a type the region covers
-            At(at::kEnemyRecords + (index - 3) * at::kEnemyStride + 0xF0)[0] = static_cast<unsigned char>(Next() % 8);
+            At(Battle_Enemies_addr + (index - 3) * at::kEnemyStride + 0xF0)[0] = static_cast<unsigned char>(Next() % 8);
         if (k == kFxSizeK && index < 3) {
             unsigned char* const r = At(ObjTrio_addr + index * at::kPartyStride);
             if (Half()) r[0x134] ^= 2;

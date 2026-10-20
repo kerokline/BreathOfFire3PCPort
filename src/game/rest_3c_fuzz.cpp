@@ -210,7 +210,7 @@ U CalcEffect(const U* a, U answer) {
     if (n % 3 == 0) return answer;
     const unsigned t = a[1] & 0xFF;
     if (t > 10) return answer;
-    const unsigned hp = t < 3 ? Word(Mem(ObjTrio_addr + t * at::kPartyStride + 0x98)) : Word(Mem(at::kEnemies + (t - 3) * at::kEnemyStride + 0xA4));
+    const unsigned hp = t < 3 ? Word(Mem(ObjTrio_addr + t * at::kPartyStride + 0x98)) : Word(Mem(Battle_Enemies_addr + (t - 3) * at::kEnemyStride + 0xA4));
     static const unsigned kPick[] = {0, 1, 0xFFFFFFFFu, 0, 1};
     const unsigned k = (n >> 4) % 5;
     const unsigned v = k < 2 ? kPick[k] : hp + kPick[k];   // k 2..4: HP - 1, HP, HP + 1
@@ -269,7 +269,7 @@ const bh::Clone* g_cur = nullptr;   // the Run's clones (for Seed and Disturb)
 U g_base = 0;                       // the clone the round runs
 
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
-unsigned char* EnemyObj(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
+unsigned char* EnemyObj(unsigned n) { return Mem(Battle_Enemies_addr + (n % 8) * at::kEnemyStride); }
 unsigned char* CharRecord(unsigned c) { return Mem(at::kCharRecords + c * at::kCharStride); }
 std::uint16_t Word16(std::initializer_list<U> often) {
     if (!bh::Often()) return static_cast<std::uint16_t>(bh::Next());

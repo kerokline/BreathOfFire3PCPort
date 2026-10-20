@@ -213,7 +213,7 @@ extern "C" unsigned long __cdecl BossSample6_Hook(unsigned word) {
 extern "C" void __cdecl Boss38_Setup(void) {
     SetupOwnEnd(bof3::addr::Boss38_End);
     B(at::kTarget) = 0x40;
-    Sprite_Current = At(at::kEnemy7);
+    Sprite_Current = At(Battle_Enemies_addr + 0x818);
     BH_CALL(MagicFx_CenterOnSide)();
     const unsigned char* const s = Sprite_Current;
     const U cx = BossSi_CentreX;
@@ -486,7 +486,7 @@ extern "C" unsigned long __cdecl BossArwanFx_Dispatch(void) {
 // +0x29 = 2, Sprite_SetAnimation(2); Sprite_Current put back.
 extern "C" void __cdecl BossArwanFx_Start(void) {
     Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
-    Sprite_Current[9] = At(at::kEnemyDataCount + at::kEnemyDataStride * B(at::kEnemy0Type))[0];
+    Sprite_Current[9] = At(at::kEnemyDataCount + at::kEnemyDataStride * Battle_Enemies[0].data_id)[0];
     Sprite_Current[0xA] = 0x2D;
     unsigned char* const task = Sprite_Current;
     Sprite_Current = Owner();

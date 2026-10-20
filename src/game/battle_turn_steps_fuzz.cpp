@@ -87,7 +87,7 @@ std::uint32_t Watch() {
         for (unsigned o : {0x01u, 0x98u, 0x99u, 0x9Au, 0x9Bu, 0x9Cu, 0x131u, 0x134u, 0x135u}) mix(m[o]);
     }
     for (unsigned k = 0; k < 3; ++k) mix(B(at::kCopies + k * at::kPartyStride + at::kFlags));
-    for (unsigned i = 0; i < 8; ++i) mix(B(at::kEnemy + i * at::kEnemyStride + at::kEFlags + 1));
+    for (unsigned i = 0; i < 8; ++i) mix(B(Battle_Enemies_addr + i * at::kEnemyStride + at::kEFlags + 1));
     for (unsigned k = 0; k < 12; ++k) mix(B(Window1_addr + k * at::kWindowStride));
     mix(Address(Sprite_Current));
     return h;

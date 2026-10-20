@@ -81,7 +81,7 @@ void SetPtrAt(std::uint32_t address, const unsigned char* p) {
 unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
 unsigned char* CurrentTask() { return PtrAt(BattleFlow_TaskCurrent_addr); }
 unsigned char* Task(unsigned index) { return At(BattleTask_Slots_addr + index * at::kTaskSize); }
-unsigned char* EnemyObject(unsigned index) { return At(at::kEnemies + index * at::kEnemySize); }
+unsigned char* EnemyObject(unsigned index) { return At(Battle_Enemies_addr + index * at::kEnemySize); }
 
 // A float's bits for a primitive's corner: the original's fild of a sign-
 // extended 16-bit value, then fstp.
