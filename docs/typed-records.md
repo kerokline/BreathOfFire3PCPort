@@ -640,6 +640,8 @@ Padding:
 
 ### `SpriteObject` (`0xA4` bytes, from `SpriteHead`)
 
+Since the C4 audit (A F5) its fields `+0x80..+0x9F` are declared in `SpriteObjectBody` (`0xA0` bytes, from `SpriteHead`), which `SpriteObject` extends with `handler` and `pad_A1`: `SpriteObjectBody` is `Sprite_Kind2`'s type, the kind-2 object 0x7E0940 whose `+0xA0..+0xA3` are `DrawItemPool_Free`, so `handler` cannot be spelled on it. The table lists the fields of both.
+
 | off | type | field | source |
 |---|---|---|---|
 | `+0x80` | u8 | `context` | the script context's first byte: flags (movement-script 1b; field_objects.cpp) |

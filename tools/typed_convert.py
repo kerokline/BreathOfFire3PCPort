@@ -664,6 +664,8 @@ class Entries:
 UNION_NAMES = {
     'records::SpriteObject': {0x6: 'type', 0x7: 'flags2', 0x8: 'direction', 0x9: 'step_frames',
                               0x32: 'draw_key', 0x60: 'depth'},
+    'records::SpriteObjectBody': {0x6: 'type', 0x7: 'flags2', 0x8: 'direction', 0x9: 'step_frames',
+                                  0x32: 'draw_key', 0x60: 'depth'},
     'records::PartyMember': {0x5: 'actor', 0x8: 'direction', 0x9: 'step_frames', 0x32: 'draw_key', 0x60: 'depth'},
     'records::BattleEnemy': {0x5: 'actor', 0x8: 'layout', 0x32: 'draw_key', 0x60: 'depth'},
     'records::EffectObject': {0x5: 'kind', 0x6: 'param', 0x9: 'timer', 0x32: 'draw_key', 0x60: 'depth'},

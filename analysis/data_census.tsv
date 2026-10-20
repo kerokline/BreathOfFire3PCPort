@@ -21007,7 +21007,7 @@ const	kTintsEnd	0x7e0880	data	1	src/game/battle_sprites_callees.h:58(battle_spri
 const	kPassFlags	0x7e0918	data	1	src/game/area_w2e_callees.h:93(area_w2e::at)	Draw_PassFlags	data	exact	unsigned char	at
 const	kReturnX	0x7e091c	data	1	src/game/rest_3g_callees.h:67(rest_3g::at)	-	-	inside	unsigned char	at
 const	kReturnZ	0x7e0920	data	1	src/game/rest_3g_callees.h:68(rest_3g::at)	-	-	inside	unsigned char	at
-const	kFzKind2Sprite	0x7e0974	data	1	src/game/area_w3g_fuzz.cpp:69(area_w3g::(anon))	-	-	inside	records::SpriteObject	module
+const	kFzKind2Sprite	0x7e0974	data	1	src/game/area_w3g_fuzz.cpp:69(area_w3g::(anon))	-	-	inside	records::SpriteObjectBody	module
 const	kEffects	0x7e11e0	data	7	src/game/scena_sc12_callees.h:53(scena_sc12::at);src/game/scena_sc13_callees.h:60(scena_sc13::at);src/game/scena_sc5_callees.h:69(scena_sc5::at);src/game/scena_sc6_callees.h:71(scena_sc6::at);src/game/scena_sc9a_callees.h:55(scena_sc9a::at);src/game/scena_sc9b_callees.h:53(scena_sc9b::at);src/game/scenario_harness.h:76(scenario_harness::at)	Effect_Objects	data	exact	records::EffectObject	at
 const	kRecord0	0x7e11e0	data	1	src/game/effect_1a_callees.h:83(effect_1a::at)	Effect_Objects	data	exact	records::EffectObject	at
 const	kEff0StepX	0x7e11ec	data	1	src/game/effect_1e_callees.h:48(effect_1e::at)	-	-	inside	records::EffectObject	at
@@ -22157,7 +22157,7 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count stride_definitions	445
 #count stride_names	92
 #count stride_values	34
-#count static_assert_offsetof_sizeof	739
+#count static_assert_offsetof_sizeof	740
 #count symbols_data	3248
 #count symbols_data_ctype	3164
 #count symbols_data_count	2415

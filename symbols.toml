@@ -3622,10 +3622,10 @@ evidence = "disasm 2026-09-22: flow op 0F takes its animation from byte b1 * 11 
 [[data]]
 pc = 0x7E0940
 name = "Sprite_Kind2"
-ctype = "records::SpriteObject"
+ctype = "records::SpriteObjectBody"
 status = "hypothesis"
 evidence = "disasm 2026-09-22: the one object MoveScript_ObjectKind calls kind 2. MoveScript_Flow op 0D writes its +0x34..+0x3E directly (0x7E0974..0x7E097E) where other kinds go through Sprite_Current, and op F3 its +0x14 (0x7E0954) and reads +0x87 (0x7E09C7). 0x5730E6 runs a script with 0x7E09C0 (its +0x80) as the script context. What it is in the game is unread; 164 = 0xA4, the sprite object size."
-note = "Typed (typed-data round stage C4, 2026-10-19) as one records::SpriteObject (the macro is the record, `Sprite_Kind2.speed`), from 164 bytes: MoveScript_Flow op 0D's +0x34..+0x3E, op F3's +0x14 and +0x87, 0x5730E6's script context at +0x80 are the sprite object's fields there. Its last four bytes +0xA0..+0xA3 lie on DrawItemPool_Free's first two words (0x7E09E0, filled 0, 1 by its initialisers), as the 164-byte entry did: none of our readers of the kind-2 object reach past +0x9F (the C4 sites)."
+note = "Typed (typed-data round stage C4, 2026-10-19) as one records::SpriteObject (the macro is the record, `Sprite_Kind2.speed`), from 164 bytes: MoveScript_Flow op 0D's +0x34..+0x3E, op F3's +0x14 and +0x87, 0x5730E6's script context at +0x80 are the sprite object's fields there. Its last four bytes +0xA0..+0xA3 lie on DrawItemPool_Free's first two words (0x7E09E0, filled 0, 1 by its initialisers), as the 164-byte entry did: none of our readers of the kind-2 object reach past +0x9F (the C4 sites), so since the C4 audit (A F5) the entry is one records::SpriteObjectBody, the sprite object's first 0xA0 bytes: handler / pad_A1 cannot be spelled on it. The self-tests that copy the object with the pool's bytes copy sizeof(records::SpriteObject), 164, as before."
 
 [[data]]
 pc = 0x937F8C

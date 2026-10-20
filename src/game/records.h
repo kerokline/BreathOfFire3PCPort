@@ -149,7 +149,12 @@ struct SpriteHead {
 // ScriptContext view below).
 // Not this family: the character records 0x903A70 + id * 0xA4 share the
 // stride (kCharStride / kRecordStride) but not the layout (CharRecord below).
-struct SpriteObject : SpriteHead {
+//
+// SpriteObjectBody is its first 0xA0 bytes, all but the area-object handler
+// byte and the three after it: the extent of Sprite_Kind2 0x7E0940, the kind-2
+// object, whose +0xA0..+0xA3 are DrawItemPool_Free 0x7E09E0 (C4 audit A F5;
+// symbols.toml Sprite_Kind2), so Sprite_Kind2.handler cannot be spelled.
+struct SpriteObjectBody : SpriteHead {
     std::uint8_t context;  // +0x80 the script context's first byte: flags (movement-script 1b; field_objects.cpp)
     std::uint8_t pose_wait;  // +0x81 (field_objects.cpp)
     std::uint8_t loop;  // +0x82 the context's loop counter (movement-script 1b)
@@ -168,6 +173,9 @@ struct SpriteObject : SpriteHead {
     std::uint16_t counter;  // +0x9C counted up for every object in reach of the point ahead (event-ops.md); a u16 zeroed by field_objects.cpp
     std::uint8_t tag;  // +0x9E the boss set-ups' tag (boss_spawn.h; field_o.cpp:1157 op[0x10]; psp-battle-changes.md)
     unsigned char pad_9F[0x1];  // +0x9F: area_w0c.md Area32_TintStart puts a slot in the active member's +0x9F; one reader, meaning not settled
+};
+
+struct SpriteObject : SpriteObjectBody {
     std::uint8_t handler;  // +0xA0 & 0x7F the area object handler, 0x7F none (rest_2a.md Area_ObjectHandler); 0x7F at a spawn (event_ops.cpp:204,259; field_o.cpp:1158)
     unsigned char pad_A1[0x3];  // +0xA1..+0xA3: +0xA1 written by field_objects.cpp, not named
 };
@@ -740,23 +748,24 @@ static_assert(sizeof(SpriteHead) == 0x80, "SpriteHead stride");
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
 
-static_assert(offsetof(SpriteObject, context) == 0x80, "SpriteObject::context");
-static_assert(offsetof(SpriteObject, pose_wait) == 0x81, "SpriteObject::pose_wait");
-static_assert(offsetof(SpriteObject, loop) == 0x82, "SpriteObject::loop");
-static_assert(offsetof(SpriteObject, area_script) == 0x83, "SpriteObject::area_script");
-static_assert(offsetof(SpriteObject, speed) == 0x84, "SpriteObject::speed");
-static_assert(offsetof(SpriteObject, saved_facing) == 0x85, "SpriteObject::saved_facing");
-static_assert(offsetof(SpriteObject, trigger) == 0x86, "SpriteObject::trigger");
-static_assert(offsetof(SpriteObject, move_steps) == 0x87, "SpriteObject::move_steps");
-static_assert(offsetof(SpriteObject, trigger_word) == 0x88, "SpriteObject::trigger_word");
-static_assert(offsetof(SpriteObject, script_position) == 0x8A, "SpriteObject::script_position");
-static_assert(offsetof(SpriteObject, target_x) == 0x8C, "SpriteObject::target_x");
-static_assert(offsetof(SpriteObject, target_z) == 0x90, "SpriteObject::target_z");
-static_assert(offsetof(SpriteObject, best_score) == 0x94, "SpriteObject::best_score");
-static_assert(offsetof(SpriteObject, half_w) == 0x98, "SpriteObject::half_w");
-static_assert(offsetof(SpriteObject, half_d) == 0x9A, "SpriteObject::half_d");
-static_assert(offsetof(SpriteObject, counter) == 0x9C, "SpriteObject::counter");
-static_assert(offsetof(SpriteObject, tag) == 0x9E, "SpriteObject::tag");
+static_assert(offsetof(SpriteObjectBody, context) == 0x80, "SpriteObjectBody::context");
+static_assert(offsetof(SpriteObjectBody, pose_wait) == 0x81, "SpriteObjectBody::pose_wait");
+static_assert(offsetof(SpriteObjectBody, loop) == 0x82, "SpriteObjectBody::loop");
+static_assert(offsetof(SpriteObjectBody, area_script) == 0x83, "SpriteObjectBody::area_script");
+static_assert(offsetof(SpriteObjectBody, speed) == 0x84, "SpriteObjectBody::speed");
+static_assert(offsetof(SpriteObjectBody, saved_facing) == 0x85, "SpriteObjectBody::saved_facing");
+static_assert(offsetof(SpriteObjectBody, trigger) == 0x86, "SpriteObjectBody::trigger");
+static_assert(offsetof(SpriteObjectBody, move_steps) == 0x87, "SpriteObjectBody::move_steps");
+static_assert(offsetof(SpriteObjectBody, trigger_word) == 0x88, "SpriteObjectBody::trigger_word");
+static_assert(offsetof(SpriteObjectBody, script_position) == 0x8A, "SpriteObjectBody::script_position");
+static_assert(offsetof(SpriteObjectBody, target_x) == 0x8C, "SpriteObjectBody::target_x");
+static_assert(offsetof(SpriteObjectBody, target_z) == 0x90, "SpriteObjectBody::target_z");
+static_assert(offsetof(SpriteObjectBody, best_score) == 0x94, "SpriteObjectBody::best_score");
+static_assert(offsetof(SpriteObjectBody, half_w) == 0x98, "SpriteObjectBody::half_w");
+static_assert(offsetof(SpriteObjectBody, half_d) == 0x9A, "SpriteObjectBody::half_d");
+static_assert(offsetof(SpriteObjectBody, counter) == 0x9C, "SpriteObjectBody::counter");
+static_assert(offsetof(SpriteObjectBody, tag) == 0x9E, "SpriteObjectBody::tag");
+static_assert(sizeof(SpriteObjectBody) == 0xA0, "SpriteObjectBody: Sprite_Kind2's extent");
 static_assert(offsetof(SpriteObject, handler) == 0xA0, "SpriteObject::handler");
 static_assert(sizeof(SpriteObject) == 0xA4, "SpriteObject stride");
 
