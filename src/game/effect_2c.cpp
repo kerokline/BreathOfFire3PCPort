@@ -689,7 +689,7 @@ extern "C" void __cdecl EffectKind43_Run(void) {
 // phase +6 = 0; +1 up; Sound_PlayEffect(0x201).
 extern "C" void __cdecl EffectKind43_Start(void) {
     SH_CALL(EffectKind43_Setup)();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x78);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x78);
     S()[6] = 0;
     NextState();
     SH_CALL(Sound_PlayEffect)(0x201);
@@ -701,11 +701,11 @@ extern "C" void __cdecl EffectKind43_Start(void) {
 extern "C" void __cdecl EffectKind43_Gather(void) {
     for (unsigned k = 0; k < 4; ++k) SH_CALL(EffectKind43_AddSpark)();
     SH_CALL(EffectKind43_SparksRun)();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, rv::As<records::EffectObject>(S())->draw_key - 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, rv::As<records::EffectWork>(S())->work_32 - 1u);
     unsigned char* s = S();
-    if (rv::As<records::EffectObject>(s)->draw_key != 0) return;
+    if (rv::As<records::EffectWork>(s)->work_32 != 0) return;
     s[6] = 1;
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x3C);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x3C);
     NextState();
 }
 

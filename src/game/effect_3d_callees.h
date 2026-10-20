@@ -39,7 +39,7 @@ constexpr std::uint32_t kText = 0x904BA0;          // the text scratch Crt_sprin
 // --- kind 0x78: a ring about Sprite_Objects record 2 -------------------------
 constexpr std::uint32_t kObject2 = 0x7DEFC8;       // Sprite_Objects + 2 * 0xA4
 // kObject2Screen: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_x (records.h). its +0x2E, +0x30 (s16 screen x, y)
-// kObject2Turn: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->draw_key (records.h). its +0x32 (u16, the turn the ring spins it by)
+constexpr std::uint32_t kObject2Turn = 0x7DEFFA;   // its +0x32 (u16, the turn the ring spins it by): raw, not SpriteHead::draw_key (C2 audit ea doubt 1)
 // kObject2Point: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x (records.h). its +0x34, +0x38 (x, z)
 
 // --- kind 0x7D: area 170's three dials (Area170_Tail37's case 40 spawns it) --

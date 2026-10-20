@@ -844,7 +844,7 @@ extern "C" void __cdecl EffectKind98_Flash(void) {
     s = S();
     SH_CALL(EffectKind98_DrawFlash)(static_cast<int>(rv::As<records::EffectWork>(s)->work_0c));
     if (!CountDown()) return;
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x140);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x140);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x100);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0x100);
     S()[9] = 0x10;
@@ -870,7 +870,7 @@ void Kind98Project() {
 // EffectKind98_DrawBurst(+0x32, +0xC, +0x10), Sprite_Current read once.
 void Kind98Burst() {
     const unsigned char* const s = S();
-    SH_CALL(EffectKind98_DrawBurst)(rv::As<records::EffectObject>(s)->draw_key, Word(s + 0xC), Word(s + 0x10));
+    SH_CALL(EffectKind98_DrawBurst)(rv::As<records::EffectWork>(s)->work_32, Word(s + 0xC), Word(s + 0x10));
 }
 
 // original 0x48D360 (state 2): the point projected; the rim level +0x10 down
@@ -894,7 +894,7 @@ extern "C" void __cdecl EffectKind98_Fall(void) {
     unsigned char* s = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 0x10u);
     s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->draw_key + 0xFFECu);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectWork>(s)->work_32 + 0xFFECu);
     Kind98Burst();
     if (CountDown()) SH_CALL(Effect_Release)();
 }

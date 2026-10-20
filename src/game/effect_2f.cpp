@@ -467,7 +467,7 @@ void SwayStep() {
 // width +0x2C = 0, the sound, +1 up.
 void Kind51Start(unsigned short sound) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x20);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->script_pos, 0);
     for (unsigned i = 0; i < 0x40; ++i) {
         SwayStep();
@@ -504,7 +504,7 @@ void Kind51Wait() {
 }
 
 // The ring at the half-height +0x32 (its word as the original pushes it).
-void Ring() { SH_CALL(EffectKind51_DrawRing)(rv::As<records::EffectObject>(S())->draw_key); }
+void Ring() { SH_CALL(EffectKind51_DrawRing)(rv::As<records::EffectWork>(S())->work_32); }
 
 }  // namespace
 
@@ -563,7 +563,7 @@ extern "C" void __cdecl EffectKind51_RingIn(void) {
 extern "C" void __cdecl EffectKind51_RingOut(void) {
     Ring();
     unsigned char* const s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->draw_key + 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectWork>(s)->work_32 + 0x10u);
     DecWord(s + 0x5A);
     if (rv::As<records::EffectObject>(S())->frame_word == 0) SH_CALL(Effect_Release)();
 }
@@ -600,7 +600,7 @@ extern "C" void __cdecl EffectKind51_Burst(void) {
     auto* const so = rv::As<records::EffectObject>(s);
     const long point[4] = {so->x, so->z, so->height, 0};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x140);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x140);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x14);
     NextState();
     SH_CALL(EffectKind51_DrawMoves)();
@@ -612,7 +612,7 @@ extern "C" void __cdecl EffectKind51_Burst(void) {
 extern "C" void __cdecl EffectKind51_RingClose(void) {
     Ring();
     unsigned char* const s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->draw_key - 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectWork>(s)->work_32 - 0x10u);
     DecWord(s + 0x5A);
     if (rv::As<records::EffectObject>(S())->frame_word == 0) SH_CALL(Effect_Release)();
 }
@@ -663,7 +663,7 @@ extern "C" void __cdecl EffectKind51_DrawFrame(void) {
     SH_CALL(EffectKind51_DrawMoves)();
     SH_CALL(EffectKind51_PushAngle)(rv::As<records::EffectObject>(S())->script_pos);
     const unsigned char* const t = S();
-    SH_CALL(EffectKind51_DrawColumn)(rv::As<records::EffectObject>(t)->draw_key, rv::As<records::EffectObject>(t)->column);
+    SH_CALL(EffectKind51_DrawColumn)(rv::As<records::EffectWork>(t)->work_32, rv::As<records::EffectObject>(t)->column);
 }
 
 // original 0x47C870 (0x359 bytes): the column, two textured Gouraud quads a row

@@ -1127,11 +1127,11 @@ extern "C" void __cdecl EffectKind18Sub0F_DrawGate(int ground) {
         const long e4 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
         SetV(3, 2, (0u - static_cast<U>(Half(e4))) - rv::As<records::EffectObject>(S())->height_whole);
     } else {
-        const U head = rv::As<records::EffectObject>(s)->draw_key - 0x140u;
+        const U head = rv::As<records::EffectWork>(s)->work_32 - 0x140u;
         SetV(1, 2, head);
         SetV(0, 2, head);
-        SetV(3, 2, rv::As<records::EffectObject>(s)->draw_key);
-        SetV(2, 2, rv::As<records::EffectObject>(s)->draw_key);
+        SetV(3, 2, rv::As<records::EffectWork>(s)->work_32);
+        SetV(2, 2, rv::As<records::EffectWork>(s)->work_32);
     }
     Project4(prim, 0x10);
     SH_CALL(Gte_PrimDepths4_10)(prim);

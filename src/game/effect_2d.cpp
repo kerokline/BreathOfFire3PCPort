@@ -118,7 +118,7 @@ extern "C" void __cdecl EffectKind45_Start(void) {
     *flags_high = static_cast<unsigned char>(*flags_high | 1);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0xA00);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0);
     S()[0x5D] = 0;
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
     if (SH_CALL(Flags_Test)(Row(), 0x25)) {
@@ -142,16 +142,16 @@ extern "C" void __cdecl EffectKind45_Tune(void) {
             s = S();
             rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, Word(s + 0x30) + 0xFFF0u);
             if (static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30) < 0x200) rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0x200);
-            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->draw_key + ((Frame_Counter & 3u) == 0 ? 1u : 0u));
-            if (static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->draw_key) > 0x18) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, 0x18);
+            rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectWork>(s)->work_32 + ((Frame_Counter & 3u) == 0 ? 1u : 0u));
+            if (static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_32) > 0x18) rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, 0x18);
             rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, 0);
         }
         s = S();
-        SH_CALL(EffectKind45_PushSample)(0x82, 0xA, rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->x_whole);
+        SH_CALL(EffectKind45_PushSample)(0x82, 0xA, rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectObject>(s)->x_whole);
     }
     SH_CALL(EffectKind45_DrawTrace)(0x82, 0xA);
     unsigned char* const s = S();
-    if (rv::As<records::EffectObject>(s)->draw_key == 0x18 && rv::As<records::EffectWork>(s)->work_30 == 0x200) {
+    if (rv::As<records::EffectWork>(s)->work_32 == 0x18 && rv::As<records::EffectWork>(s)->work_30 == 0x200) {
         s[1] = static_cast<unsigned char>(s[1] + 1);
         return;
     }
@@ -178,7 +178,7 @@ extern "C" void __cdecl EffectKind45_Aim(void) {
             rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, 0);
             rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, static_cast<unsigned char>(s[0x36] - 8) & 0x1Fu);
         }
-        SH_CALL(EffectKind45_PushSample)(0x82, 0xA, rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->x_whole);
+        SH_CALL(EffectKind45_PushSample)(0x82, 0xA, rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectObject>(s)->x_whole);
         s = S();
         if (rv::As<records::EffectWork>(s)->work_2e == 2) SH_CALL(Sound_PlayEffect)(0x205);
     }

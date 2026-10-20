@@ -245,7 +245,7 @@ extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
             SetV(8 * k + 2, y);
             const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(static_cast<long>((static_cast<U>(S16(x) + 0x4000)) << 9),
                                                                   static_cast<long>((static_cast<U>(S16(y) + 0x4000)) << 9)));
-            const std::int32_t h = S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key));
+            const std::int32_t h = S16(static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32));
             const std::int32_t lift = I(B(height_byte) * static_cast<U>(h)) / 128;
             SetV(8 * k + 4, static_cast<U>(-(S16(e) / 2) - lift));
         };

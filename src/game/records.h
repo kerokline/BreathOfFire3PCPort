@@ -547,7 +547,8 @@ struct EffectWork {
     unsigned char pad_14[0x1A];  // +0x14..+0x2D: EffectObject's
     std::uint16_t work_2e;  // +0x2E a word of the kind's own, read as u16 (Word / W) in 367 of the 402 union rows at +0x2E / +0x30, as s16 (SW) in 35 (a count: effect_2d.cpp kind 0x45; effect_3a.md 1.5 kind 0x68's count)
     std::uint16_t work_30;  // +0x30 likewise (kind 0x68's frame, effect_3a.md 1.5; kind 0x45's, effect_2d.cpp)
-    unsigned char pad_32[0x4E];  // +0x32..+0x7F: EffectObject's
+    std::uint16_t work_32;  // +0x32 likewise, where the kind does not use +0x32 as a draw key (the C2 audit, ea F1 and doubt 1, frs F4: kind 0x2B's count, 0x43's countdown, 0x45's amplitude, 0x51's and 0x98's radius, 0xAE's ellipse word and angle, 0x78's saved turn of object 2; kind 18's subs 0x0F and 0x2B a height, 0x17 a counter and a height factor, 0x24 an angle, 0x25, 0x26 and 0x39 a lid index). Kind 18's sub 0x44 draws by it as a key (Sub44_Follow stores 0x3200) and keeps draw_key
+    unsigned char pad_34[0x4C];  // +0x34..+0x7F: EffectObject's
 };
 
 // ---------------------------------------------------------------------------
@@ -988,6 +989,7 @@ static_assert(offsetof(EffectWork, work_0c) == 0xC, "EffectWork::work_0c");
 static_assert(offsetof(EffectWork, work_10) == 0x10, "EffectWork::work_10");
 static_assert(offsetof(EffectWork, work_2e) == 0x2E, "EffectWork::work_2e");
 static_assert(offsetof(EffectWork, work_30) == 0x30, "EffectWork::work_30");
+static_assert(offsetof(EffectWork, work_32) == 0x32, "EffectWork::work_32");
 static_assert(sizeof(EffectWork) == 0x80, "EffectWork stride");
 
 static_assert(offsetof(CharStatBlock, max_hp) == 0x0, "CharStatBlock::max_hp");

@@ -411,6 +411,10 @@ family, so a view's names do not leak onto the family's other readers.
   `Word` at the words). `+2`, `+6` and `+9` - the other per-kind bytes the
   brief lists - are the head's `step`, `param` and `timer`, which already
   read as the effect family's own.
+  The C2 audit (2026-10-19, `typed-data-round.md` 3) added `+0x32`
+  (u16, `work_32`): 52 sites in thirteen kinds and subs had taken it as
+  the head's `draw_key` where the kind keeps a count, a radius, an angle
+  or a lid index there (the table in section 9).
 
 ### 7.2 New families
 
@@ -1002,6 +1006,7 @@ Padding:
 | `+0x10` | u32 | `work_10` | likewise (kind 3's acceleration, kind 5's target height, effect_1a.md 2.5, 2.6) |
 | `+0x2E` | u16 | `work_2e` | a word of the kind's own, read as u16 (Word / W) in 367 of the 402 union rows at +0x2E / +0x30, as s16 (SW) in 35 (a count: effect_2d.cpp kind 0x45; effect_3a.md 1.5 kind 0x68's count) |
 | `+0x30` | u16 | `work_30` | likewise (kind 0x68's frame, effect_3a.md 1.5; kind 0x45's, effect_2d.cpp) |
+| `+0x32` | u16 | `work_32` | likewise, where the kind does not use +0x32 as a draw key (the C2 audit, ea F1 and doubt 1, frs F4: kind 0x2B's count, 0x43's countdown, 0x45's amplitude, 0x51's and 0x98's radius, 0xAE's ellipse word and angle, 0x78's saved turn of object 2; kind 18's subs 0x0F and 0x2B a height, 0x17 a counter and a height factor, 0x24 an angle, 0x25, 0x26 and 0x39 a lid index). Kind 18's sub 0x44 draws by it as a key (Sub44_Follow stores 0x3200) and keeps draw_key |
 
 Padding:
 

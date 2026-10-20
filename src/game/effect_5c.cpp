@@ -1415,9 +1415,9 @@ void Settle() {
         s[9] = 0;
         s = S();
     }
-    const U w = rv::As<records::EffectObject>(s)->draw_key;
+    const U w = rv::As<records::EffectWork>(s)->work_32;
     if (SW(w) > 0) {
-        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, w - 1u);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, w - 1u);
     } else if (s[9] / 5 == 0) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
@@ -1445,7 +1445,7 @@ extern "C" void __cdecl EffectKind18Sub17_Start(void) {
     so->x = 0x570000;
     so->z = 0x140000;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, 0xFF00);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, 0);
     s[9] = 0;
     s[0xB] = 0;
     s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -1472,9 +1472,9 @@ extern "C" void __cdecl EffectKind18Sub17_WaitCue(void) {
 // and the counter 0x903848 = 0xD. The shared tail.
 extern "C" void __cdecl EffectKind18Sub17_Rise(void) {
     unsigned char* const s = S();
-    const U w = rv::As<records::EffectObject>(s)->draw_key;
+    const U w = rv::As<records::EffectWork>(s)->work_32;
     if (SW(w) < 0x80) {
-        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, w + 1u);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, w + 1u);
     } else {
         s[2] = static_cast<unsigned char>(s[2] + 1);
         At(at::kCounter)[0] = 0xD;
@@ -1575,7 +1575,7 @@ extern "C" void __cdecl EffectKind18Sub17_Start10(void) {
     so->x = 0x430000;
     so->z = 0x1A0000;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, 0xFF00);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, 0x80);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, 0x80);
     s[9] = 0;
     s[0xB] = 1;
     SH_CALL(MoveCmd_TestFB)(0x55, 0x19);
@@ -1626,7 +1626,7 @@ extern "C" void __cdecl EffectKind18Sub17_WaitEnemy1(void) {
 // + 0x18) (al unread).
 extern "C" void __cdecl EffectKind18Sub17_Settle14(void) {
     Settle();
-    const std::int32_t lean = SW(rv::As<records::EffectObject>(S())->draw_key) / 6;
+    const std::int32_t lean = SW(rv::As<records::EffectWork>(S())->work_32) / 6;
     SH_CALL(MoveCmd_TestFB)(0x42, static_cast<short>(lean + 0x18));
 }
 

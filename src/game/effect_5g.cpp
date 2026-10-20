@@ -249,10 +249,10 @@ extern "C" void __cdecl EffectKind18Sub2B_Draw(int follow) {
         if (follow != 0) {
             Grounded();
         } else {
-            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, rv::As<records::EffectObject>(s)->draw_key - 0x180u);
-            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, rv::As<records::EffectObject>(s)->draw_key - 0x180u);
-            SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->draw_key);
-            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, rv::As<records::EffectObject>(s)->draw_key);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, rv::As<records::EffectWork>(s)->work_32 - 0x180u);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, rv::As<records::EffectWork>(s)->work_32 - 0x180u);
+            SetWord(v + 0x1C, rv::As<records::EffectWork>(s)->work_32);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, rv::As<records::EffectWork>(s)->work_32);
         }
         Project(p);
         SH_CALL(Prim_SetTexture)(rv::As<records::EffectWork>(S())->work_0c | texture | 0x1690000u, p, 1);
@@ -395,7 +395,7 @@ extern "C" void __cdecl EffectKind18Sub2B_Place(void) {
     const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(h) & 0xFFFFu) / 2;
     s = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, (0u - height) - static_cast<U>(half));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, height);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, height);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<U>(At(at::kSub2BTextures + v)[0]) << 24);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     s[2] = static_cast<unsigned char>(s[2] + 1);
