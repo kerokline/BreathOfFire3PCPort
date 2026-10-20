@@ -40,7 +40,7 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 unsigned char& B(U a) { return sh::Mem(a)[0]; }
-unsigned char* Member(unsigned i) { return ObjTrio + (i % 3) * at::kObjStride; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i % 3]); }
 unsigned char* Object(unsigned i) { return rv::Bytes(Sprite_Objects) + i * at::kSpriteStride; }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -324,7 +324,7 @@ void Seed(unsigned k) {
     Field_MemberCount = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 3 : sh::Next() % 4);
     B(EventLeader_PendingCount_addr) = static_cast<unsigned char>(sh::Next() % 3);
     if (IsLeaderState(k) || sh::Half()) {
-        unsigned char* const m = sh::Often() ? ObjTrio : Member(sh::Next());
+        unsigned char* const m = sh::Often() ? rv::Bytes(ObjTrio) : Member(sh::Next());
         Sprite_Current = m;
         Field_State = sh::Often() ? m : Member(sh::Next());
     }
@@ -357,7 +357,7 @@ void Seed(unsigned k) {
         B(at::kBlink) = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
         break;
     case kPath:
-        SetWord(ObjTrio + 0x3E, sh::Next() % 0x400);
+        SetWord(rv::Bytes(ObjTrio) + 0x3E, sh::Next() % 0x400);
         break;
     case kFormAction:
         Field_InputHeld = static_cast<unsigned short>(sh::Half() ? 0 : PickOf(1, 2, 0x8000, sh::Next()));

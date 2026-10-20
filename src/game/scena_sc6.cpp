@@ -539,7 +539,7 @@ SC6_EXPORT void __cdecl Scena06_Run02(void) {
         return;
     case 10: {
         if (Busy()) return;
-        const unsigned lead = ObjTrio[8];
+        const unsigned lead = ObjTrio[0].direction;
         SetCounter(0, 0xF);
         if (lead == 2) DropIn(4);
         else if (lead == 3) DropIn(5);
@@ -685,7 +685,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
 
 // original 0x54B6C0: run 4, steps 0..7, 0xA..0xC, 0x14..0x16, 0x1E, 0x1F.
 SC6_EXPORT void __cdecl Scena06_Run04(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         Say(0xD);
@@ -819,7 +819,7 @@ SC6_EXPORT void __cdecl Scena06_Run05(void) {
 // As the original has it: step 6 moves Camera_Distance by -0x40 a frame for
 // 0x12 frames, counted in counter 3.
 SC6_EXPORT void __cdecl Scena06_Run06(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         DropIn(3);
@@ -1141,7 +1141,7 @@ namespace {
 // the second party list's Field_MemberCount bytes copied to 0x939A10, that
 // list reset to (0, 0xFF, 0xFF), the old count to 0x939A02, the count 1.
 void SortParty() {
-    unsigned char* const trio = &ObjTrio[0];
+    unsigned char* const trio = &rv::Bytes(ObjTrio)[0];
     for (unsigned i = 1; i <= 2; ++i) {
         unsigned char* const a = trio + at::kObjStride * (i - 1);
         for (unsigned j = i; j < 3; ++j) {

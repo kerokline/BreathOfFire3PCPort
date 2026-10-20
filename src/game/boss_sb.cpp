@@ -125,16 +125,16 @@ bool LeaderCommand78() {
 }
 // Phase 3: the leader's HP 0 clears its +0x134 bit 1.
 void EventLeaderDown() {
-    if (Word(At(ObjTrio_addr + 0x98)) == 0) ObjTrio[0x134] &= 0xFD;
+    if (Word(At(ObjTrio_addr + 0x98)) == 0) rv::Bytes(ObjTrio)[0x134] &= 0xFD;
 }
 // Phase 5: with 0x904AAD bit 0, the leader's command is kind 4, id 0x78, at
 // target 0x40, and the battle's command kind and target the same.
 void EventLeaderCommand() {
     if (!(BossSe_Script & 1)) return;
     SetWord(At(ObjTrio_addr + 0x126), 0x78);
-    ObjTrio[0x125] = 4;
+    rv::Bytes(ObjTrio)[0x125] = 4;
     B(at::kCommandKind) = 4;
-    ObjTrio[0x124] = 0x40;
+    rv::Bytes(ObjTrio)[0x124] = 0x40;
     B(at::kTarget) = 0x40;
 }
 
@@ -148,12 +148,12 @@ unsigned char Kind3Event(unsigned code) {
             SetWord(At(at::kEnemy0B0), 1);
             BossSb_Enemy1Hp = 1;
             BossSb_Enemy1B0 = 1;
-            ObjTrio[0x134] &= 0xFD;
+            rv::Bytes(ObjTrio)[0x134] &= 0xFD;
         }
         break;
     case 3: EventLeaderDown(); break;
     case 5: EventLeaderCommand(); break;
-    case 6: ObjTrio[0x134] |= 2; break;
+    case 6: rv::Bytes(ObjTrio)[0x134] |= 2; break;
     default: break;   // 2, 4, and anything past 6 (the original's ja)
     }
     return 0;
@@ -440,7 +440,7 @@ extern "C" unsigned char __cdecl Boss07_Event(unsigned code) {
     case 1:
         if (LeaderCommand78()) {
             Battle_EndFlags |= 4;
-            ObjTrio[0x134] &= 0xFD;
+            rv::Bytes(ObjTrio)[0x134] &= 0xFD;
             char* const text = reinterpret_cast<char*>(At(at::kBannerText));
             BH_CALL(Str_CopyN)(text, reinterpret_cast<const char*>(At(at::kBannerSource)), 0x10);
             BH_CALL(BattleBanner_Add)(1, 1, 0, 0x1E, text);
@@ -461,7 +461,7 @@ extern "C" unsigned char __cdecl Boss07_Event(unsigned code) {
         break;
     case 3: EventLeaderDown(); break;
     case 5: EventLeaderCommand(); break;
-    case 6: ObjTrio[0x134] |= 2; break;
+    case 6: rv::Bytes(ObjTrio)[0x134] |= 2; break;
     default: break;   // 4, and anything past 6
     }
     return 0;

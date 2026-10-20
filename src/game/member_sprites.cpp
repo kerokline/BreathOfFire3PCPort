@@ -74,7 +74,7 @@ constexpr std::uint32_t kMemberBytes = 0x14C, kActorBytes = 0xA4;
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 // Member i by address, i unchecked (the original indexes past the three).
-unsigned char* Member(unsigned i) { return At(Address(ObjTrio) + i * kMemberBytes); }
+unsigned char* Member(unsigned i) { return At(Address(rv::Bytes(ObjTrio)) + i * kMemberBytes); }
 
 // The member records' views (game/record_views.h): Sprite_Current
 // and Field_State are ObjTrio records here.
@@ -180,7 +180,7 @@ extern "C" void __cdecl Member_Follow(void) {
     if (flags & 0xC00) return;
     if (g.test_535120(1)) return;
     if (g.test_535240(1)) return;
-    if (rv::As<records::PartyMember>(ObjTrio)->state == 0xA) {
+    if (ObjTrio[0].state == 0xA) {
         g.ensure_animation(rv::Current<records::PartyMember>()->direction);
         rv::Current<records::PartyMember>()->state = 7;
         rv::Current<records::PartyMember>()->step = 0;
@@ -599,7 +599,7 @@ extern "C" void __cdecl Field_DirectionTo(long x, long z, unsigned char* directi
 // As the original has it: the other member is +5 ^ 3, unchecked; the actor
 // record is indexed by Field_State +0x148 directly.
 extern "C" unsigned char __cdecl Member_Idle(void) {
-    if (ObjTrio[0x137] == 8) return 0;
+    if (rv::Bytes(ObjTrio)[0x137] == 8) return 0;
     if (Field_Request != 0) return 0;
     records::PartyMember* const state = rv::As<records::PartyMember>(Field_State);
     if (Field_ActorStates[state->char_index * kActorBytes] & 0x20) return 0;
@@ -607,7 +607,7 @@ extern "C" unsigned char __cdecl Member_Idle(void) {
     unsigned char* const s = Field_State;
     if (s[0x136] <= 0xF0) return 0;
     s[0x136] = 0;
-    if (ObjTrio[0x137] == 9) return 0;
+    if (rv::Bytes(ObjTrio)[0x137] == 9) return 0;
     if (Member((rv::Current<records::PartyMember>()->actor & 0xFFu) ^ 3u)[0x137] == 9) return 0;
     const unsigned pick = (static_cast<unsigned>(g.rand()) & 1u) + 1u;
     if (rv::Current<records::PartyMember>()->actor != pick) return 0;

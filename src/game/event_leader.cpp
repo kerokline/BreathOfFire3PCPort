@@ -83,7 +83,7 @@ unsigned char& Byte(std::uint32_t a) { return *At(a); }
 // the next table holds (docs/event_leader.md section 3).
 const Handler* Table(std::uint32_t address) { return reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(address)); }
 
-unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 
 // Field_DirectionSteps' pair for a direction - a whole byte into a table of
 // eight, as the original indexes it.
@@ -324,7 +324,7 @@ extern "C" void __cdecl Field_SwapState(void) { Table(Field_SwapSteps_addr)[Spri
 // own +0x70 and the fallback's Sprite_Current's.
 extern "C" void __cdecl Field_SwapGather(void) {
     unsigned char count = Field_MemberCount;
-    const unsigned char dir = ObjTrio[8];
+    const unsigned char dir = ObjTrio[0].direction;
     if (count != 0) {
         unsigned i = 0;
         do {
@@ -336,7 +336,7 @@ extern "C" void __cdecl Field_SwapGather(void) {
                 slot = static_cast<signed char>(count);
             }
             bool placed;
-            if ((ObjTrio[0x138] & 1) || slot == 0) {
+            if ((rv::Bytes(ObjTrio)[0x138] & 1) || slot == 0) {
                 placed = g.spot_free(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)), dir, m[0x70]) != 0;
             } else {
                 placed = false;
@@ -360,14 +360,14 @@ extern "C" void __cdecl Field_SwapGather(void) {
             ++i;
         } while (static_cast<int>(i) < static_cast<int>(count));
     }
-    Sprite_Current = ObjTrio;
+    Sprite_Current = rv::Bytes(ObjTrio);
     for (unsigned j = 1; static_cast<int>(j) < static_cast<int>(count); ++j) {
         if (Member(j)[1] == 3) {
-            ObjTrio[2] = static_cast<unsigned char>(ObjTrio[2] + 1);
+            ObjTrio[0].step = static_cast<unsigned char>(ObjTrio[0].step + 1);
             return;
         }
     }
-    ObjTrio[2] = 4;
+    ObjTrio[0].step = 4;
 }
 
 // original 0x52EBA0: whether a member can stand at (x, z) - Sprite_Current +9
@@ -416,8 +416,8 @@ extern "C" void __cdecl Field_SwapSpinOut(void) {
             i = static_cast<unsigned char>(i + 1);
         } while (i < Field_MemberCount);
     }
-    Sprite_Current = ObjTrio;
-    if (ObjTrio[9] == 4) ObjTrio[2] = static_cast<unsigned char>(ObjTrio[2] + 1);
+    Sprite_Current = rv::Bytes(ObjTrio);
+    if (ObjTrio[0].step_frames == 4) ObjTrio[0].step = static_cast<unsigned char>(ObjTrio[0].step + 1);
 }
 
 // original 0x52EE70: sub-state 2, the exchange - ObjTrio_SwapFields(0, 1, 1)
@@ -464,9 +464,9 @@ extern "C" void __cdecl Field_SwapExchange(void) {
             g.shade_begin();
             Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
             Sprite_Current[0x5C] = 1;
-            Sprite_Current[8] = static_cast<unsigned char>(ObjTrio[8] ^ 4);
+            Sprite_Current[8] = static_cast<unsigned char>(ObjTrio[0].direction ^ 4);
         }
-        if (!(ObjTrio[0x138] & 1) && i != 0) {
+        if (!(rv::Bytes(ObjTrio)[0x138] & 1) && i != 0) {
             unsigned char* const sc = Sprite_Current;
             const unsigned char d = sc[8];
             const unsigned char raised = sc[0x70];
@@ -494,8 +494,8 @@ extern "C" void __cdecl Field_SwapExchange(void) {
         rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
         g.set_animation(Sprite_Current[8]);
     }
-    Sprite_Current = ObjTrio;
-    Field_State = ObjTrio;
+    Sprite_Current = rv::Bytes(ObjTrio);
+    Field_State = rv::Bytes(ObjTrio);
     const auto lx = static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x34)));
     const auto lz = static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x38)));
     std::int32_t far = Abs(static_cast<std::uint32_t>(Field_Kind2X) - lx);
@@ -511,8 +511,8 @@ extern "C" void __cdecl Field_SwapExchange(void) {
     } else {
         MoveScript_FAWord = 0;
     }
-    ObjTrio[9] = 4;
-    ObjTrio[2] = static_cast<unsigned char>(ObjTrio[2] + 1);
+    ObjTrio[0].step_frames = 4;
+    ObjTrio[0].step = static_cast<unsigned char>(ObjTrio[0].step + 1);
 }
 
 // original 0x52F1B0: sub-state 3 - the leader's +9 counts down and it turns
@@ -544,9 +544,9 @@ extern "C" void __cdecl Field_SwapSpinIn(void) {
             i = static_cast<unsigned char>(i + 1);
         } while (i < count);
     }
-    Field_State = ObjTrio;
-    Sprite_Current = ObjTrio;
-    if (ObjTrio[9] != 0) return;
+    Field_State = rv::Bytes(ObjTrio);
+    Sprite_Current = rv::Bytes(ObjTrio);
+    if (ObjTrio[0].step_frames != 0) return;
     if (count > 1) {
         unsigned char i = 1;
         do {
@@ -569,8 +569,8 @@ extern "C" void __cdecl Field_SwapSpinIn(void) {
             i = static_cast<unsigned char>(i + 1);
         } while (i < count);
     }
-    Sprite_Current = ObjTrio;
-    ObjTrio[2] = static_cast<unsigned char>(ObjTrio[2] + 1);
+    Sprite_Current = rv::Bytes(ObjTrio);
+    ObjTrio[0].step = static_cast<unsigned char>(ObjTrio[0].step + 1);
 }
 
 // original 0x52F350: sub-state 4 - once Field_Kind2Hold is 0: Field_ScriptFlags2
@@ -850,11 +850,11 @@ extern "C" void __cdecl Field_ExitFromCell(void) {
 extern "C" void __cdecl Field_PendingWalkIn(void) {
     unsigned char n = EventLeader_PendingCount;
     if (n == 0) {
-        ObjTrio[0] = static_cast<unsigned char>(ObjTrio[0] & 0xBF);
+        ObjTrio[0].flags = static_cast<unsigned char>(ObjTrio[0].flags & 0xBF);
         g.clear_state(0);
-        const unsigned char f = ObjTrio[0x138];
+        const unsigned char f = rv::Bytes(ObjTrio)[0x138];
         n = EventLeader_PendingCount;
-        ObjTrio[0x138] = static_cast<unsigned char>(f & 0xFD);
+        rv::Bytes(ObjTrio)[0x138] = static_cast<unsigned char>(f & 0xFD);
         n = static_cast<unsigned char>(n + 1);
         EventLeader_PendingCount = n;
     } else {

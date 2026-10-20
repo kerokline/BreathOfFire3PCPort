@@ -754,7 +754,7 @@ void SelfTestPlacements() {
 void SelfTestFlags() {
     constexpr unsigned kRounds = 20000;
     const Region r[] = {R(g_bits), R(g_script, 0x10), R(MoveScript_PartyRecords, 0x80), R(&EventScript_FlagBank, 2),
-                        R(Cond_Flags, 0x820), R(&Field_ScriptFlags, 2), R(ObjTrio, 0x299), R(g_result)};
+                        R(Cond_Flags, 0x820), R(&Field_ScriptFlags, 2), R(rv::Bytes(ObjTrio), 0x299), R(g_result)};
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);
     const Fn kFnsHere[] = {kFlagsSet, kFlagsClear, kFlagsTest, kCondFA, kCondFlag, kCondFD, kSet40, kSetBit40};

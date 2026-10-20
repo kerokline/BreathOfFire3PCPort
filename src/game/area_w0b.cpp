@@ -158,7 +158,7 @@ extern "C" void __cdecl Area16_PlaceMessage(void) {
 // 0xAE 3, else Field_ScriptFlags2 bit 12 4, else 0; then Area16_PlateStates
 // 0x5E5F5C by +1 (read after the calls, unchecked).
 extern "C" void __cdecl Area16_PlateRun(void) {
-    const U steps = ObjTrio[9];
+    const U steps = ObjTrio[0].step_frames;
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);

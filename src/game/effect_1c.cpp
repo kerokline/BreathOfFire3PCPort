@@ -239,7 +239,7 @@ extern "C" void __cdecl EffectKind70_Run(void) {
         if (i >= 3)
             bof3::Fatal("EffectKind70_Run: +0xB has bit %u set with %u members; the original writes ObjTrio record %u, "
                         "past the three", i, n, i);
-        unsigned char* const o = ObjTrio + i * 0x14Cu;
+        unsigned char* const o = rv::Bytes(&ObjTrio[i]);
         o[1] = 1;
         o[2] = static_cast<unsigned char>(i == 0 ? 2 : 1);
         o[3] = 0;

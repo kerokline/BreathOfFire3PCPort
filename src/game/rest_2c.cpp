@@ -380,7 +380,7 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     B(0x903A02) = B(0x90384A);
     PutL(0x903A08, L(0x802D74));
     PutL(0x903A0C, L(0x802D78));
-    B(0x903A07) = ObjTrio[8];
+    B(0x903A07) = ObjTrio[0].direction;
     SaveMenu_SavedButtons = L(0x903580);
     PutL(0x9046A4, L(0x903588));
     B(0x903A03) = B(0x90384B);
@@ -849,7 +849,7 @@ namespace {
 // Menu_DrawPanelBox(0x14, 0x10 - 10 * slide, 0x118, 0x13, the window colour).
 void Panels() {
     for (unsigned slot = 0; slot < Field_MemberCount; ++slot) {
-        const unsigned char* const member = At(Field_Members_addr + slot * at::kObjStride);
+        const unsigned char* const member = At(ObjTrio_addr + 0x148 + slot * at::kObjStride);
         const int y = static_cast<int>(54 * slot + 0x3E);
         SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * Rest2c_TalkSlide, y, member[0], slot);
         SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * Rest2c_TalkSlide, y, member[0]);

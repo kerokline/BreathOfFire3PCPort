@@ -357,7 +357,7 @@ void Seed(unsigned k) {
     if (sh::Often()) B(Cond_ByteFD_addr) = static_cast<unsigned char>(AnFD());
     if (sh::Half()) B(Field_Kind2Hold_addr) = 0;
     if (sh::Half()) B(Field_ScriptFlags2_addr) = static_cast<unsigned char>(B(Field_ScriptFlags2_addr) & 0xF8);
-    if (sh::Often()) B(Field_Members_addr + 0x13b) = static_cast<unsigned char>(SH_PICK(3, 2, 0));
+    if (sh::Often()) B(ObjTrio_addr + 0x283) = static_cast<unsigned char>(SH_PICK(3, 2, 0));
     if (sh::Often()) B(ObjTrio_addr + 0x3cf) = static_cast<unsigned char>(SH_PICK(3, 2, 0));
     if (sh::Half()) SetW(Input_Pressed_addr, 0);
     if (sh::Half()) SetW(Field_MenuButton_addr, sh::Half() ? 0 : 1u << (sh::Next() % 16));
@@ -419,7 +419,7 @@ void Disturb(std::uint32_t h) {
         break;
     }
     case 7: B(Scena09_Slot11_addr) = static_cast<unsigned char>(v % 20); break;
-    case 8: B((h >> 24) & 1 ? (Field_Members_addr + 0x13b) : (ObjTrio_addr + 0x3cf)) = static_cast<unsigned char>(2 + (v % 3)); break;
+    case 8: B((h >> 24) & 1 ? (ObjTrio_addr + 0x283) : (ObjTrio_addr + 0x3cf)) = static_cast<unsigned char>(2 + (v % 3)); break;
     case 9: {
         static const unsigned char kKinds[] = {7, 2, 4, 8, 5};
         B(Cond_Flags_addr + 0xd2 + (h >> 12) % 3) = kKinds[(h >> 16) % 5];

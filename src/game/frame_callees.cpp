@@ -226,7 +226,7 @@ extern "C" void __cdecl MoveScript_TintFrame(void) {
 extern "C" void __cdecl Party_UpdateScreens(void) {
     const int last = static_cast<int>(Field_MemberCount) - 1;
     if (last < 0) return;
-    unsigned char* member = ObjTrio + last * kMemberBytes;
+    unsigned char* member = rv::Bytes(&ObjTrio[last]);
     for (int left = last + 1; left != 0; --left, member -= kMemberBytes) {
         if (member[0] & 0x40) continue;
         Sprite_Current = member;
@@ -270,7 +270,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0) {
     ++g_log_n;
 }
 unsigned char* Effect(unsigned k) { return rv::Bytes(&Effect_Objects[k % kEffects]); }
-unsigned char* Member(unsigned k) { return ObjTrio + (k % 5) * kMemberBytes; }
+unsigned char* Member(unsigned k) { return rv::Bytes(&ObjTrio[k % 5]); }
 
 // A callee may change what the caller reads again after it: which objects
 // are in use and their kinds, the slots' and members' flag bytes, the
@@ -348,7 +348,7 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(rv::Bytes(Effect_Objects)), kEffects * kEffectBytes},
     {Address(Field_Slots), kSlots * kSlotBytes},
-    {Address(ObjTrio), kMembersSpan},
+    {Address(rv::Bytes(ObjTrio)), kMembersSpan},
     {kTintFrom, kTintSpan},
     {Address(g_sprites), sizeof g_sprites},
     {Address(Camera_Angles), 6},

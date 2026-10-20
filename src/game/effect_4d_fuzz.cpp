@@ -307,7 +307,7 @@ void Seed(unsigned k) {
         break;
     case k94Redraw:
         for (unsigned m = 0; m < at::kTrioCount; ++m)
-            ObjTrio[at::kTrioStride * m + at::kTrioBusy] = static_cast<unsigned char>(PickOf(7, 7, 6, 8, sh::Next()));
+            ObjTrio[m].char_id = static_cast<unsigned char>(PickOf(7, 7, 6, 8, sh::Next()));
         break;
     case k95Clock:
     case k95Finish: {

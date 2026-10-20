@@ -224,7 +224,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
         if (op == 0xE0) {
             object[0] |= 8;
             object[5] = rv::Current<records::SpriteHead>()->direction;
-            value = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->direction ^ 4);
+            value = static_cast<unsigned char>(ObjTrio[0].direction ^ 4);
             g.face(value);
         } else {
             object[5] = rv::Current<records::SpriteHead>()->direction & 7;
@@ -497,7 +497,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         return value;
     case 0xCE: {   // turn toward ObjTrio 0's direction, reversed
         records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
-        const auto target = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->direction ^ 4);
+        const auto target = static_cast<unsigned char>(ObjTrio[0].direction ^ 4);
         const auto now = static_cast<unsigned char>(sprite->direction & 7);
         if (now == target) return sprite->direction;
         const int step = static_cast<signed char>(target - now) <= 0 ? -1 : 1;
@@ -532,7 +532,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         return value;
     }
     case 0x85: {   // the kind-2 object toward ObjTrio 0, repeating until it is there
-        const long x = Field_Kind2X, to_x = rv::As<records::PartyMember>(ObjTrio)->x, to_z = rv::As<records::PartyMember>(ObjTrio)->z, z = Field_Kind2Z;
+        const long x = Field_Kind2X, to_x = ObjTrio[0].x, to_z = ObjTrio[0].z, z = Field_Kind2Z;
         if (x == to_x && z == to_z) {
             if (Field_Kind2Hold == 0) {
                 g.set_elevation(g.elevation(x, z));
@@ -550,7 +550,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         const unsigned char steps_z = away(z, to_z);
         if (steps < steps_z) steps = steps_z;
         g.elevation(x, z);
-        const long nx = rv::As<records::PartyMember>(ObjTrio)->x, nz = rv::As<records::PartyMember>(ObjTrio)->z;
+        const long nx = ObjTrio[0].x, nz = ObjTrio[0].z;
         Field_Kind2X = nx;
         Field_Kind2Z = nz;
         const long h = g.elevation(nx, nz);
@@ -819,7 +819,7 @@ const void* const kOurs[kGroupCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
-    {Address(ObjTrio), 0x40},
+    {Address(rv::Bytes(ObjTrio)), 0x40},
     {Address(rv::Bytes(Sprite_ObjectsExtra)), 8 * 0xA4}, // the party objects and what a slot up to 7 reaches
     {Address(MoveScript_TintRecords), MoveScript_TintRecords_count},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
@@ -880,7 +880,7 @@ void Seed(unsigned char op, unsigned char* p) {
     unsigned char* const sprite = g_sprite;
     switch (op) {
     case 0xC8: if (Often()) p[1] = sprite[8]; break;
-    case 0xCE: if (Often()) sprite[8] = static_cast<unsigned char>((sprite[8] & 0xF8) | ((ObjTrio[8] ^ 4) & 7)); break;
+    case 0xCE: if (Often()) sprite[8] = static_cast<unsigned char>((sprite[8] & 0xF8) | ((ObjTrio[0].direction ^ 4) & 7)); break;
     case 0xD4: if (Often()) p[7] = 0; break;
     case 0xD5: case 0xD6:
         if (Often()) {
@@ -895,10 +895,10 @@ void Seed(unsigned char op, unsigned char* p) {
     case 0x9F: if (Often()) sprite[0xB] = static_cast<unsigned char>(Next() % 2); break;
     case 0x8C: if (Often()) p[1] = 0x94; break;
     case 0x85:
-        if (Next() % 2) { Field_Kind2X = Long(ObjTrio + 0x34); Field_Kind2Z = Long(ObjTrio + 0x38); }
+        if (Next() % 2) { Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34); Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38); }
         else if (Often()) {
-            Field_Kind2X = Long(ObjTrio + 0x34) + static_cast<long>(Next() % 0x10000) - 0x8000;
-            Field_Kind2Z = Long(ObjTrio + 0x38) + static_cast<long>(Next() % 0x10000) - 0x8000;
+            Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34) + static_cast<long>(Next() % 0x10000) - 0x8000;
+            Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38) + static_cast<long>(Next() % 0x10000) - 0x8000;
         }
         if (Often()) Field_Kind2Hold = 0;
         break;

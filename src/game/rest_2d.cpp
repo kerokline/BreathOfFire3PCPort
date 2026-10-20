@@ -88,7 +88,7 @@ unsigned short MasterMessage(unsigned k) {
     return static_cast<unsigned short>(Word(At(at::kMasterMessages + 2u * AreaW0c_TailSub)) + k);
 }
 // Field_Members' byte of the party slot `slot` (ObjTrio + 0x148, 0x14C apart).
-unsigned char MemberAt(unsigned slot) { return Field_Members[slot * at::kObjStride]; }
+unsigned char MemberAt(unsigned slot) { return (rv::Bytes(ObjTrio) + 0x148)[slot * at::kObjStride]; }
 // The member under the cursor: a CharacterRecords index.
 unsigned char CursorMember() { return MemberAt(Rest2d_Cursor); }
 U RecordOf(unsigned member) { return at::kRecords + member * at::kRecordStride; }
@@ -547,7 +547,7 @@ extern "C" void __cdecl FieldMenu_TopBarCountdown(void) {
 // section 5) - else 1.
 extern "C" unsigned char __cdecl FieldMenu_CampAllowedCell(void) {
     const unsigned char cell =
-        static_cast<unsigned char>(SH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(ObjTrio + 0x36)), static_cast<short>(Word(ObjTrio + 0x3A))) & 0xF0);
+        static_cast<unsigned char>(SH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(rv::Bytes(ObjTrio) + 0x36)), static_cast<short>(Word(rv::Bytes(ObjTrio) + 0x3A))) & 0xF0);
     if (cell == 0xA0 || cell == 0xA1 || cell == 0xAF || cell == 0x91) return 0;
     return 1;
 }

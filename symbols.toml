@@ -1770,15 +1770,6 @@ status = "hypothesis"
 evidence = "disasm 2026-09-20: Field_CopyInput's loop count over the 0x14C-byte records at 0x802E88. 'Member' is a guess at what the records are."
 
 [[data]]
-pc = 0x802E88
-name = "Field_Members"
-ctype = "unsigned char"
-count = 0x14C
-status = "hypothesis"
-evidence = "disasm 2026-09-20: Field_CopyInput reads byte +0 of records 0x14C apart from 0x802E88, Field_MemberCount of them, as an index into Field_ActorStates. One record declared: how many there are is not established."
-note = "(C3 naming, left as it is) 0x802E88 is ObjTrio + 0x148, record 0's PartyMember::char_index: Field_CopyInput's reads of +0 at a stride of 0x14C are the members' char_index bytes, and Field_Members[4 + k] is ObjTrio record 1 + k (effect_2g, scena_sc7). A rename wants the ObjTrio-as-PartyMember[3] layout (C4)."
-
-[[data]]
 pc = 0x903A80
 name = "Field_ActorStates"
 ctype = "unsigned char"
@@ -3808,10 +3799,11 @@ evidence = "disasm 2026-09-22: see Field_Kind2Z; op 85 copies ObjTrio 0's +0x34 
 [[data]]
 pc = 0x802D40
 name = "ObjTrio"
-ctype = "unsigned char"
-count = 0x3E4
+ctype = "records::PartyMember"
+count = 3
 status = "hypothesis"
 evidence = "disasm 2026-09-22: ObjTrio_ClearBit40 / SetBit40 touch the bytes 0x802D40, 0x802E8C, 0x802FD8 - three objects 0x14C apart. Ops E0 and CE read the first one's +8 (a direction), op 85 its +0x34 / +0x38 (a position). 3 x 0x14C."
+note = "Typed (typed-data round stage C4, 2026-10-19) as records::PartyMember x3, from 0x3E4 bytes: the evidence's three records 0x14C apart (ObjTrio_ClearBit40 / SetBit40), the struct's stride; records.h PartyMember. Field_Members (0x802E88, record 0 +0x148) was this table's char_index and is retired into it."
 
 [[data]]
 pc = 0x929F12

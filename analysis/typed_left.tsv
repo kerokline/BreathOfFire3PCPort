@@ -62,7 +62,7 @@ src/game/area_entry.cpp	Party_DropIn	record	At	Address(&Field_ScriptFlags) + 1	0
 src/game/area_entry.cpp	Party_DropIn	record	At	Address(&Field_ScriptFlags2) + 1	0	-	via=Address	family	At(Address(&Field_ScriptFlags2) + 1): Address(&Field_ScriptFlags2): family not established	b1-area
 src/game/area_entry.cpp	Party_SetUpMembers	record	Ptr	Descriptor() + 0x18	0	-	via=Descriptor	family	Ptr(Descriptor() + 0x18): Descriptor(): family not established	b1-area
 src/game/area_entry.cpp	Party_SetUpMembers	record	Long	Ptr(Descriptor() + 0x18) + list[i] * 4u	0	-	via=Ptr	computed	Long(Ptr(Descriptor() + 0x18) + list[i] * 4u): offset not a constant	b1-area
-src/game/area_entry.cpp	Party_SetUpMembers	record	SetLong	record + kRecScript	0	-	stride=0x14c	computed	SetLong(record + kRecScript): offset not a constant	b1-area
+src/game/area_entry.cpp	Party_SetUpMembers	record	SetLong	record + kRecScript	0	-	via=Bytes;stride=0x14c	computed	SetLong(record + kRecScript): offset not a constant	b1-area
 src/game/area_entry.cpp	Party_SetUpMembers	global	At	kPalettes	0	0x80d380	-	gate	kPalettes 0x80d380 Gfx_ClutStripSource+0x1e00	b0
 src/game/area_entry.cpp	Party_SwapMembers	global	At	kCharacterRecords	0	0x903a70	-	no-entry	kCharacterRecords 0x903a70 -	b0
 src/game/area_entry.cpp	Party_SwapMembers	record	Long	from + k	0	-	stride=0xa4	computed	Long(from + k): offset not a constant	b1-area
@@ -5722,7 +5722,7 @@ src/game/effect_2d.cpp	EffectKind47_Run	record	SetUL	a + 0x38	0	-	via=SpriteRec	
 src/game/effect_2d.cpp	EffectKind47_Run	record	UL	a + 0x38	0	-	via=SpriteRec	family	UL(a + 0x38): local a reassigned	b1-effect
 src/game/effect_2d.cpp	EffectKind47_Run	record	SetUL	b + 0x34	0	-	via=SpriteRec	family	SetUL(b + 0x34): local b reassigned	b1-effect
 src/game/effect_2d.cpp	EffectKind47_Run	record	UL	b + 0x34	0	-	via=SpriteRec	family	UL(b + 0x34): local b reassigned	b1-effect
-src/game/effect_2d.cpp	EffectKind47_Run	record	UL	ObjTrio + 0x3C	0	-	base=ObjTrio	family	UL(ObjTrio + 0x3c): local ObjTrio: no declaration read	b1-effect
+src/game/effect_2d.cpp	EffectKind47_Run	record	UL	rv::Bytes(ObjTrio) + 0x3C	0	-	via=Bytes	family	UL(ObjTrio + 0x3c): local ObjTrio: no declaration read	b1-effect
 src/game/effect_2d.cpp	EffectKind47_Run	record	SetUL	b + 0x38	0	-	via=SpriteRec	family	SetUL(b + 0x38): local b reassigned	b1-effect
 src/game/effect_2d.cpp	EffectKind47_Run	record	UL	b + 0x38	0	-	via=SpriteRec	family	UL(b + 0x38): local b reassigned	b1-effect
 src/game/effect_2d.cpp	EffectKind47_Run	record	SetUL	b + 0x3C	0	-	via=SpriteRec	family	SetUL(b + 0x3c): local b reassigned	b1-effect
@@ -6670,15 +6670,15 @@ src/game/effect_4b.cpp	EffectKind8A_Unblock	global	At	at::kKind8ACells	0	0x654ef
 src/game/effect_4b.cpp	Kind8AColour	global	-	at::kKind8AColour	0	0x654ef8	-	no-entry	at::kKind8AColour 0x654ef8 -	b0
 src/game/effect_4b.cpp	Kind8AColour	global	At	at::kKind8AColour	0	0x654ef8	-	no-entry	at::kKind8AColour 0x654ef8 -	b0
 src/game/effect_4b.cpp	EffectKind8B_Wait	global	Byte	at::kCounter2	0	0x903849	-	no-entry	at::kCounter2 0x903849 -	b0
-src/game/effect_4b.cpp	EffectKind8B_Pose	record	Word	ObjTrio + 0x58	0	-	base=ObjTrio	family	Word(ObjTrio + 0x58): local ObjTrio: no declaration read	b1-effect
+src/game/effect_4b.cpp	EffectKind8B_Pose	record	Word	rv::Bytes(ObjTrio) + 0x58	0	-	via=Bytes	family	Word(ObjTrio + 0x58): local ObjTrio: no declaration read	b1-effect
 src/game/effect_4b.cpp	EffectKind8B_Again	global	Byte	at::kCounter2	0	0x903849	-	no-entry	at::kCounter2 0x903849 -	b0
-src/game/effect_4b.cpp	Pad	record	UL	ObjTrio + off	0	-	base=ObjTrio	computed	UL(ObjTrio + -): the offset is not a constant	b1-effect
-src/game/effect_4b.cpp	Pad	record	SetUL	ObjTrio + off	0	-	base=ObjTrio	computed	SetUL(ObjTrio + -): the offset is not a constant	b1-effect
+src/game/effect_4b.cpp	Pad	record	UL	rv::Bytes(ObjTrio) + off	0	-	via=Bytes	computed	UL(ObjTrio + -): the offset is not a constant	b1-effect
+src/game/effect_4b.cpp	Pad	record	SetUL	rv::Bytes(ObjTrio) + off	0	-	via=Bytes	computed	SetUL(ObjTrio + -): the offset is not a constant	b1-effect
 src/game/effect_4b.cpp	EffectKind8C_Start	global	At	at::kKind8CCounts	0	0x654f28	-	no-entry	at::kKind8CCounts 0x654f28 -	b0
-src/game/effect_4b.cpp	EffectKind8C_SteerBack	record	UL	ObjTrio + 0x38	0	-	base=ObjTrio	family	UL(ObjTrio + 0x38): local ObjTrio: no declaration read	b1-effect
-src/game/effect_4b.cpp	EffectKind8C_SteerBack	record	SetUL	ObjTrio + 0x38	0	-	base=ObjTrio	family	SetUL(ObjTrio + 0x38): local ObjTrio: no declaration read	b1-effect
-src/game/effect_4b.cpp	EffectKind8C_SteerBack	record	UL	ObjTrio + 0x34	0	-	base=ObjTrio	family	UL(ObjTrio + 0x34): local ObjTrio: no declaration read	b1-effect
-src/game/effect_4b.cpp	EffectKind8C_SteerBack	record	SetUL	ObjTrio + 0x34	0	-	base=ObjTrio	family	SetUL(ObjTrio + 0x34): local ObjTrio: no declaration read	b1-effect
+src/game/effect_4b.cpp	EffectKind8C_SteerBack	record	UL	rv::Bytes(ObjTrio) + 0x38	0	-	via=Bytes	family	UL(ObjTrio + 0x38): local ObjTrio: no declaration read	b1-effect
+src/game/effect_4b.cpp	EffectKind8C_SteerBack	record	SetUL	rv::Bytes(ObjTrio) + 0x38	0	-	via=Bytes	family	SetUL(ObjTrio + 0x38): local ObjTrio: no declaration read	b1-effect
+src/game/effect_4b.cpp	EffectKind8C_SteerBack	record	UL	rv::Bytes(ObjTrio) + 0x34	0	-	via=Bytes	family	UL(ObjTrio + 0x34): local ObjTrio: no declaration read	b1-effect
+src/game/effect_4b.cpp	EffectKind8C_SteerBack	record	SetUL	rv::Bytes(ObjTrio) + 0x34	0	-	via=Bytes	family	SetUL(ObjTrio + 0x34): local ObjTrio: no declaration read	b1-effect
 src/game/effect_4b.cpp	EffectKind8C_CountA	global	Byte	at::kCounter2	0	0x903849	-	no-entry	at::kCounter2 0x903849 -	b0
 src/game/effect_4b.cpp	EffectKind8C_CountA	global	Byte	at::kCounter2	1	0x903849	-	no-entry	at::kCounter2 0x903849 -	b0
 src/game/effect_4b.cpp	EffectKind8C_Pass	global	Byte	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
@@ -6688,7 +6688,7 @@ src/game/effect_4b_fuzz.cpp	SeedParticles	record	SetLong	r + 0xC	0	-	via=Particl
 src/game/effect_4b_fuzz.cpp	SeedParticles	record	Long	r + 0x1C	0	-	via=Particle	harness	Long(r + 0x1c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_4b_fuzz.cpp	Seed	record	SetWord	rv::Bytes(&Sprite_Objects[i])+ 0x2C	0	-	via=Bytes	computed	SetWord(Sprite_Objects + -): the offset is not a constant	b1-effect
 src/game/effect_4b_fuzz.cpp	Seed	global	Mem	at::kCounter2	0	0x903849	-	no-entry	at::kCounter2 0x903849 -	b0
-src/game/effect_4b_fuzz.cpp	Seed	record	SetWord	ObjTrio + 0x58	0	-	base=ObjTrio	harness	SetWord(ObjTrio + 0x58): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_4b_fuzz.cpp	Seed	record	SetWord	rv::Bytes(ObjTrio) + 0x58	0	-	via=Bytes	harness	SetWord(ObjTrio + 0x58): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_4b_fuzz.cpp	Disturb	global	Mem	at::kCounter2	0	0x903849	-	no-entry	at::kCounter2 0x903849 -	b0
 src/game/effect_4c.cpp	Dispatch	record	At	table + 4 * state	0	-	param	computed	At(table + -): the offset is not a constant	b1-effect
 src/game/effect_4c.cpp	Fall	record	UL	v + 8	0	-	param	family	UL(v + 0x8): parameter v of Fall	b1-effect
@@ -8706,12 +8706,12 @@ src/game/field_c1.cpp	EffectKind30_Run	record	At	list + 8u * Cur()[0xB]	0	-	-	co
 src/game/field_c1_fuzz.cpp	Eff	record	SetLong	o + kOff[v % 6]	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Eff	record	SetWord	o + (v & 1 ? 0x34 : 0x38)	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Eff	record	SetWord	o + 0x3E	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_c1_fuzz.cpp	Eff	record	SetWord	ObjTrio + 0x3E	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_c1_fuzz.cpp	Eff	record	Long	ObjTrio + 0x34	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_c1_fuzz.cpp	Eff	record	Long	ObjTrio + 0x38	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_c1_fuzz.cpp	Eff	record	SetWord	rv::Bytes(ObjTrio) + 0x3E	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_c1_fuzz.cpp	Eff	record	Long	rv::Bytes(ObjTrio) + 0x34	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_c1_fuzz.cpp	Eff	record	Long	rv::Bytes(ObjTrio) + 0x38	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Eff	record	SetLong	o + 0x40	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Ground	record	Word	o + 0x3E	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_c1_fuzz.cpp	Ground	record	Word	ObjTrio + 0x3E	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_c1_fuzz.cpp	Ground	record	Word	rv::Bytes(ObjTrio) + 0x3E	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Ground	record	Word	o + 0x3E	1	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	SeedRecord	record	SetLong	o + 0x34	0	-	param	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	SeedRecord	record	SetLong	o + 0x38	0	-	param	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
@@ -8728,10 +8728,10 @@ src/game/field_c1_fuzz.cpp	Seed	record	SetLong	o + 0x1C	0	-	via=Cur	harness	a st
 src/game/field_c1_fuzz.cpp	Seed	record	Long	o + (along_x ? 0xC : 0x10)	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Seed	record	Long	o + (along_x ? 0x18 : 0x1C)	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Seed	record	Long	o + axis	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_c1_fuzz.cpp	Seed	record	SetLong	ObjTrio + axis	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_c1_fuzz.cpp	Seed	record	SetLong	ObjTrio + cross	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_c1_fuzz.cpp	Seed	record	Long	ObjTrio + 0x34	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_c1_fuzz.cpp	Seed	record	Long	ObjTrio + 0x38	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_c1_fuzz.cpp	Seed	record	SetLong	rv::Bytes(ObjTrio) + axis	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_c1_fuzz.cpp	Seed	record	SetLong	rv::Bytes(ObjTrio) + cross	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_c1_fuzz.cpp	Seed	record	Long	rv::Bytes(ObjTrio) + 0x34	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_c1_fuzz.cpp	Seed	record	Long	rv::Bytes(ObjTrio) + 0x38	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Seed	record	SetWord	o + 0x34	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Seed	record	SetWord	o + 0x38	0	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_c1_fuzz.cpp	Seed	record	SetLong	o + 0x18	1	-	via=Cur	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
@@ -9002,7 +9002,7 @@ src/game/field_e1_fuzz.cpp	Seed	global	B	at::kItemCounts	0	0x904354	-	no-entry	a
 src/game/field_e1_fuzz.cpp	Seed	global	B	at::kItemCounts	1	0x904354	-	no-entry	at::kItemCounts 0x904354 -	b0
 src/game/field_e1_fuzz.cpp	Seed	global	B	at::kItemIds	2	0x904154	-	no-entry	at::kItemIds 0x904154 -	b0
 src/game/field_e1_fuzz.cpp	Seed	global	B	at::kBlink	0	0x939a28	-	gate	at::kBlink 0x939a28 Effect1e_Blink	b0
-src/game/field_e1_fuzz.cpp	Seed	record	SetWord	ObjTrio + 0x3E	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_e1_fuzz.cpp	Seed	record	SetWord	rv::Bytes(ObjTrio) + 0x3E	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_e1_fuzz.cpp	Seed	global	B	at::kFlags2Lo	0	0x905ba4	-	name	at::kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/field_e1_fuzz.cpp	Seed	global	B	at::kFlags2Lo	1	0x905ba4	-	name	at::kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/field_e1_fuzz.cpp	Seed	global	B	at::kFlagsLo	0	0x9039a2	-	name	at::kFlagsLo 0x9039a2 Field_ScriptFlags	b0
@@ -9156,8 +9156,8 @@ src/game/field_event.cpp	Field_PartyPosition	record	Long	offset + 4	1	-	stride=0
 src/game/field_event.cpp	PartySet_Find	global	At	at::kFindIds	0	0x903850	-	no-entry	at::kFindIds 0x903850 -	b0
 src/game/field_event_fuzz.cpp	Disturb	global	At	at::kActorRecords	0	0x903a70	-	no-entry	at::kActorRecords 0x903a70 -	b0
 src/game/field_event_fuzz.cpp	Disturb	record	SetLong	At(MoveScript_TintRecords_addr + 0x8) + (h >> 8) % 32 * 12	0	-	via=At	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_event_fuzz.cpp	StubSetBank	record	SetLong	ObjTrio + 0x34 + (Hash(291) % 2) * 4	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_event_fuzz.cpp	StubPositionAlt	record	SetLong	ObjTrio + 0x34 + (Hash(301) % 2) * 4	0	-	base=ObjTrio	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_event_fuzz.cpp	StubSetBank	record	SetLong	rv::Bytes(ObjTrio) + 0x34 + (Hash(291) % 2) * 4	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_event_fuzz.cpp	StubPositionAlt	record	SetLong	rv::Bytes(ObjTrio) + 0x34 + (Hash(301) % 2) * 4	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_event_fuzz.cpp	StubSelect	global	At	at::kFindIds	0	0x903850	-	no-entry	at::kFindIds 0x903850 -	b0
 src/game/field_event_fuzz.cpp	StubSelect	global	At	at::kFindIds	1	0x903850	-	no-entry	at::kFindIds 0x903850 -	b0
 src/game/field_event_fuzz.cpp	Address	global	-	at::kFindIds	0	0x903850	-	no-entry	at::kFindIds 0x903850 -	b0
@@ -13698,7 +13698,7 @@ src/game/map_scroll_fuzz.cpp	Block	record	SetWord	AreaMap_Header + (offset * 2 +
 src/game/map_scroll_fuzz.cpp	Block	record	SetWord	AreaMap_Header + offset * 4	0	-	base=AreaMap_Header	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/map_scroll_fuzz.cpp	Block	record	Word	g_input + d * 4	0	-	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/member_sprites.cpp	-	global	-	at::kControlStates	0	0x65f99c	-	no-entry	at::kControlStates 0x65f99c -	b0
-src/game/member_sprites.cpp	Address	record	At	Address(ObjTrio) + i * kMemberBytes	0	-	via=Address	computed	offset computed at run time: Address(ObjTrio) + i * kMemberBytes	b1-field
+src/game/member_sprites.cpp	Address	record	At	Address(rv::Bytes(ObjTrio)) + i * kMemberBytes	0	-	via=Address	computed	offset computed at run time: Address(ObjTrio) + i * kMemberBytes	b1-field
 src/game/member_sprites.cpp	Address	global	At	at::kCells	0	0x903850	-	no-entry	at::kCells 0x903850 -	b0
 src/game/member_sprites.cpp	High	record	At	table + dir * 8	0	-	param	computed	offset computed at run time: table + dir * 8	b1-field
 src/game/member_sprites.cpp	High	record	At	table + dir * 8 + 4	0	-	param	no-family	`table + dir * 8`: not shown to point at one of the nine record families	b1-field
@@ -14047,10 +14047,10 @@ src/game/move_groups.cpp	MoveScript_GroupD	record	SetLong	r + 8	0	-	via=PartyRec
 src/game/move_groups.cpp	MoveScript_GroupD	record	SetLong	r + 4	0	-	via=PartyRecord	no-family	`r`: a shard / party-move record	b1-field
 src/game/move_groups.cpp	StubTintRelease	record	Word	Sprite_Current + 0x58	0	-	base=Sprite_Current	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_groups.cpp	StubTintRelease	record	SetWord	Sprite_Current + 0x58	0	-	base=Sprite_Current	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
-src/game/move_groups.cpp	Next	record	Long	ObjTrio + 0x34	0	-	base=ObjTrio	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
-src/game/move_groups.cpp	Next	record	Long	ObjTrio + 0x38	0	-	base=ObjTrio	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
-src/game/move_groups.cpp	Next	record	Long	ObjTrio + 0x34	1	-	base=ObjTrio	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
-src/game/move_groups.cpp	Next	record	Long	ObjTrio + 0x38	1	-	base=ObjTrio	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
+src/game/move_groups.cpp	Next	record	Long	rv::Bytes(ObjTrio) + 0x34	0	-	via=Bytes	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
+src/game/move_groups.cpp	Next	record	Long	rv::Bytes(ObjTrio) + 0x38	0	-	via=Bytes	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
+src/game/move_groups.cpp	Next	record	Long	rv::Bytes(ObjTrio) + 0x34	1	-	via=Bytes	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
+src/game/move_groups.cpp	Next	record	Long	rv::Bytes(ObjTrio) + 0x38	1	-	via=Bytes	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_groups.cpp	SelfTest	record	At	Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slo	0	-	via=Address	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_script.cpp	MoveScript_GroupF	record	SetWord	scratch + 2	0	-	via=Scratch	no-family	`scratch`: the PSX scratchpad	b1-field
 src/game/move_script.cpp	MoveScript_GroupF	record	Word	scratch + 2	0	-	via=Scratch	no-family	`scratch`: the PSX scratchpad	b1-field
@@ -14849,8 +14849,8 @@ src/game/rest_2d.cpp	MasterGrant_Step1Member	record	At	bof3::addr::Text_Records 
 src/game/rest_2d.cpp	FieldMenu_TopBarCountdown	global	B	at::kMenuTimer	0	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
 src/game/rest_2d.cpp	FieldMenu_TopBarCountdown	global	B	at::kMenuTimer	1	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
 src/game/rest_2d.cpp	FieldMenu_TopBarCountdown	global	B	at::kMenuTimer	2	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
-src/game/rest_2d.cpp	FieldMenu_CampAllowedCell	record	Word	ObjTrio + 0x36	0	-	base=ObjTrio	no-struct	Word(ObjTrio + 0x36): base=ObjTrio, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_2d.cpp	FieldMenu_CampAllowedCell	record	Word	ObjTrio + 0x3A	0	-	base=ObjTrio	no-struct	Word(ObjTrio + 0x3A): base=ObjTrio, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_2d.cpp	FieldMenu_CampAllowedCell	record	Word	rv::Bytes(ObjTrio) + 0x36	0	-	via=Bytes	no-struct	Word(ObjTrio + 0x36): base=ObjTrio, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_2d.cpp	FieldMenu_CampAllowedCell	record	Word	rv::Bytes(ObjTrio) + 0x3A	0	-	via=Bytes	no-struct	Word(ObjTrio + 0x3A): base=ObjTrio, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2d.cpp	Done	record	At	RecordOf(caster & 0xFF) + 0x2A	0	-	via=RecordOf	no-struct	At(RecordOf(caster & 0xFF) + 0x2A): via=RecordOf, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2d.cpp	FieldAbility_Use	global	-	at::kWorking	0	0x802dc0	-	untyped-entry	at::kWorking 0x802dc0 Text_CurrentName	b0
 src/game/rest_2d.cpp	FieldAbility_Use	record	At	record + 0x1A	0	-	table=0x802dc0;stride=0x14c	no-struct	At(record + 0x1A): table=0x802dc0;stride=0x14c, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -15035,7 +15035,7 @@ src/game/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x90358E	0	0x90358e	-	-	-	-
 src/game/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x903590	0	0x903590	-	-	-	-
 src/game/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x7E1BEC	0	0x7e1bec	-	-	-	-
 src/game/rest_2d_fuzz.cpp	SeedRecords	global	Mem	at::kRecords	0	0x903a70	-	no-entry	at::kRecords 0x903a70 -	b0
-src/game/rest_2d_fuzz.cpp	SeedRecords	record	SetWord	obj + 0x80 + 0x1A	0	-	stride=0x14c	no-struct	SetWord(obj + 0x80 + 0x1A): stride=0x14c, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_2d_fuzz.cpp	SeedRecords	record	SetWord	obj + 0x80 + 0x1A	0	-	via=Bytes	no-struct	SetWord(obj + 0x80 + 0x1A): stride=0x14c, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2d_fuzz.cpp	SeedMaster	global	B	at::kScriptObject	0	0x90384b	-	no-entry	at::kScriptObject 0x90384b -	b0
 src/game/rest_2d_fuzz.cpp	SeedMenu	global	B	at::kMenuTimer	0	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
 src/game/rest_2d_fuzz.cpp	SeedMenu	raw	B	0x80333E	0	0x80333e	-	-	-	-
@@ -15056,8 +15056,8 @@ src/game/rest_2d_fuzz.cpp	Seed	global	Mem	at::kItemIdLists	0	0x656b00	-	untyped-
 src/game/rest_2d_fuzz.cpp	Seed	raw	B	0x80333E	1	0x80333e	-	-	-	-
 src/game/rest_2d_fuzz.cpp	Seed	raw	B	0x803340	0	0x803340	-	-	-	-
 src/game/rest_2d_fuzz.cpp	Seed	record	B	list + B(0x803340)	0	-	table=0x656b00	no-struct	B(list + B(0x803340)): table=0x656b00, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_2d_fuzz.cpp	Seed	record	SetWord	ObjTrio + 0x36	0	-	base=ObjTrio	width	PartyMember +0x36 w2 (SetWord(ObjTrio + 0x36))	b1-rest
-src/game/rest_2d_fuzz.cpp	Seed	record	SetWord	ObjTrio + 0x3A	0	-	base=ObjTrio	width	PartyMember +0x3a w2 (SetWord(ObjTrio + 0x3A))	b1-rest
+src/game/rest_2d_fuzz.cpp	Seed	record	SetWord	rv::Bytes(ObjTrio) + 0x36	0	-	via=Bytes	width	PartyMember +0x36 w2 (SetWord(ObjTrio + 0x36))	b1-rest
+src/game/rest_2d_fuzz.cpp	Seed	record	SetWord	rv::Bytes(ObjTrio) + 0x3A	0	-	via=Bytes	width	PartyMember +0x3a w2 (SetWord(ObjTrio + 0x3A))	b1-rest
 src/game/rest_2d_fuzz.cpp	Disturb	global	Mem	at::kRecords	0	0x903a70	-	no-entry	at::kRecords 0x903a70 -	b0
 src/game/rest_2d_fuzz.cpp	Disturb	global	B	at::kMenuTimer	0	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
 src/game/rest_2d_fuzz.cpp	Disturb	raw	B	0x80333E	0	0x80333e	-	-	-	-

@@ -257,7 +257,7 @@ extern "C" void __cdecl Area85_ClutShift(int delta) {
 extern "C" unsigned char __cdecl Area86_SwitchHook(unsigned x, unsigned z) {
     U k = 0;
     for (U a = Area86_Switches_addr + 1; a < at::kA86SwitchesEnd + 1; a += 4, ++k) {
-        if (At(a - 1)[0] == (x & 0xFF) && At(a)[0] == (z & 0xFF) && At(a + 1)[0] == ObjTrio[8]) break;
+        if (At(a - 1)[0] == (x & 0xFF) && At(a)[0] == (z & 0xFF) && At(a + 1)[0] == ObjTrio[0].direction) break;
     }
     if (k == 3) return 0;
     const unsigned char* const rect = At(Area86_Rects_addr + k * 4);
@@ -408,7 +408,7 @@ void PlaceMessage(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = ObjTrio[9];
+    const U steps = ObjTrio[0].step_frames;
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);

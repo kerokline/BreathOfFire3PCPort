@@ -74,7 +74,7 @@ using field_event::Handler;
 constexpr unsigned kMemberBytes = 0x14C, kActorBytes = 0xA4;
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Member(unsigned i) { return ObjTrio + i * kMemberBytes; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 
 // The record views (game/record_views.h). The leader's states and the party's
 // set-up run on an ObjTrio record (Member above, Field_State always); the
@@ -242,7 +242,7 @@ extern "C" void __cdecl Field_ZoneCounterRoll(unsigned keep) {
         SetWord(counter, 0);
         return;
     }
-    const unsigned char* const zone = g.zone_at(ObjTrio[0x36], ObjTrio[0x3a]);
+    const unsigned char* const zone = g.zone_at(rv::Bytes(ObjTrio)[0x36], rv::Bytes(ObjTrio)[0x3a]);
     const unsigned char* const bases = At(at::kZoneBases);
     unsigned char value = bases[zone[4] * 2u];
     if (value == 0) {
@@ -264,10 +264,10 @@ extern "C" void __cdecl Field_ZoneCounterRoll(unsigned keep) {
     const unsigned members = static_cast<unsigned char>(g.party_count(0));
     unsigned i = 0;
     for (; i < members; ++i)
-        if (g.has_item(Field_Members[i * kMemberBytes], 3, 0x15)) break;
+        if (g.has_item(ObjTrio[i].char_index, 3, 0x15)) break;
     if (i < members) value = static_cast<unsigned char>(value << 1);
     for (i = 0; i < members; ++i)
-        if (g.has_item(Field_Members[i * kMemberBytes], 3, 0x14)) break;
+        if (g.has_item(ObjTrio[i].char_index, 3, 0x14)) break;
     if (i < members) value = static_cast<unsigned char>(value >> 1);
     SetWord(counter, value);
 }
@@ -523,7 +523,7 @@ extern "C" void __cdecl Field_PartyPosition(long x, long z, unsigned direction) 
         if (i != 0)
             m->flags = static_cast<unsigned char>(m->flags | 0x40);
         else
-            rv::As<records::PartyMember>(ObjTrio)->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->flags & 0xBF);
+            ObjTrio[0].flags = static_cast<unsigned char>(ObjTrio[0].flags & 0xBF);
         ++i;
         if (i >= Field_MemberCount) break;
     }
@@ -562,19 +562,19 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         }
         for (unsigned i = 0; i < count; ++i) {
             if (Field_ActorStates[Character_IndexById[list[i]] * kActorBytes] & 0x80) {
-                ObjTrio[0x124] = 10;
+                rv::Bytes(ObjTrio)[0x124] = 10;
                 break;
             }
         }
         const unsigned char input = Field_InputFlags;
-        rv::As<records::PartyMember>(ObjTrio)->actor = 0;
-        Sprite_Current = ObjTrio;
-        CopyActor(ObjTrio + 0x80, Actor(0));
-        const unsigned char bits = ObjTrio[0x138];
+        ObjTrio[0].actor = 0;
+        Sprite_Current = rv::Bytes(ObjTrio);
+        CopyActor(rv::Bytes(ObjTrio) + 0x80, Actor(0));
+        const unsigned char bits = rv::Bytes(ObjTrio)[0x138];
         Field_MemberCount = 1;
-        rv::As<records::PartyMember>(ObjTrio)->char_index = 0;
-        ObjTrio[0x138] = static_cast<unsigned char>(bits & 0xFE);
-        ObjTrio[0x48] = 0;
+        ObjTrio[0].char_index = 0;
+        rv::Bytes(ObjTrio)[0x138] = static_cast<unsigned char>(bits & 0xFE);
+        ObjTrio[0].scale_mode = 0;
         if (input & 1) {
             const unsigned char who = Actor(0)[9];
             if (who == 0)
@@ -592,8 +592,8 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         } else if (input & 0x40) {
             g.member_sprite(Actor(0)[9], 0);
         } else if (Game_AreaNumber == 0xBD) {
-            ObjTrio[0x2B] = 0;
-            rv::As<records::PartyMember>(ObjTrio)->reach = 0;
+            ObjTrio[0].key_class = 0;
+            ObjTrio[0].reach = 0;
         }
     } else {
         // The whole party.
@@ -629,8 +629,8 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
     }
     // Where the kind-2 object and the camera start.
     if (Field_InputFlags & 8) {
-        rv::As<records::PartyMember>(ObjTrio)->z = 0x410000;
-        rv::As<records::PartyMember>(ObjTrio)->x = 0xF0000;
+        ObjTrio[0].z = 0x410000;
+        ObjTrio[0].x = 0xF0000;
         Field_Kind2X = 0xF0000;
         Field_Kind2Z = 0x3C0000;
         return;
@@ -644,7 +644,7 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         g.position_alt(x, z, flags);
     else
         g.position(x, z, flags);
-    const long leader_x = rv::As<records::PartyMember>(ObjTrio)->x, leader_z = rv::As<records::PartyMember>(ObjTrio)->z;
+    const long leader_x = ObjTrio[0].x, leader_z = ObjTrio[0].z;
     Field_Kind2X = leader_x;
     Field_Kind2Z = leader_z;
 }
@@ -667,7 +667,7 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
     const unsigned char input = Field_InputFlags;
     const unsigned char count = Field_MemberCount;
     if (input & 8) {
-        rv::As<records::PartyMember>(ObjTrio)->state = 9;
+        ObjTrio[0].state = 9;
     } else {
         for (unsigned i = 0; i < count; ++i) Member(i)[0x29] = 6;
     }
@@ -735,7 +735,7 @@ extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
     Sprite_Current[0x4B] = 0xFF;
     const unsigned char k = Field_MemberCount;
     Field_MemberCount = static_cast<unsigned char>(k + 1);
-    Field_Members[k * kMemberBytes] = *actor_of;
+    (rv::Bytes(ObjTrio) + 0x148)[k * kMemberBytes] = *actor_of;
     return 0;
 }
 

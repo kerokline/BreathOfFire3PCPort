@@ -575,10 +575,10 @@ extern "C" void __cdecl Scena07_Scene4(void) {
     switch (Step()) {
     case 0: {
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        ObjTrio[0xb] = slot;
+        rv::Bytes(ObjTrio)[0xb] = slot;
         if (slot == 0xFF) return;
         unsigned char* const e = EffectAt(slot);
-        const unsigned arg = Byte(at::kEffectArg + ObjTrio[0x89]);
+        const unsigned arg = Byte(at::kEffectArg + ObjTrio[0].char_id);
         e[0] = 1;
         e[5] = 6;
         e[6] = 1;
@@ -590,7 +590,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         return;
     }
     case 1:
-        if (EffectAt(ObjTrio[0xb])[0] & 1) return;
+        if (EffectAt(rv::Bytes(ObjTrio)[0xb])[0] & 1) return;
         C0() = 1;
         SH_CALL(Kind2_Place)(0);
         SetStep(2);
@@ -1267,7 +1267,7 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
         if (!Near(zh, 0x3C, 5)) return 0;
         if (!Near(xh, 0x22, 4)) return 0;
         if (!Flag(4) || SH_CALL(Scena07_PartyHas89State2)() == 0) {
-            const unsigned char kind = ObjTrio[8];
+            const unsigned char kind = ObjTrio[0].direction;
             Byte(at::kSlot) = kind;
             if (kind != 6 && kind != 5 && kind != 4) {
                 C0() = 0x10;
@@ -1290,7 +1290,7 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
     }
     const unsigned area = Area();
     if (area == 0x69) {
-        const unsigned char kind = ObjTrio[8];
+        const unsigned char kind = ObjTrio[0].direction;
         Byte(at::kSlot) = kind;
         if (kind == 0 || kind == 1 || kind == 2) return 0;
         if (static_cast<short>(zh) <= 0x1D) return 0;
@@ -1430,11 +1430,11 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
     }
     if (Area() == 3 && !Flag(0xE)) {
         SH_CALL(Scenario_CallA)(3);
-        Field_Members[4] = static_cast<unsigned char>(Field_Members[4] | 0x40);
+        ObjTrio[1].flags = static_cast<unsigned char>(ObjTrio[1].flags | 0x40);
     }
     if (Area() == 0xC && !Flag(0xC) && Flag(0xB)) {
         Set40();
-        const unsigned char kind = ObjTrio[8];
+        const unsigned char kind = ObjTrio[0].direction;
         const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
         const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
         PassFlags(0);
@@ -2719,7 +2719,7 @@ extern "C" unsigned char __cdecl Scena08_ArriveHook(int x, int z) {
         return 1;
     }
     if (Area() == 0x23 && !Flag(8) && Near(xh, 0x45, 3) && Near(zh, 0x37, 3)) {
-        const unsigned char kind = ObjTrio[8];
+        const unsigned char kind = ObjTrio[0].direction;
         Byte(at::kSlot) = kind;
         if (kind != 6 && kind != 7 && kind != 0) {
             SetRun(6);

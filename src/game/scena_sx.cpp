@@ -65,7 +65,7 @@ unsigned char* Record(unsigned n) { return At(bof3::addr::CharacterRecords + n *
 // A member id's record: CharacterRecords[Character_IndexById[id]], both
 // indexes a whole byte, unchecked (the original reads them the same way).
 unsigned char* MemberRecord(unsigned char id) { return Record(Character_IndexById[id]); }
-unsigned char* Obj(unsigned n) { return ObjTrio + n * at::kObjStride; }
+unsigned char* Obj(unsigned n) { return rv::Bytes(&ObjTrio[n]); }
 
 // A signed byte's value.
 int S8(unsigned char b) { return static_cast<signed char>(b); }
@@ -264,7 +264,7 @@ extern "C" void __cdecl Party_Remove(unsigned id_arg) {
     }
     const unsigned char n = Field_MemberCount;
     const auto below = static_cast<unsigned char>(n - 1);
-    ObjTrio[(static_cast<int>(n) - 1) * static_cast<int>(at::kObjStride)] = 0;
+    ObjTrio[static_cast<int>(n) - 1].flags = 0;
     SH_CALL(Member_ClearState)(below);
     const unsigned char now = Field_MemberCount;
     if (now == 3) {
@@ -345,7 +345,7 @@ extern "C" std::uint32_t __cdecl Field_CellTriggerAt(unsigned char* table, unsig
         }
         if (!hit) continue;
         const unsigned facing = r[3] & 0xF;
-        if (facing == 8 || facing == ObjTrio[8]) return i;
+        if (facing == 8 || facing == ObjTrio[0].direction) return i;
     }
     return 0xFF;
 }

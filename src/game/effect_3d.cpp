@@ -1013,9 +1013,9 @@ extern "C" void __cdecl EffectKind81_Run(void) {
 // original 0x4878B0 (state 0): the record's point the leader's (ObjTrio +0x34,
 // +0x38, +0x3C); the drops cleared, the sources placed; +1 up.
 extern "C" void __cdecl EffectKind81_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z));
-    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->height));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(ObjTrio[0].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(ObjTrio[0].z));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(ObjTrio[0].height));
     SH_CALL(EffectKind81_ClearDrops)();
     SH_CALL(EffectKind81_PlaceSources)();
     NextState();
@@ -1193,8 +1193,8 @@ namespace {
 // leader's or past it (signed).
 bool ObjectReached() {
     const auto object_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_Objects[0].x));
-    const auto leader_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
-    Field_State = ObjTrio;
+    const auto leader_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ObjTrio[0].x));
+    Field_State = rv::Bytes(ObjTrio);
     return object_x >= leader_x;
 }
 // Record 0 a cell on (x + 0x4000 four times, Sprite_Current pointed at it for

@@ -372,7 +372,7 @@ void Seed(unsigned k) {
     }
     Field_MemberCount = static_cast<unsigned char>(sh::Next() % 4);
     for (unsigned m = 0; m < at::kObjTrioCount; ++m)
-        if (sh::Half()) (ObjTrio + at::kObjTrioStride * m)[0x89] = 7;
+        if (sh::Half()) (rv::Bytes(&ObjTrio[m]))[0x89] = 7;
     if (sh::Next() % 3 == 0) Field_Request = static_cast<unsigned char>(PickOf(1, 3, 0, 2));
     switch (k) {
     case k87Setup:
@@ -405,8 +405,8 @@ void Seed(unsigned k) {
         Mem(at::kCounter2)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next()));
         break;
     case k8BPose:
-        if (sh::Often()) SetWord(ObjTrio + 0x58, 0xC);
-        if (sh::Often()) ObjTrio[0x4A] = 1;
+        if (sh::Often()) SetWord(rv::Bytes(ObjTrio) + 0x58, 0xC);
+        if (sh::Often()) ObjTrio[0].script_hold = 1;
         break;
     default: break;
     }

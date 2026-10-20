@@ -226,7 +226,7 @@ void SeedB34(unsigned k) {
         const auto id = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 5, 6, 0x80, 0xFF) : bh::Next());
         B(Character_IndexById_addr + 0x4) = id;
         for (unsigned m = 0; m < 3; ++m)
-            B(Field_Members_addr + m * at::kPartyStride) = static_cast<unsigned char>(bh::Half() ? id : id ^ (1u << (bh::Next() % 8)));
+            B(ObjTrio_addr + 0x148 + m * at::kPartyStride) = static_cast<unsigned char>(bh::Half() ? id : id ^ (1u << (bh::Next() % 8)));
         if (bh::Half()) B(BossSh_Picked_addr) = static_cast<unsigned char>(BH_PICK(0, 1, 2, 7, 0xFF));
         break;
     }

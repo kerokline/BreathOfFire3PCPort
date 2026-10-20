@@ -910,7 +910,7 @@ Args Generate(unsigned k) {
         // Field_Members' record bytes and the two accessory slots, 0x1B sometimes.
         for (U i = 0; i < 5; ++i) {
             const U r = Next() % 4 ? Next() % 8 : Next() & 0xFF;
-            PutByte(Field_Members_addr + i * at::kMemberStride, r);
+            PutByte(ObjTrio_addr + 0x148 + i * at::kMemberStride, r);
             if (r < 16) {
                 PutByte(at::kCharRecords + r * at::kCharStride + 0x16, Pick({0x1B, 0x1A, 0x1C, Next()}));
                 PutByte(at::kCharRecords + r * at::kCharStride + 0x17, Pick({0x1B, 0x1A, 0x1C, Next()}));

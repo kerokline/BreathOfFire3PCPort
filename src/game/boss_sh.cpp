@@ -174,7 +174,7 @@ extern "C" unsigned long __cdecl BossSample3_Hook(unsigned long word) {
 extern "C" void __cdecl Boss34_Setup(void) {
     const unsigned char id = Character_IndexById[4];
     for (unsigned m = 0; m <= 2; ++m)
-        if (At(Field_Members_addr + m * at::kPartyStride)[0] == id) BossSh_Picked = static_cast<unsigned char>(m);
+        if (At(ObjTrio_addr + 0x148 + m * at::kPartyStride)[0] == id) BossSh_Picked = static_cast<unsigned char>(m);
     StoreHooks(bof3::addr::Boss34_End, bof3::addr::Boss34_Exit, bof3::addr::Boss34_Event);
 }
 

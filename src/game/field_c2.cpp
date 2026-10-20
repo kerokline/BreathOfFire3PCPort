@@ -150,7 +150,7 @@ extern "C" void __cdecl EffectKind30_Push(void) {
             SH_CALL(EffectKind30_FreeCells)();
         } else if (S()[0xB] != 0) {
             records::EffectObject* s = rv::As<records::EffectObject>(S());
-            rv::Bytes(s)[8] = ObjTrio[8];
+            rv::Bytes(s)[8] = ObjTrio[0].direction;
             s = rv::As<records::EffectObject>(S());
             s->step_x = UL(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(s)[8])) << 1;
             s = rv::As<records::EffectObject>(S());
@@ -895,7 +895,7 @@ extern "C" void __cdecl EffectKind3A_Run(void) { Run("EffectKind3A_Run", Address
 // original (a data read). No PSX twin paired.
 extern "C" void __cdecl EffectKind3A_Start(void) {
     records::EffectObject* s = rv::As<records::EffectObject>(S());
-    rv::Bytes(s)[8] = ObjTrio[8];
+    rv::Bytes(s)[8] = ObjTrio[0].direction;
     s = rv::As<records::EffectObject>(S());
     s->x = UL(At(AddressOf(Field_DirectionSteps) + 8u * rv::Bytes(s)[8])) + UL(At(ObjTrio_addr + 0x34));
     s = rv::As<records::EffectObject>(S());
@@ -933,7 +933,7 @@ extern "C" void __cdecl EffectKind3A_Fly(void) {
     }
     if (SH_CALL(EffectKind3A_Hit)() != 0) {
         SH_CALL(EffectKind3A_LeaderPose)();
-        S()[0x27] = ObjTrio[0x27];
+        S()[0x27] = ObjTrio[0].clut;
         SH_CALL(Sprite_SetAnimation)(0x4A);
         SH_CALL(Sound_PlayEffect)(0x10E);
         rv::As<records::EffectObject>(S())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(S())->state + 1);
@@ -1071,7 +1071,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         e->height_whole = static_cast<U>(at_ground) + 0x100u;
         rv::Bytes(e)[0xB] = 0;
     }
-    ObjTrio[7] = 1;
+    rv::Bytes(ObjTrio)[0x7] = 1;
     return 1;
 }
 

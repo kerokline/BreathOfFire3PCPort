@@ -143,7 +143,7 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
     records::PartyMember* const s = rv::Current<records::PartyMember>();
     switch (s->step) {
     case 0:
-        if (ObjTrio[0x137] != 8) {
+        if (rv::Bytes(ObjTrio)[0x137] != 8) {
             s->state = 1;
             rv::Current<records::PartyMember>()->step = 0;
         }

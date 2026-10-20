@@ -242,7 +242,7 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
 // flag. Else once (flag 10): the flag, Party_DropIn(0), the kind-2 object to
 // (0x260000, 0x1B8000).
 extern "C" void __cdecl Scena00_Area02(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     if (Game_AreaNumber != 2) return;
     if (SH_CALL(Flags_Test)(Row(), 2) == 0) {
         SetL(kCounter, 0);
@@ -542,7 +542,7 @@ extern "C" void __cdecl Scena00_Run4(void) {
 // Scena00_Shake[frame & 15] * 4 while 0x90384A counts down; 14 shakes the
 // sprite records' +0x34 / +0x38 by the table's value << 11.
 extern "C" void __cdecl Scena00_Run5(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     auto* const obj2 = &Sprite_Objects[2];
     auto* const xobj0 = Sprite_ObjectsExtra;
     uint32_t frame = Frame_Counter;
@@ -727,7 +727,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
 // and step 0 - 0xD counts before the call, 0x17 / 0x21 after); 0x32 goes to
 // area 0x1F. Every other step to 0x32 nothing.
 extern "C" void __cdecl Scena00_Run6(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     const unsigned step = MoveScript_PartyRecords[0x65];
     if (step > 0x32) return;
     switch (step) {
@@ -755,7 +755,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         Run(0);
         return;
     case 0x14:
-        if (ObjTrio[1] == 2) return;
+        if (ObjTrio[0].state == 2) return;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Party_DropIn)(4);
         SH_CALL(Flags_Set)(Row(), 8);
@@ -778,7 +778,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         return;
     }
     case 0x1E:
-        if (ObjTrio[1] == 2) return;
+        if (ObjTrio[0].state == 2) return;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Party_DropIn)(5);
         SH_CALL(Flags_Set)(Row(), 9);
@@ -812,7 +812,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
 // area 0x1F on 0x25.
 extern "C" void __cdecl Scena00_Run7(void) {
     auto* const kind2 = &Sprite_Kind2;
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         B(kCounter) = 0xA;
@@ -1001,7 +1001,7 @@ extern "C" void __cdecl Scena00_Steer(void) {
 // corner words, and at the end area 9 with ObjTrio 0's +0x24 bit 5 cleared.
 extern "C" void __cdecl Scena00_Run11(void) {
     auto* const kind2 = &Sprite_Kind2;
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     auto* const obj0 = Sprite_Objects;
     auto* const xobj0 = Sprite_ObjectsExtra;
     auto* const xobj1 = &Sprite_ObjectsExtra[1];

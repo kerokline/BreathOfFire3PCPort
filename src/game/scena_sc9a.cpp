@@ -177,7 +177,7 @@ std::uint32_t Entry(std::uint32_t table, int index, unsigned count, const char* 
 
 // Scena09_EnterArea's body; every return leads to its state store.
 void EnterAreaBody() {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     // area 0x25: flag 0x2E without 0x2F - run 0xF step 0xA, the call-table
     // entries by the selector
     if (Area() == 0x25 && Flag(0x2E) && !Flag(0x2F)) {
@@ -565,7 +565,7 @@ SC9A_EXPORT void __cdecl Scena09_Run3(void) {
 
 // original 0x5547F0: run 4.
 SC9A_EXPORT void __cdecl Scena09_Run4(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         SetStep(1);
@@ -977,7 +977,7 @@ SC9A_EXPORT void __cdecl Scena09_Run6(void) {
 SC9A_EXPORT void __cdecl Scena09_Run7(void) {
     switch (Step()) {
     case 0:
-        if (ObjTrio[0x3cf] == 2) break;
+        if (rv::Bytes(&ObjTrio[2])[0x137] == 2) break;
         DropIn(0);
         SetStep(1);
         break;
@@ -1005,7 +1005,7 @@ SC9A_EXPORT void __cdecl Scena09_Run7(void) {
 
 // original 0x5556D0: run 8.
 SC9A_EXPORT void __cdecl Scena09_Run8(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0: Say(0x23); SetStep(0xA); break;
     case 1: Say(0x24); SetStep(0xA); break;
@@ -1060,7 +1060,7 @@ SC9A_EXPORT void __cdecl Scena09_Run8(void) {
         // each of the three members listed as 7: an effect of kind 6 at the
         // member's +0x2E / +0x30 words, its slot to the member's +0xB
         if (Counter(0) != 3) break;
-        unsigned char* member = ObjTrio;
+        unsigned char* member = rv::Bytes(ObjTrio);
         for (unsigned i = 0; i < 3; ++i, member += 0x14C) {
             if (B(at::kPartyList + i) != 7) continue;
             Sprite_Current = member;
@@ -1132,7 +1132,7 @@ SC9A_EXPORT void __cdecl Scena09_Run8(void) {
 SC9A_EXPORT void __cdecl Scena09_Run9(void) {
     switch (Step()) {
     case 0:
-        if (ObjTrio[0x3cf] == 3) break;
+        if (rv::Bytes(&ObjTrio[2])[0x137] == 3) break;
         ScriptOrByte(8);
         DropIn(5);
         Kind2(1);
@@ -1240,7 +1240,7 @@ unsigned char Take11() {
 
 // original 0x556C40: run 11.
 SC9A_EXPORT void __cdecl Scena09_Run11(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         DropIn(2);
@@ -1490,7 +1490,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         SetAndEnd(0x36);
         break;
     case 0x46:
-        if (Field_Members[0x13b] == 3) break;
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         Msg(0x87);
         SetRequest(2);
         SetStep(0x47);
@@ -1591,7 +1591,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         EndRun();
         break;
     case 0x6E:
-        if (Field_Members[0x13b] == 3) break;
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         Say(0x9C);
         SetStep(0x6F);
         break;
@@ -1619,7 +1619,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         SetRun(0);
         break;
     case 0x78:
-        if (Field_Members[0x13b] == 3) break;
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         SetCounter(2, 0);
         SetStep(0x79);
         DropIn(2);

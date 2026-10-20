@@ -26,6 +26,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/inventory_ops_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -77,7 +78,7 @@ void Record(u32 what, u32 a = 0, u32 b = 0, u32 c = 0, u32 d = 0, u32 e = 0) {
 }
 
 constexpr unsigned kObjects = 5;   // ObjTrio and the two slots after it that Encounter_RollInitiative walks
-unsigned char* Obj(unsigned i) { return ObjTrio + at::kObjStride * i; }
+unsigned char* Obj(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 unsigned char* EnemySlot(unsigned k) { return At(at::kEnemies + at::kEnemyStride * k); }
 unsigned char* ActorRecord(unsigned i) { return At(at::kRecords + at::kRecordSize * i); }
 

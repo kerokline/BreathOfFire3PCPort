@@ -19,6 +19,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/area_backdrop_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -438,7 +439,7 @@ void SelfTestTextureCycle(void (__cdecl* theirs)(const unsigned char*)) {
 
 void SelfTestSlotZones(void (__cdecl* theirs)(const unsigned char*)) {
     constexpr unsigned kRounds = 40000;
-    const Region r[] = {R(Draw_OtSlot), R(ObjTrio, 0x3E4), R(At(FieldEvent_Object905DA0_addr), 0x3C), R(g_entry)};
+    const Region r[] = {R(Draw_OtSlot), R(rv::Bytes(ObjTrio), 0x3E4), R(At(FieldEvent_Object905DA0_addr), 0x3C), R(g_entry)};
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);
     g_rng = 0x571E2001u;
@@ -480,7 +481,7 @@ void SelfTestSlotZones(void (__cdecl* theirs)(const unsigned char*)) {
             SetDword(position, pack(cell(x0, x0 + w)));
             SetDword(position + 4, pack(cell(z0, z0 + d)));
         };
-        for (unsigned k = 0; k < 3; ++k) place(ObjTrio + k * 0x14C + 0x34);
+        for (unsigned k = 0; k < 3; ++k) place(rv::Bytes(&ObjTrio[k]) + 0x34);
         place(At(FieldEvent_Object905DA0_addr) + 0x34);
         const unsigned char fourth_before = At(FieldEvent_Object905DA0_addr)[0xB];
         Pair("AreaMap_SlotZones", round, r, n, [&] { theirs(g_entry); }, [&] { AreaMap_SlotZones(g_entry); }, bad);

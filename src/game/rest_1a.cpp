@@ -42,7 +42,7 @@ unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
 
 // ObjTrio's record i (stride 0x14C), the index unchecked as the original's.
-const unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
+const unsigned char* Member(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kMemberStride; }
 
 // Field_DirectionSteps' row for a direction (x then z), read in place with the
 // direction byte unmasked, as every reader of the table does.
@@ -274,8 +274,8 @@ extern "C" void __cdecl Member_ResumeUnlessHeld800(void) {
 // leader's. As the original has it: +6 indexes ObjTrio unchecked.
 extern "C" void __cdecl Member_FormActionState(void) {
     unsigned char stop = 0;
-    const unsigned char kind = ObjTrio[0x89];
-    if ((kind == 3 || kind == 6) && ObjTrio[1] == 0xA && ObjTrio[2] == 1) stop = 1;
+    const unsigned char kind = ObjTrio[0].char_id;
+    if ((kind == 3 || kind == 6) && ObjTrio[0].state == 0xA && ObjTrio[0].step == 1) stop = 1;
     if (Field_Request != 0) stop = 1;
     const unsigned char* const s = Sc();
     const unsigned char* const r = Member(s[6]);

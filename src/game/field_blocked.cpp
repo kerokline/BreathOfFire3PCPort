@@ -270,7 +270,7 @@ extern "C" unsigned char __cdecl Sprite_ObjectAt(long x, long y, unsigned margin
 // Field_MemberCount of ObjTrio's, re-read after each - without the +7 test.
 extern "C" unsigned char __cdecl Party_MemberAt(long x, long y, unsigned margin) {
     const long h = g.probe(x, y);
-    return FirstInReach(ObjTrio, kMemberSize, 0, &Field_MemberCount, false, x, y, h, margin, 0);
+    return FirstInReach(rv::Bytes(ObjTrio), kMemberSize, 0, &Field_MemberCount, false, x, y, h, margin, 0);
 }
 
 namespace {
@@ -317,7 +317,7 @@ unsigned char* Candidate(unsigned i) {
     if (i < kObjects) return rv::Bytes(Sprite_Objects) + i * kObjectSize;
     i -= kObjects;
     if (i < kExtra) return rv::Bytes(Sprite_ObjectsExtra) + i * kObjectSize;
-    return ObjTrio + (i - kExtra) * kMemberSize;
+    return rv::Bytes(ObjTrio) + (i - kExtra) * kMemberSize;
 }
 std::uint32_t Id(const void* p) {
     for (unsigned i = 0; i < kCandidates; ++i)

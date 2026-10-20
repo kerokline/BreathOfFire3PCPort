@@ -60,7 +60,7 @@ constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHoo
 // --- set-up 34's member pick ------------------------------------------------------
 // kPickId: now Character_IndexById[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
 // kPicked: now BossSh_Picked (symbols.toml). u8 (read once as a dword): the member whose +0x148 matched; only set-up 34 writes it
-// kPartyTag: now Field_Members (symbols.toml). member 0's +0x148 (ObjTrio stride 0x14C; symbols.toml's Field_Members)
+// kPartyTag: now ObjTrio (symbols.toml). member 0's +0x148, ObjTrio[0].char_index (stride 0x14C; Field_Members until stage C4)
 // kParty: now ObjTrio (symbols.toml). ObjTrio
 constexpr U kPartyStride = 0x14C;
 // kPartyFlags91: now ObjTrio[0x91] (symbols.toml). member 0's +0x91 (bit 0x20 read by set-up 34's event hook)

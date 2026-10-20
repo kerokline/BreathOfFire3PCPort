@@ -37,6 +37,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_calls_callees.h"
 #include "game/scenario_harness.h"
@@ -55,7 +56,7 @@ void Leave(unsigned id) { SH_AT(void (__cdecl*)(unsigned), at::kLeave)(id); }
 void Palettes() { SH_AT(void (__cdecl*)(), at::kPalettes)(); }
 
 // Field member i (ObjTrio + 0x14C i, unchecked) and its character id +0x89.
-unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 unsigned char MemberId(unsigned i) { return At(ObjTrio_addr + 0x89 + i * at::kMemberStride)[0]; }
 
 // The character record of Character_IndexById[k] (CharacterRecords, 0xA4

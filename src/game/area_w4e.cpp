@@ -417,13 +417,13 @@ extern "C" void __cdecl Area189_LeaderStart(void) {
     std::int32_t pace = static_cast<std::int32_t>((static_cast<U>(AH_CALL(Rand)()) & 0x1F) + 0x96);
     const unsigned count = static_cast<unsigned>(AH_CALL(Party_Count)(0)) & 0xFF;
     for (unsigned i = 0; i < count; ++i) {
-        if (AH_CALL(Actor_EquipCount)(Field_Members[i * 0x14C], 3, 0x15) != 0) {
+        if (AH_CALL(Actor_EquipCount)(ObjTrio[i].char_index, 3, 0x15) != 0) {
             pace <<= 1;
             break;
         }
     }
     for (unsigned i = 0; i < count; ++i) {
-        if (AH_CALL(Actor_EquipCount)(Field_Members[i * 0x14C], 3, 0x14) != 0) {
+        if (AH_CALL(Actor_EquipCount)(ObjTrio[i].char_index, 3, 0x14) != 0) {
             pace >>= 1;
             break;
         }

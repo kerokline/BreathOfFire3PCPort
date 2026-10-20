@@ -245,8 +245,8 @@ extern "C" void __cdecl Scena16_Area02(void) {
         SetWord(AngleAt(0), static_cast<unsigned>(Word(AngleAt(0))) + 0xAA);
         PlaceEffect([] { return Angle(0) - 0xAA; }, 0x40);
         g.obj_trio();
-        rv::As<records::PartyMember>(ObjTrio)->x = 0x330000;
-        rv::As<records::PartyMember>(ObjTrio)->z = 0x400000;
+        ObjTrio[0].x = 0x330000;
+        ObjTrio[0].z = 0x400000;
         g.flags_set(FlagBits(), 2);
         return;
     }

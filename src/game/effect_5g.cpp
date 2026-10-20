@@ -126,7 +126,7 @@ bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int
 bool PartyAt(const unsigned char* s, std::int32_t first, std::int32_t second) {
     bool any = false;
     for (unsigned m = 0; m < at::kTrioCount; ++m) {
-        const unsigned char* const r = ObjTrio + at::kTrioStride * m;
+        const unsigned char* const r = rv::Bytes(&ObjTrio[m]);
         auto* const ro = rv::AsConst<records::PartyMember>(r);
         if (r[0] == 0) continue;
         if (Within(FromEdge(static_cast<std::uint32_t>(ro->z), S16(s + 0x3A)), first, FromEdge(static_cast<std::uint32_t>(ro->x), S16(s + 0x36)), second))

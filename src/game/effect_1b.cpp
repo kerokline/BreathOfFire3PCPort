@@ -182,7 +182,7 @@ void DrawAt(int x, int y, int colour, int count, const unsigned char* text) {
 // The toggles' bits the list states hand EffectKind0F_DrawToggles: 1 << +6
 // (the shift count masked to 5 bits, as shl masks it) once the leader's +3 is
 // 3 or more, else none.
-U ToggleBits() { return ObjTrio[3] >= 3 ? 1u << (Sc()[6] & 31) : 0u; }
+U ToggleBits() { return ObjTrio[0].state3 >= 3 ? 1u << (Sc()[6] & 31) : 0u; }
 
 // The pose every sub-kind's first step gives the record (Sprite_* read it as a
 // sprite): +0x24 = 0x80, +0x29, +0x2A, the screen place +0x2E / +0x30, and the
@@ -982,7 +982,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
         if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, n);
         s = Sc();
         const int row = y + 13 * static_cast<int>(drawn);
-        if (ObjTrio[4] == 2 && (s[7] & 1) == 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) {
+        if (ObjTrio[0].state4 == 2 && (s[7] & 1) == 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) {
             DrawAt(x + 5, row + 0x19, 7, NameCount(), AccessoryName(B(at::kItemIds + n)));
             DrawAt(x + 5, row + 0x17, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
             const unsigned char count = B(at::kItemCounts + n);
@@ -1071,7 +1071,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
         if (seen >= static_cast<std::int32_t>(top) && drawn < count) {
             s = Sc();
             const int row = y + 13 * static_cast<int>(drawn) + offset;
-            if (ObjTrio[4] == 2 && (s[7] & 1) != 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10) == static_cast<std::int32_t>(drawn)) {
+            if (ObjTrio[0].state4 == 2 && (s[7] & 1) != 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10) == static_cast<std::int32_t>(drawn)) {
                 DrawAt(x + 5, row, 7, NameCount(), AccessoryName(id));
                 DrawAt(x + 5, row - 2, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
                 const unsigned char c = B(at::kItemCounts + n);

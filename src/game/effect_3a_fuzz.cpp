@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_3a.h"
 #include "game/effect_3a_callees.h"
 #include "game/effect_gte.h"
@@ -372,7 +373,7 @@ void Seed(unsigned k) {
     // every record (the disturbance may move Sprite_Current among them, and
     // onto the one kind 0x61's capture fills from ObjTrio): +7 inside ObjTrio
     for (unsigned r = 0; r < sh::at::kEffectCount; ++r) Rec(r)[7] = static_cast<unsigned char>(sh::Next() % at::kObjTrioCount);
-    for (unsigned m = 0; m < at::kObjTrioCount; ++m) ObjTrio[at::kObjTrioStride * m + 7] = static_cast<unsigned char>(sh::Next() % at::kObjTrioCount);
+    for (unsigned m = 0; m < at::kObjTrioCount; ++m) rv::Bytes(&ObjTrio[m])[0x7] = static_cast<unsigned char>(sh::Next() % at::kObjTrioCount);
     sh::Mem(Effect3a_Variant_addr)[0] = static_cast<unsigned char>(sh::Next() % at::kFrameCount);
     SetWord(sh::Mem(Effect3a_ParticleCount_addr), PickOf(0, 1, 2, 0x10, 0x11, kParticlesSeeded, sh::Next() % (kParticlesSeeded + 1)));
     SeedFrames();
@@ -382,7 +383,7 @@ void Seed(unsigned k) {
     switch (k) {
     case k61Capture:
         for (unsigned m = 0; m < at::kObjTrioCount; ++m)
-            ObjTrio[at::kObjTrioStride * m + at::kMemberFlag] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+            ObjTrio[m].char_index = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
         break;
     case k61Arm:
     case k61Twinkle: SeedParticles(); break;

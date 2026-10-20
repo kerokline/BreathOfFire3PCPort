@@ -35,6 +35,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_sx.h"
 #include "game/scena_sx_callees.h"
@@ -108,7 +109,7 @@ template <typename... T> std::uint32_t PickOf(T... v) {
     return sh::Pick(values, sizeof...(v));
 }
 unsigned char* Rec(unsigned n) { return Mem(bof3::addr::CharacterRecords + (n & 7) * at::kRecordStride); }
-unsigned char* Obj(unsigned n) { return ObjTrio + (n % 3) * at::kObjStride; }
+unsigned char* Obj(unsigned n) { return rv::Bytes(&ObjTrio[n % 3]); }
 
 // Inventory_Remove's category, item and count, chosen by the seed.
 std::uint32_t g_inv[3];
@@ -193,7 +194,7 @@ const sh::Region kRegions[] = {
     {Key(Gfx_ClutStrip), 0x4000},
     {CameraTurn_Steps_addr + 0x8, 4},
     {CameraTurn_Angles_addr + 0x8, 8},
-    {Key(ObjTrio) - at::kObjStride, at::kObjStride},   // Party_Remove at a count of 0 clears its +0
+    {Key(rv::Bytes(ObjTrio)) - at::kObjStride, at::kObjStride}, // Party_Remove at a count of 0 clears its +0
     {Key(g_cells), sizeof g_cells},
 };
 

@@ -202,7 +202,7 @@ extern "C" unsigned char __cdecl Camera_TurnStepFB(unsigned angle, unsigned step
 // EffectKind2A_PushParty 0x4712E0 and 0x4849A0 pass 2 or a table byte. PSX 0x8015CC04
 // (pairs_propagated "call").
 extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
-    unsigned char* const o = ObjTrio + (member & 0xFF) * at::kObjStride;
+    unsigned char* const o = rv::Bytes(&ObjTrio[member & 0xFF]);
     o[1] = 2;
     o[2] = 8;
     o[3] = 0;

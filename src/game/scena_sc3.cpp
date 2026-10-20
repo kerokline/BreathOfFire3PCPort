@@ -2161,7 +2161,7 @@ extern "C" unsigned char __cdecl Scena04_StepHook(int x, int z) {
 namespace {
 // The leader's +8 into the byte 0x903850; true unless it is 4, 5 or 6.
 bool LeaderFree() {
-    const unsigned char k = ObjTrio[8];
+    const unsigned char k = ObjTrio[0].direction;
     Byte(at::kSlot) = k;
     return k != 6 && k != 5 && k != 4;
 }

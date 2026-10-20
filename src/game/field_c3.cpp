@@ -215,7 +215,7 @@ extern "C" unsigned char __cdecl Field_ObjectAvoidDirection(unsigned char* objec
 // unblocked one whose step lands farthest (toward not 0) or nearest (0) to the
 // leader's next point, by the sum of the two distances; 0xFF for none.
 extern "C" unsigned char __cdecl Field_ObjectBestDirection(unsigned char* object, unsigned char toward) {
-    const U pace = ObjTrio[9];
+    const U pace = ObjTrio[0].step_frames;
     const U point_z = pace * ULong(At(ObjTrio_addr + 0x10)) + ULong(At(ObjTrio_addr + 0x38));
     const U point_x = pace * ULong(At(ObjTrio_addr + 0xc)) + ULong(At(ObjTrio_addr + 0x34));
     records::SpriteHead* s = rv::Current<records::SpriteHead>();

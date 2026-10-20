@@ -119,7 +119,7 @@ extern "C" void __cdecl BossHook_ExitActor0Bit40(void) { BH_CALL(BossActor_Clear
 // hook called with 0, 0x435BF5): when the leader's target byte +0x124 is 4,
 // the battle's target 0x904B44 = 5. The hook's word is not read.
 extern "C" void __cdecl BossHook_RetargetMember0(unsigned) {
-    if (ObjTrio[0x124] == 4) B(at::kTarget) = 5;
+    if (rv::Bytes(ObjTrio)[0x124] == 4) B(at::kTarget) = 5;
 }
 
 // --- the state helpers ---------------------------------------------------------------
@@ -325,7 +325,7 @@ extern "C" void __cdecl BossMap_SetCorners(unsigned cell, unsigned value) {
 // function); any other id leaves it. Called by set-ups 18..20's hooks before
 // the battle ends.
 extern "C" void __cdecl Boss_SetByLeaderId(void) {
-    switch (ObjTrio[0x89]) {
+    switch (ObjTrio[0].char_id) {
     case 0: BossH_LeaderPick = 0x2C; break;
     case 1: BossH_LeaderPick = 0x2D; break;
     case 5: BossH_LeaderPick = 0x2E; break;
@@ -362,7 +362,7 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
     BossH_Enemy0Ground = static_cast<unsigned>(ground) & 0xFFFF;
     const long leader = BH_CALL(AreaMap_Elevation)(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
     move_script::SetWord(At(ObjTrio_addr + 0x3e), static_cast<unsigned>(leader) & 0xFFFF);
-    if (ObjTrio[0x134] & 2) BossH_CameraY = Long(At(ObjTrio_addr + 0x3c));
+    if (rv::Bytes(ObjTrio)[0x134] & 2) BossH_CameraY = Long(At(ObjTrio_addr + 0x3c));
 }
 
 void BossH_Inject() {

@@ -62,7 +62,7 @@ constexpr std::uint32_t kEntryZone = 0x905E68;
 constexpr std::uint32_t kLeader = 0x802D40;
 // kLeaderByte8: now ObjTrio[8] (symbols.toml).
 // kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
-// kPartyRecord1: now Field_Members[4] (symbols.toml).
+// kPartyRecord1: now ObjTrio (symbols.toml). record 1 (ObjTrio_addr + 0x14C; Field_Members[4] until stage C4).
 // kPartyRecord2: now ObjTrio[0x298] (symbols.toml).
 // The cell step per direction: two signed bytes (x, z), 2 bytes apart
 // (event_ops_callees.h's kCellDelta).

@@ -162,7 +162,7 @@ void PlaceMessage(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = ObjTrio[9];
+    const U steps = ObjTrio[0].step_frames;
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
@@ -1193,7 +1193,7 @@ extern "C" unsigned char __cdecl Area167_ArriveHook(long x, long z) {
 // none al 0. Else its flag toggled in the story bank, ScriptFlags_Set40, tail
 // kind 0x20 at state 5, al 1.
 extern "C" unsigned char __cdecl Area167_CellHook(unsigned x, unsigned z) {
-    const unsigned char facing = ObjTrio[8];
+    const unsigned char facing = ObjTrio[0].direction;
     const auto bx = static_cast<unsigned char>(x);
     const auto bz = static_cast<unsigned char>(z);
     U found = 0;

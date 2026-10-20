@@ -187,7 +187,7 @@ void PlaceMessage(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = ObjTrio[9];
+    const U steps = ObjTrio[0].step_frames;
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
@@ -749,7 +749,7 @@ extern "C" unsigned char __cdecl Area116_StepHook(long x, long z) {
     if (AH_CALL(Flags_Test)(Bank(), 0x33) == 0) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x46) >= 3) return 0;
     if (static_cast<std::uint16_t>(High(z) - 0x33) >= 3) return 0;
-    const unsigned char pose = ObjTrio[8];
+    const unsigned char pose = ObjTrio[0].direction;
     if (pose != 0 && pose != 7 && pose != 6) return 0;
     At(at::kCounter0)[0] = 0;
     AH_CALL(Party_DropIn)(0);
@@ -999,7 +999,7 @@ void MembersFrame(const TwinTables& t) {
 unsigned char SwitchHook(const TwinTables& t, unsigned x, unsigned z) {
     const auto cx = static_cast<unsigned char>(x);
     const auto cz = static_cast<unsigned char>(z);
-    const unsigned char facing = ObjTrio[8];
+    const unsigned char facing = ObjTrio[0].direction;
     unsigned index = 0;
     for (U r = t.switches; r < t.switches_end; r += 4, ++index) {
         const unsigned char* const e = At(r);

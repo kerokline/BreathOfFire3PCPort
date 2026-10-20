@@ -82,7 +82,7 @@ void ScriptAnd(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>
 void Redraw() { MapView_Redraw = 2; }
 unsigned char* SpriteCurrent() { return Sprite_Current; }
 unsigned char MemberByte(unsigned m, unsigned offset) { return B(ObjTrio_addr + m * at::kObjStride + offset); }
-unsigned char LeaderKind() { return ObjTrio[0x89]; }
+unsigned char LeaderKind() { return ObjTrio[0].char_id; }
 
 // The four counters 0x903848..B zeroed, in that order; counters 1..3 alone.
 void ClearCounters() {
@@ -307,7 +307,7 @@ unsigned char StepHook9(std::int32_t x, std::int32_t z) {
         return 1;
     }
     if (!Near(zc, 0x3C, 5) || !Near(xc, 0x22, 4)) return 0;
-    const unsigned char b = ObjTrio[8];
+    const unsigned char b = ObjTrio[0].direction;
     B(at::kEffectSlot) = b;
     if (b == 6 || b == 5 || b == 4) return 0;
     if (LeaderKind() == 2) {
@@ -438,7 +438,7 @@ void EnterArea10Body() {
             Camera_Distance = 0x5DC;
             Kind2(0);
         }
-        ObjTrio[0xb] = 0;
+        rv::Bytes(ObjTrio)[0xb] = 0;
     }
     if (Area() == 0x80) {
         if (FD() != 3) return;
@@ -1292,7 +1292,7 @@ SC9B_EXPORT void __cdecl Scena10_Run1(void) {
 // party, effects of kinds 0x68 / 0x61 / 0x62 / 0x69 / 0x64 on counts and
 // timers, two area changes into 0x62, music 0x7B, flag 8.
 SC9B_EXPORT void __cdecl Scena10_Run2(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         DropIn(0);
@@ -1916,7 +1916,7 @@ SC9B_EXPORT void __cdecl Scena10_Run12(void) {
 // (MSVC's two-level switch): area changes into 0x78, drop-ins, message 0x3A,
 // effects 0x43 / 0x6B, event battle 0x23 at the leader, flags 0x38..0x3D.
 SC9B_EXPORT void __cdecl Scena10_Run13(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         if (Counter(0) != 4) return;
@@ -2283,7 +2283,7 @@ SC9B_EXPORT unsigned char __cdecl Scena10_StepHook(int x, int z) {
     if (Area() == 0x52) {
         if (FD() != 0) return 0;
         if (Near(zc, 0x3C, 5) && Near(xc, 0x22, 4)) {
-            const unsigned char b = ObjTrio[8];
+            const unsigned char b = ObjTrio[0].direction;
             B(at::kEffectSlot) = b;
             if (b != 6 && b != 5 && b != 4) {
                 if (SH_CALL(Scena07_PartyHas89State2)() == 0) {
@@ -2330,7 +2330,7 @@ SC9B_EXPORT unsigned char __cdecl Scena10_StepHook(int x, int z) {
     }
     if (Area() != 0x80) return 0;
     if (FD() == 0 && Flag(0xB) && !Flag(0xE) && z == 0x118000 && Near(xc, 0x18, 5)) {
-        const unsigned char b = ObjTrio[8];
+        const unsigned char b = ObjTrio[0].direction;
         B(at::kEffectSlot) = b;
         if (b == 0 || b == 1 || b == 2) {
             Set40();

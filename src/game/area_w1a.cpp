@@ -174,7 +174,7 @@ extern "C" void __cdecl Area38_SetCellsC0(void) {
 
 // original 0x405410 (Area38_Handlers[2]; PSX 0x801F2C94): party-list byte
 // 0x904063, party record 1.
-extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(Cond_Flags_addr + 0xd3, Field_Members_addr + 0x4); }
+extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(Cond_Flags_addr + 0xd3, ObjTrio_addr + 0x14c); }
 
 // original 0x4054D0 (Area38_Handlers[3]; PSX 0x801F2E60): 0x904064, record 2.
 extern "C" void __cdecl Area38_SpawnEffectMember2(void) { SpawnForMember(Cond_Flags_addr + 0xd4, ObjTrio_addr + 0x298); }

@@ -40,7 +40,7 @@ using move_script::Word;
 // Sprite_Kind2 record.
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 
 // --- the stand-ins' log ----------------------------------------------------
 
@@ -74,7 +74,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 // the stand-ins' buffers, else the address.
 std::uint32_t Id(const void* p) {
     const std::uint32_t a = Address(p);
-    const std::uint32_t trio = Address(ObjTrio);
+    const std::uint32_t trio = Address(rv::Bytes(ObjTrio));
     if (a >= trio && a < trio + 3 * at::kMemberStride) return 0x10000u + (a - trio);
     if (a >= Address(g_passage) && a < Address(g_passage) + sizeof g_passage) return 0x20000u + (a - Address(g_passage));
     return a;
@@ -119,9 +119,9 @@ void Disturb() {
     }
     case 14: {
         const unsigned k = w % 3;
-        if (k == 0) ObjTrio[0x138] = static_cast<unsigned char>(ObjTrio[0x138] ^ 1);
-        else if (k == 1) ObjTrio[9] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 3 == 1 ? 4 : v);
-        else ObjTrio[8] = static_cast<unsigned char>(v % 8);
+        if (k == 0) rv::Bytes(ObjTrio)[0x138] = static_cast<unsigned char>(rv::Bytes(ObjTrio)[0x138] ^ 1);
+        else if (k == 1) ObjTrio[0].step_frames = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 3 == 1 ? 4 : v);
+        else ObjTrio[0].direction = static_cast<unsigned char>(v % 8);
         break;
     }
     case 15: {
@@ -624,7 +624,7 @@ Args Seed(unsigned k) {
     case kSwapGather:
     case kExchange:
         if (Often()) Field_MemberCount = static_cast<unsigned char>(1 + Next() % 3);
-        if (Half()) ObjTrio[0x138] = static_cast<unsigned char>(ObjTrio[0x138] & ~1u);
+        if (Half()) rv::Bytes(ObjTrio)[0x138] = static_cast<unsigned char>(rv::Bytes(ObjTrio)[0x138] & ~1u);
         for (unsigned i = 0; i < 3; ++i) Member(i)[1] = static_cast<unsigned char>(Often() ? 3 : Next() % 12);
         if (k == kExchange) {
             // the frames: the larger distance moved, >> 13, 0 or not
@@ -648,12 +648,12 @@ Args Seed(unsigned k) {
             const int edge = -32 * static_cast<int>(n + 1);
             m[0x5D] = static_cast<unsigned char>(edge + static_cast<int>(Next() % 3) - 1);
         }
-        if (Half()) ObjTrio[9] = 3;
+        if (Half()) ObjTrio[0].step_frames = 3;
         break;
     }
     case kSpinIn:
         if (Often()) Field_MemberCount = static_cast<unsigned char>(2 + Next() % 2);
-        if (Often()) Sprite_Current = ObjTrio;
+        if (Often()) Sprite_Current = rv::Bytes(ObjTrio);
         Sprite_Current[9] = static_cast<unsigned char>(Next() % 3);
         for (unsigned i = 1; i < 3; ++i) if (Often()) Member(i)[1] = 3;
         break;

@@ -307,7 +307,7 @@ extern "C" void __cdecl Area32_ChoiceLeaderAnim(void) {
     SetMessage(0xFFFF);
     if (answer != 1) return;
     unsigned char* const kept = Sprite_Current;
-    Sprite_Current = ObjTrio;
+    Sprite_Current = rv::Bytes(ObjTrio);
     AH_CALL(Sprite_SetAnimation)(0x80);
     Sprite_Current = kept;
 }

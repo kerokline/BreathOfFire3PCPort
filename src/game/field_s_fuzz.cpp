@@ -16,6 +16,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_s.h"
 #include "game/field_s_callees.h"
 #include "game/move_script_bytes.h"
@@ -285,7 +286,7 @@ std::uint32_t PartyLoad(const std::uint32_t* a, std::uint32_t answer) {
     const unsigned char* const list = Mem(Cond_Flags_addr + 0xd2 + (a[0] & 0xFF) * 3);
     const unsigned n = Field_MemberCount < 3 ? Field_MemberCount : 3;
     for (unsigned i = 0; i < n; ++i) {
-        unsigned char* const m = ObjTrio + i * at::kObjStride;
+        unsigned char* const m = rv::Bytes(&ObjTrio[i]);
         m[0x89] = list[i];
         if (list[i] < 24) m[0x148] = Character_IndexById[list[i]];
     }
@@ -437,7 +438,7 @@ void SeedButtons() {
 void SeedParty() {
     for (unsigned i = 0; i < 6; ++i) B(Cond_Flags_addr + 0xd2 + i) = sh::Next() % 6 != 0 ? SafeId() : 0xFF;
     for (unsigned i = 0; i < 3; ++i) {
-        unsigned char* const obj = ObjTrio + i * at::kObjStride;
+        unsigned char* const obj = rv::Bytes(&ObjTrio[i]);
         obj[0x148] = static_cast<unsigned char>(sh::Next() % 8);   // Field_Members: a record index
         obj[0x89] = SafeId();
     }
@@ -517,7 +518,7 @@ void Seed(unsigned k) {
         sh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * 0xE));
     }
     // the zenny at ten times a member's level (ShopResist)
-    const U level = Mem(at::kRecords + ObjTrio[(B(BattleActorCopies_ItemActor_addr) % 3) * at::kObjStride + 0x148] * at::kRecordStride)[0xA];
+    const U level = Mem(at::kRecords + ObjTrio[B(BattleActorCopies_ItemActor_addr) % 3].char_index * at::kRecordStride)[0xA];
     SetL(Party_Zenny_addr, PickOf(10 * level, 10 * level - 1, 10 * level + 1, 0, sh::Next() % 100000));
     // the dispatchers' steps inside their tables
     if (Is(k, "PartyForm_OpenStep") || Is(k, "SharedList_SortStep")) B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % 3);
@@ -530,7 +531,7 @@ void Seed(unsigned k) {
         for (unsigned i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd2 + i) = SafeId();
     if (Is(k, "PartyForm_Reload") && sh::Half()) {
         B(Cond_Flags_addr + 0xd2) = 2;
-        ObjTrio[0x89] = static_cast<unsigned char>(sh::Half() ? 2 : SafeId());
+        ObjTrio[0].char_id = static_cast<unsigned char>(sh::Half() ? 2 : SafeId());
     }
     // the item window's cursor against its category byte
     B(0x803360) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));

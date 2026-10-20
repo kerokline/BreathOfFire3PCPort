@@ -830,7 +830,7 @@ extern "C" void __cdecl Fish_Swim(void) {
             const auto bits = static_cast<unsigned char>(Rnd());
             const unsigned char nibbling = Fish_Nibbling;
             unsigned char* s = S();
-            if (nibbling == 0 && rv::As<records::SpriteObject>(s)->height_whole == 0 && (bits & 3) == 0 && ObjTrio[2] != 4 && s[6] != 0x16) {
+            if (nibbling == 0 && rv::As<records::SpriteObject>(s)->height_whole == 0 && (bits & 3) == 0 && ObjTrio[0].step != 4 && s[6] != 0x16) {
                 Fish_Nibbling = 1;
                 Bank(KindWord(s[6], 0x12));
                 if ((S()[0] & 0x80) == 0) Sound(0x206);
@@ -987,9 +987,9 @@ extern "C" void __cdecl Fish_Approach(void) {
             if (Kind(kind, 0x14 + (rb[0xE] & 0xF)) != 9) {
                 unsigned char* const f = S();
                 const unsigned char index = f[5];
-                ObjTrio[2] = 4;
+                ObjTrio[0].step = 4;
                 Effect1a_PanelObject = index;
-                ObjTrio[3] = 0;
+                ObjTrio[0].state3 = 0;
                 Effect_Objects[0].state = 5;
                 SetL(kEff0StepX, 0);
                 SetL(kEff0StepY, 0);
@@ -1048,8 +1048,8 @@ extern "C" void __cdecl Fish_Hooked(void) {
     if (L(s, 0x38) <= 0x8000) {
         SetL(kEff5Frame, 0xFFFFFFF9u);
         Effect_Objects[0].state = 0;
-        ObjTrio[2] = 6;
-        ObjTrio[3] = 0;
+        ObjTrio[0].step = 6;
+        ObjTrio[0].state3 = 0;
         s[1] = static_cast<unsigned char>(s[1] + 1);
         return;
     }
@@ -1090,8 +1090,8 @@ extern "C" void __cdecl Fish_Hooked(void) {
                             unsigned char* const f = S();
                             Effect_Objects[0].state = 0;
                             SetL(kEff5Frame, 0xFFFFFFF9u);
-                            ObjTrio[2] = 6;
-                            ObjTrio[3] = 0;
+                            ObjTrio[0].step = 6;
+                            ObjTrio[0].state3 = 0;
                             f[1] = static_cast<unsigned char>(f[1] + 1);
                             return;
                         }
@@ -1108,8 +1108,8 @@ extern "C" void __cdecl Fish_Hooked(void) {
                 s[0xB] = 0;
                 if (SH_CALL(Fish_Chance)(lo, 2) != 0) {
                     unsigned char* const f = S();
-                    ObjTrio[2] = 7;
-                    ObjTrio[3] = 0;
+                    ObjTrio[0].step = 7;
+                    ObjTrio[0].state3 = 0;
                     Effect_Objects[0].state = 0;
                     f[1] = static_cast<unsigned char>(f[1] + 1);
                     return;
@@ -1362,7 +1362,7 @@ extern "C" void __cdecl Fish_S6Wait(void) {
 // original 0x52C970: Fish_S6Steps[2] - the leader's step (ObjTrio +3) above 9:
 // the record freed (+0 = 0).
 extern "C" void __cdecl Fish_S6Release(void) {
-    if (ObjTrio[3] > 9) S()[0] = 0;
+    if (ObjTrio[0].state3 > 9) S()[0] = 0;
 }
 
 // original 0x52C990: the member's strength +0x9A moved by the signed byte
@@ -1474,7 +1474,7 @@ extern "C" void __cdecl Fish_Heading(void) {
 // or Sprite_PointInReach(the fish's x, z, height, margin record 0's +7 - the
 // record's +0xF + 3, record 0): al 1. Otherwise +1 = 1 and al 0.
 extern "C" unsigned char __cdecl Fish_LureInReach(void) {
-    if (Effect_Objects[0].state == 4 && Effect1a_PanelObject == 0xFF && ObjTrio[2] == 3) {
+    if (Effect_Objects[0].state == 4 && Effect1a_PanelObject == 0xFF && ObjTrio[0].step == 3) {
         unsigned char* const s = S();
         const unsigned char* const rb = RecordB();
         if (s[6] == 0x16 && (rb[0xE] & 0xF) == 4) return 1;
@@ -1489,7 +1489,7 @@ extern "C" unsigned char __cdecl Fish_LureInReach(void) {
 // idle, the leader at stage 3, and the fish within 0x8000 of record 0 in x and
 // in z (absolute 32-bit differences) and 0x400 in height (s16): al 1, else 0.
 extern "C" unsigned char __cdecl Fish_LureClose(void) {
-    if (Effect_Objects[0].state != 4 || Effect1a_PanelObject != 0xFF || Effect_Objects[4].state != 0 || ObjTrio[2] != 3) return 0;
+    if (Effect_Objects[0].state != 4 || Effect1a_PanelObject != 0xFF || Effect_Objects[4].state != 0 || ObjTrio[0].step != 3) return 0;
     const unsigned char* const s = S();
     if (Abs32(static_cast<U>(L(s, 0x34)) - static_cast<U>(L(kEff0X))) >= 0x8000) return 0;
     if (Abs32(static_cast<U>(L(s, 0x38)) - static_cast<U>(L(kEff0Z))) >= 0x8000) return 0;

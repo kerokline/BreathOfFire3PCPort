@@ -58,7 +58,7 @@ constexpr std::uint32_t kEntryZone = 0x905E68;
 // kLeaderZ: now ObjTrio[0x38] (symbols.toml).
 // kLeader89: now ObjTrio[0x89] (symbols.toml).
 constexpr std::uint32_t kLeader137 = 0x802E77;
-// kParty1Word12E: now Field_Members[0x132] (symbols.toml).
+// kParty1Word12E: now ObjTrio (symbols.toml). record 1 +0x12E (Field_Members[0x132] until stage C4).
 // kParty2Word12E: now ObjTrio[0x3c6] (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The field record's byte +0x128 the member frames set to 2, and the byte

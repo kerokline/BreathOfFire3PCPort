@@ -131,7 +131,7 @@ void SpawnAtLeader(unsigned char kind, std::uint32_t kinds) {
     const auto z = static_cast<short>(Word(Mem(ObjTrio_addr + 0x30)));
     const auto x = static_cast<short>(Word(Mem(ObjTrio_addr + 0x2E)));
     const unsigned char list = B(Cond_Flags_addr + 0xd2);
-    Sprite_Current = ObjTrio;
+    Sprite_Current = rv::Bytes(ObjTrio);
     const unsigned char effect = B(kinds + list);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;

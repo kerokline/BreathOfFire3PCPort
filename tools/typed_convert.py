@@ -860,14 +860,15 @@ def top_level_ops(s):
 
 
 class Converter:
-    def __init__(self, toml='symbols.toml', addr_names=()):
+    def __init__(self, toml='symbols.toml', addr_names=(), only_entries=()):
         os.chdir(ROOT)
         self.addr_names = set(addr_names)
+        self.only_entries = set(only_entries)
         self.syms = dc.Symbols(toml)
         self.entries = Entries(toml)
         self.files = dc.load_sources()
         self.by_rel = {f.rel: f for f in self.files}
-        self.genv = dc.collect_constants(self.files, self.syms.names)
+        self.genv = dc.collect_constants(self.files, {**self.syms.names, **self.syms.addr_names})
         self.defs_by_name = collections.defaultdict(list)
         for f in self.files:
             for name, value, ns, line in f.consts:
@@ -985,6 +986,9 @@ class Converter:
         site.entry, site.off = entry, off
         if entry is None:
             site.reason = 'no-entry'
+            return site
+        if self.only_entries and entry['name'] not in self.only_entries:
+            site.reason = 'not-asked'
             return site
         if not entry.get('ctype'):
             site.reason = 'untyped-entry'
@@ -1818,6 +1822,48 @@ def find_bad(ok, base, cand):
 
 
 # --------------------------------------------------------------------------
+# Retiring field entries (stage C4)
+# --------------------------------------------------------------------------
+
+def retire_fields(conv, toml, dry_run=False):
+    """The field entries (`field_of`) of a [[block]] with a record ctype, or
+    any entry inside a typed record array (`Battle_Enemies`), that nothing in
+    src/ spells any more: its sites read the record's field. Removed from
+    symbols.toml unless dry_run. An entry still spelled stays: its readers'
+    name, where the struct's is another reader's or the width differs."""
+    used = set()
+    word = re.compile(r'\b([A-Za-z_]\w*?)(?:_addr|_count)?\b')
+    for f in conv.files:
+        used.update(m.group(1) for m in word.finditer(f.code))
+    typed = [e for e in conv.entries.data if record_sizes.size_of(e.get('ctype', '')) is not None]
+    gone = []
+    for e in conv.entries.data:
+        if e.get('block') or e in typed or e['name'] in used:
+            continue
+        if 'field_of' not in e:
+            continue
+        blk = conv.entries.by_name.get(e['field_of'])
+        home = blk if blk is not None and blk.get('block') else None
+        if home is None:
+            home = next((t for t in typed if t['pc'] <= e['pc'] < t['pc'] + conv.entries.elem_size(t)
+                         * t.get('count', 1)), None)
+        if home is None:
+            continue
+        gone.append((e['name'], e['pc'], home['name']))
+    if not dry_run and gone:
+        with open(toml, encoding='utf-8') as fh:
+            text = fh.read()
+        for name, _, _ in gone:
+            m = re.search(r'(?m)^\[\[data\]\]\n(?:(?!\[\[)[^\n]*\n)*?name = "' + re.escape(name) + r'"\n', text)
+            end = re.compile(r'(?m)^(\[\[|# )').search(text, m.end())
+            stop = end.start() if end else len(text)
+            text = text[:m.start()] + text[stop:]
+        with open(toml, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(text)
+    return gone
+
+
+# --------------------------------------------------------------------------
 # Retiring module constants
 # --------------------------------------------------------------------------
 
@@ -2019,6 +2065,9 @@ def main():
     ap.add_argument('--gate', metavar='BASE_BUILD', help='verify each file against this baseline build')
     ap.add_argument('--build', default='build')
     ap.add_argument('--retire', action='store_true', help='remove module constants nothing uses any more')
+    ap.add_argument('--retire-fields', action='store_true',
+                    help='remove the field entries (field_of) of a typed record array that no source spells, '
+                         'neither the name nor <name>_addr / <name>_count (stage C4)')
     ap.add_argument('--since', help='with --retire: only constants something used at this git revision')
     ap.add_argument('--report', action='store_true', help='print each site and its outcome')
     ap.add_argument('--remaining', action='store_true',
@@ -2028,12 +2077,21 @@ def main():
     ap.add_argument('--selftest', action='store_true', help='check the renderer on synthetic text and exit')
     ap.add_argument('--addr-names', default='',
                     help='comma-separated entries whose <Name>_addr spellings are converted too (stage C4)')
+    ap.add_argument('--only-entries', default='',
+                    help='comma-separated entries: convert only the sites on these (stage C4\'s batches by table)')
     a = ap.parse_args()
 
     if a.selftest:
         return 1 if selftest() else 0
 
-    conv = Converter(a.toml, [n for n in a.addr_names.split(',') if n])
+    conv = Converter(a.toml, [n for n in a.addr_names.split(',') if n],
+                     [n for n in a.only_entries.split(',') if n])
+    if a.retire_fields:
+        gone = retire_fields(conv, a.toml, a.dry_run)
+        for name, pc, block in gone:
+            print(f'retire-field\t{name}\t{pc:#x}\t{block}')
+        print(f'typed_convert: {len(gone)} field entries {"unused" if a.dry_run else "removed"}', file=sys.stderr)
+        return 0
     if a.retire:
         removed = retire(conv, a.dry_run, a.since)
         for r in removed:

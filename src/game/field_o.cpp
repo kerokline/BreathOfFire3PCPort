@@ -1285,7 +1285,7 @@ extern "C" unsigned char __cdecl EventCond_Status1(const unsigned char** at) {
 }
 // original 0x57C250: condition 11 - the leader's member id (ObjTrio +0x89)
 // equals it.
-extern "C" unsigned char __cdecl EventCond_LeaderId(const unsigned char** at) { return rv::As<records::PartyMember>(ObjTrio)->char_id == **at; }
+extern "C" unsigned char __cdecl EventCond_LeaderId(const unsigned char** at) { return ObjTrio[0].char_id == **at; }
 // original 0x57C270: condition 12 - story flag `operand` (Flags_Test of
 // 0x904030); the answer is Flags_Test's eax.
 extern "C" unsigned char __cdecl EventCond_StoryFlag(const unsigned char** at) {
@@ -1307,9 +1307,9 @@ extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { retu
 // original 0x57C7E0 (MoveScript_Flow 0x57701D, Scena03_Scene5 0x5438DC): bit 6
 // of the three party objects' first byte cleared - ObjTrio_SetBit40's inverse.
 extern "C" void __cdecl ObjTrio_ClearBit40(void) {
-    rv::As<records::PartyMember>(ObjTrio)->flags &= 0xBF;
-    ObjTrio[0x14C] &= 0xBF;
-    ObjTrio[0x298] &= 0xBF;
+    ObjTrio[0].flags &= 0xBF;
+    ObjTrio[1].flags &= 0xBF;
+    ObjTrio[2].flags &= 0xBF;
 }
 
 void FieldO_Inject() {

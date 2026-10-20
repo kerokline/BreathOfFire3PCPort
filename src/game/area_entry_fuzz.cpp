@@ -10,6 +10,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/area_entry_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -21,7 +22,7 @@ namespace {
 using namespace move_script;
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Rec(unsigned slot) { return ObjTrio + slot * kRecord; }
+unsigned char* Rec(unsigned slot) { return rv::Bytes(ObjTrio) + slot * kRecord; }
 
 // --- The fuzz's own area data ------------------------------------------------
 // Four descriptors (areas 0..3), each with its own script table so that a
@@ -191,7 +192,7 @@ const void* Ours(unsigned k) {
 struct Region { std::uint32_t at, size; };
 constexpr unsigned kObjBytes = 6 * kRecord;   // ObjTrio's three records and three past them (D18's reach)
 const Region kRegions[] = {
-    {Address(ObjTrio), kObjBytes},
+    {Address(rv::Bytes(ObjTrio)), kObjBytes},
     {0x903840, 0x40},                           // Camera_Distance.. the pending x / z, the scratch lists
     {0x904060, 0x20},                           // the party list and what follows
     {kCharacterRecords, 8 * kCharacterBytes},

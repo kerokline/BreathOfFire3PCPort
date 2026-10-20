@@ -86,7 +86,7 @@ void Dispatch(const U* states, unsigned count, const char* who) {
 // is never 0, so the call is unconditional. It pushes eax whole, the upper
 // bytes Rand's answer; Sprite_FaceDirection reads the byte.
 void FaceAwayFromLeader() {
-    const unsigned char lead = ObjTrio[8];
+    const unsigned char lead = ObjTrio[0].direction;
     SH_CALL(Sprite_FaceDirection)(static_cast<unsigned char>((lead ^ 0xFC) & 7));
 }
 
@@ -441,7 +441,7 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
 // / 28 (a signed division: imul by 0x92492493, add, sar 4, the sign added);
 // negative, shifted left 2 (al only). Answers al.
 extern "C" unsigned char __cdecl LinkedObject_EffectRise(void) {
-    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - ObjTrio[0x30]));
+    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - rv::Bytes(ObjTrio)[0x30]));
     const auto q = static_cast<unsigned char>(static_cast<int>(d) / 28);
     return static_cast<signed char>(q) < 0 ? static_cast<unsigned char>(q << 2) : q;
 }

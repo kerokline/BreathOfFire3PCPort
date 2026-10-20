@@ -193,8 +193,8 @@ void Move(U h) {
     case 6: SetWord(o + 0x3E, w); break;
     case 7: Field_Kind2Hold = static_cast<unsigned char>(v & 1); break;
     case 8: Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
-    case 9: SetWord(ObjTrio + 0x3E, w); break;
-    case 10: Field_Kind2X = Long(ObjTrio + 0x34); Field_Kind2Z = v & 1 ? Long(ObjTrio + 0x38) : static_cast<long>(w); break;
+    case 9: SetWord(rv::Bytes(ObjTrio) + 0x3E, w); break;
+    case 10: Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34); Field_Kind2Z = v & 1 ? Long(rv::Bytes(ObjTrio) + 0x38) : static_cast<long>(w); break;
     case 11: Camera_Distance = static_cast<short>(w); break;
     case 12: SetLong(o + 0x40, static_cast<std::int32_t>(PickBy(v, 0x1C000, 0x1FFFF, 0x20000, w << 1))); break;
     case 13: o[0xB] = static_cast<unsigned char>(w % 20); break;
@@ -217,7 +217,7 @@ std::uint32_t Ground(const std::uint32_t*, std::uint32_t answer) {
     U anchor;
     switch (n % 5) {
     case 0: anchor = sh::InRegions(o, 0x40) ? Word(o + 0x3E) : 0; break;
-    case 1: anchor = Word(ObjTrio + 0x3E) + 0x40u; break;
+    case 1: anchor = Word(rv::Bytes(ObjTrio) + 0x3E) + 0x40u; break;
     case 2: anchor = static_cast<U>(MapView_Elevation); break;
     case 3: anchor = sh::InRegions(o, 0x40) ? Word(o + 0x3E) - 0x80u : 0; break;
     default: Move(sh::Noise()); return answer;
@@ -380,7 +380,7 @@ void Seed(unsigned k) {
     // to (the first four sprite records) get index bytes inside the records too
     for (unsigned i = 0; i < 4; ++i) SeedRecord(sh::SpriteRecord(i));
     SeedRecord(o);
-    ObjTrio[0xB] = static_cast<unsigned char>(sh::Next() % 20);
+    rv::Bytes(ObjTrio)[0xb] = static_cast<unsigned char>(sh::Next() % 20);
     if (sh::Half()) Field_Kind2Hold = 0;
     if (sh::Half()) Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(sh::Half() ? 0 : 1);
     switch (k) {
@@ -449,10 +449,10 @@ void Seed(unsigned k) {
             const std::int32_t m = static_cast<std::int32_t>(moved);
             if ((m < 0 ? -static_cast<std::int64_t>(m) : m) < 0x1000) moved = speed;
             const U at = static_cast<U>(Long(o + axis)) + moved;
-            SetLong(ObjTrio + axis, static_cast<std::int32_t>(at - PickOf(0x40000, 0x40001, 0x3FFFF, 0xFFFC0000u, 0x10000, 0x50000)));
-            if (sh::Half()) SetLong(ObjTrio + cross, static_cast<std::int32_t>(at - PickOf(0x10000, 0x50000)));
-            Field_Kind2X = Long(ObjTrio + 0x34);
-            Field_Kind2Z = Long(ObjTrio + 0x38);
+            SetLong(rv::Bytes(ObjTrio) + axis, static_cast<std::int32_t>(at - PickOf(0x40000, 0x40001, 0x3FFFF, 0xFFFC0000u, 0x10000, 0x50000)));
+            if (sh::Half()) SetLong(rv::Bytes(ObjTrio) + cross, static_cast<std::int32_t>(at - PickOf(0x10000, 0x50000)));
+            Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34);
+            Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38);
         }
         if (sh::Half()) SetWord(o + 0x34, 0);
         if (sh::Half()) SetWord(o + 0x38, 0);
@@ -491,7 +491,7 @@ void Seed(unsigned k) {
         PlantCell(static_cast<short>(g_cell[0]), static_cast<short>(g_cell[1]), sh::Next() % 3 == 0);
         break;
     }
-    case k1BStart: if (sh::Half()) ObjTrio[0x89] = 1; break;
+    case k1BStart: if (sh::Half()) ObjTrio[0].char_id = 1; break;
     case k1BFly: {
         o[0xA] = static_cast<unsigned char>(PickOf(1, 2, 3, sh::Next()));
         SetLong(o + 0xC, static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000)));

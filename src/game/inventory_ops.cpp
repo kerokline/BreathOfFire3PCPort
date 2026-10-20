@@ -93,7 +93,7 @@ unsigned char* PosZ(u32 m) { return At(at::kMemberPos + 8 * m + 4); }
 unsigned char* Member(u32 m) { return At(at::kMembers + 4 * m); }   // +0 placed, +1 wide
 unsigned char* Enemy(u32 k) { return At(at::kEnemies + at::kEnemyStride * k); }
 unsigned char* Kind(u32 kind) { return At(at::kKinds + at::kKindStride * kind); }
-unsigned char* Obj(u32 i) { return ObjTrio + at::kObjStride * i; }
+unsigned char* Obj(u32 i) { return rv::Bytes(ObjTrio) + at::kObjStride * i; }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does;

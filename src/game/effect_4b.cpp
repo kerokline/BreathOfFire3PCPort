@@ -175,7 +175,7 @@ unsigned char* Member(unsigned m, const char* who) {
         bof3::Fatal("%s: party member %u, past ObjTrio's three records - the original writes what follows "
                     "(docs/effect_4b.md section 6)",
                     who, m);
-    return ObjTrio + at::kObjTrioStride * m;
+    return rv::Bytes(&ObjTrio[m]);
 }
 // Field_MemberCount as a loop bound over ObjTrio; past three, ours aborts.
 unsigned Members(const char* who) {
@@ -319,7 +319,7 @@ extern "C" unsigned char __cdecl EffectKind87_StepPanes(void) {
             r[0x16] = static_cast<unsigned char>(r[0x16] + 0xF0);
             if (t == 0xA) {
                 unsigned char* const saved = Sprite_Current;
-                Sprite_Current = ObjTrio;
+                Sprite_Current = rv::Bytes(ObjTrio);
                 SH_CALL(Sprite_SetAnimation)(r[0x1A]);
                 Sprite_Current = saved;
             }
@@ -1198,13 +1198,13 @@ extern "C" void __cdecl EffectKind8B_Wait(void) {
     const unsigned char n = Byte(at::kCounter2);
     unsigned char* const saved = Sprite_Current;
     if (n < 1) return;
-    Field_State = ObjTrio;
-    Sprite_Current = ObjTrio;
-    ObjTrio[0x124] = static_cast<unsigned char>(ObjTrio[0x124] | 0x40);
+    Field_State = rv::Bytes(ObjTrio);
+    Sprite_Current = rv::Bytes(ObjTrio);
+    rv::Bytes(ObjTrio)[0x124] = static_cast<unsigned char>(rv::Bytes(ObjTrio)[0x124] | 0x40);
     SH_CALL(Sprite_SetAnimation)(0x6F);
-    const unsigned char b = static_cast<unsigned char>(ObjTrio[7] & 0x11);
+    const unsigned char b = static_cast<unsigned char>(rv::Bytes(ObjTrio)[0x7] & 0x11);
     Sprite_Current = saved;
-    ObjTrio[7] = b;
+    rv::Bytes(ObjTrio)[0x7] = b;
     saved[1] = 2;
 }
 
@@ -1213,15 +1213,15 @@ extern "C" void __cdecl EffectKind8B_Wait(void) {
 // 0x6E, its +7 kept to bits 0x11, Sprite_Current put back and +1 = 3. Else
 // Sprite_Current is left on the leader (section 7).
 extern "C" void __cdecl EffectKind8B_Pose(void) {
-    const bool word = Word(ObjTrio + 0x58) == 0xC;
+    const bool word = Word(rv::Bytes(ObjTrio) + 0x58) == 0xC;
     unsigned char* const saved = Sprite_Current;
-    Field_State = ObjTrio;
-    Sprite_Current = ObjTrio;
-    if (!word || ObjTrio[0x4A] != 1) return;
+    Field_State = rv::Bytes(ObjTrio);
+    Sprite_Current = rv::Bytes(ObjTrio);
+    if (!word || ObjTrio[0].script_hold != 1) return;
     SH_CALL(Sprite_SetAnimation)(0x6E);
-    const unsigned char b = static_cast<unsigned char>(ObjTrio[7] & 0x11);
+    const unsigned char b = static_cast<unsigned char>(rv::Bytes(ObjTrio)[0x7] & 0x11);
     Sprite_Current = saved;
-    ObjTrio[7] = b;
+    rv::Bytes(ObjTrio)[0x7] = b;
     saved[1] = 3;
 }
 
@@ -1243,9 +1243,9 @@ void CountUp() { Effect4b_Count = Effect4b_Count + 1u; }
 // The leader's x (+0x34) or z (+0x38) moved by `d`, Field_State the leader
 // (made so before the store, as the original).
 void Nudge(unsigned off, U d) {
-    const U v = UL(ObjTrio + off);
-    Field_State = ObjTrio;
-    SetUL(ObjTrio + off, v + d);
+    const U v = UL(rv::Bytes(ObjTrio) + off);
+    Field_State = rv::Bytes(ObjTrio);
+    SetUL(rv::Bytes(ObjTrio) + off, v + d);
 }
 }  // namespace
 
@@ -1370,12 +1370,12 @@ extern "C" void __cdecl EffectKind8C_SteerBack(void) {
     const unsigned char n = static_cast<unsigned char>(Effect4b_Steps + 1);
     Effect4b_Steps = n;
     if (n >= 8) {
-        const U z = UL(ObjTrio + 0x38) & 0xFFFFF000u;
-        Field_State = ObjTrio;
-        SetUL(ObjTrio + 0x38, z);
-        const U x = UL(ObjTrio + 0x34) & 0xFFFFF000u;
+        const U z = UL(rv::Bytes(ObjTrio) + 0x38) & 0xFFFFF000u;
+        Field_State = rv::Bytes(ObjTrio);
+        SetUL(rv::Bytes(ObjTrio) + 0x38, z);
+        const U x = UL(rv::Bytes(ObjTrio) + 0x34) & 0xFFFFF000u;
         unsigned char* const s = S();
-        SetUL(ObjTrio + 0x34, x);
+        SetUL(rv::Bytes(ObjTrio) + 0x34, x);
         s[1] = 0xF;
         Effect4b_Count = 0;
         Effect4b_Steps = 0;

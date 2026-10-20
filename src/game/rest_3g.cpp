@@ -601,7 +601,7 @@ extern "C" int __cdecl Area109_SwitchPattern(void) {
 // each cleared, then set by its bit; Effect_HoldFlag1C(0xF); sounds 0x206,
 // 0x202; al 1. Otherwise al 0 (the rest of eax the caller's).
 extern "C" unsigned char __cdecl Area109_SwitchHook(long x, long z) {
-    if ((static_cast<U>(x) & 0xFF) != 0x1C || (static_cast<U>(z) & 0xFF) != 6 || ObjTrio[8] != 3) return 0;
+    if ((static_cast<U>(x) & 0xFF) != 0x1C || (static_cast<U>(z) & 0xFF) != 6 || ObjTrio[0].direction != 3) return 0;
     if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x1C) != 0) return 0;
     const int pattern = SH_CALL(Area109_SwitchPattern)();
     int bits = pattern % 6;

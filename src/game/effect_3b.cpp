@@ -154,7 +154,7 @@ unsigned char* Member(const char* who, unsigned m) {
         bof3::Fatal("%s: member %u of Field_MemberCount %u, past ObjTrio's three records - the original writes "
                     "what follows (docs/effect_3b.md section 7)",
                     who, m, (unsigned)Field_MemberCount);
-    return ObjTrio + m * at::kObjTrioStride;
+    return rv::Bytes(&ObjTrio[m]);
 }
 
 // Effect_FindFree's record (the answer's low byte, as the originals widen it):

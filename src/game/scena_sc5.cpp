@@ -128,7 +128,7 @@ void LoadMusic(unsigned track) {
 // An event battle at the leader: 0x532ED0(ObjTrio +0x34, +0x38, kind), then
 // Field_StartEventBattle(kind) (group SE's).
 void Battle(unsigned kind) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     SH_AT(PlaceFn, at::kPartyPlace)(member0->x, member0->z, kind);
     SH_CALL(Field_StartEventBattle)(kind);
 }

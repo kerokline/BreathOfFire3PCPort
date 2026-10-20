@@ -259,7 +259,7 @@ extern "C" void __cdecl MsgBox_Step(void) {
             case 0x03: {
                 flags = static_cast<unsigned char>(flags | 1u);
                 resume = at;
-                const unsigned member = B(kNameMap + ObjTrio[0x89]);
+                const unsigned member = B(kNameMap + ObjTrio[0].char_id);
                 sub_count = 9;
                 at = At(kCharRecords + 164u * member);
                 break;
@@ -445,7 +445,7 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 resume = at;
                 again = false;
                 SetPtr(kResume, resume);
-                const unsigned member = B(kNameMap + ObjTrio[0x89]);
+                const unsigned member = B(kNameMap + ObjTrio[0].char_id);
                 Msgbox_SubCount = 9;
                 at = At(kCharRecords + 164u * member);
                 break;

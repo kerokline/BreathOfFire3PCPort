@@ -211,7 +211,7 @@ void Move(U h) {
     case 7: B(AreaW3f_AnswerMarkD1_addr) = static_cast<unsigned char>(v); break;
     case 8: B(Rest2c_TalkSlide_addr) = static_cast<unsigned char>(v % 6); break;
     case 9: B(Field_MemberCount_addr) = static_cast<unsigned char>(v % 4); break;
-    case 10: B(Field_Members_addr + (v % 3) * at::kObjStride) = static_cast<unsigned char>((v >> 2) % 8); break;
+    case 10: B(ObjTrio_addr + 0x148 + (v % 3) * at::kObjStride) = static_cast<unsigned char>((v >> 2) % 8); break;
     case 11: B(Field_Request_addr) = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
     case 12: B(Rest2c_FigureRgb_addr + v % 3) = static_cast<unsigned char>(h >> 16); break;
     case 13: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v % 18); break;
@@ -381,7 +381,7 @@ void SeedMaster() {
     const bool all = sh::Half();
     for (unsigned i = 0; i < 3; ++i) {
         const auto record = static_cast<unsigned char>(sh::Next() % 8);
-        B(Field_Members_addr + i * at::kObjStride) = record;
+        B(ObjTrio_addr + 0x148 + i * at::kObjStride) = record;
         B(at::kRecords + 0x1F + record * at::kRecordStride) =
             static_cast<unsigned char>(all || sh::Half() ? master : PickOf(0xFF, master + 1u, sh::Next()));
     }

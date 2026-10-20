@@ -26,6 +26,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_calls.h"
 #include "game/scena_calls_callees.h"
@@ -327,7 +328,7 @@ void Move(std::uint32_t n) {
         break;
     }
     case 6: {
-        unsigned char* const m = ObjTrio + (v % 3) * at::kMemberStride;
+        unsigned char* const m = rv::Bytes(&ObjTrio[v % 3]);
         m[0] = static_cast<unsigned char>(m[0] ^ 1);
         break;
     }

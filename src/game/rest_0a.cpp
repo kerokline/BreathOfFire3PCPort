@@ -64,7 +64,7 @@ const unsigned char* EffectByArgument(unsigned index, const char* who) {
     return rv::Bytes(Effect_Objects) + i * kEffectStride;
 }
 
-const unsigned char* Member(unsigned m) { return At(Field_Members_addr + 0x4 + (m - 1) * kMemberStride); }
+const unsigned char* Member(unsigned m) { return At(ObjTrio_addr + 0x14c + (m - 1) * kMemberStride); }
 
 bool MapTarget(unsigned char b) { return b == 0xF2; }
 bool MapBlocked(unsigned char b) { return b == 0xF0 || b == 0xF1 || b == 0xF4 || b == 0xF6 || b == 0xF7; }

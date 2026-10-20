@@ -963,9 +963,9 @@ extern "C" void __cdecl EffectKind18Sub1D_Hurt(void) {
             s = S();
             continue;
         }
-        const U member = Index(kWho, S8(who), at::kMemberCount, AddressOf(ObjTrio));
+        const U member = Index(kWho, S8(who), at::kMemberCount, AddressOf(rv::Bytes(ObjTrio)));
         unsigned char* const saved = S();
-        unsigned char* const object = ObjTrio + at::kMemberStride * member;
+        unsigned char* const object = rv::Bytes(&ObjTrio[member]);
         Field_State = object;
         Sprite_Current = object;
         if (SH_CALL(Actor_EquipCount)(object[0x148], 3, 8) == 0) {

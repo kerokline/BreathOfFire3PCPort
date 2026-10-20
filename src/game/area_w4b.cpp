@@ -589,7 +589,7 @@ extern "C" void __cdecl Area170_Tail37(void) {
         return;
     case 60:
         AH_CALL(ScriptFlags_Clear40)();
-        AddWord(Mem(Field_Members_addr + 0x132), 1);
+        AddWord(Mem(ObjTrio_addr + 0x27a), 1);
         AddWord(Mem(ObjTrio_addr + 0x3c6), 1);
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFEF);
         EndTail();

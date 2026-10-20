@@ -295,9 +295,9 @@ extern "C" unsigned char __cdecl Boss01_Event(unsigned phase) {
     case 5:
         if (BossSe_Script & 1) {
             SetWord(At(ObjTrio_addr + 0x126), 0x78);
-            ObjTrio[0x125] = 4;
+            rv::Bytes(ObjTrio)[0x125] = 4;
             B(at::kActionKind) = 4;
-            ObjTrio[0x124] = 0x40;
+            rv::Bytes(ObjTrio)[0x124] = 0x40;
             B(at::kTarget) = 0x40;
         }
         break;

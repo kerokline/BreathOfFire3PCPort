@@ -205,7 +205,7 @@ unsigned char* Member(U m, const char* who) {
         bof3::Fatal("%s: Party_MemberAt answered %u, past ObjTrio's three records - the original writes what follows "
                     "(docs/effect_3c.md section 6)",
                     who, (unsigned)m);
-    return ObjTrio + at::kObjTrioStride * m;
+    return rv::Bytes(ObjTrio) + at::kObjTrioStride * m;
 }
 
 }  // namespace

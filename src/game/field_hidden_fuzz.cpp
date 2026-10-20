@@ -31,7 +31,7 @@ using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 constexpr std::uint32_t kMemberSize = 0x14C;
-unsigned char* Member(unsigned i) { return ObjTrio + (i % 3) * kMemberSize; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i % 3]); }
 void SetPtr(unsigned char* at, const void* p) { SetLong(at, static_cast<std::int32_t>(Address(p))); }
 unsigned char* Sc() { return Sprite_Current; }
 

@@ -673,7 +673,7 @@ extern "C" void __cdecl Boss16_Exit(void) {
         SetWord(Sprite_Current + 0x5A, Word(At(at::kEnemy0 + at::kEnemyPose + 2)));
     }
     BH_CALL(Scenario_CallA)(1);
-    Field_Members[4] |= 0x40;
+    ObjTrio[1].flags |= 0x40;
     BossH_LeaderPick = static_cast<unsigned char>(B(at::kMoveCounter) != 0x14 ? 7 : 6);
 }
 

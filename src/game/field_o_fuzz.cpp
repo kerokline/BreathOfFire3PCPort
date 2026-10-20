@@ -431,7 +431,7 @@ void Seed(unsigned run_k) {
     case kCArea: if (sh::Half()) SetWord(Mem(0x904EFC), op[0]); break;
     case kCRun: if (sh::Half()) Mem(0x8034E4)[0] = op[0]; break;
     case kCStatus: if (sh::Half()) op[0] = 1; break;
-    case kCLeader: if (sh::Half()) ObjTrio[0x89] = op[0]; break;
+    case kCLeader: if (sh::Half()) ObjTrio[0].char_id = op[0]; break;
     case kCChapter: if (sh::Half()) op[0] = static_cast<unsigned char>(Mem(0x8034E0)[0] + sh::Next() % 3 - 1); break;
     case kCRecord: op[0] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 8 : sh::Next()); break;
     case kCCount0: if (sh::Half()) op[0] = Mem(0x903848)[0]; break;

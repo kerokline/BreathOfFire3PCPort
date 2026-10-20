@@ -567,9 +567,9 @@ extern "C" void __cdecl ScriptFlags_Set40(void) {
 
 // original 0x57C810 (PSX 0x8015CAF0): bit 6 of three objects' first byte.
 extern "C" void __cdecl ObjTrio_SetBit40(void) {
-    ObjTrio[0] |= 0x40;
-    ObjTrio[0x14C] |= 0x40;
-    ObjTrio[0x298] |= 0x40;
+    ObjTrio[0].flags |= 0x40;
+    ObjTrio[1].flags |= 0x40;
+    ObjTrio[2].flags |= 0x40;
 }
 
 void EventScript_Inject() {

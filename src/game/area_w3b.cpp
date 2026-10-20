@@ -252,7 +252,7 @@ void PlaceMessage(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = ObjTrio[9];
+    const U steps = ObjTrio[0].step_frames;
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
@@ -1079,7 +1079,7 @@ extern "C" void __cdecl Area121_Kind5CRun(void) { StateEntry("Area121", "Kind5CR
 // Ours aborts on an area number past the 200 descriptors or a null descriptor,
 // where the original would read through it.
 extern "C" void __cdecl Area121_Kind5CStart(void) {
-    Cur()[8] = ObjTrio[8];
+    Cur()[8] = ObjTrio[0].direction;
     const unsigned area = Game_AreaNumber;
     if (area >= 200) bof3::Fatal("Area121_Kind5CStart: area %u is past Area_Descriptors' 200", area);
     const unsigned char* const descriptor = Area_Descriptors[area];
@@ -1124,10 +1124,10 @@ extern "C" void __cdecl Area121_Kind5CFollow(void) {
         row(0x40, 1);
         return;
     }
-    if (ObjTrio[0xa] == 0) {
+    if (ObjTrio[0].digits == 0) {
         gauge(0xDC, 0x10, 0);
         row(0x40, 0);
-        row(static_cast<unsigned char>(0x40 - ObjTrio[0xb]), 1);
+        row(static_cast<unsigned char>(0x40 - rv::Bytes(ObjTrio)[0xb]), 1);
         return;
     }
     gauge(0xDC, 0x10, (Frame_Counter & 2) != 0 ? 1u : 2u);
@@ -1167,10 +1167,10 @@ extern "C" void __cdecl Area121_GaugeSprite(int x, int y, unsigned n) {
 // neither: the leader's facing = +8. Then (and when they match) a tail jump to
 // Area121_Kind5CFollow.
 extern "C" void __cdecl Area121_Kind5CFace(void) {
-    if (Cur()[8] != ObjTrio[8]) {
-        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8], ObjTrio[8]) != 0) return;
-        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8] ^ 4u, ObjTrio[8]) != 0) return;
-        ObjTrio[8] = Cur()[8];
+    if (Cur()[8] != ObjTrio[0].direction) {
+        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8], ObjTrio[0].direction) != 0) return;
+        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8] ^ 4u, ObjTrio[0].direction) != 0) return;
+        ObjTrio[0].direction = Cur()[8];
     }
     AH_AT(Handler, area_w3b::kKind5CFollow)();
 }
@@ -1201,7 +1201,7 @@ extern "C" unsigned char __cdecl Area121_Kind5CTurnStep(unsigned a, unsigned b) 
     }
     Cur()[8] = static_cast<unsigned char>(Cur()[8] & 7);
     unsigned char* const o = Cur();
-    ObjTrio[8] = o[8];
+    ObjTrio[0].direction = o[8];
     o[9] = 8;
     AH_AT(Handler, area_w3b::kKind5CTurn)();
     Cur()[1] = 2;

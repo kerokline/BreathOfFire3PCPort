@@ -631,14 +631,14 @@ extern "C" unsigned char __cdecl Field_EncounterDue(void) {
     }
     if (Word(At(ObjTrio_addr + 0x134)) == 0) return 0;
     std::uint32_t edge = Field_EdgeBits;
-    if (ObjTrio[0x128] < 4) edge = edge * 7 / 10;
+    if (rv::Bytes(ObjTrio)[0x128] < 4) edge = edge * 7 / 10;
     if (edge < Word(At(ObjTrio_addr + 0x134))) return 0;
-    if (ObjTrio[0x138] & 1) return 0;
+    if (rv::Bytes(ObjTrio)[0x138] & 1) return 0;
     const bool on_foot = (Field_InputFlags & 1) != 0;
     if (!on_foot && static_cast<std::int32_t>(EventOps_ScreenCounter) > 0xF0) return 0;
     const int members = Field_MemberCount;
     for (int i = 0; i < members; ++i)
-        if (ObjTrio[i * at::kMemberStride] & 0x40) return 0;
+        if (ObjTrio[i].flags & 0x40) return 0;
     if (on_foot) {
         unsigned char* const sc = Sprite_Current;
         const std::uint32_t steps = sc[9];
@@ -673,7 +673,7 @@ extern "C" unsigned char __cdecl Field_LeaderIdleTest(void) {
     if (members > 1) {
         bool busy = false;
         for (int i = 1; i < members; ++i)
-            if (ObjTrio[i * at::kMemberStride + 0x137] == 9) busy = true;
+            if (rv::Bytes(&ObjTrio[i])[0x137] == 9) busy = true;
         if (busy) return 0;
     }
     if (!(g.rand() & 1)) return 0;

@@ -601,7 +601,7 @@ SC13_EXPORT void __cdecl Scena13_Run3(void) {
 // 0x563070 of 0x20, then 17 cases). Its ebx holds 0x1F from the start: step
 // 0x1E stores it to Draw_PassFlags and the step (below).
 SC13_EXPORT void __cdecl Scena13_Run4(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         Say(0x12);
@@ -613,7 +613,7 @@ SC13_EXPORT void __cdecl Scena13_Run4(void) {
         return;
     case 0xA: {
         if (Counter(0) != 0x10) return;
-        const unsigned char arg = B(at::kEffectArg + ObjTrio[0x89]);
+        const unsigned char arg = B(at::kEffectArg + ObjTrio[0].char_id);
         Scena13_Slot[0] = SH_CALL(Effect_SpawnAt)(4, 5, static_cast<signed char>(arg), static_cast<long>(static_cast<std::uint32_t>(member0->x)),
                                                   static_cast<long>(static_cast<std::uint32_t>(member0->z)), static_cast<long>(static_cast<std::uint32_t>(member0->height)));
         SetStep(0xB);
@@ -1201,8 +1201,8 @@ SC13_EXPORT void __cdecl Scena13_Run8(void) {
     switch (Step()) {
     case 0:
         // ObjTrio records 1 and 2 + 0x137 (0x802FC3, 0x80310F) both 0
-        if (ObjTrio[0x283] != 0) return;
-        if (ObjTrio[0x3cf] != 0) return;
+        if (rv::Bytes(&ObjTrio[1])[0x137] != 0) return;
+        if (rv::Bytes(&ObjTrio[2])[0x137] != 0) return;
         DropIn(0xA);
         Set(0x1D);
         StopRun();
@@ -1308,28 +1308,28 @@ SC13_EXPORT unsigned char __cdecl Scena13_StepHook(int x, int z) {
     if (Area() == 0x70) {
         if (FD() != 4) return 0;
         if (!Flag(0xF) && In(x16, 0x36, 3) && In(z16, 0x32, 4)) {
-            facing = ObjTrio[8];
+            facing = ObjTrio[0].direction;
             if (facing != 0 && facing != 7 && facing != 6) return Hit(4, 0);
             loaded = true;
         }
     }
-    if (!loaded) facing = ObjTrio[8];
+    if (!loaded) facing = ObjTrio[0].direction;
     if (Area() == 0x7F) {
         if (FD() != 0) return 0;
         if (xw != 0x38000) return 0;
         if (!In(z16, 6, 3)) return 0;
         Set(6);
-        facing = ObjTrio[8];
+        facing = ObjTrio[0].direction;
     }
     if (Area() == 0x8F) {
         if (FD() == 0) {
             if (!Flag(0x14) && xw == 0x3B8000 && In(z16, 0x1F, 4)) return Hit(6, 0x14);
             if (Flag(0x1D) && !Flag(0x1E) && xw == 0x3B8000 && In(z16, 0x1F, 4)) return Hit(8, 5);
-            facing = ObjTrio[8];
+            facing = ObjTrio[0].direction;
         }
         if (FD() == 1) {
             if (!Flag(0x11) && xw == 0x428000 && In(z16, 0x64, 3)) return Hit(6, 0);
-            facing = ObjTrio[8];
+            facing = ObjTrio[0].direction;
         }
     }
     if (Area() == 0x90) {
@@ -1341,13 +1341,13 @@ SC13_EXPORT unsigned char __cdecl Scena13_StepHook(int x, int z) {
         if (!Flag(0x1B)) {
             Set40();
             if (!Flag(0x18)) {
-                if (ObjTrio[0x89] == 2) DropIn(1);
+                if (ObjTrio[0].char_id == 2) DropIn(1);
             } else if (!Flag(0x19)) {
-                const unsigned char who = ObjTrio[0x89];
+                const unsigned char who = ObjTrio[0].char_id;
                 DropIn(who == 8 ? 4 : who == 5 ? 3 : 2);
             } else {
                 const bool third = Flag(0x1A);
-                const unsigned char who = ObjTrio[0x89];
+                const unsigned char who = ObjTrio[0].char_id;
                 if (!third) {
                     if (who != 7) DropIn(5);
                 } else if (who == 7) {
@@ -1359,7 +1359,7 @@ SC13_EXPORT unsigned char __cdecl Scena13_StepHook(int x, int z) {
         }
     }
     if (Area() == 0x91 && SH_CALL(Flags_Test)(Story(), 0x2D) != 0 && !Flag(0xB) && In(x16, 0xA, 2) && In(z16, 0x62, 3)) {
-        const unsigned char f = ObjTrio[8];
+        const unsigned char f = ObjTrio[0].direction;
         if (f == 0 || f == 7 || f == 6) {
             SetCounter(0, 0);
             DropIn(9);
@@ -1733,9 +1733,9 @@ static void Shake4() { SH_CALL(Scena14_Shake)(4); }
 
 // The three party objects' +0x48 bytes (ObjTrio records 0..2) set to 1.
 static void TrioFlags48() {
-    ObjTrio[0x2e0] = 1;
-    ObjTrio[0x194] = 1;
-    ObjTrio[0x48] = 1;
+    ObjTrio[2].scale_mode = 1;
+    ObjTrio[1].scale_mode = 1;
+    ObjTrio[0].scale_mode = 1;
 }
 
 // original 0x565240: run 2, steps 0..8, 0xA..0x11, 0x14, 0x15, 0x19, 0x1D,
@@ -1880,7 +1880,7 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
         EndRun();
         return;
     case 0x19:
-        if (ObjTrio[0x137] != 0) return;         // 0x802E77
+        if (rv::Bytes(ObjTrio)[0x137] != 0) return; // 0x802E77
         Clear40();
         DropIn(3);
         Set(8);
@@ -1918,11 +1918,11 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
             Say(4);
             SetStep(0x23);
         }
-        ObjTrio[9] = static_cast<unsigned char>(ObjTrio[9] + 1);
+        ObjTrio[0].step_frames = static_cast<unsigned char>(ObjTrio[0].step_frames + 1);
         return;
     case 0x23:
         if (Request() != 2) SetStep(0x24);
-        ObjTrio[9] = static_cast<unsigned char>(ObjTrio[9] + 1);
+        ObjTrio[0].step_frames = static_cast<unsigned char>(ObjTrio[0].step_frames + 1);
         return;
     case 0x24: {
         ChangeArea(0x96, 0x1C8000, 0x148000, 5);
@@ -1943,8 +1943,8 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
 // Field_ChangeArea(0xC4, 0x298000, 0x168000, 0x80), ScriptFlags_Set40, run 2
 // step 0, Field_StatusBits bit 0 cleared.
 SC13_EXPORT void __cdecl Scena14_LeaveToC4(void) {
-    ObjTrio[0x170] = static_cast<unsigned char>(ObjTrio[0x170] & 0xFE);
-    ObjTrio[0x2bc] = static_cast<unsigned char>(ObjTrio[0x2bc] & 0xFE);
+    ObjTrio[1].draw_flags = static_cast<unsigned char>(ObjTrio[1].draw_flags & 0xFE);
+    ObjTrio[2].draw_flags = static_cast<unsigned char>(ObjTrio[2].draw_flags & 0xFE);
     ChangeArea(0xC4, 0x298000, 0x168000, 0x80);
     Set40();
     const unsigned char bits = static_cast<unsigned char>(Field_StatusBits & 0xFE);

@@ -342,7 +342,7 @@ void Disturb(U h) {
     case 1: Mem(at::kMoveCounter)[0] = h & 0x1000000 ? 0x14 : b; break;
     case 2: Mem(BossSc_WaitTurns_addr)[0] = b; break;
     case 3: Mem(Character_IndexById_addr + 0x1)[0] = b; break;
-    default: Mem(Field_Members_addr + 0x4)[0] = b; break;
+    default: Mem(ObjTrio_addr + 0x14c)[0] = b; break;
     }
 }
 

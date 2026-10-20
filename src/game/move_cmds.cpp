@@ -447,7 +447,7 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
     case 8: return Cond_ByteFD;
     case 9: return Field_StatusBits & 1;
     case 10: return rv::Current<records::SpriteHead>()->script_pos;
-    case 11: return ObjTrio[0x89];
+    case 11: return ObjTrio[0].char_id;
     case 12: return Long(At(Cond_Flags_addr + 0xa0));
     case 13: return 1;
     default: return 0xFF;
@@ -461,7 +461,7 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
 extern "C" int __cdecl MoveScript_ObjectKind(void) {
     const std::uint32_t sprite = Address(Sprite_Current);
     if (sprite == Address(rv::Bytes(&Sprite_Kind2))) return 2;
-    const std::uint32_t trio = Address(ObjTrio);
+    const std::uint32_t trio = Address(rv::Bytes(ObjTrio));
     if (sprite == trio || sprite == trio + 0x14C || sprite == trio + 0x298) return 1;
     if (sprite >= Address(rv::Bytes(Sprite_Objects)) && sprite < Address(rv::Bytes(Sprite_Objects)) + (Sprite_Objects_count * sizeof(records::SpriteObject))) return 0;
     if (sprite >= Address(rv::Bytes(Sprite_ObjectsExtra)) && sprite < Address(rv::Bytes(Sprite_ObjectsExtra)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))) return 3;

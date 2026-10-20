@@ -311,7 +311,7 @@ unsigned char Pick(std::initializer_list<unsigned> seeds) {
 
 // The pointers MoveScript_ObjectKind tells apart, each edge and its neighbour.
 std::uint32_t KindPointer() {
-    const std::uint32_t k2 = Address(rv::Bytes(&Sprite_Kind2)), trio = Address(ObjTrio);
+    const std::uint32_t k2 = Address(rv::Bytes(&Sprite_Kind2)), trio = Address(rv::Bytes(ObjTrio));
     const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra));
     const std::uint32_t seeds[] = {k2, k2 - 1, k2 + 1, trio, trio + 1, trio + 0x14C, trio + 0x14B, trio + 0x298, trio + 0x299,
                                    objects, objects - 1, objects + (Sprite_Objects_count * sizeof(records::SpriteObject)) - 1, objects + (Sprite_Objects_count * sizeof(records::SpriteObject)),

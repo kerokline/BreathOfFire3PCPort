@@ -109,7 +109,7 @@ U Place(const char* who, U table, unsigned count) {
 // next cell's start. The gate's test is (0x8000, 0x10000); "two cells away"
 // is its negation at (0x20000, 0x20000).
 bool Within(const unsigned char* s, bool z_axis, std::int32_t edge, std::int32_t cross) {
-    const U lx = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x), lz = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z);
+    const U lx = static_cast<std::uint32_t>(ObjTrio[0].x), lz = static_cast<std::uint32_t>(ObjTrio[0].z);
     const U x = static_cast<U>(S16(Word(s + 0x36))), z = static_cast<U>(S16(Word(s + 0x3A)));
     U along, across;
     if (z_axis) {
@@ -475,7 +475,7 @@ extern "C" unsigned char __cdecl EffectKind18Sub42_MemberNear(long x, long z) {
             bof3::Fatal("EffectKind18Sub42_MemberNear: Field_MemberCount is %u, past the three ObjTrio records - the "
                         "original reads what follows them (docs/effect_5f.md section 6)",
                         (unsigned)count);
-        const unsigned char* const o = ObjTrio + at::kObjTrioStride * i;
+        const unsigned char* const o = rv::Bytes(&ObjTrio[i]);
         auto* const oo = rv::AsConst<records::PartyMember>(o);
         if (o[0] == 0) continue;
         const U t = o[9];

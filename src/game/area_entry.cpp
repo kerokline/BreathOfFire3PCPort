@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/area_entry_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -30,7 +31,7 @@ using namespace area_entry;
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
 unsigned char* Descriptor() { return Area_Descriptors[Game_AreaNumber]; }
-unsigned char* Record(unsigned slot) { return ObjTrio + slot * kRecord; }
+unsigned char* Record(unsigned slot) { return rv::Bytes(ObjTrio) + slot * kRecord; }
 
 }  // namespace
 
@@ -195,7 +196,7 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
 // the count is a byte and not limited to the three records ObjTrio holds.
 extern "C" void __cdecl Party_SetUpMembers(unsigned count_arg, const unsigned char* list) {
     const unsigned count = count_arg & 0xFFu;
-    unsigned char* record = ObjTrio;
+    unsigned char* record = rv::Bytes(ObjTrio);
     for (unsigned i = 0; i < count; ++i, record += kRecord) {
         Sprite_Current = record;
         record[0] &= 0xDF;

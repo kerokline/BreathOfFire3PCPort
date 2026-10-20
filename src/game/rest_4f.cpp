@@ -1243,7 +1243,7 @@ U Hi(const void* p) { return Key(p) & 0xFFFF0000u; }
 // Palette 0x7B: entries 1..30 the leader's palette (ObjTrio 0's +0x27) with bit
 // 15 set, entries 0 and 31 zero; Gfx_ClutStripDirty is set by the callers.
 void TintPalette() {
-    const U from = Gfx_ClutStrip_addr + 2 + static_cast<std::uint32_t>(ObjTrio[0x27]) * at::kClutBytes;
+    const U from = Gfx_ClutStrip_addr + 2 + static_cast<std::uint32_t>(ObjTrio[0].clut) * at::kClutBytes;
     for (U i = 0; i < 30; ++i) SetW(at::kClut7B + 2 + 2 * i, W(from + 2 * i) | 0x8000);
     Gfx_ClutStrip[0xf60] = 0;
     Gfx_ClutStrip[0xf7f] = 0;
@@ -1269,10 +1269,10 @@ bool Above38() { return static_cast<std::int16_t>(W(at::kKind02Word)) > 0x38; }
 // the colour 0; the panel's y +0x10 0xF0; +1 up.
 extern "C" void __cdecl EffectKind02_Start(void) {
     unsigned char* const s = S();
-    s[0x25] = ObjTrio[0x25];
-    s[0x26] = ObjTrio[0x26];
-    s[0x27] = ObjTrio[0x27];
-    s[0x28] = ObjTrio[0x28];
+    s[0x25] = ObjTrio[0].tex_slot;
+    s[0x26] = ObjTrio[0].tex_row;
+    s[0x27] = ObjTrio[0].clut;
+    s[0x28] = ObjTrio[0].clut_mode;
     s[0x29] = 2;
     s[0x24] = 0x80;
     rv::As<records::EffectObject>(s)->screen_x = 0x39;
@@ -1367,15 +1367,15 @@ extern "C" void __cdecl EffectKind02_Mode1Brighten(void) {
 // +0x5A copied; Sprite_QueueOverlay (a tail jmp).
 extern "C" void __cdecl EffectKind02_CopyLeader(void) {
     unsigned char* const s = S();
-    if (ObjTrio[2] == 1) {
+    if (ObjTrio[0].step == 1) {
         s[2] = 0;
         return;
     }
     if (Above38()) s[2] = 3;
-    s[0x2A] = ObjTrio[0x2a];
-    s[0x49] = ObjTrio[0x49];
-    s[0x4A] = ObjTrio[0x4a];
-    s[0x4B] = ObjTrio[0x4b];
+    s[0x2A] = ObjTrio[0].flip;
+    s[0x49] = ObjTrio[0].script_steps;
+    s[0x4A] = ObjTrio[0].script_hold;
+    s[0x4B] = ObjTrio[0].animation;
     rv::As<records::EffectObject>(s)->script = L(at::kLeader + 0x50);
     rv::As<records::EffectObject>(s)->frames = L(at::kLeader + 0x54);
     rv::As<records::EffectObject>(s)->script_pos = W(at::kLeader + 0x58);
@@ -1417,7 +1417,7 @@ extern "C" void __cdecl EffectKind02_Mode3Darken(void) {
 // +3 = 0; else while the word 0x905E62 is below 0x38 (s16), +2 = 1 and +3 = 0.
 extern "C" void __cdecl EffectKind02_Mode3Wait(void) {
     unsigned char* const s = S();
-    if (ObjTrio[2] == 1) {
+    if (ObjTrio[0].step == 1) {
         s[2] = 0;
         s[3] = 0;
         return;

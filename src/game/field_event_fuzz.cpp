@@ -32,6 +32,7 @@
 #include <utility>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_event_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -102,7 +103,7 @@ unsigned char g_zones[8 * 8];        // Area_ZoneAt's list: seven records, the l
 unsigned char g_bank[8 + 256 * 4 + 8 * 64];   // Sprite_LoadPalette's bank: +4 an offset to 256 offsets
 unsigned char g_zone_record[8];      // what the zone_at stand-in returns; +4 the zone
 
-unsigned char* Member(unsigned i) { return ObjTrio + i * kMemberBytes; }
+unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 // Sprite_Current may be any of the five, Field_State one of the four with +0x148.
 unsigned char* SpriteChoice(unsigned v) {
     switch (v % 5) {
@@ -144,7 +145,7 @@ void Fix() {
 void Disturb(std::uint32_t salt) {
     const std::uint32_t h = Hash(salt);
     switch (h % 24) {
-    case 0: ObjTrio[(h >> 8) % ObjTrio_count] = static_cast<unsigned char>(h >> 24); break;
+    case 0: rv::Bytes(ObjTrio)[(h >> 8) % (ObjTrio_count * sizeof(records::PartyMember))] = static_cast<unsigned char>(h >> 24); break;
     case 1: Sprite_Current = SpriteChoice(h >> 8); break;
     case 2: Field_State = StateChoice(h >> 8); break;
     case 3: Field_MemberCount = static_cast<unsigned char>((h >> 8) % 4); break;
@@ -244,13 +245,13 @@ void __cdecl StubLoadPalette(unsigned short* dst, unsigned index) { Record(28, A
 void __cdecl StubPosition(long x, long z, unsigned flags) {
     Record(29, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), flags & 0xFF);
     Disturb(29);
-    if (Hash(290) % 3 == 0) SetLong(ObjTrio + 0x34 + (Hash(291) % 2) * 4, static_cast<std::int32_t>(Hash(292)));
+    if (Hash(290) % 3 == 0) SetLong(rv::Bytes(ObjTrio) + 0x34 + (Hash(291) % 2) * 4, static_cast<std::int32_t>(Hash(292)));
 }
 // 0x533690 is unread: its whole dword is compared (Field_PartySetUp hands on the caller's).
 void __cdecl StubPositionAlt(long x, long z, unsigned flags) {
     Record(30, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), flags);
     Disturb(30);
-    if (Hash(300) % 3 == 0) SetLong(ObjTrio + 0x34 + (Hash(301) % 2) * 4, static_cast<std::int32_t>(Hash(302)));
+    if (Hash(300) % 3 == 0) SetLong(rv::Bytes(ObjTrio) + 0x34 + (Hash(301) % 2) * 4, static_cast<std::int32_t>(Hash(302)));
 }
 void __cdecl StubClearActive() { Record(31); Disturb(31); }
 void __cdecl StubLeaderFrame() { Record(32, Address(Sprite_Current), Address(Field_State)); Disturb(32); }
@@ -506,7 +507,7 @@ void AimTable(void* copy, const Clone& c, std::uint32_t at, std::uint8_t op, std
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(ObjTrio), ObjTrio_count},
+    {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
     {at::kFindIds, 0x40},
     {Address(&Field_ScriptFlags), 2},
     {at::kActorRecords, kActors * kActorBytes},
@@ -530,7 +531,7 @@ const Region kRegions[] = {
     {Address(g_scratch), sizeof g_scratch},
     {Address(g_zone_record), sizeof g_zone_record},
 };
-constexpr unsigned kStateBytes = ObjTrio_count + 0x40 + 2 + kActors * kActorBytes + 6 + 1 + 9 + 0xE + 1 + 6 + 0xD0 + 1 +
+constexpr unsigned kStateBytes = (ObjTrio_count * sizeof(records::PartyMember)) + 0x40 + 2 + kActors * kActorBytes + 6 + 1 + 9 + 0xE + 1 + 6 + 0xD0 + 1 +
                                  Character_IndexById_count + 1 + 1 + 1 + 4 + 1 + 0x100 + 0x100 + 32 * 12 + sizeof g_scratch + sizeof g_zone_record;
 
 struct State {

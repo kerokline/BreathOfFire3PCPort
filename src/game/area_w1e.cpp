@@ -174,7 +174,7 @@ extern "C" void __cdecl Area65_PlaceMessage(void) {
 // 3, else Field_ScriptFlags2 bit 12 4, else 0; then Area65_PlateStates
 // 0x604880 by +1 (read after the calls; ours aborts past its five entries).
 extern "C" void __cdecl Area65_PlateRun(void) {
-    const U steps = ObjTrio[9];
+    const U steps = ObjTrio[0].step_frames;
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
@@ -854,7 +854,7 @@ extern "C" void __cdecl Area67_LeaderSpawn4(void) { MemberSpawn(0, 4, Area67_Spa
 // (Character_IndexById's index) is 6, then ScriptFlags_Set40,
 // MoveScript_Var7 = 4, the four bytes 0x903848..0x90384B and 0x8034E5 zeroed.
 extern "C" void __cdecl Area67_ResetOn6(void) {
-    const unsigned char effect = ObjTrio[0x89];
+    const unsigned char effect = ObjTrio[0].char_id;
     unsigned char* const member = Field_ActiveMember;
     const auto cleared = static_cast<unsigned char>(member[0x80] & 0xFE);
     member[0x80] = cleared;

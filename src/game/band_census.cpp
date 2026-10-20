@@ -322,7 +322,7 @@ int ScriptOf(const unsigned char* o, unsigned area) {
 
 void Identify(const unsigned char* s, int& who, int& index) {
     const std::uint32_t a = Address(s);
-    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(ObjTrio);
+    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
     who = kOther;
     index = -1;
     if (a >= objects && a < objects + kObjects * kObjectBytes && (a - objects) % kObjectBytes == 0) {
@@ -349,7 +349,7 @@ bool ScreenRect(const unsigned char* sprite, float& left, float& right, float& t
 unsigned SceneMask() {
     return (static_cast<unsigned char>(Field_ScriptFlags | Field_ScriptFlags2) & 1u) |
            ((Field_ScriptFlags & 0x100) ? 2u : 0u) | ((Field_ScriptFlags2 & 0x40) ? 4u : 0u) |
-           (Field_Request == 5 ? 8u : 0u) | (ObjTrio[1] != 1 ? 0x10u : 0u);
+           (Field_Request == 5 ? 8u : 0u) | (ObjTrio[0].state != 1 ? 0x10u : 0u);
 }
 
 Class Classify(float left, float right, float top, float bottom, unsigned columns) {

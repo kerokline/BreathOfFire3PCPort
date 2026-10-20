@@ -309,8 +309,8 @@ void Seed(unsigned k) {
     if (sh::Half()) SetWord(Mem(MoveScript_PartyRecords_addr + 0x66), PickOf(0xFF, 0xFF, 0x1FF, 0xFE));
     Mem(EffectKind51_Angles_addr + 0x80)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
     // ObjTrio record 1's animation word and flag
-    SetWord(Mem(Field_Members_addr + 0x5c), PickOf(4, 8, 4, 8, 0, 0x104, 0x108, sh::Next()));
-    Mem(Field_Members_addr + 0x4e)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 0x81, sh::Next()));
+    SetWord(Mem(ObjTrio_addr + 0x1a4), PickOf(4, 8, 4, 8, 0, 0x104, 0x108, sh::Next()));
+    Mem(ObjTrio_addr + 0x196)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 0x81, sh::Next()));
     // the frame counts
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 7, 8, 9, 0xFF, sh::Next()));
     switch (k) {
@@ -350,8 +350,8 @@ void Seed(unsigned k) {
     case k15Pose8:
         // the member's animation run through half the time, no hit to take
         if (sh::Half()) {
-            SetWord(Mem(Field_Members_addr + 0x5c), k == k15Pose4 ? 4 : 8);
-            Mem(Field_Members_addr + 0x4e)[0] = 1;
+            SetWord(Mem(ObjTrio_addr + 0x1a4), k == k15Pose4 ? 4 : 8);
+            Mem(ObjTrio_addr + 0x196)[0] = 1;
             Mem(at::kHit)[0] = 0;
         }
         break;

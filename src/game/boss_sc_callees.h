@@ -47,7 +47,7 @@ constexpr U kMoveCounter = 0x903848;
 // --- the field's cells B16's hooks write --------------------------------------
 // kSaveWord: now Field_ScriptFlags (symbols.toml). u16 in the live game block (bit 7 cleared by fight 16's end hook)
 // kFieldByte131: now Music_Track (symbols.toml). u8: set to 0x31 by fight 16's end hook (what reads it was not read)
-// kMember1Flags: now Field_Members[4] (symbols.toml). u8: ObjTrio member 1's +0 (bit 0x40 set by fight 16's exit hook)
+// kMember1Flags: now ObjTrio (symbols.toml). record 1 +0, ObjTrio[1].flags (Field_Members[4] until stage C4). u8: ObjTrio member 1's +0 (bit 0x40 set by fight 16's exit hook)
 // kLeaderPick: now BossH_LeaderPick (symbols.toml). u8: 6 / 7 (Boss_SetByLeaderId's byte; boss_h_callees.h)
 // kMsgPass: now BossSa_WindowPass (symbols.toml). u8: set to 2 before each Msg_OpenScript here (the window pass byte)
 

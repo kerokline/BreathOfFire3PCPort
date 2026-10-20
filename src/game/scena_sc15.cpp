@@ -2587,7 +2587,7 @@ SC15_EXPORT void __cdecl Scena17_EndTask(void) {
 // 0x929EC2 1 / C3 0, 0x66C7DA 1; file 0x31B loaded a frame at a time; CLUT
 // strip rows 1 and 2 copied; Game_Step + 1; the strip dirty.
 SC15_EXPORT void __cdecl Scena17_EndReturn(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     SetAt(Cond_Flags_addr + 0xa0, 0x92);
     for (unsigned i = 9; i <= 0x16; ++i) ClearAt(Cond_Flags_addr + 0x78, i);
     SH_AT(VoidFn, kPartyPass)();

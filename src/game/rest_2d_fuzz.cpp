@@ -317,7 +317,7 @@ void SeedRecords(unsigned char master) {
         rv::As<records::CharRecord>(rec)->stats.intel = PickOf(0, 1, 50, 99, 255, 999, 0xFFFF, sh::Next());
     }
     for (unsigned i = 0; i < 3; ++i) {
-        unsigned char* const obj = ObjTrio + i * at::kObjStride;
+        unsigned char* const obj = rv::Bytes(&ObjTrio[i]);
         obj[0x148] = static_cast<unsigned char>(sh::Next() % 8);   // Field_Members: a CharacterRecords index
         SetWord(obj + 0x80 + 0x1A, PickOf(0, 1, 0x10, 0x20, 0x30, sh::Next()));
     }
@@ -381,7 +381,7 @@ void Seed(unsigned k) {
     case 0x58B1C0: B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % at::kItemsState5StepCount); break;
     case 0x5873C0:   // a member gaining: the cursor's record this master's half the time, around g = 3
         if (sh::Half()) {
-            unsigned char* const rec = sh::Mem(at::kRecords + ObjTrio[B(Rest2d_Cursor_addr) * at::kObjStride + 0x148] * at::kRecordStride);
+            unsigned char* const rec = sh::Mem(at::kRecords + ObjTrio[B(Rest2d_Cursor_addr)].char_index * at::kRecordStride);
             rec[0x1F] = B(AreaW0c_TailSub_addr);
             rec[0xA] = static_cast<unsigned char>(rec[0x88] + PickOf(2, 3, 4, 6, 9, 0x80));
             if (sh::Half()) Field_Request = 0;
@@ -398,8 +398,8 @@ void Seed(unsigned k) {
         }
         break;
     case 0x589FB0: {   // the leader's position words
-        SetWord(ObjTrio + 0x36, PickOf(0, 1, 0x7F, 0x8000, sh::Next()));
-        SetWord(ObjTrio + 0x3A, PickOf(0, 1, 0x7F, 0x8000, sh::Next()));
+        SetWord(rv::Bytes(ObjTrio) + 0x36, PickOf(0, 1, 0x7F, 0x8000, sh::Next()));
+        SetWord(rv::Bytes(ObjTrio) + 0x3A, PickOf(0, 1, 0x7F, 0x8000, sh::Next()));
         break;
     }
     default: break;

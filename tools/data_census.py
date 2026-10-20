@@ -441,6 +441,12 @@ class Symbols:
             self.names.setdefault(e['name'], e['pc'])
         for e in t.get('func', []):
             self.by_pc.setdefault(e['pc'], ('func', e))
+        # <Name>_addr, which tools/gen_symbols.py emits for a typed entry or a
+        # typed block, evaluates like bof3::addr::Name in a constant's
+        # definition (stage C4: `kLineAngle = DamageScratch_addr + 4` is a
+        # data address all the same). Not a record base: `B(Name_addr + k)`
+        # is not counted (docs/typed-data-census.md 4).
+        self.addr_names = {e['name'] + '_addr': e['pc'] for e in self.data + t.get('block', []) if 'ctype' in e}
         self.extents = []
         for e in self.data:
             size = ctype_size(e.get('ctype', ''))
@@ -696,7 +702,7 @@ def stride_family(f, ident, line, env, at_value, syms):
 
 def scan(files, syms):
     by_rel = {f.rel: f for f in files}
-    env = collect_constants(files, syms.names)
+    env = collect_constants(files, {**syms.names, **syms.addr_names})
     defs_by_name = collections.defaultdict(list)
     for f in files:
         for name, value, ns, line in f.consts:

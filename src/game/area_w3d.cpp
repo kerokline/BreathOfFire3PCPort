@@ -241,7 +241,7 @@ extern "C" void __cdecl Area135_MarkerRoute(void) {
         if (r[3] == 0xFF || r[5] == 0xFF) {
             ScriptStep(0xFFFC);
             last = Sprite_Current;
-            if (last == ObjTrio) B(at::kCounter3) = 8;
+            if (last == rv::Bytes(ObjTrio)) B(at::kCounter3) = 8;
             continue;
         }
         const U x = (r[2] ? 0x8000u : 0u) | static_cast<U>(r[3]) << 16;
@@ -252,7 +252,7 @@ extern "C" void __cdecl Area135_MarkerRoute(void) {
         MoveScript_Object[7] = 1;
         Sprite_Current[8] = r[6];
         last = Sprite_Current;
-        if (last == ObjTrio) {
+        if (last == rv::Bytes(ObjTrio)) {
             SetD(Field_Kind2X_addr, x);
             SetD(Field_Kind2Z_addr, z);
             SetWord(Mem(MoveScript_F3Divisor_addr), 0x20);
@@ -527,7 +527,7 @@ extern "C" void __cdecl Area135_SpawnKind1AtLeader(void) {
     const auto z = static_cast<short>(Word(Mem(ObjTrio_addr + 0x30)));
     const auto x = static_cast<short>(Word(Mem(ObjTrio_addr + 0x2e)));
     const unsigned char list = B(Cond_Flags_addr + 0xd3);
-    Sprite_Current = ObjTrio;
+    Sprite_Current = rv::Bytes(ObjTrio);
     const unsigned char kind = B(Area135_EffectKinds_addr + list);
     const unsigned char slot = AH_CALL(Effect_Spawn)(1, 0, static_cast<signed char>(kind), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;

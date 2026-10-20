@@ -565,8 +565,8 @@ extern "C" void __cdecl EffectKind46_RedrawSprites(void) {
             SH_CALL(Sprite_UpdateScreen)();
         }
     }
-    Sprite_Current = ObjTrio;
-    ObjTrio[0x29] = 5;
+    Sprite_Current = rv::Bytes(ObjTrio);
+    ObjTrio[0].ot_slot = 5;
     SH_CALL(Sprite_UpdateScreen)();
     Sprite_Current = saved;
 }
@@ -601,7 +601,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
         return;
     }
     SpriteRec(who, self[4])[0] = 1;
-    unsigned char model = ObjTrio[0x4B];
+    unsigned char model = ObjTrio[0].animation;
     if (self[0xB] == 0) model = Sprite_Objects[2].animation;
     unsigned k = 0;
     while (k < 5 && model != At(at::kTwinAnims + 3 * k)[0]) ++k;
@@ -618,7 +618,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
     SetUL(a + 0x38, UL(a + 0x38) + 0x1000u);
     unsigned char* b = SpriteRec(who, self[4]);
     SetUL(b + 0x34, UL(b + 0x34) + 0x1000u);
-    const U height = UL(ObjTrio + 0x3C);
+    const U height = UL(rv::Bytes(ObjTrio) + 0x3C);
     SetUL(b + 0x38, UL(b + 0x38) + 0xFFFFF000u);
     SetUL(b + 0x3C, height);
     SetUL(a + 0x3C, height);
@@ -639,7 +639,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
 // +0 = 0 and +1 = 2.
 extern "C" void __cdecl EffectKind47_Blink(void) {
     unsigned char* const s = S();
-    unsigned char* const model = s[0xB] != 0 ? ObjTrio : At(Sprite_Objects_addr + 0x148);
+    unsigned char* const model = s[0xB] != 0 ? rv::Bytes(ObjTrio) : At(Sprite_Objects_addr + 0x148);
     if (s[9] != 0) {
         model[0] = static_cast<unsigned char>(model[0] | 0x40);
         s[9] = static_cast<unsigned char>(s[9] - 1);

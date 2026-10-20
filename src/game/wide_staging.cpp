@@ -645,7 +645,7 @@ namespace {
 // exception list's key for it.
 bool Candidate(const unsigned char* sprite, unsigned& field, unsigned& index) {
     const std::uint32_t a = Address(sprite);
-    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(ObjTrio);
+    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
     if (a >= objects && a < objects + 30u * 0xA4u && (a - objects) % 0xA4u == 0) {
         field = 0x10;
         index = sprite[0x83];
@@ -1059,10 +1059,10 @@ void SelfTest() {
         }
         // The leader is never a candidate; the other two members and the objects are.
         unsigned field = 0, index = 0;
-        Check(!Candidate(ObjTrio, field, index), "the leader is not hidden");
-        Check(Candidate(ObjTrio + 0x14C, field, index) && field == 0 && index == 1, "member 1 is a candidate");
-        Check(Candidate(ObjTrio + 2 * 0x14C, field, index) && index == 2, "member 2 is a candidate");
-        Check(!Candidate(ObjTrio + 3 * 0x14C, field, index), "past the trio");
+        Check(!Candidate(rv::Bytes(ObjTrio), field, index), "the leader is not hidden");
+        Check(Candidate(rv::Bytes(&ObjTrio[1]), field, index) && field == 0 && index == 1, "member 1 is a candidate");
+        Check(Candidate(rv::Bytes(&ObjTrio[2]), field, index) && index == 2, "member 2 is a candidate");
+        Check(!Candidate(rv::Bytes(&ObjTrio[3]), field, index), "past the trio");
         Check(Candidate(rv::Bytes(&Sprite_Objects[0x1d]), field, index) && field == 0x10, "object 29");
         Check(!Candidate(rv::Bytes(&Sprite_Objects[0x1e]), field, index), "past object 29");
         Check(!Candidate(rv::Bytes(&Sprite_Kind2), field, index), "the kind-2 object is not hidden");

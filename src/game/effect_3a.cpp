@@ -139,7 +139,7 @@ unsigned char* Member(const char* who, unsigned m) {
         bof3::Fatal("%s: +7 is %u, past ObjTrio's three records - the original reads what follows "
                     "(docs/effect_3a.md section 6)",
                     who, m);
-    return ObjTrio + at::kObjTrioStride * m;
+    return rv::Bytes(&ObjTrio[m]);
 }
 
 // Kind 0x61's frame record (the variant byte 0x676266): a Fatal past its two,
@@ -676,9 +676,9 @@ extern "C" void __cdecl EffectKind64_Run(void) {
 // leader's (ObjTrio +0x34..), its height 0x80 up; the size +0x2E = 0; +9 = 8;
 // +1 up.
 extern "C" void __cdecl EffectKind64_Start(void) {
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[0], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[1], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->height) + 0x800000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[0], static_cast<std::uint32_t>(ObjTrio[0].x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[1], static_cast<std::uint32_t>(ObjTrio[0].z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], static_cast<std::uint32_t>(ObjTrio[0].height) + 0x800000u);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
     S()[9] = 8;
     NextState();

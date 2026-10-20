@@ -116,7 +116,7 @@ extern "C" void __cdecl Area42_ChoiceMessage(void) {
 // armed - kind 7 (0x9039F3), state 0xA, the countdown word 0x9039F6 = 0x384.
 extern "C" void __cdecl Area42_StartTimer(void) {
     ActiveMember()[0x80] = static_cast<unsigned char>(ActiveMember()[0x80] & 0xFE);
-    if (Character_IndexById[ObjTrio[0x89]] != 1) return;
+    if (Character_IndexById[ObjTrio[0].char_id] != 1) return;
     if (AH_CALL(Flags_Test)(Bank(), 0xB) != 0) return;
     if (AH_CALL(Flags_Test)(Bank(), 0x11) != 0) return;
     AH_CALL(Flags_Set)(Bank(), 0xB);
@@ -140,7 +140,7 @@ namespace {
 // 0xB is set, Field_ActiveMember's word +0x8A (read again) + 1.
 void Touch42(unsigned flag) {
     ActiveMember()[0x80] = static_cast<unsigned char>(ActiveMember()[0x80] & 0xFE);
-    if (Character_IndexById[ObjTrio[0x89]] != 1) return;
+    if (Character_IndexById[ObjTrio[0].char_id] != 1) return;
     if (AH_CALL(Flags_Test)(Bank(), flag) != 0) return;
     AH_CALL(Flags_Set)(Bank(), flag);
     AH_AT(CheckAllFn, kCheckAll42)();
@@ -612,7 +612,7 @@ extern "C" void __cdecl Area44_SetGates(void) {
 // ScriptFlags_Set40, the mode tail armed with the record's kind (8 or 9,
 // through a register) and state 0; al 1. None: al 0.
 extern "C" unsigned char __cdecl Area44_SwitchHook(unsigned x, unsigned z) {
-    const unsigned char facing = ObjTrio[8];
+    const unsigned char facing = ObjTrio[0].direction;
     U rec = Area44_Switches_addr;
     for (; rec < at::kA44SwitchesEnd; rec += 5) {
         const unsigned char* const r = At(rec);
@@ -933,7 +933,7 @@ extern "C" void __cdecl Area45_PlaceMessage(void) {
 // 0xAE 3, else Field_ScriptFlags2 bit 12 4, else 0; then Area45_PlateStates
 // 0x5F7654 by +1 (read after the calls; ours aborts past its five entries).
 extern "C" void __cdecl Area45_PlateRun(void) {
-    const U steps = ObjTrio[9];
+    const U steps = ObjTrio[0].step_frames;
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);

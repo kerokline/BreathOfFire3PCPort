@@ -291,7 +291,7 @@ void AttachVector(const unsigned char* o, const long* out, short* v) {
 
 // kinds 0xF's windows: ObjTrio 0's +3 at 3 or more names the option bit.
 U OptionBits() {
-    if (ObjTrio[3] < 3) return 0;
+    if (ObjTrio[0].state3 < 3) return 0;
     return 1u << (S()[6] & 31);
 }
 
@@ -541,7 +541,7 @@ extern "C" void __cdecl EffectHud_Draw(int x, int y) {
     }
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextBuffer)), reinterpret_cast<const char*>(At(Boss26Fx_CountFormat_addr)),
                          static_cast<int>(count));
-    const int colour = (count >= 0x32 && ObjTrio[2] == 4 && (Frame_Counter & 4) != 0) ? 2 : 0;
+    const int colour = (count >= 0x32 && ObjTrio[0].step == 4 && (Frame_Counter & 4) != 0) ? 2 : 0;
     SH_CALL(Text_DrawFont12)(x + 0xEE, y + 0x1A, colour, At(at::kTextBuffer));
     SH_CALL(EffectHud_DrawGauge)(x, y);
 }
@@ -845,7 +845,7 @@ extern "C" void __cdecl EffectKind03_Fade(void) {
     DrawSprite(0x10, 2, 0x87, 0xB4);
     const std::int32_t scaled = static_cast<std::int32_t>(rv::As<records::EffectWork>(S())->work_0c * 0x60u);
     SH_CALL(EffectHud_TwoBars)(0x88, 0xCB, scaled / 255, 2);
-    if (ObjTrio[2] != 3) return;
+    if (ObjTrio[0].step != 3) return;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0xB8);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0xD1);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
@@ -905,8 +905,8 @@ U Row05(const char* who, unsigned row) {
 // kind-0xA record spawned (+0 1, +5 0xA) when Effect_FindFree has one; +7 =
 // the block's byte +0xF; +1 up. PSX 0x801D2108 (callers).
 extern "C" void __cdecl EffectKind05_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z) - 0x8000u);
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(ObjTrio[0].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(ObjTrio[0].z) - 0x8000u);
     unsigned char* s = S();
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(h) + 0x100);
@@ -1263,7 +1263,7 @@ extern "C" void __cdecl EffectKind0C_Aim(void) {
     else if (arrow > 0xE4)
         arrow = 0xE4;
     SH_CALL(EffectHud_DrawArrow)(static_cast<std::uint16_t>(arrow), 0xCB, flip, 2);
-    if (ObjTrio[2] != 4) return;
+    if (ObjTrio[0].step != 4) return;
     if (Object(kWho, Effect1a_PanelObject)[4] == 3) return;
     if (arrow <= static_cast<std::int16_t>(right) && arrow >= static_cast<std::int16_t>(left)) return;
     if ((Frame_Counter & 0xF) != 0) return;

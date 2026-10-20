@@ -73,8 +73,8 @@ void ScriptXor(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(
 void Distance(int delta) { Camera_Distance = static_cast<short>(Camera_Distance + delta); }
 
 // The leader's record (ObjTrio's first member) and the second's.
-unsigned char* Leader() { return ObjTrio; }
-unsigned char* Second() { return ObjTrio + 0x14C; }
+unsigned char* Leader() { return rv::Bytes(ObjTrio); }
+unsigned char* Second() { return rv::Bytes(&ObjTrio[1]); }
 short LeaderWord(unsigned off) { return static_cast<short>(Word(Leader() + off)); }
 int LeaderLong(unsigned off) { return Long(Leader() + off); }
 

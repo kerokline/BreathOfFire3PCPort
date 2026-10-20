@@ -636,9 +636,9 @@ void HoldUntil(unsigned cue) {
 }
 // The leader's shade bytes (ObjTrio record 0's +0x5F, +0x5E, +0x5D).
 void LeaderShade(unsigned char v) {
-    ObjTrio[0x5f] = v;
-    ObjTrio[0x5e] = v;
-    ObjTrio[0x5d] = v;
+    ObjTrio[0].shade[2] = v;
+    ObjTrio[0].shade[1] = v;
+    ObjTrio[0].shade[0] = v;
 }
 
 }  // namespace
@@ -888,10 +888,10 @@ namespace {
 // +0x36 << 16 or the next; with +8 clear the same with x and z swapped.
 bool LeaderAt(const unsigned char* s, std::int32_t across, std::int32_t along) {
     const bool lengthwise = s[8] != 0;
-    const U first = lengthwise ? static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z) : static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x);
+    const U first = lengthwise ? static_cast<std::uint32_t>(ObjTrio[0].z) : static_cast<std::uint32_t>(ObjTrio[0].x);
     const U middle = ((static_cast<U>(SW(s + (lengthwise ? 0x3A : 0x36))) + 1u) << 16) | 0x8000u;
     if (Abs(first - middle) > across) return false;
-    const U second = (lengthwise ? static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x) : static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z)) - (static_cast<U>(SW(s + (lengthwise ? 0x36 : 0x3A))) << 16);
+    const U second = (lengthwise ? static_cast<std::uint32_t>(ObjTrio[0].x) : static_cast<std::uint32_t>(ObjTrio[0].z)) - (static_cast<U>(SW(s + (lengthwise ? 0x36 : 0x3A))) << 16);
     if (Abs(second) <= along) return true;
     return Abs(second - 0x10000u) <= along;
 }

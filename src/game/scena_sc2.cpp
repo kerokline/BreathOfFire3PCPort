@@ -76,7 +76,7 @@ void ScriptXor(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(
 
 // The leader's record (ObjTrio's first member): +0x34 x, +0x38 z (16.16),
 // +0x36 / +0x3A the cell words, +0x4B, +8.
-unsigned char* Leader() { return ObjTrio; }
+unsigned char* Leader() { return rv::Bytes(ObjTrio); }
 unsigned LeaderCellX() { return rv::As<records::SpriteHead>(Leader())->x_whole; }
 short LeaderCellZ() { return static_cast<short>(rv::As<records::SpriteHead>(Leader())->z_whole); }
 
@@ -1415,7 +1415,7 @@ extern "C" void __cdecl Scena02_Scene10(void) {
         SetRun(0);
         return;
     case 0xF:
-        if (Field_Members[0x13b] == 7) return;
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 7) return;
         DropIn(2);
         SetStep(0x10);
         return;

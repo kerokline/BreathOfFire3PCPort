@@ -89,8 +89,8 @@ unsigned char* Object(const char* who, unsigned index) {
 // leader's x or past it (signed).
 bool Reached(U x) {
     const std::int32_t object_x = SL(x);
-    const std::int32_t leader_x = rv::As<records::PartyMember>(ObjTrio)->x;
-    Field_State = ObjTrio;
+    const std::int32_t leader_x = ObjTrio[0].x;
+    Field_State = rv::Bytes(ObjTrio);
     return object_x >= leader_x;
 }
 
@@ -142,7 +142,7 @@ void Again() {
 // Field_State the third member's object; its x at 0x34 cells or past it
 // (signed): true, with 0x903849 0xFF, 0x90384A / B 0 and the step 0x14.
 bool PastLine() {
-    const std::int32_t x = rv::As<records::PartyMember>(ObjTrio + 0x298)->x;
+    const std::int32_t x = ObjTrio[2].x;
     Field_State = P(ObjTrio_addr + 0x298);
     if (x < at::kTrio2Line) return false;
     B(at::kCounterB) = 0xFF;
@@ -306,7 +306,7 @@ extern "C" void __cdecl EffectKind83_Finish(void) {
     const U leader_x = UL(At(ObjTrio_addr + 0x34));
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    Field_State = ObjTrio;
+    Field_State = rv::Bytes(ObjTrio);
     so->x = leader_x - object_x;
     MoveScript_PartyRecords[0x65] = 0x1E;
     SH_CALL(Effect_Release)();
@@ -416,8 +416,8 @@ extern "C" void __cdecl EffectKind85_ShowObjects(void) {
     Sprite_Current = Object("EffectKind85_ShowObjects", saved[6]);
     Sprite_Current[0x29] = 2;
     SH_CALL(Sprite_UpdateScreen)();
-    Sprite_Current = ObjTrio;
-    ObjTrio[0x29] = 2;
+    Sprite_Current = rv::Bytes(ObjTrio);
+    ObjTrio[0].ot_slot = 2;
     SH_CALL(Sprite_UpdateScreen)();
     Sprite_Current = saved;
 }
