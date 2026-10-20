@@ -44,7 +44,7 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
 // kPartyList2: now Cond_Flags[0xd4] (symbols.toml).
 // The party's records (ObjTrio: three of 0x14C); the leader's byte +0x89
-// (MoveScript_EffectState's index, area_w2d's reading) and its dword +0x134
+// (Character_IndexById's index, area_w2d's reading) and its dword +0x134
 // (Field_EdgeBits is set from it less 5, area_w1f's kLeaderZone).
 constexpr std::uint32_t kParty = 0x802D40;
 constexpr std::uint32_t kPartyStride = 0x14C;

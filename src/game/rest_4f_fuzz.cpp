@@ -219,7 +219,7 @@ sh::Clone g_clones[] = {
 #undef R4F_CLONE
 
 enum : unsigned {
-    MoveScript_Var7_addr, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
+    kScreenRun, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
     kPanel, kOptions, kPad, kPadRow, kCell, kExits,
     k07Draw, k07Hold, k07Fade, k08Start, k08Trace, k08Two, k08Line,
     k09Start, k09Open1, k09Open2, k09Open3, k09Open4, k09Open5, k09Open6, k09Open7, k09Open8, k09Spin, k09Blades, k09Fan,
@@ -312,7 +312,7 @@ U FxRotTransPers(const U* a, U answer) {
 U FxSound(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 2 == 0) {
-        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, BattleDraw_Colour_addr, FieldS_Backdrop_addr, FieldE2_RunDefault_addr};
+        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, Config_WindowColour_addr, Config_Background_addr, FieldE2_RunDefault_addr};
         for (unsigned i = 0; i < 5; ++i) B(kCells[i]) = static_cast<unsigned char>((n >> (2 + 2 * i)) & 3);
     }
     return answer;
@@ -437,7 +437,7 @@ void Seed(unsigned k) {
     if (sh::Half()) Field_ConfirmButtons = static_cast<unsigned short>(PickOf(0, 0x20, 0x60, 0xA000, sh::Next()));
     if (sh::Half()) Field_CancelButtons = static_cast<unsigned short>(PickOf(0, 0x40, 0x800, sh::Next()));
     if (sh::Half()) Game_Step = static_cast<unsigned short>(PickOf(4, 5, 4, 2));
-    if (sh::Half()) MoveScript_WaitWordDA = 0;
+    if (sh::Half()) Transition_Busy = 0;
     for (U cell = ModeFlow_ConfigBytes_addr; cell <= FieldE2_RunDefault_addr; ++cell)
         if (sh::Often()) B(cell) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x7F, 0x80, 0xFF));
     switch (k) {
@@ -572,7 +572,7 @@ void Disturb(U h) {
         else B(MenuLists_Cursor_addr) = CursorFor(g_current, v >> 1);
         break;
     case 4: {
-        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, BattleDraw_Colour_addr, FieldS_Backdrop_addr, FieldE2_RunDefault_addr};
+        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, Config_WindowColour_addr, Config_Background_addr, FieldE2_RunDefault_addr};
         B(kCells[v % 5]) = static_cast<unsigned char>((v >> 3) & 3);
         break;
     }

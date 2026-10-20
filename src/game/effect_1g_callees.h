@@ -24,10 +24,10 @@ constexpr std::uint32_t kPiece = bof3::addr::UiSprite_Draw;           // E1F: (i
 // kTradeRow: now AreaEntry_PendingFlags (symbols.toml). u8: which ten-byte row of kTradeIndex the screen shows
 constexpr std::uint32_t kTradeIndex = 0x66AD10;      // 10 bytes a row: the entries' record numbers, 0xFF ends a row
 constexpr std::uint32_t kTradeRecords = 0x66AB58;    // 8 bytes a record: +0 item, +1 category, +2..+4 ingredients, +5..+7 their counts
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA (u16)
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy (u16)
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox is handed
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style Menu_DrawBox is handed
 constexpr std::uint32_t kPoolWordAsk = 0x80360A;     // MessagePools' offsets of the prompts (u16 each)
 constexpr std::uint32_t kPoolWordList = 0x80360E;
 constexpr std::uint32_t kPoolWordNeeds = 0x803610;

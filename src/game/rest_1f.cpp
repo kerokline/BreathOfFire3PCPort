@@ -48,7 +48,7 @@ constexpr unsigned kEffectCount = 20;
 // kObjectsAt: now Sprite_Objects (symbols.toml). Sprite_Objects
 // kExtraAt: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 constexpr U kEffectStride = 0x80;
-// kPanelPose: now Effect1e_BiteHeld (symbols.toml). the leader panel's cells (docs/effect_1e.md section 1)
+// kPanelPose: now Fish_Nibbling (symbols.toml): rest_1g's "a fish is nibbling", its one reader Fish_Swim; this file only clears it
 // kPanelCounter: now Effect1e_Choice (symbols.toml).
 // kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
@@ -947,12 +947,12 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
 // ===========================================================================
 
 // original 0x5288C0 (0x75 bytes), LeaderPanel_Stage0Steps[0]: the panel's
-// pose byte 0x6BC716, its counter 0x6BC709 and the blink switch 0x939A28
+// Fish_Nibbling 0x6BC716 (once called its pose byte), its counter 0x6BC709 and the blink switch 0x939A28
 // cleared; +0x29 = 5; the height word +0x3E = AreaMap_Elevation(+0x34, +0x38);
 // Field_State +0x89 0: Sprite_SetAnimationAt(0xA, 2), else
 // Sprite_SetAnimation(0xB); +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Begin(void) {
-    Effect1e_BiteHeld = 0;
+    Fish_Nibbling = 0;
     Effect1e_Choice = 0;
     Effect1e_Blink = 0;
     Sc()[0x29] = 5;
@@ -965,10 +965,10 @@ extern "C" void __cdecl LeaderPanel_S0Begin(void) {
 }
 
 // original 0x528940 (0x26 bytes), LeaderPanel_Stage0Steps[1]: once the wait
-// word MoveScript_WaitWordDA is 0, effect record 4's +6 = 0 and its state +1
+// word Transition_Busy is 0, effect record 4's +6 = 0 and its state +1
 // one on, and +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Wait(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     unsigned char* const record4 = Effect_Objects + 4 * kEffectStride;
     const unsigned char state = record4[1];
     record4[6] = 0;

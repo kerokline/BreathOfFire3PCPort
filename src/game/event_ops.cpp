@@ -451,7 +451,7 @@ extern "C" void __cdecl Field_LeaderWalk(void) {
 extern "C" void __cdecl Field_LeaderSetPace(void) {
     const unsigned n = static_cast<unsigned>(g.party_count(0)) & 0xFF;
     for (unsigned i = 0; i < n; ++i) {
-        const unsigned record = MoveScript_EffectState[Cond_Flags[0xd2 + i]];
+        const unsigned record = Character_IndexById[Cond_Flags[0xd2 + i]];
         if (At(at::kActorRecords + 0x10)[record * at::kActorStride] & 0x80) {
             Field_State[0x128] = 3;
             return;
@@ -652,7 +652,7 @@ extern "C" unsigned char __cdecl Field_EncounterDue(void) {
     if (r == 0) return r;
     for (unsigned i = 0; i < Field_MemberCount; ++i) {
         const unsigned char* const at = At(at::kMemberPositions) + i * 8;
-        const unsigned slot = MoveScript_EffectState[0xc + Cond_Flags[0xd5 + i]];
+        const unsigned slot = Character_IndexById[0xc + Cond_Flags[0xd5 + i]];
         r = g.member_fits(Long(at), Long(at + 4), slot, 0x10, 1);
         if (r == 0) return r;
     }

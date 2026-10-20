@@ -63,7 +63,7 @@ The eight states (`Title_States` `0x653830`, PSX `0x801D1BD4`), read
 | 1 | `0x462290` | when Fade is 2: Timer `0x168` (360 frames); next |
 | 2 | `0x4622B0` | Timer down; at 0: Fade 3 (backdrop out), LogoState 1 (logo in), Timer `0x384` (900); next |
 | 3 | `0x4622E0` | Timer down; at 0: `Transition_Start(0)`, `Title_FadeMusic`; next |
-| 4 | `0x462300` | when `MoveScript_WaitWordDA` is 0: clear the title's bytes, stop the music, zero the play clock `0x9040C8..CB`, `0x56D5E0(0x10)`, `Task_Create(0, 0x495800)` - **the demo**; next |
+| 4 | `0x462300` | when `Transition_Busy` is 0: clear the title's bytes, stop the music, zero the play clock `0x9040C8..CB`, `0x56D5E0(0x10)`, `Task_Create(0, 0x495800)` - **the demo**; next |
 | 5 | `0x462370` | task 0 gone: state 0 (the title again). Start, with `File_LoadDone` and the wait word 0: `MoveScript_Var7 = 1`, `Transition_Start(4)`, `Music_FadeOutStop(8)`, next. Tail: `0x4624F0` (the badge) |
 | 6 | `0x4623D0` | task 0 gone: `0x90412C = 0xFF`, state 0; else `0x4624F0` |
 | 7 | `0x4623F0` | when the wait word is 0: stop the music, `Task_Create(0, 0x588E70)` (the title menu), end this task (`jmp 0x5A99AD`) |

@@ -157,7 +157,7 @@ void MarkObject(unsigned char found, const char* who) {
 // reads the low words only (Menu_DrawBox, menu_windows.cpp).
 extern "C" void __cdecl Config_DrawRowLabel(int x, int y, unsigned row, unsigned state) {
     const int s = static_cast<int>(state & 0xFF);
-    const unsigned char style = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned char style = static_cast<unsigned char>(Config_WindowColour);
     SH_CALL(Menu_DrawBox)(x, y - s, 0xF9, 2 * s + 0xB, 0, style);
     const unsigned r = row & 0xFF;
     if (r >= 6)

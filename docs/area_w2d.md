@@ -154,7 +154,7 @@ state 1), its state 1 `Area100_EffectB7Ring`.
 | `0x414640` | `Area103_SpawnEffect4D` | `0x58` | handler 5 (PSX `0x801F5834`) | kHandler | an effect of kind `0x4D` at the running object; none: the script back 2 |
 | `0x4146A0` | `Area103_Trigger35` | `0x1D` | object trigger 35 (a gap) | kCallee | tail kind 44 (engine) with sub-kind 8; al 0 |
 
-The `+0x89` byte is `MoveScript_EffectState`'s index in AR1C's reading
+The `+0x89` byte is `Character_IndexById`'s index in AR1C's reading
 (op `8C`); area 103 compares each member's with three constants. What the
 three stand for is not read.
 

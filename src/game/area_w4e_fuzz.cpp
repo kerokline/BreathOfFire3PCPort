@@ -230,7 +230,7 @@ U MessageEffect(const U*, U answer) {
 // sound, its menu button Sprite_Current.
 U SoundEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) B(AreaW3g_Byte9036D0_addr) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) B(Area189_EventsInRow_addr) = static_cast<unsigned char>(n >> 8);
     if (n & 2) MoveCurrent(n >> 4);
     return answer;
 }
@@ -416,8 +416,8 @@ const ah::Region kRegions189[] = {
     {Prim_VertexScratch_addr, 6},
     {MapView_ScreenXY_addr, 8},
     {Gfx_UnpackScratch_addr + 0x1f000, 8}, // the button words 0x903580 .. Field_MenuButton 0x903584
-    {AreaW3g_Byte929EC1_addr, 1},
-    {AreaW3g_Byte9036D0_addr, 1},
+    {Area189_StepsSinceEvent_addr, 1},
+    {Area189_EventsInRow_addr, 1},
     {Cond_ByteFE_addr, 1},
     {Camera_Angles_addr, 8},       // Camera_Angles[0..1], Cond_AngleFB
     {at::kCharRecords, 8 * at::kCharStride},
@@ -425,11 +425,11 @@ const ah::Region kRegions189[] = {
 };
 const ah::Region kRegions191[] = {
     {Field_ActiveMember_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
-    {MoveScript_WaitWordDA_addr, 2},
+    {Chapter_FlagRow_addr, 4},
+    {Transition_Busy_addr, 2},
     {Draw_PassFlags_addr, 1},
-    {AreaW3g_Byte929EC1_addr, 1},
-    {AreaW3g_Byte9036D0_addr, 1},
+    {Area189_StepsSinceEvent_addr, 1},
+    {Area189_EventsInRow_addr, 1},
     {Camera_ShiftY_addr, 6},       // the focus pointer 0x903804
     {at::kCharRecords, 8 * at::kCharStride},
     {MoveScript_Object_addr, 4},
@@ -442,7 +442,7 @@ void Common(int area, unsigned k) {
     ah::SetPointer(MoveScript_Object_addr, AnyRecord(ah::Next()));
     ah::SetPointer(AreaW1a_FocusObject_addr, AnyRecord(ah::Next()));
     ah::SetPointer(Field_ActiveMember_addr, AnyRecord(ah::Next()));
-    ah::SetPointer(AreaW0c_FlagRow_addr, ah::Mem(Cond_Flags_addr + (ah::Next() % 24) * 8));
+    ah::SetPointer(Chapter_FlagRow_addr, ah::Mem(Cond_Flags_addr + (ah::Next() % 24) * 8));
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -454,8 +454,8 @@ void Disturb(U h) {
     case 1: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? (v & 1 ? 0 : 0x28) : v); break;
     case 2: SetWord(ah::Mem(Cond_Flags_addr + 0xcc), h & 0x100 ? (v & 1 ? 0x1DFu : 0x3BFu) : h >> 16); break;
     case 3: B(Cond_Flags_addr + 0xcf) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
-    case 4: B(AreaW3g_Byte929EC1_addr) = v; break;
-    case 5: MoveScript_WaitWordDA = static_cast<unsigned short>(h & 0x100 ? 0 : v); break;
+    case 4: B(Area189_StepsSinceEvent_addr) = v; break;
+    case 5: Transition_Busy = static_cast<unsigned short>(h & 0x100 ? 0 : v); break;
     case 6: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 3); break;
     case 7: Cond_ByteFF = static_cast<unsigned char>(h & 0x100 ? v & 1 : v); break;
     default: ah::SetPointer(Field_ActiveMember_addr, AnyRecord(h >> 12)); break;
@@ -584,8 +584,8 @@ void Seed189(unsigned k) {
         if (ah::Often()) SetWord(ah::Mem(Cond_Flags_addr + 0xcc), AH_PICK(0x1DF, 0x3BF, 0x1DF, 0x3BF, 0x1E0, 0x3C0, 0, 0xFFFF, 0x1DE));
         if (ah::Often()) B(Cond_Flags_addr + 0xcf) = static_cast<unsigned char>(AH_PICK(0, 0, 0, 1, 2, 3, 4, 8, 0xF8));
         if (ah::Often()) Cond_ByteFF = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 0x80));
-        if (ah::Often()) B(AreaW3g_Byte929EC1_addr) = static_cast<unsigned char>(ah::Next() % 32);
-        if (ah::Often()) B(AreaW3g_Byte9036D0_addr) = static_cast<unsigned char>(AH_PICK(3, 4, 5, 0, 3, 4, 0xFF));
+        if (ah::Often()) B(Area189_StepsSinceEvent_addr) = static_cast<unsigned char>(ah::Next() % 32);
+        if (ah::Often()) B(Area189_EventsInRow_addr) = static_cast<unsigned char>(AH_PICK(3, 4, 5, 0, 3, 4, 0xFF));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2));
         unsigned char* const cur = Sprite_Current;
         if (ah::Often()) {
@@ -663,7 +663,7 @@ void Seed191(unsigned k) {
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(
             AH_PICK(0, 2, 3, 4, 0xA, 0x14, 0x1E, 0, 2, 3, 4, 0xA, 0x14, 0x1E, 1, 5, 9, 0xB, 0x13, 0x15, 0x1D, 0x1F, 0x80, 0xFF, 0x82));
         SeedRequest();
-        if (ah::Often()) MoveScript_WaitWordDA = static_cast<unsigned short>(AH_PICK(0, 0, 1, 0x100));
+        if (ah::Often()) Transition_Busy = static_cast<unsigned short>(AH_PICK(0, 0, 1, 0x100));
         break;
     case k191Talk:
         if (ah::Often()) B(at::kWalkCount) = static_cast<unsigned char>(ah::Next() % 11);

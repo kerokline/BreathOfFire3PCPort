@@ -543,8 +543,8 @@ void TakeSlot(U slot) {
 // The list windows' opening and closing (0x4502C0 / 0x450B60, 0x450680 /
 // 0x450EF0, 0x4505A0 / 0x450DF0): see each.
 void OpenList(U slot, U window, unsigned char kind, unsigned x, unsigned line) {
-    if (BattleE4_Above & 1) return;
-    BattleE4_Above = 0;
+    if (Window21 & 1) return;
+    Window21 = 0;
     BH_CALL(Window_Alloc)(slot, 5);
     B(window + 2) = kind;
     B(window + 3) = 0;
@@ -622,7 +622,7 @@ extern "C" void __cdecl DragonCmd_Open(void) {
     B(at::kWin17 + 2) = 1;
     B(at::kWin17 + 3) = 0;
     Sound(0x102);
-    const U genes = ScenaSc7_EventFlags;
+    const U genes = Gene_Bits;
     for (unsigned i = 0; i < 18; ++i) B(at::kGeneFlags + i) = static_cast<unsigned char>((genes >> i) & 1);
     SetW(at::kRepeatLatch, 0);
     BossSb_Countdown = 1;
@@ -696,7 +696,7 @@ extern "C" void __cdecl DragonCmd_MenuPick(void) {
 
 // original 0x4501E0 (0x64ECF0[2]): window 21's +3 = 2 (closing), the next step.
 extern "C" void __cdecl DragonCmd_MenuClose(void) {
-    CloseList(BattleE4_Above_addr);
+    CloseList(Window21_addr);
     NextStep();
 }
 
@@ -704,10 +704,10 @@ extern "C" void __cdecl DragonCmd_MenuClose(void) {
 // windows 17 and 21's +0 zeroed, BattleBanner_ShowName(the menu actor),
 // window 4's +3 = 1, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_MenuCancel(void) {
-    if (BattleE4_Above & 1) return;
+    if (Window21 & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    BattleE4_Cands = 0;
-    BattleE4_Above = 0;
+    Window17 = 0;
+    Window21 = 0;
     BH_CALL(BattleBanner_ShowName)(Member());
     B(at::kWin4 + 3) = 1;
     BH_CALL(LoadDatFile)(0xCF);
@@ -744,7 +744,7 @@ extern "C" void __cdecl DragonCmd_SlotsCloseMenu(void) {
 // original 0x4502C0 (0x64ED04[1]): window 21 closed: its +0 zeroed, window 18
 // claimed (kind 5; +2 2, +3 0, at 0xFF5B, 0x3F, its cursor 0, 0), line 0x59,
 // 0x904AA5 |= 0x80, the next step.
-extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, BattleE4_Slots_addr, 2, 0xFF5B, 0x59); }
+extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, Window18_addr, 2, 0xFF5B, 0x59); }
 
 // original 0x450340 (0x64ED04[2]): the first list's cursor, once window 18's
 // x is 0x5B. The repeat keys of 0x500C; cancel: sound 0x106, the next step
@@ -772,7 +772,7 @@ extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
         pressed = Pressed();
     }
     if (pressed & Sigma(0x10)) {
-        if (B(SlotOf(at::kSlots, BattleE4_Slots_addr) + 3) != 0xFF) {
+        if (B(SlotOf(at::kSlots, Window18_addr) + 3) != 0xFF) {
             Sound(0x104);
             BattleE4_Step3 = 6;
             BattleE4_Step4 = 0;
@@ -780,12 +780,12 @@ extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
         }
         Sound(0x107);
     }
-    MoveCursor(BattleE4_Slots_addr, keys, 5, 3);
+    MoveCursor(Window18_addr, keys, 5, 3);
 }
 
 // original 0x450510 (called by DragonCmd_SlotsCursor): the first list's slot
 // at the cursor priced against the member's AP (Affordable). al out.
-extern "C" unsigned char __cdecl DragonCmd_SlotAffordable(void) { return Affordable(SlotOf(at::kSlots, BattleE4_Slots_addr)); }
+extern "C" unsigned char __cdecl DragonCmd_SlotAffordable(void) { return Affordable(SlotOf(at::kSlots, Window18_addr)); }
 
 // original 0x4505A0 (0x64ED04[3]): window 21 claimed again (+2 / +3 0, at
 // 0x142, 0x3F), window 18's +3 = 2, the next step.
@@ -798,12 +798,12 @@ extern "C" void __cdecl DragonCmd_SlotsCancel(void) {
 
 // original 0x4505E0 (0x64ED04[4]): window 18 closed: back to the menu (part 2,
 // step 0, 0x904AA5's bit 7 cleared).
-extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(BattleE4_Slots_addr); }
+extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(Window18_addr); }
 
 // original 0x450610 (0x64ED04[5]): the slot at the cursor taken (TakeSlot),
 // 0x4525B0, window 18's +3 = 2, the member's +0x134 |= 4, the next step.
 extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
-    TakeSlot(SlotOf(at::kSlots, BattleE4_Slots_addr));
+    TakeSlot(SlotOf(at::kSlots, Window18_addr));
     BH_AT(Void0, at::kDragonTask)();
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     B(at::kWin18 + 3) = 2;
@@ -815,12 +815,12 @@ extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
 // 18, 16, 19's +0 zeroed, LoadDatFile(0xCF), then part 4's step 3 (the
 // gene grid's close and commit).
 extern "C" void __cdecl DragonCmd_SlotsClose(void) {
-    if (BattleE4_Slots & 1) return;
+    if (Window18 & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    BattleE4_Cands = 0;
-    BattleE4_Slots = 0;
-    BattleE4_List = 0;
-    BattleE4_Hand = 0;
+    Window17 = 0;
+    Window18 = 0;
+    Window16 = 0;
+    Window19 = 0;
     BH_CALL(LoadDatFile)(0xCF);
     BattleE4_Step3 = 4;
     BattleE4_Step4 = 3;
@@ -968,12 +968,12 @@ extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
 // original 0x450A70 (0x64ED20[3]): window 21 closed: 0x447F40, windows 17, 21,
 // 16, 19's +0 zeroed, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_GenesClose(void) {
-    if (BattleE4_Above & 1) return;
+    if (Window21 & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    BattleE4_Cands = 0;
-    BattleE4_Above = 0;
-    BattleE4_List = 0;
-    BattleE4_Hand = 0;
+    Window17 = 0;
+    Window21 = 0;
+    Window16 = 0;
+    Window19 = 0;
     BH_CALL(LoadDatFile)(0xCF);
     NextStep();
 }
@@ -1017,7 +1017,7 @@ extern "C" void __cdecl DragonCmd_Slots2CloseMenu(void) {
 
 // original 0x450B60 (0x64ED34[1]): as DragonCmd_SlotsOpen for window 19 (slot
 // 0x13; +2 3, at 0x15B) and line 0x63.
-extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, BattleE4_Hand_addr, 3, 0x15B, 0x63); }
+extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, Window19_addr, 3, 0x15B, 0x63); }
 
 // original 0x450BE0 (0x64ED34[2]): the second list's cursor, once window 19's
 // x is 0x5B: as DragonCmd_SlotsCursor without the bit-0x10 branch - cancel:
@@ -1041,12 +1041,12 @@ extern "C" void __cdecl DragonCmd_Slots2Cursor(void) {
         }
         Sound(0x107);
     }
-    MoveCursor(BattleE4_Hand_addr, keys, 0xB, 9);
+    MoveCursor(Window19_addr, keys, 0xB, 9);
 }
 
 // original 0x450D60 (called by DragonCmd_Slots2Cursor): the second list's
 // slot at the cursor priced against the member's AP. al out.
-extern "C" unsigned char __cdecl DragonCmd_Slot2Affordable(void) { return Affordable(SlotOf(at::kSlots2, BattleE4_Hand_addr)); }
+extern "C" unsigned char __cdecl DragonCmd_Slot2Affordable(void) { return Affordable(SlotOf(at::kSlots2, Window19_addr)); }
 
 // original 0x450DF0 (0x64ED34[3]): window 21 claimed again (at 0xFF42, 0x3F,
 // +0xA 1), window 19's +3 = 2, the next step.
@@ -1059,13 +1059,13 @@ extern "C" void __cdecl DragonCmd_Slots2Cancel(void) {
 }
 
 // original 0x450E40 (0x64ED34[4]): window 19 closed: back to the menu.
-extern "C" void __cdecl DragonCmd_Slots2Back(void) { BackToMenu(BattleE4_Hand_addr); }
+extern "C" void __cdecl DragonCmd_Slots2Back(void) { BackToMenu(Window19_addr); }
 
 // original 0x450E70 (0x64ED34[5]): the second list's slot taken (TakeSlot),
 // 0x4525B0, sound 0x104, window 19's +3 = 2, the member's +0x134 |= 4, the
 // next step.
 extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
-    TakeSlot(SlotOf(at::kSlots2, BattleE4_Hand_addr));
+    TakeSlot(SlotOf(at::kSlots2, Window19_addr));
     BH_AT(Void0, at::kDragonTask)();
     Sound(0x104);
     auto* const member_rec = rv::As<records::PartyMember>(Member());
@@ -1078,11 +1078,11 @@ extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
 // record is the one tested): 0x447F40, windows 17, 16, 19's +0 zeroed,
 // LoadDatFile(0xCF), part 4's step 3.
 extern "C" void __cdecl DragonCmd_Slots2Close(void) {
-    if (BattleE4_Slots & 1) return;
+    if (Window18 & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    BattleE4_Cands = 0;
-    BattleE4_List = 0;
-    BattleE4_Hand = 0;
+    Window17 = 0;
+    Window16 = 0;
+    Window19 = 0;
     BH_CALL(LoadDatFile)(0xCF);
     BattleE4_Step3 = 4;
     BattleE4_Step4 = 3;
@@ -1130,7 +1130,7 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
         return;
     }
     if (Confirm(pressed)) {
-        if (B(SlotOf(at::kSlots2, BattleE4_Hand_addr) + 3) == 0xFF) {
+        if (B(SlotOf(at::kSlots2, Window19_addr) + 3) == 0xFF) {
             BattleE4_Step4 = 4;
         } else {
             SetW(at::kAsk, 0);
@@ -1138,7 +1138,7 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
         }
         Sound(0x104);
     }
-    MoveCursor(BattleE4_Hand_addr, keys, 0xB, 9);
+    MoveCursor(Window19_addr, keys, 0xB, 9);
 }
 
 // original 0x451160 (0x64ED50[3]): the overwrite prompt: line 0x62; the
@@ -1168,8 +1168,8 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
 // into the second list's at its cursor, byte by byte (each read before its
 // write, as the original), the next step.
 extern "C" void __cdecl DragonCmd_StoreCopy(void) {
-    const U from = SlotOf(at::kSlots, BattleE4_Slots_addr);
-    const U to = SlotOf(at::kSlots2, BattleE4_Hand_addr);
+    const U from = SlotOf(at::kSlots, Window18_addr);
+    const U to = SlotOf(at::kSlots2, Window19_addr);
     for (unsigned j = 0; j < 4; ++j) B(to + j) = B(from + j);
     NextStep();
 }
@@ -1190,7 +1190,7 @@ extern "C" void __cdecl DragonCmd_StoreSource(void) {
         return;
     }
     if (((Field_ConfirmButtons | 0x10u) & pressed & 0xFFFF) != 0) {
-        if (B(SlotOf(at::kSlots, BattleE4_Slots_addr) + 3) != 0xFF) {
+        if (B(SlotOf(at::kSlots, Window18_addr) + 3) != 0xFF) {
             Sound(0x104);
             BattleE4_Step4 = 2;
             return;
@@ -1199,14 +1199,14 @@ extern "C" void __cdecl DragonCmd_StoreSource(void) {
         pressed = Pressed();
     }
     if (pressed & Sigma(0x10)) {
-        if (B(SlotOf(at::kSlots, BattleE4_Slots_addr) + 3) != 0xFF) {
+        if (B(SlotOf(at::kSlots, Window18_addr) + 3) != 0xFF) {
             Sound(0x104);
             BattleE4_Step4 = 2;
             return;
         }
         Sound(0x107);
     }
-    MoveCursor(BattleE4_Slots_addr, keys, 5, 3);
+    MoveCursor(Window18_addr, keys, 5, 3);
 }
 
 // ============================================================================

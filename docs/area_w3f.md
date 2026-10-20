@@ -155,7 +155,7 @@ The cell hook arms it at 2, 4, 6 or `0xA`, the step hook at `0x19`:
   down, then `Field_ChangeArea(0x91, 0x3B8000, 0x5D0000, 0x82)`, story flag
   `0x2E` (sound `0x20C` the first time) and disarms.
 - `0x1E`: `Transition_Start(8)`, the kind-2 target (`0x308000`,
-  `0x638000`); `0x1F` waits for `MoveScript_WaitWordDA`, `Transition_Start(9)`
+  `0x638000`); `0x1F` waits for `Transition_Busy`, `Transition_Start(9)`
   and an effect of kind `0x3E`; `0x20` waits for `Field_Kind2Hold`, timer
   `0x1E`; `0x21` counts it; `0x22` flag `0x2D`, `Field_ChangeArea(0x91,
   0xA0000, 0x630000, 0x80)`; `0x23` waits for the word, timer `0x5A`; `0x24`
@@ -261,7 +261,7 @@ The shared bodies run under the area whose block holds them.
   focus object, active member and chapter row pointers; the marks
   `0x9398CF..D1`; the dword `0x904650`; `Cond_ByteFE`; the kind-2 object;
   `MoveScript_PartyRecords` records 0..5; `Text_Records`' first 16 bytes;
-  `Field_Kind2Hold`; `Camera_Angles`; `MoveScript_WaitWordDA`;
+  `Field_Kind2Hold`; `Camera_Angles`; `Transition_Busy`;
   `Draw_OtSlot`; `Gfx_PacketNext`, the packet buffer, the name buffer, a
   point; for area 143 the eleven CLUT rows it reads and the eleven it writes
   (31, 25, 32 and 27 regions; 34,160, 18,944, 23,014 and 22,886 bytes).

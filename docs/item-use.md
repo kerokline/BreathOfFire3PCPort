@@ -412,7 +412,7 @@ the trace list with the sizes in section 2 (and `00496AD0 88`).
 
 - D21, D22 and D23 ([`known-defects.md`](known-defects.md)), all latent and
   Capcom's on both platforms.
-- `MoveScript_EffectState` `0x66972C` (a hypothesis name from group L's use
+- `Character_IndexById` `0x66972C` (a hypothesis name from group L's use
   of it) is read here as the party list's record map: `0x66972C[0x904062[i]]`
   is member i's record index, both in the menu and in the party walks, and
   its 24 bytes are `0..7` (measured). Not renamed here - one name, one owner.

@@ -71,7 +71,7 @@ constexpr std::uint32_t kS = 0x903850;
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). unsigned char *: the enemy the per-frame loops set last
 constexpr std::uint32_t kAbilityId = 0x904B80;        // u16: the ability id (0x32 Pollen, 0x33 Venom Breath)
 
@@ -538,7 +538,7 @@ S09_EXPORT void __cdecl ElemBreath_Start(void) {
         tchild->owner = static_cast<std::int32_t>(Key(Sc()));
         child[1] = 0;
     }
-    if (Mem(BattleActions_EventBattle_addr)[0] != 0 && Pointer(BattleE3_CurrentEnemy_addr)[0x100] == 0x29) {
+    if (Mem(EventBattle_Id_addr)[0] != 0 && Pointer(BattleE3_CurrentEnemy_addr)[0x100] == 0x29) {
         const unsigned slot = NewTask(0x32);
         unsigned char* const child = TaskSlot(slot);
         records::BattleTask* const tchild = rv::As<records::BattleTask>(child);

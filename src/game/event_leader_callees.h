@@ -56,7 +56,7 @@ constexpr std::uint32_t kReturnPoint = 0x904148;     // x, z dwords, the area wo
 // kEdgeX: now MoveScript_TintRecords[0x21c] (symbols.toml). s32 each
 // kEdgeZ: now MoveScript_TintRecords[0x220] (symbols.toml).
 // kLandByte: now ModeFlow_AreaTransition (symbols.toml). u8, 0 on the 0xAF exit
-// kLandMode: now AreaW0c_PendingKind (symbols.toml). u8, 0xC on the 0xAF exit
+// kLandMode: now Area_EnterTransition (symbols.toml). u8, 0xC on the 0xAF exit
 // kButtonConfirm: now Gfx_UnpackScratch[0x1f000] (symbols.toml). u16 (input-script.md section 4)
 // The pending walk-in (Area_Enter's 0x904EF0.., symbols.toml 0x533710).
 // kPendingFlag: now EventLeader_PendingFlag (symbols.toml). u8
@@ -67,7 +67,7 @@ constexpr std::uint32_t kReturnPoint = 0x904148;     // x, z dwords, the area wo
 constexpr std::uint32_t kPassageFlags = 0x90410C;    // bits by the entry's +4 (Flags_Test / Flags_Set)
 // kPassageCount: now Rest4a_CountD (symbols.toml). s32, one more per content taken
 // kPartySet: now AreaW0b_PartySet (symbols.toml). u8, & 0x7F the row (field-event.md)
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (battle_flow_callees.h)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8 (battle_flow_callees.h)
 // Field_ScriptFlags' high byte and Field_ScriptFlags2's two, tested and set by
 // byte as the original does.
 constexpr std::uint32_t kFlagsHi = 0x9039A3;

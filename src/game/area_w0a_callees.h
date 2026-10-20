@@ -33,7 +33,7 @@ constexpr std::uint32_t kEffectSlot = 0x903850;
 // The story flags (Cond_Flags + 0xA0): Flags_Set's bits.
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // The dword holding the flag bits the chapter's Flags_Test calls are given.
-// kFlagBank: now AreaW0c_FlagRow (symbols.toml).
+// kFlagBank: now Chapter_FlagRow (symbols.toml).
 // A byte area 3's choice handlers set to 6 with the message 0x44.
 // kByte9398CF: now AreaW0c_AnswerMark (symbols.toml).
 // The scene's timer (u16, docs/field-modes.md).

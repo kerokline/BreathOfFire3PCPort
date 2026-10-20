@@ -282,7 +282,7 @@ void PlateShrink() {
 // The dial frame's slide, state 1: the word +0x2E += 0x10; at 0x10 and above
 // (s16) +2 + 1; then a tail jump to the copy's FrameHold.
 void FrameSlideIn(const WorldMapTables& t) {
-    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) + 0x10u;
+    rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(t.fn_frame_hold)();
@@ -299,7 +299,7 @@ void FrameHold(const WorldMapTables& t) {
 // State 3: the word +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the
 // mode byte is 2, +2 = 1 (over the 0); DrawFrame(0x10, y).
 void FrameSlideOut(const WorldMapTables& t) {
-    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) - 0x10u;
+    rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -1042,7 +1042,7 @@ extern "C" void __cdecl Area167_SetByteFE10(void) { Cond_ByteFE = 0x10; }
 //      0x49 set. Then Sound_PlayEffect(0x205) with Cond_ByteFD 0, flag 0x4A
 //      set, state 0xC.
 //   0x1E: state 0x1F.
-//   0x1F: MoveScript_WaitWordDA 0: Cond_ByteFE = 0x20, the countdown 0x1E,
+//   0x1F: Transition_Busy 0: Cond_ByteFE = 0x20, the countdown 0x1E,
 //      state 0x20.
 //   0x20: the countdown - 1; at 0 ScriptFlags_Clear40, flag 0x90 set,
 //      Field_ChangeArea(0xA8, 0x150000, 0x40000, 7), Field_ScriptFlags2 bit 6
@@ -1155,7 +1155,7 @@ extern "C" void __cdecl Area167_Tail32(void) {
         AreaW0c_TailState = 0x1F;
         return;
     case 11:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Cond_ByteFE = 0x20;
         SetWord(At(at::kTailTimer), 0x1E);
         AreaW0c_TailState = 0x20;

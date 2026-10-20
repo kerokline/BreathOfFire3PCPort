@@ -60,7 +60,7 @@ constexpr U kPendingX = 0x903860;          // the pending area's cells (Field_Ch
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml).
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
 // kCell904EE0: now ModeFlow_AreaTransition (symbols.toml). zeroed with 0x937F98 = 0xC by area 104's exit cell
-// kCell937F98: now AreaW0c_PendingKind (symbols.toml).
+// kCell937F98: now Area_EnterTransition (symbols.toml).
 constexpr U kFoundX = 0x903850;            // the scratch word the step hook of area 105 stores the facing in
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits
 // kCondFA: now Cond_ByteFA (symbols.toml). Cond_ByteFA (s8, the chapter)
@@ -87,13 +87,13 @@ constexpr unsigned kEffectCount = 20;
 constexpr U kObjectStride = 0xA4;
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember (a pointer)
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object (a pointer)
-constexpr U kEffectStates = 0x66972C;      // MoveScript_EffectState: a byte per +0x89 value
+constexpr U kEffectStates = 0x66972C;      // Character_IndexById: a byte per +0x89 value
 // kDescriptors: now Area_Descriptors (symbols.toml). Area_Descriptors
 constexpr U kPacketNext = 0x7E0670;        // Gfx_PacketNext
 constexpr U kPassFlags = 0x7E0918;         // Draw_PassFlags
 constexpr U kFrameCounter = 0x937F94;      // Frame_Counter
 constexpr U kClutDirty = 0x937F90;         // Gfx_ClutStripDirty
-// kMenuColour: now BattleDraw_Colour (symbols.toml). the byte area 104's countdown hands Menu_DrawBox
+// kMenuColour: now Config_WindowColour (symbols.toml). the byte area 104's countdown hands Menu_DrawBox
 constexpr U kCountdownText = 0x904BA0;     // the countdown's text buffer (Crt_sprintf's)
 constexpr U kCountdownFormat = 0x61BC74;   // its format (data, read in place)
 // kPanelTris: now Area104_PanelTris (symbols.toml). four (x0, x1, x2, y0, y1, y2) s16 rows: the panel's triangles

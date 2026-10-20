@@ -439,7 +439,7 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
     case 1: return Game_AreaNumber;
     case 2: {
         const unsigned char* flags;
-        std::memcpy(&flags, At(AreaW0c_FlagRow_addr), sizeof flags);
+        std::memcpy(&flags, At(Chapter_FlagRow_addr), sizeof flags);
         return Long(flags);
     }
     case 3: case 4: case 5: case 6: return At(kCounters)[index - 3];

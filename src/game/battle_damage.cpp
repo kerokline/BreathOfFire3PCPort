@@ -311,7 +311,7 @@ extern "C" void __cdecl Battle_ClearCommands() {
     }
     for (unsigned a = 3; a < 11; ++a) {
         auto* const er = rv::As<records::BattleEnemy>(Enemy(a) + at::kEObject);
-        er->command = 0;
+        er->command_kind = 0;
         er->flags_110 = 0;
     }
 }
@@ -354,7 +354,7 @@ extern "C" void __cdecl Battle_RemoveFromTurnOrder(unsigned actor) {
         pr->flags_134 = S32(U32(static_cast<std::int32_t>(pr->flags_134)) & ~4u);
     } else {
         auto* const er = rv::As<records::BattleEnemy>(Enemy(actor) + at::kEObject);
-        er->command = 0;
+        er->command_kind = 0;
         er->flags_110 = S32(U32(static_cast<std::int32_t>(er->flags_110)) & ~2u);
     }
     for (unsigned k = 0; k < BattleDamage_TurnCount; ++k)
@@ -926,8 +926,8 @@ extern "C" void __cdecl EnemyAI_ChooseActions() {
                 holds = count != 0;
                 break;
             }
-            case 0x0F: holds = BattleActorCopies_EnemyCount > BattleE2_EnemiesLeft; break;
-            case 0x10: holds = BattleE2_EnemiesLeft == 1; break;
+            case 0x0F: holds = Battle_EnemyCount > Battle_EnemiesLeft; break;
+            case 0x10: holds = Battle_EnemiesLeft == 1; break;
             case 0x11: holds = hp > (max_hp >> 1); break;
             case 0x12: holds = ap > (max_ap >> 1); break;
             case 0x13: holds = counter == 2; break;
@@ -937,10 +937,10 @@ extern "C" void __cdecl EnemyAI_ChooseActions() {
             case 0x1A: holds = (counter & 1) != 0; break;
             case 0x1B: holds = counter % 3 == 0; break;
             case 0x1C: holds = counter % 3 != 0; break;
-            case 0x1D: holds = BattleSprites_PartyPick == 1; break;
-            case 0x1E: holds = BattleSprites_PartyPick != 1; break;
-            case 0x1F: holds = BattleE2_EnemiesLeft == BattleActorCopies_EnemyCount; break;
-            case 0x20: holds = BattleE2_EnemiesLeft != 1; break;
+            case 0x1D: holds = Battle_PartyStanding == 1; break;
+            case 0x1E: holds = Battle_PartyStanding != 1; break;
+            case 0x1F: holds = Battle_EnemiesLeft == Battle_EnemyCount; break;
+            case 0x20: holds = Battle_EnemiesLeft != 1; break;
             case 0x26: holds = g.ai_rows_left(r, e) != 0; break;
             case 0x27: holds = BattleDamage_AiByteB97 == 1; break;
             default: continue;

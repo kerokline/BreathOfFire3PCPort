@@ -315,7 +315,7 @@ const ah::Callee kCallees[] = {
 // Beyond the field frame: the twenty effect records, Sprite_Kind2, the active
 // member, script object and focus object pointers, MoveScript_PartyRecords
 // records 0..1, Field_Kind2Hold, Field_MoveSpeeds[3..4], area 108's model
-// record and the fuzz's point buffer, MoveScript_EffectState, the mark, the
+// record and the fuzz's point buffer, Character_IndexById, the mark, the
 // byte 0x9045F4, area 110's cells and weights, area 111's grid (and the four
 // bytes after it), its grid start and cell bytes.
 ah::Region g_regions[] = {
@@ -329,7 +329,7 @@ ah::Region g_regions[] = {
     {(Field_MoveSpeeds_addr + 0x3), 2},
     {Area108_Model_addr, 8},
     {0, kPointBytes},   // g_points (set at start-up)
-    {0x66972C, 0x18},   // MoveScript_EffectState
+    {0x66972C, 0x18},   // Character_IndexById
     {AreaW0c_AnswerMark_addr, 1},
     {FieldE1_Rank_addr, 1},
     {Area110_Cells_addr, 16},
@@ -429,7 +429,7 @@ void Seed108(unsigned k) {
     case k108Effect5: {
         const auto index = static_cast<unsigned char>(ah::Often() ? ah::Next() % 0x18 : ah::Next());
         B(ObjTrio_addr + 0x89) = index;
-        if (index < 0x18 && ah::Half()) B(MoveScript_EffectState_addr + index) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
+        if (index < 0x18 && ah::Half()) B(Character_IndexById_addr + index) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
         break;
     }
     case k108FadeRun: Sprite_Current[4] = static_cast<unsigned char>(ah::Next() % at::kArea108FadeStateCount); break;

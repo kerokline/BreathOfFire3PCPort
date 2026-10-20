@@ -32,10 +32,10 @@ constexpr U kExtra1Z = 0x8020DC;           // ... +0x38
 constexpr U kExtra1Y = 0x8020E0;           // ... +0x3C
 
 // --- the battle bytes and records ------------------------------------------------
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: the event battle (EventBattle_Records' index)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: the event battle (EventBattle_Records' index)
 constexpr U kEventRows = 0x64DDEE;         // EventBattle_Records + 2: each record's encounter row (image .data)
-// kPlaced: now BattleActorCopies_EnemyCount (symbols.toml). u8: the boss actors placed so far
-// kPlacedTotal: now BattleE2_EnemiesLeft (symbols.toml). u8: ... copied at the end of the pass
+// kPlaced: now Battle_EnemyCount (symbols.toml). u8: the boss actors placed so far
+// kPlacedTotal: now Battle_EnemiesLeft (symbols.toml). u8: ... copied at the end of the pass
 constexpr U kFormation = 0x904AAC;         // u8: the formation (its bit 1 flips each enemy's facing +8)
 constexpr U kEnemies = 0x93B960;           // the eight enemy records (EnemyWorkingRecords' first byte), 0x128 apart
 constexpr U kEnemyStride = 0x128;

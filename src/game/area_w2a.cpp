@@ -45,7 +45,7 @@ unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEff
 unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
 }
 
 // The choice answer, as every choice of the band reads it: a signed byte.

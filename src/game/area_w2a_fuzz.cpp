@@ -218,7 +218,7 @@ const ah::Region kRegions[] = {
     {Effect_Objects_addr, 4 * at::kEffectStride},
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {Camera_ShiftY_addr, 2},
     {Cond_ByteFE_addr, 1},
     // Effect_Objects "record" 0xFF, past the 20: where a helper that took

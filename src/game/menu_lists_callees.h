@@ -38,11 +38,11 @@ constexpr std::uint32_t kCountdown = 0x929F04;     // u8 the open / close countd
 constexpr std::uint32_t kReserveData = 0x9045FC;   // 3 bytes a reserve slot, kept with its member
 // kMoney: now Party_Zenny (symbols.toml). dword, Menu_DrawMoneyBox's value
 constexpr std::uint32_t kCampFlag = 0x904152;      // u8 (hypothesis: "camping allowed anywhere")
-constexpr std::uint32_t kMemberRecord = 0x66972C;  // u8 by character: its record (MoveScript_EffectState)
+constexpr std::uint32_t kMemberRecord = 0x66972C;  // u8 by character: its record (Character_IndexById)
 constexpr std::uint32_t kCharRecords = 0x903A70;   // 0xA4 bytes each
 constexpr std::uint32_t kCharRecordSize = 0xA4;
-// kColour: now BattleDraw_Colour (symbols.toml). Config's window colour byte
-// kBackground: now FieldS_Backdrop (symbols.toml). Config's "Background" byte
+// kColour: now Config_WindowColour (symbols.toml). Config's window colour byte
+// kBackground: now Config_Background (symbols.toml). Config's "Background" byte
 // The party as the menu opened on it (FieldMenu_Open), for
 // FieldMenu_ReconcileParty to compare the party it closes on against.
 constexpr std::uint32_t kSavedParty = 0x6BDF98;

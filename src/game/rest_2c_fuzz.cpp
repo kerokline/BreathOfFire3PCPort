@@ -360,7 +360,7 @@ void SeedMenu() {
     B(at::kMsgFlags) = static_cast<unsigned char>(sh::Half() ? sh::Next() | 2 : sh::Next() & ~2u);
     B(Field_InputFlags_addr) = static_cast<unsigned char>(PickOf(0x40, 0x40, 0, 0x41, sh::Next()));
     SetW(Game_AreaNumber_addr, PickOf(0xBC, 0x85, 0xC1, 0xBB, 0xBD, 0x84, 0x86, 0xC0, 0xC2, sh::Next()));
-    SetW(MoveScript_WaitWordDA_addr, PickOf(0, 0, sh::Next()));
+    SetW(Transition_Busy_addr, PickOf(0, 0, sh::Next()));
     SetL(Rest2c_Slot_addr, sh::Next() % at::kSlotCount);
 }
 

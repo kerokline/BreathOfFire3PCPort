@@ -459,7 +459,7 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     const bool lit = (highlight & 0xFFu) != 0;
     const U bl = lit ? 7u : 0u;
     U colour = bl;
-    g.draw_box(x + 3, y + 3, 0x7D, 0x30, static_cast<int>(highlight), static_cast<unsigned char>(BattleDraw_Colour));
+    g.draw_box(x + 3, y + 3, 0x7D, 0x30, static_cast<int>(highlight), static_cast<unsigned char>(Config_WindowColour));
     unsigned char* const record = At(kCharRecords + (member & 0xFFu) * kCharStride);
     const U shade = lit ? 1u : ((record[0x10] >> 6) & 2u);
     g.item_icon(x + 0x56, y + 2, static_cast<int>(record[9]), static_cast<int>(shade));
@@ -541,7 +541,7 @@ extern "C" unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned
 // off by eax's high word << 19, which Menu_DrawPieces' 16-bit piece draws do
 // not see.
 extern "C" unsigned long __cdecl Menu_DrawPlayTime(int x, int y) {
-    g.draw_box(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.draw_box(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
     char* const buffer = reinterpret_cast<char*>(At(kPrintBuf));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
     g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormat02d)), Byte(kClockHours));

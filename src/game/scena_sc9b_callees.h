@@ -36,14 +36,14 @@ constexpr std::uint32_t kTimer = 0x8034E6;      // u16: a countdown the runs kee
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
 constexpr std::uint32_t kEffectSlot = 0x903850; // u8 (a word in Scena10_SpriteOp): the slot just taken
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Set / Clear as a literal
 constexpr std::uint32_t kRow657 = 0x904657;     // a row handed to Flags_Set as a literal (run 7 step 0xF)
 // kArea: now Game_AreaNumber (symbols.toml). u16 Game_AreaNumber
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 constexpr std::uint32_t kScriptFlags = 0x9039A2;   // u16 Field_ScriptFlags
 // kRequest: now Field_Request (symbols.toml). Field_Request
-// kWait: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA
+// kWait: now Transition_Busy (symbols.toml). u16 Transition_Busy
 // kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
 // kCamDist: now Camera_Distance (symbols.toml). u16 Camera_Distance
 // kShiftY: now Camera_ShiftY (symbols.toml). u16 Camera_ShiftY
@@ -76,7 +76,7 @@ constexpr std::uint32_t kKind2ZHigh = 0x905E62; // u16: Field_Kind2Z's whole par
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). u16 MoveScript_F3Divisor
 // kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty
 // kFrameCounter: now Frame_Counter (symbols.toml). Frame_Counter
-// kByte937F98: now AreaW0c_PendingKind (symbols.toml). u8 set 0xFF / 1 beside the area changes
+// kByte937F98: now Area_EnterTransition (symbols.toml). u8 set 0xFF / 1 beside the area changes
 // kByte904EE0: now ModeFlow_AreaTransition (symbols.toml). u8 set 0xFF / 0 / 0xD beside the area changes
 // kInputHeld: now Input_Held (symbols.toml). u16 Input_Held
 // kOtSlot: now Draw_OtSlot (symbols.toml). Draw_OtSlot

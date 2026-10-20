@@ -235,7 +235,7 @@ every state handler `kMenu`; the helpers `kCall`; `PartyForm_Swap` and
   top and the state), since `SharedList_DrawList` reads all four after it -
   one of them is the low byte of the window argument's own stack slot.
 - **The seeds**: the buttons one bit each and the pad hitting either, both
-  or none; the party list ids inside `MoveScript_EffectState`'s 24 (so a
+  or none; the party list ids inside `Character_IndexById`'s 24 (so a
   record index is one of the eight); `Field_Members` a record index; the
   records' `+0xA`, `+0xB`, `+0x1D`, HP and AP at their colour thresholds; the
   menu cells at their boundaries (rows -1..5, picks `0x7F`, the answer's

@@ -38,11 +38,11 @@ namespace at {
 constexpr std::uint32_t kPhase = 0x904AA0;
 // kCounter: now BossSb_Countdown (symbols.toml). u8, zeroed as an action starts its effect
 constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (0x904AA9 its high byte)
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: non-zero, the hook 0x904B6C is called (battle_flow.md)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: non-zero, the hook 0x904B6C is called (battle_flow.md)
 constexpr std::uint32_t kQueue = 0x904ACC;         // u8 per slot: the actors in turn order, 0xFF a spent slot
 // kQueueAt: now BossSe_RoundSlot (symbols.toml).
 constexpr std::uint32_t kQueueEnd = 0x904AE3;  // u8 each
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8
 // The acting actor's block and the target's, 0x10 bytes each and the same
 // layout: +0 the actor (0..2 a member, 3..10 an enemy; the target byte may be
 // 0x40 / 0x80 / 0xC0, a side), +1 the command kind (the actor's), +2 / +4 /

@@ -99,7 +99,7 @@ void Step(U table) { Dispatch(table, Rec()[3]); }
 
 // A party slot's character record: 0x66972C[0x904062[slot]], both bytes, the
 // slot unbounded.
-unsigned Member(unsigned slot) { return At(MoveScript_EffectState_addr + At(Cond_Flags_addr + 0xd2 + slot)[0])[0]; }
+unsigned Member(unsigned slot) { return At(Character_IndexById_addr + At(Cond_Flags_addr + 0xd2 + slot)[0])[0]; }
 
 // The slides: x (+4) or y (+6) stepped by `by`; past `bound` (signed 16-bit;
 // `below` says which side) it is set to `to` and the step +3 goes to 0.
@@ -161,7 +161,7 @@ unsigned char g_shop_yes_no_line = 0;
 
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_TitleRun(void) {
     Step(ShopWin_TitleSteps_addr);
-    const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* w = Rec();
     g.title_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), 0x118, 0x13, static_cast<int>(colour));
     const unsigned id = Word(Rec() + 0x10);

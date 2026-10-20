@@ -533,7 +533,7 @@ extern "C" void __cdecl Area34_ChoiceTail5(void) {
     }
     if (B(AreaW0c_ChoiceAnswer_addr) == 2) return;
     if (static_cast<unsigned char>(Cond_ByteFA) != 8) return;
-    const auto row = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
+    const auto row = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
     if (AH_CALL(Flags_Test)(row, 3) != 0) return;
     B(AreaW0a_TailKind_addr) = 0;
     AH_CALL(ScriptFlags_Set40)();
@@ -680,7 +680,7 @@ extern "C" void __cdecl Area37_ChoiceTail2E(void) {
 // 1), the pending kind 0xFE, state + 1; 1 waits for Field_Request 0, then
 // message 0xB5 and Field_Request 2, state + 1; 2 waits for Field_Request to
 // leave 2, then Transition_Start(1) and Draw_PassFlags 0x1F, state + 1; 3
-// waits for MoveScript_WaitWordDA 0, then ScriptFlags_Clear40, the tail
+// waits for Transition_Busy 0, then ScriptFlags_Clear40, the tail
 // disarmed and counter 3 = 0. The state is re-read after each call.
 extern "C" void __cdecl Area37_TailLeave(void) {
     switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
@@ -689,7 +689,7 @@ extern "C" void __cdecl Area37_TailLeave(void) {
         AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x72);
         AH_CALL(Field_ChangeArea)(0x25, 0x2C8000, 0x270000, 1);
         const auto next = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
-        B(AreaW0c_PendingKind_addr) = 0xFE;
+        B(Area_EnterTransition_addr) = 0xFE;
         B(AreaW0c_TailState_addr) = next;
         return;
     }
@@ -710,7 +710,7 @@ extern "C" void __cdecl Area37_TailLeave(void) {
         return;
     }
     case 3:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         AH_CALL(ScriptFlags_Clear40)();
         B(AreaW0a_TailKind_addr) = 0;
         B(AreaW0c_TailState_addr) = 0;

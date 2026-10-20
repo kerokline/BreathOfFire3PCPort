@@ -173,8 +173,8 @@ extern "C" unsigned __cdecl EnemyOp_CastDispatch(unsigned passed) {
 extern "C" unsigned char __cdecl EnemyOp_CastStart(void) {
     if (BH_CALL(File_LoadDone)() == 0) return 0;
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
-    if (enemy_rec->command == 4) {
-        if (BattleActions_EventBattle != 0) {
+    if (enemy_rec->command_kind == 4) {
+        if (EventBattle_Id != 0) {
             const unsigned key = static_cast<unsigned char>(enemy_rec->run_state + 0x20);
             const bool loaded = BH_CALL(Battle_LoadSoundByKey)(key, BattleE3_SoundSet) != 0;
             S()[9] = loaded ? 0 : 0x1E;
@@ -204,7 +204,7 @@ extern "C" unsigned char __cdecl EnemyOp_CastCue(void) {
         s[9] -= 1;
         return BH_CALL(BattleEnemy_ScriptTickOnce)();
     }
-    const bool fight = BattleActions_EventBattle != 0;
+    const bool fight = EventBattle_Id != 0;
     unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     if (fight)
@@ -231,12 +231,12 @@ extern "C" void __cdecl EnemyOp_CastDoneDispatch(void) {
 // nobody reads it - EnemyOp_CastDoneDispatch drops it.)
 extern "C" void __cdecl EnemyOp_CastDoneCost(void) {
     records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(Enemy());
-    if (enemy_rec->command == 4) {
+    if (enemy_rec->command_kind == 4) {
         enemy_rec->ap = enemy_rec->ap - BattleE3_Cost;
         enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     }
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) | 0x800);
-    enemy_rec->command = 0;
+    enemy_rec->command_kind = 0;
     if ((AbilityWord4() & 0x800) == 0) BH_CALL(BattleEnemy_ScriptTickOnce)();
     rv::As<records::BattleEnemy>(S())->step += 1;
 }
@@ -322,9 +322,9 @@ extern "C" void __cdecl EnemyOp_LeaveStep(void) {
 // the enemy leaves the count without being defeated.
 extern "C" void __cdecl EnemyOp_LeaveEnd(void) {
     BH_CALL(Battle_RemoveFromTurnOrder)(rv::As<records::BattleEnemy>(S())->actor);
-    const auto left = static_cast<unsigned char>(BattleE2_EnemiesLeft - 1);
-    BattleE2_EnemiesLeft = left;
-    if (left == 0) BattleActions_BattleEnd |= 2;
+    const auto left = static_cast<unsigned char>(Battle_EnemiesLeft - 1);
+    Battle_EnemiesLeft = left;
+    if (left == 0) Battle_EndFlags |= 2;
     BH_CALL(Sprite_ReleaseTint)(S());
     BH_CALL(Battle_ClearActorBit)(rv::As<records::BattleEnemy>(S())->actor);
     B(at::kWindow4State) = 2;
@@ -349,7 +349,7 @@ extern "C" void __cdecl EnemyOp_EndAction(void) {
     BH_CALL(Battle_ClearActorBit)(rv::As<records::BattleEnemy>(S())->actor);
     unsigned char* const e = Enemy();
     SetULong(e + 0x110, ULong(e + 0x110) & ~0x200u);
-    if ((B(at::kRoundFlags) & 0x40) == 0) rv::As<records::BattleEnemy>(Enemy())->command = 0;
+    if ((B(at::kRoundFlags) & 0x40) == 0) rv::As<records::BattleEnemy>(Enemy())->command_kind = 0;
 }
 
 // original 0x4376F0: with 0x939AD8's +0x90 bit 3 and Rand's bit 0, 0x904AA8 |=
@@ -570,7 +570,7 @@ extern "C" void __cdecl BattleObj_HitEnd(void) {
     }
     BH_CALL(Battle_ClearActorBit)(rv::As<records::PartyMember>(S())->actor);
     SetULong(F() + 0x130, ULong(F() + 0x130) & 0xFFFFFF8Fu);
-    if (BH_CALL(BattleParty_AllDown)() != 0) BattleActions_BattleEnd |= 1;
+    if (BH_CALL(BattleParty_AllDown)() != 0) Battle_EndFlags |= 1;
     SetULong(F() + 0x130, ULong(F() + 0x130) & ~0x200u);
     rv::As<records::PartyMember>(S())->state = 2;
     rv::As<records::PartyMember>(S())->step = 0;
@@ -709,7 +709,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
         BH_CALL(BattleObj_ScriptTick)();
         return;
     }
-    BattleSprites_PartyPick -= 1;
+    Battle_PartyStanding -= 1;
     for (unsigned i = 0; i < 8; ++i) F()[0x138 + i] = 0;
     SetULong(F() + 0x134, ULong(F() + 0x134) & 0xFFFB84FFu);
     F()[0x12D] = 0;
@@ -718,7 +718,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
     rv::As<records::PartyMember>(F())->count_40 = 0;
     rv::As<records::PartyMember>(F())->count_80 = 0;
     BH_AT(void (__cdecl*)(unsigned), at::kPass453300)(rv::As<records::PartyMember>(S())->actor);
-    if (BH_CALL(BattleParty_AllDown)() != 0 || BattleSprites_PartyPick == 0) BattleActions_BattleEnd |= 1;
+    if (BH_CALL(BattleParty_AllDown)() != 0 || Battle_PartyStanding == 0) Battle_EndFlags |= 1;
     ClearFormFlag();
     auto* const member_s = rv::As<records::PartyMember>(S());
     if (F()[0x134] & 1) {

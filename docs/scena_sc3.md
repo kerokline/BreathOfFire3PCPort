@@ -194,7 +194,7 @@ chapter 4's byte; it reads none.
   (6), `Scena04_CellHandlers` (1);
 - **regions** beyond the standard 22: `0x904CD0`, `0x904EE0`,
   `Music_Track`, `Cond_ByteFE`, the message id `0x7DEE48`, `Game_Mode`,
-  `0x929F00..0x929F13`, `MoveScript_EffectState`, `Field_ActiveMember`, and
+  `0x929F00..0x929F13`, `Character_IndexById`, `Field_ActiveMember`, and
   the object handler table (32 regions in all, about 10,050 bytes);
 - **the seed**: the state and run inside the swapped windows; the step
   inside each scene's cases and one past; half the time a step that waits on

@@ -62,7 +62,7 @@ constexpr std::uint32_t kPicks = 0x675FA1;      // u8 x 9: the first game's pick
 constexpr std::uint32_t kRecords = 0x675F9B;    // 8 x 5 bytes: the second game's guesses (3 digits, hits, blows)
 // The bet's three digits (DamageScratch's block, docs: hundreds, tens, ones).
 constexpr std::uint32_t kDigits = 0x903850;     // s8 x 3: ones +0, tens +1, hundreds +2
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox is handed
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style Menu_DrawBox is handed
 constexpr std::uint32_t kTextB = 0x904D00;      // Text_Records' second record (sprintf and the prize name)
 
 // --- image tables read in place (.data / .rdata; their bytes are not copied here) --

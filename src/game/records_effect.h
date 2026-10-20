@@ -29,9 +29,12 @@ struct EffectSpeck {
 };
 
 // A spark of the 0x28 pool: 0x80 at EffectKind30_Shards (effect_2a.md 1.4;
-// effect_2a_callees.h / effect_3b_callees.h kSparkStride 0x28).
+// effect_2a_callees.h kSparkStride 0x28).
 // EffectSparks_Move 0x4721A0, _Draw 0x472240, _Clear 0x4723E0, _FindFree
-// 0x472400; kinds 0x2C and 0x2E (E2A) and E3B's.
+// 0x472400; kinds 0x2C and 0x2E (E2A). Not E3B kind 0x6C's sparks: their
+// 0x28 records over the same pool have another layout (a point at +4 / +8 /
+// +0xC, a velocity at +0x14 / +0x18, a word at +0x24; C2 effect group).
+// Was "and E3B's" until the C3 naming pass.
 struct EffectSpark {
     std::int32_t x;  // +0x00 the point (EffectSparks_Draw links at x, z: MapView_LinkPrimAt(UL(spark), UL(spark + 4)))
     std::int32_t z;  // +0x04

@@ -42,9 +42,9 @@ constexpr std::uint32_t kCurrent = 0x905B84;       // the window record Field_Ru
 // kMsgTail: now BattleActorCopies_QueueWrite (symbols.toml). u8: its write index
 constexpr std::uint32_t kMsgRing = 0x93C2C4;       // 8 bytes an entry: +0 the text pointer
 // kStateTable: now BattleObj_StateTable (symbols.toml). 27 handlers of a party object's state byte +1
-// kPoseFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8, bit 0x20
+// kPoseFlags: now EventBattle_Flags (symbols.toml). u8, bit 0x20
 constexpr std::uint32_t kBattleKind = 0x904AA0;    // u8, 5 = a kind with its own poses
-// kKindFlags: now BattleActions_BattleEnd (symbols.toml). u8, bit 1
+// kKindFlags: now Battle_EndFlags (symbols.toml). u8, bit 1
 constexpr std::uint32_t kPoseMode = 0x904AA8;      // u8, bit 0x10
 // kTickGate: now BattleFlow_AnimGate (symbols.toml). u8: 0x441180 / 0x4411B0 tick unless set
 constexpr std::uint32_t kSkillFlags = 0x65C4DD;    // 24 bytes a skill: bit 3 of this byte

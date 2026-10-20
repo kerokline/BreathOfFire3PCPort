@@ -56,10 +56,10 @@ constexpr std::uint32_t kWindows = 0x803160;       // WindowRecords, stride 0x24
 constexpr std::uint32_t kWindow0State = 0x803163;  // u8, window 0's state byte
 // kWindow0X: now WindowRecords record 0 x (records::WindowRecord).
 // kWindow0Y: now WindowRecords record 0 y (records::WindowRecord).
-// kWindow0Rows: now BattleOdds_Win0Index (symbols.toml). u8, halved into the page-arrow's x
-// kWindow0Kind: now Msgbox_Window0Kind (symbols.toml). u8, set to 2 by MsgBox_Reset
-// kWindow1Kind: now Msgbox_Window1Kind (symbols.toml). u8, window 1's kind (1 a choice list, 2 a menu)
-// kWindow1State: now ItemUse_Window1State (symbols.toml). u8, window 1's state byte
+// kWindow0Rows: now Window0_ParamA (symbols.toml). u8, halved into the page-arrow's x
+// kWindow0Kind: now Window0_Pass (symbols.toml). u8, set to 2 by MsgBox_Reset
+// kWindow1Kind: now Window1_Kind (symbols.toml). u8, window 1's kind (1 a choice list, 2 a menu)
+// kWindow1State: now Window1_State (symbols.toml). u8, window 1's state byte
 constexpr std::uint32_t kScriptPool = 0x803580;    // MessagePools, the script side
 constexpr std::uint32_t kPoolSelector = 0x803584;  // u32 inside the pool header: code 0x08's sub-pool
 constexpr std::uint32_t kTextRecords = 0x904CDF;   // Text_Records 0x904CE0 minus one (the tail's inc esi)

@@ -28,8 +28,8 @@ constexpr std::uint32_t kCounter = 0x929F04;
 // cleared with them by the defaults.
 // kSetting0: now ModeFlow_ConfigBytes (symbols.toml).
 // kSetting3: now Rest4f_Setting3 (symbols.toml).
-// kStyle: now BattleDraw_Colour (symbols.toml).
-// kBackdrop: now FieldS_Backdrop (symbols.toml).
+// kStyle: now Config_WindowColour (symbols.toml).
+// kBackdrop: now Config_Background (symbols.toml).
 // kSetting5C: now Rest4f_Setting5C (symbols.toml).
 // kSetting5D: now BattleWinStates_LabelGate (symbols.toml).
 // kSetting4: now FieldE2_RunDefault (symbols.toml).

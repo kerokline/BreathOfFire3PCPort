@@ -132,7 +132,7 @@ struct SpriteHead {
         std::int32_t depth;  // +0x60 the projection's depth (movement-script 1c; sprite-draw-order 14; effect_1a.md 2.2)
         std::int32_t value;  // +0x60 battle task, the damage popup: the number shown (battle_fx_tasks.cpp; read as a word by the draw)
     };
-    std::uint32_t angle[3];  // +0x64 the rotation angles in the low words (sprite-draw-order 12); +0x64 / +0x68 also the member / its row during a member set-up (sprite-pose 3); MoveCmd_OpF9 runs a party object's tilt counts into them (field_o.cpp)
+    std::uint32_t angle[3];  // +0x64 the rotation angles in the low words (sprite-draw-order 12); +0x64 / +0x68 also the member / its row during a member set-up (sprite-pose 3); MoveCmd_OpF9 runs a party object's tilt counts into them (field_o.cpp); effect kind 0x13 (the camera turn): the three target Camera_Angles, dwords (CameraTurn_Start, frame-callees.md; area_w3f.cpp Kind13)
     std::uint32_t reach;  // +0x70 dword (sprite-pose 3: its low byte ORed from the bank's first byte); the low byte the object's reach: Sprite_PointInReach's margin (sprite-draw-order 6), Party_MemberAt's (area_w1c.md Area51_MemberAtObject), blocked_at's and AreaMap_CellsNone's size (member_sprites.cpp; field_c3.cpp), the jump's scale (field_c3.md); member-sprites 2 calls a member's non-zero byte "raised" (Field_CellAhead splits on it). Was PartyMember::raised
     std::uint32_t screen_xf;  // +0x74 the float screen point's bits (movement-script 1c; sprite_screen.cpp; effect_4d.md EffectKind98_DrawBurst)
     std::uint32_t screen_yf;  // +0x78
@@ -209,7 +209,7 @@ struct PartyMember : SpriteHead {
     std::uint16_t base_intel;  // +0xCA record +0x4A
     unsigned char pad_CC[0x58];  // +0xCC..+0x123: the rest of the base block (record +0x4C..+0x5F) and record +0x60..+0xA3 (CharRecord); not named here
     std::uint8_t command;  // +0x124 battle: the command auto-battle gives (docs/battle_e4.md); field: the script context's first byte (area_entry_callees.h kRecContext). ActionRecord::command / MemberFieldTail::context
-    std::uint8_t queued_kind;  // +0x125 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand)
+    std::uint8_t command_kind;  // +0x125 ActionRecord::command_kind (was queued_kind; C3 naming): 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand)
     std::uint16_t queued_id;  // +0x126 category << 8 | id, or the ability id (battle_setup kPQueuedItem; battle_damage kPCommandId)
     std::int16_t hp_change;  // +0x128 battle: the result record's +4, read signed (battle_setup kPHpChange; battle_e3.cpp:486,499,898 SWord); field: its low byte the walking speed (member-sprites 2)
     std::int16_t ap_change;  // +0x12A battle: the result record's +6, read signed (battle_setup kPApChange; battle_e3.cpp:499)
@@ -249,7 +249,7 @@ struct EffectObject : SpriteHead {};
 // effect's and a task's): on an enemy, ->kind is +0x8C, as before C1.
 struct BattleEnemy : SpriteHead {
     char name[0xc];  // +0x80 from EnemyData +0 (battle_sprites.md 3)
-    std::uint8_t kind;  // +0x8C EnemyData +0xC; grouped by Battle_OpenEnemyNames (battle_sprites.cpp)
+    std::uint8_t enemy_kind;  // +0x8C EnemyData::kind (+0xC); grouped by Battle_OpenEnemyNames (battle_sprites.cpp). Was kind, which hid the head's kind at +5 (C3 naming)
     std::uint8_t family;  // +0x8D EnemyData +0xD (battle_damage kEFamily)
     std::uint8_t odds_index;  // +0x8E EnemyData +0xE (Battle_CopyEnemyData)
     std::uint8_t kind_flag;  // +0x8F Battle_EnemyKindFlag (Battle_SetupEnemy)
@@ -262,9 +262,11 @@ struct BattleEnemy : SpriteHead {
     std::uint8_t abilities[8];  // +0x9C EnemyData +0x1C (Battle_CopyEnemyData)
     std::uint16_t hp;  // +0xA4 (battle_setup kEHp; battle_damage kEHp)
     std::uint16_t ap;  // +0xA6 (battle_damage kEAp)
-    unsigned char pad_A8[0x2];  // +0xA8, +0xA9: EnemyData +0x30 dword copied here (Battle_CopyEnemyData), unnamed
+    std::uint16_t item_a8;  // +0xA8 EnemyData +0x30's low word (Battle_CopyEnemyData): an item word, Identify_DrawEnemy hands it to Identify_DrawItem (magic_s12.cpp:448) (C3 naming)
     std::uint8_t steal_row;  // +0xAA the steal-rate row, SkillSteal_RateTable[+0xAA], unbounded (magic_steal.cpp SkillSteal_Roll; magic_steal.md)
-    unsigned char pad_AB[0x5];  // +0xAB..+0xAF: the rest of the EnemyData +0x30 / +0x34 dwords; +0xAE raised with +0xAA, each once by the marker bits of +0xAB / +0xAF (rest_3c.md Effect_EnemyRaiseAAAE); not named
+    unsigned char pad_AB[0x1];  // +0xAB: the rest of the EnemyData +0x30 dword; its marker bit raises +0xAA once (rest_3c.md Effect_EnemyRaiseAAAE); not named
+    std::uint16_t item_ac;  // +0xAC EnemyData +0x34's low word: the second item word Identify_DrawEnemy hands to Identify_DrawItem (magic_s12.cpp:450) (C3 naming)
+    unsigned char pad_AE[0x2];  // +0xAE, +0xAF: the rest of the EnemyData +0x34 dword; +0xAE raised with +0xAA, each once by the marker bits of +0xAB / +0xAF (rest_3c.md Effect_EnemyRaiseAAAE); not named
     std::uint16_t max_hp;  // +0xB0 (battle_setup kEMaxHp)
     std::uint16_t max_ap;  // +0xB2 (battle_damage kEMaxAp)
     std::uint16_t atk;  // +0xB4 the stat copy's +4 (battle_damage kAttackerAtk; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4))
@@ -292,8 +294,8 @@ struct BattleEnemy : SpriteHead {
     std::uint8_t run_state;  // +0x100 indexes the state table 0x64B084 (battle_flow.md); EnemyData +0x88
     std::uint8_t hit_class;  // +0x101 EnemyData +0x89; the hit-sound class (battle_sprites.cpp:534 Battle_PlayHitSound)
     unsigned char pad_102[0x2];  // +0x102, +0x103: unread
-    std::uint8_t result_head;  // +0x104 the result / action record's first byte: 0x904B60 points here (battle_actions.cpp SetEnemyBlock; battle_actions.md; enemy_ai_ops.md); the party's is +0x124
-    std::uint8_t command;  // +0x105 (battle_damage kECommand)
+    std::uint8_t command;  // +0x104 ActionRecord::command, the action record's first byte (was result_head; C3 naming, the party's +0x124 is command): 0x904B60 points here (battle_actions.cpp SetEnemyBlock; battle_actions.md; enemy_ai_ops.md); the party's is +0x124
+    std::uint8_t command_kind;  // +0x105 ActionRecord::command_kind: 5 an item, 4 an ability (battle_damage kECommand). Was command (C3 naming: the party's +0x125 and ActionRecord +1 say command_kind)
     std::uint16_t ability;  // +0x106 the ability id, one of +0x9C by Rand() & 7 (battle_e2.cpp:828,866; battle_e2.md BattleEnemy_PickAction)
     std::int16_t hp_change;  // +0x108 the result record's +4, signed (battle_setup kEHpChange; battle_e2.cpp:1133; boss_sd.cpp:404; boss_sa.cpp:394; battle_e2.md "the s16 +0x108")
     std::int16_t ap_change;  // +0x10A the result record's +6, signed like +0x108 (battle_setup kEApChange)
@@ -368,7 +370,7 @@ struct WindowRecord {
     std::uint8_t handler;  // +0x01 index into Field_RunTaskRecords' nine
     std::uint8_t kind;  // +0x02 the window kind, per handler: 0..2 for the field windows (window-task.md 3, 4), 0..7 for the battle windows (battle_win_states.md 2; written 7 battle_phases.cpp:286, 6 battle_setup.cpp:121, 4 battle_sprites.cpp:970 and battle_result.cpp:148, 5 battle_menu_states.cpp:348), and by the menus 5 (rest_2d.cpp:810) and 0xB (rest_2f.cpp:843); the fuzz seeds 0..7 (battle_win_states_fuzz.cpp)
     std::uint8_t state;  // +0x03 0..4
-    std::uint16_t x;  // +0x04 the box's left edge: Window_Grow moves it back half the width step while the width grows, which keeps the box centred only on a left edge (window_task.cpp Window_Grow, HalfStep); 12.4 in the field windows (kind 1 writes << 4, rest_2f.cpp), whole pixels in the menus (Menu_DrawBox at +4 + 3, text at +4 + 7, menu_windows.cpp; MenuSlide_RightTo80 clamps it at 0x50, rest_2f.cpp) and the battle windows (battle_win_states.md 2; menu-windows.md 2 "x, y (s16)"). Was centre_x: window-task.md 3's "centre" is wrong (B1 audit rbs section 4)
+    std::uint16_t x;  // +0x04 the box's left edge: Window_Grow moves it back half the width step while the width grows, which keeps the box centred only on a left edge (window_task.cpp Window_Grow, HalfStep); 12.4 in the field windows (kind 1 writes << 4, rest_2f.cpp), whole pixels in the menus (Menu_DrawBox at +4 + 3, text at +4 + 7, menu_windows.cpp; MenuSlide_RightTo80 clamps it at 0x50, rest_2f.cpp) and the battle windows (battle_win_states.md 2; menu-windows.md 2 "x, y (s16)"). Was centre_x: window-task.md 3 said "centre" until the C3 naming pass (B1 audit rbs section 4)
     std::uint16_t y;  // +0x06 the top edge, as +4. Was centre_y
     unsigned char pad_08[0x2];  // +8, +9: not in window-task.md 3; the battle and list handlers' own (BattleWindow, ItemListWindow)
     std::uint8_t param_a;  // +0x0A per handler: the half-width in pixels for the field windows (window-task.md 3); the actor slot for battle handler 3 (battle_win_states.md 2; battle_sprites.md 3); the item category for the list windows, the greyed / price percent in the buy list (menu-windows.md 2). The per-handler views are BattleWindow and ItemListWindow
@@ -465,8 +467,8 @@ struct MemberFieldTail {
 // kECounter (+9), kPFlags / kEFlags (+0x10); battle_damage_callees.h
 // kPCommand / kECommand (+1), kPFlags / kEFlags (+0xC).
 struct ActionRecord {
-    std::uint8_t command;  // +0x00 the command: auto-battle gives 3 (battle_e4.md AutoBattle_FillCommands); PartyMember::command, BattleEnemy::result_head
-    std::uint8_t command_kind;  // +0x01 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand / kECommand); PartyMember::queued_kind, BattleEnemy::command
+    std::uint8_t command;  // +0x00 the command: auto-battle gives 3 (battle_e4.md AutoBattle_FillCommands); PartyMember::command, BattleEnemy::command
+    std::uint8_t command_kind;  // +0x01 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand / kECommand); PartyMember::command_kind, BattleEnemy::command_kind
     std::uint16_t action_id;  // +0x02 the action id (battle_actions.md): category << 8 | id or the ability id (battle_setup kPQueuedItem; battle_damage kPCommandId); the enemy's ability (battle_e2.cpp:828,866). PartyMember::queued_id, BattleEnemy::ability
     std::int16_t hp_change;  // +0x04 read signed (battle_setup kPHpChange / kEHpChange; battle_e3.cpp:486; battle_e2.cpp:1133)
     std::int16_t ap_change;  // +0x06 (kPApChange / kEApChange)
@@ -775,7 +777,7 @@ static_assert(offsetof(PartyMember, base_def) == 0xC6, "PartyMember::base_def");
 static_assert(offsetof(PartyMember, base_agi) == 0xC8, "PartyMember::base_agi");
 static_assert(offsetof(PartyMember, base_intel) == 0xCA, "PartyMember::base_intel");
 static_assert(offsetof(PartyMember, command) == 0x124, "PartyMember::command");
-static_assert(offsetof(PartyMember, queued_kind) == 0x125, "PartyMember::queued_kind");
+static_assert(offsetof(PartyMember, command_kind) == 0x125, "PartyMember::command_kind");
 static_assert(offsetof(PartyMember, queued_id) == 0x126, "PartyMember::queued_id");
 static_assert(offsetof(PartyMember, hp_change) == 0x128, "PartyMember::hp_change");
 static_assert(offsetof(PartyMember, ap_change) == 0x12A, "PartyMember::ap_change");
@@ -799,7 +801,7 @@ static_assert(sizeof(PartyMember) == 0x14C, "PartyMember stride");
 static_assert(sizeof(EffectObject) == 0x80, "EffectObject stride");
 
 static_assert(offsetof(BattleEnemy, name) == 0x80, "BattleEnemy::name");
-static_assert(offsetof(BattleEnemy, kind) == 0x8C, "BattleEnemy::kind");
+static_assert(offsetof(BattleEnemy, enemy_kind) == 0x8C, "BattleEnemy::enemy_kind");
 static_assert(offsetof(BattleEnemy, family) == 0x8D, "BattleEnemy::family");
 static_assert(offsetof(BattleEnemy, odds_index) == 0x8E, "BattleEnemy::odds_index");
 static_assert(offsetof(BattleEnemy, kind_flag) == 0x8F, "BattleEnemy::kind_flag");
@@ -812,7 +814,9 @@ static_assert(offsetof(BattleEnemy, bank) == 0x9A, "BattleEnemy::bank");
 static_assert(offsetof(BattleEnemy, abilities) == 0x9C, "BattleEnemy::abilities");
 static_assert(offsetof(BattleEnemy, hp) == 0xA4, "BattleEnemy::hp");
 static_assert(offsetof(BattleEnemy, ap) == 0xA6, "BattleEnemy::ap");
+static_assert(offsetof(BattleEnemy, item_a8) == 0xA8, "BattleEnemy::item_a8");
 static_assert(offsetof(BattleEnemy, steal_row) == 0xAA, "BattleEnemy::steal_row");
+static_assert(offsetof(BattleEnemy, item_ac) == 0xAC, "BattleEnemy::item_ac");
 static_assert(offsetof(BattleEnemy, max_hp) == 0xB0, "BattleEnemy::max_hp");
 static_assert(offsetof(BattleEnemy, max_ap) == 0xB2, "BattleEnemy::max_ap");
 static_assert(offsetof(BattleEnemy, atk) == 0xB4, "BattleEnemy::atk");
@@ -836,8 +840,8 @@ static_assert(offsetof(BattleEnemy, cue_table) == 0xF8, "BattleEnemy::cue_table"
 static_assert(offsetof(BattleEnemy, anim_table) == 0xFC, "BattleEnemy::anim_table");
 static_assert(offsetof(BattleEnemy, run_state) == 0x100, "BattleEnemy::run_state");
 static_assert(offsetof(BattleEnemy, hit_class) == 0x101, "BattleEnemy::hit_class");
-static_assert(offsetof(BattleEnemy, result_head) == 0x104, "BattleEnemy::result_head");
-static_assert(offsetof(BattleEnemy, command) == 0x105, "BattleEnemy::command");
+static_assert(offsetof(BattleEnemy, command) == 0x104, "BattleEnemy::command");
+static_assert(offsetof(BattleEnemy, command_kind) == 0x105, "BattleEnemy::command_kind");
 static_assert(offsetof(BattleEnemy, ability) == 0x106, "BattleEnemy::ability");
 static_assert(offsetof(BattleEnemy, hp_change) == 0x108, "BattleEnemy::hp_change");
 static_assert(offsetof(BattleEnemy, ap_change) == 0x10A, "BattleEnemy::ap_change");

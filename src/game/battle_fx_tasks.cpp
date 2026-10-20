@@ -496,7 +496,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_FollowOwner
 //
 // As the original has it: the flag byte is read once, before the area word.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Script(void) {
-    if ((BattleActions_BattleEnd & 1) == 0) return;
+    if ((Battle_EndFlags & 1) == 0) return;
     if (AreaW2c_LastArea != 0xBD) return;
     MoveScript_Var7 = 1;
     At(MoveScript_Var7_addr + 1)[0] = 0x19;
@@ -508,7 +508,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Sc
 // state and called by 0x4317B0 (group CC's). With the same two conditions:
 // Transition_Start(4), then byte 0x904AA2 + 1 (read after the call).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Transition(void) {
-    if ((BattleActions_BattleEnd & 1) == 0) return;
+    if ((Battle_EndFlags & 1) == 0) return;
     if (AreaW2c_LastArea != 0xBD) return;
     g.transition_start(4);
     BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);

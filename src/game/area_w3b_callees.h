@@ -81,7 +81,7 @@ constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the
 constexpr U kPendingX = 0x903860;         // dword: Field_ChangeArea's x (the pending area cells, docs/area_harness.md)
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). dword: its z
 // k904EE0: now ModeFlow_AreaTransition (symbols.toml). byte zeroed on the 0xAF cell's change of area
-// k937F98: now AreaW0c_PendingKind (symbols.toml). byte set to 0xC on it
+// k937F98: now Area_EnterTransition (symbols.toml). byte set to 0xC on it
 constexpr U kFieldStateNow = 0x905D98;    // Field_State
 
 // --- area 120's (its descriptor 0x623648: only a choice table) ------------------

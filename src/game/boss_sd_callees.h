@@ -32,10 +32,10 @@ using U = std::uint32_t;
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 // kWhoFell: now BossSe_Script (symbols.toml). u8: set-ups 18..20 keep here which of enemies 1 (bit 1) and 2 (bit 0) fell
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win
 constexpr U kActKind = 0x904B35;          // u8: the action kind (1 attack, 4 ability, 5 item)
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
 
 // The field's move-script counter 0 (0x903848..0x90384B are MoveScript's four
 // counters, symbols.toml at 0x57C460): set-ups 17 and 21's end hooks set it on

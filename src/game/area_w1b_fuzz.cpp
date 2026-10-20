@@ -54,7 +54,7 @@ constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 // --- shared by the groups -------------------------------------------------------
 
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
-// kEffectState: now MoveScript_EffectState (symbols.toml). MoveScript_EffectState (24)
+// kEffectState: now Character_IndexById (symbols.toml). Character_IndexById (24)
 // kKind2Hold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles (3 words)
 // kEffects: now Effect_Objects (symbols.toml). Effect_Objects: the first eight records
@@ -135,7 +135,7 @@ const ah::Callee kCallees42[] = {
     kFindFree, kSet40, kClear40,
 };
 const ah::Region kRegions42[] = {
-    {Field_ActiveMember_addr, 4}, {MoveScript_EffectState_addr, 24}, {Area42_Rank_addr, 1}, {Field_Kind2Hold_addr, 1}, {Camera_Angles_addr, 6}, {Effect_Objects_addr, 8 * 0x80},
+    {Field_ActiveMember_addr, 4}, {Character_IndexById_addr, 24}, {Area42_Rank_addr, 1}, {Field_Kind2Hold_addr, 1}, {Camera_Angles_addr, 6}, {Effect_Objects_addr, 8 * 0x80},
 };
 
 // The countdown's boundaries: seconds 5 / 6 / 10 (150, 180, 300 frames),
@@ -150,7 +150,7 @@ void Seed42(unsigned k) {
     SeedActiveMember();
     // the leader's effect-state index inside the table, its entry 1 most of the time
     if (ah::Often()) Mem(ObjTrio_addr + 0x89)[0] = static_cast<unsigned char>(ah::Next() % 24);
-    if (ah::Often()) Mem(MoveScript_EffectState_addr + Mem(ObjTrio_addr + 0x89)[0] % 24)[0] = static_cast<unsigned char>(ah::Often() ? 1 : AH_PICK(0, 2, 0x81));
+    if (ah::Often()) Mem(Character_IndexById_addr + Mem(ObjTrio_addr + 0x89)[0] % 24)[0] = static_cast<unsigned char>(ah::Often() ? 1 : AH_PICK(0, 2, 0x81));
     Mem(Area42_Rank_addr)[0] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 3 : ah::Next());
     SetWord(Mem(at::kTailTimer), TimerWord());
     Mem(AreaW0c_TailSub_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 1, 2, 0x3C, 0xFF) : ah::Next());

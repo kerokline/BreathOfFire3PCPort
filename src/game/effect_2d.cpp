@@ -67,7 +67,7 @@ void StoreFloat(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 // The x87 at the game's 53-bit precision: a float plus or less a whole number
 // rounded once to 53 bits, then to a float at the store.
 void StoreSum(unsigned char* p, float a, int b) { StoreFloat(p, static_cast<float>(static_cast<double>(a) + static_cast<double>(b))); }
-unsigned char* Row() { return *reinterpret_cast<unsigned char**>(At(AreaW0c_FlagRow_addr)); }
+unsigned char* Row() { return *reinterpret_cast<unsigned char**>(At(Chapter_FlagRow_addr)); }
 unsigned char* Colour() { return At(Effect2d_PanelColour_addr); } // [0] 0x6761C4, [1] 0x6761C5, [2] 0x6761C6
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + which]; jmp [table +

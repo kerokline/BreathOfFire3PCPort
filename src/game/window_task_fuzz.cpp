@@ -90,7 +90,7 @@ const Watch kWatch[] = {
     {BossSa_WindowPass_addr, 0, 4},
     {AreaW1f_MusicCurrent_addr, 1, 0},
     {Music_Track_addr, 1, 0},
-    {AreaW0c_PendingKind_addr, 1, 0},
+    {Area_EnterTransition_addr, 1, 0},
     {AreaEntry_PendingFlags_addr, 1, 0},
     {AreaW0b_Place_addr, 1, 0},
     {AreaW0b_Place_addr + 1, 1, 0},
@@ -415,7 +415,7 @@ const Region kRegions[] = {
     {BossSa_WindowPass_addr, 1},
     {0x7DEE40, 0x40},                       // MsgBoxState: the list dword, set, count, cursor, placement and rows
     {AreaW0b_Place_addr, 2},
-    {AreaW0c_PendingKind_addr, 1},
+    {Area_EnterTransition_addr, 1},
     {window_task::at::kPendingX, 4},
     {AreaEntry_PendingZ_addr, 4},
     {AreaEntry_PendingFlags_addr, 1},       // Gfx_BufferIndex is the byte after it: one byte, exactly
@@ -423,7 +423,7 @@ const Region kRegions[] = {
     {Music_Track_addr, 1},
     {0x66C7D8, 1},                          // Field_Request
     {0x9039A2, 2},                          // Field_ScriptFlags
-    {BattleDraw_Colour_addr, 1},
+    {Config_WindowColour_addr, 1},
     {0x904EFC, 2},                          // Game_AreaNumber
     {0x903F90, 0x108},                      // Cond_Flags
 };
@@ -620,7 +620,7 @@ unsigned Byte(const State& s, std::uint32_t address) {
 void Cover(unsigned k, const State& in, const State& out) {
     switch (k) {
     case kClassify:
-        if (Byte(out, AreaW0c_PendingKind_addr) == 0xB) ++g_cover.area_kind;
+        if (Byte(out, Area_EnterTransition_addr) == 0xB) ++g_cover.area_kind;
         else ++g_cover.area_other;
         break;
     case kPickMusic: {

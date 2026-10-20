@@ -383,7 +383,7 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     unsigned char hit = 0;
     if (Field_InputFlags & 1) {
         for (unsigned i = 0; i < count; ++i)
-            if (ActorState(MoveScript_EffectState[Cond_Flags[0xd2 + i]]) & 0x80) hit = 1;
+            if (ActorState(Character_IndexById[Cond_Flags[0xd2 + i]]) & 0x80) hit = 1;
         if (!hit) return;
     } else if (!(ActorState(f[0x148]) & 0x80)) {
         return;
@@ -396,7 +396,7 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     if (Field_InputFlags & 1) {
         for (unsigned i = 0; i < count; ++i) {
             const unsigned char member = Cond_Flags[0xd2 + i];
-            if ((ActorState(MoveScript_EffectState[member]) & 0x80) && (g.hp_lose(1, member) & 0xFFFF) != 0) hit = 1;
+            if ((ActorState(Character_IndexById[member]) & 0x80) && (g.hp_lose(1, member) & 0xFFFF) != 0) hit = 1;
         }
         if (!hit) return;
     } else if ((g.hp_lose(1, Field_State[0x89]) & 0xFFFF) == 0) {
@@ -437,9 +437,9 @@ extern "C" void __cdecl Field_EquipTick(void) {
 
 // original 0x535310 (PSX 0x801C48EC): how many of a record's equipment bytes
 // of `kind` are `value`. Nothing bounds the member (a whole byte into
-// MoveScript_EffectState's 24) or the record it names.
+// Character_IndexById's 24) or the record it names.
 extern "C" unsigned char __cdecl Actor_EquipCount(unsigned member, unsigned kind, unsigned value) {
-    const unsigned char* const r = At(bof3::addr::CharacterRecords + MoveScript_EffectState[member & 0xFF] * kRecordSize);
+    const unsigned char* const r = At(bof3::addr::CharacterRecords + Character_IndexById[member & 0xFF] * kRecordSize);
     const auto v = static_cast<unsigned char>(value);
     switch (kind & 0xFF) {
     case 1: return r[0x12] == v;

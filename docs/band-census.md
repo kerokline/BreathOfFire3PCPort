@@ -123,7 +123,7 @@ inside `BOF3.exe`'s image (else `unread`). Read from the handlers
 | State | When |
 |---|---|
 | `end` | op `FF` (steps the position back onto itself), `86` (hands over to a `+0x18` script and stays), or the byte before the position `EF`, `D8` or `E6` (they end the script and the position has passed them); also speed index `+0x84` 0, which `Field_ObjectUpdate` never steps |
-| `wait` | ops that step back onto themselves while their test holds: `FD` (`Sprite_ScriptTickOnce`), `D9` (`Field_Request` 2), `DA` (`MoveScript_WaitWordDA`), `E9`, `F9`, and a counter op `A0`..`AF` the flow pass stopped on; also a timed move or its wait running (`+9` or steps left `+0x87`, `Field_ObjectMotion` `0x518980`) |
+| `wait` | ops that step back onto themselves while their test holds: `FD` (`Sprite_ScriptTickOnce`), `D9` (`Field_Request` 2), `DA` (`Transition_Busy`), `E9`, `F9`, and a counter op `A0`..`AF` the flow pass stopped on; also a timed move or its wait running (`+9` or steps left `+0x87`, `Field_ObjectMotion` `0x518980`) |
 | `run` | anything else |
 | `none` | not a field object: the party, the kind-2 object, the extra objects, others |
 

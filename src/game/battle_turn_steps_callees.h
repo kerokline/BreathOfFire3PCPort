@@ -37,15 +37,15 @@ constexpr std::uint32_t kState3 = 0x904AA3;       // u8: the result's step
 constexpr std::uint32_t kState4 = 0x904AA4;       // u8 (read as a dword and masked): the result's page
 // kCursor: now BossSb_Countdown (symbols.toml). u8: the member BattleEnd_StartMemberTask is at
 constexpr std::uint32_t kRoundFlags = 0x904AA8;   // u16; bits 2, 3 and 4 cleared here, bit 4 tested
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (battle_flow.md: "event battle" is a guess)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8 (battle_flow.md: "event battle" is a guess)
 constexpr std::uint32_t kMembers = 0x904AB0;      // u8: the party's count
 constexpr std::uint32_t kCmdByte = 0x904AB4;      // u8, zeroed with the four below before file 0x131
 constexpr std::uint32_t kCmdKind = 0x904ABC;      // u8, set to 8
 constexpr std::uint32_t kCmdLong = 0x904ABD;      // u32, zeroed (unaligned)
 constexpr std::uint32_t kCmdWord = 0x904AC1;      // u16, zeroed (unaligned)
 // kSideMode: now BattlePhases_Initiative (symbols.toml). u8: 2 changes what the faster side gets
-// kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 and bit 1 pick the way out (|= 2 when the last enemy falls)
+// kMusicFlags: now EventBattle_Flags (symbols.toml). u8: bit 0x40 keeps the battle's music
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 and bit 1 pick the way out (|= 2 when the last enemy falls)
 // kBattleEnd2: now BattleMisc_BannerKinds (symbols.toml). u8, zeroed on the way out
 // kExtraRound: now BattlePhases_B7A (symbols.toml). u8: 1..3, the faster side's extra round; 0 none
 // kPending: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect to show

@@ -237,7 +237,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml).
-// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kEventBattle: now EventBattle_Id (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kCamera: now Camera_Angles (symbols.toml).
 constexpr std::uint32_t kScratch = 0x903850, kScratchBytes = 0x1C, kAbility = 0x904B80;
@@ -435,7 +435,7 @@ void Disturb(std::uint32_t h) {
     case 4: SetWord(mh::Mem(Camera_Angles_addr), h >> 16); break;
     case 5: PoolRecord(SomePool(v), v >> 2)[0] ^= 1; break;
     case 6: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
-    case 7: mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(h >> 24); break;
+    case 7: mh::Mem(EventBattle_Id_addr)[0] = Byte(h >> 24); break;
     case 8: SetWord(mh::Mem(kAbility), (h & 0x1000000) ? 0xDF : h >> 16); break;
     default: break;
     }
@@ -513,7 +513,7 @@ void Seed(unsigned k) {
         if (mh::Half()) sc[9] = 0;
         Near(sc[0xA], 0);
         break;
-    case kMagic225Veil_Start: if (mh::Half()) mh::Mem(BattleActions_EventBattle_addr)[0] = mh::Half() ? 0x37 : 0x36; break;
+    case kMagic225Veil_Start: if (mh::Half()) mh::Mem(EventBattle_Id_addr)[0] = mh::Half() ? 0x37 : 0x36; break;
     case kMagic225Shard_Fly:
         if (mh::Often()) SetLong(sc + 0xC, static_cast<std::int32_t>(4 + mh::Next() % 2));
         break;

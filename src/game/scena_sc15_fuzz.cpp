@@ -61,7 +61,7 @@ template <typename T, unsigned N> T PickOf(const T (&v)[N]) { return v[sh::Next(
 constexpr std::uint32_t kState = 0x8034E2;
 // kByteFD: now Cond_ByteFD (symbols.toml).
 constexpr std::uint32_t kCounter0 = 0x903848, kCounter3 = 0x90384B;
-// kWait: now MoveScript_WaitWordDA (symbols.toml).
+// kWait: now Transition_Busy (symbols.toml).
 // kRequest: now Field_Request (symbols.toml).
 // kArea: now Game_AreaNumber (symbols.toml).
 // kEffects: now Effect_Objects (symbols.toml).
@@ -531,7 +531,7 @@ void Seed15(unsigned k) {
     if (sh::Often()) SetW(Game_AreaNumber_addr, PickOf(kAreas15));
     B(Cond_ByteFD_addr) = static_cast<unsigned char>(sh::Next() % 4);
     if (sh::Half()) B(Field_Request_addr) = PickOf<std::uint8_t, 4>({0, 2, 6, 1});
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     if (sh::Half()) B(Scena15_Bytes_addr + 0x1) = 0;
     B(kShakeShift) = static_cast<unsigned char>(sh::Next() % 8);
     if (sh::Half()) B(Scena15_Bytes_addr + 0x2) = sh::Half() ? 0 : 0xFF;
@@ -828,7 +828,7 @@ void Seed17(unsigned k) {
     B(MoveScript_PartyRecords_addr + 0x62) = static_cast<unsigned char>(sh::Next() % 3);
     B(MoveScript_PartyRecords_addr + 0x63) = static_cast<unsigned char>(sh::Next() % 4);
     B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kCounts);
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     if (sh::Half()) B(Field_Request_addr) = sh::Half() ? 2 : 0;
     if (sh::Half()) B(Field_Kind2Hold_addr) = 0;
     B(kCounter3) = PickOf<std::uint8_t, 5>({0x14, 0x64, 1, 2, 0});

@@ -40,7 +40,7 @@ constexpr unsigned kMaxAp = 0x22;       // u16, effective
 constexpr unsigned kRecordBytes = 0xA4;
 
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). Party_Count's 3-byte lists (move_cmds_callees.h)
-// kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per party entry: its record index (MoveScript_EffectState)
+// kMemberRecord: now Character_IndexById (symbols.toml). u8 per party entry: its record index (Character_IndexById)
 constexpr std::uint32_t kItemFlags = 0x656B38;     // NameTable_Consumables + 0x10: each record's flags byte
 constexpr std::uint32_t kItemStride = 22;
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0 (title-states.md section 3)
@@ -57,7 +57,7 @@ constexpr std::uint32_t kMessage = 0x7DEE48;       // u16
 // kChoiceId: now ItemUse_ChoiceId (symbols.toml). u8
 constexpr std::uint32_t kCursor = 0x7DEE67;        // s8 as the system choices read it
 constexpr std::uint32_t kWindow0State = 0x803163;  // u8
-// kWindow1State: now ItemUse_Window1State (symbols.toml). u8
+// kWindow1State: now Window1_State (symbols.toml). u8
 constexpr std::uint32_t kSysMessages = 0x658F08;   // u16 pairs, 4 bytes per system choice id
 // kSysFlag: now FieldS_Answer (symbols.toml). u8, choice 0x80's answer
 constexpr std::uint32_t kSysCounter = 0x903848;    // u8, MoveScript variable 3 (move_cmds' kCounters)

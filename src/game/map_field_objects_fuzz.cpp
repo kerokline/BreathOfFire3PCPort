@@ -790,7 +790,7 @@ int SomeCoordinate() { return static_cast<int>(OneIn(4) ? Next() : Next() % 0x20
 void TestMemberStatus(Tally& t, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(int, int, unsigned, unsigned);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {{kCharRecords, kMembersBytes}, {kPrintBuf, 0x20}, {BattleDraw_Colour_addr, 1}, {at::FrameCounterAt(), 4}};
+    const Region r[] = {{kCharRecords, kMembersBytes}, {kPrintBuf, 0x20}, {Config_WindowColour_addr, 1}, {at::FrameCounterAt(), 4}};
     const int n = sizeof r / sizeof r[0];
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
@@ -807,7 +807,7 @@ void TestMemberStatus(Tally& t, void* clone, unsigned rounds) {
         SetWord(rec + 0x1A, ap);
         if (OneIn(2)) rec[0x1E] = 0;
         const U highlight = OneIn(2) ? (Next() & 0xFFFFFF00u) : Next();
-        SetWatch({{Addr(rec) + 9, 0x1A}, {at::FrameCounterAt(), 1}, {BattleDraw_Colour_addr, 1}});
+        SetWatch({{Addr(rec) + 9, 0x1A}, {at::FrameCounterAt(), 1}, {Config_WindowColour_addr, 1}});
         const int x = SomeCoordinate(), y = SomeCoordinate();
         Pair(t, r, n, true, [&] { return theirs(x, y, member, highlight); },
              [&] { return static_cast<U>(Menu_DrawMemberStatus(x, y, member, highlight)); });
@@ -836,9 +836,9 @@ void TestCell8(Tally& t, void* clone, unsigned rounds) {
 void TestPlayTime(Tally& t, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(int, int);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {{kClockHours, 4}, {kPrintBuf, 0x20}, {BattleDraw_Colour_addr, 1}};
+    const Region r[] = {{kClockHours, 4}, {kPrintBuf, 0x20}, {Config_WindowColour_addr, 1}};
     const int n = sizeof r / sizeof r[0];
-    SetWatch({{kClockHours, 4}, {BattleDraw_Colour_addr, 1}});
+    SetWatch({{kClockHours, 4}, {Config_WindowColour_addr, 1}});
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
         At(MapFieldObjects_ClockFrames_addr)[0] = static_cast<unsigned char>(Pick({0, 14, 15, 16, 29, 0x80, 0xFF, Next()}));
@@ -952,7 +952,7 @@ void SelfTest() {
         kScratch, kVertices, kScreen, kPacketNext, kOtSlot, kUprights, kHeaderRegion,
         {at::OriginAt(), 4}, {at::RowAt(), 2}, {at::ColumnAt(), 2}, {0x937FA0, 56 * 28 * 4},
         {at::FrameCounterAt(), 4}, {at::CondByteFFAt(), 1}, {kCharRecords, kMembersBytes}, {kPrintBuf, 0x20},
-        {BattleDraw_Colour_addr, 1}, {kClockHours, 4}, {at::BytesAt(), 4}, {kObjectsFrom, kObjectsBytes},
+        {Config_WindowColour_addr, 1}, {kClockHours, 4}, {at::BytesAt(), 4}, {kObjectsFrom, kObjectsBytes},
         {Sprite_Current_addr, 4}, {Field_ActiveMember_addr, 4}, {at::StatusBitsAt(), 1}, {at::ScriptFlagsAt(), 2},
     };
     const int n_all = sizeof all / sizeof all[0];

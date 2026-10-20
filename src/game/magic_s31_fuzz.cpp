@@ -229,7 +229,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml).
-// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kEventBattle: now EventBattle_Id (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
 constexpr std::uint32_t kScratch = 0x903850;
@@ -482,7 +482,7 @@ void Seed(unsigned k) {
         break;
     // Corona's third child: an event battle, the acting enemy's +0x100 0x29
     case kCorona_Start:
-        if (mh::Often()) mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(1 + mh::Next() % 0xFF);
+        if (mh::Often()) mh::Mem(EventBattle_Id_addr)[0] = Byte(1 + mh::Next() % 0xFF);
         if (mh::Often()) {
             const unsigned a = mh::Mem(mh::at::kActor)[0];
             mh::Mem(mh::at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(a) - 3) * 0x128) + 0x100)[0] = 0x29;

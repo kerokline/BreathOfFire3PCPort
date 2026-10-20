@@ -570,10 +570,10 @@ address	constants	reason
 0x66726C	src/game/save_menu_callees.h:88 kPieces	indexed: 1-byte by [reg + addr] (e.g. mov dl, byte ptr [eax + 0x66726c] at 0x588cd8); a table, its count unread
 0x667548	src/game/char_stats_callees.h:37 kTraitLists	indexed: 4-byte by [reg + addr] (e.g. mov esi, dword ptr [eax*4 + 0x667548] at 0x590816); a table, its count unread
 0x66971C	src/game/area_w1a_callees.h:69 kCellDelta; src/game/area_w2f_callees.h:77 kCellDelta; src/game/area_w3e_callees.h:69 kCellDelta; src/game/area_w3f_callees.h:133 kCellDelta; src/game/event_ops_callees.h:60 kCellDelta; src/game/field_e1_callees.h:54 kDirPairs; src/game/member_sprites_callees.h:28 kCellOffsets	indexed: 1-byte by [reg + addr] (e.g. movsx cx, byte ptr [eax + 0x66971c] at 0x405e8a; movsx di, byte ptr [ecx + 0x66971c] at 0x4176ed; mov al, byte ptr [esi + 0x66971c] at 0x417a2c); a table, its count unread
-0x66972D	src/game/boss_sc_callees.h:58 kBannerChar	inside MoveScript_EffectState (0x66972C + 0x1); an element of a typed entry, not its own
-0x669730	src/game/boss_sh_callees.h:61 kPickId; src/game/scena_sc1_callees.h:49 kScene06Member	inside MoveScript_EffectState (0x66972C + 0x4); an element of a typed entry, not its own
-0x669734	src/game/scena_sc13_callees.h:103 kRecordIndex	inside MoveScript_EffectState (0x66972C + 0x8); an element of a typed entry, not its own
-0x669738	src/game/event_ops_callees.h:40 kMemberSlot; src/game/field_event_callees.h:32 kMemberFlags	inside MoveScript_EffectState (0x66972C + 0xC); an element of a typed entry, not its own
+0x66972D	src/game/boss_sc_callees.h:58 kBannerChar	inside Character_IndexById (0x66972C + 0x1); an element of a typed entry, not its own
+0x669730	src/game/boss_sh_callees.h:61 kPickId; src/game/scena_sc1_callees.h:49 kScene06Member	inside Character_IndexById (0x66972C + 0x4); an element of a typed entry, not its own
+0x669734	src/game/scena_sc13_callees.h:103 kRecordIndex	inside Character_IndexById (0x66972C + 0x8); an element of a typed entry, not its own
+0x669738	src/game/event_ops_callees.h:40 kMemberSlot; src/game/field_event_callees.h:32 kMemberFlags	inside Character_IndexById (0x66972C + 0xC); an element of a typed entry, not its own
 0x669750	src/game/field_event_callees.h:31 kPartySets	inside MoveScript_EffectArg (0x669744 + 0xC); an element of a typed entry, not its own
 0x66978C	src/game/field_c3_callees.h:42 kTargetOffsets; src/game/field_e2_callees.h:46 kPaceHeights	indexed: 2-byte by [reg + addr] (e.g. movsx eax, word ptr [eax*2 + 0x66978c] at 0x525e66; movsx eax, word ptr [ebx*2 + 0x66978c] at 0x5361d0; sub ax, word ptr [ecx*2 + 0x66978c] at 0x536213); a table, its count unread
 0x6697A4	src/game/field_e2_callees.h:47 kPaceRises	indexed: 1-byte by [reg + addr] (e.g. movzx dx, byte ptr [ebx + 0x6697a4] at 0x5361e4; movzx dx, byte ptr [eax + 0x6697a4] at 0x53632f); a table, its count unread

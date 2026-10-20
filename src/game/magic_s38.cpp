@@ -70,7 +70,7 @@ constexpr std::uint32_t kS = 0x903850;
 
 // The cells the overlays read beyond the harness's names.
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle (its kind)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle (its kind)
 constexpr std::uint32_t kAbility = 0x904B80;       // u16: the acting ability (battle_actions.cpp)
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
@@ -675,7 +675,7 @@ S38_EXPORT void __cdecl Magic225Veil_Run(void) {
 S38_EXPORT void __cdecl Magic225Veil_Start(void) {
     Pointer(MagicS23_ActorSprite_addr)[0x29] = 2;
     LayerSide(2);
-    Sc()[0x29] = Mem(BattleActions_EventBattle_addr)[0] == 0x37 ? 7 : 3;
+    Sc()[0x29] = Mem(EventBattle_Id_addr)[0] == 0x37 ? 7 : 3;
     Sc()[0xB] = 1;
     Sc()[9] = 0;
     Sc()[0xA] = 0;

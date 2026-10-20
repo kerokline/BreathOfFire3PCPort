@@ -38,22 +38,22 @@ constexpr std::uint32_t kSubStep = 0x904AA2;       // u8: the step's own step; t
 // kTapCommand: now BattleE5_GeneRow (symbols.toml). u8: the command + 1 the first tap chose
 // kAA7: now BattleE1_Roster (symbols.toml). u8, zeroed by Battle_Init
 constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16: bit 1 the phases held, 3 committed, 4 auto battle
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (battle_flow.md: "event battle", a guess)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8 (battle_flow.md: "event battle", a guess)
 constexpr std::uint32_t kFacing = 0x904AAC;        // u8: its (b ^ 2) >> 1 picks a word of 0x64E2BC
 // kAAD: now BossSe_Script (symbols.toml). u8, zeroed by Battle_Init
 // kMenuMember: now BattleE4_AutoMember (symbols.toml). u8: the member whose menu is open
 constexpr std::uint32_t kActorCount = 0x904AB0;    // u8: actors Battle_Init counts over
-// kActorsIn: now BattleSprites_PartyPick (symbols.toml). u8: of those, the ones not out
+// kActorsIn: now Battle_PartyStanding (symbols.toml). u8: of those, the ones not out
 constexpr std::uint32_t kCommand = 0x904AB4;       // u8: the command the cross points at (0 none)
 constexpr std::uint32_t kEntryOrder = 0x904AB6;    // u8 x 3: members in menu order, 0xFF none
 constexpr std::uint32_t kCrossGrow = 0x904ABC;     // u8 x 7: the command cross's arms' growth
 // kMenuIndex: now BattleActorCopies_EntryCount (symbols.toml). s8: the entry of kEntryOrder the menu is at
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: 1 and 2 show messages 0x16 / 0x17 at the start; 2+ no cross
 // kAE6: now BattlePhases_AE6 (symbols.toml).
-// kDropCount: now BattleE7_DropCount (symbols.toml).
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml).
+// kDropCount: now Battle_DropCount (symbols.toml).
+// kBattleEnd: now Battle_EndFlags (symbols.toml).
 // kAE9: now BattleMisc_BannerKinds (symbols.toml). u8: bit 1 holds the phases until phase 5
-// kExpTotal: now BattleFlow_ExpTotal (symbols.toml).
+// kExpTotal: now Battle_ExpTotal (symbols.toml).
 // kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml).
 // kB24: now BattlePhases_B24 (symbols.toml). 4 dwords zeroed by Battle_Init
 constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int): called with 6 by Battle_Init

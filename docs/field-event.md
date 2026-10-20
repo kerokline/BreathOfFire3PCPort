@@ -75,7 +75,7 @@ of the function can be compared.
 ## 2. The addresses this layer touches
 
 `symbols.toml` names `ObjTrio`, `Field_Members`, `Field_State`,
-`Sprite_Current`, `Field_ActorStates`, `MoveScript_EffectState`,
+`Sprite_Current`, `Field_ActorStates`, `Character_IndexById`,
 `Field_MemberCount`, `Field_InputFlags`, `Field_InputHeld`,
 `Field_ScriptFlags` / `2`, `Field_Request`, `Field_Kind2X` / `Z`,
 `Game_AreaNumber`, `Draw_OtSlot`, `MapView_HeightScale`, the clut strip and
@@ -272,7 +272,7 @@ The state compared is `ObjTrio` (996 bytes), eight actor records, the two
 party lists, the current set, `PartySet_Find`'s ids, the join state, the
 pending jump, `Game_AreaNumber`, the leader's timer, the input and script
 flags, `Field_State` and the object at `0x905DA0`, `Field_Kind2X` / `Z`,
-`Field_Request`, `MoveScript_EffectState`, `Field_MemberCount`,
+`Field_Request`, `Character_IndexById`, `Field_MemberCount`,
 `MapView_HeightScale`, `Draw_OtSlot`, `Sprite_Current`, the clut strip dirty
 byte, 256 bytes of palette and their twins, the 32 tint records, a scratch
 object and the zone record the stand-in returns.
@@ -284,13 +284,13 @@ member count, either flags word, the input, a party list byte, the current
 set, an actor record, the area, an object's byte, a tint record. That is what
 makes the "read again" quirks above testable. One bound: the count the
 party-count stand-in returns never exceeds the real ids at the front of the
-list, since `Field_PartySetUp` indexes the 24-entry `MoveScript_EffectState`
+list, since `Field_PartySetUp` indexes the 24-entry `Character_IndexById`
 by them and an `0xFF` would read past it (review, 2026-09-22).
 
 **Not generated**, because the original would fault or write outside the
 compared state: a `Sprite_Current` / `Field_State` outside the five objects, a
 dispatch byte past its table, more than three members, a
-`MoveScript_EffectState` entry above 7, a member id of 24 or more for
+`Character_IndexById` entry above 7, a member id of 24 or more for
 `Party_Join`, a member index above 2 for `Member_ClearState`, a zone list
 with no matching record, and a palette destination outside the 256 bytes at
 `0x80D380`.
@@ -315,7 +315,7 @@ Each is a single planted change, built and run alone
 | area 0xBD tested before input bit 5 | `Field_LeaderStart` | yes | 898 |
 | `Sprite_ScriptTick` before the sub-state | `Field_LeaderControl` | yes | 6,000 |
 | the second "is a direction held" dropped | `Field_LeaderStand` | yes | 250 |
-| the actor index taken through `MoveScript_EffectState` | `Field_LeaderStand` | yes | 394 |
+| the actor index taken through `Character_IndexById` | `Field_LeaderStand` | yes | 394 |
 | `counter < base` as `counter <= base` | `Field_ZoneCounterRoll` | **no** | 0 |
 | `counter + 1 < base` | `Field_ZoneCounterRoll` | yes | 158 |
 | the base + roll sum in 16 bits | `Field_ZoneCounterRoll` | yes | 4 |

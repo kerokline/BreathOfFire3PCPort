@@ -93,7 +93,7 @@ void Disturb() {
     const unsigned w = h >> 20;
     switch ((h >> 4) % 16) {
     case 0: Game_Step = static_cast<unsigned short>(v % 3 == 0 ? h >> 16 : v % 4); break;
-    case 1: MoveScript_WaitWordDA = static_cast<unsigned short>(v % 2 ? 0 : w); break;
+    case 1: Transition_Busy = static_cast<unsigned short>(v % 2 ? 0 : w); break;
     case 2: Sprite_Current = Object(w % kObjectCount); break;
     case 3: Field_State = g_fstate[v % 2]; break;
     case 4: {
@@ -107,7 +107,7 @@ void Disturb() {
         break;
     }
     case 6: At(at::kCounters + w % 4)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v % 10); break;
-    case 7: SetLong(At(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
+    case 7: SetLong(At(Chapter_FlagRow_addr), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 8: Cond_ByteFD = static_cast<unsigned char>(v % 2 ? 1 : v); break;
     case 9: Gfx_PacketNext = g_prim + (w % 0xC0); break;
     case 10: g_text[w % kText] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
@@ -146,7 +146,7 @@ void __cdecl StubBank(unsigned file) { Record(6, file); Disturb(); }
 void __cdecl StubMenuFrame() {
     Record(7);
     Disturb();
-    if (++g_frame_calls > g_frame_limit) MoveScript_WaitWordDA = 0;
+    if (++g_frame_calls > g_frame_limit) Transition_Busy = 0;
 }
 // Text_EmitGlyph uses the low words of h, u and v (the original pushes
 // registers whose upper halves are left over); x, y, w and the CLUT whole.
@@ -407,7 +407,7 @@ const Region kRegions[] = {
     {0x937F88, 4},                      // Sprite_Current
     {0x937F90, 1},                      // Gfx_ClutStripDirty
     {0x66C7D8, 0x14},                   // Field_Request, the turn byte, Game_Mode, Game_Step
-    {0x66C810, 2},                      // MoveScript_WaitWordDA
+    {0x66C810, 2},                      // Transition_Busy
     {at::kSmallUV, 0x20},               // constant data from here on - random here, put back after
     {at::kCursorRows, 0x30},
 };
@@ -480,7 +480,7 @@ struct Args { std::uint32_t a[5]; };
 Args Seed(unsigned k) {
     Args args;
     for (std::uint32_t& v : args.a) v = Next();
-    if (Often()) MoveScript_WaitWordDA = 0;
+    if (Often()) Transition_Busy = 0;
     switch (k) {
     case kLookEnd:
     case kLookReturn:

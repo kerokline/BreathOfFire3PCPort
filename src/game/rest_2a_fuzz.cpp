@@ -272,7 +272,7 @@ void Seed(unsigned k) {
     }
 }
 
-// The record helpers' member byte below MoveScript_EffectState's 24 (past it
+// The record helpers' member byte below Character_IndexById's 24 (past it
 // both read the .data after it unchecked), the amount at the HP / AP edges;
 // Area_ObjectHandler's (short) n inside Area_ObjectFallbacks' 11 under random
 // upper bytes; the spawns' sub-kind any dword.

@@ -92,9 +92,9 @@ constexpr U kCharacters = 0x903A70;  // CharacterRecords: 0xA4 a member
 constexpr U kCharacterStride = 0xA4;
 constexpr U kWorking = 0x802DC0;     // the party's working records' +0x80 (ObjTrio + 0x80), 0x14C a slot
 constexpr U kWorkingStride = 0x14C;
-constexpr U kEffectState = 0x66972C; // MoveScript_EffectState: the record of a member id
-// kStyle: now BattleDraw_Colour (symbols.toml). the window colour
-// kBackdrop: now FieldS_Backdrop (symbols.toml). the Config "Background" byte
+constexpr U kEffectState = 0x66972C; // Character_IndexById: the record of a member id
+// kStyle: now Config_WindowColour (symbols.toml). the window colour
+// kBackdrop: now Config_Background (symbols.toml). the Config "Background" byte
 // kGameStep: now Game_Step (symbols.toml). Game_Step (u16)
 // kPressed: now Input_Pressed (symbols.toml). Input_Pressed (u16)
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
@@ -158,7 +158,7 @@ void Run(const char* who, const unsigned long* table, unsigned entries, unsigned
 }
 
 // --- the callees ------------------------------------------------------------------------
-void Backdrop() { SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(Config_Background); }
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
 unsigned char PartyCount() { return static_cast<unsigned char>(SH_CALL(Party_Count)(0)); }
 U Repeat(U pressed) { return SH_CALL(Input_AutoRepeat)(pressed); }
@@ -169,7 +169,7 @@ void Row(int x, U y, unsigned colour, unsigned category, unsigned id, unsigned c
     SH_CALL(Menu_DrawItemRow)(x, static_cast<int>(y), static_cast<int>(colour), category, id, count, static_cast<int>(dim));
 }
 
-// The member a CharacterRecords flag test is about: record MoveScript_EffectState[id].
+// The member a CharacterRecords flag test is about: record Character_IndexById[id].
 unsigned char* Character(unsigned char id) { return At(kCharacters + kCharacterStride * B(kEffectState + id)); }
 
 // DIV-0059's site, read at inject (0: not read yet - the fuzz's runs, before
@@ -331,7 +331,7 @@ extern "C" void __cdecl Tactics_Open(void) {
         B(Rec(n, 0)) = 0;
         B(Rec(n, 0xA)) = 0;
     }
-    const unsigned char kind = FieldS_Backdrop;
+    const unsigned char kind = Config_Background;
     B(Rec(18, 1)) = 6;
     B(Rec(18, 2)) = 0xD;
     B(Rec(18, 3)) = 2;
@@ -1246,7 +1246,7 @@ extern "C" void __cdecl Window_Handler1Kinds(void) {
 extern "C" void __cdecl Win1_TitleStrip(void) {
     Run("Win1_TitleStrip (0x596550)", Win1_TitleStripStates, Win1_TitleStripStates_count, Cur()[3],
         "the window record's +3");
-    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = Cur();
     SH_CALL(Menu_DrawTitleBox)(Wx(r), Wy(r), 0x118, 0x13, colour);
     r = Cur();
@@ -1283,7 +1283,7 @@ extern "C" void __cdecl Win1_ShisuPanel(void) {
 // frame's pieces.
 extern "C" void __cdecl Win1_DrawShisuPanel(unsigned char* rec) {
     SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 3u) & 0xFFFF), 0x95,
-                          0xA0, 0, static_cast<unsigned char>(BattleDraw_Colour));
+                          0xA0, 0, static_cast<unsigned char>(Config_WindowColour));
     for (unsigned char i = 0; i < 4; ++i) {
         const unsigned char held = At(static_cast<U>(Long(rec + 0x20)))[i];
         const unsigned colour = held != 0 ? 0 : 7;
@@ -1388,7 +1388,7 @@ extern "C" void __cdecl Win2_EquipCompare(void) {
 // message it names (Msg_SystemPtr) at (x + 7, y + 3), colour 0, count 0xFF.
 extern "C" void __cdecl Win2_TitleBox(void) {
     Run("Win2_TitleBox (0x5969E0)", Win2_TitleBoxStates, Win2_TitleBoxStates_count, Cur()[3], "the window record's +3");
-    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = Cur();
     SH_CALL(Menu_DrawTitleBox)(Wx(r), Wy(r), static_cast<int>(Word(r + 0x12)), 0x13, colour);
     r = Cur();
@@ -1427,7 +1427,7 @@ extern "C" void __cdecl MenuSlide_DownTo40(void) {
 // (or the word cleared); the frame's pieces; the scroll bar over 9 rows.
 extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
     SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 3u) & 0xFFFF), 0x99,
-                          0x9A, rec[9], static_cast<unsigned char>(BattleDraw_Colour));
+                          0x9A, rec[9], static_cast<unsigned char>(Config_WindowColour));
     unsigned char offset = static_cast<unsigned char>(Key(rec));
     unsigned char moving = 0;
     const unsigned char top = SH_CALL(Menu_ListScroll)(rec + 0xB, &offset, &moving, rec + 0x12);
@@ -1459,9 +1459,9 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         Row(Wx(rec) + 7, y - 2, colour, rec[0xA], *ids, count, dim);
     }
     SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 3u) & 0xFFFF), 0x99,
-                          0x14, rec[9], static_cast<unsigned char>(BattleDraw_Colour));
+                          0x14, rec[9], static_cast<unsigned char>(Config_WindowColour));
     {
-        const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
+        const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
         const unsigned char flags = rec[9];
         SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 0x92u) & 0xFFFF),
                               0x99, 8, flags, colour);

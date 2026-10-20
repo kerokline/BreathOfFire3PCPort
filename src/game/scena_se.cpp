@@ -14,7 +14,7 @@
 // can stand recorders in for ours as for the originals' copies. No
 // divergence: each is a faithful replacement. The unchecked indexes the
 // originals make (a negative placement count, a member id past
-// MoveScript_EffectState's 24) are reproduced, as event_script.cpp's
+// Character_IndexById's 24) are reproduced, as event_script.cpp's
 // placements and field_event.cpp's Party_Join reproduce them (latent
 // defects, docs/scena_se.md section 6).
 #include "game/scena_se.h"
@@ -60,9 +60,9 @@ std::uint32_t Coordinate(unsigned char half, unsigned char whole) {
 }
 
 // A character's record +0xB (CharacterRecords, stride 0xA4) through
-// MoveScript_EffectState[id] - both indexes a whole byte, unchecked.
+// Character_IndexById[id] - both indexes a whole byte, unchecked.
 unsigned char* RecordFlags(unsigned char id) {
-    return At(bof3::addr::CharacterRecords + 0xB + MoveScript_EffectState[id] * at::kObjectStride);
+    return At(bof3::addr::CharacterRecords + 0xB + Character_IndexById[id] * at::kObjectStride);
 }
 
 }  // namespace
@@ -77,14 +77,14 @@ unsigned char* RecordFlags(unsigned char id) {
 extern "C" void __cdecl Field_StartEventBattle(unsigned id_arg) {
     const unsigned char id = static_cast<unsigned char>(id_arg);
     At(at::kScriptFlags2High)[0] = static_cast<unsigned char>(At(at::kScriptFlags2High)[0] | 0x10);
-    BattleActions_EventBattle = id;
+    EventBattle_Id = id;
     unsigned char* const leader = At(ObjTrio_addr);
     leader[1] = 5;
     const unsigned char flags = At(bof3::addr::EventBattle_Records)[id * 4u];
     leader[2] = 0;
     leader[3] = 0;
     leader[4] = 0;
-    BattleTurnSteps_MusicFlags = flags;
+    EventBattle_Flags = flags;
     BattlePhases_Initiative = 0;
 }
 

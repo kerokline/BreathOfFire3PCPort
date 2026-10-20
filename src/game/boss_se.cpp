@@ -150,11 +150,11 @@ extern "C" void __cdecl Boss22_Setup(void) {
 // music not kept), Music_Track = 0x6A, the byte 0x92BF18 = 3; then a tail jump
 // to 0x446E20 (the end phase, step 3) - whatever the battle's end.
 extern "C" void __cdecl Boss22_End(void) {
-    const unsigned char end = BattleActions_BattleEnd;
-    const unsigned char music = BattleTurnSteps_MusicFlags;
+    const unsigned char end = Battle_EndFlags;
+    const unsigned char music = EventBattle_Flags;
     B(at::kScriptVar3) = 0xC;
-    BattleActions_BattleEnd = static_cast<unsigned char>(end | 8);
-    BattleTurnSteps_MusicFlags = static_cast<unsigned char>(music & 0xBF);
+    Battle_EndFlags = static_cast<unsigned char>(end | 8);
+    EventBattle_Flags = static_cast<unsigned char>(music & 0xBF);
     Music_Track = 0x6A;
     BossH_LeaderPick = 3;
     BH_AT(Handler, at::kEndThird)();
@@ -230,7 +230,7 @@ extern "C" void __cdecl Boss30_Setup(void) {
 // (the end phase, step 1) called, then Music_Track = 0x5A. Otherwise a tail
 // jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss30_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -296,13 +296,13 @@ extern "C" void __cdecl Boss24_Setup(void) {
 // 5, 0x904AE8 = the value read | 8, Music_Track = 0x44, a tail jump to
 // 0x446DE0 (step 1). Otherwise a tail jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss24_End(void) {
-    const unsigned char end = BattleActions_BattleEnd;
+    const unsigned char end = Battle_EndFlags;
     if ((end & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     B(at::kScriptVar3) = 5;
-    BattleActions_BattleEnd = static_cast<unsigned char>(end | 8);
+    Battle_EndFlags = static_cast<unsigned char>(end | 8);
     Music_Track = 0x44;
     BH_AT(Handler, at::kEndWin)();
 }
@@ -332,7 +332,7 @@ extern "C" void __cdecl BossBeyd_Enter(void) {
     StoreKind(AddressOf(BossBeyd_Anims), bof3::addr::BossBeyd_Hook, AddressOf(BossBeyd_Sounds));
     rv::Current<records::BattleEnemy>()->state = 2;
     BH_CALL(Sprite_ScriptTick)();
-    if (BattleActions_EventBattle != 0x1A) return;
+    if (EventBattle_Id != 0x1A) return;
     const unsigned char id = BH_CALL(EnemyData_FindByTag)(0x59);
     BH_CALL(Battle_CopyEnemyData)(0, id);
     rv::As<records::BattleEnemy>(Enemy())->kind_flag = 1;
@@ -350,7 +350,7 @@ extern "C" void __cdecl BossBeyd_ActDispatch(void) {
 // (25) then Msg_OpenScript(0x20).
 extern "C" void __cdecl BossBeyd_Death(void) {
     Death(0xF);
-    if (BattleActions_EventBattle == 0x19) Message(0x20);
+    if (EventBattle_Id == 0x19) Message(0x20);
 }
 
 // original 0x43BA90: the +0xF4 hook through BossBeyd_Hooks (3: BossBeyd_HookPick,
@@ -361,7 +361,7 @@ extern "C" void __cdecl BossBeyd_Hook(unsigned word) { DispatchHook("BossBeyd_Ho
 // only: 0x904AE2 at 1 or above clears bit 1 of 0x939AD8's +0x110; then the
 // acting kind 0x904B35 = 1. The word is not read.
 extern "C" void __cdecl BossBeyd_HookPick(unsigned) {
-    if (BattleActions_EventBattle != 0x19) return;
+    if (EventBattle_Id != 0x19) return;
     if (BossSe_RoundSlot >= 1) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
         enemy_rec->flags_110 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) & 0xFFFFFFFDu);
@@ -370,11 +370,11 @@ extern "C" void __cdecl BossBeyd_HookPick(unsigned) {
 }
 
 // original 0x43BAD0: hook entry 2 (BattleEnemy_RunAll's, each frame). With
-// round-flag bit 1 and MoveScript_WaitWordDA 0: BossActor_ClearBit40(0), then
+// round-flag bit 1 and Transition_Busy 0: BossActor_ClearBit40(0), then
 // the round flags' word &= 0xFFFD and Draw_PassFlags = 0.
 extern "C" void __cdecl BossBeyd_HookTick(unsigned) {
     if ((B(at::kFlags) & 2) == 0) return;
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BH_CALL(BossActor_ClearBit40)(0);
     SetWord(At(at::kFlags), Word(At(at::kFlags)) & 0xFFFDu);
     Draw_PassFlags = 0;
@@ -708,7 +708,7 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
         }
         return 0;
     case 2:
-        if (static_cast<U>(Long(At(at::kTurn))) == 0x15) BattleActions_BattleEnd |= 4;
+        if (static_cast<U>(Long(At(at::kTurn))) == 0x15) Battle_EndFlags |= 4;
         return 0;
     case 3:
         if ((BossSe_Script & 0x20) == 0 && B(at::kPhase) == 1) {

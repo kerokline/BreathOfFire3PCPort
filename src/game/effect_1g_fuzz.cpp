@@ -175,7 +175,7 @@ const sh::DataTable kTables[] = {{ItemTrade_LeaveSteps_addr, 2}};
 // --- the state ------------------------------------------------------------------------------------
 
 // Beyond the harness's standard and field regions (which hold Input_Pressed,
-// MoveScript_WaitWordDA, the packet cursor and buffer, Frame_Counter, the
+// Transition_Busy, the packet cursor and buffer, Frame_Counter, the
 // style byte 0x903A5A, the row byte 0x905B88 in the camera-turn cells, the
 // text scratch 0x904BA0).
 const sh::Region kRegions[] = {
@@ -223,7 +223,7 @@ void Seed(unsigned) {
     SetW(0x7E1BEC, pressed);   // Input_Pressed
     SetW(Field_ConfirmButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
     SetW(Field_CancelButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
-    SetW(MoveScript_WaitWordDA_addr, sh::Half() ? 0 : sh::Next());
+    SetW(Transition_Busy_addr, sh::Half() ? 0 : sh::Next());
 }
 
 // The arguments each kCall function reads (garbage above the bytes it masks).

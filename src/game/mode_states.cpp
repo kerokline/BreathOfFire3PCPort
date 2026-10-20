@@ -103,7 +103,7 @@ void ClearCounters() { for (unsigned i = 0; i < 4; ++i) Counter(i) = 0; }
 void SetStep5(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void SetRun(int v) { MoveScript_Var7 = static_cast<signed char>(v); }
 // The flag bits, the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return g.flags_test(Bank(), n) != 0; }
 void SetFlag(unsigned n) { g.flags_set(Bank(), n); }
 // Takes an effect slot and, when there is one, marks its record live as kind
@@ -338,7 +338,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_Frame(void) {
 
 // original 0x496830 (no PSX twin paired): Field_WaitTransition with the menu's
 // frame - called by mode 3's steps 0 and 2 after Transition_Start(3) / (2).
-// Loop: a frame's sleep; with MoveScript_WaitWordDA 0 and `run` 0, one more
+// Loop: a frame's sleep; with Transition_Busy 0 and `run` 0, one more
 // sleep and return; else Menu_Frame, and return once the word is 0.
 //
 // As the original has it: `run` is the argument's byte, read once, and
@@ -347,12 +347,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_WaitTransition(
     const unsigned char run = SlotByte(run_argument);
     for (;;) {
         g.sleep(1);
-        if (MoveScript_WaitWordDA == 0 && run == 0) {
+        if (Transition_Busy == 0 && run == 0) {
             g.sleep(1);
             return;
         }
         g.menu_frame();
-        if (MoveScript_WaitWordDA == 0) return;
+        if (Transition_Busy == 0) return;
     }
 }
 

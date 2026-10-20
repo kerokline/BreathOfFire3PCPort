@@ -121,10 +121,10 @@ void Disturb() {
     case 5:
         switch ((h >> 20) % 5) {
         case 0: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 5); break;
-        case 1: At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
-        case 2: At(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(v % 3); break;
-        case 3: At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
-        default: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(v % 24); break;
+        case 1: At(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
+        case 2: At(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(v % 3); break;
+        case 3: At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
+        default: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 24); break;
         }
         break;
     case 6: Sprite_Current = PoolSprite(v); break;
@@ -153,7 +153,7 @@ void Disturb() {
 enum Stub : unsigned {
     kActorOut, kRand, kMark, kInvPut, kItemClass, kPopupSlot, kAddClamped, kAddCap, kWindow, kPlayEffect, kElevation,
     kSetBank, kUpdateScreen, kChanceB, kActFlag, kSlotsFull, kCoinFlip, kAutoAllowed, kAutoFixed, kNoTarget, kOutAction,
-    kActionE, kPickParty, kPickEnemyA, kPickEnemyB, kClutMark, kClutFind, kClutOwner, kBossCommon, BattleActions_EventBattle_addr, kNormal,
+    kActionE, kPickParty, kPickEnemyA, kPickEnemyB, kClutMark, kClutFind, kClutOwner, kBossCommon, kBossEncounter, kNormal,
     kSetupEnemy, kCopyEnemy, kEnemyOffset, kKindFlag, kStubs
 };
 struct StubSpec { std::uint32_t target; std::uint32_t mask[4]; };
@@ -278,7 +278,7 @@ Callees StubCallees() {
     c.clut_find = As<decltype(c.clut_find)>(kClutFind);
     c.clut_owner = As<decltype(c.clut_owner)>(kClutOwner);
     c.boss_common = As<decltype(c.boss_common)>(kBossCommon);
-    c.boss_encounter = As<decltype(c.boss_encounter)>(BattleActions_EventBattle_addr);
+    c.boss_encounter = As<decltype(c.boss_encounter)>(kBossEncounter);
     c.normal_encounter = As<decltype(c.normal_encounter)>(kNormal);
     c.setup_enemy = As<decltype(c.setup_enemy)>(kSetupEnemy);
     c.copy_enemy = As<decltype(c.copy_enemy)>(kCopyEnemy);
@@ -500,9 +500,9 @@ void SeedRound(unsigned regions) {
     At(at::kTarget)[0] = TargetValue();
     At(at::kActor)[0] = static_cast<unsigned char>(Next() % 11);
     At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 5);
-    At(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(Next() % 3);
-    At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 9 : 8);
-    At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
+    At(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(Next() % 3);
+    At(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 9 : 8);
+    At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
     At(at::kBoss)[0] = static_cast<unsigned char>(Half() ? 0 : Next() % kBossHandlers);
     At(at::kLayout)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
     At(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(Next() % 6);
@@ -526,7 +526,7 @@ void SeedRound(unsigned regions) {
         unsigned char* const e = At(at::kEnemies + k * at::kEnemyStride);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         SeedSprite(e);
-        enemy_rec->kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
+        enemy_rec->enemy_kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
         static const unsigned char kClasses[] = {0, 5, 6, 7, 0xFF};
         e[0xC7] = Half() ? Pick(kClasses) : static_cast<unsigned char>(Next());
     }
@@ -551,11 +551,11 @@ void SeedRound(unsigned regions) {
 // A round of Battle_OpenEnemyNames with eight living enemies of eight kinds:
 // the walk runs past the list (docs/battle_sprites.md section 1).
 void SeedEightKinds() {
-    At(BattleActorCopies_EnemyCount_addr)[0] = 8;
+    At(Battle_EnemyCount_addr)[0] = 8;
     for (unsigned k = 0; k < 8; ++k) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(At(at::kEnemies + k * at::kEnemyStride));
         enemy_rec->flags |= 1;
-        enemy_rec->kind = static_cast<unsigned char>(0x10 + k);
+        enemy_rec->enemy_kind = static_cast<unsigned char>(0x10 + k);
     }
 }
 

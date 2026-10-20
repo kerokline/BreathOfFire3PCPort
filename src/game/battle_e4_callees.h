@@ -35,7 +35,7 @@ constexpr U kEnemyWork = 0x93B9E0;        // an enemy's working record (+0x80): 
 constexpr U kCharRecords = 0x903A70;
 constexpr U kCharStride = 0xA4;
 // kMemberChar: now Cond_Flags[0xd5] (symbols.toml). u8[3]: the members' character bytes (0x66972C's index)
-// kCharOf: now MoveScript_EffectState (symbols.toml). u8[]: MoveScript_EffectState - a character record's index by that byte
+// kCharOf: now Character_IndexById (symbols.toml). u8[]: Character_IndexById - a character record's index by that byte
 
 // --- the battle bytes (0x904AA0..0x904BA0) ------------------------------------
 constexpr U kPhase = 0x904AA0;
@@ -44,13 +44,13 @@ constexpr U kStep = 0x904AA1;
 // kStep3: now BattleE4_Step3 (symbols.toml). the command's state (BattleItemCmd_States, the escape states)
 constexpr U kStep4 = 0x904AA4;            // the sub-state (a dword whose low byte the dispatchers index by)
 constexpr U kFlags = 0x904AA8;            // u16: the round flags
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (0 none)
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle (0 none)
 // kAutoMember: now BattleE4_AutoMember (symbols.toml). u8: the member AutoBattle_FillCommands filled last
 // kPicking: now BattleE4_Picking (symbols.toml). u8: a target pick is up
 constexpr U kPartyCount = 0x904AB0;       // u8 (read as a dword's low byte too)
-// kPartyDivisor: now BattleSprites_PartyPick (symbols.toml). u8: Escape_Roll divides the party's sum by it
-// kEnemyCount: now BattleActorCopies_EnemyCount (symbols.toml). u8: the enemies set up (the target wrap)
-// kEnemyDivisor: now BattleE2_EnemiesLeft (symbols.toml). u8: enemies left (Escape_Roll divides by it)
+// kPartyDivisor: now Battle_PartyStanding (symbols.toml). u8: Escape_Roll divides the party's sum by it
+// kEnemyCount: now Battle_EnemyCount (symbols.toml). u8: the enemies set up (the target wrap)
+// kEnemyDivisor: now Battle_EnemiesLeft (symbols.toml). u8: enemies left (Escape_Roll divides by it)
 constexpr U kEntryOrder = 0x904AB6;       // u8[3]: the members by entry order, 0xFF past the last
 // kCommandsChosen: now BattleActorCopies_EntryCount (symbols.toml). u8: members whose command is chosen
 constexpr U kOrder = 0x904ACC;            // u8[]: the turn order

@@ -73,7 +73,7 @@ void Disturb() {
     unsigned char* const m = Member(w % 3);
     auto* const member_rec = rv::As<records::PartyMember>(m);
     switch ((h >> 4) % 22) {
-    case 0: B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(v % 2 ? 0 : v % 3 ? 0x25 : v); break;
+    case 0: B(EventBattle_Id_addr) = static_cast<unsigned char>(v % 2 ? 0 : v % 3 ? 0x25 : v); break;
     case 1: {
         static const unsigned char kBits[] = {2, 8, 0x10};
         B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ kBits[v % 3]);
@@ -107,7 +107,7 @@ void Disturb() {
     case 17: Sprite_Current = v % 2 ? Member(w % 3) : EnemyObj(w % 8); break;
     case 18: B(at::kFacing) = static_cast<unsigned char>(v); break;
     case 19: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) ^ 2); B(at::kWindows) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 20: B(BattleSprites_PartyPick_addr) = static_cast<unsigned char>(v); break;
+    case 20: B(Battle_PartyStanding_addr) = static_cast<unsigned char>(v); break;
     default: {
         if (v % 2) m[0x90] = static_cast<unsigned char>(m[0x90] ^ 0x20);
         else member_rec->flags_134 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) ^ (v % 4 == 1 ? 2u : 0x4000u));
@@ -124,7 +124,7 @@ void Disturb() {
 // section 4), from bits of its own hash, not Disturb's.
 std::uint32_t H2() { return (Hash() ^ 0x165667B1u) * 0x27D4EB2Du; }
 bool Nudging(std::uint32_t h) { return h % 4 != 0; }
-void FlipEvent(std::uint32_t h) { B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(B(BattleActions_EventBattle_addr) ? 0 : 1 + (h >> 24) % 0x30); }
+void FlipEvent(std::uint32_t h) { B(EventBattle_Id_addr) = static_cast<unsigned char>(B(EventBattle_Id_addr) ? 0 : 1 + (h >> 24) % 0x30); }
 
 // The void(void) callees, by a number of their own; the six stack-table
 // handlers (100..), the .data tables' sixteen (120..). Every one may move
@@ -538,7 +538,7 @@ void Fix() {
     B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>(Next() % 9);
     for (unsigned n = 0; n <= 8; ++n) B(at::kMessages + 4 * n) = static_cast<unsigned char>(Next() % 8);
     SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubEventHook));
-    if (Half()) B(BattleActions_EventBattle_addr) = 0;
+    if (Half()) B(EventBattle_Id_addr) = 0;
     if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) & ~0x12u);
 }
 
@@ -563,7 +563,7 @@ void Seed(unsigned k) {
             member_rec->hp = (max >> 2) + (Next() % 3) - 1;
         }
         static const unsigned char kEvent[] = {0, 0, 0x25, 0x10, 1};
-        B(BattleActions_EventBattle_addr) = kEvent[Next() % 5];
+        B(EventBattle_Id_addr) = kEvent[Next() % 5];
         break;
     }
     case kIntro:

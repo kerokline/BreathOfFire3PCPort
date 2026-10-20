@@ -1072,7 +1072,7 @@ extern "C" void __cdecl LeaderPanel_S8(void) {
 // Field_ViewReset, 0x52CE20 (the effects cleared), Transition_Start(3); the
 // standing animation by Field_State +0x89 (0xA at 2, or 0xB), +3 = 1.
 extern "C" void __cdecl LeaderPanel_S8Leave(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Task_Sleep)(1);
     Field_Kind2X = 0xF0000;
     Field_Kind2Z = 0x3C0000;
@@ -1089,7 +1089,7 @@ extern "C" void __cdecl LeaderPanel_S8Leave(void) {
 // original 0x52A3F0 (PSX twin 0x801DC86C): LeaderPanel_Stage8Steps[1] - with
 // the wait word clear: +2 = 1, +3 = +4 = 0.
 extern "C" void __cdecl LeaderPanel_S8End(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     S()[2] = 1;
     S()[3] = 0;
     S()[4] = 0;

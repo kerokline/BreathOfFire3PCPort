@@ -174,7 +174,7 @@ records them) for the stir below.
   `Sprite_Current`, ObjTrio, `Sprite_Objects`, `Effect_Objects`):
   `Field_ScriptFlags2`, the battle bytes `0x904AA0..0x904B50`, the
   `Field_ActiveMember` cell, `CharacterRecords` 0..7
-  (`MoveScript_EffectState`'s 24 entries name records 0..7), and a 32-byte
+  (`Character_IndexById`'s 24 entries name records 0..7), and a 32-byte
   op buffer of the fuzz's own: 27 regions, 11,524 bytes.
 - **Seed**: both pointer cells at a sprite object; the count 0..29, and for
   `EventOp_0x` 30 or 31 a third of the time; `op[3]` bit 7 both ways; the
@@ -257,7 +257,7 @@ in brackets); every refused one exited 3.
   word is compared signed (`cmp ax, 0x1E; jge`), so 0x8000..0xFFFF passes
   and indexes `Sprite_Objects` backwards. `EventOp_1x` / `2x` share it
   (`event_script.cpp`'s `Place`). Nothing seen sets the count negative.
-- **`Party_AddToLists` indexes `MoveScript_EffectState` by a whole byte.**
+- **`Party_AddToLists` indexes `Character_IndexById` by a whole byte.**
   An id of 24 or more reads the bytes after its 24 entries as a record
   index and ORs 3 into whatever lies at `CharacterRecords` + 0xA4 x that
   byte; an empty list slot (`0xFF`) in the three-member search reads one

@@ -415,7 +415,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         Mem(at::kActor)[0] = 0;
         Mem(BattleE2_SavedCount_addr)[0] = was;
         Mem(0x904AB0)[0] = 1;
-        Mem(BattleSprites_PartyPick_addr)[0] = 1;
+        Mem(Battle_PartyStanding_addr)[0] = 1;
     }
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char* const m = PartyRecord(i);
@@ -442,7 +442,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     }
     const unsigned char was = Mem(0x904AB0)[0];
     unsigned char* const saved = Sc();
-    Mem(Rest3a_Win1Slot_addr)[0] = was;
+    Mem(Window1_ParamA_addr)[0] = was;
     const unsigned a = ActorIndex();
     SetWord(Mem(at::kFlags), Word(Mem(at::kFlags)) & 0xBFFFu);
     SetWord(Mem(0x803188), 0x70);

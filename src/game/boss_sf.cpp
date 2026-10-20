@@ -177,19 +177,19 @@ extern "C" unsigned char __cdecl Boss27_Event(unsigned code) {
     case 0: {
         if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) {
             BossSe_Script |= 1;
-            BattleActions_BattleEnd |= 4;
+            Battle_EndFlags |= 4;
             return 0;
         }
         if (BossH_Enemy1Status & 0x4000) {
             BossSe_Script |= 2;
-            BattleActions_BattleEnd |= 4;
+            Battle_EndFlags |= 4;
             return 0;
         }
-        if (BattleActions_BattleEnd == 0 && (BossSe_Script & 8) == 0) {
+        if (Battle_EndFlags == 0 && (BossSe_Script & 8) == 0) {
             const unsigned char who = B(at::kOrderBefore + BossSe_RoundSlot);
             if (who <= 2 && (At(ObjTrio_addr + who * at::kPartyStride)[0x130] & 3) == 0) {
                 const unsigned char script = BossSe_Script;
-                BattleActions_BattleEnd = 4;
+                Battle_EndFlags = 4;
                 BossSe_Script = static_cast<unsigned char>(script | 4);
             }
         }
@@ -198,7 +198,7 @@ extern "C" unsigned char __cdecl Boss27_Event(unsigned code) {
         return 0;
     }
     case 2: {
-        if (BattleActions_BattleEnd & 4) return 0;
+        if (Battle_EndFlags & 4) return 0;
         const unsigned char script = BossSe_Script;
         if ((script & 0x10) == 0) return 0;
         BossSe_Script = static_cast<unsigned char>(script & 0xEF);
@@ -259,7 +259,7 @@ extern "C" unsigned __cdecl Boss26Fx_Dispatch(unsigned passed) {
 // original 0x43C760: state 0 - with the window byte 0x803433 clear and
 // 0x904AE9 bit 1 clear, +1 up by one.
 extern "C" void __cdecl Boss26Fx_Wait(void) {
-    if (BossSf_WindowUp == 0 && (BattleMisc_BannerKinds & 2) == 0) rv::Current<records::BattleTask>()->state += 1;
+    if (Window20_State == 0 && (BattleMisc_BannerKinds & 2) == 0) rv::Current<records::BattleTask>()->state += 1;
 }
 
 // original 0x43C780: state 1 - BattleWin_DrawMediumBox(0x6B, 0x10); the text
@@ -296,7 +296,7 @@ extern "C" void __cdecl Boss26Fx_DrawCount(void) {
         BH_CALL(Text_DrawFont12)(0x92, 0x12, 4, At(at::kTextRow1));
         BH_CALL(Text_DrawAt)(0xAA, 0x12, 0, 4, At(BossSf_CountText1));
     }
-    if (BossSf_WindowUp != 0 || (BattleMisc_BannerKinds & 2) != 0) rv::Current<records::BattleTask>()->state -= 1;
+    if (Window20_State != 0 || (BattleMisc_BannerKinds & 2) != 0) rv::Current<records::BattleTask>()->state -= 1;
     if (B(at::kPhase) == 5) BH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -397,7 +397,7 @@ extern "C" void __cdecl Boss28_Setup(void) {
 // original 0x43CA00: the end hook. The win (0x904AE8 bit 1): movement-script
 // variable 3 = 0x1E and a tail jump to 0x446DE0 (step 1); else 0x446E00.
 extern "C" void __cdecl Boss28_End(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         B(at::kScriptVar3) = 0x1E;
         BH_AT(Handler, at::kEndWin)();
         return;
@@ -682,8 +682,8 @@ extern "C" unsigned __cdecl BossMyria_State7Dispatch(unsigned passed) {
 extern "C" unsigned char __cdecl BossMyria_State7Start(void) {
     if (BH_CALL(File_LoadDone)() == 0) return 0;
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
-    if (enemy_rec->command == 4) {
-        if (BattleActions_EventBattle != 0) {
+    if (enemy_rec->command_kind == 4) {
+        if (EventBattle_Id != 0) {
             const unsigned key = static_cast<unsigned char>(enemy_rec->run_state + 0x20);
             if (BH_CALL(Battle_LoadSoundByKey)(key, BattleE3_SoundSet) != 0)
                 BossSa_EndCount = 0;
@@ -773,12 +773,12 @@ extern "C" void __cdecl BossMyria_State8Tick(void) {
 extern "C" void __cdecl BossMyria_State8Cost(void) {
     BH_CALL(BattleEnemy_ScriptTickOnce)();
     records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(Enemy());
-    if (enemy_rec->command == 4) {
+    if (enemy_rec->command_kind == 4) {
         enemy_rec->ap = enemy_rec->ap - BattleE3_Cost;
         enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     }
     B(at::kRoundFlagsHi) |= 8;
-    enemy_rec->command = 0;
+    enemy_rec->command_kind = 0;
     rv::Current<records::BattleEnemy>()->step += 1;
 }
 

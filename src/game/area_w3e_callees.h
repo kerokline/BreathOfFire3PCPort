@@ -37,7 +37,7 @@ constexpr std::uint32_t kScratch850 = 0x903850;
 // The story flags (Flags_Set / Flags_Test's bank) and the chapter's flag row
 // pointer (Cond_Flags + 8 * chapter; docs/field-modes.md).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The party list: the character in slot 1 and slot 2 (0x904062 is slot 0).
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
 // kPartyList2: now Cond_Flags[0xd4] (symbols.toml).

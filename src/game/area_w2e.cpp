@@ -298,7 +298,7 @@ void PlateShrink() {
 // The dial frame's slide, state 1: the word +0x2E += 0x10; at 0x10 and above
 // (s16) +2 + 1; then a tail jump to the copy's FrameHold.
 void FrameSlideIn(const WorldMapTables& t) {
-    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) + 0x10u;
+    rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(t.fn_frame_hold)();
@@ -315,7 +315,7 @@ void FrameHold(const WorldMapTables& t) {
 // State 3: the word +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the
 // mode byte is 2, +2 = 1 (over the 0); DrawFrame(0x10, y).
 void FrameSlideOut(const WorldMapTables& t) {
-    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) - 0x10u;
+    rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -742,7 +742,7 @@ extern "C" void __cdecl Area104_LeaderStep(void) {
         if (cell() == 0xAF) {
             AH_CALL(Field_ChangeArea)(AreaW0b_Place, Long(At(at::kPendingX)), static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
-            AreaW0c_PendingKind = 0xC;
+            Area_EnterTransition = 0xC;
             return;
         }
         if (cell() == 0xC0) AH_CALL(Area_LinkAt)(rv::Current<records::SpriteHead>()->x_whole, rv::Current<records::SpriteHead>()->z_whole);
@@ -1136,7 +1136,7 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
             return;
         }
     }
-    AH_CALL(Menu_DrawBox)(0x7E, 0x2E, 0x48, 0x11, 0xF2, static_cast<unsigned char>(BattleDraw_Colour));
+    AH_CALL(Menu_DrawBox)(0x7E, 0x2E, 0x48, 0x11, 0xF2, static_cast<unsigned char>(Config_WindowColour));
     AH_CALL(Menu_DrawOutline)(0x80, 0x30, 0x44, 0xD, 2);
     signed char digit = 0;
     if (Field_Request == 0) {
@@ -1365,7 +1365,7 @@ extern "C" void __cdecl Area105_Init(void) {
 
 // original 0x416440 (area 106's handler 0, its descriptor 0x61C670's +0x3C
 // 0x61C664; PSX 0x801F38E8): Field_ActiveMember +0x80 bit 0 cleared; when the
-// byte of MoveScript_EffectState 0x66972C by the leader's +0x89 is 0,
+// byte of Character_IndexById 0x66972C by the leader's +0x89 is 0,
 // Cond_ByteFE = 1 and Sprite_Current (read before) +0 = 0.
 extern "C" void __cdecl Area106_Handler0(void) {
     unsigned char* const member = Field_ActiveMember;

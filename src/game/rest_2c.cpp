@@ -77,7 +77,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
 // 0x118 by 0x13, in the window colour (the original pushes the byte in a
 // register whose upper bytes it never cleared; Menu_DrawTitleBox reads the
 // byte - shop_states.cpp's TitleBox).
-void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour)); }
+void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour)); }
 
 // System message `id` at (0x1C, 0x16), colour 0, to its end.
 void Message(unsigned id) {
@@ -327,7 +327,7 @@ extern "C" void __cdecl Rest_WaitJingle(void) {
 // original 0x5805D0, Rest_States[4]: when the wait word 0x66C810 is 0:
 // Party_RestoreAll(0) and the state up (read after the call).
 extern "C" void __cdecl Rest_Restore(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Party_RestoreAll)(0);
     ++FieldS_State;
 }
@@ -355,7 +355,7 @@ extern "C" void __cdecl Rest_EndAfterMessage(void) {
 // bytes 0x903848..0x90384B; ObjTrio's leader +0x34 / +0x38 and its +8 byte;
 // Game_AreaNumber; 0x903A50 = 0. The summary 0x904680: the buttons' dwords
 // 0x903580 / 84 / 88 / 8C and word 0x903590 after it; the leader's name -
-// the record of MoveScript_EffectState[party id 0], strncpy 5 bytes, then 4
+// the record of Character_IndexById[party id 0], strncpy 5 bytes, then 4
 // from its +5 (both the C runtime's, through); the three party ids (id 4 as
 // FormOf); record 0's +0xA (not the leader's), the dword 0x9040C8, the style
 // bytes 0x903A5A / 0x903A5B, record 0's +0xC dword; Flags_Test(story flags,
@@ -396,8 +396,8 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + 0x623 + i) = FormOf(B(at::kPartyList + i));
     B(0x904688) = B(0x903A7A);
     PutL(0x90468C, L(0x9040C8));
-    B(0x904689) = static_cast<unsigned char>(BattleDraw_Colour);
-    B(0x90468A) = FieldS_Backdrop;
+    B(0x904689) = static_cast<unsigned char>(Config_WindowColour);
+    B(0x90468A) = Config_Background;
     PutL(0x904690, L(0x903A7C));
     const unsigned char flag = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x92);
     B(0x904694) = flag;
@@ -854,7 +854,7 @@ void Panels() {
         SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * Rest2c_TalkSlide, y, member[0], slot);
         SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * Rest2c_TalkSlide, y, member[0]);
     }
-    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 10 * Rest2c_TalkSlide, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 10 * Rest2c_TalkSlide, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
 }
 
 }  // namespace
@@ -896,7 +896,7 @@ extern "C" void __cdecl MasterTalk_PickAsk(void) {
 // + it (8 long) and system message 0x34 at (x + 0xB, y + 0x22); the box's
 // pieces: 0x664468, sixteen of 0x664494 8 apart, 0x6644A0.
 extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
-    SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, static_cast<unsigned char>(Config_WindowColour));
     const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
     char* const buffer = reinterpret_cast<char*>(At(at::kPath));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
@@ -940,7 +940,7 @@ extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
 // committed; R2H's 0x59DB70 at (x + 9, y + 5): the cell (s + 3, 0x1E), the
 // CLUT Gpu_GetClut(0x10, 0x1E0), shade 0x80.
 extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, unsigned slot) {
-    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(Config_WindowColour));
     const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
     const unsigned char id = rv::As<records::CharRecord>(At(r))->char_id;
     const unsigned shade = (B(r + 0x10) >> 6) & 2;

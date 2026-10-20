@@ -73,7 +73,7 @@ constexpr std::uint32_t kGridText = 0x66A32C;       // 3 pointers to strings (in
 // kStyleColours: now Gfx_ClutStripSource[0x114] (symbols.toml). the window styles' colour words, 0x40 bytes a style
 
 // --- cells ---
-// kStyle: now BattleDraw_Colour (symbols.toml). the window style byte (Menu_DrawBox's colour)
+// kStyle: now Config_WindowColour (symbols.toml). the window style byte (Menu_DrawBox's colour)
 // kLeader3: now ObjTrio[3] (symbols.toml). ObjTrio (the leader's record) +3
 // kLeader4: now ObjTrio[4] (symbols.toml). ObjTrio +4
 // kRecord6State: now Effect_Objects[0x301] (symbols.toml). Effect_Objects record 6: +1

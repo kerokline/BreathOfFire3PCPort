@@ -140,7 +140,7 @@ extern "C" void __cdecl MsgBox_Reset(void) {
     SetW(kEffectOff, 0);
     ItemUse_ColorHigh = 0;
     g.window_alloc(0, 0);
-    Msgbox_Window0Kind = 2;
+    Window0_Pass = 2;
 }
 
 // original 0x4977F0 (PSX 0x80150508). The box's frame: the box origin from
@@ -633,7 +633,7 @@ extern "C" void __cdecl MsgBox_State3Arrow(void) {
         ItemUse_SubState = next;
     }
     const int y = static_cast<std::uint16_t>(W(kEffectOff) + Msgbox_PenY) + 0x0C;
-    const int x = (BattleOdds_Win0Index >> 1) + MsgBox_LineX - 0x0E;
+    const int x = (Window0_ParamA >> 1) + MsgBox_LineX - 0x0E;
     g.page_arrow(x, y);
 }
 
@@ -681,7 +681,7 @@ extern "C" void __cdecl MsgBox_ChoiceOpen(void) {
     g.window_alloc(1, 0);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
     SetB(kFlags, B(kFlags) | 4u);
-    Msgbox_Window1Kind = 1;
+    Window1_Kind = 1;
     rv::Store<unsigned>(win0->state, 3);
     ItemUse_SubState = next;
 }
@@ -690,7 +690,7 @@ extern "C" void __cdecl MsgBox_ChoiceOpen(void) {
 // its own move.
 extern "C" void __cdecl MsgBox_ChoiceWaitOpen(void) {
     auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
-    if (ItemUse_Window1State == 2 && win0->state == 4) ItemUse_SubState = ItemUse_SubState + 1;
+    if (Window1_State == 2 && win0->state == 4) ItemUse_SubState = ItemUse_SubState + 1;
 }
 
 // original 0x498110. The choice list's input: cancel closes it, confirm
@@ -706,7 +706,7 @@ extern "C" void __cdecl MsgBox_ChoiceInput(void) {
     const unsigned pressed = Input_Pressed;
     if ((Field_CancelButtons & pressed) != 0) {
         const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
-        ItemUse_Window1State = 3;
+        Window1_State = 3;
         rv::Store<unsigned>(win0->state, 1);
         ItemUse_SubState = next;
         return;
@@ -753,7 +753,7 @@ extern "C" void __cdecl MsgBox_ChoiceReopen(void) {
 // message), window 0 to state 4, and state 2 sub 1 - the wait for it to shut.
 extern "C" void __cdecl MsgBox_ChoiceDone(void) {
     auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
-    if (ItemUse_Window1State != 4) return;
+    if (Window1_State != 4) return;
     SetB(kFlags, B(kFlags) | 0x80u);
     rv::Store<unsigned>(win0->state, 4);
     SetB(kState, 2);
@@ -786,13 +786,13 @@ extern "C" void __cdecl MsgBox_MenuOpen(void) {
     AreaW0c_ChoiceAnswer = 0;
     g.window_alloc(1, 0);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
-    Msgbox_Window1Kind = 2;
+    Window1_Kind = 2;
     ItemUse_SubState = next;
 }
 
 // original 0x498340. Waits until window 1 reports 2.
 extern "C" void __cdecl MsgBox_MenuWaitOpen(void) {
-    if (ItemUse_Window1State == 2) ItemUse_SubState = ItemUse_SubState + 1;
+    if (Window1_State == 2) ItemUse_SubState = ItemUse_SubState + 1;
 }
 
 // original 0x498350. The menu's input: confirm moves on, and the cursor moves
@@ -819,7 +819,7 @@ extern "C" void __cdecl MsgBox_MenuInput(void) {
 // there is nothing left to say and the box is finished; otherwise on to the
 // next entry.
 extern "C" void __cdecl MsgBox_MenuDone(void) {
-    if (ItemUse_Window1State != 4) return;
+    if (Window1_State != 4) return;
     if (W(kMessage) != 0xFFFF) {
         ItemUse_SubState = ItemUse_SubState + 1;
         return;

@@ -415,7 +415,7 @@ None shows in play as far as the reads go, and all are kept.
   `Shop_ScalePrice`. It reads weapons `+0x18`, armour `+0x16`, accessories
   `+0x14`, key items `+0x10`, consumables `+0x12`: each record's help
   message. A rename is W's (or the coordinator's) to make.
-- **`MoveScript_EffectState` `0x66972C` (24 bytes) is the character to
+- **`Character_IndexById` `0x66972C` (24 bytes) is the character to
   record map** - `0x66972C[0x904062[member]]` picks the `0x903A70 + 0xA4 n`
   record in `ShopTrade_BuyMember`, `ShopTrade_BuySlot`, `0x581720`, and in
   `item_use.cpp`, `msgbox.cpp`, `battle_window_draw.cpp`,

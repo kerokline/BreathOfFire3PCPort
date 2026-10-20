@@ -86,8 +86,8 @@ Every name is a hypothesis from what the code does (`symbols.toml` status
 | `0x48D0B0` | `EffectKind97_Grow` | `+0x2E` up 0x18; the ring (`EffectKind97_DrawRing(+0x34, +0x2E, 7)`); `+9` down, at 0 `+9` = 0x40 and `+1` up |
 | `0x48D100` | `EffectKind97_WaitCue` | the ring; at the counter `0x903848` = 10: E3A's `EffectKind64_ClearSparks`, `Gte_PushMatrix`, the 32 debris at `0x92C040` set up, `Gte_PopMatrix`; `+6` 0, `+0x5D` 8, `+9` = 0x78, `+1` up |
 | `0x48D180` | `EffectKind97_Burst` | `+6` up, a spark every fourth frame; the ring; the debris drawn; the sparks moved; `+0x5D` up while below 0x40 (signed); every debris shade `+0x2A` = `+0x5D` >> 1 (signed); `+9` down, at 0 `Transition_Start(8)`, `+1` up |
-| `0x48D220` | `EffectKind97_Fade` | a spark every fourth frame; the debris; the sparks moved; once `MoveScript_WaitWordDA` is 0 `Transition_Start(9)`, `Draw_PassFlags` 0, `+1` up |
-| `0x48D270` | `EffectKind97_End` | once `MoveScript_WaitWordDA` is 0 the step `0x8034E5` = 0x14, a tail jump to `Effect_Release` |
+| `0x48D220` | `EffectKind97_Fade` | a spark every fourth frame; the debris; the sparks moved; once `Transition_Busy` is 0 `Transition_Start(9)`, `Draw_PassFlags` 0, `+1` up |
+| `0x48D270` | `EffectKind97_End` | once `Transition_Busy` is 0 the step `0x8034E5` = 0x14, a tail jump to `Effect_Release` |
 | `0x48D490` | `EffectKind97_DrawRing` | (point, size, shade): a draw mode (`Gpu_GetTPage(0, 1, 0x2C0, 0x100)`) at slot 2; the point and the size (its low s16 in both words) projected; radius r = width + `Frame_Counter & 1`; 32 semi-transparent POLY_G3s from the centre, each from the last rim point (first (x + r, y)) to the next at 0x80 steps (`Math_Cos` / `Math_Sin` * r >> 12 added through the FPU), the depth at all three, the centre 0x40 per bit 2 / 1 / 0 of the shade byte (its callers pass 7: grey), the rim black; slot 2 (0x34) |
 | `0x48D650` | `EffectKind97_EmitSpark` | the first free of the eight 0x18-byte sparks at `EffectKind30_Shards`: in use, life 0x20, at the record's point, size 0x180, centre shade the record's `+0x5D`, rim 0 |
 | `0x48D6A0` | `EffectKind97_MoveSparks` | `EffectGte_LoadMapCamera`; each live spark shrunk 0xC, aged (out of use at 0) and drawn - also the frame it dies; al 1 when any was live (both callers ignore it) |
@@ -197,7 +197,7 @@ clock). Everything else the band touches is standard: the records,
 `ObjTrio` (`+0x29`, `+0x89`, `+0x137`), `Field_MemberCount`,
 `EffectKind30_Shards` (the sparks and the debris), the chapter bytes, the
 counter `0x903848`, `Field_Request`, `Game_Mode`, `Field_MenuButton`,
-`Input_Pressed`, `MoveScript_WaitWordDA`, `Draw_PassFlags`, `Frame_Counter`,
+`Input_Pressed`, `Transition_Busy`, `Draw_PassFlags`, `Frame_Counter`,
 the packet buffer.
 
 **Callees**: the standard and effect-standard rows for `Effect_Release`,
@@ -231,7 +231,7 @@ projected point (fractions, a NaN quiet or signalling a sixth of the time),
 the levels `+0xC`, `+0x10`, `+0x32` at the clamps (-1, 0, 0xFF, 0x100,
 0x7FFF, 0x8000, ...); `Field_MemberCount` 0..3 (ours aborts past three);
 kind 0x96's index 0..7 (ours aborts past); the counter `0x903848` at 10 or
-0x28 half the time, `MoveScript_WaitWordDA` 0 half the time; `Field_Request`
+0x28 half the time, `Transition_Busy` 0 half the time; `Field_Request`
 2 half the time for kind 0x91's wait; `ObjTrio +0x89` 7 often; kind 0x95's
 holds one at a time (or none a third of the time), its clock's frames at
 0x1D / 0x1E / 0x27 / 0x28 and ticks at 0xE / 0xF, either mode; the sparks'

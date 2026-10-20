@@ -141,7 +141,7 @@ unsigned char BattleEndByte() {
 void Disturb(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 5) {
-    case 0: bh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * (v % 40))); break;
+    case 0: bh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * (v % 40))); break;
     case 1: bh::Pointer(BattleE3_CurrentEnemy_addr)[5] = Byte(v); break;
     case 2: Sprite_Current[9 + (v & 1)] = Byte(v >> 1); break;
     case 3: bh::Pointer(BattleE2_Owner_addr)[1 + (v & 1)] = Byte(v >> 1); break;
@@ -286,7 +286,7 @@ void SeedK58(unsigned k) {
 void SeedSetup(unsigned k) {
     switch (g_clones[k].shape) {
     case S::kEnd:
-        B(BattleActions_BattleEnd_addr) = BattleEndByte();
+        B(Battle_EndFlags_addr) = BattleEndByte();
         break;
     case S::kSetup:
         if (g_clones[k].base == 0x43EE50) {

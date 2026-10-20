@@ -44,7 +44,7 @@ using U = std::uint32_t;
 constexpr U kFlags = 0x904AA8;            // u16: the round flags (bit 1 cleared by Gaist's hook, bit 2 the action's done flag, bit 15 read)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (set-up 34: bit 0 the member put first, bit 1 the ability given)
 constexpr U kRoundSlot = 0x904AE2;        // u8: the turn order's cursor (0x446700 decrements it)
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bit 3 set by set-up 34's end hook
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bit 3 set by set-up 34's end hook
 constexpr U kActor = 0x904B34;            // u8: the acting actor (0..2 a member, 3..10 an enemy)
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (battle_actions.md)
 constexpr U kAction = 0x904B40;           // unsigned char *: the action record set-up 34's hook writes +1 and +2 of
@@ -58,7 +58,7 @@ constexpr U kWord80 = 0x904B80;           // u16: set to 0x40 beside the action 
 constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
 
 // --- set-up 34's member pick ------------------------------------------------------
-// kPickId: now MoveScript_EffectState[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
+// kPickId: now Character_IndexById[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
 // kPicked: now BossSh_Picked (symbols.toml). u8 (read once as a dword): the member whose +0x148 matched; only set-up 34 writes it
 // kPartyTag: now Field_Members (symbols.toml). member 0's +0x148 (ObjTrio stride 0x14C; symbols.toml's Field_Members)
 // kParty: now ObjTrio (symbols.toml). ObjTrio

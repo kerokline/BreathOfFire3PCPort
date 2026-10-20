@@ -46,7 +46,7 @@ one, `Field_MemberCount` - 1 - nobody's) and `0x533E00` (the members' palettes
 reloaded - nobody's), with `Field_MemberCount` cleared before a party is joined
 anew. Some also clear or set a character record's `+0xB` bit 0 (the bit
 `Party_Join` sets: "in the party") or its `+9`, through
-`MoveScript_EffectState[id]`; empty or rewrite the party lists
+`Character_IndexById[id]`; empty or rewrite the party lists
 `0x904062..0x904067`; or save a party to `0x903A10..0x903A15` (three ids, then
 a copy of the second list) and restore it later - a cell only this block reads
 and writes. What each party change means in the story is not read here (the
@@ -82,17 +82,17 @@ compared; the names are not taken from it.
 
 | PC | Name | Bytes | Chapters' tables | PSX by position | What it does |
 |---|---|--:|---|---|---|
-| `0x5198F0` | `Scena01_Set934Party9` | 0x49 | 1 A[0] | `0x801FE10C` | the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(9, 3, 4, 0); Field_MemberCount 0; the record of MoveScript_EffectState[9] (read after the load) +9 = 9; Party_Join(9) |
-| `0x519940` | `Scena01_Party034` | 0x42 | 1 A[1] | `0x801FE1B0` | the record of MoveScript_EffectState[0] +9 = 0; PartySet_Load(0, 3, 4, 0); Field_MemberCount 0; Party_Join(0), (3), (4) |
+| `0x5198F0` | `Scena01_Set934Party9` | 0x49 | 1 A[0] | `0x801FE10C` | the record of Character_IndexById[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(9, 3, 4, 0); Field_MemberCount 0; the record of Character_IndexById[9] (read after the load) +9 = 9; Party_Join(9) |
+| `0x519940` | `Scena01_Party034` | 0x42 | 1 A[1] | `0x801FE1B0` | the record of Character_IndexById[0] +9 = 0; PartySet_Load(0, 3, 4, 0); Field_MemberCount 0; Party_Join(0), (3), (4) |
 | `0x519990` | `ScenaCall_Join4` | 0x9 | 1 A[2], 2 A[0] | `0x801FE224`, `0x801FE178` | Party_Join(4) |
 | `0x5199A0` | `ScenaCall_Leave4` | 0xF | 1 B[0], 2 B[0], 9 B[0], 11 B[0], 12 B[0] | `0x801FE244`, `0x801FE198`, `0x801FE12C`, `0x801FADF8`, `0x801FD0B0` | 0x534030(4); 0x533E00 |
-| `0x5199B0` | `Scena02_Leave43` | 0x49 | 2 B[1] | `0x801FE1C0` | the records of MoveScript_EffectState[4] and [3] +0xB bit 0 cleared; 0x534030(4), 0x534030(3); tail 0x533E00 |
+| `0x5199B0` | `Scena02_Leave43` | 0x49 | 2 B[1] | `0x801FE1C0` | the records of Character_IndexById[4] and [3] +0xB bit 0 cleared; 0x534030(4), 0x534030(3); tail 0x533E00 |
 | `0x519A00` | `Scena03_Set012Party0` | 0x3F | 3 A[0] | `0x801FCE6C` | PartySet_Load(0, 1, 2, 0); both party lists 0x904062..0x904067 = 0xFF; Field_MemberCount 0; Party_Join(0) |
 | `0x519A40` | `ScenaCall_Join1` | 0x9 | 3 A[1], 5 A[1] | `0x801FCEDC`, `0x801FD30C` | Party_Join(1) |
 | `0x519A50` | `ScenaCall_Leave1` | 0xF | 3 B[0], 5 B[1] | `0x801FCEFC`, `0x801FD508` | 0x534030(1); 0x533E00 |
 | `0x519A60` | `Scena04_Set015Party01` | 0x46 | 4 A[0] | `0x801FA0B4` | PartySet_Load(0, 1, 5, 0); both party lists 0x904062..0x904067 = 0xFF; Field_MemberCount 0; Party_Join(0), (1) |
 | `0x519AB0` | `ScenaCall_Party015` | 0x2D | 4 A[1], 7 A[0] | `0x801FA12C`, `0x801FDB18` | PartySet_Load(0, 1, 5, 0); Field_MemberCount 0; Party_Join(0); Party_Join(1); Party_Join(5) |
-| `0x519AE0` | `Scena05_ReloadJoin516` | 0x35 | 5 A[0] | `0x801FD298` | the record of MoveScript_EffectState[6] +0xB bit 0 set; Field_PartyLoad(0); Party_Join(5), (1), (6) |
+| `0x519AE0` | `Scena05_ReloadJoin516` | 0x35 | 5 A[0] | `0x801FD298` | the record of Character_IndexById[6] +0xB bit 0 set; Field_PartyLoad(0); Party_Join(5), (1), (6) |
 | `0x519B20` | `Scena05_Join0` | 0x9 | 5 A[4] | `0x801FD36C` | Party_Join(0) |
 | `0x519B30` | `Scena05_Set015ReloadJoin5` | 0x1F | 5 A[5] | `0x801FD38C` | PartySet_Load(0, 1, 5, 0); Field_PartyLoad(0); Party_Join(5) |
 | `0x519B50` | `Scena05_Set015ReloadJoin1` | 0x1F | 5 A[6] | `0x801FD3C8` | PartySet_Load(0, 1, 5, 0); Field_PartyLoad(0); Party_Join(1) |
@@ -118,9 +118,9 @@ compared; the names are not taken from it.
 | `0x519DC0` | `Scena06_Leave56` | 0x16 | 6 B[7] | `0x801FE38C` | 0x534030(5); 0x534030(6); 0x533E00 |
 | `0x519DE0` | `Scena07_Party012` | 0x2D | 7 A[1] | `0x801FDB64` | PartySet_Load(0, 1, 2, 0); Field_MemberCount 0; Party_Join(0); Party_Join(1); Party_Join(2) |
 | `0x519E10` | `Scena07_LeaveThird` | 0xD | 7 B[0] | `0x801FDBB0` | 0x534030(the third field member's +0x89, ObjTrio[2] at 0x803061) |
-| `0x519E20` | `Scena07_Leave2Out1562` | 0x78 | 7 B[1] | `0x801FDBD8` | 0x534030(2); then the records of MoveScript_EffectState[1], [5], [6], [2] +0xB bit 0 cleared, each index read after the call; no palettes |
+| `0x519E20` | `Scena07_Leave2Out1562` | 0x78 | 7 B[1] | `0x801FDBD8` | 0x534030(2); then the records of Character_IndexById[1], [5], [6], [2] +0xB bit 0 cleared, each index read after the call; no palettes |
 | `0x519EA0` | `Scena08_Set72APartyA` | 0x23 | 8 A[0] | `0x801FE698` | PartySet_Load(7, 2, 0xA, 0); Field_MemberCount 0; Party_Join(0xA); 0x533E00 |
-| `0x519ED0` | `Scena08_Party7` | 0x25 | 8 A[1] | `0x801FE6DC` | Field_MemberCount 0; the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; Party_Join(7) |
+| `0x519ED0` | `Scena08_Party7` | 0x25 | 8 A[1] | `0x801FE6DC` | Field_MemberCount 0; the record of Character_IndexById[10] (Char_WhelpSlot) +0xB bit 0 cleared; Party_Join(7) |
 | `0x519F00` | `Scena08_Set724Party72` | 0x2A | 8 A[3] | `0x801FE760` | PartySet_Load(7, 2, 4, 0); Field_MemberCount 0; Party_Join(7); Party_Join(2); 0x533E00 |
 | `0x519F30` | `ScenaCall_Party728` | 0x31 | 8 A[4], 14 A[7] | `0x801FE7AC`, `0x801FC074` | PartySet_Load(7, 2, 8, 0); Field_MemberCount 0; Party_Join(7); Party_Join(2); Party_Join(8); 0x533E00 |
 | `0x519FA0` | `Scena08_SetParty784` | 0x15 | 8 A[6] | `0x801FE840` | PartySet_Load(7, 8, 4, 0); tail Scena08_PartyJoin784 (SE) |
@@ -150,7 +150,7 @@ compared; the names are not taken from it.
 | `0x51A410` | `Scena10_Join8` | 0x9 | 10 A[2] | `0x801FE3F8` | Party_Join(8) |
 | `0x51A420` | `ScenaCall_Join5` | 0x9 | 5 A[2], 6 A[4], 10 A[3] | `0x801FD32C`, `0x801FE11C`, `0x801FE418` | Party_Join(5) |
 | `0x51A430` | `Scena10_RestoreSaved` | 0x55 | 10 A[4] | `0x801FE438` | the saved bytes s0..s2 (0x903A10..0x903A12); PartySet_Load(s0, s1, s2, 0); each of s0, s1, s2 not 7: Party_Join(it); no count reset, no palettes |
-| `0x51A490` | `Scena10_Leave5` | 0x24 | 10 B[0] | `0x801FE5B0` | the record of MoveScript_EffectState[5] +0xB bit 0 cleared; 0x534030(5); tail 0x533E00 |
+| `0x51A490` | `Scena10_Leave5` | 0x24 | 10 B[0] | `0x801FE5B0` | the record of Character_IndexById[5] +0xB bit 0 cleared; 0x534030(5); tail 0x533E00 |
 | `0x51A4C0` | `Scena10_LeaveAll` | 0x43 | 10 B[2] | `0x801FE63C` | the three members' +0x89 copied; each not 7: 0x534030(it); 0x533E00 |
 | `0x51A510` | `ScenaCall_Set725ReloadJoin5` | 0x23 | 11 A[4], 12 A[4] | `0x801FAC94`, `0x801FCF00` | PartySet_Load(7, 2, 5, 0); Field_PartyLoad(0); Party_Join(5); 0x533E00 |
 | `0x51A540` | `ScenaCall_Set742ReloadJoin42` | 0x2A | 11 A[8], 12 A[8] | `0x801FADAC`, `0x801FD018` | PartySet_Load(7, 4, 2, 0); Field_PartyLoad(0); Party_Join(4); Party_Join(2); 0x533E00 |
@@ -167,7 +167,7 @@ compared; the names are not taken from it.
 | `0x51A7B0` | `Scena14_Party746` | 0x2D | 14 A[1] | `0x801FBD78` | PartySet_Load(7, 4, 6, 0); Field_MemberCount 0; Party_Join(7); Party_Join(4); Party_Join(6) |
 | `0x51A7E0` | `Scena14_Party756` | 0x2D | 14 A[2] | `0x801FBDC4` | PartySet_Load(7, 5, 6, 0); Field_MemberCount 0; Party_Join(7); Party_Join(5); Party_Join(6) |
 | `0x51A810` | `Scena14_SaveLeaveAllPartyA` | 0x71 | 14 A[3] | `0x801FBE10` | the three members' +0x89 copied, the last that is neither 7 nor 4 also into 0x903A10; 0x534030 on each copy (no test); PartySet_Load(0xA, 0xFF, 0xFF, 0); Field_MemberCount 0; Party_Join(0xA); 0x533E00 |
-| `0x51A890` | `Scena14_Out10Party748` | 0x46 | 14 A[4] | `0x801FBF18` | the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(7, 4, 8, 0); Field_MemberCount 0; Party_Join(7), (4), (8); tail 0x533E00 |
+| `0x51A890` | `Scena14_Out10Party748` | 0x46 | 14 A[4] | `0x801FBF18` | the record of Character_IndexById[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(7, 4, 8, 0); Field_MemberCount 0; Party_Join(7), (4), (8); tail 0x533E00 |
 | `0x51A8E0` | `Scena14_Party015Lists785` | 0x47 | 14 A[5] | `0x801FBFA8` | PartySet_Load(0, 1, 5, 0); Field_MemberCount 0; Party_Join(0), (1), (5); 0x533E00; then the second list 0x904065..67 = 7, 8, 5 |
 | `0x51A930` | `Scena14_Party726` | 0x31 | 14 A[6] | `0x801FC020` | PartySet_Load(7, 2, 6, 0); Field_MemberCount 0; Party_Join(7); Party_Join(2); Party_Join(6); 0x533E00 |
 | `0x51A970` | `Scena14_Party74First` | 0x3A | 14 A[8] | `0x801FC0C8` | PartySet_Load(7, 4, 0x903A10, 0); Field_MemberCount 0; Party_Join(7), (4), (0x903A10 read again after the calls); tail 0x533E00 |
@@ -213,20 +213,20 @@ except `ecx`, the entry's index, which the seed sets directly (below). Chapter
   `0x534030` (`kU8`) and `0x533E00` by address. Each recorder's `effect` moves
   one cell an entry reads again after a call - the member count (0..4), a
   member's id or its `+0` bit 0, a saved byte, a party-list byte, an
-  `MoveScript_EffectState` byte (0..7), a record's `+9` / `+0xB` - from the
+  `Character_IndexById` byte (0..7), a record's `+9` / `+0xB` - from the
   recorders' stream (the harness's own disturbance reaches a group cell about
   one call in 24, too seldom to tell a read before a call from one after it,
   wave one's lesson). The group's `disturb` moves the same cells from the hash
   it is given.
 - **The regions** beyond the standard 22 (which hold the party lists,
   `Field_MemberCount`, `ObjTrio` and `0x903A04..0x903A13`): `0x903A14..17`,
-  `MoveScript_EffectState` (24), and the eight character records it names
+  `Character_IndexById` (24), and the eight character records it names
   (`CharacterRecords`, 8 x 0xA4) - 11,336 bytes in 25 regions.
 - **The seed.** `Field_MemberCount` 0..4 (a count of 5 or more makes
   `0x51A300` and `0x51AB50` overwrite their return address: those two cannot
   be run past 4); the three members' ids, the six saved bytes and, half the
   time, the six list bytes each 7, 2, 4 (the values the entries compare with)
-  or 0..11; every `MoveScript_EffectState` byte 0..7, so each index names a
+  or 0..11; every `Character_IndexById` byte 0..7, so each index names a
   record in the region.
 - **`ecx`.** The harness calls a clone with whatever `ecx` its own code left.
   For `0x51A300` and `0x51AB50` this file hands the harness, as the original,
@@ -370,7 +370,7 @@ refused**, every one by a count of mismatching rounds (of 3,000):
 
 The weakest, A1 (15 rounds), is a record index read before
 `PartySet_Load` instead of after: refused only when the load's recorder moves
-that `MoveScript_EffectState` byte (one stir in eight, one byte in 24).
+that `Character_IndexById` byte (one stir in eight, one byte in 24).
 
 ## 6. Latent defects (Capcom's, kept; for the coordinator to number)
 
@@ -397,7 +397,7 @@ that `MoveScript_EffectState` byte (one stir in eight, one byte in 24).
   the second stays (in the lists and on the field) when the new party joins.
   Kept.
 - **Unchecked indexes**: every record reached through
-  `MoveScript_EffectState[k]` (a byte, `CharacterRecords + 0xA4` x it) and
+  `Character_IndexById[k]` (a byte, `CharacterRecords + 0xA4` x it) and
   every member through `ObjTrio + 0x14C i` for `i` up to the count, as
   wave one's groups found elsewhere.
 

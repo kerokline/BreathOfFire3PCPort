@@ -24,10 +24,10 @@ using U = std::uint32_t;
 // --- the battle's cells -----------------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy EnemyRunAll is running (its object)
 constexpr U kFight = 0x904AAA;            // u8: the event battle
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win
 constexpr U kTarget = 0x904B44;           // u8: the battle's target
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 
 // --- the party's leader (ObjTrio + 0) ---------------------------------------

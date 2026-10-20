@@ -158,7 +158,7 @@ game is the owner's to say.
 
 | PC | Name | Size | Root | What |
 |---|---|--:|---|---|
-| `0x416440` | `Area106_Handler0` | `0x36` | handler 0 (PSX `0x801F38E8`) | `Field_ActiveMember +0x80` bit 0 cleared; `MoveScript_EffectState[leader +0x89]` 0: `Cond_ByteFE = 1` and the running object's `+0 = 0` |
+| `0x416440` | `Area106_Handler0` | `0x36` | handler 0 (PSX `0x801F38E8`) | `Field_ActiveMember +0x80` bit 0 cleared; `Character_IndexById[leader +0x89]` 0: `Cond_ByteFE = 1` and the running object's `+0 = 0` |
 | `0x416480` | `Area106_PlaceByFlags` | `0xCF` | handler 1 (`0x801F3940`) | the running object to `(0x128000, 0xB8000)` / `(0x128000, 0x238000)` / `(0x118000, 0x1F8000)` by story flags `0x51` / `0x4F`, with `+0x3E` `0x850` / `0x600` / `0x300` and the script word + 2, + 4 or not |
 | `0x416550` | `Area106_PlaceByPair` | `0xAF` | handler 2 (`0x801F3A60`) | `k = flag 0x52 | flag 0x53 << 1` picks a cell of `Area106_Cells` `0x61C6B4` (`(x << 16) | 0x8000`); flag `0x4F`: `+0x3E = 0x850`, script + 8; else `0x280`, script + 2k |
 | `0x416600` | `Area106_Tail36` | `0x161` | tail kind 36 | states 0, 2, `0xA`, `0xC`, `0xE`, `0x10`: `Party_DropIn(0..5)`, the tail cleared, story flags: 0 sets `0x51`, 2 clears it; `0xA` / `0xC` / `0xE` / `0x10` set `0x52` / `0x53` as 10, 01, 11, 00 |

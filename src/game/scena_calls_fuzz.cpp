@@ -308,7 +308,7 @@ unsigned char Pick4(std::uint32_t n) {
 
 // Moves one cell an entry reads again after a call: the member count (0..4),
 // a member's id or its +0 bit 0, a saved byte, a list byte, an
-// MoveScript_EffectState index (0..7), a record's +9 / +0xB. The harness's
+// Character_IndexById index (0..7), a record's +9 / +0xB. The harness's
 // disturbance reaches a group cell about one call in 24, too seldom for a
 // read before a call to be told from one after it, so each callee's recorder
 // does it too, from the recorders' stream (the same on both passes).
@@ -319,7 +319,7 @@ void Move(std::uint32_t n) {
     case 1: sh::Mem(ObjTrio_addr + 0x89 + (v % 3) * at::kMemberStride)[0] = Pick4(v >> 4); break;
     case 2: sh::Mem(at::kSaved + v % 6)[0] = Pick4(v >> 4); break;
     case 3: sh::Mem(Cond_Flags_addr + 0xd2 + v % 6)[0] = Pick4(v >> 4); break;
-    case 4: MoveScript_EffectState[v % 24] = static_cast<unsigned char>((v >> 5) % 8); break;
+    case 4: Character_IndexById[v % 24] = static_cast<unsigned char>((v >> 5) % 8); break;
     case 5: {
         unsigned char* const r = sh::Mem(bof3::addr::CharacterRecords + (v % 8) * at::kRecordStride);
         r[0xB] = static_cast<unsigned char>(r[0xB] ^ 1);
@@ -356,7 +356,7 @@ const sh::Callee kCallees[] = {
 // Field_MemberCount, ObjTrio, and 0x903A04..0x903A13).
 const sh::Region kRegions[] = {
     {0x903A14, 4},                                               // the saved second list's last two bytes, and two spare
-    {Key(MoveScript_EffectState), 24},                   // the id -> record map, seeded 0..7
+    {Key(Character_IndexById), 24},                   // the id -> record map, seeded 0..7
     {bof3::addr::CharacterRecords, 8 * at::kRecordStride},       // the eight records it names
 };
 
@@ -376,7 +376,7 @@ void Seed(unsigned k) {
     if (sh::Half())
         for (unsigned i = 0; i < 6; ++i) sh::Mem(Cond_Flags_addr + 0xd2 + i)[0] = Pick4(sh::Next());
     // every index names one of the eight records in the region
-    for (unsigned i = 0; i < 24; ++i) MoveScript_EffectState[i] = static_cast<unsigned char>(sh::Next() % 8);
+    for (unsigned i = 0; i < 24; ++i) Character_IndexById[i] = static_cast<unsigned char>(sh::Next() % 8);
     // the caller's ecx: the entry's index in the tables that hold it (Scenario_CallA
     // / B leave n & 0xFF), another byte, or any word
     const std::uint32_t base = kRows[k].base;

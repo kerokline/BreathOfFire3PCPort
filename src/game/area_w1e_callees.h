@@ -25,7 +25,7 @@ constexpr U kMember2 = 0x802FD8;          // ObjTrio + 0x298
 constexpr U kPartyStride = 0x14C;
 // kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
 // kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: MoveScript_EffectState's index
+// kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: Character_IndexById's index
 constexpr U kPartyList = 0x904062;        // three bytes: the members' character ids, in order
 constexpr U kScratch48 = 0x903848;        // u8 scratch cells 0x903848..0x90384B (the script's)
 // kVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7

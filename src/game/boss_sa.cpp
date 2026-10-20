@@ -148,7 +148,7 @@ bool PickSpent() {
 // step 2 (0x446E00); with either, what `with` does, MoveScript counter 0 and
 // the music track, and step 1 (0x446DE0).
 template <typename F> void EndByBits(F with, unsigned counter, unsigned track) {
-    if ((BattleActions_BattleEnd & 6) == 0) {
+    if ((Battle_EndFlags & 6) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -202,7 +202,7 @@ extern "C" void __cdecl BossGary_EndStart(void) {
 extern "C" unsigned char __cdecl BossGary_EndAwait(void) {
     if (BossSa_EndCount == 0) {
         EndStep(AddressOf(BossGary_AnimsEnd), 1);
-        BattleActions_BattleEnd |= 4;
+        Battle_EndFlags |= 4;
         BH_CALL(MoveCmd_TestFB)(0x64, 0x14);
         rv::Current<records::BattleEnemy>()->step += 1;
     }
@@ -314,7 +314,7 @@ extern "C" unsigned char __cdecl Boss01_Event(unsigned phase) {
 // chapter's run 0x8034E4 = 6 and step 0x8034E5 = 0x32; otherwise the step up
 // by one. Then a tail jump to 0x446E20 (the end phase, step 3) either way.
 extern "C" void __cdecl Boss01_End(void) {
-    if (BattleActions_BattleEnd & 1) {
+    if (Battle_EndFlags & 1) {
         MoveScript_Var7 = 6;
         MoveScript_PartyRecords[0x65] = 0x32;
     } else {
@@ -373,7 +373,7 @@ extern "C" void __cdecl BossNue_EndPose(void) {
 // Effect_Release.
 extern "C" void __cdecl BossNue_EndMove(void) {
     if (!EndWalk()) return;
-    BattleActions_BattleEnd |= 2;
+    Battle_EndFlags |= 2;
     BH_CALL(Effect_Release)();
 }
 
@@ -461,7 +461,7 @@ extern "C" void __cdecl Boss02_Setup(void) { SetHooks(at::kBoss02End, at::kBareR
 // with 0x904AE8 bit 1 (the win), the window records' pass 0x802D20 = 2 and
 // Msg_OpenScript(0x19). al 0.
 extern "C" unsigned char __cdecl Boss02_Event(unsigned phase) {
-    if ((phase & 0xFF) == 0 && (BattleActions_BattleEnd & 2)) {
+    if ((phase & 0xFF) == 0 && (Battle_EndFlags & 2)) {
         BossSa_WindowPass = 2;
         BH_CALL(Msg_OpenScript)(0x19);
     }
@@ -581,8 +581,8 @@ extern "C" void __cdecl BossWeretigr_EndPose(void) {
 extern "C" void __cdecl BossWeretigr_EndMove(void) {
     if (!EndWalk()) return;
     const unsigned exp = rv::As<records::BattleEnemy>(Enemy())->exp * Cheats_ExpMultiplier();
-    BattleActions_BattleEnd |= 2;
-    AddLong(At(BattleFlow_ExpTotal_addr), exp);
+    Battle_EndFlags |= 2;
+    AddLong(At(Battle_ExpTotal_addr), exp);
     BH_CALL(Effect_Release)();
 }
 

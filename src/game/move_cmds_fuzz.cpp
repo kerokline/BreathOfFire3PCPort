@@ -280,7 +280,7 @@ void Capture(State& s) {
     std::memcpy(s.alt, g_alt, sizeof s.alt);
     s.flags = g_flags;
     s.current = Sprite_Current;
-    std::memcpy(&s.flags_ptr, At(AreaW0c_FlagRow_addr), 4);
+    std::memcpy(&s.flags_ptr, At(Chapter_FlagRow_addr), 4);
     std::memcpy(s.log, g_log, sizeof s.log);
     s.log_n = g_log_n;
 }
@@ -293,7 +293,7 @@ void Apply(const State& s) {
     std::memcpy(g_alt, s.alt, sizeof g_alt);
     g_flags = s.flags;
     Sprite_Current = s.current;
-    std::memcpy(At(AreaW0c_FlagRow_addr), &s.flags_ptr, 4);
+    std::memcpy(At(Chapter_FlagRow_addr), &s.flags_ptr, 4);
     std::memset(g_log, 0, sizeof g_log);
     g_log_n = 0;
 }

@@ -225,11 +225,11 @@ const sh::Region kRegions[] = {
 bool Is(unsigned k, const char* name) { return std::strcmp(kClones[k].name, name) == 0; }
 bool Has(unsigned k, const char* part) { return std::strstr(kClones[k].name, part) != nullptr; }
 
-// A member id whose record index (MoveScript_EffectState) is one of the eight.
+// A member id whose record index (Character_IndexById) is one of the eight.
 UC SafeId() {
     for (int tries = 0; tries < 16; ++tries) {
         const auto id = static_cast<UC>(sh::Next() % 24);
-        if (MoveScript_EffectState[id] < 8) return id;
+        if (Character_IndexById[id] < 8) return id;
     }
     return 0;
 }
@@ -293,10 +293,10 @@ void SeedWindows(bool items) {
     B(0x8031F3) = static_cast<UC>(PickOf(0, 0, 1, sh::Next()));
     B(0x803337) = static_cast<UC>(PickOf(0, 0, 1, sh::Next()));
     // the Ability screen's cells
-    B(BattleActorCopies_ItemState_addr) = static_cast<UC>(PickOf(0, 0, 1, 4));
+    B(Window16_State_addr) = static_cast<UC>(PickOf(0, 0, 1, 4));
     B(0x8033A8) = static_cast<UC>(PickOf(1, 3, sh::Next()));
-    B(BattleActorCopies_ItemOwner_addr) = static_cast<UC>(PickOf(0, 1, 2, 0xFF, 3, sh::Next() % 3));
-    B(BattleActorCopies_ItemPage_addr) = static_cast<UC>(PickOf(0, 1, 2, 3, 3, 0xFF, 4));
+    B(Window16_Owner_addr) = static_cast<UC>(PickOf(0, 1, 2, 0xFF, 3, sh::Next() % 3));
+    B(Window16_Page_addr) = static_cast<UC>(PickOf(0, 1, 2, 3, 3, 0xFF, 4));
     B(0x8033AC) = static_cast<UC>(PickOf(0, 1, 8, 9, 0xFF, sh::Next() % 10));
     B(0x8033AD) = static_cast<UC>(PickOf(0xFF, 0xFF, 0, 1, sh::Next() % 10));
     const UC vtop = static_cast<UC>(PickOf(0, 1, 8, 9, 0xA, sh::Next() % 0x12));
@@ -322,10 +322,10 @@ void Seed(unsigned k) {
     if (Is(k, "FieldAbility_ArrangeRun")) B(FieldS_Step_addr) = static_cast<UC>(sh::Next() % 3);
     if (Is(k, "FieldAbility_ViewRun")) B(FieldS_Step_addr) = static_cast<UC>(sh::Next() % 5);
     // the type indexes 0x9398C0 + type + 4 member, written by the Ability states
-    if (Has(k, "FieldAbility")) B(BattleActorCopies_ItemPage_addr) = static_cast<UC>(PickOf(0, 1, 2, 3, sh::Next() % 4));
+    if (Has(k, "FieldAbility")) B(Window16_Page_addr) = static_cast<UC>(PickOf(0, 1, 2, 3, sh::Next() % 4));
     // the equipment previews against the records they were drawn from
     if (Has(k, "FieldEquip") && sh::Half()) {
-        const UC* const rec = sh::Mem(0x903A70 + 0xA4u * MoveScript_EffectState[B(Cond_Flags_addr + 0xd2 + B(0x803340) % 3)]);
+        const UC* const rec = sh::Mem(0x903A70 + 0xA4u * Character_IndexById[B(Cond_Flags_addr + 0xd2 + B(0x803340) % 3)]);
         for (U i = 0; i < 6; ++i)
             if (sh::Half()) B(0x6BDFA8 + i) = rec[0x12 + i];
     }
@@ -333,7 +333,7 @@ void Seed(unsigned k) {
     // at 0x80..0xFF (it only reads through it - the record for a text copy)
     if (Is(k, "FieldEquip_PickMember") && sh::Next() % 4 == 0) B(0x803340) = static_cast<UC>(0x80 | sh::Next());
     // the readers' record index above 7 (the 8-bit bit is then 0): a party id
-    // whose MoveScript_EffectState byte is any - these only read the record
+    // whose Character_IndexById byte is any - these only read the record
     if ((Has(k, "FieldEquip_Best") || Has(k, "FieldEquip_Preview") || Is(k, "FieldItemSort_EquipableFirst")) && sh::Next() % 4 == 0)
         for (U i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd2 + i) = static_cast<UC>(sh::Next());
 }
@@ -357,8 +357,8 @@ void Disturb(std::uint32_t h) {
     case 2: B(0x803341) = static_cast<UC>(v & 1 ? 0xFF : w & 0x7F); break;
     case 3: B(0x80333F) = static_cast<UC>(v & 0x7F); break;
     case 4: SetW(0x803346, v & 1 ? 0 : w); break;
-    case 5: B(BattleActorCopies_ItemOwner_addr) = static_cast<UC>(v % 3); break;
-    case 6: B(BattleActorCopies_ItemPage_addr) = static_cast<UC>(v % 4); break;
+    case 5: B(Window16_Owner_addr) = static_cast<UC>(v % 3); break;
+    case 6: B(Window16_Page_addr) = static_cast<UC>(v % 4); break;
     case 7: B(0x8033AC) = static_cast<UC>(v % 10); break;
     case 8: B(0x8033AD) = static_cast<UC>(v & 1 ? 0xFF : w % 10); break;
     case 9: B(BattleActorCopies_ItemActor_addr) = static_cast<UC>(v % 3); break;
@@ -369,7 +369,7 @@ void Disturb(std::uint32_t h) {
     case 14: {
         // a member id whose record is one of the eight, from the hash alone
         UC id = static_cast<UC>(w % 24);
-        for (int tries = 0; tries < 24 && MoveScript_EffectState[id] >= 8; ++tries) id = static_cast<UC>((id + 1) % 24);
+        for (int tries = 0; tries < 24 && Character_IndexById[id] >= 8; ++tries) id = static_cast<UC>((id + 1) % 24);
         B(Cond_Flags_addr + 0xd2 + v % 3) = id;
         break;
     }

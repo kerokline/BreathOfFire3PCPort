@@ -110,11 +110,11 @@ void StoreHooks(U end, U exit, U event) {
 // +0xA6 (the object read again for each) from the words set-ups 18..20 kept;
 // without, the flag set. Then the three stores.
 void RestoreOrMark(unsigned flag, U fc, U hook, U f8) {
-    if (BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), flag) & 0xFF) {
+    if (BH_CALL(Flags_Test)(At(Chapter_FlagRow), flag) & 0xFF) {
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(Enemy())->hp, BossSd_KeptA4);
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(Enemy())->ap, BossSd_KeptA6);
     } else {
-        BH_CALL(Flags_Set)(At(AreaW0c_FlagRow), flag);
+        BH_CALL(Flags_Set)(At(Chapter_FlagRow), flag);
     }
     PointEnemy(fc, hook, f8);
 }
@@ -131,14 +131,14 @@ void EndStep(U step) { BH_AT(Handler, step)(); }
 // kept: enemy 1's HP, enemy 2's, enemy 0's +0xA4 and +0xA6.
 void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_first) {
     const unsigned char fell = BossSe_Script;     // read once, before any call
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = fell & 2 ? step_if_1 : step_if_not;
         EndStep(at::kEndWin);
     } else if (fell & 1) {
         EndStep(at::kEndOther);
     } else {
-        const bool f23 = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x23) & 0xFF;
-        if (f23 && (BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x24) & 0xFF)) {
+        const bool f23 = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x23) & 0xFF;
+        if (f23 && (BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x24) & 0xFF)) {
             EndStep(at::kEndOther);
         } else {
             const unsigned char step = f23 ? 0x3A : 0x1C;
@@ -173,16 +173,16 @@ unsigned char EventAreaFight(unsigned code) {
         return 0;
     }
     if (phase != 0) return 0;
-    if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) BattleActions_BattleEnd |= 2;
+    if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) Battle_EndFlags |= 2;
     if (BossH_Enemy1Status & 0x4000) {
         BossSe_Script |= 2;
-        BattleActions_BattleEnd |= 2;
+        Battle_EndFlags |= 2;
     }
     if (BossH_Enemy2Status & 0x4000) {
         BossSe_Script |= 1;
-        BattleActions_BattleEnd |= 1;
+        Battle_EndFlags |= 1;
     }
-    if (BattleActions_BattleEnd != 0) BH_CALL(BossMap_UpdateFromEnemies)();
+    if (Battle_EndFlags != 0) BH_CALL(BossMap_UpdateFromEnemies)();
     return 0;
 }
 
@@ -204,7 +204,7 @@ void ExitAreaFight(unsigned tag) {
 // Set-ups 17 and 21's end hooks: the win sets the field's move-script counter
 // 0 (`counter`) and takes the end phase's step 1, else step 2.
 void EndCounter(unsigned char counter) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         B(at::kCounter0) = counter;
         EndStep(at::kEndWin);
         return;
@@ -329,10 +329,10 @@ extern "C" void __cdecl BossPatrio_Hook(unsigned code) { HookTable("BossPatrio_H
 // jmp [BossDodai_Steps + 4 * +1].
 extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
     if (rv::Current<records::BattleEnemy>()->actor == 4) {
-        const bool f = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x34) & 0xFF;
+        const bool f = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x34) & 0xFF;
         SetCell(Enemy() + 0xFC, f ? 0x64CF34 : 0x64CF28);
     } else {
-        const bool f = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x33) & 0xFF;
+        const bool f = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x33) & 0xFF;
         SetCell(Enemy() + 0xFC, f ? 0x64CF4C : 0x64CF40);
     }
     Dispatch("BossDodai_Dispatch", AddressOf(BossDodai_Steps), 12, 1, passed);
@@ -344,8 +344,8 @@ extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
 // its +8 |= 2 and +0xFC = 0x64CF40, else +0xFC = 0x64CF28; +0xF4 =
 // BossDodai_Hook, +0xF8 = 0x64CF70; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossDodai_Enter(void) {
-    bool back = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x1E) & 0xFF;
-    if (!back) back = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x23) & 0xFF;
+    bool back = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x1E) & 0xFF;
+    if (!back) back = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x23) & 0xFF;
     if (back) {
         const unsigned hp = rv::Current<records::BattleEnemy>()->actor == 4 ? BossSd_KeptHp1 : BossSd_KeptHp2;
         rv::As<records::BattleEnemy>(Enemy())->hp = hp;

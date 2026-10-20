@@ -282,7 +282,7 @@ const ah::Region kRegions[] = {
     {Effect_Objects_addr, at::kEffectCount * at::kEffectStride},
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {Camera_ShiftY_addr, 2},
     {Input_Held_addr, 8},
     {Gfx_UnpackScratch_addr + 0x1f00c, 2},

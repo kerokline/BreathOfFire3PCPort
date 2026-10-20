@@ -59,7 +59,7 @@ constexpr std::uint32_t kGateway189 = 0x660B08;       // 2 x 3 bytes: area, x, z
 constexpr std::uint32_t kPendingStates = 0x660B70;    // 5 x 4 bytes: a member's state bytes +1..+4 by kind
 constexpr std::uint32_t kFormationAnims = 0x660B3C;   // BattleFormation_Anims: a byte by the formation 0x904AAC
 // Cells.
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox is given
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style Menu_DrawBox is given
 constexpr std::uint32_t kKindCounts = 0x9040EC;       // 32 bytes: a count by kind (kKindTotal's)
 // kRank: now FieldE1_Rank (symbols.toml). u8: the total's rank (0..12), written by FieldPanel_DrawTotal
 constexpr std::uint32_t kBlink = 0x939A28;            // u8: FieldPanel_DrawBlink draws while it is not 0
@@ -79,7 +79,7 @@ constexpr std::uint32_t kExitX = 0x903860;            // s32: the exit's x (16.1
 constexpr std::uint32_t kSlotPositions = 0x7E06E0;    // 4 x (x, z) dwords: a party slot's placed position
 // kLeaderList: now Cond_Flags[0xd2] (symbols.toml). u8: the leader's id (the party list's first)
 constexpr std::uint32_t kSecondList = 0x904065;       // 3 bytes: the second party list
-// kBattleBits: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 1 the camera left alone, bit 7 the drop-in
+// kBattleBits: now EventBattle_Flags (symbols.toml). u8: bit 1 the camera left alone, bit 7 the drop-in
 constexpr std::uint32_t kFormation = 0x904AAC;        // u8: the event battle's formation
 // kDropEntry: now BossH_LeaderPick (symbols.toml). u8: Party_DropIn's entry
 // kPendingFlag: now EventLeader_PendingFlag (symbols.toml). u8: a pending jump runs (Field_PendingJump)

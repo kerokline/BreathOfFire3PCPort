@@ -198,8 +198,8 @@ void CheckEntries(const char* who, const unsigned char* record, unsigned first, 
 // original 0x451480 (the gene history's step table 0x64ED50, entry 6, by
 // 0x904AA4): windows 18 and 19's +3 = 4 and 2, 0x904AA3 = 3, 0x904AA4 = 2.
 extern "C" void __cdecl DragonHistory_Leave(void) {
-    BattleE6_Window18State = 4;
-    BattleE6_Window19State = 2;
+    Window18_State = 4;
+    Window19_State = 2;
     BattleE4_Step3 = 3;
     BattleE4_Step4 = 2;
 }
@@ -300,7 +300,7 @@ extern "C" unsigned char __cdecl DragonForm_RecipeSlotHeld(unsigned recipe, unsi
 extern "C" unsigned char __cdecl DragonForm_TryPartyRecipe(void) {
     const unsigned count = BattleE5_GeneCount;
     if (count == 0) return 0;
-    const unsigned char size = BattleSprites_PartyPick;
+    const unsigned char size = Battle_PartyStanding;
     for (unsigned i = 0; i < count; ++i)
         if (B(at::kGenes + i) == 0x10 && size == 3) return BH_CALL(DragonForm_PartyRecipe)();
     return 0;
@@ -900,7 +900,7 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     if (r[0x124] != B(at::kActor)) return 0;
     if (BH_CALL(Battle_ActionBitSet)(At(BattleSprites_Action)[2]) != 0) return 0;
     if (BH_CALL(Battle_MemberListFull)(member) != 0) return 0;
-    const U table = MoveScript_EffectState[member_rec->char_id] == 6 ? at::kRollOddsB : at::kRollOdds;
+    const U table = Character_IndexById[member_rec->char_id] == 6 ? at::kRollOddsB : at::kRollOdds;
     const unsigned id = Word(At(BattleSprites_Action) + 2);
     const unsigned nibble = At(at::kActionRows + id * at::kActionRowStride)[0] >> 4;
     const unsigned odds = At(table)[nibble];

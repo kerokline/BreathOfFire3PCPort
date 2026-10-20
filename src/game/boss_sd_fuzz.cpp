@@ -103,7 +103,7 @@ void Disturb(U h) {
     case 3: Mem(BossH_Enemy2Status_addr)[1] = b; break;
     case 4: SetWord(Mem(h & 0x100 ? BossSb_Enemy1Hp_addr : at::kEnemy0Hp), h >> 12); break;
     case 5: SetWord(Mem(BossSd_KeptA6_addr + 2 * ((h >> 12) % 4)), h >> 14); break;
-    case 6: bh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * ((h >> 16) % 40))); break;
+    case 6: bh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * ((h >> 16) % 40))); break;
     default: Sprite_Current[5] = static_cast<unsigned char>(h & 0x200 ? 4 + ((h >> 16) & 1) : b); break;
     }
 }
@@ -333,7 +333,7 @@ const bh::Clone kClonesB21[] = {
 // The set-ups' seed: the battle-end byte and 0x904AAD at their bit values, the
 // three enemies' +0x93 with and without 0x40, the kept words' sources.
 void SeedSetup(unsigned) {
-    Mem(BattleActions_BattleEnd_addr)[0] = EndByte();
+    Mem(Battle_EndFlags_addr)[0] = EndByte();
     Mem(BossSe_Script_addr)[0] = EndByte();
     Mem(at::kEnemy0Status)[1] = StatusByte();
     Mem(BossH_Enemy1Status_addr)[1] = StatusByte();

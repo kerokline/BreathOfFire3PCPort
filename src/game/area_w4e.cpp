@@ -48,7 +48,7 @@ unsigned char Answer() { return B(AreaW0c_ChoiceAnswer_addr); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 unsigned char* Row14() { return Mem(Cond_Flags_addr + 0x70); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 bool Test(const unsigned char* bits, unsigned index) { return AH_CALL(Flags_Test)(bits, index) != 0; }
 // The movement script's position (MoveScript_Object's word +0xA) back by 2.
 void ScriptBack2() { AddWord(MoveScript_Object + 0xA, -2); }
@@ -631,8 +631,8 @@ extern "C" void __cdecl Area189_StepArrive(void) {
             if (reserve != 0) --reserve;
         }
         B(Cond_Flags_addr + 0xcf) = reserve;
-        B(AreaW3g_Byte929EC1_addr) = 0;
-        B(AreaW3g_Byte9036D0_addr) = 0;
+        B(Area189_StepsSinceEvent_addr) = 0;
+        B(Area189_EventsInRow_addr) = 0;
         if (reserve == 0) {
             AH_CALL(Msg_OpenScript)(1);
             Field_Request = 2;
@@ -642,22 +642,22 @@ extern "C" void __cdecl Area189_StepArrive(void) {
     } else {
         const U r = static_cast<U>(AH_CALL(Rand)()) & 7;
         const auto limit = static_cast<std::int32_t>(r + Cond_ByteFF * 20u + 7u);
-        const unsigned char steps = B(AreaW3g_Byte929EC1_addr);
+        const unsigned char steps = B(Area189_StepsSinceEvent_addr);
         if (static_cast<std::int32_t>(steps) < limit) {
-            B(AreaW3g_Byte929EC1_addr) = static_cast<unsigned char>(steps + 1);
+            B(Area189_StepsSinceEvent_addr) = static_cast<unsigned char>(steps + 1);
         } else {
-            const unsigned char events = B(AreaW3g_Byte9036D0_addr);
-            B(AreaW3g_Byte929EC1_addr) = 0;
+            const unsigned char events = B(Area189_EventsInRow_addr);
+            B(Area189_StepsSinceEvent_addr) = 0;
             if (events >= 4) {
                 AH_CALL(Area189_RaiseByte1E)();
                 Cond_ByteFE = 2;
                 AH_CALL(Sound_PlayEffect)(0x10B);
-                B(AreaW3g_Byte9036D0_addr) = 0;
+                B(Area189_EventsInRow_addr) = 0;
             } else {
                 AH_CALL(Area189_DrainHp)();
                 Cond_ByteFE = 1;
                 AH_CALL(Sound_PlayEffect)(0x108);
-                B(AreaW3g_Byte9036D0_addr) = static_cast<unsigned char>(B(AreaW3g_Byte9036D0_addr) + 1);
+                B(Area189_EventsInRow_addr) = static_cast<unsigned char>(B(Area189_EventsInRow_addr) + 1);
             }
         }
     }
@@ -929,7 +929,7 @@ extern "C" void __cdecl Area191_ScaleShrink(void) { ScaleTick(-0x2000, 1); }
 // of 31 at +0x1D8 into a jump table of 8 at +0x1B8, both inside the extent;
 // the ja bounds it unsigned): 0 - message 0x6D, request 2, state 1 (which
 // does nothing: the message's choice moves it on). 2 - once Field_Request is
-// not 2: Transition_Start(0), state 3. 3 - once MoveScript_WaitWordDA is 0:
+// not 2: Transition_Start(0), state 3. 3 - once Transition_Busy is 0:
 // Draw_PassFlags 0, Sound_StopMusic, 0x42C2D0, Sound_LoadStream(0), state 4.
 // 4 - once Sound_StreamDone answers (all of eax): story flag 0x82, the walk's
 // word 0x90405C, 0x929EC1, 0x9036D0 0, its count + 1, Field_StatusBits bit 0,
@@ -953,7 +953,7 @@ extern "C" void __cdecl Area191_Tail53(void) {
         B(AreaW0c_TailState_addr) = 3;
         return;
     case 3:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         AH_CALL(Sound_StopMusic)();
         AH_AT(void (__cdecl*)(), at::kRestoreRecords)();
@@ -966,8 +966,8 @@ extern "C" void __cdecl Area191_Tail53(void) {
         const unsigned char count = B(at::kWalkCount);
         const unsigned char bits = Field_StatusBits;
         SetWord(Mem(Cond_Flags_addr + 0xcc), 0);
-        B(AreaW3g_Byte929EC1_addr) = 0;
-        B(AreaW3g_Byte9036D0_addr) = 0;
+        B(Area189_StepsSinceEvent_addr) = 0;
+        B(Area189_EventsInRow_addr) = 0;
         B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
         Field_StatusBits = static_cast<unsigned char>(bits | 1);
         B(AreaW0c_TailState_addr) = 0xA;
@@ -1030,7 +1030,7 @@ extern "C" unsigned char __cdecl Area191_StepHook(long x, long z) {
 // 0x567873, 0x5678B3, 0x5678F3 (SC13) and 0x56AEE1 (SC15)): the message a
 // member's talk opens. i = the index of the member byte (`who`'s low byte) in
 // Area191_TalkKeys (5 when none); a = i * 9; b = the walk count, at most 8; c
-// = the byte +0x1E of the actor record MoveScript_EffectState[who] names (both
+// = the byte +0x1E of the actor record Character_IndexById[who] names (both
 // unchecked). Cond_Flags row 14 bit 0xA set: Area191_TalkMessageB(a, who, b,
 // c). Else a + 8 for c from 8, + 7 for c above 4 with b below 7, else +
 // Area191_TalkSteps[b]; the word from Area191_TalkMessagesB (the chapter
@@ -1045,7 +1045,7 @@ extern "C" unsigned short __cdecl Area191_TalkMessage(unsigned who) {
     auto a = static_cast<unsigned char>(i * 9);
     unsigned char b = B(at::kWalkCount);
     if (b > 8) b = 8;
-    const unsigned char c = B(Field_ActorStates_addr + 0xe + MoveScript_EffectState[key] * at::kCharStride);
+    const unsigned char c = B(Field_ActorStates_addr + 0xe + Character_IndexById[key] * at::kCharStride);
     if (Test(Row14(), 0xA)) return AH_CALL(Area191_TalkMessageB)(a, who, b, c);
     if (c >= 8) {
         a = static_cast<unsigned char>(a + 8);
@@ -1100,8 +1100,8 @@ extern "C" void __cdecl Area191_Kind18Flag77(void) {
     if (!Test(StoryFlags(), 0x77)) return;
     const unsigned char count = B(at::kWalkCount);
     SetWord(Mem(Cond_Flags_addr + 0xcc), 0);
-    B(AreaW3g_Byte929EC1_addr) = 0;
-    B(AreaW3g_Byte9036D0_addr) = 0;
+    B(Area189_StepsSinceEvent_addr) = 0;
+    B(Area189_EventsInRow_addr) = 0;
     const unsigned char bits = Field_StatusBits;
     B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
     Field_StatusBits = static_cast<unsigned char>(bits | 1);

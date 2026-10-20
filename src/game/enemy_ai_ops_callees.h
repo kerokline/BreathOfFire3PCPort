@@ -45,7 +45,7 @@ constexpr std::uint32_t kTintSize = 12;
 constexpr std::uint32_t kStatBlock = 0x939F80;     // 32 bytes: the target's +0xB0.. copied in
 constexpr std::uint32_t kCommandSource = 0x939FA0; // pointer: byte +0 the actor the command is aimed at
 constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (docs/battle_flow.md: "event battle" is a guess)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8 (docs/battle_flow.md: "event battle" is a guess)
 // kTargeting: now BattleE4_Picking (symbols.toml). u8: non-zero while a target is being picked (by use here)
 constexpr std::uint32_t kPulse = 0x904AC8;         // u8: the menu cursor's pulse (Battle_PulseStep)
 constexpr std::uint32_t kActor = 0x904B34;         // u8: the acting actor

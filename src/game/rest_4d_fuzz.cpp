@@ -442,7 +442,7 @@ void SeedCommu() {
     for (unsigned i = 1; i < 0x28; ++i) B(at::kName + i) = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next());
     for (unsigned c = 0; c < 4; ++c) B(at::kPicked + c) = static_cast<unsigned char>(sh::Next() % 10);
     Field_Request = static_cast<unsigned char>(PickOf(2, 2, 0, 1, sh::Next()));
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
+    Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
     // the record pointer: one of the scratch's, its +5 a slot mostly
     unsigned char* const record = sh::Scratch(0);
     record[5] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 60 : sh::Next());

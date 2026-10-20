@@ -96,7 +96,7 @@ constexpr std::uint32_t kFieldEC2 = 0x929EC2;
 // kGameMode: now Game_Mode (symbols.toml). Game_Mode (u16)
 // kCondByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kStreamFlag: now AreaW1a_FocusObject (symbols.toml). a pointer to the byte FieldTail_FlagMessage clears
-// kMessageBits: now ScenaSc7_EventFlags (symbols.toml). the bits FieldTail_FlagMessage sets by its argument
+// kMessageBits: now Gene_Bits (symbols.toml). the bits FieldTail_FlagMessage sets by its argument
 // kReturnX: now AreaW2d_ReturnPoint (symbols.toml). FieldTail_StoryWarp's saved leader x, z, area
 // kReturnZ: now AreaW4d_ReturnZ (symbols.toml).
 // kReturnArea: now AreaW4d_ReturnArea (symbols.toml).
@@ -132,7 +132,7 @@ constexpr std::uint32_t kPoolWordAsk = 0x803614;
 // Named data whose symbols.gen.h name is a macro (bof3::addr::<Name> would expand it).
 constexpr std::uint32_t kScenarioHooks = 0x662C80;   // Scenario_Hooks
 // kWorldMapHooks: now WorldMap_FieldHooks (symbols.toml). WorldMap_FieldHooks
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA (u16)
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy (u16)
 // kAreaNumber: now Game_AreaNumber (symbols.toml). Game_AreaNumber (u16)
 // kMapRow: now MapView_Row (symbols.toml). MapView_Row (s16)
 // kMapColumn: now MapView_Column (symbols.toml). MapView_Column (s16)

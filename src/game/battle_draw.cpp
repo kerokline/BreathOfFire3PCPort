@@ -281,7 +281,7 @@ bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     auto* const window_rec = rv::As<records::WindowRecord>(w);
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x82, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x82, w[9], static_cast<unsigned char>(Config_WindowColour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
     const U category = w[0xA];
@@ -317,8 +317,8 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         row += 0xD;
     }
 
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(BattleDraw_Colour));
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(Config_WindowColour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
         const unsigned char* const label = At(Long(At(kItemLabels + w[0xA] * 4u)));
@@ -378,7 +378,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
 // and the scroll bar over the list's 10 entries.
 extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     auto* const window_rec = rv::As<records::WindowRecord>(w);
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x82, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x82, 0, static_cast<unsigned char>(Config_WindowColour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0x10, &offset, &moving, w + 0x12);
     U ids = Addr(g.skill_list(w[0xA], w[0xB], 1)) + top;
@@ -407,7 +407,7 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
         row += 0xD;
     }
 
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char* const label =
             At(Word(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : Long(At(kSkillLabels + w[0xB] * 4u)));

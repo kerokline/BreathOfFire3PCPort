@@ -255,7 +255,7 @@ and the tables', 2026-09-25).
   [`dialogue-localisation.md`](dialogue-localisation.md) section 6 the
   address is `0x59B240`. Not translated here.
 - **Other groups' addresses, said and not acted on:**
-  - `0x66972C` is named `MoveScript_EffectState` (count 24, status
+  - `0x66972C` is named `Character_IndexById` (count 24, status
     hypothesis) in `symbols.toml`, but every reader this group met - and
     `item_use.cpp`, `battle_draw_callees.h` - uses it as the map from a party
     member id (`0x904062[slot]`) to its character record. The name looks

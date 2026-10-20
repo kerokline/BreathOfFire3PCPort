@@ -156,10 +156,10 @@ void MarkerLook() {
 void GridPlace() {
     unsigned char* s = Sprite_Current;
     unsigned b = s[0xB];
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(BattleE4_Above_addr + 4)) + (b % 6) * 30 + 0x13);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(Window21_addr + 4)) + (b % 6) * 30 + 0x13);
     s = Sprite_Current;
     b = s[0xB];
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, (b / 6) * 32 + Word(At(BattleE4_Above_addr + 6)) + 0x30);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, (b / 6) * 32 + Word(At(Window21_addr + 6)) + 0x30);
 }
 
 // The animation byte of a cursor's grid: the 18 dwords of `grid` as bytes,
@@ -402,14 +402,14 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
     if ((UL(At(at::kRoundFlags)) & 0x8000) != 0) {
         const unsigned char n = BattleE2_SavedCount;
         B(at::kPartyCount) = n;
-        BattleSprites_PartyPick = 0;
+        Battle_PartyStanding = 0;
         if (n > 0) {
             unsigned char in = 0;
             for (unsigned k = 0; k < n; ++k)
                 if ((At(at::kBackupBit40 + k * at::kPartyStride)[0] & 0x40) == 0) ++in;
-            BattleSprites_PartyPick = in;
+            Battle_PartyStanding = in;
         }
-        Rest3a_Win1Slot = n;
+        Window1_ParamA = n;
         SetWord(At(at::kWindow1X), At(at::kCountX + n)[0]);
         if (n > 1) {
             unsigned char m = 1;
@@ -525,7 +525,7 @@ extern "C" void __cdecl BattleFx_GridMarkStart(void) {
 extern "C" void __cdecl BattleFx_GridMarkRun(void) {
     static constexpr U kSteps[2] = {bof3::addr::BattleFx_GridMarkCount, bof3::addr::BattleFx_GridMarkPlace};
     CallState("BattleFx_GridMarkRun", kSteps, 2, Sprite_Current[2]);
-    if ((BattleE4_Above & 1) == 0) {
+    if ((Window21 & 1) == 0) {
         rv::Current<records::BattleTask>()->state = 2;
         Sc()[2] = 0;
         return;
@@ -562,8 +562,8 @@ extern "C" void __cdecl BattleFx_GridMarkPlace(void) {
         unsigned char i = 0;
         do {
             if (At(at::kPickList + i)[0] == b) {
-                rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(BattleE4_Above_addr + 4)) + i * 24u + 0x41);
-                rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(BattleE4_Above_addr + 6)) + 0x12);
+                rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(Window21_addr + 4)) + i * 24u + 0x41);
+                rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
                 return;
             }
             ++i;
@@ -585,8 +585,8 @@ extern "C" void __cdecl BattleFx_ListHand(void) {
 // overlay queued (a tail jmp).
 extern "C" void __cdecl BattleFx_ListHandStart(void) {
     MarkerLook();
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, UL(At(BattleE4_Above_addr + 4)) + 0x14);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(BattleE4_Above_addr + 6)) + 0x12);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, UL(At(Window21_addr + 4)) + 0x14);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
     ++rv::Current<records::BattleTask>()->state;
     BH_CALL(Sprite_SetAnimation)(0x13);
     BH_CALL(Sprite_QueueOverlay)();
@@ -602,13 +602,13 @@ extern "C" void __cdecl BattleFx_ListHandRun(void) {
     unsigned char* const s = Sprite_Current;
     auto* const cur_task = rv::As<records::BattleTask>(s);
     if ((cur_task->flags & 1) == 0) return;
-    if ((BattleE4_Above & 1) == 0) {
+    if ((Window21 & 1) == 0) {
         cur_task->state = 2;
         Sprite_Current[2] = 0;
         return;
     }
-    rv::Store<unsigned>(cur_task->screen_x, UL(At(BattleE4_Above_addr + 4)) + 0x14);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(BattleE4_Above_addr + 6)) + 0x12);
+    rv::Store<unsigned>(cur_task->screen_x, UL(At(Window21_addr + 4)) + 0x14);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
     BH_CALL(Sprite_QueueOverlay)();
 }
 
@@ -625,7 +625,7 @@ extern "C" void __cdecl BattleFx_ListHandPress(void) {
 // command is tapped (0x904AA6 not 0xFF); record 21 not in use: +1 on, +2 = 0.
 extern "C" void __cdecl BattleFx_ListHandWait(void) {
     if (BattleE5_GeneRow != 0xFF) Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] - 1);
-    if ((BattleE4_Above & 1) != 0) return;
+    if ((Window21 & 1) != 0) return;
     ++rv::Current<records::BattleTask>()->state;
     Sprite_Current[2] = 0;
 }
@@ -689,11 +689,11 @@ extern "C" void __cdecl BattleFx_Win18Cursor(void) {
 
 // original 0x434DC0 (hidden in 0x434870's extent): CursorStart over record
 // 18 (0x8033E8) and the grid 0x904608.
-extern "C" void __cdecl BattleFx_Win18CursorStart(void) { CursorStart(BattleE4_Slots_addr, at::kGrid18); }
+extern "C" void __cdecl BattleFx_Win18CursorStart(void) { CursorStart(Window18_addr, at::kGrid18); }
 
 // original 0x434E80 (hidden in 0x434870's extent): CursorRun over record 18
 // and the grid 0x904608.
-extern "C" void __cdecl BattleFx_Win18CursorRun(void) { CursorRun(BattleE4_Slots_addr, at::kGrid18); }
+extern "C" void __cdecl BattleFx_Win18CursorRun(void) { CursorRun(Window18_addr, at::kGrid18); }
 
 // original 0x434F40 (hidden in 0x434870's extent): BattleFx_Dispatch slot 14,
 // with the battle's pose pool: by +1 through {_Win19CursorStart,
@@ -705,11 +705,11 @@ extern "C" void __cdecl BattleFx_Win19Cursor(void) {
 
 // original 0x434F90 (hidden in 0x434870's extent): CursorStart over record
 // 19 (0x80340C) and the grid 0x904620.
-extern "C" void __cdecl BattleFx_Win19CursorStart(void) { CursorStart(BattleE4_Hand_addr, at::kGrid19); }
+extern "C" void __cdecl BattleFx_Win19CursorStart(void) { CursorStart(Window19_addr, at::kGrid19); }
 
 // original 0x435050 (hidden in 0x434870's extent): CursorRun over record 19
 // and the grid 0x904620.
-extern "C" void __cdecl BattleFx_Win19CursorRun(void) { CursorRun(BattleE4_Hand_addr, at::kGrid19); }
+extern "C" void __cdecl BattleFx_Win19CursorRun(void) { CursorRun(Window19_addr, at::kGrid19); }
 
 // ===========================================================================
 // The enemy's action and its target (the action's begin)
@@ -798,14 +798,14 @@ extern "C" unsigned char __cdecl Battle_MemberLowestHp(void) {
 // random member (a tail jmp to Battle_RandomMember), else another enemy
 // (Battle_RandomEnemy(enemy + 3)).
 extern "C" unsigned char __cdecl BattleEnemy_OtherOrMember(unsigned enemy) {
-    if (BattleE2_EnemiesLeft == 1) return BH_CALL(Battle_RandomMember)();
+    if (Battle_EnemiesLeft == 1) return BH_CALL(Battle_RandomMember)();
     return BH_CALL(Battle_RandomEnemy)((enemy + 3) & 0xFF);
 }
 
 // original 0x436070 (no PSX twin paired): with one enemy left 0xFF, else
 // another enemy (Battle_RandomEnemy(enemy + 3)).
 extern "C" unsigned char __cdecl BattleEnemy_OtherEnemy(unsigned enemy) {
-    if (BattleE2_EnemiesLeft == 1) return 0xFF;
+    if (Battle_EnemiesLeft == 1) return 0xFF;
     return BH_CALL(Battle_RandomEnemy)((enemy + 3) & 0xFF);
 }
 
@@ -861,7 +861,7 @@ extern "C" unsigned char __cdecl BattleEnemy_PickTarget(unsigned enemy) {
 extern "C" unsigned char __cdecl BattleEnemy_PickAnyTarget(unsigned enemy) {
     const unsigned r = static_cast<unsigned>(BH_CALL(Rand)()) & 7;
     unsigned char t;
-    if (r < 3 || BattleE2_EnemiesLeft == 1) t = BH_CALL(Battle_RandomMember)();
+    if (r < 3 || Battle_EnemiesLeft == 1) t = BH_CALL(Battle_RandomMember)();
     else t = BH_CALL(Battle_RandomEnemy)((enemy + 3) & 0xFF);
     B(at::kTarget) = t;
     return t;
@@ -927,16 +927,16 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
     } else if (may_act(actor) != 0) {
         B(at::kTarget) = BH_CALL(BattleEnemy_PickTarget)(enemy);
     }
-    if (BattleActions_EventBattle != 0) {
+    if (EventBattle_Id != 0) {
         BattleE3_CurrentEnemy = Key(e);
         Sprite_Current = e;
         reinterpret_cast<boss_harness::Hook>(static_cast<std::uintptr_t>(static_cast<U>(enemy_rec->event_hook)))(0);
     }
     if (B(at::kTarget) == 0xFF) {
-        enemy_rec->command = 0;
+        enemy_rec->command_kind = 0;
         B(at::kActKind) = 0;
     } else {
-        enemy_rec->command = B(at::kActKind);
+        enemy_rec->command_kind = B(at::kActKind);
     }
 }
 
@@ -1024,7 +1024,7 @@ extern "C" void __cdecl EnemyOp_PlayCreatureCue(void) {
     BH_CALL(BattleEnemy_ScriptTick)();
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
     if (Sprite_Current[9] != 0) return;
-    const unsigned char fight = BattleActions_EventBattle;
+    const unsigned char fight = EventBattle_Id;
     const unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(e);
     if (fight != 0) {

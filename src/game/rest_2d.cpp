@@ -112,7 +112,7 @@ void DrawMasterScreen(U message, unsigned blink, const unsigned char* (*line)(U)
         MemberLabel(0x89, y, MemberAt(i));
     }
     SH_CALL(MasterScreen_DrawCursorFrame)(0x11, 0x3E + 54u * Rest2d_Cursor, 0x110, 0x34, blink, 6);
-    PromptBox(0x14, 0x10, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    PromptBox(0x14, 0x10, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
     line(message);
 }
 
@@ -529,7 +529,7 @@ extern "C" void __cdecl MasterGrant_Step2Next(void) {
 // the timer down, at 0 the screen of the top bar's entry: the mode = the
 // entry + 2, the state, step and 0x929F03 0, the timer 5.
 extern "C" void __cdecl FieldMenu_TopBarCountdown(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto t = static_cast<unsigned char>(B(at::kMenuTimer) - 1);
     B(at::kMenuTimer) = t;
     if (t != 0) return;
@@ -652,7 +652,7 @@ extern "C" unsigned char __cdecl FieldAbility_Use(unsigned caster, unsigned targ
 namespace {
 const unsigned char* StatusRecord() {
     const auto c = BattleActorCopies_ItemActor;
-    return At(RecordOf(MoveScript_EffectState[Cond_Flags[0xd2 + c]]));
+    return At(RecordOf(Character_IndexById[Cond_Flags[0xd2 + c]]));
 }
 }  // namespace
 
@@ -665,7 +665,7 @@ extern "C" void __cdecl FieldMenuStatus_ByState(void) {
 // original 0x58A4D0 (0x3A bytes), state 0: Menu_DrawBackdrop, the windows placed;
 // the cursor 0, the timer 8, the state on; Sound_PlayEffect(0x102).
 extern "C" void __cdecl FieldMenuStatus_Open(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     SH_CALL(FieldMenuStatus_PlaceWindows)();
     const auto state = static_cast<unsigned char>(FieldS_State + 1);
     BattleActorCopies_ItemActor = 0;
@@ -679,7 +679,7 @@ extern "C" void __cdecl FieldMenuStatus_Open(void) {
 // Menu_DrawBackdrop; the timer down, the state on when it was 0.
 extern "C" void __cdecl FieldMenuStatus_SlideIn(void) {
     SH_CALL(TextRecord_Set)(0, 8, StatusRecord());
-    const unsigned char kind = FieldS_Backdrop;
+    const unsigned char kind = Config_Background;
     SetWord(At(0x8032FC), 0x12);
     SH_CALL(Menu_DrawBackdrop)(kind);
     const unsigned char t = B(at::kMenuTimer);
@@ -697,13 +697,13 @@ extern "C" void __cdecl FieldMenuStatus_SlideIn(void) {
 // on; cancel (Input_Pressed read again) - 0x106, 0x102, windows 12 + i state 1
 // for each member, window 11 state 1, window 19 off, the timer 8, state + 2.
 extern "C" void __cdecl FieldMenuStatus_Choose(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto c = BattleActorCopies_ItemActor;
-    BattleE4_Hand = 1;
+    Window19 = 1;
     const U member_window = at::kWindows + at::kWindowStride * static_cast<U>(4 + c);
     SetWord(At(0x803410), rv::As<records::WindowRecord>(At(member_window))->x);
-    BattleActorCopies_ItemCursorY = rv::As<records::WindowRecord>(At(member_window))->y;
-    SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(MoveScript_EffectState[Cond_Flags[0xd2 + c]])));
+    Window19_Y = rv::As<records::WindowRecord>(At(member_window))->y;
+    SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(Character_IndexById[Cond_Flags[0xd2 + c]])));
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x8032FC), 0x12);
     const U held = SH_CALL(Input_AutoRepeat)(pressed & 0x5000);
@@ -731,7 +731,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         SH_CALL(Sound_PlayEffect)(0x102);
         SH_CALL(FieldMenuStatus_DetailWindows)();
         const unsigned char state = FieldS_State;
-        BattleE4_Hand = 0;
+        Window19 = 0;
         B(at::kMenuTimer) = 8;
         FieldS_State = static_cast<unsigned char>(state + 1);
     }
@@ -747,7 +747,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         }
         const unsigned char state = FieldS_State;
         B(0x8032EF) = 1;
-        BattleE4_Hand = 0;
+        Window19 = 0;
         B(at::kMenuTimer) = 8;
         FieldS_State = static_cast<unsigned char>(state + 2);
     }
@@ -757,7 +757,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
 // window 11's +0x10 = 0x12; while the timer runs it counts down; then cancel -
 // 0x106, 0x102, the list's windows, the timer 8, the state back two.
 extern "C" void __cdecl FieldMenuStatus_Detail(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     SH_CALL(TextRecord_Set)(0, 8, StatusRecord());
     const unsigned char t = B(at::kMenuTimer);
     SetWord(At(0x8032FC), 0x12);
@@ -778,7 +778,7 @@ extern "C" void __cdecl FieldMenuStatus_Detail(void) {
 // 0 the screen's windows cleared, windows 4 + i state 4 for each member, the
 // timer 0, windows 7..10 state 2, back to the top bar (mode 1, state 0).
 extern "C" void __cdecl FieldMenuStatus_Close(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto t = static_cast<unsigned char>(B(at::kMenuTimer) - 1);
     B(at::kMenuTimer) = t;
     if (t != 0) return;
@@ -825,7 +825,7 @@ extern "C" void __cdecl FieldMenuStatus_PlaceWindows(void) {
     SetWord(At(0x8032FC), 0);
     B(0x80340D) = 6;
     B(0x80340E) = 0xA;
-    BattleE4_Hand = 0;
+    Window19 = 0;
     B(0x803416) = 0;
     B(0x803417) = 1;
 }
@@ -853,7 +853,7 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
     MemberWindowStates(5, 3, 7, 5, "FieldMenuStatus_DetailWindows");
     const unsigned char cursor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     B(0x80337F) = 2;
-    BattleActorCopies_ItemState = 2;
+    Window16_State = 2;
     B(0x8033C7) = 2;
     B(0x80337D) = 6;
     B(0x80337E) = 6;
@@ -863,13 +863,13 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
     B(0x803386) = cursor;
     B(0x8033A1) = 6;
     B(0x8033A2) = 7;
-    BattleE4_List = 1;
+    Window16 = 1;
     SetWord(At(0x8033A4), 0xFF9C);
-    BattleActorCopies_ItemBaseY = 0x78;
-    BattleActorCopies_ItemOwner = cursor;
+    Window16_Y = 0x78;
+    Window16_Owner = cursor;
     B(0x8033C5) = 6;
     B(0x8033C6) = 8;
-    BattleE4_Cands = 1;
+    Window17 = 1;
     SetWord(At(0x8033C8), 0xFF9C);
     SetWord(At(0x8033CA), 0xA8);
     B(0x8033CE) = cursor;
@@ -880,7 +880,7 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
 extern "C" void __cdecl FieldMenuStatus_ListWindows(void) {
     MemberWindowStates(6, 4, 8, 6, "FieldMenuStatus_ListWindows");
     B(0x80337F) = 1;
-    BattleActorCopies_ItemState = 1;
+    Window16_State = 1;
     B(0x8033C7) = 1;
 }
 
@@ -890,8 +890,8 @@ extern "C" void __cdecl FieldMenuStatus_ClearWindows(void) {
     B(0x803334) = 0;
     B(0x803358) = 0;
     B(0x80337C) = 0;
-    BattleE4_List = 0;
-    BattleE4_Cands = 0;
+    Window16 = 0;
+    Window17 = 0;
 }
 
 // --- the Items screen: FieldMenu_States[2] -------------------------------------------------------
@@ -906,7 +906,7 @@ extern "C" void __cdecl FieldMenuItems_ByState(void) {
 // (R2E's 0x58BC30), Sound_PlayEffect(0x102); the state on, the category 0,
 // the timer 5.
 extern "C" void __cdecl FieldMenuItems_Open(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     SH_AT(void (__cdecl*)(), at::kItemsWindows)();
     SH_CALL(Sound_PlayEffect)(0x102);
     const unsigned char state = FieldS_State;
@@ -918,7 +918,7 @@ extern "C" void __cdecl FieldMenuItems_Open(void) {
 // original 0x58AB30 (0x30 bytes), state 1: Menu_DrawBackdrop; the timer down, at
 // 0 the timer 0 and the state on.
 extern "C" void __cdecl FieldMenuItems_SlideIn(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto t = static_cast<unsigned char>(B(at::kMenuTimer) - 1);
     B(at::kMenuTimer) = t;
     if (t != 0) return;
@@ -938,7 +938,7 @@ extern "C" void __cdecl FieldMenuItems_SlideIn(void) {
 // 0x9398B8 / 0x939898 by its own +0xA, state + 1. Cancel - 0x106, 0x102,
 // windows 11, 12, 13 state 1, the hand off, the timer + 5, state + 2.
 extern "C" void __cdecl FieldMenuItems_Category(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto category = Rest2d_ItemsCategory;
     B(0x80333C) = 0;
     const U window_x = static_cast<U>(Long(At(0x803314)));
@@ -946,9 +946,9 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
     const unsigned pressed = Input_Pressed;
     B(0x803340) = 0xFF;
     const unsigned short y = static_cast<unsigned short>(Word(At(0x803316)) + 4);
-    BattleE4_Above = 1;
+    Window21 = 1;
     SetWord(At(0x803458), static_cast<unsigned>(48 * category) + window_x);
-    ShopStates2_HandY = y;
+    Window21_Y = y;
     B(0x80331B) = 0xFF;
     const U held = SH_CALL(Input_AutoRepeat)(pressed & 0xA000);
     unsigned char c = static_cast<unsigned char>(Rest2d_ItemsCategory);
@@ -1011,7 +1011,7 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
         B(0x8032EF) = 1;
         B(0x803313) = 1;
         B(0x803337) = 1;
-        BattleE4_Above = 0;
+        Window21 = 0;
         B(at::kMenuTimer) = static_cast<unsigned char>(t + 5);
         FieldS_State = static_cast<unsigned char>(state + 2);
     }
@@ -1047,7 +1047,7 @@ U ListOf(U table, unsigned category, const char* who) {
 // - and one without: the cursor 0, +0xD the pick, the hand off, state + 4.
 // Cancel - 0x106, the state back.
 extern "C" void __cdecl FieldMenuItems_List(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const unsigned char cursor_row = static_cast<unsigned char>(Rest2d_ItemsCategory);
     const unsigned char category = B(0x80333E);
     const U ids = ListOf(at::kItemIdLists, category, "FieldMenuItems_List");
@@ -1060,8 +1060,8 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
     const int row = static_cast<int>(B(0x803340)) - static_cast<int>(top) + 2;
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x803458), window_x + 7);
-    BattleE4_Above = 1;
-    ShopStates2_HandY = static_cast<unsigned>(row * 13) + Word(At(0x80333A));
+    Window21 = 1;
+    Window21_Y = static_cast<unsigned>(row * 13) + Word(At(0x80333A));
     const U held = SH_CALL(Input_AutoRepeat)(pressed & Sigma(0xF00C));
     if (held & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
@@ -1188,7 +1188,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
             const unsigned char p = B(0x803340);
             BattleActorCopies_ItemActor = 0;
             B(0x803341) = p;
-            BattleE4_Above = 0;
+            Window21 = 0;
             FieldS_State = static_cast<unsigned char>(state + 4);
             return;
         }
@@ -1217,7 +1217,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
 // 0 the windows taken down (R2E's 0x58C2A0), windows 4 + i state 3 for each
 // member, the timer 0, windows 7..10 state 2, back to the top bar.
 extern "C" void __cdecl FieldMenuItems_Close(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto t = static_cast<unsigned char>(B(at::kMenuTimer) - 1);
     B(at::kMenuTimer) = t;
     if (t != 0) return;

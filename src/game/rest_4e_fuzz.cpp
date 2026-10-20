@@ -174,7 +174,7 @@ unsigned char& B(U a) { return Mem(a)[0]; }
 // The cells (rest_4e.cpp's).
 // kMode: now Rest4b_BoardState (symbols.toml).
 // kStep: now Rest4b_BoardStep (symbols.toml).
-// kStyle: now BattleDraw_Colour (symbols.toml).
+// kStyle: now Config_WindowColour (symbols.toml).
 // kCursor: now Rest4c_Count (symbols.toml).
 // kSavedTrack: now CommuMusic_SavedTrack (symbols.toml).
 // kSlide: now CommuMusic_Slide (symbols.toml).
@@ -190,8 +190,8 @@ constexpr U kMembers = 0x903A70;
 // kListC: now Rest4b_BusyB (symbols.toml).
 constexpr U kListAEntries = 0x9039C0, kListBEntries = 0x904F00, kListCPairs = 0x904CA0;
 constexpr U kWin0 = 0x803160;
-// kTab: now BattleOdds_Win0Index (symbols.toml).
-// kRow: now Rest3a_Win0Cursor (symbols.toml).
+// kTab: now Window0_ParamA (symbols.toml).
+// kRow: now Window0_Cursor (symbols.toml).
 constexpr U kWinOff = kWin0 + 3, kTop = kWin0 + 0xB, kScroll = kWin0 + 0x12;
 constexpr U kPool = 0x803580;          // the script pool's offsets and, from +0x600, the seeded strings
 constexpr U kStrings = 0x600;          // 0x60 slots of 16 bytes
@@ -314,7 +314,7 @@ const sh::Region kRegions[] = {
 void PointMessage(unsigned id) { SetWord(Mem(kPool + 2 * id), kStrings + 16 * (sh::Next() % 0x60)); }
 
 void Seed(unsigned k) {
-    B(BattleDraw_Colour_addr) = static_cast<unsigned char>(sh::Next() % 8);
+    B(Config_WindowColour_addr) = static_cast<unsigned char>(sh::Next() % 8);
     // the strings: 0x60 slots of up to 12 bytes (an early NUL often), so the two
     // halves of a random name fit the 32 bytes
     for (unsigned s = 0; s < 0x60; ++s) {
@@ -366,14 +366,14 @@ void Seed(unsigned k) {
     // the item window: shut or not, tab 0..4, top and row at the paging bounds,
     // the scroll word 0 most of the time, the row's item empty or not
     B(kWinOff) = static_cast<unsigned char>(PickOf(0, 0, 0, 1, 2));
-    B(BattleOdds_Win0Index_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0, 3));
+    B(Window0_ParamA_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0, 3));
     const unsigned top = PickOf(0, 1, 8, 9, 0x6E, 0x6F, 0x76, 0x77, sh::Next() % 0x78);
     B(kTop) = static_cast<unsigned char>(top);
-    B(Rest3a_Win0Cursor_addr) = static_cast<unsigned char>(PickOf(0, top, top - 1, top + 8, top + 9, 0x7E, 0x7F, sh::Next() % 0x80));
+    B(Window0_Cursor_addr) = static_cast<unsigned char>(PickOf(0, top, top - 1, top + 8, top + 9, 0x7E, 0x7F, sh::Next() % 0x80));
     SetWord(Mem(kScroll), PickOf(0, 0, 0, 0x10, sh::Next()));
     B(CommuItem_Slide_addr) = static_cast<unsigned char>(PickOf(0, 1, 3, 4, 5, sh::Next()));
-    const U list = Long(Mem(bof3::addr::Inventory_IdLists + 4 * B(BattleOdds_Win0Index_addr)));
-    if (sh::Half()) Mem(list + B(Rest3a_Win0Cursor_addr))[0] = 0;
+    const U list = Long(Mem(bof3::addr::Inventory_IdLists + 4 * B(Window0_ParamA_addr)));
+    if (sh::Half()) Mem(list + B(Window0_Cursor_addr))[0] = 0;
     // the three lists: counts at their page bounds, the pairs' kinds below 8 and
     // entries below 60 for the four pages the counts reach
     B(Rest4a_RemovedCount_addr) = static_cast<unsigned char>(PickOf(0, 1, 7, 8, 14, 15, 0x20, sh::Next()));
@@ -442,8 +442,8 @@ void Disturb(U h) {
     case 2: B(CommuMusic_Slide_addr) = static_cast<unsigned char>(b % 6); break;
     case 3: B(CommuItem_Slide_addr) = static_cast<unsigned char>(b % 6); break;
     case 4: B(kWinOff) = static_cast<unsigned char>(b & 1); break;
-    case 5: B(BattleOdds_Win0Index_addr) = static_cast<unsigned char>(b % 5); break;
-    case 6: B(Rest3a_Win0Cursor_addr) = static_cast<unsigned char>(b & 0x7F); break;
+    case 5: B(Window0_ParamA_addr) = static_cast<unsigned char>(b % 5); break;
+    case 6: B(Window0_Cursor_addr) = static_cast<unsigned char>(b & 0x7F); break;
     case 7: SetWord(Mem(kScroll), b & 1 ? 0 : v | 1); break;
     case 8: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(b % 60); break;
     case 9: Music_Track = static_cast<unsigned char>(b & 1 ? 0xFF : b); break;
@@ -452,7 +452,7 @@ void Disturb(U h) {
     case 12:   // every row of the first list, so the row being drawn moves
         for (unsigned i = 0; i < 0x20; ++i) B(kListAEntries + i) ^= static_cast<unsigned char>(0x80 | (b & 0x7F));
         break;
-    case 13: B(BattleDraw_Colour_addr) = static_cast<unsigned char>(b % 8); break;
+    case 13: B(Config_WindowColour_addr) = static_cast<unsigned char>(b % 8); break;
     case 14: sh::Scratch(3)[b % 0x3F] = static_cast<unsigned char>(v); break;
     case 15: SetWord(Mem(CommuMusic_Track_addr), (v % 44) - 2); break;
     case 16: B(kEntries + 8 * B(AreaW0c_TailSub_addr) + 2 + (b & 1)) = static_cast<unsigned char>(v); break;

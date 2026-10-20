@@ -334,7 +334,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         e = Enemy();
         enemy_rec = rv::As<records::BattleEnemy>(e);
     }
-    if (BattleActions_EventBattle != 0) {
+    if (EventBattle_Id != 0) {
         reinterpret_cast<HookFn>(PtrIn(e + 0xF4))(1);
         e = Enemy();
         enemy_rec = rv::As<records::BattleEnemy>(e);
@@ -384,7 +384,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
             rv::As<records::BattleEnemy>(Enemy())->status = 0x4000;
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
-        } else if (BattleActions_EventBattle != 0) {
+        } else if (EventBattle_Id != 0) {
             g.play_cue(Word(PtrIn(e + 0xF8) + 4));
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
@@ -493,7 +493,7 @@ extern "C" void __cdecl EnemyOp_DeathSwell(void) {
 // 0xFF, 0xFF, 0); the speed +0x10 = 0 and its step +0x1C = -0x2000; +3 = 3.
 extern "C" void __cdecl EnemyOp_DeathFlash(void) {
     g.play_effect(0x204);
-    if (BattleActions_EventBattle != 0) g.play_cue(Word(PtrIn(Enemy() + 0xF8) + 6));
+    if (EventBattle_Id != 0) g.play_cue(Word(PtrIn(Enemy() + 0xF8) + 6));
     g.release_tint(Sc());
     g.set_tint(Sc(), 0xFF, 0xFF, 0xFF, 0);
     rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_z, 0);

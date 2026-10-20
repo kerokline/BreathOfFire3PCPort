@@ -72,6 +72,6 @@ constexpr std::uint32_t kTitle = 0x66A098;          // the menu's title text
 constexpr std::uint32_t kCounts = 0x903A10;         // 8 bytes: a count per item, held at 100
 constexpr unsigned kItems = 8;
 constexpr unsigned kFirstItem = 0x4E;               // the items 0x4E..0x55
-// kStyle: now BattleDraw_Colour (symbols.toml). the window style byte
+// kStyle: now Config_WindowColour (symbols.toml). the window style byte
 
 }  // namespace rest_3e::at

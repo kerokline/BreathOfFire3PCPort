@@ -29,7 +29,7 @@ constexpr std::uint32_t kAnimationRemap = 0x6608D8;   // 2 bytes an animation
 constexpr std::uint32_t kPartyLists = 0x904062;       // two 3-byte lists of member ids, 0xFF-ended
 // kPartySetCurrent: now AreaW0b_PartySet (symbols.toml). the loaded party set; bit 7 from PartySet_Select mode 0
 // kPartySets: now MoveScript_EffectArg[0xc] (symbols.toml). 19 sorted rows of 3 member ids
-// kMemberFlags: now MoveScript_EffectState[0xc] (symbols.toml). a byte per member id, to sprite +0x2B
+// kMemberFlags: now Character_IndexById[0xc] (symbols.toml). a byte per member id, to sprite +0x2B
 constexpr std::uint32_t kBankTable = 0x813580;        // dword offsets from itself, by column
 // kPaletteBase: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes a slot, inside Gfx_ClutStripSource
 constexpr std::uint32_t kActorRecords = 0x903A70;     // 0xA4 bytes each; Field_ActorStates is +0x10 of the first

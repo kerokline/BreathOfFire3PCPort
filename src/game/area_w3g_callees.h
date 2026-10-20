@@ -65,8 +65,8 @@ constexpr unsigned kEffectCount = 20;
 // kWord90405C: now Cond_Flags[0xcc] (symbols.toml).
 // kByte90405E: now Cond_Flags[0xce] (symbols.toml).
 // kByte90405F: now Cond_Flags[0xcf] (symbols.toml).
-// kByte929EC1: now AreaW3g_Byte929EC1 (symbols.toml).
-// kByte9036D0: now AreaW3g_Byte9036D0 (symbols.toml).
+// kByte929EC1: now Area189_StepsSinceEvent (symbols.toml).
+// kByte9036D0: now Area189_EventsInRow (symbols.toml).
 
 // --- area 148 (descriptor 0x635388) -----------------------------------------
 // kA148BeamColours: now Area148_BeamColours (symbols.toml). (r, g, b) by the effect's +6

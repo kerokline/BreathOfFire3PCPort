@@ -100,7 +100,7 @@ const sh::Callee kCallees[] = {
 
 // --- the state -------------------------------------------------------------------
 
-// CharacterRecords' first eight: MoveScript_EffectState's 24 entries name
+// CharacterRecords' first eight: Character_IndexById's 24 entries name
 // records 0..7 (read 2026-09-27), so a member id below 24 writes inside.
 constexpr unsigned kRecords = 8;
 

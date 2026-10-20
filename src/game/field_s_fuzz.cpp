@@ -247,7 +247,7 @@ void Move(std::uint32_t h) {
     case 15: B(0x803340) = static_cast<unsigned char>(v % 3); break;
     case 16: B(0x80333E) = static_cast<unsigned char>(v % 7); break;
     case 17: B(0x803362 + (v & 3)) = static_cast<unsigned char>(w); break;
-    case 18: B(Cond_Flags_addr + 0xd2 + v % 6) = static_cast<unsigned char>(w % 24); break; // MoveScript_EffectState's 24
+    case 18: B(Cond_Flags_addr + 0xd2 + v % 6) = static_cast<unsigned char>(w % 24); break; // Character_IndexById's 24
     case 19: SetL(Party_Zenny_addr, L(Party_Zenny_addr) ^ (1u << (v & 15))); break;
     case 20: {
         static const unsigned char kOffsets[] = {0xA, 0xB, 0x1D};
@@ -287,7 +287,7 @@ std::uint32_t PartyLoad(const std::uint32_t* a, std::uint32_t answer) {
     for (unsigned i = 0; i < n; ++i) {
         unsigned char* const m = ObjTrio + i * at::kObjStride;
         m[0x89] = list[i];
-        if (list[i] < 24) m[0x148] = MoveScript_EffectState[list[i]];
+        if (list[i] < 24) m[0x148] = Character_IndexById[list[i]];
     }
     Move(sh::Noise());
     return answer;
@@ -412,11 +412,11 @@ sh::Clone g_one[1];
 
 bool Is(unsigned k, const char* name) { return std::strcmp(g_clones[k].name, name) == 0; }
 
-// A member id whose record index (MoveScript_EffectState) is one of the eight.
+// A member id whose record index (Character_IndexById) is one of the eight.
 unsigned char SafeId() {
     for (int tries = 0; tries < 16; ++tries) {
         const auto id = static_cast<unsigned char>(sh::Next() % 24);
-        if (MoveScript_EffectState[id] < 8) return id;
+        if (Character_IndexById[id] < 8) return id;
     }
     return 0;
 }
@@ -510,11 +510,11 @@ void Seed(unsigned k) {
     SeedArea();
     B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     if (sh::Half()) Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ 0x40);
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     // the chapter compared with 0xE (Rest_*), the row pointer with it
     if (sh::Half()) {
         B(Cond_ByteFA_addr) = 0xE;
-        sh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * 0xE));
+        sh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * 0xE));
     }
     // the zenny at ten times a member's level (ShopResist)
     const U level = Mem(at::kRecords + ObjTrio[(B(BattleActorCopies_ItemActor_addr) % 3) * at::kObjStride + 0x148] * at::kRecordStride)[0xA];

@@ -280,7 +280,7 @@ void Frame(int x, int y, unsigned across, int top_end, int right, unsigned side,
 // the script pool's messages by the words 0x8035FA at (x + 0x28, y + 6),
 // 0x8035FC at (x + 6, y + 0x19) and 0x8035FE at (x + 6, y + 0x29).
 extern "C" void __cdecl FieldPanel_DrawBox3(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x, y + 1, 0x64, 0x38, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, y + 1, 0x64, 0x38, 0x80, static_cast<unsigned char>(Config_WindowColour));
     Frame(x, y, 8, 0x48, 0x60, 0x20, 0x38, 0xB);
     Text(x + 0x28, y + 6, 0, 0xFF, PoolText(at::kPools + 0x7A));
     Text(x + 6, y + 0x19, 0, 0xFF, PoolText(at::kPools + 0x7C));
@@ -291,7 +291,7 @@ extern "C" void __cdecl FieldPanel_DrawBox3(int x, int y) {
 // frame (15 across, the sides 0x28 high, the bottom at + 0x40); the messages
 // by 0x8035F8 at (x + 0x32, y + 6) and 0x803602 at (x + 6, y + 0x19).
 extern "C" void __cdecl FieldPanel_DrawBox2(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x, y + 1, 0xB3, 0x42, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, y + 1, 0xB3, 0x42, 0x80, static_cast<unsigned char>(Config_WindowColour));
     Frame(x, y, 0xF, 0x98, 0xB0, 0x28, 0x40, 0x15);
     Text(x + 0x32, y + 6, 0, 0xFF, PoolText(at::kPools + 0x78));
     Text(x + 6, y + 0x19, 0, 0xFF, PoolText(at::kPools + 0x82));
@@ -809,7 +809,7 @@ extern "C" void __cdecl Party_PlaceAtSlots(void) {
     }
     unsigned k = 0;
     while (k < n && rv::As<records::PartyMember>(Member(k))->char_id != Cond_Flags[0xd2]) ++k;
-    if (BattleTurnSteps_MusicFlags & 2) return;
+    if (EventBattle_Flags & 2) return;
     MoveScript_F3Divisor = 0x20;
     const std::int32_t x = rv::As<records::PartyMember>(Member(k))->x, z = rv::As<records::PartyMember>(Member(k))->z;
     const std::int32_t dx = Abs32(static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) - static_cast<std::uint32_t>(x)));
@@ -876,7 +876,7 @@ extern "C" void __cdecl Party_PlacesByList(void) {
             members = count;
         }
     }
-    if (BattleTurnSteps_MusicFlags & 0x80) {
+    if (EventBattle_Flags & 0x80) {
         SH_CALL(Party_DropIn)(BossH_LeaderPick);
         SH_CALL(Field_MembersFrame)();
         return;

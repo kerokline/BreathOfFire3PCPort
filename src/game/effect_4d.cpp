@@ -556,23 +556,23 @@ extern "C" void __cdecl EffectKind97_Burst(void) {
 }
 
 // original 0x48D220 (state 4): a spark every fourth frame; the debris; the
-// sparks moved; once MoveScript_WaitWordDA is 0: Transition_Start(9),
+// sparks moved; once Transition_Busy is 0: Transition_Start(9),
 // Draw_PassFlags 0, +1 up.
 extern "C" void __cdecl EffectKind97_Fade(void) {
     Kind97Emit();
     SH_CALL(EffectKind97_DrawDebris)();
     SH_CALL(EffectKind97_MoveSparks)();
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Transition_Start)(9);
     unsigned char* const s = S();
     Draw_PassFlags = 0;
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
-// original 0x48D270 (state 5): once MoveScript_WaitWordDA is 0, the chapter's
+// original 0x48D270 (state 5): once Transition_Busy is 0, the chapter's
 // step 0x8034E5 = 0x14 and a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind97_End(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     MoveScript_PartyRecords[0x65] = 0x14;
     SH_CALL(Effect_Release)();
 }

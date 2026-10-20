@@ -207,7 +207,7 @@ extern "C" void __cdecl Battle_MemberAutoFixed(unsigned member) {
     const int r = SH_CALL(Rand)();
     const int roll = r % 20;
     unsigned char target;
-    if (roll < odds && BattleSprites_PartyPick != 1) {
+    if (roll < odds && Battle_PartyStanding != 1) {
         target = SH_CALL(Battle_RandomOtherMember)(member);
     } else {
         const int r2 = SH_CALL(Rand)();

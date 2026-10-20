@@ -93,7 +93,7 @@ using U = std::uint32_t;
 unsigned char* Sc() { return Sprite_Current; }
 U ScKey() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(Sprite_Current)); }
 unsigned char& B(U a) { return *At(a); }
-unsigned char Style() { return static_cast<unsigned char>(BattleDraw_Colour); }
+unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
 const unsigned char* Text(U a) { return At(a); }
 char* Print() { return reinterpret_cast<char*>(At(at::kPrint)); }
 // A float stored as the originals' fild / fstp store it: every value here is a

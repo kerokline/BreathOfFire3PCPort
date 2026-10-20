@@ -30,13 +30,13 @@ constexpr std::uint32_t kInputAnims = 0x660D38;   // Scena00_InputAnims: 16 pair
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml).
 constexpr std::uint32_t kTimer = 0x8034E6;        // u16
 // kByteFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 constexpr std::uint32_t kCounter = 0x903848;      // dword; its low byte is waited on
 constexpr std::uint32_t kCount2 = 0x903849;
 constexpr std::uint32_t kByte4A = 0x90384A;
 constexpr std::uint32_t kByte4B = 0x90384B;
 constexpr std::uint32_t kSlot = 0x903850;         // the effect slot just taken
-// kWait: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kWait: now Transition_Busy (symbols.toml). Transition_Busy
 // kRequest: now Field_Request (symbols.toml). Field_Request
 // kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags

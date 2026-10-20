@@ -39,7 +39,7 @@ namespace at {
 constexpr std::uint32_t kPartyCount = 0x904AB0;   // u8: party slots in the fight (PSX 0x801462EC)
 constexpr std::uint32_t kDropCount = 0x904AE7;    // u8 (PSX 0x80146323)
 constexpr std::uint32_t kBattleEnd = 0x904AE8;    // u8: |= 0x20 when a level-up was found
-// kExpTotal: now BattleFlow_ExpTotal (symbols.toml). dword (PSX 0x80146328)
+// kExpTotal: now Battle_ExpTotal (symbols.toml). dword (PSX 0x80146328)
 // kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml). dword (PSX 0x8014632C)
 constexpr std::uint32_t kDropItems = 0x904AF4;    // u16 x 16: category << 8 | item (PSX 0x80146330)
 constexpr std::uint32_t kDropCounts = 0x904B14;   // u8 x 16 (PSX 0x80146350)

@@ -82,7 +82,7 @@ const sh::Clone kAll15[] = {
 #undef E1F_N
 
 enum : unsigned {
-    kChoice, kStep, kEnter, kPickSlot, kPickItem, kScaled, kAllScaled, kReset, kPoints, kTotal, kFrame, kTrade, MoveScript_WaitWordDA_addr,
+    kChoice, kStep, kEnter, kPickSlot, kPickItem, kScaled, kAllScaled, kReset, kPoints, kTotal, kFrame, kTrade, Transition_Busy_addr,
     kSetMode, kDraw, kCount
 };
 static_assert(kCount == sizeof kAll15 / sizeof kAll15[0], "one enum entry a clone, in order");

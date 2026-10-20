@@ -95,7 +95,7 @@ constexpr U kComboStep = 0x6BC70C;     // u8 x 4: each sequence's position
 constexpr U kComboTimer = 0x6BC710;    // u8 x 4: each sequence's frames left
 // kPoseWas: now Effect1e_PoseWas (symbols.toml). u8 (E1E's)
 // kPose: now Effect1e_Pose (symbols.toml). u8 (E1E's)
-// kBiteHeld: now Effect1e_BiteHeld (symbols.toml). u8: a fish is nibbling (Fish_Swim sets, Fish_Settle clears)
+// kBiteHeld: now Fish_Nibbling (symbols.toml). u8: a fish is nibbling (Fish_Swim sets, Fish_Settle clears)
 constexpr U kHoldFlag = 0x903850;      // u8 (E1E reads it after LeaderPanel_HoldTest)
 constexpr U kPoolWordData = 0x803642;  // u16: MessagePools offset of the data page's title
 constexpr U kPoolWordRule = 0x803660;  // u16: the rule page's (read as a dword & 0xFFFF)
@@ -478,7 +478,7 @@ extern "C" void __cdecl LeaderPanel_S11FadeOut(void) {
 // four bytes 0x93985C..0x93985F and Draw_PassFlags cleared, Game_Step = 3, +3
 // up (game mode 8's step 3).
 extern "C" void __cdecl LeaderPanel_S11Switch(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     Effect1g_TradeState = 0;
     B(kDrawMode + 2) = 0;
     B(kDrawMode + 1) = 0;
@@ -501,7 +501,7 @@ extern "C" void __cdecl LeaderPanel_S11FadeIn(void) {
 // original 0x52B180: LeaderPanel_Stage11Steps[3] - the wait word clear: record
 // 1 up, back to stage 1 step 0.
 extern "C" void __cdecl LeaderPanel_S11End(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     Effect_Objects[0x81] = static_cast<unsigned char>(Effect_Objects[0x81] + 1);
     S()[2] = 1;
     S()[3] = 0;
@@ -828,10 +828,10 @@ extern "C" void __cdecl Fish_Swim(void) {
             S()[1] = 3;
         } else {
             const auto bits = static_cast<unsigned char>(Rnd());
-            const unsigned char nibbling = Effect1e_BiteHeld;
+            const unsigned char nibbling = Fish_Nibbling;
             unsigned char* s = S();
             if (nibbling == 0 && rv::As<records::SpriteObject>(s)->height_whole == 0 && (bits & 3) == 0 && ObjTrio[2] != 4 && s[6] != 0x16) {
-                Effect1e_BiteHeld = 1;
+                Fish_Nibbling = 1;
                 Bank(KindWord(s[6], 0x12));
                 if ((S()[0] & 0x80) == 0) Sound(0x206);
                 s = S();
@@ -888,7 +888,7 @@ extern "C" void __cdecl Fish_Swim(void) {
 extern "C" void __cdecl Fish_Settle(void) {
     if (Tick() == 0) return;
     const unsigned kind = S()[6];
-    Effect1e_BiteHeld = 0;
+    Fish_Nibbling = 0;
     Bank(KindWord(kind, 0x10));
     unsigned char* s = S();
     s[0] = static_cast<unsigned char>(s[0] | 0x20);

@@ -66,8 +66,8 @@ constexpr std::uint32_t kS = 0x903850;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle
-// kBattleB2: now BattleActorCopies_EnemyCount (symbols.toml). u8: a battle byte Foretell_Read adds in (not read further)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle
+// kBattleB2: now Battle_EnemyCount (symbols.toml). u8: a battle byte Foretell_Read adds in (not read further)
 
 // The overlays' own .data (read in place, as the originals read it).
 // kForetellBias: now Foretell_Bias[7] (symbols.toml). Foretell_Bias + 7: s8, by party count - enemy count
@@ -274,7 +274,7 @@ S15_EXPORT void __cdecl Chill_Start(void) {
         Gfx_ClutStrip[0x1A10 + k] = Gfx_ClutStripSource[0x1A10 + k];
     }
     Gfx_ClutStripDirty = 1;
-    if (Mem(BattleActions_EventBattle_addr)[0] == 0) return;
+    if (Mem(EventBattle_Id_addr)[0] == 0) return;
     if (EnemyRecord(ActorIndex())[0x100] != 0x29) return;
     const unsigned slot = NewTask(0x13);
     unsigned char* const child = TaskSlot(slot);
@@ -703,7 +703,7 @@ S15_EXPORT void __cdecl Foretell_Read(void) {
         step = Band(Percent(e, 0xA4, 0xB0, "enemy", i), step, 0x18, kEnemyBands);
         score += static_cast<std::uint32_t>(step);
     }
-    score += (static_cast<std::uint32_t>(Mem(BattleActorCopies_EnemyCount_addr)[0]) - enemy_n) * 8u;
+    score += (static_cast<std::uint32_t>(Mem(Battle_EnemyCount_addr)[0]) - enemy_n) * 8u;
     if (party_n == 0) bof3::Fatal("Foretell_Read: no member counted, the original's idiv faults");
     if (enemy_n == 0) bof3::Fatal("Foretell_Read: no enemy counted, the original's idiv faults");
     const int mean_party = static_cast<short>(party_sum) / static_cast<int>(party_n);

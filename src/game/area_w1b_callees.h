@@ -39,7 +39,7 @@ constexpr U kTailTimer = 0x9039F6;        // u16: area 42's countdown in frames 
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
 // kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
 // kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: MoveScript_EffectState's index
+// kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: Character_IndexById's index
 // kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
 constexpr U kFoundSlot = 0x903850;        // a found slot (word or byte, as each writer stores it)
 // kCameraAngle1: now Camera_Angles[1] (symbols.toml). Camera_Angles[1]

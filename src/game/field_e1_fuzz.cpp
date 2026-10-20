@@ -415,7 +415,7 @@ void Seed(unsigned k) {
     }
     case kPlaceSlots: {
         B(Cond_Flags_addr + 0xd2) = Member(sh::Next())[0x89];
-        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(sh::Next());
+        B(EventBattle_Flags_addr) = static_cast<unsigned char>(sh::Next());
         const unsigned m = sh::Next() % 3;
         const std::int32_t x = Long(sh::Mem(at::kSlotPositions + 8 * m)), z = Long(sh::Mem(at::kSlotPositions + 8 * m + 4));
         if (sh::Often()) {
@@ -426,7 +426,7 @@ void Seed(unsigned k) {
     }
     case kPlacesByList:
         for (unsigned i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd5 + i) = Member(sh::Often() ? i + sh::Next() % 2 : sh::Next())[0x89];
-        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(sh::Next());
+        B(EventBattle_Flags_addr) = static_cast<unsigned char>(sh::Next());
         break;
     case kPlaceOffset:
         for (unsigned i = 0; i < 3; ++i) Member(i)[0x70] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());

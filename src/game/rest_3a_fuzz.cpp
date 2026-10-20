@@ -236,7 +236,7 @@ const bh::Region kEngineRegions[] = {
     {0x903B24, 0x46C},            // character records 1..7 past the engine frame's 0x903A50..0x903B24
     {0x904060, 8},                // the party list
     {Game_AreaNumber_addr, 2},
-    {MoveScript_WaitWordDA_addr, 2},
+    {Transition_Busy_addr, 2},
     {Draw_PassFlags_addr, 1},
     {Camera_Distance_addr, 0x14}, // Camera_Distance .. the tint's three bytes 0x903850
     {MapView_Redraw_addr, 1},
@@ -306,13 +306,13 @@ void SeedEngine(unsigned k) {
         }
         break;
     case 0x42E2F0:   // window 1's slot cursor inside the six bytes (0 and 3 the screen's two slots)
-        Mem(Rest3a_Win1Slot_addr)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 3) : bh::Next() % at::kChosenCount);
+        Mem(Window1_ParamA_addr)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 3) : bh::Next() % at::kChosenCount);
         break;
     case 0x431550:
-        Mem(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(bh::Half() ? Mem(BattleTurnSteps_MusicFlags_addr)[0] | 0x40 : Mem(BattleTurnSteps_MusicFlags_addr)[0] & ~0x40);
+        Mem(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(bh::Half() ? Mem(EventBattle_Flags_addr)[0] | 0x40 : Mem(EventBattle_Flags_addr)[0] & ~0x40);
         break;
     case 0x4318F0:
-        if (bh::Half()) SetWord(Mem(MoveScript_WaitWordDA_addr), 0);
+        if (bh::Half()) SetWord(Mem(Transition_Busy_addr), 0);
         break;
     case 0x432F90: case 0x4332B0:   // the running slot's +1 inside the stack table
         Slot()[1] = static_cast<unsigned char>(bh::Next() % 3);
@@ -400,7 +400,7 @@ void DisturbEngine(U h) {
     case 4: Slot()[9 + (h >> 24) % 2] = b; break;
     case 5: SetWord(Slot() + 0x10, h >> 16); break;
     case 6: Owner()[8] = b; break;
-    case 7: B(BattleTurnSteps_MusicFlags_addr) = b; break;
+    case 7: B(EventBattle_Flags_addr) = b; break;
     case 8: SetWord(Mem(Game_AreaNumber_addr), h >> 16); break;
     default: Sprite_Current[9] = b; break;
     }

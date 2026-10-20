@@ -48,7 +48,7 @@ constexpr std::uint32_t kEntryZone = 0x905E68;
 // block no other group has read; what it holds is not read here).
 // kGateKey: now AreaW4b_GateKey (symbols.toml).
 // The leader's record (ObjTrio record 0): x +0x34, z +0x38, the pose byte +8
-// the hooks compare, +0x89 (MoveScript_EffectState's index, area_w1c), +0x137
+// the hooks compare, +0x89 (Character_IndexById's index, area_w1c), +0x137
 // (area 171's tail waits for it to be 0; field_hidden_callees.h's
 // kLeader137). Party records 1 and 2's words +0x12E (area 170's state 60
 // counts both up).
@@ -96,7 +96,7 @@ constexpr std::uint32_t kObjectStride = 0xA4;
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 // kInputHeld: now Input_Held (symbols.toml). Input_Held
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy
 // kKind2Hold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles
 // kMoveSpeeds: now Field_MoveSpeeds (symbols.toml). Field_MoveSpeeds

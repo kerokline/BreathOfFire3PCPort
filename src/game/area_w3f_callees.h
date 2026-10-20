@@ -46,8 +46,8 @@ constexpr std::uint32_t kRecordIndex = 0x903851;
 // (eighteen flags set).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow13: now Cond_Flags[0x68] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
-// kFlags904650: now ScenaSc7_EventFlags (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
+// kFlags904650: now Gene_Bits (symbols.toml).
 // The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject).
 constexpr std::uint32_t kFocusObject = 0x903804;
@@ -74,10 +74,10 @@ constexpr std::uint32_t kObjectStride = 0xA4;
 // +0x38, +0x3C) and bytes +0x84, +0x87 area 144's handler 6 sets before
 // MoveCmd_MoveKind2.
 // kKind2: now Sprite_Kind2 (symbols.toml).
-// Camera_Angles[1] (s16) and MoveScript_WaitWordDA (u16), which area 145's
+// Camera_Angles[1] (s16) and Transition_Busy (u16), which area 145's
 // tail reads.
 // kCameraAngle1: now Camera_Angles[1] (symbols.toml).
-// kWaitWordDA: now MoveScript_WaitWordDA (symbols.toml).
+// kWaitWordDA: now Transition_Busy (symbols.toml).
 // Effect_Objects' stride and count (records of 0x80 bytes, 20 of them).
 constexpr std::uint32_t kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;

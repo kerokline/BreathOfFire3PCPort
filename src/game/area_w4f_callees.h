@@ -60,10 +60,10 @@ constexpr std::uint32_t kFlagRow = 0x929ED0;
 constexpr std::uint32_t kParty80 = 0x802DC0;
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The party list (a member id a byte, Field_MemberCount of them) and
-// MoveScript_EffectState 0x66972C, which by this use maps a member id to its
+// Character_IndexById 0x66972C, which by this use maps a member id to its
 // character record (docs/area-entry.md).
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml).
-// kMemberToRecord: now MoveScript_EffectState (symbols.toml).
+// kMemberToRecord: now Character_IndexById (symbols.toml).
 // The eight character records (0xA4 bytes from 0x903A70): +0xB bit 0
 // ("joined", docs/field-event.md), the status word +0x10, HP +0x18, AP +0x1A,
 // max HP +0x20, max AP +0x22, and the byte +0x1E (docs/item-use.md section 2
@@ -79,8 +79,8 @@ constexpr unsigned kCharCount = 8;
 // kByte90405E: now Cond_Flags[0xce] (symbols.toml).
 // kByte90405F: now Cond_Flags[0xcf] (symbols.toml).
 // Two bytes cleared with them (no reader read this round).
-// kByte929EC1: now AreaW3g_Byte929EC1 (symbols.toml).
-// kByte9036D0: now AreaW3g_Byte9036D0 (symbols.toml).
+// kByte929EC1: now Area189_StepsSinceEvent (symbols.toml).
+// kByte9036D0: now Area189_EventsInRow (symbols.toml).
 // The return point (event_ops_callees.h's kReturnPoint): x and z dwords, the
 // area word at +8; the byte +0xA cleared on the way back, the byte +0xB area
 // 193's tail sets to 2 (menu_lists_callees.h calls +0xA kCampFlag).
@@ -103,7 +103,7 @@ constexpr std::uint32_t kActiveMember = 0x9035A4;      // Field_ActiveMember
 constexpr std::uint32_t kScriptObject = 0x929E80;      // MoveScript_Object
 // kCondByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kDrawPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
-constexpr std::uint32_t kWaitWordDA = 0x66C810;        // MoveScript_WaitWordDA
+constexpr std::uint32_t kWaitWordDA = 0x66C810;        // Transition_Busy
 constexpr std::uint32_t kStatusBits = 0x8034E1;        // Field_StatusBits
 // kScriptFlags2: now Field_ScriptFlags2 (symbols.toml). Field_ScriptFlags2
 

@@ -52,8 +52,8 @@ constexpr U kPartyBackup = 0x939AE0;      // the party records copied before the
 constexpr U kStatDeltas = 0x939EE0;       // u16 x 5 then u8 x 9: the new stats and their changes (0x939EE0 .. 0x939EF2)
 
 // --- the gene history's windows (records 18 and 19 of WindowRecords, their +3)
-// kWindow18State: now BattleE6_Window18State (symbols.toml).
-// kWindow19State: now BattleE6_Window19State (symbols.toml).
+// kWindow18State: now Window18_State (symbols.toml).
+// kWindow19State: now Window19_State (symbols.toml).
 
 // --- the character records: 0x903A70 + 0xA4 * a member's +0x148 ------------
 constexpr U kCharRecords = 0x903A70;
@@ -72,9 +72,9 @@ constexpr U kTaskStride = 0x84;
 
 // --- the action flags set the roll tests (bit n of the dwords at 0x904088) ---
 // kActionBits: now Cond_Flags[0xf8] (symbols.toml).
-// the field's effect state bytes (MoveScript_EffectState, 24): a member's
+// the field's effect state bytes (Character_IndexById, 24): a member's
 // +0x89 indexes it; 6 picks the roll's second table
-// kEffectState: now MoveScript_EffectState (symbols.toml).
+// kEffectState: now Character_IndexById (symbols.toml).
 // the action records' byte the roll reads (0x65C4D9 + 0x18 * id), its high nibble
 constexpr U kActionRows = 0x65C4D9;
 constexpr U kActionRowStride = 0x18;

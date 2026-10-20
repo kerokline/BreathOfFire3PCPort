@@ -295,7 +295,7 @@ bool Rect(const unsigned char* s, float& left, float& right, float& top, float& 
 // gone past them (so the byte before is one of them); 86 hands the sprite a
 // +0x18 script and stays on itself. Waits step back onto themselves while
 // their test holds: FD (Sprite_ScriptTickOnce), D9 (Field_Request 2), DA
-// (MoveScript_WaitWordDA), E9 and F9 (their tests), and an A0..AF counter op
+// (Transition_Busy), E9 and F9 (their tests), and an A0..AF counter op
 // the flow pass stopped on.
 int ScriptAt(unsigned char op, unsigned char before) {
     if (op == 0xFF || op == 0x86) return kEnd;

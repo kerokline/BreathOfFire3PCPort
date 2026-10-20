@@ -116,7 +116,7 @@ timers, `+0x148` the actor index, `+0x89` the member. The actor record is
 
 - **`Field_Bit80Tick`**: with `Field_InputFlags` bit 0, the party list at
   `0x904062` (`Party_Count(0)` long, each member's record through
-  `MoveScript_EffectState`) is searched for bit 0x80; without it, only the
+  `Character_IndexById`) is searched for bit 0x80; without it, only the
   leader's. If found, `+0x124` counts down; at 0 it is 10 again,
   `0x534DB0(1)` (a flash of the leader's CLUT and sound `0x108`), then
   `0x537480(1, member)` - one HP, bounded below - for each such member (or for

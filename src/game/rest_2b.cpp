@@ -91,8 +91,8 @@ constexpr U kSavedA = 0x6BC87C;        // u8 x 3: model A's
 
 // kModelFile: now Rest2b_ModelFile (symbols.toml). pointer: the two models' headers (+0, +8) and quad pointers (+4, +0xC)
 // kLevelByte: now Rest2b_SavedScaleIndex (symbols.toml). u8 (save data) the scale index is read from
-// kBackdrop: now FieldS_Backdrop (symbols.toml). u8: Config's Background, Menu_DrawBackdrop's kind
-// kStyle: now BattleDraw_Colour (symbols.toml). s8: the window style (its colour row)
+// kBackdrop: now Config_Background (symbols.toml). u8: Config's Background, Menu_DrawBackdrop's kind
+// kStyle: now Config_WindowColour (symbols.toml). s8: the window style (its colour row)
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 0x40 bytes a style: the window colour's first word
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scenario step the result hands over
 constexpr U kCounterB = 0x90384B;      // u8: the chapter's counter byte (1 low score, 2 high)
@@ -134,7 +134,7 @@ void Run(const char* who, const unsigned long* table, unsigned entries, unsigned
 
 // --- the callees ------------------------------------------------------------------------
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
-void Backdrop() { SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(Config_Background); }
 void Models() {
     SH_CALL(Shisu_ModelBDispatch)();
     SH_CALL(Shisu_ModelADispatch)();
@@ -235,7 +235,7 @@ extern "C" void __cdecl Menu_DrawGreyHLine(int x, int y, unsigned w, unsigned br
 // coordinates from dwords spanning two notch words (n0 | n1 << 16, ...) and
 // Menu_DrawLine reads their low words: the same lines.
 extern "C" void __cdecl Menu_DrawOutlineNotched(int x, int y, int w, int h, int flags) {
-    const int row = BattleDraw_Colour;
+    const int row = Config_WindowColour;
     const unsigned char* const entry = At(Gfx_ClutStripSource_addr + 0x228 + static_cast<U>(row * 64));
     const U c = Word(entry);
     const auto r = static_cast<unsigned char>((entry[0] & 0x1F) << 3);
@@ -304,7 +304,7 @@ extern "C" void __cdecl Shisu_OpenFade(void) {
 // 0, the message 0x2B, the mode up one and its state 0.
 extern "C" void __cdecl Shisu_OpenWait(void) {
     Backdrop();
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const unsigned char mode = BattleE1_Mode;
     FieldS_State = 0;
     SetW(kMessage, 0x2B);
@@ -330,15 +330,15 @@ extern "C" void __cdecl Shisu_CloseFade(void) {
 // backdrop; once it is 0, the mode up one with its state 0 and windows 1..3's
 // first bytes 0.
 extern "C" void __cdecl Shisu_CloseWait(void) {
-    if (MoveScript_WaitWordDA != 0) {
+    if (Transition_Busy != 0) {
         Backdrop();
         return;
     }
     const unsigned char mode = BattleE1_Mode;
     FieldS_State = 0;
-    BattleE1_Win1 = 0;
+    Window1 = 0;
     BattleE1_Mode = static_cast<unsigned char>(mode + 1);
-    BattleE1_Win2 = 0;
+    Window2 = 0;
     B(kWin3) = 0;
 }
 
@@ -671,12 +671,12 @@ extern "C" void __cdecl Shisu_SetupWindows(void) {
     SetW(kWin2 + 6, 0xFF9C);
     B(kWin0 + 1) = 1;
     B(kWin0 + 3) = 2;
-    BattleE1_Win1 = 1;
+    Window1 = 1;
     B(kWin1 + 1) = 1;
     B(kWin1 + 2) = 1;
     B(kWin1 + 3) = 2;
     SetW(kWin1 + 4, 0x14);
-    BattleE1_Win2 = 1;
+    Window2 = 1;
     B(kWin2 + 1) = 1;
     B(kWin2 + 2) = 2;
     B(kWin2 + 3) = 2;

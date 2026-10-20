@@ -91,7 +91,7 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // The screen transition (0x495040..0x495800)
 // ===========================================================================
 
-// original 0x495040 (PSX 0x8014EB68): unless MoveScript_WaitWordDA is set (a
+// original 0x495040 (PSX 0x8014EB68): unless Transition_Busy is set (a
 // transition already running), the kind to the word 0x66C828 and task 2
 // started at 0x495070.
 //
@@ -99,7 +99,7 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // to the word; the wait word is tested as 16 bits; a running transition makes
 // the call a no-op (the kind is not stored).
 extern "C" void __cdecl Transition_Start(unsigned char kind) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     ModeFlow_TransitionKind = SlotByte(kind);
     g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTransitionEntry)));
 }
@@ -336,10 +336,10 @@ extern "C" void __cdecl GameMode_Start(void) {
     rv::As<records::SpriteHead>(Sprite_Kind2)->state = 0;   // Sprite_Kind2 + 1..3
     rv::As<records::SpriteHead>(Sprite_Kind2)->step = 0;
     rv::As<records::SpriteHead>(Sprite_Kind2)->state3 = 0;
-    BattleTurnSteps_MusicFlags = 0;
-    BattleActions_EventBattle = 0;
-    AreaW3g_Byte929EC1 = 0;   // the byte after Field_MemberCount
-    AreaW3g_Byte9036D0 = 0;
+    EventBattle_Flags = 0;
+    EventBattle_Id = 0;
+    Area189_StepsSinceEvent = 0;   // the byte after Field_MemberCount
+    Area189_EventsInRow = 0;
     Game_AreaNumber = 0xFFFF;
     g.change_area(area, x, z, flags);
     const unsigned char* const clock = At(at::kClock);
@@ -380,7 +380,7 @@ extern "C" void __cdecl GameMode_Enter(void) {
         Game_Mode = 8;
         return;
     }
-    const unsigned char kind = AreaW0c_PendingKind;
+    const unsigned char kind = Area_EnterTransition;
     if (kind == 0xFE) {
         Draw_PassFlags = 0;
     } else if (kind != 0xFF) {
@@ -411,12 +411,12 @@ extern "C" void __cdecl Field_WaitTransition(unsigned char run_argument) {
     const unsigned char run = SlotByte(run_argument);
     for (;;) {
         g.sleep(1);
-        if (MoveScript_WaitWordDA == 0 && run == 0) {
+        if (Transition_Busy == 0 && run == 0) {
             g.sleep(1);
             return;
         }
         g.field_frame();
-        if (MoveScript_WaitWordDA == 0) return;
+        if (Transition_Busy == 0) return;
     }
 }
 

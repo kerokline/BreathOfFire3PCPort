@@ -107,7 +107,7 @@ void StepDispatch(const char* who, U table, unsigned entries) {
 // The two framed waits of the mode steps: while the wait word is not 0, a frame
 // and a sleep; while File_LoadDone answers 0, `frame` (if any) and a sleep.
 void WaitWord(void (*frame)()) {
-    while (MoveScript_WaitWordDA != 0) {
+    while (Transition_Busy != 0) {
         frame();
         SH_CALL(Task_Sleep)(1);
     }
@@ -308,9 +308,9 @@ extern "C" int __cdecl Screen_TriangleWinding(const float* a, const float* b, co
 // The original passes the slot and the count from stack bytes whose upper
 // three bytes it never wrote; its callee reads their low bytes only.
 extern "C" void __cdecl Battle_PlaceBossActors(void) {
-    const unsigned event = BattleActions_EventBattle;
+    const unsigned event = EventBattle_Id;
     const unsigned row = At(at::kEventRows + 4 * event)[0];
-    BattleActorCopies_EnemyCount = 0;
+    Battle_EnemyCount = 0;
     if (row >= at::kEncounterRows)
         bof3::Fatal("Battle_PlaceBossActors: event battle %u names encounter row %u, past Encounter_Rows' %u - the original "
                     "reads on into the enemy kinds' records (docs/rest_3g.md section 7)",
@@ -322,7 +322,7 @@ extern "C" void __cdecl Battle_PlaceBossActors(void) {
         SH_CALL(Battle_PlaceBossActor)(slot, count, kind);
         count = static_cast<unsigned char>(count + 1);
     }
-    BattleE2_EnemiesLeft = BattleActorCopies_EnemyCount;
+    Battle_EnemiesLeft = Battle_EnemyCount;
 }
 
 // original 0x494570 (cdecl, by Battle_PlaceBossActors): the field actor tagged
@@ -372,11 +372,11 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[8] = static_cast<unsigned char>(At(at::kFormation)[0] ^ 2);
     s[0x48] = 0;
     SH_CALL(Battle_CopyEnemyData)(count, kind);
-    psp_code::MyriaItem(At(at::kEnemies + at::kEnemyStride * n), Game_AreaNumber, BattleActions_EventBattle);
+    psp_code::MyriaItem(At(at::kEnemies + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
     At(at::kEnemies + at::kEnemyStride * n + 0x8F)[0] = 0;
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);
-    BattleActorCopies_EnemyCount = static_cast<unsigned char>(BattleActorCopies_EnemyCount + 1);
+    Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
 
 // original 0x494E70 (BattleEnd_Finish, BattleLoss_ResetParty, BattleLoss_Restart,

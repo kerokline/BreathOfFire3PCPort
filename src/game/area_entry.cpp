@@ -218,7 +218,7 @@ extern "C" void __cdecl Party_SetUpMembers(unsigned count_arg, const unsigned ch
 // records a and b trade places - ObjTrio_SwapFields(a, b, keep), then for a
 // and then b: the record made Field_State and Sprite_Current,
 // Field_MemberSprite(its member, its slot), its character block +0x80
-// (0xA4 bytes) copied from the character record MoveScript_EffectState
+// (0xA4 bytes) copied from the character record Character_IndexById
 // gives for its member, and +0x148 set to that table's byte again.
 //
 // As the original has it: the second lookup reads +0x89 AFTER the copy,
@@ -235,11 +235,11 @@ extern "C" void __cdecl Party_SwapMembers(unsigned a, unsigned b, unsigned keep)
         Sprite_Current = record;
         g.member_sprite(record[kRecMember], slot);
         unsigned char* state = Field_State;
-        const unsigned char character = MoveScript_EffectState[state[kRecMember]];
+        const unsigned char character = Character_IndexById[state[kRecMember]];
         const unsigned char* const from = At(kCharacterRecords + character * kCharacterBytes);
         for (unsigned k = 0; k < kCharacterBytes; k += 4) SetLong(state + kRecCharacter + k, Long(from + k));
         state = Field_State;
-        state[kRecCharacterIndex] = MoveScript_EffectState[state[kRecMember]];
+        state[kRecCharacterIndex] = Character_IndexById[state[kRecMember]];
     }
 }
 

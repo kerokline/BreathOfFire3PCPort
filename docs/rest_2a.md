@@ -48,7 +48,7 @@ the once-only mark the rolls set.
 | Address | Name | What it does |
 |---|---|---|
 | `0x5372E0` | `Mode11_ListedSpriteScreens` | For each of the 30 `Sprite_Objects` records: `Sprite_Current` = it; live (`+0` bit 0): type `+6` not 9 - draw slot `+0x29` = 4 with `+0x24` bit 4, else `Draw_OtSlot`; type 9 with `Draw_OtSlot` 4 - nothing more. Then type 0xA: `Sprite_UpdateScreenA`. Else the bank list's record whose `+7` equals the sprite's u16 `+0x2C` (the list `Sprite_SetAnimationBank` searches: count byte `0x8C3580`, 8-byte records at `[0x7E0880]`); its bank word in `Mode11_ScreenBanks`: `Sprite_UpdateScreen`. `Mode11_FieldFrame`'s sixth call. |
-| `0x5373F0` | `Char_GainHp` | The member byte's record (through `MoveScript_EffectState`): HP below max - HP + amount as a u16, held at max; then the actor `Field_State +0x148` names, HP above a quarter: its `+0x10` and `Field_State +0x90` lose 0x2000. HP at max: nothing at all. |
+| `0x5373F0` | `Char_GainHp` | The member byte's record (through `Character_IndexById`): HP below max - HP + amount as a u16, held at max; then the actor `Field_State +0x148` names, HP above a quarter: its `+0x10` and `Field_State +0x90` lose 0x2000. HP at max: nothing at all. |
 | `0x537500` | `Char_LoseAp` | AP `+0x1A` minus the amount while more, else 1; answers what it took. `Char_LoseHp` without the actor test. |
 | `0x537540` | `Area_ObjectHandler` | Tail jmp: member `+0xA0 & 0x7F` not 0x7F - `Area_Descriptors[Game_AreaNumber] +0x3C` at that index; else `Area_ObjectFallbacks[(short)n]`. |
 | `0x5375A0` | `LinkedObjectA_Run` | Fallbacks 0, 7, 9: `call [esp + 4 * +4]` over a five-entry stack table: Roll, Show2, Show5, EndAfterEffect, EndAfterMessage. |
@@ -142,7 +142,7 @@ the whole eax), `Area_ObjectHandler` and the two spawns.
   `+0` in use or not; a dispatcher's `+4` below its table, `ShowAmount`'s
   0..3; Rand's hint at the rolls' switch edges.
 - **Arguments**: the record helpers' member byte below
-  `MoveScript_EffectState`'s 24, the amount at 0, 1, 2, 0xFFFF, 0x10000, ...;
+  `Character_IndexById`'s 24, the amount at 0, 1, 2, 0xFFFF, 0x10000, ...;
   `Area_ObjectHandler`'s n 0..10 under random upper bytes.
 - **Callees re-listed**: `Effect_FindFree` (0xFF a quarter, else 0..19),
   `Sprite_UpdateScreen` / `_A` and `Sprite_FaceDirection` (each logs
@@ -186,7 +186,7 @@ note, not a refusal.
 - **L4. Ranges.** `Char_GainHp`'s sum wraps at 0x10000 before the clamp
   (`Field_EquipTick` adds 1: unreachable below a maximum of 0xFFFF);
   `Char_LoseAp` at AP 0 takes 0xFFFFFFFF and leaves AP 1, as `Char_LoseHp`.
-  The `MoveScript_EffectState` index is the member byte unchecked past 24,
+  The `Character_IndexById` index is the member byte unchecked past 24,
   as `Char_LoseHp`. `Area_ObjectHandler` hands the handler the caller's
   dword where ours passes the u16 zero-extended (every handler read here is
   void and reads no argument).

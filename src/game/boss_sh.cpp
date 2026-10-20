@@ -136,7 +136,7 @@ void GiveAbility40() {
 // `step`, then a tail jump to 0x446DE0 (the end phase, step 1); else to
 // 0x446E00 (step 2).
 void EndWithStep(unsigned char step) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = step;
         BH_AT(Handler, at::kEndWin)();
     } else {
@@ -172,7 +172,7 @@ extern "C" unsigned long __cdecl BossSample3_Hook(unsigned long word) {
 // last one wins; none leaves the byte as it was). The hooks: end Boss34_End,
 // exit Boss34_Exit, event Boss34_Event.
 extern "C" void __cdecl Boss34_Setup(void) {
-    const unsigned char id = MoveScript_EffectState[4];
+    const unsigned char id = Character_IndexById[4];
     for (unsigned m = 0; m <= 2; ++m)
         if (At(Field_Members_addr + m * at::kPartyStride)[0] == id) BossSh_Picked = static_cast<unsigned char>(m);
     StoreHooks(bof3::addr::Boss34_End, bof3::addr::Boss34_Exit, bof3::addr::Boss34_Event);
@@ -232,7 +232,7 @@ extern "C" unsigned char __cdecl Boss34_Event(unsigned code) {
 // the chapter step 0x8034E5 incremented after it. Otherwise a tail jump to
 // 0x446E00 (step 2).
 extern "C" void __cdecl Boss34_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -247,7 +247,7 @@ extern "C" void __cdecl Boss34_End(void) {
         BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
     }
     if ((BossSe_Script & 2) == 0) GiveAbility40();
-    BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 8);
+    Battle_EndFlags = static_cast<unsigned char>(Battle_EndFlags | 8);
     BH_AT(Handler, at::kEndWin)();
     MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
 }
@@ -299,11 +299,11 @@ extern "C" unsigned long __cdecl BossGaist_Hook(unsigned long word) {
 }
 
 // original 0x43E5D0: hook entry 2 (BattleEnemy_RunAll's call): with the round
-// flags' bit 1 set and the word MoveScript_WaitWordDA 0, the bit cleared (a
+// flags' bit 1 set and the word Transition_Busy 0, the bit cleared (a
 // word and) and Draw_PassFlags = 0. The word is not read.
 extern "C" void __cdecl BossGaist_HookClearBit1(unsigned) {
     if ((B(at::kFlags) & 2) == 0) return;
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SetWord(At(at::kFlags), Word(At(at::kFlags)) & 0xFFFD);
     Draw_PassFlags = 0;
 }
@@ -357,7 +357,7 @@ extern "C" void __cdecl Boss35_Setup(void) {
 // al 0.
 extern "C" unsigned char __cdecl Boss35_Event(unsigned code) {
     if ((code & 0xFF) == 0 && (BH_CALL(Battle_ActorIsOut)(3) & 0xFF) != 0)
-        BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 2);
+        Battle_EndFlags = static_cast<unsigned char>(Battle_EndFlags | 2);
     return 0;
 }
 

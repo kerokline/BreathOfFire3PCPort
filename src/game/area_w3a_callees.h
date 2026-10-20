@@ -40,7 +40,7 @@ constexpr U kMessage = 0x7DEE48;          // u16: the message a choice opened, 0
 constexpr U kCounter0 = 0x903848;         // MoveScript counter 0 (flow ops A0..AC)
 // kByte9398CF: now AreaW0c_AnswerMark (symbols.toml). set to 6 by the choices that refuse (area_w0a's kByte9398CF)
 // kZenny: now Party_Zenny (symbols.toml). Party_Zenny: u32
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml). the chapter's Cond_Flags row (a pointer, Scenario_Enter)
+// kFlagRow: now Chapter_FlagRow (symbols.toml). the chapter's Cond_Flags row (a pointer, Scenario_Enter)
 constexpr U kFieldStateMember = 0x128;    // the record byte the member frames set to 2
 
 // --- the world maps' cells (area 16's, docs/area_w0b.md; as area_w2b's) --------

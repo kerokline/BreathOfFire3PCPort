@@ -105,7 +105,7 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 
 // Every region any test touches, saved once and put back at the end.
 const Region g_all[] = {
-    {D3d_Vertices_addr, 0x80}, {D3d_ScaleY_addr, 8},          {Gfx_DrawTpage_addr, 4},         {BattleDraw_Colour_addr, 1},
+    {D3d_Vertices_addr, 0x80}, {D3d_ScaleY_addr, 8},          {Gfx_DrawTpage_addr, 4},         {Config_WindowColour_addr, 1},
     {BattleActorCopies_ItemActor_addr, 1},  {kPartyFrom, kPartyBytes}, {kInvFrom, kInvBytes}, {kPrintBuf, 0x60},
     {Field_StatusBits_addr, 1},
 };
@@ -193,7 +193,7 @@ void Disturb(U salt) {
     if (h % 4 == 0) return;
     const auto v = static_cast<unsigned char>(h >> 24);
     switch ((h >> 4) % 12) {
-    case 0: At(BattleDraw_Colour_addr)[0] = v; break;
+    case 0: At(Config_WindowColour_addr)[0] = v; break;
     case 1: At(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v % 5); break;
     case 2:
     case 3:
@@ -622,7 +622,7 @@ void FuzzHandler(Tally& t, const Handler& h, void* clone, unsigned rounds) {
 // --- the lists -------------------------------------------------------------------------
 
 const Region kListRegions[] = {
-    {Addr(g_window), sizeof g_window}, {Addr(g_list), sizeof g_list}, {BattleDraw_Colour_addr, 1}, {BattleActorCopies_ItemActor_addr, 1},
+    {Addr(g_window), sizeof g_window}, {Addr(g_list), sizeof g_list}, {Config_WindowColour_addr, 1}, {BattleActorCopies_ItemActor_addr, 1},
     {kPartyFrom, kPartyBytes},         {kInvFrom, kInvBytes},         {kPrintBuf, 0x60},
 };
 
@@ -657,7 +657,7 @@ void SeedList(bool skill) {
     for (U i = 0; i < sizeof g_list; ++i) g_list[i] = static_cast<unsigned char>(Next() % 3 == 0 ? 0 : Next() & 0xFF);
     for (U i = 0; i < kPartyBytes; ++i) At(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(Next() % 9);
     At(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(Next() % 4 ? Next() % 3 : Next() & 0xFF);
-    At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 8 : Next() & 0xFF);
+    At(Config_WindowColour_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 8 : Next() & 0xFF);
     std::memset(At(kPrintBuf), 0x5A, 0x60);
 }
 

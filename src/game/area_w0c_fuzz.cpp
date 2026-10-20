@@ -205,11 +205,11 @@ const ah::Region kRegions[] = {
     {Effect_Objects_addr, 4 * at::kEffectStride},
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
-    {AreaW0c_PendingKind_addr, 1},
+    {Chapter_FlagRow_addr, 4},
+    {Area_EnterTransition_addr, 1},
     {AreaW0c_AnswerMark_addr, 1},
     {at::kRecord0Byte9, 1},
-    {MoveScript_WaitWordDA_addr, 2},
+    {Transition_Busy_addr, 2},
     {Draw_PassFlags_addr, 1},
 };
 
@@ -242,7 +242,7 @@ void Disturb(std::uint32_t h) {
     case 1: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? v : (h & 0x200 ? 0x31 : 0x20)); break;
     case 2: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 4); break;
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
-    case 4: B(AreaW0c_FlagRow_addr + (h >> 16) % 4) = v; break;
+    case 4: B(Chapter_FlagRow_addr + (h >> 16) % 4) = v; break;
     default: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? 1 : v); break;
     }
 }
@@ -384,7 +384,7 @@ void Seed37(unsigned k) {
     if (k == k37TailLeave) {
         SeedTailState(3);
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 0, 1, 3));
-        if (ah::Often()) MoveScript_WaitWordDA = static_cast<unsigned short>(AH_PICK(0, 1, 0x100, 0xFFFF));
+        if (ah::Often()) Transition_Busy = static_cast<unsigned short>(AH_PICK(0, 1, 0x100, 0xFFFF));
     }
 }
 // Area 34's and 37's object triggers are called (object, story flags).

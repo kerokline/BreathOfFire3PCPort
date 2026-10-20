@@ -44,11 +44,11 @@ constexpr U kItemClass = bof3::addr::Item_UseFlags;        // (byte, byte) -> al
 
 // --- the battle bytes (0x904AA0..0x904BA0, the harness's battle frame) ---
 constexpr U kRoundFlags = 0x904AA8;       // u16: bit 2 an action's end, 6, 7 (a roll), 11 (a cast's end), 13, 14
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (0 none)
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle (0 none)
 constexpr U kPartyCount = 0x904AB0;       // u8: the members the party loops walk (ObjTrio holds three)
-// kMembersUp: now BattleSprites_PartyPick (symbols.toml). u8: counted down as a member falls; 0 is the loss
-// kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8: counted down as an enemy leaves; 0 is the win
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win
+// kMembersUp: now Battle_PartyStanding (symbols.toml). u8: counted down as a member falls; 0 is the loss
+// kEnemiesLeft: now Battle_EnemiesLeft (symbols.toml). u8: counted down as an enemy leaves; 0 is the win
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win
 // kKindsSeen: now BattleMisc_BannerKinds (symbols.toml). u8: the message kinds seen this frame (battle_windows.md)
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the action's kind (1, 4, 5 read here)

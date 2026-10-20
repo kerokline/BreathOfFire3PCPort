@@ -65,7 +65,7 @@ constexpr std::uint32_t kS = 0x903850;
 
 // The cells the overlays read beyond the harness's names.
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle (its kind)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle (its kind)
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
@@ -725,7 +725,7 @@ void CopyToChild(unsigned char* rec, unsigned number) {
 // party) given an animation - an enemy 4 through the engine's 0x435A20, a
 // member its +8 + 0x10 - and copied into a child; sound 0x100.
 S10_EXPORT void __cdecl Howling_Start(void) {
-    if (Mem(BattleActions_EventBattle_addr)[0] == 0x37) {
+    if (Mem(EventBattle_Id_addr)[0] == 0x37) {
         MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
         Sc()[1] = 3;
         Sc()[9] = 0x1E;

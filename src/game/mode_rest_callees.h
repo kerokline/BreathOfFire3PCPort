@@ -49,8 +49,8 @@ constexpr U kMessageBits = 0x7DEE44;       // u8: bit 1 ends mode 4 (the message
 // kCameraTurnByte: now EventOps_BlockByte (symbols.toml). u8: 0x10 when mode 4 ends (CameraTurn_Steps' cells)
 
 // --- mode 5 (the battle) -----------------------------------------------------------
-// kBattleFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: EventBattle_Records +0's flags (Field_StartEventBattle)
-// kBattleFlags2: now BattleActions_BattleEnd (symbols.toml). u8: bit 3 keeps the field's music off after the battle
+// kBattleFlags: now EventBattle_Flags (symbols.toml). u8: EventBattle_Records +0's flags (Field_StartEventBattle)
+// kBattleFlags2: now Battle_EndFlags (symbols.toml). u8: bit 3 keeps the field's music off after the battle
 // kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml). u8: the area's track Field_ChangeArea chose (mode_flow kAreaTrack); DIV-0092
 // kBattleFlags3: now BattleMisc_BannerKinds (symbols.toml). u8: zeroed at steps 3 and 4
 constexpr U kFormation = 0x904AAC;         // dword read, its low byte the formation (rest_3g_callees.h)
@@ -58,7 +58,7 @@ constexpr U kApproach = 0x656AA4;          // s8 pairs by the formation byte: x 
 // kElevationBase: now ModeRest_ElevationBase (symbols.toml). dword: less MapView_Elevation, sar 4, into MoveScript_FAWord
 constexpr U kKind2ZHigh = 0x905E62;        // u16: Field_Kind2Z's upper half
 constexpr U kKind2XHigh = 0x905E66;        // u16: Field_Kind2X's upper half
-// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kEventBattle: now EventBattle_Id (symbols.toml).
 // kLeaderXHigh: now ObjTrio[0x36] (symbols.toml). u8: the leader's integer x, low byte (field_event_callees.h); DIV-0092's second amendment
 // kLeaderZHigh: now ObjTrio[0x3a] (symbols.toml). u8: its z       // u8: the event battle (EventBattle_Records' index)
 constexpr U kEventAsset = 0x64DDEF;        // EventBattle_Records + 3: each record's asset index (image .data)

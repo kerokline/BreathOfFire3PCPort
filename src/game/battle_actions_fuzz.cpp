@@ -68,7 +68,7 @@ unsigned char g_psp_end;
 unsigned g_psp_fired;
 void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32_t d = 0) {
     if (g_psp_pending) {
-        At(BattleActions_BattleEnd_addr)[0] = g_psp_end;
+        At(Battle_EndFlags_addr)[0] = g_psp_end;
         g_psp_pending = false;
     }
     if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, d};
@@ -117,8 +117,8 @@ void Disturb() {
     case 9: SetWord(At(BattleActions_Pending_addr), v % 3 == 0 ? w : 0); break;
     case 10: At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] ^ (1u << (v % 8))); break;
     case 11: At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ (1u << (v % 8))); break;
-    case 12: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
-    case 13: At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 12: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
+    case 13: At(Battle_EndFlags_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 14: At(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
     case 15: SetWord(At(Field_CancelButtons_addr), h >> 16); break;
     case 16: SetWord(At(Input_Held_addr), h >> 16); break;
@@ -157,19 +157,19 @@ void __cdecl StubHook(int n) {
     // the battle end and the event byte
     const std::uint32_t h = Hash();
     if (h % 2) At(at::kActor + at::kBKind)[0] = static_cast<unsigned char>((h >> 8) % 7);
-    if ((h >> 1) % 3 == 0) At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>((h >> 3) % 2);
-    if ((h >> 2) % 3 == 0) At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>((h >> 5) % 2);
+    if ((h >> 1) % 3 == 0) At(Battle_EndFlags_addr)[0] = static_cast<unsigned char>((h >> 3) % 2);
+    if ((h >> 2) % 3 == 0) At(EventBattle_Id_addr)[0] = static_cast<unsigned char>((h >> 5) % 2);
     Disturb();
 }
 // DIV-0108: the hook as the original sees it with the PSP's duel-loss: after the
 // hook with 0 (BattleAction_End's first), the PSP's test on the bytes it left.
 void __cdecl StubHookPsp(int n) {
     StubHook(n);
-    const unsigned char end = At(BattleActions_BattleEnd_addr)[0];
-    if (n == 0 && psp_code::DuelLossGoesOn(At(BattleActions_EventBattle_addr)[0], end)) {
+    const unsigned char end = At(Battle_EndFlags_addr)[0];
+    if (n == 0 && psp_code::DuelLossGoesOn(At(EventBattle_Id_addr)[0], end)) {
         g_psp_end = end;
         g_psp_pending = true;
-        At(BattleActions_BattleEnd_addr)[0] = 0;
+        At(Battle_EndFlags_addr)[0] = 0;
         ++g_psp_fired;
     }
 }
@@ -266,7 +266,7 @@ unsigned char __cdecl StubPickTarget() {
 void __cdecl StubLoadAbility(unsigned a) { Record(54, a & 0xFF); Disturb(); }
 int __cdecl StubLoadDone() {
     Record(55);
-    if (Hash() % 2) At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(Hash() % 2);
+    if (Hash() % 2) At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(Hash() % 2);
     Disturb();
     const std::uint32_t h = Hash();
     return h % 2 ? 0 : static_cast<int>(h | 0x100);
@@ -517,8 +517,8 @@ void Fix() {
     At(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>(Next() % 9);
     for (unsigned n = 0; n <= 8; ++n) At(at::kMsgList + n * 4)[0] = static_cast<unsigned char>(Next() % 8);
     SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHook));
-    if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
-    if (Half()) At(BattleActions_BattleEnd_addr)[0] = 0;
+    if (Half()) At(EventBattle_Id_addr)[0] = 0;
+    if (Half()) At(Battle_EndFlags_addr)[0] = 0;
     if (Half()) At(BattleE1_MessageUp_addr)[0] = 0;
     if (Half()) SetWord(At(BattleActions_Pending_addr), 0);
 }
@@ -549,7 +549,7 @@ void Seed(unsigned k) {
         break;
     }
     case kEnterKind:
-        At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         break;
     case kKindPlain:
         At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(Half() ? 2 : Next() % 6);
@@ -601,7 +601,7 @@ void Seed(unsigned k) {
         break;
     }
     case kEffectLoaded:
-        At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         break;
     case kAfterSettle:
     case kEnd:
@@ -781,8 +781,8 @@ void SelfTest() {
         Fix();
         g_seed = Next();
         Seed(kEnd);
-        if (Half()) At(BattleActions_EventBattle_addr)[0] = psp_code::kDuelEvent;
-        At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
+        if (Half()) At(EventBattle_Id_addr)[0] = psp_code::kDuelEvent;
+        At(Battle_EndFlags_addr)[0] = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
         Capture(input);
 
         static State plain_out;

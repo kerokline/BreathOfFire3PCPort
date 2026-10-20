@@ -436,7 +436,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
         }
         if (!(p[0x134] & 1)) {
             const unsigned char roll = static_cast<unsigned char>(g.rand() & 7);
-            if (static_cast<signed char>(roll) >= 3 && BattleSprites_PartyPick != 1)
+            if (static_cast<signed char>(roll) >= 3 && Battle_PartyStanding != 1)
                 SetTarget(g.pick_party(member));
             else
                 SetTarget(g.pick_enemy_b(static_cast<unsigned char>((g.rand() & 7) + 3)));
@@ -461,7 +461,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
     // A party target of the member's own choosing: 0x454310 unless 0x904AB1
     // is 1, then the member itself.
     auto party_pick = [member]() {
-        if (BattleSprites_PartyPick != 1) SetTarget(g.pick_party(member));
+        if (Battle_PartyStanding != 1) SetTarget(g.pick_party(member));
         else SetTarget(static_cast<unsigned char>(member));
     };
     switch (p[0x125]) {
@@ -514,7 +514,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
             party_pick();
             return;
         }
-        if (BattleE2_EnemiesLeft != 1) SetTarget(g.pick_enemy_a(again));
+        if (Battle_EnemiesLeft != 1) SetTarget(g.pick_enemy_a(again));
         else SetTarget(g.pick_enemy_b(again));
         return;
     }
@@ -730,7 +730,7 @@ extern "C" void __cdecl Sprite_SetClutStp(void) {
 // original 0x494280 (0x800A8AD4, the PSX's Battle_InitEncounterKind): a boss
 // encounter (0x904AAA not 0) or an ordinary one - both tail jumps.
 extern "C" void __cdecl Battle_InitEncounterKind(void) {
-    if (BattleActions_EventBattle) g.boss_encounter();
+    if (EventBattle_Id) g.boss_encounter();
     else g.normal_encounter();
 }
 
@@ -744,7 +744,7 @@ extern "C" void __cdecl Battle_InitEncounterKind(void) {
 // about 3,000 times per self-test, so expect that many lines there.
 extern "C" void __cdecl Battle_InitBossEncounter(void) {
     g.boss_common();
-    const unsigned id = BattleActions_EventBattle;
+    const unsigned id = EventBattle_Id;
     const std::uint32_t handler = static_cast<std::uint32_t>(Long(At(Boss_SetupTable_addr + id * 4u)));
     bof3::Log("boss encounter: id %u (0x%02X) -> set-up 0x%08X", id, id, static_cast<unsigned>(handler));
     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(handler))();
@@ -754,7 +754,7 @@ extern "C" void __cdecl Battle_InitBossEncounter(void) {
 // the eight at 0x939F00 set up as the next enemy (Battle_SetupEnemy(n, +1,
 // +4, +8)); 0x904AB3 = the count Battle_SetupEnemy left.
 extern "C" void __cdecl Battle_InitEnemies(void) {
-    BattleActorCopies_EnemyCount = 0;
+    Battle_EnemyCount = 0;
     unsigned char n = 0;
     for (unsigned r = 0; r < 8; ++r) {
         const unsigned char* const rec = At(at::kEncounter + r * 12);
@@ -762,7 +762,7 @@ extern "C" void __cdecl Battle_InitEnemies(void) {
         g.setup_enemy(n, rec[1], Long(rec + 4), Long(rec + 8));
         ++n;
     }
-    BattleE2_EnemiesLeft = BattleActorCopies_EnemyCount;
+    Battle_EnemiesLeft = Battle_EnemyCount;
 }
 
 // original 0x494320 (no twin found): enemy `slot` from enemy data `id` at
@@ -820,7 +820,7 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     g.copy_enemy(slot, id);
     g.enemy_offset(slot, id);
     enemy_rec->kind_flag = g.kind_flag(enemy_data->kind);
-    BattleActorCopies_EnemyCount = static_cast<unsigned char>(BattleActorCopies_EnemyCount + 1);
+    Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
 
 // original 0x4946C0 (0x800A9148): the enemy data `id` (by its low byte) into
@@ -845,7 +845,7 @@ extern "C" void __cdecl Battle_CopyEnemyData(unsigned slot, unsigned id) {
     SetLong(dst, Long(src));
     SetLong(dst + 4, Long(src + 4));
     SetLong(dst + 8, Long(src + 8));
-    to_rec->kind = from_rec->kind;
+    to_rec->enemy_kind = from_rec->kind;
     to_rec->family = from_rec->family;
     to_rec->odds_index = from_rec->odds_index;
     to_rec->flags_90 = from_rec->flags;
@@ -914,12 +914,12 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
     };
 
     unsigned char listed = 0;
-    unsigned char enemies = BattleActorCopies_EnemyCount;
+    unsigned char enemies = Battle_EnemyCount;
     if (enemies) {
         for (unsigned e = 0, left = enemies; left; --left, ++e) {
             auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(e));
             if (!(enemy_rec->flags & 1)) continue;
-            const std::uint16_t k = enemy_rec->kind;
+            const std::uint16_t k = enemy_rec->enemy_kind;
             unsigned c = 0;
             while (c < listed && kinds[c] != k) ++c;
             if (c < listed) {
@@ -930,7 +930,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
             counts[listed] = 1;
             ++listed;
         }
-        enemies = BattleActorCopies_EnemyCount;
+        enemies = Battle_EnemyCount;
     }
     if (enemies > 1 && listed > 1)
         for (unsigned char d = 1; d < listed; ++d)
@@ -962,9 +962,9 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
         y = static_cast<std::uint16_t>(y - left * 8u - 0xD);
         const std::uint16_t top = y;
         std::uint16_t row = y;
-        if (BattleActorCopies_EnemyCount)
+        if (Battle_EnemyCount)
             for (unsigned char e = 0; left;) {
-                if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->kind) {
+                if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->enemy_kind) {
                     set_count(k, count(k) - 1u);
                     g.window_open(static_cast<unsigned char>(0xC - shown), 3);
                     unsigned char* const w = At(at::kWindows + 0x1B0 - shown * at::kWindowStride);
@@ -982,7 +982,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
                     --left;
                     row = static_cast<std::uint16_t>(row + 8);
                 }
-                if (!(++e < BattleActorCopies_EnemyCount)) break;
+                if (!(++e < Battle_EnemyCount)) break;
             }
         y = static_cast<std::uint16_t>(top - 2);
         ++k;

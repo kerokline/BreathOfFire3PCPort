@@ -102,7 +102,7 @@ void Disturb() {
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) ^ kBits[v % 4]);
         break;
     }
-    case 12: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
+    case 12: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
     case 13: At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
     case 14: At(at::kActionKind)[0] = static_cast<unsigned char>(v % 7); break;
     case 15: SetWord(At(at::kMagicId), (w % 4) << 8 | v); break;
@@ -394,7 +394,7 @@ void Fix() {
     SetPtr(BattleDamage_Result_addr, EnemyObj(Next()) + 0x104);
     SetWord(At(at::kMagicId), (Half() ? (Next() % 4) << 8 : 0) | (Next() & 0xFF));
     At(at::kActionKind)[0] = static_cast<unsigned char>(Next() % 7);
-    if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
+    if (Half()) At(EventBattle_Id_addr)[0] = 0;
     if (Half()) At(BattleE4_Picking_addr)[0] = 0;
 }
 
@@ -445,7 +445,7 @@ void Seed(unsigned k) {
         if (Often()) e[0x111] = static_cast<unsigned char>(e[0x111] & ~2u);
         if (Half()) SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & ~0x2000u);
         if (Half()) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 0x80);
-        if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
+        if (Half()) At(EventBattle_Id_addr)[0] = 0;
         if (Half()) SetWord(At(at::kMagicId), Next() & 0xFF);
         break;
     }

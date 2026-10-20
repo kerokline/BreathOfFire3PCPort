@@ -77,7 +77,7 @@ unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return PtrAt(at::kCommandRecord); }
 unsigned char* Acting() { return PtrAt(at::kActing); }
-unsigned char* List() { return At(BattleE4_List_addr); }
+unsigned char* List() { return At(Window16_addr); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
 // the original has it - an index past the table reads the next one's.
 Handler Entry(std::uint32_t table, unsigned i) {
@@ -108,7 +108,7 @@ unsigned LastQueueEntry() { return ((BattleActorCopies_QueueWrite - 1u) & 0xF) *
 // second, after the first's sound).
 void StepEnemyTarget(unsigned repeat) {
     if (repeat & 0x2000) {
-        const long high = BattleActorCopies_EnemyCount + 2;
+        const long high = Battle_EnemyCount + 2;
         const long value = static_cast<long>(static_cast<signed char>(Command()[0])) + 1;
         const long wrapped = g.wrap_index(high, 3, value);
         const unsigned char target = g.default_target(static_cast<unsigned>(wrapped));
@@ -116,7 +116,7 @@ void StepEnemyTarget(unsigned repeat) {
         g.sound(0x101);
     }
     if (repeat & 0x8000) {
-        const long high = BattleActorCopies_EnemyCount + 2;
+        const long high = Battle_EnemyCount + 2;
         const long value = static_cast<long>(static_cast<signed char>(Command()[0])) - 1;
         const long wrapped = g.wrap_index(high, 3, value);
         const unsigned char target = g.prev_target(static_cast<unsigned>(wrapped));
@@ -259,7 +259,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     auto* const list_window = rv::As<records::WindowRecord>(list);
     if (list_window->state != 0) return;
     const unsigned actor = Acting()[5];
-    auto* const hand_window = rv::As<records::WindowRecord>(At(BattleE4_Hand_addr));
+    auto* const hand_window = rv::As<records::WindowRecord>(At(Window19_addr));
     hand_window->in_use = 1;
     hand_window->x = static_cast<unsigned>(Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];
@@ -344,7 +344,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
         g.sound(0x100);
         const std::uint32_t x = static_cast<std::uint32_t>(Long(list + 4)) + 0x20;
         const unsigned y = list_window->y - 0x16u;
-        unsigned char* const above = At(BattleE4_Above_addr);
+        unsigned char* const above = At(Window21_addr);
         auto* const above_window = rv::As<records::WindowRecord>(above);
         above_window->handler = 8;
         above_window->kind = 5;

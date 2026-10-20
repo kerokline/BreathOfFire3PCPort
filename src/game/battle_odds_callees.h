@@ -23,9 +23,9 @@ constexpr U kBanners = 0x93B8E0;
 // Window records (WindowRecords 0x803160, 0x24 bytes each) the two banner
 // handlers write: record 0's +3 and +0xA, record 4's +3 and +0xA.
 constexpr U kWin0State = 0x803163;
-// kWin0Index: now BattleOdds_Win0Index (symbols.toml).
+// kWin0Index: now Window0_ParamA (symbols.toml).
 constexpr U kWin4State = 0x8031F3;
-// kWin4Index: now BattleOdds_Win4Index (symbols.toml).
+// kWin4Index: now Window4_Index (symbols.toml).
 // Effect_ApplyResult's operands (battle_damage_callees.h): the result record's
 // pointer, the target byte, the acting dword (its low byte the actor).
 constexpr U kResult = 0x904B60;

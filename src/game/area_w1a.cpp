@@ -305,7 +305,7 @@ extern "C" void __cdecl Area40_NudgeObject(void) {
 // Field_ScriptFlags bits 3 and 7 and Field_StatusBits bit 6 cleared.
 extern "C" void __cdecl Area40_ChoiceFlag5(void) {
     const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
-    unsigned char* const row = Ptr(AreaW0c_FlagRow_addr);
+    unsigned char* const row = Ptr(Chapter_FlagRow_addr);
     SetMessage(0xFFFF);
     B(MoveScript_PartyRecords_addr + 0x65) = answer != 0 ? 0x1E : 0x1C;
     AH_CALL(Flags_Set)(row, 5);
@@ -611,10 +611,10 @@ extern "C" void __cdecl Area41_ChoiceGiveItem(void) {
     const auto index = static_cast<std::int32_t>(static_cast<signed char>(answer));
     SetMessage(Word(Mem(Area41_GiveMessages_addr + static_cast<U>(index) * 2u)));
     if (answer != 0) return;
-    if (AH_CALL(Flags_Test)(Ptr(AreaW0c_FlagRow_addr), 6) != 0) return;
+    if (AH_CALL(Flags_Test)(Ptr(Chapter_FlagRow_addr), 6) != 0) return;
     AH_CALL(Sound_PlayEffect)(0x106);
     AH_CALL(Inventory_Add)(0, 0x28, 1);   // the original pushes a fourth word, 0, never read
-    AH_CALL(Flags_Set)(Ptr(AreaW0c_FlagRow_addr), 6);
+    AH_CALL(Flags_Set)(Ptr(Chapter_FlagRow_addr), 6);
 }
 
 // original 0x4062E0 (Area41_Choices[4]): answer 0 with items 0x49, 0x3F, 0x27

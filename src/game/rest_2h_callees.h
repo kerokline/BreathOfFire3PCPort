@@ -29,13 +29,13 @@ namespace at {
 // kCurrent: now BattleWinStates_Current (symbols.toml). unsigned char *: the record Field_RunTaskRecords is on
 constexpr std::uint32_t kWindows = 0x803160;       // WindowRecords, 22 of 0x24
 constexpr std::uint32_t kWindowStride = 0x24;
-// kWindow1Master: now Rest2h_Window1Master (symbols.toml). window 1's +0xD: the master list's chosen entry
-// kStyle: now BattleDraw_Colour (symbols.toml). the window colour byte Menu_DrawBox is handed
+// kWindow1Master: now Window1_Master (symbols.toml). window 1's +0xD: the master list's chosen entry
+// kStyle: now Config_WindowColour (symbols.toml). the window colour byte Menu_DrawBox is handed
 
 // --- the character records and the party ------------------------------------------
 constexpr std::uint32_t kRecords = 0x903A70;       // CharacterRecords, 0xA4 each
 constexpr std::uint32_t kRecordStride = 0xA4;
-constexpr std::uint32_t kMemberMap = 0x66972C;     // a member id's record (MoveScript_EffectState's bytes), unbounded
+constexpr std::uint32_t kMemberMap = 0x66972C;     // a member id's record (Character_IndexById's bytes), unbounded
 // kPartyBits: now Cond_Flags[0xd1] (symbols.toml). the byte MasterWin_Available tests (bits 3..5)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0
 constexpr std::uint32_t kBattleParty = 0x904065;   // the second party list (three bytes)
@@ -43,7 +43,7 @@ constexpr std::uint32_t kSharedList = 0x904574;    // the shared ability list, 1
 // kSkillSlots: now Field_ActorStates[0x6e] (symbols.toml). a record's ten ability slots (+0x7E)
 
 // --- the gene list (MenuList kind 20) -------------------------------------------------
-// kGenes: now ScenaSc7_EventFlags (symbols.toml). u32: the eighteen gene bits
+// kGenes: now Gene_Bits (symbols.toml). u32: the eighteen gene bits
 constexpr std::uint32_t kGeneList = 0x6BE0B0;      // 18 bytes: bit + 1 of each set bit, then 0
 constexpr std::uint32_t kGeneTitle = 0x66B1F0;     // the list's title
 constexpr std::uint32_t kGenePiecesA = 0x66B1D8;

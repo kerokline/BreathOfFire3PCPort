@@ -183,7 +183,7 @@ extern "C" void __cdecl Boss29_Setup(void) {
 // 0x8034E5 = 0x1C, 0x446DE0 (the end phase, step 1) called, then Music_Track =
 // 0x62. Otherwise a tail jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss29_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -273,12 +273,12 @@ extern "C" void __cdecl Boss31_Setup(void) {
 // 0x14 and a tail jump to 0x446DE0 (step 1). Otherwise 0x904AE5 &= 0xBF (the
 // battle's music not kept) and a tail jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss31_End(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = 0x14;
         BH_AT(Handler, at::kEndWin)();
         return;
     }
-    BattleTurnSteps_MusicFlags &= 0xBF;
+    EventBattle_Flags &= 0xBF;
     BH_AT(Handler, at::kEndOther)();
 }
 
@@ -339,7 +339,7 @@ extern "C" void __cdecl Boss32_Setup(void) {
 // value read | 8, a tail jump to 0x446DE0 (step 1). Otherwise a tail jump to
 // 0x446E00 (step 2).
 extern "C" void __cdecl Boss32_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -353,10 +353,10 @@ extern "C" void __cdecl Boss32_End(void) {
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
         BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
     }
-    const unsigned char end = BattleActions_BattleEnd;
+    const unsigned char end = Battle_EndFlags;
     Music_Track = 0x6B;
     MoveScript_PartyRecords[0x65] = 0xE;
-    BattleActions_BattleEnd = static_cast<unsigned char>(end | 8);
+    Battle_EndFlags = static_cast<unsigned char>(end | 8);
     BH_AT(Handler, at::kEndWin)();
 }
 
@@ -376,7 +376,7 @@ extern "C" void __cdecl Boss33_Setup(void) { StoreHooks(bof3::addr::Boss33_End, 
 // Field_Kind2X = party member 0's +0x34 and Field_Kind2Z = its +0x38 (the
 // dwords); the chapter's step = 8; a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss33_End(void) {
-    if ((BattleActions_BattleEnd & 6) == 0) {
+    if ((Battle_EndFlags & 6) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }

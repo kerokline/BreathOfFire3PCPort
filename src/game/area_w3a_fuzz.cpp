@@ -66,7 +66,7 @@ const ah::Callee kSpawn = {"Effect_Spawn", ::bof3::addr::Effect_Spawn, KeyOf(Eff
 // kFzPartyList: now Cond_Flags[0xd2] (symbols.toml).
 // kFzZenny: now Party_Zenny (symbols.toml).
 // kFzByte9398CF: now AreaW0c_AnswerMark (symbols.toml).
-// kFzFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFzFlagRow: now Chapter_FlagRow (symbols.toml).
 
 // BOF3X_AR3A_AREA=n runs area n's group alone (the controls script's
 // shortcut); unset, every area runs.
@@ -812,7 +812,7 @@ const ah::Clone kClones119[] = {
 };
 enum : unsigned { k119Choice = 9 };
 const ah::Callee kCallees119[] = {kSpawn};
-const ah::Region kRegions119[] = {{AreaW0c_FlagRow_addr, 4}};
+const ah::Region kRegions119[] = {{Chapter_FlagRow_addr, 4}};
 
 void Seed119(unsigned k) {
     if (k == k119Choice) Mem(AreaW0c_ChoiceAnswer_addr)[0] = SomeCursor();

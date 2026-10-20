@@ -430,7 +430,7 @@ extern "C" unsigned char __cdecl Encounter_PlaceParty(void) {
     for (unsigned char i = 0; i < 3; ++i) {
         order[i] = i;
         Member(i)[0] = 0;
-        const unsigned char record = MoveScript_EffectState[Cond_Flags[0xd5 + i]];
+        const unsigned char record = Character_IndexById[Cond_Flags[0xd5 + i]];
         Member(i)[1] = (record == 2 || record == 6) ? 1 : 0;
     }
     bool swapped = false;
@@ -652,7 +652,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             if (r <= 0x32) ++count;
             continue;
         }
-        const u32 record = MoveScript_EffectState[Cond_Flags[0xd2 + i]];
+        const u32 record = Character_IndexById[Cond_Flags[0xd2 + i]];
         if (At(at::kRecords + record * at::kRecordSize)[0x38] < r) continue;
         const unsigned char e = g.effect_free();
         if (e != 0xFF) {
@@ -724,7 +724,7 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
         }
         return 0;
     }
-    if (BattleTurnSteps_MusicFlags & 4) return 1;
+    if (EventBattle_Flags & 4) return 1;
     for (u32 j = 0; static_cast<i32>(j) < static_cast<i32>(n); ++j, n = Field_MemberCount) {
         unsigned char* const obj = Obj(j);
         Field_State = obj;
@@ -756,7 +756,7 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
 // whether every member's +0xB is 2 (1 for no members), the count the last
 // one read.
 extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
-    if (BattleTurnSteps_MusicFlags & 4) return 1;
+    if (EventBattle_Flags & 4) return 1;
     const u32 f = Byte(at::kBattleFacing);
     const auto* const step = reinterpret_cast<const signed char*>(At(at::kSideSteps + 2 * f));
     BossSi_CentreX = Add(Shl(step[0], 16), Field_Kind2X);
@@ -840,7 +840,7 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
 // every member's +0xB is 1 (1 for no members), the count the last one read.
 // Like 0x532A70 it first searches the first party list for nothing.
 extern "C" unsigned char __cdecl Encounter_PartyScriptOnce(void) {
-    if (BattleTurnSteps_MusicFlags & 0x10) return 1;
+    if (EventBattle_Flags & 0x10) return 1;
     u32 n = Field_MemberCount;
     if (n != 0) {
         for (u32 i = 0; i < n; ++i, n = Field_MemberCount) {

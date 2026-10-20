@@ -38,11 +38,11 @@ using U = std::uint32_t;
 constexpr U kPhase = 0x904AA0;            // u8: Battle_PhaseDispatch's phase (5: the battle's end)
 constexpr U kRoundFlags = 0x904AA8;       // u8: the round flags' low byte (bit 2 set by the kinds' action ends)
 constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (bit 3 set by Myria's cost step)
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (Boss_SetupTable's index)
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle (Boss_SetupTable's index)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (set-up 27: bits 0..5)
 constexpr U kOrderBefore = 0x904ACB;      // u8[]: the turn order 0x904ACC one before - indexed by the cursor
 // kCursor: now BossSe_RoundSlot (symbols.toml). u8: the turn order's cursor (battle_actions.md)
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bit 2 set by set-up 27's event hook
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bit 2 set by set-up 27's event hook
 // kBanner: now BattleMisc_BannerKinds (symbols.toml). u8: bit 1 holds the phases until phase 5 (battle_phases_callees.h)
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (4 an ability)
 constexpr U kTarget = 0x904B44;           // u8: the battle's target
@@ -78,7 +78,7 @@ constexpr unsigned kTaskCount = 48;
 constexpr U kPartyStride = 0x14C;
 
 // --- other cells ------------------------------------------------------------
-// kWindowUp: now BossSf_WindowUp (symbols.toml). u8: a window record's byte (0x803430's); the count waits while set
+// kWindowUp: now Window20_State (symbols.toml). u8: a window record's byte (0x803430's); the count waits while set
 constexpr U kScriptVar3 = 0x903848;       // u8: movement-script variable 3 (area_w0a.md), set by set-up 28's end
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
 constexpr U kPoseSet = 0x8C5D80;          // the frame set set-up 27's end hook poses the party from

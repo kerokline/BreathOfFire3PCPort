@@ -409,7 +409,7 @@ extern "C" void __cdecl Area10_SpawnEffect1C(void) {
 // the bank at [0x929ED0] is set, the script position 2 back (the op runs
 // again), MoveScript_Object read after the call.
 extern "C" void __cdecl Area12_WaitFlagE(void) {
-    const auto bank = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
+    const auto bank = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
     if (AH_CALL(Flags_Test)(bank, 0xE)) return;
     MoveScriptPos(0xFFFE);
 }

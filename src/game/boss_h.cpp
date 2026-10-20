@@ -100,7 +100,7 @@ extern "C" unsigned char __cdecl BareRetZero(unsigned) { return 0; }
 // bit 1): the chapter's step 0x8034E5 = 5 and a tail jump to 0x446DE0 (the end
 // phase, step 1); otherwise to 0x446E00 (step 2).
 extern "C" void __cdecl BossHook_EndPickWay(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = 5;
         BH_AT(Handler, at::kEndWin)();
         return;
@@ -351,7 +351,7 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
         const unsigned status = At(e.status)[1];   // the dword's second byte: +0x93
         if (status & 0x40) continue;
         const bool up = (status & 0x20) != 0;
-        unsigned char* const bits = At(AreaW0c_FlagRow);
+        unsigned char* const bits = At(Chapter_FlagRow);
         if (up) BH_CALL(Flags_Set)(bits, e.flag);
         else BH_CALL(Flags_Clear)(bits, e.flag);
         Sprite_Current = At(e.object);

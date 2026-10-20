@@ -255,7 +255,7 @@ extern "C" void __cdecl Battle_BeginAction(void) {
 // battle (0x904AAA) the hook 0x904B6C is called with 1 first; then the step
 // becomes 1 and 0x904AA2 the command kind 0x904B35, read after the hook.
 extern "C" void __cdecl BattleAction_EnterKind(void) {
-    if (BattleActions_EventBattle != 0) EventHook(1);
+    if (EventBattle_Id != 0) EventHook(1);
     const unsigned kind = B(at::kActor + at::kBKind);
     BattleActions_Step = 1;
     BattleE4_Step2 = kind;
@@ -544,7 +544,7 @@ extern "C" void __cdecl BattleAction_EffectPreload(void) {
 // come before the row copy.
 extern "C" void __cdecl BattleAction_EffectLoaded(void) {
     if (g.file_load_done() == 0) return;
-    if (BattleActions_EventBattle != 0) EventHook(4);
+    if (EventBattle_Id != 0) EventHook(4);
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xFBFFu);
     BattleActions_Step = 3;
     BattleE4_Step2 = 0;
@@ -623,12 +623,12 @@ extern "C" void __cdecl BattleAction_EnemyMessages(void) {
 extern "C" void __cdecl BattleAction_End(void) {
     if ((B(at::kRoundFlags) & 4) == 0) return;
     if (BattleActions_Pending != 0) return;
-    const unsigned char event = BattleActions_EventBattle;
+    const unsigned char event = EventBattle_Id;
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xD7FBu);
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
     if (event != 0) EventHook(0);
-    if (BattleActions_BattleEnd != 0 && !psp_code::DuelLossGoesOn(BattleActions_EventBattle, BattleActions_BattleEnd)) {
+    if (Battle_EndFlags != 0 && !psp_code::DuelLossGoesOn(EventBattle_Id, Battle_EndFlags)) {
         SetB(at::kPhase, 4);
         BattleActions_Step = 2;
         return;
@@ -651,7 +651,7 @@ extern "C" void __cdecl BattleAction_End(void) {
         BattleActions_Step = 0;
         BattleE4_Step2 = 1;
     }
-    if (BattleActions_EventBattle != 0) EventHook(5);
+    if (EventBattle_Id != 0) EventHook(5);
 }
 
 // ===========================================================================

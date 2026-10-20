@@ -361,7 +361,7 @@ void SeedRestore() {
 // pick list around it; the cursors' row bases and their copies.
 void SeedMarkers() {
     unsigned char* const s = Sprite_Current;
-    for (U w : {BattleE4_Slots_addr, BattleE4_Hand_addr, BattleE4_Above_addr}) {
+    for (U w : {Window18_addr, Window19_addr, Window21_addr}) {
         unsigned char* const r = Mem(w);
         r[0] = static_cast<unsigned char>(bh::Half() ? r[0] | 1 : r[0] & 0xFE);
         SetWord(r + 0x12, static_cast<unsigned>(static_cast<std::int32_t>(bh::Next() % 5) - 1));
@@ -389,7 +389,7 @@ void SeedOp(U base) {
     s[0xA] = Byte({1, 1, 2, 0, 4});
     s[9] = Byte({1, 1, 2, 0});
     enemy_rec->data_id = static_cast<unsigned char>(bh::Next() % 8);
-    if (bh::Half()) Mem(BattleActions_EventBattle_addr)[0] = 0;
+    if (bh::Half()) Mem(EventBattle_Id_addr)[0] = 0;
     // a dispatcher's other state bytes inside its table (the harness drew its
     // own): a plant reading the wrong byte lands on another entry, a count
     switch (base) {
@@ -479,12 +479,12 @@ void Seed(unsigned k) {
             x[0x115] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? x[0x115] | 0x40 : x[0x115] & 0xBF);
         }
         Mem(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(at::kRoundFlags + 1)[0] | 0x40 : Mem(at::kRoundFlags + 1)[0] & 0xBF);
-        if (bh::Half()) Mem(BattleActions_EventBattle_addr)[0] = 0;
+        if (bh::Half()) Mem(EventBattle_Id_addr)[0] = 0;
         Mem(at::kTarget)[0] = Byte({0xFF, 0xFF, 3, 0});
         break;
     }
     case 0x435C40:
-        Mem(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
+        Mem(Battle_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
         bh::SetRandHint(3);
         break;
     case 0x435C80:
@@ -504,7 +504,7 @@ void Seed(unsigned k) {
                     bh::Often() ? BH_PICK(0, 1, 0x270F, 0x2710, 0x2711, 0x10) : bh::Next());
         break;
     case 0x435E70: case 0x436070:
-        Mem(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
+        Mem(Battle_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
         break;
     case 0x435EF0:
         SetLong(Mem(at::kPartyCount), static_cast<std::int32_t>((bh::Next() & 0xFFFFFF00u) | Byte({3, 3, 2, 2, 1, 0, 4})));
@@ -540,9 +540,9 @@ void Disturb(U h) {
     switch ((h >> 8) % 6) {
     case 0: Owner()[5] = b; break;
     case 1: Mem(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
-    case 2: Mem(BattleE4_Above_addr)[0] = b; break;
+    case 2: Mem(Window21_addr)[0] = b; break;
     case 3: Mem(BattleE5_GeneRow_addr)[0] = h & 0x1000000 ? 0xFF : b; break;
-    case 4: Mem(BattleE2_EnemiesLeft_addr)[0] = b; break;
+    case 4: Mem(Battle_EnemiesLeft_addr)[0] = b; break;
     default: Mem(at::kRoundFlags + 1)[0] = b; break;
     }
 }

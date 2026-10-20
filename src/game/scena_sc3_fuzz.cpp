@@ -272,11 +272,11 @@ const sh::DataTable kTables4[] = {{Scena04_States_addr, 6}, {Scena04_CellHandler
 // Beyond the harness's 22 standard ones: the cells of the chapters' own.
 const sh::Region kRegions3[] = {
     {AreaW1f_MusicCurrent_addr, 1}, {ModeFlow_AreaTransition_addr, 1}, {Music_Track_addr, 1}, {Cond_ByteFE_addr, 1}, {at::kMessage, 2},
-    {Game_Mode_addr, 2}, {0x929F00, 0x14}, {MoveScript_EffectState_addr, 4}, {Field_ActiveMember_addr, 4}, {Scena03_ObjectHandlers_addr, 9 * 4},
+    {Game_Mode_addr, 2}, {0x929F00, 0x14}, {Character_IndexById_addr, 4}, {Field_ActiveMember_addr, 4}, {Scena03_ObjectHandlers_addr, 9 * 4},
 };
 const sh::Region kRegions4[] = {
     {AreaW1f_MusicCurrent_addr, 1}, {ModeFlow_AreaTransition_addr, 1}, {Music_Track_addr, 1}, {Cond_ByteFE_addr, 1}, {at::kMessage, 2},
-    {Game_Mode_addr, 2}, {0x929F00, 0x14}, {MoveScript_EffectState_addr, 4}, {Field_ActiveMember_addr, 4}, {Scena04_ObjectHandlers_addr, 4},
+    {Game_Mode_addr, 2}, {0x929F00, 0x14}, {Character_IndexById_addr, 4}, {Field_ActiveMember_addr, 4}, {Scena04_ObjectHandlers_addr, 4},
 };
 
 // --- the seed ----------------------------------------------------------------------
@@ -395,7 +395,7 @@ void Seed(unsigned k) {
     if (sh::Often()) sh::Mem(ObjTrio_addr + 0x8)[0] = static_cast<unsigned char>(3 + sh::Next() % 5);
     // the waits
     if (sh::Half()) sh::Mem(Field_Request_addr)[0] = 2;
-    if (sh::Half()) SetWord(sh::Mem(MoveScript_WaitWordDA_addr), 0);
+    if (sh::Half()) SetWord(sh::Mem(Transition_Busy_addr), 0);
     if (sh::Half()) SetWord(sh::Mem(at::kMessage), SH_PICK(1, 0xC, 0x11, 0x12, 0x1F, 0x33));
     if (sh::Half()) sh::Mem(Field_Kind2Hold_addr)[0] = 0;
     if (sh::Half()) SetWord(sh::Mem(Game_Mode_addr), 2);

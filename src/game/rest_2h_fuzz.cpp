@@ -373,7 +373,7 @@ void SeedRecords() {
         rv::As<records::CharRecord>(r)->stats.max_ap = ap_max;
         rv::As<records::CharRecord>(r)->ap = PickOf(0, 1, ap_max >> 2, (ap_max >> 2) + 1, (ap_max >> 2) - 1u, sh::Next());
     }
-    Mem(Rest2h_Window1Master_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 17, sh::Next()));
+    Mem(Window1_Master_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 17, sh::Next()));
     for (unsigned i = 0; i < 6; ++i) Mem(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(sh::Often() ? GoodId() : sh::Next());
 }
 
@@ -399,10 +399,10 @@ void Seed(unsigned k) {
     SeedWindow(g_window);
     if (const unsigned n = StepsOf(k)) self[3] = static_cast<unsigned char>(sh::Next() % n);
     SeedRecords();
-    Mem(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
+    Mem(Config_WindowColour_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
     Frame_Counter = sh::Next();
     // the gene bits: some of the eighteen, rarely all (the list then has no 0 in its 18)
-    SetLong(Mem(ScenaSc7_EventFlags_addr), static_cast<std::int32_t>(sh::Often() ? sh::Next() & 0x1FFFF : PickOf(0, 0x3FFFF, 0x7FFFF, sh::Next())));
+    SetLong(Mem(Gene_Bits_addr), static_cast<std::int32_t>(sh::Often() ? sh::Next() & 0x1FFFF : PickOf(0, 0x3FFFF, 0x7FFFF, sh::Next())));
     // the masters' bits
     for (unsigned i = 0; i < 3; ++i) Mem(at::kMasterBits + i)[0] = static_cast<unsigned char>(sh::Next());
     Mem(Cond_Flags_addr + 0xd1)[0] = static_cast<unsigned char>(sh::Next());
@@ -441,7 +441,7 @@ void Seed(unsigned k) {
     case kPortrait:
     case kPupilsDraw:
     case kPupilsRun:
-        Mem(Rest2h_Window1Master_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3));
+        Mem(Window1_Master_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3));
         for (unsigned n = 0; n < 8; ++n) Record(n)[0x1F] = static_cast<unsigned char>(PickOf(0, 1, 2, 3));
         Cond_ByteFA = static_cast<signed char>(PickOf(7, 8, 9, 0, 0xFF, 0x80, sh::Next()));
         break;
@@ -458,7 +458,7 @@ void Seed(unsigned k) {
         // the gene list's top past 9 too (its rows then read past the 18 bytes, in
         // place) with all eighteen set half the time: the first 0 ends the rows
         g_window[0xA] = static_cast<unsigned char>(PickOf(1, 3, 6, 9, 10, 11, 14, 20));
-        if (sh::Half()) SetLong(Mem(ScenaSc7_EventFlags_addr), 0x3FFFF);
+        if (sh::Half()) SetLong(Mem(Gene_Bits_addr), 0x3FFFF);
         for (unsigned i = 0x12; i < 0x30; ++i) Mem(at::kGeneList + i)[0] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
         break;
     case kKeys: break;
@@ -515,11 +515,11 @@ void Disturb(U h) {
     switch (h % 13) {
     case 0: sh::SetPointer(BattleWinStates_Current_addr, Window(b)); break; // another record (the runs re-read 0x905B84)
     case 1: SetWord(self + (b & 1 ? 4 : 6), v & 0x1FF); break;
-    case 2: Mem(BattleDraw_Colour_addr)[0] = b; break;
+    case 2: Mem(Config_WindowColour_addr)[0] = b; break;
     case 3: g_window[0xB] = static_cast<unsigned char>(b % 0x12); break;
     case 4: g_window[8] = static_cast<unsigned char>(1 + b % 3); break;
     case 5: SetWord(g_window + (b & 1 ? 4 : 6), v & 0x1FF); break;
-    case 6: Mem(Rest2h_Window1Master_addr)[0] = static_cast<unsigned char>(b % 4); break;
+    case 6: Mem(Window1_Master_addr)[0] = static_cast<unsigned char>(b % 4); break;
     case 7: Record(b)[(b >> 3) & 1 ? 0xB : 0x1F] = static_cast<unsigned char>(v); break;
     case 8: Mem(at::kUseIds + (b & 1 ? g_window[0xB] + (b >> 1) % 3 - 1u : b % 0x80u))[0] = static_cast<unsigned char>(v); break;
     case 9: g_window[0xC] = static_cast<unsigned char>(b % 3); break;
@@ -581,7 +581,7 @@ void SelfTest() {
     g_regions[n_regions - 2].at = Key(g_instance);
     g_regions[n_regions - 1].at = Key(g_reserve);
     for (unsigned id = 0; id < 256; ++id)
-        if (Mem(MoveScript_EffectState_addr + id)[0] < 8) g_good_ids[g_good_n++] = static_cast<unsigned char>(id);
+        if (Mem(Character_IndexById_addr + id)[0] < 8) g_good_ids[g_good_n++] = static_cast<unsigned char>(id);
     // MasterWin_SlideOut reads its bound from the copy's immediate
     const std::uint32_t master_bound_was = g_master_bound;
     g_master_bound = Key(g_r2h_slide_copy) + 6;

@@ -282,19 +282,19 @@ const ah::Callee kCallees[] = {
 
 // Beyond the field frame: the effect records (slots 0..3), the active member
 // and script object pointers, the chapter row pointer, the mark, area 48's
-// two bytes, 0x9045FB, Camera_ShiftY, MoveScript_EffectState, area 52's
+// two bytes, 0x9045FB, Camera_ShiftY, Character_IndexById, area 52's
 // extra objects (.data), and the two dwords above.
 const ah::Region kRegions[] = {
     {Effect_Objects_addr, 4 * at::kEffectStride},
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {AreaW0c_AnswerMark_addr, 1},
     {AreaW1c_Count48_addr, 1},
     {(MoveScript_PartyRecords_addr + 0x10), 1},
     {AreaW1c_Byte9045FB_addr, 1},
     {Camera_ShiftY_addr, 2},
-    {MoveScript_EffectState_addr, 24},
+    {Character_IndexById_addr, 24},
     {Area52_ExtraObjects_addr, 16},
     {0, sizeof g_cells},   // g_cells, filled in at Run
 };
@@ -343,9 +343,9 @@ void Seed48(unsigned k) {
     switch (k) {
     case k48Choice: SeedAnswer(); break;
     case k48ToggleD: case k48Bump: {
-        // the leader's index inside MoveScript_EffectState, its byte 1 half the time
+        // the leader's index inside Character_IndexById, its byte 1 half the time
         if (ah::Often()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(ah::Next() % 24);
-        if (ah::Half()) B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89) % 24) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
+        if (ah::Half()) B(Character_IndexById_addr + B(ObjTrio_addr + 0x89) % 24) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
         SeedCount();
         break;
     }

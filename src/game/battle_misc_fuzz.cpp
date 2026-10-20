@@ -146,7 +146,7 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 const Region g_all[] = {
     {BattleMisc_PulseDown_addr, 8},        {kFieldState, 4},        {kSprite, 4},           {kContexts, 0x2AC0},
     {kParty, kPartyBytes},  {BattleE3_CurrentEnemy_addr, 4},      {kSoundLists, 0x400},   {BattleActions_Pending_addr, 2},
-    {BattleE4_List_addr, 0x90},    {BattleE4_Hand_addr, 3},   {BattleWinStates_Current_addr, 4},    {BattleActorCopies_ItemActor_addr, 1},
+    {Window16_addr, 0x90},    {Window19_addr, 3},   {BattleWinStates_Current_addr, 4},    {BattleActorCopies_ItemActor_addr, 1},
     {BattleE4_MenuActor_addr, 4},      {kActorPages, 0x300},    {BattleActorCopies_Command_addr, 4},    {BattleMisc_PartyPages_addr, 3},
     {BattleMisc_BannerKinds_addr, 1},      {kScratch, 1},           {kBannerText, 0x40},    {kMessages, 0x400},
     {BattlePhases_B7A_addr, 1},         {kAiScripts, kScriptBytes}, {kActingKind, 1},    {kObjects, kObjectBytes},
@@ -753,11 +753,11 @@ void FuzzCopies(Tally& t, const void* clone, unsigned rounds) {
 }
 
 void FuzzCanUse(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{BattleE4_List_addr, 0x24}, {BattleActorCopies_ItemActor_addr, 1}};
+    const Region regions[] = {{Window16_addr, 0x24}, {BattleActorCopies_ItemActor_addr, 1}};
     g_test = kTestCanUse;
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x900000u + r;
-        FillRandom(BattleE4_List_addr, 0x24);
+        FillRandom(Window16_addr, 0x24);
         FillRandom(Addr(g_items), sizeof g_items);
         At(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 3 : Next());
         At(kItemWindowCursor)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 0x40 : Next());
@@ -767,17 +767,17 @@ void FuzzCanUse(Tally& t, const void* clone, unsigned rounds) {
 }
 
 void FuzzSetupActor(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{BattleE4_List_addr, 0x24}, {BattleE4_Hand_addr, 3}, {BattleActorCopies_ItemActor_addr, 1}};
+    const Region regions[] = {{Window16_addr, 0x24}, {Window19_addr, 3}, {BattleActorCopies_ItemActor_addr, 1}};
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0xA00000u + r;
-        FillRandom(BattleE4_List_addr, 0x24);
-        FillRandom(BattleE4_Hand_addr, 3);
+        FillRandom(Window16_addr, 0x24);
+        FillRandom(Window19_addr, 3);
         FillRandom(Addr(g_record), sizeof g_record);
         if (r % 16 == 0) FillRandom(kActorPages, 0x300);
         // the acting context's byte +5: the fuzz's buffer, or inside record 16,
         // where the stores before each of its two reads can reach it
         U acting = Addr(g_record);
-        if (OneIn(3)) acting = BattleE4_List_addr + Pick({0, 1, 2, 3, 4, 5, 6, 8, 9, 0xA, 0xB, 0xC, 0xF, 0x10}) - 5;
+        if (OneIn(3)) acting = Window16_addr + Pick({0, 1, 2, 3, 4, 5, 6, 8, 9, 0xA, 0xB, 0xC, 0xF, 0x10}) - 5;
         else g_record[5] = static_cast<unsigned char>(Next() % 2 ? Next() % 3 : Next());
         PutLong(At(BattleE4_MenuActor_addr), acting);
         const U source = Addr(g_record) + 0x40;
@@ -795,11 +795,11 @@ void FuzzTrue(Tally& t, const void* clone, unsigned rounds) {
 }
 
 void FuzzSetupParty(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{BattleE4_List_addr, 0x24}, {BattleE4_Hand_addr, 3}};
+    const Region regions[] = {{Window16_addr, 0x24}, {Window19_addr, 3}};
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0xC00000u + r;
-        FillRandom(BattleE4_List_addr, 0x24);
-        FillRandom(BattleE4_Hand_addr, 3);
+        FillRandom(Window16_addr, 0x24);
+        FillRandom(Window19_addr, 3);
         FillRandom(BattleMisc_PartyPages_addr, 3);
         Pass(t, regions, 2, 0xFFFFFFFFu, clone, As<const void*>(&ItemMenu_SetupForParty), RandomEntry());
     }

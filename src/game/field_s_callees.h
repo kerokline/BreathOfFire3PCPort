@@ -39,8 +39,8 @@ constexpr std::uint32_t kColumn = 0x929F08;           // u8: PartyForm's column 
 constexpr std::uint32_t kMessageEnd = 0x929F0F;       // u8: ShopResist's message end; 1 after PartyForm_End
 
 // Other cells.
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style (Menu_DrawBox's colour)
-// kBackdrop: now FieldS_Backdrop (symbols.toml). u8: the Config backdrop kind
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style (Menu_DrawBox's colour)
+// kBackdrop: now Config_Background (symbols.toml). u8: the Config backdrop kind
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Cond_Flags + 0xA0)
 constexpr std::uint32_t kPartyList = 0x904062;        // 3 bytes: the party's member ids
 constexpr std::uint32_t kPartyList2 = 0x904065;       // 3 bytes: the second list
@@ -69,9 +69,9 @@ constexpr std::uint32_t kArea = 0x904EFC;             // Game_AreaNumber (u16)
 // kFieldMembers: now Field_Members (symbols.toml). Field_Members: ObjTrio's +0x148, a record index
 constexpr std::uint32_t kAreaDescriptors = 0x667590;  // Area_Descriptors, 200 pointers
 constexpr std::uint32_t kLeaderName = 0x802DC0;       // Text_CurrentName: the leader's +0x80, a record's copy
-// kWait: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA: non-zero while a transition runs
+// kWait: now Transition_Busy (symbols.toml). Transition_Busy: non-zero while a transition runs
 // kChapter: now Cond_ByteFA (symbols.toml). Cond_ByteFA
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml). the chapter's flag row pointer
+// kFlagRow: now Chapter_FlagRow (symbols.toml). the chapter's flag row pointer
 constexpr std::uint32_t kPressed = 0x7E1BEC;          // Input_Pressed (a dword read where the original reads one)
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons

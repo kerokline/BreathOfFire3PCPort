@@ -73,7 +73,7 @@ VoidFn Entry(std::uint32_t table, int index) {
 unsigned char& Step() { return MoveScript_PartyRecords[0x65]; }
 std::uint16_t Timer() { return Word(At(MoveScript_PartyRecords_addr + 0x66)); }
 void SetTimer(unsigned v) { SetWord(At(MoveScript_PartyRecords_addr + 0x66), v); }
-unsigned char* FlagBits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* FlagBits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 // The three camera angles, Camera_Angles[0..2].
 unsigned char* AngleAt(unsigned i) { return reinterpret_cast<unsigned char*>(Camera_Angles) + 2 * i; }
 short Angle(unsigned i) { return static_cast<short>(Word(AngleAt(i))); }
@@ -269,7 +269,7 @@ extern "C" void __cdecl Scena16_Run(void) { Entry(kRunTable, MoveScript_Var7)();
 // which does not return). The PSX restarts the area's music from its table
 // and sets the volume where the port stops it (docs/field-modes.md 3.4).
 extern "C" void __cdecl Scena16_End(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     Title_BadgeOn = 0;
     Draw_PassFlags = 0;
     g.clut_restore();
@@ -295,7 +295,7 @@ extern "C" void __cdecl Scena16_End(void) {
 extern "C" void __cdecl Scena16_Scene2(void) {
     switch (Step()) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         g.transition(1);
         g.music_play(6, 8);
         At(0x9039A2)[0] |= 0x80;   // Field_ScriptFlags' low byte
@@ -303,7 +303,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         return;
     case 1:
         Line(0x82, 0x64, 0x10);
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SetTimer(0);
         ++Step();
         return;
@@ -316,7 +316,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         SetTimer(0);
         return;
     case 3:
-        if (MoveScript_WaitWordDA != 0) {
+        if (Transition_Busy != 0) {
             Line(0x82, 0x64, 0x10);
             return;
         }
@@ -334,14 +334,14 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         ++Step();
         return;
     case 5:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         g.transition(1);
         ++Step();
         return;
     case 6:
         Line(0x44, 0x50, 0x11);
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SetTimer(0x7F);
         ++Step();
         return;
@@ -353,7 +353,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         ++Step();
         return;
     case 8:
-        if (MoveScript_WaitWordDA != 0) {
+        if (Transition_Busy != 0) {
             Line(0x44, 0x50, 0x11);
             return;
         }
@@ -373,7 +373,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
     case 11:
         if (At(kCounters + 3)[0] != 0x60) return;
         g.change_area(0x1F, 0x70000, 0x140000, 0);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         g.music_stop(0x40);
         At(kCounters + 2)[0] = 0;
         MoveScript_Var7 = 3;
@@ -419,13 +419,13 @@ void Scene3Tail() {
 extern "C" void __cdecl Scena16_Scene3(void) {
     switch (Step()) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         g.transition(1);
         ++Step();
         break;
     case 1:
         Line(0x4C, 0x50, 0x02);
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         ++Step();
         SetTimer(0x7F);
         break;
@@ -437,7 +437,7 @@ extern "C" void __cdecl Scena16_Scene3(void) {
         ++Step();
         break;
     case 3:
-        if (MoveScript_WaitWordDA != 0) {
+        if (Transition_Busy != 0) {
             Line(0x4C, 0x50, 0x02);
             break;
         }
@@ -448,7 +448,7 @@ extern "C" void __cdecl Scena16_Scene3(void) {
         ++Step();
         break;
     case 4:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         ++Step();
         SetTimer(0);
         break;
@@ -532,7 +532,7 @@ void DistanceFromTimer(unsigned (*distance)(std::uint16_t)) {
 extern "C" void __cdecl Scena16_Scene4(void) {
     switch (Step()) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         g.open_script(1);
         Field_Request = 2;
         ++Step();
@@ -590,7 +590,7 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         SetTimer(0);
         return;
     case 9:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         g.transition(1);
         g.music_stop(0x20);
@@ -598,7 +598,7 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         return;
     case 10:
         Line(0x5E, 0x64, 0x04);
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         ++Step();
         SetTimer(0x7F);
         return;
@@ -610,7 +610,7 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         ++Step();
         return;
     case 12:
-        if (MoveScript_WaitWordDA == 0) {
+        if (Transition_Busy == 0) {
             MoveScript_Var7 = 1;
             Step() = 0;
             return;

@@ -46,7 +46,7 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kLeverRow: now Cond_Flags[0x20] (symbols.toml).
 // kLeverNibble: now Cond_Flags[0x21] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The party lists' first bytes (Cond_Flags' tail): the members in the party.
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).

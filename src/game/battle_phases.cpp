@@ -118,7 +118,7 @@ extern "C" void __cdecl Battle_Frame(void) {
     g.task_run_all();
     g.party_update_screens();
     g.enemy_update_screens();
-    if (BattleActions_EventBattle != 0) g.objects_screen();
+    if (EventBattle_Id != 0) g.objects_screen();
     else g.update_object_screens();
     g.party_extra_screens();
     g.effect_run_objects();
@@ -172,11 +172,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleStart_Dispatch
 extern "C" void __cdecl Battle_Init(void) {
     g.banner_clear_all();
     const unsigned count = B(at::kActorCount);
-    BattleSprites_PartyPick = 0;
+    Battle_PartyStanding = 0;
     if (count != 0) {
         unsigned i = 0;
         do {
-            if (g.actor_is_out(i) == 0) BattleSprites_PartyPick = static_cast<unsigned char>(BattleSprites_PartyPick + 1);
+            if (g.actor_is_out(i) == 0) Battle_PartyStanding = static_cast<unsigned char>(Battle_PartyStanding + 1);
             ++i;
         } while (i < B(at::kActorCount));
     }
@@ -187,15 +187,15 @@ extern "C" void __cdecl Battle_Init(void) {
     B(at::kCommand) = 0;
     B(at::kCrossGrow) = 8;
     SetWord(At(at::kRoundFlags), 0);
-    BattleActions_BattleEnd = 0;
+    Battle_EndFlags = 0;
     SetLong(At(at::kTurnCounter), 1);
     BattleFlow_ZennyTotal = 0;
-    BattleFlow_ExpTotal = 0;
+    Battle_ExpTotal = 0;
     BattlePhases_AE6 = 0;
     BossSe_Script = 0;
     BattlePhases_B7A = 0;
     SetWord(At(at::kB98), 0);
-    BattleE7_DropCount = 0;
+    Battle_DropCount = 0;
     BattleActions_Pending = 0;
     BattlePhases_B8B = 0;
     BattleFlow_ActorAt = 0;
@@ -242,13 +242,13 @@ extern "C" void __cdecl Battle_Init(void) {
             Sprite_Current = p;
         } else {
             if (g.actor_is_out(a) != 0) continue;
-            if (BattleActions_EventBattle == 0x25) continue;
+            if (EventBattle_Id == 0x25) continue;
             Sprite_Current = EnemyObject(a - 3);
         }
         g.set_clut_stp();
     }
-    if (BattleActions_EventBattle == 0) g.load_dat(static_cast<int>(Game_AreaNumber + 0x15D));
-    const unsigned char event = BattleActions_EventBattle;
+    if (EventBattle_Id == 0) g.load_dat(static_cast<int>(Game_AreaNumber + 0x15D));
+    const unsigned char event = EventBattle_Id;
     for (unsigned i = 0; i < 4; ++i) SetLong(At(BattlePhases_B24_addr + 4 * i), 0);
     if (event != 0) reinterpret_cast<void (__cdecl*)(int)>(PtrAt(at::kEventHook))(6);
     BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);

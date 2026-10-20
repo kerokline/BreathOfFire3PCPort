@@ -764,7 +764,7 @@ void Seed(unsigned k) {
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(sh::Next() % 8 == 0 ? sh::Next() : sh::Next() % states);
         B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
         Field_Request = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next() % 8);
-        SetW(MoveScript_WaitWordDA_addr, sh::Half() ? 0 : sh::Next());
+        SetW(Transition_Busy_addr, sh::Half() ? 0 : sh::Next());
         B(at::kCounterB) = static_cast<unsigned char>(PickOf(0x20, 0x31, sh::Next()));
         SetW(at::kTailTimer, PickOf(1, 2, sh::Next()));
         SetW(Game_Mode_addr, sh::Half() ? 2 : sh::Next());
@@ -814,7 +814,7 @@ void Seed(unsigned k) {
         SetW(0x7E1BEC, pressed);
         SetW(Field_ConfirmButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
         SetW(Field_CancelButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
-        SetW(MoveScript_WaitWordDA_addr, sh::Half() ? 0 : sh::Next());
+        SetW(Transition_Busy_addr, sh::Half() ? 0 : sh::Next());
         break;
     }
     default: break;

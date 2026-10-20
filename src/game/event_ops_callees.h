@@ -36,8 +36,8 @@ constexpr std::uint32_t kMemberStride = 0x14C;
 constexpr std::uint32_t kActorRecords = 0x903A70;    // stride 0xA4 (item_use_callees.h)
 constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). two 3-byte lists of member ids (field-event.md section 2)
-// kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per member id: its actor record (MoveScript_EffectState)
-// kMemberSlot: now MoveScript_EffectState[0xc] (symbols.toml). u8 per member id (field-event.md section 2)
+// kMemberRecord: now Character_IndexById (symbols.toml). u8 per member id: its actor record (Character_IndexById)
+// kMemberSlot: now Character_IndexById[0xc] (symbols.toml). u8 per member id (field-event.md section 2)
 constexpr std::uint32_t kMemberPositions = 0x7E06E0; // x, z dwords per member, 8 bytes apart
 // kRunOption: now FieldE2_RunDefault (symbols.toml). u8 compared with "the run button is held"
 // kBlockByte: now EventOps_BlockByte (symbols.toml). u8, Field_LeaderFrame counts it down (field-event.md)

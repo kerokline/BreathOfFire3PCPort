@@ -106,7 +106,7 @@ and sets `+1` = 2; its hook is `jmp [Hooks + 4 * (word & 0xFF)]` (3 entries).
 | `0x43BA30` | `BossBeyd_Death` | 0x5F | `Sprite_EnsureAnimation(0xF)`, `+0x2A` = 0, `Sprite_ScriptTickOnce`, `Battle_EnemyDefeated`, `+0` &= 0xBF, states 3, 0, 0 (all on the `Sprite_Current` of after the calls); in fight 0x19 message 0x20 |
 | `0x43BA90` | `BossBeyd_Hook` | 0x10 | `BossBeyd_HookPick`, `BareRet`, `BossBeyd_HookTick` |
 | `0x43BAA0` | `BossBeyd_HookPick` | 0x27 | word 0: in fight 0x19, `0x904AE2` >= 1 clears `0x939AD8 +0x110` bit 1, and `0x904B35` = 1 |
-| `0x43BAD0` | `BossBeyd_HookTick` | 0x2E | word 2: round-flag bit 1 and `MoveScript_WaitWordDA` 0 - `BossActor_ClearBit40(0)`, then the flags word &= 0xFFFD and `Draw_PassFlags` = 0 |
+| `0x43BAD0` | `BossBeyd_HookTick` | 0x2E | word 2: round-flag bit 1 and `Transition_Busy` 0 - `BossActor_ClearBit40(0)`, then the flags word &= 0xFFFD and `Draw_PassFlags` = 0 |
 | `0x43BB00` | `BossBeyd2_Dispatch` | 0x12 | kind 31 (the second Beyd kind) |
 | `0x43BB20` | `BossBeyd2_Enter` | 0xDC | kind 30's byte tables, its own hook, tick called, `+8` = 1, `+0x8F` = 1, the seven words - in every fight |
 | `0x43BC00` | `BossBeyd2_ActDispatch` | 0x12 | `BossBeyd2_ActSubs` (6) |
