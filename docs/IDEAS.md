@@ -1889,10 +1889,12 @@ _(2026-10-17) steps 2 to 4 staged_ in [`install-gap-round.md`](install-gap-round
 **Ask (2026-10-17, the owner):** if we want to move closer to a fully
 reconstructed source, what is the next code step?
 **Kind:** engine / tooling
-**Status (2026-10-19):** stages 1 and 2 IN PROGRESS: stages A and B of
-[`typed-data-round.md`](typed-data-round.md) run on `typed/b1` (50,943 raw
-data sites down to 27,394, machine code identical to `main`); stage C staged
-in [`typed-data-stage-c.md`](typed-data-stage-c.md).
+**Status (2026-10-20):** stages 1 and 2 IN PROGRESS: stages A and B of
+[`typed-data-round.md`](typed-data-round.md) merged as PR #94 (50,943 raw
+data sites down to 27,394, machine code identical to `main`); stage C
+([`typed-data-stage-c.md`](typed-data-stage-c.md)) built on `typed/c`, the
+machine code identical again (the typed tables, `GameData`, the strict CI
+rule; every raw site left has a reason), its PR after the owner's smoke run.
 **Feasibility:** HIGH for stages 1 and 2 (mechanical, no behaviour change,
 parallel by file group); MEDIUM for stage 3 (a loader change, proved by the
 state hash). **Gated on:** nothing for stage 1; stage 3 on the state hash
@@ -2032,3 +2034,43 @@ Options when picked up, none chosen:
   resume points in our code before writing them back. Narrower, and does
   not cover function pointers elsewhere in the span.
 - Nothing beyond the note, if quicksaves stay a local convenience.
+
+## I48 — A comment-cleanup round after the typed-data round
+
+**Ask (2026-10-20, the owner):** the typed-data round left a lot of
+retire notes and stale comments; worth a cleanup round at some point, not
+now.
+**Kind:** tooling / source   **Feasibility:** HIGH   **Gated on:** the
+typed-data round's stage C merged; the owner's word to pick it up.
+
+Every time stages B and C retired a module's constant for its
+`symbols.toml` name, the converter left a note where the constant was, in
+the form `// kX: now Name[i].field (symbols.toml).`, so a reader of the old
+docs could still find the module's word. Measured on `typed/c` `2a208d56`
+(a scan of `src/` for comment lines of that shape): **4,714 retire notes in
+338 files**, 389 of them in fuzz files; 92 files carry twenty or more (the
+most, `scena_sc7_callees.h`, 67). 14 name a symbol `symbols.toml` no longer
+has (renamed since the note was written). Besides them, comments written
+for the module's own constants and helpers that the stages removed: 40
+comment lines still name an `at::kX` constant, 4 of them a constant
+defined nowhere now; the per-module header comments that describe the
+retired constants or the old per-file view helpers are not counted.
+
+### What to measure first
+- The notes by kind: a constant whose name says what the symbol does not
+  (worth keeping as one line in the entry's `note`, or a typed alias as C4
+  did for the scratch block), against one that only repeats the symbol.
+- Which docs cite a module constant by name, so a note's removal does not
+  orphan a doc's search (`grep` of `docs/` for each `kX`).
+
+### Options when picked up, none chosen
+- Drop the notes whose constant's name is the symbol's or adds nothing;
+  move the rest's word into the entry's `note` in `symbols.toml`; one
+  tool, gated by `tools/codegen_same.py` (comments only, so `0 differ` by
+  construction) and the census's `--check`.
+- Keep the notes, and only fix the stale ones (the 14, the `at::kX`
+  comments, the header comments).
+- Leave them: they cost reading time, not correctness.
+
+### Outcome
+_(2026-10-20) open; logged at the owner's word, nothing changed._

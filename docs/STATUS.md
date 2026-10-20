@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-19)
+**Status:** IN PROGRESS (2026-10-20)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,7 +8,30 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The quicksave round, 2026-10-19** (`quicksave/round`, its PR next; [`quicksave-round.md`](quicksave-round.md),
+**The typed-data round, 2026-10-19..20** ([`typed-data-round.md`](typed-data-round.md), IDEAS I44 stages 1 and 2): our
+code's reads of Capcom's data image become named, typed accesses, with **no behaviour change**; the proof throughout is
+`tools/codegen_same.py`, every object disassembling the same as the baseline build's, so no run of the game was needed.
+**Stages A and B are on `main`** (PR #94): the globals typed (488 new `symbols.toml` `[[data]]` entries, widths by
+`tools/data_widths.py`), the nine record families (`src/game/records.h`, every offset static-asserted), the census
+(`tools/data_census.py`, a CI ratchet), every global site by `tools/typed_convert.py` and the record sites by seven
+file groups, each part re-derived by an independent agent and a family audit after; raw data sites 50,943 -> 27,394.
+The PR also carried the install-gap round's second pairing pass ([`install-gap-pairs.md`](install-gap-pairs.md) 8).
+**Stage C is built on `typed/c`** (from `main` 56d81b42; unpushed, its PR after the owner's smoke run;
+[`typed-data-stage-c.md`](typed-data-stage-c.md), each step as run in the round doc's section 3): C0 one shared
+views header (`src/game/record_views.h`) in place of seven dialects of per-file helpers; C1 the types (a shared
+0x80-byte `SpriteHead` the five sprite families derive from, the audits' renames, views for fields that change
+meaning, new structs for the character and community records, the GPU packets, the effect sub-pools); C2 the sites
+they unlock by seven groups (27,408 -> 19,705); C3 the module-only entries, the pointer cells retyped, and a naming
+pass by meaning; C4 the tables as `records::` arrays and blocks, the damage scratch block renamed `SharedScratch`
+with its per-function names kept as typed per-file aliases (the owner's calls, 2026-10-20), the data image as one
+generated `GameData` struct (0x37B000 bytes from 0x5C4000, 2,965 members, each address `static_assert`ed against
+`symbols.toml`), and the strict CI rule (`data_census.py --strict`: a raw site in `src/game` fails unless
+`analysis/typed_left.tsv` lists it with a reason; 27,327 exceptions). Every typing pass had a read-only family audit
+by other agents (the gate cannot see a pointer typed as the wrong struct), and C2's and C4's findings went through a
+fix branch. The census reads **27,390**: up from 18,630 after C4's fix branch because it now counts `<Name>_addr` accessor
+spellings and `rv::Bytes` subscripts too, a wider count, not a regression; every site has a reason.
+
+**The quicksave round, 2026-10-19** (`quicksave/round`, merged as PR #95; [`quicksave-round.md`](quicksave-round.md),
 [`quicksave.md`](quicksave.md)): save states. F6 saves the whole game state between two logic frames - the data span,
 the task stacks and three participants' records (our statics, sound, graphics) - into a rotating set of sixteen
 quicksaves (`BISLPS10..1F.DAT`), F7 restores the newest to the frame, and F5 opens a load-only menu drawn as the title's
@@ -17,26 +40,14 @@ load screen (DIV-0145..0147); the save list is split from the quicksaves and bou
 two by-design words) and by 22 pixel-equal capture pairs over six routes, two conditions, the PC, US disc-only and
 PSP-EU installs and wide mode, in-process and across processes. Not yet played by the owner.
 
-**The typed-data round, stages A and B, 2026-10-19** (`typed/b1`, its PR next;
-[`typed-data-round.md`](typed-data-round.md), IDEAS I44 stages 1 and 2): our code's reads of Capcom's data image become
-named, typed accesses, with **no behaviour change**. Stage A typed the globals (488 new `symbols.toml` `[[data]]`
-entries, widths measured by `tools/data_widths.py`), the nine record families (`src/game/records.h`, 263 named fields,
-every offset static-asserted) and the census (`tools/data_census.py`, a CI ratchet on the raw-site count). Each part
-was re-derived by an independent agent, which found a class of cases each had missed, and corrected. Stage B converted
-every global site with one tool (`tools/typed_convert.py`) and the record sites by seven file groups; a read-only
-family audit then found 13 pointers typed as the wrong struct and put them back to raw. **Raw data sites: 50,943 ->
-27,394.** The proof is new: `tools/codegen_same.py` shows every one of the 637 objects disassembling the same as
-`origin/main`'s, so no run of the game was needed. What is left, and the method for it, is staged as stage C
-([`typed-data-stage-c.md`](typed-data-stage-c.md)). The branch also carries the install-gap round's second pairing
-pass (385 pairs, four more rows placed; [`install-gap-pairs.md`](install-gap-pairs.md) 8).
-
-**`main` is `19180e63` since 2026-10-19**, after the button round (PR #85, below) and: the event battles' own music on
+**`main` is `56d81b42`** in this checkout (2026-10-19: the typed-data round's stages A and B, PR #94, and the quicksave
+round, PR #95), stage C's base; `origin/main` has since taken PR #96 (the quicksave's language guard) and PR #98 (D266's
+title mark, DIV-0148). Before that, `19180e63`: the button round (PR #85, below) and the event battles' own music on
 disc-only installs (PR #86, D316); sprites flagged for capture drawn into VRAM, restoring Amalgam's melt (PR #87, D317 /
 DIV-0142); Ryu's dream silent as on the PlayStation (PR #90, D318 / DIV-0143); the install-gap round (PR #91,
 [`install-gap-round.md`](install-gap-round.md): disc-built images from the player's discs, the read watch, D279 and
 D321; its live end batch passed on every install kind, 2026-10-18); the jukebox's eleven recorded streams, the staff
-roll's *Pure Again* among them (PR #92). The quicksave round is staged ([`quicksave-round.md`](quicksave-round.md)) and
-not built.
+roll's *Pure Again* among them (PR #92).
 
 **The button unification round, 2026-10-17** (`buttons/round`, its end on `buttons/round-end`; merged as PR #85;
 [`button-unification-round.md`](button-unification-round.md)): one table, `σ`, read from the save's Config, decides

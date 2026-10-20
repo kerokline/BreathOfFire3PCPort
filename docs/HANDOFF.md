@@ -1,7 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-19: `main` is `19180e63` (PRs #85..#92 merged); the typed-data round's stages A
-and B are done on `typed/b1`, its PR is item 0 below; stage C is staged)
+**Status:** IN PROGRESS (2026-10-20: `main` is `56d81b42` here (PRs #94 and #95 merged; `origin/main` has #96 and #98
+since); the typed-data round's stage C is built on `typed/c`, unpushed: the owner's smoke run, then its PR, item 0)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -16,40 +16,47 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged since PR #43: the game's own code is
-all ours). `main` is `19180e63`: since `b5ee8bdd` it took the button unification round (PR #85, DIV-0133..0141), the
-event battles' own music on disc-only installs (PR #86, D316), sprites flagged for capture drawn into VRAM, which
-restores Amalgam's melt (PR #87, D317 / DIV-0142), the away days' staging docs (PR #89), Ryu's dream silent as on the
-PlayStation (PR #90, D318 / DIV-0143), the install-gap round (PR #91: disc-built images from the player's discs, the
-read watch, the live end batch, D279 and D321) and the jukebox's eleven recorded streams (PR #92).
-**The typed-data round** (IDEAS I44 stages 1 and 2, [`typed-data-round.md`](typed-data-round.md); `typed/b1`,
-unpushed until its PR): stage A typed the globals (`symbols.toml`, 488 new `[[data]]` entries), the nine record
-families (`src/game/records.h`) and the census (`tools/data_census.py`, a CI ratchet); each part was re-derived
-independently and corrected. Stage B converted the sites: every global site by `tools/typed_convert.py` (B0), the
-record sites by seven file groups (B1), then a family audit that put 13 wrongly typed pointers back to raw. Raw data
-sites went from 50,943 to 27,394, and **the machine code is identical to `origin/main`'s**, object by object
-(`tools/codegen_same.py`, the round's proof). Stage C is staged in
-[`typed-data-stage-c.md`](typed-data-stage-c.md). The same branch carries the install-gap round's second pairing pass
-([`install-gap-pairs.md`](install-gap-pairs.md) 8). **The quicksave round** ([`quicksave-round.md`](quicksave-round.md))
-is built on `quicksave/round` (2026-10-19, its PR next): F6 / F7 / the F5 menu, DIV-0145..0147, D322, proven by the
-state hash and 22 pixel-equal capture pairs ([`quicksave-routes.md`](quicksave-routes.md) 7). Owed: the owner's play,
-their call on drawing F6 / F7's confirmation (logged only, as F12's is, DIV-0032), and the leftovers in
-[`quicksave.md`](quicksave.md) (a live screen grab at the take, the cross-reboot base, the hosted cross form).
+all ours). `main` is `56d81b42`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw
+data sites to 27,394, the machine code identical; the census's CI ratchet; the install-gap round's second pairing
+pass) and the quicksave round (PR #95: F6 / F7 / the F5 menu, DIV-0145..0147, D322; not yet played). `origin/main`
+has since taken PR #96 (the quicksave's language guard, IDEAS I47) and PR #98 (D266's title mark, DIV-0148); PR #99
+(docs/handoff-1020) rewrites this file and STATUS for that day's other work. Before `19180e63`: the button round
+(PR #85), the event battles' music (PR #86), Amalgam's melt (PR #87), Ryu's dream (PR #90), the install-gap round
+(PR #91), the jukebox's recorded streams (PR #92). **The typed-data round's stage C is built on `typed/c`**
+([`typed-data-stage-c.md`](typed-data-stage-c.md); each step as run in [`typed-data-round.md`](typed-data-round.md)
+3): C0 one shared views header, C1 the types (the shared 0x80-byte `SpriteHead`, renames, views, new structs), C2 the
+sites they unlock by seven groups, C3 the module-only entries and a naming pass, C4 the tables as `records::` arrays,
+the scratch block renamed `SharedScratch` with its per-function names as typed per-file aliases (the owner's calls),
+the generated `GameData` struct (0x37B000 bytes, 2,965 members) and the strict CI rule (`data_census.py --strict`,
+27,327 exceptions). Family audits after C2 and C4, each with a fix branch. The census reads 27,390, a wider count
+(the `<Name>_addr` and `rv::Bytes` spellings now count), not a regression, every site with a reason; **the machine
+code is identical to `main`'s throughout** (`tools/codegen_same.py`, 640 objects, `0 differ` at every merge).
+Quicksave owed: the owner's play, their call on drawing F6 / F7's confirmation (logged only, as F12's is, DIV-0032),
+and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the take, the cross-reboot base, the
+hosted cross form).
 
 ## Pick up here
 
-0. **The typed-data round's PR** from `typed/b1` (stages A and B, no behaviour change, no ledger entry; every
-   non-merge commit signed off, the group branches merged in). The CI's Python checks were run locally on the tip and
-   pass. Then **stage C** ([`typed-data-stage-c.md`](typed-data-stage-c.md)): C0 the consolidation first (one shared
-   header for the seven groups' view helpers and `Store()`, the converter's double-insertion bug, one left-raw list
-   regenerated from the tree), then C1 the types (a shared 0x80-byte sprite head, the audits' renames, views for
-   fields that change meaning, structs for the damage scratch block and the GPU packets), C2 the sites they unlock,
-   C3 the globals' follow-ups and a naming pass, C4 the `GameData` layout. **The method that held** (stage C's
+0. **The typed-data round's stage C: the owner's smoke run, then its PR** from `typed/c` (tip `2a208d56` plus the
+   coordinator's docs; [`typed-data-stage-c.md`](typed-data-stage-c.md) 8 call 2). On the owner's machine (agents may
+   not run the game here): the headless `BOF3X_SHADOW='*'` self-test and one state-hash route, both from a plain copy
+   of `build/` as the install-gap round's end batch ran them ([`install-gap-round.md`](install-gap-round.md) 6). The
+   machine code is identical to `main` 56d81b42 object by object, so this is a formality, but it is the only check
+   that runs the game. Then the PR: no behaviour change, no ledger entry; every non-merge commit signed off (read
+   `git log --format=%B main..typed/c` first). **Before the PR, merge `origin/main`** (PRs #96, #98 and, if merged,
+   #99): STATUS, HANDOFF and IDEAS will conflict (both sides rewrote them or appended), and the two PRs change five
+   `src/` files (`dat_load.cpp`, `scena_sc15.cpp` / `.h`, the hook's snapshot; `main`'s census 27,407 -> 27,406) -
+   rebuild, re-gate against a build of the merged base, regenerate `analysis/data_census.tsv` and
+   `analysis/typed_left.tsv`, and give those files' new raw sites in `src/game` their reasons, or
+   `data_census.py --strict` fails. **Two calls for the owner**, from the C4 audit
+   ([`owner-review.md`](owner-review.md) "2026-10-20, typed-data stage C"): `rest_4a`'s `kEnemyHp` against
+   `records.h`'s `intel` at the same offset, and `Save_Directory`'s count. **The method that held** (stage C's
    section 1): `tools/codegen_same.py` against a baseline build after every batch, `0 differ`; after every typing
    pass a read-only family audit by other agents, because the gate cannot see a pointer typed as the wrong struct;
-   build before calling anything done. After the PR merges, stage C's baseline is a build of the new `main` (B is
-   proved identical to `19180e63`, so the chain holds). Scratch of the round, outside the tree: the B1 brief and file
-   lists `C:\Users\kerok\b1\`, the verification and audit reports `C:\Users\kerok\v_typed\`, the pairing scratch
-   `C:\Users\kerok\v_pairs` and `g_pairs`; the worktrees are listed under "In flight".
+   build before calling anything done. Scratch of stage C, outside the tree: `C:\Users\kerok\c_typed` (the
+   coordinator's log `RESUME.md`, the briefs `BRIEF_*.md`, the audit reports `audit\`, the C2 groups' and C4's
+   scripts); of stages A and B: `C:\Users\kerok\b1\`, `C:\Users\kerok\v_typed\`, `C:\Users\kerok\v_pairs` and
+   `g_pairs`. The worktrees are listed under "In flight".
 
    **Owed from the button round (PR #85), the owner:** (a) record the minigame starts from RC's placed saves,
    `C:\Users\kerok\b_rc\saves\` (`chop8`, `well68`, `rope75`, `tower112`, `ram121`, `dock128`, `crane135`: the six
@@ -123,7 +130,7 @@ their call on drawing F6 / F7's confirmation (logged only, as F12's is, DIV-0032
    - **RW's watch re-run on the merged code** ([`install-gap-reads.md`](install-gap-reads.md) 8). Then I43 step 4,
      `BOF3X_EXEIMAGE_STRICT=1` as the default, once no row read in play is still zero except the owner's two
      (D266's title mark, the empty save slot; a DIV-0101 amendment);
-   - **the unpaired rows: a second pass ran 2026-10-19 on `typed/b1`** ([`install-gap-pairs.md`](install-gap-pairs.md)
+   - **the unpaired rows: a second pass ran 2026-10-19 on `typed/b1`, merged in PR #94** ([`install-gap-pairs.md`](install-gap-pairs.md)
      8, independently re-derived): 385 new `psx` pairs and 125 `psx_overlay` fields; `BossDolphin_Sounds` and the
      `Scena04` row place on every build, `BossGaist_Anims+0x2` and `BossTorch_Sounds` on psx-jp only (the twin's body
      matches three functions in `BOSS035#16`; a `build_twins` tie-break is the follow-up). **The recipes were not
@@ -327,13 +334,20 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **The typed-data round** (2026-10-19), all under `.claude/worktrees/`: `typed-b1` (`typed/b1`, the PR's branch),
-  `typed-integration` (`typed/integration`, stage A merged), `typed-baseline` (a detached `origin/main` `19180e63`
-  build: the gate's reference until stage C has its own; keep it), and the `agent-*` worktrees of the stage A, fix,
-  B0 and B1 agents (branches `typed/census`, `typed/records`, `typed/globals`, `pairs/unpaired`, their `-fix`
-  branches, `typed/b0-globals`, `typed/b1-<group>`, `typed/b1-audit-fix`): all in `typed/b1`; removable once the PR
-  merges. The `-fix` branches start from the originals with the commit trailer corrected (the originals named a
-  model that did not do the work); the originals are kept for comparison and are not in the PR.
+- **The typed-data round's stage C** (2026-10-19..20), all under `.claude/worktrees/`: `typed-c` (`typed/c`, the
+  PR's branch), `typed-baseline-c` (a detached `main` `56d81b42` build: the gate's reference; keep it until the PR
+  merges), `agent-c4` (`typed/c4`, merged), `agent-c4fix` (`typed/c4-fix`, merged), `audit-c4` (detached `f56ed9a8`,
+  the C4 audit's read-only tree) and the older stage C agents' `agent-c0`, `agent-c1`, `agent-c2-<group>`,
+  `agent-c2fix`, `agent-c3e`, `agent-c3n` (branches `typed/c0`, `typed/c1`, `typed/c2-<group>`, `typed/c2-fix`,
+  `typed/c3-entries`, `typed/c3-naming`): all merged into `typed/c`; removable after the PR merges. Scratch:
+  `C:\Users\kerok\c_typed`.
+- **Stages A and B's worktrees** (merged as PR #94; `git cherry main` shows no commit missing from `main` on
+  `typed/b1`, `typed/integration`, `typed/census`, `typed/records`, `typed/globals`, `pairs/unpaired`,
+  `typed/b0-globals`, `typed/b1-audit-fix`): `typed-b1`, `typed-integration`, `typed-baseline` (the detached
+  `19180e63` build, the gate's reference for A and B, no longer needed) and the stage A, fix, B0 and B1 agents'
+  `agent-*` worktrees, plus the session-`eb87db8c` scratchpad's `sd` (`typed/records`). Removable at the owner's word.
+- **The quicksave round's** `agent-a10bb1b1f874af08e` (`quicksave/typed`) and the baseline `C:\Users\kerok\q_typed\base`
+  (detached `6422dee2`): merged in PR #95; removable.
 - **The install-gap round's worktrees** (`agent-*` on `install-gap/*`, and `scratchpad/coord` of session
   `14ea0433`): merged in PR #91; removable.
 - **`wide/ultrawide-round`** (a worktree in session `6d500aac`'s scratchpad `uw/`): merged as PR #60. Its

@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-18, the install-gap round's section added at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-20, typed-data stage C's section added at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,31 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-20, typed-data stage C
+
+`typed/c` (`2a208d56` and the coordinator's docs;
+[`typed-data-stage-c.md`](typed-data-stage-c.md), the round doc's section 3).
+No behaviour change, the machine code identical to `main`; one thing to run
+and two names the C4 audit could not settle from the code
+(`C:\Users\kerok\c_typed\audit\c4\`, reports A and B).
+
+- **The smoke run** (stage C's call 2): the headless `BOF3X_SHADOW='*'`
+  self-test and one state-hash route, from a plain copy of `build/`. Then
+  the PR. HANDOFF item 0.
+- **`rest_4a`'s `kEnemyHp`** (`0x93BA1A`, `rest_4a_callees.h`): an enemy
+  record's `+0xBA`, which `records.h` calls `BattleEnemy::intel` (the stat
+  copy's `+0xA`; `hp` is `+0xA4`). It predates C4 - C4 only respelled the
+  use in `rest_4a.cpp` as `Battle_Enemies_addr + 0xba` - but one of the two
+  names is wrong. `records.h`'s own comment already notes a doc conflict at
+  that offset (`magic_steal.md` R22). Which, if you know the function's
+  test (an enemy picked while `+0xBA` is above 1)?
+- **`Save_Directory`'s count 16** (`symbols.toml`, `records::SaveDirEntry`
+  x16): the readers' bound and the room before the next entry. Capcom's
+  writer stores up to twenty, 0x60 bytes past it - D322, which our list
+  bounds at sixteen since the quicksave round (DIV-0146,
+  `quick_menu.cpp`'s check). Keep 16 as the table's size, with the overrun
+  recorded as D322's? Recommended: yes.
 
 ## 2026-10-18, the install-gap round
 
