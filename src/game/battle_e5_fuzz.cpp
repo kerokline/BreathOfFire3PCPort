@@ -309,7 +309,7 @@ void DragonFrame() {
     Slots();
     Cursor(Window18_addr, 4, 3);
     Cursor(Window19_addr, 10, 3);
-    for (U w : {at::kWin4, Window16_addr, Window17_addr, Window18_addr, Window19_addr, Window21_addr}) {
+    for (U w : {WindowRecords_addr + 0x90, Window16_addr, Window17_addr, Window18_addr, Window19_addr, Window21_addr}) {
         rv::As<records::WindowRecord>(Win(w))->in_use = static_cast<unsigned char>(bh::Half() ? rv::As<records::WindowRecord>(Win(w))->in_use & 0xFE : rv::As<records::WindowRecord>(Win(w))->in_use | 1);
         rv::As<records::WindowRecord>(Win(w))->state = Byte({0, 0, 1, 2});
     }

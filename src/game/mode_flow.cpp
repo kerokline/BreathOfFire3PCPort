@@ -623,7 +623,7 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
 // starts from. No calls.
 extern "C" void __cdecl Window_ResetAll(void) {
     for (unsigned i = 0; i < 22; ++i) {
-        unsigned char* const r = At(at::kWindowRecords + i * 0x24);
+        unsigned char* const r = At(WindowRecords_addr + i * 0x24);
         r[0] = 0;
         r[1] = 0;
         r[2] = 0;

@@ -238,7 +238,7 @@ namespace {
 void CancelHead(bool windows) {
     BH_CALL(Sound_PlayEffect)(0x106);
     if (windows) {
-        B(at::kWin3State) = 1;
+        WindowRecords[3].state = 1;
         Window2_State = 1;
     }
     BH_CALL(BattleBanner_ShowName)(Ptr(at::kMenuActor));

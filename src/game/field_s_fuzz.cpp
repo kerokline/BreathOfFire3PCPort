@@ -395,7 +395,7 @@ constexpr unsigned kFrameRow = sizeof g_callees / sizeof g_callees[0] - 1;
 // zenny, the save block's bytes with the shared list, ObjTrio with
 // Field_Members).
 const sh::Region kRegions[] = {
-    {sh::at::kWindows, sh::at::kWindowCount * sh::at::kWindowStride},   // WindowRecords 0x803160..0x803477
+    {WindowRecords_addr, sh::at::kWindowCount * sh::at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x6BC880, 0x48},                                                  // the reserve, its flags, the joined list, the cursors
     {0x903A94, 0x903F90 - 0x903A94},                                   // CharacterRecords past the style region
     {0x903584, 0x10},                                                  // Field_ConfirmButtons / Field_CancelButtons
@@ -545,7 +545,7 @@ void Args(unsigned k, std::uint32_t* a) {
         const U index = B(FieldS_Answer_addr);
         a[1] = hi | (PickOf(index + 1, index + 2, index, sh::Next()) & 0xFF);
     } else if (Is(k, "SharedList_DrawList") || Is(k, "SharedList_DrawMember")) {
-        a[0] = sh::at::kWindows + sh::at::kWindowStride * (sh::Next() % 21);
+        a[0] = WindowRecords_addr + sh::at::kWindowStride * (sh::Next() % 21);
     } else if (Is(k, "SharedList_Sort")) {
         a[0] = hi | (sh::Next() % 3);
     } else if (Is(k, "ShopResist_DrawBits")) {

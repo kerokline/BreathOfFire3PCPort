@@ -500,7 +500,7 @@ extern "C" void __cdecl MenuList_SlideDownTo42(void) { Slide(6, 0x10, 0x2A, Past
 extern "C" void __cdecl MenuList_SlideLeftBesidePanel(void) {
     unsigned char* const moved = Rec();
     rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x - 0x20u;
-    const U panel = Word(At(at::kRecord4X));
+    const U panel = WindowRecords[4].x;
     unsigned char* const r = Rec();
     if (Sx(r + 4) >= static_cast<std::int32_t>(static_cast<short>(panel)) + 0x78) return;
     rv::As<records::WindowRecord>(r)->x = panel + 0x78;

@@ -286,9 +286,9 @@ extern "C" void __cdecl BattleItem_OpenWindow(void) {
 //      window record 4's +3 = 2, phase 2 = 7 and step 0.
 extern "C" void __cdecl BattleItem_Browse(void) {
     if (Window16_State != 0) return;
-    SetWord(At(at::kItemCursorX), static_cast<unsigned>(Long(At(at::kItemBaseX))) + 7);
+    WindowRecords[0x13].x = static_cast<unsigned>(Long(At(WindowRecords_addr + 0x244))) + 7;
     Window19 = 1;
-    const unsigned rows = static_cast<unsigned>(B(at::kItemCursor)) - static_cast<unsigned>(Long(At(at::kItemScroll))) + 2;
+    const unsigned rows = static_cast<unsigned>(B(at::kItemCursor)) - static_cast<unsigned>(Long(At(WindowRecords_addr + 0x250))) + 2;
     const unsigned y = rows * 13 + Window16_Y;
     const unsigned pressed = Input_Pressed;
     Window19_Y = y;
@@ -315,40 +315,40 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     const unsigned char was = cursor;
     if (held & 0x1000) {
         if (cursor != 0) B(at::kItemCursor) = --cursor;
-        if (static_cast<short>(cursor) < static_cast<short>(Word(At(at::kItemScroll)))) Window16_Scroll = 0xF0;
+        if (static_cast<short>(cursor) < static_cast<short>(Word(At(WindowRecords_addr + 0x250)))) Window16_Scroll = 0xF0;
     } else if (held & 0x4000) {
         if (cursor < 9) B(at::kItemCursor) = ++cursor;
-        const int last = static_cast<short>(Word(At(at::kItemScroll))) + 7;
+        const int last = static_cast<short>(Word(At(WindowRecords_addr + 0x250))) + 7;
         if (!(static_cast<int>(B(at::kItemCursor)) < last)) Window16_Scroll = 0x10;
     } else if (held & Sigma(4)) {
-        const short scroll = static_cast<short>(Word(At(at::kItemScroll)));
+        const short scroll = static_cast<short>(Word(At(WindowRecords_addr + 0x250)));
         if (scroll == 0) {
             cursor = 0;
             B(at::kItemCursor) = 0;
         } else if (scroll < 7) {
             const unsigned char s = B(at::kItemScroll);
-            SetWord(At(at::kItemScroll), 0);
+            SetWord(At(WindowRecords_addr + 0x250), 0);
             cursor = static_cast<unsigned char>(cursor - s);
             B(at::kItemCursor) = cursor;
         } else {
             cursor = static_cast<unsigned char>(cursor - 7);
             B(at::kItemCursor) = cursor;
-            SetWord(At(at::kItemScroll), static_cast<unsigned>(scroll - 7));
+            SetWord(At(WindowRecords_addr + 0x250), static_cast<unsigned>(scroll - 7));
         }
     } else if (held & Sigma(8)) {
-        const short scroll = static_cast<short>(Word(At(at::kItemScroll)));
+        const short scroll = static_cast<short>(Word(At(WindowRecords_addr + 0x250)));
         if (scroll == 3) {
             cursor = 9;
             B(at::kItemCursor) = 9;
         } else if (scroll > -4) {
             const unsigned char s = B(at::kItemScroll);
-            SetWord(At(at::kItemScroll), 3);
+            SetWord(At(WindowRecords_addr + 0x250), 3);
             cursor = static_cast<unsigned char>(cursor + static_cast<unsigned char>(3 - s));
             B(at::kItemCursor) = cursor;
         } else {
             cursor = static_cast<unsigned char>(cursor + 7);
             B(at::kItemCursor) = cursor;
-            SetWord(At(at::kItemScroll), static_cast<unsigned>(scroll + 7));
+            SetWord(At(WindowRecords_addr + 0x250), static_cast<unsigned>(scroll + 7));
         }
     }
     if (was != cursor) g.play_effect(0x100);
@@ -391,7 +391,7 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     Window19 = 0;
     if (rv::As<records::ActionRecord>(c)->action_id == 0x97) {
         unsigned char* const a = Acting();
-        B(at::kWindow4State) = 2;
+        WindowRecords[4].state = 2;
         c[0] = a[5];
         BattleE4_Step2 = 7;
         BattleE4_Step3 = 0;

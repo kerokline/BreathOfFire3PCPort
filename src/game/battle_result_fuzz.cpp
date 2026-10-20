@@ -33,7 +33,7 @@ using move_script::Word;
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 std::uint32_t Dw(std::uint32_t address) { return static_cast<std::uint32_t>(Long(At(address))); }
-unsigned char* WindowSlot(unsigned slot) { return At(at::kWindows + slot * at::kWindowSize); }
+unsigned char* WindowSlot(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowSize); }
 constexpr unsigned kWindowSlots = 0x16;
 constexpr unsigned kMaxMembers = 8;
 
@@ -397,7 +397,7 @@ const Region kRegions[] = {
     {at::kMsgCurrent, 4},
     {Input_Held_addr, 8},                               // Input_Held .. Input_Pressed
     {at::kMembers, kMaxMembers * at::kMemberSize},      // the party slots' records, and past the third
-    {at::kWindows, kWindowSlots * at::kWindowSize},     // the window records 0..0x15
+    {WindowRecords_addr, kWindowSlots * at::kWindowSize}, // the window records 0..0x15
     {BattleWinStates_Current_addr, 4},
 };
 constexpr unsigned kRegionBytes = 0x460 + 4 + 1 + 4 + 8 + kMaxMembers * 0x14C + kWindowSlots * 36 + 4;

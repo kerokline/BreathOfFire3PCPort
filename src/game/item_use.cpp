@@ -399,7 +399,7 @@ extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
     Window1_State = 3;
     if (more) {
         const unsigned char sub = ItemUse_SubState;
-        At(at::kWindow0State)[0] = 1;
+        WindowRecords[0].state = 1;
         ItemUse_ColorHigh = 0;
         ItemUse_SubState = static_cast<unsigned char>(sub + 1);
         return;

@@ -34,7 +34,7 @@ using move_script::Word;
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char& B(std::uint32_t address) { return At(address)[0]; }
-unsigned char* Record_(unsigned i) { return At(at::kRecords + i * at::kRecordSize); }
+unsigned char* Record_(unsigned i) { return At(WindowRecords_addr + i * at::kRecordSize); }
 unsigned char* Cur() { return At(static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr)))); }
 
 // --- the stand-ins' log ----------------------------------------------------
@@ -391,7 +391,7 @@ const Region kRegions[] = {
     {at::kSavedParty, 0x10},     // the party as the menu opened on it (a Party_Count of 8 copies past the six)
     {0x7E0670, 8},               // Gfx_PacketNext, 0x7E0674..0x7E0677
     {Input_Pressed_addr, 4},
-    {at::kRecords, 0x318},       // the 22 window records
+    {WindowRecords_addr, 0x318}, // the 22 window records
     {0x90358C, 8},               // the confirm and cancel words
     {0x903A50, 0x560},           // Config's colour and background, the eight character records
     {0x904040, 0x5D0},           // money, the party lists, 0x904152, the reserve's bytes
@@ -598,7 +598,7 @@ void Cover(unsigned k, const State& in, const State& out) {
     case kDown38: {
         bool any = false;
         for (unsigned i = 0; i < 22; ++i)
-            if (Byte(out, at::kRecords + i * at::kRecordSize + 3) == 0 && Byte(in, at::kRecords + i * at::kRecordSize + 3) != 0)
+            if (Byte(out, WindowRecords_addr + i * at::kRecordSize + 3) == 0 && Byte(in, WindowRecords_addr + i * at::kRecordSize + 3) != 0)
                 any = true;
         if (any) ++g_cover.clamped;
         break;

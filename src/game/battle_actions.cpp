@@ -335,7 +335,7 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
     }
     if (Word(At(at::kAbility)) != 0x97) {
         const unsigned id = Word(At(at::kAbility));
-        SetB(at::kBannerShown, 1);
+        WindowRecords[4].state = 1;
         g.str_copy_n(reinterpret_cast<char*>(At(at::kNameBuf)), reinterpret_cast<const char*>(At(at::kAbilityRecords + id * 24)), 0x10);
         g.banner_add(1, 1, 0, 0x3C, reinterpret_cast<const char*>(At(at::kNameBuf)));
     }
@@ -447,7 +447,7 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
     g.banner_add(1, 1, 0, 0x1E, reinterpret_cast<const char*>(At(at::kNameBuf)));
     const unsigned sub2 = BattleE4_Step3;
     BossSb_Countdown = 0;
-    SetB(at::kBannerShown, 1);
+    WindowRecords[4].state = 1;
     BattleE4_Step3 = sub2 + 1;
 }
 
@@ -647,7 +647,7 @@ extern "C" void __cdecl BattleAction_End(void) {
         CopyStats(a);
         const std::uint32_t text = static_cast<std::uint32_t>(L((flags & 0x8000) != 0 ? BattleActions_TextCounter_addr : BattleActions_TextMiss_addr));
         g.banner_add(1, 0, 0, 0xF, reinterpret_cast<const char*>(static_cast<std::uintptr_t>(text)));
-        SetB(at::kBannerShown, 1);
+        WindowRecords[4].state = 1;
         BattleActions_Step = 0;
         BattleE4_Step2 = 1;
     }

@@ -327,7 +327,7 @@ extern "C" void __cdecl EnemyOp_LeaveEnd(void) {
     if (left == 0) Battle_EndFlags |= 2;
     BH_CALL(Sprite_ReleaseTint)(S());
     BH_CALL(Battle_ClearActorBit)(rv::As<records::BattleEnemy>(S())->actor);
-    B(at::kWindow4State) = 2;
+    WindowRecords[4].state = 2;
     BH_CALL(BattleBanner_ClearAll)();
     BH_CALL(Effect_Release)();
 }

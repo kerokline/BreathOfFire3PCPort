@@ -45,7 +45,7 @@ template <typename... T> U PickOf(T... v) {
 unsigned char& B(U a) { return *sh::Mem(a); }
 void SetW(U a, U v) { SetWord(sh::Mem(a), v); }
 void SetL(U a, U v) { SetLong(sh::Mem(a), static_cast<std::int32_t>(v)); }
-U Win(unsigned n, unsigned off) { return at::kWindows + n * at::kWindowStride + off; }
+U Win(unsigned n, unsigned off) { return WindowRecords_addr + n * at::kWindowStride + off; }
 
 // --- the clone table (band_rows.py --group R2C --clones --harness scenario, 2026-10-04) ---
 constexpr sh::CallSite kCalls57F340[] = {{0xAF, 0x57EEF0}};
@@ -324,7 +324,7 @@ const sh::Callee kCallees[] = {
 // cursor, the camera turn's cells with Field_InputFlags, the buttons'
 // 0x90358C..0x904593).
 const sh::Region kRegions[] = {
-    {at::kWindows, 22 * at::kWindowStride},       // WindowRecords 0x803160..0x803477
+    {WindowRecords_addr, 22 * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x6BC880, 0x48},                             // the save / inn bytes, the sell flags
     {0x903580, 0xC},                              // the buttons' dwords before Field_ConfirmButtons
     {at::kBlock, 0x24},                           // the save block 0x9039E0..0x903A03 (the master byte 0x9039F5)

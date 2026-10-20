@@ -814,11 +814,7 @@ src/game/area_w3d.cpp	Area135_Tail18	global	B	at::kCounter3	6	0x90384b	-	no-entr
 src/game/area_w3d.cpp	Area135_Tail18	global	B	at::kCounter3	7	0x90384b	-	no-entry	at::kCounter3 0x90384b -	b0
 src/game/area_w3d.cpp	Area135_Tail18	global	B	at::kCounter3	8	0x90384b	-	no-entry	at::kCounter3 0x90384b -	b0
 src/game/area_w3d.cpp	Area135_Init	global	B	at::kCounter3	0	0x90384b	-	no-entry	at::kCounter3 0x90384b -	b0
-src/game/area_w3d.cpp	Area135_OpenMessage	global	-	at::kMessagePools	0	0x803160	-	no-entry	at::kMessagePools 0x803160 -	b0
-src/game/area_w3d.cpp	Area135_OpenMessage	global	Mem	at::kPoolWords	0	0x803164	-	no-entry	at::kPoolWords 0x803164 -	b0
-src/game/area_w3d.cpp	Area135_OpenMessage	global	Mem	at::kPoolWords	1	0x803164	-	no-entry	at::kPoolWords 0x803164 -	b0
 src/game/area_w3d_fuzz.cpp	Kind2Effect	global	B	at::kCounter3	0	0x90384b	-	no-entry	at::kCounter3 0x90384b -	b0
-src/game/area_w3d_fuzz.cpp	-	global	-	at::kPoolWords	0	0x803164	-	no-entry	at::kPoolWords 0x803164 -	b0
 src/game/area_w3d_fuzz.cpp	Disturb	global	B	at::kCounter3	0	0x90384b	-	no-entry	at::kCounter3 0x90384b -	b0
 src/game/area_w3d_fuzz.cpp	SeedTail	global	Mem	at::kTailTimer	0	0x9039f6	-	no-entry	at::kTailTimer 0x9039f6 -	b0
 src/game/area_w3d_fuzz.cpp	SeedTail	global	B	at::kCounter3	0	0x90384b	-	no-entry	at::kCounter3 0x90384b -	b0
@@ -1273,7 +1269,6 @@ src/game/battle_actions.cpp	BattleAction_AbilityCheck	global	B	at::kActor	1	0x90
 src/game/battle_actions.cpp	BattleAction_AbilityCheck	global	SetB	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_actions.cpp	BattleAction_AbilityCheck	global	At	at::kAbility	1	0x904b80	-	no-entry	at::kAbility 0x904b80 -	b0
 src/game/battle_actions.cpp	BattleAction_AbilityCheck	global	At	at::kAbility	2	0x904b80	-	no-entry	at::kAbility 0x904b80 -	b0
-src/game/battle_actions.cpp	BattleAction_AbilityCheck	global	SetB	at::kBannerShown	0	0x8031f3	-	no-entry	at::kBannerShown 0x8031f3 -	b0
 src/game/battle_actions.cpp	BattleAction_AbilityCheck	global	At	at::kAbilityRecords	0	0x65c4c8	-	untyped-entry	at::kAbilityRecords 0x65c4c8 Ability_Records	b0
 src/game/battle_actions.cpp	BattleAction_AbilityCheck	global	At	at::kNameBuf	0	0x904ea0	-	no-entry	at::kNameBuf 0x904ea0 -	b0
 src/game/battle_actions.cpp	BattleAction_AbilityCheck	global	At	at::kNameBuf	1	0x904ea0	-	no-entry	at::kNameBuf 0x904ea0 -	b0
@@ -1309,7 +1304,6 @@ src/game/battle_actions.cpp	BattleAction_ItemCheck	global	SetB	at::kPhase	0	0x90
 src/game/battle_actions.cpp	BattleAction_ItemCheck	global	PtrAt	at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_actions.cpp	BattleAction_ItemCheck	global	At	at::kNameBuf	0	0x904ea0	-	no-entry	at::kNameBuf 0x904ea0 -	b0
 src/game/battle_actions.cpp	BattleAction_ItemCheck	global	At	at::kNameBuf	1	0x904ea0	-	no-entry	at::kNameBuf 0x904ea0 -	b0
-src/game/battle_actions.cpp	BattleAction_ItemCheck	global	SetB	at::kBannerShown	0	0x8031f3	-	no-entry	at::kBannerShown 0x8031f3 -	b0
 src/game/battle_actions.cpp	BattleAction_ItemCommit	global	PtrAt	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_actions.cpp	BattleAction_ItemCommit	global	B	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_actions.cpp	BattleAction_ItemCommit	global	PtrAt	at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
@@ -1344,7 +1338,6 @@ src/game/battle_actions.cpp	BattleAction_End	global	At	at::kActor	1	0x904b34	-	n
 src/game/battle_actions.cpp	BattleAction_End	global	At	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/battle_actions.cpp	BattleAction_End	global	SetB	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_actions.cpp	BattleAction_End	global	B	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/battle_actions.cpp	BattleAction_End	global	SetB	at::kBannerShown	0	0x8031f3	-	no-entry	at::kBannerShown 0x8031f3 -	b0
 src/game/battle_actions_fuzz.cpp	Actor	global	At	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_actions_fuzz.cpp	Actor	global	At	at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_actions_fuzz.cpp	Actor	global	SetPtr	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
@@ -1440,37 +1433,25 @@ src/game/battle_actor_copies.cpp	KeepPage	global	B	at::kItemCursor	0	0x8033ac	-	
 src/game/battle_actor_copies.cpp	KeepPage	global	B	at::kActorPages	1	0x9045fc	-	no-entry	at::kActorPages 0x9045fc -	b0
 src/game/battle_actor_copies.cpp	KeepPage	global	B	at::kActorPages	2	0x9045fc	-	no-entry	at::kActorPages 0x9045fc -	b0
 src/game/battle_actor_copies.cpp	BattleTarget_PickDispatch	global	At	at::kRepeatLatch	0	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemBaseX	0	0x8033a4	-	no-entry	at::kItemBaseX 0x8033a4 -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemCursorX	0	0x803410	-	no-entry	at::kItemCursorX 0x803410 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	0	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	0	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	1	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	2	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	1	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	3	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	2	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	4	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	3	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	5	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemScroll	0	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	4	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	6	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	7	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	5	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	6	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	8	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemScroll	1	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	7	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	9	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	10	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemScroll	8	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kItemRecords	0	0x65c4d8	-	untyped-entry	at::kItemRecords 0x65c4d8 NameTable_Abilities	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	At	at::kQueueText	0	0x93c2c4	-	no-entry	at::kQueueText 0x93c2c4 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemScroll	2	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kQueueByte	0	0x93c2c1	-	no-entry	at::kQueueByte 0x93c2c1 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemScroll	3	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kItemCursor	11	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kWindow4State	0	0x8031f3	-	no-entry	at::kWindow4State 0x8031f3 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_Browse	global	B	at::kStep	0	0x904aa3	-	gate	at::kStep 0x904aa3 BattleE4_Step3	b0
 src/game/battle_actor_copies.cpp	BattleItem_TargetDispatch	global	At	at::kRepeatLatch	0	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
 src/game/battle_actor_copies.cpp	BattleItem_TargetDispatch	global	At	at::kRepeatLatch	1	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
@@ -1481,18 +1462,13 @@ src/game/battle_actor_copies.cpp	BattleItem_PickParty	global	B	at::kPartyCount	3
 src/game/battle_actor_copies.cpp	BattleItem_Confirm	global	B	at::kQueueByte	0	0x93c2c1	-	no-entry	at::kQueueByte 0x93c2c1 -	b0
 src/game/battle_actor_copies_fuzz.cpp	Watched	raw	At	0x904AA0	0	0x904aa0	-	-	-	-
 src/game/battle_actor_copies_fuzz.cpp	Watched	global	At	at::kRepeatLatch	0	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
-src/game/battle_actor_copies_fuzz.cpp	Watched	global	At	at::kWindow4State	0	0x8031f3	-	no-entry	at::kWindow4State 0x8031f3 -	b0
 src/game/battle_actor_copies_fuzz.cpp	Watched	raw	At	0x8033A0	0	0x8033a0	-	-	-	-
 src/game/battle_actor_copies_fuzz.cpp	Watched	raw	At	0x93C2A0	0	0x93c2a0	-	-	-	-
 src/game/battle_actor_copies_fuzz.cpp	Watched	global	At	at::kActorPages	0	0x9045fc	-	no-entry	at::kActorPages 0x9045fc -	b0
-src/game/battle_actor_copies_fuzz.cpp	Disturb	global	B	at::kItemCursor	0	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
 src/game/battle_actor_copies_fuzz.cpp	Disturb	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_actor_copies_fuzz.cpp	Disturb	global	B	at::kItemRecords	0	0x65c4d8	-	untyped-entry	at::kItemRecords 0x65c4d8 NameTable_Abilities	b0
-src/game/battle_actor_copies_fuzz.cpp	Disturb	global	At	at::kItemScroll	0	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies_fuzz.cpp	Disturb	record	SetWord	Cmd() + 2	0	-	via=Cmd	not-record	not one of the nine records.h families (via=Cmd)	b1-battle
 src/game/battle_actor_copies_fuzz.cpp	Disturb	record	SetLong	Cmd() + 0x10	0	-	via=Cmd	not-record	not one of the nine records.h families (via=Cmd)	b1-battle
-src/game/battle_actor_copies_fuzz.cpp	StubPlayEffect	global	B	at::kItemCursor	0	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies_fuzz.cpp	StubSetupForActor	global	B	at::kItemCursor	0	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
 src/game/battle_actor_copies_fuzz.cpp	-	global	-	at::kRepeatLatch	0	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
 src/game/battle_actor_copies_fuzz.cpp	-	global	-	at::kConfirm	0	0x90358e	-	gate	at::kConfirm 0x90358e Field_ConfirmButtons	b0
 src/game/battle_actor_copies_fuzz.cpp	-	global	-	at::kActorPages	0	0x9045fc	-	no-entry	at::kActorPages 0x9045fc -	b0
@@ -1502,9 +1478,6 @@ src/game/battle_actor_copies_fuzz.cpp	SeedButtons	global	At	at::kConfirm	0	0x903
 src/game/battle_actor_copies_fuzz.cpp	SeedButtons	global	At	at::kConfirm	1	0x90358e	-	gate	at::kConfirm 0x90358e Field_ConfirmButtons	b0
 src/game/battle_actor_copies_fuzz.cpp	SeedTarget	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_actor_copies_fuzz.cpp	Seed	record	SetLong	Cmd() + 0x10	0	-	via=Cmd	not-record	not one of the nine records.h families (via=Cmd)	b1-battle
-src/game/battle_actor_copies_fuzz.cpp	Seed	global	At	at::kItemScroll	0	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
-src/game/battle_actor_copies_fuzz.cpp	Seed	global	B	at::kItemCursor	0	0x8033ac	-	no-entry	at::kItemCursor 0x8033ac -	b0
-src/game/battle_actor_copies_fuzz.cpp	Seed	global	B	at::kItemScroll	0	0x8033b0	-	no-entry	at::kItemScroll 0x8033b0 -	b0
 src/game/battle_actor_copies_fuzz.cpp	Seed	global	At	at::kConfirm	0	0x90358e	-	gate	at::kConfirm 0x90358e Field_ConfirmButtons	b0
 src/game/battle_actor_copies_fuzz.cpp	Seed	global	-	at::kConfirm	0	0x90358e	-	gate	at::kConfirm 0x90358e Field_ConfirmButtons	b0
 src/game/battle_actor_copies_fuzz.cpp	SelfTest	record	At	t.at + 4 * i	0	-	-	family	no record family established for this pointer here (-)	b1-battle
@@ -1545,9 +1518,7 @@ src/game/battle_damage.cpp	Battle_CalcDamage	global	At	at::kCuredBits	1	0x904b9a
 src/game/battle_damage.cpp	Battle_CalcDamage	global	At	at::kCuredBits	2	0x904b9a	-	no-entry	at::kCuredBits 0x904b9a -	b0
 src/game/battle_damage.cpp	Battle_CalcDamage	global	Byte	at::kBattleFlags	0	0x904aa8	-	no-entry	at::kBattleFlags 0x904aa8 -	b0
 src/game/battle_damage.cpp	Battle_CalcDamage	global	Byte	at::kBattleFlags	1	0x904aa8	-	no-entry	at::kBattleFlags 0x904aa8 -	b0
-src/game/battle_damage.cpp	Battle_ApplyDamage	global	At	at::kInstantKill	0	0x8031f3	-	no-entry	at::kInstantKill 0x8031f3 -	b0
 src/game/battle_damage.cpp	Battle_ApplyDamage	record	Word	e + at::kEHp	0	-	via=Enemy	gate	BattleEnemy->hp typed changed the object	b1-battle
-src/game/battle_damage.cpp	Battle_ApplyDamage	global	At	at::kInstantKill	1	0x8031f3	-	no-entry	at::kInstantKill 0x8031f3 -	b0
 src/game/battle_damage.cpp	Battle_ElementAffinity	global	At	at::kElementTable	0	0x64e95c	-	untyped-entry	at::kElementTable 0x64e95c Battle_ElementTable	b0
 src/game/battle_damage.cpp	Effect_ApplyResult	global	Byte	at::kTarget	0	0x904b54	-	no-entry	at::kTarget 0x904b54 -	b0
 src/game/battle_damage.cpp	Effect_ApplyResult	global	At	at::kActing	0	0x904b34	-	no-entry	at::kActing 0x904b34 -	b0
@@ -1679,44 +1650,31 @@ src/game/battle_e1.cpp	BattleExtra_EquipFadeIn	global	B	at::kModeTimer	1	0x929f0
 src/game/battle_e1.cpp	BattleExtra_EquipFadeIn	global	B	at::kEquipOpenBytes	0	0x675ebe	-	inside-entry	at::kEquipOpenBytes 0x675ebe BattleE1_EquipOpenBytes	b0
 src/game/battle_e1.cpp	BattleExtra_EquipFadeIn	global	B	at::kEquipOpenBytes	1	0x675ebe	-	inside-entry	at::kEquipOpenBytes 0x675ebe BattleE1_EquipOpenBytes	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	L	at::kWin1	0	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
-src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	At	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	0	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
-src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	At	at::kWin4	1	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	1	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	2	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	3	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	4	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	5	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin0	0	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	At	at::kWin3	0	0x8031cc	-	no-entry	at::kWin3 0x8031cc -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin0	1	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	6	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin0	2	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	7	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
-src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin0	3	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin1	8	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin2	0	0x8031a8	-	inside-entry	at::kWin2 0x8031a8 Window2	b0
-src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin3	0	0x8031cc	-	no-entry	at::kWin3 0x8031cc -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kWin4	1	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipSlotInput	global	B	at::kModeTimer	0	0x929f04	-	no-entry	at::kModeTimer 0x929f04 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	L	at::kWin0	0	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin1	0	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
-src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	At	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	0	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	1	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	2	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	3	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	At	at::kWin0	0	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	At	at::kWin4	1	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	At	at::kWin3	0	0x8031cc	-	no-entry	at::kWin3 0x8031cc -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	4	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	5	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	6	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	At	at::kWin0	1	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	7	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	8	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	At	at::kWin0	2	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	9	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	10	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	11	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
@@ -1729,7 +1687,6 @@ src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	17	0x803160
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	18	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	19	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	20	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	At	at::kWin0	3	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	21	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	22	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleExtra_EquipListInput	global	B	at::kWin0	23	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
@@ -1741,19 +1698,16 @@ src/game/battle_e1.cpp	BattleHold_Shrink	global	B	at::kMenuMember	0	0x904ab4	-	n
 src/game/battle_e1.cpp	BattleHold_Shrink	global	B	at::kMenuMember	1	0x904ab4	-	no-entry	at::kMenuMember 0x904ab4 -	b0
 src/game/battle_e1.cpp	BattleHold_ShowAll	global	B	at::kWin2	0	0x8031a8	-	inside-entry	at::kWin2 0x8031a8 Window2	b0
 src/game/battle_e1.cpp	BattleHold_ShowAll	global	B	at::kWin1	0	0x803184	-	inside-entry	at::kWin1 0x803184 Window1	b0
-src/game/battle_e1.cpp	BattleHold_ShowAll	global	B	at::kWin3	0	0x8031cc	-	no-entry	at::kWin3 0x8031cc -	b0
 src/game/battle_e1.cpp	BattleHold_ShowAll	global	B	at::kHoldIcons	0	0x64e2ac	-	no-entry	at::kHoldIcons 0x64e2ac -	b0
 src/game/battle_e1.cpp	BattleHold_ShowAll	global	B	at::kHoldIcons	1	0x64e2ac	-	no-entry	at::kHoldIcons 0x64e2ac -	b0
 src/game/battle_e1.cpp	BattleHold_Regrow	global	B	at::kCrossGrow	0	0x904abc	-	no-entry	at::kCrossGrow 0x904abc -	b0
 src/game/battle_e1.cpp	BattleHold_Regrow	global	B	at::kMenuMember	0	0x904ab4	-	no-entry	at::kMenuMember 0x904ab4 -	b0
-src/game/battle_e1.cpp	Cmd_AutoBattle	global	B	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e1.cpp	Cmd_AutoBattle	global	B	at::kEntryFirst	0	0x904ab6	-	no-entry	at::kEntryFirst 0x904ab6 -	b0
 src/game/battle_e1.cpp	Cmd_AutoBattle	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e1.cpp	Cmd_AutoBattle	global	B	at::kPartyCount	1	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e1.cpp	Cmd_AutoBattle	global	B	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/battle_e1.cpp	Cmd_AutoBattle	global	B	at::kFlags	1	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/battle_e1.cpp	BattleAction_Kind3Banner	global	B	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/battle_e1.cpp	BattleAction_Kind3Banner	global	B	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e1.cpp	BattleAction_Kind3Wait	global	B	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/battle_e1.cpp	BattleAction_Kind3Wait	global	B	at::kFlags	1	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/battle_e1.cpp	BattleAction_PickRandomAbility	global	At	at::kActionId	0	0x904b80	-	no-entry	at::kActionId 0x904b80 -	b0
@@ -1809,7 +1763,6 @@ src/game/battle_e1.cpp	Char_LevelUpGain	global	B	at::kCharExpTable	0	0x658f48	-	
 src/game/battle_e1.cpp	LossMember	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e1.cpp	LossMember	record	At	row + 4	0	-	table=0x904ab0	not-record	not one of the nine records.h families (table=0x904ab0)	b1-battle
 src/game/battle_e1.cpp	BattleLoss_ResetParty	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
-src/game/battle_e1.cpp	BattleLoss_ResetParty	global	B	at::kWin0	0	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1.cpp	BattleLoss_ResetParty	global	B	at::kPartyCount	1	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e1.cpp	BattleLoss_ResetParty	global	B	at::kPartyCount	2	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e1.cpp	BattleLoss_Restart	raw	B	0x904AA0	0	0x904aa0	-	-	-	-
@@ -1828,11 +1781,6 @@ src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kTallyShown	0	0x675e88	-	no-entr
 src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kTallyStep	0	0x64add0	-	no-entry	at::kTallyStep 0x64add0 -	b0
 src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kTallyTarget	0	0x675ea0	-	no-entry	at::kTallyTarget 0x675ea0 -	b0
 src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kModeTimer	0	0x929f04	-	no-entry	at::kModeTimer 0x929f04 -	b0
-src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kWin0	0	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kWin0	1	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kWin0	2	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kWin0	3	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kWin0	4	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kMenuMember	0	0x904ab4	-	no-entry	at::kMenuMember 0x904ab4 -	b0
 src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kCrossGrow	0	0x904abc	-	no-entry	at::kCrossGrow 0x904abc -	b0
 src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kMenuMember	1	0x904ab4	-	no-entry	at::kMenuMember 0x904ab4 -	b0
@@ -1842,8 +1790,6 @@ src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kActor	0	0x904b34	-	no-entry	at:
 src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_e1_fuzz.cpp	Seed	global	Mem	at::kPartyCount	1	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e1_fuzz.cpp	Disturb	global	Mem	at::kTallyTarget	0	0x675ea0	-	no-entry	at::kTallyTarget 0x675ea0 -	b0
-src/game/battle_e1_fuzz.cpp	Disturb	global	Mem	at::kWin0	0	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
-src/game/battle_e1_fuzz.cpp	Disturb	global	Mem	at::kWin0	1	0x803160	-	no-entry	at::kWin0 0x803160 -	b0
 src/game/battle_e1_fuzz.cpp	Disturb	global	Mem	at::kOldLevel	0	0x904b72	-	no-entry	at::kOldLevel 0x904b72 -	b0
 src/game/battle_e1_fuzz.cpp	Disturb	global	Mem	at::kActionId	0	0x904b80	-	no-entry	at::kActionId 0x904b80 -	b0
 src/game/battle_e1_fuzz.cpp	Disturb	global	Mem	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
@@ -1873,15 +1819,10 @@ src/game/battle_e2.cpp	RestoreBody	record	Long	from + k	0	-	table=0x939ae0;strid
 src/game/battle_e2.cpp	RestoreBody	record	SetLong	to + k	0	-	via=rec	not-record	not one of the nine records.h families (via=rec)	b1-battle
 src/game/battle_e2.cpp	RestoreBody	global	At	at::kMemberPositions	0	0x7e06e0	-	no-entry	at::kMemberPositions 0x7e06e0 -	b0
 src/game/battle_e2.cpp	RestoreBody	global	At	at::kMemberPositions	1	0x7e06e0	-	no-entry	at::kMemberPositions 0x7e06e0 -	b0
-src/game/battle_e2.cpp	RestoreBody	global	At	at::kPartyValues	0	0x803348	-	no-entry	at::kPartyValues 0x803348 -	b0
-src/game/battle_e2.cpp	RestoreBody	global	At	at::kPartyValues	1	0x803348	-	no-entry	at::kPartyValues 0x803348 -	b0
-src/game/battle_e2.cpp	RestoreBody	global	At	at::kPartyGauges	0	0x80333f	-	no-entry	at::kPartyGauges 0x80333f -	b0
-src/game/battle_e2.cpp	RestoreBody	global	At	at::kPartyGauges	1	0x80333f	-	no-entry	at::kPartyGauges 0x80333f -	b0
 src/game/battle_e2.cpp	BattleFx_RestoreParty	global	At	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_e2.cpp	BattleFx_RestoreParty	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e2.cpp	BattleFx_RestoreParty	global	At	at::kBackupBit40	0	0x939b71	-	no-entry	at::kBackupBit40 0x939b71 -	b0
 src/game/battle_e2.cpp	BattleFx_RestoreParty	global	At	at::kCountX	0	0x64b073	-	no-entry	at::kCountX 0x64b073 -	b0
-src/game/battle_e2.cpp	BattleFx_RestoreParty	global	At	at::kWindow1X	0	0x803188	-	no-entry	at::kWindow1X 0x803188 -	b0
 src/game/battle_e2.cpp	BattleFx_RestoreParty	global	B	at::kPartyCount	1	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e2.cpp	BattleFx_RestoreParty	global	At	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_e2.cpp	BattleFx_RestoreParty	global	B	at::kPlaceCells	0	0x9045fd	-	no-entry	at::kPlaceCells 0x9045fd -	b0
@@ -1995,7 +1936,6 @@ src/game/battle_e3.cpp	EnemyOp_CastDoneCost	global	At	at::kRoundFlags	0	0x904aa8
 src/game/battle_e3.cpp	EnemyOp_CastDoneCost	global	At	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_e3.cpp	EnemyOp_CastDoneTickUnless	global	AbilityByte	at::kAbilityFlags5	0	0x65c4dd	-	no-entry	at::kAbilityFlags5 0x65c4dd -	b0
 src/game/battle_e3.cpp	EnemyOp_CastDoneCheck	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
-src/game/battle_e3.cpp	EnemyOp_LeaveEnd	global	B	at::kWindow4State	0	0x8031f3	-	no-entry	at::kWindow4State 0x8031f3 -	b0
 src/game/battle_e3.cpp	EnemyOp_EndAction	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_e3.cpp	EnemyOp_RollBit80Task	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_e3.cpp	BattleObj_HitReceive	global	At	at::kStatusOr2	0	0x904b9a	-	no-entry	at::kStatusOr2 0x904b9a -	b0
@@ -2140,10 +2080,8 @@ src/game/battle_e4.cpp	BattleItemCmd_EquipMenu	global	B	at::kSlots	1	0x8033e8	-	
 src/game/battle_e4.cpp	BattleItemCmd_EquipMenu	global	B	at::kCands	0	0x8033c4	-	inside-entry	at::kCands 0x8033c4 Window17	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipMenu	global	B	at::kCands	1	0x8033c4	-	inside-entry	at::kCands 0x8033c4 Window17	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipMenu	global	B	at::kStep4	0	0x904aa4	-	gate	at::kStep4 0x904aa4 BattleE4_Step4	b0
-src/game/battle_e4.cpp	BattleItemCmd_EquipMenu	global	B	at::kRecord4	0	0x8031f0	-	no-entry	at::kRecord4 0x8031f0 -	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipSlotPick	global	At	at::kQueue	0	0x93c2c0	-	no-entry	at::kQueue 0x93c2c0 -	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipSlotPick	global	B	at::kSlots	0	0x8033e8	-	inside-entry	at::kSlots 0x8033e8 Window18	b0
-src/game/battle_e4.cpp	BattleItemCmd_EquipSlotPick	global	B	at::kRecord4	0	0x8031f0	-	no-entry	at::kRecord4 0x8031f0 -	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipSlotPick	global	B	at::kList	0	0x8033a0	-	inside-entry	at::kList 0x8033a0 Window16	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipSlotPick	global	B	at::kSlots	1	0x8033e8	-	inside-entry	at::kSlots 0x8033e8 Window18	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipSlotPick	global	B	at::kCands	0	0x8033c4	-	inside-entry	at::kCands 0x8033c4 Window17	b0
@@ -2182,12 +2120,10 @@ src/game/battle_e4.cpp	BattleItemCmd_EquipItemPick	global	B	at::kCands	22	0x8033
 src/game/battle_e4.cpp	BattleItemCmd_EquipItemPick	global	B	at::kSlots	1	0x8033e8	-	inside-entry	at::kSlots 0x8033e8 Window18	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipUsePick	global	At	at::kQueue	0	0x93c2c0	-	no-entry	at::kQueue 0x93c2c0 -	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipUsePick	global	B	at::kSlots	0	0x8033e8	-	inside-entry	at::kSlots 0x8033e8 Window18	b0
-src/game/battle_e4.cpp	BattleItemCmd_EquipUsePick	global	B	at::kRecord4	0	0x8031f0	-	no-entry	at::kRecord4 0x8031f0 -	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipUsePick	global	B	at::kList	0	0x8033a0	-	inside-entry	at::kList 0x8033a0 Window16	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipUsePick	global	B	at::kSlots	1	0x8033e8	-	inside-entry	at::kSlots 0x8033e8 Window18	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipUsePick	global	B	at::kCands	0	0x8033c4	-	inside-entry	at::kCands 0x8033c4 Window17	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipUsePick	global	At	at::kQueue	1	0x93c2c0	-	no-entry	at::kQueue 0x93c2c0 -	b0
-src/game/battle_e4.cpp	BattleItemCmd_EquipUsePick	global	B	at::kRecord4	1	0x8031f0	-	no-entry	at::kRecord4 0x8031f0 -	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipTargetBegin	global	At	at::kRepeatLatch	0	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipTargetBegin	global	At	at::kRepeatLatch	1	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
 src/game/battle_e4.cpp	BattleItemCmd_EquipPickMember	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
@@ -2236,7 +2172,6 @@ src/game/battle_e4.cpp	BattleEquip_OpenUse	global	B	at::kSlots	7	0x8033e8	-	insi
 src/game/battle_e4.cpp	Escape_Roll	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e4.cpp	Escape_Roll	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e4.cpp	Escape_FailDispatch	global	B	at::kFlee	0	0x93b8e0	-	no-entry	at::kFlee 0x93b8e0 -	b0
-src/game/battle_e4.cpp	Escape_FailDispatch	global	B	at::kRecord4	0	0x8031f0	-	no-entry	at::kRecord4 0x8031f0 -	b0
 src/game/battle_e4.cpp	Escape_FailDispatch	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e4.cpp	Escape_FailDispatch	global	B	at::kPartyCount	1	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e4.cpp	Escape_Failed	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
@@ -2356,7 +2291,6 @@ src/game/battle_e5.cpp	DragonCmd_Open	global	B	at::kGeneFlags	0	0x939a60	-	no-en
 src/game/battle_e5.cpp	DragonCmd_Open	global	SetW	at::kRepeatLatch	0	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
 src/game/battle_e5.cpp	DragonCmd_Open	global	SetW	at::kWord72	0	0x904b72	-	no-entry	at::kWord72 0x904b72 -	b0
 src/game/battle_e5.cpp	DragonCmd_Open	global	SetW	at::kAsk	0	0x904b74	-	no-entry	at::kAsk 0x904b74 -	b0
-src/game/battle_e5.cpp	DragonCmd_MenuCancel	global	B	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e5.cpp	DragonCmd_SlotsCloseMenu	global	B	at::kWin21	0	0x803454	-	inside-entry	at::kWin21 0x803454 Window21	b0
 src/game/battle_e5.cpp	DragonCmd_SlotsCloseMenu	global	B	at::kWin21	1	0x803454	-	inside-entry	at::kWin21 0x803454 Window21	b0
 src/game/battle_e5.cpp	DragonCmd_SlotsOpen	global	W	at::kWin18	0	0x8033e8	-	inside-entry	at::kWin18 0x8033e8 Window18	b0
@@ -2366,12 +2300,10 @@ src/game/battle_e5.cpp	DragonCmd_SlotAffordable	global	B	at::kWin18	0	0x8033e8	-
 src/game/battle_e5.cpp	DragonCmd_SlotsBack	global	SlotOf	at::kSlots	0	0x904608	-	no-entry	at::kSlots 0x904608 -	b0
 src/game/battle_e5.cpp	DragonCmd_SlotsBack	global	B	at::kWin18	0	0x8033e8	-	inside-entry	at::kWin18 0x8033e8 Window18	b0
 src/game/battle_e5.cpp	DragonCmd_GenesOpen	global	B	at::kWin17	0	0x8033c4	-	inside-entry	at::kWin17 0x8033c4 Window17	b0
-src/game/battle_e5.cpp	DragonCmd_GenesOpen	global	B	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e5.cpp	DragonCmd_GenesPick	global	B	at::kGeneFlags	0	0x939a60	-	no-entry	at::kGeneFlags 0x939a60 -	b0
 src/game/battle_e5.cpp	DragonCmd_GenesPick	global	B	at::kGeneFlags	1	0x939a60	-	no-entry	at::kGeneFlags 0x939a60 -	b0
 src/game/battle_e5.cpp	DragonCmd_GenesPick	global	B	at::kGenes	0	0x904b84	-	no-entry	at::kGenes 0x904b84 -	b0
 src/game/battle_e5.cpp	DragonCmd_GenesPick	global	B	at::kWin17	0	0x8033c4	-	inside-entry	at::kWin17 0x8033c4 Window17	b0
-src/game/battle_e5.cpp	DragonCmd_GenesPick	global	B	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e5.cpp	DragonCmd_GenesPick	global	At	at::kGeneFlags	0	0x939a60	-	no-entry	at::kGeneFlags 0x939a60 -	b0
 src/game/battle_e5.cpp	DragonCmd_GenesPick	global	B	at::kGenes	1	0x904b84	-	no-entry	at::kGenes 0x904b84 -	b0
 src/game/battle_e5.cpp	DragonCmd_GenesPick	global	B	at::kGeneFlags	2	0x939a60	-	no-entry	at::kGeneFlags 0x939a60 -	b0
@@ -2414,7 +2346,6 @@ src/game/battle_e5_fuzz.cpp	Slots	global	Mem	at::kSlots	0	0x904608	-	no-entry	at
 src/game/battle_e5_fuzz.cpp	DragonFrame	global	Mem	at::kGenes	0	0x904b84	-	no-entry	at::kGenes 0x904b84 -	b0
 src/game/battle_e5_fuzz.cpp	DragonFrame	global	Mem	at::kGeneFlags	0	0x939a60	-	no-entry	at::kGeneFlags 0x939a60 -	b0
 src/game/battle_e5_fuzz.cpp	DragonFrame	global	Mem	at::kAsk	0	0x904b74	-	no-entry	at::kAsk 0x904b74 -	b0
-src/game/battle_e5_fuzz.cpp	DragonFrame	global	-	at::kWin4	0	0x8031f0	-	no-entry	at::kWin4 0x8031f0 -	b0
 src/game/battle_e5_fuzz.cpp	DragonFrame	record	SetWord	actor + 0x9A	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_e5_fuzz.cpp	Seed	global	Mem	at::kAiScripts	0	0x8c5600	-	no-entry	at::kAiScripts 0x8c5600 -	b0
 src/game/battle_e5_fuzz.cpp	Seed	global	Mem	at::kActingKind	0	0x904b35	-	no-entry	at::kActingKind 0x904b35 -	b0
@@ -2889,7 +2820,6 @@ src/game/battle_menu_states.cpp	BattleItemCmd_List	record	SetWord	list + 0x12	1	
 src/game/battle_menu_states.cpp	BattleItemCmd_List	global	At	at::kQueue	0	0x93c2c0	-	no-entry	at::kQueue 0x93c2c0 -	b0
 src/game/battle_menu_states.cpp	BattleItemCmd_List	record	Word	list + 0x12	0	-	via=List	union	WindowRecord +0x12 w2	b1-battle
 src/game/battle_menu_states.cpp	BattleItemCmd_List	record	Long	list + 4	1	-	via=List	width	WindowRecord +0x4 w4	b1-battle
-src/game/battle_menu_states.cpp	BattleItemCmd_List	global	Byte	at::kRecord4	0	0x8031f0	-	no-entry	at::kRecord4 0x8031f0 -	b0
 src/game/battle_menu_states.cpp	BattleItemCmd_List	global	At	at::kQueue	1	0x93c2c0	-	no-entry	at::kQueue 0x93c2c0 -	b0
 src/game/battle_menu_states.cpp	BattleItemCmd_List	global	Byte	at::kSavedList	0	0x904605	-	inside-entry	at::kSavedList 0x904605 BattleMisc_PartyPages	b0
 src/game/battle_menu_states.cpp	BattleItemCmd_List	global	Byte	at::kSavedList	1	0x904605	-	inside-entry	at::kSavedList 0x904605 BattleMisc_PartyPages	b0
@@ -2935,8 +2865,7 @@ src/game/battle_misc.cpp	Battle_SpawnActorCopies	record	At	object + k	0	-	stride
 src/game/battle_misc.cpp	Battle_SpawnActorCopies	record	At	context + 0x80	0	-	via=Context	family	no record family established for this pointer here (via=Context)	b1-battle
 src/game/battle_misc.cpp	Battle_LoadSoundByKey	global	At	kSoundLists	0	0x6565bc	-	no-entry	kSoundLists 0x6565bc -	b0
 src/game/battle_misc.cpp	Battle_LoadSoundByKey	record	At	p + 4	0	-	stride=0x4	not-record	not one of the nine records.h families (stride=0x4)	b1-battle
-src/game/battle_misc.cpp	ItemMenu_CanUseSelected	global	At	kItemWindowCursor	0	0x8033ac	-	no-entry	kItemWindowCursor 0x8033ac -	b0
-src/game/battle_misc.cpp	ItemMenu_CanUseSelected	record	At	list + At(kItemWindowCursor)[0]	0	-	base=BattleActorCopies_ItemActor	not-record	not one of the nine records.h families (base=BattleActorCopies_ItemActor)	b1-battle
+src/game/battle_misc.cpp	ItemMenu_CanUseSelected	record	At	list + At(WindowRecords_addr + 0x24c)[0]	0	-	base=BattleActorCopies_ItemActor	not-record	not one of the nine records.h families (base=BattleActorCopies_ItemActor)	b1-battle
 src/game/battle_misc.cpp	ItemMenu_SetupForActor	record	At	acting + 5	0	-	base=BattleE4_MenuActor	not-record	not one of the nine records.h families (base=BattleE4_MenuActor)	b1-battle
 src/game/battle_misc.cpp	ItemMenu_SetupForActor	global	At	kActorPages	0	0x9045fc	-	no-entry	kActorPages 0x9045fc -	b0
 src/game/battle_misc.cpp	ItemMenu_SetupForActor	global	At	kActorPages	1	0x9045fc	-	no-entry	kActorPages 0x9045fc -	b0
@@ -2968,7 +2897,6 @@ src/game/battle_misc.cpp	EnemyAI_TurnCheck	record	At	actor + 0xA4	0	-	via=Curren
 src/game/battle_misc.cpp	EnemyAI_TurnCheck	record	At	actor + 0x108	3	-	via=CurrentEnemy	family	no record family established for this pointer here (via=CurrentEnemy)	b1-battle
 src/game/battle_misc.cpp	Sprite_UpdateObjectScreens	record	At	object + 6	0	-	via=Sprite_ObjectsAt;stride=0xa4	not-record	not one of the nine records.h families (via=Sprite_ObjectsAt;stride=0xa4)	b1-battle
 src/game/battle_misc_fuzz.cpp	SomeEnemy	record	At	object + (k < 3 ? 0x134 : 0x114)	0	-	stride=0x14c	family	no record family established for this pointer here (stride=0x14c)	b1-battle
-src/game/battle_misc_fuzz.cpp	StubItemList	global	At	kItemWindowCursor	0	0x8033ac	-	no-entry	kItemWindowCursor 0x8033ac -	b0
 src/game/battle_misc_fuzz.cpp	DisturbAi	record	At	g_script + ((h >> 8) % 4) * 16	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_misc_fuzz.cpp	DisturbAi	global	At	kActingKind	0	0x904b35	-	no-entry	kActingKind 0x904b35 -	b0
 src/game/battle_misc_fuzz.cpp	DisturbAi	record	PutWord	e + 0x108	0	-	-	family	no record family established for this pointer here (-)	b1-battle
@@ -2984,7 +2912,6 @@ src/game/battle_misc_fuzz.cpp	RandomActors	record	At	kParty + i * kPartyStride	0
 src/game/battle_misc_fuzz.cpp	RandomLists	record	PutLong	g_lists + at	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_misc_fuzz.cpp	RandomLists	record	PutLong	g_lists + at	1	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_misc_fuzz.cpp	RandomLists	global	At	kSoundLists	0	0x6565bc	-	no-entry	kSoundLists 0x6565bc -	b0
-src/game/battle_misc_fuzz.cpp	FuzzCanUse	global	At	kItemWindowCursor	0	0x8033ac	-	no-entry	kItemWindowCursor 0x8033ac -	b0
 src/game/battle_misc_fuzz.cpp	FuzzSetupActor	record	At	source + 0x10	0	-	via=Addr	not-record	not one of the nine records.h families (via=Addr)	b1-battle
 src/game/battle_misc_fuzz.cpp	RandomBanners	global	At	kBanners	0	0x93b8e0	-	no-entry	kBanners 0x93b8e0 -	b0
 src/game/battle_misc_fuzz.cpp	FuzzAdd	global	At	kBanners	0	0x93b8e0	-	no-entry	kBanners 0x93b8e0 -	b0
@@ -3049,11 +2976,9 @@ src/game/battle_odds.cpp	BattleBanner_TickKind1	record	PutWord	e + 8	0	-	via=Ban
 src/game/battle_odds.cpp	BattleBanner_TickKind1	record	Word	e + 8	1	-	via=BannerCurrent	not-record	not one of the nine records.h families (via=BannerCurrent)	b1-battle
 src/game/battle_odds.cpp	BattleBanner_TickKind1	record	Word	e + 8	2	-	via=BannerCurrent	not-record	not one of the nine records.h families (via=BannerCurrent)	b1-battle
 src/game/battle_odds.cpp	BattleBanner_TickKind1	record	At	entry + 1	0	-	via=BannerCurrent	not-record	not one of the nine records.h families (via=BannerCurrent)	b1-battle
-src/game/battle_odds.cpp	BattleBanner_TickKind1	global	At	kWin4State	0	0x8031f3	-	no-entry	kWin4State 0x8031f3 -	b0
 src/game/battle_odds.cpp	BattleBanner_TickKind2	record	Word	e + 8	0	-	via=BannerCurrent	not-record	not one of the nine records.h families (via=BannerCurrent)	b1-battle
 src/game/battle_odds.cpp	BattleBanner_TickKind2	record	PutWord	e + 8	0	-	via=BannerCurrent	not-record	not one of the nine records.h families (via=BannerCurrent)	b1-battle
 src/game/battle_odds.cpp	BattleBanner_TickKind2	record	Word	e + 8	1	-	via=BannerCurrent	not-record	not one of the nine records.h families (via=BannerCurrent)	b1-battle
-src/game/battle_odds.cpp	BattleBanner_TickKind2	global	At	kWin0State	0	0x803163	-	no-entry	kWin0State 0x803163 -	b0
 src/game/battle_odds.cpp	Effect_HalfAttack	global	At	kTarget	0	0x904b54	-	no-entry	kTarget 0x904b54 -	b0
 src/game/battle_odds.cpp	Effect_HalfAttack	global	At	kActing	0	0x904b34	-	no-entry	kActing 0x904b34 -	b0
 src/game/battle_odds.cpp	BattleFx_Brighten	record	At	at::TintRecordsAt() + s[0xA] * 12u + k	0	-	via=TintRecordsAt	not-record	not one of the nine records.h families (via=TintRecordsAt)	b1-battle
@@ -3061,8 +2986,6 @@ src/game/battle_odds.cpp	BattleFx_Finish	record	At	s + 0xB	0	-	via=SpriteCurrent
 src/game/battle_odds.cpp	BattleFx_Finish	global	At	kFlagTarget	0	0x904b44	-	no-entry	kFlagTarget 0x904b44 -	b0
 src/game/battle_odds.cpp	BattleFx_Finish	global	At	kRoundFlags	0	0x904aa8	-	no-entry	kRoundFlags 0x904aa8 -	b0
 src/game/battle_odds.cpp	BattleFx_Finish	global	At	kRoundFlags	1	0x904aa8	-	no-entry	kRoundFlags 0x904aa8 -	b0
-src/game/battle_odds_fuzz.cpp	SomeObject	global	At	kWindows	0	0x803160	-	no-entry	kWindows 0x803160 -	b0
-src/game/battle_odds_fuzz.cpp	SomeObject	global	At	kWindows	1	0x803160	-	no-entry	kWindows 0x803160 -	b0
 src/game/battle_odds_fuzz.cpp	StubFreeTask	global	At	kRoundFlags	0	0x904aa8	-	no-entry	kRoundFlags 0x904aa8 -	b0
 src/game/battle_odds_fuzz.cpp	StubSetFlag40	global	At	kRoundFlags	0	0x904aa8	-	no-entry	kRoundFlags 0x904aa8 -	b0
 src/game/battle_odds_fuzz.cpp	StubSetFlag40	global	At	kRoundFlags	1	0x904aa8	-	no-entry	kRoundFlags 0x904aa8 -	b0
@@ -3076,13 +2999,11 @@ src/game/battle_odds_fuzz.cpp	FuzzWait	record	At	GetLong(At(kSprite)) + 0xB	0	-	
 src/game/battle_odds_fuzz.cpp	FuzzFinish	record	At	s + 0xB	0	-	via=SomeObject	family	no record family established for this pointer here (via=SomeObject)	b1-battle
 src/game/battle_odds_fuzz.cpp	FuzzFinish	global	At	kFlagTarget	0	0x904b44	-	no-entry	kFlagTarget 0x904b44 -	b0
 src/game/battle_odds_fuzz.cpp	FuzzFinish	global	At	kRoundFlags	0	0x904aa8	-	no-entry	kRoundFlags 0x904aa8 -	b0
-src/game/battle_phases.cpp	Member	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_phases.cpp	Member	global	PtrAt	at::kMenuActor	0	0x939ec4	-	pointer-in-integer	at::kMenuActor 0x939ec4 BattleE4_MenuActor	b0
 src/game/battle_phases.cpp	Member	global	PtrAt	at::kMenuRecord	0	0x939fa0	-	pointer-in-integer	at::kMenuRecord 0x939fa0 BattleActorCopies_Command	b0
 src/game/battle_phases.cpp	Member	record	At	table + index * 4	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_phases.cpp	Battle_Frame	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_phases.cpp	Battle_Frame	global	B	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
-src/game/battle_phases.cpp	Battle_Frame	global	B	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_phases.cpp	Battle_Init	global	B	at::kActorCount	0	0x904ab0	-	no-entry	at::kActorCount 0x904ab0 -	b0
 src/game/battle_phases.cpp	Battle_Init	global	B	at::kActorCount	1	0x904ab0	-	no-entry	at::kActorCount 0x904ab0 -	b0
 src/game/battle_phases.cpp	Battle_Init	global	SetPtrAt	at::kMenuActor	0	0x939ec4	-	pointer-in-integer	at::kMenuActor 0x939ec4 BattleE4_MenuActor	b0
@@ -3138,15 +3059,12 @@ src/game/battle_phases.cpp	BattleCommit_QueueMessages	record	SetLong	text + 8	0	
 src/game/battle_phases.cpp	BattleCommit_WaitLoad	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_phases.cpp	BattleCommit_WaitLoad	global	B	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_phases.cpp	BattleCommit_WaitLoad	global	B	at::kPhase	1	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
-src/game/battle_phases_fuzz.cpp	Address	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_phases_fuzz.cpp	Disturb	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_phases_fuzz.cpp	Disturb	global	B	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_phases_fuzz.cpp	Disturb	global	B	at::kActorCount	0	0x904ab0	-	no-entry	at::kActorCount 0x904ab0 -	b0
 src/game/battle_phases_fuzz.cpp	Disturb	global	B	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_phases_fuzz.cpp	Disturb	global	B	at::kCommand	0	0x904ab4	-	no-entry	at::kCommand 0x904ab4 -	b0
-src/game/battle_phases_fuzz.cpp	Disturb	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_phases_fuzz.cpp	Disturb	global	B	at::kFacing	0	0x904aac	-	no-entry	at::kFacing 0x904aac -	b0
-src/game/battle_phases_fuzz.cpp	Disturb	global	B	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_phases_fuzz.cpp	H2	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_phases_fuzz.cpp	H2	global	B	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_phases_fuzz.cpp	StubRunStates	global	B	at::kActorCount	0	0x904ab0	-	no-entry	at::kActorCount 0x904ab0 -	b0
@@ -3160,14 +3078,11 @@ src/game/battle_phases_fuzz.cpp	StubSound	global	B	at::kCommand	0	0x904ab4	-	no-
 src/game/battle_phases_fuzz.cpp	StubSound	record	SetWord	Window(2) + 4 + 2 * (v % 2)	0	-	via=Window	computed	WindowRecord, offset 4 + 2 * (v % 2)	b1-battle
 src/game/battle_phases_fuzz.cpp	NudgeSelect	global	B	at::kCommand	0	0x904ab4	-	no-entry	at::kCommand 0x904ab4 -	b0
 src/game/battle_phases_fuzz.cpp	NudgeSelect	record	SetWord	Window(1) + 4 + 2 * ((h >> 8) % 2)	0	-	via=Window	computed	WindowRecord, offset 4 + 2 * ((h >> 8) % 2)	b1-battle
-src/game/battle_phases_fuzz.cpp	-	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
-src/game/battle_phases_fuzz.cpp	-	global	-	at::kWindows	1	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_phases_fuzz.cpp	-	global	-	at::kB8E0	0	0x93b8e0	-	no-entry	at::kB8E0 0x93b8e0 -	b0
 src/game/battle_phases_fuzz.cpp	Next	global	B	at::kEntryOrder	0	0x904ab6	-	no-entry	at::kEntryOrder 0x904ab6 -	b0
 src/game/battle_phases_fuzz.cpp	Next	global	B	at::kMessages	0	0x939fbc	-	no-entry	at::kMessages 0x939fbc -	b0
 src/game/battle_phases_fuzz.cpp	Next	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_phases_fuzz.cpp	Next	global	B	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
-src/game/battle_phases_fuzz.cpp	Seed	global	B	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_phases_fuzz.cpp	Seed	global	B	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_phases_fuzz.cpp	Seed	global	B	at::kActorCount	0	0x904ab0	-	no-entry	at::kActorCount 0x904ab0 -	b0
 src/game/battle_phases_fuzz.cpp	Seed	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
@@ -3188,7 +3103,6 @@ src/game/battle_phases_fuzz.cpp	SwapTable	record	At	table + 4 * i	0	-	param	fami
 src/game/battle_phases_fuzz.cpp	SwapTable	record	SetPtr	table + 4 * i	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_phases_fuzz.cpp	RestoreTable	record	At	table + 4 * i	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_result.cpp	Byte	global	At	at::kMembers	0	0x802dc0	-	untyped-entry	at::kMembers 0x802dc0 Text_CurrentName	b0
-src/game/battle_result.cpp	Byte	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_result.cpp	Byte	record	Dword	table + index * 4	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_result.cpp	__attribute__	global	Format	at::kFormatD	0	0x5e10c0	-	untyped-entry	at::kFormatD 0x5e10c0 Area08_MessageFormat	b0
 src/game/battle_result.cpp	__attribute__	global	Text	at::kText0	0	0x904ce0	-	untyped-entry	at::kText0 0x904ce0 Text_Records	b0
@@ -3220,7 +3134,6 @@ src/game/battle_result.cpp	__attribute__	global	Format	at::kFormat7d	0	0x64addc	
 src/game/battle_result.cpp	__attribute__	global	Text	at::kText2	2	0x904d20	-	no-entry	at::kText2 0x904d20 -	b0
 src/game/battle_result.cpp	__attribute__	global	At	at::kText2	2	0x904d20	-	no-entry	at::kText2 0x904d20 -	b0
 src/game/battle_result.cpp	__attribute__	global	At	at::kZennyUnit	0	0x66a31c	-	no-entry	at::kZennyUnit 0x66a31c -	b0
-src/game/battle_result_fuzz.cpp	Address	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_result_fuzz.cpp	TextHash	global	At	at::kMembers	0	0x802dc0	-	untyped-entry	at::kMembers 0x802dc0 Text_CurrentName	b0
 src/game/battle_result_fuzz.cpp	Disturb	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_result_fuzz.cpp	Disturb	global	At	at::kDropItems	0	0x904af4	-	no-entry	at::kDropItems 0x904af4 -	b0
@@ -3233,7 +3146,6 @@ src/game/battle_result_fuzz.cpp	StubWindowAlloc	global	At	at::kPartyCount	0	0x90
 src/game/battle_result_fuzz.cpp	StubTextDrawAt	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_result_fuzz.cpp	-	global	-	at::kMsgCurrent	0	0x93b8e4	-	no-entry	at::kMsgCurrent 0x93b8e4 -	b0
 src/game/battle_result_fuzz.cpp	-	global	-	at::kMembers	0	0x802dc0	-	untyped-entry	at::kMembers 0x802dc0 Text_CurrentName	b0
-src/game/battle_result_fuzz.cpp	-	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_result_fuzz.cpp	Next	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_result_fuzz.cpp	Next	global	At	at::kText0	0	0x904ce0	-	untyped-entry	at::kText0 0x904ce0 Text_Records	b0
 src/game/battle_result_fuzz.cpp	Next	global	At	at::kText2	0	0x904d20	-	no-entry	at::kText2 0x904d20 -	b0
@@ -3246,7 +3158,6 @@ src/game/battle_result_fuzz.cpp	Cover	global	-	at::kDropItems	0	0x904af4	-	no-en
 src/game/battle_result_fuzz.cpp	Cover	global	-	at::kDropItems	1	0x904af4	-	no-entry	at::kDropItems 0x904af4 -	b0
 src/game/battle_result_fuzz.cpp	Cover	global	-	at::kDropCount	0	0x904ae7	-	name	at::kDropCount 0x904ae7 Battle_DropCount	b0
 src/game/battle_result_fuzz.cpp	SwapTable	record	SetPtr	table + 4 * i	0	-	param	family	no record family established for this pointer here (param)	b1-battle
-src/game/battle_setup.cpp	Battle_OpenMsgWindow	global	At	at::kMsgWindow	0	0x803162	-	no-entry	at::kMsgWindow 0x803162 -	b0
 src/game/battle_setup.cpp	Battle_ClearActingFlags	global	At	at::kActing	0	0x904b34	-	no-entry	at::kActing 0x904b34 -	b0
 src/game/battle_setup.cpp	Battle_ClearActingFlags	global	At	at::kAbility	0	0x904b80	-	no-entry	at::kAbility 0x904b80 -	b0
 src/game/battle_setup.cpp	Battle_ReturnQueuedItem	global	At	at::kItemQueue	0	0x904acc	-	no-entry	at::kItemQueue 0x904acc -	b0
@@ -3261,7 +3172,6 @@ src/game/battle_setup_fuzz.cpp	StubSetHpChange	record	Word	o + (i <= 2 ? at::kPH
 src/game/battle_setup_fuzz.cpp	StubSetHpChange	record	SetWord	o + (i <= 2 ? at::kPHpChange : at::kEHpChange)	0	-	via=Obj	family	no record family established for this pointer here (via=Obj)	b1-battle
 src/game/battle_setup_fuzz.cpp	StubReleaseTint	record	SetWord	object + at::kPStatus	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_setup_fuzz.cpp	StubReleaseTint	record	SetWord	object + at::kEStatus	0	-	param	family	no record family established for this pointer here (param)	b1-battle
-src/game/battle_setup_fuzz.cpp	StubWindowAlloc	global	At	at::kMsgWindow	0	0x803162	-	no-entry	at::kMsgWindow 0x803162 -	b0
 src/game/battle_setup_fuzz.cpp	Byte	record	SetLong	o + (i <= 2 ? at::kPFlags : at::kEFlags)	0	-	via=Obj	family	no record family established for this pointer here (via=Obj)	b1-battle
 src/game/battle_setup_fuzz.cpp	Byte	record	SetWord	o + (i <= 2 ? at::kPStatus : at::kEStatus)	0	-	via=Obj	family	no record family established for this pointer here (via=Obj)	b1-battle
 src/game/battle_setup_fuzz.cpp	Seed	global	At	at::kActing	0	0x904b34	-	no-entry	at::kActing 0x904b34 -	b0
@@ -3337,14 +3247,12 @@ src/game/battle_sprites.cpp	Battle_OpenEnemyNames	record	SetWord	above + (k - 8)
 src/game/battle_sprites.cpp	Battle_OpenEnemyNames	global	At	at::kLayout	0	0x904aac	-	no-entry	at::kLayout 0x904aac -	b0
 src/game/battle_sprites.cpp	Battle_OpenEnemyNames	global	At	at::kNamePlaces	0	0x656a34	-	no-entry	at::kNamePlaces 0x656a34 -	b0
 src/game/battle_sprites.cpp	Battle_OpenEnemyNames	global	At	at::kNamePlaces	1	0x656a34	-	no-entry	at::kNamePlaces 0x656a34 -	b0
-src/game/battle_sprites.cpp	Battle_OpenEnemyNames	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_sprites_fuzz.cpp	Disturb	global	At	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/battle_sprites_fuzz.cpp	Disturb	global	At	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_sprites_fuzz.cpp	Disturb	record	SetWord	g_mine.action + 2	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_sprites_fuzz.cpp	Disturb	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_sprites_fuzz.cpp	Disturb	raw	At	0x802E08 + ((h >> 20) % 3) * at::kPartyStride	0	0x802e08	-	-	-	-
 src/game/battle_sprites_fuzz.cpp	Disturb	global	At	at::kClutMap	0	0x7e06a0	-	no-entry	at::kClutMap 0x7e06a0 -	b0
-src/game/battle_sprites_fuzz.cpp	Handle	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_sprites_fuzz.cpp	Address	global	-	at::kActions	0	0x65c4d8	-	untyped-entry	at::kActions 0x65c4d8 NameTable_Abilities	b0
 src/game/battle_sprites_fuzz.cpp	Fill	record	SetLong	p + i	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_sprites_fuzz.cpp	SeedClutMap	global	At	at::kClutMap	0	0x7e06a0	-	no-entry	at::kClutMap 0x7e06a0 -	b0
@@ -3441,7 +3349,6 @@ src/game/battle_win_states_fuzz.cpp	Seed	global	At	at::kCrossGrow	0	0x904abc	-	n
 src/game/battle_win_states_fuzz.cpp	Seed	global	At	at::kCrossSel	0	0x904ab4	-	no-entry	at::kCrossSel 0x904ab4 -	b0
 src/game/battle_win_states_fuzz.cpp	Seed	global	At	at::kCrossGrow	1	0x904abc	-	no-entry	at::kCrossGrow 0x904abc -	b0
 src/game/battle_win_states_fuzz.cpp	Seed	global	At	at::kBanners	0	0x93b8e0	-	no-entry	at::kBanners 0x93b8e0 -	b0
-src/game/battle_window_draw.cpp	Next	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_window_draw.cpp	Next	global	At	at::kPrintBuf	0	0x904ba0	-	no-entry	at::kPrintBuf 0x904ba0 -	b0
 src/game/battle_window_draw.cpp	BattleWin_OpenStatus	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_window_draw.cpp	BattleWin_OpenStatus	global	At	at::kStatusX	0	0x64e307	-	no-entry	at::kStatusX 0x64e307 -	b0
@@ -3472,17 +3379,14 @@ src/game/battle_window_draw_fuzz.cpp	Disturb	global	At	at::kPartyCount	0	0x904ab
 src/game/battle_window_draw_fuzz.cpp	Disturb	global	At	at::kPrintBuf	0	0x904ba0	-	no-entry	at::kPrintBuf 0x904ba0 -	b0
 src/game/battle_window_draw_fuzz.cpp	Disturb	global	At	at::kWorking	0	0x802dc0	-	untyped-entry	at::kWorking 0x802dc0 Text_CurrentName	b0
 src/game/battle_window_draw_fuzz.cpp	Disturb	global	At	at::kAbilities	0	0x65c4c8	-	untyped-entry	at::kAbilities 0x65c4c8 Ability_Records	b0
-src/game/battle_window_draw_fuzz.cpp	PutDword	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_window_draw_fuzz.cpp	StubApCost	global	At	at::kWorking	0	0x802dc0	-	untyped-entry	at::kWorking 0x802dc0 Text_CurrentName	b0
 src/game/battle_window_draw_fuzz.cpp	StubApCost	record	SetWord	r + 0x1A	0	-	stride=0xa4	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)	b1-battle
-src/game/battle_window_draw_fuzz.cpp	static_assert	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_window_draw_fuzz.cpp	static_assert	global	-	at::kWorking	0	0x802dc0	-	untyped-entry	at::kWorking 0x802dc0 Text_CurrentName	b0
 src/game/battle_window_draw_fuzz.cpp	static_assert	global	-	at::kPrintBuf	0	0x904ba0	-	no-entry	at::kPrintBuf 0x904ba0 -	b0
 src/game/battle_window_draw_fuzz.cpp	static_assert	global	-	at::kAbilities	0	0x65c4c8	-	untyped-entry	at::kAbilities 0x65c4c8 Ability_Records	b0
 src/game/battle_window_draw_fuzz.cpp	static_assert	global	-	at::kQuadShapes	0	0x64e148	-	no-entry	at::kQuadShapes 0x64e148 -	b0
 src/game/battle_window_draw_fuzz.cpp	static_assert	global	-	at::kFmtNone	0	0x64e320	-	no-entry	at::kFmtNone 0x64e320 -	b0
 src/game/battle_window_draw_fuzz.cpp	static_assert	global	-	at::kSkillIcons	0	0x663d70	-	untyped-entry	at::kSkillIcons 0x663d70 Skill_KindIcons	b0
-src/game/battle_window_draw_fuzz.cpp	Window	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_window_draw_fuzz.cpp	Window	global	At	at::kAbilities	0	0x65c4c8	-	untyped-entry	at::kAbilities 0x65c4c8 Ability_Records	b0
 src/game/battle_window_draw_fuzz.cpp	Fix	global	At	at::kPrintBuf	0	0x904ba0	-	no-entry	at::kPrintBuf 0x904ba0 -	b0
 src/game/battle_window_draw_fuzz.cpp	Fix	record	SetWord	r + 0x1A	0	-	stride=0xa4	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)	b1-battle
@@ -3506,7 +3410,6 @@ src/game/battle_windows.cpp	BattleWin_DrawPartyStatus	global	At	at::kPartyCount	
 src/game/battle_windows.cpp	BattleWin_DrawPartyStatus	global	At	at::kPartyCount	1	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_windows.cpp	BattleWin_DrawPartyStatus	global	At	at::kPartyCount	2	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_windows.cpp	BattleWin_DrawPartyStatus	global	At	at::kPartyCount	3	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
-src/game/battle_windows.cpp	BattleWin_DrawPartyStatus	global	At	at::kPartyBars	0	0x80333f	-	no-entry	at::kPartyBars 0x80333f -	b0
 src/game/battle_windows.cpp	BattleWin_DrawPartyStatus	global	At	at::kPartyCount	4	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_windows.cpp	ArmShade	global	Ptr	at::kActor	0	0x939ec4	-	pointer-in-integer	at::kActor 0x939ec4 BattleE4_MenuActor	b0
 src/game/battle_windows.cpp	BattleWin_DrawCommandCross	global	At	at::kCrossSel	0	0x904ab4	-	no-entry	at::kCrossSel 0x904ab4 -	b0
@@ -3525,16 +3428,13 @@ src/game/battle_windows.cpp	BattleWin_DrawMessage	global	At	at::kMsgRing	0	0x93c
 src/game/battle_windows_fuzz.cpp	Member	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_windows_fuzz.cpp	Member	global	At	at::kCrossSel	0	0x904ab4	-	no-entry	at::kCrossSel 0x904ab4 -	b0
 src/game/battle_windows_fuzz.cpp	Member	global	At	at::kCrossGrow	0	0x904abc	-	no-entry	at::kCrossGrow 0x904abc -	b0
-src/game/battle_windows_fuzz.cpp	Member	global	At	at::kPartyBars	0	0x80333f	-	no-entry	at::kPartyBars 0x80333f -	b0
 src/game/battle_windows_fuzz.cpp	Member	global	At	at::kMsgRing	0	0x93c2c4	-	no-entry	at::kMsgRing 0x93c2c4 -	b0
-src/game/battle_windows_fuzz.cpp	Member	global	At	at::kPartyBars	1	0x80333f	-	no-entry	at::kPartyBars 0x80333f -	b0
 src/game/battle_windows_fuzz.cpp	Fix	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_windows_fuzz.cpp	SeedMember	record	SetWord	m + 0x90	0	-	param	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)	b1-battle
 src/game/battle_windows_fuzz.cpp	SeedMember	record	SetWord	m + 0xA2	0	-	param	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)	b1-battle
 src/game/battle_windows_fuzz.cpp	SeedMember	record	SetWord	m + 0x9A	0	-	param	audit-family	C:/Users/kerok/v_typed/b1_audit_rbs.md section 1: PartyMember index past the three ObjTrio records (runs into WindowRecords)	b1-battle
 src/game/battle_windows_fuzz.cpp	Seed	global	At	at::kBattleKind	0	0x904aa0	-	no-entry	at::kBattleKind 0x904aa0 -	b0
 src/game/battle_windows_fuzz.cpp	Seed	global	At	at::kPoseMode	0	0x904aa8	-	no-entry	at::kPoseMode 0x904aa8 -	b0
-src/game/battle_windows_fuzz.cpp	Seed	global	At	at::kPartyBars	0	0x80333f	-	no-entry	at::kPartyBars 0x80333f -	b0
 src/game/battle_windows_fuzz.cpp	Seed	global	At	at::kCrossSel	0	0x904ab4	-	no-entry	at::kCrossSel 0x904ab4 -	b0
 src/game/battle_windows_fuzz.cpp	Seed	global	At	at::kCrossGrow	0	0x904abc	-	no-entry	at::kCrossGrow 0x904abc -	b0
 src/game/battle_windows_fuzz.cpp	SelfTest	global	At	at::kSkillFlags	0	0x65c4dd	-	no-entry	at::kSkillFlags 0x65c4dd -	b0
@@ -3566,11 +3466,9 @@ src/game/boss_harness.cpp	TurnEffect	record	SetLong	s + 0x10	2	-	-	family	no rec
 src/game/boss_harness.cpp	TurnEffect	record	SetLong	s + 0xC	2	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/boss_harness.cpp	Fix	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/boss_harness.cpp	Fix	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/boss_harness.cpp	WindowAt	global	Mem	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/boss_harness.cpp	WindowAt	global	-	at::kHookEnd	0	0x904b64	-	name	at::kHookEnd 0x904b64 BattleHook_End	b0
 src/game/boss_harness.cpp	Run	record	Mem	d.at + d.stride * i	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/boss_harness.cpp	Run	global	-	at::kBattle	0	0x904aa0	-	no-entry	at::kBattle 0x904aa0 -	b0
-src/game/boss_harness.cpp	Run	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/boss_harness.cpp	Run	global	-	at::kModeBytes	0	0x929f00	-	name	at::kModeBytes 0x929f00 BattleE1_Mode	b0
 src/game/boss_harness.cpp	Run	record	Mem	d.at + d.stride * i	1	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/boss_sa.cpp	B	record	At	table + 4 * state	0	-	-	family	no record family established for this pointer here (-)	b1-battle
@@ -3625,11 +3523,9 @@ src/game/boss_sb.cpp	Boss04_Setup	record	SetLong	Sprite_Current + 0x3C	0	-	base=
 src/game/boss_sb.cpp	BossOperator_HookHit	record	SetWord	At(BattleSprites_HitBlock) + 4	0	-	via=At	family	no record family established for this pointer here (via=At)	b1-battle
 src/game/boss_sb.cpp	BossOperator_HookHit	global	At	at::kBannerText	0	0x904ea0	-	no-entry	at::kBannerText 0x904ea0 -	b0
 src/game/boss_sb.cpp	BossOperator_HookHit	global	At	at::kBannerSource	0	0x65d008	-	no-entry	at::kBannerSource 0x65d008 -	b0
-src/game/boss_sb.cpp	BossOperator_HookHit	global	B	at::kWindow4Flag	0	0x8031f3	-	no-entry	at::kWindow4Flag 0x8031f3 -	b0
 src/game/boss_sb.cpp	BossOperator_HookHit	global	B	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/boss_sb.cpp	Boss13_Setup	global	B	at::kScriptVar3	0	0x903848	-	no-entry	at::kScriptVar3 0x903848 -	b0
 src/game/boss_sb_fuzz.cpp	-	global	-	at::kScriptVar3	0	0x903848	-	no-entry	at::kScriptVar3 0x903848 -	b0
-src/game/boss_sb_fuzz.cpp	-	global	-	at::kWindow4Flag	0	0x8031f3	-	no-entry	at::kWindow4Flag 0x8031f3 -	b0
 src/game/boss_sb_fuzz.cpp	SeedEvent	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/boss_sb_fuzz.cpp	SeedEvent	global	Mem	at::kCommandKind	0	0x904b35	-	no-entry	at::kCommandKind 0x904b35 -	b0
 src/game/boss_sb_fuzz.cpp	SeedEvent	record	SetWord	command + 2	0	-	via=SpriteRecord	not-record	not one of the nine records.h families (via=SpriteRecord)	b1-battle
@@ -9256,7 +9152,6 @@ src/game/field_s_fuzz.cpp	Move	raw	B	0x80321E	0	0x80321e	-	-	-	-
 src/game/field_s_fuzz.cpp	Move	raw	B	0x803340	0	0x803340	-	-	-	-
 src/game/field_s_fuzz.cpp	Move	raw	B	0x80333E	0	0x80333e	-	-	-	-
 src/game/field_s_fuzz.cpp	Move	raw	B	0x803362 + (v & 3)	0	0x803362	-	-	-	-
-src/game/field_s_fuzz.cpp	-	global	-	sh::at::kWindows	0	0x803160	-	no-entry	sh::at::kWindows 0x803160 -	b0
 src/game/field_s_fuzz.cpp	-	global	-	at::kEquipBytes	0	0x939880	-	no-entry	at::kEquipBytes 0x939880 -	b0
 src/game/field_s_fuzz.cpp	SeedParty	record	SetWord	rec + 0x18	0	-	stride=0xa4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_s_fuzz.cpp	SeedParty	record	SetWord	rec + 0x1A	0	-	stride=0xa4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
@@ -9287,7 +9182,6 @@ src/game/field_s_fuzz.cpp	SeedWindows	raw	B	0x803365	0	0x803365	-	-	-	-
 src/game/field_s_fuzz.cpp	SeedWindows	raw	SetW	0x803368	0	0x803368	-	-	-	-
 src/game/field_s_fuzz.cpp	SeedWindows	global	B	at::kSharedList	0	0x904574	-	no-entry	at::kSharedList 0x904574 -	b0
 src/game/field_s_fuzz.cpp	Seed	raw	B	0x803360	0	0x803360	-	-	-	-
-src/game/field_s_fuzz.cpp	Args	global	-	sh::at::kWindows	0	0x803160	-	no-entry	sh::at::kWindows 0x803160 -	b0
 src/game/fishing_text.cpp	SelfTest	global	Byte	kLineRecords	0	0x653b98	-	no-entry	kLineRecords 0x653b98 -	b0
 src/game/fishing_text.cpp	SelfTest	global	Byte	kLineRecords	1	0x653b98	-	no-entry	kLineRecords 0x653b98 -	b0
 src/game/fishing_text.cpp	SelfTest	global	Byte	kLinePens	0	0x653c00	-	no-entry	kLinePens 0x653c00 -	b0
@@ -9397,7 +9291,6 @@ src/game/item_use.cpp	CharRecord	global	At	at::kWorkRecords	0	0x802dc0	-	untyped
 src/game/item_use.cpp	__attribute__	global	At	at::kItemFlags	0	0x656b38	-	no-entry	at::kItemFlags 0x656b38 -	b0
 src/game/item_use.cpp	CommitChoice	record	Long	desc + 0x34	0	-	base=Area_Descriptors	no-struct	no records.h family is evidenced for this pointer (base=Area_Descriptors)	b1-scen_ui
 src/game/item_use.cpp	MsgBox_ChoiceCommit	global	At	at::kMessage	0	0x7dee48	-	no-entry	at::kMessage 0x7dee48 -	b0
-src/game/item_use.cpp	MsgBox_ChoiceCommit	global	At	at::kWindow0State	0	0x803163	-	no-entry	at::kWindow0State 0x803163 -	b0
 src/game/item_use.cpp	SysMessage	global	At	at::kMessage	0	0x7dee48	-	no-entry	at::kMessage 0x7dee48 -	b0
 src/game/item_use.cpp	SysMessage	global	At	at::kSysMessages	0	0x658f08	-	no-entry	at::kSysMessages 0x658f08 -	b0
 src/game/item_use.cpp	SysCounter	global	At	at::kSysCounter	0	0x903848	-	no-entry	at::kSysCounter 0x903848 -	b0
@@ -9407,7 +9300,6 @@ src/game/item_use.cpp	MsgBox_SysChoice81	global	At	at::kRepeatLatch	1	0x7e01b8	-
 src/game/item_use.cpp	MsgBox_SysChoice81	global	At	at::kRepeatLatch	2	0x7e01b8	-	no-entry	at::kRepeatLatch 0x7e01b8 -	b0
 src/game/item_use_fuzz.cpp	RecordOf	global	At	at::kWorkRecords	0	0x802dc0	-	untyped-entry	at::kWorkRecords 0x802dc0 Text_CurrentName	b0
 src/game/item_use_fuzz.cpp	Disturb	global	At	at::kMessage	0	0x7dee48	-	no-entry	at::kMessage 0x7dee48 -	b0
-src/game/item_use_fuzz.cpp	Disturb	global	At	at::kWindow0State	0	0x803163	-	no-entry	at::kWindow0State 0x803163 -	b0
 src/game/item_use_fuzz.cpp	Disturb	global	At	at::kTiaraCount	0	0x905b61	-	name	at::kTiaraCount 0x905b61 ModeRest_AreaAsked	b0
 src/game/item_use_fuzz.cpp	Disturb	global	At	at::kSysCounter	0	0x903848	-	no-entry	at::kSysCounter 0x903848 -	b0
 src/game/item_use_fuzz.cpp	StubHealHp	record	SetWord	r + at::kHp	0	-	via=RecordOf	no-struct	the persistent character record (0x903A70 + id * 0xA4) or its working copy: not a records.h family (via=RecordOf)	b1-scen_ui
@@ -10705,7 +10597,6 @@ src/game/magic_s33.cpp	Accession_ApplyB	raw	Mem	0x904AB0	0	0x904ab0	-	-	-	-
 src/game/magic_s33.cpp	Accession_ApplyB	raw	Mem	0x904AA9	0	0x904aa9	-	-	-	-
 src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_s33.cpp	Accession_ApplyB	raw	Mem	0x904AB0	1	0x904ab0	-	-	-	-
-src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	kWindowRows	0	0x803337	-	no-entry	kWindowRows 0x803337 -	b0
 src/game/magic_s33.cpp	Accession_ApplyB	raw	Mem	0x904AAC	0	0x904aac	-	-	-	-
 src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	kSideOffsets	0	0x64e2bc	-	no-entry	kSideOffsets 0x64e2bc -	b0
 src/game/magic_s33.cpp	Accession_ApplyB	record	SetWord	w + 1	0	-	stride=0x24	field-missing	struct unknown: Mem(kWindowRows + i * 0x24u); records.h has no struct for this record	b1-magic
@@ -11093,14 +10984,10 @@ src/game/member_sprites_fuzz.cpp	SelfTest	global	-	at::kControlStates	0	0x65f99c
 src/game/menu_draw_helpers.cpp	S	record	At	table + index * 4	0	-	-	computed	computed offset or index (-)	b1-scen_ui
 src/game/menu_draw_helpers.cpp	__attribute__	record	Word	Rec() + 0x10	0	-	via=Rec	union	WindowRecord Word width: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
 src/game/menu_draw_helpers.cpp	__attribute__	record	Word	Rec() + 0x10	1	-	via=Rec	union	WindowRecord Word width: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
-src/game/menu_draw_helpers_fuzz.cpp	Disturb	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/menu_draw_helpers_fuzz.cpp	SwapTables	record	At	tb.at + 4 * i	0	-	-	computed	computed offset or index (-)	b1-scen_ui
 src/game/menu_draw_helpers_fuzz.cpp	SwapTables	record	At	tb.at + 4 * i	1	-	-	computed	computed offset or index (-)	b1-scen_ui
-src/game/menu_draw_helpers_fuzz.cpp	-	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/menu_draw_helpers_fuzz.cpp	Seed	record	SetWord	r + 0x10	0	-	via=Current	union	WindowRecord SetWord width: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
 src/game/menu_draw_helpers_fuzz.cpp	Cover	record	Long	in.memory + 0x318	0	-	param	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (param)	b1-scen_ui
-src/game/menu_draw_helpers_fuzz.cpp	Cover	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
-src/game/menu_draw_helpers_fuzz.cpp	SelfTest	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/menu_lists.cpp	void	record	At	table + index * 4	0	-	param	computed	computed offset or index (param)	b1-scen_ui
 src/game/menu_lists.cpp	FieldMenu_Open	raw	Byte	0x7E0675	0	0x7e0675	-	-	-	-
 src/game/menu_lists.cpp	FieldMenu_Open	raw	Byte	0x7E0674	0	0x7e0674	-	-	-	-
@@ -11127,8 +11014,6 @@ src/game/menu_lists.cpp	FieldMenu_TopBarInput	global	Byte	at::kMoneyWindow	0	0x8
 src/game/menu_lists.cpp	FieldMenu_TopBarInput	global	Byte	at::kTimeWindow	0	0x803280	-	inside-entry	at::kTimeWindow 0x803280 Window8	b0
 src/game/menu_lists.cpp	FieldMenu_TopBarInput	global	Byte	at::kIconWindow	3	0x8032a4	-	inside-entry	at::kIconWindow 0x8032a4 Window9	b0
 src/game/menu_lists.cpp	FieldMenu_TopBarInput	global	Byte	at::kTitleWindow	0	0x8032c8	-	inside-entry	at::kTitleWindow 0x8032c8 Window10	b0
-src/game/menu_lists.cpp	FieldMenu_TopBarInput	global	At	at::kMemberPanels	0	0x8031f0	-	no-entry	at::kMemberPanels 0x8031f0 -	b0
-src/game/menu_lists.cpp	FieldMenu_BackdropStep	global	At	at::kMemberPanels	0	0x8031f0	-	no-entry	at::kMemberPanels 0x8031f0 -	b0
 src/game/menu_lists.cpp	FieldMenu_BackdropStep	global	Byte	at::kIconWindow	0	0x8032a4	-	inside-entry	at::kIconWindow 0x8032a4 Window9	b0
 src/game/menu_lists.cpp	FieldMenu_BackdropStep	global	Byte	at::kIconWindow	1	0x8032a4	-	inside-entry	at::kIconWindow 0x8032a4 Window9	b0
 src/game/menu_lists.cpp	FieldMenu_BackdropStep	global	Byte	at::kIconWindow	2	0x8032a4	-	inside-entry	at::kIconWindow 0x8032a4 Window9	b0
@@ -11140,7 +11025,6 @@ src/game/menu_lists.cpp	MenuList_TopBarIcons	record	SetWord	r + 0x10	0	-	via=Rec
 src/game/menu_lists.cpp	MenuList_TopBarIcons	record	SetWord	r + 0x10	1	-	via=Rec	union	WindowRecord SetWord width: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
 src/game/menu_lists.cpp	MenuList_TopBarIcons	record	Word	r + 0x10	0	-	via=Rec	union	WindowRecord Word width: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
 src/game/menu_lists.cpp	MenuList_TitleBox	record	Word	r + 0x10	0	-	via=Rec	union	WindowRecord Word width: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
-src/game/menu_lists_fuzz.cpp	Address	global	At	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/menu_lists_fuzz.cpp	Current	record	SetWord	g_arg_rec + 4	0	-	param	order	WindowRecord: a store through a pointer read afresh (Sprite_Current, Rec(), Object(Count())) whose value is computed: an assignment would read the pointer after the value, not before as the setter call does	b1-scen_ui
 src/game/menu_lists_fuzz.cpp	Current	record	SetWord	g_arg_rec + 6	0	-	param	order	WindowRecord: a store through a pointer read afresh (Sprite_Current, Rec(), Object(Count())) whose value is computed: an assignment would read the pointer after the value, not before as the setter call does	b1-scen_ui
 src/game/menu_lists_fuzz.cpp	Disturb	record	SetWord	Cur() + 4	0	-	via=Cur	order	WindowRecord: a store through a pointer read afresh (Sprite_Current, Rec(), Object(Count())) whose value is computed: an assignment would read the pointer after the value, not before as the setter call does	b1-scen_ui
@@ -11149,15 +11033,12 @@ src/game/menu_lists_fuzz.cpp	Disturb	record	SetWord	Cur() + 0x10	0	-	via=Cur	uni
 src/game/menu_lists_fuzz.cpp	Disturb	global	At	at::kSavedParty	0	0x6bdf98	-	no-entry	at::kSavedParty 0x6bdf98 -	b0
 src/game/menu_lists_fuzz.cpp	Disturb	global	At	at::kReserveData	0	0x9045fc	-	no-entry	at::kReserveData 0x9045fc -	b0
 src/game/menu_lists_fuzz.cpp	-	global	-	at::kSavedParty	0	0x6bdf98	-	no-entry	at::kSavedParty 0x6bdf98 -	b0
-src/game/menu_lists_fuzz.cpp	-	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/menu_lists_fuzz.cpp	Seed	record	Word	r + 0x10	0	-	stride=0xa4	no-struct	the persistent character record (0x903A70 + id * 0xA4) or its working copy: not a records.h family (table=0x903a70;stride=0xa4)	b1-scen_ui
 src/game/menu_lists_fuzz.cpp	Seed	record	SetWord	r + 8	0	-	stride=0xa4	no-struct	the persistent character record (0x903A70 + id * 0xA4) or its working copy: not a records.h family (table=0x903a70;stride=0xa4)	b1-scen_ui
 src/game/menu_lists_fuzz.cpp	Seed	global	At	at::kSavedParty	0	0x6bdf98	-	no-entry	at::kSavedParty 0x6bdf98 -	b0
 src/game/menu_lists_fuzz.cpp	Seed	record	SetWord	r + 0x10	0	-	via=Cur	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (via=Cur)	b1-scen_ui
 src/game/menu_lists_fuzz.cpp	Seed	record	SetWord	Cur() + 6	0	-	via=Cur	order	WindowRecord: a store through a pointer read afresh (Sprite_Current, Rec(), Object(Count())) whose value is computed: an assignment would read the pointer after the value, not before as the setter call does	b1-scen_ui
 src/game/menu_lists_fuzz.cpp	Seed	record	SetWord	Cur() + 4	0	-	via=Cur	order	WindowRecord: a store through a pointer read afresh (Sprite_Current, Rec(), Object(Count())) whose value is computed: an assignment would read the pointer after the value, not before as the setter call does	b1-scen_ui
-src/game/menu_lists_fuzz.cpp	Cover	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
-src/game/menu_lists_fuzz.cpp	Cover	global	-	at::kRecords	1	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/menu_windows.cpp	Addr	global	At	at::kPrintBuf	0	0x904ba0	-	no-entry	at::kPrintBuf 0x904ba0 -	b0
 src/game/menu_windows.cpp	PoolRect	record	SetWord	r + 2	0	-	via=Next	no-struct	a GPU packet in the OT pool, not a records.h family (via=Next)	b1-scen_ui
 src/game/menu_windows.cpp	PoolRect	record	SetWord	r + 4	0	-	via=Next	no-struct	a GPU packet in the OT pool, not a records.h family (via=Next)	b1-scen_ui
@@ -11243,7 +11124,6 @@ src/game/mode_flow.cpp	Area_Enter	raw	At	0x8034E2	0	0x8034e2	-	-	-	-
 src/game/mode_flow.cpp	Area_Enter	global	At	at::kKind2XHigh	1	0x905e66	-	inside-entry	at::kKind2XHigh 0x905e66 Field_Kind2X+0x2	b0
 src/game/mode_flow.cpp	Area_Enter	global	At	at::kKind2ZHigh	1	0x905e62	-	inside-entry	at::kKind2ZHigh 0x905e62 Field_Kind2Z+0x2	b0
 src/game/mode_flow.cpp	Area_EntryWalk	global	At	at::kWalkPoses	0	0x66adbc	-	no-entry	at::kWalkPoses 0x66adbc -	b0
-src/game/mode_flow.cpp	Window_ResetAll	global	At	at::kWindowRecords	0	0x803160	-	no-entry	at::kWindowRecords 0x803160 -	b0
 src/game/mode_flow.cpp	__attribute__	global	At	at::kBootClear	0	0x9039e0	-	no-entry	at::kBootClear 0x9039e0 -	b0
 src/game/mode_flow.cpp	MoveScript_TintReset	global	At	at::kTintMarks	0	0x7e06a0	-	no-entry	at::kTintMarks 0x7e06a0 -	b0
 src/game/mode_flow_fuzz.cpp	Disturb	raw	At	0x905BA4	0	0x905ba4	-	-	-	-
@@ -11529,7 +11409,6 @@ src/game/msgbox.cpp	MsgBox_EffectDraw	global	W	kEffectOff	1	0x7dee68	-	no-entry	
 src/game/msgbox.cpp	MsgBox_EffectDraw	global	W	kEffectOff	2	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	b0
 src/game/msgbox.cpp	MsgBox_EffectDraw	global	B	kClipTable	2	0x658f00	-	no-entry	kClipTable 0x658f00 -	b0
 src/game/msgbox.cpp	MsgBox_EffectDraw	global	W	kEffectOff	3	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	b0
-src/game/msgbox.cpp	Window_Alloc	global	At	kWindows	0	0x803160	-	no-entry	kWindows 0x803160 -	b0
 src/game/msgbox.cpp	MsgBox_StepRecord	global	Ptr	kBase	0	0x7dee4c	-	pointer-in-integer	kBase 0x7dee4c Msgbox_Base	b0
 src/game/msgbox.cpp	MsgBox_StepRecord	global	W	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StepRecord	global	SetPtr	kBase	0	0x7dee4c	-	pointer-in-integer	kBase 0x7dee4c Msgbox_Base	b0
@@ -11540,9 +11419,7 @@ src/game/msgbox_fuzz.cpp	Disturb	global	SetB	kState	0	0x7dee40	-	no-entry	kState
 src/game/msgbox_fuzz.cpp	Disturb	global	SetW	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox_fuzz.cpp	Disturb	global	SetW	kMessage	0	0x7dee48	-	no-entry	kMessage 0x7dee48 -	b0
 src/game/msgbox_fuzz.cpp	Disturb	global	SetB	kChoiceLast	0	0x7dee66	-	name	kChoiceLast 0x7dee66 MenuWindows_ListCount	b0
-src/game/msgbox_fuzz.cpp	Disturb	global	SetB	kWindow0State	0	0x803163	-	no-entry	kWindow0State 0x803163 -	b0
 src/game/msgbox_fuzz.cpp	Disturb	global	SetW	kEffectOff	0	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	b0
-src/game/msgbox_fuzz.cpp	StubWindowAlloc	global	At	kWindows	0	0x803160	-	no-entry	kWindows 0x803160 -	b0
 src/game/msgbox_fuzz.cpp	BuildPool	global	SetW	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/msgbox_fuzz.cpp	BuildRecords	global	At	kRecordsLow	0	0x903a60	-	no-entry	kRecordsLow 0x903a60 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	SetW	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
@@ -11550,7 +11427,6 @@ src/game/msgbox_fuzz.cpp	Seed	global	W	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7de
 src/game/msgbox_fuzz.cpp	Seed	global	SetB	kState	0	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	SetW	kMessage	0	0x7dee48	-	no-entry	kMessage 0x7dee48 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	SetL	kPoolSelector	0	0x803584	-	no-entry	kPoolSelector 0x803584 -	b0
-src/game/msgbox_fuzz.cpp	Seed	global	SetB	kWindow0State	0	0x803163	-	no-entry	kWindow0State 0x803163 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	SetB	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	B	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	SetB	kState	1	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
@@ -11565,8 +11441,6 @@ src/game/msgbox_fuzz.cpp	Seed	global	B	kFlags	2	0x7dee44	-	no-entry	kFlags 0x7de
 src/game/msgbox_fuzz.cpp	Seed	global	SetW	kEffectOff	0	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	SetW	kEffectOff	1	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	SetW	kEffectOff	2	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	b0
-src/game/msgbox_fuzz.cpp	Seed	global	SetB	kWindow0State	1	0x803163	-	no-entry	kWindow0State 0x803163 -	b0
-src/game/msgbox_fuzz.cpp	Seed	global	At	kWindows	0	0x803160	-	no-entry	kWindows 0x803160 -	b0
 src/game/msgbox_fuzz.cpp	Seed	global	SetW	kEffectOff	3	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	b0
 src/game/msgbox_fuzz.cpp	SelfTest	global	At	kRecordsLow	0	0x903a60	-	no-entry	kRecordsLow 0x903a60 -	b0
 src/game/msgbox_fuzz.cpp	SelfTest	global	L	kPoolSelector	0	0x803584	-	no-entry	kPoolSelector 0x803584 -	b0
@@ -11861,7 +11735,6 @@ src/game/rest_2a_fuzz.cpp	Disturb	record	SetLong	s + 0x34 + 4 * (v % 3)	0	-	base
 src/game/rest_2b.cpp	Field_TriggerCounterF0	global	B	kTriggerCounter	0	0x903848	-	no-entry	kTriggerCounter 0x903848 -	b0
 src/game/rest_2b.cpp	Shisu_Begin	global	B	kGiven	0	0x9399e4	-	no-entry	kGiven 0x9399e4 -	b0
 src/game/rest_2b.cpp	Shisu_OpenWait	global	SetW	kMessage	0	0x803194	-	no-entry	kMessage 0x803194 -	b0
-src/game/rest_2b.cpp	Shisu_CloseWait	global	B	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
 src/game/rest_2b.cpp	Shisu_Result	global	B	kGiven	0	0x9399e4	-	no-entry	kGiven 0x9399e4 -	b0
 src/game/rest_2b.cpp	Shisu_Result	global	B	kCounterB	0	0x90384b	-	no-entry	kCounterB 0x90384b -	b0
 src/game/rest_2b.cpp	Shisu_Result	global	B	kCounterB	1	0x90384b	-	no-entry	kCounterB 0x90384b -	b0
@@ -11869,21 +11742,14 @@ src/game/rest_2b.cpp	Shisu_PickSide	global	SetW	kMessage	0	0x803194	-	no-entry	k
 src/game/rest_2b.cpp	Shisu_PickSide	global	SetW	kMessage	1	0x803194	-	no-entry	kMessage 0x803194 -	b0
 src/game/rest_2b.cpp	Shisu_PickSide	global	SetW	kMessage	2	0x803194	-	no-entry	kMessage 0x803194 -	b0
 src/game/rest_2b.cpp	Shisu_PickSide	global	SetW	kMessage	3	0x803194	-	no-entry	kMessage 0x803194 -	b0
-src/game/rest_2b.cpp	Shisu_PickSide	global	B	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_2b.cpp	Shisu_PickSide	global	L	kWin2	0	0x8031a8	-	inside-entry	kWin2 0x8031a8 Window2	b0
-src/game/rest_2b.cpp	Shisu_PickSide	global	SetW	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_2b.cpp	Shisu_PickSide	global	SetW	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_2b.cpp	Shisu_PickSide	global	W	kWin2	0	0x8031a8	-	inside-entry	kWin2 0x8031a8 Window2	b0
 src/game/rest_2b.cpp	Shisu_PickCounts	global	SetW	kMessage	0	0x803194	-	no-entry	kMessage 0x803194 -	b0
 src/game/rest_2b.cpp	Shisu_PickCounts	global	SetW	kMessage	1	0x803194	-	no-entry	kMessage 0x803194 -	b0
 src/game/rest_2b.cpp	Shisu_PickCounts	global	SetW	kMessage	2	0x803194	-	no-entry	kMessage 0x803194 -	b0
 src/game/rest_2b.cpp	Shisu_PickCounts	global	L	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
 src/game/rest_2b.cpp	Shisu_PickCounts	global	B	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_2b.cpp	Shisu_PickCounts	global	SetW	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_2b.cpp	Shisu_PickCounts	global	B	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_2b.cpp	Shisu_PickCounts	global	B	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_PickCounts	global	SetW	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_2b.cpp	Shisu_PickCounts	global	W	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
 src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kAColour	0	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
 src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kAColour	1	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
 src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kSavedA	0	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
@@ -11919,14 +11785,8 @@ src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kSavedA	3	0x6bc87c	-	no-entry	kSave
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kAColour	2	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kAColour	3	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
 src/game/rest_2b.cpp	Shisu_CountItems	global	B	kOwned	0	0x9399e0	-	no-entry	kOwned 0x9399e0 -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin1	0	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin2	0	0x8031a8	-	inside-entry	kWin2 0x8031a8 Window2	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin0	2	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin0	3	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin1	0	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin1	1	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin1	2	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
@@ -11938,17 +11798,9 @@ src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin2	1	0x8031a8	-	inside-en
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin2	3	0x8031a8	-	inside-entry	kWin2 0x8031a8 Window2	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin2	4	0x8031a8	-	inside-entry	kWin2 0x8031a8 Window2	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin3	1	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin3	2	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin3	3	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin3	1	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_SetupWindows	global	B	kWin3	4	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetL	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_CloseWindows	global	B	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_2b.cpp	Shisu_CloseWindows	global	B	kWin1	0	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_2b.cpp	Shisu_CloseWindows	global	B	kWin2	0	0x8031a8	-	inside-entry	kWin2 0x8031a8 Window2	b0
-src/game/rest_2b.cpp	Shisu_CloseWindows	global	B	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
 src/game/rest_2b.cpp	Shisu_InitModels	global	SetL	kModelB	0	0x939960	-	no-entry	kModelB 0x939960 -	b0
 src/game/rest_2b.cpp	Shisu_InitModels	global	SetL	kModelB	1	0x939960	-	no-entry	kModelB 0x939960 -	b0
 src/game/rest_2b.cpp	Shisu_InitModels	record	L	file + 4	0	-	base=Rest2b_ModelFile	no-struct	L(file + 4): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -11971,7 +11823,6 @@ src/game/rest_2b.cpp	Shisu_InitModels	global	SetL	kModelA	6	0x9398e0	-	no-entry	
 src/game/rest_2b.cpp	Shisu_ModelBDraw	global	At	kModelB	0	0x939960	-	no-entry	kModelB 0x939960 -	b0
 src/game/rest_2b.cpp	Shisu_DrawModel	global	At	kOffsetX	0	0x5c4278	-	no-entry	kOffsetX 0x5c4278 -	b0
 src/game/rest_2b.cpp	Shisu_DrawModel	global	At	kOffsetY	0	0x5c4274	-	no-entry	kOffsetY 0x5c4274 -	b0
-src/game/rest_2b_fuzz.cpp	-	global	-	sh::at::kWindows	0	0x803160	-	no-entry	sh::at::kWindows 0x803160 -	b0
 src/game/rest_2b_fuzz.cpp	Seed	global	B	kTimer	0	0x929f04	-	no-entry	kTimer 0x929f04 -	b0
 src/game/rest_2b_fuzz.cpp	Seed	global	Mem	kModelA	0	0x9398e0	-	no-entry	kModelA 0x9398e0 -	b0
 src/game/rest_2b_fuzz.cpp	Seed	global	Mem	kModelB	0	0x939960	-	no-entry	kModelB 0x939960 -	b0
@@ -11981,7 +11832,6 @@ src/game/rest_2c.cpp	Key	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 
 src/game/rest_2c.cpp	SummaryOf	global	-	at::kSummaries	0	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
 src/game/rest_2c.cpp	SummaryOf	global	-	at::kSummaries	1	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
 src/game/rest_2c.cpp	CopySummary	global	L	at::kSummary	0	0x904680	-	no-entry	at::kSummary 0x904680 -	b0
-src/game/rest_2c.cpp	Win	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2c.cpp	MasterMessage	global	At	at::kMasterMessages	0	0x6644e8	-	no-entry	at::kMasterMessages 0x6644e8 -	b0
 src/game/rest_2c.cpp	MasterFigure_DrawFaded	global	B	at::kFigureRgb	0	0x93993d	-	inside-entry	at::kFigureRgb 0x93993d Rest2c_FigureRgb	b0
 src/game/rest_2c.cpp	MasterFigure_DrawFaded	global	B	at::kFigureRgb	1	0x93993d	-	inside-entry	at::kFigureRgb 0x93993d Rest2c_FigureRgb	b0
@@ -12111,10 +11961,8 @@ src/game/rest_2c.cpp	MasterPanel_DrawFace	global	-	at::kFaceTable	0	0x6644b8	-	n
 src/game/rest_2c.cpp	MasterPanel_DrawFace	record	B	entry + 1	0	-	table=0x6644b8	no-struct	B(entry + 1): table=0x6644b8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2c.cpp	MasterPanel_DrawFace	record	B	entry + 2	0	-	table=0x6644b8	no-struct	B(entry + 2): table=0x6644b8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2c.cpp	MasterPanel_DrawFace	record	B	entry + 3	0	-	table=0x6644b8	no-struct	B(entry + 3): table=0x6644b8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_2c_fuzz.cpp	B	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2c_fuzz.cpp	Move	global	B	at::kTimer	0	0x929f04	-	no-entry	at::kTimer 0x929f04 -	b0
 src/game/rest_2c_fuzz.cpp	FigureDraw	global	Mem	at::kFigure	0	0x9398e0	-	no-entry	at::kFigure 0x9398e0 -	b0
-src/game/rest_2c_fuzz.cpp	-	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2c_fuzz.cpp	-	global	-	at::kBlock	0	0x9039e0	-	no-entry	at::kBlock 0x9039e0 -	b0
 src/game/rest_2c_fuzz.cpp	-	global	-	at::kSummaries	0	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
 src/game/rest_2c_fuzz.cpp	SeedMenu	global	B	at::kTimer	0	0x929f04	-	no-entry	at::kTimer 0x929f04 -	b0
@@ -12127,7 +11975,6 @@ src/game/rest_2c_fuzz.cpp	SeedRecords	record	SetW	rec + 0x10	0	-	stride=0xa4	no-
 src/game/rest_2c_fuzz.cpp	SeedRecords	record	B	rec + 0xA	0	-	stride=0xa4	no-struct	B(rec + 0xA): table=0x903a70;stride=0xa4, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2c_fuzz.cpp	Seed	record	B	d->by	0	-	via=DispatchOf	no-struct	B(d->by): via=DispatchOf, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2d.cpp	B	record	At	table + 4 * index	0	-	-	computed	- (At(table + 4 * index))	b1-rest
-src/game/rest_2d.cpp	Window	global	RecordChecked	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2d.cpp	MemberLabel	global	At	at::kMasterMessages	0	0x6644e8	-	no-entry	at::kMasterMessages 0x6644e8 -	b0
 src/game/rest_2d.cpp	MessageText	global	At	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
 src/game/rest_2d.cpp	MessageText	global	At	at::kMessagePools	1	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
@@ -12157,7 +12004,6 @@ src/game/rest_2d.cpp	FieldMenuStatus_Open	global	B	at::kMenuTimer	0	0x929f04	-	n
 src/game/rest_2d.cpp	FieldMenuStatus_SlideIn	raw	At	0x8032FC	0	0x8032fc	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuStatus_SlideIn	global	B	at::kMenuTimer	0	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
 src/game/rest_2d.cpp	FieldMenuStatus_SlideIn	global	B	at::kMenuTimer	1	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
-src/game/rest_2d.cpp	FieldMenuStatus_Choose	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2d.cpp	FieldMenuStatus_Choose	raw	At	0x803410	0	0x803410	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuStatus_Choose	raw	At	0x8032FC	0	0x8032fc	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuStatus_Choose	global	B	at::kMenuTimer	0	0x929f04	-	no-entry	at::kMenuTimer 0x929f04 -	b0
@@ -12178,7 +12024,6 @@ src/game/rest_2d.cpp	FieldMenuStatus_Close	raw	B	0x803283	0	0x803283	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuStatus_Close	raw	B	0x8032A7	0	0x8032a7	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuStatus_Close	raw	B	0x8032CB	0	0x8032cb	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuStatus_PlaceWindows	record	At	w + 4	0	-	via=Window	gate	compiled differently when typed (bisected per site)	b1-rest
-src/game/rest_2d.cpp	FieldMenuStatus_PlaceWindows	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2d.cpp	FieldMenuStatus_PlaceWindows	record	B	w + 0xA	0	-	via=Window	union	WindowRecord +0xa w1 (B(w + 0xA))	b1-rest
 src/game/rest_2d.cpp	FieldMenuStatus_PlaceWindows	record	At	w + 6	0	-	via=Window	gate	compiled differently when typed (bisected per site)	b1-rest
 src/game/rest_2d.cpp	FieldMenuStatus_PlaceWindows	raw	B	0x8032ED	0	0x8032ed	-	-	-	-
@@ -12325,7 +12170,6 @@ src/game/rest_2d.cpp	FieldMenuItems_Close	raw	B	0x80325F	0	0x80325f	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuItems_Close	raw	B	0x803283	0	0x803283	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuItems_Close	raw	B	0x8032A7	0	0x8032a7	-	-	-	-
 src/game/rest_2d.cpp	FieldMenuItems_Close	raw	B	0x8032CB	0	0x8032cb	-	-	-	-
-src/game/rest_2d_fuzz.cpp	-	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x90358E	0	0x90358e	-	-	-	-
 src/game/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x903590	0	0x903590	-	-	-	-
 src/game/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x7E1BEC	0	0x7e1bec	-	-	-	-
@@ -12899,7 +12743,6 @@ src/game/rest_2e.cpp	FieldAbility_ViewLeave	global	B	kTimer	1	0x929f04	-	no-entr
 src/game/rest_2e.cpp	FieldAbility_ViewLeave	global	B	kTimer	2	0x929f04	-	no-entry	kTimer 0x929f04 -	b0
 src/game/rest_2e.cpp	FieldAbility_ViewEnd	global	B	kTimer	0	0x929f04	-	no-entry	kTimer 0x929f04 -	b0
 src/game/rest_2e.cpp	FieldAbility_ViewEnd	global	B	kTimer	1	0x929f04	-	no-entry	kTimer 0x929f04 -	b0
-src/game/rest_2e_fuzz.cpp	-	global	-	sh::at::kWindows	0	0x803160	-	no-entry	sh::at::kWindows 0x803160 -	b0
 src/game/rest_2e_fuzz.cpp	SeedButtons	raw	SetW	0x7E1BEE	0	0x7e1bee	-	-	-	-
 src/game/rest_2e_fuzz.cpp	SeedInventory	raw	B	0x904154 + i	0	0x904154	-	-	-	-
 src/game/rest_2e_fuzz.cpp	SeedInventory	raw	B	0x904154 + 0x80 * list + i	0	0x904154	-	-	-	-
@@ -13086,18 +12929,13 @@ src/game/rest_2g.cpp	MenuList_LabelList	global	At	at::kLabelRowPieces	1	0x66b0f0
 src/game/rest_2g.cpp	MenuList_LabelList	global	B	at::kLabelRows	3	0x66b158	-	no-entry	at::kLabelRows 0x66b158 -	b0
 src/game/rest_2g.cpp	MenuList_LabelList	global	At	at::kLabelEndPieces	0	0x66b0fc	-	no-entry	at::kLabelEndPieces 0x66b0fc -	b0
 src/game/rest_2g.cpp	MenuList_EquipCompare	record	Long	r + 0x20	0	-	via=Rec	pad	WindowRecord +0x20 w4: inside records.h padding (Long(r + 0x20))	b1-rest
-src/game/rest_2g.cpp	MenuList_SlideRightTo182	global	At	at::kRecord4X	0	0x8031f4	-	no-entry	at::kRecord4X 0x8031f4 -	b0
-src/game/rest_2g_fuzz.cpp	Key	global	Mem	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
-src/game/rest_2g_fuzz.cpp	-	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2g_fuzz.cpp	-	global	-	at::kGridWords	0	0x939820	-	no-entry	at::kGridWords 0x939820 -	b0
 src/game/rest_2g_fuzz.cpp	-	global	-	at::kGridCells	0	0x939a60	-	no-entry	at::kGridCells 0x939a60 -	b0
 src/game/rest_2g_fuzz.cpp	Move	record	SetWord	r + 0x10	0	-	via=Current	union	WindowRecord +0x10 w2 (SetWord(r + 0x10))	b1-rest
 src/game/rest_2g_fuzz.cpp	Move	record	SetLong	r + 0x20	0	-	via=Current	pad	WindowRecord +0x20 w4: inside records.h padding (SetLong(r + 0x20))	b1-rest
 src/game/rest_2g_fuzz.cpp	Move	global	Mem	at::kGridCells	0	0x939a60	-	no-entry	at::kGridCells 0x939a60 -	b0
 src/game/rest_2g_fuzz.cpp	TaskMoving	global	Mem	at::kGridCells	0	0x939a60	-	no-entry	at::kGridCells 0x939a60 -	b0
-src/game/rest_2g_fuzz.cpp	BoundOf	global	Mem	at::kRecord4X	0	0x8031f4	-	no-entry	at::kRecord4X 0x8031f4 -	b0
 src/game/rest_2g_fuzz.cpp	Seed	record	SetWord	r + 0x10	0	-	via=Rec	union	WindowRecord +0x10 w2 (SetWord(r + 0x10))	b1-rest
-src/game/rest_2g_fuzz.cpp	Seed	global	Mem	at::kRecord4X	0	0x8031f4	-	no-entry	at::kRecord4X 0x8031f4 -	b0
 src/game/rest_2g_fuzz.cpp	Seed	global	Mem	at::kGridCells	0	0x939a60	-	no-entry	at::kGridCells 0x939a60 -	b0
 src/game/rest_2g_fuzz.cpp	Seed	record	SetWord	r + s.off	0	-	via=Rec	computed	via=Rec (SetWord(r + s.off))	b1-rest
 src/game/rest_2h.cpp	void	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -13187,8 +13025,6 @@ src/game/rest_2h.cpp	Menu_DrawVerbPair	global	-	at::kVerbPiecesOn	1	0x66b500	-	n
 src/game/rest_2h.cpp	DInput_EnumJoystick	global	-	at::kJoystickIid	0	0x5c4718	-	no-entry	at::kJoystickIid 0x5c4718 -	b0
 src/game/rest_2h.cpp	DInput_EnumJoystick	global	At	at::kProductName	0	0x66c7b0	-	no-entry	at::kProductName 0x66c7b0 -	b0
 src/game/rest_2h_fuzz.cpp	Mem	record	Mem	site + 1	0	-	param	no-struct	Mem(site + 1): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_2h_fuzz.cpp	-	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
-src/game/rest_2h_fuzz.cpp	Window	global	Mem	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2h_fuzz.cpp	SeedSlide	record	SetWord	w + at_word	0	-	param	computed	param (SetWord(w + at_word))	b1-rest
 src/game/rest_2h_fuzz.cpp	SeedSkills	global	Mem	at::kSharedList	0	0x904574	-	no-entry	at::kSharedList 0x904574 -	b0
 src/game/rest_2h_fuzz.cpp	Seed	global	Mem	at::kMasterBits	0	0x904657	-	no-entry	at::kMasterBits 0x904657 -	b0
@@ -13306,7 +13142,6 @@ src/game/rest_3b.cpp	Stat_PercentCap999	global	Ptr	at::kCommand	2	0x939fa0	-	poi
 src/game/rest_3b.cpp	Stat_PercentCap999	global	Ptr	at::kCommand	3	0x939fa0	-	pointer-in-integer	at::kCommand 0x939fa0 BattleActorCopies_Command	b0
 src/game/rest_3b.cpp	Stat_PercentCap999	global	B	at::kPartyCount	1	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/rest_3b.cpp	Stat_PercentCap999	global	Ptr	at::kCommand	4	0x939fa0	-	pointer-in-integer	at::kCommand 0x939fa0 BattleActorCopies_Command	b0
-src/game/rest_3b.cpp	CancelHead	global	B	at::kWin3State	0	0x8031cf	-	no-entry	at::kWin3State 0x8031cf -	b0
 src/game/rest_3b.cpp	CancelHead	global	Ptr	at::kMenuActor	0	0x939ec4	-	pointer-in-integer	at::kMenuActor 0x939ec4 BattleE4_MenuActor	b0
 src/game/rest_3b.cpp	Escape_Dispatch	global	Ptr	at::kCommand	0	0x939fa0	-	pointer-in-integer	at::kCommand 0x939fa0 BattleActorCopies_Command	b0
 src/game/rest_3b.cpp	Escape_Dispatch	record	Word	c + 2	0	-	table=0x939fa0	no-struct	Word(c + 2): table=0x939fa0, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -13397,7 +13232,6 @@ src/game/rest_3b_fuzz.cpp	BattleFrame	global	Mem	at::kTarget	0	0x904b54	-	no-ent
 src/game/rest_3b_fuzz.cpp	BattleFrame	global	Mem	at::kAbility	0	0x904b80	-	no-entry	at::kAbility 0x904b80 -	b0
 src/game/rest_3b_fuzz.cpp	BattleFrame	global	Mem	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/rest_3b_fuzz.cpp	MenuFrame	record	SetWord	c + 2	0	-	-	no-struct	SetWord(c + 2): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_3b_fuzz.cpp	MenuFrame	global	Mem	at::kWin16Cursor	0	0x8033ac	-	no-entry	at::kWin16Cursor 0x8033ac -	b0
 src/game/rest_3b_fuzz.cpp	Disturb	global	Mem	at::kTarget	0	0x904b54	-	no-entry	at::kTarget 0x904b54 -	b0
 src/game/rest_3b_fuzz.cpp	Disturb	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/rest_3b_fuzz.cpp	Disturb	global	Mem	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
@@ -14511,11 +14345,9 @@ src/game/rest_4e.cpp	CommuMusic_DrawList	global	At	kGlyphsC	1	0x65314c	-	no-entr
 src/game/rest_4e.cpp	CommuMusic_DrawList	global	At	kGlyphsA	0	0x653144	-	no-entry	kGlyphsA 0x653144 -	b0
 src/game/rest_4e.cpp	CommuMusic_DrawLabel	global	At	kEight	0	0x5c41cc	-	-	-	-
 src/game/rest_4e.cpp	ItemList	record	L	bof3::addr::Inventory_IdLists + 4 * tab	0	-	base=Inventory_IdLists	no-struct	L(bof3::addr::Inventory_IdLists + 4 * tab): base=Inventory_IdLists, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4e.cpp	CommuItem_Choose	global	B	kWinOff	0	0x803163	-	no-entry	kWinOff 0x803163 -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	L	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	SetW	kWin1	0	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	0	0x80316b	-	no-entry	kTop 0x80316b -	b0
-src/game/rest_4e.cpp	CommuItem_Choose	global	W	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	SetW	kWin1	1	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	SetW	kScroll	0	0x803172	-	no-entry	kScroll 0x803172 -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	1	0x80316b	-	no-entry	kTop 0x80316b -	b0
@@ -14528,9 +14360,6 @@ src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	6	0x80316b	-	no-entry	kTop 0
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	7	0x80316b	-	no-entry	kTop 0x80316b -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	8	0x80316b	-	no-entry	kTop 0x80316b -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	W	kScroll	0	0x803172	-	no-entry	kScroll 0x803172 -	b0
-src/game/rest_4e.cpp	CommuItem_Choose	global	B	kWinOff	1	0x803163	-	no-entry	kWinOff 0x803163 -	b0
-src/game/rest_4e.cpp	CommuItem_Choose	global	B	kWinOff	2	0x803163	-	no-entry	kWinOff 0x803163 -	b0
-src/game/rest_4e.cpp	ItemClosed	global	B	kWinOff	0	0x803163	-	no-entry	kWinOff 0x803163 -	b0
 src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Consumables + 0x10 + 22 * item	0	-	base=NameTable_Consumables	no-struct	B(bof3::addr::NameTable_Consumables + 0x10 + 22 * item): base=NameTable_Consumables, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Weapons + 0x11 + 28 * item	0	-	base=NameTable_Weapons	no-struct	B(bof3::addr::NameTable_Weapons + 0x11 + 28 * item): base=NameTable_Weapons, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Armour + 0x11 + 26 * item	0	-	base=NameTable_Armour	no-struct	B(bof3::addr::NameTable_Armour + 0x11 + 26 * item): base=NameTable_Armour, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -14540,16 +14369,10 @@ src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	0	0x803160	-	no-entry	
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	2	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	3	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_4e.cpp	CommuItem_SetupWindow	global	SetW	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_4e.cpp	CommuItem_SetupWindow	global	SetW	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	4	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	5	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	6	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	7	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	8	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	9	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_4e.cpp	CommuItem_SetupWindow	global	SetW	kWin0	2	0x803160	-	no-entry	kWin0 0x803160 -	b0
-src/game/rest_4e.cpp	CommuItem_SetupWindow	global	SetW	kWin0	3	0x803160	-	no-entry	kWin0 0x803160 -	b0
+src/game/rest_4e.cpp	CommuItem_SetupWindow	global	SetW	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
+src/game/rest_4e.cpp	CommuItem_SetupWindow	global	SetW	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin1	0	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin1	1	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin1	2	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
@@ -14587,14 +14410,11 @@ src/game/rest_4e.cpp	CommuRank_DrawBackdrop	global	At	kTilesTop	0	0x6531a0	-	no-
 src/game/rest_4e.cpp	CommuRank_DrawBackdrop	global	B	kTilesSide	0	0x6531e0	-	no-entry	kTilesSide 0x6531e0 -	b0
 src/game/rest_4e.cpp	CommuRank_DrawBackdrop	global	B	kTilesSide	1	0x6531e0	-	no-entry	kTilesSide 0x6531e0 -	b0
 src/game/rest_4e.cpp	CommuRank_DrawBackdrop	global	At	kTilesBottom	0	0x6531c0	-	no-entry	kTilesBottom 0x6531c0 -	b0
-src/game/rest_4e_fuzz.cpp	-	global	-	sh::at::kWindows	0	0x803160	-	no-entry	sh::at::kWindows 0x803160 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPool	0	0x803580	-	no-entry	kPool 0x803580 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPool	1	0x803580	-	no-entry	kPool 0x803580 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPairMessages	0	0x653180	-	no-entry	kPairMessages 0x653180 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kTracks	0	0x653098	-	no-entry	kTracks 0x653098 -	b0
-src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kWinOff	0	0x803163	-	no-entry	kWinOff 0x803163 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kTop	0	0x80316b	-	no-entry	kTop 0x80316b -	b0
-src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kScroll	0	0x803172	-	no-entry	kScroll 0x803172 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	record	Mem	bof3::addr::Inventory_IdLists + 4 * B(Window0_ParamA_addr)	0	-	base=Inventory_IdLists	no-struct	Mem(bof3::addr::Inventory_IdLists + 4 * B(BattleOdds_Win0Index_a): base=Inventory_IdLists, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4e_fuzz.cpp	PointMessage	record	Mem	list + B(Window0_Cursor_addr)	0	-	base=Inventory_IdLists	no-struct	Mem(list + B(Window0_Cursor_addr)): base=Inventory_IdLists, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kListCPairs	0	0x904ca0	-	no-entry	kListCPairs 0x904ca0 -	b0
@@ -14609,10 +14429,6 @@ src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kPages	6	0x675fd8	-	no-entry	kPa
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kPages	7	0x675fd8	-	no-entry	kPages 0x675fd8 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kPages	8	0x675fd8	-	no-entry	kPages 0x675fd8 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kPages	9	0x675fd8	-	no-entry	kPages 0x675fd8 -	b0
-src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kWinOff	1	0x803163	-	no-entry	kWinOff 0x803163 -	b0
-src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kScroll	1	0x803172	-	no-entry	kScroll 0x803172 -	b0
-src/game/rest_4e_fuzz.cpp	Disturb	global	B	kWinOff	0	0x803163	-	no-entry	kWinOff 0x803163 -	b0
-src/game/rest_4e_fuzz.cpp	Disturb	global	Mem	kScroll	0	0x803172	-	no-entry	kScroll 0x803172 -	b0
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	kListAEntries	0	0x9039c0	-	no-entry	kListAEntries 0x9039c0 -	b0
 src/game/rest_4f.cpp	Dispatch	record	L	table + 4 * index	0	-	param	no-struct	L(table + 4 * index): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -15963,7 +15779,6 @@ src/game/shop_states.cpp	FieldSave_End	global	PutWord	at::kRepeatLatch	0	0x7e01b
 src/game/shop_states.cpp	FieldSave_End	global	B	at::kCount	0	0x929f04	-	no-entry	at::kCount 0x929f04 -	b0
 src/game/shop_states2.cpp	PutLong	global	Long	at::kIdLists	0	0x656b00	-	untyped-entry	at::kIdLists 0x656b00 Inventory_IdLists	b0
 src/game/shop_states2.cpp	PutLong	global	Long	at::kCountLists	0	0x656b14	-	untyped-entry	at::kCountLists 0x656b14 Inventory_CountLists	b0
-src/game/shop_states2.cpp	PutLong	global	At	at::kMembers	0	0x8031cc	-	no-entry	at::kMembers 0x8031cc -	b0
 src/game/shop_states2.cpp	PutLong	global	Byte	at::kPartyList	0	0x904062	-	gate	at::kPartyList 0x904062 Cond_Flags+0xd2	b0
 src/game/shop_states2.cpp	PutLong	global	Byte	at::kRecordOf	0	0x66972c	-	gate	at::kRecordOf 0x66972c Character_IndexById	b0
 src/game/shop_states2.cpp	PutLong	raw	Long	0x803164	0	0x803164	-	-	-	-
@@ -16455,12 +16270,9 @@ src/game/window_kinds_fuzz.cpp	-	global	-	at::kMsgRing	0	0x93c2c0	-	no-entry	at:
 src/game/window_kinds_fuzz.cpp	-	global	-	at::kMsgRing	1	0x93c2c0	-	no-entry	at::kMsgRing 0x93c2c0 -	b0
 src/game/window_kinds_fuzz.cpp	-	global	-	at::kMsgRing	2	0x93c2c0	-	no-entry	at::kMsgRing 0x93c2c0 -	b0
 src/game/window_kinds_fuzz.cpp	-	global	-	at::kMsgRing	3	0x93c2c0	-	no-entry	at::kMsgRing 0x93c2c0 -	b0
-src/game/window_kinds_fuzz.cpp	Disturb	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
-src/game/window_kinds_fuzz.cpp	-	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/window_kinds_fuzz.cpp	-	global	-	at::kMsgRing	4	0x93c2c0	-	no-entry	at::kMsgRing 0x93c2c0 -	b0
 src/game/window_kinds_fuzz.cpp	-	global	-	at::kBannerPool	0	0x93b8e0	-	no-entry	at::kBannerPool 0x93b8e0 -	b0
 src/game/window_kinds_fuzz.cpp	-	global	-	at::kBannerMask	1	0x904ae9	-	name	at::kBannerMask 0x904ae9 BattleMisc_BannerKinds	b0
-src/game/window_kinds_fuzz.cpp	Next	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/window_kinds_fuzz.cpp	Next	global	-	at::kBannerPool	0	0x93b8e0	-	no-entry	at::kBannerPool 0x93b8e0 -	b0
 src/game/window_kinds_fuzz.cpp	SeedGauge	record	SetWord	g_enemy + 0x30	0	-	param	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (param)	b1-scen_ui
 src/game/window_kinds_fuzz.cpp	SeedGauge	record	SetWord	g_enemy + 0x24	0	-	param	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (param)	b1-scen_ui
@@ -16469,7 +16281,6 @@ src/game/window_kinds_fuzz.cpp	SeedGauge	record	SetWord	g_win + 0x14	0	-	-	fuzz-
 src/game/window_kinds_fuzz.cpp	SeedGauge	record	SetWord	g_win + 0x18	0	-	-	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (-)	b1-scen_ui
 src/game/window_kinds_fuzz.cpp	Seed	global	At	at::kMsgRing	0	0x93c2c0	-	no-entry	at::kMsgRing 0x93c2c0 -	b0
 src/game/window_kinds_fuzz.cpp	CurrentSlot	record	Long	s.memory + 0x318	0	-	param	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (param)	b1-scen_ui
-src/game/window_kinds_fuzz.cpp	CurrentSlot	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/window_kinds_fuzz.cpp	Cover	record	Word	in.enemy + 0x30	0	-	param	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (param)	b1-scen_ui
 src/game/window_kinds_fuzz.cpp	Cover	record	Word	in.win + 0x1C	0	-	param	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (param)	b1-scen_ui
 src/game/window_kinds_fuzz.cpp	Cover	record	Word	in.enemy + 0x24	0	-	param	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (param)	b1-scen_ui
@@ -16482,9 +16293,7 @@ src/game/window_kinds_fuzz.cpp	Cover	record	Word	rin + 6	0	-	stride=0x24	fuzz-bu
 src/game/window_task.cpp	Area_ClassifyPending	global	-	at::kAreaKinds	0	0x66adc0	-	no-entry	at::kAreaKinds 0x66adc0 -	b0
 src/game/window_task.cpp	Area_ClassifyPending	global	-	at::kAreaKindsEnd	0	0x66add6	-	no-entry	at::kAreaKindsEnd 0x66add6 -	b0
 src/game/window_task.cpp	Area_ZoneTrack	global	-	at::kMusicSets	0	0x669a48	-	no-entry	at::kMusicSets 0x669a48 -	b0
-src/game/window_task.cpp	Field_RunTaskRecords	global	-	at::kRecords	0	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/window_task.cpp	Field_RunTaskRecords	global	-	at::kRecordsEnd	0	0x803478	-	no-entry	at::kRecordsEnd 0x803478 -	b0
-src/game/window_task.cpp	Field_RunTaskRecords	global	-	at::kRecords	1	0x803160	-	no-entry	at::kRecords 0x803160 -	b0
 src/game/window_task.cpp	Window_Kind0States	global	At	at::kBoxAltXY	0	0x66ade8	-	no-entry	at::kBoxAltXY 0x66ade8 -	b0
 src/game/window_task.cpp	Window_Kind0States	global	At	at::kBoxAltXY	1	0x66ade8	-	no-entry	at::kBoxAltXY 0x66ade8 -	b0
 src/game/window_task.cpp	Window_Kind0States	global	At	at::kBoxXY	0	0x66add8	-	no-entry	at::kBoxXY 0x66add8 -	b0
@@ -16514,14 +16323,8 @@ src/game/window_task.cpp	Window_FreeState	record	SetWord	window2 + 2	0	-	base=Gf
 src/game/window_task.cpp	Window_FreeState	record	SetWord	window2 + 0	0	-	base=Gfx_PacketNext	no-struct	a GPU packet in the OT pool, not a records.h family (base=Gfx_PacketNext)	b1-scen_ui
 src/game/window_task.cpp	Window_FreeState	record	SetWord	window2 + 6	0	-	base=Gfx_PacketNext	no-struct	a GPU packet in the OT pool, not a records.h family (base=Gfx_PacketNext)	b1-scen_ui
 src/game/window_task.cpp	Window_FreeState	record	SetWord	window2 + 4	0	-	base=Gfx_PacketNext	no-struct	a GPU packet in the OT pool, not a records.h family (base=Gfx_PacketNext)	b1-scen_ui
-src/game/window_task_fuzz.cpp	Id	global	-	window_task::at::kRecords	0	0x803160	-	no-entry	window_task::at::kRecords 0x803160 -	b0
 src/game/window_task_fuzz.cpp	Id	global	-	window_task::at::kRecordsEnd	0	0x803478	-	no-entry	window_task::at::kRecordsEnd 0x803478 -	b0
-src/game/window_task_fuzz.cpp	Id	global	-	window_task::at::kRecords	1	0x803160	-	no-entry	window_task::at::kRecords 0x803160 -	b0
-src/game/window_task_fuzz.cpp	Disturb	global	-	window_task::at::kRecords	0	0x803160	-	no-entry	window_task::at::kRecords 0x803160 -	b0
-src/game/window_task_fuzz.cpp	-	global	-	window_task::at::kRecords	0	0x803160	-	no-entry	window_task::at::kRecords 0x803160 -	b0
-src/game/window_task_fuzz.cpp	Next	global	-	window_task::at::kRecords	0	0x803160	-	no-entry	window_task::at::kRecords 0x803160 -	b0
 src/game/window_task_fuzz.cpp	Next	global	-	window_task::at::kRecordsEnd	0	0x803478	-	no-entry	window_task::at::kRecordsEnd 0x803478 -	b0
-src/game/window_task_fuzz.cpp	Next	global	-	window_task::at::kRecords	1	0x803160	-	no-entry	window_task::at::kRecords 0x803160 -	b0
 src/game/window_task_fuzz.cpp	Next	global	At	window_task::at::kMusicSets	0	0x669a48	-	no-entry	window_task::at::kMusicSets 0x669a48 -	b0
 src/game/window_task_fuzz.cpp	Next	global	At	window_task::at::kMusicSets	1	0x669a48	-	no-entry	window_task::at::kMusicSets 0x669a48 -	b0
 src/game/window_task_fuzz.cpp	Seed	record	SetWord	r + 0x14	0	-	-	union	WindowRecord SetWord width_step: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
@@ -16531,7 +16334,6 @@ src/game/window_task_fuzz.cpp	Seed	record	SetWord	r + 0x12	0	-	-	union	WindowRec
 src/game/window_task_fuzz.cpp	Seed	record	SetWord	r + 0x10	1	-	-	union	WindowRecord SetWord width: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
 src/game/window_task_fuzz.cpp	Seed	record	SetWord	r + 0x12	1	-	-	union	WindowRecord SetWord height: records.h / typed-records.md 3: the meaning varies (WindowRecord +8..+0x1F per handler; PartyMember +0x124..+0x13F)	b1-scen_ui
 src/game/window_task_fuzz.cpp	Cover	record	Long	in.memory + 0x318	0	-	param	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (param)	b1-scen_ui
-src/game/window_task_fuzz.cpp	Cover	global	-	window_task::at::kRecords	0	0x803160	-	no-entry	window_task::at::kRecords 0x803160 -	b0
 src/game/window_task_fuzz.cpp	SelfTest	global	At	window_task::at::kMusicSets	0	0x669a48	-	no-entry	window_task::at::kMusicSets 0x669a48 -	b0
 src/game/window_task_fuzz.cpp	SelfTest	global	At	window_task::at::kMusicSets	1	0x669a48	-	no-entry	window_task::at::kMusicSets 0x669a48 -	b0
 src/game/world_map.cpp	__attribute__	global	At	kLeaderCellX	0	0x905e66	-	inside-entry	kLeaderCellX 0x905e66 Field_Kind2X+0x2	b0

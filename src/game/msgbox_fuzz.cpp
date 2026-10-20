@@ -94,7 +94,7 @@ void Disturb() {
     case 19: SetW(Msgbox_OriginY_addr, v); break;
     case 20: SetB(AreaW0c_ChoiceAnswer_addr, v); break;
     case 21: SetB(kChoiceLast, v); break;
-    case 22: SetB(kWindow0State, v % 6); break;
+    case 22: SetB(WindowRecords_addr + 0x3, v % 6); break;
     case 23: SetB(Window1_State_addr, v % 6); break;
     case 24: SetW(kEffectOff, v); break;
     default: SetW(Msgbox_EffectWait_addr, v); break;
@@ -115,7 +115,7 @@ void __cdecl Slot() {
 // (the movement-script trap - a stand-in quieter than the callee).
 unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
     Record(0x59E2D0, slot, kind);
-    unsigned char* const rec = At(kWindows + (slot & 0xFF) * 0x24u);
+    unsigned char* const rec = At(WindowRecords_addr + (slot & 0xFF) * 0x24u);
     unsigned answer = slot | 0xFFu;
     if (rec[0] == 0) {
         rec[0] = 1;
@@ -377,7 +377,7 @@ const Clone kClones[kCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {kState, 0x30},          // the whole MsgBoxState block
-    {kWindows, 0x48},        // window records 0 and 1
+    {WindowRecords_addr, 0x48}, // window records 0 and 1
     {0x8034F2, 4},           // Text_PenY, Text_PenX
     {0x7E1BE4, 2},           // Text_LineX
     {0x7E1BEC, 2},           // Input_Pressed (the stand-ins disturb it through nothing else)
@@ -513,7 +513,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     if (Often()) SetB(Msgbox_Delay_addr, Next() % 2 ? Next() % 3 : Next() & 0xFF);
     if (Often()) SetB(Msgbox_SubCount_addr, Next() % 2 ? 1 + Next() % 3 : Next() & 0xFF);
     if (Often()) SetB(ItemUse_ColorHigh_addr, Next() % 2 ? Next() % 9 : Next() & 0xFF);
-    if (Often()) SetB(kWindow0State, Next() % 6);
+    if (Often()) SetB(WindowRecords_addr + 0x3, Next() % 6);
     if (Often()) SetB(Window1_State_addr, Next() % 6);
     if (Often()) Input_Pressed = static_cast<unsigned short>(Next() % 2 ? 0 : Next() & 0xFFFF);
 
@@ -623,13 +623,13 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     case kMenuDone:
     case kState6:
     case kState2Closed:
-        if (Often()) SetB(kWindow0State, Next() % 6);
+        if (Often()) SetB(WindowRecords_addr + 0x3, Next() % 6);
         if (Often()) SetB(Window1_State_addr, Next() % 6);
         break;
     case kWindowAlloc:
         args[0] = Next() % 2 ? Next() % 2 : (Next() & 0xFFFFFF00u) | (Next() % 2);
         args[1] = Next();
-        if (Often()) At(kWindows + (args[0] & 0xFF) * 0x24u)[0] = static_cast<unsigned char>(Next() % 2);
+        if (Often()) At(WindowRecords_addr + (args[0] & 0xFF) * 0x24u)[0] = static_cast<unsigned char>(Next() % 2);
         break;
     case kDrawAt:
         args[0] = Next() % 2 ? Next() % 0x200 : Next();
@@ -673,7 +673,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
 // The MsgBoxState block is the first region; the two window records the
 // second, at +0x30.
 unsigned Block(const State& s, std::uint32_t address) { return s.memory[address - kState]; }
-unsigned Window(const State& s, std::uint32_t address) { return s.memory[0x30 + address - kWindows]; }
+unsigned Window(const State& s, std::uint32_t address) { return s.memory[0x30 + address - WindowRecords_addr]; }
 
 void Cover(unsigned k, const State& before, const State& after) {
     ++g_cover.ran[k];
@@ -690,8 +690,8 @@ void Cover(unsigned k, const State& before, const State& after) {
     if ((k == kChoiceInput || k == kMenuInput) && Block(after, AreaW0c_ChoiceAnswer_addr) != Block(before, AreaW0c_ChoiceAnswer_addr))
         ++g_cover.cursor_moved;
     if ((k == kChoiceOpen || k == kMenuOpen || k == kReset || k == kWindowAlloc) &&
-        (Window(after, kWindows) != Window(before, kWindows) ||
-         Window(after, kWindows + 0x24) != Window(before, kWindows + 0x24)))
+        (Window(after, WindowRecords_addr) != Window(before, WindowRecords_addr) ||
+         Window(after, WindowRecords_addr + 0x24) != Window(before, WindowRecords_addr + 0x24)))
         ++g_cover.window_taken;
 }
 

@@ -279,7 +279,7 @@ const sh::Callee kCallees[] = {
 // ObjTrio with Field_Members, Sprite_Objects, the pad, Field_Request,
 // Frame_Counter, the counter byte 0x90384B and the packet cursor).
 const sh::Region kRegions[] = {
-    {at::kWindows, at::kWindowCount * at::kWindowStride},   // WindowRecords 0x803160..0x803477
+    {WindowRecords_addr, at::kWindowCount * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x903A94, 0x903F90 - 0x903A94},                        // CharacterRecords past the style region
     {0x939880, 0x60},                                       // the per-category picks / tops, the masters' cells
     {bof3::addr::Text_Records, 0x30},                       // the name and the ability's record

@@ -192,7 +192,7 @@ constexpr U kListAEntries = 0x9039C0, kListBEntries = 0x904F00, kListCPairs = 0x
 constexpr U kWin0 = 0x803160;
 // kTab: now Window0_ParamA (symbols.toml).
 // kRow: now Window0_Cursor (symbols.toml).
-constexpr U kWinOff = kWin0 + 3, kTop = kWin0 + 0xB, kScroll = kWin0 + 0x12;
+constexpr U kWinOff = WindowRecords_addr + 3, kTop = WindowRecords_addr + 0xB, kScroll = WindowRecords_addr + 0x12;
 constexpr U kPool = 0x803580;          // the script pool's offsets and, from +0x600, the seeded strings
 constexpr U kStrings = 0x600;          // 0x60 slots of 16 bytes
 constexpr U kPairMessages = 0x653180;
@@ -295,7 +295,7 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {0x675F8C, 0x50},
     {0x939A3C, 8},
-    {sh::at::kWindows, sh::at::kWindowCount * sh::at::kWindowStride},
+    {WindowRecords_addr, sh::at::kWindowCount * sh::at::kWindowStride},
     {0x903A94, 0x460},
     {0x904160, 0x400},
     {0x904700, 0x330},
@@ -365,12 +365,12 @@ void Seed(unsigned k) {
     B(CommuMusic_SavedTrack_addr) = static_cast<unsigned char>(PickOf(0xFF, Music_Track, sh::Next()));
     // the item window: shut or not, tab 0..4, top and row at the paging bounds,
     // the scroll word 0 most of the time, the row's item empty or not
-    B(kWinOff) = static_cast<unsigned char>(PickOf(0, 0, 0, 1, 2));
+    B(WindowRecords_addr + 0x3) = static_cast<unsigned char>(PickOf(0, 0, 0, 1, 2));
     B(Window0_ParamA_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0, 3));
     const unsigned top = PickOf(0, 1, 8, 9, 0x6E, 0x6F, 0x76, 0x77, sh::Next() % 0x78);
     B(kTop) = static_cast<unsigned char>(top);
     B(Window0_Cursor_addr) = static_cast<unsigned char>(PickOf(0, top, top - 1, top + 8, top + 9, 0x7E, 0x7F, sh::Next() % 0x80));
-    SetWord(Mem(kScroll), PickOf(0, 0, 0, 0x10, sh::Next()));
+    SetWord(Mem(WindowRecords_addr + 0x12), PickOf(0, 0, 0, 0x10, sh::Next()));
     B(CommuItem_Slide_addr) = static_cast<unsigned char>(PickOf(0, 1, 3, 4, 5, sh::Next()));
     const U list = Long(Mem(bof3::addr::Inventory_IdLists + 4 * B(Window0_ParamA_addr)));
     if (sh::Half()) Mem(list + B(Window0_Cursor_addr))[0] = 0;
@@ -399,8 +399,8 @@ void Seed(unsigned k) {
     // CommuItem_Choose: the window open, not scrolling and a confirm pressed
     // most of the time, so the paths past its sounds run often
     if (k == kChoose && sh::Often()) {
-        B(kWinOff) = 0;
-        SetWord(Mem(kScroll), 0);
+        B(WindowRecords_addr + 0x3) = 0;
+        SetWord(Mem(WindowRecords_addr + 0x12), 0);
         if (sh::Half()) Field_ConfirmButtons = static_cast<unsigned short>(Field_ConfirmButtons | Input_Pressed | 0x20);
     }
     // a label for CommuMusic_DrawLabel: letters, spaces, a NUL by the end
@@ -441,10 +441,10 @@ void Disturb(U h) {
     case 1: B(Rest4b_BoardState_addr) = b; break;
     case 2: B(CommuMusic_Slide_addr) = static_cast<unsigned char>(b % 6); break;
     case 3: B(CommuItem_Slide_addr) = static_cast<unsigned char>(b % 6); break;
-    case 4: B(kWinOff) = static_cast<unsigned char>(b & 1); break;
+    case 4: B(WindowRecords_addr + 0x3) = static_cast<unsigned char>(b & 1); break;
     case 5: B(Window0_ParamA_addr) = static_cast<unsigned char>(b % 5); break;
     case 6: B(Window0_Cursor_addr) = static_cast<unsigned char>(b & 0x7F); break;
-    case 7: SetWord(Mem(kScroll), b & 1 ? 0 : v | 1); break;
+    case 7: SetWord(Mem(WindowRecords_addr + 0x12), b & 1 ? 0 : v | 1); break;
     case 8: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(b % 60); break;
     case 9: Music_Track = static_cast<unsigned char>(b & 1 ? 0xFF : b); break;
     case 10: B(kEdit + (b & 7)) = static_cast<unsigned char>(v); break;

@@ -176,7 +176,7 @@ const unsigned char* __cdecl StubMsg(unsigned id) {
 unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
     Record(15, slot, kind);
     std::uint32_t h = Hash();
-    for (unsigned i = 0; i < 6; ++i, h >>= 5) At(at::kMsgWindow)[i] = static_cast<unsigned char>(h);
+    for (unsigned i = 0; i < 6; ++i, h >>= 5) At(WindowRecords_addr + 0x2)[i] = static_cast<unsigned char>(h);
     Disturb();
     return Hash();
 }

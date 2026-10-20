@@ -967,7 +967,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
                 if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->enemy_kind) {
                     set_count(k, count(k) - 1u);
                     g.window_open(static_cast<unsigned char>(0xC - shown), 3);
-                    unsigned char* const w = At(at::kWindows + 0x1B0 - shown * at::kWindowStride);
+                    unsigned char* const w = At(WindowRecords_addr + 0x1B0 - shown * at::kWindowStride);
                     auto* const window_rec = rv::As<records::WindowRecord>(w);
                     window_rec->kind = 4;
                     window_rec->state = 0;

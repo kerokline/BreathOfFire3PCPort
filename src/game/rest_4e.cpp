@@ -94,12 +94,12 @@ constexpr U kListCPairs = 0x904CA0;
 
 // WindowRecords 0 and 1 (0x24 each): the item window and its cursor.
 constexpr U kWin0 = 0x803160, kWin1 = 0x803184;
-constexpr U kWinOff = kWin0 + 3;       // u8: window 0 shut (the slide waits for 0)
+constexpr U kWinOff = WindowRecords_addr + 3; // u8: window 0 shut (the slide waits for 0)
 // kTab: now Window0_ParamA (symbols.toml). u8: the tab 0..3 (Inventory_IdLists' index)
-constexpr U kTop = kWin0 + 0xB;        // u8: the first row shown
+constexpr U kTop = WindowRecords_addr + 0xB; // u8: the first row shown
 // kRow: now Window0_Cursor (symbols.toml). u8: the row
 // kTabMove: now Window0_Arrows (symbols.toml). u16: 0x31 / 0x32 when the tab moved
-constexpr U kScroll = kWin0 + 0x12;    // u16: 0xF0 / 0x10 while the list scrolls
+constexpr U kScroll = WindowRecords_addr + 0x12; // u16: 0xF0 / 0x10 while the list scrolls
 
 constexpr U kTextRecords = 0x904CE0;   // Text_Records (0x20 each)
 constexpr U kTextBuffer = 0x904BA0;    // the text scratch sprintf writes
@@ -960,11 +960,11 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     unsigned char slide = CommuItem_Slide;
     if (slide != 0) CommuItem_Slide = --slide;
     ItemFrame(slide);
-    if (B(kWinOff) != 0) return;
+    if (WindowRecords[0].state != 0) return;
     const U window_x = L(kWin0 + 4);
     Window1 = 1;
     SetW(kWin1 + 4, window_x + 7);
-    SetW(kWin1 + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - B(kTop) + 2u) + W(kWin0 + 6));
+    SetW(kWin1 + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - B(kTop) + 2u) + static_cast<std::uint32_t>(WindowRecords[0].y));
     const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
     if (moved & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
@@ -1021,7 +1021,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     const unsigned pressed = Input_Pressed;
     if (Field_CancelButtons & pressed) {
         Window1 = 0;
-        B(kWinOff) = 1;
+        WindowRecords[0].state = 1;
         SH_CALL(Sound_PlayEffect)(0x106);
         ++Rest4b_BoardStep;
     } else if (Field_ConfirmButtons & pressed) {
@@ -1033,7 +1033,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
         SH_CALL(Sound_PlayEffect)(0x105);
         const unsigned char tab = Window0_ParamA;
         unsigned char* const entry = EntryRecord("CommuItem_Choose (0x45FE90)");
-        B(kWinOff) = 1;
+        WindowRecords[0].state = 1;
         entry[2] = item;
         unsigned char* const again = EntryRecord("CommuItem_Choose (0x45FE90)");
         Window1 = 0;
@@ -1054,7 +1054,7 @@ bool ItemClosed() {
     unsigned char slide = CommuItem_Slide;
     if (slide < 4) CommuItem_Slide = ++slide;
     ItemFrame(slide);
-    return B(kWinOff) == 0;
+    return WindowRecords[0].state == 0;
 }
 
 // original 0x4601D0: CommuItem_Steps[3] (cancelled) - the window slides away;
@@ -1129,12 +1129,12 @@ extern "C" void __cdecl CommuItem_Refused(void) {
 // kind 2, +2 0, +3 2, at (-0xAA, 0x3E), tab, top and row 0, +0xD 0xFF, +8 / +9
 // 0, +0x10 / +0x12 0; 1: off, kind 2, +2 1, +3 0.
 extern "C" void __cdecl CommuItem_SetupWindow(void) {
-    B(kWin0 + 1) = 2;
-    B(kWin0 + 2) = 0;
-    B(kWin0 + 3) = 2;
-    B(kWin0) = 1;
-    SetW(kWin0 + 4, 0xFF56);
-    SetW(kWin0 + 6, 0x3E);
+    WindowRecords[0].handler = 2;
+    WindowRecords[0].kind = 0;
+    WindowRecords[0].state = 2;
+    WindowRecords[0].in_use = 1;
+    WindowRecords[0].x = 0xFF56;
+    WindowRecords[0].y = 0x3E;
     B(kWin0 + 0xA) = 0;
     B(kWin0 + 0xB) = 0;
     B(kWin0 + 0xC) = 0;

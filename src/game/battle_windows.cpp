@@ -267,7 +267,7 @@ extern "C" void __cdecl BattleWin_DrawPartyStatus(int x, int y) {
     unsigned i = 0;
     do {
         g.draw_tile_rgb(xs, y + 0xE, 9, 0, 0);
-        const unsigned char* const bars = At(at::kPartyBars + 36 * i);
+        const unsigned char* const bars = At(WindowRecords_addr + 0x1df + 36 * i);
         const unsigned char b1 = bars[2], b0 = bars[0];
         g.draw_bar(xs, y + 0xE, b0, b1, 0);
         unsigned char* const m = Member(i);

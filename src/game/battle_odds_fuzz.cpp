@@ -122,7 +122,7 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 
 // Every game region any test touches, saved once and put back at the end.
 const Region g_all[] = {
-    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {DamageScratch_addr, 1},       {kWindows, kWindowBytes},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {DamageScratch_addr, 1},       {WindowRecords_addr, kWindowBytes},
     {BattleDamage_Result_addr, 4},        {kTarget, 1},     {kActing, 4},      {BattleOdds_ActorObject_addr, 4},   {kFlagTarget, 1},
     {kRoundFlags, 4},    {kSprite, 4},     {kTints, kTintBytes},
 };
@@ -130,7 +130,7 @@ const Region g_all[] = {
 // Every region a function could write, the game's and the fuzz's.
 const Region g_writes[] = {
     {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60},  {BattleMisc_BannerKinds_addr, 1}, {DamageScratch_addr, 1},
-    {kWindows, kWindowBytes}, {BattleDamage_Result_addr, 4}, {kRoundFlags, 4},  {BattleOdds_ActorObject_addr, 4},
+    {WindowRecords_addr, kWindowBytes}, {BattleDamage_Result_addr, 4}, {kRoundFlags, 4},  {BattleOdds_ActorObject_addr, 4},
     {kSprite, 4},        {kTints, kTintBytes}, {0, sizeof g_objects}, {0, sizeof g_results},
 };
 Region g_regions[sizeof g_writes / sizeof g_writes[0]];
@@ -168,7 +168,7 @@ U __cdecl StubNoneOfKind(U kind) {
     switch ((h >> 4) % 5) {
     case 0: PutLong(At(BattleMisc_BannerCurrent_addr), kBanners + ((h >> 8) % 8) * 0xC); break;
     case 1: At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(h >> 12); break;
-    case 2: At(kWindows + 3)[0] = static_cast<unsigned char>(h >> 16); At(kWindows + 4 * 0x24 + 3)[0] = static_cast<unsigned char>(h >> 20); break;
+    case 2: At(WindowRecords_addr + 3)[0] = static_cast<unsigned char>(h >> 16); At(WindowRecords_addr + 4 * 0x24 + 3)[0] = static_cast<unsigned char>(h >> 20); break;
     default: break;
     }
     return ByteAnswer(2);
@@ -328,7 +328,7 @@ bool Called(const d3d_fuzz::Log& log, U what) {
 // The pool, the current entry one of its eight; its timer at the edges.
 void RandomBanner() {
     FillRandom(kBanners, 0x60);
-    FillRandom(kWindows, kWindowBytes);
+    FillRandom(WindowRecords_addr, kWindowBytes);
     At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 4, 0xFF}) : Next());
     At(DamageScratch_addr)[0] = static_cast<unsigned char>(Next());
     const U entry = kBanners + (Next() % 8) * 0xC;

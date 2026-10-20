@@ -250,7 +250,7 @@ U __cdecl StubItemList(U actor, U page, U flag) {
     Record(6, actor & 0xFF, page & 0xFF, flag & 0xFF);
     const U h = Mix(6);
     if (h % 5 == 0) At(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(h >> 8);
-    if (h % 7 == 0) At(kItemWindowCursor)[0] = static_cast<unsigned char>(h >> 16);
+    if (h % 7 == 0) At(WindowRecords_addr + 0x24c)[0] = static_cast<unsigned char>(h >> 16);
     switch ((h >> 24) % 3) {
     case 0: return Addr(g_items) + (h >> 4) % 0x40;
     case 1: return kParty + (h >> 4) % 0x100;
@@ -760,7 +760,7 @@ void FuzzCanUse(Tally& t, const void* clone, unsigned rounds) {
         FillRandom(Window16_addr, 0x24);
         FillRandom(Addr(g_items), sizeof g_items);
         At(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 3 : Next());
-        At(kItemWindowCursor)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 0x40 : Next());
+        At(WindowRecords_addr + 0x24c)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 0x40 : Next());
         Pass(t, regions, 2, 0xFF, clone, As<const void*>(&ItemMenu_CanUseSelected), RandomEntry());
     }
     g_test = kTestNone;

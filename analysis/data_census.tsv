@@ -814,11 +814,7 @@ site	src/game/area_w3d.cpp	706	global	B	at::kCounter3	0x90384b	-	none	-	-	0
 site	src/game/area_w3d.cpp	719	global	B	at::kCounter3	0x90384b	-	none	-	-	0
 site	src/game/area_w3d.cpp	734	global	B	at::kCounter3	0x90384b	-	none	-	-	0
 site	src/game/area_w3d.cpp	771	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	936	global	-	at::kMessagePools	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/area_w3d.cpp	938	global	Mem	at::kPoolWords	0x803164	-	inside	WindowRecords+0x4	records::WindowRecord	0
-site	src/game/area_w3d.cpp	939	global	Mem	at::kPoolWords	0x803164	-	inside	WindowRecords+0x4	records::WindowRecord	0
 site	src/game/area_w3d_fuzz.cpp	199	global	B	at::kCounter3	0x90384b	-	none	-	-	1
-site	src/game/area_w3d_fuzz.cpp	304	global	-	at::kPoolWords	0x803164	-	inside	WindowRecords+0x4	records::WindowRecord	1
 site	src/game/area_w3d_fuzz.cpp	331	global	B	at::kCounter3	0x90384b	-	none	-	-	1
 site	src/game/area_w3d_fuzz.cpp	370	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	1
 site	src/game/area_w3d_fuzz.cpp	378	global	B	at::kCounter3	0x90384b	-	none	-	-	1
@@ -1273,7 +1269,6 @@ site	src/game/battle_actions.cpp	327	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_actions.cpp	328	global	SetB	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_actions.cpp	336	global	At	at::kAbility	0x904b80	-	none	-	-	0
 site	src/game/battle_actions.cpp	337	global	At	at::kAbility	0x904b80	-	none	-	-	0
-site	src/game/battle_actions.cpp	338	global	SetB	at::kBannerShown	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/battle_actions.cpp	339	global	At	at::kAbilityRecords	0x65c4c8	-	exact	Ability_Records	-	0
 site	src/game/battle_actions.cpp	339	global	At	at::kNameBuf	0x904ea0	-	none	-	-	0
 site	src/game/battle_actions.cpp	340	global	At	at::kNameBuf	0x904ea0	-	none	-	-	0
@@ -1309,7 +1304,6 @@ site	src/game/battle_actions.cpp	435	global	SetB	at::kPhase	0x904aa0	-	none	-	-	
 site	src/game/battle_actions.cpp	443	global	PtrAt	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_actions.cpp	446	global	At	at::kNameBuf	0x904ea0	-	none	-	-	0
 site	src/game/battle_actions.cpp	447	global	At	at::kNameBuf	0x904ea0	-	none	-	-	0
-site	src/game/battle_actions.cpp	450	global	SetB	at::kBannerShown	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/battle_actions.cpp	458	global	PtrAt	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_actions.cpp	459	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_actions.cpp	460	global	PtrAt	at::kActor	0x904b34	-	none	-	-	0
@@ -1344,7 +1338,6 @@ site	src/game/battle_actions.cpp	642	global	At	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_actions.cpp	643	global	At	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/battle_actions.cpp	644	global	SetB	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_actions.cpp	645	global	B	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/battle_actions.cpp	650	global	SetB	at::kBannerShown	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/battle_actions_fuzz.cpp	111	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_actions_fuzz.cpp	112	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_actions_fuzz.cpp	113	global	SetPtr	at::kActor	0x904b34	-	none	-	-	1
@@ -1440,37 +1433,25 @@ site	src/game/battle_actor_copies.cpp	163	global	B	at::kItemCursor	0x8033ac	-	in
 site	src/game/battle_actor_copies.cpp	164	global	B	at::kActorPages	0x9045fc	-	none	-	-	0
 site	src/game/battle_actor_copies.cpp	165	global	B	at::kActorPages	0x9045fc	-	none	-	-	0
 site	src/game/battle_actor_copies.cpp	199	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
-site	src/game/battle_actor_copies.cpp	289	global	At	at::kItemBaseX	0x8033a4	-	inside	WindowRecords+0x244	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	289	global	At	at::kItemCursorX	0x803410	-	inside	WindowRecords+0x2b0	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	291	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	291	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	314	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	317	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	318	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	320	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	321	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	322	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	324	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	327	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	329	global	B	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	330	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	332	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	335	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	336	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	339	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	342	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	344	global	B	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	345	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	347	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	350	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	351	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	358	global	At	at::kItemRecords	0x65c4d8	-	exact	NameTable_Abilities	-	0
 site	src/game/battle_actor_copies.cpp	360	global	At	at::kQueueText	0x93c2c4	-	none	-	-	0
 site	src/game/battle_actor_copies.cpp	366	global	B	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	370	global	B	at::kQueueByte	0x93c2c1	-	none	-	-	0
 site	src/game/battle_actor_copies.cpp	383	global	B	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	388	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
-site	src/game/battle_actor_copies.cpp	394	global	B	at::kWindow4State	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	400	global	B	at::kStep	0x904aa3	-	exact	BattleE4_Step3	unsigned char	0
 site	src/game/battle_actor_copies.cpp	441	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/battle_actor_copies.cpp	452	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
@@ -1481,18 +1462,13 @@ site	src/game/battle_actor_copies.cpp	512	global	B	at::kPartyCount	0x904ab0	-	no
 site	src/game/battle_actor_copies.cpp	532	global	B	at::kQueueByte	0x93c2c1	-	none	-	-	0
 site	src/game/battle_actor_copies_fuzz.cpp	70	raw	At	0x904AA0	0x904aa0	-	none	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	73	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	1
-site	src/game/battle_actor_copies_fuzz.cpp	74	global	At	at::kWindow4State	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	1
 site	src/game/battle_actor_copies_fuzz.cpp	75	raw	At	0x8033A0	0x8033a0	-	exact	Window16	unsigned char	1
 site	src/game/battle_actor_copies_fuzz.cpp	77	raw	At	0x93C2A0	0x93c2a0	-	exact	BattleWindows_MsgHead	unsigned char	1
 site	src/game/battle_actor_copies_fuzz.cpp	78	global	At	at::kActorPages	0x9045fc	-	none	-	-	1
-site	src/game/battle_actor_copies_fuzz.cpp	94	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	1
 site	src/game/battle_actor_copies_fuzz.cpp	101	global	B	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	107	global	B	at::kItemRecords	0x65c4d8	-	exact	NameTable_Abilities	-	1
-site	src/game/battle_actor_copies_fuzz.cpp	110	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	1
 site	src/game/battle_actor_copies_fuzz.cpp	113	record	SetWord	Cmd() + 2	-	via=Cmd	-	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	114	record	SetLong	Cmd() + 0x10	-	via=Cmd	-	-	-	1
-site	src/game/battle_actor_copies_fuzz.cpp	172	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	1
-site	src/game/battle_actor_copies_fuzz.cpp	185	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	1
 site	src/game/battle_actor_copies_fuzz.cpp	304	global	-	at::kRepeatLatch	0x7e01b8	-	none	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	306	global	-	at::kConfirm	0x90358e	-	exact	Field_ConfirmButtons	unsigned short	1
 site	src/game/battle_actor_copies_fuzz.cpp	313	global	-	at::kActorPages	0x9045fc	-	none	-	-	1
@@ -1502,9 +1478,6 @@ site	src/game/battle_actor_copies_fuzz.cpp	374	global	At	at::kConfirm	0x90358e	-
 site	src/game/battle_actor_copies_fuzz.cpp	375	global	At	at::kConfirm	0x90358e	-	exact	Field_ConfirmButtons	unsigned short	1
 site	src/game/battle_actor_copies_fuzz.cpp	393	global	B	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	418	record	SetLong	Cmd() + 0x10	-	via=Cmd	-	-	-	1
-site	src/game/battle_actor_copies_fuzz.cpp	422	global	At	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	1
-site	src/game/battle_actor_copies_fuzz.cpp	427	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	1
-site	src/game/battle_actor_copies_fuzz.cpp	427	global	B	at::kItemScroll	0x8033b0	-	inside	WindowRecords+0x250	records::WindowRecord	1
 site	src/game/battle_actor_copies_fuzz.cpp	434	global	At	at::kConfirm	0x90358e	-	exact	Field_ConfirmButtons	unsigned short	1
 site	src/game/battle_actor_copies_fuzz.cpp	435	global	-	at::kConfirm	0x90358e	-	exact	Field_ConfirmButtons	unsigned short	1
 site	src/game/battle_actor_copies_fuzz.cpp	510	record	At	t.at + 4 * i	-	-	-	-	-	1
@@ -1545,9 +1518,7 @@ site	src/game/battle_damage.cpp	529	global	At	at::kCuredBits	0x904b9a	-	none	-	-
 site	src/game/battle_damage.cpp	529	global	At	at::kCuredBits	0x904b9a	-	none	-	-	0
 site	src/game/battle_damage.cpp	546	global	Byte	at::kBattleFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_damage.cpp	554	global	Byte	at::kBattleFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_damage.cpp	586	global	At	at::kInstantKill	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/battle_damage.cpp	612	record	Word	e + at::kEHp	-	via=Enemy	-	-	-	0
-site	src/game/battle_damage.cpp	615	global	At	at::kInstantKill	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/battle_damage.cpp	653	global	At	at::kElementTable	0x64e95c	-	exact	Battle_ElementTable	-	0
 site	src/game/battle_damage.cpp	686	global	Byte	at::kTarget	0x904b54	-	none	-	-	0
 site	src/game/battle_damage.cpp	689	global	At	at::kActing	0x904b34	-	none	-	-	0
@@ -1679,44 +1650,31 @@ site	src/game/battle_e1.cpp	338	global	B	at::kModeTimer	0x929f04	-	none	-	-	0
 site	src/game/battle_e1.cpp	341	global	B	at::kEquipOpenBytes	0x675ebe	-	exact	BattleE1_EquipOpenBytes	unsigned char	0
 site	src/game/battle_e1.cpp	342	global	B	at::kEquipOpenBytes	0x675ebe	-	exact	BattleE1_EquipOpenBytes	unsigned char	0
 site	src/game/battle_e1.cpp	371	global	L	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/battle_e1.cpp	371	global	At	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
-site	src/game/battle_e1.cpp	372	global	B	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e1.cpp	373	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/battle_e1.cpp	374	global	At	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e1.cpp	376	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	377	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	380	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	380	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	382	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	383	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/battle_e1.cpp	388	global	At	at::kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/battle_e1.cpp	391	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	392	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	393	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	395	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/battle_e1.cpp	403	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	404	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	405	global	B	at::kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/battle_e1.cpp	406	global	B	at::kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/battle_e1.cpp	407	global	B	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e1.cpp	409	global	B	at::kModeTimer	0x929f04	-	none	-	-	0
 site	src/game/battle_e1.cpp	428	global	L	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	429	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/battle_e1.cpp	430	global	At	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e1.cpp	431	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	431	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	432	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	432	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/battle_e1.cpp	433	global	At	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/battle_e1.cpp	433	global	At	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
-site	src/game/battle_e1.cpp	436	global	At	at::kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/battle_e1.cpp	439	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	442	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	443	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/battle_e1.cpp	443	global	At	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	445	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	446	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/battle_e1.cpp	446	global	At	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	448	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	451	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	454	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
@@ -1729,7 +1687,6 @@ site	src/game/battle_e1.cpp	469	global	B	at::kWin0	0x803160	-	exact	WindowRecord
 site	src/game/battle_e1.cpp	471	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	475	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	476	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/battle_e1.cpp	480	global	At	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	483	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	490	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	497	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
@@ -1741,19 +1698,16 @@ site	src/game/battle_e1.cpp	552	global	B	at::kMenuMember	0x904ab4	-	none	-	-	0
 site	src/game/battle_e1.cpp	557	global	B	at::kMenuMember	0x904ab4	-	none	-	-	0
 site	src/game/battle_e1.cpp	569	global	B	at::kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/battle_e1.cpp	570	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/battle_e1.cpp	571	global	B	at::kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/battle_e1.cpp	578	global	B	at::kHoldIcons	0x64e2ac	-	none	-	-	0
 site	src/game/battle_e1.cpp	578	global	B	at::kHoldIcons	0x64e2ac	-	none	-	-	0
 site	src/game/battle_e1.cpp	586	global	B	at::kCrossGrow	0x904abc	-	none	-	-	0
 site	src/game/battle_e1.cpp	586	global	B	at::kMenuMember	0x904ab4	-	none	-	-	0
-site	src/game/battle_e1.cpp	606	global	B	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e1.cpp	610	global	B	at::kEntryFirst	0x904ab6	-	none	-	-	0
 site	src/game/battle_e1.cpp	619	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e1.cpp	626	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e1.cpp	628	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e1.cpp	628	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e1.cpp	652	global	B	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/battle_e1.cpp	653	global	B	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e1.cpp	663	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e1.cpp	663	global	B	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e1.cpp	680	global	At	at::kActionId	0x904b80	-	none	-	-	0
@@ -1809,7 +1763,6 @@ site	src/game/battle_e1.cpp	891	global	B	at::kCharExpTable	0x658f48	-	exact	Char
 site	src/game/battle_e1.cpp	931	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e1.cpp	933	record	At	row + 4	-	table=0x904ab0	-	-	-	0
 site	src/game/battle_e1.cpp	944	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
-site	src/game/battle_e1.cpp	945	global	B	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_e1.cpp	948	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e1.cpp	950	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e1.cpp	1009	raw	B	0x904AA0	0x904aa0	-	none	-	-	0
@@ -1828,11 +1781,6 @@ site	src/game/battle_e1_fuzz.cpp	284	global	Mem	at::kTallyShown	0x675e88	-	none	
 site	src/game/battle_e1_fuzz.cpp	285	global	Mem	at::kTallyStep	0x64add0	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	286	global	Mem	at::kTallyTarget	0x675ea0	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	295	global	Mem	at::kModeTimer	0x929f04	-	none	-	-	1
-site	src/game/battle_e1_fuzz.cpp	302	global	Mem	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/battle_e1_fuzz.cpp	303	global	Mem	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/battle_e1_fuzz.cpp	303	global	Mem	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/battle_e1_fuzz.cpp	305	global	Mem	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/battle_e1_fuzz.cpp	306	global	Mem	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_e1_fuzz.cpp	310	global	Mem	at::kMenuMember	0x904ab4	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	311	global	Mem	at::kCrossGrow	0x904abc	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	311	global	Mem	at::kMenuMember	0x904ab4	-	none	-	-	1
@@ -1842,8 +1790,6 @@ site	src/game/battle_e1_fuzz.cpp	333	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	344	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	350	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	412	global	Mem	at::kTallyTarget	0x675ea0	-	none	-	-	1
-site	src/game/battle_e1_fuzz.cpp	414	global	Mem	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/battle_e1_fuzz.cpp	416	global	Mem	at::kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_e1_fuzz.cpp	420	global	Mem	at::kOldLevel	0x904b72	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	422	global	Mem	at::kActionId	0x904b80	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	423	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
@@ -1873,15 +1819,10 @@ site	src/game/battle_e2.cpp	325	record	Long	from + k	-	table=0x939ae0;stride=0x1
 site	src/game/battle_e2.cpp	325	record	SetLong	to + k	-	via=rec	-	-	-	0
 site	src/game/battle_e2.cpp	335	global	At	at::kMemberPositions	0x7e06e0	-	none	-	-	0
 site	src/game/battle_e2.cpp	336	global	At	at::kMemberPositions	0x7e06e0	-	none	-	-	0
-site	src/game/battle_e2.cpp	362	global	At	at::kPartyValues	0x803348	-	inside	WindowRecords+0x1e8	records::WindowRecord	0
-site	src/game/battle_e2.cpp	364	global	At	at::kPartyValues	0x803348	-	inside	WindowRecords+0x1e8	records::WindowRecord	0
-site	src/game/battle_e2.cpp	368	global	At	at::kPartyGauges	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	0
-site	src/game/battle_e2.cpp	372	global	At	at::kPartyGauges	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	0
 site	src/game/battle_e2.cpp	402	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e2.cpp	404	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e2.cpp	409	global	At	at::kBackupBit40	0x939b71	-	none	-	-	0
 site	src/game/battle_e2.cpp	413	global	At	at::kCountX	0x64b073	-	none	-	-	0
-site	src/game/battle_e2.cpp	413	global	At	at::kWindow1X	0x803188	-	inside	WindowRecords+0x28	records::WindowRecord	0
 site	src/game/battle_e2.cpp	421	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e2.cpp	438	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e2.cpp	440	global	B	at::kPlaceCells	0x9045fd	-	none	-	-	0
@@ -1995,7 +1936,6 @@ site	src/game/battle_e3.cpp	238	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e3.cpp	238	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e3.cpp	247	global	AbilityByte	at::kAbilityFlags5	0x65c4dd	-	none	-	-	0
 site	src/game/battle_e3.cpp	255	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_e3.cpp	330	global	B	at::kWindow4State	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/battle_e3.cpp	352	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e3.cpp	361	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e3.cpp	430	global	At	at::kStatusOr2	0x904b9a	-	none	-	-	0
@@ -2140,10 +2080,8 @@ site	src/game/battle_e4.cpp	715	global	B	at::kSlots	0x8033e8	-	exact	Window18	un
 site	src/game/battle_e4.cpp	716	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e4.cpp	717	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e4.cpp	718	global	B	at::kStep4	0x904aa4	-	exact	BattleE4_Step4	unsigned char	0
-site	src/game/battle_e4.cpp	726	global	B	at::kRecord4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e4.cpp	747	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
 site	src/game/battle_e4.cpp	754	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
-site	src/game/battle_e4.cpp	756	global	B	at::kRecord4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e4.cpp	758	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
 site	src/game/battle_e4.cpp	773	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	774	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
@@ -2182,12 +2120,10 @@ site	src/game/battle_e4.cpp	877	global	B	at::kCands	0x8033c4	-	exact	Window17	un
 site	src/game/battle_e4.cpp	878	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	896	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
 site	src/game/battle_e4.cpp	901	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
-site	src/game/battle_e4.cpp	902	global	B	at::kRecord4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e4.cpp	904	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
 site	src/game/battle_e4.cpp	925	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	926	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e4.cpp	929	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
-site	src/game/battle_e4.cpp	930	global	B	at::kRecord4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e4.cpp	987	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/battle_e4.cpp	998	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/battle_e4.cpp	1061	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
@@ -2236,7 +2172,6 @@ site	src/game/battle_e4.cpp	1294	global	B	at::kSlots	0x8033e8	-	exact	Window18	u
 site	src/game/battle_e4.cpp	1334	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1338	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1371	global	B	at::kFlee	0x93b8e0	-	none	-	-	0
-site	src/game/battle_e4.cpp	1373	global	B	at::kRecord4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e4.cpp	1389	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1402	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1440	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
@@ -2356,7 +2291,6 @@ site	src/game/battle_e5.cpp	626	global	B	at::kGeneFlags	0x939a60	-	none	-	-	0
 site	src/game/battle_e5.cpp	627	global	SetW	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/battle_e5.cpp	631	global	SetW	at::kWord72	0x904b72	-	none	-	-	0
 site	src/game/battle_e5.cpp	632	global	SetW	at::kAsk	0x904b74	-	none	-	-	0
-site	src/game/battle_e5.cpp	712	global	B	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e5.cpp	739	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
 site	src/game/battle_e5.cpp	740	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
 site	src/game/battle_e5.cpp	757	global	W	at::kWin18	0x8033e8	-	exact	Window18	unsigned char	0
@@ -2366,12 +2300,10 @@ site	src/game/battle_e5.cpp	795	global	B	at::kWin18	0x8033e8	-	exact	Window18	un
 site	src/game/battle_e5.cpp	806	global	SlotOf	at::kSlots	0x904608	-	none	-	-	0
 site	src/game/battle_e5.cpp	809	global	B	at::kWin18	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e5.cpp	840	global	B	at::kWin17	0x8033c4	-	exact	Window17	unsigned char	0
-site	src/game/battle_e5.cpp	841	global	B	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e5.cpp	869	global	B	at::kGeneFlags	0x939a60	-	none	-	-	0
 site	src/game/battle_e5.cpp	881	global	B	at::kGeneFlags	0x939a60	-	none	-	-	0
 site	src/game/battle_e5.cpp	881	global	B	at::kGenes	0x904b84	-	none	-	-	0
 site	src/game/battle_e5.cpp	887	global	B	at::kWin17	0x8033c4	-	exact	Window17	unsigned char	0
-site	src/game/battle_e5.cpp	888	global	B	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_e5.cpp	905	global	At	at::kGeneFlags	0x939a60	-	none	-	-	0
 site	src/game/battle_e5.cpp	915	global	B	at::kGenes	0x904b84	-	none	-	-	0
 site	src/game/battle_e5.cpp	934	global	B	at::kGeneFlags	0x939a60	-	none	-	-	0
@@ -2414,7 +2346,6 @@ site	src/game/battle_e5_fuzz.cpp	292	global	Mem	at::kSlots	0x904608	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	305	global	Mem	at::kGenes	0x904b84	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	306	global	Mem	at::kGeneFlags	0x939a60	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	308	global	Mem	at::kAsk	0x904b74	-	none	-	-	1
-site	src/game/battle_e5_fuzz.cpp	312	global	-	at::kWin4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	1
 site	src/game/battle_e5_fuzz.cpp	321	record	SetWord	actor + 0x9A	-	-	-	-	-	1
 site	src/game/battle_e5_fuzz.cpp	332	global	Mem	at::kAiScripts	0x8c5600	-	none	-	-	1
 site	src/game/battle_e5_fuzz.cpp	337	global	Mem	at::kActingKind	0x904b35	-	none	-	-	1
@@ -2889,7 +2820,6 @@ site	src/game/battle_menu_states.cpp	301	record	SetWord	list + 0x12	-	via=List	-
 site	src/game/battle_menu_states.cpp	340	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
 site	src/game/battle_menu_states.cpp	341	record	Word	list + 0x12	-	via=List	-	-	-	0
 site	src/game/battle_menu_states.cpp	345	record	Long	list + 4	-	via=List	-	-	-	0
-site	src/game/battle_menu_states.cpp	356	global	Byte	at::kRecord4	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/battle_menu_states.cpp	368	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
 site	src/game/battle_menu_states.cpp	369	global	Byte	at::kSavedList	0x904605	-	exact	BattleMisc_PartyPages	unsigned char	0
 site	src/game/battle_menu_states.cpp	370	global	Byte	at::kSavedList	0x904605	-	exact	BattleMisc_PartyPages	unsigned char	0
@@ -2935,8 +2865,7 @@ site	src/game/battle_misc.cpp	238	record	At	object + k	-	stride=0x128	-	-	-	0
 site	src/game/battle_misc.cpp	239	record	At	context + 0x80	-	via=Context	-	-	-	0
 site	src/game/battle_misc.cpp	263	global	At	kSoundLists	0x6565bc	-	none	-	-	0
 site	src/game/battle_misc.cpp	269	record	At	p + 4	-	stride=0x4	-	-	-	0
-site	src/game/battle_misc.cpp	307	global	At	kItemWindowCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
-site	src/game/battle_misc.cpp	307	record	At	list + At(kItemWindowCursor)[0]	-	base=BattleActorCopies_ItemActor	-	-	-	0
+site	src/game/battle_misc.cpp	307	record	At	list + At(WindowRecords_addr + 0x24c)[0]	-	base=BattleActorCopies_ItemActor	-	-	-	0
 site	src/game/battle_misc.cpp	329	record	At	acting + 5	-	base=BattleE4_MenuActor	-	-	-	0
 site	src/game/battle_misc.cpp	332	global	At	kActorPages	0x9045fc	-	none	-	-	0
 site	src/game/battle_misc.cpp	336	global	At	kActorPages	0x9045fc	-	none	-	-	0
@@ -2968,7 +2897,6 @@ site	src/game/battle_misc.cpp	603	record	At	actor + 0xA4	-	via=CurrentEnemy	-	-	
 site	src/game/battle_misc.cpp	604	record	At	actor + 0x108	-	via=CurrentEnemy	-	-	-	0
 site	src/game/battle_misc.cpp	643	record	At	object + 6	-	via=Sprite_ObjectsAt;stride=0xa4	-	-	-	0
 site	src/game/battle_misc_fuzz.cpp	221	record	At	object + (k < 3 ? 0x134 : 0x114)	-	stride=0x14c	-	-	-	1
-site	src/game/battle_misc_fuzz.cpp	253	global	At	kItemWindowCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	1
 site	src/game/battle_misc_fuzz.cpp	278	record	At	g_script + ((h >> 8) % 4) * 16	-	-	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	279	global	At	kActingKind	0x904b35	-	none	-	-	1
 site	src/game/battle_misc_fuzz.cpp	283	record	PutWord	e + 0x108	-	-	-	-	-	1
@@ -2984,7 +2912,6 @@ site	src/game/battle_misc_fuzz.cpp	666	record	At	kParty + i * kPartyStride	-	par
 site	src/game/battle_misc_fuzz.cpp	700	record	PutLong	g_lists + at	-	-	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	703	record	PutLong	g_lists + at	-	-	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	708	global	At	kSoundLists	0x6565bc	-	none	-	-	1
-site	src/game/battle_misc_fuzz.cpp	763	global	At	kItemWindowCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	1
 site	src/game/battle_misc_fuzz.cpp	785	record	At	source + 0x10	-	via=Addr	-	-	-	1
 site	src/game/battle_misc_fuzz.cpp	824	global	At	kBanners	0x93b8e0	-	none	-	-	1
 site	src/game/battle_misc_fuzz.cpp	852	global	At	kBanners	0x93b8e0	-	none	-	-	1
@@ -3049,11 +2976,9 @@ site	src/game/battle_odds.cpp	95	record	PutWord	e + 8	-	via=BannerCurrent	-	-	-	
 site	src/game/battle_odds.cpp	95	record	Word	e + 8	-	via=BannerCurrent	-	-	-	0
 site	src/game/battle_odds.cpp	97	record	Word	e + 8	-	via=BannerCurrent	-	-	-	0
 site	src/game/battle_odds.cpp	101	record	At	entry + 1	-	via=BannerCurrent	-	-	-	0
-site	src/game/battle_odds.cpp	104	global	At	kWin4State	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/battle_odds.cpp	123	record	Word	e + 8	-	via=BannerCurrent	-	-	-	0
 site	src/game/battle_odds.cpp	125	record	PutWord	e + 8	-	via=BannerCurrent	-	-	-	0
 site	src/game/battle_odds.cpp	128	record	Word	e + 8	-	via=BannerCurrent	-	-	-	0
-site	src/game/battle_odds.cpp	131	global	At	kWin0State	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
 site	src/game/battle_odds.cpp	157	global	At	kTarget	0x904b54	-	none	-	-	0
 site	src/game/battle_odds.cpp	158	global	At	kActing	0x904b34	-	none	-	-	0
 site	src/game/battle_odds.cpp	203	record	At	at::TintRecordsAt() + s[0xA] * 12u + k	-	via=TintRecordsAt	-	-	-	0
@@ -3061,8 +2986,6 @@ site	src/game/battle_odds.cpp	239	record	At	s + 0xB	-	via=SpriteCurrent	-	-	-	0
 site	src/game/battle_odds.cpp	240	global	At	kFlagTarget	0x904b44	-	none	-	-	0
 site	src/game/battle_odds.cpp	241	global	At	kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_odds.cpp	241	global	At	kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_odds_fuzz.cpp	171	global	At	kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/battle_odds_fuzz.cpp	171	global	At	kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_odds_fuzz.cpp	189	global	At	kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_odds_fuzz.cpp	221	global	At	kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_odds_fuzz.cpp	223	global	At	kRoundFlags	0x904aa8	-	none	-	-	1
@@ -3076,13 +2999,11 @@ site	src/game/battle_odds_fuzz.cpp	442	record	At	GetLong(At(kSprite)) + 0xB	-	vi
 site	src/game/battle_odds_fuzz.cpp	452	record	At	s + 0xB	-	via=SomeObject	-	-	-	1
 site	src/game/battle_odds_fuzz.cpp	454	global	At	kFlagTarget	0x904b44	-	none	-	-	1
 site	src/game/battle_odds_fuzz.cpp	455	global	At	kRoundFlags	0x904aa8	-	none	-	-	1
-site	src/game/battle_phases.cpp	77	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_phases.cpp	80	global	PtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
 site	src/game/battle_phases.cpp	81	global	PtrAt	at::kMenuRecord	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/battle_phases.cpp	88	record	At	table + index * 4	-	-	-	-	-	0
 site	src/game/battle_phases.cpp	108	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_phases.cpp	109	global	B	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_phases.cpp	110	global	B	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_phases.cpp	174	global	B	at::kActorCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_phases.cpp	181	global	B	at::kActorCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_phases.cpp	183	global	SetPtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
@@ -3138,15 +3059,12 @@ site	src/game/battle_phases.cpp	641	record	SetLong	text + 8	-	table=0x904ce0	-	-
 site	src/game/battle_phases.cpp	652	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_phases.cpp	657	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_phases.cpp	659	global	B	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_phases_fuzz.cpp	40	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_phases_fuzz.cpp	79	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	79	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	82	global	B	at::kActorCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	84	global	B	at::kPhase	0x904aa0	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	86	global	B	at::kCommand	0x904ab4	-	none	-	-	1
-site	src/game/battle_phases_fuzz.cpp	103	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_phases_fuzz.cpp	108	global	B	at::kFacing	0x904aac	-	none	-	-	1
-site	src/game/battle_phases_fuzz.cpp	109	global	B	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_phases_fuzz.cpp	152	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	152	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	168	global	B	at::kActorCount	0x904ab0	-	none	-	-	1
@@ -3160,14 +3078,11 @@ site	src/game/battle_phases_fuzz.cpp	286	global	B	at::kCommand	0x904ab4	-	none	-
 site	src/game/battle_phases_fuzz.cpp	288	record	SetWord	Window(2) + 4 + 2 * (v % 2)	-	via=Window	-	-	-	1
 site	src/game/battle_phases_fuzz.cpp	316	global	B	at::kCommand	0x904ab4	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	317	record	SetWord	Window(1) + 4 + 2 * ((h >> 8) % 2)	-	via=Window	-	-	-	1
-site	src/game/battle_phases_fuzz.cpp	482	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/battle_phases_fuzz.cpp	483	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_phases_fuzz.cpp	492	global	-	at::kB8E0	0x93b8e0	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	536	global	B	at::kEntryOrder	0x904ab6	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	539	global	B	at::kMessages	0x939fbc	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	542	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	542	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
-site	src/game/battle_phases_fuzz.cpp	549	global	B	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_phases_fuzz.cpp	551	global	B	at::kPhase	0x904aa0	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	557	global	B	at::kActorCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_phases_fuzz.cpp	588	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
@@ -3188,7 +3103,6 @@ site	src/game/battle_phases_fuzz.cpp	755	record	At	table + 4 * i	-	param	-	-	-	1
 site	src/game/battle_phases_fuzz.cpp	759	record	SetPtr	table + 4 * i	-	param	-	-	-	1
 site	src/game/battle_phases_fuzz.cpp	763	record	At	table + 4 * i	-	param	-	-	-	1
 site	src/game/battle_result.cpp	80	global	At	at::kMembers	0x802dc0	-	exact	Text_CurrentName	-	0
-site	src/game/battle_result.cpp	81	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_result.cpp	99	record	Dword	table + index * 4	-	-	-	-	-	0
 site	src/game/battle_result.cpp	126	global	Format	at::kFormatD	0x5e10c0	-	exact	Area08_MessageFormat	-	0
 site	src/game/battle_result.cpp	126	global	Text	at::kText0	0x904ce0	-	exact	Text_Records	-	0
@@ -3220,7 +3134,6 @@ site	src/game/battle_result.cpp	475	global	Format	at::kFormat7d	0x64addc	-	none	
 site	src/game/battle_result.cpp	475	global	Text	at::kText2	0x904d20	-	none	-	-	0
 site	src/game/battle_result.cpp	476	global	At	at::kText2	0x904d20	-	none	-	-	0
 site	src/game/battle_result.cpp	477	global	At	at::kZennyUnit	0x66a31c	-	none	-	-	0
-site	src/game/battle_result_fuzz.cpp	36	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_result_fuzz.cpp	78	global	At	at::kMembers	0x802dc0	-	exact	Text_CurrentName	-	1
 site	src/game/battle_result_fuzz.cpp	99	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_result_fuzz.cpp	110	global	At	at::kDropItems	0x904af4	-	none	-	-	1
@@ -3233,7 +3146,6 @@ site	src/game/battle_result_fuzz.cpp	244	global	At	at::kPartyCount	0x904ab0	-	no
 site	src/game/battle_result_fuzz.cpp	272	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_result_fuzz.cpp	397	global	-	at::kMsgCurrent	0x93b8e4	-	none	-	-	1
 site	src/game/battle_result_fuzz.cpp	399	global	-	at::kMembers	0x802dc0	-	exact	Text_CurrentName	-	1
-site	src/game/battle_result_fuzz.cpp	400	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_result_fuzz.cpp	448	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_result_fuzz.cpp	458	global	At	at::kText0	0x904ce0	-	exact	Text_Records	-	1
 site	src/game/battle_result_fuzz.cpp	459	global	At	at::kText2	0x904d20	-	none	-	-	1
@@ -3246,7 +3158,6 @@ site	src/game/battle_result_fuzz.cpp	579	global	-	at::kDropItems	0x904af4	-	none
 site	src/game/battle_result_fuzz.cpp	579	global	-	at::kDropItems	0x904af4	-	none	-	-	1
 site	src/game/battle_result_fuzz.cpp	581	global	-	at::kDropCount	0x904ae7	-	exact	Battle_DropCount	unsigned char	1
 site	src/game/battle_result_fuzz.cpp	621	record	SetPtr	table + 4 * i	-	param	-	-	-	1
-site	src/game/battle_setup.cpp	120	global	At	at::kMsgWindow	0x803162	-	inside	WindowRecords+0x2	records::WindowRecord	0
 site	src/game/battle_setup.cpp	170	global	At	at::kActing	0x904b34	-	none	-	-	0
 site	src/game/battle_setup.cpp	172	global	At	at::kAbility	0x904b80	-	none	-	-	0
 site	src/game/battle_setup.cpp	306	global	At	at::kItemQueue	0x904acc	-	none	-	-	0
@@ -3261,7 +3172,6 @@ site	src/game/battle_setup_fuzz.cpp	145	record	Word	o + (i <= 2 ? at::kPHpChange
 site	src/game/battle_setup_fuzz.cpp	146	record	SetWord	o + (i <= 2 ? at::kPHpChange : at::kEHpChange)	-	via=Obj	-	-	-	1
 site	src/game/battle_setup_fuzz.cpp	164	record	SetWord	object + at::kPStatus	-	param	-	-	-	1
 site	src/game/battle_setup_fuzz.cpp	165	record	SetWord	object + at::kEStatus	-	param	-	-	-	1
-site	src/game/battle_setup_fuzz.cpp	179	global	At	at::kMsgWindow	0x803162	-	inside	WindowRecords+0x2	records::WindowRecord	1
 site	src/game/battle_setup_fuzz.cpp	362	record	SetLong	o + (i <= 2 ? at::kPFlags : at::kEFlags)	-	via=Obj	-	-	-	1
 site	src/game/battle_setup_fuzz.cpp	363	record	SetWord	o + (i <= 2 ? at::kPStatus : at::kEStatus)	-	via=Obj	-	-	-	1
 site	src/game/battle_setup_fuzz.cpp	378	global	At	at::kActing	0x904b34	-	none	-	-	1
@@ -3337,14 +3247,12 @@ site	src/game/battle_sprites.cpp	913	record	SetWord	above + (k - 8) * 4 + 2	-	vi
 site	src/game/battle_sprites.cpp	946	global	At	at::kLayout	0x904aac	-	none	-	-	0
 site	src/game/battle_sprites.cpp	947	global	At	at::kNamePlaces	0x656a34	-	none	-	-	0
 site	src/game/battle_sprites.cpp	948	global	At	at::kNamePlaces	0x656a34	-	none	-	-	0
-site	src/game/battle_sprites.cpp	970	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_sprites_fuzz.cpp	106	global	At	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	107	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	108	record	SetWord	g_mine.action + 2	-	-	-	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	123	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	134	raw	At	0x802E08 + ((h >> 20) % 3) * at::kPartyStride	0x802e08	-	inside	ObjTrio+0xc8	records::PartyMember	1
 site	src/game/battle_sprites_fuzz.cpp	136	global	At	at::kClutMap	0x7e06a0	-	none	-	-	1
-site	src/game/battle_sprites_fuzz.cpp	198	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_sprites_fuzz.cpp	417	global	-	at::kActions	0x65c4d8	-	exact	NameTable_Abilities	-	1
 site	src/game/battle_sprites_fuzz.cpp	465	record	SetLong	p + i	-	-	-	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	475	global	At	at::kClutMap	0x7e06a0	-	none	-	-	1
@@ -3441,7 +3349,6 @@ site	src/game/battle_win_states_fuzz.cpp	471	global	At	at::kCrossGrow	0x904abc	-
 site	src/game/battle_win_states_fuzz.cpp	475	global	At	at::kCrossSel	0x904ab4	-	none	-	-	1
 site	src/game/battle_win_states_fuzz.cpp	477	global	At	at::kCrossGrow	0x904abc	-	none	-	-	1
 site	src/game/battle_win_states_fuzz.cpp	482	global	At	at::kBanners	0x93b8e0	-	none	-	-	1
-site	src/game/battle_window_draw.cpp	78	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/battle_window_draw.cpp	79	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	0
 site	src/game/battle_window_draw.cpp	116	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_window_draw.cpp	119	global	At	at::kStatusX	0x64e307	-	none	-	-	0
@@ -3472,17 +3379,14 @@ site	src/game/battle_window_draw_fuzz.cpp	107	global	At	at::kPartyCount	0x904ab0
 site	src/game/battle_window_draw_fuzz.cpp	111	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	116	global	At	at::kWorking	0x802dc0	-	exact	Text_CurrentName	-	1
 site	src/game/battle_window_draw_fuzz.cpp	128	global	At	at::kAbilities	0x65c4c8	-	exact	Ability_Records	-	1
-site	src/game/battle_window_draw_fuzz.cpp	150	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_window_draw_fuzz.cpp	278	global	At	at::kWorking	0x802dc0	-	exact	Text_CurrentName	-	1
 site	src/game/battle_window_draw_fuzz.cpp	279	record	SetWord	r + 0x1A	-	stride=0xa4	-	-	-	1
-site	src/game/battle_window_draw_fuzz.cpp	382	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_window_draw_fuzz.cpp	384	global	-	at::kWorking	0x802dc0	-	exact	Text_CurrentName	-	1
 site	src/game/battle_window_draw_fuzz.cpp	390	global	-	at::kPrintBuf	0x904ba0	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	392	global	-	at::kAbilities	0x65c4c8	-	exact	Ability_Records	-	1
 site	src/game/battle_window_draw_fuzz.cpp	398	global	-	at::kQuadShapes	0x64e148	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	399	global	-	at::kFmtNone	0x64e320	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	400	global	-	at::kSkillIcons	0x663d70	-	exact	Skill_KindIcons	-	1
-site	src/game/battle_window_draw_fuzz.cpp	434	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_window_draw_fuzz.cpp	435	global	At	at::kAbilities	0x65c4c8	-	exact	Ability_Records	-	1
 site	src/game/battle_window_draw_fuzz.cpp	445	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	1
 site	src/game/battle_window_draw_fuzz.cpp	460	record	SetWord	r + 0x1A	-	stride=0xa4	-	-	-	1
@@ -3506,7 +3410,6 @@ site	src/game/battle_windows.cpp	259	global	At	at::kPartyCount	0x904ab0	-	none	-
 site	src/game/battle_windows.cpp	261	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_windows.cpp	262	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_windows.cpp	264	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
-site	src/game/battle_windows.cpp	270	global	At	at::kPartyBars	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	0
 site	src/game/battle_windows.cpp	299	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_windows.cpp	307	global	Ptr	at::kActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
 site	src/game/battle_windows.cpp	321	global	At	at::kCrossSel	0x904ab4	-	none	-	-	0
@@ -3525,16 +3428,13 @@ site	src/game/battle_windows.cpp	642	global	At	at::kMsgRing	0x93c2c4	-	none	-	-	
 site	src/game/battle_windows_fuzz.cpp	125	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	126	global	At	at::kCrossSel	0x904ab4	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	127	global	At	at::kCrossGrow	0x904abc	-	none	-	-	1
-site	src/game/battle_windows_fuzz.cpp	134	global	At	at::kPartyBars	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	1
 site	src/game/battle_windows_fuzz.cpp	145	global	At	at::kMsgRing	0x93c2c4	-	none	-	-	1
-site	src/game/battle_windows_fuzz.cpp	147	global	At	at::kPartyBars	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	1
 site	src/game/battle_windows_fuzz.cpp	516	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	542	record	SetWord	m + 0x90	-	param	-	-	-	1
 site	src/game/battle_windows_fuzz.cpp	544	record	SetWord	m + 0xA2	-	param	-	-	-	1
 site	src/game/battle_windows_fuzz.cpp	547	record	SetWord	m + 0x9A	-	param	-	-	-	1
 site	src/game/battle_windows_fuzz.cpp	576	global	At	at::kBattleKind	0x904aa0	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	579	global	At	at::kPoseMode	0x904aa8	-	none	-	-	1
-site	src/game/battle_windows_fuzz.cpp	596	global	At	at::kPartyBars	0x80333f	-	inside	WindowRecords+0x1df	records::WindowRecord	1
 site	src/game/battle_windows_fuzz.cpp	603	global	At	at::kCrossSel	0x904ab4	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	604	global	At	at::kCrossGrow	0x904abc	-	none	-	-	1
 site	src/game/battle_windows_fuzz.cpp	704	global	At	at::kSkillFlags	0x65c4dd	-	none	-	-	1
@@ -3566,11 +3466,9 @@ site	src/game/boss_harness.cpp	591	record	SetLong	s + 0x10	-	-	-	-	-	1
 site	src/game/boss_harness.cpp	591	record	SetLong	s + 0xC	-	-	-	-	-	1
 site	src/game/boss_harness.cpp	1040	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/boss_harness.cpp	1041	global	Mem	at::kActor	0x904b34	-	none	-	-	1
-site	src/game/boss_harness.cpp	1132	global	Mem	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/boss_harness.cpp	1137	global	-	at::kHookEnd	0x904b64	-	exact	BattleHook_End	unsigned long	1
 site	src/game/boss_harness.cpp	1235	record	Mem	d.at + d.stride * i	-	-	-	-	-	1
 site	src/game/boss_harness.cpp	1246	global	-	at::kBattle	0x904aa0	-	none	-	-	1
-site	src/game/boss_harness.cpp	1262	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/boss_harness.cpp	1269	global	-	at::kModeBytes	0x929f00	-	exact	BattleE1_Mode	unsigned char	1
 site	src/game/boss_harness.cpp	1469	record	Mem	d.at + d.stride * i	-	-	-	-	-	1
 site	src/game/boss_sa.cpp	80	record	At	table + 4 * state	-	-	-	-	-	0
@@ -3625,11 +3523,9 @@ site	src/game/boss_sb.cpp	372	record	SetLong	Sprite_Current + 0x3C	-	base=Sprite
 site	src/game/boss_sb.cpp	419	record	SetWord	At(BattleSprites_HitBlock) + 4	-	via=At	-	-	-	0
 site	src/game/boss_sb.cpp	444	global	At	at::kBannerText	0x904ea0	-	none	-	-	0
 site	src/game/boss_sb.cpp	445	global	At	at::kBannerSource	0x65d008	-	none	-	-	0
-site	src/game/boss_sb.cpp	447	global	B	at::kWindow4Flag	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	0
 site	src/game/boss_sb.cpp	450	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/boss_sb.cpp	507	global	B	at::kScriptVar3	0x903848	-	none	-	-	0
 site	src/game/boss_sb_fuzz.cpp	50	global	-	at::kScriptVar3	0x903848	-	none	-	-	1
-site	src/game/boss_sb_fuzz.cpp	50	global	-	at::kWindow4Flag	0x8031f3	-	inside	WindowRecords+0x93	records::WindowRecord	1
 site	src/game/boss_sb_fuzz.cpp	69	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/boss_sb_fuzz.cpp	70	global	Mem	at::kCommandKind	0x904b35	-	none	-	-	1
 site	src/game/boss_sb_fuzz.cpp	73	record	SetWord	command + 2	-	via=SpriteRecord	-	-	-	1
@@ -9256,7 +9152,6 @@ site	src/game/field_s_fuzz.cpp	247	raw	B	0x80321E	0x80321e	-	inside	WindowRecord
 site	src/game/field_s_fuzz.cpp	248	raw	B	0x803340	0x803340	-	inside	WindowRecords+0x1e0	records::WindowRecord	1
 site	src/game/field_s_fuzz.cpp	249	raw	B	0x80333E	0x80333e	-	inside	WindowRecords+0x1de	records::WindowRecord	1
 site	src/game/field_s_fuzz.cpp	250	raw	B	0x803362 + (v & 3)	0x803362	-	inside	WindowRecords+0x202	records::WindowRecord	1
-site	src/game/field_s_fuzz.cpp	398	global	-	sh::at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/field_s_fuzz.cpp	402	global	-	at::kEquipBytes	0x939880	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	451	record	SetWord	rec + 0x18	-	stride=0xa4	-	-	-	1
 site	src/game/field_s_fuzz.cpp	452	record	SetWord	rec + 0x1A	-	stride=0xa4	-	-	-	1
@@ -9287,7 +9182,6 @@ site	src/game/field_s_fuzz.cpp	492	raw	B	0x803365	0x803365	-	inside	WindowRecord
 site	src/game/field_s_fuzz.cpp	493	raw	SetW	0x803368	0x803368	-	inside	WindowRecords+0x208	records::WindowRecord	1
 site	src/game/field_s_fuzz.cpp	495	global	B	at::kSharedList	0x904574	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	537	raw	B	0x803360	0x803360	-	inside	WindowRecords+0x200	records::WindowRecord	1
-site	src/game/field_s_fuzz.cpp	548	global	-	sh::at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/fishing_text.cpp	278	global	Byte	kLineRecords	0x653b98	-	none	-	-	0
 site	src/game/fishing_text.cpp	279	global	Byte	kLineRecords	0x653b98	-	none	-	-	0
 site	src/game/fishing_text.cpp	288	global	Byte	kLinePens	0x653c00	-	none	-	-	0
@@ -9397,7 +9291,6 @@ site	src/game/item_use.cpp	67	global	At	at::kWorkRecords	0x802dc0	-	exact	Text_C
 site	src/game/item_use.cpp	119	global	At	at::kItemFlags	0x656b38	-	none	-	-	0
 site	src/game/item_use.cpp	385	record	Long	desc + 0x34	-	base=Area_Descriptors	-	-	-	0
 site	src/game/item_use.cpp	398	global	At	at::kMessage	0x7dee48	-	none	-	-	0
-site	src/game/item_use.cpp	402	global	At	at::kWindow0State	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
 site	src/game/item_use.cpp	429	global	At	at::kMessage	0x7dee48	-	none	-	-	0
 site	src/game/item_use.cpp	429	global	At	at::kSysMessages	0x658f08	-	none	-	-	0
 site	src/game/item_use.cpp	434	global	At	at::kSysCounter	0x903848	-	none	-	-	0
@@ -9407,7 +9300,6 @@ site	src/game/item_use.cpp	479	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/item_use.cpp	484	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/item_use_fuzz.cpp	68	global	At	at::kWorkRecords	0x802dc0	-	exact	Text_CurrentName	-	1
 site	src/game/item_use_fuzz.cpp	77	global	At	at::kMessage	0x7dee48	-	none	-	-	1
-site	src/game/item_use_fuzz.cpp	80	global	At	at::kWindow0State	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	1
 site	src/game/item_use_fuzz.cpp	83	global	At	at::kTiaraCount	0x905b61	-	exact	ModeRest_AreaAsked	unsigned char	1
 site	src/game/item_use_fuzz.cpp	88	global	At	at::kSysCounter	0x903848	-	none	-	-	1
 site	src/game/item_use_fuzz.cpp	106	record	SetWord	r + at::kHp	-	via=RecordOf	-	-	-	1
@@ -10705,7 +10597,6 @@ site	src/game/magic_s33.cpp	410	raw	Mem	0x904AB0	0x904ab0	-	none	-	-	0
 site	src/game/magic_s33.cpp	411	raw	Mem	0x904AA9	0x904aa9	-	none	-	-	0
 site	src/game/magic_s33.cpp	415	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s33.cpp	417	raw	Mem	0x904AB0	0x904ab0	-	none	-	-	0
-site	src/game/magic_s33.cpp	423	global	Mem	kWindowRows	0x803337	-	inside	WindowRecords+0x1d7	records::WindowRecord	0
 site	src/game/magic_s33.cpp	430	raw	Mem	0x904AAC	0x904aac	-	none	-	-	0
 site	src/game/magic_s33.cpp	431	global	Mem	kSideOffsets	0x64e2bc	-	none	-	-	0
 site	src/game/magic_s33.cpp	434	record	SetWord	w + 1	-	stride=0x24	-	-	-	0
@@ -11093,14 +10984,10 @@ site	src/game/member_sprites_fuzz.cpp	769	global	-	at::kControlStates	0x65f99c	-
 site	src/game/menu_draw_helpers.cpp	95	record	At	table + index * 4	-	-	-	-	-	0
 site	src/game/menu_draw_helpers.cpp	167	record	Word	Rec() + 0x10	-	via=Rec	-	-	-	0
 site	src/game/menu_draw_helpers.cpp	172	record	Word	Rec() + 0x10	-	via=Rec	-	-	-	0
-site	src/game/menu_draw_helpers_fuzz.cpp	74	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/menu_draw_helpers_fuzz.cpp	211	record	At	tb.at + 4 * i	-	-	-	-	-	1
 site	src/game/menu_draw_helpers_fuzz.cpp	216	record	At	tb.at + 4 * i	-	-	-	-	-	1
-site	src/game/menu_draw_helpers_fuzz.cpp	292	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/menu_draw_helpers_fuzz.cpp	355	record	SetWord	r + 0x10	-	via=Current	-	-	-	1
 site	src/game/menu_draw_helpers_fuzz.cpp	408	record	Long	in.memory + 0x318	-	param	-	-	-	1
-site	src/game/menu_draw_helpers_fuzz.cpp	409	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/menu_draw_helpers_fuzz.cpp	456	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/menu_lists.cpp	102	record	At	table + index * 4	-	param	-	-	-	0
 site	src/game/menu_lists.cpp	163	raw	Byte	0x7E0675	0x7e0675	-	none	-	-	0
 site	src/game/menu_lists.cpp	164	raw	Byte	0x7E0674	0x7e0674	-	none	-	-	0
@@ -11127,8 +11014,6 @@ site	src/game/menu_lists.cpp	313	global	Byte	at::kMoneyWindow	0x80325c	-	exact	W
 site	src/game/menu_lists.cpp	314	global	Byte	at::kTimeWindow	0x803280	-	exact	Window8	unsigned char	0
 site	src/game/menu_lists.cpp	315	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
 site	src/game/menu_lists.cpp	316	global	Byte	at::kTitleWindow	0x8032c8	-	exact	Window10	unsigned char	0
-site	src/game/menu_lists.cpp	321	global	At	at::kMemberPanels	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
-site	src/game/menu_lists.cpp	349	global	At	at::kMemberPanels	0x8031f0	-	inside	WindowRecords+0x90	records::WindowRecord	0
 site	src/game/menu_lists.cpp	376	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
 site	src/game/menu_lists.cpp	377	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
 site	src/game/menu_lists.cpp	378	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
@@ -11140,7 +11025,6 @@ site	src/game/menu_lists.cpp	503	record	SetWord	r + 0x10	-	via=Rec	-	-	-	0
 site	src/game/menu_lists.cpp	508	record	SetWord	r + 0x10	-	via=Rec	-	-	-	0
 site	src/game/menu_lists.cpp	521	record	Word	r + 0x10	-	via=Rec	-	-	-	0
 site	src/game/menu_lists.cpp	556	record	Word	r + 0x10	-	via=Rec	-	-	-	0
-site	src/game/menu_lists_fuzz.cpp	37	global	At	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/menu_lists_fuzz.cpp	79	record	SetWord	g_arg_rec + 4	-	param	-	-	-	1
 site	src/game/menu_lists_fuzz.cpp	80	record	SetWord	g_arg_rec + 6	-	param	-	-	-	1
 site	src/game/menu_lists_fuzz.cpp	107	record	SetWord	Cur() + 4	-	via=Cur	-	-	-	1
@@ -11149,15 +11033,12 @@ site	src/game/menu_lists_fuzz.cpp	112	record	SetWord	Cur() + 0x10	-	via=Cur	-	-	
 site	src/game/menu_lists_fuzz.cpp	121	global	At	at::kSavedParty	0x6bdf98	-	none	-	-	1
 site	src/game/menu_lists_fuzz.cpp	122	global	At	at::kReserveData	0x9045fc	-	none	-	-	1
 site	src/game/menu_lists_fuzz.cpp	391	global	-	at::kSavedParty	0x6bdf98	-	none	-	-	1
-site	src/game/menu_lists_fuzz.cpp	394	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/menu_lists_fuzz.cpp	482	record	Word	r + 0x10	-	stride=0xa4	-	-	-	1
 site	src/game/menu_lists_fuzz.cpp	482	record	SetWord	r + 8	-	stride=0xa4	-	-	-	1
 site	src/game/menu_lists_fuzz.cpp	516	global	At	at::kSavedParty	0x6bdf98	-	none	-	-	1
 site	src/game/menu_lists_fuzz.cpp	534	record	SetWord	r + 0x10	-	via=Cur	-	-	-	1
 site	src/game/menu_lists_fuzz.cpp	544	record	SetWord	Cur() + 6	-	via=Cur	-	-	-	1
 site	src/game/menu_lists_fuzz.cpp	554	record	SetWord	Cur() + 4	-	via=Cur	-	-	-	1
-site	src/game/menu_lists_fuzz.cpp	601	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/menu_lists_fuzz.cpp	601	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/menu_windows.cpp	133	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	0
 site	src/game/menu_windows.cpp	160	record	SetWord	r + 2	-	via=Next	-	-	-	0
 site	src/game/menu_windows.cpp	161	record	SetWord	r + 4	-	via=Next	-	-	-	0
@@ -11243,7 +11124,6 @@ site	src/game/mode_flow.cpp	558	raw	At	0x8034E2	0x8034e2	-	inside	MoveScript_Par
 site	src/game/mode_flow.cpp	578	global	At	at::kKind2XHigh	0x905e66	-	inside	Field_Kind2X+0x2	long	0
 site	src/game/mode_flow.cpp	578	global	At	at::kKind2ZHigh	0x905e62	-	inside	Field_Kind2Z+0x2	long	0
 site	src/game/mode_flow.cpp	613	global	At	at::kWalkPoses	0x66adbc	-	none	-	-	0
-site	src/game/mode_flow.cpp	626	global	At	at::kWindowRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/mode_flow.cpp	664	global	At	at::kBootClear	0x9039e0	-	none	-	-	0
 site	src/game/mode_flow.cpp	716	global	At	at::kTintMarks	0x7e06a0	-	none	-	-	0
 site	src/game/mode_flow_fuzz.cpp	121	raw	At	0x905BA4	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	1
@@ -11529,7 +11409,6 @@ site	src/game/msgbox.cpp	1079	global	W	kEffectOff	0x7dee68	-	none	-	-	0
 site	src/game/msgbox.cpp	1088	global	W	kEffectOff	0x7dee68	-	none	-	-	0
 site	src/game/msgbox.cpp	1091	global	B	kClipTable	0x658f00	-	none	-	-	0
 site	src/game/msgbox.cpp	1104	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1115	global	At	kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/msgbox.cpp	1200	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
 site	src/game/msgbox.cpp	1201	global	W	kFlags	0x7dee44	-	none	-	-	0
 site	src/game/msgbox.cpp	1208	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
@@ -11540,9 +11419,7 @@ site	src/game/msgbox_fuzz.cpp	72	global	SetB	kState	0x7dee40	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	76	global	SetW	kFlags	0x7dee44	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	79	global	SetW	kMessage	0x7dee48	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	96	global	SetB	kChoiceLast	0x7dee66	-	exact	MenuWindows_ListCount	signed char	1
-site	src/game/msgbox_fuzz.cpp	97	global	SetB	kWindow0State	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	1
 site	src/game/msgbox_fuzz.cpp	99	global	SetW	kEffectOff	0x7dee68	-	none	-	-	1
-site	src/game/msgbox_fuzz.cpp	118	global	At	kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/msgbox_fuzz.cpp	474	global	SetW	kScriptPool	0x803580	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	487	global	At	kRecordsLow	0x903a60	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	503	global	SetW	kFlags	0x7dee44	-	none	-	-	1
@@ -11550,7 +11427,6 @@ site	src/game/msgbox_fuzz.cpp	503	global	W	kFlags	0x7dee44	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	505	global	SetB	kState	0x7dee40	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	510	global	SetW	kMessage	0x7dee48	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	511	global	SetL	kPoolSelector	0x803584	-	none	-	-	1
-site	src/game/msgbox_fuzz.cpp	516	global	SetB	kWindow0State	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	1
 site	src/game/msgbox_fuzz.cpp	541	global	SetB	kFlags	0x7dee44	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	541	global	B	kFlags	0x7dee44	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	543	global	SetB	kState	0x7dee40	-	none	-	-	1
@@ -11565,8 +11441,6 @@ site	src/game/msgbox_fuzz.cpp	587	global	B	kFlags	0x7dee44	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	601	global	SetW	kEffectOff	0x7dee68	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	606	global	SetW	kEffectOff	0x7dee68	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	615	global	SetW	kEffectOff	0x7dee68	-	none	-	-	1
-site	src/game/msgbox_fuzz.cpp	626	global	SetB	kWindow0State	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	1
-site	src/game/msgbox_fuzz.cpp	632	global	At	kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/msgbox_fuzz.cpp	664	global	SetW	kEffectOff	0x7dee68	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	802	global	At	kRecordsLow	0x903a60	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	808	global	L	kPoolSelector	0x803584	-	none	-	-	1
@@ -11861,7 +11735,6 @@ site	src/game/rest_2a_fuzz.cpp	304	record	SetLong	s + 0x34 + 4 * (v % 3)	-	base=
 site	src/game/rest_2b.cpp	162	global	B	kTriggerCounter	0x903848	-	none	-	-	0
 site	src/game/rest_2b.cpp	280	global	B	kGiven	0x9399e4	-	exact	Rest2b_Given	unsigned char	0
 site	src/game/rest_2b.cpp	311	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	343	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/rest_2b.cpp	357	global	B	kGiven	0x9399e4	-	exact	Rest2b_Given	unsigned char	0
 site	src/game/rest_2b.cpp	362	global	B	kCounterB	0x90384b	-	none	-	-	0
 site	src/game/rest_2b.cpp	364	global	B	kCounterB	0x90384b	-	none	-	-	0
@@ -11869,21 +11742,14 @@ site	src/game/rest_2b.cpp	402	global	SetW	kMessage	0x803194	-	inside	WindowRecor
 site	src/game/rest_2b.cpp	406	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
 site	src/game/rest_2b.cpp	412	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
 site	src/game/rest_2b.cpp	431	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	441	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2b.cpp	442	global	L	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	443	global	SetW	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_2b.cpp	444	global	SetW	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2b.cpp	444	global	W	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/rest_2b.cpp	462	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
 site	src/game/rest_2b.cpp	465	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
 site	src/game/rest_2b.cpp	471	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
 site	src/game/rest_2b.cpp	533	global	L	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	535	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_2b.cpp	536	global	SetW	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2b.cpp	537	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2b.cpp	538	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	539	global	SetW	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_2b.cpp	539	global	W	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/rest_2b.cpp	574	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
 site	src/game/rest_2b.cpp	574	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
 site	src/game/rest_2b.cpp	577	global	B	kSavedA	0x6bc87c	-	none	-	-	0
@@ -11919,14 +11785,8 @@ site	src/game/rest_2b.cpp	638	global	B	kSavedA	0x6bc87c	-	none	-	-	0
 site	src/game/rest_2b.cpp	641	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
 site	src/game/rest_2b.cpp	644	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
 site	src/game/rest_2b.cpp	660	global	B	kOwned	0x9399e0	-	exact	Rest2b_Owned	unsigned char	0
-site	src/game/rest_2b.cpp	667	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_2b.cpp	668	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_2b.cpp	669	global	SetW	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_2b.cpp	670	global	SetW	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2b.cpp	671	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_2b.cpp	672	global	SetW	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	673	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_2b.cpp	674	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2b.cpp	676	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_2b.cpp	677	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_2b.cpp	678	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
@@ -11937,18 +11797,10 @@ site	src/game/rest_2b.cpp	683	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned c
 site	src/game/rest_2b.cpp	684	global	SetW	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/rest_2b.cpp	685	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/rest_2b.cpp	686	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	687	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	688	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	689	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	690	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	691	global	SetW	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	692	global	SetW	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/rest_2b.cpp	693	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/rest_2b.cpp	694	global	SetL	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	699	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2b.cpp	700	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_2b.cpp	701	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	702	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/rest_2b.cpp	769	global	SetL	kModelB	0x939960	-	none	-	-	0
 site	src/game/rest_2b.cpp	770	global	SetL	kModelB	0x939960	-	none	-	-	0
 site	src/game/rest_2b.cpp	770	record	L	file + 4	-	base=Rest2b_ModelFile	-	-	-	0
@@ -11971,7 +11823,6 @@ site	src/game/rest_2b.cpp	800	global	SetL	kModelA	0x9398e0	-	none	-	-	0
 site	src/game/rest_2b.cpp	848	global	At	kModelB	0x939960	-	none	-	-	0
 site	src/game/rest_2b.cpp	912	global	At	kOffsetX	0x5c4278	-	exact	Rest2b_ModelOffsetX	float	0
 site	src/game/rest_2b.cpp	913	global	At	kOffsetY	0x5c4274	-	exact	Rest2b_ModelOffsetY	float	0
-site	src/game/rest_2b_fuzz.cpp	340	global	-	sh::at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/rest_2b_fuzz.cpp	366	global	B	kTimer	0x929f04	-	none	-	-	1
 site	src/game/rest_2b_fuzz.cpp	403	global	Mem	kModelA	0x9398e0	-	none	-	-	1
 site	src/game/rest_2b_fuzz.cpp	404	global	Mem	kModelB	0x939960	-	none	-	-	1
@@ -11981,7 +11832,6 @@ site	src/game/rest_2c.cpp	73	record	L	table + 4 * index	-	-	-	-	-	0
 site	src/game/rest_2c.cpp	95	global	-	at::kSummaries	0x905bc0	-	none	-	-	0
 site	src/game/rest_2c.cpp	96	global	-	at::kSummaries	0x905bc0	-	none	-	-	0
 site	src/game/rest_2c.cpp	102	global	L	at::kSummary	0x904680	-	none	-	-	0
-site	src/game/rest_2c.cpp	106	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2c.cpp	120	global	At	at::kMasterMessages	0x6644e8	-	none	-	-	0
 site	src/game/rest_2c.cpp	139	global	B	at::kFigureRgb	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
 site	src/game/rest_2c.cpp	139	global	B	at::kFigureRgb	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
@@ -12111,10 +11961,8 @@ site	src/game/rest_2c.cpp	1151	global	-	at::kFaceTable	0x6644b8	-	none	-	-	0
 site	src/game/rest_2c.cpp	1173	record	B	entry + 1	-	table=0x6644b8	-	-	-	0
 site	src/game/rest_2c.cpp	1174	record	B	entry + 2	-	table=0x6644b8	-	-	-	0
 site	src/game/rest_2c.cpp	1174	record	B	entry + 3	-	table=0x6644b8	-	-	-	0
-site	src/game/rest_2c_fuzz.cpp	48	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/rest_2c_fuzz.cpp	206	global	B	at::kTimer	0x929f04	-	none	-	-	1
 site	src/game/rest_2c_fuzz.cpp	231	global	Mem	at::kFigure	0x9398e0	-	none	-	-	1
-site	src/game/rest_2c_fuzz.cpp	327	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/rest_2c_fuzz.cpp	330	global	-	at::kBlock	0x9039e0	-	none	-	-	1
 site	src/game/rest_2c_fuzz.cpp	335	global	-	at::kSummaries	0x905bc0	-	none	-	-	1
 site	src/game/rest_2c_fuzz.cpp	357	global	B	at::kTimer	0x929f04	-	none	-	-	1
@@ -12127,7 +11975,6 @@ site	src/game/rest_2c_fuzz.cpp	421	record	SetW	rec + 0x10	-	stride=0xa4	-	-	-	1
 site	src/game/rest_2c_fuzz.cpp	422	record	B	rec + 0xA	-	stride=0xa4	-	-	-	1
 site	src/game/rest_2c_fuzz.cpp	439	record	B	d->by	-	via=DispatchOf	-	-	-	1
 site	src/game/rest_2d.cpp	62	record	At	table + 4 * index	-	-	-	-	-	0
-site	src/game/rest_2d.cpp	75	global	RecordChecked	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2d.cpp	88	global	At	at::kMasterMessages	0x6644e8	-	none	-	-	0
 site	src/game/rest_2d.cpp	120	global	At	at::kMessagePools	0x803580	-	none	-	-	0
 site	src/game/rest_2d.cpp	121	global	At	at::kMessagePools	0x803580	-	none	-	-	0
@@ -12157,7 +12004,6 @@ site	src/game/rest_2d.cpp	672	global	B	at::kMenuTimer	0x929f04	-	none	-	-	0
 site	src/game/rest_2d.cpp	683	raw	At	0x8032FC	0x8032fc	-	inside	WindowRecords+0x19c	records::WindowRecord	0
 site	src/game/rest_2d.cpp	685	global	B	at::kMenuTimer	0x929f04	-	none	-	-	0
 site	src/game/rest_2d.cpp	686	global	B	at::kMenuTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2d.cpp	703	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2d.cpp	704	raw	At	0x803410	0x803410	-	inside	WindowRecords+0x2b0	records::WindowRecord	0
 site	src/game/rest_2d.cpp	708	raw	At	0x8032FC	0x8032fc	-	inside	WindowRecords+0x19c	records::WindowRecord	0
 site	src/game/rest_2d.cpp	735	global	B	at::kMenuTimer	0x929f04	-	none	-	-	0
@@ -12178,7 +12024,6 @@ site	src/game/rest_2d.cpp	795	raw	B	0x803283	0x803283	-	inside	WindowRecords+0x1
 site	src/game/rest_2d.cpp	796	raw	B	0x8032A7	0x8032a7	-	inside	WindowRecords+0x147	records::WindowRecord	0
 site	src/game/rest_2d.cpp	797	raw	B	0x8032CB	0x8032cb	-	inside	WindowRecords+0x16b	records::WindowRecord	0
 site	src/game/rest_2d.cpp	813	record	At	w + 4	-	via=Window	-	-	-	0
-site	src/game/rest_2d.cpp	814	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_2d.cpp	815	record	B	w + 0xA	-	via=Window	-	-	-	0
 site	src/game/rest_2d.cpp	817	record	At	w + 6	-	via=Window	-	-	-	0
 site	src/game/rest_2d.cpp	819	raw	B	0x8032ED	0x8032ed	-	inside	WindowRecords+0x18d	records::WindowRecord	0
@@ -12325,7 +12170,6 @@ site	src/game/rest_2d.cpp	1231	raw	B	0x80325F	0x80325f	-	inside	WindowRecords+0x
 site	src/game/rest_2d.cpp	1232	raw	B	0x803283	0x803283	-	inside	WindowRecords+0x123	records::WindowRecord	0
 site	src/game/rest_2d.cpp	1233	raw	B	0x8032A7	0x8032a7	-	inside	WindowRecords+0x147	records::WindowRecord	0
 site	src/game/rest_2d.cpp	1234	raw	B	0x8032CB	0x8032cb	-	inside	WindowRecords+0x16b	records::WindowRecord	0
-site	src/game/rest_2d_fuzz.cpp	282	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/rest_2d_fuzz.cpp	302	raw	Mem	0x90358E	0x90358e	-	exact	Field_ConfirmButtons	unsigned short	1
 site	src/game/rest_2d_fuzz.cpp	303	raw	Mem	0x903590	0x903590	-	exact	Field_CancelButtons	unsigned short	1
 site	src/game/rest_2d_fuzz.cpp	305	raw	Mem	0x7E1BEC	0x7e1bec	-	exact	Input_Pressed	unsigned short	1
@@ -12899,7 +12743,6 @@ site	src/game/rest_2e.cpp	1873	global	B	kTimer	0x929f04	-	none	-	-	0
 site	src/game/rest_2e.cpp	1878	global	B	kTimer	0x929f04	-	none	-	-	0
 site	src/game/rest_2e.cpp	1885	global	B	kTimer	0x929f04	-	none	-	-	0
 site	src/game/rest_2e.cpp	1886	global	B	kTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2e_fuzz.cpp	214	global	-	sh::at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/rest_2e_fuzz.cpp	247	raw	SetW	0x7E1BEE	0x7e1bee	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	257	raw	B	0x904154 + i	0x904154	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	261	raw	B	0x904154 + 0x80 * list + i	0x904154	-	none	-	-	1
@@ -13086,18 +12929,13 @@ site	src/game/rest_2g.cpp	419	global	At	at::kLabelRowPieces	0x66b0f0	-	none	-	-	
 site	src/game/rest_2g.cpp	422	global	B	at::kLabelRows	0x66b158	-	none	-	-	0
 site	src/game/rest_2g.cpp	424	global	At	at::kLabelEndPieces	0x66b0fc	-	none	-	-	0
 site	src/game/rest_2g.cpp	436	record	Long	r + 0x20	-	via=Rec	-	-	-	0
-site	src/game/rest_2g.cpp	503	global	At	at::kRecord4X	0x8031f4	-	inside	WindowRecords+0x94	records::WindowRecord	0
-site	src/game/rest_2g_fuzz.cpp	44	global	Mem	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/rest_2g_fuzz.cpp	212	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/rest_2g_fuzz.cpp	214	global	-	at::kGridWords	0x939820	-	none	-	-	1
 site	src/game/rest_2g_fuzz.cpp	215	global	-	at::kGridCells	0x939a60	-	none	-	-	1
 site	src/game/rest_2g_fuzz.cpp	238	record	SetWord	r + 0x10	-	via=Current	-	-	-	1
 site	src/game/rest_2g_fuzz.cpp	241	record	SetLong	r + 0x20	-	via=Current	-	-	-	1
 site	src/game/rest_2g_fuzz.cpp	244	global	Mem	at::kGridCells	0x939a60	-	none	-	-	1
 site	src/game/rest_2g_fuzz.cpp	268	global	Mem	at::kGridCells	0x939a60	-	none	-	-	1
-site	src/game/rest_2g_fuzz.cpp	344	global	Mem	at::kRecord4X	0x8031f4	-	inside	WindowRecords+0x94	records::WindowRecord	1
 site	src/game/rest_2g_fuzz.cpp	367	record	SetWord	r + 0x10	-	via=Rec	-	-	-	1
-site	src/game/rest_2g_fuzz.cpp	371	global	Mem	at::kRecord4X	0x8031f4	-	inside	WindowRecords+0x94	records::WindowRecord	1
 site	src/game/rest_2g_fuzz.cpp	375	global	Mem	at::kGridCells	0x939a60	-	none	-	-	1
 site	src/game/rest_2g_fuzz.cpp	390	record	SetWord	r + s.off	-	via=Rec	-	-	-	1
 site	src/game/rest_2h.cpp	103	record	L	table + 4 * index	-	-	-	-	-	0
@@ -13187,8 +13025,6 @@ site	src/game/rest_2h.cpp	832	global	-	at::kVerbPiecesOn	0x66b500	-	none	-	-	0
 site	src/game/rest_2h.cpp	855	global	-	at::kJoystickIid	0x5c4718	-	none	-	-	0
 site	src/game/rest_2h.cpp	857	global	At	at::kProductName	0x66c7b0	-	none	-	-	0
 site	src/game/rest_2h_fuzz.cpp	72	record	Mem	site + 1	-	param	-	-	-	1
-site	src/game/rest_2h_fuzz.cpp	300	global	-	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/rest_2h_fuzz.cpp	313	global	Mem	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/rest_2h_fuzz.cpp	345	record	SetWord	w + at_word	-	param	-	-	-	1
 site	src/game/rest_2h_fuzz.cpp	387	global	Mem	at::kSharedList	0x904574	-	none	-	-	1
 site	src/game/rest_2h_fuzz.cpp	407	global	Mem	at::kMasterBits	0x904657	-	none	-	-	1
@@ -13306,7 +13142,6 @@ site	src/game/rest_3b.cpp	221	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleAct
 site	src/game/rest_3b.cpp	225	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/rest_3b.cpp	226	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/rest_3b.cpp	229	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
-site	src/game/rest_3b.cpp	241	global	B	at::kWin3State	0x8031cf	-	inside	WindowRecords+0x6f	records::WindowRecord	0
 site	src/game/rest_3b.cpp	244	global	Ptr	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
 site	src/game/rest_3b.cpp	334	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/rest_3b.cpp	335	record	Word	c + 2	-	table=0x939fa0	-	-	-	0
@@ -13397,7 +13232,6 @@ site	src/game/rest_3b_fuzz.cpp	356	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	373	global	Mem	at::kAbility	0x904b80	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	375	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	385	record	SetWord	c + 2	-	-	-	-	-	1
-site	src/game/rest_3b_fuzz.cpp	388	global	Mem	at::kWin16Cursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	1
 site	src/game/rest_3b_fuzz.cpp	442	global	Mem	at::kTarget	0x904b54	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	443	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/rest_3b_fuzz.cpp	444	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
@@ -14511,11 +14345,9 @@ site	src/game/rest_4e.cpp	810	global	At	kGlyphsC	0x65314c	-	none	-	-	0
 site	src/game/rest_4e.cpp	811	global	At	kGlyphsA	0x653144	-	none	-	-	0
 site	src/game/rest_4e.cpp	853	global	At	kEight	0x5c41cc	-	none	-	-	0
 site	src/game/rest_4e.cpp	944	record	L	bof3::addr::Inventory_IdLists + 4 * tab	-	base=Inventory_IdLists	-	-	-	0
-site	src/game/rest_4e.cpp	963	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
 site	src/game/rest_4e.cpp	964	global	L	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_4e.cpp	966	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_4e.cpp	967	global	B	kTop	0x80316b	-	inside	WindowRecords+0xb	records::WindowRecord	0
-site	src/game/rest_4e.cpp	967	global	W	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_4e.cpp	967	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_4e.cpp	986	global	SetW	kScroll	0x803172	-	inside	WindowRecords+0x12	records::WindowRecord	0
 site	src/game/rest_4e.cpp	986	global	B	kTop	0x80316b	-	inside	WindowRecords+0xb	records::WindowRecord	0
@@ -14528,20 +14360,11 @@ site	src/game/rest_4e.cpp	1005	global	B	kTop	0x80316b	-	inside	WindowRecords+0xb
 site	src/game/rest_4e.cpp	1010	global	B	kTop	0x80316b	-	inside	WindowRecords+0xb	records::WindowRecord	0
 site	src/game/rest_4e.cpp	1016	global	B	kTop	0x80316b	-	inside	WindowRecords+0xb	records::WindowRecord	0
 site	src/game/rest_4e.cpp	1020	global	W	kScroll	0x803172	-	inside	WindowRecords+0x12	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1024	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1036	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1057	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
 site	src/game/rest_4e.cpp	1087	record	B	bof3::addr::NameTable_Consumables + 0x10 + 22 * item	-	base=NameTable_Consumables	-	-	-	0
 site	src/game/rest_4e.cpp	1088	record	B	bof3::addr::NameTable_Weapons + 0x11 + 28 * item	-	base=NameTable_Weapons	-	-	-	0
 site	src/game/rest_4e.cpp	1089	record	B	bof3::addr::NameTable_Armour + 0x11 + 26 * item	-	base=NameTable_Armour	-	-	-	0
 site	src/game/rest_4e.cpp	1090	record	B	bof3::addr::NameTable_Accessories + 0x11 + 24 * item	-	base=NameTable_Accessories	-	-	-	0
 site	src/game/rest_4e.cpp	1099	global	At	kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/rest_4e.cpp	1132	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1133	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1134	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1135	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1136	global	SetW	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1137	global	SetW	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_4e.cpp	1138	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_4e.cpp	1139	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/rest_4e.cpp	1140	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
@@ -14587,14 +14410,11 @@ site	src/game/rest_4e.cpp	1352	global	At	kTilesTop	0x6531a0	-	none	-	-	0
 site	src/game/rest_4e.cpp	1359	global	B	kTilesSide	0x6531e0	-	none	-	-	0
 site	src/game/rest_4e.cpp	1362	global	B	kTilesSide	0x6531e0	-	none	-	-	0
 site	src/game/rest_4e.cpp	1368	global	At	kTilesBottom	0x6531c0	-	none	-	-	0
-site	src/game/rest_4e_fuzz.cpp	298	global	-	sh::at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/rest_4e_fuzz.cpp	314	global	Mem	kPool	0x803580	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	321	global	Mem	kPool	0x803580	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	330	global	Mem	kPairMessages	0x653180	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	363	global	Mem	kTracks	0x653098	-	none	-	-	1
-site	src/game/rest_4e_fuzz.cpp	368	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	1
 site	src/game/rest_4e_fuzz.cpp	371	global	B	kTop	0x80316b	-	inside	WindowRecords+0xb	records::WindowRecord	1
-site	src/game/rest_4e_fuzz.cpp	373	global	Mem	kScroll	0x803172	-	inside	WindowRecords+0x12	records::WindowRecord	1
 site	src/game/rest_4e_fuzz.cpp	375	record	Mem	bof3::addr::Inventory_IdLists + 4 * B(Window0_ParamA_addr)	-	base=Inventory_IdLists	-	-	-	1
 site	src/game/rest_4e_fuzz.cpp	376	record	Mem	list + B(Window0_Cursor_addr)	-	base=Inventory_IdLists	-	-	-	1
 site	src/game/rest_4e_fuzz.cpp	383	global	B	kListCPairs	0x904ca0	-	none	-	-	1
@@ -14609,10 +14429,6 @@ site	src/game/rest_4e_fuzz.cpp	390	global	B	kPages	0x675fd8	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	390	global	B	kPages	0x675fd8	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	391	global	B	kPages	0x675fd8	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	391	global	B	kPages	0x675fd8	-	none	-	-	1
-site	src/game/rest_4e_fuzz.cpp	402	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	1
-site	src/game/rest_4e_fuzz.cpp	403	global	Mem	kScroll	0x803172	-	inside	WindowRecords+0x12	records::WindowRecord	1
-site	src/game/rest_4e_fuzz.cpp	444	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	1
-site	src/game/rest_4e_fuzz.cpp	447	global	Mem	kScroll	0x803172	-	inside	WindowRecords+0x12	records::WindowRecord	1
 site	src/game/rest_4e_fuzz.cpp	450	global	B	kEdit	0x675f98	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	453	global	B	kListAEntries	0x9039c0	-	none	-	-	1
 site	src/game/rest_4f.cpp	101	record	L	table + 4 * index	-	param	-	-	-	0
@@ -15963,7 +15779,6 @@ site	src/game/shop_states.cpp	588	global	PutWord	at::kRepeatLatch	0x7e01b8	-	non
 site	src/game/shop_states.cpp	595	global	B	at::kCount	0x929f04	-	none	-	-	0
 site	src/game/shop_states2.cpp	95	global	Long	at::kIdLists	0x656b00	-	exact	Inventory_IdLists	-	0
 site	src/game/shop_states2.cpp	96	global	Long	at::kCountLists	0x656b14	-	exact	Inventory_CountLists	-	0
-site	src/game/shop_states2.cpp	98	global	At	at::kMembers	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
 site	src/game/shop_states2.cpp	100	global	Byte	at::kPartyList	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
 site	src/game/shop_states2.cpp	100	global	Byte	at::kRecordOf	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/shop_states2.cpp	127	raw	Long	0x803164	0x803164	-	inside	WindowRecords+0x4	records::WindowRecord	0
@@ -16455,12 +16270,9 @@ site	src/game/window_kinds_fuzz.cpp	76	global	-	at::kMsgRing	0x93c2c0	-	none	-	-
 site	src/game/window_kinds_fuzz.cpp	76	global	-	at::kMsgRing	0x93c2c0	-	none	-	-	1
 site	src/game/window_kinds_fuzz.cpp	76	global	-	at::kMsgRing	0x93c2c0	-	none	-	-	1
 site	src/game/window_kinds_fuzz.cpp	76	global	-	at::kMsgRing	0x93c2c0	-	none	-	-	1
-site	src/game/window_kinds_fuzz.cpp	82	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/window_kinds_fuzz.cpp	237	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/window_kinds_fuzz.cpp	240	global	-	at::kMsgRing	0x93c2c0	-	none	-	-	1
 site	src/game/window_kinds_fuzz.cpp	243	global	-	at::kBannerPool	0x93b8e0	-	none	-	-	1
 site	src/game/window_kinds_fuzz.cpp	244	global	-	at::kBannerMask	0x904ae9	-	exact	BattleMisc_BannerKinds	unsigned char	1
-site	src/game/window_kinds_fuzz.cpp	283	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/window_kinds_fuzz.cpp	286	global	-	at::kBannerPool	0x93b8e0	-	none	-	-	1
 site	src/game/window_kinds_fuzz.cpp	313	record	SetWord	g_enemy + 0x30	-	param	-	-	-	1
 site	src/game/window_kinds_fuzz.cpp	318	record	SetWord	g_enemy + 0x24	-	param	-	-	-	1
@@ -16469,7 +16281,6 @@ site	src/game/window_kinds_fuzz.cpp	324	record	SetWord	g_win + 0x14	-	-	-	-	-	1
 site	src/game/window_kinds_fuzz.cpp	336	record	SetWord	g_win + 0x18	-	-	-	-	-	1
 site	src/game/window_kinds_fuzz.cpp	370	global	At	at::kMsgRing	0x93c2c0	-	none	-	-	1
 site	src/game/window_kinds_fuzz.cpp	400	record	Long	s.memory + 0x318	-	param	-	-	-	1
-site	src/game/window_kinds_fuzz.cpp	401	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/window_kinds_fuzz.cpp	409	record	Word	in.enemy + 0x30	-	param	-	-	-	1
 site	src/game/window_kinds_fuzz.cpp	409	record	Word	in.win + 0x1C	-	param	-	-	-	1
 site	src/game/window_kinds_fuzz.cpp	410	record	Word	in.enemy + 0x24	-	param	-	-	-	1
@@ -16482,9 +16293,7 @@ site	src/game/window_kinds_fuzz.cpp	448	record	Word	rin + 6	-	stride=0x24	-	-	-	
 site	src/game/window_task.cpp	160	global	-	at::kAreaKinds	0x66adc0	-	none	-	-	0
 site	src/game/window_task.cpp	160	global	-	at::kAreaKindsEnd	0x66add6	-	none	-	-	0
 site	src/game/window_task.cpp	218	global	-	at::kMusicSets	0x669a48	-	none	-	-	0
-site	src/game/window_task.cpp	278	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/window_task.cpp	278	global	-	at::kRecordsEnd	0x803478	-	none	-	-	0
-site	src/game/window_task.cpp	289	global	-	at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	0
 site	src/game/window_task.cpp	370	global	At	at::kBoxAltXY	0x66ade8	-	none	-	-	0
 site	src/game/window_task.cpp	371	global	At	at::kBoxAltXY	0x66ade8	-	none	-	-	0
 site	src/game/window_task.cpp	375	global	At	at::kBoxXY	0x66add8	-	none	-	-	0
@@ -16514,14 +16323,8 @@ site	src/game/window_task.cpp	727	record	SetWord	window2 + 2	-	base=Gfx_PacketNe
 site	src/game/window_task.cpp	728	record	SetWord	window2 + 0	-	base=Gfx_PacketNext	-	-	-	0
 site	src/game/window_task.cpp	729	record	SetWord	window2 + 6	-	base=Gfx_PacketNext	-	-	-	0
 site	src/game/window_task.cpp	730	record	SetWord	window2 + 4	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/window_task_fuzz.cpp	77	global	-	window_task::at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/window_task_fuzz.cpp	77	global	-	window_task::at::kRecordsEnd	0x803478	-	none	-	-	1
-site	src/game/window_task_fuzz.cpp	78	global	-	window_task::at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/window_task_fuzz.cpp	103	global	-	window_task::at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/window_task_fuzz.cpp	413	global	-	window_task::at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
-site	src/game/window_task_fuzz.cpp	473	global	-	window_task::at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/window_task_fuzz.cpp	473	global	-	window_task::at::kRecordsEnd	0x803478	-	none	-	-	1
-site	src/game/window_task_fuzz.cpp	482	global	-	window_task::at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/window_task_fuzz.cpp	502	global	At	window_task::at::kMusicSets	0x669a48	-	none	-	-	1
 site	src/game/window_task_fuzz.cpp	503	global	At	window_task::at::kMusicSets	0x669a48	-	none	-	-	1
 site	src/game/window_task_fuzz.cpp	557	record	SetWord	r + 0x14	-	-	-	-	-	1
@@ -16531,7 +16334,6 @@ site	src/game/window_task_fuzz.cpp	562	record	SetWord	r + 0x12	-	-	-	-	-	1
 site	src/game/window_task_fuzz.cpp	565	record	SetWord	r + 0x10	-	-	-	-	-	1
 site	src/game/window_task_fuzz.cpp	566	record	SetWord	r + 0x12	-	-	-	-	-	1
 site	src/game/window_task_fuzz.cpp	656	record	Long	in.memory + 0x318	-	param	-	-	-	1
-site	src/game/window_task_fuzz.cpp	657	global	-	window_task::at::kRecords	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/window_task_fuzz.cpp	717	global	At	window_task::at::kMusicSets	0x669a48	-	none	-	-	1
 site	src/game/window_task_fuzz.cpp	769	global	At	window_task::at::kMusicSets	0x669a48	-	none	-	-	1
 site	src/game/world_map.cpp	209	global	At	kLeaderCellX	0x905e66	-	inside	Field_Kind2X+0x2	long	0
@@ -20210,13 +20012,13 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	16673
-#count sites_global	8367
-#count sites_global_at	6758
-#count sites_global_module	1609
+#count sites	16475
+#count sites_global	8169
+#count sites_global_at	6613
+#count sites_global_module	1556
 #count sites_record	7177
 #count sites_raw	1129
-#count sites_in_fuzz	3867
+#count sites_in_fuzz	3781
 #count files_with_sites	523
 #count files_with_record_sites	470
 #count record_sites_with_stride	699
@@ -20228,8 +20030,8 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_param	661
 #count record_sites_family_unknown	1713
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	1476
-#count global_sites_covered_inside	697
+#count global_sites_covered_exact	1380
+#count global_sites_covered_inside	595
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
 #count at_refs_struct_or_array	271

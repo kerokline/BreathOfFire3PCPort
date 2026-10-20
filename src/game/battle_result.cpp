@@ -78,7 +78,7 @@ std::uint32_t Dword(std::uint32_t address) { return static_cast<std::uint32_t>(L
 void SetDword(std::uint32_t address, std::uint32_t v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 void Advance(std::uint32_t address) { Byte(address) = static_cast<unsigned char>(Byte(address) + 1); }
 unsigned char* Member(unsigned slot) { return At(at::kMembers + (slot & 0xFF) * at::kMemberSize); }
-unsigned char* WindowSlot(unsigned slot) { return At(at::kWindows + slot * at::kWindowSize); }
+unsigned char* WindowSlot(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowSize); }
 // The record the window task is running, re-read wherever the original reads it.
 unsigned char* CurrentWindow() { return At(BattleWinStates_Current); }
 // Member() is +0x80 into the member record (0x802DC0); the record, and its

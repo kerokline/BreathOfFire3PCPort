@@ -583,7 +583,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
             v = pr->hp;
             g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
             const std::uint32_t f = U32(static_cast<std::int32_t>(pr->flags_130)) & ~0x100u;
-            At(at::kInstantKill)[0] = 1;
+            WindowRecords[4].state = 1;
             pr->flags_130 = S32(f);
         }
         const std::int32_t hp = pr->hp;
@@ -612,7 +612,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
                 v = Word(e + at::kEHp);
                 g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
                 const std::uint32_t f = U32(static_cast<std::int32_t>(er->flags_110)) & ~0x100u;
-                At(at::kInstantKill)[0] = 1;
+                WindowRecords[4].state = 1;
                 er->flags_110 = S32(f);
             }
             const std::int32_t hp = er->hp;

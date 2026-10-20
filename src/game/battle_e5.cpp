@@ -709,7 +709,7 @@ extern "C" void __cdecl DragonCmd_MenuCancel(void) {
     Window17 = 0;
     Window21 = 0;
     BH_CALL(BattleBanner_ShowName)(Member());
-    B(at::kWin4 + 3) = 1;
+    WindowRecords[4].state = 1;
     BH_CALL(LoadDatFile)(0xCF);
     NextStep();
 }
@@ -838,7 +838,7 @@ extern "C" unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) 
 extern "C" void __cdecl DragonCmd_GenesOpen(void) {
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin17 + 3) = 2;
-    B(at::kWin4 + 3) = 1;
+    WindowRecords[4].state = 1;
     BattleE4_Step4 = step;
 }
 
@@ -885,7 +885,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
         }
         const unsigned char pick = static_cast<unsigned char>(BossSb_Countdown & 0x7F);
         B(at::kWin17 + 3) = 1;
-        B(at::kWin4 + 3) = 2;
+        WindowRecords[4].state = 2;
         BossSb_Countdown = pick;
         BattleE4_Step3 = 2;
         BattleE4_Step4 = 0;

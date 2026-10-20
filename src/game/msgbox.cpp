@@ -1112,7 +1112,7 @@ extern "C" void __cdecl MsgBox_EffectDraw(unsigned color, const unsigned char* t
 // forced to 0xFF on failure (`or al, 0xFF`), so a caller that passes a slot
 // with high bytes set gets them back. No bound on the slot.
 extern "C" unsigned __cdecl Window_Alloc(unsigned slot, unsigned kind) {
-    unsigned char* const rec = At(kWindows + (slot & 0xFF) * 0x24u);
+    unsigned char* const rec = At(WindowRecords_addr + (slot & 0xFF) * 0x24u);
     if (rec[0] != 0) return slot | 0xFFu;
     rec[0] = 1;
     rec[1] = static_cast<unsigned char>(kind);

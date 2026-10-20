@@ -181,8 +181,8 @@ unsigned SlideColumns() {
 Split* SplitOf(unsigned char* rec) {
     if (g_test_rec != nullptr) return rec == g_test_rec ? g_test_split : nullptr;
     const U a = static_cast<U>(reinterpret_cast<std::uintptr_t>(rec));
-    if (a >= kRecords && a < kRecords + kRecordSize * kRecordCount && (a - kRecords) % kRecordSize == 0)
-        return &g_split[(a - kRecords) / kRecordSize];
+    if (a >= WindowRecords_addr && a < WindowRecords_addr + kRecordSize * kRecordCount && (a - WindowRecords_addr) % kRecordSize == 0)
+        return &g_split[(a - WindowRecords_addr) / kRecordSize];
     // Not a window record: the box is drawn at Capcom's x (the original's
     // picture), and said once.
     static bool said = false;

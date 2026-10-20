@@ -444,7 +444,7 @@ extern "C" unsigned char __cdecl Boss07_Event(unsigned code) {
             char* const text = reinterpret_cast<char*>(At(at::kBannerText));
             BH_CALL(Str_CopyN)(text, reinterpret_cast<const char*>(At(at::kBannerSource)), 0x10);
             BH_CALL(BattleBanner_Add)(1, 1, 0, 0x1E, text);
-            B(at::kWindow4Flag) = 1;
+            WindowRecords[4].state = 1;
             Sprite_Current = At(ObjTrio_addr);
             BH_CALL(Sprite_SetAnimation)(0x2C);
             B(at::kPhase) = 4;

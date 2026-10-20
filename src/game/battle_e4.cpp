@@ -723,7 +723,7 @@ extern "C" void __cdecl BattleItemCmd_EquipMenu(void) {
     }
     if (!back) return;
     Window21 = 0;
-    B(at::kRecord4) = 1;
+    WindowRecords[4].in_use = 1;
     BattleE4_Step2 = 2;
     BattleE4_Step3 = 1;
 }
@@ -753,7 +753,7 @@ extern "C" void __cdecl BattleItemCmd_EquipSlotPick(void) {
         const unsigned y = Word(At(Window17_addr + 6));
         B(at::kSlots + 3) = 1;
         Window16 = 1;
-        B(at::kRecord4) = 1;
+        WindowRecords[4].in_use = 1;
         BattleE4_Step3 = 1;
         B(at::kList + 3) = 3;
         SetWord(At(Window16_addr + 4), x);
@@ -899,7 +899,7 @@ extern "C" void __cdecl BattleItemCmd_EquipUsePick(void) {
     if (Field_CancelButtons & pad) {
         BH_CALL(Sound_PlayEffect)(0x106);
         B(at::kSlots + 3) = 1;
-        B(at::kRecord4) = 1;
+        WindowRecords[4].in_use = 1;
         BattleE4_Step3 = 1;
         B(at::kList + 3) = 3;
         Window21 = 0;
@@ -927,7 +927,7 @@ extern "C" void __cdecl BattleItemCmd_EquipUsePick(void) {
             Window19 = 0;
             Window21 = 0;
             SetLong(At(at::kQueue + 4 + last), S32(static_cast<U>(reinterpret_cast<std::uintptr_t>(line))));
-            B(at::kRecord4) = 1;
+            WindowRecords[4].in_use = 1;
             BattleE4_Step3 = 7;
         } else {
             BH_CALL(Sound_PlayEffect)(0x107);
@@ -1370,7 +1370,7 @@ extern "C" void __cdecl Escape_Begin(void) {
     const auto text = reinterpret_cast<const char*>(BattleE1_BannerText);
     B(at::kFlee) = 0;
     BH_CALL(BattleBanner_Add)(1, 0, 0, 0x3C, text);
-    B(at::kRecord4 + 3) = 1;
+    WindowRecords[4].state = 1;
     MoveScript_F3Divisor = 0x20;
     const unsigned char state = BattleE4_Step3;
     FieldStep(1);

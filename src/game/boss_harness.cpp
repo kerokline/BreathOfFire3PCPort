@@ -1129,7 +1129,7 @@ bool InEngineBands(std::uint32_t address) {
         if (address >= b.lo && address < b.hi) return true;
     return false;
 }
-unsigned char* WindowAt(unsigned k) { return Mem(at::kWindows + (k % at::kWindowCount) * at::kWindowStride); }
+unsigned char* WindowAt(unsigned k) { return Mem(WindowRecords_addr + (k % at::kWindowCount) * at::kWindowStride); }
 unsigned char* CurrentWindow() { return Pointer(BattleWinStates_Current_addr); }
 unsigned char* TextBuffer() { return g_text; }
 std::uint32_t HookStub(std::uint32_t cell) {
@@ -1259,7 +1259,7 @@ void Run(const Group& group) {
     // the engine frame's (round twelve; docs/boss_harness.md section 10.3):
     // the state three or more of BE1..BE7 touch beyond the boss frame
     const Region engine[] = {
-        {at::kWindows, at::kWindowCount * at::kWindowStride},       // WindowRecords: BE1..BE6
+        {WindowRecords_addr, at::kWindowCount * at::kWindowStride}, // WindowRecords: BE1..BE6
         {BattleWinStates_Current_addr, 4},                          // the record a window handler runs for: BE7 (every kWindow)
         {Field_State_addr, 4},                                      // Field_State: BE2, BE3, BE4
         {0x903A50, 0xD4},                                           // DrawItemPool_Top's tail, CharacterRecords' head, Field_ActorStates[0]: BE1..BE4, BE6, BE7

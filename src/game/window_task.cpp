@@ -275,7 +275,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
     unsigned pass = BossSa_WindowPass;
     if (pass > 2) return;
     do {
-        for (std::uint32_t a = at::kRecords; a < at::kRecordsEnd; a += 0x24) {
+        for (std::uint32_t a = WindowRecords_addr; a < at::kRecordsEnd; a += 0x24) {
             unsigned char* const record = At(a);
             if (record[0] == 0) {
                 Widescreen_SlideIdle(record);
@@ -286,7 +286,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
             const unsigned handler = record[1];
             if (handler >= 9)
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
-                            static_cast<unsigned>((a - at::kRecords) / 0x24), handler);
+                            static_cast<unsigned>((a - WindowRecords_addr) / 0x24), handler);
             Widescreen_SlideBefore(record);
             g.records[handler]();
             Widescreen_SlideAfter(record);

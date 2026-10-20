@@ -359,17 +359,17 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
     auto* const cur_member = rv::As<records::PartyMember>(s);
     {
         unsigned i = cur_member->actor;
-        SetWord(At(at::kPartyValues + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->hp);
+        SetWord(At(WindowRecords_addr + 0x1e8 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->hp);
         i = cur_member->actor;
-        SetWord(At(at::kPartyValues + 2 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->ap);
+        SetWord(At(WindowRecords_addr + 0x1e8 + 2 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->ap);
         i = cur_member->actor;
         const unsigned hp = rv::As<records::PartyMember>(Rec(who, i))->hp, max_hp = rv::As<records::PartyMember>(Rec(who, i))->max_hp;
         if (max_hp == 0) bof3::Fatal("%s: member %u's max HP is 0 - the original divides by it (docs/battle_e2.md section 7)", who, i);
-        At(at::kPartyGauges + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * hp) / static_cast<std::int32_t>(max_hp));
+        At(WindowRecords_addr + 0x1df + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * hp) / static_cast<std::int32_t>(max_hp));
         i = cur_member->actor;
         const unsigned ap = rv::As<records::PartyMember>(Rec(who, i))->ap, max_ap = rv::As<records::PartyMember>(Rec(who, i))->max_ap;
         if (max_ap == 0) bof3::Fatal("%s: member %u's max AP is 0 - the original divides by it (docs/battle_e2.md section 7)", who, i);
-        At(at::kPartyGauges + 1 + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * ap) / static_cast<std::int32_t>(max_ap));
+        At(WindowRecords_addr + 0x1df + 1 + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * ap) / static_cast<std::int32_t>(max_ap));
     }
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(cur_member->direction + 4));
     BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<U>(rv::Current<records::PartyMember>()->actor) << 6))), 0);
@@ -410,7 +410,7 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
             Battle_PartyStanding = in;
         }
         Window1_ParamA = n;
-        SetWord(At(at::kWindow1X), At(at::kCountX + n)[0]);
+        WindowRecords[1].x = At(at::kCountX + n)[0];
         if (n > 1) {
             unsigned char m = 1;
             do {

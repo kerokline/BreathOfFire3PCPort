@@ -297,7 +297,7 @@ const sh::DataTable kTables[] = {
 unsigned char g_instance[0x240];   // a DIDEVICEINSTANCEA and its product name at +0x12C
 unsigned char g_reserve[0x40];     // the reserve list's ids
 const sh::Region kRegions[] = {
-    {at::kWindows, 22 * at::kWindowStride},   // WindowRecords
+    {WindowRecords_addr, 22 * at::kWindowStride}, // WindowRecords
     {0x903A94, 0x903F90 - 0x903A94},          // CharacterRecords past the standard 0x903A14 + 0x80
     {0x904160, 0x400},                        // the inventory's id and count lists, 0x904160..0x904560
     {0x6BE0A0, 0x1C0},                        // the gene list 0x6BE0B0, the item list 0x6BE0C4 / 0x6BE144, and past them
@@ -310,7 +310,7 @@ sh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
 
 // --- the seed ---------------------------------------------------------------------------
 
-unsigned char* Window(unsigned k) { return Mem(at::kWindows + (k % 22) * at::kWindowStride); }
+unsigned char* Window(unsigned k) { return Mem(WindowRecords_addr + (k % 22) * at::kWindowStride); }
 unsigned char* Record(unsigned n) { return Mem(CharacterRecords_addr + (n % 8) * at::kRecordStride); }
 unsigned char* g_window;   // the record a kCall draw is handed (a[0])
 unsigned g_self_index;

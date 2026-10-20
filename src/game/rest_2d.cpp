@@ -72,7 +72,7 @@ U RecordChecked(U base, U stride, unsigned count, unsigned index, const char* ar
     return base + index * stride;
 }
 U Window(unsigned index, const char* who) {
-    return RecordChecked(at::kWindows, at::kWindowStride, at::kWindowCount, index, "WindowRecords", who);
+    return RecordChecked(WindowRecords_addr, at::kWindowStride, at::kWindowCount, index, "WindowRecords", who);
 }
 
 // --- callees by address (R2C's and R2E's, ours; named in rest_2d_callees.h) ----------------
@@ -700,7 +700,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto c = BattleActorCopies_ItemActor;
     Window19 = 1;
-    const U member_window = at::kWindows + at::kWindowStride * static_cast<U>(4 + c);
+    const U member_window = WindowRecords_addr + at::kWindowStride * static_cast<U>(4 + c);
     SetWord(At(0x803410), rv::As<records::WindowRecord>(At(member_window))->x);
     Window19_Y = rv::As<records::WindowRecord>(At(member_window))->y;
     SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(Character_IndexById[Cond_Flags[0xd2 + c]])));
@@ -811,7 +811,7 @@ extern "C" void __cdecl FieldMenuStatus_PlaceWindows(void) {
         rv::As<records::WindowRecord>(At(w))->state = 2;
         rv::As<records::WindowRecord>(At(w))->in_use = 1;
         SetWord(At(w + 4), 0x140);
-        const unsigned short y = Word(At(at::kWindows + at::kWindowStride * (4u + i) + 6));
+        const unsigned short y = Word(At(WindowRecords_addr + at::kWindowStride * (4u + i) + 6));
         B(w + 0xA) = i;
         ++i;
         SetWord(At(w + 6), y);

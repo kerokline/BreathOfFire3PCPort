@@ -75,7 +75,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Next() { return Gfx_PacketNext; }
-unsigned char* Window(unsigned slot) { return At(at::kWindows + slot * at::kWindowStride); }
+unsigned char* Window(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowStride); }
 char* PrintBuf() { return reinterpret_cast<char*>(At(at::kPrintBuf)); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
 

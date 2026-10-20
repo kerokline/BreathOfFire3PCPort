@@ -420,7 +420,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char* const m = PartyRecord(i);
         const records::PartyMember* const tm = rv::AsConst<records::PartyMember>(m);
-        unsigned char* const w = Mem(kWindowRows + i * 0x24u);
+        unsigned char* const w = Mem(WindowRecords_addr + 0x1d7 + i * 0x24u);
         if ((m[0] & 1) == 0) continue;
         MH_CALL(Window_Alloc)(i + 0xD, 3);
         const unsigned column = m[8], row = m[0x89];

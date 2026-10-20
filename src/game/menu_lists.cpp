@@ -318,7 +318,7 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
     std::uint16_t i = 0;
     if (Members() != 0) {
         do {
-            At(at::kMemberPanels + 3 + static_cast<std::uint32_t>(i) * at::kRecordSize)[0] = state;
+            At(WindowRecords_addr + 0x90 + 3 + static_cast<std::uint32_t>(i) * at::kRecordSize)[0] = state;
             ++i;
         } while (i < static_cast<std::uint16_t>(Members()));
     }
@@ -346,7 +346,7 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
     unsigned char i = 0;
     if (Members() != 0) {
         do {
-            unsigned char* const r = At(at::kMemberPanels + i * at::kRecordSize);
+            unsigned char* const r = At(WindowRecords_addr + 0x90 + i * at::kRecordSize);
             r[0xA] = i;
             r[1] = 6;
             r[2] = 0;

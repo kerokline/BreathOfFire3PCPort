@@ -147,7 +147,7 @@ std::uint32_t Lo8(unsigned v) { return v & 0xFF; }
 // Window_Alloc as msgbox.cpp has it: claims the record when its first byte is 0.
 unsigned __cdecl StubAlloc(unsigned slot, unsigned kind) {
     Record(1, slot, kind);
-    unsigned char* const rec = At(at::kWindows + (slot & 0xFF) * at::kWindowStride);
+    unsigned char* const rec = At(WindowRecords_addr + (slot & 0xFF) * at::kWindowStride);
     unsigned answer = slot | 0xFFu;
     if (rec[0] == 0) {
         rec[0] = 1;
@@ -379,7 +379,7 @@ static_assert(kAbilityList + 1 == kCount, "the index list and the clone list dis
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kWindows, 22 * at::kWindowStride},                 // WindowRecords
+    {WindowRecords_addr, 22 * at::kWindowStride},           // WindowRecords
     {0x7E0670, 4},                                          // Gfx_PacketNext (into our pool)
     {at::kWorking, 4 * at::kWorkingStride},                 // the party's working records
     {CharacterRecords_addr, 10 * at::kCharStride},          // CharacterRecords
@@ -431,7 +431,7 @@ void Apply(const State& s) {
     g_log_n = 0;
 }
 
-unsigned char* Window(unsigned slot) { return At(at::kWindows + slot * at::kWindowStride); }
+unsigned char* Window(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowStride); }
 unsigned char* Ability(unsigned id) { return At(at::kAbilities + (id & 0xFF) * at::kAbilityStride); }
 unsigned char* Enemy(std::int32_t index) {
     return At(Battle_Enemies_addr + 0x80 + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride)));

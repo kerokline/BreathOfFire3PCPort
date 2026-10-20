@@ -301,7 +301,7 @@ const ah::Region kRegions[] = {
     {Field_MoveSpeeds_addr + 0x3, 1},
     {AreaW3d_Area135MapFlags_addr, 1},
     {MoveScript_PartyRecords_addr + 0x30, 1},
-    {at::kPoolWords, 4},
+    {WindowRecords_addr + 0x4, 4},
     {Area135_Routes_addr, at::kArea135RouteCount * at::kArea135RouteStride},
 };
 

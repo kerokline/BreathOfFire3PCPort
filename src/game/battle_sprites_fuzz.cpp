@@ -195,7 +195,7 @@ std::uint32_t Handle(unsigned id, std::uint32_t a, std::uint32_t b, std::uint32_
         }
         break;
     case kWindow: {
-        unsigned char* const w = At(at::kWindows + (a & 0xFF) * at::kWindowStride);
+        unsigned char* const w = At(WindowRecords_addr + (a & 0xFF) * at::kWindowStride);
         auto* const window_rec = rv::As<records::WindowRecord>(w);
         window_rec->in_use = 1;
         window_rec->handler = static_cast<unsigned char>(b);

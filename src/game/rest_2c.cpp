@@ -103,7 +103,7 @@ void CopySummary(U slot, const char* who) {
 }
 
 // The window record n's byte / word at +off.
-U Win(unsigned n, unsigned off) { return at::kWindows + n * at::kWindowStride + off; }
+U Win(unsigned n, unsigned off) { return WindowRecords_addr + n * at::kWindowStride + off; }
 
 // A party id's form: id 4 is drawn and saved as 0xB unless the story byte's
 // low seven bits are 5 or 0xC (Save_BuildBlock's and MasterPanel_DrawFace's

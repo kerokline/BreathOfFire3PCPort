@@ -304,7 +304,7 @@ extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
 // 0x591E50 masks off. The one caller (0x447776) tests al.
 extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
     const U list = g.item_list(static_cast<unsigned char>(BattleActorCopies_ItemActor), Window16_Page, 1);
-    const U item = At(list + At(kItemWindowCursor)[0])[0];
+    const U item = At(list + At(WindowRecords_addr + 0x24c)[0])[0];
     const U high = list & 0xFFFF0000u;
     const U usable = g.item_usable(2, high | static_cast<unsigned char>(BattleActorCopies_ItemActor), high | item);
     return (usable & 0xFF) == 0;

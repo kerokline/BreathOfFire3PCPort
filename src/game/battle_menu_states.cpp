@@ -353,7 +353,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
         above_window->y = y;
         above[0xA] = 0;
         above[0xB] = 0xFF;
-        Byte(at::kRecord4) = 0;
+        WindowRecords[4].in_use = 0;
         BattleE4_Step3 = 6;
         return;
     }

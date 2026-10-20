@@ -385,7 +385,7 @@ void MenuFrame() {
     SetWord(c + 2, Word16({0, 1, 0x20, 0x97, 0xE3}) % 0xE4);
     Mem(Window16_State_addr)[0] = Byte({0, 0, 1});
     Mem(Window16_Page_addr)[0] = Byte({0, 1, 2, 3});
-    SetLong(Mem(at::kWin16Cursor), static_cast<std::int32_t>(bh::Next()));
+    SetLong(Mem(WindowRecords_addr + 0x24c), static_cast<std::int32_t>(bh::Next()));
     Mem(BattleActorCopies_ItemActor_addr)[0] = Byte({0, 1, 2});
 }
 

@@ -337,7 +337,7 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {kModelA, 0x120},
     {kSaved, 8},
-    {sh::at::kWindows, sh::at::kWindowCount * sh::at::kWindowStride},
+    {WindowRecords_addr, sh::at::kWindowCount * sh::at::kWindowStride},
     {0x903F68, 4},
     {0x66C7E8, 4},
     {0x9037A0, 0x40},

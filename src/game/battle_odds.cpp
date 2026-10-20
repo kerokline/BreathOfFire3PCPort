@@ -101,7 +101,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
             const unsigned char kind = At(entry + 1)[0];
             BattleMisc_BannerKinds = static_cast<unsigned char>(kinds & static_cast<unsigned char>(~kind));
             const U eax = g.none_of_kind(1);
-            if (eax & 0xFF) At(kWin4State)[0] = 0;
+            if (eax & 0xFF) WindowRecords[4].state = 0;
             return eax;
         }
     }
@@ -128,7 +128,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
     if (Word(e + 8) == 0) {
         e[0] = 0;
         const U eax = g.none_of_kind(4);
-        if (eax & 0xFF) At(kWin0State)[0] = 2;
+        if (eax & 0xFF) WindowRecords[0].state = 2;
         return eax;
     }
     Window0_ParamA = DamageScratch.b_00;

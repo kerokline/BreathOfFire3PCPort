@@ -933,10 +933,10 @@ extern "C" void __cdecl Area135_Kind2ToObject0(unsigned divisor) {
 // 0x3C0 / 0xAA0.
 extern "C" void __cdecl Area135_OpenMessage(unsigned id) {
     AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(id & 0xFF));
-    SetD(BattleWinStates_Current_addr, at::kMessagePools);
+    SetD(BattleWinStates_Current_addr, WindowRecords_addr);
     AH_CALL(Window_FreeCurrent)();
-    SetWord(Mem(at::kPoolWords), 0x3C0);
-    SetWord(Mem(at::kPoolWords + 2), 0xAA0);
+    SetWord(Mem(WindowRecords_addr + 0x4), 0x3C0);
+    SetWord(Mem(WindowRecords_addr + 0x4 + 2), 0xAA0);
 }
 
 void AreaW3d_Inject() {

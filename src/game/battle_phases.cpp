@@ -74,7 +74,7 @@ void SetPtrAt(std::uint32_t address, const unsigned char* p) {
 }
 unsigned char* Member(unsigned index) { return At(ObjTrio_addr + index * at::kMemberSize); }
 unsigned char* EnemyObject(unsigned index) { return At(Battle_Enemies_addr + index * at::kEnemySize); }
-unsigned char* Window(unsigned index) { return At(at::kWindows + index * at::kWindowSize); }
+unsigned char* Window(unsigned index) { return At(WindowRecords_addr + index * at::kWindowSize); }
 // The member the menu is for (0x939EC4) and its command record (0x939FA0),
 // each re-read wherever the original re-reads it.
 unsigned char* MenuActor() { return PtrAt(at::kMenuActor); }
@@ -107,7 +107,7 @@ void JumpThrough(std::uint32_t table, unsigned index) {
 extern "C" void __cdecl Battle_Frame(void) {
     if ((B(at::kRoundFlags) & 2) == 0) {
         const unsigned phase = B(at::kPhase);
-        const bool window_held = B(at::kWindows) != 0 && phase != 5;
+        const bool window_held = WindowRecords[0].in_use != 0 && phase != 5;
         const bool flag_held = (BattleMisc_BannerKinds & 2) != 0 && phase != 5;
         if (!window_held && !flag_held) g.phase_dispatch();
     }

@@ -95,7 +95,7 @@ unsigned char* List() { return At(ShopStates2_ShopList); }
 unsigned char* Ids(U kind) { return At(Long(at::kIdLists + kind * 4)); }
 unsigned char* Counts(U kind) { return At(Long(at::kCountLists + kind * 4)); }
 // The window record of party member i.
-unsigned char* Panel(int i) { return At(at::kMembers + static_cast<U>(i) * at::kMemberStride); }
+unsigned char* Panel(int i) { return At(WindowRecords_addr + 0x6c + static_cast<U>(i) * at::kMemberStride); }
 // Member m's record index: 0x66972C[0x904062[m]], m signed.
 U RecordOf(int member) { return Byte(at::kRecordOf + Byte(at::kPartyList + static_cast<U>(member))); }
 U PartyCount() { return static_cast<U>(g.party_count(0)) & 0xFF; }

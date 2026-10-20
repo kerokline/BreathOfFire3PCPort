@@ -140,7 +140,7 @@ U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // Window record n's byte / word at `at`.
-U Rec(unsigned n, unsigned at) { return kWindows + kWindowStride * n + at; }
+U Rec(unsigned n, unsigned at) { return WindowRecords_addr + kWindowStride * n + at; }
 // The record Field_RunTaskRecords runs, read afresh at each use.
 unsigned char* Cur() { return At(BattleWinStates_Current); }
 int Wx(const unsigned char* r) { return static_cast<int>(rv::As<records::WindowRecord>(r)->x); }

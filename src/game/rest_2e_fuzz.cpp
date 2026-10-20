@@ -211,7 +211,7 @@ const sh::Callee kCallees[] = {
 // first records 0x903A70..0x903A93, Cond_Flags with the party list, the save
 // block's 0x904098..0x904160 and 0x904560.., the camera cells with 0x905BA1).
 const sh::Region kRegions[] = {
-    {sh::at::kWindows, sh::at::kWindowCount * sh::at::kWindowStride},   // WindowRecords 0x803160..0x803477
+    {WindowRecords_addr, sh::at::kWindowCount * sh::at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x903584, 0x10},                                                  // Field_ConfirmButtons / Field_CancelButtons
     {0x903A94, 0x903F90 - 0x903A94},                                   // CharacterRecords past the style region
     {0x904160, 0x400},                                                 // the inventory's id and count lists to 0x904560

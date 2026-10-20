@@ -340,7 +340,7 @@ extern "C" void __cdecl Shisu_CloseWait(void) {
     Window1 = 0;
     BattleE1_Mode = static_cast<unsigned char>(mode + 1);
     Window2 = 0;
-    B(kWin3) = 0;
+    WindowRecords[3].in_use = 0;
 }
 
 // original 0x57E160 (PSX 0x801D1018): Shisu_Modes[4] - with no show run, the
@@ -438,10 +438,10 @@ extern "C" void __cdecl Shisu_PickSide(void) {
         }
     }
     const unsigned side = Rest2b_Side;
-    B(kWin0) = 1;
+    WindowRecords[0].in_use = 1;
     const U base = L(kWin2 + 4);
-    SetW(kWin0 + 4, side * 0x30u + base);
-    SetW(kWin0 + 6, W(kWin2 + 6) + 4u);
+    WindowRecords[0].x = side * 0x30u + base;
+    WindowRecords[0].y = W(kWin2 + 6) + 4u;
     StackModels();
     Models();
 }
@@ -532,11 +532,11 @@ extern "C" void __cdecl Shisu_PickCounts(void) {
     }
     const U base = L(kWin3 + 4);
     const unsigned char c = Rest2b_Cursor;
-    B(kWin0) = 1;
-    SetW(kWin0 + 4, base + 7u);
+    WindowRecords[0].in_use = 1;
+    WindowRecords[0].x = base + 7u;
     B(kWin0 + 0xA) = c;
     B(kWin3 + 0xA) = c;
-    SetW(kWin0 + 6, (c + 2u) * 13u + W(kWin3 + 6));
+    WindowRecords[0].y = (c + 2u) * 13u + static_cast<std::uint32_t>(WindowRecords[3].y);
     StackModels();
     Models();
 }
@@ -664,14 +664,14 @@ extern "C" void __cdecl Shisu_CountItems(void) {
 // original 0x57E9F0: WindowRecords 0..3 for the screen (bytes and words as
 // stored; record 3's +0x20 the counts' address 0x9399E0).
 extern "C" void __cdecl Shisu_SetupWindows(void) {
-    B(kWin0) = 0;
-    B(kWin0 + 2) = 0;
-    SetW(kWin0 + 4, 0);
-    SetW(kWin0 + 6, 0);
+    WindowRecords[0].in_use = 0;
+    WindowRecords[0].kind = 0;
+    WindowRecords[0].x = 0;
+    WindowRecords[0].y = 0;
     SetW(kWin1 + 6, 0xFF9C);
     SetW(kWin2 + 6, 0xFF9C);
-    B(kWin0 + 1) = 1;
-    B(kWin0 + 3) = 2;
+    WindowRecords[0].handler = 1;
+    WindowRecords[0].state = 2;
     Window1 = 1;
     B(kWin1 + 1) = 1;
     B(kWin1 + 2) = 1;
@@ -684,22 +684,22 @@ extern "C" void __cdecl Shisu_SetupWindows(void) {
     SetW(kWin2 + 4, 0x70);
     B(kWin2 + 0xA) = 8;
     B(kWin2 + 0xB) = 0xFF;
-    B(kWin3) = 1;
-    B(kWin3 + 1) = 1;
-    B(kWin3 + 2) = 3;
-    B(kWin3 + 3) = 2;
-    SetW(kWin3 + 4, 0xFF88);
-    SetW(kWin3 + 6, 0x3F);
+    WindowRecords[3].in_use = 1;
+    WindowRecords[3].handler = 1;
+    WindowRecords[3].kind = 3;
+    WindowRecords[3].state = 2;
+    WindowRecords[3].x = 0xFF88;
+    WindowRecords[3].y = 0x3F;
     B(kWin3 + 0xA) = 0xFF;
     SetL(kWin3 + 0x20, Rest2b_Owned_addr);
 }
 
 // original 0x57EAC0: window 0's first byte 0, windows 1..3's +3 = 1.
 extern "C" void __cdecl Shisu_CloseWindows(void) {
-    B(kWin0) = 0;
+    WindowRecords[0].in_use = 0;
     B(kWin1 + 3) = 1;
     B(kWin2 + 3) = 1;
-    B(kWin3 + 3) = 1;
+    WindowRecords[3].state = 1;
 }
 
 // original 0x57EAE0: the byte 0x904101 to a scale index - below 0x26: 9, 0x28:

@@ -124,8 +124,8 @@ void SwapBytes(U a, U b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*)
 // 0x8031CC): the member list and the member's slots, the joined record `rec`
 // shown in both.
 void OpenMemberWindows(unsigned char rec) {
-    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 2 * 0x24);
-    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 3 * 0x24);
+    records::WindowRecord* const win2 = &WindowRecords[2];
+    records::WindowRecord* const win3 = &WindowRecords[3];
     win2->handler = 7;
     win2->kind = 0xD;
     B(0x8031B2) = rec;
@@ -820,9 +820,9 @@ extern "C" void __cdecl PartyForm_Draw(void) {
 // +0xA / +0xB / +0xD 0, +0xC 0x7F, +8 0, at (-0x64, 0x3E), on). Called by
 // 0x583370.
 extern "C" void __cdecl ShopBrowse_InitWindows(void) {
-    records::WindowRecord* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * 0x24);
-    records::WindowRecord* const win1 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 1 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win0 = &WindowRecords[0];
+    records::WindowRecord* const win1 = &WindowRecords[1];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     win0->handler = 7;
     win0->kind = 0;
     win0->state = 2;
@@ -851,8 +851,8 @@ extern "C" void __cdecl ShopBrowse_InitWindows(void) {
 // (0x8031CC: kind 7, +2 0x11, +3 2, at (0xB4, 0xF0), on). Called by 0x5833E0
 // on a confirm.
 extern "C" void __cdecl ShopBrowse_OpenDetail(void) {
-    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 2 * 0x24);
-    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 3 * 0x24);
+    records::WindowRecord* const win2 = &WindowRecords[2];
+    records::WindowRecord* const win3 = &WindowRecords[3];
     B(0x8031B2) = B(0x803191);
     win2->handler = 7;
     win2->kind = 0x10;
@@ -1193,13 +1193,13 @@ extern "C" void __cdecl SharedList_Begin(void) {
 // sound 0x106, windows 0 and 1 closing (+3 1), the hand off, window 5's +3 1
 // without the key item, counter 5, state 4 (the close).
 extern "C" void __cdecl SharedList_Menu(void) {
-    records::WindowRecord* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * 0x24);
-    records::WindowRecord* const win1 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 1 * 0x24);
-    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 2 * 0x24);
-    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 3 * 0x24);
-    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 4 * 0x24);
-    records::WindowRecord* const win6 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 6 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win0 = &WindowRecords[0];
+    records::WindowRecord* const win1 = &WindowRecords[1];
+    records::WindowRecord* const win2 = &WindowRecords[2];
+    records::WindowRecord* const win3 = &WindowRecords[3];
+    records::WindowRecord* const win4 = &WindowRecords[4];
+    records::WindowRecord* const win6 = &WindowRecords[6];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     const U choice = FieldS_SharedChoice;
     B(0x80318F) = 0xFF;
     SetW(0x803170, choice + 0x73);
@@ -1310,8 +1310,8 @@ extern "C" void __cdecl SharedList_MoveStep(void) {
 unsigned char g_use_item_yes_no_hand = 0;
 
 extern "C" void __cdecl SharedList_UseItem(void) {
-    records::WindowRecord* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win0 = &WindowRecords[0];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     const U hand_x = g_use_item_yes_no_hand
                          ? static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(static_cast<U>(win0->x)) + 7, FieldS_Answer))
                          : static_cast<U>(win0->x) - 36u * static_cast<std::uint32_t>(FieldS_Answer) + 0xE8;
@@ -1363,10 +1363,10 @@ extern "C" void __cdecl Menu_StepAfterTimer(void) {
 // window 3 +3 3, the step up one. Cancel: sound 0x106, windows 2 and 3 +3 1,
 // the state down one.
 extern "C" void __cdecl SharedList_PickMember(void) {
-    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 2 * 0x24);
-    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 3 * 0x24);
-    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 4 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win2 = &WindowRecords[2];
+    records::WindowRecord* const win3 = &WindowRecords[3];
+    records::WindowRecord* const win4 = &WindowRecords[4];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     SH_CALL(TextRecord_Set)(0, 8, Rec(B(at::kJoined + FieldS_PickIndex)));
     const unsigned char open = win3->state;
     SetW(0x803170, 0x75);
@@ -1436,10 +1436,10 @@ extern "C" void __cdecl SharedList_PickMember(void) {
 // an empty slot buzzes (0x107). Cancel: sounds 0x102 and 0x106, windows 2 +3 2,
 // 3 +3 4 and +0xC 0xFF, 4 +3 1, the step down one.
 extern "C" void __cdecl SharedList_PickSlot(void) {
-    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 2 * 0x24);
-    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 3 * 0x24);
-    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 4 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win2 = &WindowRecords[2];
+    records::WindowRecord* const win3 = &WindowRecords[3];
+    records::WindowRecord* const win4 = &WindowRecords[4];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     const U member_rec = B(0x8031D6);
     unsigned char slot = B(0x8031D7);
     const U ability = B(RecAddr(member_rec) + 0x7E + slot);
@@ -1513,8 +1513,8 @@ extern "C" void __cdecl SharedList_PickSlot(void) {
 // swapped, sound 0x103 and the step down one. Cancel: sound 0x106 and the
 // step down one.
 extern "C" void __cdecl SharedList_PickShared(void) {
-    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 4 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win4 = &WindowRecords[4];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     const unsigned char cur = B(0x8031FB);
     win21->in_use = 1;
     SetW(0x803170, W(at::kAbilityRecords + 0x16 + 24u * B(at::kSharedList + cur)));
@@ -1558,7 +1558,7 @@ extern "C" void __cdecl SharedList_SortStep(void) {
 // window 6 (0x803214) open - kind 7, +2 0xE, +0xA 0, +0xB 0xFF, at (0xC8,
 // 0x3F) - and the step up one.
 extern "C" void __cdecl SharedList_SortOpen(void) {
-    records::WindowRecord* const win5 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 5 * 0x24);
+    records::WindowRecord* const win5 = &WindowRecords[5];
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = t;
     if (t != 0) return;
@@ -1580,9 +1580,9 @@ extern "C" void __cdecl SharedList_SortOpen(void) {
 // (the arranging); else SharedList_Sort(row). Cancel: sounds 0x102 and 0x106,
 // window 6 off, window 4's +3 4, the state down two.
 extern "C" void __cdecl SharedList_SortMenu(void) {
-    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 4 * 0x24);
-    records::WindowRecord* const win5 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 5 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win4 = &WindowRecords[4];
+    records::WindowRecord* const win5 = &WindowRecords[5];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     SetW(0x803170, 0x18);
     win21->x = static_cast<U>(win5->x) + 5;
     win21->y = 16u * B(0x80321E) + static_cast<U>(win5->y) + 0x1A;
@@ -1628,8 +1628,8 @@ extern "C" void __cdecl SharedList_SortMenu(void) {
 // Cancel: sound 0x106; a pick is dropped, or window 6's +0xB 0xFF and the
 // step down one.
 extern "C" void __cdecl SharedList_Arrange(void) {
-    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 4 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win4 = &WindowRecords[4];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     const unsigned char cur = B(0x8031FB);
     win21->in_use = 1;
     SetW(0x803170, W(at::kAbilityRecords + 0x16 + 24u * B(at::kSharedList + cur)));
@@ -1680,10 +1680,10 @@ extern "C" void __cdecl SharedList_Arrange(void) {
 // (kind 7, +2 3, +0xA 4, off); without key item 0xF, window 5 (0x803238: kind
 // 7, +2 0x12, +3 2, on, at (0x140, 0x26)) - the item count's.
 extern "C" void __cdecl SharedList_Setup(void) {
-    records::WindowRecord* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * 0x24);
-    records::WindowRecord* const win1 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 1 * 0x24);
-    records::WindowRecord* const win6 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 6 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win0 = &WindowRecords[0];
+    records::WindowRecord* const win1 = &WindowRecords[1];
+    records::WindowRecord* const win6 = &WindowRecords[6];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     unsigned char n = 0;
     FieldS_JoinedCount = 0;
     for (unsigned char r = 0; r < 8; ++r)
@@ -1925,9 +1925,9 @@ extern "C" void __cdecl SharedList_DrawItemCount(int x, int y) {
 // +0xB 0xFF, each member's window (0x8031F0 + 0x24 k) +3 8, the hand off, the
 // counter 0, the state down two.
 extern "C" void __cdecl Equip_ChooseSlot(void) {
-    records::WindowRecord* const win13 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 13 * 0x24);
-    records::WindowRecord* const win14 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 14 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win13 = &WindowRecords[0xd];
+    records::WindowRecord* const win14 = &WindowRecords[0xe];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const U slot0 = B(0x80333E);
     win21->in_use = 1;
@@ -2033,9 +2033,9 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
 // 0x58D570, the cursor 0xFF and the state down one; without, a buzz. Cancel:
 // sound 0x106, the cursor 0xFF, window 0x803400's +0xC 0, the state down one.
 extern "C" void __cdecl Equip_ChooseItem(void) {
-    records::WindowRecord* const win14 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 14 * 0x24);
-    records::WindowRecord* const win19 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 19 * 0x24);
-    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * 0x24);
+    records::WindowRecord* const win14 = &WindowRecords[0xe];
+    records::WindowRecord* const win19 = &WindowRecords[0x13];
+    records::WindowRecord* const win21 = &WindowRecords[0x15];
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const U hand_y = 13 * (static_cast<U>(B(0x803363)) - B(0x803362) + 2) + static_cast<U>(win14->y);
     win21->x = L(0x80335C) + 7;
