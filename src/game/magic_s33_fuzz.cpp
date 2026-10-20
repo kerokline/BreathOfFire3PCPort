@@ -243,7 +243,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kCentre: now BossSi_CentreX (symbols.toml).
 // kFormation: now BattlePhases_B89 (symbols.toml).
 // kPartySet: now AreaW0b_PartySet (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kMembers = 0x939B00;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kMembers = 0x939B00;
 
 // The kinds 0x904B89 may hold where MAGIC151 reads a pointer by it: the 26
 // pointer pairs of 0x64E9BC but the three that are null (10, 19, 20).

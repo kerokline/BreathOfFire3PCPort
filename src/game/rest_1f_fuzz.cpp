@@ -139,7 +139,7 @@ template <typename... T> U PickOf(T... v) {
 }
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps
 constexpr U kCellOffsets = 0x66971C;   // the cell-ahead offsets, two signed bytes a direction
-constexpr U kCells = 0x903850;         // the sloped flag and the cells 1..0xF
+// kCells: now DamageScratch (symbols.toml). the sloped flag and the cells 1..0xF
 unsigned char* Mem(U a) { return sh::Mem(a); }
 unsigned char* Sc() { return Sprite_Current; }
 

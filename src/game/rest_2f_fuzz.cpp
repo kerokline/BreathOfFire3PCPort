@@ -196,7 +196,9 @@ constexpr U kGrid = 0x6BDFBC, kReserve = 0x6BDFD4;
 // kCurrent: now BattleWinStates_Current (symbols.toml).
 // kListText: now MenuWindows_ListText (symbols.toml).
 // kListCursor: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr U kCharacters = 0x903A70, kListLast = 0x7DEE66, kWindows = 0x803160;
+// kCharacters: now CharacterRecords (symbols.toml).
+// kWindows: now WindowRecords (symbols.toml).
+constexpr U kListLast = 0x7DEE66;
 U Rec(unsigned n, unsigned at) { return WindowRecords_addr + 0x24 * n + at; }
 
 // The kind-1 choices' text (a region of its own; a tail of zeros after it that

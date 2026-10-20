@@ -35,7 +35,7 @@ constexpr std::uint32_t kCounter = 0x903848;      // dword; its low byte is wait
 constexpr std::uint32_t kCount2 = 0x903849;
 constexpr std::uint32_t kByte4A = 0x90384A;
 constexpr std::uint32_t kByte4B = 0x90384B;
-constexpr std::uint32_t kSlot = 0x903850;         // the effect slot just taken
+// kSlot: now DamageScratch (symbols.toml). the effect slot just taken
 // kWait: now Transition_Busy (symbols.toml). Transition_Busy
 // kRequest: now Field_Request (symbols.toml). Field_Request
 // kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber

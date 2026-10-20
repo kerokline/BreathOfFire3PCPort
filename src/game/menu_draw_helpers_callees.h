@@ -23,7 +23,7 @@ using U = std::uint32_t;
 
 namespace at {
 
-constexpr U kRecords = 0x803160;     // 22 window records of 0x24 bytes (Window_Alloc 0x59E2D0)
+// kRecords: now WindowRecords (symbols.toml). 22 window records of 0x24 bytes (Window_Alloc 0x59E2D0)
 constexpr U kRecordsEnd = 0x803478;
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record Field_RunTaskRecords is running
 // kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row

@@ -56,13 +56,13 @@ constexpr U kMoveCounter = 0x903848;
 
 // --- the name Str_CopyN copies into the banner --------------------------------
 // kBannerChar: now Character_IndexById[1] (symbols.toml). u8: the character record index (0x903A70 + n * 0xA4)
-constexpr U kCharRecords = 0x903A70;      // the live character records, stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). the live character records, stride 0xA4
 constexpr U kCharStride = 0xA4;
 
 // --- the enemies' objects (0x93B960 + n * 0x128) -----------------------------
-constexpr U kEnemy0 = 0x93B960;
-constexpr U kEnemy1 = 0x93BA88;
-constexpr U kEnemy2 = 0x93BBB0;
+// kEnemy0: now Battle_Enemies (symbols.toml).
+// kEnemy1: now Battle_Enemies[1] (symbols.toml).
+// kEnemy2: now Battle_Enemies[2] (symbols.toml).
 constexpr U kEnemyPose = 0x58;            // u16 +0x58 and +0x5A: the pose a field actor is given back
 constexpr U kEnemyStatus = 0x92;          // u32 from +0x92: bit 0x2000 (+0x93 bit 0x20)
 constexpr U kEnemyExp = 0x96;             // u16

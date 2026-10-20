@@ -17,7 +17,7 @@ namespace battle_window_draw {
 namespace at {
 
 // Data the helpers read or write, as the originals address it.
-constexpr std::uint32_t kWindows = 0x803160;        // WindowRecords, 22 of 0x24 bytes
+// kWindows: now WindowRecords (symbols.toml). WindowRecords, 22 of 0x24 bytes
 constexpr std::uint32_t kWindowStride = 0x24;
 constexpr std::uint32_t kPartyCount = 0x904AB0;     // dword; its low byte: the battle's party size (x of window 1)
 constexpr std::uint32_t kStatusX = 0x64E307;        // u8 by party size: window 1's x (0x70, 0x41, 0x12)
@@ -35,7 +35,7 @@ constexpr std::uint32_t kEnemyKind = 0xC;           // the byte BattleWin_FirstO
 constexpr std::uint32_t kAbilities = 0x65C4C8;      // the ability table, 0x18 bytes a record: name[16] then the PSX's 8 bytes
 constexpr std::uint32_t kAbilityStride = 0x18;
 constexpr std::uint32_t kSkillIcons = 0x663D70;     // u8 by kind (Skill_FlagIndex): the row's 8 x 8 icon
-constexpr std::uint32_t kCharRecords = 0x903A70;    // CharacterRecords, stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr std::uint32_t kWorking = 0x802DC0;        // the party's working records inside ObjTrio, stride 0x14C
 constexpr std::uint32_t kWorkingStride = 0x14C;

@@ -212,7 +212,7 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 
 // Set by the seed for the one function each matters to.
 unsigned g_k = kCount;                // the function being fuzzed

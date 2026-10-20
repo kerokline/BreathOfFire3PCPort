@@ -53,7 +53,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, words by function) and the first two
 // words of Prim_VertexScratch (0x9037A0). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 // The sprite frame-offset table pointer (magic_s17.cpp's kFrameSet): the
 // bones switch it to 0x8E3580 around their phase and put back 0x8B3580.

@@ -72,7 +72,7 @@ bool OneIn(U n) { return Next() % n == 0; }
 const U kSprite = at::Sprite_CurrentAt();       // 0x937F88
 const U kTints = at::TintRecordsAt();           // 0x7E0700
 const U kScratch = DamageScratch_addr;   // 0x903850
-constexpr U kWindows = 0x803160;                // WindowRecords 0..4
+// kWindows: now WindowRecords (symbols.toml). WindowRecords 0..4
 constexpr U kWindowBytes = 5 * 0x24;
 constexpr U kTintBytes = 0xC00;
 

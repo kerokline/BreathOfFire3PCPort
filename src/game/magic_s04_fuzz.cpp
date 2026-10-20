@@ -245,7 +245,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kActorSprite: now MagicS23_ActorSprite (symbols.toml).
 // kPool: now SnapSpark_Pool (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kPoolStride = 0x84;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kPoolStride = 0x84;
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* PoolRecord(unsigned i) { return mh::Mem(SnapSpark_Pool_addr + (i & 63) * kPoolStride); }

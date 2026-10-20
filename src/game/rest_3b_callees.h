@@ -50,7 +50,7 @@ constexpr U kResult = 0x904B60;           // unsigned char *: the result record 
 constexpr U kAbility = 0x904B80;          // u16: the acting ability
 
 // --- the command menu's cells (docs/battle_menu_states.md) ---
-constexpr U kMenuActor = 0x939EC4;        // unsigned char *: the acting member's ObjTrio record
+// kMenuActor: now BattleE4_MenuActor (symbols.toml). unsigned char *: the acting member's ObjTrio record
 constexpr U kCommand = 0x939FA0;          // unsigned char *: the member's command record (+0 target, +2 word)
 constexpr U kPower = 0x939FE4;            // u16: the power word Battle_CalcDamage reads (several slots set it)
 // kPowerAdd: now Rest3b_PowerAdd (symbols.toml). u16: slot 35's addend
@@ -74,9 +74,9 @@ constexpr U kWin16Cursor = 0x8033AC;      // record 16's +0xC (a dword, the low 
 // --- the party (ObjTrio, stride 0x14C), the enemies (stride 0x128), the character records ---
 // kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
-constexpr U kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr U kEnemyStride = 0x128;
-constexpr U kCharRecords = 0x903A70;      // CharacterRecords: eight of 0xA4; +0xC the EXP dword, +0x44 a stat word
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords: eight of 0xA4; +0xC the EXP dword, +0x44 a stat word
 constexpr U kCharStride = 0xA4;
 constexpr U kRosterOf = 0x66972C;         // .data u8 by character id: the roster index (Character_IndexById's address)
 constexpr U kAbilityRows = 0x65C4D8;      // NameTable_Abilities: 24 bytes an id; +0 flags, +3 power, +4 element word

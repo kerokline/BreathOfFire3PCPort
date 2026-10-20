@@ -129,7 +129,7 @@ const mh::DataTable kTables[] = {{0x65B9C8, 3}, {0x65B9D4, 4}, {0x65B9E4, 3}};
 alignas(16) unsigned char g_packets[0x200];
 unsigned char* PacketAt(unsigned k) { return g_packets + (k & 3) * 0x40; }
 
-constexpr std::uint32_t kAngles = 0x903850;   // MAGIC111's wash: two words
+// kAngles: now DamageScratch (symbols.toml). MAGIC111's wash: two words
 const mh::Region kRegions[] = {
     {DamageScratch_addr, 4},
     {0x7E0670, 4},   // Gfx_PacketNext

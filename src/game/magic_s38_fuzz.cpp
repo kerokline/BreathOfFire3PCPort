@@ -240,7 +240,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kEventBattle: now EventBattle_Id (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kCamera: now Camera_Angles (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kScratchBytes = 0x1C, kAbility = 0x904B80;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kScratchBytes = 0x1C, kAbility = 0x904B80;
 
 struct Pool {
     std::uint32_t at;

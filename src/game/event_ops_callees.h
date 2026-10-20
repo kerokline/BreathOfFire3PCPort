@@ -33,7 +33,7 @@ constexpr std::uint32_t kMemberStride = 0x14C;
 // kLeaderPace: now ObjTrio[0x128] (symbols.toml). u8, ObjTrio +0x128 - Field_State +0x128 read by address
 // kLeaderFlags: now ObjTrio[0x138] (symbols.toml). u8, ObjTrio +0x138
 // kLeaderZone: now ObjTrio[0x36] (symbols.toml). u16 pair: ObjTrio +0x36 / +0x3A (whole x, z)
-constexpr std::uint32_t kActorRecords = 0x903A70;    // stride 0xA4 (item_use_callees.h)
+// kActorRecords: now CharacterRecords (symbols.toml). stride 0xA4 (item_use_callees.h)
 constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). two 3-byte lists of member ids (field-event.md section 2)
 // kMemberRecord: now Character_IndexById (symbols.toml). u8 per member id: its actor record (Character_IndexById)
@@ -63,7 +63,7 @@ constexpr std::uint32_t kSwapKinds = 0x660A34;       // three bytes Party_CanSwa
 constexpr std::uint32_t kFacingPose = 0x660A38;      // u8 per Field_State +0x89
 constexpr std::uint32_t kChapterHooks = 0x662C80;    // a record pointer per chapter (Cond_ByteFA): +8 step, +0xC arrive
 // The scratch words (DamageScratch 0x903850 and after, PSX 0x1F800000).
-constexpr std::uint32_t kScratch = 0x903850;         // u16 / u8: the count, a found cell's x, the slope flag
+// kScratch: now DamageScratch (symbols.toml). u16 / u8: the count, a found cell's x, the slope flag
 constexpr std::uint32_t kScratch2 = 0x903852;        // u16: a found cell's z, the animation bank
 constexpr std::uint32_t kCellX = 0x903854;           // u16 each: the step's target cell
 constexpr std::uint32_t kCellZ = 0x903856;

@@ -132,7 +132,7 @@ unsigned g_k;
 // --- the state -------------------------------------------------------------------
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 // kMotePool: now BreathMote_Pool (symbols.toml).
 // kBoltPool: now ThunderPool (symbols.toml).
 constexpr unsigned kMotes = 90, kBolts = 64;

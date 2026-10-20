@@ -76,7 +76,7 @@ constexpr U kCondFlagsEnd = 0x904030;
 constexpr U kCounters = 0x903848;       // four MoveScript counters, u8
 constexpr U kPosition = 0x8034E0;       // four dwords from the block's first 16 bytes
 // 0x588800 and the growth rolls.
-constexpr U kCharRecords = 0x903A70;    // stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr U kCharStride = 0xA4;
 constexpr U kGrowthTable = 0x667248;    // 8 x {lo, hi, n}
 constexpr U kGrowthValues = 0x667260;   // u8 per roll sum
@@ -90,7 +90,7 @@ constexpr U kRowWidths[3] = {0x5888E8, 0x5888ED, 0x5888F2};   // the imm8 of 0x5
 // The save menu's slots.
 constexpr U kSummaries = 0x905BC0;      // 16 x 0x1C: the slot summaries; +0x15 the directory index or 0xFF
 constexpr U kSummaryBytes = 0x1C;
-constexpr U kDirectory = 0x929F40;      // Save_Directory, 16 x 0x18: name, size at +0x14
+// kDirectory: now Save_Directory (symbols.toml). Save_Directory, 16 x 0x18: name, size at +0x14
 constexpr U kDirectoryBytes = 0x18;
 constexpr U kListPattern = 0x65289C;    // "BISLPS??.DAT"
 constexpr U kSummaryAt = 0xCA0;         // the summary's offset in a save file

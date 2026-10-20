@@ -59,7 +59,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC; words by function)
 // and the four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are
 // read again after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.

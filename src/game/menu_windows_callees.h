@@ -22,7 +22,7 @@ namespace menu_windows {
 namespace at {
 
 // kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row
-constexpr std::uint32_t kCharRecords = 0x903A70;  // CharacterRecords, stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr std::uint32_t kPrintBuf = 0x904BA0;     // the sprintf buffer every number goes through
 // kGold: now Party_Zenny (symbols.toml). u32: the party's money

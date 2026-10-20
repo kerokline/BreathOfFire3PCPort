@@ -36,10 +36,10 @@ constexpr U kActor = 0x904B34;            // u8: the acting actor (3..10 an enem
 
 // --- the enemies and the task slots ----------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
-constexpr U kEnemies = 0x93B960;          // enemy objects, stride 0x128
+// kEnemies: now Battle_Enemies (symbols.toml). enemy objects, stride 0x128
 constexpr U kEnemyStride = 0x128;
 constexpr U kEnemy0Type = 0x93BA50;       // enemy 0's +0xF0 (its data record's index; Battle_CopyEnemyData)
-constexpr U kTasks = 0x93A000;            // BattleTask_Create's 48 slots of 0x84
+// kTasks: now BattleTask_Slots (symbols.toml). BattleTask_Create's 48 slots of 0x84
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 // kOwner: now BattleE2_Owner (symbols.toml). unsigned char *: the running task's owner (BattleTask_RunAll)

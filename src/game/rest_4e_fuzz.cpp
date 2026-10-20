@@ -183,13 +183,14 @@ unsigned char& B(U a) { return Mem(a)[0]; }
 // kPage: now CommuList_Page (symbols.toml).
 constexpr U kEdit = 0x675F98, kPages = 0x675FD8;
 // kEntry: now AreaW0c_TailSub (symbols.toml).
-constexpr U kEntries = 0x9046D0, kTrackCounts = 0x9048AB;
-constexpr U kMembers = 0x903A70;
+// kEntries: now Community_Records (symbols.toml).
+constexpr U kTrackCounts = 0x9048AB;
+// kMembers: now CharacterRecords (symbols.toml).
 // kListA: now Rest4a_RemovedCount (symbols.toml).
 // kListB: now Rest4b_BusyA (symbols.toml).
 // kListC: now Rest4b_BusyB (symbols.toml).
 constexpr U kListAEntries = 0x9039C0, kListBEntries = 0x904F00, kListCPairs = 0x904CA0;
-constexpr U kWin0 = 0x803160;
+// kWin0: now WindowRecords (symbols.toml).
 // kTab: now Window0_ParamA (symbols.toml).
 // kRow: now Window0_Cursor (symbols.toml).
 constexpr U kWinOff = WindowRecords_addr + 3, kTop = WindowRecords_addr + 0xB, kScroll = WindowRecords_addr + 0x12;

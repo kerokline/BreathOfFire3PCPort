@@ -232,7 +232,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kEventBattle: now EventBattle_Id (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 
 // Set by the seed for the one function each matters to.
 bool g_allow_none = false;    // BattleTask_Create may answer 0xFF (MainCannon_Fire)

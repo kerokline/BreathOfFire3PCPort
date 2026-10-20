@@ -8675,7 +8675,7 @@ src/game/field_modes.cpp	Scena16_Scene4	global	At	kCounters	2	0x903848	-	no-entr
 src/game/field_modes.cpp	Scena16_Scene4	global	At	kCounters	3	0x903848	-	no-entry	kCounters 0x903848 -	b0
 src/game/field_modes.cpp	Scena16_Scene4	global	At	kCounters	4	0x903848	-	no-entry	kCounters 0x903848 -	b0
 src/game/field_modes_fuzz.cpp	Addr	global	At	kCounters	0	0x903848	-	no-entry	kCounters 0x903848 -	b0
-src/game/field_modes_fuzz.cpp	Addr	record	At	kAngles + 2 * ((h >> 3) % 3)	0	-	base=Camera_Angles	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_modes_fuzz.cpp	Addr	record	At	kAngles + 2 * ((h >> 3) % 3)	0	-	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_modes_fuzz.cpp	SwapTables	global	At	kTailTable	0	0x662cd0	-	no-entry	kTailTable 0x662cd0 -	b0
 src/game/field_modes_fuzz.cpp	SwapTables	global	At	kStateTable	0	0x6619fc	-	no-entry	kStateTable 0x6619fc -	b0
 src/game/field_modes_fuzz.cpp	Next	global	At	kCounters	0	0x903848	-	no-entry	kCounters 0x903848 -	b0

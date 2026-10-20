@@ -102,7 +102,7 @@ unsigned VariantCase(unsigned k) {
 
 // The effect's scratch (words 0x903850..0x90385E, Scratch_Swap among them)
 // and the vertex scratch (Prim_VertexScratch: SVECTORs 8 bytes apart).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 // kVertex: now Prim_VertexScratch (symbols.toml).
 
 // The ability id (u16) and the actor's side byte 0x904B35 (4 for the party's

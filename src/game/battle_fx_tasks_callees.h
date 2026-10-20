@@ -28,7 +28,7 @@ namespace at {
 // The 48 battle-task slots, 0x84 bytes each (battle_flow_callees.h): +0
 // flags, +1 the state, +5 the parameter (which handler of the kind), +6 the
 // kind, +7 a mode, +9 a timer, +0xA a digit count, +0xB, +0x80 the owner.
-constexpr std::uint32_t kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskSize = 0x84;
 constexpr unsigned kTaskCount = 0x30;
 // kTaskCurrent: now BattleFlow_TaskCurrent (symbols.toml). unsigned char*: the slot being run
@@ -37,7 +37,7 @@ constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80, c
 // objects (0x128 each): an actor 0..2 is a member, 3.. an enemy.
 // kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
-constexpr std::uint32_t kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemySize = 0x128;
 // The battle's globals.
 constexpr std::uint32_t kPhase = 0x904AA0;        // u8 here: the actor watch waits out phase 5, the follower ends outside 1

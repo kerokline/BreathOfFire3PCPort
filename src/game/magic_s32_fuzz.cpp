@@ -169,7 +169,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 // The group's cells (magic_s32.cpp).
 // kV: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kPool: now WallOfFire_Pool (symbols.toml).
 constexpr std::uint32_t kRecord = 0x84;
 constexpr unsigned kPoolCount = 48;

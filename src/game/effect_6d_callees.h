@@ -69,7 +69,7 @@ constexpr unsigned kGlowQuads = 6;
 // --- sub-kind 0x64 ----------------------------------------------------------------------
 constexpr std::uint32_t kSub64Cells = 0x65F578;     // two bytes a variant: the cell x, z (room two)
 constexpr unsigned kSub64Variants = 2;
-constexpr std::uint32_t kEnemyRecords = 0x93BA88;   // the enemy records from the second (0x93B960 + 0x128)
+// kEnemyRecords: now Battle_Enemies[1] (symbols.toml). the enemy records from the second (0x93B960 + 0x128)
 constexpr unsigned kEnemyStride = 0x128;
 
 // --- sub-kind 0x65's CLUT rows ----------------------------------------------------------

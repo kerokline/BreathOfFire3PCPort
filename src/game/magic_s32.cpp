@@ -51,7 +51,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F) and the SVECTORs of Prim_VertexScratch
 // (0x9037A0..). Both are read again after every call, as the originals read
 // them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // MAGIC144's pool: 48 task-like records of 0x84 bytes (+0 bit 0 in use, +1

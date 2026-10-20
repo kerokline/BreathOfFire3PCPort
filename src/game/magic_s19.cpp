@@ -69,7 +69,7 @@ constexpr std::uint32_t kAbility = 0x904B80;     // u16: the id of the action be
 // kV1: now Prim_VertexScratch[4] (symbols.toml).
 // kV2: now Prim_VertexScratch[8] (symbols.toml).
 // kV3: now Prim_VertexScratch[0xc] (symbols.toml).
-constexpr std::uint32_t kRadius = 0x903850;   // s16 (dword for MAGIC086's draws)
+// kRadius: now DamageScratch (symbols.toml). s16 (dword for MAGIC086's draws)
 constexpr std::uint32_t kHeight = 0x903852;   // s16
 constexpr std::uint32_t kAngle = 0x903854;    // s16 (dword: MAGIC086's inner radius)
 constexpr std::uint32_t kShade = 0x903856;    // u16

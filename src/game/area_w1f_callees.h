@@ -31,7 +31,7 @@ constexpr std::uint32_t kTailTimer = 0x9039F6;
 constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // The scratch word 0x903850: an effect or sprite slot a handler keeps there.
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 // The object pointer after Camera_ShiftY (area_w1a_callees.h's kFocusObject):
 // area 68's object trigger 25 reads the object through it.
 constexpr std::uint32_t kFocusObject = 0x903804;

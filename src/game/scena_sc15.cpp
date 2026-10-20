@@ -91,7 +91,7 @@ constexpr uint32_t kCounter0 = 0x903848;
 constexpr uint32_t kCounter1 = 0x903849;
 constexpr uint32_t kCounter2 = 0x90384A;
 constexpr uint32_t kCounter3 = 0x90384B;
-constexpr uint32_t kSlotWord = 0x903850;    // u16: the event object's slot (Scena15_EventObjects)
+// kSlotWord: now DamageScratch (symbols.toml). u16: the event object's slot (Scena15_EventObjects)
 // kFlagRow: now Chapter_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
 // kStoryRow: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, the story flags
 // kRow14: now Cond_Flags[0x70] (symbols.toml). Cond_Flags + 0x70

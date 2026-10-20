@@ -291,7 +291,7 @@ const mh::DataTable kTables[] = {
 };
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 // kInkPool: now InkInkPuff_Pool (symbols.toml).
 // kMotePool: now Magic213Mote_Pool (symbols.toml).
 constexpr std::uint32_t kPoolBytes = 64 * 0x84;

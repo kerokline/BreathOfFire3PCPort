@@ -253,7 +253,8 @@ unsigned char* PacketAt(unsigned k) { return g_packets + (k & 7) * 0x40; }
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kFormIndex: now BattlePhases_B89 (symbols.toml).
 // kMotePool: now BonebreakMote_Pool (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kAbilityId = 0x904B80, kPoolBytes = 64 * 0x84;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kAbilityId = 0x904B80, kPoolBytes = 64 * 0x84;
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
 

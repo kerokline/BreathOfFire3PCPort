@@ -44,7 +44,8 @@ constexpr U kFlatColour0 = 0x8CB59A, kFlatColour1 = 0x8CB59C;
 // The window colour (Config), a CLUT row: s8 (battle_windows_callees.h kColour).
 // kWindowColour: now Config_WindowColour (symbols.toml).
 // CharacterRecords, 0xA4 bytes each (battle_window_draw_callees.h).
-constexpr U kCharRecords = 0x903A70, kCharStride = 0xA4;
+// kCharRecords: now CharacterRecords (symbols.toml).
+constexpr U kCharStride = 0xA4;
 // The play clock: hours, minutes, seconds, frames (0x9040C8..0x9040CB).
 // kClockMinutes: now MapFieldObjects_ClockMinutes (symbols.toml).
 // kClockFrames: now MapFieldObjects_ClockFrames (symbols.toml).

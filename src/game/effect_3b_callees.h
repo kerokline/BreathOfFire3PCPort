@@ -20,7 +20,7 @@ constexpr std::uint32_t kKind69Lines = bof3::addr::EffectKind69_DrawLines;   // 
                                                    // +0xA - 1 LINE_G2s, writes 0x903850..0x90385F and 0x9037A0..
 
 // --- the scratch cells (DamageScratch 0x903850 and after: the effect code's) --------
-constexpr std::uint32_t kScale = 0x903850;         // dword: a radius / scale the states multiply by (re-read
+// kScale: now DamageScratch (symbols.toml). dword: a radius / scale the states multiply by (re-read
                                                    // after each Math_* call); also kind 0x67's record byte
 constexpr std::uint32_t kAngle = 0x903854;         // dword: the angle handed to Math_Sin (re-read for it)
 constexpr std::uint32_t kShade = 0x903858;         // dword: kind 0x69's shade, 7 * +0xA (its low byte re-read)

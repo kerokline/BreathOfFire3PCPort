@@ -78,7 +78,7 @@ constexpr U kPressed = 0x7E1BEC;       // Input_Pressed
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons
 constexpr U kParty = 0x904062;         // the party's member ids
-constexpr U kRecords = 0x903A70;       // CharacterRecords, 0xA4 each
+// kRecords: now CharacterRecords (symbols.toml). CharacterRecords, 0xA4 each
 constexpr U kRecordStride = 0xA4;
 
 // The image's tables, read in place.

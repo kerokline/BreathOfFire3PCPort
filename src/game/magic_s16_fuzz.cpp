@@ -318,7 +318,7 @@ constexpr mh::Region kData[] = {{0x65AE2C, 0xF4}, {0x65AF24, 0xF4}, {0x65B01C, 0
 
 alignas(16) unsigned char g_prims[0x100];
 // kPacketNext: now Gfx_PacketNext (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 constexpr std::uint32_t kEnemyState = 0x93BCD9;   // Magic073_CountReacting's (0x93B961 + 0x128 * 3)
 // kPastEnemies: now BattleWindows_MsgHead (symbols.toml).
 

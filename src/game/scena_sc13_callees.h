@@ -44,7 +44,7 @@ namespace at {
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: the scenes' word timer
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
-constexpr std::uint32_t kSlotWord = 0x903850;   // u16: an object or effect slot, a caption's clock
+// kSlotWord: now DamageScratch (symbols.toml). u16: an object or effect slot, a caption's clock
 constexpr std::uint32_t kCaptionTotal = 0x903852;  // u16: a caption's length in frames, less one
 // kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Test / Set as a literal

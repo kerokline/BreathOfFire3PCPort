@@ -26,7 +26,7 @@ constexpr std::uint32_t kLinkHigh = 0x903851;
 // position the record slot found, per record a copy of the party list that
 // is struck out (0xFF) as records are taken. Four bytes apart, so a list of
 // more than four overruns the next, as on the PSX.
-constexpr std::uint32_t kPickColumn = 0x903850;
+// kPickColumn: now DamageScratch (symbols.toml).
 constexpr std::uint32_t kPickSlot = 0x903854;
 constexpr std::uint32_t kPickFree = 0x903858;
 // The 3-byte party list (Party_Join's, move_cmds_callees.h kPartyLists).
@@ -34,7 +34,7 @@ constexpr std::uint32_t kPickFree = 0x903858;
 // The eight 0xA4-byte character records Character_IndexById indexes by
 // member (its values are 0..7), copied to a party record's +0x80 (PSX
 // 0x80144964); symbols.toml line 84's save-record block.
-constexpr std::uint32_t kCharacterRecords = 0x903A70;
+// kCharacterRecords: now CharacterRecords (symbols.toml).
 // The palettes Sprite_LoadPalette fills: 64 bytes per record's +5 byte
 // (PSX 0x8002D600).
 constexpr std::uint32_t kPalettes = 0x80D380;

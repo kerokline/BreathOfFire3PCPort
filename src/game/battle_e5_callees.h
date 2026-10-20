@@ -57,7 +57,7 @@ constexpr U kGenes = 0x904B84;            // u8[3]: the genes picked
 // kAiFlag: now BattleDamage_AiByteB97 (symbols.toml). u8: set by an AI row of kind 7
 
 // --- the command menu's cells (docs/battle_menu_states.md) ---
-constexpr U kMenuActor = 0x939EC4;        // unsigned char *: the acting member's ObjTrio record
+// kMenuActor: now BattleE4_MenuActor (symbols.toml). unsigned char *: the acting member's ObjTrio record
 constexpr U kCommandRecord = 0x939FA0;    // unsigned char *: the member's +0x124
 
 // --- the keys (symbols.toml Input_Pressed, Field_ConfirmButtons, Field_CancelButtons: their
@@ -83,9 +83,9 @@ constexpr U kMsgText = 0x93C2C4;          // const unsigned char * of the entry
 constexpr U kAiScripts = 0x8C5600;        // the area's AI scripts, 0x8C bytes each: four rows of 16
 constexpr U kEnemyMessages = 0x939FC0;          // 8 entries of 4 bytes: +0 the enemy (actor - 3), +2 a system message (BattleAction_EnemyMessages)
 // kEnemyMessageCount: now BattleE5_EnemyMessageCount (symbols.toml). u8: entries in kEnemyMessages, 8 at most
-constexpr U kEnemies = 0x93B960;          // the enemies' objects, stride 0x128
+// kEnemies: now Battle_Enemies (symbols.toml). the enemies' objects, stride 0x128
 constexpr U kEnemyStride = 0x128;
-constexpr U kCurrentEnemy = 0x939AD8;     // unsigned char *
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). unsigned char *
 constexpr U kAbilityRows = 0x65C4DC;      // .data: 24 bytes an ability, +0 the element word
 constexpr U kWeaponElement = 0x657463;    // .data: NameTable_Weapons' element byte, 28 bytes a weapon
 
@@ -94,7 +94,7 @@ constexpr U kWeaponElement = 0x657463;    // .data: NameTable_Weapons' element b
 constexpr U kPartyStride = 0x14C;
 
 // --- the window records (WindowRecords 0x803160, stride 0x24) the run uses ---
-constexpr U kWin4 = 0x803160 + 4 * 0x24;     // 0x8031F0
+// kWin4: now WindowRecords[4] (symbols.toml). 0x8031F0
 constexpr U kWin16 = 0x803160 + 16 * 0x24;   // 0x8033A0
 constexpr U kWin17 = 0x803160 + 17 * 0x24;   // 0x8033C4
 constexpr U kWin18 = 0x803160 + 18 * 0x24;   // 0x8033E8: the first list; +0x10 / +0x12 its cursor

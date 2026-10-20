@@ -96,12 +96,16 @@ void TurnByFacing(unsigned char* task) { MH_AT(TurnFn, magic_s24::kTurnByFacing)
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 
 // The scratch words (DamageScratch): radii at +0 / +2, then colours or angles.
-constexpr std::uint32_t kR = DamageScratch_addr, kR2 = DamageScratch_addr + 2;
+// kR: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kR2 = DamageScratch_addr + 2;
 constexpr std::uint32_t kW4 = DamageScratch_addr + 4, kW6 = DamageScratch_addr + 6, kW8 = DamageScratch_addr + 8;
 // kWC: now Scratch_Swap (symbols.toml).
 constexpr std::uint32_t kWA = DamageScratch_addr + 0xA, kWE = DamageScratch_addr + 0xE;
 // The four SVECTORs of Prim_VertexScratch, as the originals name them: a (+0), b (+8), c (+0x10), d (+0x18).
-constexpr std::uint32_t kA = Prim_VertexScratch_addr, kB = Prim_VertexScratch_addr + 8, kC = Prim_VertexScratch_addr + 0x10, kD = Prim_VertexScratch_addr + 0x18;
+// kA: now Prim_VertexScratch (symbols.toml).
+// kB: now Prim_VertexScratch[1] (symbols.toml).
+// kC: now Prim_VertexScratch[2] (symbols.toml).
+// kD: now Prim_VertexScratch[3] (symbols.toml).
 
 const short* Vec(std::uint32_t address) { return reinterpret_cast<const short*>(Mem(address)); }
 float* Xy(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*>(prim + offset); }

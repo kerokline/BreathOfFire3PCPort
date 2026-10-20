@@ -38,7 +38,7 @@ constexpr U kTarget = 0x904B44;           // u8: the target (set-up 38 writes 0x
 // kOwner: now BattleE2_Owner (symbols.toml). the running task slot's owner (BattleTask_RunAll sets it from the slot's +0x80)
 
 // --- the enemies' objects (0x93B960 + n * 0x128) and the task slots ----------
-constexpr U kEnemy7 = 0x93C178;           // enemy 7's object: set-up 38 makes it Sprite_Current
+// kEnemy7: now Battle_Enemies[7] (symbols.toml). enemy 7's object: set-up 38 makes it Sprite_Current
 constexpr U kEnemy0Type = 0x93BA50;       // enemy 0's +0xF0 (its enemy data record's index): the Arwan task reads it
 constexpr U kTaskOwners = 0x93A080;       // the task slots' +0x80 (their owner), stride 0x84
 constexpr U kTaskStride = 0x84;

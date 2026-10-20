@@ -245,7 +245,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kField: now Field_Kind2Z (symbols.toml).
 // kShiftX: now Camera_ShiftX (symbols.toml).
 // kCamera: now Camera_Angles (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kMagmaBytes = 32 * 0x84, kGeoBytes = 64 * 0x84;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kMagmaBytes = 32 * 0x84, kGeoBytes = 64 * 0x84;
 
 // Math_Ratan2's answer near the fuzzed function's threshold (MagmaBreathRecord_Fly).
 bool g_ratan_on = false;

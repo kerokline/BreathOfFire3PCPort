@@ -55,7 +55,7 @@ using move_script::Word;
 // their working values in, and Prim_VertexScratch's first two words (MAGIC124's
 // bolt keeps its moving point there). All are read again after every call, as
 // the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }

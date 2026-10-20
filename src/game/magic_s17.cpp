@@ -50,7 +50,7 @@ using move_script::Word;
 
 // --- the addresses ours reads and writes -----------------------------------
 
-constexpr std::uint32_t kScratchA = 0x903850;       // DamageScratch (the PSX scratchpad): radius, angle words
+// kScratchA: now DamageScratch (symbols.toml). DamageScratch (the PSX scratchpad): radius, angle words
 constexpr std::uint32_t kScratchB = 0x903854;
 constexpr std::uint32_t kShade = 0x903856;          // u16: a shade the draws copy to their primitives
 constexpr std::uint32_t kRgb = 0x903858;            // three u16 at +0 / +2 / +4

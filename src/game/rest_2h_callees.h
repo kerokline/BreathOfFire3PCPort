@@ -27,13 +27,13 @@ namespace at {
 
 // --- the window records ----------------------------------------------------------
 // kCurrent: now BattleWinStates_Current (symbols.toml). unsigned char *: the record Field_RunTaskRecords is on
-constexpr std::uint32_t kWindows = 0x803160;       // WindowRecords, 22 of 0x24
+// kWindows: now WindowRecords (symbols.toml). WindowRecords, 22 of 0x24
 constexpr std::uint32_t kWindowStride = 0x24;
 // kWindow1Master: now Window1_Master (symbols.toml). window 1's +0xD: the master list's chosen entry
 // kStyle: now Config_WindowColour (symbols.toml). the window colour byte Menu_DrawBox is handed
 
 // --- the character records and the party ------------------------------------------
-constexpr std::uint32_t kRecords = 0x903A70;       // CharacterRecords, 0xA4 each
+// kRecords: now CharacterRecords (symbols.toml). CharacterRecords, 0xA4 each
 constexpr std::uint32_t kRecordStride = 0xA4;
 constexpr std::uint32_t kMemberMap = 0x66972C;     // a member id's record (Character_IndexById's bytes), unbounded
 // kPartyBits: now Cond_Flags[0xd1] (symbols.toml). the byte MasterWin_Available tests (bits 3..5)

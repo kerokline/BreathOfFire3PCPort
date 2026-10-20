@@ -213,7 +213,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kTrail: now IntimidateTrail_Points (symbols.toml).
 // kStruck: now AuraBreath_Struck (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 // IntimidateTrail_Points as far as a trail +4 below 48 and a point index up
 // to 256 reach: 4 x ((47 << 5) + 256) + 4 bytes.
 constexpr std::uint32_t kTrailBytes = 0x1B84;

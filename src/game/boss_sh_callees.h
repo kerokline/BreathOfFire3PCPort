@@ -67,14 +67,14 @@ constexpr U kPartyStride = 0x14C;
 
 // --- the enemies (0x93B960 + n * 0x128) ---------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
-constexpr U kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr U kEnemyStride = 0x128;
 // kEnemy0X: now BossSb_Enemy0Pose (symbols.toml). enemy 0's word +0x58 (set-up 34's exit copies it)
 // kEnemy0Y: now BossSh_Enemy0Y (symbols.toml). enemy 0's word +0x5A
 constexpr U kEnemyDataCount9 = 0x8C5652;  // the area's enemy data records' byte +0x8A (stride 0x8C): the count step 4 starts with
 
 // --- the effect task slots (BattleTask_Create's) -----------------------------------
-constexpr U kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 

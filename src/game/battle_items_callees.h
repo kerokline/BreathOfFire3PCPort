@@ -59,14 +59,14 @@ constexpr std::uint32_t kSparkleLife = 0x65AE20;      // u8 per kind
 constexpr std::uint32_t kSparkleTypes = 0x65AE28;     // the dispatch table
 
 // The PC's copy of the PSX scratchpad (DamageScratch) and the vertex scratch.
-constexpr std::uint32_t kScratch = 0x903850;          // s16 words at +0 .. +0xE
+// kScratch: now DamageScratch (symbols.toml). s16 words at +0 .. +0xE
 // kVertex: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch: four SVECTORs, 8 bytes apart
 
 // The battle actor's records.
 constexpr std::uint32_t kActorIndex = 0x904B34;       // u8: 0..2 a party member, 3.. an enemy
 // kPartyRecords: now ObjTrio (symbols.toml). ObjTrio, stride 0x14C
 constexpr std::uint32_t kPartyStride = 0x14C;
-constexpr std::uint32_t kEnemyRecords = 0x93B960;     // stride 0x128
+// kEnemyRecords: now Battle_Enemies (symbols.toml). stride 0x128
 constexpr std::uint32_t kEnemyStride = 0x128;
 // kEnemySoundMode: now EventBattle_Id (symbols.toml). u8: non-zero plays the enemy's own cue
 constexpr std::uint32_t kFxSizeSelect = 0x904B89;     // u8

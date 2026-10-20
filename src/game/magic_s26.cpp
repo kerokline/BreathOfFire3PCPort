@@ -48,7 +48,7 @@ using move_script::Word;
 // DamageScratch's first dword (0x903850; a word at +0 and +2 in the beams)
 // and Prim_VertexScratch's four SVECTORs (0x9037A0..0x9037BF): read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 // The sprite frame-offset table pointer (sprite_pose.h): the effects' bank
 // 0x8E3580 around a sprite child's phase, the engine's 0x8B3580 after.

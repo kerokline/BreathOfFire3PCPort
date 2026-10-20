@@ -52,7 +52,7 @@ constexpr std::uint32_t kEffectOff = 0x7DEE68;     // u16, the effect's own offs
 // kPlacement: now Msgbox_Placement (symbols.toml). u8, the argument of a leading 0x0C
 
 // --- Outside the block ----------------------------------------------------
-constexpr std::uint32_t kWindows = 0x803160;       // WindowRecords, stride 0x24; slot 1 is 0x803184
+// kWindows: now WindowRecords (symbols.toml). WindowRecords, stride 0x24; slot 1 is 0x803184
 constexpr std::uint32_t kWindow0State = 0x803163;  // u8, window 0's state byte
 // kWindow0X: now WindowRecords record 0 x (records::WindowRecord).
 // kWindow0Y: now WindowRecords record 0 y (records::WindowRecord).

@@ -235,7 +235,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kPoolCurrent: now WeretigerStreak_Current (symbols.toml).
 // kRingPhases: now TsunamiRing_Phases (symbols.toml).
 // kFrameCounter: now Frame_Counter (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 constexpr unsigned kPoolCount = 0xC0, kPoolStride = 0x1C;
 unsigned char* PoolRecord(unsigned i) { return mh::Mem(WeretigerStreak_Pool_addr + (i % kPoolCount) * kPoolStride); }
 

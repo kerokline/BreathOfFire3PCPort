@@ -51,7 +51,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 constexpr std::uint32_t kSparkleStride = 0x2C;
-constexpr std::uint32_t kScratch = 0x903850;       // s16 words +0 .. +0xE (DamageScratch's neighbourhood)
+// kScratch: now DamageScratch (symbols.toml). s16 words +0 .. +0xE (DamageScratch's neighbourhood)
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12-byte records
 constexpr std::uint32_t kEnemyState = 0x93BCD9;    // what 0x4BBCE0 reads: 0x93B961 + 0x128 * 3 (docs/magic_s16.md section 6)
 // kPartyState: now ObjTrio[1] (symbols.toml). a member's +1

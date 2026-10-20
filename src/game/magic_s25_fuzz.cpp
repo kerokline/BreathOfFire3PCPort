@@ -305,7 +305,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kCasterRecord: now MagicS23_ActorSprite (symbols.toml).
 // kSpriteBank: now BattleE2_AnimSet (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kSideCorner = 0x904AAC;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kSideCorner = 0x904AAC;
 
 mh::Region g_regions[] = {
     {0x7E0670, 4},                       // Gfx_PacketNext

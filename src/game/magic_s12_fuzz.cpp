@@ -201,10 +201,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kTints: now MoveScript_TintRecords (symbols.toml).
 // kInput: now Input_Pressed (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850,
-                        kSeenBits = 0x9040A8,
-                        kAbility = 0x904B80,
-                        kAbilityStep = 0x65C4DB;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kSeenBits = 0x9040A8, kAbility = 0x904B80, kAbilityStep = 0x65C4DB;
 
 // Celerity_ApplyStat's stat, chosen by the seed with the cell it moves.
 unsigned g_stat = 0;

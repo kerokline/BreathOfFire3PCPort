@@ -228,10 +228,8 @@ unsigned char* PacketAt(unsigned k) { return g_packets + (k & 7) * 0x40; }
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
 // kMotePool: now ElemBreath_Motes (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850,
-                        kAbilityId = 0x904B80,
-                        kPoolBytes = 48 * 0x84,
-                        kPoolRecord255 = 0x67DE40 + 255 * 0x84;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kAbilityId = 0x904B80, kPoolBytes = 48 * 0x84, kPoolRecord255 = 0x67DE40 + 255 * 0x84;
 
 // Set by the seed for the functions they matter to.
 bool g_keep_slots = false;    // the four slots' +0xB stay below 155 (BoneDartShadow_Follow / _Fade)

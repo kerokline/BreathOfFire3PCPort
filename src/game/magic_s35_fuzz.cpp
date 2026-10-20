@@ -203,7 +203,8 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kPartyCount = 0x904AB0;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kPartyCount = 0x904AB0;
 // kCurePool: now CureMote_Pool (symbols.toml).
 // kCureCurrent: now CureMote_Current (symbols.toml).
 constexpr std::uint32_t kCureStride = 0x2C;

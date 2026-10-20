@@ -42,9 +42,9 @@ constexpr U kTarget = 0x904B44;           // u8: the target (0..2 a member, 3..1
 
 // --- the enemies and the task slots ---------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
-constexpr U kEnemies = 0x93B960;          // enemy objects, stride 0x128
+// kEnemies: now Battle_Enemies (symbols.toml). enemy objects, stride 0x128
 constexpr U kEnemyStride = 0x128;
-constexpr U kTasks = 0x93A000;            // BattleTask_Create's 48 slots of 0x84
+// kTasks: now BattleTask_Slots (symbols.toml). BattleTask_Create's 48 slots of 0x84
 constexpr U kTaskStride = 0x84;
 // kOwner: now BattleE2_Owner (symbols.toml). the running task's owner (BattleTask_RunAll sets it from the slot's +0x80)
 

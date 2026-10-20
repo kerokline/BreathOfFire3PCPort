@@ -154,7 +154,8 @@ bool g_slide_armed = false;
 
 // The window records (symbols.toml block WindowRecords) and the current one.
 // kCurrent: now BattleWinStates_Current (symbols.toml).
-constexpr U kRecords = 0x803160, kRecordSize = 0x24, kRecordCount = 22;
+// kRecords: now WindowRecords (symbols.toml).
+constexpr U kRecordSize = 0x24, kRecordCount = 22;
 
 // One record's split: Capcom's x (`L`) and the drawn one (`D`) as this file
 // last left them, and the leg the drawn x is on - from (aL, aD), where it

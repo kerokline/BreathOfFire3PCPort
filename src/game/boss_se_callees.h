@@ -57,7 +57,7 @@ constexpr U kEnd21 = bof3::addr::Boss21_End;            // set-up 21 / 23's end 
 
 // --- the enemies' objects (0x93B960 + n * 0x128), the offsets used ------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
-constexpr U kEnemy0 = 0x93B960;           // enemy 0's object
+// kEnemy0: now Battle_Enemies (symbols.toml). enemy 0's object
 constexpr U kEnemy0State1 = 0x93B961;     // its +1
 constexpr U kEnemy0State2 = 0x93B962;     // its +2
 constexpr U kEnemy0Flag8E = 0x93B9EE;     // its +0x8E

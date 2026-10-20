@@ -148,7 +148,8 @@ constexpr mh::Answer kG = mh::Answer::kGarbage;
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kTurn = 0x446770;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kTurn = 0x446770;
 
 // --- the group's memory ----------------------------------------------------------
 

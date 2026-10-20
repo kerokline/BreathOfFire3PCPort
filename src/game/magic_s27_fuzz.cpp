@@ -272,7 +272,7 @@ const mh::DataTable kTables[] = {
 };
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 const mh::Region kRegions[] = {
     {DamageScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},

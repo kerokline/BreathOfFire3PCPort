@@ -39,7 +39,7 @@ constexpr std::uint32_t kReserveData = 0x9045FC;   // 3 bytes a reserve slot, ke
 // kMoney: now Party_Zenny (symbols.toml). dword, Menu_DrawMoneyBox's value
 constexpr std::uint32_t kCampFlag = 0x904152;      // u8 (hypothesis: "camping allowed anywhere")
 constexpr std::uint32_t kMemberRecord = 0x66972C;  // u8 by character: its record (Character_IndexById)
-constexpr std::uint32_t kCharRecords = 0x903A70;   // 0xA4 bytes each
+// kCharRecords: now CharacterRecords (symbols.toml). 0xA4 bytes each
 constexpr std::uint32_t kCharRecordSize = 0xA4;
 // kColour: now Config_WindowColour (symbols.toml). Config's window colour byte
 // kBackground: now Config_Background (symbols.toml). Config's "Background" byte
@@ -48,11 +48,11 @@ constexpr std::uint32_t kCharRecordSize = 0xA4;
 constexpr std::uint32_t kSavedParty = 0x6BDF98;
 constexpr std::uint32_t kSavedReserve = 0x6BDF9B;
 // The window records (WindowRecords, docs/window-task.md section 3).
-constexpr std::uint32_t kRecords = 0x803160;
+// kRecords: now WindowRecords (symbols.toml).
 constexpr std::uint32_t kRecordSize = 0x24;
 constexpr std::uint32_t kRecordsEnd = 0x803478;
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record the window layer is running
-constexpr std::uint32_t kMemberPanels = 0x8031F0;  // record 4: the first member panel
+// kMemberPanels: now WindowRecords[4] (symbols.toml). record 4: the first member panel
 constexpr std::uint32_t kMoneyWindow = 0x80325C;   // record 7
 constexpr std::uint32_t kTimeWindow = 0x803280;    // record 8
 constexpr std::uint32_t kIconWindow = 0x8032A4;    // record 9, the top bar's icons

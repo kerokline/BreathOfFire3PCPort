@@ -69,7 +69,7 @@ void PutFloatBits(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 
 // The scratch words MAGIC111's wash keeps its angles in: DamageScratch
 // 0x903850 and 0x903852, read back after every Math_Sin as the original does.
-constexpr std::uint32_t kAngleA = 0x903850;
+// kAngleA: now DamageScratch (symbols.toml).
 constexpr std::uint32_t kAngleB = 0x903852;
 
 // Capcom's, unnamed, in no group: fild the argument, fsqrt, tail jmp to the

@@ -54,7 +54,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, words or dwords by function) and the
 // SVECTORs of Prim_VertexScratch (0x9037A0..). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The overlays' own .data the functions read in place (symbols.toml [[data]]).

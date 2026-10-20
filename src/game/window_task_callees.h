@@ -20,7 +20,7 @@ namespace window_task {
 namespace at {
 
 // The window records and the one the layer is running.
-constexpr std::uint32_t kRecords = 0x803160;        // 22 records of 0x24 bytes (symbols.toml block WindowRecords)
+// kRecords: now WindowRecords (symbols.toml). 22 records of 0x24 bytes (symbols.toml block WindowRecords)
 constexpr std::uint32_t kRecordsEnd = 0x803478;     // one past the last
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record Field_RunTaskRecords set
 // kPass: now BossSa_WindowPass (symbols.toml). u8: the pass Field_RunTaskRecords starts from

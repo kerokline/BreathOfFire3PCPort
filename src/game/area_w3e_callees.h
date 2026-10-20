@@ -33,7 +33,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // A scratch word: the event ops' object index (EventOp_0x / EventOp_6x read
 // it: scena_se.cpp), and where area 140's tail keeps Input_Held.
-constexpr std::uint32_t kScratch850 = 0x903850;
+// kScratch850: now DamageScratch (symbols.toml).
 // The story flags (Flags_Set / Flags_Test's bank) and the chapter's flag row
 // pointer (Cond_Flags + 8 * chapter; docs/field-modes.md).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).

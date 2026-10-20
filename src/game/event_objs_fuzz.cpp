@@ -394,7 +394,8 @@ std::uint32_t Run(const void* fn, const Clone& c, const Args& x) {
 // pointer and Field_Kind2Z / X. Then Sprite_Current, MoveScript_F3Divisor and
 // Gfx_ClutStripDirty; and, for the one function each that writes them, the
 // 256 CLUTs of row 15 and 256 effect objects (a whole index byte's reach).
-constexpr std::uint32_t kBlockAt = 0x903850, kBlockEnd = 0x903A70 + 255 * kRecordSize + 0x18;
+// kBlockAt: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kBlockEnd = 0x903A70 + 255 * kRecordSize + 0x18;
 constexpr unsigned kBlock = kBlockEnd - DamageScratch_addr, kClutBytes = 256 * 64, kEffectBytes = 256 * 0x80;
 // kGlobalsAt: now Sprite_Current (symbols.toml).
 // kEffectsAt: now Effect_Objects (symbols.toml). Effect_Objects

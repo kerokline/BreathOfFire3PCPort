@@ -68,7 +68,7 @@ constexpr unsigned kPoolSlots = 32;
 
 // The PC's copy of the PSX scratchpad (DamageScratch) and Prim_VertexScratch:
 // four SVECTORs 8 bytes apart, A0 / A8 / B0 / B8.
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 // kVertex: now Prim_VertexScratch (symbols.toml).
 unsigned char* Scr(unsigned off) { return Mem(DamageScratch_addr + off); }
 unsigned char* Vtx(unsigned off) { return Mem(Prim_VertexScratch_addr + off); }

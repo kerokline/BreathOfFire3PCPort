@@ -51,7 +51,7 @@ using move_script::Word;
 // The scratch the draw keeps its radius in (DamageScratch's words +0 and +2)
 // and the three SVECTORs of Prim_VertexScratch it projects; both read again
 // after every call, as the original reads them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }

@@ -176,7 +176,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kKind2: now Field_Kind2Z (symbols.toml).
 // kTints: now MoveScript_TintRecords (symbols.toml).
 // kInput: now Input_Pressed (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kEnemyLift = 0x8C564F;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kEnemyLift = 0x8C564F;
 
 // Set by the seed for the one function each matters to.
 bool g_keep_facing = false;   // the facing stays inside 0..3 (ChillRay_PushMatrix)

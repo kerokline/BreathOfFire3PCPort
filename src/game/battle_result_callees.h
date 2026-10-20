@@ -62,7 +62,7 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 // The window records (0x803160 + 36 n, Window_Alloc 0x59E2D0): +0 taken,
 // +1 kind, +2 the kind handler's state, +3 its step; +4 / +6 x / y words,
 // +9 the height. Slot 1 is the EXP / zenny window, slot 0x15 the drops'.
-constexpr std::uint32_t kWindows = 0x803160;
+// kWindows: now WindowRecords (symbols.toml).
 constexpr std::uint32_t kWindowSize = 36;
 // kWindowCurrent: now BattleWinStates_Current (symbols.toml). the record the window task is running
 // Constant data in .data / .rdata.

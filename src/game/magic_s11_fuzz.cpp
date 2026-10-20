@@ -171,7 +171,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 // kSanctuaryPool: now SanctuaryMote_Pool (symbols.toml).
 // kReached: now Sanctuary_Reached (symbols.toml).
 // kTornadoPool: now TornadoMote_Pool (symbols.toml).

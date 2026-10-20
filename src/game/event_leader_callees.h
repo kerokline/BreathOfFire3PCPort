@@ -37,12 +37,12 @@ constexpr std::uint32_t kMemberStride = 0x14C;
 // kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34 / +0x38 (dwords), +0x3E (word)
 // kLeaderZ: now ObjTrio[0x38] (symbols.toml).
 // kLeaderHeight: now ObjTrio[0x3e] (symbols.toml).
-constexpr std::uint32_t kActorRecords = 0x903A70;    // stride 0xA4
+// kActorRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). the first 3-byte party list
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes per party slot (field-event.md)
 // The step's scratch (event_ops_callees.h's terms).
-constexpr std::uint32_t kScratch = 0x903850;         // u8: MapView_SlopeAt's "a slope" byte
+// kScratch: now DamageScratch (symbols.toml). u8: MapView_SlopeAt's "a slope" byte
 constexpr std::uint32_t kScratch2 = 0x903852;        // u16: the found spot's ground
 constexpr std::uint32_t kTargetX = 0x903858;         // s32 each: the found spot
 // kTargetZ: now Scratch_Swap (symbols.toml).

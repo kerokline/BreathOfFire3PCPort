@@ -256,7 +256,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 // kPacketNext: now Gfx_PacketNext (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 constexpr std::uint32_t kMotes = 0x68E1B8, kStreaks = 0x698EC0, kSparks = 0x6A2D38;
 constexpr std::uint32_t kRecord = 0x84, kStreak = 0x3C;
 

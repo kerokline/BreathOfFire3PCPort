@@ -36,7 +36,7 @@ constexpr std::uint32_t kRun = 0x8034E4;        // s8: MoveScript_Var7, which sc
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: run 11's countdown
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
-constexpr std::uint32_t kEffectSlot = 0x903850; // u8: the effect slot just taken
+// kEffectSlot: now DamageScratch (symbols.toml). u8: the effect slot just taken
 // kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kRow6: now Cond_Flags[0x30] (symbols.toml). Cond_Flags + 0x30 (row 6), handed to Flags_Set / Clear as a literal
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Set / Clear as a literal

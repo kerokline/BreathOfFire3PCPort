@@ -54,9 +54,9 @@ constexpr U kCounter0 = 0x903848;
 // kKeptA4: now BossSd_KeptA4 (symbols.toml).
 
 // --- the enemies' objects (0x93B960 + n * 0x128) the set-ups read -----------
-constexpr U kEnemy0 = 0x93B960;
-constexpr U kEnemy1 = 0x93BA88;
-constexpr U kEnemy2 = 0x93BBB0;
+// kEnemy0: now Battle_Enemies (symbols.toml).
+// kEnemy1: now Battle_Enemies[1] (symbols.toml).
+// kEnemy2: now Battle_Enemies[2] (symbols.toml).
 constexpr U kEnemy0Status = 0x93B9F2;     // enemy 0's +0x92 (a dword read; +0x93 bit 0x40 tested)
 // kEnemy1Status: now BossH_Enemy1Status (symbols.toml). enemy 1's +0x92
 // kEnemy2Status: now BossH_Enemy2Status (symbols.toml). enemy 2's +0x92

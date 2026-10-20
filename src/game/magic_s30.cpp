@@ -54,7 +54,7 @@ using move_script::Word;
 // 0x903850 (words; Scratch_Swap is +0xC) and the four SVECTORs of
 // Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now DamageScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 // The dword the sprite children point at a sprite bank while their phase
 // runs (0x8E3580 / 0x813580), and put back to 0x8B3580 after.

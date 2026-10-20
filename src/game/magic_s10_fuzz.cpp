@@ -268,7 +268,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kCamera: now Camera_Angles (symbols.toml).
 // kFieldState: now Field_State (symbols.toml).
 // kPool: now Lavaburst_Pool (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kPoolBytes = 32 * 0x84;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kPoolBytes = 32 * 0x84;
 
 // The function being fuzzed, for the settle.
 unsigned g_k = 0;

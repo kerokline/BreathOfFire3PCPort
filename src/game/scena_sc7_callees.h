@@ -82,9 +82,9 @@ constexpr std::uint32_t kMemberStride = 0x14C;
 // kLeaderX: now ObjTrio[0x34] (symbols.toml). member 0 +0x34
 // kLeaderZ: now ObjTrio[0x38] (symbols.toml). member 0 +0x38
 // kMember1: now Field_Members[4] (symbols.toml). member 1 +0
-constexpr std::uint32_t kCharRecords = 0x903A70; // CharacterRecords
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords
 constexpr std::uint32_t kRecordStride = 0xA4;
-constexpr std::uint32_t kRecord4 = 0x903D00;      // record 4, the one chapter 8 run 11 sets up (Char_RecalcStats is given it)
+// kRecord4: now CharacterRecords[4] (symbols.toml). record 4, the one chapter 8 run 11 sets up (Char_RecalcStats is given it)
 // kSprites: now Sprite_Objects (symbols.toml). Sprite_Objects, 0xA4-byte records
 constexpr std::uint32_t kSpriteStride = 0xA4;
 // kSpritesExtra: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra

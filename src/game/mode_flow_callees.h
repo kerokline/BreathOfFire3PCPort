@@ -76,7 +76,7 @@ constexpr std::uint32_t kBootClearBytes = 0x42C * 4;
 constexpr std::uint32_t kTintMarks = 0x7E06A0;       // 16 dwords set to -1 by MoveScript_TintReset
 // kClutStripZero: now Gfx_ClutStripSource[0x1c00] (symbols.toml). the source's last 0x800 bytes, zeroed before the copy
 // Window_ResetAll's range.
-constexpr std::uint32_t kWindowRecords = 0x803160;
+// kWindowRecords: now WindowRecords (symbols.toml).
 // kWindowPass: now BossSa_WindowPass (symbols.toml).
 
 }  // namespace at

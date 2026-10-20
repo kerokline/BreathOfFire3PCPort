@@ -96,7 +96,7 @@ constexpr U kComboTimer = 0x6BC710;    // u8 x 4: each sequence's frames left
 // kPoseWas: now Effect1e_PoseWas (symbols.toml). u8 (E1E's)
 // kPose: now Effect1e_Pose (symbols.toml). u8 (E1E's)
 // kBiteHeld: now Fish_Nibbling (symbols.toml). u8: a fish is nibbling (Fish_Swim sets, Fish_Settle clears)
-constexpr U kHoldFlag = 0x903850;      // u8 (E1E reads it after LeaderPanel_HoldTest)
+// kHoldFlag: now DamageScratch (symbols.toml). u8 (E1E reads it after LeaderPanel_HoldTest)
 constexpr U kPoolWordData = 0x803642;  // u16: MessagePools offset of the data page's title
 constexpr U kPoolWordRule = 0x803660;  // u16: the rule page's (read as a dword & 0xFFFF)
 constexpr U kPoolWordStage1 = 0x803600;  // u16 (read as a dword & 0xFFFF)

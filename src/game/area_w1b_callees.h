@@ -41,7 +41,7 @@ constexpr U kTailTimer = 0x9039F6;        // u16: area 42's countdown in frames 
 // kLeaderZ: now ObjTrio[0x38] (symbols.toml).
 // kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: Character_IndexById's index
 // kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
-constexpr U kFoundSlot = 0x903850;        // a found slot (word or byte, as each writer stores it)
+// kFoundSlot: now DamageScratch (symbols.toml). a found slot (word or byte, as each writer stores it)
 // kCameraAngle1: now Camera_Angles[1] (symbols.toml). Camera_Angles[1]
 // kCameraAngle2: now Cond_AngleFB (symbols.toml). Camera_Angles[2] (Cond_AngleFB's low half)
 constexpr U kTextBuffer = 0x904BA0;       // area 42's time string, by Crt_sprintf

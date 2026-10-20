@@ -54,7 +54,7 @@ using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
 // kStep3: now Field_DirectionSteps[6] (symbols.toml).
 // kStep5: now Field_DirectionSteps[0xa] (symbols.toml). rows 3 and 5, read by address
-constexpr U kSloped = 0x903850;                        // DamageScratch's first byte: AreaMap_Slope's "sloped" flag
+// kSloped: now DamageScratch (symbols.toml). DamageScratch's first byte: AreaMap_Slope's "sloped" flag
 // kObjectFlag: now Sprite_Objects[0x80] (symbols.toml). Sprite_Objects + 0x80
 // kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml). Sprite_ObjectsExtra + 0x80
 constexpr U kObjectStride = 0xA4;

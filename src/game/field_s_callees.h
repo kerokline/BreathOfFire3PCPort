@@ -46,7 +46,7 @@ constexpr std::uint32_t kPartyList = 0x904062;        // 3 bytes: the party's me
 constexpr std::uint32_t kPartyList2 = 0x904065;       // 3 bytes: the second list
 // kLoneParty: now AreaW3c_CampFlag (symbols.toml). u8: non-zero: the party reloads as one member
 constexpr std::uint32_t kSharedList = 0x904574;       // 128 bytes: the shared ability list (AbilityList_Add's `shared`)
-constexpr std::uint32_t kRecords = 0x903A70;          // CharacterRecords, 8 of 0xA4
+// kRecords: now CharacterRecords (symbols.toml). CharacterRecords, 8 of 0xA4
 constexpr std::uint32_t kRecordStride = 0xA4;
 constexpr std::uint32_t kObjStride = 0x14C;           // ObjTrio's records (Field_Members is +0x148 of each)
 constexpr std::uint32_t kAbilityRecords = 0x65C4C8;   // Ability_Records, 24 bytes each (+0x12 the byte sorted on, +0x16 the help)

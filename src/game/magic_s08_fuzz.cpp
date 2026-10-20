@@ -253,7 +253,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kFormIndex: now BattlePhases_B89 (symbols.toml).
 // kWardPool: now WardMote_Pool (symbols.toml).
 // kTrails: now EvilEyeBeam_Trails (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kAbility = 0x904B80;
+// kScratch: now DamageScratch (symbols.toml).
+constexpr std::uint32_t kAbility = 0x904B80;
 constexpr unsigned kTrailBytes = 0x600;
 
 // Set by the seed for the functions each matters to.

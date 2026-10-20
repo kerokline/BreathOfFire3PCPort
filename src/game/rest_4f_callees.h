@@ -76,7 +76,7 @@ constexpr unsigned kRecordCount = 12;                 // the eleven records and 
 constexpr std::uint32_t kChapterCount = 0x903848;     // the chapter's count: kind 9's last open adds one
 constexpr std::uint32_t kChapterByte4A = 0x90384A;    // compared by kind 8's lines (0x32, 0x34)
 constexpr unsigned kObjectCount = 30;                 // Sprite_Objects: kind 8's object by +6
-constexpr std::uint32_t kExtra0 = 0x802000;           // Sprite_ObjectsExtra[0]: kind 0xB's point and angles
+// kExtra0: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra[0]: kind 0xB's point and angles
 constexpr std::uint32_t kKind0BOffset = 0x653AAC;     // two s8: kind 0xB's start x, y offsets from the extra record's word +0x2E / +0x30
 constexpr std::uint32_t kKind0BRise = 0x653AB0;       // s8 by +9 >> 2: kind 0xB's rise per frame
 constexpr rdata::Const kKind0BStepX{0x5C41C8};      // 4.0f
@@ -85,7 +85,7 @@ constexpr rdata::Const kKind0BStepY{0x5C41C0};      // 2.0f
 // +0x25.., +0x2A, +0x49.. the sprite fields copied; the word 0x905E62 compared
 // with 0x38; the CLUT shadow 0x80F580 (64 bytes a palette), palette 0x7B
 // (0x811440) the record's own.
-constexpr std::uint32_t kLeader = 0x802D40;
+// kLeader: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kKind02Word = 0x905E62;
 // kClutShadow: now Gfx_ClutStrip (symbols.toml).
 constexpr std::uint32_t kClut7B = 0x811440;

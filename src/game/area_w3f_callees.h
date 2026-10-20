@@ -37,7 +37,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The slot byte area 145's effect spawns keep at DamageScratch (0x903850)
 // and the byte after it, where area 145's handler 0 keeps a record index.
-constexpr std::uint32_t kSlotScratch = 0x903850;
+// kSlotScratch: now DamageScratch (symbols.toml).
 constexpr std::uint32_t kRecordIndex = 0x903851;
 // The story flags (Flags_Set / Flags_Test's bank), Cond_Flags row 13 (the
 // row area 145's cell hook tests: 0x903F90 + 8 * 13), the row pointer the

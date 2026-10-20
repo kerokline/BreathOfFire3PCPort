@@ -272,7 +272,7 @@ alignas(16) unsigned char g_packets[0x200];
 unsigned char* PacketAt(unsigned k) { return g_packets + (k & 3) * 0x40; }
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now DamageScratch (symbols.toml).
 const mh::Region kRegions[] = {
     {DamageScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},
