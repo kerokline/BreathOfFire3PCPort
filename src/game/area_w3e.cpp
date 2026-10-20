@@ -633,7 +633,7 @@ extern "C" void __cdecl Area141_MoveToX45(void) {
     MoveScript_Object[7] = static_cast<unsigned char>(d < 0 ? -d : d);
     Sprite_Current[8] = 7;
     unsigned char* const cur = Sprite_Current;
-    if (cur == Sprite_Kind2) {
+    if (cur == rv::Bytes(&Sprite_Kind2)) {
         AH_CALL(MoveCmd_MoveKind2)(cur[8]);
         return;
     }

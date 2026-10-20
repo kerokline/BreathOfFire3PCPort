@@ -486,7 +486,7 @@ extern "C" void __cdecl Area108_TailPlace(void) {
     case 1:
         if (Field_Kind2Hold != 0) return;
         AH_CALL(Kind2_Place)(static_cast<unsigned char>(Extra(1)[0x83] - 1));
-        Sprite_Kind2[0x84] = 4;
+        Sprite_Kind2.speed = 4;
         B(at::kCounter3) = 1;
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
         return;
@@ -662,7 +662,7 @@ extern "C" void __cdecl Area111_AttachAtLeaderCell(void) {
     AH_CALL(MoveCmd_Attach)(object, 7, block, slot, 0x10);
     rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, position);
     Sprite_Current[8] = static_cast<unsigned char>(Extra(block)[8] & 7);
-    Sprite_Kind2[8] = Sprite_Current[8];
+    Sprite_Kind2.direction = Sprite_Current[8];
 }
 
 // original 0x417890 (area 111 +0x3C[3]; PSX 0x801F3768): counter 3 = 0x10 <<

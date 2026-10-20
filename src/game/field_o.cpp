@@ -872,8 +872,8 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Start(unsigned char* object, signed
     Sc()[0xA] = static_cast<unsigned char>(Idiv(0x10, speed, "MoveCmd_OpE9Start"));
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sc())->step_y, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(c))) << 8));
     if (SH_CALL(MoveScript_ObjectKind)() == 2) {
-        Field_Kind2Z = static_cast<long>(static_cast<U>(sb) << 15) + rv::As<records::SpriteHead>(Sprite_Kind2)->z;
-        Field_Kind2X = static_cast<long>(static_cast<U>(sa) << 15) + rv::As<records::SpriteHead>(Sprite_Kind2)->x;
+        Field_Kind2Z = static_cast<long>(static_cast<U>(sb) << 15) + Sprite_Kind2.z;
+        Field_Kind2X = static_cast<long>(static_cast<U>(sa) << 15) + Sprite_Kind2.x;
         MoveScript_F3Divisor = static_cast<unsigned short>(speed << 3);
         MoveScript_FAWord = 0;
         Sc()[4] = 2;
@@ -955,7 +955,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed
                                                    unsigned short d, unsigned char, unsigned char f) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(Sc())->height_whole, rv::As<records::SpriteHead>(Sc())->height_whole + static_cast<U>(rv::As<records::SpriteHead>(Sc())->step_y >> 8));
     rv::As<records::SpriteHead>(Sc())->step_y = static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(Sc())->step_y) + static_cast<U>(static_cast<short>(d)));
-    SH_CALL(MapView_SetElevation)(rv::As<records::SpriteHead>(Sprite_Kind2)->height_whole);
+    SH_CALL(MapView_SetElevation)(Sprite_Kind2.height_whole);
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
     const long ground = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     records::SpriteHead* sc = rv::As<records::SpriteHead>(Sc());

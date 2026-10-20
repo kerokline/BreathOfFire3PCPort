@@ -757,8 +757,11 @@ note = "count is the size of a save file, 0x12B0 - a lower bound on the buffer, 
 [[data]]
 pc = 0x929F40
 name = "Save_Directory"
+ctype = "records::SaveDirEntry"
+count = 16
 status = "evidence"
 evidence = "16 entries of 0x18 bytes: file name at +0, file size at +0x14. Filled only by Save_ListFiles 0x4548B0, read only by Save_ReadSummaries 0x588DC0 (pe_xref.py: two references)."
+note = "Typed (typed-data round stage C4, 2026-10-19) as records::SaveDirEntry x16: the evidence's sixteen entries of 0x18, name at +0 and size at +0x14 (records.h SaveDirEntry; docs/save-files.md 2)."
 
 # ---------------------------------------------------------------------------
 # Task system - cooperative coroutines
@@ -3617,10 +3620,10 @@ evidence = "disasm 2026-09-22: flow op 0F takes its animation from byte b1 * 11 
 [[data]]
 pc = 0x7E0940
 name = "Sprite_Kind2"
-ctype = "unsigned char"
-count = 164
+ctype = "records::SpriteObject"
 status = "hypothesis"
 evidence = "disasm 2026-09-22: the one object MoveScript_ObjectKind calls kind 2. MoveScript_Flow op 0D writes its +0x34..+0x3E directly (0x7E0974..0x7E097E) where other kinds go through Sprite_Current, and op F3 its +0x14 (0x7E0954) and reads +0x87 (0x7E09C7). 0x5730E6 runs a script with 0x7E09C0 (its +0x80) as the script context. What it is in the game is unread; 164 = 0xA4, the sprite object size."
+note = "Typed (typed-data round stage C4, 2026-10-19) as one records::SpriteObject (the macro is the record, `Sprite_Kind2.speed`), from 164 bytes: MoveScript_Flow op 0D's +0x34..+0x3E, op F3's +0x14 and +0x87, 0x5730E6's script context at +0x80 are the sprite object's fields there. Its last four bytes +0xA0..+0xA3 lie on DrawItemPool_Free's first two words (0x7E09E0, filled 0, 1 by its initialisers), as the 164-byte entry did: none of our readers of the kind-2 object reach past +0x9F (the C4 sites)."
 
 [[data]]
 pc = 0x937F8C
@@ -107049,18 +107052,20 @@ evidence = "read 2026-10-03 (round thirteen group E4E): EffectKindA9_Run 0x491C6
 [[data]]
 pc = 0x6762B0
 name = "EffectKindA0_Sparks"
-ctype = "unsigned char"
-count = 384
+ctype = "records::EffectGlowSpark"
+count = 16
 status = "evidence"
 evidence = "read 2026-10-03 (round thirteen group E4E): kind 0xA0's sixteen sparks of 0x18 (EffectKind64's spark form: +0 in use, +2 life, +4..+0xF point, +0x14 size, +0x16 / +0x17 shades). Written by EffectKindA0_ClearSparks, _SpawnSpark, _StepSparks; read by EffectKind64_DrawSpark through _StepSparks. docs/effect_4e.md section 3."
+note = "Typed (typed-data round stage C4, 2026-10-19) as records::EffectGlowSpark x16, from 384 bytes: the evidence's sixteen sparks of 0x18 and their fields are the struct's (records_effect.h EffectGlowSpark, from docs/effect_4e.md 3)."
 
 [[data]]
 pc = 0x676430
 name = "EffectKindA0_Shards"
-ctype = "unsigned char"
-count = 1408
+ctype = "records::EffectShard"
+count = 32
 status = "evidence"
 evidence = "read 2026-10-03 (round thirteen group E4E): kind 0xA0's 32 shards of 0x2C (EffectKind64's shard form: point, two edge SVECTORs +0x10 / +0x18, angles +0x20..+0x25, speed +0x28, shade +0x2A), two runs of sixteen (the second at 0x6766F0). Written by EffectKindA0_InitShard, _Rise, _DrawShards; read by EffectKindA0_DrawShard. SuperComboHit_Pool begins after it at 0x6769C0. docs/effect_4e.md section 3."
+note = "Typed (typed-data round stage C4, 2026-10-19) as records::EffectShard x32, from 1408 bytes: the evidence's 32 shards of 0x2C and their fields are the struct's (records_effect.h EffectShard)."
 
 # --- round thirteen group E4B (effect_4b.cpp): 0x489030..0x48B1FC, docs/effect_4b.md ---
 

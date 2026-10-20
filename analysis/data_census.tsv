@@ -8671,7 +8671,7 @@ site	src/game/event_script.cpp	70	record	SetWord	At(bof3::addr::DamageScratch) +
 site	src/game/event_script.cpp	353	record	SetWord	Field_ActiveMember + 0x8A	-	base=Field_ActiveMember	-	-	-	0
 site	src/game/event_script.cpp	354	record	SetWord	Field_ActiveMember + 0x9C	-	base=Field_ActiveMember	-	-	-	0
 site	src/game/event_script.cpp	456	record	Dword	entry + 4	-	param	-	-	-	0
-site	src/game/event_script_fuzz.cpp	268	record	SetWord	At(bof3::addr::DamageScratch) + 2	-	via=At	-	-	-	1
+site	src/game/event_script_fuzz.cpp	269	record	SetWord	At(bof3::addr::DamageScratch) + 2	-	via=At	-	-	-	1
 site	src/game/field_blocked.cpp	112	record	Long	object + at	-	-	-	-	-	0
 site	src/game/field_blocked.cpp	335	record	SetWord	Sprite_Current + 0x3E	-	base=Sprite_Current	-	-	-	0
 site	src/game/field_blocked.cpp	336	record	SetLong	g_current_object + 0x34 + (h >> 20) % 2 * 4	-	-	-	-	-	0
@@ -14029,16 +14029,16 @@ site	src/game/move_cmds.cpp	223	record	SetLong	k2 + kK2Z	-	via=Kind2	-	-	-	0
 site	src/game/move_cmds.cpp	225	record	SetWord	k2 + kK2Height	-	via=Kind2	-	-	-	0
 site	src/game/move_cmds.cpp	272	record	Word	rv::Bytes(sprite) + 0x3E	-	via=Bytes	-	-	-	0
 site	src/game/move_cmds.cpp	445	global	At	kCounters	0x903848	-	none	-	-	0
-site	src/game/move_cmds_fuzz.cpp	143	record	SetWord	Sprite_Current + 0x3E	-	base=Sprite_Current	-	-	-	1
-site	src/game/move_cmds_fuzz.cpp	436	record	SetLong	s + 0x10	-	-	-	-	-	1
-site	src/game/move_cmds_fuzz.cpp	436	record	Long	s + 0xC	-	-	-	-	-	1
-site	src/game/move_cmds_fuzz.cpp	438	record	At	Address(Sprite_DirectionAngles) + 6	-	via=Address	-	-	-	1
-site	src/game/move_cmds_fuzz.cpp	439	record	SetLong	s + 0x6C	-	-	-	-	-	1
-site	src/game/move_cmds_fuzz.cpp	459	record	Long	s + 0x34	-	-	-	-	-	1
-site	src/game/move_cmds_fuzz.cpp	460	record	Long	s + 0x38	-	-	-	-	-	1
-site	src/game/move_cmds_fuzz.cpp	511	record	SetWord	s + 0x58	-	-	-	-	-	1
-site	src/game/move_cmds_fuzz.cpp	600	global	At	kScaleAt	0x5c4658	-	exact	MoveCmds_Scale	double	1
-site	src/game/move_cmds_fuzz.cpp	601	global	At	kInversePiAt	0x5c4650	-	exact	MoveCmds_InversePi	double	1
+site	src/game/move_cmds_fuzz.cpp	144	record	SetWord	Sprite_Current + 0x3E	-	base=Sprite_Current	-	-	-	1
+site	src/game/move_cmds_fuzz.cpp	437	record	SetLong	s + 0x10	-	-	-	-	-	1
+site	src/game/move_cmds_fuzz.cpp	437	record	Long	s + 0xC	-	-	-	-	-	1
+site	src/game/move_cmds_fuzz.cpp	439	record	At	Address(Sprite_DirectionAngles) + 6	-	via=Address	-	-	-	1
+site	src/game/move_cmds_fuzz.cpp	440	record	SetLong	s + 0x6C	-	-	-	-	-	1
+site	src/game/move_cmds_fuzz.cpp	460	record	Long	s + 0x34	-	-	-	-	-	1
+site	src/game/move_cmds_fuzz.cpp	461	record	Long	s + 0x38	-	-	-	-	-	1
+site	src/game/move_cmds_fuzz.cpp	512	record	SetWord	s + 0x58	-	-	-	-	-	1
+site	src/game/move_cmds_fuzz.cpp	601	global	At	kScaleAt	0x5c4658	-	exact	MoveCmds_Scale	double	1
+site	src/game/move_cmds_fuzz.cpp	602	global	At	kInversePiAt	0x5c4650	-	exact	MoveCmds_InversePi	double	1
 site	src/game/move_groups.cpp	218	record	SetWord	object + 8	-	param	-	-	-	0
 site	src/game/move_groups.cpp	233	record	SetWord	object + 8	-	param	-	-	-	0
 site	src/game/move_groups.cpp	241	record	SetWord	object + 8	-	param	-	-	-	0
@@ -17550,14 +17550,14 @@ site	src/game/save_menu.cpp	214	record	Long	chunk + 8	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	215	record	At	chunk + 0x10	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	215	record	Long	chunk + 4	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	263	record	PutLong	base + i * 4	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	299	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	-	0
-site	src/game/save_menu.cpp	300	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	-	0
+site	src/game/save_menu.cpp	299	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
+site	src/game/save_menu.cpp	300	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
 site	src/game/save_menu.cpp	300	global	At	at::kListPattern	0x65289c	-	none	-	-	0
 site	src/game/save_menu.cpp	315	record	Byte	dir + n * at::kDirectoryBytes + 7	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	322	record	At	dir + n * at::kDirectoryBytes	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	334	global	Long	at::kStaging	0x92a0e0	-	exact	Save_Staging	unsigned char	0
 site	src/game/save_menu.cpp	334	record	PutLong	Addr(summary) + i * 4	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	345	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	-	0
+site	src/game/save_menu.cpp	345	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
 site	src/game/save_menu.cpp	345	global	At	at::kSummaries	0x905bc0	-	none	-	-	0
 site	src/game/save_menu.cpp	366	record	PutWord	base + i * 2	-	-	-	-	-	0
 site	src/game/save_menu.cpp	366	record	Word	base + i * 2 - 0x4000	-	-	-	-	-	0
@@ -17706,7 +17706,7 @@ site	src/game/save_menu_fuzz.cpp	915	global	PutByte	at::kCharRecords	0x903a70	-	
 site	src/game/save_menu_fuzz.cpp	916	global	PutByte	at::kCharRecords	0x903a70	-	none	-	-	1
 site	src/game/save_menu_fuzz.cpp	935	global	-	at::kCharRecords	0x903a70	-	none	-	-	1
 site	src/game/save_menu_fuzz.cpp	966	global	PutByte	at::kSummaries	0x905bc0	-	none	-	-	1
-site	src/game/save_menu_fuzz.cpp	968	global	PutByte	at::kDirectory	0x929f40	-	exact	Save_Directory	-	1
+site	src/game/save_menu_fuzz.cpp	968	global	PutByte	at::kDirectory	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	1
 site	src/game/save_menu_fuzz.cpp	974	global	PutLong	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	1
 site	src/game/save_menu_fuzz.cpp	986	global	PutLong	at::kStreamTables	0x6653b0	-	none	-	-	1
 site	src/game/save_menu_fuzz.cpp	1004	global	PutByte	at::kCounter	0x929f04	-	none	-	-	1
@@ -20437,7 +20437,7 @@ const	kAreaAskedZ	0x160000	value	1	src/game/mode_rest_callees.h:45(mode_rest::at
 const	kTrio2Line	0x340000	value	1	src/game/effect_4a_callees.h:35(effect_4a::at)	-	-	-	-	at
 const	kExeLo	0x400000	data	1	src/hook/statehash.cpp:79(bof3::(anon))	-	-	none	-	module
 const	kImageBase	0x400000	data	1	src/hook/exe_layout.h:20(bof3::exe_layout)	-	-	none	-	module
-const	kImageLo	0x400000	data	1	src/game/band_census.cpp:41(band_census::(anon))	-	-	none	-	module
+const	kImageLo	0x400000	data	1	src/game/band_census.cpp:42(band_census::(anon))	-	-	none	-	module
 const	kTextLo	0x401000	code	4	src/game/effect_1g_callees.h:43(effect_1g::at);src/game/effect_2g_callees.h:54(effect_2g::at);src/game/field_e2_callees.h:140(field_e2::at);src/game/field_o_callees.h:72(field_o::at)	Area00_ChoiceVars3And6	func	-	-	at
 const	kA117Choice2Cases	0x41a080	code	1	src/game/area_w3a_callees.h:137(area_w3a::at)	-	-	-	-	at
 const	kArea141a	0x4204d0	code	1	src/game/scena_sc13_callees.h:144(scena_sc13::at)	Area141_PlacePairAnimated	func	-	-	at
@@ -21921,8 +21921,8 @@ const	kShardCursor	0x67626c	data	1	src/game/effect_3c_callees.h:31(effect_3c::at
 const	kSparkCursor	0x676274	data	1	src/game/effect_3c_callees.h:33(effect_3c::at)	Effect3c_SparkCursor	data	exact	unsigned long	at
 const	kSoundIndex	0x676280	data	1	src/game/effect_4b_callees.h:22(effect_4b::at)	Effect4b_SoundIndex	data	exact	unsigned char	at
 const	kCount	0x67628c	data	1	src/game/effect_4b_callees.h:29(effect_4b::at)	Effect4b_Count	data	exact	unsigned short	at
-const	kShards	0x676430	data	1	src/game/effect_4e_callees.h:35(effect_4e::at)	EffectKindA0_Shards	data	exact	unsigned char	at
-const	kShardsB	0x6766f0	data	1	src/game/effect_4e_callees.h:36(effect_4e::at)	-	-	inside	unsigned char	at
+const	kShards	0x676430	data	1	src/game/effect_4e_callees.h:35(effect_4e::at)	EffectKindA0_Shards	data	exact	records::EffectShard	at
+const	kShardsB	0x6766f0	data	1	src/game/effect_4e_callees.h:36(effect_4e::at)	-	-	inside	records::EffectShard	at
 const	kPixIndex	0x6769ba	data	1	src/game/rest_3f_callees.h:45(rest_3f::at)	Rest3f_PixIndex	data	exact	unsigned char	at
 const	kSparklePool	0x684790	data	2	src/game/battle_items_callees.h:35(battle_items::at);src/game/magic_fx_reached_callees.h:68(magic_fx_reached::at)	-	-	none	-	at
 const	kSparkleCurrent	0x685d90	data	1	src/game/magic_fx_reached_callees.h:71(magic_fx_reached::at)	BattleItems_SparkleCurrent	data	exact	unsigned long	at
@@ -22098,7 +22098,7 @@ const	kTintsEnd	0x7e0880	data	1	src/game/battle_sprites_callees.h:57(battle_spri
 const	kPassFlags	0x7e0918	data	1	src/game/area_w2e_callees.h:93(area_w2e::at)	Draw_PassFlags	data	exact	unsigned char	at
 const	kReturnX	0x7e091c	data	1	src/game/rest_3g_callees.h:67(rest_3g::at)	-	-	inside	unsigned char	at
 const	kReturnZ	0x7e0920	data	1	src/game/rest_3g_callees.h:68(rest_3g::at)	-	-	inside	unsigned char	at
-const	kFzKind2Sprite	0x7e0974	data	1	src/game/area_w3g_fuzz.cpp:69(area_w3g::(anon))	-	-	inside	unsigned char	module
+const	kFzKind2Sprite	0x7e0974	data	1	src/game/area_w3g_fuzz.cpp:69(area_w3g::(anon))	-	-	inside	records::SpriteObject	module
 const	kEffects	0x7e11e0	data	7	src/game/scena_sc12_callees.h:52(scena_sc12::at);src/game/scena_sc13_callees.h:59(scena_sc13::at);src/game/scena_sc5_callees.h:69(scena_sc5::at);src/game/scena_sc6_callees.h:71(scena_sc6::at);src/game/scena_sc9a_callees.h:54(scena_sc9a::at);src/game/scena_sc9b_callees.h:52(scena_sc9b::at);src/game/scenario_harness.h:76(scenario_harness::at)	Effect_Objects	data	exact	unsigned char	at
 const	kRecord0	0x7e11e0	data	1	src/game/effect_1a_callees.h:83(effect_1a::at)	Effect_Objects	data	exact	unsigned char	at
 const	kEff0StepX	0x7e11ec	data	1	src/game/effect_1e_callees.h:48(effect_1e::at)	-	-	inside	unsigned char	at
@@ -23027,7 +23027,7 @@ const	kObject	0x929f0c	data	1	src/game/shop_states_callees.h:28(shop_states::at)
 const	kMessageEnd	0x929f0f	data	1	src/game/field_s_callees.h:39(field_s::at)	AreaW3c_Load0F	data	exact	unsigned char	at
 const	kElevation	0x929f1c	data	1	src/game/field_e2_callees.h:67(field_e2::at)	MapView_Elevation	data	exact	long	at
 const	kElevation	0x929f1c	data	1	src/game/scena_sc15.cpp:123((anon))	MapView_Elevation	data	exact	long	module
-const	kDirectory	0x929f40	data	1	src/game/save_menu_callees.h:93(save_menu::at)	Save_Directory	data	exact	-	at
+const	kDirectory	0x929f40	data	1	src/game/save_menu_callees.h:93(save_menu::at)	Save_Directory	data	exact	records::SaveDirEntry	at
 const	kCorner	0x92a0c0	data	1	src/game/scena_sc0_callees.h:54(scena_sc0)	MapView_CornerPtr	data	exact	unsigned char *	module
 const	kSavedSprite	0x92a0c0	data	1	src/game/move_cmds_callees.h:23(move_cmds)	MapView_CornerPtr	data	exact	unsigned char *	module
 const	kStaging	0x92a0e0	data	2	src/game/rest_2c_callees.h:71(rest_2c::at);src/game/save_menu_callees.h:55(save_menu::at)	Save_Staging	data	exact	unsigned char	at
@@ -23278,7 +23278,7 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count distinct_addresses_symbol_data	324
 #count distinct_addresses_symbol_block	5
 #count distinct_addresses_symbol_func	0
-#count distinct_addresses_symbol_data_no_ctype	35
+#count distinct_addresses_symbol_data_no_ctype	34
 #count distinct_addresses_name_missing	947
 #count distinct_addresses_name_missing_inside_entry	87
 #count module_constant_definitions_data	851
@@ -23295,5 +23295,5 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count stride_values	34
 #count static_assert_offsetof_sizeof	735
 #count symbols_data	3256
-#count symbols_data_ctype	3171
+#count symbols_data_ctype	3172
 #count symbols_data_count	2411

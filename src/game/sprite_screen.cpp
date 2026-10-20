@@ -197,7 +197,7 @@ constexpr std::uint32_t kFtol = 0x5B9550;
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Kind2), Sprite_Kind2_count},
+    {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
     {Address(Sprite_DrawList), 40 * 4},
     {Address(&Sprite_DrawListCount), 1},
     {Address(Sprite_OverlayList), 30 * 4},
@@ -206,7 +206,7 @@ const Region kRegions[] = {
     {Address(&Draw_OtSlot), 1},
     {Address(&Draw_SortOnX), 1},
 };
-constexpr unsigned kRegionBytes = Sprite_Kind2_count + 160 + 1 + 120 + 1 + 4 + 1 + 1;
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 160 + 1 + 120 + 1 + 4 + 1 + 1;
 
 struct State {
     unsigned char memory[kRegionBytes];
@@ -251,7 +251,7 @@ void SelfTest(Fn theirs_update, Fn theirs_overlay) {
         const bool overlay_only = round % 4 == 3;
         auto* bytes = reinterpret_cast<unsigned char*>(&input);
         for (unsigned i = 0; i < offsetof(State, log); ++i) bytes[i] = static_cast<unsigned char>(Next());
-        input.current = Next() % 5 ? g_sprite : Sprite_Kind2;
+        input.current = Next() % 5 ? g_sprite : rv::Bytes(&Sprite_Kind2);
         g_seed = Next();
         Apply(input);
         unsigned char* const s = Sprite_Current;
@@ -273,10 +273,10 @@ void SelfTest(Fn theirs_update, Fn theirs_overlay) {
             (pass ? (overlay_only ? &Sprite_QueueOverlay : &Sprite_UpdateScreen) : (overlay_only ? theirs_overlay : theirs_update))();
             Capture(pass ? our_out : their_out);
         }
-        const auto key = static_cast<std::int16_t>(Word((their_out.current == g_sprite ? their_out.sprite : Sprite_Kind2) + 0x32));
+        const auto key = static_cast<std::int16_t>(Word((their_out.current == g_sprite ? their_out.sprite : rv::Bytes(&Sprite_Kind2)) + 0x32));
         in_range += !overlay_only && !(their_out.current[0] & 0x80) ? 1 : 0;
         (void)key;
-        listed += their_out.memory[Sprite_Kind2_count + 160] != input.memory[Sprite_Kind2_count + 160];
+        listed += their_out.memory[sizeof(records::SpriteObject) + 160] != input.memory[sizeof(records::SpriteObject) + 160];
         if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0 && ++bad <= 12)
             bof3::Log("shadow      sprite_screen self-test MISMATCH: round %u, %s, log %u / %u", round,
                       overlay_only ? "Sprite_QueueOverlay" : "Sprite_UpdateScreen", their_out.log_n, our_out.log_n);

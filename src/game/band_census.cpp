@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/wide_staging.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -333,7 +334,7 @@ void Identify(const unsigned char* s, int& who, int& index) {
     } else if (a >= trio && a < trio + kMembers * kMemberBytes && (a - trio) % kMemberBytes == 0) {
         who = kParty;
         index = static_cast<int>((a - trio) / kMemberBytes);
-    } else if (a == Address(Sprite_Kind2)) {
+    } else if (a == Address(rv::Bytes(&Sprite_Kind2))) {
         who = kKind2;
         index = 0;
     }

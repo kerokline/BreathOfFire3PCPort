@@ -515,7 +515,7 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
 // original 0x57B4E0: op Cx, 2 bytes - the kind-2 object's kind is the op's
 // high nibble (always 0xC), then Kind2_Place(op[1]) (PSX FUN_801A82B8).
 extern "C" void __cdecl EventOp_Cx(const unsigned char* op) {
-    Sprite_Kind2[6] = op[0] >> 4;
+    Sprite_Kind2.type = op[0] >> 4;
     g.kind2_place(op[1]);
 }
 

@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/event_script_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -642,7 +643,7 @@ void SelfTestPlacements() {
     unsigned char* const objects = Object(kFirstObject);
     const Region r[] = {R(objects, kObjects * 0xA4), R(Sprite_ObjectsExtra, 8 * 0xA4), R(MoveScript_PartyRecords, 0x1000),
                         R(At(bof3::addr::DamageScratch), 4), R(&Sprite_Current, 4), R(&Field_ActiveMember, 4),
-                        R(Sprite_Kind2, Sprite_Kind2_count), R(&Game_AreaNumber, 2), R(g_script, 0x40),
+                        R(rv::Bytes(&Sprite_Kind2), sizeof(records::SpriteObject)), R(&Game_AreaNumber, 2), R(g_script, 0x40),
                         R(g_entries), R(g_result)};
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);

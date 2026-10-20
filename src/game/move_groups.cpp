@@ -306,9 +306,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
     switch (p[0]) {
     case 0xD0: {   // place Sprite_Kind2 at Field_Kind2X / Z and ground it
         const long z = Field_Kind2Z, x = Field_Kind2X;
-        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->x, x);
-        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->z, z);
-        rv::Store<unsigned>(rv::As<records::SpriteHead>(Sprite_Kind2)->height_whole, static_cast<unsigned>(g.elevation(x, z)));
+        rv::Store<std::int32_t>(Sprite_Kind2.x, x);
+        rv::Store<std::int32_t>(Sprite_Kind2.z, z);
+        rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(g.elevation(x, z)));
         return value;
     }
     case 0xD1:   // D1 hi lo x s: sound hi:lo when the sprite's script reaches x
@@ -638,7 +638,7 @@ std::uint32_t Id(const void* p) {   // a pointer as the log keeps it
     const auto a = reinterpret_cast<std::uintptr_t>(p);
     if (p == g_sprite) return 1;
     if (p == g_object) return 2;
-    if (a == Address(Sprite_Kind2)) return 3;
+    if (a == Address(rv::Bytes(&Sprite_Kind2))) return 3;
     return static_cast<std::uint32_t>(a);
 }
 // A callee may move the position or turn the sprite: the handler must read them again.
@@ -818,7 +818,7 @@ const void* const kOurs[kGroupCount] = {
 // randomised every round and compared after both passes.
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Kind2), Sprite_Kind2_count},
+    {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
     {Address(ObjTrio), 0x40},
     {Address(Sprite_ObjectsExtra), 8 * 0xA4},   // the party objects and what a slot up to 7 reaches
     {Address(MoveScript_TintRecords), MoveScript_TintRecords_count},
@@ -833,7 +833,7 @@ const Region kRegions[] = {
     {Address(&Field_Kind2Hold), 1},
     {Address(&MapView_Elevation), 4},
 };
-constexpr unsigned kRegionBytes = Sprite_Kind2_count + 0x40 + 8 * 0xA4 + MoveScript_TintRecords_count +
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 0x40 + 8 * 0xA4 + MoveScript_TintRecords_count +
                                   MoveScript_PartyRecords_count + 12 + 8 + 2 + 2 + 2 + 1 + 2 + 1 + 4;
 
 struct State {
@@ -936,7 +936,7 @@ void SelfTest(void* const (&theirs)[kGroupCount]) {
         ++ops[op];
         ++per_group[k];
         SetPos(input.object, start);
-        input.current = Next() % 5 ? g_sprite : Sprite_Kind2;
+        input.current = Next() % 5 ? g_sprite : rv::Bytes(&Sprite_Kind2);
         // The party slot D4..D6 compute: every one of 0..7, so that D4's clamp
         // (above 4) and D5's bound (4 and up) are met; a few bytes into the
         // object sometimes, since the original divides, truncating. A uniform

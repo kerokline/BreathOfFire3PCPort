@@ -405,7 +405,7 @@ extern "C" void __cdecl Scena00_Run2(void) {
 // sprite and the kind-2 sprite 0x1E0000 back, 0x7E068A back 0x1E, the focus
 // to 0x6200, then the view shift (a tail jump in the original).
 extern "C" void __cdecl Scena00_Run3(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
@@ -811,7 +811,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
 // 0x20-frame pull (distance - 0x24 a frame); music 4 on the counter 0x24;
 // area 0x1F on 0x25.
 extern "C" void __cdecl Scena00_Run7(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
@@ -1000,7 +1000,7 @@ extern "C" void __cdecl Scena00_Steer(void) {
 // animating sprite 0 through Scena00_InputAnims), a random wobble of the
 // corner words, and at the end area 9 with ObjTrio 0's +0x24 bit 5 cleared.
 extern "C" void __cdecl Scena00_Run11(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     auto* const obj0 = rv::As<records::SpriteObject>(Sprite_Objects + 0 * sizeof(records::SpriteObject));
     auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));

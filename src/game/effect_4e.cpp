@@ -151,8 +151,8 @@ bool Tick() {
     return (was & 3) == 0;
 }
 
-unsigned char* Spark(unsigned i) { return EffectKindA0_Sparks + i * at::kSparkStride; }
-unsigned char* Shard(unsigned i) { return EffectKindA0_Shards + i * at::kShardStride; }
+unsigned char* Spark(unsigned i) { return rv::Bytes(EffectKindA0_Sparks) + i * at::kSparkStride; }
+unsigned char* Shard(unsigned i) { return rv::Bytes(&EffectKindA0_Shards[i]); }
 
 // The trail of EffectKind9C_DrawTrail that kind 0x9C's states 1..6 draw:
 // (Sprite_Current +0x34, +0xC, the byte +0x5D).

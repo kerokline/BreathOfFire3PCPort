@@ -11,6 +11,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -74,7 +75,7 @@ int __cdecl StubRatan2(float y, float x) {
 // (+0x83 +0x84) or reads (+0x85): a random value, so a store moved before the
 // call shows.
 void __cdecl StubContextReset(unsigned char* context) {
-    Record(3, context == Sprite_Kind2 + kK2Context);
+    Record(3, context == rv::Bytes(&Sprite_Kind2) + kK2Context);
     const std::uint32_t h = Hash();
     SetPos(context, h);
     context[3] = static_cast<unsigned char>(h >> 8);
@@ -241,7 +242,7 @@ const void* Ours(unsigned k) {
 // --- The state a round compares -------------------------------------------
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Kind2), Sprite_Kind2_count},
+    {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
     {Address(Sprite_Objects), Sprite_Objects_count},
     {Address(Sprite_ObjectsExtra), Sprite_ObjectsExtra_count},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
@@ -257,7 +258,7 @@ const Region kRegions[] = {
     {kStoryFlags, 4},
     {bof3::addr::DamageScratch, 4},             // AreaMap_Slope's answer byte
 };
-constexpr unsigned kRegionBytes = Sprite_Kind2_count + Sprite_Objects_count + Sprite_ObjectsExtra_count +
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + Sprite_Objects_count + Sprite_ObjectsExtra_count +
                                   MoveScript_PartyRecords_count + 2 + 4 + 8 + 4 + 7 + 1 + 0x12 + 4 + 1 + 4 + 4;
 
 struct State {
@@ -310,7 +311,7 @@ unsigned char Pick(std::initializer_list<unsigned> seeds) {
 
 // The pointers MoveScript_ObjectKind tells apart, each edge and its neighbour.
 std::uint32_t KindPointer() {
-    const std::uint32_t k2 = Address(Sprite_Kind2), trio = Address(ObjTrio);
+    const std::uint32_t k2 = Address(rv::Bytes(&Sprite_Kind2)), trio = Address(ObjTrio);
     const std::uint32_t objects = Address(Sprite_Objects), extra = Address(Sprite_ObjectsExtra);
     const std::uint32_t seeds[] = {k2, k2 - 1, k2 + 1, trio, trio + 1, trio + 0x14C, trio + 0x14B, trio + 0x298, trio + 0x299,
                                    objects, objects - 1, objects + Sprite_Objects_count - 1, objects + Sprite_Objects_count,
@@ -443,8 +444,8 @@ Args Generate(unsigned k, State& input) {
         x.a[0] = Address(g_context);
         break;
     case kMoveKind2: {
-        Sprite_Kind2[kK2Speed] = static_cast<unsigned char>(1 + Next() % 5);
-        Sprite_Kind2[kK2Steps] = static_cast<unsigned char>(Pick({1, 2, 0x7F, 0x80, 0xFF}) | 1);
+        Sprite_Kind2.speed = static_cast<unsigned char>(1 + Next() % 5);
+        Sprite_Kind2.move_steps = static_cast<unsigned char>(Pick({1, 2, 0x7F, 0x80, 0xFF}) | 1);
         // A stale divisor that divides: a store of it dropped then shows as a
         // count, not a fault.
         MoveScript_F3Divisor = static_cast<short>(1 + Next() % 0x80);

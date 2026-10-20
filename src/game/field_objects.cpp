@@ -441,14 +441,14 @@ constexpr unsigned kCount = 6;
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Kind2), Sprite_Kind2_count},
+    {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
     {Address(Sprite_ObjectsExtra), 8 * 0xA4},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
     {bof3::addr::DamageScratch, 4},
     {Address(&Field_Request), 1},
     {Address(Sprite_Objects), Sprite_Objects_count},   // what a handle names
 };
-constexpr unsigned kRegionBytes = Sprite_Kind2_count + 8 * 0xA4 + MoveScript_PartyRecords_count + 4 + 1 + Sprite_Objects_count;
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 8 * 0xA4 + MoveScript_PartyRecords_count + 4 + 1 + Sprite_Objects_count;
 
 struct State {
     unsigned char memory[kRegionBytes];
@@ -513,7 +513,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
         ++per[k];
         auto* bytes = reinterpret_cast<unsigned char*>(&input);
         for (unsigned i = 0; i < offsetof(State, log); ++i) bytes[i] = static_cast<unsigned char>(Next());
-        input.current = Next() % 5 ? g_sprite : Sprite_Kind2;
+        input.current = Next() % 5 ? g_sprite : rv::Bytes(&Sprite_Kind2);
         const unsigned slot = Next() % 8;
         input.active = At(Address(Sprite_ObjectsExtra) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
         input.area = static_cast<std::uint16_t>(Next() % Area_Descriptors_count);

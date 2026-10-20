@@ -471,7 +471,7 @@ SC13_EXPORT void __cdecl Scena13_SpawnPairB(void) { SpawnPair(Scena13_EventOps_a
 // original 0x562840: run 3, steps 0..5, 0xA..0xD, 0x14..0x18 (MSVC's
 // two-level switch: the byte table 0x562CD0 of 0x19, then 16 cases).
 SC13_EXPORT void __cdecl Scena13_Run3(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     switch (Step()) {
     case 0: {
         if (Counter(0) != 2) return;
@@ -2049,7 +2049,7 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
 // 0x56FCA0, and Sprite_ObjectsExtra record 0's +0x34 + 0x140000 with its
 // elevation +0x3E.
 SC13_EXPORT void __cdecl Scena14_ScrollView(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
     if (static_cast<std::uint32_t>(MapView_FocusX) != 0x77FF) return;
     const std::uint32_t kx = static_cast<std::uint32_t>(kind2->x);

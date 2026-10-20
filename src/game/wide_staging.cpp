@@ -1065,7 +1065,7 @@ void SelfTest() {
         Check(!Candidate(ObjTrio + 3 * 0x14C, field, index), "past the trio");
         Check(Candidate(Sprite_Objects + 29 * 0xA4, field, index) && field == 0x10, "object 29");
         Check(!Candidate(Sprite_Objects + 30 * 0xA4, field, index), "past object 29");
-        Check(!Candidate(Sprite_Kind2, field, index), "the kind-2 object is not hidden");
+        Check(!Candidate(rv::Bytes(&Sprite_Kind2), field, index), "the kind-2 object is not hidden");
         Check(!Excepted(0, 0x10, 0), "the exception list starts empty");
     }
     // 5. Case zero's table: each script's two west walks add north, its east walk south; 3 fewer steps a walk.

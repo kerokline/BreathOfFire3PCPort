@@ -202,7 +202,7 @@ void Spawn5D() {
 // The kind-2 sprite moved: Field_Kind2X / Z and (with `sprite`) Sprite_Kind2's
 // +0x34 / +0x38.
 void Kind2At(std::int32_t x, std::int32_t z) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     Field_Kind2X = static_cast<std::uint32_t>(x);
     kind2->x = static_cast<std::uint32_t>(x);
     Field_Kind2Z = static_cast<std::uint32_t>(z);
@@ -476,7 +476,7 @@ void GreyClut() {
 
 // Run 6's body; the run then calls Scena10_Shake on every way out.
 void Run6Body() {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     const unsigned char step = Step();   // the case the jump table picked
     switch (step) {
     case 0:

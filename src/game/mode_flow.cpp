@@ -333,9 +333,9 @@ extern "C" void __cdecl GameMode_Start(void) {
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x4040);
     const std::uint16_t area = FieldModes_Pending;
     At(0x905B82)[0] = 0;   // Field_EdgeBits + 2
-    rv::As<records::SpriteHead>(Sprite_Kind2)->state = 0;   // Sprite_Kind2 + 1..3
-    rv::As<records::SpriteHead>(Sprite_Kind2)->step = 0;
-    rv::As<records::SpriteHead>(Sprite_Kind2)->state3 = 0;
+    Sprite_Kind2.state = 0;                                 // Sprite_Kind2 + 1..3
+    Sprite_Kind2.step = 0;
+    Sprite_Kind2.state3 = 0;
     EventBattle_Flags = 0;
     EventBattle_Id = 0;
     Area189_StepsSinceEvent = 0;   // the byte after Field_MemberCount

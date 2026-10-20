@@ -1230,7 +1230,7 @@ SC15_EXPORT void __cdecl Scena15_ClutToGrey(unsigned snap) {
 // the end area 0xC7 at (0xB60000, 0x128000), Field_ScriptFlags bit 0x0800 off,
 // the run ended and Field_StatusBits |= 0x80 (0x56D6F0).
 SC15_EXPORT void __cdecl Scena15_Run6(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Transition_Busy != 0) break;

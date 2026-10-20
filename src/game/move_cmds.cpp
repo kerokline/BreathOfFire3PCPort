@@ -42,7 +42,7 @@ std::int32_t Sub(std::int32_t a, std::int32_t b) {
 std::int32_t Mul(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b));
 }
-unsigned char* Kind2() { return Sprite_Kind2; }
+unsigned char* Kind2() { return rv::Bytes(&Sprite_Kind2); }
 
 // Sprite_Current may be a Sprite_Objects record or another family whose
 // first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
@@ -460,7 +460,7 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
 // As the original has it: anything else returns the pointer itself.
 extern "C" int __cdecl MoveScript_ObjectKind(void) {
     const std::uint32_t sprite = Address(Sprite_Current);
-    if (sprite == Address(Sprite_Kind2)) return 2;
+    if (sprite == Address(rv::Bytes(&Sprite_Kind2))) return 2;
     const std::uint32_t trio = Address(ObjTrio);
     if (sprite == trio || sprite == trio + 0x14C || sprite == trio + 0x298) return 1;
     if (sprite >= Address(Sprite_Objects) && sprite < Address(Sprite_Objects) + Sprite_Objects_count) return 0;
