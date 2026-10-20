@@ -70,7 +70,7 @@ std::uint32_t ULong(const unsigned char* p) { return static_cast<std::uint32_t>(
 void SetULong(unsigned char* p, std::uint32_t v) { SetLong(p, static_cast<std::int32_t>(v)); }
 
 // 0x939AD8 and Sprite_Current, each re-read wherever the original re-reads it.
-unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 unsigned char* Sc() { return Sprite_Current; }
 // The enemy ops run on the enemy: Sprite_Current and 0x939AD8 (docs/enemy_ai_ops.md).
 

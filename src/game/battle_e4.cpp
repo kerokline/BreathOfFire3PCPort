@@ -68,7 +68,7 @@ unsigned char* Ptr(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + (member & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 unsigned char* CharRecord(unsigned index) { return At(CharacterRecords_addr + (index & 0xFF) * at::kCharStride); }
-unsigned char* MenuActor() { return Ptr(at::kMenuActor); }
+unsigned char* MenuActor() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return Ptr(at::kCommand); }

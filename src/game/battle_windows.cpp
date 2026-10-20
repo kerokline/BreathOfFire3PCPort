@@ -304,7 +304,7 @@ namespace {
 // acting member's +0x134 has bit 1, else 0x80.
 unsigned ArmShade(unsigned j) {
     if (j == 2 || j == 3) {
-        if (Ptr(at::kActor)[0x134] & 2) return 0x40;
+        if (reinterpret_cast<unsigned char*>(BattleE4_MenuActor)[0x134] & 2) return 0x40;
     }
     return 0x80;
 }

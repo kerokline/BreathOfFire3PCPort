@@ -76,7 +76,7 @@ unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return PtrAt(at::kCommandRecord); }
-unsigned char* Acting() { return PtrAt(at::kActing); }
+unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
 unsigned char* List() { return At(Window16_addr); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
 // the original has it - an index past the table reads the next one's.

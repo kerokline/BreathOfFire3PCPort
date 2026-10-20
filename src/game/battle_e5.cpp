@@ -124,7 +124,7 @@ extern "C" void __cdecl EnemyAI_SetRowDone(unsigned char* enemy, unsigned row, u
 // weapon +0x92 and its element byte (0x657463, 28 bytes a weapon) against
 // the mask's low byte. Anything else 0. al out.
 extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
-    if (static_cast<std::uint16_t>(rv::As<records::BattleEnemy>(Ptr(at::kCurrentEnemy))->hp_change) == 0) return 0;
+    if (static_cast<std::uint16_t>(BattleE3_CurrentEnemy->hp_change) == 0) return 0;
     const unsigned actor = B(at::kActor);
     const unsigned kind = B(at::kActingKind);
     if (kind == 4) {
@@ -463,7 +463,7 @@ const unsigned char* Line(unsigned id) { return BH_CALL(Msg_SystemPtr)(id); }
 void ShowLine(const unsigned char* text) {
     SetLong(At(at::kMsgText + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
 }
-unsigned char* Member() { return Ptr(at::kMenuActor); }
+unsigned char* Member() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
 void MarkMember() {
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
