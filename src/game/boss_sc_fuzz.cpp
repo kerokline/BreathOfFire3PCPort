@@ -247,14 +247,14 @@ void Seed(unsigned k) {
     switch (g_cur[k].base) {
     // --- the end and exit hooks: the win bit, the fight's bits, the scene byte
     case 0x439430: case 0x439900: case 0x43A480: case 0x43A560:
-        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82, 8, 0xA});
+        Mem(Battle_EndFlags_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82, 8, 0xA});
         break;
     case 0x43A190:
-        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
+        Mem(Battle_EndFlags_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
         Mem(BossSe_Script_addr)[0] = Byte({0, 0x40, 0xBF, 0x41});
         break;
     case 0x43A230:
-        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
+        Mem(Battle_EndFlags_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
         Mem(BossSe_Script_addr)[0] = Byte({0, 1, 0x40, 0x41, 0xBE, 0xFF});
         Mem(at::kMoveCounter)[0] = Byte({0x14, 0x14, 0x15, 0x13, 0x50, 0x94});
         break;

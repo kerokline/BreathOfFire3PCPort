@@ -484,7 +484,7 @@ void Seed(unsigned k) {
         break;
     }
     case 0x435C40:
-        Mem(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
+        Mem(Battle_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
         bh::SetRandHint(3);
         break;
     case 0x435C80:
@@ -504,7 +504,7 @@ void Seed(unsigned k) {
                     bh::Often() ? BH_PICK(0, 1, 0x270F, 0x2710, 0x2711, 0x10) : bh::Next());
         break;
     case 0x435E70: case 0x436070:
-        Mem(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
+        Mem(Battle_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
         break;
     case 0x435EF0:
         SetLong(Mem(at::kPartyCount), static_cast<std::int32_t>((bh::Next() & 0xFFFFFF00u) | Byte({3, 3, 2, 2, 1, 0, 4})));
@@ -542,7 +542,7 @@ void Disturb(U h) {
     case 1: Mem(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
     case 2: Mem(Window21_addr)[0] = b; break;
     case 3: Mem(BattleE5_GeneRow_addr)[0] = h & 0x1000000 ? 0xFF : b; break;
-    case 4: Mem(BattleE2_EnemiesLeft_addr)[0] = b; break;
+    case 4: Mem(Battle_EnemiesLeft_addr)[0] = b; break;
     default: Mem(at::kRoundFlags + 1)[0] = b; break;
     }
 }

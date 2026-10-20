@@ -97,7 +97,7 @@ void Disturb() {
     case 8: SetWord(At(Window16_Scroll_addr), v % 2 ? 0 : w); break;
     case 9: SetWord(At(Input_Pressed_addr), w); break;
     case 10: SetWord(At(v % 2 ? Field_CancelButtons_addr : Field_ConfirmButtons_addr), v % 3 == 0 ? 0 : 1u << (w % 16)); break;
-    case 11: B(BattleActorCopies_EnemyCount_addr) = static_cast<unsigned char>(v % 9); break;
+    case 11: B(Battle_EnemyCount_addr) = static_cast<unsigned char>(v % 9); break;
     case 12: B(at::kPartyCount) = static_cast<unsigned char>(v % 5); break;
     case 13: Cmd()[0] = static_cast<unsigned char>(v); break;
     case 14: g_list[w % sizeof g_list] = static_cast<unsigned char>(v % 4 == 0 ? 0x97 : v); break;
@@ -389,7 +389,7 @@ void SeedTarget() {
     static const unsigned char kTargets[] = {0, 1, 2, 3, 4, 10, 0x7F, 0x80, 0x81, 0xFF, 0xFE};
     if (Often()) Cmd()[0] = Pick(kTargets);
     static const unsigned char kCounts[] = {0, 1, 2, 3, 4, 5, 8, 0xFF};
-    if (Often()) B(BattleActorCopies_EnemyCount_addr) = Pick(kCounts);
+    if (Often()) B(Battle_EnemyCount_addr) = Pick(kCounts);
     if (Often()) B(at::kPartyCount) = Pick(kCounts);
 }
 

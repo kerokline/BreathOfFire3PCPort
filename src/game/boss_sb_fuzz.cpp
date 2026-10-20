@@ -58,7 +58,7 @@ unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 
 // The battle-end byte: its bits 0, 1, 2 and 3 each way.
 void SeedBattleEnd() {
-    Mem(BattleActions_BattleEnd_addr)[0] = Byte(bh::Often() ? BH_PICK(0, 1, 2, 3, 4, 5, 8, 9, 0xFC, 0xFD, 0xFE, 0xFF) : bh::Next());
+    Mem(Battle_EndFlags_addr)[0] = Byte(bh::Often() ? BH_PICK(0, 1, 2, 3, 4, 5, 8, 9, 0xFC, 0xFD, 0xFE, 0xFF) : bh::Next());
 }
 
 // The event hooks' reads: the actor, the command kind, the command's id (the
@@ -75,7 +75,7 @@ void SeedEvent() {
     Mem(at::kTarget)[0] = Byte(bh::Half() ? 0 : BH_PICK(1, 3, 0x40, 0x80, 0xFF));
     Mem(BossSe_Script_addr)[0] = Byte(bh::Half() ? bh::Next() | 1 : bh::Next() & ~1u);
     SetWord(Mem(ObjTrio_addr + 0x98), bh::Half() ? 0 : BH_PICK(1, 0x100, 0x8000, 0xFFFF));
-    Mem(BattleActions_BattleEnd_addr)[0] = Byte(bh::Half() ? bh::Next() | 4 : bh::Next() & ~4u);
+    Mem(Battle_EndFlags_addr)[0] = Byte(bh::Half() ? bh::Next() | 4 : bh::Next() & ~4u);
     Mem(BossSb_Countdown_addr)[0] = Byte(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x3C, 0x80, 0xFF) : bh::Next());
 }
 

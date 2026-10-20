@@ -49,8 +49,8 @@ constexpr U kFlags = 0x904AA8;            // u16: the round flags
 // kPicking: now BattleE4_Picking (symbols.toml). u8: a target pick is up
 constexpr U kPartyCount = 0x904AB0;       // u8 (read as a dword's low byte too)
 // kPartyDivisor: now Battle_PartyStanding (symbols.toml). u8: Escape_Roll divides the party's sum by it
-// kEnemyCount: now BattleActorCopies_EnemyCount (symbols.toml). u8: the enemies set up (the target wrap)
-// kEnemyDivisor: now BattleE2_EnemiesLeft (symbols.toml). u8: enemies left (Escape_Roll divides by it)
+// kEnemyCount: now Battle_EnemyCount (symbols.toml). u8: the enemies set up (the target wrap)
+// kEnemyDivisor: now Battle_EnemiesLeft (symbols.toml). u8: enemies left (Escape_Roll divides by it)
 constexpr U kEntryOrder = 0x904AB6;       // u8[3]: the members by entry order, 0xFF past the last
 // kCommandsChosen: now BattleActorCopies_EntryCount (symbols.toml). u8: members whose command is chosen
 constexpr U kOrder = 0x904ACC;            // u8[]: the turn order

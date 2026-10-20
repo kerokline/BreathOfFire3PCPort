@@ -121,9 +121,9 @@ void Disturb() {
     case 5:
         switch ((h >> 20) % 5) {
         case 0: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 5); break;
-        case 1: At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
+        case 1: At(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
         case 2: At(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(v % 3); break;
-        case 3: At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
+        case 3: At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
         default: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 24); break;
         }
         break;
@@ -501,8 +501,8 @@ void SeedRound(unsigned regions) {
     At(at::kActor)[0] = static_cast<unsigned char>(Next() % 11);
     At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 5);
     At(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(Next() % 3);
-    At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 9 : 8);
-    At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
+    At(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 9 : 8);
+    At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
     At(at::kBoss)[0] = static_cast<unsigned char>(Half() ? 0 : Next() % kBossHandlers);
     At(at::kLayout)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
     At(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(Next() % 6);
@@ -551,7 +551,7 @@ void SeedRound(unsigned regions) {
 // A round of Battle_OpenEnemyNames with eight living enemies of eight kinds:
 // the walk runs past the list (docs/battle_sprites.md section 1).
 void SeedEightKinds() {
-    At(BattleActorCopies_EnemyCount_addr)[0] = 8;
+    At(Battle_EnemyCount_addr)[0] = 8;
     for (unsigned k = 0; k < 8; ++k) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(At(at::kEnemies + k * at::kEnemyStride));
         enemy_rec->flags |= 1;

@@ -219,7 +219,7 @@ void Disturb() {
         if (g_group && g_group->engine) EngineDisturb(h);
         else Mem(h & 0x100 ? MoveScript_Var7_addr : (MoveScript_PartyRecords_addr + 0x65))[0] = b;
         break;
-    case 13: Mem(BattleActions_BattleEnd_addr)[0] = b; break;
+    case 13: Mem(Battle_EndFlags_addr)[0] = b; break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;

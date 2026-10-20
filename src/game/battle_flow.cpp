@@ -332,7 +332,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_EnemyDefeated
     records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(e);
     // DIV-0045: the yields times the launcher's multipliers, 1 unless set
     // (src/game/cheats.cpp); the enemy's record keeps its own numbers.
-    BattleFlow_ExpTotal = static_cast<std::int32_t>(BattleFlow_ExpTotal + enemy_rec->exp * Cheats_ExpMultiplier());
+    Battle_ExpTotal = static_cast<std::int32_t>(Battle_ExpTotal + enemy_rec->exp * Cheats_ExpMultiplier());
     BattleFlow_ZennyTotal = static_cast<std::int32_t>(BattleFlow_ZennyTotal + enemy_rec->zenny * Cheats_ZennyMultiplier());
     enemy_rec->zenny = 0;
     e = Enemy();
@@ -340,9 +340,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_EnemyDefeated
     e[0x93] = static_cast<unsigned char>(e[0x93] | 0x40);
     g.remove_from_turn_order(Sprite_Current[5]);
     g.roll_drops();
-    const auto left = static_cast<unsigned char>(BattleE2_EnemiesLeft - 1);
-    BattleE2_EnemiesLeft = left;
-    if (left == 0) BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 2);
+    const auto left = static_cast<unsigned char>(Battle_EnemiesLeft - 1);
+    Battle_EnemiesLeft = left;
+    if (left == 0) Battle_EndFlags = static_cast<unsigned char>(Battle_EndFlags | 2);
     if ((Long(At(at::kRoundFlags)) & 0x4000) != 0 && BattleFlow_ActorAt == Sprite_Current[5])
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xBFFF);
     g.set_flag_bit(rv::As<records::BattleEnemy>(Enemy())->enemy_kind);
@@ -387,7 +387,7 @@ extern "C" void __cdecl Battle_RollDrops(void) {
         const unsigned cls = e[slot + 2];
         if (cls >= 8) bof3::Fatal("Battle_RollDrops: drop class %u, past the eight-entry table", cls);
         if (kChance[cls] < roll) continue;
-        unsigned count = BattleE7_DropCount;
+        unsigned count = Battle_DropCount;
         if (count != 0) {
             unsigned i = 0;
             do {
@@ -395,15 +395,15 @@ extern "C" void __cdecl Battle_RollDrops(void) {
                     At(at::kDropCounts)[i] = static_cast<unsigned char>(At(at::kDropCounts)[i] + 1);
                     SetWord(e + slot, 0);
                     e = Enemy();
-                    count = BattleE7_DropCount;
+                    count = Battle_DropCount;
                 }
                 i = (i + 1) & 0xFF;
             } while (i < count);
         }
         SetWord(At(at::kDropItems + count * 2), Word(e + slot));
-        At(at::kDropCounts)[BattleE7_DropCount] = 1;
-        const unsigned char entries = BattleE7_DropCount;
-        if (entries < 0xF) BattleE7_DropCount = static_cast<unsigned char>(entries + 1);
+        At(at::kDropCounts)[Battle_DropCount] = 1;
+        const unsigned char entries = Battle_DropCount;
+        if (entries < 0xF) Battle_DropCount = static_cast<unsigned char>(entries + 1);
         SetWord(e + slot, 0);
         e = Enemy();
     }

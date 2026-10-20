@@ -251,7 +251,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
             BattleHook_Event);
         if ((hook(2) & 0xFF) == 0xFF) return;
     }
-    if (BattleActions_BattleEnd != 0 && !psp_code::DuelLossGoesOn(EventBattle_Id, BattleActions_BattleEnd)) {
+    if (Battle_EndFlags != 0 && !psp_code::DuelLossGoesOn(EventBattle_Id, Battle_EndFlags)) {
         B(at::kRoundFlags) &= 0xEF;
         for (unsigned w : {0u, 3u, 1u, 11u, 10u, 9u, 8u, 7u, 6u, 5u, 4u}) B(at::kWindows + w * at::kWindowStride) = 0;
         B(at::kPhase) = 5;
@@ -359,7 +359,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
         --*At(BattleE4_Step2_addr);
         return;
     }
-    unsigned end = BattleActions_BattleEnd;
+    unsigned end = Battle_EndFlags;
     if ((end & 1) == 0) {
         if (count != 0) {
             for (unsigned i = 0;;) {
@@ -378,7 +378,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
                 i = (i + 1) & 0xFF;
                 if (i >= B(at::kMembers)) break;
             }
-            end = BattleActions_BattleEnd;
+            end = Battle_EndFlags;
         }
         BattleFlow_AnimGate = 0;
     }
@@ -462,7 +462,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_ExitHook()
     reinterpret_cast<Step>(BattleHook_Exit)();
     if ((EventBattle_Flags & 0x40) == 0) {
         g.fade_out(10);
-        if (Music_Track == 0xFF) BattleActions_BattleEnd |= 8;
+        if (Music_Track == 0xFF) Battle_EndFlags |= 8;
     }
     Inc(BattleE4_Step2_addr);
 }

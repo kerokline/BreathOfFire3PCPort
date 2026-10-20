@@ -174,7 +174,7 @@ const bh::Clone kClonesB22[] = {
 };
 void SeedB22(unsigned k) {
     if (k == 1) {
-        B(BattleActions_BattleEnd_addr) = BattleEndByte();
+        B(Battle_EndFlags_addr) = BattleEndByte();
         B(EventBattle_Flags_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x40, 0, 0xFF, 0xBF) : bh::Next());
     }
 }
@@ -210,7 +210,7 @@ const bh::Clone kClonesB30[] = {
     Row("Boss30_End", 0x43CFA0, 0x2E, kCalls43CFA0, BH_N(kCalls43CFA0), BH_FN(Boss30_End), 0, S::kEnd),
 };
 void SeedEnd(unsigned k) {
-    if (k == 1) B(BattleActions_BattleEnd_addr) = BattleEndByte();
+    if (k == 1) B(Battle_EndFlags_addr) = BattleEndByte();
     if (k == 1 && bh::Half()) B(at::kScriptVar3) = static_cast<unsigned char>(BH_PICK(0, 0xFF, 0x7F, 0x80, 0xC));
 }
 

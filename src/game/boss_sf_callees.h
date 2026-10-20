@@ -42,7 +42,7 @@ constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (bit
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (set-up 27: bits 0..5)
 constexpr U kOrderBefore = 0x904ACB;      // u8[]: the turn order 0x904ACC one before - indexed by the cursor
 // kCursor: now BossSe_RoundSlot (symbols.toml). u8: the turn order's cursor (battle_actions.md)
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bit 2 set by set-up 27's event hook
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bit 2 set by set-up 27's event hook
 // kBanner: now BattleMisc_BannerKinds (symbols.toml). u8: bit 1 holds the phases until phase 5 (battle_phases_callees.h)
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (4 an ability)
 constexpr U kTarget = 0x904B44;           // u8: the battle's target

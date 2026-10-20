@@ -2884,13 +2884,13 @@ src/game/battle_flow_fuzz.cpp	Current	global	-	at::kItemRows	0	0x64b274	-	untype
 src/game/battle_flow_fuzz.cpp	Current	global	At	at::kAbilityRows	0	0x64c1d0	-	untyped-entry	at::kAbilityRows 0x64c1d0 AbilityMagic_Rows	b0
 src/game/battle_flow_fuzz.cpp	Current	record	SetWord	s + 0x32	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_flow_fuzz.cpp	Current	global	At	at::kNumberText	0	0x904ba0	-	no-entry	at::kNumberText 0x904ba0 -	b0
-src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kDropCount	0	0x904ae7	-	name	at::kDropCount 0x904ae7 BattleE7_DropCount	b0
-src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kDropCount	1	0x904ae7	-	name	at::kDropCount 0x904ae7 BattleE7_DropCount	b0
+src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kDropCount	0	0x904ae7	-	name	at::kDropCount 0x904ae7 Battle_DropCount	b0
+src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kDropCount	1	0x904ae7	-	name	at::kDropCount 0x904ae7 Battle_DropCount	b0
 src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kDropCounts	0	0x904b14	-	no-entry	at::kDropCounts 0x904b14 -	b0
 src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kDropCounts	1	0x904b14	-	no-entry	at::kDropCounts 0x904b14 -	b0
 src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kDropCounts	2	0x904b14	-	no-entry	at::kDropCounts 0x904b14 -	b0
-src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kBattleEnd	0	0x904ae8	-	name	at::kBattleEnd 0x904ae8 BattleActions_BattleEnd	b0
-src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kBattleEnd	1	0x904ae8	-	name	at::kBattleEnd 0x904ae8 BattleActions_BattleEnd	b0
+src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kBattleEnd	0	0x904ae8	-	name	at::kBattleEnd 0x904ae8 Battle_EndFlags	b0
+src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kBattleEnd	1	0x904ae8	-	name	at::kBattleEnd 0x904ae8 Battle_EndFlags	b0
 src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_flow_fuzz.cpp	Cover	global	-	at::kNumberText	0	0x904ba0	-	no-entry	at::kNumberText 0x904ba0 -	b0
@@ -3416,11 +3416,11 @@ src/game/battle_result_fuzz.cpp	Next	global	At	at::kText2	0	0x904d20	-	no-entry	
 src/game/battle_result_fuzz.cpp	Seed	global	At	at::kDropItems	0	0x904af4	-	no-entry	at::kDropItems 0x904af4 -	b0
 src/game/battle_result_fuzz.cpp	Seed	record	At	Dw(BattleWinStates_Current_addr) + 3	0	-	via=Dw	not-record	not one of the nine records.h families (via=Dw)	b1-battle
 src/game/battle_result_fuzz.cpp	Seed	global	At	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
-src/game/battle_result_fuzz.cpp	Cover	global	-	at::kBattleEnd	0	0x904ae8	-	name	at::kBattleEnd 0x904ae8 BattleActions_BattleEnd	b0
-src/game/battle_result_fuzz.cpp	Cover	global	-	at::kBattleEnd	1	0x904ae8	-	name	at::kBattleEnd 0x904ae8 BattleActions_BattleEnd	b0
+src/game/battle_result_fuzz.cpp	Cover	global	-	at::kBattleEnd	0	0x904ae8	-	name	at::kBattleEnd 0x904ae8 Battle_EndFlags	b0
+src/game/battle_result_fuzz.cpp	Cover	global	-	at::kBattleEnd	1	0x904ae8	-	name	at::kBattleEnd 0x904ae8 Battle_EndFlags	b0
 src/game/battle_result_fuzz.cpp	Cover	global	-	at::kDropItems	0	0x904af4	-	no-entry	at::kDropItems 0x904af4 -	b0
 src/game/battle_result_fuzz.cpp	Cover	global	-	at::kDropItems	1	0x904af4	-	no-entry	at::kDropItems 0x904af4 -	b0
-src/game/battle_result_fuzz.cpp	Cover	global	-	at::kDropCount	0	0x904ae7	-	name	at::kDropCount 0x904ae7 BattleE7_DropCount	b0
+src/game/battle_result_fuzz.cpp	Cover	global	-	at::kDropCount	0	0x904ae7	-	name	at::kDropCount 0x904ae7 Battle_DropCount	b0
 src/game/battle_result_fuzz.cpp	SwapTable	record	SetPtr	table + 4 * i	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_setup.cpp	Battle_OpenMsgWindow	global	At	at::kMsgWindow	0	0x803162	-	no-entry	at::kMsgWindow 0x803162 -	b0
 src/game/battle_setup.cpp	Battle_ActorStanding	global	At	at::kEnemy	0	0x93b960	-	no-entry	at::kEnemy 0x93b960 -	b0

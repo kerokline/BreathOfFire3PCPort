@@ -92,7 +92,7 @@ void Disturb() {
     case 7: SetWord(At(Input_Pressed_addr), w); break;
     case 8: SetWord(At(v % 2 ? Field_ConfirmButtons_addr : Field_CancelButtons_addr), w); break;
     case 9: At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>(v); break;
-    case 10: At(v % 2 ? at::kPartyCount : BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(w); break;
+    case 10: At(v % 2 ? at::kPartyCount : Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(w); break;
     case 11: if (v % 2) SetLong(list + 4, static_cast<std::int32_t>(h * 0x9E3779B1u)); else SetWord(list + 6, w); break;
     case 12: SetWord(list + 0x12, v % 3 == 0 ? w : 0); break;
     case 13: At(BattleActorCopies_EntryCount_addr)[0] = static_cast<unsigned char>(v); break;
@@ -418,7 +418,7 @@ void Seed(unsigned k) {
     case kMemberPick:
         SeedPad();
         CurrentCmd()[0] = EdgeTarget();
-        At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 6 : Next());
+        At(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 6 : Next());
         At(at::kPartyCount)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
         break;
     case kList: {

@@ -45,7 +45,7 @@ constexpr std::uint32_t kCmdLong = 0x904ABD;      // u32, zeroed (unaligned)
 constexpr std::uint32_t kCmdWord = 0x904AC1;      // u16, zeroed (unaligned)
 // kSideMode: now BattlePhases_Initiative (symbols.toml). u8: 2 changes what the faster side gets
 // kMusicFlags: now EventBattle_Flags (symbols.toml). u8: bit 0x40 keeps the battle's music
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 and bit 1 pick the way out (|= 2 when the last enemy falls)
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 and bit 1 pick the way out (|= 2 when the last enemy falls)
 // kBattleEnd2: now BattleMisc_BannerKinds (symbols.toml). u8, zeroed on the way out
 // kExtraRound: now BattlePhases_B7A (symbols.toml). u8: 1..3, the faster side's extra round; 0 none
 // kPending: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect to show

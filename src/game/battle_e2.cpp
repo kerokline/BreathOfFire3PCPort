@@ -798,14 +798,14 @@ extern "C" unsigned char __cdecl Battle_MemberLowestHp(void) {
 // random member (a tail jmp to Battle_RandomMember), else another enemy
 // (Battle_RandomEnemy(enemy + 3)).
 extern "C" unsigned char __cdecl BattleEnemy_OtherOrMember(unsigned enemy) {
-    if (BattleE2_EnemiesLeft == 1) return BH_CALL(Battle_RandomMember)();
+    if (Battle_EnemiesLeft == 1) return BH_CALL(Battle_RandomMember)();
     return BH_CALL(Battle_RandomEnemy)((enemy + 3) & 0xFF);
 }
 
 // original 0x436070 (no PSX twin paired): with one enemy left 0xFF, else
 // another enemy (Battle_RandomEnemy(enemy + 3)).
 extern "C" unsigned char __cdecl BattleEnemy_OtherEnemy(unsigned enemy) {
-    if (BattleE2_EnemiesLeft == 1) return 0xFF;
+    if (Battle_EnemiesLeft == 1) return 0xFF;
     return BH_CALL(Battle_RandomEnemy)((enemy + 3) & 0xFF);
 }
 
@@ -861,7 +861,7 @@ extern "C" unsigned char __cdecl BattleEnemy_PickTarget(unsigned enemy) {
 extern "C" unsigned char __cdecl BattleEnemy_PickAnyTarget(unsigned enemy) {
     const unsigned r = static_cast<unsigned>(BH_CALL(Rand)()) & 7;
     unsigned char t;
-    if (r < 3 || BattleE2_EnemiesLeft == 1) t = BH_CALL(Battle_RandomMember)();
+    if (r < 3 || Battle_EnemiesLeft == 1) t = BH_CALL(Battle_RandomMember)();
     else t = BH_CALL(Battle_RandomEnemy)((enemy + 3) & 0xFF);
     B(at::kTarget) = t;
     return t;

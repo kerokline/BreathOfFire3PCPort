@@ -253,7 +253,7 @@ const bh::Clone kClonesB27[] = {
 // small and the actor before it a member two times in three, else an enemy or
 // none; the members' +0x130 low bits clear half the time.
 void SeedB27(unsigned) {
-    B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(bh::Half() ? 0 : bh::Often() ? BH_PICK(1, 1, 4, 2, 5, 0x80, 0xFB, 0xFF) : bh::Next());
+    B(Battle_EndFlags_addr) = static_cast<unsigned char>(bh::Half() ? 0 : bh::Often() ? BH_PICK(1, 1, 4, 2, 5, 0x80, 0xFB, 0xFF) : bh::Next());
     if (bh::Often()) B(BossSe_Script_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 0x10, 0x20, 0x28, 0x18, 8, 1, 2, 4, 7) : bh::Next());
     if (bh::Half()) B(BossSe_Script_addr) &= 0xF7;
     B(at::kEnemy0Status + 1) = static_cast<unsigned char>(bh::Next() % 6 ? B(at::kEnemy0Status + 1) & 0xBF : B(at::kEnemy0Status + 1) | 0x40);
@@ -333,7 +333,7 @@ const bh::Clone kClonesB28[] = {
     Row("Boss28_End", 0x43CA00, 0x1A, kCalls43CA00, BSF_N(kCalls43CA00), BSF_FN(Boss28_End), S::kEnd),
 };
 void SeedB28(unsigned) {
-    B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0xFD, 0x82) : bh::Next());
+    B(Battle_EndFlags_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0xFD, 0x82) : bh::Next());
 }
 
 // ===========================================================================

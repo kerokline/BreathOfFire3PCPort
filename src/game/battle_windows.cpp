@@ -208,7 +208,7 @@ extern "C" unsigned char __cdecl BattleObj_ScriptTickOnce() {
 // (0x65C4DD + 24 skill), 8 or 0x28, 5 -> 4; 3 and above 5 change nothing and
 // answer the action. The answer is the callee's eax.
 extern "C" unsigned __cdecl BattleObj_PickPose() {
-    const bool own_poses = At(at::kBattleKind)[0] == 5 && (BattleActions_BattleEnd & 2) != 0;
+    const bool own_poses = At(at::kBattleKind)[0] == 5 && (Battle_EndFlags & 2) != 0;
     if (own_poses) {
         const bool high = (EventBattle_Flags & 0x20) != 0;
         if (FieldState()[0x91] & 0x40)

@@ -103,7 +103,7 @@ void Disturb() {
         break;
     }
     case 7: g_anim[w % kAnim] = static_cast<unsigned char>(v); break;
-    case 8: At(BattleE7_DropCount_addr)[0] = static_cast<unsigned char>(v % 17); break;
+    case 8: At(Battle_DropCount_addr)[0] = static_cast<unsigned char>(v % 17); break;
     case 9: {
         unsigned char* const e = move_script::At(static_cast<std::uint32_t>(Long(At(BattleE3_CurrentEnemy_addr))));
         const unsigned slot = 0xA8 + (w % 2) * 4;
@@ -111,7 +111,7 @@ void Disturb() {
         else e[slot + 2] = static_cast<unsigned char>(v % 8);
         break;
     }
-    case 10: At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
+    case 10: At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
     case 11: At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ 0x40); break;
     case 12: At(BattleFlow_ActorAt_addr)[0] = static_cast<unsigned char>(v % 11); break;
     case 13: SetWord(At(at::kMagicId), v % 3 == 0 ? 0xA1 : v); break;
@@ -555,10 +555,10 @@ Args Seed(unsigned k) {
         break;
     }
     case kDefeated: {
-        At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
+        At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
         if (Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] | 0x40);
         if (Half()) At(BattleFlow_ActorAt_addr)[0] = Sprite_Current[5];
-        if (Half()) SetLong(At(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>(0xFFFFFFFFu - Next() % 0x100));
+        if (Half()) SetLong(At(Battle_ExpTotal_addr), static_cast<std::int32_t>(0xFFFFFFFFu - Next() % 0x100));
         break;
     }
     case kRollDrops: {
@@ -568,7 +568,7 @@ Args Seed(unsigned k) {
             e[slot + 2] = static_cast<unsigned char>(Next() % 4 == 0 ? 0 : Next() % 8);
         }
         static const unsigned char kCounts[] = {0, 0, 1, 2, 3, 5, 14, 15, 15, 16};
-        At(BattleE7_DropCount_addr)[0] = Often() ? kCounts[Next() % 10] : static_cast<unsigned char>(Next() % 17);
+        At(Battle_DropCount_addr)[0] = Often() ? kCounts[Next() % 10] : static_cast<unsigned char>(Next() % 17);
         for (unsigned i = 0; i < 16; ++i)
             if (Often()) SetWord(At(at::kDropItems + i * 2), Next() % 5);
         break;

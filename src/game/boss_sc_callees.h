@@ -33,8 +33,8 @@ constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (0x9
 // kFight: now EventBattle_Id (symbols.toml). u8: the event battle
 // kFightFlags: now BossSe_Script (symbols.toml). u8: the fight's own progress bits (fights 13 / 16: which lines were shown)
 // kCount4AE2: now BossSe_RoundSlot (symbols.toml). u8: Nina's action hook decrements it once (what it counts was not read)
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win
-// kBattleExp: now BattleFlow_ExpTotal (symbols.toml). u32: the battle's experience sum (Battle_EnemyDefeated adds +0x96)
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win
+// kBattleExp: now Battle_ExpTotal (symbols.toml). u32: the battle's experience sum (Battle_EnemyDefeated adds +0x96)
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kAction = 0x904B35;           // u8: the enemy's action pick
 constexpr U kTarget = 0x904B44;           // u8: the battle's target

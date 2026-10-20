@@ -261,7 +261,7 @@ U RandMovesTarget(const U*, U answer) {
 // 28 and 29 count one up around the call): a store moved across the call is
 // compared, not hidden.
 U ClearNotesCounts(const U*, U answer) {
-    bh::Note(Mem(Battle_PartyStanding_addr)[0], Mem(BattleE2_EnemiesLeft_addr)[0]);
+    bh::Note(Mem(Battle_PartyStanding_addr)[0], Mem(Battle_EnemiesLeft_addr)[0]);
     return answer;
 }
 

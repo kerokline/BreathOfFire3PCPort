@@ -628,7 +628,7 @@ extern "C" void __cdecl BattleAction_End(void) {
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
     if (event != 0) EventHook(0);
-    if (BattleActions_BattleEnd != 0 && !psp_code::DuelLossGoesOn(EventBattle_Id, BattleActions_BattleEnd)) {
+    if (Battle_EndFlags != 0 && !psp_code::DuelLossGoesOn(EventBattle_Id, Battle_EndFlags)) {
         SetB(at::kPhase, 4);
         BattleActions_Step = 2;
         return;

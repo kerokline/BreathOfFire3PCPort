@@ -163,7 +163,7 @@ unsigned char Kind3Event(unsigned code) {
 // 0x92BF18 = `pick`, 0x904AE5 |= 0x80, 0x446E20, then the chapter's step =
 // 0x32; otherwise the step up by one and 0x446E20.
 void EndChapter(unsigned char pick) {
-    if (BattleActions_BattleEnd & 1) {
+    if (Battle_EndFlags & 1) {
         BossH_LeaderPick = pick;
         EventBattle_Flags |= 0x80;
         BH_AT(Handler, at::kEndThird)();
@@ -205,7 +205,7 @@ void PoseActor(unsigned tag, U enemy, U pose, unsigned char flip) {
 // The exit hook of set-ups 4, 5, 6: the loss clears bit 0x40 of the two
 // actors; otherwise each is posed from its enemy (0 and 1).
 void ExitPosePair(unsigned tag0, unsigned char flip) {
-    if (BattleActions_BattleEnd & 1) {
+    if (Battle_EndFlags & 1) {
         BH_CALL(BossActor_ClearBit40)(tag0);
         BH_CALL(BossActor_ClearBit40)(tag0 + 1);
         return;
@@ -229,7 +229,7 @@ void ExitPoseOne(unsigned tag, bool flip) {
 // The end hook of set-ups 8, 9, 10: the win (0x904AE8 bit 1) - the movement
 // script's variable 3 = `var`, 0x446DE0; otherwise 0x446E00.
 void EndVar(unsigned char var) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         B(at::kScriptVar3) = var;
         BH_AT(Handler, at::kEndWin)();
         return;
@@ -295,7 +295,7 @@ extern "C" unsigned char __cdecl BossEngineer_HitStep(void) {
         rv::Store<unsigned>(rv::Current<records::BattleEnemy>()->height_whole, static_cast<unsigned>(ground) & 0xFFFF);
         rv::As<records::BattleEnemy>(Enemy())->anim_table = static_cast<std::int32_t>(AddressOf(BossEngineer_AnimsHit));
         BH_CALL(Sprite_SetAnimation)(1);
-        BattleActions_BattleEnd |= 4;
+        Battle_EndFlags |= 4;
         auto* const cur_enemy_t = rv::Current<records::BattleEnemy>();
         const unsigned count = cur_enemy_t->actor & 0x1F;
         BossSe_Script |= static_cast<unsigned char>(count < 8 ? 1u << count : 0u);
@@ -360,7 +360,7 @@ extern "C" unsigned char __cdecl Boss06_Event(unsigned code) { return Kind3Event
 // actor 5 (not on the loss's path) its dwords +0x34 / +0x38 / +0x3C = enemy
 // 1's.
 extern "C" void __cdecl Boss06_Exit(void) {
-    if (BattleActions_BattleEnd & 1) {
+    if (Battle_EndFlags & 1) {
         BH_CALL(BossActor_ClearBit40)(4);
         BH_CALL(BossActor_ClearBit40)(5);
         return;
@@ -439,7 +439,7 @@ extern "C" unsigned char __cdecl Boss07_Event(unsigned code) {
     case 0: EventRoundFlag(); break;
     case 1:
         if (LeaderCommand78()) {
-            BattleActions_BattleEnd |= 4;
+            Battle_EndFlags |= 4;
             ObjTrio[0x134] &= 0xFD;
             char* const text = reinterpret_cast<char*>(At(at::kBannerText));
             BH_CALL(Str_CopyN)(text, reinterpret_cast<const char*>(At(at::kBannerSource)), 0x10);
@@ -453,7 +453,7 @@ extern "C" unsigned char __cdecl Boss07_Event(unsigned code) {
         }
         break;
     case 2:
-        if (BattleActions_BattleEnd & 4) {
+        if (Battle_EndFlags & 4) {
             const auto left = static_cast<unsigned char>(BossSb_Countdown - 1);
             BossSb_Countdown = left;
             if (left != 0) return 0xFF;
@@ -472,17 +472,17 @@ extern "C" unsigned char __cdecl Boss07_Event(unsigned code) {
 // otherwise the step up by one, 0x904AE8 |= 8, Draw_PassFlags 0, 0x92BF18 =
 // 2, Music_Track 4. Then 0x446E20.
 extern "C" void __cdecl Boss07_End(void) {
-    if (BattleActions_BattleEnd & 1) {
+    if (Battle_EndFlags & 1) {
         MoveScript_PartyRecords[0x65] = 0x32;
         BossH_LeaderPick = 6;
         MoveScript_Var7 = 6;
     } else {
         const auto step = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
-        const auto end = static_cast<unsigned char>(BattleActions_BattleEnd | 8);
+        const auto end = static_cast<unsigned char>(Battle_EndFlags | 8);
         Draw_PassFlags = 0;
         BossH_LeaderPick = 2;
         MoveScript_PartyRecords[0x65] = step;
-        BattleActions_BattleEnd = end;
+        Battle_EndFlags = end;
         Music_Track = 4;
     }
     BH_AT(Handler, at::kEndThird)();
@@ -503,7 +503,7 @@ extern "C" void __cdecl Boss13_Setup(void) { Setup(bof3::addr::Boss13_End, bof3:
 // = 0x32; the win (0x904AE8 bit 1, read before) - 0x446DE0; otherwise
 // 0x446E20, then 0x92BF18 = 3.
 extern "C" void __cdecl Boss13_End(void) {
-    const unsigned char end = BattleActions_BattleEnd;
+    const unsigned char end = Battle_EndFlags;
     B(at::kScriptVar3) = 0x32;
     if (end & 2) {
         BH_AT(Handler, at::kEndWin)();

@@ -514,7 +514,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
             party_pick();
             return;
         }
-        if (BattleE2_EnemiesLeft != 1) SetTarget(g.pick_enemy_a(again));
+        if (Battle_EnemiesLeft != 1) SetTarget(g.pick_enemy_a(again));
         else SetTarget(g.pick_enemy_b(again));
         return;
     }
@@ -754,7 +754,7 @@ extern "C" void __cdecl Battle_InitBossEncounter(void) {
 // the eight at 0x939F00 set up as the next enemy (Battle_SetupEnemy(n, +1,
 // +4, +8)); 0x904AB3 = the count Battle_SetupEnemy left.
 extern "C" void __cdecl Battle_InitEnemies(void) {
-    BattleActorCopies_EnemyCount = 0;
+    Battle_EnemyCount = 0;
     unsigned char n = 0;
     for (unsigned r = 0; r < 8; ++r) {
         const unsigned char* const rec = At(at::kEncounter + r * 12);
@@ -762,7 +762,7 @@ extern "C" void __cdecl Battle_InitEnemies(void) {
         g.setup_enemy(n, rec[1], Long(rec + 4), Long(rec + 8));
         ++n;
     }
-    BattleE2_EnemiesLeft = BattleActorCopies_EnemyCount;
+    Battle_EnemiesLeft = Battle_EnemyCount;
 }
 
 // original 0x494320 (no twin found): enemy `slot` from enemy data `id` at
@@ -820,7 +820,7 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     g.copy_enemy(slot, id);
     g.enemy_offset(slot, id);
     enemy_rec->kind_flag = g.kind_flag(enemy_data->kind);
-    BattleActorCopies_EnemyCount = static_cast<unsigned char>(BattleActorCopies_EnemyCount + 1);
+    Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
 
 // original 0x4946C0 (0x800A9148): the enemy data `id` (by its low byte) into
@@ -914,7 +914,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
     };
 
     unsigned char listed = 0;
-    unsigned char enemies = BattleActorCopies_EnemyCount;
+    unsigned char enemies = Battle_EnemyCount;
     if (enemies) {
         for (unsigned e = 0, left = enemies; left; --left, ++e) {
             auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(e));
@@ -930,7 +930,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
             counts[listed] = 1;
             ++listed;
         }
-        enemies = BattleActorCopies_EnemyCount;
+        enemies = Battle_EnemyCount;
     }
     if (enemies > 1 && listed > 1)
         for (unsigned char d = 1; d < listed; ++d)
@@ -962,7 +962,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
         y = static_cast<std::uint16_t>(y - left * 8u - 0xD);
         const std::uint16_t top = y;
         std::uint16_t row = y;
-        if (BattleActorCopies_EnemyCount)
+        if (Battle_EnemyCount)
             for (unsigned char e = 0; left;) {
                 if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->enemy_kind) {
                     set_count(k, count(k) - 1u);
@@ -982,7 +982,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
                     --left;
                     row = static_cast<std::uint16_t>(row + 8);
                 }
-                if (!(++e < BattleActorCopies_EnemyCount)) break;
+                if (!(++e < Battle_EnemyCount)) break;
             }
         y = static_cast<std::uint16_t>(top - 2);
         ++k;

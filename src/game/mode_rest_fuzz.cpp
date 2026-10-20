@@ -127,7 +127,7 @@ U TripEffect(const U*, U answer) {
 U ElevationEffect(const U*, U answer) {
     const U n = sh::Noise();
     if (n & 1) Mem(EventBattle_Flags_addr)[0] ^= 0x40;
-    if (n & 2) Mem(BattleActions_BattleEnd_addr)[0] ^= 8;
+    if (n & 2) Mem(Battle_EndFlags_addr)[0] ^= 8;
     if ((n & 0xC) == 0) Music_Track = 0xFF;
     return answer;
 }

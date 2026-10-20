@@ -333,7 +333,7 @@ const bh::Clone kClonesB21[] = {
 // The set-ups' seed: the battle-end byte and 0x904AAD at their bit values, the
 // three enemies' +0x93 with and without 0x40, the kept words' sources.
 void SeedSetup(unsigned) {
-    Mem(BattleActions_BattleEnd_addr)[0] = EndByte();
+    Mem(Battle_EndFlags_addr)[0] = EndByte();
     Mem(BossSe_Script_addr)[0] = EndByte();
     Mem(at::kEnemy0Status)[1] = StatusByte();
     Mem(BossH_Enemy1Status_addr)[1] = StatusByte();

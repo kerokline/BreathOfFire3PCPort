@@ -193,7 +193,7 @@ unsigned char SideTarget(unsigned char flags) { return (flags & 0x20) ? 0x40 : 0
 // and again after the calls.
 void StepEnemyTarget(unsigned repeat) {
     if (repeat & 0x2000) {
-        const long high = BattleActorCopies_EnemyCount + 2;
+        const long high = Battle_EnemyCount + 2;
         const long value = static_cast<long>(static_cast<signed char>(Command()[0])) + 1;
         const long wrapped = BH_CALL(Battle_WrapIndex)(high, 3, value);
         const unsigned char t = BH_CALL(Battle_DefaultTarget)(static_cast<unsigned>(wrapped));
@@ -201,7 +201,7 @@ void StepEnemyTarget(unsigned repeat) {
         BH_CALL(Sound_PlayEffect)(0x101);
     }
     if (repeat & 0x8000) {
-        const long high = BattleActorCopies_EnemyCount + 2;
+        const long high = Battle_EnemyCount + 2;
         const long value = static_cast<long>(static_cast<signed char>(Command()[0])) - 1;
         const long wrapped = BH_CALL(Battle_WrapIndex)(high, 3, value);
         const unsigned char t = BH_CALL(Battle_PrevTarget)(static_cast<unsigned>(wrapped));
@@ -1326,7 +1326,7 @@ extern "C" void __cdecl Escape_Roll(void) {
         const bool out = BH_CALL(Battle_ActorIsOut)(a) != 0;
         if (!out) enemies += Word(At(at::kEnemies + a * at::kEnemyStride + 0xB8));
     }
-    const unsigned e_div = BattleE2_EnemiesLeft;
+    const unsigned e_div = Battle_EnemiesLeft;
     if (e_div == 0)
         bof3::Fatal("Escape_Roll: the enemies left 0x904AB3 is 0 - the original divides by it (docs/battle_e4.md section 7)");
     const U e_mean = enemies / e_div;

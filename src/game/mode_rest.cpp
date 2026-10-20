@@ -368,7 +368,7 @@ extern "C" void __cdecl GameMode5_Leave(void) {
             const long height = SH_CALL(AreaMap_Elevation)(x, z);
             SH_CALL(MapView_SetElevation)(static_cast<int>(height));
         }
-        if (!(EventBattle_Flags & 0x40) && !(BattleActions_BattleEnd & 8)) {
+        if (!(EventBattle_Flags & 0x40) && !(Battle_EndFlags & 8)) {
             unsigned char track = Music_Track;
             // DIV-0092: by now the fanfare's stopping fade (BattleEnd_ExitHook)
             // has left the track 0xFF, so Capcom's Music_Play(Music_Track) never

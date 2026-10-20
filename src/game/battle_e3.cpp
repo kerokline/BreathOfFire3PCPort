@@ -322,9 +322,9 @@ extern "C" void __cdecl EnemyOp_LeaveStep(void) {
 // the enemy leaves the count without being defeated.
 extern "C" void __cdecl EnemyOp_LeaveEnd(void) {
     BH_CALL(Battle_RemoveFromTurnOrder)(rv::As<records::BattleEnemy>(S())->actor);
-    const auto left = static_cast<unsigned char>(BattleE2_EnemiesLeft - 1);
-    BattleE2_EnemiesLeft = left;
-    if (left == 0) BattleActions_BattleEnd |= 2;
+    const auto left = static_cast<unsigned char>(Battle_EnemiesLeft - 1);
+    Battle_EnemiesLeft = left;
+    if (left == 0) Battle_EndFlags |= 2;
     BH_CALL(Sprite_ReleaseTint)(S());
     BH_CALL(Battle_ClearActorBit)(rv::As<records::BattleEnemy>(S())->actor);
     B(at::kWindow4State) = 2;
@@ -570,7 +570,7 @@ extern "C" void __cdecl BattleObj_HitEnd(void) {
     }
     BH_CALL(Battle_ClearActorBit)(rv::As<records::PartyMember>(S())->actor);
     SetULong(F() + 0x130, ULong(F() + 0x130) & 0xFFFFFF8Fu);
-    if (BH_CALL(BattleParty_AllDown)() != 0) BattleActions_BattleEnd |= 1;
+    if (BH_CALL(BattleParty_AllDown)() != 0) Battle_EndFlags |= 1;
     SetULong(F() + 0x130, ULong(F() + 0x130) & ~0x200u);
     rv::As<records::PartyMember>(S())->state = 2;
     rv::As<records::PartyMember>(S())->step = 0;
@@ -718,7 +718,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
     rv::As<records::PartyMember>(F())->count_40 = 0;
     rv::As<records::PartyMember>(F())->count_80 = 0;
     BH_AT(void (__cdecl*)(unsigned), at::kPass453300)(rv::As<records::PartyMember>(S())->actor);
-    if (BH_CALL(BattleParty_AllDown)() != 0 || Battle_PartyStanding == 0) BattleActions_BattleEnd |= 1;
+    if (BH_CALL(BattleParty_AllDown)() != 0 || Battle_PartyStanding == 0) Battle_EndFlags |= 1;
     ClearFormFlag();
     auto* const member_s = rv::As<records::PartyMember>(S());
     if (F()[0x134] & 1) {

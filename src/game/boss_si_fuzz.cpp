@@ -286,7 +286,7 @@ void SeedK58(unsigned k) {
 void SeedSetup(unsigned k) {
     switch (g_clones[k].shape) {
     case S::kEnd:
-        B(BattleActions_BattleEnd_addr) = BattleEndByte();
+        B(Battle_EndFlags_addr) = BattleEndByte();
         break;
     case S::kSetup:
         if (g_clones[k].base == 0x43EE50) {

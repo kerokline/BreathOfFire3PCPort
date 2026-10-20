@@ -271,7 +271,7 @@ void Seed(unsigned k) {
         if (bh::Often()) rec[0xB] = static_cast<unsigned char>(bh::Next() % 99);
         break;
     case 0x5984B0: {  // the drops: a count 0..8, words zero sometimes
-        Mem(BattleE7_DropCount_addr)[0] = Byte({0, 1, 2, 3, 5, 8, 8});
+        Mem(Battle_DropCount_addr)[0] = Byte({0, 1, 2, 3, 5, 8, 8});
         for (unsigned i = 0; i < 8; ++i) {
             if (bh::Half()) SetWord(Mem(at::kDropItems + 2 * i), 0);
             if (bh::Half()) Mem(at::kDropCounts + i)[0] = Byte({0, 1, 2, 9});
@@ -359,7 +359,7 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 8) {
-    case 0: Mem(BattleE7_DropCount_addr)[0] = static_cast<unsigned char>(b % 9); break;
+    case 0: Mem(Battle_DropCount_addr)[0] = static_cast<unsigned char>(b % 9); break;
     case 1: Mem(Config_WindowColour_addr)[0] = b; break;
     case 2: Mem(BossSb_Countdown_addr)[0] = static_cast<unsigned char>((b & 0x80) | (b % 3)); break;
     case 3: Mem(BattleActions_ApCost_addr)[0] = b; break;

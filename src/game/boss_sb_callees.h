@@ -28,7 +28,7 @@ constexpr U kPhase = 0x904AA0;            // u8: Battle_PhaseDispatch's phase
 // kFight: now EventBattle_Id (symbols.toml). u8: the event battle
 // kPoseBits: now BossSe_Script (symbols.toml). u8: bit n per enemy slot n (BattleObj_StateInit reads it as a pose base)
 // kMusicFlags: now EventBattle_Flags (symbols.toml). u8
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win, 4 and 8 set here
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win, 4 and 8 set here
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kCommandKind = 0x904B35;      // u8: the command's kind (4 read and written here)
 // kCommand: now BattleSprites_Action (symbols.toml). unsigned char *: the command; its word +2 the id

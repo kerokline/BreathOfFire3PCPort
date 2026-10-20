@@ -177,19 +177,19 @@ extern "C" unsigned char __cdecl Boss27_Event(unsigned code) {
     case 0: {
         if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) {
             BossSe_Script |= 1;
-            BattleActions_BattleEnd |= 4;
+            Battle_EndFlags |= 4;
             return 0;
         }
         if (BossH_Enemy1Status & 0x4000) {
             BossSe_Script |= 2;
-            BattleActions_BattleEnd |= 4;
+            Battle_EndFlags |= 4;
             return 0;
         }
-        if (BattleActions_BattleEnd == 0 && (BossSe_Script & 8) == 0) {
+        if (Battle_EndFlags == 0 && (BossSe_Script & 8) == 0) {
             const unsigned char who = B(at::kOrderBefore + BossSe_RoundSlot);
             if (who <= 2 && (At(ObjTrio_addr + who * at::kPartyStride)[0x130] & 3) == 0) {
                 const unsigned char script = BossSe_Script;
-                BattleActions_BattleEnd = 4;
+                Battle_EndFlags = 4;
                 BossSe_Script = static_cast<unsigned char>(script | 4);
             }
         }
@@ -198,7 +198,7 @@ extern "C" unsigned char __cdecl Boss27_Event(unsigned code) {
         return 0;
     }
     case 2: {
-        if (BattleActions_BattleEnd & 4) return 0;
+        if (Battle_EndFlags & 4) return 0;
         const unsigned char script = BossSe_Script;
         if ((script & 0x10) == 0) return 0;
         BossSe_Script = static_cast<unsigned char>(script & 0xEF);
@@ -397,7 +397,7 @@ extern "C" void __cdecl Boss28_Setup(void) {
 // original 0x43CA00: the end hook. The win (0x904AE8 bit 1): movement-script
 // variable 3 = 0x1E and a tail jump to 0x446DE0 (step 1); else 0x446E00.
 extern "C" void __cdecl Boss28_End(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         B(at::kScriptVar3) = 0x1E;
         BH_AT(Handler, at::kEndWin)();
         return;

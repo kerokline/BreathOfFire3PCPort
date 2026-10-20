@@ -533,7 +533,7 @@ extern "C" void __cdecl EffectSlot17_RaiseDown(void) {
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xFFFF);
     BH_CALL(Battle_ClearStatus)(B(at::kTarget), 0x4000);
     if (B(at::kTarget) <= 2) Battle_PartyStanding = static_cast<unsigned char>(Battle_PartyStanding + 1);
-    else BattleE2_EnemiesLeft = static_cast<unsigned char>(BattleE2_EnemiesLeft + 1);
+    else Battle_EnemiesLeft = static_cast<unsigned char>(Battle_EnemiesLeft + 1);
 }
 
 // original 0x44C330 (slot 18): half a hit, then 0x44FCA0(0x80).
@@ -583,7 +583,7 @@ extern "C" void __cdecl EffectSlot28_RaiseQuarter(void) {
     } else {
         const S32 max = rv::As<records::BattleEnemy>(Enemy(t))->max_hp;
         rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>((0 - max) >> 2));
-        BattleE2_EnemiesLeft = static_cast<unsigned char>(BattleE2_EnemiesLeft + 1);
+        Battle_EnemiesLeft = static_cast<unsigned char>(Battle_EnemiesLeft + 1);
     }
     BH_CALL(Battle_ClearStatus)(B(at::kTarget), 0x4000);
 }

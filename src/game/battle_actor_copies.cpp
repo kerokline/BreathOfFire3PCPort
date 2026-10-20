@@ -132,13 +132,13 @@ U Stepped(U high, U low, int delta) {
 // 3 .. enemy count + 2; each with cue 0x101. Both may run in one frame.
 void PickAmongEnemies(U held) {
     if (held & 0x2000) {
-        const U high = static_cast<std::uint32_t>(BattleActorCopies_EnemyCount) + 2;
+        const U high = static_cast<std::uint32_t>(Battle_EnemyCount) + 2;
         const unsigned char t = Low(g.default_target(Stepped(high, 3, +1)));
         Command()[0] = t;
         g.play_effect(0x101);
     }
     if (held & 0x8000) {
-        const U high = static_cast<std::uint32_t>(BattleActorCopies_EnemyCount) + 2;
+        const U high = static_cast<std::uint32_t>(Battle_EnemyCount) + 2;
         const unsigned char t = Low(g.prev_target(Stepped(high, 3, -1)));
         Command()[0] = t;
         g.play_effect(0x101);

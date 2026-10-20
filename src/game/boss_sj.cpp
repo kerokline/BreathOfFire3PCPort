@@ -318,7 +318,7 @@ extern "C" void __cdecl Boss52_Setup(void) {
 // to 0x446E00 (the end phase, step 2). Won: the party posed (PoseParty), the
 // chapter step 0x8034E5 = 0x1A, a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss52_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -414,7 +414,7 @@ extern "C" void __cdecl Boss54_Setup(void) {
 // original 0x43FC60: the end hook. Won: movement-script variable 3 (0x903848)
 // = 0x32, a tail jump to 0x446DE0; else to 0x446E00.
 extern "C" void __cdecl Boss54_End(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         B(at::kScriptVar3) = 0x32;
         BH_AT(Handler, at::kEndWin)();
     } else {
@@ -436,7 +436,7 @@ extern "C" void __cdecl Boss55_Setup(void) {
 // party posed (PoseParty), the chapter step 0x8034E5 = 0xF, 0x446E20 called
 // (the end phase's step 3), then Music_Track = 0xFF.
 extern "C" void __cdecl Boss55_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }

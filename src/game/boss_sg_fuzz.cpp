@@ -279,7 +279,7 @@ const bh::Clone kClonesB29[] = {
 };
 void SeedEnd(unsigned k) {
     if (k != 1) return;
-    B(BattleActions_BattleEnd_addr) = EndByte();
+    B(Battle_EndFlags_addr) = EndByte();
     B(EventBattle_Flags_addr) = static_cast<unsigned char>(BSG_PICK(0x40, 0, 0xFF, 0xBF));
 }
 
@@ -301,7 +301,7 @@ const bh::Clone kClonesB32[] = {
 };
 void SeedB32(unsigned k) {
     if (k != 1) return;
-    B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(bh::Often() ? B(BattleActions_BattleEnd_addr) | 2 : EndByte());
+    B(Battle_EndFlags_addr) = static_cast<unsigned char>(bh::Often() ? B(Battle_EndFlags_addr) | 2 : EndByte());
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(m));
         p[0] = static_cast<unsigned char>(bh::Often() ? p[0] | 1 : p[0] & ~1u);
@@ -315,7 +315,7 @@ const bh::Clone kClonesB33[] = {
     Row("Boss33_End", 0x43D690, 0x3A, kCalls43D690, BSG_N(kCalls43D690), BSG_FN(Boss33_End), 0, S::kEnd),
 };
 void SeedB33(unsigned k) {
-    if (k == 1) B(BattleActions_BattleEnd_addr) = EndByte();
+    if (k == 1) B(Battle_EndFlags_addr) = EndByte();
 }
 
 // ===========================================================================

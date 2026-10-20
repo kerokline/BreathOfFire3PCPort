@@ -414,7 +414,7 @@ void Disturb(U h) {
     case 6: SetLong(Mem((v & 1) ? at::kRows : at::kColumns), static_cast<std::int32_t>((v >> 1) % 6)); break;   // a walk cut short
     case 7: DrawItemPool_Top = static_cast<unsigned short>((v & 1) ? 0x3FE + (v >> 1) % 4 : (v >> 1) % kItemsRegion); break;
     case 8: SetWord(Mem((v & 1) ? at::kOriginX : at::kOriginZ), v >> 1); break;
-    case 9: Mem(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(v); break;
+    case 9: Mem(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(v); break;
     case 10: SetWord(Mem(Prim_VertexScratch_addr + 2 * ((v & 3) % 3)), v >> 2); break;
     case 11: PutFloat(Mem(MapView_ScreenXY_addr + 4 * (v & 1)), static_cast<float>(static_cast<int>((v >> 1) % 1000) - 500)); break;
     default: break;

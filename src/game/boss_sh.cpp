@@ -136,7 +136,7 @@ void GiveAbility40() {
 // `step`, then a tail jump to 0x446DE0 (the end phase, step 1); else to
 // 0x446E00 (step 2).
 void EndWithStep(unsigned char step) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = step;
         BH_AT(Handler, at::kEndWin)();
     } else {
@@ -232,7 +232,7 @@ extern "C" unsigned char __cdecl Boss34_Event(unsigned code) {
 // the chapter step 0x8034E5 incremented after it. Otherwise a tail jump to
 // 0x446E00 (step 2).
 extern "C" void __cdecl Boss34_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -247,7 +247,7 @@ extern "C" void __cdecl Boss34_End(void) {
         BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
     }
     if ((BossSe_Script & 2) == 0) GiveAbility40();
-    BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 8);
+    Battle_EndFlags = static_cast<unsigned char>(Battle_EndFlags | 8);
     BH_AT(Handler, at::kEndWin)();
     MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
 }
@@ -357,7 +357,7 @@ extern "C" void __cdecl Boss35_Setup(void) {
 // al 0.
 extern "C" unsigned char __cdecl Boss35_Event(unsigned code) {
     if ((code & 0xFF) == 0 && (BH_CALL(Battle_ActorIsOut)(3) & 0xFF) != 0)
-        BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 2);
+        Battle_EndFlags = static_cast<unsigned char>(Battle_EndFlags | 2);
     return 0;
 }
 

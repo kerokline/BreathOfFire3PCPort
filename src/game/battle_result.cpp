@@ -118,11 +118,11 @@ void RunStep(std::uint32_t table) {
 // the step's increment is a read-modify-write after PartySet_Select.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_SplitExp(void) {
     std::uint32_t share = 0;
-    if (BattleFlow_ExpTotal != 0) {
+    if (Battle_ExpTotal != 0) {
         const unsigned n = g.count_members();
-        if (n != 0) share = (BattleFlow_ExpTotal + n - 1) / n;
+        if (n != 0) share = (Battle_ExpTotal + n - 1) / n;
     }
-    BattleFlow_ExpTotal = share;
+    Battle_ExpTotal = share;
     g.crt_sprintf(Text(at::kText0), Format(at::kFormatD), share);
     const unsigned char* const msg = g.msg_system(5);
     const unsigned set = AreaW0b_PartySet & 0x7Fu;
@@ -142,7 +142,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_SplitEx
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_OpenExpWindow(void) {
     g.window_alloc(1, 4);
     const auto height = static_cast<unsigned char>((Byte(at::kPartyCount) << 4) + 4);
-    const std::uint32_t exp = BattleFlow_ExpTotal;
+    const std::uint32_t exp = Battle_ExpTotal;
     unsigned char* const w = WindowSlot(1);
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->kind = 4;
@@ -171,20 +171,20 @@ extern "C" void __cdecl BattleResult_ExpWaitHeld(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_ExpTick(void) {
     std::uint32_t amount;
     if (Input_Held != 0 && g.file_load_done() != 0) {
-        amount = BattleFlow_ExpTotal;
+        amount = Battle_ExpTotal;
     } else {
         const std::uint32_t step = Dword(at::kTickStep) & 0xFFFF;
-        const std::uint32_t exp = BattleFlow_ExpTotal;
+        const std::uint32_t exp = Battle_ExpTotal;
         if (static_cast<std::int32_t>(exp - step) > 0) {
             g.add_exp(step);
-            BattleFlow_ExpTotal = BattleFlow_ExpTotal - (Dword(at::kTickStep) & 0xFFFF);
+            Battle_ExpTotal = Battle_ExpTotal - (Dword(at::kTickStep) & 0xFFFF);
             return;
         }
         amount = exp;
     }
     g.add_exp(amount);
     const auto next = static_cast<unsigned char>(BattleE4_Step4 + 1);
-    BattleFlow_ExpTotal = 0;
+    Battle_ExpTotal = 0;
     BattleE4_Step4 = next;
 }
 
@@ -225,7 +225,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_FindLev
         BattleE1_Roster = static_cast<unsigned char>(index);
         BossSb_Countdown = next;
         if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) {
-            BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 0x20);
+            Battle_EndFlags = static_cast<unsigned char>(Battle_EndFlags | 0x20);
             Advance(BattleE4_Step4_addr);
             return;
         }
@@ -271,7 +271,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_RewardS
 // (which reaches into the counts with the items, and past them) is sorted
 // exactly as the original does it.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(void) {
-    if ((BattleActions_BattleEnd & 0x20) != 0 && Input_Pressed == 0) return;
+    if ((Battle_EndFlags & 0x20) != 0 && Input_Pressed == 0) return;
     if (Input_Held == 0) return;
 
     for (unsigned char slot = 0; slot < Byte(at::kPartyCount); ++slot) {
@@ -291,9 +291,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
     SetDword(at::kMsgCurrent, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(msg)));
     SetTickStep(total);
 
-    if (BattleE7_DropCount != 0) {
+    if (Battle_DropCount != 0) {
         g.window_alloc(0x15, 4);
-        unsigned char n = BattleE7_DropCount;
+        unsigned char n = Battle_DropCount;
         unsigned char* const w = WindowSlot(0x15);
         auto* const window_rec = rv::As<records::WindowRecord>(w);
         const int last = static_cast<int>(n) - 1;
@@ -319,7 +319,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
                     ci[0] = static_cast<unsigned char>(ci[0] ^ cj[0]);
                     cj[0] = static_cast<unsigned char>(cj[0] ^ ci[0]);
                     ci[0] = static_cast<unsigned char>(ci[0] ^ cj[0]);
-                    n = BattleE7_DropCount;
+                    n = Battle_DropCount;
                 }
                 i = next;
             } while (static_cast<int>(i) < static_cast<int>(n) - 1);
@@ -372,7 +372,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_ZennyTi
 // the fourth argument, 0, is pushed (the PSX's), and ours reads three.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_AwardDrops(void) {
     if (g.file_load_done() == 0) return;
-    for (unsigned char i = 0; i < BattleE7_DropCount; ++i) {
+    for (unsigned char i = 0; i < Battle_DropCount; ++i) {
         const unsigned count = At(at::kDropCounts + i)[0];
         const unsigned item = At(at::kDropItems + i * 2u)[0];
         const unsigned category = At(at::kDropItems + i * 2u)[1];

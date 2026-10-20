@@ -42,7 +42,7 @@ constexpr U kRoundFlags2 = 0x904AA9;      // u8: the round flags' high byte (bit
 // kPicking: now BattleE4_Picking (symbols.toml). u8: a target pick is up
 constexpr U kPartyCount = 0x904AB0;       // u8: the party slots in the battle
 // kPartyUp: now Battle_PartyStanding (symbols.toml). u8: counted up when a party member is raised
-// kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8: counted up when an enemy is raised
+// kEnemiesLeft: now Battle_EnemiesLeft (symbols.toml). u8: counted up when an enemy is raised
 constexpr U kActor = 0x904B34;            // u8 (read as a dword by some): the acting actor, 0..2 a member, 3.. an enemy
 constexpr U kActingKind = 0x904B35;       // u8: 4 an ability (slots 44..49 set it)
 constexpr U kTarget = 0x904B54;           // u8 (read as a dword by some): the effect's target

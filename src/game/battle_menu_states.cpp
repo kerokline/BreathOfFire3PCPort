@@ -108,7 +108,7 @@ unsigned LastQueueEntry() { return ((BattleActorCopies_QueueWrite - 1u) & 0xF) *
 // second, after the first's sound).
 void StepEnemyTarget(unsigned repeat) {
     if (repeat & 0x2000) {
-        const long high = BattleActorCopies_EnemyCount + 2;
+        const long high = Battle_EnemyCount + 2;
         const long value = static_cast<long>(static_cast<signed char>(Command()[0])) + 1;
         const long wrapped = g.wrap_index(high, 3, value);
         const unsigned char target = g.default_target(static_cast<unsigned>(wrapped));
@@ -116,7 +116,7 @@ void StepEnemyTarget(unsigned repeat) {
         g.sound(0x101);
     }
     if (repeat & 0x8000) {
-        const long high = BattleActorCopies_EnemyCount + 2;
+        const long high = Battle_EnemyCount + 2;
         const long value = static_cast<long>(static_cast<signed char>(Command()[0])) - 1;
         const long wrapped = g.wrap_index(high, 3, value);
         const unsigned char target = g.prev_target(static_cast<unsigned>(wrapped));

@@ -148,7 +148,7 @@ void NameBanner() {
 // The end hooks' common shape: on the win (0x904AE8 bit 1) the move-script
 // counter byte 0x903848 = scene and the end phase's step 1, else step 2.
 void EndByWin(unsigned char scene) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         B(at::kMoveCounter) = scene;
         BH_AT(Handler, at::kEndWin)();
         return;
@@ -355,10 +355,10 @@ extern "C" void __cdecl Boss12_Setup(void) { StoreHooks(bof3::addr::Boss12_End, 
 // original 0x439900: won (0x904AE8 bit 1, the byte read once): 0x903848 =
 // 0x23, 0x904AE8 = the byte | 8, a tail jump to 0x446DE0; else to 0x446E00.
 extern "C" void __cdecl Boss12_End(void) {
-    const unsigned char end = BattleActions_BattleEnd;
+    const unsigned char end = Battle_EndFlags;
     if (end & 2) {
         B(at::kMoveCounter) = 0x23;
-        BattleActions_BattleEnd = static_cast<unsigned char>(end | 8);
+        Battle_EndFlags = static_cast<unsigned char>(end | 8);
         BH_AT(Handler, at::kEndWin)();
         return;
     }
@@ -618,10 +618,10 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
 // back to 1, so Battle_EnemyDefeated - where the multiplier otherwise
 // applies - never adds theirs, and this store replaces whatever it did add.
 extern "C" void __cdecl Boss16_End(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         const U sum = (static_cast<U>(Word(At(at::kEnemy1 + at::kEnemyExp))) + Word(At(at::kEnemy0 + at::kEnemyExp))) * Cheats_ExpMultiplier();
         B(at::kMoveCounter) = 0x14;
-        BattleFlow_ExpTotal = static_cast<std::int32_t>(sum);
+        Battle_ExpTotal = static_cast<std::int32_t>(sum);
         BH_AT(Handler, at::kEndWin)();
     } else {
         if (BossSe_Script & 0x40) {
@@ -647,7 +647,7 @@ extern "C" void __cdecl Boss16_End(void) {
 // Scenario_CallA(1), member 1's +0 |= 0x40, and 0x92BF18 = 6, or 7 when
 // 0x903848 (read after the call) is not 0x14.
 extern "C" void __cdecl Boss16_Exit(void) {
-    if (!(BattleActions_BattleEnd & 2)) {
+    if (!(Battle_EndFlags & 2)) {
         if (!(BossSe_Script & 1)) {
             BH_CALL(BossActor_ClearBit40)(2);
             Sprite_Current = Actor("Boss16_Exit", 2);

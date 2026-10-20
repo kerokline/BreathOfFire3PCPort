@@ -37,7 +37,7 @@ constexpr U kStep = 0x904AA3;        // u8: BattleTarget_Steps' / BattleItem_Ste
 // kSub: now BattleE4_Step4 (symbols.toml). u8: the pick states' index (read as a dword & 0xFF by two stubs)
 // kTargetCursor: now BattleE4_Picking (symbols.toml). u8: 1 while a target is being picked, 0 on confirm / cancel (a guess)
 constexpr U kPartyCount = 0x904AB0;  // u8 (read as a dword & 0xFF): members in the party row
-// kEnemyCount: now BattleActorCopies_EnemyCount (symbols.toml). u8: enemies in the battle (actors 3 .. count + 2)
+// kEnemyCount: now Battle_EnemyCount (symbols.toml). u8: enemies in the battle (actors 3 .. count + 2)
 // kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). u8: counted up by each committed command (PSX 0x801462FF)
 // Input.
 // kPressed: now Input_Pressed (symbols.toml). Input_Pressed, u16

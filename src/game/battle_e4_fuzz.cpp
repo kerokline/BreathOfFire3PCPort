@@ -313,7 +313,7 @@ void Seed(unsigned k) {
     // the counts every loop runs to: the party 0..3 (1..3 where it divides), the divisors at least 1
     M(at::kPartyCount)[0] = Byte({0, 1, 2, 3, 3, 3});
     M(Battle_PartyStanding_addr)[0] = Byte({1, 1, 2, 3, 8});
-    M(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 2, 3, 8});
+    M(Battle_EnemiesLeft_addr)[0] = Byte({1, 2, 3, 8});
     M(at::kFaceStep)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 4 : bh::Next());
     switch (base) {
     case 0x4463E0:   // divides by the count

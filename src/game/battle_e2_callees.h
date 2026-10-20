@@ -48,7 +48,7 @@ constexpr U kRoundFlags = 0x904AA8;       // u16 / u32: the round flags (0x400, 
 // kTapCommand: now BattleE5_GeneRow (symbols.toml). u8: 0xFF none (battle_phases_callees.h kTapCommand)
 constexpr U kPartyCount = 0x904AB0;       // u8 (read as a dword, the low byte): members in the fight
 // kPartyIn: now Battle_PartyStanding (symbols.toml). u8: members counted in
-// kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8
+// kEnemiesLeft: now Battle_EnemiesLeft (symbols.toml). u8
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the action's kind (1 attack, 2, 3, 4 an ability)
 constexpr U kTarget = 0x904B44;           // u8: the target, 0xFF none

@@ -134478,17 +134478,19 @@ note = "was BattleSprites_PartyPick (C3 naming): the party members not out: coun
 
 [[data]]
 pc = 0x904AB2
-name = "BattleActorCopies_EnemyCount"
+name = "Battle_EnemyCount"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 27 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov cl, byte ptr [0x904ab2] at 0x44720f; mov dl, byte ptr [0x904ab2] at 0x44724f; mov cl, byte ptr [0x904ab2] at 0x447a93 and 24 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kEnemyCount, battle_damage::kAiByteB2, battle_e4::kEnemyCount, battle_menu_states::kEnemyCount, battle_sprites::kEnemyCount, rest_3g::kPlaced."
+note = "was BattleActorCopies_EnemyCount (C3 naming): every battle module calls it the enemy count (battle_actor_copies, battle_e4, battle_menu_states, battle_sprites kEnemyCount; battle_damage's AI byte B2); only the module prefix changed."
 
 [[data]]
 pc = 0x904AB3
-name = "BattleE2_EnemiesLeft"
+name = "Battle_EnemiesLeft"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 18 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: cmp byte ptr [0x904ab3], 1 at 0x435c4c; cmp byte ptr [0x904ab3], 1 at 0x435e70; cmp byte ptr [0x904ab3], 1 at 0x436070 and 15 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_damage::kAiByteB3, battle_e2::kEnemiesLeft, battle_e3::kEnemiesLeft, battle_e4::kEnemyDivisor, battle_flow::kEnemiesLeft, battle_sprites::kEnemyPick, rest_3b::kEnemiesLeft, rest_3g::kPlacedTotal."
+note = "was BattleE2_EnemiesLeft (C3 naming): the enemies left (battle_e2, battle_e3, battle_flow, rest_3b kEnemiesLeft; Escape_Roll's divisor, battle_e4; battle_damage's AI byte B3); only the module prefix changed."
 
 [[data]]
 pc = 0x904AC3
@@ -134542,17 +134544,19 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x904AE7
-name = "BattleE7_DropCount"
+name = "Battle_DropCount"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x904ae7], bl at 0x42e54e; mov al, byte ptr [0x904ae7] at 0x431e82; mov bl, byte ptr [0x904ae7] at 0x431e98 and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e7::kDropCount, battle_flow::kDropCount, battle_phases::kDropCount, battle_result::kDropCount."
+note = "was BattleE7_DropCount (C3 naming): the drop count in every reader (battle_e7, battle_flow, battle_phases, battle_result); only the module prefix changed."
 
 [[data]]
 pc = 0x904AE8
-name = "BattleActions_BattleEnd"
+name = "Battle_EndFlags"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 111 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x904ae8], bl at 0x42e519; mov al, byte ptr [0x904ae8] at 0x430059; mov al, byte ptr [0x904ae8] at 0x4310d6 and 108 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actions::kBattleEnd, battle_e1::kBattleEnd, battle_e3::kBattleEnd, battle_flow::kBattleEnd, battle_fx_tasks::kBattleEnd, battle_phases::kBattleEnd, battle_result::kBattleEnd, battle_turn_steps::kBattleEnd, battle_windows::kKindFlags, boss_h::kBattleEnd, boss_sa::kBattleEnd, boss_sb::kBattleEnd, boss_sc::kBattleEnd, boss_sd::kBattleEnd, boss_se::kBattleEnd, boss_sf::kBattleEnd, boss_sg::kBattleEnd, boss_sh::kBattleEnd, boss_si::kBattleEnd, boss_sj::kBattleEnd, mode_rest::kBattleFlags2."
+note = "was BattleActions_BattleEnd (C3 naming): the battle's end bits, read as such by every battle and boss module (kBattleEnd): bit 0 the party down (battle_e3), bit 1 no enemy left (battle_e3, battle_flow), 8 (mode_rest), cleared at the round's start (battle_phases)."
 
 [[data]]
 pc = 0x904AE9
@@ -134563,10 +134567,11 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x904AEC
-name = "BattleFlow_ExpTotal"
+name = "Battle_ExpTotal"
 ctype = "unsigned long"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 15 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904aec], ebx at 0x42e52f; mov eax, dword ptr [0x904aec] at 0x431941; mov eax, dword ptr [0x904aec] at 0x43195b and 12 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_flow::kExpTotal, battle_phases::kExpTotal, battle_result::kExpTotal, boss_sa::kExp, boss_sc::kBattleExp."
+note = "was BattleFlow_ExpTotal (C3 naming): the battle's EXP total (battle_flow, battle_phases, battle_result kExpTotal; boss_sa, boss_sc); only the module prefix changed."
 
 [[data]]
 pc = 0x904AF0

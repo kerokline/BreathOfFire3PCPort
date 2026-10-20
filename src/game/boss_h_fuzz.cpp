@@ -283,7 +283,7 @@ static_assert(kExitBit + 1 == BH_COUNT(kClonesHooks), "the hooks' seeding indice
 
 void SeedHooks(unsigned k) {
     if (k == kEndPick)
-        Mem(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0xFD, 0x82) : bh::Next());
+        Mem(Battle_EndFlags_addr)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0xFD, 0x82) : bh::Next());
 }
 
 // BOF3X_BH_RUN=torast|ops|hooks runs that one alone (the controls script's

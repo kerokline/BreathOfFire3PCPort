@@ -50,7 +50,7 @@ constexpr U kMessageBits = 0x7DEE44;       // u8: bit 1 ends mode 4 (the message
 
 // --- mode 5 (the battle) -----------------------------------------------------------
 // kBattleFlags: now EventBattle_Flags (symbols.toml). u8: EventBattle_Records +0's flags (Field_StartEventBattle)
-// kBattleFlags2: now BattleActions_BattleEnd (symbols.toml). u8: bit 3 keeps the field's music off after the battle
+// kBattleFlags2: now Battle_EndFlags (symbols.toml). u8: bit 3 keeps the field's music off after the battle
 // kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml). u8: the area's track Field_ChangeArea chose (mode_flow kAreaTrack); DIV-0092
 // kBattleFlags3: now BattleMisc_BannerKinds (symbols.toml). u8: zeroed at steps 3 and 4
 constexpr U kFormation = 0x904AAC;         // dword read, its low byte the formation (rest_3g_callees.h)

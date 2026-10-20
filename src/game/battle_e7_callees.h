@@ -48,7 +48,7 @@ constexpr std::uint32_t kLevelBufs = 0x904D20;       // the level-up window's ei
 // kGeneRow: now BattleE5_GeneRow (symbols.toml). 0xFF: the hand on the first box
 // kGeneColumn: now BattleE1_Roster (symbols.toml).
 // kApCost: now BattleActions_ApCost (symbols.toml). u8: the AP cost (battle_actions.md)
-// kDropCount: now BattleE7_DropCount (symbols.toml). u8: the drops listed
+// kDropCount: now Battle_DropCount (symbols.toml). u8: the drops listed
 constexpr std::uint32_t kDropItems = 0x904AF4;       // u16 x n: category << 8 | item
 constexpr std::uint32_t kDropCounts = 0x904B14;      // u8 x n
 constexpr std::uint32_t kGeneList = 0x904608;        // 4-byte rows: three cost indices (0xFF none), a form byte

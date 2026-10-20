@@ -187,15 +187,15 @@ extern "C" void __cdecl Battle_Init(void) {
     B(at::kCommand) = 0;
     B(at::kCrossGrow) = 8;
     SetWord(At(at::kRoundFlags), 0);
-    BattleActions_BattleEnd = 0;
+    Battle_EndFlags = 0;
     SetLong(At(at::kTurnCounter), 1);
     BattleFlow_ZennyTotal = 0;
-    BattleFlow_ExpTotal = 0;
+    Battle_ExpTotal = 0;
     BattlePhases_AE6 = 0;
     BossSe_Script = 0;
     BattlePhases_B7A = 0;
     SetWord(At(at::kB98), 0);
-    BattleE7_DropCount = 0;
+    Battle_DropCount = 0;
     BattleActions_Pending = 0;
     BattlePhases_B8B = 0;
     BattleFlow_ActorAt = 0;

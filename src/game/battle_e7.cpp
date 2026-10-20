@@ -248,7 +248,7 @@ extern "C" void __cdecl BattleResultWin_DrawDrops(void) {
     const unsigned char* const rec = Win();
     auto* const win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(BattleResultWin_DrawFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), 0x118, rec[9]);
-    for (unsigned i = 0; (i & 0xFF) < BattleE7_DropCount; i = (i + 1) & 0xFF) {
+    for (unsigned i = 0; (i & 0xFF) < Battle_DropCount; i = (i + 1) & 0xFF) {
         const unsigned word = W(At(at::kDropItems + 2 * i));
         if (word == 0) continue;
         const unsigned count = B(at::kDropCounts + i);

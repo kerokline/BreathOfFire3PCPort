@@ -131,7 +131,7 @@ void EndStep(U step) { BH_AT(Handler, step)(); }
 // kept: enemy 1's HP, enemy 2's, enemy 0's +0xA4 and +0xA6.
 void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_first) {
     const unsigned char fell = BossSe_Script;     // read once, before any call
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = fell & 2 ? step_if_1 : step_if_not;
         EndStep(at::kEndWin);
     } else if (fell & 1) {
@@ -173,16 +173,16 @@ unsigned char EventAreaFight(unsigned code) {
         return 0;
     }
     if (phase != 0) return 0;
-    if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) BattleActions_BattleEnd |= 2;
+    if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) Battle_EndFlags |= 2;
     if (BossH_Enemy1Status & 0x4000) {
         BossSe_Script |= 2;
-        BattleActions_BattleEnd |= 2;
+        Battle_EndFlags |= 2;
     }
     if (BossH_Enemy2Status & 0x4000) {
         BossSe_Script |= 1;
-        BattleActions_BattleEnd |= 1;
+        Battle_EndFlags |= 1;
     }
-    if (BattleActions_BattleEnd != 0) BH_CALL(BossMap_UpdateFromEnemies)();
+    if (Battle_EndFlags != 0) BH_CALL(BossMap_UpdateFromEnemies)();
     return 0;
 }
 
@@ -204,7 +204,7 @@ void ExitAreaFight(unsigned tag) {
 // Set-ups 17 and 21's end hooks: the win sets the field's move-script counter
 // 0 (`counter`) and takes the end phase's step 1, else step 2.
 void EndCounter(unsigned char counter) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         B(at::kCounter0) = counter;
         EndStep(at::kEndWin);
         return;

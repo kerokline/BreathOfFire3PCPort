@@ -41,8 +41,8 @@ using U = std::uint32_t;
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy EnemyRunAll is running (its object)
 constexpr U kRoundFlags = 0x904AA8;       // u8: the round flags' low byte
 // kEventFlags: now BossSe_Script (symbols.toml). u8: bit 0 set by the hooks of kinds 1 and 39 at a quarter of HP, and by Boss01_Event
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win, bit 2 set by Gary's end (tested with 6 by set-ups 2, 3)
-// kExp: now BattleFlow_ExpTotal (symbols.toml). u32: the experience the battle pays (Battle_EnemyDefeated adds +0x96)
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win, bit 2 set by Gary's end (tested with 6 by set-ups 2, 3)
+// kExp: now Battle_ExpTotal (symbols.toml). u32: the experience the battle pays (Battle_EnemyDefeated adds +0x96)
 constexpr U kActor = 0x904B34;            // u8: the acting actor, 3.. an enemy
 constexpr U kActionKind = 0x904B35;       // u8: the action's kind (4 an ability)
 // kAction: now BattleSprites_Action (symbols.toml). pointer: the action's record, +2 the action's id (u16)

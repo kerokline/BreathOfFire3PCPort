@@ -71,8 +71,8 @@ constexpr std::uint32_t kTurnWork = 0x939A80;      // 11 x (s16 value, u16 actor
 constexpr std::uint32_t kBattleFlags = 0x904AA8;   // u8, bit 7 (PSX 0x801462E4)
 constexpr std::uint32_t kPartyCount = 0x904AB0;    // u8 (PSX 0x801462EC)
 // kAiByteB1: now Battle_PartyStanding (symbols.toml). u8, AI opcodes 0x1D / 0x1E
-// kAiByteB2: now BattleActorCopies_EnemyCount (symbols.toml). u8, AI opcodes 0xF / 0x1F
-// kAiByteB3: now BattleE2_EnemiesLeft (symbols.toml). u8, AI opcodes 0xF / 0x10 / 0x1F / 0x20
+// kAiByteB2: now Battle_EnemyCount (symbols.toml). u8, AI opcodes 0xF / 0x1F
+// kAiByteB3: now Battle_EnemiesLeft (symbols.toml). u8, AI opcodes 0xF / 0x10 / 0x1F / 0x20
 constexpr std::uint32_t kEntryOrder = 0x904AB6;    // 3 actor bytes, 0xFF-ended (PSX 0x801462F2)
 // kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). u8 (PSX 0x801462FF)
 constexpr std::uint32_t kTurnOrder = 0x904ACC;     // 11 actor bytes (PSX 0x80146308)

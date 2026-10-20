@@ -43,7 +43,7 @@ constexpr U kOrder = 0x904ACC;            // u8[]: the turn order (battle_damage
 // kOrderCount: now BattleDamage_TurnCount (symbols.toml). u8: the turn order's length
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: 1 / 2 the side that moves first (battle_phases.md), 3 here
 // kMusicFlags: now EventBattle_Flags (symbols.toml). u8: bit 0x40 keeps the battle's music
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bits 2 and 3 set by hooks here
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bits 2 and 3 set by hooks here
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (battle_actions.md)
 constexpr U kTarget = 0x904B44;           // u8: the target (0..2 a member, 3..10 an enemy)

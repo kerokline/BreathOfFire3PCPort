@@ -574,7 +574,7 @@ Args Seed(unsigned k) {
     case kPickPose: {
         static const unsigned char kKinds[] = {5, 5, 4, 6, 0};
         At(at::kBattleKind)[0] = Often() ? kKinds[Next() % 5] : static_cast<unsigned char>(Next());
-        At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(Next() & 3);
+        At(Battle_EndFlags_addr)[0] = static_cast<unsigned char>(Next() & 3);
         At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Next() & 0x30);
         At(at::kPoseMode)[0] = static_cast<unsigned char>(Next() & 0x18);
         unsigned char* const f = Field_State;

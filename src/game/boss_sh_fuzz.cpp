@@ -250,7 +250,7 @@ void SeedB34(unsigned k) {
         break;
     }
     case 2:
-        B(BattleActions_BattleEnd_addr) = EndByte();
+        B(Battle_EndFlags_addr) = EndByte();
         SeedPicked();
         B(BossSe_Script_addr) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next() & ~2u);
         for (unsigned m = 0; m < 3; ++m) {
@@ -312,7 +312,7 @@ const bh::Clone kB35[] = {
 };
 void SeedEnd(unsigned k) {
     const bh::Clone& c = g_clones[k];
-    if (c.shape == S::kEnd || c.shape == S::kEvent) B(BattleActions_BattleEnd_addr) = EndByte();
+    if (c.shape == S::kEnd || c.shape == S::kEvent) B(Battle_EndFlags_addr) = EndByte();
     if (c.shape == S::kEvent) g_code = Code(0);
 }
 

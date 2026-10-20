@@ -129,7 +129,7 @@ void SetupOwnEnd(U end) { Setup(end, bof3::addr::BareRet, bof3::addr::BareRetZer
 // win) the chapter's step 0x8034E5 = step and a tail jump to 0x446DE0 (the end
 // phase, step 1); otherwise a tail jump to 0x446E00 (step 2).
 void EndStep(unsigned step) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(step);
         BH_AT(Handler, at::kEndWin)();
         return;
@@ -226,7 +226,7 @@ extern "C" void __cdecl Boss38_Setup(void) {
 // original 0x43EED0: the end hook: won, the movement script's variable 3 =
 // 5, the chapter's step 0x20, Music_Track = 0x77, step 1; otherwise step 2.
 extern "C" void __cdecl Boss38_End(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         B(at::kScriptVar3) = 5;
         MoveScript_PartyRecords[0x65] = 0x20;
         Music_Track = 0x77;
@@ -389,7 +389,7 @@ extern "C" void __cdecl Boss50_Setup(void) { SetupOwnEnd(bof3::addr::Boss50_End)
 // original 0x43F380: the end hook: won, the chapter's step 0x10, step 1 (a
 // call, not a tail jump) and after it Music_Track = 0x8C; otherwise step 2.
 extern "C" void __cdecl Boss50_End(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = 0x10;
         BH_AT(Handler, at::kEndWin)();
         Music_Track = 0x8C;

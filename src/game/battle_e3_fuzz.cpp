@@ -222,7 +222,7 @@ void SeedEO(unsigned k) {
     Bit(Mem(at::kRoundFlags), 4);
     Bit(Mem(at::kRoundFlags), 0x40);
     if (k == kCastCue && Flip()) Sprite_Current[9] = 0;
-    if (k == kLeaveEnd) B(BattleE2_EnemiesLeft_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 0, 0xFF) : bh::Next());
+    if (k == kLeaveEnd) B(Battle_EnemiesLeft_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 0, 0xFF) : bh::Next());
     if (k == kCastDoneCost) B(BattleE3_Cost_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 0xFF, 0x80) : bh::Next());
 }
 
@@ -250,7 +250,7 @@ void DisturbEO(U h) {
     case 1: rv::As<records::BattleEnemy>(Enemy())->command_kind = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 2: Enemy()[0x90] ^= 8; break;
     case 3: B(EventBattle_Id_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 4: B(BattleE2_EnemiesLeft_addr) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
+    case 4: B(Battle_EnemiesLeft_addr) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
     case 5: B(BattleE3_Cost_addr) = static_cast<unsigned char>(v); break;
     default: B(at::kRoundFlags) ^= static_cast<unsigned char>(v & 1 ? 4 : 0x40); break;
     }
