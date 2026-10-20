@@ -53,7 +53,7 @@ void SetUL(U a, U v) { SetUL(At(a), v); }
 unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 
 // The community's records and buildings, and the traits table by record.
-unsigned char* Rec(U i) { return At(at::kRecords + 8u * i); }
+unsigned char* Rec(U i) { return At(Community_Records_addr + 8u * i); }
 unsigned char* Bld(U b) { return At(at::kBuildings + 8u * b); }
 unsigned char Trait(U i, U field) { return At(at::kRecordTraits + at::kTraitStride * i + field)[0]; }
 unsigned char* Pose(U object) { return At(Sprite_Objects_addr + 0x88 + at::kSpriteStride * object); }
@@ -1176,7 +1176,7 @@ extern "C" unsigned char __cdecl FieldTrigger08(unsigned char* object, unsigned 
 extern "C" unsigned char __cdecl FieldTrigger09(unsigned char* object, unsigned char*) {
     const unsigned char building = Rec(object[5])[1];
     const U shop = UL(object + 0x1C);
-    At(at::kShopRecords + at::kShopStride * shop)[0] = At(at::kBuildingLevels + 8u * building)[0];
+    At(at::kShopRecords + at::kShopStride * shop)[0] = At(Community_Records_addr + 0x1db + 8u * building)[0];
     return 0;
 }
 

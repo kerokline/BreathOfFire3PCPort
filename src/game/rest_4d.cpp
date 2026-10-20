@@ -1184,7 +1184,7 @@ extern "C" void __cdecl Commu_LeaveWhenClosed(void) {
 // not 0, counted in al (the original clears al alone; callers read al).
 extern "C" unsigned char __cdecl CommuName_CountSlots(void) {
     unsigned char n = 0;
-    for (U cell = at::kSlots; cell < at::kSlotsEnd; cell += 8)
+    for (U cell = Community_Records_addr; cell < at::kSlotsEnd; cell += 8)
         if (B(cell) != 0) n = static_cast<unsigned char>(n + 1);
     return n;
 }
@@ -1194,7 +1194,7 @@ extern "C" unsigned char __cdecl CommuName_CountSlots(void) {
 extern "C" unsigned __cdecl CommuName_NthSlot(unsigned n) {
     unsigned char seen = 0;
     unsigned index = 0;
-    for (U cell = at::kSlots; cell < at::kSlotsEnd; cell += 8, ++index) {
+    for (U cell = Community_Records_addr; cell < at::kSlotsEnd; cell += 8, ++index) {
         if (B(cell) == 0) continue;
         if (seen == static_cast<unsigned char>(n)) return index;
         seen = static_cast<unsigned char>(seen + 1);

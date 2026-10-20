@@ -310,7 +310,7 @@ const sh::Region kRegions[] = {
 
 // --- the seed ------------------------------------------------------------------
 
-unsigned char* Rec(U i) { return Mem(at::kRecords + 8 * i); }
+unsigned char* Rec(U i) { return Mem(Community_Records_addr + 8 * i); }
 unsigned char* Bld(U b) { return Mem(at::kBuildings + 8 * b); }
 
 // The community, as the simulation leaves it: up to 24 records in use (the

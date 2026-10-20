@@ -351,12 +351,12 @@ void Seed(unsigned k) {
     // that kind's track count (the 40 tracks), the row near the count
     B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(PickOf(0, 59, sh::Next() % 60, sh::Next() % 60));
     const unsigned kind = PickOf(0, 1, 8, sh::Next() % 9, sh::Next() % 9);
-    unsigned char* const entry = Mem(kEntries + 8 * B(AreaW0c_TailSub_addr));
+    unsigned char* const entry = Mem(Community_Records_addr + 8 * B(AreaW0c_TailSub_addr));
     entry[1] = static_cast<unsigned char>(kind);
     entry[2] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
     entry[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x13, 0x18, 0xF, sh::Next()));
-    for (unsigned c = 0; c < 9; ++c) B(kTrackCounts + 8 * c) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x26, 0x27, sh::Next() % 40));
-    const unsigned count = B(kTrackCounts + 8 * kind);
+    for (unsigned c = 0; c < 9; ++c) B(Community_Records_addr + 0x1db + 8 * c) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x26, 0x27, sh::Next() % 40));
+    const unsigned count = B(Community_Records_addr + 0x1db + 8 * kind);
     SetWord(Mem(CommuMusic_Track_addr), PickOf(0, 1, count, count - 1, count + 1, 39, 0xFFFF, 0xFFFE, sh::Next() % 40));
     B(CommuMusic_Slide_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xFF, sh::Next()));
     const auto row = static_cast<short>(Word(Mem(CommuMusic_Track_addr)));
@@ -455,7 +455,7 @@ void Disturb(U h) {
     case 13: B(Config_WindowColour_addr) = static_cast<unsigned char>(b % 8); break;
     case 14: sh::Scratch(3)[b % 0x3F] = static_cast<unsigned char>(v); break;
     case 15: SetWord(Mem(CommuMusic_Track_addr), (v % 44) - 2); break;
-    case 16: B(kEntries + 8 * B(AreaW0c_TailSub_addr) + 2 + (b & 1)) = static_cast<unsigned char>(v); break;
+    case 16: B(Community_Records_addr + 8 * B(AreaW0c_TailSub_addr) + 2 + (b & 1)) = static_cast<unsigned char>(v); break;
     case 17: if (b & 1) B(CommuMusic_SavedTrack_addr) = static_cast<unsigned char>(v); else B(CommuList_Page_addr) = static_cast<unsigned char>(v); break;
     case 18: B(Rest4c_Count_addr) = b; break;
     default: break;

@@ -452,7 +452,7 @@ void SeedCommu() {
 // The 60 slot cells half in use; the seven records' list bit half set.
 void SeedSlots() {
     const bool full = sh::Next() % 8 == 0;
-    for (U cell = at::kSlots; cell < at::kSlotsEnd; cell += 8)
+    for (U cell = Community_Records_addr; cell < at::kSlotsEnd; cell += 8)
         B(cell) = static_cast<unsigned char>(full || sh::Half() ? sh::Next() | 1 : 0);
     for (unsigned r = 0; r < 7; ++r) {
         unsigned char& flags = B(at::kRecordFlags + at::kRecordStride * r);

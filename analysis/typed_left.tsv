@@ -8987,21 +8987,18 @@ src/game/field_e2.cpp	FollowAndTick	global	B	at::kScriptFlags2	0	0x905ba4	-	widt
 src/game/field_e2.cpp	FollowAndTick	global	B	at::kScriptFlagsLow	0	0x9039a2	-	width	at::kScriptFlagsLow 0x9039a2 Field_ScriptFlags	b0
 src/game/field_e2.cpp	Records_CountUnpaired	global	B	at::kRecords	0	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
 src/game/field_e2.cpp	Records_CountUnpaired	global	B	at::kRecords	1	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
-src/game/field_e2.cpp	Records_CountUnpaired	global	-	at::kPairs	0	0x9046d0	-	no-entry	at::kPairs 0x9046d0 -	b0
 src/game/field_e2.cpp	Records_CountUnpaired	global	-	at::kPairsEnd	0	0x9048b0	-	no-entry	at::kPairsEnd 0x9048b0 -	b0
-src/game/field_e2.cpp	Records_CountUnpaired	record	B	p - 1	0	-	table=0x9046d0;stride=0x8	computed	offset computed at run time: p - 1	b1-field
+src/game/field_e2.cpp	Records_CountUnpaired	record	B	p - 1	0	-	stride=0x8	computed	offset computed at run time: p - 1	b1-field
 src/game/field_e2.cpp	Records_CountUnpairedOfKind	global	B	at::kRecords	0	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
 src/game/field_e2.cpp	Records_CountUnpairedOfKind	global	B	at::kRecords	1	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
-src/game/field_e2.cpp	Records_CountUnpairedOfKind	global	-	at::kPairs	0	0x9046d0	-	no-entry	at::kPairs 0x9046d0 -	b0
 src/game/field_e2.cpp	Records_CountUnpairedOfKind	global	-	at::kPairsEnd	0	0x9048b0	-	no-entry	at::kPairsEnd 0x9048b0 -	b0
-src/game/field_e2.cpp	Records_CountUnpairedOfKind	record	B	p - 1	0	-	table=0x9046d0;stride=0x8	computed	offset computed at run time: p - 1	b1-field
+src/game/field_e2.cpp	Records_CountUnpairedOfKind	record	B	p - 1	0	-	stride=0x8	computed	offset computed at run time: p - 1	b1-field
 src/game/field_e2.cpp	Records_CountUnpairedOfKind	global	SetL	at::kRecords	0	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
 src/game/field_e2.cpp	Records_CountUnpairedOfKind	global	L	at::kRecords	0	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
 src/game/field_e2.cpp	Field_AfterBattleTally	global	At	at::kTallyBits	0	0x904654	-	no-entry	at::kTallyBits 0x904654 -	b0
 src/game/field_e2.cpp	Field_AfterBattleTally	global	At	at::kTallyBits	1	0x904654	-	no-entry	at::kTallyBits 0x904654 -	b0
-src/game/field_e2.cpp	Field_AfterBattleTally	global	-	at::kPairs	0	0x9046d0	-	no-entry	at::kPairs 0x9046d0 -	b0
 src/game/field_e2.cpp	Field_AfterBattleTally	global	-	at::kPairsEnd	0	0x9048b0	-	no-entry	at::kPairsEnd 0x9048b0 -	b0
-src/game/field_e2.cpp	Field_AfterBattleTally	record	B	p - 1	0	-	table=0x9046d0;stride=0x8	computed	offset computed at run time: p - 1	b1-field
+src/game/field_e2.cpp	Field_AfterBattleTally	record	B	p - 1	0	-	stride=0x8	computed	offset computed at run time: p - 1	b1-field
 src/game/field_e2.cpp	Field_FaceMode11Object	global	L	at::kObject	0	0x905da0	-	inside-entry	at::kObject 0x905da0 FieldEvent_Object905DA0	b0
 src/game/field_e2.cpp	Field_FaceMode11Object	global	L	at::kObject	1	0x905da0	-	inside-entry	at::kObject 0x905da0 FieldEvent_Object905DA0	b0
 src/game/field_e2.cpp	Field_FloorHurt	global	-	at::kCharRecords	0	0x903a70	-	no-entry	at::kCharRecords 0x903a70 -	b0
@@ -9074,8 +9071,6 @@ src/game/field_e2.cpp	ItemTrade_Confirm	global	Pool	at::kPoolWordAsk	1	0x803614	
 src/game/field_e2_fuzz.cpp	-	global	-	field_e2::at::kTextRecords	0	0x904ce0	-	untyped-entry	field_e2::at::kTextRecords 0x904ce0 Text_Records	b0
 src/game/field_e2_fuzz.cpp	Move	global	B	field_e2::at::kEffectSlot	0	0x903850	-	no-entry	field_e2::at::kEffectSlot 0x903850 -	b0
 src/game/field_e2_fuzz.cpp	SeedRecords	global	Mem	at::kRecords	0	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
-src/game/field_e2_fuzz.cpp	SeedRecords	global	Mem	at::kPairs	0	0x9046d0	-	no-entry	at::kPairs 0x9046d0 -	b0
-src/game/field_e2_fuzz.cpp	SeedRecords	global	Mem	at::kPairs	1	0x9046d0	-	no-entry	at::kPairs 0x9046d0 -	b0
 src/game/field_e2_fuzz.cpp	Seed	global	W	field_e2::at::kPaceHeights	0	0x66978c	-	no-entry	field_e2::at::kPaceHeights 0x66978c -	b0
 src/game/field_e2_fuzz.cpp	Seed	record	Word	s + 0x3E	0	-	base=Sprite_Current	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_e2_fuzz.cpp	Seed	global	B	at::kEffectSlot	0	0x903850	-	no-entry	at::kEffectSlot 0x903850 -	b0
@@ -16666,7 +16661,6 @@ src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x7DEE80 + i * 0xA4	0	0x7dee8
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x7DEE80 + (next() % 30) * 0xA4	0	0x7dee80	-	-	-	-
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x904EFC	0	0x904efc	-	-	-	-
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x904EFC	1	0x904efc	-	-	-	-
-src/game/rest_4a.cpp	UL	global	At	at::kRecords	0	0x9046d0	-	no-entry	at::kRecords 0x9046d0 -	b0
 src/game/rest_4a.cpp	UL	global	At	at::kBuildings	0	0x9048b0	-	no-entry	at::kBuildings 0x9048b0 -	b0
 src/game/rest_4a.cpp	UL	global	At	at::kRecordTraits	0	0x653200	-	no-entry	at::kRecordTraits 0x653200 -	b0
 src/game/rest_4a.cpp	UL	global	At	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
@@ -16768,7 +16762,6 @@ src/game/rest_4a.cpp	FieldTrigger03	global	Row	at::kTextRow0	0	0x904ce0	-	untype
 src/game/rest_4a.cpp	FieldTrigger03	global	Row	at::kTextRow1	0	0x904d00	-	no-entry	at::kTextRow1 0x904d00 -	b0
 src/game/rest_4a.cpp	FieldTrigger03	global	Row	at::kTextRow2	0	0x904d20	-	no-entry	at::kTextRow2 0x904d20 -	b0
 src/game/rest_4a.cpp	FieldTrigger04	record	UL	object + 0x1C	0	-	param	no-struct	UL(object + 0x1C): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4a.cpp	FieldTrigger04	global	At	at::kBuildingLevels	0	0x9048ab	-	no-entry	at::kBuildingLevels 0x9048ab -	b0
 src/game/rest_4a.cpp	FieldTrigger04	global	At	at::kShopRecords	0	0x658930	-	untyped-entry	at::kShopRecords 0x658930 Shop_Records	b0
 src/game/rest_4a_fuzz.cpp	ElevationEffect	global	Mem	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a_fuzz.cpp	-	global	-	at::kEvents	0	0x904ca0	-	no-entry	at::kEvents 0x904ca0 -	b0
@@ -16776,7 +16769,6 @@ src/game/rest_4a_fuzz.cpp	-	global	-	at::kSpawned	0	0x904f00	-	no-entry	at::kSpa
 src/game/rest_4a_fuzz.cpp	-	global	-	at::kEventCount	0	0x937f80	-	name	at::kEventCount 0x937f80 Rest4b_BusyB	b0
 src/game/rest_4a_fuzz.cpp	-	global	-	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a_fuzz.cpp	-	global	-	at::kShopRecords	0	0x658930	-	untyped-entry	at::kShopRecords 0x658930 Shop_Records	b0
-src/game/rest_4a_fuzz.cpp	Rec	global	Mem	at::kRecords	0	0x9046d0	-	no-entry	at::kRecords 0x9046d0 -	b0
 src/game/rest_4a_fuzz.cpp	Rec	global	Mem	at::kBuildings	0	0x9048b0	-	no-entry	at::kBuildings 0x9048b0 -	b0
 src/game/rest_4a_fuzz.cpp	Rec	record	SetUL	r + 4	0	-	via=Rec	no-struct	SetUL(r + 4): via=Rec, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4a_fuzz.cpp	Rec	record	SetUL	bl + 4	0	-	via=Bld	no-struct	SetUL(bl + 4): via=Bld, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -16807,11 +16799,6 @@ src/game/rest_4a_fuzz.cpp	Disturb	global	-	at::kEventCount	0	0x937f80	-	name	at:
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
 src/game/rest_4b.cpp	B	record	L	table + 4 * static_cast<U>(index)	0	-	-	no-struct	L(table + 4 * static_cast<U>(index)): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	Member	global	-	at::kMembers	0	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
-src/game/rest_4b.cpp	Member	global	-	at::kMembers	1	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
-src/game/rest_4b.cpp	Slot	global	-	at::kSlots	0	0x9048a8	-	no-entry	at::kSlots 0x9048a8 -	b0
-src/game/rest_4b.cpp	Slot	global	-	at::kSlots	1	0x9048a8	-	no-entry	at::kSlots 0x9048a8 -	b0
-src/game/rest_4b.cpp	Slot	global	-	at::kSlots	2	0x9048a8	-	no-entry	at::kSlots 0x9048a8 -	b0
 src/game/rest_4b.cpp	StateBy	global	B	at::kFrame	0	0x937f94	-	width	at::kFrame 0x937f94 Frame_Counter	b0
 src/game/rest_4b.cpp	Column	global	PutL	at::kTextRecords	0	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4b.cpp	Column	global	PutL	at::kTextRecords	1	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
@@ -16861,11 +16848,10 @@ src/game/rest_4b.cpp	CommuBoard_PickListB	global	B	at::kPickPairs	1	0x652b58	-	n
 src/game/rest_4b.cpp	CommuBoard_PickListB	global	B	at::kPickPairs	2	0x652b58	-	no-entry	at::kPickPairs 0x652b58 -	b0
 src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	slot + 1	0	-	via=Slot	no-struct	B(slot + 1): via=Slot, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	slot + 2	0	-	via=Slot	no-struct	B(slot + 2): via=Slot, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	CommuBoard_Confirm	global	-	at::kMembers	0	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
 src/game/rest_4b.cpp	CommuBoard_Confirm	global	-	at::kMembersEnd	0	0x9048b0	-	no-entry	at::kMembersEnd 0x9048b0 -	b0
-src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	r + 1	0	-	table=0x9046d0;stride=0x8	no-struct	B(r + 1): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	r + 2	0	-	table=0x9046d0;stride=0x8	no-struct	B(r + 2): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	r + 3	0	-	table=0x9046d0;stride=0x8	no-struct	B(r + 3): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	r + 1	0	-	stride=0x8	no-struct	B(r + 1): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	r + 2	0	-	stride=0x8	no-struct	B(r + 2): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	r + 3	0	-	stride=0x8	no-struct	B(r + 3): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	SlotToWrite(arg, " ") + 3	0	-	via=SlotToWrite	no-struct	B(SlotToWrite(arg, " ") + 3): via=SlotToWrite, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 1	0	-	via=SlotToWrite	no-struct	B(SlotToWrite(AreaW0c_TailSub, " ") + 1): via=SlotToWrite, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 2	0	-	via=SlotToWrite	no-struct	B(SlotToWrite(AreaW0c_TailSub, " ") + 2): via=SlotToWrite, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -16881,10 +16867,9 @@ src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 2	1	-	table=0x653
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 3	1	-	table=0x653210	no-struct	B(bars + 3): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	W	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	-	at::kSlots	0	0x9048a8	-	no-entry	at::kSlots 0x9048a8 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kSlotIcons	0	0x652b6c	-	no-entry	at::kSlotIcons 0x652b6c -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	record	B	slot + 1	0	-	table=0x9048a8;stride=0x8	no-struct	B(slot + 1): table=0x9048a8;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	record	B	slot + 1	0	-	stride=0x8	no-struct	B(slot + 1): table=0x9048a8;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kSlotIcons	1	0x652b6c	-	no-entry	at::kSlotIcons 0x652b6c -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kTextBuffer	0	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kTextBuffer	1	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
@@ -16893,11 +16878,9 @@ src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kNumberFormat	0	0x5e10c0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kTextBuffer	2	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawSlotLines	global	-	at::kSlotLines	0	0x652b7c	-	no-entry	at::kSlotLines 0x652b7c -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawSlotLines	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
-src/game/rest_4b.cpp	Commu_CountInSlot	global	-	at::kMembers	0	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
 src/game/rest_4b.cpp	Commu_CountInSlot	global	-	at::kMembersEnd	0	0x9048b0	-	no-entry	at::kMembersEnd 0x9048b0 -	b0
-src/game/rest_4b.cpp	Commu_CountInSlot	record	B	r + 1	0	-	table=0x9046d0;stride=0x8	no-struct	B(r + 1): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	Commu_NthInSlot	global	-	at::kMembers	0	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
-src/game/rest_4b.cpp	Commu_NthInSlot	record	B	r + 1	0	-	table=0x9046d0	no-struct	B(r + 1): table=0x9046d0, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	Commu_CountInSlot	record	B	r + 1	0	-	stride=0x8	no-struct	B(r + 1): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	Commu_NthInSlot	record	B	r + 1	0	-	-	no-struct	B(r + 1): table=0x9046d0, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawDigits	global	B	at::kDigitCells	0	0x652c0c	-	no-entry	at::kDigitCells 0x652c0c -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawSprite	global	-	at::kSprites	0	0x652c18	-	no-entry	at::kSprites 0x652c18 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawSprite	record	B	e + 1	0	-	table=0x652c18	no-struct	B(e + 1): table=0x652c18, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -16921,8 +16904,6 @@ src/game/rest_4b.cpp	CommuBoard_SlotHelp	record	B	slot + 1	0	-	via=Slot	no-struc
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	W	at::kSlotHelp	0	0x652c72	-	no-entry	at::kSlotHelp 0x652c72 -	b0
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	W	at::kPickHelp	0	0x652af0	-	index	at::kPickHelp 0x652af0 CommuTail26_States+0xc	b0
-src/game/rest_4b_fuzz.cpp	B	global	-	at::kMembers	0	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
-src/game/rest_4b_fuzz.cpp	B	global	-	at::kSlots	0	0x9048a8	-	no-entry	at::kSlots 0x9048a8 -	b0
 src/game/rest_4b_fuzz.cpp	Move	record	B	SlotAt(w % 8 + 1) + (v % 3)	0	-	via=SlotAt	no-struct	B(SlotAt(w % 8 + 1) + (v % 3)): via=SlotAt, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b_fuzz.cpp	Move	record	B	Rec(w % 60) + 1 + v % 3	0	-	via=Rec	no-struct	B(Rec(w % 60) + 1 + v % 3): via=Rec, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b_fuzz.cpp	Move	global	B	at::kListCount	0	0x9046cb	-	name	at::kListCount 0x9046cb FieldE2_LevelA	b0
@@ -17132,9 +17113,7 @@ src/game/rest_4d.cpp	CommuName_MemberEntryOut	global	B	at::kName	1	0x675f98	-	no
 src/game/rest_4d.cpp	CommuName_MemberEntryOut	record	At	name + i	0	-	via=RecordName	computed	via=RecordName (At(name + i))	b1-rest
 src/game/rest_4d.cpp	CommuName_MemberClose	global	-	at::kRecordFlags	0	0x903a7b	-	no-entry	at::kRecordFlags 0x903a7b -	b0
 src/game/rest_4d.cpp	CommuName_MemberClose	global	-	at::kRecordFlagsEnd	0	0x903ef7	-	no-entry	at::kRecordFlagsEnd 0x903ef7 -	b0
-src/game/rest_4d.cpp	CommuName_CountSlots	global	-	at::kSlots	0	0x9046d0	-	no-entry	at::kSlots 0x9046d0 -	b0
 src/game/rest_4d.cpp	CommuName_CountSlots	global	-	at::kSlotsEnd	0	0x9048b0	-	no-entry	at::kSlotsEnd 0x9048b0 -	b0
-src/game/rest_4d.cpp	CommuName_NthSlot	global	-	at::kSlots	0	0x9046d0	-	no-entry	at::kSlots 0x9046d0 -	b0
 src/game/rest_4d.cpp	CommuName_NthSlot	global	-	at::kSlotsEnd	0	0x9048b0	-	no-entry	at::kSlotsEnd 0x9048b0 -	b0
 src/game/rest_4d.cpp	CommuName_DrawHeader	global	PoolText	at::kPoolWords	0	0x803580	-	no-entry	at::kPoolWords 0x803580 -	b0
 src/game/rest_4d_fuzz.cpp	Move	global	B	at::kPicked	0	0x675fc0	-	no-entry	at::kPicked 0x675fc0 -	b0
@@ -17149,7 +17128,6 @@ src/game/rest_4d_fuzz.cpp	BareRetMove	global	B	at::kName	0	0x675f98	-	no-entry	a
 src/game/rest_4d_fuzz.cpp	SeedCommu	global	B	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/rest_4d_fuzz.cpp	SeedCommu	global	B	at::kName	1	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/rest_4d_fuzz.cpp	SeedCommu	global	B	at::kPicked	0	0x675fc0	-	no-entry	at::kPicked 0x675fc0 -	b0
-src/game/rest_4d_fuzz.cpp	SeedSlots	global	-	at::kSlots	0	0x9046d0	-	no-entry	at::kSlots 0x9046d0 -	b0
 src/game/rest_4d_fuzz.cpp	SeedSlots	global	-	at::kSlotsEnd	0	0x9048b0	-	no-entry	at::kSlotsEnd 0x9048b0 -	b0
 src/game/rest_4d_fuzz.cpp	SeedSlots	global	B	at::kRecordFlags	0	0x903a7b	-	no-entry	at::kRecordFlags 0x903a7b -	b0
 src/game/rest_4d_fuzz.cpp	SeedSlots	global	B	at::kSlotNames	0	0x9048f0	-	no-entry	at::kSlotNames 0x9048f0 -	b0
@@ -17162,7 +17140,6 @@ src/game/rest_4d_fuzz.cpp	Seed	record	B	d->by	0	-	via=DispatchOf	no-struct	B(d->
 src/game/rest_4e.cpp	Put	global	At	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/rest_4e.cpp	Put	global	W	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/rest_4e.cpp	Put	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4e.cpp	EntryRecord	global	At	kEntries	0	0x9046d0	-	no-entry	kEntries 0x9046d0 -	b0
 src/game/rest_4e.cpp	CommuEntry_DrawPanel	global	At	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e.cpp	CommuEntry_DrawPanel	global	At	kEntryNames	0	0x9048f0	-	no-entry	kEntryNames 0x9048f0 -	b0
 src/game/rest_4e.cpp	CommuEntry_DrawPanel	global	B	kBars	0	0x653210	-	no-entry	kBars 0x653210 -	b0
@@ -17231,7 +17208,6 @@ src/game/rest_4e.cpp	CommuItem_Choose	global	W	kScroll	0	0x803172	-	no-entry	kSc
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kWinOff	1	0x803163	-	no-entry	kWinOff 0x803163 -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kWinOff	2	0x803163	-	no-entry	kWinOff 0x803163 -	b0
 src/game/rest_4e.cpp	ItemClosed	global	B	kWinOff	0	0x803163	-	no-entry	kWinOff 0x803163 -	b0
-src/game/rest_4e.cpp	CommuItem_Confirm	global	At	kEntries	0	0x9046d0	-	no-entry	kEntries 0x9046d0 -	b0
 src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Consumables + 0x10 + 22 * item	0	-	base=NameTable_Consumables	no-struct	B(bof3::addr::NameTable_Consumables + 0x10 + 22 * item): base=NameTable_Consumables, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Weapons + 0x11 + 28 * item	0	-	base=NameTable_Weapons	no-struct	B(bof3::addr::NameTable_Weapons + 0x11 + 28 * item): base=NameTable_Weapons, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Armour + 0x11 + 26 * item	0	-	base=NameTable_Armour	no-struct	B(bof3::addr::NameTable_Armour + 0x11 + 26 * item): base=NameTable_Armour, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -17293,9 +17269,6 @@ src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPool	0	0x803580	-	no-entry	kP
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPool	1	0x803580	-	no-entry	kPool 0x803580 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPairMessages	0	0x653180	-	no-entry	kPairMessages 0x653180 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kMembers	0	0x903a70	-	no-entry	kMembers 0x903a70 -	b0
-src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kEntries	0	0x9046d0	-	no-entry	kEntries 0x9046d0 -	b0
-src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kTrackCounts	0	0x9048ab	-	no-entry	kTrackCounts 0x9048ab -	b0
-src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kTrackCounts	1	0x9048ab	-	no-entry	kTrackCounts 0x9048ab -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kTracks	0	0x653098	-	no-entry	kTracks 0x653098 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kWinOff	0	0x803163	-	no-entry	kWinOff 0x803163 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kTop	0	0x80316b	-	no-entry	kTop 0x80316b -	b0
@@ -17320,7 +17293,6 @@ src/game/rest_4e_fuzz.cpp	Disturb	global	B	kWinOff	0	0x803163	-	no-entry	kWinOff
 src/game/rest_4e_fuzz.cpp	Disturb	global	Mem	kScroll	0	0x803172	-	no-entry	kScroll 0x803172 -	b0
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	kListAEntries	0	0x9039c0	-	no-entry	kListAEntries 0x9039c0 -	b0
-src/game/rest_4e_fuzz.cpp	Disturb	global	B	kEntries	0	0x9046d0	-	no-entry	kEntries 0x9046d0 -	b0
 src/game/rest_4f.cpp	Dispatch	record	L	table + 4 * index	0	-	param	no-struct	L(table + 4 * index): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4f.cpp	CursorId	global	L	at::kCounter	0	0x929f04	-	no-entry	at::kCounter 0x929f04 -	b0
 src/game/rest_4f.cpp	SetDefaults	global	SetW	at::kButtons	0	0x903580	-	width	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0

@@ -134,7 +134,7 @@ extern "C" void __cdecl Records_CountUnpaired(unsigned key, U* counter) {
     for (U r = 0; r < 8; ++r) {
         if (B(at::kRecords + 8u * r) != 4) continue;
         if (B(at::kRecords + 1u + 8u * r) != static_cast<unsigned char>(key)) continue;
-        for (U p = at::kPairs + 1u; p < at::kPairsEnd + 1u; p += 8)
+        for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8)
             if (B(p - 1) != 0 && B(p) == r + 1u) ++named;
     }
     if (named == 0) ++*counter;
@@ -148,7 +148,7 @@ extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
         unsigned char named = 0;
         if (B(at::kRecords + 8u * r) != static_cast<unsigned char>(kind)) continue;
         if (B(at::kRecords + 3u + 8u * r) == 0) continue;
-        for (U p = at::kPairs + 1u; p < at::kPairsEnd + 1u; p += 8)
+        for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8)
             if (B(p - 1) != 0 && B(p) == r + 1u) ++named;
         if (named == 0) SetL(at::kRecords + 4u + 8u * r, L(at::kRecords + 4u + 8u * r) + 1u);
     }
@@ -183,7 +183,7 @@ extern "C" void __cdecl Field_AfterBattleTally(void) {
             }
         if (found) {
             unsigned char a = 0, b = 0;
-            for (U p = at::kPairs + 1u; p < at::kPairsEnd + 1u; p += 8) {
+            for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8) {
                 if (B(p - 1) == 0) continue;
                 if (B(p) == 0xA) ++a;
                 else if (B(p) == 0xB) ++b;

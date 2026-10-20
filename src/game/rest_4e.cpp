@@ -154,7 +154,7 @@ unsigned char* EntryRecord(const char* who) {
     const unsigned e = AreaW0c_TailSub;
     if (e >= kEntryCount)
         bof3::Fatal("%s: the entry 0x9039F5 is %u, past the 60 of 0x9046D0 (docs/rest_4e.md section 7)", who, e);
-    return At(kEntries + 8 * e);
+    return At(Community_Records_addr + 8 * e);
 }
 
 // --- the callees ------------------------------------------------------------------------
@@ -1079,7 +1079,7 @@ extern "C" void __cdecl CommuItem_Cancel(void) {
 extern "C" void __cdecl CommuItem_Confirm(void) {
     if (!ItemClosed()) return;
     SH_CALL(Window_ResetAll)();
-    const unsigned char* const entry = At(kEntries + 8u * AreaW0c_TailSub);
+    const unsigned char* const entry = At(Community_Records_addr + 8u * AreaW0c_TailSub);
     const unsigned char tab = entry[3];
     const unsigned item = entry[2];
     unsigned char kind;

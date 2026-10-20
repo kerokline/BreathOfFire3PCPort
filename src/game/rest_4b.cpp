@@ -71,19 +71,19 @@ void Jump(U table, unsigned count, int index, const char* who) {
 U Member(unsigned k, const char* who) {
     if (k >= 60)
         bof3::Fatal("%s: community record %u is past the 60 at 0x9046D0; the original writes at 0x%X", who, k,
-                    static_cast<unsigned>(at::kMembers + 8 * k));
-    return at::kMembers + 8 * k;
+                    static_cast<unsigned>(Community_Records_addr + 8 * k));
+    return Community_Records_addr + 8 * k;
 }
 
 // A slot's bytes (0x9048A8 + 8 * slot, the slots 1..8 at 0x9048B0): read in
 // place for any slot byte, as the original reads them.
-U Slot(unsigned slot) { return at::kSlots + 8 * slot; }
+U Slot(unsigned slot) { return Community_Records_addr + 0x1d8 + 8 * slot; }
 // ... and written only for the eight (section 5).
 U SlotToWrite(unsigned slot, const char* who) {
     if (slot - 1 >= 8)
         bof3::Fatal("%s: slot %u is outside the eight at 0x9048B0; the original writes at 0x%X", who, slot,
-                    static_cast<unsigned>(at::kSlots + 8 * slot));
-    return at::kSlots + 8 * slot;
+                    static_cast<unsigned>(Community_Records_addr + 0x1d8 + 8 * slot));
+    return Community_Records_addr + 0x1d8 + 8 * slot;
 }
 
 // The field tail's state byte, moved by one as the original's inc / dec do.
@@ -965,7 +965,7 @@ extern "C" void __cdecl CommuBoard_Confirm(void) {
             const bool same = static_cast<int>(B(slot)) == Rest4b_Pick + 4 && static_cast<int>(B(slot + 1)) == Rest4b_PickB &&
                               static_cast<int>(B(slot + 2)) == Rest4b_PickC;
             if (!same) {
-                for (U r = at::kMembers; r < at::kMembersEnd; r += at::kMemberStride) {
+                for (U r = Community_Records_addr; r < at::kMembersEnd; r += at::kMemberStride) {
                     if (B(r + 1) != arg) continue;
                     PutL(r + 4, Rest4a_Clock);
                     B(r + 2) = 0;
@@ -1226,7 +1226,7 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
         for (unsigned j = 0; j < n; ++j)
             SH_CALL(CommuBoard_DrawSprite)(static_cast<int>(j % 5) * 8 + 0xF6, static_cast<int>(j / 5) * 7 + ry + 0x44, 1);
     }
-    U slot = at::kSlots + 8;
+    U slot = Community_Records_addr + 0x1d8 + 8;
     for (unsigned char i = 0; i < 8; ++i, slot += 8) {
         const int sy = (i >> 2) * 61;
         const int sx = static_cast<int>(i % 4) * 52;
@@ -1327,7 +1327,7 @@ extern "C" void __cdecl CommuBoard_DrawSlotLines(unsigned slot, unsigned steady)
 extern "C" unsigned char __cdecl Commu_CountInSlot(unsigned slot) {
     const unsigned char s = static_cast<unsigned char>(slot);
     unsigned char n = 0;
-    for (U r = at::kMembers; r < at::kMembersEnd; r += at::kMemberStride)
+    for (U r = Community_Records_addr; r < at::kMembersEnd; r += at::kMemberStride)
         if (B(r) != 0 && B(r + 1) == s) ++n;
     return n;
 }
@@ -1338,7 +1338,7 @@ extern "C" unsigned __cdecl Commu_NthInSlot(unsigned slot, unsigned nth) {
     const unsigned char s = static_cast<unsigned char>(slot), want = static_cast<unsigned char>(nth);
     unsigned char seen = 0;
     for (unsigned k = 0; k < 60; ++k) {
-        const U r = at::kMembers + 8 * k;
+        const U r = Community_Records_addr + 8 * k;
         if (B(r) == 0 || B(r + 1) != s) continue;
         if (seen == want) return k;
         ++seen;

@@ -564,12 +564,12 @@ void SeedRecords() {
         rec[3] = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFF);
     }
     for (U p = 0; p < 60; ++p) {
-        unsigned char* const pair = Mem(at::kPairs + 8 * p);
+        unsigned char* const pair = Mem(Community_Records_addr + 8 * p);
         pair[0] = static_cast<unsigned char>(sh::Next() % 4 == 0 ? 1 : 0);
         pair[1] = static_cast<unsigned char>(PickOf(0xA, 0xB, 1 + sh::Next() % 8, sh::Next() % 12));
     }
     if (sh::Half())
-        for (U p = 0; p < 60; ++p) Mem(at::kPairs + 8 * p)[0] = 0;   // no pair in use at all
+        for (U p = 0; p < 60; ++p) Mem(Community_Records_addr + 8 * p)[0] = 0; // no pair in use at all
 }
 
 void SeedParty() {

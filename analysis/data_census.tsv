@@ -8987,21 +8987,18 @@ site	src/game/field_e2.cpp	103	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field
 site	src/game/field_e2.cpp	103	global	B	at::kScriptFlagsLow	0x9039a2	-	exact	Field_ScriptFlags	unsigned short	0
 site	src/game/field_e2.cpp	135	global	B	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
 site	src/game/field_e2.cpp	136	global	B	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/field_e2.cpp	137	global	-	at::kPairs	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/field_e2.cpp	137	global	-	at::kPairsEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/field_e2.cpp	138	record	B	p - 1	-	table=0x9046d0;stride=0x8	-	-	-	0
+site	src/game/field_e2.cpp	138	record	B	p - 1	-	stride=0x8	-	-	-	0
 site	src/game/field_e2.cpp	149	global	B	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
 site	src/game/field_e2.cpp	150	global	B	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/field_e2.cpp	151	global	-	at::kPairs	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/field_e2.cpp	151	global	-	at::kPairsEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/field_e2.cpp	152	record	B	p - 1	-	table=0x9046d0;stride=0x8	-	-	-	0
+site	src/game/field_e2.cpp	152	record	B	p - 1	-	stride=0x8	-	-	-	0
 site	src/game/field_e2.cpp	153	global	SetL	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
 site	src/game/field_e2.cpp	153	global	L	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
 site	src/game/field_e2.cpp	172	global	At	at::kTallyBits	0x904654	-	none	-	-	0
 site	src/game/field_e2.cpp	172	global	At	at::kTallyBits	0x904654	-	none	-	-	0
-site	src/game/field_e2.cpp	186	global	-	at::kPairs	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/field_e2.cpp	186	global	-	at::kPairsEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/field_e2.cpp	187	record	B	p - 1	-	table=0x9046d0;stride=0x8	-	-	-	0
+site	src/game/field_e2.cpp	187	record	B	p - 1	-	stride=0x8	-	-	-	0
 site	src/game/field_e2.cpp	224	global	L	at::kObject	0x905da0	-	exact	FieldEvent_Object905DA0	unsigned char	0
 site	src/game/field_e2.cpp	225	global	L	at::kObject	0x905da0	-	exact	FieldEvent_Object905DA0	unsigned char	0
 site	src/game/field_e2.cpp	259	global	-	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
@@ -9074,8 +9071,6 @@ site	src/game/field_e2.cpp	1892	global	Pool	at::kPoolWordAsk	0x803614	-	none	-	-
 site	src/game/field_e2_fuzz.cpp	518	global	-	field_e2::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	1
 site	src/game/field_e2_fuzz.cpp	541	global	B	field_e2::at::kEffectSlot	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/field_e2_fuzz.cpp	561	global	Mem	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	1
-site	src/game/field_e2_fuzz.cpp	567	global	Mem	at::kPairs	0x9046d0	-	exact	Community_Records	records::CommunityRecord	1
-site	src/game/field_e2_fuzz.cpp	572	global	Mem	at::kPairs	0x9046d0	-	exact	Community_Records	records::CommunityRecord	1
 site	src/game/field_e2_fuzz.cpp	653	global	W	field_e2::at::kPaceHeights	0x66978c	-	none	-	-	1
 site	src/game/field_e2_fuzz.cpp	654	record	Word	s + 0x3E	-	base=Sprite_Current	-	-	-	1
 site	src/game/field_e2_fuzz.cpp	657	global	B	at::kEffectSlot	0x903850	-	exact	DamageScratch	records::DamageScratch	1
@@ -16666,7 +16661,6 @@ site	src/game/rest_3g_fuzz.cpp	484	raw	At	0x7DEE80 + i * 0xA4	0x7dee80	-	exact	S
 site	src/game/rest_3g_fuzz.cpp	488	raw	At	0x7DEE80 + (next() % 30) * 0xA4	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	1
 site	src/game/rest_3g_fuzz.cpp	492	raw	At	0x904EFC	0x904efc	-	exact	Game_AreaNumber	unsigned short	1
 site	src/game/rest_3g_fuzz.cpp	496	raw	At	0x904EFC	0x904efc	-	exact	Game_AreaNumber	unsigned short	1
-site	src/game/rest_4a.cpp	56	global	At	at::kRecords	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/rest_4a.cpp	57	global	At	at::kBuildings	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
 site	src/game/rest_4a.cpp	58	global	At	at::kRecordTraits	0x653200	-	none	-	-	0
 site	src/game/rest_4a.cpp	60	global	At	at::kResidentCounts	0x675f58	-	none	-	-	0
@@ -16768,7 +16762,6 @@ site	src/game/rest_4a.cpp	1154	global	Row	at::kTextRow0	0x904ce0	-	exact	Text_Re
 site	src/game/rest_4a.cpp	1155	global	Row	at::kTextRow1	0x904d00	-	none	-	-	0
 site	src/game/rest_4a.cpp	1156	global	Row	at::kTextRow2	0x904d20	-	none	-	-	0
 site	src/game/rest_4a.cpp	1178	record	UL	object + 0x1C	-	param	-	-	-	0
-site	src/game/rest_4a.cpp	1179	global	At	at::kBuildingLevels	0x9048ab	-	inside	Community_Records+0x1db	records::CommunityRecord	0
 site	src/game/rest_4a.cpp	1179	global	At	at::kShopRecords	0x658930	-	exact	Shop_Records	-	0
 site	src/game/rest_4a_fuzz.cpp	221	global	Mem	at::kResidentCounts	0x675f58	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	301	global	-	at::kEvents	0x904ca0	-	none	-	-	1
@@ -16776,7 +16769,6 @@ site	src/game/rest_4a_fuzz.cpp	302	global	-	at::kSpawned	0x904f00	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	304	global	-	at::kEventCount	0x937f80	-	exact	Rest4b_BusyB	unsigned char	1
 site	src/game/rest_4a_fuzz.cpp	305	global	-	at::kResidentCounts	0x675f58	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	307	global	-	at::kShopRecords	0x658930	-	exact	Shop_Records	-	1
-site	src/game/rest_4a_fuzz.cpp	313	global	Mem	at::kRecords	0x9046d0	-	exact	Community_Records	records::CommunityRecord	1
 site	src/game/rest_4a_fuzz.cpp	314	global	Mem	at::kBuildings	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	1
 site	src/game/rest_4a_fuzz.cpp	335	record	SetUL	r + 4	-	via=Rec	-	-	-	1
 site	src/game/rest_4a_fuzz.cpp	343	record	SetUL	bl + 4	-	via=Bld	-	-	-	1
@@ -16807,11 +16799,6 @@ site	src/game/rest_4a_fuzz.cpp	594	global	-	at::kEventCount	0x937f80	-	exact	Res
 site	src/game/rest_4a_fuzz.cpp	599	global	Mem	at::kResidentCounts	0x675f58	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	600	global	Mem	at::kOfferWords	0x675f60	-	none	-	-	1
 site	src/game/rest_4b.cpp	66	record	L	table + 4 * static_cast<U>(index)	-	-	-	-	-	0
-site	src/game/rest_4b.cpp	74	global	-	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	75	global	-	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	80	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	85	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	86	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
 site	src/game/rest_4b.cpp	95	global	B	at::kFrame	0x937f94	-	exact	Frame_Counter	unsigned int	0
 site	src/game/rest_4b.cpp	106	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
 site	src/game/rest_4b.cpp	107	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
@@ -16861,11 +16848,10 @@ site	src/game/rest_4b.cpp	880	global	B	at::kPickPairs	0x652b58	-	none	-	-	0
 site	src/game/rest_4b.cpp	886	global	B	at::kPickPairs	0x652b58	-	none	-	-	0
 site	src/game/rest_4b.cpp	965	record	B	slot + 1	-	via=Slot	-	-	-	0
 site	src/game/rest_4b.cpp	966	record	B	slot + 2	-	via=Slot	-	-	-	0
-site	src/game/rest_4b.cpp	968	global	-	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/rest_4b.cpp	968	global	-	at::kMembersEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/rest_4b.cpp	969	record	B	r + 1	-	table=0x9046d0;stride=0x8	-	-	-	0
-site	src/game/rest_4b.cpp	971	record	B	r + 2	-	table=0x9046d0;stride=0x8	-	-	-	0
-site	src/game/rest_4b.cpp	972	record	B	r + 3	-	table=0x9046d0;stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	969	record	B	r + 1	-	stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	971	record	B	r + 2	-	stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	972	record	B	r + 3	-	stride=0x8	-	-	-	0
 site	src/game/rest_4b.cpp	975	record	B	SlotToWrite(arg, " ") + 3	-	via=SlotToWrite	-	-	-	0
 site	src/game/rest_4b.cpp	980	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 1	-	via=SlotToWrite	-	-	-	0
 site	src/game/rest_4b.cpp	983	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 2	-	via=SlotToWrite	-	-	-	0
@@ -16881,10 +16867,9 @@ site	src/game/rest_4b.cpp	1080	record	B	bars + 2	-	table=0x653210	-	-	-	0
 site	src/game/rest_4b.cpp	1081	record	B	bars + 3	-	table=0x653210	-	-	-	0
 site	src/game/rest_4b.cpp	1195	global	At	at::kMessagePools	0x803580	-	none	-	-	0
 site	src/game/rest_4b.cpp	1195	global	W	at::kMessagePools	0x803580	-	none	-	-	0
-site	src/game/rest_4b.cpp	1229	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
 site	src/game/rest_4b.cpp	1234	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
 site	src/game/rest_4b.cpp	1241	global	B	at::kSlotIcons	0x652b6c	-	none	-	-	0
-site	src/game/rest_4b.cpp	1241	record	B	slot + 1	-	table=0x9048a8;stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	1241	record	B	slot + 1	-	stride=0x8	-	-	-	0
 site	src/game/rest_4b.cpp	1242	global	B	at::kSlotIcons	0x652b6c	-	none	-	-	0
 site	src/game/rest_4b.cpp	1254	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
 site	src/game/rest_4b.cpp	1256	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
@@ -16893,11 +16878,9 @@ site	src/game/rest_4b.cpp	1263	global	At	at::kNumberFormat	0x5e10c0	-	exact	Area
 site	src/game/rest_4b.cpp	1264	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
 site	src/game/rest_4b.cpp	1299	global	-	at::kSlotLines	0x652b7c	-	none	-	-	0
 site	src/game/rest_4b.cpp	1300	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
-site	src/game/rest_4b.cpp	1330	global	-	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/rest_4b.cpp	1330	global	-	at::kMembersEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/rest_4b.cpp	1331	record	B	r + 1	-	table=0x9046d0;stride=0x8	-	-	-	0
-site	src/game/rest_4b.cpp	1341	global	-	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	1342	record	B	r + 1	-	table=0x9046d0	-	-	-	0
+site	src/game/rest_4b.cpp	1331	record	B	r + 1	-	stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	1342	record	B	r + 1	-	-	-	-	-	0
 site	src/game/rest_4b.cpp	1497	global	B	at::kDigitCells	0x652c0c	-	none	-	-	0
 site	src/game/rest_4b.cpp	1512	global	-	at::kSprites	0x652c18	-	none	-	-	0
 site	src/game/rest_4b.cpp	1514	record	B	e + 1	-	table=0x652c18	-	-	-	0
@@ -16921,8 +16904,6 @@ site	src/game/rest_4b.cpp	1709	record	B	slot + 1	-	via=Slot	-	-	-	0
 site	src/game/rest_4b.cpp	1734	global	W	at::kSlotHelp	0x652c72	-	none	-	-	0
 site	src/game/rest_4b.cpp	1737	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
 site	src/game/rest_4b.cpp	1742	global	W	at::kPickHelp	0x652af0	-	inside	CommuTail26_States+0xc	unsigned long	0
-site	src/game/rest_4b_fuzz.cpp	47	global	-	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	1
-site	src/game/rest_4b_fuzz.cpp	48	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	1
 site	src/game/rest_4b_fuzz.cpp	249	record	B	SlotAt(w % 8 + 1) + (v % 3)	-	via=SlotAt	-	-	-	1
 site	src/game/rest_4b_fuzz.cpp	250	record	B	Rec(w % 60) + 1 + v % 3	-	via=Rec	-	-	-	1
 site	src/game/rest_4b_fuzz.cpp	251	global	B	at::kListCount	0x9046cb	-	exact	FieldE2_LevelA	unsigned char	1
@@ -17132,9 +17113,7 @@ site	src/game/rest_4d.cpp	1117	global	B	at::kName	0x675f98	-	none	-	-	0
 site	src/game/rest_4d.cpp	1117	record	At	name + i	-	via=RecordName	-	-	-	0
 site	src/game/rest_4d.cpp	1155	global	-	at::kRecordFlags	0x903a7b	-	inside	CharacterRecords+0xb	records::CharRecord	0
 site	src/game/rest_4d.cpp	1155	global	-	at::kRecordFlagsEnd	0x903ef7	-	inside	CharacterRecords+0x487	records::CharRecord	0
-site	src/game/rest_4d.cpp	1187	global	-	at::kSlots	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/rest_4d.cpp	1187	global	-	at::kSlotsEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/rest_4d.cpp	1197	global	-	at::kSlots	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/rest_4d.cpp	1197	global	-	at::kSlotsEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
 site	src/game/rest_4d.cpp	1243	global	PoolText	at::kPoolWords	0x803580	-	none	-	-	0
 site	src/game/rest_4d_fuzz.cpp	233	global	B	at::kPicked	0x675fc0	-	none	-	-	1
@@ -17149,7 +17128,6 @@ site	src/game/rest_4d_fuzz.cpp	304	global	B	at::kName	0x675f98	-	none	-	-	1
 site	src/game/rest_4d_fuzz.cpp	439	global	B	at::kName	0x675f98	-	none	-	-	1
 site	src/game/rest_4d_fuzz.cpp	442	global	B	at::kName	0x675f98	-	none	-	-	1
 site	src/game/rest_4d_fuzz.cpp	443	global	B	at::kPicked	0x675fc0	-	none	-	-	1
-site	src/game/rest_4d_fuzz.cpp	455	global	-	at::kSlots	0x9046d0	-	exact	Community_Records	records::CommunityRecord	1
 site	src/game/rest_4d_fuzz.cpp	455	global	-	at::kSlotsEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	1
 site	src/game/rest_4d_fuzz.cpp	458	global	B	at::kRecordFlags	0x903a7b	-	inside	CharacterRecords+0xb	records::CharRecord	1
 site	src/game/rest_4d_fuzz.cpp	462	global	B	at::kSlotNames	0x9048f0	-	none	-	-	1
@@ -17162,7 +17140,6 @@ site	src/game/rest_4d_fuzz.cpp	485	record	B	d->by	-	via=DispatchOf	-	-	-	1
 site	src/game/rest_4e.cpp	138	global	At	kScriptPool	0x803580	-	none	-	-	0
 site	src/game/rest_4e.cpp	138	global	W	kScriptPool	0x803580	-	none	-	-	0
 site	src/game/rest_4e.cpp	148	record	L	table + 4 * index	-	-	-	-	-	0
-site	src/game/rest_4e.cpp	157	global	At	kEntries	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/rest_4e.cpp	195	global	At	kEdit	0x675f98	-	none	-	-	0
 site	src/game/rest_4e.cpp	195	global	At	kEntryNames	0x9048f0	-	none	-	-	0
 site	src/game/rest_4e.cpp	208	global	B	kBars	0x653210	-	none	-	-	0
@@ -17231,7 +17208,6 @@ site	src/game/rest_4e.cpp	1020	global	W	kScroll	0x803172	-	inside	WindowRecords+
 site	src/game/rest_4e.cpp	1024	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
 site	src/game/rest_4e.cpp	1036	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
 site	src/game/rest_4e.cpp	1057	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	0
-site	src/game/rest_4e.cpp	1082	global	At	kEntries	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
 site	src/game/rest_4e.cpp	1087	record	B	bof3::addr::NameTable_Consumables + 0x10 + 22 * item	-	base=NameTable_Consumables	-	-	-	0
 site	src/game/rest_4e.cpp	1088	record	B	bof3::addr::NameTable_Weapons + 0x11 + 28 * item	-	base=NameTable_Weapons	-	-	-	0
 site	src/game/rest_4e.cpp	1089	record	B	bof3::addr::NameTable_Armour + 0x11 + 26 * item	-	base=NameTable_Armour	-	-	-	0
@@ -17293,9 +17269,6 @@ site	src/game/rest_4e_fuzz.cpp	314	global	Mem	kPool	0x803580	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	321	global	Mem	kPool	0x803580	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	330	global	Mem	kPairMessages	0x653180	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	347	global	B	kMembers	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
-site	src/game/rest_4e_fuzz.cpp	354	global	Mem	kEntries	0x9046d0	-	exact	Community_Records	records::CommunityRecord	1
-site	src/game/rest_4e_fuzz.cpp	358	global	B	kTrackCounts	0x9048ab	-	inside	Community_Records+0x1db	records::CommunityRecord	1
-site	src/game/rest_4e_fuzz.cpp	359	global	B	kTrackCounts	0x9048ab	-	inside	Community_Records+0x1db	records::CommunityRecord	1
 site	src/game/rest_4e_fuzz.cpp	363	global	Mem	kTracks	0x653098	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	368	global	B	kWinOff	0x803163	-	inside	WindowRecords+0x3	records::WindowRecord	1
 site	src/game/rest_4e_fuzz.cpp	371	global	B	kTop	0x80316b	-	inside	WindowRecords+0xb	records::WindowRecord	1
@@ -17320,7 +17293,6 @@ site	src/game/rest_4e_fuzz.cpp	444	global	B	kWinOff	0x803163	-	inside	WindowReco
 site	src/game/rest_4e_fuzz.cpp	447	global	Mem	kScroll	0x803172	-	inside	WindowRecords+0x12	records::WindowRecord	1
 site	src/game/rest_4e_fuzz.cpp	450	global	B	kEdit	0x675f98	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	453	global	B	kListAEntries	0x9039c0	-	none	-	-	1
-site	src/game/rest_4e_fuzz.cpp	458	global	B	kEntries	0x9046d0	-	exact	Community_Records	records::CommunityRecord	1
 site	src/game/rest_4f.cpp	101	record	L	table + 4 * index	-	param	-	-	-	0
 site	src/game/rest_4f.cpp	125	global	L	at::kCounter	0x929f04	-	none	-	-	0
 site	src/game/rest_4f.cpp	137	global	SetW	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
@@ -23104,26 +23076,26 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19567
-#count sites_global	9711
-#count sites_global_at	7711
-#count sites_global_module	2000
+#count sites	19539
+#count sites_global	9683
+#count sites_global_at	7689
+#count sites_global_module	1994
 #count sites_record	8727
 #count sites_raw	1129
-#count sites_in_fuzz	4194
+#count sites_in_fuzz	4184
 #count files_with_sites	523
 #count files_with_record_sites	470
 #count record_sites_with_stride	699
-#count record_sites_with_table_or_base	3497
+#count record_sites_with_table_or_base	3488
 #count record_sites_on_named_pointer	198
 #count record_sites_on_helper_call	677
 #count record_sites_offset_into_constant	1546
 #count record_sites_via_helper	2430
 #count record_sites_param	661
-#count record_sites_family_unknown	1708
+#count record_sites_family_unknown	1709
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	2379
-#count global_sites_covered_inside	1138
+#count global_sites_covered_exact	2359
+#count global_sites_covered_inside	1130
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
 #count at_refs_struct_or_array	271
