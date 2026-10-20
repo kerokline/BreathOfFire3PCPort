@@ -109,7 +109,7 @@ RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 TRACK_NONE = 0xFF            # an event battle's track when its file has no music: Music_Play(0xFF) plays nothing
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
 RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk",
-         "faerie", "pspmap", "verb", "fishrec", "fishpen", "margins")   # widen<k>: the disc's name is k bytes
+         "faerie", "pspmap", "verb", "fishrec", "fishpen", "margins", "titlemark")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
@@ -383,6 +383,19 @@ VERB_SETS, VERB_SET, VERB_SLOT = 0x66383C, 8, 2          # set 8's second verb: 
 VERB_AT = VERB_SETS + 5 * VERB_SET + VERB_SLOT
 VERB_FILE, VERB_WEST, VERB_PORT = "ETC/STATUS.EMI", 0x16, 0x0B   # the Western 23rd verb -> the port's Quit
 VERB_BUILDS = ("psx-us", "psx-eu-en", "psx-fr", "psx-de")
+# titlemark (D266, 2026-10-20): the title's mark is Title_Sprites (0x653850, 17 entries of
+# u16 u, v, w, h, clut) entry 1, drawn from the disc's own glyph page on a disc-only install
+# (DIV-0114): the (R) on the PC and the Japanese discs, 10 wide; the TM on the Western discs,
+# 12 wide. The width's low byte is the disc's own, so no segment matches BOF3.exe's and the
+# image held 0 (the mark drawn zero wide). The owner's call (2026-10-13, the away day; IDEAS
+# I43, docs/exe-gap-round.md 3): the disc's own width. The table is found in TM_FILE (the
+# title's overlay, GAME.EMI#1 on every disc) by entries 0..6 equal to BOF3.exe's but for that
+# byte (entries 7..9 are regional too: the US notice line, FR's entry 7), and the one byte is
+# copied. DIV-0101's amendment of 2026-10-20.
+TM_TABLE, TM_AT, TM_ANCHOR_END = 0x653850, 0x65385E, 0x65389A   # entry 1's width; entry 7's width
+TM_FILE = "ETC/GAME.EMI"
+TM_BUILDS = VERB_BUILDS
+TM_WIDTHS = range(8, 17)                                          # a mark glyph's width: refuse anything else
 # boxxy: the dialogue box's two position tables (window_task.cpp kBoxXY 0x66ADD8, kBoxAltXY
 # 0x66ADE8: 7 x (u8 x, u8 y) and two zero bytes each). The PSP's BOOT.BIN holds them as 7 x
 # (s16 x, s16 y), the two tables 0x1C apart, with entries 3..6 framed for its 384-wide view:
@@ -849,6 +862,10 @@ def build_fill(row, disc, elf, rule, srcs):
             if v < 0:
                 fail("%s: BOOT.BIN 0x%X margin %d is under the PSP's widening" % (row["build"], row["addr"], i))
             out[i], mask[i] = v, True
+    elif rl == "titlemark":
+        if (lo, hi) != (TM_AT, TM_AT + 1) or blob[at] not in TM_WIDTHS:
+            fail("%s: %s 0x%X is not the title mark's width (%d)" % (row["build"], row["file"], row["addr"], blob[at]))
+        out[0], mask[0] = blob[at], True
     elif rl == "verb":
         if hi - lo != 1 or lo != VERB_AT or blob[at] != VERB_WEST:
             fail("%s: %s 0x%X is not set 8's Western 23rd verb (0x%02X)" % (row["build"], row["file"], row["addr"], VERB_WEST))
@@ -1040,6 +1057,13 @@ def find_rows(disc, bid, pc, ref_srcs=None):
                      "section": v[0], "addr": v[1]})
     elif bid in VERB_BUILDS:
         print("  %s verb: set 8 with the 23rd verb not found in %s" % (bid, VERB_FILE))
+    tm = twin_place(srcs, pc, TM_TABLE, TM_ANCHOR_END, TM_FILE, 0,
+                    ((TM_TABLE, TM_AT), (TM_AT + 1, TM_ANCHOR_END))) if bid in TM_BUILDS else None
+    if tm:
+        rows.append({"build": bid, "rule": "titlemark", "pc": TM_AT, "pc_end": TM_AT + 1, "file": TM_FILE,
+                     "section": tm[0], "addr": tm[1] + TM_AT - TM_TABLE})
+    elif bid in TM_BUILDS:
+        print("  %s titlemark: Title_Sprites not found in %s" % (bid, TM_FILE))
     if psp:
         ch = records_place(srcs, pc, "ETC/GAME.EMI", CH_RECORDS, CH_COUNT, CH_STRIDE, CH_AREA)
         if ch:
@@ -1079,7 +1103,8 @@ def find_rows(disc, bid, pc, ref_srcs=None):
             r["addr"], r["filled"], len(bad)))
         # fishpen: the release's own pens, BOF3.exe's only on a Japanese build; kept by its
         # place (fish_place) beside the fishrec row, whose bytes are BOF3.exe's
-        if not bad or (r["rule"] == "fishpen" and any(k["rule"] == "fishrec" for k in kept)):
+        # titlemark: the release's own mark width (D266), BOF3.exe's only on a Japanese disc
+        if not bad or r["rule"] == "titlemark" or (r["rule"] == "fishpen" and any(k["rule"] == "fishrec" for k in kept)):
             kept.append(r)
     if not psp:
         return kept
@@ -1613,10 +1638,11 @@ def write_recipe(rows):
              "# msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from",
              "# COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit), fishrec and",
              "# fishpen (the fishing banner's line records and the release's own label pens, D313), margins",
-             "# (Sprite_ScreenMargins from BOOT.BIN, the PSP's x margins less its 32 columns) - and how",
+             "# (Sprite_ScreenMargins from BOOT.BIN, the PSP's x margins less its 32 columns), titlemark (the",
+             "# Western title mark's width, the disc's own, D266) - and how",
              "# many bytes it fills.",
              "# A row is written only when every",
-             "# byte equals BOF3.exe's, but a fishpen row (each release's own pens) and a pairs track",
+             "# byte equals BOF3.exe's, but a fishpen row (each release's own pens), a titlemark row and a pairs track",
              "# naming a song the disc makes the same (byte-identical BGM files).",
              "# Addresses and counts only (CLAUDE.md rule 1).",
              "\t".join(COLS)]
@@ -1769,7 +1795,7 @@ def check():
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
             want = {"rows8": n // 2, "pairs": n, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES, "verb": n,
-                    "fishrec": 4 * FI_COUNT, "fishpen": 3, "margins": n}.get(r["rule"])
+                    "fishrec": 4 * FI_COUNT, "fishpen": 3, "margins": n, "titlemark": 1}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:
@@ -1779,6 +1805,9 @@ def check():
             if r["rule"] == "verb" and (bid not in VERB_BUILDS
                                         or (r["pc"], r["pc_end"], r["file"]) != (VERB_AT, VERB_AT + 1, VERB_FILE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: a verb row off the rule" % (bid, r["pc"]))
+            if r["rule"] == "titlemark" and (bid not in TM_BUILDS
+                                             or (r["pc"], r["pc_end"], r["file"]) != (TM_AT, TM_AT + 1, TM_FILE)):
+                errs.append("exe-psp.tsv: %s 0x%06X: a titlemark row off the rule" % (bid, r["pc"]))
             if r["rule"] == "margins" and (bid not in PSP or (r["pc"], r["pc_end"], r["file"])
                                            != (MARGINS, MARGINS + 4 * MARGIN_ENTRIES, "BOOT.BIN")):
                 errs.append("exe-psp.tsv: %s 0x%06X: a margins row off the rule" % (bid, r["pc"]))
