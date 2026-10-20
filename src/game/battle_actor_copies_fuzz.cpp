@@ -269,7 +269,7 @@ constexpr Call kItemPartyCalls[] = {{0x31, 0x461EB0}, {0x47, 0x591E50},  {0x79, 
 constexpr Call kItemConfirmCalls[] = {{0x6, 0x587740}, {0x49, 0x449FE0}};
 
 enum : unsigned {
-    kTargetDispatch, kShowPrompt, kPickDispatch, kBegin, kPickEnemy, Field_ConfirmButtons_addr, kItemDispatch, kOpenDispatch, kOpenWindow,
+    kTargetDispatch, kShowPrompt, kPickDispatch, kBegin, kPickEnemy, kTargetConfirm, kItemDispatch, kOpenDispatch, kOpenWindow,
     kBrowse, kChoose, kTargetDispatch2, kTargetBegin, kItemPickEnemy, kItemPickParty, kItemConfirm, kCount
 };
 

@@ -151,7 +151,7 @@ const sh::Clone kEnemy[] = {
 
 enum : unsigned {
     kAutoCheck, kLiveMember, kActionIs0E, kAutoFixed, kOtherMember, kRunSlot, kClutCopy, kAreaEnter, kQueueAreas,
-    kPopulation, kMood, Rest4a_LevelLit_addr, FieldE2_LevelA_addr, kTick5, kTick9, kTickD, kTickB, kAddRecord, kRemoveRecord, kSumsAB,
+    kPopulation, kMood, kSimLevelLit, kSimLevelDark, kTick5, kTick9, kTickD, kTickB, kAddRecord, kRemoveRecord, kSumsAB,
     kRollOffers, kPlaceObjects, kPlaceLoose, kPlaceResident, kPose0, kPose4, kPose5, kPose6, kPose7, kPose8, kPose9,
     kPoseA, kPoseB, kPoseC, kPoseD, kTrig01, kTrig09, kTrig02, kTrig03, kTrig04, kTrig05, kTrig06, kTrig07, kTrig08,
     kTrig10, kTrig61, kTrig11, kCount

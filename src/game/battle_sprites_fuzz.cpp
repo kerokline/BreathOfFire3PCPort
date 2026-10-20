@@ -153,7 +153,7 @@ void Disturb() {
 enum Stub : unsigned {
     kActorOut, kRand, kMark, kInvPut, kItemClass, kPopupSlot, kAddClamped, kAddCap, kWindow, kPlayEffect, kElevation,
     kSetBank, kUpdateScreen, kChanceB, kActFlag, kSlotsFull, kCoinFlip, kAutoAllowed, kAutoFixed, kNoTarget, kOutAction,
-    kActionE, kPickParty, kPickEnemyA, kPickEnemyB, kClutMark, kClutFind, kClutOwner, kBossCommon, BattleActions_EventBattle_addr, kNormal,
+    kActionE, kPickParty, kPickEnemyA, kPickEnemyB, kClutMark, kClutFind, kClutOwner, kBossCommon, kBossEncounter, kNormal,
     kSetupEnemy, kCopyEnemy, kEnemyOffset, kKindFlag, kStubs
 };
 struct StubSpec { std::uint32_t target; std::uint32_t mask[4]; };
@@ -278,7 +278,7 @@ Callees StubCallees() {
     c.clut_find = As<decltype(c.clut_find)>(kClutFind);
     c.clut_owner = As<decltype(c.clut_owner)>(kClutOwner);
     c.boss_common = As<decltype(c.boss_common)>(kBossCommon);
-    c.boss_encounter = As<decltype(c.boss_encounter)>(BattleActions_EventBattle_addr);
+    c.boss_encounter = As<decltype(c.boss_encounter)>(kBossEncounter);
     c.normal_encounter = As<decltype(c.normal_encounter)>(kNormal);
     c.setup_enemy = As<decltype(c.setup_enemy)>(kSetupEnemy);
     c.copy_enemy = As<decltype(c.copy_enemy)>(kCopyEnemy);

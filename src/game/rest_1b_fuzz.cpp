@@ -122,7 +122,7 @@ static_assert(kCount == 47, "the cut's 47 rows");
 
 // What each clone is, for the seed: a dispatcher by the word +0x2C, the byte +2
 // or the byte +3 with its table's count; or one of the state shapes.
-enum Role : std::uint8_t { kByWord, kByState, kByStep, kBegin, kResolve, kPickup, kPush, kSpawn3A, kAim, kHit, kCellHit, kAgain, MoveScript_WaitWordDA_addr };
+enum Role : std::uint8_t { kByWord, kByState, kByStep, kBegin, kResolve, kPickup, kPush, kSpawn3A, kAim, kHit, kCellHit, kAgain, kFormWait };
 struct Spec { Role role; std::uint8_t count; };
 constexpr Spec kSpecs[kCount] = {
     {kByWord, 3}, {kByWord, 3}, {kByState, 3}, {kByState, 3}, {kBegin, 0}, {kResolve, 0}, {kPickup, 0}, {kByState, 3},
@@ -130,7 +130,7 @@ constexpr Spec kSpecs[kCount] = {
     {kByState, 3}, {kBegin, 0}, {kResolve, 0}, {kPickup, 0}, {kByState, 3}, {kByState, 2}, {kPush, 0}, {kByState, 3},
     {kByState, 2}, {kByStep, 5}, {kAim, 0}, {kHit, 0}, {kCellHit, 0}, {kByStep, 3}, {kAgain, 0}, {kByWord, 3},
     {kByWord, 3}, {kByState, 3}, {kByState, 3}, {kByState, 2}, {kByStep, 5}, {kAim, 0}, {kHit, 0}, {kCellHit, 0},
-    {kByStep, 3}, {kAgain, 0}, {MoveScript_WaitWordDA_addr, 0}, {kByState, 3}, {kByWord, 3}, {kByState, 3}, {kByState, 3},
+    {kByStep, 3}, {kAgain, 0}, {kFormWait, 0}, {kByState, 3}, {kByWord, 3}, {kByState, 3}, {kByState, 3},
 };
 
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }

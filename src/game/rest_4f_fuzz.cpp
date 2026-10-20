@@ -219,7 +219,7 @@ sh::Clone g_clones[] = {
 #undef R4F_CLONE
 
 enum : unsigned {
-    MoveScript_Var7_addr, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
+    kScreenRun, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
     kPanel, kOptions, kPad, kPadRow, kCell, kExits,
     k07Draw, k07Hold, k07Fade, k08Start, k08Trace, k08Two, k08Line,
     k09Start, k09Open1, k09Open2, k09Open3, k09Open4, k09Open5, k09Open6, k09Open7, k09Open8, k09Spin, k09Blades, k09Fan,
