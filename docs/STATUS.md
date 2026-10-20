@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-19)
+**Status:** IN PROGRESS (2026-10-20)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,7 +8,16 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The quicksave round, 2026-10-19** (`quicksave/round`, its PR next; [`quicksave-round.md`](quicksave-round.md),
+**2026-10-20** (branches `fix/d266-title-mark` and `docs/handoff-1020`, their PRs next; HANDOFF item 0): a
+Western disc-only install draws its disc's title mark (D266, DIV-0101's `titlemark` rule) and rolls its own release's
+staff roll (DIV-0148, D323: the roll differs by release - US, PAL, Japan = PC - and lives beside the image in
+`base/exe/roll.bin`, since `.data`'s pointer words stay the PC's). The recipes are regenerated with the second pairing
+pass's rows (`gap` rows 49..74 per build); what is left before `BOF3X_EXEIMAGE_STRICT=1` can be the default is framed
+in [`exe-gap-round.md`](exe-gap-round.md). The quicksave refuses a load across the original Chinese and a translation
+(PR #96). The ten state-hash pairs are re-recorded (`cn_<route>_orig3`); ours differs from them only by ledgered
+changes, each shown with the change off ([`state-hash.md`](state-hash.md) 6).
+
+**The quicksave round, 2026-10-19** (`quicksave/round`, merged as PR #95; [`quicksave-round.md`](quicksave-round.md),
 [`quicksave.md`](quicksave.md)): save states. F6 saves the whole game state between two logic frames - the data span,
 the task stacks and three participants' records (our statics, sound, graphics) - into a rotating set of sixteen
 quicksaves (`BISLPS10..1F.DAT`), F7 restores the newest to the frame, and F5 opens a load-only menu drawn as the title's
@@ -17,7 +26,7 @@ load screen (DIV-0145..0147); the save list is split from the quicksaves and bou
 two by-design words) and by 22 pixel-equal capture pairs over six routes, two conditions, the PC, US disc-only and
 PSP-EU installs and wide mode, in-process and across processes. Not yet played by the owner.
 
-**The typed-data round, stages A and B, 2026-10-19** (`typed/b1`, its PR next;
+**The typed-data round, stages A and B, 2026-10-19** (`typed/b1`, merged as PR #94; stage C runs on `typed/c`;
 [`typed-data-round.md`](typed-data-round.md), IDEAS I44 stages 1 and 2): our code's reads of Capcom's data image become
 named, typed accesses, with **no behaviour change**. Stage A typed the globals (488 new `symbols.toml` `[[data]]`
 entries, widths measured by `tools/data_widths.py`), the nine record families (`src/game/records.h`, 263 named fields,
