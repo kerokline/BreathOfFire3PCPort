@@ -49,17 +49,17 @@ constexpr U kNameInsetSite = 0x576A48;   // the disp8 of `lea eax, [ebp + 0x13]`
 constexpr U kTextScratch = 0x904BA0;     // the text scratch Crt_sprintf and the slot's name copy write
 
 // --- Menu_DrawPieces / Menu_DrawPiece lists the panels draw (image) ---
-// kStatsPiecesA: now AreaMap_EntryHandlers[0x2f] (symbols.toml).
-// kStatsPiecesB: now AreaMap_EntryHandlers[0x3a] (symbols.toml).
-// kStatsPiecesC: now AreaMap_EntryHandlers[0x3d] (symbols.toml).
+constexpr U kStatsPiecesA = 0x663358;  // not AreaMap_EntryHandlers[0x2f]: that table is four handlers (typed C3 naming)
+constexpr U kStatsPiecesB = 0x663384;
+constexpr U kStatsPiecesC = 0x663390;
 constexpr U kExpPieces = 0x6634CC;
 // kWheelPiecesA: now Menu_PlayTimePieces[0x2c] (symbols.toml).
-// kWheelPiecesB: now AreaMap_EntryHandlers[0x5a] (symbols.toml).
-// kWheelPiecesC: now AreaMap_EntryHandlers[0x5d] (symbols.toml).
-// kEquipPieces: now AreaMap_EntryHandlers[0x6f] (symbols.toml).
-// kListPiecesA: now AreaMap_EntryHandlers[0x7a] (symbols.toml).
+constexpr U kWheelPiecesB = 0x663404;
+constexpr U kWheelPiecesC = 0x663410;
+constexpr U kEquipPieces = 0x663458;
+constexpr U kListPiecesA = 0x663484;
 constexpr U kListPiecesLit = 0x66349C, kListPiecesB = 0x6634B4, kListPiecesBLit = 0x6634C0;
-// kItemPiecesB: now AreaMap_EntryHandlers[0x7d] (symbols.toml).
+constexpr U kItemPiecesB = 0x663490;
 constexpr U kSlotPieces = 0x663584;
 
 // --- the movement script's tables read in place ---

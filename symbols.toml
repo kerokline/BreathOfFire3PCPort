@@ -1772,6 +1772,7 @@ ctype = "unsigned char"
 count = 0x14C
 status = "hypothesis"
 evidence = "disasm 2026-09-20: Field_CopyInput reads byte +0 of records 0x14C apart from 0x802E88, Field_MemberCount of them, as an index into Field_ActorStates. One record declared: how many there are is not established."
+note = "(C3 naming, left as it is) 0x802E88 is ObjTrio + 0x148, record 0's PartyMember::char_index: Field_CopyInput's reads of +0 at a stride of 0x14C are the members' char_index bytes, and Field_Members[4 + k] is ObjTrio record 1 + k (effect_2g, scena_sc7). A rename wants the ObjTrio-as-PartyMember[3] layout (C4)."
 
 [[data]]
 pc = 0x903A80
@@ -4893,9 +4894,10 @@ evidence = "disasm 2026-09-22: AreaMap_Header + 0x22; AreaMap_HeaderPass starts 
 pc = 0x66329C
 name = "AreaMap_EntryHandlers"
 ctype = "unsigned long"
-count = 128
+count = 4
 status = "evidence"
 evidence = "disasm 2026-09-22: AreaMap_HeaderPass calls [0x66329C + ((entry >> 24) & 0x7F) * 4]. In the exe: 0x571B40 (AreaMap_ClutCycle), 0x571BE0, 0x571D30, 0x571E20, then Kind2_Run's table at 0x6632AC. The count is the mask's reach, not the table's: only entries 0..3 are this pass's."
+note = "count 128 -> 4 (C3 naming, the brief's item 6): 128 dwords was the mask's reach ((entry >> 24) & 0x7F), not the table's size, and it swallowed Kind2_RunTable (0x6632AC), Kind2_StateTable, Menu_MemberPieces and the menu piece lists past them (0x6633A8 as +0x10c; field_o's eight piece lists as +0xbc..+0x1f4, now field_o_callees.h constants again). The table's own four: AreaMap_ClutCycle, 0x571BE0, 0x571D30, 0x571E20 (area-backdrop.md, map-layers.md)."
 
 [[data]]
 pc = 0x663280

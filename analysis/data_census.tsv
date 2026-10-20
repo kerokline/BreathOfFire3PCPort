@@ -9334,6 +9334,9 @@ site	src/game/field_o.cpp	154	global	Text	at::kStatLabels	0x66a0f8	-	none	-	-	0
 site	src/game/field_o.cpp	155	global	Sprintf	at::kFmtNumber	0x64e324	-	none	-	-	0
 site	src/game/field_o.cpp	157	global	Text	at::kStatLabels	0x66a0f8	-	none	-	-	0
 site	src/game/field_o.cpp	158	global	Sprintf	at::kFmtNumber	0x64e324	-	none	-	-	0
+site	src/game/field_o.cpp	165	global	Text	at::kStatsPiecesA	0x663358	-	inside	AreaMap_SetupHandlers+0xc8	unsigned long	0
+site	src/game/field_o.cpp	166	global	Text	at::kStatsPiecesB	0x663384	-	inside	AreaMap_SetupHandlers+0xf4	unsigned long	0
+site	src/game/field_o.cpp	167	global	Text	at::kStatsPiecesC	0x663390	-	none	-	-	0
 site	src/game/field_o.cpp	180	global	-	at::kExpLabel	0x663670	-	none	-	-	0
 site	src/game/field_o.cpp	180	global	-	at::kExpLabel	0x663670	-	none	-	-	0
 site	src/game/field_o.cpp	183	global	Sprintf	at::kFmtExpNone	0x6639b8	-	none	-	-	0
@@ -9368,6 +9371,8 @@ site	src/game/field_o.cpp	295	record	SetLong	a + 4	-	table=0x6bc748	-	-	-	0
 site	src/game/field_o.cpp	296	record	SetLong	a + 0xC	-	table=0x6bc748	-	-	-	0
 site	src/game/field_o.cpp	307	global	At	at::kWheelSpots	0x6bc748	-	none	-	-	0
 site	src/game/field_o.cpp	309	record	Word	spot + 4	-	table=0x6bc748	-	-	-	0
+site	src/game/field_o.cpp	313	global	Text	at::kWheelPiecesB	0x663404	-	none	-	-	0
+site	src/game/field_o.cpp	314	global	Text	at::kWheelPiecesC	0x663410	-	none	-	-	0
 site	src/game/field_o.cpp	358	global	Text	at::kStatLabels	0x66a0f8	-	none	-	-	0
 site	src/game/field_o.cpp	361	global	Sprintf	at::kFmtNumber	0x64e324	-	none	-	-	0
 site	src/game/field_o.cpp	361	record	Word	rec + kStats[i]	-	via=Record	-	-	-	0
@@ -9380,10 +9385,12 @@ site	src/game/field_o.cpp	383	record	At	bof3::addr::NameTable_Accessories + rec[
 site	src/game/field_o.cpp	383	record	At	bof3::addr::NameTable_Accessories + rec[0x17] * 24u	-	base=NameTable_Accessories	-	-	-	0
 site	src/game/field_o.cpp	387	global	At	at::kEquipIcons	0x66386c	-	none	-	-	0
 site	src/game/field_o.cpp	394	global	At	at::kEquipIcons	0x66386c	-	none	-	-	0
+site	src/game/field_o.cpp	401	global	Text	at::kEquipPieces	0x663458	-	none	-	-	0
 site	src/game/field_o.cpp	428	record	Word	panel + 4	-	param	-	-	-	0
 site	src/game/field_o.cpp	429	record	Word	panel + 6	-	param	-	-	-	0
 site	src/game/field_o.cpp	473	record	At	bof3::addr::Ability_Records + list[0] * 24u	-	base=Ability_Records	-	-	-	0
 site	src/game/field_o.cpp	482	global	At	at::kAbilityTitles	0x663984	-	none	-	-	0
+site	src/game/field_o.cpp	487	global	-	at::kListPiecesA	0x663484	-	none	-	-	0
 site	src/game/field_o.cpp	487	global	-	at::kListPiecesLit	0x66349c	-	none	-	-	0
 site	src/game/field_o.cpp	488	global	-	at::kListPiecesB	0x6634b4	-	none	-	-	0
 site	src/game/field_o.cpp	488	global	-	at::kListPiecesBLit	0x6634c0	-	none	-	-	0
@@ -9400,6 +9407,8 @@ site	src/game/field_o.cpp	554	global	-	at::kListCounts	0x6bc7e0	-	none	-	-	0
 site	src/game/field_o.cpp	554	global	-	at::kListIds	0x6bc760	-	none	-	-	0
 site	src/game/field_o.cpp	568	global	At	at::kItemTitles	0x663994	-	none	-	-	0
 site	src/game/field_o.cpp	571	global	Sprintf	at::kFmtCount	0x6639c8	-	none	-	-	0
+site	src/game/field_o.cpp	573	global	Text	at::kListPiecesA	0x663484	-	none	-	-	0
+site	src/game/field_o.cpp	574	global	Text	at::kItemPiecesB	0x663490	-	none	-	-	0
 site	src/game/field_o.cpp	590	global	At	at::kListIds	0x6bc760	-	none	-	-	0
 site	src/game/field_o.cpp	609	global	Sprintf	at::kFmtSlot	0x6639d4	-	none	-	-	0
 site	src/game/field_o.cpp	626	global	Sprintf	at::kFmtTime	0x654830	-	none	-	-	0
@@ -13837,7 +13846,7 @@ site	src/game/menu_windows.cpp	1143	raw	At	0x658450 + record[0x17] * 24u	0x65845
 site	src/game/menu_windows.cpp	1146	raw	At	0x663660	0x663660	-	exact	Equip_SlotIcons	-	0
 site	src/game/menu_windows.cpp	1207	global	Format	at::kFmt7d	0x64addc	-	none	-	-	0
 site	src/game/menu_windows.cpp	1209	global	At	at::kMoneyLabel	0x66a31c	-	none	-	-	0
-site	src/game/menu_windows.cpp	1210	raw	At	0x6633A8	0x6633a8	-	inside	AreaMap_EntryHandlers+0x10c	unsigned long	0
+site	src/game/menu_windows.cpp	1210	raw	At	0x6633A8	0x6633a8	-	none	-	-	0
 site	src/game/menu_windows.cpp	1228	global	At	at::kCharRecords	0x903a70	-	none	-	-	0
 site	src/game/menu_windows.cpp	1242	global	Format	at::kFmt3d	0x64e324	-	none	-	-	0
 site	src/game/menu_windows.cpp	1251	global	Format	at::kFmt3d	0x64e324	-	none	-	-	0
@@ -21606,6 +21615,14 @@ const	kScenarioHooks	0x662c80	data	1	src/game/field_e2_callees.h:133(field_e2::a
 const	kTailTable	0x662cd0	data	1	src/game/field_modes_callees.h:22(field_modes)	-	-	none	-	module
 const	kDropInTable	0x662de8	data	1	src/game/field_e2_callees.h:89(field_e2::at)	-	-	none	-	at
 const	kPairs	0x662f28	data	1	src/game/area_cell_hook.cpp:20(area_cell_hook::at)	Area_CellHooks	data	exact	unsigned long	at
+const	kStatsPiecesA	0x663358	data	1	src/game/field_o_callees.h:52(field_o::at)	-	-	inside	unsigned long	at
+const	kStatsPiecesB	0x663384	data	1	src/game/field_o_callees.h:53(field_o::at)	-	-	inside	unsigned long	at
+const	kStatsPiecesC	0x663390	data	1	src/game/field_o_callees.h:54(field_o::at)	-	-	none	-	at
+const	kWheelPiecesB	0x663404	data	1	src/game/field_o_callees.h:57(field_o::at)	-	-	none	-	at
+const	kWheelPiecesC	0x663410	data	1	src/game/field_o_callees.h:58(field_o::at)	-	-	none	-	at
+const	kEquipPieces	0x663458	data	1	src/game/field_o_callees.h:59(field_o::at)	-	-	none	-	at
+const	kListPiecesA	0x663484	data	1	src/game/field_o_callees.h:60(field_o::at)	-	-	none	-	at
+const	kItemPiecesB	0x663490	data	1	src/game/field_o_callees.h:62(field_o::at)	-	-	none	-	at
 const	kListPiecesLit	0x66349c	data	1	src/game/field_o_callees.h:61(field_o::at)	-	-	none	-	at
 const	kListPiecesB	0x6634b4	data	1	src/game/field_o_callees.h:61(field_o::at)	-	-	none	-	at
 const	kListPiecesBLit	0x6634c0	data	1	src/game/field_o_callees.h:61(field_o::at)	-	-	none	-	at
@@ -23224,9 +23241,9 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19707
-#count sites_global	9832
-#count sites_global_at	7820
+#count sites	19716
+#count sites_global	9841
+#count sites_global_at	7829
 #count sites_global_module	2012
 #count sites_record	8746
 #count sites_raw	1129
@@ -23243,27 +23260,27 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_family_unknown	1709
 #count record_strides	0x28:184 0x4:83 0xa4:66 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:20
 #count global_sites_covered_exact	1314
-#count global_sites_covered_inside	564
-#count global_sites_uncovered	7954
+#count global_sites_covered_inside	566
+#count global_sites_uncovered	7961
 #count global_sites_ambiguous	0
 #count at_refs_struct_or_array	271
-#count at_constant_definitions	4244
-#count at_constant_definitions_in_callees_h	4038
-#count at_constants_name_value	2897
-#count at_constants_data	1777
+#count at_constant_definitions	4252
+#count at_constant_definitions_in_callees_h	4046
+#count at_constants_name_value	2905
+#count at_constants_data	1785
 #count at_constants_code	388
 #count at_constants_value	732
 #count at_constants_unresolved	0
 #count distinct_code_addresses	331
-#count distinct_addresses	1268
+#count distinct_addresses	1276
 #count max_names_one_address	25
 #count addresses_with_several_names	237
 #count distinct_addresses_symbol_data	324
 #count distinct_addresses_symbol_block	5
 #count distinct_addresses_symbol_func	0
 #count distinct_addresses_symbol_data_no_ctype	35
-#count distinct_addresses_name_missing	939
-#count distinct_addresses_name_missing_inside_entry	85
+#count distinct_addresses_name_missing	947
+#count distinct_addresses_name_missing_inside_entry	87
 #count module_constant_definitions_data	851
 #count module_constant_files	186
 #count module_constants_name_value	619
@@ -23271,8 +23288,8 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count module_distinct_addresses_not_in_at	319
 #count module_distinct_addresses_not_in_at_no_data_entry	203
 #count module_distinct_addresses_not_in_at_name_missing	202
-#count all_distinct_data_addresses	1587
-#count all_distinct_data_addresses_name_missing	1141
+#count all_distinct_data_addresses	1595
+#count all_distinct_data_addresses_name_missing	1149
 #count stride_definitions	445
 #count stride_names	92
 #count stride_values	34

@@ -9334,6 +9334,9 @@ src/game/field_o.cpp	Menu_DrawStatsPanel	global	Text	at::kStatLabels	2	0x66a0f8	
 src/game/field_o.cpp	Menu_DrawStatsPanel	global	Sprintf	at::kFmtNumber	2	0x64e324	-	no-entry	at::kFmtNumber 0x64e324 -	b0
 src/game/field_o.cpp	Menu_DrawStatsPanel	global	Text	at::kStatLabels	3	0x66a0f8	-	no-entry	at::kStatLabels 0x66a0f8 -	b0
 src/game/field_o.cpp	Menu_DrawStatsPanel	global	Sprintf	at::kFmtNumber	3	0x64e324	-	no-entry	at::kFmtNumber 0x64e324 -	b0
+src/game/field_o.cpp	Menu_DrawStatsPanel	global	Text	at::kStatsPiecesA	0	0x663358	-	no-entry	at::kStatsPiecesA 0x663358: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
+src/game/field_o.cpp	Menu_DrawStatsPanel	global	Text	at::kStatsPiecesB	0	0x663384	-	no-entry	at::kStatsPiecesB 0x663384: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
+src/game/field_o.cpp	Menu_DrawStatsPanel	global	Text	at::kStatsPiecesC	0	0x663390	-	no-entry	at::kStatsPiecesC 0x663390: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
 src/game/field_o.cpp	Menu_DrawExpPanel	global	-	at::kExpLabel	0	0x663670	-	no-entry	at::kExpLabel 0x663670 -	b0
 src/game/field_o.cpp	Menu_DrawExpPanel	global	-	at::kExpLabel	1	0x663670	-	no-entry	at::kExpLabel 0x663670 -	b0
 src/game/field_o.cpp	Menu_DrawExpPanel	global	Sprintf	at::kFmtExpNone	0	0x6639b8	-	no-entry	at::kFmtExpNone 0x6639b8 -	b0
@@ -9368,6 +9371,8 @@ src/game/field_o.cpp	Menu_DrawIconWheel	record	SetLong	a + 4	0	-	table=0x6bc748	
 src/game/field_o.cpp	Menu_DrawIconWheel	record	SetLong	a + 0xC	0	-	table=0x6bc748	no-family	`a`: a menu record	b1-field
 src/game/field_o.cpp	Menu_DrawIconWheel	global	At	at::kWheelSpots	3	0x6bc748	-	no-entry	at::kWheelSpots 0x6bc748 -	b0
 src/game/field_o.cpp	Menu_DrawIconWheel	record	Word	spot + 4	0	-	table=0x6bc748	no-family	`spot`: an icon spot	b1-field
+src/game/field_o.cpp	Menu_DrawIconWheel	global	Text	at::kWheelPiecesB	0	0x663404	-	no-entry	at::kWheelPiecesB 0x663404: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
+src/game/field_o.cpp	Menu_DrawIconWheel	global	Text	at::kWheelPiecesC	0	0x663410	-	no-entry	at::kWheelPiecesC 0x663410: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
 src/game/field_o.cpp	Menu_DrawEquipCompare	global	Text	at::kStatLabels	0	0x66a0f8	-	no-entry	at::kStatLabels 0x66a0f8 -	b0
 src/game/field_o.cpp	Menu_DrawEquipCompare	global	Sprintf	at::kFmtNumber	0	0x64e324	-	computed	offset computed at run time: rec + kStats[i] | b0: no-entry (at::kFmtNumber 0x64e324 -)	b1-field;b0
 src/game/field_o.cpp	Menu_DrawEquipCompare	record	Word	rec + kStats[i]	0	-	via=Record	-	-	-
@@ -9380,10 +9385,12 @@ src/game/field_o.cpp	Menu_DrawEquipCompare	record	At	bof3::addr::NameTable_Acces
 src/game/field_o.cpp	Menu_DrawEquipCompare	record	At	bof3::addr::NameTable_Accessories + rec[0x17] * 24u	0	-	base=NameTable_Accessories	computed	offset computed at run time: bof3::addr::NameTable_Accessories + rec[0x17] * 24u	b1-field
 src/game/field_o.cpp	Menu_DrawEquipCompare	global	At	at::kEquipIcons	0	0x66386c	-	no-entry	at::kEquipIcons 0x66386c -	b0
 src/game/field_o.cpp	Menu_DrawEquipCompare	global	At	at::kEquipIcons	1	0x66386c	-	no-entry	at::kEquipIcons 0x66386c -	b0
+src/game/field_o.cpp	Menu_DrawEquipCompare	global	Text	at::kEquipPieces	0	0x663458	-	no-entry	at::kEquipPieces 0x663458: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
 src/game/field_o.cpp	PanelX	record	Word	panel + 4	0	-	param	no-family	`panel`: a menu panel	b1-field
 src/game/field_o.cpp	PanelX	record	Word	panel + 6	0	-	param	no-family	`panel`: a menu panel	b1-field
 src/game/field_o.cpp	Menu_DrawAbilityPanel	record	At	bof3::addr::Ability_Records + list[0] * 24u	0	-	base=Ability_Records	computed	offset computed at run time: bof3::addr::Ability_Records + list[0] * 24u	b1-field
 src/game/field_o.cpp	Menu_DrawAbilityPanel	global	At	at::kAbilityTitles	0	0x663984	-	no-entry	at::kAbilityTitles 0x663984 -	b0
+src/game/field_o.cpp	Menu_DrawAbilityPanel	global	-	at::kListPiecesA	0	0x663484	-	no-entry	at::kListPiecesA 0x663484: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
 src/game/field_o.cpp	Menu_DrawAbilityPanel	global	-	at::kListPiecesLit	0	0x66349c	-	no-entry	at::kListPiecesLit 0x66349c -	b0
 src/game/field_o.cpp	Menu_DrawAbilityPanel	global	-	at::kListPiecesB	0	0x6634b4	-	no-entry	at::kListPiecesB 0x6634b4 -	b0
 src/game/field_o.cpp	Menu_DrawAbilityPanel	global	-	at::kListPiecesBLit	0	0x6634c0	-	no-entry	at::kListPiecesBLit 0x6634c0 -	b0
@@ -9400,6 +9407,8 @@ src/game/field_o.cpp	Menu_DrawItemPanel	global	-	at::kListCounts	0	0x6bc7e0	-	no
 src/game/field_o.cpp	Menu_DrawItemPanel	global	-	at::kListIds	0	0x6bc760	-	no-entry	at::kListIds 0x6bc760 -	b0
 src/game/field_o.cpp	Menu_DrawItemPanel	global	At	at::kItemTitles	0	0x663994	-	no-entry	at::kItemTitles 0x663994 -	b0
 src/game/field_o.cpp	Menu_DrawItemPanel	global	Sprintf	at::kFmtCount	0	0x6639c8	-	no-entry	at::kFmtCount 0x6639c8 -	b0
+src/game/field_o.cpp	Menu_DrawItemPanel	global	Text	at::kListPiecesA	0	0x663484	-	no-entry	at::kListPiecesA 0x663484: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
+src/game/field_o.cpp	Menu_DrawItemPanel	global	Text	at::kItemPiecesB	0	0x663490	-	no-entry	at::kItemPiecesB 0x663490: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
 src/game/field_o.cpp	Menu_DrawItemPanel	global	At	at::kListIds	4	0x6bc760	-	no-entry	at::kListIds 0x6bc760 -	b0
 src/game/field_o.cpp	Menu_DrawSaveSlot	global	Sprintf	at::kFmtSlot	0	0x6639d4	-	no-entry	at::kFmtSlot 0x6639d4 -	b0
 src/game/field_o.cpp	Menu_DrawSaveSlot	global	Sprintf	at::kFmtTime	0	0x654830	-	no-entry	at::kFmtTime 0x654830 -	b0

@@ -162,9 +162,9 @@ extern "C" void __cdecl Menu_DrawStatsPanel(int x, int y, unsigned record) {
         SH_CALL(TextRecord_Set)(0, 8, SH_CALL(Msg_SystemPtr)(0x111u + trait));
         SH_CALL(Text_DrawAt)(left, y + 0x22, 0, 0xFF, SH_CALL(Msg_SystemPtr)(0x34));
     }
-    SH_CALL(Menu_DrawPieces)(x, y, Text(AreaMap_EntryHandlers_addr + 0xbc), 0);
-    for (unsigned b = 0; b < 0x10; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(AreaMap_EntryHandlers_addr + 0xe8), 0);
-    SH_CALL(Menu_DrawPieces)(x, y, Text(AreaMap_EntryHandlers_addr + 0xf4), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kStatsPiecesA), 0);
+    for (unsigned b = 0; b < 0x10; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(at::kStatsPiecesB), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kStatsPiecesC), 0);
 }
 
 // original 0x573BF0: a record's EXP (next 0) or the EXP its next level wants
@@ -310,8 +310,8 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
         SH_CALL(Menu_DrawCell8)(sx, sy, static_cast<unsigned char>(order[j] + 3), 0x1E, clut, colour[j]);
     }
     SH_CALL(Menu_DrawPieces)(x, y, Text(Menu_PlayTimePieces_addr + 0x2c), 0);
-    for (unsigned b = 0; b < 6; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(AreaMap_EntryHandlers_addr + 0x168), 0);
-    SH_CALL(Menu_DrawPieces)(x, y, Text(AreaMap_EntryHandlers_addr + 0x174), 0);
+    for (unsigned b = 0; b < 6; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(at::kWheelPiecesB), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kWheelPiecesC), 0);
 }
 
 // original 0x574400: one 16 x 8 SPRT of the menu page (CLUT 0x7800, v 0xD8, u
@@ -398,7 +398,7 @@ extern "C" void __cdecl Menu_DrawEquipCompare(unsigned record, int x, int y, con
             SH_CALL(Text_DrawAt)(x + 0x11, row + 0x55, 0, SH_CALL(Text_CharCount)(name), name);
         }
     }
-    SH_CALL(Menu_DrawPieces)(x, y, Text(AreaMap_EntryHandlers_addr + 0x1bc), 1);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kEquipPieces), 1);
     for (unsigned b = 0; b < 7; ++b) {
         const int row = y + 8 * static_cast<int>(b) + 0x18;
         SH_CALL(Menu_DrawPiece)(x, row, 4, 1);
@@ -484,7 +484,7 @@ extern "C" void __cdecl Menu_DrawAbilityPanel(unsigned char* panel) {
     SH_CALL(Text_DrawAt)(Centred(PanelX(panel), static_cast<unsigned>(std::strlen(title)),
                                  reinterpret_cast<const unsigned char*>(title)),
                          ty, 0, 0x10, reinterpret_cast<const unsigned char*>(title));
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 2 ? at::kListPiecesLit : (AreaMap_EntryHandlers_addr + 0x1e8)), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 2 ? at::kListPiecesLit : at::kListPiecesA), 1);
     SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 1 ? at::kListPiecesBLit : at::kListPiecesB), 1);
     const unsigned char arrows = panel[9];
     panel[9] = arrows & 0xF0 ? static_cast<unsigned char>(arrows - 0x10) : 0;
@@ -570,8 +570,8 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     SH_CALL(Text_DrawAt)(Centred(PanelX(panel), SH_CALL(Text_CharCount)(title), title), ty, 0, 0x10, title);
     Sprintf(at::kFmtCount, static_cast<unsigned>(total), 0x80u);
     SH_CALL(Text_DrawFont8)(PanelX(panel) + 0x55, PanelY(panel) + 0x92, 0, Buf());
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(AreaMap_EntryHandlers_addr + 0x1e8), 1);
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(AreaMap_EntryHandlers_addr + 0x1f4), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(at::kListPiecesA), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(at::kItemPiecesB), 1);
     for (unsigned b = 0; b < 0xA; ++b) SH_CALL(Menu_DrawPiece)(PanelX(panel) + 8 * static_cast<int>(b) + 0x28, PanelY(panel), 1, 1);
     for (unsigned b = 0; b < 0xF; ++b) SH_CALL(Menu_DrawPiece)(PanelX(panel), PanelY(panel) + 8 * static_cast<int>(b) + 0x18, 4, 1);
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 0x90, PanelY(panel) + 0x18, 0x16, 1);
