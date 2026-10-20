@@ -65,7 +65,7 @@ rule ([`README.md`](README.md)) here too.
 | I18 | F12 before shipping: disable it, or make it a true quicksave | game behaviour | HIGH / MEDIUM | open |
 | I19 | Screen curvature for the SatPixie look | look | HIGH | open |
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
-| I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
+| I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | **staged 2026-10-20** as the reading-row round ([`reading-row-round.md`](reading-row-round.md), issue #97) with I45; its own branch and playtesting (owner, 2026-09-24) |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
 | I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | **built** 2026-10-06..11 (DIV-0081 the loops, DIV-0087 the disc's music, DIV-0091 minimp3, heard); method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26). **Asked for first, 2026-10-04**: the owner wants to hear the MP3s against the sequences before the MP3 decoder's fate is decided ([`platform-layers-plan.md`](platform-layers-plan.md) section 5) |
 | I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | **built 2026-09-27..28** in round ten's first three waves - every chapter bank ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) |
@@ -88,6 +88,7 @@ rule ([`README.md`](README.md)) here too.
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
 | I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | **partly built** 2026-10-15: every step timed; the movie, PSX sound and language layers reused when unchanged (adding a disc 89 s, not 372); the PSP's conversions left |
 | I43 | Settle every gap of a disc-built exe image: each of the ranges where the PC's `.data` has a value and the image leaves zero (`recipes/exe-gaps.tsv`; for the EU disc 188 ranges, 2,561 bytes on `main` the day it opened) placed from a disc, filled by an engine rule, or shown never read - first by placing a region from the pointers that point into it | tooling / engine | HIGH | **step 1 built** 2026-10-16 (the owner asked), from the forest sprite of a PSX-only install: the importer places a region from the pointers into it (gap ranges EU 185 to 177, the sprite fixed); steps 2..4 open |
+| I45 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **staged 2026-10-20** in the reading-row round ([`reading-row-round.md`](reading-row-round.md)); from issue #97 (the owner, 2026-10-20) |
 
 ---
 
@@ -2066,3 +2067,43 @@ the disc in the running one. Read from the code on 2026-10-20, not played.
 
 ### Outcome
 _(2026-10-20) open; logged at the owner's word, nothing measured._
+
+---
+## I45 — A second language in the row above the text
+
+**Ask (2026-10-20, the owner, from GitHub issue #97 and a Reddit request):**
+beside furigana (I21), let two languages run in step: the message the player
+is reading in one language, and the same message from another held language
+layer in the smaller row above each text row, re-flowed page by page so
+the two scripts stay together.
+**Kind:** game behaviour / localisation
+**Feasibility:** MEDIUM. **Gated on:** I21's renderer (the reading row in
+`MsgBox_Step`) and a measured pairing rule.
+
+### What already exists
+- **Messages pair by slot.** Every language overlay is converted onto the
+  PC's slot table (`loc_build.py convert_block`; the US disc's blocks have
+  the PC's slot counts in 288 of 288), so "the same message in another
+  language" is the same area block and slot. Pages and lines inside a
+  message do not pair; that re-flow is the work.
+- **The reading row** (I21): the ja-JP kana at 12 px are the sheet cell texel
+  for texel on a 6-unit quad, so a reading row is exactly half a text row
+  (the owner, 2026-10-20). A Latin second language has the same choice of
+  1/2 (texel-exact at the donor's 8 x 12) or 2/3.
+- **Optional text layers** (DIV-0086) already carry a language in their name
+  and are refused under another; a second-language layer is one more:
+  `ruby-en-US-ja-JP`.
+
+### What is missing
+- The census: for every held pair, how often the second script fits over the
+  main page's rows as authored, with the rows re-broken, or only with a page
+  split; whether two overlays' glyph tables can be resident together.
+- The pairing rule, drafted from the census (the main script keeps its
+  breaks; the second is packed in order; a split only when it overflows).
+- Names and inserts drawn from the other layer's tables on the reading row.
+
+### First concrete step
+The census (the round's group SL), before any build.
+
+### Outcome
+_(2026-10-20) staged, not launched: [`reading-row-round.md`](reading-row-round.md)._

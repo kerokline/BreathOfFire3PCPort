@@ -93,6 +93,12 @@ against them traced to a ledgered change.
    name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's first).
    The exe-gap round needs its answer too (item 2).
 
+6a. **The reading-row round, staged 2026-10-20, not launched** ([`reading-row-round.md`](reading-row-round.md);
+   briefs `C:\Users\kerok\r_ruby\BRIEF_*.md`; issue #97): furigana (I21) and a second language (I45) in a
+   half-height row above each text row of the dialogue box. Launch at the owner's word: the four stage-A groups
+   (PR, FB, SL, ML) in worktrees from `main`, RR and SB after PR's numbers and FB's layer; the owner's six calls
+   are the round doc's section 6. The string shape (section 4) is fixed before stage A starts.
+
 7. **Work that needs no owner** (each doc's own list is the authority):
    [`exe-import-engine.md`](exe-import-engine.md) 5's remainder; [`cache-read.md`](cache-read.md) 10; the music's
    long-fade row ([`music-open-ends.md`](music-open-ends.md) 4) and `SsUtKeyOnV`; the loop rows `084`, `109`, `130`
