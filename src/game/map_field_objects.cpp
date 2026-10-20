@@ -623,9 +623,9 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     const U object = Sprite_Objects_addr + S16(first) * kObjectStride;
     SetDword(At(Sprite_Current_addr), object);
     SetDword(At(Field_ActiveMember_addr), object);
-    SharedScratch.w_02 = (static_cast<U>(op[1]) << 8) | op[2];
+    kScratchBank = (static_cast<U>(op[1]) << 8) | op[2];
     g.obj_reset();
-    g.set_bank(static_cast<std::uint32_t>(SharedScratch.w_02));
+    g.set_bank(static_cast<std::uint32_t>(kScratchBank));
     rv::As<records::SpriteObject>(Sprite())->flags = 1;
     rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->x, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
     SetDword(At(Sprite_Objects_addr + 0x8c + static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride), static_cast<U>(rv::As<records::SpriteObject>(Sprite())->x));

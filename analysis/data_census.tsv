@@ -6112,7 +6112,6 @@ site	src/game/effect_4a.cpp	525	global	P	at::kPlaceOp	0x654d88	-	none	-	-	0
 site	src/game/effect_4a.cpp	527	global	P	at::kPlaceOp	0x654d88	-	none	-	-	0
 site	src/game/effect_4a.cpp	570	global	B	at::kCounter	0x903848	-	none	-	-	0
 site	src/game/effect_4a.cpp	570	global	B	at::kCounter	0x903848	-	none	-	-	0
-site	src/game/effect_4a_fuzz.cpp	148	global	Mem	at::kObjectCount	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/effect_4a_fuzz.cpp	204	global	Mem	at::kCounter	0x903848	-	none	-	-	1
 site	src/game/effect_4a_fuzz.cpp	205	global	Mem	at::kCounterB	0x903849	-	none	-	-	1
 site	src/game/effect_4a_fuzz.cpp	206	global	Mem	at::kCounterC	0x90384a	-	none	-	-	1
@@ -8388,8 +8387,6 @@ site	src/game/field_e1.cpp	787	record	W	r + 4	-	table=0x660ab8;stride=0x8	-	-	-	
 site	src/game/field_e1.cpp	807	global	L	at::kSlotPositions	0x7e06e0	-	none	-	-	0
 site	src/game/field_e1.cpp	808	global	L	at::kSlotPositions	0x7e06e0	-	none	-	-	0
 site	src/game/field_e1.cpp	847	global	B	at::kSecondList	0x904065	-	inside	Cond_Flags+0xd5	unsigned char	0
-site	src/game/field_e1.cpp	866	global	L	at::kCellX	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/field_e1.cpp	871	global	L	at::kCellX	0x903850	-	exact	SharedScratch	records::SharedScratch	0
 site	src/game/field_e1.cpp	890	global	B	at::kFormation	0x904aac	-	none	-	-	0
 site	src/game/field_e1.cpp	890	global	B	at::kFormationAnims	0x660b3c	-	exact	BattleFormation_Anims	-	0
 site	src/game/field_e1.cpp	915	global	L	at::kPlaceOffsets	0x660b40	-	exact	Field_PlaceOffsets	long	0
@@ -11604,72 +11601,69 @@ site	src/game/rest_1f_fuzz.cpp	462	record	SetWord	s + (v & 1 ? 0x34 : 0x38)	-	vi
 site	src/game/rest_1f_fuzz.cpp	463	record	SetWord	s + 0x3E	-	via=Sc	-	-	-	1
 site	src/game/rest_1f_fuzz.cpp	474	record	SetWord	s + 0x36 + (v & 1) * 4	-	via=Sc	-	-	-	1
 site	src/game/rest_1f_fuzz.cpp	476	record	SetWord	s + 0x2C	-	via=Sc	-	-	-	1
-site	src/game/rest_1g.cpp	134	record	Long	p + at	-	-	-	-	-	0
-site	src/game/rest_1g.cpp	135	record	SetLong	p + at	-	-	-	-	-	0
-site	src/game/rest_1g.cpp	136	record	Word	p + at	-	-	-	-	-	0
-site	src/game/rest_1g.cpp	145	global	At	kDirAnims	0x660340	-	none	-	-	0
-site	src/game/rest_1g.cpp	146	global	At	kDirAnims	0x660340	-	none	-	-	0
-site	src/game/rest_1g.cpp	213	global	B	kItemA	0x904130	-	none	-	-	0
-site	src/game/rest_1g.cpp	256	global	B	kItemA	0x904130	-	none	-	-	0
-site	src/game/rest_1g.cpp	319	global	L	kPoolWordStage1	0x803600	-	none	-	-	0
-site	src/game/rest_1g.cpp	320	global	At	kPools	0x803580	-	none	-	-	0
-site	src/game/rest_1g.cpp	334	global	W	kPoolWordData	0x803642	-	none	-	-	0
-site	src/game/rest_1g.cpp	334	global	At	kPools	0x803580	-	none	-	-	0
-site	src/game/rest_1g.cpp	347	global	W	kEff6Shown	0x7e151e	-	inside	Effect_Objects+0x33e	records::EffectObject	0
-site	src/game/rest_1g.cpp	366	global	L	kPoolWordRule	0x803660	-	none	-	-	0
-site	src/game/rest_1g.cpp	366	global	At	kPools	0x803580	-	none	-	-	0
-site	src/game/rest_1g.cpp	383	global	W	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
-site	src/game/rest_1g.cpp	384	global	SetW	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
-site	src/game/rest_1g.cpp	483	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
-site	src/game/rest_1g.cpp	484	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
+site	src/game/rest_1g.cpp	136	record	Long	p + at	-	-	-	-	-	0
+site	src/game/rest_1g.cpp	137	record	SetLong	p + at	-	-	-	-	-	0
+site	src/game/rest_1g.cpp	138	record	Word	p + at	-	-	-	-	-	0
+site	src/game/rest_1g.cpp	147	global	At	kDirAnims	0x660340	-	none	-	-	0
+site	src/game/rest_1g.cpp	148	global	At	kDirAnims	0x660340	-	none	-	-	0
+site	src/game/rest_1g.cpp	215	global	B	kItemA	0x904130	-	none	-	-	0
+site	src/game/rest_1g.cpp	258	global	B	kItemA	0x904130	-	none	-	-	0
+site	src/game/rest_1g.cpp	321	global	L	kPoolWordStage1	0x803600	-	none	-	-	0
+site	src/game/rest_1g.cpp	322	global	At	kPools	0x803580	-	none	-	-	0
+site	src/game/rest_1g.cpp	336	global	W	kPoolWordData	0x803642	-	none	-	-	0
+site	src/game/rest_1g.cpp	336	global	At	kPools	0x803580	-	none	-	-	0
+site	src/game/rest_1g.cpp	368	global	L	kPoolWordRule	0x803660	-	none	-	-	0
+site	src/game/rest_1g.cpp	368	global	At	kPools	0x803580	-	none	-	-	0
 site	src/game/rest_1g.cpp	485	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
-site	src/game/rest_1g.cpp	550	global	B	kItemA	0x904130	-	none	-	-	0
-site	src/game/rest_1g.cpp	611	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/rest_1g.cpp	614	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/rest_1g.cpp	614	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/rest_1g.cpp	618	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/rest_1g.cpp	486	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
+site	src/game/rest_1g.cpp	487	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
+site	src/game/rest_1g.cpp	552	global	B	kItemA	0x904130	-	none	-	-	0
+site	src/game/rest_1g.cpp	613	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/rest_1g.cpp	616	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/rest_1g.cpp	616	global	B	kComboTimer	0x6bc710	-	none	-	-	0
 site	src/game/rest_1g.cpp	620	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/rest_1g.cpp	621	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/rest_1g.cpp	626	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/rest_1g.cpp	622	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/rest_1g.cpp	623	global	B	kComboStep	0x6bc70c	-	none	-	-	0
 site	src/game/rest_1g.cpp	628	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/rest_1g.cpp	629	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/rest_1g.cpp	636	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/rest_1g.cpp	637	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/rest_1g.cpp	641	record	At	row + 4	-	-	-	-	-	0
-site	src/game/rest_1g.cpp	649	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/rest_1g.cpp	650	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/rest_1g.cpp	679	global	At	kSpotCounts	0x66a9cc	-	none	-	-	0
-site	src/game/rest_1g.cpp	693	record	SetWord	AM() + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	697	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	703	record	SetWord	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	708	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	712	record	SetWord	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	721	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	722	record	SetWord	am + 0x98	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	724	record	Word	am2 + 0x98	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	724	record	SetWord	am2 + 0x9A	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	729	record	Word	AM() + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	734	record	SetWord	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	734	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	994	global	SetL	kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/rest_1g.cpp	995	global	SetL	kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/rest_1g.cpp	1049	global	SetL	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/rest_1g.cpp	1086	global	L	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/rest_1g.cpp	1092	global	SetL	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/rest_1g.cpp	1131	record	At	chances + 4 * tier	-	-	-	-	-	0
-site	src/game/rest_1g.cpp	1167	global	L	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/rest_1g.cpp	1168	global	W	kEff5Level	0x7e1490	-	inside	Effect_Objects+0x2b0	records::EffectObject	0
-site	src/game/rest_1g.cpp	1221	global	W	kEff5Level	0x7e1490	-	inside	Effect_Objects+0x2b0	records::EffectObject	0
-site	src/game/rest_1g.cpp	1253	global	L	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/rest_1g.cpp	1355	global	At	kS6Frames	0x660364	-	none	-	-	0
-site	src/game/rest_1g.cpp	1372	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	1372	record	Word	am + 0x9A	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	1375	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	1376	record	Word	am + 0x98	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	1376	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	630	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/rest_1g.cpp	631	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/rest_1g.cpp	638	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/rest_1g.cpp	639	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/rest_1g.cpp	643	record	At	row + 4	-	-	-	-	-	0
+site	src/game/rest_1g.cpp	651	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/rest_1g.cpp	652	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/rest_1g.cpp	681	global	At	kSpotCounts	0x66a9cc	-	none	-	-	0
+site	src/game/rest_1g.cpp	695	record	SetWord	AM() + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	699	record	Word	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	705	record	SetWord	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	710	record	Word	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	714	record	SetWord	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	723	record	Word	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	724	record	SetWord	am + 0x98	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	726	record	Word	am2 + 0x98	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	726	record	SetWord	am2 + 0x9A	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	731	record	Word	AM() + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	736	record	SetWord	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	736	record	Word	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	996	global	SetL	kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/rest_1g.cpp	997	global	SetL	kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/rest_1g.cpp	1051	global	SetL	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/rest_1g.cpp	1088	global	L	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/rest_1g.cpp	1094	global	SetL	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/rest_1g.cpp	1133	record	At	chances + 4 * tier	-	-	-	-	-	0
+site	src/game/rest_1g.cpp	1169	global	L	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/rest_1g.cpp	1170	global	W	kEff5Level	0x7e1490	-	inside	Effect_Objects+0x2b0	records::EffectObject	0
+site	src/game/rest_1g.cpp	1223	global	W	kEff5Level	0x7e1490	-	inside	Effect_Objects+0x2b0	records::EffectObject	0
+site	src/game/rest_1g.cpp	1255	global	L	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/rest_1g.cpp	1357	global	At	kS6Frames	0x660364	-	none	-	-	0
+site	src/game/rest_1g.cpp	1374	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	1374	record	Word	am + 0x9A	-	via=AM	-	-	-	0
 site	src/game/rest_1g.cpp	1377	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	1410	record	Word	s + 0x14	-	via=S	-	-	-	0
-site	src/game/rest_1g.cpp	1463	record	At	at - 4	-	-	-	-	-	0
+site	src/game/rest_1g.cpp	1378	record	Word	am + 0x98	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	1378	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	1379	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
+site	src/game/rest_1g.cpp	1412	record	Word	s + 0x14	-	via=S	-	-	-	0
+site	src/game/rest_1g.cpp	1465	record	At	at - 4	-	-	-	-	-	0
 site	src/game/rest_1g_fuzz.cpp	185	record	SetWord	s + 0x3E	-	via=Sc	-	-	-	1
 site	src/game/rest_1g_fuzz.cpp	188	record	Word	s + 0x3E	-	via=Sc	-	-	-	1
 site	src/game/rest_1g_fuzz.cpp	224	record	Word	am + 0x98	-	via=Active	-	-	-	1
@@ -14110,12 +14104,6 @@ site	src/game/rest_4c.cpp	448	global	SetL	at::kCards	0x675f98	-	none	-	-	0
 site	src/game/rest_4c.cpp	450	global	At	at::kCards	0x675f98	-	none	-	-	0
 site	src/game/rest_4c.cpp	491	global	SetL	at::kBet	0x675f88	-	none	-	-	0
 site	src/game/rest_4c.cpp	528	global	B	at::kBet	0x675f88	-	none	-	-	0
-site	src/game/rest_4c.cpp	547	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/rest_4c.cpp	548	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/rest_4c.cpp	549	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/rest_4c.cpp	553	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/rest_4c.cpp	554	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/rest_4c.cpp	555	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
 site	src/game/rest_4c.cpp	558	global	SetL	at::kBet	0x675f88	-	none	-	-	0
 site	src/game/rest_4c.cpp	560	global	SetL	at::kBet	0x675f88	-	none	-	-	0
 site	src/game/rest_4c.cpp	565	global	SetL	at::kBet	0x675f88	-	none	-	-	0
@@ -15633,9 +15621,6 @@ site	src/game/scena_sc9b_fuzz.cpp	761	global	B	at::kCounters	0x903848	-	none	-	-
 site	src/game/scena_sc9b_fuzz.cpp	771	global	B	at::kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_se.cpp	79	global	At	at::kScriptFlags2High	0x905ba5	-	inside	Field_ScriptFlags2+0x1	unsigned short	0
 site	src/game/scena_se.cpp	79	global	At	at::kScriptFlags2High	0x905ba5	-	inside	Field_ScriptFlags2+0x1	unsigned short	0
-site	src/game/scena_se_fuzz.cpp	84	global	Mem	at::kCount	0x903850	-	exact	SharedScratch	records::SharedScratch	1
-site	src/game/scena_se_fuzz.cpp	129	global	Mem	at::kCount	0x903850	-	exact	SharedScratch	records::SharedScratch	1
-site	src/game/scena_se_fuzz.cpp	144	global	Mem	at::kCount	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/scena_sx.cpp	115	record	Word	exp_table + (level + rows) * 8	-	base=Char_ExpTable	-	-	-	0
 site	src/game/scena_sx.cpp	154	global	At	at::kFormation	0x904aac	-	none	-	-	0
 site	src/game/scena_sx.cpp	173	global	At	at::kSlotPositions	0x7e06e0	-	none	-	-	0
@@ -18862,8 +18847,6 @@ const	kEff5Frame	0x7e1470	data	1	src/game/effect_1e_callees.h:63(effect_1e::at)	
 const	kEff5Frame	0x7e1470	data	1	src/game/rest_1g.cpp:77((anon))	-	-	inside	records::EffectObject	module
 const	kEff5Level	0x7e1490	data	1	src/game/rest_1g.cpp:78((anon))	-	-	inside	records::EffectObject	module
 const	kRecord6	0x7e14e0	data	1	src/game/effect_1f_callees.h:18(effect_1f::at)	-	-	inside	records::EffectObject	at
-const	kEff6Page	0x7e151c	data	1	src/game/rest_1g.cpp:81((anon))	-	-	inside	records::EffectObject	module
-const	kEff6Shown	0x7e151e	data	1	src/game/rest_1g.cpp:82((anon))	-	-	inside	records::EffectObject	module
 const	kHeld	0x7e1be8	data	1	src/game/save_menu_callees.h:41(save_menu::at)	Input_Held	data	exact	unsigned short	at
 const	kInputHeld	0x7e1be8	data	2	src/game/area_w4e_callees.h:109(area_w4e::at);src/game/scena_sc13_callees.h:94(scena_sc13::at)	Input_Held	data	exact	unsigned short	at
 const	kInputHeld	0x7e1be8	data	1	src/game/scena_sc15.cpp:120((anon))	Input_Held	data	exact	unsigned short	module
@@ -19191,20 +19174,14 @@ const	kScriptObject	0x90384b	data	1	src/game/rest_2d_callees.h:49(rest_2d::at)	-
 const	kScriptVar	0x90384b	data	1	src/game/area_w3g_callees.h:51(area_w3g::at)	-	-	none	-	at
 const	kScriptVar6	0x90384b	data	2	src/game/area_w3b_callees.h:63(area_w3b::at);src/game/area_w4a_callees.h:39(area_w4a::at)	-	-	none	-	at
 const	kVar6	0x90384b	data	1	src/game/area_w0a_callees.h:25(area_w0a::at)	-	-	none	-	at
-const	kCellX	0x903850	data	1	src/game/field_e1_callees.h:73(field_e1::at)	SharedScratch	block	exact	records::SharedScratch	at
-const	kCount	0x903850	data	1	src/game/scena_se_callees.h:27(scena_se::at)	SharedScratch	block	exact	records::SharedScratch	at
-const	kDigits	0x903850	data	1	src/game/rest_4c_callees.h:64(rest_4c::at)	SharedScratch	block	exact	records::SharedScratch	at
-const	kObjectCount	0x903850	data	1	src/game/effect_4a_callees.h:22(effect_4a::at)	SharedScratch	block	exact	records::SharedScratch	at
 const	kR	0x903850	data	1	src/game/magic_s29_callees.h:36(magic_s29::cell)	SharedScratch	block	exact	records::SharedScratch	module
 const	kS	0x903850	data	1	src/game/magic_s13.cpp:48((anon))	SharedScratch	block	exact	records::SharedScratch	module
 const	kScratch	0x903850	data	5	src/game/battle_misc_fuzz.cpp:87(battle_misc::(anon));src/game/battle_odds_fuzz.cpp:74(battle_odds::(anon));src/game/field_misc_fuzz.cpp:71(field_misc::(anon));src/game/magic_s24_callees.h:36(magic_s24::cell);src/game/magic_s29_callees.h:35(magic_s29::cell)	SharedScratch	block	exact	records::SharedScratch	module
-const	kSlot	0x903850	data	2	src/game/scena_sc3_callees.h:28(scena_sc3::at);src/game/scena_sc7_callees.h:31(scena_sc7::at)	SharedScratch	block	exact	records::SharedScratch	at
 const	kRecordIndex	0x903851	data	1	src/game/area_w3f_callees.h:41(area_w3f::at)	-	-	inside	records::SharedScratch	at
 const	kAngleB	0x903852	data	1	src/game/magic_c3.cpp:73((anon))	-	-	inside	records::SharedScratch	module
 const	kHeight	0x903852	data	1	src/game/magic_s19.cpp:73((anon))	-	-	inside	records::SharedScratch	module
 const	kR2	0x903852	data	1	src/game/magic_s23_callees.h:36(magic_s23::at)	-	-	inside	records::SharedScratch	at
 const	kR2	0x903852	data	2	src/game/magic_s24.cpp:100((anon));src/game/magic_s29_callees.h:37(magic_s29::cell)	-	-	inside	records::SharedScratch	module
-const	kScratchBank	0x903852	data	1	src/game/map_field_objects_callees.h:26(map_field_objects)	-	-	inside	records::SharedScratch	module
 const	kShade	0x903852	data	1	src/game/magic_s06.cpp:63((anon))	-	-	inside	records::SharedScratch	module
 const	kAngle	0x903854	data	1	src/game/magic_s19.cpp:74((anon))	-	-	inside	records::SharedScratch	module
 const	kPickSlot	0x903854	data	1	src/game/area_entry_callees.h:31(area_entry)	-	-	inside	records::SharedScratch	module
@@ -19901,14 +19878,14 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	16458
-#count sites_global	8152
-#count sites_global_at	6596
-#count sites_global_module	1556
+#count sites	16443
+#count sites_global	8137
+#count sites_global_at	6584
+#count sites_global_module	1553
 #count sites_record	7177
 #count sites_raw	1129
-#count sites_in_fuzz	3781
-#count files_with_sites	523
+#count sites_in_fuzz	3777
+#count files_with_sites	522
 #count files_with_record_sites	470
 #count record_sites_with_stride	699
 #count record_sites_with_table_or_base	1899
@@ -19919,37 +19896,37 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_param	661
 #count record_sites_family_unknown	1714
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	1363
-#count global_sites_covered_inside	595
+#count global_sites_covered_exact	1351
+#count global_sites_covered_inside	592
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
-#count at_refs_struct_or_array	458
-#count at_constant_definitions	4064
-#count at_constant_definitions_in_callees_h	3858
-#count at_constants_name_value	2840
-#count at_constants_data	1720
+#count at_refs_struct_or_array	500
+#count at_constant_definitions	4058
+#count at_constant_definitions_in_callees_h	3852
+#count at_constants_name_value	2835
+#count at_constants_data	1715
 #count at_constants_code	388
 #count at_constants_value	732
 #count at_constants_unresolved	0
 #count distinct_code_addresses	331
-#count distinct_addresses	1269
+#count distinct_addresses	1268
 #count max_names_one_address	14
-#count addresses_with_several_names	223
+#count addresses_with_several_names	222
 #count distinct_addresses_symbol_data	327
-#count distinct_addresses_symbol_block	5
+#count distinct_addresses_symbol_block	4
 #count distinct_addresses_symbol_func	0
 #count distinct_addresses_symbol_data_no_ctype	34
 #count distinct_addresses_name_missing	937
 #count distinct_addresses_name_missing_inside_entry	135
-#count module_constant_definitions_data	764
+#count module_constant_definitions_data	761
 #count module_constant_files	164
-#count module_constants_name_value	602
-#count module_distinct_addresses	501
-#count module_distinct_addresses_not_in_at	326
-#count module_distinct_addresses_not_in_at_no_data_entry	208
-#count module_distinct_addresses_not_in_at_name_missing	207
-#count all_distinct_data_addresses	1595
-#count all_distinct_data_addresses_name_missing	1144
+#count module_constants_name_value	599
+#count module_distinct_addresses	499
+#count module_distinct_addresses_not_in_at	325
+#count module_distinct_addresses_not_in_at_no_data_entry	207
+#count module_distinct_addresses_not_in_at_name_missing	205
+#count all_distinct_data_addresses	1593
+#count all_distinct_data_addresses_name_missing	1142
 #count stride_definitions	445
 #count stride_names	92
 #count stride_values	34

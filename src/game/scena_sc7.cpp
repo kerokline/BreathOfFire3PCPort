@@ -180,7 +180,7 @@ void Effect13(unsigned char* e, std::int32_t a, std::int32_t b, std::int32_t c, 
 }
 // The record 0x903850 names, read back as a dword's low byte, as the
 // originals index it after the store.
-unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(SharedScratch.d_00) & 0xFF); }
+unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(at::kSlot.d_00) & 0xFF); }
 
 // The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
 // views a
@@ -735,7 +735,7 @@ extern "C" void __cdecl Scena07_ShakeCamera(void) {
 extern "C" void __cdecl Scena07_PlaceObjects(void) {
     for (unsigned i = 0; i < 14; ++i) {
         const unsigned slot = SpriteFindFree() & 0xFF;
-        SharedScratch.w_00 = slot;
+        at::kSlot.w_00 = slot;
         if (slot == 0xFF) continue;
         SH_CALL(EventOp_0x)(At(Scena07_PlacedObjects_addr + 0x11 * i));
         rv::Store<unsigned>(rv::As<records::SpriteHead>(SpriteCurrent())->height_whole, 0xA00);
@@ -1268,7 +1268,7 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
         if (!Near(xh, 0x22, 4)) return 0;
         if (!Flag(4) || SH_CALL(Scena07_PartyHas89State2)() == 0) {
             const unsigned char kind = ObjTrio[0].direction;
-            SharedScratch.b_00 = kind;
+            at::kSlot.b_00 = kind;
             if (kind != 6 && kind != 5 && kind != 4) {
                 C0() = 0x10;
                 Set40();
@@ -1291,7 +1291,7 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
     const unsigned area = Area();
     if (area == 0x69) {
         const unsigned char kind = ObjTrio[0].direction;
-        SharedScratch.b_00 = kind;
+        at::kSlot.b_00 = kind;
         if (kind == 0 || kind == 1 || kind == 2) return 0;
         if (static_cast<short>(zh) <= 0x1D) return 0;
         Set40();
@@ -2081,11 +2081,11 @@ extern "C" void __cdecl Scena08_SpawnPair(void) {
         Sprite(static_cast<std::uint32_t>(Long(At(Scena08_Kept_addr + 0x4))))[0] = 0;
         return;
     }
-    SharedScratch.w_00 = Word(At(Scena08_Kept_addr + 0x4));
+    at::kSlot.w_00 = Word(At(Scena08_Kept_addr + 0x4));
     Sprite(b)[0] = 1;
     SH_CALL(EventOp_6x)(At(Scena08_PairOps_addr));
     SH_CALL(Sprite_SetAnimationAt)(0x4C, 0);
-    SharedScratch.w_00 = Word(At(Scena08_Kept_addr + 0x8));
+    at::kSlot.w_00 = Word(At(Scena08_Kept_addr + 0x8));
     SH_CALL(EventOp_6x)(At(Scena08_PairOps_addr + 0x10));
     SH_CALL(Sprite_SetAnimationAt)(0x36, 0);
 }
@@ -2720,7 +2720,7 @@ extern "C" unsigned char __cdecl Scena08_ArriveHook(int x, int z) {
     }
     if (Area() == 0x23 && !Flag(8) && Near(xh, 0x45, 3) && Near(zh, 0x37, 3)) {
         const unsigned char kind = ObjTrio[0].direction;
-        SharedScratch.b_00 = kind;
+        at::kSlot.b_00 = kind;
         if (kind != 6 && kind != 7 && kind != 0) {
             SetRun(6);
             SetStep(0);

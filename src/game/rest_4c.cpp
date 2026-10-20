@@ -526,10 +526,10 @@ extern "C" void __cdecl CommuHiLo_BetDispatch(void) {
 // ours aborts outside 0..2 where it does.
 extern "C" void __cdecl CommuHiLo_BetInput(void) {
     const int low = static_cast<signed char>(B(at::kBet));
-    SharedScratch.b_02 = static_cast<unsigned char>(low / 100);
+    at::kDigits.b_02 = static_cast<unsigned char>(low / 100);
     const int rest = static_cast<signed char>(static_cast<unsigned char>(low % 100));
-    SharedScratch.b_01 = static_cast<unsigned char>(rest / 10);
-    SharedScratch.b_00 = static_cast<unsigned char>(rest % 10);
+    at::kDigits.b_01 = static_cast<unsigned char>(rest / 10);
+    at::kDigits.b_00 = static_cast<unsigned char>(rest % 10);
     const unsigned pressed = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF000u);
     if ((pressed & 0xFFFF) != 0) {
         Sound(0x100);
@@ -544,17 +544,17 @@ extern "C" void __cdecl CommuHiLo_BetInput(void) {
         } else if (pressed & 0x4000) {
             const int i = Rest4c_Count;
             Room("CommuHiLo_BetInput (0x45A0B0)", "the digit cursor 0x675F8C", i, 0, 2);
-            const auto d = static_cast<unsigned char>(B(at::kDigits + i) - 1);
-            B(at::kDigits + i) = d;
-            if (static_cast<signed char>(d) < 0) B(at::kDigits + i) = 9;
+            const auto d = static_cast<unsigned char>(reinterpret_cast<unsigned char*>(&at::kDigits)[i] - 1);
+            reinterpret_cast<unsigned char*>(&at::kDigits)[i] = d;
+            if (static_cast<signed char>(d) < 0) reinterpret_cast<unsigned char*>(&at::kDigits)[i] = 9;
         } else if (pressed & 0x1000) {
             const int i = Rest4c_Count;
             Room("CommuHiLo_BetInput (0x45A0B0)", "the digit cursor 0x675F8C", i, 0, 2);
-            const auto d = static_cast<unsigned char>(B(at::kDigits + i) + 1);
-            B(at::kDigits + i) = d;
-            if (static_cast<signed char>(d) > 9) B(at::kDigits + i) = 0;
+            const auto d = static_cast<unsigned char>(reinterpret_cast<unsigned char*>(&at::kDigits)[i] + 1);
+            reinterpret_cast<unsigned char*>(&at::kDigits)[i] = d;
+            if (static_cast<signed char>(d) > 9) reinterpret_cast<unsigned char*>(&at::kDigits)[i] = 0;
         }
-        const int stake = static_cast<signed char>(SharedScratch.b_02) * 100 + static_cast<signed char>(SharedScratch.b_01) * 10 + static_cast<signed char>(SharedScratch.b_00);
+        const int stake = static_cast<signed char>(at::kDigits.b_02) * 100 + static_cast<signed char>(at::kDigits.b_01) * 10 + static_cast<signed char>(at::kDigits.b_00);
         SetL(at::kBet, static_cast<U>(stake));
         if (stake < 0) {
             SetL(at::kBet, 0);

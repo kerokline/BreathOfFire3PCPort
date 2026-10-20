@@ -898,7 +898,7 @@ void TestOp8x(Tally& t, void* clone, unsigned rounds) {
     const Fn theirs = reinterpret_cast<Fn>(clone);
     const Region r[] = {RecordRegion(), {kObjectsFrom, kObjectsBytes}, kScratch, {Sprite_Current_addr, 4}, {Field_ActiveMember_addr, 4}};
     const int n = sizeof r / sizeof r[0];
-    SetWatch({{kScratchBank, 2}, {kObjectsFrom, kObjectsBytes}});
+    SetWatch({{SharedScratch_addr + 0x2, 2}, {kObjectsFrom, kObjectsBytes}});
     g_move_sprite = true;
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);

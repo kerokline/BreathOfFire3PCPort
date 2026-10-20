@@ -28,7 +28,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter2 = 0x90384A;
 constexpr std::uint32_t kCounter3 = 0x90384B;
-constexpr std::uint32_t kSlot = 0x903850;         // u8 (a u16 store in two places): the effect or sprite slot just taken
+inline auto& kSlot = SharedScratch;         // u8 (a u16 store in two places): the effect or sprite slot just taken
 // kFlagBank: now Chapter_FlagRow (symbols.toml). unsigned char *: the flag row Flags_Test / Flags_Set are given
 // kRow6: now Cond_Flags[0x30] (symbols.toml). chapter 6's flag row, tested by two of chapter 7's object handlers
 // kRow7: now Cond_Flags[0x38] (symbols.toml). chapter 7's flag row (Cond_Flags +0x38), cleared by its start

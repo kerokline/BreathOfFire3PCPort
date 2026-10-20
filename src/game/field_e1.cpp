@@ -596,7 +596,7 @@ int DirStep(unsigned direction, unsigned which) {
     const auto v = static_cast<signed char>(B(at::kDirPairs + direction * 2u + which));
     return v == 1 ? 2 : v;
 }
-std::uint16_t CellX() { return SharedScratch.w_00; }
+std::uint16_t CellX() { return at::kCellX; }
 std::uint16_t CellZ() { return at::kCellZ; }
 bool CellIs(unsigned char code) {
     return SH_CALL(AreaMap_ByteAt)(static_cast<short>(CellX()), static_cast<short>(CellZ())) == code;
@@ -633,7 +633,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     const auto c = static_cast<unsigned char>(code);
     if (fx != 0 && rv::As<records::SpriteHead>(sc)->z_frac != 0) {
         // both fractions: x .. x + 1 at the row ahead, then the column ahead
-        SharedScratch.w_00 = x;
+        at::kCellX = x;
         at::kCellZ = ahead_z;
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {
@@ -641,9 +641,9 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
                 if (!(f & 1)) return AlongX();
                 if (f == 1 || f == 5) return 1;
             }
-            SharedScratch.w_00 = CellX() + 1;
+            at::kCellX = CellX() + 1;
         }
-        SharedScratch.w_00 = ahead_x;
+        at::kCellX = ahead_x;
         at::kCellZ = rv::As<records::SpriteHead>(Sc())->z_whole;
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {
@@ -659,7 +659,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     }
     if (fx != 0) {
         // x's fraction only: the column ahead, z - 1 .. z + 1
-        SharedScratch.w_00 = ahead_x;
+        at::kCellX = ahead_x;
         at::kCellZ = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole - 1);
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
@@ -671,7 +671,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
         }
         const unsigned char f = Sc()[8];
         if (f != 1 && f != 5) return 0;
-        SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
+        at::kCellX = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
         at::kCellZ = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
@@ -680,7 +680,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
             }
             at::kCellZ = CellZ() + 1;
         }
-        SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole + 2);
+        at::kCellX = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole + 2);
         at::kCellZ = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
@@ -692,7 +692,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
         return 0;
     }
     // z's fraction only: the row ahead, x - 1 .. x + 1
-    SharedScratch.w_00 = static_cast<std::uint16_t>(x - 1);
+    at::kCellX = static_cast<std::uint16_t>(x - 1);
     at::kCellZ = ahead_z;
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
@@ -700,27 +700,27 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
             if (!(f & 1)) return AlongX();
             if (f == 1 || f == 5) return 1;
         }
-        SharedScratch.w_00 = CellX() + 1;
+        at::kCellX = CellX() + 1;
     }
     const unsigned char f = Sc()[8];
     if (f != 7 && f != 3) return 0;
-    SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
+    at::kCellX = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
     at::kCellZ = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             Sc()[8] = 1;
             return 1;
         }
-        SharedScratch.w_00 = CellX() + 1;
+        at::kCellX = CellX() + 1;
     }
-    SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
+    at::kCellX = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
     at::kCellZ = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole + 2);
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             Sc()[8] = 5;
             return 1;
         }
-        SharedScratch.w_00 = CellX() + 1;
+        at::kCellX = CellX() + 1;
     }
     return 0;
 }
@@ -733,7 +733,7 @@ extern "C" unsigned char __cdecl Field_CellAroundSide(unsigned direction, unsign
     const auto d = static_cast<unsigned char>(direction);
     const auto c = static_cast<unsigned char>(code);
     const unsigned char* const sc = Sc();
-    SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->x_whole + DirStep(d, 0));
+    at::kCellX = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->x_whole + DirStep(d, 0));
     at::kCellZ = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole + DirStep(d, 1));
     if (d == 1 || d == 5) {
         for (int i = 0; i <= 1; ++i) {
@@ -741,7 +741,7 @@ extern "C" unsigned char __cdecl Field_CellAroundSide(unsigned direction, unsign
                 Sc()[8] = d;
                 return 1;
             }
-            SharedScratch.w_00 = CellX() + 1;
+            at::kCellX = CellX() + 1;
         }
         return 0;
     }
@@ -863,12 +863,12 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     const unsigned n = count;
     if (n > 0) {
         for (unsigned i = 0; i < n; ++i) SetLong(At(SharedScratch_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->x);
-        for (unsigned j = 0; j < n; ++j) rv::As<records::PartyMember>(Member(j))->x = L(at::kCellX + 4 * ListSlot(rv::As<records::PartyMember>(Member(j))->char_id, n));
+        for (unsigned j = 0; j < n; ++j) rv::As<records::PartyMember>(Member(j))->x = L(SharedScratch_addr + 4 * ListSlot(rv::As<records::PartyMember>(Member(j))->char_id, n));
         for (unsigned i = 0; i < n; ++i) SetLong(At(SharedScratch_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->z);
         unsigned members = n;
         for (unsigned j = 0; j < members; ++j) {
             records::PartyMember* const m = rv::As<records::PartyMember>(Member(j));
-            const std::int32_t z = L(at::kCellX + 4 * ListSlot(m->char_id, members));
+            const std::int32_t z = L(SharedScratch_addr + 4 * ListSlot(m->char_id, members));
             m->z = z;
             const long ground = SH_CALL(MapView_GroundAt)(m->x, z);
             count = Field_MemberCount;

@@ -23,7 +23,7 @@ using U = std::uint32_t;
 inline auto& kScratchX = SharedScratch;
 inline auto& kScratchY = SharedScratch.d_04;
 inline auto& kScratchH = SharedScratch.d_08;
-constexpr U kScratchBank = 0x903852;
+inline auto& kScratchBank = SharedScratch.w_02;
 // MapView_ScreenXY's three points: the uprights' Gte_RotTransPers3 outputs.
 constexpr U kScreen0 = 0x903820, kScreen1 = 0x903828, kScreen2 = 0x903830;
 // Prim_VertexScratch's four vertices, 8 bytes apart.

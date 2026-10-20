@@ -78,8 +78,8 @@ constexpr U kEff5Frame = 0x7E1470;     // record 5 +0x10 (s32)
 constexpr U kEff5Level = 0x7E1490;     // record 5 +0x30 (a byte, and a s16)
 // kEff6State: now Effect_Objects[0x301] (symbols.toml). record 6 +1
 // kEff6Dir: now Effect_Objects[0x308] (symbols.toml). record 6 +8
-constexpr U kEff6Page = 0x7E151C;      // record 6 +0x3C (u16)
-constexpr U kEff6Shown = 0x7E151E;     // record 6 +0x3E (u16)
+inline auto& kEff6Page = Effect_Objects[6].height_frac;    // record 6 +0x3C (u16)
+inline auto& kEff6Shown = Effect_Objects[6].height_whole;  // record 6 +0x3E (u16)
 
 // kLeaderStage: now ObjTrio[2] (symbols.toml). ObjTrio record 0 +2 (the leader's stage)
 // kLeaderStep: now ObjTrio[3] (symbols.toml). ObjTrio record 0 +3
@@ -127,6 +127,8 @@ std::int32_t L(U address) { return Long(At(address)); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
+// The address of a typed alias, for the accessors above.
+U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // A register loaded with Sprite_Current, then `movzx ax, byte [reg + n]`: the
 // pointer's upper half above the byte (E1E's PtrHi).
@@ -336,16 +338,16 @@ extern "C" void __cdecl ChoiceMenu_DataPage(void) {
     const unsigned pressed = Input_Pressed;
     if (pressed & 0x2000) {
         Sound(0x102);
-        const U page = (static_cast<std::uint32_t>(Effect_Objects[6].height_whole) + 1) & 0xFFFF;
-        Effect_Objects[6].height_frac = page < 0x17 ? page : 0;
+        const U page = (static_cast<std::uint32_t>(kEff6Shown) + 1) & 0xFFFF;
+        kEff6Page = page < 0x17 ? page : 0;
         rv::Bytes(&Effect_Objects[6])[0x8] = 0;
         Effect_Objects[6].state = static_cast<unsigned char>(Effect_Objects[6].state + 1);
         return;
     }
     if (pressed & 0x8000) {
         Sound(0x102);
-        const auto page = static_cast<short>(W(kEff6Shown) - 1);
-        Effect_Objects[6].height_frac = page < 0 ? 0x16u : static_cast<U>(page);
+        const auto page = static_cast<short>(W(AddrOf(&kEff6Shown)) - 1);
+        kEff6Page = page < 0 ? 0x16u : static_cast<U>(page);
         rv::Bytes(&Effect_Objects[6])[0x8] = 1;
         Effect_Objects[6].state = static_cast<unsigned char>(Effect_Objects[6].state + 1);
         return;
@@ -374,16 +376,16 @@ extern "C" void __cdecl ChoiceMenu_RulePage(void) {
         return;
     }
     if (pressed & 0x4000) {
-        const U page = (static_cast<std::uint32_t>(Effect_Objects[6].height_frac) + 1) & 0xFFFF;
+        const U page = (static_cast<std::uint32_t>(kEff6Page) + 1) & 0xFFFF;
         rv::Bytes(&Effect_Objects[6])[0x8] = 0xFF;
-        Effect_Objects[6].height_frac = page > 5 ? 0 : page;
+        kEff6Page = page > 5 ? 0 : page;
         return;
     }
     if (pressed & 0x1000) {
-        const auto page = static_cast<short>(W(kEff6Page) - 1);
-        SetW(kEff6Page, static_cast<U>(page));
+        const auto page = static_cast<short>(W(AddrOf(&kEff6Page)) - 1);
+        SetW(AddrOf(&kEff6Page), static_cast<U>(page));
         rv::Bytes(&Effect_Objects[6])[0x8] = 1;
-        if (page < 0) Effect_Objects[6].height_frac = 5;
+        if (page < 0) kEff6Page = 5;
     }
 }
 

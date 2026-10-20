@@ -42,7 +42,7 @@ using move_script::Word;
 
 // The placement count (SharedScratch, read afresh at every use as the
 // original reads the word [0x903850]) and the bank word after it.
-short Count() { return static_cast<std::int16_t>(SharedScratch.w_00); }
+short Count() { return static_cast<std::int16_t>(at::kCount); }
 unsigned char* Object(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(at::kObjectStride); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
@@ -183,7 +183,7 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5C] = static_cast<unsigned char>(op[3] & 0xF);
     SH_CALL(EventObj_Face)();
-    SharedScratch.w_00 = static_cast<unsigned>(SharedScratch.w_00 + 1);
+    at::kCount = static_cast<unsigned>(at::kCount + 1);
 }
 
 // original 0x591CC0: a member into the two party lists without a sprite
