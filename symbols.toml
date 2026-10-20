@@ -136240,3 +136240,49 @@ ctype = "unsigned long"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x9399fc] at 0x57e1c2; mov dword ptr [0x9399fc], eax at 0x57ecb9. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kScore, rest_2b::kScoreCell."
 note = "rest_2b.cpp: the score."
+
+# ---------------------------------------------------------------------------
+# Record arrays the typed-data round stage C4 named (docs/typed-data-stage-c.md
+# 6; docs/typed-records.md 8): each a records:: struct with a count, its
+# evidence the readers' loop and the struct's size.
+
+[[data]]
+pc = 0x939F00
+name = "Encounter_Slots"
+psx = 0x801463D8
+ctype = "records::EncounterSlot"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-19 (typed-data round stage C4): Battle_InitEnemies 0x4942C0 walks the eight 12-byte records here (its evidence above; battle_sprites.cpp r < 8, at::kEncounter + r * 12), setting each used one (+0) up as Battle_SetupEnemy(n, +1, dword +4, dword +8); Encounter_FillSlots writes +0 / +1 (field_hidden.cpp). field_hidden_callees.h / inventory_ops_callees.h kEnemies (12 bytes x 8, PSX 0x801463D8). records.h EncounterSlot."
+
+[[data]]
+pc = 0x9046D0
+name = "Community_Records"
+ctype = "records::CommunityRecord"
+count = 60
+status = "evidence"
+evidence = "read 2026-10-19 (typed-data round stage C4): sixty records of 8 bytes to 0x9048B0 - rest_4a_callees.h kRecords / kRecordCount = 60 / kRecordsEnd, rest_4b_callees.h kMembers / kMembersEnd and field_e2_callees.h kPairs / kPairsEnd bound the readers' walks there (rest_4b.cpp, field_e2.cpp). +0 in use, +1 the building, +4 a clock stamp (records.h CommunityRecord; docs/rest_4a.md, rest_4b.md)."
+
+[[data]]
+pc = 0x9048B0
+name = "Community_Buildings"
+ctype = "records::CommunityBuilding"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-19 (typed-data round stage C4): eight records of 8 bytes after Community_Records - rest_4a_callees.h kBuildings (8 records of 8), field_e2_callees.h kRecords (8 x 8), rest_4b_callees.h kSlots (by slot 1..8, 0x9048B0 + 8 * (slot - 1)); +0 the kind (records.h CommunityBuilding). The five-byte names follow at 0x9048F0 (docs/save-interchange.md 2)."
+
+[[data]]
+pc = 0x93A000
+name = "BattleTask_Slots"
+ctype = "records::BattleTask"
+count = 48
+status = "evidence"
+evidence = "read 2026-10-19 (typed-data round stage C4): BattleTask_RunAll 0x435110 runs the 48 slots of 0x84 bytes here (to 0x93B8C0), BattleTask_Create 0x435180 hands out the first free one and BattleTask_ClearAll 0x435260 clears all 48 (their evidence above); records.h BattleTask (the sprite head and the owner at +0x80). BattleFlow_TaskCurrent points at the one running."
+
+[[data]]
+pc = 0x93B960
+name = "Battle_Enemies"
+ctype = "records::BattleEnemy"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-19 (typed-data round stage C4): the eight enemy objects of 0x128 bytes BattleEnemy_RunAll 0x435830 and BattleEnemy_UpdateScreenAll 0x4358A0 walk (their evidence above), actor a >= 3 at 0x93B960 + (a - 3) * 0x128 (Battle_ActorIsOut 0x4456C0, Battle_ClearActingFlags 0x4301B0); records.h BattleEnemy. Each record's +0x80.. is the [[block]] EnemyWorkingRecords (0x93B9E0, the PSX block's image), which stays as it is for its field entries."
