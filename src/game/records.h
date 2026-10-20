@@ -283,7 +283,7 @@ struct BattleEnemy : SpriteHead {
     std::uint16_t atk;  // +0xB4 the stat copy's +4 (battle_damage kAttackerAtk; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4))
     std::uint16_t def;  // +0xB6 the stat copy's +6 (battle_damage kTargetDef; rest_3b.cpp:464; rest_3b.md)
     std::uint16_t agi;  // +0xB8 (battle_setup kEAgi)
-    std::uint16_t intel;  // +0xBA the stat copy's +0xA (battle_damage kAttackerInt / kTargetInt); BattleEnemy_PickAction tests it <= 1 (battle_e2.md). magic_steal.md R22 calls +0xBA the speed, but SkillSteal_Roll reads +0xB8 (magic_steal.cpp): a doc conflict
+    std::uint16_t intel;  // +0xBA the stat copy's +0xA (battle_damage kAttackerInt / kTargetInt); BattleEnemy_PickAction tests it <= 1 (battle_e2.md), Battle_AutoTargetCheck > 1 (rest_4a kEnemyIntel, named kEnemyHp until 2026-10-20: IDEAS I49). magic_steal.md R22 calls +0xBA the speed, but SkillSteal_Roll reads +0xB8 (magic_steal.cpp): a doc conflict
     unsigned char pad_BC[0x3];  // +0xBC..+0xBE: the stat copy's +0xC..+0xE; not named
     std::uint8_t elements[5];  // +0xBF (battle_damage kEElements)
     std::uint8_t holy;  // +0xC4 (battle_damage kEHoly)

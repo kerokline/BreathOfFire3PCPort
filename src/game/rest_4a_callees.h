@@ -33,7 +33,8 @@ constexpr U kTarget = 0x904B44;            // u8: the target the checks store
 // kMemberMode: now ObjTrio_addr + 0x125 (symbols.toml). ObjTrio + 0x125 (u8): a member's auto mode
 // kMemberOdds: now ObjTrio[0].count_4000 (symbols.toml). ObjTrio + 0x142 (s8): the odds of a party pick, by 20
 constexpr U kMemberStride = 0x14C;
-constexpr U kEnemyHp = 0x93BA1A;           // enemy record + 0xBA (u16), records from 0x93B960, 0x128 apart
+constexpr U kEnemyIntel = 0x93BA1A;        // enemy record + 0xBA (u16), records from 0x93B960, 0x128 apart:
+                                           // BattleEnemy::intel (named kEnemyHp until 2026-10-20; IDEAS I49)
 constexpr U kEnemyStatus = 0x93B9F2;       // enemy record + 0x92 (u8): bit 5
 constexpr U kEnemyFlags = 0x93BA74;        // enemy record + 0x114 (dword): bit 14
 constexpr U kEnemyAbility = 0x93BA66;      // enemy record + 0x106 (u16): the ability

@@ -23390,8 +23390,8 @@ src/game/rest_4a.cpp	UL	global	At	at::kEvents	1	0x904ca0	-	no-entry	at::kEvents 
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	UL	at::kBattleFlags	0	0x904aa8	-	no-entry	at::kBattleFlags 0x904aa8 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	Battle_Enemies_addr + 0x92 + e	0	0x93b960	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Battle_Enemies_addr - -)	c4-tc
-src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	Battle_Enemies_addr + 0xba + e	0	0x93b960	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Battle_Enemies_addr - -)	c4-tc
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	UL	at::kEnemyFlags	0	0x93ba74	-	no-entry	at::kEnemyFlags 0x93ba74 -	b0
+src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kEnemyIntel	0	0x93ba1a	-	ptr	a pointer form: At(at::kEnemyIntel + e) is read through Word() at an enemy index (the module name back, 2026-10-20; was Battle_Enemies_addr + 0xba + e)	owner-1020
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kAutoMode	0	0x904b35	-	no-entry	at::kAutoMode 0x904b35 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	Battle_Enemies_addr + 0x106 + e	0	0x93b960	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Battle_Enemies_addr - -)	c4-tc

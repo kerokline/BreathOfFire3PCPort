@@ -2108,3 +2108,21 @@ retired constants or the old per-file view helpers are not counted.
 
 ### Outcome
 _(2026-10-20) open; logged at the owner's word, nothing changed._
+
+## I49 — What `Battle_AutoTargetCheck`'s `+0xBA` test means
+
+**Status:** open (2026-10-20, logged at the owner's word: "maybe leave a note in ideas to check it again later").
+
+**What.** `Battle_AutoTargetCheck` (`src/game/rest_4a.cpp`) keeps a forced target only while the enemy record's
+u16 at `+0xBA` is above 1 (with `+0x92` bit 5 and `+0x114` bit 14 clear). The module called that word `kEnemyHp`;
+`records.h` calls `+0xBA` `BattleEnemy::intel`, the stat copy's `+0xA`, which the damage code reads as INT
+(`battle_damage` kAttackerInt / kTargetInt) and `BattleEnemy_PickAction` tests for `<= 1`; HP is `+0xA4`. The C4
+audit (slice B) found the two names disagree; the owner had the constant renamed `kEnemyIntel` on 2026-10-20.
+`magic_steal.md` R22's "speed" at `+0xBA` is a third reading (its code reads `+0xB8`).
+
+**The check.** An INT gate on an auto-target is an odd rule, so confirm the field by measurement: the writers of
+`+0xBA` (`Battle_CopyEnemyData`, `EnemyAI_ScaleStat`), the PSX twin's test (psx-twin-check.md), and a live read of
+`+0xBA` against a known enemy's stats. If it is not INT, the struct's name and both readers' docs change together.
+
+### Outcome
+_(2026-10-20) open; the rename is done, the meaning unconfirmed._

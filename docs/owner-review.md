@@ -18,22 +18,14 @@ where the reading behind it is. Nothing here is a divergence until it is in
 `typed/c` (`main` 61023304 merged in;
 [`typed-data-stage-c.md`](typed-data-stage-c.md), the round doc's section 3).
 No behaviour change, the machine code identical to `main` (the smoke run
-passed 2026-10-20: the round doc's section 3); two names the C4 audit could not settle from the code
-(`C:\Users\kerok\c_typed\audit\c4\`, reports A and B).
+passed 2026-10-20: the round doc's section 3). The C4 audit's two names, answered
+2026-10-20 (reports A and B in `C:\Users\kerok\c_typed\audit\c4\`):
 
-- **`rest_4a`'s `kEnemyHp`** (`0x93BA1A`, `rest_4a_callees.h`): an enemy
-  record's `+0xBA`, which `records.h` calls `BattleEnemy::intel` (the stat
-  copy's `+0xA`; `hp` is `+0xA4`). It predates C4 - C4 only respelled the
-  use in `rest_4a.cpp` as `Battle_Enemies_addr + 0xba` - but one of the two
-  names is wrong. `records.h`'s own comment already notes a doc conflict at
-  that offset (`magic_steal.md` R22). Which, if you know the function's
-  test (an enemy picked while `+0xBA` is above 1)?
-- **`Save_Directory`'s count 16** (`symbols.toml`, `records::SaveDirEntry`
-  x16): the readers' bound and the room before the next entry. Capcom's
-  writer stores up to twenty, 0x60 bytes past it - D322, which our list
-  bounds at sixteen since the quicksave round (DIV-0146,
-  `quick_menu.cpp`'s check). Keep 16 as the table's size, with the overrun
-  recorded as D322's? Recommended: yes.
+- **`rest_4a`'s `kEnemyHp`**: renamed `kEnemyIntel` ("go ahead with the
+  rename"), matching `records.h`'s `BattleEnemy::intel` at `+0xBA`; no
+  behaviour change. IDEAS I49 is the later check of what the test means.
+- **`Save_Directory`'s count**: 16 kept ("I agree on the 16 save slot
+  cap"); the overrun stays D322's, bounded by DIV-0146.
 
 ## 2026-10-20, answered at the machine
 

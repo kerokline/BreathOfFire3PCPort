@@ -50,9 +50,8 @@ hosted cross form).
    `git log --format=%B main..typed/c` first). `main` (`b3498050`, PRs #96 and #98, then `61023304`, PR #99) is
    merged into `typed/c` (2026-10-20; gate baseline `.claude/worktrees/typed-baseline-c2`, a build of `b3498050`,
    0 differ; census 27,389; DIV-0148's one new raw site, `scena_sc15.cpp` RollEntry's `L(kRollLines + 4u * i)`,
-   listed `gate`: `Scena17_RollLines[i]` changes `Scena17_ScrollRoll`). **Two calls for the owner**, from the C4 audit
-   ([`owner-review.md`](owner-review.md) "2026-10-20, typed-data stage C"): `rest_4a`'s `kEnemyHp` against
-   `records.h`'s `intel` at the same offset, and `Save_Directory`'s count. **The method that held** (stage C's
+   listed `gate`: `Scena17_RollLines[i]` changes `Scena17_ScrollRoll`). The C4 audit's two calls are answered ([`owner-review.md`](owner-review.md) "2026-10-20, typed-data
+   stage C"): `kEnemyHp` renamed `kEnemyIntel` (IDEAS I49 to look again), `Save_Directory` kept at 16. **The method that held** (stage C's
    section 1): `tools/codegen_same.py` against a baseline build after every batch, `0 differ`; after every typing
    pass a read-only family audit by other agents, because the gate cannot see a pointer typed as the wrong struct;
    build before calling anything done. Scratch of stage C, outside the tree: `C:\Users\kerok\c_typed` (the
