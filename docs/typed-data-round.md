@@ -63,7 +63,9 @@ it, the `symbols.toml` name at that address or none. Output:
 `analysis/data_census.tsv` (committed: addresses and names, our work
 product) and the counts above re-measured in `docs/typed-data-census.md`.
 The CI rule (`checks.yml`): the census's site count may not rise; after
-stage B, a raw accessor in `src/game` fails the check.
+stage B, a raw accessor in `src/game` fails the check (built in stage C4
+as `data_census.py --strict`: unless `analysis/typed_left.tsv` lists the
+site with a reason).
 
 ### SD: the record types (`src/game/records.h`; reads, then one header)
 
@@ -618,14 +620,136 @@ battle phase bytes whose module names disagree (`BattleE4_Step2..4`,
 `data_census.py --check` 19,716 (+9, the restored constants);
 `typed_left.py --check` current.
 
+### C4 as run (2026-10-19 .. 2026-10-20)
+
+[`typed-data-stage-c.md`](typed-data-stage-c.md) section 6, in two parts
+on `typed/c4` with an audit and a fix branch between; one agent at a time,
+every commit gated `0 differ` (640 objects) with both `--check`s green.
+
+**Part 1: the struct-typed tables** (from `typed/c` 14124a24; merged as
+f56ed9a8).
+
+- **Tools.** `tools/record_sizes.py` reads each `records::` struct's size
+  and fields from the headers' `static_assert`s; `data_widths.py` and
+  `data_census.py` size a `records::T` entry by its struct;
+  `gen_symbols.py` checks that a `records::` ctype names a struct and lets
+  a `[[block]]` carry a ctype equal to its stride (an array, or one
+  record when the count is 1); `typed_convert.py` converts inside record
+  arrays (`Name[i].field`, one union name per family, the per-handler view
+  bytes left raw with reason `view`) and grew `--addr-names`,
+  `--only-entries`, `--retire-fields`; `typed_left.py` keeps a reason
+  across an edit that changes only `expr`.
+- **Entries.** `records::` arrays, each count checked against its readers'
+  loop: Sprite_Objects `SpriteObject` x30, Sprite_ObjectsExtra x4,
+  Sprite_Kind2 one object, ObjTrio `PartyMember` x3 (Field_Members retired
+  into `ObjTrio[0].char_index`), Effect_Objects `EffectObject` x20,
+  Prim_VertexScratch `SVector` x4, EffectKindA0_Sparks / _Shards,
+  Save_Directory `SaveDirEntry` x16, and five new ones: Encounter_Slots
+  0x939F00 x8, Community_Records 0x9046D0 x60, Community_Buildings 0x9048B0
+  x8, BattleTask_Slots 0x93A000 x48, Battle_Enemies 0x93B960 x8. Typed
+  blocks: WindowRecords `WindowRecord` x22, CharacterRecords `CharRecord`
+  x8, the damage scratch block one record of 0x1C with Scratch_Swap its
+  +0xC field (185 `bof3::addr::<block>` spellings became `<block>_addr`).
+- **Sites.** Per table `typed_convert --gate --only-entries T
+  --addr-names T`; the field entries' uses as their records' fields
+  (`Window16_State` -> `WindowRecords[16].state`, 217 uses); ten field
+  entries retired; BattleE3_CurrentEnemy and BattleE4_MenuActor retyped as
+  `records::BattleEnemy *` / `records::PartyMember *` with their pointer
+  cells' sites; BattleFlow_TaskCurrent through magic's `Pointer()` left
+  (an out-of-line seam: the gate refused it). Census 19,716 -> 16,458.
+- **The owner's call on the scratch block** (2026-10-20). The pass had
+  replaced per-function module names (kPendingX, kPickSlot, kEffectSlot,
+  kRadius, ...) with the struct's neutral fields. Kept the typing; renamed
+  the block `DamageScratch` -> `SharedScratch` (the PSX scratchpad it
+  relocates has no one meaning; the old name is in its note) and gave the
+  names back as typed aliases in their own scope, `inline auto& kPendingX
+  = SharedScratch.d_10;` (or `= SharedScratch;` for a base read at several
+  fields, `at::kTint.b_01`): 70 aliases (68 scratch constants and rest_1g's
+  kEff6Page / kEff6Shown), each folding to its absolute address. Census
+  16,443.
+
+**The audit** (three read-only slices, `audit/c4/{A,B,C}`): no wrong
+address and no wrong size; wrong names. A: object 2's turn word in
+effect_3d spelled as `Sprite_Objects[2].draw_key` against a recorded C2
+decision; `.digits` (+0xA, the battle tasks' damage digits) on effect
+objects and party members; Sprite_Kind2 typed past the 0xA0 bytes its
+readers reach. B: Community_Buildings addresses spelled off the end of
+Community_Records. C: the scratch block's address uses respelled from the
+module names to `SharedScratch_addr + 0xN` (874 sites, 167 constants), the
+names lost where nothing was typed; 15 raw sites the census did not see.
+
+**The fix branch** (`typed/c4-fix`, merged as 6f863cc0): the scratch
+block's address uses spelled through the module names again (872 sites; 82
+retired base constants back as `kX = SharedScratch_addr;`, 40 aliases with
+`kX_addr` companions for their address uses); the three wrong-meaning
+field names backed off, with `typed_convert` KEEP_RAW for per-site
+exclusions (effect_3d's kObject2Turn, the Community_Buildings sites);
+SpriteHead +0xA a union with `digits` for BattleTask only, EffectWork
+`work_3c` / `work_3e`; `records::SpriteObjectBody` (0xA0) as Sprite_Kind2's
+ctype, SpriteObject deriving from it; 416 stale retire notes regenerated as
+`Name[i].field` / `Name_addr + 0xN`; the census counting `AddrOf(&kX)` and
+`reinterpret_cast<T*>(&kX)[i]`, the alias rule by tier, the `rv::As`
+split. Census 16,443 -> 18,630 (helper-base sites such as `SW(k)` on kS
+count again).
+
+**Part 2: the census sees every raw spelling, GameData, the strict rule**
+(from `typed/c` 6f863cc0).
+
+- **What counts** (the owner's decision for the strict rule, 2026-10-20):
+  `B(Name_addr + k)`, `At(Name_addr)` and every other accessor on a typed
+  entry's `<Name>_addr` are raw sites, and so is a subscript of
+  `rv::Bytes(...)`. `data_census.py` now counts them
+  ([`typed-data-census.md`](typed-data-census.md) 4). Census 18,630 ->
+  27,390: +8,459 `<Name>_addr` sites (4,975 in fuzz and harness files,
+  3,484 in the game's), +301 `rv::Bytes` subscripts, none lost.
+- **Every site a reason.** `analysis/typed_left.tsv` had 10,094 rows at
+  `-`: 1,134 took the C2 groups' own reasons (their `left.tsv` lists, the
+  import the round owed), 8,459 typed_convert's verdict on the site (a
+  gated run over every `<Name>_addr` spelling for the refusals, a dry run
+  for the rest: seam, harness, pointer form, helper, ...), 501 a rule by
+  shape and family (`view` for the `rv::Bytes` subscripts). The gated run
+  typed only two sites and wrote two, and re-spelled module constants as
+  `<Entry>_addr + k` in the same pass (what the fix branch had undone), so
+  its source edits were dropped and only its verdicts kept.
+- **GameData** (`tools/gen_symbols.py`). `bof3::GameData`, 0x37B000 bytes
+  from `bof3::kGameDataVa` 0x5C4000 (the first page past `.text`) to the
+  image's end 0x93F000, 2,965 members in address order (every typed
+  `[[data]]` that is not a block's field, every typed `[[block]]`;
+  `pad_<address>` between; no member needed packing), its size
+  `static_assert`ed; `BOF3_GAME` the one pointer to it. Each member's
+  `<Name>_addr` is computed from the struct (`kGameDataVa + offsetof`) and
+  `static_assert`ed equal to `symbols.toml`'s pc with the member's size,
+  and the member's macro casts that `<Name>_addr`, so every spelling
+  compiles and keeps its address. Macros spelled `BOF3_GAME->Name` were
+  tried first: with every global one object the optimiser merged and split
+  code differently (rest_4c.cpp's CommuHiLo_Close), and the gate refused
+  them. Outside GameData with their literals: 4 entries inside `.text`
+  and 135 that start inside an earlier member (two views of the same
+  bytes, the areas' Choices / Handlers pairs).
+- **The strict rule** (`data_census.py --strict`, a step in `checks.yml`
+  beside the ratchet; [`typed-data-census.md`](typed-data-census.md) 3):
+  a raw site in `src/game` with no reasoned row in
+  `analysis/typed_left.tsv` fails, and so does a listed `src/game` key
+  that no longer measures. 27,327 exceptions, the whole committed list's
+  `src/game` part.
+
+`codegen_same.py` against the baseline: 640 objects compared, 0 differ;
+`data_census.py --check` 27,390, `--strict` ok; `typed_left.py --check`
+current.
+
 ## 4. Stage C
 
 Staged in [`typed-data-stage-c.md`](typed-data-stage-c.md): C0 the
 consolidation, C1 the types (the shared sprite head, the renames, the views,
 the new structs), C2 the sites they unlock with a family audit after, C3 the
-globals' follow-ups and a naming pass, and C4, this section's old content:
-the data image as one `GameData` struct generated by `tools/gen_symbols.py`,
-and the census's strict rule.
+globals' follow-ups and a naming pass, and C4, this section's old content,
+built 2026-10-20 ("C4 as run" above): the typed tables as struct arrays, the
+data image as one `GameData` struct generated by `tools/gen_symbols.py`
+(its members' addresses computed from the struct and checked against
+`symbols.toml`; the macros cast those addresses, so the machine code is
+unchanged), and the census's strict rule (`data_census.py --strict` in
+`checks.yml`: a raw site in `src/game` fails unless
+`analysis/typed_left.tsv` lists it with a reason).
 
 ## 5. Ownership, merge order, numbering
 
