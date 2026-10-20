@@ -63,6 +63,9 @@ number may only fall (docs/typed-data-census.md section 3).
 """
 import argparse, ast, collections, os, re, sys, tomllib
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import record_sizes  # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_OUT = os.path.join('analysis', 'data_census.tsv')
 EXTS = ('.cpp', '.h', '.hpp', '.cc', '.inl', '.ixx')
@@ -86,6 +89,19 @@ CTYPE_SIZE = {
     'std::uint32_t': 4, 'unsigned char': 1, 'signed char': 1, 'char': 1,
     'unsigned short': 2, 'short': 2, 'const unsigned short': 2,
 }
+
+
+
+def ctype_size(ct):
+    """An entry's element size: CTYPE_SIZE's, 4 for a pointer, a record
+    family's struct size (tools/record_sizes.py), else 0 (unsized)."""
+    if not ct:
+        return 0
+    if '*' in ct:
+        return 4
+    if ct in CTYPE_SIZE:
+        return CTYPE_SIZE[ct]
+    return record_sizes.size_of(ct) or 0
 
 
 # --------------------------------------------------------------------------
@@ -427,9 +443,13 @@ class Symbols:
             self.by_pc.setdefault(e['pc'], ('func', e))
         self.extents = []
         for e in self.data:
-            size = CTYPE_SIZE.get(e.get('ctype', ''), 4 if '*' in e.get('ctype', '') else 0)
+            size = ctype_size(e.get('ctype', ''))
             if size:
                 self.extents.append((e['pc'], e['pc'] + size * max(1, e.get('count', 1)), e))
+        # a [[block]] with a record ctype (stage C4) covers its records
+        for e in t.get('block', []):
+            if 'ctype' in e:
+                self.extents.append((e['pc'], e['pc'] + ctype_size(e['ctype']) * e['record_count'], e))
         self.extents.sort(key=lambda x: x[0])
         self.n_data = len(self.data)
         self.n_ctype = sum(1 for e in self.data if 'ctype' in e)
@@ -457,7 +477,7 @@ class Symbols:
     def cover(self, v):
         """(cover, name, ctype) of the [[data]] entry covering address v."""
         hit = self.by_pc.get(v)
-        if hit and hit[0] == 'data':
+        if hit and (hit[0] == 'data' or 'ctype' in hit[1]):
             return 'exact', hit[1]['name'], hit[1].get('ctype', '-')
         best = None
         for a, b, e in self.extents:

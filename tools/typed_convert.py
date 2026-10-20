@@ -62,6 +62,7 @@ import tomllib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import data_census as dc  # noqa: E402
+import record_sizes  # noqa: E402
 
 ROOT = dc.ROOT
 
@@ -600,7 +601,18 @@ class Entries:
     def __init__(self, path):
         with open(path, 'rb') as fh:
             t = tomllib.load(fh)
-        self.data = sorted(t.get('data', []), key=lambda e: e['pc'])
+        # A [[block]] with a record ctype is a typed array like a [[data]]
+        # entry (tools/gen_symbols.py, stage C4). A field entry inside it
+        # still wins at its own address (find: the exact entry first): its
+        # name is its readers', where the struct's may be another handler's.
+        typed_blocks = {}
+        for b in t.get('block', []):
+            if 'ctype' in b:
+                e = {'name': b['name'], 'pc': b['pc'], 'ctype': b['ctype'], 'block': True}
+                if b['record_count'] != 1:
+                    e['count'] = b['record_count']
+                typed_blocks[b['name']] = e
+        self.data = sorted(t.get('data', []) + list(typed_blocks.values()), key=lambda e: e['pc'])
         self.by_pc = {e['pc']: e for e in self.data}
         self.starts = [e['pc'] for e in self.data]
 
@@ -611,6 +623,9 @@ class Entries:
             return 0
         if '*' in ct:
             return 4
+        rs = record_sizes.size_of(ct)
+        if rs is not None:
+            return rs
         st = int_type(ct)
         if st:
             return st[0]
@@ -633,6 +648,63 @@ class Entries:
                 return e, v - e['pc']
             i -= 1
         return None, None
+
+
+# --------------------------------------------------------------------------
+# Record fields (stage C4): which field of a record array a site reads
+# --------------------------------------------------------------------------
+
+# The sprite head's anonymous unions (src/game/records.h SpriteHead) hold one
+# name per family; the comment beside each says whose it is. A family absent
+# from an offset's row has no name there (SpriteObject +5, a party member's
+# +6: records.h "not named"), and its sites stay raw with reason `union`.
+UNION_NAMES = {
+    'records::SpriteObject': {0x6: 'type', 0x7: 'flags2', 0x8: 'direction', 0x9: 'step_frames',
+                              0x32: 'draw_key', 0x60: 'depth'},
+    'records::PartyMember': {0x5: 'actor', 0x8: 'direction', 0x9: 'step_frames', 0x32: 'draw_key', 0x60: 'depth'},
+    'records::BattleEnemy': {0x5: 'actor', 0x8: 'layout', 0x32: 'draw_key', 0x60: 'depth'},
+    'records::EffectObject': {0x5: 'kind', 0x6: 'param', 0x9: 'timer', 0x32: 'draw_key', 0x60: 'depth'},
+    'records::BattleTask': {0x5: 'kind', 0x6: 'runner', 0x7: 'mode', 0x9: 'timer'},
+}
+
+# Bytes a record's struct names for one reader only, where the site's reader
+# decides the meaning: a view (records.h's rv::As targets) or nothing types
+# them from the table alone. Sites there stay raw with the reason given.
+VIEW_BYTES = {
+    # "Bytes +0..+7 and +0xF mean the same to every handler; +8..+0x23 are
+    # each handler's own" (records.h WindowRecord; BattleWindow, ItemListWindow)
+    'records::WindowRecord': [(0x8, 0xF, 'view'), (0x10, 0x24, 'view')],
+    # the tail +0x124..+0x13F: ActionRecord in battle, MemberFieldTail in the
+    # field (records.h PartyMember: the field and battle read it differently)
+    'records::PartyMember': [(0x124, 0x140, 'view')],
+    # the kinds' own words: EffectWork (records.h EffectObject)
+    'records::EffectObject': [(0xC, 0x14, 'view'), (0x2E, 0x32, 'view')],
+}
+
+
+def record_field(entry, o, size, kind):
+    """(path, size, signed, kind) of the field of entry's record at offset o
+    that an access of `size` bytes and `kind` reads, or a reason string."""
+    ct = clean_type(entry['ctype'])
+    for lo, hi, why in VIEW_BYTES.get(ct, ()):
+        if lo <= o < hi:
+            return why
+    every = record_sizes.fields(ct)
+    here = [x for x in every if x[0] == o]
+    cands = [x for x in here if x[2] == size and x[4] == kind]
+    if not cands:
+        covering = [x for x in every if x[0] < o < x[0] + x[2]]
+        return 'width' if (here or covering) else 'field-missing'
+    # an array's element beside a scalar of its own (states[0] / state): the scalar
+    scalars = [x for x in cands if '[' not in x[1].split('.')[-1]]
+    if scalars and len(scalars) < len(cands):
+        cands = scalars
+    if len(cands) > 1:
+        pick = UNION_NAMES.get(ct, {}).get(o)
+        cands = [x for x in cands if x[1] == pick]
+        if len(cands) != 1:
+            return 'union'
+    return cands[0][1], cands[0][2], cands[0][3], cands[0][4]
 
 
 # --------------------------------------------------------------------------
@@ -1020,7 +1092,11 @@ class Converter:
         return bool(m) and m.group(1).lower() not in entry['name'].lower()
 
     def addr_tiers(self, site, entry, off, esize):
-        if off % esize != 0 or (off and 'count' not in entry):
+        if record_sizes.size_of(entry['ctype']) is not None:
+            # a record array: any byte of it is the table's address plus an offset
+            if not 0 <= off < esize * entry.get('count', 1):
+                return []
+        elif off % esize != 0 or (off and 'count' not in entry):
             return []
         name = entry['name'] + '_addr'
         if off == 0:
@@ -1197,6 +1273,29 @@ class Converter:
             return None
         return (cstart, close, s2, add, None, None)
 
+    def access_of(self, f, sem):
+        """(size, kind) a site's access reads or writes, kind 'int' or
+        'float'; a reason string for a pointer or an unknown accessor."""
+        k = sem[0]
+        if k == 'write':
+            return (sem[1], 'int')
+        if k == 'ref':
+            rt = self.ev.itype(f, sem[1])
+            if rt is not None:
+                return (rt[0], 'int')
+            if clean_type(sem[1]) == 'float':
+                return (4, 'float')
+            return 'type'
+        if k == 'val':
+            return (sem[1], 'int')
+        if k == 'fval':
+            return (4, 'float')
+        if k == 'ptrval':
+            return 'pointer-in-integer'
+        if k in ('ptr', 'addr'):
+            return 'ptr'
+        return 'accessor'
+
     def typed(self, site, entry, esize, off, dyn, cs, ce, sem, wr):
         """The typed replacement tiers for span [cs, ce) computing `sem`, or a
         reason string."""
@@ -1205,6 +1304,23 @@ class Converter:
         ct = entry['ctype']
         cst = int_type(ct)
         is_ptr_entry = '*' in ct
+        member = ''
+        if record_sizes.size_of(ct) is not None:
+            # a record array (stage C4): the element is the record, the
+            # access one of its fields, chosen by offset, width and kind
+            acc = self.access_of(f, sem)
+            if isinstance(acc, str):
+                return acc
+            if off < 0:
+                return 'inside-entry'
+            o = off % esize
+            fld = record_field(entry, o, acc[0], acc[1])
+            if isinstance(fld, str):
+                return fld
+            member, fsize, fsigned, fkind = fld
+            off -= o
+            ct = 'float' if fkind == 'float' else CANON[(fsize, fsigned)]
+            cst = None if fkind == 'float' else (fsize, fsigned)
         if off % esize != 0:
             return 'inside-entry'
         if (off or dyn) and 'count' not in entry:
@@ -1224,6 +1340,9 @@ class Converter:
                 x_parts = [f'{name}[{i if i < 10 else hex(i)}]']
         else:
             x_parts = [name]
+        if member:
+            x_parts = x_parts + ['.' + member]
+            esize = fsize
         k = sem[0]
         if k == 'write':
             width, vkind = sem[1], sem[2]
