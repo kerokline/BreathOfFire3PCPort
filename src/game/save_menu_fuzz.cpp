@@ -965,7 +965,7 @@ Args Generate(unsigned k) {
         // Summaries present or not, directory names with hex digits and their neighbours at byte 7.
         for (U i = 0; i < 20; ++i) PutByte(at::kSummaries + i * at::kSummaryBytes + 0x15, Next() % 2 ? 0xFF : Next());
         for (U i = 0; i < 16; ++i)
-            PutByte(at::kDirectory + i * at::kDirectoryBytes + 7,
+            PutByte(Save_Directory_addr + i * at::kDirectoryBytes + 7,
                     Pick({'0', '9', 'A', 'F', 'a', 'f', '/', ':', '@', 'G', '`', 'g', Next(), '0' + Next() % 10,
                           'A' + Next() % 6}));
         x.a[2] = Pick({0, 1, Next()});

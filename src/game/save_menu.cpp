@@ -296,8 +296,8 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
 // BISLPS0?.DAT and the bound. Kept either way, the original's defect: no
 // _findclose (a search handle leaks per call).
 extern "C" int __cdecl Save_ListFiles(void) {
-    if (g_lists_split != 0) return save_menu::ListFiles(kSavePattern, At(at::kDirectory), true, false);
-    return save_menu::ListFiles(reinterpret_cast<const char*>(At(at::kListPattern)), At(at::kDirectory), false, false);
+    if (g_lists_split != 0) return save_menu::ListFiles(kSavePattern, At(Save_Directory_addr), true, false);
+    return save_menu::ListFiles(reinterpret_cast<const char*>(At(at::kListPattern)), At(Save_Directory_addr), false, false);
 }
 
 // 0x588DC0's body (docs/save-files.md). All sixteen summaries marked empty
@@ -342,7 +342,7 @@ bool StagedRead(const char* name, unsigned char* summary, void*) {
 // summary whatever Save_Staging held. It rebuilds from Save_Directory alone:
 // DIV-0002's re-listing in Save_WriteFile is what keeps a new save in it.
 extern "C" void __cdecl Save_ReadSummaries(void) {
-    save_menu::ReadSummaries(At(at::kDirectory), At(at::kSummaries), &StagedRead, nullptr);
+    save_menu::ReadSummaries(At(Save_Directory_addr), At(at::kSummaries), &StagedRead, nullptr);
 }
 
 void SaveLists_Arm() {

@@ -17360,14 +17360,11 @@ src/game/save_menu.cpp	Snd_LoadBankFile	record	Long	chunk + 8	0	-	via=Addr	no-st
 src/game/save_menu.cpp	Snd_LoadBankFile	record	At	chunk + 0x10	0	-	via=Addr	no-struct	a chunk header of a loaded sound file, not a records.h family	b1-scen_ui
 src/game/save_menu.cpp	Snd_LoadBankFile	record	Long	chunk + 4	0	-	via=Addr	no-struct	a chunk header of a loaded sound file, not a records.h family	b1-scen_ui
 src/game/save_menu.cpp	save_menu::ListFiles	record	PutLong	base + i * 4	0	-	via=Addr	-	-	-
-src/game/save_menu.cpp	Save_ListFiles	global	At	at::kDirectory	0	0x929f40	-	untyped-entry	at::kDirectory 0x929f40 Save_Directory	b0
-src/game/save_menu.cpp	Save_ListFiles	global	At	at::kDirectory	1	0x929f40	-	untyped-entry	at::kDirectory 0x929f40 Save_Directory	b0
 src/game/save_menu.cpp	Save_ListFiles	global	At	at::kListPattern	0	0x65289c	-	no-entry	at::kListPattern 0x65289c -	b0
 src/game/save_menu.cpp	save_menu::ReadSummaries	record	Byte	dir + n * at::kDirectoryBytes + 7	0	-	via=Addr	-	-	-
 src/game/save_menu.cpp	save_menu::ReadSummaries	record	At	dir + n * at::kDirectoryBytes	0	-	via=Addr	computed	computed offset or index (table=0x905bc0;stride=0x1c)	b1-scen_ui
 src/game/save_menu.cpp	StagedRead	global	Long	at::kStaging	0	0x92a0e0	-	index	at::kStaging 0x92a0e0 Save_Staging	b0
 src/game/save_menu.cpp	StagedRead	record	PutLong	Addr(summary) + i * 4	0	-	via=Addr	-	-	-
-src/game/save_menu.cpp	Save_ReadSummaries	global	At	at::kDirectory	0	0x929f40	-	-	-	-
 src/game/save_menu.cpp	Save_ReadSummaries	global	At	at::kSummaries	0	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
 src/game/save_menu.cpp	Gfx_ClutStripCopyRow	record	PutWord	base + i * 2	0	-	-	computed	computed offset or index (-)	b1-scen_ui
 src/game/save_menu.cpp	Gfx_ClutStripCopyRow	record	Word	base + i * 2 - 0x4000	0	-	-	computed	computed offset or index (-)	b1-scen_ui
@@ -17516,7 +17513,6 @@ src/game/save_menu_fuzz.cpp	Generate	global	PutByte	at::kCharRecords	0	0x903a70	
 src/game/save_menu_fuzz.cpp	Generate	global	PutByte	at::kCharRecords	1	0x903a70	-	no-entry	at::kCharRecords 0x903a70 -	b0
 src/game/save_menu_fuzz.cpp	Generate	global	-	at::kCharRecords	0	0x903a70	-	no-entry	at::kCharRecords 0x903a70 -	b0
 src/game/save_menu_fuzz.cpp	Generate	global	PutByte	at::kSummaries	0	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
-src/game/save_menu_fuzz.cpp	Generate	global	PutByte	at::kDirectory	0	0x929f40	-	untyped-entry	at::kDirectory 0x929f40 Save_Directory	b0
 src/game/save_menu_fuzz.cpp	Generate	global	PutLong	at::kSlotTop	0	0x8034d0	-	name	at::kSlotTop 0x8034d0 MoveScript_PartyRecords+0x50	b0
 src/game/save_menu_fuzz.cpp	Generate	global	PutLong	at::kStreamTables	0	0x6653b0	-	no-entry	at::kStreamTables 0x6653b0 -	b0
 src/game/save_menu_fuzz.cpp	Generate	global	PutByte	at::kCounter	0	0x929f04	-	no-entry	at::kCounter 0x929f04 -	b0

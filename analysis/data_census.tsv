@@ -17360,14 +17360,11 @@ site	src/game/save_menu.cpp	214	record	Long	chunk + 8	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	215	record	At	chunk + 0x10	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	215	record	Long	chunk + 4	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	263	record	PutLong	base + i * 4	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	299	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
-site	src/game/save_menu.cpp	300	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
 site	src/game/save_menu.cpp	300	global	At	at::kListPattern	0x65289c	-	none	-	-	0
 site	src/game/save_menu.cpp	315	record	Byte	dir + n * at::kDirectoryBytes + 7	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	322	record	At	dir + n * at::kDirectoryBytes	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	334	global	Long	at::kStaging	0x92a0e0	-	exact	Save_Staging	unsigned char	0
 site	src/game/save_menu.cpp	334	record	PutLong	Addr(summary) + i * 4	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	345	global	At	at::kDirectory	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
 site	src/game/save_menu.cpp	345	global	At	at::kSummaries	0x905bc0	-	none	-	-	0
 site	src/game/save_menu.cpp	366	record	PutWord	base + i * 2	-	-	-	-	-	0
 site	src/game/save_menu.cpp	366	record	Word	base + i * 2 - 0x4000	-	-	-	-	-	0
@@ -17516,7 +17513,6 @@ site	src/game/save_menu_fuzz.cpp	915	global	PutByte	at::kCharRecords	0x903a70	-	
 site	src/game/save_menu_fuzz.cpp	916	global	PutByte	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/save_menu_fuzz.cpp	935	global	-	at::kCharRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/save_menu_fuzz.cpp	966	global	PutByte	at::kSummaries	0x905bc0	-	none	-	-	1
-site	src/game/save_menu_fuzz.cpp	968	global	PutByte	at::kDirectory	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	1
 site	src/game/save_menu_fuzz.cpp	974	global	PutLong	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	1
 site	src/game/save_menu_fuzz.cpp	986	global	PutLong	at::kStreamTables	0x6653b0	-	none	-	-	1
 site	src/game/save_menu_fuzz.cpp	1004	global	PutByte	at::kCounter	0x929f04	-	none	-	-	1
@@ -23053,13 +23049,13 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19516
-#count sites_global	9660
-#count sites_global_at	7666
+#count sites	19512
+#count sites_global	9656
+#count sites_global_at	7662
 #count sites_global_module	1994
 #count sites_record	8727
 #count sites_raw	1129
-#count sites_in_fuzz	4180
+#count sites_in_fuzz	4179
 #count files_with_sites	523
 #count files_with_record_sites	470
 #count record_sites_with_stride	699
@@ -23071,7 +23067,7 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_param	661
 #count record_sites_family_unknown	1707
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	2346
+#count global_sites_covered_exact	2342
 #count global_sites_covered_inside	1120
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
