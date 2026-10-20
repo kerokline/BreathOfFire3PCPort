@@ -1,7 +1,11 @@
 # The reading-row round: furigana, and a second language, in the row above the text
 
 **Status:** STAGED 2026-10-20, not launched (branch `docs/reading-row-staging`;
-briefs in `C:\Users\kerok\r_ruby\`). Asked for by the owner on 2026-10-20
+briefs in `C:\Users\kerok\r_ruby\`). **Group SL ran the same day**
+([`second-language-census.md`](second-language-census.md), merged here) and
+the owner decided on its numbers: **two text rows plus two reading rows per
+page**, overflow accepted as extra confirm presses; and **composed messages
+delivered from a side chunk, not re-authored in the arena** (section 4). Asked for by the owner on 2026-10-20
 after GitHub issue
 [kerokline/BreathOfFire3PCPort#97](https://github.com/kerokline/BreathOfFire3PCPort/issues/97)
 ("Second Script": furigana or a second language in the rendered script, from
@@ -107,12 +111,34 @@ room to spare for the owner's eye on the gap.
   them its own way (`MsgBox_ChoiceOpen`...). The sibling lost options by
   stopping at the first NUL. Options are left plain in this round (no
   reading row over a choice), and the layer copies a `0x14` block verbatim.
-- **Fonts.** A language overlay carries its own glyph table (Latin: the
-  donor's 100 cells upscaled, appended to a blank table; Japanese: 882 cells
-  from glyph `0x993`). Whether two languages' glyphs can be resident at once
-  - the second-language row needs the main font and the other's - is
-  **unmeasured**. If they collide, the second-language layer composes one
-  font chunk. SL measures this first.
+- **Fonts cannot be resident together as built** (SL, 2026-10-20,
+  [`second-language-census.md`](second-language-census.md) 7): the engine
+  has one glyph table, every overlay's `FIRST.DAT` carries a whole one, and
+  Latin and Japanese both start their cells at glyph `0x993`; 76 of the 90
+  single-byte slots differ and both hanging slots `0x2A` / `0x3C` differ. So
+  a second-language layer carries a **composed font chunk**: Latin cells
+  relocated above the Japanese set (`0xDF2..`) under a Japanese main, or the
+  882 Japanese cells at `0xAC0..0xE31` under a Latin main; English against
+  French or German differs in letter shapes (98 of 100 cells) with the
+  accented block appended where English is blank. A reading-row glyph is
+  therefore a code of the relocated range, never an ordinary kana code,
+  whenever the second script's font is not the main's.
+- **The arena is too small for composed blocks** (SL, section 8): the area
+  text block has `0x8000` bytes of room, the largest main blocks are 20 to
+  24 KB, and with the second script added sixteen areas pass it in every
+  pair (AREA039, 090, 094, 153, 154 and the faerie village 175..185, one
+  block of 665 short messages whose largest is the hi-lo tutorial at eleven
+  pages - nothing to reuse, the sum is the problem). The owner's decision:
+  composed messages live outside the arena (section 4).
+- **The second script rarely overflows; the main's third row is the cost**
+  (SL, section 4): over Japanese at 1/2 size, English, French and German need
+  more than two reading rows on 1 to 2 % of box pages, at 2/3 size 6 to 8 %;
+  Japanese over English and Latin over Latin under 1 %. But a Latin main's
+  three-row pages are 28 to 33 % of its box pages, and every one splits
+  under two row pairs - about 5,300 to 6,000 pages added. The owner's
+  decision (2026-10-20): **two pairs per page, consistently**; the presses
+  are accepted. Three text rows plus two reading rows was offered and
+  declined.
 - **The typewriter reveals by glyph count.** The sibling accepted "a reading
   types in just before its word". Here, because the walk is ours, a reading
   can be revealed with its word (RR's design choice, recommended). The
@@ -151,10 +177,11 @@ its numbers go to section 5 and the row table RR compiles in.
 install's `ja-JP` text chunks (the kind-0 area blocks and the pools the
 overlay carries, DIV-0056) and writes the optional layer
 `cache/opt/ruby-furigana-ja-JP/` (or `DAT\ruby-furigana-ja-JP.<NAME>.DAT`
-over a PC install), one re-authored block per area: for every message whose
-pages take a reading, each text row preceded by its ruby row. Readings: the
+over a PC install), one **side chunk of composed messages keyed by slot** per
+area (section 4; the text block itself is never rewritten): for every message
+whose pages take a reading, each text row preceded by its ruby row. Readings: the
 PC's own kana codes (`loc_build.py ja_encode`), SudachiPy mode C, the
-sidecar first. **The string shape is RR's contract** (section 4) and is
+sidecar first. **The side chunk and the string shape are RR's contract** (section 4) and is
 fixed before either starts: a page-head marker no shipped page starts with,
 `<ruby row> 0x01 <text row> 0x01 ...`, half-cell gaps as `0x09`, which the
 stepper already skips. `--selftest` (no readings, no re-flow) must
@@ -170,7 +197,14 @@ block against the pool's room. **Do not copy a Capcom table**; the
 readings are generated from the player's text at build time and the sidecar
 is ours.
 
-### SL: the second-language census and the pairing rule (reads and a scratch tool; no `src/`)
+### SL: the second-language census and the pairing rule - **DONE 2026-10-20**
+
+Run alone on the day of staging, as an Opus agent in a worktree:
+[`second-language-census.md`](second-language-census.md) (MEASURED) and
+`tools/second_language_census.py`, merged into this branch. Its drafted
+pairing rule (section 9 there) is SB's starting point; its open questions
+are folded into section 6 below. The text that follows is the brief as
+written.
 
 For every pair of held text layers the owner has (`ja-JP`, `en-US`,
 `en-150`, `fr-FR`, `de-DE`; the PSP's as well where their layers exist),
@@ -216,8 +250,8 @@ ML's build step calls a placeholder command that is **refused loudly**
 
 ### RR: the renderer (`src/game/msgbox.cpp`, `text_advance.cpp`; the ledger entry)
 
-`MsgBox_Step` learns the annotated page: on the page-head marker the row
-table is PR's (pen y per row, ruby rows at 6 units, text at 12, the gap
+`MsgBox_Step` learns the annotated page: for a message opened from the side
+chunk (section 4) the row table is PR's (pen y per row, ruby rows at 6 units, text at 12, the gap
 the owner chose), a ruby glyph is emitted on a 6 x 6-unit quad from the same
 cell, `0x09` advances half a cell, inserts (`0x03`/`0x04`/`0x07`/`0x08`)
 report their drawn width back into the ruby row's x, a pair code counts two
@@ -243,18 +277,42 @@ where RR reports an insert (stage B of its own if it does not fit the
 round). `setup` builds every held pair. Captures of the same two scenes,
 English over Japanese and Japanese over English.
 
-## 4. The contract between FB, SB and RR: the string shape
+## 4. The contract between FB, SB and RR: the side chunk and the string shape
 
-Fixed by the coordinator before stage A launches, in `docs/reading-row.md`
-section 1 (the feature doc RR starts): the page-head marker; a page as
-`ruby 0x01 text 0x01 ruby 0x01 text`, ruby rows first so a page ends on
-text; a ruby row's cells as half-cells of the text row with `0x09` gaps; a
-reading's kana as the PC's ordinary two-byte kana codes; `0x02` between
-pages as today; every other control carried through verbatim and never
-inside a ruby row except `0x05 nn` / `0x06` (colour). The sibling's
-`<0f><13>` preset head is **not** reused (on the PC `0x0F` is a two-byte
-control the stepper skips, but a marker no shipped page starts with is what
-is needed, and the choice is recorded with the census that proves it).
+Decided by the owner on 2026-10-20 after the census (section 1's arena
+finding), to be written out by the coordinator in `docs/reading-row.md`
+section 1 before FB and RR launch:
+
+- **Delivery: a side chunk, not a rewritten block.** The arena's text block
+  stays exactly as the language layer built it. A reading-row layer adds,
+  per area file (and per pool), one chunk of a new kind of ours holding
+  **composed messages keyed by slot**: a slot table and the composed bytes.
+  `LoadDatFile` (ours) keeps it in our own memory with no arena limit; when
+  `Msg_OpenScript` (ours) opens slot `n` and the loaded chunk has a composed
+  message for it, the box's base and read pointers take the composed copy,
+  else the original - the sibling's `MsgBox_Reset` repoint, done natively.
+  A slot with no composed message plays exactly as today, which is also what
+  keeps the shadow fuzz and the state hash meaningful. Every area gets the
+  same mechanism; the sixteen big areas are not a special case.
+- **The composed message's shape.** A page is `ruby 0x01 text 0x01 ruby
+  0x01 text`, ruby rows first so a page ends on text and the arrow places
+  off a text row; **an empty text row under a reading row is allowed**
+  (SL's gap: the second script may have text where the main has none);
+  **two pairs per page**, a third pair goes to a new page on `0x02`; a ruby
+  row's cells are half-cells of the text row, `0x09` a half-cell gap; a
+  reading's glyphs are ordinary two-byte kana codes for furigana and codes
+  of the composed font's relocated range for a second language whose font
+  is not the main's; inside a ruby row only glyphs, gaps, `0x05 nn` / `0x06`
+  and **one insert marker** (a one-byte code the stepper never sees in a
+  shipped message, chosen and recorded in `reading-row.md` 1) that stands
+  for "the width of the k-th insert in the text row below", which the
+  stepper resolves at draw time; every other control stays in the text row
+  verbatim; a `0x14` choice block is copied from the main from its first
+  byte. The stepper knows a page is annotated because the message came from
+  the side chunk, so **no page-head marker** is needed and no shipped byte
+  changes meaning.
+- **The hanging brackets** `0x2A` / `0x3C` are written as two-byte codes in
+  a ruby row so they do not hang at a row start (SL 9).
 
 ## 5. Stage C: the end batch, then the owner's play
 
@@ -264,7 +322,9 @@ is needed, and the choice is recorded with the census that proves it).
    `cn_<route>_orig3` references ([`state-hash.md`](state-hash.md)).
 3. Captures with `ruby-furigana-ja-JP` and one second-language pair over
    the attract sequence and the dialogue-heavy routes, 4:3 and 16:9, point
-   filter, in the contact-sheet form; the owner's eye on every sheet (per
+   filter, in the contact-sheet form - plus the faerie village's minigame
+   tutorials (the block's longest messages, SL; **a new recipe the owner
+   records**, since no route reaches them yet); the owner's eye on every sheet (per
    [`owner-tunes-layout-by-eye`](HANDOFF.md): their words, applied
    literally).
 4. The ledger entries numbered from the ledger's tail at merge time (the
@@ -275,8 +335,14 @@ is needed, and the choice is recorded with the census that proves it).
 
 ## 6. The owner's calls (asked here, answered in chat or `owner-review.md`)
 
+**Decided 2026-10-20 (chat, on SL's numbers):** two text rows plus two
+reading rows per page, consistently, overflow as presses; composed messages
+from a side chunk (section 4); the default pair is left to the numbers,
+which favour a Japanese main with an English second (SL 10).
+
 1. **The gap between row pairs** and the Latin row's size (1/2 or 2/3), off
-   PR's captures.
+   PR's captures. SL's numbers for the size: 2/3 overflows on 6 to 8 % of
+   Latin-over-Japanese pages against 1 to 2 % at 1/2.
 2. **Should furigana be a mod zip at all?** Everything but the override list
    is in the tree. The case for the zip: it is the first real mod and proves
    the Mods tab end to end, and the proofread readings can be re-issued
@@ -291,6 +357,11 @@ is needed, and the choice is recorded with the census that proves it).
 5. **Choice options** plain for now - agreed, or wanted in this round?
 6. **The second-language default pair** to build on `setup` when more than
    two languages are held (every pair is cheap; the dropdown shows them all).
+7. **From SL (section 10 there):** names on the reading row from the main's
+   name table or the second's own; proportional sharing of the second's text
+   when page counts differ (drafted) or strict carry-forward; non-box and
+   offset-pen pages left plain (drafted); under a Latin main, the second in
+   the main's letter shapes or its own.
 
 ## 7. Not in this round
 
