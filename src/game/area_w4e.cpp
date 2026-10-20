@@ -449,12 +449,12 @@ extern "C" void __cdecl Area189_LeaderStart(void) {
 // word 0x8034E6 = 0x3C. Else +2 = 2.
 extern "C" void __cdecl Area189_LeaderProject(void) {
     auto scaled = [](U v) { return static_cast<short>((static_cast<std::int32_t>(((v - 1u) & 0xFFFFFFu) + 1u) >> 9) - 0x4000); };
-    Prim_VertexScratch[0] = scaled(static_cast<U>(Field_Kind2X));
-    Prim_VertexScratch[1] = scaled(static_cast<U>(Field_Kind2Z));
+    Prim_VertexScratch[0].x = scaled(static_cast<U>(Field_Kind2X));
+    Prim_VertexScratch[0].y = scaled(static_cast<U>(Field_Kind2Z));
     const auto y = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::Current<records::SpriteHead>()->height_whole));
-    Prim_VertexScratch[2] = static_cast<short>(-(y / 2));
+    Prim_VertexScratch[0].z = static_cast<short>(-(y / 2));
     long depth[2];
-    AH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth[1]);
+    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth[1]);
     AH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(Cur() + 0x7C));
     CopyFloatX87(Cur() + 0x78, Mem(MapView_ScreenXY_addr + 0x4));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, 1);

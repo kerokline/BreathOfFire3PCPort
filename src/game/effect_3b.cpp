@@ -739,8 +739,8 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
     const unsigned char bright = static_cast<unsigned char>(13u * s[0xA]);
     const int sn0 = SH_CALL(Math_Sin)(static_cast<int>(first));
     unsigned char* const mode = Gfx_PacketNext;
-    Prim_VertexScratch[1] = Sar(Mul(sn0, UL(at::kScale)), 12);
-    Prim_VertexScratch[2] = 0;
+    Prim_VertexScratch[0].y = Sar(Mul(sn0, UL(at::kScale)), 12);
+    Prim_VertexScratch[0].z = 0;
     SH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     const U d = width & 0xFFFF;
@@ -769,23 +769,23 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
         else
             radius = S16(base) - (static_cast<U>(SH_CALL(Rand)()) & S16(spread));
         SetUL(at::kScale, radius);
-        const U y = static_cast<std::uint16_t>(Prim_VertexScratch[1]), z = static_cast<std::uint16_t>(Prim_VertexScratch[2]);
-        Prim_VertexScratch[9] = y;
-        Prim_VertexScratch[0xd] = y - d;
-        Prim_VertexScratch[8] = 0;
-        Prim_VertexScratch[0xa] = z;
-        Prim_VertexScratch[0xc] = 0;
-        Prim_VertexScratch[0xe] = z;
-        Prim_VertexScratch[0] = 0;
+        const U y = static_cast<std::uint16_t>(Prim_VertexScratch[0].y), z = static_cast<std::uint16_t>(Prim_VertexScratch[0].z);
+        Prim_VertexScratch[2].y = y;
+        Prim_VertexScratch[3].y = y - d;
+        Prim_VertexScratch[2].x = 0;
+        Prim_VertexScratch[2].z = z;
+        Prim_VertexScratch[3].x = 0;
+        Prim_VertexScratch[3].z = z;
+        Prim_VertexScratch[0].x = 0;
         const int sn = SH_CALL(Math_Sin)(static_cast<int>(UL(at::kAngle)));
         const U ny = Sar(Mul(sn, UL(at::kScale)), 12);
-        Prim_VertexScratch[4] = 0;
+        Prim_VertexScratch[1].x = 0;
         unsigned char* p = Gfx_PacketNext;
         const U nz = (0u - i) << 6;
-        Prim_VertexScratch[1] = ny;
-        Prim_VertexScratch[2] = nz;
-        Prim_VertexScratch[5] = ny - d;
-        Prim_VertexScratch[6] = nz;
+        Prim_VertexScratch[0].y = ny;
+        Prim_VertexScratch[0].z = nz;
+        Prim_VertexScratch[1].y = ny - d;
+        Prim_VertexScratch[1].z = nz;
         // the first quad: the ring between this y and the previous, `width` down
         SH_CALL(Gpu_SetPolyG4)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);

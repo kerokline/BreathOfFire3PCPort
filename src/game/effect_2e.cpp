@@ -1033,12 +1033,12 @@ extern "C" void __cdecl EffectKind4E_Run(void) {
 extern "C" void __cdecl EffectKind4E_Start(void) {
     const U x = UL(At(ObjTrio_addr + 0x34));
     const U z = UL(At(ObjTrio_addr + 0x38));
-    Prim_VertexScratch[0] = static_cast<short>(Sar(x, 9) - 0x4000u);
+    Prim_VertexScratch[0].x = static_cast<short>(Sar(x, 9) - 0x4000u);
     const std::int32_t height = static_cast<std::int16_t>(Word(At(ObjTrio_addr + 0x3e)));
-    Prim_VertexScratch[1] = static_cast<short>(Sar(z, 9) - 0x4000u);
-    Prim_VertexScratch[2] = static_cast<short>(-(height / 2));
+    Prim_VertexScratch[0].y = static_cast<short>(Sar(z, 9) - 0x4000u);
+    Prim_VertexScratch[0].z = static_cast<short>(-(height / 2));
     long depth = 0;
-    const long answer = SH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(S() + 0x74), &depth);
+    const long answer = SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(S() + 0x74), &depth);
     rv::Current<records::EffectObject>()->depth = static_cast<U>(answer);
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(S() + 0x7C));
     S()[9] = 0;

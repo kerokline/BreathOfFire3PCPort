@@ -168,17 +168,17 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     const U elevation = static_cast<U>(g.elevation(static_cast<long>((b1 << 16) - 0x10000u), static_cast<long>(b0 << 16)));
     const U h = static_cast<U>(-(static_cast<std::int32_t>(S16(elevation)) / 2));
     const U x = Dword(At(kScratchX));
-    Prim_VertexScratch[0xc] = x;
-    Prim_VertexScratch[8] = x;
+    Prim_VertexScratch[3].x = x;
+    Prim_VertexScratch[2].x = x;
     const U y = Dword(At(kScratchY));
-    Prim_VertexScratch[0xd] = y;
-    Prim_VertexScratch[9] = y;
+    Prim_VertexScratch[3].y = y;
+    Prim_VertexScratch[2].y = y;
     SetDword(At(kScratchH), h);
     const U top = h - Word(At(at::UprightHeightsAt() + e * 2u));
-    Prim_VertexScratch[0xe] = h;
-    Prim_VertexScratch[6] = h;
-    Prim_VertexScratch[0xa] = top;
-    Prim_VertexScratch[2] = top;
+    Prim_VertexScratch[3].z = h;
+    Prim_VertexScratch[1].z = h;
+    Prim_VertexScratch[2].z = top;
+    Prim_VertexScratch[0].z = top;
     long p = 0;
     g.rtp3(Vertex(Prim_VertexScratch_addr + 0x10), Vertex(Prim_VertexScratch_addr + 0x18), Vertex(Prim_VertexScratch_addr), FloatAt(MapView_ScreenXY_addr), FloatAt(Effect6c_OffsetX_addr),
            FloatAt(kScreen2), &p);
@@ -339,9 +339,9 @@ extern "C" void __cdecl MapCell_PatchThenStop(unsigned char* record, unsigned, u
 // slot and then the corner offsets over it again.
 extern "C" void __cdecl MapCell_DrawAnimated(const unsigned char* record, unsigned b1, unsigned b0) {
     if (g.test(Word(record)) == 0) return;
-    Prim_VertexScratch[0] = (S8(Dword(record + 4) >> 24) + ((b1 - 0x80u) << 6)) << 1;
-    Prim_VertexScratch[1] = (S8(Dword(record + 4) >> 16) + ((b0 - 0x80u) << 6)) << 1;
-    Prim_VertexScratch[2] = Word(record + 4);
+    Prim_VertexScratch[0].x = (S8(Dword(record + 4) >> 24) + ((b1 - 0x80u) << 6)) << 1;
+    Prim_VertexScratch[0].y = (S8(Dword(record + 4) >> 16) + ((b0 - 0x80u) << 6)) << 1;
+    Prim_VertexScratch[0].z = Word(record + 4);
     long depth = 0;
     const auto p = static_cast<std::int32_t>(
         g.rtp(Vertex(Prim_VertexScratch_addr), reinterpret_cast<unsigned long*>(At(MapView_ScreenXY_addr)), &depth));

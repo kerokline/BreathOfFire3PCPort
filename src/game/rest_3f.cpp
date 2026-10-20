@@ -461,7 +461,7 @@ extern "C" void __cdecl EffectKind69_DrawLines(void) {
         SH_CALL(Gpu_SetLineG2)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
         long depth;
-        SH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(p + 8), &depth);
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 8), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
         if ((SH_CALL(Rand)() & 1) != 0)
             SetUL(At(at::kLineAmp), (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu) + 0x80u);
@@ -474,7 +474,7 @@ extern "C" void __cdecl EffectKind69_DrawLines(void) {
         const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle)));
         SetWord(v + 2, Sar(sn * UL(At(at::kLineAmp)), 12));
         SetWord(v + 4, (0u - i) << 6);
-        SH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(p + 0x18), &depth);
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 0x18), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x20));
         p[4] = At(at::kLineShade)[0];
         p[5] = At(at::kLineShade)[0];

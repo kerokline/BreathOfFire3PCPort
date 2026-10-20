@@ -252,7 +252,7 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
         MapView_BuildFlags |= 1;
         return;
     }
-    short* const s = Prim_VertexScratch;
+    short* const s = reinterpret_cast<short*>(Prim_VertexScratch);
     s[0] = static_cast<short>((static_cast<std::uint32_t>(cell[0]) << 7) - 0x4040u);
     s[1] = static_cast<short>((static_cast<std::uint32_t>(cell[1]) << 7) - 0x4040u);
     unsigned char* corner = Corners() + (cell[1] * Width() + cell[0]) * 4u;

@@ -2956,10 +2956,11 @@ evidence = "pe_xref 2026-09-21: two references, both in Sprite_AddDrawRecords - 
 [[data]]
 pc = 0x9037A0
 name = "Prim_VertexScratch"
-ctype = "short"
-count = 16
+ctype = "records::SVector"
+count = 4
 status = "hypothesis"
 evidence = "disasm 2026-09-21: Sprite_AddDrawRecords writes a quad's four SVECTORs here (x, y, z at 0, 8, 16, 24 bytes) and hands each to Gte_LoadVertex, then the normal to Gte_NormalColor from here. pe_xref: 652 references in some 250 functions - a scratch every primitive builder shares, by that count."
+note = "Typed (typed-data round stage C4, 2026-10-19) as records::SVector x4, from short x16: Sprite_AddDrawRecords' four SVECTORs at 0, 8, 16 and 24 (the evidence), each x, y, z and a pad word (records_gpu.h SVector)."
 
 [[func]]
 pc = 0x5935B0

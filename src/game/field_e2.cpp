@@ -986,7 +986,7 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     const U wobble = (counter >> 1) & 3;
     const U radius = (counter & 8) ? wobble * 2u + 0x32u : (0x1Cu - wobble) * 2u;
     const std::int32_t r = static_cast<short>(radius);
-    short* const v = Prim_VertexScratch;
+    short* const v = reinterpret_cast<short*>(Prim_VertexScratch);
     for (U a = 0; a < 0x1000; a += 0x80) {
         v[0] = 0;
         v[1] = 0;

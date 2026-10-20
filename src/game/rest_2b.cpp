@@ -896,7 +896,7 @@ extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
     const unsigned tpage = SH_CALL(Gpu_GetTPage)(0, mode & 3, 0x2C0, 0x100);
     if (count != 0) {
         const unsigned semi = (mode >> 6) & 1;
-        short* const v = Prim_VertexScratch;
+        short* const v = reinterpret_cast<short*>(Prim_VertexScratch);
         for (unsigned n = count; n != 0; --n) {
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyFT4)(p);
@@ -916,10 +916,10 @@ extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
             p[5] = Sprite_Current[0x5E];
             p[6] = Sprite_Current[0x5F];
             if (Get<const unsigned char*>(Sprite_Current, 0x54)[3] & 0x80) {
-                SH_CALL(Gte_VectorNormalS)(normal, Prim_VertexScratch);
+                SH_CALL(Gte_VectorNormalS)(normal, reinterpret_cast<short*>(Prim_VertexScratch));
                 const unsigned char* const s = Sprite_Current;
                 const unsigned char colour[4] = {s[0x5D], s[0x5E], s[0x5F], p[7]};
-                SH_CALL(Gte_NormalColor)(Prim_VertexScratch, colour, p + 4);
+                SH_CALL(Gte_NormalColor)(reinterpret_cast<short*>(Prim_VertexScratch), colour, p + 4);
             }
             Put<std::uint16_t>(p, 0x26, static_cast<std::uint16_t>(tpage));
             const int clut_x = static_cast<int>(static_cast<unsigned>(static_cast<int>(Get<short>(quad, 0))) << 4);

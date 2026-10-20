@@ -127,7 +127,7 @@ extern "C" unsigned __cdecl Sprite_AddDrawRecords(unsigned long* record) {
     auto* rec = reinterpret_cast<unsigned char*>(record);
     for (unsigned n = count; n != 0; --n) {
         Gpu_SetPolyFT4(prim);
-        short* vertices = Prim_VertexScratch;
+        short* vertices = reinterpret_cast<short*>(Prim_VertexScratch);
         for (unsigned i = 0; i < 12; ++i) vertices[i / 3 * 4 + i % 3] = Get<short>(quad, 2 + 2 * i);
         const long normal[3] = {Get<short>(quad, 0x1A), Get<short>(quad, 0x1C), Get<short>(quad, 0x1E)};
         for (unsigned k = 0; k < 4; ++k) Put<std::uint16_t>(prim, 0x14 + 0x10 * k, Get<std::uint16_t>(quad, 0x20 + 2 * k));
@@ -151,9 +151,9 @@ extern "C" unsigned __cdecl Sprite_AddDrawRecords(unsigned long* record) {
         prim[5] = Sprite_Current[0x5E];
         prim[6] = Sprite_Current[0x5F];
         if (ObjectData()[3] & 0x80) {
-            Gte_VectorNormalS(normal, Prim_VertexScratch);
+            Gte_VectorNormalS(normal, reinterpret_cast<short*>(Prim_VertexScratch));
             const unsigned char color[4] = {Sprite_Current[0x5D], Sprite_Current[0x5E], Sprite_Current[0x5F], prim[7]};
-            Gte_NormalColor(Prim_VertexScratch, color, prim + 4);
+            Gte_NormalColor(reinterpret_cast<short*>(Prim_VertexScratch), color, prim + 4);
         }
         Put<std::uint16_t>(prim, 0x26, static_cast<std::uint16_t>(tpage));
         const int clut_x = static_cast<int>(static_cast<unsigned>(static_cast<int>(Get<short>(quad, 0))) << 4);

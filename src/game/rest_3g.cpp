@@ -640,7 +640,7 @@ extern "C" void __cdecl EffectKind18Sub41_DrawPanels(unsigned lift, unsigned tex
             rv::As<records::SVector>(v)[k].z = 0xFFFFFC08u - static_cast<U>(b[2]) * lift;
         }
         long depth;
-        const short* const vs = Prim_VertexScratch;
+        const short* const vs = reinterpret_cast<short*>(Prim_VertexScratch);
         SH_CALL(Gte_RotTransPers4)(vs, vs + 4, vs + 8, vs + 12, reinterpret_cast<float*>(p + 8),
                                    reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                    reinterpret_cast<float*>(p + 0x38), &depth);
@@ -665,7 +665,7 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
     SH_CALL(Gfx_CommitPrim)(5, 0xC);
     unsigned char* const v = Vertices();
-    const short* const v0 = Prim_VertexScratch;
+    const short* const v0 = reinterpret_cast<short*>(Prim_VertexScratch);
     rv::As<records::SVector>(v)->z = 0xFC08;
     U radius_arg = static_cast<U>(size);
     U colour = (0x28u - static_cast<U>(size)) * 5u;
