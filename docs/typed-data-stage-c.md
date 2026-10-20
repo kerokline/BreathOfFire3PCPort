@@ -1,7 +1,8 @@
 # The typed-data round, stage C: staging
 
-**Status:** DRAFT (staged 2026-10-19 on `typed/b1` `b78726f8`, after stages A
-and B; nothing of stage C built). The round is
+**Status:** BUILT (staged 2026-10-19 on `typed/b1` `b78726f8`, after stages
+A and B; C0..C4 built 2026-10-19..20 on `typed/c`, each as run in
+[`typed-data-round.md`](typed-data-round.md) 3). The round is
 [`typed-data-round.md`](typed-data-round.md) (IDEAS I44, stages 1 and 2);
 this doc replaces its old section 4, which becomes C4 below.
 
@@ -166,14 +167,31 @@ as after B1, and a revert of whatever they find.
 
 ## 6. C4: the layout as one struct, and the strict rule
 
-The round doc's old section 4: `tools/gen_symbols.py` grows `GameData`, one
-struct spanning `.rdata` and `.data` from the typed entries in address order,
-named padding between, `static_assert`ed on every member's offset and the
-total size; the engine takes a `GameData*` at the image base and the macros
-become members. Then the census's stricter rule
-([`typed-data-census.md`](typed-data-census.md) 3): a raw accessor in
-`src/game` fails CI, except the sites on a committed list with a reason
-(seams, platform buffers, computed offsets).
+The round doc's old section 4, as built (round doc 3, "C4 as run"):
+
+- **Part 1:** the tables C2 asked for typed as `records::` arrays and
+  blocks (the sprite objects, the party trio, the effect objects, the
+  vertex scratch, the window and character records, the shared scratch
+  block, five new arrays), their sites converted by the gate; the scratch
+  block renamed `SharedScratch` by the owner, its module names kept as
+  typed aliases and, at address uses, as module constants (the audit and
+  its fix branch).
+- **`GameData`:** `tools/gen_symbols.py` lays the typed entries past
+  `.text` out as one struct, 0x5C4000..0x93F000, in address order with
+  named padding, its size `static_assert`ed; each member's `<Name>_addr`
+  is computed from the struct and `static_assert`ed against
+  `symbols.toml`, and the macros cast those addresses (macros through the
+  struct pointer `BOF3_GAME` changed the optimiser's code, which the gate
+  refuses). Entries that overlap an earlier one, or sit in `.text`, keep
+  their literals.
+- **The strict rule:** `tools/data_census.py --strict` in `checks.yml`
+  beside the ratchet ([`typed-data-census.md`](typed-data-census.md) 3): a
+  raw site in `src/game` fails CI unless `analysis/typed_left.tsv` lists
+  it with a reason (seams, harness and platform buffers, computed offsets,
+  pointer forms, gate refusals, the stages' recorded reasons); a stale
+  listed key fails too. The census counts every raw spelling first,
+  `B(Name_addr + k)` and `rv::Bytes(...)[k]` included (the owner,
+  2026-10-20).
 
 ## 7. Order, and what runs in parallel
 

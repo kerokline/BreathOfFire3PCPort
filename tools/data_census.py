@@ -5,6 +5,8 @@
     python tools/data_census.py --out FILE           # write elsewhere
     python tools/data_census.py --counts             # print the counts only, write nothing
     python tools/data_census.py --check              # fail if the site count rose above the committed file's
+    python tools/data_census.py --strict             # fail on a src/game raw site analysis/typed_left.tsv
+                                                     # does not list with a reason, or a stale listed key
 
 Group CS of the typed-data round (docs/typed-data-round.md section 2; the
 counts and the method in docs/typed-data-census.md). Reads src/ and
@@ -627,6 +629,12 @@ GLOBAL_OFF = re.compile(r'^\s*(?:\(\s*)?(?:::)?(?:bof3::)?(?:addr::)?([A-Z]\w*)\
 HELPER_CALL = re.compile(r'^\s*(?:\(\s*)?((?:\w+::)*[A-Za-z_]\w*)\s*\(')
 # a module constant (any `k` name not reached through `at::`)
 MODULE_REF = re.compile(r'(?<![\w.>])((?:\w+::)*)(k[A-Z0-9_]\w*)\b(?!\s*[\[(.])')
+# a typed entry's address spelled <Name>_addr (gen_symbols' constant beside
+# the typed macro), bare or bof3::addr::-free: `B(ObjTrio_addr + 0x3a)`,
+# `At(SharedScratch_addr)` (stage C4 part 2: the owner counts these as raw)
+ADDR_NAME_REF = re.compile(r'(?<![\w.>:])((?:::)?)([A-Z]\w*_addr)\b')
+# a subscript of a typed record's own bytes: `rv::Bytes(&Effect_Objects[6])[0x8]`
+RV_BYTES_SUB = re.compile(r'(?<![\w.>:])((?:\w+::)*)rv::Bytes\s*\(')
 LIT = re.compile(r'^\s*\(?\s*(0[xX][0-9A-Fa-f]{6,8})[uUlL]*\b')
 STRIDE_NAME = re.compile(r'Stride')
 # calls that are not a helper returning a pointer: casts and operators
@@ -772,6 +780,25 @@ def stride_family(f, ident, line, env, at_value, syms):
     return '-'
 
 
+def in_call(text, pos):
+    """Whether pos sits inside a call's parentheses in text (`Vertex(X_addr)`
+    is the helper's record, not X_addr's global site); casts' and plain
+    parentheses do not count."""
+    depth = 0
+    for k in range(pos - 1, -1, -1):
+        c = text[k]
+        if c == ')':
+            depth += 1
+        elif c == '(':
+            if depth:
+                depth -= 1
+                continue
+            m = re.search(r'([\w>])\s*$', text[:k])
+            if m and not re.search(r'(static_cast|reinterpret_cast|const_cast)\s*<[^<>]*>\s*$', text[:k]):
+                return True
+    return False
+
+
 def scan(files, syms):
     by_rel = {f.rel: f for f in files}
     env = collect_constants(files, {**syms.names, **syms.addr_names})
@@ -886,6 +913,19 @@ def scan(files, syms):
                 sites.append((f.rel, ln, 'record', name, expr, addr, f'base={kname}',
                               '-', '-', '-', fuzz))
                 continue
+            # a typed entry's <Name>_addr: `B(ObjTrio_addr + 0x3a)`, a global
+            # site at the entry's address (the expr column holds the rest)
+            anames = [am for am in ADDR_NAME_REF.finditer(top) if am.group(2) in syms.addr_names
+                      and not in_call(top, am.start())]
+            if anames:
+                am = anames[0]
+                v = syms.addr_names[am.group(2)]
+                rest = top[am.end():].strip()
+                off = eval_expr(rest[1:], env) if rest[:1] == '+' else (0 if not rest.strip(' )') else None)
+                av = (v + off) & 0xFFFFFFFF if off is not None and top[:am.start()].strip(' (') == '' else v
+                cov, dname, ctype = syms.cover(av)
+                sites.append((f.rel, ln, 'global', name, expr, f'{av:#x}', '-', cov, dname, ctype, fuzz))
+                continue
             # a module constant outside `namespace at`: `W(kScriptPool + 2 * i)`,
             # `B(kShakeShift)`
             mods = [(mm, local_value(f, mm.group(2), env)) for mm in MODULE_REF.finditer(top)
@@ -939,6 +979,20 @@ def scan(files, syms):
                     continue
                 cov, dname, ctype = syms.cover(v)
                 sites.append((f.rel, ln, 'global', acc, name, f'{v:#x}', '-', cov, dname, ctype, fuzz))
+        # a subscript of rv::Bytes(...): a record site on the typed record
+        for m in RV_BYTES_SUB.finditer(code):
+            r = balanced_args(code, m.end() - 1)
+            if r is None:
+                continue
+            after = code[r[1]:r[1] + 3].lstrip()
+            if not after.startswith('['):
+                continue
+            ln = line_of(f.starts, m.start())
+            arg = ' '.join(','.join(r[0]).split())
+            bm = re.match(r'&?\s*([A-Za-z_]\w*)', arg)
+            fam = f'base={bm.group(1)}' if bm else '-'
+            sites.append((f.rel, ln, 'record', 'Bytes', ('rv::Bytes(' + arg + ')')[:60], '-', fam,
+                          '-', '-', '-', fuzz))
     sites.sort(key=lambda s: (s[0], s[1], s[2], s[4]))
 
     # constant map: every `namespace at` constant (scope `at`), and every other
@@ -1079,6 +1133,44 @@ def committed_sites(path):
     sys.exit(f'data_census: no "#count sites" line in {path}')
 
 
+STRICT_SCOPE = 'src/game/'
+
+
+def strict():
+    """The strict rule (stage C4 part 2, docs/typed-data-census.md 3): every
+    raw site the census measures in src/game must be a row of
+    analysis/typed_left.tsv with a reason (not `-`), keyed as typed_left.py
+    keys it (file, function, shape, accessor, expr, n); and every src/game
+    row of the list must still measure. Returns the exit status."""
+    import typed_left as tl
+    measured = tl.measure()
+    listed = tl.read_list(os.path.join(ROOT, tl.OUT))
+    keys = {k for k, _ln, _s in measured}
+    bad = []
+    for k, ln, _s in measured:
+        if not k[0].startswith(STRICT_SCOPE):
+            continue
+        row = listed.get(k)
+        if row is None:
+            bad.append(f'  new raw site {k[0]}:{ln} {k[3]}({k[4]}) in {k[1]}: no row in {tl.OUT}')
+        elif row[8] in ('-', ''):
+            bad.append(f'  {k[0]}:{ln} {k[3]}({k[4]}) in {k[1]}: listed with no reason')
+    stale = [k for k in listed if k[0].startswith(STRICT_SCOPE) and k not in keys]
+    for k in stale:
+        bad.append('  stale key (the list names a site that no longer measures): ' + '\t'.join(k))
+    n = sum(1 for k in listed if k[0].startswith(STRICT_SCOPE))
+    if bad:
+        print(f'data_census --strict: {len(bad)} problem(s) against {tl.OUT} ({n} listed src/game sites):')
+        print('\n'.join(bad[:200]))
+        if len(bad) > 200:
+            print(f'  ... and {len(bad) - 200} more')
+        print('Use a typed access (docs/typed-data-round.md). A site that must stay raw: run '
+              'tools/typed_left.py and give its row a reason; a stale key: regenerate with tools/typed_left.py.')
+        return 1
+    print(f'data_census --strict: every raw site in src/game is listed with a reason ({n} exceptions); ok')
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--out', default=DEFAULT_OUT)
@@ -1086,8 +1178,13 @@ def main():
     ap.add_argument('--counts', action='store_true', help='print the counts, write nothing')
     ap.add_argument('--check', action='store_true',
                     help='fail if the site count is above the committed --out file\'s')
+    ap.add_argument('--strict', action='store_true',
+                    help='fail on any raw site in src/game that analysis/typed_left.tsv does not list '
+                         'with a reason, and on any listed src/game key that no longer measures')
     a = ap.parse_args()
     os.chdir(ROOT)
+    if a.strict:
+        sys.exit(strict())
     syms = Symbols(a.toml)
     files = load_sources()
     sites, consts, files, unresolved_refs = scan(files, syms)
