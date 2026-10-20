@@ -74,6 +74,14 @@ using SnapshotRestoreFn = void (*)(SnapshotReader&);
 // buffers, heap blocks), which after the span is written it could no longer
 // find: the words are then the take's.
 using SnapshotDiscardFn = void (*)();
+// Optional: runs on the participant's record while the file is checked,
+// before anything is written. A record this process cannot take back for a
+// reason the build check does not see (the ST record's message pool, which a
+// language overlay moves and the original does not) is refused here, with a
+// short reason for the overlay (`why`) and the log's (`detail`), instead of
+// failing in the participant's Restore after the span has been written.
+// Returns false to refuse.
+using SnapshotCheckFn = bool (*)(SnapshotReader&, std::string& why, std::string& detail);
 
 // A module owning state outside the span registers once, at start-up (its
 // _Inject): `tag` 1..15 printable characters, unique. Save runs at the take;
@@ -83,7 +91,7 @@ using SnapshotDiscardFn = void (*)();
 // release - keeps its own copy outside the span). A registration after the
 // first take or restore, or a second one of a tag, is a Fatal.
 void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore,
-                       SnapshotDiscardFn discard = nullptr);
+                       SnapshotDiscardFn discard = nullptr, SnapshotCheckFn check = nullptr);
 
 // The keys' requests (Game_WndProc) and the quick menu's (stage B): nothing
 // happens until Snapshot_Pending. Slots are 0x10..0x1F; F7 loads 0x10, the

@@ -125,7 +125,8 @@ in the overlay and the log, the game untouched: not a save file (under
 header's size, or a record past the end); another host; **another build**
 (the tag or the hash); another process (the DLL's base, or `Task_StackTop`);
 another span; **a record whose tag has no participant**; **a participant with
-no record** (rule 4: never a partial restore); trailing bytes. The save half
+no record** (rule 4: never a partial restore); **another language** (section
+4b); trailing bytes. The save half
 does not depend on any of it: a file refused for another build still has a
 save file's first `0x12B0` bytes, summary included, so the quick menu can
 draw it and a later "load as a plain save" needs no format change.
@@ -167,6 +168,27 @@ before, `DllCharacteristics 0x0140` and a base of `0x5C2D0000` (q_sn's
 `0x54790000` (`launcher_st`) - two directories, two bases; after,
 `DllCharacteristics 0x0100` (NX only) and `0x10000000` from both directories
 and again from a third start of the first. Not measured: across a reboot.
+
+## 4b. Another language
+
+The language is the start's (`BOF3X_LANG`), not the build's, so the build id
+does not see it. Two cases (2026-10-20, the owner's call):
+
+- **The original Chinese text and any translation, either way: refused**
+  ("another language"). A translation moves the system message pool into a
+  32 KB buffer of ours (DIV-0007) and the original does not, so `ST`'s
+  record holds 0 bytes of pool in one and 0x8000 in the other. Before
+  2026-10-20 `StRestore` met that as a Fatal **after** the span had been
+  written; now `ST`'s check (`StCheck`, a participant's optional
+  `SnapshotCheckFn`, run in `Parse` on the record) refuses it before a byte
+  is written. The file does not record which translation, only whether one
+  ran, so the log line says "a translation", not its tag.
+- **One translation into another (say en-US into fr-FR): let through.** Both
+  pools are 0x8000 bytes and every check passes. The take's pool and the
+  take's area text in the span come back in the take's language, and the
+  game's own text stays so until it reloads it from the disc in the running
+  language. Read from the code, not measured: how long that lasts and where
+  it shows is [`IDEAS.md`](IDEAS.md) I47's to review.
 
 ## 5. The registry
 
@@ -241,7 +263,10 @@ temporary directory:
   with nothing written; another tag, another DLL hash, another DLL base,
   another `Task_StackTop` refused; the save half's summary still where the
   menu reads it under a refused build; a truncated file refused with its
-  save half kept;
+  save half kept; a participant whose check refuses its record refused,
+  with nothing written; `StCheck` letting `ST`'s own record through and
+  refusing it with the pool's presence turned the other way ("another
+  language", section 4b);
 - the rotation over sixteen files (each up one, the old `1F` gone, `10` the
   new one), over a gapped set (`10`, `13`, `15`, `1F` become `11`, `14`, `16`
   and a new `10`), and with `1A` held open: the refusal, `1F` deleted, `1E`..`1B`

@@ -101,6 +101,7 @@ struct Participant {
     SnapshotSaveFn save;
     SnapshotRestoreFn restore;
     SnapshotDiscardFn discard = nullptr;   // before the span is written (SP-A)
+    SnapshotCheckFn check = nullptr;       // while the file is checked, before anything is written
 };
 using Registry = std::vector<Participant>;
 
@@ -471,6 +472,11 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
                                  tag.c_str(), rh.bytes));
         if (seen[k]) return Refuse(p, "a record twice", Printf("record '%s' appears twice", tag.c_str()));
         seen[k] = true;
+        if (registry[k].check) {
+            SnapshotReader reader(registry[k].tag.c_str(), file.data() + at, rh.bytes);
+            std::string why, detail;
+            if (!registry[k].check(reader, why, detail)) return Refuse(p, why, Printf("record '%s': %s", tag.c_str(), detail.c_str()));
+        }
         p.records.push_back({k, file.data() + at, rh.bytes});
         at += rh.bytes;
     }
@@ -748,7 +754,8 @@ void DoLoad(unsigned slot) {
 // buffer, under a language overlay), and DIV-0133/0134's "the release's
 // words stand" flag, with sigma's table rebuilt from the restored Config
 // words. A byte copy each; a size that differs at a restore is another
-// build's, which the build check refused already, so it is a Fatal here.
+// build's, which the build check refused already, so it is a Fatal here -
+// except the message pool's, which is the language's (StCheck).
 constexpr U kStVersion = 1;
 
 void StSave(SnapshotWriter& w) {
@@ -763,6 +770,31 @@ void StSave(SnapshotWriter& w) {
     if (pool_bytes) w.Put(pool, pool_bytes);
     const unsigned char release_words = bof3x::input::sigma::RecipeTranslating() ? 1 : 0;
     w.Put(release_words);
+}
+
+// The message pool is moved (DIV-0007) under any language overlay and not
+// under the original Chinese, and the language is the start's (BOF3X_LANG),
+// not the build's: a quicksave taken in one and loaded in the other passes
+// the build check. Refused here, before the span is written - StRestore's
+// Fatal would come after it. One translation into another is let through:
+// both pools are 0x8000 bytes, and the take's text stands until the game
+// reloads its own (IDEAS I47 reviews that).
+bool StCheck(SnapshotReader& r, std::string& why, std::string& detail) {
+    if (r.Left() < 3 * sizeof(U)) return true;   // StRestore's Fatals say what is wrong
+    if (r.Get<U>() != kStVersion) return true;
+    r.Get<std::uint32_t>();
+    const U ring = r.Get<U>();
+    if (r.Left() < std::size_t{ring} * sizeof(unsigned short) + sizeof(std::uint32_t)) return true;
+    std::vector<unsigned short> skip(ring);
+    if (ring) r.Get(skip.data(), ring * sizeof(unsigned short));
+    const std::uint32_t pool_bytes = r.Get<std::uint32_t>();
+    std::uint32_t now_bytes = 0;
+    MsgPool_Moved(&now_bytes);
+    if ((pool_bytes != 0) == (now_bytes != 0)) return true;
+    why = "another language";
+    detail = pool_bytes ? "taken under a translation (BOF3X_LANG), this game runs the original Chinese text"
+                        : "taken under the original Chinese text, this game runs a translation (BOF3X_LANG)";
+    return false;
 }
 
 void StRestore(SnapshotReader& r) {
@@ -798,6 +830,33 @@ void TestRestore(SnapshotReader& r) {
 }
 void TestEmptySave(SnapshotWriter&) {}
 void TestEmptyRestore(SnapshotReader&) {}
+bool TestRefuse(SnapshotReader&, std::string& why, std::string& detail) {
+    why = "refused by its check";
+    detail = "the self-test's";
+    return false;
+}
+
+// StCheck on ST records made by StSave, then with the pool's presence turned
+// the other way: the language swap refused, the same language let through.
+void SelfTestStCheck() {
+    std::vector<unsigned char> rec;
+    SnapshotWriter w(rec);
+    StSave(w);
+    std::string why, detail;
+    SnapshotReader same("ST", rec.data(), rec.size());
+    Check(StCheck(same, why, detail), "ST's check lets a record of this process's language through");
+    const std::size_t at = 3 * sizeof(U) + std::size_t{draw_pool::Count()} * sizeof(unsigned short);
+    std::uint32_t pool_bytes = 0;
+    std::memcpy(&pool_bytes, rec.data() + at, sizeof pool_bytes);
+    std::vector<unsigned char> other(rec.begin(), rec.begin() + at);
+    const std::uint32_t flipped = pool_bytes ? 0 : 0x8000;
+    const auto* f = reinterpret_cast<const unsigned char*>(&flipped);
+    other.insert(other.end(), f, f + sizeof flipped);
+    other.resize(other.size() + flipped + 1, 0);
+    SnapshotReader swapped("ST", other.data(), other.size());
+    Check(!StCheck(swapped, why, detail) && why == "another language",
+          "ST's check refuses a record from the original Chinese under a translation, or the reverse");
+}
 
 void FakeSaveHalf(unsigned char* to) {
     for (U i = 0; i < kSaveHalf; ++i) to[i] = static_cast<unsigned char>(i * 7 + 3);
@@ -907,6 +966,10 @@ void SelfTestSpan(const std::wstring& dir) {
     more.push_back({"EXTRA", &TestEmptySave, &TestEmptyRestore});
     q = Parse(back, build, span, top, more);
     Check(!q.ok && q.why == "a participant with no record", "a participant with no record is refused");
+    Registry checked = reg;
+    checked[0].check = &TestRefuse;
+    q = Parse(back, build, span, top, checked);
+    Check(!q.ok && q.why == "refused by its check", "a participant's check refuses its record before the restore");
     Check(Same(span.image, scribbled), "a refused restore writes nothing");
 
     // Another build: the snapshot half refused, the save half still a save
@@ -1005,20 +1068,23 @@ void SelfTest() {
     if (!CreateDirectoryW(dir.c_str(), nullptr) && GetLastError() != ERROR_ALREADY_EXISTS)
         Fatal("snapshot self-test: cannot create %s", Utf8Path(dir.c_str()).text);
     SelfTestSpan(dir);
+    SelfTestStCheck();
     SelfTestRotation(dir);
     ClearDir(dir);
     RemoveDirectoryW(dir.c_str());
     if (g_fails) Fatal("snapshot self-test: %d check(s) failed (the log has each)", g_fails);
     const Span span = CurrentSpan();
     Log("shadow      snapshot: self-test passed - span 0x%08X+0x%X and pool 0x%08X+0x%X copied, scribbled and restored equal; "
-        "a missing participant either side, another build, DLL base, arena top and a truncated file refused; the "
+        "a missing participant either side, a participant's check, another language, another build, DLL base, arena top "
+        "and a truncated file refused; the "
         "rotation over sixteen files, a gapped set and a failed rename",
         span.image.base, span.image.bytes, span.pool.base, span.pool.bytes);
 }
 
 }  // namespace
 
-void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore, SnapshotDiscardFn discard) {
+void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore, SnapshotDiscardFn discard,
+                       SnapshotCheckFn check) {
     if (g_registry_closed) Fatal("snapshot: participant '%s' registered after the first quicksave or quickload", tag);
     const std::size_t n = tag ? std::strlen(tag) : 0;
     if (n == 0 || n >= kTagBytes) Fatal("snapshot: a participant's tag must be 1..%u characters", (unsigned)kTagBytes - 1);
@@ -1027,7 +1093,7 @@ void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn r
     if (!save || !restore) Fatal("snapshot: participant '%s' registered without both Save and Restore", tag);
     for (const Participant& p : g_registry)
         if (p.tag == tag) Fatal("snapshot: participant '%s' registered twice", tag);
-    g_registry.push_back({tag, save, restore, discard});
+    g_registry.push_back({tag, save, restore, discard, check});
     Log("quicksave   participant '%s' registered", tag);
 }
 
@@ -1086,7 +1152,7 @@ void Snapshot_Inject() {
     // host's span is the one players have, so there it runs on every
     // BOF3X_SELFTEST_ONLY start, as ExeIcon_SelfTest does.
     if (IsExeHost() ? GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("snapshot")) SelfTest();
-    Snapshot_Register("ST", &StSave, &StRestore);   // after DrawPool_Grow, sigma::Arm and MsgPool_Relocate's inject
+    Snapshot_Register("ST", &StSave, &StRestore, nullptr, &StCheck);   // after DrawPool_Grow, sigma::Arm and MsgPool_Relocate's inject
 }
 
 }  // namespace bof3

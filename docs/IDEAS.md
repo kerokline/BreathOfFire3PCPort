@@ -2032,3 +2032,36 @@ Options when picked up, none chosen:
   resume points in our code before writing them back. Narrower, and does
   not cover function pointers elsewhere in the span.
 - Nothing beyond the note, if quicksaves stay a local convenience.
+
+## I47 — Quick-loading across translations: review the text that carries over
+
+**Ask (2026-10-20, the owner):** keep the one-translation-into-another
+quick-load working ("the slow replace"), and come back to check it behaves
+as wanted.
+**Kind:** engine   **Feasibility:** HIGH   **Gated on:** the owner's word to
+pick it up.
+
+A quicksave does not record the language, only whether a translation ran
+([`quicksave.md`](quicksave.md) 4b). The original Chinese against any
+translation is refused before anything is written. One translation's
+quicksave loaded under another passes every check: the take's system message
+pool (DIV-0007's buffer, in `ST`'s record) and the area text in the span come
+back in the take's language, and stay so until the game reloads them from
+the disc in the running one. Read from the code on 2026-10-20, not played.
+
+### What to measure first
+- A quicksave under en-US, loaded under fr-FR (or de-DE) in one place each:
+  the field, a menu, a battle, mid-dialogue. Which text shows in which
+  language, and what reloads it (an area change, a menu, a battle's end).
+- Whether anything ours outside `ST` is language-shaped: the title menu's
+  labels (DIV-0064), the font's widths, the name tables.
+
+### Options when picked up, none chosen
+- Leave it: a deliberate way to change language mid-game, with the reload
+  rule written down.
+- Reload the running language's system pool after a cross-language load
+  (record the tag in `ST`, a version bump), so only the area text lags.
+- Refuse it like the original-against-translation case.
+
+### Outcome
+_(2026-10-20) open; logged at the owner's word, nothing measured._

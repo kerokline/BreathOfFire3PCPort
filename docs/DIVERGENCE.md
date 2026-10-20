@@ -9067,7 +9067,12 @@ designed in rather than bolted on.
   restores the newest to the frame; the F5 menu (DIV-0147) restores any.
   Each file starts with an ordinary save file whose summary the menu draws.
   A file from another build, or from a process whose DLL or task stacks sit
-  elsewhere, is refused with its reason and nothing is written.
+  elsewhere, is refused with its reason and nothing is written; so is one
+  taken under the original Chinese text and loaded under a translation, or
+  the reverse (from 2026-10-20; before, that load ended the game in a Fatal
+  part-way through). One translation's quicksave loaded under another is
+  let through: the take's text shows until the game reloads its own
+  ([`quicksave.md`](quicksave.md) 4b, IDEAS I47).
 
   Sound after a quick-load: the music resumes at the sample heard at the take
   (for an MP3 on a track that rewinds, the start of its 26 ms frame), at the
@@ -9102,6 +9107,8 @@ designed in rather than bolted on.
   at the first tick, nothing crashed in 46 runs, and all 22 capture pairs
   (the frame k ticks after F6 against the frame k ticks after F7) are
   pixel-equal. Re-checked after `main`'s typed-data round (PR #94) merged.
+  The language refusal (2026-10-20): the `snapshot` self-test in the exe
+  host under the original and under en-US, both passing.
 - **Reversible?** The keys are ours; without them nothing of the game
   changes. Not a switch.
 
