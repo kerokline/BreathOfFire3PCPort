@@ -108,7 +108,7 @@ the layer lists that `Sprite_DrawPass` merges with the sprites
   The threshold is `Field_Kind2Z.hi - MapView_Origin.y - MapView_Origin.x +
   Field_Kind2X.hi + 8` - the kind-2 object's own row, by its shape. The
   lowest corner is the smallest of the four bytes with their sign bits
-  flipped, and passes through `DamageScratch`'s byte `0x903850` on the way.
+  flipped, and passes through `SharedScratch`'s byte `0x903850` on the way.
 - **Side triangles.** The `+0x7E` item (the next cell's edge) and the `+0x8E`
   item (the edge below) are triangles from two corners of the neighbour and
   the quad's own third vertex, in layer j's list 0 when cell word bit 13 /
@@ -194,7 +194,7 @@ Each is in the code's comments; the ones a control refused are marked.
   the game's all-purpose temporary - for the column count and the next row's
   first column (B10), and the corner pointer after an allocation (B15).
 - **Globals as temporaries.** The corner pointer lives in `MapView_CornerPtr`
-  `0x92A0C0`, the draw-table key's minimum in `DamageScratch`'s byte (B21) -
+  `0x92A0C0`, the draw-table key's minimum in `SharedScratch`'s byte (B21) -
   both left there, both compared.
 - **The follow overshoots.** A difference not a multiple of the step is never
   landed on: the focus swings across it, the hold stays set, and the view is
@@ -295,7 +295,7 @@ with exit 3, by comparison:
 | B18 first screen y from x | 1,374 |
 | B19 the flags replace the cell word | 1,373 |
 | B20 `+0x8E` side from the cell, not the one below | 1,374 |
-| B21 the key kept off `DamageScratch` | 621 |
+| B21 the key kept off `SharedScratch` | 621 |
 | T1 texture run at `h * w / 2` | 11,806 |
 | T2 `0x1000` from bit 29 | 9,054 |
 | T3 a zero texture never releases | 5,954 |

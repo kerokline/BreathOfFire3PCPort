@@ -48,11 +48,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap its +0xC) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-// kS: now DamageScratch (symbols.toml).
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
@@ -60,10 +60,10 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(DamageScratch_addr + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(DamageScratch_addr + k)[0]; }
-void SetSW(unsigned k, std::uint32_t v) { SetWord(Mem(DamageScratch_addr + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+void SetSW(unsigned k, std::uint32_t v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
 void AddSW(unsigned k, std::uint32_t v) { SetSW(k, SW(k) + v); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
@@ -494,7 +494,7 @@ namespace {
 
 // The beams' aim, both spells (WhelpBreathBeam_Aim, DragonBreathBeam_Aim once
 // +9 runs out): the owner's direction byte; the task to the targets' centre
-// (MagicFx_CenterOnSide) and its screen point kept in DamageScratch +0xC /
+// (MagicFx_CenterOnSide) and its screen point kept in SharedScratch +0xC /
 // +0xE; MagicFx_FormationOffset; the task back at its owner, its screen point
 // moved by the words +0xC / +0x10 into +8 / +0xA; +0x14 the angle
 // Math_Ratan2(kept x - x, kept y - y) from there to the centre.
@@ -639,7 +639,7 @@ S27_EXPORT void __cdecl WhelpBreathBeam_Grow(void) {
 
 namespace {
 
-// One step's width of the Whelp beam: DamageScratch +0 = (sin(angle) x step x
+// One step's width of the Whelp beam: SharedScratch +0 = (sin(angle) x step x
 // 2 >> 12) + base, divided by +0xB (signed, the original's idiv), plus 1.
 void BeamWidth(std::uint32_t angle, int step, int base) {
     const int v = Sin(static_cast<int>(angle));
@@ -1195,7 +1195,7 @@ S27_EXPORT void __cdecl DragonBreathBeam_End(void) {
 
 namespace {
 
-// The Dragon beam's radii of one quad pair: DamageScratch +0 at the near end
+// The Dragon beam's radii of one quad pair: SharedScratch +0 at the near end
 // and +2 at the far, `base` (+0xB x 4, or +0xB x 4 + 0x10 for the outer pair)
 // or, over the first steps, `per` x step (near: step - 1 while it is below 4;
 // far: step while it is below 4); each plus its end's jitter.
@@ -1210,7 +1210,7 @@ void DragonRadii(unsigned base_add, unsigned per_add, int k, unsigned prev, unsi
     AddSW(0, prev);
     SetSW(2, far + cur);
 }
-// The four points of a Dragon quad: the side points at angle DamageScratch +4
+// The four points of a Dragon quad: the side points at angle SharedScratch +4
 // and radii +0 / +2 about the step's near (+0xC, +0xE) and far (+8, +0xA)
 // centres, at `near_at` and `far_at`; the centres themselves at `near_c` and
 // `far_c`.
@@ -1227,7 +1227,7 @@ void DragonCentres(unsigned char* p, unsigned near_c, unsigned far_c) {
     PutFloat(p + far_c + 4, SS(0xA));
 }
 // A point's shade: (s, s, s) on the centre line, (s, s / 4, s / 4) on the
-// edge, 1 on the outer edge; s the DamageScratch +6 word, / 4 signed.
+// edge, 1 on the outer edge; s the SharedScratch +6 word, / 4 signed.
 void ShadeFull(unsigned char* p, unsigned at) {
     p[at] = SB(6);
     p[at + 1] = SB(6);
@@ -1340,7 +1340,7 @@ namespace {
 
 // DragonBreathBeam_DrawLinesA / B: a crackling line of 47 segments (POLY_F2
 // lines, semi-transparent) beside the beam, `side` 0x400 or -0x400 from its
-// angle. It starts `n` + 1 steps of 12 down the beam (DamageScratch +8 / +0xA,
+// angle. It starts `n` + 1 steps of 12 down the beam (SharedScratch +8 / +0xA,
 // kept in the vertex scratch +8 / +0xA), 32 units out; each segment walks
 // Rand & 7 along the beam (back to the kept point plus 12 once the walk
 // passes 12) and swings out by sin(segment x 0x40) x (0x10 + Rand & 3) >> 12;

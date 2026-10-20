@@ -180,7 +180,7 @@ void Effect13(unsigned char* e, std::int32_t a, std::int32_t b, std::int32_t c, 
 }
 // The record 0x903850 names, read back as a dword's low byte, as the
 // originals index it after the store.
-unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(DamageScratch.d_00) & 0xFF); }
+unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(SharedScratch.d_00) & 0xFF); }
 
 // The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
 // views a
@@ -378,7 +378,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 9:
         if (C0() != 3) return;
-        if (TakeInto(DamageScratch_addr) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xA);
         Effect13(Slot850(), Camera_Angles[0], Camera_Angles[1], 0x31E, 0xE0);
         return;
@@ -390,7 +390,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0xB:
         if (C0() != 5) return;
-        if (TakeInto(DamageScratch_addr) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xC);
         Effect13(Slot850(), Camera_Angles[0], Camera_Angles[1], 0x200, 0x70);
         return;
@@ -402,14 +402,14 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0xD:
         if (C0() != 0xB) return;
-        if (TakeInto(DamageScratch_addr) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xE);
         Effect13(Slot850(), -0x35A, Camera_Angles[1], 0x48, 0x30);
         SetTimer(0x30);
         return;
     case 0xE: {
         if (C0() != 0xC) return;
-        if (TakeInto(DamageScratch_addr) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xF);
         unsigned char* const e = Slot850();
         Live(e, 0x31);
@@ -449,7 +449,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0x13:
         if (C0() != 0x22) return;
-        if (TakeInto(DamageScratch_addr) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0x14);
         Live(Slot850(), 0x38);
         return;
@@ -608,7 +608,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         return;
     case 4: {
         if (C0() != 0xA) return;
-        if (TakeInto(DamageScratch_addr) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         unsigned char* const e = Slot850();
         SetTimer(0x8C);
         SetStep(5);
@@ -623,7 +623,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
             DecTimer();
             return;
         }
-        if (TakeInto(DamageScratch_addr) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         Effect13(Slot850(), -0x33E, Camera_Angles[1], S16(at::kPitch), 0xA0);
         IncC0();
         Sound(0x205);
@@ -639,7 +639,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         SetStep(8);
         return;
     case 8:
-        if (C0() == 0xE && TakeInto(DamageScratch_addr) != 0xFF) {
+        if (C0() == 0xE && TakeInto(SharedScratch_addr) != 0xFF) {
             SetStep(9);
             Effect13(Slot850(), -0x2AA, Camera_Angles[1], S16(at::kPitch), 0x90);
         }
@@ -735,7 +735,7 @@ extern "C" void __cdecl Scena07_ShakeCamera(void) {
 extern "C" void __cdecl Scena07_PlaceObjects(void) {
     for (unsigned i = 0; i < 14; ++i) {
         const unsigned slot = SpriteFindFree() & 0xFF;
-        DamageScratch.w_00 = slot;
+        SharedScratch.w_00 = slot;
         if (slot == 0xFF) continue;
         SH_CALL(EventOp_0x)(At(Scena07_PlacedObjects_addr + 0x11 * i));
         rv::Store<unsigned>(rv::As<records::SpriteHead>(SpriteCurrent())->height_whole, 0xA00);
@@ -888,7 +888,7 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         break;
     case 0x15:
         if (C0() != 0x14) break;
-        if (TakeInto(DamageScratch_addr) == 0xFF) break;
+        if (TakeInto(SharedScratch_addr) == 0xFF) break;
         SetStep(0x16);
         Live(Slot850(), 0x46);
         out = kDone;
@@ -1057,14 +1057,14 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     }
     case 0x24:
         if (C0() != 0x25) break;
-        if (TakeInto(DamageScratch_addr) == 0xFF) break;
+        if (TakeInto(SharedScratch_addr) == 0xFF) break;
         SetStep(0x25);
         Effect13(Slot850(), -0x370, Camera_Angles[1], 0xB6, 0xA8);
         out = kShake;
         break;
     case 0x25:
         if (C0() != 0x26) break;
-        if (TakeInto(DamageScratch_addr) == 0xFF) break;
+        if (TakeInto(SharedScratch_addr) == 0xFF) break;
         SetStep(0x26);
         Effect13(Slot850(), -0x2AA, Camera_Angles[1], 0x200, 0x1E);
         out = kShake;
@@ -1268,7 +1268,7 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
         if (!Near(xh, 0x22, 4)) return 0;
         if (!Flag(4) || SH_CALL(Scena07_PartyHas89State2)() == 0) {
             const unsigned char kind = ObjTrio[0].direction;
-            DamageScratch.b_00 = kind;
+            SharedScratch.b_00 = kind;
             if (kind != 6 && kind != 5 && kind != 4) {
                 C0() = 0x10;
                 Set40();
@@ -1291,7 +1291,7 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
     const unsigned area = Area();
     if (area == 0x69) {
         const unsigned char kind = ObjTrio[0].direction;
-        DamageScratch.b_00 = kind;
+        SharedScratch.b_00 = kind;
         if (kind == 0 || kind == 1 || kind == 2) return 0;
         if (static_cast<short>(zh) <= 0x1D) return 0;
         Set40();
@@ -1424,7 +1424,7 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
         }
     }
     if (Area() == 2 && Flag(6) && !Flag(7)) {
-        const unsigned char slot = TakeInto(DamageScratch_addr);
+        const unsigned char slot = TakeInto(SharedScratch_addr);
         Camera_Angles[0] = 0xFDC4;
         if (slot != 0xFF) Effect13(Slot850(), -0x302, Camera_Angles[1], S16(at::kPitch), 0xFF);
     }
@@ -1547,7 +1547,7 @@ extern "C" void __cdecl Scena08_Scene1(void) {
         return;
     case 2: {
         if (C0() != 4) return;
-        if (TakeInto(DamageScratch_addr) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             rv::As<records::EffectObject>(e)->z = 0x550000;
             const std::int32_t z = rv::As<records::EffectObject>(e)->z;
@@ -1565,7 +1565,7 @@ extern "C" void __cdecl Scena08_Scene1(void) {
     }
     case 3:
         if (C0() != 7) return;
-        if (TakeInto(DamageScratch_addr) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x52;
@@ -1709,7 +1709,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
     }
     case 2:
         if (C0() != 5) return;
-        if (TakeInto(DamageScratch_addr) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             rv::As<records::EffectObject>(e)->z = 0x418000;
             const std::int32_t z = rv::As<records::EffectObject>(e)->z;
@@ -1794,7 +1794,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         return;
     case 0xF:
         if (C0() != 0x23) return;
-        if (TakeInto(DamageScratch_addr) != 0xFF) Live(Slot850(), 0x63);
+        if (TakeInto(SharedScratch_addr) != 0xFF) Live(Slot850(), 0x63);
         SetTimer(0x3C);
         SetStep(0x10);
         return;
@@ -1957,7 +1957,7 @@ extern "C" void __cdecl Scena08_Scene6(void) {
     }
     case 3: {
         if (EffectAt(Scena08_Kept[0xf])[0] & 1) return;
-        if (TakeInto(DamageScratch_addr) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2081,11 +2081,11 @@ extern "C" void __cdecl Scena08_SpawnPair(void) {
         Sprite(static_cast<std::uint32_t>(Long(At(Scena08_Kept_addr + 0x4))))[0] = 0;
         return;
     }
-    DamageScratch.w_00 = Word(At(Scena08_Kept_addr + 0x4));
+    SharedScratch.w_00 = Word(At(Scena08_Kept_addr + 0x4));
     Sprite(b)[0] = 1;
     SH_CALL(EventOp_6x)(At(Scena08_PairOps_addr));
     SH_CALL(Sprite_SetAnimationAt)(0x4C, 0);
-    DamageScratch.w_00 = Word(At(Scena08_Kept_addr + 0x8));
+    SharedScratch.w_00 = Word(At(Scena08_Kept_addr + 0x8));
     SH_CALL(EventOp_6x)(At(Scena08_PairOps_addr + 0x10));
     SH_CALL(Sprite_SetAnimationAt)(0x36, 0);
 }
@@ -2328,7 +2328,7 @@ extern "C" void __cdecl Scena08_Scene9(void) {
         return;
     case 6:
         if (C0() != 5) return;
-        if (TakeInto(DamageScratch_addr) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2365,7 +2365,7 @@ extern "C" void __cdecl Scena08_Scene10(void) {
         SetStep(0);
         return;
     case 0xA:
-        if (TakeInto(DamageScratch_addr) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xB);
         Effect13(Slot850(), -0x2EC, Camera_Angles[1], 0xB6, 0x20);
         return;
@@ -2435,7 +2435,7 @@ extern "C" void __cdecl Scena08_Scene11(void) {
     case 2:
         if (SH_CALL(File_LoadDone)() == 0) return;
         if (Field_Kind2Hold != 0) return;
-        if (TakeInto(DamageScratch_addr) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2460,7 +2460,7 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         return;
     case 4:
         if (C0() != 8) return;
-        if (TakeInto(DamageScratch_addr) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x60;
@@ -2720,7 +2720,7 @@ extern "C" unsigned char __cdecl Scena08_ArriveHook(int x, int z) {
     }
     if (Area() == 0x23 && !Flag(8) && Near(xh, 0x45, 3) && Near(zh, 0x37, 3)) {
         const unsigned char kind = ObjTrio[0].direction;
-        DamageScratch.b_00 = kind;
+        SharedScratch.b_00 = kind;
         if (kind != 6 && kind != 7 && kind != 0) {
             SetRun(6);
             SetStep(0);

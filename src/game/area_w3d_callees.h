@@ -35,7 +35,7 @@ constexpr std::uint32_t kTailTimer = 0x9039F6;
 // The movement script's counter 3 (MoveScript_CounterOps) and the scratch
 // word 0x903850 (a sprite slot the spawn state keeps there).
 constexpr std::uint32_t kCounter3 = 0x90384B;
-// kScratch: now DamageScratch (symbols.toml).
+// kScratch: now SharedScratch (symbols.toml).
 // The story flags (Flags_Set's bank); party list 1's first byte.
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).

@@ -212,7 +212,7 @@ its effect of kind `0x13` (`Kind13`). Kept as the originals: every re-read
 after a call (`Sprite_Current` and `MoveScript_Object` in the drop's states,
 the message word in `Area143_ChoiceRun8`, `Cond_ByteFE` in the trigger, the
 active member after `Effect_FindFree`, the effect slot read back from
-`DamageScratch`), the order of every call, the 16-bit compares of the hooks'
+`SharedScratch`), the order of every call, the 16-bit compares of the hooks'
 high words, the signed quotients (`(pointer - base) / 0xA4` and `/ 0x14C`
 truncate toward 0), the 32-bit wrap of every coordinate sum, the byte index
 area 145's handler 0 keeps, and the unchecked reads of section 6.

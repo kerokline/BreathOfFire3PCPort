@@ -98,16 +98,16 @@ U CodeAt(U table, unsigned index, const char* who) {
 }
 
 // The event ops' count and bank words (event_script.cpp's terms): the word at
-// DamageScratch is the next Sprite_Objects entry a placement fills, the word
+// SharedScratch is the next Sprite_Objects entry a placement fills, the word
 // after it the animation bank a placement passes on.
 short Count() {
     short v;
-    std::memcpy(&v, At(DamageScratch_addr), sizeof v);
+    std::memcpy(&v, At(SharedScratch_addr), sizeof v);
     return v;
 }
-unsigned short Bank() { return DamageScratch.w_02; }
-void SetBank(unsigned v) { DamageScratch.w_02 = v; }
-void BumpCount() { DamageScratch.w_00 = static_cast<unsigned>(Count() + 1); }
+unsigned short Bank() { return SharedScratch.w_02; }
+void SetBank(unsigned v) { SharedScratch.w_02 = v; }
+void BumpCount() { SharedScratch.w_00 = static_cast<unsigned>(Count() + 1); }
 unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 
 // A placement's x or z: the whole part and the half (0x8000) when `half` is not 0.

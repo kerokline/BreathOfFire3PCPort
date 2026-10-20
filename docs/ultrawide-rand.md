@@ -136,7 +136,7 @@ grepped for `Rand` and `Sound_`.
 | Handler | Kinds | Ours in | `Rand` | Writes outside the primitive, besides the GTE's own globals |
 |---|---|---|---|---|
 | `MapCell_DrawQuads` `0x570020` | 0 | `map_cells.cpp` | no | `Gfx_PacketNext` |
-| `MapCell_DrawUprights` `0x570210` | 1..3, 5..0xE, 0x31..0x33, 0x35..0x3E | `map_field_objects.cpp` | no | the scratchpad `0x903850..0x903858` (`DamageScratch`'s page), `Prim_VertexScratch` `0x9037A4..0x9037BC`, `MapView_ScreenXY` (by the GTE call) |
+| `MapCell_DrawUprights` `0x570210` | 1..3, 5..0xE, 0x31..0x33, 0x35..0x3E | `map_field_objects.cpp` | no | the scratchpad `0x903850..0x903858` (`SharedScratch`'s page), `Prim_VertexScratch` `0x9037A4..0x9037BC`, `MapView_ScreenXY` (by the GTE call) |
 | `MapCell_DrawDiagonalWall` `0x570530` | 4, 0x34 | `map_field_objects.cpp` | no | — |
 | **`MapCell_DrawRising`** `0x570660` | **0xF** | `map_cells.cpp` | **8 a cell** | `Prim_VertexScratch` `0x9037A2..0x9037BC` |
 | `MapCell_DrawFrames` `0x570870` | 0x10 | `field_e2.cpp` | no | — |
@@ -214,7 +214,7 @@ from our generator.
   band cell skips the patch, and the original cell applies it when the
   original walk arrives. That is a logic change in the other direction, so
   it is the owner's call.
-- **The scratchpad `0x903850..0x90385F`** (`DamageScratch` `0x903850`,
+- **The scratchpad `0x903850..0x90385F`** (`SharedScratch` `0x903850`,
   `Scratch_Swap` `0x90385C`; PSX `0x1F800000`). `MapCell_DrawUprights`
   writes `+0`, `+4` and `+8` for each cell. After a row whose last cell is a
   band cell, the words hold that cell's values, not the last original cell's.
@@ -236,7 +236,7 @@ reaches band columns under the lowered inset. It writes:
 - `DrawTable` entries, whose byte count wraps at 256;
 - `MapView_BuildFlags` bit 0. `AreaMap_DrawBackdrop` `0x571BE0` reads it,
   and that is a draw gate;
-- `MapView_CornerPtr` and `DamageScratch`'s byte;
+- `MapView_CornerPtr` and `SharedScratch`'s byte;
 - `Scratch_Swap`.
 
 None of these is a `Rand` call (`reach_build.txt`: no `Rand` under

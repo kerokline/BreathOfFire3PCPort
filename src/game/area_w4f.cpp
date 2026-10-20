@@ -387,7 +387,7 @@ extern "C" void __cdecl Area192_Init(void) {
     }
     for (unsigned k = 0; k < at::kPlaceOpCount; ++k) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(DamageScratch_addr), slot);
+        SetWord(Mem(SharedScratch_addr), slot);
         if (slot == 0xFF) continue;
         const U ops = static_cast<U>(Long(Mem(Area192_PlaceOps_addr + set * 4u)));
         AH_CALL(EventOp_0x)(Mem(ops + k * at::kPlaceOpStride));
@@ -871,7 +871,7 @@ extern "C" void __cdecl Area198_SpawnDrops(void) {
 extern "C" void __cdecl Area198_SpawnDrop(void) {
     unsigned char* const self = Sprite_Current;
     const unsigned char slot = AH_CALL(Sprite_FindFree)();
-    SetWord(Mem(DamageScratch_addr), slot);
+    SetWord(Mem(SharedScratch_addr), slot);
     if (slot != 0xFF) {
         AH_CALL(EventOp_0x)(Mem(Area198_DropOp_addr));
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, 0);

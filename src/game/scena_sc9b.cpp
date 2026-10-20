@@ -181,9 +181,9 @@ unsigned char SpawnCamera(std::int32_t x, bool x_from_angle, std::int32_t z, boo
 }
 // Kind 0x61's record: +0 = 1, +5 = 0x61, +6, +7.
 void Spawn61(unsigned char b6, unsigned char b7) {
-    const unsigned char slot = Spawn(DamageScratch_addr, 0x61);
+    const unsigned char slot = Spawn(SharedScratch_addr, 0x61);
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect(DamageScratch.b_00);
+    unsigned char* const e = Effect(SharedScratch.b_00);
     e[6] = b6;
     e[7] = b7;
 }
@@ -308,7 +308,7 @@ unsigned char StepHook9(std::int32_t x, std::int32_t z) {
     }
     if (!Near(zc, 0x3C, 5) || !Near(xc, 0x22, 4)) return 0;
     const unsigned char b = ObjTrio[0].direction;
-    DamageScratch.b_00 = b;
+    SharedScratch.b_00 = b;
     if (b == 6 || b == 5 || b == 4) return 0;
     if (LeaderKind() == 2) {
         if (Flag(0x20)) return 0;
@@ -1265,8 +1265,8 @@ SC9B_EXPORT void __cdecl Scena10_Run1(void) {
         return;
     case 0xB: {
         if (Counter(0) != 9) return;
-        if (Spawn(DamageScratch_addr, 0x20) != 0xFF) {
-            unsigned char* const e = Effect(DamageScratch.b_00);
+        if (Spawn(SharedScratch_addr, 0x20) != 0xFF) {
+            unsigned char* const e = Effect(SharedScratch.b_00);
             const std::int32_t x = obj0->x;
             const std::int32_t z = obj0->z;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = x;
@@ -1314,8 +1314,8 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
     case 3: {
         if (Counter(0) != 4) return;
         if (!LoadDone()) return;
-        if (Spawn(DamageScratch_addr, 0x68) != 0xFF) {
-            unsigned char* const e = Effect(DamageScratch.b_00);
+        if (Spawn(SharedScratch_addr, 0x68) != 0xFF) {
+            unsigned char* const e = Effect(SharedScratch.b_00);
             e[1] = 0;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = 0x58000;
             *reinterpret_cast<std::int32_t*>(e + 0x38) = 0x58000;
@@ -1362,8 +1362,8 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         return;
     case 0xA: {
         if (Counter(0) != 0x10) return;
-        if (Spawn(DamageScratch_addr, 0x62) != 0xFF) {
-            unsigned char* const e = Effect(DamageScratch.b_00);
+        if (Spawn(SharedScratch_addr, 0x62) != 0xFF) {
+            unsigned char* const e = Effect(SharedScratch.b_00);
             *reinterpret_cast<std::int32_t*>(e + 0x34) = 0x380000;
             *reinterpret_cast<std::int32_t*>(e + 0x38) = 0x260000;
             *reinterpret_cast<std::int32_t*>(e + 0x3C) = 0x2800000;
@@ -1381,8 +1381,8 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         return;
     case 0xC: {
         if (Counter(0) != 0x13) return;
-        if (Spawn(DamageScratch_addr, 0x69) != 0xFF) {
-            unsigned char* const e = Effect(DamageScratch.b_00);
+        if (Spawn(SharedScratch_addr, 0x69) != 0xFF) {
+            unsigned char* const e = Effect(SharedScratch.b_00);
             const std::int32_t x = member0->x;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = x;
             const std::int32_t z = member0->z;
@@ -1428,8 +1428,8 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         return;
     case 0x13: {
         if (Counter(0) != 0x16) return;
-        if (Spawn(DamageScratch_addr, 0x64) != 0xFF) {
-            unsigned char* const e = Effect(DamageScratch.b_00);
+        if (Spawn(SharedScratch_addr, 0x64) != 0xFF) {
+            unsigned char* const e = Effect(SharedScratch.b_00);
             *reinterpret_cast<std::int32_t*>(e + 0x64) = member0->x;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = member0->x;
             *reinterpret_cast<std::int32_t*>(e + 0x68) = member0->z;
@@ -1868,8 +1868,8 @@ SC9B_EXPORT void __cdecl Scena10_Run12(void) {
         W(at::kKind2ZHigh) = static_cast<std::uint16_t>(W(at::kKind2ZHigh) + 7);
         SetFE(1);
         MoveScript_F3Divisor = static_cast<std::uint16_t>(speed << 3);
-        if (Spawn(DamageScratch_addr, 0x13) != 0xFF) {
-            unsigned char* const e = Effect(DamageScratch.b_00);
+        if (Spawn(SharedScratch_addr, 0x13) != 0xFF) {
+            unsigned char* const e = Effect(SharedScratch.b_00);
             *reinterpret_cast<std::int32_t*>(e + 0x64) = -0x3B4;
             *reinterpret_cast<std::int32_t*>(e + 0x68) = AngleY();
             *reinterpret_cast<std::int32_t*>(e + 0x6C) = 0x2A6;
@@ -1890,8 +1890,8 @@ SC9B_EXPORT void __cdecl Scena10_Run12(void) {
         const unsigned speed = Field_MoveSpeeds[3];
         W(at::kKind2ZHigh) = static_cast<std::uint16_t>(W(at::kKind2ZHigh) - 7);
         MoveScript_F3Divisor = static_cast<std::uint16_t>(speed << 3);
-        if (Spawn(DamageScratch_addr, 0x13) != 0xFF) {
-            unsigned char* const e = Effect(DamageScratch.b_00);
+        if (Spawn(SharedScratch_addr, 0x13) != 0xFF) {
+            unsigned char* const e = Effect(SharedScratch.b_00);
             *reinterpret_cast<std::int32_t*>(e + 0x64) = -0x2AA;
             *reinterpret_cast<std::int32_t*>(e + 0x68) = AngleY();
             *reinterpret_cast<std::int32_t*>(e + 0x6C) = 0x200;
@@ -2046,7 +2046,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
 // to the word 0x903850; on one, EventOp_0x(Scena10_SpriteScript).
 SC9B_EXPORT void __cdecl Scena10_SpriteOp(void) {
     const unsigned char v = SH_AT(ByteFn, at::kSpriteFindFree)();
-    DamageScratch.w_00 = v;
+    SharedScratch.w_00 = v;
     if (v == 0xFF) return;
     SH_CALL(EventOp_0x)(reinterpret_cast<const unsigned char*>(Scena10_SpriteScript_addr));
 }
@@ -2284,7 +2284,7 @@ SC9B_EXPORT unsigned char __cdecl Scena10_StepHook(int x, int z) {
         if (FD() != 0) return 0;
         if (Near(zc, 0x3C, 5) && Near(xc, 0x22, 4)) {
             const unsigned char b = ObjTrio[0].direction;
-            DamageScratch.b_00 = b;
+            SharedScratch.b_00 = b;
             if (b != 6 && b != 5 && b != 4) {
                 if (SH_CALL(Scena07_PartyHas89State2)() == 0) {
                     SetCounter(0, 0x10);
@@ -2331,7 +2331,7 @@ SC9B_EXPORT unsigned char __cdecl Scena10_StepHook(int x, int z) {
     if (Area() != 0x80) return 0;
     if (FD() == 0 && Flag(0xB) && !Flag(0xE) && z == 0x118000 && Near(xc, 0x18, 5)) {
         const unsigned char b = ObjTrio[0].direction;
-        DamageScratch.b_00 = b;
+        SharedScratch.b_00 = b;
         if (b == 0 || b == 1 || b == 2) {
             Set40();
             SetRun(4);

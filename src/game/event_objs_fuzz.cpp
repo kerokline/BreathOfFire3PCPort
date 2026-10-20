@@ -11,7 +11,7 @@
 // holding whatever it held) compared. The stand-ins record only what the real
 // callee reads of its arguments - the originals push bytes with stale upper
 // bytes - give back what the real callee leaves for the caller to read
-// (DamageScratch's slope byte, ax, al), and now and then disturb what the
+// (SharedScratch's slope byte, ax, al), and now and then disturb what the
 // caller reads again after the call: Sprite_Current and Field_State (each
 // swapped between two buffers), their fields, the flag bytes.
 #include <cstdint>
@@ -120,11 +120,11 @@ void Disturb() {
 void __cdecl StubJumpSetUp() { Record(1); Disturb(); }
 void __cdecl StubJumpCamera() { Record(2); }
 void __cdecl StubJumpStart() { Record(3); }
-// 0x5725C0: the slope byte in DamageScratch is what its callers test.
+// 0x5725C0: the slope byte in SharedScratch is what its callers test.
 long __cdecl StubSlope(long x, long z, unsigned direction) {
     Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction & 0xFF);
     const std::uint32_t h = Hash();
-    At(DamageScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 24);
+    At(SharedScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 24);
     Disturb();
     return static_cast<long>(Hash(1));
 }
@@ -387,16 +387,16 @@ std::uint32_t Run(const void* fn, const Clone& c, const Args& x) {
 }
 
 // --- the state a round compares ---------------------------------------------------
-// One block from DamageScratch through the 256th actor record's equipment
+// One block from SharedScratch through the 256th actor record's equipment
 // bytes: the slope byte, Field_ScriptFlags, every record an index byte can
 // name (0x903A70 + 255 * 0xA4 + 0x18), the party list and its 256-byte reach,
 // MoveScript_FAWord, Field_InputFlags, Field_ScriptFlags2, the Field_State
 // pointer and Field_Kind2Z / X. Then Sprite_Current, MoveScript_F3Divisor and
 // Gfx_ClutStripDirty; and, for the one function each that writes them, the
 // 256 CLUTs of row 15 and 256 effect objects (a whole index byte's reach).
-// kBlockAt: now DamageScratch (symbols.toml).
+// kBlockAt: now SharedScratch (symbols.toml).
 constexpr std::uint32_t kBlockEnd = 0x903A70 + 255 * kRecordSize + 0x18;
-constexpr unsigned kBlock = kBlockEnd - DamageScratch_addr, kClutBytes = 256 * 64, kEffectBytes = 256 * 0x80;
+constexpr unsigned kBlock = kBlockEnd - SharedScratch_addr, kClutBytes = 256 * 64, kEffectBytes = 256 * 0x80;
 // kGlobalsAt: now Sprite_Current (symbols.toml).
 // kEffectsAt: now Effect_Objects (symbols.toml). Effect_Objects
 constexpr unsigned kGlobals = 12;
@@ -411,7 +411,7 @@ struct State {
     Log log;
 };
 void Capture(State& s, unsigned k) {
-    std::memcpy(s.block, At(DamageScratch_addr), kBlock);
+    std::memcpy(s.block, At(SharedScratch_addr), kBlock);
     std::memcpy(s.globals, At(Sprite_Current_addr), kGlobals);
     if (k == kShadeBegin) std::memcpy(s.clut, At(Gfx_ClutStrip_addr + 0x1e00), kClutBytes);
     if (k == kBit80) std::memcpy(s.effects, At(Effect_Objects_addr), kEffectBytes);
@@ -420,7 +420,7 @@ void Capture(State& s, unsigned k) {
     s.log = g_log;
 }
 void Apply(const State& s, unsigned k) {
-    std::memcpy(At(DamageScratch_addr), s.block, kBlock);
+    std::memcpy(At(SharedScratch_addr), s.block, kBlock);
     std::memcpy(At(Sprite_Current_addr), s.globals, kGlobals);
     if (k == kShadeBegin) std::memcpy(At(Gfx_ClutStrip_addr + 0x1e00), s.clut, kClutBytes);
     if (k == kBit80) std::memcpy(At(Effect_Objects_addr), s.effects, kEffectBytes);
@@ -475,7 +475,7 @@ Args Generate(unsigned k, State& input) {
     if (k == kBit80 && OneIn(2)) g_field[0][0x124] = 1;
     Sprite_Current = g_sprite[0];
     Field_State = g_field[0];
-    unsigned char* const scratch = At(DamageScratch_addr);
+    unsigned char* const scratch = At(SharedScratch_addr);
     for (unsigned i = 0; i < 4; ++i) scratch[i] = static_cast<unsigned char>(OneIn(2) ? 0 : Next());
     Field_ScriptFlags = static_cast<unsigned short>(Next() & (OneIn(2) ? 0xFBFFu : 0xFFFFu));
     if (OneIn(3)) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFF7u);

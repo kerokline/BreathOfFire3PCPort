@@ -101,7 +101,7 @@ own clone in the fuzz.
   nothing that way, two on; when nothing there either, back to the first turn.
   Then one step ahead in `+8`: `MapView_GroundAt` there less the height word
   (re-read after the call) as a short is **the rise**, and `MapView_SlopeAt`
-  there with the direction re-read after the ground; `DamageScratch`'s flag set
+  there with the direction re-read after the ground; `SharedScratch`'s flag set
   and the rise above 0x40 - the pose 0x46 and `+2` one on; otherwise `+0x2B` =
   1, the side probes in directions 3 and 5 inline (`PartyAction_SideProbes`'
   code), `Sound_PlayEffect(+0x2C + 0x100)`, the pose 0x42 and `+0xA` = 5.
@@ -238,7 +238,7 @@ standard rows):
 | `PartyAction_SideProbes`, `Field_JumpStart` | - | garbage |
 | `Effect_SpawnAtCellHigh`, `Effect_SpawnAtCell` | the state's byte, x and z 16 bits | garbage |
 | `MapView_GroundAt` | whole | ax the height word + 0, +-1, 0x40, 0x41, 0x3F, 0x7FFF, 0x8000, 0x8041, or random |
-| `MapView_SlopeAt` | whole, whole, the direction byte | `DamageScratch`'s flag 0 a third of the time; ax around 0x40 and the s16 limits |
+| `MapView_SlopeAt` | whole, whole, the direction byte | `SharedScratch`'s flag 0 a third of the time; ax around 0x40 and the s16 limits |
 | `Sprite_EnsureAnimation`, `Sprite_TurnSense`, `Sprite_FlashClut` | the byte | `kFlag` / garbage |
 | `Sound_PlayEffect`, `Msg_OpenSystem` | 16 bits | garbage |
 | `Sprite_ObjectAt` | whole | al 0xFF half the time, else 0..0x21 |
@@ -280,7 +280,7 @@ random upper halves, half the time.
 Sprite_Current's direction, `+9` / `+0xA`, `+0xB` (below 20), `+7`, the form
 word, x or z, the height word; `Field_State +0x89` / `+0x138`;
 `Field_InputFlags` bit 1 or 2 (the pickups read it after the first draw);
-`DamageScratch`'s flag; a dword of `Field_DirectionSteps`; an effect record's
+`SharedScratch`'s flag; a dword of `Field_DirectionSteps`; an effect record's
 in-use byte. The harness's own moves Sprite_Current among the sprite records
 and its state bytes.
 

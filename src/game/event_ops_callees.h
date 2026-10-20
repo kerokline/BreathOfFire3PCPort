@@ -62,8 +62,8 @@ constexpr std::uint32_t kStepSounds = 0x660960;      // u16 per byte 0x903851
 constexpr std::uint32_t kSwapKinds = 0x660A34;       // three bytes Party_CanSwap looks a member's +2 up in
 constexpr std::uint32_t kFacingPose = 0x660A38;      // u8 per Field_State +0x89
 constexpr std::uint32_t kChapterHooks = 0x662C80;    // a record pointer per chapter (Cond_ByteFA): +8 step, +0xC arrive
-// The scratch words (DamageScratch 0x903850 and after, PSX 0x1F800000).
-// kScratch: now DamageScratch (symbols.toml). u16 / u8: the count, a found cell's x, the slope flag
+// The scratch words (SharedScratch 0x903850 and after, PSX 0x1F800000).
+// kScratch: now SharedScratch (symbols.toml). u16 / u8: the count, a found cell's x, the slope flag
 constexpr std::uint32_t kScratch2 = 0x903852;        // u16: a found cell's z, the animation bank
 constexpr std::uint32_t kCellX = 0x903854;           // u16 each: the step's target cell
 constexpr std::uint32_t kCellZ = 0x903856;

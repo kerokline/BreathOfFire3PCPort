@@ -41,7 +41,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlay keeps its working values in: DamageScratch's words
+// The scratch the overlay keeps its working values in: SharedScratch's words
 // (0x903850..0x90385F) and the three SVECTORs of Prim_VertexScratch
 // (0x9037A0..0x9037B7). Both are read again after every call, as the
 // originals read them.
@@ -58,10 +58,10 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* M() { return SuddenDeath_CurrentMote; }
 unsigned char* MoteAt(unsigned i) { return SuddenDeath_Motes + i * kMoteStride; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(DamageScratch_addr + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(DamageScratch_addr + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(DamageScratch_addr + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 

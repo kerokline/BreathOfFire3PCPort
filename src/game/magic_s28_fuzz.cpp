@@ -132,7 +132,7 @@ unsigned g_k;
 // --- the state -------------------------------------------------------------------
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
-// kScratch: now DamageScratch (symbols.toml).
+// kScratch: now SharedScratch (symbols.toml).
 // kMotePool: now BreathMote_Pool (symbols.toml).
 // kBoltPool: now ThunderPool (symbols.toml).
 constexpr unsigned kMotes = 90, kBolts = 64;
@@ -149,7 +149,7 @@ std::uint32_t K(const void* p) { return static_cast<std::uint32_t>(reinterpret_c
 template <typename F> std::uint32_t KeyOf(F f) { return K(reinterpret_cast<const void*>(f)); }
 
 const mh::Region kRegions[] = {
-    {DamageScratch_addr, 0x10},
+    {SharedScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {BreathMote_Pool_addr, kMotes * 0x84},       // BreathMote_Pool
@@ -379,7 +379,7 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 8) & 0xFF;
     switch ((h >> 16) % 6) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: case 2: SetWord(mh::Mem(DamageScratch_addr + 2 * (v % 8)), h >> 20); break;
+    case 1: case 2: SetWord(mh::Mem(SharedScratch_addr + 2 * (v % 8)), h >> 20); break;
     case 3: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 2)), h >> 20); break;
     case 4: mh::Mem(BreathMote_Angles_addr + v % 8)[0] = static_cast<unsigned char>(h >> 24); break;
     default: {

@@ -42,9 +42,9 @@ constexpr std::uint32_t kSlotChance = 0x669CB0;     // Encounter_SlotChance: u8 
 // kDirSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: two longs a direction, 8 rows, read unchecked
 // ObjTrio's first member, +0x137 (the leader's); Member_EffectState waits while it is 8.
 constexpr std::uint32_t kLeader137 = 0x802E77;
-// The scratch bytes (DamageScratch, PSX 0x1F800000): byte 0 is AreaMap_Slope's
+// The scratch bytes (SharedScratch, PSX 0x1F800000): byte 0 is AreaMap_Slope's
 // "sloped" flag, left there by MapView_SlopeAt.
-// kScratch: now DamageScratch (symbols.toml).
+// kScratch: now SharedScratch (symbols.toml).
 // Sprite_Objects' / Sprite_ObjectsExtra's byte +0x80 (bit 0 "touched").
 // kObjectFlag: now Sprite_Objects[0x80] (symbols.toml).
 // kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml).

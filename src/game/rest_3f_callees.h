@@ -24,10 +24,10 @@ constexpr rdata::Const kTrailHalfY{0x5C41C0};     // ... and across y (float)
 // --- cells -------------------------------------------------------------------------------
 constexpr std::uint32_t kCounter = 0x903848;        // the chapter's count (a byte compared)
 // EffectKind69_DrawLines' working cells: the relocated PSX scratchpad
-// (DamageScratch) +0, +4, +8 and Scratch_Swap (+0xC)
-// kLineAmp: now DamageScratch (symbols.toml). the wave's amplitude, a dword
-constexpr std::uint32_t kLineAngle = DamageScratch_addr + 4;    // the angle, a dword
-constexpr std::uint32_t kLineShade = DamageScratch_addr + 8;    // the next shade, a dword (its byte read)
+// (SharedScratch) +0, +4, +8 and Scratch_Swap (+0xC)
+// kLineAmp: now SharedScratch (symbols.toml). the wave's amplitude, a dword
+constexpr std::uint32_t kLineAngle = SharedScratch_addr + 4;    // the angle, a dword
+constexpr std::uint32_t kLineShade = SharedScratch_addr + 8;    // the next shade, a dword (its byte read)
 // Kind 0x9E's wall vector (three longs): its state 2 writes the negated
 // half-extent, its state 3 bounces the third between +/- the record's +0x14.
 // k9EWall: now Rest3f_9EWall (symbols.toml).

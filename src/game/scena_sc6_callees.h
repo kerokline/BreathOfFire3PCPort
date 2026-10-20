@@ -53,7 +53,7 @@ constexpr std::uint32_t kStep = 0x8034E5;       // u8: the scene's step
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: run 1's count-down
 // kCameraDistance: now Camera_Distance (symbols.toml). u16 Camera_Distance
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
-// kEffectSlot: now DamageScratch (symbols.toml). u8: the effect slot just taken
+// kEffectSlot: now SharedScratch (symbols.toml). u8: the effect slot just taken
 // kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to the flag calls as a literal
 // kSelector: now AreaW0b_PartySet (symbols.toml). Cond_Flags + 0x19C: & 0x7F picks the call-table entries

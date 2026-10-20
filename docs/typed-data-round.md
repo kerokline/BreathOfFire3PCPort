@@ -481,7 +481,7 @@ no raw site converted. The record is
   `+0x104`), `BattleWindow` and `ItemListWindow`, `EffectWork` (the kinds'
   own words at `+0xC`, `+0x10`, `+0x2E`, `+0x30`).
 - **New families:** `CharRecord` with `CharStatBlock`, `EncounterSlot`,
-  `CommunityRecord`, `CommunityBuilding`, `DamageScratch` (three views by
+  `CommunityRecord`, `CommunityBuilding`, `SharedScratch` (three views by
   offset over the relocated PSX scratchpad: its readers give no offset one
   meaning), base stat names in `PartyMember` and `BattleEnemy`; in two new
   headers, the GPU packets and `SVector` (`records_gpu.h`) and eight effect

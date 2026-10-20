@@ -86,7 +86,7 @@ void Disturb() {
     case 3: s[0xB] = static_cast<unsigned char>(v % 20); break;
     case 4: s[0xA] = static_cast<unsigned char>(v % 3); break;
     case 5: Field_Request = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 6: At(DamageScratch_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 6: At(SharedScratch_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 7: Field_State = Member(v); break;
     case 8: At(ObjTrio_addr + 0x137)[0] = static_cast<unsigned char>(v % 2 ? 8 : v); break;
     case 9: At(FieldHidden_Facing_addr)[0] = static_cast<unsigned char>(v % 3 ? v % 4 : v); break;
@@ -131,7 +131,7 @@ std::uint32_t __cdecl StubTargetAhead() {
 long __cdecl StubSlope(long x, long z, unsigned long d) {
     Record(7, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), d & 0xFF);
     const std::uint32_t h = Hash();
-    At(DamageScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : (h >> 4) | 1);
+    At(SharedScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : (h >> 4) | 1);
     Disturb();
     static const std::uint32_t kEdges[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0x10040, 0xFFFF0041u, 0xFFFFFFFFu, 0x8041};
     const std::uint32_t k = Hash();

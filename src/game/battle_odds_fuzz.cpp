@@ -71,7 +71,7 @@ bool OneIn(U n) { return Next() % n == 0; }
 // --- addresses ------------------------------------------------------------------------
 const U kSprite = at::Sprite_CurrentAt();       // 0x937F88
 const U kTints = at::TintRecordsAt();           // 0x7E0700
-const U kScratch = DamageScratch_addr;   // 0x903850
+const U kScratch = SharedScratch_addr;   // 0x903850
 // kWindows: now WindowRecords (symbols.toml). WindowRecords 0..4
 constexpr U kWindowBytes = 5 * 0x24;
 constexpr U kTintBytes = 0xC00;
@@ -122,14 +122,14 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 
 // Every game region any test touches, saved once and put back at the end.
 const Region g_all[] = {
-    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {DamageScratch_addr, 1},       {WindowRecords_addr, kWindowBytes},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {SharedScratch_addr, 1},       {WindowRecords_addr, kWindowBytes},
     {BattleDamage_Result_addr, 4},        {kTarget, 1},     {kActing, 4},      {BattleOdds_ActorObject_addr, 4},   {kFlagTarget, 1},
     {kRoundFlags, 4},    {kSprite, 4},     {kTints, kTintBytes},
 };
 
 // Every region a function could write, the game's and the fuzz's.
 const Region g_writes[] = {
-    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60},  {BattleMisc_BannerKinds_addr, 1}, {DamageScratch_addr, 1},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60},  {BattleMisc_BannerKinds_addr, 1}, {SharedScratch_addr, 1},
     {WindowRecords_addr, kWindowBytes}, {BattleDamage_Result_addr, 4}, {kRoundFlags, 4},  {BattleOdds_ActorObject_addr, 4},
     {kSprite, 4},        {kTints, kTintBytes}, {0, sizeof g_objects}, {0, sizeof g_results},
 };
@@ -330,7 +330,7 @@ void RandomBanner() {
     FillRandom(kBanners, 0x60);
     FillRandom(WindowRecords_addr, kWindowBytes);
     At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 4, 0xFF}) : Next());
-    At(DamageScratch_addr)[0] = static_cast<unsigned char>(Next());
+    At(SharedScratch_addr)[0] = static_cast<unsigned char>(Next());
     const U entry = kBanners + (Next() % 8) * 0xC;
     PutLong(At(BattleMisc_BannerCurrent_addr), entry);
     At(entry + 1)[0] = static_cast<unsigned char>(Next() % 3 ? Pick({1, 2, 0, 3, 4}) : Next());

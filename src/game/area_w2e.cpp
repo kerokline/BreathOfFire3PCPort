@@ -740,7 +740,7 @@ extern "C" void __cdecl Area104_LeaderStep(void) {
     if ((Field_InputFlags & 1) != 0) {
         const auto cell = [] { return AH_CALL(AreaMap_ByteAt)(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole)); };
         if (cell() == 0xAF) {
-            AH_CALL(Field_ChangeArea)(AreaW0b_Place, DamageScratch.d_10, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
+            AH_CALL(Field_ChangeArea)(AreaW0b_Place, SharedScratch.d_10, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
             Area_EnterTransition = 0xC;
             return;
@@ -1341,7 +1341,7 @@ extern "C" unsigned char __cdecl Area105_StepHook(U, U z) {
     if (Cond_ByteFA >= 0xA) return 0;
     if (Cond_ByteFD != 0) return 0;
     const unsigned char facing = ObjTrio[0].direction;
-    DamageScratch.b_00 = facing;
+    SharedScratch.b_00 = facing;
     if (facing == 0 || facing == 1 || facing == 2) return 0;
     if (static_cast<std::int16_t>(z >> 16) <= 0x1D) return 0;
     Set40();

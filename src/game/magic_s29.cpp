@@ -146,9 +146,9 @@ void Project4(unsigned char* p) {
 }
 // Three colour bytes from the scratch words' low bytes (red, green, blue).
 void Shade3(unsigned char* p) {
-    p[0] = SB(DamageScratch_addr + 0x6);
-    p[1] = SB(DamageScratch_addr + 0x8);
-    p[2] = SB(DamageScratch_addr + 0xa);
+    p[0] = SB(SharedScratch_addr + 0x6);
+    p[1] = SB(SharedScratch_addr + 0x8);
+    p[2] = SB(SharedScratch_addr + 0xa);
 }
 void Fill3(unsigned char* p, unsigned char v) { p[0] = p[1] = p[2] = v; }
 
@@ -290,9 +290,9 @@ namespace {
 // colour byte +0x5D / +0x5E / +0x5F times the brightness +9.
 void BeamColours() {
     const unsigned char* const s = Sc();
-    Put(DamageScratch_addr + 0x6, Mul(static_cast<signed char>(s[0x5D]), s[9]));
-    Put(DamageScratch_addr + 0x8, Mul(static_cast<signed char>(s[0x5E]), s[9]));
-    Put(DamageScratch_addr + 0xa, Mul(static_cast<signed char>(s[0x5F]), s[9]));
+    Put(SharedScratch_addr + 0x6, Mul(static_cast<signed char>(s[0x5D]), s[9]));
+    Put(SharedScratch_addr + 0x8, Mul(static_cast<signed char>(s[0x5E]), s[9]));
+    Put(SharedScratch_addr + 0xa, Mul(static_cast<signed char>(s[0x5F]), s[9]));
 }
 
 }  // namespace
@@ -305,14 +305,14 @@ void BeamColours() {
 S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
     DrawMode(0x35);
     Commit(5, 0xC);
-    Put(DamageScratch_addr, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
+    Put(SharedScratch_addr, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(DamageScratch_addr)));
+        Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(SharedScratch_addr)));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 0x10 + 2, Mul12(c, SS(DamageScratch_addr)));
+        Put(Prim_VertexScratch_addr + 0x10 + 2, Mul12(c, SS(SharedScratch_addr)));
     }
     BeamColours();
     for (int a = 0x100; a < 0x1100; a += 0x100) {
@@ -324,10 +324,10 @@ S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
         Put(Prim_VertexScratch_addr + 0x8 + 2, y);
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(DamageScratch_addr)));
+            Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(SharedScratch_addr)));
         }
         const int c = Cos(a);
-        const int ny = Mul12(c, SS(DamageScratch_addr));
+        const int ny = Mul12(c, SS(SharedScratch_addr));
         unsigned char* const p = Gfx_PacketNext;
         Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
         Put(Prim_VertexScratch_addr + 0x10 + 2, ny);
@@ -351,14 +351,14 @@ S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
 // each after Gpu_SetDrawMode(.., 0x35) linked by MapView_LinkPrimAt at the
 // task's point plus the new rim point << 9 (0, 0xC), and again (0, 0x44).
 S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
-    Put(DamageScratch_addr, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
+    Put(SharedScratch_addr, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(DamageScratch_addr)));
+        Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(SharedScratch_addr)));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(DamageScratch_addr)));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(SharedScratch_addr)));
     }
     BeamColours();
     for (int a = 0x80; a < 0x1080; a += 0x80) {
@@ -372,10 +372,10 @@ S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
         Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(DamageScratch_addr)));
+            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(SharedScratch_addr)));
         }
         const int c = Cos(a);
-        const int ny = Mul12(c, SS(DamageScratch_addr));
+        const int ny = Mul12(c, SS(SharedScratch_addr));
         const std::uint16_t nx = SW(Prim_VertexScratch_addr + 0x8);
         Put(Prim_VertexScratch_addr + 0x8 + 4, -0x300);
         Put(Prim_VertexScratch_addr + 0x18, nx);
@@ -528,17 +528,17 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
         ts->work_18 = 0x200;
         rv::Store(ts->step_y, 0x80000);
         rv::Store(ts->work_20, 0x40000);
-        Put(DamageScratch_addr, static_cast<std::uint16_t>(ts->step_x));
-        Put(DamageScratch_addr + 0x4, MoteAngle(s));
+        Put(SharedScratch_addr, static_cast<std::uint16_t>(ts->step_x));
+        Put(SharedScratch_addr + 0x4, MoteAngle(s));
     }
     {
-        const int sn = Sin(SS(DamageScratch_addr + 0x4));
-        const std::int32_t v = Add(Mul12(sn, SS(DamageScratch_addr)), rv::As<records::SpriteHead>(Owner())->x);
+        const int sn = Sin(SS(SharedScratch_addr + 0x4));
+        const std::int32_t v = Add(Mul12(sn, SS(SharedScratch_addr)), rv::As<records::SpriteHead>(Owner())->x);
         rv::Current<records::BattleTask>()->x = v;
     }
     {
-        const int c = Cos(SS(DamageScratch_addr + 0x4));
-        const std::int32_t v = Add(Mul12(c, SS(DamageScratch_addr)), rv::As<records::SpriteHead>(Owner())->z);
+        const int c = Cos(SS(SharedScratch_addr + 0x4));
+        const std::int32_t v = Add(Mul12(c, SS(SharedScratch_addr)), rv::As<records::SpriteHead>(Owner())->z);
         rv::Current<records::BattleTask>()->z = v;
     }
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
@@ -570,18 +570,18 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
     unsigned char* x = nullptr;
     {
         unsigned char* const s = Sc();
-        Put(DamageScratch_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
+        Put(SharedScratch_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
         x = s + 0x34;
-        Put(DamageScratch_addr + 0x4, MoteAngle(s));
+        Put(SharedScratch_addr + 0x4, MoteAngle(s));
     }
     {
-        const int sn = Sin(SS(DamageScratch_addr + 0x4));
-        SetLong(x, Add(Long(x), Mul12(sn, SS(DamageScratch_addr))));
+        const int sn = Sin(SS(SharedScratch_addr + 0x4));
+        SetLong(x, Add(Long(x), Mul12(sn, SS(SharedScratch_addr))));
     }
     unsigned char* const z = Sc() + 0x38;
     {
-        const int c = Cos(SS(DamageScratch_addr + 0x4));
-        SetLong(z, Add(Long(z), Mul12(c, SS(DamageScratch_addr))));
+        const int c = Cos(SS(SharedScratch_addr + 0x4));
+        SetLong(z, Add(Long(z), Mul12(c, SS(SharedScratch_addr))));
     }
     {
         unsigned char* const s = Sc();
@@ -598,20 +598,20 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
 // the centre 0xF0 grey, the rim the colour bytes << 4; each linked at the
 // mote (2, 0x34).
 S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
-    Put(DamageScratch_addr, Sc()[0xA]);
+    Put(SharedScratch_addr, Sc()[0xA]);
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr, Mul12(s, SS(DamageScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+        Put(Prim_VertexScratch_addr, Mul12(s, SS(SharedScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(DamageScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+        Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(SharedScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     }
     {
         const unsigned char* const s = Sc();
-        Put(DamageScratch_addr + 0x6, Mul(static_cast<signed char>(s[0x5D]), 16));
-        Put(DamageScratch_addr + 0x8, Mul(static_cast<signed char>(s[0x5E]), 16));
-        Put(DamageScratch_addr + 0xa, Mul(static_cast<signed char>(s[0x5F]), 16));
+        Put(SharedScratch_addr + 0x6, Mul(static_cast<signed char>(s[0x5D]), 16));
+        Put(SharedScratch_addr + 0x8, Mul(static_cast<signed char>(s[0x5E]), 16));
+        Put(SharedScratch_addr + 0xa, Mul(static_cast<signed char>(s[0x5F]), 16));
     }
     for (int a = 0x200; a < 0x1200; a += 0x200) {
         unsigned char* const p = Gfx_PacketNext;
@@ -626,12 +626,12 @@ S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
         }
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr, Mul12(s, SS(DamageScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            Put(Prim_VertexScratch_addr, Mul12(s, SS(SharedScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
             PutFloat(p + 0x28, SS(Prim_VertexScratch_addr));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(DamageScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(SharedScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             Fill3(p + 4, 0xF0);
             PutFloat(p + 0x2C, SS(Prim_VertexScratch_addr + 2));
             Shade3(p + 0x14);
@@ -648,8 +648,8 @@ S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
 S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
     {
         const unsigned char* const s = Sc();
-        Put(DamageScratch_addr, s[0xA]);
-        Put(DamageScratch_addr + 0x2, s[0xA] * 2);
+        Put(SharedScratch_addr, s[0xA]);
+        Put(SharedScratch_addr + 0x2, s[0xA] * 2);
     }
     // the rim points: v0 on the outer circle, v1 on the inner, at angle a
     const auto rim = [](int a, std::uint32_t radius, std::uint32_t v) {
@@ -661,7 +661,7 @@ S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
         Put(v + 2, Mul12(c, SS(radius)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     };
     rim(0, cell::kR2, Prim_VertexScratch_addr);
-    rim(0, DamageScratch_addr, cell::kV1);
+    rim(0, SharedScratch_addr, cell::kV1);
     for (int a = 0x200; a < 0x1200; a += 0x200) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
@@ -672,22 +672,22 @@ S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
         PutFloat(p + 0x2C, SS(Prim_VertexScratch_addr + 0x8 + 2));
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr, Mul12(s, SS(DamageScratch_addr + 0x2)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            Put(Prim_VertexScratch_addr, Mul12(s, SS(SharedScratch_addr + 0x2)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
             PutFloat(p + 0x18, SS(Prim_VertexScratch_addr));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(DamageScratch_addr + 0x2)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(SharedScratch_addr + 0x2)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             PutFloat(p + 0x1C, SS(Prim_VertexScratch_addr + 2));
         }
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(DamageScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(SharedScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
             PutFloat(p + 0x38, SS(Prim_VertexScratch_addr + 0x8));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(DamageScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(SharedScratch_addr)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             Fill3(p + 4, 1);
             Fill3(p + 0x14, 1);
             PutFloat(p + 0x3C, SS(Prim_VertexScratch_addr + 0x8 + 2));
@@ -814,18 +814,18 @@ S29_EXPORT void __cdecl ShadowOrb_DrawDisc(void) {
     Commit(5, 0xC);
     {
         const unsigned char* const s = Sc();
-        Put(DamageScratch_addr, s[0xA] * 2);
-        Put(DamageScratch_addr + 0x6, s[9] * 12);
-        Put(DamageScratch_addr + 0x8, s[9] * 12);
-        Put(DamageScratch_addr + 0xa, s[9] * 12);
+        Put(SharedScratch_addr, s[0xA] * 2);
+        Put(SharedScratch_addr + 0x6, s[9] * 12);
+        Put(SharedScratch_addr + 0x8, s[9] * 12);
+        Put(SharedScratch_addr + 0xa, s[9] * 12);
     }
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(DamageScratch_addr)));
+        Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(SharedScratch_addr)));
     }
     {
         const int c = Cos(0);
-        const int y = Mul12(c, SS(DamageScratch_addr));
+        const int y = Mul12(c, SS(SharedScratch_addr));
         Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
         Put(Prim_VertexScratch_addr + 0x10 + 2, y);
         Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
@@ -843,11 +843,11 @@ S29_EXPORT void __cdecl ShadowOrb_DrawDisc(void) {
         Put(Prim_VertexScratch_addr + 0x8 + 2, y);
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(DamageScratch_addr)));
+            Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(SharedScratch_addr)));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x10 + 2, Mul12(c, SS(DamageScratch_addr)));
+            Put(Prim_VertexScratch_addr + 0x10 + 2, Mul12(c, SS(SharedScratch_addr)));
         }
         Project3(p);
         Shade3(p + 4);
@@ -866,19 +866,19 @@ namespace {
 void OrbRing(bool shade_first) {
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(DamageScratch_addr + 0x2)));
+        Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(SharedScratch_addr + 0x2)));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(DamageScratch_addr + 0x2)));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(SharedScratch_addr + 0x2)));
     }
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x18, Mul12(s, SS(DamageScratch_addr)));
+        Put(Prim_VertexScratch_addr + 0x18, Mul12(s, SS(SharedScratch_addr)));
     }
     {
         const int c = Cos(0);
-        const int y = Mul12(c, SS(DamageScratch_addr));
+        const int y = Mul12(c, SS(SharedScratch_addr));
         Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
         Put(Prim_VertexScratch_addr + 0x18 + 2, y);
         Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
@@ -899,19 +899,19 @@ void OrbRing(bool shade_first) {
         Put(Prim_VertexScratch_addr + 0x10 + 2, y3);
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(DamageScratch_addr + 0x2)));
+            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(SharedScratch_addr + 0x2)));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(DamageScratch_addr + 0x2)));
+            Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(SharedScratch_addr + 0x2)));
         }
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x18, Mul12(s, SS(DamageScratch_addr)));
+            Put(Prim_VertexScratch_addr + 0x18, Mul12(s, SS(SharedScratch_addr)));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x18 + 2, Mul12(c, SS(DamageScratch_addr)));
+            Put(Prim_VertexScratch_addr + 0x18 + 2, Mul12(c, SS(SharedScratch_addr)));
         }
         Project4(p);
         if (shade_first) {
@@ -937,14 +937,14 @@ void OrbRing(bool shade_first) {
 S29_EXPORT void __cdecl ShadowOrb_DrawRim(void) {
     DrawMode(0x35);
     Commit(5, 0xC);
-    Put(DamageScratch_addr, Sc()[0xA] * 2);
+    Put(SharedScratch_addr, Sc()[0xA] * 2);
     const std::uint32_t r = RandCall();
     {
         const unsigned char* const s = Sc();
-        Put(DamageScratch_addr + 0x2, (r & 3) + s[0xA] * 3u);
-        Put(DamageScratch_addr + 0x6, s[9] * 15);
-        Put(DamageScratch_addr + 0x8, s[9] * 4);
-        Put(DamageScratch_addr + 0xa, s[9] * 15);
+        Put(SharedScratch_addr + 0x2, (r & 3) + s[0xA] * 3u);
+        Put(SharedScratch_addr + 0x6, s[9] * 15);
+        Put(SharedScratch_addr + 0x8, s[9] * 4);
+        Put(SharedScratch_addr + 0xa, s[9] * 15);
     }
     OrbRing(false);
 }
@@ -957,11 +957,11 @@ S29_EXPORT void __cdecl ShadowOrb_DrawBand(void) {
     Commit(5, 0xC);
     {
         const unsigned char* const s = Sc();
-        Put(DamageScratch_addr, s[0xA]);
-        Put(DamageScratch_addr + 0x2, s[0xA] * 2);
-        Put(DamageScratch_addr + 0x6, s[9] * 15);
-        Put(DamageScratch_addr + 0x8, s[9] * 4);
-        Put(DamageScratch_addr + 0xa, s[9] * 15);
+        Put(SharedScratch_addr, s[0xA]);
+        Put(SharedScratch_addr + 0x2, s[0xA] * 2);
+        Put(SharedScratch_addr + 0x6, s[9] * 15);
+        Put(SharedScratch_addr + 0x8, s[9] * 4);
+        Put(SharedScratch_addr + 0xa, s[9] * 15);
     }
     OrbRing(true);
 }
@@ -1009,9 +1009,9 @@ S29_EXPORT void __cdecl ShadowGlow_Grow(void) {
 S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
     {
         const unsigned char* const s = Sc();
-        Put(DamageScratch_addr, 0x28);
-        Put(DamageScratch_addr + 0x2, s[9]);
-        Put(DamageScratch_addr + 0x4, s[0xA] << 3);
+        Put(SharedScratch_addr, 0x28);
+        Put(SharedScratch_addr + 0x2, s[9]);
+        Put(SharedScratch_addr + 0x4, s[0xA] << 3);
         Put(Scratch_Swap_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
         Put(cell::kY, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
@@ -1021,7 +1021,7 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyGT4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        const int x = SS(Scratch_Swap_addr), y = SS(cell::kY), r = SS(DamageScratch_addr), h = SS(DamageScratch_addr + 0x2);
+        const int x = SS(Scratch_Swap_addr), y = SS(cell::kY), r = SS(SharedScratch_addr), h = SS(SharedScratch_addr + 0x2);
         const int top = k == 0 ? y - h - 0x10 : y - 0x10;
         const int foot = k == 0 ? y - 0x10 : y;
         PutFloat(p + 8, x - r);
@@ -1040,7 +1040,7 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
             const unsigned c = MH_CALL(Gpu_GetClut)(0, 0x1FA);
             rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, c & 0xFFFFu);
         }
-        const auto v = [](unsigned add) { return static_cast<unsigned char>(SB(DamageScratch_addr + 0x2) + add); };
+        const auto v = [](unsigned add) { return static_cast<unsigned char>(SB(SharedScratch_addr + 0x2) + add); };
         if (k == 0) {
             p[0x14] = 8;
             p[0x15] = 8;
@@ -1060,7 +1060,7 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
             p[0x3D] = v(0x18);
             p[0x51] = v(0x18);
         }
-        const unsigned char g = SB(DamageScratch_addr + 0x4);
+        const unsigned char g = SB(SharedScratch_addr + 0x4);
         Fill3(p + 4, g);
         Fill3(p + 0x18, g);
         Fill3(p + 0x2C, k == 0 ? g : 1);
@@ -1217,14 +1217,14 @@ S29_EXPORT void __cdecl ShadowSeeker_Draw(void) {
     Commit(3, 0xC);
     {
         const unsigned char* const s = Sc();
-        Put(DamageScratch_addr + 0x4, 0);
-        Put(DamageScratch_addr, 0x18);
+        Put(SharedScratch_addr + 0x4, 0);
+        Put(SharedScratch_addr, 0x18);
         Put(Scratch_Swap_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
         Put(cell::kY, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
         const unsigned char* const c = Mem(ShadowSeeker_Colours_addr + s[0xB] * 2u);
-        Put(DamageScratch_addr + 0x6, c[0] * s[9]);
-        Put(DamageScratch_addr + 0x8, s[9]);
-        Put(DamageScratch_addr + 0xa, c[1] * s[9]);
+        Put(SharedScratch_addr + 0x6, c[0] * s[9]);
+        Put(SharedScratch_addr + 0x8, s[9]);
+        Put(SharedScratch_addr + 0xa, c[1] * s[9]);
     }
     for (int i = 0; i < 0x10; ++i) {
         unsigned char* const p = Gfx_PacketNext;
@@ -1233,21 +1233,21 @@ S29_EXPORT void __cdecl ShadowSeeker_Draw(void) {
         PutFloat(p + 8, SS(Scratch_Swap_addr));
         PutFloat(p + 0xC, SS(cell::kY));
         {
-            const int s = Sin(SS(DamageScratch_addr + 0x4));
-            PutFloat(p + 0x18, Add(Mul12(s, SS(DamageScratch_addr)), SS(Scratch_Swap_addr)));
+            const int s = Sin(SS(SharedScratch_addr + 0x4));
+            PutFloat(p + 0x18, Add(Mul12(s, SS(SharedScratch_addr)), SS(Scratch_Swap_addr)));
         }
         {
-            const int c = Cos(SS(DamageScratch_addr + 0x4));
-            PutFloat(p + 0x1C, Add(Mul12(c, SS(DamageScratch_addr)), SS(cell::kY)));
+            const int c = Cos(SS(SharedScratch_addr + 0x4));
+            PutFloat(p + 0x1C, Add(Mul12(c, SS(SharedScratch_addr)), SS(cell::kY)));
         }
-        Put(DamageScratch_addr + 0x4, (i + 1) << 8);
+        Put(SharedScratch_addr + 0x4, (i + 1) << 8);
         {
-            const int s = Sin(SS(DamageScratch_addr + 0x4));
-            PutFloat(p + 0x28, Add(Mul12(s, SS(DamageScratch_addr)), SS(Scratch_Swap_addr)));
+            const int s = Sin(SS(SharedScratch_addr + 0x4));
+            PutFloat(p + 0x28, Add(Mul12(s, SS(SharedScratch_addr)), SS(Scratch_Swap_addr)));
         }
         {
-            const int c = Cos(SS(DamageScratch_addr + 0x4));
-            PutFloat(p + 0x2C, Add(Mul12(c, SS(DamageScratch_addr)), SS(cell::kY)));
+            const int c = Cos(SS(SharedScratch_addr + 0x4));
+            PutFloat(p + 0x2C, Add(Mul12(c, SS(SharedScratch_addr)), SS(cell::kY)));
         }
         Shade3(p + 4);
         Fill3(p + 0x14, 1);
@@ -1288,12 +1288,12 @@ std::uint16_t ShadeAngle(const unsigned char* r) { return static_cast<std::uint1
 // word).
 template <typename Radius> void ShadeCircle(Radius radius) {
     {
-        const int s = Sin(static_cast<short>(SW(DamageScratch_addr + 0x4)));
+        const int s = Sin(static_cast<short>(SW(SharedScratch_addr + 0x4)));
         unsigned char* const r = Cur();
         SetLong(r + 0x10, Add(Mul(s, radius(r)), rv::As<records::SpriteHead>(Owner())->x));
     }
     {
-        const int c = Cos(SS(DamageScratch_addr + 0x4));
+        const int c = Cos(SS(SharedScratch_addr + 0x4));
         unsigned char* const r = Cur();
         SetLong(r + 0x14, Add(Mul(c, radius(r)), rv::As<records::SpriteHead>(Owner())->z));
     }
@@ -1303,7 +1303,7 @@ int SpreadRadius(const unsigned char* r) { return r[7]; }
 // The three moving steps' common middle: the angle, the point at radius +7,
 // the height +0x18 up the rise +8.
 void ShadeMove() {
-    Put(DamageScratch_addr + 0x4, ShadeAngle(Cur()));
+    Put(SharedScratch_addr + 0x4, ShadeAngle(Cur()));
     ShadeCircle(&SpreadRadius);
     unsigned char* const r = Cur();
     SetLong(r + 0x18, Add(Long(r + 0x18), Long(r + 8)));
@@ -1319,14 +1319,14 @@ S29_EXPORT void __cdecl ShadowMote_Wait(void) {
     Dec(Cur()[5]);
     const unsigned char* const r = Cur();
     if (r[5] != 0) return;
-    Put(DamageScratch_addr + 0x4, ShadeAngle(r));
-    Put(DamageScratch_addr, (r[4] >> 4) * 8 + 8);
-    ShadeCircle([](const unsigned char*) { return static_cast<int>(SS(DamageScratch_addr)); });
+    Put(SharedScratch_addr + 0x4, ShadeAngle(r));
+    Put(SharedScratch_addr, (r[4] >> 4) * 8 + 8);
+    ShadeCircle([](const unsigned char*) { return static_cast<int>(SS(SharedScratch_addr)); });
     SetLong(Cur() + 0x18, Add(rv::As<records::SpriteHead>(Owner())->height, 0x800000));
     SetLong(Cur() + 8, 0);
     Cur()[5] = 0;
     Cur()[6] = 0;
-    Cur()[7] = SB(DamageScratch_addr);
+    Cur()[7] = SB(SharedScratch_addr);
     Inc(Cur()[2]);
 }
 
@@ -1375,9 +1375,9 @@ S29_EXPORT void __cdecl ShadowMote_Fade(void) {
 S29_EXPORT void __cdecl ShadowMote_Draw(void) {
     {
         const unsigned char* const r = Cur();
-        Put(DamageScratch_addr, r[5]);
-        Put(DamageScratch_addr + 0x2, r[5] * 4);
-        Put(DamageScratch_addr + 0x4, r[6] * 6);
+        Put(SharedScratch_addr, r[5]);
+        Put(SharedScratch_addr + 0x2, r[5] * 4);
+        Put(SharedScratch_addr + 0x4, r[6] * 6);
         Put(Scratch_Swap_addr, Word(r + 0xC));
         Put(cell::kY, Word(r + 0xE));
     }
@@ -1387,7 +1387,7 @@ S29_EXPORT void __cdecl ShadowMote_Draw(void) {
     MH_CALL(Gpu_SetPolyFT4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     {
-        const int x = SS(Scratch_Swap_addr), y = SS(cell::kY), r = SS(DamageScratch_addr), h = SS(DamageScratch_addr + 0x2);
+        const int x = SS(Scratch_Swap_addr), y = SS(cell::kY), r = SS(SharedScratch_addr), h = SS(SharedScratch_addr + 0x2);
         PutFloat(p + 8, x - r);
         PutFloat(p + 0xC, y - h);
         PutFloat(p + 0x18, x + r);
@@ -1413,7 +1413,7 @@ S29_EXPORT void __cdecl ShadowMote_Draw(void) {
     p[0x35] = 0x48;
     p[0x44] = 0x68;
     p[0x45] = 0x48;
-    Fill3(p + 4, SB(DamageScratch_addr + 0x4));
+    Fill3(p + 4, SB(SharedScratch_addr + 0x4));
     LinkAtCur(0x48);
 }
 

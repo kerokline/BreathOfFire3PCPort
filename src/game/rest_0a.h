@@ -69,7 +69,7 @@ void __cdecl Effect_SpawnAtCellHigh(unsigned state, unsigned x, unsigned z);
 
 // original 0x524DA0: Sprite_Current's +0x2B = 1, then the side probes in
 // directions 3 and 5: the point one step that way; when MapView_SlopeAt there
-// is steep (DamageScratch's flag byte set and the slope's low word, signed,
+// is steep (SharedScratch's flag byte set and the slope's low word, signed,
 // above 0x40) and MapView_GroundAt there is above the sprite's height word
 // (both signed 16 bits), +0x2B = 0. Sprite_Current, its position and the two
 // steps are re-read for the second probe. No caller reads eax (14 sites).

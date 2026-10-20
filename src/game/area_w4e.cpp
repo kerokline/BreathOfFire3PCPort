@@ -119,7 +119,7 @@ short HeightAt(U x, U z) { return AH_AT(HeightFn, at::kHeightAt)(static_cast<lon
 // Area 189: the pending area change of its walk and exit button:
 // Field_ChangeArea(the area word, x, z, the flags byte) from the four cells.
 void ChangeToPending() {
-    AH_CALL(Field_ChangeArea)(Word(Mem(AreaW0b_Place_addr)), Long(Mem(DamageScratch_addr + 0x10)), Long(Mem(AreaEntry_PendingZ_addr)), B(AreaEntry_PendingFlags_addr));
+    AH_CALL(Field_ChangeArea)(Word(Mem(AreaW0b_Place_addr)), Long(Mem(SharedScratch_addr + 0x10)), Long(Mem(AreaEntry_PendingZ_addr)), B(AreaEntry_PendingFlags_addr));
 }
 // The walk's facing for the next area: Area189_FacingJitter[Rand() & 3] +
 // the leader's +8, the low nibble (Sprite_Current read after Rand).
@@ -706,7 +706,7 @@ extern "C" void __cdecl Area189_StepArrive(void) {
             cur = Cur();
         }
         SetWord(Mem(AreaW0b_Place_addr), 0x7D);
-        SetLong(Mem(DamageScratch_addr + 0x10), 0x190000);
+        SetLong(Mem(SharedScratch_addr + 0x10), 0x190000);
         SetLong(Mem(AreaEntry_PendingZ_addr), 0x190000);
         B(AreaEntry_PendingFlags_addr) = 4;
         JitterFacing();
@@ -746,7 +746,7 @@ extern "C" unsigned char __cdecl Area189_ExitButton(void) {
     B(AreaEntry_PendingFlags_addr) = 4;
     const U place = Area189_ExitPlaces_addr + e * 3;
     SetWord(Mem(AreaW0b_Place_addr), B(place));
-    SetLong(Mem(DamageScratch_addr + 0x10), static_cast<std::int32_t>(static_cast<U>(B(place + 1)) << 16));
+    SetLong(Mem(SharedScratch_addr + 0x10), static_cast<std::int32_t>(static_cast<U>(B(place + 1)) << 16));
     SetLong(Mem(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(static_cast<U>(B(place + 2)) << 16));
     const unsigned char* const cur = Cur();
     SetLong(Mem(AreaW2d_ReturnPoint_addr), rv::As<records::SpriteHead>(cur)->x);
@@ -1072,7 +1072,7 @@ extern "C" unsigned short __cdecl Area191_TalkMessageB(unsigned a, unsigned who,
 // the chapter row's flag 5, nor with story flag 0x77. Else a list k by actor
 // record 0's byte +0x1E (read first): row 14 bit 0xA clear - 2 from 9, 1 from
 // 5, else the walk count at least 5; set - 2 from 5, else the count at least
-// 5. Six times: Sprite_FindFree to the word DamageScratch; not 0xFF:
+// 5. Six times: Sprite_FindFree to the word SharedScratch; not 0xFF:
 // EventOp_0x(Area191_ObjectLists[k] + 0x11 * n).
 extern "C" void __cdecl Area191_Init(void) {
     if (Cond_ByteFA == 0xE && Test(FlagRow(), 5)) return;
@@ -1086,7 +1086,7 @@ extern "C" void __cdecl Area191_Init(void) {
     }
     for (unsigned n = 0; n < 6; ++n) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(DamageScratch_addr), slot);
+        SetWord(Mem(SharedScratch_addr), slot);
         if (slot == 0xFF) continue;
         const U list = static_cast<U>(Long(Mem(Area191_ObjectLists_addr + k * 4u)));
         AH_CALL(EventOp_0x)(Mem(list + n * at::kEventOpRecord));

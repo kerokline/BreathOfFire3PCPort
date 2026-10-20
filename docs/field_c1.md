@@ -89,7 +89,7 @@ as `EffectKind06_Ticks`: kind 0x19 is kind 6 with a drift of the words
 `EffectKind14_Start` `0x46A600` (0x1E9) and `EffectKind3C_Start` `0x46A950`
 (0x1D7) take two free sprites (`Sprite_FindFree` into `+3`, `+4`; the first
 given back when the second fails), run an event op for each with
-`DamageScratch`'s word naming it (`EventOp_6x(EffectKind14_Op)` and
+`SharedScratch`'s word naming it (`EventOp_6x(EffectKind14_Op)` and
 `Sprite_SetAnimationAt(0x61, 0xC)`, or `EventOp_0x(EffectKind3C_Op)`), put
 `Sprite_Current` back, move the two `0x1000` apart diagonally (the two kinds
 mirror each other), set their `+0` bit 5, clear `+0x5C` and tint them
@@ -114,7 +114,7 @@ both sprites and step to state 2 (`0x478160`, catalog part 7).
 | `EffectKind17_Bump` | `0x46B400` | 0xA6 | an object at the point (`Sprite_ObjectAt`: its `+0x80` bit 0) or a member other than the leader (`Party_MemberAt`: its `+2` = 1): state 4, the tick, al 1; else al 0 |
 | `EffectKind17_AlignTarget` | `0x46B4B0` | 0xC5 | `(flag)`: off a whole cell, the target `+0x18` = the next cell edge in the speed's direction (or this cell's, for a flag); state 3 |
 | `EffectKind17_BlockedAhead` | `0x46B580` | 0x33 | `_BlockedAt` two direction steps ahead (`Field_DirectionSteps[+8]`) |
-| `EffectKind17_BlockedAt` | `0x46B5C0` | 0x106 | `(x, z)`: the cell blocked, or on the axis of motion the slope at the half cell (`AreaMap_Slope`, `DamageScratch`) higher than the block, or the next cell blocked |
+| `EffectKind17_BlockedAt` | `0x46B5C0` | 0x106 | `(x, z)`: the cell blocked, or on the axis of motion the slope at the half cell (`AreaMap_Slope`, `SharedScratch`) higher than the block, or the next cell blocked |
 | `EffectKind17_CellBlocked` | `0x46B6D0` | 0xCA | `(cell x, cell z)`: no floor word; or by the map byte against the height - `0xFx` within 0x100, `0x10` / `0x2x` / `0xAx` level, anything above |
 
 ### 1.6 Kind 0x1B, kind 0x30
@@ -215,7 +215,7 @@ below 30, `+8` a direction, `+2` a hop - in that record and in the first
 four sprite records (a disturbance or `EventOp_*`'s stand-in can move
 `Sprite_Current` there mid-function); the position on the area block's 32 x
 32 cells, its fraction 0 a third of the time; the leader's `+0xB` below 20;
-`Field_Kind2Hold` and `DamageScratch` 0 half the time. Per function: each
+`Field_Kind2Hold` and `SharedScratch` 0 half the time. Per function: each
 dispatcher's byte inside its table; `+9` at 0, 1, 2 for the countdowns (not
 0 for `CameraZoom_Start`, which divides by it); the zoom's target near
 `Camera_Distance` plus the step, the step's sign both ways; `+7` against
@@ -241,7 +241,7 @@ Registered before the standard sets, so they stand:
 | `AreaMap_SetByte` | 0xFFFF, 0xFFFF, 0xFF | `S16` x z and the value's byte |
 | `AreaMap_ByteAt` | 0xFFFF x 2, answers 0x10, 0x11, 0x2x, 0xAx, 0xFx or any | the bytes its callers test |
 | `AreaMap_Elevation` | answers at, a step off, 0x80 / 0x100 off the height word, the leader's height + 0x40 or `MapView_Elevation` | the heights its callers compare it with (a random word falls in `_Settle`'s 0x80 window 1 time in 512) |
-| `AreaMap_Slope` | direction masked 0xFF; sets `DamageScratch` 0 or 1 | its callers test that byte straight after (`area_slope.cpp`) |
+| `AreaMap_Slope` | direction masked 0xFF; sets `SharedScratch` 0 or 1 | its callers test that byte straight after (`area_slope.cpp`) |
 | `MoveCmd_Move` | object masked 0, its bytes `+0` and `+4` noted | the only two it reads (`0x578C10` read to its `ret` at `0x578D04`) |
 | `Sprite_FindFree`, `Sprite_ObjectAt`, `Party_MemberAt` | answers 0..29, 0..0x21, 0..2, or 0xFF a third of the time | the standard `kFlag` answers any byte, which the callers use as an index |
 | `EventOp_6x`, `EventOp_0x` | move `Sprite_Current` half the time | they place a sprite and leave `Sprite_Current` on it; the starts put it back |
@@ -249,7 +249,7 @@ Registered before the standard sets, so they stand:
 **For the fold** (`scenario_harness.cpp`, the coordinator's): the masks of
 `Menu_DrawBox`, `AreaMap_SetByte`, `AreaMap_Slope`'s direction and
 `MoveCmd_Move`'s object (the standard rows compare leftover upper bytes);
-`AreaMap_Slope`'s `DamageScratch` effect; answers in range for
+`AreaMap_Slope`'s `SharedScratch` effect; answers in range for
 `Sprite_FindFree` / `Sprite_ObjectAt` / `Party_MemberAt`. FH's field-standard
 stand-ins this group ran for the first time and found right as they stand:
 `Sprite_ScriptTick`, `_ScriptTickOnce`, `_UpdateScreen`, `_UpdateScreenSlot`,
@@ -310,7 +310,7 @@ mismatched (exit 3). **The first pass (the fuzz of commit `58d2bb1`) refused
 225 of 235.** The ten it did not were the fuzz's fault first, as rounds nine
 to eleven taught: `+6`'s bits 6 and 7 never seeded for `EffectKind37_Start`
 (J3, J4: `SeedRecord` kept it below 30 for `_Throw`'s index); `EventOp_6x`'s
-stand-in did not note the `DamageScratch` word it reads (L3); a speed and
+stand-in did not note the `SharedScratch` word it reads (L3); a speed and
 brake that land exactly on `0x1000` (Q1), the view point exactly `0x40000`
 from the block after its move (Q3, Q15), the settle target exactly where the
 step lands (S1), and position fractions whose low 12 bits are 0 (a9) never

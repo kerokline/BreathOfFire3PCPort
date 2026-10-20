@@ -332,7 +332,7 @@ extern "C" unsigned char __cdecl AreaMap_CellsNoneWide(long x, long z, unsigned 
 
 // original 0x535830: Field_WayBlocked for a raised sprite: al 1 when
 // Field_CellsBlock(x, z, 1) answers; or when a slope probe MapView_SlopeAt
-// answers above 0x40 (s16) with DamageScratch's byte 0x903850 set after it -
+// answers above 0x40 (s16) with SharedScratch's byte 0x903850 set after it -
 // the points and directions, with xi / zi the whole cells: (xi.8, zi.8) 4,
 // (xi.8, zi.0) 3, (xi.0, zi.8) 5; with no x fraction (xi-1.8, zi.0) 7,
 // (xi-1.8, zi+1.0) 7, (xi.8, zi+1.0) 7, (xi-1.0, zi.8) 1, (xi+1.0, zi.8) 1;
@@ -352,7 +352,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
     auto probe = [&](unsigned direction) {
         const U px = q.xlo | static_cast<U>(q.xhi) << 16, py = q.ylo | static_cast<U>(q.yhi) << 16;
         const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(px), static_cast<long>(py), direction);
-        return S16(static_cast<U>(slope)) > 0x40 && DamageScratch.b_00 != 0;
+        return S16(static_cast<U>(slope)) > 0x40 && SharedScratch.b_00 != 0;
     };
     q.yhi = static_cast<std::uint16_t>(zi);
     q.ylo = 0x8000;
@@ -662,8 +662,8 @@ extern "C" void __cdecl Leader_TurnBack(void) {
 extern "C" void __cdecl PartySet_ErrorLoop(void) {
     for (;;) {
         SH_CALL(Text_DrawFont8)(0xA0, 0x64, 0, At(at::kErrorTitle));
-        const U third = DamageScratch.b_02;
-        const U ids = static_cast<std::uint32_t>(DamageScratch.d_00);
+        const U third = SharedScratch.b_02;
+        const U ids = static_cast<std::uint32_t>(SharedScratch.d_00);
         SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextScratch)), reinterpret_cast<const char*>(At(at::kErrorFormat)),
                              ids & 0xFF, (ids >> 8) & 0xFF, third);
         SH_CALL(Text_DrawFont8)(0xA0, 0x74, 0, At(at::kTextScratch));

@@ -84,7 +84,7 @@ the attacker's ATK to `0x939FE4` and the target's DEF to `0x939F86` (the PSX
    `0xCD`; it is `0xCD` for any base below 256,000);
 2. x the variance `{218, 230, 243, 256, 269, 282, 294, 307}[Rand & 7] / 256`
    - 0.85 to 1.20;
-3. if the damage scratch (`DamageScratch` `0x903850`, the weapon's element
+3. if the damage scratch (`SharedScratch` `0x903850`, the weapon's element
    byte) has any of bits 0..4: x `Battle_ElementAffinity(target, scratch) /
    100` - the sum over those bits (fire, ice, lightning, earth, wind) of the
    s16 `0x64E95C[class]`, the target's five class bytes (party `+0x9F`, enemy
@@ -238,7 +238,7 @@ jump table (29 entries) relocated in its copy, the effect handler table
 `0x64E73C` swapped for 130 recording stand-ins and the category table
 `0x64E72C` for byte lists of our own, both put back after. 2,000 rounds per
 function: random bytes over the party objects (`0x802D40`, `0x4C0`),
-`DamageScratch`, the battle state (`0x904000`, `0xC00`), the turn work and
+`SharedScratch`, the battle state (`0x904000`, `0xC00`), the turn work and
 damage stats (`0x939A80`, `0x580`), the enemies (`0x93B960`, `0xBA0`, room
 for actor 11), AI scripts 0..15 and the result records; then the function's
 boundaries seeded (levels at every threshold; HP / AP / maxima equal and

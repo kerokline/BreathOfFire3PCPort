@@ -84,7 +84,7 @@ const U kSprite = at::Sprite_CurrentAt();       // 0x937F88
 const U kFieldState = at::Field_StateAt();      // 0x905D98
 const U kParty = at::ObjTrioAt();               // 0x802D40
 const U kObjects = at::Sprite_ObjectsAt();      // 0x7DEE80
-const U kScratch = DamageScratch_addr;   // 0x903850
+const U kScratch = SharedScratch_addr;   // 0x903850
 constexpr U kPartyBytes = 3 * kPartyStride;
 constexpr U kEnemyBytes = 8 * kEnemyStride;
 constexpr U kFuzzSlots = 48;                    // contexts the stand-in hands out: below the banner pool
@@ -148,7 +148,7 @@ const Region g_all[] = {
     {kParty, kPartyBytes},  {BattleE3_CurrentEnemy_addr, 4},      {kSoundLists, 0x400},   {BattleActions_Pending_addr, 2},
     {Window16_addr, 0x90},    {Window19_addr, 3},   {BattleWinStates_Current_addr, 4},    {BattleActorCopies_ItemActor_addr, 1},
     {BattleE4_MenuActor_addr, 4},      {kActorPages, 0x300},    {BattleActorCopies_Command_addr, 4},    {BattleMisc_PartyPages_addr, 3},
-    {BattleMisc_BannerKinds_addr, 1},      {DamageScratch_addr, 1},           {kBannerText, 0x40},    {kMessages, 0x400},
+    {BattleMisc_BannerKinds_addr, 1},      {SharedScratch_addr, 1},           {kBannerText, 0x40},    {kMessages, 0x400},
     {BattlePhases_B7A_addr, 1},         {kAiScripts, kScriptBytes}, {kActingKind, 1},    {kObjects, kObjectBytes},
 };
 
@@ -374,27 +374,27 @@ void DisturbBanners(U salt) {
     case 2: At(kBanners + ((h >> 8) % 8) * 0xC + 1)[0] = static_cast<unsigned char>((h >> 12) % 5); break;
     case 3: At(kBanners + ((h >> 8) % 8) * 0xC + 3)[0] = static_cast<unsigned char>((h >> 12) % 2); break;
     case 4: At(kBanners + ((h >> 8) % 8) * 0xC)[0] ^= 1; break;
-    case 5: At(DamageScratch_addr)[0] = static_cast<unsigned char>(h >> 16); break;
+    case 5: At(SharedScratch_addr)[0] = static_cast<unsigned char>(h >> 16); break;
     default: break;
     }
 }
 U __cdecl StubBannerRet03() {
-    Record(19, GetLong(At(BattleMisc_BannerCurrent_addr)), At(DamageScratch_addr)[0]);
+    Record(19, GetLong(At(BattleMisc_BannerCurrent_addr)), At(SharedScratch_addr)[0]);
     DisturbBanners(27);
     return Mix(28);
 }
 U __cdecl StubBannerKind1() {
-    Record(20, GetLong(At(BattleMisc_BannerCurrent_addr)), At(DamageScratch_addr)[0]);
+    Record(20, GetLong(At(BattleMisc_BannerCurrent_addr)), At(SharedScratch_addr)[0]);
     DisturbBanners(29);
     return Mix(30);
 }
 U __cdecl StubBannerKind2() {
-    Record(21, GetLong(At(BattleMisc_BannerCurrent_addr)), At(DamageScratch_addr)[0]);
+    Record(21, GetLong(At(BattleMisc_BannerCurrent_addr)), At(SharedScratch_addr)[0]);
     DisturbBanners(31);
     return Mix(32);
 }
 U __cdecl StubBannerRet4() {
-    Record(22, GetLong(At(BattleMisc_BannerCurrent_addr)), At(DamageScratch_addr)[0]);
+    Record(22, GetLong(At(BattleMisc_BannerCurrent_addr)), At(SharedScratch_addr)[0]);
     DisturbBanners(33);
     return Mix(34);
 }
@@ -829,13 +829,13 @@ void RandomBanners(U bytes) {
 }
 
 void FuzzDispatch(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {DamageScratch_addr, 1}};
+    const Region regions[] = {{BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {SharedScratch_addr, 1}};
     g_test = kTestDispatch;
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0xE00000u + r;
         RandomBanners(0x60);
         At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(Next());
-        At(DamageScratch_addr)[0] = static_cast<unsigned char>(Next());
+        At(SharedScratch_addr)[0] = static_cast<unsigned char>(Next());
         PutLong(At(BattleMisc_BannerCurrent_addr), Next());
         Pass(t, regions, 4, 0, clone, As<const void*>(&BattleBanner_Dispatch), RandomEntry());
         t.hits += g_theirs.n;

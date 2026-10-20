@@ -243,7 +243,7 @@ nothing with `Cond_ByteFA` `0xE` and the chapter row's flag 5, nor with story
 flag `0x77`. Else a list k by actor record 0's max-HP scale (read first):
 `Cond_Flags` row 14 bit `0xA` clear - 2 from 9, 1 from 5, else (the walk
 count at least 5); set - 2 from 5, else (the count at least 5). Six times:
-`Sprite_FindFree` to the word `DamageScratch`; not `0xFF`:
+`Sprite_FindFree` to the word `SharedScratch`; not `0xFF`:
 `EventOp_0x(Area191_ObjectLists[k] + 0x11 n)` (each list six 17-byte
 records).
 

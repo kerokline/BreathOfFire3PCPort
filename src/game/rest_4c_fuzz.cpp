@@ -388,7 +388,7 @@ void Seed(unsigned k) {
             static_cast<std::int32_t>(PickOf(0, 1, 9, 50, 99, 100, 101, 499, 500, 501, 0x8000, 0xFFFF, 0x1FFFF, 0x10050,
                                              sh::Next())));
     for (unsigned i = 0; i < 3; ++i)
-        B(DamageScratch_addr + i) = static_cast<unsigned char>(PickOf(0, 1, 5, 8, 9, 10, 0xFF, 0x80, sh::Next()));
+        B(SharedScratch_addr + i) = static_cast<unsigned char>(PickOf(0, 1, 5, 8, 9, 10, 0xFF, 0x80, sh::Next()));
     // the values, the picks and the guess records: digits 1..9 mostly
     for (unsigned i = 0; i < 9; ++i) B(at::kCards + i) = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 9 : sh::Next());
     for (unsigned i = 1; i <= 8; ++i) B(at::kPicks + i) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
@@ -466,7 +466,7 @@ void MoveCell(U n) {
     case 5: SetLong(Mem(at::kBet), static_cast<std::int32_t>((b & 1) ? (b >> 1) % 2 * 10000 + v % 3 : v)); break;
     case 6: SetLong(Mem(Party_Zenny_addr), static_cast<std::int32_t>(v)); break;
     case 7: B(at::kCards + b % 0x2B) = static_cast<unsigned char>(1 + (v >> 8) % 9); break;
-    case 8: B(DamageScratch_addr + b % 3) = static_cast<unsigned char>(static_cast<int>((v >> 8) % 12) - 1); break;
+    case 8: B(SharedScratch_addr + b % 3) = static_cast<unsigned char>(static_cast<int>((v >> 8) % 12) - 1); break;
     case 9: B((b & 1) ? Rest4c_Lost_addr : Rest4c_Again_addr) = static_cast<unsigned char>((b & 2) ? 0 : b); break;
     case 10: B(AreaW0c_TailState_addr) = b; break;
     default: break;

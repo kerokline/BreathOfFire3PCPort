@@ -78,7 +78,7 @@ unsigned char* Member(unsigned i) { return At(Address(rv::Bytes(ObjTrio)) + i * 
 
 // The member records' views (game/record_views.h): Sprite_Current
 // and Field_State are ObjTrio records here.
-unsigned char& Cell(unsigned i) { return At(DamageScratch_addr)[i & 0xFF]; }
+unsigned char& Cell(unsigned i) { return At(SharedScratch_addr)[i & 0xFF]; }
 std::uint32_t U(const unsigned char* at) { return static_cast<std::uint32_t>(Long(at)); }
 void Dispatch(const std::uint32_t* table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
@@ -353,7 +353,7 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
         const std::int32_t mine = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(c->z) - pz)) +
                                                             static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(c->x) - px)));
         const std::int32_t aim = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(Scratch_Swap - pz)) +
-                                                           static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(DamageScratch.d_08) - px)));
+                                                           static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(SharedScratch.d_08) - px)));
         if (mine >= aim) return answer;
         c->direction = facing;
         answer = 1;
@@ -417,7 +417,7 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
         ax = static_cast<std::uint32_t>(c->x) + ((RowX(MoveCmd_F9Steps_addr, c->direction) * frames * speed) << 1);
         az = static_cast<std::uint32_t>(c->z) + ((RowZ(MoveCmd_F9Steps_addr, c->direction) * frames * speed) << 1);
     }
-    DamageScratch.d_08 = static_cast<std::int32_t>(ax);
+    SharedScratch.d_08 = static_cast<std::int32_t>(ax);
     Scratch_Swap = static_cast<std::int32_t>(az);
     switch (kind) {
     case 0:
@@ -432,7 +432,7 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
             rv::Current<records::PartyMember>()->direction = facing;
             return 1;
         }
-        g.ground_at(DamageScratch.d_08, static_cast<std::int32_t>(Scratch_Swap));
+        g.ground_at(SharedScratch.d_08, static_cast<std::int32_t>(Scratch_Swap));
         return 0;
     }
     case 6: return 5;

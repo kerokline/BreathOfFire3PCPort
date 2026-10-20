@@ -127,7 +127,7 @@ unsigned char __cdecl StubPartyJoin(unsigned member) {
 }
 
 // AreaMap_Slope: its answer (high half 0, sign-extended or anything) and
-// DamageScratch's byte - 0, 1 or any other non-zero byte - as the caller reads
+// SharedScratch's byte - 0, 1 or any other non-zero byte - as the caller reads
 // them; it records the direction's low byte, all the real one reads (the
 // original pushes the whole dword). It also rewrites the frame count +9 (never
 // to 0) and the height +0x3E a third of the time each, so that a caller
@@ -256,7 +256,7 @@ const Region kRegions[] = {
     {kCounters, 4},
     {kNameIndex, 1},
     {kStoryFlags, 4},
-    {DamageScratch_addr, 4},             // AreaMap_Slope's answer byte
+    {SharedScratch_addr, 4},             // AreaMap_Slope's answer byte
 };
 constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + (Sprite_Objects_count * sizeof(records::SpriteObject)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)) +
                                   MoveScript_PartyRecords_count + 2 + 4 + 8 + 4 + 7 + 1 + 0x12 + 4 + 1 + 4 + 4;

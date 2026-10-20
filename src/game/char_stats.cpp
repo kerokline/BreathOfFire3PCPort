@@ -471,10 +471,10 @@ extern "C" void __cdecl Equip_PreviewSet(unsigned id, const unsigned char* set, 
 // The inventory
 
 // original 0x590BB0 (PSX 0x80165AA4): 0 for an item or count of 0 (their low
-// bytes). DamageScratch (the PSX scratchpad's first byte) 0. Outside category
+// bytes). SharedScratch (the PSX scratchpad's first byte) 0. Outside category
 // 4, an existing stack of the item takes the count: above 99 it is 99 and the
 // answer 0, else 1. Otherwise the first slot with id 0 - or, outside category
-// 4, count 0 - takes the item (and the count), DamageScratch 1, answer 1; no
+// 4, count 0 - takes the item (and the count), SharedScratch 1, answer 1; no
 // slot, 0. The category's low byte indexes the list pointers unbounded, and
 // category 4 (the key items, 32 bytes) is searched 128 long like the others,
 // as on the PSX (D34).
@@ -484,7 +484,7 @@ extern "C" unsigned char __cdecl Inventory_Add(unsigned category, unsigned item,
     const auto n = static_cast<unsigned char>(count);
     if (n == 0) return 0;
     const unsigned cat = category & 0xFF;
-    unsigned char* const scratch = At(DamageScratch_addr);
+    unsigned char* const scratch = At(SharedScratch_addr);
     scratch[0] = 0;
     if (cat != 4) {
         unsigned char* const ids = IdList(cat);

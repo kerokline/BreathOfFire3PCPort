@@ -615,7 +615,7 @@ extern "C" void __cdecl Tint_Release(unsigned char index) {
 // original 0x454DF0 (0x80197784): the body Sprite_SetTint and Tint_Release
 // share. Claim: ClutMap_FindFree(kind) and the owner written; release:
 // ClutMap_FindOwner(owner) and 0xFF written - over the cells the callee left
-// in DamageScratch bytes 0 / 1 (row, cell), read after the call: kind 0 one
+// in SharedScratch bytes 0 / 1 (row, cell), read after the call: kind 0 one
 // cell, 1 sixteen, 2 two, 3 four, 4 eight, anything else none. Answers what
 // the callee answered. Neither the row nor a run past the map's 64 cells is
 // checked; a release that found nothing still writes over the last cell the
@@ -629,7 +629,7 @@ extern "C" unsigned char __cdecl ClutMap_Mark(unsigned kind, unsigned owner, uns
         answer = g.clut_owner(owner);
         fill = 0xFF;
     }
-    unsigned char* const cells = At(at::kClutMap + DamageScratch.b_00 * 16u + DamageScratch.b_01);
+    unsigned char* const cells = At(at::kClutMap + SharedScratch.b_00 * 16u + SharedScratch.b_01);
     unsigned n;
     switch (kind & 0xFF) {
     case 0: n = 1; break;
@@ -645,7 +645,7 @@ extern "C" unsigned char __cdecl ClutMap_Mark(unsigned kind, unsigned owner, uns
 
 // original 0x454F30 (0x801978BC): the first free clut cell (0xFF in the
 // 4 x 16 map) that starts a free run of the kind's size, aligned to it:
-// every free cell tried is left in DamageScratch bytes 0 / 1 (row, cell),
+// every free cell tried is left in SharedScratch bytes 0 / 1 (row, cell),
 // so a failed search leaves the last free cell there. Answers the clut slot
 // - kind 0 0xC0 + row * 16 + cell, 1 (cell 0, the whole row) 0x1C + row,
 // 2 0xE0 + row * 8 + cell / 2, 3 0x70 + row * 4 + cell / 4, 4 0x38 + row * 2
@@ -660,8 +660,8 @@ extern "C" unsigned char __cdecl ClutMap_FindFree(unsigned kind) {
     for (unsigned row = 0; row < 4; ++row)
         for (unsigned cell = 0; cell < 16; ++cell) {
             if (map[row * 16 + cell] != 0xFF) continue;
-            DamageScratch.b_01 = static_cast<unsigned char>(cell);
-            DamageScratch.b_00 = static_cast<unsigned char>(row);
+            SharedScratch.b_01 = static_cast<unsigned char>(cell);
+            SharedScratch.b_00 = static_cast<unsigned char>(row);
             switch (kind & 0xFF) {
             case 0: return static_cast<unsigned char>((row + 0xC) * 16 + cell);
             case 1:
@@ -683,15 +683,15 @@ extern "C" unsigned char __cdecl ClutMap_FindFree(unsigned kind) {
 }
 
 // original 0x455140 (0x80197B20): the first cell of the clut map owned by
-// `owner`, left in DamageScratch bytes 0 / 1 (row, cell); answers the owner,
+// `owner`, left in SharedScratch bytes 0 / 1 (row, cell); answers the owner,
 // or 0xFF (and the scratch untouched) when it owns none.
 extern "C" unsigned char __cdecl ClutMap_FindOwner(unsigned owner) {
     const unsigned char o = static_cast<unsigned char>(owner);
     for (unsigned row = 0; row < 4; ++row)
         for (unsigned cell = 0; cell < 16; ++cell)
             if (At(at::kClutMap)[row * 16 + cell] == o) {
-                DamageScratch.b_00 = static_cast<unsigned char>(row);
-                DamageScratch.b_01 = static_cast<unsigned char>(cell);
+                SharedScratch.b_00 = static_cast<unsigned char>(row);
+                SharedScratch.b_01 = static_cast<unsigned char>(cell);
                 return o;
             }
     return 0xFF;

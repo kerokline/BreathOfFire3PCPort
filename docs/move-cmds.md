@@ -351,7 +351,7 @@ PSX twin is `FUN_801ACBA8` (`psx_pair` call; not re-read for this).
    named it `MoveCmd_F9Steps`, and both moves now use that name.
 4. The landing: `x = +0xC * +9 + +0x34`, `z = +0x10 * +9 + +0x38`.
 5. Unless bit 7 of `object +0`: `ground = AreaMap_Slope(x, z, direction)`,
-   and when it leaves `DamageScratch`'s byte non-zero (sloped ground,
+   and when it leaves `SharedScratch`'s byte non-zero (sloped ground,
    [`kind2-object.md`](kind2-object.md) section 7) `ground =
    AreaMap_Elevation(x, z)` instead; then `+0x14 = ((s16) ground - (s16)
    +0x3E) / +9` (`idiv`), both re-read through `Sprite_Current` after the
@@ -389,10 +389,10 @@ The clone-based fuzzes (`field_objects`, `object_kinds`, the area clones'
 `move_cmds_fuzz.cpp` clones `0x578C10` for `0xF5` bytes with both calls
 re-aimed: `0xAE` to a new `AreaMap_Slope` stand-in, `0xC2` to the existing
 elevation one. The slope stand-in records `(x, z, direction & 0xFF)`,
-answers a high half of 0, sign-extended or random, leaves `DamageScratch`'s
+answers a high half of 0, sign-extended or random, leaves `SharedScratch`'s
 byte 0, 1 or another non-zero byte (a third of the time each), and a third
 of the time each rewrites `+9` (never to 0) and `+0x3E`, so that a read
-moved before the call shows. `DamageScratch`'s four bytes joined the
+moved before the call shows. `SharedScratch`'s four bytes joined the
 compared state. Inputs: the object is the fuzz's context buffer, bit 7 of
 `+0` half the time; the speed index 1..5 three times in four, else any byte
 whose table byte divides (non-zero, and with the ground asked one that

@@ -51,7 +51,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 constexpr std::uint32_t kSparkleStride = 0x2C;
-// kScratch: now DamageScratch (symbols.toml). s16 words +0 .. +0xE (DamageScratch's neighbourhood)
+// kScratch: now SharedScratch (symbols.toml). s16 words +0 .. +0xE (SharedScratch's neighbourhood)
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12-byte records
 constexpr std::uint32_t kEnemyState = 0x93BCD9;    // what 0x4BBCE0 reads: 0x93B961 + 0x128 * 3 (docs/magic_s16.md section 6)
 // kPartyState: now ObjTrio[1] (symbols.toml). a member's +1
@@ -104,7 +104,7 @@ std::int32_t PtrValue(const void* p) { return static_cast<std::int32_t>(static_c
 unsigned char* Record(const Pool& p, unsigned index) { return Mem(p.pool + index * kSparkleStride); }
 unsigned char* Cur(const Pool& p) { return Pointer(p.current); }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Scr(unsigned k) { return Mem(DamageScratch_addr + k); }
+unsigned char* Scr(unsigned k) { return Mem(SharedScratch_addr + k); }
 short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
 
 // `imul` then `sar 0xC`: a 32-bit product that wraps, shifted arithmetically.

@@ -169,7 +169,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 // The group's cells (magic_s32.cpp).
 // kV: now Prim_VertexScratch (symbols.toml).
-// kS: now DamageScratch (symbols.toml).
+// kS: now SharedScratch (symbols.toml).
 // kPool: now WallOfFire_Pool (symbols.toml).
 constexpr std::uint32_t kRecord = 0x84;
 constexpr unsigned kPoolCount = 48;
@@ -287,7 +287,7 @@ mh::Region g_regions[] = {
     {0, kPrimBytes},                // g_prims (filled in at start-up)
     {0, sizeof g_centre},           // g_centre (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
-    {DamageScratch_addr, 0x10},     // 0x903850..
+    {SharedScratch_addr, 0x10},     // 0x903850..
     {WallOfFire_Pool_addr, kPoolCount * kRecord}, // WallOfFire_Pool
     {EyeBeam_State_addr, kBeamBytes}, // EyeBeam_State, _Sparks, _SparkCurrent, _SpiralPoints
     {0x80E980, 0x20},               // Gfx_ClutStripSource row 26, the first sixteen
@@ -307,7 +307,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: SetWord(mh::Mem(DamageScratch_addr + 2 * (v % 8)), h >> 16); break;
+    case 2: SetWord(mh::Mem(SharedScratch_addr + 2 * (v % 8)), h >> 16); break;
     case 3: Record(v % kPoolCount)[(h >> 20) % 0x80] = b; break;   // never the owner at +0x80
     case 4: SetWord(mh::Mem(EyeBeam_State_addr + 2 * (v % 12)), h >> 16); break;
     case 5: mh::Mem(EyeBeam_Sparks_addr + v % 0x40)[0] = b; break;

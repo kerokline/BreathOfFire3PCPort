@@ -443,7 +443,7 @@ class Symbols:
             self.by_pc.setdefault(e['pc'], ('func', e))
         # <Name>_addr, which tools/gen_symbols.py emits for a typed entry or a
         # typed block, evaluates like bof3::addr::Name in a constant's
-        # definition (stage C4: `kLineAngle = DamageScratch_addr + 4` is a
+        # definition (stage C4: `kLineAngle = SharedScratch_addr + 4` is a
         # data address all the same). Not a record base: `B(Name_addr + k)`
         # is not counted (docs/typed-data-census.md 4).
         self.addr_names = {e['name'] + '_addr': e['pc'] for e in self.data + t.get('block', []) if 'ctype' in e}

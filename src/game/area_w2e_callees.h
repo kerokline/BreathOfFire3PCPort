@@ -61,7 +61,7 @@ constexpr U kPendingX = 0x903860;          // the pending area's cells (Field_Ch
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
 // kCell904EE0: now ModeFlow_AreaTransition (symbols.toml). zeroed with 0x937F98 = 0xC by area 104's exit cell
 // kCell937F98: now Area_EnterTransition (symbols.toml).
-// kFoundX: now DamageScratch (symbols.toml). the scratch word the step hook of area 105 stores the facing in
+// kFoundX: now SharedScratch (symbols.toml). the scratch word the step hook of area 105 stores the facing in
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits
 // kCondFA: now Cond_ByteFA (symbols.toml). Cond_ByteFA (s8, the chapter)
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD

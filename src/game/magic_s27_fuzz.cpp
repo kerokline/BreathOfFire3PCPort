@@ -272,9 +272,9 @@ const mh::DataTable kTables[] = {
 };
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
-// kScratch: now DamageScratch (symbols.toml).
+// kScratch: now SharedScratch (symbols.toml).
 const mh::Region kRegions[] = {
-    {DamageScratch_addr, 0x10},
+    {SharedScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                                   // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
@@ -295,7 +295,7 @@ void Disturb(std::uint32_t h) {
     const auto word = static_cast<std::uint16_t>(h >> 16);
     switch ((h >> 8) % 6) {
     case 0: mh::SetPointer(0x7E0670, PacketAt(v)); break;
-    case 1: SetWord(mh::Mem(DamageScratch_addr + (v % 8) * 2), word); break;
+    case 1: SetWord(mh::Mem(SharedScratch_addr + (v % 8) * 2), word); break;
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: {
         static const unsigned kFields[] = {0x10, 0x14, 0x15, 0x20, 0x2E, 0x2F, 0x31, 0x3E, 0x5D, 0x5E, 0x5F};

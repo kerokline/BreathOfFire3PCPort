@@ -60,7 +60,7 @@ constexpr std::uint32_t kAbility = 0x904B80;        // u16: the ability being ca
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetSlash = 0x8C5D80;
-constexpr std::uint32_t kShade = 0x903852;          // u16: DamageScratch +2, Magic020_DrawFade's shade
+constexpr std::uint32_t kShade = 0x903852;          // u16: SharedScratch +2, Magic020_DrawFade's shade
 // kDashOffsets: now Magic008Dash_Offsets (symbols.toml). Magic008Dash_Offsets: 3 x (dword dx, dword dz)
 constexpr unsigned kDashOffsetCount = 3;
 // kSlashAnimations: now Magic020Slash_Animations (symbols.toml). Magic020Slash_Animations: 12 bytes to the next table
@@ -1001,10 +1001,10 @@ S06_EXPORT void __cdecl Magic020_DrawFade(void) {
     PutU32(p + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // kF320 narrow
     PutU32(p + 0x18, kF240);
     const unsigned grey = (static_cast<unsigned>(Sc()[9]) * 15u) & 0xFFFF;
-    SetWord(Mem(DamageScratch_addr + 0x2), grey);
+    SetWord(Mem(SharedScratch_addr + 0x2), grey);
     p[4] = static_cast<unsigned char>(grey);
-    p[5] = Mem(DamageScratch_addr + 0x2)[0];
-    p[6] = Mem(DamageScratch_addr + 0x2)[0];
+    p[5] = Mem(SharedScratch_addr + 0x2)[0];
+    p[6] = Mem(SharedScratch_addr + 0x2)[0];
     MH_CALL(Gfx_CommitPrim)(2, 0x1C);
     DrawMode(0x15, 2);
 }

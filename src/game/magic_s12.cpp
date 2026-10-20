@@ -98,15 +98,15 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 unsigned char* PartyRec(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRec(int i) { return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
 
-// The scratch words DamageScratch + k and the vertex scratch
+// The scratch words SharedScratch + k and the vertex scratch
 // Prim_VertexScratch + k (SVECTORs at +0, +8, +0x10, +0x18).
-// kDs: now DamageScratch (symbols.toml).
+// kDs: now SharedScratch (symbols.toml).
 // kVx: now Prim_VertexScratch (symbols.toml).
-short Ds(unsigned k) { return static_cast<short>(Word(Mem(DamageScratch_addr + k))); }
-void SetDs(unsigned k, unsigned v) { SetWord(Mem(DamageScratch_addr + k), v); }
-std::int32_t Dd(unsigned k) { return Long(Mem(DamageScratch_addr + k)); }
-void SetDd(unsigned k, std::uint32_t v) { SetLong(Mem(DamageScratch_addr + k), static_cast<std::int32_t>(v)); }
-unsigned char DsByte(unsigned k) { return Mem(DamageScratch_addr + k)[0]; }
+short Ds(unsigned k) { return static_cast<short>(Word(Mem(SharedScratch_addr + k))); }
+void SetDs(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v); }
+std::int32_t Dd(unsigned k) { return Long(Mem(SharedScratch_addr + k)); }
+void SetDd(unsigned k, std::uint32_t v) { SetLong(Mem(SharedScratch_addr + k), static_cast<std::int32_t>(v)); }
+unsigned char DsByte(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
 short Vx(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
 void SetVx(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v); }
 const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }

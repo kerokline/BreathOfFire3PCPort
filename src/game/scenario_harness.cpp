@@ -547,7 +547,7 @@ std::uint32_t FxSetTrans(const std::uint32_t* a, std::uint32_t answer) {
     else Note(0xFFFFFFFFu);
     return answer;
 }
-// AreaMap_Slope's "sloped" byte 0x903850 (DamageScratch's first; the effect slot
+// AreaMap_Slope's "sloped" byte 0x903850 (SharedScratch's first; the effect slot
 // region), which its callers and MapView_SlopeAt's read straight after the call
 // (FC1, FC3): 0 (flat) a third of the time, else 1.
 std::uint32_t FxSloped(const std::uint32_t*, std::uint32_t answer) {

@@ -67,9 +67,9 @@ void PutFloat(unsigned char* at, int v) {
 float AsFloat(int v) { return static_cast<float>(v); }
 void PutFloatBits(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 
-// The scratch words MAGIC111's wash keeps its angles in: DamageScratch
+// The scratch words MAGIC111's wash keeps its angles in: SharedScratch
 // 0x903850 and 0x903852, read back after every Math_Sin as the original does.
-// kAngleA: now DamageScratch (symbols.toml).
+// kAngleA: now SharedScratch (symbols.toml).
 constexpr std::uint32_t kAngleB = 0x903852;
 
 // Capcom's, unnamed, in no group: fild the argument, fsqrt, tail jmp to the
@@ -522,38 +522,38 @@ C3_EXPORT void __cdecl Magic111Wash_Draw(void) {
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     FullScreen(p, 0x18, 0x1C, 0x28, 0x2C, 0x38, 0x3C);
 
-    unsigned a = SetAngle(DamageScratch_addr, Sc()[0xC], 0);
-    SetAngle(DamageScratch_addr + 0x2, Sc()[0x10], 0);
+    unsigned a = SetAngle(SharedScratch_addr, Sc()[0xC], 0);
+    SetAngle(SharedScratch_addr + 0x2, Sc()[0x10], 0);
     unsigned char c0 = Pulse(static_cast<short>(a));
-    unsigned char c1 = Pulse(AngleWord(DamageScratch_addr + 0x2));
-    unsigned char c2 = Pulse(AngleWord(DamageScratch_addr + 0x2));
+    unsigned char c1 = Pulse(AngleWord(SharedScratch_addr + 0x2));
+    unsigned char c2 = Pulse(AngleWord(SharedScratch_addr + 0x2));
     p[4] = c0;
     p[5] = c1;
     p[6] = c2;
 
-    SetAngle(DamageScratch_addr, Sc()[0xC], 0xF);
-    unsigned b = SetAngle(DamageScratch_addr + 0x2, Sc()[0x10], 0xF);
+    SetAngle(SharedScratch_addr, Sc()[0xC], 0xF);
+    unsigned b = SetAngle(SharedScratch_addr + 0x2, Sc()[0x10], 0xF);
     c0 = Pulse(static_cast<short>(b));
-    c1 = Pulse(AngleWord(DamageScratch_addr));
-    c2 = Pulse(AngleWord(DamageScratch_addr + 0x2));
+    c1 = Pulse(AngleWord(SharedScratch_addr));
+    c2 = Pulse(AngleWord(SharedScratch_addr + 0x2));
     p[0x14] = c0;
     p[0x15] = c1;
     p[0x16] = c2;
 
-    SetAngle(DamageScratch_addr, Sc()[0xC], 0x1F);
-    b = SetAngle(DamageScratch_addr + 0x2, Sc()[0x10], 0x1F);
+    SetAngle(SharedScratch_addr, Sc()[0xC], 0x1F);
+    b = SetAngle(SharedScratch_addr + 0x2, Sc()[0x10], 0x1F);
     c0 = Pulse(static_cast<short>(b));
-    c1 = Pulse(AngleWord(DamageScratch_addr + 0x2));
-    c2 = Pulse(AngleWord(DamageScratch_addr));
+    c1 = Pulse(AngleWord(SharedScratch_addr + 0x2));
+    c2 = Pulse(AngleWord(SharedScratch_addr));
     p[0x24] = c0;
     p[0x25] = c1;
     p[0x26] = c2;
 
-    a = SetAngle(DamageScratch_addr, Sc()[0xC], 0x100 - 0x11);
-    SetAngle(DamageScratch_addr + 0x2, Sc()[0x10], 0x100 - 0x11);
+    a = SetAngle(SharedScratch_addr, Sc()[0xC], 0x100 - 0x11);
+    SetAngle(SharedScratch_addr + 0x2, Sc()[0x10], 0x100 - 0x11);
     c0 = Pulse(static_cast<short>(a));
-    c1 = Pulse(AngleWord(DamageScratch_addr));
-    c2 = Pulse(AngleWord(DamageScratch_addr + 0x2));
+    c1 = Pulse(AngleWord(SharedScratch_addr));
+    c2 = Pulse(AngleWord(SharedScratch_addr + 0x2));
     p[0x34] = c0;
     p[0x35] = c1;
     p[0x36] = c2;

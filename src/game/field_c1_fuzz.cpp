@@ -17,7 +17,7 @@
 // AreaMap_SetByte, AreaMap_Slope's direction, MoveCmd_Move's object); answers
 // in the callee's range (Sprite_FindFree, Sprite_ObjectAt, Party_MemberAt);
 // louder stand-ins where the caller reads a cell after the call
-// (AreaMap_Slope's DamageScratch, AreaMap_Elevation near the heights compared,
+// (AreaMap_Slope's SharedScratch, AreaMap_Elevation near the heights compared,
 // AreaMap_ByteAt's tested bytes, EventOp_6x / _0x moving Sprite_Current).
 #include <cstdint>
 #include <cstring>
@@ -166,7 +166,7 @@ unsigned char* Eff(unsigned i) { return rv::Bytes(&Effect_Objects[i % at::kEffec
 //
 // What the functions read again after a call: Sprite_Current's counters and
 // state (+6..+0xB), its speeds, brakes and fall (+0xC..+0x20), its position's
-// fractions, its height word, its scale; Field_Kind2Hold; DamageScratch; the
+// fractions, its height word, its scale; Field_Kind2Hold; SharedScratch; the
 // leader's height and point; the view's kind-2 point and elevation; Camera_
 // Distance. Every index byte stays inside the records it indexes.
 unsigned g_k;   // the function being fuzzed (Seed's k)
@@ -192,7 +192,7 @@ void Move(U h) {
     case 5: SetWord(o + (v & 1 ? 0x34 : 0x38), w & 1 ? 0 : w); break;
     case 6: SetWord(o + 0x3E, w); break;
     case 7: Field_Kind2Hold = static_cast<unsigned char>(v & 1); break;
-    case 8: Mem(DamageScratch_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
+    case 8: Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
     case 9: SetWord(rv::Bytes(ObjTrio) + 0x3E, w); break;
     case 10: Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34); Field_Kind2Z = v & 1 ? Long(rv::Bytes(ObjTrio) + 0x38) : static_cast<long>(w); break;
     case 11: Camera_Distance = static_cast<short>(w); break;
@@ -235,10 +235,10 @@ std::uint32_t CellByte(const std::uint32_t*, std::uint32_t answer) {
     return (answer & 0xFFFFFF00u) | b;
 }
 
-// AreaMap_Slope: DamageScratch 0 (flat) or 1 (sloped), which its callers test
+// AreaMap_Slope: SharedScratch 0 (flat) or 1 (sloped), which its callers test
 // straight after the call.
 std::uint32_t Slope(const std::uint32_t*, std::uint32_t answer) {
-    Mem(DamageScratch_addr)[0] = static_cast<unsigned char>(sh::Noise() % 3 == 0 ? 0 : 1);
+    Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(sh::Noise() % 3 == 0 ? 0 : 1);
     return answer;
 }
 
@@ -271,7 +271,7 @@ std::uint32_t FoundMember(const std::uint32_t*, std::uint32_t answer) {
 // EventOp_6x / _0x place a sprite and leave Sprite_Current on it (the starts
 // put it back): moved half the time.
 std::uint32_t Placed(const std::uint32_t*, std::uint32_t answer) {
-    sh::Note(Word(Mem(DamageScratch_addr)));   // the object index it places, which it reads
+    sh::Note(Word(Mem(SharedScratch_addr)));   // the object index it places, which it reads
     const U n = sh::Noise();
     if (n & 1) Sprite_Current = sh::SpriteRecord(n >> 1);
     return answer;
@@ -325,7 +325,7 @@ U g_cell[2];
 
 // Beyond the harness's standard and field regions (which hold Sprite_Current,
 // Sprite_Objects, Sprite_ObjectsExtra, Effect_Objects, ObjTrio, Camera_
-// Distance and DamageScratch, Field_Request, Game_AreaNumber / MoveScript_
+// Distance and SharedScratch, Field_Request, Game_AreaNumber / MoveScript_
 // FAWord, Field_Kind2Z / X, MapView_Redraw, MapView_Elevation, the menu block
 // with Field_Kind2Hold, the style byte, the packet buffer and the area block).
 const sh::Region kRegions[] = {
@@ -382,7 +382,7 @@ void Seed(unsigned k) {
     SeedRecord(o);
     rv::Bytes(ObjTrio)[0xb] = static_cast<unsigned char>(sh::Next() % 20);
     if (sh::Half()) Field_Kind2Hold = 0;
-    if (sh::Half()) Mem(DamageScratch_addr)[0] = static_cast<unsigned char>(sh::Half() ? 0 : 1);
+    if (sh::Half()) Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(sh::Half() ? 0 : 1);
     switch (k) {
     case kRowLabel:
         if (sh::Half()) Mem(0x929F02)[0] = 1;

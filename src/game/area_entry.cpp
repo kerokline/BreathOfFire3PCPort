@@ -79,7 +79,7 @@ found:
     unsigned char flags;
     if (Word(link + 2) != 0xFFFF) {
         AreaW0b_Place = Word(link + 2);
-        DamageScratch.d_10 = static_cast<std::int32_t>((Word(link + 4) & 0xFF80u) << 8);
+        SharedScratch.d_10 = static_cast<std::int32_t>((Word(link + 4) & 0xFF80u) << 8);
         AreaEntry_PendingZ = static_cast<std::int32_t>((Word(link + 6) & 0xFF80u) << 8);
         flags = link[0xA];
     } else {
@@ -89,14 +89,14 @@ found:
         for (unsigned i = 0; i < count; ++i, choice += 10)
             if (g.flags_test(Cond_Flags + choice[6] * 8u, choice[7]) != 0) break;
         AreaW0b_Place = Word(choice);
-        DamageScratch.d_10 = static_cast<std::int32_t>((Word(choice + 2) & 0xFF80u) << 8);
+        SharedScratch.d_10 = static_cast<std::int32_t>((Word(choice + 2) & 0xFF80u) << 8);
         AreaEntry_PendingZ = static_cast<std::int32_t>((Word(choice + 4) & 0xFF80u) << 8);
         flags = choice[8];
     }
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags & 0x8F);
-    DamageScratch.b_01 = static_cast<unsigned char>((flags >> 4) & 7);
+    SharedScratch.b_01 = static_cast<unsigned char>((flags >> 4) & 7);
     g.classify();
-    g.pick_music(static_cast<unsigned>(DamageScratch.d_10 >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
+    g.pick_music(static_cast<unsigned>(SharedScratch.d_10 >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
                  AreaW0b_Place);
     return 0;
 }
@@ -139,7 +139,7 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
     ++list;
     if ((header & 0xC0) == 0) {
         if (Field_MemberCount != n) return (table & 0xFFFFFF00u) | 1u;
-        for (unsigned i = 0; i < n; ++i) At(DamageScratch_addr + 0x8)[i] = Cond_Flags[0xd2 + i];
+        for (unsigned i = 0; i < n; ++i) At(SharedScratch_addr + 0x8)[i] = Cond_Flags[0xd2 + i];
         for (unsigned i = 0; i < n; ++i) {
             const unsigned char wanted = list[i];
             const unsigned members = Field_MemberCount;
@@ -148,21 +148,21 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
                 while (j < members && Record(j)[kRecMember] != wanted) ++j;
                 if (j == members) return 1;
             } else {
-                while (j < members && At(DamageScratch_addr + 0x8)[j] == 0xFF) ++j;
+                while (j < members && At(SharedScratch_addr + 0x8)[j] == 0xFF) ++j;
                 if (j == members) continue;
             }
-            At(DamageScratch_addr)[i] = Record(j)[kRecColumn];
-            At(DamageScratch_addr + 0x4)[i] = static_cast<unsigned char>(j);
-            At(DamageScratch_addr + 0x8)[j] = 0xFF;
+            At(SharedScratch_addr)[i] = Record(j)[kRecColumn];
+            At(SharedScratch_addr + 0x4)[i] = static_cast<unsigned char>(j);
+            At(SharedScratch_addr + 0x8)[j] = 0xFF;
         }
-        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(At(DamageScratch_addr + 0x4)[i])[kRecMember];
+        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(At(SharedScratch_addr + 0x4)[i])[kRecMember];
         for (unsigned s = 0; static_cast<int>(s) < static_cast<int>(n) - 1; ++s) {
-            const unsigned char there = At(DamageScratch_addr + 0x4)[s];
+            const unsigned char there = At(SharedScratch_addr + 0x4)[s];
             if (s == there) continue;
             g.swap_members(s, there, 0);
             for (unsigned t = s; t < n; ++t) {
-                if (At(DamageScratch_addr + 0x4)[t] == s) {
-                    At(DamageScratch_addr + 0x4)[t] = At(DamageScratch_addr + 0x4)[s];
+                if (At(SharedScratch_addr + 0x4)[t] == s) {
+                    At(SharedScratch_addr + 0x4)[t] = At(SharedScratch_addr + 0x4)[s];
                     break;
                 }
             }

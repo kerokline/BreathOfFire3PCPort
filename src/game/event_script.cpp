@@ -14,7 +14,7 @@
 // The event script interpreter and the flag helpers - see docs/event-script.md
 // for each function, its PSX twin and the fuzz.
 //
-// Terms. "The count" is the word at DamageScratch (0x903850; the PSX
+// Terms. "The count" is the word at SharedScratch (0x903850; the PSX
 // scratchpad's 0x1F800000): the next Sprite_Objects entry a placement fills.
 // The word after it (0x903852, PSX 0x1F800002) holds the animation bank a
 // placement passes on. Both are general scratch words, used all over the exe
@@ -58,16 +58,16 @@ std::uint32_t Dword(const unsigned char* p) {
 // The count and the bank word (see the top of the file).
 short Count() {
     short v;
-    std::memcpy(&v, At(DamageScratch_addr), sizeof v);
+    std::memcpy(&v, At(SharedScratch_addr), sizeof v);
     return v;
 }
-void SetCount(unsigned v) { DamageScratch.w_00 = v; }
+void SetCount(unsigned v) { SharedScratch.w_00 = v; }
 unsigned short Bank() {
     unsigned short v;
-    std::memcpy(&v, At(DamageScratch_addr) + 2, sizeof v);
+    std::memcpy(&v, At(SharedScratch_addr) + 2, sizeof v);
     return v;
 }
-void SetBank(unsigned v) { DamageScratch.w_02 = v; }
+void SetBank(unsigned v) { SharedScratch.w_02 = v; }
 
 // Data these read that symbols.toml does not name.
 // kBlockFlags: now Field_StatusBits (symbols.toml). bit 6: ScriptFlags_Set40 / Clear40 (object_kinds.cpp)

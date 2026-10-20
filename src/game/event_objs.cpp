@@ -90,8 +90,8 @@ std::int32_t Idiv(std::int32_t dividend, std::int32_t divisor) {
     __asm__ volatile("cltd\n\tidivl %2" : "=a"(quotient) : "a"(dividend), "r"(divisor) : "edx", "cc");
     return quotient;
 }
-// DamageScratch's first byte: 0x5725C0 leaves 1 there on a slope.
-unsigned char ScratchByte() { return DamageScratch.b_00; }
+// SharedScratch's first byte: 0x5725C0 leaves 1 there on a slope.
+unsigned char ScratchByte() { return SharedScratch.b_00; }
 // The low byte of an actor record's state word (Field_ActorStates + n * 0xA4),
 // n a whole byte as the original's.
 unsigned char& ActorState(unsigned n) { return At(0x903A80u + n * kRecordSize)[0]; }
@@ -198,7 +198,7 @@ extern "C" void __cdecl Field_JumpStart(void) {
 // landing point. Kept: both divisions are idiv and fault on 0 - a speed of 0
 // (Field_MoveSpeeds' index a whole byte into a table of six, zeros after) or
 // frames that the speed has brought to 0 (a speed above 0x20). The ground is
-// 0x5725C0's answer unless that leaves DamageScratch's byte non-zero - a
+// 0x5725C0's answer unless that leaves SharedScratch's byte non-zero - a
 // slope - and then MapView_GroundAt's.
 extern "C" void __cdecl Field_JumpSetUp(void) {
     const unsigned speed = Field_MoveSpeeds[Field_State[0x128]];

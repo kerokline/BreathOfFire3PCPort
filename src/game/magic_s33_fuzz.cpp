@@ -243,7 +243,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kCentre: now BossSi_CentreX (symbols.toml).
 // kFormation: now BattlePhases_B89 (symbols.toml).
 // kPartySet: now AreaW0b_PartySet (symbols.toml).
-// kScratch: now DamageScratch (symbols.toml).
+// kScratch: now SharedScratch (symbols.toml).
 constexpr std::uint32_t kMembers = 0x939B00;
 
 // The kinds 0x904B89 may hold where MAGIC151 reads a pointer by it: the 26
@@ -381,7 +381,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {DamageScratch_addr, 0x10},           // 0x903850.., Scratch_Swap at +0xC
+    {SharedScratch_addr, 0x10},           // 0x903850.., Scratch_Swap at +0xC
     {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the blades swap
     {0x80E980, 0x20},                     // Gfx_ClutStripSource row 26, its first 16 words
     {0x812980, 0x20},                     // Gfx_ClutStrip row 26, its first 16 words
@@ -401,7 +401,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: SetWord(mh::Mem(DamageScratch_addr + 2 * (v % 8)), h >> 16); break;
+    case 2: SetWord(mh::Mem(SharedScratch_addr + 2 * (v % 8)), h >> 16); break;
     case 3: SetLong(mh::Mem(BossSi_CentreX_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
     case 4: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 5: {

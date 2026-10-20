@@ -73,7 +73,7 @@ constexpr U kReturnZ = 0x7E0920;           // dword: its z
 
 // --- area 0xBD's view (AreaMap_FrameAreaBD and its build) --------------------------------
 // kAnglesDrawn: now Camera_AnglesDrawn (symbols.toml). Camera_AnglesDrawn: two dwords
-// kOriginX: now DamageScratch (symbols.toml). s16: the build's first column (the effect slot's word too)
+// kOriginX: now SharedScratch (symbols.toml). s16: the build's first column (the effect slot's word too)
 constexpr U kOriginZ = 0x903852;           // s16: its first row
 constexpr U kRows = 0x903854;              // dword: the rows the build walks (0x38 or 0x2C)
 constexpr U kColumns = 0x903858;           // dword: the columns (0x1C or 0x28)

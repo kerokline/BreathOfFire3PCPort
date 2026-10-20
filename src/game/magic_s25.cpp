@@ -70,10 +70,10 @@ using move_script::Word;
 // The vertex scratch (Prim_VertexScratch, four SVECTORs at +0 / +8 / +0x10 /
 // +0x18) and the word scratch at 0x903850 (+0xC is Scratch_Swap).
 // kVertex: now Prim_VertexScratch (symbols.toml).
-// kScratch: now DamageScratch (symbols.toml).
+// kScratch: now SharedScratch (symbols.toml).
 unsigned char* V(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(V(k)); }
-unsigned char* S(unsigned k) { return Mem(DamageScratch_addr + k); }
+unsigned char* S(unsigned k) { return Mem(SharedScratch_addr + k); }
 std::int32_t SL(unsigned k) { return Long(S(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 

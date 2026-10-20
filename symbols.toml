@@ -498,15 +498,15 @@ evidence = "Stride read off PC Battle_ElementAffinity's party branch (x5 / x41 /
 note = "The record grew 0xC but every documented field keeps its offset, so the growth is past +0x13C, beyond what BATTLE_RAM.md covers. Carries a copy of the persistent character record at +0x74; that record did not change size (164 bytes in both)."
 
 [[block]]
-name = "DamageScratch"
+name = "SharedScratch"
 pc = 0x903850
 psx = 0x1F800000
 record_stride = 0x1C
 record_count = 1
-ctype = "records::DamageScratch"
+ctype = "records::SharedScratch"
 status = "hypothesis"
 evidence = "Battle_ScaleDamage 0x446430 reads the weapon/element byte from 0x903850 and tests it for 0x1F then 0x20, exactly where PSX Battle_ScaleDamage reads scratchpad 0x1F800000 (names/functions.toml)."
-note = "NOT a delta — the PSX scratchpad is 1 KB of on-chip fast RAM with no x86 equivalent, so the port relocated it to an ordinary global. Expect the same for every other 0x1F80xxxx address: they will never transfer by arithmetic. Only the one word is confirmed; the extent of the relocated block is unknown. Typed (typed-data round stage C4, 2026-10-19) as one records::DamageScratch, 0x1C bytes: the extent its readers reach (the dword at +0x18; records.h DamageScratch), at most 0x30 (Gfx_BufferBlocks 0x903880 follows). The macro is the record (`DamageScratch.w_0c`); the struct's neutral names are by offset and width, since the PSX scratchpad this relocates has no one meaning per offset. Scratch_Swap is its +0xC dword (field_of). The block and the struct share their name: symbols.gen.h includes the record headers first, and records::DamageScratch is not spelled past it."
+note = "NOT a delta — the PSX scratchpad is 1 KB of on-chip fast RAM with no x86 equivalent, so the port relocated it to an ordinary global. Expect the same for every other 0x1F80xxxx address: they will never transfer by arithmetic. Only the one word is confirmed; the extent of the relocated block is unknown. Typed (typed-data round stage C4, 2026-10-19) as one records::SharedScratch, 0x1C bytes: the extent its readers reach (the dword at +0x18; records.h SharedScratch), at most 0x30 (Gfx_BufferBlocks 0x903880 follows). The macro is the record (`SharedScratch.w_0c`); the struct's neutral names are by offset and width, since the PSX scratchpad this relocates has no one meaning per offset. Scratch_Swap is its +0xC dword (field_of). The block and the struct share their name: symbols.gen.h includes the record headers first, and records::SharedScratch is not spelled past it. Named DamageScratch until 2026-10-20 (renamed SharedScratch by the owner: the PSX scratchpad this relocates has no one meaning)."
 
 [[func]]
 pc = 0x44F030
@@ -1932,7 +1932,7 @@ evidence = "disasm 2026-09-20: DrawTable_Sort's bound, and the bound 0x593060 co
 pc = 0x90385C
 name = "Scratch_Swap"
 ctype = "unsigned long"
-field_of = "DamageScratch"
+field_of = "SharedScratch"
 field_offset = 0xC
 status = "evidence"
 evidence = "disasm 2026-09-20: DrawTable_Sort stores the value it moves up here on every exchange (0x56F639) and never reads it back. pe_xref.py: 505 references in well over a hundred functions."
@@ -3309,7 +3309,7 @@ ret = "void"
 params = "unsigned char *object, unsigned char direction"
 impl = "src/game/move_cmds.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-10 (capstone to the last instruction), 0x578C10..0x578D04 (0xF5 bytes, then nops to 0x578D10), cdecl, two calls: speed = Field_MoveSpeeds[object +4] (any byte); Sprite_Current +9 = 0x20 for direction (low byte) 2 or 6, else 0x10, then idiv by the speed (a speed of 0 faults); +0xC / +0x10 = MoveCmd_F9Steps[direction * 2] / [direction * 2 + 1] times the speed (imul, wrapping); the landing x / z = +0xC / +0x10 times +9 plus +0x34 / +0x38. Unless object +0 bit 7: AreaMap_Slope(x, z, the direction's whole pushed dword) at 0x578CBE, and when it leaves DamageScratch's byte non-zero AreaMap_Elevation(x, z) at 0x578CD2 instead; +0x14 = (s16 answer - s16 +0x3E) idiv +9, both re-read through Sprite_Current. Always +0 |= 0x10. Same shape as Field_JumpSetUp 0x534610 (which asks 0x5725C0 / MapView_GroundAt). Called by MoveScript_Step (ops 0x10-0x4F) and MoveScript_GroupF (F2, F3, FA) when the object is not kind 2, and by the field objects, EffectKind32_Throw and nine area modules. psx_pair call. docs/move-cmds.md section 8."
+evidence = "disasm 2026-10-10 (capstone to the last instruction), 0x578C10..0x578D04 (0xF5 bytes, then nops to 0x578D10), cdecl, two calls: speed = Field_MoveSpeeds[object +4] (any byte); Sprite_Current +9 = 0x20 for direction (low byte) 2 or 6, else 0x10, then idiv by the speed (a speed of 0 faults); +0xC / +0x10 = MoveCmd_F9Steps[direction * 2] / [direction * 2 + 1] times the speed (imul, wrapping); the landing x / z = +0xC / +0x10 times +9 plus +0x34 / +0x38. Unless object +0 bit 7: AreaMap_Slope(x, z, the direction's whole pushed dword) at 0x578CBE, and when it leaves SharedScratch's byte non-zero AreaMap_Elevation(x, z) at 0x578CD2 instead; +0x14 = (s16 answer - s16 +0x3E) idiv +9, both re-read through Sprite_Current. Always +0 |= 0x10. Same shape as Field_JumpSetUp 0x534610 (which asks 0x5725C0 / MapView_GroundAt). Called by MoveScript_Step (ops 0x10-0x4F) and MoveScript_GroupF (F2, F3, FA) when the object is not kind 2, and by the field objects, EffectKind32_Throw and nine area modules. psx_pair call. docs/move-cmds.md section 8."
 
 
 # --- group B: the kind-2 object's script runner (docs/kind2-object.md) ---
@@ -3386,7 +3386,7 @@ ret = "long"
 params = "long x, long y, unsigned long direction"
 impl = "src/game/area_slope.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x5722D0..0x57256F (0x2A0 bytes), cdecl, no calls, every jump internal. AreaMap_Elevation's grid and cell lookup; scratch byte 0x903850 (DamageScratch) 0 for flat or outside, 1 for sloped, tested by the callers read (0x46B611, 0x518784, MoveCmd_Move 0x578CC3) straight after. Whole cell: the elevation formula. One half: the edge sums a+b, d+e - flat when b == e and a == d, else the absolute difference << 4. Both halves: four corners, flat when equal (p0 << 5), else by the direction byte n, i = n >> 1, the absolute difference of p[i] (the larger of p[i], p[(i+1)&3] for odd n) and p[(i-2)&3], << 5; p[i] unmasked, reading past the four for n >= 8. Uses its caller's x and y slots as scratch. psx from psx_pair (call-anchored); the PSX body is not in the sibling's boot decompilation and was not read. E8 callers: 0x46B611, 0x46B66B, 0x51877F, 0x5725D4, 0x578CBE. Call trace hidden_b: 4,612 calls (2,481 from 0x518784, 2,131 from 0x578CC3) - reached by the attract cycle."
+evidence = "disasm 2026-09-22, 0x5722D0..0x57256F (0x2A0 bytes), cdecl, no calls, every jump internal. AreaMap_Elevation's grid and cell lookup; scratch byte 0x903850 (SharedScratch) 0 for flat or outside, 1 for sloped, tested by the callers read (0x46B611, 0x518784, MoveCmd_Move 0x578CC3) straight after. Whole cell: the elevation formula. One half: the edge sums a+b, d+e - flat when b == e and a == d, else the absolute difference << 4. Both halves: four corners, flat when equal (p0 << 5), else by the direction byte n, i = n >> 1, the absolute difference of p[i] (the larger of p[i], p[(i+1)&3] for odd n) and p[(i-2)&3], << 5; p[i] unmasked, reading past the four for n >= 8. Uses its caller's x and y slots as scratch. psx from psx_pair (call-anchored); the PSX body is not in the sibling's boot decompilation and was not read. E8 callers: 0x46B611, 0x46B66B, 0x51877F, 0x5725D4, 0x578CBE. Call trace hidden_b: 4,612 calls (2,481 from 0x518784, 2,131 from 0x578CC3) - reached by the attract cycle."
 
 # group B callees
 
@@ -5991,7 +5991,7 @@ ret = "void"
 params = "const unsigned char *script"
 impl = "src/game/event_script.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, whole (0x579740..0x5797B7, 120 bytes), branch for branch the PSX FUN_801A4E58: the object count (the word at DamageScratch, PSX 0x1F800000) = 0, byte 0 of the four Sprite_ObjectsExtra cleared, the word after it = 4, EventScript_Run(script), then byte 0 of every Sprite_Objects entry from the count to 29 cleared and the count set to 30. Called by 0x594E60 (area entry) and 0x580535 with the area descriptor +0 - the area's placement script, in the exe's .data."
+evidence = "disasm 2026-09-22, whole (0x579740..0x5797B7, 120 bytes), branch for branch the PSX FUN_801A4E58: the object count (the word at SharedScratch, PSX 0x1F800000) = 0, byte 0 of the four Sprite_ObjectsExtra cleared, the word after it = 4, EventScript_Run(script), then byte 0 of every Sprite_Objects entry from the count to 29 cleared and the count set to 30. Called by 0x594E60 (area entry) and 0x580535 with the area descriptor +0 - the area's placement script, in the exe's .data."
 
 [[func]]
 pc = 0x579800
@@ -9618,7 +9618,7 @@ ret = "void"
 params = "void"
 impl = "src/game/event_objs.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x534610..0x534705 (0xF6 bytes): speed = Field_MoveSpeeds[Field_State +0x128]; Sprite_Current +9 = 0x20 for direction (+8) 2 or 6, else 0x10, divided by the speed (idiv, a zero speed faults), doubled if Field_ScriptFlags bit 12; +0xC / +0x10 = the direction's step pair at 0x6696DC times the speed; the landing (x, z) = step * +9 + (+0x34, +0x38); 0x5725C0(x, z, direction) and, when it leaves DamageScratch's byte non-zero, MapView_GroundAt(x, z) instead; +0x14 = (s16 ground - s16 +0x3E) / +9 (idiv, faults on 0). The PSX 0x801C3530 the same (divu / div, break 7). Callers Field_JumpStart, 0x51AE66, 0x535FF7. Shop route 179 calls."
+evidence = "disasm 2026-09-23, 0x534610..0x534705 (0xF6 bytes): speed = Field_MoveSpeeds[Field_State +0x128]; Sprite_Current +9 = 0x20 for direction (+8) 2 or 6, else 0x10, divided by the speed (idiv, a zero speed faults), doubled if Field_ScriptFlags bit 12; +0xC / +0x10 = the direction's step pair at 0x6696DC times the speed; the landing (x, z) = step * +9 + (+0x34, +0x38); 0x5725C0(x, z, direction) and, when it leaves SharedScratch's byte non-zero, MapView_GroundAt(x, z) instead; +0x14 = (s16 ground - s16 +0x3E) / +9 (idiv, faults on 0). The PSX 0x801C3530 the same (divu / div, break 7). Callers Field_JumpStart, 0x51AE66, 0x535FF7. Shop route 179 calls."
 
 [[func]]
 pc = 0x534710
@@ -9808,7 +9808,7 @@ ret = "void"
 params = "void"
 impl = "src/game/event_objs.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x535F50..0x535FBC (0x6D bytes): the landing point (Field_JumpSetUp's), 0x5725C0 on it; if that leaves DamageScratch's byte 0, MapView_GroundAt there, and if the ground is 0x80 or more above word +0x3E, Field_State +0x128 one less and Field_JumpStart again. PSX 0x801C5C40 the same. Callers 0x51AE6B, 0x52DCFF. Shop route 176 calls."
+evidence = "disasm 2026-09-23, 0x535F50..0x535FBC (0x6D bytes): the landing point (Field_JumpSetUp's), 0x5725C0 on it; if that leaves SharedScratch's byte 0, MapView_GroundAt there, and if the ground is 0x80 or more above word +0x3E, Field_State +0x128 one less and Field_JumpStart again. PSX 0x801C5C40 the same. Callers 0x51AE6B, 0x52DCFF. Shop route 176 calls."
 
 [[func]]
 pc = 0x536670
@@ -9894,7 +9894,7 @@ ret = "unsigned char"
 params = "unsigned category, unsigned item, unsigned count"
 impl = "src/game/char_stats.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22 and 2026-09-23, 0x590BB0..0x590C8D (0xDE bytes), no calls: 0 for item or count 0 (low bytes); DamageScratch 0; the id list 0x656B00[category] and count list 0x656B14[category] (the category's low byte, unbounded), 128 slots; outside category 4 an existing stack adds count, capped at 99 (answer 0 then, 1 otherwise); else the first slot with id 0 - or count 0, outside category 4 - takes it and DamageScratch is 1; category 4 (the key items 0x904554, 32 bytes) is searched 128 long, D34. ItemUse_FaerieTiara pushes a fourth 0 it does not read. The sibling's Inventory_Add 0x80165AA4. 80 call sites."
+evidence = "disasm 2026-09-22 and 2026-09-23, 0x590BB0..0x590C8D (0xDE bytes), no calls: 0 for item or count 0 (low bytes); SharedScratch 0; the id list 0x656B00[category] and count list 0x656B14[category] (the category's low byte, unbounded), 128 slots; outside category 4 an existing stack adds count, capped at 99 (answer 0 then, 1 otherwise); else the first slot with id 0 - or count 0, outside category 4 - takes it and SharedScratch is 1; category 4 (the key items 0x904554, 32 bytes) is searched 128 long, D34. ItemUse_FaerieTiara pushes a fourth 0 it does not read. The sibling's Inventory_Add 0x80165AA4. 80 call sites."
 
 [[func]]
 pc = 0x590EE0
@@ -13020,7 +13020,7 @@ ret = "void"
 params = "unsigned char *gauge, const unsigned char *max_hp, unsigned char *max_seen, unsigned char *shown, unsigned char *hp, unsigned char *drain, unsigned char *step, unsigned char *kind"
 impl = "src/game/window_kinds.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x597A80..0x597BCB (0x14C bytes), cdecl, no calls. Slot 0 of the three Window_DispatchKind 0x597A30 builds on its stack (the imm32 at 0x597A63); its only caller is the enemy target window 0x597320 at 0x59738E, whose eight pushes are w+0xB, enemy+0x30, w+0x1C, w+0x14, enemy+0x24, w+0xD, w+0x18, w+8 (w the window record, enemy EnemyWorkingRecords 0x93B9E0 + 0x128 (w[+0xA] - 3); +0x24 HP, +0x30 max HP - 0x5973C1 compares one with the other >> 2). The HP gauge's settled state: on a max change the HP clamped (jg), the gauge 55 * HP / max (idiv; 1 while HP non-zero) or 55 * shown / max capped at 0x37 (jbe), the max stored; then shown > HP (jle) -> gauge state 1 with the drained part (old gauge via DamageScratch 0x903850) >> 4 as the step, shown < HP -> state 2 with (55 HP / max - 55 shown / max) / 16 (cdq; and 0xF; sar 4), step at least 1, shown = HP. The eax it leaves is dead: 0x597399 loads al over it and Battle_ActorIsOut masks its argument to a byte."
+evidence = "disasm 2026-09-25, 0x597A80..0x597BCB (0x14C bytes), cdecl, no calls. Slot 0 of the three Window_DispatchKind 0x597A30 builds on its stack (the imm32 at 0x597A63); its only caller is the enemy target window 0x597320 at 0x59738E, whose eight pushes are w+0xB, enemy+0x30, w+0x1C, w+0x14, enemy+0x24, w+0xD, w+0x18, w+8 (w the window record, enemy EnemyWorkingRecords 0x93B9E0 + 0x128 (w[+0xA] - 3); +0x24 HP, +0x30 max HP - 0x5973C1 compares one with the other >> 2). The HP gauge's settled state: on a max change the HP clamped (jg), the gauge 55 * HP / max (idiv; 1 while HP non-zero) or 55 * shown / max capped at 0x37 (jbe), the max stored; then shown > HP (jle) -> gauge state 1 with the drained part (old gauge via SharedScratch 0x903850) >> 4 as the step, shown < HP -> state 2 with (55 HP / max - 55 shown / max) / 16 (cdq; and 0xF; sar 4), step at least 1, shown = HP. The eax it leaves is dead: 0x597399 loads al over it and Battle_ActorIsOut masks its argument to a byte."
 
 [[func]]
 pc = 0x597BD0
@@ -14562,7 +14562,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_misc.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x44A5C0..0x44A647 (0x88 bytes): 0x904AE9 = 0; for layer 0 then 1, each of the 8 pool entries at 0x93B8E0 (stride 0xC) made 0x93B8C0, then skipped unless +0 set, +3 the layer and +1 sharing no bit with 0x904AE9; DamageScratch = the index; call through a five-entry table built on the stack by immediates: 0x437CC0 (bare ret) for kinds 0, 3, 4, 0x44A740 for 1, 0x44A7B0 for 2. No bound on the kind. The sibling's BattleBanner_Dispatch (its body at 0x801DE440, the entry 0x801DE404 builds the table from 0x801D0C84: nop, kind 1, kind 2, nop, nop). Called from the battle frame 0x42E3A8. Combat route: 2,091 calls."
+evidence = "disasm 2026-09-23, 0x44A5C0..0x44A647 (0x88 bytes): 0x904AE9 = 0; for layer 0 then 1, each of the 8 pool entries at 0x93B8E0 (stride 0xC) made 0x93B8C0, then skipped unless +0 set, +3 the layer and +1 sharing no bit with 0x904AE9; SharedScratch = the index; call through a five-entry table built on the stack by immediates: 0x437CC0 (bare ret) for kinds 0, 3, 4, 0x44A740 for 1, 0x44A7B0 for 2. No bound on the kind. The sibling's BattleBanner_Dispatch (its body at 0x801DE440, the entry 0x801DE404 builds the table from 0x801D0C84: nop, kind 1, kind 2, nop, nop). Called from the battle frame 0x42E3A8. Combat route: 2,091 calls."
 
 [[func]]
 pc = 0x44A650
@@ -14794,7 +14794,7 @@ ret = "short"
 params = "unsigned attacker, unsigned target, unsigned element"
 impl = "src/game/battle_damage.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x445CF0..0x44610A (0x41B bytes), cdecl, nine calls, every jump internal; FUN_801dc00c (sibling Ghidra export) branch for branch. DamageScratch = element (0xFFFF: a party attacker's weapon byte NameTable_Weapons +0x13, an enemy 0); a charged attacker (second flags bit 6) - party ATK 0x939FE4 += charge x ATK >> 1, enemy ATK = that (the PSX the same), charge and bit cleared; Battle_BaseDamage(a, t, 0); party on enemy doubled for weapons 0x13/0x17/0x33 on family (+0x0D) 4 and 0x16/0x35/0x40 on family 1; target status byte & 0x64 clear -> to-hit 0x446110 (party) / 0x4461B0 (enemy); else 0x40 and 0x20 cured through 0x44F4B0 (0x904B9A |= bit) with a minimum of 1, and 4 a minimum of 1; flags bit 1: x {50,50,50,50,60,60,60,70}[Rand % 8] / 100; 0x904AA8 bit 7: x 2 + Battle_BaseDamage(a, t, 1) / 4; a quarter off on a party target with 0x904060 == 2 and on status 0x80 (16-bit); minimum 1 with status 0x60 or 0x904AA8 bit 7; 0 with flags 0x10000; clamp +-9999. Returns ax; every caller (28, E8 scan) takes the low word. Combat route: 5 calls, from Battle_ApplyDamage and an effect handler."
+evidence = "disasm 2026-09-23, 0x445CF0..0x44610A (0x41B bytes), cdecl, nine calls, every jump internal; FUN_801dc00c (sibling Ghidra export) branch for branch. SharedScratch = element (0xFFFF: a party attacker's weapon byte NameTable_Weapons +0x13, an enemy 0); a charged attacker (second flags bit 6) - party ATK 0x939FE4 += charge x ATK >> 1, enemy ATK = that (the PSX the same), charge and bit cleared; Battle_BaseDamage(a, t, 0); party on enemy doubled for weapons 0x13/0x17/0x33 on family (+0x0D) 4 and 0x16/0x35/0x40 on family 1; target status byte & 0x64 clear -> to-hit 0x446110 (party) / 0x4461B0 (enemy); else 0x40 and 0x20 cured through 0x44F4B0 (0x904B9A |= bit) with a minimum of 1, and 4 a minimum of 1; flags bit 1: x {50,50,50,50,60,60,60,70}[Rand % 8] / 100; 0x904AA8 bit 7: x 2 + Battle_BaseDamage(a, t, 1) / 4; a quarter off on a party target with 0x904060 == 2 and on status 0x80 (16-bit); minimum 1 with status 0x60 or 0x904AA8 bit 7; 0 with flags 0x10000; clamp +-9999. Returns ax; every caller (28, E8 scan) takes the low word. Combat route: 5 calls, from Battle_ApplyDamage and an effect handler."
 
 [[func]]
 pc = 0x4462B0
@@ -14817,7 +14817,7 @@ ret = "int"
 params = "unsigned attacker, unsigned target, int base"
 impl = "src/game/battle_damage.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-18 and 2026-09-23, 0x446430..0x446530 (0x101 bytes), cdecl, two calls, every jump internal; term for term against the PSX evidence note: s = base << 8 into 8.8 fixed, the multiplier 0x100 - (s / 256000) << 17 >> 8 clamped to at least 0xCD (= 205/256), times s >> 8, times Battle_DamageVarianceTable[rand() & 7] >> 8; then if DamageScratch & 0x1F, times s16 Battle_ElementAffinity(target, scratch word) / 100 (magic 0x51EB851F, sar 5), the scratch read again after the call; then if & 0x20, times s16 Battle_HolyAffinityTable[holy class: party +0xA4, enemy +0x44] / 100; rounded half up out of 8.8, eax whole. Both tables hold the PSX values exactly. The attacker is not read. Combat route: 5 calls."
+evidence = "disasm 2026-09-18 and 2026-09-23, 0x446430..0x446530 (0x101 bytes), cdecl, two calls, every jump internal; term for term against the PSX evidence note: s = base << 8 into 8.8 fixed, the multiplier 0x100 - (s / 256000) << 17 >> 8 clamped to at least 0xCD (= 205/256), times s >> 8, times Battle_DamageVarianceTable[rand() & 7] >> 8; then if SharedScratch & 0x1F, times s16 Battle_ElementAffinity(target, scratch word) / 100 (magic 0x51EB851F, sar 5), the scratch read again after the call; then if & 0x20, times s16 Battle_HolyAffinityTable[holy class: party +0xA4, enemy +0x44] / 100; rounded half up out of 8.8, eax whole. Both tables hold the PSX values exactly. The attacker is not read. Combat route: 5 calls."
 
 [[func]]
 pc = 0x446650
@@ -15404,7 +15404,7 @@ ret = "unsigned char"
 params = "unsigned kind, unsigned owner, unsigned claim"
 impl = "src/game/battle_sprites.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x454DF0..0x454F30 (0x140 bytes: code to 0x454F19, a 5-entry jump table at 0x454F1C), cdecl, calls ClutMap_FindFree or ClutMap_FindOwner. The shared body of Sprite_SetTint and Tint_Release: claim writes the owner, release 0xFF, over 1 / 16 / 2 / 4 / 8 cells (kind 0..4) of the 4 x 16 clut map at 0x7E06A0 from the row and cell the callee left in DamageScratch bytes 0 and 1; answers the callee's al. The catalogue size 0x3AF ran on through ClutMap_FindFree and ClutMap_FindOwner. Combat route: 40 calls."
+evidence = "disasm 2026-09-23, 0x454DF0..0x454F30 (0x140 bytes: code to 0x454F19, a 5-entry jump table at 0x454F1C), cdecl, calls ClutMap_FindFree or ClutMap_FindOwner. The shared body of Sprite_SetTint and Tint_Release: claim writes the owner, release 0xFF, over 1 / 16 / 2 / 4 / 8 cells (kind 0..4) of the 4 x 16 clut map at 0x7E06A0 from the row and cell the callee left in SharedScratch bytes 0 and 1; answers the callee's al. The catalogue size 0x3AF ran on through ClutMap_FindFree and ClutMap_FindOwner. Combat route: 40 calls."
 
 [[func]]
 pc = 0x454F30
@@ -15415,7 +15415,7 @@ ret = "unsigned char"
 params = "unsigned kind"
 impl = "src/game/battle_sprites.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x454F30..0x455140 (0x210 bytes: code to 0x45512C, a 5-entry jump table at 0x45512C), cdecl, no calls; missing from entries_logic.txt (after 0x454DF0's inline table). The first free (0xFF) cell of the 4 x 16 map at 0x7E06A0 that starts an aligned free run of the kind's size; each free cell tried goes to DamageScratch bytes 0 / 1; answers the clut slot: kind 0 0xC0 + row * 16 + cell, 1 0x1C + row, 2 0xE0 + row * 8 + cell / 2, 3 0x70 + row * 4 + cell / 4, 4 0x38 + row * 2 + cell / 8, else 0xFF."
+evidence = "disasm 2026-09-23, 0x454F30..0x455140 (0x210 bytes: code to 0x45512C, a 5-entry jump table at 0x45512C), cdecl, no calls; missing from entries_logic.txt (after 0x454DF0's inline table). The first free (0xFF) cell of the 4 x 16 map at 0x7E06A0 that starts an aligned free run of the kind's size; each free cell tried goes to SharedScratch bytes 0 / 1; answers the clut slot: kind 0 0xC0 + row * 16 + cell, 1 0x1C + row, 2 0xE0 + row * 8 + cell / 2, 3 0x70 + row * 4 + cell / 4, 4 0x38 + row * 2 + cell / 8, else 0xFF."
 
 [[func]]
 pc = 0x455140
@@ -15426,7 +15426,7 @@ ret = "unsigned char"
 params = "unsigned owner"
 impl = "src/game/battle_sprites.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x455140..0x45519F (0x5F bytes), cdecl, no calls; missing from entries_logic.txt. The first cell of the clut map owned by the byte, its row and cell to DamageScratch bytes 0 / 1, answering the owner; 0xFF (scratch untouched) when none."
+evidence = "disasm 2026-09-23, 0x455140..0x45519F (0x5F bytes), cdecl, no calls; missing from entries_logic.txt. The first cell of the clut map owned by the byte, its row and cell to SharedScratch bytes 0 / 1, answering the owner; 0xFF (scratch untouched) when none."
 
 [[func]]
 pc = 0x4551A0
@@ -15828,7 +15828,7 @@ ret = "unsigned long"
 params = "void"
 impl = "src/game/battle_odds.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x44A740..0x44A7AC (0x6D bytes), one call (0x44A830 BattleBanner_NoneOfKind at +0x4C), every jump internal. Reached only as entry 1 of the table BattleBanner_Dispatch builds on its stack (immediate at 0x44A5D4, call [esp + ecx*4 + 0xC] at 0x44A625, no argument, eax dropped). On *0x93B8C0: word +8 of 0xFF skips to the store; else 0x904AE9 |= +1, word +8 decremented; the pointer re-read; not 0: 0x8031FA (window record 4 +0xA) = DamageScratch; 0: +0 = 0, 0x904AE9 &= ~(+1 of the re-read pointer), NoneOfKind(1), al set: 0x8031F3 (record 4 +3) = 0. eax the entry or NoneOfKind's. Combat route: reached (round 8 first-call trace)."
+evidence = "disasm 2026-09-25, 0x44A740..0x44A7AC (0x6D bytes), one call (0x44A830 BattleBanner_NoneOfKind at +0x4C), every jump internal. Reached only as entry 1 of the table BattleBanner_Dispatch builds on its stack (immediate at 0x44A5D4, call [esp + ecx*4 + 0xC] at 0x44A625, no argument, eax dropped). On *0x93B8C0: word +8 of 0xFF skips to the store; else 0x904AE9 |= +1, word +8 decremented; the pointer re-read; not 0: 0x8031FA (window record 4 +0xA) = SharedScratch; 0: +0 = 0, 0x904AE9 &= ~(+1 of the re-read pointer), NoneOfKind(1), al set: 0x8031F3 (record 4 +3) = 0. eax the entry or NoneOfKind's. Combat route: reached (round 8 first-call trace)."
 
 [[func]]
 pc = 0x44A7B0
@@ -15839,7 +15839,7 @@ ret = "unsigned long"
 params = "void"
 impl = "src/game/battle_odds.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x44A7B0..0x44A807 (0x58 bytes), one call (0x44A830 at +0x37), every jump internal. Entry 2 of BattleBanner_Dispatch's stack table (immediate at 0x44A5DC). 0x904AE9 |= +1 first; word +8 not 0xFF: decremented through cx, pointer re-read; word +8 0: +0 = 0, NoneOfKind(4), al set: 0x803163 (window record 0 +3) = 2; else 0x80316A (record 0 +0xA) = DamageScratch. The kind is never cleared from 0x904AE9. PSX twin as paired in docs/battle_misc.md 1.1. Combat route: reached."
+evidence = "disasm 2026-09-25, 0x44A7B0..0x44A807 (0x58 bytes), one call (0x44A830 at +0x37), every jump internal. Entry 2 of BattleBanner_Dispatch's stack table (immediate at 0x44A5DC). 0x904AE9 |= +1 first; word +8 not 0xFF: decremented through cx, pointer re-read; word +8 0: +0 = 0, NoneOfKind(4), al set: 0x803163 (window record 0 +3) = 2; else 0x80316A (record 0 +0xA) = SharedScratch. The kind is never cleared from 0x904AE9. PSX twin as paired in docs/battle_misc.md 1.1. Combat route: reached."
 
 [[func]]
 pc = 0x44C140
@@ -29299,7 +29299,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s28.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DDA50..0x4DDBF7 (0x1A8 bytes), group S28: +9 -= 1; at 0: +8 from the owner; MagicFx_CenterOnSide, BattleActor_UpdateScreenXY, the centre screen point into DamageScratch +0xC/+0xE; the owner position, UpdateScreenXY again; a party actor (byte 0x904B34 < 3) MagicFx_FormationOffset, else +0xC/+0x10 by +8 (0: 0x29,-13; 1: -41,-13; 2: -38,-38; else 0x26,-38); +0x2E/+0x30 += them, into scratch +8/+0xA; +0x14 = Math_Ratan2(float(cx - x), float(cy - y)); +4 0x10, +0xB 0x11, +9 0, +0xA 1, +2 += 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+evidence = "disasm 2026-09-26, 0x4DDA50..0x4DDBF7 (0x1A8 bytes), group S28: +9 -= 1; at 0: +8 from the owner; MagicFx_CenterOnSide, BattleActor_UpdateScreenXY, the centre screen point into SharedScratch +0xC/+0xE; the owner position, UpdateScreenXY again; a party actor (byte 0x904B34 < 3) MagicFx_FormationOffset, else +0xC/+0x10 by +8 (0: 0x29,-13; 1: -41,-13; 2: -38,-38; else 0x26,-38); +0x2E/+0x30 += them, into scratch +8/+0xA; +0x14 = Math_Ratan2(float(cx - x), float(cy - y)); +4 0x10, +0xB 0x11, +9 0, +0xA 1, +2 += 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
 
 [[func]]
 pc = 0x4DDC00
@@ -29900,7 +29900,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DA540..0x4DA8A5 (0x366 bytes), group S27, cdecl: DamageScratch +0xA = +0xB << 3, +0 = +9 << 2, +6 = word +0x14 + 0x20, +8 = (Frame_Counter & 0xF) << 8; a ring of 32 semi-transparent POLY_GT4 (angles 0x80..0x1000 by 0x80) through Prim_VertexScratch: bottom points (cos, sin) x +0 at 0, top points at -(((sin(+8) << 5) >> 12) + +6) with +8 = ((Frame_Counter + i) & 0xF) << 8 (the first top from sin(0)); per quad Gpu_SetDrawMode(tpage 0x35) and MapView_LinkPrimAt(x + (v8.x << 9), z + (v8.x << 9), 2, 0xC) - both axes by the first point's x - Gpu_SetPolyGT4, Gpu_SetSemiTrans, colours 1 / +0xA byte, Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), u i x 8, v (+0xA + 8) x 4 and (+0xA + 0xA) x 4, Gte_RotTransPers4 (ten arguments, points +8 +0x1C +0x30 +0x44), Gte_PrimDepths4_14, MapView_LinkPrimAt(.., 2, 0x54). MAGIC118 (row 60, file 0x287, ability id 0x76; Burn read one id down, a hypothesis: docs/cut-content.md section 2), extent 0x4DA220..0x4DACCD (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DA540..0x4DA8A5 (0x366 bytes), group S27, cdecl: SharedScratch +0xA = +0xB << 3, +0 = +9 << 2, +6 = word +0x14 + 0x20, +8 = (Frame_Counter & 0xF) << 8; a ring of 32 semi-transparent POLY_GT4 (angles 0x80..0x1000 by 0x80) through Prim_VertexScratch: bottom points (cos, sin) x +0 at 0, top points at -(((sin(+8) << 5) >> 12) + +6) with +8 = ((Frame_Counter + i) & 0xF) << 8 (the first top from sin(0)); per quad Gpu_SetDrawMode(tpage 0x35) and MapView_LinkPrimAt(x + (v8.x << 9), z + (v8.x << 9), 2, 0xC) - both axes by the first point's x - Gpu_SetPolyGT4, Gpu_SetSemiTrans, colours 1 / +0xA byte, Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), u i x 8, v (+0xA + 8) x 4 and (+0xA + 0xA) x 4, Gte_RotTransPers4 (ten arguments, points +8 +0x1C +0x30 +0x44), Gte_PrimDepths4_14, MapView_LinkPrimAt(.., 2, 0x54). MAGIC118 (row 60, file 0x287, ability id 0x76; Burn read one id down, a hypothesis: docs/cut-content.md section 2), extent 0x4DA220..0x4DACCD (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DA8B0
@@ -29913,7 +29913,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DA8B0..0x4DAAF4 (0x245 bytes), group S27, cdecl: Gpu_SetDrawMode(tpage 0x55) and Gfx_CommitPrim(5, 0xC); DamageScratch +2 0x80, +4 0xC0, +0xA +9 x 6; 32 semi-transparent POLY_G4 round the origin (outer radius +4, inner +2), colours 1 outside and +0xA byte inside, Gte_RotTransPers4, Gte_PrimDepths4_10B, Gfx_CommitPrim(5, 0x44); then tpage 0x15, Gfx_CommitPrim(5, 0xC). MAGIC118 (row 60, file 0x287, ability id 0x76; Burn read one id down, a hypothesis: docs/cut-content.md section 2), extent 0x4DA220..0x4DACCD (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DA8B0..0x4DAAF4 (0x245 bytes), group S27, cdecl: Gpu_SetDrawMode(tpage 0x55) and Gfx_CommitPrim(5, 0xC); SharedScratch +2 0x80, +4 0xC0, +0xA +9 x 6; 32 semi-transparent POLY_G4 round the origin (outer radius +4, inner +2), colours 1 outside and +0xA byte inside, Gte_RotTransPers4, Gte_PrimDepths4_10B, Gfx_CommitPrim(5, 0x44); then tpage 0x15, Gfx_CommitPrim(5, 0xC). MAGIC118 (row 60, file 0x287, ability id 0x76; Burn read one id down, a hypothesis: docs/cut-content.md section 2), extent 0x4DA220..0x4DACCD (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DAB00
@@ -29926,7 +29926,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DAB00..0x4DACCD (0x1CE bytes), group S27, cdecl: tpage 0x55 committed to slot 5; DamageScratch +0 0x80, +0xA +9 << 2, +0xC (Scratch_Swap) +9 x 6; 32 semi-transparent POLY_G3 from the origin to radius +0, colours (a, a, c) centre, (a, c, c) rim; Gte_RotTransPers3, Gte_PrimDepths3_10B, Gfx_CommitPrim(5, 0x34); tpage 0x15 after. MAGIC118 (row 60, file 0x287, ability id 0x76; Burn read one id down, a hypothesis: docs/cut-content.md section 2), extent 0x4DA220..0x4DACCD (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DAB00..0x4DACCD (0x1CE bytes), group S27, cdecl: tpage 0x55 committed to slot 5; SharedScratch +0 0x80, +0xA +9 << 2, +0xC (Scratch_Swap) +9 x 6; 32 semi-transparent POLY_G3 from the origin to radius +0, colours (a, a, c) centre, (a, c, c) rim; Gte_RotTransPers3, Gte_PrimDepths3_10B, Gfx_CommitPrim(5, 0x34); tpage 0x15 after. MAGIC118 (row 60, file 0x287, ability id 0x76; Burn read one id down, a hypothesis: docs/cut-content.md section 2), extent 0x4DA220..0x4DACCD (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DACD0
@@ -30004,7 +30004,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DAF50..0x4DB08A (0x13B bytes), group S27, cdecl: +9 down; at 0: +8 from the owner; MagicFx_CenterOnSide, BattleActor_UpdateScreenXY, words +0x2E / +0x30 kept in DamageScratch +0xC / +0xE; MagicFx_FormationOffset; the position from the owner; BattleActor_UpdateScreenXY; +0x2E += word +0xC, +0x30 += word +0x10, copied to DamageScratch +8 / +0xA; dword +0x14 = Math_Ratan2((float)(kept x - x), (float)(kept y - y)); +0xB 0x11, +9 0, +0xA 1, +4 0x10, +2 on; Sound_PlayById(0x100). MAGIC120 (row 16, file 0x288, ability id 0x78; Whelp Breath read one id down, a hypothesis), extent 0x4DACD0..0x4DC109. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DAF50..0x4DB08A (0x13B bytes), group S27, cdecl: +9 down; at 0: +8 from the owner; MagicFx_CenterOnSide, BattleActor_UpdateScreenXY, words +0x2E / +0x30 kept in SharedScratch +0xC / +0xE; MagicFx_FormationOffset; the position from the owner; BattleActor_UpdateScreenXY; +0x2E += word +0xC, +0x30 += word +0x10, copied to SharedScratch +8 / +0xA; dword +0x14 = Math_Ratan2((float)(kept x - x), (float)(kept y - y)); +0xB 0x11, +9 0, +0xA 1, +4 0x10, +2 on; Sound_PlayById(0x100). MAGIC120 (row 16, file 0x288, ability id 0x78; Whelp Breath read one id down, a hypothesis), extent 0x4DACD0..0x4DC109. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DB090
@@ -30030,7 +30030,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DB0D0..0x4DB791 (0x6C2 bytes), group S27, cdecl: tpage 0x35 committed to slot 3; DamageScratch +8 / +0xA the screen point, +2 word +0x14; for step 1..+0xA: the angle +4 = (((sin(((+9 + step) << 2 & 0xFF) << 4) x 11) << 5 >> 12) + +2) & 0xFFF, the point moved by (sin, cos) << 4 >> 12; two semi-transparent POLY_GT4 at angle +2 +- 0x400, each with widths (sin(a) x n x 2 >> 12 + base) / byte +0xB (signed idiv, the divisor unchecked) + 1 at the near and far ends, a = ((step - +9 [- 1]) & 0x3F) << 6; screen points as floats (fild / fstp); Gpu_GetClut(0, 0x1FA), Gpu_GetTPage(0, 1, 0x380, 0x100), u 0x40 / 0x80 or 0 / 0x40, v ((+9 x 0x1E + step [+ 1]) << 3) bytes, colours +4 x 12 and +4 through DamageScratch +6; Gfx_CommitPrim(3, 0x54); then tpage 0x15. MAGIC120 (row 16, file 0x288, ability id 0x78; Whelp Breath read one id down, a hypothesis), extent 0x4DACD0..0x4DC109. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DB0D0..0x4DB791 (0x6C2 bytes), group S27, cdecl: tpage 0x35 committed to slot 3; SharedScratch +8 / +0xA the screen point, +2 word +0x14; for step 1..+0xA: the angle +4 = (((sin(((+9 + step) << 2 & 0xFF) << 4) x 11) << 5 >> 12) + +2) & 0xFFF, the point moved by (sin, cos) << 4 >> 12; two semi-transparent POLY_GT4 at angle +2 +- 0x400, each with widths (sin(a) x n x 2 >> 12 + base) / byte +0xB (signed idiv, the divisor unchecked) + 1 at the near and far ends, a = ((step - +9 [- 1]) & 0x3F) << 6; screen points as floats (fild / fstp); Gpu_GetClut(0, 0x1FA), Gpu_GetTPage(0, 1, 0x380, 0x100), u 0x40 / 0x80 or 0 / 0x40, v ((+9 x 0x1E + step [+ 1]) << 3) bytes, colours +4 x 12 and +4 through SharedScratch +6; Gfx_CommitPrim(3, 0x54); then tpage 0x15. MAGIC120 (row 16, file 0x288, ability id 0x78; Whelp Breath read one id down, a hypothesis), extent 0x4DACD0..0x4DC109. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DB7A0
@@ -30161,7 +30161,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DBBC0..0x4DBE07 (0x248 bytes), group S27, cdecl: for j 0..5 (k = 3j) while k < +9 and WhelpBreathFlames_Ages[j] < 0x10: a semi-transparent POLY_FT4, DamageScratch +0 age x 4 + 0x32, corners (cos, sin) x +0 at angles 0x200 0x600 0xE00 0xA00 and height age x 15; Gpu_GetTPage(0, 1, 0x340, 0x100) at +0x26, Gpu_GetClut(0x20, 0x1FA), uv (8, 0x40) (0x28, 0x40) (8, 0x60) (0x28, 0x60), colour 0x61 - age x 6 through DamageScratch +6; Gte_RotTransPers4, Gte_PrimDepths4_10, Gfx_CommitPrim(3, 0x48). MAGIC120 (row 16, file 0x288, ability id 0x78; Whelp Breath read one id down, a hypothesis), extent 0x4DACD0..0x4DC109. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DBBC0..0x4DBE07 (0x248 bytes), group S27, cdecl: for j 0..5 (k = 3j) while k < +9 and WhelpBreathFlames_Ages[j] < 0x10: a semi-transparent POLY_FT4, SharedScratch +0 age x 4 + 0x32, corners (cos, sin) x +0 at angles 0x200 0x600 0xE00 0xA00 and height age x 15; Gpu_GetTPage(0, 1, 0x340, 0x100) at +0x26, Gpu_GetClut(0x20, 0x1FA), uv (8, 0x40) (0x28, 0x40) (8, 0x60) (0x28, 0x60), colour 0x61 - age x 6 through SharedScratch +6; Gte_RotTransPers4, Gte_PrimDepths4_10, Gfx_CommitPrim(3, 0x48). MAGIC120 (row 16, file 0x288, ability id 0x78; Whelp Breath read one id down, a hypothesis), extent 0x4DACD0..0x4DC109. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DBE10
@@ -30192,7 +30192,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DBF70..0x4DC109 (0x19A bytes), group S27, cdecl: DamageScratch +0 (Frame_Counter & 0x3F) + 0x100; tpage 0xD5 committed to slot 5; one semi-transparent POLY_G3 from the origin to radius +0 at angles ((WhelpBreath_GlowAngles[+8] -+ 6) & 0x3F) << 6 (the index +8 unbounded); colour +9 x 10 + 1 at the origin, 1 at the rim; Gte_RotTransPers3, Gte_PrimDepths3_10B, Gfx_CommitPrim(5, 0x34). MAGIC120 (row 16, file 0x288, ability id 0x78; Whelp Breath read one id down, a hypothesis), extent 0x4DACD0..0x4DC109. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DBF70..0x4DC109 (0x19A bytes), group S27, cdecl: SharedScratch +0 (Frame_Counter & 0x3F) + 0x100; tpage 0xD5 committed to slot 5; one semi-transparent POLY_G3 from the origin to radius +0 at angles ((WhelpBreath_GlowAngles[+8] -+ 6) & 0x3F) << 6 (the index +8 unbounded); colour +9 x 10 + 1 at the origin, 1 at the rim; Gte_RotTransPers3, Gte_PrimDepths3_10B, Gfx_CommitPrim(5, 0x34). MAGIC120 (row 16, file 0x288, ability id 0x78; Whelp Breath read one id down, a hypothesis), extent 0x4DACD0..0x4DC109. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DC110
@@ -30336,7 +30336,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DC5D0..0x4DD0A4 (0xAD5 bytes), group S27, cdecl: tpage 0x35 committed to slot 3; DamageScratch +8 / +0xA the screen point; for step k 1..+0xA: the point moved (sin, cos)(dword +0x14) x 12 >> 12; +0 / +2 the radii +0xB x 4 (near (k - 1) x +0xB while k - 1 < 4, far k x +0xB while k < 4) plus the jitters (the previous step's and Rand & 3), +6 +9 x 15; four semi-transparent POLY_G4 at +0x14 +- 0x400: the inner pair from the centre line, shaded (s, s, s) / (s, s/4, s/4) with s the +6 word and / 4 signed; the outer pair from there to +0xB x 4 + 0x10 ((+0xB + 4) x step over the first four), shaded (s, s/4, s/4) / 1; screen points as floats; Gfx_CommitPrim(3, 0x44) each; tpage 0x15 after. MAGIC121 (row 122, file 0x289, ability id 0x79; DragonBreath read one id down, a hypothesis), extent 0x4DC110..0x4DD8A4. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DC5D0..0x4DD0A4 (0xAD5 bytes), group S27, cdecl: tpage 0x35 committed to slot 3; SharedScratch +8 / +0xA the screen point; for step k 1..+0xA: the point moved (sin, cos)(dword +0x14) x 12 >> 12; +0 / +2 the radii +0xB x 4 (near (k - 1) x +0xB while k - 1 < 4, far k x +0xB while k < 4) plus the jitters (the previous step's and Rand & 3), +6 +9 x 15; four semi-transparent POLY_G4 at +0x14 +- 0x400: the inner pair from the centre line, shaded (s, s, s) / (s, s/4, s/4) with s the +6 word and / 4 signed; the outer pair from there to +0xB x 4 + 0x10 ((+0xB + 4) x step over the first four), shaded (s, s/4, s/4) / 1; screen points as floats; Gfx_CommitPrim(3, 0x44) each; tpage 0x15 after. MAGIC121 (row 122, file 0x289, ability id 0x79; DragonBreath read one id down, a hypothesis), extent 0x4DC110..0x4DD8A4. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DD0B0
@@ -30345,7 +30345,7 @@ ret = "void"
 params = "unsigned n"
 impl = "src/game/magic_s27.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4DD0B0..0x4DD4A4 (0x3F5 bytes), group S27, cdecl: tpage 0x35 committed to slot 3; DamageScratch +8 / +0xA the screen point moved (n & 0xFF) + 1 steps of 12 along dword +0x14 and kept in Prim_VertexScratch +8 / +0xA; +4 the angle word +0x14 + 0x400 & 0xFFF; +0xC / +0xE 32 units out; then 47 POLY_F2 lines (Gpu_SetLineF2, semi-transparent), each walking Rand & 7 along the beam (the walk past 12 back to the kept point plus 12) and swinging out sin(i x 0x40 & 0x7C0) x (Rand & 3 + 0x10) >> 12; colour ((Rand & 7) + 5) x +4, blue a third (signed); Gfx_CommitPrim(3, 0x20) each; tpage 0x15 after. The argument's low byte only. MAGIC121 (row 122, file 0x289, ability id 0x79; DragonBreath read one id down, a hypothesis), extent 0x4DC110..0x4DD8A4. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
+evidence = "disasm 2026-09-26, 0x4DD0B0..0x4DD4A4 (0x3F5 bytes), group S27, cdecl: tpage 0x35 committed to slot 3; SharedScratch +8 / +0xA the screen point moved (n & 0xFF) + 1 steps of 12 along dword +0x14 and kept in Prim_VertexScratch +8 / +0xA; +4 the angle word +0x14 + 0x400 & 0xFFF; +0xC / +0xE 32 units out; then 47 POLY_F2 lines (Gpu_SetLineF2, semi-transparent), each walking Rand & 7 along the beam (the walk past 12 back to the kept point plus 12) and swinging out sin(i x 0x40 & 0x7C0) x (Rand & 3 + 0x10) >> 12; colour ((Rand & 7) + 5) x +4, blue a third (signed); Gfx_CommitPrim(3, 0x20) each; tpage 0x15 after. The argument's low byte only. MAGIC121 (row 122, file 0x289, ability id 0x79; DragonBreath read one id down, a hypothesis), extent 0x4DC110..0x4DD8A4. Fuzz only: no recorded route casts it (docs/magic_s27.md)."
 
 [[func]]
 pc = 0x4DD4B0
@@ -30649,7 +30649,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s26.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4D86A0..0x4D8A56 (0x3B7 bytes), cdecl, group S26: Gpu_SetDrawMode(.., 0xB5), Gfx_CommitPrim(3, 0xC); the first pair turned from (0x80000, 0) and (-0x30000, 0); while i (from 1) is below dword +0x14 (signed) and the depth -0x8000 i is above -0x1C0000 (at most 55 steps): Gpu_SetPolyFT4, Gpu_SetSemiTrans(p, 1), the last pair copied, the next turned from ((+0x14 - i < 0x20 ? (+0x14 - i) << 14 : 0x80000), depth) and ((+0x14 - i < 8 ? (i - +0x14) x 3 << 13 : -0x30000), depth), Gpu_GetTPage(1, 1, 0x340, 0x100) to +0x26, Gpu_GetClut(0, 0x1E2) to +0x16, v = (dword +0x20 + 4 i) mod 0xBC (unsigned) + 0x40 through DamageScratch's word, Gte_RotAverage4, grey (Math_Sin(((Frame_Counter + i) & 0x3F) << 6) << 5 sar 12) + 0xA0 while +2 is below 2 else +9 x 10 through the word at 0x903852; Gfx_CommitPrim(3, 0x48). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+evidence = "disasm 2026-09-26, 0x4D86A0..0x4D8A56 (0x3B7 bytes), cdecl, group S26: Gpu_SetDrawMode(.., 0xB5), Gfx_CommitPrim(3, 0xC); the first pair turned from (0x80000, 0) and (-0x30000, 0); while i (from 1) is below dword +0x14 (signed) and the depth -0x8000 i is above -0x1C0000 (at most 55 steps): Gpu_SetPolyFT4, Gpu_SetSemiTrans(p, 1), the last pair copied, the next turned from ((+0x14 - i < 0x20 ? (+0x14 - i) << 14 : 0x80000), depth) and ((+0x14 - i < 8 ? (i - +0x14) x 3 << 13 : -0x30000), depth), Gpu_GetTPage(1, 1, 0x340, 0x100) to +0x26, Gpu_GetClut(0, 0x1E2) to +0x16, v = (dword +0x20 + 4 i) mod 0xBC (unsigned) + 0x40 through SharedScratch's word, Gte_RotAverage4, grey (Math_Sin(((Frame_Counter + i) & 0x3F) << 6) << 5 sar 12) + 0xA0 while +2 is below 2 else +9 x 10 through the word at 0x903852; Gfx_CommitPrim(3, 0x48). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
 
 [[func]]
 pc = 0x4D8A60
@@ -77509,7 +77509,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w4e.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BBF0..0x42BCD4 (0xE4 bytes), cdecl: area 191 +0x40 (PSX 0x801F3964), with 0x42BC20 (its tail-jumped body, a separate start reached by nothing else; the tool reads one function to 0x42BCD3): nothing with Cond_ByteFA 0xE and the chapter row flag 5, nor with story flag 0x77; list k from CharacterRecords[0] +0x1E and row 14 bit 0xA (2 / 1 / walk count at least 5); six Sprite_FindFree slots to DamageScratch, each not 0xFF EventOp_0x(Area191_ObjectLists[k] + 0x11 n). docs/area_w4e.md."
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BBF0..0x42BCD4 (0xE4 bytes), cdecl: area 191 +0x40 (PSX 0x801F3964), with 0x42BC20 (its tail-jumped body, a separate start reached by nothing else; the tool reads one function to 0x42BCD3): nothing with Cond_ByteFA 0xE and the chapter row flag 5, nor with story flag 0x77; list k from CharacterRecords[0] +0x1E and row 14 bit 0xA (2 / 1 / walk count at least 5); six Sprite_FindFree slots to SharedScratch, each not 0xFF EventOp_0x(Area191_ObjectLists[k] + 0x11 n). docs/area_w4e.md."
 
 [[func]]
 pc = 0x42BCE0
@@ -92596,7 +92596,7 @@ ret = "void"
 params = "void"
 impl = "src/game/field_c1.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A600..0x46A7E8 (0x1E9 bytes): two Sprite_FindFree into +3 / +4 (none: nothing; only the second: the first freed); each marked, DamageScratch word its index, EventOp_6x(EffectKind14_Op), Sprite_SetAnimationAt(0x61, 0xC); Sprite_Current restored; the first moved (+0x1000, -0x1000), the second the other way; both +0 |= 0x20, +0x5C 0, Sprite_SetTint (0xF,0,0,1) and (0,0,0xF,1); +9 = 4, +1 = 1. EffectKind14_States[0] (dispatcher 0x46A5E0, catalog part 2). No PSX twin paired. docs/field_c1.md."
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A600..0x46A7E8 (0x1E9 bytes): two Sprite_FindFree into +3 / +4 (none: nothing; only the second: the first freed); each marked, SharedScratch word its index, EventOp_6x(EffectKind14_Op), Sprite_SetAnimationAt(0x61, 0xC); Sprite_Current restored; the first moved (+0x1000, -0x1000), the second the other way; both +0 |= 0x20, +0x5C 0, Sprite_SetTint (0xF,0,0,1) and (0,0,0xF,1); +9 = 4, +1 = 1. EffectKind14_States[0] (dispatcher 0x46A5E0, catalog part 2). No PSX twin paired. docs/field_c1.md."
 
 [[func]]
 pc = 0x46A7F0
@@ -92743,7 +92743,7 @@ ret = "unsigned char"
 params = "long x, long z"
 impl = "src/game/field_c1.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B5C0..0x46B6C5 (0x106 bytes): EffectKind17_CellBlocked(x >> 16, z >> 16): 1. Moving in x (+0xC): whole x 0; AreaMap_Slope(cell middle, z, +8), sloped (DamageScratch) and the ground there above word +0x3E: 1; +0xC > 0 and the next cell blocked: 1; else 0. In z likewise. Reads its arguments high words through its frame at +2. E8 from EffectKind17_Slide and _BlockedAhead. No PSX twin paired. docs/field_c1.md."
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B5C0..0x46B6C5 (0x106 bytes): EffectKind17_CellBlocked(x >> 16, z >> 16): 1. Moving in x (+0xC): whole x 0; AreaMap_Slope(cell middle, z, +8), sloped (SharedScratch) and the ground there above word +0x3E: 1; +0xC > 0 and the next cell blocked: 1; else 0. In z likewise. Reads its arguments high words through its frame at +2. E8 from EffectKind17_Slide and _BlockedAhead. No PSX twin paired. docs/field_c1.md."
 
 [[func]]
 pc = 0x46B6D0
@@ -98366,7 +98366,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_2d.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-29 (round thirteen group E2D, capstone to the last instruction), 0x477E30..0x4780C0 (0x291 bytes), hidden in 0x477D20 (EffectKind46_DrawFlash, whose recorded extent 0x56F covers it): EffectKind47_States[0]: two Sprite_FindFree into +3 / +4, marked; the leader's +0x4B (sprite object 2's at +0xB 0) looked up in the triples at 0x654564; for each sprite DamageScratch = its index, EventOp_0x(0x654540 + 17 * +0xB), Sprite_SetAnimationAt(the triple's); moved (-0x1000, +0x1000) and (+0x1000, -0x1000), the leader's height, +0 |= 0x20, +0x5C 0, Sprite_SetTint (0xF,0,0,1) / (0,0,0xF,1); +9 4, +1 1. Spawned by Area85_SpawnEffect47A / B. PSX twin 0x801F30E0 (analysis/pairs_propagated.json, callers-paired, an AREA overlay copy; unnamed in the sibling). Fuzz only: no recorded route enters it. docs/effect_2d.md."
+evidence = "disasm 2026-09-29 (round thirteen group E2D, capstone to the last instruction), 0x477E30..0x4780C0 (0x291 bytes), hidden in 0x477D20 (EffectKind46_DrawFlash, whose recorded extent 0x56F covers it): EffectKind47_States[0]: two Sprite_FindFree into +3 / +4, marked; the leader's +0x4B (sprite object 2's at +0xB 0) looked up in the triples at 0x654564; for each sprite SharedScratch = its index, EventOp_0x(0x654540 + 17 * +0xB), Sprite_SetAnimationAt(the triple's); moved (-0x1000, +0x1000) and (+0x1000, -0x1000), the leader's height, +0 |= 0x20, +0x5C 0, Sprite_SetTint (0xF,0,0,1) / (0,0,0xF,1); +9 4, +1 1. Spawned by Area85_SpawnEffect47A / B. PSX twin 0x801F30E0 (analysis/pairs_propagated.json, callers-paired, an AREA overlay copy; unnamed in the sibling). Fuzz only: no recorded route enters it. docs/effect_2d.md."
 
 [[func]]
 pc = 0x4780D0
@@ -99532,7 +99532,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_2f.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-29 (round thirteen group E2F, capstone to the last instruction), 0x47B990..0x47BB66 (0x1D7 bytes), cdecl: hidden in 0x47B7D0: EffectKind4F_States[0]: FC1's EffectKind3C_Start with the op EffectKind4F_Op - two free sprites (Sprite_FindFree) into +3 / +4, EventOp_0x for each with DamageScratch its index, moved apart (-0x1000, +0x1000) / (+0x1000, -0x1000), +0 |= 0x20, +0x5C = 0, tinted (0xF, 0, 0, 1) / (0, 0, 0xF, 1); +9 = 4, +1 = 1. The cut says 480 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2f.md."
+evidence = "disasm 2026-09-29 (round thirteen group E2F, capstone to the last instruction), 0x47B990..0x47BB66 (0x1D7 bytes), cdecl: hidden in 0x47B7D0: EffectKind4F_States[0]: FC1's EffectKind3C_Start with the op EffectKind4F_Op - two free sprites (Sprite_FindFree) into +3 / +4, EventOp_0x for each with SharedScratch its index, moved apart (-0x1000, +0x1000) / (+0x1000, -0x1000), +0 |= 0x20, +0x5C = 0, tinted (0xF, 0, 0, 1) / (0, 0, 0xF, 1); +9 = 4, +1 = 1. The cut says 480 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2f.md."
 
 [[func]]
 pc = 0x47BB70
@@ -101965,7 +101965,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_3b.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482E40..0x482EF6 (0xB7 bytes), cdecl: +0xB = Rand() & 0xF, +9 = +0xA = 0, +0xC = +4 << 5; DamageScratch = 0x20, 0x903854 = (+0xC & 0x7F) << 5; x = Math_Cos * DamageScratch + the parent's x, z = Math_Sin(0x903854) * DamageScratch + its z (both cells read again); the parent's height; +3 up. Reached by EffectKind69_Part1Steps[0]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482E40..0x482EF6 (0xB7 bytes), cdecl: +0xB = Rand() & 0xF, +9 = +0xA = 0, +0xC = +4 << 5; SharedScratch = 0x20, 0x903854 = (+0xC & 0x7F) << 5; x = Math_Cos * SharedScratch + the parent's x, z = Math_Sin(0x903854) * SharedScratch + its z (both cells read again); the parent's height; +3 up. Reached by EffectKind69_Part1Steps[0]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
 
 [[func]]
 pc = 0x482F00
@@ -102079,7 +102079,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_3b.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483970..0x483AF4 (0x185 bytes), cdecl: DamageScratch = (Rand() & 7) + 3 * +0xA; a draw mode (0x35, dtd 1) in slot 2; eight semi-transparent POLY_G3s in slot 2 round the screen point (s16 +0x2E, +0x30): centre shaded (+0xA << 3, +0xA << 3, 6 * +0xA), the rim at a and a + 0x200 (Math_Sin / Math_Cos * DamageScratch sar 12 + the point, fild) shaded 1. Reached by called by EffectKind69_Part1, _Part2. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483970..0x483AF4 (0x185 bytes), cdecl: SharedScratch = (Rand() & 7) + 3 * +0xA; a draw mode (0x35, dtd 1) in slot 2; eight semi-transparent POLY_G3s in slot 2 round the screen point (s16 +0x2E, +0x30): centre shaded (+0xA << 3, +0xA << 3, 6 * +0xA), the rim at a and a + 0x200 (Math_Sin / Math_Cos * SharedScratch sar 12 + the point, fild) shaded 1. Reached by called by EffectKind69_Part1, _Part2. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
 
 [[func]]
 pc = 0x483B00
@@ -115792,7 +115792,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_0a.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R0A, capstone to the last instruction), 0x524DA0..0x524E4E (0xAF bytes), cdecl, no arguments: Sprite_Current +0x2B = 1; then for direction 3 and then 5 (Field_DirectionSteps' rows at 0x6697C8 and 0x6697D8 by address, the direction pushed as an immediate): the point one row from Sprite_Current (re-read); MapView_SlopeAt there; when DamageScratch's flag byte is set and the slope's low word, signed, exceeds 0x40, MapView_GroundAt there, and +0x2B = 0 when Sprite_Current's s16 +0x3E is below its low word. The same probe PartyAction5_Form0Begin 0x51E930 makes inline. 14 E8 sites; none reads eax (each writes it first). Fuzz only. docs/rest_0a.md."
+evidence = "disasm 2026-10-04 (round fourteen group R0A, capstone to the last instruction), 0x524DA0..0x524E4E (0xAF bytes), cdecl, no arguments: Sprite_Current +0x2B = 1; then for direction 3 and then 5 (Field_DirectionSteps' rows at 0x6697C8 and 0x6697D8 by address, the direction pushed as an immediate): the point one row from Sprite_Current (re-read); MapView_SlopeAt there; when SharedScratch's flag byte is set and the slope's low word, signed, exceeds 0x40, MapView_GroundAt there, and +0x2B = 0 when Sprite_Current's s16 +0x3E is below its low word. The same probe PartyAction5_Form0Begin 0x51E930 makes inline. 14 E8 sites; none reads eax (each writes it first). Fuzz only. docs/rest_0a.md."
 
 # --- 2026-10-04, round fourteen wave-one group R1B: party sets 2..6's field
 # actions 0x51D710..0x51F202 (docs/rest_1b.md), each read with capstone to its
@@ -116068,7 +116068,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1b.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1B, capstone to the last instruction), 0x51D790..0x51D940 (0x1b1 bytes), cdecl, void, run on Sprite_Current: PartyAction5_Form0Begin 0x51E930's code instruction for instruction (compared with capstone; the call targets the same): an even direction +8 turned -1, then +2 and -2 (& 7) while PartyAction_TargetAhead answers 0; the slope one Field_DirectionSteps row ahead (MapView_SlopeAt, the unmasked direction in bl): steep (DamageScratch's flag, s16 above 0x40) Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5, Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0, +2 one on. Sprite_Current re-read after each call. PartyAction3_Form0States[0]. docs/rest_1b.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1B, capstone to the last instruction), 0x51D790..0x51D940 (0x1b1 bytes), cdecl, void, run on Sprite_Current: PartyAction5_Form0Begin 0x51E930's code instruction for instruction (compared with capstone; the call targets the same): an even direction +8 turned -1, then +2 and -2 (& 7) while PartyAction_TargetAhead answers 0; the slope one Field_DirectionSteps row ahead (MapView_SlopeAt, the unmasked direction in bl): steep (SharedScratch's flag, s16 above 0x40) Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5, Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0, +2 one on. Sprite_Current re-read after each call. PartyAction3_Form0States[0]. docs/rest_1b.md."
 
 [[func]]
 pc = 0x51D950
@@ -116513,7 +116513,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522760..0x522933 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): DamageScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction13_Form2States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522760..0x522933 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): SharedScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction13_Form2States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
 
 [[func]]
 pc = 0x522940
@@ -116666,7 +116666,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5230D0..0x5232A3 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): DamageScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction14_Form2States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5230D0..0x5232A3 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): SharedScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction14_Form2States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
 
 [[func]]
 pc = 0x5232B0
@@ -116738,7 +116738,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523550..0x523723 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): DamageScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction15_Form1States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523550..0x523723 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): SharedScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction15_Form1States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
 
 [[func]]
 pc = 0x523730
@@ -116819,7 +116819,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5239F0..0x523AD6 (0xE7 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7; an odd one kept unmasked); +0x2B = 1; for direction 3 and then 5 (the rows 0x6697C8 / 0x6697D8 by address, the direction an immediate) the point one row from Sprite_Current (re-read), MapView_SlopeAt there, and with DamageScratch's flag set and the slope's low word, signed, above 0x40, MapView_GroundAt there and +0x2B = 0 when the s16 +0x3E is below its low word (PartyAction_SideProbes' code, inline); Sprite_EnsureAnimation((+8 >> 1) + 0x42, a byte); +2 one on. Reached only through .data: entry 0 of PartyAction13_Form1States and PartyAction16_Form0States and five more cells (sets 1, 2, 5 among them: band_rows.py --byte-tables). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5239F0..0x523AD6 (0xE7 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7; an odd one kept unmasked); +0x2B = 1; for direction 3 and then 5 (the rows 0x6697C8 / 0x6697D8 by address, the direction an immediate) the point one row from Sprite_Current (re-read), MapView_SlopeAt there, and with SharedScratch's flag set and the slope's low word, signed, above 0x40, MapView_GroundAt there and +0x2B = 0 when the s16 +0x3E is below its low word (PartyAction_SideProbes' code, inline); Sprite_EnsureAnimation((+8 >> 1) + 0x42, a byte); +2 one on. Reached only through .data: entry 0 of PartyAction13_Form1States and PartyAction16_Form0States and five more cells (sets 1, 2, 5 among them: band_rows.py --byte-tables). Fuzz only: no recorded route enters it. docs/rest_1e.md."
 
 [[func]]
 pc = 0x523AE0
@@ -117744,7 +117744,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1c.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F210..0x51F3C0 (0x1B1 bytes): instruction for instruction PartyAction5_Form0Begin 0x51E930 (field_hidden.cpp), compared normalised (scratch r1c/r1dis.py --cmp): an even direction +8 turned back one (- 1, & 7), PartyAction_TargetAhead finding nothing turns it two on, again nothing back two; MapView_SlopeAt one step ahead in +8 (the whole ebx pushed, its low byte the direction): steep (DamageScratch flag 0x903850 set and the slope low word above 0x40 signed) - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46), +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 (rows 0x6697C8 / 0x6697D8 by address), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation(the turn + 0x42), +0xA = 5. Then +0xB = 0, +2 one on. PartyAction6_Form0States 0x65FC30[0] (R1B 0x51F1F0 reads that table). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F210..0x51F3C0 (0x1B1 bytes): instruction for instruction PartyAction5_Form0Begin 0x51E930 (field_hidden.cpp), compared normalised (scratch r1c/r1dis.py --cmp): an even direction +8 turned back one (- 1, & 7), PartyAction_TargetAhead finding nothing turns it two on, again nothing back two; MapView_SlopeAt one step ahead in +8 (the whole ebx pushed, its low byte the direction): steep (SharedScratch flag 0x903850 set and the slope low word above 0x40 signed) - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46), +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 (rows 0x6697C8 / 0x6697D8 by address), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation(the turn + 0x42), +0xA = 5. Then +0xB = 0, +2 one on. PartyAction6_Form0States 0x65FC30[0] (R1B 0x51F1F0 reads that table). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
 
 [[func]]
 pc = 0x51F3D0
@@ -119034,7 +119034,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0x523FF0..0x5241C3 (0x1D4 bytes), PartyAction16_Form2States[0], hidden after R1E's 0x523D20; 0x524490 and 0x524E90 are the same bytes (capstone, normalised). cdecl, no arguments, 11 calls: an even +8 one eighth back (-1 & 7); PartyAction_TargetAhead 0: +2 (& 7), 0 again: -2. The point one Field_DirectionSteps row ahead in +8 (unmasked): MapView_GroundAt there less Sprite_Current's word +0x3E (16 bits) the rise; MapView_SlopeAt there in +8 (the pushed dword's low byte; its answer unused). DamageScratch's flag set and the rise above 0x40 (s16): Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46), +2 up. Else +0x2B = 1, the two side probes of PartyAction_SideProbes inline (rows 3 and 5 by address), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5. Then +0xB = 0, +2 up. PartyAction5_Form0Begin's shape with the rise test (a ground probe) where that one has the slope's word. Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0x523FF0..0x5241C3 (0x1D4 bytes), PartyAction16_Form2States[0], hidden after R1E's 0x523D20; 0x524490 and 0x524E90 are the same bytes (capstone, normalised). cdecl, no arguments, 11 calls: an even +8 one eighth back (-1 & 7); PartyAction_TargetAhead 0: +2 (& 7), 0 again: -2. The point one Field_DirectionSteps row ahead in +8 (unmasked): MapView_GroundAt there less Sprite_Current's word +0x3E (16 bits) the rise; MapView_SlopeAt there in +8 (the pushed dword's low byte; its answer unused). SharedScratch's flag set and the rise above 0x40 (s16): Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46), +2 up. Else +0x2B = 1, the two side probes of PartyAction_SideProbes inline (rows 3 and 5 by address), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5. Then +0xB = 0, +2 up. PartyAction5_Form0Begin's shape with the rise test (a ground probe) where that one has the slope's word. Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x524490
@@ -119896,7 +119896,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1d.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1D, capstone to the last instruction), 0x520F40..0x521113 (0x1D4 bytes), cdecl, eleven calls; 0x521600 and 0x521CC0 are the same instructions. Even +8: (+8 - 1) & 7, then (+2) & 7 when PartyAction_TargetAhead answers 0, then (-2) & 7 when it answers 0 again. One step ahead in +8 (unmasked): MapView_GroundAt(x, z), its low word less +0x3E (Sprite_Current re-read) as the rise; MapView_SlopeAt(x, z, +8 re-read); DamageScratch's flag set and the rise above 0x40 (s16) - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46), +2 += 1. Else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5. Then +0xB = 0, +2 += 1. PartyAction9_Form2States[0]. Unlike PartyAction5_Form0Begin the steep test is the ground's rise, not the slope's answer. Fuzz only: no recorded route enters it. docs/rest_1d.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1D, capstone to the last instruction), 0x520F40..0x521113 (0x1D4 bytes), cdecl, eleven calls; 0x521600 and 0x521CC0 are the same instructions. Even +8: (+8 - 1) & 7, then (+2) & 7 when PartyAction_TargetAhead answers 0, then (-2) & 7 when it answers 0 again. One step ahead in +8 (unmasked): MapView_GroundAt(x, z), its low word less +0x3E (Sprite_Current re-read) as the rise; MapView_SlopeAt(x, z, +8 re-read); SharedScratch's flag set and the rise above 0x40 (s16) - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46), +2 += 1. Else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5. Then +0xB = 0, +2 += 1. PartyAction9_Form2States[0]. Unlike PartyAction5_Form0Begin the steep test is the ground's rise, not the slope's answer. Fuzz only: no recorded route enters it. docs/rest_1d.md."
 
 [[func]]
 pc = 0x521120
@@ -126868,7 +126868,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_3f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4837B0..0x48396F (0x1C0 bytes). Reached by E8 from EffectKind69_Part2 0x483540 (E3B); PSX twin 0x801D218C (call-disputed; no name): in DamageScratch +0/+4/+8 and Scratch_Swap the amplitude 0x40, the angle ((+0xB + 2) & 0xF) << 8, a shade, the count +0xA; for i below the count a draw mode committed 0xC to slot 2 and a semi-transparent LINE_G2 between Prim_VertexScratch projected before and after it moves to (0, Math_Sin(((+0xB + i + 2) & 0xF) << 8) * amplitude sar 12, -i << 6), the amplitude 0x80 +/- Rand & 0x3F, committed 0x24 to slot 2. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4837B0..0x48396F (0x1C0 bytes). Reached by E8 from EffectKind69_Part2 0x483540 (E3B); PSX twin 0x801D218C (call-disputed; no name): in SharedScratch +0/+4/+8 and Scratch_Swap the amplitude 0x40, the angle ((+0xB + 2) & 0xF) << 8, a shade, the count +0xA; for i below the count a draw mode committed 0xC to slot 2 and a semi-transparent LINE_G2 between Prim_VertexScratch projected before and after it moves to (0, Math_Sin(((+0xB + i + 2) & 0xF) << 8) * amplitude sar 12, -i << 6), the amplitude 0x80 +/- Rand & 0x3F, committed 0x24 to slot 2. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
 
 [[func]]
 pc = 0x48ED80

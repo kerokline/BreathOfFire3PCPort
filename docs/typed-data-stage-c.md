@@ -127,7 +127,7 @@ A's SD did, and the B1 left-lists say which sites wait on it.
    read as `u16` in about 1,100 sites. A named view (`x_whole` and so on) in
    the head.
 5. **New structs for families `records.h` lacks**, each only as far as its
-   readers settle it: the damage scratch block `DamageScratch` (`kS`,
+   readers settle it: the damage scratch block `SharedScratch` (`kS`,
    `0x903850`, a `[[block]]` today; 1,546 magic sites), the GPU primitive
    packets at `Gfx_PacketNext`, the character records `0x903A70`, the
    community records `0x9046D0` / `0x9048B0`, the 12-byte enemy slots

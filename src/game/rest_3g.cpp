@@ -843,22 +843,22 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
     const U x0 = static_cast<U>(S8(rec[0])) - fx + 0x100u;
     const U z0 = static_cast<U>(S8(rec[3])) - fz + 0x100u;
     const U rows = 0x38u - even * 12u, columns = even * 12u + 0x1Cu;
-    DamageScratch.w_00 = x0;
+    SharedScratch.w_00 = x0;
     MapView_Origin[0] = static_cast<short>(x0);
-    DamageScratch.w_02 = z0;
+    SharedScratch.w_02 = z0;
     MapView_Origin[1] = static_cast<short>(z0);
-    DamageScratch.d_04 = rows;
-    DamageScratch.d_08 = columns;
+    SharedScratch.d_04 = rows;
+    SharedScratch.d_08 = columns;
     DrawItemPool_Top = 0;
     U row_bound = rows;
     for (U row = 0; I(row) < I(row_bound); ++row) {
-        U col_bound = row == 0 ? columns : static_cast<std::uint32_t>(DamageScratch.d_08);
-        for (U col = 0; I(col) < I(col_bound); ++col, col_bound = static_cast<std::uint32_t>(DamageScratch.d_08)) {
+        U col_bound = row == 0 ? columns : static_cast<std::uint32_t>(SharedScratch.d_08);
+        for (U col = 0; I(col) < I(col_bound); ++col, col_bound = static_cast<std::uint32_t>(SharedScratch.d_08)) {
             if (DrawItemPool_Top >= draw_pool::Count()) continue;   // at::kTopBoundAt: 0x400, DIV-0062's 0x800
             const U a = static_cast<U>(S8(rec[2])) * row;
-            const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8(rec[1])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(DamageScratch.w_00));
+            const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8(rec[1])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(SharedScratch.w_00));
             const U b = static_cast<U>(S8(rec[5])) * (row + 1u);
-            const U z = static_cast<U>(I(b) / 2) + static_cast<U>(S8(rec[4])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(DamageScratch.w_02));
+            const U z = static_cast<U>(I(b) / 2) + static_cast<U>(S8(rec[4])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(SharedScratch.w_02));
             const unsigned char block = At(at::kBlocks + ((Sar(x, 4) & 0xFu) | (z & 0xF0u)))[0];
             const U map_row = (block & 0xF0u) | (z & 0xFu);
             const U map_col = ((block & 0xFu) << 4) | (x & 0xFu);
@@ -927,7 +927,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             }
             SH_CALL(Gte_PrimDepths4_10)(item + Gfx_BufferIndex * 0x48u);
         }
-        row_bound = static_cast<std::uint32_t>(DamageScratch.d_04);
+        row_bound = static_cast<std::uint32_t>(SharedScratch.d_04);
     }
 }
 

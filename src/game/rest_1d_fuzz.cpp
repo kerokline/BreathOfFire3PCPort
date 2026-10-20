@@ -187,11 +187,11 @@ U FxMapByte(const U*, U answer) {
     const U n = sh::Noise();
     return WithAl(answer, n % 8 == 0 ? n >> 8 : kCodes[(n >> 3) % (sizeof kCodes / sizeof kCodes[0])]);
 }
-// MapView_SlopeAt: DamageScratch's flag byte 0 a third of the time, else not 0;
+// MapView_SlopeAt: SharedScratch's flag byte 0 a third of the time, else not 0;
 // the slope's low word on either side of 0x40 and at the s16 limits.
 U FxSlope(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const flag = sh::Mem(DamageScratch_addr);
+    unsigned char* const flag = sh::Mem(SharedScratch_addr);
     if (sh::InRegions(flag, 1)) flag[0] = static_cast<unsigned char>(n % 3 == 0 ? 0 : (n >> 2) % 4 ? 1 : 1 + (n >> 4) % 0xFF);
     static const U kWords[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x0140, 0xFFC0};
     const U m = sh::Noise();
@@ -366,7 +366,7 @@ void Args(unsigned k, U* a) {
 // harness's disturbance (from its hash only): Sprite_Current's direction,
 // counters, +7, +0xB (below 20), form word, position and height; Field_State
 // +0x89 / +0x138; Field_InputFlags (read after the pickup's first Rand);
-// DamageScratch's flag; a dword of Field_DirectionSteps. The harness's own
+// SharedScratch's flag; a dword of Field_DirectionSteps. The harness's own
 // moves Sprite_Current among the Sprite_Objects records and its state bytes.
 void Disturb(U h) {
     const U v = h >> 8;
@@ -389,7 +389,7 @@ void Disturb(U h) {
     case 12:
     case 13:
     case 8: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (2u << (v % 2))); break;
-    case 9: sh::Mem(DamageScratch_addr)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 9: sh::Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 10: SetLong(sh::Mem(Field_DirectionSteps_addr) + 4 * (v % 16), static_cast<std::int32_t>(v << 6)); break;
     case 11: Effect_Objects[(v >> 1) % 20].flags = static_cast<unsigned char>(v & 1); break;
     default: break;

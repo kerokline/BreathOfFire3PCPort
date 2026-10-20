@@ -40,14 +40,14 @@ record family of src/game/records*.h (`ctype = "records::SpriteObject"`,
 be a record of exactly `record_stride` bytes (tools/record_sizes.py reads each
 struct's size from its header's static_assert): it is emitted as a typed
 array of `record_count` records (`WindowRecords[16].state`), or, with one
-record, as that record (`DamageScratch.w_0c`), with `<Name>_addr` (and
+record, as that record (`SharedScratch.w_0c`), with `<Name>_addr` (and
 `<Name>_count` for an array) as for a [[data]] entry. A field entry stays a
 field of its block either way. The generated header includes
 game/records.h before any macro, so a record-typed macro expands to a
 complete type wherever it is spelled, and the record headers themselves are
-read before a macro of the same name exists (the block DamageScratch and
-the struct records::DamageScratch share their name: past this header,
-`records::DamageScratch` is not spellable, and nothing in src/ spells it).
+read before a macro of the same name exists (the block SharedScratch and
+the struct records::SharedScratch share their name: past this header,
+`records::SharedScratch` is not spellable, and nothing in src/ spells it).
 
 The output contains addresses and names only — our work product, not game data.
 It is still generated into the build tree rather than committed, so it cannot

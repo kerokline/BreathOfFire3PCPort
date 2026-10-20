@@ -80,7 +80,7 @@ leader, record 0, is never tested), the count re-read for each.
   for direction 3 and then 5 (the rows at `0x6697C8` and `0x6697D8`, read by
   address; the direction pushed as an immediate): the point one step that way
   from Sprite_Current (re-read); when `MapView_SlopeAt` there is steep
-  (`DamageScratch`'s flag byte set and the slope's low word, signed, above
+  (`SharedScratch`'s flag byte set and the slope's low word, signed, above
   0x40) and `MapView_GroundAt` there is above the sprite's height word (s16
   against s16), `+0x2B` = 0. It is the probe `PartyAction5_Form0Begin` makes
   inline (`field_hidden.cpp`, `ProbeSide`).
@@ -147,12 +147,12 @@ have standard rows; the group's listing stands):
 | `Field_EffectAhead` () | - | al 0xFF half the time, else 0..19 or any byte |
 | `Effect_FindFree` () | - | al 0xFF a third of the time, else a slot 0..19 (what the real one hands out) |
 | `AreaMap_Elevation` (x, y) | whole, whole | garbage |
-| `MapView_SlopeAt` (x, y, direction) | whole each (the direction is pushed as an immediate) | `DamageScratch`'s flag 0 a third of the time, else 1 or any non-zero byte; ax 0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x140, 0xFFC0, 0x1000 or random; garbage above |
+| `MapView_SlopeAt` (x, y, direction) | whole each (the direction is pushed as an immediate) | `SharedScratch`'s flag 0 a third of the time, else 1 or any non-zero byte; ax 0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x140, 0xFFC0, 0x1000 or random; garbage above |
 | `MapView_GroundAt` (x, z) | whole, whole | ax the sprite's height word + 0, +-1, +-2, 0x8000, 0x7FFF, or random; garbage above |
 
 **The state.** Field mode's standard regions (which hold `Sprite_Current` and
 the sprite records, `ObjTrio`, `Field_State`, `Field_MemberCount`,
-`Effect_Objects` and `DamageScratch`'s byte) and the group's one:
+`Effect_Objects` and `SharedScratch`'s byte) and the group's one:
 `Field_DirectionSteps` `0x6697B0`, 0x40 bytes (`.data`, writable; the harness
 restores every region after the run). 23,660 bytes, 39 regions.
 

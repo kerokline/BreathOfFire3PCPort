@@ -19,14 +19,14 @@ constexpr std::uint32_t kPendingX = 0x903860;       // s32, 16.16
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8
 // Bits 4-6 of a link's flags byte: the PSX scratchpad's 0x1F800001, which
-// the PC keeps at DamageScratch + 1. What reads it is not established.
+// the PC keeps at SharedScratch + 1. What reads it is not established.
 constexpr std::uint32_t kLinkHigh = 0x903851;
 // Party_DropIn's three scratch lists, the PSX scratchpad's 0x1F800000,
 // +4 and +8: per wanted position the record's +0x2C byte, per wanted
 // position the record slot found, per record a copy of the party list that
 // is struck out (0xFF) as records are taken. Four bytes apart, so a list of
 // more than four overruns the next, as on the PSX.
-// kPickColumn: now DamageScratch (symbols.toml).
+// kPickColumn: now SharedScratch (symbols.toml).
 constexpr std::uint32_t kPickSlot = 0x903854;
 constexpr std::uint32_t kPickFree = 0x903858;
 // The 3-byte party list (Party_Join's, move_cmds_callees.h kPartyLists).

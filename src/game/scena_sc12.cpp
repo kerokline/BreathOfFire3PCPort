@@ -493,10 +493,10 @@ void EnterAreaBody() {
         if (c < 1 || c > 9) return;
         switch (c) {
         case 1:
-            if (!Flag(0x28)) Spawn(DamageScratch_addr, 0x76);
+            if (!Flag(0x28)) Spawn(SharedScratch_addr, 0x76);
             break;
         case 2:
-            Spawn(DamageScratch_addr, 0x79);
+            Spawn(SharedScratch_addr, 0x79);
             LoadAndPlay(0x8F);
             break;
         case 3:
@@ -515,13 +515,13 @@ void EnterAreaBody() {
             break;
         case 6:
             SetPass(0x1F);
-            Spawn(DamageScratch_addr, 0x7B);
+            Spawn(SharedScratch_addr, 0x7B);
             break;
         case 7:
-            Spawn(DamageScratch_addr, 0x7B);
+            Spawn(SharedScratch_addr, 0x7B);
             break;
         case 8:
-            Spawn(DamageScratch_addr, 0x7C);
+            Spawn(SharedScratch_addr, 0x7C);
             break;
         default:   // 9
             LoadAndPlay(0x8B);
@@ -953,7 +953,7 @@ SC12_EXPORT void __cdecl Scena12_Run6(void) {
     case 3: {
         Cond_ByteFE = 1;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetCounter(3, slot);
         Place13(slot, -0x370, AngleY(), 0x200, 4);
@@ -1031,7 +1031,7 @@ SC12_EXPORT void __cdecl Scena12_Run6(void) {
     case 0x12: {
         if (Counter(0) != 3) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetCounter(0, 4);
         SetStep(0x13);
@@ -1362,7 +1362,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0xB: {
         if (Counter(0) != 2) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetStep(0xC);
         Place13(slot, -0x32E, AngleY(), 0x8A, 0x28);
@@ -1372,7 +1372,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         if (Counter(0) != 6) break;
         SH_CALL(Party_DropIn)(2);
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetCounter(3, slot);
         SetStep(0xD);
@@ -1401,9 +1401,9 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     case 0x11:
         if (Counter(0) != 0xE || Field_Kind2Hold != 0) break;
-        Spawn(DamageScratch_addr, 0x82);
-        Spawn(DamageScratch_addr, 0x83);
-        Spawn(DamageScratch_addr, 0x84);
+        Spawn(SharedScratch_addr, 0x82);
+        Spawn(SharedScratch_addr, 0x83);
+        Spawn(SharedScratch_addr, 0x84);
         SetStep(0x12);
         break;
     case 0x12: {
@@ -1470,7 +1470,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0x22: {
         if (Counter(0) != 1) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetStep(0x2B);
         Place13(slot, -0x35A, AngleY(), 0x200, 0x14);
@@ -1484,7 +1484,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0x2C: {
         if (Counter(0) != 3) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetStep(0x2D);
         Place13(slot, AngleX(), AngleY(), 0x2B0, 0x14);

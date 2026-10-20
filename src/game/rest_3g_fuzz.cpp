@@ -411,9 +411,9 @@ void Disturb(U h) {
     case 3: Mem(Music_Track_addr)[0] = static_cast<unsigned char>((v & 1) ? Mem(AreaW1f_MusicCurrent_addr)[0] : v >> 1); break;
     case 4: MapView_Redraw = static_cast<unsigned char>(v % 4); break;
     case 5: SetWord(Mem((v & 1) ? Camera_Angles_addr : Cond_AngleFB_addr), (v & 2) ? ((v & 1) ? 0xFD56u : 0x200u) : v >> 2); break;
-    case 6: SetLong(Mem((v & 1) ? (DamageScratch_addr + 0x4) : (DamageScratch_addr + 0x8)), static_cast<std::int32_t>((v >> 1) % 6)); break; // a walk cut short
+    case 6: SetLong(Mem((v & 1) ? (SharedScratch_addr + 0x4) : (SharedScratch_addr + 0x8)), static_cast<std::int32_t>((v >> 1) % 6)); break; // a walk cut short
     case 7: DrawItemPool_Top = static_cast<unsigned short>((v & 1) ? 0x3FE + (v >> 1) % 4 : (v >> 1) % kItemsRegion); break;
-    case 8: SetWord(Mem((v & 1) ? DamageScratch_addr : (DamageScratch_addr + 0x2)), v >> 1); break;
+    case 8: SetWord(Mem((v & 1) ? SharedScratch_addr : (SharedScratch_addr + 0x2)), v >> 1); break;
     case 9: Mem(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(v); break;
     case 10: SetWord(Mem(Prim_VertexScratch_addr + 2 * ((v & 3) % 3)), v >> 2); break;
     case 11: PutFloat(Mem(MapView_ScreenXY_addr + 4 * (v & 1)), static_cast<float>(static_cast<int>((v >> 1) % 1000) - 500)); break;

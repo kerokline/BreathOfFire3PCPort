@@ -582,7 +582,7 @@ extern "C" void __cdecl EffectKind47_Run(void) { Dispatch("EffectKind47_Run", Ad
 // only the second: the first given back), each marked in use. The model's
 // animation byte +0x4B - the leader's, or sprite object 2's when +0xB is 0 -
 // looked up among the five triples at 0x654564 (the sixth, past them, when none
-// matches). For each sprite: DamageScratch's word = its index,
+// matches). For each sprite: SharedScratch's word = its index,
 // EventOp_0x(0x654540 + 17 * +0xB), Sprite_SetAnimationAt(the triple's
 // animation, its start). Sprite_Current put back; the first moved (-0x1000,
 // +0x1000), the second (+0x1000, -0x1000), both at the leader's height, +0 |=
@@ -606,10 +606,10 @@ extern "C" void __cdecl EffectKind47_Start(void) {
     unsigned k = 0;
     while (k < 5 && model != At(at::kTwinAnims + 3 * k)[0]) ++k;
     const unsigned char* const triple = At(at::kTwinAnims + 3 * k);
-    DamageScratch.w_00 = self[3];
+    SharedScratch.w_00 = self[3];
     SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
-    DamageScratch.w_00 = self[4];
+    SharedScratch.w_00 = self[4];
     SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
     Sprite_Current = self;

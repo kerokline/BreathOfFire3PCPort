@@ -399,7 +399,7 @@ extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
 // original 0x44A5C0 (PSX 0x801DE404 BattleBanner_Dispatch): kBannerKinds = 0; for
 // layer 0 then 1, each of the 8 entries: made kBannerCurrent (every entry, before
 // any test); skipped unless active, on this layer, and its kind byte shares no
-// bit with kBannerKinds (read again for each entry); then DamageScratch = its
+// bit with kBannerKinds (read again for each entry); then SharedScratch = its
 // index (the PSX scratchpad byte) and the handler for its kind byte, read
 // again, through a five-entry table the original builds on its stack: a bare
 // ret (0x437CC0) for kinds 0, 3 and 4, 0x44A740 for kind 1, 0x44A7B0 for kind
@@ -416,7 +416,7 @@ extern "C" void __cdecl BattleBanner_Dispatch(void) {
             if (entry[0] == 0) continue;
             if (entry[3] != layer) continue;
             if (BattleMisc_BannerKinds & entry[1]) continue;
-            DamageScratch.b_00 = static_cast<unsigned char>(i);
+            SharedScratch.b_00 = static_cast<unsigned char>(i);
             const U kind = entry[1];
             if (kind >= 5) bof3::Fatal("banner entry %u has kind %u; the original's stack table holds five", i, kind);
             g.banner[kind]();

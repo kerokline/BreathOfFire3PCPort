@@ -775,7 +775,7 @@ const Region kRegions[] = {
     {Address(&Sprite_OverlayListCount), 1},
     {Address(Sprite_DrawList), 40 * 4},
     {Address(&Sprite_DrawListCount), 1},
-    {DamageScratch_addr, 4},
+    {SharedScratch_addr, 4},
     {Address(&Field_ScriptFlags), 2},
     {Address(&Field_ScriptFlags2), 2},
     {Address(&Field_MemberCount), 1},

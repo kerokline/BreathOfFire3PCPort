@@ -33,7 +33,7 @@ constexpr std::uint32_t kPartyLists = 0x904062;       // two 3-byte lists of mem
 constexpr std::uint32_t kBankTable = 0x813580;        // dword offsets from itself, by column
 // kPaletteBase: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes a slot, inside Gfx_ClutStripSource
 // kActorRecords: now CharacterRecords (symbols.toml). 0xA4 bytes each; Field_ActorStates is +0x10 of the first
-// kFindIds: now DamageScratch (symbols.toml). PartySet_Find's three ids, then its swap byte at +4
+// kFindIds: now SharedScratch (symbols.toml). PartySet_Find's three ids, then its swap byte at +4
 constexpr std::uint32_t kJoinState = 0x9045FC;        // two dwords and a byte, Party_JoinReset's
 // kFlagBits: now Cond_Flags[0xa0] (symbols.toml). the bit array Field_PartySetUp tests flag 0x77 in
 // kMemberOffsets: now Field_PlaceOffsets (symbols.toml). 8 bytes (dx, dz) per direction / 2

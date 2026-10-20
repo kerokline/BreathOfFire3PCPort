@@ -521,9 +521,9 @@ extern "C" void __cdecl EffectKind86_Spawn(void) {
         return;
     }
     Object(kWho, s[4])[0] = 1;
-    DamageScratch.w_00 = s[3];
+    SharedScratch.w_00 = s[3];
     SH_CALL(EventOp_0x)(P(at::kPlaceOp));
-    DamageScratch.w_00 = s[4];
+    SharedScratch.w_00 = s[4];
     SH_CALL(EventOp_0x)(P(at::kPlaceOp));
     Sprite_Current = s;
     unsigned char* const a = Object(kWho, s[3]);

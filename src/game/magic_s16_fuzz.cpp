@@ -318,7 +318,7 @@ constexpr mh::Region kData[] = {{0x65AE2C, 0xF4}, {0x65AF24, 0xF4}, {0x65B01C, 0
 
 alignas(16) unsigned char g_prims[0x100];
 // kPacketNext: now Gfx_PacketNext (symbols.toml).
-// kScratch: now DamageScratch (symbols.toml).
+// kScratch: now SharedScratch (symbols.toml).
 constexpr std::uint32_t kEnemyState = 0x93BCD9;   // Magic073_CountReacting's (0x93B961 + 0x128 * 3)
 // kPastEnemies: now BattleWindows_MsgHead (symbols.toml).
 
@@ -448,7 +448,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 4) {
     case 0: mh::SetPointer(kPools[p].current, Record(p, (h >> 16) % kPools[p].count)); break;
     case 1: Gfx_PacketNext = g_prims + ((h >> 14) & 1 ? 0 : 0x40); break;
-    case 2: move_script::SetWord(mh::Mem(DamageScratch_addr + 2 * ((h >> 16) % 8)), h >> 20); break;
+    case 2: move_script::SetWord(mh::Mem(SharedScratch_addr + 2 * ((h >> 16) % 8)), h >> 20); break;
     default: {
         // through the cell only while it points into its pool: a spawn's
         // index past the pool (an alloc answering 128..254) writes over it
@@ -526,7 +526,7 @@ void SelfTest() {
     g_regions[r++] = {0x7E0700, 0xC00};                       // MoveScript_TintRecords, by an unbounded +0xA
     g_regions[r++] = {Gfx_PacketNext_addr, 4};                // Gfx_PacketNext
     g_regions[r++] = {Key(g_prims), sizeof g_prims};
-    g_regions[r++] = {DamageScratch_addr, 0x10};
+    g_regions[r++] = {SharedScratch_addr, 0x10};
     g_regions[r++] = {BattleWindows_MsgHead_addr, 3 * at::kEnemyStride}; // records 8..10: 0x4BBCE0's reach
     const mh::Group group = {
         "magic_s16", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],

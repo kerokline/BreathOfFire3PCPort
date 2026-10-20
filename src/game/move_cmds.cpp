@@ -235,7 +235,7 @@ extern "C" void __cdecl Kind2_Place(unsigned char script) {
 // directions 2 and 6, else 0x10, divided by the speed; the velocity +0xC /
 // +0x10 = the direction's MoveCmd_F9Steps pair times the speed; then, unless
 // bit 7 of object +0, the ground where the move lands - AreaMap_Slope there,
-// or AreaMap_Elevation when the slope says the ground is sloped (DamageScratch's
+// or AreaMap_Elevation when the slope says the ground is sloped (SharedScratch's
 // byte) - and the rise to it spread over +9 frames into +0x14. Flag 0x10.
 //
 // As the original has it: the speed byte indexes the table unmasked; the

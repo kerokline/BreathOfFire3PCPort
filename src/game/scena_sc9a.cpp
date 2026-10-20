@@ -321,11 +321,11 @@ void EnterAreaBody() {
             SetRun(7);
             SetStep(0);
             ClearCounters();
-            Spawn(DamageScratch_addr, 0x96);
-            if (member0->height <= 0x2000000) Spawn(DamageScratch_addr, 0x95);
+            Spawn(SharedScratch_addr, 0x96);
+            if (member0->height <= 0x2000000) Spawn(SharedScratch_addr, 0x95);
         } else if (member0->height <= 0x2000000) {
-            Spawn(DamageScratch_addr, 0x96);
-            if (member0->height <= 0x2000000) Spawn(DamageScratch_addr, 0x95);
+            Spawn(SharedScratch_addr, 0x96);
+            if (member0->height <= 0x2000000) Spawn(SharedScratch_addr, 0x95);
         }
     }
     // area 0x77: nothing more unless Cond_ByteFD is 2; flag 0x3D without 0x16
@@ -494,20 +494,20 @@ SC9A_EXPORT void __cdecl Scena09_Run3(void) {
         break;
     case 3: {
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetStep(4);
-        Place13(DamageScratch.b_00, -0x252, AngleY(), 0xA0, 0x14);
+        Place13(SharedScratch.b_00, -0x252, AngleY(), 0xA0, 0x14);
         break;
     }
     case 4: {
         if (Counter(0) != 2) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetCounter(3, slot);
         SetStep(5);
-        Place13(DamageScratch.b_00, -0x35A, AngleY(), 0x3FA, 0x8C);
+        Place13(SharedScratch.b_00, -0x35A, AngleY(), 0x3FA, 0x8C);
         break;
     }
     case 5:
@@ -612,10 +612,10 @@ SC9A_EXPORT void __cdecl Scena09_Run4(void) {
     case 0xC: {
         Kind2(3);
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        DamageScratch.b_00 = slot;
+        SharedScratch.b_00 = slot;
         if (slot == 0xFF) break;
         SetStep(0xD);
-        Place13(DamageScratch.b_00, -0x268, AngleY(), 0x10E, 2);
+        Place13(SharedScratch.b_00, -0x268, AngleY(), 0x10E, 2);
         break;
     }
     case 0xD:
@@ -721,11 +721,11 @@ SC9A_EXPORT void __cdecl Scena09_Run5(void) {
 // (x, angle Y, z) of life 4.
 void CameraHop(unsigned char next, std::int32_t x, std::int32_t z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    DamageScratch.b_00 = slot;
+    SharedScratch.b_00 = slot;
     if (slot == 0xFF) return;
     SetCounter(3, slot);
     SetStep(next);
-    Place13(DamageScratch.b_00, x, AngleY(), z, 4);
+    Place13(SharedScratch.b_00, x, AngleY(), z, 4);
 }
 // Its wait for that effect (steps 0x22 / 0x2C): the record counter 3 names
 // free, counter 3 0, counter 0 1, Transition_Start(5), the pass flags, the
@@ -1145,7 +1145,7 @@ SC9A_EXPORT void __cdecl Scena09_Run9(void) {
         break;
     case 2:
         if (Counter(0) != 0x25) break;
-        Spawn(DamageScratch_addr, 0x9A);
+        Spawn(SharedScratch_addr, 0x9A);
         SetStep(3);
         break;
     case 3:

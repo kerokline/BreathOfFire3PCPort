@@ -4546,13 +4546,13 @@ site	src/game/effect_1e.cpp	439	record	Long	r + 8	-	via=RecordB	-	-	-	0
 site	src/game/effect_1e.cpp	443	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
 site	src/game/effect_1e.cpp	444	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
 site	src/game/effect_1e.cpp	445	record	Long	RecordB() + 8	-	via=RecordB	-	-	-	0
-site	src/game/effect_1e.cpp	448	raw	B	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	0
+site	src/game/effect_1e.cpp	448	raw	B	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	0
 site	src/game/effect_1e.cpp	449	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
 site	src/game/effect_1e.cpp	453	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
 site	src/game/effect_1e.cpp	454	record	Long	r + 8	-	via=RecordB	-	-	-	0
 site	src/game/effect_1e.cpp	459	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
 site	src/game/effect_1e.cpp	460	record	Long	r + 4	-	via=RecordB	-	-	-	0
-site	src/game/effect_1e.cpp	463	raw	B	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	0
+site	src/game/effect_1e.cpp	463	raw	B	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	0
 site	src/game/effect_1e.cpp	466	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
 site	src/game/effect_1e.cpp	467	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
 site	src/game/effect_1e.cpp	468	record	Long	r + 8	-	via=RecordB	-	-	-	0
@@ -4579,15 +4579,15 @@ site	src/game/effect_1e.cpp	1197	global	At	at::kPoolWord40	0x803640	-	none	-	-	0
 site	src/game/effect_1e.cpp	1197	global	At	at::kPools	0x803580	-	none	-	-	0
 site	src/game/effect_1e.cpp	1198	global	At	at::kPoolWord5E	0x80365e	-	none	-	-	0
 site	src/game/effect_1e.cpp	1198	global	At	at::kPools	0x803580	-	none	-	-	0
-site	src/game/effect_1e_fuzz.cpp	165	raw	Mem	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/effect_1e_fuzz.cpp	165	raw	Mem	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/effect_1e_fuzz.cpp	258	global	-	at::kPools	0x803580	-	none	-	-	1
 site	src/game/effect_1e_fuzz.cpp	289	record	SetLong	s + 0xC	-	param	-	-	-	1
 site	src/game/effect_1e_fuzz.cpp	290	record	SetLong	s + 0x38	-	param	-	-	-	1
 site	src/game/effect_1e_fuzz.cpp	291	record	SetWord	s + 0x58	-	param	-	-	-	1
 site	src/game/effect_1e_fuzz.cpp	308	record	SetWord	p + 0x9C	-	base=Sprite_Objects	-	-	-	1
 site	src/game/effect_1e_fuzz.cpp	309	global	Mem	at::kBestCounts	0x9040ec	-	none	-	-	1
-site	src/game/effect_1e_fuzz.cpp	334	raw	Mem	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/effect_1e_fuzz.cpp	360	raw	Mem	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/effect_1e_fuzz.cpp	334	raw	Mem	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	1
+site	src/game/effect_1e_fuzz.cpp	360	raw	Mem	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/effect_1f.cpp	64	global	B	at::kRecord6	0x7e14e0	-	inside	Effect_Objects+0x300	records::EffectObject	0
 site	src/game/effect_1f.cpp	83	record	At	bof3::addr::MessagePools + Word(cell)	-	base=MessagePools	-	-	-	0
 site	src/game/effect_1f.cpp	90	global	B	at::kAccessoryIds	0x9042d4	-	none	-	-	0
@@ -6112,7 +6112,7 @@ site	src/game/effect_4a.cpp	525	global	P	at::kPlaceOp	0x654d88	-	none	-	-	0
 site	src/game/effect_4a.cpp	527	global	P	at::kPlaceOp	0x654d88	-	none	-	-	0
 site	src/game/effect_4a.cpp	570	global	B	at::kCounter	0x903848	-	none	-	-	0
 site	src/game/effect_4a.cpp	570	global	B	at::kCounter	0x903848	-	none	-	-	0
-site	src/game/effect_4a_fuzz.cpp	148	global	Mem	at::kObjectCount	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/effect_4a_fuzz.cpp	148	global	Mem	at::kObjectCount	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/effect_4a_fuzz.cpp	204	global	Mem	at::kCounter	0x903848	-	none	-	-	1
 site	src/game/effect_4a_fuzz.cpp	205	global	Mem	at::kCounterB	0x903849	-	none	-	-	1
 site	src/game/effect_4a_fuzz.cpp	206	global	Mem	at::kCounterC	0x90384a	-	none	-	-	1
@@ -8071,7 +8071,7 @@ site	src/game/event_ops.cpp	462	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_Scr
 site	src/game/event_ops.cpp	489	record	Word	At(Scratch_Swap_addr) + 2	-	via=At	-	-	-	0
 site	src/game/event_ops.cpp	562	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
 site	src/game/event_ops.cpp	569	global	At	at::kStepSounds	0x660960	-	none	-	-	0
-site	src/game/event_ops.cpp	569	record	Word	At(at::kStepSounds) + DamageScratch.b_01 * 2u	-	via=At	-	-	-	0
+site	src/game/event_ops.cpp	569	record	Word	At(at::kStepSounds) + SharedScratch.b_01 * 2u	-	via=At	-	-	-	0
 site	src/game/event_ops.cpp	580	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
 site	src/game/event_ops.cpp	600	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
 site	src/game/event_ops.cpp	626	global	Byte	kFlagsLo	0x9039a2	-	exact	Field_ScriptFlags	unsigned short	0
@@ -8113,7 +8113,7 @@ site	src/game/event_ops_fuzz.cpp	1138	record	SetWord	o + 0x3E	-	-	-	-	-	1
 site	src/game/event_script.cpp	353	record	SetWord	Field_ActiveMember + 0x8A	-	base=Field_ActiveMember	-	-	-	0
 site	src/game/event_script.cpp	354	record	SetWord	Field_ActiveMember + 0x9C	-	base=Field_ActiveMember	-	-	-	0
 site	src/game/event_script.cpp	456	record	Dword	entry + 4	-	param	-	-	-	0
-site	src/game/event_script_fuzz.cpp	269	record	SetWord	At(DamageScratch_addr) + 2	-	via=At	-	-	-	1
+site	src/game/event_script_fuzz.cpp	269	record	SetWord	At(SharedScratch_addr) + 2	-	via=At	-	-	-	1
 site	src/game/field_blocked.cpp	112	record	Long	object + at	-	-	-	-	-	0
 site	src/game/field_blocked.cpp	335	record	SetWord	Sprite_Current + 0x3E	-	base=Sprite_Current	-	-	-	0
 site	src/game/field_blocked.cpp	336	record	SetLong	g_current_object + 0x34 + (h >> 20) % 2 * 4	-	-	-	-	-	0
@@ -8388,8 +8388,8 @@ site	src/game/field_e1.cpp	787	record	W	r + 4	-	table=0x660ab8;stride=0x8	-	-	-	
 site	src/game/field_e1.cpp	807	global	L	at::kSlotPositions	0x7e06e0	-	none	-	-	0
 site	src/game/field_e1.cpp	808	global	L	at::kSlotPositions	0x7e06e0	-	none	-	-	0
 site	src/game/field_e1.cpp	847	global	B	at::kSecondList	0x904065	-	inside	Cond_Flags+0xd5	unsigned char	0
-site	src/game/field_e1.cpp	866	global	L	at::kCellX	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/field_e1.cpp	871	global	L	at::kCellX	0x903850	-	exact	DamageScratch	records::DamageScratch	0
+site	src/game/field_e1.cpp	866	global	L	at::kCellX	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/field_e1.cpp	871	global	L	at::kCellX	0x903850	-	exact	SharedScratch	records::SharedScratch	0
 site	src/game/field_e1.cpp	890	global	B	at::kFormation	0x904aac	-	none	-	-	0
 site	src/game/field_e1.cpp	890	global	B	at::kFormationAnims	0x660b3c	-	exact	BattleFormation_Anims	-	0
 site	src/game/field_e1.cpp	915	global	L	at::kPlaceOffsets	0x660b40	-	exact	Field_PlaceOffsets	long	0
@@ -9662,7 +9662,7 @@ site	src/game/magic_s06_fuzz.cpp	277	record	Long	task + 0x10	-	-	-	-	-	1
 site	src/game/magic_s06_fuzz.cpp	277	record	Long	task + 0xC	-	-	-	-	-	1
 site	src/game/magic_s06_fuzz.cpp	288	global	Mem	mh::at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_s06_fuzz.cpp	357	global	Mem	kAbility	0x904b80	-	none	-	-	1
-site	src/game/magic_s06_fuzz.cpp	361	raw	Mem	0x903852	0x903852	-	inside	DamageScratch+0x2	records::DamageScratch	1
+site	src/game/magic_s06_fuzz.cpp	361	raw	Mem	0x903852	0x903852	-	inside	SharedScratch+0x2	records::SharedScratch	1
 site	src/game/magic_s06_fuzz.cpp	375	record	Byte	before + (mh::Half() ? 1u : 0u)	-	param	-	-	-	1
 site	src/game/magic_s06_fuzz.cpp	378	global	Mem	kAbility	0x904b80	-	none	-	-	1
 site	src/game/magic_s07.cpp	85	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
@@ -9753,7 +9753,7 @@ site	src/game/magic_s10.cpp	1100	record	SetWord	rec + 0x92	-	via=ActingRecord	-	
 site	src/game/magic_s10.cpp	1452	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s10.cpp	1457	global	Mem	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/magic_s10.cpp	1496	global	Mem	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/magic_s10_fuzz.cpp	320	raw	Mem	0x903850 + 2 * ((r >> 12) % 8)	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/magic_s10_fuzz.cpp	320	raw	Mem	0x903850 + 2 * ((r >> 12) % 8)	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/magic_s10_fuzz.cpp	321	raw	Mem	0x9037A0 + 2 * ((r >> 12) % 16)	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	1
 site	src/game/magic_s10_fuzz.cpp	328	record	Long	task + 0x10	-	-	-	-	-	1
 site	src/game/magic_s10_fuzz.cpp	328	record	Long	task + 0xC	-	-	-	-	-	1
@@ -10030,7 +10030,7 @@ site	src/game/magic_s17_fuzz.cpp	454	record	Long	sc + 0x20	-	base=Sprite_Current
 site	src/game/magic_s17_fuzz.cpp	461	raw	Mem	0x68C0B8 + i * 0x84	0x68c0b8	-	exact	ReviveMote_Pool	unsigned char	1
 site	src/game/magic_s17_fuzz.cpp	481	record	SetLong	sc + 0xC	-	base=Sprite_Current	-	-	-	1
 site	src/game/magic_s17_fuzz.cpp	510	raw	Mem	0x9037A0 + ((h >> 12) & 0x1E)	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	1
-site	src/game/magic_s17_fuzz.cpp	511	raw	Mem	0x903850 + ((h >> 12) & 0xE)	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/magic_s17_fuzz.cpp	511	raw	Mem	0x903850 + ((h >> 12) & 0xE)	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/magic_s18.cpp	623	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s18.cpp	624	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s18.cpp	645	global	Mem	kActionId	0x904b80	-	none	-	-	0
@@ -10147,7 +10147,7 @@ site	src/game/magic_s21.cpp	1030	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_s21.cpp	1030	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
 site	src/game/magic_s21_fuzz.cpp	377	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/magic_s21_fuzz.cpp	387	record	SetLong	slot + 0x80	-	stride=0x84	-	-	-	1
-site	src/game/magic_s21_fuzz.cpp	524	raw	Mem	0x903850 + 2 * (v % 8)	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/magic_s21_fuzz.cpp	524	raw	Mem	0x903850 + 2 * (v % 8)	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/magic_s21_fuzz.cpp	525	raw	Mem	0x9037A0 + 2 * (v % 16)	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	1
 site	src/game/magic_s22.cpp	61	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
 site	src/game/magic_s22.cpp	266	record	SetLong	Sc() + first	-	via=Sc	-	-	-	0
@@ -14110,12 +14110,12 @@ site	src/game/rest_4c.cpp	448	global	SetL	at::kCards	0x675f98	-	none	-	-	0
 site	src/game/rest_4c.cpp	450	global	At	at::kCards	0x675f98	-	none	-	-	0
 site	src/game/rest_4c.cpp	491	global	SetL	at::kBet	0x675f88	-	none	-	-	0
 site	src/game/rest_4c.cpp	528	global	B	at::kBet	0x675f88	-	none	-	-	0
-site	src/game/rest_4c.cpp	547	global	B	at::kDigits	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/rest_4c.cpp	548	global	B	at::kDigits	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/rest_4c.cpp	549	global	B	at::kDigits	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/rest_4c.cpp	553	global	B	at::kDigits	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/rest_4c.cpp	554	global	B	at::kDigits	0x903850	-	exact	DamageScratch	records::DamageScratch	0
-site	src/game/rest_4c.cpp	555	global	B	at::kDigits	0x903850	-	exact	DamageScratch	records::DamageScratch	0
+site	src/game/rest_4c.cpp	547	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/rest_4c.cpp	548	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/rest_4c.cpp	549	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/rest_4c.cpp	553	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/rest_4c.cpp	554	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/rest_4c.cpp	555	global	B	at::kDigits	0x903850	-	exact	SharedScratch	records::SharedScratch	0
 site	src/game/rest_4c.cpp	558	global	SetL	at::kBet	0x675f88	-	none	-	-	0
 site	src/game/rest_4c.cpp	560	global	SetL	at::kBet	0x675f88	-	none	-	-	0
 site	src/game/rest_4c.cpp	565	global	SetL	at::kBet	0x675f88	-	none	-	-	0
@@ -15014,7 +15014,7 @@ site	src/game/scena_sc11_fuzz.cpp	331	global	B	kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_sc11_fuzz.cpp	337	global	B	kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_sc11_fuzz.cpp	340	global	B	kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_sc11_fuzz.cpp	344	global	B	kCounters	0x903848	-	none	-	-	1
-site	src/game/scena_sc11_fuzz.cpp	371	raw	B	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/scena_sc11_fuzz.cpp	371	raw	B	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/scena_sc11_fuzz.cpp	377	global	B	kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_sc11_fuzz.cpp	381	global	B	kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_sc11_fuzz.cpp	388	global	B	kCounters	0x903848	-	none	-	-	1
@@ -15633,9 +15633,9 @@ site	src/game/scena_sc9b_fuzz.cpp	761	global	B	at::kCounters	0x903848	-	none	-	-
 site	src/game/scena_sc9b_fuzz.cpp	771	global	B	at::kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_se.cpp	79	global	At	at::kScriptFlags2High	0x905ba5	-	inside	Field_ScriptFlags2+0x1	unsigned short	0
 site	src/game/scena_se.cpp	79	global	At	at::kScriptFlags2High	0x905ba5	-	inside	Field_ScriptFlags2+0x1	unsigned short	0
-site	src/game/scena_se_fuzz.cpp	84	global	Mem	at::kCount	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/scena_se_fuzz.cpp	129	global	Mem	at::kCount	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/scena_se_fuzz.cpp	144	global	Mem	at::kCount	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/scena_se_fuzz.cpp	84	global	Mem	at::kCount	0x903850	-	exact	SharedScratch	records::SharedScratch	1
+site	src/game/scena_se_fuzz.cpp	129	global	Mem	at::kCount	0x903850	-	exact	SharedScratch	records::SharedScratch	1
+site	src/game/scena_se_fuzz.cpp	144	global	Mem	at::kCount	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/scena_sx.cpp	115	record	Word	exp_table + (level + rows) * 8	-	base=Char_ExpTable	-	-	-	0
 site	src/game/scena_sx.cpp	154	global	At	at::kFormation	0x904aac	-	none	-	-	0
 site	src/game/scena_sx.cpp	173	global	At	at::kSlotPositions	0x7e06e0	-	none	-	-	0
@@ -15686,8 +15686,8 @@ site	src/game/scenario_harness.cpp	229	raw	Mem	0x7E1BEC	0x7e1bec	-	exact	Input_P
 site	src/game/scenario_harness.cpp	527	raw	Mem	0x904138	0x904138	-	exact	Rest4a_CountC	unsigned long	1
 site	src/game/scenario_harness.cpp	528	raw	Mem	0x904138	0x904138	-	exact	Rest4a_CountC	unsigned long	1
 site	src/game/scenario_harness.cpp	528	raw	Mem	0x904138	0x904138	-	exact	Rest4a_CountC	unsigned long	1
-site	src/game/scenario_harness.cpp	554	raw	Mem	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/scenario_harness.cpp	554	raw	Mem	0x903850	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/scenario_harness.cpp	554	raw	Mem	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	1
+site	src/game/scenario_harness.cpp	554	raw	Mem	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/scenario_harness.cpp	1325	raw	Mem	0x929F24	0x929f24	-	exact	MapView_Row	short	1
 site	src/game/scenario_harness.cpp	1326	raw	Mem	0x929F20	0x929f20	-	exact	MapView_Column	short	1
 site	src/game/scenario_harness.cpp	1565	global	-	at::kTextBuffer	0x904ba0	-	none	-	-	1
@@ -16353,7 +16353,7 @@ site	src/game/world_map_fuzz.cpp	233	record	GetLong	m + 0x14	-	-	-	-	-	1
 site	src/game/world_map_fuzz.cpp	233	record	GetLong	m + 0x18	-	-	-	-	-	1
 site	src/game/world_map_fuzz.cpp	233	record	GetLong	m + 0x1C	-	-	-	-	-	1
 site	src/game/world_map_fuzz.cpp	240	record	PutLong	prim + z	-	param	-	-	-	1
-site	src/game/world_map_fuzz.cpp	243	global	At	kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	1
+site	src/game/world_map_fuzz.cpp	243	global	At	kScratch	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/world_map_fuzz.cpp	243	record	PutLong	At(kScratch) + i	-	via=At	-	-	-	1
 site	src/game/world_map_fuzz.cpp	286	record	PutLong	p + z	-	-	-	-	-	1
 site	src/game/world_map_fuzz.cpp	304	global	At	kPacketNext	0x7e0670	-	exact	Gfx_PacketNext	unsigned char *	1
@@ -19191,64 +19191,64 @@ const	kScriptObject	0x90384b	data	1	src/game/rest_2d_callees.h:49(rest_2d::at)	-
 const	kScriptVar	0x90384b	data	1	src/game/area_w3g_callees.h:51(area_w3g::at)	-	-	none	-	at
 const	kScriptVar6	0x90384b	data	2	src/game/area_w3b_callees.h:63(area_w3b::at);src/game/area_w4a_callees.h:39(area_w4a::at)	-	-	none	-	at
 const	kVar6	0x90384b	data	1	src/game/area_w0a_callees.h:25(area_w0a::at)	-	-	none	-	at
-const	kCellX	0x903850	data	1	src/game/field_e1_callees.h:73(field_e1::at)	DamageScratch	block	exact	records::DamageScratch	at
-const	kCount	0x903850	data	1	src/game/scena_se_callees.h:27(scena_se::at)	DamageScratch	block	exact	records::DamageScratch	at
-const	kDigits	0x903850	data	1	src/game/rest_4c_callees.h:64(rest_4c::at)	DamageScratch	block	exact	records::DamageScratch	at
-const	kObjectCount	0x903850	data	1	src/game/effect_4a_callees.h:22(effect_4a::at)	DamageScratch	block	exact	records::DamageScratch	at
-const	kR	0x903850	data	1	src/game/magic_s29_callees.h:36(magic_s29::cell)	DamageScratch	block	exact	records::DamageScratch	module
-const	kS	0x903850	data	1	src/game/magic_s13.cpp:48((anon))	DamageScratch	block	exact	records::DamageScratch	module
-const	kScratch	0x903850	data	5	src/game/battle_misc_fuzz.cpp:87(battle_misc::(anon));src/game/battle_odds_fuzz.cpp:74(battle_odds::(anon));src/game/field_misc_fuzz.cpp:71(field_misc::(anon));src/game/magic_s24_callees.h:36(magic_s24::cell);src/game/magic_s29_callees.h:35(magic_s29::cell)	DamageScratch	block	exact	records::DamageScratch	module
-const	kScratchX	0x903850	data	1	src/game/map_field_objects_callees.h:23(map_field_objects)	DamageScratch	block	exact	records::DamageScratch	module
-const	kSlot	0x903850	data	2	src/game/scena_sc3_callees.h:28(scena_sc3::at);src/game/scena_sc7_callees.h:31(scena_sc7::at)	DamageScratch	block	exact	records::DamageScratch	at
-const	kSlot	0x903850	data	1	src/game/scena_sc11.cpp:56((anon))	DamageScratch	block	exact	records::DamageScratch	module
-const	kLinkHigh	0x903851	data	1	src/game/area_entry_callees.h:23(area_entry)	-	-	inside	records::DamageScratch	module
-const	kRecordIndex	0x903851	data	1	src/game/area_w3f_callees.h:41(area_w3f::at)	-	-	inside	records::DamageScratch	at
-const	kAngleB	0x903852	data	1	src/game/magic_c3.cpp:73((anon))	-	-	inside	records::DamageScratch	module
-const	kBank	0x903852	data	1	src/game/scena_se_callees.h:28(scena_se::at)	-	-	inside	records::DamageScratch	at
-const	kCaptionTotal	0x903852	data	1	src/game/scena_sc13_callees.h:48(scena_sc13::at)	-	-	inside	records::DamageScratch	at
-const	kCellZ	0x903852	data	1	src/game/field_e1_callees.h:74(field_e1::at)	-	-	inside	records::DamageScratch	at
-const	kHeight	0x903852	data	1	src/game/magic_s19.cpp:73((anon))	-	-	inside	records::DamageScratch	module
-const	kOriginZ	0x903852	data	1	src/game/rest_3g_callees.h:77(rest_3g::at)	-	-	inside	records::DamageScratch	at
-const	kR2	0x903852	data	1	src/game/magic_s23_callees.h:36(magic_s23::at)	-	-	inside	records::DamageScratch	at
-const	kR2	0x903852	data	2	src/game/magic_s24.cpp:100((anon));src/game/magic_s29_callees.h:37(magic_s29::cell)	-	-	inside	records::DamageScratch	module
-const	kScratch2	0x903852	data	2	src/game/event_leader_callees.h:46(event_leader::at);src/game/event_ops_callees.h:67(event_ops::at)	-	-	inside	records::DamageScratch	at
-const	kScratchBank	0x903852	data	1	src/game/map_field_objects_callees.h:26(map_field_objects)	-	-	inside	records::DamageScratch	module
-const	kShade	0x903852	data	1	src/game/magic_s06.cpp:63((anon))	-	-	inside	records::DamageScratch	module
-const	kAngle	0x903854	data	1	src/game/effect_3b_callees.h:25(effect_3b::at)	-	-	inside	records::DamageScratch	at
-const	kAngle	0x903854	data	1	src/game/magic_s19.cpp:74((anon))	-	-	inside	records::DamageScratch	module
-const	kCellX	0x903854	data	1	src/game/event_ops_callees.h:68(event_ops::at)	-	-	inside	records::DamageScratch	at
-const	kLineAngle	0x903854	data	1	src/game/rest_3f_callees.h:29(rest_3f::at)	-	-	inside	records::DamageScratch	at
-const	kPickSlot	0x903854	data	1	src/game/area_entry_callees.h:30(area_entry)	-	-	inside	records::DamageScratch	module
-const	kRows	0x903854	data	1	src/game/rest_3g_callees.h:78(rest_3g::at)	-	-	inside	records::DamageScratch	at
-const	kScratchB	0x903854	data	1	src/game/magic_s17.cpp:54((anon))	-	-	inside	records::DamageScratch	module
-const	kScratchY	0x903854	data	1	src/game/map_field_objects_callees.h:24(map_field_objects)	-	-	inside	records::DamageScratch	module
-const	kW4	0x903854	data	1	src/game/magic_s23_callees.h:37(magic_s23::at)	-	-	inside	records::DamageScratch	at
-const	kW4	0x903854	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:38(magic_s29::cell)	-	-	inside	records::DamageScratch	module
-const	kCellZ	0x903856	data	1	src/game/event_ops_callees.h:69(event_ops::at)	-	-	inside	records::DamageScratch	at
-const	kShade	0x903856	data	2	src/game/magic_s17.cpp:55((anon));src/game/magic_s19.cpp:75((anon))	-	-	inside	records::DamageScratch	module
-const	kW6	0x903856	data	1	src/game/magic_s23_callees.h:38(magic_s23::at)	-	-	inside	records::DamageScratch	at
-const	kW6	0x903856	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:39(magic_s29::cell)	-	-	inside	records::DamageScratch	module
-const	kAimX	0x903858	data	1	src/game/member_sprites_callees.h:25(member_sprites::at)	-	-	inside	records::DamageScratch	at
-const	kColumns	0x903858	data	1	src/game/rest_3g_callees.h:79(rest_3g::at)	-	-	inside	records::DamageScratch	at
-const	kLineShade	0x903858	data	1	src/game/rest_3f_callees.h:30(rest_3f::at)	-	-	inside	records::DamageScratch	at
-const	kPickFree	0x903858	data	1	src/game/area_entry_callees.h:31(area_entry)	-	-	inside	records::DamageScratch	module
-const	kRed	0x903858	data	1	src/game/magic_s19.cpp:77((anon))	-	-	inside	records::DamageScratch	module
-const	kRgb	0x903858	data	1	src/game/magic_s17.cpp:56((anon))	-	-	inside	records::DamageScratch	module
-const	kScratchH	0x903858	data	1	src/game/map_field_objects_callees.h:25(map_field_objects)	-	-	inside	records::DamageScratch	module
-const	kShade	0x903858	data	1	src/game/effect_3b_callees.h:26(effect_3b::at)	-	-	inside	records::DamageScratch	at
-const	kTargetX	0x903858	data	2	src/game/event_leader_callees.h:47(event_leader::at);src/game/event_ops_callees.h:70(event_ops::at)	-	-	inside	records::DamageScratch	at
-const	kW8	0x903858	data	1	src/game/magic_s23_callees.h:39(magic_s23::at)	-	-	inside	records::DamageScratch	at
-const	kW8	0x903858	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:40(magic_s29::cell)	-	-	inside	records::DamageScratch	module
-const	kGreen	0x90385a	data	1	src/game/magic_s19.cpp:77((anon))	-	-	inside	records::DamageScratch	module
-const	kWA	0x90385a	data	1	src/game/magic_s23_callees.h:40(magic_s23::at)	-	-	inside	records::DamageScratch	at
-const	kWA	0x90385a	data	2	src/game/magic_s24.cpp:103((anon));src/game/magic_s29_callees.h:41(magic_s29::cell)	-	-	inside	records::DamageScratch	module
+const	kCellX	0x903850	data	1	src/game/field_e1_callees.h:73(field_e1::at)	SharedScratch	block	exact	records::SharedScratch	at
+const	kCount	0x903850	data	1	src/game/scena_se_callees.h:27(scena_se::at)	SharedScratch	block	exact	records::SharedScratch	at
+const	kDigits	0x903850	data	1	src/game/rest_4c_callees.h:64(rest_4c::at)	SharedScratch	block	exact	records::SharedScratch	at
+const	kObjectCount	0x903850	data	1	src/game/effect_4a_callees.h:22(effect_4a::at)	SharedScratch	block	exact	records::SharedScratch	at
+const	kR	0x903850	data	1	src/game/magic_s29_callees.h:36(magic_s29::cell)	SharedScratch	block	exact	records::SharedScratch	module
+const	kS	0x903850	data	1	src/game/magic_s13.cpp:48((anon))	SharedScratch	block	exact	records::SharedScratch	module
+const	kScratch	0x903850	data	5	src/game/battle_misc_fuzz.cpp:87(battle_misc::(anon));src/game/battle_odds_fuzz.cpp:74(battle_odds::(anon));src/game/field_misc_fuzz.cpp:71(field_misc::(anon));src/game/magic_s24_callees.h:36(magic_s24::cell);src/game/magic_s29_callees.h:35(magic_s29::cell)	SharedScratch	block	exact	records::SharedScratch	module
+const	kScratchX	0x903850	data	1	src/game/map_field_objects_callees.h:23(map_field_objects)	SharedScratch	block	exact	records::SharedScratch	module
+const	kSlot	0x903850	data	2	src/game/scena_sc3_callees.h:28(scena_sc3::at);src/game/scena_sc7_callees.h:31(scena_sc7::at)	SharedScratch	block	exact	records::SharedScratch	at
+const	kSlot	0x903850	data	1	src/game/scena_sc11.cpp:56((anon))	SharedScratch	block	exact	records::SharedScratch	module
+const	kLinkHigh	0x903851	data	1	src/game/area_entry_callees.h:23(area_entry)	-	-	inside	records::SharedScratch	module
+const	kRecordIndex	0x903851	data	1	src/game/area_w3f_callees.h:41(area_w3f::at)	-	-	inside	records::SharedScratch	at
+const	kAngleB	0x903852	data	1	src/game/magic_c3.cpp:73((anon))	-	-	inside	records::SharedScratch	module
+const	kBank	0x903852	data	1	src/game/scena_se_callees.h:28(scena_se::at)	-	-	inside	records::SharedScratch	at
+const	kCaptionTotal	0x903852	data	1	src/game/scena_sc13_callees.h:48(scena_sc13::at)	-	-	inside	records::SharedScratch	at
+const	kCellZ	0x903852	data	1	src/game/field_e1_callees.h:74(field_e1::at)	-	-	inside	records::SharedScratch	at
+const	kHeight	0x903852	data	1	src/game/magic_s19.cpp:73((anon))	-	-	inside	records::SharedScratch	module
+const	kOriginZ	0x903852	data	1	src/game/rest_3g_callees.h:77(rest_3g::at)	-	-	inside	records::SharedScratch	at
+const	kR2	0x903852	data	1	src/game/magic_s23_callees.h:36(magic_s23::at)	-	-	inside	records::SharedScratch	at
+const	kR2	0x903852	data	2	src/game/magic_s24.cpp:100((anon));src/game/magic_s29_callees.h:37(magic_s29::cell)	-	-	inside	records::SharedScratch	module
+const	kScratch2	0x903852	data	2	src/game/event_leader_callees.h:46(event_leader::at);src/game/event_ops_callees.h:67(event_ops::at)	-	-	inside	records::SharedScratch	at
+const	kScratchBank	0x903852	data	1	src/game/map_field_objects_callees.h:26(map_field_objects)	-	-	inside	records::SharedScratch	module
+const	kShade	0x903852	data	1	src/game/magic_s06.cpp:63((anon))	-	-	inside	records::SharedScratch	module
+const	kAngle	0x903854	data	1	src/game/effect_3b_callees.h:25(effect_3b::at)	-	-	inside	records::SharedScratch	at
+const	kAngle	0x903854	data	1	src/game/magic_s19.cpp:74((anon))	-	-	inside	records::SharedScratch	module
+const	kCellX	0x903854	data	1	src/game/event_ops_callees.h:68(event_ops::at)	-	-	inside	records::SharedScratch	at
+const	kLineAngle	0x903854	data	1	src/game/rest_3f_callees.h:29(rest_3f::at)	-	-	inside	records::SharedScratch	at
+const	kPickSlot	0x903854	data	1	src/game/area_entry_callees.h:30(area_entry)	-	-	inside	records::SharedScratch	module
+const	kRows	0x903854	data	1	src/game/rest_3g_callees.h:78(rest_3g::at)	-	-	inside	records::SharedScratch	at
+const	kScratchB	0x903854	data	1	src/game/magic_s17.cpp:54((anon))	-	-	inside	records::SharedScratch	module
+const	kScratchY	0x903854	data	1	src/game/map_field_objects_callees.h:24(map_field_objects)	-	-	inside	records::SharedScratch	module
+const	kW4	0x903854	data	1	src/game/magic_s23_callees.h:37(magic_s23::at)	-	-	inside	records::SharedScratch	at
+const	kW4	0x903854	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:38(magic_s29::cell)	-	-	inside	records::SharedScratch	module
+const	kCellZ	0x903856	data	1	src/game/event_ops_callees.h:69(event_ops::at)	-	-	inside	records::SharedScratch	at
+const	kShade	0x903856	data	2	src/game/magic_s17.cpp:55((anon));src/game/magic_s19.cpp:75((anon))	-	-	inside	records::SharedScratch	module
+const	kW6	0x903856	data	1	src/game/magic_s23_callees.h:38(magic_s23::at)	-	-	inside	records::SharedScratch	at
+const	kW6	0x903856	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:39(magic_s29::cell)	-	-	inside	records::SharedScratch	module
+const	kAimX	0x903858	data	1	src/game/member_sprites_callees.h:25(member_sprites::at)	-	-	inside	records::SharedScratch	at
+const	kColumns	0x903858	data	1	src/game/rest_3g_callees.h:79(rest_3g::at)	-	-	inside	records::SharedScratch	at
+const	kLineShade	0x903858	data	1	src/game/rest_3f_callees.h:30(rest_3f::at)	-	-	inside	records::SharedScratch	at
+const	kPickFree	0x903858	data	1	src/game/area_entry_callees.h:31(area_entry)	-	-	inside	records::SharedScratch	module
+const	kRed	0x903858	data	1	src/game/magic_s19.cpp:77((anon))	-	-	inside	records::SharedScratch	module
+const	kRgb	0x903858	data	1	src/game/magic_s17.cpp:56((anon))	-	-	inside	records::SharedScratch	module
+const	kScratchH	0x903858	data	1	src/game/map_field_objects_callees.h:25(map_field_objects)	-	-	inside	records::SharedScratch	module
+const	kShade	0x903858	data	1	src/game/effect_3b_callees.h:26(effect_3b::at)	-	-	inside	records::SharedScratch	at
+const	kTargetX	0x903858	data	2	src/game/event_leader_callees.h:47(event_leader::at);src/game/event_ops_callees.h:70(event_ops::at)	-	-	inside	records::SharedScratch	at
+const	kW8	0x903858	data	1	src/game/magic_s23_callees.h:39(magic_s23::at)	-	-	inside	records::SharedScratch	at
+const	kW8	0x903858	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:40(magic_s29::cell)	-	-	inside	records::SharedScratch	module
+const	kGreen	0x90385a	data	1	src/game/magic_s19.cpp:77((anon))	-	-	inside	records::SharedScratch	module
+const	kWA	0x90385a	data	1	src/game/magic_s23_callees.h:40(magic_s23::at)	-	-	inside	records::SharedScratch	at
+const	kWA	0x90385a	data	2	src/game/magic_s24.cpp:103((anon));src/game/magic_s29_callees.h:41(magic_s29::cell)	-	-	inside	records::SharedScratch	module
 const	kFace	0x90385e	data	1	src/game/magic_s19.cpp:78((anon))	-	-	inside	unsigned long	module
 const	kWE	0x90385e	data	1	src/game/magic_s23_callees.h:42(magic_s23::at)	-	-	inside	unsigned long	at
 const	kWE	0x90385e	data	1	src/game/magic_s24.cpp:103((anon))	-	-	inside	unsigned long	module
 const	kY	0x90385e	data	1	src/game/magic_s29_callees.h:43(magic_s29::cell)	-	-	inside	unsigned long	module
-const	kExitX	0x903860	data	3	src/game/event_leader_callees.h:51(event_leader::at);src/game/event_ops_callees.h:46(event_ops::at);src/game/field_e1_callees.h:77(field_e1::at)	-	-	inside	records::DamageScratch	at
-const	kPendingX	0x903860	data	6	src/game/area_w2e_callees.h:59(area_w2e::at);src/game/area_w3b_callees.h:81(area_w3b::at);src/game/area_w4e_callees.h:76(area_w4e::at);src/game/mode_flow_callees.h:40(mode_flow::at);src/game/mode_rest_callees.h:39(mode_rest::at);src/game/window_task_callees.h:45(window_task::at)	-	-	inside	records::DamageScratch	at
-const	kPendingX	0x903860	data	1	src/game/area_entry_callees.h:18(area_entry)	-	-	inside	records::DamageScratch	module
+const	kExitX	0x903860	data	3	src/game/event_leader_callees.h:51(event_leader::at);src/game/event_ops_callees.h:46(event_ops::at);src/game/field_e1_callees.h:77(field_e1::at)	-	-	inside	records::SharedScratch	at
+const	kPendingX	0x903860	data	6	src/game/area_w2e_callees.h:59(area_w2e::at);src/game/area_w3b_callees.h:81(area_w3b::at);src/game/area_w4e_callees.h:76(area_w4e::at);src/game/mode_flow_callees.h:40(mode_flow::at);src/game/mode_rest_callees.h:39(mode_rest::at);src/game/window_task_callees.h:45(window_task::at)	-	-	inside	records::SharedScratch	at
+const	kPendingX	0x903860	data	1	src/game/area_entry_callees.h:18(area_entry)	-	-	inside	records::SharedScratch	module
 const	kBlocks	0x903880	data	1	src/game/shell_callees.h:34(shell)	Gfx_BufferBlocks	data	exact	-	module
 const	kEnvBase	0x903880	data	1	src/game/win_main.cpp:139((anon))	Gfx_BufferBlocks	data	exact	-	module
 const	kFlagsLo	0x9039a2	data	1	src/game/field_e1_callees.h:88(field_e1::at)	Field_ScriptFlags	data	exact	unsigned short	at

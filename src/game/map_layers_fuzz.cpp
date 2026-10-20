@@ -521,7 +521,7 @@ void SelfTestBuild(void (__cdecl* theirs)()) {
         R(Camera_Distance), R(MapView_Origin, 4), R(&Field_Kind2Z, 8), R(MapView_BuildFlags), R(Gfx_BufferIndex),
         R(Draw_OtSlot), R(MapView_CellItems, MapView_CellItems_count), R(AreaMap_Header, 0x800),
         R(reinterpret_cast<short*>(Prim_VertexScratch), 0x20), R(MapView_CornerPtr), R(MapView_ScreenXY, 8),
-        R(At(DamageScratch_addr), 4), R(DrawItems, kItemBytes),
+        R(At(SharedScratch_addr), 4), R(DrawItems, kItemBytes),
     };
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);

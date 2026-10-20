@@ -96,7 +96,7 @@ constexpr U kComboTimer = 0x6BC710;    // u8 x 4: each sequence's frames left
 // kPoseWas: now Effect1e_PoseWas (symbols.toml). u8 (E1E's)
 // kPose: now Effect1e_Pose (symbols.toml). u8 (E1E's)
 // kBiteHeld: now Fish_Nibbling (symbols.toml). u8: a fish is nibbling (Fish_Swim sets, Fish_Settle clears)
-// kHoldFlag: now DamageScratch (symbols.toml). u8 (E1E reads it after LeaderPanel_HoldTest)
+// kHoldFlag: now SharedScratch (symbols.toml). u8 (E1E reads it after LeaderPanel_HoldTest)
 constexpr U kPoolWordData = 0x803642;  // u16: MessagePools offset of the data page's title
 constexpr U kPoolWordRule = 0x803660;  // u16: the rule page's (read as a dword & 0xFFFF)
 constexpr U kPoolWordStage1 = 0x803600;  // u16 (read as a dword & 0xFFFF)
@@ -567,7 +567,7 @@ extern "C" void __cdecl LeaderPanel_Effect3Mode(unsigned mode) {
 // 0x903850 = 0.
 extern "C" void __cdecl LeaderPanel_HoldTest(void) {
     if (Input_Pressed & 0x4000) {
-        DamageScratch.b_00 = 1;
+        SharedScratch.b_00 = 1;
         S()[0xA] = 8;
         return;
     }
@@ -575,11 +575,11 @@ extern "C" void __cdecl LeaderPanel_HoldTest(void) {
         unsigned char* const s = S();
         if (s[0xA] != 0) {
             s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
-            DamageScratch.b_00 = 1;
+            SharedScratch.b_00 = 1;
             return;
         }
     }
-    DamageScratch.b_00 = 0;
+    SharedScratch.b_00 = 0;
 }
 
 // original 0x52B330: (Input_Pressed & buttons)'s low word not 0:

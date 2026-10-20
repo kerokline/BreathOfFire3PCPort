@@ -194,11 +194,11 @@ U FxMapByte(const U*, U answer) {
     const U n = sh::Noise();
     return WithAl(answer, n % 8 == 0 ? n >> 8 : kCodes[(n >> 3) % (sizeof kCodes / sizeof kCodes[0])]);
 }
-// MapView_SlopeAt: DamageScratch's flag byte 0 a third of the time, else not
+// MapView_SlopeAt: SharedScratch's flag byte 0 a third of the time, else not
 // 0; the slope's low word on either side of 0x40 and at the s16 limits.
 U FxSlope(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const flag = sh::Mem(DamageScratch_addr);
+    unsigned char* const flag = sh::Mem(SharedScratch_addr);
     if (sh::InRegions(flag, 1)) flag[0] = static_cast<unsigned char>(n % 3 == 0 ? 0 : (n >> 2) % 4 ? 1 : 1 + (n >> 4) % 0xFF);
     static const U kWords[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x0140, 0xFFC0, 0x1000};
     const U m = sh::Noise();
@@ -289,7 +289,7 @@ const sh::Callee kCallees[] = {
 
 // Beyond field mode's standard regions (which hold Sprite_Current and the
 // sprite records, ObjTrio, Field_State's pointer, Field_Request, Effect_Objects,
-// Sprite_ObjectsExtra, DamageScratch's flag, Field_ScriptFlags 0x9039A2,
+// Sprite_ObjectsExtra, SharedScratch's flag, Field_ScriptFlags 0x9039A2,
 // Field_InputFlags and Field_Kind2Hold): Field_DirectionSteps, which the
 // states read in place (seeded at its boundaries; .data, restored after the
 // run), and Text_Records' 16 bytes the item names are copied into.

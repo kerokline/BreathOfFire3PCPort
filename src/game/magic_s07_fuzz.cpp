@@ -253,7 +253,7 @@ unsigned char* PacketAt(unsigned k) { return g_packets + (k & 7) * 0x40; }
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kFormIndex: now BattlePhases_B89 (symbols.toml).
 // kMotePool: now BonebreakMote_Pool (symbols.toml).
-// kScratch: now DamageScratch (symbols.toml).
+// kScratch: now SharedScratch (symbols.toml).
 constexpr std::uint32_t kAbilityId = 0x904B80, kPoolBytes = 64 * 0x84;
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
@@ -316,7 +316,7 @@ std::uint32_t TrigEffect(const std::uint32_t*, std::uint32_t answer) {
     if (h % 4 != 0) return answer;
     const unsigned w = (h >> 4) % 24;
     const auto v = static_cast<std::uint16_t>(h >> 16);
-    if (w < 8) SetWord(mh::Mem(DamageScratch_addr + w * 2), v);
+    if (w < 8) SetWord(mh::Mem(SharedScratch_addr + w * 2), v);
     else SetWord(mh::Mem(Prim_VertexScratch_addr + (w - 8) * 2), v);
     return answer;
 }
@@ -394,7 +394,7 @@ const mh::DataTable kTables[] = {
 };
 
 mh::Region g_regions[] = {
-    {DamageScratch_addr, 0x10},
+    {SharedScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {0, kPacketBytes},                           // g_packets (filled in at start-up)
@@ -439,7 +439,7 @@ void Disturb(std::uint32_t h) {
         break;
     }
     case 0: Gfx_PacketNext = PacketAt(v); break;
-    case 1: SetWord(mh::Mem(DamageScratch_addr + (v % 8) * 2), word); break;
+    case 1: SetWord(mh::Mem(SharedScratch_addr + (v % 8) * 2), word); break;
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: PoolRecord(v)[0] ^= 1; break;
     case 4: mh::Pointer(BattleE2_Owner_addr)[0xB] = Byte(v % 3); break;

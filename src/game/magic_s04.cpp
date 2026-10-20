@@ -53,11 +53,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F) and the four SVECTORs of
 // Prim_VertexScratch (0x9037A0..0x9037BF), read again after every call as the
 // originals read them.
-// kS: now DamageScratch (symbols.toml).
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
@@ -71,11 +71,11 @@ unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 
-std::int32_t SD(unsigned k) { return Long(Mem(DamageScratch_addr + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(DamageScratch_addr + k), static_cast<std::int32_t>(v)); }
-short SS(unsigned k) { return static_cast<short>(Word(Mem(DamageScratch_addr + k))); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(DamageScratch_addr + k), v & 0xFFFF); }
-unsigned char SB(unsigned k) { return Mem(DamageScratch_addr + k)[0]; }
+std::int32_t SD(unsigned k) { return Long(Mem(SharedScratch_addr + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(SharedScratch_addr + k), static_cast<std::int32_t>(v)); }
+short SS(unsigned k) { return static_cast<short>(Word(Mem(SharedScratch_addr + k))); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }

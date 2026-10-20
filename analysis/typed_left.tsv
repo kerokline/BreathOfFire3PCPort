@@ -8071,7 +8071,7 @@ src/game/event_ops.cpp	Field_LeaderSetPace	global	Byte	kFlags2Lo	0	0x905ba4	-	wi
 src/game/event_ops.cpp	Field_LeaderStepCell	record	Word	At(Scratch_Swap_addr) + 2	0	-	via=At	no-struct	no records.h family is evidenced for this pointer (via=At)	b1-scen_ui
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	Byte	kFlags2Lo	0	0x905ba4	-	width	kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	At	at::kStepSounds	0	0x660960	-	no-entry	at::kStepSounds 0x660960 -	b0
-src/game/event_ops.cpp	Field_LeaderStepTarget	record	Word	At(at::kStepSounds) + DamageScratch.b_01 * 2u	0	-	via=At	-	-	-
+src/game/event_ops.cpp	Field_LeaderStepTarget	record	Word	At(at::kStepSounds) + SharedScratch.b_01 * 2u	0	-	via=At	-	-	-
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	Byte	kFlags2Lo	1	0x905ba4	-	width	kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	Byte	kFlags2Lo	2	0x905ba4	-	width	kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/event_ops.cpp	Field_EncounterDue	global	Byte	kFlagsLo	0	0x9039a2	-	width	kFlagsLo 0x9039a2 Field_ScriptFlags	b0
@@ -8113,7 +8113,7 @@ src/game/event_ops_fuzz.cpp	RunTests	record	SetWord	o + 0x3E	0	-	-	width	SpriteO
 src/game/event_script.cpp	EventObj_Reset	record	SetWord	Field_ActiveMember + 0x8A	0	-	base=Field_ActiveMember	family	SpriteObject SetWord script_position: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
 src/game/event_script.cpp	EventObj_Reset	record	SetWord	Field_ActiveMember + 0x9C	0	-	base=Field_ActiveMember	family	SpriteObject SetWord counter: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
 src/game/event_script.cpp	Sprite_InitFromEntry	record	Dword	entry + 4	0	-	param	no-struct	no records.h family is evidenced for this pointer (param)	b1-scen_ui
-src/game/event_script_fuzz.cpp	StubKind2Place	record	SetWord	At(DamageScratch_addr) + 2	0	-	via=At	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (via=At)	b1-scen_ui
+src/game/event_script_fuzz.cpp	StubKind2Place	record	SetWord	At(SharedScratch_addr) + 2	0	-	via=At	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (via=At)	b1-scen_ui
 src/game/field_blocked.cpp	Originals	record	Long	object + at	0	-	-	computed	offset computed at run time: object + at	b1-field
 src/game/field_blocked.cpp	Disturb	record	SetWord	Sprite_Current + 0x3E	0	-	base=Sprite_Current	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/field_blocked.cpp	Disturb	record	SetLong	g_current_object + 0x34 + (h >> 20) % 2 * 4	0	-	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field

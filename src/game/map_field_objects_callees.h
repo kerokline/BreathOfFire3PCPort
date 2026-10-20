@@ -17,7 +17,7 @@ namespace map_field_objects {
 using U = std::uint32_t;
 
 // --- Addresses without a name ------------------------------------------------------
-// DamageScratch's first three dwords, the PSX scratchpad's 0x1F800000..: the
+// SharedScratch's first three dwords, the PSX scratchpad's 0x1F800000..: the
 // uprights' cell origin (x, y) and their base height; EventOp_8x's object
 // index (word +0) and animation bank (word +2).
 constexpr U kScratchX = 0x903850;

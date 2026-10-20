@@ -83,7 +83,7 @@ unsigned char* Sprite() { return At(SpriteCurrent()); }
 // (word +8) of 0xFF runs forever. Otherwise the kind byte is or'ed into the
 // kinds seen, the timer counted down, and while it has not reached 0 - both
 // read through kBannerCurrent again - window record 4's +0xA gets
-// DamageScratch (the entry's index, which the dispatch stored). At 0: the
+// SharedScratch (the entry's index, which the dispatch stored). At 0: the
 // entry's active byte 0; its kind taken back out of the kinds seen (the
 // pointer read again, the kinds byte before the kind byte); then
 // BattleBanner_NoneOfKind(1), and when no kind-1 entry is left (al set)
@@ -105,7 +105,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
             return eax;
         }
     }
-    Window4_Index = DamageScratch.b_00;
+    Window4_Index = SharedScratch.b_00;
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
 }
 
@@ -113,7 +113,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
 // differences. The kind is or'ed into the kinds seen before the timer is
 // tested, even for 0xFF; it is never taken back out; and the test is
 // NoneOfKind(4), after which window record 0's +3 = 2. While the timer runs,
-// record 0's +0xA gets DamageScratch. The word is decremented through a
+// record 0's +0xA gets SharedScratch. The word is decremented through a
 // register (only its low 16 bits stored) and the pointer read again only then;
 // at 0xFF the entry the first read found is tested, which is never 0.
 extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
@@ -131,7 +131,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
         if (eax & 0xFF) WindowRecords[0].state = 2;
         return eax;
     }
-    Window0_ParamA = DamageScratch.b_00;
+    Window0_ParamA = SharedScratch.b_00;
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
 }
 

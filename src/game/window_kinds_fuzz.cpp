@@ -73,7 +73,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 // repointed - the thing these functions re-read after every call out.
 const std::uint32_t kWatch[] = {
     BattleWindows_MsgHead_addr, BattleActorCopies_QueueWrite_addr, BattleE1_MessageUp_addr, at::kBannerMask, 0x7E1BEC /* Input_Pressed */,
-    at::kMsgRing, at::kMsgRing + 1, at::kMsgRing + 8, at::kMsgRing + 9, DamageScratch_addr,
+    at::kMsgRing, at::kMsgRing + 1, at::kMsgRing + 8, at::kMsgRing + 9, SharedScratch_addr,
 };
 void Disturb() {
     const std::uint32_t h = Hash();
@@ -243,7 +243,7 @@ const Region kRegions[] = {
     {at::kBannerPool, 0x60},     // the banner pool's 8 entries
     {at::kBannerMask, 1},
     {0x7E1BEC, 2},               // Input_Pressed
-    {DamageScratch_addr, 1},
+    {SharedScratch_addr, 1},
 };
 constexpr unsigned kRegionBytes = 0x318 + 4 + 2 + 0x80 + 1 + 4 + 0x60 + 1 + 2 + 1;
 
@@ -524,7 +524,7 @@ void SelfTest() {
 
     bof3::Log("shadow      window_kinds self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "
               "%u MISMATCHES; the 22 window records, the current record, the message ring and its indices, 0x939F60, "
-              "the banner pool, its pointer and mask, Input_Pressed, DamageScratch's byte, the gauge's two records "
+              "the banner pool, its pointer and mask, Input_Pressed, SharedScratch's byte, the gauge's two records "
               "and the stand-ins' log compared",
               kRounds, static_cast<unsigned>(kCount), per[0], calls, bad);
     if (bad)

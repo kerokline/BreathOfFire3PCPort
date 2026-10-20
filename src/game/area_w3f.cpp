@@ -240,14 +240,14 @@ unsigned char TrailLeg(unsigned t, unsigned kk, unsigned back, U table1, U table
     return AH_CALL(Area145_TrailLeg2)(d32, next);
 }
 
-// Area 145's effect spawn at DamageScratch: the slot byte stored there, read
+// Area 145's effect spawn at SharedScratch: the slot byte stored there, read
 // back as the originals do (a dword, masked).
 unsigned char SpawnSlot() {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(DamageScratch_addr) = slot;
+    B(SharedScratch_addr) = slot;
     return slot;
 }
-unsigned char* ScratchRecord() { return EffectAt(static_cast<U>(Long(Mem(DamageScratch_addr))) & 0xFF); }
+unsigned char* ScratchRecord() { return EffectAt(static_cast<U>(Long(Mem(SharedScratch_addr))) & 0xFF); }
 // Tail states 0xA and 0x14: an effect of kind 0x13, the camera turn, to the
 // three target angles +0x64 / +0x68 / +0x6C (CameraTurn_Start turns each
 // Camera_Angles[n] toward dword +0x64 + 4n over +9 frames: docs/frame-callees.md),
@@ -611,7 +611,7 @@ extern "C" void __cdecl Area145_ChoiceRun3(void) {
 // script object's +0 | 8.
 extern "C" void __cdecl Area145_PartyRecord16(void) {
     const auto index = static_cast<unsigned char>(static_cast<std::int32_t>(Key(Field_ActiveMember) - Sprite_ObjectsExtra_addr) / 0xA4);
-    B(DamageScratch_addr + 0x1) = index;
+    B(SharedScratch_addr + 0x1) = index;
     unsigned char* const rec = Mem(MoveScript_PartyRecords_addr + index * 16u);
     rec[2] = 0x10;
     rec[1] = 0;
@@ -940,7 +940,7 @@ extern "C" unsigned char __cdecl Area145_TrailLeg2(unsigned t, unsigned k) {
     return TrailLeg(t, k, 10, Area145_TrailLegs2A_addr, Area145_TrailLegs2B_addr, true);
 }
 
-// original 0x421EA0: Effect_FindFree to DamageScratch; none: al 1. A slot:
+// original 0x421EA0: Effect_FindFree to SharedScratch; none: al 1. A slot:
 // kind 0x3F from (x0, z0) (+0xC, +0x10) to (x1, z1) (+0x18, +0x1C), +0x20 and
 // +0x14 0x500000; al 0.
 extern "C" unsigned char __cdecl Area145_SpawnTrail(long x0, long z0, long x1, long z1) {

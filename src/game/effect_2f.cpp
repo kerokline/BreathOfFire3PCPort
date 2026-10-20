@@ -227,7 +227,7 @@ extern "C" void __cdecl EffectKind4F_Run(void) {
 // original 0x47B990 (EffectKind4F_States[0]): FC1's EffectKind3C_Start with the
 // op EffectKind4F_Op. Two free sprites into +3 and +4 (none: nothing, the first
 // given back when only the second fails), each marked in use; for each,
-// DamageScratch's word = its index and EventOp_0x(EffectKind4F_Op); Sprite_Current
+// SharedScratch's word = its index and EventOp_0x(EffectKind4F_Op); Sprite_Current
 // put back; the first moved by (-0x1000, +0x1000), the second by (+0x1000,
 // -0x1000), both +0 |= 0x20, +0x5C = 0, tinted (0xF, 0, 0, 1) and (0, 0, 0xF, 1);
 // +9 = 4 and +1 = 1 (Sprite_Current read again after the tints).
@@ -243,9 +243,9 @@ extern "C" void __cdecl EffectKind4F_Start(void) {
         return;
     }
     Sprite(self[4], who)[0] = 1;
-    DamageScratch.w_00 = self[3];
+    SharedScratch.w_00 = self[3];
     SH_CALL(EventOp_0x)(EffectKind4F_Op);
-    DamageScratch.w_00 = self[4];
+    SharedScratch.w_00 = self[4];
     SH_CALL(EventOp_0x)(EffectKind4F_Op);
     Sprite_Current = self;
     unsigned char* a = Sprite(self[3], who);

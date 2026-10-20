@@ -914,10 +914,10 @@ extern "C" void __cdecl Area24_NoMessage(void) { SetMessage(0xFFFF); }
 extern "C" void __cdecl Area25_SpawnEffect(void) {
     if ((Frame_Counter & 3) != 0) return;
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    DamageScratch.b_00 = slot;
+    SharedScratch.b_00 = slot;
     if (slot == 0xFF) return;
     const unsigned count = At(at::kEffectCount)[0];
-    unsigned char* const record = rv::Bytes(Effect_Objects) + static_cast<std::uint32_t>(DamageScratch.b_00) * 0x80u;
+    unsigned char* const record = rv::Bytes(Effect_Objects) + static_cast<std::uint32_t>(SharedScratch.b_00) * 0x80u;
     record[0] = 1;
     record[5] = 0xB;
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(record)->work_1c, 6);

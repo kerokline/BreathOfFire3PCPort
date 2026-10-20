@@ -596,8 +596,8 @@ int DirStep(unsigned direction, unsigned which) {
     const auto v = static_cast<signed char>(B(at::kDirPairs + direction * 2u + which));
     return v == 1 ? 2 : v;
 }
-std::uint16_t CellX() { return DamageScratch.w_00; }
-std::uint16_t CellZ() { return DamageScratch.w_02; }
+std::uint16_t CellX() { return SharedScratch.w_00; }
+std::uint16_t CellZ() { return SharedScratch.w_02; }
 bool CellIs(unsigned char code) {
     return SH_CALL(AreaMap_ByteAt)(static_cast<short>(CellX()), static_cast<short>(CellZ())) == code;
 }
@@ -633,25 +633,25 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     const auto c = static_cast<unsigned char>(code);
     if (fx != 0 && rv::As<records::SpriteHead>(sc)->z_frac != 0) {
         // both fractions: x .. x + 1 at the row ahead, then the column ahead
-        DamageScratch.w_00 = x;
-        DamageScratch.w_02 = ahead_z;
+        SharedScratch.w_00 = x;
+        SharedScratch.w_02 = ahead_z;
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {
                 const unsigned char f = Sc()[8];
                 if (!(f & 1)) return AlongX();
                 if (f == 1 || f == 5) return 1;
             }
-            DamageScratch.w_00 = CellX() + 1;
+            SharedScratch.w_00 = CellX() + 1;
         }
-        DamageScratch.w_00 = ahead_x;
-        DamageScratch.w_02 = rv::As<records::SpriteHead>(Sc())->z_whole;
+        SharedScratch.w_00 = ahead_x;
+        SharedScratch.w_02 = rv::As<records::SpriteHead>(Sc())->z_whole;
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {
                 const unsigned char f = Sc()[8];
                 if (!(f & 1)) return AlongZ();
                 if (f == 7 || f == 3) return 1;
             }
-            DamageScratch.w_02 = CellZ() + 1;
+            SharedScratch.w_02 = CellZ() + 1;
         }
         if (SH_CALL(Field_CellAroundSide)(static_cast<unsigned char>((Sc()[8] + 2) & 7), code)) return 1;
         if (SH_CALL(Field_CellAroundSide)(static_cast<unsigned char>((Sc()[8] - 2) & 7), code)) return 1;
@@ -659,68 +659,68 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     }
     if (fx != 0) {
         // x's fraction only: the column ahead, z - 1 .. z + 1
-        DamageScratch.w_00 = ahead_x;
-        DamageScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole - 1);
+        SharedScratch.w_00 = ahead_x;
+        SharedScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole - 1);
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 const unsigned char f = Sc()[8];
                 if (!(f & 1)) return AlongZ();
                 if (f == 7 || f == 3) return 1;
             }
-            DamageScratch.w_02 = CellZ() + 1;
+            SharedScratch.w_02 = CellZ() + 1;
         }
         const unsigned char f = Sc()[8];
         if (f != 1 && f != 5) return 0;
-        DamageScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
-        DamageScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
+        SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
+        SharedScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 Sc()[8] = 7;
                 return 1;
             }
-            DamageScratch.w_02 = CellZ() + 1;
+            SharedScratch.w_02 = CellZ() + 1;
         }
-        DamageScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole + 2);
-        DamageScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
+        SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole + 2);
+        SharedScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 Sc()[8] = 3;
                 return 1;
             }
-            DamageScratch.w_02 = CellZ() + 1;
+            SharedScratch.w_02 = CellZ() + 1;
         }
         return 0;
     }
     // z's fraction only: the row ahead, x - 1 .. x + 1
-    DamageScratch.w_00 = static_cast<std::uint16_t>(x - 1);
-    DamageScratch.w_02 = ahead_z;
+    SharedScratch.w_00 = static_cast<std::uint16_t>(x - 1);
+    SharedScratch.w_02 = ahead_z;
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             const unsigned char f = Sc()[8];
             if (!(f & 1)) return AlongX();
             if (f == 1 || f == 5) return 1;
         }
-        DamageScratch.w_00 = CellX() + 1;
+        SharedScratch.w_00 = CellX() + 1;
     }
     const unsigned char f = Sc()[8];
     if (f != 7 && f != 3) return 0;
-    DamageScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
-    DamageScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
+    SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
+    SharedScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1);
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             Sc()[8] = 1;
             return 1;
         }
-        DamageScratch.w_00 = CellX() + 1;
+        SharedScratch.w_00 = CellX() + 1;
     }
-    DamageScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
-    DamageScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole + 2);
+    SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1);
+    SharedScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole + 2);
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             Sc()[8] = 5;
             return 1;
         }
-        DamageScratch.w_00 = CellX() + 1;
+        SharedScratch.w_00 = CellX() + 1;
     }
     return 0;
 }
@@ -733,15 +733,15 @@ extern "C" unsigned char __cdecl Field_CellAroundSide(unsigned direction, unsign
     const auto d = static_cast<unsigned char>(direction);
     const auto c = static_cast<unsigned char>(code);
     const unsigned char* const sc = Sc();
-    DamageScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->x_whole + DirStep(d, 0));
-    DamageScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole + DirStep(d, 1));
+    SharedScratch.w_00 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->x_whole + DirStep(d, 0));
+    SharedScratch.w_02 = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole + DirStep(d, 1));
     if (d == 1 || d == 5) {
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {
                 Sc()[8] = d;
                 return 1;
             }
-            DamageScratch.w_00 = CellX() + 1;
+            SharedScratch.w_00 = CellX() + 1;
         }
         return 0;
     }
@@ -751,7 +751,7 @@ extern "C" unsigned char __cdecl Field_CellAroundSide(unsigned direction, unsign
                 Sc()[8] = d;
                 return 1;
             }
-            DamageScratch.w_02 = CellZ() + 1;
+            SharedScratch.w_02 = CellZ() + 1;
         }
         return 0;
     }
@@ -772,7 +772,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
         const std::uint32_t r = at::kGateway189 + (Cond_ByteFF == 0 ? 3u : 0u);
         AreaEntry_PendingFlags = 4;
         AreaW0b_Place = B(r);
-        DamageScratch.d_10 = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 1)) << 16);
+        SharedScratch.d_10 = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 1)) << 16);
         SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 2)) << 16));
         return 1;
     }
@@ -784,7 +784,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
         AreaW0b_Place = W(r + 2);
         AreaEntry_PendingFlags = 4;
         AreaEntry_PendingZ = static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 6)) << 16);
-        SetLong(At(DamageScratch_addr + 0x10), static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 4)) << 16));
+        SetLong(At(SharedScratch_addr + 0x10), static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 4)) << 16));
         return 1;
     }
     return 0;
@@ -862,9 +862,9 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     unsigned char count = Field_MemberCount;
     const unsigned n = count;
     if (n > 0) {
-        for (unsigned i = 0; i < n; ++i) SetLong(At(DamageScratch_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->x);
+        for (unsigned i = 0; i < n; ++i) SetLong(At(SharedScratch_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->x);
         for (unsigned j = 0; j < n; ++j) rv::As<records::PartyMember>(Member(j))->x = L(at::kCellX + 4 * ListSlot(rv::As<records::PartyMember>(Member(j))->char_id, n));
-        for (unsigned i = 0; i < n; ++i) SetLong(At(DamageScratch_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->z);
+        for (unsigned i = 0; i < n; ++i) SetLong(At(SharedScratch_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->z);
         unsigned members = n;
         for (unsigned j = 0; j < members; ++j) {
             records::PartyMember* const m = rv::As<records::PartyMember>(Member(j));

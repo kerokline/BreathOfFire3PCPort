@@ -58,8 +58,8 @@ constexpr std::uint32_t kSparkleColours = 0x65ADD4;   // rgb rows, row = shade +
 constexpr std::uint32_t kSparkleLife = 0x65AE20;      // u8 per kind
 constexpr std::uint32_t kSparkleTypes = 0x65AE28;     // the dispatch table
 
-// The PC's copy of the PSX scratchpad (DamageScratch) and the vertex scratch.
-// kScratch: now DamageScratch (symbols.toml). s16 words at +0 .. +0xE
+// The PC's copy of the PSX scratchpad (SharedScratch) and the vertex scratch.
+// kScratch: now SharedScratch (symbols.toml). s16 words at +0 .. +0xE
 // kVertex: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch: four SVECTORs, 8 bytes apart
 
 // The battle actor's records.

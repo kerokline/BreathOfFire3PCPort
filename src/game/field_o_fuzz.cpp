@@ -287,7 +287,7 @@ const sh::DataTable kTables[] = {{MoveCmd_Op88States_addr, 4}};
 // Beyond field mode's standard regions (which hold ObjTrio, Sprite_Objects and
 // Extra, Cond_Flags with the party list, the save block to 0x904160, the
 // menu block, the style byte and the records' first 0x24 bytes, the text
-// scratch, the packet cursor, Game_AreaNumber, the counters, DamageScratch,
+// scratch, the packet cursor, Game_AreaNumber, the counters, SharedScratch,
 // Sprite_Current, Frame_Counter, Sprite_Kind2, Field_Kind2X / Z):
 const sh::Region kRegions[] = {
     {0x903A94, 0x903F90 - 0x903A94},   // CharacterRecords 0x903A70.. past the standard 0x24: the eight records
@@ -359,7 +359,7 @@ void Seed(unsigned run_k) {
     default: Field_ActiveMember = sh::SpriteRecord(sh::Next()); break;
     }
     // the count word in 0..31 (30 and 31: the ops' early return)
-    SetWord(Mem(DamageScratch_addr), sh::Often() ? sh::Next() % 30 : 30 + sh::Next() % 2);
+    SetWord(Mem(SharedScratch_addr), sh::Often() ? sh::Next() % 30 : 30 + sh::Next() % 2);
     for (unsigned i = 0; i < 4; ++i) {
         unsigned char* const r = sh::SpriteRecord(i);
         r[0xA] = static_cast<unsigned char>(1 + sh::Next() % 0x10);   // the frames E9's states divide by
@@ -500,7 +500,7 @@ void Disturb(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     switch ((h >> 16) % 3) {
     case 0: Field_ActiveMember = sh::SpriteRecord(v); break;
-    case 1: SetWord(Mem(DamageScratch_addr), v % 30); break;
+    case 1: SetWord(Mem(SharedScratch_addr), v % 30); break;
     default: {
         unsigned char* const s = Sprite_Current;
         if (sh::InRegions(s + 0x5D, 3)) s[0x5D + v % 3] = static_cast<unsigned char>(h >> 24);

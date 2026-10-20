@@ -45,10 +45,10 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// DamageScratch's first dword (0x903850; a word at +0 and +2 in the beams)
+// SharedScratch's first dword (0x903850; a word at +0 and +2 in the beams)
 // and Prim_VertexScratch's four SVECTORs (0x9037A0..0x9037BF): read again
 // after every call, as the originals read them.
-// kS: now DamageScratch (symbols.toml).
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 // The sprite frame-offset table pointer (sprite_pose.h): the effects' bank
 // 0x8E3580 around a sprite child's phase, the engine's 0x8B3580 after.
@@ -65,7 +65,7 @@ std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
-unsigned char SB(unsigned k) { return Mem(DamageScratch_addr + k)[0]; }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -647,7 +647,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
         rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
         rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2) & 0xFFFF);
         s = Sc();
-        SetWord(Mem(DamageScratch_addr), (static_cast<std::uint32_t>(AddL(rv::As<records::BattleTask>(s)->work_20, i * 4)) % 0xBC + 0x40) & 0xFFFF);
+        SetWord(Mem(SharedScratch_addr), (static_cast<std::uint32_t>(AddL(rv::As<records::BattleTask>(s)->work_20, i * 4)) % 0xBC + 0x40) & 0xFFFF);
         p[0x14] = 0x40;
         p[0x24] = 0xC0;
         p[0x15] = SB(0);
@@ -661,11 +661,11 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
         if (s[2] < 2) {
             const int sn = MH_CALL(Math_Sin)(static_cast<int>(((Frame_Counter + static_cast<unsigned>(i)) & 0x3F) << 6));
             const std::int32_t grey = (Shl(sn, 5) >> 0xC) + 0xA0;
-            SetWord(Mem(DamageScratch_addr + 2), static_cast<unsigned>(grey) & 0xFFFF);
+            SetWord(Mem(SharedScratch_addr + 2), static_cast<unsigned>(grey) & 0xFFFF);
             p[4] = static_cast<unsigned char>(grey);
         } else {
             const unsigned grey = s[9] * 10u;
-            SetWord(Mem(DamageScratch_addr + 2), grey & 0xFFFF);
+            SetWord(Mem(SharedScratch_addr + 2), grey & 0xFFFF);
             p[4] = static_cast<unsigned char>(grey);
         }
         p[5] = SB(2);
@@ -725,7 +725,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
         VertexOffset(0x18, s);
         rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, abr, 0x340, 0x100) & 0xFFFF);
         rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2) & 0xFFFF);
-        SetWord(Mem(DamageScratch_addr), (static_cast<unsigned>(i) & 0xF) * 12 + 0x40);
+        SetWord(Mem(SharedScratch_addr), (static_cast<unsigned>(i) & 0xF) * 12 + 0x40);
         p[0x14] = 0;
         p[0x24] = 0xC4;
         p[0x15] = SB(0);
@@ -736,7 +736,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
         p[0x45] = static_cast<unsigned char>(SB(0) + 0xB);
         Average4(p);
         const unsigned grey = Sc()[9] * 8u;
-        SetWord(Mem(DamageScratch_addr + 2), grey & 0xFFFF);
+        SetWord(Mem(SharedScratch_addr + 2), grey & 0xFFFF);
         p[4] = static_cast<unsigned char>(grey);
         p[5] = SB(2);
         p[6] = SB(2);
@@ -805,7 +805,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
         SetVW(0x18, Pos9(AddL(rv::As<records::BattleTask>(s)->x, rv::As<records::BattleTask>(s)->step_x)));
         Average4(p);
         const unsigned grey = Sc()[9] * 4u;
-        SetWord(Mem(DamageScratch_addr + 2), grey & 0xFFFF);
+        SetWord(Mem(SharedScratch_addr + 2), grey & 0xFFFF);
         p[4] = static_cast<unsigned char>(grey);
         p[5] = SB(2);
         p[6] = SB(2);
@@ -1059,19 +1059,19 @@ S26_EXPORT void __cdecl Magic115_OrbitStart(void) {
 }
 
 // The orbit step both circling phases share: +9 up, the angle (+9 & 0x3F) <<
-// 6 kept in DamageScratch's dword, the position the owner's plus 3 x (sin,
+// 6 kept in SharedScratch's dword, the position the owner's plus 3 x (sin,
 // cos) << 2.
 static void Magic115_Circle() {
     Inc(Sc()[9]);
     const std::uint32_t angle = (Sc()[9] & 0x3Fu) << 6;
-    SetL(Mem(DamageScratch_addr), angle);
+    SetL(Mem(SharedScratch_addr), angle);
     {
         const int sn = MH_CALL(Math_Sin)(static_cast<int>(angle));
         const unsigned char* const owner = Owner();
         rv::Store(rv::Current<records::BattleTask>()->x, AddL(Shl(MulL(sn, 3), 0xE) >> 0xC, rv::As<records::SpriteHead>(owner)->x));
     }
     {
-        const int c = MH_CALL(Math_Cos)(Long(Mem(DamageScratch_addr)));
+        const int c = MH_CALL(Math_Cos)(Long(Mem(SharedScratch_addr)));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         const unsigned char* const owner = Owner();

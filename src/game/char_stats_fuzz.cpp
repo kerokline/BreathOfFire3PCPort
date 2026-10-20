@@ -284,7 +284,7 @@ Region g_regions[kRegionCount];
 constexpr unsigned kRegionBytes = 0x950 + 0x600 + 0x2000 + 4 + sizeof g_packets + sizeof g_out;
 
 void MakeRegions() {
-    g_regions[0] = {at::kRosterBonus, 0x950};    // the roster bonus, DamageScratch, the eight records
+    g_regions[0] = {at::kRosterBonus, 0x950};    // the roster bonus, SharedScratch, the eight records
     g_regions[1] = {0x904000, 0x600};            // the extras 0x90412E..0x904130, the inventory lists, key items
     g_regions[2] = {at::kTextRecords, 0x2000};   // Text_Records, 256 entries
     g_regions[3] = {Address(&Gfx_PacketNext), 4};
@@ -534,7 +534,7 @@ void Cover(unsigned k, const Args& x, const State& in, const State& out, std::ui
     ++g_cover.answers[k][a];
     switch (k) {
     case kIconK: if ((x.a[0] & 0xFF) > 20) ++g_cover.icon_past; break;
-    case kAddK: if (At(DamageScratch_addr)[0] == 1) ++g_cover.answers[k][3]; break;
+    case kAddK: if (At(SharedScratch_addr)[0] == 1) ++g_cover.answers[k][3]; break;
     case kRecalcK:
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
             if (out.log[i].what == 8) ++g_cover.roster_calls;

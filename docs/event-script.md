@@ -100,7 +100,7 @@ and their four helpers, all ours:
 | `0x57BA60` `Sprite_InitFromEntry` | `0x8015B67C` | a sprite from an area descriptor `+8` entry; `+0x6C` from `Sprite_DirectionAngles` |
 | `0x579D70` `EventObj_Face` | `FUN_801A591C` | Capcom's: the pose or the facing, at the end of a placement |
 
-**The count** is the word at `DamageScratch` `0x903850` - the PSX's scratchpad
+**The count** is the word at `SharedScratch` `0x903850` - the PSX's scratchpad
 word `0x1F800000`, which the port moved to an ordinary global - and the word
 after it (`0x903852`, PSX `0x1F800002`) carries the animation bank from the op
 to `Sprite_SetAnimationBank`. Both are general scratch, used all over the exe

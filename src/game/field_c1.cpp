@@ -447,7 +447,7 @@ namespace {
 
 // The start both kinds share: two free sprites into +3 and +4 (none: nothing,
 // the first given back if only the second fails), each marked in use; for
-// each, DamageScratch's word = its index and the op run (EventOp_6x with
+// each, SharedScratch's word = its index and the op run (EventOp_6x with
 // Sprite_SetAnimationAt(0x61, 0xC) for 0x14, EventOp_0x for 0x3C);
 // Sprite_Current put back; the first moved by (dx, -dx), the second by (-dx,
 // dx), both +0 |= 0x20, +0x5C = 0, tinted (0xF, 0, 0, 1) and (0, 0, 0xF, 1);
@@ -465,14 +465,14 @@ void TwinStart(const char* who) {
     }
     SpriteRec(self[4], who)[0] = 1;
     const auto* const op = At(kKind14 ? AddressOf(EffectKind14_Op) : AddressOf(EffectKind3C_Op));
-    DamageScratch.w_00 = self[3];
+    SharedScratch.w_00 = self[3];
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
         SH_CALL(Sprite_SetAnimationAt)(0x61, 0xC);
     } else {
         SH_CALL(EventOp_0x)(op);
     }
-    DamageScratch.w_00 = self[4];
+    SharedScratch.w_00 = self[4];
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
         SH_CALL(Sprite_SetAnimationAt)(0x61, 0xC);
@@ -945,7 +945,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAhead(void) {
 // whether the block may not stand at (x, z), 16.16. Its own cell blocked
 // (EffectKind17_CellBlocked): 1. Moving in x (+0xC not 0): on a whole cell
 // (x's low word 0) 0; else the slope at the cell's middle in x
-// (AreaMap_Slope(cell x.8000, z, +8)), and where it slopes (DamageScratch) the
+// (AreaMap_Slope(cell x.8000, z, +8)), and where it slopes (SharedScratch) the
 // ground there above the height word +0x3E: 1; moving up in x, the next cell
 // in x blocked: 1; else 0. Moving in z the same with z. The original reads
 // its arguments' high words through its own frame at +2, so the cells passed
@@ -960,7 +960,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAt(long x, long z) {
         if ((ux & 0xFFFF) == 0) return 0;
         const U mid = (cell_x << 16) | 0x8000u;
         SH_CALL(AreaMap_Slope)(S32(mid), z, rv::Bytes(o)[8]);
-        if (DamageScratch.b_00 != 0) {
+        if (SharedScratch.b_00 != 0) {
             const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(S32(mid), z)));
             if (static_cast<short>(rv::As<records::EffectObject>(Cur())->height_whole) < ground) return 1;
         }
@@ -970,7 +970,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAt(long x, long z) {
     if ((uz & 0xFFFF) == 0) return 0;
     const U mid = (cell_z << 16) | 0x8000u;
     SH_CALL(AreaMap_Slope)(x, S32(mid), rv::Bytes(o)[8]);
-    if (DamageScratch.b_00 != 0) {
+    if (SharedScratch.b_00 != 0) {
         const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(x, S32(mid))));
         if (static_cast<short>(rv::As<records::EffectObject>(Cur())->height_whole) < ground) return 1;
     }

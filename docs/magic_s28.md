@@ -28,7 +28,7 @@ play has not been measured.
 
 Throughout, `+n` is a byte of `Sprite_Current` (the task or pool record being
 run), the owner is `0x93B940`, and "the scratch +n" is a word of
-DamageScratch `0x903850..0x90385F`.
+SharedScratch `0x903850..0x90385F`.
 
 ## 1. What each function does
 

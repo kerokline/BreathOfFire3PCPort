@@ -40,9 +40,9 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The placement count (DamageScratch, read afresh at every use as the
+// The placement count (SharedScratch, read afresh at every use as the
 // original reads the word [0x903850]) and the bank word after it.
-short Count() { return static_cast<std::int16_t>(DamageScratch.w_00); }
+short Count() { return static_cast<std::int16_t>(SharedScratch.w_00); }
 unsigned char* Object(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(at::kObjectStride); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
@@ -154,9 +154,9 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     unsigned char* const o = Object(Count());
     Sprite_Current = o;
     Field_ActiveMember = o;
-    DamageScratch.w_02 = static_cast<unsigned>(op[1]) << 8 | op[2];
+    SharedScratch.w_02 = static_cast<unsigned>(op[1]) << 8 | op[2];
     SH_CALL(EventObj_Reset)();
-    SH_CALL(Sprite_SetAnimationBank)(DamageScratch.w_02);
+    SH_CALL(Sprite_SetAnimationBank)(SharedScratch.w_02);
     Sprite_Current[0] = 1;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
     rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, rv::Current<records::SpriteObject>()->x);
@@ -183,7 +183,7 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5C] = static_cast<unsigned char>(op[3] & 0xF);
     SH_CALL(EventObj_Face)();
-    DamageScratch.w_00 = static_cast<unsigned>(DamageScratch.w_00 + 1);
+    SharedScratch.w_00 = static_cast<unsigned>(SharedScratch.w_00 + 1);
 }
 
 // original 0x591CC0: a member into the two party lists without a sprite

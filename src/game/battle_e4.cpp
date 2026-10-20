@@ -264,9 +264,9 @@ extern "C" void __cdecl BattleWin_DrawTileTint(int x, int y, int size) {
     rv::Store<std::int32_t>(tile->y, S16(static_cast<U>(y)));
     rv::Store<std::int32_t>(tile->w, w);
     rv::Store<std::int32_t>(tile->h, Word(t + 2));
-    p[4] = DamageScratch.b_00;
-    p[5] = DamageScratch.b_01;
-    p[6] = DamageScratch.b_02;
+    p[4] = SharedScratch.b_00;
+    p[5] = SharedScratch.b_01;
+    p[6] = SharedScratch.b_02;
     BH_CALL(Gpu_SetSemiTrans)(p, 1);
     BH_CALL(Gfx_CommitPrim)(1, 0x1C);
 }
