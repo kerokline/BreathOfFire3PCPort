@@ -423,7 +423,7 @@ const Region kRegions[] = {
     {0x903580, 0x14},            // the pad map: confirm, cancel
     {Game_Mode_addr, 4},         // Game_Mode, Game_Step
     {Gfx_ClutStripDirty_addr, 4},
-    {MoveScript_EffectState_addr, 0x18}, // constant data from here on - random here, put back after
+    {Character_IndexById_addr, 0x18}, // constant data from here on - random here, put back after
     {at::kIdLists, 0x28},        // the inventory's list pointers
 };
 constexpr unsigned kRegionBytes = 0x20 + 0x40 + 0x320 + 4 + 0x10 + 8 + 0x14 + 4 + 4 + 0x18 + 0x28;

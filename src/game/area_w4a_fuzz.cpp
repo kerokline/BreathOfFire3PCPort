@@ -49,7 +49,7 @@ constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
     {#name, base, size, calls, AH_N(calls), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), 0xFF, false, shape}
 
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
-// kWaitWordDA: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA (u16)
+// kWaitWordDA: now Transition_Busy (symbols.toml). Transition_Busy (u16)
 // kByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 constexpr U kByteFD = 0x8034F1;           // Cond_ByteFD
 
@@ -579,7 +579,7 @@ const ah::Callee kCallees167[] = {kSet40, kClear40, kToggle};
 
 // kFzSwitch: now Area167_Switch (symbols.toml). the fuzz's own literal: the cell hook's one record
 ah::Region g_regions167[] = {
-    {MoveScript_Object_addr, 4}, {Cond_ByteFE_addr, 1}, {MoveScript_WaitWordDA_addr, 2}, {Area167_Switch_addr, 4},
+    {MoveScript_Object_addr, 4}, {Cond_ByteFE_addr, 1}, {Transition_Busy_addr, 2}, {Area167_Switch_addr, 4},
 };
 unsigned char g_switch[4];
 
@@ -622,7 +622,7 @@ void Seed167(unsigned k) {
         if (body[1] < 0x100 && ah::Often()) Mem(at::kScriptVar6)[0] = static_cast<unsigned char>(body[1] + (ah::Often() ? 0 : AH_PICK(1, 0xFF)));
         Mem(at::kScriptVar5)[0] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 3 : AH_PICK(3, 0x80, 0xFF));
         SetWord(Mem(at::kTailTimer), ah::Often() ? AH_PICK(1, 1, 2, 0, 0xFFFF, 0x1E) : ah::Next());
-        SetWord(Mem(MoveScript_WaitWordDA_addr), ah::Half() ? 0 : AH_PICK(1, 0x100, 0xFFFF, 0x8000));
+        SetWord(Mem(Transition_Busy_addr), ah::Half() ? 0 : AH_PICK(1, 0x100, 0xFFFF, 0x8000));
         break;
     }
     case kInit167:

@@ -303,7 +303,7 @@ extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
 // mov al); the first call's carry the entry's stale eax and ecx, which
 // 0x591E50 masks off. The one caller (0x447776) tests al.
 extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
-    const U list = g.item_list(static_cast<unsigned char>(BattleActorCopies_ItemActor), BattleActorCopies_ItemPage, 1);
+    const U list = g.item_list(static_cast<unsigned char>(BattleActorCopies_ItemActor), Window16_Page, 1);
     const U item = At(list + At(kItemWindowCursor)[0])[0];
     const U high = list & 0xFFFF0000u;
     const U usable = g.item_usable(2, high | static_cast<unsigned char>(BattleActorCopies_ItemActor), high | item);
@@ -320,7 +320,7 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 // 0x80340D = 8. In that order. The one caller (0x447469) reloads eax.
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     const U acting = BattleE4_MenuActor;
-    unsigned char* const w = At(BattleE4_List_addr);
+    unsigned char* const w = At(Window16_addr);
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->in_use = 1;
     window_rec->handler = 8;
@@ -340,10 +340,10 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     window_rec->x = 0x140;
     window_rec->y = 0x3F;
     const unsigned char again = At(acting + 5)[0];
-    BattleE4_Hand = 0;
-    At(BattleE4_Hand_addr + 2)[0] = 0;
+    Window19 = 0;
+    At(Window19_addr + 2)[0] = 0;
     BattleActorCopies_ItemActor = again;
-    At(BattleE4_Hand_addr + 1)[0] = 8;
+    At(Window19_addr + 1)[0] = 8;
 }
 
 // original 0x449E00 (PSX 0x80097F44, `return 1` there too): al = 1. Thirteen
@@ -357,7 +357,7 @@ extern "C" unsigned char __cdecl Battle_ReturnTrue(void) { return 1; }
 // word +4 = 0xFF56, word +6 = 0x3F, 0x80340C = 0, 0x80340D = 8, 0x80340E = 0.
 // eax is 0 at the end (xor eax, eax); ours returns it.
 extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
-    unsigned char* const w = At(BattleE4_List_addr);
+    unsigned char* const w = At(Window16_addr);
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     const unsigned char a = BattleMisc_PartyPages;
     window_rec->in_use = 1;
@@ -375,9 +375,9 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
     PutWord(w + 0x10, 0);
     window_rec->x = 0xFF56;
     window_rec->y = 0x3F;
-    BattleE4_Hand = 0;
-    At(BattleE4_Hand_addr + 1)[0] = 8;
-    At(BattleE4_Hand_addr + 2)[0] = 0;
+    Window19 = 0;
+    At(Window19_addr + 1)[0] = 8;
+    At(Window19_addr + 2)[0] = 0;
     return 0;
 }
 
@@ -388,7 +388,7 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
 extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
     U eax = 0;
     for (U k = 0; k < 4; ++k) {
-        BattleWinStates_Current = BattleE4_List_addr + k * 0x24;
+        BattleWinStates_Current = Window16_addr + k * 0x24;
         eax = g.free_window();
     }
     return eax;

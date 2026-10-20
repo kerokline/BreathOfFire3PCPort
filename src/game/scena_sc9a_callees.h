@@ -37,7 +37,7 @@ constexpr std::uint32_t kTimer = 0x8034E6;      // u16: run 11's countdown
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
 constexpr std::uint32_t kEffectSlot = 0x903850; // u8: the effect slot just taken
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kRow6: now Cond_Flags[0x30] (symbols.toml). Cond_Flags + 0x30 (row 6), handed to Flags_Set / Clear as a literal
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Set / Clear as a literal
 constexpr std::uint32_t kSelector = 0x90412C;   // Cond_Flags + 0x19C: & 0x7F picks the call-table entries
@@ -46,7 +46,7 @@ constexpr std::uint32_t kSelector = 0x90412C;   // Cond_Flags + 0x19C: & 0x7F pi
 constexpr std::uint32_t kScriptFlags = 0x9039A2;   // u16 Field_ScriptFlags
 constexpr std::uint32_t kScriptFlags2 = 0x905BA4;  // u16 Field_ScriptFlags2: its low 3 bits tested (run 2 step 0)
 // kRequest: now Field_Request (symbols.toml). Field_Request
-// kWait: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA
+// kWait: now Transition_Busy (symbols.toml). u16 Transition_Busy
 // kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
 // kCamDist: now Camera_Distance (symbols.toml). u16 Camera_Distance
 // kMusicCurrent: now AreaW1f_MusicCurrent (symbols.toml). u8: Music_Play returns at once while its track equals it

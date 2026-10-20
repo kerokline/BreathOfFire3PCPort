@@ -16,7 +16,7 @@ namespace effect_4b::at {
 constexpr std::uint32_t kCounter = 0x903848;        // the chapters' counter byte (scenario_harness::at::kCounter):
                                                     // kinds 0x9F and 0x8C
 constexpr std::uint32_t kCounter2 = 0x903849;       // the byte after it: kind 0x8B waits on it, kind 0x8C counts it
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (Flags_Test's bank)
+// kFlagRow: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (Flags_Test's bank)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags' story row
 // kExtraX: now Sprite_ObjectsExtra[0x34] (symbols.toml). Sprite_ObjectsExtra record 0's +0x34 (x): kind 0x88's goal
 constexpr std::uint32_t kSoundIndex = 0x676280;     // kind 0x87: the byte 0..2 that picks kKind87Sounds' next word

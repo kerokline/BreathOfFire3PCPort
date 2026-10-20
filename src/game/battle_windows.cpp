@@ -103,7 +103,7 @@ void PutFloat(unsigned char* at, std::int32_t v) {
 // 0x903A5A, as three bytes 0..0xF8. Read once, where the original reads it.
 struct Rgb { unsigned r, g, b; };
 Rgb WindowRgb() {
-    const int row = BattleDraw_Colour;
+    const int row = Config_WindowColour;
     const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)));
     return {(w & 0x1F) << 3, ((w >> 5) & 0x1F) << 3, ((w >> 10) & 0x1F) << 3};
 }
@@ -210,7 +210,7 @@ extern "C" unsigned char __cdecl BattleObj_ScriptTickOnce() {
 extern "C" unsigned __cdecl BattleObj_PickPose() {
     const bool own_poses = At(at::kBattleKind)[0] == 5 && (BattleActions_BattleEnd & 2) != 0;
     if (own_poses) {
-        const bool high = (BattleTurnSteps_MusicFlags & 0x20) != 0;
+        const bool high = (EventBattle_Flags & 0x20) != 0;
         if (FieldState()[0x91] & 0x40)
             return g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x1C), at::kPoseSet, 0x1800);
         if (high) return g.pose_from(Sprite()[0x4B], at::kPoseSet, 0x1800);
@@ -509,7 +509,7 @@ void EnemyGauge(int x, int y, std::uint32_t enemy) {
 extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
     OpenDrawMode(0);
     const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(
-                                  BattleDraw_Colour * 64)));
+                                  Config_WindowColour * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
     TargetFrame(x, y);
@@ -529,7 +529,7 @@ extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
 // so, and four lines in the window colour.
 extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
     OpenDrawMode(0);
-    const int row = BattleDraw_Colour;
+    const int row = Config_WindowColour;
     const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
@@ -556,7 +556,7 @@ extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
 extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
     OpenDrawMode(0);
     const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(
-                                  BattleDraw_Colour * 64)));
+                                  Config_WindowColour * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     g.draw_tile(x + 4, y + 8, 8, 1);
     g.draw_edge(x + 4, y + 6, 2, 1);

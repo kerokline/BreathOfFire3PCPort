@@ -89,7 +89,7 @@ const bh::Region kRegions[] = {
     {0x939A00, 0xD0},            // the copy's count and bytes, set-up 26's sums (to 0x939AD0, the harness's)
     {0x929EC0, 4},               // Field_MemberCount
     {0x7E0918, 4},               // Draw_PassFlags
-    {0x66C810, 4},               // MoveScript_WaitWordDA
+    {0x66C810, 4},               // Transition_Busy
 };
 
 // The clones of the run in progress, for Args; the code Boss25_Event's seed
@@ -175,7 +175,7 @@ const bh::Clone kClonesB22[] = {
 void SeedB22(unsigned k) {
     if (k == 1) {
         B(BattleActions_BattleEnd_addr) = BattleEndByte();
-        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x40, 0, 0xFF, 0xBF) : bh::Next());
+        B(EventBattle_Flags_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x40, 0, 0xFF, 0xBF) : bh::Next());
     }
 }
 
@@ -267,21 +267,21 @@ unsigned char FightByte(unsigned char mine) {
 }
 void SeedK30(unsigned k) {
     switch (k) {
-    case 1: B(BattleActions_EventBattle_addr) = FightByte(0x1A); break;
+    case 1: B(EventBattle_Id_addr) = FightByte(0x1A); break;
     case 2:
         // the other state bytes inside the tables, so a dispatcher reading the
         // wrong byte lands on another entry rather than past its table
         if (bh::Often()) Sprite_Current[1] = static_cast<unsigned char>(bh::Next() % 6);
         if (bh::Often()) Sprite_Current[3] = static_cast<unsigned char>(bh::Next() % 6);
         break;
-    case 3: B(BattleActions_EventBattle_addr) = FightByte(0x19); break;
+    case 3: B(EventBattle_Id_addr) = FightByte(0x19); break;
     case 5:
-        B(BattleActions_EventBattle_addr) = FightByte(0x19);
+        B(EventBattle_Id_addr) = FightByte(0x19);
         B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 0x80, 0xFF) : bh::Next());
         break;
     case 6:
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next());
-        SetWord(Mem(MoveScript_WaitWordDA_addr), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
+        SetWord(Mem(Transition_Busy_addr), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
         break;
     default: break;
     }

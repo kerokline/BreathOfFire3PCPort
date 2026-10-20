@@ -69,7 +69,7 @@ unsigned char* Buf() { return At(at::kTextScratch); }
 char* CBuf() { return reinterpret_cast<char*>(At(at::kTextScratch)); }
 
 unsigned char* Record(unsigned id) { return At(bof3::addr::CharacterRecords + (id & 0xFF) * at::kRecordStride); }
-unsigned char Style() { return static_cast<unsigned char>(BattleDraw_Colour); }
+unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fam() { return Field_ActiveMember; }
 
@@ -427,11 +427,11 @@ namespace {
 // original reads them.
 int PanelX(const unsigned char* panel) { return static_cast<int>(Word(panel + 4)); }
 int PanelY(const unsigned char* panel) { return static_cast<int>(Word(panel + 6)); }
-// The member id of the menu's shown party slot: MoveScript_EffectState by the
+// The member id of the menu's shown party slot: Character_IndexById by the
 // party list's byte at the slot (the slot a signed byte).
 unsigned char ShownMember() {
     const unsigned char id = At(Cond_Flags_addr + 0xd2 + BattleActorCopies_ItemActor)[0];
-    return MoveScript_EffectState[id];
+    return Character_IndexById[id];
 }
 // A title of a table of pointers, centred on 13 six-unit columns - or, under
 // DIVERGENCE DIV-0059, on the width its pen covers.
@@ -530,7 +530,7 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     const unsigned char* counts = At(static_cast<U>(Long(At(bof3::addr::Inventory_CountLists + 4 * cat))));
     unsigned char kept = 0, total = 0;
     for (unsigned n = 0; n < 0x80; ++n, ++ids, ++counts) {
-        const unsigned char member = MoveScript_EffectState[At(Cond_Flags_addr + 0xd2 + panel[0xC])[0]];
+        const unsigned char member = Character_IndexById[At(Cond_Flags_addr + 0xd2 + panel[0xC])[0]];
         if (!SH_CALL(Item_CanUse)(4, member, panel[8], ids[0])) continue;
         if (panel[8] == 2) {
             const U kindv = SH_CALL(Item_IconKind)(2, ids[0]) & 0xFF;
@@ -1302,7 +1302,7 @@ extern "C" unsigned char __cdecl EventCond_ChapterAtMost(const unsigned char** a
 extern "C" unsigned char __cdecl EventCond_RecordBit0(const unsigned char** at) { return Record(**at)[0xB] & 1; }
 // original 0x57C2F0: condition 16 - bit `operand` of the gene flags 0x904650
 // (Flags_Test; the dword's 18 bits, battle_e5.md).
-extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { return SH_CALL(Flags_Test)(At(ScenaSc7_EventFlags_addr), **at); }
+extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { return SH_CALL(Flags_Test)(At(Gene_Bits_addr), **at); }
 
 // original 0x57C7E0 (MoveScript_Flow 0x57701D, Scena03_Scene5 0x5438DC): bit 6
 // of the three party objects' first byte cleared - ObjTrio_SetBit40's inverse.

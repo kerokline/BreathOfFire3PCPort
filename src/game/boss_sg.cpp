@@ -278,7 +278,7 @@ extern "C" void __cdecl Boss31_End(void) {
         BH_AT(Handler, at::kEndWin)();
         return;
     }
-    BattleTurnSteps_MusicFlags &= 0xBF;
+    EventBattle_Flags &= 0xBF;
     BH_AT(Handler, at::kEndOther)();
 }
 

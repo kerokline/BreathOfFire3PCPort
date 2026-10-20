@@ -172,7 +172,7 @@ extern "C" unsigned long __cdecl BossSample3_Hook(unsigned long word) {
 // last one wins; none leaves the byte as it was). The hooks: end Boss34_End,
 // exit Boss34_Exit, event Boss34_Event.
 extern "C" void __cdecl Boss34_Setup(void) {
-    const unsigned char id = MoveScript_EffectState[4];
+    const unsigned char id = Character_IndexById[4];
     for (unsigned m = 0; m <= 2; ++m)
         if (At(Field_Members_addr + m * at::kPartyStride)[0] == id) BossSh_Picked = static_cast<unsigned char>(m);
     StoreHooks(bof3::addr::Boss34_End, bof3::addr::Boss34_Exit, bof3::addr::Boss34_Event);
@@ -299,11 +299,11 @@ extern "C" unsigned long __cdecl BossGaist_Hook(unsigned long word) {
 }
 
 // original 0x43E5D0: hook entry 2 (BattleEnemy_RunAll's call): with the round
-// flags' bit 1 set and the word MoveScript_WaitWordDA 0, the bit cleared (a
+// flags' bit 1 set and the word Transition_Busy 0, the bit cleared (a
 // word and) and Draw_PassFlags = 0. The word is not read.
 extern "C" void __cdecl BossGaist_HookClearBit1(unsigned) {
     if ((B(at::kFlags) & 2) == 0) return;
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SetWord(At(at::kFlags), Word(At(at::kFlags)) & 0xFFFD);
     Draw_PassFlags = 0;
 }

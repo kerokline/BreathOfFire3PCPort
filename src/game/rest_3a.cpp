@@ -209,7 +209,7 @@ extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
     for (unsigned i = 0;;) {
         const unsigned char who = B(at::kPartyList + i);
         if (who == 0 || who == 7) {
-            Rest3a_Win0Cursor = static_cast<unsigned char>(i);
+            Window0_Cursor = static_cast<unsigned char>(i);
             break;
         }
         i = (i + 1) & 0xFF;
@@ -223,23 +223,23 @@ extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
     B(0x8031CE) = 4;
     B(0x803169) = 0;
     B(0x80316B) = 0;
-    BattleOdds_Win0Index = 0;
-    Rest3a_Win0Category = 0;
-    Rest3a_Win0Item = 0;
-    ShopStates2_Help = 0;
+    Window0_ParamA = 0;
+    Window0_Category = 0;
+    Window0_Item = 0;
+    Window0_Arrows = 0;
     B(0x803185) = 2;
-    Msgbox_Window1Kind = 3;
-    ItemUse_Window1State = 2;
-    BattleE1_Win1 = 1;
+    Window1_Kind = 3;
+    Window1_State = 2;
+    Window1 = 1;
     W16(0x803188, 0xFF56);
     W16(0x80318A, 0x3E);
     B(0x803190) = 7;
-    Rest3a_Win1Slot = 0;
+    Window1_ParamA = 0;
     B(0x80318F) = 0xFF;
-    Rest2h_Window1Master = 1;
+    Window1_Master = 1;
     B(0x8031A9) = 2;
-    Rest3b_Win2State = 2;
-    BattleE1_Win2 = 1;
+    Window2_State = 2;
+    Window2 = 1;
     W16(0x8031AC, 0x14);
     W16(0x8031B8, 0);
     W16(0x8031BA, 0x118);
@@ -281,15 +281,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleExtra_EquipCom
 // window 0's +0xD. al: +0x17 (the last byte loaded; the caller does not read
 // it). The cursor indexes unchecked; ours aborts past the six bytes.
 extern "C" unsigned char __cdecl BattleExtra_EquipRefresh(void) {
-    const unsigned char category = Rest3a_Win0Category;
-    const unsigned char item = Rest3a_Win0Item;
+    const unsigned char category = Window0_Category;
+    const unsigned char item = Window0_Item;
     const unsigned fits = BH_CALL(Item_EquipMask)(category, item);
     const unsigned char e14 = B(at::kGuestEquip + 2);
     const unsigned char e12 = Rest3a_GuestEquip;
     B(at::kWin13Dim) = static_cast<unsigned char>(~fits & 1);
     const unsigned char e13 = B(at::kGuestEquip + 1);
     B(at::kChosen + 2) = e14;
-    const unsigned slot = Rest3a_Win1Slot;
+    const unsigned slot = Window1_ParamA;
     B(at::kChosen + 0) = e12;
     const unsigned char e15 = B(at::kGuestEquip + 3);
     B(at::kChosen + 1) = e13;
@@ -320,7 +320,7 @@ extern "C" unsigned long __cdecl BattleEnd_LossDispatch(unsigned long through) {
 // Battle_OpenMsgWindow; BattleBanner_Set(0, 2, 0, 0, 0xFF, Msg_SystemPtr(0x11));
 // 0x904AA2 + 1 (read after the calls). The win's BattleEnd_WinBegin plays 0xA5.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_LossBanner(void) {
-    if ((BattleTurnSteps_MusicFlags & 0x40) == 0) {
+    if ((EventBattle_Flags & 0x40) == 0) {
         BH_CALL(Music_FadeOutStop)(10);
         BH_CALL(Music_Play)(0xA6, 10);
     }
@@ -360,10 +360,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_RestoreAwa
     BattleE4_Step2 = 0;
 }
 
-// original 0x4318F0 (BattleEnd_ExitSteps[3]): once MoveScript_WaitWordDA is 0,
+// original 0x4318F0 (BattleEnd_ExitSteps[3]): once Transition_Busy is 0,
 // Draw_PassFlags = 0 and 0x904AA2 - 1 (back to BattleEnd_Finish).
 extern "C" void __cdecl BattleEnd_ExitAwaitFade(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const unsigned char step = BattleE4_Step2;
     Draw_PassFlags = 0;
     BattleE4_Step2 = static_cast<unsigned char>(step - 1);

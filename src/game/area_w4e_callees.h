@@ -37,7 +37,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // pointer the chapters' flag calls take (Cond_Flags + 8 * chapter).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow14: now Cond_Flags[0x70] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The focus object: the object whose talk ran last (area_w3f_callees.h's
 // kFocusObject); areas 188 and 191's choices store a byte pair at its +0x18
 // and +0x1C.
@@ -67,8 +67,8 @@ constexpr std::uint32_t kSavedCount = 0x904152;
 // kWalkFacing: now AreaW3g_HealByte (symbols.toml).
 // Two bytes area 189's arrival counts with: steps since the last event and
 // events since the last big one.
-// kStepsSince: now AreaW3g_Byte929EC1 (symbols.toml).
-// kEventsSince: now AreaW3g_Byte9036D0 (symbols.toml).
+// kStepsSince: now Area189_StepsSinceEvent (symbols.toml).
+// kEventsSince: now Area189_EventsInRow (symbols.toml).
 // The pending area change Field_ChangeArea keeps: the area word, x and z
 // dwords, the flags byte (docs/area_w3b.md's kPlace, kPendingX / Z,
 // kChangeFlags).
@@ -112,7 +112,7 @@ constexpr std::uint32_t kInputHeld = 0x7E1BE8;         // Input_Held (Input_Pres
 // kVertexScratch: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch (three shorts)
 // kScreenXY: now MapView_ScreenXY (symbols.toml). MapView_ScreenXY (two floats)
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles; Cond_AngleFB 0x929ECC after
-// kWaitWordDA: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kWaitWordDA: now Transition_Busy (symbols.toml). Transition_Busy
 constexpr std::uint32_t kDamageScratch = 0x903850;     // DamageScratch (the slot word EventOp_0x reads)
 
 // --- the areas' tables (symbols.toml [[data]]) ---

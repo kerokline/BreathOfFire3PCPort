@@ -122,7 +122,7 @@ void Disturb() {
     if (h % 4 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 16) {
-    case 0: At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(v); break;
+    case 0: At(Config_WindowColour_addr)[0] = static_cast<unsigned char>(v); break;
     case 1: At(FieldS_Answer_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v & 1); break;
     case 2: At(Input_Pressed_addr + (v & 1))[0] = static_cast<unsigned char>(h >> 20); break;
     case 3: At(MenuWindows_ListCount_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 9) - 1); break;

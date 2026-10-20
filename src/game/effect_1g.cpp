@@ -232,11 +232,11 @@ extern "C" void __cdecl ItemTrade_LeaveAsk(void) {
 }
 
 // original 0x594240 (ItemTrade_LeaveSteps[1], hidden in Sprite_ClutWord's
-// catalog extent; PSX twin 0x800F5DA8): once MoveScript_WaitWordDA is 0 (the
+// catalog extent; PSX twin 0x800F5DA8): once Transition_Busy is 0 (the
 // fade Transition_Start began), Game_Step = 1 and nothing drawn; until then
 // the prompt as ItemTrade_LeaveAsk draws it.
 extern "C" void __cdecl ItemTrade_LeaveWait(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         Game_Step = 1;
         return;
     }
@@ -366,7 +366,7 @@ extern "C" void __cdecl ItemTrade_DrawList(unsigned flag) {
 // at x, sixteen 0x31 from x + 8 by 8, 0x32 at x + 0x88, all at y + 0x9C).
 extern "C" void __cdecl ItemTrade_DrawListFrame(int x, int y, unsigned flag) {
     const U xs = static_cast<U>(x), ys = static_cast<U>(y);
-    SH_CALL(Menu_DrawBox)(x, static_cast<int>(ys + 1), 0x8C, 0xA0, static_cast<unsigned char>(flag | 0x80), static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, static_cast<int>(ys + 1), 0x8C, 0xA0, static_cast<unsigned char>(flag | 0x80), static_cast<unsigned char>(Config_WindowColour));
     PieceMode(9);
     Piece(0x25, xs, ys);
     for (U i = 0; i < 10; ++i) Piece(0x26, xs + 8 * i + 0x20, ys);
@@ -456,7 +456,7 @@ extern "C" void __cdecl ItemTrade_DrawNeeds(void) {
 // x + 8 by 8, 0x32 at x + 0x80, at y + 0x40).
 extern "C" void __cdecl ItemTrade_DrawNeedsFrame(int x, int y) {
     const U xs = static_cast<U>(x), ys = static_cast<U>(y);
-    SH_CALL(Menu_DrawBox)(x, static_cast<int>(ys + 1), 0x84, 0x42, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, static_cast<int>(ys + 1), 0x84, 0x42, 0x80, static_cast<unsigned char>(Config_WindowColour));
     PieceMode(9);
     Piece(0x25, xs, ys);
     for (U i = 0; i < 9; ++i) Piece(0x26, xs + 8 * i + 0x20, ys);
@@ -508,7 +508,7 @@ extern "C" void __cdecl ItemTrade_DrawCount(void) {
 // x + 0x84, at y + 0x34).
 extern "C" void __cdecl ItemTrade_DrawCountFrame(int x, int y) {
     const U xs = static_cast<U>(x), ys = static_cast<U>(y);
-    SH_CALL(Menu_DrawBox)(x, y, 0x88, 0x36, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, y, 0x88, 0x36, 0x80, static_cast<unsigned char>(Config_WindowColour));
     PieceMode(8);
     Piece(0x33, xs, ys);
     for (U i = 0; i < 16; ++i) Piece(0x34, xs + 8 * i + 8, ys);

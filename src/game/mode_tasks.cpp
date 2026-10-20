@@ -123,7 +123,7 @@ extern "C" void __cdecl Title_CheckStart(void) {
     if (Title_StartArmed == 0) return;
     if (!(Input_Pressed & 0x800)) return;
     if (g.load_done() == 0) return;
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     if (TaskZeroState() != 0) return;
     if (Title_State <= 2) {
         Title_Timer = 1;
@@ -567,7 +567,7 @@ constexpr move_script::Table kFieldTable = {0x22, 0x198, 9};
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {bof3::addr::Task_Records, 0x48},   // task 0's state, Field_Request, Game_Mode / Game_Step,
-                                        // task 1's words, MoveScript_WaitWordDA
+                                        // task 1's words, Transition_Busy
     {static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Input_Pressed)), 2},
     {Music_Track_addr - 1, 8},          // the track and the battle count
     {kBattleBytes, 4},
@@ -637,7 +637,7 @@ void Seed(unsigned k) {
         if (Often()) Title_StartArmed = static_cast<unsigned char>(Next() % 4 ? 1 : Next());
         else Title_StartArmed = 0;
         if (Often()) Input_Pressed = static_cast<std::uint16_t>(Input_Pressed | 0x800);
-        if (Often()) MoveScript_WaitWordDA = 0;
+        if (Often()) Transition_Busy = 0;
         if (Often()) SetWord(At(bof3::addr::Task_Records), 0);
         Title_State = static_cast<std::uint16_t>(Next() % 3 ? Next() % 8 : Next());
         if (Often()) Title_Fade = 0;

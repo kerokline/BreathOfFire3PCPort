@@ -436,7 +436,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
         }
         if (!(p[0x134] & 1)) {
             const unsigned char roll = static_cast<unsigned char>(g.rand() & 7);
-            if (static_cast<signed char>(roll) >= 3 && BattleSprites_PartyPick != 1)
+            if (static_cast<signed char>(roll) >= 3 && Battle_PartyStanding != 1)
                 SetTarget(g.pick_party(member));
             else
                 SetTarget(g.pick_enemy_b(static_cast<unsigned char>((g.rand() & 7) + 3)));
@@ -461,7 +461,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
     // A party target of the member's own choosing: 0x454310 unless 0x904AB1
     // is 1, then the member itself.
     auto party_pick = [member]() {
-        if (BattleSprites_PartyPick != 1) SetTarget(g.pick_party(member));
+        if (Battle_PartyStanding != 1) SetTarget(g.pick_party(member));
         else SetTarget(static_cast<unsigned char>(member));
     };
     switch (p[0x125]) {
@@ -730,7 +730,7 @@ extern "C" void __cdecl Sprite_SetClutStp(void) {
 // original 0x494280 (0x800A8AD4, the PSX's Battle_InitEncounterKind): a boss
 // encounter (0x904AAA not 0) or an ordinary one - both tail jumps.
 extern "C" void __cdecl Battle_InitEncounterKind(void) {
-    if (BattleActions_EventBattle) g.boss_encounter();
+    if (EventBattle_Id) g.boss_encounter();
     else g.normal_encounter();
 }
 
@@ -744,7 +744,7 @@ extern "C" void __cdecl Battle_InitEncounterKind(void) {
 // about 3,000 times per self-test, so expect that many lines there.
 extern "C" void __cdecl Battle_InitBossEncounter(void) {
     g.boss_common();
-    const unsigned id = BattleActions_EventBattle;
+    const unsigned id = EventBattle_Id;
     const std::uint32_t handler = static_cast<std::uint32_t>(Long(At(Boss_SetupTable_addr + id * 4u)));
     bof3::Log("boss encounter: id %u (0x%02X) -> set-up 0x%08X", id, id, static_cast<unsigned>(handler));
     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(handler))();

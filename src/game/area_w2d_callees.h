@@ -40,7 +40,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // kFlagsA, save_menu_callees.h).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow3: now Cond_Flags[0x18] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 constexpr std::uint32_t kFlags904654 = 0x904654;
 // The return point Field_ChangeArea's callers keep (x, z dwords, the area
 // word at +8; event_ops_callees.h's kReturnPoint).

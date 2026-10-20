@@ -238,12 +238,13 @@ The turns are `Field_TurnUnless(a, b, to)`; every function re-reads
 E1E took stages 2..9 of `LeaderPanel_Stages` ([`effect_1e.md`](effect_1e.md));
 stage 0 and the state's own dispatcher are here, stage 1 is R1G's.
 
-- **`LeaderPanel_S0Begin` `0x5288C0`** - the pose byte `0x6BC716`, the count
+- **`LeaderPanel_S0Begin` `0x5288C0`** - `Fish_Nibbling` `0x6BC716` (read only by the fishing's
+  `Fish_Swim`; once called the pose byte), the count
   `0x6BC709` and `FieldPanel_DrawBlink`'s switch `0x939A28` cleared; `+0x29 =
   5`; the height word = `AreaMap_Elevation(+0x34, +0x38)`; `Field_State
   +0x89` 0: `Sprite_SetAnimationAt(0xA, 2)`, else `Sprite_SetAnimation(0xB)`;
   `+3` one on.
-- **`LeaderPanel_S0Wait` `0x528940`** - once `MoveScript_WaitWordDA` is 0:
+- **`LeaderPanel_S0Wait` `0x528940`** - once `Transition_Busy` is 0:
   effect record 4's `+6 = 0` and its state `+1` one on, `+3` one on.
 - **`LeaderPanel_S0End` `0x528970`** - once effect record 4's state is 4:
   record 1's state one on, `+2` one on (stage 1), `+3 = 0`.

@@ -664,7 +664,7 @@ Args Seed(unsigned k) {
         if (Half()) Field_Request = 1;
         break;
     case kEncStart:
-        if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
+        if (Half()) At(EventBattle_Id_addr)[0] = 0;
         break;
     case kEncWait: {
         if (Half()) sc[0xB] = 0xFF;

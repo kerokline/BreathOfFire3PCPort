@@ -173,7 +173,7 @@ extern "C" void __cdecl FieldMenu_Open(void) {
         signed char i = 0;
         do {
             const unsigned member = At(Cond_Flags_addr + 0xd2 + static_cast<std::int32_t>(i))[0];
-            g.recalc_stats(At(at::kCharRecords + MoveScript_EffectState[member] * at::kCharRecordSize));
+            g.recalc_stats(At(at::kCharRecords + Character_IndexById[member] * at::kCharRecordSize));
             i = static_cast<signed char>(i + 1);
         } while (static_cast<int>(i) < Field_MemberCount);
     }
@@ -255,12 +255,12 @@ extern "C" void __cdecl FieldMenu_TopBar(void) {
 // negative to 6 and right any above 6 (signed) to 0; Input_Pressed is read
 // again after the moves; the state and step bytes after each call.
 extern "C" void __cdecl FieldMenu_TopBarInput(void) {
-    g.backdrop(FieldS_Backdrop);
+    g.backdrop(Config_Background);
     const unsigned char cursor = static_cast<unsigned char>(MenuLists_Cursor);
     unsigned char* const saved = Sprite_Current;
     Byte(at::kIconWindow + 0xA) = cursor;
     const unsigned char camp = AreaW3c_CampFlag;
-    SetWord(At(MenuLists_TitleWindow_addr + 0x10), At(FieldMenu_TitleIds_addr + static_cast<std::int32_t>(static_cast<signed char>(cursor)))[0]);
+    SetWord(At(Window10_addr + 0x10), At(FieldMenu_TitleIds_addr + static_cast<std::int32_t>(static_cast<signed char>(cursor)))[0]);
     Sprite_Current = At(ObjTrio_addr);
     bool open;
     if (camp != 0) open = g.camp_cell() != 0;
@@ -328,7 +328,7 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
 // original 0x589E50 (13 bytes): the backdrop alone - the top bar's step 2,
 // and a slot of the table at 0x66734C (0x667350) another screen steps
 // through.
-extern "C" void __cdecl FieldMenu_BackdropStep(void) { g.backdrop(FieldS_Backdrop); }
+extern "C" void __cdecl FieldMenu_BackdropStep(void) { g.backdrop(Config_Background); }
 
 // original 0x589E60 (PSX 0x801D2010): the top bar's windows placed, after
 // Window_ResetAll. Each member (one a Party_Count(0), asked each time) gets
@@ -360,10 +360,10 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
         } while (i < Members());
     }
     struct Place { std::uint32_t at; unsigned char kind; std::uint16_t x, y; };
-    static constexpr Place kPlaces[] = {{MenuLists_MoneyWindow_addr, 1, 0xC8, 0x10},
-                                        {MenuLists_TimeWindow_addr, 2, 0x10, 0x10},
-                                        {MenuLists_IconWindow_addr, 3, 0x68, 0x2A},
-                                        {MenuLists_TitleWindow_addr, 4, 0x73, 0x10}};
+    static constexpr Place kPlaces[] = {{Window7_addr, 1, 0xC8, 0x10},
+                                        {Window8_addr, 2, 0x10, 0x10},
+                                        {Window9_addr, 3, 0x68, 0x2A},
+                                        {Window10_addr, 4, 0x73, 0x10}};
     for (const Place& p : kPlaces) {
         unsigned char* const r = At(p.at);
         r[1] = 6;
@@ -376,8 +376,8 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
     Byte(at::kIconWindow + 0xA) = 0;
     Byte(at::kIconWindow + 0xB) = 0;
     Byte(at::kIconWindow + 0xC) = 0;
-    SetWord(At(MenuLists_IconWindow_addr + 0x10), 0);
-    SetWord(At(MenuLists_TitleWindow_addr + 0x10), 0);
+    SetWord(At(Window9_addr + 0x10), 0);
+    SetWord(At(Window10_addr + 0x10), 0);
 }
 
 // original 0x589FE0: the party check as the menu closes (the top bar's
@@ -461,7 +461,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel
 // fields are read again after the calls; Gfx_PacketNext after the panel.
 extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
     const unsigned member = At(Cond_Flags_addr + 0xd2 + rec[0xB] * 3u + rec[0xA])[0];
-    const unsigned record = At(MoveScript_EffectState_addr + member)[0];
+    const unsigned record = At(Character_IndexById_addr + member)[0];
     g.member_body(rv::As<records::WindowRecord>(rec)->x, rv::As<records::WindowRecord>(rec)->y, record, rec[0xC], 0);
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
     g.commit(1, 0xC);
@@ -549,7 +549,7 @@ unsigned char g_title_centre = 0;
 // width in pixels - the same number as the original's for 12-unit glyphs.
 extern "C" void __cdecl MenuList_TitleBox(void) {
     Entry(MenuList_TitleStates_addr, Rec()[3])();
-    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = Rec();
     g.title_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x48, 0x13, colour);
     r = Rec();

@@ -165,7 +165,7 @@ unsigned char Kind3Event(unsigned code) {
 void EndChapter(unsigned char pick) {
     if (BattleActions_BattleEnd & 1) {
         BossH_LeaderPick = pick;
-        BattleTurnSteps_MusicFlags |= 0x80;
+        EventBattle_Flags |= 0x80;
         BH_AT(Handler, at::kEndThird)();
         MoveScript_PartyRecords[0x65] = 0x32;
         return;
@@ -286,7 +286,7 @@ extern "C" unsigned char __cdecl BossEngineer_HitStep(void) {
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
     if (Sprite_Current[9] == 0) {
         BH_CALL(Sprite_SetAnimationBank)(0x5F);
-        const bool fight5 = BattleActions_EventBattle == 5;
+        const bool fight5 = EventBattle_Id == 5;
         rv::Current<records::BattleEnemy>()->flip = fight5 ? 0 : 1;
         unsigned char* const axis = Sprite_Current + (fight5 ? 0x38 : 0x34);
         SetLong(axis, static_cast<std::int32_t>(static_cast<U>(Long(axis)) + 0x18000u));

@@ -262,7 +262,7 @@ const bh::Region kRegions[] = {
     {at::kMixSums, 0x10},                 // the sums, the form and group codes
     {0x939B20, 0x3A0},                    // the party's backup past the engine region (0x939AE0 + 3 x 0x14C)
     {Cond_Flags_addr + 0xf8, 0x20},       // the action flag set
-    {MoveScript_EffectState_addr, 0x18},  // MoveScript_EffectState (the roll's table pick)
+    {Character_IndexById_addr, 0x18},  // Character_IndexById (the roll's table pick)
     {Field_Slots_addr, 0x80},     // the eight Field_Slots records
     {Field_Kind2Z_addr, 8},               // Field_Kind2Z / _Kind2X (the dash's rise)
     {Prim_VertexScratch_addr, 8}, // slot 43's point
@@ -441,7 +441,7 @@ void Seed(unsigned k) {
         if (bh::Often()) r[0x130] |= 1;
         if (bh::Often()) r[0x124] = Mem(at::kActor)[0];
         r[0x89] = Small(0x18);
-        if (bh::Half()) Mem(MoveScript_EffectState_addr + r[0x89])[0] = 6;
+        if (bh::Half()) Mem(Character_IndexById_addr + r[0x89])[0] = 6;
         SetWord(bh::Pointer(BattleSprites_Action_addr) + 2, SafeAction());
         g_args[0] = Dirty(m);
         break;

@@ -51,18 +51,18 @@ constexpr U kActing = 0x939EC4;      // pointer: the acting actor's context, +1 
 // 0x97 is chosen; battle_damage names the same byte kInstantKill.
 constexpr U kWindow4State = 0x8031F3;
 // The item window: record 16 (0x8033A0) and its neighbours.
-// kItemState: now BattleActorCopies_ItemState (symbols.toml). u8: record 16's byte +3, set to 1 when the window closes
+// kItemState: now Window16_State (symbols.toml). u8: record 16's byte +3, set to 1 when the window closes
 constexpr U kItemBaseX = 0x8033A4;   // u16: the window's x; +7 is the cursor's
-// kItemBaseY: now BattleActorCopies_ItemBaseY (symbols.toml). u16: the window's y
-// kItemPageCue: now BattleActorCopies_ItemPageCue (symbols.toml). u8: 0x32 on a page left, 0x31 on a page right
-// kItemOwner: now BattleActorCopies_ItemOwner (symbols.toml). u8: the actor whose page / scroll / cursor are kept
-// kItemPage: now BattleActorCopies_ItemPage (symbols.toml). u8: the inventory page 0..3
+// kItemBaseY: now Window16_Y (symbols.toml). u16: the window's y
+// kItemPageCue: now Window16_PageCue (symbols.toml). u8: 0x32 on a page left, 0x31 on a page right
+// kItemOwner: now Window16_Owner (symbols.toml). u8: the actor whose page / scroll / cursor are kept
+// kItemPage: now Window16_Page (symbols.toml). u8: the inventory page 0..3
 constexpr U kItemCursor = 0x8033AC;  // u8: the cursor's item index 0..9
 constexpr U kItemScroll = 0x8033B0;  // s16: the first row shown
-// kItemScrollMotion: now BattleActorCopies_ItemScrollMotion (symbols.toml). u16: 0xF0 / 0x10 while the list scrolls
-// kItemCursorOn: now BattleE4_Hand (symbols.toml). u8
+// kItemScrollMotion: now Window16_Scroll (symbols.toml). u16: 0xF0 / 0x10 while the list scrolls
+// kItemCursorOn: now Window19 (symbols.toml). u8
 constexpr U kItemCursorX = 0x803410;       // u16
-// kItemCursorY: now BattleActorCopies_ItemCursorY (symbols.toml). u16
+// kItemCursorY: now Window19_Y (symbols.toml). u16
 // kItemActor: now BattleActorCopies_ItemActor (symbols.toml). u8: the actor the item window is for
 constexpr U kActorPages = 0x9045FC;  // 3 bytes per actor: page, scroll, cursor
 // The item records: 24 bytes each, byte +0 the target flags (0x10 a side,

@@ -66,7 +66,7 @@ unsigned char& C0() { return Byte(at::kCounter0); }
 unsigned char& C1() { return Byte(at::kCounter1); }
 void ClearCounters() { SetLong(At(at::kCounters), 0); }
 void PassFlags(unsigned v) { Draw_PassFlags = static_cast<unsigned char>(v); }
-bool WaitDone() { return MoveScript_WaitWordDA == 0; }
+bool WaitDone() { return Transition_Busy == 0; }
 bool Requested() { return Field_Request == 2; }
 unsigned Message() { return Word(At(at::kMessage)); }
 void ScriptFlagsOr80() { Byte(at::kScriptFlags) = static_cast<unsigned char>(Byte(at::kScriptFlags) | 0x80); }
@@ -81,7 +81,7 @@ std::uint32_t Entry(std::uint32_t table, int index) {
 }
 
 // The flag row, the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
 void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 
@@ -300,13 +300,13 @@ extern "C" void __cdecl Scena03_Scene1(void) {
     }
     case 4: {
         if (C0() != 0x32) return;
-        const unsigned state = MoveScript_EffectState[0];
+        const unsigned state = Character_IndexById[0];
         ItemEvent(0x97, state, 0, 0);
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), 0);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), 0);
         SetFlag(1);
         ChangeArea(0x2D, 0x280000, 0x350000, 0x86);
         AreaW1f_MusicCurrent = 0x2F;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(5);
         return;
     }
@@ -327,7 +327,7 @@ extern "C" void __cdecl Scena03_Scene1(void) {
         SetFlag(2);
         ScriptFlagsOr80();
         ChangeArea(0x27, 0x290000, 0x270000, 5);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0;
         SetRun(3);
         SetStep(0);
@@ -632,7 +632,7 @@ extern "C" void __cdecl Scena03_Scene5(void) {
         }
         ScriptFlagsOr80();
         ChangeArea(0x2D, 0x280000, 0x220000, 0x86);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(4);
         return;
@@ -640,7 +640,7 @@ extern "C" void __cdecl Scena03_Scene5(void) {
         if (C0() != 9) return;
         ScriptFlagsAnd(0xFF7F);
         ChangeArea(0x32, 0x290000, 0x250000, 5);
-        AreaW0c_PendingKind = 0xFE;
+        Area_EnterTransition = 0xFE;
         ModeFlow_AreaTransition = 0;
         SetStep(5);
         return;
@@ -680,7 +680,7 @@ extern "C" void __cdecl Scena03_Scene5(void) {
             return;
         }
         ChangeArea(0x32, 0xB0000, 0x610000, 5);
-        AreaW0c_PendingKind = 0xFE;
+        Area_EnterTransition = 0xFE;
         SetStep(0xA);
         return;
     case 0xA:
@@ -852,7 +852,7 @@ extern "C" void __cdecl Scena03_Scene6(void) {
         return;
     case 0x11: {
         ChangeArea(0x63, 0x68000, 0x230000, 0x83);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0x12);
         return;
@@ -953,7 +953,7 @@ extern "C" void __cdecl Scena03_Scene7(void) {
         return;
     case 2:
         ChangeArea(0x63, 0x68000, 0x230000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(3);
         return;
@@ -1226,7 +1226,7 @@ extern "C" void __cdecl Scena03_Scene8(void) {
         SH_CALL(Music_FadeOutStop)(8);
         SH_CALL(Music_Play)(0x51, 8);
         SetFlag(0x1E);
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), 6);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), 6);
         SH_CALL(ScriptFlags_Clear40)();
         C0() = 0;
         SetRun(0);
@@ -1579,7 +1579,7 @@ extern "C" void __cdecl Scena04_EnterArea(void) {
         ClearCounters();
         if (SH_CALL(Flags_Test)(bank, 6) == 0) {
             SetFlag(6);
-            AreaW0c_PendingKind = 5;
+            Area_EnterTransition = 5;
             SH_CALL(Party_DropIn)(3);
         }
         if (!Flag(7)) {
@@ -2055,7 +2055,7 @@ unsigned char Scene2Body() {
         ScriptFlagsOr80();
         ChangeArea(0x41, 0x2E0000, 0x210000, 1);
         unsigned char* const bank = Bank();
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SH_CALL(Flags_Set)(bank, 7);
         SetStep(0x11);
         return 0x11;

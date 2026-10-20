@@ -316,7 +316,7 @@ extern "C" void __cdecl EffectKind77_Tick(void) {
     unsigned frames = (((word >> 8) & 0x7Fu) + 1u) & 0xFFu;
     if (pace == 0 ? frames >= 0x1E : frames >= 0x28) {
         count = (count + 1u) & 0xFFu;
-        if (SH_CALL(Flags_Test)(P(AreaW0c_FlagRow), at::kTallySoundFlag)) SH_CALL(Sound_PlayEffect)(0x20A);
+        if (SH_CALL(Flags_Test)(P(Chapter_FlagRow), at::kTallySoundFlag)) SH_CALL(Sound_PlayEffect)(0x20A);
         frames = 0;
     }
     const unsigned high = ((pace << 7) | frames) & 0xFFu;
@@ -330,7 +330,7 @@ extern "C" void __cdecl EffectKind77_Tick(void) {
 extern "C" void __cdecl EffectKind77_End(void) {
     if (Field_Request == 2) return;
     if (Game_Mode == 4) return;
-    if (SH_CALL(Flags_Test)(P(AreaW0c_FlagRow), at::kTallyEndFlag)) return;
+    if (SH_CALL(Flags_Test)(P(Chapter_FlagRow), at::kTallyEndFlag)) return;
     B(at::kScriptFlagsHigh) = static_cast<unsigned char>(B(at::kScriptFlagsHigh) | 1u);
     MoveScript_PartyRecords[0x65] = 0x19;
     MoveScript_Var7 = 5;

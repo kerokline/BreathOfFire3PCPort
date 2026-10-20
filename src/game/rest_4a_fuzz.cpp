@@ -402,7 +402,7 @@ void SeedBattle() {
     SetUL(Mem(at::kBattleFlags), sh::Next() | (sh::Often() ? 0x4000u : 0));
     Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 10, sh::Next() % 11));
     Mem(at::kAutoMode)[0] = static_cast<unsigned char>(PickOf(4, 4, 3, 5, sh::Next()));
-    Mem(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, sh::Next()));
+    Mem(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, sh::Next()));
     for (U e = 0; e < 8; ++e) {
         unsigned char* const rec = Mem(0x93B960 + at::kEnemyStride * e);
         rv::As<records::BattleEnemy>(rec)->intel = PickOf(0, 1, 2, sh::Next());
@@ -594,7 +594,7 @@ void Disturb(U h) {
     case 5: Mem((v & 1) ? at::kEventCount : Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
     case 6:
         Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>((v >> 1) % 11);
-        Mem(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(v & 1);
+        Mem(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(v & 1);
         break;
     case 7: Mem(at::kResidentCounts + (v % 8))[0] = static_cast<unsigned char>((v >> 3) % 4); break;
     case 8: SetWord(Mem(at::kOfferWords + 2 * (v % 9)), 0x9Bu + (v >> 4) % 26); break;

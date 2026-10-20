@@ -133,7 +133,7 @@ void Disturb() {
     case 15: At(Cond_Flags_addr + 0xd2 + w % 6)[0] = static_cast<unsigned char>(v % 12); break;
     case 16: SetWord(At(0x903800 + 2 * (w % 2)), v); break;   // Camera_ShiftX / ShiftY
     case 17: SetWord(At(Camera_Distance_addr), v); break;        // Camera_Distance
-    case 18: At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(v); break;
+    case 18: At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(v); break;
     default: SetLong(At(0x905E60 + 4 * (w & 1)), static_cast<std::int32_t>(v)); break;   // Field_Kind2Z / X
     }
 }
@@ -728,7 +728,7 @@ Args Seed(unsigned k) {
             if (Half()) o[8] = At(at::kFaceTable)[At(at::kBattleFacing)[0]];
         }
         for (unsigned i = 0; i < 9; ++i) SetWord(ActorRecord(i) + 0x10, Half() ? 0x4000 : Next() & ~0x4000u);
-        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Half() ? 4 : Next() & ~4u);
+        At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Half() ? 4 : Next() & ~4u);
         break;
     case kToPlacesK:
         for (unsigned i = 0; i < kObjects; ++i) {
@@ -736,14 +736,14 @@ Args Seed(unsigned k) {
             o[0xB] = static_cast<unsigned char>(Pick({0, 1, 2, 3}));
             if (Often()) o[0x89] = At(Cond_Flags_addr + 0xd5)[Next() % 3];
         }
-        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 4 : Next() & ~4u);
+        At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 4 : Next() & ~4u);
         break;
     case kAtPlacesK:
         for (unsigned i = 0; i < 9; ++i) ActorRecord(i)[0x11] = static_cast<unsigned char>(Half() ? 0x40 : Next() & ~0x40u);
         break;
     case kScriptOnceK:
         for (unsigned i = 0; i < kObjects; ++i) Obj(i)[0xB] = static_cast<unsigned char>(Pick({0, 0, 1, 1, 2}));
-        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 0x10 : Next() & ~0x10u);
+        At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 0x10 : Next() & ~0x10u);
         break;
     case kShadeLowerK:
         for (unsigned i = 0x5D; i <= 0x5F; ++i)

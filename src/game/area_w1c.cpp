@@ -45,7 +45,7 @@ unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEff
 unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
 }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
@@ -281,12 +281,12 @@ extern "C" void __cdecl Area48_ChoiceCounterBOr1(void) {
 }
 
 // original 0x409040 (Area48_Choices[1] = Area48_Handlers[0]; PSX 0x801F4804):
-// the active member's +0x80 bit 0 cleared; with MoveScript_EffectState[the
+// the active member's +0x80 bit 0 cleared; with Character_IndexById[the
 // leader's +0x89] at 1 (the index unchecked), story flag 0xD toggled
 // (0x57C160).
 extern "C" void __cdecl Area48_ToggleFlagD(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
-    if (B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89)) != 1) return;
+    if (B(Character_IndexById_addr + B(ObjTrio_addr + 0x89)) != 1) return;
     FlagsToggle(Mem(Cond_Flags_addr + 0xa0), 0xD);
 }
 
@@ -295,7 +295,7 @@ extern "C" void __cdecl Area48_ToggleFlagD(void) {
 // and Sound_PlayEffect(0x20D).
 extern "C" void __cdecl Area48_BumpCount(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
-    if (B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89)) != 1) return;
+    if (B(Character_IndexById_addr + B(ObjTrio_addr + 0x89)) != 1) return;
     const unsigned char count = B(AreaW1c_Count48_addr);
     if (count < 8) B(AreaW1c_Count48_addr) = static_cast<unsigned char>(count + 1);
     AH_CALL(Sound_PlayEffect)(0x20D);

@@ -37,14 +37,14 @@ constexpr std::uint32_t kRun = 0x8034E4;        // s8: MoveScript_Var7, which sc
 constexpr std::uint32_t kStep = 0x8034E5;       // u8: the scene's step
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: a scene's frame count
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Set / Clear as a literal
 // kSelector: now AreaW0b_PartySet (symbols.toml). Cond_Flags + 0x19C: & 0x7F, 1 or 2 picks a branch
 // kArea: now Game_AreaNumber (symbols.toml). u16 Game_AreaNumber
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 constexpr std::uint32_t kScriptFlags = 0x9039A2;   // u16 Field_ScriptFlags
 // kRequest: now Field_Request (symbols.toml). Field_Request
-// kWait: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA
+// kWait: now Transition_Busy (symbols.toml). u16 Transition_Busy
 // kMusicCurrent: now AreaW1f_MusicCurrent (symbols.toml). u8: Music_Play returns at once while its track equals it
 constexpr std::uint32_t kMsgFlags = 0x7DEE44;   // u8 (MsgBoxState +4): bit 1 set once a message is done
 // kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount

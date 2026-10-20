@@ -218,7 +218,7 @@ const bh::Region kRegions[] = {
     {BossH_LeaderPick_addr, 1},
     {BossSc_WaitTurns_addr, 1},
     {BossSa_WindowPass_addr, 1},
-    {MoveScript_EffectState_addr + 0x1, 1},
+    {Character_IndexById_addr + 0x1, 1},
 };
 
 // ===========================================================================
@@ -269,11 +269,11 @@ void Seed(unsigned k) {
         break;
     // --- the entrances that read the fight byte (fight 13's HP)
     case 0x439B30: case 0x439C80:
-        Mem(BattleActions_EventBattle_addr)[0] = Byte({0xD, 0xD, 0x10, 0x8D, 0xC, 0xE});
+        Mem(EventBattle_Id_addr)[0] = Byte({0xD, 0xD, 0x10, 0x8D, 0xC, 0xE});
         break;
     // --- the Balio / Sunder action hooks: fight 16 and the fight's bits
     case 0x439BD0: case 0x439D20:
-        Mem(BattleActions_EventBattle_addr)[0] = Byte({0x10, 0x10, 0x10, 0xD, 0x11, 0x90});
+        Mem(EventBattle_Id_addr)[0] = Byte({0x10, 0x10, 0x10, 0xD, 0x11, 0x90});
         Mem(BossSe_Script_addr)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() & 0x3F : bh::Next());
         break;
     // --- the hit hooks: HP 0 and neighbours; Sunder's +0x108 and actor 8
@@ -281,7 +281,7 @@ void Seed(unsigned k) {
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(E())->hp, Hp());
         break;
     case 0x439DB0:
-        Mem(BattleActions_EventBattle_addr)[0] = Byte({0x10, 0x10, 0xD, 0x11, 0x90});
+        Mem(EventBattle_Id_addr)[0] = Byte({0x10, 0x10, 0xD, 0x11, 0x90});
         Mem(at::kActor)[0] = Byte({8, 8, 7, 9, 0x88});
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(E())->hp, Hp());
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(E())->hp_change, Hp());
@@ -293,7 +293,7 @@ void Seed(unsigned k) {
         Mem(BossSe_RoundSlot_addr)[0] = Byte({0, 1, 2, 0x80});
         break;
     case 0x439F50:
-        Mem(MoveScript_EffectState_addr + 0x1)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
+        Mem(Character_IndexById_addr + 0x1)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
         break;
     // --- Amalgam's melt: the row counter at and around its end
     case 0x439830:
@@ -341,7 +341,7 @@ void Disturb(U h) {
     case 0: Mem(BossSe_Script_addr)[0] = b; break;
     case 1: Mem(at::kMoveCounter)[0] = h & 0x1000000 ? 0x14 : b; break;
     case 2: Mem(BossSc_WaitTurns_addr)[0] = b; break;
-    case 3: Mem(MoveScript_EffectState_addr + 0x1)[0] = b; break;
+    case 3: Mem(Character_IndexById_addr + 0x1)[0] = b; break;
     default: Mem(Field_Members_addr + 0x4)[0] = b; break;
     }
 }

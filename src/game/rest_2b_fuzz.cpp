@@ -161,7 +161,7 @@ constexpr U kModelA = 0x9398E0, kModelB = 0x939960;
 // kBColour: now Rest2b_ModelBRgb (symbols.toml).
 // kBAngle: now Rest2b_ModelBAngle (symbols.toml).
 constexpr U kSaved = 0x6BC878;
-// kStyle: now BattleDraw_Colour (symbols.toml).
+// kStyle: now Config_WindowColour (symbols.toml).
 // kModelFile: now Rest2b_ModelFile (symbols.toml).
 // kLevelByte: now Rest2b_SavedScaleIndex (symbols.toml).
 
@@ -359,7 +359,7 @@ void SeedModel(unsigned char* record, unsigned char* header, unsigned char* quad
 
 void Seed(unsigned k) {
     // the style row inside the region; the screen's menu cells near their bounds
-    B(BattleDraw_Colour_addr) = static_cast<unsigned char>(sh::Next() % 8);
+    B(Config_WindowColour_addr) = static_cast<unsigned char>(sh::Next() % 8);
     B(BattleE1_Mode_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, sh::Next()));
     B(FieldS_State_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
     B(FieldS_Step_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, sh::Next()));
@@ -405,7 +405,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < 4; ++i) SeedModel(sh::SpriteRecord(i), sh::Half() ? HeaderA() : HeaderB(), sh::Half() ? QuadsA() : QuadsB());
     sh::SetPointer(Rest2b_ModelFile_addr, File());
     // the pad
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, 1, sh::Next()));
+    Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, 1, sh::Next()));
     Input_Pressed = static_cast<unsigned short>(PickOf(0, 0x1000, 0x4000, 0x5000, 0x8000, 0x2000, 0xF000, 0x20, 0x40,
                                                        0x60, 0x10, sh::Next()));
     Field_ConfirmButtons = static_cast<unsigned short>(PickOf(0x20, 0x40, 0x60, 0, sh::Next()));

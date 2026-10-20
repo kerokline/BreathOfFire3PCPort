@@ -67,7 +67,7 @@ void SetRun(unsigned char v) { MoveScript_Var7 = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool WaitClear() { return MoveScript_WaitWordDA == 0; }
+bool WaitClear() { return Transition_Busy == 0; }
 unsigned char FD() { return Cond_ByteFD; }
 void SetFE(unsigned char v) { Cond_ByteFE = v; }
 void SetTimer(std::uint16_t v) { W(at::kTimer) = v; }
@@ -94,7 +94,7 @@ void ClearCounters123() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
 void Clr(unsigned i) { SH_CALL(Flags_Clear)(Bits(), i); }
@@ -492,7 +492,7 @@ void Run6Body() {
         return;
     case 2:
         ChangeArea(0x80, 0x580000, 0x390000, 0x85);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         AreaW1f_MusicCurrent = 0x88;
         SetStep(3);
@@ -603,7 +603,7 @@ void Run6Body() {
         Scena10_Shaking = 0;
         Sound(0x205);
         ChangeArea(0x79, 0x2A0000, 0x180000, 0x80);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         SetStep(0x12);
         return;
     case 0x12:
@@ -628,7 +628,7 @@ void Run6Body() {
         SetPass(0);
         CallA(2);
         ChangeArea(0x84, 0x50000, 0x460000, 0x82);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetTimer(4);
         SetStep(0x16);
@@ -793,7 +793,7 @@ void Run6Body() {
         CallA(3);
         Sound(0x205);
         ChangeArea(0x79, 0x2C0000, 0x370000, 0x80);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         SetStep(0x2E);
         return;
     case 0x2E:
@@ -807,7 +807,7 @@ void Run6Body() {
         ScriptAnd(0xFF7F);
         ChangeArea(0x5E, 0x320000, 0x210000, 0x8D);
         ModeFlow_AreaTransition = 0;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(0x30);
         return;
     case 0x30:
@@ -867,7 +867,7 @@ bool Run7Body() {
     case 3:
         Set(0x12);
         ChangeArea(0x79, 0x2B0000, 0x390000, 0x80);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         AreaW1f_MusicCurrent = 0x86;
         SetStep(4);
@@ -1162,7 +1162,7 @@ SC9B_EXPORT void __cdecl Scena10_Run(void) {
 // original 0x55B6D0: slot 1, called by 0x56D6D0 with the object that
 // triggered: Scena10_Objects[object +0x86] (object, the flag bits' pointer).
 SC9B_EXPORT void __cdecl Scena10_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena10_Objects_addr, static_cast<int>(index), at::kObject10Count, "Scena10_ObjectTrigger")))(object, bits);
@@ -1694,7 +1694,7 @@ SC9B_EXPORT void __cdecl Scena10_Run4(void) {
     case 0x16:
         if (Request() != 0) return;
         ChangeArea(0x58, 0x280000, 0x220000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0x17);
         return;
@@ -2001,7 +2001,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
     case 0x15:
         Set(0x3C);
         ChangeArea(0x78, 0x1F8000, 0x748000, 7);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         AreaW1f_MusicCurrent = 0x49;
         SetCounter(0, 0);

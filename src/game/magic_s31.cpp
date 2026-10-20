@@ -67,7 +67,7 @@ constexpr std::uint32_t kS = 0x903850;
 
 // The cells the overlays read beyond the harness's names.
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
@@ -612,7 +612,7 @@ S31_EXPORT void __cdecl Corona_Start(void) {
         Inc(s[0xB]);
     }
     RestoreRow26Stp();
-    if (Mem(BattleActions_EventBattle_addr)[0] == 0) return;
+    if (Mem(EventBattle_Id_addr)[0] == 0) return;
     if (EnemyRecord(ActorIndex())[0x100] != 0x29) return;
     const unsigned slot = NewTask(0x4B);
     unsigned char* const child = TaskSlot(slot);

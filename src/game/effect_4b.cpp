@@ -1007,7 +1007,7 @@ extern "C" void __cdecl EffectKindA4_MarkSprites(void) {
             SH_CALL(Sprite_UpdateScreen)();
         }
         if ((SH_CALL(Scena15_RecordWord)(oo->column) & 0xFFFFu) == 0x308 &&
-            SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(AreaW0c_FlagRow), 0x11) != 0) {
+            SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(Chapter_FlagRow), 0x11) != 0) {
             Sprite_Current = o;
             o[0x29] = 3;
             SH_CALL(Sprite_UpdateScreen)();

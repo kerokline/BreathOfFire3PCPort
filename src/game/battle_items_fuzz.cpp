@@ -539,7 +539,7 @@ Region g_regions[] = {
     {0x7E0670, 4},                                            // Gfx_PacketNext
     {at::kActorIndex, 4},
     {BattlePhases_B89_addr, 1},
-    {BattleActions_EventBattle_addr, 1},
+    {EventBattle_Id_addr, 1},
     {ObjTrio_addr, 3 * at::kPartyStride},
     {at::kEnemyRecords, 8 * at::kEnemyStride},
     {0x905D98, 4},                                            // Field_State
@@ -670,7 +670,7 @@ Args Seed(unsigned k) {
             static const std::uint32_t kSounds[] = {0, 0xFF, 1, 0xFE};
             args.a[0] = Stale(0xFF, Often() ? kSounds[Next() % 4] : Next() & 0xFF);
             args.a[1] = Stale(0xFF, Often() ? kSounds[Next() % 4] : Next() & 0xFF);
-            At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+            At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         }
         if (k == kFxSizeK && index >= 3)   // a type the region covers
             At(at::kEnemyRecords + (index - 3) * at::kEnemyStride + 0xF0)[0] = static_cast<unsigned char>(Next() % 8);

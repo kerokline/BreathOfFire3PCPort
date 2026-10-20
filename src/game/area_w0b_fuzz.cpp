@@ -500,11 +500,11 @@ const ah::Callee kCallees21[] = {
     {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {"Inventory_Count", bof3::addr::Inventory_Count, KeyOf(&::Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountEffect, nullptr},
 };
-const ah::Region kRegions21[] = {{at::kTextRecords, 0x80}, {AreaW0c_FlagRow_addr, 4}};
+const ah::Region kRegions21[] = {{at::kTextRecords, 0x80}, {Chapter_FlagRow_addr, 4}};
 // Areas 21 and 26: the flag row's pointer moved (never followed: the
 // recorders log it), so a pointer not read again shows.
 void DisturbFlagRow(U h) {
-    if ((h >> 16) % 3 == 0) SetLong(Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(0x904000u + ((h >> 8) & 0xF0)));
+    if ((h >> 16) % 3 == 0) SetLong(Mem(Chapter_FlagRow_addr), static_cast<std::int32_t>(0x904000u + ((h >> 8) & 0xF0)));
 }
 void Seed21(unsigned k) {
     Mem(AreaW0c_ChoiceAnswer_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 2, 0xFF, 0x80) : ah::Next());
@@ -553,7 +553,7 @@ const ah::Clone kClones25[] = {
 // Effect_FindFree: a slot of the first eight or none (0xFF), garbage above.
 const ah::Callee kFindFree = {"Effect_FindFree", bof3::addr::Effect_FindFree, KeyOf(&::Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x07};
 const ah::Callee kCallees25[] = {kFindFree};
-const ah::Region kRegionsEffects[] = {{0x7E11E0, 8 * 0x80}, {0x903802, 2}, {AreaW0c_FlagRow_addr, 4}}; // Effect_Objects' first eight
+const ah::Region kRegionsEffects[] = {{0x7E11E0, 8 * 0x80}, {0x903802, 2}, {Chapter_FlagRow_addr, 4}}; // Effect_Objects' first eight
 void Seed25(unsigned) {
     if (ah::Often()) Frame_Counter &= ~3u;
     if (ah::Often()) Mem(at::kEffectCount)[0] = static_cast<unsigned char>(AH_PICK(0x13, 0x14, 0, 0xFF, 0x15));

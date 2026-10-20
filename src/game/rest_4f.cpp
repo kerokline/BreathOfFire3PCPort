@@ -106,9 +106,9 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned index, const 
 // ===========================================================================
 
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
-void Backdrop() { SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(Config_Background); }
 // The banner box: (0x14, y, 0x118, 0x13) in the window style.
-void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour)); }
+void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour)); }
 // The banner's text, system message 0xBC + the cursor (s8), at (0x1C, 0x13).
 void TitleText(U id) {
     const unsigned char* const text = SH_CALL(Msg_SystemPtr)(id);
@@ -127,8 +127,8 @@ U RowState(unsigned row) {
     return cursor == static_cast<int>(row) ? (d & 0xFF) : 0;
 }
 void SetDefaults() {
-    BattleDraw_Colour = 0;
-    FieldS_Backdrop = 0;
+    Config_WindowColour = 0;
+    Config_Background = 0;
     Rest4f_Setting3 = 0;
     Rest4f_Setting5C = 0;
     BattleWinStates_LabelGate = 0;
@@ -170,14 +170,14 @@ extern "C" void __cdecl ConfigScreen_OpenFade(void) {
 
 // original 0x460CF0 (ConfigScreen_OpenStates[1]): the screen drawn at rest
 // (the backdrop, the banner box, the panel at (0x1C, 0x40), the top bar with no
-// button lit); once MoveScript_WaitWordDA is 0, the counter and 0x929F03 0 and
+// button lit); once Transition_Busy is 0, the counter and 0x929F03 0 and
 // the state on.
 extern "C" void __cdecl ConfigScreen_OpenWait(void) {
     Backdrop();
     TitleBox(0x10);
     SH_CALL(Config_DrawPanel)(0x1C, 0x40);
     SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26);
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const unsigned char st = FieldS_Step;
     B(at::kCounter) = 0;
     Rest2d_MenuSub = 0;
@@ -217,7 +217,7 @@ extern "C" void __cdecl ConfigScreen_SlideIn(void) {
 // 4, bit 0x800 leaves without a sound; elsewhere a cancel button leaves with the
 // two sounds.
 extern "C" void __cdecl ConfigScreen_TopBar(void) {
-    const unsigned char bd = FieldS_Backdrop;
+    const unsigned char bd = Config_Background;
     B(at::kCounter) = 0;
     SH_CALL(Menu_DrawBackdrop)(bd);
     TitleBox(0x10);
@@ -327,8 +327,8 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
         const U held = L(at::kPressedDword);
         switch (row) {
         case 0: StepSetting(ModeFlow_ConfigBytes_addr, 2, false); break;
-        case 1: StepSetting(BattleDraw_Colour_addr, 3, false); break;
-        case 2: StepSetting(FieldS_Backdrop_addr, 3, true); break;
+        case 1: StepSetting(Config_WindowColour_addr, 3, false); break;
+        case 2: StepSetting(Config_Background_addr, 3, true); break;
         case 3:
             if (held & 0xA000) {
                 Sound(0x101);
@@ -501,7 +501,7 @@ extern "C" void __cdecl ConfigScreen_SlideOut(void) {
 // original 0x4616F0 (cdecl (sel, x, y)): Menu_DrawButtonRow(x, y, set 6, sel,
 // the style byte - the callee's unused fifth).
 extern "C" void __cdecl ConfigScreen_DrawButtons(int sel, int x, int y) {
-    SH_CALL(Menu_DrawButtonRow)(x, y, 6, sel, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawButtonRow)(x, y, 6, sel, static_cast<unsigned char>(Config_WindowColour));
 }
 
 // original 0x461710 (cdecl (x, y)): the panel. The five settings read first (rows
@@ -510,7 +510,7 @@ extern "C" void __cdecl ConfigScreen_DrawButtons(int sel, int x, int y) {
 // menu_frame.cpp holds it); then for each row at (x + 5, y + 9 + 15 * row): Config_DrawRowLabel
 // and Config_DrawRowOptions, each with the row's state (RowState, read afresh).
 extern "C" void __cdecl Config_DrawPanel(int x, int y) {
-    const unsigned char settings[6] = {static_cast<unsigned char>(ModeFlow_ConfigBytes), static_cast<unsigned char>(BattleDraw_Colour), FieldS_Backdrop, Rest4f_Setting3, FieldE2_RunDefault, 0};
+    const unsigned char settings[6] = {static_cast<unsigned char>(ModeFlow_ConfigBytes), static_cast<unsigned char>(Config_WindowColour), Config_Background, Rest4f_Setting3, FieldE2_RunDefault, 0};
     SH_AT(Frame, MenuFrame_Draw())(x, y, 0x21, 0xD);
     const int x5 = x + 5;
     int row_y = y + 9;
@@ -587,7 +587,7 @@ extern "C" void __cdecl Config_DrawControllerPanel(int x, int y) {
 // (1, 0x20); unless DIV-0051's jump stands at 0x461BAC, a second at x16 + 0x53
 // with the first's two y floats copied as dwords.
 extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
-    const unsigned char style = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned char style = static_cast<unsigned char>(Config_WindowColour);
     const ConfigTextOperands& ops = ConfigText_Operands();   // at::kPadBoxWidth .. kPadSecondCell
     SH_CALL(Menu_DrawBox)(x, y, ops.box_width, 0x10, 0, style);
     const U r = static_cast<U>(row) & 0xFF;

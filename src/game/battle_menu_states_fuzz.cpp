@@ -80,7 +80,7 @@ void Disturb() {
     if (h % 4 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
-    unsigned char* const list = At(BattleE4_List_addr);
+    unsigned char* const list = At(Window16_addr);
     switch ((h >> 4) % 20) {
     case 0: At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(v); break;
     case 1: At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(v); break;
@@ -160,7 +160,7 @@ unsigned __cdecl StubAutoRepeat(unsigned pressed) {
 void __cdecl StubSound(unsigned short id) {
     Record(6, id);
     const std::uint32_t h = Hash();
-    if (h % 2) At(BattleE4_List_addr)[0xA] = static_cast<unsigned char>((h >> 8) % 4);
+    if (h % 2) At(Window16_addr)[0xA] = static_cast<unsigned char>((h >> 8) % 4);
     if ((h >> 1) % 2) At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(h >> 16);
     Disturb();
 }
@@ -367,7 +367,7 @@ void Fix() {
     SetPtr(BattleActorCopies_Command_addr, g_cmd + (Next() % 2) * kCmdSize);
     SetPtr(BattleE4_MenuActor_addr, Member(Next() % 3));
     for (unsigned i = 0; i < 3; ++i) Member(i)[5] = static_cast<unsigned char>(Next() % 3);
-    At(BattleE4_List_addr)[0xA] = static_cast<unsigned char>(Next() % 4);
+    At(Window16_addr)[0xA] = static_cast<unsigned char>(Next() % 4);
 }
 
 // The pad: most rounds neither the confirm nor the cancel word shares a bit
@@ -393,7 +393,7 @@ unsigned char EdgeTarget() {
 
 // Each branch's boundaries, on top of the random bytes.
 void Seed(unsigned k) {
-    unsigned char* const list = At(BattleE4_List_addr);
+    unsigned char* const list = At(Window16_addr);
     switch (k) {
     // the other step byte inside the tables too, so that an index read from
     // the wrong byte shows as a count, not a crash
@@ -488,14 +488,14 @@ void Cover(unsigned k, const State& in, const State& out) {
             if (out.log[i].what == 6 && out.log[i].a == 0x106) cancelled = true;
         }
         if (state_out == 6 && ByteOf(in, BattleE4_Step3_addr) != 6) ++g_cover.list_above;
-        if (ByteOf(out, BattleE4_List_addr + 0x12) | ByteOf(out, BattleE4_List_addr + 0x13)) ++g_cover.list_scrolled;
+        if (ByteOf(out, Window16_addr + 0x12) | ByteOf(out, Window16_addr + 0x13)) ++g_cover.list_scrolled;
         g_cover.list_refused += refused;
         g_cover.list_confirmed += confirmed;
         g_cover.list_cancelled += cancelled;
         break;
     }
     case kCommit: {
-        const unsigned cat = ByteOf(in, BattleE4_List_addr + 0xA), row = ByteOf(in, BattleE4_List_addr + 0xC);
+        const unsigned cat = ByteOf(in, Window16_addr + 0xA), row = ByteOf(in, Window16_addr + 0xC);
         const std::uint32_t count = 0x904354u + 0x80 * cat + row;
         if (ByteOf(out, count) == 0 && ByteOf(out, 0x904154u + 0x80 * cat + row) == 0) ++g_cover.cleared;
         else ++g_cover.spent;

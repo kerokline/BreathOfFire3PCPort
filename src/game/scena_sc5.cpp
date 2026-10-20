@@ -55,7 +55,7 @@ void SetRun(unsigned char v) { MoveScript_Var7 = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool WaitClear() { return MoveScript_WaitWordDA == 0; }
+bool WaitClear() { return Transition_Busy == 0; }
 bool MsgDone() { return (B(at::kMsgFlags) & 2) == 2; }
 unsigned Sel() { return AreaW0b_PartySet & 0x7Fu; }
 void MusicCurrent(unsigned char v) { AreaW1f_MusicCurrent = v; }
@@ -73,7 +73,7 @@ void ClearCounters123() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 unsigned char* Story() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Cond_Flags_addr + 0xa0)); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
@@ -169,7 +169,7 @@ SC5_EXPORT void __cdecl Scena05_Run(void) {
 // triggered: Scena05_Objects[object +0x86] (object, the flag bits' pointer).
 // The entry's eax is the original's answer; 0x56D6D0 does not read it.
 SC5_EXPORT void __cdecl Scena05_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena05_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena05_ObjectTrigger")))(object, bits);

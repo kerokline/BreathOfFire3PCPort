@@ -75,7 +75,7 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kSpriteObjectsExtra: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 constexpr std::uint32_t kKind2Z = 0x905E60;            // Field_Kind2Z
 // kInputPressed: now Input_Pressed (symbols.toml). Input_Pressed

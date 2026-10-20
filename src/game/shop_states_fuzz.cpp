@@ -69,8 +69,8 @@ std::uint32_t Hash() {
 // The cells a store or a re-read could be moved across a call on.
 const U kWatched[] = {
     BattleE1_Mode_addr, FieldS_State_addr, FieldS_Step_addr, at::kCount, FieldS_Answer_addr, ModeStates_ShopObject_addr, AreaW3c_Load0F_addr, ShopStates_Clear0A_addr,
-    ScenaSc1_ShopByteB_addr, ShopStates_Choice_addr, ShopStates_Cancelled_addr, Rest2c_SaveBack_addr, ShopStates_InnFlag_addr, BattleDraw_Colour_addr, at::kMsgFlags,
-    MoveScript_WaitWordDA_addr, Input_Pressed_addr, Input_Pressed_addr + 1, Field_ConfirmButtons_addr, Field_ConfirmButtons_addr + 1, Field_CancelButtons_addr, Field_CancelButtons_addr + 1,
+    ScenaSc1_ShopByteB_addr, ShopStates_Choice_addr, ShopStates_Cancelled_addr, Rest2c_SaveBack_addr, ShopStates_InnFlag_addr, Config_WindowColour_addr, at::kMsgFlags,
+    Transition_Busy_addr, Input_Pressed_addr, Input_Pressed_addr + 1, Field_ConfirmButtons_addr, Field_ConfirmButtons_addr + 1, Field_CancelButtons_addr, Field_CancelButtons_addr + 1,
     Party_Zenny_addr, Party_Zenny_addr + 1, Rest2c_Slot_addr, at::kSlotTop, at::kRepeatLatch, ItemUse_RepeatTimer_addr, Game_Step_addr,
     Field_ScriptFlags_addr + 1,
 };
@@ -216,7 +216,7 @@ void __cdecl StubTextRecord(unsigned slot, unsigned length, const unsigned char*
 }
 void __cdecl StubChoices(int x, int y) {
     Record(18, Low16(x), Low16(y));
-    Nudge(BattleDraw_Colour_addr, 0x1F);
+    Nudge(Config_WindowColour_addr, 0x1F);
     Nudge(at::kCount, 7);
     Disturb();
 }
@@ -376,14 +376,14 @@ const Region kRegions[] = {
     {Game_Step_addr, 2},
     {Field_InputFlags_addr, 1},
     {Game_AreaNumber_addr, 2},
-    {BattleDraw_Colour_addr, 1},
+    {Config_WindowColour_addr, 1},
     {at::kMsgFlags, 4},
     {at::kText, 0x20},
     {Party_Zenny_addr, 4},
     {Rest2c_SaveBack_addr, 4},                         // 0x6BC880..3: the save flag, the cursor, cancelled
     {Input_Pressed_addr, 4},
     {Field_ConfirmButtons_addr, 4},                    // the confirm and cancel maps
-    {MoveScript_WaitWordDA_addr, 2},
+    {Transition_Busy_addr, 2},
     {at::kRepeatLatch, 2},
     {ItemUse_RepeatTimer_addr, 2},
     {Rest2c_Slot_addr, 4},
@@ -542,7 +542,7 @@ void Seed(unsigned k) {
         SeedObject();
         // zero, or with only its high byte or only its low byte set
         static const std::uint16_t kFades[] = {0, 0, 0x100, 0x8000, 1, 0xFF};
-        PutWord(MoveScript_WaitWordDA_addr, Often() ? kFades[Next() % 6] : static_cast<std::uint16_t>(Next()));
+        PutWord(Transition_Busy_addr, Often() ? kFades[Next() % 6] : static_cast<std::uint16_t>(Next()));
         break;
     }
     case kWait2:

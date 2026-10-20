@@ -222,14 +222,14 @@ void MembersFrame(const at::Rects& t) {
 void HealStates(signed char state) {
     switch (state) {
     case 1:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         AH_CALL(Sound_PlayEffect)(0x202);
         AH_CALL(Party_HealJoined)();
         AH_CALL(Transition_Start)(9);
         B(AreaW0c_TailState_addr) = 2;
         return;
     case 2:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         AH_CALL(Msg_OpenScript)(1);
         Field_Request = 2;
         B(AreaW0c_TailState_addr) = 3;

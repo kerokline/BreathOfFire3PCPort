@@ -26,11 +26,11 @@ constexpr std::uint32_t kCounters = 0x903848;     // four script counter bytes (
 constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kSlot = 0x903850;         // u8 (read back as a dword's low byte): the effect slot just taken
-// kFlagBank: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the flag row Flags_Test / Flags_Set are given
+// kFlagBank: now Chapter_FlagRow (symbols.toml). unsigned char *: the flag row Flags_Test / Flags_Set are given
 // kRow3: now Cond_Flags[0x18] (symbols.toml). chapter 3's flag row (Cond_Flags +0x18), cleared by its start
 // kRow3Byte2: now Cond_Flags[0x1a] (symbols.toml). its bits 0x10..0x17
 // kRow4: now Cond_Flags[0x20] (symbols.toml). chapter 4's flag row (Cond_Flags +0x20), cleared by its start
-// kStoryFlags: now ScenaSc7_EventFlags (symbols.toml). a flag row passed by address (two Flags_Set calls)
+// kStoryFlags: now Gene_Bits (symbols.toml). a flag row passed by address (two Flags_Set calls)
 
 // The field's cells.
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
@@ -40,7 +40,7 @@ constexpr std::uint32_t kSlot = 0x903850;         // u8 (read back as a dword's 
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits
 constexpr std::uint32_t kScriptFlags = 0x9039A2;  // Field_ScriptFlags, u16
 constexpr std::uint32_t kScriptFlagsHi = 0x9039A3;
-// kWait: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA, u16
+// kWait: now Transition_Busy (symbols.toml). Transition_Busy, u16
 // kRequest: now Field_Request (symbols.toml). Field_Request, u8
 constexpr std::uint32_t kMessage = 0x7DEE48;      // u16: the message id last opened
 constexpr std::uint32_t kPendingKind = 0x937F98;  // u8: the pending area change's kind
@@ -59,7 +59,7 @@ constexpr std::uint32_t kPitch = 0x929ECC;        // Camera_Angles[2] (Cond_Angl
 // kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
 // kMusicTrack: now Music_Track (symbols.toml). Music_Track
 // kGameMode: now Game_Mode (symbols.toml). Game_Mode, u16
-// kEffectState: now MoveScript_EffectState (symbols.toml). MoveScript_EffectState's first byte
+// kEffectState: now Character_IndexById (symbols.toml). Character_IndexById's first byte
 // kLoadNext: now ModeStates_ShopObject (symbols.toml). u8 set 0xFE with the mode 7 switch (Gfx_UnpackNext +0x30)
 // kLoadByte: now BattleE1_Mode (symbols.toml). u8 cleared with it (Gfx_UnpackNext +0x24)
 // kMemberCount3: now ScenaSc1_ShopByteB (symbols.toml). u8 cleared with it (Field_MemberCount +3)

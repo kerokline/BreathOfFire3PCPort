@@ -223,7 +223,7 @@ void Disturb() {
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;
-    case 15: Mem(BattleActions_EventBattle_addr)[0] = FightValue(h >> 8); break;
+    case 15: Mem(EventBattle_Id_addr)[0] = FightValue(h >> 8); break;
     default: break;
     }
     if (g_group && g_group->settle) g_group->settle();
@@ -396,8 +396,8 @@ std::uint32_t MoveCounterEffect(const std::uint32_t*, std::uint32_t answer) {
 // Battle_OpenMsgWindow: the banner's character 0x66972D, read after by the
 // event hooks (BSC's CharEffect). A group region, as above.
 std::uint32_t BannerCharEffect(const std::uint32_t*, std::uint32_t answer) {
-    if (!InRegions(Mem(MoveScript_EffectState_addr + 0x1), 1)) return answer;
-    Mem(MoveScript_EffectState_addr + 0x1)[0] = static_cast<unsigned char>(Noise());
+    if (!InRegions(Mem(Character_IndexById_addr + 0x1), 1)) return answer;
+    Mem(Character_IndexById_addr + 0x1)[0] = static_cast<unsigned char>(Noise());
     return answer;
 }
 // BattleTask_Create answering none (BSG's CreateEffect): F6's strike tests for
@@ -1054,7 +1054,7 @@ void Fix() {
     move_script::SetLong(Mem(BattleHook_End_addr), static_cast<std::int32_t>(g_hook_end));
     move_script::SetLong(Mem(BattleHook_Exit_addr), static_cast<std::int32_t>(g_hook_exit));
     move_script::SetLong(Mem(BattleHook_Event_addr), static_cast<std::int32_t>(g_hook_event));
-    SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * (Next() % 40)));
+    SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * (Next() % 40)));
     SetPointer(Gfx_PacketNext_addr, g_packets + 4 * (Next() % 64));
     if (g_group && g_group->engine) FixEngine();
 }
@@ -1248,7 +1248,7 @@ void Run(const Group& group) {
         {ObjTrio_addr, at::kPartyCount * at::kPartyStride},         // ObjTrio
         {0x8034E0, 0x10},                                           // Cond_ByteFA .., the chapter's run and step
         {Sprite_Objects_addr, at::kObjectCount * at::kObjectStride}, // Sprite_Objects: the field's actors
-        {AreaW0c_FlagRow_addr, 4},                                  // the chapter's flag bits (a pointer)
+        {Chapter_FlagRow_addr, 4},                                  // the chapter's flag bits (a pointer)
         {Cond_Flags_addr, 0x1D0},                                   // Cond_Flags, which it points into
         {Encounter_Rows_addr, 0x48 + 8 * at::kEnemyDataStride},     // the area's enemy rows and records
         {Gfx_PacketNext_addr, 4},                                   // Gfx_PacketNext
@@ -1354,7 +1354,7 @@ void Run(const Group& group) {
         g_rand_first = -1;
         Apply(input);
         Fix();
-        Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(group.fight >= 0 ? group.fight : 1 + Next() % 55);
+        Mem(EventBattle_Id_addr)[0] = static_cast<unsigned char>(group.fight >= 0 ? group.fight : 1 + Next() % 55);
         if (group.kind >= 0 && InRegions(CurrentEnemy() + 0x100, 1)) CurrentEnemy()[0x100] = static_cast<unsigned char>(group.kind);
         if (c.shape == Shape::kDispatch && c.states && InRegions(StateByte(c), 1))
             *StateByte(c) = static_cast<unsigned char>(Next() % c.states);

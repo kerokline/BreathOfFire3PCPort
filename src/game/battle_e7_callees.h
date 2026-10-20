@@ -30,7 +30,7 @@ constexpr std::uint32_t kList3OutBound = 0x599551;   // 0x143 in GeneWin_List3Sl
 
 // --- the cells (every one an address in BOF3.exe) ---------------------------
 // kWindowCurrent: now BattleWinStates_Current (symbols.toml). the window record a handler runs for
-// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour, a CLUT row
+// kColour: now Config_WindowColour (symbols.toml). s8: the window colour, a CLUT row
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). the CLUT shadow rows (64 bytes each)
 constexpr std::uint32_t kTasks = 0x93A000;           // BattleTask_Create's 48 slots of 0x84
 constexpr std::uint32_t kTaskStride = 0x84;
@@ -67,7 +67,7 @@ constexpr std::uint32_t kEquipCategories = 0x66B5BC; // u8 x 6: the equipment sl
 constexpr std::uint32_t kEquipIcons = 0x66B5B4;      // u8 x 6
 // kFieldMember: now BattleActorCopies_ItemActor (symbols.toml). s8: BATE's member (0x904065's index)
 constexpr std::uint32_t kPartyOrder = 0x904065;      // u8 x n: the party's members
-// kMemberIds: now MoveScript_EffectState (symbols.toml). MoveScript_EffectState: a member byte by slot
+// kMemberIds: now Character_IndexById (symbols.toml). Character_IndexById: a member byte by slot
 
 // --- .data strings and piece lists (addresses only) -------------------------
 constexpr std::uint32_t kFmtNumber = 0x5E10C0;       // Area08_MessageFormat

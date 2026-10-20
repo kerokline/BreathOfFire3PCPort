@@ -16,7 +16,7 @@ using U = std::uint32_t;
 
 // --- the character records the menu panels draw (CharacterRecords, 0xA4 each) ---
 constexpr U kRecordStride = 0xA4;
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox takes last (the Config byte)
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style Menu_DrawBox takes last (the Config byte)
 // kShownMember: now BattleActorCopies_ItemActor (symbols.toml). s8: the menu block's +6, the character a panel shows (a party slot)
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). u8 x 3: the party's member ids by slot (Cond_Flags' party list)
 

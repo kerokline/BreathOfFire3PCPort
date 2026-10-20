@@ -19,9 +19,9 @@ constexpr std::uint32_t kPartyPalettes = bof3::addr::Party_ReloadPalettes;    //
 
 // Data.
 constexpr std::uint32_t kScriptFlags2High = 0x905BA5;  // Field_ScriptFlags2's high byte: bit 4 is the word's bit 12, "an encounter"
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: the event battle (0 none; docs/battle_actions.md)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: the event battle (0 none; docs/battle_actions.md)
 // kBattleIntro: now BattlePhases_Initiative (symbols.toml). u8: the battle's opening kind (BattleWin_OpenSub* read it)
-// kBattleFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: the event battle's flags byte (its record's +0)
+// kBattleFlags: now EventBattle_Flags (symbols.toml). u8: the event battle's flags byte (its record's +0)
 // kLeader: now ObjTrio (symbols.toml). ObjTrio's first record: +1 its state, +2..+4 its sub-state bytes
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). two 3-byte lists of member ids (field-event.md section 2)
 constexpr std::uint32_t kCount = 0x903850;             // s16: the next Sprite_Objects entry a placement fills (DamageScratch)

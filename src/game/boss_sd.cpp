@@ -110,11 +110,11 @@ void StoreHooks(U end, U exit, U event) {
 // +0xA6 (the object read again for each) from the words set-ups 18..20 kept;
 // without, the flag set. Then the three stores.
 void RestoreOrMark(unsigned flag, U fc, U hook, U f8) {
-    if (BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), flag) & 0xFF) {
+    if (BH_CALL(Flags_Test)(At(Chapter_FlagRow), flag) & 0xFF) {
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(Enemy())->hp, BossSd_KeptA4);
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(Enemy())->ap, BossSd_KeptA6);
     } else {
-        BH_CALL(Flags_Set)(At(AreaW0c_FlagRow), flag);
+        BH_CALL(Flags_Set)(At(Chapter_FlagRow), flag);
     }
     PointEnemy(fc, hook, f8);
 }
@@ -137,8 +137,8 @@ void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_
     } else if (fell & 1) {
         EndStep(at::kEndOther);
     } else {
-        const bool f23 = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x23) & 0xFF;
-        if (f23 && (BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x24) & 0xFF)) {
+        const bool f23 = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x23) & 0xFF;
+        if (f23 && (BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x24) & 0xFF)) {
             EndStep(at::kEndOther);
         } else {
             const unsigned char step = f23 ? 0x3A : 0x1C;
@@ -329,10 +329,10 @@ extern "C" void __cdecl BossPatrio_Hook(unsigned code) { HookTable("BossPatrio_H
 // jmp [BossDodai_Steps + 4 * +1].
 extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
     if (rv::Current<records::BattleEnemy>()->actor == 4) {
-        const bool f = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x34) & 0xFF;
+        const bool f = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x34) & 0xFF;
         SetCell(Enemy() + 0xFC, f ? 0x64CF34 : 0x64CF28);
     } else {
-        const bool f = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x33) & 0xFF;
+        const bool f = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x33) & 0xFF;
         SetCell(Enemy() + 0xFC, f ? 0x64CF4C : 0x64CF40);
     }
     Dispatch("BossDodai_Dispatch", AddressOf(BossDodai_Steps), 12, 1, passed);
@@ -344,8 +344,8 @@ extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
 // its +8 |= 2 and +0xFC = 0x64CF40, else +0xFC = 0x64CF28; +0xF4 =
 // BossDodai_Hook, +0xF8 = 0x64CF70; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossDodai_Enter(void) {
-    bool back = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x1E) & 0xFF;
-    if (!back) back = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x23) & 0xFF;
+    bool back = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x1E) & 0xFF;
+    if (!back) back = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x23) & 0xFF;
     if (back) {
         const unsigned hp = rv::Current<records::BattleEnemy>()->actor == 4 ? BossSd_KeptHp1 : BossSd_KeptHp2;
         rv::As<records::BattleEnemy>(Enemy())->hp = hp;

@@ -83,8 +83,8 @@ int S16(U v) { return static_cast<short>(static_cast<unsigned short>(v)); }
 unsigned char* Rec(U n) { return At(at::kRecords + n * at::kRecordStride); }
 U RecAddr(U n) { return at::kRecords + n * at::kRecordStride; }
 
-// A member id's record index: MoveScript_EffectState[id], unchecked.
-U RecordOf(U id) { return MoveScript_EffectState[id & 0xFF]; }
+// A member id's record index: Character_IndexById[id], unchecked.
+U RecordOf(U id) { return Character_IndexById[id & 0xFF]; }
 // Field_Members of ObjTrio record k (s8, unchecked): the byte +0x148.
 U MemberAt(int k) { return B(static_cast<U>(Field_Members_addr + static_cast<std::int32_t>(k) * static_cast<std::int32_t>(at::kObjStride))); }
 
@@ -216,7 +216,7 @@ std::uint32_t field_s::FrameCallTarget() { return MenuFrame_Draw(); }
 // and the step down one (back to the slots). The style goes out in eax over
 // the entry's upper bytes; Menu_DrawTitleBox reads its byte.
 extern "C" void __cdecl FieldSave_Confirm(void) {
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(Text_DrawAt)(0x1C, 0x16, 0, 0xFF, Message(0x9F));
     SH_CALL(SaveMenu_DrawSlots)(0x20, 0x30, 0);
     if ((SH_CALL(Menu_YesNo)() & 0xFF) == 0) return;
@@ -240,7 +240,7 @@ extern "C" void __cdecl Rest_Begin(void) {
         return;
     }
     if (static_cast<unsigned char>(Cond_ByteFA) != 0xE ||
-        (SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(AreaW0c_FlagRow), 5) & 0xFF) == 0)
+        (SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(Chapter_FlagRow), 5) & 0xFF) == 0)
         SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x77);
     SH_CALL(Transition_Start)(0);
     FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
@@ -264,7 +264,7 @@ extern "C" void __cdecl Rest_Begin(void) {
 // unbounded by the member count; the area indexes Area_Descriptors (200) as a
 // word, unchecked.
 extern "C" void __cdecl Rest_PlaceParty(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Menu_DrawBlackScreen)();
     U area = Game_AreaNumber;
     if (area == 0xBB || area == 0xC1) {
@@ -272,7 +272,7 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
         return;
     }
     if (area == 0xBF && static_cast<unsigned char>(Cond_ByteFA) == 0xE) {
-        if ((SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(AreaW0c_FlagRow), 5) & 0xFF) != 0) {
+        if ((SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(Chapter_FlagRow), 5) & 0xFF) != 0) {
             FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
             return;
         }
@@ -378,7 +378,7 @@ extern "C" void __cdecl PartyForm_Setup(void) {
 // original 0x580B80: PartyForm_OpenSteps[1]. The transition over:
 // Transition_Start(3) and the step up one.
 extern "C" void __cdecl PartyForm_FadeWait(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Transition_Start)(3);
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
@@ -387,7 +387,7 @@ extern "C" void __cdecl PartyForm_FadeWait(void) {
 // over: step 0 and the state up two (to the choosing).
 extern "C" void __cdecl PartyForm_OpenWait(void) {
     SH_CALL(PartyForm_Draw)();
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const auto state = FieldS_State;
     FieldS_Step = 0;
     FieldS_State = static_cast<unsigned char>(state + 2);
@@ -398,7 +398,7 @@ extern "C" void __cdecl PartyForm_OpenWait(void) {
 // at the slide's offset, the counter down one; at 0 the counter 3 and the
 // state up one.
 extern "C" void __cdecl PartyForm_SlideIn(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     SH_CALL(PartyForm_DrawSliding)();
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = t;
@@ -505,7 +505,7 @@ extern "C" void __cdecl PartyForm_LeaveStep(void) {
 // tail jump to PartyForm_Draw; then the black screen, the counter 2 and the
 // step up one.
 extern "C" void __cdecl PartyForm_LeaveFade(void) {
-    if (MoveScript_WaitWordDA != 0) {
+    if (Transition_Busy != 0) {
         [[clang::musttail]] return SH_CALL(PartyForm_Draw)();
     }
     SH_CALL(Menu_DrawBlackScreen)();
@@ -632,7 +632,7 @@ extern "C" void __cdecl PartyForm_Reload(void) {
 // original 0x5811B0: PartyForm_LeaveSteps[3]. The transition over: the
 // counter 0, the mode 1 (the field), state and step 0, 0x929F0F 1.
 extern "C" void __cdecl PartyForm_End(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     B(at::kTimer) = 0;
     BattleE1_Mode = 1;
     FieldS_State = 0;
@@ -660,7 +660,7 @@ extern "C" void __cdecl PartyForm_DrawSliding(void) {
         DrawFont8(0x1A - 40 * static_cast<int>(B(at::kTimer)), y + 5, 0);
     }
     SH_CALL(PartyForm_DrawReserve)(45 * static_cast<int>(B(at::kTimer)) + 0x96, 0x3B);
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12 - 8 * static_cast<int>(B(at::kTimer)), 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12 - 8 * static_cast<int>(B(at::kTimer)), 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
 }
 
 // original 0x581300: the reserve's panels from (x, y): the port's dropped call
@@ -698,7 +698,7 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
         const U index = RecordOf(B(at::kReserve + row));
         const unsigned char* const rec = Rec(index);
         unsigned char colour = 0;
-        SH_CALL(Menu_DrawBox)(X, Y, 0x7D, 0x30, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+        SH_CALL(Menu_DrawBox)(X, Y, 0x7D, 0x30, 0x80, static_cast<unsigned char>(Config_WindowColour));
         SH_CALL(Menu_DrawItemIcon)(X + 0x56, Y, rec[9], (rec[0x10] >> 6) & 2);
         SH_CALL(Text_DrawAt)(X + 0x14, base - 0x14, 0, 5, rec);
         SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag)(X + 2, base, 3, 0);
@@ -788,9 +788,9 @@ extern "C" unsigned char __cdecl PartyForm_Swap(void) {
 // 6 (column + 2 row), s8 each: (x, y) words and a flag (0x7E x 0x30 when set,
 // else 0x80 x 0x34), not blinking - and the cursor's, blinking.
 extern "C" void __cdecl PartyForm_Draw(void) {
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const U n = PartyCount();
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
     for (U k = 0; k < n; ++k) {
         const U record = RecordOf(B(at::kPartyList + k));
         const int y = static_cast<int>(54 * k) + 0x3E;
@@ -1134,7 +1134,7 @@ extern "C" void __cdecl ShopResist_DrawBits(unsigned member, int x, int y, unsig
 // Menu_DrawMemberStatus's draws and Menu_DrawMoneyBox's read the low word.
 extern "C" void __cdecl ShopResist_DrawMembers(unsigned sliding) {
     const int s = (sliding & 0xFF) != 0 ? static_cast<int>(B(at::kTimer)) : 0;
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x10 - 10 * s, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x10 - 10 * s, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
     if (PartyCount() != 0) {
         unsigned char k = 0;
         do {
@@ -1740,7 +1740,7 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     auto* const w = rv::As<records::WindowRecord>(window);
     const int wx = static_cast<int>(w->x);
     const int wy = static_cast<int>(w->y);
-    SH_CALL(Menu_DrawBox)(wx + 3, wy + 3, 0x99, 0x9A, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(wx + 3, wy + 3, 0x99, 0x9A, 0, static_cast<unsigned char>(Config_WindowColour));
     unsigned char offset = 0;   // both written by Menu_ListScroll on every path
     unsigned char moving = 0;
     const unsigned char top = SH_CALL(Menu_ListScroll)(window + 0xA, &offset, &moving, window + 0xD);
@@ -1765,8 +1765,8 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
             SH_CALL(Menu_DrawSkillRow)(x, y, 0, kind, At(record), B(record + 0x12), 0);
         }
     }
-    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 3, 0x99, 0x14, window[9], static_cast<unsigned char>(BattleDraw_Colour));
-    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 0x92, 0x99, 8, window[9], static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 3, 0x99, 0x14, window[9], static_cast<unsigned char>(Config_WindowColour));
+    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 0x92, 0x99, 8, window[9], static_cast<unsigned char>(Config_WindowColour));
     const int title_y = w->y + 7;
     const unsigned char length = SH_CALL(Text_CharCount)(Text(at::kListTitle));
     SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + w->x, title_y, 0, 0x10, Text(at::kListTitle));
@@ -1804,7 +1804,7 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
 // the kind's byte and six bits of the colour.
 extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
     auto* const w = rv::As<records::WindowRecord>(window);
-    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 3, 0x92, 0xA0, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 3, 0x92, 0xA0, 0, static_cast<unsigned char>(Config_WindowColour));
     int y = w->y + 0x1A;
     U slot = RecAddr(window[0xA]) + 0x7E;
     for (unsigned char k = 0; k < 0xA; ++k, y += 0xD, ++slot) {
@@ -1892,7 +1892,7 @@ extern "C" void __cdecl SharedList_SortCostUp(void) {
 // 0x58, 0), a word) in the 12 px font at (x + 0x34, y + 4); the piece lists
 // 0x66422C, 0x664238 nine times 8 apart, 0x664244.
 extern "C" void __cdecl SharedList_DrawItemCount(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, Text(at::kItemLabel));
     const U count = SH_CALL(Inventory_Count)(0, at::kInkItem, 0) & 0xFFFF;
     SH_CALL(Crt_sprintf)(PrintBuf(), Format(Boss26Fx_CountFormat_addr), count);
@@ -1928,7 +1928,7 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
     records::WindowRecord* const win13 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 13 * 0x24);
     records::WindowRecord* const win14 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 14 * 0x24);
     records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const U slot0 = B(0x80333E);
     win21->in_use = 1;
     win21->x = L(0x803338) + 6;
@@ -2036,7 +2036,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     records::WindowRecord* const win14 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 14 * 0x24);
     records::WindowRecord* const win19 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 19 * 0x24);
     records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
-    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const U hand_y = 13 * (static_cast<U>(B(0x803363)) - B(0x803362) + 2) + static_cast<U>(win14->y);
     win21->x = L(0x80335C) + 7;
     win21->in_use = 1;

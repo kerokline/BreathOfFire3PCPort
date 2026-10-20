@@ -428,7 +428,7 @@ void Seed(unsigned k) {
     Field_InputFlags = static_cast<unsigned char>(PickOf(0, 2, 4, 6, 1, sh::Next()));
     Field_ScriptFlags = static_cast<unsigned short>(sh::Next() % 8 == 0 ? Field_ScriptFlags | 0x400 : Field_ScriptFlags & ~0x400u);
     Field_State[0x89] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
+    Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
     unsigned char* const record4 = Effect_Objects + 4 * 0x80;
     record4[1] = static_cast<unsigned char>(PickOf(4, 4, 3, 5, sh::Next()));
     sh::SetRandHint(PickOf(0xD, 0xE, 0xF, 0xC, 0, 4, 6, 7, 5, 0xB, sh::Next()));

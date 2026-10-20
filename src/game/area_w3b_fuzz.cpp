@@ -608,7 +608,7 @@ const ah::Callee kCalleesLeader[] = {
 };
 const ah::DataTable kTablesLeader[] = {{Area121_LeaderStates_addr, 2}};
 const ah::Region kRegionsLeader[] = {
-    {Field_ActorStates_addr, 4 * 0xA4}, {kExtraE1, 0xA4}, {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {Input_Held_addr, 8}, {ModeFlow_AreaTransition_addr, 1}, {AreaW0c_PendingKind_addr, 1},
+    {Field_ActorStates_addr, 4 * 0xA4}, {kExtraE1, 0xA4}, {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {Input_Held_addr, 8}, {ModeFlow_AreaTransition_addr, 1}, {Area_EnterTransition_addr, 1},
 };
 
 // The object planted near the point a round asks about, and the point.

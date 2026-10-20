@@ -159,11 +159,11 @@ extern "C" void __cdecl Area_ClassifyPending(void) {
     unsigned n = 0;
     for (std::uint32_t p = at::kAreaKinds; p < at::kAreaKindsEnd; p += 2, ++n) {
         if (Word(At(p)) == pending) {
-            AreaW0c_PendingKind = 0xB;
+            Area_EnterTransition = 0xB;
             return;
         }
     }
-    if (n == 0xB) AreaW0c_PendingKind = 1;
+    if (n == 0xB) Area_EnterTransition = 1;
 }
 
 // original 0x595390 (PSX 0x801A1350): the zone byte +5 at (x, z) in the
@@ -688,7 +688,7 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     unsigned char* const quad = Gfx_PacketNext;
     g.set_poly_gt4(quad);
     rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
-    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->clut, g.get_clut(BattleDraw_Colour * 32 + 0x10, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->clut, g.get_clut(Config_WindowColour * 32 + 0x10, 0x1E1));
     const float fright = Flt(x + w + 1), fbottom = Flt(y + h + 1);
     PutFloat(quad + 8, fx);
     PutFloat(quad + 0xC, fy);

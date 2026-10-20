@@ -92,11 +92,11 @@ constexpr uint32_t kCounter1 = 0x903849;
 constexpr uint32_t kCounter2 = 0x90384A;
 constexpr uint32_t kCounter3 = 0x90384B;
 constexpr uint32_t kSlotWord = 0x903850;    // u16: the event object's slot (Scena15_EventObjects)
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
+// kFlagRow: now Chapter_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
 // kStoryRow: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, the story flags
 // kRow14: now Cond_Flags[0x70] (symbols.toml). Cond_Flags + 0x70
 // kRow3: now Cond_Flags[0x78] (symbols.toml). Cond_Flags + 0x78 (chapter 15's row is 0x904008)
-// kWait: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kWait: now Transition_Busy (symbols.toml). Transition_Busy
 // kRequest: now Field_Request (symbols.toml). Field_Request
 // kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber
 // kPass: now Draw_PassFlags (symbols.toml). Draw_PassFlags
@@ -114,7 +114,7 @@ constexpr uint32_t kAngle2 = 0x929ECC;      // Cond_AngleFB's word
 // kMusicTrack: now Music_Track (symbols.toml). Music_Track
 // kAreaMusic: now AreaW1f_MusicCurrent (symbols.toml). the byte the area changes set with the track to play
 // kByteEE0: now ModeFlow_AreaTransition (symbols.toml). set with some area changes
-// kByte7F98: now AreaW0c_PendingKind (symbols.toml).
+// kByte7F98: now Area_EnterTransition (symbols.toml).
 // kPartyByte: now AreaW0b_PartySet (symbols.toml).
 constexpr uint32_t kFrame = 0x937F94;       // Frame_Counter
 constexpr uint32_t kInputHeld = 0x7E1BE8;   // Input_Held (u16; read as a dword by run 5 step 0x18)
@@ -189,12 +189,12 @@ VoidFn Handler(uint32_t table, int index, const char* who) {
 // An object hook's handler, called (object, the flag row) as 0x56D6D0's slot 1
 // calls through a chapter's object table.
 void CallObject(uint32_t table, unsigned char* object, const char* who) {
-    unsigned char* const row = At(AreaW0c_FlagRow);
+    unsigned char* const row = At(Chapter_FlagRow);
     reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(CodeAt(table, object[0x86], who)))(object, row);
 }
 
 // The chapter's flag row, as the original reads it: the pointer afresh.
-unsigned char* Row() { return At(AreaW0c_FlagRow); }
+unsigned char* Row() { return At(Chapter_FlagRow); }
 bool Test(unsigned n) { return SH_CALL(Flags_Test)(Row(), n) != 0; }
 bool TestAt(uint32_t row, unsigned n) { return SH_CALL(Flags_Test)(At(row), n) != 0; }
 void Set(unsigned n) { SH_CALL(Flags_Set)(Row(), n); }
@@ -484,7 +484,7 @@ SC15_EXPORT void __cdecl Scena15_Run1(void) {
         Step(2);
         return;
     case 2:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Say(0x12);
         Step(3);
         return;
@@ -529,7 +529,7 @@ SC15_EXPORT void __cdecl Scena15_Run1(void) {
         }
         SetAt(Cond_Flags_addr + 0xa0, 0x8A);
         Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xFE);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         EndRun();
         return;
@@ -665,7 +665,7 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
         Step(0x16);
         return;
     case 0x16:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         Say(3);
         Step(0x17);
@@ -678,12 +678,12 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
         Set(2);
         ChangeArea(0x58, 0x3E0000, 0x210000, 0x82);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0x8E;
         Step(0x19);
         return;
     case 0x19:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0x1F;
         Transition(1);
         Camera_Distance = 0x5DC;
@@ -739,7 +739,7 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
     case 0x32:
         Set(7);
         ChangeArea(2, 0x1A0000, 0x170000, 0x87);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0x8E;
         Step(0x33);
         return;
@@ -893,7 +893,7 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
     case 0xD:
         if (B(kCounter0) != 1) return;
         ChangeArea(0x2D, 0xF8000, 0x358000, 0x87);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         AreaW1f_MusicCurrent = 0xA2;
         Step(0xE);
         return;
@@ -908,7 +908,7 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
         if (B(kCounter0) != 0xD) return;
         Set(0xA);
         ChangeArea(0x98, 0x180000, 0x270000, 0x80);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         AreaW1f_MusicCurrent = 0xA2;
         Step(0x10);
         return;
@@ -917,12 +917,12 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
         Set(0xA);
         ChangeArea(0xAE, 0x2F8000, 0x278000, 0x8A);
         ModeFlow_AreaTransition = 0;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         Step(0x11);
         return;
     case 0x11:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Say(0x1E);
         Step(0x12);
         return;
@@ -1066,11 +1066,11 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         if (!TimerDone()) return;
         Set(0x12);
         ChangeArea(0xAC, 0x178000, 0x210000, 0x8C);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         Step(0xF);
         return;
     case 0xF:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Say(0x2B);
         Step(0x10);
         return;
@@ -1100,7 +1100,7 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         Step(0x13);
         return;
     case 0x13:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         Timer(0x3C);
         Step(0x14);
@@ -1126,7 +1126,7 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         Step(0x19);
         return;
     case 0x19:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SH_AT(VoidFn, kSoundStop)();
         SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kBootTask)));
         return;
@@ -1153,7 +1153,7 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         Step(0x21);
         return;
     case 0x21:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         Say(0x65);
         Step(0x22);
@@ -1174,7 +1174,7 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         if (Field_Request != 0) return;
         ChangeArea(0xC6, 0x160000, 0x120000, 0x80);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         Scena15_Bytes[1] = 0;
         MoveScript_Var7 = 6;
@@ -1233,7 +1233,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
     auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         Draw_PassFlags = 0xFB;
         Transition(1);
         {
@@ -1357,7 +1357,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         SH_CALL(Scena15_RandomPause)();
         break;
     case 0x15:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         Draw_PassFlags = 0;
         SH_CALL(Sound_PlayEffect)(0x206);
         Timer(0x78);
@@ -1424,7 +1424,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
     case 0x23:
     case 0x27:
     case 0x2C: {
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         const unsigned step = MoveScript_PartyRecords[0x65];
         Draw_PassFlags = 0;
         Say(step == 0x1F ? 0xA : step == 0x23 ? 0x6B : 0xC);
@@ -1499,12 +1499,12 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         Set(0x16);
         ChangeArea(0x95, 0x80000, 0xC0000, 0x82);
         ModeFlow_AreaTransition = 8;
-        AreaW0c_PendingKind = 9;
+        Area_EnterTransition = 9;
         AreaW1f_MusicCurrent = 0x5F;
         Step(0x32);
         break;
     case 0x32:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         Step(0x33);
         break;
     case 0x33:
@@ -1517,14 +1517,14 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         SH_AT(VoidFn, kViewShift)();
         break;
     case 0x34:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         SH_CALL(Music_FadeOutStop)(0xA);
         Draw_PassFlags = 0;
         Transition(0x10);
         Step(0x35);
         break;
     case 0x35:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         Timer(0x96);
         Step(0x36);
         break;
@@ -1848,7 +1848,7 @@ SC15_EXPORT void __cdecl Scena17_Intro(void) {
 // at (0xB00000, 0x138000), Field_ViewReset, Cond_ByteFE 4, track 0x96 loaded,
 // the transition in, the fade drawn (off, 0x80), the next step.
 SC15_EXPORT void __cdecl Scena17_Intro00(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     Field_Kind2X = 0xB00000;
     Field_Kind2Z = 0x138000;
     SH_CALL(Field_ViewReset)();
@@ -1862,7 +1862,7 @@ SC15_EXPORT void __cdecl Scena17_Intro00(void) {
 // original 0x56C2D0: step 1: once the wait word is 0 and the file is in, the
 // run's step 0x5A and the next step; the fade drawn every frame.
 SC15_EXPORT void __cdecl Scena17_Intro01(void) {
-    if (MoveScript_WaitWordDA == 0 && LoadDone()) {
+    if (Transition_Busy == 0 && LoadDone()) {
         Step(0x5A);
         RunUp();
     }
@@ -2043,7 +2043,7 @@ SC15_EXPORT void __cdecl Scena17_Intro14(void) {
 // 10 frames, Music_Track 0xFF, the pass flags 0, Cond_ByteFE 6, part 2 at
 // step 0.
 SC15_EXPORT void __cdecl Scena17_Intro15(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Music_FadeOutStop)(0xA);
     const unsigned char part = static_cast<unsigned char>(MoveScript_PartyRecords[0x63] + 1);
     Music_Track = 0xFF;
@@ -2083,7 +2083,7 @@ SC15_EXPORT void __cdecl Scena17_Roll1(void) {
 // original 0x56C720: step 2: once the wait word is 0, part 3 at step 0; until
 // then the roll drawn (a tail jump to Scena17_ScrollRoll).
 SC15_EXPORT void __cdecl Scena17_Roll2(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         const unsigned char part = MoveScript_PartyRecords[0x63];
         MoveScript_Var7 = 0;
         MoveScript_PartyRecords[0x63] = static_cast<unsigned char>(part + 1);
@@ -2115,7 +2115,7 @@ SC15_EXPORT void __cdecl Scena17_Outro00(void) {
 // original 0x56C7B0: step 1: once the wait word is 0, 0x8034E5 = 0 and the
 // next step; the rays drawn at radius 0, level 0xFF.
 SC15_EXPORT void __cdecl Scena17_Outro01(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0);
         MoveScript_Var7 = static_cast<unsigned char>(run + 1);
@@ -2243,7 +2243,7 @@ SC15_EXPORT void __cdecl Scena17_Outro09(void) {
 // Music_Track 0xFF, Port_DroppedCall(0), the pass flags 0, script message 1,
 // the next step, the request 2. The rays and the panel.
 SC15_EXPORT void __cdecl Scena17_Outro10(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         SH_CALL(Music_FadeOutStop)(0xA);
         Music_Track = 0xFF;
         SH_CALL(Port_DroppedCall)(0);

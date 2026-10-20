@@ -246,12 +246,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Statu
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextRound() {
     for (unsigned i = 0x10; i < 0x18; ++i)
         if (Long(At(0x803500 + i * 4)) != 0) return;
-    if (BattleActions_EventBattle != 0) {
+    if (EventBattle_Id != 0) {
         const auto hook = reinterpret_cast<unsigned (__cdecl*)(int)>(
             BattleHook_Event);
         if ((hook(2) & 0xFF) == 0xFF) return;
     }
-    if (BattleActions_BattleEnd != 0 && !psp_code::DuelLossGoesOn(BattleActions_EventBattle, BattleActions_BattleEnd)) {
+    if (BattleActions_BattleEnd != 0 && !psp_code::DuelLossGoesOn(EventBattle_Id, BattleActions_BattleEnd)) {
         B(at::kRoundFlags) &= 0xEF;
         for (unsigned w : {0u, 3u, 1u, 11u, 10u, 9u, 8u, 7u, 6u, 5u, 4u}) B(at::kWindows + w * at::kWindowStride) = 0;
         B(at::kPhase) = 5;
@@ -382,7 +382,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
         }
         BattleFlow_AnimGate = 0;
     }
-    if (BattleActions_EventBattle == 0) {
+    if (EventBattle_Id == 0) {
         if (end & 1) BattleActions_Step = 2;
         if (end & 2) BattleActions_Step = 1;
     }
@@ -407,7 +407,7 @@ extern "C" void __cdecl BattleEnd_WinStep() {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_WinBegin() {
     for (unsigned i = 0; i < 3; ++i)
         if (rv::As<records::PartyMember>(Member(i))->flags & 1) rv::As<records::PartyMember>(Member(i))->state = 2;
-    if ((BattleTurnSteps_MusicFlags & 0x40) == 0) {
+    if ((EventBattle_Flags & 0x40) == 0) {
         g.fade_out(10);
         g.music_play(0xA5, 10);
     }
@@ -460,7 +460,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_WriteBackPart
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_ExitHook() {
     if (g.load_done() == 0) return;
     reinterpret_cast<Step>(BattleHook_Exit)();
-    if ((BattleTurnSteps_MusicFlags & 0x40) == 0) {
+    if ((EventBattle_Flags & 0x40) == 0) {
         g.fade_out(10);
         if (Music_Track == 0xFF) BattleActions_BattleEnd |= 8;
     }

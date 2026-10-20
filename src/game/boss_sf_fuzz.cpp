@@ -183,7 +183,7 @@ void Disturb(U h) {
     case 2: SetWord(Mem(at::kAbility), v & 1 ? v >> 1 : (v >> 1) % 0x140); break;
     case 3: B(at::kActKind) = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 4: SetWord(Mem(BossSa_EndCount_addr), v & 1 ? (v >> 1) % 9 : v >> 1); break;
-    case 5: B(BossSf_WindowUp_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 5: B(Window20_State_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 6: B(BattleMisc_BannerKinds_addr) ^= 2; break;
     case 7: {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
@@ -287,7 +287,7 @@ const bh::DataTable kTablesFB8[] = {{0x64D3E4, 2}};
 void SeedFB8(unsigned k) {
     unsigned char* const s = Sprite_Current;
     s[1] = static_cast<unsigned char>(k == 0 ? bh::Next() % 2 : bh::Often() ? bh::Next() % 3 : bh::Next());
-    B(BossSf_WindowUp_addr) = static_cast<unsigned char>(bh::Half() ? 0 : bh::Next());
+    B(Window20_State_addr) = static_cast<unsigned char>(bh::Half() ? 0 : bh::Next());
     B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(bh::Half() ? B(BattleMisc_BannerKinds_addr) & 0xFD : B(BattleMisc_BannerKinds_addr) | 2);
     if (bh::Often()) B(at::kPhase) = static_cast<unsigned char>(bh::Half() ? 5 : BH_PICK(1, 2, 3, 4, 6));
     SetLong(Mem(at::kTurn), static_cast<std::int32_t>(bh::Often() ? bh::Next() % 0x18 : bh::Next()));
@@ -452,7 +452,7 @@ void SeedK62(unsigned k) {
     B(at::kRoundFlags) = static_cast<unsigned char>(bh::Half() ? B(at::kRoundFlags) | 4 : B(at::kRoundFlags) & 0xFB);
     auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
     enemy_rec->command = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
-    if (bh::Next() % 6 == 0) B(BattleActions_EventBattle_addr) = 0;
+    if (bh::Next() % 6 == 0) B(EventBattle_Id_addr) = 0;
     if (k == kMy8Dispatch && bh::Often()) Sprite_Current[1] = 8;
 }
 

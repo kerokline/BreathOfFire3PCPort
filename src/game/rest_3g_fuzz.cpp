@@ -304,7 +304,7 @@ void Seed(unsigned k) {
         break;
     case kPlaceAll: {
         // an event battle below the battle side's 24 (each names a row below 8)
-        Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(sh::Next() % 24);
+        Mem(EventBattle_Id_addr)[0] = static_cast<unsigned char>(sh::Next() % 24);
         unsigned char* const rows = Mem(Encounter_Rows_addr);
         for (unsigned i = 0; i < 0x48; ++i)
             if (sh::Half()) rows[i] = 0xFF;
@@ -320,7 +320,7 @@ void Seed(unsigned k) {
     case kBuildView: Gfx_BufferIndex = static_cast<unsigned char>(sh::Next() & 1); break;
     case kMode8Leave:
     case kMode9Leave: {
-        if (sh::Often()) MoveScript_WaitWordDA = 0;
+        if (sh::Often()) Transition_Busy = 0;
         const U t = PickOf(0xFF, 3, sh::Next());
         Mem(Music_Track_addr)[0] = static_cast<unsigned char>(t);
         Mem(AreaW1f_MusicCurrent_addr)[0] = static_cast<unsigned char>(sh::Half() ? t : sh::Next());
@@ -328,7 +328,7 @@ void Seed(unsigned k) {
     }
     case kMode9Enter:
     case kMode10Enter:
-        if (sh::Often()) MoveScript_WaitWordDA = 0;
+        if (sh::Often()) Transition_Busy = 0;
         break;
     case kMode11Frame: Field_Request = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next())); break;
     case kMode11LookEnd:
@@ -490,11 +490,11 @@ void CheckPspMyriaItem() {
             o[0x9E] = static_cast<unsigned char>(slot);
         }
         SetWord(move_script::At(0x904EFC), (next() & 1) ? psp_code::kMyriaArea : (next() & 1) ? 197 + next() % 3 : next());
-        move_script::At(BattleActions_EventBattle_addr)[0] =
+        move_script::At(EventBattle_Id_addr)[0] =
             static_cast<unsigned char>((next() & 1) ? psp_code::kMyriaEvent : (next() & 1) ? 0x36 + next() % 3 : next());
         capture(input);
         const bool cond = Word(move_script::At(0x904EFC)) == psp_code::kMyriaArea &&
-                          move_script::At(BattleActions_EventBattle_addr)[0] == psp_code::kMyriaEvent;
+                          move_script::At(EventBattle_Id_addr)[0] == psp_code::kMyriaEvent;
 
         apply(input);
         original(slot, count, kind);

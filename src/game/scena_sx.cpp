@@ -25,7 +25,7 @@
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
 // can stand recorders in for ours as for the originals' copies. No
 // divergence: each is a faithful replacement. The unchecked indexes the
-// originals make (a member id past MoveScript_EffectState's 24, a category
+// originals make (a member id past Character_IndexById's 24, a category
 // past the inventory's five, a member count above three) are reproduced;
 // where the original would fault or read its own stack frame (a CLUT colour
 // past its four, a divide by 0), ours aborts with a message (docs/scena_sx.md
@@ -62,9 +62,9 @@ using move_script::Word;
 
 // CharacterRecords' record n (stride 0xA4), unchecked.
 unsigned char* Record(unsigned n) { return At(bof3::addr::CharacterRecords + n * at::kRecordStride); }
-// A member id's record: CharacterRecords[MoveScript_EffectState[id]], both
+// A member id's record: CharacterRecords[Character_IndexById[id]], both
 // indexes a whole byte, unchecked (the original reads them the same way).
-unsigned char* MemberRecord(unsigned char id) { return Record(MoveScript_EffectState[id]); }
+unsigned char* MemberRecord(unsigned char id) { return Record(Character_IndexById[id]); }
 unsigned char* Obj(unsigned n) { return ObjTrio + n * at::kObjStride; }
 
 // A signed byte's value.
@@ -199,7 +199,7 @@ extern "C" void __cdecl Party_ReloadPalettes(void) {
 // joined bit): +0x1E 0, Char_RecalcStats(record), then +0x1C = +0x2E, HP +0x18
 // = +0x20, AP +0x1A = +0x22, the state word +0x10 0 - read after the call.
 // Then, for each member i below Field_MemberCount (read once, after the
-// eight), the member's record (MoveScript_EffectState of the first list's id,
+// eight), the member's record (Character_IndexById of the first list's id,
 // unchecked) copied whole (0xA4 bytes) over ObjTrio record i +0x80. No PSX
 // twin paired; Party_RestoreAll (0x580630, the inn's) is its larger cousin.
 extern "C" void __cdecl Party_HealJoined(void) {
@@ -225,7 +225,7 @@ extern "C" void __cdecl Party_HealJoined(void) {
 // - 1 (read again each time) takes the next slot's id, the next ObjTrio record
 // copied over it (0x14C bytes; Sprite_Current it) and renumbered: +5 its slot,
 // +0x26 the slot x 0x50 (a byte), +0x27 0x78 + the slot, +0x4B 0xFF, +0x148
-// MoveScript_EffectState[+0x89]. Then ObjTrio record count - 1 +0 cleared,
+// Character_IndexById[+0x89]. Then ObjTrio record count - 1 +0 cleared,
 // Member_ClearState(count - 1), and with the count read again: three -
 // 0x904060 cleared when 3 or more, two - cleared; the count one less. No PSX
 // twin paired.
@@ -259,7 +259,7 @@ extern "C" void __cdecl Party_Remove(unsigned id_arg) {
             Sprite_Current[0x26] = static_cast<unsigned char>(s * 0x50);
             Sprite_Current[0x27] = static_cast<unsigned char>(s + 0x78);
             Sprite_Current[0x4B] = 0xFF;
-            o[0x148] = MoveScript_EffectState[o[0x89]];
+            o[0x148] = Character_IndexById[o[0x89]];
         }
     }
     const unsigned char n = Field_MemberCount;
@@ -294,7 +294,7 @@ extern "C" void __cdecl Sprite_FlashClut(unsigned colour_arg) {
 }
 
 // original 0x537480: a member's HP (+0x18 of its record: the second
-// argument's low byte through MoveScript_EffectState, unchecked) down by the
+// argument's low byte through Character_IndexById, unchecked) down by the
 // first argument's word while it is more; else to 1 (an HP of 0 becomes 1
 // too). Then the record Field_State +0x148 names (not the member's): with HP
 // at most a quarter of +0x20 (>> 2), its state word +0x10 and Field_State's

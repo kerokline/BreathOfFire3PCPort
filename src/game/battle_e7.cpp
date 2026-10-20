@@ -74,7 +74,7 @@ const unsigned char* Text(U address) { return At(address); }
 // 0x80B7A8), one five-bit field shifted into a byte. Read afresh each time,
 // as the original reads it.
 unsigned ColourField(unsigned shift) {
-    const int row = BattleDraw_Colour;
+    const int row = Config_WindowColour;
     const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<U>(row * 64)));
     return (((w >> shift) & 0x1F) << 3) & 0xFF;
 }
@@ -304,18 +304,18 @@ extern "C" void __cdecl GeneWin_DrawGrid(void) {
     const unsigned char* rec = Win();
     const records::WindowRecord* win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(GeneWin_DrawFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), rec[8], rec[9]);
-    unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
+    unsigned colour = static_cast<unsigned char>(Config_WindowColour);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->x) + 6), static_cast<int>(static_cast<unsigned>(win->y) + 0x21),
                           static_cast<int>(rec[8] * 8u - 0xF), static_cast<int>(rec[9] * 8u - 0x27), 0,
                           static_cast<int>(colour));
-    colour = static_cast<unsigned char>(BattleDraw_Colour);
+    colour = static_cast<unsigned char>(Config_WindowColour);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->x) + 0x36), static_cast<int>(static_cast<unsigned>(win->y) + 6), 0x48, 0x18, 0,
                           static_cast<int>(colour));
-    colour = static_cast<unsigned char>(BattleDraw_Colour);
+    colour = static_cast<unsigned char>(Config_WindowColour);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->x) + 0x87), static_cast<int>(static_cast<unsigned>(win->y) + 0xA), 0x30, 0x10, 0,
@@ -352,7 +352,7 @@ extern "C" void __cdecl GeneWin_DrawGrid(void) {
 // and 0x66AF3C, and the hand at box (0x904AA5 & 0x7F), y + 4.
 extern "C" void __cdecl GeneWin_DrawChoices(U x, U y) {
     for (unsigned k = 0; k < 3; ++k) {
-        const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
+        const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
         const U bx = x + 48 * k;
         BH_CALL(Menu_DrawBox)(static_cast<int>(bx), static_cast<int>(y), 0x2D, 0x14, 0, static_cast<int>(colour));
         const unsigned choice = BossSb_Countdown;
@@ -415,9 +415,9 @@ extern "C" void __cdecl GeneWin_ChoiceStates(void) {
 // and fourth words are pushed by its callers and never read.
 extern "C" void __cdecl GeneWin_DrawListFrame(U x, U y, U, U, U title) {
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
-    BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x82, 0, static_cast<unsigned char>(BattleDraw_Colour));
-    BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x14, 0, static_cast<unsigned char>(BattleDraw_Colour));
-    BH_CALL(Menu_DrawBox)(xi + 3, yi + 0x7A, 0x89, 8, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x82, 0, static_cast<unsigned char>(Config_WindowColour));
+    BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
+    BH_CALL(Menu_DrawBox)(xi + 3, yi + 0x7A, 0x89, 8, 0, static_cast<unsigned char>(Config_WindowColour));
     const unsigned char* const text = At(at::kTitles + (title & 0xFF) * 5);
     const unsigned n = BH_CALL(Text_CharCount)(text);
     BH_CALL(Text_DrawAt)(xi + 0x46 - 6 * static_cast<int>(n & 0xFF), yi + 7, 0, 0x10, text);
@@ -799,7 +799,7 @@ unsigned char g_equip_labels_row = 0;
 extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, U record) {
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
     const int label_y = g_equip_labels_row ? 0x1A : 0x27;
-    BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, static_cast<unsigned char>(Config_WindowColour));
     unsigned char* const ch = At(at::kCharRecords + (member & 0xFF) * at::kCharStride);
     unsigned n = BH_CALL(Text_CharCount)(ch) & 0xFF;
     if (n > 5) n = 5;
@@ -842,7 +842,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
         if (r == rec[0xB]) colour = 2;
         if (rec[0xD] & 2) {
             const unsigned slot = B(at::kPartyOrder + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
-            const unsigned who = MoveScript_EffectState[slot];
+            const unsigned who = Character_IndexById[slot];
             if (BH_CALL(Item_CanUse)(2, who, category, items[r]) == 0) {
                 colour = 7;
             } else if (r == rec[0xA]) {

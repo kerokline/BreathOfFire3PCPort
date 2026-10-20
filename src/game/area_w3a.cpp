@@ -74,7 +74,7 @@ unsigned char* PartyRecord(U index) { return At(ObjTrio_addr + index * at::kPart
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 void SetMessage(unsigned id) { SetWord(At(at::kMessage), id); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* FlagRow() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours

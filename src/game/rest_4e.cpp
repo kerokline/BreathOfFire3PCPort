@@ -52,7 +52,7 @@ using Handler = void (__cdecl*)();
 // kMode: now Rest4b_BoardState (symbols.toml). u8: the facility's mode (the tables' index)
 // kNameMode: now Rest4c_Step (symbols.toml). u8: zeroed by the name commits (R4D's step)
 // kStep: now Rest4b_BoardStep (symbols.toml). u8: the mode's step
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style (Menu_DrawBox's colour)
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style (Menu_DrawBox's colour)
 // kFontPage: now Rest4f_Setting3 (symbols.toml). u8: 0 or not, which label CommuMusic_DrawList shows
 
 // The band's own cells 0x675F8C..0x675FDB.
@@ -95,10 +95,10 @@ constexpr U kListCPairs = 0x904CA0;
 // WindowRecords 0 and 1 (0x24 each): the item window and its cursor.
 constexpr U kWin0 = 0x803160, kWin1 = 0x803184;
 constexpr U kWinOff = kWin0 + 3;       // u8: window 0 shut (the slide waits for 0)
-// kTab: now BattleOdds_Win0Index (symbols.toml). u8: the tab 0..3 (Inventory_IdLists' index)
+// kTab: now Window0_ParamA (symbols.toml). u8: the tab 0..3 (Inventory_IdLists' index)
 constexpr U kTop = kWin0 + 0xB;        // u8: the first row shown
-// kRow: now Rest3a_Win0Cursor (symbols.toml). u8: the row
-// kTabMove: now ShopStates2_Help (symbols.toml). u16: 0x31 / 0x32 when the tab moved
+// kRow: now Window0_Cursor (symbols.toml). u8: the row
+// kTabMove: now Window0_Arrows (symbols.toml). u16: 0x31 / 0x32 when the tab moved
 constexpr U kScroll = kWin0 + 0x12;    // u16: 0xF0 / 0x10 while the list scrolls
 
 constexpr U kTextRecords = 0x904CE0;   // Text_Records (0x20 each)
@@ -166,7 +166,7 @@ void DrawMode(unsigned dtd, unsigned tpage, const short* window) {
 }
 void Grey(unsigned char* p) { p[4] = p[5] = p[6] = 0x80; }
 void OpenMessage(unsigned short id) { SH_CALL(Msg_OpenScript)(id); }
-void Box(int x, int y, int w, int h, int flags) { SH_CALL(Menu_DrawBox)(x, y, w, h, flags, static_cast<unsigned char>(BattleDraw_Colour)); }
+void Box(int x, int y, int w, int h, int flags) { SH_CALL(Menu_DrawBox)(x, y, w, h, flags, static_cast<unsigned char>(Config_WindowColour)); }
 
 // A colour that pulses with Frame_Counter's low byte: bit 3 set,
 // ((n & 6) << 5) + 0x3F; clear, ((~n & 6) << 5) + 0x3F.
@@ -962,57 +962,57 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     ItemFrame(slide);
     if (B(kWinOff) != 0) return;
     const U window_x = L(kWin0 + 4);
-    BattleE1_Win1 = 1;
+    Window1 = 1;
     SetW(kWin1 + 4, window_x + 7);
-    SetW(kWin1 + 6, 13u * (static_cast<std::uint32_t>(Rest3a_Win0Cursor) - B(kTop) + 2u) + W(kWin0 + 6));
+    SetW(kWin1 + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - B(kTop) + 2u) + W(kWin0 + 6));
     const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
     if (moved & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
-        const auto tab = static_cast<unsigned char>(BattleOdds_Win0Index - 1);
-        ShopStates2_Help = 0x32;
-        BattleOdds_Win0Index = tab;
-        if (static_cast<signed char>(tab) < 0) BattleOdds_Win0Index = 3;
+        const auto tab = static_cast<unsigned char>(Window0_ParamA - 1);
+        Window0_Arrows = 0x32;
+        Window0_ParamA = tab;
+        if (static_cast<signed char>(tab) < 0) Window0_ParamA = 3;
     } else if (moved & 0x2000) {
-        ShopStates2_Help = 0x31;
+        Window0_Arrows = 0x31;
         SH_CALL(Sound_PlayEffect)(0x101);
-        const auto tab = static_cast<unsigned char>(BattleOdds_Win0Index + 1);
-        BattleOdds_Win0Index = tab;
-        if (tab > 3) BattleOdds_Win0Index = 0;
+        const auto tab = static_cast<unsigned char>(Window0_ParamA + 1);
+        Window0_ParamA = tab;
+        if (tab > 3) Window0_ParamA = 0;
     }
-    unsigned char row = Rest3a_Win0Cursor;
+    unsigned char row = Window0_Cursor;
     const unsigned char was = row;
     if (moved & 0x1000) {
-        if (row != 0) Rest3a_Win0Cursor = --row;
+        if (row != 0) Window0_Cursor = --row;
         if (row < B(kTop)) SetW(kScroll, 0xF0);
     } else if (moved & 0x4000) {
-        if (row < 0x7F) Rest3a_Win0Cursor = ++row;
-        if (Rest3a_Win0Cursor >= static_cast<int>(B(kTop)) + 9) SetW(kScroll, 0x10);
+        if (row < 0x7F) Window0_Cursor = ++row;
+        if (Window0_Cursor >= static_cast<int>(B(kTop)) + 9) SetW(kScroll, 0x10);
     } else if (moved & Sigma(4)) {
         const unsigned char top = B(kTop);
         if (top == 0) {
             row = 0;
-            Rest3a_Win0Cursor = 0;
+            Window0_Cursor = 0;
         } else if (top < 9) {
             row = static_cast<unsigned char>(row - top);
             B(kTop) = 0;
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
         } else {
             row = static_cast<unsigned char>(row - 9);
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
             B(kTop) = static_cast<unsigned char>(top - 9);
         }
     } else if (moved & Sigma(8)) {
         const unsigned char top = B(kTop);
         if (top == 0x77) {
             row = 0x7F;
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
         } else if (top > 0x6E) {
             B(kTop) = 0x77;
             row = static_cast<unsigned char>(row + (0x77 - top));
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
         } else {
             row = static_cast<unsigned char>(row + 9);
-            Rest3a_Win0Cursor = row;
+            Window0_Cursor = row;
             B(kTop) = static_cast<unsigned char>(top + 9);
         }
     }
@@ -1020,28 +1020,28 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     if (W(kScroll) != 0) return;
     const unsigned pressed = Input_Pressed;
     if (Field_CancelButtons & pressed) {
-        BattleE1_Win1 = 0;
+        Window1 = 0;
         B(kWinOff) = 1;
         SH_CALL(Sound_PlayEffect)(0x106);
         ++Rest4b_BoardStep;
     } else if (Field_ConfirmButtons & pressed) {
-        const unsigned char item = ItemList("CommuItem_Choose (0x45FE90)", BattleOdds_Win0Index)[Rest3a_Win0Cursor];
+        const unsigned char item = ItemList("CommuItem_Choose (0x45FE90)", Window0_ParamA)[Window0_Cursor];
         if (item == 0) {
             SH_CALL(Sound_PlayEffect)(0x107);
             return;
         }
         SH_CALL(Sound_PlayEffect)(0x105);
-        const unsigned char tab = BattleOdds_Win0Index;
+        const unsigned char tab = Window0_ParamA;
         unsigned char* const entry = EntryRecord("CommuItem_Choose (0x45FE90)");
         B(kWinOff) = 1;
         entry[2] = item;
         unsigned char* const again = EntryRecord("CommuItem_Choose (0x45FE90)");
-        BattleE1_Win1 = 0;
+        Window1 = 0;
         Rest4b_BoardStep = 4;
         again[3] = tab;
     }
-    const unsigned tab = BattleOdds_Win0Index;
-    const unsigned char shown = ItemList("CommuItem_Choose (0x45FE90)", tab)[Rest3a_Win0Cursor];
+    const unsigned tab = Window0_ParamA;
+    const unsigned char shown = ItemList("CommuItem_Choose (0x45FE90)", tab)[Window0_Cursor];
     if (shown == 0) return;
     const unsigned help = SH_CALL(Item_HelpMessage)(tab, shown);
     const unsigned char* const line = SH_CALL(Msg_SystemPtr)(help);
@@ -1146,7 +1146,7 @@ extern "C" void __cdecl CommuItem_SetupWindow(void) {
     B(kWin1 + 1) = 2;
     B(kWin1 + 2) = 1;
     B(kWin1 + 3) = 0;
-    BattleE1_Win1 = 0;
+    Window1 = 0;
 }
 
 // ===========================================================================

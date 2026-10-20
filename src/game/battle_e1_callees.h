@@ -37,9 +37,9 @@ using U = std::uint32_t;
 constexpr U kModeTimer = 0x929F04;   // u8: a frame count the steps count down
 // kTallyRow: now FieldS_Column (symbols.toml). s8: the tally counter being counted up (0..5; 6 done)
 // kModeByte9: now BattleE1_ModeByte9 (symbols.toml). u8: cleared as the equipment screen opens
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA: a transition is running while non-zero
-// kMenuShade: now FieldS_Backdrop (symbols.toml). u8: Menu_DrawBackdrop's kind (the config's window colour)
-// kBoxColour: now BattleDraw_Colour (symbols.toml). u8: Menu_DrawBox's colour byte
+// kWaitWord: now Transition_Busy (symbols.toml). u16 Transition_Busy: a transition is running while non-zero
+// kMenuShade: now Config_Background (symbols.toml). u8: Menu_DrawBackdrop's kind (the config's window colour)
+// kBoxColour: now Config_WindowColour (symbols.toml). u8: Menu_DrawBox's colour byte
 
 // The tally's six counters: shown (counted up), target, the step per frame.
 constexpr U kTallyShown = 0x675E88;  // u32 x 6: what the window shows
@@ -77,7 +77,7 @@ constexpr U kWin1 = 0x803184;
 constexpr U kWin2 = 0x8031A8;
 constexpr U kWin3 = 0x8031CC;
 constexpr U kWin4 = 0x8031F0;
-// kWin21: now BattleE4_Above (symbols.toml).
+// kWin21: now Window21 (symbols.toml).
 
 // --- the battle engine ---
 constexpr U kStep = 0x904AA1;

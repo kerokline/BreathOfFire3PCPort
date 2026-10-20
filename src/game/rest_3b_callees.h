@@ -41,7 +41,7 @@ constexpr U kRoundFlags = 0x904AA8;       // u8: the round flags' low byte (bit 
 constexpr U kRoundFlags2 = 0x904AA9;      // u8: the round flags' high byte (bit 5 set by slots 32, 33, 35, 41)
 // kPicking: now BattleE4_Picking (symbols.toml). u8: a target pick is up
 constexpr U kPartyCount = 0x904AB0;       // u8: the party slots in the battle
-// kPartyUp: now BattleSprites_PartyPick (symbols.toml). u8: counted up when a party member is raised
+// kPartyUp: now Battle_PartyStanding (symbols.toml). u8: counted up when a party member is raised
 // kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8: counted up when an enemy is raised
 constexpr U kActor = 0x904B34;            // u8 (read as a dword by some): the acting actor, 0..2 a member, 3.. an enemy
 constexpr U kActingKind = 0x904B35;       // u8: 4 an ability (slots 44..49 set it)
@@ -64,10 +64,10 @@ constexpr U kPower = 0x939FE4;            // u16: the power word Battle_CalcDama
 constexpr U kRepeatLatch = 0x7E01B8;      // u16: Input_AutoRepeat's latch
 
 // --- the window records the menus' steps touch (WindowRecords 0x803160, stride 0x24) ---
-// kWin2State: now Rest3b_Win2State (symbols.toml). record 2's +3 (0x8031A8 + 3)
+// kWin2State: now Window2_State (symbols.toml). record 2's +3 (0x8031A8 + 3)
 constexpr U kWin3State = 0x8031CF;        // record 3's +3
-// kWin16Closing: now BattleActorCopies_ItemState (symbols.toml). record 16's +3: the ability window's closing byte
-// kWin16Page: now BattleActorCopies_ItemPage (symbols.toml). record 16's +0xB: Char_AbilityList's type
+// kWin16Closing: now Window16_State (symbols.toml). record 16's +3: the ability window's closing byte
+// kWin16Page: now Window16_Page (symbols.toml). record 16's +0xB: Char_AbilityList's type
 constexpr U kWin16Cursor = 0x8033AC;      // record 16's +0xC (a dword, the low byte the row)
 // kAbilityActor: now BattleActorCopies_ItemActor (symbols.toml). u8: the ability window's member (Char_AbilityList's first word)
 
@@ -78,7 +78,7 @@ constexpr U kEnemies = 0x93B960;
 constexpr U kEnemyStride = 0x128;
 constexpr U kCharRecords = 0x903A70;      // CharacterRecords: eight of 0xA4; +0xC the EXP dword, +0x44 a stat word
 constexpr U kCharStride = 0xA4;
-constexpr U kRosterOf = 0x66972C;         // .data u8 by character id: the roster index (MoveScript_EffectState's address)
+constexpr U kRosterOf = 0x66972C;         // .data u8 by character id: the roster index (Character_IndexById's address)
 constexpr U kAbilityRows = 0x65C4D8;      // NameTable_Abilities: 24 bytes an id; +0 flags, +3 power, +4 element word
 constexpr U kAbilityStride = 0x18;
 

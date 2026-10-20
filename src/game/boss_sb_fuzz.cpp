@@ -97,7 +97,7 @@ void Disturb(U h) {
     case 0: Mem(BossSb_Enemy0Pose_addr + (h >> 24) % 4)[0] = b; break;
     case 1: Mem(BossSb_Enemy1Pose_addr + (h >> 24) % 4)[0] = b; break;
     case 2: Mem(BossSb_Enemy1Place_addr + (h >> 24) % 12)[0] = b; break;
-    default: Mem(BattleActions_EventBattle_addr)[0] = h & 0x1000000 ? 5 : Byte(4 + (h >> 25) % 3); break;
+    default: Mem(EventBattle_Id_addr)[0] = h & 0x1000000 ? 5 : Byte(4 + (h >> 25) % 3); break;
     }
 }
 
@@ -128,7 +128,7 @@ void SeedK03(unsigned k) {
     if (k != kK03HitStep) return;
     // the count at 1 (it reaches 0), at 0 (it wraps), and beside
     s[9] = Byte(bh::Often() ? BH_PICK(1, 1, 1, 0, 2, 0x3D) : bh::Next());
-    Mem(BattleActions_EventBattle_addr)[0] = Byte(bh::Half() ? 5 : BH_PICK(4, 6, 0x85, 0x15));
+    Mem(EventBattle_Id_addr)[0] = Byte(bh::Half() ? 5 : BH_PICK(4, 6, 0x85, 0x15));
     // the shift count +5: the byte's bits 0..7, 8 and past, and the 5-bit mask
     s[5] = Byte(bh::Often() ? bh::Next() % 9 : BH_PICK(0x1F, 0x20, 0x21, 0x27, 0xFF, 0xE3));
 }

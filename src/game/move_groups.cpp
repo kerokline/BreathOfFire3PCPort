@@ -383,7 +383,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         if (Field_Request == 2) SetPos(object, pos - 1u);
         return value;
     case 0xDA:
-        if (MoveScript_WaitWordDA != 0) SetPos(object, pos - 1u);
+        if (Transition_Busy != 0) SetPos(object, pos - 1u);
         return value;
     case 0xDB:
         g.op_db();
@@ -590,7 +590,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         return value;
     case 0x8C: {
         records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
-        const auto arg = static_cast<signed char>(MoveScript_EffectArg[MoveScript_EffectState[Field_State[0x89]]]);
+        const auto arg = static_cast<signed char>(MoveScript_EffectArg[Character_IndexById[Field_State[0x89]]]);
         const unsigned char n = g.effect_spawn_at(static_cast<unsigned char>(p[1] - 0x90), p[1] == 0x94 ? 10 : 0, arg,
                                                   sprite->x, sprite->z, sprite->height);
         Sprite_Current[0xB] = n;
@@ -829,7 +829,7 @@ const Region kRegions[] = {
     {Address(&MoveScript_F3Divisor), 2},
     {Address(&MoveScript_FAWord), 2},
     {Address(&Field_Request), 1},
-    {Address(&MoveScript_WaitWordDA), 2},
+    {Address(&Transition_Busy), 2},
     {Address(&Field_Kind2Hold), 1},
     {Address(&MapView_Elevation), 4},
 };
@@ -890,7 +890,7 @@ void Seed(unsigned char op, unsigned char* p) {
         break;
     case 0xD9: if (Often()) Field_Request = 2; break;
     case 0xD1: case 0xDF: if (Often()) Field_Request = 3; break;
-    case 0xDA: if (Often()) MoveScript_WaitWordDA = 0; break;
+    case 0xDA: if (Often()) Transition_Busy = 0; break;
     case 0xEA: if (Often()) sprite[6] = 0x0A; break;
     case 0x9F: if (Often()) sprite[0xB] = static_cast<unsigned char>(Next() % 2); break;
     case 0x8C: if (Often()) p[1] = 0x94; break;

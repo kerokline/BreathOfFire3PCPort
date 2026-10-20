@@ -174,7 +174,7 @@ extern "C" unsigned char __cdecl EnemyOp_CastStart(void) {
     if (BH_CALL(File_LoadDone)() == 0) return 0;
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     if (enemy_rec->command == 4) {
-        if (BattleActions_EventBattle != 0) {
+        if (EventBattle_Id != 0) {
             const unsigned key = static_cast<unsigned char>(enemy_rec->run_state + 0x20);
             const bool loaded = BH_CALL(Battle_LoadSoundByKey)(key, BattleE3_SoundSet) != 0;
             S()[9] = loaded ? 0 : 0x1E;
@@ -204,7 +204,7 @@ extern "C" unsigned char __cdecl EnemyOp_CastCue(void) {
         s[9] -= 1;
         return BH_CALL(BattleEnemy_ScriptTickOnce)();
     }
-    const bool fight = BattleActions_EventBattle != 0;
+    const bool fight = EventBattle_Id != 0;
     unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     if (fight)
@@ -709,7 +709,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
         BH_CALL(BattleObj_ScriptTick)();
         return;
     }
-    BattleSprites_PartyPick -= 1;
+    Battle_PartyStanding -= 1;
     for (unsigned i = 0; i < 8; ++i) F()[0x138 + i] = 0;
     SetULong(F() + 0x134, ULong(F() + 0x134) & 0xFFFB84FFu);
     F()[0x12D] = 0;
@@ -718,7 +718,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
     rv::As<records::PartyMember>(F())->count_40 = 0;
     rv::As<records::PartyMember>(F())->count_80 = 0;
     BH_AT(void (__cdecl*)(unsigned), at::kPass453300)(rv::As<records::PartyMember>(S())->actor);
-    if (BH_CALL(BattleParty_AllDown)() != 0 || BattleSprites_PartyPick == 0) BattleActions_BattleEnd |= 1;
+    if (BH_CALL(BattleParty_AllDown)() != 0 || Battle_PartyStanding == 0) BattleActions_BattleEnd |= 1;
     ClearFormFlag();
     auto* const member_s = rv::As<records::PartyMember>(S());
     if (F()[0x134] & 1) {

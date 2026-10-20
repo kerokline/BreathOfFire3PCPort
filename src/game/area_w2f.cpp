@@ -7,7 +7,7 @@
 //
 // Every one is a faithful replacement: no DIVERGENCE.md entry is owed. Reads
 // by an unchecked index that stay inside the image's .data are kept (area
-// 108's place tables and MoveScript_EffectState by a byte, area 111's grid by
+// 108's place tables and Character_IndexById by a byte, area 111's grid by
 // the leader's cell, the extra objects by a byte); the dispatchers through
 // the areas' state tables abort past the table (what follows is data, which
 // the original would jump into), area 111's handler 8 aborts where its dword
@@ -322,12 +322,12 @@ extern "C" void __cdecl Area108_ScriptByFlags1E(void) {
 }
 
 // original 0x416EC0 (area 108 +0x3C[8]; PSX 0x801F4A98): the active member's
-// +0x80 bit 0 cleared; MoveScript_EffectState[the leader's +0x89] (a byte
+// +0x80 bit 0 cleared; Character_IndexById[the leader's +0x89] (a byte
 // index, unchecked; it reads inside .data) at 5: story flag 0x30,
 // MoveCmd_TestFB(1, 0xB), the running object's +0 = 0.
 extern "C" void __cdecl Area108_FlagIfEffectState5(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
-    if (B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89)) != 5) return;
+    if (B(Character_IndexById_addr + B(ObjTrio_addr + 0x89)) != 5) return;
     Set(0x30);
     AH_CALL(MoveCmd_TestFB)(1, 0xB);
     Sprite_Current[0] = 0;

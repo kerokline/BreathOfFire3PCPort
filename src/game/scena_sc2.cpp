@@ -12,7 +12,7 @@
 //     cells (Scena02_DoorStart / Scena02_DoorSound).
 //   - A scene is a switch on the step byte 0x8034E5: each step waits on a
 //     script counter (0x903848..B), the message box (Field_Request), the wait
-//     word (MoveScript_WaitWordDA), a flag, a stream or the leader's cell,
+//     word (Transition_Busy), a flag, a stream or the leader's cell,
 //     does one thing - a message, a sound, the music, an effect, an area
 //     change, a party member dropped in, an event battle - and sets the next
 //     step; the last clears the counters and sets the run and step to 0.
@@ -67,7 +67,7 @@ void OpenMessage(unsigned id) {
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(id));
     Field_Request = 2;
 }
-bool Waiting() { return MoveScript_WaitWordDA != 0; }
+bool Waiting() { return Transition_Busy != 0; }
 bool Chosen() { return (At(at::kChoiceBits)[0] & 2) != 0; }
 // Field_ScriptFlags: the original ors its low byte (`or byte ptr`) and xors
 // the word; on a u16 both are these.
@@ -81,7 +81,7 @@ unsigned LeaderCellX() { return rv::As<records::SpriteHead>(Leader())->x_whole; 
 short LeaderCellZ() { return static_cast<short>(rv::As<records::SpriteHead>(Leader())->z_whole); }
 
 // The flag row: the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
 void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 void ClearFlag(unsigned n) { SH_CALL(Flags_Clear)(Bank(), n); }
@@ -635,7 +635,7 @@ extern "C" void __cdecl Scena02_Scene04(void) {
         SetFlag(6);
         ScriptXor(0x80);
         ChangeArea(0x1A, 0x310000, 0x4B0000, 0x85);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         return;
     case 7:
         DropIn(2);
@@ -652,7 +652,7 @@ extern "C" void __cdecl Scena02_Scene04(void) {
         SetFlag(6);
         ScriptXor(0x80);
         ChangeArea(0x1A, 0x310000, 0x4B0000, 0x85);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         return;
     default:   // 2..4, and 9 and up
         return;

@@ -33,10 +33,10 @@ constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1: rhw = 0.1 / z
 constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
 
 // --- the battle menu's lists ---------------------------------------------------
-// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour (Config), a CLUT row
+// kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row
 // kMenuMember: now BattleActorCopies_ItemActor (symbols.toml). s8: the member the menu is on
 constexpr U kBattleParty = 0x904065;   // the second of the two 3-byte party lists (0x904062 the first)
-constexpr U kMemberRecord = 0x66972C;  // u8 per party entry: its character record (MoveScript_EffectState)
+constexpr U kMemberRecord = 0x66972C;  // u8 per party entry: its character record (Character_IndexById)
 constexpr U kInventory = 0x656B00;     // 5 pointers: each category's item ids
 constexpr U kCounts = 0x656B14;        // 5 pointers: each category's counts (the fifth, key items, 0)
 constexpr U kItemLabels = 0x66B58C;    // 5 pointers: the item list's title by category

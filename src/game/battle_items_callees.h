@@ -68,7 +68,7 @@ constexpr std::uint32_t kActorIndex = 0x904B34;       // u8: 0..2 a party member
 constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr std::uint32_t kEnemyRecords = 0x93B960;     // stride 0x128
 constexpr std::uint32_t kEnemyStride = 0x128;
-// kEnemySoundMode: now BattleActions_EventBattle (symbols.toml). u8: non-zero plays the enemy's own cue
+// kEnemySoundMode: now EventBattle_Id (symbols.toml). u8: non-zero plays the enemy's own cue
 constexpr std::uint32_t kFxSizeSelect = 0x904B89;     // u8
 constexpr std::uint32_t kFxSizeTable = 0x65C3EC;      // u8 by a party record's +0x89
 constexpr std::uint32_t kFxSizeAltTable = 0x65C3F8;   // u8 by 0x904B89, for a member with +0x134 bit 1

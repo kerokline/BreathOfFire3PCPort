@@ -88,7 +88,7 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 unsigned char* Rec() { return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))); }
 int X(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->x; }
 int Y(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->y; }
-unsigned char Style() { return static_cast<unsigned char>(BattleDraw_Colour); }
+unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
 
 // The step: the current record's +3 through a step table, called through the
 // word the table holds (the fuzz swaps the words for recorders); past the
@@ -254,7 +254,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_GeneWinRun(
 // 9, in place; +0xB is re-read after the lit row's calls; the title's y is
 // read before Text_CharCount and its x after.
 extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
-    const U genes = ScenaSc7_EventFlags;
+    const U genes = Gene_Bits;
     unsigned char n = 0;
     for (unsigned i = 0; i < 0x12; ++i)
         if (genes & (1u << i)) B(at::kGeneList + n++) = static_cast<unsigned char>(i + 1);
@@ -608,7 +608,7 @@ extern "C" void __cdecl MasterWin_DrawPupils(unsigned char* w) {
     for (U k = 0; k < 8; ++k) {
         const unsigned char* const rec = Record(k);
         if (!(rec[0xB] & 1)) continue;
-        if (rec[0x1F] != Rest2h_Window1Master) continue;
+        if (rec[0x1F] != Window1_Master) continue;
         const unsigned portrait = rec[9];
         SH_CALL(MasterWin_DrawPortrait)(dx + X(w) + 4, dy + Y(w) + 5, portrait, 0);
         dx += 0x25;

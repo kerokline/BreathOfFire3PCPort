@@ -310,7 +310,7 @@ void ListRegions(int chapter) {
         {Scena08_Kept_addr, 0x10},         // chapter 8's cells 0x6BC720..
         {0x929F10, 4},                     // 0x929F10, Field_Kind2Hold
         {ScenaSc7_DrawPool_addr, 0x14},    // 0x9039F0..0x903A03
-        {MoveScript_EffectState_addr, 0x10}, // MoveScript_EffectState [0..15]
+        {Character_IndexById_addr, 0x10}, // Character_IndexById [0..15]
         {at::kKeyItems, 0x20},
         {Key(g_name), sizeof g_name},
     };
@@ -432,7 +432,7 @@ void Seed(unsigned k) {
     if (sh::Next() % 6) sh::Mem(Cond_ByteFD_addr)[0] = static_cast<unsigned char>(sh::Next() % 6);
     // the waits
     if (sh::Half()) sh::Mem(Field_Request_addr)[0] = static_cast<unsigned char>(sh::Half() ? 2 : SH_PICK(0, 0, 1, 5, 6));
-    if (sh::Half()) SetWord(sh::Mem(MoveScript_WaitWordDA_addr), 0);
+    if (sh::Half()) SetWord(sh::Mem(Transition_Busy_addr), 0);
     if (sh::Half()) SetWord(sh::Mem(at::kMessage), SH_PICK(2, 2, 0xE, 0xE, 3, 0xD));
     if (sh::Half()) sh::Mem(Field_Kind2Hold_addr)[0] = 0;
     // the party: its count, member 0's kind and kept effect slot, the +0x89
@@ -447,7 +447,7 @@ void Seed(unsigned k) {
     sh::SetPointer(AreaW1a_FocusObject_addr, sh::SpriteRecord(sh::Next()));
     sh::SetPointer(Field_ActiveMember_addr, sh::Half() ? sh::SpriteRecord(sh::Next()) : sh::Mem(Sprite_ObjectsExtra_addr + (sh::Next() % 4) * at::kSpriteStride));
     sh::Mem(Scena08_Kept_addr)[0] = static_cast<unsigned char>(sh::Next() % 30);
-    for (unsigned i = 0; i < 16; ++i) sh::Mem(MoveScript_EffectState_addr + i)[0] = static_cast<unsigned char>(sh::Next() % 8);
+    for (unsigned i = 0; i < 16; ++i) sh::Mem(Character_IndexById_addr + i)[0] = static_cast<unsigned char>(sh::Next() % 8);
     for (unsigned i = 0; i < 0x20; ++i)
         if (sh::Next() % 4 == 0) sh::Mem(at::kKeyItems + i)[0] = 4;
     // the object handlers' index in the records the kObject shape passes, and

@@ -333,7 +333,7 @@ hosts these came out of; the consolidation keeps the smaller extent.
 
 ## 8. Other groups' addresses (said, not acted on)
 
-- **`0x66972C` is named `MoveScript_EffectState`** in `symbols.toml`, but
+- **`0x66972C` is named `Character_IndexById`** in `symbols.toml`, but
   other modules and this one use it as the character-to-record byte table
   (`0x903A70 + 0xA4 * 0x66972C[character]`; `battle_draw_callees.h`,
   `battle_window_draw_callees.h` call it `kMemberRecord`). The name is

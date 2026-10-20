@@ -8,7 +8,7 @@
 //     other six entries are 0x437CC0, a bare ret).
 //   - A scene is a switch on the step byte 0x8034E5: each step waits on a
 //     script counter (0x903848..B), the message box (Field_Request), the wait
-//     word (MoveScript_WaitWordDA), a flag, a timer or a position, does one
+//     word (Transition_Busy), a flag, a timer or a position, does one
 //     thing - a message, a sound, the music, an effect, an area change, a
 //     party member dropped in - and sets the next step; the last clears the
 //     counters and sets the run and step back to 0.
@@ -67,7 +67,7 @@ void OpenMessage(unsigned id) {
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(id));
     Field_Request = 2;
 }
-bool Waiting() { return MoveScript_WaitWordDA != 0; }
+bool Waiting() { return Transition_Busy != 0; }
 void ScriptOr(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | bits); }
 void ScriptXor(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ bits); }
 void Distance(int delta) { Camera_Distance = static_cast<short>(Camera_Distance + delta); }
@@ -79,7 +79,7 @@ short LeaderWord(unsigned off) { return static_cast<short>(Word(Leader() + off))
 int LeaderLong(unsigned off) { return Long(Leader() + off); }
 
 // The flag bits: the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
 void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 void ClearFlag(unsigned n) { SH_CALL(Flags_Clear)(Bank(), n); }
@@ -549,7 +549,7 @@ extern "C" void __cdecl Scena01_Scene06(void) {
         return;
     case 0xF: {
         if (Waiting()) return;
-        const unsigned member = MoveScript_EffectState[4];
+        const unsigned member = Character_IndexById[4];
         SetStep(0x10);
         Counter(2) = 4;
         Draw_PassFlags = 0;

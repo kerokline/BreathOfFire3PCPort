@@ -149,7 +149,7 @@ void PickAmongEnemies(U held) {
 // actor, its page, 1) - the actor's inventory page - read at the cursor.
 // The actor and the page are read before the call, the cursor after.
 unsigned ItemUnderCursor() {
-    const unsigned page = BattleActorCopies_ItemPage;
+    const unsigned page = Window16_Page;
     const unsigned actor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     const unsigned char* const list = At(g.ability_list(actor, page, 1));
     return list[B(at::kItemCursor)];
@@ -256,7 +256,7 @@ extern "C" void __cdecl BattleItem_OpenWindow(void) {
     Command()[1] = 4;
     g.setup_for_actor();
     const U flags = static_cast<U>(rv::As<records::ActionRecord>(Command())->flags2);
-    if ((flags & 2) && !(flags & 0x20000)) BattleActorCopies_ItemPage = 2;
+    if ((flags & 2) && !(flags & 0x20000)) Window16_Page = 2;
     const unsigned char actor = Acting()[5];
     BattleE4_Step4 = 0;
     BattleActorCopies_ItemActor = actor;
@@ -285,29 +285,29 @@ extern "C" void __cdecl BattleItem_OpenWindow(void) {
 //      closed, and step 3 - or for item 0x97 the acting actor as the target,
 //      window record 4's +3 = 2, phase 2 = 7 and step 0.
 extern "C" void __cdecl BattleItem_Browse(void) {
-    if (BattleActorCopies_ItemState != 0) return;
+    if (Window16_State != 0) return;
     SetWord(At(at::kItemCursorX), static_cast<unsigned>(Long(At(at::kItemBaseX))) + 7);
-    BattleE4_Hand = 1;
+    Window19 = 1;
     const unsigned rows = static_cast<unsigned>(B(at::kItemCursor)) - static_cast<unsigned>(Long(At(at::kItemScroll))) + 2;
-    const unsigned y = rows * 13 + BattleActorCopies_ItemBaseY;
+    const unsigned y = rows * 13 + Window16_Y;
     const unsigned pressed = Input_Pressed;
-    BattleActorCopies_ItemCursorY = y;
+    Window19_Y = y;
     const U held = g.auto_repeat(pressed & Sigma(0xF00C));
 
     const U flags = static_cast<U>(rv::As<records::ActionRecord>(Command())->flags2);
     if (!(flags & 2) || (flags & 0x20000)) {
         if (held & 0x8000) {
             g.play_effect(0x101);
-            const unsigned char page = static_cast<unsigned char>(BattleActorCopies_ItemPage - 1);
-            BattleActorCopies_ItemPageCue = 0x32;
-            BattleActorCopies_ItemPage = page;
-            if (static_cast<signed char>(page) < 0) BattleActorCopies_ItemPage = 3;
+            const unsigned char page = static_cast<unsigned char>(Window16_Page - 1);
+            Window16_PageCue = 0x32;
+            Window16_Page = page;
+            if (static_cast<signed char>(page) < 0) Window16_Page = 3;
         } else if (held & 0x2000) {
             g.play_effect(0x101);
-            const unsigned char page = static_cast<unsigned char>(BattleActorCopies_ItemPage + 1);
-            BattleActorCopies_ItemPageCue = 0x31;
-            BattleActorCopies_ItemPage = page;
-            if (page > 3) BattleActorCopies_ItemPage = 0;
+            const unsigned char page = static_cast<unsigned char>(Window16_Page + 1);
+            Window16_PageCue = 0x31;
+            Window16_Page = page;
+            if (page > 3) Window16_Page = 0;
         }
     }
 
@@ -315,11 +315,11 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     const unsigned char was = cursor;
     if (held & 0x1000) {
         if (cursor != 0) B(at::kItemCursor) = --cursor;
-        if (static_cast<short>(cursor) < static_cast<short>(Word(At(at::kItemScroll)))) BattleActorCopies_ItemScrollMotion = 0xF0;
+        if (static_cast<short>(cursor) < static_cast<short>(Word(At(at::kItemScroll)))) Window16_Scroll = 0xF0;
     } else if (held & 0x4000) {
         if (cursor < 9) B(at::kItemCursor) = ++cursor;
         const int last = static_cast<short>(Word(At(at::kItemScroll))) + 7;
-        if (!(static_cast<int>(B(at::kItemCursor)) < last)) BattleActorCopies_ItemScrollMotion = 0x10;
+        if (!(static_cast<int>(B(at::kItemCursor)) < last)) Window16_Scroll = 0x10;
     } else if (held & Sigma(4)) {
         const short scroll = static_cast<short>(Word(At(at::kItemScroll)));
         if (scroll == 0) {
@@ -356,17 +356,17 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     const U entry = ((static_cast<std::uint32_t>(BattleActorCopies_QueueWrite) - 1) & 0xF) * 8;
     const unsigned id = ItemUnderCursor();
     const U text = g.msg_system(Word(At(at::kItemRecords + id * at::kItemRecordSize + 6)));
-    const bool scrolling = BattleActorCopies_ItemScrollMotion != 0;
+    const bool scrolling = Window16_Scroll != 0;
     SetLong(At(at::kQueueText + entry), static_cast<std::int32_t>(text));
     if (scrolling) return;
 
     const unsigned buttons = Input_Pressed;
     if (buttons & Field_CancelButtons) {
-        const unsigned char page = BattleActorCopies_ItemPage;
+        const unsigned char page = Window16_Page;
         const unsigned char scroll = B(at::kItemScroll);
-        const unsigned owner = BattleActorCopies_ItemOwner;
-        BattleActorCopies_ItemState = 1;
-        BattleE4_Hand = 0;
+        const unsigned owner = Window16_Owner;
+        Window16_State = 1;
+        Window19 = 0;
         B(at::kQueueByte + entry) = 1;
         KeepPage(page, scroll, owner);
         g.play_effect(0x106);
@@ -379,16 +379,16 @@ extern "C" void __cdecl BattleItem_Browse(void) {
         return;
     }
     g.play_effect(0x103);
-    const unsigned char page = BattleActorCopies_ItemPage;
+    const unsigned char page = Window16_Page;
     const unsigned char scroll = B(at::kItemScroll);
-    const unsigned owner = BattleActorCopies_ItemOwner;
+    const unsigned owner = Window16_Owner;
     KeepPage(page, scroll, owner);
     const unsigned actor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     const unsigned char* const list = At(g.ability_list(actor, page, 1));
     rv::Store<unsigned>(rv::As<records::ActionRecord>(Command())->action_id, list[B(at::kItemCursor)]);
     unsigned char* const c = Command();
-    BattleActorCopies_ItemState = 1;
-    BattleE4_Hand = 0;
+    Window16_State = 1;
+    Window19 = 0;
     if (rv::As<records::ActionRecord>(c)->action_id == 0x97) {
         unsigned char* const a = Acting();
         B(at::kWindow4State) = 2;

@@ -28,7 +28,7 @@ constexpr U kBattleFlags = 0x904AA8;       // dword: bit 14 the auto-target chec
 constexpr U kAutoMode = 0x904B35;          // u8: the auto-target mode (4: by the enemy's ability)
 constexpr U kTarget = 0x904B44;            // u8: the target the checks store
 // kForcedActor: now BattlePhases_B8B (symbols.toml). u8: the actor the auto-target check compares
-// kPartyPick: now BattleSprites_PartyPick (symbols.toml). u8: 1 keeps a member's pick off the party
+// kPartyPick: now Battle_PartyStanding (symbols.toml). u8: 1 keeps a member's pick off the party
 // kMemberAction: now ObjTrio[0x126] (symbols.toml). ObjTrio + 0x126 (u16): a member's action
 // kMemberMode: now ObjTrio[0x125] (symbols.toml). ObjTrio + 0x125 (u8): a member's auto mode
 // kMemberOdds: now ObjTrio[0x142] (symbols.toml). ObjTrio + 0x142 (s8): the odds of a party pick, by 20

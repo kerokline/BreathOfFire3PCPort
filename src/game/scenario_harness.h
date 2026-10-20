@@ -57,7 +57,7 @@ constexpr std::uint32_t kCondFlagsSize = 0x108;
 constexpr std::uint32_t kFlagRow = 0x929ED0;        // unsigned char *
 // The wait word the handlers poll (0 = nothing waiting), Field_Request (2 =
 // a message is open, 5 = an area change pending), Game_AreaNumber.
-constexpr std::uint32_t kWait = 0x66C810;           // MoveScript_WaitWordDA, u16
+constexpr std::uint32_t kWait = 0x66C810;           // Transition_Busy, u16
 constexpr std::uint32_t kRequest = 0x66C7D8;        // Field_Request, u8
 constexpr std::uint32_t kArea = 0x904EFC;           // Game_AreaNumber, u16
 // The chapters' counters: 0x903848 a dword whose low byte the handlers wait

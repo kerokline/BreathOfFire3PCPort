@@ -54,7 +54,7 @@ constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter2 = 0x90384A;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 constexpr std::uint32_t kSlot = 0x903850;       // the effect slot just taken
-// kFlagsPtr: now AreaW0c_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
+// kFlagsPtr: now Chapter_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
 // kStates: now Scena11_States (symbols.toml). Scena11_States, 3 entries
 // kRuns: now Scena11_Runs (symbols.toml). Scena11_Runs, 10 entries (then Scena11_Triggers)
 // kTriggers: now Scena11_Triggers (symbols.toml). Scena11_Triggers, 15 entries
@@ -75,7 +75,7 @@ VoidFn Entry(std::uint32_t table, int index) {
     return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(
         static_cast<std::uint32_t>(Long(At(table + 4u * static_cast<std::uint32_t>(index))))));
 }
-unsigned char* Flags() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Flags() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 unsigned char* EffectRecord(unsigned slot) { return Effect_Objects + ((slot & 0xFFu) << 7); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
@@ -323,7 +323,7 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
         MoveScript_PartyRecords[0x65] = 2;
         return;
     case 2:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 3;
         return;
@@ -383,7 +383,7 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
         MoveScript_PartyRecords[0x65] = 0xD;
         return;
     case 13:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 0xE;
         return;
@@ -869,7 +869,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         MoveScript_PartyRecords[0x65] = 0xB;
         return;
     case 11:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Field_Request = 8;
         Draw_PassFlags = 0;
         SH_CALL(Port_DroppedCall)(1);
@@ -943,7 +943,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         SH_CALL(Transition_Start)(0xD);
         return;
     case 43:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 0x2C;
         return;
@@ -1057,7 +1057,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         MoveScript_PartyRecords[0x65] = 0xA;
         return;
     case 10:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 0xB;
         return;
@@ -1112,7 +1112,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         MoveScript_PartyRecords[0x65] = 0x11;
         return;
     case 17:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         B(kCounter0) = 1;
         Draw_PassFlags = 0x1F;
         MoveScript_PartyRecords[0x65] = 0x12;
@@ -1198,7 +1198,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         MoveScript_PartyRecords[0x65] = 0x24;
         return;
     case 36:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         B(kCounter0) = 0;
         Draw_PassFlags = 0;
         B(kCounter2) = 2;
@@ -1261,7 +1261,7 @@ SC11_EXPORT void __cdecl Scena11_Scene9(void) {
         MoveScript_PartyRecords[0x65] = 8;
         return;
     case 8:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         SH_CALL(Msg_OpenScript)(0x3F);
         Field_Request = 2;

@@ -851,7 +851,7 @@ extern "C" void __cdecl Area67_LeaderSpawn4(void) { MemberSpawn(0, 4, Area67_Spa
 
 // original 0x40CE70 (handler 17; PSX 0x801F451C): Field_ActiveMember +0x80
 // bit 0 cleared (the byte read before the test); when the leader's +0x89
-// (MoveScript_EffectState's index) is 6, then ScriptFlags_Set40,
+// (Character_IndexById's index) is 6, then ScriptFlags_Set40,
 // MoveScript_Var7 = 4, the four bytes 0x903848..0x90384B and 0x8034E5 zeroed.
 extern "C" void __cdecl Area67_ResetOn6(void) {
     const unsigned char effect = ObjTrio[0x89];

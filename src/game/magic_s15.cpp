@@ -66,7 +66,7 @@ constexpr std::uint32_t kS = 0x903850;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle
 // kBattleB2: now BattleActorCopies_EnemyCount (symbols.toml). u8: a battle byte Foretell_Read adds in (not read further)
 
 // The overlays' own .data (read in place, as the originals read it).
@@ -274,7 +274,7 @@ S15_EXPORT void __cdecl Chill_Start(void) {
         Gfx_ClutStrip[0x1A10 + k] = Gfx_ClutStripSource[0x1A10 + k];
     }
     Gfx_ClutStripDirty = 1;
-    if (Mem(BattleActions_EventBattle_addr)[0] == 0) return;
+    if (Mem(EventBattle_Id_addr)[0] == 0) return;
     if (EnemyRecord(ActorIndex())[0x100] != 0x29) return;
     const unsigned slot = NewTask(0x13);
     unsigned char* const child = TaskSlot(slot);

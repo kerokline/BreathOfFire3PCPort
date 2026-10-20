@@ -28,7 +28,7 @@ constexpr unsigned kPulseShadeCount = 2;
 // --- kind 0x77: a count in a box ---------------------------------------------
 constexpr std::uint32_t kTally = 0x939A00;         // u16: the low byte the count (to 200), the high byte bit 7 the
                                                    // pace (0: 30 frames a count, 1: 40) and bits 0..6 the frames
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (scenario_harness at::kFlagRow)
+// kFlagRow: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (scenario_harness at::kFlagRow)
 constexpr unsigned kTallySoundFlag = 0x14;         // the row's flag that makes each count sound (0x20A)
 constexpr unsigned kTallyEndFlag = 0x2E;           // the row's flag that keeps the end from starting run 5
 constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;  // u8: Field_ScriptFlags + 1 (bit 0 set at the end)

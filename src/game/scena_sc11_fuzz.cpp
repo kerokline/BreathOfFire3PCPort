@@ -301,7 +301,7 @@ void Seed(unsigned k) {
     B(kCounters + 3) = static_cast<unsigned char>(sh::Next() % kEffectCount);   // the slot a scene waits on
     Mem(Effect_Objects_addr + 0x80u * B(kCounters + 3))[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : 1);
     if (sh::Half()) Field_Request = PickOf<std::uint8_t, 3>({0, 2, 8});
-    if (sh::Half()) MoveScript_WaitWordDA = 0;
+    if (sh::Half()) Transition_Busy = 0;
     if (sh::Half()) Field_Kind2Hold = 0;
     if (sh::Often()) Game_AreaNumber = PickOf(kAreas);
     // the party byte of area 0x65 (7..18, with its top bit sometimes)
@@ -376,7 +376,7 @@ void Disturb(std::uint32_t h) {
     }
     case 0: B(kCounters + (h >> 12) % 3) = kCounter0s[(h >> 16) % (sizeof kCounter0s)]; break;
     case 1: Field_Request = static_cast<unsigned char>((h >> 12) % 3 == 0 ? 2 : 0); break;
-    case 2: MoveScript_WaitWordDA = static_cast<unsigned short>((h >> 12) & 1 ? 0 : h >> 16); break;
+    case 2: Transition_Busy = static_cast<unsigned short>((h >> 12) & 1 ? 0 : h >> 16); break;
     case 3: Field_Kind2Hold = static_cast<unsigned char>((h >> 12) & 1); break;
     case 4: Mem(Effect_Objects_addr + 0x80u * (B(kCounters + 3) % kEffectCount))[0] = static_cast<unsigned char>((h >> 12) & 1); break;
     default: break;

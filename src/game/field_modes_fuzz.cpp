@@ -58,7 +58,7 @@ void Disturb() {
     const std::uint32_t h = Hash();
     if (h % 5 == 0) At(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(h % 3 ? (h >> 8) % 14 : h >> 8);
     if (h % 7 == 0) SetWord(At(MoveScript_PartyRecords_addr + 0x66), h % 2 ? (h >> 9) % 4 : h >> 12);
-    if (h % 6 == 0) MoveScript_WaitWordDA = static_cast<unsigned short>(h % 4 ? 0 : h >> 16);
+    if (h % 6 == 0) Transition_Busy = static_cast<unsigned short>(h % 4 ? 0 : h >> 16);
     if (h % 9 == 0) Field_Request = static_cast<unsigned char>(h % 2 ? 2 : h >> 20);
     if (h % 11 == 0) At(kCounters + (h >> 5) % 4)[0] = static_cast<unsigned char>(h >> 13);
     if (h % 8 == 0) SetWord(At(kSlot), h % 3 ? (h >> 7) % 0xC4 : h >> 15);
@@ -67,7 +67,7 @@ void Disturb() {
     if (h % 4 == 0) SetWord(At(kAngles + 2 * ((h >> 3) % 3)), h >> 17);
     if (h % 12 == 0) At(Music_Track_addr)[0] = static_cast<unsigned char>(h % 3 ? 0xFF : h >> 9);
     if (h % 14 == 0) Cond_ByteFD = static_cast<unsigned char>(h % 2 ? 2 : h >> 22);
-    if (h % 15 == 0) SetLong(At(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(h));
+    if (h % 15 == 0) SetLong(At(Chapter_FlagRow_addr), static_cast<std::int32_t>(h));
     if (h % 16 == 0) Game_AreaNumber = static_cast<unsigned short>(h >> 10);
 }
 
@@ -275,7 +275,7 @@ const Region kRegions[] = {
     {0x903840, 0x14},                         // Camera_Distance, the counters, the slot word
     {0x66C7D8, 1},                            // Field_Request
     {Title_BadgeOn_addr, 1},
-    {0x66C810, 2},                            // MoveScript_WaitWordDA
+    {0x66C810, 2},                            // Transition_Busy
     {Music_Track_addr, 1},
     {kAngles, 0xC},                           // the angles and the flag pointer
     {kEffectRecords, 0x400},                  // the first eight effect records
@@ -323,7 +323,7 @@ bool Often() { return Next() % 3 != 0; }
 // indices are kept inside the swapped tables: outside them the original
 // jumps through whatever words follow.
 void Seed(unsigned k) {
-    if (Often()) MoveScript_WaitWordDA = 0;
+    if (Often()) Transition_Busy = 0;
     Cond_ByteFA = static_cast<signed char>(Next() % kChapters);
     switch (k) {
     case kModeTail: At(SaveMenu_NewGameByte_addr)[0] = static_cast<unsigned char>(Next() % kTailSlots); break;

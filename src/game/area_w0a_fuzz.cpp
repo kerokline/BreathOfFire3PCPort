@@ -196,7 +196,7 @@ void BuildRegions() {
     const ah::Region r[] = {
         {Field_ActiveMember_addr, 4},                         // Field_ActiveMember
         {MoveScript_Object_addr, 4},                          // MoveScript_Object
-        {AreaW0c_FlagRow_addr, 4},                            // the flag bank's pointer
+        {Chapter_FlagRow_addr, 4},                            // the flag bank's pointer
         {kCameraShift, 4},                                    // Camera_ShiftX, Camera_ShiftY
         {AreaW0c_AnswerMark_addr, 1},
         {Draw_PassFlags_addr, 1},                             // Draw_PassFlags
@@ -226,7 +226,7 @@ void Seed(unsigned k) {
     // every round: the three pointers some function follows, inside the state
     ah::SetPointer(Field_ActiveMember_addr, Record(ah::Next()));
     ah::SetPointer(MoveScript_Object_addr, Record(ah::Next()));
-    ah::SetPointer(AreaW0c_FlagRow_addr, ah::Mem(Cond_Flags_addr + ah::Next() % 0x1C0));
+    ah::SetPointer(Chapter_FlagRow_addr, ah::Mem(Cond_Flags_addr + ah::Next() % 0x1C0));
     // the cursor row: the rows a handler tests, its neighbours, the s8 edges
     if (ah::Often()) ah::Mem(AreaW0c_ChoiceAnswer_addr)[0] = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 3, 0xFF, 0x80, 0x7F));
     unsigned char* const cur = Sprite_Current;

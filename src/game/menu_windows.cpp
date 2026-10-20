@@ -627,7 +627,7 @@ extern "C" void __cdecl Menu_DrawBorder(int x, int y, int w, int h) {
 extern "C" void __cdecl Menu_DrawPanel(int x, int y, int w, int h) {
     const unsigned wb = static_cast<unsigned>(w) & 0xFF, hb = static_cast<unsigned>(h) & 0xFF;
     const int height = static_cast<int>(hb) * 8 + 0x18;
-    g.box(x + 3, y + 3, static_cast<int>(wb) * 8 + 0x2D, height, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(x + 3, y + 3, static_cast<int>(wb) * 8 + 0x2D, height, 0, static_cast<unsigned char>(Config_WindowColour));
     PiecePage(0x340);
     g.piece(x, y, 0, 1);
     for (unsigned char c = 0; c < wb; ++c) g.piece(x + c * 8 + 0x20, y, 1, 1);
@@ -701,7 +701,7 @@ extern "C" void __cdecl Menu_DrawLine(int x0, int y0, int x1, int y1, int r, int
 extern "C" void __cdecl Menu_DrawOutline(int x, int y, int w, int h, int flags) {
     const bool bit0 = (flags & 1) != 0;
     const unsigned char abr_a = bit0 ? 2 : 1, abr_b = bit0 ? 1 : 2;
-    const int row = BattleDraw_Colour;
+    const int row = Config_WindowColour;
     const unsigned char* const entry = At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64));
     const unsigned c = Word(entry);
     const auto r = static_cast<unsigned char>((entry[0] & 0x1F) << 3);
@@ -945,7 +945,7 @@ extern "C" void __cdecl Menu_DrawButtonRow(int x, int y, int set, int sel, int) 
     unsigned char i = 0;
     do {
         const int bx = x + 48 * i;
-        g.box(bx, y, 0x2D, 0x14, 0, static_cast<unsigned char>(BattleDraw_Colour));
+        g.box(bx, y, 0x2D, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
         unsigned char colour;
         if (selected >= sets[s5]) colour = 0;
         else colour = (i == selected) ? 0 : 7;
@@ -1203,7 +1203,7 @@ extern "C" void __cdecl Menu_DrawCursorBox(int x, int y, int w, int h, int blink
 // label 0x66A31C at (x + 0x58, y + 4), then three piece lists across it. The
 // third argument is not read (every caller passes 0).
 extern "C" void __cdecl Menu_DrawMoneyBox(int x, int y, int, unsigned value) {
-    g.box(x + 3, y + 3, 0x65, 0x10, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(x + 3, y + 3, 0x65, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
     g.sprintf_(PrintBuf(), Format(at::kFmt7d), value);
     g.font12(x + 4, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     g.text_draw_at(x + 0x58, y + 4, 0, 0xFF, At(at::kMoneyLabel));
@@ -1231,7 +1231,7 @@ extern "C" void __cdecl Shop_DrawMemberStats(int x, int y, unsigned member, unsi
     const unsigned char category = s1 > 10 ? 0 : kCategory[s1];
     const unsigned mask = g.equip_mask(category, item);
     const unsigned char cannot = ((1u << (m & 31)) & mask & 0xFF) == 0 ? 1 : 0;
-    g.box(x + 3, y + 3, 0x6C, 0x30, cannot, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(x + 3, y + 3, 0x6C, 0x30, cannot, static_cast<unsigned char>(Config_WindowColour));
     if (!cannot) {
         unsigned char colours[4] = {0, 0, 0, 0};
         unsigned short stats[4] = {0, 0, 0, 0};
@@ -1336,7 +1336,7 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
 // when it runs out), the frame's pieces and the scroll bar.
 extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
     unsigned char* const w = window;
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x9A, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x9A, w[9], static_cast<unsigned char>(Config_WindowColour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
     const unsigned category = w[0xA];
@@ -1348,7 +1348,7 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
         if (items[0] != 0) {
             unsigned char dim;
             if (w[9] == 0) {
-                const unsigned char member = MoveScript_EffectState[Cond_Flags[0xd2 + BattleActorCopies_ItemActor]];
+                const unsigned char member = Character_IndexById[Cond_Flags[0xd2 + BattleActorCopies_ItemActor]];
                 dim = g.can_use(w[8], member, w[0xA], items[0]) ? 0 : 1;
             } else {
                 dim = 1;
@@ -1373,8 +1373,8 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
         row += 0xD;
     }
 
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(BattleDraw_Colour));
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 0x92, 0x99, 8, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(Config_WindowColour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 0x92, 0x99, 8, w[9], static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
         const int label_y = rv::As<records::WindowRecord>(w)->y + 7;
@@ -1502,7 +1502,7 @@ extern "C" void __cdecl Menu_DrawScrollBar(const unsigned char* items, unsigned 
 // again after each entry. Then the border (x, y, 0x14, 0x13).
 extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
     unsigned char* const w = window;
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAD, 0x9F, w[0xA], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAD, 0x9F, w[0xA], static_cast<unsigned char>(Config_WindowColour));
     const unsigned char* const list = Ptr(Addr(w + 0x20));
     std::uint32_t text_y = static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->y + 8);
     std::uint32_t row_y = text_y + 3;
@@ -1589,7 +1589,7 @@ extern "C" void __cdecl Shop_DrawBuyDetail(unsigned char* window) {
     const unsigned price = g.item_price(category, id) & 0xFFFF;
     const std::uint32_t cost = g.price_scale(price, percent);
     const unsigned char* const name = g.item_name(category, id);
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x3C, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x3C, 0, static_cast<unsigned char>(Config_WindowColour));
     const unsigned kind = g.item_kind(category, id) & 0xFF;
     g.icon8(rv::As<records::WindowRecord>(w)->x + 4, rv::As<records::WindowRecord>(w)->y + 7, At(at::kBuyDetailIcons)[kind], 0);
     const unsigned n = g.char_count(name);
@@ -1620,7 +1620,7 @@ extern "C" void __cdecl Shop_DrawSellDetail(unsigned char* window) {
     const unsigned char id = w[0xB], category = w[0xA], flag = w[0xD];
     const std::uint32_t unit = g.sell_price(category, id, flag);
     const unsigned char* const name = g.item_name(category, id);
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x1C, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x1C, 0, static_cast<unsigned char>(Config_WindowColour));
     const unsigned kind = g.item_kind(category, id) & 0xFF;
     g.icon8(rv::As<records::WindowRecord>(w)->x + 7, rv::As<records::WindowRecord>(w)->y + 6, At(at::kSellIcons)[kind], 0);
     const unsigned n = g.char_count(name);

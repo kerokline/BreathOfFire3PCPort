@@ -216,7 +216,7 @@ void SeedEO(unsigned k) {
     enemy_rec->data_id = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 8);
     enemy_rec->command = static_cast<unsigned char>(Flip() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
     Bit(e + 0x90, 8);
-    if (bh::Next() % 3 == 0) B(BattleActions_EventBattle_addr) = 0;
+    if (bh::Next() % 3 == 0) B(EventBattle_Id_addr) = 0;
     Sprite_Current[9] = Counter();
     Sprite_Current[0xA] = Counter();
     Bit(Mem(at::kRoundFlags), 4);
@@ -249,7 +249,7 @@ void DisturbEO(U h) {
     case 0: SetWord(Mem(at::kAbility), v % 256); break;
     case 1: rv::As<records::BattleEnemy>(Enemy())->command = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 2: Enemy()[0x90] ^= 8; break;
-    case 3: B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 3: B(EventBattle_Id_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 4: B(BattleE2_EnemiesLeft_addr) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
     case 5: B(BattleE3_Cost_addr) = static_cast<unsigned char>(v); break;
     default: B(at::kRoundFlags) ^= static_cast<unsigned char>(v & 1 ? 4 : 0x40); break;
@@ -443,7 +443,7 @@ void SeedOBJ(unsigned k) {
         MemberByte(0x97, path == 3 || bh::Next() % 8 == 0 ? 0x18 : 0x19);
         MemberByte(0x95, path == 4 || bh::Next() % 8 == 0 ? 0x43 : 0x42);
         MemberBit(0x134, 1);
-        B(BattleSprites_PartyPick_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 3, 0) : bh::Next());
+        B(Battle_PartyStanding_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 3, 0) : bh::Next());
         Bit(Mem(at::kRoundFlags + 1), 0x40);
         if (Flip()) B(BattleFlow_ActorAt_addr) = Sprite_Current[5];
         break;
@@ -522,7 +522,7 @@ void DisturbOBJ(U h) {
     case 6: B(at::kActKind) = static_cast<unsigned char>(v & 1 ? 1 + (v >> 1) % 5 : v >> 1); break;
     case 7: B(at::kRoundFlags + (v & 1)) ^= static_cast<unsigned char>(1u << ((v >> 1) % 8)); break;
     case 8: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 9: B(v & 1 ? BattleSprites_PartyPick_addr : BattleFlow_ActorAt_addr) = static_cast<unsigned char>(v & 2 ? (v >> 2) % 3 : v >> 2); break;
+    case 9: B(v & 1 ? Battle_PartyStanding_addr : BattleFlow_ActorAt_addr) = static_cast<unsigned char>(v & 2 ? (v >> 2) % 3 : v >> 2); break;
     case 10: SetWord(Mem(at::kAbility), v % 256); break;
     default: B(at::kPartyCount) = static_cast<unsigned char>(v % 4); break;
     }

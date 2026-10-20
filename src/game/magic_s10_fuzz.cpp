@@ -263,7 +263,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml).
-// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kEventBattle: now EventBattle_Id (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kCamera: now Camera_Angles (symbols.toml).
 // kFieldState: now Field_State (symbols.toml).
@@ -437,7 +437,7 @@ void Disturb(std::uint32_t h) {
     case 4: SetWord(mh::Mem(Camera_Angles_addr), h >> 16); break;
     case 5: PoolRecord(v)[0] ^= 1; break;
     case 6: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
-    case 7: mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(h >> 24); break;
+    case 7: mh::Mem(EventBattle_Id_addr)[0] = Byte(h >> 24); break;
     default: break;
     }
 }
@@ -530,7 +530,7 @@ void Seed(unsigned k) {
         break;
     // Howling: the event battle of kind 0x37; the record number inside the
     // side; the scale step one frame from its end
-    case kHowling_Start: if (mh::Half()) mh::Mem(BattleActions_EventBattle_addr)[0] = mh::Half() ? 0x37 : 0x36; break;
+    case kHowling_Start: if (mh::Half()) mh::Mem(EventBattle_Id_addr)[0] = mh::Half() ? 0x37 : 0x36; break;
     case kHowlingChild_Start: case kHowlingChild_End: sc[0xB] = Byte(mh::Next() % (enemies ? 8 : 3)); break;
     case kHowlingChild_Out: case kHowlingChild_Back:
         if (mh::Often()) {

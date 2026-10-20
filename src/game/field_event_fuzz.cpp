@@ -18,7 +18,7 @@
 // Never generated, because the original would fault or write outside the
 // compared state: a Sprite_Current / Field_State outside the five objects, a
 // state byte past its table (+1 >= 15, +2 >= 3, 0x904EF1 >= 4), more than
-// three members, a MoveScript_EffectState entry above 7 (the actor records
+// three members, a Character_IndexById entry above 7 (the actor records
 // compared are eight), a member id of 24 or more for Party_Join, a member
 // index above 2 for Member_ClearState, a zone list with no record that
 // matches (Area_ZoneAt would loop), a palette destination outside the 256
@@ -133,7 +133,7 @@ void Fix() {
     }
     At(EventLeader_PendingFlag_addr)[1] = static_cast<unsigned char>(At(EventLeader_PendingFlag_addr)[1] % 4);
     Field_MemberCount = static_cast<unsigned char>(Field_MemberCount % 4);
-    for (unsigned i = 0; i < MoveScript_EffectState_count; ++i) MoveScript_EffectState[i] = static_cast<unsigned char>(MoveScript_EffectState[i] % kActors);
+    for (unsigned i = 0; i < Character_IndexById_count; ++i) Character_IndexById[i] = static_cast<unsigned char>(Character_IndexById[i] % kActors);
     for (unsigned i = 0; i < 6; ++i) {
         unsigned char& id = At(Cond_Flags_addr + 0xd2)[i];
         if (id != 0xFF) id = MemberId(id);
@@ -155,7 +155,7 @@ void Disturb(std::uint32_t salt) {
     case 8: Field_Request = static_cast<unsigned char>((h >> 8) % 3 == 0 ? 6 : h >> 16); break;
     case 9: At(Cond_Flags_addr + 0xd2)[(h >> 8) % 6] = MemberId(h >> 16); break;
     case 10: *At(AreaW0b_PartySet_addr) = static_cast<unsigned char>(h >> 8); break;
-    case 11: MoveScript_EffectState[(h >> 8) % MoveScript_EffectState_count] = static_cast<unsigned char>(h >> 16); break;
+    case 11: Character_IndexById[(h >> 8) % Character_IndexById_count] = static_cast<unsigned char>(h >> 16); break;
     case 12: At(at::kActorRecords)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
     case 13: Game_AreaNumber = AreaChoice(h >> 8); break;
     case 14: g_scratch[(h >> 8) % sizeof g_scratch] = static_cast<unsigned char>(h >> 24); break;
@@ -210,7 +210,7 @@ int __cdecl StubRand() {
 int __cdecl StubPartyCount(unsigned slot) {
     Record(20, slot & 0xFF);
     Disturb(20);
-    // Field_PartySetUp's leader-alone loop indexes MoveScript_EffectState (24
+    // Field_PartySetUp's leader-alone loop indexes Character_IndexById (24
     // entries) by the first `count` ids of the party list, and an id of 0xFF
     // there reads the byte past the table (0x66982B, image data) and writes
     // the actor record it names - inside the eight compared records only while
@@ -518,7 +518,7 @@ const Region kRegions[] = {
     {Address(&Field_InputFlags), 6},   // Field_InputFlags, a byte, Field_ScriptFlags2, Field_InputHeld
     {Address(&Field_State), 0xD0},     // Field_State, the object at 0x905DA0, Field_Kind2Z / X
     {Address(&Field_Request), 1},
-    {Address(MoveScript_EffectState), MoveScript_EffectState_count},
+    {Address(Character_IndexById), Character_IndexById_count},
     {Address(&Field_MemberCount), 1},
     {Address(&MapView_HeightScale), 1},
     {Address(&Draw_OtSlot), 1},
@@ -531,7 +531,7 @@ const Region kRegions[] = {
     {Address(g_zone_record), sizeof g_zone_record},
 };
 constexpr unsigned kStateBytes = ObjTrio_count + 0x40 + 2 + kActors * kActorBytes + 6 + 1 + 9 + 0xE + 1 + 6 + 0xD0 + 1 +
-                                 MoveScript_EffectState_count + 1 + 1 + 1 + 4 + 1 + 0x100 + 0x100 + 32 * 12 + sizeof g_scratch + sizeof g_zone_record;
+                                 Character_IndexById_count + 1 + 1 + 1 + 4 + 1 + 0x100 + 0x100 + 32 * 12 + sizeof g_scratch + sizeof g_zone_record;
 
 struct State {
     unsigned char memory[kStateBytes];

@@ -78,7 +78,7 @@ void IncTimer() { SetWord(At(MoveScript_PartyRecords_addr + 0x66), Word(At(MoveS
 unsigned char& C0() { return Byte(at::kCounter0); }
 void IncC0() { C0() = static_cast<unsigned char>(C0() + 1); }
 void PassFlags(unsigned v) { Draw_PassFlags = static_cast<unsigned char>(v); }
-bool WaitDone() { return MoveScript_WaitWordDA == 0; }
+bool WaitDone() { return Transition_Busy == 0; }
 bool Requested() { return Field_Request == 2; }
 void Request(unsigned v) { Field_Request = static_cast<unsigned char>(v); }
 void ScriptFlagsOr(unsigned v) { Byte(at::kScriptFlags) = static_cast<unsigned char>(Byte(at::kScriptFlags) | v); }
@@ -96,10 +96,10 @@ unsigned char* ActiveMember() {
 }
 unsigned char* Sprite(std::uint32_t k) { return At(Sprite_Objects_addr + k * at::kSpriteStride); }
 unsigned char* Record(std::uint32_t k) { return At(at::kCharRecords + k * at::kRecordStride); }
-// Chapter 8 run 11's character records: by MoveScript_EffectState [7] (a
+// Chapter 8 run 11's character records: by Character_IndexById [7] (a
 // byte) and [4] (the dword at [4] read, its low byte).
-unsigned char* RecordOfMember7() { return Record(MoveScript_EffectState[7]); }
-unsigned char* RecordOfMember4() { return Record(static_cast<std::uint32_t>(Long(At(MoveScript_EffectState_addr + 4))) & 0xFF); }
+unsigned char* RecordOfMember7() { return Record(Character_IndexById[7]); }
+unsigned char* RecordOfMember4() { return Record(static_cast<std::uint32_t>(Long(At(Character_IndexById_addr + 4))) & 0xFF); }
 // The sprite 0x903804 points at, read afresh.
 unsigned char* FocusObject() {
     return reinterpret_cast<unsigned char*>(AreaW1a_FocusObject);
@@ -112,7 +112,7 @@ std::uint32_t Entry(std::uint32_t table, int index) {
 }
 
 // The flag row, the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
 void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 
@@ -357,7 +357,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         SH_CALL(Scenario_CallA)(0);
         ChangeArea(0xAF, 0x240000, 0x1E0000, 0x81);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(6);
         return;
     case 6:
@@ -522,7 +522,7 @@ extern "C" void __cdecl Scena07_Scene3(void) {
         Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xFE);
         SetFlag(2);
         ChangeArea(0xAF, 0x2D8000, 0x5E0000, 0x83);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(5);
         return;
@@ -881,7 +881,7 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0x14:
         SetFlag(9);
         ChangeArea(0x55, 0x258000, 0x410000, 0x82);
-        AreaW0c_PendingKind = 5;
+        Area_EnterTransition = 5;
         ModeFlow_AreaTransition = 4;
         SetStep(0x15);
         out = kDone;
@@ -1527,7 +1527,7 @@ extern "C" void __cdecl Scena08_Run(void) {
 // original 0x551590: run 1, steps 0..0xC (a jump table of 13 after it at
 // 0x5518A0): a timed music start (step 0 runs on into step 1's wait), counter
 // 0 = 1, effects of kind 0x52 on counter 4 and 7, a transition, the music
-// faded, two character records set (by MoveScript_EffectState [7] and [8])
+// faded, two character records set (by Character_IndexById [7] and [8])
 // and the change to area 0x20; again on 0x16 with flag 0; sound 0x204; on
 // 0x1D the change to area 0x20 with flag 1; the run over.
 extern "C" void __cdecl Scena08_Scene1(void) {
@@ -1588,12 +1588,12 @@ extern "C" void __cdecl Scena08_Scene1(void) {
     case 6: {
         if (DecTimer() != 0) return;
         SH_CALL(Music_FadeOutStop)(0xA);
-        unsigned char* const a = Record(MoveScript_EffectState[7]);
+        unsigned char* const a = Record(Character_IndexById[7]);
         a[0x09] = 7;
         a[0x58] = 0x37;
         a[0x5B] = 8;
         a[0x5C] = 0x64;
-        unsigned char* const b = Record(MoveScript_EffectState[8]);
+        unsigned char* const b = Record(Character_IndexById[8]);
         b[0x09] = 8;
         b[0x5B] = 0xC;
         SH_CALL(Scenario_CallA)(0);
@@ -1811,8 +1811,8 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         return;
     case 0x12:
         if (C0() != 0) return;
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), 3);
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), 0x10);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), 3);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), 0x10);
         SetFlag(4);
         ScriptFlagsAnd(0xFFF7);
         Clear40();
@@ -1898,7 +1898,7 @@ extern "C" void __cdecl Scena08_Scene5(void) {
     case 1:
         if (C0() == 1) {
             ChangeArea(0x35, 0x3D8000, 0xD8000, 0x83);
-            AreaW0c_PendingKind = 0xFF;
+            Area_EnterTransition = 0xFF;
             AreaW1f_MusicCurrent = 0xFF;
             SetStep(2);
         }
@@ -2104,7 +2104,7 @@ extern "C" void __cdecl Scena08_Scene8(void) {
     case 0:
         if (!WaitDone()) return;
         ChangeArea(0xB, 0x138000, 0x238000, 0x84);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         SetStep(1);
@@ -2152,7 +2152,7 @@ extern "C" void __cdecl Scena08_Scene8(void) {
         const std::int32_t x = Long(At(Scena08_Kept_addr + 0x4));
         ChangeArea(0xC, x, z, flags);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(8);
         return;
     }

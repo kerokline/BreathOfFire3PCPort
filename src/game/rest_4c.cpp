@@ -263,7 +263,7 @@ extern "C" void __cdecl Commu_DrawFrame(int x, int y) {
 // (x + 6, y + 0x18), the unit (Text_DrawAt(x + 0x5A, y + 0x18, 0, 1,
 // 0x66A31C)).
 extern "C" void __cdecl Commu_DrawZennyBox(int x, int y) {
-    const unsigned style = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned style = static_cast<unsigned char>(Config_WindowColour);
     SH_CALL(Menu_DrawBox)(x + 1, y + 1, 0x6A, 0x28, 0x80, static_cast<int>(style));
     SH_CALL(Commu_DrawFrame)(x, y);
     SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, Labels_Written(14) ? 0xFF : 3,
@@ -280,7 +280,7 @@ extern "C" void __cdecl Commu_DrawZennyBox(int x, int y) {
 // + 0x36, + 0x2A; otherwise the wide format 0x64ADDC at x + 6. The unit as the
 // money box's.
 extern "C" void __cdecl Commu_DrawStakeBox(int x, int y, unsigned digits) {
-    const unsigned style = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned style = static_cast<unsigned char>(Config_WindowColour);
     SH_CALL(Menu_DrawBox)(x + 1, y + 1, 0x6A, 0x28, 0x80, static_cast<int>(style));
     SH_CALL(Commu_DrawFrame)(x, y);
     SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, Labels_Written(14) ? 0xFF : 3,
@@ -388,7 +388,7 @@ extern "C" void __cdecl CommuHiLo_Shuffle(void) {
 // puts a four-letter word at x + 6 and a three-letter one at x + 0xA, the
 // box's middle for 8-px letters, here (0x2C - its pen width) / 2.
 extern "C" void __cdecl CommuHiLo_DrawChoice(int x, int y, unsigned label, unsigned mode) {
-    const unsigned style = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned style = static_cast<unsigned char>(Config_WindowColour);
     SH_CALL(Menu_DrawBox)(x, y, 0x2A, 0x14, 0, static_cast<int>(style));
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x1D, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);

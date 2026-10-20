@@ -190,7 +190,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
             g.leader_animation(Sprite_Current[8]);
             g.change_area(AreaW0b_Place, Long(At(at::kExitX)), static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
-            AreaW0c_PendingKind = 0xC;
+            Area_EnterTransition = 0xC;
             return;
         }
         if (Byte(at::kFlags2Hi) & 0x20) {
@@ -453,11 +453,11 @@ extern "C" void __cdecl Field_SwapExchange(void) {
         if (Field_State[0x138] & 1) Sprite_Current[0x29] = 4;
         {
             unsigned char* const fs = Field_State;
-            std::memcpy(fs + 0x80, At(at::kActorRecords + MoveScript_EffectState[fs[0x89]] * at::kActorStride), at::kActorStride);
+            std::memcpy(fs + 0x80, At(at::kActorRecords + Character_IndexById[fs[0x89]] * at::kActorStride), at::kActorStride);
         }
         {
             unsigned char* const fs = Field_State;
-            fs[0x148] = MoveScript_EffectState[fs[0x89]];
+            fs[0x148] = Character_IndexById[fs[0x89]];
         }
         Cond_Flags[0xd2 + i] = Field_State[0x89];
         if (i != 0) {
@@ -618,7 +618,7 @@ extern "C" void __cdecl Field_EncounterState(void) { Table(Field_EncounterSteps_
 // and put in state 5, and +0xB = 0xFF. Then sub-state 1.
 // As the original has it: the member count is read again after each clear.
 extern "C" void __cdecl Field_EncounterStart(void) {
-    if (BattleActions_EventBattle == 0) {
+    if (EventBattle_Id == 0) {
         g.roll_initiative();
         Sprite_Current[2] = 1;
         return;

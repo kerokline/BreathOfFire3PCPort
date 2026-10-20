@@ -280,7 +280,7 @@ const bh::Clone kClonesB29[] = {
 void SeedEnd(unsigned k) {
     if (k != 1) return;
     B(BattleActions_BattleEnd_addr) = EndByte();
-    B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(BSG_PICK(0x40, 0, 0xFF, 0xBF));
+    B(EventBattle_Flags_addr) = static_cast<unsigned char>(BSG_PICK(0x40, 0, 0xFF, 0xBF));
 }
 
 constexpr bh::CallSite kCalls43D0E0[] = {{0x10, 0x446DE0}, {0x1C, 0x446E00}};

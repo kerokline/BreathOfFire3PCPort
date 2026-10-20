@@ -742,7 +742,7 @@ extern "C" void __cdecl Area104_LeaderStep(void) {
         if (cell() == 0xAF) {
             AH_CALL(Field_ChangeArea)(AreaW0b_Place, Long(At(at::kPendingX)), static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
-            AreaW0c_PendingKind = 0xC;
+            Area_EnterTransition = 0xC;
             return;
         }
         if (cell() == 0xC0) AH_CALL(Area_LinkAt)(rv::Current<records::SpriteHead>()->x_whole, rv::Current<records::SpriteHead>()->z_whole);
@@ -1136,7 +1136,7 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
             return;
         }
     }
-    AH_CALL(Menu_DrawBox)(0x7E, 0x2E, 0x48, 0x11, 0xF2, static_cast<unsigned char>(BattleDraw_Colour));
+    AH_CALL(Menu_DrawBox)(0x7E, 0x2E, 0x48, 0x11, 0xF2, static_cast<unsigned char>(Config_WindowColour));
     AH_CALL(Menu_DrawOutline)(0x80, 0x30, 0x44, 0xD, 2);
     signed char digit = 0;
     if (Field_Request == 0) {
@@ -1365,7 +1365,7 @@ extern "C" void __cdecl Area105_Init(void) {
 
 // original 0x416440 (area 106's handler 0, its descriptor 0x61C670's +0x3C
 // 0x61C664; PSX 0x801F38E8): Field_ActiveMember +0x80 bit 0 cleared; when the
-// byte of MoveScript_EffectState 0x66972C by the leader's +0x89 is 0,
+// byte of Character_IndexById 0x66972C by the leader's +0x89 is 0,
 // Cond_ByteFE = 1 and Sprite_Current (read before) +0 = 0.
 extern "C" void __cdecl Area106_Handler0(void) {
     unsigned char* const member = Field_ActiveMember;

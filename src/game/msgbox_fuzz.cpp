@@ -95,7 +95,7 @@ void Disturb() {
     case 20: SetB(AreaW0c_ChoiceAnswer_addr, v); break;
     case 21: SetB(kChoiceLast, v); break;
     case 22: SetB(kWindow0State, v % 6); break;
-    case 23: SetB(ItemUse_Window1State_addr, v % 6); break;
+    case 23: SetB(Window1_State_addr, v % 6); break;
     case 24: SetW(kEffectOff, v); break;
     default: SetW(Msgbox_EffectWait_addr, v); break;
     }
@@ -514,7 +514,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     if (Often()) SetB(Msgbox_SubCount_addr, Next() % 2 ? 1 + Next() % 3 : Next() & 0xFF);
     if (Often()) SetB(ItemUse_ColorHigh_addr, Next() % 2 ? Next() % 9 : Next() & 0xFF);
     if (Often()) SetB(kWindow0State, Next() % 6);
-    if (Often()) SetB(ItemUse_Window1State_addr, Next() % 6);
+    if (Often()) SetB(Window1_State_addr, Next() % 6);
     if (Often()) Input_Pressed = static_cast<unsigned short>(Next() % 2 ? 0 : Next() & 0xFFFF);
 
     switch (k) {
@@ -624,7 +624,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     case kState6:
     case kState2Closed:
         if (Often()) SetB(kWindow0State, Next() % 6);
-        if (Often()) SetB(ItemUse_Window1State_addr, Next() % 6);
+        if (Often()) SetB(Window1_State_addr, Next() % 6);
         break;
     case kWindowAlloc:
         args[0] = Next() % 2 ? Next() % 2 : (Next() & 0xFFFFFF00u) | (Next() % 2);

@@ -226,7 +226,7 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
 }
 
 // original 0x5373F0 (PSX 0x80168954, pairs_propagated call-anchored): the
-// member byte's record (MoveScript_EffectState, unchecked, as Char_LoseHp):
+// member byte's record (Character_IndexById, unchecked, as Char_LoseHp):
 // with HP +0x18 below its maximum +0x20 (u16), HP = (HP + amount) as a u16,
 // held at the maximum (a sum past 0xFFFF wraps first, as the original's
 // 16-bit compare has it). Then, only then, the record Field_State +0x148
@@ -234,7 +234,7 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
 // word +0x10 and of Field_State's word +0x90. Its eax is no answer (a
 // record offset); Field_EquipTick reads none.
 extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
-    const unsigned slot = MoveScript_EffectState[member & 0xFF];
+    const unsigned slot = Character_IndexById[member & 0xFF];
     unsigned char* const rec = Record(slot);
     const unsigned max = rv::As<records::CharRecord>(rec)->stats.max_hp;
     const unsigned hp = rv::As<records::CharRecord>(rec)->hp;
@@ -254,7 +254,7 @@ extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
 // amount whole, or AP - 1 (0xFFFFFFFF at AP 0). Char_LoseHp without its
 // actor test.
 extern "C" unsigned __cdecl Char_LoseAp(unsigned amount, unsigned member) {
-    const unsigned slot = MoveScript_EffectState[member & 0xFF];
+    const unsigned slot = Character_IndexById[member & 0xFF];
     unsigned char* const rec = Record(slot);
     const unsigned ap = rv::As<records::CharRecord>(rec)->ap;
     unsigned took = amount;

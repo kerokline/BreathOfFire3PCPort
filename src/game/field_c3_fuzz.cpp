@@ -174,7 +174,7 @@ const sh::Clone kClones[] = {
 
 enum : unsigned {
     kMode11, kMode8a, kMode8b, kOpE7, kApproach, kAvoid, kBest, kFadeOutStart, kFadeOutStep, kFadeInStart, kFadeInStep,
-    kScriptMove, kAlign, kNext, kStep, MoveScript_WaitWordDA_addr, kShadeLower, kShadeFade, kAttached, kHop, kHopBegin, kHopLaunch, kHopRise,
+    kScriptMove, kAlign, kNext, kStep, Transition_Busy_addr, kShadeLower, kShadeFade, kAttached, kHop, kHopBegin, kHopLaunch, kHopRise,
     kHopFall, kHopLand, kVertical, kUp, kUpBegin, kUpOut, kUpArrive, kUpIn, kUpWait5, kUpWait6, kUpEnd, kDown,
     kDownBegin, kDownWait1, kDownWait2, kDownWait3, kDownWait4, kDownOut, kDownArrive, kDownIn, kDownLand, kVShade,
     kJumpExit, kJumpBegin, kJumpOut, kJumpArrive, kJumpShade, kJumpIn, kTileD0, kTileBegin, kTileMove, kTileExit,

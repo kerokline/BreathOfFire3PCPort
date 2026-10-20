@@ -1042,7 +1042,7 @@ extern "C" void __cdecl Area167_SetByteFE10(void) { Cond_ByteFE = 0x10; }
 //      0x49 set. Then Sound_PlayEffect(0x205) with Cond_ByteFD 0, flag 0x4A
 //      set, state 0xC.
 //   0x1E: state 0x1F.
-//   0x1F: MoveScript_WaitWordDA 0: Cond_ByteFE = 0x20, the countdown 0x1E,
+//   0x1F: Transition_Busy 0: Cond_ByteFE = 0x20, the countdown 0x1E,
 //      state 0x20.
 //   0x20: the countdown - 1; at 0 ScriptFlags_Clear40, flag 0x90 set,
 //      Field_ChangeArea(0xA8, 0x150000, 0x40000, 7), Field_ScriptFlags2 bit 6
@@ -1155,7 +1155,7 @@ extern "C" void __cdecl Area167_Tail32(void) {
         AreaW0c_TailState = 0x1F;
         return;
     case 11:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Cond_ByteFE = 0x20;
         SetWord(At(at::kTailTimer), 0x1E);
         AreaW0c_TailState = 0x20;

@@ -3817,11 +3817,12 @@ evidence = "disasm 2026-09-22: op 85, when the kind-2 object is at ObjTrio 0's p
 
 [[data]]
 pc = 0x66C810
-name = "MoveScript_WaitWordDA"
+name = "Transition_Busy"
 psx = 0x80143C40
 ctype = "unsigned short"
 status = "hypothesis"
 evidence = "disasm 2026-09-22: op DA repeats while this word is non-zero. Named by that one use."
+note = "was MoveScript_WaitWordDA (C3 naming): non-zero while a screen transition runs: Transition_Start 0x495040 is a no-op while it is set (mode_flow.cpp, docs/mode-flow.md), and the scenario steps and menus wait for it to be 0 (docs/shop_states.md 1, scena_sc5.md, mode-tasks.md's wait word); movement-script op DA is one of its waiters."
 
 [[data]]
 pc = 0x9039A2
@@ -3833,11 +3834,12 @@ evidence = "disasm 2026-09-22: ops 80 / 81 set and clear bit 8, E5 clears bit 8,
 
 [[data]]
 pc = 0x66972C
-name = "MoveScript_EffectState"
+name = "Character_IndexById"
 ctype = "unsigned char"
 count = 24
 status = "hypothesis"
 evidence = "disasm 2026-09-22: op 8C indexes it by Field_State[0x89] and the byte found indexes MoveScript_EffectArg. The count is the distance to that table."
+note = "was Character_IndexById (C3 naming): a character id (PartyMember::char_id, +0x89) to its character record's index (0..7, CharacterRecords): Area_Enter copies CharacterRecords + 0xA4 * this[+0x89] (docs/area-entry.md), and Area192_RestoreCharacters, BattleEquipWin_Draw and Item_CanUse's callers read it the same way (docs/area_w4f.md, battle_e7.md, battle_draw.md); op 8C's use is one of these."
 
 [[func]]
 pc = 0x517BF0
@@ -3979,7 +3981,7 @@ name = "MoveScript_EffectArg"
 ctype = "signed char"
 count = 24
 status = "hypothesis"
-evidence = "disasm 2026-09-22: op 8C passes the byte here as Effect_SpawnAt's third argument. PSX 0x801824A0, after 0x80182488. The count is a guess: the index is a byte of MoveScript_EffectState."
+evidence = "disasm 2026-09-22: op 8C passes the byte here as Effect_SpawnAt's third argument. PSX 0x801824A0, after 0x80182488. The count is a guess: the index is a byte of Character_IndexById."
 
 
 # --- 2026-09-22: boundary callees, registered before the parallel takeover of
@@ -4579,7 +4581,7 @@ ret = "void"
 params = "void"
 impl = "src/game/mode_tasks.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x8E bytes, cdecl, every jump internal. With Title_StartArmed, the pad's bit 0x800 newly pressed, File_LoadDone, MoveScript_WaitWordDA 0 and task 0 free (Task_Records +0 is 0): Title_State at most 2 - Title_Timer = 1, state 2; else, with Title_Fade 0 and Title_LogoState 2 - Transition_Start(0), Title_FadeMusic, Sound_PlayEffect(0x105), Title_StartArmed = 0, state 7. PSX FUN_801D104C branch for branch (its sltiu 3 is the PC's ja 2). Call trace hidden_b: 16,127 calls; all_b 12,799."
+evidence = "disasm 2026-09-22, 0x8E bytes, cdecl, every jump internal. With Title_StartArmed, the pad's bit 0x800 newly pressed, File_LoadDone, Transition_Busy 0 and task 0 free (Task_Records +0 is 0): Title_State at most 2 - Title_Timer = 1, state 2; else, with Title_Fade 0 and Title_LogoState 2 - Transition_Start(0), Title_FadeMusic, Sound_PlayEffect(0x105), Title_StartArmed = 0, state 7. PSX FUN_801D104C branch for branch (its sltiu 3 is the PC's ja 2). Call trace hidden_b: 16,127 calls; all_b 12,799."
 
 [[func]]
 pc = 0x462560
@@ -5073,7 +5075,7 @@ ret = "void"
 params = "void"
 impl = "src/game/title_states.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x6A bytes. Title_States entry 4: once MoveScript_WaitWordDA is 0, Title_Fade, Title_LogoState, Title_StartArmed 0; Title_StopMusic; Port_DroppedCall(0); Effect_ClearAll; the play clock bytes 0x9040C8..0x9040CB and Draw_PassFlags 0; Scenario_Start(0x10); Task_Create(0, 0x495800) - the demo; Title_State + 1. PSX 0x801D0E54 call for call (clock 0x80144FBC, flags 0x8014832A). Call trace hidden_b: 48 calls."
+evidence = "disasm 2026-09-22, 0x6A bytes. Title_States entry 4: once Transition_Busy is 0, Title_Fade, Title_LogoState, Title_StartArmed 0; Title_StopMusic; Port_DroppedCall(0); Effect_ClearAll; the play clock bytes 0x9040C8..0x9040CB and Draw_PassFlags 0; Scenario_Start(0x10); Task_Create(0, 0x495800) - the demo; Title_State + 1. PSX 0x801D0E54 call for call (clock 0x80144FBC, flags 0x8014832A). Call trace hidden_b: 48 calls."
 
 [[func]]
 pc = 0x462370
@@ -5084,7 +5086,7 @@ ret = "void"
 params = "void"
 impl = "src/game/title_states.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x55 bytes. Title_States entry 5: task 0 gone (Task_Records +0 is 0): Title_State 0 and return. Else with File_LoadDone, MoveScript_WaitWordDA 0 and Input_Pressed bit 0x800: MoveScript_Var7 1, Transition_Start(4), Music_FadeOutStop(8), Title_State + 1. Then a tail jump to Title_DrawBadge. PSX 0x801D0F00. Call trace hidden_b: 12,200 calls."
+evidence = "disasm 2026-09-22, 0x55 bytes. Title_States entry 5: task 0 gone (Task_Records +0 is 0): Title_State 0 and return. Else with File_LoadDone, Transition_Busy 0 and Input_Pressed bit 0x800: MoveScript_Var7 1, Transition_Start(4), Music_FadeOutStop(8), Title_State + 1. Then a tail jump to Title_DrawBadge. PSX 0x801D0F00. Call trace hidden_b: 12,200 calls."
 
 [[func]]
 pc = 0x4623D0
@@ -5105,7 +5107,7 @@ ret = "void"
 params = "void"
 impl = "src/game/title_states.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x2B bytes. Title_States entry 7: once MoveScript_WaitWordDA is 0, Title_StopMusic, Port_DroppedCall(0), Task_Create(0, 0x588E70) - the title menu - and a tail jump to Task_Exit, which ends task 1. PSX 0x801D1000. Reached only by Start on the title; not in hidden_b."
+evidence = "disasm 2026-09-22, 0x2B bytes. Title_States entry 7: once Transition_Busy is 0, Title_StopMusic, Port_DroppedCall(0), Task_Create(0, 0x588E70) - the title menu - and a tail jump to Task_Exit, which ends task 1. PSX 0x801D1000. Reached only by Start on the title; not in hidden_b."
 
 [[func]]
 pc = 0x4624D0
@@ -5126,7 +5128,7 @@ ret = "void"
 params = "void"
 impl = "src/game/title_states.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x6B bytes. With Field_Request 5, Game_Mode 2 and MoveScript_WaitWordDA 0, Title_BadgeOn 0. Then with Draw_PassFlags and Title_BadgeOn both set: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x9D, 0), Gfx_CommitPrim(2, 0xC), Title_Sprite(0xC0, 4, 0xA, 2, 0) (9,562 draws in hidden_b). The demo's corner badge. Tail of Title_StateDemo and Title_StateDemoEnd. PSX 0x801D11E4 (its tpage from a video-mode test). Call trace hidden_b: 12,198 calls."
+evidence = "disasm 2026-09-22, 0x6B bytes. With Field_Request 5, Game_Mode 2 and Transition_Busy 0, Title_BadgeOn 0. Then with Draw_PassFlags and Title_BadgeOn both set: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x9D, 0), Gfx_CommitPrim(2, 0xC), Title_Sprite(0xC0, 4, 0xA, 2, 0) (9,562 draws in hidden_b). The demo's corner badge. Tail of Title_StateDemo and Title_StateDemoEnd. PSX 0x801D11E4 (its tpage from a video-mode test). Call trace hidden_b: 12,198 calls."
 
 [[func]]
 pc = 0x56D5E0
@@ -5802,7 +5804,7 @@ psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned slot"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x120 bytes: unless Field_Request 6, Party_ClearAll; then for each of Field_MemberCount members: Field_State = Sprite_Current = the member, +0 = 1, +5 = i, Field_MemberSprite(list[slot * 3 + i], i), +0x48 = 0, +0x40 = +0x44 = 0x10000, +0x148 = MoveScript_EffectState[id], its actor record copied to +0x80, +0x138 bit 0 cleared; slot non-zero and actor bit 0x80: Sprite_SetTint(-4, -8, 0, 0); slot 0: Field_MemberTimers. 34 call sites. psx_pair call-anchored."
+evidence = "disasm 2026-09-22, 0x120 bytes: unless Field_Request 6, Party_ClearAll; then for each of Field_MemberCount members: Field_State = Sprite_Current = the member, +0 = 1, +5 = i, Field_MemberSprite(list[slot * 3 + i], i), +0x48 = 0, +0x40 = +0x44 = 0x10000, +0x148 = Character_IndexById[id], its actor record copied to +0x80, +0x138 bit 0 cleared; slot non-zero and actor bit 0x80: Sprite_SetTint(-4, -8, 0, 0); slot 0: Field_MemberTimers. 34 call sites. psx_pair call-anchored."
 impl = "src/game/field_event.cpp"
 
 [[func]]
@@ -5813,7 +5815,7 @@ psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned member"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x11A bytes: Party_JoinReset; actor record MoveScript_EffectState[member] +0xB bit 0 set; with Field_MemberCount 3 or more, Field_Request = 6 and 1; else the member into both party lists at 0x904062 / 0x904065, ObjTrio slot n +0 = 1, Member_ClearState(n), Field_MemberSprite(member, n), its actor record copied, +5 = n, +0x4B = 0xFF, Field_MemberCount + 1, +0x148 = the actor index, and 0. psx_pair callers."
+evidence = "disasm 2026-09-22, 0x11A bytes: Party_JoinReset; actor record Character_IndexById[member] +0xB bit 0 set; with Field_MemberCount 3 or more, Field_Request = 6 and 1; else the member into both party lists at 0x904062 / 0x904065, ObjTrio slot n +0 = 1, Member_ClearState(n), Field_MemberSprite(member, n), its actor record copied, +5 = n, +0x4B = 0xFF, Field_MemberCount + 1, +0x148 = the actor index, and 0. psx_pair callers."
 impl = "src/game/field_event.cpp"
 
 [[func]]
@@ -7310,7 +7312,7 @@ ret = "void"
 params = "unsigned char kind"
 status = "evidence"
 impl = "src/game/mode_flow.cpp"
-evidence = "disasm 2026-09-22, 0x495040..0x495066 (0x26 bytes): unless MoveScript_WaitWordDA is set, the word 0x66C828 = kind (movzx of the byte) and Task_Create(2, 0x495070) - Transition_Task. PSX 0x8014EB68 the same, kind to 0x80143C90, task entry 0x8014EC28. 170 call sites, some pushing whole registers: ours reads the byte from its stack slot. docs/mode-flow.md section 2."
+evidence = "disasm 2026-09-22, 0x495040..0x495066 (0x26 bytes): unless Transition_Busy is set, the word 0x66C828 = kind (movzx of the byte) and Task_Create(2, 0x495070) - Transition_Task. PSX 0x8014EB68 the same, kind to 0x80143C90, task entry 0x8014EC28. 170 call sites, some pushing whole registers: ours reads the byte from its stack slot. docs/mode-flow.md section 2."
 
 [[func]]
 pc = 0x495070
@@ -7577,7 +7579,7 @@ ret = "void"
 params = "unsigned char run"
 status = "evidence"
 impl = "src/game/mode_flow.cpp"
-evidence = "disasm 2026-09-22, 0x3A bytes: loop { Task_Sleep(1); if the wait word MoveScript_WaitWordDA is 0 and run is 0: Task_Sleep(1), return; Field_Frame; if the wait word is 0 return }. run is tested every pass, so with run set it returns only after a field frame. Four callers, all pushing constants. psx_pair's 0x80199BC4 is call-disputed, so no psx. hidden_b: 18 calls."
+evidence = "disasm 2026-09-22, 0x3A bytes: loop { Task_Sleep(1); if the wait word Transition_Busy is 0 and run is 0: Task_Sleep(1), return; Field_Frame; if the wait word is 0 return }. run is tested every pass, so with run set it returns only after a field frame. Four callers, all pushing constants. psx_pair's 0x80199BC4 is call-disputed, so no psx. hidden_b: 18 calls."
 
 [[func]]
 pc = 0x496870
@@ -7740,7 +7742,7 @@ ret = "void"
 params = "unsigned a, unsigned b, unsigned keep"
 status = "evidence"
 impl = "src/game/area_entry.cpp"
-evidence = "disasm 2026-09-22, 0x5322D0..0x5323DB (0x10C bytes, whole); the PSX FUN_801BF730 (call-anchored; read, the same). ObjTrio_SwapFields(a, b, keep), then for a and b: Field_State = Sprite_Current = the record, Field_MemberSprite(+0x89, slot), 0xA4 bytes to +0x80 from 0x903A70 + MoveScript_EffectState[+0x89] * 0xA4, +0x148 = MoveScript_EffectState[+0x89] read after that copy. Sole caller Party_DropIn."
+evidence = "disasm 2026-09-22, 0x5322D0..0x5323DB (0x10C bytes, whole); the PSX FUN_801BF730 (call-anchored; read, the same). ObjTrio_SwapFields(a, b, keep), then for a and b: Field_State = Sprite_Current = the record, Field_MemberSprite(+0x89, slot), 0xA4 bytes to +0x80 from 0x903A70 + Character_IndexById[+0x89] * 0xA4, +0x148 = Character_IndexById[+0x89] read after that copy. Sole caller Party_DropIn."
 
 [[func]]
 pc = 0x5323E0
@@ -9684,7 +9686,7 @@ ret = "void"
 params = "void"
 impl = "src/game/event_objs.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x534F10..0x5350B3 (0x1A4 bytes): with Field_InputFlags bit 0, any of the Party_Count(0) members of the list at 0x904062 whose actor record (by MoveScript_EffectState) has bit 0x80 at +0x10; else the leader's record (Field_State +0x148). Then Field_State +0x124 counts down; at 0 it is 10 again, 0x534DB0(1), and 0x537480(1, member) for each such member (or for Field_State +0x89); if any took HP, an Effect_FindFree object gets kind 0x41 at the leader's +0x2E / +0x30. PSX 0x801C4294 the same. Callers 0x51AFEA, 0x52E967. Shop route 178 calls."
+evidence = "disasm 2026-09-23, 0x534F10..0x5350B3 (0x1A4 bytes): with Field_InputFlags bit 0, any of the Party_Count(0) members of the list at 0x904062 whose actor record (by Character_IndexById) has bit 0x80 at +0x10; else the leader's record (Field_State +0x148). Then Field_State +0x124 counts down; at 0 it is 10 again, 0x534DB0(1), and 0x537480(1, member) for each such member (or for Field_State +0x89); if any took HP, an Effect_FindFree object gets kind 0x41 at the leader's +0x2E / +0x30. PSX 0x801C4294 the same. Callers 0x51AFEA, 0x52E967. Shop route 178 calls."
 
 [[func]]
 pc = 0x5350C0
@@ -9747,7 +9749,7 @@ ret = "unsigned char"
 params = "unsigned member, unsigned kind, unsigned value"
 impl = "src/game/event_objs.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x535310..0x535388 (0x79 bytes), no calls: the record 0x903A70 + MoveScript_EffectState[member byte] * 0xA4; kind byte 1: al = +0x12 == value; 2: how many of +0x13..+0x15; 3: how many of +0x16, +0x17; any other: 0. al only (the rest of eax is the caller's). PSX 0x801C48EC the same (its record base 4 lower). Callers Field_EquipTick, 0x534D6C, and Field_ZoneCounterRoll (docs/field-event.md). Shop route 561 calls."
+evidence = "disasm 2026-09-23, 0x535310..0x535388 (0x79 bytes), no calls: the record 0x903A70 + Character_IndexById[member byte] * 0xA4; kind byte 1: al = +0x12 == value; 2: how many of +0x13..+0x15; 3: how many of +0x16, +0x17; any other: 0. al only (the rest of eax is the caller's). PSX 0x801C48EC the same (its record base 4 lower). Callers Field_EquipTick, 0x534D6C, and Field_ZoneCounterRoll (docs/field-event.md). Shop route 561 calls."
 
 [[func]]
 pc = 0x535390
@@ -18410,7 +18412,7 @@ ret = "void"
 params = "void"
 impl = "src/game/shop_states.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x57FBE0..0x57FC33 (0x54 bytes, 4 calls): InnNight_States 1 (0x663F7C). word 0x66C810 (MoveScript_WaitWordDA) 0: Menu_DrawBlackScreen, 0x929F02 + 1; else with an object title box and message 0xA4."
+evidence = "disasm 2026-09-25, 0x57FBE0..0x57FC33 (0x54 bytes, 4 calls): InnNight_States 1 (0x663F7C). word 0x66C810 (Transition_Busy) 0: Menu_DrawBlackScreen, 0x929F02 + 1; else with an object title box and message 0xA4."
 
 [[func]]
 pc = 0x57FC40
@@ -19305,7 +19307,7 @@ ret = "void"
 params = "void"
 impl = "src/game/event_leader.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x52EE70..0x52F1A5 (0x336 bytes), cdecl, entry 2 of Field_SwapSteps (.data 0x660970): Field_State +0x138 saved; member 1 in state 3: ObjTrio_SwapFields(0, 1, 1) and with 3 members and member 2 in state 3 (1, 2, 1); else that test for (0, 2, 1). Each member in state 3: Sprite_Current = Field_State = it, Field_MemberSprite(+0x89, i), +0x138 = saved (+0x29 = 4 if bit 0), rep movsd 0x29 dwords from actor record MoveScript_EffectState[+0x89] to +0x80, +0x148 its index, 0x904062[i] = +0x89; i > 0: Sprite_ShadeFadeBegin, +0 &= 0xBF, +0x5C = 1, +8 = ObjTrio +8 ^ 4; i > 0 and ObjTrio +0x138 bit 0 clear: the formation spot (Field_SpotFree, 0x52EC20) else Field_SpotFree at the leader's (answer unread); else Field_SpotFree at the leader's; +0x34 / +0x38 = 0x903858 / 0x90385C, +0x3E = MapView_GroundAt, Sprite_SetAnimation(+8). Then Sprite_Current = Field_State = ObjTrio, Field_Kind2X / Z = the leader's, F3Divisor 0x20, FAWord = s16 (ObjTrio +0x3E - word MapView_Elevation) / (max |moved| >> 13 low byte) (idiv) or 0, ObjTrio +9 = 4, +2 + 1. Queue: worldmap."
+evidence = "disasm 2026-09-25, 0x52EE70..0x52F1A5 (0x336 bytes), cdecl, entry 2 of Field_SwapSteps (.data 0x660970): Field_State +0x138 saved; member 1 in state 3: ObjTrio_SwapFields(0, 1, 1) and with 3 members and member 2 in state 3 (1, 2, 1); else that test for (0, 2, 1). Each member in state 3: Sprite_Current = Field_State = it, Field_MemberSprite(+0x89, i), +0x138 = saved (+0x29 = 4 if bit 0), rep movsd 0x29 dwords from actor record Character_IndexById[+0x89] to +0x80, +0x148 its index, 0x904062[i] = +0x89; i > 0: Sprite_ShadeFadeBegin, +0 &= 0xBF, +0x5C = 1, +8 = ObjTrio +8 ^ 4; i > 0 and ObjTrio +0x138 bit 0 clear: the formation spot (Field_SpotFree, 0x52EC20) else Field_SpotFree at the leader's (answer unread); else Field_SpotFree at the leader's; +0x34 / +0x38 = 0x903858 / 0x90385C, +0x3E = MapView_GroundAt, Sprite_SetAnimation(+8). Then Sprite_Current = Field_State = ObjTrio, Field_Kind2X / Z = the leader's, F3Divisor 0x20, FAWord = s16 (ObjTrio +0x3E - word MapView_Elevation) / (max |moved| >> 13 low byte) (idiv) or 0, ObjTrio +9 = 4, +2 + 1. Queue: worldmap."
 
 [[func]]
 pc = 0x52F1B0
@@ -50725,7 +50727,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_sc6.cpp"
-evidence = "disasm 2026-09-27 (round ten group SC6), 0x54A930..0x54ADD0 (0x4A0 bytes with its 6-entry jump table at 0x54ADB8, cmp 5): state 1 (Scena06_States entry 1). By Game_AreaNumber (0x27, 0x2E, 0x35, 0x4C, 0x57, 0x5C, 0x5E, each read afresh), counter 2 0x90384A and chapter 6's flags: two members' character records +0xB bit 0 cleared (MoveScript_EffectState 2, 5, 6) and call B 0..2 by the selector 0x90412C & 0x7F; ScriptFlags_Set40, run 0x11 and calls B / A by the selector; Scenario_CallA(0); Scena06_PartyCalls; 0x56D6F0; 0x532ED0(0x1D0000, 0x3E0000, 0x1B); Camera_Distance 0x480; the pass flags; areas 0x2D, 0x41, 0x57, 0x10 clear the counters; state 2 on every way out. 34 calls. pairs_propagated.json pairs 0x54AAD0, its jump-table case +0x1A0, with nine PSX addresses: not a function."
+evidence = "disasm 2026-09-27 (round ten group SC6), 0x54A930..0x54ADD0 (0x4A0 bytes with its 6-entry jump table at 0x54ADB8, cmp 5): state 1 (Scena06_States entry 1). By Game_AreaNumber (0x27, 0x2E, 0x35, 0x4C, 0x57, 0x5C, 0x5E, each read afresh), counter 2 0x90384A and chapter 6's flags: two members' character records +0xB bit 0 cleared (Character_IndexById 2, 5, 6) and call B 0..2 by the selector 0x90412C & 0x7F; ScriptFlags_Set40, run 0x11 and calls B / A by the selector; Scenario_CallA(0); Scena06_PartyCalls; 0x56D6F0; 0x532ED0(0x1D0000, 0x3E0000, 0x1B); Camera_Distance 0x480; the pass flags; areas 0x2D, 0x41, 0x57, 0x10 clear the counters; state 2 on every way out. 34 calls. pairs_propagated.json pairs 0x54AAD0, its jump-table case +0x1A0, with nine PSX addresses: not a function."
 
 [[func]]
 pc = 0x54ADD0
@@ -51861,7 +51863,7 @@ ret = "unsigned char"
 params = "unsigned member"
 status = "evidence"
 impl = "src/game/scena_se.cpp"
-evidence = "disasm 2026-09-27, group SE, 0x591CC0..0x591DA5 (0xE5 bytes), cdecl, no calls, every jump internal: the member's character record (CharacterRecords + 0xA4 * MoveScript_EffectState[member], both bytes unchecked) +0xB |= 3; Field_MemberCount below 3: the count + 1 and both party lists' slot (0x904062 / 0x904065 + the old count) = member, al 1; else the first slot i of the first list whose member's record +0xB lacks bit 1 and whose id stands at some j of the second: both take the member, al 1; none, al 0. Party_Join's list half, no sprite (docs/char-stats.md section 1 listed it). One E8 caller, chapter 6's 0x54CF00 (0x54D053), which does not read al. No PSX twin paired."
+evidence = "disasm 2026-09-27, group SE, 0x591CC0..0x591DA5 (0xE5 bytes), cdecl, no calls, every jump internal: the member's character record (CharacterRecords + 0xA4 * Character_IndexById[member], both bytes unchecked) +0xB |= 3; Field_MemberCount below 3: the count + 1 and both party lists' slot (0x904062 / 0x904065 + the old count) = member, al 1; else the first slot i of the first list whose member's record +0xB lacks bit 1 and whose id stands at some j of the second: both take the member, al 1; none, al 0. Party_Join's list half, no sprite (docs/char-stats.md section 1 listed it). One E8 caller, chapter 6's 0x54CF00 (0x54D053), which does not read al. No PSX twin paired."
 
 [[data]]
 pc = 0x64DDEC
@@ -51883,7 +51885,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_calls.cpp"
-evidence = "disasm 2026-09-27, group CALLS, 0x5198F0..0x519939 (0x49 bytes), every jump internal; reached only through the call tables (1 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(9, 3, 4, 0); Field_MemberCount 0; the record of MoveScript_EffectState[9] (read after the load) +9 = 9; Party_Join(9). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
+evidence = "disasm 2026-09-27, group CALLS, 0x5198F0..0x519939 (0x49 bytes), every jump internal; reached only through the call tables (1 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of Character_IndexById[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(9, 3, 4, 0); Field_MemberCount 0; the record of Character_IndexById[9] (read after the load) +9 = 9; Party_Join(9). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
 [[func]]
 pc = 0x519940
@@ -51896,7 +51898,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_calls.cpp"
-evidence = "disasm 2026-09-27, group CALLS, 0x519940..0x519982 (0x42 bytes), every jump internal; reached only through the call tables (1 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[0] +9 = 0; PartySet_Load(0, 3, 4, 0); Field_MemberCount 0; Party_Join(0), (3), (4). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
+evidence = "disasm 2026-09-27, group CALLS, 0x519940..0x519982 (0x42 bytes), every jump internal; reached only through the call tables (1 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of Character_IndexById[0] +9 = 0; PartySet_Load(0, 3, 4, 0); Field_MemberCount 0; Party_Join(0), (3), (4). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
 [[func]]
 pc = 0x519990
@@ -51935,7 +51937,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_calls.cpp"
-evidence = "disasm 2026-09-27, group CALLS, 0x5199B0..0x5199F9 (0x49 bytes), every jump internal; reached only through the call tables (2 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the records of MoveScript_EffectState[4] and [3] +0xB bit 0 cleared; 0x534030(4), 0x534030(3); tail 0x533E00. PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
+evidence = "disasm 2026-09-27, group CALLS, 0x5199B0..0x5199F9 (0x49 bytes), every jump internal; reached only through the call tables (2 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the records of Character_IndexById[4] and [3] +0xB bit 0 cleared; 0x534030(4), 0x534030(3); tail 0x533E00. PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
 [[func]]
 pc = 0x519A00
@@ -52013,7 +52015,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_calls.cpp"
-evidence = "disasm 2026-09-27, group CALLS, 0x519AE0..0x519B15 (0x35 bytes), every jump internal; reached only through the call tables (5 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[6] +0xB bit 0 set; Field_PartyLoad(0); Party_Join(5), (1), (6). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
+evidence = "disasm 2026-09-27, group CALLS, 0x519AE0..0x519B15 (0x35 bytes), every jump internal; reached only through the call tables (5 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of Character_IndexById[6] +0xB bit 0 set; Field_PartyLoad(0); Party_Join(5), (1), (6). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
 [[func]]
 pc = 0x519B20
@@ -52351,7 +52353,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_calls.cpp"
-evidence = "disasm 2026-09-27, group CALLS, 0x519E20..0x519E98 (0x78 bytes), every jump internal; reached only through the call tables (7 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(2); then the records of MoveScript_EffectState[1], [5], [6], [2] +0xB bit 0 cleared, each index read after the call; no palettes. PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
+evidence = "disasm 2026-09-27, group CALLS, 0x519E20..0x519E98 (0x78 bytes), every jump internal; reached only through the call tables (7 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(2); then the records of Character_IndexById[1], [5], [6], [2] +0xB bit 0 cleared, each index read after the call; no palettes. PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
 [[func]]
 pc = 0x519EA0
@@ -52377,7 +52379,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_calls.cpp"
-evidence = "disasm 2026-09-27, group CALLS, 0x519ED0..0x519EF5 (0x25 bytes), every jump internal; reached only through the call tables (8 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Field_MemberCount 0; the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; Party_Join(7). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
+evidence = "disasm 2026-09-27, group CALLS, 0x519ED0..0x519EF5 (0x25 bytes), every jump internal; reached only through the call tables (8 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Field_MemberCount 0; the record of Character_IndexById[10] (Char_WhelpSlot) +0xB bit 0 cleared; Party_Join(7). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
 [[func]]
 pc = 0x519F00
@@ -52767,7 +52769,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_calls.cpp"
-evidence = "disasm 2026-09-27, group CALLS, 0x51A490..0x51A4B4 (0x24 bytes), every jump internal; reached only through the call tables (10 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[5] +0xB bit 0 cleared; 0x534030(5); tail 0x533E00. PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
+evidence = "disasm 2026-09-27, group CALLS, 0x51A490..0x51A4B4 (0x24 bytes), every jump internal; reached only through the call tables (10 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of Character_IndexById[5] +0xB bit 0 cleared; 0x534030(5); tail 0x533E00. PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
 [[func]]
 pc = 0x51A4C0
@@ -52988,7 +52990,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_calls.cpp"
-evidence = "disasm 2026-09-27, group CALLS, 0x51A890..0x51A8D6 (0x46 bytes), every jump internal; reached only through the call tables (14 A[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(7, 4, 8, 0); Field_MemberCount 0; Party_Join(7), (4), (8); tail 0x533E00. PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
+evidence = "disasm 2026-09-27, group CALLS, 0x51A890..0x51A8D6 (0x46 bytes), every jump internal; reached only through the call tables (14 A[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of Character_IndexById[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(7, 4, 8, 0); Field_MemberCount 0; Party_Join(7), (4), (8); tail 0x533E00. PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
 [[func]]
 pc = 0x51A8E0
@@ -55357,7 +55359,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w0c.cpp"
-evidence = "disasm 2026-09-27 (round ten group AR0C), 0x405240..0x40531F (0xE0 bytes), cdecl: Field_ModeTailKinds slot 0x2E (a 4-entry jump table at +0xD0), by the s8 0x9039F4: 0 Field_Request not 2: Flags_Set(0x904030, 0x72), Field_ChangeArea(0x25, 0x2C8000, 0x270000, 1), 0x937F98 = 0xFE, state + 1 (re-read after the calls); 1 Field_Request 0: Msg_OpenScript(0xB5), Field_Request 2, state + 1; 2 Field_Request not 2: Transition_Start(1), Draw_PassFlags 0x1F, state + 1; 3 MoveScript_WaitWordDA 0: ScriptFlags_Clear40, kind and state 0, counter 3 = 0. docs/area_w0c.md."
+evidence = "disasm 2026-09-27 (round ten group AR0C), 0x405240..0x40531F (0xE0 bytes), cdecl: Field_ModeTailKinds slot 0x2E (a 4-entry jump table at +0xD0), by the s8 0x9039F4: 0 Field_Request not 2: Flags_Set(0x904030, 0x72), Field_ChangeArea(0x25, 0x2C8000, 0x270000, 1), 0x937F98 = 0xFE, state + 1 (re-read after the calls); 1 Field_Request 0: Msg_OpenScript(0xB5), Field_Request 2, state + 1; 2 Field_Request not 2: Transition_Start(1), Draw_PassFlags 0x1F, state + 1; 3 Transition_Busy 0: ScriptFlags_Clear40, kind and state 0, counter 3 = 0. docs/area_w0c.md."
 
 [[func]]
 pc = 0x405320
@@ -56006,7 +56008,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_sc7.cpp"
-evidence = "disasm 2026-09-27, group SC7, 0x551590..0x5518D4 (0x344 bytes): run 1: switch on the step 0..0xC (jump table of 13 at 0x5518A0; step 0 runs on into step 1): timed music 0x2B, counter 0 = 1, effects of kind 0x52 (the first at AreaMap_Elevation), Transition_Start(4), Music_FadeOut / FadeOutStop, CharacterRecords by MoveScript_EffectState [7] / [8] set, Scenario_CallA(0) and the change to area 0x20, again on counter 0x16 with flag 0, sound 0x204, on 0x1D the change to area 0x20 with flag 1 and Field_ScriptFlags |= 0x20, the run over."
+evidence = "disasm 2026-09-27, group SC7, 0x551590..0x5518D4 (0x344 bytes): run 1: switch on the step 0..0xC (jump table of 13 at 0x5518A0; step 0 runs on into step 1): timed music 0x2B, counter 0 = 1, effects of kind 0x52 (the first at AreaMap_Elevation), Transition_Start(4), Music_FadeOut / FadeOutStop, CharacterRecords by Character_IndexById [7] / [8] set, Scenario_CallA(0) and the change to area 0x20, again on counter 0x16 with flag 0, sound 0x204, on 0x1D the change to area 0x20 with flag 1 and Field_ScriptFlags |= 0x20, the run over."
 
 [[func]]
 pc = 0x5518E0
@@ -56145,7 +56147,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_sc7.cpp"
-evidence = "disasm 2026-09-27, group SC7, 0x553050..0x553621 (0x5D1 bytes): run 11: steps 0..0x15 and 0x64 through a byte table of 0x65 at 0x5535BC into a jump table of 23 at 0x553560 (0x553070 and 0x5534E0 are its cases 0 and 0x14; pairs_propagated.json pairs 0x553070 across sections): PartySet_LoadFirst(7, 8, 4) / LoadSecond(7, 8, 4, 0) with Kind2 at 0x170000 / 0xF0000; Scenario_CallA 5 and 6; effects of kind 0x5F / 0x60; message 9, Scena08_SetUpRecord4 and two CharacterRecords (by MoveScript_EffectState [7] and [4]) +0xB / +0x11 / +0x18 set; 0x532ED0 and Field_StartEventBattle(0x22) (step 0xB waits for it); flag 0x15; the change to area 0x2B; music 0x73, stream 3; message 0x22; music 0x64 and Kind2 at member 0; 0x56D6F0 and the run over."
+evidence = "disasm 2026-09-27, group SC7, 0x553050..0x553621 (0x5D1 bytes): run 11: steps 0..0x15 and 0x64 through a byte table of 0x65 at 0x5535BC into a jump table of 23 at 0x553560 (0x553070 and 0x5534E0 are its cases 0 and 0x14; pairs_propagated.json pairs 0x553070 across sections): PartySet_LoadFirst(7, 8, 4) / LoadSecond(7, 8, 4, 0) with Kind2 at 0x170000 / 0xF0000; Scenario_CallA 5 and 6; effects of kind 0x5F / 0x60; message 9, Scena08_SetUpRecord4 and two CharacterRecords (by Character_IndexById [7] and [4]) +0xB / +0x11 / +0x18 set; 0x532ED0 and Field_StartEventBattle(0x22) (step 0xB waits for it); flag 0x15; the change to area 0x2B; music 0x73, stream 3; message 0x22; music 0x64 and Kind2 at member 0; 0x56D6F0 and the run over."
 
 [[func]]
 pc = 0x553630
@@ -56833,7 +56835,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_sx.cpp"
-evidence = "disasm 2026-09-28, group SX, 0x533E50..0x533EE3 (0x94 bytes), every jump internal: each of the 8 CharacterRecords with +0xB bit 0: +0x1E = 0, Char_RecalcStats(record), +0x1C = +0x2E, HP +0x18 = +0x20, AP +0x1A = +0x22, word +0x10 = 0; then for i below Field_MemberCount (read once) 0x29 dwords from the record MoveScript_EffectState[first list 0x904062 byte i] (unchecked) to ObjTrio record i +0x80. 51 E8 sites: 11 chapter bands, five area overlays, Field_ModeTailRun. Party_RestoreAll 0x580630 (the inn) is the larger cousin. No PSX twin paired."
+evidence = "disasm 2026-09-28, group SX, 0x533E50..0x533EE3 (0x94 bytes), every jump internal: each of the 8 CharacterRecords with +0xB bit 0: +0x1E = 0, Char_RecalcStats(record), +0x1C = +0x2E, HP +0x18 = +0x20, AP +0x1A = +0x22, word +0x10 = 0; then for i below Field_MemberCount (read once) 0x29 dwords from the record Character_IndexById[first list 0x904062 byte i] (unchecked) to ObjTrio record i +0x80. 51 E8 sites: 11 chapter bands, five area overlays, Field_ModeTailRun. Party_RestoreAll 0x580630 (the inn) is the larger cousin. No PSX twin paired."
 
 [[func]]
 pc = 0x534030
@@ -56846,7 +56848,7 @@ ret = "void"
 params = "unsigned member"
 status = "evidence"
 impl = "src/game/scena_sx.cpp"
-evidence = "disasm 2026-09-28, group SX, 0x534030..0x534195 (0x166 bytes), cdecl, every jump internal: Party_JoinReset; the member byte's slot in the second list 0x904065 (the count when absent, unchecked) = 0xFF and bubbled to the end below count - 1; its slot in the first list 0x904062 = 0xFF; while s < Field_MemberCount - 1, a 0xFF slot takes the next id, the next ObjTrio record copied over (0x53 dwords; Sprite_Current it), +5 = s, +0x26 = s * 0x50, +0x27 = s + 0x78, +0x4B = 0xFF, +0x148 = MoveScript_EffectState[+0x89]. Then ObjTrio record count - 1 +0 = 0 (0x802BF4 at a count of 0), Member_ClearState(count - 1), and by the count read again: 3 - 0x904060 = 0 if at least 3; 2 - 0x904060 = 0; the count one less. 41 E8 / E9 sites, all in the CALLS block. No PSX twin paired."
+evidence = "disasm 2026-09-28, group SX, 0x534030..0x534195 (0x166 bytes), cdecl, every jump internal: Party_JoinReset; the member byte's slot in the second list 0x904065 (the count when absent, unchecked) = 0xFF and bubbled to the end below count - 1; its slot in the first list 0x904062 = 0xFF; while s < Field_MemberCount - 1, a 0xFF slot takes the next id, the next ObjTrio record copied over (0x53 dwords; Sprite_Current it), +5 = s, +0x26 = s * 0x50, +0x27 = s + 0x78, +0x4B = 0xFF, +0x148 = Character_IndexById[+0x89]. Then ObjTrio record count - 1 +0 = 0 (0x802BF4 at a count of 0), Member_ClearState(count - 1), and by the count read again: 3 - 0x904060 = 0 if at least 3; 2 - 0x904060 = 0; the count one less. 41 E8 / E9 sites, all in the CALLS block. No PSX twin paired."
 
 [[func]]
 pc = 0x534DB0
@@ -56866,7 +56868,7 @@ ret = "unsigned"
 params = "unsigned amount, unsigned member"
 status = "evidence"
 impl = "src/game/scena_sx.cpp"
-evidence = "disasm 2026-09-28, group SX, 0x537480..0x5374F7 (0x78 bytes), cdecl, no calls: the member byte's record (MoveScript_EffectState, unchecked) HP +0x18 minus the amount when HP is above its word (16-bit, unsigned), else HP 1; eax the amount taken (the argument whole, or HP - 1). Then the record Field_State +0x148 names: HP at most (+0x20 >> 2) sets bit 0x2000 of its word +0x10 (Field_ActorStates) and of Field_State word +0x90. 14 E8 sites: the nine field-action copies, 0x534C20, Field_Bit80Tick (twice; reads ax), SC11 twice. PSX 0x80168AB4 (pairs_propagated call)."
+evidence = "disasm 2026-09-28, group SX, 0x537480..0x5374F7 (0x78 bytes), cdecl, no calls: the member byte's record (Character_IndexById, unchecked) HP +0x18 minus the amount when HP is above its word (16-bit, unsigned), else HP 1; eax the amount taken (the argument whole, or HP - 1). Then the record Field_State +0x148 names: HP at most (+0x20 >> 2) sets bit 0x2000 of its word +0x10 (Field_ActorStates) and of Field_State word +0x90. 14 E8 sites: the nine field-action copies, 0x534C20, Field_Bit80Tick (twice; reads ax), SC11 twice. PSX 0x80168AB4 (pairs_propagated call)."
 
 [[func]]
 pc = 0x56D6F0
@@ -57030,7 +57032,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w1b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-27, 0x406670..0x4066E7 (0x78), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 0 (Area42_Handlers). Field_ActiveMember +0x80 bit 0 cleared; when MoveScript_EffectState[the leader's +0x89] is 1 and story flags 0xB and 0x11 are clear: flag 0xB set, byte Field_ScriptFlags |= 0x20, the mode tail armed (0x9039F3 = 7, 0x9039F4 = 0xA, word 0x9039F6 = 0x384). PSX twin: area 42 handler[0]. docs/area_w1b.md."
+evidence = "disasm 2026-09-27, 0x406670..0x4066E7 (0x78), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 0 (Area42_Handlers). Field_ActiveMember +0x80 bit 0 cleared; when Character_IndexById[the leader's +0x89] is 1 and story flags 0xB and 0x11 are clear: flag 0xB set, byte Field_ScriptFlags |= 0x20, the mode tail armed (0x9039F3 = 7, 0x9039F4 = 0xA, word 0x9039F6 = 0x384). PSX twin: area 42 handler[0]. docs/area_w1b.md."
 
 [[func]]
 pc = 0x4066F0
@@ -57052,7 +57054,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w1b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-27, 0x406710..0x406777 (0x68), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 2: Field_ActiveMember +0x80 bit 0 cleared; when MoveScript_EffectState[leader +0x89] is 1 and story flag 0x12 is clear: flag 0x12 set, Area42_CheckAll (answer not read), and unless flag 0xB, Field_ActiveMember's word +0x8A + 1. Handlers 3..5 (0x406780, 0x4067F0, 0x406860) are the same with flags 0x13..0x15. PSX twin: area 42 handler[2]. docs/area_w1b.md."
+evidence = "disasm 2026-09-27, 0x406710..0x406777 (0x68), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 2: Field_ActiveMember +0x80 bit 0 cleared; when Character_IndexById[leader +0x89] is 1 and story flag 0x12 is clear: flag 0x12 set, Area42_CheckAll (answer not read), and unless flag 0xB, Field_ActiveMember's word +0x8A + 1. Handlers 3..5 (0x406780, 0x4067F0, 0x406860) are the same with flags 0x13..0x15. PSX twin: area 42 handler[2]. docs/area_w1b.md."
 
 [[func]]
 pc = 0x406780
@@ -57815,7 +57817,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w1c.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409040..0x409073 (0x34 bytes), cdecl: area 48 +0x34[1] and +0x3C[0] (Area48_Handlers): Field_ActiveMember +0x80 bit 0 cleared; MoveScript_EffectState[byte 0x802DC9, the leader +0x89] (unchecked) at 1: 0x57C160(0x904030, 0xD), a story-flag toggle (bits[i >> 3] ^= 1 << (i & 7)). PSX twin: names/area_records.toml. docs/area_w1c.md."
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409040..0x409073 (0x34 bytes), cdecl: area 48 +0x34[1] and +0x3C[0] (Area48_Handlers): Field_ActiveMember +0x80 bit 0 cleared; Character_IndexById[byte 0x802DC9, the leader +0x89] (unchecked) at 1: 0x57C160(0x904030, 0xD), a story-flag toggle (bits[i >> 3] ^= 1 << (i & 7)). PSX twin: names/area_records.toml. docs/area_w1c.md."
 
 [[func]]
 pc = 0x409080
@@ -61707,7 +61709,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/scena_sc13.cpp"
-evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5670E0..0x5677AB (0x6CC bytes): jump table 0x567728 (33): run 7, steps 0..7, 0xA..0x1A, 0x1E..0x20 - steps 0..5 each a flag, a drop-in and the area codes 0x4204D0 / 0x420580 / 0x420670 / 0x420710 object set-up; a fade on counter 0 = 7; Music_Play(0x9F, 8); 0x532ED0 kind 0x25 and Field_StartEventBattle(0x33); area 0xAC, the field effects of kind 0x97 / 0x98 at (0x1C8000, 0x268000); message 0x22, Scenario_CallA(0xB); step 0x17 sets Draw_OtSlot 4 and Draw_SortOnX 0, drops member 0xA in, places the party (kind 0x22), restores records 1..7 at 0x903A70 (+0xB bit 0: +0x1C = +0x2E, +0x18 = +0x20, +0x1A = +0x22, +0x10 = 0) and copies 0xA4 bytes of the record MoveScript_EffectState names into each following members ObjTrio +0x80, then Field_StartEventBattle(0x34); flag 0x1F; 0x587B80, Sound_LoadStream(2), 0x591900(0xC), message 0x2A, Sound_ResumeAll, 0x56D6F0 and flag 0x31. 53 calls."
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5670E0..0x5677AB (0x6CC bytes): jump table 0x567728 (33): run 7, steps 0..7, 0xA..0x1A, 0x1E..0x20 - steps 0..5 each a flag, a drop-in and the area codes 0x4204D0 / 0x420580 / 0x420670 / 0x420710 object set-up; a fade on counter 0 = 7; Music_Play(0x9F, 8); 0x532ED0 kind 0x25 and Field_StartEventBattle(0x33); area 0xAC, the field effects of kind 0x97 / 0x98 at (0x1C8000, 0x268000); message 0x22, Scenario_CallA(0xB); step 0x17 sets Draw_OtSlot 4 and Draw_SortOnX 0, drops member 0xA in, places the party (kind 0x22), restores records 1..7 at 0x903A70 (+0xB bit 0: +0x1C = +0x2E, +0x18 = +0x20, +0x1A = +0x22, +0x10 = 0) and copies 0xA4 bytes of the record Character_IndexById names into each following members ObjTrio +0x80, then Field_StartEventBattle(0x34); flag 0x1F; 0x587B80, Sound_LoadStream(2), 0x591900(0xC), message 0x2A, Sound_ResumeAll, 0x56D6F0 and flag 0x31. 53 calls."
 
 [[func]]
 pc = 0x5677B0
@@ -66955,7 +66957,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w1f.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DB90..0x40E11F (0x590 bytes), cdecl: Field_ModeTailKinds[30] (armed by Area75_ArmTail30): by the s8 0x9039F4 through the byte table 0x40E0FC (36) and the jump table 0x40E09C (24 entries, 0x40E000 among them) inside the function; the exit tail-jumps to Area75_PhaseRun when the state it ends on is 6..0xE. States 0..4 and 0x1F..0x23 fades (Transition_Start, MoveScript_WaitWordDA), two Field_ChangeArea(0x4B, ...) and story flag 0x41; 5..0xD three press rounds by counter 0 and the two counters 0x93C34A / 0x93C34C; 0xF a timer back to 4; 0x14 / 0x15 a round from a choice; 0x1E the counts' words bumped. docs/area_w1f.md."
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DB90..0x40E11F (0x590 bytes), cdecl: Field_ModeTailKinds[30] (armed by Area75_ArmTail30): by the s8 0x9039F4 through the byte table 0x40E0FC (36) and the jump table 0x40E09C (24 entries, 0x40E000 among them) inside the function; the exit tail-jumps to Area75_PhaseRun when the state it ends on is 6..0xE. States 0..4 and 0x1F..0x23 fades (Transition_Start, Transition_Busy), two Field_ChangeArea(0x4B, ...) and story flag 0x41; 5..0xD three press rounds by counter 0 and the two counters 0x93C34A / 0x93C34C; 0xF a timer back to 4; 0x14 / 0x15 a round from a choice; 0x1E the counts' words bumped. docs/area_w1f.md."
 
 [[func]]
 pc = 0x40E120
@@ -70323,7 +70325,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0x416440..0x416475 (0x36), cdecl, capstone to the last instruction, group AR2E. area 106's handler 0 (Area106_Handlers 0x61C664; PSX 0x801F38E8): Field_ActiveMember +0x80 bit 0 cleared; MoveScript_EffectState 0x66972C by the leader's +0x89 at 0: Cond_ByteFE 1 and Sprite_Current +0 = 0. docs/area_w2e.md."
+evidence = "disasm 2026-09-28, 0x416440..0x416475 (0x36), cdecl, capstone to the last instruction, group AR2E. area 106's handler 0 (Area106_Handlers 0x61C664; PSX 0x801F38E8): Field_ActiveMember +0x80 bit 0 cleared; Character_IndexById 0x66972C by the leader's +0x89 at 0: Cond_ByteFE 1 and Sprite_Current +0 = 0. docs/area_w2e.md."
 
 [[func]]
 pc = 0x416480
@@ -70917,7 +70919,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w3f.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x4216D0..0x421B1A (0x44B bytes), cdecl: Field_ModeTailKinds[20]: by the s8 state - 2 through a byte table of 35 (+0x428) into a jump table of 18 (+0x3E0), both inside the extent: states 2, 4, 6 (armed by the cell hook) counter 3 = the state, state 8; 8 waits for counter 3 = 0 and disarms (ScriptFlags_Clear40); 0xA story flag 0x2C, sound 0x200, Kind2_Place(0), an effect of kind 0x13 (slot at 0x903850; none: stays); 0xB waits for counter 3 = 0x40 (timer 0, sound 0x204); 0xC timer + 1 and Area145_TrailStart(timer): 1 waits, 0 with flag 0x2D clear sounds 0x205 / 0x207 and state 0x1E, else sound 0x205 and state 0x14; 0x14 a kind 0x13 effect, Field_Kind2X / Z the leader's; 0x15 waits for Field_Kind2Hold; 0x16 clears 0x2C and disarms; 0x19..0x1A the leader's +1..+3, 0x17 frames, Field_ChangeArea(0x91, 0x3B8000, 0x5D0000, 0x82), flag 0x2E (sound 0x20C the first time); 0x1E..0x24 Transition_Start 8 and 9, a kind 0x3E effect, waits on Field_Kind2Hold / MoveScript_WaitWordDA / the timer, flag 0x2D, two area 0x91 changes, back to 0x16. Every other state (0, 1, 3, 5, 7, 9, 0xD..0x13, 0x17, 0x18, 0x1B..0x1D, above 0x24, negative) does nothing. 25 calls. docs/area_w3f.md."
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x4216D0..0x421B1A (0x44B bytes), cdecl: Field_ModeTailKinds[20]: by the s8 state - 2 through a byte table of 35 (+0x428) into a jump table of 18 (+0x3E0), both inside the extent: states 2, 4, 6 (armed by the cell hook) counter 3 = the state, state 8; 8 waits for counter 3 = 0 and disarms (ScriptFlags_Clear40); 0xA story flag 0x2C, sound 0x200, Kind2_Place(0), an effect of kind 0x13 (slot at 0x903850; none: stays); 0xB waits for counter 3 = 0x40 (timer 0, sound 0x204); 0xC timer + 1 and Area145_TrailStart(timer): 1 waits, 0 with flag 0x2D clear sounds 0x205 / 0x207 and state 0x1E, else sound 0x205 and state 0x14; 0x14 a kind 0x13 effect, Field_Kind2X / Z the leader's; 0x15 waits for Field_Kind2Hold; 0x16 clears 0x2C and disarms; 0x19..0x1A the leader's +1..+3, 0x17 frames, Field_ChangeArea(0x91, 0x3B8000, 0x5D0000, 0x82), flag 0x2E (sound 0x20C the first time); 0x1E..0x24 Transition_Start 8 and 9, a kind 0x3E effect, waits on Field_Kind2Hold / Transition_Busy / the timer, flag 0x2D, two area 0x91 changes, back to 0x16. Every other state (0, 1, 3, 5, 7, 9, 0xD..0x13, 0x17, 0x18, 0x1B..0x1D, above 0x24, negative) does nothing. 25 calls. docs/area_w3f.md."
 
 [[func]]
 pc = 0x421B20
@@ -72764,7 +72766,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w2f.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR2F), 0x416EC0..0x416F05 (0x46 bytes), cdecl: area 108 +0x3C[8] = +0x34[11]: active member +0x80 bit 0 cleared; MoveScript_EffectState[leader +0x89] 5: story flag 0x30, MoveCmd_TestFB(1, 0xB), Sprite_Current +0 = 0. PSX twin: names/area_records.toml. docs/area_w2f.md."
+evidence = "disasm 2026-09-28 (round ten group AR2F), 0x416EC0..0x416F05 (0x46 bytes), cdecl: area 108 +0x3C[8] = +0x34[11]: active member +0x80 bit 0 cleared; Character_IndexById[leader +0x89] 5: story flag 0x30, MoveCmd_TestFB(1, 0xB), Sprite_Current +0 = 0. PSX twin: names/area_records.toml. docs/area_w2f.md."
 
 [[func]]
 pc = 0x416F10
@@ -74789,7 +74791,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w4a.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0x4260F0..0x42643F (0x350), cdecl, capstone to the last instruction, group AR4A. Field_ModeTailKinds[32] (0x662D68): a switch on the s8 0x9039F4 (above 0x20 unsigned nothing) through the byte table 0x426440 and the jump table 0x426408 (14) inside the function: state 0 Party_DropIn(0); 1 on variable 6 0x18 Field_ChangeArea(0x95, 0x80000, 0xC0000, 0x81); 5 / 6 a sound and a countdown 0x9039F6; 0xA / 0xB / 0xC party drop-in 5, a change to area 0xA7 by Cond_ByteFD, flags 0x4B / 0x4C; 0x14 / 0x15 drop-ins 2 / 8; 0x18 a change to area 0xA7 by variable 5 and flags 0x48..0x4A; 0x1E..0x20 a wait on MoveScript_WaitWordDA, Cond_ByteFE = 0x20, a countdown, flag 0x90, Field_ChangeArea(0xA8, 0x150000, 0x40000, 7), Field_ScriptFlags2 bit 6. docs/area_w4a.md section 6 has every case. docs/area_w4a.md."
+evidence = "disasm 2026-09-28, 0x4260F0..0x42643F (0x350), cdecl, capstone to the last instruction, group AR4A. Field_ModeTailKinds[32] (0x662D68): a switch on the s8 0x9039F4 (above 0x20 unsigned nothing) through the byte table 0x426440 and the jump table 0x426408 (14) inside the function: state 0 Party_DropIn(0); 1 on variable 6 0x18 Field_ChangeArea(0x95, 0x80000, 0xC0000, 0x81); 5 / 6 a sound and a countdown 0x9039F6; 0xA / 0xB / 0xC party drop-in 5, a change to area 0xA7 by Cond_ByteFD, flags 0x4B / 0x4C; 0x14 / 0x15 drop-ins 2 / 8; 0x18 a change to area 0xA7 by variable 5 and flags 0x48..0x4A; 0x1E..0x20 a wait on Transition_Busy, Cond_ByteFE = 0x20, a countdown, flag 0x90, Field_ChangeArea(0xA8, 0x150000, 0x40000, 7), Field_ScriptFlags2 bit 6. docs/area_w4a.md section 6 has every case. docs/area_w4a.md."
 
 [[func]]
 pc = 0x426470
@@ -77448,7 +77450,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w4e.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B7F0..0x42B9E7 (0x1F7 bytes), cdecl: Field_ModeTailKinds[53]: by the s8 state through a byte table of 31 (+0x1D8) into a jump table of 8 (+0x1B8), both inside the extent: 0 message 0x6D, request 2, state 1 (1 does nothing); 2 Transition_Start(0), state 3; 3 once MoveScript_WaitWordDA is 0: Draw_PassFlags 0, Sound_StopMusic, 0x42C2D0, Sound_LoadStream(0), state 4; 4 once Sound_StreamDone: story flag 0x82, the walk counters reset, count + 1, Field_StatusBits bit 0, state 0xA; 0xA Field_ChangeArea(saved area, x, z, 4), Field_ScriptFlags2 bit 6, 0x904152 0, flag 0x77 cleared, disarm; 0x14 disarm; 0x1E Field_ChangeArea(0x96, 0x180000, 0x300000, 1) and the same, Field_StatusBits bit 0 cleared. 14 calls. docs/area_w4e.md."
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B7F0..0x42B9E7 (0x1F7 bytes), cdecl: Field_ModeTailKinds[53]: by the s8 state through a byte table of 31 (+0x1D8) into a jump table of 8 (+0x1B8), both inside the extent: 0 message 0x6D, request 2, state 1 (1 does nothing); 2 Transition_Start(0), state 3; 3 once Transition_Busy is 0: Draw_PassFlags 0, Sound_StopMusic, 0x42C2D0, Sound_LoadStream(0), state 4; 4 once Sound_StreamDone: story flag 0x82, the walk counters reset, count + 1, Field_StatusBits bit 0, state 0xA; 0xA Field_ChangeArea(saved area, x, z, 4), Field_ScriptFlags2 bit 6, 0x904152 0, flag 0x77 cleared, disarm; 0x14 disarm; 0x1E Field_ChangeArea(0x96, 0x180000, 0x300000, 1) and the same, Field_StatusBits bit 0 cleared. 14 calls. docs/area_w4e.md."
 
 [[func]]
 pc = 0x42B9F0
@@ -77474,7 +77476,7 @@ ret = "unsigned short"
 params = "unsigned who"
 status = "evidence"
 impl = "src/game/area_w4e.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BA90..0x42BBAB (0x11B bytes), cdecl: called raw by chapter code 0x5677F3, 0x567833, 0x567873, 0x5678B3, 0x5678F3 (SC13) and 0x56AEE1 (SC15): i = index of the member byte in Area191_TalkKeys (5 none), a = 9i, b = the walk count 0x90405E at most 8, c = CharacterRecords[MoveScript_EffectState[who]] +0x1E; row 14 bit 0xA: Area191_TalkMessageB(a, who, b, c); else a + 8 (c from 8), + 7 (c above 4, b below 7) or + Area191_TalkSteps[b]; ax the byte of Area191_TalkMessagesB (chapter row flag 2) or _A. A gap of the tool. docs/area_w4e.md."
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BA90..0x42BBAB (0x11B bytes), cdecl: called raw by chapter code 0x5677F3, 0x567833, 0x567873, 0x5678B3, 0x5678F3 (SC13) and 0x56AEE1 (SC15): i = index of the member byte in Area191_TalkKeys (5 none), a = 9i, b = the walk count 0x90405E at most 8, c = CharacterRecords[Character_IndexById[who]] +0x1E; row 14 bit 0xA: Area191_TalkMessageB(a, who, b, c); else a + 8 (c from 8), + 7 (c above 4, b below 7) or + Area191_TalkSteps[b]; ax the byte of Area191_TalkMessagesB (chapter row flag 2) or _A. A gap of the tool. docs/area_w4e.md."
 
 [[func]]
 pc = 0x42BBB0
@@ -77740,7 +77742,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w4f.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR4F, capstone to the last instruction); extent agrees with tools/area_rows.py --unit AREA192), 0x42BE10..0x42BFFA (0x1EB bytes), cdecl: Field_ModeTailKinds[54] (0x662DC0): by the s8 state through a byte table of 31 (+0x1CC) into a jump table of 8 (+0x1AC), both in the extent; the ja makes every other and every negative state nothing. 0: message 0x6D, Field_Request 2, state 1. 2: unless request 2, Transition_Start(0), state 3. 3: once MoveScript_WaitWordDA 0: Draw_PassFlags 0, Sound_StopMusic, Area192_RestoreCharacters, Sound_LoadStream(0), state 4. 4: once Sound_StreamDone: story flag 0x82, Field_StatusBits bit 0 cleared (read after the call) with the word 0x90405C 0x1E0 and bytes 0x929EC1 / 0x9036D0 0, state 0xA. 0xA: ScriptFlags_Clear40, Field_ChangeArea(word 0x904150, 0x904148, 0x90414C, 4) (the return point; the area pushed from cx with the register's high half unread), Field_ScriptFlags2 bit 6, byte 0x904152 0, story flag 0x77 cleared, disarmed. 0x14: ScriptFlags_Clear40, disarmed. 0x1E: ScriptFlags_Clear40, Field_ChangeArea(0x96, 0x180000, 0x300000, 1), bit 6, 0x904152 0, flag 0x77 cleared, disarmed, Field_StatusBits bit 0 cleared. docs/area_w4f.md."
+evidence = "disasm 2026-09-28 (round ten group AR4F, capstone to the last instruction); extent agrees with tools/area_rows.py --unit AREA192), 0x42BE10..0x42BFFA (0x1EB bytes), cdecl: Field_ModeTailKinds[54] (0x662DC0): by the s8 state through a byte table of 31 (+0x1CC) into a jump table of 8 (+0x1AC), both in the extent; the ja makes every other and every negative state nothing. 0: message 0x6D, Field_Request 2, state 1. 2: unless request 2, Transition_Start(0), state 3. 3: once Transition_Busy 0: Draw_PassFlags 0, Sound_StopMusic, Area192_RestoreCharacters, Sound_LoadStream(0), state 4. 4: once Sound_StreamDone: story flag 0x82, Field_StatusBits bit 0 cleared (read after the call) with the word 0x90405C 0x1E0 and bytes 0x929EC1 / 0x9036D0 0, state 0xA. 0xA: ScriptFlags_Clear40, Field_ChangeArea(word 0x904150, 0x904148, 0x90414C, 4) (the return point; the area pushed from cx with the register's high half unread), Field_ScriptFlags2 bit 6, byte 0x904152 0, story flag 0x77 cleared, disarmed. 0x14: ScriptFlags_Clear40, disarmed. 0x1E: ScriptFlags_Clear40, Field_ChangeArea(0x96, 0x180000, 0x300000, 1), bit 6, 0x904152 0, flag 0x77 cleared, disarmed, Field_StatusBits bit 0 cleared. docs/area_w4f.md."
 
 [[func]]
 pc = 0x42C000
@@ -81766,7 +81768,7 @@ ret = "void"
 params = "unsigned word"
 impl = "src/game/boss_se.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BAD0..0x43BAFD (0x2E bytes), one call: kind 30 hook entry 2 (BattleEnemy_RunAll's): with 0x904AA8 bit 1 and MoveScript_WaitWordDA 0, BossActor_ClearBit40(0), the word 0x904AA8 &= 0xFFFD, Draw_PassFlags = 0. docs/boss_se.md."
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BAD0..0x43BAFD (0x2E bytes), one call: kind 30 hook entry 2 (BattleEnemy_RunAll's): with 0x904AA8 bit 1 and Transition_Busy 0, BossActor_ClearBit40(0), the word 0x904AA8 &= 0xFFFD, Draw_PassFlags = 0. docs/boss_se.md."
 
 [[func]]
 pc = 0x43BB00
@@ -83053,7 +83055,7 @@ ret = "void"
 params = "unsigned word"
 impl = "src/game/boss_sh.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E5D0..0x43E5F3 (0x24 bytes), no calls: BossGaist_Hooks 2 (BattleEnemy_RunAll's call): with round-flag bit 1 (0x904AA8) set and MoveScript_WaitWordDA 0, the bit cleared (a word and) and Draw_PassFlags = 0. The word is not read. docs/boss_sh.md."
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E5D0..0x43E5F3 (0x24 bytes), no calls: BossGaist_Hooks 2 (BattleEnemy_RunAll's call): with round-flag bit 1 (0x904AA8) set and Transition_Busy 0, the bit cleared (a word and) and Draw_PassFlags = 0. The word is not read. docs/boss_sh.md."
 
 [[func]]
 pc = 0x43E600
@@ -85758,7 +85760,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42D7A0..0x42D7E0 (0x41 bytes): BATE state 3's 0x64ADC8[1] (hidden in 0x42D710's catalogue extent): Menu_DrawBackdrop(0x903A5B), BattleExtra_DrawTally(0x37, 0x37); once MoveScript_WaitWordDA is 0, BattleExtra_ApplyTally, 0x929F08 = 0, 0x929F02 = 0, 0x929F01 + 1 (read after the call). PSX twin 0x801D2114 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42D7A0..0x42D7E0 (0x41 bytes): BATE state 3's 0x64ADC8[1] (hidden in 0x42D710's catalogue extent): Menu_DrawBackdrop(0x903A5B), BattleExtra_DrawTally(0x37, 0x37); once Transition_Busy is 0, BattleExtra_ApplyTally, 0x929F08 = 0, 0x929F02 = 0, 0x929F01 + 1 (read after the call). PSX twin 0x801D2114 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
 
 [[func]]
 pc = 0x42D7F0
@@ -85776,7 +85778,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42D880..0x42D8B9 (0x3a bytes): 0x64ADBC[2]: once MoveScript_WaitWordDA is 0, 0x929F04 = 0, 0x929F00 = 1, 0x929F01 = 0x929F02 = 0; else the backdrop and the tally. PSX twin 0x801D2290 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42D880..0x42D8B9 (0x3a bytes): 0x64ADBC[2]: once Transition_Busy is 0, 0x929F04 = 0, 0x929F00 = 1, 0x929F01 = 0x929F02 = 0; else the backdrop and the tally. PSX twin 0x801D2290 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
 
 [[func]]
 pc = 0x42D8C0
@@ -85830,7 +85832,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DC20..0x42DC70 (0x51 bytes): 0x64ADEC[1]: the backdrop; once MoveScript_WaitWordDA is 0, Sound_PlayEffect(0x102), 0x42E0E0(), 0x929F04 = 4, 0x929F02 + 1 (read after), memcpy (0x5B9450) of 5 bytes 0x669CE8 over character record 7's first five. docs/battle_e1.md."
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DC20..0x42DC70 (0x51 bytes): 0x64ADEC[1]: the backdrop; once Transition_Busy is 0, Sound_PlayEffect(0x102), 0x42E0E0(), 0x929F04 = 4, 0x929F02 + 1 (read after), memcpy (0x5B9450) of 5 bytes 0x669CE8 over character record 7's first five. docs/battle_e1.md."
 
 [[func]]
 pc = 0x42DC80
@@ -85893,7 +85895,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42E090..0x42E0D2 (0x43 bytes): 0x64AE00[1]: once MoveScript_WaitWordDA is 0, 0x929F04 = 0, 0x929F00 = 1, 0x929F01 = 0x929F02 = 0, memcpy of 5 bytes 0x669CE0 (DIV-0020's whelp slot; its check reads 0x42E09D, which the inject leaves) over character record 7's first five; else the backdrop. docs/battle_e1.md."
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42E090..0x42E0D2 (0x43 bytes): 0x64AE00[1]: once Transition_Busy is 0, 0x929F04 = 0, 0x929F00 = 1, 0x929F01 = 0x929F02 = 0, memcpy of 5 bytes 0x669CE0 (DIV-0020's whelp slot; its check reads 0x42E09D, which the inject leaves) over character record 7's first five; else the backdrop. docs/battle_e1.md."
 
 [[func]]
 pc = 0x42ED90
@@ -86083,7 +86085,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432460..0x4325E5 (0x186 bytes): BattleLoss_Steps[1]: once MoveScript_WaitWordDA is 0, window 0's +0 = 0; members 0 / 1 / 2 (count at least 1, 2, exactly 3, re-read): Sprite_Current, Sprite_EnsureAnimation(+8 + 0x1C), +0x29 = 1, +0x24 |= 0x80, +0x2E / +0x30 from the words at 0x64AFD8 + 24 * count + 8 * member (+0, +4), Sprite_ReleaseTint; 0x494E70(), BattleTask_ClearAll, Transition_Start(0xE), 0x904AA3 + 1. PSX twin 0x801EEC7C (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432460..0x4325E5 (0x186 bytes): BattleLoss_Steps[1]: once Transition_Busy is 0, window 0's +0 = 0; members 0 / 1 / 2 (count at least 1, 2, exactly 3, re-read): Sprite_Current, Sprite_EnsureAnimation(+8 + 0x1C), +0x29 = 1, +0x24 |= 0x80, +0x2E / +0x30 from the words at 0x64AFD8 + 24 * count + 8 * member (+0, +4), Sprite_ReleaseTint; 0x494E70(), BattleTask_ClearAll, Transition_Start(0xE), 0x904AA3 + 1. PSX twin 0x801EEC7C (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
 
 [[func]]
 pc = 0x4325F0
@@ -86092,7 +86094,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE1), 0x4325F0..0x432621 (0x32 bytes): BattleLoss_Steps[2]: BattleLoss_DrawBlack, BattleLoss_DrawPanels(0x80); once MoveScript_WaitWordDA is 0, 0x904B70 = 0x2C, 0x904AA3 + 1. PSX twin 0x801EEEB8 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x4325F0..0x432621 (0x32 bytes): BattleLoss_Steps[2]: BattleLoss_DrawBlack, BattleLoss_DrawPanels(0x80); once Transition_Busy is 0, 0x904B70 = 0x2C, 0x904AA3 + 1. PSX twin 0x801EEEB8 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
 
 [[func]]
 pc = 0x432630
@@ -86110,7 +86112,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432750..0x4327E8 (0x99 bytes): BattleLoss_Steps[4]: the black, the panels, the caption; once MoveScript_WaitWordDA is 0, Sprite_ReleaseTint of the three members, Window_ResetAll, 0x904AE9 / 0x904AE5 / 0x904AAA / 0x904AA0..0x904AA4 = 0, 0x494E70(), BattleTask_ClearAll, Sound_StopChannels, Task_Restart(Boot_Task). PSX twin 0x801EF0A8 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432750..0x4327E8 (0x99 bytes): BattleLoss_Steps[4]: the black, the panels, the caption; once Transition_Busy is 0, Sprite_ReleaseTint of the three members, Window_ResetAll, 0x904AE9 / 0x904AE5 / 0x904AAA / 0x904AA0..0x904AA4 = 0, 0x494E70(), BattleTask_ClearAll, Sound_StopChannels, Task_Restart(Boot_Task). PSX twin 0x801EF0A8 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
 
 [[func]]
 pc = 0x4327F0
@@ -90722,7 +90724,7 @@ ret = "void"
 params = "void"
 impl = "src/game/field_e2.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5939D0..0x5939E8 (0x19 bytes) ItemTrade_OpenSteps[1]: once MoveScript_WaitWordDA is 0, 0x93985C = 1 and 0x93985E = 0. PSX twin 0x800F510C table-anchored, a hypothesis. docs/field_e2.md."
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5939D0..0x5939E8 (0x19 bytes) ItemTrade_OpenSteps[1]: once Transition_Busy is 0, 0x93985C = 1 and 0x93985E = 0. PSX twin 0x800F510C table-anchored, a hypothesis. docs/field_e2.md."
 
 [[func]]
 pc = 0x5939F0
@@ -93797,7 +93799,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_1g.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round thirteen group E1G, capstone to the last instruction), 0x594240..0x5942B3 (0x74 bytes), hidden in Sprite_ClutWord's catalog extent, ItemTrade_LeaveSteps[1]: MoveScript_WaitWordDA 0 - Game_Step = 1; else the prompt ItemTrade_LeaveAsk draws (the same seven calls). PSX twin 0x800F5DA8 table-anchored. docs/effect_1g.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1G, capstone to the last instruction), 0x594240..0x5942B3 (0x74 bytes), hidden in Sprite_ClutWord's catalog extent, ItemTrade_LeaveSteps[1]: Transition_Busy 0 - Game_Step = 1; else the prompt ItemTrade_LeaveAsk draws (the same seven calls). PSX twin 0x800F5DA8 table-anchored. docs/effect_1g.md."
 
 [[func]]
 pc = 0x5942C0
@@ -94838,7 +94840,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x52A370..0x52A3E3 (0x74 bytes): LeaderPanel_Stage8Steps[0]; MoveScript_WaitWordDA clear: Task_Sleep(1), Field_Kind2X = 0xF0000, Field_Kind2Z = 0x3C0000, Field_ViewReset, 0x52CE20, Transition_Start(3); Field_State +0x89 clear Sprite_SetAnimationAt(0xA, 2), else Sprite_SetAnimation(0xB); +3 = 1. PSX twin 0x801DC7CC (analysis/pairs_propagated.json, callers; an AREA overlay's copy, unnamed in the sibling), a hypothesis, not read. docs/effect_1e.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x52A370..0x52A3E3 (0x74 bytes): LeaderPanel_Stage8Steps[0]; Transition_Busy clear: Task_Sleep(1), Field_Kind2X = 0xF0000, Field_Kind2Z = 0x3C0000, Field_ViewReset, 0x52CE20, Transition_Start(3); Field_State +0x89 clear Sprite_SetAnimationAt(0xA, 2), else Sprite_SetAnimation(0xB); +3 = 1. PSX twin 0x801DC7CC (analysis/pairs_propagated.json, callers; an AREA overlay's copy, unnamed in the sibling), a hypothesis, not read. docs/effect_1e.md."
 
 [[func]]
 pc = 0x52A3F0
@@ -94848,7 +94850,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x52A3F0..0x52A417 (0x28 bytes): LeaderPanel_Stage8Steps[1]; MoveScript_WaitWordDA clear: +2 = 1, +3 = +4 = 0. PSX twin 0x801DC86C (analysis/pairs_propagated.json, gap44; an AREA overlay's copy, unnamed in the sibling), a hypothesis, not read. docs/effect_1e.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x52A3F0..0x52A417 (0x28 bytes): LeaderPanel_Stage8Steps[1]; Transition_Busy clear: +2 = 1, +3 = +4 = 0. PSX twin 0x801DC86C (analysis/pairs_propagated.json, gap44; an AREA overlay's copy, unnamed in the sibling), a hypothesis, not read. docs/effect_1e.md."
 
 [[func]]
 pc = 0x52A420
@@ -105983,7 +105985,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_4d.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-10-03 (round thirteen group E4D, capstone to the last instruction), 0x48D220..0x48D269 (0x4A bytes), cdecl: a spark every fourth frame; the debris; the sparks moved; once MoveScript_WaitWordDA is 0 Transition_Start(9), Draw_PassFlags 0, +1 up. Reached by EffectKind97_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_4d.md."
+evidence = "disasm 2026-10-03 (round thirteen group E4D, capstone to the last instruction), 0x48D220..0x48D269 (0x4A bytes), cdecl: a spark every fourth frame; the debris; the sparks moved; once Transition_Busy is 0 Transition_Start(9), Draw_PassFlags 0, +1 up. Reached by EffectKind97_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_4d.md."
 
 [[func]]
 pc = 0x48D270
@@ -105996,7 +105998,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_4d.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-10-03 (round thirteen group E4D, capstone to the last instruction), 0x48D270..0x48D286 (0x17 bytes), cdecl: once MoveScript_WaitWordDA is 0 the step 0x8034E5 = 0x14 and a tail jmp to Effect_Release. Reached by EffectKind97_States[5]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_4d.md."
+evidence = "disasm 2026-10-03 (round thirteen group E4D, capstone to the last instruction), 0x48D270..0x48D286 (0x17 bytes), cdecl: once Transition_Busy is 0 the step 0x8034E5 = 0x14 and a tail jmp to Effect_Release. Reached by EffectKind97_States[5]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_4d.md."
 
 [[func]]
 pc = 0x48D290
@@ -118584,7 +118586,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1g.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B120..0x52B155 (0x36 bytes): LeaderPanel_Stage11Steps[1]: MoveScript_WaitWordDA clear: bytes 0x93985C..0x93985F and Draw_PassFlags cleared, Game_Step = 3, +3 up. docs/rest_1g.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B120..0x52B155 (0x36 bytes): LeaderPanel_Stage11Steps[1]: Transition_Busy clear: bytes 0x93985C..0x93985F and Draw_PassFlags cleared, Game_Step = 3, +3 up. docs/rest_1g.md."
 
 [[func]]
 pc = 0x52B160
@@ -118606,7 +118608,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1g.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B180..0x52B1A9 (0x2A bytes): LeaderPanel_Stage11Steps[3]: MoveScript_WaitWordDA clear: record 1 up, +2 = 1, +3 = 0. docs/rest_1g.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B180..0x52B1A9 (0x2A bytes): LeaderPanel_Stage11Steps[3]: Transition_Busy clear: record 1 up, +2 = 1, +3 = 0. docs/rest_1g.md."
 
 [[func]]
 pc = 0x52B1B0
@@ -119418,7 +119420,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0x528940..0x528965 (0x26 bytes), LeaderPanel_Stage0Steps[1], no calls: MoveScript_WaitWordDA 0: effect record 4's +6 (0x7E13E6) = 0 and +1 (0x7E13E1) up, +3 up. Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0x528940..0x528965 (0x26 bytes), LeaderPanel_Stage0Steps[1], no calls: Transition_Busy 0: effect record 4's +6 (0x7E13E6) = 0 and +1 (0x7E13E1) up, +3 up. Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x528970
@@ -120267,7 +120269,7 @@ ret = "void"
 params = "unsigned amount, unsigned member"
 impl = "src/game/rest_2a.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5373F0..0x537478 (0x89 bytes), cdecl, no calls: the member byte's record (MoveScript_EffectState, unchecked; stride 0xA4): HP +0x18 below its maximum +0x20 (u16) - HP = (HP + amount) as a u16, held at the maximum; then the record Field_State +0x148 names: HP above (+0x20 >> 2) clears 0x2000 of its +0x10 and of Field_State word +0x90. HP at or above the maximum: nothing at all. eax is no answer. Called by Field_EquipTick (three sites). PSX twin 0x80168954 (pairs_propagated call-anchored). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5373F0..0x537478 (0x89 bytes), cdecl, no calls: the member byte's record (Character_IndexById, unchecked; stride 0xA4): HP +0x18 below its maximum +0x20 (u16) - HP = (HP + amount) as a u16, held at the maximum; then the record Field_State +0x148 names: HP above (+0x20 >> 2) clears 0x2000 of its +0x10 and of Field_State word +0x90. HP at or above the maximum: nothing at all. eax is no answer. Called by Field_EquipTick (three sites). PSX twin 0x80168954 (pairs_propagated call-anchored). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
 [[func]]
 pc = 0x537500
@@ -120277,7 +120279,7 @@ ret = "unsigned"
 params = "unsigned amount, unsigned member"
 impl = "src/game/rest_2a.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537500..0x537537 (0x38 bytes), cdecl, no calls: the member byte's record (MoveScript_EffectState, unchecked) AP +0x1A minus the amount while AP is above its word (16-bit, unsigned), else AP 1; eax the amount taken (the argument whole, or AP - 1). Char_LoseHp's twin without its actor test. Called by Field_FloorHurt. PSX twin 0x80168BC0 (pairs_propagated call). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537500..0x537537 (0x38 bytes), cdecl, no calls: the member byte's record (Character_IndexById, unchecked) AP +0x1A minus the amount while AP is above its word (16-bit, unsigned), else AP 1; eax the amount taken (the argument whole, or AP - 1). Char_LoseHp's twin without its actor test. Called by Field_FloorHurt. PSX twin 0x80168BC0 (pairs_propagated call). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
 [[func]]
 pc = 0x5375A0
@@ -121416,7 +121418,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2d.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A510..0x58A56E (0x5F bytes), cdecl: FieldMenuStatus_States[1]: TextRecord_Set(0, 8, CharacterRecords + 0xA4 * MoveScript_EffectState[byte 0x904062[s8 0x929F06]]), window 11's word +0x10 (0x8032FC) = 0x12, Menu_DrawBackdrop; the timer - 1, the state + 1 when it was 0. docs/rest_2d.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A510..0x58A56E (0x5F bytes), cdecl: FieldMenuStatus_States[1]: TextRecord_Set(0, 8, CharacterRecords + 0xA4 * Character_IndexById[byte 0x904062[s8 0x929F06]]), window 11's word +0x10 (0x8032FC) = 0x12, Menu_DrawBackdrop; the timer - 1, the state + 1 when it was 0. docs/rest_2d.md."
 
 [[func]]
 pc = 0x58A570
@@ -122839,7 +122841,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F7E0..0x58F886 (0xA7 bytes): TacticsMembers_Steps[0]: the backdrop; at 0x929F04's end each party record 4.. whose member (0x904062 + 3 rec +0xB + rec +0xA, through MoveScript_EffectState) has CharacterRecords +0xB bit 1 gets +0xC = 1; 0x929F02 + 1. docs/rest_2f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F7E0..0x58F886 (0xA7 bytes): TacticsMembers_Steps[0]: the backdrop; at 0x929F04's end each party record 4.. whose member (0x904062 + 3 rec +0xB + rec +0xA, through Character_IndexById) has CharacterRecords +0xB bit 1 gets +0xC = 1; 0x929F02 + 1. docs/rest_2f.md."
 
 [[func]]
 pc = 0x58F890
@@ -123437,7 +123439,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2c.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5806F0..0x5808D8 (0x1E9 bytes): no arguments (called by FieldSave_Write and Save_QuickWrite): the live block 0x9039E0 gathers the chapter dwords 0x8034E0..0x8034EC, the counter bytes 0x903848..0x90384B, ObjTrio record 0's +0x34 / +0x38 / +8, Game_AreaNumber, 0x903A50 = 0; the summary 0x904680 the buttons' dwords 0x903580..0x90358C and word 0x903590, strncpy (0x5B9450) of the leader's record name 5 + 4 bytes (record MoveScript_EffectState[party id 0]), the three party ids (id 4 is 0xB unless 0x90412C & 0x7F is 5 or 0xC), record 0's +0xA / +0xC, 0x9040C8, the style bytes 0x903A5A / 5B, Flags_Test(0x904030, 0x92); 0x90412D = 0x9039A2; then 0x10B0 bytes copied to 0x92A0E0 and summed (the low word to 0x92A150), 0xD50 more cleared, the summary copied to slot 0x9036D4's (ours aborts past 16). save-files.md had it by position; read whole here. docs/rest_2c.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5806F0..0x5808D8 (0x1E9 bytes): no arguments (called by FieldSave_Write and Save_QuickWrite): the live block 0x9039E0 gathers the chapter dwords 0x8034E0..0x8034EC, the counter bytes 0x903848..0x90384B, ObjTrio record 0's +0x34 / +0x38 / +8, Game_AreaNumber, 0x903A50 = 0; the summary 0x904680 the buttons' dwords 0x903580..0x90358C and word 0x903590, strncpy (0x5B9450) of the leader's record name 5 + 4 bytes (record Character_IndexById[party id 0]), the three party ids (id 4 is 0xB unless 0x90412C & 0x7F is 5 or 0xC), record 0's +0xA / +0xC, 0x9040C8, the style bytes 0x903A5A / 5B, Flags_Test(0x904030, 0x92); 0x90412D = 0x9039A2; then 0x10B0 bytes copied to 0x92A0E0 and summed (the low word to 0x92A150), 0xD50 more cleared, the summary copied to slot 0x9036D4's (ours aborts past 16). save-files.md had it by position; read whole here. docs/rest_2c.md."
 
 [[func]]
 pc = 0x580A40
@@ -124038,7 +124040,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E0A0..0x57E0D4 (0x35 bytes): Shisu_OpenStates[1] - Menu_DrawBackdrop(byte 0x903A5B); MoveScript_WaitWordDA 0 (read after): 0x929F01 = 0, the word 0x803194 (WindowRecords[1] +0x10) = 0x2B, 0x929F00 + 1. docs/rest_2b.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E0A0..0x57E0D4 (0x35 bytes): Shisu_OpenStates[1] - Menu_DrawBackdrop(byte 0x903A5B); Transition_Busy 0 (read after): 0x929F01 = 0, the word 0x803194 (WindowRecords[1] +0x10) = 0x2B, 0x929F00 + 1. docs/rest_2b.md."
 
 [[func]]
 pc = 0x57E0E0
@@ -124065,7 +124067,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E120..0x57E15A (0x3B bytes): Shisu_CloseStates[1] - MoveScript_WaitWordDA not 0: Menu_DrawBackdrop(byte 0x903A5B); 0: 0x929F01 = 0, 0x929F00 + 1, WindowRecords 1..3's first bytes 0. docs/rest_2b.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E120..0x57E15A (0x3B bytes): Shisu_CloseStates[1] - Transition_Busy not 0: Menu_DrawBackdrop(byte 0x903A5B); 0: 0x929F01 = 0, 0x929F00 + 1, WindowRecords 1..3's first bytes 0. docs/rest_2b.md."
 
 [[func]]
 pc = 0x57E160
@@ -124547,7 +124549,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_3a.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4318F0..0x43190D (0x1E bytes): BattleEnd_ExitSteps[3]: once MoveScript_WaitWordDA is 0, Draw_PassFlags = 0 and 0x904AA2 - 1. docs/rest_3a.md."
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4318F0..0x43190D (0x1E bytes): BattleEnd_ExitSteps[3]: once Transition_Busy is 0, Draw_PassFlags = 0 and 0x904AA2 - 1. docs/rest_3a.md."
 
 [[func]]
 pc = 0x432F90
@@ -128186,7 +128188,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_4f.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x460CF0..0x460D4F (0x60 bytes): Menu_DrawBackdrop(0x903A5B), Menu_DrawTitleBox(0x14, 0x10, 0x118, 0x13, 0x903A5A), Config_DrawPanel(0x1C, 0x40), ConfigScreen_DrawButtons(0xFF, 0x70, 0x26); with MoveScript_WaitWordDA 0 the counter 0x929F04 and 0x929F03 0, 0x929F02 up one. ConfigScreen_OpenStates[1]; hidden in 0x460C40. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x460CF0..0x460D4F (0x60 bytes): Menu_DrawBackdrop(0x903A5B), Menu_DrawTitleBox(0x14, 0x10, 0x118, 0x13, 0x903A5A), Config_DrawPanel(0x1C, 0x40), ConfigScreen_DrawButtons(0xFF, 0x70, 0x26); with Transition_Busy 0 the counter 0x929F04 and 0x929F03 0, 0x929F02 up one. ConfigScreen_OpenStates[1]; hidden in 0x460C40. Fuzz only: no recorded route enters it. docs/rest_4f.md."
 
 [[func]]
 pc = 0x460D50
@@ -129455,7 +129457,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_4d.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C900..0x45C941 (0x42 bytes): CommuDraw_OpenSteps[1]: once MoveScript_WaitWordDA is 0, Music_Track kept at 0x675F90, Draw_PassFlags 0, Music_FadeOutStop(10), Music_Play(0x67, 8), 0x939A3E one on, 0x939A40 0. docs/rest_4d.md."
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C900..0x45C941 (0x42 bytes): CommuDraw_OpenSteps[1]: once Transition_Busy is 0, Music_Track kept at 0x675F90, Draw_PassFlags 0, Music_FadeOutStop(10), Music_Play(0x67, 8), 0x939A3E one on, 0x939A40 0. docs/rest_4d.md."
 
 [[func]]
 pc = 0x45C950
@@ -129520,7 +129522,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_4d.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CDF0..0x45CE35 (0x46 bytes): CommuDraw_ShowSteps[3]: while MoveScript_WaitWordDA is not 0 CommuDraw_DrawTitle (tail jmp); else Music_FadeOutStop(10), Music_Play(0x675F90, 8), Draw_PassFlags 0x1F, Transition_Start(1), 0x939A40 on. docs/rest_4d.md."
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CDF0..0x45CE35 (0x46 bytes): CommuDraw_ShowSteps[3]: while Transition_Busy is not 0 CommuDraw_DrawTitle (tail jmp); else Music_FadeOutStop(10), Music_Play(0x675F90, 8), Draw_PassFlags 0x1F, Transition_Start(1), 0x939A40 on. docs/rest_4d.md."
 
 [[func]]
 pc = 0x45CE40
@@ -129533,7 +129535,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_4d.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CE40..0x45CE71 (0x32 bytes): CommuDraw_ShowSteps[4]: once MoveScript_WaitWordDA is 0, Msg_OpenScript(0xE2), Field_Request 2, 0x939A3E on, 0x939A40 0. docs/rest_4d.md."
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CE40..0x45CE71 (0x32 bytes): CommuDraw_ShowSteps[4]: once Transition_Busy is 0, Msg_OpenScript(0xE2), Field_Request 2, 0x939A3E on, 0x939A40 0. docs/rest_4d.md."
 
 [[func]]
 pc = 0x45CE80
@@ -133446,316 +133448,351 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x803168
-name = "Rest3a_Win0Category"
+name = "Window0_Category"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x8
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov dl, byte ptr [0x803168] at 0x42de88; mov byte ptr [0x803168], al at 0x42e18d; mov cl, byte ptr [0x803168] at 0x42e2f1 and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_3a::kWin0Category."
+note = "was Rest3a_Win0Category (C3 naming): window record 0's +8, named by the record and its one reader's word (rest_3a)."
 
 [[data]]
 pc = 0x80316A
-name = "BattleOdds_Win0Index"
+name = "Window0_ParamA"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 24 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x80316a] at 0x42ddc1; movzx cx, byte ptr [0x80316a] at 0x42de56; cmp al, byte ptr [0x80316a] at 0x42dee2 and 21 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_odds::kWin0Index, msgbox::kWindow0Rows."
+note = "was BattleOdds_Win0Index (C3 naming): window record 0's +0xA, WindowRecord::param_a: per handler, and its readers disagree (battle_odds an index, msgbox halves it into the page arrow's x, rest_4e the tab 0..3)."
 
 [[data]]
 pc = 0x80316C
-name = "Rest3a_Win0Cursor"
+name = "Window0_Cursor"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xC
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 15 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x80316c], bl at 0x42e145; movzx ax, byte ptr [0x80316c] at 0x45ff21; mov al, byte ptr [0x80316c] at 0x45ffbd and 12 more. 3 of them dword loads narrowed before use (and 0xff x3, e.g. at 0x460007). Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_3a::kWin0Cursor."
+note = "was Rest3a_Win0Cursor (C3 naming): window record 0's +0xC, a cursor row (rest_3a the party index, rest_4e the row)."
 
 [[data]]
 pc = 0x80316D
-name = "Rest3a_Win0Item"
+name = "Window0_Item"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xD
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov cl, byte ptr [0x80316d] at 0x42de78; mov al, byte ptr [0x80316d] at 0x42dfd3; mov byte ptr [0x80316d], al at 0x42e192 and 2 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_3a::kWin0Item."
+note = "was Rest3a_Win0Item (C3 naming): window record 0's +0xD, named by its one reader's word (rest_3a)."
 
 [[data]]
 pc = 0x80316F
-name = "Msgbox_Window0Kind"
+name = "Window0_Pass"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xF
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x80316f], 2 at 0x4977e7. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kWindow0Kind."
+note = "was Msgbox_Window0Kind (C3 naming): window record 0's +0xF, WindowRecord::pass (0..2); its one writer MsgBox_Reset stores 2."
 
 [[data]]
 pc = 0x803170
-name = "ShopStates2_Help"
+name = "Window0_Arrows"
 ctype = "unsigned short"
 field_of = "WindowRecords"
 field_offset = 0x10
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 31 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x803170], 0xf0 at 0x42deee; mov word ptr [0x803170], 0x10 at 0x42df23; cmp word ptr [0x803170], 0 at 0x42dfba and 28 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: shop_states2::kHelp."
+note = "was ShopStates2_Help (C3 naming): window record 0's +0x10, ItemListWindow::arrows: rest_4e stores 0x32 / 0x31 as the tab moves (arrow bit 1 / 0, a countdown of 3 in the high nibble); save_menu and rest_3a clear it."
 
 [[data]]
 pc = 0x803184
-name = "BattleE1_Win1"
+name = "Window1"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803184], dl at 0x42e1b0; mov byte ptr [0x803184], 0 at 0x4310e8; mov byte ptr [0x803184], 0 at 0x431e1d and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kWin1, battle_turn_steps::kWindows."
+note = "was BattleE1_Win1 (C3 naming): window record 1; the scalar is its in_use byte (WindowRecord +0), the address the record's base (battle_e1 reads +4 / +6 off it)."
 
 [[data]]
 pc = 0x803186
-name = "Msgbox_Window1Kind"
+name = "Window1_Kind"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x2
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803186], 3 at 0x42e1a3; mov byte ptr [0x803186], 4 at 0x431a3f; mov byte ptr [0x803186], 0 at 0x431d25 and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kWindow1Kind."
+note = "was Msgbox_Window1Kind (C3 naming): window record 1's +2, WindowRecord::kind."
 
 [[data]]
 pc = 0x803187
-name = "ItemUse_Window1State"
+name = "Window1_State"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 30 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803187], bl at 0x42de19; mov byte ptr [0x803187], cl at 0x42e1aa; cmp byte ptr [0x803187], 1 at 0x42e8c0 and 27 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: item_use::kWindow1State, msgbox::kWindow1State."
+note = "was ItemUse_Window1State (C3 naming): window record 1's +3, WindowRecord::state."
 
 [[data]]
 pc = 0x80318E
-name = "Rest3a_Win1Slot"
+name = "Window1_ParamA"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 21 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movzx ax, byte ptr [0x80318e] at 0x42dd08; mov al, byte ptr [0x80318e] at 0x42dd57; mov byte ptr [0x80318e], al at 0x42dd61 and 18 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e2::kWindow1Count, rest_3a::kWin1Slot."
+note = "was Rest3a_Win1Slot (C3 naming): window record 1's +0xA, WindowRecord::param_a: per handler, and its readers disagree (battle_e2 the party count, rest_3a the slot cursor 0 or 3, magic_s33 saves and puts it back)."
 
 [[data]]
 pc = 0x803191
-name = "Rest2h_Window1Master"
+name = "Window1_Master"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xD
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803191], bl at 0x42dd45; mov byte ptr [0x803191], 0 at 0x42de61; mov byte ptr [0x803191], dl at 0x42e1db and 5 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_2h::kWindow1Master."
+note = "was Rest2h_Window1Master (C3 naming): window record 1's +0xD, the master list's chosen entry (rest_2h, its one reader)."
 
 [[data]]
 pc = 0x8031A8
-name = "BattleE1_Win2"
+name = "Window2"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8031a8], dl at 0x42e1ed; mov byte ptr [0x8031a8], 0 at 0x4310f6; mov byte ptr [0x8031a8], al at 0x57e143 and 5 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kWin2."
+note = "was BattleE1_Win2 (C3 naming): window record 2; the scalar is its in_use byte, the address the record's base."
 
 [[data]]
 pc = 0x8031AB
-name = "Rest3b_Win2State"
+name = "Window2_State"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 24 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8031ab], bl at 0x42de1f; mov byte ptr [0x8031ab], cl at 0x42e1e7; mov byte ptr [0x8031ab], al at 0x42e8e6 and 21 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_3b::kWin2State."
+note = "was Rest3b_Win2State (C3 naming): window record 2's +3, WindowRecord::state."
 
 [[data]]
 pc = 0x8031FA
-name = "BattleOdds_Win4Index"
+name = "Window4_Index"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 19 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8031fa], cl at 0x44a7a6; mov byte ptr [0x8031fa], 0 at 0x5843b5; mov byte ptr [0x8031fa], bl at 0x58474e and 16 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_odds::kWin4Index."
+note = "was BattleOdds_Win4Index (C3 naming): window record 4's +0xA, named by its one writer's word (battle_odds)."
 
 [[data]]
 pc = 0x80325C
-name = "MenuLists_MoneyWindow"
+name = "Window7"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x80325c], 0 at 0x431120; mov byte ptr [0x80325c], 1 at 0x5827bb; mov byte ptr [0x80325c], cl at 0x582ed5 and 1 more. Its address is also an immediate 1 time(s) (cmp eax, 0x80325c at 0x571f34). No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_lists::kMoneyWindow."
+note = "was MenuLists_MoneyWindow (C3 naming): window record 7 (the menu's money window; the shop's sell list); the scalar is its in_use byte."
 
 [[data]]
 pc = 0x803280
-name = "MenuLists_TimeWindow"
+name = "Window8"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803280], 0 at 0x431119; mov byte ptr [0x803280], 1 at 0x581ba2; mov byte ptr [0x803280], 1 at 0x589f1a. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_lists::kTimeWindow."
+note = "was MenuLists_TimeWindow (C3 naming): window record 8 (the menu's time window; the shop's buy list); the scalar is its in_use byte."
 
 [[data]]
 pc = 0x8032A4
-name = "MenuLists_IconWindow"
+name = "Window9"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8032a4], 0 at 0x431112; mov byte ptr [0x8032a4], 0 at 0x581c83; mov byte ptr [0x8032a4], 1 at 0x581f32 and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_lists::kIconWindow."
+note = "was MenuLists_IconWindow (C3 naming): window record 9; the scalar is its in_use byte."
 
 [[data]]
 pc = 0x8032C8
-name = "MenuLists_TitleWindow"
+name = "Window10"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8032c8], 0 at 0x43110b; mov byte ptr [0x8032c8], 0 at 0x582866; mov byte ptr [0x8032c8], 1 at 0x582ba5 and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_lists::kTitleWindow."
+note = "was MenuLists_TitleWindow (C3 naming): window record 10; the scalar is its in_use byte."
 
 [[data]]
 pc = 0x8033A0
-name = "BattleE4_List"
+name = "Window16"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8033a0], 1 at 0x447e6d; mov byte ptr [0x8033a0], 1 at 0x447f4a; mov byte ptr [0x8033a0], bl at 0x448e96 and 10 more. Its address is also an immediate 1 time(s) (mov esi, 0x8033a0 at 0x449fe2). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e4::kList, battle_menu_states::kList, battle_misc::kItemWindow."
+note = "was BattleE4_List (C3 naming): window record 16, the item and ability list of the battle and field menus; the scalar is its in_use byte, the address the record's base."
 
 [[data]]
 pc = 0x8033A3
-name = "BattleActorCopies_ItemState"
+name = "Window16_State"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 25 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x8033a3] at 0x4474b0; mov byte ptr [0x8033a3], 1 at 0x447723; mov byte ptr [0x8033a3], 1 at 0x4477f6 and 22 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemState, rest_3b::kWin16Closing."
+note = "was BattleActorCopies_ItemState (C3 naming): window record 16's +3, WindowRecord::state."
 
 [[data]]
 pc = 0x8033A6
-name = "BattleActorCopies_ItemBaseY"
+name = "Window16_Y"
 ctype = "unsigned short"
 field_of = "WindowRecords"
 field_offset = 0x6
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: add dx, word ptr [0x8033a6] at 0x4474f3; mov word ptr [0x8033a6], 0x3f at 0x447f0c; mov word ptr [0x8033a6], 0x3f at 0x447f9e and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemBaseY."
+note = "was BattleActorCopies_ItemBaseY (C3 naming): window record 16's +6, WindowRecord::y (the hand's row is 13 * row + it: battle_actor_copies, rest_2e)."
 
 [[data]]
 pc = 0x8033A9
-name = "BattleActorCopies_ItemPageCue"
+name = "Window16_PageCue"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x9
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 12 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8033a9], 0x32 at 0x44753e; mov byte ptr [0x8033a9], 0x31 at 0x44756e; mov byte ptr [0x8033a9], bl at 0x447eb3 and 9 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemPageCue."
+note = "was BattleActorCopies_ItemPageCue (C3 naming): window record 16's +9, 0x32 on a page left and 0x31 on a page right (battle_actor_copies, rest_2e)."
 
 [[data]]
 pc = 0x8033AA
-name = "BattleActorCopies_ItemOwner"
+name = "Window16_Owner"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 62 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x8033aa] at 0x44771e; mov al, byte ptr [0x8033aa] at 0x4477a8; mov byte ptr [0x8033aa], al at 0x447e8e and 59 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemOwner."
+note = "was BattleActorCopies_ItemOwner (C3 naming): window record 16's +0xA, the member whose list it shows (battle_actor_copies, rest_2d, rest_2e: AbilityList(owner, page))."
 
 [[data]]
 pc = 0x8033AB
-name = "BattleActorCopies_ItemPage"
+name = "Window16_Page"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0xB
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 67 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8033ab], 2 at 0x447482; mov al, byte ptr [0x8033ab] at 0x447534; mov byte ptr [0x8033ab], al at 0x447545 and 64 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemPage, battle_misc::kItemWindowPage, rest_3b::kWin16Page."
+note = "was BattleActorCopies_ItemPage (C3 naming): window record 16's +0xB, the list's page 0..3 (battle_actor_copies, battle_misc, rest_2e, rest_3b)."
 
 [[data]]
 pc = 0x8033B2
-name = "BattleActorCopies_ItemScrollMotion"
+name = "Window16_Scroll"
 ctype = "unsigned short"
 field_of = "WindowRecords"
 field_offset = 0x12
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x8033b2], 0xf0 at 0x4475ae; mov word ptr [0x8033b2], 0x10 at 0x4475ea; cmp word ptr [0x8033b2], 0 at 0x4476e8 and 3 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemScrollMotion."
+note = "was BattleActorCopies_ItemScrollMotion (C3 naming): window record 16's +0x12, ItemListWindow::scroll (0xF0 / 0x10 while the list scrolls)."
 
 [[data]]
 pc = 0x8033C4
-name = "BattleE4_Cands"
+name = "Window17"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8033c4], 0 at 0x448ebd; mov byte ptr [0x8033c4], dl at 0x449ecb; mov byte ptr [0x8033c4], al at 0x450210 and 8 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e4::kCands."
+note = "was BattleE4_Cands (C3 naming): window record 17; the scalar is its in_use byte, the address the record's base."
 
 [[data]]
 pc = 0x8033E8
-name = "BattleE4_Slots"
+name = "Window18"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 12 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: test byte ptr [0x8033e8], 1 at 0x434e81; mov byte ptr [0x8033e8], dl at 0x449e9b; mov byte ptr [0x8033e8], dl at 0x449f6a and 9 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e2::kWindow18, battle_e4::kSlots."
+note = "was BattleE4_Slots (C3 naming): window record 18; the scalar is its in_use byte, the address the record's base."
 
 [[data]]
 pc = 0x8033EB
-name = "BattleE6_Window18State"
+name = "Window18_State"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 15 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x8033eb] at 0x448de0; mov byte ptr [0x8033eb], bl at 0x448e90; mov al, byte ptr [0x8033eb] at 0x4491d0 and 12 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e6::kWindow18State."
+note = "was BattleE6_Window18State (C3 naming): window record 18's +3, WindowRecord::state."
 
 [[data]]
 pc = 0x80340C
-name = "BattleE4_Hand"
+name = "Window19"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 58 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: test byte ptr [0x80340c], 1 at 0x435051; mov byte ptr [0x80340c], 1 at 0x4474d3; mov byte ptr [0x80340c], 0 at 0x44772a and 55 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemCursorOn, battle_e2::kWindow19, battle_e4::kHand, battle_menu_states::kHand, battle_misc::kItemWindowExtra."
+note = "was BattleE4_Hand (C3 naming): window record 19, the hand of the item lists and the Dragon commands' second slot list (docs/battle_e5.md); the scalar is its in_use byte, the address the record's base."
 
 [[data]]
 pc = 0x80340F
-name = "BattleE6_Window19State"
+name = "Window19_State"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x80340f], bl at 0x450b84; mov byte ptr [0x80340f], 2 at 0x450e28; mov byte ptr [0x80340f], 2 at 0x450ec6 and 2 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e6::kWindow19State."
+note = "was BattleE6_Window19State (C3 naming): window record 19's +3, WindowRecord::state."
 
 [[data]]
 pc = 0x803412
-name = "BattleActorCopies_ItemCursorY"
+name = "Window19_Y"
 ctype = "unsigned short"
 field_of = "WindowRecords"
 field_offset = 0x6
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 18 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: add cx, word ptr [0x803412] at 0x4350b8; mov word ptr [0x803412], dx at 0x447500; mov word ptr [0x803412], ax at 0x448287 and 15 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemCursorY."
+note = "was BattleActorCopies_ItemCursorY (C3 naming): window record 19's +6, WindowRecord::y."
 
 [[data]]
 pc = 0x803433
-name = "BossSf_WindowUp"
+name = "Window20_State"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x803433] at 0x43c760; mov al, byte ptr [0x803433] at 0x43c7e3. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sf::kWindowUp."
+note = "was BossSf_WindowUp (C3 naming): window record 20's +3, WindowRecord::state (boss_sf's count waits while it is set)."
 
 [[data]]
 pc = 0x803454
-name = "BattleE4_Above"
+name = "Window21"
 ctype = "unsigned char"
 field_of = "WindowRecords"
 field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 84 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803454], al at 0x42de30; test byte ptr [0x803454], 1 at 0x434a32; test byte ptr [0x803454], 1 at 0x434cac and 81 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kWin21, battle_e2::kWindow21, battle_e4::kAbove, battle_menu_states::kAbove, shop_states2::kHand."
+note = "was BattleE4_Above (C3 naming): window record 21 (the battle menu's grid and list hands, the shop's hand: docs/battle_e2.md, shop_states2); the scalar is its in_use byte, the address the record's base."
 
 [[data]]
 pc = 0x80345A
-name = "ShopStates2_HandY"
+name = "Window21_Y"
 ctype = "unsigned short"
 field_of = "WindowRecords"
 field_offset = 0x6
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 47 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x80345a], 0x46 at 0x431ebc; add dx, word ptr [0x80345a] at 0x4349d5; add dx, word ptr [0x80345a] at 0x434aa8 and 44 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: shop_states2::kHandY."
+note = "was ShopStates2_HandY (C3 naming): window record 21's +6, WindowRecord::y."
 
 [[data]]
 pc = 0x9036D0
-name = "AreaW3g_Byte9036D0"
+name = "Area189_EventsInRow"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 12 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9036d0], al at 0x4237f6; mov byte ptr [0x9036d0], 0 at 0x42af62; mov al, byte ptr [0x9036d0] at 0x42afa9 and 9 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w3g::kByte9036D0, area_w4e::kEventsSince, area_w4f::kByte9036D0."
+note = "was AreaW3g_Byte9036D0 (C3 naming): Area189_StepArrive's count of events in a row, the fifth (at 4) the other outcome (docs/area_w4e.md, area_w4e.cpp); every other writer only zeroes it."
 
 [[data]]
 pc = 0x9036D4
@@ -133934,17 +133971,19 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x903A5A
-name = "BattleDraw_Colour"
+name = "Config_WindowColour"
 ctype = "signed char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 193 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov cl, byte ptr [0x903a5a] at 0x415d67; mov al, byte ptr [0x903a5a] at 0x42d8c1; movsx edx, byte ptr [0x903a5a] at 0x443027 and 190 more. Every widening read is movsx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w2e::kMenuColour, battle_draw::kColour, battle_e1::kBoxColour, battle_e7::kColour, battle_window_draw::kColour, battle_windows::kColour, effect_1b::kStyle, effect_1g::kStyle, field_e1::kStyle, field_o::kStyle, field_s::kStyle, map_field_objects::kWindowColour, menu_draw_helpers::kColour, menu_lists::kColour, menu_windows::kColour, rest_2c::kColour, rest_2d::kStyle, rest_2g::kColour, rest_2h::kStyle, rest_3e::kStyle, rest_4b::kColour, rest_4c::kStyle, rest_4d::kColour, rest_4f::kStyle, save_menu::kWindowColor, shop_states::kColour, window_task::kClutRow."
+note = "was BattleDraw_Colour (C3 naming): the Config screen's row 1, the window colour (docs/config-screen.md 2: black / blue / green / red); every reader uses it as the window colour, the CLUT shadow row (Menu_DrawBox's style, docs/battle_windows.md, save_menu, field_e1), and Save_BuildBlock keeps it in the summary (SaveSummary::style)."
 
 [[data]]
 pc = 0x903A5B
-name = "FieldS_Backdrop"
+name = "Config_Background"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 91 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x903a5b] at 0x42d7a0; mov al, byte ptr [0x903a5b] at 0x42d7f0; mov al, byte ptr [0x903a5b] at 0x42d8a2 and 88 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kMenuShade, field_s::kBackdrop, menu_lists::kBackground, rest_2d::kBackdrop, rest_4f::kBackdrop, save_menu::kWindowStyle."
+note = "was FieldS_Backdrop (C3 naming): the Config screen's row 2, the background (docs/config-screen.md 2), kept in 0..3 by the Config screen (0x461239 / 0x46126D); Menu_DrawBackdrop's kind (docs/menu-screens.md 2, menu-windows.md 3)."
 
 [[data]]
 pc = 0x903A5C
@@ -134224,10 +134263,11 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x904650
-name = "ScenaSc7_EventFlags"
+name = "Gene_Bits"
 ctype = "unsigned long"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: cmp dword ptr [0x904650], 0x3ffff at 0x420809; mov esi, dword ptr [0x904650] at 0x44fff2; mov esi, dword ptr [0x904650] at 0x59ae07. Its address is also an immediate 6 time(s) (push 0x904650 at 0x542de2). No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w3f::kFlags904650, battle_e5::kGeneBits, field_e2::kMessageBits, rest_2h::kGenes, scena_sc3::kStoryFlags, scena_sc7::kEventFlags."
+note = "was ScenaSc7_EventFlags (C3 naming): the Dragon genes, a bit each: EventCond_Gene is Flags_Test(this, operand) (docs/field_o.md), DragonCmd_Open copies its 18 bits into 0x939A60 (docs/battle_e5.md), area 143 tests all 18 (0x3FFFF, docs/area_w3f.md), rest_2h and battle_e5 read it as the genes."
 
 [[data]]
 pc = 0x90465C
@@ -134399,10 +134439,11 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x904AAA
-name = "BattleActions_EventBattle"
+name = "EventBattle_Id"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 48 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x904aaa] at 0x42e3c1; mov al, byte ptr [0x904aaa] at 0x42e403; cmp byte ptr [0x904aaa], 0x25 at 0x42e69d and 45 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actions::kEventBattle, battle_e2::kFight, battle_e3::kFight, battle_e4::kFight, battle_flow::kEventBattle, battle_items::kEnemySoundMode, battle_phases::kEventBattle, battle_sprites::kBoss, battle_turn_steps::kEventBattle, battle_window_draw::kBattle97, boss_h::kFight, boss_sb::kFight, boss_sc::kFight, boss_se::kFight, boss_sf::kFight, boss_sg::kFight, boss_si::kFight, enemy_ai_ops::kEventBattle, event_leader::kEventBattle, magic_s23::kEventBattle, mode_rest::kEventBattle, rest_3g::kEventBattle, scena_se::kEventBattle."
+note = "was BattleActions_EventBattle (C3 naming): the event battle's index into EventBattle_Records, 0 none: Field_StartEventBattle stores its argument here and copies EventBattle_Records[id] +0 to EventBattle_Flags (scena_se.cpp); the battle side indexes its 24-entry jump table 0x656954 and the boss handlers by it (battle_sprites_callees.h, the boss_* modules)."
 
 [[data]]
 pc = 0x904AAD
@@ -134427,10 +134468,11 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x904AB1
-name = "BattleSprites_PartyPick"
+name = "Battle_PartyStanding"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 21 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x904ab1], bl at 0x42e4b0; inc byte ptr [0x904ab1] at 0x42e4cd; mov byte ptr [0x904ab1], dl at 0x433df3 and 18 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_damage::kAiByteB1, battle_e2::kPartyIn, battle_e3::kMembersUp, battle_e4::kPartyDivisor, battle_e6::kPartySize, battle_phases::kActorsIn, battle_sprites::kPartyPick, rest_3b::kPartyUp, rest_4a::kPartyPick."
+note = "was BattleSprites_PartyPick (C3 naming): the party members not out: counted at the round's start over the members not out (battle_phases.cpp), down as one falls, 0 the loss (battle_e3.cpp), up as one is raised (rest_3b.cpp); the target pickers test it against 1 (battle_sprites, rest_4a), Escape_Roll divides by it (battle_e4)."
 
 [[data]]
 pc = 0x904AB2
@@ -134483,10 +134525,11 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x904AE5
-name = "BattleTurnSteps_MusicFlags"
+name = "EventBattle_Flags"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 24 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: test byte ptr [0x904ae5], 0x40 at 0x4314f0; test byte ptr [0x904ae5], 0x40 at 0x431550; test byte ptr [0x904ae5], 0x40 at 0x4317bf and 21 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_turn_steps::kMusicFlags, battle_windows::kPoseFlags, boss_sb::kMusicFlags, boss_se::kMusicFlags, boss_sg::kMusicFlags, field_e1::kBattleBits, inventory_ops::kBattleFlags, mode_rest::kBattleFlags, rest_3a::kMusicFlags, scena_se::kBattleFlags."
+note = "was BattleTurnSteps_MusicFlags (C3 naming): EventBattle_Records[id] +0, stored by Field_StartEventBattle (scena_se.cpp; mode_rest_callees.h); its bits are read for different things (0x40 keeps the battle's music: battle_turn_steps, rest_3a, mode_rest; 0x20 battle_windows; 2 and 0x80 field_e1; 4 and 0x10 inventory_ops; 1 mode_rest), so the name is the record's, not one bit's."
 
 [[data]]
 pc = 0x904AE6
@@ -134812,10 +134855,11 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x929EC1
-name = "AreaW3g_Byte929EC1"
+name = "Area189_StepsSinceEvent"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x929ec1], al at 0x4237f1; mov byte ptr [0x929ec1], 0 at 0x42af5b; mov dl, byte ptr [0x929ec1] at 0x42af9f and 8 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w3g::kByte929EC1, area_w4e::kStepsSince, area_w4f::kByte929EC1."
+note = "was AreaW3g_Byte929EC1 (C3 naming): Area189_StepArrive counts the steps since the last event in it and zeroes it at the event (docs/area_w4e.md, area_w4e.cpp); every other writer (mode_flow, areas 150 and 191) only zeroes it."
 
 [[data]]
 pc = 0x929EC3
@@ -134826,10 +134870,11 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x929ED0
-name = "AreaW0c_FlagRow"
+name = "Chapter_FlagRow"
 ctype = "unsigned long"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1,394 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x929ed0] at 0x401840; mov edx, dword ptr [0x929ed0] at 0x402f47; mov eax, dword ptr [0x929ed0] at 0x4031e0 and 1391 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w0a::kFlagBank, area_w0b::kFlagBase, area_w0c::kFlagRow, area_w1a::kFlagRow, area_w1c::kFlagRow, area_w2a::kFlagRow, area_w2c::kFlagRow, area_w2d::kFlagRow, area_w3a::kFlagRow, area_w3e::kFlagRow, area_w3f::kFlagRow, area_w4e::kFlagRow, area_w4f::kFlagRow, boss_h::kFlagBits, boss_sd::kFlagBits, effect_2d::kFlagRow, effect_3d::kFlagRow, effect_4b::kFlagRow, field_modes::kFlagsPtr, field_s::kFlagRow, mode_states::kFlagBank, move_cmds::kFlagsPtr, save_menu::kCondPointer, scena_sc0::kFlagRow, scena_sc12::kFlagBits, scena_sc13::kFlagBits, scena_sc1::kFlagBank, scena_sc2::kFlagBank, scena_sc3::kFlagBank, scena_sc5::kFlagBits, scena_sc6::kFlagBits, scena_sc7::kFlagBank, scena_sc9a::kFlagBits, scena_sc9b::kFlagBits."
+note = "was AreaW0c_FlagRow (C3 naming): a pointer to the current chapter's row of story flags, Cond_Flags + 8 * chapter as Scenario_Start sets it (docs/scenario_harness.md); every reader hands it to Flags_Test / Flags_Set (docs/area_w3a.md, boss_si.md, effect_2d.md)."
 
 [[data]]
 pc = 0x929ED4
@@ -135036,10 +135081,11 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x937F98
-name = "AreaW0c_PendingKind"
+name = "Area_EnterTransition"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 67 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x937f98], 0xfe at 0x40528d; mov byte ptr [0x937f98], 0xc at 0x415568; mov byte ptr [0x937f98], 0xc at 0x41bfc8 and 64 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w0c::kPendingKind, area_w2e::kCell937F98, area_w3b::k937F98, area_w4f::kPendingKind, event_leader::kLandMode, mode_flow::kPendingKind, scena_sc13::kSpriteMode, scena_sc2::kFrameByte, scena_sc3::kPendingKind, scena_sc7::kPendingKind, scena_sc9b::kByte937F98, window_task::kPendingKind."
+note = "was AreaW0c_PendingKind (C3 naming): GameMode_Enter's transition for the area just entered: 0xFF none, 0xFE only Draw_PassFlags 0, else Transition_Start(it) (docs/mode-flow.md); its writers store 0xB / 1 / 0xD / 0xFF / 0xFE ahead of an area change (Area_ClassifyPending, the leader's landing)."
 
 [[data]]
 pc = 0x93985C
@@ -135867,11 +135913,11 @@ note = "rest_1g.cpp: the previous value of Effect1e_PressNow."
 
 [[data]]
 pc = 0x6BC716
-name = "Effect1e_BiteHeld"
+name = "Fish_Nibbling"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bc716], 0 at 0x5288c5; mov al, byte ptr [0x6bc716] at 0x52b927; mov byte ptr [0x6bc716], 1 at 0x52b95e and 1 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 4 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_1f::kPanelPose, rest_1g::kBiteHeld."
-note = "rest_1g.cpp kBiteHeld: a fish is nibbling (Fish_Swim sets, Fish_Settle clears); rest_1f.cpp names the same byte kPanelPose, one of the leader panel's cells."
+note = "rest_1g.cpp kBiteHeld: a fish is nibbling (Fish_Swim sets, Fish_Settle clears); rest_1f.cpp names the same byte kPanelPose, one of the leader panel's cells. was Effect1e_BiteHeld (C3 naming): a fish is nibbling; its one reader is Fish_Swim (rest_1g.cpp), which sets it; Fish_Settle clears it, and LeaderPanel_S0Begin (the leader's state 9, rest_1f.cpp) clears it with the panel's other cells at the start. rest_1f's kPanelPose was a name by shape (docs/effect_1e.md 1): one byte, one meaning."
 
 [[data]]
 pc = 0x6BC717

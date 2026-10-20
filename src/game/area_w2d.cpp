@@ -52,7 +52,7 @@ std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v)
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours

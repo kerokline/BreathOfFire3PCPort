@@ -307,7 +307,7 @@ extern "C" void __cdecl MenuList_NextLevelPanel(void) {
 // place. The record re-read after each call, as the original.
 extern "C" void __cdecl MenuList_WideTitleBox(void) {
     State("MenuList_WideTitleBox", MenuList_WideTitleStates_addr, 3);
-    const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = Rec();
     SH_CALL(Menu_DrawTitleBox)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x118, 0x13, static_cast<int>(colour));
     r = Rec();
@@ -395,7 +395,7 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
     auto x = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->x + d) & 0xFFFF); };
     auto y = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->y + d) & 0xFFFF); };
     auto text = [](unsigned index) { return At(static_cast<U>(Long(At(at::kLabelTexts + 4 * index)))); };
-    const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned count = B(at::kLabelRows + 6u * rec[0xA]);
     SH_CALL(Menu_DrawBox)(x(3), y(3), 0x65, static_cast<int>((count << 4) + 0x19), 0, static_cast<int>(colour));
     SH_CALL(Text_DrawAt)(x(0x2A), y(7), 0, 0xFF, text(0));

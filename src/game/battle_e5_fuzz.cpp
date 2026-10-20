@@ -307,14 +307,14 @@ void DragonFrame() {
     Mem(BattleActions_ApCost_addr)[0] = Byte({0, 1, 8, 0x20, 0xFF});
     SetWord(Mem(at::kAsk), Word16({0, 1, 2, 0x100}));
     Slots();
-    Cursor(BattleE4_Slots_addr, 4, 3);
-    Cursor(BattleE4_Hand_addr, 10, 3);
-    for (U w : {at::kWin4, BattleE4_List_addr, BattleE4_Cands_addr, BattleE4_Slots_addr, BattleE4_Hand_addr, BattleE4_Above_addr}) {
+    Cursor(Window18_addr, 4, 3);
+    Cursor(Window19_addr, 10, 3);
+    for (U w : {at::kWin4, Window16_addr, Window17_addr, Window18_addr, Window19_addr, Window21_addr}) {
         rv::As<records::WindowRecord>(Win(w))->in_use = static_cast<unsigned char>(bh::Half() ? rv::As<records::WindowRecord>(Win(w))->in_use & 0xFE : rv::As<records::WindowRecord>(Win(w))->in_use | 1);
         rv::As<records::WindowRecord>(Win(w))->state = Byte({0, 0, 1, 2});
     }
-    rv::Store<unsigned>(rv::As<records::WindowRecord>(Win(BattleE4_Slots_addr))->x, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
-    rv::Store<unsigned>(rv::As<records::WindowRecord>(Win(BattleE4_Hand_addr))->x, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Win(Window18_addr))->x, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Win(Window19_addr))->x, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
     unsigned char* const actor = bh::Pointer(BattleE4_MenuActor_addr);
     actor[5] = Byte({0, 1, 2});
     rv::Store<unsigned>(rv::As<records::PartyMember>(Member(actor[5]))->ap, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
@@ -462,7 +462,7 @@ void Disturb(U h) {
     case 5: Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(b % 5); break;
     case 6: Mem(at::kMsgCount)[0] = b; break;
     case 7: SetWord(Mem(at::kAsk), b & 3); break;
-    case 8: SetWord(Mem(b & 1 ? BattleE4_Slots_addr + 0x10 : BattleE4_Hand_addr + 0x10), (b >> 1) % 4); break;
+    case 8: SetWord(Mem(b & 1 ? Window18_addr + 0x10 : Window19_addr + 0x10), (b >> 1) % 4); break;
     case 9: Mem(at::kTarget)[0] = static_cast<unsigned char>(b % 11); break;
     case 10: Mem(at::kActor)[0] = static_cast<unsigned char>(b % 11); break;
     default:

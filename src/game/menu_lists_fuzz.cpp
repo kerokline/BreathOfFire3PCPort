@@ -120,10 +120,10 @@ void Disturb() {
     case 15: B(Field_MemberCount_addr) = static_cast<unsigned char>(v % 5); break;
     case 16: At(at::kSavedParty)[w % 6] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : v % 4); break;
     case 17: At(at::kReserveData)[w % 9] = static_cast<unsigned char>(v); break;
-    case 18: B(BattleDraw_Colour_addr) = static_cast<unsigned char>(v); break;
-    case 19: B(FieldS_Backdrop_addr) = static_cast<unsigned char>(v); break;
+    case 18: B(Config_WindowColour_addr) = static_cast<unsigned char>(v); break;
+    case 19: B(Config_Background_addr) = static_cast<unsigned char>(v); break;
     case 20: Gfx_PacketNext = g_prim + v; break;
-    case 21: B(MenuLists_IconWindow_addr + 0xC) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 21: B(Window9_addr + 0xC) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 22: At(at::kCharRecords + 0x10 + (w % 8) * at::kCharRecordSize)[v % 0x20] = static_cast<unsigned char>(h); break;
     default: SetLong(At(Party_Zenny_addr), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     }
@@ -386,7 +386,7 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {FieldMenu_IconIds_addr, 8}, // constant data - random here, put back after: the icon ids
     {FieldMenu_TitleIds_addr, 8}, // the title ids
-    {MoveScript_EffectState_addr, 0x20}, // the character-to-record bytes
+    {Character_IndexById_addr, 0x20}, // the character-to-record bytes
     {0x66C7E8, 4},               // Game_Mode, Game_Step
     {at::kSavedParty, 0x10},     // the party as the menu opened on it (a Party_Count of 8 copies past the six)
     {0x7E0670, 8},               // Gfx_PacketNext, 0x7E0674..0x7E0677

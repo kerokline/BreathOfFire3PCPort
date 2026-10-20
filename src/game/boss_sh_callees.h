@@ -58,7 +58,7 @@ constexpr U kWord80 = 0x904B80;           // u16: set to 0x40 beside the action 
 constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
 
 // --- set-up 34's member pick ------------------------------------------------------
-// kPickId: now MoveScript_EffectState[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
+// kPickId: now Character_IndexById[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
 // kPicked: now BossSh_Picked (symbols.toml). u8 (read once as a dword): the member whose +0x148 matched; only set-up 34 writes it
 // kPartyTag: now Field_Members (symbols.toml). member 0's +0x148 (ObjTrio stride 0x14C; symbols.toml's Field_Members)
 // kParty: now ObjTrio (symbols.toml). ObjTrio

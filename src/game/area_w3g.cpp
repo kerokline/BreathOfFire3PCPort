@@ -866,8 +866,8 @@ extern "C" void __cdecl Area150_Tail58(void) {
             SetWord(At(Cond_Flags_addr + 0xcc), 0);
             Cond_Flags[0xcf] = 0xF0;
             Cond_Flags[0xce] = 0;
-            AreaW3g_Byte929EC1 = 0;
-            AreaW3g_Byte9036D0 = 0;
+            Area189_StepsSinceEvent = 0;
+            Area189_EventsInRow = 0;
             Field_StatusBits = static_cast<unsigned char>(status | 1);
         }
         Disarm();

@@ -38,7 +38,7 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The story flags (Flags_Set / Flags_Test's bank) and the pointer to the
 // chapter's flag row the chapters' flag calls take (docs/field-modes.md).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).

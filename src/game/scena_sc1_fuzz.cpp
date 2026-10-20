@@ -319,7 +319,7 @@ void Seed(unsigned k) {
     // Every round: the effect slot a real one, the member index 0..7, the
     // object hook's index in each object the kObject shape may pass.
     M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(sh::Next()));
-    M(MoveScript_EffectState_addr + 0x4)[0] = static_cast<unsigned char>(sh::Next() % 8);
+    M(Character_IndexById_addr + 0x4)[0] = static_cast<unsigned char>(sh::Next() % 8);
     for (unsigned i = 0; i < 4; ++i) sh::SpriteRecord(i)[0x86] = static_cast<unsigned char>(sh::Next() % at::kObjectCount);
     if (sh::Half()) sh::SetPointer(0x937F88, sh::ObjectOf(sh::Next()));   // Sprite_Current at a party object
     // The waits, each on its boundary two in three.
@@ -423,7 +423,7 @@ void Disturb(std::uint32_t h) {
 void Settle() {
     const unsigned char s = M(at::kEffectSlot)[0];
     if (s != 0xFF && s >= 20) M(at::kEffectSlot)[0] = static_cast<unsigned char>(s % 20);
-    M(MoveScript_EffectState_addr + 0x4)[0] &= 7;
+    M(Character_IndexById_addr + 0x4)[0] &= 7;
 }
 
 }  // namespace

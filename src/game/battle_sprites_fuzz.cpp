@@ -122,9 +122,9 @@ void Disturb() {
         switch ((h >> 20) % 5) {
         case 0: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 5); break;
         case 1: At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
-        case 2: At(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(v % 3); break;
+        case 2: At(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(v % 3); break;
         case 3: At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
-        default: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(v % 24); break;
+        default: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 24); break;
         }
         break;
     case 6: Sprite_Current = PoolSprite(v); break;
@@ -500,7 +500,7 @@ void SeedRound(unsigned regions) {
     At(at::kTarget)[0] = TargetValue();
     At(at::kActor)[0] = static_cast<unsigned char>(Next() % 11);
     At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 5);
-    At(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(Next() % 3);
+    At(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(Next() % 3);
     At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 9 : 8);
     At(BattleE2_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
     At(at::kBoss)[0] = static_cast<unsigned char>(Half() ? 0 : Next() % kBossHandlers);

@@ -150,7 +150,7 @@ site	src/game/area_w0b.cpp	802	global	At	at::kCounter	0x90384b	-	none	-	-	0
 site	src/game/area_w0b.cpp	813	global	At	at::kCounter	0x90384b	-	none	-	-	0
 site	src/game/area_w0b.cpp	815	global	At	at::kFormat	0x5e10c0	-	exact	Area08_MessageFormat	-	0
 site	src/game/area_w0b.cpp	815	global	At	at::kTextRow1	0x904d00	-	none	-	-	0
-site	src/game/area_w0b.cpp	819	global	Pointer	at::kFlagBase	0x929ed0	-	exact	AreaW0c_FlagRow	unsigned long	0
+site	src/game/area_w0b.cpp	819	global	Pointer	at::kFlagBase	0x929ed0	-	exact	Chapter_FlagRow	unsigned long	0
 site	src/game/area_w0b.cpp	832	global	At	at::kScriptVar	0x903848	-	none	-	-	0
 site	src/game/area_w0b.cpp	833	global	At	at::kScriptVar	0x903848	-	none	-	-	0
 site	src/game/area_w0b.cpp	917	global	At	at::kFoundSlot	0x903850	-	none	-	-	0
@@ -158,7 +158,7 @@ site	src/game/area_w0b.cpp	919	global	At	at::kEffectCount	0x90384a	-	none	-	-	0
 site	src/game/area_w0b.cpp	920	global	At	at::kFoundSlot	0x903850	-	none	-	-	0
 site	src/game/area_w0b.cpp	937	global	At	at::kScriptVar	0x903848	-	none	-	-	0
 site	src/game/area_w0b.cpp	938	global	At	at::kScriptVar	0x903848	-	none	-	-	0
-site	src/game/area_w0b.cpp	945	global	Pointer	at::kFlagBase	0x929ed0	-	exact	AreaW0c_FlagRow	unsigned long	0
+site	src/game/area_w0b.cpp	945	global	Pointer	at::kFlagBase	0x929ed0	-	exact	Chapter_FlagRow	unsigned long	0
 site	src/game/area_w0b_fuzz.cpp	66	record	SetLong	p + i	-	-	-	-	-	1
 site	src/game/area_w0b_fuzz.cpp	236	global	-	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	1
 site	src/game/area_w0b_fuzz.cpp	237	global	-	at::kAreaTextOffset	0x803588	-	none	-	-	1
@@ -645,7 +645,7 @@ site	src/game/area_w2e.cpp	1154	global	At	at::kCountdownText	0x904ba0	-	none	-	-
 site	src/game/area_w2e.cpp	1232	global	-	at::kPanelTrisEnd	0x61bc74	-	none	-	-	0
 site	src/game/area_w2e.cpp	1238	record	At	row + w * 2	-	stride=0xc	-	-	-	0
 site	src/game/area_w2e.cpp	1344	global	B	at::kFoundX	0x903850	-	none	-	-	0
-site	src/game/area_w2e.cpp	1373	global	B	at::kEffectStates	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/area_w2e.cpp	1373	global	B	at::kEffectStates	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/area_w2e_fuzz.cpp	125	record	SetLong	p + i	-	-	-	-	-	1
 site	src/game/area_w2e_fuzz.cpp	387	global	-	at::kAreaText	0x803580	-	none	-	-	1
 site	src/game/area_w2e_fuzz.cpp	401	global	B	at::kLeaderCellX	0x905e66	-	inside	Field_Kind2X+0x2	long	1
@@ -1322,10 +1322,10 @@ site	src/game/area_w4f.cpp	948	record	Word	A6Record(Sprite_Current[6]) + 4	-	via
 site	src/game/area_w4f.cpp	994	record	Word	A6Record(c[6]) + 2	-	via=A6Record	-	-	-	0
 site	src/game/area_w4f.cpp	1004	record	Word	A6Record(c[6]) + 2	-	via=A6Record	-	-	-	0
 site	src/game/area_w4f_fuzz.cpp	302	global	-	at::kActiveMember	0x9035a4	-	exact	Field_ActiveMember	unsigned char *	1
-site	src/game/area_w4f_fuzz.cpp	302	global	-	at::kFlagRow	0x929ed0	-	exact	AreaW0c_FlagRow	unsigned long	1
+site	src/game/area_w4f_fuzz.cpp	302	global	-	at::kFlagRow	0x929ed0	-	exact	Chapter_FlagRow	unsigned long	1
 site	src/game/area_w4f_fuzz.cpp	302	global	-	at::kFocusObject	0x903804	-	exact	AreaW1a_FocusObject	unsigned long	1
 site	src/game/area_w4f_fuzz.cpp	302	global	-	at::kScriptObject	0x929e80	-	exact	MoveScript_Object	unsigned char *	1
-site	src/game/area_w4f_fuzz.cpp	302	global	-	at::kWaitWordDA	0x66c810	-	exact	MoveScript_WaitWordDA	unsigned short	1
+site	src/game/area_w4f_fuzz.cpp	302	global	-	at::kWaitWordDA	0x66c810	-	exact	Transition_Busy	unsigned short	1
 site	src/game/area_w4f_fuzz.cpp	305	global	-	at::kCharRecords	0x903a70	-	none	-	-	1
 site	src/game/area_w4f_fuzz.cpp	366	global	B	at::kCounter0	0x903848	-	none	-	-	1
 site	src/game/area_w4f_fuzz.cpp	367	global	B	at::kCounter1	0x903849	-	none	-	-	1
@@ -1584,7 +1584,7 @@ site	src/game/battle_actor_copies.cpp	532	global	B	at::kQueueByte	0x93c2c1	-	non
 site	src/game/battle_actor_copies_fuzz.cpp	70	raw	At	0x904AA0	0x904aa0	-	none	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	73	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	74	global	At	at::kWindow4State	0x8031f3	-	none	-	-	1
-site	src/game/battle_actor_copies_fuzz.cpp	75	raw	At	0x8033A0	0x8033a0	-	exact	BattleE4_List	unsigned char	1
+site	src/game/battle_actor_copies_fuzz.cpp	75	raw	At	0x8033A0	0x8033a0	-	exact	Window16	unsigned char	1
 site	src/game/battle_actor_copies_fuzz.cpp	77	raw	At	0x93C2A0	0x93c2a0	-	exact	BattleWindows_MsgHead	unsigned char	1
 site	src/game/battle_actor_copies_fuzz.cpp	78	global	At	at::kActorPages	0x9045fc	-	none	-	-	1
 site	src/game/battle_actor_copies_fuzz.cpp	94	global	B	at::kItemCursor	0x8033ac	-	none	-	-	1
@@ -1722,7 +1722,7 @@ site	src/game/battle_draw.cpp	183	record	PutLong	Vertex(3) + 8	-	via=Vertex	-	-	
 site	src/game/battle_draw.cpp	288	global	At	kInventory	0x656b00	-	exact	Inventory_IdLists	-	0
 site	src/game/battle_draw.cpp	289	global	At	kCounts	0x656b14	-	exact	Inventory_CountLists	-	0
 site	src/game/battle_draw.cpp	297	global	Byte	kBattleParty	0x904065	-	inside	Cond_Flags+0xd5	unsigned char	0
-site	src/game/battle_draw.cpp	297	global	Byte	kMemberRecord	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/battle_draw.cpp	297	global	Byte	kMemberRecord	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/battle_draw.cpp	324	global	At	kItemLabels	0x66b58c	-	none	-	-	0
 site	src/game/battle_draw.cpp	334	global	At	kFmt3d3d	0x6639c8	-	none	-	-	0
 site	src/game/battle_draw.cpp	334	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
@@ -1785,30 +1785,30 @@ site	src/game/battle_e1.cpp	337	global	B	at::kModeTimer	0x929f04	-	none	-	-	0
 site	src/game/battle_e1.cpp	338	global	B	at::kModeTimer	0x929f04	-	none	-	-	0
 site	src/game/battle_e1.cpp	341	global	B	at::kEquipOpenBytes	0x675ebe	-	exact	BattleE1_EquipOpenBytes	unsigned char	0
 site	src/game/battle_e1.cpp	342	global	B	at::kEquipOpenBytes	0x675ebe	-	exact	BattleE1_EquipOpenBytes	unsigned char	0
-site	src/game/battle_e1.cpp	371	global	L	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_e1.cpp	371	global	L	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	371	global	At	at::kWin4	0x8031f0	-	none	-	-	0
 site	src/game/battle_e1.cpp	372	global	B	at::kWin4	0x8031f0	-	none	-	-	0
-site	src/game/battle_e1.cpp	373	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_e1.cpp	373	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	374	global	At	at::kWin4	0x8031f0	-	none	-	-	0
-site	src/game/battle_e1.cpp	376	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	377	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	380	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	380	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	382	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_e1.cpp	376	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	377	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	380	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	380	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	382	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	383	global	B	at::kWin0	0x803160	-	none	-	-	0
 site	src/game/battle_e1.cpp	388	global	At	at::kWin3	0x8031cc	-	none	-	-	0
 site	src/game/battle_e1.cpp	391	global	B	at::kWin0	0x803160	-	none	-	-	0
-site	src/game/battle_e1.cpp	392	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_e1.cpp	392	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	393	global	B	at::kWin0	0x803160	-	none	-	-	0
-site	src/game/battle_e1.cpp	395	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_e1.cpp	395	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	403	global	B	at::kWin0	0x803160	-	none	-	-	0
-site	src/game/battle_e1.cpp	404	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	405	global	B	at::kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
+site	src/game/battle_e1.cpp	404	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	405	global	B	at::kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/battle_e1.cpp	406	global	B	at::kWin3	0x8031cc	-	none	-	-	0
 site	src/game/battle_e1.cpp	407	global	B	at::kWin4	0x8031f0	-	none	-	-	0
 site	src/game/battle_e1.cpp	409	global	B	at::kModeTimer	0x929f04	-	none	-	-	0
 site	src/game/battle_e1.cpp	428	global	L	at::kWin0	0x803160	-	none	-	-	0
-site	src/game/battle_e1.cpp	429	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_e1.cpp	429	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	430	global	At	at::kWin4	0x8031f0	-	none	-	-	0
 site	src/game/battle_e1.cpp	431	global	B	at::kWin0	0x803160	-	none	-	-	0
 site	src/game/battle_e1.cpp	431	global	B	at::kWin0	0x803160	-	none	-	-	0
@@ -1847,8 +1847,8 @@ site	src/game/battle_e1.cpp	529	global	Memcpy	at::kGuest	0x903eec	-	none	-	-	0
 site	src/game/battle_e1.cpp	552	global	B	at::kCrossGrow	0x904abc	-	none	-	-	0
 site	src/game/battle_e1.cpp	552	global	B	at::kMenuMember	0x904ab4	-	none	-	-	0
 site	src/game/battle_e1.cpp	557	global	B	at::kMenuMember	0x904ab4	-	none	-	-	0
-site	src/game/battle_e1.cpp	569	global	B	at::kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
-site	src/game/battle_e1.cpp	570	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_e1.cpp	569	global	B	at::kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/battle_e1.cpp	570	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	571	global	B	at::kWin3	0x8031cc	-	none	-	-	0
 site	src/game/battle_e1.cpp	578	global	B	at::kHoldIcons	0x64e2ac	-	none	-	-	0
 site	src/game/battle_e1.cpp	578	global	B	at::kHoldIcons	0x64e2ac	-	none	-	-	0
@@ -1905,11 +1905,11 @@ site	src/game/battle_e1.cpp	824	global	At	at::kOldLevel	0x904b72	-	none	-	-	0
 site	src/game/battle_e1.cpp	825	record	B	row + 6	-	table=0x658f48;stride=0x63	-	-	-	0
 site	src/game/battle_e1.cpp	826	record	B	row + 7	-	table=0x658f48;stride=0x63	-	-	-	0
 site	src/game/battle_e1.cpp	829	global	B	at::kOldLevel	0x904b72	-	none	-	-	0
-site	src/game/battle_e1.cpp	830	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	832	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	833	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	834	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/battle_e1.cpp	835	global	B	at::kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_e1.cpp	830	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	832	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	833	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	834	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_e1.cpp	835	global	B	at::kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_e1.cpp	842	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e1.cpp	850	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e1.cpp	867	global	At	at::kCharRecords	0x903a70	-	none	-	-	0
@@ -2186,18 +2186,18 @@ site	src/game/battle_e4.cpp	98	record	At	table + 4 * state	-	-	-	-	-	0
 site	src/game/battle_e4.cpp	121	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	136	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	140	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
-site	src/game/battle_e4.cpp	158	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	159	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	160	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	164	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	165	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	166	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	173	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	176	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	158	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	159	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	160	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	164	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	165	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	166	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	173	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	176	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	217	global	At	at::kFaceStep	0x904aac	-	none	-	-	0
 site	src/game/battle_e4.cpp	218	global	B	at::kFacePairs	0x64e4f4	-	none	-	-	0
 site	src/game/battle_e4.cpp	219	global	B	at::kFacePairs	0x64e4f4	-	none	-	-	0
-site	src/game/battle_e4.cpp	226	global	B	at::kAbove	0x803454	-	exact	BattleE4_Above	unsigned char	0
+site	src/game/battle_e4.cpp	226	global	B	at::kAbove	0x803454	-	exact	Window21	unsigned char	0
 site	src/game/battle_e4.cpp	244	record	SetLong	p + 0x14	-	via=TileHead	-	-	-	0
 site	src/game/battle_e4.cpp	245	record	SetLong	p + 0x18	-	via=TileHead	-	-	-	0
 site	src/game/battle_e4.cpp	259	global	At	at::kTileSizes	0x64e268	-	none	-	-	0
@@ -2233,126 +2233,126 @@ site	src/game/battle_e4.cpp	574	global	Ptr	at::kInventoryIds	0x656b00	-	exact	In
 site	src/game/battle_e4.cpp	582	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_e4.cpp	589	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_e4.cpp	596	global	B	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_e4.cpp	613	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	614	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	615	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	616	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	617	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	619	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	620	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	621	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	628	global	B	at::kHand	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e4.cpp	629	global	B	at::kHand	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e4.cpp	637	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
+site	src/game/battle_e4.cpp	613	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	614	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	615	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	616	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	617	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	619	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	620	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	621	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	628	global	B	at::kHand	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e4.cpp	629	global	B	at::kHand	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e4.cpp	637	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
 site	src/game/battle_e4.cpp	639	global	Ptr	at::kInventoryIds	0x656b00	-	exact	Inventory_IdLists	-	0
 site	src/game/battle_e4.cpp	643	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
-site	src/game/battle_e4.cpp	663	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
+site	src/game/battle_e4.cpp	663	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
 site	src/game/battle_e4.cpp	665	global	Ptr	at::kInventoryIds	0x656b00	-	exact	Inventory_IdLists	-	0
 site	src/game/battle_e4.cpp	685	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
-site	src/game/battle_e4.cpp	686	global	B	at::kAbove	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e4.cpp	688	global	B	at::kAbove	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e4.cpp	694	global	B	at::kAbove	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e4.cpp	697	global	B	at::kAbove	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e4.cpp	705	global	B	at::kAbove	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e4.cpp	706	global	B	at::kAbove	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e4.cpp	714	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	715	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	716	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	717	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
+site	src/game/battle_e4.cpp	686	global	B	at::kAbove	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e4.cpp	688	global	B	at::kAbove	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e4.cpp	694	global	B	at::kAbove	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e4.cpp	697	global	B	at::kAbove	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e4.cpp	705	global	B	at::kAbove	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e4.cpp	706	global	B	at::kAbove	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e4.cpp	714	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	715	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	716	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	717	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e4.cpp	718	global	B	at::kStep4	0x904aa4	-	exact	BattleE4_Step4	unsigned char	0
 site	src/game/battle_e4.cpp	726	global	B	at::kRecord4	0x8031f0	-	none	-	-	0
 site	src/game/battle_e4.cpp	747	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
-site	src/game/battle_e4.cpp	754	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	754	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	756	global	B	at::kRecord4	0x8031f0	-	none	-	-	0
-site	src/game/battle_e4.cpp	758	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	773	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	774	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	775	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	777	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	778	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	779	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
+site	src/game/battle_e4.cpp	758	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	773	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	774	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	775	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	777	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	778	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	779	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e4.cpp	780	global	B	at::kListReset	0x929f04	-	none	-	-	0
-site	src/game/battle_e4.cpp	785	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	785	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	800	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	803	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	803	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	810	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	815	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	817	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	821	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	823	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	825	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	828	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	831	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	832	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	835	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	836	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	839	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	842	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	844	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	846	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	849	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	850	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	854	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	855	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
+site	src/game/battle_e4.cpp	785	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	785	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	800	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	803	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	803	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	810	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	815	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	817	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	821	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	823	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	825	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	828	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	831	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	832	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	835	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	836	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	839	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	842	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	844	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	846	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	849	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	850	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	854	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	855	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e4.cpp	858	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
-site	src/game/battle_e4.cpp	876	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	877	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	878	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	876	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	877	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	878	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	896	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
-site	src/game/battle_e4.cpp	901	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	901	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	902	global	B	at::kRecord4	0x8031f0	-	none	-	-	0
-site	src/game/battle_e4.cpp	904	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	925	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	926	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
+site	src/game/battle_e4.cpp	904	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	925	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	926	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e4.cpp	929	global	At	at::kQueue	0x93c2c0	-	none	-	-	0
 site	src/game/battle_e4.cpp	930	global	B	at::kRecord4	0x8031f0	-	none	-	-	0
 site	src/game/battle_e4.cpp	987	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/battle_e4.cpp	998	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/battle_e4.cpp	1061	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1107	global	B	at::kQueue	0x93c2c0	-	none	-	-	0
-site	src/game/battle_e4.cpp	1124	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
+site	src/game/battle_e4.cpp	1124	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
 site	src/game/battle_e4.cpp	1146	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/battle_e4.cpp	1183	global	B	at::kPreview	0x675f18	-	none	-	-	0
 site	src/game/battle_e4.cpp	1185	global	B	at::kEquipCats	0x64e4e4	-	none	-	-	0
 site	src/game/battle_e4.cpp	1187	global	B	at::kEquipCats	0x64e4e4	-	none	-	-	0
 site	src/game/battle_e4.cpp	1188	global	B	at::kPreview	0x675f18	-	none	-	-	0
-site	src/game/battle_e4.cpp	1201	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1203	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1205	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	1201	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1203	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1205	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	1207	global	B	at::kPreview	0x675f18	-	none	-	-	0
 site	src/game/battle_e4.cpp	1208	global	B	at::kPreview	0x675f18	-	none	-	-	0
-site	src/game/battle_e4.cpp	1208	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1220	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	1208	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1220	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	1230	global	B	at::kUnequipCats	0x64e4ec	-	none	-	-	0
-site	src/game/battle_e4.cpp	1245	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1246	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1247	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1248	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1249	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1251	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1253	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1255	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	1245	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1246	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1247	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1248	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1249	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1251	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1253	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1255	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	1258	global	-	at::kPreview	0x675f18	-	none	-	-	0
-site	src/game/battle_e4.cpp	1261	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1262	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1263	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1264	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1265	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1266	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1267	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1268	global	B	at::kCands	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e4.cpp	1281	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1282	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1283	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1284	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1285	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1287	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e4.cpp	1288	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	1261	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1262	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1263	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1264	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1265	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1266	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1267	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1268	global	B	at::kCands	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e4.cpp	1281	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1282	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1283	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1284	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1285	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1287	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e4.cpp	1288	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	1289	global	-	at::kPreview	0x675f18	-	none	-	-	0
-site	src/game/battle_e4.cpp	1292	global	B	at::kList	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e4.cpp	1294	global	B	at::kSlots	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e4.cpp	1292	global	B	at::kList	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e4.cpp	1294	global	B	at::kSlots	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e4.cpp	1327	global	At	at::kEnemies	0x93b960	-	none	-	-	0
 site	src/game/battle_e4.cpp	1334	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_e4.cpp	1338	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
@@ -2468,60 +2468,60 @@ site	src/game/battle_e5.cpp	551	record	SetW	window + 4	-	param	-	-	-	0
 site	src/game/battle_e5.cpp	552	record	SetW	window + 6	-	param	-	-	-	0
 site	src/game/battle_e5.cpp	553	record	SetW	window + 0x10	-	param	-	-	-	0
 site	src/game/battle_e5.cpp	554	record	SetW	window + 0x12	-	param	-	-	-	0
-site	src/game/battle_e5.cpp	562	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	563	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	564	global	SetW	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	565	global	SetW	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	588	global	B	at::kWin16	0x8033a0	-	exact	BattleE4_List	unsigned char	0
-site	src/game/battle_e5.cpp	616	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	617	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	618	global	SetW	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	619	global	SetW	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	620	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	622	global	B	at::kWin17	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
-site	src/game/battle_e5.cpp	623	global	B	at::kWin17	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
+site	src/game/battle_e5.cpp	562	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	563	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	564	global	SetW	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	565	global	SetW	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	588	global	B	at::kWin16	0x8033a0	-	exact	Window16	unsigned char	0
+site	src/game/battle_e5.cpp	616	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	617	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	618	global	SetW	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	619	global	SetW	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	620	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	622	global	B	at::kWin17	0x8033c4	-	exact	Window17	unsigned char	0
+site	src/game/battle_e5.cpp	623	global	B	at::kWin17	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e5.cpp	626	global	B	at::kGeneFlags	0x939a60	-	none	-	-	0
 site	src/game/battle_e5.cpp	627	global	SetW	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
 site	src/game/battle_e5.cpp	631	global	SetW	at::kWord72	0x904b72	-	none	-	-	0
 site	src/game/battle_e5.cpp	632	global	SetW	at::kAsk	0x904b74	-	none	-	-	0
 site	src/game/battle_e5.cpp	712	global	B	at::kWin4	0x8031f0	-	none	-	-	0
-site	src/game/battle_e5.cpp	739	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	740	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	757	global	W	at::kWin18	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e5.cpp	739	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	740	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	757	global	W	at::kWin18	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e5.cpp	775	global	SlotOf	at::kSlots	0x904608	-	none	-	-	0
 site	src/game/battle_e5.cpp	788	global	SlotOf	at::kSlots	0x904608	-	none	-	-	0
-site	src/game/battle_e5.cpp	795	global	B	at::kWin18	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
+site	src/game/battle_e5.cpp	795	global	B	at::kWin18	0x8033e8	-	exact	Window18	unsigned char	0
 site	src/game/battle_e5.cpp	806	global	SlotOf	at::kSlots	0x904608	-	none	-	-	0
-site	src/game/battle_e5.cpp	809	global	B	at::kWin18	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e5.cpp	840	global	B	at::kWin17	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
+site	src/game/battle_e5.cpp	809	global	B	at::kWin18	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e5.cpp	840	global	B	at::kWin17	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e5.cpp	841	global	B	at::kWin4	0x8031f0	-	none	-	-	0
 site	src/game/battle_e5.cpp	869	global	B	at::kGeneFlags	0x939a60	-	none	-	-	0
 site	src/game/battle_e5.cpp	881	global	B	at::kGeneFlags	0x939a60	-	none	-	-	0
 site	src/game/battle_e5.cpp	881	global	B	at::kGenes	0x904b84	-	none	-	-	0
-site	src/game/battle_e5.cpp	887	global	B	at::kWin17	0x8033c4	-	exact	BattleE4_Cands	unsigned char	0
+site	src/game/battle_e5.cpp	887	global	B	at::kWin17	0x8033c4	-	exact	Window17	unsigned char	0
 site	src/game/battle_e5.cpp	888	global	B	at::kWin4	0x8031f0	-	none	-	-	0
 site	src/game/battle_e5.cpp	905	global	At	at::kGeneFlags	0x939a60	-	none	-	-	0
 site	src/game/battle_e5.cpp	915	global	B	at::kGenes	0x904b84	-	none	-	-	0
 site	src/game/battle_e5.cpp	934	global	B	at::kGeneFlags	0x939a60	-	none	-	-	0
-site	src/game/battle_e5.cpp	963	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
+site	src/game/battle_e5.cpp	963	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
 site	src/game/battle_e5.cpp	988	global	Ptr	at::kCommandRecord	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/battle_e5.cpp	1000	global	B	at::kMsgFlag	0x93c2c1	-	none	-	-	0
-site	src/game/battle_e5.cpp	1013	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	1014	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	1028	global	W	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
+site	src/game/battle_e5.cpp	1013	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	1014	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	1028	global	W	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
 site	src/game/battle_e5.cpp	1049	global	SlotOf	at::kSlots2	0x904620	-	none	-	-	0
-site	src/game/battle_e5.cpp	1056	global	B	at::kWin21	0x803454	-	exact	BattleE4_Above	unsigned char	0
-site	src/game/battle_e5.cpp	1057	global	B	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
+site	src/game/battle_e5.cpp	1056	global	B	at::kWin21	0x803454	-	exact	Window21	unsigned char	0
+site	src/game/battle_e5.cpp	1057	global	B	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
 site	src/game/battle_e5.cpp	1068	global	SlotOf	at::kSlots2	0x904620	-	none	-	-	0
-site	src/game/battle_e5.cpp	1072	global	B	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e5.cpp	1102	global	B	at::kWin18	0x8033e8	-	exact	BattleE4_Slots	unsigned char	0
-site	src/game/battle_e5.cpp	1104	global	B	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e5.cpp	1105	global	SetW	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e5.cpp	1106	global	SetW	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e5.cpp	1108	global	B	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e5.cpp	1109	global	SetW	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e5.cpp	1110	global	SetW	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
-site	src/game/battle_e5.cpp	1116	global	W	at::kWin19	0x80340c	-	exact	BattleE4_Hand	unsigned char	0
+site	src/game/battle_e5.cpp	1072	global	B	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e5.cpp	1102	global	B	at::kWin18	0x8033e8	-	exact	Window18	unsigned char	0
+site	src/game/battle_e5.cpp	1104	global	B	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e5.cpp	1105	global	SetW	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e5.cpp	1106	global	SetW	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e5.cpp	1108	global	B	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e5.cpp	1109	global	SetW	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e5.cpp	1110	global	SetW	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
+site	src/game/battle_e5.cpp	1116	global	W	at::kWin19	0x80340c	-	exact	Window19	unsigned char	0
 site	src/game/battle_e5.cpp	1133	global	SlotOf	at::kSlots2	0x904620	-	none	-	-	0
 site	src/game/battle_e5.cpp	1136	global	SetW	at::kAsk	0x904b74	-	none	-	-	0
 site	src/game/battle_e5.cpp	1152	global	W	at::kAsk	0x904b74	-	none	-	-	0
@@ -2700,7 +2700,7 @@ site	src/game/battle_e6_fuzz.cpp	333	global	Mem	at::kRollOdds	0x64f0fc	-	none	-	
 site	src/game/battle_e6_fuzz.cpp	333	global	Mem	at::kRollOddsB	0x64f104	-	none	-	-	1
 site	src/game/battle_e6_fuzz.cpp	355	record	Mem	m + 2 * i	-	-	-	-	-	1
 site	src/game/battle_e6_fuzz.cpp	377	global	Mem	at::kGenes	0x904b84	-	none	-	-	1
-site	src/game/battle_e6_fuzz.cpp	378	global	Mem	at::kPartySize	0x904ab1	-	exact	BattleSprites_PartyPick	unsigned char	1
+site	src/game/battle_e6_fuzz.cpp	378	global	Mem	at::kPartySize	0x904ab1	-	exact	Battle_PartyStanding	unsigned char	1
 site	src/game/battle_e6_fuzz.cpp	380	global	Mem	at::kGenes	0x904b84	-	none	-	-	1
 site	src/game/battle_e6_fuzz.cpp	388	global	Mem	at::kGenes	0x904b84	-	none	-	-	1
 site	src/game/battle_e6_fuzz.cpp	388	global	Mem	at::kRecipeGenes	0x64ed78	-	none	-	-	1
@@ -2717,7 +2717,7 @@ site	src/game/battle_e6_fuzz.cpp	478	record	SetLong	s + 0x20	-	base=Sprite_Curre
 site	src/game/battle_e6_fuzz.cpp	479	record	SetLong	s + 0x14	-	base=Sprite_Current	-	-	-	1
 site	src/game/battle_e6_fuzz.cpp	511	record	SetLong	g_cell + i	-	-	-	-	-	1
 site	src/game/battle_e6_fuzz.cpp	542	global	Mem	at::kGenes	0x904b84	-	none	-	-	1
-site	src/game/battle_e6_fuzz.cpp	543	global	Mem	at::kPartySize	0x904ab1	-	exact	BattleSprites_PartyPick	unsigned char	1
+site	src/game/battle_e6_fuzz.cpp	543	global	Mem	at::kPartySize	0x904ab1	-	exact	Battle_PartyStanding	unsigned char	1
 site	src/game/battle_e6_fuzz.cpp	597	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_e6_fuzz.cpp	605	global	Mem	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_e6_fuzz.cpp	616	global	Mem	at::kActor	0x904b34	-	none	-	-	1
@@ -3548,7 +3548,7 @@ site	src/game/battle_sprites_fuzz.cpp	499	record	SetWord	g_mine.action + 2	-	par
 site	src/game/battle_sprites_fuzz.cpp	500	global	At	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	501	global	At	at::kActor	0x904b34	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	502	global	At	at::kPartyCount	0x904ab0	-	none	-	-	1
-site	src/game/battle_sprites_fuzz.cpp	506	global	At	at::kBoss	0x904aaa	-	exact	BattleActions_EventBattle	unsigned char	1
+site	src/game/battle_sprites_fuzz.cpp	506	global	At	at::kBoss	0x904aaa	-	exact	EventBattle_Id	unsigned char	1
 site	src/game/battle_sprites_fuzz.cpp	507	global	At	at::kLayout	0x904aac	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	526	global	At	at::kEnemies	0x93b960	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	537	record	SetLong	rec + 8	-	stride=0xc	-	-	-	1
@@ -3572,7 +3572,7 @@ site	src/game/battle_turn_steps.cpp	154	global	At	at::kRounds	0x904b90	-	none	-	
 site	src/game/battle_turn_steps.cpp	224	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_turn_steps.cpp	248	raw	At	0x803500 + i * 4	0x803500	-	none	-	-	0
 site	src/game/battle_turn_steps.cpp	255	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	256	global	B	at::kWindows	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/battle_turn_steps.cpp	256	global	B	at::kWindows	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/battle_turn_steps.cpp	257	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_turn_steps.cpp	261	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_turn_steps.cpp	262	global	At	at::kCmdLong	0x904abd	-	none	-	-	0
@@ -8562,7 +8562,7 @@ site	src/game/event_objs.cpp	235	record	Word	s + 0x14	-	base=Sprite_Current	-	-	
 site	src/game/event_objs.cpp	257	record	Word	Sprite_Current + 0x14	-	base=Sprite_Current	-	-	-	0
 site	src/game/event_objs.cpp	279	record	Long	s + 0x70	-	base=Sprite_Current	-	-	-	0
 site	src/game/event_objs.cpp	300	record	Long	s + 0x70	-	base=Sprite_Current	-	-	-	0
-site	src/game/event_objs.cpp	442	record	At	bof3::addr::CharacterRecords + MoveScript_EffectState[member	-	base=CharacterRecords	-	-	-	0
+site	src/game/event_objs.cpp	442	record	At	bof3::addr::CharacterRecords + Character_IndexById[member & 	-	base=CharacterRecords	-	-	-	0
 site	src/game/event_objs_fuzz.cpp	136	record	Word	Sprite_Current + 0x3E	-	base=Sprite_Current	-	-	-	1
 site	src/game/event_objs_fuzz.cpp	413	global	At	kBlockAt	0x903850	-	none	-	-	1
 site	src/game/event_objs_fuzz.cpp	422	global	At	kBlockAt	0x903850	-	none	-	-	1
@@ -9529,13 +9529,13 @@ site	src/game/field_s.cpp	806	record	W	cell + 2	-	table=0x664078	-	-	-	0
 site	src/game/field_s.cpp	808	global	-	at::kPickCells	0x664078	-	none	-	-	0
 site	src/game/field_s.cpp	809	record	B	cell + 4	-	table=0x664078	-	-	-	0
 site	src/game/field_s.cpp	810	record	W	cell + 2	-	table=0x664078	-	-	-	0
-site	src/game/field_s.cpp	832	raw	SetW	0x803170	0x803170	-	exact	ShopStates2_Help	unsigned short	0
+site	src/game/field_s.cpp	832	raw	SetW	0x803170	0x803170	-	exact	Window0_Arrows	unsigned short	0
 site	src/game/field_s.cpp	839	raw	B	0x80318F	0x80318f	-	none	-	-	0
-site	src/game/field_s.cpp	840	raw	B	0x80318E	0x80318e	-	exact	Rest3a_Win1Slot	unsigned char	0
+site	src/game/field_s.cpp	840	raw	B	0x80318E	0x80318e	-	exact	Window1_ParamA	unsigned char	0
 site	src/game/field_s.cpp	841	raw	B	0x803190	0x803190	-	none	-	-	0
-site	src/game/field_s.cpp	842	raw	B	0x803191	0x803191	-	exact	Rest2h_Window1Master	unsigned char	0
+site	src/game/field_s.cpp	842	raw	B	0x803191	0x803191	-	exact	Window1_Master	unsigned char	0
 site	src/game/field_s.cpp	843	raw	B	0x80318C	0x80318c	-	none	-	-	0
-site	src/game/field_s.cpp	856	raw	B	0x803191	0x803191	-	exact	Rest2h_Window1Master	unsigned char	0
+site	src/game/field_s.cpp	856	raw	B	0x803191	0x803191	-	exact	Window1_Master	unsigned char	0
 site	src/game/field_s.cpp	856	raw	B	0x8031B2	0x8031b2	-	none	-	-	0
 site	src/game/field_s.cpp	893	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	895	global	B	at::kTimer	0x929f04	-	none	-	-	0
@@ -9557,7 +9557,7 @@ site	src/game/field_s.cpp	1155	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1156	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1158	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1204	raw	B	0x80318F	0x80318f	-	none	-	-	0
-site	src/game/field_s.cpp	1205	raw	SetW	0x803170	0x803170	-	exact	ShopStates2_Help	unsigned short	0
+site	src/game/field_s.cpp	1205	raw	SetW	0x803170	0x803170	-	exact	Window0_Arrows	unsigned short	0
 site	src/game/field_s.cpp	1207	raw	L	0x803188	0x803188	-	none	-	-	0
 site	src/game/field_s.cpp	1234	global	B	at::kJoined	0x6bc8bc	-	none	-	-	0
 site	src/game/field_s.cpp	1242	raw	B	0x8031B2	0x8031b2	-	none	-	-	0
@@ -9567,7 +9567,7 @@ site	src/game/field_s.cpp	1250	raw	B	0x8031D8	0x8031d8	-	none	-	-	0
 site	src/game/field_s.cpp	1251	raw	B	0x8031D9	0x8031d9	-	none	-	-	0
 site	src/game/field_s.cpp	1257	raw	B	0x80318F	0x80318f	-	none	-	-	0
 site	src/game/field_s.cpp	1258	global	B	at::kTimer	0x929f04	-	none	-	-	0
-site	src/game/field_s.cpp	1270	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	0
+site	src/game/field_s.cpp	1270	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	0
 site	src/game/field_s.cpp	1271	raw	B	0x8031FB	0x8031fb	-	none	-	-	0
 site	src/game/field_s.cpp	1272	raw	B	0x8031FC	0x8031fc	-	none	-	-	0
 site	src/game/field_s.cpp	1273	raw	B	0x8031FD	0x8031fd	-	none	-	-	0
@@ -9575,20 +9575,20 @@ site	src/game/field_s.cpp	1277	raw	B	0x80318F	0x80318f	-	none	-	-	0
 site	src/game/field_s.cpp	1279	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1289	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1319	global	L	at::kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
-site	src/game/field_s.cpp	1320	raw	SetW	0x803170	0x803170	-	exact	ShopStates2_Help	unsigned short	0
+site	src/game/field_s.cpp	1320	raw	SetW	0x803170	0x803170	-	exact	Window0_Arrows	unsigned short	0
 site	src/game/field_s.cpp	1327	global	L	at::kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
 site	src/game/field_s.cpp	1335	global	B	at::kJoined	0x6bc8bc	-	none	-	-	0
 site	src/game/field_s.cpp	1351	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1352	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1370	global	B	at::kJoined	0x6bc8bc	-	none	-	-	0
-site	src/game/field_s.cpp	1372	raw	SetW	0x803170	0x803170	-	exact	ShopStates2_Help	unsigned short	0
+site	src/game/field_s.cpp	1372	raw	SetW	0x803170	0x803170	-	exact	Window0_Arrows	unsigned short	0
 site	src/game/field_s.cpp	1374	raw	L	0x8031D0	0x8031d0	-	none	-	-	0
 site	src/game/field_s.cpp	1386	raw	B	0x8031D9	0x8031d9	-	none	-	-	0
 site	src/game/field_s.cpp	1394	raw	B	0x8031D9	0x8031d9	-	none	-	-	0
 site	src/game/field_s.cpp	1397	global	B	at::kJoined	0x6bc8bc	-	none	-	-	0
 site	src/game/field_s.cpp	1398	raw	B	0x8031B2	0x8031b2	-	none	-	-	0
 site	src/game/field_s.cpp	1399	raw	B	0x8031D6	0x8031d6	-	none	-	-	0
-site	src/game/field_s.cpp	1405	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	0
+site	src/game/field_s.cpp	1405	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	0
 site	src/game/field_s.cpp	1406	raw	B	0x8031FB	0x8031fb	-	none	-	-	0
 site	src/game/field_s.cpp	1407	raw	B	0x8031FD	0x8031fd	-	none	-	-	0
 site	src/game/field_s.cpp	1409	raw	B	0x8031D8	0x8031d8	-	none	-	-	0
@@ -9597,7 +9597,7 @@ site	src/game/field_s.cpp	1443	raw	B	0x8031D6	0x8031d6	-	none	-	-	0
 site	src/game/field_s.cpp	1444	raw	B	0x8031D7	0x8031d7	-	none	-	-	0
 site	src/game/field_s.cpp	1445	record	B	RecAddr(member_rec) + 0x7E + slot	-	via=RecAddr	-	-	-	0
 site	src/game/field_s.cpp	1446	global	W	at::kAbilityRecords	0x65c4c8	-	exact	Ability_Records	-	0
-site	src/game/field_s.cpp	1446	raw	SetW	0x803170	0x803170	-	exact	ShopStates2_Help	unsigned short	0
+site	src/game/field_s.cpp	1446	raw	SetW	0x803170	0x803170	-	exact	Window0_Arrows	unsigned short	0
 site	src/game/field_s.cpp	1448	raw	L	0x8031D0	0x8031d0	-	none	-	-	0
 site	src/game/field_s.cpp	1456	raw	B	0x8031D7	0x8031d7	-	none	-	-	0
 site	src/game/field_s.cpp	1460	raw	B	0x8031D7	0x8031d7	-	none	-	-	0
@@ -9613,9 +9613,9 @@ site	src/game/field_s.cpp	1502	raw	B	0x8031D8	0x8031d8	-	none	-	-	0
 site	src/game/field_s.cpp	1518	raw	B	0x8031FB	0x8031fb	-	none	-	-	0
 site	src/game/field_s.cpp	1520	global	W	at::kAbilityRecords	0x65c4c8	-	exact	Ability_Records	-	0
 site	src/game/field_s.cpp	1520	global	B	at::kSharedList	0x904574	-	none	-	-	0
-site	src/game/field_s.cpp	1520	raw	SetW	0x803170	0x803170	-	exact	ShopStates2_Help	unsigned short	0
+site	src/game/field_s.cpp	1520	raw	SetW	0x803170	0x803170	-	exact	Window0_Arrows	unsigned short	0
 site	src/game/field_s.cpp	1521	raw	L	0x8031F4	0x8031f4	-	none	-	-	0
-site	src/game/field_s.cpp	1522	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	0
+site	src/game/field_s.cpp	1522	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	0
 site	src/game/field_s.cpp	1524	raw	B	0x8031FB	0x8031fb	-	none	-	-	0
 site	src/game/field_s.cpp	1528	raw	B	0x8031FB	0x8031fb	-	none	-	-	0
 site	src/game/field_s.cpp	1530	raw	B	0x8031FD	0x8031fd	-	none	-	-	0
@@ -9628,7 +9628,7 @@ site	src/game/field_s.cpp	1562	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1563	global	B	at::kTimer	0x929f04	-	none	-	-	0
 site	src/game/field_s.cpp	1569	raw	B	0x80321E	0x80321e	-	none	-	-	0
 site	src/game/field_s.cpp	1570	raw	B	0x80321F	0x80321f	-	none	-	-	0
-site	src/game/field_s.cpp	1586	raw	SetW	0x803170	0x803170	-	exact	ShopStates2_Help	unsigned short	0
+site	src/game/field_s.cpp	1586	raw	SetW	0x803170	0x803170	-	exact	Window0_Arrows	unsigned short	0
 site	src/game/field_s.cpp	1588	raw	B	0x80321E	0x80321e	-	none	-	-	0
 site	src/game/field_s.cpp	1592	raw	B	0x80321E	0x80321e	-	none	-	-	0
 site	src/game/field_s.cpp	1593	raw	B	0x80321E	0x80321e	-	none	-	-	0
@@ -9641,8 +9641,8 @@ site	src/game/field_s.cpp	1606	raw	B	0x80321F	0x80321f	-	none	-	-	0
 site	src/game/field_s.cpp	1633	raw	B	0x8031FB	0x8031fb	-	none	-	-	0
 site	src/game/field_s.cpp	1635	global	W	at::kAbilityRecords	0x65c4c8	-	exact	Ability_Records	-	0
 site	src/game/field_s.cpp	1635	global	B	at::kSharedList	0x904574	-	none	-	-	0
-site	src/game/field_s.cpp	1635	raw	SetW	0x803170	0x803170	-	exact	ShopStates2_Help	unsigned short	0
-site	src/game/field_s.cpp	1637	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	0
+site	src/game/field_s.cpp	1635	raw	SetW	0x803170	0x803170	-	exact	Window0_Arrows	unsigned short	0
+site	src/game/field_s.cpp	1637	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	0
 site	src/game/field_s.cpp	1639	raw	B	0x8031FB	0x8031fb	-	none	-	-	0
 site	src/game/field_s.cpp	1643	raw	B	0x8031FB	0x8031fb	-	none	-	-	0
 site	src/game/field_s.cpp	1645	raw	B	0x8031FD	0x8031fd	-	none	-	-	0
@@ -9661,8 +9661,8 @@ site	src/game/field_s.cpp	1668	raw	B	0x8031FC	0x8031fc	-	none	-	-	0
 site	src/game/field_s.cpp	1669	raw	B	0x8031FC	0x8031fc	-	none	-	-	0
 site	src/game/field_s.cpp	1672	raw	B	0x80321F	0x80321f	-	none	-	-	0
 site	src/game/field_s.cpp	1690	global	B	at::kJoined	0x6bc8bc	-	none	-	-	0
-site	src/game/field_s.cpp	1696	raw	B	0x80316A	0x80316a	-	exact	BattleOdds_Win0Index	unsigned char	0
-site	src/game/field_s.cpp	1703	raw	B	0x80318E	0x80318e	-	exact	Rest3a_Win1Slot	unsigned char	0
+site	src/game/field_s.cpp	1696	raw	B	0x80316A	0x80316a	-	exact	Window0_ParamA	unsigned char	0
+site	src/game/field_s.cpp	1703	raw	B	0x80318E	0x80318e	-	exact	Window1_ParamA	unsigned char	0
 site	src/game/field_s.cpp	1704	raw	B	0x80318F	0x80318f	-	none	-	-	0
 site	src/game/field_s.cpp	1709	raw	B	0x80345E	0x80345e	-	none	-	-	0
 site	src/game/field_s.cpp	1748	global	At	at::kSharedList	0x904574	-	none	-	-	0
@@ -9767,7 +9767,7 @@ site	src/game/field_s.cpp	2115	raw	B	0x803365	0x803365	-	none	-	-	0
 site	src/game/field_s.cpp	2119	raw	B	0x803363	0x803363	-	none	-	-	0
 site	src/game/field_s.cpp	2129	raw	B	0x803363	0x803363	-	none	-	-	0
 site	src/game/field_s_fuzz.cpp	242	raw	B	0x8031FB	0x8031fb	-	none	-	-	1
-site	src/game/field_s_fuzz.cpp	243	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	1
+site	src/game/field_s_fuzz.cpp	243	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	1
 site	src/game/field_s_fuzz.cpp	244	raw	B	0x8031FC	0x8031fc	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	245	raw	B	0x8031D7	0x8031d7	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	246	raw	B	0x80321E	0x80321e	-	none	-	-	1
@@ -9785,14 +9785,14 @@ site	src/game/field_s_fuzz.cpp	457	global	B	at::kTimer	0x929f04	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	464	global	B	at::kMessageEnd	0x929f0f	-	exact	AreaW3c_Load0F	unsigned char	1
 site	src/game/field_s_fuzz.cpp	468	global	B	at::kReserve	0x6bc894	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	473	global	B	at::kJoined	0x6bc8bc	-	none	-	-	1
-site	src/game/field_s_fuzz.cpp	478	raw	B	0x803187	0x803187	-	exact	ItemUse_Window1State	unsigned char	1
+site	src/game/field_s_fuzz.cpp	478	raw	B	0x803187	0x803187	-	exact	Window1_State	unsigned char	1
 site	src/game/field_s_fuzz.cpp	479	raw	B	0x8031CF	0x8031cf	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	480	raw	B	0x8031D6	0x8031d6	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	481	raw	B	0x8031D7	0x8031d7	-	none	-	-	1
-site	src/game/field_s_fuzz.cpp	482	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	1
-site	src/game/field_s_fuzz.cpp	483	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	1
-site	src/game/field_s_fuzz.cpp	483	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	1
-site	src/game/field_s_fuzz.cpp	483	raw	B	0x8031FA	0x8031fa	-	exact	BattleOdds_Win4Index	unsigned char	1
+site	src/game/field_s_fuzz.cpp	482	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	1
+site	src/game/field_s_fuzz.cpp	483	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	1
+site	src/game/field_s_fuzz.cpp	483	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	1
+site	src/game/field_s_fuzz.cpp	483	raw	B	0x8031FA	0x8031fa	-	exact	Window4_Index	unsigned char	1
 site	src/game/field_s_fuzz.cpp	483	raw	B	0x8031FB	0x8031fb	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	484	raw	B	0x8031FC	0x8031fc	-	none	-	-	1
 site	src/game/field_s_fuzz.cpp	485	raw	B	0x8031FD	0x8031fd	-	none	-	-	1
@@ -13762,21 +13762,21 @@ site	src/game/menu_lists.cpp	209	raw	At	0x9398B0	0x9398b0	-	none	-	-	0
 site	src/game/menu_lists.cpp	210	raw	At	0x939890	0x939890	-	none	-	-	0
 site	src/game/menu_lists.cpp	211	raw	Byte	0x9398BC	0x9398bc	-	none	-	-	0
 site	src/game/menu_lists.cpp	212	raw	Byte	0x93989C	0x93989c	-	none	-	-	0
-site	src/game/menu_lists.cpp	261	global	Byte	at::kIconWindow	0x8032a4	-	exact	MenuLists_IconWindow	unsigned char	0
-site	src/game/menu_lists.cpp	271	global	Byte	at::kIconWindow	0x8032a4	-	exact	MenuLists_IconWindow	unsigned char	0
+site	src/game/menu_lists.cpp	261	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
+site	src/game/menu_lists.cpp	271	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
 site	src/game/menu_lists.cpp	278	global	Byte	at::kCountdown	0x929f04	-	none	-	-	0
 site	src/game/menu_lists.cpp	285	global	Byte	at::kCountdown	0x929f04	-	none	-	-	0
-site	src/game/menu_lists.cpp	299	global	Byte	at::kIconWindow	0x8032a4	-	exact	MenuLists_IconWindow	unsigned char	0
+site	src/game/menu_lists.cpp	299	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
 site	src/game/menu_lists.cpp	312	global	Byte	at::kCountdown	0x929f04	-	none	-	-	0
-site	src/game/menu_lists.cpp	313	global	Byte	at::kMoneyWindow	0x80325c	-	exact	MenuLists_MoneyWindow	unsigned char	0
-site	src/game/menu_lists.cpp	314	global	Byte	at::kTimeWindow	0x803280	-	exact	MenuLists_TimeWindow	unsigned char	0
-site	src/game/menu_lists.cpp	315	global	Byte	at::kIconWindow	0x8032a4	-	exact	MenuLists_IconWindow	unsigned char	0
-site	src/game/menu_lists.cpp	316	global	Byte	at::kTitleWindow	0x8032c8	-	exact	MenuLists_TitleWindow	unsigned char	0
+site	src/game/menu_lists.cpp	313	global	Byte	at::kMoneyWindow	0x80325c	-	exact	Window7	unsigned char	0
+site	src/game/menu_lists.cpp	314	global	Byte	at::kTimeWindow	0x803280	-	exact	Window8	unsigned char	0
+site	src/game/menu_lists.cpp	315	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
+site	src/game/menu_lists.cpp	316	global	Byte	at::kTitleWindow	0x8032c8	-	exact	Window10	unsigned char	0
 site	src/game/menu_lists.cpp	321	global	At	at::kMemberPanels	0x8031f0	-	none	-	-	0
 site	src/game/menu_lists.cpp	349	global	At	at::kMemberPanels	0x8031f0	-	none	-	-	0
-site	src/game/menu_lists.cpp	376	global	Byte	at::kIconWindow	0x8032a4	-	exact	MenuLists_IconWindow	unsigned char	0
-site	src/game/menu_lists.cpp	377	global	Byte	at::kIconWindow	0x8032a4	-	exact	MenuLists_IconWindow	unsigned char	0
-site	src/game/menu_lists.cpp	378	global	Byte	at::kIconWindow	0x8032a4	-	exact	MenuLists_IconWindow	unsigned char	0
+site	src/game/menu_lists.cpp	376	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
+site	src/game/menu_lists.cpp	377	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
+site	src/game/menu_lists.cpp	378	global	Byte	at::kIconWindow	0x8032a4	-	exact	Window9	unsigned char	0
 site	src/game/menu_lists.cpp	397	global	At	at::kSavedParty	0x6bdf98	-	none	-	-	0
 site	src/game/menu_lists.cpp	411	global	At	at::kReserveData	0x9045fc	-	none	-	-	0
 site	src/game/menu_lists.cpp	415	global	At	at::kReserveData	0x9045fc	-	none	-	-	0
@@ -14063,7 +14063,7 @@ site	src/game/msgbox.cpp	140	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
 site	src/game/msgbox.cpp	167	global	B	kFlags	0x7dee44	-	none	-	-	0
 site	src/game/msgbox.cpp	168	global	B	kFlags	0x7dee44	-	none	-	-	0
 site	src/game/msgbox.cpp	220	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
-site	src/game/msgbox.cpp	262	global	B	kNameMap	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/msgbox.cpp	262	global	B	kNameMap	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/msgbox.cpp	264	global	At	kCharRecords	0x903a6f	-	none	-	-	0
 site	src/game/msgbox.cpp	273	global	At	kCharRecords	0x903a6f	-	none	-	-	0
 site	src/game/msgbox.cpp	300	global	At	kTextRecords	0x904cdf	-	none	-	-	0
@@ -14085,7 +14085,7 @@ site	src/game/msgbox.cpp	441	global	SetB	kState	0x7dee40	-	none	-	-	0
 site	src/game/msgbox.cpp	444	global	SetB	kFlags	0x7dee44	-	none	-	-	0
 site	src/game/msgbox.cpp	444	global	B	kFlags	0x7dee44	-	none	-	-	0
 site	src/game/msgbox.cpp	447	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
-site	src/game/msgbox.cpp	448	global	B	kNameMap	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/msgbox.cpp	448	global	B	kNameMap	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/msgbox.cpp	450	global	At	kCharRecords	0x903a6f	-	none	-	-	0
 site	src/game/msgbox.cpp	454	global	SetB	kFlags	0x7dee44	-	none	-	-	0
 site	src/game/msgbox.cpp	454	global	B	kFlags	0x7dee44	-	none	-	-	0
@@ -14555,10 +14555,10 @@ site	src/game/rest_2b.cpp	405	global	SetW	kMessage	0x803194	-	none	-	-	0
 site	src/game/rest_2b.cpp	411	global	SetW	kMessage	0x803194	-	none	-	-	0
 site	src/game/rest_2b.cpp	430	global	SetW	kMessage	0x803194	-	none	-	-	0
 site	src/game/rest_2b.cpp	440	global	B	kWin0	0x803160	-	none	-	-	0
-site	src/game/rest_2b.cpp	441	global	L	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
+site	src/game/rest_2b.cpp	441	global	L	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/rest_2b.cpp	442	global	SetW	kWin0	0x803160	-	none	-	-	0
 site	src/game/rest_2b.cpp	443	global	SetW	kWin0	0x803160	-	none	-	-	0
-site	src/game/rest_2b.cpp	443	global	W	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
+site	src/game/rest_2b.cpp	443	global	W	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/rest_2b.cpp	461	global	SetW	kMessage	0x803194	-	none	-	-	0
 site	src/game/rest_2b.cpp	464	global	SetW	kMessage	0x803194	-	none	-	-	0
 site	src/game/rest_2b.cpp	470	global	SetW	kMessage	0x803194	-	none	-	-	0
@@ -14608,20 +14608,20 @@ site	src/game/rest_2b.cpp	666	global	B	kWin0	0x803160	-	none	-	-	0
 site	src/game/rest_2b.cpp	667	global	B	kWin0	0x803160	-	none	-	-	0
 site	src/game/rest_2b.cpp	668	global	SetW	kWin0	0x803160	-	none	-	-	0
 site	src/game/rest_2b.cpp	669	global	SetW	kWin0	0x803160	-	none	-	-	0
-site	src/game/rest_2b.cpp	670	global	SetW	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/rest_2b.cpp	671	global	SetW	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
+site	src/game/rest_2b.cpp	670	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	671	global	SetW	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/rest_2b.cpp	672	global	B	kWin0	0x803160	-	none	-	-	0
 site	src/game/rest_2b.cpp	673	global	B	kWin0	0x803160	-	none	-	-	0
-site	src/game/rest_2b.cpp	675	global	B	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/rest_2b.cpp	676	global	B	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/rest_2b.cpp	677	global	B	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/rest_2b.cpp	678	global	SetW	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/rest_2b.cpp	680	global	B	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
-site	src/game/rest_2b.cpp	681	global	B	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
-site	src/game/rest_2b.cpp	682	global	B	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
-site	src/game/rest_2b.cpp	683	global	SetW	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
-site	src/game/rest_2b.cpp	684	global	B	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
-site	src/game/rest_2b.cpp	685	global	B	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
+site	src/game/rest_2b.cpp	675	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	676	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	677	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	678	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	680	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	681	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	682	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	683	global	SetW	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	684	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	685	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/rest_2b.cpp	686	global	B	kWin3	0x8031cc	-	none	-	-	0
 site	src/game/rest_2b.cpp	687	global	B	kWin3	0x8031cc	-	none	-	-	0
 site	src/game/rest_2b.cpp	688	global	B	kWin3	0x8031cc	-	none	-	-	0
@@ -14631,8 +14631,8 @@ site	src/game/rest_2b.cpp	691	global	SetW	kWin3	0x8031cc	-	none	-	-	0
 site	src/game/rest_2b.cpp	692	global	B	kWin3	0x8031cc	-	none	-	-	0
 site	src/game/rest_2b.cpp	693	global	SetL	kWin3	0x8031cc	-	none	-	-	0
 site	src/game/rest_2b.cpp	698	global	B	kWin0	0x803160	-	none	-	-	0
-site	src/game/rest_2b.cpp	699	global	B	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/rest_2b.cpp	700	global	B	kWin2	0x8031a8	-	exact	BattleE1_Win2	unsigned char	0
+site	src/game/rest_2b.cpp	699	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	700	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
 site	src/game/rest_2b.cpp	701	global	B	kWin3	0x8031cc	-	none	-	-	0
 site	src/game/rest_2b.cpp	768	global	SetL	kModelB	0x939960	-	none	-	-	0
 site	src/game/rest_2b.cpp	769	global	SetL	kModelB	0x939960	-	none	-	-	0
@@ -14718,7 +14718,7 @@ site	src/game/rest_2c.cpp	386	raw	B	0x90384B	0x90384b	-	none	-	-	0
 site	src/game/rest_2c.cpp	386	raw	B	0x903A03	0x903a03	-	none	-	-	0
 site	src/game/rest_2c.cpp	387	raw	L	0x90358C	0x90358c	-	inside	Gfx_UnpackScratch+0x1f00c	unsigned char	0
 site	src/game/rest_2c.cpp	389	raw	L	0x903584	0x903584	-	exact	Field_MenuButton	unsigned short	0
-site	src/game/rest_2c.cpp	390	global	B	at::kMemberRecord	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/rest_2c.cpp	390	global	B	at::kMemberRecord	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/rest_2c.cpp	393	global	-	at::kRecords	0x903a70	-	none	-	-	0
 site	src/game/rest_2c.cpp	394	global	At	at::kSummary	0x904680	-	none	-	-	0
 site	src/game/rest_2c.cpp	395	raw	At	0x904696	0x904696	-	none	-	-	0
@@ -15067,7 +15067,7 @@ site	src/game/rest_2e.cpp	336	raw	L	0x803338	0x803338	-	none	-	-	0
 site	src/game/rest_2e.cpp	337	raw	W	0x80333A	0x80333a	-	none	-	-	0
 site	src/game/rest_2e.cpp	338	raw	SetW	0x8032FC	0x8032fc	-	none	-	-	0
 site	src/game/rest_2e.cpp	340	raw	SetW	0x803458	0x803458	-	none	-	-	0
-site	src/game/rest_2e.cpp	341	raw	SetW	0x80345A	0x80345a	-	exact	ShopStates2_HandY	unsigned short	0
+site	src/game/rest_2e.cpp	341	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
 site	src/game/rest_2e.cpp	343	raw	B	0x803340	0x803340	-	none	-	-	0
 site	src/game/rest_2e.cpp	348	raw	B	0x80333E	0x80333e	-	none	-	-	0
 site	src/game/rest_2e.cpp	349	raw	SetW	0x803344	0x803344	-	none	-	-	0
@@ -15094,7 +15094,7 @@ site	src/game/rest_2e.cpp	393	raw	L	0x80335C	0x80335c	-	none	-	-	0
 site	src/game/rest_2e.cpp	394	raw	W	0x80335E	0x80335e	-	none	-	-	0
 site	src/game/rest_2e.cpp	395	raw	SetW	0x8032FC	0x8032fc	-	none	-	-	0
 site	src/game/rest_2e.cpp	397	raw	SetW	0x803458	0x803458	-	none	-	-	0
-site	src/game/rest_2e.cpp	398	raw	SetW	0x80345A	0x80345a	-	exact	ShopStates2_HandY	unsigned short	0
+site	src/game/rest_2e.cpp	398	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
 site	src/game/rest_2e.cpp	399	raw	B	0x803340	0x803340	-	none	-	-	0
 site	src/game/rest_2e.cpp	400	raw	B	0x803364	0x803364	-	none	-	-	0
 site	src/game/rest_2e.cpp	404	raw	B	0x803363	0x803363	-	none	-	-	0
@@ -15150,7 +15150,7 @@ site	src/game/rest_2e.cpp	503	raw	W	0x8032F2	0x8032f2	-	none	-	-	0
 site	src/game/rest_2e.cpp	504	global	L	kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
 site	src/game/rest_2e.cpp	505	raw	SetW	0x8032FC	0x8032fc	-	none	-	-	0
 site	src/game/rest_2e.cpp	507	raw	SetW	0x803458	0x803458	-	none	-	-	0
-site	src/game/rest_2e.cpp	508	raw	SetW	0x80345A	0x80345a	-	exact	ShopStates2_HandY	unsigned short	0
+site	src/game/rest_2e.cpp	508	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
 site	src/game/rest_2e.cpp	512	global	L	kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
 site	src/game/rest_2e.cpp	517	raw	B	0x80333E	0x80333e	-	none	-	-	0
 site	src/game/rest_2e.cpp	517	raw	B	0x803340	0x803340	-	none	-	-	0
@@ -15251,7 +15251,7 @@ site	src/game/rest_2e.cpp	824	raw	L	0x803314	0x803314	-	none	-	-	0
 site	src/game/rest_2e.cpp	825	raw	SetW	0x8032FC	0x8032fc	-	none	-	-	0
 site	src/game/rest_2e.cpp	828	raw	W	0x803316	0x803316	-	none	-	-	0
 site	src/game/rest_2e.cpp	829	raw	SetW	0x803458	0x803458	-	none	-	-	0
-site	src/game/rest_2e.cpp	830	raw	SetW	0x80345A	0x80345a	-	exact	ShopStates2_HandY	unsigned short	0
+site	src/game/rest_2e.cpp	830	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
 site	src/game/rest_2e.cpp	831	raw	B	0x80331B	0x80331b	-	none	-	-	0
 site	src/game/rest_2e.cpp	832	raw	B	0x803341	0x803341	-	none	-	-	0
 site	src/game/rest_2e.cpp	840	raw	B	0x80331B	0x80331b	-	none	-	-	0
@@ -15317,7 +15317,7 @@ site	src/game/rest_2e.cpp	988	raw	SetW	0x8032FC	0x8032fc	-	none	-	-	0
 site	src/game/rest_2e.cpp	989	raw	W	0x80333A	0x80333a	-	none	-	-	0
 site	src/game/rest_2e.cpp	989	raw	B	0x80333E	0x80333e	-	none	-	-	0
 site	src/game/rest_2e.cpp	991	raw	SetW	0x803458	0x803458	-	none	-	-	0
-site	src/game/rest_2e.cpp	993	raw	SetW	0x80345A	0x80345a	-	exact	ShopStates2_HandY	unsigned short	0
+site	src/game/rest_2e.cpp	993	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
 site	src/game/rest_2e.cpp	997	raw	B	0x80333E	0x80333e	-	none	-	-	0
 site	src/game/rest_2e.cpp	998	raw	B	0x80333E	0x80333e	-	none	-	-	0
 site	src/game/rest_2e.cpp	999	raw	B	0x80333E	0x80333e	-	none	-	-	0
@@ -15434,7 +15434,7 @@ site	src/game/rest_2e.cpp	1272	raw	SetW	0x8032FC	0x8032fc	-	none	-	-	0
 site	src/game/rest_2e.cpp	1274	raw	B	0x8033A8	0x8033a8	-	none	-	-	0
 site	src/game/rest_2e.cpp	1275	raw	W	0x803316	0x803316	-	none	-	-	0
 site	src/game/rest_2e.cpp	1277	raw	SetW	0x803458	0x803458	-	none	-	-	0
-site	src/game/rest_2e.cpp	1278	raw	SetW	0x80345A	0x80345a	-	exact	ShopStates2_HandY	unsigned short	0
+site	src/game/rest_2e.cpp	1278	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
 site	src/game/rest_2e.cpp	1279	raw	B	0x80331B	0x80331b	-	none	-	-	0
 site	src/game/rest_2e.cpp	1289	raw	B	0x80331B	0x80331b	-	none	-	-	0
 site	src/game/rest_2e.cpp	1301	global	B	kTimer	0x929f04	-	none	-	-	0
@@ -15535,7 +15535,7 @@ site	src/game/rest_2e.cpp	1669	raw	W	0x8033EE	0x8033ee	-	none	-	-	0
 site	src/game/rest_2e.cpp	1670	raw	SetW	0x8032FC	0x8032fc	-	none	-	-	0
 site	src/game/rest_2e.cpp	1671	raw	B	0x8033F4	0x8033f4	-	none	-	-	0
 site	src/game/rest_2e.cpp	1673	raw	SetW	0x803458	0x803458	-	none	-	-	0
-site	src/game/rest_2e.cpp	1674	raw	SetW	0x80345A	0x80345a	-	exact	ShopStates2_HandY	unsigned short	0
+site	src/game/rest_2e.cpp	1674	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
 site	src/game/rest_2e.cpp	1675	raw	B	0x8033AC	0x8033ac	-	none	-	-	0
 site	src/game/rest_2e.cpp	1681	raw	B	0x8033F3	0x8033f3	-	none	-	-	0
 site	src/game/rest_2e.cpp	1682	raw	B	0x8033F3	0x8033f3	-	none	-	-	0
@@ -15628,7 +15628,7 @@ site	src/game/rest_2e_fuzz.cpp	306	raw	B	0x8033D0	0x8033d0	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	307	raw	B	0x8033F3	0x8033f3	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	318	raw	B	0x80333E	0x80333e	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	328	raw	B	0x803340	0x803340	-	none	-	-	1
-site	src/game/rest_2e_fuzz.cpp	328	raw	Mem	0x903A70 + 0xA4u * MoveScript_EffectState[B(Cond_Flags_addr 	0x903a70	-	none	-	-	1
+site	src/game/rest_2e_fuzz.cpp	328	raw	Mem	0x903A70 + 0xA4u * Character_IndexById[B(Cond_Flags_addr + 0	0x903a70	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	330	raw	B	0x6BDFA8 + i	0x6bdfa8	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	334	raw	B	0x803340	0x803340	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	355	raw	B	0x80333E	0x80333e	-	none	-	-	1
@@ -15642,7 +15642,7 @@ site	src/game/rest_2e_fuzz.cpp	367	raw	B	0x904154 + (w << 1 | (v & 1))	0x904154	
 site	src/game/rest_2e_fuzz.cpp	368	raw	B	0x6BDFA8 + v % 6	0x6bdfa8	-	none	-	-	1
 site	src/game/rest_2e_fuzz.cpp	376	raw	B	0x8033F3	0x8033f3	-	none	-	-	1
 site	src/game/rest_2f.cpp	173	global	At	kCharacters	0x903a70	-	none	-	-	0
-site	src/game/rest_2f.cpp	173	global	B	kEffectState	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/rest_2f.cpp	173	global	B	kEffectState	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/rest_2f.cpp	267	global	B	kApCost	0x65c4da	-	none	-	-	0
 site	src/game/rest_2f.cpp	267	global	B	kApCost	0x65c4da	-	none	-	-	0
 site	src/game/rest_2f.cpp	280	global	B	kApCost	0x65c4da	-	none	-	-	0
@@ -15740,7 +15740,7 @@ site	src/game/rest_2f.cpp	1393	record	Word	r + 0x12	-	via=Cur	-	-	-	0
 site	src/game/rest_2f.cpp	1395	record	Word	r + 0x10	-	via=Cur	-	-	-	0
 site	src/game/rest_2f.cpp	1436	global	At	kIdLists	0x656b00	-	exact	Inventory_IdLists	-	0
 site	src/game/rest_2f.cpp	1437	global	At	kCountLists	0x656b14	-	exact	Inventory_CountLists	-	0
-site	src/game/rest_2f.cpp	1445	global	B	kEffectState	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/rest_2f.cpp	1445	global	B	kEffectState	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/rest_2f.cpp	1473	global	At	kListTitles	0x66af10	-	none	-	-	0
 site	src/game/rest_2f.cpp	1484	global	At	kPrint	0x904ba0	-	none	-	-	0
 site	src/game/rest_2f.cpp	1484	global	At	kUsedFormat	0x6639c8	-	none	-	-	0
@@ -15763,7 +15763,7 @@ site	src/game/rest_2f_fuzz.cpp	507	record	SetWord	cur + 0x10	-	-	-	-	-	1
 site	src/game/rest_2f_fuzz.cpp	509	global	B	kListLast	0x7dee66	-	exact	MenuWindows_ListCount	signed char	1
 site	src/game/rest_2f_fuzz.cpp	533	record	Mem	kTitleCall + 1	-	-	-	-	-	1
 site	src/game/rest_2g.cpp	79	record	At	table + 4 * s	-	param	-	-	-	0
-site	src/game/rest_2g.cpp	95	global	B	at::kMemberRecord	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/rest_2g.cpp	95	global	B	at::kMemberRecord	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/rest_2g.cpp	95	global	B	at::kParty	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
 site	src/game/rest_2g.cpp	104	record	SetWord	moved + off	-	via=Rec	-	-	-	0
 site	src/game/rest_2g.cpp	104	record	Word	moved + off	-	via=Rec	-	-	-	0
@@ -15813,7 +15813,7 @@ site	src/game/rest_2h.cpp	111	record	Word	w + at_word	-	via=Rec	-	-	-	0
 site	src/game/rest_2h.cpp	112	record	Word	w + at_word	-	via=Rec	-	-	-	0
 site	src/game/rest_2h.cpp	114	record	SetWord	w + at_word	-	via=Rec	-	-	-	0
 site	src/game/rest_2h.cpp	121	global	At	at::kRecords	0x903a70	-	none	-	-	0
-site	src/game/rest_2h.cpp	122	global	B	at::kMemberMap	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/rest_2h.cpp	122	global	B	at::kMemberMap	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/rest_2h.cpp	124	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	0
 site	src/game/rest_2h.cpp	172	record	Long	obj + 0x20	-	-	-	-	-	0
 site	src/game/rest_2h.cpp	184	global	Format	at::kFmtLevel	0x64e324	-	none	-	-	0
@@ -16015,7 +16015,7 @@ site	src/game/rest_3b.cpp	98	record	Word	Enemy(actor) + enemy_at	-	via=Enemy	-	-
 site	src/game/rest_3b.cpp	98	record	Word	Party(actor) + party_at	-	via=Party	-	-	-	0
 site	src/game/rest_3b.cpp	105	global	B	at::kTarget	0x904b54	-	none	-	-	0
 site	src/game/rest_3b.cpp	106	global	B	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/rest_3b.cpp	123	global	B	at::kRosterOf	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/rest_3b.cpp	123	global	B	at::kRosterOf	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/rest_3b.cpp	145	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/rest_3b.cpp	211	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/rest_3b.cpp	217	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
@@ -16088,7 +16088,7 @@ site	src/game/rest_3b.cpp	670	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/rest_3b.cpp	671	global	B	at::kRoundFlags2	0x904aa9	-	none	-	-	0
 site	src/game/rest_3b.cpp	671	global	B	at::kRoundFlags2	0x904aa9	-	none	-	-	0
 site	src/game/rest_3b.cpp	672	global	L	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/rest_3b.cpp	674	global	B	at::kRosterOf	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/rest_3b.cpp	674	global	B	at::kRosterOf	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/rest_3b.cpp	678	global	At	at::kPower	0x939fe4	-	none	-	-	0
 site	src/game/rest_3b.cpp	679	global	At	at::kPower	0x939fe4	-	none	-	-	0
 site	src/game/rest_3b.cpp	696	global	L	at::kAbility	0x904b80	-	none	-	-	0
@@ -17339,10 +17339,10 @@ site	src/game/rest_4e.cpp	853	global	At	kEight	0x5c41cc	-	none	-	-	0
 site	src/game/rest_4e.cpp	944	record	L	bof3::addr::Inventory_IdLists + 4 * tab	-	base=Inventory_IdLists	-	-	-	0
 site	src/game/rest_4e.cpp	963	global	B	kWinOff	0x803163	-	none	-	-	0
 site	src/game/rest_4e.cpp	964	global	L	kWin0	0x803160	-	none	-	-	0
-site	src/game/rest_4e.cpp	966	global	SetW	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/rest_4e.cpp	966	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_4e.cpp	967	global	B	kTop	0x80316b	-	none	-	-	0
 site	src/game/rest_4e.cpp	967	global	W	kWin0	0x803160	-	none	-	-	0
-site	src/game/rest_4e.cpp	967	global	SetW	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/rest_4e.cpp	967	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_4e.cpp	986	global	SetW	kScroll	0x803172	-	none	-	-	0
 site	src/game/rest_4e.cpp	986	global	B	kTop	0x80316b	-	none	-	-	0
 site	src/game/rest_4e.cpp	989	global	SetW	kScroll	0x803172	-	none	-	-	0
@@ -17377,9 +17377,9 @@ site	src/game/rest_4e.cpp	1142	global	B	kWin0	0x803160	-	none	-	-	0
 site	src/game/rest_4e.cpp	1143	global	B	kWin0	0x803160	-	none	-	-	0
 site	src/game/rest_4e.cpp	1144	global	SetW	kWin0	0x803160	-	none	-	-	0
 site	src/game/rest_4e.cpp	1145	global	SetW	kWin0	0x803160	-	none	-	-	0
-site	src/game/rest_4e.cpp	1146	global	B	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/rest_4e.cpp	1147	global	B	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
-site	src/game/rest_4e.cpp	1148	global	B	kWin1	0x803184	-	exact	BattleE1_Win1	unsigned char	0
+site	src/game/rest_4e.cpp	1146	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_4e.cpp	1147	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_4e.cpp	1148	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
 site	src/game/rest_4e.cpp	1171	global	B	kPages	0x675fd8	-	none	-	-	0
 site	src/game/rest_4e.cpp	1172	global	B	kPages	0x675fd8	-	none	-	-	0
 site	src/game/rest_4e.cpp	1174	global	B	kPages	0x675fd8	-	none	-	-	0
@@ -17426,8 +17426,8 @@ site	src/game/rest_4e_fuzz.cpp	363	global	Mem	kTracks	0x653098	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	368	global	B	kWinOff	0x803163	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	371	global	B	kTop	0x80316b	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	373	global	Mem	kScroll	0x803172	-	none	-	-	1
-site	src/game/rest_4e_fuzz.cpp	375	record	Mem	bof3::addr::Inventory_IdLists + 4 * B(BattleOdds_Win0Index_a	-	base=Inventory_IdLists	-	-	-	1
-site	src/game/rest_4e_fuzz.cpp	376	record	Mem	list + B(Rest3a_Win0Cursor_addr)	-	base=Inventory_IdLists	-	-	-	1
+site	src/game/rest_4e_fuzz.cpp	375	record	Mem	bof3::addr::Inventory_IdLists + 4 * B(Window0_ParamA_addr)	-	base=Inventory_IdLists	-	-	-	1
+site	src/game/rest_4e_fuzz.cpp	376	record	Mem	list + B(Window0_Cursor_addr)	-	base=Inventory_IdLists	-	-	-	1
 site	src/game/rest_4e_fuzz.cpp	383	global	B	kListCPairs	0x904ca0	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	384	global	B	kListCPairs	0x904ca0	-	none	-	-	1
 site	src/game/rest_4e_fuzz.cpp	388	global	B	kPages	0x675fd8	-	none	-	-	1
@@ -17708,7 +17708,7 @@ site	src/game/save_menu_fuzz.cpp	1014	global	PutByte	at::kMenuFlags	0x7dee44	-	n
 site	src/game/save_menu_fuzz.cpp	1085	global	At	at::kStepTable	0x6671f4	-	none	-	-	1
 site	src/game/save_menu_fuzz.cpp	1086	global	PutLong	at::kStepTable	0x6671f4	-	none	-	-	1
 site	src/game/save_menu_fuzz.cpp	1133	global	At	at::kStepTable	0x6671f4	-	none	-	-	1
-site	src/game/scena_calls.cpp	64	record	At	bof3::addr::CharacterRecords + MoveScript_EffectState[k] * a	-	base=CharacterRecords	-	-	-	0
+site	src/game/scena_calls.cpp	64	record	At	bof3::addr::CharacterRecords + Character_IndexById[k] * at::	-	base=CharacterRecords	-	-	-	0
 site	src/game/scena_calls.cpp	487	global	At	at::kSaved	0x903a10	-	none	-	-	0
 site	src/game/scena_calls.cpp	577	global	At	at::kSaved	0x903a10	-	none	-	-	0
 site	src/game/scena_calls.cpp	654	global	At	at::kSaved	0x903a10	-	none	-	-	0
@@ -18220,7 +18220,7 @@ site	src/game/scena_sc13.cpp	2624	global	-	at::kRecords	0x903a70	-	none	-	-	0
 site	src/game/scena_sc13.cpp	2633	global	B	at::kSlotWord	0x903850	-	none	-	-	0
 site	src/game/scena_sc13.cpp	2635	global	B	at::kSlotWord	0x903850	-	none	-	-	0
 site	src/game/scena_sc13.cpp	2637	global	B	at::kPartyList	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
-site	src/game/scena_sc13.cpp	2638	global	B	at::kEffectState	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/scena_sc13.cpp	2638	global	B	at::kEffectState	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/scena_sc13.cpp	2639	global	B	at::kRecords	0x903a70	-	none	-	-	0
 site	src/game/scena_sc13.cpp	2640	global	B	at::kTrio	0x802d40	-	exact	ObjTrio	unsigned char	0
 site	src/game/scena_sc13_fuzz.cpp	320	global	W	at::kSlotWord	0x903850	-	none	-	-	1
@@ -18586,7 +18586,7 @@ site	src/game/scena_sc6.cpp	64	global	B	at::kCounters	0x903848	-	none	-	-	0
 site	src/game/scena_sc6.cpp	65	global	B	at::kCounters	0x903848	-	none	-	-	0
 site	src/game/scena_sc6.cpp	76	global	B	at::kScriptFlags	0x9039a2	-	exact	Field_ScriptFlags	unsigned short	0
 site	src/game/scena_sc6.cpp	76	global	B	at::kScriptFlags	0x9039a2	-	exact	Field_ScriptFlags	unsigned short	0
-site	src/game/scena_sc6.cpp	145	global	B	at::kEffectState	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/scena_sc6.cpp	145	global	B	at::kEffectState	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/scena_sc6.cpp	146	global	B	at::kCharRecords	0x903a70	-	none	-	-	0
 site	src/game/scena_sc6.cpp	149	global	B	at::kEffects	0x7e11e0	-	exact	Effect_Objects	unsigned char	0
 site	src/game/scena_sc6.cpp	163	global	B	at::kEffectSlot	0x903850	-	none	-	-	0
@@ -18848,7 +18848,7 @@ site	src/game/scena_sc9b_fuzz.cpp	721	global	B	at::kCounters	0x903848	-	none	-	-
 site	src/game/scena_sc9b_fuzz.cpp	761	global	B	at::kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_sc9b_fuzz.cpp	771	global	B	at::kCounters	0x903848	-	none	-	-	1
 site	src/game/scena_se.cpp	45	global	At	at::kCount	0x903850	-	none	-	-	0
-site	src/game/scena_se.cpp	65	record	At	bof3::addr::CharacterRecords + 0xB + MoveScript_EffectState[	-	base=CharacterRecords	-	-	-	0
+site	src/game/scena_se.cpp	65	record	At	bof3::addr::CharacterRecords + 0xB + Character_IndexById[id]	-	base=CharacterRecords	-	-	-	0
 site	src/game/scena_se.cpp	79	global	At	at::kScriptFlags2High	0x905ba5	-	inside	Field_ScriptFlags2+0x1	unsigned short	0
 site	src/game/scena_se.cpp	79	global	At	at::kScriptFlags2High	0x905ba5	-	inside	Field_ScriptFlags2+0x1	unsigned short	0
 site	src/game/scena_se.cpp	157	global	At	at::kBank	0x903852	-	none	-	-	0
@@ -18992,7 +18992,7 @@ site	src/game/shop_states2.cpp	95	global	Long	at::kIdLists	0x656b00	-	exact	Inve
 site	src/game/shop_states2.cpp	96	global	Long	at::kCountLists	0x656b14	-	exact	Inventory_CountLists	-	0
 site	src/game/shop_states2.cpp	98	global	At	at::kMembers	0x8031cc	-	none	-	-	0
 site	src/game/shop_states2.cpp	100	global	Byte	at::kPartyList	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
-site	src/game/shop_states2.cpp	100	global	Byte	at::kRecordOf	0x66972c	-	exact	MoveScript_EffectState	unsigned char	0
+site	src/game/shop_states2.cpp	100	global	Byte	at::kRecordOf	0x66972c	-	exact	Character_IndexById	unsigned char	0
 site	src/game/shop_states2.cpp	127	raw	Long	0x803164	0x803164	-	none	-	-	0
 site	src/game/shop_states2.cpp	128	global	Long	at::kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
 site	src/game/shop_states2.cpp	134	global	Long	at::kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
@@ -21699,15 +21699,15 @@ const	kCellOffsets	0x66971c	data	1	src/game/member_sprites_callees.h:28(member_s
 const	kCellOffsets	0x66971c	data	2	src/game/rest_1f.cpp:42((anon));src/game/rest_1f_fuzz.cpp:140(rest_1f::(anon))	-	-	none	-	module
 const	kDirPairs	0x66971c	data	1	src/game/field_e1_callees.h:54(field_e1::at)	-	-	none	-	at
 const	kF9StepsEnd	0x669720	data	1	src/game/rest_1g.cpp:116((anon))	-	-	none	-	module
-const	kEffectState	0x66972c	data	2	src/game/scena_sc13_callees.h:100(scena_sc13::at);src/game/scena_sc6_callees.h:90(scena_sc6::at)	MoveScript_EffectState	data	exact	unsigned char	at
-const	kEffectState	0x66972c	data	1	src/game/rest_2f.cpp:95((anon))	MoveScript_EffectState	data	exact	unsigned char	module
-const	kEffectStates	0x66972c	data	1	src/game/area_w2e_callees.h:90(area_w2e::at)	MoveScript_EffectState	data	exact	unsigned char	at
-const	kMemberMap	0x66972c	data	1	src/game/rest_2h_callees.h:38(rest_2h::at)	MoveScript_EffectState	data	exact	unsigned char	at
-const	kMemberRecord	0x66972c	data	3	src/game/menu_lists_callees.h:41(menu_lists::at);src/game/rest_2c_callees.h:74(rest_2c::at);src/game/rest_2g_callees.h:23(rest_2g::at)	MoveScript_EffectState	data	exact	unsigned char	at
-const	kMemberRecord	0x66972c	data	1	src/game/battle_draw_callees.h:39(battle_draw)	MoveScript_EffectState	data	exact	unsigned char	module
-const	kNameMap	0x66972c	data	1	src/game/msgbox_callees.h:68(msgbox)	MoveScript_EffectState	data	exact	unsigned char	module
-const	kRecordOf	0x66972c	data	1	src/game/shop_states2_callees.h:48(shop_states2::at)	MoveScript_EffectState	data	exact	unsigned char	at
-const	kRosterOf	0x66972c	data	1	src/game/rest_3b_callees.h:81(rest_3b::at)	MoveScript_EffectState	data	exact	unsigned char	at
+const	kEffectState	0x66972c	data	2	src/game/scena_sc13_callees.h:100(scena_sc13::at);src/game/scena_sc6_callees.h:90(scena_sc6::at)	Character_IndexById	data	exact	unsigned char	at
+const	kEffectState	0x66972c	data	1	src/game/rest_2f.cpp:95((anon))	Character_IndexById	data	exact	unsigned char	module
+const	kEffectStates	0x66972c	data	1	src/game/area_w2e_callees.h:90(area_w2e::at)	Character_IndexById	data	exact	unsigned char	at
+const	kMemberMap	0x66972c	data	1	src/game/rest_2h_callees.h:38(rest_2h::at)	Character_IndexById	data	exact	unsigned char	at
+const	kMemberRecord	0x66972c	data	3	src/game/menu_lists_callees.h:41(menu_lists::at);src/game/rest_2c_callees.h:74(rest_2c::at);src/game/rest_2g_callees.h:23(rest_2g::at)	Character_IndexById	data	exact	unsigned char	at
+const	kMemberRecord	0x66972c	data	1	src/game/battle_draw_callees.h:39(battle_draw)	Character_IndexById	data	exact	unsigned char	module
+const	kNameMap	0x66972c	data	1	src/game/msgbox_callees.h:68(msgbox)	Character_IndexById	data	exact	unsigned char	module
+const	kRecordOf	0x66972c	data	1	src/game/shop_states2_callees.h:48(shop_states2::at)	Character_IndexById	data	exact	unsigned char	at
+const	kRosterOf	0x66972c	data	1	src/game/rest_3b_callees.h:81(rest_3b::at)	Character_IndexById	data	exact	unsigned char	at
 const	kEffectArg	0x669744	data	2	src/game/scena_sc13_callees.h:92(scena_sc13::at);src/game/scena_sc7_callees.h:71(scena_sc7::at)	MoveScript_EffectArg	data	exact	signed char	at
 const	kPartySetRows	0x669750	data	1	src/game/sprite_pose.h:16(sprite_pose::at)	-	-	inside	signed char	at
 const	kPaceHeights	0x66978c	data	1	src/game/field_e2_callees.h:46(field_e2::at)	-	-	none	-	at
@@ -21862,8 +21862,8 @@ const	kFieldRequest	0x66c7d8	data	1	src/game/area_harness.h:61(area_harness::at)
 const	kRequest	0x66c7d8	data	1	src/game/scenario_harness.h:61(scenario_harness::at)	Field_Request	data	exact	unsigned char	at
 const	kGameMode	0x66c7e8	data	2	src/game/scenario_harness.h:131(scenario_harness::at);src/game/shop_states2_callees.h:77(shop_states2::at)	Game_Mode	data	exact	unsigned short	at
 const	kGameStep	0x66c7ea	data	1	src/game/save_menu_callees.h:25(save_menu::at)	Game_Step	data	exact	unsigned short	at
-const	kWait	0x66c810	data	1	src/game/scenario_harness.h:60(scenario_harness::at)	MoveScript_WaitWordDA	data	exact	unsigned short	at
-const	kWaitWordDA	0x66c810	data	1	src/game/area_w4f_callees.h:106(area_w4f::at)	MoveScript_WaitWordDA	data	exact	unsigned short	at
+const	kWait	0x66c810	data	1	src/game/scenario_harness.h:60(scenario_harness::at)	Transition_Busy	data	exact	unsigned short	at
+const	kWaitWordDA	0x66c810	data	1	src/game/area_w4f_callees.h:106(area_w4f::at)	Transition_Busy	data	exact	unsigned short	at
 const	kTaskStackTop	0x66c858	data	1	src/hook/stackwatch.cpp:42(bof3::(anon))	Task_StackTop	data	exact	unsigned long	module
 const	kRank	0x675a00	data	1	src/game/area_w1b_callees.h:48(area_w1b::at)	Area42_Rank	data	exact	unsigned char	at
 const	kDials	0x675dc8	data	1	src/game/effect_3d_callees.h:46(effect_3d::at)	-	-	none	-	at
@@ -22180,13 +22180,13 @@ const	kWindow0State	0x803163	data	1	src/game/msgbox_callees.h:56(msgbox)	-	-	non
 const	kPoolWords	0x803164	data	1	src/game/area_w3d_callees.h:87(area_w3d::at)	-	-	none	-	at
 const	kTop	0x80316b	data	2	src/game/rest_4e.cpp:99((anon));src/game/rest_4e_fuzz.cpp:195(rest_4e::(anon))	-	-	none	-	module
 const	kScroll	0x803172	data	2	src/game/rest_4e.cpp:102((anon));src/game/rest_4e_fuzz.cpp:195(rest_4e::(anon))	-	-	none	-	module
-const	kWin1	0x803184	data	1	src/game/battle_e1_callees.h:76(battle_e1::at)	BattleE1_Win1	data	exact	unsigned char	at
-const	kWin1	0x803184	data	2	src/game/rest_2b.cpp:103((anon));src/game/rest_4e.cpp:96((anon))	BattleE1_Win1	data	exact	unsigned char	module
-const	kWindows	0x803184	data	1	src/game/battle_turn_steps_callees.h:83(battle_turn_steps::at)	BattleE1_Win1	data	exact	unsigned char	at
+const	kWin1	0x803184	data	1	src/game/battle_e1_callees.h:76(battle_e1::at)	Window1	data	exact	unsigned char	at
+const	kWin1	0x803184	data	2	src/game/rest_2b.cpp:103((anon));src/game/rest_4e.cpp:96((anon))	Window1	data	exact	unsigned char	module
+const	kWindows	0x803184	data	1	src/game/battle_turn_steps_callees.h:83(battle_turn_steps::at)	Window1	data	exact	unsigned char	at
 const	kWindow1X	0x803188	data	1	src/game/battle_e2_callees.h:83(battle_e2::at)	-	-	none	-	at
 const	kMessage	0x803194	data	1	src/game/rest_2b.cpp:104((anon))	-	-	none	-	module
-const	kWin2	0x8031a8	data	1	src/game/battle_e1_callees.h:77(battle_e1::at)	BattleE1_Win2	data	exact	unsigned char	at
-const	kWin2	0x8031a8	data	1	src/game/rest_2b.cpp:103((anon))	BattleE1_Win2	data	exact	unsigned char	module
+const	kWin2	0x8031a8	data	1	src/game/battle_e1_callees.h:77(battle_e1::at)	Window2	data	exact	unsigned char	at
+const	kWin2	0x8031a8	data	1	src/game/rest_2b.cpp:103((anon))	Window2	data	exact	unsigned char	module
 const	kMembers	0x8031cc	data	1	src/game/shop_states2_callees.h:64(shop_states2::at)	-	-	none	-	at
 const	kWin3	0x8031cc	data	1	src/game/battle_e1_callees.h:78(battle_e1::at)	-	-	none	-	at
 const	kWin3	0x8031cc	data	1	src/game/rest_2b.cpp:103((anon))	-	-	none	-	module
@@ -22200,32 +22200,32 @@ const	kWin4State	0x8031f3	data	1	src/game/battle_odds_callees.h:27(battle_odds)	
 const	kWindow4Flag	0x8031f3	data	1	src/game/boss_sb_callees.h:62(boss_sb::at)	-	-	none	-	at
 const	kWindow4State	0x8031f3	data	2	src/game/battle_actor_copies_callees.h:52(battle_actor_copies::at);src/game/battle_e3_callees.h:72(battle_e3::at)	-	-	none	-	at
 const	kRecord4X	0x8031f4	data	1	src/game/rest_2g_callees.h:18(rest_2g::at)	-	-	none	-	at
-const	kMoneyWindow	0x80325c	data	1	src/game/menu_lists_callees.h:56(menu_lists::at)	MenuLists_MoneyWindow	data	exact	unsigned char	at
-const	kTimeWindow	0x803280	data	1	src/game/menu_lists_callees.h:57(menu_lists::at)	MenuLists_TimeWindow	data	exact	unsigned char	at
-const	kIconWindow	0x8032a4	data	1	src/game/menu_lists_callees.h:58(menu_lists::at)	MenuLists_IconWindow	data	exact	unsigned char	at
-const	kTitleWindow	0x8032c8	data	1	src/game/menu_lists_callees.h:59(menu_lists::at)	MenuLists_TitleWindow	data	exact	unsigned char	at
+const	kMoneyWindow	0x80325c	data	1	src/game/menu_lists_callees.h:56(menu_lists::at)	Window7	data	exact	unsigned char	at
+const	kTimeWindow	0x803280	data	1	src/game/menu_lists_callees.h:57(menu_lists::at)	Window8	data	exact	unsigned char	at
+const	kIconWindow	0x8032a4	data	1	src/game/menu_lists_callees.h:58(menu_lists::at)	Window9	data	exact	unsigned char	at
+const	kTitleWindow	0x8032c8	data	1	src/game/menu_lists_callees.h:59(menu_lists::at)	Window10	data	exact	unsigned char	at
 const	kWindowRows	0x803337	data	1	src/game/magic_s33.cpp:81((anon))	-	-	none	-	module
 const	kPartyBars	0x80333f	data	1	src/game/battle_windows_callees.h:26(battle_windows::at)	-	-	none	-	at
 const	kPartyGauges	0x80333f	data	1	src/game/battle_e2_callees.h:84(battle_e2::at)	-	-	none	-	at
 const	kWin13Dim	0x803341	data	1	src/game/rest_3a_callees.h:44(rest_3a::at)	-	-	none	-	at
 const	kPartyValues	0x803348	data	1	src/game/battle_e2_callees.h:85(battle_e2::at)	-	-	none	-	at
-const	kList	0x8033a0	data	2	src/game/battle_e4_callees.h:81(battle_e4::at);src/game/battle_menu_states_callees.h:66(battle_menu_states::at)	BattleE4_List	data	exact	unsigned char	at
-const	kWin16	0x8033a0	data	1	src/game/battle_e5_callees.h:98(battle_e5::at)	BattleE4_List	data	exact	unsigned char	at
+const	kList	0x8033a0	data	2	src/game/battle_e4_callees.h:81(battle_e4::at);src/game/battle_menu_states_callees.h:66(battle_menu_states::at)	Window16	data	exact	unsigned char	at
+const	kWin16	0x8033a0	data	1	src/game/battle_e5_callees.h:98(battle_e5::at)	Window16	data	exact	unsigned char	at
 const	kItemBaseX	0x8033a4	data	1	src/game/battle_actor_copies_callees.h:55(battle_actor_copies::at)	-	-	none	-	at
-const	kItemWindowPage	0x8033ab	data	1	src/game/battle_misc_callees.h:51(battle_misc)	BattleActorCopies_ItemPage	data	exact	unsigned char	module
+const	kItemWindowPage	0x8033ab	data	1	src/game/battle_misc_callees.h:51(battle_misc)	Window16_Page	data	exact	unsigned char	module
 const	kItemCursor	0x8033ac	data	1	src/game/battle_actor_copies_callees.h:60(battle_actor_copies::at)	-	-	none	-	at
 const	kItemWindowCursor	0x8033ac	data	1	src/game/battle_misc_callees.h:52(battle_misc)	-	-	none	-	module
 const	kWin16Cursor	0x8033ac	data	1	src/game/rest_3b_callees.h:71(rest_3b::at)	-	-	none	-	at
 const	kItemScroll	0x8033b0	data	1	src/game/battle_actor_copies_callees.h:61(battle_actor_copies::at)	-	-	none	-	at
-const	kCands	0x8033c4	data	1	src/game/battle_e4_callees.h:82(battle_e4::at)	BattleE4_Cands	data	exact	unsigned char	at
-const	kWin17	0x8033c4	data	1	src/game/battle_e5_callees.h:99(battle_e5::at)	BattleE4_Cands	data	exact	unsigned char	at
-const	kSlots	0x8033e8	data	1	src/game/battle_e4_callees.h:83(battle_e4::at)	BattleE4_Slots	data	exact	unsigned char	at
-const	kWin18	0x8033e8	data	1	src/game/battle_e5_callees.h:100(battle_e5::at)	BattleE4_Slots	data	exact	unsigned char	at
-const	kHand	0x80340c	data	1	src/game/battle_e4_callees.h:84(battle_e4::at)	BattleE4_Hand	data	exact	unsigned char	at
-const	kWin19	0x80340c	data	1	src/game/battle_e5_callees.h:101(battle_e5::at)	BattleE4_Hand	data	exact	unsigned char	at
+const	kCands	0x8033c4	data	1	src/game/battle_e4_callees.h:82(battle_e4::at)	Window17	data	exact	unsigned char	at
+const	kWin17	0x8033c4	data	1	src/game/battle_e5_callees.h:99(battle_e5::at)	Window17	data	exact	unsigned char	at
+const	kSlots	0x8033e8	data	1	src/game/battle_e4_callees.h:83(battle_e4::at)	Window18	data	exact	unsigned char	at
+const	kWin18	0x8033e8	data	1	src/game/battle_e5_callees.h:100(battle_e5::at)	Window18	data	exact	unsigned char	at
+const	kHand	0x80340c	data	1	src/game/battle_e4_callees.h:84(battle_e4::at)	Window19	data	exact	unsigned char	at
+const	kWin19	0x80340c	data	1	src/game/battle_e5_callees.h:101(battle_e5::at)	Window19	data	exact	unsigned char	at
 const	kItemCursorX	0x803410	data	1	src/game/battle_actor_copies_callees.h:64(battle_actor_copies::at)	-	-	none	-	at
-const	kAbove	0x803454	data	1	src/game/battle_e4_callees.h:85(battle_e4::at)	BattleE4_Above	data	exact	unsigned char	at
-const	kWin21	0x803454	data	1	src/game/battle_e5_callees.h:102(battle_e5::at)	BattleE4_Above	data	exact	unsigned char	at
+const	kAbove	0x803454	data	1	src/game/battle_e4_callees.h:85(battle_e4::at)	Window21	data	exact	unsigned char	at
+const	kWin21	0x803454	data	1	src/game/battle_e5_callees.h:102(battle_e5::at)	Window21	data	exact	unsigned char	at
 const	kRecordsEnd	0x803478	data	4	src/game/menu_draw_helpers_callees.h:27(menu_draw_helpers::at);src/game/menu_lists_callees.h:53(menu_lists::at);src/game/window_kinds_callees.h:26(window_kinds::at);src/game/window_task_callees.h:24(window_task::at)	-	-	none	-	at
 const	kByte803490	0x803490	data	2	src/game/area_w1c_callees.h:70(area_w1c::at);src/game/area_w2f_callees.h:55(area_w2f::at)	-	-	inside	unsigned char	at
 const	kSlotTop	0x8034d0	data	2	src/game/save_menu_callees.h:47(save_menu::at);src/game/shop_states_callees.h:65(shop_states::at)	-	-	inside	unsigned char	at
@@ -22559,8 +22559,8 @@ const	kCounts	0x903a10	data	1	src/game/rest_3e_callees.h:72(rest_3e::at)	-	-	non
 const	kSaved	0x903a10	data	1	src/game/scena_calls_callees.h:25(scena_calls::at)	-	-	none	-	at
 const	kTally	0x903a10	data	1	src/game/scena_sc9b_callees.h:86(scena_sc9b::at)	-	-	none	-	at
 const	kStyle	0x903a14	data	1	src/game/scenario_harness.h:90(scenario_harness::at)	ScenaSc9b_TallyWord	data	exact	unsigned long	at
-const	kColour	0x903a5a	data	1	src/game/battle_windows_callees.h:22(battle_windows::at)	BattleDraw_Colour	data	exact	signed char	at
-const	kind	0x903a5b	data	1	src/game/rest_2d.cpp:682(-)	FieldS_Backdrop	data	exact	unsigned char	module
+const	kColour	0x903a5a	data	1	src/game/battle_windows_callees.h:22(battle_windows::at)	Config_WindowColour	data	exact	signed char	at
+const	kind	0x903a5b	data	1	src/game/rest_2d.cpp:682(-)	Config_Background	data	exact	unsigned char	module
 const	kRecordsLow	0x903a60	data	1	src/game/msgbox_fuzz.cpp:483(msgbox::(anon))	-	-	none	-	module
 const	kCharRecords	0x903a6f	data	1	src/game/msgbox_callees.h:66(msgbox)	-	-	none	-	module
 const	kActorRecords	0x903a70	data	4	src/game/event_leader_callees.h:40(event_leader::at);src/game/event_ops_callees.h:36(event_ops::at);src/game/field_event_callees.h:35(field_event::at);src/game/member_sprites_callees.h:32(member_sprites::at)	CharacterRecords	block	none	-	at
@@ -22665,7 +22665,7 @@ const	kHistoryLast	0x90461c	data	1	src/game/battle_e6_callees.h:45(battle_e6::at
 const	kGeneList2	0x904620	data	1	src/game/battle_e7_callees.h:55(battle_e7::at)	-	-	none	-	at
 const	kGrid19	0x904620	data	1	src/game/battle_e2_callees.h:111(battle_e2::at)	-	-	none	-	at
 const	kSlots2	0x904620	data	1	src/game/battle_e5_callees.h:71(battle_e5::at)	-	-	none	-	at
-const	kGeneBits	0x904650	data	1	src/game/battle_e5_callees.h:72(battle_e5::at)	ScenaSc7_EventFlags	data	exact	unsigned long	at
+const	kGeneBits	0x904650	data	1	src/game/battle_e5_callees.h:72(battle_e5::at)	Gene_Bits	data	exact	unsigned long	at
 const	kFlags904654	0x904654	data	1	src/game/area_w2d_callees.h:44(area_w2d::at)	-	-	none	-	at
 const	kFlagsA	0x904654	data	1	src/game/save_menu_callees.h:113(save_menu::at)	-	-	none	-	at
 const	kMetFlags	0x904654	data	1	src/game/rest_2c_callees.h:83(rest_2c::at)	-	-	none	-	at
@@ -22729,8 +22729,8 @@ const	kFxBits	0x904aa9	data	1	src/game/magic_s02.cpp:62((anon))	-	-	none	-	modul
 const	kLoadFlags	0x904aa9	data	1	src/game/battle_flow_callees.h:71(battle_flow::at)	-	-	none	-	at
 const	kRoundFlags2	0x904aa9	data	1	src/game/rest_3b_callees.h:41(rest_3b::at)	-	-	none	-	at
 const	kRoundFlagsHi	0x904aa9	data	3	src/game/boss_sc_callees.h:32(boss_sc::at);src/game/boss_sf_callees.h:40(boss_sf::at);src/game/rest_3d_callees.h:22(rest_3d::at)	-	-	none	-	at
-const	kBoss	0x904aaa	data	1	src/game/battle_sprites_callees.h:41(battle_sprites::at)	BattleActions_EventBattle	data	exact	unsigned char	at
-const	kFight	0x904aaa	data	4	src/game/boss_h_callees.h:26(boss_h::at);src/game/boss_harness.h:71(boss_harness::at);src/game/boss_sg_callees.h:30(boss_sg::at);src/game/boss_si_callees.h:31(boss_si::at)	BattleActions_EventBattle	data	exact	unsigned char	at
+const	kBoss	0x904aaa	data	1	src/game/battle_sprites_callees.h:41(battle_sprites::at)	EventBattle_Id	data	exact	unsigned char	at
+const	kFight	0x904aaa	data	4	src/game/boss_h_callees.h:26(boss_h::at);src/game/boss_harness.h:71(boss_harness::at);src/game/boss_sg_callees.h:30(boss_sg::at);src/game/boss_si_callees.h:31(boss_si::at)	EventBattle_Id	data	exact	unsigned char	at
 const	kBattleFacing	0x904aac	data	2	src/game/field_hidden_callees.h:63(field_hidden::at);src/game/inventory_ops_callees.h:49(inventory_ops::at)	-	-	none	-	at
 const	kFaceStep	0x904aac	data	1	src/game/battle_e4_callees.h:66(battle_e4::at)	-	-	none	-	at
 const	kFacing	0x904aac	data	2	src/game/battle_phases_callees.h:42(battle_phases::at);src/game/boss_sg_callees.h:31(boss_sg::at)	-	-	none	-	at
@@ -22747,7 +22747,7 @@ const	kMembers	0x904ab0	data	1	src/game/battle_turn_steps_callees.h:41(battle_tu
 const	kPartyCount	0x904ab0	data	14	src/game/battle_actor_copies_callees.h:39(battle_actor_copies::at);src/game/battle_damage_callees.h:72(battle_damage::at);src/game/battle_e1_callees.h:90(battle_e1::at);src/game/battle_e2_callees.h:49(battle_e2::at);src/game/battle_e3_callees.h:48(battle_e3::at);src/game/battle_e4_callees.h:50(battle_e4::at);src/game/battle_e6_callees.h:29(battle_e6::at);src/game/battle_menu_states_callees.h:41(battle_menu_states::at);src/game/battle_result_callees.h:39(battle_result::at);src/game/battle_sprites_callees.h:37(battle_sprites::at);src/game/battle_window_draw_callees.h:22(battle_window_draw::at);src/game/battle_windows_callees.h:29(battle_windows::at);src/game/rest_3b_callees.h:43(rest_3b::at);src/game/rest_3c_callees.h:48(rest_3c::at)	-	-	none	-	at
 const	kPartyCount	0x904ab0	data	2	src/game/magic_s35.cpp:57((anon));src/game/magic_s35_fuzz.cpp:206(magic_s35::(anon))	-	-	none	-	module
 const	kPartySize	0x904ab0	data	1	src/game/rest_3d_callees.h:24(rest_3d::at)	-	-	none	-	at
-const	kPartySize	0x904ab1	data	1	src/game/battle_e6_callees.h:30(battle_e6::at)	BattleSprites_PartyPick	data	exact	unsigned char	at
+const	kPartySize	0x904ab1	data	1	src/game/battle_e6_callees.h:30(battle_e6::at)	Battle_PartyStanding	data	exact	unsigned char	at
 const	kEnemyCount	0x904ab2	data	1	src/game/battle_sprites_callees.h:39(battle_sprites::at)	BattleActorCopies_EnemyCount	data	exact	unsigned char	at
 const	kEnemyTotal	0x904ab2	data	1	src/game/boss_harness.h:72(boss_harness::at)	BattleActorCopies_EnemyCount	data	exact	unsigned char	at
 const	kEnemiesLeft	0x904ab3	data	1	src/game/boss_harness.h:73(boss_harness::at)	BattleE2_EnemiesLeft	data	exact	unsigned char	at
@@ -22775,7 +22775,7 @@ const	kQueue	0x904acc	data	1	src/game/battle_actions_callees.h:42(battle_actions
 const	kTurnOrder	0x904acc	data	2	src/game/battle_damage_callees.h:78(battle_damage::at);src/game/rest_3c_callees.h:49(rest_3c::at)	-	-	none	-	at
 const	kRoundSlot	0x904ae2	data	1	src/game/boss_sh_callees.h:46(boss_sh::at)	BossSe_RoundSlot	data	exact	unsigned char	at
 const	kQueueEnd	0x904ae3	data	1	src/game/battle_actions_callees.h:44(battle_actions::at)	BattleDamage_TurnCount	data	exact	unsigned char	at
-const	kMusicFlags	0x904ae5	data	1	src/game/boss_harness.h:74(boss_harness::at)	BattleTurnSteps_MusicFlags	data	exact	unsigned char	at
+const	kMusicFlags	0x904ae5	data	1	src/game/boss_harness.h:74(boss_harness::at)	EventBattle_Flags	data	exact	unsigned char	at
 const	kDropCount	0x904ae7	data	2	src/game/battle_flow_callees.h:57(battle_flow::at);src/game/battle_result_callees.h:40(battle_result::at)	BattleE7_DropCount	data	exact	unsigned char	at
 const	kBattleEnd	0x904ae8	data	4	src/game/battle_e1_callees.h:95(battle_e1::at);src/game/battle_flow_callees.h:58(battle_flow::at);src/game/battle_result_callees.h:41(battle_result::at);src/game/boss_harness.h:75(boss_harness::at)	BattleActions_BattleEnd	data	exact	unsigned char	at
 const	kBannerKinds	0x904ae9	data	1	src/game/battle_misc_callees.h:65(battle_misc)	BattleMisc_BannerKinds	data	exact	unsigned char	module
@@ -22977,9 +22977,9 @@ const	kAngleFB	0x929ecc	data	3	src/game/scena_sc13_callees.h:65(scena_sc13::at);
 const	kCameraAngle	0x929ecc	data	1	src/game/mode_flow.cpp:79((anon))	Cond_AngleFB	data	exact	unsigned long	module
 const	kPitch	0x929ecc	data	2	src/game/scena_sc3_callees.h:57(scena_sc3::at);src/game/scena_sc7_callees.h:65(scena_sc7::at)	Cond_AngleFB	data	exact	unsigned long	at
 const	kPitch	0x929ecc	data	1	src/game/mode_states.cpp:82((anon))	Cond_AngleFB	data	exact	unsigned long	module
-const	kFlagBase	0x929ed0	data	1	src/game/area_w0b_callees.h:62(area_w0b::at)	AreaW0c_FlagRow	data	exact	unsigned long	at
-const	kFlagBits	0x929ed0	data	1	src/game/boss_harness.h:122(boss_harness::at)	AreaW0c_FlagRow	data	exact	unsigned long	at
-const	kFlagRow	0x929ed0	data	2	src/game/area_w4f_callees.h:55(area_w4f::at);src/game/scenario_harness.h:57(scenario_harness::at)	AreaW0c_FlagRow	data	exact	unsigned long	at
+const	kFlagBase	0x929ed0	data	1	src/game/area_w0b_callees.h:62(area_w0b::at)	Chapter_FlagRow	data	exact	unsigned long	at
+const	kFlagBits	0x929ed0	data	1	src/game/boss_harness.h:122(boss_harness::at)	Chapter_FlagRow	data	exact	unsigned long	at
+const	kFlagRow	0x929ed0	data	2	src/game/area_w4f_callees.h:55(area_w4f::at);src/game/scenario_harness.h:57(scenario_harness::at)	Chapter_FlagRow	data	exact	unsigned long	at
 const	kMenuBlock	0x929ed4	data	1	src/game/scenario_harness.h:84(scenario_harness::at)	SaveMenu_ErrorKind	data	exact	unsigned long	at
 const	kMenuMode	0x929f00	data	1	src/game/scenario_harness.h:86(scenario_harness::at)	BattleE1_Mode	data	exact	unsigned char	at
 const	kMode	0x929f00	data	1	src/game/rest_3a_callees.h:26(rest_3a::at)	BattleE1_Mode	data	exact	unsigned char	at
@@ -23055,8 +23055,8 @@ const	kClutDirty	0x937f90	data	2	src/game/area_w2e_callees.h:95(area_w2e::at);sr
 const	kFrame	0x937f94	data	1	src/game/rest_4b_callees.h:82(rest_4b::at)	Frame_Counter	data	exact	unsigned int	at
 const	kFrame	0x937f94	data	1	src/game/scena_sc15.cpp:119((anon))	Frame_Counter	data	exact	unsigned int	module
 const	kFrameCounter	0x937f94	data	2	src/game/area_w2e_callees.h:94(area_w2e::at);src/game/rest_2c_callees.h:106(rest_2c::at)	Frame_Counter	data	exact	unsigned int	at
-const	kPendingKind	0x937f98	data	2	src/game/area_w4f_callees.h:93(area_w4f::at);src/game/scena_sc3_callees.h:46(scena_sc3::at)	AreaW0c_PendingKind	data	exact	unsigned char	at
-const	kind	0x937f98	data	2	src/game/mode_flow.cpp:117(-);src/game/mode_flow.cpp:383(-)	AreaW0c_PendingKind	data	exact	unsigned char	module
+const	kPendingKind	0x937f98	data	2	src/game/area_w4f_callees.h:93(area_w4f::at);src/game/scena_sc3_callees.h:46(scena_sc3::at)	Area_EnterTransition	data	exact	unsigned char	at
+const	kind	0x937f98	data	2	src/game/mode_flow.cpp:117(-);src/game/mode_flow.cpp:383(-)	Area_EnterTransition	data	exact	unsigned char	module
 const	kGridWords	0x939820	data	1	src/game/rest_2g_callees.h:37(rest_2g::at)	-	-	none	-	at
 const	kScrollMarks	0x939848	data	1	src/game/battle_e7_callees.h:56(battle_e7::at)	-	-	none	-	at
 const	kScrollMarks2	0x939850	data	1	src/game/battle_e7_callees.h:57(battle_e7::at)	-	-	none	-	at

@@ -385,7 +385,7 @@ ah::Region g_regions[] = {
     {AreaW1f_Phase_addr, at::kArea75CellBytes},
     {Input_Pressed_addr, 2},
     {Draw_PassFlags_addr, 1},
-    {MoveScript_WaitWordDA_addr, 2},
+    {Transition_Busy_addr, 2},
     {AreaW1f_MusicCurrent_addr, 1},
     {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},   // g_packets (set at start-up)
@@ -423,7 +423,7 @@ void Disturb(U h) {
     case 4: MoveCell(h >> 4); break;
     case 5: SetWord(ah::Mem(h & 0x100 ? AreaW1f_PlayerCounter_addr : AreaW1f_OtherCounter_addr), h >> 12); break;
     case 6: B(Input_Pressed_addr) = v; break;
-    default: SetWord(ah::Mem(MoveScript_WaitWordDA_addr), h & 0x100 ? 0 : v); break;
+    default: SetWord(ah::Mem(Transition_Busy_addr), h & 0x100 ? 0 : v); break;
     }
 }
 
@@ -525,7 +525,7 @@ void SeedTail() {
     const bool on = ah::Often();
     switch (state) {
     case 1: case 3: case 4: case 0x20: case 0x23:
-        SetWord(ah::Mem(MoveScript_WaitWordDA_addr), on ? 0 : AH_PICK(1, 0x100, 0xFFFF));
+        SetWord(ah::Mem(Transition_Busy_addr), on ? 0 : AH_PICK(1, 0x100, 0xFFFF));
         break;
     case 5: B(at::kCounter0) = static_cast<unsigned char>(on ? 3 : AH_PICK(2, 4, 0x83)); break;
     case 7: B(at::kCounter0) = static_cast<unsigned char>(on ? 6 : AH_PICK(5, 7, 0x86)); break;

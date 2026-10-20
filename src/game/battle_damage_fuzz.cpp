@@ -109,7 +109,7 @@ void Disturb() {
     case 18: r[party ? at::kPAgi : at::kEAgi] = v; break;
     case 19: if (!party) r[at::kEObject + 0xF0] = static_cast<unsigned char>(v % 16); break;
     case 20: At(at::kTurnCounter)[0] = static_cast<unsigned char>(v % 12); break;
-    case 21: At(BattleSprites_PartyPick_addr + v % 3)[0] = static_cast<unsigned char>(h >> 26); break;
+    case 21: At(Battle_PartyStanding_addr + v % 3)[0] = static_cast<unsigned char>(h >> 26); break;
     case 22: At(at::kAiScripts + (h >> 16) % 0x900)[0] = static_cast<unsigned char>(0xB + v % 0x1D); break;
     default: r[party ? at::kPCommand : at::kECommand] = v; break;
     }
@@ -608,7 +608,7 @@ Args Seed(unsigned k) {
             if (Often()) At(at::kAiScripts + i)[0] = static_cast<unsigned char>(0xB + Next() % 0x1D);
         if (Half()) SetLong(At(at::kTurnCounter), static_cast<std::int32_t>(Next() % 13 + (Half() ? 0 : (Next() % 4) << 8)));
         for (unsigned i = 0; i < 3; ++i)
-            if (Half()) At(BattleSprites_PartyPick_addr + i)[0] = static_cast<unsigned char>(Next() % 3);
+            if (Half()) At(Battle_PartyStanding_addr + i)[0] = static_cast<unsigned char>(Next() % 3);
         if (Half()) At(BattleDamage_AiByteB97_addr)[0] = static_cast<unsigned char>(Next() % 2);
         break;
     case kRowDoneK: {

@@ -216,7 +216,7 @@ the one shadow name, one per area with its `Group::area` (27, 28, 32..37),
 - **Regions beyond the field frame:** `Effect_Objects` records 0..3,
   `Field_ActiveMember`, `MoveScript_Object`, the chapter row pointer
   `0x929ED0`, the pending kind `0x937F98`, `0x9398CF`, `0x903A79`,
-  `MoveScript_WaitWordDA`, `Draw_PassFlags` (29 regions, 16,738 bytes).
+  `Transition_Busy`, `Draw_PassFlags` (29 regions, 16,738 bytes).
 - **Every round:** `Field_ActiveMember` at one of the four party objects
   (`Sprite_ObjectsExtra`), a field object, a party record or the running
   object itself (the two alias in the game); `MoveScript_Object` at a field

@@ -252,7 +252,7 @@ void ArgsOps(unsigned k, U* a) {
 // bits pointer (read before each Flags call).
 void DisturbOps(U h) {
     switch ((h >> 8) % 6) {
-    case 5: bh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * ((h >> 16) % 40))); break;
+    case 5: bh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * ((h >> 16) % 40))); break;
     case 0: Mem(BossH_Enemy1Status_addr)[1] = static_cast<unsigned char>(h >> 16); break;
     case 1: Mem(BossH_Enemy2Status_addr)[1] = static_cast<unsigned char>(h >> 16); break;
     case 2: Mem(AreaMap_Header_addr)[0] = static_cast<unsigned char>((h >> 16) % 0x40); break;

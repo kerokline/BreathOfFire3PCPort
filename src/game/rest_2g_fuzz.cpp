@@ -240,7 +240,7 @@ void Move(U h) {
     }
     case 9: if (in) SetLong(r + 0x20, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 10: Mem(Cond_Flags_addr + 0xd2 + b % 6)[0] = static_cast<unsigned char>(v % 9); break;
-    case 11: Mem(BattleDraw_Colour_addr)[0] = b; break;
+    case 11: Mem(Config_WindowColour_addr)[0] = b; break;
     case 12: Mem(at::kGridCells + b % 0x12)[0] ^= static_cast<unsigned char>(v | 1); break;
     case 13: if (in) r[3] = b; break;
     default: break;

@@ -31,7 +31,7 @@ constexpr std::uint32_t kPickSlot = 0x903854;
 constexpr std::uint32_t kPickFree = 0x903858;
 // The 3-byte party list (Party_Join's, move_cmds_callees.h kPartyLists).
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml).
-// The eight 0xA4-byte character records MoveScript_EffectState indexes by
+// The eight 0xA4-byte character records Character_IndexById indexes by
 // member (its values are 0..7), copied to a party record's +0x80 (PSX
 // 0x80144964); symbols.toml line 84's save-record block.
 constexpr std::uint32_t kCharacterRecords = 0x903A70;

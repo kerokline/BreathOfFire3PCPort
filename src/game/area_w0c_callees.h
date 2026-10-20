@@ -40,9 +40,9 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // The story flags (Flags_Set / Flags_Test's bank) and the row pointer the
 // chapters' flag tests take (Cond_Flags + 8 * chapter; docs/field-modes.md).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The pending area kind (docs/mode-flow.md: 0xFE only Draw_PassFlags 0).
-// kPendingKind: now AreaW0c_PendingKind (symbols.toml).
+// kPendingKind: now Area_EnterTransition (symbols.toml).
 // The pending place word the world map keeps (docs/worldmap_area.md).
 constexpr std::uint32_t kPlace = 0x937F82;
 // A byte area 37's choices set to 6 beside the message they open; no reader
@@ -65,7 +65,7 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kSpriteObjectsExtra: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 
 // --- the areas' tables (symbols.toml [[data]]) ---

@@ -40,7 +40,7 @@ constexpr std::uint32_t kClock = 0x9040C8;
 constexpr std::uint32_t kPendingX = 0x903860;
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml).
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
-// kPendingKind: now AreaW0c_PendingKind (symbols.toml).
+// kPendingKind: now Area_EnterTransition (symbols.toml).
 // kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml).
 // kMusicTrack: now Music_Track (symbols.toml).
 // kAreaTransition: now ModeFlow_AreaTransition (symbols.toml). GameMode_Field's Transition_Start kind for the area change

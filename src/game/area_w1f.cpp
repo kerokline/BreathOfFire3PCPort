@@ -630,7 +630,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         B(AreaW0c_TailState_addr) = cl;
         break;
     case 1:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         Draw_PassFlags = 0;
         cl = 2;
         B(AreaW0c_TailState_addr) = cl;
@@ -646,14 +646,14 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         break;
     }
     case 3:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         Draw_PassFlags = 0x1F;
         AH_CALL(Transition_Start)(1);
         cl = 4;
         B(AreaW0c_TailState_addr) = cl;
         break;
     case 4:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         cl = 5;
         B(at::kCounter0) = 1;
         B(AreaW0c_TailState_addr) = cl;
@@ -776,7 +776,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         B(AreaW0c_TailState_addr) = cl;
         break;
     case 0x20:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         Draw_PassFlags = 0;
         AH_CALL(Music_FadeOutStop)(0xA);
         AH_CALL(Sound_LoadStream)(6);
@@ -801,7 +801,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         B(AreaW0c_TailState_addr) = cl;
         break;
     case 0x23:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         Draw_PassFlags = 0x1F;
         AH_CALL(Transition_Start)(1);
         B(at::kCounter0) = 1;

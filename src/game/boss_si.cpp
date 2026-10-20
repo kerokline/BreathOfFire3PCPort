@@ -172,7 +172,7 @@ extern "C" unsigned long __cdecl BossAmmonite_Dispatch(unsigned word) {
 extern "C" void __cdecl BossAmmonite_Enter(void) {
     EnterStores(AddressOf(BossAmmonite_Anims), bof3::addr::BossAmmonite_Hook, AddressOf(BossAmmonite_Cues));
     BH_CALL(Sprite_ScriptTick)();
-    const unsigned char* const bits = At(static_cast<U>(AreaW0c_FlagRow));
+    const unsigned char* const bits = At(static_cast<U>(Chapter_FlagRow));
     if (BH_CALL(Flags_Test)(bits, 2) == 0) return;
     const unsigned id = BH_CALL(EnemyData_FindByTag)(0x96);
     const unsigned slot = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Enemy())->actor - 3);

@@ -78,10 +78,10 @@ void Disturb() {
     unsigned char* const w = At(static_cast<U>(Long(At(BattleWinStates_Current_addr))));
     const auto v = static_cast<unsigned char>(h >> 12);
     switch ((h >> 4) % 8) {
-    case 0: At(BattleDraw_Colour_addr)[0] = v; break;
+    case 0: At(Config_WindowColour_addr)[0] = v; break;
     case 1: At(Party_Zenny_addr + ((h >> 20) & 3))[0] = v; break;
     case 2: At(Cond_Flags_addr + 0xd2 + ((h >> 20) % 3))[0] = v; break;
-    case 3: At(MoveScript_EffectState_addr + ((h >> 20) & 0xFF))[0] = v; break;
+    case 3: At(Character_IndexById_addr + ((h >> 20) & 0xFF))[0] = v; break;
     default: w[kField[(h >> 20) % 10]] = v; break;
     }
 }
@@ -291,9 +291,9 @@ struct Region { U at, size; };
 const Region kRegions[] = {
     {at::kRecords, 0x318},       // the 22 window records
     {BattleWinStates_Current_addr, 4}, // the record running (Fix puts it on one of the 22)
-    {BattleDraw_Colour_addr, 1},
+    {Config_WindowColour_addr, 1},
     {Party_Zenny_addr, 0x10A},   // the zenny, and the party list with every byte +0xA can reach
-    {MoveScript_EffectState_addr, 0x100}, // the member map, every byte a party-list byte can reach
+    {Character_IndexById_addr, 0x100}, // the member map, every byte a party-list byte can reach
 };
 constexpr unsigned kRegionBytes = 0x318 + 4 + 1 + 0x10A + 0x100;
 

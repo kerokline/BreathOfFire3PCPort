@@ -351,7 +351,7 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
         const unsigned status = At(e.status)[1];   // the dword's second byte: +0x93
         if (status & 0x40) continue;
         const bool up = (status & 0x20) != 0;
-        unsigned char* const bits = At(AreaW0c_FlagRow);
+        unsigned char* const bits = At(Chapter_FlagRow);
         if (up) BH_CALL(Flags_Set)(bits, e.flag);
         else BH_CALL(Flags_Clear)(bits, e.flag);
         Sprite_Current = At(e.object);

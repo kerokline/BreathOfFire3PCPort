@@ -80,7 +80,7 @@ unsigned char UsedOr3(unsigned char answer) { return answer != 0 ? 0 : 3; }
 
 // Party member i's record index: 0x66972C[0x904062[i]] (the party list's
 // entry, then its record).
-unsigned Member(unsigned char i) { return MoveScript_EffectState[Cond_Flags[0xd2 + i]]; }
+unsigned Member(unsigned char i) { return Character_IndexById[Cond_Flags[0xd2 + i]]; }
 
 // The party walk of 0x496D50 / 0x497410 / 0x497490 / 0x497510: Party_Count(0)
 // asked before the first member and again after each, compared as bytes. The
@@ -396,7 +396,7 @@ void CommitChoice() {
 extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
     CommitChoice();
     const bool more = Word(At(at::kMessage)) != 0xFFFF;
-    ItemUse_Window1State = 3;
+    Window1_State = 3;
     if (more) {
         const unsigned char sub = ItemUse_SubState;
         At(at::kWindow0State)[0] = 1;
@@ -413,7 +413,7 @@ extern "C" void __cdecl MsgBox_MenuCommit(void) {
     CommitChoice();
     const unsigned char sub = ItemUse_SubState;
     ItemUse_ColorHigh = 0;
-    ItemUse_Window1State = 3;
+    Window1_State = 3;
     ItemUse_SubState = static_cast<unsigned char>(sub + 1);
 }
 

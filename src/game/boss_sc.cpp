@@ -138,7 +138,7 @@ void Line(unsigned char action, unsigned short line) {
 // Msg_SystemPtr(0x25)).
 void NameBanner() {
     BH_CALL(Battle_OpenMsgWindow)();
-    const unsigned n = MoveScript_EffectState[1];
+    const unsigned n = Character_IndexById[1];
     BH_CALL(Str_CopyN)(reinterpret_cast<char*>(At(bof3::addr::Text_Records)),
                        reinterpret_cast<const char*>(At(at::kCharRecords + n * at::kCharStride)), 8);
     const unsigned char* const text = BH_CALL(Msg_SystemPtr)(0x25);
@@ -377,7 +377,7 @@ namespace {
 void BalioSunderEnter(U fc, U f4, U f8, unsigned short bank) {
     StoreKindTables(fc, f4, f8);
     Sprite_Current[1] = 2;
-    if (BattleActions_EventBattle == 0xD) {
+    if (EventBattle_Id == 0xD) {
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(Enemy())->base_max_hp, 0xFFFF);
         rv::As<records::BattleEnemy>(Enemy())->max_hp = 0xFFFF;
         rv::As<records::BattleEnemy>(Enemy())->hp = 0xFFFF;
@@ -413,7 +413,7 @@ extern "C" unsigned long __cdecl BossBalio_Hook(unsigned long word) { return Hoo
 // call); then (on that byte) bit 4 without bit 5 - action 3, line 0x29, bit 5
 // set. The word is not read.
 extern "C" void __cdecl BossBalio_HookAct(unsigned) {
-    if (BattleActions_EventBattle != 0x10) return;
+    if (EventBattle_Id != 0x10) return;
     unsigned char bits = BossSe_Script;
     if ((bits & 1) && !(bits & 2)) {
         Line(0, 0x26);
@@ -447,7 +447,7 @@ extern "C" unsigned long __cdecl BossSunder_Hook(unsigned long word) { return Ho
 // again after the call); then bit 3 without bit 4 - action 0, line 0x28, bit
 // 4 set (likewise); then with bit 5 - action 3, line 0x2A, no bit set.
 extern "C" void __cdecl BossSunder_HookAct(unsigned) {
-    if (BattleActions_EventBattle != 0x10) return;
+    if (EventBattle_Id != 0x10) return;
     unsigned char bits = BossSe_Script;
     if (!(bits & 1)) return;
     if (!(bits & 4)) {
@@ -466,7 +466,7 @@ extern "C" void __cdecl BossSunder_HookAct(unsigned) {
 // original 0x439DB0: hook entry 1: in fight 16 with the acting actor 8,
 // 0x939AD8's word +0x108 at 0 made 1; then HP 0 made 1.
 extern "C" void __cdecl BossSunder_HookHit(unsigned) {
-    if (BattleActions_EventBattle == 0x10 && B(at::kActor) == 8) {
+    if (EventBattle_Id == 0x10 && B(at::kActor) == 8) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
         if (static_cast<std::uint16_t>(enemy_rec->hp_change) == 0) enemy_rec->hp_change = 1;
     }

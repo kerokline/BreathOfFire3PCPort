@@ -239,7 +239,7 @@ void CancelHead(bool windows) {
     BH_CALL(Sound_PlayEffect)(0x106);
     if (windows) {
         B(at::kWin3State) = 1;
-        Rest3b_Win2State = 1;
+        Window2_State = 1;
     }
     BH_CALL(BattleBanner_ShowName)(Ptr(at::kMenuActor));
     BattleE4_Picking = 0;
@@ -270,7 +270,7 @@ namespace {
 // record 16's +3 is 0, step 1, the command and step 0, and a tail jump to
 // ItemMenu_FreeWindows.
 void CloseWait() {
-    if (BattleActorCopies_ItemState != 0) return;
+    if (Window16_State != 0) return;
     BattleActions_Step = 1;
     BattleE4_Step2 = 0;
     BattleE4_Step3 = 0;
@@ -357,7 +357,7 @@ extern "C" void __cdecl BattleItem_SidePick(void) {
     }
     const U held = BH_CALL(Input_AutoRepeat)(pressed & 0xF000);
     if ((held & 0xF000) == 0) return;
-    const unsigned char* const list = BH_CALL(Char_AbilityList)(static_cast<unsigned char>(BattleActorCopies_ItemActor), BattleActorCopies_ItemPage, 1);
+    const unsigned char* const list = BH_CALL(Char_AbilityList)(static_cast<unsigned char>(BattleActorCopies_ItemActor), Window16_Page, 1);
     const unsigned id = list[L(at::kWin16Cursor) & 0xFF];
     if ((AbilityRow(id)[0] & 0x80) == 0) return;
     unsigned char* const c = Ptr(at::kCommand);
@@ -532,7 +532,7 @@ extern "C" void __cdecl EffectSlot17_RaiseDown(void) {
     }
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xFFFF);
     BH_CALL(Battle_ClearStatus)(B(at::kTarget), 0x4000);
-    if (B(at::kTarget) <= 2) BattleSprites_PartyPick = static_cast<unsigned char>(BattleSprites_PartyPick + 1);
+    if (B(at::kTarget) <= 2) Battle_PartyStanding = static_cast<unsigned char>(Battle_PartyStanding + 1);
     else BattleE2_EnemiesLeft = static_cast<unsigned char>(BattleE2_EnemiesLeft + 1);
 }
 
@@ -579,7 +579,7 @@ extern "C" void __cdecl EffectSlot28_RaiseQuarter(void) {
     if (t <= 2) {
         const S32 max = rv::As<records::PartyMember>(Party(t))->max_hp;
         rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>((0 - max) >> 2));
-        BattleSprites_PartyPick = static_cast<unsigned char>(BattleSprites_PartyPick + 1);
+        Battle_PartyStanding = static_cast<unsigned char>(Battle_PartyStanding + 1);
     } else {
         const S32 max = rv::As<records::BattleEnemy>(Enemy(t))->max_hp;
         rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>((0 - max) >> 2));
@@ -598,9 +598,9 @@ extern "C" void __cdecl EffectSlot29_RaiseFull(void) {
         return;
     }
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xD8F0);
-    const unsigned char up = static_cast<unsigned char>(BattleSprites_PartyPick + 1);
+    const unsigned char up = static_cast<unsigned char>(Battle_PartyStanding + 1);
     const unsigned t = B(at::kTarget);
-    BattleSprites_PartyPick = up;
+    Battle_PartyStanding = up;
     BH_CALL(Battle_ClearStatus)(t, 0x4000);
 }
 

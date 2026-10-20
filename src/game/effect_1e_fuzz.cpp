@@ -336,7 +336,7 @@ void Seed(unsigned k) {
     Input_Held = static_cast<unsigned short>(PickOf(0x20, 0x8000, 0x2000, 0xA000, 0x4000, 0xC000, 0x1000, 0x3000, 0, sh::Next()));
     Field_ConfirmButtons = static_cast<unsigned short>(PickOf(0x40, 0x43, 0x20, sh::Next()));
     Field_CancelButtons = static_cast<unsigned short>(PickOf(0x10, 0x20, 0x40, sh::Next()));
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
+    Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
     Field_Kind2Hold = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     Field_State[0x89] = static_cast<unsigned char>(PickOf(0, sh::Next()));
     sh::SetRandHint(PickOf(0, 1, 8, 0xF, sh::Next()));

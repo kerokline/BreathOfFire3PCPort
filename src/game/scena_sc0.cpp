@@ -41,7 +41,7 @@ void SetL(uint32_t a, uint32_t v) { move_script::SetLong(At(a), static_cast<int3
 void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<int32_t>(v)); }
 
 // The chapter's flag row, as the original reads it: the pointer afresh.
-unsigned char* Row() { return At(AreaW0c_FlagRow); }
+unsigned char* Row() { return At(Chapter_FlagRow); }
 
 constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
 
@@ -341,7 +341,7 @@ extern "C" void __cdecl Scena00_Run(void) {
 extern "C" void __cdecl Scena00_Run2(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SH_CALL(Msg_OpenScript)(0x10);
         Field_Request = 2;
         SH_CALL(Music_Play)(6, 8);
@@ -366,7 +366,7 @@ extern "C" void __cdecl Scena00_Run2(void) {
         Step(3);
         return;
     case 3:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         SH_CALL(Msg_OpenScript)(0x11);
         Field_Request = 2;
@@ -390,7 +390,7 @@ extern "C" void __cdecl Scena00_Run2(void) {
     case 7:
         if (B(kByte4B) != 0x60) return;
         SH_CALL(Field_ChangeArea)(0x1F, 0x70000, 0x140000, 0);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SH_CALL(Music_FadeOutStop)(0x40);
         Run(3);
         Step(0);
@@ -455,7 +455,7 @@ extern "C" void __cdecl Scena00_Run3(void) {
 extern "C" void __cdecl Scena00_Run4(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SH_CALL(Msg_OpenScript)(1);
         Field_Request = 2;
         Step(1);
@@ -517,7 +517,7 @@ extern "C" void __cdecl Scena00_Run4(void) {
         Step(9);
         return;
     case 9:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         SH_CALL(Msg_OpenScript)(4);
         Field_Request = 2;
@@ -642,7 +642,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
     case 8:
         if (W(kTimer) != 0) {
             Timer(W(kTimer) - 1u);
-            if (MoveScript_WaitWordDA != 0) return;
+            if (Transition_Busy != 0) return;
             Draw_PassFlags = 0;
             return;
         }
@@ -662,12 +662,12 @@ extern "C" void __cdecl Scena00_Run5(void) {
         }
         SH_CALL(Flags_Set)(Row(), 4);
         SH_CALL(Field_ChangeArea)(0x18, 0x630000, 0x110000, 3);
-        AreaW0c_PendingKind = 9;
+        Area_EnterTransition = 9;
         ModeFlow_AreaTransition = 0xFF;
         Step(0xB);
         return;
     case 0xB:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         B(kCounter) = 1;
         Step(0xC);
         return;
@@ -853,7 +853,7 @@ extern "C" void __cdecl Scena00_Run7(void) {
         Step(5);
         return;
     case 5:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Timer(W(kTimer) - 1u);
         if (W(kTimer) != 0) return;
         SH_CALL(Kind2_Place)(2);
@@ -1124,7 +1124,7 @@ extern "C" void __cdecl Scena00_Run11(void) {
         Step(9);
         return;
     case 9: {
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         const auto bits = static_cast<unsigned char>(member0->draw_flags & 0xDF);
         Field_ScriptFlags = Field_ScriptFlags & 0xFFB7u;
         Draw_PassFlags = 0;

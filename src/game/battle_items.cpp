@@ -722,7 +722,7 @@ extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
         return;
     }
     auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride));
-    if (BattleActions_EventBattle != 0) {
+    if (EventBattle_Id != 0) {
         const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
         g.enemy_sound(Word(cue));
     } else {

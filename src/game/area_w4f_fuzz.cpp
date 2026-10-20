@@ -303,16 +303,16 @@ const ah::Callee kCallees[] = {
 const ah::Region kRegions192[] = {
     W4F_BASE_REGIONS,
     {at::kCharRecords, at::kCharCount * at::kCharStride},
-    {AreaW3g_Byte929EC1_addr, 1},
-    {AreaW3g_Byte9036D0_addr, 1},
+    {Area189_StepsSinceEvent_addr, 1},
+    {Area189_EventsInRow_addr, 1},
     {Draw_PassFlags_addr, 1},
 };
 const ah::Region kRegions193[] = {
     W4F_BASE_REGIONS,
-    {AreaW3g_Byte929EC1_addr, 1},
-    {AreaW3g_Byte9036D0_addr, 1},
+    {Area189_StepsSinceEvent_addr, 1},
+    {Area189_EventsInRow_addr, 1},
     {Draw_PassFlags_addr, 1},
-    {AreaW0c_PendingKind_addr, 1},
+    {Area_EnterTransition_addr, 1},
 };
 const ah::Region kRegions196[] = {
     W4F_BASE_REGIONS,
@@ -347,7 +347,7 @@ void Common(int area) {
     ah::SetPointer(MoveScript_Object_addr, ScriptRecord(ah::Next()));
     ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(ah::Next()));
     SetMember(ah::Next());
-    ah::SetPointer(AreaW0c_FlagRow_addr, ah::Mem(Cond_Flags_addr + (ah::Next() % 24) * 8));
+    ah::SetPointer(Chapter_FlagRow_addr, ah::Mem(Cond_Flags_addr + (ah::Next() % 24) * 8));
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -370,7 +370,7 @@ void Disturb(U h) {
     case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
     case 6: SetMember(h >> 12); break;
     case 7: B(Cond_Flags_addr + 0xce) = static_cast<unsigned char>(h & 0x100 ? v % 10 : v); break;
-    case 8: MoveScript_WaitWordDA = static_cast<unsigned short>(h & 0x100 ? 0 : v); break;
+    case 8: Transition_Busy = static_cast<unsigned short>(h & 0x100 ? 0 : v); break;
     case 9: B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(h & 0x100 ? 7 : v); break;
     default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 3); break;
     }
@@ -427,7 +427,7 @@ void Seed192(unsigned k) {
     case k192Tail: {
         static const U kStates[] = {0, 1, 2, 3, 4, 0xA, 0x14, 0x1E, 0, 2, 3, 4, 0xA, 0x14, 0x1E, 5, 9, 0xB, 0x13, 0x1F, 0x7F, 0x80, 0xFF};
         SeedTail(kStates, sizeof kStates / sizeof kStates[0]);
-        if (ah::Half()) MoveScript_WaitWordDA = static_cast<unsigned short>(AH_PICK(0, 0, 1, 0x100));
+        if (ah::Half()) Transition_Busy = static_cast<unsigned short>(AH_PICK(0, 0, 1, 0x100));
         break;
     }
     case k192Talk:

@@ -76,7 +76,7 @@ void Disturb() {
     switch ((h >> 4) % 14) {
     case 0: SetWord(At(at::kMessage), v % 3 == 0 ? 0xFFFF : h >> 16); break;
     case 1: At(ItemUse_SubState_addr)[0] = static_cast<unsigned char>(v); break;
-    case 2: At(ItemUse_Window1State_addr)[0] = static_cast<unsigned char>(v); break;
+    case 2: At(Window1_State_addr)[0] = static_cast<unsigned char>(v); break;
     case 3: At(at::kWindow0State)[0] = static_cast<unsigned char>(v); break;
     case 4: At(ItemUse_ColorHigh_addr)[0] = static_cast<unsigned char>(v); break;
     case 5: Game_Step = static_cast<unsigned short>(h >> 16); break;

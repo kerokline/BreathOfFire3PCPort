@@ -172,7 +172,7 @@ void Seed(unsigned k) {
         B(kByte4A) = static_cast<unsigned char>(SH_PICK(0, 1, 3, 9, 0x13, 0x14, 0x15, 0x17, 0x23, 0x30, 0x35, 0x38, 0x71));
     if (sh::Often()) B(kByte4B) = static_cast<unsigned char>(SH_PICK(0, 1, 0x54, 0x60));
     if (sh::Half()) B(kCount2) = static_cast<unsigned char>(SH_PICK(0x1E, 0x1F, 0));
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     if (sh::Half()) B(Field_Request_addr) = 2;
     if (sh::Often()) SetW(MoveScript_PartyRecords_addr + 0x66, SH_PICK(0, 1, 2, 0x21, 0x7B, 0x7C));
     if (sh::Half()) SetL(MapView_FocusZ_addr, SH_PICK(0x4400, 0x5000));
@@ -193,7 +193,7 @@ void Seed(unsigned k) {
     // the message steps that store Field_Request between two calls
     if ((k == kRun2K || k == kRun4K) && sh::Half()) {
         B(MoveScript_PartyRecords_addr + 0x65) = k == kRun2K ? 0 : 9;
-        SetW(MoveScript_WaitWordDA_addr, 0);
+        SetW(Transition_Busy_addr, 0);
     }
     // run 5's shaking steps, with something to shake
     if (k == kRun5K && sh::Next() % 3 == 0) {

@@ -937,8 +937,8 @@ extern "C" void __cdecl EnemyAI_ChooseActions() {
             case 0x1A: holds = (counter & 1) != 0; break;
             case 0x1B: holds = counter % 3 == 0; break;
             case 0x1C: holds = counter % 3 != 0; break;
-            case 0x1D: holds = BattleSprites_PartyPick == 1; break;
-            case 0x1E: holds = BattleSprites_PartyPick != 1; break;
+            case 0x1D: holds = Battle_PartyStanding == 1; break;
+            case 0x1E: holds = Battle_PartyStanding != 1; break;
             case 0x1F: holds = BattleE2_EnemiesLeft == BattleActorCopies_EnemyCount; break;
             case 0x20: holds = BattleE2_EnemiesLeft != 1; break;
             case 0x26: holds = g.ai_rows_left(r, e) != 0; break;

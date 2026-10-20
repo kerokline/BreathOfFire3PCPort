@@ -411,7 +411,7 @@ const sh::Region kRegions14[] = {
     {Gfx_ClutStrip_addr, at::kClutWords * 2},
     {MapView_Origin_addr, 2},
     {at::kRecords, 8 * at::kRecordStride},
-    {MoveScript_EffectState_addr + 0x8, 1},
+    {Character_IndexById_addr + 0x8, 1},
     {0x929F0C, 8},                // 0x929F10
     {0x92BF18, 4},                // Draw_OtSlot 0x92BF19
     {Draw_SortOnX_addr, 1},
@@ -563,7 +563,7 @@ void Seed(unsigned k) {
     B(Field_MemberCount_addr) = static_cast<unsigned char>(sh::Next() % 4);
     B(Scena13_Slot_addr) = static_cast<unsigned char>(sh::Next() % 0x14);
     B(Scena14_Slot_addr) = static_cast<unsigned char>(sh::Next() % 0x14);
-    B(MoveScript_EffectState_addr + 0x8) = static_cast<unsigned char>(sh::Next() % 8);
+    B(Character_IndexById_addr + 0x8) = static_cast<unsigned char>(sh::Next() % 8);
     sh::SetPointer(AreaW1a_FocusObject_addr, sh::SpriteRecord(sh::Next()));
     for (unsigned i = 0; i < at::kObjectCount13; ++i) SetD(Scena13_Objects_addr + 4 * i, KeyOf(kObjectEntries13[i]));
     for (unsigned i = 0; i < at::kObjectCount14; ++i) SetD(Scena14_Objects_addr + 4 * i, KeyOf(kObjectEntries14[i]));
@@ -572,7 +572,7 @@ void Seed(unsigned k) {
     if (sh::Often()) SetW(Game_AreaNumber_addr, AnArea(sh::Next()));
     if (sh::Often()) B(Cond_ByteFD_addr) = static_cast<unsigned char>(AnFD());
     if (sh::Often()) B(Field_Request_addr) = static_cast<unsigned char>(SH_PICK(0, 2, 6, 1));
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     if (sh::Often()) SetW(MoveScript_PartyRecords_addr + 0x66, SH_PICK(0, 1, 2, 0x10, 0xB3, 0xB4, 0xB5, 0xF0, 0xF1));
     if (sh::Often()) B(at::kCounters + 3) = static_cast<unsigned char>(SH_PICK(0x14, 0x18, 0x31, 0x30, 0x20));
     if (sh::Half()) Effect0(B(g_chapter == 13 ? Scena13_Slot_addr : Scena14_Slot_addr));

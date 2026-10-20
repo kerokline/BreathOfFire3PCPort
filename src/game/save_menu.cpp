@@ -134,8 +134,8 @@ void CopyForward(U dst, U src, U n) {
 // through the dispatch's `xor eax, eax`, ecx not); ours zero-extends. Group
 // Y's 0x575690 masks it (`and eax, 0xFF` at 0x575718).
 void LoadWindows() {
-    g.window_back(static_cast<std::uint32_t>(FieldS_Backdrop));
-    g.window_frame5(0x14, 0x12, 0x118, 0x13, static_cast<std::uint32_t>(static_cast<unsigned char>(BattleDraw_Colour)));
+    g.window_back(static_cast<std::uint32_t>(Config_Background));
+    g.window_frame5(0x14, 0x12, 0x118, 0x13, static_cast<std::uint32_t>(static_cast<unsigned char>(Config_WindowColour)));
 }
 // Text_DrawAt(0x1C, 0x15, 0, 0xFF, system message id).
 void LoadMessage(U id) { g.text_draw(0x1C, 0x15, 0, 0xFF, g.msg_ptr(id)); }
@@ -517,7 +517,7 @@ extern "C" void __cdecl Party_RestoreAll(unsigned full) {
 // the hand's row is `movzx ax, byte`, over the upper half of the last
 // Text_DrawAt's result. Both vanish in a 16-bit y.
 extern "C" void __cdecl SaveMenu_DrawChoices(int x, int y) {
-    g.window_frame(x + 4, y + 4, 0x52, 0x48, 0, static_cast<std::uint32_t>(static_cast<unsigned char>(BattleDraw_Colour)));
+    g.window_frame(x + 4, y + 4, 0x52, 0x48, 0, static_cast<std::uint32_t>(static_cast<unsigned char>(Config_WindowColour)));
     g.window_box(x, y, 9, 8);
     const U high = static_cast<U>(x) & 0xFFFF0000u;
     U last = 0;
@@ -605,7 +605,7 @@ extern "C" unsigned __cdecl Shop_SellPrice(unsigned kind, unsigned item, unsigne
 extern "C" void __cdecl Shop_InitWindows(void) {
     // Window records 0, 1, 2, 20 and 21 of WindowRecords 0x803160, 0x24 apart
     // (symbols.toml Window_Alloc): their shared bytes +0..+7 typed; record 0's
-    // +0x10 is the entry ShopStates2_Help; records 2's and 20's +0xA / +0xB are
+    // +0x10 is the entry Window0_Arrows; records 2's and 20's +0xA / +0xB are
     // the handler's own (WindowRecord's per-handler bytes), kept raw.
     auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
     auto* const w1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 1 * sizeof(records::WindowRecord));
@@ -623,7 +623,7 @@ extern "C" void __cdecl Shop_InitWindows(void) {
     w0->in_use = 1;
     w0->x = 0x14;
     w0->y = 0xFFEC;
-    ShopStates2_Help = 0;
+    Window0_Arrows = 0;
     w1->handler = 7;
     w1->kind = 1;
     w1->in_use = 1;
@@ -985,7 +985,7 @@ extern "C" void __cdecl TitleMenu_Choose(void) {
 // cursor + 2 - the new game, the load, or the config screen - and state 0;
 // until then the frame and the rows.
 extern "C" void __cdecl TitleMenu_Leave(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         const U step = static_cast<U>(SaveMenu_Cursor + 2);
         SetState(0);
         Game_Step = step;
@@ -1032,7 +1032,7 @@ extern "C" void __cdecl LoadMenu_Open(void) {
     LoadWindows();
     LoadMessage(0xAC);
     g.draw_slots(0x20, 0x30, 1);
-    if (MoveScript_WaitWordDA == 0) SetState(State() + 1);
+    if (Transition_Busy == 0) SetState(State() + 1);
 }
 
 // 0x5881F0, state 2, choosing a slot: the same draw; then Input_AutoRepeat
@@ -1233,7 +1233,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         const U c0 = Byte(at::kGameBlock + 0x20);
         const U cond = Cond_Flags_addr + static_cast<U>(static_cast<int>(static_cast<signed char>(d0 & 0xFF)) * 8);
         const U c1 = Byte(at::kGameBlock + 0x21);
-        AreaW0c_FlagRow = cond;
+        Chapter_FlagRow = cond;
         const U c2 = Byte(at::kGameBlock + 0x22);
         PutByte(at::kCounters, c0);
         const U c3 = Byte(at::kGameBlock + 0x23);
@@ -1245,7 +1245,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         Game_Step = 5;
         SetState(0);
     }
-    if (MoveScript_WaitWordDA == 0) return;
+    if (Transition_Busy == 0) return;
     if (Long(at::kHeld) & 0x800) SaveMenu_DefaultPad = 1;
     LoadWindows();
     g.draw_slots(0x20, 0x30, 0);
@@ -1259,7 +1259,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
 // of its record - after a load too - and task 0 restarted at 0x495800, the
 // game's body (0x5A9976, which does not return).
 extern "C" void __cdecl TitleFlow_EnterGame(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const U cursor = static_cast<unsigned char>(SaveMenu_Cursor);
     FieldS_Step = 0;
     PutByte(at::kMenuStates + 1, 0);

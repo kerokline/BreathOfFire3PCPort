@@ -37,10 +37,10 @@ constexpr U kModeSub = 0x929F02;      // u8: the step's sub-step
 // character record 7 (CharacterRecords + 7 * 0xA4) and its six equipment
 // bytes +0x12..+0x17, the categories by equipment slot (.data, six bytes).
 constexpr U kWindows = 0x803160;
-// kWin0Cursor: now Rest3a_Win0Cursor (symbols.toml). window 0's +0xC: the party index set up
-// kWin0Category: now Rest3a_Win0Category (symbols.toml). window 0's +8
-// kWin0Item: now Rest3a_Win0Item (symbols.toml). window 0's +0xD
-// kWin1Slot: now Rest3a_Win1Slot (symbols.toml). window 1's +0xA: the slot cursor (0 or 3: BattleExtra_EquipSlotInput's xor 3)
+// kWin0Cursor: now Window0_Cursor (symbols.toml). window 0's +0xC: the party index set up
+// kWin0Category: now Window0_Category (symbols.toml). window 0's +8
+// kWin0Item: now Window0_Item (symbols.toml). window 0's +0xD
+// kWin1Slot: now Window1_ParamA (symbols.toml). window 1's +0xA: the slot cursor (0 or 3: BattleExtra_EquipSlotInput's xor 3)
 constexpr U kWin13Dim = 0x803341;     // window 13's +0xD: 1 when Item_EquipMask's answer has bit 0 clear
 constexpr U kPartyList = 0x904062;    // u8 x 3: the party list's first three entries
 constexpr U kChosen = 0x675EB8;       // u8 x 6: the list's choice per equipment slot (window 0 and 1's +0x20 point here)
@@ -53,11 +53,11 @@ constexpr U kCategories = 0x64AE20;   // .data, u8 x 6: the item category of eac
 // kStep: now BattleActions_Step (symbols.toml).
 constexpr U kSubStep = 0x904AA2;
 constexpr U kFlags = 0x904AA8;        // the round flags (a dword is read for bit 15)
-// kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
+// kMusicFlags: now EventBattle_Flags (symbols.toml). u8: bit 0x40 keeps the battle's music
 constexpr U kActor = 0x904B34;        // u8: the acting actor
 constexpr U kAction = 0x904B40;       // unsigned char *: the action record (+2 the ability id)
 // kAreaNumber: now Game_AreaNumber (symbols.toml). u16 Game_AreaNumber
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA: a transition runs while non-zero
+// kWaitWord: now Transition_Busy (symbols.toml). u16 Transition_Busy: a transition runs while non-zero
 // kPassFlags: now Draw_PassFlags (symbols.toml). u8 Draw_PassFlags
 // kLossSteps: now BattleEnd_LossSteps (symbols.toml). BattleEnd_LossSteps: 3, by kSubStep
 // kRestoreSteps: now BattleEnd_RestoreSteps (symbols.toml). BattleEnd_RestoreSteps: 5, by kSubStep

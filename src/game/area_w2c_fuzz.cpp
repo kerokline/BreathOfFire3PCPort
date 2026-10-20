@@ -165,12 +165,12 @@ U MovesCurrent(const U*, U answer) {
 // again after Flags_Test and KeyItem_Add).
 U MovesRow(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(n & 2 ? (Cond_Flags_addr + 0xa0) + (n >> 8) % 0x20 : n));
+    if (n & 1) SetLong(ah::Mem(Chapter_FlagRow_addr), static_cast<std::int32_t>(n & 2 ? (Cond_Flags_addr + 0xa0) + (n >> 8) % 0x20 : n));
     return answer;
 }
 U MovesRowBool(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + (n >> 8) % 0x20));
+    if (n & 1) SetLong(ah::Mem(Chapter_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + (n >> 8) % 0x20));
     return answer;
 }
 
@@ -445,7 +445,7 @@ const ah::Callee kCallees92[] = {
 // disturbed +0xB reaches past the four the stand-in answers), the row pointer.
 const ah::Region kRegions92[] = {
     {Effect_Objects_addr, 0xFF * at::kEffectStride},
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
 };
 void Seed92(unsigned k) {
     switch (k) {
@@ -464,7 +464,7 @@ void Disturb92(U h) {
     switch ((h >> 8) % 3) {
     case 0: B(Cond_Flags_addr + 0xd2 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
     case 1: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 5); break;
-    default: SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + v % 0x20)); break;
+    default: SetLong(ah::Mem(Chapter_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + v % 0x20)); break;
     }
 }
 
@@ -496,7 +496,7 @@ const ah::Callee kCallees94[] = {
     {W2C_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
 };
 const ah::Region kRegions94[] = {
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {AreaW2c_LastArea_addr, 4},
 };
 // The patch chain: AreaMap_PatchBase at a dword of the block's first 7 KiB,
@@ -533,7 +533,7 @@ void Disturb94(U h) {
     switch ((h >> 8) % 3) {
     case 0: B(Cond_Flags_addr + 0xd2 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
     case 1: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 5); break;
-    default: SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + v % 0x20)); break;
+    default: SetLong(ah::Mem(Chapter_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + v % 0x20)); break;
     }
 }
 #undef W2C_OURS

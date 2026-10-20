@@ -70,7 +70,7 @@ void SetState(unsigned char v) { MoveScript_PartyRecords[0x62] = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool Waiting() { return MoveScript_WaitWordDA != 0; }
+bool Waiting() { return Transition_Busy != 0; }
 bool Busy() { return Request() == 2; }   // a message still open
 void SetMusicByte(unsigned char v) { AreaW1f_MusicCurrent = v; }
 void ScriptOr8() { B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | 8); }       // or byte
@@ -88,7 +88,7 @@ void ClearCounters123() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 unsigned char* Story() { return &Cond_Flags[0xa0]; }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 bool StoryFlag(unsigned i) { return SH_CALL(Flags_Test)(Story(), i) != 0; }
@@ -140,7 +140,7 @@ void EndRunAll() {
     SetRun(0);
 }
 
-// The character record of MoveScript_EffectState[k] (the member's), its +0xB.
+// The character record of Character_IndexById[k] (the member's), its +0xB.
 unsigned char& RecordB(unsigned k) {
     const unsigned member = B(at::kEffectState + k);
     return B(at::kCharRecords + at::kCharStride * member + 0xB);
@@ -667,7 +667,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         return;
     case 14: {
         if (Counter(0) != 0x32) return;
-        const unsigned member6 = MoveScript_EffectState[6];
+        const unsigned member6 = Character_IndexById[6];
         ScriptXor8();
         SetStep(0xF);
         B(at::kCharRecords + at::kCharStride * member6 + 0xB) |= 1;
@@ -2032,7 +2032,7 @@ SC6_EXPORT void __cdecl Scena06_Run17(void) {
 // triggered: Scena06_Objects[object +0x86] (object, the flag bits' pointer).
 // 0x56D6D0 does not read the answer.
 SC6_EXPORT void __cdecl Scena06_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena06_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena06_ObjectTrigger")))(object, bits);

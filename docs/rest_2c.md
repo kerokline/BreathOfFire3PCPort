@@ -283,7 +283,7 @@ called.
   scale index `+0x10B` (21 scales; past them the state tables), the master
   byte into `0x6644E8` (18 masters), a face id into `0x6644B8` (12 faces), a
   record byte into the character records (8) and `Char_ExpTable`, a party id
-  into `MoveScript_EffectState` (24). No play value goes past them that the
+  into `Character_IndexById` (24). No play value goes past them that the
   code shows.
 - **`Save_BuildBlock` takes the name from the leader's record but the level
   and `+0xC` from record 0** (`0x903A7A`, `0x903A7C`), whatever the party.

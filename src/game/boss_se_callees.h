@@ -36,13 +36,13 @@ using U = std::uint32_t;
 constexpr U kPhase = 0x904AA0;            // u8: Battle_PhaseDispatch's phase
 // kStep: now BattleActions_Step (symbols.toml). u8: the phase's step
 constexpr U kFlags = 0x904AA8;            // u16: the round flags (bit 1, 2, 6, 7 read or set here)
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (Boss_SetupTable's index)
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle (Boss_SetupTable's index)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (read and set by the hooks below)
 constexpr U kOrder = 0x904ACC;            // u8[]: the turn order (battle_damage.md)
 // kRoundSlot: now BossSe_RoundSlot (symbols.toml). u8: the turn order's cursor (battle_actions.md) - the round's count here
 // kOrderCount: now BattleDamage_TurnCount (symbols.toml). u8: the turn order's length
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: 1 / 2 the side that moves first (battle_phases.md), 3 here
-// kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
+// kMusicFlags: now EventBattle_Flags (symbols.toml). u8: bit 0x40 keeps the battle's music
 // kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bits 2 and 3 set by hooks here
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (battle_actions.md)

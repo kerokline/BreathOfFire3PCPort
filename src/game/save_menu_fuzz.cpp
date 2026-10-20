@@ -850,7 +850,7 @@ U Wide(U low, U bits_mask) { return (Next() & ~bits_mask) | (low & bits_mask); }
 // index tables, made valid.
 void Sane() {
     PutLong(Gfx_PacketNext_addr, Addr(g_prim) + (Next() % 0x30) * 4);
-    PutWord(MoveScript_WaitWordDA_addr, Next() % 2 ? 0 : Next());
+    PutWord(Transition_Busy_addr, Next() % 2 ? 0 : Next());
     PutLong(Rest2c_Slot_addr, Next() % 4 ? Next() % 17 : Next() % 0x100);
     // The first slot shown: its upper bytes reach 0x576960's slot argument.
     PutLong(at::kSlotTop, Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);

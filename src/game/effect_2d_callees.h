@@ -26,7 +26,7 @@ constexpr std::uint32_t kDustStart = bof3::addr::EffectDust_Start;     // 0x47A1
 constexpr std::uint32_t kDustStep = bof3::addr::EffectDust_Run;      // 0x47A200, R3E's: (void): the live dust drawn and stepped; al 1 when any was live
 
 // Data.
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (scenario_harness at::kFlagRow)
+// kFlagRow: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (scenario_harness at::kFlagRow)
 constexpr std::uint32_t kCounter0 = 0x903848;      // the chapters' counter byte (scenario_harness at::kCounter)
 // kPanelColour: now Effect2d_PanelColour (symbols.toml). three bytes: the blue, green and red of kind 0x45's lines and
                                                    // rectangles (committed at +6, +5, +4)

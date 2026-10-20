@@ -360,7 +360,7 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 8) {
     case 0: Mem(BattleE7_DropCount_addr)[0] = static_cast<unsigned char>(b % 9); break;
-    case 1: Mem(BattleDraw_Colour_addr)[0] = b; break;
+    case 1: Mem(Config_WindowColour_addr)[0] = b; break;
     case 2: Mem(BossSb_Countdown_addr)[0] = static_cast<unsigned char>((b & 0x80) | (b % 3)); break;
     case 3: Mem(BattleActions_ApCost_addr)[0] = b; break;
     case 4: Mem(BattleE5_GeneRow_addr)[0] = h & 0x1000000 ? 0xFF : static_cast<unsigned char>(b % 4); break;

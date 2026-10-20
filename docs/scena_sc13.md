@@ -212,7 +212,7 @@ then doing one thing and storing the next step.
 - *Chapter 14's run 7, step 0x17*: records 1..7 of the eight at `0x903A70`
   with `+0xB` bit 0 get `+0x1C` = `+0x2E`, `+0x18` = `+0x20`, `+0x1A` =
   `+0x22`, `+0x10` = 0; then each member after the leader has the 0xA4
-  bytes of the record `MoveScript_EffectState[its party byte]` names copied
+  bytes of the record `Character_IndexById[its party byte]` names copied
   to its ObjTrio `+0x80` - a party restored before a battle.
 
 **As the originals have them** (each kept, and each said at its site):

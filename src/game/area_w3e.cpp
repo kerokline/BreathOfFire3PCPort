@@ -48,7 +48,7 @@ unsigned char* ObjectAt(unsigned slot) { return Sprite_Objects + slot * at::kObj
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 // The movement script's position (MoveScript_Object's word +0xA) moved by `v`.
 void ScriptStep(int v) { AddWord(MoveScript_Object + 0xA, v); }
 

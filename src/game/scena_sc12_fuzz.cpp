@@ -323,7 +323,7 @@ void Seed(unsigned k) {
         if (sh::Often()) B(at::kCounters + c) = static_cast<unsigned char>(ACount());
     B(at::kCounters + 3) = static_cast<unsigned char>(sh::Next() % 20);
     if (sh::Often()) B(Field_Request_addr) = static_cast<unsigned char>(SH_PICK(0, 2, 6));
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     if (sh::Often()) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(ASelector());
     if (sh::Often()) B(Cond_ByteFD_addr) = static_cast<unsigned char>(SH_PICK(2, 3));
     if (sh::Often()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(2 + sh::Next() % 7);

@@ -121,7 +121,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const auto byte = static_cast<unsigned char>(h >> 24);
     switch ((h >> 4) % 18) {
-    case 0: At(BattleDraw_Colour_addr)[0] = SmallRow(v); break;
+    case 0: At(Config_WindowColour_addr)[0] = SmallRow(v); break;
     case 1: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 6); break;
     case 2: At(at::kCrossSel)[0] = static_cast<unsigned char>(v % 8); break;
     case 3: At(at::kCrossGrow + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
@@ -512,7 +512,7 @@ void Fix() {
     Field_State = g_buf.objects[Next() % kObjects];
     Sprite_Current = g_buf.objects[Next() % kObjects];
     SetLong(At(BattleE4_MenuActor_addr), static_cast<std::int32_t>(Address(g_buf.objects[Next() % kObjects])));
-    At(BattleDraw_Colour_addr)[0] = SmallRow(Next());
+    At(Config_WindowColour_addr)[0] = SmallRow(Next());
     At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 6);
     for (unsigned k = 0; k < kTexts; ++k) Text(g_buf.texts[k], kTextBytes);
 }
@@ -531,7 +531,7 @@ std::uint32_t Coord() {
 }
 // A CLUT shadow word near the darker lines' clamp: components 0..3 often.
 void SeedLineColour() {
-    const int row = static_cast<signed char>(At(BattleDraw_Colour_addr)[0]);
+    const int row = static_cast<signed char>(At(Config_WindowColour_addr)[0]);
     unsigned w = Next();
     if (Often()) w = (Next() % 4) | (Next() % 4) << 5 | (Next() % 4) << 10 | (Next() & 0x8000);
     SetWord(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)), w);
@@ -575,7 +575,7 @@ Args Seed(unsigned k) {
         static const unsigned char kKinds[] = {5, 5, 4, 6, 0};
         At(at::kBattleKind)[0] = Often() ? kKinds[Next() % 5] : static_cast<unsigned char>(Next());
         At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(Next() & 3);
-        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() & 0x30);
+        At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Next() & 0x30);
         At(at::kPoseMode)[0] = static_cast<unsigned char>(Next() & 0x18);
         unsigned char* const f = Field_State;
         SeedMember(f);

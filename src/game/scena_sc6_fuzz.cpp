@@ -261,13 +261,13 @@ const sh::DataTable kTables[] = {{Scena06_States_addr, at::kStateCount}, {Scena0
 unsigned char g_leap_object[8];
 
 // Beyond the standard regions: the character records (record 7 and the
-// members' +0xB), MoveScript_EffectState, the selector, the byte 0x904C9F,
+// members' +0xB), Character_IndexById, the selector, the byte 0x904C9F,
 // the music byte and the two Text_Records names, Cond_ByteFE, the load bytes
 // and Field_Kind2Hold, the byte 0x7DEE44, run 8's copy of the party list, the
 // three tables the seed writes stand-ins into, and the leap's object.
 const sh::Region kRegions[] = {
     {at::kCharRecords, 8 * at::kCharStride},
-    {MoveScript_EffectState_addr, 0x18},
+    {Character_IndexById_addr, 0x18},
     {AreaW0b_PartySet_addr, 4},
     {ScenaSc6_Byte904C9F_addr, 1},
     {AreaW1f_MusicCurrent_addr, 0x40},
@@ -360,7 +360,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < at::kCellHandlerCount; ++i) SetD(Scena06_CellHandlers_addr + 4 * i, KeyOf(kCellEntries[i]));
     if (sh::Half()) SetD(Scena06_CellHandlers_addr + 4, at::kBareRet);
     // every member's record byte inside the eight records
-    for (unsigned i = 0; i < 0x18; ++i) B(MoveScript_EffectState_addr + i) = static_cast<unsigned char>(sh::Next() & 7);
+    for (unsigned i = 0; i < 0x18; ++i) B(Character_IndexById_addr + i) = static_cast<unsigned char>(sh::Next() & 7);
     // the cells the chapter compares, each most of the time at a value a
     // branch tests
     if (sh::Often()) SetW(Game_AreaNumber_addr, AnArea());
@@ -371,7 +371,7 @@ void Seed(unsigned k) {
     if (sh::Half()) B(Effect_Objects_addr + B(at::kCounters + 3) * at::kEffectStride) = 0;
     if (sh::Half()) B(Effect_Objects_addr + (B(at::kCounters + 1) % 20) * at::kEffectStride) = 0;
     if (sh::Often()) B(Field_Request_addr) = static_cast<unsigned char>(SH_PICK(0, 2, 7, 6));
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     if (sh::Half()) B(Field_Kind2Hold_addr) = 0;
     if (sh::Often()) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>((sh::Next() % 8) | (sh::Half() ? 0x80 : 0));
     for (unsigned i = 0; i < 3; ++i)

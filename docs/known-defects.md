@@ -3294,13 +3294,13 @@ indexes ours aborts (each group's doc says which).
   `Scena02_PlaceEffect70` / `68` `0x541B90` / `0x541C50` (`Scena02_EffectX`
   `0x660E48`). Kept.
 - **Member records by a whole byte:** `CharacterRecords + 0xA4 x
-  MoveScript_EffectState[k]` in the call tables, chapters 6, 8 and 14
+  Character_IndexById[k]` in the call tables, chapters 6, 8 and 14
   (`Scena08_Scene1` / `11` `0x551590` / `0x553050`, `Scena14_Run2` / `3`
   `0x565240` / `0x565910` step 0x11 / 9 by `0x669734`), `Scena01_Scene06`
   `0x53AC30` step 0xF (a byte of 8 or more clears a bit in `Cond_Flags`
   `0x903F90`), `Scena02_StripMember` `0x542080` (ten bytes at `0x903AEE +
   0xA4 x member`; its caller passes 3 and 4), `Party_AddToLists` `0x591CC0`
-  (an id of 24 or more reads past `MoveScript_EffectState`'s 24 and ORs 3
+  (an id of 24 or more reads past `Character_IndexById`'s 24 and ORs 3
   into a record the byte after names; SE), `Char_LevelUp` `0x498DE0`
   (`CharacterRecords` and `Char_ExpTable`; SX), `Member_SetState2_8`
   `0x57C8A0`, `AbilityList_ForType` `0x591EC0`, `Party_PlaceInFormation`
@@ -3392,7 +3392,7 @@ indexes ours aborts (each group's doc says which).
   `Area148_BeamTurnMembers` `0x422A50`'s `+9 >> 3`, `Area189_StepBegin`
   `0x42ADB0`'s whole facing byte into sixteen vectors (kept below 16 by its
   writers), `Area48_ToggleFlagD` / `_BumpCount` `0x409040` / `0x409080` and
-  `Area108_FlagIfEffectState5` `0x416EC0` (`MoveScript_EffectState`, 24
+  `Area108_FlagIfEffectState5` `0x416EC0` (`Character_IndexById`, 24
   bytes, by the leader's `+0x89`), `Area41_TintUp` / `_TintFall` `0x406560` /
   `0x4064C0` (`MoveScript_TintRecords` by `Field_State +0x149`, as ops `C1` /
   `C2`), `Area40_DrawGrid` `0x405ED0` (`DrawItems`, `0x24000` bytes, by

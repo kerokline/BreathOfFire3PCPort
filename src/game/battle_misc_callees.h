@@ -47,10 +47,10 @@ constexpr U kSoundLists = 0x6565BC;
 constexpr U kActorBits = 0x904B82;
 // Window record 16 of the window task's records (0x803160 + 16 * 0x24) and the
 // three after it: the item window. Record 16's fields the two set-ups write.
-// kItemWindow: now BattleE4_List (symbols.toml).
+// kItemWindow: now Window16 (symbols.toml).
 constexpr U kItemWindowPage = 0x8033AB;      // byte: the inventory page
 constexpr U kItemWindowCursor = 0x8033AC;    // byte: the cursor's item index
-// kItemWindowExtra: now BattleE4_Hand (symbols.toml). three bytes 0x80340C..E
+// kItemWindowExtra: now Window19 (symbols.toml). three bytes 0x80340C..E
 constexpr U kWindowCurrent = 0x905B84;       // the window task's current record
 constexpr U kItemActor = 0x929F06;           // byte: the actor the item window is for
 constexpr U kActingActor = 0x939EC4;         // pointer: the acting actor's context, its byte +5 the actor

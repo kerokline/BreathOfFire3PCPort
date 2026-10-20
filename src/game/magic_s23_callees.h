@@ -48,7 +48,7 @@ constexpr std::uint32_t kWE = 0x90385E;      // s16: its screen y
 
 // kShiftY: now Camera_ShiftY (symbols.toml). Camera_ShiftY (s16)
 // kActorSprite: now MagicS23_ActorSprite (symbols.toml). unsigned char *: its +8 is the side's facing
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8
+// kEventBattle: now EventBattle_Id (symbols.toml). u8
 
 // Quake's own .bss (MAGIC102): the heights it keeps while it heaves the map.
 constexpr std::uint32_t kQuakeEnemyZ = 0x695994;   // s16 x 8: an enemy's +0x3E before

@@ -155,8 +155,8 @@ void ArmRun(signed char var, unsigned char step) {
 // tail and its EffectKind18 state: the word 0x1E0 and the two bytes 0.
 void ResetWord1E0() {
     SetWord(Mem(Cond_Flags_addr + 0xcc), 0x1E0);
-    B(AreaW3g_Byte929EC1_addr) = 0;
-    B(AreaW3g_Byte9036D0_addr) = 0;
+    B(Area189_StepsSinceEvent_addr) = 0;
+    B(Area189_EventsInRow_addr) = 0;
 }
 
 // ---- area 198's shakes and fades ----
@@ -217,7 +217,7 @@ extern "C" void __cdecl Area192_ChoiceArmTail54(void) {
 // other state, and every negative one, nothing):
 //   0: message 0x6D, Field_Request 2, state 1 (1 waits);
 //   2: unless Field_Request is 2, Transition_Start(0), state 3;
-//   3: once MoveScript_WaitWordDA is 0: Draw_PassFlags 0, Sound_StopMusic,
+//   3: once Transition_Busy is 0: Draw_PassFlags 0, Sound_StopMusic,
 //      Area192_RestoreCharacters, Sound_LoadStream(0), state 4;
 //   4: once Sound_StreamDone: story flag 0x82 set; Field_StatusBits (read
 //      after the call) bit 0 cleared, with the word 0x90405C 0x1E0 and the
@@ -243,7 +243,7 @@ extern "C" void __cdecl Area192_Tail54(void) {
         B(AreaW0c_TailState_addr) = 3;
         return;
     case 3:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         AH_CALL(Sound_StopMusic)();
         AH_CALL(Area192_RestoreCharacters)();
@@ -254,8 +254,8 @@ extern "C" void __cdecl Area192_Tail54(void) {
         if (AH_CALL(Sound_StreamDone)() == 0) return;
         AH_CALL(Flags_Set)(StoryFlags(), 0x82);
         const unsigned char bits = Field_StatusBits;
-        B(AreaW3g_Byte929EC1_addr) = 0;
-        B(AreaW3g_Byte9036D0_addr) = 0;
+        B(Area189_StepsSinceEvent_addr) = 0;
+        B(Area189_EventsInRow_addr) = 0;
         SetWord(Mem(Cond_Flags_addr + 0xcc), 0x1E0);
         Field_StatusBits = static_cast<unsigned char>(bits & 0xFE);
         B(AreaW0c_TailState_addr) = 0xA;
@@ -319,7 +319,7 @@ extern "C" unsigned char __cdecl Area192_StepHook(long x, long z) {
 // 0x5678DD, and chapter 15's talk, 0x56AEC6, in area 0xC0): the message the
 // member `who` says. i = who's place among Area192_TalkWho's five (5 none);
 // the rank the byte 0x90405E capped at 8; the level the character record's
-// byte +0x1E (the record MoveScript_EffectState maps who to). Cond_Flags row
+// byte +0x1E (the record Character_IndexById maps who to). Cond_Flags row
 // 14's flag 0xA set: Area192_TalkMessageB(i * 9, who, rank, level). Else the
 // index i * 9 plus 8 (level 8 or more), 7 (level 5..7 and rank below 7) or
 // Area192_TalkSteps[rank]; the chapter's flag 2 picks Area192_TalkMessagesF
@@ -333,7 +333,7 @@ extern "C" unsigned short __cdecl Area192_TalkMessage(unsigned char who) {
     auto index = static_cast<unsigned char>(i * 9);
     unsigned char rank = B(Cond_Flags_addr + 0xce);
     if (rank > 8) rank = 8;
-    const unsigned char record = B(MoveScript_EffectState_addr + who);
+    const unsigned char record = B(Character_IndexById_addr + who);
     const unsigned char level = B(Field_ActorStates_addr + 0xe + record * at::kCharStride);
     if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0x70), 0xA) != 0)
         return AH_CALL(Area192_TalkMessageB)(index, who, rank, level);
@@ -343,7 +343,7 @@ extern "C" unsigned short __cdecl Area192_TalkMessage(unsigned char who) {
         index = static_cast<unsigned char>(index + 7);
     else
         index = static_cast<unsigned char>(index + B(Area192_TalkSteps_addr + rank));
-    if (AH_CALL(Flags_Test)(Ptr(AreaW0c_FlagRow_addr), 2) != 0) return B(Area192_TalkMessagesF_addr + index);
+    if (AH_CALL(Flags_Test)(Ptr(Chapter_FlagRow_addr), 2) != 0) return B(Area192_TalkMessagesF_addr + index);
     return B(Area192_TalkMessages_addr + index);
 }
 
@@ -398,7 +398,7 @@ extern "C" void __cdecl Area192_Init(void) {
 // 0x42B864): every character record with +0xB bit 0: HP (+0x18) = max HP
 // (+0x20), AP (+0x1A) = max AP (+0x22), the status word +0x10 0; then for
 // each of Field_MemberCount's members (a signed compare), the 0xA4 bytes of
-// the character record MoveScript_EffectState maps its id to copied over its
+// the character record Character_IndexById maps its id to copied over its
 // party record's +0x80 block (dword by dword, forward).
 extern "C" void __cdecl Area192_RestoreCharacters(void) {
     for (unsigned k = 0; k < at::kCharCount; ++k) {
@@ -411,7 +411,7 @@ extern "C" void __cdecl Area192_RestoreCharacters(void) {
     const int count = Field_MemberCount;
     for (int i = 0; i < count; ++i) {
         const unsigned char id = B(Cond_Flags_addr + 0xd2 + static_cast<U>(i));
-        const unsigned char record = B(MoveScript_EffectState_addr + id);
+        const unsigned char record = B(Character_IndexById_addr + id);
         unsigned char* const to = Mem(at::kParty80 + static_cast<U>(i) * at::kPartyStride);
         const unsigned char* const from = Mem(at::kCharRecords + record * at::kCharStride);
         for (unsigned d = 0; d < at::kCharStride; d += 4) std::memcpy(to + d, from + d, 4);
@@ -523,8 +523,8 @@ extern "C" void __cdecl Area193_Tail57(void) {
         SetWord(Mem(Cond_Flags_addr + 0xcc), 0);
         B(Cond_Flags_addr + 0xcf) = 0xF0;
         B(Cond_Flags_addr + 0xce) = 0;
-        B(AreaW3g_Byte929EC1_addr) = 0;
-        B(AreaW3g_Byte9036D0_addr) = 0;
+        B(Area189_StepsSinceEvent_addr) = 0;
+        B(Area189_EventsInRow_addr) = 0;
         Field_StatusBits = static_cast<unsigned char>(bits | 1);
         Disarm();
         return;
@@ -589,7 +589,7 @@ extern "C" void __cdecl Area193_Init(void) {
         B(AreaW0c_TailState_addr) = 0x14;
         return;
     }
-    B(AreaW0c_PendingKind_addr) = 1;
+    B(Area_EnterTransition_addr) = 1;
 }
 
 // ============================================================================

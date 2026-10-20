@@ -111,12 +111,12 @@ extern "C" void __cdecl Area42_ChoiceMessage(void) {
 
 // original 0x406670 (area 42's handler 0, Area42_Handlers 0x5F6274; PSX
 // 0x801F3DBC): Field_ActiveMember's +0x80 bit 0 cleared; then, only when
-// MoveScript_EffectState[the leader's +0x89] is 1 and neither story flag 0xB
+// Character_IndexById[the leader's +0x89] is 1 and neither story flag 0xB
 // nor 0x11 is set: flag 0xB set, Field_ScriptFlags bit 5, and the mode tail
 // armed - kind 7 (0x9039F3), state 0xA, the countdown word 0x9039F6 = 0x384.
 extern "C" void __cdecl Area42_StartTimer(void) {
     ActiveMember()[0x80] = static_cast<unsigned char>(ActiveMember()[0x80] & 0xFE);
-    if (MoveScript_EffectState[ObjTrio[0x89]] != 1) return;
+    if (Character_IndexById[ObjTrio[0x89]] != 1) return;
     if (AH_CALL(Flags_Test)(Bank(), 0xB) != 0) return;
     if (AH_CALL(Flags_Test)(Bank(), 0x11) != 0) return;
     AH_CALL(Flags_Set)(Bank(), 0xB);
@@ -135,12 +135,12 @@ extern "C" void __cdecl Area42_ClearMemberFlag(void) {
 namespace {
 // Area 42's handlers 2..5 (0x406710, 0x406780, 0x4067F0, 0x406860; one shape,
 // the flag 0x12..0x15): Field_ActiveMember's +0x80 bit 0 cleared; only when
-// MoveScript_EffectState[the leader's +0x89] is 1 and the flag is not yet
+// Character_IndexById[the leader's +0x89] is 1 and the flag is not yet
 // set: the flag set, Area42_CheckAll (its answer not read), and unless flag
 // 0xB is set, Field_ActiveMember's word +0x8A (read again) + 1.
 void Touch42(unsigned flag) {
     ActiveMember()[0x80] = static_cast<unsigned char>(ActiveMember()[0x80] & 0xFE);
-    if (MoveScript_EffectState[ObjTrio[0x89]] != 1) return;
+    if (Character_IndexById[ObjTrio[0x89]] != 1) return;
     if (AH_CALL(Flags_Test)(Bank(), flag) != 0) return;
     AH_CALL(Flags_Set)(Bank(), flag);
     AH_AT(CheckAllFn, kCheckAll42)();

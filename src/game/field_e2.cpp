@@ -1189,7 +1189,7 @@ extern "C" void __cdecl FieldTail_DropInMove(void) {
 
 // original 0x56DB80 (slot 10): two runs through a byte table, states 0..3 and
 // 20..23 the same four steps - ScriptFlags_Set40 and Transition_Start(0);
-// once MoveScript_WaitWordDA is 0, Draw_PassFlags 0, Party_HealJoined,
+// once Transition_Busy is 0, Draw_PassFlags 0, Party_HealJoined,
 // Sound_StopMusic, Sound_LoadStream(0); once Sound_StreamDone,
 // Sound_ResumeAll, Transition_Start(1), Draw_PassFlags 0x1F; once the wait
 // word is 0 - then state 10 for the first, and for the second the menu set
@@ -1204,7 +1204,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
     const signed char state = TailState();
     if (static_cast<U>(static_cast<std::int32_t>(state)) > 0x17) return;
     auto rest = [](unsigned char next) {
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         SH_CALL(Party_HealJoined)();
         SH_CALL(Sound_StopMusic)();
@@ -1230,7 +1230,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
     case 2: resume(3); return;
     case 11: resume(0x17); return;
     case 3:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         TailStep(0xA);
         return;
     case 4:
@@ -1265,7 +1265,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
         TailDone();
         return;
     case 12:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         BattleE1_Mode = 0;
         ModeStates_ShopObject = 0xFE;
         B(at::kFieldEC2) = 1;
@@ -1317,7 +1317,7 @@ extern "C" void __cdecl FieldTail_FlagMessage(void) {
     switch (TailState()) {
     case 0: {
         if (Field_Request == 2) return;
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), AreaW0c_TailSub);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), AreaW0c_TailSub);
         const unsigned char* const text = SH_CALL(Msg_SystemPtr)(AreaW0c_TailSub + 0x4172u);
         SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(at::kTextRecords)), reinterpret_cast<const char*>(text), 8);
         SH_CALL(Msg_OpenSystem)(0xFA);
@@ -1661,10 +1661,10 @@ extern "C" void __cdecl ItemTrade_OpenStart(void) {
     Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep + 1);
 }
 
-// original 0x5939D0 (ItemTrade_OpenSteps[1]): once MoveScript_WaitWordDA is
+// original 0x5939D0 (ItemTrade_OpenSteps[1]): once Transition_Busy is
 // 0, the state 0x93985C = 1 and the step 0.
 extern "C" void __cdecl ItemTrade_OpenWait(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     Effect1g_TradeState = 1;
     Effect1g_TradeStep = 0;
 }

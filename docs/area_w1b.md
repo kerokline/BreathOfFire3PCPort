@@ -78,7 +78,7 @@ the step hook calls it all off at two rows of the map.
 | PC | Name | Size | Root | PSX twin | What |
 |---|---|--:|---|---|---|
 | `0x406650` | `Area42_ChoiceMessage` | `0x17` | choice 0, handler 6 | `0x801F3D90` | message `Area42_Messages[(s8) choice]` |
-| `0x406670` | `Area42_StartTimer` | `0x78` | handler 0 | `0x801F3DBC` | `Field_ActiveMember +0x80` bit 0 cleared; when `MoveScript_EffectState[leader +0x89]` is 1 and flags `0xB` and `0x11` are clear: flag `0xB`, `Field_ScriptFlags` bit 5 (a byte `or`), tail kind 7 armed in state `0xA` with the countdown word `0x9039F6 = 0x384` (900 frames) |
+| `0x406670` | `Area42_StartTimer` | `0x78` | handler 0 | `0x801F3DBC` | `Field_ActiveMember +0x80` bit 0 cleared; when `Character_IndexById[leader +0x89]` is 1 and flags `0xB` and `0x11` are clear: flag `0xB`, `Field_ScriptFlags` bit 5 (a byte `or`), tail kind 7 armed in state `0xA` with the countdown word `0x9039F6 = 0x384` (900 frames) |
 | `0x4066F0` | `Area42_ClearMemberFlag` | `0x1D` | handler 1 | `0x801F3E80` | `Flags_Clear` of flag `Field_ActiveMember +0xA0` + `0x10` (a byte) |
 | `0x406710`..`0x406860` | `Area42_Touch12`..`Touch15` | `0x68` each | handlers 2..5 | `0x801F3EB8`, `F6C`, `4020`, `40D4` | one shape, flags `0x12..0x15`: `+0x80` bit 0 cleared; when the effect state is 1 and the flag clear: the flag set, `Area42_CheckAll`, and unless flag `0xB` the member's script word `+0x8A` + 1 |
 | `0x4068D0` | `Area42_CheckAll` | `0x159` | called by the four | (`0x801F4188`, area_pairs) | al 0 unless `0x12..0x15` set and `0x11` clear; then `ScriptFlags_Set40`, the tail to state 0 with `0x9039F5 = 0x3C` (the time shown 60 frames), `Area42_Rank` = 2 / 1 / 0 for the seconds' low byte above / at / below 5; the first field object with `+0` bit 0, `+6 == 9`, `+5` in `0x5C..0x5E` whose flag `0x5C + rank` of the bank `0x9040CC` is set gets `Sprite_SetAnimation(1)` (the rank re-read after each miss); al 1 |
@@ -243,7 +243,7 @@ area's group alone (the controls script's shortcut).
 
 - **Area 42** (6,000 rounds a function): regions `Field_ActiveMember`
   (seeded to a party record or one of the first four field objects),
-  `MoveScript_EffectState`, `Area42_Rank`, `Field_Kind2Hold`,
+  `Character_IndexById`, `Area42_Rank`, `Field_Kind2Hold`,
   `Camera_Angles`, `Effect_Objects`' first eight records. Listed: the
   window `0x40E750`, `0x57CD90` (`kByte 0xFF..0x1D`), `Crt_sprintf`,
   `EventOp_9x` (its 13-byte operand dereferenced), `Area42_CheckAll`

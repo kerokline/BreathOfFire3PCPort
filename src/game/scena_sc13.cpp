@@ -65,7 +65,7 @@ void SetRun(unsigned char v) { MoveScript_Var7 = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool WaitClear() { return MoveScript_WaitWordDA == 0; }
+bool WaitClear() { return Transition_Busy == 0; }
 void ScriptAnd(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags & v); }
 std::uint16_t Timer() { return W(at::kTimer); }
 void SetTimer(std::uint16_t v) { W(at::kTimer) = v; }
@@ -78,7 +78,7 @@ void AddElevOffset(std::uint16_t v) { MapView_ElevationOffset = static_cast<std:
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 unsigned char* Story() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Cond_Flags_addr + 0xa0)); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
@@ -328,7 +328,7 @@ SC13_EXPORT void __cdecl Scena13_Run1(void) {
         SetCounter(0, 0);
         Set(0);
         ChangeArea(0x7E, 0x4E0000, 0x2C8000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(4);
         return;
@@ -423,7 +423,7 @@ SC13_EXPORT void __cdecl Scena13_Run2(void) {
         if (SH_CALL(Sound_StreamDone)() == 0) return;
         PartyPass();
         ChangeArea(0x97, 0x330000, 0x370000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0xB);
         return;
@@ -558,7 +558,7 @@ SC13_EXPORT void __cdecl Scena13_Run3(void) {
         if (Counter(0) != 1) return;
         Set40();
         ChangeArea(0x58, 0x130000, 0x250000, 0x80);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         SetStep(0x15);
         return;
     case 0x15:
@@ -647,7 +647,7 @@ SC13_EXPORT void __cdecl Scena13_Run4(void) {
         Set(0xE);
         ChangeArea(0x58, 0x240000, 0x200000, 0x81);
         AreaW1f_MusicCurrent = 0xFF;
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         SetStep(0x18);
         return;
     case 0x18:
@@ -688,7 +688,7 @@ SC13_EXPORT void __cdecl Scena13_Run4(void) {
         SetCounter(0, 0);
         Set(0xF);
         ChangeArea(0x56, 0x100000, 0x98000, 3);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0x1E);
         return;
@@ -868,7 +868,7 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
         Set(0x11);
         Set(0x21);
         ChangeArea(0x8F, 0x350000, 0x330000, 0x84);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         SetStep(5);
         return;
@@ -924,7 +924,7 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
         Clr(0x21);
         ChangeArea(0x8F, 0x90000, 0x4C0000, 0x85);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(0xD);
         return;
     case 0xD:
@@ -974,7 +974,7 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
         Clr(0x22);
         ChangeArea(0x8F, 0x78000, 0x508000, 0x88);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetPass(0);
         SetStep(0x1B);
         return;
@@ -1244,7 +1244,7 @@ SC13_EXPORT void __cdecl Scena13_Run8(void) {
 // original 0x564120: slot 1, called by 0x56D6D0 with the object that
 // triggered: Scena13_Objects[object +0x86] (object, the flag bits' pointer).
 SC13_EXPORT void __cdecl Scena13_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena13_Objects_addr, static_cast<int>(index), at::kObjectCount13, "Scena13_ObjectTrigger")))(object, bits);
@@ -1711,7 +1711,7 @@ SC13_EXPORT void __cdecl Scena14_Run1(void) {
         }
         SH_CALL(Flags_Set)(Story(), 0x8A);
         const unsigned char bits = static_cast<unsigned char>(Field_StatusBits & 0xFE);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         StopRun();
         Field_StatusBits = bits;
@@ -1852,7 +1852,7 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
     case 0xF:
         ChangeArea(0xBF, 0x490000, 0xD0000, 0x81);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(0x10);
         return;
     case 0x10:
@@ -1863,7 +1863,7 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
         return;
     case 0x11: {
         if (Counter(0) != 0) return;
-        const std::uint32_t r = static_cast<std::uint32_t>(MoveScript_EffectState[8]) * at::kRecordStride;
+        const std::uint32_t r = static_cast<std::uint32_t>(Character_IndexById[8]) * at::kRecordStride;
         B(at::kRecords + r + 0x1E) = 9;
         W(at::kRecords + r + 0x18) = 1;
         Clear40();
@@ -1965,7 +1965,7 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
         if (Counter(0) != 8) return;
         Set(0xA);
         ChangeArea(0x96, 0x158000, 0x230000, 3);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 4;
         SetStep(2);
         return;
@@ -2009,7 +2009,7 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
         return;
     case 9:
         if (Request() == 2) return;
-        B(at::kRecords + static_cast<std::uint32_t>(MoveScript_EffectState[8]) * at::kRecordStride + 0x1E) = 0;
+        B(at::kRecords + static_cast<std::uint32_t>(Character_IndexById[8]) * at::kRecordStride + 0x1E) = 0;
         PartyPass();
         SH_CALL(Task_Sleep)(1);
         SetRequest(6);
@@ -2021,7 +2021,7 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
         SetCounter(0, 0);
         Set(0xC);
         ChangeArea(0x96, 0x3C0000, 0x390000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0xB);
         return;
@@ -2114,7 +2114,7 @@ SC13_EXPORT void __cdecl Scena14_Run4(void) {
         SH_CALL(Flags_Set)(Story(), 0x46);
         ChangeArea(0x95, 0x1C0000, 0xC0000, 0x80);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0x27;
         SetStep(0xF);
         return;
@@ -2170,7 +2170,7 @@ SC13_EXPORT void __cdecl Scena14_Run4(void) {
         SetCounter(3, 0x20);
         ChangeArea(0xA7, 0x280000, 0x630000, 0x8A);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         SetStep(0x17);
         return;
@@ -2371,7 +2371,7 @@ static void Recall(unsigned short msg, unsigned char next) {
 static void Visit(unsigned area, int x, int z, unsigned flags, unsigned char next) {
     ChangeArea(area, x, z, flags);
     ModeFlow_AreaTransition = 0xFF;
-    AreaW0c_PendingKind = 0xFF;
+    Area_EnterTransition = 0xFF;
     AreaW1f_MusicCurrent = 0xFF;
     SetStep(next);
 }
@@ -2473,7 +2473,7 @@ SC13_EXPORT void __cdecl Scena14_Run6(void) {
         if (Counter(0) != 0) return;
         Set(0x13);
         ChangeArea(0xB, 0x1E0000, 0xB0000, 0);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(0xF);
         return;
     case 0xF:
@@ -2561,7 +2561,7 @@ SC13_EXPORT void __cdecl Scena14_Run6(void) {
     case 0x43:
         if (Counter(0) != 0) return;
         ChangeArea(0x8D, 0x5F8000, 0xA8000, 0);
-        AreaW0c_PendingKind = 0xE;
+        Area_EnterTransition = 0xE;
         AreaW1f_MusicCurrent = 0xFF;
         SetStep(0x44);
         return;
@@ -2618,7 +2618,7 @@ static void Farewell(unsigned flag, unsigned member, std::uint32_t setup) {
 // Step 0x17's two copies: records 1..7 of the eight at 0x903A70 (+0xB bit 0
 // set: +0x1C = +0x2E, +0x18 = +0x20, +0x1A = +0x22, +0x10 = 0), then for the
 // members after the leader each ObjTrio record + 0x80 gets the 0xA4 bytes of
-// the record MoveScript_EffectState[party list byte] names.
+// the record Character_IndexById[party list byte] names.
 static void RestoreRecords() {
     for (unsigned r = 1; r < 8; ++r) {
         const std::uint32_t p = at::kRecords + r * at::kRecordStride;
@@ -2788,7 +2788,7 @@ SC13_EXPORT void __cdecl Scena14_Run7(void) {
 // original 0x5677B0: slot 1 - Scena14_Objects[object +0x86] (object, the flag
 // bits' pointer).
 SC13_EXPORT void __cdecl Scena14_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena14_Objects_addr, static_cast<int>(index), at::kObjectCount14, "Scena14_ObjectTrigger")))(object, bits);

@@ -923,7 +923,7 @@ S23_EXPORT void __cdecl Quake_Start(void) {
     }
     Walk(&Semi);
     std::memset(Mem(at::kQuakeLift), 0, 0xFF);
-    switch (Byte(BattleActions_EventBattle_addr)) {
+    switch (Byte(EventBattle_Id_addr)) {
     case 0x1C: case 0x23: case 0x2F: case 0x34: Mem(MagicS23_QuakeHover_addr)[0] = 1; break;
     default: Mem(MagicS23_QuakeHover_addr)[0] = 0; break;
     }

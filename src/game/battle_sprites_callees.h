@@ -35,7 +35,7 @@ constexpr std::uint32_t kActor = 0x904B34;          // byte (read as a dword by 
 constexpr std::uint32_t kAutoMode = 0x904B35;       // byte
 constexpr std::uint32_t kBattleFlags = 0x904AA8;    // dword; bit 4 of the low byte, bit 7 the critical hit
 constexpr std::uint32_t kPartyCount = 0x904AB0;     // byte
-// kPartyPick: now BattleSprites_PartyPick (symbols.toml). byte, tested against 1
+// kPartyPick: now Battle_PartyStanding (symbols.toml). byte, tested against 1
 constexpr std::uint32_t kEnemyCount = 0x904AB2;     // byte
 // kEnemyPick: now BattleE2_EnemiesLeft (symbols.toml). byte, tested against 1; = kEnemyCount after set-up
 constexpr std::uint32_t kBoss = 0x904AAA;           // byte: 0 an ordinary encounter, else the boss handler's index

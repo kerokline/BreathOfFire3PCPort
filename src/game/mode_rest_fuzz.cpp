@@ -126,7 +126,7 @@ U TripEffect(const U*, U answer) {
 // track, read after it.
 U ElevationEffect(const U*, U answer) {
     const U n = sh::Noise();
-    if (n & 1) Mem(BattleTurnSteps_MusicFlags_addr)[0] ^= 0x40;
+    if (n & 1) Mem(EventBattle_Flags_addr)[0] ^= 0x40;
     if (n & 2) Mem(BattleActions_BattleEnd_addr)[0] ^= 8;
     if ((n & 0xC) == 0) Music_Track = 0xFF;
     return answer;
@@ -141,7 +141,7 @@ U FormationEffect(const U*, U answer) {
 // after it.
 U LoadEffect(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 3 == 0) Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>((n >> 8) % 56);
+    if (n % 3 == 0) Mem(EventBattle_Id_addr)[0] = static_cast<unsigned char>((n >> 8) % 56);
     return answer;
 }
 
@@ -228,7 +228,7 @@ void Seed(unsigned k) {
     case kToPlaces: Field_Kind2Hold = static_cast<unsigned char>(sh::Often() ? 0 : sh::Next()); break;
     case kLoad:
         Music_Track = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0xFE, sh::Next()));
-        Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, sh::Next() % 56, sh::Next()));
+        Mem(EventBattle_Id_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, sh::Next() % 56, sh::Next()));
         Cond_ByteFA = static_cast<signed char>(PickOf(7, 8, 9, 0, 0xFF, 0x7F, 0x80, sh::Next()));
         break;
     case kLeave5:
@@ -245,9 +245,9 @@ void Disturb(U h) {
     const U v = h >> 3;
     switch (sh::DisturbCase(h, 15)) {
     case 0: Game_Step = static_cast<unsigned short>(v % 8); break;
-    case 1: Mem(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(v); break;
+    case 1: Mem(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(v); break;
     case 2: Mem(at::kFormation)[0] = static_cast<unsigned char>((v & 1) ? (v >> 1) % 4 : v >> 1); break;
-    case 3: Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>((v & 1) ? (v >> 1) % 56 : 0); break;
+    case 3: Mem(EventBattle_Id_addr)[0] = static_cast<unsigned char>((v & 1) ? (v >> 1) % 56 : 0); break;
     case 4: Music_Track = static_cast<unsigned char>((v & 1) ? 0xFF : v >> 1); break;
     case 5: Field_Kind2Hold = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
     case 6: Mem((v & 1) ? MenuLists_CampChosen_addr : ModeRest_AreaAsked_addr)[0] = static_cast<unsigned char>((v & 2) ? 0 : v >> 2); break;

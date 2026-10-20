@@ -92,7 +92,7 @@ unsigned long Dispatch(const char* who, U table, unsigned index, unsigned entrie
 void Memcpy(U dst, U src, unsigned n) {
     BH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(dst)), reinterpret_cast<const char*>(At(src)), n);
 }
-void Backdrop() { BH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
+void Backdrop() { BH_CALL(Menu_DrawBackdrop)(Config_Background); }
 
 // A texture page and draw mode for the next primitives: Gpu_GetTPage(tp, abr,
 // x, y), Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, page & 0xFFFF, 0) - the fifth
@@ -150,7 +150,7 @@ U MemberFlags(U index) { return static_cast<U>(static_cast<std::int32_t>(rv::As<
 extern "C" void __cdecl BattleExtra_TallyOpen(void) {
     Backdrop();
     BH_CALL(BattleExtra_DrawTally)(0x37, 0x37);
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BH_CALL(BattleExtra_ApplyTally)();
     const unsigned char step = FieldS_State;
     FieldS_Column = 0;
@@ -186,7 +186,7 @@ extern "C" void __cdecl BattleExtra_TallyCount(void) {
 // state 1 (0x42D750: Window_ResetAll, Game_Step + 1), steps 0; else the
 // backdrop and the tally.
 extern "C" void __cdecl BattleExtra_TallyClose(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         B(at::kModeTimer) = 0;
         BattleE1_Mode = 1;
         FieldS_State = 0;
@@ -209,7 +209,7 @@ extern "C" void __cdecl BattleExtra_TallyClose(void) {
 extern "C" void __cdecl BattleExtra_DrawTally(int x_arg, int y_arg) {
     const U x = static_cast<U>(x_arg), y = static_cast<U>(y_arg);
     const auto I = [](U v) { return static_cast<int>(v); };
-    BH_CALL(Menu_DrawBox)(I(x - 4), I(y - 8), 0xDC, 0x8C, 0xF0, static_cast<unsigned char>(BattleDraw_Colour));
+    BH_CALL(Menu_DrawBox)(I(x - 4), I(y - 8), 0xDC, 0x8C, 0xF0, static_cast<unsigned char>(Config_WindowColour));
     BH_CALL(Menu_DrawBorder)(I(x - 4), I(y - 8), 0x1A, 0x10);
     const unsigned char* const title = BH_CALL(Msg_SystemPtr)(0xE7);
     BH_CALL(Text_DrawAt)(I(x + 0x45), I(y + 6), 0, 0xFF, title);
@@ -317,7 +317,7 @@ extern "C" unsigned long __cdecl BattleExtra_EquipOpenDispatch(unsigned long thr
 // string (BATE.EMI's Beyd) instead of 0x669CE8's shipped Chinese name.
 extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     Backdrop();
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BH_CALL(Sound_PlayEffect)(0x102);
     BH_AT(void (__cdecl*)(), at::kEquipOpenHelper)();
     const unsigned char sub = FieldS_Step;
@@ -371,7 +371,7 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
     SetWord(At(at::kWin4 + 4), L(at::kWin1 + 4) + 6);
     B(at::kWin4) = 1;
     const U cursor = B(at::kWin1 + 0xA);
-    SetWord(At(at::kWin4 + 6), 13 * cursor + Word(At(BattleE1_Win1_addr + 6)) + 0x57);
+    SetWord(At(at::kWin4 + 6), 13 * cursor + Word(At(Window1_addr + 6)) + 0x57);
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     B(at::kWin1 + 0xB) = 0xFF;
     B(at::kWin1 + 0xD) = 1;
@@ -383,7 +383,7 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
     B(at::kWin0 + 9) = now;
     const bool second = now == 3;
     const unsigned item = B(second ? BattleE1_GuestEquipB_addr : Rest3a_GuestEquip_addr);
-    SetWord(At(BattleE1_Win2_addr + 0x10), BH_CALL(Item_HelpMessage)(second ? 2 : 1, item));
+    SetWord(At(Window2_addr + 0x10), BH_CALL(Item_HelpMessage)(second ? 2 : 1, item));
     const unsigned pressed = Pressed();
     SetWord(At(at::kWin3 + 0x10), 0xDC);
     if (Field_ConfirmButtons & pressed) {
@@ -405,7 +405,7 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
         B(at::kWin2 + 3) = 1;
         B(at::kWin3 + 3) = 1;
         B(at::kWin4) = 0;
-        BattleE4_Above = 0;
+        Window21 = 0;
         B(at::kModeTimer) = 5;
         FieldS_State = static_cast<unsigned char>(step + 1);
         FieldS_Step = 0;
@@ -431,7 +431,7 @@ extern "C" void __cdecl BattleExtra_EquipListInput(void) {
     const U scroll = B(at::kWin0 + 0xA), cursor = B(at::kWin0 + 0xB);
     const unsigned count = B(at::kWin0 + 0xD), category = B(at::kWin0 + 8);
     SetWord(At(at::kWin4 + 6), 13 * (cursor - scroll + 2) + Word(At(at::kWin0 + 6)));
-    SetWord(At(BattleE1_Win2_addr + 0x10), BH_CALL(Item_HelpMessage)(category, count));
+    SetWord(At(Window2_addr + 0x10), BH_CALL(Item_HelpMessage)(category, count));
     const unsigned pressed = Pressed() & Sigma(0xF00C);
     SetWord(At(at::kWin3 + 0x10), 0xDD);
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(pressed);
@@ -521,7 +521,7 @@ extern "C" void __cdecl BattleExtra_EquipFadeOut(void) {
 // `push 0x669CE0` at 0x42E09D, which the inject's jmp at 0x42E090 leaves in
 // place); else the backdrop.
 extern "C" void __cdecl BattleExtra_EquipLeave(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         B(at::kModeTimer) = 0;
         BattleE1_Mode = 1;
         FieldS_State = 0;
@@ -555,8 +555,8 @@ extern "C" void __cdecl BattleHold_Shrink(void) {
     else
         BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
     BH_CALL(BattleWin_DrawCommandLabel)(B(at::kMenuMember));
-    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(BattleE1_Win1_addr + 4)), Word(At(BattleE1_Win1_addr + 6)));
-    BH_CALL(BattleWin_DrawCommandCross)(Word(At(BattleE1_Win2_addr + 4)), Word(At(BattleE1_Win2_addr + 6)));
+    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(Window1_addr + 4)), Word(At(Window1_addr + 6)));
+    BH_CALL(BattleWin_DrawCommandCross)(Word(At(Window2_addr + 4)), Word(At(Window2_addr + 6)));
 }
 
 // original 0x42EE00 (BattleHold_Steps[1]): while Input_Held has no 0x100,
@@ -571,7 +571,7 @@ extern "C" void __cdecl BattleHold_ShowAll(void) {
         B(at::kWin3 + 3) = 1;
         BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
     }
-    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(BattleE1_Win1_addr + 4)), Word(At(BattleE1_Win1_addr + 6)));
+    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(Window1_addr + 4)), Word(At(Window1_addr + 6)));
     BH_AT(void (__cdecl*)(), at::kBe4Draw444660)();
     for (unsigned i = 0; i < 7; ++i) {
         BH_CALL(BattleWin_DrawCommandLabel)(i);
@@ -940,7 +940,7 @@ void LossMember(U index) {
 // is at least 1, 2, exactly 3; then 0x494E70() (the enemies' state bytes),
 // BattleTask_ClearAll, Transition_Start(0xE), 0x904AA3 + 1.
 extern "C" void __cdecl BattleLoss_ResetParty(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const unsigned char n = B(at::kPartyCount);
     B(at::kWin0) = 0;
     if (n >= 1) {
@@ -962,7 +962,7 @@ extern "C" void __cdecl BattleLoss_ResetParty(void) {
 extern "C" void __cdecl BattleLoss_Show(void) {
     BH_CALL(BattleLoss_DrawBlack)();
     BH_CALL(BattleLoss_DrawPanels)(0x80);
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BattleResult_TickStep = 0x2C;
     BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
 }
@@ -998,14 +998,14 @@ extern "C" void __cdecl BattleLoss_Restart(void) {
     BH_CALL(BattleLoss_DrawBlack)();
     BH_CALL(BattleLoss_DrawPanels)(0x80);
     BH_CALL(BattleLoss_DrawCaption)(0x80);
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BH_CALL(Sprite_ReleaseTint)(Member(0));
     BH_CALL(Sprite_ReleaseTint)(Member(1));
     BH_CALL(Sprite_ReleaseTint)(Member(2));
     BH_CALL(Window_ResetAll)();
     BattleMisc_BannerKinds = 0;
-    BattleTurnSteps_MusicFlags = 0;
-    BattleActions_EventBattle = 0;
+    EventBattle_Flags = 0;
+    EventBattle_Id = 0;
     B(0x904AA0) = 0;
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;

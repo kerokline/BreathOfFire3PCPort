@@ -52,7 +52,7 @@ void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 unsigned char Answer() { return B(AreaW0c_ChoiceAnswer_addr); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 // The movement script's position (MoveScript_Object's word +0xA) moved by `v`.
 void ScriptStep(int v) { AddWord(MoveScript_Object + 0xA, v); }
 
@@ -291,7 +291,7 @@ extern "C" void __cdecl Area143_ChoiceAsk52(void) {
         B(AreaW0c_AnswerMark_addr) = 6;
         return;
     }
-    if (static_cast<U>(Long(Mem(ScenaSc7_EventFlags_addr))) == 0x3FFFFu) {
+    if (static_cast<U>(Long(Mem(Gene_Bits_addr))) == 0x3FFFFu) {
         SetMessage(0x52);
         return;
     }
@@ -847,7 +847,7 @@ extern "C" void __cdecl Area145_Tail20(void) {
         B(AreaW0c_TailState_addr) = 0x1F;
         return;
     case 0x1F:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         AH_CALL(Transition_Start)(9);
         if (SpawnSlot() != 0xFF) {
             unsigned char* const e = ScratchRecord();
@@ -871,7 +871,7 @@ extern "C" void __cdecl Area145_Tail20(void) {
         B(AreaW0c_TailState_addr) = 0x23;
         return;
     case 0x23:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SetWord(Mem(at::kTailTimer), 0x5A);
         B(AreaW0c_TailState_addr) = 0x24;
         return;

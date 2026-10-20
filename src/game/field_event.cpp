@@ -7,7 +7,7 @@
 //
 // "Member i" is ObjTrio + i * 0x14C, the party's three field objects; their
 // +0x80..+0x123 is a copy of an actor record 0x903A70 + a * 0xA4, a the
-// member's MoveScript_EffectState entry (kept in the member's +0x148).
+// member's Character_IndexById entry (kept in the member's +0x148).
 //
 // As in the original, every global is read again after each call and every
 // object through Sprite_Current or Field_State each time it is used.
@@ -436,7 +436,7 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
     Sprite_Current[0x28] = 2;
     Sprite_Current[0x25] = 5;
     Sprite_Current[0x26] = static_cast<unsigned char>(slot * 0x50);
-    Sprite_Current[0x2B] = At(MoveScript_EffectState_addr + 0xc)[member];
+    Sprite_Current[0x2B] = At(Character_IndexById_addr + 0xc)[member];
     {
         unsigned char* const c = Sprite_Current;
         SetLong(c + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(c + 0x70)) & 0xFFFFFF00u));
@@ -476,7 +476,7 @@ extern "C" void __cdecl Field_PartyLoad(unsigned slot_arg) {
         Sprite_Current[0x48] = 0;
         rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->scale_x, 0x10000);
         rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->scale_y, 0x10000);
-        const unsigned char actor = MoveScript_EffectState[list[i]];
+        const unsigned char actor = Character_IndexById[list[i]];
         m->char_index = actor;
         CopyActor(rv::Bytes(m) + 0x80, Actor(actor));
         rv::Bytes(m)[0x138] = static_cast<unsigned char>(rv::Bytes(m)[0x138] & 0xFE);
@@ -557,11 +557,11 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         const unsigned count = static_cast<unsigned char>(g.party_count(0));
         const unsigned char* const list = At(Cond_Flags_addr + 0xd2);
         for (unsigned i = 0; i < count; ++i) {
-            unsigned char* const word = Field_ActorStates + MoveScript_EffectState[list[i]] * kActorBytes;
+            unsigned char* const word = Field_ActorStates + Character_IndexById[list[i]] * kActorBytes;
             SetWord(word, Word(word) & 0xFFDF);
         }
         for (unsigned i = 0; i < count; ++i) {
-            if (Field_ActorStates[MoveScript_EffectState[list[i]] * kActorBytes] & 0x80) {
+            if (Field_ActorStates[Character_IndexById[list[i]] * kActorBytes] & 0x80) {
                 ObjTrio[0x124] = 10;
                 break;
             }
@@ -611,7 +611,7 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
                 rv::Current<records::PartyMember>()->z = 0;
                 rv::Current<records::PartyMember>()->height = 0;
                 const unsigned char id = Cond_Flags[0xd2 + i];
-                const unsigned char actor = MoveScript_EffectState[id];
+                const unsigned char actor = Character_IndexById[id];
                 m->char_index = actor;
                 CopyActor(rv::Bytes(m) + 0x80, Actor(actor));
                 if (!(Sprite_Current[0x24] & 1)) {
@@ -707,12 +707,12 @@ extern "C" void __cdecl Field_PendingJump(void) {
 // As the original has it: the actor record's +0xB bit 0 is set before the
 // test, so even a refused join marks it; the member's slot and the count are
 // read again after each call; the actor index is read again for the copy and
-// the +0x148 store; `member` is not checked against MoveScript_EffectState's
+// the +0x148 store; `member` is not checked against Character_IndexById's
 // 24 entries.
 extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
     const auto member = static_cast<unsigned char>(member_arg);
     g.join_reset();
-    const unsigned char* const actor_of = MoveScript_EffectState + member;
+    const unsigned char* const actor_of = Character_IndexById + member;
     unsigned char* const joined = Actor(*actor_of) + 0xB;
     *joined = static_cast<unsigned char>(*joined | 1);
     const unsigned char n = Field_MemberCount;

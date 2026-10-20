@@ -261,7 +261,7 @@ U RandMovesTarget(const U*, U answer) {
 // 28 and 29 count one up around the call): a store moved across the call is
 // compared, not hidden.
 U ClearNotesCounts(const U*, U answer) {
-    bh::Note(Mem(BattleSprites_PartyPick_addr)[0], Mem(BattleE2_EnemiesLeft_addr)[0]);
+    bh::Note(Mem(Battle_PartyStanding_addr)[0], Mem(BattleE2_EnemiesLeft_addr)[0]);
     return answer;
 }
 
@@ -383,8 +383,8 @@ void MenuFrame() {
     unsigned char* const c = bh::Pointer(BattleActorCopies_Command_addr);
     c[0] = Byte({0, 1, 2, 3, 0x40, 0x80, 0xC0, 0xFF, 0x7F});
     SetWord(c + 2, Word16({0, 1, 0x20, 0x97, 0xE3}) % 0xE4);
-    Mem(BattleActorCopies_ItemState_addr)[0] = Byte({0, 0, 1});
-    Mem(BattleActorCopies_ItemPage_addr)[0] = Byte({0, 1, 2, 3});
+    Mem(Window16_State_addr)[0] = Byte({0, 0, 1});
+    Mem(Window16_Page_addr)[0] = Byte({0, 1, 2, 3});
     SetLong(Mem(at::kWin16Cursor), static_cast<std::int32_t>(bh::Next()));
     Mem(BattleActorCopies_ItemActor_addr)[0] = Byte({0, 1, 2});
 }

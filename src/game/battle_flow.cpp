@@ -130,7 +130,7 @@ using HookFn = void (__cdecl*)(int);
 // on the original's stack, its own return address first; ours aborts
 // instead (CLAUDE.md rule 4, as mode_flow's Transition_Task).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch(void) {
-    const unsigned char event = BattleActions_EventBattle;
+    const unsigned char event = EventBattle_Id;
     std::uint32_t phase = static_cast<std::uint32_t>(Long(At(at::kPhase)));
     if (event != 0 && (phase & 0xFF) != 0) {
         reinterpret_cast<HookFn>(PtrAt(at::kEventHook))(3);
@@ -220,7 +220,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(v
         unsigned char* const e = EnemyObject(i);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         if (enemy_rec->flags == 0) continue;
-        const unsigned char event = BattleActions_EventBattle;
+        const unsigned char event = EventBattle_Id;
         Sprite_Current = e;
         SetPtrAt(at::kEnemyCurrent, e);
         if (event != 0) {

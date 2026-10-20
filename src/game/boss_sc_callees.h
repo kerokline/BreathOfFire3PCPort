@@ -30,7 +30,7 @@ using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0, the harness's battle bytes) ---
 constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (0x904AA8 + 1); Amalgam's death sets bit 2
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle
 // kFightFlags: now BossSe_Script (symbols.toml). u8: the fight's own progress bits (fights 13 / 16: which lines were shown)
 // kCount4AE2: now BossSe_RoundSlot (symbols.toml). u8: Nina's action hook decrements it once (what it counts was not read)
 // kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win
@@ -55,7 +55,7 @@ constexpr U kMoveCounter = 0x903848;
 // kWaitTurns: now BossSc_WaitTurns (symbols.toml). u8: set to 8 or 10 by Boss16_Setup (Rand & 2), counted down
 
 // --- the name Str_CopyN copies into the banner --------------------------------
-// kBannerChar: now MoveScript_EffectState[1] (symbols.toml). u8: the character record index (0x903A70 + n * 0xA4)
+// kBannerChar: now Character_IndexById[1] (symbols.toml). u8: the character record index (0x903A70 + n * 0xA4)
 constexpr U kCharRecords = 0x903A70;      // the live character records, stride 0xA4
 constexpr U kCharStride = 0xA4;
 

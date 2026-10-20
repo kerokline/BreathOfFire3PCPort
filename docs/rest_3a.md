@@ -86,7 +86,7 @@ other four only matter if a cursor reaches them.
 | `0x4315B0` | `BattleEnd_RestoreDispatch` | `BattleEnd_Steps[3]`: `jmp [BattleEnd_RestoreSteps + 4 * 0x904AA2]`, 5 |
 | `0x431710` | `BattleEnd_RestoreLoadBank` | once `File_LoadDone`: `Snd_LoadBankFile(Game_AreaNumber + 3)`, `0x904AA2` + 1 |
 | `0x431740` | `BattleEnd_RestoreAwaitBank` | once `File_LoadDone`: `0x904AA1` = 4 (`BattleEnd_ExitStep`), `0x904AA2` = 0 |
-| `0x4318F0` | `BattleEnd_ExitAwaitFade` | `BattleEnd_ExitSteps[3]`: once `MoveScript_WaitWordDA` is 0, `Draw_PassFlags` = 0, `0x904AA2` - 1 |
+| `0x4318F0` | `BattleEnd_ExitAwaitFade` | `BattleEnd_ExitSteps[3]`: once `Transition_Busy` is 0, `Draw_PassFlags` = 0, `0x904AA2` - 1 |
 
 `BattleEnd_Steps[3]`'s steps are `BattleEnd_TasksBegin`,
 `BattleEnd_StartMemberTask`, BE1's `BattleEnd_AwaitRestore`, then the two
@@ -206,7 +206,7 @@ function (`BOF3X_R3A_ONLY=<hex address>` runs one clone):
   `BattleEnemy_SetAnimation` whole (both sides push the whole word).
   Regions beyond the engine frame's: the six chosen bytes `0x675EB8`,
   character records 1..7 past the frame's, the party list `0x904060`,
-  `Game_AreaNumber`, `MoveScript_WaitWordDA`, `Draw_PassFlags`,
+  `Game_AreaNumber`, `Transition_Busy`, `Draw_PassFlags`,
   `Camera_Distance` .. the tint bytes `0x903850`, `MapView_Redraw`, the
   party set `0x90412C`, `Char_WhelpSlot` (37 regions, 37,136 bytes).
 
