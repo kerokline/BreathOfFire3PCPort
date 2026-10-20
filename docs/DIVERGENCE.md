@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 147 entries, DIV-0001..0147, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 148 entries, DIV-0001..0148, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -6915,6 +6915,33 @@ designed in rather than bolted on.
   provisional, and `BOF3X_EXEIMAGE_STRICT=1` is not the default (I43 step 4,
   not ready: the read watch is to be re-run on the merged branch, and the
   two rows read in play are the owner's).
+- Amended 2026-10-20 (D266, the owner's call of 2026-10-13, "the away day"
+  in [`owner-review.md`](owner-review.md), confirmed 2026-10-20: "read the
+  12"): one byte the Western PSX discs carry in their own value is filled
+  by a rule, `titlemark`. `Title_Sprites` (`0x653850`, 17 entries of u16 u,
+  v, w, h, clut) entry 1 is the title's mark; its width is 10 on the PC and
+  the Japanese discs (the (R)) and 12 on the US, European, French and German
+  discs (their glyph page's TM), so no segment matched and the image held 0:
+  a Western disc-only title drew no mark (D266). The rule finds the table in
+  `ETC/GAME.EMI` by entries 0..6 equal to `BOF3.exe`'s but for that byte
+  (entries 7..9 are regional too), requires the disc's byte to be 8..16, and
+  copies it - the disc's own value, the second rule after `fishpen` whose row
+  is kept although it differs from `BOF3.exe`'s. Verification: `psp_exe.py
+  recipe` over the seven discs: one `titlemark` row on each of US, EU-English,
+  FR and DE (`GAME.EMI#1`, `0x801D1C7A` on the US disc, `0x801D1C3A` on the
+  three PAL ones), "1 bytes, 1 not BOF3.exe's", each byte 12; no other row of
+  `exe-psp.tsv` moved. The regeneration (`exe_tables.py recipe`,
+  `exe_own.py measure`, `exe_tables.py gaps`) also carried in the second
+  pairing pass's rows ([`install-gap-pairs.md`](install-gap-pairs.md) 8,
+  merged with PR #94 but not regenerated then): `exe-imm.tsv` + 16 `immref`
+  rows (PSX-JP 4, every other build 2); `exe-gaps.tsv`'s `gap` rows PSX-JP 58
+  to 53, US 76 to 72, EU 75 to 71, FR 76 to 72, DE 78 to 74, PSP-JP 54 to 51,
+  PSP-EU 52 to 49, none new; `exe_tables.py check` with the seven discs 0
+  errors. Planted faults: a `titlemark` row on PSX-JP, a two-byte row and
+  another file each refused by `psp_exe.py check`; a disc byte of 40 refused
+  by the rule. Live: a US disc-only install built by this branch's importer
+  draws the TM whole at (262, 130), against the PC install's (R)
+  (`analysis/shots/d266-title-mark-1020/`, local).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -7500,7 +7527,8 @@ designed in rather than bolted on.
   the disc's title page from the disc. A Western disc's install draws **no
   mark at all** (neither the PC's (R) nor its own ™), because `Title_Sprites`
   entry 1's width (`0x65385E`) is a gap of the disc-built image (zero); once
-  that gap is filled it draws the disc's ™. A JP disc-only install places the
+  that gap is filled it draws the disc's ™. *Filled 2026-10-20* by DIV-0101's
+  `titlemark` rule (D266): a Western disc-only install draws its disc's ™. A JP disc-only install places the
   width and draws the (R), as the JP release does. A PSP-only install
   draws the PSP's own title page and `Title_Sprites` entry 10 (DIV-0103).
   A PC install, or a cache with the PC's `DAT/` among its sources, keeps the
@@ -9176,3 +9204,60 @@ designed in rather than bolted on.
   `quick_menu.txt` in the proof batch.
 - **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
   replaced; without the key nothing changes).
+
+### The staff roll follows the language: a US or PAL layer rolls its release's credits
+
+- **ID:** DIV-0148
+- **Date:** 2026-10-20
+- **Subsystem:** the ending's roll (`Scena17_ScrollRoll` `0x56D110`, ours in
+  `src/game/scena_sc15.cpp`, `ScenaSc15_RollApply`; `Scena17_RollLines`
+  `0x661A20`); the language layer's kind 17 (`FIRST.DAT`, `tools/loc_build.py`
+  `build_all`, `tools/exe_roll.py`, `tools/dat.py` `KINDS`;
+  `src/game/dat_load.cpp` `TakeChunk`)
+- **Tier:** Sensible - the release the player's language comes from
+  (DIV-0115's stance, the PlayStation's data where both exist).
+- **Original behaviour:** the PC port rolls the Japanese release's credits
+  under every language: `Scena17_RollLines` (351 lines, 173 blank) and the
+  strings after `Scena17_EndSteps` equal the Japan disc's
+  `SCENARIO/SCENA17.EMI#0`; the en-US layer and the original text roll the
+  same frames (82 of 84 shots pixel-equal, the two others the fade into
+  "Fin"). The US and PAL discs carry rolls of their own: other job titles
+  ("Engine Design" for "System Planner"), no naming contest, testing and
+  localization blocks (the US only), 345 lines on the US disc and 293 on the
+  European, French and German discs, which are byte-identical to each other.
+  A disc-only install of a Western disc drew neither: the image's pointer
+  words are the PC's, so its lines named the PC's offsets while the map had
+  placed stretches of the disc's text there (D323).
+- **New behaviour:** the roll follows the language played. A layer built
+  from a US or PAL PlayStation disc (en-US; en-150, fr-FR, de-DE) carries
+  that release's roll as kind 17 of its `FIRST.DAT`: the disc's line table,
+  the 14 entries after its end (the "Presented by" card is the fifth) and its
+  text. When the layer is walked the engine copies it, and
+  `Scena17_ScrollRoll` takes its lines from it - on a PC install with that
+  layer and on a disc-only install alike. The original text, a ja-JP layer
+  and a layer from a PSP disc carry none and roll `.data`'s table, the
+  Japanese release's (the Japan disc's roll is the PC's; the PSPs' place the
+  PC's bytes). `.data` is untouched (its pointer words stay the PC's), so the
+  state hash and the image's checks are as before. The title's mark stays
+  the base's (DIV-0114): a PC install under en-US keeps the (R) and rolls the
+  US credits.
+- **Rationale:** the owner, 2026-10-20: "let western installs use their own
+  roll", then "let's have the roll track with localization", after the
+  renders of the PC's roll and of the patchwork.
+- **Also in the PSX version?** Yes: this is each release's own roll, read
+  from the player's disc.
+- **Verification:** `tools/exe_roll.py`'s synthetic self-test (in
+  `loc_build.py selftest` too); the Japan disc's roll extracted the same way
+  equals the PC's table word for word (365 of 365: the 351 lines and the 14
+  after the end, every string equal). Layers built by the importer: kind 17,
+  tag 1, 4,283 bytes on the en-US layer of a PC + US cache and of a US
+  disc-only cache, 3,907 bytes on an EU disc-only cache's en-150. The ending
+  (`ending17`, shots every 300 frames, scratch
+  `C:\Users\kerok\bof3x-runs\away1020`): the PC install under en-US and the US
+  disc-only install both log `DIV-0148: the language's staff roll, 345 lines`
+  and roll the US credits to "Presented by CAPCOM" and "Fin"; the EU
+  disc-only install logs `293 lines` and rolls the PAL credits to the same end; the PC install's original text rolls the
+  Japanese credits as before. `data_census.py --check` 27,406 sites.
+- **Reversible?** Rebuild the language without the chunk, or play the
+  original text: the roll then reads `.data`'s table (on a Western disc-only
+  install, D323's patchwork). Not a runtime switch.
