@@ -83,12 +83,12 @@ Handler Entry(U table, unsigned index, const char* who) {
 unsigned char* SpriteRec(int i, const char* who) {
     if (i < 0 || i >= static_cast<int>(at::kSpriteCount))
         bof3::Fatal("%s: Sprite_Objects index %d - the original writes outside the records", who, i);
-    return Sprite_Objects + static_cast<U>(i) * at::kRecordStride;
+    return rv::Bytes(Sprite_Objects) + static_cast<U>(i) * at::kRecordStride;
 }
 unsigned char* ExtraRec(int i, const char* who) {
     if (i < 0 || i >= static_cast<int>(at::kExtraCount))
         bof3::Fatal("%s: Sprite_ObjectsExtra index %d - the original writes outside the records", who, i);
-    return Sprite_ObjectsExtra + static_cast<U>(i) * at::kRecordStride;
+    return rv::Bytes(Sprite_ObjectsExtra) + static_cast<U>(i) * at::kRecordStride;
 }
 unsigned char* EffectRec(unsigned i, const char* who) {
     if (i >= at::kEffectCount)
@@ -102,7 +102,7 @@ unsigned char* Member(int i, const char* who) {
 }
 // A Sprite_Objects record the original only reads, by an unchecked byte: read
 // in place wherever it lands, as the original reads it.
-unsigned char* SpriteRead(unsigned i) { return Sprite_Objects + i * at::kRecordStride; }
+unsigned char* SpriteRead(unsigned i) { return rv::Bytes(&Sprite_Objects[i]); }
 
 
 void Tick() {

@@ -330,7 +330,7 @@ extern "C" void __cdecl Effect_DrawScreenTintMode(unsigned blend) {
 // section 6).
 extern "C" void __cdecl EffectKind94_RedrawSprites(void) {
     unsigned char* const saved = Sprite_Current;
-    unsigned char* o = Sprite_Objects;
+    unsigned char* o = rv::Bytes(Sprite_Objects);
     for (unsigned n = 6; n != 0; --n, o += 0xA4) {
         Sprite_Current = o;
         o[0x29] = 2;

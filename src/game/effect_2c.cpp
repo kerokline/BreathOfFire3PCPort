@@ -907,9 +907,9 @@ extern "C" void __cdecl EffectKind6B_Capture(void) {
     SH_CALL(Gfx_ClearRect)(0x340, 0x100, 0x80, 0x100);
     for (unsigned i = 0; i < at::kEffectStride; i += 4) SetUL(e + i, UL(at::kSprite2 + i));
     e[0] = 1;
-    eo->x = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x);
-    eo->z = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->z);
-    eo->height = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->height);
+    eo->x = static_cast<std::uint32_t>(Sprite_Objects[2].x);
+    eo->z = static_cast<std::uint32_t>(Sprite_Objects[2].z);
+    eo->height = static_cast<std::uint32_t>(Sprite_Objects[2].height);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_2e, static_cast<std::uint16_t>(EffectKind6B_Frame[0]));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_30, static_cast<std::uint16_t>(EffectKind6B_Frame[1]));
     e[0x24] = static_cast<unsigned char>(e[0x24] | 0x88);
@@ -949,9 +949,9 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
     for (unsigned i = 0; i < 2 * at::kHeightCount; i += 4) SetUL(at::kHeights + i, 0);
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char q[12];
-    SetUL(q, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x));
-    SetUL(q + 4, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->z));
-    SetUL(q + 8, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->height));
+    SetUL(q, static_cast<std::uint32_t>(Sprite_Objects[2].x));
+    SetUL(q + 4, static_cast<std::uint32_t>(Sprite_Objects[2].z));
+    SetUL(q + 8, static_cast<std::uint32_t>(Sprite_Objects[2].height));
     alignas(4) unsigned char o[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o));
     U pixel = EffectKind30_Shards_addr;
@@ -1020,7 +1020,7 @@ extern "C" void __cdecl EffectKind6B_Arm(void) {
 // channels (<< 3, >> 2, >> 7, each & 0xF8), committed to slot 2 (0x14); none
 // live (or none made) - Effect_Release.
 extern "C" void __cdecl EffectKind6B_Fall(void) {
-    Sprite_Objects[0x148] = static_cast<unsigned char>(Sprite_Objects[0x148] | 0x40);
+    Sprite_Objects[2].flags = static_cast<unsigned char>(Sprite_Objects[2].flags | 0x40);
     unsigned char none = 1;
     if (EffectKind6B_PixelCount != 0) {
         U i = 0;
@@ -1079,9 +1079,9 @@ extern "C" void __cdecl EffectKind44_Run(void) {
 // 0x800 up (+8 + 0x8000000) and centre the record's point, radius 0, shades
 // 0x20 and 0; the sparks cleared (EffectKind44_SparksClear); +9 = 0x10, +1 up.
 extern "C" void __cdecl EffectKind44_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0xA4)->x));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0xA4)->z));
-    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0xA4)->height));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(Sprite_Objects[1].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(Sprite_Objects[1].z));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
     SetUL(at::kRingCell, EffectKind30_Shards_addr);
@@ -1148,9 +1148,9 @@ extern "C" void __cdecl EffectKind44_Widen(void) {
 // original 0x476870 (state 4): the ring's centre Sprite_Objects record 1's
 // point; projected, drawn, its cone, the sparks; +9 down, at 0 +9 = 0x10, +1 up.
 extern "C" void __cdecl EffectKind44_Follow(void) {
-    SetUL(Ring() + 0x10, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0xA4)->x));
-    SetUL(Ring() + 0x14, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0xA4)->z));
-    SetUL(Ring() + 0x18, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0xA4)->height));
+    SetUL(Ring() + 0x10, static_cast<std::uint32_t>(Sprite_Objects[1].x));
+    SetUL(Ring() + 0x14, static_cast<std::uint32_t>(Sprite_Objects[1].z));
+    SetUL(Ring() + 0x18, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     SH_CALL(EffectKind44_RingProject)(Ring());
     SH_CALL(EffectKind44_RingDraw)(Ring());
     SH_CALL(EffectKind44_RingCone)(Ring());

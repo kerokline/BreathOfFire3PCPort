@@ -97,8 +97,8 @@ void MarkObject(unsigned char found, bool is_signed, const char* who) {
     if (i < 0 || i >= static_cast<int>(kObjectsAll))
         bof3::Fatal("%s: Sprite_ObjectAt's answer 0x%X is past the 34 objects; the original marks it unchecked", who,
                     static_cast<unsigned>(found));
-    if (i < static_cast<int>(kObjects)) Sprite_Objects[i * kObjectStride + 0x80] |= 1;
-    else Sprite_ObjectsExtra[(i - kObjects) * kObjectStride + 0x80] |= 1;
+    if (i < static_cast<int>(kObjects)) Sprite_Objects[i].context |= 1;
+    else Sprite_ObjectsExtra[i - kObjects].context |= 1;
 }
 
 // An even direction +8 turned one eighth back (-1, & 7); when `probe` answers

@@ -322,7 +322,7 @@ int ScriptOf(const unsigned char* o, unsigned area) {
 
 void Identify(const unsigned char* s, int& who, int& index) {
     const std::uint32_t a = Address(s);
-    const std::uint32_t objects = Address(Sprite_Objects), extra = Address(Sprite_ObjectsExtra), trio = Address(ObjTrio);
+    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(ObjTrio);
     who = kOther;
     index = -1;
     if (a >= objects && a < objects + kObjects * kObjectBytes && (a - objects) % kObjectBytes == 0) {

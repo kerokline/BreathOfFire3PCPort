@@ -90,7 +90,7 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned byte) {
 // Sprite_Objects record `index` (the effect record's +0xB), as the originals
 // compute it: unchecked where only its address is stored, checked by Object()
 // where it is read, written or animated.
-unsigned char* ObjectAddress(unsigned index) { return Sprite_Objects + index * at::kObjectStride; }
+unsigned char* ObjectAddress(unsigned index) { return rv::Bytes(&Sprite_Objects[index]); }
 unsigned char* Object(const char* who, unsigned index) {
     if (index >= at::kObjectCount)
         bof3::Fatal("%s: +0xB is %u, past the thirty Sprite_Objects records - the original reads and writes what "

@@ -1239,7 +1239,7 @@ extern "C" void __cdecl EffectKind75_Hold(void) {
 // tile; Sprite_Current put back.
 extern "C" void __cdecl EffectKind75_MarkSprites(void) {
     unsigned char* const saved = Sprite_Current;
-    unsigned char* o = Sprite_Objects;
+    unsigned char* o = rv::Bytes(Sprite_Objects);
     for (unsigned n = at::kSpriteCount; n != 0; --n, o += at::kSpriteStride) {
         Sprite_Current = o;
         if ((o[0] & 1) != 0 && o[6] == 6) {

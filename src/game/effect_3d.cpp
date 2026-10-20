@@ -374,8 +374,8 @@ extern "C" void __cdecl EffectKind78_Start(void) {
     S()[9] = 0x14;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0);
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_x)));
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_y)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, static_cast<std::uint32_t>(static_cast<std::uint16_t>(Sprite_Objects[2].screen_x)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, static_cast<std::uint32_t>(static_cast<std::uint16_t>(Sprite_Objects[2].screen_y)));
     NextState();
 }
 
@@ -467,7 +467,7 @@ extern "C" void __cdecl EffectKind78_DrawRing(unsigned cx, unsigned cy, unsigned
             p[5] = 0;
             p[6] = 0;
         }
-        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->z), 0xC, 0x2C);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(Sprite_Objects[2].x), static_cast<std::uint32_t>(Sprite_Objects[2].z), 0xC, 0x2C);
     }
 }
 
@@ -1192,7 +1192,7 @@ namespace {
 // Field_State the leader; true when Sprite_Objects record 0's x is the
 // leader's or past it (signed).
 bool ObjectReached() {
-    const auto object_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects)->x));
+    const auto object_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_Objects[0].x));
     const auto leader_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
     Field_State = ObjTrio;
     return object_x >= leader_x;
@@ -1201,7 +1201,7 @@ bool ObjectReached() {
 // the adds as the original does), +1 `next`.
 void Push(unsigned next) {
     unsigned char* const saved = Sprite_Current;
-    Sprite_Current = Sprite_Objects;
+    Sprite_Current = rv::Bytes(Sprite_Objects);
     for (int n = 4; n != 0; --n) SetUL(Sprite_Current + 0x34, UL(Sprite_Current + 0x34) + 0x4000u);
     saved[1] = static_cast<unsigned char>(next);
     Sprite_Current = saved;

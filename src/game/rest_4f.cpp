@@ -757,7 +757,7 @@ const unsigned char* TraceObject(const char* who) {
         bof3::Fatal("%s: the object byte +6 is %u, past the thirty Sprite_Objects records - the original reads what "
                     "follows (docs/rest_4f.md section 7)",
                     who, idx);
-    return Sprite_Objects + idx * 0xA4u;
+    return rv::Bytes(&Sprite_Objects[idx]);
 }
 
 // One run of kind 8's line along z, in steps of 0x8000 (`dir` +1 or -1) from z to

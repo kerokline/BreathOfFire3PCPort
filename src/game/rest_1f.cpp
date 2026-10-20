@@ -107,9 +107,9 @@ unsigned char* EffectAt(unsigned index, const char* who) {
 void MarkObject(unsigned char found, const char* who) {
     const int i = static_cast<signed char>(found);
     if (i >= 0 && i < static_cast<int>(kObjectCount))
-        Sprite_Objects[static_cast<unsigned>(i) * kObjectStride + 0x80] |= 1;
+        Sprite_Objects[static_cast<unsigned>(i)].context |= 1;
     else if (i >= static_cast<int>(kObjectCount) && i < static_cast<int>(kObjectCount) + 4)
-        Sprite_ObjectsExtra[static_cast<unsigned>(i - static_cast<int>(kObjectCount)) * kObjectStride + 0x80] |= 1;
+        Sprite_ObjectsExtra[static_cast<unsigned>(i - static_cast<int>(kObjectCount))].context |= 1;
     else
         bof3::Fatal("%s: Sprite_ObjectAt's answer 0x%02X is past Sprite_Objects' 30 and Sprite_ObjectsExtra's 4; the "
                     "original sets a bit at 0x%X (docs/rest_1f.md section 7)",

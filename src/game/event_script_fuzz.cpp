@@ -93,7 +93,7 @@ alignas(4) unsigned char g_arm[2];              // an if's else and depth bytes
 alignas(4) std::uint32_t g_result;              // a function's result, as a region
 
 constexpr int kFirstObject = -4, kObjects = 38;   // Sprite_Objects -4..33: counts a stand-in may leave
-unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
+unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 short Count() {
     short v;
     std::memcpy(&v, At(bof3::addr::DamageScratch), sizeof v);
@@ -641,7 +641,7 @@ void SeedObject(unsigned char* o) {
 void SelfTestPlacements() {
     constexpr unsigned kRounds = 20000;
     unsigned char* const objects = Object(kFirstObject);
-    const Region r[] = {R(objects, kObjects * 0xA4), R(Sprite_ObjectsExtra, 8 * 0xA4), R(MoveScript_PartyRecords, 0x1000),
+    const Region r[] = {R(objects, kObjects * 0xA4), R(rv::Bytes(Sprite_ObjectsExtra), 8 * 0xA4), R(MoveScript_PartyRecords, 0x1000),
                         R(At(bof3::addr::DamageScratch), 4), R(&Sprite_Current, 4), R(&Field_ActiveMember, 4),
                         R(rv::Bytes(&Sprite_Kind2), sizeof(records::SpriteObject)), R(&Game_AreaNumber, 2), R(g_script, 0x40),
                         R(g_entries), R(g_result)};
@@ -654,7 +654,7 @@ void SelfTestPlacements() {
         for (unsigned round = 0; round < kRounds; ++round) {
             Randomize(r, n);
             for (int i = kFirstObject; i < kFirstObject + kObjects; ++i) SeedObject(Object(i));
-            for (unsigned i = 0; i < 8; ++i) SeedObject(Sprite_ObjectsExtra + i * 0xA4);
+            for (unsigned i = 0; i < 8; ++i) SeedObject(rv::Bytes(&Sprite_ObjectsExtra[i]));
             static const int kCount[] = {29, 30, 31, 0, 1, 0x7FFF, 100};
             SetCount(OneIn(3) ? kCount[Next() % 7] : static_cast<int>(Next() % 32));
             Game_AreaNumber = static_cast<unsigned short>(Next() % Area_Descriptors_count);

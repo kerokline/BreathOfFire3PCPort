@@ -1200,7 +1200,7 @@ SC9B_EXPORT void __cdecl Scena10_StartRun1(void) {
 // transitions around an area change into 0x42, the palette greyed, an area
 // change into 0x52, a ground effect, flag 6.
 SC9B_EXPORT void __cdecl Scena10_Run1(void) {
-    auto* const obj0 = rv::As<records::SpriteObject>(Sprite_Objects + 0 * sizeof(records::SpriteObject));
+    auto* const obj0 = Sprite_Objects;
     switch (Step()) {
     case 0:
         if (EffectBusy(Scena10_Slot_addr)) return;

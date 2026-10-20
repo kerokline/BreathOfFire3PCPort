@@ -242,7 +242,7 @@ extern "C" void __cdecl GameMode_Shop(void) { Entry(GameMode_ShopSteps_addr, Gam
 extern "C" void __cdecl Shop_Open(void) {
     const signed char index = static_cast<signed char>(ModeStates_ShopObject);
     if (index >= 0) {
-        unsigned char* const o = Sprite_Objects + static_cast<std::uint32_t>(static_cast<int>(index)) * 0xA4u;
+        unsigned char* const o = rv::Bytes(Sprite_Objects) + static_cast<std::uint32_t>(static_cast<int>(index)) * 0xA4u;
         Sprite_Current = o;
         if (Long(o + 0x18) == 9) {
             Game_Mode = 2;

@@ -101,7 +101,7 @@ std::uint32_t Hash(unsigned salt = 0) {
 
 constexpr int kFirstObject = -4, kObjects = 38;   // Sprite_Objects -4..33 (EventOp_5x / 9x may leave counts there)
 constexpr int kExtras = 8;                         // Sprite_ObjectsExtra 0..7 (Field_LeaderTalkTo reaches past 4)
-unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
+unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 unsigned char* Member(int n) { return At(ObjTrio_addr) + n * at::kMemberStride; }
 
 alignas(4) unsigned char g_script[0x40];     // an op's bytes
@@ -815,12 +815,12 @@ void UseRegions(unsigned mask) {
     add(R(g_list, sizeof g_list));
     add(R(&g_result, sizeof g_result));
     if (mask & kObj) add(R(Object(kFirstObject), kObjects * 0xA4));
-    if (mask & kExt) add(R(Sprite_ObjectsExtra, kExtras * 0xA4));
+    if (mask & kExt) add(R(rv::Bytes(Sprite_ObjectsExtra), kExtras * 0xA4));
     if (mask & kEff) add(R(Effect_Objects, 0xA00));
     if (mask & kAct) add(R(0x903A50, 0x5E0));                 // the run option byte and eight actor records
     if (mask & kFar)                                          // Field_ObjectInPath's answers read either way
-        for (unsigned char* const o : {Object(-128), Sprite_ObjectsExtra + 97 * 0xA4, Sprite_ObjectsExtra + 98 * 0xA4,
-                                       Sprite_ObjectsExtra + 224 * 0xA4})
+        for (unsigned char* const o : {Object(-128), rv::Bytes(&Sprite_ObjectsExtra[0x61]), rv::Bytes(&Sprite_ObjectsExtra[0x62]),
+                                       rv::Bytes(&Sprite_ObjectsExtra[0xe0])})
             add(R(o, 0xA4));   // Object(-2), the other, lies in the objects' region
     unsigned total = 0;
     for (unsigned i = 0; i < g_n; ++i) total += g_r[i].size;
@@ -1138,9 +1138,9 @@ void RunTests(unsigned rounds, unsigned only) {
                     SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(Word(Sprite_Current + 0x3E)) + Pick(kRise)));
                 };
                 for (int i = 0; i < 30; ++i) seed_object(Object(i));
-                for (int i = 0; i < kExtras; ++i) seed_object(Sprite_ObjectsExtra + i * 0xA4);
+                for (int i = 0; i < kExtras; ++i) seed_object(rv::Bytes(&Sprite_ObjectsExtra[i]));
                 seed_object(Object(-128));
-                for (const int n : {97, 98, 224}) seed_object(Sprite_ObjectsExtra + n * 0xA4);
+                for (const int n : {97, 98, 224}) seed_object(rv::Bytes(Sprite_ObjectsExtra) + n * 0xA4);
                 break;
             }
             case kEffectAhead:

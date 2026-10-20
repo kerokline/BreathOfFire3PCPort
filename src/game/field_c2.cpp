@@ -99,8 +99,8 @@ void Touch(const char* who, int index) {
                     "outside them (docs/field_c2.md section 2)",
                     who, index);
     unsigned char* const o = index < static_cast<int>(at::kObjects)
-                                 ? Sprite_Objects + static_cast<U>(index) * at::kObjectStride
-                                 : Sprite_ObjectsExtra + static_cast<U>(index - static_cast<int>(at::kObjects)) * at::kObjectStride;
+                                 ? rv::Bytes(Sprite_Objects) + static_cast<U>(index) * at::kObjectStride
+                                 : rv::Bytes(Sprite_ObjectsExtra) + static_cast<U>(index - static_cast<int>(at::kObjects)) * at::kObjectStride;
     o[0x80] = static_cast<unsigned char>(o[0x80] | 1);
 }
 

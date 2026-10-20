@@ -108,7 +108,7 @@ void EndEvent(const unsigned char* s) {
 // sar 6, the sign added) - the member need not lie in the array.
 U MemberSpriteIndex() {
     const auto offset = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) -
-                                                  Addr(Sprite_Objects));
+                                                  Addr(rv::Bytes(Sprite_Objects)));
     return static_cast<U>(offset / static_cast<std::int32_t>(kSpriteStride));
 }
 
@@ -194,7 +194,7 @@ const U kStatesD[] = {bof3::addr::LinkedObjectD_Roll,        bof3::addr::LinkedO
 // left at the last live record.
 extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
     for (unsigned k = 0; k < 30; ++k) {
-        unsigned char* const rec = Sprite_Objects + k * kSpriteStride;
+        unsigned char* const rec = rv::Bytes(&Sprite_Objects[k]);
         Sprite_Current = rec;
         if (!(rec[0] & 1)) continue;
         if (rec[6] != 9) {

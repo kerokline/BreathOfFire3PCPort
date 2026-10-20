@@ -617,7 +617,7 @@ U g_x, g_z, g_k;
 // An object record 0..0x21 (0xFF: the extra record 0xE1).
 unsigned char* Record(U k) {
     k &= 0xFF;
-    return k < 0x1E ? Sprite_Objects + k * 0xA4 : Sprite_ObjectsExtra + (k - 0x1E) * 0xA4;
+    return k < 0x1E ? rv::Bytes(&Sprite_Objects[k]) : rv::Bytes(&Sprite_ObjectsExtra[k - 0x1E]);
 }
 
 void SeedLeader(unsigned k) {

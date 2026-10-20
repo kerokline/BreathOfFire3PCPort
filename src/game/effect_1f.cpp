@@ -28,6 +28,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_1f_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -382,8 +383,8 @@ extern "C" unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
 // not put back.
 extern "C" void __cdecl Sprite_UpdateAllScaled(void) {
     constexpr U kStride = 0xA4;
-    const U kEnd = Key(Sprite_Objects) + 30 * kStride;
-    for (U record = Key(Sprite_Objects); record < kEnd; record += kStride) {
+    const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
+    for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
         if (B(record) == 0) continue;
         Sprite_Current = At(record);
         SH_CALL(Sprite_UpdateScreenScaled)();

@@ -119,7 +119,7 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
     records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     std::int32_t tilt_x = static_cast<std::int32_t>(sprite->angle[0]);
     std::int32_t tilt_y = static_cast<std::int32_t>(sprite->angle[1]);
-    const std::int32_t index = static_cast<std::int32_t>(Address(object) - Address(Sprite_ObjectsExtra)) / 0xA4;
+    const std::int32_t index = static_cast<std::int32_t>(Address(object) - Address(rv::Bytes(Sprite_ObjectsExtra))) / 0xA4;
     signed char slot = static_cast<signed char>(index & 0xFF);
     if (slot < 0) slot = 4;
     unsigned char* const record = MoveScript_PartyRecords + slot * 16;
@@ -323,13 +323,13 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
     if (handle & 0x80) {
         unsigned char count = 0;
         for (unsigned char n = 0; n < 0x1E; ++n) {
-            if (Sprite_Objects[n * 0xA4u + 6] != 0x0A) continue;
+            if (Sprite_Objects[n].type != 0x0A) continue;
             if (count == (handle & 0x3F)) break;
             ++count;
         }
-        object = Sprite_Objects + count * 0xA4u;
+        object = rv::Bytes(Sprite_Objects) + count * 0xA4u;
     } else {
-        object = Sprite_ObjectsExtra + handle * 0xA4u;
+        object = rv::Bytes(Sprite_ObjectsExtra) + handle * 0xA4u;
     }
     Sprite_Current = object;
     long buffer[4] = {};
@@ -463,8 +463,8 @@ extern "C" int __cdecl MoveScript_ObjectKind(void) {
     if (sprite == Address(rv::Bytes(&Sprite_Kind2))) return 2;
     const std::uint32_t trio = Address(ObjTrio);
     if (sprite == trio || sprite == trio + 0x14C || sprite == trio + 0x298) return 1;
-    if (sprite >= Address(Sprite_Objects) && sprite < Address(Sprite_Objects) + Sprite_Objects_count) return 0;
-    if (sprite >= Address(Sprite_ObjectsExtra) && sprite < Address(Sprite_ObjectsExtra) + Sprite_ObjectsExtra_count) return 3;
+    if (sprite >= Address(rv::Bytes(Sprite_Objects)) && sprite < Address(rv::Bytes(Sprite_Objects)) + (Sprite_Objects_count * sizeof(records::SpriteObject))) return 0;
+    if (sprite >= Address(rv::Bytes(Sprite_ObjectsExtra)) && sprite < Address(rv::Bytes(Sprite_ObjectsExtra)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))) return 3;
     return static_cast<int>(sprite);
 }
 

@@ -5037,7 +5037,7 @@ src/game/effect_1e_fuzz.cpp	-	global	-	at::kPools	0	0x803580	-	no-entry	at::kPoo
 src/game/effect_1e_fuzz.cpp	SeedRecord	record	SetLong	s + 0xC	0	-	param	harness	SetLong(s + 0xc): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_1e_fuzz.cpp	SeedRecord	record	SetLong	s + 0x38	0	-	param	harness	SetLong(s + 0x38): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_1e_fuzz.cpp	SeedRecord	record	SetWord	s + 0x58	0	-	param	harness	SetWord(s + 0x58): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_1e_fuzz.cpp	Seed	record	SetWord	p + 0x9C	0	-	base=Sprite_Objects;stride=0xa4	harness	SetWord(p + 0x9c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_1e_fuzz.cpp	Seed	record	SetWord	p + 0x9C	0	-	base=Sprite_Objects	harness	SetWord(p + 0x9c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_1e_fuzz.cpp	Seed	global	Mem	at::kBestCounts	0	0x9040ec	-	no-entry	at::kBestCounts 0x9040ec -	b0
 src/game/effect_1e_fuzz.cpp	Seed	raw	Mem	0x903850	0	0x903850	-	-	-	-
 src/game/effect_1e_fuzz.cpp	Disturb	raw	Mem	0x903850	0	0x903850	-	-	-	-
@@ -6066,7 +6066,7 @@ src/game/effect_2g.cpp	EffectKind5B_DrawBeam	record	SetWord	rect + 2	1	-	base=Gf
 src/game/effect_2g.cpp	EffectKind5B_DrawBeam	record	SetWord	rect + 4	1	-	base=Gfx_PacketNext	family	SetWord(rect + 0x4): local rect reassigned	b1-effect
 src/game/effect_2g.cpp	EffectKind5B_DrawBeam	record	SetWord	rect + 6	1	-	base=Gfx_PacketNext	family	SetWord(rect + 0x6): local rect reassigned	b1-effect
 src/game/effect_2g_fuzz.cpp	FxSprintf	global	-	at::kKind55TimeFormat	0	0x654830	-	no-entry	at::kKind55TimeFormat 0x654830 -	b0
-src/game/effect_2g_fuzz.cpp	SeedObject	record	SetWord	o + 0x58	0	-	base=Sprite_Objects;stride=0xa4	harness	SetWord(o + 0x58): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_2g_fuzz.cpp	SeedObject	record	SetWord	o + 0x58	0	-	base=Sprite_Objects	harness	SetWord(o + 0x58): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_2g_fuzz.cpp	Seed	global	Mem	at::kScore	0	0x90384b	-	no-entry	at::kScore 0x90384b -	b0
 src/game/effect_2g_fuzz.cpp	Seed	global	Mem	at::kCue	0	0x90384a	-	no-entry	at::kCue 0x90384a -	b0
 src/game/effect_2g_fuzz.cpp	Seed	global	Mem	at::kHit	0	0x903849	-	no-entry	at::kHit 0x903849 -	b0
@@ -6686,7 +6686,7 @@ src/game/effect_4b_fuzz.cpp	-	global	-	at::kKind87Points	0	0x654da0	-	no-entry	a
 src/game/effect_4b_fuzz.cpp	Rec	record	SetLong	r + w	0	-	via=Pane	computed	SetLong(r + -): the offset is not a constant	b1-effect
 src/game/effect_4b_fuzz.cpp	SeedParticles	record	SetLong	r + 0xC	0	-	via=Particle	harness	SetLong(r + 0xc): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_4b_fuzz.cpp	SeedParticles	record	Long	r + 0x1C	0	-	via=Particle	harness	Long(r + 0x1c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_4b_fuzz.cpp	Seed	record	SetWord	Sprite_Objects + at::kSpriteStride * i + 0x2C	0	-	base=Sprite_Objects	computed	SetWord(Sprite_Objects + -): the offset is not a constant	b1-effect
+src/game/effect_4b_fuzz.cpp	Seed	record	SetWord	rv::Bytes(&Sprite_Objects[i])+ 0x2C	0	-	via=Bytes	computed	SetWord(Sprite_Objects + -): the offset is not a constant	b1-effect
 src/game/effect_4b_fuzz.cpp	Seed	global	Mem	at::kCounter2	0	0x903849	-	no-entry	at::kCounter2 0x903849 -	b0
 src/game/effect_4b_fuzz.cpp	Seed	record	SetWord	ObjTrio + 0x58	0	-	base=ObjTrio	harness	SetWord(ObjTrio + 0x58): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_4b_fuzz.cpp	Disturb	global	Mem	at::kCounter2	0	0x903849	-	no-entry	at::kCounter2 0x903849 -	b0
@@ -9452,13 +9452,13 @@ src/game/field_objects.cpp	Party_ApplyRecord	record	Long	r + 4	0	-	base=MoveScri
 src/game/field_objects.cpp	Party_ApplyRecord	record	Long	r + 8	0	-	base=MoveScript_PartyRecords;stride=0x10	no-family	`r`: a shard / party-move record	b1-field
 src/game/field_objects.cpp	Party_ApplyRecord	record	Long	r + 0xC	0	-	base=MoveScript_PartyRecords;stride=0x10	no-family	`r`: a shard / party-move record	b1-field
 src/game/field_objects.cpp	Field_ObjectFollow	record	SetLong	Sprite_Current + at	0	-	base=Sprite_Current	computed	offset computed at run time: Sprite_Current + at	b1-field
-src/game/field_objects.cpp	Field_ObjectFollow	record	Long	other + at	0	-	base=Sprite_ObjectsExtra;stride=0xa4	computed	offset computed at run time: other + at	b1-field
+src/game/field_objects.cpp	Field_ObjectFollow	record	Long	other + at	0	-	base=Sprite_ObjectsExtra	computed	offset computed at run time: other + at	b1-field
 src/game/field_objects.cpp	Field_ObjectFollow	record	SetLong	Sprite_Current + at	1	-	base=Sprite_Current	computed	offset computed at run time: Sprite_Current + at	b1-field
-src/game/field_objects.cpp	Field_ObjectFollow	record	Long	other + at	1	-	base=Sprite_ObjectsExtra;stride=0xa4	computed	offset computed at run time: other + at	b1-field
+src/game/field_objects.cpp	Field_ObjectFollow	record	Long	other + at	1	-	base=Sprite_ObjectsExtra	computed	offset computed at run time: other + at	b1-field
 src/game/field_objects.cpp	MoveCmd_AttachOffset	record	Word	sprite + 0x64	0	-	base=Sprite_Current	width	SpriteObject +0x64 read as 2 bytes; records.h has another width there	b1-field
 src/game/field_objects.cpp	MoveCmd_AttachOffset	record	Word	sprite + 0x68	0	-	base=Sprite_Current	width	SpriteObject +0x68 read as 2 bytes; records.h has another width there	b1-field
 src/game/field_objects.cpp	MoveCmd_AttachOffset	record	Word	sprite + 0x6C	0	-	base=Sprite_Current	width	SpriteObject +0x6c read as 2 bytes; records.h has another width there	b1-field
-src/game/field_objects.cpp	Next	record	At	Address(Sprite_ObjectsExtra) + slot * 0xA4 + (slot < 7 ? Nex	0	-	via=Address	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
+src/game/field_objects.cpp	Next	record	At	Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slo	0	-	via=Address	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/field_s.cpp	At	global	At	at::kRecords	0	0x903a70	-	no-entry	at::kRecords 0x903a70 -	b0
 src/game/field_s.cpp	At	global	-	at::kRecords	0	0x903a70	-	no-entry	at::kRecords 0x903a70 -	b0
 src/game/field_s.cpp	At	global	At	at::kPrintBuf	0	0x904ba0	-	no-entry	at::kPrintBuf 0x904ba0 -	b0
@@ -14051,7 +14051,7 @@ src/game/move_groups.cpp	Next	record	Long	ObjTrio + 0x34	0	-	base=ObjTrio	harnes
 src/game/move_groups.cpp	Next	record	Long	ObjTrio + 0x38	0	-	base=ObjTrio	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_groups.cpp	Next	record	Long	ObjTrio + 0x34	1	-	base=ObjTrio	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_groups.cpp	Next	record	Long	ObjTrio + 0x38	1	-	base=ObjTrio	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
-src/game/move_groups.cpp	SelfTest	record	At	Address(Sprite_ObjectsExtra) + slot * 0xA4 + (slot < 7 ? Nex	0	-	via=Address	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
+src/game/move_groups.cpp	SelfTest	record	At	Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slo	0	-	via=Address	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_script.cpp	MoveScript_GroupF	record	SetWord	scratch + 2	0	-	via=Scratch	no-family	`scratch`: the PSX scratchpad	b1-field
 src/game/move_script.cpp	MoveScript_GroupF	record	Word	scratch + 2	0	-	via=Scratch	no-family	`scratch`: the PSX scratchpad	b1-field
 src/game/move_script.cpp	StubMoveKind2	record	SetWord	Scratch() + 2	0	-	via=Scratch	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field

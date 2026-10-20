@@ -403,7 +403,7 @@ extern "C" void __cdecl EffectKind35_Burst(void) {
 // original 0x473800 (EffectKind35_States[2]): Sprite_ObjectsExtra[1]'s +0 = 0
 // (the model's record freed); Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind35_FreeModel(void) {
-    Sprite_ObjectsExtra[0xa4] = 0;
+    Sprite_ObjectsExtra[1].flags = 0;
     SH_CALL(Effect_Release)();
 }
 

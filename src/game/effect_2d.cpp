@@ -90,7 +90,7 @@ unsigned char* SpriteRec(const char* who, unsigned index) {
         bof3::Fatal("%s: sprite index %u is past Sprite_Objects' 30 records - the original writes past the pool "
                     "(docs/effect_2d.md section 2)",
                     who, index);
-    return Sprite_Objects + index * at::kSpriteStride;
+    return rv::Bytes(Sprite_Objects) + index * at::kSpriteStride;
 }
 
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + i * at::kSparkStride; }
@@ -558,7 +558,7 @@ extern "C" void __cdecl EffectKind46_DrawFlash(void) {
 extern "C" void __cdecl EffectKind46_RedrawSprites(void) {
     unsigned char* const saved = Sprite_Current;
     for (unsigned i = 0; i < at::kSprites; ++i) {
-        unsigned char* const o = Sprite_Objects + i * at::kSpriteStride;
+        unsigned char* const o = rv::Bytes(&Sprite_Objects[i]);
         Sprite_Current = o;
         if ((o[0] & 1) != 0) {
             o[0x29] = 5;
@@ -602,7 +602,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
     }
     SpriteRec(who, self[4])[0] = 1;
     unsigned char model = ObjTrio[0x4B];
-    if (self[0xB] == 0) model = Sprite_Objects[0x193];
+    if (self[0xB] == 0) model = Sprite_Objects[2].animation;
     unsigned k = 0;
     while (k < 5 && model != At(at::kTwinAnims + 3 * k)[0]) ++k;
     const unsigned char* const triple = At(at::kTwinAnims + 3 * k);
@@ -656,8 +656,8 @@ extern "C" void __cdecl EffectKind47_Blink(void) {
 // [+4] (Sprite_Current read for each; the addresses only - the callee compares,
 // it does not read the record), then Effect_Release (a tail jump).
 extern "C" void __cdecl EffectTwinSprites_Release(void) {
-    SH_CALL(Sprite_ReleaseTint)(Sprite_Objects + S()[3] * at::kSpriteStride);
-    SH_CALL(Sprite_ReleaseTint)(Sprite_Objects + S()[4] * at::kSpriteStride);
+    SH_CALL(Sprite_ReleaseTint)(rv::Bytes(&Sprite_Objects[S()[3]]));
+    SH_CALL(Sprite_ReleaseTint)(rv::Bytes(&Sprite_Objects[S()[4]]));
     SH_CALL(Effect_Release)();
 }
 

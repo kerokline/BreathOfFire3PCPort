@@ -2114,7 +2114,7 @@ namespace {
 // Scena02_StartRun07.
 void Near(unsigned char n, int xlo, int xhi, int zlo, int zhi) {
     if (Cond_ByteFD != 0) return;
-    const unsigned char* const s = Sprite_Objects + 0xA4u * n;
+    const unsigned char* const s = rv::Bytes(&Sprite_Objects[n]);
     const int sx = rv::As<records::SpriteObject>(s)->x, sz = rv::As<records::SpriteObject>(s)->z;
     const int lx = rv::As<records::PartyMember>(Leader())->x, lz = rv::As<records::PartyMember>(Leader())->z;
     if (lz > Plus(sz, zhi) || lz < Plus(sz, zlo)) return;

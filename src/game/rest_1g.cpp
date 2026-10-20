@@ -682,8 +682,8 @@ extern "C" void __cdecl Fish_Spawn(void) {
             if (index >= kSpriteCount)
                 bof3::Fatal("Fish_Spawn (0x52B480): spot %u's counts fill more than the %u Sprite_Objects records - the "
                             "original writes record %u at 0x%X (docs/rest_1g.md section 7)",
-                            spot, kSpriteCount, index, (unsigned)(Key(Sprite_Objects) + index * kSpriteStride));
-            unsigned char* const rec = Sprite_Objects + index * kSpriteStride;
+                            spot, kSpriteCount, index, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + index * kSpriteStride));
+            unsigned char* const rec = rv::Bytes(&Sprite_Objects[index]);
             Sprite_Current = rec;
             Field_ActiveMember = rec;
             rec[0] = 0x21;
@@ -753,7 +753,7 @@ extern "C" void __cdecl Fish_Spawn(void) {
 // = +0x5D.
 extern "C" void __cdecl Fish_RunAll(void) {
     for (unsigned i = 0; i < kSpriteCount; ++i) {
-        unsigned char* const rec = Sprite_Objects + i * kSpriteStride;
+        unsigned char* const rec = rv::Bytes(&Sprite_Objects[i]);
         if (rec[0] == 0) continue;
         Sprite_Current = rec;
         Field_ActiveMember = rec;

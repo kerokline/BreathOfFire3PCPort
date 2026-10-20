@@ -155,9 +155,9 @@ extern "C" void __cdecl Scena00_Start(void) {
 // 1) the pass flags 0, the flag, state 2 and run 3 and return; else
 // Party_DropIn(0) and run 9.
 extern "C" void __cdecl Scena00_EnterArea(void) {
-    auto* const obj0 = rv::As<records::SpriteObject>(Sprite_Objects + 0 * sizeof(records::SpriteObject));
-    auto* const xobj2 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 2 * sizeof(records::SpriteObject));
-    auto* const xobj3 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 3 * sizeof(records::SpriteObject));
+    auto* const obj0 = Sprite_Objects;
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
+    auto* const xobj3 = &Sprite_ObjectsExtra[3];
     if (Game_AreaNumber == 1) {
         SH_CALL(Party_DropIn)(0);
         const unsigned char n = B(kByte4A);
@@ -406,7 +406,7 @@ extern "C" void __cdecl Scena00_Run2(void) {
 // to 0x6200, then the view shift (a tail jump in the original).
 extern "C" void __cdecl Scena00_Run3(void) {
     auto* const kind2 = &Sprite_Kind2;
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
+    auto* const xobj0 = Sprite_ObjectsExtra;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (B(kByte4A) != 0x30) return;
@@ -543,8 +543,8 @@ extern "C" void __cdecl Scena00_Run4(void) {
 // sprite records' +0x34 / +0x38 by the table's value << 11.
 extern "C" void __cdecl Scena00_Run5(void) {
     auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
-    auto* const obj2 = rv::As<records::SpriteObject>(Sprite_Objects + 2 * sizeof(records::SpriteObject));
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
+    auto* const obj2 = &Sprite_Objects[2];
+    auto* const xobj0 = Sprite_ObjectsExtra;
     uint32_t frame = Frame_Counter;
     if (static_cast<unsigned char>(MoveScript_PartyRecords[0x65] - 4) < 3 && (frame & 0xF) == 0) {
         const int r = SH_CALL(Rand)();
@@ -927,7 +927,7 @@ extern "C" void __cdecl Scena00_Run9(void) {
 // coordinates, and at 0x90384A 3 after the timer area 1; the camera turned to
 // 0xF, then 0x90384A 4; at 9 script flag bit 7 cleared, area 0x19 and run 11.
 extern "C" void __cdecl Scena00_Run10(void) {
-    auto* const xobj3 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 3 * sizeof(records::SpriteObject));
+    auto* const xobj3 = &Sprite_ObjectsExtra[3];
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (TurnCamera(0x2D, 0xA) != 0) return;
@@ -970,7 +970,7 @@ extern "C" void __cdecl Scena00_Run10(void) {
 // and down / up (0x4000 / 0x1000), the sprite words 0x8021AC / 0x8021B0 by
 // 0x40 with them, then sound 0x204.
 extern "C" void __cdecl Scena00_Steer(void) {
-    auto* const xobj2 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 2 * sizeof(records::SpriteObject));
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
     move_script::SetWord(Corner("Scena00_Steer"), 0);
     if (B(kInput + 1) & 0x20) {
         SetW(L(kCorner), W(L(kCorner)) + 2u);
@@ -1002,10 +1002,10 @@ extern "C" void __cdecl Scena00_Steer(void) {
 extern "C" void __cdecl Scena00_Run11(void) {
     auto* const kind2 = &Sprite_Kind2;
     auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
-    auto* const obj0 = rv::As<records::SpriteObject>(Sprite_Objects + 0 * sizeof(records::SpriteObject));
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
-    auto* const xobj1 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 1 * sizeof(records::SpriteObject));
-    auto* const xobj2 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 2 * sizeof(records::SpriteObject));
+    auto* const obj0 = Sprite_Objects;
+    auto* const xobj0 = Sprite_ObjectsExtra;
+    auto* const xobj1 = &Sprite_ObjectsExtra[1];
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
     if ((B(0x937F94) & 0x1F) == 0) B(kByte4B) = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
     if (B(kByte4A) < 0x14 && static_cast<std::uint32_t>(MapView_FocusZ) == 0x5000) {
         const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = static_cast<uint32_t>(xobj0->z);
@@ -1065,7 +1065,7 @@ extern "C" void __cdecl Scena00_Run11(void) {
             const uint32_t i = (static_cast<std::uint32_t>(Input_Pressed) >> 12) << 1;
             if (B(kInputAnims + i) != 0) {
                 const unsigned char animation = B(kInputAnims + i + 1);
-                Sprite_Current = Sprite_Objects;
+                Sprite_Current = rv::Bytes(Sprite_Objects);
                 obj0->direction = animation;
                 EnsureAnimation(animation);
             }
@@ -1104,7 +1104,7 @@ extern "C" void __cdecl Scena00_Run11(void) {
         rv::Store<uint32_t>(xobj2->angle[1], S(p + 2) >= 0 ? 0x40u : 0xFFFFFFC0u);
         if ((B(0x937F94) & 3) == 0) {
             const auto animation = static_cast<unsigned char>((obj0->direction + 1) & 3);
-            Sprite_Current = Sprite_Objects;
+            Sprite_Current = rv::Bytes(Sprite_Objects);
             obj0->direction = animation;
             EnsureAnimation((p & 0xFFFFFF00u) | animation);
         }

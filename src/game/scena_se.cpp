@@ -43,7 +43,7 @@ using move_script::Word;
 // The placement count (DamageScratch, read afresh at every use as the
 // original reads the word [0x903850]) and the bank word after it.
 short Count() { return static_cast<short>(Word(At(at::kCount))); }
-unsigned char* Object(int n) { return Sprite_Objects + n * static_cast<int>(at::kObjectStride); }
+unsigned char* Object(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(at::kObjectStride); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.

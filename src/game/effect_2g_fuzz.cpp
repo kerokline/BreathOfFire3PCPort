@@ -18,6 +18,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_2g.h"
 #include "game/effect_2g_callees.h"
 #include "game/effect_gte.h"
@@ -292,7 +293,7 @@ void Records(unsigned k) {
 
 // The object +0xB names, at the animations and flags the states compare.
 void SeedObject(unsigned char* s) {
-    unsigned char* const o = Sprite_Objects + s[0xB] * at::kObjectStride;
+    unsigned char* const o = rv::Bytes(&Sprite_Objects[s[0xB]]);
     SetWord(o + 0x58, PickOf(2, 4, 5, 8, 0, 3, 9, 0x102, 0x108, sh::Next()));
     o[0x4A] = static_cast<unsigned char>(PickOf(1, 1, 0, 2, 0x101, sh::Next()));
 }

@@ -72,8 +72,8 @@ void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
 // Data these read that symbols.toml does not name.
 // kBlockFlags: now Field_StatusBits (symbols.toml). bit 6: ScriptFlags_Set40 / Clear40 (object_kinds.cpp)
 
-unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
-unsigned char* Extra(unsigned n) { return Sprite_ObjectsExtra + n * 0xA4u; }
+unsigned char* Object(int n) { return rv::Bytes(Sprite_Objects) + n * 0xA4; }
+unsigned char* Extra(unsigned n) { return rv::Bytes(&Sprite_ObjectsExtra[n]); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.

@@ -62,7 +62,7 @@ Callees g = kOriginals;
 // As MoveScript_GroupD's: Field_ActiveMember's party slot, as a byte.
 unsigned char PartySlot() {
     const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember) -
-                                                    Address(Sprite_ObjectsExtra));
+                                                    Address(rv::Bytes(Sprite_ObjectsExtra)));
     return static_cast<unsigned char>(distance / 0xA4);
 }
 
@@ -236,7 +236,7 @@ extern "C" void __cdecl Field_ObjectSettle(unsigned char* object, unsigned char 
 // of 0x98-byte objects is two of 0xA4 on the PC.
 extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
     const unsigned char n = g.by_handle(Sprite_Current[0x18]);
-    const unsigned char* const other = n >= 0x1E ? Sprite_ObjectsExtra + (n - 0x1Eu) * 0xA4u : Sprite_Objects + n * 0xA4u;
+    const unsigned char* const other = n >= 0x1E ? rv::Bytes(&Sprite_ObjectsExtra[n - 0x1Eu]) : rv::Bytes(&Sprite_Objects[n]);
     if (rv::Current<records::SpriteObject>()->step_frames == 0) {
         rv::Current<records::SpriteObject>()->draw_flags |= 0x20;
         for (const unsigned at : {0x34u, 0x38u, 0x3Cu}) SetLong(Sprite_Current + at, Long(other + at));
@@ -442,13 +442,13 @@ constexpr unsigned kCount = 6;
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
-    {Address(Sprite_ObjectsExtra), 8 * 0xA4},
+    {Address(rv::Bytes(Sprite_ObjectsExtra)), 8 * 0xA4},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
     {bof3::addr::DamageScratch, 4},
     {Address(&Field_Request), 1},
-    {Address(Sprite_Objects), Sprite_Objects_count},   // what a handle names
+    {Address(rv::Bytes(Sprite_Objects)), (Sprite_Objects_count * sizeof(records::SpriteObject))}, // what a handle names
 };
-constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 8 * 0xA4 + MoveScript_PartyRecords_count + 4 + 1 + Sprite_Objects_count;
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 8 * 0xA4 + MoveScript_PartyRecords_count + 4 + 1 + (Sprite_Objects_count * sizeof(records::SpriteObject));
 
 struct State {
     unsigned char memory[kRegionBytes];
@@ -515,7 +515,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
         for (unsigned i = 0; i < offsetof(State, log); ++i) bytes[i] = static_cast<unsigned char>(Next());
         input.current = Next() % 5 ? g_sprite : rv::Bytes(&Sprite_Kind2);
         const unsigned slot = Next() % 8;
-        input.active = At(Address(Sprite_ObjectsExtra) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
+        input.active = At(Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
         input.area = static_cast<std::uint16_t>(Next() % Area_Descriptors_count);
         g_seed = Next();
         for (auto& v : g_vectors) v = static_cast<short>(Next());

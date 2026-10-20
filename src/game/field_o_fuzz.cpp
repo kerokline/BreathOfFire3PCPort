@@ -27,6 +27,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_o.h"
 #include "game/field_o_callees.h"
 #include "game/move_script_bytes.h"
@@ -354,7 +355,7 @@ void Seed(unsigned run_k) {
     // Field_ActiveMember: a sprite record most of the time, an extra record (a party slot) or Sprite_Current
     switch (sh::Next() % 4) {
     case 0: Field_ActiveMember = sc; break;
-    case 1: Field_ActiveMember = Sprite_ObjectsExtra + (sh::Next() % 4) * 0xA4; break;
+    case 1: Field_ActiveMember = rv::Bytes(&Sprite_ObjectsExtra[sh::Next() % 4]); break;
     default: Field_ActiveMember = sh::SpriteRecord(sh::Next()); break;
     }
     // the count word in 0..31 (30 and 31: the ops' early return)

@@ -491,7 +491,7 @@ extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
         At(BattleE1_Mode_addr)[1] = 0;
         Game_Mode = 7;
         // (object - Sprite_Objects) / 0xA4, signed as the original's imul.
-        const auto offset = static_cast<std::int32_t>(Address(object) - Address(Sprite_Objects));
+        const auto offset = static_cast<std::int32_t>(Address(object) - Address(rv::Bytes(Sprite_Objects)));
         At(BattleE1_Mode_addr)[0xC] = static_cast<unsigned char>(offset / 0xA4);
         return;
     }

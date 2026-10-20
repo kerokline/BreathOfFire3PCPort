@@ -43,7 +43,7 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`) and Sprite_Objects record `slot` (0xA4, likewise).
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
-unsigned char* ObjectAt(unsigned slot) { return Sprite_Objects + slot * at::kObjectStride; }
+unsigned char* ObjectAt(unsigned slot) { return rv::Bytes(Sprite_Objects) + slot * at::kObjectStride; }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }

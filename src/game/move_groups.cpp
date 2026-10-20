@@ -83,7 +83,7 @@ std::int32_t S16(const unsigned char* at) { return static_cast<std::int16_t>(at[
 // divides the pointer's distance from Sprite_ObjectsExtra by 0xA4, truncating.
 unsigned char PartySlot() {
     const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember) -
-                                                    Address(Sprite_ObjectsExtra));
+                                                    Address(rv::Bytes(Sprite_ObjectsExtra)));
     return static_cast<unsigned char>(distance / 0xA4);
 }
 unsigned char* PartyRecord(int slot) { return MoveScript_PartyRecords + slot * 16; }
@@ -820,7 +820,7 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
     {Address(ObjTrio), 0x40},
-    {Address(Sprite_ObjectsExtra), 8 * 0xA4},   // the party objects and what a slot up to 7 reaches
+    {Address(rv::Bytes(Sprite_ObjectsExtra)), 8 * 0xA4}, // the party objects and what a slot up to 7 reaches
     {Address(MoveScript_TintRecords), MoveScript_TintRecords_count},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
     {bof3::addr::DamageScratch - 8, 12},
@@ -944,7 +944,7 @@ void SelfTest(void* const (&theirs)[kGroupCount]) {
         // never above it - a control moving D4's clamp went unseen.
         {
             const unsigned slot = Next() % 8;
-            input.active = At(Address(Sprite_ObjectsExtra) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
+            input.active = At(Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
         }
         input.area = static_cast<std::uint16_t>(Next() % Area_Descriptors_count);
         const auto value = static_cast<unsigned char>(Next());

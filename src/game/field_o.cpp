@@ -108,7 +108,7 @@ short Count() {
 unsigned short Bank() { return Word(At(bof3::addr::DamageScratch) + 2); }
 void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
 void BumpCount() { SetWord(At(bof3::addr::DamageScratch), static_cast<unsigned>(Count() + 1)); }
-unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
+unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 
 // A placement's x or z: the whole part and the half (0x8000) when `half` is not 0.
 std::int32_t Coordinate(unsigned char half, unsigned char whole) {
@@ -701,7 +701,7 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
     sc = rv::As<records::SpriteHead>(Sc());
     records::SpriteObject* fam = rv::As<records::SpriteObject>(Fam());
     if (sc->type == 0x0A) {
-        const std::int32_t slot = static_cast<std::int32_t>(static_cast<U>(Key(rv::Bytes(fam))) - static_cast<U>(Key(Sprite_ObjectsExtra))) / 0xA4;
+        const std::int32_t slot = static_cast<std::int32_t>(static_cast<U>(Key(rv::Bytes(fam))) - static_cast<U>(Key(rv::Bytes(Sprite_ObjectsExtra)))) / 0xA4;
         const auto crossed = [](const unsigned char* pos, const unsigned char* vel) {
             const U p = static_cast<U>(Long(pos));
             return (((static_cast<U>(Long(vel)) + p) ^ p) & 0x8000u) != 0;

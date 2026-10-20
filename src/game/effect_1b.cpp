@@ -1386,7 +1386,7 @@ extern "C" void __cdecl EffectKind92_Follow() {
     if (n >= at::kSpriteCount)
         bof3::Fatal("EffectKind92_Follow: sprite object %u past the %u (the original writes past Sprite_Objects)", n,
                     at::kSpriteCount);
-    unsigned char* const o = Sprite_Objects + at::kSpriteStride * n;
+    unsigned char* const o = rv::Bytes(Sprite_Objects) + at::kSpriteStride * n;
     auto* const oo = rv::As<records::SpriteObject>(o);
     if ((s[0] & 0x40) == 0) {
         oo->screen_x = static_cast<std::uint16_t>(oo->screen_x) + rv::As<records::EffectWork>(s)->work_2e;

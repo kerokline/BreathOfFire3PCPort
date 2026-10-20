@@ -240,7 +240,7 @@ void Seed(unsigned k) {
     const sh::Clone& c = kAll[k];
     SeedBanks();
     for (unsigned i = 0; i < 30; ++i) {
-        unsigned char* const s = Sprite_Objects + i * 0xA4;
+        unsigned char* const s = rv::Bytes(&Sprite_Objects[i]);
         if (i < 4 || sh::Next() % 4 == 0) SeedSprite(s);
     }
     for (unsigned i = 0; i < 8; ++i) SeedRecord(sh::Mem(bof3::addr::CharacterRecords + i * at::kRecordStride));

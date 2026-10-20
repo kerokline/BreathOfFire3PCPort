@@ -78,7 +78,7 @@ std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
 unsigned char* Member(unsigned i) { return ObjTrio + i * at::kObjStride; }
-unsigned char* Object(unsigned i) { return Sprite_Objects + i * at::kSpriteStride; }
+unsigned char* Object(unsigned i) { return rv::Bytes(&Sprite_Objects[i]); }
 
 // The record views (game/record_views.h): in the leader states Sprite_Current
 // is an ObjTrio record, and Field_State always is.

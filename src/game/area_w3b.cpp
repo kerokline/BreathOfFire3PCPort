@@ -79,7 +79,7 @@ Handler StateEntry(const char* who, const char* what, U table, unsigned count, u
 // lands on "extra record 0xE1", 0x80B0A4, inside .bss).
 unsigned char* ObjectRecord(U k) {
     k &= 0xFF;
-    return k < 0x1E ? Sprite_Objects + k * at::kObjectStride : Sprite_ObjectsExtra + (k - 0x1E) * at::kObjectStride;
+    return k < 0x1E ? rv::Bytes(&Sprite_Objects[k]) : rv::Bytes(&Sprite_ObjectsExtra[k - 0x1E]);
 }
 
 // Field_DirectionSteps' pair for a direction - a whole byte into a table of

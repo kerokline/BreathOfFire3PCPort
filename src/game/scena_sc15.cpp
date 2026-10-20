@@ -293,7 +293,7 @@ SC15_EXPORT void __cdecl Scena15_Frame(void) {
 // (Scena15_BattleSetup) or set a flag; 0xA4 and 0xA6 with Cond_ByteFD not 0,
 // and 0xAD with it not 2, go straight to state 2.
 SC15_EXPORT void __cdecl Scena15_EnterArea(void) {
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
+    auto* const xobj0 = Sprite_ObjectsExtra;
     if (Area() == 2 && Test(7) && !Test(8)) Draw_PassFlags = 0;
     if (Area() == 0x2D && Test(9) && !Test(0xA)) {
         Camera_Distance = 0x5DC;

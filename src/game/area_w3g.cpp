@@ -609,7 +609,7 @@ void DustThenAgain(int dx) {
 // +0x84 = 3.
 void MarkIfBehind() {
     if (Long(At(Sprite_ObjectsExtra_addr + 0x34)) < static_cast<std::int32_t>(static_cast<U>(Field_Kind2X) + 0x20000u))
-        Sprite_ObjectsExtra[0x84] = 3;
+        Sprite_ObjectsExtra[0].speed = 3;
 }
 // The map moved 0x14 cells in x (`sign` +1 or -1): Sprite_Kind2 +0x34 and
 // Field_Kind2X by 0x140000, MapView_Origin's word by 0x14, MapView_FocusX to
@@ -659,7 +659,7 @@ extern "C" void __cdecl Area149_DustRun(void) {
 // the dust at -4 and the op again.
 extern "C" void __cdecl Area149_DustNear880(void) {
     if (Camera_Distance < 0x880) {
-        Sprite_ObjectsExtra[0x84] = 1;
+        Sprite_ObjectsExtra[0].speed = 1;
         B(at::kCounter0) = 0xA;
         AH_CALL(Sound_PlayEffect)(1);
         Cur()[4] = static_cast<unsigned char>(Cur()[4] + 1);

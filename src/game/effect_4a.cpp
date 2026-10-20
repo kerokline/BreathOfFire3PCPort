@@ -82,7 +82,7 @@ unsigned char* Object(const char* who, unsigned index) {
         bof3::Fatal("%s: Sprite_Objects index %u, past its %u records - the original writes past them "
                     "(docs/effect_4a.md section 7)",
                     who, index, at::kSpriteCount);
-    return Sprite_Objects + at::kSpriteStride * index;
+    return rv::Bytes(&Sprite_Objects[index]);
 }
 
 // Field_State the leader; true when the dword at `x` (a record's +0x34) is the
@@ -175,13 +175,13 @@ extern "C" void __cdecl EffectKind82_Restart(void) {
 }
 
 // original 0x488090 (state 13): record 0's z + 0x4000 twice, +1 0xE, +9 8.
-extern "C" void __cdecl EffectKind82_Nudge13(void) { Nudge(Sprite_Objects, 0x38, 2, 0x4000u, 0xE, 8); }
+extern "C" void __cdecl EffectKind82_Nudge13(void) { Nudge(rv::Bytes(Sprite_Objects), 0x38, 2, 0x4000u, 0xE, 8); }
 
 // original 0x4880D0 (state 15): record 0's z - 0x4000 four times, +1 0x10, +9 8.
-extern "C" void __cdecl EffectKind82_Nudge15(void) { Nudge(Sprite_Objects, 0x38, 4, 0xFFFFC000u, 0x10, 8); }
+extern "C" void __cdecl EffectKind82_Nudge15(void) { Nudge(rv::Bytes(Sprite_Objects), 0x38, 4, 0xFFFFC000u, 0x10, 8); }
 
 // original 0x488110 (state 17): record 0's z + 0x4000 twice, +1 0x12.
-extern "C" void __cdecl EffectKind82_Nudge17(void) { Nudge(Sprite_Objects, 0x38, 2, 0x4000u, 0x12, -1); }
+extern "C" void __cdecl EffectKind82_Nudge17(void) { Nudge(rv::Bytes(Sprite_Objects), 0x38, 2, 0x4000u, 0x12, -1); }
 
 // original 0x488150 (state 18): +2 up one; +1 0x14 when it was below 0xF,
 // else 0xD.

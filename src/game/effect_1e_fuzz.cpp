@@ -12,6 +12,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_1e.h"
 #include "game/effect_1e_callees.h"
 #include "game/move_script_bytes.h"
@@ -302,7 +303,7 @@ void Seed(unsigned k) {
     // kind stay in the save block's region) and its count near +9
     const unsigned pick = sh::Next() % at::kSpriteCount;
     Mem(Effect1a_PanelObject_addr)[0] = static_cast<unsigned char>(pick);
-    unsigned char* const p = Sprite_Objects + pick * at::kSpriteStride;
+    unsigned char* const p = rv::Bytes(&Sprite_Objects[pick]);
     p[6] = static_cast<unsigned char>(PickOf(0x16, 0x16, sh::Next() % 0x16, sh::Next() % 0x16, sh::Next() % 0x74));
     SetWord(p + 0x9C, PickOf(s[9], s[9] + 1u, s[9] - 1u, sh::Next() & 0xFF, sh::Next()));
     Mem(at::kBestCounts + p[6])[0] = static_cast<unsigned char>(PickOf(p[0x9C], p[0x9C] - 1u, p[0x9C] + 1u, 0, sh::Next()));

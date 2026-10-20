@@ -373,7 +373,7 @@ extern "C" void __cdecl EffectKind63_End(void) {
 // after each call) the same; Sprite_Current put back.
 extern "C" void __cdecl EffectKind63_RefreshSprites(void) {
     unsigned char* const saved = Sprite_Current;
-    unsigned char* o = Sprite_Objects;
+    unsigned char* o = rv::Bytes(Sprite_Objects);
     for (unsigned n = at::kSprites; n != 0; --n, o += at::kSpriteStride) {
         Sprite_Current = o;
         if ((o[0] & 1) == 0) continue;

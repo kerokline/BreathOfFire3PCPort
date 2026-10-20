@@ -20,6 +20,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_4b.h"
 #include "game/effect_4b_callees.h"
 #include "game/effect_gte.h"
@@ -398,7 +399,7 @@ void Seed(unsigned k) {
         break;
     case kA4Mark:
         for (unsigned i = 0; i < at::kSpriteCount; ++i)
-            SetWord(Sprite_Objects + at::kSpriteStride * i + 0x2C, sh::Next());
+            SetWord(rv::Bytes(&Sprite_Objects[i])+ 0x2C, sh::Next());
         break;
     case k8BWait:
         Mem(at::kCounter2)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next()));

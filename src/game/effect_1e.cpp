@@ -104,8 +104,8 @@ unsigned char* Picked(const char* who) {
     if (n >= at::kSpriteCount)
         bof3::Fatal("%s: the sprite index 0x939A1C is %u, past the %u Sprite_Objects records - the original reads 0x%X "
                     "(docs/effect_1e.md section 6)",
-                    who, n, at::kSpriteCount, (unsigned)(Key(Sprite_Objects) + n * at::kSpriteStride));
-    return Sprite_Objects + n * at::kSpriteStride;
+                    who, n, at::kSpriteCount, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + n * at::kSpriteStride));
+    return rv::Bytes(Sprite_Objects) + n * at::kSpriteStride;
 }
 unsigned char PickedKind(const char* who) { return Picked(who)[6]; }
 

@@ -20,6 +20,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_se.h"
 #include "game/scena_se_callees.h"
@@ -115,7 +116,7 @@ const sh::Region kRegions[] = {
     {Key(g_op), sizeof g_op},
 };
 
-unsigned char* Object(unsigned k) { return Sprite_Objects + (k % at::kObjectCount) * at::kObjectStride; }
+unsigned char* Object(unsigned k) { return rv::Bytes(&Sprite_Objects[k % at::kObjectCount]); }
 unsigned char* Mem(std::uint32_t a) { return sh::Mem(a); }
 
 // What a function reads again after a call and a caller could have moved:

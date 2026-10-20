@@ -243,8 +243,8 @@ const void* Ours(unsigned k) {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
-    {Address(Sprite_Objects), Sprite_Objects_count},
-    {Address(Sprite_ObjectsExtra), Sprite_ObjectsExtra_count},
+    {Address(rv::Bytes(Sprite_Objects)), (Sprite_Objects_count * sizeof(records::SpriteObject))},
+    {Address(rv::Bytes(Sprite_ObjectsExtra)), (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
     {Address(&MoveScript_F3Divisor), 2},
     {Address(&Game_AreaNumber), 4},             // with MoveScript_FAWord after it
@@ -258,7 +258,7 @@ const Region kRegions[] = {
     {kStoryFlags, 4},
     {bof3::addr::DamageScratch, 4},             // AreaMap_Slope's answer byte
 };
-constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + Sprite_Objects_count + Sprite_ObjectsExtra_count +
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + (Sprite_Objects_count * sizeof(records::SpriteObject)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)) +
                                   MoveScript_PartyRecords_count + 2 + 4 + 8 + 4 + 7 + 1 + 0x12 + 4 + 1 + 4 + 4;
 
 struct State {
@@ -312,10 +312,10 @@ unsigned char Pick(std::initializer_list<unsigned> seeds) {
 // The pointers MoveScript_ObjectKind tells apart, each edge and its neighbour.
 std::uint32_t KindPointer() {
     const std::uint32_t k2 = Address(rv::Bytes(&Sprite_Kind2)), trio = Address(ObjTrio);
-    const std::uint32_t objects = Address(Sprite_Objects), extra = Address(Sprite_ObjectsExtra);
+    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra));
     const std::uint32_t seeds[] = {k2, k2 - 1, k2 + 1, trio, trio + 1, trio + 0x14C, trio + 0x14B, trio + 0x298, trio + 0x299,
-                                   objects, objects - 1, objects + Sprite_Objects_count - 1, objects + Sprite_Objects_count,
-                                   extra, extra - 1, extra + Sprite_ObjectsExtra_count - 1, extra + Sprite_ObjectsExtra_count,
+                                   objects, objects - 1, objects + (Sprite_Objects_count * sizeof(records::SpriteObject)) - 1, objects + (Sprite_Objects_count * sizeof(records::SpriteObject)),
+                                   extra, extra - 1, extra + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)) - 1, extra + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)),
                                    Address(g_sprite), objects + (Next() % 30) * 0xA4, extra + (Next() % 4) * 0xA4, Next()};
     return seeds[Next() % (sizeof seeds / sizeof seeds[0])];
 }
@@ -420,7 +420,7 @@ Args Generate(unsigned k, State& input) {
     case kMoveMember: {
         // The slot: one of the eight inside the records, below the objects
         // (0 just below, then negative), or 0x100 + n (the low byte counts).
-        const std::uint32_t base = Address(Sprite_ObjectsExtra);
+        const std::uint32_t base = Address(rv::Bytes(Sprite_ObjectsExtra));
         const unsigned choice = Next() % 10, n = Next() % 8;
         std::uint32_t object;
         if (choice < 7) object = base + n * 0xA4 + Next() % 0xA4;
@@ -465,7 +465,7 @@ Args Generate(unsigned k, State& input) {
         break;
     case kHandle: {
         for (unsigned n = 0; n < 30; ++n)
-            if (Often()) Sprite_Objects[n * 0xA4u + 6] = 0x0A;
+            if (Often()) Sprite_Objects[n].type = 0x0A;
         const unsigned char low = static_cast<unsigned char>(Next() % 3 ? Next() % 12 : Next() & 0x7F);
         x.a[0] = Address(g_out);
         x.a[1] = Stale(static_cast<unsigned char>(Next() % 2 ? low | 0x80 : low | (Next() & 0x40)));

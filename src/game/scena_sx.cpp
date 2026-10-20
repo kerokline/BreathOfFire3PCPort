@@ -430,7 +430,7 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
 // 0x8015D438 (pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl Sprite_FindFree(void) {
     for (unsigned i = 0; i < at::kSpriteCount; ++i)
-        if (Sprite_Objects[i * at::kRecordStride] == 0) return static_cast<unsigned char>(i);
+        if (Sprite_Objects[i].flags == 0) return static_cast<unsigned char>(i);
     return 0xFF;
 }
 

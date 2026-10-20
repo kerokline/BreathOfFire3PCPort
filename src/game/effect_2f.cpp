@@ -129,7 +129,7 @@ unsigned char* Sprite(unsigned index, const char* who) {
         bof3::Fatal("%s: Sprite_Objects index %u, past the 30 records - the original writes past the pool "
                     "(docs/effect_2f.md section 2)",
                     who, index);
-    return Sprite_Objects + index * at::kSpriteStride;
+    return rv::Bytes(&Sprite_Objects[index]);
 }
 // A Sprite_ObjectsExtra record by the dword +0x18: a Fatal past the four.
 unsigned char* Extra(U index, const char* who) {
@@ -137,7 +137,7 @@ unsigned char* Extra(U index, const char* who) {
         bof3::Fatal("%s: +0x18 is %u, past the 4 records of Sprite_ObjectsExtra - the original reads past them "
                     "(docs/effect_2f.md section 2)",
                     who, (unsigned)index);
-    return Sprite_ObjectsExtra + index * at::kSpriteStride;
+    return rv::Bytes(&Sprite_ObjectsExtra[index]);
 }
 
 // +1 up, Sprite_Current read afresh.

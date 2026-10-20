@@ -19,6 +19,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_e1.h"
 #include "game/field_e1_callees.h"
 #include "game/move_script_bytes.h"
@@ -40,7 +41,7 @@ template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)
 constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 unsigned char& B(U a) { return sh::Mem(a)[0]; }
 unsigned char* Member(unsigned i) { return ObjTrio + (i % 3) * at::kObjStride; }
-unsigned char* Object(unsigned i) { return Sprite_Objects + i * at::kSpriteStride; }
+unsigned char* Object(unsigned i) { return rv::Bytes(Sprite_Objects) + i * at::kSpriteStride; }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));

@@ -1532,19 +1532,20 @@ note = "A two-byte step of a byte script: a hold in ticks (+0x4A is counted down
 [[data]]
 pc = 0x7DEE80
 name = "Sprite_Objects"
-ctype = "unsigned char"
-count = 0x1338
+ctype = "records::SpriteObject"
+count = 30
 status = "evidence"
 evidence = "disasm 2026-09-20: Sprite_FindNearby 0x589660 walks it from 0x7DEE80 in steps of 0xA4 while below 0x7E01B8 - 30 objects of 0xA4 bytes = 0x1338 - counting an index as it goes; 0x57C0A0 tests the byte at 0x7DEE86 + n * 0xA4 for n < 0x1E, the same objects' byte +6. Fields seen there: +0 flags (bit 0 in use), +6 a type byte (0x0A is the only value tested), +0x24 flags (bit 0x40), +0x34 and +0x38 signed dwords (position; 0x593060 sorts on their sum), +0x3E an s16, +0x54 a pointer to a record whose byte +2 is a signed reach and byte +3 bit 0x10 a skip flag."
-note = "Declared as bytes because the generated header has no struct types. The draw records of 0x593060 start at 0x7E01C0, 8 bytes after the last object."
+note = "Typed (typed-data round stage C4, 2026-10-19) as records::SpriteObject x30, from 0x1338 bytes: the evidence's stride 0xA4 and count 0x1E, the struct's size (src/game/records.h, docs/typed-records.md). The draw records of 0x593060 start at 0x7E01C0, 8 bytes after the last object."
 
 [[data]]
 pc = 0x802000
 name = "Sprite_ObjectsExtra"
-ctype = "unsigned char"
-count = 0x290
+ctype = "records::SpriteObject"
+count = 4
 status = "evidence"
 evidence = "disasm 2026-09-20: Sprite_FindNearby walks it the same way from 0x802000 while below 0x802290 - 4 objects of 0xA4 - and reports a hit as its index + 0x1E, continuing the numbering of Sprite_Objects. 0x57C0A0 returns (handle & 0x3F) + 0x1E for a handle without bit 7, the same numbering."
+note = "Typed (typed-data round stage C4, 2026-10-19) as records::SpriteObject x4, from 0x290 bytes: Sprite_FindNearby's walk (four of 0xA4) and its index + 0x1E, the numbering Sprite_Objects begins (docs/sprite-draw-order.md 5)."
 
 [[func]]
 pc = 0x589660

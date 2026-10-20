@@ -161,10 +161,10 @@ void PlaceOneObject(std::uint32_t positions, std::uint32_t weights) {
         left = static_cast<unsigned char>(left - w);
     }
     for (unsigned k = 0; k < 8; ++k)
-        if (k != pick) Sprite_Objects[k * at::kObjectStride] = 0;
+        if (k != pick) Sprite_Objects[k].flags = 0;
     if (pick < 8) {
         const unsigned r = static_cast<unsigned char>(AH_CALL(Rand)() & 7);
-        unsigned char* const object = Sprite_Objects + pick * at::kObjectStride;
+        unsigned char* const object = rv::Bytes(Sprite_Objects) + pick * at::kObjectStride;
         auto* const tObject = rv::As<records::SpriteObject>(object);
         const std::int32_t z = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(positions + r * 2 + 1)) << 16);
         const std::int32_t x = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(positions + r * 2)) << 16);

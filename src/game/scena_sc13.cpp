@@ -731,7 +731,7 @@ SC13_EXPORT void __cdecl Scena13_ToneLevels(unsigned angle) {
 // 0x2000 (up) or 0x8000 (down) is held, the two voices following it, until
 // Input_Pressed bit 0x20; 0x4A0..0x4E0 goes on to step 0xA, anything else to 5.
 SC13_EXPORT void __cdecl Scena13_Run5(void) {
-    auto* const xobj1 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 1 * sizeof(records::SpriteObject));
+    auto* const xobj1 = &Sprite_ObjectsExtra[1];
     switch (Step()) {
     case 0:
         FadeOutStop(8);
@@ -2050,7 +2050,7 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
 // elevation +0x3E.
 SC13_EXPORT void __cdecl Scena14_ScrollView(void) {
     auto* const kind2 = &Sprite_Kind2;
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
+    auto* const xobj0 = Sprite_ObjectsExtra;
     if (static_cast<std::uint32_t>(MapView_FocusX) != 0x77FF) return;
     const std::uint32_t kx = static_cast<std::uint32_t>(kind2->x);
     const std::uint32_t fx = static_cast<std::uint32_t>(Field_Kind2X);

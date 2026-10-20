@@ -54,7 +54,7 @@ unsigned char* Extra(unsigned k) { return Mem(Sprite_ObjectsExtra_addr + k * at:
 // Party record m (ObjTrio, 0x14C bytes; m not checked).
 unsigned char* Record(unsigned m) { return Mem(ObjTrio_addr + m * at::kPartyStride); }
 // Field object k (Sprite_Objects, 0xA4 bytes).
-unsigned char* ObjectAt(unsigned k) { return Sprite_Objects + k * 0xA4; }
+unsigned char* ObjectAt(unsigned k) { return rv::Bytes(Sprite_Objects) + k * 0xA4; }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }

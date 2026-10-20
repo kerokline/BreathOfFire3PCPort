@@ -182,7 +182,7 @@ extern "C" unsigned char __cdecl Area42_CheckAll(void) {
     unsigned char rank = low > 5 ? 2 : (low == 5 ? 1 : 0);
     Area42_Rank = rank;
     for (unsigned k = 0; k < 30; ++k) {
-        unsigned char* const o = Sprite_Objects + k * 0xA4u;
+        unsigned char* const o = rv::Bytes(&Sprite_Objects[k]);
         if ((o[0] & 1) == 0 || o[6] != 9 || static_cast<unsigned char>(o[5] - 0x5C) >= 3) continue;
         if (AH_CALL(Flags_Test)(At(at::kFlagsCC), static_cast<unsigned char>(rank + 0x5C)) != 0) {
             Sprite_Current = o;
@@ -669,7 +669,7 @@ extern "C" void __cdecl Area44_GateTailA(void) {
         AreaW0c_TailState = 0xA;
         return;
     case 1:
-        if (Sprite_ObjectsExtra[9] != 0) return;
+        if (Sprite_ObjectsExtra[0].step_frames != 0) return;
         area_harness::Phase(kSetGates44)();
         [[fallthrough]];
     case 0xA:
@@ -695,7 +695,7 @@ extern "C" void __cdecl Area44_GateTailA(void) {
         AreaW0c_TailState = 0x14;
         return;
     case 0xB:
-        if (Sprite_ObjectsExtra[0xad] != 0) return;
+        if (Sprite_ObjectsExtra[1].step_frames != 0) return;
         area_harness::Phase(kSetGates44)();
         AH_CALL(Sound_PlayEffect)(0x202);
         AreaW0c_TailState = 0x14;
@@ -801,7 +801,7 @@ extern "C" void __cdecl Area44_GateTailB(void) {
         AreaW0c_TailState = 0xA;
         return;
     case 1:
-        if (Sprite_ObjectsExtra[0xad] != 0) return;
+        if (Sprite_ObjectsExtra[1].step_frames != 0) return;
         area_harness::Phase(kSetGates44)();
         [[fallthrough]];
     case 0xA: {
@@ -833,7 +833,7 @@ extern "C" void __cdecl Area44_GateTailB(void) {
         return;
     }
     case 0xB:
-        if (Sprite_ObjectsExtra[9] != 0) return;
+        if (Sprite_ObjectsExtra[0].step_frames != 0) return;
         area_harness::Phase(kSetGates44)();
         AH_CALL(Sound_PlayEffect)(0x202);
         AreaW0c_TailState = 0x14;

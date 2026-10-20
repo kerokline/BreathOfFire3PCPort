@@ -120,8 +120,8 @@ short Count() {
 void SetCount(unsigned v) { SetWord(At(at::kScratch), v); }
 unsigned short Bank() { return Word(At(at::kScratch2)); }
 
-unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
-unsigned char* Extra(int n) { return Sprite_ObjectsExtra + n * 0xA4; }
+unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
+unsigned char* Extra(int n) { return rv::Bytes(&Sprite_ObjectsExtra[n]); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.

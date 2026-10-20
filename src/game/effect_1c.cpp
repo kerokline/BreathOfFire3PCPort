@@ -528,7 +528,7 @@ extern "C" void __cdecl EffectKind1E_Burst(void) {
 // before the store).
 extern "C" void __cdecl EffectKind1E_FreeModel(void) {
     unsigned char* const s = Cur();
-    Sprite_ObjectsExtra[0] = 0;
+    Sprite_ObjectsExtra[0].flags = 0;
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -848,7 +848,7 @@ extern "C" void __cdecl EffectKind1E_DebrisDraw(void) {
 // read far past the model): ours aborts.
 extern "C" void __cdecl EffectKind1E_DrawModel(unsigned shade) {
     unsigned char* const saved = Sprite_Current;
-    Sprite_Current = Sprite_ObjectsExtra;
+    Sprite_Current = rv::Bytes(Sprite_ObjectsExtra);
     SH_CALL(Gte_PushMatrix)();
     Matrix m1;
     const auto count = static_cast<signed char>(At(UL(At(at::kModelCount)))[0]);

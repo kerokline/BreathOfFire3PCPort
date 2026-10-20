@@ -748,10 +748,10 @@ extern "C" void __cdecl Area20_PickFieldObject(void) {
         roll = (roll - chance) & 0xFF;
     }
     for (unsigned i = 0; i < 8; ++i)
-        if (i != keep) Sprite_Objects[i * 0xA4] = 0;
+        if (i != keep) Sprite_Objects[i].flags = 0;
     if (keep < 8) {
         const unsigned cell = static_cast<unsigned>(AH_CALL(Rand)()) & 7;
-        unsigned char* const o = Sprite_Objects + keep * 0xA4;
+        unsigned char* const o = rv::Bytes(Sprite_Objects) + keep * 0xA4;
         auto* const tO = rv::As<records::SpriteObject>(o);
         const U x = static_cast<U>(At(Area20_Cells_addr + cell * 2)[0]) << 16;
         const U z = static_cast<U>(At(Area20_Cells_addr + cell * 2 + 1)[0]) << 16;

@@ -283,9 +283,9 @@ void Seed(unsigned k) {
         break;
     case kFindFree:
         for (unsigned i = 0; i < at::kSpriteCount; ++i)
-            if (Sprite_Objects[i * at::kRecordStride] == 0) Sprite_Objects[i * at::kRecordStride] = 1;
-        if (sh::Often()) Sprite_Objects[(sh::Next() % at::kSpriteCount) * at::kRecordStride] = 0;
-        if (sh::Half()) Sprite_Objects[(sh::Next() % at::kSpriteCount) * at::kRecordStride] = 0;
+            if (Sprite_Objects[i].flags == 0) Sprite_Objects[i].flags = 1;
+        if (sh::Often()) Sprite_Objects[sh::Next() % at::kSpriteCount].flags = 0;
+        if (sh::Half()) Sprite_Objects[sh::Next() % at::kSpriteCount].flags = 0;
         break;
     case kAbility:
     case kKeyItem: {

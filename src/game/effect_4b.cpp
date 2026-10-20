@@ -193,7 +193,7 @@ unsigned char* Sprite(unsigned k, const char* who) {
         bof3::Fatal("%s: +0xB is %u, past Sprite_Objects' thirty records - the original reads and writes what follows "
                     "(docs/effect_4b.md section 6)",
                     who, k);
-    return Sprite_Objects + at::kSpriteStride * k;
+    return rv::Bytes(&Sprite_Objects[k]);
 }
 
 }  // namespace
@@ -999,7 +999,7 @@ extern "C" void __cdecl EffectKindA4_Hold(void) {
 extern "C" void __cdecl EffectKindA4_MarkSprites(void) {
     unsigned char* const saved = Sprite_Current;
     for (unsigned i = 0; i < at::kSpriteCount; ++i) {
-        unsigned char* const o = Sprite_Objects + at::kSpriteStride * i;
+        unsigned char* const o = rv::Bytes(&Sprite_Objects[i]);
         auto* const oo = rv::As<records::SpriteObject>(o);
         if ((SH_CALL(Scena15_RecordWord)(oo->column) & 0xFFFFu) == 0x261) {
             Sprite_Current = o;
