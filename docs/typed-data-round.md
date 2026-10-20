@@ -2,8 +2,10 @@
 
 **Status:** IN PROGRESS (staged 2026-10-17; stages A and B run 2026-10-19 on
 `typed/b1`, 50,943 raw data sites down to 27,394 with the machine code
-identical to `origin/main`; stage C staged in
-[`typed-data-stage-c.md`](typed-data-stage-c.md), its C0 run on `typed/c0`, section 3. The idea is
+identical to `origin/main`, merged as PR #94; stage C, staged in
+[`typed-data-stage-c.md`](typed-data-stage-c.md), built 2026-10-19..20 on
+`typed/c` (C0..C4, section 3), machine code identical to `main` 56d81b42,
+unpushed, its PR after the owner's smoke run. The idea is
 [`IDEAS.md`](IDEAS.md) I44; this round is its first two stages, which change
 no behaviour. Stage 3, the relocatable image, is not staged here.)
 
@@ -498,6 +500,71 @@ no raw site converted. The record is
   objects compared, 0 differ; `data_census.py --check` 27,408, unchanged;
   `typed_left.py --check` current after regenerating six rows whose keys
   named `->member` (their reasons carried).
+
+### C2 as run (2026-10-19)
+
+Seven agents, one per B1 file group, from `typed/c` `1b1701a1` (C0, C1 and
+C3's entries merged, the census and the left-list regenerated), each on its own
+branch `typed/c2-<group>` with its B1 file list and the brief
+`C:\Users\kerok\c_typed\BRIEF_C2.md`. Each converted the rows of
+`analysis/typed_left.tsv` in its files whose reason C1's types or C3's entries
+had removed, with the gate after every batch; merged one at a time in the
+order they handed back (battle, area, magic, rest, effect, field, scen_ui),
+the build and the gate after each merge, `0 differ` every time.
+
+| Group | Files | Sites before | After | Converted |
+|---|---:|---:|---:|---:|
+| battle | 161 | 3,422 | 2,989 | 433 |
+| area | 131 | 2,411 | 1,337 | 1,074 |
+| magic | 142 | 5,471 | 3,559 | 1,912 |
+| rest | 111 | 4,240 | 3,276 | 964 |
+| effect | 143 | 5,714 | 3,862 | 1,852 |
+| field | 128 | 2,472 | 1,725 | 747 |
+| scen_ui | 399 | 3,668 | 2,947 | 721 |
+| the tree | | 27,408 | 19,705 | 7,703 |
+
+What converted, by what unlocked it: the shared head's names and the 16.16
+halves on every family (the largest share in every group); `EffectWork` for
+the kinds' own words; `BattleTask` head fields on the task records (magic,
+about 1,050); `ActionRecord`, `BattleWindow`, `ItemListWindow`, `CharRecord`,
+`SVector`, the effect sub-pools, the GPU packets typed by the setter each
+function calls; C3's 72 entries and the retyped pointer cells (`rest` took
+324 global references by the converter, `scen_ui` about 70); raw literals on
+typed entries. What stayed, by the groups' own lists: the 1,546
+`DamageScratch` rows (the magic harness's out-of-line `Mem()` is the seam:
+`rv::As<DamageScratch>(Mem(kS))->d_08` passes a different address to `Mem`,
+measured as `1 differ`), the pools and packet kinds with no struct (G3, G4,
+F4, LineG2, Tile1; kind 0x48's sparks, 0x50's specks and the rest the effect
+hand-back lists), the window records' per-handler bytes past +7, the 17
+pointer entries still typed as integers, and the gate's own refusals (a u16
+read of a dword field that becomes a dword load, adjacent float stores the
+compiler merges, a loop induction variable that changes when its base is
+typed).
+
+Three read-only family audits followed (slices battle+magic, effect+area,
+field+rest+scen_ui; brief `BRIEF_AUDIT.md`), reading every typed pointer in
+the diff, the groups' own thin-evidence lists first. The binary settled the
+three flagged action-record addresses (0x939FA0, 0x904B40, 0x904B60: every
+writer stores a member's +0x124 or an enemy's +0x104). **No group had typed a
+pointer as the wrong family.** What the audits found was the class the gate
+cannot see and C1's shared head made possible: a head field's name used for
+a kind's own word, and a function typed as the field sprite object that other
+families also run through. The fixes (`typed/c2-fix`, the paragraph "C2
+audit as run" below) moved 63 effect uses of a kind's +0x32 from `draw_key`
+to a new `EffectWork::work_32`, the movement-script interpreter, its op
+handlers and the sprite projection (about 190 lines) from `SpriteObject` to
+`SpriteHead`, two kinds' +0xC/+0x10 to `work_0c` / `work_10`, four party-member
+union bytes back to raw, one pre-C2 `BattleTask` pointer in the Weretiger
+sprite to `SpriteHead` (its callers make the acting member current, which
+the B1 audit's swap scan had missed), and `MagicFx_NearSprite3D` /
+`NearPoint3D` to the head. `0 differ` throughout; 19,707 sites after.
+
+Two tool lessons: `typed_convert.py` mis-rendered CRLF files for the battle
+group (comment text spliced into an array index, enumerators renamed to
+`_addr` forms), so every group diffed the tool's edits before building and
+most converted by hand; and `data_census.py` counts
+`At(Name_addr + k * 0x24)` as a raw site but `At(Name_addr) + k * sizeof(T)`
+not, which C4's struct-typed arrays make moot.
 
 ### C2 audit as run (2026-10-19)
 

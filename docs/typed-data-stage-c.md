@@ -206,7 +206,8 @@ Nothing here changes what the player sees, so no ledger entries. Two calls:
 
 1. **Merge stages A and B first** (the PR from `typed/b1`), so stage C
    branches from `main`. Recommended: stage C's diffs are easier to review
-   against a merged B.
+   against a merged B. Done: PR #94, and stage C branched from `main`
+   56d81b42.
 2. **A live smoke run at the round's end:** the headless `BOF3X_SHADOW='*'`
    self-test and one hash route, from a plain copy of `build/` as the
    install-gap round's end batch ran them on 2026-10-18
