@@ -67,7 +67,8 @@ SHIPPED_DATA = ["fixtures.toml", "fixtures", "recipes", "symbols.toml", "tables.
 # The module-level memos of the setup's tools, emptied at each step's start:
 # (module, global, its empty value). `lint` finds one missing.
 MEMOS = [("cache_inventory", "_psp_table", None), ("psp_exe", "_BASE_IMAGE", dict),
-         ("psp_standins", "_table", None), ("region_diff", "_CODE_MEMO", dict), ("vag", "_CACHE", dict)]
+         ("psp_standins", "_table", None), ("record_sizes", "_cache", dict), ("record_sizes", "_parsed", dict),
+         ("region_diff", "_CODE_MEMO", dict), ("vag", "_CACHE", dict)]
 # Run-time-written globals of tools that are no memo of a build step: loc_build.py
 # runs in a process of its own for each step; the others are not the setup's.
 LINT_EXEMPT = {"loc_build", "attract_run", "band_rows", "close_probe", "input_run", "magic_rows", "scenario_rows",
