@@ -541,7 +541,7 @@ extern "C" void __cdecl EffectKind35_ShardFade(void) {
 // +0x10..+0x15 0; then the copy's twelve vertex words made relative to the
 // centre.
 extern "C" void __cdecl EffectKind35_SplitModel(void) {
-    U src = UL(At(Sprite_ObjectsExtra_addr + 0xf4));
+    U src = Sprite_ObjectsExtra[1].script;
     for (U i = 0; i < at::kPiece35Count; ++i) {
         unsigned char* const d = At(at::kCopies35 + 0x28 * i);
         unsigned char* const r = At(EffectKind30_Shards_addr + 0x280 + 0x18 * i);
@@ -568,7 +568,7 @@ extern "C" void __cdecl EffectKind35_SplitModel(void) {
 // face, the piece)); the model's faces from Sprite_ObjectsExtra[1] +0x50 read
 // once.
 extern "C" void __cdecl EffectKind35_StepPieces(void) {
-    const U model = UL(At(Sprite_ObjectsExtra_addr + 0xf4));
+    const U model = Sprite_ObjectsExtra[1].script;
     for (U i = 0; i < at::kPiece35Count; ++i) {
         unsigned char* const r = At(EffectKind30_Shards_addr + 0x280 + 0x18 * i);
         const U vx = Word(r + 8);

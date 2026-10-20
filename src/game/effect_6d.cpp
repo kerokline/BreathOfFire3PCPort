@@ -1122,9 +1122,9 @@ extern "C" void __cdecl EffectKind18Sub62_Ripple(void) {
             corners[at3] = static_cast<unsigned char>(corners[at3] + up13);
         }
     }
-    const long h = SH_CALL(AreaMap_Elevation)(Long(At(Sprite_ObjectsExtra_addr + 0x34)), Long(At(Sprite_ObjectsExtra_addr + 0x34 + 4)));
-    SetWord(At(Sprite_ObjectsExtra_addr + 0x3e), static_cast<U>(h));
-    SetUL(At(Sprite_ObjectsExtra_addr + 0x14), 0);
+    const long h = SH_CALL(AreaMap_Elevation)(Sprite_ObjectsExtra[0].x, Sprite_ObjectsExtra[0].z);
+    Sprite_ObjectsExtra[0].height_whole = static_cast<U>(h);
+    Sprite_ObjectsExtra[0].step_y = 0;
     MapView_Redraw = 2;
 }
 

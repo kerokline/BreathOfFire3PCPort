@@ -266,12 +266,12 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
     const U d2 = Sar(((0u - static_cast<U>(sin2) - three_cos) * 3u) << 13, 12);
     {
         unsigned char* const s = S();
-        rv::As<records::EffectObject>(s)->x = UL(at::kExtra1X) + d1;
-        rv::As<records::EffectObject>(s)->z = UL(at::kExtra1Z) + d2;
-        rv::As<records::EffectObject>(s)->height = UL(at::kExtra1Y) + 0x1000000u;
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, UL(at::kExtra1X) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, UL(at::kExtra1Z) + d2);
-        SetUL(s + 0x14, UL(at::kExtra1Y) + 0x1000000u);
+        rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].x) + d1;
+        rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].z) + d2;
+        rv::As<records::EffectObject>(s)->height = static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].height) + 0x1000000u;
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].x) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].z) + d2);
+        SetUL(s + 0x14, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].height) + 0x1000000u);
         SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                        0x40);
     }

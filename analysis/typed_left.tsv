@@ -4829,7 +4829,7 @@ src/game/effect_1c.cpp	EffectKind1E_ShardFade	record	UL	r + 0x1C	0	-	via=Cursor	
 src/game/effect_1c.cpp	EffectKind1E_ShardFade	record	SetUL	r + 0xC	0	-	via=Cursor	family	SetUL(r + 0xc): local r reassigned	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_ShardFade	record	UL	r + 0xC	0	-	via=Cursor	family	UL(r + 0xc): local r reassigned	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_SplitModel	record	SetUL	d + j	0	-	-	computed	SetUL(d + -): the offset is not a constant	b1-effect
-src/game/effect_1c.cpp	EffectKind1E_SplitModel	record	At	src + j	0	-	stride=0x28	computed	At(src + -): the offset is not a constant	b1-effect
+src/game/effect_1c.cpp	EffectKind1E_SplitModel	record	At	src + j	0	-	base=Sprite_ObjectsExtra;stride=0x28	computed	At(src + -): the offset is not a constant	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_SplitModel	record	SW	d + 0x14	0	-	-	no-struct	SW(d + 0x14): local d = At(EffectKind30_Shards_addr + 0x3c8 + 0x (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_SplitModel	record	SW	d + 0xE	0	-	-	no-struct	SW(d + 0xe): local d = At(EffectKind30_Shards_addr + 0x3c8 + 0x (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_SplitModel	record	SW	d + 2	0	-	-	no-struct	SW(d + 0x2): local d = At(EffectKind30_Shards_addr + 0x3c8 + 0x (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
@@ -4866,7 +4866,7 @@ src/game/effect_1c.cpp	EffectKind1E_StepPieces	record	Word	r + 0xC	0	-	-	no-stru
 src/game/effect_1c.cpp	EffectKind1E_StepPieces	record	Word	r + 0xC	1	-	-	no-struct	Word(r + 0xc): local r = At(EffectKind30_Shards_addr + 0x140 + 0x (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_StepPieces	record	SetWord	r + 4	0	-	-	no-struct	SetWord(r + 0x4): local r = At(EffectKind30_Shards_addr + 0x140 + 0x (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_StepPieces	record	Word	r + 4	0	-	-	no-struct	Word(r + 0x4): local r = At(EffectKind30_Shards_addr + 0x140 + 0x (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
-src/game/effect_1c.cpp	EffectKind1E_StepPieces	record	At	model + 0x28 * i	0	-	-	computed	At(model + -): the offset is not a constant	b1-effect
+src/game/effect_1c.cpp	EffectKind1E_StepPieces	record	At	model + 0x28 * i	0	-	base=Sprite_ObjectsExtra	computed	At(model + -): the offset is not a constant	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_TurnPiece	record	SetWord	piece + 0x10	0	-	-	family	SetWord(piece + 0x10): parameter piece of EffectKind1E_TurnPiece	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_TurnPiece	record	SetWord	piece + 0x12	0	-	-	family	SetWord(piece + 0x12): parameter piece of EffectKind1E_TurnPiece	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_TurnPiece	record	SetWord	piece + 0x14	0	-	-	family	SetWord(piece + 0x14): parameter piece of EffectKind1E_TurnPiece	b1-effect
@@ -4900,8 +4900,7 @@ src/game/effect_1c.cpp	DebrisLoop	record	Word	d + 0x24	0	-	-	family	Word(d + 0x2
 src/game/effect_1c.cpp	DebrisLoop	record	SetWord	d + 0x2A	0	-	-	family	SetWord(d + 0x2a): local d = At(base + 0x2C * i)	b1-effect
 src/game/effect_1c.cpp	DebrisLoop	record	Word	d + 0x2A	0	-	-	family	Word(d + 0x2a): local d = At(base + 0x2C * i)	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_DebrisDraw	global	DebrisLoop	at::kDebris	0	0x92c780	-	no-entry	at::kDebris 0x92c780 -	b0
-src/game/effect_1c.cpp	EffectKind1E_DrawModel	global	At	at::kModelCount	0	0x802054	-	name	at::kModelCount 0x802054 Sprite_ObjectsExtra+0x54	b0
-src/game/effect_1c.cpp	EffectKind1E_DrawModel	record	At	face + 2 + 6 * k + 2 * j	0	-	stride=0x28	computed	At(face + -): the offset is not a constant	b1-effect
+src/game/effect_1c.cpp	EffectKind1E_DrawModel	record	At	face + 2 + 6 * k + 2 * j	0	-	base=Sprite_ObjectsExtra;stride=0x28	computed	At(face + -): the offset is not a constant	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_Winding	record	Word	a + 2	0	-	-	family	Word(b + 0x2): parameter b of EffectKind1E_Winding	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_Winding	record	Word	b + 2	0	-	-	family	Word(a + 0x2): parameter a of EffectKind1E_Winding	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_Winding	record	Word	b + 2	1	-	-	family	Word(c + 0x2): parameter c of EffectKind1E_Winding	b1-effect
@@ -5353,7 +5352,7 @@ src/game/effect_2b.cpp	EffectKind35_ShardFade	record	SetUL	r + 0xC	0	-	via=Curso
 src/game/effect_2b.cpp	EffectKind35_ShardFade	record	UL	r + 0xC	0	-	via=Cursor	family	UL(r + 0xc): local r reassigned	b1-effect
 src/game/effect_2b.cpp	EffectKind35_SplitModel	global	At	at::kCopies35	0	0x92c728	-	no-entry	at::kCopies35 0x92c728 -	b0
 src/game/effect_2b.cpp	EffectKind35_SplitModel	record	SetUL	d + j	0	-	table=0x92c728	computed	SetUL(d + -): the offset is not a constant	b1-effect
-src/game/effect_2b.cpp	EffectKind35_SplitModel	record	At	src + j	0	-	stride=0x28	computed	At(src + -): the offset is not a constant	b1-effect
+src/game/effect_2b.cpp	EffectKind35_SplitModel	record	At	src + j	0	-	base=Sprite_ObjectsExtra;stride=0x28	computed	At(src + -): the offset is not a constant	b1-effect
 src/game/effect_2b.cpp	EffectKind35_SplitModel	record	SW	d + 0x14	0	-	table=0x92c728	family	SW(d + 0x14): local d = At(at::kCopies35 + 0x28 * i)	b1-effect
 src/game/effect_2b.cpp	EffectKind35_SplitModel	record	SW	d + 0xE	0	-	table=0x92c728	family	SW(d + 0xe): local d = At(at::kCopies35 + 0x28 * i)	b1-effect
 src/game/effect_2b.cpp	EffectKind35_SplitModel	record	SW	d + 2	0	-	table=0x92c728	family	SW(d + 0x2): local d = At(at::kCopies35 + 0x28 * i)	b1-effect
@@ -5391,7 +5390,7 @@ src/game/effect_2b.cpp	EffectKind35_StepPieces	record	Word	r + 4	0	-	-	no-struct
 src/game/effect_2b.cpp	EffectKind35_StepPieces	record	SetWord	r + 2	0	-	-	no-struct	SetWord(r + 0x2): local r = At(EffectKind30_Shards_addr + 0x280 + 0x (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_2b.cpp	EffectKind35_StepPieces	record	Word	r + 2	0	-	-	no-struct	Word(r + 0x2): local r = At(EffectKind30_Shards_addr + 0x280 + 0x (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_2b.cpp	EffectKind35_StepPieces	global	At	at::kCopies35	0	0x92c728	-	computed	At(model + -): the offset is not a constant | b0: no-entry (at::kCopies35 0x92c728 -)	b1-effect;b0
-src/game/effect_2b.cpp	EffectKind35_StepPieces	record	At	model + 0x28 * i	0	-	-	-	-	-
+src/game/effect_2b.cpp	EffectKind35_StepPieces	record	At	model + 0x28 * i	0	-	base=Sprite_ObjectsExtra	-	-	-
 src/game/effect_2b.cpp	EffectKind35_TurnPiece	record	SetWord	piece + 0x10	0	-	-	family	SetWord(piece + 0x10): parameter piece of EffectKind35_TurnPiece	b1-effect
 src/game/effect_2b.cpp	EffectKind35_TurnPiece	record	SetWord	piece + 0x12	0	-	-	family	SetWord(piece + 0x12): parameter piece of EffectKind35_TurnPiece	b1-effect
 src/game/effect_2b.cpp	EffectKind35_TurnPiece	record	SetWord	piece + 0x14	0	-	-	family	SetWord(piece + 0x14): parameter piece of EffectKind35_TurnPiece	b1-effect
@@ -16584,12 +16583,6 @@ src/game/rest_3f_fuzz.cpp	Disturb	global	At	at::kCounter	0	0x903848	-	no-entry	a
 src/game/rest_3g.cpp	StepDispatch	record	UL	table + 4 * step	0	-	param	computed	param (UL(table + 4 * step))	b1-rest
 src/game/rest_3g.cpp	EffectKindAD_Start	record	SetUL	s + 0x14	0	-	via=S	pad	EffectObject +0x14 w4: inside records.h padding (SetUL(s + 0x14))	b1-rest
 src/game/rest_3g.cpp	EffectKindAD_Rise	global	At	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
-src/game/rest_3g.cpp	EffectKindBA_Line	global	UL	at::kExtra1X	0	0x8020d8	-	width	at::kExtra1X 0x8020d8 Sprite_ObjectsExtra+0xd8	b0
-src/game/rest_3g.cpp	EffectKindBA_Line	global	UL	at::kExtra1Z	0	0x8020dc	-	width	at::kExtra1Z 0x8020dc Sprite_ObjectsExtra+0xdc	b0
-src/game/rest_3g.cpp	EffectKindBA_Line	global	UL	at::kExtra1Y	0	0x8020e0	-	width	at::kExtra1Y 0x8020e0 Sprite_ObjectsExtra+0xe0	b0
-src/game/rest_3g.cpp	EffectKindBA_Line	global	UL	at::kExtra1X	1	0x8020d8	-	width	at::kExtra1X 0x8020d8 Sprite_ObjectsExtra+0xd8	b0
-src/game/rest_3g.cpp	EffectKindBA_Line	global	UL	at::kExtra1Z	1	0x8020dc	-	width	at::kExtra1Z 0x8020dc Sprite_ObjectsExtra+0xdc	b0
-src/game/rest_3g.cpp	EffectKindBA_Line	global	UL	at::kExtra1Y	1	0x8020e0	-	width	at::kExtra1Y 0x8020e0 Sprite_ObjectsExtra+0xe0	b0
 src/game/rest_3g.cpp	EffectKindBA_Line	record	SetUL	s + 0x14	0	-	via=S	pad	EffectObject +0x14 w4: inside records.h padding (SetUL(s + 0x14))	b1-rest
 src/game/rest_3g.cpp	Battle_PlaceBossActors	global	At	at::kEventRows	0	0x64ddee	-	no-entry	at::kEventRows 0x64ddee -	b0
 src/game/rest_3g.cpp	Battle_PlaceBossActor	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
@@ -17342,18 +17335,10 @@ src/game/rest_4f.cpp	EffectKind08_TraceLine	global	B	at::kChapterByte4A	0	0x9038
 src/game/rest_4f.cpp	EffectKind08_TraceTwo	global	B	at::kChapterByte4A	0	0x90384a	-	no-entry	at::kChapterByte4A 0x90384a -	b0
 src/game/rest_4f.cpp	EffectKind09_Open8	global	B	at::kChapterCount	0	0x903848	-	no-entry	at::kChapterCount 0x903848 -	b0
 src/game/rest_4f.cpp	EffectKind09_Open8	global	B	at::kChapterCount	1	0x903848	-	no-entry	at::kChapterCount 0x903848 -	b0
-src/game/rest_4f.cpp	EffectKind0B_Start	global	W	at::kExtra0	0	0x802000	-	width	at::kExtra0 0x802000 Sprite_ObjectsExtra	b0
 src/game/rest_4f.cpp	EffectKind0B_Start	global	B	at::kKind0BOffset	0	0x653aac	-	inside-entry	at::kKind0BOffset 0x653aac Rest4f_Kind0BOffset	b0
-src/game/rest_4f.cpp	EffectKind0B_Start	global	W	at::kExtra0	1	0x802000	-	width	at::kExtra0 0x802000 Sprite_ObjectsExtra	b0
 src/game/rest_4f.cpp	EffectKind0B_Rise	global	At	at::kKind0BStepX	0	0x5c41c8	-	no-entry	at::kKind0BStepX 0x5c41c8 -	b0
 src/game/rest_4f.cpp	EffectKind0B_Rise	global	B	at::kKind0BRise	0	0x653ab0	-	no-entry	at::kKind0BRise 0x653ab0 -	b0
 src/game/rest_4f.cpp	EffectKind0B_Drop	global	At	at::kKind0BStepY	0	0x5c41c0	-	no-entry	at::kKind0BStepY 0x5c41c0 -	b0
-src/game/rest_4f.cpp	EffectKind0B_Attach	global	L	at::kExtra0	0	0x802000	-	width	at::kExtra0 0x802000 Sprite_ObjectsExtra	b0
-src/game/rest_4f.cpp	EffectKind0B_Attach	global	L	at::kExtra0	1	0x802000	-	width	at::kExtra0 0x802000 Sprite_ObjectsExtra	b0
-src/game/rest_4f.cpp	EffectKind0B_Attach	global	L	at::kExtra0	2	0x802000	-	width	at::kExtra0 0x802000 Sprite_ObjectsExtra	b0
-src/game/rest_4f.cpp	EffectKind0B_Attach	global	L	at::kExtra0	3	0x802000	-	width	at::kExtra0 0x802000 Sprite_ObjectsExtra	b0
-src/game/rest_4f.cpp	EffectKind0B_Attach	global	L	at::kExtra0	4	0x802000	-	width	at::kExtra0 0x802000 Sprite_ObjectsExtra	b0
-src/game/rest_4f.cpp	EffectKind0B_Attach	global	L	at::kExtra0	5	0x802000	-	width	at::kExtra0 0x802000 Sprite_ObjectsExtra	b0
 src/game/rest_4f.cpp	Panel	record	Word	S() + 0x10	0	-	via=S	union	EffectObject +0x10 w2 (Word(S() + 0x10))	b1-rest
 src/game/rest_4f.cpp	Panel	global	SetW	at::kClut7B	0	0x811440	-	gate	at::kClut7B 0x811440 Gfx_ClutStrip+0x1ec0	b0
 src/game/rest_4f.cpp	Panel	record	W	from + 2 * i	0	-	stride=0x40	no-struct	W(from + 2 * i): stride=0x40, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest

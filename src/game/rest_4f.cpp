@@ -1084,9 +1084,9 @@ extern "C" void __cdecl EffectKind09_DrawFan(int len, int a1, int a2, int a3) {
 extern "C" void __cdecl EffectKind0B_Start(void) {
     unsigned char* s = S();
     StF(s + 0x74, I(static_cast<U>(Rest4f_Kind0BOffset +
-                                   static_cast<std::int16_t>(W(at::kExtra0 + 0x2E)))));
+                                   Sprite_ObjectsExtra[0].screen_x)));
     StF(s + 0x78, I(static_cast<U>(static_cast<signed char>(B(at::kKind0BOffset + 1)) +
-                                   static_cast<std::int16_t>(W(at::kExtra0 + 0x30)))));
+                                   Sprite_ObjectsExtra[0].screen_y)));
     rv::As<records::EffectObject>(s)->depth_f = 0x3C23D70Au;
     s[9] = 0;
     s[6] = 0x20;
@@ -1151,12 +1151,12 @@ extern "C" void __cdecl EffectKind0B_Drop(void) {
 // byte +0x1C (x, z, and the height word +0x3E); +1 up.
 extern "C" void __cdecl EffectKind0B_Attach(void) {
     unsigned char* s = S();
-    rv::As<records::EffectObject>(s)->x = L(at::kExtra0 + 0x34);
-    rv::As<records::EffectObject>(s)->z = L(at::kExtra0 + 0x38);
-    rv::As<records::EffectObject>(s)->height = L(at::kExtra0 + 0x3C);
-    rv::As<records::EffectObject>(s)->angle[0] = L(at::kExtra0 + 0x64);
-    rv::As<records::EffectObject>(s)->angle[1] = L(at::kExtra0 + 0x68);
-    rv::As<records::EffectObject>(s)->angle[2] = L(at::kExtra0 + 0x6C);
+    rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x);
+    rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].z);
+    rv::As<records::EffectObject>(s)->height = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].height);
+    rv::As<records::EffectObject>(s)->angle[0] = Sprite_ObjectsExtra[0].angle[0];
+    rv::As<records::EffectObject>(s)->angle[1] = Sprite_ObjectsExtra[0].angle[1];
+    rv::As<records::EffectObject>(s)->angle[2] = Sprite_ObjectsExtra[0].angle[2];
     long out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, s[0x1C]);
     s = S();

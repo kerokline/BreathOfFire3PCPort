@@ -608,7 +608,7 @@ void DustThenAgain(int dx) {
 // Extra record 0's x (s32 +0x34) below the kind-2 x + 0x20000 (signed): its
 // +0x84 = 3.
 void MarkIfBehind() {
-    if (Long(At(Sprite_ObjectsExtra_addr + 0x34)) < static_cast<std::int32_t>(static_cast<U>(Field_Kind2X) + 0x20000u))
+    if (Sprite_ObjectsExtra[0].x < static_cast<std::int32_t>(static_cast<U>(Field_Kind2X) + 0x20000u))
         Sprite_ObjectsExtra[0].speed = 3;
 }
 // The map moved 0x14 cells in x (`sign` +1 or -1): Sprite_Kind2 +0x34 and
@@ -640,10 +640,10 @@ void ShiftMap(int sign, U focus, bool effects) {
             rv::Store<unsigned>(rv::As<records::EffectObject>(e)->height_whole, static_cast<U>(eh));
         }
     }
-    const std::int32_t ex = static_cast<std::int32_t>(static_cast<U>(Long(At(Sprite_ObjectsExtra_addr + 0x34))) + step);
-    SetLong(At(Sprite_ObjectsExtra_addr + 0x34), ex);
-    const long xh = AH_CALL(AreaMap_Elevation)(ex, Long(At(Sprite_ObjectsExtra_addr + 0x38)));
-    SetWord(At(Sprite_ObjectsExtra_addr + 0x3E), static_cast<U>(xh));
+    const std::int32_t ex = static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x) + step);
+    Sprite_ObjectsExtra[0].x = ex;
+    const long xh = AH_CALL(AreaMap_Elevation)(ex, Sprite_ObjectsExtra[0].z);
+    Sprite_ObjectsExtra[0].height_whole = static_cast<U>(xh);
 }
 
 }  // namespace

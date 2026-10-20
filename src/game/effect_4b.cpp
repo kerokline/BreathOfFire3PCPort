@@ -422,7 +422,7 @@ void Kind88Emit(U goal) {
         SH_CALL(EffectKind88_MoveParticles)();
         s = S();
     }
-    if (UL(At(Sprite_ObjectsExtra_addr + 0x34)) == goal) s[1] = static_cast<unsigned char>(s[1] + 1);
+    if (static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x) == goal) s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 }  // namespace
 
@@ -473,7 +473,7 @@ extern "C" unsigned char __cdecl EffectKind88_MoveParticles(void) {
                                                             reinterpret_cast<const long*>(s + 0xC));
         SetWord(r + 6, static_cast<U>(angle));
         r[5] = static_cast<unsigned char>(r[5] - 1);
-        if (r[5] == 0 || S32(UL(r + 0xC)) >= S32(UL(At(Sprite_ObjectsExtra_addr + 0x34)) + 0xFFFF0000u)) r[3] = 0;
+        if (r[5] == 0 || S32(UL(r + 0xC)) >= S32(static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x) + 0xFFFF0000u)) r[3] = 0;
         SH_CALL(EffectKind88_DrawBurst)(reinterpret_cast<const long*>(r + 0xC), Word(r + 8), Word(r + 0xA), Word(r + 6), 0x80,
                                         0);
     }

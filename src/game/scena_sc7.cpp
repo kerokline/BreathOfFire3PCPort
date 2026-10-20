@@ -1654,7 +1654,7 @@ extern "C" void __cdecl Scena08_Scene2(void) {
     switch (Step()) {
     case 0:
         Sprite_ObjectsExtra[0].area_script = 3;
-        rv::As<records::SpriteObject>(At(Sprite_ObjectsExtra_addr))->script_position = 0;
+        Sprite_ObjectsExtra[0].script_position = 0;
         SetStep(1);
         return;
     case 1:

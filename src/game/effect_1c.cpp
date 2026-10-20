@@ -697,7 +697,7 @@ extern "C" void __cdecl EffectKind1E_ShardNext3(void) {
 // into +8..+0xD and each s16 there >> 8 (a direction); +0x10..+0x15 0 (a
 // velocity); then the copy's twelve vertex words made relative to the centre.
 extern "C" void __cdecl EffectKind1E_SplitModel(void) {
-    U src = UL(At(Sprite_ObjectsExtra_addr + 0x50));
+    U src = Sprite_ObjectsExtra[0].script;
     for (U i = 0; i < at::kPieceCount; ++i) {
         unsigned char* const d = At(EffectKind30_Shards_addr + 0x3c8 + 0x28 * i);
         unsigned char* const r = At(EffectKind30_Shards_addr + 0x140 + 0x18 * i);
@@ -724,7 +724,7 @@ extern "C" void __cdecl EffectKind1E_SplitModel(void) {
 // the model's face, the piece)); the model's faces from
 // Sprite_ObjectsExtra[0] +0x50 read once.
 extern "C" void __cdecl EffectKind1E_StepPieces(void) {
-    const U model = UL(At(Sprite_ObjectsExtra_addr + 0x50));
+    const U model = Sprite_ObjectsExtra[0].script;
     for (U i = 0; i < at::kPieceCount; ++i) {
         const U odd = Frame_Counter & 1;
         unsigned char* const r = At(EffectKind30_Shards_addr + 0x140 + 0x18 * i);
@@ -851,7 +851,7 @@ extern "C" void __cdecl EffectKind1E_DrawModel(unsigned shade) {
     Sprite_Current = rv::Bytes(Sprite_ObjectsExtra);
     SH_CALL(Gte_PushMatrix)();
     Matrix m1;
-    const auto count = static_cast<signed char>(At(UL(At(at::kModelCount)))[0]);
+    const auto count = static_cast<signed char>(At(Sprite_ObjectsExtra[0].frames)[0]);
     SH_CALL(Sprite_ObjectMatrix)(m1.m);
     SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m1));
     SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m1));
@@ -859,7 +859,7 @@ extern "C" void __cdecl EffectKind1E_DrawModel(unsigned shade) {
     std::memcpy(&m2, &m1, sizeof m2);
     SH_CALL(Camera_LoadMatrix)(m2.m);
     DebrisMode(0);
-    U face = UL(At(Sprite_ObjectsExtra_addr + 0x50));
+    U face = Sprite_ObjectsExtra[0].script;
     if (count < 0)
         bof3::Fatal("EffectKind1E_DrawModel: the face count byte is %d; the original draws 0x%X faces past the model",
                     count, (unsigned)(static_cast<unsigned short>(count)));

@@ -4829,7 +4829,7 @@ site	src/game/effect_1c.cpp	671	record	UL	r + 0x1C	-	via=Cursor	-	-	-	0
 site	src/game/effect_1c.cpp	671	record	SetUL	r + 0xC	-	via=Cursor	-	-	-	0
 site	src/game/effect_1c.cpp	671	record	UL	r + 0xC	-	via=Cursor	-	-	-	0
 site	src/game/effect_1c.cpp	704	record	SetUL	d + j	-	-	-	-	-	0
-site	src/game/effect_1c.cpp	704	record	At	src + j	-	stride=0x28	-	-	-	0
+site	src/game/effect_1c.cpp	704	record	At	src + j	-	base=Sprite_ObjectsExtra;stride=0x28	-	-	-	0
 site	src/game/effect_1c.cpp	705	record	SW	d + 0x14	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	705	record	SW	d + 0xE	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	705	record	SW	d + 2	-	-	-	-	-	0
@@ -4866,7 +4866,7 @@ site	src/game/effect_1c.cpp	733	record	Word	r + 0xC	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	734	record	Word	r + 0xC	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	734	record	SetWord	r + 4	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	734	record	Word	r + 4	-	-	-	-	-	0
-site	src/game/effect_1c.cpp	735	record	At	model + 0x28 * i	-	-	-	-	-	0
+site	src/game/effect_1c.cpp	735	record	At	model + 0x28 * i	-	base=Sprite_ObjectsExtra	-	-	-	0
 site	src/game/effect_1c.cpp	747	record	SetWord	piece + 0x10	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	748	record	SetWord	piece + 0x12	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	749	record	SetWord	piece + 0x14	-	-	-	-	-	0
@@ -4900,8 +4900,7 @@ site	src/game/effect_1c.cpp	822	record	Word	d + 0x24	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	823	record	SetWord	d + 0x2A	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	823	record	Word	d + 0x2A	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	833	global	DebrisLoop	at::kDebris	0x92c780	-	none	-	-	0
-site	src/game/effect_1c.cpp	854	global	At	at::kModelCount	0x802054	-	inside	Sprite_ObjectsExtra+0x54	records::SpriteObject	0
-site	src/game/effect_1c.cpp	875	record	At	face + 2 + 6 * k + 2 * j	-	stride=0x28	-	-	-	0
+site	src/game/effect_1c.cpp	875	record	At	face + 2 + 6 * k + 2 * j	-	base=Sprite_ObjectsExtra;stride=0x28	-	-	-	0
 site	src/game/effect_1c.cpp	898	record	Word	a + 2	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	898	record	Word	b + 2	-	-	-	-	-	0
 site	src/game/effect_1c.cpp	899	record	Word	b + 2	-	-	-	-	-	0
@@ -5353,7 +5352,7 @@ site	src/game/effect_2b.cpp	526	record	SetUL	r + 0xC	-	via=Cursor	-	-	-	0
 site	src/game/effect_2b.cpp	526	record	UL	r + 0xC	-	via=Cursor	-	-	-	0
 site	src/game/effect_2b.cpp	546	global	At	at::kCopies35	0x92c728	-	none	-	-	0
 site	src/game/effect_2b.cpp	548	record	SetUL	d + j	-	table=0x92c728	-	-	-	0
-site	src/game/effect_2b.cpp	548	record	At	src + j	-	stride=0x28	-	-	-	0
+site	src/game/effect_2b.cpp	548	record	At	src + j	-	base=Sprite_ObjectsExtra;stride=0x28	-	-	-	0
 site	src/game/effect_2b.cpp	549	record	SW	d + 0x14	-	table=0x92c728	-	-	-	0
 site	src/game/effect_2b.cpp	549	record	SW	d + 0xE	-	table=0x92c728	-	-	-	0
 site	src/game/effect_2b.cpp	549	record	SW	d + 2	-	table=0x92c728	-	-	-	0
@@ -5391,7 +5390,7 @@ site	src/game/effect_2b.cpp	578	record	Word	r + 4	-	-	-	-	-	0
 site	src/game/effect_2b.cpp	579	record	SetWord	r + 2	-	-	-	-	-	0
 site	src/game/effect_2b.cpp	579	record	Word	r + 2	-	-	-	-	-	0
 site	src/game/effect_2b.cpp	580	global	At	at::kCopies35	0x92c728	-	none	-	-	0
-site	src/game/effect_2b.cpp	580	record	At	model + 0x28 * i	-	-	-	-	-	0
+site	src/game/effect_2b.cpp	580	record	At	model + 0x28 * i	-	base=Sprite_ObjectsExtra	-	-	-	0
 site	src/game/effect_2b.cpp	592	record	SetWord	piece + 0x10	-	-	-	-	-	0
 site	src/game/effect_2b.cpp	593	record	SetWord	piece + 0x12	-	-	-	-	-	0
 site	src/game/effect_2b.cpp	594	record	SetWord	piece + 0x14	-	-	-	-	-	0
@@ -16584,12 +16583,6 @@ site	src/game/rest_3f_fuzz.cpp	448	global	At	at::kCounter	0x903848	-	none	-	-	1
 site	src/game/rest_3g.cpp	104	record	UL	table + 4 * step	-	param	-	-	-	0
 site	src/game/rest_3g.cpp	186	record	SetUL	s + 0x14	-	via=S	-	-	-	0
 site	src/game/rest_3g.cpp	202	global	At	at::kCounter	0x903848	-	none	-	-	0
-site	src/game/rest_3g.cpp	269	global	UL	at::kExtra1X	0x8020d8	-	inside	Sprite_ObjectsExtra+0xd8	records::SpriteObject	0
-site	src/game/rest_3g.cpp	270	global	UL	at::kExtra1Z	0x8020dc	-	inside	Sprite_ObjectsExtra+0xdc	records::SpriteObject	0
-site	src/game/rest_3g.cpp	271	global	UL	at::kExtra1Y	0x8020e0	-	inside	Sprite_ObjectsExtra+0xe0	records::SpriteObject	0
-site	src/game/rest_3g.cpp	272	global	UL	at::kExtra1X	0x8020d8	-	inside	Sprite_ObjectsExtra+0xd8	records::SpriteObject	0
-site	src/game/rest_3g.cpp	273	global	UL	at::kExtra1Z	0x8020dc	-	inside	Sprite_ObjectsExtra+0xdc	records::SpriteObject	0
-site	src/game/rest_3g.cpp	274	global	UL	at::kExtra1Y	0x8020e0	-	inside	Sprite_ObjectsExtra+0xe0	records::SpriteObject	0
 site	src/game/rest_3g.cpp	274	record	SetUL	s + 0x14	-	via=S	-	-	-	0
 site	src/game/rest_3g.cpp	312	global	At	at::kEventRows	0x64ddee	-	none	-	-	0
 site	src/game/rest_3g.cpp	349	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
@@ -17342,18 +17335,10 @@ site	src/game/rest_4f.cpp	807	global	B	at::kChapterByte4A	0x90384a	-	none	-	-	0
 site	src/game/rest_4f.cpp	827	global	B	at::kChapterByte4A	0x90384a	-	none	-	-	0
 site	src/game/rest_4f.cpp	957	global	B	at::kChapterCount	0x903848	-	none	-	-	0
 site	src/game/rest_4f.cpp	957	global	B	at::kChapterCount	0x903848	-	none	-	-	0
-site	src/game/rest_4f.cpp	1087	global	W	at::kExtra0	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
 site	src/game/rest_4f.cpp	1088	global	B	at::kKind0BOffset	0x653aac	-	exact	Rest4f_Kind0BOffset	signed char	0
-site	src/game/rest_4f.cpp	1089	global	W	at::kExtra0	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
 site	src/game/rest_4f.cpp	1121	global	At	at::kKind0BStepX	0x5c41c8	-	none	-	-	0
 site	src/game/rest_4f.cpp	1122	global	B	at::kKind0BRise	0x653ab0	-	none	-	-	0
 site	src/game/rest_4f.cpp	1141	global	At	at::kKind0BStepY	0x5c41c0	-	none	-	-	0
-site	src/game/rest_4f.cpp	1154	global	L	at::kExtra0	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
-site	src/game/rest_4f.cpp	1155	global	L	at::kExtra0	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
-site	src/game/rest_4f.cpp	1156	global	L	at::kExtra0	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
-site	src/game/rest_4f.cpp	1157	global	L	at::kExtra0	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
-site	src/game/rest_4f.cpp	1158	global	L	at::kExtra0	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
-site	src/game/rest_4f.cpp	1159	global	L	at::kExtra0	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
 site	src/game/rest_4f.cpp	1240	record	Word	S() + 0x10	-	via=S	-	-	-	0
 site	src/game/rest_4f.cpp	1247	global	SetW	at::kClut7B	0x811440	-	inside	Gfx_ClutStrip+0x1ec0	unsigned short	0
 site	src/game/rest_4f.cpp	1247	record	W	from + 2 * i	-	stride=0x40	-	-	-	0
@@ -23068,9 +23053,9 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19531
-#count sites_global	9675
-#count sites_global_at	7681
+#count sites	19516
+#count sites_global	9660
+#count sites_global_at	7666
 #count sites_global_module	1994
 #count sites_record	8727
 #count sites_raw	1129
@@ -23078,16 +23063,16 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count files_with_sites	523
 #count files_with_record_sites	470
 #count record_sites_with_stride	699
-#count record_sites_with_table_or_base	3488
+#count record_sites_with_table_or_base	3493
 #count record_sites_on_named_pointer	198
 #count record_sites_on_helper_call	677
 #count record_sites_offset_into_constant	1546
 #count record_sites_via_helper	2430
 #count record_sites_param	661
-#count record_sites_family_unknown	1709
+#count record_sites_family_unknown	1707
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	2354
-#count global_sites_covered_inside	1127
+#count global_sites_covered_exact	2346
+#count global_sites_covered_inside	1120
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
 #count at_refs_struct_or_array	271

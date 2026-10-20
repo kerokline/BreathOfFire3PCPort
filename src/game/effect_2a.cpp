@@ -895,9 +895,9 @@ extern "C" void __cdecl EffectKind2C_Run(void) { Dispatch("EffectKind2C_Run", Ad
 
 // The centre 0x92D380: Sprite_ObjectsExtra[0]'s x, z and height sar 8.
 static void SparkCentreFromExtra() {
-    const U h = UL(At(Sprite_ObjectsExtra_addr + 0x34 + 8));
-    const U x = UL(At(Sprite_ObjectsExtra_addr + 0x34));
-    const U z = UL(At(Sprite_ObjectsExtra_addr + 0x34 + 4));
+    const U h = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].height);
+    const U x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x);
+    const U z = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].z);
     SetUL(At(at::kSparkCentre), x);
     SetUL(At(at::kSparkCentre + 4), z);
     SetUL(At(at::kSparkCentre + 8), Sar(h, 8));
