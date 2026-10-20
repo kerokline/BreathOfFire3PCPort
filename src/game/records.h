@@ -132,7 +132,7 @@ struct SpriteHead {
         std::int32_t depth;  // +0x60 the projection's depth (movement-script 1c; sprite-draw-order 14; effect_1a.md 2.2)
         std::int32_t value;  // +0x60 battle task, the damage popup: the number shown (battle_fx_tasks.cpp; read as a word by the draw)
     };
-    std::uint32_t angle[3];  // +0x64 the rotation angles in the low words (sprite-draw-order 12); +0x64 / +0x68 also the member / its row during a member set-up (sprite-pose 3); MoveCmd_OpF9 runs a party object's tilt counts into them (field_o.cpp)
+    std::uint32_t angle[3];  // +0x64 the rotation angles in the low words (sprite-draw-order 12); +0x64 / +0x68 also the member / its row during a member set-up (sprite-pose 3); MoveCmd_OpF9 runs a party object's tilt counts into them (field_o.cpp); effect kind 0x13 (the camera turn): the three target Camera_Angles, dwords (CameraTurn_Start, frame-callees.md; area_w3f.cpp Kind13)
     std::uint32_t reach;  // +0x70 dword (sprite-pose 3: its low byte ORed from the bank's first byte); the low byte the object's reach: Sprite_PointInReach's margin (sprite-draw-order 6), Party_MemberAt's (area_w1c.md Area51_MemberAtObject), blocked_at's and AreaMap_CellsNone's size (member_sprites.cpp; field_c3.cpp), the jump's scale (field_c3.md); member-sprites 2 calls a member's non-zero byte "raised" (Field_CellAhead splits on it). Was PartyMember::raised
     std::uint32_t screen_xf;  // +0x74 the float screen point's bits (movement-script 1c; sprite_screen.cpp; effect_4d.md EffectKind98_DrawBurst)
     std::uint32_t screen_yf;  // +0x78

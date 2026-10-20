@@ -248,14 +248,17 @@ unsigned char SpawnSlot() {
     return slot;
 }
 unsigned char* ScratchRecord() { return EffectAt(static_cast<U>(Long(Mem(at::kSlotScratch))) & 0xFF); }
-// Tail states 0xA and 0x14: an effect of kind 0x13 at (+0x64 `x`, +0x68 the
-// camera's angle 1 (s16), +0x6C `y`), +9 0x30.
-void Kind13(unsigned char* e, U x, std::int32_t angle, U y) {
+// Tail states 0xA and 0x14: an effect of kind 0x13, the camera turn, to the
+// three target angles +0x64 / +0x68 / +0x6C (CameraTurn_Start turns each
+// Camera_Angles[n] toward dword +0x64 + 4n over +9 frames: docs/frame-callees.md),
+// here (a0, the camera's angle 1 kept, a2), +9 0x30. Its parameters were named
+// x / y until the C3 naming pass.
+void Kind13(unsigned char* e, U a0, std::int32_t angle, U a2) {
     e[0] = 1;
     e[5] = 0x13;
-    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], static_cast<std::int32_t>(x));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], static_cast<std::int32_t>(a0));
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[1], angle);
-    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[2], static_cast<std::int32_t>(y));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[2], static_cast<std::int32_t>(a2));
     e[9] = 0x30;
 }
 std::int32_t CameraAngle1() { return static_cast<std::int16_t>(Word(Mem(Camera_Angles_addr + 0x2))); }

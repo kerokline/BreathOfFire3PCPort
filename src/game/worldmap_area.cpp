@@ -375,7 +375,7 @@ extern "C" void __cdecl WorldMapHud_Frame(void) {
 extern "C" void __cdecl WorldMap_FrameWait(void) {
     if (AreaW0b_MapMode == 2) return;
     if ((Field_ScriptFlags & 0x100) != 0) return;
-    rv::As<records::EffectObject>(Cur())->screen_x = 0xFFD0;
+    rv::As<records::EffectWork>(Cur())->work_2e = 0xFFD0;
     rv::As<records::EffectObject>(Cur())->step = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->step + 1);
 }
 

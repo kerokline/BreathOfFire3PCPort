@@ -319,7 +319,7 @@ extern "C" void __cdecl Area65_FrameStep(void) { StateEntry("Area65_FrameStep", 
 // +0x2E += 0x10; at 0x10 and above (s16) +2 + 1; then a tail jump to
 // Area65_FrameHold.
 extern "C" void __cdecl Area65_FrameSlideIn(void) {
-    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) + 0x10u;
+    rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(kFrameHold65)();
@@ -338,7 +338,7 @@ extern "C" void __cdecl Area65_FrameHold(void) {
 // +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the mode byte is 2, +2 = 1
 // (over the 0); Area65_DrawFrame(0x10, y).
 extern "C" void __cdecl Area65_FrameSlideOut(void) {
-    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) - 0x10u;
+    rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
