@@ -220,6 +220,7 @@ pc = 0x802DC0
 name = "Text_CurrentName"
 status = "evidence"
 evidence = "disasm 2026-09-20: control 0x03 of Text_DrawImmediate substitutes the string here, up to 9 characters (mov esi, 0x802DBF / inc esi at 0x596232). The PSX 0x03 row is 'insert current-character name'."
+note = "Inside ObjTrio: the leader's +0x80, the copy of a character record's name (PartyMember +0x80..+0x88, not named in records.h). Kept as its own entry (C4 audit A F6): no field to retire into, and its readers (text_immediate.cpp) take its address as a buffer."
 
 [[func]]
 pc = 0x516D50
@@ -1781,6 +1782,7 @@ ctype = "unsigned char"
 count = 0xA4
 status = "hypothesis"
 evidence = "disasm 2026-09-20: Field_CopyInput tests bit 0x20 of the byte at 0x903A80 + index * 0xA4, index a byte. The stride is the sprite object's size (Sprite_Objects), so this may be a third array of them; pe_xref.py has 26 references in 19 functions. One record declared: the length is not established."
+note = "Inside CharacterRecords: record 0's +0x10, the low byte of CharRecord::status (u16), read as a byte with a character index times 0xA4 (bit 0x20, 0x80), and used as a base for other record bytes (+0xe, +0x8, +0x6e, +0x9f past it). Not a third sprite-object array: the stride is CharacterRecords'. Kept as its own entry (C4 audit A F6): a byte read of a u16 field is not that field, and the based reads are other fields; retiring it is a CharacterRecords conversion of its own sites."
 
 [[func]]
 pc = 0x531BD0
@@ -135386,25 +135388,12 @@ status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1,317 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x93b940] at 0x4334c8; mov edx, dword ptr [0x93b940] at 0x4334f0; mov ecx, dword ptr [0x93b940] at 0x433523 and 1314 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e2::kOwner, battle_e6::kOwner, battle_flow::kTaskOwner, battle_fx_tasks::kTaskOwner, battle_items::kFxActor, boss_sf::kOwner, boss_sg::kOwner, boss_si::kOwner, boss_sj::kOwner, magic_fx_reached::kOwner, rest_3a::kTaskOwner."
 
 [[data]]
-pc = 0x93B99E
-name = "BossH_Enemy0Ground"
-ctype = "unsigned short"
-status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x93b99e], ax at 0x43aab3; mov word ptr [0x93b99e], ax at 0x43b24d. Its address is also an immediate 4 time(s) (mov esi, 0x93b99e at 0x4ab34a). No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_h::kEnemy0Ground, boss_sd::kEnemy0Ground."
-
-[[data]]
 pc = 0x93B9B8
 name = "BossSb_Enemy0Pose"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 10 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov ax, word ptr [0x93b9b8] at 0x437e59; mov ax, word ptr [0x93b9b8] at 0x4385c1; mov ax, word ptr [0x93b9b8] at 0x438824 and 7 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sb::kEnemy0Pose, boss_sh::kEnemy0X."
-
-[[data]]
-pc = 0x93B9BA
-name = "BossSh_Enemy0Y"
-ctype = "unsigned short"
-status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 10 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov dx, word ptr [0x93b9ba] at 0x437e6b; mov dx, word ptr [0x93b9ba] at 0x4385d3; mov dx, word ptr [0x93b9ba] at 0x438836 and 7 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sh::kEnemy0Y."
+note = "Inside Battle_Enemies: enemy 0's +0x58, BattleEnemy::script_pos (u16, the same width). Kept as its own entry, not retired into the record (C4 audit A F6): boss_sb hands its address to PoseActor (and its fuzz writes its bytes), and Battle_Enemies is a [[data]] record array, which a field_of cannot name."
 
 [[data]]
 pc = 0x93BABC
@@ -135412,6 +135401,7 @@ name = "BossSb_Enemy1Place"
 ctype = "unsigned long"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov ecx, dword ptr [0x93babc] at 0x438b07. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sb::kEnemy1Place."
+note = "Inside Battle_Enemies: enemy 1's +0x34, BattleEnemy::x. Kept as its own entry (C4 audit A F6): unsigned long here against x's int32_t (the one read casts to int32_t), and boss_sb_fuzz writes 12 bytes from its address (x, z, height)."
 
 [[data]]
 pc = 0x93BAE0
@@ -135419,6 +135409,7 @@ name = "BossSb_Enemy1Pose"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov ax, word ptr [0x93bae0] at 0x437eb9; mov ax, word ptr [0x93bae0] at 0x438624; mov ax, word ptr [0x93bae0] at 0x438885 and 2 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sb::kEnemy1Pose."
+note = "Inside Battle_Enemies: enemy 1's +0x58, BattleEnemy::script_pos (u16, the same width). Kept as its own entry (C4 audit A F6): boss_sb hands its address to PoseActor and its fuzz writes its bytes."
 
 [[data]]
 pc = 0x93BB1A

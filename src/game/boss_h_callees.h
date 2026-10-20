@@ -43,7 +43,7 @@ constexpr U kLeaderId = 0x802DC9;         // +0x89: the character id
 // --- the enemies' objects (0x93B960 + n * 0x128) that BossMap_UpdateFromEnemies reads
 constexpr U kEnemy0X = 0x93B994;          // enemy 0's +0x34 / +0x38, and the word +0x3E
 constexpr U kEnemy0Z = 0x93B998;
-// kEnemy0Ground: now BossH_Enemy0Ground (symbols.toml).
+// kEnemy0Ground: now Battle_Enemies[0].height_whole (symbols.toml).
 // kEnemy1: now Battle_Enemies[1] (symbols.toml). enemy 1's object; +0x93 at 0x93BB1B
 // kEnemy1Status: now BossH_Enemy1Status (symbols.toml). its +0x92 (the dword read; byte +0x93 tested)
 // kEnemy2: now Battle_Enemies[2] (symbols.toml). enemy 2's object

@@ -22158,6 +22158,6 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count stride_names	92
 #count stride_values	34
 #count static_assert_offsetof_sizeof	739
-#count symbols_data	3250
-#count symbols_data_ctype	3166
+#count symbols_data	3248
+#count symbols_data_ctype	3164
 #count symbols_data_count	2415

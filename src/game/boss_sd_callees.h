@@ -66,7 +66,7 @@ constexpr U kEnemy0A6 = 0x93BA06;         // enemy 0's +0xA6
 // kEnemy2Hp: now BossSd_Enemy2Hp (symbols.toml). enemy 2's +0xA4
 constexpr U kEnemy0X = 0x93B994;          // enemy 0's +0x34 / +0x38, and the word +0x3E
 constexpr U kEnemy0Z = 0x93B998;
-// kEnemy0Ground: now BossH_Enemy0Ground (symbols.toml).
+// kEnemy0Ground: now Battle_Enemies[0].height_whole (symbols.toml).
 
 // --- the party (ObjTrio, stride 0x14C) -----------------------------------------
 // kPartyFlags: now ObjTrio[0].status (symbols.toml). member 0's +0x90 (bit 0x10 set by set-up 21's event hook)
