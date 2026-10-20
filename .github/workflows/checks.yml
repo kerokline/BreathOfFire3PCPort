@@ -20,6 +20,9 @@
 #                           raw address)
 #                           no more than analysis/data_census.tsv's committed
 #                           count (docs/typed-data-census.md)
+#     --strict              and every one in src/game a row of
+#                           analysis/typed_left.tsv with a reason, no listed
+#                           src/game key stale (docs/typed-data-census.md 3)
 #   tools/bgm/host          the SPU model's and the sequencer's unit tests
 #                           (spu_tests, seq_tests) on synthetic samples and songs
 #   tools/lift/selftest.sh  the x86 -> C lifter prototype against its
@@ -73,6 +76,9 @@ jobs:
 
       - name: The typed-data census's raw site count may not rise (no game data)
         run: python tools/data_census.py --check
+
+      - name: Every raw data site in src/game is listed with a reason (no game data)
+        run: python tools/data_census.py --strict
 
   music-host:
     # The SPU model and libsnd's sequencer (src/audio/) built with the system

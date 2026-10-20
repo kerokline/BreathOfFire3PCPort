@@ -5,6 +5,8 @@
     python tools/data_census.py --out FILE           # write elsewhere
     python tools/data_census.py --counts             # print the counts only, write nothing
     python tools/data_census.py --check              # fail if the site count rose above the committed file's
+    python tools/data_census.py --strict             # fail on a src/game raw site analysis/typed_left.tsv
+                                                     # does not list with a reason, or a stale listed key
 
 Group CS of the typed-data round (docs/typed-data-round.md section 2; the
 counts and the method in docs/typed-data-census.md). Reads src/ and
@@ -1131,6 +1133,44 @@ def committed_sites(path):
     sys.exit(f'data_census: no "#count sites" line in {path}')
 
 
+STRICT_SCOPE = 'src/game/'
+
+
+def strict():
+    """The strict rule (stage C4 part 2, docs/typed-data-census.md 3): every
+    raw site the census measures in src/game must be a row of
+    analysis/typed_left.tsv with a reason (not `-`), keyed as typed_left.py
+    keys it (file, function, shape, accessor, expr, n); and every src/game
+    row of the list must still measure. Returns the exit status."""
+    import typed_left as tl
+    measured = tl.measure()
+    listed = tl.read_list(os.path.join(ROOT, tl.OUT))
+    keys = {k for k, _ln, _s in measured}
+    bad = []
+    for k, ln, _s in measured:
+        if not k[0].startswith(STRICT_SCOPE):
+            continue
+        row = listed.get(k)
+        if row is None:
+            bad.append(f'  new raw site {k[0]}:{ln} {k[3]}({k[4]}) in {k[1]}: no row in {tl.OUT}')
+        elif row[8] in ('-', ''):
+            bad.append(f'  {k[0]}:{ln} {k[3]}({k[4]}) in {k[1]}: listed with no reason')
+    stale = [k for k in listed if k[0].startswith(STRICT_SCOPE) and k not in keys]
+    for k in stale:
+        bad.append('  stale key (the list names a site that no longer measures): ' + '\t'.join(k))
+    n = sum(1 for k in listed if k[0].startswith(STRICT_SCOPE))
+    if bad:
+        print(f'data_census --strict: {len(bad)} problem(s) against {tl.OUT} ({n} listed src/game sites):')
+        print('\n'.join(bad[:200]))
+        if len(bad) > 200:
+            print(f'  ... and {len(bad) - 200} more')
+        print('Use a typed access (docs/typed-data-round.md). A site that must stay raw: run '
+              'tools/typed_left.py and give its row a reason; a stale key: regenerate with tools/typed_left.py.')
+        return 1
+    print(f'data_census --strict: every raw site in src/game is listed with a reason ({n} exceptions); ok')
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--out', default=DEFAULT_OUT)
@@ -1138,8 +1178,13 @@ def main():
     ap.add_argument('--counts', action='store_true', help='print the counts, write nothing')
     ap.add_argument('--check', action='store_true',
                     help='fail if the site count is above the committed --out file\'s')
+    ap.add_argument('--strict', action='store_true',
+                    help='fail on any raw site in src/game that analysis/typed_left.tsv does not list '
+                         'with a reason, and on any listed src/game key that no longer measures')
     a = ap.parse_args()
     os.chdir(ROOT)
+    if a.strict:
+        sys.exit(strict())
     syms = Symbols(a.toml)
     files = load_sources()
     sites, consts, files, unresolved_refs = scan(files, syms)
