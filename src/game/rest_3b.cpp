@@ -239,7 +239,7 @@ void CancelHead(bool windows) {
     BH_CALL(Sound_PlayEffect)(0x106);
     if (windows) {
         WindowRecords[3].state = 1;
-        Window2_State = 1;
+        WindowRecords[2].state = 1;
     }
     BH_CALL(BattleBanner_ShowName)(Ptr(at::kMenuActor));
     BattleE4_Picking = 0;
@@ -270,7 +270,7 @@ namespace {
 // record 16's +3 is 0, step 1, the command and step 0, and a tail jump to
 // ItemMenu_FreeWindows.
 void CloseWait() {
-    if (Window16_State != 0) return;
+    if (WindowRecords[16].state != 0) return;
     BattleActions_Step = 1;
     BattleE4_Step2 = 0;
     BattleE4_Step3 = 0;

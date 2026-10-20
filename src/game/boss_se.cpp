@@ -102,13 +102,13 @@ void StoreKind(U fc, U f4, U f8) {
 // +0xB0 from the word 0x903F0C, +0xD4 and +0xB4 from 0x903F10, +0xD6 and +0xB6
 // from 0x903F12 - each word and 0x939AD8 read for each store.
 void CarryStats() {
-    SetWord(Enemy() + 0xA4, BossSe_CarryHp);
-    SetWord(Enemy() + 0xD0, BossSe_CarryHp);
-    SetWord(Enemy() + 0xB0, BossSe_CarryHp);
-    SetWord(Enemy() + 0xD4, BossSe_CarryB4);
-    SetWord(Enemy() + 0xB4, BossSe_CarryB4);
-    SetWord(Enemy() + 0xD6, BossSe_CarryB6);
-    SetWord(Enemy() + 0xB6, BossSe_CarryB6);
+    SetWord(Enemy() + 0xA4, CharacterRecords[7].stats.max_hp);
+    SetWord(Enemy() + 0xD0, CharacterRecords[7].stats.max_hp);
+    SetWord(Enemy() + 0xB0, CharacterRecords[7].stats.max_hp);
+    SetWord(Enemy() + 0xD4, CharacterRecords[7].stats.atk);
+    SetWord(Enemy() + 0xB4, CharacterRecords[7].stats.atk);
+    SetWord(Enemy() + 0xD6, CharacterRecords[7].stats.def);
+    SetWord(Enemy() + 0xB6, CharacterRecords[7].stats.def);
 }
 
 // The death entry (+2 entry 4) of kinds 30, 31 and 32: Sprite_EnsureAnimation

@@ -146,8 +146,8 @@ unsigned char Kind3Event(unsigned code) {
         if (LeaderCommand78()) {
             Battle_Enemies[0].hp = 1;
             Battle_Enemies[0].max_hp = 1;
-            BossSb_Enemy1Hp = 1;
-            BossSb_Enemy1B0 = 1;
+            Battle_Enemies[1].hp = 1;
+            Battle_Enemies[1].max_hp = 1;
             rv::Bytes(ObjTrio)[0x134] &= 0xFD;
         }
         break;

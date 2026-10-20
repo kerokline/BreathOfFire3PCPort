@@ -340,7 +340,7 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     window_rec->x = 0x140;
     window_rec->y = 0x3F;
     const unsigned char again = At(acting + 5)[0];
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     At(Window19_addr + 2)[0] = 0;
     BattleActorCopies_ItemActor = again;
     At(Window19_addr + 1)[0] = 8;
@@ -375,7 +375,7 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
     PutWord(w + 0x10, 0);
     window_rec->x = 0xFF56;
     window_rec->y = 0x3F;
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     At(Window19_addr + 1)[0] = 8;
     At(Window19_addr + 2)[0] = 0;
     return 0;

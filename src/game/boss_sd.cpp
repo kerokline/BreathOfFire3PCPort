@@ -152,8 +152,8 @@ void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_
             EndStep(at::kEndThird);
         }
     }
-    const unsigned hp1 = BossSb_Enemy1Hp;
-    const unsigned hp2 = BossSd_Enemy2Hp;
+    const unsigned hp1 = Battle_Enemies[1].hp;
+    const unsigned hp2 = Battle_Enemies[2].hp;
     const unsigned a4 = Battle_Enemies[0].hp;
     BossSd_KeptHp1 = hp1;
     const unsigned a6 = Battle_Enemies[0].ap;

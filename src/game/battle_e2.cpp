@@ -525,7 +525,7 @@ extern "C" void __cdecl BattleFx_GridMarkStart(void) {
 extern "C" void __cdecl BattleFx_GridMarkRun(void) {
     static constexpr U kSteps[2] = {bof3::addr::BattleFx_GridMarkCount, bof3::addr::BattleFx_GridMarkPlace};
     CallState("BattleFx_GridMarkRun", kSteps, 2, Sprite_Current[2]);
-    if ((Window21 & 1) == 0) {
+    if ((WindowRecords[21].in_use & 1) == 0) {
         rv::Current<records::BattleTask>()->state = 2;
         Sc()[2] = 0;
         return;
@@ -602,7 +602,7 @@ extern "C" void __cdecl BattleFx_ListHandRun(void) {
     unsigned char* const s = Sprite_Current;
     auto* const cur_task = rv::As<records::BattleTask>(s);
     if ((cur_task->flags & 1) == 0) return;
-    if ((Window21 & 1) == 0) {
+    if ((WindowRecords[21].in_use & 1) == 0) {
         cur_task->state = 2;
         Sprite_Current[2] = 0;
         return;
@@ -625,7 +625,7 @@ extern "C" void __cdecl BattleFx_ListHandPress(void) {
 // command is tapped (0x904AA6 not 0xFF); record 21 not in use: +1 on, +2 = 0.
 extern "C" void __cdecl BattleFx_ListHandWait(void) {
     if (BattleE5_GeneRow != 0xFF) Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] - 1);
-    if ((Window21 & 1) != 0) return;
+    if ((WindowRecords[21].in_use & 1) != 0) return;
     ++rv::Current<records::BattleTask>()->state;
     Sprite_Current[2] = 0;
 }

@@ -198,8 +198,8 @@ void CheckEntries(const char* who, const unsigned char* record, unsigned first, 
 // original 0x451480 (the gene history's step table 0x64ED50, entry 6, by
 // 0x904AA4): windows 18 and 19's +3 = 4 and 2, 0x904AA3 = 3, 0x904AA4 = 2.
 extern "C" void __cdecl DragonHistory_Leave(void) {
-    Window18_State = 4;
-    Window19_State = 2;
+    WindowRecords[18].state = 4;
+    WindowRecords[19].state = 2;
     BattleE4_Step3 = 3;
     BattleE4_Step4 = 2;
 }

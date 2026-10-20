@@ -171,11 +171,11 @@ void SlotCursor(unsigned repeat) {
 // x = record 18's x + 6, y = 13 * cursor + record 18's y + 0x57.
 void SlotHand() {
     if (B(at::kSlots + 3) == 0) {
-        Window19 = 1;
+        WindowRecords[19].in_use = 1;
         SetWord(At(Window19_addr + 4), static_cast<unsigned>(Long(At(Window18_addr + 4))) + 6);
         SetWord(At(Window19_addr + 6), 13u * B(at::kSlots + 0xA) + Word(At(Window18_addr + 6)) + 0x57);
     } else {
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
     }
 }
 
@@ -609,7 +609,7 @@ extern "C" void __cdecl BattleEnd_EnterStep3(void) {
 // off, kind 8. BE5's four Dragon-run steps call it.
 extern "C" void __cdecl ItemMenu_SetupForMember(void) {
     unsigned char* const actor = MenuActor();
-    Window16 = 1;
+    WindowRecords[16].in_use = 1;
     B(at::kList + 1) = 8;
     B(at::kList + 2) = 2;
     B(at::kList + 3) = 2;
@@ -624,7 +624,7 @@ extern "C" void __cdecl ItemMenu_SetupForMember(void) {
     SetWord(At(Window16_addr + 6), 0x3F);
     SetWord(At(Window16_addr + 0x14), bits);
     BattleActorCopies_ItemActor = actor[5];
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     B(at::kHand + 1) = 8;
     B(at::kHand + 2) = 0;
 }
@@ -684,11 +684,11 @@ extern "C" void __cdecl BattleItemCmd_EquipMenu(void) {
     const unsigned char* const text = OptionMessage(0x2F);
     SetLong(At(at::kQueue + 4 + LastQueueEntry()), S32(static_cast<U>(reinterpret_cast<std::uintptr_t>(text))));
     if (B(at::kAbove + 3) == 0) {
-        Window19 = 1;
+        WindowRecords[19].in_use = 1;
         SetWord(At(Window19_addr + 4), B(at::kAbove + 0xA) * 48u + static_cast<U>(Long(At(Window21_addr + 4))));
         SetWord(At(Window19_addr + 6), Word(At(Window21_addr + 6)) + 4u);
     } else {
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
     }
     U pad = static_cast<U>(Long(At(Input_Pressed_addr)));
     B(at::kAbove + 0xB) = 0xFF;
@@ -722,7 +722,7 @@ extern "C" void __cdecl BattleItemCmd_EquipMenu(void) {
         back = true;
     }
     if (!back) return;
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
     WindowRecords[4].in_use = 1;
     BattleE4_Step2 = 2;
     BattleE4_Step3 = 1;
@@ -752,15 +752,15 @@ extern "C" void __cdecl BattleItemCmd_EquipSlotPick(void) {
         const unsigned x = Word(At(Window17_addr + 4));
         const unsigned y = Word(At(Window17_addr + 6));
         B(at::kSlots + 3) = 1;
-        Window16 = 1;
+        WindowRecords[16].in_use = 1;
         WindowRecords[4].in_use = 1;
         BattleE4_Step3 = 1;
         B(at::kList + 3) = 3;
         SetWord(At(Window16_addr + 4), x);
         SetWord(At(Window16_addr + 6), y);
-        Window17 = 0;
-        Window21 = 0;
-        Window19 = 0;
+        WindowRecords[17].in_use = 0;
+        WindowRecords[21].in_use = 0;
+        WindowRecords[19].in_use = 0;
         BattleE4_Step4 = 0;
         return;
     }
@@ -798,12 +798,12 @@ extern "C" void __cdecl BattleItemCmd_EquipSlotPick(void) {
 // cue 0x103, BattleEquip_Apply and back; without: cue 0x107.
 extern "C" void __cdecl BattleItemCmd_EquipItemPick(void) {
     if (B(at::kCands + 3) == 0) {
-        Window19 = 1;
+        WindowRecords[19].in_use = 1;
         SetWord(At(Window19_addr + 4), static_cast<U>(Long(At(Window17_addr + 4))) + 7);
         const U rows = static_cast<U>(B(at::kCands + 0xB)) - B(at::kCands + 0xA) + 2;
         SetWord(At(Window19_addr + 6), rows * 13 + Word(At(Window17_addr + 6)));
     } else {
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
     }
     BH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0x500C));
@@ -902,8 +902,8 @@ extern "C" void __cdecl BattleItemCmd_EquipUsePick(void) {
         WindowRecords[4].in_use = 1;
         BattleE4_Step3 = 1;
         B(at::kList + 3) = 3;
-        Window21 = 0;
-        Window19 = 0;
+        WindowRecords[21].in_use = 0;
+        WindowRecords[19].in_use = 0;
         BattleE4_Step4 = 0;
         return;
     }
@@ -924,8 +924,8 @@ extern "C" void __cdecl BattleItemCmd_EquipUsePick(void) {
             const unsigned last = LastQueueEntry();
             B(at::kSlots + 3) = 1;
             B(at::kCands + 3) = 2;
-            Window19 = 0;
-            Window21 = 0;
+            WindowRecords[19].in_use = 0;
+            WindowRecords[21].in_use = 0;
             SetLong(At(at::kQueue + 4 + last), S32(static_cast<U>(reinterpret_cast<std::uintptr_t>(line))));
             WindowRecords[4].in_use = 1;
             BattleE4_Step3 = 7;
@@ -1241,7 +1241,7 @@ extern "C" unsigned char __cdecl BattleEquip_RemoveSlot(void) {
 // the list off with its word +4 = 0x140, 0x929F06 the member's +5.
 extern "C" void __cdecl BattleEquip_OpenChange(void) {
     unsigned char* const actor = MenuActor();
-    Window18 = 1;
+    WindowRecords[18].in_use = 1;
     B(at::kSlots + 1) = 8;
     B(at::kSlots + 2) = 3;
     B(at::kSlots + 3) = 2;
@@ -1249,7 +1249,7 @@ extern "C" void __cdecl BattleEquip_OpenChange(void) {
     B(at::kSlots + 0xB) = 0xFF;
     const unsigned char member = actor[5];
     B(at::kSlots + 0xD) = 1;
-    Window17 = 1;
+    WindowRecords[17].in_use = 1;
     B(at::kCands + 3) = 1;
     const unsigned x = Word(At(Window16_addr + 4));
     B(at::kSlots + 0xC) = member;
@@ -1267,7 +1267,7 @@ extern "C" void __cdecl BattleEquip_OpenChange(void) {
     B(at::kCands + 0xD) = 0;
     B(at::kCands + 9) = 0;
     SetWord(At(Window17_addr + 6), y);
-    Window16 = 0;
+    WindowRecords[16].in_use = 0;
     SetWord(At(Window16_addr + 4), 0x140);
     BattleActorCopies_ItemActor = actor[5];
 }
@@ -1277,7 +1277,7 @@ extern "C" void __cdecl BattleEquip_OpenChange(void) {
 // member's +5.
 extern "C" void __cdecl BattleEquip_OpenUse(void) {
     unsigned char* const actor = MenuActor();
-    Window18 = 1;
+    WindowRecords[18].in_use = 1;
     B(at::kSlots + 1) = 8;
     B(at::kSlots + 2) = 3;
     B(at::kSlots + 3) = 3;

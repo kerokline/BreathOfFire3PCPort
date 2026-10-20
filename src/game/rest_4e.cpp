@@ -962,7 +962,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     ItemFrame(slide);
     if (WindowRecords[0].state != 0) return;
     const U window_x = L(kWin0 + 4);
-    Window1 = 1;
+    WindowRecords[1].in_use = 1;
     SetW(kWin1 + 4, window_x + 7);
     SetW(kWin1 + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - B(kTop) + 2u) + static_cast<std::uint32_t>(WindowRecords[0].y));
     const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
@@ -1020,7 +1020,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     if (W(kScroll) != 0) return;
     const unsigned pressed = Input_Pressed;
     if (Field_CancelButtons & pressed) {
-        Window1 = 0;
+        WindowRecords[1].in_use = 0;
         WindowRecords[0].state = 1;
         SH_CALL(Sound_PlayEffect)(0x106);
         ++Rest4b_BoardStep;
@@ -1036,7 +1036,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
         WindowRecords[0].state = 1;
         entry[2] = item;
         unsigned char* const again = EntryRecord("CommuItem_Choose (0x45FE90)");
-        Window1 = 0;
+        WindowRecords[1].in_use = 0;
         Rest4b_BoardStep = 4;
         again[3] = tab;
     }
@@ -1146,7 +1146,7 @@ extern "C" void __cdecl CommuItem_SetupWindow(void) {
     B(kWin1 + 1) = 2;
     B(kWin1 + 2) = 1;
     B(kWin1 + 3) = 0;
-    Window1 = 0;
+    WindowRecords[1].in_use = 0;
 }
 
 // ===========================================================================

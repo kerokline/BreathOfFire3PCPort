@@ -140,7 +140,7 @@ extern "C" void __cdecl MsgBox_Reset(void) {
     SetW(kEffectOff, 0);
     ItemUse_ColorHigh = 0;
     g.window_alloc(0, 0);
-    Window0_Pass = 2;
+    WindowRecords[0].pass = 2;
 }
 
 // original 0x4977F0 (PSX 0x80150508). The box's frame: the box origin from
@@ -681,7 +681,7 @@ extern "C" void __cdecl MsgBox_ChoiceOpen(void) {
     g.window_alloc(1, 0);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
     SetB(kFlags, B(kFlags) | 4u);
-    Window1_Kind = 1;
+    WindowRecords[1].kind = 1;
     rv::Store<unsigned>(win0->state, 3);
     ItemUse_SubState = next;
 }
@@ -690,7 +690,7 @@ extern "C" void __cdecl MsgBox_ChoiceOpen(void) {
 // its own move.
 extern "C" void __cdecl MsgBox_ChoiceWaitOpen(void) {
     auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
-    if (Window1_State == 2 && win0->state == 4) ItemUse_SubState = ItemUse_SubState + 1;
+    if (WindowRecords[1].state == 2 && win0->state == 4) ItemUse_SubState = ItemUse_SubState + 1;
 }
 
 // original 0x498110. The choice list's input: cancel closes it, confirm
@@ -706,7 +706,7 @@ extern "C" void __cdecl MsgBox_ChoiceInput(void) {
     const unsigned pressed = Input_Pressed;
     if ((Field_CancelButtons & pressed) != 0) {
         const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
-        Window1_State = 3;
+        WindowRecords[1].state = 3;
         rv::Store<unsigned>(win0->state, 1);
         ItemUse_SubState = next;
         return;
@@ -753,7 +753,7 @@ extern "C" void __cdecl MsgBox_ChoiceReopen(void) {
 // message), window 0 to state 4, and state 2 sub 1 - the wait for it to shut.
 extern "C" void __cdecl MsgBox_ChoiceDone(void) {
     auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
-    if (Window1_State != 4) return;
+    if (WindowRecords[1].state != 4) return;
     SetB(kFlags, B(kFlags) | 0x80u);
     rv::Store<unsigned>(win0->state, 4);
     SetB(kState, 2);
@@ -786,13 +786,13 @@ extern "C" void __cdecl MsgBox_MenuOpen(void) {
     AreaW0c_ChoiceAnswer = 0;
     g.window_alloc(1, 0);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
-    Window1_Kind = 2;
+    WindowRecords[1].kind = 2;
     ItemUse_SubState = next;
 }
 
 // original 0x498340. Waits until window 1 reports 2.
 extern "C" void __cdecl MsgBox_MenuWaitOpen(void) {
-    if (Window1_State == 2) ItemUse_SubState = ItemUse_SubState + 1;
+    if (WindowRecords[1].state == 2) ItemUse_SubState = ItemUse_SubState + 1;
 }
 
 // original 0x498350. The menu's input: confirm moves on, and the cursor moves
@@ -819,7 +819,7 @@ extern "C" void __cdecl MsgBox_MenuInput(void) {
 // there is nothing left to say and the box is finished; otherwise on to the
 // next entry.
 extern "C" void __cdecl MsgBox_MenuDone(void) {
-    if (Window1_State != 4) return;
+    if (WindowRecords[1].state != 4) return;
     if (W(kMessage) != 0xFFFF) {
         ItemUse_SubState = ItemUse_SubState + 1;
         return;

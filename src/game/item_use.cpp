@@ -396,7 +396,7 @@ void CommitChoice() {
 extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
     CommitChoice();
     const bool more = Word(At(at::kMessage)) != 0xFFFF;
-    Window1_State = 3;
+    WindowRecords[1].state = 3;
     if (more) {
         const unsigned char sub = ItemUse_SubState;
         WindowRecords[0].state = 1;
@@ -413,7 +413,7 @@ extern "C" void __cdecl MsgBox_MenuCommit(void) {
     CommitChoice();
     const unsigned char sub = ItemUse_SubState;
     ItemUse_ColorHigh = 0;
-    Window1_State = 3;
+    WindowRecords[1].state = 3;
     ItemUse_SubState = static_cast<unsigned char>(sub + 1);
 }
 

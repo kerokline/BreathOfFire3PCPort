@@ -405,7 +405,7 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
         B(at::kWin2 + 3) = 1;
         WindowRecords[3].state = 1;
         WindowRecords[4].in_use = 0;
-        Window21 = 0;
+        WindowRecords[21].in_use = 0;
         B(at::kModeTimer) = 5;
         FieldS_State = static_cast<unsigned char>(step + 1);
         FieldS_Step = 0;

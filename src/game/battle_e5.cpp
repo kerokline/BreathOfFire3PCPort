@@ -543,8 +543,8 @@ void TakeSlot(U slot) {
 // The list windows' opening and closing (0x4502C0 / 0x450B60, 0x450680 /
 // 0x450EF0, 0x4505A0 / 0x450DF0): see each.
 void OpenList(U slot, U window, unsigned char kind, unsigned x, unsigned line) {
-    if (Window21 & 1) return;
-    Window21 = 0;
+    if (WindowRecords[21].in_use & 1) return;
+    WindowRecords[21].in_use = 0;
     BH_CALL(Window_Alloc)(slot, 5);
     B(window + 2) = kind;
     B(window + 3) = 0;
@@ -704,10 +704,10 @@ extern "C" void __cdecl DragonCmd_MenuClose(void) {
 // windows 17 and 21's +0 zeroed, BattleBanner_ShowName(the menu actor),
 // window 4's +3 = 1, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_MenuCancel(void) {
-    if (Window21 & 1) return;
+    if (WindowRecords[21].in_use & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    Window17 = 0;
-    Window21 = 0;
+    WindowRecords[17].in_use = 0;
+    WindowRecords[21].in_use = 0;
     BH_CALL(BattleBanner_ShowName)(Member());
     WindowRecords[4].state = 1;
     BH_CALL(LoadDatFile)(0xCF);
@@ -815,12 +815,12 @@ extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
 // 18, 16, 19's +0 zeroed, LoadDatFile(0xCF), then part 4's step 3 (the
 // gene grid's close and commit).
 extern "C" void __cdecl DragonCmd_SlotsClose(void) {
-    if (Window18 & 1) return;
+    if (WindowRecords[18].in_use & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    Window17 = 0;
-    Window18 = 0;
-    Window16 = 0;
-    Window19 = 0;
+    WindowRecords[17].in_use = 0;
+    WindowRecords[18].in_use = 0;
+    WindowRecords[16].in_use = 0;
+    WindowRecords[19].in_use = 0;
     BH_CALL(LoadDatFile)(0xCF);
     BattleE4_Step3 = 4;
     BattleE4_Step4 = 3;
@@ -968,12 +968,12 @@ extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
 // original 0x450A70 (0x64ED20[3]): window 21 closed: 0x447F40, windows 17, 21,
 // 16, 19's +0 zeroed, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_GenesClose(void) {
-    if (Window21 & 1) return;
+    if (WindowRecords[21].in_use & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    Window17 = 0;
-    Window21 = 0;
-    Window16 = 0;
-    Window19 = 0;
+    WindowRecords[17].in_use = 0;
+    WindowRecords[21].in_use = 0;
+    WindowRecords[16].in_use = 0;
+    WindowRecords[19].in_use = 0;
     BH_CALL(LoadDatFile)(0xCF);
     NextStep();
 }
@@ -1078,11 +1078,11 @@ extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
 // record is the one tested): 0x447F40, windows 17, 16, 19's +0 zeroed,
 // LoadDatFile(0xCF), part 4's step 3.
 extern "C" void __cdecl DragonCmd_Slots2Close(void) {
-    if (Window18 & 1) return;
+    if (WindowRecords[18].in_use & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    Window17 = 0;
-    Window16 = 0;
-    Window19 = 0;
+    WindowRecords[17].in_use = 0;
+    WindowRecords[16].in_use = 0;
+    WindowRecords[19].in_use = 0;
     BH_CALL(LoadDatFile)(0xCF);
     BattleE4_Step3 = 4;
     BattleE4_Step4 = 3;

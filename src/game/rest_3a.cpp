@@ -228,9 +228,9 @@ extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
     Window0_Item = 0;
     Window0_Arrows = 0;
     B(0x803185) = 2;
-    Window1_Kind = 3;
-    Window1_State = 2;
-    Window1 = 1;
+    WindowRecords[1].kind = 3;
+    WindowRecords[1].state = 2;
+    WindowRecords[1].in_use = 1;
     W16(0x803188, 0xFF56);
     W16(0x80318A, 0x3E);
     B(0x803190) = 7;
@@ -238,8 +238,8 @@ extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
     B(0x80318F) = 0xFF;
     Window1_Master = 1;
     B(0x8031A9) = 2;
-    Window2_State = 2;
-    Window2 = 1;
+    WindowRecords[2].state = 2;
+    WindowRecords[2].in_use = 1;
     W16(0x8031AC, 0x14);
     W16(0x8031B8, 0);
     W16(0x8031BA, 0x118);
@@ -285,7 +285,7 @@ extern "C" unsigned char __cdecl BattleExtra_EquipRefresh(void) {
     const unsigned char item = Window0_Item;
     const unsigned fits = BH_CALL(Item_EquipMask)(category, item);
     const unsigned char e14 = B(at::kGuestEquip + 2);
-    const unsigned char e12 = Rest3a_GuestEquip;
+    const unsigned char e12 = CharacterRecords[7].weapon;
     B(at::kWin13Dim) = static_cast<unsigned char>(~fits & 1);
     const unsigned char e13 = B(at::kGuestEquip + 1);
     B(at::kChosen + 2) = e14;

@@ -259,7 +259,7 @@ extern "C" unsigned __cdecl Boss26Fx_Dispatch(unsigned passed) {
 // original 0x43C760: state 0 - with the window byte 0x803433 clear and
 // 0x904AE9 bit 1 clear, +1 up by one.
 extern "C" void __cdecl Boss26Fx_Wait(void) {
-    if (Window20_State == 0 && (BattleMisc_BannerKinds & 2) == 0) rv::Current<records::BattleTask>()->state += 1;
+    if (WindowRecords[20].state == 0 && (BattleMisc_BannerKinds & 2) == 0) rv::Current<records::BattleTask>()->state += 1;
 }
 
 // original 0x43C780: state 1 - BattleWin_DrawMediumBox(0x6B, 0x10); the text
@@ -296,7 +296,7 @@ extern "C" void __cdecl Boss26Fx_DrawCount(void) {
         BH_CALL(Text_DrawFont12)(0x92, 0x12, 4, At(at::kTextRow1));
         BH_CALL(Text_DrawAt)(0xAA, 0x12, 0, 4, At(BossSf_CountText1));
     }
-    if (Window20_State != 0 || (BattleMisc_BannerKinds & 2) != 0) rv::Current<records::BattleTask>()->state -= 1;
+    if (WindowRecords[20].state != 0 || (BattleMisc_BannerKinds & 2) != 0) rv::Current<records::BattleTask>()->state -= 1;
     if (B(at::kPhase) == 5) BH_CALL(BattleTask_FreeCurrent)();
 }
 

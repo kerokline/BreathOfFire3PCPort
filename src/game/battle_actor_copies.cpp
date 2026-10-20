@@ -285,13 +285,13 @@ extern "C" void __cdecl BattleItem_OpenWindow(void) {
 //      closed, and step 3 - or for item 0x97 the acting actor as the target,
 //      window record 4's +3 = 2, phase 2 = 7 and step 0.
 extern "C" void __cdecl BattleItem_Browse(void) {
-    if (Window16_State != 0) return;
+    if (WindowRecords[16].state != 0) return;
     WindowRecords[0x13].x = static_cast<unsigned>(Long(At(WindowRecords_addr + 0x244))) + 7;
-    Window19 = 1;
+    WindowRecords[19].in_use = 1;
     const unsigned rows = static_cast<unsigned>(B(at::kItemCursor)) - static_cast<unsigned>(Long(At(WindowRecords_addr + 0x250))) + 2;
-    const unsigned y = rows * 13 + Window16_Y;
+    const unsigned y = rows * 13 + WindowRecords[16].y;
     const unsigned pressed = Input_Pressed;
-    Window19_Y = y;
+    WindowRecords[19].y = y;
     const U held = g.auto_repeat(pressed & Sigma(0xF00C));
 
     const U flags = static_cast<U>(rv::As<records::ActionRecord>(Command())->flags2);
@@ -365,8 +365,8 @@ extern "C" void __cdecl BattleItem_Browse(void) {
         const unsigned char page = Window16_Page;
         const unsigned char scroll = B(at::kItemScroll);
         const unsigned owner = Window16_Owner;
-        Window16_State = 1;
-        Window19 = 0;
+        WindowRecords[16].state = 1;
+        WindowRecords[19].in_use = 0;
         B(at::kQueueByte + entry) = 1;
         KeepPage(page, scroll, owner);
         g.play_effect(0x106);
@@ -387,8 +387,8 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     const unsigned char* const list = At(g.ability_list(actor, page, 1));
     rv::Store<unsigned>(rv::As<records::ActionRecord>(Command())->action_id, list[B(at::kItemCursor)]);
     unsigned char* const c = Command();
-    Window16_State = 1;
-    Window19 = 0;
+    WindowRecords[16].state = 1;
+    WindowRecords[19].in_use = 0;
     if (rv::As<records::ActionRecord>(c)->action_id == 0x97) {
         unsigned char* const a = Acting();
         WindowRecords[4].state = 2;

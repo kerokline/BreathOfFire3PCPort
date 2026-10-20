@@ -126,8 +126,8 @@ U YesNoFrame(U help) {
     else
         rv::Store<U>(win21->x, Long(0x803164) - static_cast<U>(answer * 36) + 0xE8);
     U pressed = Long(at::kPressed);
-    Window21 = 1;
-    Window21_Y = y + 5;
+    WindowRecords[21].in_use = 1;
+    WindowRecords[21].y = y + 5;
     if ((pressed & 0xA000) != 0) {
         g.sound(0x100);
         FieldS_Answer = static_cast<std::uint32_t>(static_cast<unsigned char>(FieldS_Answer)) ^ 1;
@@ -326,7 +326,7 @@ extern "C" void __cdecl ShopTrade_Choice(void) {
     auto* const w20 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 20 * sizeof(records::WindowRecord));
     const int choice = ShopStates2_Choice;
     Window0_Arrows = static_cast<U>(choice + 0x46);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     const U x = static_cast<U>(choice * 48) + Long(0x8031AC) + 4;
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
     const U y = static_cast<U>(w2->y) + 4;
@@ -349,7 +349,7 @@ extern "C" void __cdecl ShopTrade_Choice(void) {
     }
     if (Cancelled(p)) {
         g.sound(0x106);
-        Window21 = 0;
+        WindowRecords[21].in_use = 0;
         rv::Store<U>(w20->in_use, 0);
         const U state = FieldS_State;
         rv::Store<U>(w0->state, 1);
@@ -458,10 +458,10 @@ extern "C" void __cdecl ShopTrade_BuyList(void) {
     if (open == 0) {
         const int r = ShopStates2_Row;
         const U x = Long(0x803284) + 4;
-        Window21 = 1;
+        WindowRecords[21].in_use = 1;
         rv::Store<U>(win21->x, x);
         PutLong(0x803474, ShopStates2_ShopList);
-        Window21_Y = static_cast<U>(r * 13) + static_cast<U>(w8->y) + 0xA;
+        WindowRecords[21].y = static_cast<U>(r * 13) + static_cast<U>(w8->y) + 0xA;
     }
     const U repeat = g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & 0x5000);
     U cur = static_cast<unsigned char>(ShopStates2_Row);
@@ -569,7 +569,7 @@ extern "C" void __cdecl ShopTrade_BuyCount(void) {
     rv::Store<U>(w9->kind, 8);
     PutByte(0x80328A, 1);
     rv::Store<U>(win21->x, x);
-    Window21_Y = y + 0x33;
+    WindowRecords[21].y = y + 0x33;
     StepCount(g.auto_repeat(pressed), 0x100);
     const U c = ShopStates2_Count;
     const U p = Input_Pressed;
@@ -661,7 +661,7 @@ extern "C" void __cdecl ShopTrade_BuyMember(void) {
     SetItemName();
     const int member = BattleActorCopies_ItemActor;
     Window0_Arrows = 0x4B;
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
     rv::Store<U>(w20->in_use, 1);
     rv::Store<U>(w20->x, Word(0x8031D0 + static_cast<U>(member * 36)));
     rv::Store<U>(w20->y, Word(0x8031D2 + static_cast<U>(member * 36)));
@@ -740,9 +740,9 @@ extern "C" void __cdecl ShopTrade_BuySlot(void) {
     const U x = Long(0x80323C) + 6;
     const U slot = ShopStates2_SlotCursor;
     rv::Store<U>(win21->x, x);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
-    Window21_Y = (slot + kind + 1) * 13 + static_cast<U>(w6->y);
+    WindowRecords[21].y = (slot + kind + 1) * 13 + static_cast<U>(w6->y);
     const U repeat = g.auto_repeat(pressed);
     if (kind == 5) {
         Window0_Arrows = 0x4C;
@@ -783,7 +783,7 @@ extern "C" void __cdecl ShopTrade_BuyEquipped(void) {
     SetItemName();
     const U pressed = Input_Pressed;
     Window0_Arrows = 0x4D;
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
     if (pressed == 0) return;
     MarkPanels(4, 2);
     const U kind = ShopStates2_Kind;
@@ -853,10 +853,10 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         const U top = static_cast<U>(w7->top);
         const U r = static_cast<U>(w7->marked);
         const U x = Long(0x803260) + 7;
-        Window21 = 1;
+        WindowRecords[21].in_use = 1;
         rv::Store<U>(win21->x, x);
         rv::Store<U>(w10->in_use, 0);
-        Window21_Y = (r - top) * 13 + static_cast<U>(w7->y) + 0x1B;
+        WindowRecords[21].y = (r - top) * 13 + static_cast<U>(w7->y) + 0x1B;
     }
     const U repeat = g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & Sigma(0xF00C));
     if ((repeat & 0x8000) != 0) {
@@ -941,7 +941,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         const U x = Long(0x803260) + 7;
         ShopStates2_Item = chosen;
         rv::Store<U>(win21->x, x);
-        Window21_Y = (r - top) * 13 + static_cast<U>(w7->y) + 0x1B;
+        WindowRecords[21].y = (r - top) * 13 + static_cast<U>(w7->y) + 0x1B;
         g.sound(0x103);
         const U ok = g.can_use(static_cast<U>(w7->use_mode), 0, static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item)) & 0xFF;
         if (ok == 0) {
@@ -1047,7 +1047,7 @@ extern "C" void __cdecl ShopTrade_SellConfirm(void) {
 // 1 (buy or sell again) step 0.
 extern "C" void __cdecl ShopTrade_SellClose(void) {
     const U c = (Byte(at::kCounter) - 1) & 0xFF;
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
     PutByte(at::kCounter, c);
     if (c != 0) return;
     FieldS_State = 1;

@@ -337,9 +337,9 @@ extern "C" void __cdecl Shisu_CloseWait(void) {
     }
     const unsigned char mode = BattleE1_Mode;
     FieldS_State = 0;
-    Window1 = 0;
+    WindowRecords[1].in_use = 0;
     BattleE1_Mode = static_cast<unsigned char>(mode + 1);
-    Window2 = 0;
+    WindowRecords[2].in_use = 0;
     WindowRecords[3].in_use = 0;
 }
 
@@ -672,12 +672,12 @@ extern "C" void __cdecl Shisu_SetupWindows(void) {
     SetW(kWin2 + 6, 0xFF9C);
     WindowRecords[0].handler = 1;
     WindowRecords[0].state = 2;
-    Window1 = 1;
+    WindowRecords[1].in_use = 1;
     B(kWin1 + 1) = 1;
     B(kWin1 + 2) = 1;
     B(kWin1 + 3) = 2;
     SetW(kWin1 + 4, 0x14);
-    Window2 = 1;
+    WindowRecords[2].in_use = 1;
     B(kWin2 + 1) = 1;
     B(kWin2 + 2) = 2;
     B(kWin2 + 3) = 2;
