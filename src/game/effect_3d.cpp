@@ -370,7 +370,7 @@ extern "C" void __cdecl EffectKind78_Run(void) {
 // (0x7DEFFA), +9 0x14, +0xC and +0x10 0, +0x2E / +0x30 its screen words
 // (0x7DEFF6 / 0x7DEFF8); +1 up.
 extern "C" void __cdecl EffectKind78_Start(void) {
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, W(at::kObject2Turn));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, static_cast<std::uint32_t>(Sprite_Objects[2].draw_key));
     S()[9] = 0x14;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0);
@@ -393,7 +393,7 @@ void DrawRingOfRecord() {
 // original 0x4863E0 (state 1): record 2 turned 0xF00; the radii grow (+0xC by
 // 0xF, +0x10 by 0xA); the ring; +9 down, at 0 +9 0x3C and +1 up.
 extern "C" void __cdecl EffectKind78_Grow(void) {
-    SetWord(At(Sprite_Objects_addr + 0x17a), W(at::kObject2Turn) + 0xF00u);
+    Sprite_Objects[2].draw_key = static_cast<std::uint32_t>(Sprite_Objects[2].draw_key) + 0xF00u;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, rv::As<records::EffectWork>(S())->work_0c + 0xF);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, rv::As<records::EffectWork>(S())->work_10 + 0xA);
     DrawRingOfRecord();
@@ -406,7 +406,7 @@ extern "C" void __cdecl EffectKind78_Grow(void) {
 // original 0x486450 (state 2): record 2 turned 0xF00, the ring; +9 down, at 0
 // +1 up.
 extern "C" void __cdecl EffectKind78_Spin(void) {
-    SetWord(At(Sprite_Objects_addr + 0x17a), W(at::kObject2Turn) + 0xF00u);
+    Sprite_Objects[2].draw_key = static_cast<std::uint32_t>(Sprite_Objects[2].draw_key) + 0xF00u;
     unsigned char* const s = S();
     // here the upper halves are the caller's (the dispatcher's ecx, Sprite_Current); the ring reads the low words
     SH_CALL(EffectKind78_DrawRing)(static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30), W(s + 0xC), W(s + 0x10));
@@ -416,7 +416,7 @@ extern "C" void __cdecl EffectKind78_Spin(void) {
 // original 0x4864A0 (state 3): record 2's turn put back from +0x32; a tail jump
 // to Effect_Release.
 extern "C" void __cdecl EffectKind78_End(void) {
-    SetWord(At(Sprite_Objects_addr + 0x17a), static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32));
+    Sprite_Objects[2].draw_key = static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32);
     SH_CALL(Effect_Release)();
 }
 

@@ -302,7 +302,7 @@ extern "C" void __cdecl EffectKind83_Count18(void) {
 // +0x34 the leader's x less record 0's; the step 0x1E; a tail jump to
 // Effect_Release.
 extern "C" void __cdecl EffectKind83_Finish(void) {
-    const U object_x = UL(At(Sprite_Objects_addr + 0x34));
+    const U object_x = static_cast<std::uint32_t>(Sprite_Objects[0].x);
     const U leader_x = static_cast<std::uint32_t>(ObjTrio[0].x);
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);

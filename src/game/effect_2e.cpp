@@ -572,9 +572,9 @@ extern "C" void __cdecl EffectKind4A_Run(void) {
 // (+0x34 / +0x38 / +0x3C); +0xC = 0xB4; the trail set (EffectKind4A_TrailInit);
 // +1 up.
 extern "C" void __cdecl EffectKind4A_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(At(Sprite_Objects_addr + 0xd8)));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
-    rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(At(Sprite_Objects_addr + 0xd8 + 8)));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(Sprite_Objects[1].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(Sprite_Objects[1].z));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0xB4);
     SH_CALL(EffectKind4A_TrailInit)();
     NextState();
@@ -591,9 +591,9 @@ extern "C" void __cdecl EffectKind4A_Follow(void) {
     auto* const so = rv::As<records::EffectObject>(s);
     if (rv::As<records::EffectWork>(s)->work_0c == 0xA5) Effect2e_TrailSpin = 1;
     if (SL(s + 0xC) > 0x5A) {
-        so->x = UL(At(Sprite_Objects_addr + 0xd8));
-        rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
-        rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(At(Sprite_Objects_addr + 0xd8 + 8)));
+        so->x = static_cast<std::uint32_t>(Sprite_Objects[1].x);
+        rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(Sprite_Objects[1].z));
+        rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     }
     SH_CALL(EffectKind4A_TrailStep)();
     SH_CALL(EffectKind4A_TrailDraw)();
