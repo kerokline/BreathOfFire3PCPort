@@ -21,9 +21,11 @@ using namespace move_script;
 
 using AreaHandler = void (__cdecl*)();
 
-// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
-// record or another family whose first 0x80 bytes are a sprite object's (an
-// ObjTrio member, the kind-2 object), so only that part is named.
+// Sprite_Current may be a Sprite_Objects record or another family whose
+// first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
+// object), so only that part is named: rv::Current<records::SpriteHead>() in
+// the functions the C2 audit (frs F3) put right, SpriteObject in the rest
+// until the same fix reaches them (typed-data-round.md 3, "C2 audit as run").
 using CounterOp = signed char (__cdecl*)(const unsigned char*);
 using GroupFn = unsigned char (__cdecl*)(unsigned char*, const unsigned char*, unsigned char);
 
@@ -69,10 +71,10 @@ Callees g = kOriginals;
 // Ops 0D and F3 place an object: the coordinate words of Sprite_Current, or
 // of Sprite_Kind2 itself on the kind-2 path.
 void PlaceAndGround(unsigned char* sprite, const unsigned char* operands) {
-    rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->x_whole, operands[1]);
-    rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->x_frac, operands[2] ? 0x8000u : 0u);
-    rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->z_whole, operands[3]);
-    rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->z_frac, operands[4] ? 0x8000u : 0u);
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(sprite)->x_whole, operands[1]);
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(sprite)->x_frac, operands[2] ? 0x8000u : 0u);
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(sprite)->z_whole, operands[3]);
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(sprite)->z_frac, operands[4] ? 0x8000u : 0u);
 }
 
 }  // namespace
@@ -137,7 +139,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             AreaHandler const* handlers;
             std::memcpy(&handlers, descriptor + 0x3C, sizeof handlers);
             handlers[p[1]]();
-            result = rv::Current<records::SpriteObject>()->direction;
+            result = rv::Current<records::SpriteHead>()->direction;
             SetPos(object, Pos(object) + 2u);
             break;
         }
@@ -176,8 +178,8 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             } else {
                 PlaceAndGround(Sprite_Current, script + Pos(object));
                 wide_staging::Placed0D(object, script, Pos(object));   // DIV-0122: a site's start moved out (wide only)
-                const long h = g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
-                rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(h));
+                const long h = g.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z);
+                rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(h));
             }
             SetPos(object, Pos(object) + 5u);
             break;
@@ -186,10 +188,10 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             const unsigned char animation = op == 0x0E
                 ? p[1] : MoveScript_AnimByState[p[1] * 11u + Field_State[0x89]];
             object[0] |= 0x40;
-            rv::Current<records::SpriteObject>()->flags2 |= 8;
-            if (script[Pos(object) + 3u] & 1) rv::Current<records::SpriteObject>()->flags |= 0x10;
-            else rv::Current<records::SpriteObject>()->flags &= 0xEF;
-            rv::Current<records::SpriteObject>()->flip = script[Pos(object) + 2u];
+            rv::Current<records::SpriteHead>()->flags2 |= 8;
+            if (script[Pos(object) + 3u] & 1) rv::Current<records::SpriteHead>()->flags |= 0x10;
+            else rv::Current<records::SpriteHead>()->flags &= 0xEF;
+            rv::Current<records::SpriteHead>()->flip = script[Pos(object) + 2u];
             const unsigned at = Pos(object);
             if (script[at + 3] & 2) {
                 g.set_animation_at(animation, script[at + 4]);
@@ -249,16 +251,16 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
                     object[0] |= 0x80;
                 }
             }
-            rv::Current<records::SpriteObject>()->step_y = 0;
+            rv::Current<records::SpriteHead>()->step_y = 0;
             const unsigned at = Pos(object);
-            rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
+            rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
             SetPos(object, Pos(object) + 4u);
         } else if (moves) {   // F3 d m th tl: move toward height th.tl, over the move's frames
             if (g.kind() != 2) {
                 g.move(object, value);
                 const unsigned at = Pos(object);
                 const auto target = static_cast<std::int16_t>(script[at + 3] << 8 | script[at + 4]);
-                records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+                records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
                 const std::int32_t rise = target - static_cast<std::int16_t>(sprite->height_whole);
                 const std::int32_t frames = static_cast<std::int32_t>(sprite->step_frames) * object[7];
                 sprite->step_y = rise / frames;
@@ -266,7 +268,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
                 SetPos(object, Pos(object) + 4u);
             } else {
                 unsigned char* const scratch = Scratch();
-                SetWord(scratch, rv::Current<records::SpriteObject>()->height_whole);
+                SetWord(scratch, rv::Current<records::SpriteHead>()->height_whole);
                 const unsigned at = Pos(object);
                 SetWord(scratch + 2, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
                 g.move_kind2(value);
@@ -283,15 +285,15 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
     }
     case 0xF4: {   // F4 th tl n: rise to th.tl over n frames (0 counts as 1)
         object[0] |= 0x80;
-        rv::Current<records::SpriteObject>()->step_frames = p[3];
-        if (rv::Current<records::SpriteObject>()->step_frames == 0) rv::Current<records::SpriteObject>()->step_frames = 1;
-        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+        rv::Current<records::SpriteHead>()->step_frames = p[3];
+        if (rv::Current<records::SpriteHead>()->step_frames == 0) rv::Current<records::SpriteHead>()->step_frames = 1;
+        records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
         const unsigned at = Pos(object);
         const auto target = static_cast<std::int16_t>(script[at + 1] << 8 | script[at + 2]);
         const std::int32_t rise = target - static_cast<std::int16_t>(sprite->height_whole);
         sprite->step_y = rise / static_cast<std::int32_t>(sprite->step_frames);
-        rv::Current<records::SpriteObject>()->step_x = 0;
-        rv::Current<records::SpriteObject>()->step_z = 0;
+        rv::Current<records::SpriteHead>()->step_x = 0;
+        rv::Current<records::SpriteHead>()->step_z = 0;
         SetPos(object, Pos(object) + 3u);
         return value;
     }
@@ -321,16 +323,16 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
             return 0xFF;
         }
         SetPos(object, Pos(object) + 2u);
-        return static_cast<unsigned char>(rv::Current<records::SpriteObject>()->direction & 7);
+        return static_cast<unsigned char>(rv::Current<records::SpriteHead>()->direction & 7);
     case 0xFB: case 0xFC: {
         unsigned char* const sprite = Sprite_Current;
-        const auto x = static_cast<short>(rv::As<records::SpriteObject>(sprite)->x_whole), z = static_cast<short>(rv::As<records::SpriteObject>(sprite)->z_whole);
+        const auto x = static_cast<short>(rv::As<records::SpriteHead>(sprite)->x_whole), z = static_cast<short>(rv::As<records::SpriteHead>(sprite)->z_whole);
         if ((p[0] == 0xFB ? g.test_fb : g.test_fc)(x, z)) g.sound(0x103);
         return value;
     }
     case 0xFD:
         if (!g.tick_once()) {
-            rv::Current<records::SpriteObject>()->flags2 |= 0x20;
+            rv::Current<records::SpriteHead>()->flags2 |= 0x20;
             SetPos(object, Pos(object) - 1u);
         }
         return value;
@@ -338,7 +340,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
         if (Field_Request != 3) {
             const std::uint16_t next = g.peek();
             SetWord(Scratch(), next);
-            if (rv::Current<records::SpriteObject>()->script_pos != next) {
+            if (rv::Current<records::SpriteHead>()->script_pos != next) {
                 const unsigned at = Pos(object);
                 if (next == script[at + 2]) g.sound(static_cast<unsigned short>(script[at + 1] + 0x200u));
             }

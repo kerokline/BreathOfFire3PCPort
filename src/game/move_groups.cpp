@@ -90,9 +90,11 @@ unsigned char* PartyRecord(int slot) { return MoveScript_PartyRecords + slot * 1
 unsigned char* TintRecord(unsigned char n) { return MoveScript_TintRecords + n * 12u; }
 unsigned char* ActiveMember() { return Field_ActiveMember; }
 
-// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
-// record or another family whose first 0x80 bytes are a sprite object's (an
-// ObjTrio member, the kind-2 object), so only that part is named.
+// Sprite_Current may be a Sprite_Objects record or another family whose
+// first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
+// object), so only that part is named: rv::Current<records::SpriteHead>() in
+// the functions the C2 audit (frs F3) put right, SpriteObject in the rest
+// until the same fix reaches them (typed-data-round.md 3, "C2 audit as run").
 
 // Ops C8 and CE: the sprite's direction one step toward a target, then its
 // facing (kind 1: the animation itself), and the op repeats.
@@ -314,7 +316,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         if (Field_Request != 3) {
             const std::uint16_t next = g.peek();
             SetWord(Scratch(), next);
-            if (rv::Current<records::SpriteObject>()->script_pos != next) {
+            if (rv::Current<records::SpriteHead>()->script_pos != next) {
                 const unsigned char* const q = script + Pos(object);
                 if (next == q[3]) g.play_by_id(static_cast<unsigned short>(q[1] << 8 | q[2]));
             }
@@ -322,11 +324,11 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         SetPos(object, Pos(object) + 4u);
         return value;
     case 0xD2:
-        rv::Current<records::SpriteObject>()->flags2 ^= 0x40;
-        rv::Current<records::SpriteObject>()->scale_mode = (rv::Current<records::SpriteObject>()->flags2 & 0x40) ? 0 : 1;
+        rv::Current<records::SpriteHead>()->flags2 ^= 0x40;
+        rv::Current<records::SpriteHead>()->scale_mode = (rv::Current<records::SpriteHead>()->flags2 & 0x40) ? 0 : 1;
         return value;
     case 0xD3:
-        rv::Current<records::SpriteObject>()->flags2 ^= 0x80;
+        rv::Current<records::SpriteHead>()->flags2 ^= 0x80;
         return value;
     case 0xD4: {   // D4 x x y y z z n: the party slot moves by x y z over n frames, or the sprite's +0x64..+0x6C
         unsigned char slot = PartySlot();
@@ -344,9 +346,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
             SetLong(r + 8, S16(script + Pos(object) + 3) / static_cast<signed char>(r[2]));
             SetLong(r + 4, S16(script + Pos(object) + 1) / static_cast<signed char>(r[2]));
         } else {
-            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[2], S16(script + Pos(object) + 5));
-            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[1], S16(script + Pos(object) + 3));
-            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[0], S16(script + Pos(object) + 1));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->angle[2], S16(script + Pos(object) + 5));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->angle[1], S16(script + Pos(object) + 3));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->angle[0], S16(script + Pos(object) + 1));
         }
         object[0] |= 8;
         SetPos(object, Pos(object) + 7u);
@@ -386,20 +388,20 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         return value;
     case 0xDB:
         g.op_db();
-        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
+        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z)));
         [[fallthrough]];
     case 0xDC:
-        g.test_fb(static_cast<short>(rv::Current<records::SpriteObject>()->x_whole), static_cast<short>(rv::Current<records::SpriteObject>()->z_whole));
+        g.test_fb(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
         return value;
     case 0xDD:
-        g.test_fc(static_cast<short>(rv::Current<records::SpriteObject>()->x_whole), static_cast<short>(rv::Current<records::SpriteObject>()->z_whole));
+        g.test_fc(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
         return value;
     case 0xDE: {   // DE n: the area's handler n, as flow op 03
         const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
         AreaHandler const* handlers;
         std::memcpy(&handlers, descriptor + 0x3C, sizeof handlers);
         handlers[p[1]]();
-        const unsigned char result = rv::Current<records::SpriteObject>()->direction;
+        const unsigned char result = rv::Current<records::SpriteHead>()->direction;
         SetPos(object, Pos(object) + 1u);
         return result;
     }

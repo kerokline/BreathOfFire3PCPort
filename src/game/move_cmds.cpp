@@ -44,9 +44,11 @@ std::int32_t Mul(std::int32_t a, std::int32_t b) {
 }
 unsigned char* Kind2() { return Sprite_Kind2; }
 
-// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
-// record or another family whose first 0x80 bytes are a sprite object's (an
-// ObjTrio member, the kind-2 object), so only that part is named.
+// Sprite_Current may be a Sprite_Objects record or another family whose
+// first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
+// object), so only that part is named: rv::Current<records::SpriteHead>() in
+// the functions the C2 audit (frs F3) put right, SpriteObject in the rest
+// until the same fix reaches them (typed-data-round.md 3, "C2 audit as run").
 
 // The angle a party member turns to for a direction: Sprite_DirectionAngles,
 // read at any index as the original reads it (the table has 8).
@@ -251,28 +253,28 @@ extern "C" void __cdecl Kind2_Place(unsigned char script) {
 // (eax holds Sprite_Current; every caller discards it).
 extern "C" void __cdecl MoveCmd_Move(unsigned char* object, unsigned char direction) {
     const unsigned char speed = Field_MoveSpeeds[object[4]];
-    rv::Current<records::SpriteObject>()->step_frames = (direction == 2 || direction == 6) ? 0x20 : 0x10;
+    rv::Current<records::SpriteHead>()->step_frames = (direction == 2 || direction == 6) ? 0x20 : 0x10;
     if (speed == 0) bof3::Fatal("MoveCmd_Move: speed index %u is a speed of 0, a divide fault in the original", object[4]);
-    records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
+    records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     sprite->step_frames = static_cast<unsigned char>(static_cast<std::int32_t>(sprite->step_frames) / static_cast<std::int32_t>(speed));
     const long* const unit = MoveCmd_F9Steps + direction * 2u;
-    sprite = rv::Current<records::SpriteObject>();
+    sprite = rv::Current<records::SpriteHead>();
     sprite->step_x = Mul(unit[0], speed);
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->step_z, Mul(unit[1], speed));
-    sprite = rv::Current<records::SpriteObject>();
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, Mul(unit[1], speed));
+    sprite = rv::Current<records::SpriteHead>();
     const std::int32_t frames = sprite->step_frames;
     const std::int32_t x = Add(Mul(sprite->step_x, frames), sprite->x);
     const std::int32_t z = Add(Mul(sprite->step_z, frames), sprite->z);
     if (!(object[0] & 0x80)) {
         long ground = g.slope(x, z, direction);
         if (Scratch()[0] != 0) ground = g.elevation(x, z);
-        sprite = rv::Current<records::SpriteObject>();
+        sprite = rv::Current<records::SpriteHead>();
         const std::int32_t rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground))) -
                                   static_cast<short>(Word(rv::Bytes(sprite) + 0x3E));
         const std::int32_t count = sprite->step_frames;
         if (count == 0) bof3::Fatal("MoveCmd_Move: a frame count of 0 (speed %u), a divide fault in the original", speed);
         sprite->step_y = rise / count;
-        sprite = rv::Current<records::SpriteObject>();
+        sprite = rv::Current<records::SpriteHead>();
     }
     sprite->flags |= 0x10;
 }
@@ -286,19 +288,19 @@ extern "C" void __cdecl MoveCmd_Move(unsigned char* object, unsigned char direct
 // for even when nothing moves. The original returns Sprite_Current[8] as on
 // entry in al; its one caller, MoveScript_GroupF, clears eax at once (0x577AEA).
 extern "C" void __cdecl MoveCmd_OpF7(long x, long z, unsigned char frames, unsigned char* context) {
-    const records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+    const records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     const std::int32_t dz = Sub(z, sprite->z);
     const std::int32_t dx = Sub(x, sprite->x);
     const long ground = g.elevation(x, z);
-    const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - rv::Current<records::SpriteObject>()->height_whole));
+    const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - rv::Current<records::SpriteHead>()->height_whole));
     if (context[4] == 0) return;
     const unsigned char n = frames ? frames : 1;
-    rv::Current<records::SpriteObject>()->step_frames = n;
+    rv::Current<records::SpriteHead>()->step_frames = n;
     Sprite_Current[0xA] = static_cast<unsigned char>(n + 1);
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->step_x, dx / n);
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->step_z, dz / n);
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->step_y, rise / n);
-    rv::Current<records::SpriteObject>()->flags |= 0x10;
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dx / n);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dz / n);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, rise / n);
+    rv::Current<records::SpriteHead>()->flags |= 0x10;
 }
 
 // original 0x578DC0: where the object a handle names stands, plus attachment
@@ -362,8 +364,8 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
             return;
         }
         Sprite_Current[2] = 1;
-        rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->work_18, handle);
-        rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->work_1c, s);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_18, handle);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_1c, s);
         if (context[4] != 0) {
             g.attach_move(t);
             context[7] = 1;
@@ -371,11 +373,11 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
         SetPos(context, Pos(context) + 3u);
         return;
     }
-    if (rv::Current<records::SpriteObject>()->state == 7) g.detach();
-    rv::Current<records::SpriteObject>()->state = mode;
-    if (rv::Current<records::SpriteObject>()->state != 7) return;
-    rv::Current<records::SpriteObject>()->work_18 = handle;
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->work_1c, s);
+    if (rv::Current<records::SpriteHead>()->state == 7) g.detach();
+    rv::Current<records::SpriteHead>()->state = mode;
+    if (rv::Current<records::SpriteHead>()->state != 7) return;
+    rv::Current<records::SpriteHead>()->work_18 = handle;
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_1c, s);
     if (context[4] != 0) g.attach_move(t);
     SetPos(context, Pos(context) + 3u);
 }
@@ -401,11 +403,11 @@ extern "C" void __cdecl MoveCmd_AttachMove(unsigned char t) {
     const long* const at = g.handle_position(buffer, handle, offset);
     const std::int32_t x = at[0], z = at[1], y = at[2];
     const unsigned char count = t ? t : 1;
-    rv::Current<records::SpriteObject>()->step_frames = count;
+    rv::Current<records::SpriteHead>()->step_frames = count;
     const std::int32_t n = static_cast<signed char>(count);
-    rv::Current<records::SpriteObject>()->step_x = Sub(x, rv::Current<records::SpriteObject>()->x) / n;
-    rv::Current<records::SpriteObject>()->step_z = Sub(z, rv::Current<records::SpriteObject>()->z) / n;
-    rv::Current<records::SpriteObject>()->step_y = Sub(y, static_cast<short>(rv::Current<records::SpriteObject>()->height_whole)) / n;
+    rv::Current<records::SpriteHead>()->step_x = Sub(x, rv::Current<records::SpriteHead>()->x) / n;
+    rv::Current<records::SpriteHead>()->step_z = Sub(z, rv::Current<records::SpriteHead>()->z) / n;
+    rv::Current<records::SpriteHead>()->step_y = Sub(y, static_cast<short>(rv::Current<records::SpriteHead>()->height_whole)) / n;
 }
 
 // original 0x579450: the position of label `label` in `script` (PSX
