@@ -9070,7 +9070,6 @@ site	src/game/field_e2.cpp	1888	global	Pool	at::kPoolWordAsk	0x803614	-	none	-	-
 site	src/game/field_e2.cpp	1892	global	Pool	at::kPoolWordAsk	0x803614	-	none	-	-	0
 site	src/game/field_e2_fuzz.cpp	518	global	-	field_e2::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	1
 site	src/game/field_e2_fuzz.cpp	541	global	B	field_e2::at::kEffectSlot	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/field_e2_fuzz.cpp	561	global	Mem	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	1
 site	src/game/field_e2_fuzz.cpp	653	global	W	field_e2::at::kPaceHeights	0x66978c	-	none	-	-	1
 site	src/game/field_e2_fuzz.cpp	654	record	Word	s + 0x3E	-	base=Sprite_Current	-	-	-	1
 site	src/game/field_e2_fuzz.cpp	657	global	B	at::kEffectSlot	0x903850	-	exact	DamageScratch	records::DamageScratch	1
@@ -9086,8 +9085,6 @@ site	src/game/field_e2_fuzz.cpp	739	record	Long	s + 0x38	-	base=Sprite_Current	-
 site	src/game/field_e2_fuzz.cpp	768	global	B	at::kCounterB	0x90384b	-	none	-	-	1
 site	src/game/field_e2_fuzz.cpp	769	global	SetW	at::kTailTimer	0x9039f6	-	none	-	-	1
 site	src/game/field_e2_fuzz.cpp	814	raw	SetW	0x7E1BEC	0x7e1bec	-	exact	Input_Pressed	unsigned short	1
-site	src/game/field_e2_fuzz.cpp	829	global	Mem	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	1
-site	src/game/field_e2_fuzz.cpp	830	global	Mem	at::kRecords	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	1
 site	src/game/field_e2_fuzz.cpp	836	global	B	at::kEffectSlot	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/field_event.cpp	82	global	At	at::kActorRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/field_event.cpp	207	global	At	at::kAnimationRemap	0x6608d8	-	none	-	-	0
@@ -16661,7 +16658,6 @@ site	src/game/rest_3g_fuzz.cpp	484	raw	At	0x7DEE80 + i * 0xA4	0x7dee80	-	exact	S
 site	src/game/rest_3g_fuzz.cpp	488	raw	At	0x7DEE80 + (next() % 30) * 0xA4	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	1
 site	src/game/rest_3g_fuzz.cpp	492	raw	At	0x904EFC	0x904efc	-	exact	Game_AreaNumber	unsigned short	1
 site	src/game/rest_3g_fuzz.cpp	496	raw	At	0x904EFC	0x904efc	-	exact	Game_AreaNumber	unsigned short	1
-site	src/game/rest_4a.cpp	57	global	At	at::kBuildings	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
 site	src/game/rest_4a.cpp	58	global	At	at::kRecordTraits	0x653200	-	none	-	-	0
 site	src/game/rest_4a.cpp	60	global	At	at::kResidentCounts	0x675f58	-	none	-	-	0
 site	src/game/rest_4a.cpp	66	global	At	at::kEvents	0x904ca0	-	none	-	-	0
@@ -16769,7 +16765,6 @@ site	src/game/rest_4a_fuzz.cpp	302	global	-	at::kSpawned	0x904f00	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	304	global	-	at::kEventCount	0x937f80	-	exact	Rest4b_BusyB	unsigned char	1
 site	src/game/rest_4a_fuzz.cpp	305	global	-	at::kResidentCounts	0x675f58	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	307	global	-	at::kShopRecords	0x658930	-	exact	Shop_Records	-	1
-site	src/game/rest_4a_fuzz.cpp	314	global	Mem	at::kBuildings	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	1
 site	src/game/rest_4a_fuzz.cpp	335	record	SetUL	r + 4	-	via=Rec	-	-	-	1
 site	src/game/rest_4a_fuzz.cpp	343	record	SetUL	bl + 4	-	via=Bld	-	-	-	1
 site	src/game/rest_4a_fuzz.cpp	357	global	Mem	at::kLevelLit	0x9046cc	-	exact	Rest4a_LevelLit	unsigned char	1
@@ -23076,13 +23071,13 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19539
-#count sites_global	9683
-#count sites_global_at	7689
+#count sites	19534
+#count sites_global	9678
+#count sites_global_at	7684
 #count sites_global_module	1994
 #count sites_record	8727
 #count sites_raw	1129
-#count sites_in_fuzz	4184
+#count sites_in_fuzz	4180
 #count files_with_sites	523
 #count files_with_record_sites	470
 #count record_sites_with_stride	699
@@ -23094,7 +23089,7 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_param	661
 #count record_sites_family_unknown	1709
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	2359
+#count global_sites_covered_exact	2354
 #count global_sites_covered_inside	1130
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0

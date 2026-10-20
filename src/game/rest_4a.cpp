@@ -54,7 +54,7 @@ unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<st
 
 // The community's records and buildings, and the traits table by record.
 unsigned char* Rec(U i) { return At(Community_Records_addr + 8u * i); }
-unsigned char* Bld(U b) { return At(at::kBuildings + 8u * b); }
+unsigned char* Bld(U b) { return At(Community_Buildings_addr + 8u * b); }
 unsigned char Trait(U i, U field) { return At(at::kRecordTraits + at::kTraitStride * i + field)[0]; }
 unsigned char* Pose(U object) { return At(Sprite_Objects_addr + 0x88 + at::kSpriteStride * object); }
 unsigned char Count(U building) { return At(at::kResidentCounts + building)[0]; }

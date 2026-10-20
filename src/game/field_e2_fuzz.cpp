@@ -558,7 +558,7 @@ namespace at = field_e2::at;
 void SeedRecords() {
     // the eight records (kinds 4, 5, 0xB and others, a key, +3) and pairs naming them
     for (U r = 0; r < 8; ++r) {
-        unsigned char* const rec = Mem(at::kRecords + 8 * r);
+        unsigned char* const rec = Mem(Community_Buildings_addr + 8 * r);
         rec[0] = static_cast<unsigned char>(PickOf(4, 4, 5, 0xB, sh::Next() % 12));
         rec[1] = static_cast<unsigned char>(sh::Next() % 4);
         rec[3] = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFF);
@@ -826,8 +826,8 @@ void Args(unsigned k, U* a) {
     const U hi = a[9] & 0xFFFFFF00u;
     switch (k) {
     case kCallB: a[0] = hi | (Cond_ByteFA == 6 ? sh::Next() % 8 : sh::Next() % 10); break;
-    case kUnpaired: a[0] = hi | Mem(at::kRecords + 1 + 8 * (sh::Next() % 8))[0]; break;
-    case kUnpairedKind: a[0] = hi | PickOf(4, 5, 0xB, Mem(at::kRecords + 8 * (sh::Next() % 8))[0]); break;
+    case kUnpaired: a[0] = hi | Mem(Community_Buildings_addr + 1 + 8 * (sh::Next() % 8))[0]; break;
+    case kUnpairedKind: a[0] = hi | PickOf(4, 5, 0xB, Mem(Community_Buildings_addr + 8 * (sh::Next() % 8))[0]); break;
     case kFloor: a[0] = hi | (sh::Next() % 9); break;
     case kCellsAll:
     case kCellsNone:

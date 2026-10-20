@@ -9070,7 +9070,6 @@ src/game/field_e2.cpp	ItemTrade_Confirm	global	Pool	at::kPoolWordAsk	0	0x803614	
 src/game/field_e2.cpp	ItemTrade_Confirm	global	Pool	at::kPoolWordAsk	1	0x803614	-	no-entry	at::kPoolWordAsk 0x803614 -	b0
 src/game/field_e2_fuzz.cpp	-	global	-	field_e2::at::kTextRecords	0	0x904ce0	-	untyped-entry	field_e2::at::kTextRecords 0x904ce0 Text_Records	b0
 src/game/field_e2_fuzz.cpp	Move	global	B	field_e2::at::kEffectSlot	0	0x903850	-	no-entry	field_e2::at::kEffectSlot 0x903850 -	b0
-src/game/field_e2_fuzz.cpp	SeedRecords	global	Mem	at::kRecords	0	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
 src/game/field_e2_fuzz.cpp	Seed	global	W	field_e2::at::kPaceHeights	0	0x66978c	-	no-entry	field_e2::at::kPaceHeights 0x66978c -	b0
 src/game/field_e2_fuzz.cpp	Seed	record	Word	s + 0x3E	0	-	base=Sprite_Current	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_e2_fuzz.cpp	Seed	global	B	at::kEffectSlot	0	0x903850	-	no-entry	at::kEffectSlot 0x903850 -	b0
@@ -9086,8 +9085,6 @@ src/game/field_e2_fuzz.cpp	Seed	record	Long	s + 0x38	1	-	base=Sprite_Current	har
 src/game/field_e2_fuzz.cpp	Seed	global	B	at::kCounterB	0	0x90384b	-	no-entry	at::kCounterB 0x90384b -	b0
 src/game/field_e2_fuzz.cpp	Seed	global	SetW	at::kTailTimer	0	0x9039f6	-	no-entry	at::kTailTimer 0x9039f6 -	b0
 src/game/field_e2_fuzz.cpp	Seed	raw	SetW	0x7E1BEC	1	0x7e1bec	-	-	-	-
-src/game/field_e2_fuzz.cpp	Args	global	Mem	at::kRecords	0	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
-src/game/field_e2_fuzz.cpp	Args	global	Mem	at::kRecords	1	0x9048b0	-	no-entry	at::kRecords 0x9048b0 -	b0
 src/game/field_e2_fuzz.cpp	Args	global	B	at::kEffectSlot	0	0x903850	-	no-entry	at::kEffectSlot 0x903850 -	b0
 src/game/field_event.cpp	Address	global	At	at::kActorRecords	0	0x903a70	-	no-entry	at::kActorRecords 0x903a70 -	b0
 src/game/field_event.cpp	Field_LeaderAnimation	global	At	at::kAnimationRemap	0	0x6608d8	-	no-entry	at::kAnimationRemap 0x6608d8 -	b0
@@ -16661,7 +16658,6 @@ src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x7DEE80 + i * 0xA4	0	0x7dee8
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x7DEE80 + (next() % 30) * 0xA4	0	0x7dee80	-	-	-	-
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x904EFC	0	0x904efc	-	-	-	-
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x904EFC	1	0x904efc	-	-	-	-
-src/game/rest_4a.cpp	UL	global	At	at::kBuildings	0	0x9048b0	-	no-entry	at::kBuildings 0x9048b0 -	b0
 src/game/rest_4a.cpp	UL	global	At	at::kRecordTraits	0	0x653200	-	no-entry	at::kRecordTraits 0x653200 -	b0
 src/game/rest_4a.cpp	UL	global	At	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a.cpp	UL	global	At	at::kEvents	0	0x904ca0	-	no-entry	at::kEvents 0x904ca0 -	b0
@@ -16769,7 +16765,6 @@ src/game/rest_4a_fuzz.cpp	-	global	-	at::kSpawned	0	0x904f00	-	no-entry	at::kSpa
 src/game/rest_4a_fuzz.cpp	-	global	-	at::kEventCount	0	0x937f80	-	name	at::kEventCount 0x937f80 Rest4b_BusyB	b0
 src/game/rest_4a_fuzz.cpp	-	global	-	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a_fuzz.cpp	-	global	-	at::kShopRecords	0	0x658930	-	untyped-entry	at::kShopRecords 0x658930 Shop_Records	b0
-src/game/rest_4a_fuzz.cpp	Rec	global	Mem	at::kBuildings	0	0x9048b0	-	no-entry	at::kBuildings 0x9048b0 -	b0
 src/game/rest_4a_fuzz.cpp	Rec	record	SetUL	r + 4	0	-	via=Rec	no-struct	SetUL(r + 4): via=Rec, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4a_fuzz.cpp	Rec	record	SetUL	bl + 4	0	-	via=Bld	no-struct	SetUL(bl + 4): via=Bld, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4a_fuzz.cpp	Rec	global	Mem	at::kLevelLit	0	0x9046cc	-	gate	at::kLevelLit 0x9046cc Rest4a_LevelLit	b0
