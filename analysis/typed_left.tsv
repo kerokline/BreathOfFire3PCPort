@@ -8562,13 +8562,11 @@ src/game/event_objs.cpp	Field_JumpCamera	record	Word	s + 0x14	0	-	base=Sprite_Cu
 src/game/event_objs.cpp	Sprite_ApplyVelocity	record	Word	Sprite_Current + 0x14	0	-	base=Sprite_Current	width	SpriteObject Word step_y: the access width is not the field's (a 16.16 position's whole-part word, an angle's low word, a byte of a wider field)	b1-scen_ui
 src/game/event_objs.cpp	Field_TileD0	record	Long	s + 0x70	0	-	base=Sprite_Current	family	SpriteObject Long reach: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
 src/game/event_objs.cpp	Field_Tile89	record	Long	s + 0x70	0	-	base=Sprite_Current	family	SpriteObject Long reach: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
-src/game/event_objs.cpp	Actor_EquipCount	record	At	bof3::addr::CharacterRecords + Character_IndexById[member &	0	-	base=CharacterRecords	computed	computed offset or index (base=CharacterRecords)	b1-scen_ui
 src/game/event_objs_fuzz.cpp	StubGround	record	Word	Sprite_Current + 0x3E	0	-	base=Sprite_Current	width	SpriteObject Word height: the access width is not the field's (a 16.16 position's whole-part word, an angle's low word, a byte of a wider field)	b1-scen_ui
 src/game/event_objs_fuzz.cpp	Capture	global	At	kBlockAt	0	0x903850	-	no-entry	kBlockAt 0x903850 -	b0
 src/game/event_objs_fuzz.cpp	Apply	global	At	kBlockAt	0	0x903850	-	no-entry	kBlockAt 0x903850 -	b0
 src/game/event_objs_fuzz.cpp	RandomSprite	record	SetWord	s + 0x34	0	-	param	width	SpriteObject SetWord x: the access width is not the field's (a 16.16 position's whole-part word, an angle's low word, a byte of a wider field)	b1-scen_ui
 src/game/event_objs_fuzz.cpp	RandomSprite	record	SetWord	s + 0x38	0	-	param	width	SpriteObject SetWord z: the access width is not the field's (a 16.16 position's whole-part word, an angle's low word, a byte of a wider field)	b1-scen_ui
-src/game/event_objs_fuzz.cpp	Generate	record	At	bof3::addr::CharacterRecords + n * kRecordSize	0	-	base=CharacterRecords	computed	computed offset or index (base=CharacterRecords)	b1-scen_ui
 src/game/event_ops.cpp	Address	global	At	at::kScratch	0	0x903850	-	no-entry	at::kScratch 0x903850 -	b0
 src/game/event_ops.cpp	SetCount	global	At	at::kScratch	0	0x903850	-	no-entry	at::kScratch 0x903850 -	b0
 src/game/event_ops.cpp	SetCount	global	At	at::kScratch2	0	0x903852	-	no-entry	at::kScratch2 0x903852 -	b0
@@ -8667,11 +8665,11 @@ src/game/event_ops_fuzz.cpp	RunTests	raw	At	0x9039A3	0	0x9039a3	-	-	-	-
 src/game/event_ops_fuzz.cpp	RunTests	global	At	at::kActorRecords	0	0x903a70	-	no-entry	at::kActorRecords 0x903a70 -	b0
 src/game/event_ops_fuzz.cpp	RunTests	record	Word	Sprite_Current + 0x3E	0	-	base=Sprite_Current	width	SpriteObject Word height: the access width is not the field's (a 16.16 position's whole-part word, an angle's low word, a byte of a wider field)	b1-scen_ui
 src/game/event_ops_fuzz.cpp	RunTests	record	SetWord	o + 0x3E	0	-	-	width	SpriteObject Word height: the access width is not the field's (a 16.16 position's whole-part word, an angle's low word, a byte of a wider field)	b1-scen_ui
-src/game/event_script.cpp	SetBank	record	SetWord	At(bof3::addr::DamageScratch) + 2	0	-	via=At	no-struct	no records.h family is evidenced for this pointer (via=At)	b1-scen_ui
+src/game/event_script.cpp	SetBank	record	SetWord	At(DamageScratch_addr) + 2	0	-	via=At	no-struct	no records.h family is evidenced for this pointer (via=At)	b1-scen_ui
 src/game/event_script.cpp	EventObj_Reset	record	SetWord	Field_ActiveMember + 0x8A	0	-	base=Field_ActiveMember	family	SpriteObject SetWord script_position: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
 src/game/event_script.cpp	EventObj_Reset	record	SetWord	Field_ActiveMember + 0x9C	0	-	base=Field_ActiveMember	family	SpriteObject SetWord counter: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
 src/game/event_script.cpp	Sprite_InitFromEntry	record	Dword	entry + 4	0	-	param	no-struct	no records.h family is evidenced for this pointer (param)	b1-scen_ui
-src/game/event_script_fuzz.cpp	StubKind2Place	record	SetWord	At(bof3::addr::DamageScratch) + 2	0	-	via=At	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (via=At)	b1-scen_ui
+src/game/event_script_fuzz.cpp	StubKind2Place	record	SetWord	At(DamageScratch_addr) + 2	0	-	via=At	fuzz-buffer	a start-up fuzz snapshot or stand-in buffer, not the game record itself (via=At)	b1-scen_ui
 src/game/field_blocked.cpp	Originals	record	Long	object + at	0	-	-	computed	offset computed at run time: object + at	b1-field
 src/game/field_blocked.cpp	Disturb	record	SetWord	Sprite_Current + 0x3E	0	-	base=Sprite_Current	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/field_blocked.cpp	Disturb	record	SetLong	g_current_object + 0x34 + (h >> 20) % 2 * 4	0	-	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
@@ -9323,9 +9321,8 @@ src/game/field_modes_fuzz.cpp	Next	global	At	kCounters	1	0x903848	-	no-entry	kCo
 src/game/field_modes_fuzz.cpp	Next	global	At	kCounters	2	0x903848	-	no-entry	kCounters 0x903848 -	b0
 src/game/field_o.cpp	Key	global	At	at::kTextScratch	0	0x904ba0	-	no-entry	at::kTextScratch 0x904ba0 -	b0
 src/game/field_o.cpp	Key	global	At	at::kTextScratch	1	0x904ba0	-	no-entry	at::kTextScratch 0x904ba0 -	b0
-src/game/field_o.cpp	Key	record	At	bof3::addr::CharacterRecords + (id & 0xFF) * at::kRecordStri	0	-	base=CharacterRecords	computed	offset computed at run time: bof3::addr::CharacterRecords + (id & 0xFF) * at::kRecordStri	b1-field
-src/game/field_o.cpp	Bank	record	Word	At(bof3::addr::DamageScratch) + 2	0	-	via=At	no-family	`At(bof3::addr::DamageScratch)`: not shown to point at one of the nine record families	b1-field
-src/game/field_o.cpp	Bank	record	SetWord	At(bof3::addr::DamageScratch) + 2	0	-	via=At	no-family	`At(bof3::addr::DamageScratch)`: not shown to point at one of the nine record families	b1-field
+src/game/field_o.cpp	Bank	record	Word	At(DamageScratch_addr) + 2	0	-	via=At	no-family	`At(bof3::addr::DamageScratch)`: not shown to point at one of the nine record families	b1-field
+src/game/field_o.cpp	Bank	record	SetWord	At(DamageScratch_addr) + 2	0	-	via=At	no-family	`At(bof3::addr::DamageScratch)`: not shown to point at one of the nine record families	b1-field
 src/game/field_o.cpp	Menu_DrawStatsPanel	global	Text	at::kStatLabels	0	0x66a0f8	-	no-entry	at::kStatLabels 0x66a0f8 -	b0
 src/game/field_o.cpp	Menu_DrawStatsPanel	global	Sprintf	at::kFmtNumber	0	0x64e324	-	no-entry	at::kFmtNumber 0x64e324 -	b0
 src/game/field_o.cpp	Menu_DrawStatsPanel	global	Text	at::kStatLabels	1	0x66a0f8	-	no-entry	at::kStatLabels 0x66a0f8 -	b0
@@ -9425,7 +9422,6 @@ src/game/field_o.cpp	EventCond_Area	raw	At	0x903849	0	0x903849	-	-	-	-
 src/game/field_o.cpp	EventCond_Area	raw	At	0x90384A	0	0x90384a	-	-	-	-
 src/game/field_o.cpp	EventCond_Area	raw	At	0x90384B	0	0x90384b	-	-	-	-
 src/game/field_o.cpp	EventCond_LeaderId	raw	At	0x904030	0	0x904030	-	-	-	-
-src/game/field_o_fuzz.cpp	static_assert	record	Mem	bof3::addr::CharacterRecords + (n & 7) * at::kRecordStride	0	-	base=CharacterRecords	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_o_fuzz.cpp	EntryAnswer	record	SetLong	sprite + 0x54	0	-	base=Sprite_Current	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_o_fuzz.cpp	FindAreas	record	Mem	Key(Area_Descriptors) + 4 * n	0	-	via=Key	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_o_fuzz.cpp	FindAreas	record	Mem	d + 8	0	-	base=Area_Descriptors	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
@@ -14537,7 +14533,6 @@ src/game/rest_1g_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	via=Sc	seam	harnes
 src/game/rest_1g_fuzz.cpp	Disturb	record	SetLong	s + 0x10	0	-	via=Sc	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1g_fuzz.cpp	Disturb	record	SetWord	am + (b & 1 ? 0x98 : 0x9A)	0	-	via=Active	computed	via=Active (SetWord(am + (b & 1 ? 0x98 : 0x9A)))	b1-rest
 src/game/rest_2a.cpp	RollBody	global	At	at::kScriptFlagsHi	0	0x9039a3	-	name	at::kScriptFlagsHi 0x9039a3 Field_ScriptFlags+0x1	b0
-src/game/rest_2a.cpp	Record	record	At	bof3::addr::CharacterRecords + n * at::kRecordStride	0	-	base=CharacterRecords	computed	base=CharacterRecords (At(bof3::addr::CharacterRecords + n * at::kRecordStride))	b1-rest
 src/game/rest_2a.cpp	Mode11_ListedSpriteScreens	global	At	at::kBankCount	0	0x8c3580	-	no-entry	at::kBankCount 0x8c3580 -	b0
 src/game/rest_2a.cpp	Mode11_ListedSpriteScreens	record	Word	records + (i & 0xFF) * 8	0	-	-	computed	- (Word(records + (i & 0xFF) * 8))	b1-rest
 src/game/rest_2a.cpp	Area_ObjectHandler	record	Long	descriptor + 0x3C	0	-	base=Area_Descriptors	no-struct	Long(descriptor + 0x3C): base=Area_Descriptors, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -14550,7 +14545,6 @@ src/game/rest_2a_fuzz.cpp	Records	record	SetWord	r + i * 8	0	-	via=Records	compu
 src/game/rest_2a_fuzz.cpp	SeedRecord	record	SetWord	r + 0x20	0	-	param	no-struct	CharacterRecords 0x903A70 stride 0xA4: no struct in records.h (typed-records.md 1)	b1-rest
 src/game/rest_2a_fuzz.cpp	SeedRecord	record	SetWord	r + 0x18	0	-	param	no-struct	CharacterRecords 0x903A70 stride 0xA4: no struct in records.h (typed-records.md 1)	b1-rest
 src/game/rest_2a_fuzz.cpp	SeedRecord	record	SetWord	r + 0x1A	0	-	param	no-struct	CharacterRecords 0x903A70 stride 0xA4: no struct in records.h (typed-records.md 1)	b1-rest
-src/game/rest_2a_fuzz.cpp	Seed	record	Mem	bof3::addr::CharacterRecords + i * at::kRecordStride	0	-	base=CharacterRecords	no-struct	Mem(bof3::addr::CharacterRecords + i * at::kRecordStride): base=CharacterRecords, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2a_fuzz.cpp	Disturb	record	SetLong	s + 0x34 + 4 * (v % 3)	0	-	base=Sprite_Current	computed	base=Sprite_Current (SetLong(s + 0x34 + 4 * (v % 3)))	b1-rest
 src/game/rest_2b.cpp	Field_TriggerCounterF0	global	B	kTriggerCounter	0	0x903848	-	no-entry	kTriggerCounter 0x903848 -	b0
 src/game/rest_2b.cpp	Shisu_Begin	global	B	kGiven	0	0x9399e4	-	no-entry	kGiven 0x9399e4 -	b0
@@ -16285,9 +16279,6 @@ src/game/rest_3d.cpp	Effect_NoHitReaction	global	B	at::kRoundFlagsHi	0	0x904aa9	
 src/game/rest_3d.cpp	Effect_NoHitReaction	global	B	at::kRoundFlagsHi	1	0x904aa9	-	no-entry	at::kRoundFlagsHi 0x904aa9 -	b0
 src/game/rest_3d.cpp	Effect_StepStatByte	record	At	BattleDamage_Result + (stat & 0xFF) + 0x14	0	-	base=BattleDamage_Result	no-struct	At(BattleDamage_Result + (stat & 0xFF) + 0x14): base=BattleDamage_Result, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3d.cpp	Effect_RollInflict	global	W	at::kHpVariance	0	0x64e9ac	-	gate	at::kHpVariance 0x64e9ac Effect_HpDamageVariance	b0
-src/game/rest_3d.cpp	Effect118_RaiseCharByte1E	record	At	bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStri	0	-	base=CharacterRecords	computed	base=CharacterRecords (At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStri))	b1-rest
-src/game/rest_3d.cpp	Effect118_RaiseCharByte1E	record	At	bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStri	1	-	base=CharacterRecords	computed	base=CharacterRecords (At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStri))	b1-rest
-src/game/rest_3d.cpp	Effect118_RaiseCharByte1E	record	At	bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStri	2	-	base=CharacterRecords	computed	base=CharacterRecords (At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStri))	b1-rest
 src/game/rest_3d.cpp	Effect118_RaiseCharByte1E	global	B	at::kPartySize	0	0x904ab0	-	no-entry	at::kPartySize 0x904ab0 -	b0
 src/game/rest_3d.cpp	Effect118_RaiseCharByte1E	global	B	at::kPartySize	1	0x904ab0	-	no-entry	at::kPartySize 0x904ab0 -	b0
 src/game/rest_3d.cpp	Effect120_TargetFlag800	global	L	at::kTarget	0	0x904b54	-	no-entry	at::kTarget 0x904b54 -	b0
@@ -16306,7 +16297,6 @@ src/game/rest_3d_fuzz.cpp	Frame	global	Mem	at::kAbility	0	0x904b80	-	no-entry	at
 src/game/rest_3d_fuzz.cpp	Frame	global	Mem	at::kNewStatus	0	0x904b98	-	no-entry	at::kNewStatus 0x904b98 -	b0
 src/game/rest_3d_fuzz.cpp	Frame	global	Mem	at::kPartySize	0	0x904ab0	-	no-entry	at::kPartySize 0x904ab0 -	b0
 src/game/rest_3d_fuzz.cpp	Frame	record	SetLong	p + 0x130	0	-	via=Member	union	PartyMember +0x130 w4 (SetLong(p + 0x130))	b1-rest
-src/game/rest_3d_fuzz.cpp	Frame	record	Mem	bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStri	0	-	base=CharacterRecords	no-struct	Mem(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStri): base=CharacterRecords, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3d_fuzz.cpp	Disturb	global	Mem	at::kTarget	0	0x904b54	-	no-entry	at::kTarget 0x904b54 -	b0
 src/game/rest_3d_fuzz.cpp	Disturb	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/rest_3d_fuzz.cpp	Disturb	global	Mem	at::kPartySize	0	0x904ab0	-	no-entry	at::kPartySize 0x904ab0 -	b0
@@ -17717,7 +17707,6 @@ src/game/save_menu_fuzz.cpp	Generate	global	PutByte	at::kMenuFlags	0	0x7dee44	-	
 src/game/save_menu_fuzz.cpp	SelfTest	global	At	at::kStepTable	0	0x6671f4	-	no-entry	at::kStepTable 0x6671f4 -	b0
 src/game/save_menu_fuzz.cpp	SelfTest	global	PutLong	at::kStepTable	0	0x6671f4	-	no-entry	at::kStepTable 0x6671f4 -	b0
 src/game/save_menu_fuzz.cpp	SelfTest	global	At	at::kStepTable	1	0x6671f4	-	no-entry	at::kStepTable 0x6671f4 -	b0
-src/game/scena_calls.cpp	Set	record	At	bof3::addr::CharacterRecords + Character_IndexById[k] * at::	0	-	base=CharacterRecords	computed	computed offset or index (base=CharacterRecords)	b1-scen_ui
 src/game/scena_calls.cpp	ScenaCall_Party72Saved	global	At	at::kSaved	0	0x903a10	-	no-entry	at::kSaved 0x903a10 -	b0
 src/game/scena_calls.cpp	scena_calls_SaveAndLeave	global	At	at::kSaved	0	0x903a10	-	no-entry	at::kSaved 0x903a10 -	b0
 src/game/scena_calls.cpp	Scena10_RestoreSaved	global	At	at::kSaved	0	0x903a10	-	no-entry	at::kSaved 0x903a10 -	b0
@@ -17729,7 +17718,6 @@ src/game/scena_calls.cpp	Scena14_Party74First	global	At	at::kSaved	1	0x903a10	-	
 src/game/scena_calls.cpp	Scena14_SaveLeaveAllParty7	global	At	at::kSaved	0	0x903a10	-	no-entry	at::kSaved 0x903a10 -	b0
 src/game/scena_calls.cpp	Scena14_Party74Other	global	At	at::kSaved	0	0x903a10	-	no-entry	at::kSaved 0x903a10 -	b0
 src/game/scena_calls_fuzz.cpp	Move	global	Mem	at::kSaved	0	0x903a10	-	no-entry	at::kSaved 0x903a10 -	b0
-src/game/scena_calls_fuzz.cpp	Move	record	Mem	bof3::addr::CharacterRecords + (v % 8) * at::kRecordStride	0	-	base=CharacterRecords	seam	start-up fuzz reaching memory through the harness Mem (base=CharacterRecords)	b1-scen_ui
 src/game/scena_calls_fuzz.cpp	Disturb	global	Mem	at::kSaved	0	0x903a10	-	no-entry	at::kSaved 0x903a10 -	b0
 src/game/scena_sc0.cpp	TakeSlot	global	B	kSlot	0	0x903850	-	no-entry	kSlot 0x903850 -	b0
 src/game/scena_sc0.cpp	SlotRecord	global	B	kSlot	0	0x903850	-	no-entry	kSlot 0x903850 -	b0
@@ -18857,7 +18845,6 @@ src/game/scena_sc9b_fuzz.cpp	Disturb10	global	B	at::kCounters	0	0x903848	-	no-en
 src/game/scena_sc9b_fuzz.cpp	Settle10	global	B	at::kCounters	0	0x903848	-	no-entry	at::kCounters 0x903848 -	b0
 src/game/scena_sc9b_fuzz.cpp	Settle10	global	B	at::kCounters	1	0x903848	-	no-entry	at::kCounters 0x903848 -	b0
 src/game/scena_se.cpp	Count	global	At	at::kCount	0	0x903850	-	no-entry	at::kCount 0x903850 -	b0
-src/game/scena_se.cpp	RecordFlags	record	At	bof3::addr::CharacterRecords + 0xB + Character_IndexById[id]	0	-	base=CharacterRecords	computed	computed offset or index (base=CharacterRecords)	b1-scen_ui
 src/game/scena_se.cpp	Field_StartEventBattle	global	At	at::kScriptFlags2High	0	0x905ba5	-	inside-entry	at::kScriptFlags2High 0x905ba5 Field_ScriptFlags2+0x1	b0
 src/game/scena_se.cpp	Field_StartEventBattle	global	At	at::kScriptFlags2High	1	0x905ba5	-	inside-entry	at::kScriptFlags2High 0x905ba5 Field_ScriptFlags2+0x1	b0
 src/game/scena_se.cpp	EventOp_0x	global	At	at::kBank	0	0x903852	-	no-entry	at::kBank 0x903852 -	b0
@@ -18868,8 +18855,6 @@ src/game/scena_se_fuzz.cpp	static_assert	global	Mem	at::kCount	0	0x903850	-	no-e
 src/game/scena_se_fuzz.cpp	Object	global	Mem	at::kCount	0	0x903850	-	no-entry	at::kCount 0x903850 -	b0
 src/game/scena_se_fuzz.cpp	Object	global	Mem	at::kBank	0	0x903852	-	no-entry	at::kBank 0x903852 -	b0
 src/game/scena_se_fuzz.cpp	Seed	global	Mem	at::kCount	0	0x903850	-	no-entry	at::kCount 0x903850 -	b0
-src/game/scena_se_fuzz.cpp	Seed	record	Mem	bof3::addr::CharacterRecords + 0xB + r * at::kObjectStride	0	-	base=CharacterRecords	seam	start-up fuzz reaching memory through the harness Mem (base=CharacterRecords)	b1-scen_ui
-src/game/scena_sx.cpp	Record	record	At	bof3::addr::CharacterRecords + n * at::kRecordStride	0	-	base=CharacterRecords	computed	computed offset or index (base=CharacterRecords)	b1-scen_ui
 src/game/scena_sx.cpp	Char_LevelUp	record	Word	exp_table + (level + rows) * 8	0	-	base=Char_ExpTable	computed	computed offset or index (base=Char_ExpTable)	b1-scen_ui
 src/game/scena_sx.cpp	Party_PlaceForBattle	global	At	at::kFormation	0	0x904aac	-	no-entry	at::kFormation 0x904aac -	b0
 src/game/scena_sx.cpp	Party_PlaceForBattle	global	At	at::kSlotPositions	0	0x7e06e0	-	no-entry	at::kSlotPositions 0x7e06e0 -	b0
@@ -18891,7 +18876,6 @@ src/game/scena_sx2.cpp	Sound_SetCueVolume	record	At	cue_at + 4 * k	0	-	base=Soun
 src/game/scena_sx2.cpp	Sound_SetCueVolume	record	At	Addr(Sound_Banks) + at::kBankVoices + bank + (voice & 0xFF)	0	-	via=Addr	computed	computed offset or index (via=Addr)	b1-scen_ui
 src/game/scena_sx2.cpp	KeyItem_Remove	global	At	at::kKeyItems	0	0x904554	-	no-entry	at::kKeyItems 0x904554 -	b0
 src/game/scena_sx2.cpp	AbilityList_ForType	global	At	at::kWorkingRecords	0	0x802dc0	-	untyped-entry	at::kWorkingRecords 0x802dc0 Text_CurrentName	b0
-src/game/scena_sx2.cpp	AbilityList_ForType	record	At	bof3::addr::CharacterRecords + m * at::kRecordStride	0	-	base=CharacterRecords	computed	computed offset or index (base=CharacterRecords)	b1-scen_ui
 src/game/scena_sx2.cpp	AbilityList_ForType	global	At	at::kAbilityType	0	0x65c4d9	-	no-entry	at::kAbilityType 0x65c4d9 -	b0
 src/game/scena_sx2.cpp	Gpu_SetSprt16	record	SetLong	prim + 0x10	0	-	param	no-struct	a GPU packet in the OT pool, not a records.h family (param)	b1-scen_ui
 src/game/scena_sx2_fuzz.cpp	alignas	global	Mem	at::kFormation	0	0x904aac	-	no-entry	at::kFormation 0x904aac -	b0
@@ -18899,7 +18883,6 @@ src/game/scena_sx2_fuzz.cpp	-	global	-	at::kKeyItems	0	0x904554	-	no-entry	at::k
 src/game/scena_sx2_fuzz.cpp	-	global	-	at::kChannelsEnd	0	0x6bc924	-	no-entry	at::kChannelsEnd 0x6bc924 -	b0
 src/game/scena_sx2_fuzz.cpp	Seed	global	Mem	at::kFormation	0	0x904aac	-	no-entry	at::kFormation 0x904aac -	b0
 src/game/scena_sx2_fuzz.cpp	Seed	global	Mem	at::kKeyItems	0	0x904554	-	no-entry	at::kKeyItems 0x904554 -	b0
-src/game/scena_sx_fuzz.cpp	Rec	record	Mem	bof3::addr::CharacterRecords + (n & 7) * at::kRecordStride	0	-	base=CharacterRecords	seam	start-up fuzz reaching memory through the harness Mem (base=CharacterRecords)	b1-scen_ui
 src/game/scena_sx_fuzz.cpp	Rec	global	Mem	at::kFormation	0	0x904aac	-	no-entry	at::kFormation 0x904aac -	b0
 src/game/scena_sx_fuzz.cpp	-	global	-	at::kSlotPositions	0	0x7e06e0	-	no-entry	at::kSlotPositions 0x7e06e0 -	b0
 src/game/scena_sx_fuzz.cpp	Disturb	record	Word	t + (l + id * 99) * 8	0	-	base=Char_ExpTable	seam	start-up fuzz reaching memory through the harness Mem (base=Char_ExpTable)	b1-scen_ui

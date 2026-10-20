@@ -91,7 +91,7 @@ std::int32_t Idiv(std::int32_t dividend, std::int32_t divisor) {
     return quotient;
 }
 // DamageScratch's first byte: 0x5725C0 leaves 1 there on a slope.
-unsigned char ScratchByte() { return At(bof3::addr::DamageScratch)[0]; }
+unsigned char ScratchByte() { return At(DamageScratch_addr)[0]; }
 // The low byte of an actor record's state word (Field_ActorStates + n * 0xA4),
 // n a whole byte as the original's.
 unsigned char& ActorState(unsigned n) { return At(0x903A80u + n * kRecordSize)[0]; }
@@ -439,7 +439,7 @@ extern "C" void __cdecl Field_EquipTick(void) {
 // of `kind` are `value`. Nothing bounds the member (a whole byte into
 // Character_IndexById's 24) or the record it names.
 extern "C" unsigned char __cdecl Actor_EquipCount(unsigned member, unsigned kind, unsigned value) {
-    const unsigned char* const r = At(bof3::addr::CharacterRecords + Character_IndexById[member & 0xFF] * kRecordSize);
+    const unsigned char* const r = At(CharacterRecords_addr + Character_IndexById[member & 0xFF] * kRecordSize);
     const auto v = static_cast<unsigned char>(value);
     switch (kind & 0xFF) {
     case 1: return r[0x12] == v;

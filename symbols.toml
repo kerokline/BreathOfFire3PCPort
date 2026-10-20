@@ -74,11 +74,12 @@ pc = 0x803160
 # 22 records of 0x24 (src/game/records.h WindowRecord; docs/window-task.md 3; boss_harness.h kWindowCount) (typed-data round C3).
 record_stride = 0x24
 record_count = 22
+ctype = "records::WindowRecord"
 psx = 0x8014832C
 delta = 0x806BAE34
 status = "evidence"
 evidence = "PC Window_Alloc 0x59E2D0 indexes slot*0x24 off 0x803160 and sets byte 0 = 1, +1 = kind, +2/+3 = 0, returns 0xFF when taken — byte for byte the PSX Window_Alloc 0x80159874 note, including the 0x24 stride. Corroborated by MsgBox_FrameTask 0x4977F0 reading x/y at +4/+6 (0x803164/66) exactly as PSX 0x80148330/32 (2026-09-18)."
-note = "Record stride 0x24, same as PSX. +0/+1/+2/+3 = in-use/kind/../.., +4/+6 = x/y in 12.4 fixed, +0x10/+0x12 = w/h."
+note = "Record stride 0x24, same as PSX. +0/+1/+2/+3 = in-use/kind/../.., +4/+6 = x/y in 12.4 fixed, +0x10/+0x12 = w/h. Typed (typed-data round stage C4, 2026-10-19) as records::WindowRecord x22 (record_stride 0x24 = the struct's size; docs/window-task.md 3, records.h WindowRecord): WindowRecords[i].field. The struct names +0..+7 and +0xF for every handler; the bytes past +7 are each handler's own (BattleWindow, ItemListWindow), so the Window<N>_<field> entries there keep their readers' names."
 
 [[block]]
 name = "MessagePools"
@@ -95,11 +96,12 @@ pc = 0x903A70
 # Eight records of 0xA4, 0x903A70..0x903F90, where Cond_Flags begins (docs/area-entry.md; typed-data round C3).
 record_stride = 0xA4
 record_count = 8
+ctype = "records::CharRecord"
 psx = 0x80144964
 delta = 0x807BF10C
 status = "evidence"
 evidence = "disasm 2026-09-19: the save block builder 0x5806F0 shows the live game block at 0x9039E0 (area word stored to 0x903A04 = block+0x24, checksum zeroed at 0x903A50 = block+0x70, both the PSX block offsets), which puts the records at block+0x90 = 0x903A70; 89 code references index it as lea reg, [idx*4 + 0x903A70] with idx = n*0x29, i.e. stride 0xA4. Same delta as the block base (PSX 0x801448D4). SUPERSEDES the earlier hypothesis pc = 0x64B390, which is a table in initialised data: 0x437820 copies 0x29 dwords from 0x64B80C = 0x64B390 + 7*0xA4 into a live record, so that address is most likely the eight initial-record templates."
-note = "INTERNAL OFFSETS DIFFER FROM PSX: the name field is 9 bytes, not 5, and every later record field is +4 (docs/save-interchange.md section 2). The block-delta rule covers the record base and stride only."
+note = "INTERNAL OFFSETS DIFFER FROM PSX: the name field is 9 bytes, not 5, and every later record field is +4 (docs/save-interchange.md section 2). The block-delta rule covers the record base and stride only. Typed (typed-data round stage C4, 2026-10-19) as records::CharRecord x8 (record_stride 0xA4 = the struct's size; records.h CharRecord, docs/char-stats.md): CharacterRecords[i].field."
 
 # ---------------------------------------------------------------------------
 # Text engine — dialogue box
@@ -499,9 +501,12 @@ note = "The record grew 0xC but every documented field keeps its offset, so the 
 name = "DamageScratch"
 pc = 0x903850
 psx = 0x1F800000
+record_stride = 0x1C
+record_count = 1
+ctype = "records::DamageScratch"
 status = "hypothesis"
 evidence = "Battle_ScaleDamage 0x446430 reads the weapon/element byte from 0x903850 and tests it for 0x1F then 0x20, exactly where PSX Battle_ScaleDamage reads scratchpad 0x1F800000 (names/functions.toml)."
-note = "NOT a delta — the PSX scratchpad is 1 KB of on-chip fast RAM with no x86 equivalent, so the port relocated it to an ordinary global. Expect the same for every other 0x1F80xxxx address: they will never transfer by arithmetic. Only the one word is confirmed; the extent of the relocated block is unknown."
+note = "NOT a delta — the PSX scratchpad is 1 KB of on-chip fast RAM with no x86 equivalent, so the port relocated it to an ordinary global. Expect the same for every other 0x1F80xxxx address: they will never transfer by arithmetic. Only the one word is confirmed; the extent of the relocated block is unknown. Typed (typed-data round stage C4, 2026-10-19) as one records::DamageScratch, 0x1C bytes: the extent its readers reach (the dword at +0x18; records.h DamageScratch), at most 0x30 (Gfx_BufferBlocks 0x903880 follows). The macro is the record (`DamageScratch.w_0c`); the struct's neutral names are by offset and width, since the PSX scratchpad this relocates has no one meaning per offset. Scratch_Swap is its +0xC dword (field_of). The block and the struct share their name: symbols.gen.h includes the record headers first, and records::DamageScratch is not spelled past it."
 
 [[func]]
 pc = 0x44F030
@@ -1927,6 +1932,8 @@ evidence = "disasm 2026-09-20: DrawTable_Sort's bound, and the bound 0x593060 co
 pc = 0x90385C
 name = "Scratch_Swap"
 ctype = "unsigned long"
+field_of = "DamageScratch"
+field_offset = 0xC
 status = "evidence"
 evidence = "disasm 2026-09-20: DrawTable_Sort stores the value it moves up here on every exchange (0x56F639) and never reads it back. pe_xref.py: 505 references in well over a hundred functions."
 note = "A global the source used as its swap temporary, by the look of it - which makes it written, never meaningfully read, all over the game. Kept written, because a memory comparison would see it."

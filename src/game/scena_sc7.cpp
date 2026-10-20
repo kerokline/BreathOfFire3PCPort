@@ -2393,7 +2393,7 @@ extern "C" void __cdecl Scena08_Scene10(void) {
 // += 10000, 0x498DE0(4), its bytes +0x12..+0x15 set, Char_RecalcStats on the
 // record, Char_HealHp(4, 0, 0) and Char_HealAp(4, 0, 0).
 extern "C" void __cdecl Scena08_SetUpRecord4(void) {
-    auto* const chr4 = rv::As<records::CharRecord>(At(bof3::addr::CharacterRecords) + 4 * sizeof(records::CharRecord));
+    auto* const chr4 = rv::As<records::CharRecord>(At(CharacterRecords_addr) + 4 * sizeof(records::CharRecord));
     rv::Store<std::int32_t>(chr4->exp, static_cast<std::int32_t>(static_cast<std::uint32_t>(chr4->exp) + 0x2710u));
     Call498DE0(4);
     chr4->weapon = 7;

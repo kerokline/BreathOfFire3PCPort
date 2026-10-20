@@ -81,7 +81,7 @@ std::int32_t AddL(std::int32_t a, std::uint32_t b) { return static_cast<std::int
 
 // The scratch words DamageScratch + k (the PSX scratchpad's) and the vertex
 // scratch Prim_VertexScratch + k: three SVECTORs at +0, +8, +0x10, +0x18.
-constexpr std::uint32_t kDs = bof3::addr::DamageScratch;
+constexpr std::uint32_t kDs = DamageScratch_addr;
 // kVx: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
 short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
 void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }

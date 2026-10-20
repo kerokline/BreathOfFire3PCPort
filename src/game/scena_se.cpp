@@ -62,7 +62,7 @@ std::uint32_t Coordinate(unsigned char half, unsigned char whole) {
 // A character's record +0xB (CharacterRecords, stride 0xA4) through
 // Character_IndexById[id] - both indexes a whole byte, unchecked.
 unsigned char* RecordFlags(unsigned char id) {
-    return At(bof3::addr::CharacterRecords + 0xB + Character_IndexById[id] * at::kObjectStride);
+    return At(CharacterRecords_addr + 0xB + Character_IndexById[id] * at::kObjectStride);
 }
 
 }  // namespace

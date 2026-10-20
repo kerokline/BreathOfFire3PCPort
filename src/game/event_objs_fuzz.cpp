@@ -124,7 +124,7 @@ void __cdecl StubJumpStart() { Record(3); }
 long __cdecl StubSlope(long x, long z, unsigned direction) {
     Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction & 0xFF);
     const std::uint32_t h = Hash();
-    At(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 24);
+    At(DamageScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 24);
     Disturb();
     return static_cast<long>(Hash(1));
 }
@@ -474,7 +474,7 @@ Args Generate(unsigned k, State& input) {
     if (k == kBit80 && OneIn(2)) g_field[0][0x124] = 1;
     Sprite_Current = g_sprite[0];
     Field_State = g_field[0];
-    unsigned char* const scratch = At(bof3::addr::DamageScratch);
+    unsigned char* const scratch = At(DamageScratch_addr);
     for (unsigned i = 0; i < 4; ++i) scratch[i] = static_cast<unsigned char>(OneIn(2) ? 0 : Next());
     Field_ScriptFlags = static_cast<unsigned short>(Next() & (OneIn(2) ? 0xFBFFu : 0xFFFFu));
     if (OneIn(3)) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFF7u);
@@ -488,7 +488,7 @@ Args Generate(unsigned k, State& input) {
     // The records' state and equipment bytes, the codes the tests look for
     // seeded; the party list, mostly members 0..7.
     for (unsigned n = 0; n < 256; ++n) {
-        unsigned char* const r = At(bof3::addr::CharacterRecords + n * kRecordSize);
+        unsigned char* const r = At(CharacterRecords_addr + n * kRecordSize);
         const std::uint32_t h = Next();
         r[0x10] = static_cast<unsigned char>((h & 0x5F) | (h % 3 == 0 ? 0x80 : 0) | (h % 5 == 0 ? 0x20 : 0));
         r[0x11] = static_cast<unsigned char>(h >> 8);

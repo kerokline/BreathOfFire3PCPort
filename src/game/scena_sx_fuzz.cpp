@@ -108,7 +108,7 @@ template <typename... T> std::uint32_t PickOf(T... v) {
     const std::uint32_t values[] = {static_cast<std::uint32_t>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-unsigned char* Rec(unsigned n) { return Mem(bof3::addr::CharacterRecords + (n & 7) * at::kRecordStride); }
+unsigned char* Rec(unsigned n) { return Mem(CharacterRecords_addr + (n & 7) * at::kRecordStride); }
 unsigned char* Obj(unsigned n) { return rv::Bytes(&ObjTrio[n % 3]); }
 
 // Inventory_Remove's category, item and count, chosen by the seed.
@@ -186,7 +186,7 @@ const sh::Callee kCallees[] = {
 // Cond_AngleFB; Game_AreaNumber; Sprite_Current; Sprite_Kind2; ObjTrio and
 // Field_State; Sprite_Objects; MapView_Row / Column).
 const sh::Region kRegions[] = {
-    {bof3::addr::CharacterRecords, 8 * at::kRecordStride},
+    {CharacterRecords_addr, 8 * at::kRecordStride},
     {0x904098, 0x9045F4 - 0x904098},   // 0x904138; the inventory's lists, the key items, the shared ability list
     {0x904AA0, 0xB0},                  // the battle bytes: the formation 0x904AAC
     {BossSi_CentreX_addr, 8},

@@ -243,7 +243,7 @@ void Seed(unsigned k) {
         unsigned char* const s = rv::Bytes(&Sprite_Objects[i]);
         if (i < 4 || sh::Next() % 4 == 0) SeedSprite(s);
     }
-    for (unsigned i = 0; i < 8; ++i) SeedRecord(sh::Mem(bof3::addr::CharacterRecords + i * at::kRecordStride));
+    for (unsigned i = 0; i < 8; ++i) SeedRecord(sh::Mem(CharacterRecords_addr + i * at::kRecordStride));
     Field_State[0x148] = static_cast<unsigned char>(sh::Next() % 8);
     // the active member: a sprite record (Sprite_Current itself a third of the
     // time); Area_ObjectHandler's area 74 (its table is a DataTable here)

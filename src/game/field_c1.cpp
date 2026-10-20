@@ -465,14 +465,14 @@ void TwinStart(const char* who) {
     }
     SpriteRec(self[4], who)[0] = 1;
     const auto* const op = At(kKind14 ? AddressOf(EffectKind14_Op) : AddressOf(EffectKind3C_Op));
-    SetWord(At(bof3::addr::DamageScratch), self[3]);
+    SetWord(At(DamageScratch_addr), self[3]);
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
         SH_CALL(Sprite_SetAnimationAt)(0x61, 0xC);
     } else {
         SH_CALL(EventOp_0x)(op);
     }
-    SetWord(At(bof3::addr::DamageScratch), self[4]);
+    SetWord(At(DamageScratch_addr), self[4]);
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
         SH_CALL(Sprite_SetAnimationAt)(0x61, 0xC);
@@ -960,7 +960,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAt(long x, long z) {
         if ((ux & 0xFFFF) == 0) return 0;
         const U mid = (cell_x << 16) | 0x8000u;
         SH_CALL(AreaMap_Slope)(S32(mid), z, rv::Bytes(o)[8]);
-        if (At(bof3::addr::DamageScratch)[0] != 0) {
+        if (At(DamageScratch_addr)[0] != 0) {
             const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(S32(mid), z)));
             if (static_cast<short>(rv::As<records::EffectObject>(Cur())->height_whole) < ground) return 1;
         }
@@ -970,7 +970,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAt(long x, long z) {
     if ((uz & 0xFFFF) == 0) return 0;
     const U mid = (cell_z << 16) | 0x8000u;
     SH_CALL(AreaMap_Slope)(x, S32(mid), rv::Bytes(o)[8]);
-    if (At(bof3::addr::DamageScratch)[0] != 0) {
+    if (At(DamageScratch_addr)[0] != 0) {
         const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(x, S32(mid))));
         if (static_cast<short>(rv::As<records::EffectObject>(Cur())->height_whole) < ground) return 1;
     }

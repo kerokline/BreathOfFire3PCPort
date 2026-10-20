@@ -147,7 +147,7 @@ static_assert(kCount == sizeof kClones / sizeof kClones[0], "one enum entry a cl
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-unsigned char* Rec(unsigned n) { return Mem(bof3::addr::CharacterRecords + (n & 7) * at::kRecordStride); }
+unsigned char* Rec(unsigned n) { return Mem(CharacterRecords_addr + (n & 7) * at::kRecordStride); }
 
 // --- the stand-ins the group lists ------------------------------------------------
 
@@ -359,7 +359,7 @@ void Seed(unsigned run_k) {
     default: Field_ActiveMember = sh::SpriteRecord(sh::Next()); break;
     }
     // the count word in 0..31 (30 and 31: the ops' early return)
-    SetWord(Mem(bof3::addr::DamageScratch), sh::Often() ? sh::Next() % 30 : 30 + sh::Next() % 2);
+    SetWord(Mem(DamageScratch_addr), sh::Often() ? sh::Next() % 30 : 30 + sh::Next() % 2);
     for (unsigned i = 0; i < 4; ++i) {
         unsigned char* const r = sh::SpriteRecord(i);
         r[0xA] = static_cast<unsigned char>(1 + sh::Next() % 0x10);   // the frames E9's states divide by
@@ -500,7 +500,7 @@ void Disturb(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     switch ((h >> 16) % 3) {
     case 0: Field_ActiveMember = sh::SpriteRecord(v); break;
-    case 1: SetWord(Mem(bof3::addr::DamageScratch), v % 30); break;
+    case 1: SetWord(Mem(DamageScratch_addr), v % 30); break;
     default: {
         unsigned char* const s = Sprite_Current;
         if (sh::InRegions(s + 0x5D, 3)) s[0x5D + v % 3] = static_cast<unsigned char>(h >> 24);

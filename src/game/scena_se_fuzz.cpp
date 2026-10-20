@@ -112,7 +112,7 @@ const sh::Region kRegions[] = {
     {Key(&Field_ScriptFlags2), 4},
     {0x904AA0, 0xB0},                                    // the battle bytes: 0x904AAA, 0x904AE4, 0x904AE5
     {Key(&Field_ActiveMember), 4},
-    {bof3::addr::CharacterRecords, kRecords * at::kObjectStride},
+    {CharacterRecords_addr, kRecords * at::kObjectStride},
     {Key(g_op), sizeof g_op},
 };
 
@@ -155,7 +155,7 @@ void Seed(unsigned k) {
     }
     // the records' bit 1 (a member the search passes over) about half the time
     for (unsigned r = 0; r < kRecords; ++r) {
-        unsigned char* const f = Mem(bof3::addr::CharacterRecords + 0xB + r * at::kObjectStride);
+        unsigned char* const f = Mem(CharacterRecords_addr + 0xB + r * at::kObjectStride);
         *f = static_cast<unsigned char>(sh::Half() ? *f | 2 : *f & ~2u);
     }
     // EventObj_Face's +7 bit 3, both ways

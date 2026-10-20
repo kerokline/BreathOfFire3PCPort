@@ -256,7 +256,7 @@ const Region kRegions[] = {
     {kCounters, 4},
     {kNameIndex, 1},
     {kStoryFlags, 4},
-    {bof3::addr::DamageScratch, 4},             // AreaMap_Slope's answer byte
+    {DamageScratch_addr, 4},             // AreaMap_Slope's answer byte
 };
 constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + (Sprite_Objects_count * sizeof(records::SpriteObject)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)) +
                                   MoveScript_PartyRecords_count + 2 + 4 + 8 + 4 + 7 + 1 + 0x12 + 4 + 1 + 4 + 4;

@@ -273,7 +273,7 @@ extern "C" unsigned char* __cdecl AbilityList_ForType(unsigned member, unsigned 
     static const unsigned char kLists[4] = {0x60, 0x6A, 0x74, 0x7E};
     const unsigned m = member & 0xFF;
     unsigned char* const base = (working & 0xFF) != 0 ? At(at::kWorkingRecords + m * at::kObjStride)
-                                                      : At(bof3::addr::CharacterRecords + m * at::kRecordStride);
+                                                      : At(CharacterRecords_addr + m * at::kRecordStride);
     const unsigned type = At(at::kAbilityType)[(id & 0xFF) * 24] & 3;
     return base + kLists[type];
 }

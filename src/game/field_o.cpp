@@ -68,7 +68,7 @@ const unsigned char* Text(U a) { return At(a); }
 unsigned char* Buf() { return At(at::kTextScratch); }
 char* CBuf() { return reinterpret_cast<char*>(At(at::kTextScratch)); }
 
-unsigned char* Record(unsigned id) { return At(bof3::addr::CharacterRecords + (id & 0xFF) * at::kRecordStride); }
+unsigned char* Record(unsigned id) { return At(CharacterRecords_addr + (id & 0xFF) * at::kRecordStride); }
 unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fam() { return Field_ActiveMember; }
@@ -102,12 +102,12 @@ U CodeAt(U table, unsigned index, const char* who) {
 // after it the animation bank a placement passes on.
 short Count() {
     short v;
-    std::memcpy(&v, At(bof3::addr::DamageScratch), sizeof v);
+    std::memcpy(&v, At(DamageScratch_addr), sizeof v);
     return v;
 }
-unsigned short Bank() { return Word(At(bof3::addr::DamageScratch) + 2); }
-void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
-void BumpCount() { SetWord(At(bof3::addr::DamageScratch), static_cast<unsigned>(Count() + 1)); }
+unsigned short Bank() { return Word(At(DamageScratch_addr) + 2); }
+void SetBank(unsigned v) { SetWord(At(DamageScratch_addr) + 2, v); }
+void BumpCount() { SetWord(At(DamageScratch_addr), static_cast<unsigned>(Count() + 1)); }
 unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 
 // A placement's x or z: the whole part and the half (0x8000) when `half` is not 0.

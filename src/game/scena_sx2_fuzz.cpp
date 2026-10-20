@@ -158,7 +158,7 @@ const sh::Callee kCallees[] = {
 // 0x904030 and 0x904060; Field_MemberCount, Camera_Angles, Cond_AngleFB;
 // Sprite_Current; ObjTrio; Sprite_Objects; Effect_Objects).
 const sh::Region kRegions[] = {
-    {bof3::addr::CharacterRecords, 8 * at::kRecordStride},   // AbilityList_ForType answers into it
+    {CharacterRecords_addr, 8 * at::kRecordStride},   // AbilityList_ForType answers into it
     {at::kKeyItems, 0x20},
     {0x904AA0, 0xB0},                   // the battle bytes: the formation 0x904AAC
     {Light_Angles_addr, 8},

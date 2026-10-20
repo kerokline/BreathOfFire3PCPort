@@ -534,7 +534,7 @@ void Cover(unsigned k, const Args& x, const State& in, const State& out, std::ui
     ++g_cover.answers[k][a];
     switch (k) {
     case kIconK: if ((x.a[0] & 0xFF) > 20) ++g_cover.icon_past; break;
-    case kAddK: if (At(bof3::addr::DamageScratch)[0] == 1) ++g_cover.answers[k][3]; break;
+    case kAddK: if (At(DamageScratch_addr)[0] == 1) ++g_cover.answers[k][3]; break;
     case kRecalcK:
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
             if (out.log[i].what == 8) ++g_cover.roster_calls;

@@ -168,7 +168,7 @@ void RollBody(const Roll& r) {
 }
 
 // CharacterRecords' record n (stride 0xA4), unchecked as the originals index it.
-unsigned char* Record(unsigned n) { return At(bof3::addr::CharacterRecords + n * at::kRecordStride); }
+unsigned char* Record(unsigned n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
 
 // The states each Run builds on its stack, in the order it stores them.
 const U kStatesA[] = {bof3::addr::LinkedObjectA_Roll, bof3::addr::LinkedObject_Show2, bof3::addr::LinkedObject_Show5,

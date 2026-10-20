@@ -100,7 +100,7 @@ unsigned char* EnemyRec(int i) { return Mem(at::kEnemies + static_cast<std::uint
 
 // The scratch words DamageScratch + k and the vertex scratch
 // Prim_VertexScratch + k (SVECTORs at +0, +8, +0x10, +0x18).
-constexpr std::uint32_t kDs = bof3::addr::DamageScratch;
+constexpr std::uint32_t kDs = DamageScratch_addr;
 // kVx: now Prim_VertexScratch (symbols.toml).
 short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
 void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }

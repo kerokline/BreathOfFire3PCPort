@@ -96,10 +96,10 @@ constexpr int kFirstObject = -4, kObjects = 38;   // Sprite_Objects -4..33: coun
 unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 short Count() {
     short v;
-    std::memcpy(&v, At(bof3::addr::DamageScratch), sizeof v);
+    std::memcpy(&v, At(DamageScratch_addr), sizeof v);
     return v;
 }
-void SetCount(int v) { SetWord(At(bof3::addr::DamageScratch), static_cast<unsigned>(v)); }
+void SetCount(int v) { SetWord(At(DamageScratch_addr), static_cast<unsigned>(v)); }
 
 // A count as a stand-in may leave it: most often in range, sometimes at the
 // edges of the placements' test, never outside the objects the fuzz owns.
@@ -266,7 +266,7 @@ void __cdecl StubRun(const unsigned char* script) {
     const std::uint32_t h = Hash(17);
     g_run_count = h % 4 == 0 ? static_cast<int>(30 + (h >> 4) % 3) : PickCount(h >> 4);
     SetCount(g_run_count);
-    SetWord(At(bof3::addr::DamageScratch) + 2, h >> 16);
+    SetWord(At(DamageScratch_addr) + 2, h >> 16);
 }
 unsigned char __cdecl StubFlagsTest(const unsigned char* bits, unsigned index) {
     Record(0x139, Address(bits), index & 0xFF);
@@ -642,7 +642,7 @@ void SelfTestPlacements() {
     constexpr unsigned kRounds = 20000;
     unsigned char* const objects = Object(kFirstObject);
     const Region r[] = {R(objects, kObjects * 0xA4), R(rv::Bytes(Sprite_ObjectsExtra), 8 * 0xA4), R(MoveScript_PartyRecords, 0x1000),
-                        R(At(bof3::addr::DamageScratch), 4), R(&Sprite_Current, 4), R(&Field_ActiveMember, 4),
+                        R(At(DamageScratch_addr), 4), R(&Sprite_Current, 4), R(&Field_ActiveMember, 4),
                         R(rv::Bytes(&Sprite_Kind2), sizeof(records::SpriteObject)), R(&Game_AreaNumber, 2), R(g_script, 0x40),
                         R(g_entries), R(g_result)};
     constexpr unsigned n = sizeof r / sizeof r[0];

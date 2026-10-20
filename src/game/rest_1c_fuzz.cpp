@@ -221,7 +221,7 @@ U FxMapByte(const U*, U answer) {
 // 0x40 and at the s16 limits.
 U FxSlope(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const flag = sh::Mem(bof3::addr::DamageScratch);
+    unsigned char* const flag = sh::Mem(DamageScratch_addr);
     if (sh::InRegions(flag, 1)) flag[0] = static_cast<unsigned char>(n % 3 == 0 ? 0 : (n >> 2) % 4 ? 1 : 1 + (n >> 4) % 0xFF);
     static const U kWords[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x0140, 0xFFC0, 0x1000};
     const U m = sh::Noise();
@@ -411,7 +411,7 @@ void Disturb(U h) {
         sh::EffectRecord(i)[0] = static_cast<unsigned char>((v >> 5) & 1);
         break;
     }
-    case 10: sh::Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 10: sh::Mem(DamageScratch_addr)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 11: SetLong(Steps() + 4 * (v % 16), static_cast<std::int32_t>(v << 6)); break;
     default: break;
     }

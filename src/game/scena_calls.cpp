@@ -62,7 +62,7 @@ unsigned char MemberId(unsigned i) { return At(ObjTrio_addr + 0x89 + i * at::kMe
 // The character record of Character_IndexById[k] (CharacterRecords, 0xA4
 // each; the byte found unchecked), the index read at the call.
 unsigned char* RecordOf(unsigned k) {
-    return At(bof3::addr::CharacterRecords + Character_IndexById[k] * at::kRecordStride);
+    return At(CharacterRecords_addr + Character_IndexById[k] * at::kRecordStride);
 }
 
 // Both 3-byte party lists 0x904062..0x904067 to 0xFF.

@@ -61,7 +61,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 // CharacterRecords' record n (stride 0xA4), unchecked.
-unsigned char* Record(unsigned n) { return At(bof3::addr::CharacterRecords + n * at::kRecordStride); }
+unsigned char* Record(unsigned n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
 // A member id's record: CharacterRecords[Character_IndexById[id]], both
 // indexes a whole byte, unchecked (the original reads them the same way).
 unsigned char* MemberRecord(unsigned char id) { return Record(Character_IndexById[id]); }

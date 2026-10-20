@@ -606,10 +606,10 @@ extern "C" void __cdecl EffectKind47_Start(void) {
     unsigned k = 0;
     while (k < 5 && model != At(at::kTwinAnims + 3 * k)[0]) ++k;
     const unsigned char* const triple = At(at::kTwinAnims + 3 * k);
-    SetWord(At(bof3::addr::DamageScratch), self[3]);
+    SetWord(At(DamageScratch_addr), self[3]);
     SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
-    SetWord(At(bof3::addr::DamageScratch), self[4]);
+    SetWord(At(DamageScratch_addr), self[4]);
     SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
     Sprite_Current = self;

@@ -58,16 +58,16 @@ std::uint32_t Dword(const unsigned char* p) {
 // The count and the bank word (see the top of the file).
 short Count() {
     short v;
-    std::memcpy(&v, At(bof3::addr::DamageScratch), sizeof v);
+    std::memcpy(&v, At(DamageScratch_addr), sizeof v);
     return v;
 }
-void SetCount(unsigned v) { SetWord(At(bof3::addr::DamageScratch), v); }
+void SetCount(unsigned v) { SetWord(At(DamageScratch_addr), v); }
 unsigned short Bank() {
     unsigned short v;
-    std::memcpy(&v, At(bof3::addr::DamageScratch) + 2, sizeof v);
+    std::memcpy(&v, At(DamageScratch_addr) + 2, sizeof v);
     return v;
 }
-void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
+void SetBank(unsigned v) { SetWord(At(DamageScratch_addr) + 2, v); }
 
 // Data these read that symbols.toml does not name.
 // kBlockFlags: now Field_StatusBits (symbols.toml). bit 6: ScriptFlags_Set40 / Clear40 (object_kinds.cpp)

@@ -186,7 +186,7 @@ unsigned char* PrimAt(std::uint32_t k) { return g_prims + 4 * (k % 32); }
 const mh::Region kRegions[] = {
     {Gfx_PacketNext_addr, 4},
     {static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_prims)), sizeof g_prims},
-    {bof3::addr::DamageScratch, 0x10},          // the scratch words 0x903850..0x90385F
+    {DamageScratch_addr, 0x10},          // the scratch words 0x903850..0x90385F
     {0x9037A0, 0x20},                           // Prim_VertexScratch: four SVECTORs
     {kActionId, 4},
     {0x7E0700, 0xC00},   // MoveScript_TintRecords: 256 records of 12: Buff_Fade's index is a byte

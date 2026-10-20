@@ -484,7 +484,7 @@ extern "C" unsigned char __cdecl Inventory_Add(unsigned category, unsigned item,
     const auto n = static_cast<unsigned char>(count);
     if (n == 0) return 0;
     const unsigned cat = category & 0xFF;
-    unsigned char* const scratch = At(bof3::addr::DamageScratch);
+    unsigned char* const scratch = At(DamageScratch_addr);
     scratch[0] = 0;
     if (cat != 4) {
         unsigned char* const ids = IdList(cat);

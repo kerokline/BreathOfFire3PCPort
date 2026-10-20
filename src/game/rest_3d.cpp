@@ -491,17 +491,17 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
     if (!IsMember(t)) return;
     {
         unsigned char* const p = Party(t);
-        unsigned char* const c = At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride);
+        unsigned char* const c = At(CharacterRecords_addr + p[0x148] * at::kCharacterStride);
         if (c[0x1E] < 9) {
             c[0x1E] = static_cast<unsigned char>(c[0x1E] + 1);
             p[0x9E] = static_cast<unsigned char>(p[0x9E] + 1);
         }
-        BH_CALL(Char_RecalcStats)(At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride));
+        BH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + p[0x148] * at::kCharacterStride));
     }
     unsigned n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
         unsigned char* const p = Party(m);
-        const unsigned char* const c = At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride);
+        const unsigned char* const c = At(CharacterRecords_addr + p[0x148] * at::kCharacterStride);
         for (unsigned i = 0; i < 6; ++i) p[0x92 + i] = c[0x12 + i];
         for (unsigned i = 0; i < 0x20; ++i) p[0xC0 + i] = c[0x20 + i];
     }

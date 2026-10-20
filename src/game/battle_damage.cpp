@@ -383,11 +383,11 @@ extern "C" int __cdecl Battle_ScaleDamage(unsigned attacker, unsigned target, in
     const int roll = g.rand();
     m = Mul(m, s) >> 8;
     std::int32_t v = Mul(Long(At(bof3::addr::Battle_DamageVarianceTable + 4 * (U32(roll) & 7))), m) >> 8;
-    unsigned scratch = Word(At(bof3::addr::DamageScratch));
+    unsigned scratch = Word(At(DamageScratch_addr));
     if (scratch & 0x1F) {
         const short affinity = static_cast<short>(g.element_affinity(target, scratch));
         v = Mul(affinity, v) / 100;
-        scratch = Word(At(bof3::addr::DamageScratch));
+        scratch = Word(At(DamageScratch_addr));
     }
     if (scratch & 0x20) {
         const unsigned holy = (target & 0xFF) <= 2 ? rv::As<records::PartyMember>(Party(target) - 0x10)->holy : rv::As<records::BattleEnemy>(Enemy(target) + at::kEObject)->holy;
@@ -466,7 +466,7 @@ constexpr unsigned char kFlagRoll[8] = {50, 50, 50, 50, 60, 60, 60, 70};
 extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, unsigned element) {
     const unsigned a = attacker & 0xFF;
     const unsigned t = target & 0xFF;
-    unsigned char* const scratch = At(bof3::addr::DamageScratch);
+    unsigned char* const scratch = At(DamageScratch_addr);
     if ((element & 0xFFFF) == 0xFFFF) {
         if (a <= 2) {
             const unsigned weapon = rv::As<records::PartyMember>(Party(a) - 0x10)->weapon;
