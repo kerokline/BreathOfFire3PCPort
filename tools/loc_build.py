@@ -4538,6 +4538,12 @@ def build_all(args, disc_path):
         report = []
         overlays["FIRST.DAT"] += [code_label_chunks(module_sections(disc, "MAGIC060.EMI"), None, None, report)[15]]
         print("labels: " + ", ".join(report))
+    if not donor_ja and not is_psp(disc) and not args.only:
+        # DIV-0148: the release's own staff roll (a US or PAL disc). A Japanese
+        # or PSP layer carries none: the roll is .data's, the Japanese release's.
+        import exe_roll
+        overlays["FIRST.DAT"] += [exe_roll.chunk(module_sections(disc, exe_roll.ROLL_EMI))]
+        print("staff roll: the release's own (kind 17)")
 
     game_emi = disc.find("GAME.EMI")
     if is_psp(disc) and not args.only:
@@ -5043,6 +5049,10 @@ def cmd_selftest(args):
     selftest_code_labels()
     selftest_buttons()
     selftest_fishing_ja()
+    import exe_roll   # DIV-0148: the staff roll's chunk
+    errs = exe_roll.selftest()
+    if errs:
+        raise SystemExit("loc_build selftest: " + "; ".join(errs))
     print("loc_build selftest: ok")
     return 0
 

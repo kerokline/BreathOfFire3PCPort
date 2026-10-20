@@ -13,6 +13,7 @@
 #include "game/labels.h"
 #include "game/language_tags.h"
 #include "game/map_layers.h"
+#include "game/scena_sc15.h"
 #include "game/menu_verbs.h"
 #include "hook/exe_host.h"
 
@@ -215,9 +216,9 @@ void DatLog(const char* from, const char* path) {
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 15, which are ours (DIV-0006, DIV-0008,
+//     rejected - except kinds 4 to 17, which are ours (DIV-0006, DIV-0008,
 //     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057,
-//     DIV-0038, DIV-0064);
+//     DIV-0038, DIV-0064, DIV-0069, DIV-0148);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -404,6 +405,9 @@ void TakeChunk(void*, const ChunkHeader& h, std::uint8_t* payload) {
         break;
     case 16:  // DIV-0069: ours.
         FishingText_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+        break;
+    case 17:  // DIV-0148: ours.
+        ScenaSc15_RollApply(h.tag, payload, static_cast<std::uint32_t>(h.size));
         break;
     default:
         break;

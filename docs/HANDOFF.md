@@ -1,7 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-20: `main` is `56d81b42` here (PRs #94 and #95 merged; `origin/main` has #96 and #98
-since); the typed-data round's stage C is built on `typed/c`, unpushed: the owner's smoke run, then its PR, item 0)
+**Status:** IN PROGRESS (2026-10-20: `main` is `b3498050` (PRs #94..#96 and #98 merged; `typed/c` has it merged); the typed-data round's stage C is built on `typed/c`, unpushed: the owner's smoke run, then its PR, item 0)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -16,10 +15,10 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged since PR #43: the game's own code is
-all ours). `main` is `56d81b42`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw
+all ours). `main` was `56d81b42` on 2026-10-19: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw
 data sites to 27,394, the machine code identical; the census's CI ratchet; the install-gap round's second pairing
-pass) and the quicksave round (PR #95: F6 / F7 / the F5 menu, DIV-0145..0147, D322; not yet played). `origin/main`
-has since taken PR #96 (the quicksave's language guard, IDEAS I47) and PR #98 (D266's title mark, DIV-0148); PR #99
+pass) and the quicksave round (PR #95: F6 / F7 / the F5 menu, DIV-0145..0147, D322; not yet played). Since then PR #96
+(the quicksave's language guard, IDEAS I47) and PR #98 (D266's title mark, DIV-0148): `main` is `b3498050`; PR #99
 (docs/handoff-1020) rewrites this file and STATUS for that day's other work. Before `19180e63`: the button round
 (PR #85), the event battles' music (PR #86), Amalgam's melt (PR #87), Ryu's dream (PR #90), the install-gap round
 (PR #91), the jukebox's recorded streams (PR #92). **The typed-data round's stage C is built on `typed/c`**
@@ -41,14 +40,13 @@ hosted cross form).
    coordinator's docs; [`typed-data-stage-c.md`](typed-data-stage-c.md) 8 call 2). On the owner's machine (agents may
    not run the game here): the headless `BOF3X_SHADOW='*'` self-test and one state-hash route, both from a plain copy
    of `build/` as the install-gap round's end batch ran them ([`install-gap-round.md`](install-gap-round.md) 6). The
-   machine code is identical to `main` 56d81b42 object by object, so this is a formality, but it is the only check
+   machine code is identical to `main` b3498050 object by object, so this is a formality, but it is the only check
    that runs the game. Then the PR: no behaviour change, no ledger entry; every non-merge commit signed off (read
-   `git log --format=%B main..typed/c` first). **Before the PR, merge `origin/main`** (PRs #96, #98 and, if merged,
-   #99): STATUS, HANDOFF and IDEAS will conflict (both sides rewrote them or appended), and the two PRs change five
-   `src/` files (`dat_load.cpp`, `scena_sc15.cpp` / `.h`, the hook's snapshot; `main`'s census 27,407 -> 27,406) -
-   rebuild, re-gate against a build of the merged base, regenerate `analysis/data_census.tsv` and
-   `analysis/typed_left.tsv`, and give those files' new raw sites in `src/game` their reasons, or
-   `data_census.py --strict` fails. **Two calls for the owner**, from the C4 audit
+   `git log --format=%B main..typed/c` first). `origin/main` b3498050 (PRs #96, #98) is merged into `typed/c`
+   (2026-10-20; gate baseline `.claude/worktrees/typed-baseline-c2`, 0 differ; census 27,389; DIV-0148's one new raw
+   site, `scena_sc15.cpp` RollEntry's `L(kRollLines + 4u * i)`, listed `gate`: `Scena17_RollLines[i]` changes
+   `Scena17_ScrollRoll`). If PR #99 merges first, merge it too: STATUS, HANDOFF, owner-review, IDEAS and README will
+   conflict - take #99's and re-apply the typed-data paragraphs. **Two calls for the owner**, from the C4 audit
    ([`owner-review.md`](owner-review.md) "2026-10-20, typed-data stage C"): `rest_4a`'s `kEnemyHp` against
    `records.h`'s `intel` at the same offset, and `Save_Directory`'s count. **The method that held** (stage C's
    section 1): `tools/codegen_same.py` against a baseline build after every batch, `0 differ`; after every typing
@@ -335,8 +333,8 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 ## In flight / uncommitted
 
 - **The typed-data round's stage C** (2026-10-19..20), all under `.claude/worktrees/`: `typed-c` (`typed/c`, the
-  PR's branch), `typed-baseline-c` (a detached `main` `56d81b42` build: the gate's reference; keep it until the PR
-  merges), `agent-c4` (`typed/c4`, merged), `agent-c4fix` (`typed/c4-fix`, merged), `audit-c4` (detached `f56ed9a8`,
+  PR's branch), `typed-baseline-c` (a detached `main` `56d81b42` build: the gate's reference until main was merged) and
+  `typed-baseline-c2` (detached `b3498050`, the gate's reference now; keep it until the PR merges), `agent-c4` (`typed/c4`, merged), `agent-c4fix` (`typed/c4-fix`, merged), `audit-c4` (detached `f56ed9a8`,
   the C4 audit's read-only tree) and the older stage C agents' `agent-c0`, `agent-c1`, `agent-c2-<group>`,
   `agent-c2fix`, `agent-c3e`, `agent-c3n` (branches `typed/c0`, `typed/c1`, `typed/c2-<group>`, `typed/c2-fix`,
   `typed/c3-entries`, `typed/c3-naming`): all merged into `typed/c`; removable after the PR merges. Scratch:

@@ -40,9 +40,9 @@ load screen (DIV-0145..0147); the save list is split from the quicksaves and bou
 two by-design words) and by 22 pixel-equal capture pairs over six routes, two conditions, the PC, US disc-only and
 PSP-EU installs and wide mode, in-process and across processes. Not yet played by the owner.
 
-**`main` is `56d81b42`** in this checkout (2026-10-19: the typed-data round's stages A and B, PR #94, and the quicksave
-round, PR #95), stage C's base; `origin/main` has since taken PR #96 (the quicksave's language guard) and PR #98 (D266's
-title mark, DIV-0148). Before that, `19180e63`: the button round (PR #85, below) and the event battles' own music on
+**`main` is `b3498050`** (2026-10-20: PR #96, the quicksave's language guard, and PR #98, D266's title mark and
+DIV-0148, over `56d81b42`: the typed-data round's stages A and B, PR #94, and the quicksave round, PR #95); `typed/c`
+has it merged. Before that, `19180e63`: the button round (PR #85, below) and the event battles' own music on
 disc-only installs (PR #86, D316); sprites flagged for capture drawn into VRAM, restoring Amalgam's melt (PR #87, D317 /
 DIV-0142); Ryu's dream silent as on the PlayStation (PR #90, D318 / DIV-0143); the install-gap round (PR #91,
 [`install-gap-round.md`](install-gap-round.md): disc-built images from the player's discs, the read watch, D279 and

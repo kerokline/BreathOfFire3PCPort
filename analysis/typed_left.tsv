@@ -25178,6 +25178,7 @@ src/game/scena_sc15.cpp	Row	global	W	kTimer	0	0x8034e6	-	width	kTimer 0x8034e6 M
 src/game/scena_sc15.cpp	Row	global	W	kTimer	1	0x8034e6	-	width	kTimer 0x8034e6 MoveScript_PartyRecords+0x66	b0
 src/game/scena_sc15.cpp	CounterUp	global	B	kCounter0	0	0x903848	-	no-entry	kCounter0 0x903848 -	b0
 src/game/scena_sc15.cpp	CounterUp	global	B	kCounter0	1	0x903848	-	no-entry	kCounter0 0x903848 -	b0
+src/game/scena_sc15.cpp	RollEntry	global	L	kRollLines	0	0x661a20	-	gate	kRollLines 0x661a20 Scena17_RollLines (DIV-0148 from main; Scena17_RollLines[i] changes Scena17_ScrollRoll)	main
 src/game/scena_sc15.cpp	Scena15_RecordWord	raw	L	0x7E0880	0	0x7e0880	-	computed	computed offset or index (via=L)	b1-scen_ui
 src/game/scena_sc15.cpp	Scena15_RecordWord	record	W	L(0x7E0880) + (index & 0xFFFFu) * 8u	0	-	via=L	no-struct	an 8-byte record table behind the pointer 0x7E0880	c2-scen_ui
 src/game/scena_sc15.cpp	Scena15_EnterArea	global	W	kAngle2	0	0x929ecc	-	width	kAngle2 0x929ecc Cond_AngleFB	b0
@@ -25337,9 +25338,7 @@ src/game/scena_sc15.cpp	Scena17_DrawLetterbox	record	SetL	p + 0xC	1	-	via=Packet
 src/game/scena_sc15.cpp	Scena17_DrawLetterbox	record	SetL	p + 0x14	1	-	via=Packet	no-struct	a GPU packet in the OT pool, not a records.h family (via=Packet)	b1-scen_ui
 src/game/scena_sc15.cpp	Scena17_DrawLetterbox	record	SetL	p + 0x18	1	-	via=Packet	no-struct	a GPU packet in the OT pool, not a records.h family (via=Packet)	b1-scen_ui
 src/game/scena_sc15.cpp	Scena17_ScrollRoll	global	L	kRollLine	0	0x6bc744	-	width	kRollLine 0x6bc744 Scena15_Bytes+0x4	b0
-src/game/scena_sc15.cpp	Scena17_ScrollRoll	global	L	kRollLines	0	0x661a20	-	gate	kRollLines 0x661a20 Scena17_RollLines	b0
 src/game/scena_sc15.cpp	Scena17_ScrollRoll	global	L	kRollLine	1	0x6bc744	-	width	kRollLine 0x6bc744 Scena15_Bytes+0x4	b0
-src/game/scena_sc15.cpp	Scena17_ScrollRoll	global	L	kRollLines	1	0x661a20	-	gate	kRollLines 0x661a20 Scena17_RollLines	b0
 src/game/scena_sc15.cpp	Scena17_ScrollRoll	global	SetW	kRollLine	0	0x6bc744	-	width	kRollLine 0x6bc744 Scena15_Bytes+0x4	b0
 src/game/scena_sc15.cpp	Scena17_ScrollRoll	global	W	kRollLine	0	0x6bc744	-	width	kRollLine 0x6bc744 Scena15_Bytes+0x4	b0
 src/game/scena_sc15.cpp	Scena17_DrawLine	global	B	kGlyphWidths	0	0x66208c	-	gate	kGlyphWidths 0x66208c Scena17_GlyphWidths	b0

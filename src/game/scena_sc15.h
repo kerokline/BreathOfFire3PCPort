@@ -9,6 +9,12 @@
 
 void ScenaSc15_Inject();
 
+// DIVERGENCE DIV-0148: the language layer's kind 17 (FIRST.DAT, dat_load.cpp's
+// TakeChunk): the staff roll of the release the layer was built from (a US or
+// PAL disc; tools/exe_roll.py). Copied; the roll then takes its lines from it.
+// Tag 1 only; a malformed payload is a Fatal.
+void ScenaSc15_RollApply(unsigned tag, const unsigned char* payload, unsigned size);
+
 namespace scena_sc15 {
 // BOF3X_SHADOW=scena_sc15: the start-up fuzz, scena_sc15_fuzz.cpp. Clones every
 // original before ScenaSc15_Inject patches it.

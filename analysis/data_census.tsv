@@ -25170,185 +25170,184 @@ site	src/game/scena_sc13_fuzz.cpp	710	global	B	ObjTrio_addr + 0x8	0x802d48	-	ins
 site	src/game/scena_sc13_fuzz.cpp	713	global	SetW	Game_AreaNumber_addr	0x904efc	-	exact	Game_AreaNumber	unsigned short	1
 site	src/game/scena_sc13_fuzz.cpp	715	global	B	Cond_ByteFD_addr	0x8034f1	-	exact	Cond_ByteFD	unsigned char	1
 site	src/game/scena_sc13_fuzz.cpp	716	global	B	ObjTrio_addr + 0x8	0x802d48	-	inside	ObjTrio+0x8	records::PartyMember	1
-site	src/game/scena_sc15.cpp	204	global	At	Effect_Objects_addr + ((slot & 0xFFu) << 7)	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
-site	src/game/scena_sc15.cpp	205	global	At	Sprite_Objects_addr + (k & 0xFFu) * 0xA4u	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/scena_sc15.cpp	216	global	SetW	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
-site	src/game/scena_sc15.cpp	219	global	SetW	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
-site	src/game/scena_sc15.cpp	219	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
-site	src/game/scena_sc15.cpp	220	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
-site	src/game/scena_sc15.cpp	222	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	222	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	280	raw	L	0x7E0880	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
-site	src/game/scena_sc15.cpp	280	record	W	L(0x7E0880) + (index & 0xFFFFu) * 8u	-	via=L	-	-	-	0
-site	src/game/scena_sc15.cpp	303	global	W	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
-site	src/game/scena_sc15.cpp	411	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	422	record	W	rec + 2	-	stride=0xa	-	-	-	0
-site	src/game/scena_sc15.cpp	426	record	W	rec + 6	-	stride=0xa	-	-	-	0
-site	src/game/scena_sc15.cpp	427	record	W	rec + 4	-	stride=0xa	-	-	-	0
-site	src/game/scena_sc15.cpp	428	record	B	rec + 9	-	stride=0xa	-	-	-	0
-site	src/game/scena_sc15.cpp	446	record	SetL	e + 0x64	-	via=Effect	-	-	-	0
-site	src/game/scena_sc15.cpp	447	record	SetL	e + 0x68	-	via=Effect	-	-	-	0
-site	src/game/scena_sc15.cpp	448	record	SetL	e + 0x6C	-	via=Effect	-	-	-	0
-site	src/game/scena_sc15.cpp	472	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	477	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	483	raw	SetW	0x90405C	0x90405c	-	inside	Cond_Flags+0xcc	unsigned char	0
-site	src/game/scena_sc15.cpp	550	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	554	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	562	global	B	kBattles	0x6618c0	-	exact	Scena15_Battles	unsigned char	0
-site	src/game/scena_sc15.cpp	570	global	B	kBattles	0x6618c0	-	exact	Scena15_Battles	unsigned char	0
-site	src/game/scena_sc15.cpp	571	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	592	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	598	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	626	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	637	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	658	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	663	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	694	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	700	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	702	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	711	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	206	global	At	Effect_Objects_addr + ((slot & 0xFFu) << 7)	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
+site	src/game/scena_sc15.cpp	207	global	At	Sprite_Objects_addr + (k & 0xFFu) * 0xA4u	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/scena_sc15.cpp	218	global	SetW	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
+site	src/game/scena_sc15.cpp	221	global	SetW	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
+site	src/game/scena_sc15.cpp	221	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
+site	src/game/scena_sc15.cpp	222	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
+site	src/game/scena_sc15.cpp	224	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	224	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	314	global	L	kRollLines	0x661a20	-	exact	Scena17_RollLines	unsigned long	0
+site	src/game/scena_sc15.cpp	330	raw	L	0x7E0880	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
+site	src/game/scena_sc15.cpp	330	record	W	L(0x7E0880) + (index & 0xFFFFu) * 8u	-	via=L	-	-	-	0
+site	src/game/scena_sc15.cpp	353	global	W	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sc15.cpp	461	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	472	record	W	rec + 2	-	stride=0xa	-	-	-	0
+site	src/game/scena_sc15.cpp	476	record	W	rec + 6	-	stride=0xa	-	-	-	0
+site	src/game/scena_sc15.cpp	477	record	W	rec + 4	-	stride=0xa	-	-	-	0
+site	src/game/scena_sc15.cpp	478	record	B	rec + 9	-	stride=0xa	-	-	-	0
+site	src/game/scena_sc15.cpp	496	record	SetL	e + 0x64	-	via=Effect	-	-	-	0
+site	src/game/scena_sc15.cpp	497	record	SetL	e + 0x68	-	via=Effect	-	-	-	0
+site	src/game/scena_sc15.cpp	498	record	SetL	e + 0x6C	-	via=Effect	-	-	-	0
+site	src/game/scena_sc15.cpp	522	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	527	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	533	raw	SetW	0x90405C	0x90405c	-	inside	Cond_Flags+0xcc	unsigned char	0
+site	src/game/scena_sc15.cpp	600	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	604	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	612	global	B	kBattles	0x6618c0	-	exact	Scena15_Battles	unsigned char	0
+site	src/game/scena_sc15.cpp	620	global	B	kBattles	0x6618c0	-	exact	Scena15_Battles	unsigned char	0
+site	src/game/scena_sc15.cpp	621	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	642	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	648	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	676	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	687	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	708	global	B	kCounter0	0x903848	-	none	-	-	0
 site	src/game/scena_sc15.cpp	713	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	717	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	722	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	729	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	734	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	747	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	753	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	778	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	798	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	802	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	808	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	814	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	827	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	838	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	844	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	848	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	861	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
-site	src/game/scena_sc15.cpp	862	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
-site	src/game/scena_sc15.cpp	886	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	744	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	750	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	752	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	761	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	763	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	767	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	772	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	779	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	784	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	797	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	803	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	828	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	848	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	852	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	858	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	864	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	877	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	888	global	B	kCounter0	0x903848	-	none	-	-	0
 site	src/game/scena_sc15.cpp	894	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	901	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	908	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	916	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	935	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	939	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	940	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	945	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	898	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	911	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
+site	src/game/scena_sc15.cpp	912	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
+site	src/game/scena_sc15.cpp	936	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	944	global	B	kCounter0	0x903848	-	none	-	-	0
 site	src/game/scena_sc15.cpp	951	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	956	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	961	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	967	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	985	global	At	Scena15_EventOps_addr + 0x11u * i	0x661950	-	exact	Scena15_EventOps	unsigned char	0
-site	src/game/scena_sc15.cpp	990	global	At	Scena15_EventOps_addr + 0x38 + 0x10u * i	0x661950	-	exact	Scena15_EventOps	unsigned char	0
-site	src/game/scena_sc15.cpp	1015	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1036	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1061	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1085	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1086	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
-site	src/game/scena_sc15.cpp	1088	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
-site	src/game/scena_sc15.cpp	1097	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1124	global	L	kInputHeld	0x7e1be8	-	exact	Input_Held	unsigned short	0
-site	src/game/scena_sc15.cpp	1139	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1151	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1207	global	At	Gfx_ClutStrip_addr + row * 0x200u	0x80f580	-	exact	Gfx_ClutStrip	unsigned short	0
-site	src/game/scena_sc15.cpp	1240	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1242	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1248	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1253	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1258	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1268	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1270	global	W	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
-site	src/game/scena_sc15.cpp	1291	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1295	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1300	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1308	global	W	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sc15.cpp	958	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	966	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	985	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	989	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	990	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	995	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1001	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1006	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1011	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1017	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1035	global	At	Scena15_EventOps_addr + 0x11u * i	0x661950	-	exact	Scena15_EventOps	unsigned char	0
+site	src/game/scena_sc15.cpp	1040	global	At	Scena15_EventOps_addr + 0x38 + 0x10u * i	0x661950	-	exact	Scena15_EventOps	unsigned char	0
+site	src/game/scena_sc15.cpp	1065	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1086	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1111	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1135	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1136	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
+site	src/game/scena_sc15.cpp	1138	global	W	kTimer	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
+site	src/game/scena_sc15.cpp	1147	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1174	global	L	kInputHeld	0x7e1be8	-	exact	Input_Held	unsigned short	0
+site	src/game/scena_sc15.cpp	1189	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1201	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1257	global	At	Gfx_ClutStrip_addr + row * 0x200u	0x80f580	-	exact	Gfx_ClutStrip	unsigned short	0
+site	src/game/scena_sc15.cpp	1290	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1292	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1298	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1303	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1308	global	B	kCounter0	0x903848	-	none	-	-	0
 site	src/game/scena_sc15.cpp	1318	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1325	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1340	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1346	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1320	global	W	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sc15.cpp	1341	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1345	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1350	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1358	global	W	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sc15.cpp	1368	global	B	kCounter0	0x903848	-	none	-	-	0
 site	src/game/scena_sc15.cpp	1375	global	B	kCounter0	0x903848	-	none	-	-	0
 site	src/game/scena_sc15.cpp	1390	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1397	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1402	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1408	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1419	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1449	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1463	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1464	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1477	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1482	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1483	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1488	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1493	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1494	global	W	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
-site	src/game/scena_sc15.cpp	1511	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1552	global	B	kCounter1	0x903849	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1554	global	B	kKept	0x6bc742	-	inside	Scena15_Bytes+0x2	unsigned char	0
-site	src/game/scena_sc15.cpp	1564	global	B	kShakeSteps	0x6619a8	-	exact	Scena15_ShakeSteps	signed char	0
-site	src/game/scena_sc15.cpp	1602	global	B	kTalkWho	0x6619dc	-	exact	Scena15_TalkWho	unsigned char	0
-site	src/game/scena_sc15.cpp	1798	global	SetL	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1813	global	SetW	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
-site	src/game/scena_sc15.cpp	1821	record	SetW	rect + 2	-	-	-	-	-	0
-site	src/game/scena_sc15.cpp	1822	record	SetW	rect + 4	-	-	-	-	-	0
-site	src/game/scena_sc15.cpp	1823	record	SetW	rect + 6	-	-	-	-	-	0
-site	src/game/scena_sc15.cpp	1893	global	SetW	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
-site	src/game/scena_sc15.cpp	1927	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1935	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	1947	global	B	kFrame	0x937f94	-	exact	Frame_Counter	unsigned int	0
-site	src/game/scena_sc15.cpp	1964	global	B	kFrame	0x937f94	-	exact	Frame_Counter	unsigned int	0
-site	src/game/scena_sc15.cpp	1966	global	SetL	kElevation	0x929f1c	-	exact	MapView_Elevation	long	0
-site	src/game/scena_sc15.cpp	2015	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2067	global	SetW	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
-site	src/game/scena_sc15.cpp	2148	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2202	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2219	global	B	kInputPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
-site	src/game/scena_sc15.cpp	2221	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2221	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2222	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2233	global	B	kInputPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
-site	src/game/scena_sc15.cpp	2301	record	SetL	p + 8	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2302	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2303	record	SetL	p + 0x14	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2304	record	SetL	p + 0x18	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2312	record	SetL	p + 8	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2313	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2325	record	SetL	p + 8	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2326	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2362	global	At	Camera_Matrix_addr	0x905e40	-	exact	Camera_Matrix	short	0
-site	src/game/scena_sc15.cpp	2369	global	At	Prim_VertexScratch_addr	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
-site	src/game/scena_sc15.cpp	2415	record	SetL	quad + 8	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2415	record	L	tri + 0x18	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2416	record	SetL	quad + 0x14	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2416	record	L	tri + 0x28	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2417	record	SetL	quad + 0xC	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2417	record	L	tri + 0x1C	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2418	record	SetL	quad + 0x18	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2418	record	L	tri + 0x2C	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2419	record	SetL	quad + 0x10	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2419	record	L	tri + 0x20	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2420	record	SetL	quad + 0x1C	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2420	record	L	tri + 0x30	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2437	record	SetL	p + 8	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2438	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2439	record	SetL	p + 0x14	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2440	record	SetL	p + 0x18	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2445	record	SetL	p + 8	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2446	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2447	record	SetL	p + 0x14	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2448	record	SetL	p + 0x18	-	via=Packet	-	-	-	0
-site	src/game/scena_sc15.cpp	2482	global	L	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
-site	src/game/scena_sc15.cpp	2482	global	L	kRollLines	0x661a20	-	exact	Scena17_RollLines	unsigned long	0
-site	src/game/scena_sc15.cpp	2488	global	L	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
-site	src/game/scena_sc15.cpp	2488	global	L	kRollLines	0x661a20	-	exact	Scena17_RollLines	unsigned long	0
-site	src/game/scena_sc15.cpp	2491	global	SetW	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
-site	src/game/scena_sc15.cpp	2491	global	W	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
-site	src/game/scena_sc15.cpp	2531	global	B	kGlyphWidths	0x66208c	-	exact	Scena17_GlyphWidths	unsigned char	0
-site	src/game/scena_sc15.cpp	2606	raw	B	0x929EC2	0x929ec2	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2627	global	B	kCounter0	0x903848	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2628	global	B	kCounter1	0x903849	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2629	global	B	kCounter2	0x90384a	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2630	global	B	kCounter3	0x90384b	-	none	-	-	0
-site	src/game/scena_sc15.cpp	2676	global	B	kInputPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
+site	src/game/scena_sc15.cpp	1396	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1425	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1440	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1447	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1452	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1458	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1469	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1499	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1513	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1514	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1527	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1532	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1533	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1538	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1543	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1544	global	W	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sc15.cpp	1561	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1602	global	B	kCounter1	0x903849	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1604	global	B	kKept	0x6bc742	-	inside	Scena15_Bytes+0x2	unsigned char	0
+site	src/game/scena_sc15.cpp	1614	global	B	kShakeSteps	0x6619a8	-	exact	Scena15_ShakeSteps	signed char	0
+site	src/game/scena_sc15.cpp	1652	global	B	kTalkWho	0x6619dc	-	exact	Scena15_TalkWho	unsigned char	0
+site	src/game/scena_sc15.cpp	1848	global	SetL	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1863	global	SetW	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sc15.cpp	1871	record	SetW	rect + 2	-	-	-	-	-	0
+site	src/game/scena_sc15.cpp	1872	record	SetW	rect + 4	-	-	-	-	-	0
+site	src/game/scena_sc15.cpp	1873	record	SetW	rect + 6	-	-	-	-	-	0
+site	src/game/scena_sc15.cpp	1943	global	SetW	kAngle2	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sc15.cpp	1977	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1985	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	1997	global	B	kFrame	0x937f94	-	exact	Frame_Counter	unsigned int	0
+site	src/game/scena_sc15.cpp	2014	global	B	kFrame	0x937f94	-	exact	Frame_Counter	unsigned int	0
+site	src/game/scena_sc15.cpp	2016	global	SetL	kElevation	0x929f1c	-	exact	MapView_Elevation	long	0
+site	src/game/scena_sc15.cpp	2065	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2117	global	SetW	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
+site	src/game/scena_sc15.cpp	2198	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2252	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2269	global	B	kInputPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
+site	src/game/scena_sc15.cpp	2271	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2271	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2272	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2283	global	B	kInputPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
+site	src/game/scena_sc15.cpp	2351	record	SetL	p + 8	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2352	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2353	record	SetL	p + 0x14	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2354	record	SetL	p + 0x18	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2362	record	SetL	p + 8	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2363	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2375	record	SetL	p + 8	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2376	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2412	global	At	Camera_Matrix_addr	0x905e40	-	exact	Camera_Matrix	short	0
+site	src/game/scena_sc15.cpp	2419	global	At	Prim_VertexScratch_addr	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
+site	src/game/scena_sc15.cpp	2465	record	SetL	quad + 8	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2465	record	L	tri + 0x18	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2466	record	SetL	quad + 0x14	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2466	record	L	tri + 0x28	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2467	record	SetL	quad + 0xC	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2467	record	L	tri + 0x1C	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2468	record	SetL	quad + 0x18	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2468	record	L	tri + 0x2C	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2469	record	SetL	quad + 0x10	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2469	record	L	tri + 0x20	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2470	record	SetL	quad + 0x1C	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2470	record	L	tri + 0x30	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2487	record	SetL	p + 8	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2488	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2489	record	SetL	p + 0x14	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2490	record	SetL	p + 0x18	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2495	record	SetL	p + 8	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2496	record	SetL	p + 0xC	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2497	record	SetL	p + 0x14	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2498	record	SetL	p + 0x18	-	via=Packet	-	-	-	0
+site	src/game/scena_sc15.cpp	2532	global	L	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
+site	src/game/scena_sc15.cpp	2538	global	L	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
+site	src/game/scena_sc15.cpp	2541	global	SetW	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
+site	src/game/scena_sc15.cpp	2541	global	W	kRollLine	0x6bc744	-	inside	Scena15_Bytes+0x4	unsigned char	0
+site	src/game/scena_sc15.cpp	2581	global	B	kGlyphWidths	0x66208c	-	exact	Scena17_GlyphWidths	unsigned char	0
+site	src/game/scena_sc15.cpp	2656	raw	B	0x929EC2	0x929ec2	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2677	global	B	kCounter0	0x903848	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2678	global	B	kCounter1	0x903849	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2679	global	B	kCounter2	0x90384a	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2680	global	B	kCounter3	0x90384b	-	none	-	-	0
+site	src/game/scena_sc15.cpp	2726	global	B	kInputPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
 site	src/game/scena_sc15_fuzz.cpp	84	global	Mem	Effect_Objects_addr + (slot & 0xFFu) * 0x80u	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	1
 site	src/game/scena_sc15_fuzz.cpp	269	global	B	(n & 2) ? AreaW0b_PartySet_addr : (Scena15_Bytes_addr + 0x2)	0x90412c	-	exact	AreaW0b_PartySet	unsigned char	1
 site	src/game/scena_sc15_fuzz.cpp	369	record	Mem	t.at + 4 * i	-	param	-	-	-	1
@@ -27335,13 +27334,13 @@ site	src/hook/exe_host.cpp	198	global	At	kDataVa	0x5da000	-	none	-	-	0
 site	src/hook/exe_icon.cpp	61	global	-	menu_windows::at::kIconRects	0x66367c	-	none	-	-	0
 site	src/hook/gapwatch.cpp	156	record	Ptr	v - 6	-	param	-	-	-	0
 site	src/hook/gapwatch.cpp	277	record	Ptr	ctx->Esp	-	-	-	-	-	0
-site	src/hook/snapshot.cpp	250	record	At	lo - 1	-	-	-	-	-	0
-site	src/hook/snapshot.cpp	353	record	At	arena_top - arena	-	-	-	-	-	0
-site	src/hook/snapshot.cpp	513	record	At	h.arena_top - h.arena_bytes	-	-	-	-	-	0
-site	src/hook/snapshot.cpp	831	record	At	top - kArenaBytes	-	via=Va	-	-	-	0
-site	src/hook/snapshot.cpp	832	record	At	top - kArenaBytes	-	via=Va	-	-	-	0
-site	src/hook/snapshot.cpp	863	record	At	top - kArenaBytes	-	via=Va	-	-	-	0
-site	src/hook/snapshot.cpp	895	record	At	top - kArenaBytes	-	via=Va	-	-	-	0
+site	src/hook/snapshot.cpp	251	record	At	lo - 1	-	-	-	-	-	0
+site	src/hook/snapshot.cpp	354	record	At	arena_top - arena	-	-	-	-	-	0
+site	src/hook/snapshot.cpp	519	record	At	h.arena_top - h.arena_bytes	-	-	-	-	-	0
+site	src/hook/snapshot.cpp	890	record	At	top - kArenaBytes	-	via=Va	-	-	-	0
+site	src/hook/snapshot.cpp	891	record	At	top - kArenaBytes	-	via=Va	-	-	-	0
+site	src/hook/snapshot.cpp	922	record	At	top - kArenaBytes	-	via=Va	-	-	-	0
+site	src/hook/snapshot.cpp	954	record	At	top - kArenaBytes	-	via=Va	-	-	-	0
 site	src/hook/stackwatch.cpp	260	record	Long	g_teb + 0x04	-	via=TebOf	-	-	-	0
 site	src/hook/stackwatch.cpp	261	record	Long	g_teb + 0x08	-	via=TebOf	-	-	-	0
 site	src/hook/stackwatch.cpp	262	record	Long	g_teb + 0xE0C	-	via=TebOf	-	-	-	0
@@ -29277,13 +29276,13 @@ const	kPlacedSeat7	0x661338	data	1	src/game/scena_sc7_callees.h:112(scena_sc7::a
 const	kShakeSteps	0x6615e4	data	1	src/game/scena_sc9b_callees.h:107(scena_sc9b::at)	Scena10_ShakeSteps	data	exact	signed char	at
 const	kVtable	0x661658	data	1	src/game/scena_sc11_callees.h:25(scena_sc11)	Scena11_Hooks	data	exact	unsigned long	module
 const	kShake14	0x661868	data	1	src/game/scena_sc13_callees.h:128(scena_sc13::at)	Scena14_ShakeOffsets	data	exact	signed char	at
-const	kBattles	0x6618c0	data	1	src/game/scena_sc15.cpp:144((anon))	Scena15_Battles	data	exact	unsigned char	module
-const	kShakeSteps	0x6619a8	data	1	src/game/scena_sc15.cpp:147((anon))	Scena15_ShakeSteps	data	exact	signed char	module
-const	kTalkWho	0x6619dc	data	1	src/game/scena_sc15.cpp:149((anon))	Scena15_TalkWho	data	exact	unsigned char	module
+const	kBattles	0x6618c0	data	1	src/game/scena_sc15.cpp:146((anon))	Scena15_Battles	data	exact	unsigned char	module
+const	kShakeSteps	0x6619a8	data	1	src/game/scena_sc15.cpp:149((anon))	Scena15_ShakeSteps	data	exact	signed char	module
+const	kTalkWho	0x6619dc	data	1	src/game/scena_sc15.cpp:151((anon))	Scena15_TalkWho	data	exact	unsigned char	module
 const	kStateTable	0x6619fc	data	1	src/game/field_modes_callees.h:24(field_modes)	-	-	none	-	module
 const	kRunTable	0x661a08	data	1	src/game/field_modes_callees.h:25(field_modes)	-	-	none	-	module
-const	kRollLines	0x661a20	data	1	src/game/scena_sc15.cpp:152((anon))	Scena17_RollLines	data	exact	unsigned long	module
-const	kGlyphWidths	0x66208c	data	1	src/game/scena_sc15.cpp:159((anon))	Scena17_GlyphWidths	data	exact	unsigned char	module
+const	kRollLines	0x661a20	data	1	src/game/scena_sc15.cpp:154((anon))	Scena17_RollLines	data	exact	unsigned long	module
+const	kGlyphWidths	0x66208c	data	1	src/game/scena_sc15.cpp:161((anon))	Scena17_GlyphWidths	data	exact	unsigned char	module
 const	kChapterHooks	0x662c80	data	1	src/game/event_ops_callees.h:65(event_ops::at)	Scenario_Hooks	data	exact	unsigned long	at
 const	kScenarioHooks	0x662c80	data	1	src/game/field_e2_callees.h:134(field_e2::at)	Scenario_Hooks	data	exact	unsigned long	at
 const	kTailTable	0x662cd0	data	1	src/game/field_modes_callees.h:22(field_modes)	-	-	none	-	module
@@ -29633,9 +29632,9 @@ const	kComboStep	0x6bc70c	data	2	src/game/rest_1g.cpp:95((anon));src/game/rest_1
 const	kCounter	0x6bc70c	data	1	src/game/effect_1e_callees.h:32(effect_1e::at)	-	-	none	-	at
 const	kComboTimer	0x6bc710	data	2	src/game/rest_1g.cpp:96((anon));src/game/rest_1g_fuzz.cpp:170(rest_1g::(anon))	-	-	none	-	module
 const	kShakeShift	0x6bc740	data	1	src/game/scena_sc15_fuzz.cpp:72(scena_sc15::(anon))	Scena15_Bytes	data	exact	unsigned char	module
-const	kKept	0x6bc742	data	1	src/game/scena_sc15.cpp:135((anon))	-	-	inside	unsigned char	module
+const	kKept	0x6bc742	data	1	src/game/scena_sc15.cpp:137((anon))	-	-	inside	unsigned char	module
 const	kSlot	0x6bc743	data	1	src/game/scena_sc15_fuzz.cpp:72(scena_sc15::(anon))	-	-	inside	unsigned char	module
-const	kRollLine	0x6bc744	data	1	src/game/scena_sc15.cpp:137((anon))	-	-	inside	unsigned char	module
+const	kRollLine	0x6bc744	data	1	src/game/scena_sc15.cpp:139((anon))	-	-	inside	unsigned char	module
 const	kWheelSpots	0x6bc748	data	1	src/game/field_o_callees.h:27(field_o::at)	-	-	none	-	at
 const	kListIds	0x6bc760	data	1	src/game/field_o_callees.h:25(field_o::at)	-	-	none	-	at
 const	kListCounts	0x6bc7e0	data	1	src/game/field_o_callees.h:26(field_o::at)	-	-	none	-	at
@@ -29796,10 +29795,10 @@ const	kEff5Level	0x7e1490	data	1	src/game/rest_1g.cpp:78((anon))	-	-	inside	reco
 const	kRecord6	0x7e14e0	data	1	src/game/effect_1f_callees.h:18(effect_1f::at)	-	-	inside	records::EffectObject	at
 const	kHeld	0x7e1be8	data	1	src/game/save_menu_callees.h:41(save_menu::at)	Input_Held	data	exact	unsigned short	at
 const	kInputHeld	0x7e1be8	data	2	src/game/area_w4e_callees.h:109(area_w4e::at);src/game/scena_sc13_callees.h:95(scena_sc13::at)	Input_Held	data	exact	unsigned short	at
-const	kInputHeld	0x7e1be8	data	1	src/game/scena_sc15.cpp:120((anon))	Input_Held	data	exact	unsigned short	module
+const	kInputHeld	0x7e1be8	data	1	src/game/scena_sc15.cpp:122((anon))	Input_Held	data	exact	unsigned short	module
 const	kInput	0x7e1bec	data	1	src/game/scena_sc0_callees.h:52(scena_sc0)	Input_Pressed	data	exact	unsigned short	module
 const	kInputPressed	0x7e1bec	data	4	src/game/battle_e1_callees.h:118(battle_e1::at);src/game/effect_3d_callees.h:50(effect_3d::at);src/game/field_e2_callees.h:128(field_e2::at);src/game/scena_sc13_callees.h:96(scena_sc13::at)	Input_Pressed	data	exact	unsigned short	at
-const	kInputPressed	0x7e1bec	data	1	src/game/scena_sc15.cpp:121((anon))	Input_Pressed	data	exact	unsigned short	module
+const	kInputPressed	0x7e1bec	data	1	src/game/scena_sc15.cpp:123((anon))	Input_Pressed	data	exact	unsigned short	module
 const	kPressed	0x7e1bec	data	4	src/game/field_s_callees.h:75(field_s::at);src/game/save_menu_callees.h:40(save_menu::at);src/game/shop_states2_callees.h:55(shop_states2::at);src/game/shop_states_callees.h:52(shop_states::at)	Input_Pressed	data	exact	unsigned short	at
 const	kPressed	0x7e1bec	data	1	src/game/rest_2e.cpp:77((anon))	Input_Pressed	data	exact	unsigned short	module
 const	kPressedDword	0x7e1bec	data	1	src/game/rest_4f_callees.h:41(rest_4f::at)	Input_Pressed	data	exact	unsigned short	at
@@ -29929,7 +29928,7 @@ const	kStep	0x8034e5	data	4	src/game/effect_4a_callees.h:26(effect_4a::at);src/g
 const	kStep	0x8034e5	data	1	src/game/field_modes_callees.h:29(field_modes)	-	-	inside	unsigned char	module
 const	kVar7Step	0x8034e5	data	4	src/game/area_w1a_callees.h:42(area_w1a::at);src/game/area_w2c_callees.h:37(area_w2c::at);src/game/area_w3c_callees.h:38(area_w3c::at);src/game/effect_4c_callees.h:23(effect_4c::at)	-	-	inside	unsigned char	at
 const	kTimer	0x8034e6	data	6	src/game/scena_sc13_callees.h:44(scena_sc13::at);src/game/scena_sc5_callees.h:38(scena_sc5::at);src/game/scena_sc6_callees.h:53(scena_sc6::at);src/game/scena_sc9a_callees.h:36(scena_sc9a::at);src/game/scena_sc9b_callees.h:35(scena_sc9b::at);src/game/scenario_harness.h:50(scenario_harness::at)	-	-	inside	unsigned char	at
-const	kTimer	0x8034e6	data	2	src/game/scena_sc0_callees.h:31(scena_sc0);src/game/scena_sc15.cpp:87((anon))	-	-	inside	unsigned char	module
+const	kTimer	0x8034e6	data	2	src/game/scena_sc0_callees.h:31(scena_sc0);src/game/scena_sc15.cpp:89((anon))	-	-	inside	unsigned char	module
 const	kTimerWord	0x8034e6	data	1	src/game/effect_2g_callees.h:34(effect_2g::at)	-	-	inside	unsigned char	at
 const	kCounterSeen	0x8034e8	data	1	src/game/object_kinds.cpp:40((anon))	Field_EdgeBitsPrev	data	exact	unsigned short	module
 const	kByteFD	0x8034f1	data	1	src/game/scenario_harness.h:51(scenario_harness::at)	Cond_ByteFD	data	exact	unsigned char	at
@@ -30075,7 +30074,7 @@ const	kChapterCount	0x903848	data	1	src/game/rest_4f_callees.h:76(rest_4f::at)	-
 const	kCounter	0x903848	data	15	src/game/effect_2c_callees.h:67(effect_2c::at);src/game/effect_3a_callees.h:61(effect_3a::at);src/game/effect_3b_callees.h:30(effect_3b::at);src/game/effect_3d_callees.h:18(effect_3d::at);src/game/effect_4a_callees.h:18(effect_4a::at);src/game/effect_4b_callees.h:16(effect_4b::at);src/game/effect_4d_callees.h:20(effect_4d::at);src/game/effect_4e_callees.h:28(effect_4e::at);src/game/effect_4f_callees.h:43(effect_4f::at);src/game/effect_5c_callees.h:25(effect_5c::at);src/game/effect_5d_callees.h:18(effect_5d::at);src/game/effect_5e_callees.h:15(effect_5e::at);src/game/rest_3f_callees.h:25(rest_3f::at);src/game/rest_3g_callees.h:29(rest_3g::at);src/game/scenario_harness.h:66(scenario_harness::at)	-	-	none	-	at
 const	kCounter	0x903848	data	1	src/game/scena_sc0_callees.h:34(scena_sc0)	-	-	none	-	module
 const	kCounter0	0x903848	data	25	src/game/area_w0c_callees.h:34(area_w0c::at);src/game/area_w1a_callees.h:36(area_w1a::at);src/game/area_w1c_callees.h:33(area_w1c::at);src/game/area_w1d_callees.h:36(area_w1d::at);src/game/area_w1f_callees.h:31(area_w1f::at);src/game/area_w2a_callees.h:36(area_w2a::at);src/game/area_w2c_callees.h:31(area_w2c::at);src/game/area_w2d_callees.h:33(area_w2d::at);src/game/area_w2f_callees.h:34(area_w2f::at);src/game/area_w3a_callees.h:40(area_w3a::at);src/game/area_w3c_callees.h:30(area_w3c::at);src/game/area_w3e_callees.h:32(area_w3e::at);src/game/area_w3f_callees.h:35(area_w3f::at);src/game/area_w3g_callees.h:50(area_w3g::at);src/game/area_w4b_callees.h:34(area_w4b::at);src/game/area_w4d_callees.h:29(area_w4d::at);src/game/area_w4e_callees.h:32(area_w4e::at);src/game/area_w4f_callees.h:41(area_w4f::at);src/game/boss_sd_callees.h:43(boss_sd::at);src/game/effect_1d_callees.h:26(effect_1d::at);src/game/effect_2a_callees.h:25(effect_2a::at);src/game/effect_2d_callees.h:30(effect_2d::at);src/game/effect_2f_callees.h:27(effect_2f::at);src/game/scena_sc3_callees.h:26(scena_sc3::at);src/game/scena_sc7_callees.h:27(scena_sc7::at)	-	-	none	-	at
-const	kCounter0	0x903848	data	3	src/game/scena_sc11.cpp:52((anon));src/game/scena_sc15.cpp:90((anon));src/game/scena_sc15_fuzz.cpp:63(scena_sc15::(anon))	-	-	none	-	module
+const	kCounter0	0x903848	data	3	src/game/scena_sc11.cpp:52((anon));src/game/scena_sc15.cpp:92((anon));src/game/scena_sc15_fuzz.cpp:63(scena_sc15::(anon))	-	-	none	-	module
 const	kCounter48	0x903848	data	1	src/game/effect_6d_callees.h:18(effect_6d::at)	-	-	none	-	at
 const	kCounterByte	0x903848	data	1	src/game/effect_1a_callees.h:97(effect_1a::at)	-	-	none	-	at
 const	kCounters	0x903848	data	12	src/game/mode_states_callees.h:40(mode_states::at);src/game/save_menu_callees.h:76(save_menu::at);src/game/scena_sc12_callees.h:39(scena_sc12::at);src/game/scena_sc13_callees.h:46(scena_sc13::at);src/game/scena_sc1_callees.h:24(scena_sc1::at);src/game/scena_sc2_callees.h:25(scena_sc2::at);src/game/scena_sc3_callees.h:25(scena_sc3::at);src/game/scena_sc5_callees.h:39(scena_sc5::at);src/game/scena_sc6_callees.h:55(scena_sc6::at);src/game/scena_sc7_callees.h:26(scena_sc7::at);src/game/scena_sc9a_callees.h:38(scena_sc9a::at);src/game/scena_sc9b_callees.h:37(scena_sc9b::at)	-	-	none	-	at
@@ -30091,7 +30090,7 @@ const	kTriggerCounter	0x903848	data	1	src/game/rest_2b.cpp:101((anon))	-	-	none	
 const	kVar3	0x903848	data	1	src/game/area_w0a_callees.h:23(area_w0a::at)	-	-	none	-	at
 const	kCount2	0x903849	data	1	src/game/scena_sc0_callees.h:35(scena_sc0)	-	-	none	-	module
 const	kCounter1	0x903849	data	11	src/game/area_w0c_callees.h:35(area_w0c::at);src/game/area_w1a_callees.h:37(area_w1a::at);src/game/area_w1c_callees.h:34(area_w1c::at);src/game/area_w2a_callees.h:37(area_w2a::at);src/game/area_w2c_callees.h:32(area_w2c::at);src/game/area_w2d_callees.h:34(area_w2d::at);src/game/area_w2f_callees.h:35(area_w2f::at);src/game/area_w3c_callees.h:31(area_w3c::at);src/game/area_w4f_callees.h:42(area_w4f::at);src/game/scena_sc3_callees.h:27(scena_sc3::at);src/game/scena_sc7_callees.h:28(scena_sc7::at)	-	-	none	-	at
-const	kCounter1	0x903849	data	2	src/game/scena_sc11.cpp:53((anon));src/game/scena_sc15.cpp:91((anon))	-	-	none	-	module
+const	kCounter1	0x903849	data	2	src/game/scena_sc11.cpp:53((anon));src/game/scena_sc15.cpp:93((anon))	-	-	none	-	module
 const	kCounter2	0x903849	data	1	src/game/effect_4b_callees.h:18(effect_4b::at)	-	-	none	-	at
 const	kCounterB	0x903849	data	2	src/game/effect_3d_callees.h:19(effect_3d::at);src/game/effect_4a_callees.h:19(effect_4a::at)	-	-	none	-	at
 const	kDrop46	0x903849	data	1	src/game/area_w1b_callees.h:52(area_w1b::at)	-	-	none	-	at
@@ -30101,7 +30100,7 @@ const	kByte4A	0x90384a	data	1	src/game/scena_sc0_callees.h:36(scena_sc0)	-	-	non
 const	kChapterByte4A	0x90384a	data	1	src/game/rest_4f_callees.h:77(rest_4f::at)	-	-	none	-	at
 const	kCount44	0x90384a	data	1	src/game/area_w1b_callees.h:51(area_w1b::at)	-	-	none	-	at
 const	kCounter2	0x90384a	data	6	src/game/area_w0c_callees.h:36(area_w0c::at);src/game/area_w1c_callees.h:35(area_w1c::at);src/game/area_w2a_callees.h:38(area_w2a::at);src/game/area_w2c_callees.h:33(area_w2c::at);src/game/area_w3c_callees.h:32(area_w3c::at);src/game/scena_sc7_callees.h:29(scena_sc7::at)	-	-	none	-	at
-const	kCounter2	0x90384a	data	2	src/game/scena_sc11.cpp:54((anon));src/game/scena_sc15.cpp:92((anon))	-	-	none	-	module
+const	kCounter2	0x90384a	data	2	src/game/scena_sc11.cpp:54((anon));src/game/scena_sc15.cpp:94((anon))	-	-	none	-	module
 const	kCounterC	0x90384a	data	2	src/game/effect_3d_callees.h:20(effect_3d::at);src/game/effect_4a_callees.h:20(effect_4a::at)	-	-	none	-	at
 const	kCue	0x90384a	data	1	src/game/effect_2g_callees.h:32(effect_2g::at)	-	-	none	-	at
 const	kEffectCount	0x90384a	data	1	src/game/area_w0b_callees.h:60(area_w0b::at)	-	-	none	-	at
@@ -30111,7 +30110,7 @@ const	kByte4B	0x90384b	data	1	src/game/scena_sc0_callees.h:37(scena_sc0)	-	-	non
 const	kCells44	0x90384b	data	1	src/game/area_w1b_callees.h:50(area_w1b::at)	-	-	none	-	at
 const	kCounter	0x90384b	data	1	src/game/area_w0b_callees.h:58(area_w0b::at)	-	-	none	-	at
 const	kCounter3	0x90384b	data	19	src/game/area_w0c_callees.h:37(area_w0c::at);src/game/area_w1c_callees.h:36(area_w1c::at);src/game/area_w1d_callees.h:37(area_w1d::at);src/game/area_w1f_callees.h:32(area_w1f::at);src/game/area_w2a_callees.h:39(area_w2a::at);src/game/area_w2c_callees.h:34(area_w2c::at);src/game/area_w2d_callees.h:35(area_w2d::at);src/game/area_w2f_callees.h:36(area_w2f::at);src/game/area_w3c_callees.h:33(area_w3c::at);src/game/area_w3d_callees.h:37(area_w3d::at);src/game/area_w3e_callees.h:33(area_w3e::at);src/game/area_w3f_callees.h:36(area_w3f::at);src/game/area_w4b_callees.h:35(area_w4b::at);src/game/area_w4c_callees.h:37(area_w4c::at);src/game/area_w4d_callees.h:30(area_w4d::at);src/game/area_w4e_callees.h:33(area_w4e::at);src/game/area_w4f_callees.h:43(area_w4f::at);src/game/effect_2f_callees.h:28(effect_2f::at);src/game/scena_sc7_callees.h:30(scena_sc7::at)	-	-	none	-	at
-const	kCounter3	0x90384b	data	3	src/game/scena_sc11.cpp:55((anon));src/game/scena_sc15.cpp:93((anon));src/game/scena_sc15_fuzz.cpp:63(scena_sc15::(anon))	-	-	none	-	module
+const	kCounter3	0x90384b	data	3	src/game/scena_sc11.cpp:55((anon));src/game/scena_sc15.cpp:95((anon));src/game/scena_sc15_fuzz.cpp:63(scena_sc15::(anon))	-	-	none	-	module
 const	kCounterB	0x90384b	data	1	src/game/field_e2_callees.h:91(field_e2::at)	-	-	none	-	at
 const	kCounterB	0x90384b	data	1	src/game/rest_2b.cpp:99((anon))	-	-	none	-	module
 const	kCounterD	0x90384b	data	1	src/game/effect_4a_callees.h:21(effect_4a::at)	-	-	none	-	at
@@ -30634,7 +30633,7 @@ const	kCameraYaw	0x929ec8	data	1	src/game/mode_flow.cpp:78((anon))	Camera_Angles
 const	kYaw	0x929ec8	data	1	src/game/mode_states.cpp:82((anon))	Camera_Angles	data	exact	short	module
 const	kFzAngle1	0x929eca	data	1	src/game/area_w3g_fuzz.cpp:66(area_w3g::(anon))	-	-	inside	short	module
 const	kAngle2	0x929ecc	data	1	src/game/scena_sc6_callees.h:75(scena_sc6::at)	Cond_AngleFB	data	exact	unsigned long	at
-const	kAngle2	0x929ecc	data	1	src/game/scena_sc15.cpp:109((anon))	Cond_AngleFB	data	exact	unsigned long	module
+const	kAngle2	0x929ecc	data	1	src/game/scena_sc15.cpp:111((anon))	Cond_AngleFB	data	exact	unsigned long	module
 const	kAngleFB	0x929ecc	data	3	src/game/scena_sc13_callees.h:66(scena_sc13::at);src/game/scena_sc9a_callees.h:59(scena_sc9a::at);src/game/scena_sc9b_callees.h:57(scena_sc9b::at)	Cond_AngleFB	data	exact	unsigned long	at
 const	kCameraAngle	0x929ecc	data	1	src/game/mode_flow.cpp:79((anon))	Cond_AngleFB	data	exact	unsigned long	module
 const	kPitch	0x929ecc	data	2	src/game/scena_sc3_callees.h:57(scena_sc3::at);src/game/scena_sc7_callees.h:66(scena_sc7::at)	Cond_AngleFB	data	exact	unsigned long	at
@@ -30671,7 +30670,7 @@ const	kYesNo	0x929f0b	data	1	src/game/menu_windows_callees.h:32(menu_windows::at
 const	kObject	0x929f0c	data	1	src/game/shop_states_callees.h:28(shop_states::at)	ModeStates_ShopObject	data	exact	unsigned char	at
 const	kMessageEnd	0x929f0f	data	1	src/game/field_s_callees.h:39(field_s::at)	AreaW3c_Load0F	data	exact	unsigned char	at
 const	kElevation	0x929f1c	data	1	src/game/field_e2_callees.h:68(field_e2::at)	MapView_Elevation	data	exact	long	at
-const	kElevation	0x929f1c	data	1	src/game/scena_sc15.cpp:123((anon))	MapView_Elevation	data	exact	long	module
+const	kElevation	0x929f1c	data	1	src/game/scena_sc15.cpp:125((anon))	MapView_Elevation	data	exact	long	module
 const	kCorner	0x92a0c0	data	1	src/game/scena_sc0_callees.h:54(scena_sc0)	MapView_CornerPtr	data	exact	unsigned char *	module
 const	kSavedSprite	0x92a0c0	data	1	src/game/move_cmds_callees.h:23(move_cmds)	MapView_CornerPtr	data	exact	unsigned char *	module
 const	kStaging	0x92a0e0	data	2	src/game/rest_2c_callees.h:71(rest_2c::at);src/game/save_menu_callees.h:55(save_menu::at)	Save_Staging	data	exact	unsigned char	at
@@ -30716,7 +30715,7 @@ const	kPlace	0x937f82	data	3	src/game/area_w0c_callees.h:47(area_w0c::at);src/ga
 const	kSpriteCurrent	0x937f88	data	5	src/game/rest_4b_callees.h:80(rest_4b::at);src/game/save_menu_callees.h:65(save_menu::at);src/game/scena_sc5_callees.h:51(scena_sc5::at);src/game/scena_sc6_callees.h:96(scena_sc6::at);src/game/shop_states_callees.h:47(shop_states::at)	Sprite_Current	data	exact	unsigned char *	at
 const	kClutDirty	0x937f90	data	2	src/game/area_w2e_callees.h:95(area_w2e::at);src/game/area_w3f_callees.h:100(area_w3f::at)	Gfx_ClutStripDirty	data	exact	unsigned char	at
 const	kFrame	0x937f94	data	1	src/game/rest_4b_callees.h:82(rest_4b::at)	Frame_Counter	data	exact	unsigned int	at
-const	kFrame	0x937f94	data	1	src/game/scena_sc15.cpp:119((anon))	Frame_Counter	data	exact	unsigned int	module
+const	kFrame	0x937f94	data	1	src/game/scena_sc15.cpp:121((anon))	Frame_Counter	data	exact	unsigned int	module
 const	kFrameCounter	0x937f94	data	2	src/game/area_w2e_callees.h:94(area_w2e::at);src/game/rest_2c_callees.h:106(rest_2c::at)	Frame_Counter	data	exact	unsigned int	at
 const	kPendingKind	0x937f98	data	2	src/game/area_w4f_callees.h:93(area_w4f::at);src/game/scena_sc3_callees.h:46(scena_sc3::at)	Area_EnterTransition	data	exact	unsigned char	at
 const	kind	0x937f98	data	2	src/game/mode_flow.cpp:117(-);src/game/mode_flow.cpp:383(-)	Area_EnterTransition	data	exact	unsigned char	module
@@ -30874,10 +30873,10 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	27390
-#count sites_global	17237
+#count sites	27389
+#count sites_global	17236
 #count sites_global_at	7501
-#count sites_global_module	9736
+#count sites_global_module	9735
 #count sites_record	9024
 #count sites_raw	1129
 #count sites_in_fuzz	8907
@@ -30892,7 +30891,7 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_param	661
 #count record_sites_family_unknown	1713
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	8666
+#count global_sites_covered_exact	8665
 #count global_sites_covered_inside	2351
 #count global_sites_uncovered	6220
 #count global_sites_ambiguous	0

@@ -8,10 +8,11 @@
 # msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from
 # COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit), fishrec and
 # fishpen (the fishing banner's line records and the release's own label pens, D313), margins
-# (Sprite_ScreenMargins from BOOT.BIN, the PSP's x margins less its 32 columns) - and how
+# (Sprite_ScreenMargins from BOOT.BIN, the PSP's x margins less its 32 columns), titlemark (the
+# Western title mark's width, the disc's own, D266) - and how
 # many bytes it fills.
 # A row is written only when every
-# byte equals BOF3.exe's, but a fishpen row (each release's own pens) and a pairs track
+# byte equals BOF3.exe's, but a fishpen row (each release's own pens), a titlemark row and a pairs track
 # naming a song the disc makes the same (byte-identical BGM files).
 # Addresses and counts only (CLAUDE.md rule 1).
 build	rule	pc	pc_end	file	section	addr	filled
@@ -533,6 +534,7 @@ psx-us	twin	0x652CF4	0x652D04	ETC/COMMU02.EMI	8	0x801DAC34	16
 psx-us	twin	0x6531F4	0x6531F9	ETC/COMMU05.EMI	7	0x801D0C04	5
 psx-us	faerie	0x653200	0x6536AC	ETC/COMMU00.EMI	0	0x801F2700	236
 psx-us	twin	0x653808	0x653815	ETC/START.EMI	8	0x801ECDAC	13
+psx-us	titlemark	0x65385E	0x65385F	ETC/GAME.EMI	1	0x801D1C7A	1
 psx-us	wmrec	0x653910	0x653A44	ETC/GAME.EMI	0	0x801C7F5C	44
 psx-us	fishrec	0x653B98	0x653C00	WORLD00/AREA030.EMI	4	0x801E1E78	52
 psx-us	fishpen	0x653C00	0x653C03	WORLD00/AREA030.EMI	4	0x801E1F14	3
@@ -835,6 +837,7 @@ psx-eu-en	twin	0x6531F4	0x6531F9	ETC/COMMU05.EMI	7	0x801D0C04	5
 psx-eu-en	faerie	0x653200	0x6536AC	ETC/COMMU00.EMI	0	0x801F2700	236
 psx-eu-en	twin	0x6536AC	0x6536BB	ETC/COMMU00.EMI	0	0x801F2918	15
 psx-eu-en	twin	0x653808	0x653815	ETC/START.EMI	8	0x801ECDAC	13
+psx-eu-en	titlemark	0x65385E	0x65385F	ETC/GAME.EMI	1	0x801D1C3A	1
 psx-eu-en	wmrec	0x653910	0x653A44	ETC/GAME.EMI	0	0x801C81E0	44
 psx-eu-en	fishrec	0x653B98	0x653C00	WORLD00/AREA030.EMI	4	0x801E1E98	52
 psx-eu-en	fishpen	0x653C00	0x653C03	WORLD00/AREA030.EMI	4	0x801E1F34	3
@@ -1138,6 +1141,7 @@ psx-fr	twin	0x65313C	0x653142	ETC/COMMU03.EMI	6	0x801D0C3C	6
 psx-fr	twin	0x6531F4	0x6531F9	ETC/COMMU05.EMI	7	0x801D0C04	5
 psx-fr	faerie	0x653200	0x6536AC	ETC/COMMU00.EMI	0	0x801F2700	236
 psx-fr	twin	0x653808	0x653815	ETC/START.EMI	8	0x801ECC0C	13
+psx-fr	titlemark	0x65385E	0x65385F	ETC/GAME.EMI	1	0x801D1C3A	1
 psx-fr	wmrec	0x653910	0x653A44	ETC/GAME.EMI	0	0x801C81E4	44
 psx-fr	fishrec	0x653B98	0x653C00	WORLD00/AREA030.EMI	4	0x801E212C	52
 psx-fr	fishpen	0x653C00	0x653C03	WORLD00/AREA030.EMI	4	0x801E21C8	3
@@ -1441,6 +1445,7 @@ psx-de	twin	0x65313C	0x653142	ETC/COMMU03.EMI	6	0x801D0C3C	6
 psx-de	twin	0x6531F4	0x6531F9	ETC/COMMU05.EMI	7	0x801D0C04	5
 psx-de	faerie	0x653200	0x6536AC	ETC/COMMU00.EMI	0	0x801F2700	236
 psx-de	twin	0x653808	0x653815	ETC/START.EMI	8	0x801ECC64	13
+psx-de	titlemark	0x65385E	0x65385F	ETC/GAME.EMI	1	0x801D1C3A	1
 psx-de	wmrec	0x653910	0x653A44	ETC/GAME.EMI	0	0x801C81E0	44
 psx-de	fishrec	0x653B98	0x653C00	WORLD00/AREA030.EMI	4	0x801E1E74	52
 psx-de	fishpen	0x653C00	0x653C03	WORLD00/AREA030.EMI	4	0x801E1F10	3
