@@ -169,6 +169,17 @@ def fields(ctype, root=ROOT):
     return out
 
 
+def bases(ctype, root=ROOT):
+    """The records:: structs ctype derives from, nearest first."""
+    bodies, _ = _parse(root)
+    t = ctype.strip().replace('records::', '')
+    out = []
+    while t in bodies and bodies[t][0]:
+        t = bodies[t][0]
+        out.append('records::' + t)
+    return out
+
+
 def size_of(ctype, root=ROOT):
     """The size of a record ctype (`records::SpriteObject`), None for any other."""
     t = ctype.strip()

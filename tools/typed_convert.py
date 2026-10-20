@@ -614,6 +614,7 @@ class Entries:
                 typed_blocks[b['name']] = e
         self.data = sorted(t.get('data', []) + list(typed_blocks.values()), key=lambda e: e['pc'])
         self.by_pc = {e['pc']: e for e in self.data}
+        self.by_name = {e['name']: e for e in self.data}
         self.starts = [e['pc'] for e in self.data]
 
     @staticmethod
@@ -712,6 +713,7 @@ def record_field(entry, o, size, kind):
 # --------------------------------------------------------------------------
 
 HARNESS = re.compile(r'(_fuzz\.|_harness|fuzz_)')
+RV_VIEW = re.compile(r'\brv::(As|AsConst)\s*<\s*(records::\w+)\s*>\s*$')
 BAD_BARE_NAME = re.compile(r'(End|Last|Limit|Top|Hi|Lo|Max|Min|Stop|Size|Count|Stride|Mask|Bytes|Len|Shift)$')
 KEYWORDS = frozenset('if while for switch return sizeof alignof decltype static_cast reinterpret_cast const_cast '
                      'case else do new delete throw static_assert defined'.split())
@@ -858,8 +860,9 @@ def top_level_ops(s):
 
 
 class Converter:
-    def __init__(self, toml='symbols.toml'):
+    def __init__(self, toml='symbols.toml', addr_names=()):
         os.chdir(ROOT)
+        self.addr_names = set(addr_names)
         self.syms = dc.Symbols(toml)
         self.entries = Entries(toml)
         self.files = dc.load_sources()
@@ -923,6 +926,18 @@ class Converter:
             if not self.syms.in_data(v):
                 continue
             out.append((m.start(), m.end(), v, m.group(0)))
+        # <Name>_addr of the entries asked for (--addr-names, stage C4): the
+        # census does not count these, but `B(Name_addr + k)` is a raw access
+        # all the same, and a record array names its field
+        if self.addr_names:
+            taken = {(s, e) for s, e, _, _ in out}
+            for m in re.finditer(r'(?<![\w.>:])(\w+)_addr\b', code):
+                if m.group(1) not in self.addr_names or (m.start(), m.end()) in taken:
+                    continue
+                e = self.entries.by_name.get(m.group(1))
+                if e is None:
+                    continue
+                out.append((m.start(), m.end(), e['pc'], m.group(0)))
         out.sort()
         return out
 
@@ -961,6 +976,12 @@ class Converter:
             site.reason = 'macro'
             return site
         entry, off = self.entries.find(value)
+        if entry is not None and cname.endswith('_addr') and entry.get('field_of'):
+            # a field entry's own address, spelled <Field>_addr: its record
+            # array's, when the block is typed (stage C4)
+            blk = self.entries.by_name.get(entry['field_of'])
+            if blk is not None and blk.get('block'):
+                entry, off = blk, value - blk['pc']
         site.entry, site.off = entry, off
         if entry is None:
             site.reason = 'no-entry'
@@ -1236,6 +1257,40 @@ class Converter:
         a0 = code[arg_s:arg_s + len(args[0])]
         rest = code[ce:arg_s + len(args[0])]
         add = 0
+        # rv::As<records::T>( span [+ c | + i * s] ): the record at the span
+        # (stage C4), typed by the entry's record array if T is its family
+        mv = RV_VIEW.search(code[max(0, op - 200):op])
+        if mv:
+            if len(args) != 1 or sem[0] != 'ptr' or a0[:cs - arg_s].strip():
+                return None
+            vst = op - (len(code[max(0, op - 200):op]) - mv.start())
+            dyn = None
+            if rest.strip():
+                m = re.fullmatch(r'(\s*\+\s*)(.+?)\s*', rest, re.S)
+                if not m or idx is not None:
+                    return None
+                v = dc.eval_expr(m.group(2), self.env(f))
+                if v is not None:
+                    add = v
+                else:
+                    t0 = ce + len(m.group(1))
+                    facs = split_top(mask_casts(m.group(2)), '*')
+                    if len(facs) != 2:
+                        return None
+                    p0 = t0
+                    spans = []
+                    for fc in facs:
+                        spans.append((p0, p0 + len(fc)))
+                        p0 += len(fc) + 1
+                    vals = [dc.eval_expr(code[a:b], self.env(f)) for a, b in spans]
+                    if (vals[0] is None) == (vals[1] is None):
+                        return None
+                    a, b = spans[0] if vals[0] is None else spans[1]
+                    stride = vals[1] if vals[0] is None else vals[0]
+                    a += len(code[a:b]) - len(code[a:b].lstrip())
+                    b -= len(code[a:b]) - len(code[a:b].rstrip())
+                    dyn = (a, b, stride)
+            return (vst, close, ('recptr', mv.group(2), sem[2]), add, dyn, None)
         if rest.strip():
             m = re.fullmatch(r'\s*([+-])\s*(.+?)\s*', rest, re.S)
             if not m or sem[0] != 'ptr' or idx is not None:
@@ -1273,6 +1328,37 @@ class Converter:
             return None
         return (cstart, close, s2, add, None, None)
 
+    def record_view(self, site, entry, esize, off, dyn, cs, ce, sem):
+        """rv::As<records::T>(...) on a record of entry's array: &Name[i], or
+        Name[i]. for a following `->` (stage C4)."""
+        ct = clean_type(entry['ctype'])
+        if record_sizes.size_of(ct) is None:
+            return 'ptr'
+        if sem[1] != ct and sem[1] not in record_sizes.bases(ct):
+            return 'family'
+        if off < 0 or off % esize:
+            return 'inside-entry'
+        if dyn is not None and dyn[2] != esize:
+            return 'index'
+        i = off // esize
+        count = entry.get('count')
+        name = entry['name']
+        if count is None:
+            if i or dyn is not None:
+                return 'inside-entry'
+            rec = [name]
+        elif dyn is not None:
+            rec = [name + '[' + (f'{i:#x} + ' if i else ''), (dyn[0], dyn[1]), ']']
+        else:
+            if not 0 <= i < count:
+                return 'inside-entry'
+            rec = [f'{name}[{i if i < 10 else hex(i)}]']
+        code = site.f.code
+        t, j = next_token(code, ce)
+        if t == '->':
+            return [(cs, j + 2, rec + ['.'], 'typed')]
+        return [(cs, ce, ['&'] + rec, 'typed')]
+
     def access_of(self, f, sem):
         """(size, kind) a site's access reads or writes, kind 'int' or
         'float'; a reason string for a pointer or an unknown accessor."""
@@ -1305,6 +1391,8 @@ class Converter:
         cst = int_type(ct)
         is_ptr_entry = '*' in ct
         member = ''
+        if sem[0] == 'recptr':
+            return self.record_view(site, entry, esize, off, dyn, cs, ce, sem)
         if record_sizes.size_of(ct) is not None:
             # a record array (stage C4): the element is the record, the
             # access one of its fields, chosen by offset, width and kind
@@ -1938,12 +2026,14 @@ def main():
                          'still convert being one the gate refused (reason gate)')
     ap.add_argument('-v', '--verbose', action='store_true')
     ap.add_argument('--selftest', action='store_true', help='check the renderer on synthetic text and exit')
+    ap.add_argument('--addr-names', default='',
+                    help='comma-separated entries whose <Name>_addr spellings are converted too (stage C4)')
     a = ap.parse_args()
 
     if a.selftest:
         return 1 if selftest() else 0
 
-    conv = Converter(a.toml)
+    conv = Converter(a.toml, [n for n in a.addr_names.split(',') if n])
     if a.retire:
         removed = retire(conv, a.dry_run, a.since)
         for r in removed:
