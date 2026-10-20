@@ -12211,7 +12211,7 @@ site	src/game/rest_2e.cpp	336	raw	L	0x803338	0x803338	-	inside	WindowRecords+0x1
 site	src/game/rest_2e.cpp	337	raw	W	0x80333A	0x80333a	-	inside	WindowRecords+0x1da	records::WindowRecord	0
 site	src/game/rest_2e.cpp	338	raw	SetW	0x8032FC	0x8032fc	-	inside	WindowRecords+0x19c	records::WindowRecord	0
 site	src/game/rest_2e.cpp	340	raw	SetW	0x803458	0x803458	-	inside	WindowRecords+0x2f8	records::WindowRecord	0
-site	src/game/rest_2e.cpp	341	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
+site	src/game/rest_2e.cpp	341	raw	SetW	0x80345A	0x80345a	-	inside	WindowRecords+0x2fa	records::WindowRecord	0
 site	src/game/rest_2e.cpp	343	raw	B	0x803340	0x803340	-	inside	WindowRecords+0x1e0	records::WindowRecord	0
 site	src/game/rest_2e.cpp	348	raw	B	0x80333E	0x80333e	-	inside	WindowRecords+0x1de	records::WindowRecord	0
 site	src/game/rest_2e.cpp	349	raw	SetW	0x803344	0x803344	-	inside	WindowRecords+0x1e4	records::WindowRecord	0
@@ -12238,7 +12238,7 @@ site	src/game/rest_2e.cpp	393	raw	L	0x80335C	0x80335c	-	inside	WindowRecords+0x1
 site	src/game/rest_2e.cpp	394	raw	W	0x80335E	0x80335e	-	inside	WindowRecords+0x1fe	records::WindowRecord	0
 site	src/game/rest_2e.cpp	395	raw	SetW	0x8032FC	0x8032fc	-	inside	WindowRecords+0x19c	records::WindowRecord	0
 site	src/game/rest_2e.cpp	397	raw	SetW	0x803458	0x803458	-	inside	WindowRecords+0x2f8	records::WindowRecord	0
-site	src/game/rest_2e.cpp	398	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
+site	src/game/rest_2e.cpp	398	raw	SetW	0x80345A	0x80345a	-	inside	WindowRecords+0x2fa	records::WindowRecord	0
 site	src/game/rest_2e.cpp	399	raw	B	0x803340	0x803340	-	inside	WindowRecords+0x1e0	records::WindowRecord	0
 site	src/game/rest_2e.cpp	400	raw	B	0x803364	0x803364	-	inside	WindowRecords+0x204	records::WindowRecord	0
 site	src/game/rest_2e.cpp	404	raw	B	0x803363	0x803363	-	inside	WindowRecords+0x203	records::WindowRecord	0
@@ -12294,7 +12294,7 @@ site	src/game/rest_2e.cpp	503	raw	W	0x8032F2	0x8032f2	-	inside	WindowRecords+0x1
 site	src/game/rest_2e.cpp	504	global	L	kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
 site	src/game/rest_2e.cpp	505	raw	SetW	0x8032FC	0x8032fc	-	inside	WindowRecords+0x19c	records::WindowRecord	0
 site	src/game/rest_2e.cpp	507	raw	SetW	0x803458	0x803458	-	inside	WindowRecords+0x2f8	records::WindowRecord	0
-site	src/game/rest_2e.cpp	508	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
+site	src/game/rest_2e.cpp	508	raw	SetW	0x80345A	0x80345a	-	inside	WindowRecords+0x2fa	records::WindowRecord	0
 site	src/game/rest_2e.cpp	512	global	L	kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
 site	src/game/rest_2e.cpp	517	raw	B	0x80333E	0x80333e	-	inside	WindowRecords+0x1de	records::WindowRecord	0
 site	src/game/rest_2e.cpp	517	raw	B	0x803340	0x803340	-	inside	WindowRecords+0x1e0	records::WindowRecord	0
@@ -12395,7 +12395,7 @@ site	src/game/rest_2e.cpp	824	raw	L	0x803314	0x803314	-	inside	WindowRecords+0x1
 site	src/game/rest_2e.cpp	825	raw	SetW	0x8032FC	0x8032fc	-	inside	WindowRecords+0x19c	records::WindowRecord	0
 site	src/game/rest_2e.cpp	828	raw	W	0x803316	0x803316	-	inside	WindowRecords+0x1b6	records::WindowRecord	0
 site	src/game/rest_2e.cpp	829	raw	SetW	0x803458	0x803458	-	inside	WindowRecords+0x2f8	records::WindowRecord	0
-site	src/game/rest_2e.cpp	830	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
+site	src/game/rest_2e.cpp	830	raw	SetW	0x80345A	0x80345a	-	inside	WindowRecords+0x2fa	records::WindowRecord	0
 site	src/game/rest_2e.cpp	831	raw	B	0x80331B	0x80331b	-	inside	WindowRecords+0x1bb	records::WindowRecord	0
 site	src/game/rest_2e.cpp	832	raw	B	0x803341	0x803341	-	inside	WindowRecords+0x1e1	records::WindowRecord	0
 site	src/game/rest_2e.cpp	840	raw	B	0x80331B	0x80331b	-	inside	WindowRecords+0x1bb	records::WindowRecord	0
@@ -12461,7 +12461,7 @@ site	src/game/rest_2e.cpp	988	raw	SetW	0x8032FC	0x8032fc	-	inside	WindowRecords+
 site	src/game/rest_2e.cpp	989	raw	W	0x80333A	0x80333a	-	inside	WindowRecords+0x1da	records::WindowRecord	0
 site	src/game/rest_2e.cpp	989	raw	B	0x80333E	0x80333e	-	inside	WindowRecords+0x1de	records::WindowRecord	0
 site	src/game/rest_2e.cpp	991	raw	SetW	0x803458	0x803458	-	inside	WindowRecords+0x2f8	records::WindowRecord	0
-site	src/game/rest_2e.cpp	993	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
+site	src/game/rest_2e.cpp	993	raw	SetW	0x80345A	0x80345a	-	inside	WindowRecords+0x2fa	records::WindowRecord	0
 site	src/game/rest_2e.cpp	997	raw	B	0x80333E	0x80333e	-	inside	WindowRecords+0x1de	records::WindowRecord	0
 site	src/game/rest_2e.cpp	998	raw	B	0x80333E	0x80333e	-	inside	WindowRecords+0x1de	records::WindowRecord	0
 site	src/game/rest_2e.cpp	999	raw	B	0x80333E	0x80333e	-	inside	WindowRecords+0x1de	records::WindowRecord	0
@@ -12578,7 +12578,7 @@ site	src/game/rest_2e.cpp	1272	raw	SetW	0x8032FC	0x8032fc	-	inside	WindowRecords
 site	src/game/rest_2e.cpp	1274	raw	B	0x8033A8	0x8033a8	-	inside	WindowRecords+0x248	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1275	raw	W	0x803316	0x803316	-	inside	WindowRecords+0x1b6	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1277	raw	SetW	0x803458	0x803458	-	inside	WindowRecords+0x2f8	records::WindowRecord	0
-site	src/game/rest_2e.cpp	1278	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
+site	src/game/rest_2e.cpp	1278	raw	SetW	0x80345A	0x80345a	-	inside	WindowRecords+0x2fa	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1279	raw	B	0x80331B	0x80331b	-	inside	WindowRecords+0x1bb	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1289	raw	B	0x80331B	0x80331b	-	inside	WindowRecords+0x1bb	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1301	global	B	kTimer	0x929f04	-	none	-	-	0
@@ -12679,7 +12679,7 @@ site	src/game/rest_2e.cpp	1669	raw	W	0x8033EE	0x8033ee	-	inside	WindowRecords+0x
 site	src/game/rest_2e.cpp	1670	raw	SetW	0x8032FC	0x8032fc	-	inside	WindowRecords+0x19c	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1671	raw	B	0x8033F4	0x8033f4	-	inside	WindowRecords+0x294	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1673	raw	SetW	0x803458	0x803458	-	inside	WindowRecords+0x2f8	records::WindowRecord	0
-site	src/game/rest_2e.cpp	1674	raw	SetW	0x80345A	0x80345a	-	exact	Window21_Y	unsigned short	0
+site	src/game/rest_2e.cpp	1674	raw	SetW	0x80345A	0x80345a	-	inside	WindowRecords+0x2fa	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1675	raw	B	0x8033AC	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1681	raw	B	0x8033F3	0x8033f3	-	inside	WindowRecords+0x293	records::WindowRecord	0
 site	src/game/rest_2e.cpp	1682	raw	B	0x8033F3	0x8033f3	-	inside	WindowRecords+0x293	records::WindowRecord	0
@@ -20065,6 +20065,6 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count stride_names	92
 #count stride_values	34
 #count static_assert_offsetof_sizeof	736
-#count symbols_data	3260
-#count symbols_data_ctype	3176
+#count symbols_data	3250
+#count symbols_data_ctype	3166
 #count symbols_data_count	2415
