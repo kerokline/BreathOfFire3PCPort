@@ -41,12 +41,12 @@ constexpr std::uint32_t kStepLimit = 0x903848;
 // The story flags (Flags_Set's bank).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // The leader's record (ObjTrio): +8 its direction.
-// kLeaderDir: now ObjTrio[8] (symbols.toml).
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml).
 // The party records: +0x89 a byte the member handlers match (area 173's
 // handlers 1 and 2 against their id lists, handlers 3 and 4 on Field_State's).
 constexpr std::uint32_t kParty = 0x802D40;
 constexpr std::uint32_t kPartyStride = 0x14C;
-// kParty89: now ObjTrio[0x89] (symbols.toml).
+// kParty89: now ObjTrio[0].char_id (symbols.toml).
 // MoveScript_Var7's neighbour (0x8034E4 + 1): area 174's choice 0 stores 0x1E
 // or 0xA in it. No name; no reader read this round.
 // kChoiceByteE5: now MoveScript_PartyRecords[0x65] (symbols.toml).

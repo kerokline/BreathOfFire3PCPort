@@ -44,17 +44,17 @@ constexpr U kItemClass = bof3::addr::Item_UseFlags;        // (byte, byte) -> al
 
 // --- the battle bytes (0x904AA0..0x904BA0, the harness's battle frame) ---
 constexpr U kRoundFlags = 0x904AA8;       // u16: bit 2 an action's end, 6, 7 (a roll), 11 (a cast's end), 13, 14
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (0 none)
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle (0 none)
 constexpr U kPartyCount = 0x904AB0;       // u8: the members the party loops walk (ObjTrio holds three)
-// kMembersUp: now BattleSprites_PartyPick (symbols.toml). u8: counted down as a member falls; 0 is the loss
-// kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8: counted down as an enemy leaves; 0 is the win
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win
+// kMembersUp: now Battle_PartyStanding (symbols.toml). u8: counted down as a member falls; 0 is the loss
+// kEnemiesLeft: now Battle_EnemiesLeft (symbols.toml). u8: counted down as an enemy leaves; 0 is the win
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win
 // kKindsSeen: now BattleMisc_BannerKinds (symbols.toml). u8: the message kinds seen this frame (battle_windows.md)
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the action's kind (1, 4, 5 read here)
 constexpr U kTarget = 0x904B44;           // u8: the target (bits 6, 7 read)
 constexpr U kHitActor = 0x904B54;         // u8: the object being hit's actor (+5), stored here
-constexpr U kHitSprite = 0x904B5C;        // unsigned char *: the object being hit, stored here
+// kHitSprite: now BattleE3_HitSprite (symbols.toml). unsigned char *: the object being hit, stored here
 constexpr U kResult = 0x904B60;           // unsigned char *: the result record (Field_State + 0x124 here)
 constexpr U kAbility = 0x904B80;          // u16: the ability id (24-byte records at 0x65C4D8)
 constexpr U kItemCategory = 0x904B81;     // u8: its high byte, 0x591810's first argument
@@ -65,7 +65,7 @@ constexpr U kStatusOr = 0x904B98;         // u16: or-ed into the hit member's +0
 constexpr U kStatusOr2 = 0x904B9A;        // u16: zeroed at the hit
 
 // --- the rest ---
-constexpr U kCurrentEnemy = 0x939AD8;     // unsigned char *: the enemy BattleEnemy_RunAll runs
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). unsigned char *: the enemy BattleEnemy_RunAll runs
 constexpr U kStatCopy = 0x939F80;         // 32 bytes: the hit member's +0xA0.. copied here
 // kStatFlag: now BattleDamage_TargetDef (symbols.toml). u16: set to 1 under the member's +0x90 bit 11
 // kEvadeBoost: now BattleE3_EvadeBoost (symbols.toml). u8: += 25 to 100 under +0x130 bit 0
@@ -76,12 +76,12 @@ constexpr U kAbilityFlags5 = 0x65C4DD;    // its byte +5 (bit 3)
 constexpr U kAbilityStride = 24;
 constexpr U kEnemyData8B = 0x8C5653;      // the area's enemy data record +0x8B (stride 0x8C) by the enemy's +0xF0
 constexpr U kEnemyDataStride = 0x8C;
-constexpr U kCharRecords = 0x903A70;      // CharacterRecords, 0xA4 each, by a member's +0x148
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, 0xA4 each, by a member's +0x148
 constexpr U kCharStride = 0xA4;
 // kParty: now ObjTrio (symbols.toml). ObjTrio: three members of 0x14C
 constexpr U kPartyStride = 0x14C;
 constexpr unsigned kPartyMax = 3;
-constexpr U kTasks = 0x93A000;            // BattleTask_Create's 48 slots of 0x84
+// kTasks: now BattleTask_Slots (symbols.toml). BattleTask_Create's 48 slots of 0x84
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 constexpr U kSpecialOffsets = 0x6699A0;   // s8 pairs by the character +0x89 (state 10's task position)

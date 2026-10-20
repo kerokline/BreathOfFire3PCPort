@@ -22,6 +22,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3b.h"
 #include "game/rest_3b_callees.h"
@@ -30,11 +31,6 @@
 namespace rest_3b {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace bh = boss_harness;
 using U = std::uint32_t;
@@ -231,7 +227,7 @@ U AbilityListEffect(const U*, U) { return Key(bh::TextBuffer() + bh::Noise() % 0
 // below 3, else the enemy object byte - 3, the difference in 32 bits).
 unsigned char* Rec(unsigned n, U party_at, U enemy_at) {
     return n < 3 ? Mem(ObjTrio_addr + n * at::kPartyStride + party_at)
-                 : Mem(at::kEnemies + static_cast<U>(static_cast<std::int32_t>(n) - 3) * at::kEnemyStride + enemy_at);
+                 : Mem(Battle_Enemies_addr + static_cast<U>(static_cast<std::int32_t>(n) - 3) * at::kEnemyStride + enemy_at);
 }
 // Battle_CalcDamage answers, a third of the time, the target's HP less 1, 0
 // or plus 1 (slot 2 compares the delta with it: its boundary).
@@ -248,7 +244,7 @@ U ShareAtStatEffect(const U*, U answer) {
     const U n = bh::Noise();
     if (n % 3 != 0) return answer;
     const unsigned t = Mem(at::kTarget)[0];
-    const U v = move_script::Word(Mem(at::kEnemies + static_cast<U>(static_cast<std::int32_t>(t) - 3) * at::kEnemyStride + 0xB6));
+    const U v = move_script::Word(Mem(Battle_Enemies_addr + static_cast<U>(static_cast<std::int32_t>(t) - 3) * at::kEnemyStride + 0xB6));
     return (answer & 0xFFFF0000u) | ((v + (n >> 8) % 3 - 1) & 0xFFFF);
 }
 // Rand: 15 bits as the CRT's (the engine set's form), and the target moved
@@ -265,7 +261,7 @@ U RandMovesTarget(const U*, U answer) {
 // 28 and 29 count one up around the call): a store moved across the call is
 // compared, not hidden.
 U ClearNotesCounts(const U*, U answer) {
-    bh::Note(Mem(BattleSprites_PartyPick_addr)[0], Mem(BattleE2_EnemiesLeft_addr)[0]);
+    bh::Note(Mem(Battle_PartyStanding_addr)[0], Mem(Battle_EnemiesLeft_addr)[0]);
     return answer;
 }
 
@@ -337,7 +333,7 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
-unsigned char* EnemyN(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
+unsigned char* EnemyN(unsigned n) { return Mem(Battle_Enemies_addr + (n % 8) * at::kEnemyStride); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 
 // The keys: the confirm and cancel masks single bits, the pressed word one of
@@ -362,17 +358,17 @@ void BattleFrame() {
         unsigned char* const p = Member(m);
         p[0x89] = bh::Half() ? 0x0A : static_cast<unsigned char>(bh::Next() % 24);
         const U max = Word16({1, 2, 4, 5, 99, 999, 9999});
-        MemberRec(p)->max_hp = max;
-        SetWord(p + 0x98, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
-        MemberRec(p)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
+        rv::As<records::PartyMember>(p)->max_hp = max;
+        rv::Store<std::uint32_t>(rv::As<records::PartyMember>(p)->hp, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
+        rv::As<records::PartyMember>(p)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
         if (bh::Half()) p[0x135] = static_cast<unsigned char>(p[0x135] ^ 0x04);   // the dword +0x134's bit 10
     }
     for (unsigned n = 0; n < 8; ++n) {
         unsigned char* const e = EnemyN(n);
         const U max = Word16({1, 2, 4, 5, 99, 999, 0xFFFF, 0xFFFE});
-        EnemyRec(e)->max_hp = max;
-        SetWord(e + 0xA4, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
-        EnemyRec(e)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
+        rv::As<records::BattleEnemy>(e)->max_hp = max;
+        rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(e)->hp, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
+        rv::As<records::BattleEnemy>(e)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
     }
     SetWord(Mem(at::kAbility), Word16({0, 1, 0x55, 0x5D, 0x62, 0x65, 0x66, 0xE2}) % 0xE4);
     SetWord(Mem(Rest3b_PowerAdd2_addr), Word16({0, 1, 139, 140, 141, 142, 0xFFFF}));
@@ -387,9 +383,9 @@ void MenuFrame() {
     unsigned char* const c = bh::Pointer(BattleActorCopies_Command_addr);
     c[0] = Byte({0, 1, 2, 3, 0x40, 0x80, 0xC0, 0xFF, 0x7F});
     SetWord(c + 2, Word16({0, 1, 0x20, 0x97, 0xE3}) % 0xE4);
-    Mem(BattleActorCopies_ItemState_addr)[0] = Byte({0, 0, 1});
-    Mem(BattleActorCopies_ItemPage_addr)[0] = Byte({0, 1, 2, 3});
-    SetLong(Mem(at::kWin16Cursor), static_cast<std::int32_t>(bh::Next()));
+    Mem(Window16_State_addr)[0] = Byte({0, 0, 1});
+    Mem(Window16_Page_addr)[0] = Byte({0, 1, 2, 3});
+    SetLong(Mem(WindowRecords_addr + 0x24c), static_cast<std::int32_t>(bh::Next()));
     Mem(BattleActorCopies_ItemActor_addr)[0] = Byte({0, 1, 2});
 }
 
@@ -401,7 +397,7 @@ void Seed(unsigned k) {
     case 0x4468B0:   // BattleResult_AddExp: the EXP of every record near the cap
         for (unsigned r = 0; r < 8; ++r) {
             const U exp = bh::Often() ? 9999999u - BH_PICK(0, 1, 2, 100, 1000) : bh::Next() % 10000000u;
-            SetLong(Mem(at::kCharRecords + r * at::kCharStride + 0xC), static_cast<std::int32_t>(exp));
+            SetLong(Mem(CharacterRecords_addr + r * at::kCharStride + 0xC), static_cast<std::int32_t>(exp));
         }
         break;
     default:

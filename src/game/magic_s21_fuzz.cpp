@@ -215,7 +215,7 @@ const mh::DataTable kTables[] = {
 const mh::Region kRegions[] = {
     {FlamePool_addr, kPoolBytes},
     {0x9037A0, 0x20},                  // Prim_VertexScratch
-    {0x903850, 0x10},                  // DamageScratch
+    {0x903850, 0x10},                  // SharedScratch
     {0x80E980, 0x200},                 // the CLUT strip's buffer
     {0x812980, 0x200},                 // the CLUT strip
     {0x7E0670, 4},                     // Gfx_PacketNext

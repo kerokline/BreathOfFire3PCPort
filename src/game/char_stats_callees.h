@@ -15,7 +15,7 @@ namespace at {
 
 // The persistent character records (CharacterRecords, docs/item-use.md
 // section 2): the PSX record's offsets + 4.
-constexpr std::uint32_t kCharRecords = 0x903A70;
+// kCharRecords: now CharacterRecords (symbols.toml).
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr unsigned kRecordBytes = 0xA4;
 constexpr unsigned kFlags = 0x0B;        // u8, bit 0 counted by Inventory_Count's equipped branch

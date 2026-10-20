@@ -32,12 +32,12 @@ constexpr U kExtra1Z = 0x8020DC;           // ... +0x38
 constexpr U kExtra1Y = 0x8020E0;           // ... +0x3C
 
 // --- the battle bytes and records ------------------------------------------------
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: the event battle (EventBattle_Records' index)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8: the event battle (EventBattle_Records' index)
 constexpr U kEventRows = 0x64DDEE;         // EventBattle_Records + 2: each record's encounter row (image .data)
-// kPlaced: now BattleActorCopies_EnemyCount (symbols.toml). u8: the boss actors placed so far
-// kPlacedTotal: now BattleE2_EnemiesLeft (symbols.toml). u8: ... copied at the end of the pass
+// kPlaced: now Battle_EnemyCount (symbols.toml). u8: the boss actors placed so far
+// kPlacedTotal: now Battle_EnemiesLeft (symbols.toml). u8: ... copied at the end of the pass
 constexpr U kFormation = 0x904AAC;         // u8: the formation (its bit 1 flips each enemy's facing +8)
-constexpr U kEnemies = 0x93B960;           // the eight enemy records (EnemyWorkingRecords' first byte), 0x128 apart
+// kEnemies: now Battle_Enemies (symbols.toml). the eight enemy records (EnemyWorkingRecords' first byte), 0x128 apart
 constexpr U kEnemyStride = 0x128;
 constexpr unsigned kEnemyCount = 8;
 // kEncounterRowsAt: now Encounter_Rows (symbols.toml). Encounter_Rows (a data name is a macro: the address for a constexpr)
@@ -52,7 +52,7 @@ constexpr U kQuakeLast = 0x695A2C;         // u8 x 16 x 15: the lift one frame b
 // --- area 109's switch (Area_CellHooks' entry for area 0x6D) -------------------------
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flag row Flags_* are handed
 constexpr U kPatternFlags = 0x65DE60;      // the three story flag numbers (image .data, E5A's kStoryBits)
-// kLeaderFacing: now ObjTrio[8] (symbols.toml). ObjTrio +8: the leader's facing byte
+// kLeaderFacing: now ObjTrio[0].direction (symbols.toml). ObjTrio +8: the leader's facing byte
 
 // --- kind 0x18 sub-kind 0x41's two draws ------------------------------------------
 constexpr U kPanelVertices = 0x65ED30;     // 8 vertices of three bytes (x, z, lift) - two quads (image .data)
@@ -73,10 +73,14 @@ constexpr U kReturnZ = 0x7E0920;           // dword: its z
 
 // --- area 0xBD's view (AreaMap_FrameAreaBD and its build) --------------------------------
 // kAnglesDrawn: now Camera_AnglesDrawn (symbols.toml). Camera_AnglesDrawn: two dwords
-constexpr U kOriginX = 0x903850;           // s16: the build's first column (the effect slot's word too)
-constexpr U kOriginZ = 0x903852;           // s16: its first row
-constexpr U kRows = 0x903854;              // dword: the rows the build walks (0x38 or 0x2C)
-constexpr U kColumns = 0x903858;           // dword: the columns (0x1C or 0x28)
+inline auto& kOriginX = SharedScratch.w_00;  // s16: the build's first column (the effect slot's word too)
+constexpr std::uint32_t kOriginX_addr = SharedScratch_addr; // kOriginX's address, for the raw accessors that take one
+inline auto& kOriginZ = SharedScratch.w_02;           // s16: its first row
+constexpr std::uint32_t kOriginZ_addr = SharedScratch_addr + 0x2; // kOriginZ's address, for the raw accessors that take one
+inline auto& kRows = SharedScratch.d_04;              // dword: the rows the build walks (0x38 or 0x2C)
+constexpr std::uint32_t kRows_addr = SharedScratch_addr + 0x4; // kRows's address, for the raw accessors that take one
+inline auto& kColumns = SharedScratch.d_08;           // dword: the columns (0x1C or 0x28)
+constexpr std::uint32_t kColumns_addr = SharedScratch_addr + 0x8; // kColumns's address, for the raw accessors that take one
 constexpr U kOctants = 0x65ED48;           // 8 records of 6 s8 by the camera's octant (image .data)
 constexpr U kBlocks = 0x65ED78;            // 256 bytes: the 16 x 16 block map, each byte a block's row / column nibbles
 constexpr unsigned kMapWidth = 0x60;       // cells a row of AreaMap_Corners in area 0xBD

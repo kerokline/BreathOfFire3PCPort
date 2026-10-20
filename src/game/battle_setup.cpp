@@ -28,6 +28,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_setup_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 
@@ -76,8 +77,6 @@ using move_script::Word;
 
 unsigned char* P(unsigned actor) { return At(at::Party(actor)); }
 unsigned char* E(unsigned actor) { return At(at::Enemy(actor)); }
-records::PartyMember* PartyRec(unsigned actor) { return reinterpret_cast<records::PartyMember*>(P(actor)); }
-records::BattleEnemy* EnemyRec(unsigned actor) { return reinterpret_cast<records::BattleEnemy*>(E(actor)); }
 bool Yes(unsigned al) { return (al & 0xFFu) != 0; }
 
 // The state bytes an effect sets, in the originals' order: +1 = 6, +2 = 5,
@@ -118,11 +117,11 @@ extern "C" unsigned __cdecl Battle_ActorSkipped(unsigned actor) {
 // eax it leaves (Window_Alloc's) is read by none of its 18 callers.
 extern "C" void __cdecl Battle_OpenMsgWindow() {
     g.window_alloc(0, 3);
-    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(At(at::kMsgWindow) - 2);
+    auto* const window_rec = &WindowRecords[0];
     window_rec->kind = 6;
     window_rec->state = 0;
-    window_rec->centre_x = 0x14;
-    window_rec->centre_y = 0xFFEA;
+    window_rec->x = 0x14;
+    window_rec->y = 0xFFEA;
 }
 
 // original 0x445550 (PSX 0x801DB2C0, the same): 1 when the actor is present
@@ -136,11 +135,11 @@ extern "C" unsigned __cdecl Battle_ActorStanding(unsigned actor) {
     unsigned r;
     if (a < 3) {
         offset = a * at::kPartyStride;
-        auto* const member_rec = reinterpret_cast<const records::PartyMember*>(At(ObjTrio_addr + offset));
+        auto* const member_rec = rv::AsConst<records::PartyMember>(At(ObjTrio_addr + offset));
         r = (member_rec->flags & 1) && (member_rec->status & 0x4944) == 0 ? 1 : 0;
     } else {
         offset = ((a - 3) & 0xFF) * at::kEnemyStride;
-        auto* const enemy_rec = reinterpret_cast<const records::BattleEnemy*>(At(at::kEnemy + offset));
+        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(Battle_Enemies_addr + offset));
         r = (enemy_rec->flags & 1) && (enemy_rec->status & 0x4144) == 0 ? 1 : 0;
     }
     return (offset & ~0xFFu) | r;
@@ -150,7 +149,7 @@ extern "C" unsigned __cdecl Battle_ActorStanding(unsigned actor) {
 // (+0xA8) is at least twice the average's low word and at least the
 // highest's low word. The whole eax: the agility's high byte over the answer.
 extern "C" unsigned __cdecl Battle_PartyOutpaces(unsigned actor, unsigned average, unsigned highest) {
-    const unsigned agility = PartyRec(actor)->agi;
+    const unsigned agility = rv::As<records::PartyMember>(P(actor))->agi;
     unsigned r = 1;
     if ((average & 0xFFFF) * 2 > agility) r = 0;
     else if ((highest & 0xFFFF) > agility) r = 0;
@@ -194,14 +193,14 @@ extern "C" void __cdecl Battle_TickCounters() {
     for (unsigned i = 0; i <= 2; ++i) {
         if (Yes(g.skipped(i))) continue;
         unsigned char* const o = P(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        auto* const member_rec = rv::As<records::PartyMember>(o);
         if ((o[at::kPFlags] & 1) && member_rec->count_4000 <= 5) ++member_rec->count_4000;
         if ((o[at::kPStatus + 1] & 8) && member_rec->count_800 <= 5) ++member_rec->count_800;
         if ((static_cast<std::int32_t>(member_rec->flags_134) & 0x4000) && member_rec->count_4000 <= 2) ++member_rec->count_4000;
     }
     for (unsigned i = 3; i <= 10; ++i) {
         if (Yes(g.skipped(i))) continue;
-        auto* const enemy_rec = EnemyRec(i);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(E(i));
         if ((static_cast<std::int32_t>(enemy_rec->flags_114) & 0x4000) && enemy_rec->count_4000 <= 2) ++enemy_rec->count_4000;
     }
     unsigned char* const timer = At(BattleFlow_AnimGate_addr);
@@ -278,7 +277,7 @@ extern "C" unsigned __cdecl Battle_ClearStatus(unsigned actor, unsigned mask) {
     unsigned s = Word(status) & ~(mask & 0x48DFu);
     if ((mask & 0x20) && (s & 0x20)) {
         s &= ~0x20u;
-        std::memcpy(o + at::kPos, At(at::kSavedPos + a * at::kSavedPosStride), 12);
+        std::memcpy(o + at::kPos, At(BattleTask_Slots_addr + 0x34 + a * at::kSavedPosStride), 12);
     }
     g.release_tint(o);
     SetWord(status, s);
@@ -310,7 +309,7 @@ extern "C" void __cdecl Battle_ReturnQueuedItem(unsigned actor) {
     unsigned char* const o = P(a);
     if (o[at::kPQueuedKind] != 5) return;
     if (o[at::kPQueuedItem + 1] != 0) return;
-    g.return_item(o[at::kPItemSlot], Word(o + at::kPQueuedItem));
+    g.return_item(o[at::kPItemSlot], rv::As<records::PartyMember>(o)->queued_id);
 }
 
 // original 0x44AA00 (PSX 0x801DEA9C, the same): one of two system lines at
@@ -343,12 +342,12 @@ extern "C" unsigned __cdecl BattleStep_Expire4000() {
     for (unsigned i = 0; i <= 2; ++i) {
         if (Yes(g.skipped(i))) continue;
         unsigned char* const o = P(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        auto* const member_rec = rv::As<records::PartyMember>(o);
         unsigned char* const flags = o + at::kPFlags;
         if ((Long(flags) & 0x4000) == 0 || member_rec->count_4000 != 3) continue;
         member_rec->count_4000 = 0;
         SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(flags)) & ~0x4000u));
-        SetWord(o + at::kPHpChange, member_rec->hp);
+        rv::Store<unsigned>(member_rec->hp_change, member_rec->hp);
         MarkEffect(o);
         o[at::kPEffect] = 0x11;
         count = (count + 1) & 0xFF;
@@ -357,9 +356,9 @@ extern "C" unsigned __cdecl BattleStep_Expire4000() {
     for (unsigned i = 3; i <= 10; ++i) {
         if (Yes(g.skipped(i))) continue;
         unsigned char* const o = E(i);
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(o);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(o);
         unsigned char* const flags = o + at::kEFlags;
-        if ((Long(flags) & 0x4000) == 0 || PartyRec(i)->count_4000 != 3) continue;   // the party array, as the original
+        if ((Long(flags) & 0x4000) == 0 || rv::As<records::PartyMember>(P(i))->count_4000 != 3) continue;   // the party array, as the original
         enemy_rec->count_4000 = 0;
         SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(flags)) & ~0x4000u));
         enemy_rec->hp_change = enemy_rec->hp;
@@ -384,7 +383,7 @@ extern "C" unsigned __cdecl BattleStep_Restore800() {
     for (unsigned i = 0; i <= 2; ++i) {
         if (Yes(g.skipped(i))) continue;
         unsigned char* const o = P(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        auto* const member_rec = rv::As<records::PartyMember>(o);
         if ((o[at::kPStatus + 1] & 8) == 0 || member_rec->count_800 != 5) continue;
         count = (count + 1) & 0xFF;
         member_rec->count_800 = 0;
@@ -508,9 +507,9 @@ extern "C" unsigned __cdecl BattleStep_HpDrift() {
     for (unsigned i = 0; i <= 2; ++i) {
         if (Yes(g.skipped(i))) continue;
         unsigned char* const o = P(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        auto* const member_rec = rv::As<records::PartyMember>(o);
         std::uint16_t w = 0;
-        SetWord(o + at::kPApChange, 0);
+        rv::Store<unsigned>(member_rec->ap_change, 0);
         if (Cond_Flags[0xd0] == 5) --w;
         const int n = static_cast<int>(member_rec->max_hp) + 10;
         if (member_rec->char_id == 6) w = static_cast<std::uint16_t>(w + n / -20);
@@ -528,7 +527,7 @@ extern "C" unsigned __cdecl BattleStep_HpDrift() {
         if (member_rec->accessory[0] == 0x17) --w;
         if (member_rec->accessory[1] == 0x17) --w;
         if (o[at::kPStatus] & 1) w = static_cast<std::uint16_t>(w - (member_rec->max_hp >> 1));
-        SetWord(o + at::kPHpChange, w);
+        rv::Store<unsigned>(member_rec->hp_change, w);
         if (w == 0) continue;
         MarkEffect(o);
         o[at::kPEffect] = 0x11;
@@ -537,7 +536,7 @@ extern "C" unsigned __cdecl BattleStep_HpDrift() {
     for (unsigned i = 3; i <= 10; ++i) {
         if (Yes(g.skipped(i))) continue;
         unsigned char* const o = E(i);
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(o);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(o);
         if ((o[at::kEStatus] & 1) == 0) continue;
         enemy_rec->hp_change = 0u - (enemy_rec->max_hp >> 1);
         MarkEffect(o);
@@ -558,7 +557,7 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
     for (unsigned i = 0; i <= 2; ++i) {
         if (Yes(g.skipped(i))) continue;
         unsigned char* const o = P(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        auto* const member_rec = rv::As<records::PartyMember>(o);
         const std::uint32_t flags = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134));
         if ((flags & 2) == 0 || (flags & 0x20) != 0) {
             member_rec->flags_134 = static_cast<std::int32_t>(flags & ~0x20u);
@@ -566,16 +565,16 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
         }
         const int cost = static_cast<int>((static_cast<std::uint32_t>(Long(At(BattleActions_ApCost_addr))) & 0xFF) + 1) / 2;
         if (static_cast<int>(member_rec->ap) < cost) {
-            member_rec->state[0] = 6;
-            member_rec->state[1] = 4;
-            member_rec->state[2] = 4;
+            member_rec->state = 6;
+            member_rec->step = 4;
+            member_rec->state3 = 4;
             g.set_pending(i);
             continue;
         }
-        SetWord(o + at::kPHpChange, 0);
-        SetWord(o + at::kPApChange, 0);
+        rv::Store<unsigned>(member_rec->hp_change, 0);
+        rv::Store<unsigned>(member_rec->ap_change, 0);
         member_rec->ap = member_rec->ap - static_cast<unsigned>(cost);
-        SetWord(o + at::kPApChange, static_cast<unsigned>(cost));
+        rv::Store<unsigned>(member_rec->ap_change, static_cast<unsigned>(cost));
         if ((cost & 0xFFFF) == 0) continue;
         MarkEffect(o);
         o[at::kPEffect] = 2;

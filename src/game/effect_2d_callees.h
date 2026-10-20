@@ -26,7 +26,7 @@ constexpr std::uint32_t kDustStart = bof3::addr::EffectDust_Start;     // 0x47A1
 constexpr std::uint32_t kDustStep = bof3::addr::EffectDust_Run;      // 0x47A200, R3E's: (void): the live dust drawn and stepped; al 1 when any was live
 
 // Data.
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (scenario_harness at::kFlagRow)
+// kFlagRow: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (scenario_harness at::kFlagRow)
 constexpr std::uint32_t kCounter0 = 0x903848;      // the chapters' counter byte (scenario_harness at::kCounter)
 // kPanelColour: now Effect2d_PanelColour (symbols.toml). three bytes: the blue, green and red of kind 0x45's lines and
                                                    // rectangles (committed at +6, +5, +4)
@@ -39,7 +39,7 @@ constexpr std::uint32_t kTwinOps = 0x654540;       // kind 0x47's two EventOp_0x
 constexpr std::uint32_t kTwinAnims = 0x654564;     // kind 0x47's five (animation byte, animation, start) triples
 constexpr std::uint32_t kBurstMask = 0x6545EC;     // variant 3's per-step bit masks, a byte by +9
 constexpr std::uint32_t kBurstCount = 0x6545F4;    // variant 3's per-step dust counts, a byte by +9
-// kObject2: now Sprite_Objects[0x148] (symbols.toml). Sprite_Objects record 2 (its +0 and +0x4B, as the leader's)
+// kObject2: now Sprite_Objects[2] (symbols.toml). Sprite_Objects record 2 (its +0 and +0x4B, as the leader's)
 constexpr std::uint32_t kEffectStride = 0x80;      // Effect_Objects' records
 constexpr unsigned kEffects = 20;                  // Effect_Objects' twenty
 constexpr std::uint32_t kSpriteStride = 0xA4;      // Sprite_Objects' records

@@ -27,6 +27,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc3_callees.h"
 #include "game/scenario_harness.h"
@@ -44,12 +45,12 @@ using move_script::Word;
 
 using Handler = void (__cdecl*)();
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 using ObjectHandler = std::uint32_t (__cdecl*)(unsigned char* object, unsigned char* bank);
 
 // --- the cells --------------------------------------------------------------
@@ -65,7 +66,7 @@ unsigned char& C0() { return Byte(at::kCounter0); }
 unsigned char& C1() { return Byte(at::kCounter1); }
 void ClearCounters() { SetLong(At(at::kCounters), 0); }
 void PassFlags(unsigned v) { Draw_PassFlags = static_cast<unsigned char>(v); }
-bool WaitDone() { return MoveScript_WaitWordDA == 0; }
+bool WaitDone() { return Transition_Busy == 0; }
 bool Requested() { return Field_Request == 2; }
 unsigned Message() { return Word(At(at::kMessage)); }
 void ScriptFlagsOr80() { Byte(at::kScriptFlags) = static_cast<unsigned char>(Byte(at::kScriptFlags) | 0x80); }
@@ -80,7 +81,7 @@ std::uint32_t Entry(std::uint32_t table, int index) {
 }
 
 // The flag row, the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
 void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 
@@ -107,9 +108,9 @@ void EventObjFace() { SH_AT(void (__cdecl*)(), scena_sc3::kEventObjFace)(); }
 // back as a dword's low byte, as the originals have it.
 unsigned char* TakeEffect(unsigned char kind) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    Byte(at::kSlot) = slot;
+    at::kSlot.b_00 = slot;
     if (slot == 0xFF) return nullptr;
-    unsigned char* const e = At(Effect_Objects_addr + ((static_cast<std::uint32_t>(Long(At(at::kSlot))) & 0xFF) << 7));
+    unsigned char* const e = At(Effect_Objects_addr + ((static_cast<std::uint32_t>(at::kSlot.d_00) & 0xFF) << 7));
     e[0] = 1;
     e[5] = kind;
     return e;
@@ -299,13 +300,13 @@ extern "C" void __cdecl Scena03_Scene1(void) {
     }
     case 4: {
         if (C0() != 0x32) return;
-        const unsigned state = MoveScript_EffectState[0];
+        const unsigned state = Character_IndexById[0];
         ItemEvent(0x97, state, 0, 0);
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), 0);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), 0);
         SetFlag(1);
         ChangeArea(0x2D, 0x280000, 0x350000, 0x86);
         AreaW1f_MusicCurrent = 0x2F;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(5);
         return;
     }
@@ -326,7 +327,7 @@ extern "C" void __cdecl Scena03_Scene1(void) {
         SetFlag(2);
         ScriptFlagsOr80();
         ChangeArea(0x27, 0x290000, 0x270000, 5);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0;
         SetRun(3);
         SetStep(0);
@@ -440,8 +441,8 @@ extern "C" void __cdecl Scena03_Scene3(void) {
         return;
     case 0xB: {
         if (C0() != 0xF) return;
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         PlaceParty(x, z, 0x10);
         LeaderState5(0x10);
         SetStep(0xC);
@@ -451,8 +452,8 @@ extern "C" void __cdecl Scena03_Scene3(void) {
         const unsigned char c = C0();
         if (c <= 0x13) return;
         if (c == 0x14) {
-            Field_Kind2X = Long(At(ObjTrio_addr + at::kMemberStride + 0x34));
-            Field_Kind2Z = Long(At(ObjTrio_addr + at::kMemberStride + 0x38));
+            Field_Kind2X = ObjTrio[1].x;
+            Field_Kind2Z = ObjTrio[1].z;
             MoveScript_F3Divisor = 0x20;
             SetStep(0xD);
             return;
@@ -631,7 +632,7 @@ extern "C" void __cdecl Scena03_Scene5(void) {
         }
         ScriptFlagsOr80();
         ChangeArea(0x2D, 0x280000, 0x220000, 0x86);
-        AreaW0c_PendingKind = 1;
+        Area_EnterTransition = 1;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(4);
         return;
@@ -639,7 +640,7 @@ extern "C" void __cdecl Scena03_Scene5(void) {
         if (C0() != 9) return;
         ScriptFlagsAnd(0xFF7F);
         ChangeArea(0x32, 0x290000, 0x250000, 5);
-        AreaW0c_PendingKind = 0xFE;
+        Area_EnterTransition = 0xFE;
         ModeFlow_AreaTransition = 0;
         SetStep(5);
         return;
@@ -679,7 +680,7 @@ extern "C" void __cdecl Scena03_Scene5(void) {
             return;
         }
         ChangeArea(0x32, 0xB0000, 0x610000, 5);
-        AreaW0c_PendingKind = 0xFE;
+        Area_EnterTransition = 0xFE;
         SetStep(0xA);
         return;
     case 0xA:
@@ -851,7 +852,7 @@ extern "C" void __cdecl Scena03_Scene6(void) {
         return;
     case 0x11: {
         ChangeArea(0x63, 0x68000, 0x230000, 0x83);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(0x12);
         return;
@@ -952,7 +953,7 @@ extern "C" void __cdecl Scena03_Scene7(void) {
         return;
     case 2:
         ChangeArea(0x63, 0x68000, 0x230000, 1);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(3);
         return;
@@ -982,9 +983,9 @@ extern "C" void __cdecl Scena03_Scene7(void) {
     case 6:
         if (C0() != 0x16) return;
         if (unsigned char* const e = TakeKeptEffect(0x22)) {
-            Fx(e)->x = 0x230000;
-            Fx(e)->z = 0x4F0000;
-            Fx(e)->height = 0x4800000;
+            rv::As<records::EffectObject>(e)->x = 0x230000;
+            rv::As<records::EffectObject>(e)->z = 0x4F0000;
+            rv::As<records::EffectObject>(e)->height = 0x4800000;
         }
         SetStep(7);
         return;
@@ -1225,7 +1226,7 @@ extern "C" void __cdecl Scena03_Scene8(void) {
         SH_CALL(Music_FadeOutStop)(8);
         SH_CALL(Music_Play)(0x51, 8);
         SetFlag(0x1E);
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), 6);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), 6);
         SH_CALL(ScriptFlags_Clear40)();
         C0() = 0;
         SetRun(0);
@@ -1254,21 +1255,21 @@ extern "C" unsigned char __cdecl Scena03_SpawnAtMember(unsigned char member) {
     const std::uint32_t m = static_cast<unsigned char>(*reinterpret_cast<const volatile unsigned char*>(&member)) * at::kMemberStride;
     auto cur = [] { return Sprite_Current; };
     cur()[0] = 1;
-    SetLong(cur() + 0x34, Long(At(ObjTrio_addr + m + 0x34)) + 0x8000);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur())->x, Long(At(ObjTrio_addr + m + 0x34)) + 0x8000);
     const std::int32_t z = Long(At(ObjTrio_addr + m + 0x38));
-    Spr(rec)->target_x = Spr(cur())->x;
-    Spr(cur())->z = z;
-    Spr(rec)->target_z = Spr(cur())->z;
-    Spr(rec)->best_score = 0;
-    const long elevation = SH_CALL(AreaMap_Elevation)(Spr(cur())->x, Spr(cur())->z);
-    SetWord(cur() + 0x3E, static_cast<unsigned>(elevation));
+    rv::As<records::SpriteObject>(rec)->target_x = rv::As<records::SpriteObject>(cur())->x;
+    rv::As<records::SpriteObject>(cur())->z = z;
+    rv::As<records::SpriteObject>(rec)->target_z = rv::As<records::SpriteObject>(cur())->z;
+    rv::As<records::SpriteObject>(rec)->best_score = 0;
+    const long elevation = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(cur())->x, rv::As<records::SpriteObject>(cur())->z);
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(cur())->height_whole, static_cast<unsigned>(elevation));
     cur()[1] = 4;
     cur()[2] = 0;
     cur()[8] = 0;
     cur()[6] = 0;
-    Spr(rec)->half_d = 0;
-    Spr(rec)->half_w = 0;
-    Spr(rec)->trigger_word = 0;
+    rv::As<records::SpriteObject>(rec)->half_d = 0;
+    rv::As<records::SpriteObject>(rec)->half_w = 0;
+    rv::As<records::SpriteObject>(rec)->trigger_word = 0;
     rec[0x83] = 2;
     rec[0x84] = 2;
     const unsigned char flags = 0x88;
@@ -1287,8 +1288,8 @@ namespace {
 // times 16, added to each one's +0x3E (a 16-bit add).
 void Bob(std::uint32_t table, unsigned mask) {
     const unsigned d = static_cast<unsigned>(static_cast<int>(static_cast<signed char>(Byte(table + (MoveScript_PartyRecords[0x66] & mask)))) << 4);
-    SetWord(At(ObjTrio_addr + 0x3E), Word(At(ObjTrio_addr + 0x3E)) + d);
-    SetWord(At(ObjTrio_addr + at::kMemberStride + 0x3E), Word(At(ObjTrio_addr + at::kMemberStride + 0x3E)) + d);
+    ObjTrio[0].height_whole = ObjTrio[0].height_whole + d;
+    ObjTrio[1].height_whole = ObjTrio[1].height_whole + d;
 }
 }  // namespace
 
@@ -1578,7 +1579,7 @@ extern "C" void __cdecl Scena04_EnterArea(void) {
         ClearCounters();
         if (SH_CALL(Flags_Test)(bank, 6) == 0) {
             SetFlag(6);
-            AreaW0c_PendingKind = 5;
+            Area_EnterTransition = 5;
             SH_CALL(Party_DropIn)(3);
         }
         if (!Flag(7)) {
@@ -2054,7 +2055,7 @@ unsigned char Scene2Body() {
         ScriptFlagsOr80();
         ChangeArea(0x41, 0x2E0000, 0x210000, 1);
         unsigned char* const bank = Bank();
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SH_CALL(Flags_Set)(bank, 7);
         SetStep(0x11);
         return 0x11;
@@ -2160,8 +2161,8 @@ extern "C" unsigned char __cdecl Scena04_StepHook(int x, int z) {
 namespace {
 // The leader's +8 into the byte 0x903850; true unless it is 4, 5 or 6.
 bool LeaderFree() {
-    const unsigned char k = ObjTrio[8];
-    Byte(at::kSlot) = k;
+    const unsigned char k = ObjTrio[0].direction;
+    at::kSlot.b_00 = k;
     return k != 6 && k != 5 && k != 4;
 }
 }  // namespace

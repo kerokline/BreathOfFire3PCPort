@@ -23,6 +23,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/rest_1e_callees.h"
@@ -32,9 +33,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_1e::at;
 using U = std::uint32_t;
@@ -67,7 +65,7 @@ void Dispatch(const char* who, const char* by, U table, unsigned index, unsigned
 U Table(const unsigned long* t) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(t)); }
 void ByState2(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +2", table, S()[2], entries); }
 void ByState3(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +3", table, S()[3], entries); }
-void ByForm(const char* who, U table) { Dispatch(who, "the form word +0x2C", table, MemberRec(S())->column, 3); }
+void ByForm(const char* who, U table) { Dispatch(who, "the form word +0x2C", table, rv::As<records::PartyMember>(S())->column, 3); }
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked, as the originals index it.
@@ -100,13 +98,13 @@ void TurnWhileClear(unsigned char (__cdecl* probe)(void)) {
 // (s16 against s16), +0x2B = 0. PartyAction_SideProbes' probe, inline.
 void SideProbe(unsigned d, U row) {
     const unsigned char* const s = S();
-    const U x = static_cast<U>(MemberRec(s)->x) + static_cast<U>(Long(At(row)));
-    const U z = static_cast<U>(MemberRec(s)->z) + static_cast<U>(Long(At(row + 4)));
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(Long(At(row)));
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(Long(At(row + 4)));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     unsigned char* const c = S();
-    if (static_cast<short>(Word(c + 0x3E)) < static_cast<short>(ground)) c[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
 }
 void SideProbes() {
     S()[0x2B] = 1;
@@ -138,7 +136,7 @@ unsigned char* EffectAt(const char* who, int index, const char* what) {
         bof3::Fatal("%s: %s is %d, past Effect_Objects' 20 records; the original reads 0x%X unchecked "
                     "(docs/rest_1e.md section 5)",
                     who, what, index, static_cast<unsigned>(0x7E11E0 + index * static_cast<int>(kEffectStride)));
-    return Effect_Objects + index * static_cast<int>(kEffectStride);
+    return rv::Bytes(Effect_Objects) + index * static_cast<int>(kEffectStride);
 }
 
 // The point two steps ahead of Sprite_Current (read now), as the resolve and
@@ -146,8 +144,8 @@ unsigned char* EffectAt(const char* who, int index, const char* what) {
 void TwoAhead(U& x, U& z) {
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
-    z = static_cast<U>(MemberRec(s)->z) + 2u * StepZ(d);
+    x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
+    z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
 }
 
 // The cell calls after a probe two steps ahead: on the point's cell; when that
@@ -169,8 +167,8 @@ void Form2Begin() {
     TurnWhileClear(&PartyAction_TargetAhead);
     const unsigned char* s = S();
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = S();
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(s + 0x3E)));
@@ -182,7 +180,7 @@ void Form2Begin() {
     asm volatile("" : "+r"(upper));
     const U direction = upper | s[8];
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);   // its answer unused
-    if (At(bof3::addr::DamageScratch)[0] != 0 && rise > 0x40) {
+    if (SharedScratch.b_00 != 0 && rise > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x46));
         ++S()[2];
     } else {

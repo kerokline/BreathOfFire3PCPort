@@ -15,8 +15,8 @@ namespace effect_5b::at {
 // kCondRow9: now Cond_Flags[0x48] (symbols.toml). Cond_Flags + 8 * 9: the row sub-kinds 0x0E, 0x0F, 0x13, 0x4F test
 // kCount48: now AreaW1c_Count48 (symbols.toml). u8: area 48's count (area_w1c_callees.h kCount48)
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the field hook's / armed tail's state (area_w1a_callees.h)
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio + 0x34: the leader's x (16.16)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). ObjTrio + 0x38: the leader's z (16.16)
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio + 0x34: the leader's x (16.16)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). ObjTrio + 0x38: the leader's z (16.16)
 
 // --- the screen cull's floats in .rdata (MapCell_Handlers 0x27's too) ----------
 constexpr rdata::Const kCullLeft{0x5C4210};      // -60.0

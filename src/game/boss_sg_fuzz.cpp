@@ -177,7 +177,7 @@ void Disturb(U h) {
     }
     case 4: bh::PartyOf(static_cast<unsigned char>(v % 3))[v & 0x100 ? 0 : 8] ^= static_cast<unsigned char>(1 + (v >> 9) % 0x7F); break;
     case 5: B(at::kFacing) = static_cast<unsigned char>(v); break;
-    default: Mem(0x905E60 + v % 8)[0] = static_cast<unsigned char>(v >> 3); break;
+    default: Mem(Field_Kind2Z_addr + v % 8)[0] = static_cast<unsigned char>(v >> 3); break;
     }
 }
 
@@ -279,8 +279,8 @@ const bh::Clone kClonesB29[] = {
 };
 void SeedEnd(unsigned k) {
     if (k != 1) return;
-    B(BattleActions_BattleEnd_addr) = EndByte();
-    B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(BSG_PICK(0x40, 0, 0xFF, 0xBF));
+    B(Battle_EndFlags_addr) = EndByte();
+    B(EventBattle_Flags_addr) = static_cast<unsigned char>(BSG_PICK(0x40, 0, 0xFF, 0xBF));
 }
 
 constexpr bh::CallSite kCalls43D0E0[] = {{0x10, 0x446DE0}, {0x1C, 0x446E00}};
@@ -301,7 +301,7 @@ const bh::Clone kClonesB32[] = {
 };
 void SeedB32(unsigned k) {
     if (k != 1) return;
-    B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(bh::Often() ? B(BattleActions_BattleEnd_addr) | 2 : EndByte());
+    B(Battle_EndFlags_addr) = static_cast<unsigned char>(bh::Often() ? B(Battle_EndFlags_addr) | 2 : EndByte());
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(m));
         p[0] = static_cast<unsigned char>(bh::Often() ? p[0] | 1 : p[0] & ~1u);
@@ -315,7 +315,7 @@ const bh::Clone kClonesB33[] = {
     Row("Boss33_End", 0x43D690, 0x3A, kCalls43D690, BSG_N(kCalls43D690), BSG_FN(Boss33_End), 0, S::kEnd),
 };
 void SeedB33(unsigned k) {
-    if (k == 1) B(BattleActions_BattleEnd_addr) = EndByte();
+    if (k == 1) B(Battle_EndFlags_addr) = EndByte();
 }
 
 // ===========================================================================

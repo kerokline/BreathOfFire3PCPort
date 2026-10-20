@@ -30,6 +30,7 @@
 #include "game/battle_turn_steps_callees.h"
 #include "game/psp_code.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -86,8 +87,8 @@ std::uint32_t Watch() {
         for (unsigned o : {0x01u, 0x98u, 0x99u, 0x9Au, 0x9Bu, 0x9Cu, 0x131u, 0x134u, 0x135u}) mix(m[o]);
     }
     for (unsigned k = 0; k < 3; ++k) mix(B(at::kCopies + k * at::kPartyStride + at::kFlags));
-    for (unsigned i = 0; i < 8; ++i) mix(B(at::kEnemy + i * at::kEnemyStride + at::kEFlags + 1));
-    for (unsigned k = 0; k < 12; ++k) mix(B(BattleE1_Win1_addr + k * at::kWindowStride));
+    for (unsigned i = 0; i < 8; ++i) mix(B(Battle_Enemies_addr + i * at::kEnemyStride + at::kEFlags + 1));
+    for (unsigned k = 0; k < 12; ++k) mix(B(Window1_addr + k * at::kWindowStride));
     mix(Address(Sprite_Current));
     return h;
 }
@@ -102,7 +103,7 @@ unsigned char g_psp_end;
 unsigned g_psp_fired;
 void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0) {
     if (g_psp_pending) {
-        B(BattleActions_BattleEnd_addr) = g_psp_end;
+        B(Battle_EndFlags_addr) = g_psp_end;
         g_psp_pending = false;
     }
     if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, Watch()};
@@ -121,14 +122,14 @@ void Disturb() {
     case 1: B(BattleE4_Step2_addr) = static_cast<unsigned char>(v % 15); break;
     case 2: B(BossSb_Countdown_addr) = static_cast<unsigned char>(v % 6); break;
     case 3: B(at::kMembers) = static_cast<unsigned char>(v % 5); break;
-    case 4: B(BattleActions_BattleEnd_addr) = v; break;
+    case 4: B(Battle_EndFlags_addr) = v; break;
     case 5: B(at::kRoundFlags) = v; break;
-    case 6: B(BattleActions_EventBattle_addr) = (w & 1) ? 0 : v; break;
+    case 6: B(EventBattle_Id_addr) = (w & 1) ? 0 : v; break;
     case 7: m[at::kStatus + (w & 1)] = v; break;
     case 8: m[at::kFlags] = v; break;
     case 9: m[at::kCharId] = (w & 1) ? 4 : v; break;
     case 10: B(Music_Track_addr) = (w & 1) ? 0xFF : v; break;
-    case 11: B(BattleTurnSteps_MusicFlags_addr) = v; break;
+    case 11: B(EventBattle_Flags_addr) = v; break;
     case 12: SetWord(At(Input_Pressed_addr), (w & 1) ? 0 : v); break;
     case 13: m[at::kFlags2 + 1] = v; break;
     case 14: SetWord(At(BattleActions_Pending_addr), (w & 1) ? 0 : v); break;
@@ -186,7 +187,7 @@ unsigned __cdecl StubClearStatus(unsigned a, unsigned mask) {
 void __cdecl StubReleaseTint(unsigned char* object) { Record(17, Address(object)); Disturb(); }
 void __cdecl StubReturnItem(unsigned a) {
     Record(18, a & 0xFF);
-    if (Hash() % 3 == 0) B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 3 == 0) B(Battle_EndFlags_addr) = static_cast<unsigned char>(Hash() >> 8);
     if (Hash() % 4 == 0) B(at::kMembers) = static_cast<unsigned char>((Hash() >> 12) % 5);
     Disturb();
 }
@@ -230,10 +231,10 @@ unsigned __cdecl StubHookEvent(int n) {
 // DIV-0108: the hook as the original sees it with the PSP's duel-loss.
 unsigned __cdecl StubHookEventPsp(int n) {
     const unsigned r = StubHookEvent(n);
-    if (n == 2 && (r & 0xFF) != 0xFF && psp_code::DuelLossGoesOn(B(BattleActions_EventBattle_addr), B(BattleActions_BattleEnd_addr))) {
-        g_psp_end = B(BattleActions_BattleEnd_addr);
+    if (n == 2 && (r & 0xFF) != 0xFF && psp_code::DuelLossGoesOn(B(EventBattle_Id_addr), B(Battle_EndFlags_addr))) {
+        g_psp_end = B(Battle_EndFlags_addr);
         g_psp_pending = true;
-        B(BattleActions_BattleEnd_addr) = 0;
+        B(Battle_EndFlags_addr) = 0;
         ++g_psp_fired;
     }
     return r;
@@ -488,8 +489,8 @@ void Seed(unsigned k) {
             const unsigned i = Next() % 8;
             SetLong(At(at::kBusy + i * 4), static_cast<std::int32_t>(Half() ? 1u << (Next() % 32) : Next()));
         }
-        if (Half()) B(BattleActions_EventBattle_addr) = 0;
-        if (Half()) B(BattleActions_BattleEnd_addr) = 0;
+        if (Half()) B(EventBattle_Id_addr) = 0;
+        if (Half()) B(Battle_EndFlags_addr) = 0;
         if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10);
         break;
     }
@@ -513,28 +514,28 @@ void Seed(unsigned k) {
         }
         if (Often()) B(BossSb_Countdown_addr) = static_cast<unsigned char>(Half() ? count : Next() % 6);
         static const unsigned kEnd[] = {0, 1, 2, 3, 0xFC, 0xFE, 0xFD, 0xFF};
-        if (Often()) B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(Pick(kEnd, 8));
-        if (Half()) B(BattleActions_EventBattle_addr) = 0;
+        if (Often()) B(Battle_EndFlags_addr) = static_cast<unsigned char>(Pick(kEnd, 8));
+        if (Half()) B(EventBattle_Id_addr) = 0;
         static const unsigned kStep[] = {0, 1, 2, 3};
         if (Half()) B(BattleActions_Step_addr) = static_cast<unsigned char>(Pick(kStep, 4));
         break;
     }
     case kWinK:
-        for (unsigned i = 0; i < 3; ++i) reinterpret_cast<records::PartyMember*>(Member(i))->flags = static_cast<unsigned char>(reinterpret_cast<records::PartyMember*>(Member(i))->flags ^ (Half() ? 1 : 0));
-        if (Half()) B(BattleTurnSteps_MusicFlags_addr) ^= 0x40;
+        for (unsigned i = 0; i < 3; ++i) rv::As<records::PartyMember>(Member(i))->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(Member(i))->flags ^ (Half() ? 1 : 0));
+        if (Half()) B(EventBattle_Flags_addr) ^= 0x40;
         break;
     case kInputK:
     case kExitHookK:
         if (Half()) SetWord(At(Input_Pressed_addr), 0);
         else if (Half()) SetWord(At(Input_Pressed_addr), 0x100u << (Next() % 8));
-        if (Half()) B(BattleTurnSteps_MusicFlags_addr) ^= 0x40;
+        if (Half()) B(EventBattle_Flags_addr) ^= 0x40;
         if (Half()) B(Music_Track_addr) = 0xFF;
         break;
     case kFinishK:
         for (unsigned i = 0; i < 5; ++i) {
             unsigned char* const m = Member(i);
             if (Half()) m[at::kStatus + 1] ^= 0x40;
-            unsigned char* const r = At(at::kRecords + m[at::kRecord] * at::kRecordStride);
+            unsigned char* const r = At(CharacterRecords_addr + m[at::kRecord] * at::kRecordStride);
             static const unsigned kCounts[] = {0, 3, 4, 4, 5, 5, 6, 0xFF};
             if (Often()) r[0x1E] = static_cast<unsigned char>(Pick(kCounts, 8));
         }
@@ -709,8 +710,8 @@ void SelfTest() {
         Fix();
         g_seed = Next();
         Seed(kNextK);
-        if (Half()) B(BattleActions_EventBattle_addr) = psp_code::kDuelEvent;
-        B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
+        if (Half()) B(EventBattle_Id_addr) = psp_code::kDuelEvent;
+        B(Battle_EndFlags_addr) = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
         Capture(input);
 
         static State plain_out;

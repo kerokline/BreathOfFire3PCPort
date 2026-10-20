@@ -172,11 +172,12 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kEventBattle: now EventBattle_Id (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
 // kTints: now MoveScript_TintRecords (symbols.toml).
 // kInput: now Input_Pressed (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kEnemyLift = 0x8C564F;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr std::uint32_t kEnemyLift = 0x8C564F;
 
 // Set by the seed for the one function each matters to.
 bool g_keep_facing = false;   // the facing stays inside 0..3 (ChillRay_PushMatrix)
@@ -340,7 +341,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850.., Scratch_Swap at +0xC
+    {kScratch, 0x10},           // 0x903850.., Scratch_Swap at +0xC
     {Field_Kind2Z_addr, 8},               // Field_Kind2Z, Field_Kind2X
     {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords
     {Input_Pressed_addr, 2},              // Input_Pressed
@@ -543,10 +544,10 @@ void Seed(unsigned k) {
     case kInfluenceRight_Run: case kInfluenceMark_Run: sc[2] = Byte(mh::Next() % 5); break;
     // Chill's third child: an event battle, the acting enemy's +0x100 0x29
     case kChill_Start:
-        if (mh::Often()) mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(1 + mh::Next() % 0xFF);
+        if (mh::Often()) mh::Mem(EventBattle_Id_addr)[0] = Byte(1 + mh::Next() % 0xFF);
         if (mh::Often()) {
             const unsigned a = mh::Mem(mh::at::kActor)[0];
-            mh::Mem(mh::at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(a) - 3) * 0x128) + 0x100)[0] = 0x29;
+            mh::Mem(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(a) - 3) * 0x128) + 0x100)[0] = 0x29;
         }
         break;
     // the counters: at their thresholds

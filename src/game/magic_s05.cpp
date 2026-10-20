@@ -34,6 +34,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -50,10 +51,6 @@ using move_script::Long;
 using move_script::SetLong;
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -65,13 +62,13 @@ void AddLong(unsigned char* at, std::int32_t v) {
     SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + static_cast<std::uint32_t>(v)));
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The acting actor's record as the originals index it: a member (0x802D40,
 // stride 0x14C) at 0..2, else the enemy by index - 3 (0x93B960, stride
 // 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor <= 2) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
 }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
@@ -114,9 +111,9 @@ void TakeOwnerAndAnimate(unsigned arg) {
         const unsigned char facing = Owner()[8];
         Sc()[8] = facing;
     }
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Inc(Sc()[1]);
@@ -137,7 +134,7 @@ unsigned char* SpawnImage(unsigned parameter) {
 // The fields each image of MAGIC018/019 gets: +0x80 this task, +1 its type,
 // +2 0, +6 1, +5 the parameter.
 void SetImage008(unsigned char* t, unsigned char type) {
-    SetLong(t + 0x80, static_cast<std::int32_t>(Key(Sc())));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(t)->owner, static_cast<std::int32_t>(Key(Sc())));
     t[1] = type;
     t[2] = 0;
     t[6] = 1;
@@ -262,13 +259,13 @@ S05_EXPORT void __cdecl Magic017Image_Run(void) {
 S05_EXPORT void __cdecl Magic017Image_Appear(void) {
     Dec(Sc()[9]);
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (s[9] != 0) return;
     ShowTinted(s);
     s[0x27] = Owner()[0x27];
     const unsigned char number = s[0xB];
-    ts->vel_x = 0;
-    ts->vel_y = (number & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
+    ts->step_x = 0;
+    ts->step_z = (number & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
     Turn(s);
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
@@ -278,9 +275,9 @@ S05_EXPORT void __cdecl Magic017Image_Appear(void) {
 // down by 4; +9 down, at 0 +2 on.
 S05_EXPORT void __cdecl Magic017Image_Drift(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-    AddLong(s + 0x34, ts->vel_x);
-    AddLong(s + 0x38, ts->vel_y);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+    AddLong(s + 0x34, ts->step_x);
+    AddLong(s + 0x38, ts->step_z);
     Tint(s, 0xFC);
     Dec(s[9]);
     if (s[9] == 0) Inc(s[2]);
@@ -295,22 +292,22 @@ S05_EXPORT void __cdecl Magic017Image_Leap(void) {
     Inc(Sc()[9]);
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         if (s[9] != 0x10) return;
-        ts->vel_x = static_cast<std::int32_t>(0xFFFE0000u);
-        ts->vel_y = (s[0xB] & 1) ? static_cast<std::int32_t>(0xFFFF0000u) : 0x10000;
+        ts->step_x = static_cast<std::int32_t>(0xFFFE0000u);
+        ts->step_z = (s[0xB] & 1) ? static_cast<std::int32_t>(0xFFFF0000u) : 0x10000;
         Turn(s);
     }
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x34)) +
-                                                    static_cast<std::uint32_t>(ts->vel_x));
-        ts->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x38)) +
-                                                    static_cast<std::uint32_t>(ts->vel_y));
-        SetLong(s + 0x3C, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
-        ts->vel_x = 0;
-        ts->vel_y = (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->x) +
+                                                    static_cast<std::uint32_t>(ts->step_x));
+        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->z) +
+                                                    static_cast<std::uint32_t>(ts->step_z));
+        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height);
+        ts->step_x = 0;
+        ts->step_z = (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
         Turn(s);
     }
     if (Sc()[0xB] == 0) MH_CALL(Sound_PlayById)(0x101);
@@ -326,9 +323,9 @@ S05_EXPORT void __cdecl Magic017Image_Leap(void) {
 S05_EXPORT void __cdecl Magic017Image_Return(void) {
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        AddLong(s + 0x34, ts->vel_x);
-        AddLong(s + 0x38, ts->vel_y);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        AddLong(s + 0x34, ts->step_x);
+        AddLong(s + 0x38, ts->step_z);
         Tint(s, 4);
         Dec(s[9]);
         if (s[9] != 0) return;
@@ -388,13 +385,13 @@ S05_EXPORT void __cdecl Magic017Image_Reshow(void) {
 // +0x34 / +0x38 / +0x3C to the image, +9 8, +2 on.
 S05_EXPORT void __cdecl Magic017Image_Home(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     Tint(s, 0xF8);
     Dec(s[9]);
     if (s[9] != 0) return;
-    ts->x = Long(Owner() + 0x34);
-    ts->y = Long(Owner() + 0x38);
-    SetLong(s + 0x3C, Long(Owner() + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(Owner())->x;
+    ts->z = rv::As<records::SpriteHead>(Owner())->z;
+    rv::Store(ts->height, rv::As<records::SpriteHead>(Owner())->height);
     s[9] = 8;
     Inc(s[2]);
 }

@@ -21,15 +21,13 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -74,7 +72,7 @@ void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + (i - 3u) * at::kEnemyStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + (i - 3u) * at::kEnemyStride); }
 // An actor's record by the battle index, as the originals index it (0..2 the
 // party, 3.. an enemy; unchecked above).
 unsigned char* ActorRecord(unsigned i) { return i < 3 ? PartyRecord(i) : EnemyRecord(i); }
@@ -92,18 +90,18 @@ void PopupDrawIfShown() {
 // and by +0xA; +0x10 (the rise's speed) -14; +9 0; +0xA 1; the phase on.
 void PopupSettle() {
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetWord(Sprite_Current + 0x2E, Word(Sprite_Current + 0x2E) - 0x18u);
-    SetWord(Sprite_Current + 0x30, Word(Sprite_Current + 0x30) - Sprite_Current[0xA]);
-    ScTask()->vel_y = -14;
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) - 0x18u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) - Sprite_Current[0xA]);
+    rv::Current<records::BattleTask>()->step_z = -14;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 1;
     Bump(Sprite_Current[1]);
 }
 
 void CopyPosition(const unsigned char* from) {
-    Store(ScTask()->x, Long(from + 0x34));
-    Store(ScTask()->y, Long(from + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(from)->height);
 }
 
 // One of the popup's two quads: a POLY_FT4 at Gfx_PacketNext, 0x30 x +0xA at
@@ -120,8 +118,8 @@ void PopupQuad(const unsigned char* uv, int d, int w, unsigned char shade) {
     PutFloat(p + 0x2C, S16(Sprite_Current + 0x30) + Sprite_Current[0xA] + d);
     PutFloat(p + 0x38, S16(Sprite_Current + 0x2E) + w);
     PutFloat(p + 0x3C, S16(Sprite_Current + 0x30) + Sprite_Current[0xA] + d);
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 0, 0x380, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 0, 0x380, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
     p[0x14] = uv[0];
     p[0x15] = uv[2];
     p[0x24] = static_cast<unsigned char>(uv[0] + 0x30);
@@ -161,12 +159,11 @@ void StepAlong(const long* in, int speed) {
     short out[4] = {};
     MH_CALL(Gte_VectorNormalS)(in, out);
     const auto s = static_cast<std::uint32_t>(static_cast<short>(speed));
-    Store(ScTask()->x, I32(U32(Sprite_Current + 0x34) + static_cast<std::uint32_t>(
+    rv::Store(rv::Current<records::BattleTask>()->x, I32(U32(Sprite_Current + 0x34) + static_cast<std::uint32_t>(
                                                                           I32(static_cast<std::uint32_t>(out[0]) * s) >> 3)));
-    Store(ScTask()->y, I32(U32(Sprite_Current + 0x38) + static_cast<std::uint32_t>(
+    rv::Store(rv::Current<records::BattleTask>()->z, I32(U32(Sprite_Current + 0x38) + static_cast<std::uint32_t>(
                                                                           I32(static_cast<std::uint32_t>(out[1]) * s) >> 3)));
-    SetWord(Sprite_Current + 0x3E,
-            Word(Sprite_Current + 0x3E) + static_cast<unsigned>(I32(static_cast<std::uint32_t>(out[2]) * s) >> 11));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::Current<records::BattleTask>()->height_whole + static_cast<unsigned>(I32(static_cast<std::uint32_t>(out[2]) * s) >> 11));
 }
 
 // The three near tests' shared first two: |a - b + size / 2| within size,
@@ -202,9 +199,9 @@ MLIB_EXPORT void __cdecl BuffPopup_Task(void) {
 MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
     if (Sprite_Current[9] != 0) return;
-    Store(ScTask()->x, Long(Pointer(BattleE2_Owner_addr) + 0x34));
-    Store(ScTask()->y, Long(Pointer(BattleE2_Owner_addr) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
     PopupSettle();
 }
 
@@ -213,13 +210,13 @@ MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
 // -6 and the phase on.
 MLIB_EXPORT void __cdecl BuffPopup_Rise(void) {
     unsigned char* const t = Sprite_Current;
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     if (t[0xA] < 8) Bump(t[0xA]);
-    tt->vel_y = tt->vel_y + 2;
-    SetWord(t + 0x30, Word(t + 0x30) + Word(t + 0x10));
+    tt->step_z = tt->step_z + 2;
+    rv::Store<unsigned>(tt->screen_y, static_cast<std::uint16_t>(tt->screen_y) + static_cast<std::uint16_t>(tt->step_z));
     Bump(t[9]);
     if (t[9] == 0xC) {
-        tt->vel_y = -6;
+        tt->step_z = -6;
         Bump(t[1]);
     }
 }
@@ -228,9 +225,9 @@ MLIB_EXPORT void __cdecl BuffPopup_Rise(void) {
 // low word; +9 up, at 16 the phase on.
 MLIB_EXPORT void __cdecl BuffPopup_Fall(void) {
     unsigned char* const t = Sprite_Current;
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
-    tt->vel_y = tt->vel_y + 2;
-    SetWord(t + 0x30, Word(t + 0x30) + Word(t + 0x10));
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
+    tt->step_z = tt->step_z + 2;
+    rv::Store<unsigned>(tt->screen_y, static_cast<std::uint16_t>(tt->screen_y) + static_cast<std::uint16_t>(tt->step_z));
     Bump(t[9]);
     if (t[9] == 0x10) Bump(t[1]);
 }
@@ -318,7 +315,7 @@ MLIB_EXPORT void __cdecl MagicFx_BuffPopup(unsigned kind, unsigned who) {
         MH_CALL(MagicFx_ApplyBuff)(stat, (target & 0x40) ? static_cast<unsigned char>(who + 3) : who);
     const unsigned char icon = applied != 0 ? static_cast<unsigned char>(kind) : 8;
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x48);
-    unsigned char* const t = Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride);
+    unsigned char* const t = Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride);
     SetLong(t + 0x80, I32(Addr(Sprite_Current)));
     t[4] = icon;
     t[9] = 1;
@@ -380,9 +377,9 @@ MLIB_EXPORT void __cdecl MagicFx_StepToward(const unsigned char* to, int speed) 
 MLIB_EXPORT void __cdecl MagicFx_StepTowardPoint(unsigned x, unsigned z, unsigned y, unsigned pad, int speed) {
     (void)pad;
     const unsigned char* const sc = Sprite_Current;
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     const long in[3] = {I32(x - static_cast<std::uint32_t>((tsc->x >> 9) - 0x4000)),
-                        I32(z - static_cast<std::uint32_t>((tsc->y >> 9) - 0x4000)),
+                        I32(z - static_cast<std::uint32_t>((tsc->z >> 9) - 0x4000)),
                         I32(y - static_cast<std::uint32_t>(S16(sc + 0x3E) >> 1))};
     StepAlong(in, speed);
 }
@@ -411,11 +408,13 @@ MLIB_EXPORT int __cdecl MagicFx_StepAround(const unsigned char* to, int radius, 
 
 // original 0x4FBBD0: 1 when Sprite_Current is within the box of `size`
 // around the sprite `other`: x and z (NearXZ), and ((size >> 9) - other's
-// word +0x3E + ours) & 0xFFFF at most size >> 8; else 0.
+// word +0x3E + ours) & 0xFFFF at most size >> 8; else 0. Only Sprite_Current's
+// head is read (+0x34, +0x38, +0x3E), so it reads as SpriteHead, not
+// BattleTask (C2 audit bm doubt 5); MagicFx_NearPoint3D below the same.
 MLIB_EXPORT int __cdecl MagicFx_NearSprite3D(const unsigned char* other, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     if (!NearXZ(sc, U32(other + 0x34), U32(other + 0x38), size)) return 0;
-    const std::uint32_t h = ((size >> 9) - Word(other + 0x3E) + Word(sc + 0x3E)) & 0xFFFF;
+    const std::uint32_t h = ((size >> 9) - Word(other + 0x3E) + rv::As<records::SpriteHead>(sc)->height_whole) & 0xFFFF;
     return h <= (size >> 8) ? 1 : 0;
 }
 
@@ -429,7 +428,7 @@ MLIB_EXPORT int __cdecl MagicFx_NearSprite(const unsigned char* other, unsigned 
 MLIB_EXPORT int __cdecl MagicFx_NearPoint3D(unsigned x, unsigned z, unsigned yw, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     if (!NearXZ(sc, x, z, size)) return 0;
-    const std::uint32_t h = ((size >> 9) + Word(sc + 0x3E) - (yw >> 16)) & 0xFFFF;
+    const std::uint32_t h = ((size >> 9) + rv::As<records::SpriteHead>(sc)->height_whole - (yw >> 16)) & 0xFFFF;
     return h <= (size >> 8) ? 1 : 0;
 }
 
@@ -489,15 +488,16 @@ MLIB_EXPORT void __cdecl MagicFx_CenterOnSide(void) {
         const unsigned actor = enemies ? i + 3 : i;
         if (MH_CALL(Battle_ActorIsOut)(actor) != 0) continue;
         const unsigned char* const r = ActorRecord(actor);
-        sx += static_cast<std::uint32_t>(Long(r + 0x34) >> 9);
-        sz += static_cast<std::uint32_t>(Long(r + 0x38) >> 9);
+        sx += static_cast<std::uint32_t>(rv::As<records::SpriteHead>(r)->x >> 9);
+        sz += static_cast<std::uint32_t>(rv::As<records::SpriteHead>(r)->z >> 9);
         sy += static_cast<std::uint32_t>(static_cast<int>(S16(r + 0x3E)));
         ++n;
     }
     if (n == 0) bof3::Fatal("MagicFx_CenterOnSide: every actor of the side is out - the original divides by zero");
-    SetLong(Sprite_Current + 0x34, I32(static_cast<std::uint32_t>(I32(sx) / n) << 9));
-    SetLong(Sprite_Current + 0x38, I32(static_cast<std::uint32_t>(I32(sz) / n) << 9));
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(I32(sy) / n));
+    // SpriteHead, not BattleTask: Boss38_Setup runs this on enemy object 7 (B1 magic audit W1).
+    rv::Store(rv::Current<records::SpriteHead>()->x, I32(static_cast<std::uint32_t>(I32(sx) / n) << 9));
+    rv::Store(rv::Current<records::SpriteHead>()->z, I32(static_cast<std::uint32_t>(I32(sz) / n) << 9));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(I32(sy) / n));
 }
 
 // original 0x4FC260: BattleActor_FxSize's twin, one byte on: the acting actor
@@ -520,8 +520,8 @@ MLIB_EXPORT unsigned char __cdecl BattleActor_FxSizeB(void) {
 // 4 + (+8 & 3)) * 2 ..], both indices unchecked.
 MLIB_EXPORT void __cdecl MagicFx_FormationOffset(void) {
     const unsigned row = MagicFx_FormationRows[Mem(BattlePhases_B89_addr)[0]] * 4u;
-    Store(ScTask()->vel_x, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2]);
-    Store(ScTask()->vel_y, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2 + 1]);
+    rv::Store(rv::Current<records::BattleTask>()->step_x, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2]);
+    rv::Store(rv::Current<records::BattleTask>()->step_z, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2 + 1]);
 }
 
 void MagicLib_Inject() {

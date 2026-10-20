@@ -49,7 +49,8 @@ void Zero(U address, U bytes) { std::memset(At(address), 0, bytes); }
 
 // --- the globals (display-setup.md section 3) -------------------------------------
 // kDesktopH: now PsxRest_TexCacheEnd (symbols.toml).
-constexpr U kDesktopW = 0x7C9F44, kDesktopBpp = 0x6BE1E0;
+// kDesktopW: now Display_DesktopWidth (symbols.toml).
+// kDesktopBpp: now Display_DesktopBpp (symbols.toml).
 // kTexCache: now Gfx_TexCache (symbols.toml).
 constexpr U kTexCacheBytes = 0x6000;
 // kClutRows: now Gfx_ClutRows (symbols.toml).
@@ -63,9 +64,11 @@ constexpr U kCellCacheBytes = 0x1400;
 // kPixelFormat: now Gfx_PixelFormat (symbols.toml).
 constexpr U kPixelFormatRecord = 0x40;
 // kShadeCache: now D3d_ShadeModeCache (symbols.toml).
-constexpr U kRenderFlags = 0x6C3A4C, kUnread6C3A48 = 0x6C3A48;
+constexpr U kRenderFlags = 0x6C3A4C;
+// kUnread6C3A48: now Display_ZeroedUnread (symbols.toml).
 // kTexCoords: now D3d_TexCoords (symbols.toml).
-constexpr U kDeviceCountLess1 = 0x66B718, kDeviceRecords = 0x6C3A50, kDeviceRecord = 0x13C;
+// kDeviceCountLess1: now Display_DeviceCountLess1 (symbols.toml).
+constexpr U kDeviceRecords = 0x6C3A50, kDeviceRecord = 0x13C;
 constexpr U kModeLists = 0x6BE1E8, kModeListsBytes = 0x810;
 // kDirectDraw: now Dd_DirectDraw (symbols.toml).
 // kClipper: now PsxRest_Clipper (symbols.toml).
@@ -73,7 +76,7 @@ constexpr U kModeLists = 0x6BE1E8, kModeListsBytes = 0x810;
 constexpr U kDirect3D = 0x7CC34C;
 // kScreenRight: now Gfx_ScreenRect[2] (symbols.toml).
 // kScreenBottom: now Gfx_ScreenRect[3] (symbols.toml).
-constexpr U kModeBpp = 0x7CADE0;
+// kModeBpp: now Display_ModeBpp (symbols.toml).
 // kScaleX: now D3d_ScaleX (symbols.toml).
 // kScaleY: now D3d_ScaleY (symbols.toml).
 constexpr U kMaxScale = 8;   // BOF3X_SCALE's range since the backend (render-backend.md)
@@ -85,7 +88,7 @@ constexpr U kDeviceDesc = 0x7CC238, kDeviceDescBytes = 0xFC;
 // kViewport: now D3d_Viewport (symbols.toml).
 // kMaterial: now D3d_BackMaterial (symbols.toml).
 // kMaterialHandle: now D3d_BackMaterialHandle (symbols.toml).
-constexpr U kBackPitch = 0x7DED5C;
+// kBackPitch: now Display_BackPitch (symbols.toml).
 
 // D3DDEVICEDESC fields D3d_FitTextureSize reads (tex-cells.md section 3).
 constexpr U kDescTextureCaps = 0x84, kDescMinW = 0xAC, kDescMinH = 0xB0, kDescMaxW = 0xB4, kDescMaxH = 0xB8;
@@ -174,7 +177,7 @@ void Rescale(U k) {
     if (primary && back) {
         if (!render::ResizeSurface(primary, width, height) || !render::ResizeSurface(back, width, height))
             bof3::Fatal("Display_Setup: out of memory resizing the primary and back surfaces to %u x %u", width, height);
-        PutLong(kBackPitch, back->pitch);
+        Display_BackPitch = back->pitch;
     }
 }
 
@@ -217,9 +220,9 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
 
     // 2.1 the desktop
     HDC dc = GetDC(nullptr);
-    PutLong(kDesktopW, static_cast<U>(GetDeviceCaps(dc, HORZRES)));
+    Display_DesktopWidth = static_cast<U>(GetDeviceCaps(dc, HORZRES));
     PsxRest_TexCacheEnd = static_cast<U>(GetDeviceCaps(dc, VERTRES));
-    PutLong(kDesktopBpp, static_cast<U>(GetDeviceCaps(dc, BITSPIXEL) * GetDeviceCaps(dc, PLANES)));
+    Display_DesktopBpp = static_cast<U>(GetDeviceCaps(dc, BITSPIXEL) * GetDeviceCaps(dc, PLANES));
     ReleaseDC(nullptr, dc);
 
     // 2.2 the caches, reset - every one the original zeroes
@@ -232,7 +235,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     Zero(D3d_CellTexCache_addr, kCellCacheBytes);
     Zero(Gfx_PixelFormat_addr, 3 * kPixelFormatRecord);
     PutLong(kRenderFlags, 0);
-    PutLong(kUnread6C3A48, 0);
+    Display_ZeroedUnread = 0;
     D3d_ShadeModeCache = 0;
 
     // 2.3 the texture coordinates: i / 256 + 0.002 in double, stored as float
@@ -240,7 +243,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
 
     // 2.4 the device records: 0 the original's synthetic software renderer (kept
     // so that F7's name overlay reads it), 1 this backend. No enumeration.
-    if (static_cast<int>(*reinterpret_cast<U*>(At(kDeviceCountLess1))) < 1) {
+    if (static_cast<std::int32_t>(Display_DeviceCountLess1) < 1) {
         Zero(kDeviceRecords, 2 * kDeviceRecord);
         Zero(kModeLists, kModeListsBytes);
         PutLong(kDeviceRecords + 0, 1);
@@ -249,7 +252,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
         PutLong(kDeviceRecords + kDeviceRecord + 0, 1);
         PutLong(kDeviceRecords + kDeviceRecord + 4, 1);
         std::memcpy(At(kDeviceRecords + kDeviceRecord + 0x18), "Direct3D 11 (bof3x)", 20);
-        PutLong(kDeviceCountLess1, 1);
+        Display_DeviceCountLess1 = 1;
     }
     // 2.5 which device: the original wraps an index past the last record to 0
     // and takes record 0 as the software renderer. Here every index is the
@@ -268,7 +271,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     const U width = render::TargetWidth(), height = render::TargetHeight();
     Gfx_ScreenRect[2] = width;
     Gfx_ScreenRect[3] = height;
-    PutLong(kModeBpp, kModeBits);
+    Display_ModeBpp = kModeBits;
     // The game's scale is k, the view's - not the target's width over 320,
     // which a wide target (DIV-0041) would make 1.33k: the game keeps
     // drawing a 320-wide view and the backend shifts it into the target.
@@ -306,7 +309,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     if (kNoAlphaFormat) *reinterpret_cast<U*>(At(Gfx_RenderFlags_addr)) |= 0x20;
     if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<void**>(At(Dd_StageSurface_addr)), 0))
         bof3::Fatal("Display_Setup: the staging surface");
-    PutLong(kBackPitch, back->pitch);
+    Display_BackPitch = back->pitch;
 
     // 2.11 viewport, material, states - through the backend's objects, so that
     // the device holds the same state the original's did

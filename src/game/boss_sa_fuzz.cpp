@@ -27,6 +27,7 @@
 #include "game/boss_sa.h"
 #include "game/boss_sa_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 
 namespace boss_sa {
@@ -88,7 +89,7 @@ void HookWord(U* a) {
 // quarter of the maximum (HP less the signed pending damage at, just above
 // and just below it; the damage negative sometimes).
 void SeedHp(bool quarter) {
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy());
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     if (!quarter) {
         if (bh::Half()) enemy_rec->hp = bh::Half() ? 0xFFFF : bh::Next() % 3 == 0 ? 0xFFFE : 0;
         return;
@@ -162,7 +163,7 @@ void SeedCount(U end) {
 void SeedGary(unsigned k) {
     SeedStates(k);
     if (k == kEndStep) SeedCount(0);
-    if (k == kEndStep || k == kEndStart) Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 4, 6, 0xFB});
+    if (k == kEndStep || k == kEndStart) Mem(Battle_EndFlags_addr)[0] = Byte({0, 1, 2, 4, 6, 0xFB});
 }
 void SeedMogu(unsigned k) {
     SeedStates(k);
@@ -206,7 +207,7 @@ void Seed01(unsigned k) {
         break;
     }
     case kEndHook:
-        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 3, 0xFE, 0x81});
+        Mem(Battle_EndFlags_addr)[0] = Byte({0, 1, 2, 3, 0xFE, 0x81});
         Mem(MoveScript_PartyRecords_addr + 0x65)[0] = Byte({0, 0xFF, 0x31});
         break;
     default:
@@ -247,7 +248,7 @@ void SeedNue(unsigned k) {
     SeedStates(k);
     if (k == kNuePick) SeedHp(false);
     if (k == kNueHit) SeedHp(true);
-    if (k == kNueMove) Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 2, 0xFD, 0xFF});
+    if (k == kNueMove) Mem(Battle_EndFlags_addr)[0] = Byte({0, 2, 0xFD, 0xFF});
 }
 void ArgsNue(unsigned k, U* a) {
     if (k == kNueHook || k == kNuePick || k == kNueHit) HookWord(a);
@@ -299,7 +300,7 @@ const bh::Clone kClones39[] = {
 // The end hooks' 0x904AE8 & 6 (none, bit 1, bit 2, both), the event hook's
 // bit 1; the three cells they write, garbage before.
 void SeedBoss002(unsigned) {
-    Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 4, 6, 0xF9, 0xFB});
+    Mem(Battle_EndFlags_addr)[0] = Byte({0, 1, 2, 4, 6, 0xF9, 0xFB});
 }
 // Fight 2's event hook reads the phase code's low byte for 0: 0 a third of
 // the time, with garbage above the byte half the time.
@@ -353,8 +354,8 @@ void SeedWeretigr(unsigned k) {
         if (bh::Half()) s[0] &= 0xBF;
         break;
     case kWMove:
-        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 2, 0xFD, 0xFF});
-        SetLong(Mem(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>(bh::Often() ? BH_PICK(0, 0xFFFF, 0xFFFFFFFFu, 0x7FFFFFFF) : bh::Next()));
+        Mem(Battle_EndFlags_addr)[0] = Byte({0, 2, 0xFD, 0xFF});
+        SetLong(Mem(Battle_ExpTotal_addr), static_cast<std::int32_t>(bh::Often() ? BH_PICK(0, 0xFFFF, 0xFFFFFFFFu, 0x7FFFFFFF) : bh::Next()));
         break;
     case kWPick:
         SeedHp(false);
@@ -368,7 +369,7 @@ void SeedWeretigr(unsigned k) {
 // disturbance moving 0x939AD8 does not show a re-read). From the hash only.
 void DisturbWeretigr(U h) {
     if ((h >> 8) % 3 != 0) return;
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
     SetWord(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->cue_table)))), h >> 16);
 }
 

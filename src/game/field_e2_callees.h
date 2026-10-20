@@ -24,7 +24,7 @@ constexpr std::uint32_t kTradeCount = bof3::addr::ItemTrade_DrawCount;      // n
 constexpr std::uint32_t kTradeTake = bof3::addr::ItemTrade_TakeNeeds;       // no arguments: the ingredients taken (Inventory_Remove behind a test)
 
 // --- the event records (save block +0xCF0..) ----------------------------------
-constexpr std::uint32_t kPairs = 0x9046D0;           // 60 x 8 bytes: +0 in use, +1 the record it names (1-based)
+// kPairs: now Community_Records (symbols.toml). 60 x 8 bytes: +0 in use, +1 the record it names (1-based)
 constexpr std::uint32_t kPairsEnd = 0x9048B0;
 constexpr std::uint32_t kRecords = 0x9048B0;         // 8 x 8 bytes: +0 kind, +1 key, +3 counted, dword +4 the tally
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags row 0x14: the story flags
@@ -39,9 +39,10 @@ constexpr std::uint32_t kTallyBits = 0x904654;       // a bit array (bit 4 at +0
 // kBiasB: now FieldE2_BiasB (symbols.toml). u8: from the others'
 
 // --- the floor, the leader ---------------------------------------------------------
-constexpr std::uint32_t kCharRecords = 0x903A70;     // CharacterRecords (0xA4 each)
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords (0xA4 each)
 constexpr std::uint32_t kRecordStride = 0xA4;
-constexpr std::uint32_t kEffectSlot = 0x903850;      // DamageScratch's byte: the slope probe's flag; the party-set ids 0x903850..52
+inline auto& kEffectSlot = SharedScratch.b_00;  // SharedScratch's byte: the slope probe's flag; the party-set ids 0x903850..52
+constexpr std::uint32_t kEffectSlot_addr = SharedScratch_addr; // kEffectSlot's address, for the raw accessors that take one
 constexpr std::uint32_t kDirectionSteps = 0x6697B0;  // Field_DirectionSteps: 8 x (dx, dz) dwords
 constexpr std::uint32_t kPaceHeights = 0x66978C;     // s16 per actor id: the ground's offset for a hop
 constexpr std::uint32_t kPaceRises = 0x6697A4;       // u8 per actor id: a step's rise
@@ -55,10 +56,8 @@ constexpr std::uint32_t kObject = 0x905DA0;          // the object record (0xA4)
 constexpr std::uint32_t kButtonsRun = 0x903582;      // u16: the run buttons (save data)
 constexpr std::uint32_t kButtonsLeave = 0x903586;    // u16: the buttons that leave mode 11 (save data)
 // kRunDefault: now FieldE2_RunDefault (symbols.toml). u8: the run toggle
-constexpr std::uint32_t kLeaderX = 0x802D74;         // ObjTrio[0] +0x34 / +0x38 / +0x3C / +0x138
-constexpr std::uint32_t kLeaderZ = 0x802D78;
-constexpr std::uint32_t kLeaderY = 0x802D7C;
-// kLeaderFlags: now ObjTrio[0x138] (symbols.toml).
+// kLeaderX, kLeaderZ, kLeaderY: now ObjTrio[0].x / .z / .height (symbols.toml). ObjTrio[0] +0x34 / +0x38 / +0x3C / +0x138
+// kLeaderFlags: now ObjTrio_addr + 0x138 (symbols.toml).
 constexpr std::uint32_t kInputHeld = 0x905BA6;       // Field_InputHeld
 constexpr std::uint32_t kScriptFlags2 = 0x905BA4;    // Field_ScriptFlags2
 // kKind2Z: now Field_Kind2Z (symbols.toml). Field_Kind2Z / X
@@ -76,7 +75,7 @@ constexpr rdata::Const kQuadWidth{0x5C41F0};       // float: its width
 // --- the party-set error screen -------------------------------------------------------
 constexpr std::uint32_t kErrorTitle = 0x660C90;      // the title line it prints
 constexpr std::uint32_t kErrorFormat = 0x660C7C;     // the three ids' format
-constexpr std::uint32_t kErrorIds = 0x903850;        // the three ids PartySet_Find left
+inline auto& kErrorIds = SharedScratch;  // the three ids PartySet_Find left
 constexpr std::uint32_t kTextScratch = 0x904BA0;
 
 // --- the object triggers, the hooks -------------------------------------------------------
@@ -98,7 +97,7 @@ constexpr std::uint32_t kFieldEC2 = 0x929EC2;
 // kGameMode: now Game_Mode (symbols.toml). Game_Mode (u16)
 // kCondByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kStreamFlag: now AreaW1a_FocusObject (symbols.toml). a pointer to the byte FieldTail_FlagMessage clears
-// kMessageBits: now ScenaSc7_EventFlags (symbols.toml). the bits FieldTail_FlagMessage sets by its argument
+// kMessageBits: now Gene_Bits (symbols.toml). the bits FieldTail_FlagMessage sets by its argument
 // kReturnX: now AreaW2d_ReturnPoint (symbols.toml). FieldTail_StoryWarp's saved leader x, z, area
 // kReturnZ: now AreaW4d_ReturnZ (symbols.toml).
 // kReturnArea: now AreaW4d_ReturnArea (symbols.toml).
@@ -134,7 +133,7 @@ constexpr std::uint32_t kPoolWordAsk = 0x803614;
 // Named data whose symbols.gen.h name is a macro (bof3::addr::<Name> would expand it).
 constexpr std::uint32_t kScenarioHooks = 0x662C80;   // Scenario_Hooks
 // kWorldMapHooks: now WorldMap_FieldHooks (symbols.toml). WorldMap_FieldHooks
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA (u16)
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy (u16)
 // kAreaNumber: now Game_AreaNumber (symbols.toml). Game_AreaNumber (u16)
 // kMapRow: now MapView_Row (symbols.toml). MapView_Row (s16)
 // kMapColumn: now MapView_Column (symbols.toml). MapView_Column (s16)

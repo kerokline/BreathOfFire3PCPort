@@ -36,14 +36,14 @@ using U = std::uint32_t;
 constexpr U kPhase = 0x904AA0;            // u8: Battle_PhaseDispatch's phase
 // kStep: now BattleActions_Step (symbols.toml). u8: the phase's step
 constexpr U kFlags = 0x904AA8;            // u16: the round flags (bit 1, 2, 6, 7 read or set here)
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (Boss_SetupTable's index)
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle (Boss_SetupTable's index)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (read and set by the hooks below)
 constexpr U kOrder = 0x904ACC;            // u8[]: the turn order (battle_damage.md)
 // kRoundSlot: now BossSe_RoundSlot (symbols.toml). u8: the turn order's cursor (battle_actions.md) - the round's count here
 // kOrderCount: now BattleDamage_TurnCount (symbols.toml). u8: the turn order's length
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: 1 / 2 the side that moves first (battle_phases.md), 3 here
-// kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bits 2 and 3 set by hooks here
+// kMusicFlags: now EventBattle_Flags (symbols.toml). u8: bit 0x40 keeps the battle's music
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bits 2 and 3 set by hooks here
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (battle_actions.md)
 constexpr U kTarget = 0x904B44;           // u8: the target (0..2 a member, 3..10 an enemy)
@@ -57,7 +57,7 @@ constexpr U kEnd21 = bof3::addr::Boss21_End;            // set-up 21 / 23's end 
 
 // --- the enemies' objects (0x93B960 + n * 0x128), the offsets used ------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
-constexpr U kEnemy0 = 0x93B960;           // enemy 0's object
+// kEnemy0: now Battle_Enemies (symbols.toml). enemy 0's object
 constexpr U kEnemy0State1 = 0x93B961;     // its +1
 constexpr U kEnemy0State2 = 0x93B962;     // its +2
 constexpr U kEnemy0Flag8E = 0x93B9EE;     // its +0x8E
@@ -78,19 +78,19 @@ constexpr U kEnemy0Flags = 0x93BA70;      // its +0x110 (u32)
 // kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
 // kMsgMode: now BossSa_WindowPass (symbols.toml). u8: set to 2 before each Msg_OpenScript here (its reader not read)
-// kMember0State1: now ObjTrio[1] (symbols.toml). member 0's +1
-// kMember0State2: now ObjTrio[2] (symbols.toml). member 0's +2
-// kMember0Hp: now ObjTrio[0x98] (symbols.toml). member 0's +0x98 (u16 HP, battle_phases.md)
-// kMember0Ap: now ObjTrio[0x9a] (symbols.toml). member 0's +0x9A (u16 AP)
-// kMember0Bc: now ObjTrio[0xbc] (symbols.toml). member 0's +0xBC
-// kMember0Ba: now ObjTrio[0xba] (symbols.toml). member 0's +0xBA
-// kMember0MaxHp: now ObjTrio[0xa0] (symbols.toml). member 0's +0xA0 (u16 max HP)
-// kMember0MaxAp: now ObjTrio[0xa2] (symbols.toml). member 0's +0xA2 (u16)
-// kMember0Target: now ObjTrio[0x124] (symbols.toml). member 0's +0x124
-// kMember0Action: now ObjTrio[0x125] (symbols.toml). member 0's +0x125 (battle_windows.md: the action)
-// kMember0Skill: now ObjTrio[0x126] (symbols.toml). member 0's +0x126 (u16: the skill)
-// kMember0Word128: now ObjTrio[0x128] (symbols.toml). member 0's +0x128 (s16; +0x128 of the member a target names)
-// kMember0Word12A: now ObjTrio[0x12a] (symbols.toml). member 0's +0x12A
+// kMember0State1: now ObjTrio[0].state (symbols.toml). member 0's +1
+// kMember0State2: now ObjTrio[0].step (symbols.toml). member 0's +2
+// kMember0Hp: now ObjTrio[0].hp (symbols.toml). member 0's +0x98 (u16 HP, battle_phases.md)
+// kMember0Ap: now ObjTrio[0].ap (symbols.toml). member 0's +0x9A (u16 AP)
+// kMember0Bc: now ObjTrio_addr + 0xbc (symbols.toml). member 0's +0xBC
+// kMember0Ba: now ObjTrio_addr + 0xba (symbols.toml). member 0's +0xBA
+// kMember0MaxHp: now ObjTrio[0].max_hp (symbols.toml). member 0's +0xA0 (u16 max HP)
+// kMember0MaxAp: now ObjTrio[0].max_ap (symbols.toml). member 0's +0xA2 (u16)
+// kMember0Target: now ObjTrio_addr + 0x124 (symbols.toml). member 0's +0x124
+// kMember0Action: now ObjTrio_addr + 0x125 (symbols.toml). member 0's +0x125 (battle_windows.md: the action)
+// kMember0Skill: now ObjTrio_addr + 0x126 (symbols.toml). member 0's +0x126 (u16: the skill)
+// kMember0Word128: now ObjTrio_addr + 0x128 (symbols.toml). member 0's +0x128 (s16; +0x128 of the member a target names)
+// kMember0Word12A: now ObjTrio_addr + 0x12a (symbols.toml). member 0's +0x12A
 
 // --- set-up 25's save of member 0's HP and AP (one byte each) -----------------
 // kSavedAp: now BossSe_SavedAp (symbols.toml). u8 (.data)

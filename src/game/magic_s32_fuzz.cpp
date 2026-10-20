@@ -169,7 +169,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 // The group's cells (magic_s32.cpp).
 // kV: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kS = 0x903850;
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kPool: now WallOfFire_Pool (symbols.toml).
 constexpr std::uint32_t kRecord = 0x84;
 constexpr unsigned kPoolCount = 48;
@@ -287,7 +287,7 @@ mh::Region g_regions[] = {
     {0, kPrimBytes},                // g_prims (filled in at start-up)
     {0, sizeof g_centre},           // g_centre (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
-    {kS, 0x10},                     // 0x903850..
+    {kS, 0x10},     // 0x903850..
     {WallOfFire_Pool_addr, kPoolCount * kRecord}, // WallOfFire_Pool
     {EyeBeam_State_addr, kBeamBytes}, // EyeBeam_State, _Sparks, _SparkCurrent, _SpiralPoints
     {0x80E980, 0x20},               // Gfx_ClutStripSource row 26, the first sixteen

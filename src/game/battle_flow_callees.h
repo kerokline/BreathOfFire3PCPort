@@ -36,14 +36,14 @@ namespace at {
 constexpr std::uint32_t kTasks = 0x93A000;
 constexpr std::uint32_t kTaskSize = 0x84;
 constexpr unsigned kTaskCount = 0x30;
-constexpr std::uint32_t kTaskCurrent = 0x93B8C4;  // unsigned char*: the slot being run (PSX 0x801EC250)
+// kTaskCurrent: now BattleFlow_TaskCurrent (symbols.toml). unsigned char*: the slot being run (PSX 0x801EC250)
 constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80
 // The eight enemy objects, 0x128 bytes each (the working record, PSX
 // 0x801EB620, is +0x80 of each; kinship-probe-battle-engine.md).
-constexpr std::uint32_t kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemySize = 0x128;
 constexpr unsigned kEnemyCount = 8;
-constexpr std::uint32_t kEnemyCurrent = 0x939AD8;  // unsigned char*: the enemy being run (PSX 0x801EB458)
+// kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). unsigned char*: the enemy being run (PSX 0x801EB458)
 // kEnemyStates: now BattleEnemy_States (symbols.toml). code pointers by +0x100; 0x64B088 in an event battle
 // The battle's globals (PSX 0x801462E0..).
 constexpr std::uint32_t kPhase = 0x904AA0;         // dword; its low byte picks Battle_PhaseDispatch's entry
@@ -52,11 +52,11 @@ constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
 // other battle code (pe_xref.py, 48 references), so a number, not a flag;
 // "event battle" is a guess from what it switches on here (the hook below,
 // the enemies' +0xF4 hooks and the shifted state table)
-// kEventBattle: now BattleActions_EventBattle (symbols.toml).
-// kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8 (PSX 0x801462EF)
+// kEventBattle: now EventBattle_Id (symbols.toml).
+// kEnemiesLeft: now Battle_EnemiesLeft (symbols.toml). u8 (PSX 0x801462EF)
 constexpr std::uint32_t kDropCount = 0x904AE7;     // u8, at most 15 (PSX 0x80146323)
 constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8, |= 2 when the last enemy falls (PSX 0x80146324)
-// kExpTotal: now BattleFlow_ExpTotal (symbols.toml). dword (PSX 0x80146328)
+// kExpTotal: now Battle_ExpTotal (symbols.toml). dword (PSX 0x80146328)
 // kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml). dword (PSX 0x8014632C)
 constexpr std::uint32_t kDropItems = 0x904AF4;     // u16 x 16 (PSX 0x80146330)
 constexpr std::uint32_t kDropCounts = 0x904B14;    // u8 x 16 (PSX 0x80146350)

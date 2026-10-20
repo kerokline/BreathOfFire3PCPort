@@ -25,7 +25,7 @@ constexpr std::uint32_t kVar5 = 0x90384A;
 constexpr std::uint32_t kVar6 = 0x90384B;
 // A byte the effect handlers keep their Effect_FindFree slot in (read back
 // as a dword and masked).
-constexpr std::uint32_t kEffectSlot = 0x903850;
+constexpr std::uint32_t kEffectSlot = SharedScratch_addr;
 // The field mode's tail kind (Field_ModeTailKinds 0x662CE8 by this s8) and
 // the byte beside it the tail phases read.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
@@ -33,13 +33,13 @@ constexpr std::uint32_t kEffectSlot = 0x903850;
 // The story flags (Cond_Flags + 0xA0): Flags_Set's bits.
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // The dword holding the flag bits the chapter's Flags_Test calls are given.
-// kFlagBank: now AreaW0c_FlagRow (symbols.toml).
+// kFlagBank: now Chapter_FlagRow (symbols.toml).
 // A byte area 3's choice handlers set to 6 with the message 0x44.
 // kByte9398CF: now AreaW0c_AnswerMark (symbols.toml).
 // The scene's timer (u16, docs/field-modes.md).
 // kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml).
 // Field object 6's x (Sprite_Objects + 6 * 0xA4 + 0x34), a dword.
-// kObject6X: now Sprite_Objects[0x40c] (symbols.toml).
+// kObject6X: now Sprite_Objects[6].x (symbols.toml).
 // Text_Records, where Crt_sprintf writes the message's parameter, and the
 // format area 8's handlers 1 and 2 give it (Area08_MessageFormat).
 constexpr std::uint32_t kTextRecords = 0x904CE0;

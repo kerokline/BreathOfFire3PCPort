@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -11,7 +12,7 @@ namespace {
 
 constexpr unsigned kMemberSize = 0x14C;
 constexpr unsigned kStateSize = 0xA4;
-static_assert(Field_Members_count == kMemberSize);
+static_assert(sizeof(records::PartyMember) == kMemberSize);
 static_assert(Field_ActorStates_count == kStateSize);
 
 // --- BOF3X_SHADOW=field_input: a differential fuzz, once at start-up -----------
@@ -28,7 +29,7 @@ using CopyFn = void (__cdecl*)();
 void SelfTest(CopyFn theirs) {
     constexpr unsigned kRounds = 8000;
     static unsigned char saved_members[kFuzzMembers * kMemberSize], saved_states[256 * kStateSize];
-    std::memcpy(saved_members, Field_Members, sizeof saved_members);
+    std::memcpy(saved_members, (rv::Bytes(ObjTrio) + 0x148), sizeof saved_members);
     std::memcpy(saved_states, Field_ActorStates, sizeof saved_states);
     const unsigned char saved_flags = Field_InputFlags, saved_count = Field_MemberCount;
     std::uint32_t saved_held;   // the original reads it as a dword; the fuzz sets all four bytes
@@ -42,7 +43,7 @@ void SelfTest(CopyFn theirs) {
     for (unsigned round = 0; round < kRounds; ++round) {
         for (unsigned i = 0; i < 256; ++i)
             Field_ActorStates[i * kStateSize] = static_cast<unsigned char>(next() % 6 == 0 ? next() | 0x20u : next() & ~0x20u);
-        for (unsigned i = 0; i < kFuzzMembers; ++i) Field_Members[i * kMemberSize] = static_cast<unsigned char>(next());
+        for (unsigned i = 0; i < kFuzzMembers; ++i) ObjTrio[i].char_index = static_cast<unsigned char>(next());
         Field_InputFlags = static_cast<unsigned char>(next());
         Field_MemberCount = static_cast<unsigned char>(next() % (kFuzzMembers + 1));
         const std::uint32_t held = next();
@@ -58,14 +59,14 @@ void SelfTest(CopyFn theirs) {
         if (ours != static_cast<unsigned short>(held)) ++exchanged;
         if (Field_InputFlags & 1) {
             ++all_members;
-            const bool first = Field_MemberCount != 0 && (Field_ActorStates[Field_Members[0] * kStateSize] & 0x20);
+            const bool first = Field_MemberCount != 0 && (Field_ActorStates[ObjTrio[0].char_index * kStateSize] & 0x20);
             if (first != (ours != static_cast<unsigned short>(held)) ) ++first_disagrees;
         }
         if (their_out != ours && ++bad <= 8)
             bof3::Log("shadow      Field_CopyInput self-test MISMATCH round %u: held 0x%08X flags 0x%02X count %u: "
                       "0x%04X vs ours 0x%04X", round, held, Field_InputFlags, Field_MemberCount, their_out, ours);
     }
-    std::memcpy(Field_Members, saved_members, sizeof saved_members);
+    std::memcpy((rv::Bytes(ObjTrio) + 0x148), saved_members, sizeof saved_members);
     std::memcpy(Field_ActorStates, saved_states, sizeof saved_states);
     Field_InputFlags = saved_flags;
     Field_MemberCount = saved_count;
@@ -78,7 +79,7 @@ void SelfTest(CopyFn theirs) {
 }
 
 bool HasState20(unsigned member) {
-    return (Field_ActorStates[Field_Members[member * kMemberSize] * kStateSize] & 0x20) != 0;
+    return (Field_ActorStates[(rv::Bytes(ObjTrio) + 0x148)[member * kMemberSize] * kStateSize] & 0x20) != 0;
 }
 
 }  // namespace

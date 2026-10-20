@@ -21,6 +21,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2a.h"
 #include "game/rest_2a_callees.h"
@@ -31,9 +32,6 @@
 namespace rest_2a {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -221,7 +219,7 @@ void SeedSprite(unsigned char* s) {
     s[8] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 8 : sh::Next());
     s[0xB] = static_cast<unsigned char>(sh::Next() % 6 == 0 ? 0xFF : sh::Next() % 20);
     s[0x24] = static_cast<unsigned char>(PickOf(0, 0x10, sh::Next()));
-    SpriteRec(s)->column = sh::Often() ? Records()[(sh::Next() % 17) * 8 + 7] : PickOf(0x100, sh::Next());
+    rv::As<records::SpriteObject>(s)->column = sh::Often() ? Records()[(sh::Next() % 17) * 8 + 7] : PickOf(0x100, sh::Next());
     s[0x5D] = static_cast<unsigned char>(PickOf(0, 0xB0, 0xF0, 0x10, sh::Next()));
     s[0xA0] = static_cast<unsigned char>((sh::Half() ? 0x7F : sh::Next() % 7) | (sh::Half() ? 0x80 : 0));
 }
@@ -242,10 +240,10 @@ void Seed(unsigned k) {
     const sh::Clone& c = kAll[k];
     SeedBanks();
     for (unsigned i = 0; i < 30; ++i) {
-        unsigned char* const s = Sprite_Objects + i * 0xA4;
+        unsigned char* const s = rv::Bytes(&Sprite_Objects[i]);
         if (i < 4 || sh::Next() % 4 == 0) SeedSprite(s);
     }
-    for (unsigned i = 0; i < 8; ++i) SeedRecord(sh::Mem(bof3::addr::CharacterRecords + i * at::kRecordStride));
+    for (unsigned i = 0; i < 8; ++i) SeedRecord(sh::Mem(CharacterRecords_addr + i * at::kRecordStride));
     Field_State[0x148] = static_cast<unsigned char>(sh::Next() % 8);
     // the active member: a sprite record (Sprite_Current itself a third of the
     // time); Area_ObjectHandler's area 74 (its table is a DataTable here)
@@ -256,7 +254,7 @@ void Seed(unsigned k) {
     // each sprite record's effect record in use or not, about half and half
     for (unsigned i = 0; i < 4; ++i) {
         const unsigned e = sh::SpriteRecord(i)[0xB];
-        if (e < 20) Effect_Objects[e * 0x80] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+        if (e < 20) Effect_Objects[e].flags = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
     }
     unsigned char* const s = Sprite_Current;
     if (const unsigned n = StatesOf(c.base)) s[4] = static_cast<unsigned char>(sh::Next() % n);
@@ -274,7 +272,7 @@ void Seed(unsigned k) {
     }
 }
 
-// The record helpers' member byte below MoveScript_EffectState's 24 (past it
+// The record helpers' member byte below Character_IndexById's 24 (past it
 // both read the .data after it unchecked), the amount at the HP / AP edges;
 // Area_ObjectHandler's (short) n inside Area_ObjectFallbacks' 11 under random
 // upper bytes; the spawns' sub-kind any dword.
@@ -307,7 +305,7 @@ void Disturb(U h) {
     case 4: s[0x5D + v % 3] = static_cast<unsigned char>(v >> 2); break;
     case 5: Field_ActiveMember = sh::SpriteRecord(v); break;
     case 6: Field_ActiveMember[0xA0] = static_cast<unsigned char>(Field_ActiveMember[0xA0] ^ 0x80); break;
-    case 7: Effect_Objects[((v >> 1) % 20) * 0x80] = static_cast<unsigned char>(v & 1); break;
+    case 7: Effect_Objects[(v >> 1) % 20].flags = static_cast<unsigned char>(v & 1); break;
     case 8: Field_Request = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
     case 9: Draw_OtSlot = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 10: Records()[(v % 17) * 8 + 7] = static_cast<unsigned char>(v >> 5); break;

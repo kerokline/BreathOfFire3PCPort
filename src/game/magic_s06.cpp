@@ -36,6 +36,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -59,7 +60,7 @@ constexpr std::uint32_t kAbility = 0x904B80;        // u16: the ability being ca
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetSlash = 0x8C5D80;
-constexpr std::uint32_t kShade = 0x903852;          // u16: DamageScratch +2, Magic020_DrawFade's shade
+constexpr std::uint32_t kShade = 0x903852;          // u16: SharedScratch +2, Magic020_DrawFade's shade
 // kDashOffsets: now Magic008Dash_Offsets (symbols.toml). Magic008Dash_Offsets: 3 x (dword dx, dword dz)
 constexpr unsigned kDashOffsetCount = 3;
 // kSlashAnimations: now Magic020Slash_Animations (symbols.toml). Magic020Slash_Animations: 12 bytes to the next table
@@ -74,10 +75,6 @@ constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf
 // Magic008Dash_Run's stack table names S04's KickImage_Tick (ours now).
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
@@ -89,12 +86,12 @@ void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
 void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + v)); }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The acting actor's record as the originals index it: a member below 3, else
 // the enemy by index - 3, unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor < 3) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
 }
 // A battle actor's state byte +1, as the reaction steps read it.
 unsigned char ActorState(unsigned char actor) { return ActorRecord(actor)[1]; }
@@ -113,7 +110,7 @@ unsigned char* MakeDouble(unsigned parameter, unsigned char body) {
     const unsigned slot = NewTask(parameter);
     const unsigned char* const from = ActorRecord(ActorByte());
     unsigned char* const to = TaskSlot(slot);
-    records::BattleTask* const tto = reinterpret_cast<records::BattleTask*>(to);
+    records::BattleTask* const tto = rv::As<records::BattleTask>(to);
     for (unsigned k = 0; k < 0x80; k += 4) SetLong(to + k, Long(from + k));
     tto->owner = static_cast<std::int32_t>(Key(Sc()));
     to[1] = body;
@@ -125,15 +122,15 @@ unsigned char* MakeDouble(unsigned parameter, unsigned char body) {
 
 // Sprite_Current's position (+0x34..+0x3C) from `from`, read afresh.
 void CopyPosition(const unsigned char* from) {
-    Store(ScTask()->x, Long(from + 0x34));
-    Store(ScTask()->y, Long(from + 0x38));
-    SetLong(Sc() + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(from)->height);
 }
 // The same from the owner, the owner read again for each word.
 void CopyOwnerPosition() {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
 }
 // The sprite's colour +0x5D..+0x5F, each moved by `by` (a byte).
 void AddColour(unsigned by) {
@@ -213,7 +210,7 @@ S06_EXPORT void __cdecl Magic008_Apply(void) {
         const unsigned char took = MH_CALL(MagicFx_ApplyBuff)(MagicFx_BuffStats[Sc()[4] & 3], TargetByte());
         const unsigned slot = NewTask(0x48);
         unsigned char* const popup = TaskSlot(slot);
-        records::BattleTask* const tpopup = reinterpret_cast<records::BattleTask*>(popup);
+        records::BattleTask* const tpopup = rv::As<records::BattleTask>(popup);
         unsigned char* const sc = Sc();
         tpopup->owner = static_cast<std::int32_t>(Key(sc));
         popup[4] = took != 0 ? sc[4] : 8;
@@ -260,8 +257,8 @@ S06_EXPORT void __cdecl Magic008Grow_Run(void) {
 
 // original 0x4A24E0: the scale +0x40 / +0x44 0x10000, +0x48 2, +9 0x1E, +2 on.
 S06_EXPORT void __cdecl Magic008Grow_Start(void) {
-    SetLong(Sc() + 0x40, 0x10000);
-    SetLong(Sc() + 0x44, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x10000);
     Sc()[0x48] = 2;
     Sc()[9] = 0x1E;
     Inc(Sc()[2]);
@@ -331,11 +328,11 @@ S06_EXPORT void __cdecl Magic008Glow_Start(void) {
     Sc()[0x5D] = 0x80;
     Sc()[0x5E] = 0x80;
     Sc()[0x5F] = 0x80;
-    SetLong(Sc() + 0x34, Field_Kind2X);
-    SetLong(Sc() + 0x38, Field_Kind2Z);
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
-    SetLong(Sc() + 0x40, 0x18000);
-    SetLong(Sc() + 0x44, 0x28000);
+    rv::Store(rv::Current<records::BattleTask>()->x, Field_Kind2X);
+    rv::Store(rv::Current<records::BattleTask>()->z, Field_Kind2Z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x18000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x28000);
     Sc()[0x48] = 2;
     Sc()[0x27] = Owner()[0x27];
     MH_CALL(Sound_PlayById)(0x100);
@@ -519,11 +516,11 @@ S06_EXPORT void __cdecl Magic008Dash_Start(void) {
     Sc()[8] = Owner()[8];
     CopyOwnerPosition();
     unsigned char* const sc = Sc();
-    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+    records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     const unsigned index = sc[0xB];
     if (index >= kDashOffsetCount) bof3::Fatal("Magic008Dash_Start: +0xB %u, past the %u offsets", index, kDashOffsetCount);
-    tsc->vel_x = Long(Mem(Magic008Dash_Offsets_addr + 8 * index));
-    tsc->vel_y = Long(Mem(Magic008Dash_Offsets_addr + 8 * index + 4));
+    tsc->step_x = Long(Mem(Magic008Dash_Offsets_addr + 8 * index));
+    tsc->step_z = Long(Mem(Magic008Dash_Offsets_addr + 8 * index + 4));
     MH_AT(void (__cdecl*)(unsigned char*), kTurnOffset)(Sc());
     const unsigned char size = MH_CALL(BattleActor_FxSize)();
     Sc()[9] = size;
@@ -533,15 +530,15 @@ S06_EXPORT void __cdecl Magic008Dash_Start(void) {
 namespace {
 // The dashing double's position: the owner's plus its offset (+0xC, +0x10).
 void BesideOwner() {
-    Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
-                                                    static_cast<std::uint32_t>(ScTask()->vel_x)));
-    Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
-                                                    static_cast<std::uint32_t>(ScTask()->vel_y)));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x) +
+                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z) +
+                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
 }
 // On the owner (x, z only).
 void OnOwner() {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
 }
 }  // namespace
 
@@ -770,7 +767,7 @@ S06_EXPORT void __cdecl Magic020_Darken(void) {
         const unsigned slot = NewTask(0x2E);
         unsigned char* const sc = Sc();
         unsigned char* const slash = TaskSlot(slot);
-        records::BattleTask* const tslash = reinterpret_cast<records::BattleTask*>(slash);
+        records::BattleTask* const tslash = rv::As<records::BattleTask>(slash);
         tslash->owner = static_cast<std::int32_t>(Key(sc));
         slash[1] = 2;
         slash[2] = 0;
@@ -964,7 +961,7 @@ S06_EXPORT void __cdecl Magic020Slash_Start(void) {
     Sc()[0x25] = 0x1D;
     Sc()[0x26] = 0;
     Sc()[0x24] = 0x84;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
     Sc()[0x28] = 0;
     {

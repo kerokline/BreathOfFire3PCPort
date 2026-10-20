@@ -183,7 +183,7 @@ one of the fourteen entries of the jump table `0x426408`:
 | `0x15` | `Party_DropIn(8)`, state `0x18` |
 | `0x18` | variable 6 `0x54`: by variable 5 (read once) - 0: variable 6 = 0, `ScriptFlags_Clear40`, `Field_ChangeArea(0xA7, 0x1A8000, 0x560000, 5)`, flags `0x48`, `0x49` cleared; 1: `(0xA7, 0x200000, 0xF0000, 0x83)`, `0x48` set, `0x49` cleared; 2: `(0xA7, 0x290000, 0x8B0000, 0x84)`, `0x48` cleared, `0x49` set; then `Sound_PlayEffect(0x205)` with `Cond_ByteFD` 0, flag `0x4A` set, state `0xC` |
 | `0x1E` | state `0x1F` |
-| `0x1F` | `MoveScript_WaitWordDA` 0: `Cond_ByteFE = 0x20`, the countdown `0x1E`, state `0x20` |
+| `0x1F` | `Transition_Busy` 0: `Cond_ByteFE = 0x20`, the countdown `0x1E`, state `0x20` |
 | `0x20` | the countdown - 1; at 0 `ScriptFlags_Clear40`, flag `0x90` set, `Field_ChangeArea(0xA8, 0x150000, 0x40000, 7)`, `Field_ScriptFlags2`'s low byte `|= 0x40`, kind and state 0 |
 | others (2..4, 7..9, `0xD..0x13`, `0x16`, `0x17`, `0x19..0x1D`) | nothing |
 
@@ -309,7 +309,7 @@ alone (the controls script's shortcut).
   variable 5 0..2 and 3, `0x80`, `0xFF`. The tail: a state with a body two
   rounds in three with its wait value in variable 6 two times in three (or
   one off), else any state and the range's edges and sign; the countdown
-  1, 2, 0, `0xFFFF`; `MoveScript_WaitWordDA` 0 or not. The arrive hook's
+  1, 2, 0, `0xFFFF`; `Transition_Busy` 0 or not. The arrive hook's
   positions with high words at and around `0x14..0x16` / `0x66`; the cell
   hook's the switch's bytes (with bits above, one off, or anything) and the
   leader's facing the switch's nibble, or that nibble with a bit above, or

@@ -141,7 +141,7 @@ unsigned char BattleEndByte() {
 void Disturb(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 5) {
-    case 0: bh::SetPointer(0x929ED0, Mem(0x903F90 + 8 * (v % 40))); break;
+    case 0: bh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * (v % 40))); break;
     case 1: bh::Pointer(BattleE3_CurrentEnemy_addr)[5] = Byte(v); break;
     case 2: Sprite_Current[9 + (v & 1)] = Byte(v >> 1); break;
     case 3: bh::Pointer(BattleE2_Owner_addr)[1 + (v & 1)] = Byte(v >> 1); break;
@@ -286,13 +286,13 @@ void SeedK58(unsigned k) {
 void SeedSetup(unsigned k) {
     switch (g_clones[k].shape) {
     case S::kEnd:
-        B(BattleActions_BattleEnd_addr) = BattleEndByte();
+        B(Battle_EndFlags_addr) = BattleEndByte();
         break;
     case S::kSetup:
         if (g_clones[k].base == 0x43EE50) {
             // set-up 38: enemy 7's place and the centre an odd signed step apart
             // (the halving toward zero each way), or anywhere
-            unsigned char* const e7 = Mem(at::kEnemy7);
+            unsigned char* const e7 = Mem(Battle_Enemies_addr + 0x818);
             const U cx = static_cast<U>(Long(Mem(BossSi_CentreX_addr)));
             const U cz = static_cast<U>(Long(Mem(BossSi_CentreZ_addr)));
             if (bh::Often()) SetLong(e7 + 0x34, static_cast<std::int32_t>(cx + BH_PICK(1, 0xFFFFFFFFu, 3, 0xFFFFFFFDu, 0x7FFFFFFF, 0x80000000u, 0)));
@@ -360,7 +360,7 @@ void SeedF7(unsigned k) {
     switch (k) {
     case kF7Dispatch: s[1] = Byte(bh::Next() % 4); break;
     case kF7Start:
-        B(at::kEnemy0Type) = TypeByte();
+        B(Battle_Enemies_addr + 0xf0) = TypeByte();
         if (bh::Half()) s[1] = Byte(BH_PICK(0, 0xFF, 0x7F));
         break;
     case kF7Count:

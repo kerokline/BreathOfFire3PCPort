@@ -44,7 +44,7 @@ template <typename... T> U PickOf(T... v) {
 unsigned char& B(U a) { return *sh::Mem(a); }
 void SetW(U a, U v) { SetWord(sh::Mem(a), v); }
 void SetL(U a, U v) { SetLong(sh::Mem(a), static_cast<std::int32_t>(v)); }
-U Rec(unsigned k) { return at::kMembers + 8 * k; }
+U Rec(unsigned k) { return Community_Records_addr + 8 * k; }
 U SlotAt(unsigned s) { return at::kSlots + 8 * s; }   // s 1..8
 
 // --- the clone table (band_rows.py --group R4B --clones --harness scenario, 2026-10-05) ---

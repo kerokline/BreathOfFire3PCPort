@@ -30,9 +30,9 @@ constexpr std::uint32_t kPlayClock = 0x9040C8;      // four bytes zeroed startin
 // kPartyCombo: now AreaW0b_PartySet (symbols.toml). 0xFF when the demo ends (PSX 0x80145020)
 // kMusicTrack: now Music_Track (symbols.toml). the track Music_Play last started, 0xFF none
 constexpr std::uint32_t kScenarioBytes = 0x8034E0;  // Cond_ByteFA and the nine bytes after it (PSX 0x8014686C)
-// kScenarioFlags: now AreaW0c_FlagRow (symbols.toml). the address of the chapter's Cond_Flags dword (PSX 0x80146868)
+// kScenarioFlags: now Chapter_FlagRow (symbols.toml). the address of the chapter's Cond_Flags dword (PSX 0x80146868)
 // kSubState: now ScenaSc7_DrawPool (symbols.toml). the dispatcher 0x56D8B0's bytes (PSX 0x801448E4)
-constexpr std::uint32_t kSubInitTable = 0x662CD8;   // 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
+// kSubInitTable: now Scenario_SubInitTable (symbols.toml). 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, where they go (PSX 0x80144F24)
 constexpr std::uint32_t kDemoEntry = bof3::addr::Field_Task;      // task 0's entry for the demo (the field task)
 constexpr std::uint32_t kMenuEntry = bof3::addr::TitleTask_Run;      // task 0's entry for the title menu
@@ -189,7 +189,7 @@ extern "C" void __cdecl Title_StateLogo(void) {
 // past its own. Scenario_Start runs on task 1's stack and may sleep there
 // while its DAT loads (on the PC it never does).
 extern "C" void __cdecl Title_StateStartDemo(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     Title_Fade = 0;
     Title_LogoState = 0;
     Title_StartArmed = 0;
@@ -218,7 +218,7 @@ extern "C" void __cdecl Title_StateDemo(void) {
         Title_State = 0;
         return;
     }
-    if (g.load_done() != 0 && MoveScript_WaitWordDA == 0 && (Input_Pressed & 0x800) != 0) {
+    if (g.load_done() != 0 && Transition_Busy == 0 && (Input_Pressed & 0x800) != 0) {
         MoveScript_Var7 = 1;
         g.transition(4);
         g.music_fade_stop(8);
@@ -248,7 +248,7 @@ extern "C" void __cdecl Title_StateDemoEnd(void) {
 // stack, abandoning task 1's (this frame included). A stand-in that returns
 // makes this return, as the original's jump would to its caller.
 extern "C" void __cdecl Title_StateMenu(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     g.stop_music();
     g.dropped(0);
     g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kMenuEntry)));
@@ -282,7 +282,7 @@ extern "C" void __cdecl Title_StopMusic(void) {
 // cursor read for the draw mode at the call. The PSX asks a video-mode
 // function for the tpage; the port always takes 0x9D.
 extern "C" void __cdecl Title_DrawBadge(void) {
-    if (Field_Request == 5 && Game_Mode == 2 && MoveScript_WaitWordDA == 0) Title_BadgeOn = 0;
+    if (Field_Request == 5 && Game_Mode == 2 && Transition_Busy == 0) Title_BadgeOn = 0;
     if (Draw_PassFlags == 0 || Title_BadgeOn == 0) return;
     g.draw_mode(Gfx_PacketNext, 0, 0, 0x9D, 0);
     g.commit(2, 0xC);
@@ -414,7 +414,7 @@ extern "C" void __cdecl Scenario_Start(int chapter) {
     SetWord(s + 8, 0);
     const std::uint32_t flags = kCondFlags + static_cast<std::uint32_t>(8 * static_cast<int>(c));
     SetLong(At(flags), 0);
-    AreaW0c_FlagRow = static_cast<std::int32_t>(flags);
+    Chapter_FlagRow = static_cast<std::int32_t>(flags);
     g.scenario_load();
     while (g.load_done() == 0) {
         if (Game_AreaNumber != 0xFFFF && Field_Request != 5) g.loading_frame();
@@ -447,7 +447,7 @@ extern "C" void __cdecl Scenario_SubInit(void) {
     s[5] = 0;
     s[1] = 0;
     SetWord(s + 8, 0);
-    for (unsigned i = 0; i < 16; i += 4) SetLong(At(Cond_Flags_addr + 0xa0 + i), Long(At(kSubInitTable + i)));
+    for (unsigned i = 0; i < 16; i += 4) SetLong(At(Cond_Flags_addr + 0xa0 + i), Long(At(Scenario_SubInitTable_addr + i)));
 }
 
 namespace {
@@ -679,17 +679,17 @@ const Clone kClones[kCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {bof3::addr::Task_Records, 0x48},   // task 0's state, Field_Request, Game_Mode, task 1's words,
-                                        // MoveScript_WaitWordDA
+                                        // Transition_Busy
     {0x7E1BEC, 4},                      // Input_Pressed, read as a dword
     {0x7E0918, 1},                      // Draw_PassFlags
     {0x937F90, 1},                      // Gfx_ClutStripDirty
     {kScenarioBytes, 0x10},             // Cond_ByteFA .. Field_EdgeBitsPrev
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {ScenaSc7_DrawPool_addr, 0x10},
     {0x903F90 - 0x400, 0x808},          // Cond_Flags - 0x400: every chapter's dword, the story flags,
                                         // the play clock, the party combination and the music track
     {0x904EFC, 2},                      // Game_AreaNumber
-    {kSubInitTable, 0x10},
+    {Scenario_SubInitTable_addr, 0x10},
 };
 constexpr unsigned kRegionBytes = 0x48 + 4 + 1 + 1 + 0x10 + 4 + 0x10 + 0x808 + 2 + 0x10;
 
@@ -742,12 +742,12 @@ void Seed(unsigned k, std::uint32_t (&args)[4]) {
         break;
     case kStateStartDemo:
     case kStateMenu:
-        if (Often()) MoveScript_WaitWordDA = 0;
-        else if (Often()) MoveScript_WaitWordDA = static_cast<std::uint16_t>(Next() % 2 ? 0x100 : 1);
+        if (Often()) Transition_Busy = 0;
+        else if (Often()) Transition_Busy = static_cast<std::uint16_t>(Next() % 2 ? 0x100 : 1);
         break;
     case kStateDemo: {
         SetTaskZero(Next() % 4 != 0);
-        if (Often()) MoveScript_WaitWordDA = 0;
+        if (Often()) Transition_Busy = 0;
         static const std::uint16_t kPad[] = {0x800, 0x800, 0xFFFF, 0x7FF, 0xF7FF, 0x1000, 0x400, 0x0};
         if (Often()) Input_Pressed = Pick(kPad, 8);
         break;
@@ -766,7 +766,7 @@ void Seed(unsigned k, std::uint32_t (&args)[4]) {
         static const std::uint16_t kMode[] = {2, 2, 1, 3, 0x102};
         if (Often()) Field_Request = kRequest[Next() % 5];
         if (Often()) Game_Mode = Pick(kMode, 5);
-        if (Often()) MoveScript_WaitWordDA = 0;
+        if (Often()) Transition_Busy = 0;
         if (Often()) Draw_PassFlags = static_cast<unsigned char>(Next() % 2 ? 0 : 1u << (Next() % 8));
         if (Often()) Title_BadgeOn = static_cast<unsigned char>(Next() % 2 ? 0 : 1u << (Next() % 8));
         break;

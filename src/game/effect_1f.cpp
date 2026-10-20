@@ -28,6 +28,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_1f_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -382,8 +383,8 @@ extern "C" unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
 // not put back.
 extern "C" void __cdecl Sprite_UpdateAllScaled(void) {
     constexpr U kStride = 0xA4;
-    const U kEnd = Key(Sprite_Objects) + 30 * kStride;
-    for (U record = Key(Sprite_Objects); record < kEnd; record += kStride) {
+    const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
+    for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
         if (B(record) == 0) continue;
         Sprite_Current = At(record);
         SH_CALL(Sprite_UpdateScreenScaled)();
@@ -394,14 +395,14 @@ extern "C" void __cdecl Sprite_UpdateAllScaled(void) {
 // order record by record; Effect_ReleaseAt(7) .. (19); record 2 +1 = 2.
 extern "C" void __cdecl Effect_ResetFirstSeven(void) {
     for (U record = 0; record <= 6; ++record) {
-        unsigned char* const r = At(Key(Effect_Objects) + record * 0x80);
+        unsigned char* const r = At(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
         r[1] = 0;
         r[2] = 0;
         r[3] = 0;
         r[4] = 0;
     }
     for (unsigned i = 7; i < 0x14; ++i) SH_CALL(Effect_ReleaseAt)(static_cast<unsigned char>(i));
-    Effect_Objects[0x81] = 2;
+    Effect_Objects[1].state = 2;
 }
 
 // original 0x52CE60: the 36-byte record of kind & 0xFF from 0x66A6A0. The

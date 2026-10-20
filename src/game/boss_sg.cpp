@@ -31,6 +31,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_sg_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -47,11 +48,9 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
-records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
-// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
-records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
+// Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
+// the slot in an effect task.
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
@@ -112,9 +111,9 @@ void StoreHooks(U end, U exit, U event) {
 // A kind's entry: 0x939AD8's +0xFC (its animation bytes), +0xF4 (its hook)
 // and +0xF8 (its sound words), 0x939AD8 read for each store.
 void StoreKind(U fc, U f4, U f8) {
-    EnemyRec()->anim_table = S(fc);
-    EnemyRec()->event_hook = S(f4);
-    EnemyRec()->cue_table = S(f8);
+    rv::As<records::BattleEnemy>(Enemy())->anim_table = S(fc);
+    rv::As<records::BattleEnemy>(Enemy())->event_hook = S(f4);
+    rv::As<records::BattleEnemy>(Enemy())->cue_table = S(f8);
 }
 
 // The entry's end: Sprite_Current +1 = 2 (the idle step) and a tail jump to
@@ -128,7 +127,7 @@ unsigned char Idle() {
 // +0x110 |= 0x1000, then the Sprite_Current of after the calls +0 &= 0xBF, +1
 // = 3, +2 = 0, +3 = 0.
 void Fallen() {
-    auto* const enemy_rec = EnemyRec();
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_110 = S(static_cast<U>(enemy_rec->flags_110) | 0x1000u);
     unsigned char* const s = Sprite_Current;
     s[0] &= 0xBF;
@@ -150,7 +149,7 @@ void ActorZero(unsigned animation) {
 
 // An enemy object by a battle index (3..10 an enemy), as the originals index
 // it: 0x93B960 + (index - 3) * 0x128, wrapping - unchecked.
-unsigned char* EnemyByIndex(unsigned index) { return At(at::kEnemies + (index - 3u) * at::kEnemyStride); }
+unsigned char* EnemyByIndex(unsigned index) { return At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride); }
 
 }  // namespace
 
@@ -184,7 +183,7 @@ extern "C" void __cdecl Boss29_Setup(void) {
 // 0x8034E5 = 0x1C, 0x446DE0 (the end phase, step 1) called, then Music_Track =
 // 0x62. Otherwise a tail jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss29_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -255,7 +254,7 @@ extern "C" U __cdecl BossGarr2_ActDispatch(unsigned passed) {
 // not read), Battle_EnemyDefeated, then Fallen.
 extern "C" void __cdecl BossGarr2_Death(void) {
     BH_CALL(Sprite_EnsureAnimation)(1);
-    ScEnemy()->flip = 1;
+    rv::Current<records::BattleEnemy>()->flip = 1;
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
     Fallen();
@@ -274,12 +273,12 @@ extern "C" void __cdecl Boss31_Setup(void) {
 // 0x14 and a tail jump to 0x446DE0 (step 1). Otherwise 0x904AE5 &= 0xBF (the
 // battle's music not kept) and a tail jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss31_End(void) {
-    if (BattleActions_BattleEnd & 2) {
+    if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = 0x14;
         BH_AT(Handler, at::kEndWin)();
         return;
     }
-    BattleTurnSteps_MusicFlags &= 0xBF;
+    EventBattle_Flags &= 0xBF;
     BH_AT(Handler, at::kEndOther)();
 }
 
@@ -304,7 +303,7 @@ extern "C" U __cdecl BossDZombie_Dispatch(unsigned passed) {
 // Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossDZombie_Enter(void) {
     StoreKind(AddressOf(BossDZombie_Anims), bof3::addr::BossDZombie_Hook, AddressOf(BossDZombie_Sounds));
-    auto* const enemy_rec = EnemyRec();
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_114 = S(static_cast<U>(enemy_rec->flags_114) | 8u);
     return Idle();
 }
@@ -340,24 +339,24 @@ extern "C" void __cdecl Boss32_Setup(void) {
 // value read | 8, a tail jump to 0x446DE0 (step 1). Otherwise a tail jump to
 // 0x446E00 (step 2).
 extern "C" void __cdecl Boss32_End(void) {
-    if ((BattleActions_BattleEnd & 2) == 0) {
+    if ((Battle_EndFlags & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = L(p + 0x90);
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
         BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
     }
-    const unsigned char end = BattleActions_BattleEnd;
+    const unsigned char end = Battle_EndFlags;
     Music_Track = 0x6B;
     MoveScript_PartyRecords[0x65] = 0xE;
-    BattleActions_BattleEnd = static_cast<unsigned char>(end | 8);
+    Battle_EndFlags = static_cast<unsigned char>(end | 8);
     BH_AT(Handler, at::kEndWin)();
 }
 
@@ -377,13 +376,13 @@ extern "C" void __cdecl Boss33_Setup(void) { StoreHooks(bof3::addr::Boss33_End, 
 // Field_Kind2X = party member 0's +0x34 and Field_Kind2Z = its +0x38 (the
 // dwords); the chapter's step = 8; a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss33_End(void) {
-    if ((BattleActions_BattleEnd & 6) == 0) {
+    if ((Battle_EndFlags & 6) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     BH_CALL(BossActor_Clear)(0);
-    const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
-    const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
+    const std::int32_t x = ObjTrio[0].x;
+    const std::int32_t z = ObjTrio[0].z;
     Field_Kind2X = x;
     Field_Kind2Z = z;
     MoveScript_PartyRecords[0x65] = 8;
@@ -412,7 +411,7 @@ extern "C" void __cdecl BossWeretigrFx_Main(void) { TaskSteps("BossWeretigrFx_Ma
 // and +2 up by one.
 extern "C" void __cdecl BossWeretigrFx_Begin(void) {
     unsigned char* const s = Sprite_Current;
-    SetLong(s + 0x20, S(L(s + 0x3C) + 0x4000000u));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(s)->work_20, S(static_cast<U>(rv::As<records::BattleTask>(s)->height) + 0x4000000u));
     BH_CALL(Sprite_SetAnimation)(2);
     Sprite_Current[0xB] = 0x10;
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
@@ -434,10 +433,10 @@ extern "C" void __cdecl BossWeretigrFx_AwaitPose(void) {
 // tail jump to Sprite_ScriptTickOnce, whose al is the answer.
 extern "C" unsigned char __cdecl BossWeretigrFx_Rise(void) {
     unsigned char* const s = Sprite_Current;
-    auto* const cur_task = reinterpret_cast<records::BattleTask*>(s);
-    const U y = L(s + 0x3C);
-    if (S(y) < Long(s + 0x20)) {
-        SetLong(s + 0x3C, S(y + 0x1000000u));
+    auto* const cur_task = rv::As<records::BattleTask>(s);
+    const U y = static_cast<U>(cur_task->height);
+    if (S(y) < cur_task->work_20) {
+        rv::Store<std::int32_t>(cur_task->height, S(y + 0x1000000u));
         return BH_CALL(Sprite_ScriptTickOnce)();
     }
     U f;
@@ -453,7 +452,7 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Rise(void) {
                             static_cast<U>(Field_Kind2X));
         f = (L(At(at::kFacing)) & 0xFF) ^ 2;
     }
-    SetLong(s + 0x38, S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kFacingOffsets + 2 * f + 1)))) +
+    rv::Store<std::int32_t>(cur_task->z, S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kFacingOffsets + 2 * f + 1)))) +
                         static_cast<U>(Field_Kind2Z)));
     BH_CALL(Sprite_SetAnimation)(4);
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
@@ -474,12 +473,12 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Strike(void) {
     const unsigned n = BH_CALL(BattleTask_Create)(3, 6) & 0xFF;
     if (n != 0xFF) {
         unsigned char* const s = Sprite_Current;
-        unsigned char* const t = At(at::kTasks + n * at::kTaskStride);
-        auto* const cur_task = reinterpret_cast<records::BattleTask*>(t);
+        unsigned char* const t = At(BattleTask_Slots_addr + n * at::kTaskStride);
+        auto* const cur_task = rv::As<records::BattleTask>(t);
         std::memmove(t, s, 0x80);
         cur_task->flags &= 0xBF;
-        cur_task->kind = 3;
-        cur_task->param = 6;
+        cur_task->runner = 3;
+        cur_task->kind = 6;
         cur_task->state = 1;
         t[2] = 0;
         t[3] = 0;
@@ -517,16 +516,16 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Leap(void) {
     if ((first & 0xFF) == 0) return static_cast<unsigned char>(first);
     auto sixteenth = [](U to, U from) { return S(static_cast<U>(S(to - from) / 16)); };
     unsigned char* s = Sprite_Current;
-    records::BattleTask* cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetLong(s + 0xC, sixteenth(L(EnemyByIndex(B(at::kActor)) + 0x34), static_cast<U>(cur_task->x)));
+    records::BattleTask* cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<std::int32_t>(cur_task->step_x, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->x), static_cast<U>(cur_task->x)));
     s = Sprite_Current;
-    cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetLong(s + 0x10, sixteenth(L(EnemyByIndex(B(at::kActor)) + 0x38), L(s + 0x38)));
-    SetLong(Sprite_Current + 0x14, 0x40);
-    SetLong(Sprite_Current + 0x20, -8);
+    cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<std::int32_t>(cur_task->step_z, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->z), static_cast<U>(cur_task->z)));
+    rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->step_y, 0x40);
+    rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->work_20, -8);
     s = Sprite_Current;
-    cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetLong(s + 0x18, sixteenth(L(EnemyByIndex(B(at::kActor)) + 0x3C), L(s + 0x3C)));
+    cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<std::int32_t>(cur_task->work_18, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->height), static_cast<U>(cur_task->height)));
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
     return BH_CALL(Sprite_ScriptTickOnce)();
 }
@@ -537,13 +536,13 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Leap(void) {
 // Sprite_ScriptTickOnce.
 extern "C" unsigned char __cdecl BossWeretigrFx_Fly(void) {
     unsigned char* const s = Sprite_Current;
-    auto* const cur_task = reinterpret_cast<records::BattleTask*>(s);
-    SetLong(s + 0x34, S(static_cast<U>(cur_task->x) + L(s + 0xC)));
-    SetLong(s + 0x38, S(L(s + 0x38) + L(s + 0x10)));
-    SetWord(s + 0x3E, Word(s + 0x3E) + Word(s + 0x14));
-    SetLong(s + 0x3C, S(L(s + 0x3C) + L(s + 0x18)));
-    SetLong(s + 0x14, S(L(s + 0x14) + L(s + 0x20)));
-    if (Long(s + 0x14) == -0x40) s[2] = static_cast<unsigned char>(s[2] + 1);
+    auto* const cur_task = rv::As<records::BattleTask>(s);
+    rv::Store<std::int32_t>(cur_task->x, S(static_cast<U>(cur_task->x) + static_cast<U>(cur_task->step_x)));
+    rv::Store<std::int32_t>(cur_task->z, S(static_cast<U>(cur_task->z) + static_cast<U>(cur_task->step_z)));
+    rv::Store<unsigned>(cur_task->height_whole, cur_task->height_whole + Word(s + 0x14));
+    rv::Store<std::int32_t>(cur_task->height, S(static_cast<U>(cur_task->height) + static_cast<U>(cur_task->work_18)));
+    rv::Store<std::int32_t>(cur_task->step_y, S(static_cast<U>(cur_task->step_y) + static_cast<U>(cur_task->work_20)));
+    if (cur_task->step_y == -0x40) s[2] = static_cast<unsigned char>(s[2] + 1);
     return BH_CALL(Sprite_ScriptTickOnce)();
 }
 
@@ -574,7 +573,7 @@ void Shade() {
 // original 0x43DB40: trail step 0: +0 |= 0x20, +0x5C = 3, Shade, +9 = 8, +2 up
 // by one; a tail jump to Sprite_ScriptTickOnce.
 extern "C" unsigned char __cdecl BossWeretigrFx_TrailBegin(void) {
-    ScTask()->flags |= 0x20;
+    rv::Current<records::BattleTask>()->flags |= 0x20;
     Sprite_Current[0x5C] = 3;
     Shade();
     Sprite_Current[9] = 8;
@@ -628,7 +627,7 @@ extern "C" void __cdecl BossMikba_DeathWait(void) {
     if ((BH_CALL(Sprite_ScriptTick)() & 0xFF) == 0) return;
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0x20;
-    ScEnemy()->state[2] = 1;
+    rv::Current<records::BattleEnemy>()->state3 = 1;
 }
 
 // original 0x43DCC0: death step 1, the flashes. With +9 equal to +0xA: unless
@@ -649,7 +648,7 @@ extern "C" void __cdecl BossMikba_DeathFlash(void) {
     } else {
         s[9] = static_cast<unsigned char>(count - 1);
     }
-    if (Sprite_Current[9] == 0) ScEnemy()->state[2] = static_cast<unsigned char>(ScEnemy()->state[2] + 1);
+    if (Sprite_Current[9] == 0) rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
 
 // original 0x43DD30: death step 2. Sprite_ScriptTickOnce (answer not read);
@@ -663,19 +662,19 @@ extern "C" void __cdecl BossMikba_DeathOpen(void) {
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Gfx_ClearRect)(0x340, 0x100, 0xC0, 0x100);
     unsigned char* const s = Sprite_Current;
-    auto* const cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
-    SetLong(s + 0x18, static_cast<std::int16_t>(static_cast<std::uint16_t>(cur_enemy->screen_x)));
-    SetLong(s + 0x1C, static_cast<std::int16_t>(static_cast<std::uint16_t>(cur_enemy->screen_y)));
-    SetLong(s + 0x20, 0);
-    SetLong(s + 0xC, 0xBE);
-    SetLong(s + 0x10, 0x68);
+    auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
+    rv::Store<std::int32_t>(cur_enemy->work_18, static_cast<std::int16_t>(static_cast<std::uint16_t>(cur_enemy->screen_x)));
+    rv::Store<std::int32_t>(cur_enemy->work_1c, static_cast<std::int16_t>(static_cast<std::uint16_t>(cur_enemy->screen_y)));
+    rv::Store<std::int32_t>(cur_enemy->work_20, 0);
+    rv::Store<std::int32_t>(cur_enemy->step_x, 0xBE);
+    rv::Store<std::int32_t>(cur_enemy->step_z, 0x68);
     cur_enemy->screen_x = 0x64;
     cur_enemy->screen_y = 0x50;
     s[0xA] = 1;
     s[0x24] |= 0x88;
     BH_CALL(Sound_PlayEffect)(0x602);
     BH_CALL(BossMikba_DrawQuad)(Sprite_Current[9]);
-    ScEnemy()->state[2] = static_cast<unsigned char>(ScEnemy()->state[2] + 1);
+    rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
 
 // original 0x43DDE0: death step 3. +0x20 += the byte +0xA; the s32 +0xC above
@@ -685,17 +684,18 @@ extern "C" void __cdecl BossMikba_DeathOpen(void) {
 // +0xA 0x40 or above (a byte), +3 up by one.
 extern "C" void __cdecl BossMikba_DeathSpread(void) {
     unsigned char* const s = Sprite_Current;
-    SetLong(s + 0x20, S(L(s + 0x20) + s[0xA]));
-    const std::int32_t w = Long(s + 0xC);
+    auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
+    rv::Store<std::int32_t>(cur_enemy->work_20, S(static_cast<U>(cur_enemy->work_20) + s[0xA]));
+    const std::int32_t w = cur_enemy->step_x;
     if (w > 0x28) {
-        SetLong(s + 0xC, w - 1);
-        if (Frame_Counter & 1) SetLong(s + 0x1C, S(L(s + 0x1C) + 1u));
+        rv::Store<std::int32_t>(cur_enemy->step_x, w - 1);
+        if (Frame_Counter & 1) rv::Store<std::int32_t>(cur_enemy->work_1c, S(static_cast<U>(cur_enemy->work_1c) + 1u));
     }
-    const std::int32_t h = Long(s + 0x10);
-    if (h > 0x28) SetLong(s + 0x10, h - 1);
-    BH_CALL(BossMikba_DrawQuad)(L(s + 0x20));
+    const std::int32_t h = cur_enemy->step_z;
+    if (h > 0x28) rv::Store<std::int32_t>(cur_enemy->step_z, h - 1);
+    BH_CALL(BossMikba_DrawQuad)(static_cast<U>(cur_enemy->work_20));
     if (Frame_Counter & 7) Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] + 1);
-    if (Sprite_Current[0xA] >= 0x40) ScEnemy()->state[2] = static_cast<unsigned char>(ScEnemy()->state[2] + 1);
+    if (Sprite_Current[0xA] >= 0x40) rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
 
 // original 0x43DE60: death step 4. Sprite_SetAnimationBank(0x1C1); the
@@ -704,12 +704,12 @@ extern "C" void __cdecl BossMikba_DeathSpread(void) {
 // LoadDatFile(0xD0); the Sprite_Current of after +3 up by one.
 extern "C" void __cdecl BossMikba_DeathLoad(void) {
     BH_CALL(Sprite_SetAnimationBank)(0x1C1);
-    ScEnemy()->flip = 1;
+    rv::Current<records::BattleEnemy>()->flip = 1;
     BH_CALL(Sprite_SetAnimation)(8);
     Sprite_Current[0x24] &= 0x77;
     BH_CALL(Sprite_ScriptTick)();
     BH_CALL(LoadDatFile)(0xD0);
-    ScEnemy()->state[2] = static_cast<unsigned char>(ScEnemy()->state[2] + 1);
+    rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
 
 // original 0x43DEA0: death step 5. Sprite_ScriptTick (answer not read); when
@@ -720,11 +720,11 @@ extern "C" void __cdecl BossMikba_DeathEnd(void) {
     BH_CALL(Sprite_ScriptTick)();
     if (BH_CALL(File_LoadDone)() == 0) return;
     BH_CALL(Battle_EnemyDefeated)();
-    auto* const cur_enemy = ScEnemy();
+    auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     cur_enemy->flags &= 0xBF;
-    cur_enemy->state[0] = 6;
-    cur_enemy->state[1] = 4;
-    cur_enemy->state[2] = 6;
+    cur_enemy->state = 6;
+    cur_enemy->step = 4;
+    cur_enemy->state3 = 6;
 }
 
 // original 0x43DEE0: the +0xF4 hook through BossMikba_Hooks (3, all BareRet).
@@ -759,7 +759,7 @@ extern "C" void __cdecl BossMikba_DrawQuad(unsigned turn) {
     BH_CALL(Gte_TransMatrix)(reinterpret_cast<unsigned long*>(matrix), reinterpret_cast<const unsigned long*>(out));
     BH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
     unsigned char* const prim = Gfx_PacketNext;
-    SetWord(prim + 0x26, BH_CALL(Gpu_GetTPage)(2, 0, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(prim)->tpage, BH_CALL(Gpu_GetTPage)(2, 0, 0x340, 0x100));  // a POLY_FT4: Gpu_SetPolyFT4 below
     prim[4] = 0x80;
     prim[5] = 0x80;
     prim[6] = 0x80;
@@ -771,8 +771,8 @@ extern "C" void __cdecl BossMikba_DrawQuad(unsigned turn) {
         vector[0] = static_cast<short>(kSign[i][0] * half(s + 0xC));
         vector[1] = static_cast<short>(kSign[i][1] * half(s + 0x10));
         BH_CALL(Gte_RotTrans)(vector, out);
-        const float x = static_cast<float>(S(L(Sprite_Current + 0x18) + static_cast<U>(out[0])));
-        const float y = static_cast<float>(S(L(Sprite_Current + 0x1C) + static_cast<U>(out[1]) - 0x28u));
+        const float x = static_cast<float>(S(static_cast<U>(rv::Current<records::BattleEnemy>()->work_18) + static_cast<U>(out[0])));
+        const float y = static_cast<float>(S(static_cast<U>(rv::Current<records::BattleEnemy>()->work_1c) + static_cast<U>(out[1]) - 0x28u));
         std::memcpy(prim + kVertex[i], &x, 4);
         std::memcpy(prim + kVertex[i] + 4, &y, 4);
     }

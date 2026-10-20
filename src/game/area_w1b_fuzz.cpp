@@ -19,6 +19,7 @@
 #include "game/area_w1b.h"
 #include "game/area_w1b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w1b {
@@ -53,7 +54,7 @@ constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 // --- shared by the groups -------------------------------------------------------
 
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
-// kEffectState: now MoveScript_EffectState (symbols.toml). MoveScript_EffectState (24)
+// kEffectState: now Character_IndexById (symbols.toml). Character_IndexById (24)
 // kKind2Hold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles (3 words)
 // kEffects: now Effect_Objects (symbols.toml). Effect_Objects: the first eight records
@@ -134,7 +135,7 @@ const ah::Callee kCallees42[] = {
     kFindFree, kSet40, kClear40,
 };
 const ah::Region kRegions42[] = {
-    {Field_ActiveMember_addr, 4}, {MoveScript_EffectState_addr, 24}, {Area42_Rank_addr, 1}, {Field_Kind2Hold_addr, 1}, {Camera_Angles_addr, 6}, {Effect_Objects_addr, 8 * 0x80},
+    {Field_ActiveMember_addr, 4}, {Character_IndexById_addr, 24}, {Area42_Rank_addr, 1}, {Field_Kind2Hold_addr, 1}, {Camera_Angles_addr, 6}, {Effect_Objects_addr, 8 * 0x80},
 };
 
 // The countdown's boundaries: seconds 5 / 6 / 10 (150, 180, 300 frames),
@@ -149,7 +150,7 @@ void Seed42(unsigned k) {
     SeedActiveMember();
     // the leader's effect-state index inside the table, its entry 1 most of the time
     if (ah::Often()) Mem(ObjTrio_addr + 0x89)[0] = static_cast<unsigned char>(ah::Next() % 24);
-    if (ah::Often()) Mem(MoveScript_EffectState_addr + Mem(ObjTrio_addr + 0x89)[0] % 24)[0] = static_cast<unsigned char>(ah::Often() ? 1 : AH_PICK(0, 2, 0x81));
+    if (ah::Often()) Mem(Character_IndexById_addr + Mem(ObjTrio_addr + 0x89)[0] % 24)[0] = static_cast<unsigned char>(ah::Often() ? 1 : AH_PICK(0, 2, 0x81));
     Mem(Area42_Rank_addr)[0] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 3 : ah::Next());
     SetWord(Mem(at::kTailTimer), TimerWord());
     Mem(AreaW0c_TailSub_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 1, 2, 0x3C, 0xFF) : ah::Next());
@@ -551,7 +552,7 @@ ah::Region g_regions45[] = {
     {0, sizeof g_names},          // g_names
     {at::kTextRecords, 0x80},     // Text_Records' first four rows
     {at::kAreaTextOffset45, 4},
-    {at::kFlag3A79, 1},
+    {CharacterRecords_addr + 0x9, 1},
     {Area45_PlateAnims_addr, 0x5BC}, // area 45's plate, cell, message and name tables
     {Area45_Directions_addr, 0x18}, // Area45_Directions, Area45_Record8Anims
     {Area45_DriftUV_addr, 0xC},   // Area45_DriftUV
@@ -649,14 +650,14 @@ void Seed45(unsigned k) {
     case kPlateGrow:
     case kPlateShrink:
         if (ah::Often()) o[9] = static_cast<unsigned char>(AH_PICK(1, 1, 2, 0, 0xFF, 0x80));
-        if (ah::Half()) SetLong(o + 0x40, static_cast<std::int32_t>(AH_PICK(0, 0xE000, 0x10000, 0xFFFFE000u, 0x7FFFF000)));
+        if (ah::Half()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->scale_x, static_cast<std::int32_t>(AH_PICK(0, 0xE000, 0x10000, 0xFFFFE000u, 0x7FFFF000)));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(5, 5, 2, 0));
         break;
     case kPlateHold:
         Game_Mode = static_cast<unsigned short>(ah::Often() ? AH_PICK(0, 2, 1, 0x101) : ah::Next());
         if (ah::Often()) o[7] = static_cast<unsigned char>(ah::Half() ? 1 : AH_PICK(0, 2, 3, 4));
         if (ah::Often()) o[0xB] = o[7];
-        if (ah::Often()) SetLong(o + 0x18, static_cast<std::int32_t>(Word(Mem(AreaW0b_Place_addr)) | (ah::Half() ? 0 : 0x10000u)));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_18, static_cast<std::int32_t>(Word(Mem(AreaW0b_Place_addr)) | (ah::Half() ? 0 : 0x10000u)));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 5, 2));
         break;
     case kHudRun: o[1] = static_cast<unsigned char>(ah::Next() % 2); break;
@@ -665,18 +666,18 @@ void Seed45(unsigned k) {
     case kRecord8Run: o[1] = static_cast<unsigned char>(ah::Next() % 3); break;
     case kRecord4Run: o[1] = static_cast<unsigned char>(ah::Next() % 2); break;
     case kFrameSlideIn:
-        if (ah::Often()) SetWord(o + 0x2E, AH_PICK(0, 0xFFFF, 1, 0xFFF0, 0x7FF0, 0x7FFF, 0xFFD0));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_x, AH_PICK(0, 0xFFFF, 1, 0xFFF0, 0x7FF0, 0x7FFF, 0xFFD0));
         Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1) : ah::Next());
         break;
     case kFrameHold:
         Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
         break;
     case kFrameSlideOut:
-        if (ah::Often()) SetWord(o + 0x2E, AH_PICK(0xFFE0, 0xFFE1, 0xFFDF, 0x8000, 0x800F, 0x8010, 0x10));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_x, AH_PICK(0xFFE0, 0xFFE1, 0xFFDF, 0x8000, 0x800F, 0x8010, 0x10));
         Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
         break;
     case kBoxSlideIn:
-        if (ah::Often()) SetWord(o + 0x30, AH_PICK(0xD1, 0xD2, 0xD3, 0xF0, 0x800A, 0x8009, 0));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_y, AH_PICK(0xD1, 0xD2, 0xD3, 0xF0, 0x800A, 0x8009, 0));
         leave();
         break;
     case kBoxHold:
@@ -685,7 +686,7 @@ void Seed45(unsigned k) {
         leave();
         break;
     case kBoxSlideOut:
-        if (ah::Often()) SetWord(o + 0x30, AH_PICK(0xE5, 0xE6, 0xE7, 0xC8, 0x7FF6, 0x7FF5));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_y, AH_PICK(0xE5, 0xE6, 0xE7, 0xC8, 0x7FF6, 0x7FF5));
         leave();
         break;
     case kDrawFrame:
@@ -711,7 +712,7 @@ void Seed45(unsigned k) {
         if (ah::Often()) o[6] = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0xFF, 1));
         break;
     case kRecord4MarkCell:
-        Mem(at::kFlag3A79)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 9, 8, 0x89) : ah::Next());
+        Mem(CharacterRecords_addr + 0x9)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 9, 8, 0x89) : ah::Next());
         if (ah::Often()) Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & ~1u);
         // the map's width so that any cell record lands in the block
         AreaMap_Header[0] = static_cast<unsigned char>(ah::Next() % 0x18);
@@ -722,12 +723,12 @@ void Seed45(unsigned k) {
         if (ah::Often()) Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags | 4);
         o[0xB] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 3, 2, 3, 0, 1, 4, 5) : ah::Next());
         const unsigned height = Mem(AreaMap_Header_addr + 0x1)[0];
-        if (ah::Half()) SetWord(o + 0x3A, height + AH_PICK(8, 9, 7, 0, 0x7FFF));
+        if (ah::Half()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, height + AH_PICK(8, 9, 7, 0, 0x7FFF));
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));
         };
-        if (ah::Often()) near(Mem(at::kLeaderCellX), Word(o + 0x36));
-        if (ah::Often()) near(Mem(at::kLeaderCellZ), Word(o + 0x3A));
+        if (ah::Often()) near(Mem(at::kLeaderCellX), rv::As<records::SpriteHead>(o)->x_whole);
+        if (ah::Often()) near(Mem(at::kLeaderCellZ), rv::As<records::SpriteHead>(o)->z_whole);
         if (ah::Half()) Frame_Counter = AH_PICK(0, 15, 16, 31, 0x2F, 0xFFFFFFFFu);
         break;
     }

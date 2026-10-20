@@ -221,7 +221,7 @@ static void DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
     const int base = -(static_cast<short>(elevation) / 2);
     const unsigned phase = Frame_Counter & 7u;
     const std::uint32_t x0 = (b1 - 0x81u) << 7, y0 = (b0 - 0x80u) << 7;
-    short* const v = Prim_VertexScratch;
+    short* const v = reinterpret_cast<short*>(Prim_VertexScratch);
     for (unsigned i = 0; i < 8; ++i) {
         unsigned char* const prim = Gfx_PacketNext;
         Gpu_SetPolyFT4(prim);

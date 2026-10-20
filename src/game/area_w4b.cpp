@@ -22,13 +22,13 @@
 #include "game/area_harness.h"
 #include "game/area_w4b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 
 namespace at = area_w4b::at;
 using area_harness::Handler;
@@ -45,7 +45,7 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 void SetFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // ObjTrio record `m` (0x14C bytes; not checked, as the originals' index).
 unsigned char* PartyRecord(unsigned m) { return Mem(ObjTrio_addr + m * at::kPartyStride); }
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
@@ -121,7 +121,7 @@ void ChoiceKeyItem(unsigned item, unsigned char bit) {
 // that holds both: its index. None: 0xFF.
 unsigned char MemberRect(const at::Rects& t, unsigned member) {
     const unsigned char* const record = PartyRecord(member & 0xFF);
-    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto* const tRecord = rv::AsConst<records::PartyMember>(record);
     const std::int32_t x = tRecord->x;
     const std::int32_t z = tRecord->z;
     for (unsigned i = 0; i < t.count; ++i) {
@@ -193,11 +193,11 @@ void MembersFrame(const at::Rects& t) {
                     if (o[8] != facing) {
                         o[8] = facing;
                         o = Sprite_Current;
-                        SetLong(o + 0xC, static_cast<std::int32_t>(0u - static_cast<U>(Long(o + 0xC))));
+                        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_x, static_cast<std::int32_t>(0u - static_cast<U>(rv::As<records::SpriteHead>(o)->step_x)));
                         o = Sprite_Current;
-                        SetLong(o + 0x10, static_cast<std::int32_t>(0u - static_cast<U>(Long(o + 0x10))));
+                        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_z, static_cast<std::int32_t>(0u - static_cast<U>(rv::As<records::SpriteHead>(o)->step_z)));
                         o = Sprite_Current;
-                        SetLong(o + 0x14, static_cast<std::int32_t>(0u - static_cast<U>(Long(o + 0x14))));
+                        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_y, static_cast<std::int32_t>(0u - static_cast<U>(rv::As<records::SpriteHead>(o)->step_y)));
                         o = Sprite_Current;
                         o[9] = static_cast<unsigned char>(8 - o[9]);
                     }
@@ -222,14 +222,14 @@ void MembersFrame(const at::Rects& t) {
 void HealStates(signed char state) {
     switch (state) {
     case 1:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         AH_CALL(Sound_PlayEffect)(0x202);
         AH_CALL(Party_HealJoined)();
         AH_CALL(Transition_Start)(9);
         B(AreaW0c_TailState_addr) = 2;
         return;
     case 2:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         AH_CALL(Msg_OpenScript)(1);
         Field_Request = 2;
         B(AreaW0c_TailState_addr) = 3;
@@ -254,7 +254,7 @@ void SpawnEffect92(unsigned short y, unsigned char slot29) {
     if (slot == 0xFF) return;
     const auto distance = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) - Sprite_Objects_addr);
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x92;
     tE->screen_x = 0;
@@ -287,9 +287,9 @@ void SpawnEffect13(std::int32_t a, std::int32_t c, unsigned char nine) {
     unsigned char* const e = EffectAt(B(at::kScratch));
     e[0] = 1;
     e[5] = 0x13;
-    SetLong(e + 0x64, a);
-    SetLong(e + 0x68, yaw);
-    SetLong(e + 0x6C, c);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], a);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[1], yaw);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[2], c);
     e[9] = nine;
 }
 // MoveScript_F3Divisor = Field_MoveSpeeds byte << 3, 16 bits.
@@ -509,7 +509,7 @@ extern "C" void __cdecl Area170_Tail37(void) {
         if (slot != 0xFF) {
             const auto six = static_cast<unsigned char>(B(at::kMessage) - 0xB);
             unsigned char* const e = EffectAt(slot);
-            auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+            auto* const tE = rv::As<records::EffectObject>(e);
             e[0] = 1;
             e[5] = 0x7D;
             tE->screen_x = 0x64;
@@ -589,7 +589,7 @@ extern "C" void __cdecl Area170_Tail37(void) {
         return;
     case 60:
         AH_CALL(ScriptFlags_Clear40)();
-        AddWord(Mem(Field_Members_addr + 0x132), 1);
+        AddWord(Mem(ObjTrio_addr + 0x27a), 1);
         AddWord(Mem(ObjTrio_addr + 0x3c6), 1);
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFEF);
         EndTail();
@@ -861,7 +861,7 @@ extern "C" void __cdecl Area172_RunFall(void) {
 // velocities +0xC, +0x10, +0x14 0, +0x20 -8, state 1; the script position - 2.
 extern "C" void __cdecl Area172_FallStart(void) {
     unsigned char* const o = Sprite_Current;
-    auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
+    auto* const tO = rv::As<records::SpriteObject>(o);
     o[0] = static_cast<unsigned char>(o[0] & 0xBF);
     o[0] = static_cast<unsigned char>(o[0] | 0x20);
     o[0x5C] = 1;
@@ -871,7 +871,7 @@ extern "C" void __cdecl Area172_FallStart(void) {
     tO->step_x = 0;
     tO->step_z = 0;
     tO->step_y = 0;
-    SetLong(o + 0x20, -8);
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(o)->work_20, -8);
     o[4] = 1;
     AddWord(MoveScript_Object + 0xA, -2);
 }
@@ -886,23 +886,23 @@ extern "C" void __cdecl Area172_FallStart(void) {
 // height dword = the object's +0x3C, MapView_SetElevation(its word +0x3E).
 extern "C" void __cdecl Area172_FallStep(void) {
     unsigned char* o = Sprite_Current;
-    auto* tO = reinterpret_cast<records::SpriteObject*>(o);
-    tO->step_y = static_cast<std::int32_t>(static_cast<U>(tO->step_y) + static_cast<U>(Long(o + 0x20)));
+    auto* tO = rv::As<records::SpriteObject>(o);
+    tO->step_y = static_cast<std::int32_t>(static_cast<U>(tO->step_y) + static_cast<U>(rv::As<records::SpriteObject>(o)->work_20));
     AH_CALL(Field_LeaderStepTick)();
     o = Sprite_Current;
-    tO = reinterpret_cast<records::SpriteObject*>(o);
+    tO = rv::As<records::SpriteObject>(o);
     const long ground = AH_CALL(MapView_GroundAt)(tO->x, tO->z);
     o = Sprite_Current;
-    tO = reinterpret_cast<records::SpriteObject*>(o);
-    if (static_cast<std::int16_t>(ground) > static_cast<std::int16_t>(Word(o + 0x3E))) {
+    tO = rv::As<records::SpriteObject>(o);
+    if (static_cast<std::int16_t>(ground) > static_cast<std::int16_t>(rv::As<records::SpriteObject>(o)->height_whole)) {
         o[0] = static_cast<unsigned char>(o[0] & 0xDF);
         o[0x5C] = 0;
         o[0x5D] = 0;
         o[0x5E] = 0;
         o[0x5F] = 0;
-        SetWord(o + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(ground));
         tO->step_y = 0;
-        SetLong(o + 0x20, 0);
+        rv::Store<std::int32_t>(rv::As<records::SpriteObject>(o)->work_20, 0);
         o[4] = 2;
         AH_CALL(Sprite_SetAnimation)(0x39);
         MoveScript_Object[1] = 4;
@@ -915,14 +915,14 @@ extern "C" void __cdecl Area172_FallStep(void) {
     tint[3] = static_cast<unsigned char>(tint[3] + 0xFE);
     tint[4] = static_cast<unsigned char>(tint[4] + 0xFE);
     o = Sprite_Current;
-    tO = reinterpret_cast<records::SpriteObject*>(o);
+    tO = rv::As<records::SpriteObject>(o);
     if (o[0x5D] != 0x40) {
         o[0x5D] = static_cast<unsigned char>(o[0x5D] + 4);
         o[0x5E] = static_cast<unsigned char>(o[0x5E] + 4);
         o[0x5F] = static_cast<unsigned char>(o[0x5F] + 4);
     }
     SetLong(Mem(Sprite_Kind2_addr + 0x3c), tO->height);
-    AH_CALL(MapView_SetElevation)(static_cast<int>(Word(o + 0x3E)));
+    AH_CALL(MapView_SetElevation)(static_cast<int>(rv::As<records::SpriteObject>(o)->height_whole));
 }
 
 // original 0x427DF0 (area 172 +0x3C[3] = +0x34[4]; PSX 0x801F471C):
@@ -953,7 +953,7 @@ extern "C" void __cdecl Area172_SlideStart(void) {
 // active member's word +0x8A - 2.
 extern "C" void __cdecl Area172_SlideStep(void) {
     unsigned char* const o = Sprite_Current;
-    auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
+    auto* const tO = rv::As<records::SpriteObject>(o);
     tO->x = static_cast<std::int32_t>(static_cast<U>(tO->x) + static_cast<U>(tO->step_x));
     tO->z = static_cast<std::int32_t>(static_cast<U>(tO->z) + static_cast<U>(tO->step_z));
     for (unsigned k = 0x5D; k <= 0x5F; ++k)
@@ -976,7 +976,7 @@ extern "C" void __cdecl Area172_SlideStep(void) {
 // snapped to a half cell (& 0xFFFF8000).
 extern "C" void __cdecl Area172_Drift(void) {
     unsigned char* const o = Sprite_Current;
-    auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
+    auto* const tO = rv::As<records::SpriteObject>(o);
     if (B(at::kCounter0) < 7) {
         U step = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(Area172_DriftSteps_addr + (o[0xA] & 0xF)))));
         tO->x = static_cast<std::int32_t>(static_cast<U>(tO->x) + (step << 11));
@@ -1092,7 +1092,7 @@ extern "C" void __cdecl Area172_EffectA5Run(void) {
 // dword +0xC 0, state 1.
 extern "C" void __cdecl Area172_EffectA5Start(void) {
     unsigned char* const e = Sprite_Current;
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     tE->screen_x = 0;
     tE->step_x = 0;
     e[1] = 1;
@@ -1112,14 +1112,14 @@ static int PanelX() { return 0xDC + Widescreen_Anchor(); }
 // read again after the first draw). DIV-0041: the panel's x is PanelX().
 extern "C" void __cdecl Area172_EffectA5Grow(void) {
     unsigned char* const e = Sprite_Current;
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     AddWord(e + 0x2E, 10);
     if (static_cast<std::int16_t>(static_cast<std::uint16_t>(tE->screen_x)) > 0x190) {
         B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(B(MoveScript_PartyRecords_addr + 0x65) + 1);
         e[1] = 2;
     }
     AH_CALL(Area172_DrawPanel)(PanelX(), 0xC8);
-    AH_CALL(Area172_DrawShade)(static_cast<int>(static_cast<std::uint16_t>(CurEffect()->screen_x)), 0xC8);
+    AH_CALL(Area172_DrawShade)(static_cast<int>(static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x)), 0xC8);
 }
 
 // original 0x428290 (Area172_EffectStates[2]): Area172_DrawPanel(0xDC, 0xC8);
@@ -1151,8 +1151,8 @@ extern "C" void __cdecl Area172_DrawPanel(int x, int y) {
     SetFloatInt(p + 0x2C, sy + 0x20);
     SetFloatInt(p + 0x3C, sy + 0x20);
     p[0x34] = 0;
-    SetWord(p + 0x16, AH_CALL(Gpu_GetClut)(0, 0x1EB));
-    SetWord(p + 0x26, AH_CALL(Gpu_GetTPage)(1, 1, 0x300, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, AH_CALL(Gpu_GetClut)(0, 0x1EB));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, AH_CALL(Gpu_GetTPage)(1, 1, 0x300, 0x100));
     p[4] = 0x80;
     p[5] = 0x80;
     p[6] = 0x80;

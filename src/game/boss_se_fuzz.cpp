@@ -89,7 +89,7 @@ const bh::Region kRegions[] = {
     {0x939A00, 0xD0},            // the copy's count and bytes, set-up 26's sums (to 0x939AD0, the harness's)
     {0x929EC0, 4},               // Field_MemberCount
     {0x7E0918, 4},               // Draw_PassFlags
-    {0x66C810, 4},               // MoveScript_WaitWordDA
+    {0x66C810, 4},               // Transition_Busy
 };
 
 // The clones of the run in progress, for Args; the code Boss25_Event's seed
@@ -174,8 +174,8 @@ const bh::Clone kClonesB22[] = {
 };
 void SeedB22(unsigned k) {
     if (k == 1) {
-        B(BattleActions_BattleEnd_addr) = BattleEndByte();
-        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x40, 0, 0xFF, 0xBF) : bh::Next());
+        B(Battle_EndFlags_addr) = BattleEndByte();
+        B(EventBattle_Flags_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x40, 0, 0xFF, 0xBF) : bh::Next());
     }
 }
 
@@ -210,7 +210,7 @@ const bh::Clone kClonesB30[] = {
     Row("Boss30_End", 0x43CFA0, 0x2E, kCalls43CFA0, BH_N(kCalls43CFA0), BH_FN(Boss30_End), 0, S::kEnd),
 };
 void SeedEnd(unsigned k) {
-    if (k == 1) B(BattleActions_BattleEnd_addr) = BattleEndByte();
+    if (k == 1) B(Battle_EndFlags_addr) = BattleEndByte();
     if (k == 1 && bh::Half()) B(at::kScriptVar3) = static_cast<unsigned char>(BH_PICK(0, 0xFF, 0x7F, 0x80, 0xC));
 }
 
@@ -267,21 +267,21 @@ unsigned char FightByte(unsigned char mine) {
 }
 void SeedK30(unsigned k) {
     switch (k) {
-    case 1: B(BattleActions_EventBattle_addr) = FightByte(0x1A); break;
+    case 1: B(EventBattle_Id_addr) = FightByte(0x1A); break;
     case 2:
         // the other state bytes inside the tables, so a dispatcher reading the
         // wrong byte lands on another entry rather than past its table
         if (bh::Often()) Sprite_Current[1] = static_cast<unsigned char>(bh::Next() % 6);
         if (bh::Often()) Sprite_Current[3] = static_cast<unsigned char>(bh::Next() % 6);
         break;
-    case 3: B(BattleActions_EventBattle_addr) = FightByte(0x19); break;
+    case 3: B(EventBattle_Id_addr) = FightByte(0x19); break;
     case 5:
-        B(BattleActions_EventBattle_addr) = FightByte(0x19);
+        B(EventBattle_Id_addr) = FightByte(0x19);
         B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 0x80, 0xFF) : bh::Next());
         break;
     case 6:
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next());
-        SetWord(Mem(0x66C810), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
+        SetWord(Mem(Transition_Busy_addr), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
         break;
     default: break;
     }
@@ -435,10 +435,10 @@ void SeedB26(unsigned k) {
             static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0, 1, 2, 3, 0x40, 0x80, 0xC0, 4, 7) : bh::Next());
         B(at::kTarget) = target;
         for (unsigned m = 0; m < 3; ++m) SetWord(Mem(ObjTrio_addr + 0x128 + at::kPartyStride * m), static_cast<unsigned>(SignedWord()));
-        SetWord(Mem(at::kEnemy0Word108), static_cast<unsigned>(SignedWord()));
-        B(at::kEnemy0Flags) = static_cast<unsigned char>(bh::Half() ? B(at::kEnemy0Flags) | 2 : B(at::kEnemy0Flags) & ~2u);
+        SetWord(Mem(Battle_Enemies_addr + 0x108), static_cast<unsigned>(SignedWord()));
+        B(Battle_Enemies_addr + 0x110) = static_cast<unsigned char>(bh::Half() ? B(Battle_Enemies_addr + 0x110) | 2 : B(Battle_Enemies_addr + 0x110) & ~2u);
         B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2) : bh::Next());
-        B(at::kEnemy0Flag8E) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x81) : bh::Next());
+        B(Battle_Enemies_addr + 0x8e) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x81) : bh::Next());
         SetLong(Mem(at::kTurn), static_cast<std::int32_t>(bh::Often() ? BH_PICK(0x15, 0x15, 0x14, 0x16, 0x115, 0x80000015u) : bh::Next()));
         B(BossSe_Script_addr) = static_cast<unsigned char>(bh::Half() ? B(BossSe_Script_addr) | 0x20 : B(BossSe_Script_addr) & ~0x20u);
         B(at::kPhase) = static_cast<unsigned char>(bh::Often() ? 1 : bh::Next());

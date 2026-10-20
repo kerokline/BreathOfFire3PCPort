@@ -46,7 +46,7 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 // Party_Zenny (a dword; two choices compare it with 500).
 // kZenny: now Party_Zenny (symbols.toml).
 // The leader's pose byte (ObjTrio +8), the cell hook's third test.
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
 // Six bytes of an engine facility's state (read and written by the engine
 // code at 0x456AF0..0x460480; the name-entry commit of
 // docs/save-interchange.md sets +2 and +4). The areas' choices set them;
@@ -61,7 +61,7 @@ constexpr unsigned kFacilityBytes = 6;
 // x +0x34, z +0x38, +0x83.
 // kExtra0: now Sprite_ObjectsExtra (symbols.toml).
 // Sprite_Kind2 +0x38 (its z), and MapView_Origin's second word.
-// kKind2Z: now Sprite_Kind2[0x38] (symbols.toml).
+// kKind2Z: now Sprite_Kind2.z (symbols.toml).
 // kOriginY: now MapView_Origin[1] (symbols.toml).
 // Camera_Angles (three words; the third is Cond_AngleFB's low word) and
 // Camera_Distance.

@@ -29,14 +29,14 @@ using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). 16.16 position; its high words are the cell
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
-// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
-// kLeaderEdge: now ObjTrio[0x134] (symbols.toml). the leader's dword +0x134 (Field_EdgeBits = it - 5)
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml). 16.16 position; its high words are the cell
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
+// kLeaderEdge: now ObjTrio_addr + 0x134 (symbols.toml). the leader's dword +0x134 (Field_EdgeBits = it - 5)
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMsgMode: now AreaW0a_TailKind (symbols.toml). the tail kind byte (Field_ModeTailKinds' index)
 // kMsgState: now AreaW0c_TailState (symbols.toml). s8: the field hook's state
@@ -58,7 +58,7 @@ constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler o
 constexpr U kCounter = 0x90384B;          // area 21's trade counter, 0..7
 constexpr U kScriptVar = 0x903848;        // a movement-script variable byte (the choices set it)
 constexpr U kEffectCount = 0x90384A;      // area 25: its effects' count byte (below 0x14: variant 1)
-constexpr U kFoundSlot = 0x903850;        // area 25: the slot Effect_FindFree answered
+inline auto& kFoundSlot = SharedScratch.b_00;  // area 25: the slot Effect_FindFree answered
 constexpr U kFlagBase = 0x929ED0;         // the pointer Flags_Set / Flags_Clear are handed (a flag row)
 constexpr U kTextRecords = 0x904CE0;      // Text_Records: area 16's hook fills its first four rows of 0x20
 constexpr U kTextRecordsEnd = 0x904D60;

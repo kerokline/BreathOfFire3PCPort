@@ -32,17 +32,18 @@ constexpr std::uint32_t kMenuDispatchB = bof3::addr::Shisu_ModeDispatch;      //
 
 // Data.
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember (unsigned char *): its cell, a region of the fuzz's
-// kExtraPositions: now Sprite_ObjectsExtra[0x34] (symbols.toml). Sprite_ObjectsExtra +0x34: the attached object's x, z, y, +0x64.. (stride 0xA4)
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34: the leader's x (16.16)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). ObjTrio +0x38
-// kLeaderPace: now ObjTrio[9] (symbols.toml). ObjTrio +9: the leader's frames left in a step
-// kLeaderStepX: now ObjTrio[0xc] (symbols.toml). ObjTrio +0xC: the leader's step a frame, x
-// kLeaderStepZ: now ObjTrio[0x10] (symbols.toml). ObjTrio +0x10
+// kExtraPositions: now Sprite_ObjectsExtra[0].x (symbols.toml). Sprite_ObjectsExtra +0x34: the attached object's x, z, y, +0x64.. (stride 0xA4)
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio +0x34: the leader's x (16.16)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). ObjTrio +0x38
+// kLeaderPace: now ObjTrio[0].step_frames (symbols.toml). ObjTrio +9: the leader's frames left in a step
+// kLeaderStepX: now ObjTrio[0].step_x (symbols.toml). ObjTrio +0xC: the leader's step a frame, x
+// kLeaderStepZ: now ObjTrio[0].step_z (symbols.toml). ObjTrio +0x10
 // kJumpSteps: now MoveCmd_F9Steps (symbols.toml). per direction (8 bytes): x, z steps, the jumps' table (Field_JumpSetUp's)
 constexpr std::uint32_t kTargetOffsets = 0x66978C;      // s16 by Field_State +0x89: taken off the ground at (kTargetX, kTargetZ)
 constexpr std::uint32_t kTargetX = 0x904EF4;            // s32 (16.16): the x the vertical moves test the ground at
 constexpr std::uint32_t kTargetZ = 0x904EF8;            // s32: its z
-constexpr std::uint32_t kSloped = 0x903850;             // u8: AreaMap_Slope's "sloped" answer (DamageScratch's first byte)
+inline auto& kSloped = SharedScratch.b_00;  // u8: AreaMap_Slope's "sloped" answer (SharedScratch's first byte)
+constexpr std::uint32_t kSloped_addr = SharedScratch_addr; // kSloped's address, for the raw accessors that take one
 constexpr std::uint32_t kScriptFlags2High = 0x905BA5;   // Field_ScriptFlags2's high byte: bit 1 set by the fall's area change
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 0x40 bytes a CLUT slot: Sprite_LoadPalette's source by Sprite_Current +5
 

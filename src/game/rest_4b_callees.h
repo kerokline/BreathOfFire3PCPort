@@ -84,7 +84,7 @@ constexpr std::uint32_t kFrame = 0x937F94;          // Frame_Counter
 // kPressed: now Input_Pressed (symbols.toml). Input_Pressed (u16)
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
-// kColour: now BattleDraw_Colour (symbols.toml). the window style byte
+// kColour: now Config_WindowColour (symbols.toml). the window style byte
 // kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber (u16)
 constexpr std::uint32_t kTextRecords = 0x904CE0;    // Text_Records' first 16 bytes
 constexpr std::uint32_t kTextBuffer = 0x904BA0;     // the text scratch sprintf writes

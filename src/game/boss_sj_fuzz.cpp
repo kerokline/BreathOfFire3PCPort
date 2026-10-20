@@ -110,7 +110,7 @@ void Args(unsigned k, U* a) {
 // The end hooks: the win bit (and garbage), each member's +0 bit 0 two times
 // in three, its +8 where the byte add wraps.
 void SeedEnd() {
-    B(BattleActions_BattleEnd_addr) = Byte({0, 1, 2, 3, 0xFD, 0x82, 8, 0xA});
+    B(Battle_EndFlags_addr) = Byte({0, 1, 2, 3, 0xFD, 0x82, 8, 0xA});
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(m));
         p[0] = static_cast<unsigned char>(bh::Often() ? p[0] | 1 : p[0] & ~1u);
@@ -176,7 +176,7 @@ void SeedTask(unsigned k) {
     switch (base) {
     case 0x43FB60: s[9] = Byte({0, 0, 1, 2, 0xFF, 0xFF, 0xFE}); break;
     case 0x43FB10:
-        B(at::kEnemy0Type) = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
+        B(Battle_Enemies_addr + 0xf0) = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
         break;
     default: break;
     }

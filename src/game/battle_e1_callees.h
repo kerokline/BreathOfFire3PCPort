@@ -37,9 +37,9 @@ using U = std::uint32_t;
 constexpr U kModeTimer = 0x929F04;   // u8: a frame count the steps count down
 // kTallyRow: now FieldS_Column (symbols.toml). s8: the tally counter being counted up (0..5; 6 done)
 // kModeByte9: now BattleE1_ModeByte9 (symbols.toml). u8: cleared as the equipment screen opens
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA: a transition is running while non-zero
-// kMenuShade: now FieldS_Backdrop (symbols.toml). u8: Menu_DrawBackdrop's kind (the config's window colour)
-// kBoxColour: now BattleDraw_Colour (symbols.toml). u8: Menu_DrawBox's colour byte
+// kWaitWord: now Transition_Busy (symbols.toml). u16 Transition_Busy: a transition is running while non-zero
+// kMenuShade: now Config_Background (symbols.toml). u8: Menu_DrawBackdrop's kind (the config's window colour)
+// kBoxColour: now Config_WindowColour (symbols.toml). u8: Menu_DrawBox's colour byte
 
 // The tally's six counters: shown (counted up), target, the step per frame.
 constexpr U kTallyShown = 0x675E88;  // u32 x 6: what the window shows
@@ -58,7 +58,7 @@ constexpr U kEquipOpenBytes = 0x675EBE;  // u8 x 3 (0x675EBE, BF, C0): set as th
 // Character record 7 (CharacterRecords 0x903A70 + 7 * 0xA4; char-stats.md's
 // fields): the stat words the tally raises, its two equipment bytes, its
 // first five bytes (copied in from .data at the screens' ends).
-constexpr U kGuest = 0x903EEC;
+// kGuest: now CharacterRecords[7] (symbols.toml).
 // kGuestEquipA: now Rest3a_GuestEquip (symbols.toml). +0x12
 // kGuestEquipB: now BattleE1_GuestEquipB (symbols.toml). +0x15
 constexpr U kGuestHpMax = 0x903F0C;   // +0x20
@@ -75,9 +75,9 @@ constexpr U kGuestHeadIn = 0x669CE8;  // .data: 5 bytes copied into the record a
 constexpr U kWin0 = 0x803160;
 constexpr U kWin1 = 0x803184;
 constexpr U kWin2 = 0x8031A8;
-constexpr U kWin3 = 0x8031CC;
-constexpr U kWin4 = 0x8031F0;
-// kWin21: now BattleE4_Above (symbols.toml).
+// kWin3: now WindowRecords[3] (symbols.toml).
+// kWin4: now WindowRecords[4] (symbols.toml).
+// kWin21: now Window21 (symbols.toml).
 
 // --- the battle engine ---
 constexpr U kStep = 0x904AA1;
@@ -94,7 +94,7 @@ constexpr U kCrossGrow = 0x904ABC;   // u8 per member: the command cross's size
 // kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). s8: the entries in the order
 constexpr U kBattleEnd = 0x904AE8;
 constexpr U kActor = 0x904B34;
-constexpr U kActing = 0x904B3C;      // unsigned char *: the acting sprite
+// kActing: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting sprite
 constexpr U kActing2 = 0x904B40;     // unsigned char *: the action record (+2 the ability id)
 // kLossBar: now BattleResult_TickStep (symbols.toml). u16: the loss screen's bar width
 constexpr U kOldLevel = 0x904B72;    // u16
@@ -103,7 +103,7 @@ constexpr U kActionId = 0x904B80;    // u16
 // kEffectBits: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect still running
 // kAutoTest: now BattleFlow_AnimGate (symbols.toml). u8
 // kMessageUp: now BattleE1_MessageUp (symbols.toml). u8
-constexpr U kBannerText = 0x669E08;  // .data: the banner string pointer kind 3's first step shows
+// kBannerText: now BattleE1_BannerText (symbols.toml). .data: the banner string pointer kind 3's first step shows
 constexpr U kHoldIcons = 0x64E2AC;   // .data: 7 byte pairs, the command icons' offsets
 constexpr U kLevelMsgPtr = 0x93B8E4; // const char *: the level-up line (Msg_SystemPtr(7))
 // kPartySetByte: now AreaW0b_PartySet (symbols.toml). u8: & 0x7F the party set PartySet_Select loads
@@ -132,7 +132,7 @@ constexpr U kCharSize = 0xA4;
 // --- the .data tables the dispatchers jump through ---
 // kEquipSteps: now BattleExtra_EquipSteps (symbols.toml). by 0x929F01: 3 (0x42DC10, 0x42DCD0, 0x42E040)
 // kEquipOpenSteps: now BattleExtra_EquipOpenSteps (symbols.toml). by 0x929F02: 3 (BattleExtra_OpenTransition 0x42D780, 0x42DC20, 0x42DC80)
-constexpr U kEquipRunSteps = 0x64ADF8;   // by 0x929F02: 2, called (0x42DCF0, 0x42DE50)
+// kEquipRunSteps: now BattleExtra_EquipRunSteps (symbols.toml). by 0x929F02: 2, called (0x42DCF0, 0x42DE50)
 // kEquipLeaveSteps: now BattleExtra_EquipLeaveSteps (symbols.toml). by 0x929F02: 2 (0x42E050, 0x42E090)
 // kHoldSteps: now BattleHold_Steps (symbols.toml). by 0x904AA2: 3 (0x42EDA0, 0x42EE00, 0x42EEA0)
 // kKind3Steps: now BattleAction_Kind3Steps (symbols.toml). by 0x904AA3: 5 (0x42F5F0, 0x42F640, the three ability steps)

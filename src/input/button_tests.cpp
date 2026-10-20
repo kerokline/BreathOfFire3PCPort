@@ -207,7 +207,6 @@ unsigned PureMasks() {
 // Part 2: four of ours under the live table.
 U16* Words() { return reinterpret_cast<U16*>(static_cast<std::uintptr_t>(0x903580)); }
 unsigned char& B(U address) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U16& W(U address) { return *reinterpret_cast<U16*>(static_cast<std::uintptr_t>(address)); }
 
 struct Cell { U address, size; };
 constexpr Cell kCells[] = {
@@ -254,41 +253,41 @@ U RunS1(U16 press) {
     g_scratch[2] = 0x33;
     g_scratch[3] = 0x44;
     Sprite_Current = g_scratch;
-    B(0x7E1261) = 0x55;
-    B(0x7E1361) = 0x66;
-    B(0x90412E) = 0;
+    Effect_Objects[1].state = 0x55;
+    Effect_Objects[3].state = 0x66;
+    CharStats_ExtraItem = 0;
     B(0x904130) = 1;
-    B(0x6BC709) = 0;
+    Effect1e_Choice = 0;
     Input_Pressed = press;
     ::LeaderPanel_S1Buttons();
-    return static_cast<U>(g_scratch[2]) | static_cast<U>(g_scratch[3]) << 8 | static_cast<U>(B(0x7E1261)) << 16 |
-           static_cast<U>(B(0x7E1361)) << 24;
+    return static_cast<U>(g_scratch[2]) | static_cast<U>(g_scratch[3]) << 8 | static_cast<std::uint32_t>(Effect_Objects[1].state) << 16 |
+           static_cast<std::uint32_t>(Effect_Objects[3].state) << 24;
 }
 U RunLatch(U16 press) {
-    B(0x6BC717) = 0x5A;
-    B(0x6BC708) = 0;
+    Effect1e_PressNow = 0x5A;
+    Effect1e_PressWas = 0;
     Input_Pressed = press;
     ::LeaderPanel_PressLatch();
-    return static_cast<U>(B(0x6BC708)) | static_cast<U>(B(0x6BC717)) << 8;
+    return static_cast<std::uint32_t>(Effect1e_PressWas) | static_cast<std::uint32_t>(Effect1e_PressNow) << 8;
 }
 U RunReady(U16 press) {
     std::memset(g_scratch, 0, sizeof g_scratch);
     g_scratch[1] = 0xF;
     Sprite_Current = g_scratch;
-    W(0x67628C) = 5;
+    Effect4b_Count = 5;
     Input_Pressed = press;
     ::EffectKind8C_Ready();
-    return static_cast<U>(g_scratch[1]) | static_cast<U>(W(0x67628C)) << 8;
+    return static_cast<U>(g_scratch[1]) | static_cast<std::uint32_t>(Effect4b_Count) << 8;
 }
 U RunCountPress(U16 press) {
     std::memset(g_scratch, 0, sizeof g_scratch);
     g_scratch[1] = 0x11;
     Sprite_Current = g_scratch;
-    W(0x67628C) = 5;
-    B(0x676284) = 3;
+    Effect4b_Count = 5;
+    Effect4b_Presses = 3;
     Input_Pressed = press;
     ::EffectKind8C_CountPress();
-    return static_cast<U>(g_scratch[1]) | static_cast<U>(W(0x67628C)) << 8 | static_cast<U>(B(0x676284)) << 24;
+    return static_cast<U>(g_scratch[1]) | static_cast<std::uint32_t>(Effect4b_Count) << 8 | static_cast<std::uint32_t>(Effect4b_Presses) << 24;
 }
 
 // BattleMenu_CommandSelect with the press held and nothing pressed this frame:
@@ -296,17 +295,17 @@ U RunCountPress(U16 press) {
 // cross on the command of the lowest of the six masks held (1..6, 0 none).
 // Select (0x100) is taken off the held word: it opens the status and draws.
 U RunCross(U16 press) {
-    B(0x904AA5) = 0;      // the tap timer
-    B(0x904AA6) = 0;
+    BossSb_Countdown = 0;   // the tap timer
+    BattleE5_GeneRow = 0;
     B(0x904AB4) = 0x77;   // the cross's command, a stand-in
-    B(0x904AA1) = 0x31;
-    B(0x904AA2) = 0x42;
-    B(0x904AC3) = 1;
-    W(0x7E1BE8) = static_cast<U16>(press & ~0x100u);
+    BattleActions_Step = 0x31;
+    BattleE4_Step2 = 0x42;
+    BattleActorCopies_EntryCount = 1;
+    Input_Held = static_cast<U16>(press & ~0x100u);
     Input_Pressed = 0;
     ::BattleMenu_CommandSelect();
-    return static_cast<U>(B(0x904AB4)) | static_cast<U>(B(0x904AA5)) << 8 | static_cast<U>(B(0x904AA6)) << 16 |
-           static_cast<U>(B(0x904AA1) ^ B(0x904AA2) ^ B(0x904AC3)) << 24;
+    return static_cast<U>(B(0x904AB4)) | static_cast<std::uint32_t>(BossSb_Countdown) << 8 | static_cast<std::uint32_t>(BattleE5_GeneRow) << 16 |
+           static_cast<U>(BattleActions_Step ^ BattleE4_Step2 ^ static_cast<unsigned char>(BattleActorCopies_EntryCount)) << 24;
 }
 
 struct Live {

@@ -671,7 +671,7 @@ void Seed10(unsigned k) {
     if (sh::Often()) B(Cond_ByteFD_addr) = static_cast<unsigned char>(AnFD());
     if (sh::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(ALeader8());
     if (sh::Often()) B(Field_Request_addr) = static_cast<unsigned char>(SH_PICK(0, 2, 6));
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     if (sh::Often()) SetW(MoveScript_PartyRecords_addr + 0x66, SH_PICK(0, 1, 2));
     if (sh::Half()) B(Field_Kind2Hold_addr) = 0;
     if (sh::Half()) SetW(Input_Held_addr, 0);

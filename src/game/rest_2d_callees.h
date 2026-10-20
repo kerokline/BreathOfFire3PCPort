@@ -67,15 +67,15 @@ constexpr std::uint32_t kItemsPicks = 0x939898;    // a byte a category: the lis
 constexpr std::uint32_t kItemsTops = 0x9398B8;     // a byte a category: the list's first row shown
 
 // --- shared ---------------------------------------------------------------------------------
-constexpr std::uint32_t kWindows = 0x803160;       // WindowRecords, 22 of 0x24
+// kWindows: now WindowRecords (symbols.toml). WindowRecords, 22 of 0x24
 constexpr std::uint32_t kWindowStride = 0x24;
 constexpr unsigned kWindowCount = 22;
-constexpr std::uint32_t kRecords = 0x903A70;       // CharacterRecords, 8 of 0xA4
+// kRecords: now CharacterRecords (symbols.toml). CharacterRecords, 8 of 0xA4
 constexpr std::uint32_t kRecordStride = 0xA4;
 constexpr std::uint32_t kWorking = 0x802DC0;       // ObjTrio + 0x80: the party's working records, 3 of 0x14C
 constexpr std::uint32_t kObjStride = 0x14C;
-// kStyle: now BattleDraw_Colour (symbols.toml). the window style byte
-// kBackdrop: now FieldS_Backdrop (symbols.toml). Menu_DrawBackdrop's kind
+// kStyle: now Config_WindowColour (symbols.toml). the window style byte
+// kBackdrop: now Config_Background (symbols.toml). Menu_DrawBackdrop's kind
 constexpr std::uint32_t kMessagePools = 0x803580;  // MessagePools: u16 offsets, then the text
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). the party's ids
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).

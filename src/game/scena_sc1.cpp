@@ -8,7 +8,7 @@
 //     other six entries are 0x437CC0, a bare ret).
 //   - A scene is a switch on the step byte 0x8034E5: each step waits on a
 //     script counter (0x903848..B), the message box (Field_Request), the wait
-//     word (MoveScript_WaitWordDA), a flag, a timer or a position, does one
+//     word (Transition_Busy), a flag, a timer or a position, does one
 //     thing - a message, a sound, the music, an effect, an area change, a
 //     party member dropped in - and sets the next step; the last clears the
 //     counters and sets the run and step back to 0.
@@ -30,6 +30,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc1_callees.h"
 #include "game/scenario_harness.h"
@@ -66,19 +67,19 @@ void OpenMessage(unsigned id) {
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(id));
     Field_Request = 2;
 }
-bool Waiting() { return MoveScript_WaitWordDA != 0; }
+bool Waiting() { return Transition_Busy != 0; }
 void ScriptOr(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | bits); }
 void ScriptXor(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ bits); }
 void Distance(int delta) { Camera_Distance = static_cast<short>(Camera_Distance + delta); }
 
 // The leader's record (ObjTrio's first member) and the second's.
-unsigned char* Leader() { return ObjTrio; }
-unsigned char* Second() { return ObjTrio + 0x14C; }
+unsigned char* Leader() { return rv::Bytes(ObjTrio); }
+unsigned char* Second() { return rv::Bytes(&ObjTrio[1]); }
 short LeaderWord(unsigned off) { return static_cast<short>(Word(Leader() + off)); }
 int LeaderLong(unsigned off) { return Long(Leader() + off); }
 
 // The flag bits: the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
 void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 void ClearFlag(unsigned n) { SH_CALL(Flags_Clear)(Bank(), n); }
@@ -103,18 +104,18 @@ void SetCell(unsigned x, unsigned z, unsigned value) { SH_CALL(AreaMap_SetByte)(
 // is free.
 bool TakeEffect() {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    At(at::kEffectSlot)[0] = slot;
+    at::kEffectSlot = slot;
     return slot != 0xFF;
 }
 // The record of the slot 0x903850 holds, read back as the original does.
-unsigned char* Effect() { return Effect_Objects + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
+unsigned char* Effect() { return rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(at::kEffectSlot) << 7); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 // A kind-0x13 effect at (x, the camera's second angle word) with +0x6C `far`
 // and +9 `life`: the record written as the original writes it.
 void AimEffect(int x, int far, unsigned life) {
@@ -406,12 +407,12 @@ extern "C" void __cdecl Scena01_Scene03(void) {
         MusicStop(0xA);
         SH_CALL(Music_Play)(0x13, 8);
         if (!TakeEffect()) return;
-        Counter(3) = At(at::kEffectSlot)[0];
+        Counter(3) = at::kEffectSlot;
         SetStep(0x15);
         AimEffect(-0x2AA, 0x200, 0x14);
         return;
     case 0x15:
-        if (Effect_Objects[static_cast<std::uint32_t>(Counter(3)) << 7] != 0) return;
+        if (rv::Bytes(Effect_Objects)[static_cast<std::uint32_t>(Counter(3)) << 7] != 0) return;
         ScriptOr(8);
         Counter(3) = 0;
         Counter(0) = 0x19;
@@ -548,11 +549,11 @@ extern "C" void __cdecl Scena01_Scene06(void) {
         return;
     case 0xF: {
         if (Waiting()) return;
-        const unsigned member = MoveScript_EffectState[4];
+        const unsigned member = Character_IndexById[4];
         SetStep(0x10);
         Counter(2) = 4;
         Draw_PassFlags = 0;
-        At(at::kMemberRecords + member * 0xA4)[0] &= 0xFE;
+        At(CharacterRecords_addr + 0xb + member * 0xA4)[0] &= 0xFE;
         SH_CALL(Scenario_CallB)(0);
         SetFlag(5);
         ChangeArea(8, 0x320000, 0x120000, 0x84);
@@ -1909,15 +1910,15 @@ extern "C" void __cdecl Scena01_PlaceEffect(unsigned char n) {
     Sprite_Current[0xB] = slot;
     unsigned char* const cur = Sprite_Current;
     if (cur[0xB] == 0xFF) return;
-    auto rec = [cur] { return Effect_Objects + (static_cast<std::uint32_t>(cur[0xB]) << 7); };
+    auto rec = [cur] { return rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(cur[0xB]) << 7); };
     rec()[0] = 1;
     const unsigned char kind = static_cast<unsigned char>(n + 0x70);
     rec()[5] = 6;
     rec()[6] = kind;
-    Fx(rec())->step_x = 0;
+    rv::As<records::EffectObject>(rec())->step_x = 0;
     SetLong(rec() + 0x10, static_cast<signed char>(At(at::kEffectX + Cond_Flags[0xd2])[0]));
-    SetWord(rec() + 0x2E, static_cast<std::uint16_t>(Spr(cur)->screen_x));
-    SetWord(rec() + 0x30, static_cast<std::uint16_t>(Spr(cur)->screen_y));
+    SetWord(rec() + 0x2E, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_x));
+    SetWord(rec() + 0x30, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_y));
 }
 
 // original 0x53D470: slot 1 of chapter 1's vtable, the object hook (0x56D6D0
@@ -1986,7 +1987,7 @@ extern "C" void __cdecl Scena01_Object06(unsigned char* object, unsigned char*) 
     Counter(1) = 0;
     Counter(2) = 0;
     object[1] = 4;
-    Spr(object)->script_position = 0;
+    rv::As<records::SpriteObject>(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xA;
     Turn();
@@ -2013,7 +2014,7 @@ extern "C" void __cdecl Scena01_Object07(unsigned char* object, unsigned char*) 
 extern "C" void __cdecl Scena01_Object08(unsigned char* object, unsigned char*) {
     Set40();
     object[1] = 4;
-    Spr(object)->script_position = 0;
+    rv::As<records::SpriteObject>(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xB;
     Turn();
@@ -2028,7 +2029,7 @@ extern "C" void __cdecl Scena01_Object08(unsigned char* object, unsigned char*) 
 extern "C" void __cdecl Scena01_Object09(unsigned char* object, unsigned char*) {
     Set40();
     object[1] = 4;
-    Spr(object)->script_position = 0;
+    rv::As<records::SpriteObject>(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xB;
     Turn();

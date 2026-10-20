@@ -20,6 +20,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "game/rest_2c_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -75,7 +77,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
 // 0x118 by 0x13, in the window colour (the original pushes the byte in a
 // register whose upper bytes it never cleared; Menu_DrawTitleBox reads the
 // byte - shop_states.cpp's TitleBox).
-void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour)); }
+void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour)); }
 
 // System message `id` at (0x1C, 0x16), colour 0, to its end.
 void Message(unsigned id) {
@@ -101,7 +103,7 @@ void CopySummary(U slot, const char* who) {
 }
 
 // The window record n's byte / word at +off.
-U Win(unsigned n, unsigned off) { return at::kWindows + n * at::kWindowStride + off; }
+U Win(unsigned n, unsigned off) { return WindowRecords_addr + n * at::kWindowStride + off; }
 
 // A party id's form: id 4 is drawn and saved as 0xB unless the story byte's
 // low seven bits are 5 or 0xC (Save_BuildBlock's and MasterPanel_DrawFace's
@@ -325,7 +327,7 @@ extern "C" void __cdecl Rest_WaitJingle(void) {
 // original 0x5805D0, Rest_States[4]: when the wait word 0x66C810 is 0:
 // Party_RestoreAll(0) and the state up (read after the call).
 extern "C" void __cdecl Rest_Restore(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Party_RestoreAll)(0);
     ++FieldS_State;
 }
@@ -353,7 +355,7 @@ extern "C" void __cdecl Rest_EndAfterMessage(void) {
 // bytes 0x903848..0x90384B; ObjTrio's leader +0x34 / +0x38 and its +8 byte;
 // Game_AreaNumber; 0x903A50 = 0. The summary 0x904680: the buttons' dwords
 // 0x903580 / 84 / 88 / 8C and word 0x903590 after it; the leader's name -
-// the record of MoveScript_EffectState[party id 0], strncpy 5 bytes, then 4
+// the record of Character_IndexById[party id 0], strncpy 5 bytes, then 4
 // from its +5 (both the C runtime's, through); the three party ids (id 4 as
 // FormOf); record 0's +0xA (not the leader's), the dword 0x9040C8, the style
 // bytes 0x903A5A / 0x903A5B, record 0's +0xC dword; Flags_Test(story flags,
@@ -378,28 +380,28 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     B(0x903A02) = B(0x90384A);
     PutL(0x903A08, L(0x802D74));
     PutL(0x903A0C, L(0x802D78));
-    B(0x903A07) = B(0x802D48);
-    PutL(0x90469C, L(0x903580));
+    B(0x903A07) = ObjTrio[0].direction;
+    SaveMenu_SavedButtons = L(0x903580);
     PutL(0x9046A4, L(0x903588));
     B(0x903A03) = B(0x90384B);
     PutL(0x9046A8, L(0x90358C));
-    PutW(0x903A04, Game_AreaNumber);
+    FieldModes_Pending = Game_AreaNumber;
     PutL(0x9046A0, L(0x903584));
     const unsigned record = B(at::kMemberRecord + Cond_Flags[0xd2]);
-    PutW(0x9046AC, Word(At(0x903590)));
+    PutW(0x9046AC, Field_CancelButtons);
     PutW(0x903A50, 0);
-    const U name = at::kRecords + (g_summary_record0 ? 0u : record) * at::kRecordStride;   // DIV-0076
+    const U name = CharacterRecords_addr + (g_summary_record0 ? 0u : record) * at::kRecordStride; // DIV-0076
     SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(at::kSummary)), reinterpret_cast<const char*>(At(name)), 5);
     SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(0x904696)), reinterpret_cast<const char*>(At(name + 5)), 4);
     for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + 0x623 + i) = FormOf(B(at::kPartyList + i));
     B(0x904688) = B(0x903A7A);
     PutL(0x90468C, L(0x9040C8));
-    B(0x904689) = static_cast<unsigned char>(BattleDraw_Colour);
-    B(0x90468A) = B(0x903A5B);
+    B(0x904689) = static_cast<unsigned char>(Config_WindowColour);
+    B(0x90468A) = Config_Background;
     PutL(0x904690, L(0x903A7C));
     const unsigned char flag = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x92);
     B(0x904694) = flag;
-    B(0x90412D) = B(0x9039A2);
+    SaveMenu_ScriptFlagsSaved = B(0x9039A2);
     U sum = 0;
     for (U i = 0; i < at::kBlockBytes; ++i) {
         const unsigned char v = B(at::kBlock + i);
@@ -847,12 +849,12 @@ namespace {
 // Menu_DrawPanelBox(0x14, 0x10 - 10 * slide, 0x118, 0x13, the window colour).
 void Panels() {
     for (unsigned slot = 0; slot < Field_MemberCount; ++slot) {
-        const unsigned char* const member = At(Field_Members_addr + slot * at::kObjStride);
+        const unsigned char* const member = At(ObjTrio_addr + 0x148 + slot * at::kObjStride);
         const int y = static_cast<int>(54 * slot + 0x3E);
         SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * Rest2c_TalkSlide, y, member[0], slot);
         SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * Rest2c_TalkSlide, y, member[0]);
     }
-    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 10 * Rest2c_TalkSlide, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 10 * Rest2c_TalkSlide, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
 }
 
 }  // namespace
@@ -894,8 +896,8 @@ extern "C" void __cdecl MasterTalk_PickAsk(void) {
 // + it (8 long) and system message 0x34 at (x + 0xB, y + 0x22); the box's
 // pieces: 0x664468, sixteen of 0x664494 8 apart, 0x6644A0.
 extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
-    SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, static_cast<unsigned char>(BattleDraw_Colour));
-    const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
+    SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, static_cast<unsigned char>(Config_WindowColour));
+    const U r = CharacterRecords_addr + (record & 0xFF) * at::kRecordStride;
     char* const buffer = reinterpret_cast<char*>(At(at::kPath));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
     const auto* const format = reinterpret_cast<const char*>(At(at::kFmtNumber));
@@ -938,9 +940,9 @@ extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
 // committed; R2H's 0x59DB70 at (x + 9, y + 5): the cell (s + 3, 0x1E), the
 // CLUT Gpu_GetClut(0x10, 0x1E0), shade 0x80.
 extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, unsigned slot) {
-    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(BattleDraw_Colour));
-    const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
-    const unsigned char id = B(r + 9);
+    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(Config_WindowColour));
+    const U r = CharacterRecords_addr + (record & 0xFF) * at::kRecordStride;
+    const unsigned char id = rv::As<records::CharRecord>(At(r))->char_id;
     const unsigned shade = (B(r + 0x10) >> 6) & 2;
     SH_CALL(MasterPanel_DrawFace)(x + 0x56, y + 2, id, shade);
     SH_CALL(Text_DrawAt)(x + 0x14, y + 3, 0, 5, At(r));
@@ -956,13 +958,13 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     const auto* const left = reinterpret_cast<const char*>(At(at::kFmtLeft));
     const auto* const right = reinterpret_cast<const char*>(At(at::kFmtRight));
     int colour = (B(r + 0x11) & 0x20) ? 4 : 0;
-    const unsigned hp = Word(At(r + 0x18));
+    const unsigned hp = rv::As<records::CharRecord>(At(r))->hp;
     if (hp <= 1) colour = 2;
     SH_CALL(Crt_sprintf)(buffer, left, hp);
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x1F, colour, text);
     SH_CALL(Crt_sprintf)(buffer, right, static_cast<unsigned>(Word(At(r + 0x20))));
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x1F, 0, text);
-    const unsigned ap = Word(At(r + 0x1A));
+    const unsigned ap = rv::As<records::CharRecord>(At(r))->ap;
     colour = ap <= static_cast<unsigned>(Word(At(r + 0x22)) >> 2) ? 4 : 0;
     if (ap == 0) colour = 2;
     SH_CALL(Crt_sprintf)(buffer, left, ap);
@@ -970,7 +972,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     SH_CALL(Crt_sprintf)(buffer, right, static_cast<unsigned>(Word(At(r + 0x22))));
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x27, 0, text);
     SH_CALL(Menu_DrawPieces)(x, y, At(at::kMemberPieces), 0);
-    const U exp = L(r + 0xC);
+    const U exp = static_cast<U>(rv::As<records::CharRecord>(At(r))->exp);
     const unsigned level = B(r + 0xA);
     SH_CALL(MasterPanel_DrawExpBar)(x + 0x14, y + 0x12, record, level, exp);
     SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr)), 0, 0, 0xF, 0);

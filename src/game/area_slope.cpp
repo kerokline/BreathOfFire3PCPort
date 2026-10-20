@@ -20,7 +20,7 @@ std::int32_t Abs(std::int32_t v) { return v < 0 ? -v : v; }   // never INT_MIN h
 }  // namespace
 
 // original 0x5722D0: how steep the ground is at (x, y), 16.16, and whether it
-// is sloped at all - scratch byte 0 (DamageScratch, the PSX scratchpad's first
+// is sloped at all - scratch byte 0 (SharedScratch, the PSX scratchpad's first
 // byte) is 1 for sloped, 0 for flat or outside the grid. Its three callers
 // that were read (0x46B611, 0x518784, MoveCmd_Move 0x578CC3) test that byte
 // straight after the call. The same grid and cell lookup as AreaMap_Elevation;

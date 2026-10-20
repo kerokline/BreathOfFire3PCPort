@@ -84,7 +84,7 @@ again (HANDOFF "Pick up here" 0000). `Transition_Start`, `0x59E330` and
 ## 2. The transition task
 
 `Transition_Start(kind)` (170 call sites) refuses while
-`MoveScript_WaitWordDA` is set - a transition is already running - else
+`Transition_Busy` is set - a transition is already running - else
 stores the kind in the word `0x66C828` (PSX `0x80143C90`) and creates task 2
 at `0x495070`. **Many callers push whole registers** with the kind in the low
 byte (`push eax` at `0x495950`, `push ecx` at `0x495AC6`, `push ebx` at

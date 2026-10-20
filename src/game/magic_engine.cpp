@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -61,7 +62,7 @@ using PlayCueFn = void (__cdecl*)(unsigned);
 // A bit per actor with a reaction to show (docs/battle_actions.md).
 // kPending: now BattleActions_Pending (symbols.toml).
 // The task slots' owner cells: slot i's +0x80.
-constexpr std::uint32_t kSlotOwners = at::kTasks + 0x80;
+constexpr std::uint32_t kSlotOwners = BattleTask_Slots_addr + 0x80;
 
 // The state byte +1 of an actor: 6 is the reaction state
 // BattleAction_EffectWait sets on every actor flagged 0x40.
@@ -234,11 +235,11 @@ MENGINE_EXPORT void __cdecl HeadCracker_Task(void) {
 MENGINE_EXPORT void __cdecl HeadCracker_Start(void) {
     unsigned char* const owner = SlotOwner();
     unsigned char* const slot = Sprite_Current;
-    records::BattleTask* const tslot = reinterpret_cast<records::BattleTask*>(slot);
+    records::BattleTask* const tslot = rv::As<records::BattleTask>(slot);
     Sprite_Current = owner;
     MH_CALL(Sprite_SetAnimation)(2);
     Sprite_Current = slot;
-    tslot->vel_x = 8;
+    tslot->step_x = 8;
     Bump(Sprite_Current[1]);
 }
 
@@ -354,17 +355,17 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
     MH_CALL(Sprite_SetAnimationBank)(0x1D3);
     const unsigned char t = Mem(at::kTarget)[0];
     unsigned char* const sc = Sprite_Current;
-    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+    records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (t <= 2) {
         tsc->x = Long(PartyOf(t) + 0x34);
-        tsc->y = Long(PartyOf(Mem(at::kTarget)[0]) + 0x38);
+        tsc->z = Long(PartyOf(Mem(at::kTarget)[0]) + 0x38);
     } else {
         tsc->x = Long(EnemyOf(t) + 0x34);
-        tsc->y = Long(EnemyOf(Mem(at::kTarget)[0]) + 0x38);
+        tsc->z = Long(EnemyOf(Mem(at::kTarget)[0]) + 0x38);
     }
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + 0x800);
-    SetLong(sc + 0x14, 0);
-    SetLong(sc + 0x20, -16);
+    rv::Store<unsigned>(tsc->height_whole, tsc->height_whole + 0x800);
+    rv::Store(tsc->step_y, 0);
+    rv::Store(tsc->work_20, -16);
     sc[0x5D] = 0;
     sc[0x5E] = 0;
     sc[0x5F] = 0;
@@ -383,13 +384,13 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
 // Sprite_Current read again) is below that, the sub-phase +2 on.
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Fall(void) {
     unsigned char* const sc = Sprite_Current;
-    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + Word(sc + 0x14));
-    SetLong(sc + 0x14, Long(sc + 0x14) + Long(sc + 0x20));
-    const long ground = MH_CALL(AreaMap_Elevation)(tsc->x, tsc->y);
+    records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
+    rv::Store<unsigned>(tsc->height_whole, tsc->height_whole + Word(sc + 0x14));
+    rv::Store(tsc->step_y, tsc->step_y + tsc->work_20);
+    const long ground = MH_CALL(AreaMap_Elevation)(tsc->x, tsc->z);
     const int limit = static_cast<short>(static_cast<std::uint32_t>(ground) & 0xFFFF) + 0x180;
     unsigned char* const now = Sprite_Current;
-    if (static_cast<short>(Word(now + 0x3E)) < limit) Bump(now[2]);
+    if (static_cast<short>(rv::As<records::BattleTask>(now)->height_whole) < limit) Bump(now[2]);
 }
 
 // original 0x440060: flag 0x40 on the target; the owner's (0x93B940, read

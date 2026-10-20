@@ -21,6 +21,7 @@
 #include "game/area_harness.h"
 #include "game/area_w3d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -31,7 +32,6 @@
 using bof3x::input::sigma::Sigma;
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3d::at;
 using area_harness::Mem;
@@ -109,7 +109,7 @@ void HeldMove(unsigned word, short least, unsigned char direction) {
     MoveScript_Object[7] = 2;
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    CurSprite()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     ScriptStep(0xFFFE);
 }
 
@@ -241,7 +241,7 @@ extern "C" void __cdecl Area135_MarkerRoute(void) {
         if (r[3] == 0xFF || r[5] == 0xFF) {
             ScriptStep(0xFFFC);
             last = Sprite_Current;
-            if (last == ObjTrio) B(at::kCounter3) = 8;
+            if (last == rv::Bytes(ObjTrio)) B(at::kCounter3) = 8;
             continue;
         }
         const U x = (r[2] ? 0x8000u : 0u) | static_cast<U>(r[3]) << 16;
@@ -252,7 +252,7 @@ extern "C" void __cdecl Area135_MarkerRoute(void) {
         MoveScript_Object[7] = 1;
         Sprite_Current[8] = r[6];
         last = Sprite_Current;
-        if (last == ObjTrio) {
+        if (last == rv::Bytes(ObjTrio)) {
             SetD(Field_Kind2X_addr, x);
             SetD(Field_Kind2Z_addr, z);
             SetWord(Mem(MoveScript_F3Divisor_addr), 0x20);
@@ -272,9 +272,9 @@ extern "C" void __cdecl Area135_ToMarker(void) {
         SetD(Field_Kind2Z_addr, z);
         return;
     }
-    SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x220)));
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x224)));
-    SetLong(Sprite_Current + 0x3C, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x228)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x220)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x224)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x228)));
 }
 
 // original 0x41DE60 (Area135_Handlers[6]; PSX 0x801F44E0): unless Field_State
@@ -304,10 +304,10 @@ extern "C" void __cdecl Area135_HeldMove7(void) { HeldMove(0x36, 6, 7); }
 // there: Area135_FallTo(AreaMap_Elevation(x, z) + 0x280); none:
 // Area135_FallTo(the highest + 0x180).
 extern "C" void __cdecl Area135_FallToFloor(void) {
-    U z = static_cast<U>(CurSprite()->z) - 0x8000;
+    U z = static_cast<U>(rv::Current<records::SpriteObject>()->z) - 0x8000;
     U best = 0xFFFF8000u;
     for (unsigned row = 0; row < 2; ++row) {
-        U x = static_cast<U>(CurSprite()->x) - 0x18000;
+        U x = static_cast<U>(rv::Current<records::SpriteObject>()->x) - 0x18000;
         for (unsigned column = 0; column < 4; ++column) {
             MapView_HeightScale = 1;
             const auto ground = static_cast<U>(AH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z)));
@@ -317,10 +317,10 @@ extern "C" void __cdecl Area135_FallToFloor(void) {
         z += 0x10000;
     }
     const unsigned char found =
-        AH_CALL(Area135_ObjectAtCell)(CurSprite()->x, CurSprite()->z);
+        AH_CALL(Area135_ObjectAtCell)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     B(AreaW0c_TailSub_addr) = found;
     if (found != 0xFF) {
-        const long top = AH_CALL(AreaMap_Elevation)(CurSprite()->x, CurSprite()->z);
+        const long top = AH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
         AH_CALL(Area135_FallTo)(static_cast<unsigned>(top + 0x280));
         return;
     }
@@ -351,7 +351,7 @@ extern "C" void __cdecl Area135_RestoreOnRequest5(void) {
 // passed (12 when none stopped it).
 extern "C" void __cdecl Area135_JumpByOccupied(void) {
     const unsigned char* cur = Sprite_Current;
-    const auto* tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* tCur = rv::AsConst<records::SpriteObject>(cur);
     unsigned k = 0;
     for (; k < 4; ++k) {
         const U x = static_cast<U>(B(Area135_JumpCells_addr + k * 2)) << 16 | 0x8000;
@@ -360,7 +360,7 @@ extern "C" void __cdecl Area135_JumpByOccupied(void) {
         if (static_cast<U>(tCur->z) != z) continue;
         if (AH_CALL(Area135_ObjectAtCell)(static_cast<long>(x), static_cast<long>(z)) != 0xFF) break;
         cur = Sprite_Current;
-        tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+        tCur = rv::AsConst<records::SpriteObject>(cur);
     }
     ScriptStep(k * 3);
 }
@@ -379,7 +379,7 @@ extern "C" void __cdecl Area135_QueueRun(void) {
 extern "C" void __cdecl Area135_QueueStepZ(void) {
     const U n = AH_CALL(Area135_CountQueue)() & 0xFFu;
     Sprite_Current[8] = 5;
-    const std::int32_t step = Sar((n << 17) - static_cast<U>(CurSprite()->z) + 0xC8000, 15);
+    const std::int32_t step = Sar((n << 17) - static_cast<U>(rv::Current<records::SpriteObject>()->z) + 0xC8000, 15);
     MoveScript_Object[7] = static_cast<unsigned char>(step);
     unsigned char* object = MoveScript_Object;
     if (static_cast<signed char>(object[7]) < 0) {
@@ -389,7 +389,7 @@ extern "C" void __cdecl Area135_QueueStepZ(void) {
     }
     if (object[7] != 0) {
         AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-        CurSprite()->step_y = 0;
+        rv::Current<records::SpriteObject>()->step_y = 0;
     }
     Sprite_Current[4] = static_cast<unsigned char>(Sprite_Current[4] + 1);
     ScriptStep(0xFFFE);
@@ -404,11 +404,11 @@ extern "C" void __cdecl Area135_QueueStepX(void) {
     if (n == 4) return;
     Sprite_Current[8] = 3;
     const U cell = static_cast<U>(B(Area135_QueueCells_addr + n)) << 16 | 0x8000;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(cell - static_cast<U>(CurSprite()->x), 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(cell - static_cast<U>(rv::Current<records::SpriteObject>()->x), 15));
     unsigned char* const object = MoveScript_Object;
     if (object[7] != 0) {
         AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-        CurSprite()->step_y = 0;
+        rv::Current<records::SpriteObject>()->step_y = 0;
     }
     Sprite_Current[4] = 0;
 }
@@ -424,14 +424,14 @@ extern "C" void __cdecl Area135_WalkRun(void) {
 // +0x14 = 0, the state + 1, the script back 2.
 extern "C" void __cdecl Area135_WalkToX(void) {
     Sprite_Current[8] = 7;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(static_cast<U>(CurSprite()->x) - 0x1C8000, 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(static_cast<U>(rv::Current<records::SpriteObject>()->x) - 0x1C8000, 15));
     if (static_cast<signed char>(MoveScript_Object[7]) < 0) {
         Sprite_Current[8] = static_cast<unsigned char>(Sprite_Current[8] ^ 4);
         MoveScript_Object[7] = static_cast<unsigned char>(0u - MoveScript_Object[7]);
     }
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    CurSprite()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     Sprite_Current[4] = static_cast<unsigned char>(Sprite_Current[4] + 1);
     ScriptStep(0xFFFE);
 }
@@ -440,10 +440,10 @@ extern "C" void __cdecl Area135_WalkToX(void) {
 // (0x148000 - z) >> 15; MoveCmd_Move, +0x14 = 0, the state 0.
 extern "C" void __cdecl Area135_WalkToZ(void) {
     Sprite_Current[8] = 5;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(0x148000u - static_cast<U>(CurSprite()->z), 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(0x148000u - static_cast<U>(rv::Current<records::SpriteObject>()->z), 15));
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    CurSprite()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     Sprite_Current[4] = 0;
 }
 
@@ -460,11 +460,11 @@ extern "C" void __cdecl Area135_LiftDown(void) { Lift(0xFFFFFFFCu); }
 // script on by 1 (the running object read again); the state 0.
 extern "C" void __cdecl Area135_LiftDone(void) {
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* tCur = rv::As<records::SpriteObject>(cur);
     if (tCur->x == 0x168000 && tCur->z == 0x128000) {
         ScriptStep(1);
         cur = Sprite_Current;
-        tCur = reinterpret_cast<records::SpriteObject*>(cur);
+        tCur = rv::As<records::SpriteObject>(cur);
     }
     cur[4] = 0;
 }
@@ -488,12 +488,12 @@ extern "C" void __cdecl Area135_SpawnCopy(void) {
     if (slot == 0xFF) return;
     AH_CALL(Area135_RestoreCells)();
     unsigned char* const self = Sprite_Current;
-    auto* const tSelf = reinterpret_cast<records::SpriteObject*>(self);
+    auto* const tSelf = rv::As<records::SpriteObject>(self);
     const unsigned sub = B(AreaW0c_TailSub_addr);
     AH_CALL(EventOp_9x)(Mem(Area135_SpawnOps_addr + sub * at::kArea135SpawnOpStride));
-    SetLong(Sprite_Current + 0x34, tSelf->x);
-    SetLong(Sprite_Current + 0x38, tSelf->z);
-    SetLong(Sprite_Current + 0x3C, tSelf->height);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, tSelf->x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, tSelf->z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, tSelf->height);
     Sprite_Current = self;
     AH_AT(void (__cdecl*)(), area_w3d::kEngine46D710)();
     Sprite_Current[0xA] = Sprite_Current[9];
@@ -527,7 +527,7 @@ extern "C" void __cdecl Area135_SpawnKind1AtLeader(void) {
     const auto z = static_cast<short>(Word(Mem(ObjTrio_addr + 0x30)));
     const auto x = static_cast<short>(Word(Mem(ObjTrio_addr + 0x2e)));
     const unsigned char list = B(Cond_Flags_addr + 0xd3);
-    Sprite_Current = ObjTrio;
+    Sprite_Current = rv::Bytes(ObjTrio);
     const unsigned char kind = B(Area135_EffectKinds_addr + list);
     const unsigned char slot = AH_CALL(Effect_Spawn)(1, 0, static_cast<signed char>(kind), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;
@@ -689,10 +689,10 @@ extern "C" void __cdecl Area135_Tail18(void) {
         }
         B(AreaW0c_TailState_addr) = 0x1C;
         unsigned char* const o = ObjectAt(kWho, sub);
-        auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
+        auto* const tO = rv::As<records::SpriteObject>(o);
         o[1] = 7;
-        tO->accel_x = 0;
-        tO->accel_z = 5;
+        tO->work_18 = 0;
+        tO->work_1c = 5;
         AddWord(o + 0x8A, 3);
         return;
     }
@@ -765,8 +765,8 @@ extern "C" void __cdecl Area135_Init(void) {
         unsigned char* const e = EffectAt("Area135_Init", slot);
         e[0] = 1;
         e[5] = 0x53;
-        SetLong(e + 0x18, 0);
-        SetLong(e + 0x1C, 6);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_18, 0);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_1c, 6);
     }
     B(at::kCounter3) = 0;
 }
@@ -782,7 +782,7 @@ extern "C" void __cdecl Area135_Init(void) {
 // aborts.
 extern "C" void __cdecl Area135_FallTo(unsigned height) {
     unsigned char* cur = Sprite_Current;
-    const auto d = static_cast<std::int32_t>(static_cast<short>(static_cast<unsigned short>(height - Word(cur + 0x3E))));
+    const auto d = static_cast<std::int32_t>(static_cast<short>(static_cast<unsigned short>(height - rv::As<records::SpriteHead>(cur)->height_whole)));
     std::int32_t steps = d / 128;
     if (steps < 0) steps = -steps;
     cur[9] = static_cast<unsigned char>(static_cast<unsigned>(steps) << 4);
@@ -791,10 +791,10 @@ extern "C" void __cdecl Area135_FallTo(unsigned height) {
     if (divisor == 0)
         bof3::Fatal("Area135_FallTo: the fall's frame count +9 is 0 (height %u against +0x3E %u, a difference of %d): "
                     "the original divides by it and faults",
-                    height & 0xFFFF, static_cast<unsigned>(Word(cur + 0x3E)), static_cast<int>(d));
-    SetLong(cur + 0x14, d / divisor);
-    SetLong(Sprite_Current + 0x10, 0);
-    SetLong(Sprite_Current + 0xC, 0);
+                    height & 0xFFFF, static_cast<unsigned>(rv::As<records::SpriteHead>(cur)->height_whole), static_cast<int>(d));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_y, d / divisor);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, 0);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, 0);
 }
 
 // original 0x41EC40: the first field object (0..29) in use (+0 bit 0), not
@@ -804,7 +804,7 @@ extern "C" unsigned char __cdecl Area135_ObjectAtCell(long x, long z) {
     const unsigned char* const self = Sprite_Current;
     for (unsigned i = 0; i < at::kObjectCount; ++i) {
         const unsigned char* const o = Mem(Sprite_Objects_addr + i * at::kObjectStride);
-        const auto* const tO = reinterpret_cast<const records::SpriteObject*>(o);
+        const auto* const tO = rv::AsConst<records::SpriteObject>(o);
         if (!(o[0] & 1)) continue;
         if (o == self) continue;
         if (o[6] != 0xA) continue;
@@ -836,11 +836,11 @@ extern "C" void __cdecl Area135_StampCells(void) {
         return;
     }
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     const U x = static_cast<U>(tCur->x) - 0x8000;
     const U z = static_cast<U>(tCur->z) - 0x8000;
     const unsigned cx = (x >> 16) & 0xFFFF;
-    SetLong(cur + 0x20, 0);
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(cur)->work_20, 0);
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned cz = ((z >> 16) + k) & 0xFFFF;
         const unsigned shift = k * 8;
@@ -864,17 +864,17 @@ extern "C" void __cdecl Area135_StampCells(void) {
 // arithmetic, the running object read again).
 extern "C" void __cdecl Area135_RestoreCells(void) {
     unsigned char* const cur = Sprite_Current;
-    const auto x = static_cast<U>(Long(cur + 0x34));
-    const auto z = static_cast<U>(Long(cur + 0x38));
+    const auto x = static_cast<U>(rv::As<records::SpriteHead>(cur)->x);
+    const auto z = static_cast<U>(rv::As<records::SpriteHead>(cur)->z);
     const unsigned cx = (x >> 16) & 0xFFFF;
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned cz = ((z >> 16) + k) & 0xFFFF;
         const unsigned shift = k * 8;
         AH_CALL(AreaMap_SetHeight)(cx, cz, 0);
-        AH_CALL(AreaMap_SetByte)(cx, cz, static_cast<unsigned>(Long(Sprite_Current + 0x20) >> shift));
+        AH_CALL(AreaMap_SetByte)(cx, cz, static_cast<unsigned>(rv::Current<records::SpriteHead>()->work_20 >> shift));
         const unsigned cx1 = (cx + 1) & 0xFFFF;
         AH_CALL(AreaMap_SetHeight)(cx1, cz, 0);
-        AH_CALL(AreaMap_SetByte)(cx1, cz, static_cast<unsigned>(Long(Sprite_Current + 0x20) >> (shift + 16)));
+        AH_CALL(AreaMap_SetByte)(cx1, cz, static_cast<unsigned>(rv::Current<records::SpriteHead>()->work_20 >> (shift + 16)));
     }
 }
 
@@ -884,7 +884,7 @@ extern "C" void __cdecl Area135_RestoreCells(void) {
 // al 1, else 0.
 extern "C" unsigned char __cdecl Area135_NearMarker(long x, long z) {
     const U marker = static_cast<U>(Long(Mem(Sprite_ObjectsExtra_addr + 0x25c))) & 0xFF;
-    const U self = static_cast<U>(Long(Sprite_Current + 0x70)) & 0xFF;
+    const U self = static_cast<U>(static_cast<std::int32_t>(rv::Current<records::SpriteHead>()->reach)) & 0xFF;
     const U frames = B(Sprite_ObjectsExtra_addr + 0x1f5);
     const auto reach = static_cast<std::int32_t>((self + marker + 2) << 15);
     auto dx = static_cast<std::int32_t>(static_cast<U>(x) - frames * D(Sprite_ObjectsExtra_addr + 0x1f8) - D(Sprite_ObjectsExtra_addr + 0x220));
@@ -933,10 +933,10 @@ extern "C" void __cdecl Area135_Kind2ToObject0(unsigned divisor) {
 // 0x3C0 / 0xAA0.
 extern "C" void __cdecl Area135_OpenMessage(unsigned id) {
     AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(id & 0xFF));
-    SetD(BattleWinStates_Current_addr, at::kMessagePools);
+    SetD(BattleWinStates_Current_addr, WindowRecords_addr);
     AH_CALL(Window_FreeCurrent)();
-    SetWord(Mem(at::kPoolWords), 0x3C0);
-    SetWord(Mem(at::kPoolWords + 2), 0xAA0);
+    SetWord(Mem(WindowRecords_addr + 0x4), 0x3C0);
+    SetWord(Mem(WindowRecords_addr + 0x4 + 2), 0xAA0);
 }
 
 void AreaW3d_Inject() {

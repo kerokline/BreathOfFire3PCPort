@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"
 
 namespace mode_rest::at {
 
@@ -31,12 +32,13 @@ constexpr U kCommuFile = 0x12A;            // the DAT loaded with Field_InputFla
 // kTripArea: now AreaW4d_ReturnArea (symbols.toml). u16: the area saved going out
 // kAreaWord: now Game_AreaNumber (symbols.toml). u16: Game_AreaNumber (scenario_harness.h's name)
 constexpr U kTripAnyArea = 0xBD;           // the area the trip may start from without Field_InputFlags bit 0
-constexpr U kLeaderX = 0x802D74;           // dword: ObjTrio record 0 +0x34, the leader's x
-constexpr U kLeaderZ = 0x802D78;           // dword: ... +0x38, its z
-// kLeaderFacing: now ObjTrio[8] (symbols.toml). u8: ObjTrio +8, the leader's facing
+// kLeaderX: now ObjTrio[0].x (symbols.toml). dword: ObjTrio record 0 +0x34, the leader's x
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). dword: ... +0x38, its z
+// kLeaderFacing: now ObjTrio[0].direction (symbols.toml). u8: ObjTrio +8, the leader's facing
 constexpr U kFacingJitter = 0x656A80;      // s8 x 4: the facing's jitter by Rand & 3 (image .data, after GameMode3_Steps)
 // kPendingPlace: now AreaW0b_Place (symbols.toml). u16: the trip's destination area
-constexpr U kPendingX = 0x903860;          // dword: its x
+inline auto& kPendingX = SharedScratch.d_10;          // dword: its x
+constexpr std::uint32_t kPendingX_addr = SharedScratch_addr + 0x10; // kPendingX's address, for the raw accessors that take one
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). dword: its z
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8: its Field_ChangeArea flags
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flag row Flags_Clear is handed
@@ -49,8 +51,8 @@ constexpr U kMessageBits = 0x7DEE44;       // u8: bit 1 ends mode 4 (the message
 // kCameraTurnByte: now EventOps_BlockByte (symbols.toml). u8: 0x10 when mode 4 ends (CameraTurn_Steps' cells)
 
 // --- mode 5 (the battle) -----------------------------------------------------------
-// kBattleFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: EventBattle_Records +0's flags (Field_StartEventBattle)
-// kBattleFlags2: now BattleActions_BattleEnd (symbols.toml). u8: bit 3 keeps the field's music off after the battle
+// kBattleFlags: now EventBattle_Flags (symbols.toml). u8: EventBattle_Records +0's flags (Field_StartEventBattle)
+// kBattleFlags2: now Battle_EndFlags (symbols.toml). u8: bit 3 keeps the field's music off after the battle
 // kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml). u8: the area's track Field_ChangeArea chose (mode_flow kAreaTrack); DIV-0092
 // kBattleFlags3: now BattleMisc_BannerKinds (symbols.toml). u8: zeroed at steps 3 and 4
 constexpr U kFormation = 0x904AAC;         // dword read, its low byte the formation (rest_3g_callees.h)
@@ -58,9 +60,9 @@ constexpr U kApproach = 0x656AA4;          // s8 pairs by the formation byte: x 
 // kElevationBase: now ModeRest_ElevationBase (symbols.toml). dword: less MapView_Elevation, sar 4, into MoveScript_FAWord
 constexpr U kKind2ZHigh = 0x905E62;        // u16: Field_Kind2Z's upper half
 constexpr U kKind2XHigh = 0x905E66;        // u16: Field_Kind2X's upper half
-// kEventBattle: now BattleActions_EventBattle (symbols.toml).
-// kLeaderXHigh: now ObjTrio[0x36] (symbols.toml). u8: the leader's integer x, low byte (field_event_callees.h); DIV-0092's second amendment
-// kLeaderZHigh: now ObjTrio[0x3a] (symbols.toml). u8: its z       // u8: the event battle (EventBattle_Records' index)
+// kEventBattle: now EventBattle_Id (symbols.toml).
+// kLeaderXHigh: now ObjTrio[0].x_whole (symbols.toml). u8: the leader's integer x, low byte (field_event_callees.h); DIV-0092's second amendment
+// kLeaderZHigh: now ObjTrio[0].z_whole (symbols.toml). u8: its z       // u8: the event battle (EventBattle_Records' index)
 constexpr U kEventAsset = 0x64DDEF;        // EventBattle_Records + 3: each record's asset index (image .data)
 constexpr U kEventFile = 0x64DECC;         // u16 pairs (file, track) by that index, stride 4 (image .data)
 constexpr U kEventTrack = 0x64DECE;

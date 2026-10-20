@@ -28,12 +28,13 @@ constexpr U kBattleFlags = 0x904AA8;       // dword: bit 14 the auto-target chec
 constexpr U kAutoMode = 0x904B35;          // u8: the auto-target mode (4: by the enemy's ability)
 constexpr U kTarget = 0x904B44;            // u8: the target the checks store
 // kForcedActor: now BattlePhases_B8B (symbols.toml). u8: the actor the auto-target check compares
-// kPartyPick: now BattleSprites_PartyPick (symbols.toml). u8: 1 keeps a member's pick off the party
-// kMemberAction: now ObjTrio[0x126] (symbols.toml). ObjTrio + 0x126 (u16): a member's action
-// kMemberMode: now ObjTrio[0x125] (symbols.toml). ObjTrio + 0x125 (u8): a member's auto mode
-// kMemberOdds: now ObjTrio[0x142] (symbols.toml). ObjTrio + 0x142 (s8): the odds of a party pick, by 20
+// kPartyPick: now Battle_PartyStanding (symbols.toml). u8: 1 keeps a member's pick off the party
+// kMemberAction: now ObjTrio_addr + 0x126 (symbols.toml). ObjTrio + 0x126 (u16): a member's action
+// kMemberMode: now ObjTrio_addr + 0x125 (symbols.toml). ObjTrio + 0x125 (u8): a member's auto mode
+// kMemberOdds: now ObjTrio[0].count_4000 (symbols.toml). ObjTrio + 0x142 (s8): the odds of a party pick, by 20
 constexpr U kMemberStride = 0x14C;
-constexpr U kEnemyHp = 0x93BA1A;           // enemy record + 0xBA (u16), records from 0x93B960, 0x128 apart
+constexpr U kEnemyIntel = 0x93BA1A;        // enemy record + 0xBA (u16), records from 0x93B960, 0x128 apart:
+                                           // BattleEnemy::intel (named kEnemyHp until 2026-10-20; IDEAS I49)
 constexpr U kEnemyStatus = 0x93B9F2;       // enemy record + 0x92 (u8): bit 5
 constexpr U kEnemyFlags = 0x93BA74;        // enemy record + 0x114 (dword): bit 14
 constexpr U kEnemyAbility = 0x93BA66;      // enemy record + 0x106 (u16): the ability
@@ -59,7 +60,7 @@ constexpr U kLevelDark = 0x9046CB;         // u8: below 10
 constexpr U kLevelLit = 0x9046CC;          // u8: below 7
 // kSumA: now FieldE2_BiasA (symbols.toml). u8: kind 0xA's sum
 // kSumB: now FieldE2_BiasB (symbols.toml). u8: kind 0xB's sum
-constexpr U kRecords = 0x9046D0;           // 60 records of 8: +0 in use, +1 building (1-based) or a kind, +2, +3, +4 a clock stamp
+// kRecords: now Community_Records (symbols.toml). 60 records of 8: +0 in use, +1 building (1-based) or a kind, +2, +3, +4 a clock stamp
 constexpr U kRecordsEnd = 0x9048B0;
 constexpr unsigned kRecordCount = 60;
 constexpr U kBuildings = 0x9048B0;         // 8 records of 8: +0 the kind, +1, +2, +3 a level, +4 a clock stamp
@@ -92,8 +93,8 @@ constexpr U kOfferWords = 0x675F60;        // 3 x 3 u16 (.data, written)
 constexpr U kOfferWordsEnd = 0x675F72;
 // kSpriteBase: now Sprite_Objects (symbols.toml). Sprite_Objects
 constexpr U kSpriteStride = 0xA4;
-// kSpritePose: now Sprite_Objects[0x88] (symbols.toml). Sprite_Objects + 0x88 (u16)
-// kSpriteKind: now Sprite_Objects[6] (symbols.toml). Sprite_Objects + 6
+// kSpritePose: now Sprite_Objects[0].trigger_word (symbols.toml). Sprite_Objects + 0x88 (u16)
+// kSpriteKind: now Sprite_Objects[0].type (symbols.toml). Sprite_Objects + 6
 constexpr U kSpriteHold = 0x7DEF04;        // Sprite_Objects + 0x84
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flag row Flags_* are handed
 

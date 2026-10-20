@@ -21,6 +21,7 @@
 #include "game/boss_sd.h"
 #include "game/boss_sd_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 
 namespace boss_sd {
@@ -97,12 +98,12 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 8) {
     case 0: Mem(BossSe_Script_addr)[0] = b; break;
-    case 1: Mem(at::kEnemy0Status)[1] = b; break;
+    case 1: Mem(Battle_Enemies_addr + 0x92)[1] = b; break;
     case 2: Mem(BossH_Enemy1Status_addr)[1] = b; break;
     case 3: Mem(BossH_Enemy2Status_addr)[1] = b; break;
-    case 4: SetWord(Mem(h & 0x100 ? BossSb_Enemy1Hp_addr : at::kEnemy0Hp), h >> 12); break;
+    case 4: SetWord(Mem(h & 0x100 ? BossSb_Enemy1Hp_addr : (Battle_Enemies_addr + 0xa4)), h >> 12); break;
     case 5: SetWord(Mem(BossSd_KeptA6_addr + 2 * ((h >> 12) % 4)), h >> 14); break;
-    case 6: bh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * ((h >> 16) % 40))); break;
+    case 6: bh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * ((h >> 16) % 40))); break;
     default: Sprite_Current[5] = static_cast<unsigned char>(h & 0x200 ? 4 + ((h >> 16) & 1) : b); break;
     }
 }
@@ -252,7 +253,7 @@ void SeedK26(unsigned k) {
         break;
     case kHitSound: {
         // the signed word +0x108 against 0 (jle)
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
         enemy_rec->hp_change = bh::Often() ? BH_PICK(0, 1, 0xFFFF, 0x7FFF, 0x8000, 2) : bh::Next();
         break;
     }
@@ -270,8 +271,8 @@ void SeedK26(unsigned k) {
 // original jumps through the next .data dwords and ours aborts.
 void SettleK26() {
     for (unsigned i = 0; i < bh::at::kEnemyCount; ++i) {
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::EnemyAt(i));
-        if (enemy_rec->state[0] >= 12) enemy_rec->state[0] = static_cast<unsigned char>(enemy_rec->state[0] % 12);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::EnemyAt(i));
+        if (enemy_rec->state >= 12) enemy_rec->state = static_cast<unsigned char>(enemy_rec->state % 12);
     }
 }
 void ArgsK26(unsigned k, U* a) {
@@ -332,9 +333,9 @@ const bh::Clone kClonesB21[] = {
 // The set-ups' seed: the battle-end byte and 0x904AAD at their bit values, the
 // three enemies' +0x93 with and without 0x40, the kept words' sources.
 void SeedSetup(unsigned) {
-    Mem(BattleActions_BattleEnd_addr)[0] = EndByte();
+    Mem(Battle_EndFlags_addr)[0] = EndByte();
     Mem(BossSe_Script_addr)[0] = EndByte();
-    Mem(at::kEnemy0Status)[1] = StatusByte();
+    Mem(Battle_Enemies_addr + 0x92)[1] = StatusByte();
     Mem(BossH_Enemy1Status_addr)[1] = StatusByte();
     Mem(BossH_Enemy2Status_addr)[1] = StatusByte();
 }

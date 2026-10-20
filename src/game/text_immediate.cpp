@@ -77,7 +77,7 @@ void SelfTest(void* clone) {
     struct Region { std::uint32_t address, size; std::uint8_t saved[0x400]; };
     static Region regions[] = {
         {bof3::addr::Text_CurrentName, 16, {}},
-        {bof3::addr::CharacterRecords, 4 * kCharacterRecord, {}},
+        {CharacterRecords_addr, 4 * kCharacterRecord, {}},
         {bof3::addr::Text_Records, 4 * kTextRecord, {}},
         {bof3::addr::MessagePools, 0x400, {}},
     };
@@ -114,7 +114,7 @@ void SelfTest(void* clone) {
         // and the count.
         fill(const_cast<std::uint8_t*>(At(bof3::addr::Text_CurrentName)), 16, static_cast<int>(next() % 14));
         for (int i = 0; i < 4; ++i) {
-            fill(const_cast<std::uint8_t*>(At(bof3::addr::CharacterRecords)) + i * kCharacterRecord, 16, static_cast<int>(next() % 14));
+            fill(const_cast<std::uint8_t*>(At(CharacterRecords_addr)) + i * kCharacterRecord, 16, static_cast<int>(next() % 14));
             fill(const_cast<std::uint8_t*>(At(bof3::addr::Text_Records)) + i * kTextRecord, kTextRecord, static_cast<int>(next() % 40));
         }
         const std::uint32_t table = 0x10 + (next() % 8) * 2;
@@ -227,7 +227,7 @@ extern "C" const unsigned char* __cdecl Text_DrawImmediate(int x_arg, int y, con
             substitute(text, At(bof3::addr::Text_CurrentName), 9);
             continue;
         case 0x04:
-            substitute(text + 1, At(bof3::addr::CharacterRecords) + text[1] * kCharacterRecord, 9);
+            substitute(text + 1, At(CharacterRecords_addr) + text[1] * kCharacterRecord, 9);
             continue;
         case 0x05:
             colour = text[1];

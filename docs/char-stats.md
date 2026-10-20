@@ -182,10 +182,10 @@ followed by the 128-byte list `0x590C90` fills (the sibling's
 `AbilityList_Add`, `0x904574`).
 
 - `Inventory_Add(category, item, count)` `0x590BB0`: 0 for an item or count
-  of 0; `DamageScratch` (the PSX scratchpad's first byte, `0x903850`) 0;
+  of 0; `SharedScratch` (the PSX scratchpad's first byte, `0x903850`) 0;
   outside category 4, an existing stack takes the count - above 99 it is 99
   and the answer 0, else 1; otherwise the first slot with id 0 (or, outside
-  category 4, count 0) takes the item and count, `DamageScratch` 1, answer
+  category 4, count 0) takes the item and count, `SharedScratch` 1, answer
   1; no free slot, 0. **The category-4 branch is the PC's own**: the PSX
   `0x80165AA4` has none and treats every category alike. D34.
 - `Inventory_Count(category, item, equipped)` `0x5919B0` answers a word:

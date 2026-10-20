@@ -56,12 +56,12 @@ constexpr std::uint32_t kByte803490 = 0x803490;
 // The leader's record (ObjTrio record 0): its pose byte +8, the member id
 // +0x89, x +0x34 (high word +0x36), z +0x38 (high word +0x3A).
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderMember: now ObjTrio[0x89] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderXHigh: now ObjTrio[0x36] (symbols.toml).
-// kLeaderZHigh: now ObjTrio[0x3a] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderMember: now ObjTrio[0].char_id (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderXHigh: now ObjTrio[0].x_whole (symbols.toml).
+// kLeaderZHigh: now ObjTrio[0].z_whole (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The leader's zone counter (record 0 +0x134; area_w1f_callees.h's
 // kLeaderZone): area 110's init sets Field_EdgeBits from it.

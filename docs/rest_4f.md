@@ -86,7 +86,7 @@ strings; this is the shape.
 **`ConfigScreen_Run`** `0x460CB0`: `jmp [ConfigScreen_States + 0x929F02 * 4]`,
 unbounded. The screen's own state `0x929F02` is 0 the opening (by `0x929F03`
 through `ConfigScreen_OpenStates`: `_OpenFade` - `Transition_Start(1)`;
-`_OpenWait` - the screen at rest until `MoveScript_WaitWordDA` is 0; `_SlideIn` -
+`_OpenWait` - the screen at rest until `Transition_Busy` is 0; `_SlideIn` -
 the screen slid in over the counter `0x929F04` from 5; `ConfigMenu_Open` sets
 `0x929F03` to 2, so the menu's path slides in and the other two are the
 title's), 1 the top bar, 2 the six rows, 3 the controller panel, 4 the closing
@@ -238,7 +238,7 @@ each state keeps it (the controller's 8..13 only: past them the original reads
 the row byte from other `.data` and writes a button word there, as ours does in
 place - not a value this state writes); `Input_Pressed` half the time one of the
 bits the states test; the confirm and cancel words, `Game_Step` 4 / 5,
-`MoveScript_WaitWordDA` 0, the five settings at their edges (0..3, 0x7F, 0x80,
+`Transition_Busy` 0, the five settings at their edges (0..3, 0x7F, 0x80,
 0xFF). For the kinds: every record's `+6` below 30 (kind 8's object), `+9` and
 `+0x5D` at their edges; kind 8's object z a few steps of 0x8000 from the
 record's and from 0x138000 (the walks stay short) and `0x90384A` at 0x32 / 0x34;

@@ -146,23 +146,24 @@ std::int32_t Signed(U v) { return static_cast<std::int32_t>(v); }
 // kStep: now FieldS_Step (symbols.toml).
 constexpr U kState = 0x929F01, kTimer = 0x929F04;
 // kLevel: now Rest2c_FigureScaleIndex (symbols.toml).
-constexpr U kOwned = 0x9399E0,
-            kGiven = 0x9399E4,
-            kRounds = 0x9399E8,
-            kSide = 0x9399E9,
-            kCursor = 0x9399EA,
-            kScoreCell = 0x9399FC;
+// kOwned: now Rest2b_Owned (symbols.toml).
+// kGiven: now Rest2b_Given (symbols.toml).
+// kRounds: now Rest2b_Rounds (symbols.toml).
+// kSide: now Rest2b_Side (symbols.toml).
+// kCursor: now Rest2b_Cursor (symbols.toml).
+// kScoreCell: now Rest2b_Score (symbols.toml).
 constexpr U kModelA = 0x9398E0, kModelB = 0x939960;
 // kADone: now Rest2c_FigureDone (symbols.toml).
-constexpr U kAState = kModelA + 1,
-            kBState = kModelB + 1,
-            kBDone = kModelB + 6,
-            kBY = kModelB + 0x3C,
-            kBColour = kModelB + 0x5D,
-            kBAngle = kModelB + 0x6C;
+// kAState: now Rest2b_ModelAState (symbols.toml).
+// kBState: now Rest2b_ModelBState (symbols.toml).
+// kBDone: now Rest2b_ModelBDone (symbols.toml).
+// kBY: now Rest2b_ModelBY (symbols.toml).
+// kBColour: now Rest2b_ModelBRgb (symbols.toml).
+// kBAngle: now Rest2b_ModelBAngle (symbols.toml).
 constexpr U kSaved = 0x6BC878;
-// kStyle: now BattleDraw_Colour (symbols.toml).
-constexpr U kModelFile = 0x628C88, kLevelByte = 0x904101;
+// kStyle: now Config_WindowColour (symbols.toml).
+// kModelFile: now Rest2b_ModelFile (symbols.toml).
+// kLevelByte: now Rest2b_SavedScaleIndex (symbols.toml).
 
 // The scratch the models' headers and quads point into (the harness's ten
 // argument slots, 0x40 bytes each, one region): headers at slot 0 (A +0, B
@@ -191,7 +192,7 @@ U ScoreEffect(const U*, U answer) {
     static const U kScores[] = {0x32, 0x33, 0x31, 0x59, 0x5A, 0x77, 0x78, 0x95, 0x96, 0xA9, 0xAA, 0xB3, 0xB4,
                                 0xB5, 0, 0xFFFFFFFFu, 0x80000000u, 0x7FFFFFFFu};
     const U n = sh::Noise();
-    SetLong(Mem(kScoreCell), Signed(n % 4 == 0 ? n : kScores[(n >> 2) % 18]));
+    SetLong(Mem(Rest2b_Score_addr), Signed(n % 4 == 0 ? n : kScores[(n >> 2) % 18]));
     return answer;
 }
 // AreaMap_Elevation: two answers in three at model B's y's high word, give or
@@ -199,7 +200,7 @@ U ScoreEffect(const U*, U answer) {
 U ElevationEffect(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 3 == 0) return answer;
-    const U high = static_cast<U>(Long(Mem(kBY))) >> 16;
+    const U high = static_cast<U>(Long(Mem(Rest2b_ModelBY_addr))) >> 16;
     return (answer & 0xFFFF0000u) | ((high + (n >> 4) % 3 - 1) & 0xFFFFu);
 }
 // 0x4941B0 (the winding): ax at the callers' test's edge - 0, 1, -1, a high
@@ -336,11 +337,11 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {kModelA, 0x120},
     {kSaved, 8},
-    {sh::at::kWindows, sh::at::kWindowCount * sh::at::kWindowStride},
+    {WindowRecords_addr, sh::at::kWindowCount * sh::at::kWindowStride},
     {0x903F68, 4},
     {0x66C7E8, 4},
     {0x9037A0, 0x40},
-    {kModelFile, 4},
+    {Rest2b_ModelFile_addr, 4},
     {0x80B7A8, 0x200},
 };
 
@@ -358,7 +359,7 @@ void SeedModel(unsigned char* record, unsigned char* header, unsigned char* quad
 
 void Seed(unsigned k) {
     // the style row inside the region; the screen's menu cells near their bounds
-    B(BattleDraw_Colour_addr) = static_cast<unsigned char>(sh::Next() % 8);
+    B(Config_WindowColour_addr) = static_cast<unsigned char>(sh::Next() % 8);
     B(BattleE1_Mode_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, sh::Next()));
     B(FieldS_State_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
     B(FieldS_Step_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, sh::Next()));
@@ -373,38 +374,38 @@ void Seed(unsigned k) {
     case kPickShow: B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % Shisu_ShowSteps_count); break;
     default: break;
     }
-    B(kBState) = static_cast<unsigned char>(sh::Next() % Shisu_ModelBStates_count);
-    B(kAState) = static_cast<unsigned char>(sh::Next() % MasterFigure_States_count);
+    B(Rest2b_ModelBState_addr) = static_cast<unsigned char>(sh::Next() % Shisu_ModelBStates_count);
+    B(Rest2b_ModelAState_addr) = static_cast<unsigned char>(sh::Next() % MasterFigure_States_count);
     B(Rest2c_FigureDone_addr) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
-    B(kBDone) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
+    B(Rest2b_ModelBDone_addr) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
     // the counts, the rounds, the side and the row at their compares
-    for (unsigned i = 0; i < 4; ++i) B(kOwned + i) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 0x63, sh::Next()));
-    B(kGiven) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
+    for (unsigned i = 0; i < 4; ++i) B(Rest2b_Owned_addr + i) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 0x63, sh::Next()));
+    B(Rest2b_Given_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
     for (unsigned i = 1; i < 4; ++i)
-        B(kGiven + i) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 5, 0x13, 0x14, 0x15, sh::Next()));
-    B(kRounds) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, 7, 8, 9, sh::Next()));
-    B(kSide) = static_cast<unsigned char>(PickOf(0, 0, 1, 1, 2, 0xFF));
-    B(kCursor) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0, 1, 2, 3, 0xFF, 4, sh::Next()));
+        B(Rest2b_Given_addr + i) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 5, 0x13, 0x14, 0x15, sh::Next()));
+    B(Rest2b_Rounds_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, 7, 8, 9, sh::Next()));
+    B(Rest2b_Side_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, 1, 2, 0xFF));
+    B(Rest2b_Cursor_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0, 1, 2, 3, 0xFF, 4, sh::Next()));
     B(Rest2c_FigureScaleIndex_addr) = static_cast<unsigned char>(PickOf(0, 9, 0xA, 0xC, 0x10, 1, sh::Next()));
-    B(kLevelByte) = static_cast<unsigned char>(PickOf(0x25, 0x26, 0x27, 0x28, 0x2C, 0x2D, 0x31, 0x32, 0x3B, 0x3C, 0x40,
+    B(Rest2b_SavedScaleIndex_addr) = static_cast<unsigned char>(PickOf(0x25, 0x26, 0x27, 0x28, 0x2C, 0x2D, 0x31, 0x32, 0x3B, 0x3C, 0x40,
                                                       0x41, 0x43, 0x44, 0, 0xFF, sh::Next()));
     // model B's colour against 0xFF - 3 g2 and 3 g2 (Shisu_ModelBDraw)
-    const unsigned three = 3u * B(kGiven + 2);
-    B(kBColour) = static_cast<unsigned char>(PickOf(0xFF - three, 0xFE - three, 0x100 - three, 0x80, 0xFF, 0, sh::Next()));
-    B(kBColour + 1) = static_cast<unsigned char>(PickOf(0xFF - three, 0xFE - three, 0x100 - three, 0x80, 0xFF, sh::Next()));
-    B(kBColour + 2) = static_cast<unsigned char>(PickOf(three, three + 1, three - 1, 0, 0x80, sh::Next()));
-    SetLong(Mem(kBAngle), Signed(PickOf(0, 0x1000, 0x2000, 0xFC0, 0x40, 0xFFF, 0x1001, 0x800, 0x1800, sh::Next())));
+    const unsigned three = 3u * B(Rest2b_Given_addr + 2);
+    B(Rest2b_ModelBRgb_addr) = static_cast<unsigned char>(PickOf(0xFF - three, 0xFE - three, 0x100 - three, 0x80, 0xFF, 0, sh::Next()));
+    B(Rest2b_ModelBRgb_addr + 1) = static_cast<unsigned char>(PickOf(0xFF - three, 0xFE - three, 0x100 - three, 0x80, 0xFF, sh::Next()));
+    B(Rest2b_ModelBRgb_addr + 2) = static_cast<unsigned char>(PickOf(three, three + 1, three - 1, 0, 0x80, sh::Next()));
+    SetLong(Mem(Rest2b_ModelBAngle_addr), Signed(PickOf(0, 0x1000, 0x2000, 0xFC0, 0x40, 0xFFF, 0x1001, 0x800, 0x1800, sh::Next())));
     // model B's y on a whole unit half the time (Shisu_ModelBDrop compares it,
     // 0x200000 on, with the elevation << 16)
-    if (sh::Half()) SetLong(Mem(kBY), Signed(sh::Next() & 0xFFFF0000u));
+    if (sh::Half()) SetLong(Mem(Rest2b_ModelBY_addr), Signed(sh::Next() & 0xFFFF0000u));
     // the two models' headers and quads, and the first four sprite records'
     // (the disturbance can move Sprite_Current onto one inside Shisu_DrawModel)
     SeedModel(Mem(kModelA), HeaderA(), QuadsA());
     SeedModel(Mem(kModelB), HeaderB(), QuadsB());
     for (unsigned i = 0; i < 4; ++i) SeedModel(sh::SpriteRecord(i), sh::Half() ? HeaderA() : HeaderB(), sh::Half() ? QuadsA() : QuadsB());
-    sh::SetPointer(kModelFile, File());
+    sh::SetPointer(Rest2b_ModelFile_addr, File());
     // the pad
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, 1, sh::Next()));
+    Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, 1, sh::Next()));
     Input_Pressed = static_cast<unsigned short>(PickOf(0, 0x1000, 0x4000, 0x5000, 0x8000, 0x2000, 0xF000, 0x20, 0x40,
                                                        0x60, 0x10, sh::Next()));
     Field_ConfirmButtons = static_cast<unsigned short>(PickOf(0x20, 0x40, 0x60, 0, sh::Next()));
@@ -432,15 +433,15 @@ void Disturb(U h) {
     case 1: B(FieldS_State_addr) = static_cast<unsigned char>(b % 3); break;
     case 2: B(FieldS_Step_addr) = static_cast<unsigned char>(b % 5); break;
     case 3: B(kTimer) = static_cast<unsigned char>(b & 1 ? 0x80 : b); break;
-    case 4: B(kRounds) = static_cast<unsigned char>(b % 10); break;
-    case 5: B(kSide) = static_cast<unsigned char>(b & 1 ? b >> 1 & 1 : b); break;
-    case 6: B(kCursor) = static_cast<unsigned char>(b % 5); break;
-    case 7: B(kGiven + (b & 3)) = static_cast<unsigned char>((b >> 2) % 0x16); break;
-    case 8: SetLong(Mem(kBY), Signed(v)); break;
+    case 4: B(Rest2b_Rounds_addr) = static_cast<unsigned char>(b % 10); break;
+    case 5: B(Rest2b_Side_addr) = static_cast<unsigned char>(b & 1 ? b >> 1 & 1 : b); break;
+    case 6: B(Rest2b_Cursor_addr) = static_cast<unsigned char>(b % 5); break;
+    case 7: B(Rest2b_Given_addr + (b & 3)) = static_cast<unsigned char>((b >> 2) % 0x16); break;
+    case 8: SetLong(Mem(Rest2b_ModelBY_addr), Signed(v)); break;
     case 9: Game_Step = static_cast<unsigned short>(v); break;
-    case 10: sh::SetPointer(kModelFile, File() + (b & 1 ? 0 : 0x10)); break;
+    case 10: sh::SetPointer(Rest2b_ModelFile_addr, File() + (b & 1 ? 0 : 0x10)); break;
     case 11: if (b & 1) Field_Kind2X = static_cast<long>(v); else Field_Kind2Z = static_cast<long>(v); break;
-    case 12: SetLong(Mem(kBAngle), Signed(v)); break;
+    case 12: SetLong(Mem(Rest2b_ModelBAngle_addr), Signed(v)); break;
     default: break;
     }
 }

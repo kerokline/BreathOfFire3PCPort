@@ -19,6 +19,7 @@
 #include "game/battle_phases.h"
 #include "game/battle_phases_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -35,10 +36,8 @@ using move_script::Word;
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char& B(std::uint32_t address) { return *At(address); }
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kMemberSize); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + i * at::kEnemySize); }
-unsigned char* Window(unsigned i) { return At(at::kWindows + i * at::kWindowSize); }
-records::PartyMember* MemberRec(unsigned i) { return reinterpret_cast<records::PartyMember*>(Member(i)); }
-records::WindowRecord* WindowRec(unsigned i) { return reinterpret_cast<records::WindowRecord*>(Window(i)); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + i * at::kEnemySize); }
+unsigned char* Window(unsigned i) { return At(WindowRecords_addr + i * at::kWindowSize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 
 // --- the stand-ins' log ----------------------------------------------------
@@ -72,9 +71,9 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
     unsigned char* const m = Member(w % 3);
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+    auto* const member_rec = rv::As<records::PartyMember>(m);
     switch ((h >> 4) % 22) {
-    case 0: B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(v % 2 ? 0 : v % 3 ? 0x25 : v); break;
+    case 0: B(EventBattle_Id_addr) = static_cast<unsigned char>(v % 2 ? 0 : v % 3 ? 0x25 : v); break;
     case 1: {
         static const unsigned char kBits[] = {2, 8, 0x10};
         B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ kBits[v % 3]);
@@ -94,21 +93,21 @@ void Disturb() {
         case 1: member_rec->char_id = static_cast<unsigned char>(w); break;
         case 2: member_rec->direction = static_cast<unsigned char>(w); break;
         case 3: m[0x125] = static_cast<unsigned char>(w % 2 ? 5 : w); break;
-        case 4: SetWord(m + 0x126, h >> 16); break;
+        case 4: rv::Store<unsigned>(rv::As<records::PartyMember>(m)->queued_id, h >> 16); break;
         case 5: m[0x12E] = static_cast<unsigned char>(w); break;
         default: member_rec->flags_130 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_130)) ^ 0x4000u); break;
         }
         break;
     case 11: SetWord(At(Input_Pressed_addr), (h >> 16) & 0xF10C); break;
     case 12: SetWord(At(Input_Held_addr), (h >> 16) & 0xF10C); break;
-    case 13: SetWord(At(at::kWindows + (w % 16) * at::kWindowSize + 4 + 2 * (v % 2)), h >> 16); break;
-    case 14: WindowRec(1 + w % 4)->state = static_cast<unsigned char>(v % 3); break;
+    case 13: SetWord(At(WindowRecords_addr + (w % 16) * at::kWindowSize + 4 + 2 * (v % 2)), h >> 16); break;
+    case 14: rv::As<records::WindowRecord>(Window(1 + w % 4))->state = static_cast<unsigned char>(v % 3); break;
     case 15: B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>(v % 9); break;
     case 16: SetWord(At(BattleResult_TickStep_addr), v % 3); break;
     case 17: Sprite_Current = v % 2 ? Member(w % 3) : EnemyObj(w % 8); break;
     case 18: B(at::kFacing) = static_cast<unsigned char>(v); break;
-    case 19: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) ^ 2); B(at::kWindows) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 20: B(BattleSprites_PartyPick_addr) = static_cast<unsigned char>(v); break;
+    case 19: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) ^ 2); B(WindowRecords_addr) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 20: B(Battle_PartyStanding_addr) = static_cast<unsigned char>(v); break;
     default: {
         if (v % 2) m[0x90] = static_cast<unsigned char>(m[0x90] ^ 0x20);
         else member_rec->flags_134 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) ^ (v % 4 == 1 ? 2u : 0x4000u));
@@ -125,7 +124,7 @@ void Disturb() {
 // section 4), from bits of its own hash, not Disturb's.
 std::uint32_t H2() { return (Hash() ^ 0x165667B1u) * 0x27D4EB2Du; }
 bool Nudging(std::uint32_t h) { return h % 4 != 0; }
-void FlipEvent(std::uint32_t h) { B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(B(BattleActions_EventBattle_addr) ? 0 : 1 + (h >> 24) % 0x30); }
+void FlipEvent(std::uint32_t h) { B(EventBattle_Id_addr) = static_cast<unsigned char>(B(EventBattle_Id_addr) ? 0 : 1 + (h >> 24) % 0x30); }
 
 // The void(void) callees, by a number of their own; the six stack-table
 // handlers (100..), the .data tables' sixteen (120..). Every one may move
@@ -164,7 +163,7 @@ unsigned char __cdecl StubActorIsOut(unsigned a) {
     const std::uint32_t h2 = H2();
     if (Nudging(h2)) {
         unsigned char* const m = Member((h2 >> 8) % 3);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+        auto* const member_rec = rv::As<records::PartyMember>(m);
         switch ((h2 >> 2) % 5) {
         case 0: B(at::kActorCount) = static_cast<unsigned char>((h2 >> 12) % 6); break;
         case 1: member_rec->flags = static_cast<unsigned char>(member_rec->flags ^ 1); break;
@@ -205,7 +204,7 @@ unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
     const unsigned s = slot & 0xFF;
     if (Nudging(h2)) {
         unsigned char* const m = Member(s >= 0xD && s < 0x10 ? s - 0xD : (h2 >> 8) % 3);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+        auto* const member_rec = rv::As<records::PartyMember>(m);
         switch ((h2 >> 2) % 6) {
         case 0: member_rec->char_id = static_cast<unsigned char>(h2 >> 12); break;
         case 1: member_rec->direction = static_cast<unsigned char>(h2 >> 12); break;
@@ -480,8 +479,8 @@ const Clone kClones[kCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {ObjTrio_addr, 0x3E4},                                      // ObjTrio
-    {at::kWindows, 0x240},                                      // windows 0..15
-    {at::kWindows + 0xFF * at::kWindowSize, 8},                 // window 0xFF's, which Window_Alloc's 0xFF reaches
+    {WindowRecords_addr, 0x240},                                // windows 0..15
+    {WindowRecords_addr + 0xFF * at::kWindowSize, 8},           // window 0xFF's, which Window_Alloc's 0xFF reaches
     {Gfx_ClutStripSource_addr + 0x1fe0, 0x20},
     {Gfx_ClutStrip_addr + 0x1fe0, 0x20},
     {Input_Held_addr, 8},                                       // Input_Held .. Input_Pressed
@@ -539,7 +538,7 @@ void Fix() {
     B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>(Next() % 9);
     for (unsigned n = 0; n <= 8; ++n) B(at::kMessages + 4 * n) = static_cast<unsigned char>(Next() % 8);
     SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubEventHook));
-    if (Half()) B(BattleActions_EventBattle_addr) = 0;
+    if (Half()) B(EventBattle_Id_addr) = 0;
     if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) & ~0x12u);
 }
 
@@ -547,7 +546,7 @@ void Fix() {
 void Seed(unsigned k) {
     switch (k) {
     case kFrame:
-        if (Half()) B(at::kWindows) = 0;
+        if (Half()) B(WindowRecords_addr) = 0;
         if (Half()) B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) & ~2u);
         if (Half()) B(at::kPhase) = 5;
         break;
@@ -557,14 +556,14 @@ void Seed(unsigned k) {
     case kInit: {
         B(at::kActorCount) = static_cast<unsigned char>(Often() ? Next() % 5 : Next() % 16);
         for (unsigned i = 0; i < 3; ++i) {
-            auto* const member_rec = MemberRec(i);
+            auto* const member_rec = rv::As<records::PartyMember>(Member(i));
             if (Often()) member_rec->flags = static_cast<unsigned char>(member_rec->flags | 1);
             const unsigned max = Next() & 0xFFFF;
             member_rec->max_hp = max;
             member_rec->hp = (max >> 2) + (Next() % 3) - 1;
         }
         static const unsigned char kEvent[] = {0, 0, 0x25, 0x10, 1};
-        B(BattleActions_EventBattle_addr) = kEvent[Next() % 5];
+        B(EventBattle_Id_addr) = kEvent[Next() % 5];
         break;
     }
     case kIntro:
@@ -575,12 +574,12 @@ void Seed(unsigned k) {
     case kPrepareCross: {
         static const unsigned char kInit[] = {0, 1, 2, 3, 0xFF};
         B(BattlePhases_Initiative_addr) = kInit[Next() % 5];
-        if (Half()) WindowRec(2)->state = 1;
-        for (unsigned i = 0; i < 3; ++i) if (Half()) MemberRec(i)->flags = static_cast<unsigned char>(MemberRec(i)->flags | 1);
+        if (Half()) rv::As<records::WindowRecord>(Window(2))->state = 1;
+        for (unsigned i = 0; i < 3; ++i) if (Half()) rv::As<records::PartyMember>(Member(i))->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(Member(i))->flags | 1);
         break;
     }
     case kWaitWindow:
-        if (Half()) WindowRec(1)->state = 1;
+        if (Half()) rv::As<records::WindowRecord>(Window(1))->state = 1;
         break;
     case kInput:
         B(BattleActions_Step_addr) = static_cast<unsigned char>(Next() % at::kInputStepCount);
@@ -592,7 +591,7 @@ void Seed(unsigned k) {
         for (unsigned i = 0; i < 3; ++i) {
             if (Next() % 4 == 0) B(at::kEntryOrder + i) = 0xFF;
             unsigned char* const p = Member(i);
-            auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+            auto* const member_rec = rv::As<records::PartyMember>(p);
             p[0x90] = static_cast<unsigned char>(Next() % 4 == 0 ? p[0x90] | 0x20 : p[0x90] & ~0x20u);
             std::uint32_t f = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~0x14001u;
             if (Next() % 6 == 0) f |= 1;
@@ -635,7 +634,7 @@ void Seed(unsigned k) {
         SetWord(At(Input_Held_addr), held);
         for (unsigned i = 0; i < 3; ++i) {
             unsigned char* const a = Member(i);
-            auto* const member_rec = reinterpret_cast<records::PartyMember*>(a);
+            auto* const member_rec = rv::As<records::PartyMember>(a);
             a[0x125] = static_cast<unsigned char>(Often() ? 5 : Next());
             member_rec->flags_130 = static_cast<std::int32_t>(Half() ? Next() | 0x4000 : Next() & ~0x4000u);
         }
@@ -651,7 +650,7 @@ void Seed(unsigned k) {
         if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 0x10);
         for (unsigned i = 0; i < 3; ++i) {
             unsigned char* const p = Member(i);
-            auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+            auto* const member_rec = rv::As<records::PartyMember>(p);
             if (Often()) p[0x125] = 5;
             if (Half()) p[0x127] = 0;
             member_rec->flags_130 = static_cast<std::int32_t>(Half() ? Next() | 0x4000 : Next() & ~0x4000u);

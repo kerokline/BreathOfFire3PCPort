@@ -60,7 +60,7 @@ state with a 16-bit `inc` in memory, read after its calls.
 | 1 | when `Title_Fade` is 2 (the backdrop's fade-in done): next, Timer `0x168` |
 | 2 | Timer - 1 as a u16; at 0: next, Fade 3, LogoState 1, Timer `0x384` |
 | 3 | Timer - 1; at 0: `Transition_Start(0)`, `Title_FadeMusic`, next |
-| 4 | once `MoveScript_WaitWordDA` is 0: Fade / LogoState / StartArmed 0, `Title_StopMusic`, `Port_DroppedCall(0)`, `Effect_ClearAll` `0x5898A0`, the play clock `0x9040C8..CB` (PSX `0x80144FBC`) and `Draw_PassFlags` (PSX `0x8014832A`) zeroed, `Scenario_Start(0x10)`, `Task_Create(0, 0x495800)` - **the demo** - next |
+| 4 | once `Transition_Busy` is 0: Fade / LogoState / StartArmed 0, `Title_StopMusic`, `Port_DroppedCall(0)`, `Effect_ClearAll` `0x5898A0`, the play clock `0x9040C8..CB` (PSX `0x80144FBC`) and `Draw_PassFlags` (PSX `0x8014832A`) zeroed, `Scenario_Start(0x10)`, `Task_Create(0, 0x495800)` - **the demo** - next |
 | 5 | task 0 gone (`Task_Records` +0 is 0): state 0 and return. Else Start (`File_LoadDone`, the wait word 0, `Input_Pressed` bit `0x800`): `MoveScript_Var7` 1, `Transition_Start(4)`, `Music_FadeOutStop(8)` (the PSX passes the track and a word `0x80143F20`), next. Then a tail jump to `Title_DrawBadge` |
 | 6 | task 0 gone: the byte `0x90412C` `0xFF` (PSX `0x80145020`, the party combination - the sibling's `names/plchar_records.toml`) and state 0; else the badge (tail jump) |
 | 7 | once the wait word is 0: `Title_StopMusic`, `Port_DroppedCall(0)`, `Task_Create(0, 0x588E70)` - **the title menu** - and a tail jump to `Task_Exit` `0x5A99AD`, which clears task 1's record and enters the scheduler on its own stack: task 1 ends here |

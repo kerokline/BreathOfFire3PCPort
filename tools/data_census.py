@@ -5,6 +5,8 @@
     python tools/data_census.py --out FILE           # write elsewhere
     python tools/data_census.py --counts             # print the counts only, write nothing
     python tools/data_census.py --check              # fail if the site count rose above the committed file's
+    python tools/data_census.py --strict             # fail on a src/game raw site analysis/typed_left.tsv
+                                                     # does not list with a reason, or a stale listed key
 
 Group CS of the typed-data round (docs/typed-data-round.md section 2; the
 counts and the method in docs/typed-data-census.md). Reads src/ and
@@ -63,6 +65,9 @@ number may only fall (docs/typed-data-census.md section 3).
 """
 import argparse, ast, collections, os, re, sys, tomllib
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import record_sizes  # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_OUT = os.path.join('analysis', 'data_census.tsv')
 EXTS = ('.cpp', '.h', '.hpp', '.cc', '.inl', '.ixx')
@@ -86,6 +91,19 @@ CTYPE_SIZE = {
     'std::uint32_t': 4, 'unsigned char': 1, 'signed char': 1, 'char': 1,
     'unsigned short': 2, 'short': 2, 'const unsigned short': 2,
 }
+
+
+
+def ctype_size(ct):
+    """An entry's element size: CTYPE_SIZE's, 4 for a pointer, a record
+    family's struct size (tools/record_sizes.py), else 0 (unsized)."""
+    if not ct:
+        return 0
+    if '*' in ct:
+        return 4
+    if ct in CTYPE_SIZE:
+        return CTYPE_SIZE[ct]
+    return record_sizes.size_of(ct) or 0
 
 
 # --------------------------------------------------------------------------
@@ -324,6 +342,64 @@ def load_sources():
 
 
 CONST_BRACE = re.compile(r'\b(?:inline\s+)?(?:static\s+)?constexpr\s+[\w:]+\s+(k\w*)\s*\{([^{},;]*)\}\s*;')
+# A typed alias in a `namespace at` (stage C4: `inline auto& kPendingX =
+# SharedScratch.d_10;`): the name is a reference to a typed global, not an
+# address, so a site spelling it is typed and resolve_at answers no value.
+# The pattern finds every `inline auto& kX = <name>`; collect_constants keeps
+# the ones inside a `namespace at` (an alias elsewhere is no `at::kX`).
+REF_ALIAS = re.compile(r'\binline\s+auto\s*&\s*(k\w*)\s*=\s*[A-Za-z_]')
+_REF_ALIASES = collections.defaultdict(list)
+# The address of a typed name taken back for a raw access (C4 audit C F2):
+# `W(AddrOf(&kEff6Shown))`, `reinterpret_cast<unsigned char*>(&at::kDigits)[i]`.
+# Still raw sites, counted as globals at the name's address.
+ADDR_OF = re.compile(r'(?<![\w:])AddrOf\s*\(\s*&\s*((?:\w+::)*)(k\w+)\s*\)')
+CAST_OF = re.compile(r'\breinterpret_cast\s*<[^<>;]*\*\s*>\s*\(\s*&\s*((?:\w+::)*)(k\w+)\s*\)\s*\[')
+# a typed alias's right-hand side: Name, Name.f, Name[i].f, or a view of a
+# record of Name: rv::As<records::T>(rv::Bytes(&Name[i]))->f
+ALIAS_DEF = r'\binline\s+auto\s*&\s*%s\s*=\s*([^;]+);'
+ALIAS_RHS = re.compile(r'(\w+)(?:\[(0x[0-9A-Fa-f]+|\d+)\])?(?:\.(\w+))?')
+ALIAS_VIEW = re.compile(r'rv::As<records::(\w+)>\(rv::Bytes\(&(\w+)(?:\[(0x[0-9A-Fa-f]+|\d+)\])?\)\)->(\w+)')
+
+
+def field_offset(ctype, field):
+    hits = [x[0] for x in record_sizes.fields(ctype) if x[1] == field]
+    return hits[0] if len(hits) == 1 else None
+
+
+def alias_address(f, name, syms):
+    """The address a typed alias `inline auto& kX = ...` names, from its
+    definition in f or f's include closure; None if not read."""
+    for g in [f] + include_closure(f, _by_rel):
+        m = re.search(ALIAS_DEF % re.escape(name), g.code)
+        if not m:
+            continue
+        rhs = ' '.join(m.group(1).split())
+        vm = ALIAS_VIEW.fullmatch(rhs)
+        if vm:
+            view, entry, idx, fld = vm.groups()
+            if entry not in syms.names or entry not in syms.ctypes:
+                return None
+            off = field_offset('records::' + view, fld)
+            if off is None:
+                return None
+            return syms.names[entry] + int(idx or '0', 0) * ctype_size(syms.ctypes[entry]) + off
+        am = ALIAS_RHS.fullmatch(rhs)
+        if am:
+            entry, idx, fld = am.groups()
+            if entry not in syms.names:
+                return None
+            base = syms.names[entry]
+            ct = syms.ctypes.get(entry, '')
+            if idx:
+                base += int(idx, 0) * ctype_size(ct)
+            if fld:
+                off = field_offset(ct, fld) if ct.startswith('records::') else None
+                if off is None:
+                    return None
+                base += off
+            return base
+        return None
+    return None
 
 
 def collect_constants(files, sym_env):
@@ -363,6 +439,11 @@ def collect_constants(files, sym_env):
         ns = f.ns_at(pos)
         row = (name, f.locals.get(name), ns, line_of(f.starts, pos))
         (f.consts if f.in_at_namespace(pos) else f.mconsts).append(row)
+    _REF_ALIASES.clear()
+    for f in files:
+        for m in REF_ALIAS.finditer(f.code):
+            if f.in_at_namespace(m.start()):
+                _REF_ALIASES[m.group(1)].append((f, 'REF', f.ns_at(m.start()), line_of(f.starts, m.start())))
     return globals_env
 
 
@@ -425,11 +506,22 @@ class Symbols:
             self.names.setdefault(e['name'], e['pc'])
         for e in t.get('func', []):
             self.by_pc.setdefault(e['pc'], ('func', e))
+        # <Name>_addr, which tools/gen_symbols.py emits for a typed entry or a
+        # typed block, evaluates like bof3::addr::Name in a constant's
+        # definition (stage C4: `kLineAngle = SharedScratch_addr + 4` is a
+        # data address all the same). Not a record base: `B(Name_addr + k)`
+        # is not counted (docs/typed-data-census.md 4).
+        self.addr_names = {e['name'] + '_addr': e['pc'] for e in self.data + t.get('block', []) if 'ctype' in e}
+        self.ctypes = {e['name']: e['ctype'] for e in self.data + t.get('block', []) if 'ctype' in e}
         self.extents = []
         for e in self.data:
-            size = CTYPE_SIZE.get(e.get('ctype', ''), 4 if '*' in e.get('ctype', '') else 0)
+            size = ctype_size(e.get('ctype', ''))
             if size:
                 self.extents.append((e['pc'], e['pc'] + size * max(1, e.get('count', 1)), e))
+        # a [[block]] with a record ctype (stage C4) covers its records
+        for e in t.get('block', []):
+            if 'ctype' in e:
+                self.extents.append((e['pc'], e['pc'] + ctype_size(e['ctype']) * e['record_count'], e))
         self.extents.sort(key=lambda x: x[0])
         self.n_data = len(self.data)
         self.n_ctype = sum(1 for e in self.data if 'ctype' in e)
@@ -457,7 +549,7 @@ class Symbols:
     def cover(self, v):
         """(cover, name, ctype) of the [[data]] entry covering address v."""
         hit = self.by_pc.get(v)
-        if hit and hit[0] == 'data':
+        if hit and (hit[0] == 'data' or 'ctype' in hit[1]):
             return 'exact', hit[1]['name'], hit[1].get('ctype', '-')
         best = None
         for a, b, e in self.extents:
@@ -537,6 +629,12 @@ GLOBAL_OFF = re.compile(r'^\s*(?:\(\s*)?(?:::)?(?:bof3::)?(?:addr::)?([A-Z]\w*)\
 HELPER_CALL = re.compile(r'^\s*(?:\(\s*)?((?:\w+::)*[A-Za-z_]\w*)\s*\(')
 # a module constant (any `k` name not reached through `at::`)
 MODULE_REF = re.compile(r'(?<![\w.>])((?:\w+::)*)(k[A-Z0-9_]\w*)\b(?!\s*[\[(.])')
+# a typed entry's address spelled <Name>_addr (gen_symbols' constant beside
+# the typed macro), bare or bof3::addr::-free: `B(ObjTrio_addr + 0x3a)`,
+# `At(SharedScratch_addr)` (stage C4 part 2: the owner counts these as raw)
+ADDR_NAME_REF = re.compile(r'(?<![\w.>:])((?:::)?)([A-Z]\w*_addr)\b')
+# a subscript of a typed record's own bytes: `rv::Bytes(&Effect_Objects[6])[0x8]`
+RV_BYTES_SUB = re.compile(r'(?<![\w.>:])((?:\w+::)*)rv::Bytes\s*\(')
 LIT = re.compile(r'^\s*\(?\s*(0[xX][0-9A-Fa-f]{6,8})[uUlL]*\b')
 STRIDE_NAME = re.compile(r'Stride')
 # calls that are not a helper returning a pointer: casts and operators
@@ -551,7 +649,7 @@ def is_at_prefix(prefix):
 def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
     """The value of `[prefix::]at::name` as seen from f at pos, and the
     candidate definitions it was picked from."""
-    cands = defs_by_name.get(name, [])
+    cands = defs_by_name.get(name, []) + _REF_ALIASES.get(name, [])
     if not cands:
         return None, []
     want_ns = None
@@ -561,19 +659,27 @@ def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
         want_ns = p.split('::')[-1] + '::at'
     elif 'at' in f.aliases:
         want_ns = '::'.join(f.aliases['at'].split('::')[-2:])
+    # (candidates, whether a typed alias among them decides the name): an
+    # alias decides only in the name's own namespace, file or stem; in a wider
+    # tier it is another module's alias, and the constants there answer
     tiers = []
     if want_ns:
-        tiers.append([c for c in cands if c[2].endswith(want_ns) or c[2] == want_ns])
-    tiers.append([c for c in cands if c[0] is f])
+        tiers.append(([c for c in cands if c[2].endswith(want_ns) or c[2] == want_ns], True))
+    tiers.append(([c for c in cands if c[0] is f], True))
     stem = re.sub(r'(_fuzz)?\.\w+$', '', os.path.basename(f.rel))
-    tiers.append([c for c in cands if re.sub(r'(_callees|_fuzz)?\.\w+$', '', os.path.basename(c[0].rel)) == stem])
+    tiers.append(([c for c in cands if re.sub(r'(_callees|_fuzz)?\.\w+$', '', os.path.basename(c[0].rel)) == stem], True))
     closure = {g.rel for g in include_closure(f, by_rel)}
-    tiers.append([c for c in cands if c[0].rel in closure])
+    tiers.append(([c for c in cands if c[0].rel in closure], False))
     enc = f.ns_at(pos).split('::')[0]
-    tiers.append([c for c in cands if c[2].split('::')[0] == enc])
-    tiers.append(cands)
-    for t in tiers:
+    tiers.append(([c for c in cands if c[2].split('::')[0] == enc], False))
+    tiers.append((cands, False))
+    for t, ref_decides in tiers:
+        if not ref_decides:
+            t = [c for c in t if c[1] != 'REF']
         vals = {c[1] for c in t if c[1] is not None}
+        if 'REF' in vals:
+            # a typed alias is what this name is, here: no address
+            return None, []
         if len(vals) == 1:
             return vals.pop(), t
         if len(vals) > 1:
@@ -674,9 +780,28 @@ def stride_family(f, ident, line, env, at_value, syms):
     return '-'
 
 
+def in_call(text, pos):
+    """Whether pos sits inside a call's parentheses in text (`Vertex(X_addr)`
+    is the helper's record, not X_addr's global site); casts' and plain
+    parentheses do not count."""
+    depth = 0
+    for k in range(pos - 1, -1, -1):
+        c = text[k]
+        if c == ')':
+            depth += 1
+        elif c == '(':
+            if depth:
+                depth -= 1
+                continue
+            m = re.search(r'([\w>])\s*$', text[:k])
+            if m and not re.search(r'(static_cast|reinterpret_cast|const_cast)\s*<[^<>]*>\s*$', text[:k]):
+                return True
+    return False
+
+
 def scan(files, syms):
     by_rel = {f.rel: f for f in files}
-    env = collect_constants(files, syms.names)
+    env = collect_constants(files, {**syms.names, **syms.addr_names})
     defs_by_name = collections.defaultdict(list)
     for f in files:
         for name, value, ns, line in f.consts:
@@ -788,6 +913,19 @@ def scan(files, syms):
                 sites.append((f.rel, ln, 'record', name, expr, addr, f'base={kname}',
                               '-', '-', '-', fuzz))
                 continue
+            # a typed entry's <Name>_addr: `B(ObjTrio_addr + 0x3a)`, a global
+            # site at the entry's address (the expr column holds the rest)
+            anames = [am for am in ADDR_NAME_REF.finditer(top) if am.group(2) in syms.addr_names
+                      and not in_call(top, am.start())]
+            if anames:
+                am = anames[0]
+                v = syms.addr_names[am.group(2)]
+                rest = top[am.end():].strip()
+                off = eval_expr(rest[1:], env) if rest[:1] == '+' else (0 if not rest.strip(' )') else None)
+                av = (v + off) & 0xFFFFFFFF if off is not None and top[:am.start()].strip(' (') == '' else v
+                cov, dname, ctype = syms.cover(av)
+                sites.append((f.rel, ln, 'global', name, expr, f'{av:#x}', '-', cov, dname, ctype, fuzz))
+                continue
             # a module constant outside `namespace at`: `W(kScriptPool + 2 * i)`,
             # `B(kShakeShift)`
             mods = [(mm, local_value(f, mm.group(2), env)) for mm in MODULE_REF.finditer(top)
@@ -825,6 +963,35 @@ def scan(files, syms):
                 continue
             fam = stride_family(f, ident, ln, env, lambda tm, k: at_value(tm), syms)
             sites.append((f.rel, ln, 'record', name, expr, '-', fam,
+                          '-', '-', '-', fuzz))
+        # a typed name's address taken back for a raw access (AddrOf(&kX),
+        # reinterpret_cast<T*>(&kX)[i]): raw, at the alias's address
+        for rx, acc0 in ((ADDR_OF, 'AddrOf'), (CAST_OF, 'reinterpret_cast')):
+            for m in rx.finditer(code):
+                v = alias_address(f, m.group(2), syms)
+                ln = line_of(f.starts, m.start())
+                pre = code[f.starts[ln - 1]:m.start()]
+                wrap = re.search(r'(\w+)\s*\(\s*$', pre)
+                acc = wrap.group(1) if wrap and acc0 == 'AddrOf' else acc0
+                name = m.group(1) + m.group(2)
+                if v is None:
+                    sites.append((f.rel, ln, 'global', acc, name, 'ambiguous', '-', '-', '-', '-', fuzz))
+                    continue
+                cov, dname, ctype = syms.cover(v)
+                sites.append((f.rel, ln, 'global', acc, name, f'{v:#x}', '-', cov, dname, ctype, fuzz))
+        # a subscript of rv::Bytes(...): a record site on the typed record
+        for m in RV_BYTES_SUB.finditer(code):
+            r = balanced_args(code, m.end() - 1)
+            if r is None:
+                continue
+            after = code[r[1]:r[1] + 3].lstrip()
+            if not after.startswith('['):
+                continue
+            ln = line_of(f.starts, m.start())
+            arg = ' '.join(','.join(r[0]).split())
+            bm = re.match(r'&?\s*([A-Za-z_]\w*)', arg)
+            fam = f'base={bm.group(1)}' if bm else '-'
+            sites.append((f.rel, ln, 'record', 'Bytes', ('rv::Bytes(' + arg + ')')[:60], '-', fam,
                           '-', '-', '-', fuzz))
     sites.sort(key=lambda s: (s[0], s[1], s[2], s[4]))
 
@@ -966,6 +1133,44 @@ def committed_sites(path):
     sys.exit(f'data_census: no "#count sites" line in {path}')
 
 
+STRICT_SCOPE = 'src/game/'
+
+
+def strict():
+    """The strict rule (stage C4 part 2, docs/typed-data-census.md 3): every
+    raw site the census measures in src/game must be a row of
+    analysis/typed_left.tsv with a reason (not `-`), keyed as typed_left.py
+    keys it (file, function, shape, accessor, expr, n); and every src/game
+    row of the list must still measure. Returns the exit status."""
+    import typed_left as tl
+    measured = tl.measure()
+    listed = tl.read_list(os.path.join(ROOT, tl.OUT))
+    keys = {k for k, _ln, _s in measured}
+    bad = []
+    for k, ln, _s in measured:
+        if not k[0].startswith(STRICT_SCOPE):
+            continue
+        row = listed.get(k)
+        if row is None:
+            bad.append(f'  new raw site {k[0]}:{ln} {k[3]}({k[4]}) in {k[1]}: no row in {tl.OUT}')
+        elif row[8] in ('-', ''):
+            bad.append(f'  {k[0]}:{ln} {k[3]}({k[4]}) in {k[1]}: listed with no reason')
+    stale = [k for k in listed if k[0].startswith(STRICT_SCOPE) and k not in keys]
+    for k in stale:
+        bad.append('  stale key (the list names a site that no longer measures): ' + '\t'.join(k))
+    n = sum(1 for k in listed if k[0].startswith(STRICT_SCOPE))
+    if bad:
+        print(f'data_census --strict: {len(bad)} problem(s) against {tl.OUT} ({n} listed src/game sites):')
+        print('\n'.join(bad[:200]))
+        if len(bad) > 200:
+            print(f'  ... and {len(bad) - 200} more')
+        print('Use a typed access (docs/typed-data-round.md). A site that must stay raw: run '
+              'tools/typed_left.py and give its row a reason; a stale key: regenerate with tools/typed_left.py.')
+        return 1
+    print(f'data_census --strict: every raw site in src/game is listed with a reason ({n} exceptions); ok')
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--out', default=DEFAULT_OUT)
@@ -973,8 +1178,13 @@ def main():
     ap.add_argument('--counts', action='store_true', help='print the counts, write nothing')
     ap.add_argument('--check', action='store_true',
                     help='fail if the site count is above the committed --out file\'s')
+    ap.add_argument('--strict', action='store_true',
+                    help='fail on any raw site in src/game that analysis/typed_left.tsv does not list '
+                         'with a reason, and on any listed src/game key that no longer measures')
     a = ap.parse_args()
     os.chdir(ROOT)
+    if a.strict:
+        sys.exit(strict())
     syms = Symbols(a.toml)
     files = load_sources()
     sites, consts, files, unresolved_refs = scan(files, syms)

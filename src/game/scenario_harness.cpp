@@ -176,7 +176,7 @@ void Disturb() {
     switch ((h >> 4) % 16) {
     case 0: Byte(MoveScript_PartyRecords_addr + 0x65)[0] = span ? static_cast<unsigned char>(b % span) : b; break;
     case 1: Byte(MoveScript_Var7_addr)[0] = span ? static_cast<unsigned char>(b % span) : b; break;
-    case 2: move_script::SetWord(Mem(MoveScript_WaitWordDA_addr), b & 1 ? 0u : h >> 16); break;
+    case 2: move_script::SetWord(Mem(Transition_Busy_addr), b & 1 ? 0u : h >> 16); break;
     case 3: {
         // a flag of the chapter's row (the pointer is the seed's: moved only
         // while it points into the rows)
@@ -225,7 +225,7 @@ void Disturb() {
     case 13:
         // a bit of Field_ScriptFlags2, or the pad's pressed word
         if (g_field) {
-            if (b & 1) move_script::SetWord(Mem(0x905BA4), Word(0x905BA4) ^ (1u << ((b >> 1) & 15)));
+            if (b & 1) move_script::SetWord(Mem(0x905BA4), Word(Field_ScriptFlags2_addr) ^ (1u << ((b >> 1) & 15)));
             else move_script::SetWord(Mem(0x7E1BEC), h >> 16);
         }
         break;
@@ -547,7 +547,7 @@ std::uint32_t FxSetTrans(const std::uint32_t* a, std::uint32_t answer) {
     else Note(0xFFFFFFFFu);
     return answer;
 }
-// AreaMap_Slope's "sloped" byte 0x903850 (DamageScratch's first; the effect slot
+// AreaMap_Slope's "sloped" byte 0x903850 (SharedScratch's first; the effect slot
 // region), which its callers and MapView_SlopeAt's read straight after the call
 // (FC1, FC3): 0 (flat) a third of the time, else 1.
 std::uint32_t FxSloped(const std::uint32_t*, std::uint32_t answer) {
@@ -886,7 +886,7 @@ std::uint32_t FxPanelPrims(const std::uint32_t*, std::uint32_t answer) { Drew(0x
 // linked at 0x48 each), the four vertices in Prim_VertexScratch 0x9037A0.. and
 // MapView_ScreenXY 0x903820 written on the way - both filled here.
 std::uint32_t FxShadow(const std::uint32_t*, std::uint32_t answer) {
-    if (!(Byte(0x7E0918)[0] & 4)) return answer;
+    if (!(Byte(Draw_PassFlags_addr)[0] & 4)) return answer;
     if (InRegions(Mem(Prim_VertexScratch_addr), 0x20)) FillBytes(Mem(Prim_VertexScratch_addr), 0x20);
     FillFloats(0x903820, 2);
     Drew(16 * 0x54);
@@ -1300,7 +1300,7 @@ void Where(unsigned byte, std::uint32_t& region, std::uint32_t& offset) {
 // group's chapter where Scenario_Start leaves it.
 void Fix(int chapter) {
     Byte(Cond_ByteFA_addr)[0] = static_cast<unsigned char>(chapter);
-    SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8u * static_cast<std::uint32_t>(static_cast<int>(static_cast<signed char>(chapter)))));
+    SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8u * static_cast<std::uint32_t>(static_cast<int>(static_cast<signed char>(chapter)))));
     Sprite_Current = SpriteRecord(Next());
     SetPointer(Field_State_addr, ObjectOf(Next()));
     MapView_CornerPtr = g_own + (Next() & 0x7E);
@@ -1407,10 +1407,10 @@ unsigned char* Mem(std::uint32_t address) { return move_script::At(address); }
 unsigned char* SpriteRecord(unsigned k) { return Mem(Sprite_Objects_addr + (k % 4) * at::kSpriteStride); }
 unsigned char* EffectRecord(unsigned k) { return Mem(Effect_Objects_addr + (k % at::kEffectCount) * at::kEffectStride); }
 unsigned char* ObjectOf(unsigned k) { return Mem(ObjTrio_addr + (k % 3) * at::kObjStride); }
-unsigned char* FlagRow() { return Pointer(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Pointer(Chapter_FlagRow_addr); }
 unsigned char* TaskAt(unsigned k) { return SpriteRecord(k); }
 unsigned char* EnemyOf(unsigned char target) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyOf(unsigned char actor) { return ObjectOf(actor); }
 unsigned char* Script() { return g_cursor[0]; }
@@ -1534,7 +1534,7 @@ void Run(const Group& group) {
         {Cond_ByteFA_addr, 0x14},                          // the chapter bytes 0x8034E0..0x8034F3
         {Cond_Flags_addr, at::kCondFlagsSize},             // Cond_Flags, the story flags 0x904030, the party lists 0x904061..
         {0x929EC0, 0x14},                                  // Field_MemberCount, Camera_Angles, Cond_AngleFB, the row pointer 0x929ED0
-        {MoveScript_WaitWordDA_addr, 4},                   // MoveScript_WaitWordDA
+        {Transition_Busy_addr, 4},                   // Transition_Busy
         {Field_Request_addr, 4},                           // Field_Request
         {Game_AreaNumber_addr, 4},                         // Game_AreaNumber, MoveScript_FAWord
         {0x903840, 0x20},                                  // Camera_Distance, the counters 0x903848..0x90384B, the effect slot 0x903850

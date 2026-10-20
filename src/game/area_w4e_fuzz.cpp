@@ -24,6 +24,7 @@
 #include "game/area_w4e.h"
 #include "game/area_w4e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w4e {
@@ -229,7 +230,7 @@ U MessageEffect(const U*, U answer) {
 // sound, its menu button Sprite_Current.
 U SoundEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) B(AreaW3g_Byte9036D0_addr) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) B(Area189_EventsInRow_addr) = static_cast<unsigned char>(n >> 8);
     if (n & 2) MoveCurrent(n >> 4);
     return answer;
 }
@@ -244,8 +245,8 @@ U FlagsSetEffect(const U*, U answer) {
         if (n & 8) {
             static const std::uint16_t kMarks[][2] = {{0xB00, 0xF00}, {0x1500, 0x1100}, {0xC00, 0x1400}, {0x1000, 0x1100}, {0x1D00, 0x1700}, {0x1400, 0x1400}};
             const U m = (n >> 20) % 6;
-            SetWord(Sprite_Current + 0x36, kMarks[m][0] | ((n >> 12) & 0xFF));
-            SetWord(Sprite_Current + 0x3A, kMarks[m][1] | ((n >> 24) & 0xFF));
+            rv::Store<unsigned>(rv::Current<records::SpriteHead>()->x_whole, kMarks[m][0] | ((n >> 12) & 0xFF));
+            rv::Store<unsigned>(rv::Current<records::SpriteHead>()->z_whole, kMarks[m][1] | ((n >> 24) & 0xFF));
         }
     }
     if (n & 2) B(at::kWalkCount) = static_cast<unsigned char>(n >> 16);
@@ -319,8 +320,8 @@ U StepBeginEffect(const U*, U answer) {
     if (n & 1) Sprite_Current[9] = static_cast<unsigned char>((n >> 8) % 9);
     if (n & 2) {
         static const std::int32_t kV[] = {0, 0x2000, -0x2000, 0x10000, -0x10000, 0x800, -0x800};
-        SetLong(Sprite_Current + 0xC, kV[(n >> 12) % 7]);
-        SetLong(Sprite_Current + 0x10, kV[(n >> 16) % 7]);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, kV[(n >> 12) % 7]);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, kV[(n >> 16) % 7]);
     }
     if (n & 4) MoveCurrent(n >> 20);
     return answer;
@@ -415,22 +416,22 @@ const ah::Region kRegions189[] = {
     {Prim_VertexScratch_addr, 6},
     {MapView_ScreenXY_addr, 8},
     {Gfx_UnpackScratch_addr + 0x1f000, 8}, // the button words 0x903580 .. Field_MenuButton 0x903584
-    {AreaW3g_Byte929EC1_addr, 1},
-    {AreaW3g_Byte9036D0_addr, 1},
+    {Area189_StepsSinceEvent_addr, 1},
+    {Area189_EventsInRow_addr, 1},
     {Cond_ByteFE_addr, 1},
     {Camera_Angles_addr, 8},       // Camera_Angles[0..1], Cond_AngleFB
-    {at::kCharRecords, 8 * at::kCharStride},
+    {CharacterRecords_addr, 8 * at::kCharStride},
     {MoveScript_Object_addr, 4},
 };
 const ah::Region kRegions191[] = {
     {Field_ActiveMember_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
-    {MoveScript_WaitWordDA_addr, 2},
+    {Chapter_FlagRow_addr, 4},
+    {Transition_Busy_addr, 2},
     {Draw_PassFlags_addr, 1},
-    {AreaW3g_Byte929EC1_addr, 1},
-    {AreaW3g_Byte9036D0_addr, 1},
+    {Area189_StepsSinceEvent_addr, 1},
+    {Area189_EventsInRow_addr, 1},
     {Camera_ShiftY_addr, 6},       // the focus pointer 0x903804
-    {at::kCharRecords, 8 * at::kCharStride},
+    {CharacterRecords_addr, 8 * at::kCharStride},
     {MoveScript_Object_addr, 4},
 };
 
@@ -441,7 +442,7 @@ void Common(int area, unsigned k) {
     ah::SetPointer(MoveScript_Object_addr, AnyRecord(ah::Next()));
     ah::SetPointer(AreaW1a_FocusObject_addr, AnyRecord(ah::Next()));
     ah::SetPointer(Field_ActiveMember_addr, AnyRecord(ah::Next()));
-    ah::SetPointer(AreaW0c_FlagRow_addr, ah::Mem(Cond_Flags_addr + (ah::Next() % 24) * 8));
+    ah::SetPointer(Chapter_FlagRow_addr, ah::Mem(Cond_Flags_addr + (ah::Next() % 24) * 8));
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -453,8 +454,8 @@ void Disturb(U h) {
     case 1: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? (v & 1 ? 0 : 0x28) : v); break;
     case 2: SetWord(ah::Mem(Cond_Flags_addr + 0xcc), h & 0x100 ? (v & 1 ? 0x1DFu : 0x3BFu) : h >> 16); break;
     case 3: B(Cond_Flags_addr + 0xcf) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
-    case 4: B(AreaW3g_Byte929EC1_addr) = v; break;
-    case 5: MoveScript_WaitWordDA = static_cast<unsigned short>(h & 0x100 ? 0 : v); break;
+    case 4: B(Area189_StepsSinceEvent_addr) = v; break;
+    case 5: Transition_Busy = static_cast<unsigned short>(h & 0x100 ? 0 : v); break;
     case 6: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 3); break;
     case 7: Cond_ByteFF = static_cast<unsigned char>(h & 0x100 ? v & 1 : v); break;
     default: ah::SetPointer(Field_ActiveMember_addr, AnyRecord(h >> 12)); break;
@@ -503,7 +504,7 @@ void Seed188(unsigned k) {
         const U dir = static_cast<U>(Long(ah::Mem(Field_DirectionSteps_addr + 0x4 + (Sprite_Current[8] & 7u) * 8)));
         const U limit = static_cast<U>(B(Area188_ZLimits_addr + B(AreaW0c_TailSub_addr))) << 16;
         static const U kOff[] = {0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, 0x80000000u, 2};
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(limit - dir + kOff[ah::Next() % 7]));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(limit - dir + kOff[ah::Next() % 7]));
         break;
     }
     case k188Tail43: {
@@ -543,7 +544,7 @@ void Seed189(unsigned k) {
         static const U kK[] = {0, 1, 0xFFFFFFFFu, 0x1000000, 0x1000001, 0xFFFFFF, 0x80000000u, 0x200, 0x1FF};
         if (ah::Half()) Field_Kind2X = static_cast<long>(kK[ah::Next() % 9] + (ah::Half() ? 0 : ah::Next() & 0xFF000000u));
         if (ah::Half()) Field_Kind2Z = static_cast<long>(kK[ah::Next() % 9] + (ah::Half() ? 0 : ah::Next() & 0xFF000000u));
-        if (ah::Half()) SetWord(Sprite_Current + 0x3E, AH_PICK(0, 1, 0xFFFF, 0x8000, 0x7FFF, 3, 0xFFFD));
+        if (ah::Half()) rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, AH_PICK(0, 1, 0xFFFF, 0x8000, 0x7FFF, 3, 0xFFFD));
         break;
     }
     case k189Control: {
@@ -555,8 +556,8 @@ void Seed189(unsigned k) {
         if (ah::Often()) {
             cur[9] = static_cast<unsigned char>(ah::Next() % 9);
             static const std::int32_t kV[] = {0, 0x2000, -0x2000, 0x10000, -0x10000, 0x800, -0x800};
-            SetLong(cur + 0xC, kV[ah::Next() % 7]);
-            SetLong(cur + 0x10, kV[ah::Next() % 7]);
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_x, kV[ah::Next() % 7]);
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_z, kV[ah::Next() % 7]);
             SetHigh(cur + 0x34, NearBlock(AH_PICK(0x1000, 0x1400, 0x1200, 0x1500, 0x1900, 0x1700, 0xF00, 0x1A00)));
             SetHigh(cur + 0x38, NearBlock(AH_PICK(0x1800, 0x1700, 0x1A00, 0xE00, 0xF00, 0xC00, 0x1000)));
         }
@@ -583,17 +584,17 @@ void Seed189(unsigned k) {
         if (ah::Often()) SetWord(ah::Mem(Cond_Flags_addr + 0xcc), AH_PICK(0x1DF, 0x3BF, 0x1DF, 0x3BF, 0x1E0, 0x3C0, 0, 0xFFFF, 0x1DE));
         if (ah::Often()) B(Cond_Flags_addr + 0xcf) = static_cast<unsigned char>(AH_PICK(0, 0, 0, 1, 2, 3, 4, 8, 0xF8));
         if (ah::Often()) Cond_ByteFF = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 0x80));
-        if (ah::Often()) B(AreaW3g_Byte929EC1_addr) = static_cast<unsigned char>(ah::Next() % 32);
-        if (ah::Often()) B(AreaW3g_Byte9036D0_addr) = static_cast<unsigned char>(AH_PICK(3, 4, 5, 0, 3, 4, 0xFF));
+        if (ah::Often()) B(Area189_StepsSinceEvent_addr) = static_cast<unsigned char>(ah::Next() % 32);
+        if (ah::Often()) B(Area189_EventsInRow_addr) = static_cast<unsigned char>(AH_PICK(3, 4, 5, 0, 3, 4, 0xFF));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2));
         unsigned char* const cur = Sprite_Current;
         if (ah::Often()) {
             static const U kMarks[][2] = {{0xB00, 0xF00}, {0x1500, 0x1100}, {0xC00, 0x1400}, {0x1000, 0x1100}, {0x1D00, 0x1700}, {0x1400, 0x1400},
                                           {0x1600, 0x1000}, {0x1700, 0xF00}, {0x1600, 0x1100}, {0x900, 0xD00}, {0x1F00, 0x1900}, {0x800, 0x1A00}};
             const U m = ah::Next() % 12;
-            SetWord(cur + 0x36, kMarks[m][0] | (ah::Half() ? 0 : ah::Next() & 0xFF));
-            SetWord(cur + 0x3A, kMarks[m][1] | (ah::Half() ? 0 : ah::Next() & 0xFF));
-            if (ah::Half()) SetWord(cur + 0x36, Word(cur + 0x36) + (ah::Half() ? 0x100u : 0xFF00u));
+            rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->x_whole, kMarks[m][0] | (ah::Half() ? 0 : ah::Next() & 0xFF));
+            rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->z_whole, kMarks[m][1] | (ah::Half() ? 0 : ah::Next() & 0xFF));
+            if (ah::Half()) rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->x_whole, rv::As<records::SpriteHead>(cur)->x_whole + (ah::Half() ? 0x100u : 0xFF00u));
         }
         if (ah::Often()) {
             // the step count on and about the pace (the arrival counts one first)
@@ -662,7 +663,7 @@ void Seed191(unsigned k) {
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(
             AH_PICK(0, 2, 3, 4, 0xA, 0x14, 0x1E, 0, 2, 3, 4, 0xA, 0x14, 0x1E, 1, 5, 9, 0xB, 0x13, 0x15, 0x1D, 0x1F, 0x80, 0xFF, 0x82));
         SeedRequest();
-        if (ah::Often()) MoveScript_WaitWordDA = static_cast<unsigned short>(AH_PICK(0, 0, 1, 0x100));
+        if (ah::Often()) Transition_Busy = static_cast<unsigned short>(AH_PICK(0, 0, 1, 0x100));
         break;
     case k191Talk:
         if (ah::Often()) B(at::kWalkCount) = static_cast<unsigned char>(ah::Next() % 11);

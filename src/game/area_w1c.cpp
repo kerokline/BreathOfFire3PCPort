@@ -19,12 +19,13 @@
 #include "game/area_harness.h"
 #include "game/area_w1c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w1c::at;
 using area_harness::Mem;
@@ -39,12 +40,12 @@ std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_ca
 // A dword shifted right as the originals' `sar`.
 std::uint32_t Sar(std::int32_t v, unsigned n) { return static_cast<std::uint32_t>(v >> n); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(Effect_Objects) + slot * at::kEffectStride; }
 // Party record `member` (ObjTrio, 0x14C bytes).
-unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
+unsigned char* PartyAt(unsigned member) { return rv::Bytes(&ObjTrio[member]); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
 }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
@@ -87,8 +88,8 @@ void MoveScriptObject(unsigned char dir) {
             MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] | 0x80);
         }
     }
-    CurSprite()->step_y = 0;
-    SetWord(Sprite_Current + 0x3E, 0x480);
+    rv::Current<records::SpriteObject>()->step_y = 0;
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, 0x480);
 }
 
 // The count 0x92BEE7 as area 48 reads it: 2, 6, 8, or any other.
@@ -118,7 +119,7 @@ void ArmTail3(unsigned char sub) {
 // the table unchecked, as the original's.
 void SpawnAtMember(unsigned member, unsigned char kind) {
     const unsigned char* const record = PartyAt(member);
-    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto* const tRecord = rv::AsConst<records::PartyMember>(record);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
     const unsigned char effect = B(Area49_EffectKinds_addr + B(Cond_Flags_addr + 0xd2 + member));
@@ -177,9 +178,9 @@ void StashColumn(unsigned x, unsigned z, unsigned shift) {
 // layer call.
 void RestoreColumn(unsigned x, unsigned z, unsigned shift) {
     SetLayer(x, z, 0);
-    SetByte(x, z, Sar(Long(Sprite_Current + 0x18), shift));
+    SetByte(x, z, Sar(rv::Current<records::SpriteHead>()->work_18, shift));
     SetLayer(x, z + 1, 0);
-    SetByte(x, z + 1, Sar(Long(Sprite_Current + 0x1C), shift));
+    SetByte(x, z + 1, Sar(rv::Current<records::SpriteHead>()->work_1c, shift));
 }
 
 // Area 52's handlers 3 and 4 (0x40A1D0, 0x40A260): Area52_BlockCell; with
@@ -191,14 +192,14 @@ void MoveBlock(std::int32_t stop) {
     if (!AH_CALL(Area52_BlockCell)(&x, &z)) return;
     const unsigned char counter = B(at::kCounter3);
     if (counter == 0xA) {
-        if (CurSprite()->x == stop) return;
+        if (rv::Current<records::SpriteObject>()->x == stop) return;
         AH_CALL(Area52_DropColumn)(x, z);
         AddWord(MoveScript_Object + 0xA, 6);
         return;
     }
     if (counter != 0x14) return;
     AH_CALL(Area52_ShiftBlockX)(x, z);
-    if (CurSprite()->x != 0x858000) return;
+    if (rv::Current<records::SpriteObject>()->x != 0x858000) return;
     AddWord(MoveScript_Object + 0xA, 3);
     B(AreaW0c_TailState_addr) = 0x2D;
 }
@@ -210,7 +211,7 @@ void SpawnEffect48(std::int32_t x, std::int32_t z, unsigned char b) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     tE->z = z;
     const std::int32_t zz = tE->z;
     tE->x = x;
@@ -280,12 +281,12 @@ extern "C" void __cdecl Area48_ChoiceCounterBOr1(void) {
 }
 
 // original 0x409040 (Area48_Choices[1] = Area48_Handlers[0]; PSX 0x801F4804):
-// the active member's +0x80 bit 0 cleared; with MoveScript_EffectState[the
+// the active member's +0x80 bit 0 cleared; with Character_IndexById[the
 // leader's +0x89] at 1 (the index unchecked), story flag 0xD toggled
 // (0x57C160).
 extern "C" void __cdecl Area48_ToggleFlagD(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
-    if (B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89)) != 1) return;
+    if (B(Character_IndexById_addr + B(ObjTrio_addr + 0x89)) != 1) return;
     FlagsToggle(Mem(Cond_Flags_addr + 0xa0), 0xD);
 }
 
@@ -294,7 +295,7 @@ extern "C" void __cdecl Area48_ToggleFlagD(void) {
 // and Sound_PlayEffect(0x20D).
 extern "C" void __cdecl Area48_BumpCount(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
-    if (B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89)) != 1) return;
+    if (B(Character_IndexById_addr + B(ObjTrio_addr + 0x89)) != 1) return;
     const unsigned char count = B(AreaW1c_Count48_addr);
     if (count < 8) B(AreaW1c_Count48_addr) = static_cast<unsigned char>(count + 1);
     AH_CALL(Sound_PlayEffect)(0x20D);
@@ -313,7 +314,7 @@ extern "C" void __cdecl Area48_MoveScriptObject1(void) { MoveScriptObject(1); }
 // word +0x8A = 0xFFFE.
 extern "C" void __cdecl Area48_PoseByCount(void) {
     Field_ActiveMember[0x83] = ByCount(6, 7, 8, 9);
-    reinterpret_cast<records::SpriteObject*>(Field_ActiveMember)->script_position = 0xFFFE;
+    rv::As<records::SpriteObject>(Field_ActiveMember)->script_position = 0xFFFE;
 }
 
 // original 0x4092B0 (Area48_Choices[6] = Area48_Handlers[5]; PSX 0x801F4B40):
@@ -471,9 +472,9 @@ extern "C" void __cdecl Area49_EffectFrame(void) {
                         unsigned char* const cur = Sprite_Current;
                         if (cur[8] != dir) {
                             cur[8] = dir;
-                            SetLong(cur + 0xC, -Long(cur + 0xC));
-                            SetLong(cur + 0x10, -Long(cur + 0x10));
-                            SetLong(cur + 0x14, -Long(cur + 0x14));
+                            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_x, -rv::As<records::SpriteHead>(cur)->step_x);
+                            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_z, -rv::As<records::SpriteHead>(cur)->step_z);
+                            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_y, -rv::As<records::SpriteHead>(cur)->step_y);
                             cur[9] = static_cast<unsigned char>(8 - cur[9]);
                         }
                     }
@@ -496,7 +497,7 @@ extern "C" void __cdecl Area49_EffectFrame(void) {
 // each bound the zone's byte << 16, signed compares; 0xFF for none.
 extern "C" unsigned char __cdecl Area49_MemberZone(unsigned member) {
     const unsigned char* const record = PartyAt(member & 0xFF);
-    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto* const tRecord = rv::AsConst<records::PartyMember>(record);
     const std::int32_t x = tRecord->x, z = tRecord->z;
     for (unsigned i = 0; i < at::kArea49ZoneCount; ++i) {
         const unsigned char* const zone = Mem(Area49_Zones_addr + i * 6u);
@@ -677,7 +678,7 @@ extern "C" unsigned char __cdecl Area50_Trigger43(unsigned char*, unsigned char*
 // 0x57C8A0(member, 1).
 extern "C" void __cdecl Area51_MemberAtObject(void) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const unsigned char member =
         AH_CALL(Party_MemberAt)(tCur->x, tCur->z, static_cast<unsigned>(static_cast<std::int32_t>(tCur->reach)));
     if (member == 0xFF) return;
@@ -693,12 +694,12 @@ extern "C" void __cdecl Area51_MemberAtObject(void) {
 // store, as the original's.
 extern "C" void __cdecl Area51_PlaceAtMember(void) {
     const unsigned char* const from = Field_ActiveMember - 0x668;
-    SetLong(Sprite_Current + 0x34, Long(from + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(from + 0x38));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(from + 0x34));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(from + 0x38));
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground - 0x40));
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground - 0x40));
 }
 
 // original 0x409D80 (Area51_Choices[0]): message 1 for an answer not 0, 0x14
@@ -741,11 +742,11 @@ extern "C" void __cdecl Area52_StashBlock(void) {
         return;
     }
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) - 0x8000u));
     const std::uint16_t x = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->x) - 0x8000u));
-    tCur->accel_x = 0;
-    CurSprite()->accel_z = 0;
+    tCur->work_18 = 0;
+    rv::Current<records::SpriteObject>()->work_1c = 0;
     for (unsigned i = 0; i < 2; ++i) StashColumn(static_cast<std::uint16_t>(x + i), z, i * 8);
 }
 
@@ -761,11 +762,11 @@ extern "C" void __cdecl Area52_ShiftBlockZ(void) {
     SetLayer(x, z, 0);
     SetByte(x, z, Sprite_Current[0x18]);
     SetLayer(static_cast<std::uint16_t>(x + 1), z, 0);
-    SetByte(static_cast<std::uint16_t>(x + 1), z, Sar(CurSprite()->accel_x, 8));
+    SetByte(static_cast<std::uint16_t>(x + 1), z, Sar(rv::Current<records::SpriteObject>()->work_18, 8));
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
-    tCur->accel_x = tCur->accel_z;
-    CurSprite()->accel_z = 0;
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
+    tCur->work_18 = tCur->work_1c;
+    rv::Current<records::SpriteObject>()->work_1c = 0;
     z = static_cast<std::uint16_t>(z + 2);
     SetLayer(x, z, 0x10);
     unsigned char* p = Sprite_Current + 0x1C;
@@ -790,13 +791,13 @@ extern "C" void __cdecl Area52_ShiftBlockZ(void) {
 // the new z (high word of z less 0x8000) taken (StashColumn).
 extern "C" void __cdecl Area52_ResetBlock(void) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     if (tCur->x != 0x118000 || tCur->z != 0x298000) return;
     for (unsigned i = 0; i < 2; ++i) RestoreColumn(0x11 + i, 0x29, i * 8);
-    CurSprite()->accel_x = 0;
-    CurSprite()->accel_z = 0;
-    CurSprite()->z = 0x78000;
-    const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(CurSprite()->z) - 0x8000u));
+    rv::Current<records::SpriteObject>()->work_18 = 0;
+    rv::Current<records::SpriteObject>()->work_1c = 0;
+    rv::Current<records::SpriteObject>()->z = 0x78000;
+    const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) - 0x8000u));
     for (unsigned i = 0; i < 2; ++i) StashColumn(0x11 + i, z, i * 8);
 }
 
@@ -811,8 +812,8 @@ extern "C" void __cdecl Area52_MoveBlockB(void) { MoveBlock(0x668000); }
 // Field_Request 5, Area52_RestoreBlock(*x, z). Counter 3 at 0: the script
 // position back 2 and 0; else 1.
 extern "C" unsigned char __cdecl Area52_BlockCell(long* x, long* z) {
-    *x = static_cast<long>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x34)) - 0x8000u);
-    const auto zv = static_cast<long>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x38)) - 0x8000u);
+    *x = static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->x) - 0x8000u);
+    const auto zv = static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->z) - 0x8000u);
     *z = zv;
     if (Field_Request == 5) AH_CALL(Area52_RestoreBlock)(*x, zv);
     if (B(at::kCounter3) != 0) return 1;
@@ -833,9 +834,9 @@ extern "C" void __cdecl Area52_ShiftBlockX(long xv, long zv) {
     SetLayer(x, z1, 0);
     SetByte(x, z1, Sprite_Current[0x1C]);
     unsigned char* cur = Sprite_Current;
-    SetLong(cur + 0x18, static_cast<std::int32_t>(Sar(Long(cur + 0x18), 8)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->work_18, static_cast<std::int32_t>(Sar(rv::As<records::SpriteHead>(cur)->work_18, 8)));
     cur = Sprite_Current;
-    SetLong(cur + 0x1C, static_cast<std::int32_t>(Sar(Long(cur + 0x1C), 8)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->work_1c, static_cast<std::int32_t>(Sar(rv::As<records::SpriteHead>(cur)->work_1c, 8)));
     const auto x2 = static_cast<std::uint16_t>(x + 2);
     SetLayer(x2, z, 0x10);
     unsigned char* p = Sprite_Current + 0x18;
@@ -857,8 +858,8 @@ extern "C" void __cdecl Area52_ShiftBlockX(long xv, long zv) {
 // (RestoreColumn at 8), then both shifted left by 8.
 extern "C" void __cdecl Area52_DropColumn(long xv, long zv) {
     RestoreColumn(static_cast<std::uint16_t>(High(xv) + 1), High(zv), 8);
-    SetLong(Sprite_Current + 0x18, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x18)) << 8));
-    SetLong(Sprite_Current + 0x1C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x1C)) << 8));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_18, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->work_18) << 8));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_1c, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->work_1c) << 8));
 }
 
 // original 0x40A4C0 (called by Area52_BlockCell, `(x, z)`, their high words
@@ -908,8 +909,8 @@ extern "C" unsigned char __cdecl Area52_PartyInRect(void) {
     const unsigned char* const rect = Mem(Area52_Rects_addr + (armed ? 4u : 0u));
     for (unsigned char m = 0; m < count; ++m) {
         const unsigned char* const record = PartyAt(m);
-        if (static_cast<std::uint16_t>(Word(record + 0x36) - rect[0]) >= rect[2]) continue;
-        if (static_cast<std::uint16_t>(Word(record + 0x3A) - rect[1]) < rect[3]) return 1;
+        if (static_cast<std::uint16_t>(rv::As<records::PartyMember>(record)->x_whole - rect[0]) >= rect[2]) continue;
+        if (static_cast<std::uint16_t>(rv::As<records::PartyMember>(record)->z_whole - rect[1]) < rect[3]) return 1;
     }
     return 0;
 }

@@ -11,6 +11,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -19,11 +20,9 @@ namespace {
 
 using namespace move_script;
 
-// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
 // record or another family whose first 0x80 bytes are a sprite object's (an
 // ObjTrio member, the kind-2 object), so only that part is named.
-records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -63,7 +62,7 @@ Callees g = kOriginals;
 // As MoveScript_GroupD's: Field_ActiveMember's party slot, as a byte.
 unsigned char PartySlot() {
     const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember) -
-                                                    Address(Sprite_ObjectsExtra));
+                                                    Address(rv::Bytes(Sprite_ObjectsExtra)));
     return static_cast<unsigned char>(distance / 0xA4);
 }
 
@@ -79,14 +78,14 @@ unsigned char PartySlot() {
 // a blocked step return before the motion - a blocked move with the step
 // undone: its script position and loop counter put back.
 extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     unsigned char* const context = object + 0x80;
-    const unsigned char direction = Cur()->direction;
+    const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     // The step's two effects a blocked move undoes: the script position
     // (context +0xA) and the loop counter (context +2).
     const unsigned char loop = obj->loop;
     const std::uint16_t position = obj->script_position;
-    if (Cur()->step_frames == 0) {
+    if (rv::Current<records::SpriteObject>()->step_frames == 0) {
         const unsigned char speed_index = obj->speed;
         const unsigned char speed = Field_MoveSpeeds[speed_index];
         if (obj->move_steps == 0) {
@@ -97,47 +96,47 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
                 const unsigned char result = g.step(context, scripts[obj->area_script]);
                 if (obj->pose_wait) g.pose_wait(context);
                 if (result == 0xFF) return;
-                if (Cur()->direction != result) {
-                    Cur()->direction = result;
+                if (rv::Current<records::SpriteObject>()->direction != result) {
+                    rv::Current<records::SpriteObject>()->direction = result;
                     context[0] |= 8;
                 }
                 if (obj->move_steps != 0) {   // the step began a timed move
                     Sprite_Current[0xA] = static_cast<unsigned char>(0x10 / speed);
                     --obj->move_steps;
-                    if (!(Cur()->flags2 & 0x80) && g.blocked(object)) {
-                        Cur()->direction &= 7;
+                    if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && g.blocked(object)) {
+                        rv::Current<records::SpriteObject>()->direction &= 7;
                         context[0] |= 0x18;
                         obj->script_position = position;
                         obj->loop = loop;
                         obj->move_steps = 0;
-                        Cur()->step_frames = 0;
+                        rv::Current<records::SpriteObject>()->step_frames = 0;
                         return;
                     }
-                } else if (Cur()->type == 0x0A && (context[0] & 8) && !(context[0] & 0x80)) {
+                } else if (rv::Current<records::SpriteObject>()->type == 0x0A && (context[0] & 8) && !(context[0] & 0x80)) {
                     Sprite_Current[0xA] = static_cast<unsigned char>(0x10 / speed);
-                    Cur()->step_x = 0;
-                    Cur()->step_z = 0;
-                    Cur()->step_y = 0;
+                    rv::Current<records::SpriteObject>()->step_x = 0;
+                    rv::Current<records::SpriteObject>()->step_z = 0;
+                    rv::Current<records::SpriteObject>()->step_y = 0;
                 }
                 for (const unsigned char bit : {2, 4}) {
                     if (context[0] & bit) {
-                        Sprite_Current[3] = Cur()->state;
-                        Cur()->state = bit == 2 ? 8 : 9;
+                        Sprite_Current[3] = rv::Current<records::SpriteObject>()->state;
+                        rv::Current<records::SpriteObject>()->state = bit == 2 ? 8 : 9;
                         Sprite_Current[4] = 0;
                     }
                 }
             }
         } else {   // steps left: the next one, unless blocked
-            if (!(Cur()->flags2 & 0x80) && g.blocked(object)) {
-                Cur()->direction &= 7;
+            if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && g.blocked(object)) {
+                rv::Current<records::SpriteObject>()->direction &= 7;
                 obj->context |= 0x18;
-                Cur()->step_frames = 0;
+                rv::Current<records::SpriteObject>()->step_frames = 0;
                 return;
             }
             Sprite_Current[0xA] = static_cast<unsigned char>(0x10 / speed);
             --obj->move_steps;
-            g.move(context, Cur()->direction & 7);
-            Cur()->direction |= 8;
+            g.move(context, rv::Current<records::SpriteObject>()->direction & 7);
+            rv::Current<records::SpriteObject>()->direction |= 8;
             context[0] |= 8;
         }
         g.settle(object, direction);
@@ -147,18 +146,18 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
 
 // original 0x518980: the timed move's motion, every frame (PSX FUN_801A3544).
 extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     unsigned char* const context = object + 0x80;
-    if (Cur()->step_frames != 0) {
-        Cur()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->x) +
-                                                                 static_cast<std::uint32_t>(Cur()->step_x));
-        Cur()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->z) +
-                                                                 static_cast<std::uint32_t>(Cur()->step_z));
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(Word(Sprite_Current + 0x3E) + Word(Sprite_Current + 0x14)));
-        --Cur()->step_frames;
-        if (Cur()->step_frames == 0) {   // arrived
+    if (rv::Current<records::SpriteObject>()->step_frames != 0) {
+        rv::Current<records::SpriteObject>()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x) +
+                                                                 static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->step_x));
+        rv::Current<records::SpriteObject>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) +
+                                                                 static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->step_z));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(rv::Current<records::SpriteObject>()->height_whole + Word(Sprite_Current + 0x14)));
+        --rv::Current<records::SpriteObject>()->step_frames;
+        if (rv::Current<records::SpriteObject>()->step_frames == 0) {   // arrived
             if (!(context[0] & 0x80))
-                SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(g.elevation(Cur()->x, Cur()->z)));
+                rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
             obj->counter = 0;
             const unsigned char after = Sprite_Current[2];
             if (static_cast<int>(after) - 1 < 3) {
@@ -166,18 +165,18 @@ extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
                 obj->pose_wait = frames;
                 if (frames != 0) {   // a wait of 30, 60 or 90 frames in pose 5
                     g.pose_wait(context);
-                    if (!(Cur()->flags2 & 8)) {
-                        Cur()->direction &= 7;
+                    if (!(rv::Current<records::SpriteObject>()->flags2 & 8)) {
+                        rv::Current<records::SpriteObject>()->direction &= 7;
                         context[0] |= 8;
                     }
-                    object[0xA1] = (context[0] & 0x40) ? 0xFF : (Cur()->script_pos < 8 ? 6 : 0);
+                    object[0xA1] = (context[0] & 0x40) ? 0xFF : (rv::Current<records::SpriteObject>()->script_pos < 8 ? 6 : 0);
                 }
             }
         }
     }
     g.party_apply(context);
     if (Field_Request != 2) {
-        if (Cur()->step_frames > Sprite_Current[0xA]) context[0] &= 0xEF;
+        if (rv::Current<records::SpriteObject>()->step_frames > Sprite_Current[0xA]) context[0] &= 0xEF;
         else context[0] |= 0x10;
     }
 }
@@ -186,7 +185,7 @@ extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
 // (PSX FUN_801A4D24). Its argument is unused.
 extern "C" void __cdecl Party_ApplyRecord(unsigned char* context) {
     (void)context;
-    records::SpriteObject* sprite = Cur();
+    records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
     if (sprite->type != 0x0A) return;
     unsigned char slot = PartySlot();
     if (static_cast<signed char>(slot) < 0) slot = 4;
@@ -194,9 +193,9 @@ extern "C" void __cdecl Party_ApplyRecord(unsigned char* context) {
     if (r[1] != 0) {
         --r[1];
         sprite->angle[0] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[0])) + static_cast<std::uint32_t>(Long(r + 4)));
-        Cur()->angle[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(Cur()->angle[1])) +
+        rv::Current<records::SpriteObject>()->angle[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(rv::Current<records::SpriteObject>()->angle[1])) +
                                                                  static_cast<std::uint32_t>(Long(r + 8)));
-        sprite = Cur();
+        sprite = rv::Current<records::SpriteObject>();
     }
     if (r[2] != 0) {
         --r[2];
@@ -207,8 +206,8 @@ extern "C" void __cdecl Party_ApplyRecord(unsigned char* context) {
 // original 0x518D10: the direction settled after the step (PSX FUN_801A3AEC);
 // `direction` is Sprite_Current[8] as Field_ObjectUpdate found it.
 extern "C" void __cdecl Field_ObjectSettle(unsigned char* object, unsigned char direction) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
-    records::SpriteObject* const sprite = Cur();
+    auto* const obj = rv::As<records::SpriteObject>(object);
+    records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
     if (sprite->type == 0x0A) {
         if (sprite->step_frames == 0) return;
         if (!(Field_ActiveMember[0x80] & 8)) return;
@@ -221,13 +220,13 @@ extern "C" void __cdecl Field_ObjectSettle(unsigned char* object, unsigned char 
         return;
     }
     obj->context |= 8;
-    if (Cur()->step_frames != 0) Cur()->direction |= 8;
-    else Cur()->direction &= 7;
+    if (rv::Current<records::SpriteObject>()->step_frames != 0) rv::Current<records::SpriteObject>()->direction |= 8;
+    else rv::Current<records::SpriteObject>()->direction &= 7;
     if (Scratch()[3] == 0xFF) {   // op E4's flag, consumed
         Scratch()[3] = 0;
         return;
     }
-    if (direction == Cur()->direction) obj->context &= 0xF7;
+    if (direction == rv::Current<records::SpriteObject>()->direction) obj->context &= 0xF7;
 }
 
 // original 0x5192A0: the update of an attached object (PSX ov_entry_801A4418):
@@ -237,20 +236,20 @@ extern "C" void __cdecl Field_ObjectSettle(unsigned char* object, unsigned char 
 // of 0x98-byte objects is two of 0xA4 on the PC.
 extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
     const unsigned char n = g.by_handle(Sprite_Current[0x18]);
-    const unsigned char* const other = n >= 0x1E ? Sprite_ObjectsExtra + (n - 0x1Eu) * 0xA4u : Sprite_Objects + n * 0xA4u;
-    if (Cur()->step_frames == 0) {
-        Cur()->draw_flags |= 0x20;
+    const unsigned char* const other = n >= 0x1E ? rv::Bytes(&Sprite_ObjectsExtra[n - 0x1Eu]) : rv::Bytes(&Sprite_Objects[n]);
+    if (rv::Current<records::SpriteObject>()->step_frames == 0) {
+        rv::Current<records::SpriteObject>()->draw_flags |= 0x20;
         for (const unsigned at : {0x34u, 0x38u, 0x3Cu}) SetLong(Sprite_Current + at, Long(other + at));
-        if (Cur()->type != 0x0A)
+        if (rv::Current<records::SpriteObject>()->type != 0x0A)
             for (const unsigned at : {0x64u, 0x68u, 0x6Cu}) SetLong(Sprite_Current + at, Long(other + at));
         long offset[3];
         g.attach_offset(offset, Sprite_Current[0x1C]);
-        Cur()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->x) + static_cast<std::uint32_t>(offset[0]));
-        Cur()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->z) + static_cast<std::uint32_t>(offset[1]));
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(Word(Sprite_Current + 0x3E) + static_cast<std::uint16_t>(offset[2])));
+        rv::Current<records::SpriteObject>()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x) + static_cast<std::uint32_t>(offset[0]));
+        rv::Current<records::SpriteObject>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) + static_cast<std::uint32_t>(offset[1]));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(rv::Current<records::SpriteObject>()->height_whole + static_cast<std::uint16_t>(offset[2])));
     }
     g.update(object);
-    Cur()->direction &= 7;
+    rv::Current<records::SpriteObject>()->direction &= 7;
 }
 
 // original 0x578EB0: an attachment's offset (PSX FUN_801AD1DC) - vector
@@ -324,8 +323,8 @@ std::uint32_t Id(const void* p) {
 void Disturb() {
     const std::uint32_t h = Hash();
     if (h % 4 == 0) g_object[0x80] = static_cast<unsigned char>(h >> 8);
-    if (h % 5 == 0) Cur()->direction = static_cast<unsigned char>(h >> 16);
-    if (h % 7 == 0) Cur()->step_frames = static_cast<unsigned char>(h >> 24) % 3;
+    if (h % 5 == 0) rv::Current<records::SpriteObject>()->direction = static_cast<unsigned char>(h >> 16);
+    if (h % 7 == 0) rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(h >> 24) % 3;
 }
 
 unsigned char __cdecl StubStep(unsigned char* context, const unsigned char* script) {
@@ -342,7 +341,7 @@ unsigned char __cdecl StubStep(unsigned char* context, const unsigned char* scri
     if (h % 7 == 0) g_object[0x80] = static_cast<unsigned char>(h >> 16);
     switch (h >> 28) {
     case 0: case 1: case 2: return 0xFF;
-    case 3: case 4: case 5: return Cur()->direction;
+    case 3: case 4: case 5: return rv::Current<records::SpriteObject>()->direction;
     default: return static_cast<unsigned char>(h >> 20);
     }
 }
@@ -442,14 +441,14 @@ constexpr unsigned kCount = 6;
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Kind2), Sprite_Kind2_count},
-    {Address(Sprite_ObjectsExtra), 8 * 0xA4},
+    {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
+    {Address(rv::Bytes(Sprite_ObjectsExtra)), 8 * 0xA4},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
-    {bof3::addr::DamageScratch, 4},
+    {SharedScratch_addr, 4},
     {Address(&Field_Request), 1},
-    {Address(Sprite_Objects), Sprite_Objects_count},   // what a handle names
+    {Address(rv::Bytes(Sprite_Objects)), (Sprite_Objects_count * sizeof(records::SpriteObject))}, // what a handle names
 };
-constexpr unsigned kRegionBytes = Sprite_Kind2_count + 8 * 0xA4 + MoveScript_PartyRecords_count + 4 + 1 + Sprite_Objects_count;
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 8 * 0xA4 + MoveScript_PartyRecords_count + 4 + 1 + (Sprite_Objects_count * sizeof(records::SpriteObject));
 
 struct State {
     unsigned char memory[kRegionBytes];
@@ -514,9 +513,9 @@ void SelfTest(void* const (&theirs)[kCount]) {
         ++per[k];
         auto* bytes = reinterpret_cast<unsigned char*>(&input);
         for (unsigned i = 0; i < offsetof(State, log); ++i) bytes[i] = static_cast<unsigned char>(Next());
-        input.current = Next() % 5 ? g_sprite : Sprite_Kind2;
+        input.current = Next() % 5 ? g_sprite : rv::Bytes(&Sprite_Kind2);
         const unsigned slot = Next() % 8;
-        input.active = At(Address(Sprite_ObjectsExtra) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
+        input.active = At(Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
         input.area = static_cast<std::uint16_t>(Next() % Area_Descriptors_count);
         g_seed = Next();
         for (auto& v : g_vectors) v = static_cast<short>(Next());
@@ -524,14 +523,14 @@ void SelfTest(void* const (&theirs)[kCount]) {
         // The boundaries: a timed move running or not, arriving or not; a speed
         // (never 0 with steps left); the sprite's type byte 0x0A; bit 7 of
         // Sprite_Current[7]; E4's flag; the entry direction repeated.
-        records::SpriteObject* const sprite = Cur();
+        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
         sprite->step_frames = static_cast<unsigned char>(Next() % 2 ? 0 : Next() % 3);
         g_object[0x87] = static_cast<unsigned char>(Next() % 2 ? 0 : Next() % 4);
         g_object[0x84] = static_cast<unsigned char>(g_object[0x87] ? 1 + Next() % 5 : Next() % 6);
         g_object[0x81] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
         if (Often()) sprite->type = 0x0A;
         if (Often()) sprite->flags2 &= 0x7F;
-        if (Often()) Bytes(sprite)[2] = static_cast<unsigned char>(Next() % 5);
+        if (Often()) rv::Bytes(sprite)[2] = static_cast<unsigned char>(Next() % 5);
         if (Often()) sprite->script_pos = Next() % 16;
         if (Often()) Scratch()[3] = 0xFF;
         if (Often()) Field_Request = 2;

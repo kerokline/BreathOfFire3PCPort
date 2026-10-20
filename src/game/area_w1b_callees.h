@@ -37,11 +37,12 @@ constexpr U kFlagsCC = 0x9040CC;          // a second bank: area 42 tests its bi
 // kTailArg: now AreaW0c_TailSub (symbols.toml). area 42: a frame count, then an effect slot
 constexpr U kTailTimer = 0x9039F6;        // u16: area 42's countdown in frames (0x384 from its handler 0)
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: MoveScript_EffectState's index
-// kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
-constexpr U kFoundSlot = 0x903850;        // a found slot (word or byte, as each writer stores it)
+// kLeaderX: now ObjTrio[0].x (symbols.toml). the leader's +0x34 / +0x38, 16.16
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderEffect: now ObjTrio[0].char_id (symbols.toml). the leader's +0x89: Character_IndexById's index
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml). the leader's +8, its facing
+inline auto& kFoundSlot = SharedScratch.b_00;  // a found slot (word or byte, as each writer stores it)
+constexpr std::uint32_t kFoundSlot_addr = SharedScratch_addr; // kFoundSlot's address, for the raw accessors that take one
 // kCameraAngle1: now Camera_Angles[1] (symbols.toml). Camera_Angles[1]
 // kCameraAngle2: now Cond_AngleFB (symbols.toml). Camera_Angles[2] (Cond_AngleFB's low half)
 constexpr U kTextBuffer = 0x904BA0;       // area 42's time string, by Crt_sprintf
@@ -50,7 +51,7 @@ constexpr U kCells44 = 0x90384B;          // u8: area 44's two gates, bits 0..1 
 constexpr U kCount44 = 0x90384A;          // u8: area 44's init zeroes it with kCells44
 constexpr U kDrop46 = 0x903849;           // u8: area 46's party-drop state (1 armed, 2 / 0 done)
 // kExtra0: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra[0]
-// kExtra1: now Sprite_ObjectsExtra[0xa4] (symbols.toml). Sprite_ObjectsExtra[1]
+// kExtra1: now Sprite_ObjectsExtra[1] (symbols.toml). Sprite_ObjectsExtra[1]
 constexpr U kExtraStride = 0xA4;
 constexpr U kPartyStride = 0x14C;
 constexpr U kEffectStride = 0x80;
@@ -95,11 +96,11 @@ constexpr U kA45NameSetsEnd = 0x5F7653;
 // kA45DriftSize: now Area45_DriftUV[8] (symbols.toml).
 
 // --- area 45's world-map cells (area 16's, docs/area_w0b.md) -------------------
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
-// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
-// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z

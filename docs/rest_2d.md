@@ -93,7 +93,7 @@ The states R2C holds of the same machine: `0x586670` (the state dispatcher,
 | `0x58A380` | `FieldAbility_HealFullClearA0` | `[9]`: `Char_HealHp(target, 0, battle)` then `Char_ClearStatus(target, 0xA0, battle)`; 1 when either took. |
 | `0x58A4C0` | `FieldMenuStatus_ByState` | `FieldMenu_States[6]`: `jmp [FieldMenuStatus_States + 4 * 0x929F01]`, unchecked. |
 | `0x58A4D0` | `FieldMenuStatus_Open` | `Menu_DrawBackdrop`, `FieldMenuStatus_PlaceWindows`; the cursor `0x929F06` 0, the timer 8, state + 1; `0x102`. |
-| `0x58A510` | `FieldMenuStatus_SlideIn` | `TextRecord_Set(0, 8, CharacterRecords + 0xA4 * MoveScript_EffectState[0x904062[s8 cursor]])`, window 11 `+0x10` = `0x12`, `Menu_DrawBackdrop`; the timer - 1, state + 1 when it was 0. |
+| `0x58A510` | `FieldMenuStatus_SlideIn` | `TextRecord_Set(0, 8, CharacterRecords + 0xA4 * Character_IndexById[0x904062[s8 cursor]])`, window 11 `+0x10` = `0x12`, `Menu_DrawBackdrop`; the timer - 1, state + 1 when it was 0. |
 | `0x58A570` | `FieldMenuStatus_Choose` | `Menu_DrawBackdrop`; window 19 on at window (4 + cursor)'s place; the name record; `Input_AutoRepeat(Input_Pressed & 0x5000)`: `0x1000` cursor - 1 (negative to `Party_Count(0)` - 1), else `0x4000` + 1 (at or past the count, signed, to 0); a cursor unlike the one before `0x100` (L2). Confirm: `0x103`, `0x102`, `FieldMenuStatus_DetailWindows`, window 19 off, timer 8, state + 1. Cancel (`Input_Pressed` read again; both can run in one frame): `0x106`, `0x102`, windows 12 + i state 1, window 11 state 1, window 19 off, timer 8, state + 2. |
 | `0x58A730` | `FieldMenuStatus_Detail` | `Menu_DrawBackdrop`, the name record, window 11 `+0x10` = `0x12`; with the timer set it counts down; at 0 a cancel: `0x106`, `0x102`, `FieldMenuStatus_ListWindows`, timer 8, state - 2. |
 | `0x58A7D0` | `FieldMenuStatus_Close` | `Menu_DrawBackdrop`; the timer - 1, at 0 `FieldMenuStatus_ClearWindows`, windows 4 + i state 4, timer 0, windows 7..10 state 2, mode 1 and state 0 (the top bar). |
@@ -253,7 +253,7 @@ entries take arguments - the typed-stand-in table here is this file's own.
   counter byte `0x90384B` past `Sprite_Objects`' 30; the Status screens'
   windows 12 + i and 4 + i past the 22 records (a member count above 9). Reads
   past a table by such an index (the masters' `.data` tables by the master
-  byte, `MoveScript_EffectState` by a party byte, the records the loops read)
+  byte, `Character_IndexById` by a party byte, the records the loops read)
   are made in place, as the original makes them.
 - No read of memory the original never wrote reaches what is drawn or decided
   (the locals each function reads are written first): **no ledger entry is

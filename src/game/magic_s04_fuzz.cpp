@@ -245,7 +245,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kActorSprite: now MagicS23_ActorSprite (symbols.toml).
 // kPool: now SnapSpark_Pool (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kPoolStride = 0x84;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr std::uint32_t kPoolStride = 0x84;
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* PoolRecord(unsigned i) { return mh::Mem(SnapSpark_Pool_addr + (i & 63) * kPoolStride); }
@@ -423,7 +424,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850..
+    {kScratch, 0x10},           // 0x903850..
     {SnapSpark_Pool_addr, 64 * kPoolStride}, // SnapSpark_Pool
     {0x80E980, 0x40},                     // Gfx_ClutStripSource 0x1A00..0x1A1F
     {0x812980, 0x40},                     // Gfx_ClutStrip 0x1A00..0x1A1F

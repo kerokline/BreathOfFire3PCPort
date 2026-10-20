@@ -14,6 +14,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2f.h"
 #include "game/rest_2f_callees.h"
@@ -24,9 +25,6 @@
 namespace rest_2f {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -181,8 +179,15 @@ unsigned char& B(U a) { return sh::Mem(a)[0]; }
 // kDirect: now ScenaSc6_Load10 (symbols.toml).
 // kShown: now BattleActorCopies_ItemActor (symbols.toml).
 constexpr U kTimer = 0x929F04;
-constexpr U kGrid = 0x6BDFBC, kSetCol = 0x6BDFC5, kPickCol = 0x6BDFC6, kSetRow = 0x6BDFC7, kPickRow = 0x6BDFC8,
-            kCurCol = 0x6BDFC9, kCurRow = 0x6BDFCA, kTopChoice = 0x6BDFCB, kReserve = 0x6BDFD4, kRefused = 0x6BDFD7;
+// kSetCol: now Rest2f_SetCol (symbols.toml).
+// kPickCol: now Rest2f_PickCol (symbols.toml).
+// kSetRow: now Rest2f_SetRow (symbols.toml).
+// kPickRow: now Rest2f_PickRow (symbols.toml).
+// kCurCol: now Rest2f_CursorCol (symbols.toml).
+// kCurRow: now Rest2f_CursorRow (symbols.toml).
+// kTopChoice: now Rest2f_TopChoice (symbols.toml).
+// kRefused: now Rest2f_Refused (symbols.toml).
+constexpr U kGrid = 0x6BDFBC, kReserve = 0x6BDFD4;
 // kFormationSet: now Cond_Flags[0xd0] (symbols.toml).
 // kParty: now Cond_Flags[0xd2] (symbols.toml).
 // kPressed: now Input_Pressed (symbols.toml).
@@ -191,8 +196,10 @@ constexpr U kGrid = 0x6BDFBC, kSetCol = 0x6BDFC5, kPickCol = 0x6BDFC6, kSetRow =
 // kCurrent: now BattleWinStates_Current (symbols.toml).
 // kListText: now MenuWindows_ListText (symbols.toml).
 // kListCursor: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr U kCharacters = 0x903A70, kListLast = 0x7DEE66, kWindows = 0x803160;
-U Rec(unsigned n, unsigned at) { return kWindows + 0x24 * n + at; }
+// kCharacters: now CharacterRecords (symbols.toml).
+// kWindows: now WindowRecords (symbols.toml).
+constexpr U kListLast = 0x7DEE66;
+U Rec(unsigned n, unsigned at) { return WindowRecords_addr + 0x24 * n + at; }
 
 // The kind-1 choices' text (a region of its own; a tail of zeros after it that
 // no one writes, so a walk past the region still ends).
@@ -219,10 +226,10 @@ U SprintfEffect(const U* a, U answer) {
 // TacticsFormation_Build / TacticsMembers_Build: their callers read the cursor
 // and the pick after them; the stand-ins move them as the real ones set them.
 U FormBuildEffect(const U*, U answer) {
-    B(kCurCol) = 0;
-    B(kCurRow) = 0;
-    B(kPickCol) = 0x7F;
-    B(kPickRow) = 0x7F;
+    B(Rest2f_CursorCol_addr) = 0;
+    B(Rest2f_CursorRow_addr) = 0;
+    B(Rest2f_PickCol_addr) = 0x7F;
+    B(Rest2f_PickRow_addr) = 0x7F;
     return answer;
 }
 // The swap helper 0x58BD50 (re-listed): the two bytes exchanged, as the
@@ -308,7 +315,7 @@ const sh::DataTable kTables[] = {
 
 // Beyond field mode's standard regions.
 const sh::Region kRegions[] = {
-    {kWindows, 22 * 0x24},       // WindowRecords
+    {WindowRecords_addr, 22 * 0x24}, // WindowRecords
     {0x7DEE20, 0x60},            // the message cells: kind 1's text pointer, count, cursor, rows
     {0x6BDFB0, 0x30},            // Tactics' cells
     {0x903A94, 0x4FC},           // CharacterRecords past the style region, to Cond_Flags
@@ -360,8 +367,8 @@ void SeedRecord(unsigned char* r) {
     r[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 2, 4, sh::Next()));
     const U x = PickOf(0x50, 0x4F, 0x51, 0x30, 0x31, 0x2F, 0x70, 0xFF56, 0xFF57, 0xFF55, 0xFF76, 0xFF36, 0x11, 0x140, 0x7FF0, 0x8010,
                        sh::Next());
-    WindowRec(r)->centre_x = x;
-    WindowRec(r)->centre_y = PickOf(0x28, 0x27, 0x29, 0x18, 0x38, 0x10, 0xFFEC, 0x7FF8, 0x8008, sh::Next());
+    rv::As<records::WindowRecord>(r)->x = x;
+    rv::As<records::WindowRecord>(r)->y = PickOf(0x28, 0x27, 0x29, 0x18, 0x38, 0x10, 0xFFEC, 0x7FF8, 0x8008, sh::Next());
     r[8] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
     r[9] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     r[0xA] = static_cast<unsigned char>(sh::Next() % 5);
@@ -387,14 +394,14 @@ void SeedText() {
 void SeedGrid() {
     for (unsigned i = 0; i < 9; ++i) B(kGrid + i) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
     const unsigned col = sh::Next() % 3, row = sh::Next() % 3;
-    B(kCurCol) = static_cast<unsigned char>(col);
-    B(kCurRow) = static_cast<unsigned char>(row);
+    B(Rest2f_CursorCol_addr) = static_cast<unsigned char>(col);
+    B(Rest2f_CursorRow_addr) = static_cast<unsigned char>(row);
     B(kGrid + 3 * row + col) = static_cast<unsigned char>(PickOf(1, 1, 2, 0x80));
     const bool picked = sh::Half();
-    B(kPickCol) = static_cast<unsigned char>(picked ? PickOf(0, 0, 1, 2) : 0x7F);
-    B(kPickRow) = static_cast<unsigned char>(picked ? sh::Next() % 3 : PickOf(0x7F, 0x7F, sh::Next() % 3));
-    B(kSetCol) = static_cast<unsigned char>(PickOf(1, 2, 1, 2, 0, 3));
-    B(kSetRow) = static_cast<unsigned char>(sh::Next() % 3);
+    B(Rest2f_PickCol_addr) = static_cast<unsigned char>(picked ? PickOf(0, 0, 1, 2) : 0x7F);
+    B(Rest2f_PickRow_addr) = static_cast<unsigned char>(picked ? sh::Next() % 3 : PickOf(0x7F, 0x7F, sh::Next() % 3));
+    B(Rest2f_SetCol_addr) = static_cast<unsigned char>(PickOf(1, 2, 1, 2, 0, 3));
+    B(Rest2f_SetRow_addr) = static_cast<unsigned char>(sh::Next() % 3);
 }
 
 // Stat_AddClampedTo's word, cap and delta at their boundaries.
@@ -430,14 +437,14 @@ void Seed(unsigned k) {
     B(ScenaSc6_Load10_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     // Tactics' cells
     SeedGrid();
-    B(kTopChoice) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
+    B(Rest2f_TopChoice_addr) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
     for (unsigned i = 0; i < 5; ++i) B(kReserve + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, sh::Next() % 8));
-    B(kRefused) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0, 1, 5, 7));
+    B(Rest2f_Refused_addr) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0, 1, 5, 7));
     B(Rec(12, 0xA)) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 5));
     // the party and the characters: ids 0..7, the flags +0xB at bits 0 and 1
     for (unsigned i = 0; i < 6; ++i) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, sh::Next() % 8));
     for (unsigned m = 0; m < 8; ++m) {
-        unsigned char* const c = Mem(kCharacters + 0xA4 * m);
+        unsigned char* const c = Mem(CharacterRecords_addr + 0xA4 * m);
         c[9] = static_cast<unsigned char>(PickOf(m, m, m, sh::Next() % 8));
         c[0xB] = static_cast<unsigned char>(PickOf(0, 1, 1, 3, 2, sh::Next()));
     }
@@ -447,10 +454,10 @@ void Seed(unsigned k) {
     SetWord(Mem(Field_CancelButtons_addr), PickOf(0x40, 0x40, 0x1000, sh::Next()));
     SetWord(Mem(Input_Pressed_addr), PickOf(0, 0, 0x20, 0x40, 0x60, 0x1000, 0x2000, 0x4000, 0x8000, 0x5000, 0xA000, 0x1020, sh::Next()));
     // the formation build's limits by the members' bits
-    B(0x904061) = static_cast<unsigned char>(PickOf(0x3F, 0x15, 0x2A, 0, sh::Next()));
+    B(Cond_Flags_addr + 0xd1) = static_cast<unsigned char>(PickOf(0x3F, 0x15, 0x2A, 0, sh::Next()));
     // the trade's s8 cells
-    B(0x6BE08C) = static_cast<unsigned char>(PickOf(0, 1, 2, 9, 0x10, 0x11, 0xFF, sh::Next()));
-    B(0x6BE08E) = static_cast<unsigned char>(PickOf(1, 2, 0x7F, 0x80, 0xFF, sh::Next()));
+    B(Effect1g_TradePick_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 9, 0x10, 0x11, 0xFF, sh::Next()));
+    B(Effect1g_TradeQuantity_addr) = static_cast<unsigned char>(PickOf(1, 2, 0x7F, 0x80, 0xFF, sh::Next()));
     // Stat_AddClampedTo: the word at the cap or 0 or one from either
     g_cap = PickOf(999, 0x7FFF, 0xFFFF, 0x8000, 1, 0, sh::Next()) | (sh::Half() ? sh::Next() & 0xFFFF0000u : 0);
     g_delta = PickOf(1, 0xFFFF, 0, 0x7FFF, 0x8000, 0x10, 0xFFF0, 2, 0xFFFE, sh::Next() & 0xFFFF) | (sh::Next() & 0xFFFF0000u);
@@ -491,7 +498,7 @@ void Disturb(U h) {
     switch (sh::DisturbCase(h, 15)) {
     case 0: B(FieldS_State_addr) = static_cast<unsigned char>(b % 7); break;
     case 1: B(FieldS_Step_addr) = static_cast<unsigned char>(b % 3); break;
-    case 2: B(kTopChoice) = static_cast<unsigned char>(b & 1); break;
+    case 2: B(Rest2f_TopChoice_addr) = static_cast<unsigned char>(b & 1); break;
     case 3: B(kTimer) = static_cast<unsigned char>(b % 4); break;
     case 4: if (rec) SetWord(cur + (b & 1 ? 4 : 6), v & 0x1FF); break;
     // a category stays 0..4, and a 4 stays a 4: Win2_DrawItemList takes its

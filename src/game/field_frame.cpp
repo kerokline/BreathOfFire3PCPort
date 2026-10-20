@@ -13,6 +13,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -22,11 +23,9 @@ namespace {
 
 using namespace move_script;
 
-// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
 // record or another family whose first 0x80 bytes are a sprite object's (an
 // ObjTrio member, the kind-2 object), so only that part is named.
-records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -232,20 +231,20 @@ extern "C" void __cdecl Field_MembersFrame(void) {
     g.pending();
     const auto held = [] { return static_cast<unsigned char>(Field_ScriptFlags2 | Field_ScriptFlags); };
     if (!(held() & 1)) {
-        Field_State = ObjTrio;
-        Sprite_Current = ObjTrio;
+        Field_State = rv::Bytes(ObjTrio);
+        Sprite_Current = rv::Bytes(ObjTrio);
         g.leader();
     }
     if (Field_MemberCount <= 1) return;
     if (!(held() & 2)) {
-        Field_State = ObjTrio + kMemberBytes;
-        Sprite_Current = ObjTrio + kMemberBytes;
+        Field_State = rv::Bytes(&ObjTrio[1]);
+        Sprite_Current = rv::Bytes(&ObjTrio[1]);
         g.member();
     }
     if (Field_MemberCount != 3) return;
     if (!(held() & 4)) {
-        Field_State = ObjTrio + 2 * kMemberBytes;
-        Sprite_Current = ObjTrio + 2 * kMemberBytes;
+        Field_State = rv::Bytes(&ObjTrio[2]);
+        Sprite_Current = rv::Bytes(&ObjTrio[2]);
         g.member();   // a tail jmp in the original
     }
 }
@@ -256,7 +255,7 @@ extern "C" void __cdecl Field_MembersFrame(void) {
 // had (and is skipped entirely under Draw_OtSlot 4); the type-0x0A test reads
 // Sprite_Current, which is the object here since nothing runs in between.
 extern "C" void __cdecl Field_ObjectsScreen(void) {
-    unsigned char* object = Sprite_Objects;
+    unsigned char* object = rv::Bytes(Sprite_Objects);
     for (unsigned n = kObjects; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         if (!(object[0] & 1)) continue;
@@ -265,7 +264,7 @@ extern "C" void __cdecl Field_ObjectsScreen(void) {
         } else {
             object[0x29] = (object[0x24] & 0x10) ? 4 : Draw_OtSlot;
         }
-        if (Cur()->type == 0x0A) g.screen_a();
+        if (rv::Current<records::SpriteObject>()->type == 0x0A) g.screen_a();
         else g.update_screen();
     }
 }
@@ -283,7 +282,7 @@ extern "C" void __cdecl Field_ObjectsScreen(void) {
 // not reproduced.
 extern "C" void __cdecl Field_ObjectsFrame(void) {
     if (Field_ScriptFlags2 & 0x400) return;
-    unsigned char* object = Sprite_Objects;
+    unsigned char* object = rv::Bytes(Sprite_Objects);
     for (unsigned n = kObjects; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         Field_ActiveMember = object;
@@ -295,16 +294,16 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
         if (timed == 0 && (flags & 0x20)) {
             if (flags & 0x10) {
                 const unsigned char turned = g.turn_target(context);
-                records::SpriteObject* const sprite = Cur();
+                records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
                 if (turned != 0 && !(sprite->flags2 & 8)) {
                     object[0x85] = static_cast<unsigned char>(sprite->direction & 7);
                     if (sprite->flags2 & 2) {
                         g.face(static_cast<unsigned char>(sprite->direction & 7));
                     } else {   // turn to face ObjTrio's first member
-                        sprite->direction = static_cast<unsigned char>((ObjTrio[8] ^ 4) & 7);
-                        g.face(Cur()->direction);
+                        sprite->direction = static_cast<unsigned char>((ObjTrio[0].direction ^ 4) & 7);
+                        g.face(rv::Current<records::SpriteObject>()->direction);
                     }
-                    if (Cur()->state == 0x0A) object[0x85] |= 1;
+                    if (rv::Current<records::SpriteObject>()->state == 0x0A) object[0x85] |= 1;
                 }
             } else {
                 g.idle(object);
@@ -317,7 +316,7 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
             if (Word(object + 0x9C) > 0x1E && timed == 0) g.idle_long(object);
             else CallHandler(object);
         }
-        records::SpriteObject* const sprite = Cur();
+        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
         if (sprite->type == 0x0A) continue;
         const unsigned char after = context[0];
         if (after & 0x40) {
@@ -340,7 +339,7 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
 // FUN_8015B148): Sprite_UpdateScreenA for each present (bit 0) and not
 // hidden by bit 6.
 extern "C" void __cdecl Party_ExtraScreens(void) {
-    unsigned char* object = Sprite_ObjectsExtra;
+    unsigned char* object = rv::Bytes(Sprite_ObjectsExtra);
     for (unsigned n = kExtra; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         const unsigned char f = object[0];
@@ -352,7 +351,7 @@ extern "C" void __cdecl Party_ExtraScreens(void) {
 // Field_ObjectsFrame's first half without the idle-long case, the scratch
 // byte, the turn target's result or anything after the handler.
 extern "C" void __cdecl Party_ExtraFrame(void) {
-    unsigned char* object = Sprite_ObjectsExtra;
+    unsigned char* object = rv::Bytes(Sprite_ObjectsExtra);
     for (unsigned n = kExtra; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         Field_ActiveMember = object;
@@ -374,9 +373,9 @@ extern "C" void __cdecl Party_ExtraFrame(void) {
 // FUN_8015B334's head) - 4 with +0x24 bit 4, 6 for a record with byte 3 bit
 // 5, else Draw_OtSlot - then its screen position (a tail jmp in the original).
 extern "C" void __cdecl Sprite_UpdateScreenA(void) {
-    records::SpriteObject* const sprite = Cur();
+    records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     if (sprite->draw_flags & 0x10) sprite->ot_slot = 4;
-    else sprite->ot_slot = (Record54(Bytes(sprite))[3] & 0x20) ? 6 : Draw_OtSlot;
+    else sprite->ot_slot = (Record54(rv::Bytes(sprite))[3] & 0x20) ? 6 : Draw_OtSlot;
     g.project_a();
 }
 
@@ -391,30 +390,33 @@ extern "C" void __cdecl Sprite_UpdateScreenA(void) {
 // does. The vertex's fourth word is 0 (DIV-0023): the original never writes
 // it, and Gte_LoadVertex carries its stale stack into Gte_Vertices[3]'s top
 // half, which nothing reads.
+// Sprite_Current is any sprite head (effects reach it through
+// Sprite_UpdateScreenA): read as SpriteHead, here and in Sprite_UpdateScreenA
+// (C2 audit frs F2).
 extern "C" void __cdecl Sprite_ProjectA(void) {
-    records::SpriteObject* sprite = Cur();
-    const unsigned z_whole = Word(Bytes(sprite) + 0x38) == 0, x_whole = Word(Bytes(sprite) + 0x34) == 0;
-    sprite->draw_key = static_cast<unsigned>(Word(Bytes(sprite) + 0x3A) - z_whole - x_whole + Word(Bytes(sprite) + 0x36) -
+    records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
+    const unsigned z_whole = sprite->z_frac == 0, x_whole = sprite->x_frac == 0;
+    sprite->draw_key = static_cast<unsigned>(sprite->z_whole - z_whole - x_whole + sprite->x_whole -
                                                  static_cast<std::uint16_t>(MapView_Origin[1]) -
                                                  static_cast<std::uint16_t>(MapView_Origin[0]) + 2);
-    sprite = Cur();
-    sprite->draw_key = static_cast<unsigned>(sprite->draw_key + static_cast<signed char>(Record54(Bytes(sprite))[1]));
-    sprite = Cur();
-    sprite->draw_key = static_cast<unsigned>(Bytes(sprite)[0x32]) << 8;
+    sprite = rv::Current<records::SpriteHead>();
+    sprite->draw_key = static_cast<unsigned>(sprite->draw_key + static_cast<signed char>(Record54(rv::Bytes(sprite))[1]));
+    sprite = rv::Current<records::SpriteHead>();
+    sprite->draw_key = static_cast<unsigned>(rv::Bytes(sprite)[0x32]) << 8;
     unsigned low;
-    sprite = Cur();
-    if (Draw_OtSlot == 4) low = static_cast<unsigned>(Long(Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
-    else low = ((Word(Bytes(sprite) + 0x3E) ^ 0xF01Fu) >> 5) & 0xFF;
+    sprite = rv::Current<records::SpriteHead>();
+    if (Draw_OtSlot == 4) low = static_cast<unsigned>(Long(rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
+    else low = ((sprite->height_whole ^ 0xF01Fu) >> 5) & 0xFF;
     sprite->draw_key = sprite->draw_key | low;
-    sprite = Cur();
-    if (!(Record54(Bytes(sprite))[3] & 0x10)) {
+    sprite = rv::Current<records::SpriteHead>();
+    if (!(Record54(rv::Bytes(sprite))[3] & 0x10)) {
         g.inherit_key();
-        sprite = Cur();
+        sprite = rv::Current<records::SpriteHead>();
     }
     short vertex[4];
     vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
     vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
-    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(Word(Bytes(sprite) + 0x3E)) / 2));
+    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(sprite->height_whole) / 2));
     vertex[3] = 0;   // DIV-0023
     unsigned long vertex_words[2];
     std::memcpy(vertex_words, vertex, sizeof vertex_words);
@@ -423,13 +425,13 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
     unsigned long screen[2];
     g.store_xy(screen);
     g.store_depth(reinterpret_cast<long*>(Sprite_Current + 0x60));
-    SetLong(Sprite_Current + 0x74, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
-    SetWord(Sprite_Current + 0x2E, Ftol16(static_cast<std::uint32_t>(screen[0])));
-    SetLong(Sprite_Current + 0x78, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
-    SetWord(Sprite_Current + 0x30, Ftol16(static_cast<std::uint32_t>(screen[1])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, Ftol16(static_cast<std::uint32_t>(screen[1])));
 
-    sprite = Cur();
-    const unsigned char* const margin = Sprite_ScreenMargins + ((Record54(Bytes(sprite))[3] >> 3) & 1) * 4u;
+    sprite = rv::Current<records::SpriteHead>();
+    const unsigned char* const margin = Sprite_ScreenMargins + ((Record54(rv::Bytes(sprite))[3] >> 3) & 1) * 4u;
     const int x = static_cast<std::int16_t>(static_cast<std::uint16_t>(sprite->screen_x)), y = static_cast<std::int16_t>(static_cast<std::uint16_t>(sprite->screen_y));
     if (x > 0x140 + margin[0] || x < -static_cast<int>(margin[1]) || y > 0xF0 + margin[2] || y < -static_cast<int>(margin[3])) {
         sprite->flags |= 0x80;   // off screen
@@ -437,7 +439,7 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
         const int fill = g_band_fill >= 0 ? g_band_fill : static_cast<int>(Widescreen_Fill());
         if (fill != 0 && x <= 0x140 + margin[0] + fill && x >= -static_cast<int>(margin[1]) - fill &&
             y <= 0xF0 + margin[2] && y >= -static_cast<int>(margin[3]))
-            BandNote(Bytes(sprite));
+            BandNote(rv::Bytes(sprite));
         return;
     }
     sprite->flags &= 0x7F;
@@ -490,7 +492,7 @@ extern "C" void __cdecl Sprite_DrawOverlays(void) {
         unsigned char* const sprite = Sprite_OverlayList[i];
         Sprite_Current = sprite;
         SetLong(sprite + 0x74, static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(Word(sprite + 0x2E)))));
-        Cur()->screen_yf = static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(static_cast<std::uint16_t>(Cur()->screen_y))));
+        rv::Current<records::SpriteObject>()->screen_yf = static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(static_cast<std::uint16_t>(rv::Current<records::SpriteObject>()->screen_y))));
         g.sprite_draw();
         ++i;
     } while (i < Sprite_OverlayListCount);
@@ -540,9 +542,9 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0) {
 constexpr unsigned kPool = kObjects + kExtra + 3;
 unsigned char* Pool(unsigned k) {
     k %= kPool;
-    if (k < kObjects) return Sprite_Objects + k * kObjectBytes;
-    if (k < kObjects + kExtra) return Sprite_ObjectsExtra + (k - kObjects) * kObjectBytes;
-    return ObjTrio + (k - kObjects - kExtra) * kMemberBytes;
+    if (k < kObjects) return reinterpret_cast<unsigned char*>(Sprite_Objects) + k * kObjectBytes;
+    if (k < kObjects + kExtra) return reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (k - kObjects) * kObjectBytes;
+    return reinterpret_cast<unsigned char*>(ObjTrio) + (k - kObjects - kExtra) * kMemberBytes;
 }
 
 // A callee may change what the caller reads again after it: which sprite is
@@ -766,14 +768,14 @@ constexpr unsigned kSwap = 11;
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Objects), Sprite_Objects_count},
-    {Address(Sprite_ObjectsExtra), Sprite_ObjectsExtra_count},
-    {Address(ObjTrio), ObjTrio_count},
+    {Address(rv::Bytes(Sprite_Objects)), (Sprite_Objects_count * sizeof(records::SpriteObject))},
+    {Address(rv::Bytes(Sprite_ObjectsExtra)), (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))},
+    {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
     {Address(Sprite_OverlayList), 30 * 4},
     {Address(&Sprite_OverlayListCount), 1},
     {Address(Sprite_DrawList), 40 * 4},
     {Address(&Sprite_DrawListCount), 1},
-    {bof3::addr::DamageScratch, 4},
+    {SharedScratch_addr, 4},
     {Address(&Field_ScriptFlags), 2},
     {Address(&Field_ScriptFlags2), 2},
     {Address(&Field_MemberCount), 1},
@@ -785,7 +787,7 @@ const Region kRegions[] = {
     {Address(&Draw_PassFlags), 1},
     {Address(g_records), sizeof g_records},
 };
-constexpr unsigned kRegionBytes = Sprite_Objects_count + Sprite_ObjectsExtra_count + ObjTrio_count + 120 + 1 + 160 + 1 + 4 +
+constexpr unsigned kRegionBytes = (Sprite_Objects_count * sizeof(records::SpriteObject)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)) + (ObjTrio_count * sizeof(records::PartyMember)) + 120 + 1 + 160 + 1 + 4 +
                                   2 + 2 + 1 + 2 + 2 + 4 + 1 + 1 + 1 + kRecords * 4;
 
 struct State {
@@ -868,9 +870,9 @@ BandCheck BandSelfTest(void* theirs) {
         input.state = Pool(Next());
         Apply(input);
         g_seed = Next();
-        for (unsigned i = 0; i < kObjects; ++i) SeedObject(Sprite_Objects + i * kObjectBytes);
-        for (unsigned i = 0; i < kExtra; ++i) SeedObject(Sprite_ObjectsExtra + i * kObjectBytes);
-        for (unsigned i = 0; i < 3; ++i) SeedObject(ObjTrio + i * kMemberBytes);
+        for (unsigned i = 0; i < kObjects; ++i) SeedObject(rv::Bytes(&Sprite_Objects[i]));
+        for (unsigned i = 0; i < kExtra; ++i) SeedObject(rv::Bytes(&Sprite_ObjectsExtra[i]));
+        for (unsigned i = 0; i < 3; ++i) SeedObject(rv::Bytes(&ObjTrio[i]));
         Sprite_DrawListCount = static_cast<unsigned char>(Next() % 3 ? 0x25 + Next() % 6 : Next() % 0x29);
         Draw_OtSlot = static_cast<unsigned char>(Often() ? 4 : Next() % 8);
         Capture(input);
@@ -949,9 +951,9 @@ void SelfTest(void* const (&theirs)[kCount]) {
         input.state = Pool(Next());
         Apply(input);
         g_seed = Next();
-        for (unsigned i = 0; i < kObjects; ++i) SeedObject(Sprite_Objects + i * kObjectBytes);
-        for (unsigned i = 0; i < kExtra; ++i) SeedObject(Sprite_ObjectsExtra + i * kObjectBytes);
-        for (unsigned i = 0; i < 3; ++i) SeedObject(ObjTrio + i * kMemberBytes);
+        for (unsigned i = 0; i < kObjects; ++i) SeedObject(rv::Bytes(&Sprite_Objects[i]));
+        for (unsigned i = 0; i < kExtra; ++i) SeedObject(rv::Bytes(&Sprite_ObjectsExtra[i]));
+        for (unsigned i = 0; i < 3; ++i) SeedObject(rv::Bytes(&ObjTrio[i]));
         for (unsigned i = 0; i < 30; ++i) Sprite_OverlayList[i] = Pool(Next());
         Sprite_OverlayListCount = static_cast<unsigned char>(Next() % 4 ? Next() % 31 : Next() % 3);
         Sprite_DrawListCount = static_cast<unsigned char>(Next() % 3 ? 0x25 + Next() % 6 : Next() % 0x29);

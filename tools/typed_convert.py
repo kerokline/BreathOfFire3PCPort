@@ -62,6 +62,7 @@ import tomllib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import data_census as dc  # noqa: E402
+import record_sizes  # noqa: E402
 
 ROOT = dc.ROOT
 
@@ -600,8 +601,20 @@ class Entries:
     def __init__(self, path):
         with open(path, 'rb') as fh:
             t = tomllib.load(fh)
-        self.data = sorted(t.get('data', []), key=lambda e: e['pc'])
+        # A [[block]] with a record ctype is a typed array like a [[data]]
+        # entry (tools/gen_symbols.py, stage C4). A field entry inside it
+        # still wins at its own address (find: the exact entry first): its
+        # name is its readers', where the struct's may be another handler's.
+        typed_blocks = {}
+        for b in t.get('block', []):
+            if 'ctype' in b:
+                e = {'name': b['name'], 'pc': b['pc'], 'ctype': b['ctype'], 'block': True}
+                if b['record_count'] != 1:
+                    e['count'] = b['record_count']
+                typed_blocks[b['name']] = e
+        self.data = sorted(t.get('data', []) + list(typed_blocks.values()), key=lambda e: e['pc'])
         self.by_pc = {e['pc']: e for e in self.data}
+        self.by_name = {e['name']: e for e in self.data}
         self.starts = [e['pc'] for e in self.data]
 
     @staticmethod
@@ -611,6 +624,9 @@ class Entries:
             return 0
         if '*' in ct:
             return 4
+        rs = record_sizes.size_of(ct)
+        if rs is not None:
+            return rs
         st = int_type(ct)
         if st:
             return st[0]
@@ -636,10 +652,90 @@ class Entries:
 
 
 # --------------------------------------------------------------------------
+# Record fields (stage C4): which field of a record array a site reads
+# --------------------------------------------------------------------------
+
+# The sprite head's anonymous unions (src/game/records.h SpriteHead) hold one
+# name per family; the comment beside each says whose it is. A family absent
+# from an offset's row has no name there (SpriteObject +5, a party member's
+# +6: records.h "not named"), and its sites stay raw with reason `union`.
+# +0xA is the battle task's `digits` only: every other family's +0xA is its
+# handler's own (records.h SpriteHead byte_0a; C4 audit A F2).
+UNION_NAMES = {
+    'records::SpriteObject': {0x6: 'type', 0x7: 'flags2', 0x8: 'direction', 0x9: 'step_frames',
+                              0x32: 'draw_key', 0x60: 'depth'},
+    'records::SpriteObjectBody': {0x6: 'type', 0x7: 'flags2', 0x8: 'direction', 0x9: 'step_frames',
+                                  0x32: 'draw_key', 0x60: 'depth'},
+    'records::PartyMember': {0x5: 'actor', 0x8: 'direction', 0x9: 'step_frames', 0x32: 'draw_key', 0x60: 'depth'},
+    'records::BattleEnemy': {0x5: 'actor', 0x8: 'layout', 0x32: 'draw_key', 0x60: 'depth'},
+    'records::EffectObject': {0x5: 'kind', 0x6: 'param', 0x9: 'timer', 0x32: 'draw_key', 0x60: 'depth'},
+    'records::BattleTask': {0x5: 'kind', 0x6: 'runner', 0x7: 'mode', 0x9: 'timer', 0xA: 'digits'},
+}
+
+# Bytes a record's struct names for one reader only, where the site's reader
+# decides the meaning: a view (records.h's rv::As targets) or nothing types
+# them from the table alone. Sites there stay raw with the reason given.
+VIEW_BYTES = {
+    # "Bytes +0..+7 and +0xF mean the same to every handler; +8..+0x23 are
+    # each handler's own" (records.h WindowRecord; BattleWindow, ItemListWindow)
+    'records::WindowRecord': [(0x8, 0xF, 'view'), (0x10, 0x24, 'view')],
+    # the tail +0x124..+0x13F: ActionRecord in battle, MemberFieldTail in the
+    # field (records.h PartyMember: the field and battle read it differently)
+    'records::PartyMember': [(0x124, 0x140, 'view')],
+    # the kinds' own words: EffectWork (records.h EffectObject)
+    'records::EffectObject': [(0xC, 0x14, 'view'), (0x2E, 0x32, 'view')],
+}
+
+# Single sites no record field may type, each an audit's recorded decision:
+# (file, entry, byte offset into the entry) -> why. The field the table would
+# pick is another reader's; the site stays raw with reason `audit-family`.
+KEEP_RAW = {
+    # object 2's +0x32 is the turn the kind-0x78 ring spins it by, not the
+    # draw key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4
+    # audit A F1, which found c0635893 had typed it Sprite_Objects[2].draw_key)
+    ('src/game/effect_3d.cpp', 'Sprite_Objects', 2 * 0xA4 + 0x32): 'kObject2Turn',
+    # Community_Buildings by a 1-based slot or kind: the base, Buildings - 8
+    # (+ 3), lies in Community_Records' last record, so the table would spell
+    # these off the end of the wrong one (C4 audit B F1, d241a959)
+    ('src/game/rest_4a.cpp', 'Community_Records', 0x1DB): 'kBuildingLevels',
+    ('src/game/rest_4b.cpp', 'Community_Records', 0x1D8): 'kSlots',
+    ('src/game/rest_4b_fuzz.cpp', 'Community_Records', 0x1D8): 'kSlots',
+    ('src/game/rest_4e.cpp', 'Community_Records', 0x1DB): 'kTrackCounts',
+    ('src/game/rest_4e_fuzz.cpp', 'Community_Records', 0x1DB): 'kTrackCounts',
+}
+
+
+def record_field(entry, o, size, kind):
+    """(path, size, signed, kind) of the field of entry's record at offset o
+    that an access of `size` bytes and `kind` reads, or a reason string."""
+    ct = clean_type(entry['ctype'])
+    for lo, hi, why in VIEW_BYTES.get(ct, ()):
+        if lo <= o < hi:
+            return why
+    every = record_sizes.fields(ct)
+    here = [x for x in every if x[0] == o]
+    cands = [x for x in here if x[2] == size and x[4] == kind]
+    if not cands:
+        covering = [x for x in every if x[0] < o < x[0] + x[2]]
+        return 'width' if (here or covering) else 'field-missing'
+    # an array's element beside a scalar of its own (states[0] / state): the scalar
+    scalars = [x for x in cands if '[' not in x[1].split('.')[-1]]
+    if scalars and len(scalars) < len(cands):
+        cands = scalars
+    if len(cands) > 1:
+        pick = UNION_NAMES.get(ct, {}).get(o)
+        cands = [x for x in cands if x[1] == pick]
+        if len(cands) != 1:
+            return 'union'
+    return cands[0][1], cands[0][2], cands[0][3], cands[0][4]
+
+
+# --------------------------------------------------------------------------
 # Sites
 # --------------------------------------------------------------------------
 
 HARNESS = re.compile(r'(_fuzz\.|_harness|fuzz_)')
+RV_VIEW = re.compile(r'\brv::(As|AsConst)\s*<\s*(records::\w+)\s*>\s*$')
 BAD_BARE_NAME = re.compile(r'(End|Last|Limit|Top|Hi|Lo|Max|Min|Stop|Size|Count|Stride|Mask|Bytes|Len|Shift)$')
 KEYWORDS = frozenset('if while for switch return sizeof alignof decltype static_cast reinterpret_cast const_cast '
                      'case else do new delete throw static_assert defined'.split())
@@ -786,13 +882,15 @@ def top_level_ops(s):
 
 
 class Converter:
-    def __init__(self, toml='symbols.toml'):
+    def __init__(self, toml='symbols.toml', addr_names=(), only_entries=()):
         os.chdir(ROOT)
+        self.addr_names = set(addr_names)
+        self.only_entries = set(only_entries)
         self.syms = dc.Symbols(toml)
         self.entries = Entries(toml)
         self.files = dc.load_sources()
         self.by_rel = {f.rel: f for f in self.files}
-        self.genv = dc.collect_constants(self.files, self.syms.names)
+        self.genv = dc.collect_constants(self.files, {**self.syms.names, **self.syms.addr_names})
         self.defs_by_name = collections.defaultdict(list)
         for f in self.files:
             for name, value, ns, line in f.consts:
@@ -851,6 +949,18 @@ class Converter:
             if not self.syms.in_data(v):
                 continue
             out.append((m.start(), m.end(), v, m.group(0)))
+        # <Name>_addr of the entries asked for (--addr-names, stage C4): the
+        # census does not count these, but `B(Name_addr + k)` is a raw access
+        # all the same, and a record array names its field
+        if self.addr_names:
+            taken = {(s, e) for s, e, _, _ in out}
+            for m in re.finditer(r'(?<![\w.>:])(\w+)_addr\b', code):
+                if m.group(1) not in self.addr_names or (m.start(), m.end()) in taken:
+                    continue
+                e = self.entries.by_name.get(m.group(1))
+                if e is None:
+                    continue
+                out.append((m.start(), m.end(), e['pc'], m.group(0)))
         out.sort()
         return out
 
@@ -889,9 +999,18 @@ class Converter:
             site.reason = 'macro'
             return site
         entry, off = self.entries.find(value)
+        if entry is not None and cname.endswith('_addr') and entry.get('field_of'):
+            # a field entry's own address, spelled <Field>_addr: its record
+            # array's, when the block is typed (stage C4)
+            blk = self.entries.by_name.get(entry['field_of'])
+            if blk is not None and blk.get('block'):
+                entry, off = blk, value - blk['pc']
         site.entry, site.off = entry, off
         if entry is None:
             site.reason = 'no-entry'
+            return site
+        if self.only_entries and entry['name'] not in self.only_entries:
+            site.reason = 'not-asked'
             return site
         if not entry.get('ctype'):
             site.reason = 'untyped-entry'
@@ -918,6 +1037,10 @@ class Converter:
                 arg_e = arg_s + len(args[0])
         else:
             call = None
+        if (f.rel, entry['name'], off) in KEEP_RAW:
+            # neither typed nor respelled as the entry's address: the name stays
+            site.reason = 'audit-family'
+            return site
         addr_tiers = self.addr_tiers(site, entry, off, esize)
         if call is None:
             # an address handed on as a value
@@ -1020,7 +1143,11 @@ class Converter:
         return bool(m) and m.group(1).lower() not in entry['name'].lower()
 
     def addr_tiers(self, site, entry, off, esize):
-        if off % esize != 0 or (off and 'count' not in entry):
+        if record_sizes.size_of(entry['ctype']) is not None:
+            # a record array: any byte of it is the table's address plus an offset
+            if not 0 <= off < esize * entry.get('count', 1):
+                return []
+        elif off % esize != 0 or (off and 'count' not in entry):
             return []
         name = entry['name'] + '_addr'
         if off == 0:
@@ -1160,6 +1287,60 @@ class Converter:
         a0 = code[arg_s:arg_s + len(args[0])]
         rest = code[ce:arg_s + len(args[0])]
         add = 0
+        # rv::As<records::T>( span [+ c | + i * s] ): the record at the span
+        # (stage C4), typed by the entry's record array if T is its family
+        mv = RV_VIEW.search(code[max(0, op - 200):op])
+        if mv:
+            if len(args) != 1 or sem[0] != 'ptr' or a0[:cs - arg_s].strip():
+                return None
+            vst = op - (len(code[max(0, op - 200):op]) - mv.start())
+            dyn = None
+            if rest.strip():
+                m = re.fullmatch(r'(\s*\+\s*)(.+?)\s*', rest, re.S)
+                if not m or idx is not None:
+                    return None
+                v = dc.eval_expr(m.group(2), self.env(f))
+                if v is not None:
+                    add = v
+                else:
+                    # `+ c + i * s`: split at the top-level '+' first, so the
+                    # index is i (stride s) and c a constant, never `(c + i) * s`
+                    # (C4 audit A doubt; no site had the shape). A '-' or a
+                    # second dynamic term is not read.
+                    t0 = ce + len(m.group(1))
+                    masked = mask_casts(m.group(2))
+                    if any(o == '-' for _, o in top_level_ops(masked)):
+                        return None
+                    terms, p0 = [], t0
+                    for tm in split_top(masked, '+'):
+                        terms.append((p0, p0 + len(tm)))
+                        p0 += len(tm) + 1
+                    for ta, tb in terms:
+                        tv = dc.eval_expr(code[ta:tb], self.env(f))
+                        if tv is not None:
+                            add += tv
+                            continue
+                        if dyn is not None:
+                            return None
+                        facs = split_top(mask_casts(code[ta:tb]), '*')
+                        if len(facs) != 2:
+                            return None
+                        p1 = ta
+                        spans = []
+                        for fc in facs:
+                            spans.append((p1, p1 + len(fc)))
+                            p1 += len(fc) + 1
+                        vals = [dc.eval_expr(code[a:b], self.env(f)) for a, b in spans]
+                        if (vals[0] is None) == (vals[1] is None):
+                            return None
+                        a, b = spans[0] if vals[0] is None else spans[1]
+                        stride = vals[1] if vals[0] is None else vals[0]
+                        a += len(code[a:b]) - len(code[a:b].lstrip())
+                        b -= len(code[a:b]) - len(code[a:b].rstrip())
+                        dyn = (a, b, stride)
+                    if dyn is None:
+                        return None
+            return (vst, close, ('recptr', mv.group(2), sem[2]), add, dyn, None)
         if rest.strip():
             m = re.fullmatch(r'\s*([+-])\s*(.+?)\s*', rest, re.S)
             if not m or sem[0] != 'ptr' or idx is not None:
@@ -1197,6 +1378,60 @@ class Converter:
             return None
         return (cstart, close, s2, add, None, None)
 
+    def record_view(self, site, entry, esize, off, dyn, cs, ce, sem):
+        """rv::As<records::T>(...) on a record of entry's array: &Name[i], or
+        Name[i]. for a following `->` (stage C4)."""
+        ct = clean_type(entry['ctype'])
+        if record_sizes.size_of(ct) is None:
+            return 'ptr'
+        if sem[1] != ct and sem[1] not in record_sizes.bases(ct):
+            return 'family'
+        if off < 0 or off % esize:
+            return 'inside-entry'
+        if dyn is not None and dyn[2] != esize:
+            return 'index'
+        i = off // esize
+        count = entry.get('count')
+        name = entry['name']
+        if count is None:
+            if i or dyn is not None:
+                return 'inside-entry'
+            rec = [name]
+        elif dyn is not None:
+            rec = [name + '[' + (f'{i:#x} + ' if i else ''), (dyn[0], dyn[1]), ']']
+        else:
+            if not 0 <= i < count:
+                return 'inside-entry'
+            rec = [f'{name}[{i if i < 10 else hex(i)}]']
+        code = site.f.code
+        t, j = next_token(code, ce)
+        if t == '->':
+            return [(cs, j + 2, rec + ['.'], 'typed')]
+        return [(cs, ce, ['&'] + rec, 'typed')]
+
+    def access_of(self, f, sem):
+        """(size, kind) a site's access reads or writes, kind 'int' or
+        'float'; a reason string for a pointer or an unknown accessor."""
+        k = sem[0]
+        if k == 'write':
+            return (sem[1], 'int')
+        if k == 'ref':
+            rt = self.ev.itype(f, sem[1])
+            if rt is not None:
+                return (rt[0], 'int')
+            if clean_type(sem[1]) == 'float':
+                return (4, 'float')
+            return 'type'
+        if k == 'val':
+            return (sem[1], 'int')
+        if k == 'fval':
+            return (4, 'float')
+        if k == 'ptrval':
+            return 'pointer-in-integer'
+        if k in ('ptr', 'addr'):
+            return 'ptr'
+        return 'accessor'
+
     def typed(self, site, entry, esize, off, dyn, cs, ce, sem, wr):
         """The typed replacement tiers for span [cs, ce) computing `sem`, or a
         reason string."""
@@ -1205,6 +1440,27 @@ class Converter:
         ct = entry['ctype']
         cst = int_type(ct)
         is_ptr_entry = '*' in ct
+        member = ''
+        if dyn is None and (f.rel, entry['name'], off) in KEEP_RAW:
+            return 'audit-family'
+        if sem[0] == 'recptr':
+            return self.record_view(site, entry, esize, off, dyn, cs, ce, sem)
+        if record_sizes.size_of(ct) is not None:
+            # a record array (stage C4): the element is the record, the
+            # access one of its fields, chosen by offset, width and kind
+            acc = self.access_of(f, sem)
+            if isinstance(acc, str):
+                return acc
+            if off < 0:
+                return 'inside-entry'
+            o = off % esize
+            fld = record_field(entry, o, acc[0], acc[1])
+            if isinstance(fld, str):
+                return fld
+            member, fsize, fsigned, fkind = fld
+            off -= o
+            ct = 'float' if fkind == 'float' else CANON[(fsize, fsigned)]
+            cst = None if fkind == 'float' else (fsize, fsigned)
         if off % esize != 0:
             return 'inside-entry'
         if (off or dyn) and 'count' not in entry:
@@ -1224,6 +1480,9 @@ class Converter:
                 x_parts = [f'{name}[{i if i < 10 else hex(i)}]']
         else:
             x_parts = [name]
+        if member:
+            x_parts = x_parts + ['.' + member]
+            esize = fsize
         k = sem[0]
         if k == 'write':
             width, vkind = sem[1], sem[2]
@@ -1407,8 +1666,29 @@ class Converter:
                     edits.append(ch)
         edits.sort(key=lambda x: (x[0], -x[1]))
 
+        # Zero-width insertions at one offset are merged into one, in site
+        # order. Each used to lie within the other, so emit() found neither
+        # at the top and both were dropped (stage C0; stage B1's effect group
+        # saw 34 false gate failures from it).
+        merged = []
+        for ed in edits:
+            last = merged[-1] if merged else None
+            if last is not None and ed[0] == ed[1] == last[0] == last[1]:
+                merged[-1] = (last[0], last[1], list(last[2]) + list(ed[2])) + tuple(last[3:])
+            else:
+                merged.append(ed)
+        edits = merged
+
         def holes(ed):
             return [p for p in ed[2] if isinstance(p, tuple)]
+
+        def within(e, o):
+            # e renders inside o. A zero-width insertion at either edge of a
+            # replaced span is not inside it (it was dropped as if it were);
+            # one in a hole of o, edges included, still renders in the hole.
+            if e[0] == e[1] and o[0] != o[1]:
+                return o[0] < e[0] < o[1] or any(h[0] <= e[0] <= h[1] for h in holes(o))
+            return o[0] <= e[0] and e[1] <= o[1]
 
         kept = []
         for ed in edits:
@@ -1442,12 +1722,12 @@ class Converter:
 
         def emit(a, b, pool, state):
             inside = [e for e in pool if a <= e[0] and e[1] <= b]
-            top = [e for e in inside if not any(o is not e and o[0] <= e[0] and e[1] <= o[1] for o in inside)]
-            top.sort(key=lambda x: x[0])
+            top = [e for e in inside if not any(o is not e and within(e, o) for o in inside)]
+            top.sort(key=lambda x: (x[0], x[1]))   # an insertion before the span it starts
             out, i = [], a
             for ed in top:
                 out.append(plain(raw[i:ed[0]], state))
-                sub = [x for x in inside if x is not ed and ed[0] <= x[0] and x[1] <= ed[1]]
+                sub = [x for x in inside if x is not ed and within(x, ed)]
                 rep = ''.join(emit(p[0], p[1], sub, [0]) if isinstance(p, tuple) else p for p in ed[2])
                 out.append(rep)
                 if '\n' not in rep and '\n' not in raw[ed[0]:ed[1]]:
@@ -1587,6 +1867,48 @@ def find_bad(ok, base, cand):
     if ok(base + good_a + b):
         return bad_a
     return bad_a + find_bad(ok, base + good_a, b)
+
+
+# --------------------------------------------------------------------------
+# Retiring field entries (stage C4)
+# --------------------------------------------------------------------------
+
+def retire_fields(conv, toml, dry_run=False):
+    """The field entries (`field_of`) of a [[block]] with a record ctype, or
+    any entry inside a typed record array (`Battle_Enemies`), that nothing in
+    src/ spells any more: its sites read the record's field. Removed from
+    symbols.toml unless dry_run. An entry still spelled stays: its readers'
+    name, where the struct's is another reader's or the width differs."""
+    used = set()
+    word = re.compile(r'\b([A-Za-z_]\w*?)(?:_addr|_count)?\b')
+    for f in conv.files:
+        used.update(m.group(1) for m in word.finditer(f.code))
+    typed = [e for e in conv.entries.data if record_sizes.size_of(e.get('ctype', '')) is not None]
+    gone = []
+    for e in conv.entries.data:
+        if e.get('block') or e in typed or e['name'] in used:
+            continue
+        if 'field_of' not in e:
+            continue
+        blk = conv.entries.by_name.get(e['field_of'])
+        home = blk if blk is not None and blk.get('block') else None
+        if home is None:
+            home = next((t for t in typed if t['pc'] <= e['pc'] < t['pc'] + conv.entries.elem_size(t)
+                         * t.get('count', 1)), None)
+        if home is None:
+            continue
+        gone.append((e['name'], e['pc'], home['name']))
+    if not dry_run and gone:
+        with open(toml, encoding='utf-8') as fh:
+            text = fh.read()
+        for name, _, _ in gone:
+            m = re.search(r'(?m)^\[\[data\]\]\n(?:(?!\[\[)[^\n]*\n)*?name = "' + re.escape(name) + r'"\n', text)
+            end = re.compile(r'(?m)^(\[\[|# )').search(text, m.end())
+            stop = end.start() if end else len(text)
+            text = text[:m.start()] + text[stop:]
+        with open(toml, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(text)
+    return gone
 
 
 # --------------------------------------------------------------------------
@@ -1741,6 +2063,46 @@ def retire(conv, dry_run=False, since=None):
 LEFT_HDR = ['file', 'line', 'address', 'entry', 'accessor', 'constant', 'reason']
 
 
+def selftest():
+    """Converter.render on synthetic text: nested edits, holes, and the
+    zero-width insertions stage C0 fixed (two at one offset were both
+    dropped; stage B1's effect group saw 34 false gate failures from it).
+    Returns the number of failures."""
+    class F:
+        def __init__(self, raw):
+            self.raw = raw
+
+    class Site:
+        def __init__(self, edit):
+            self.edit = edit
+
+        def choice(self):
+            return self.edit
+
+    cases = [
+        # (text, edits as (start, end, parts, kind), expected)
+        ('abc', [(1, 1, ['X'], 't'), (1, 1, ['Y'], 't')], 'aXYbc'),
+        ('abc', [(1, 1, ['X'], 't'), (1, 1, ['Y'], 't'), (1, 1, ['Z'], 't')], 'aXYZbc'),
+        ('abcd', [(1, 3, ['Z'], 't'), (1, 1, ['X'], 't')], 'aXZd'),
+        ('abcd', [(1, 3, ['Z'], 't'), (3, 3, ['X'], 't')], 'aZXd'),
+        ('abcd', [(1, 3, ['Z'], 't'), (2, 2, ['X'], 't')], 'aZd'),
+        ('f(g)', [(0, 4, ['F[', (2, 3), ']'], 't'), (2, 3, ['G'], 't')], 'F[G]'),
+        ('f(g)', [(0, 4, ['F[', (2, 3), ']'], 't'), (2, 2, ['X'], 't')], 'F[Xg]'),
+        ('f(g)', [(0, 4, ['F[', (2, 3), ']'], 't'), (2, 2, ['X'], 't'), (2, 3, ['G'], 't')], 'F[XG]'),
+        ('f(g)', [(0, 4, ['F[', (2, 3), ']'], 't'), (2, 2, ['X'], 't'), (2, 2, ['Y'], 't')], 'F[XYg]'),
+        ('ab', [(0, 2, ['Q'], 't'), (1, 2, ['R'], 't')], 'Q'),
+    ]
+    bad = 0
+    for text, eds, want in cases:
+        sites = [Site(e) for e in eds]
+        got = Converter.render(F(text), sites, set(sites))
+        if got != want:
+            bad += 1
+            print(f'typed_convert selftest: {text!r} {eds!r}: {got!r}, want {want!r}', file=sys.stderr)
+    print(f'typed_convert selftest: {len(cases) - bad} of {len(cases)} cases pass', file=sys.stderr)
+    return bad
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('files', nargs='*', help='files (or globs) under src/ to convert; default: every file')
@@ -1751,15 +2113,33 @@ def main():
     ap.add_argument('--gate', metavar='BASE_BUILD', help='verify each file against this baseline build')
     ap.add_argument('--build', default='build')
     ap.add_argument('--retire', action='store_true', help='remove module constants nothing uses any more')
+    ap.add_argument('--retire-fields', action='store_true',
+                    help='remove the field entries (field_of) of a typed record array that no source spells, '
+                         'neither the name nor <name>_addr / <name>_count (stage C4)')
     ap.add_argument('--since', help='with --retire: only constants something used at this git revision')
     ap.add_argument('--report', action='store_true', help='print each site and its outcome')
     ap.add_argument('--remaining', action='store_true',
                     help='with --dry-run on a converted tree: list what is left, a site the tool would '
                          'still convert being one the gate refused (reason gate)')
     ap.add_argument('-v', '--verbose', action='store_true')
+    ap.add_argument('--selftest', action='store_true', help='check the renderer on synthetic text and exit')
+    ap.add_argument('--addr-names', default='',
+                    help='comma-separated entries whose <Name>_addr spellings are converted too (stage C4)')
+    ap.add_argument('--only-entries', default='',
+                    help='comma-separated entries: convert only the sites on these (stage C4\'s batches by table)')
     a = ap.parse_args()
 
-    conv = Converter(a.toml)
+    if a.selftest:
+        return 1 if selftest() else 0
+
+    conv = Converter(a.toml, [n for n in a.addr_names.split(',') if n],
+                     [n for n in a.only_entries.split(',') if n])
+    if a.retire_fields:
+        gone = retire_fields(conv, a.toml, a.dry_run)
+        for name, pc, block in gone:
+            print(f'retire-field\t{name}\t{pc:#x}\t{block}')
+        print(f'typed_convert: {len(gone)} field entries {"unused" if a.dry_run else "removed"}', file=sys.stderr)
+        return 0
     if a.retire:
         removed = retire(conv, a.dry_run, a.since)
         for r in removed:

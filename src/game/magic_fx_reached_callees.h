@@ -34,7 +34,7 @@ namespace at {
 
 // The battle task slots (BattleTask_Create's): 48 of 0x84 bytes; Sprite_Current
 // is the slot being run, 0x93B940 its +0x80 (the task's owner).
-constexpr std::uint32_t kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 constexpr std::uint32_t kOwner = 0x93B940;          // unsigned char *, BattleTask_RunAll's copy of +0x80
@@ -49,7 +49,7 @@ constexpr std::uint32_t kSource = 0x904B4C;         // unsigned char *: the spri
 // The party (ObjTrio, stride 0x14C) and the enemies (stride 0x128, index - 3).
 // kParty: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
-constexpr std::uint32_t kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemyStride = 0x128;
 constexpr unsigned kStealItem = 0xA8;               // u16 on the enemy: category << 8 | index, 0 none
 constexpr unsigned kStealRate = 0xAA;               // u8 on the enemy: row of Steal_RateTable

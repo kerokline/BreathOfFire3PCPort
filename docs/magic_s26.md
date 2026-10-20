@@ -191,7 +191,7 @@ next table's start.
 
 **Regions** beyond the harness's: `Gfx_PacketNext` and a 1 KB packet
 buffer; 256 keys for `Magic114_DrawTriangle` fuzzed alone (`Group::args`
-hands it the pointer); `Prim_VertexScratch`; `DamageScratch`'s sixteen
+hands it the pointer); `Prim_VertexScratch`; `SharedScratch`'s sixteen
 bytes; `0x9039D8`; `Field_Kind2X` / `Z`; `MoveScript_TintRecords` whole (an
 unchecked byte index of 12-byte records); CLUT rows 2 and 26 and their
 sources; `Magic114_RingOffsets`.

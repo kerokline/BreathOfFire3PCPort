@@ -90,7 +90,7 @@ constants in `inventory_ops_callees.h` (so no other group can bind one):
 | `0x8C3D80` | the cell map, a nibble per cell, `AreaMap_Header` bytes 0 / 1 its extent |
 | `0x6698B0`, `0x669B60`, `0x669AF8`, `0x669C80`, `0x669CB8` | the placement's tables: party offsets by formation, enemy offsets by count, 49 jitters, 6 recentres, camera offsets by facing |
 | `0x904060`, `0x904062`, `0x904065` | the formation byte; the party list; the second list the placement reads |
-| `0x66972C` | a member id's actor record (symbols.toml's `MoveScript_EffectState`) |
+| `0x66972C` | a member id's actor record (symbols.toml's `Character_IndexById`) |
 | `0x904AAC`, `0x904AE4`, `0x904AE5` | the battle's facing; the initiative; the intro's flags (bit 2 skips the fade, bit 4 the script step) |
 | `0x660B3C`, `0x660B1C`, `0x660B24` | per facing: the direction to face, the centre's cell step; per member id: the alert effect's two bytes |
 | `0x80D380`, `0x80D440`, `0x811380` | the shade CLUTs: source row, the saved copy, `Gfx_ClutStrip` row 15 |

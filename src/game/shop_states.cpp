@@ -38,6 +38,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/shop_states_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -90,7 +91,7 @@ Handler Entry(U table, unsigned index) { return Fn<Handler>(Long(table + index *
 // a register whose upper bytes it never cleared (entry eax, or edx after a
 // call); Menu_DrawTitleBox uses it only through Gpu_GetClut's six-bit field
 // (colour * 32 + 16 >> 4 & 0x3F), so ours zero-extends.
-void TitleBox() { g.title_box(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour)); }
+void TitleBox() { g.title_box(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour)); }
 
 // System message `id` at (0x1C, 0x16), colour 0, to its end.
 void Message(unsigned id) {
@@ -161,8 +162,10 @@ extern "C" void __cdecl ShopMode_Begin(void) {
     }
     for (U n = 0; n < at::kActors; ++n) {
         const U r = Field_ActorStates_addr + n * at::kActorStride;
-        const auto quarter = static_cast<std::uint16_t>(Word(r + 0x10) >> 2);
-        if (quarter > Word(r + 8)) B(r + 1) = static_cast<unsigned char>(B(r + 1) | 0x20);
+        // r is character record n's +0x10, its status word (Field_ActorStates 0x903A80 = CharacterRecords + 0x10)
+        const auto* const c = rv::AsConst<records::CharRecord>(At(r - 0x10));
+        const auto quarter = static_cast<std::uint16_t>(c->stats.max_hp >> 2);
+        if (quarter > c->hp) B(r + 1) = static_cast<unsigned char>(B(r + 1) | 0x20);
         else PutWord(r, Word(r) & 0xDFFFu);
     }
     FieldS_State = 0;
@@ -237,7 +240,7 @@ extern "C" void __cdecl Inn_Begin(void) {
 // counter (the counter read before the call); counter - 1, at 0 the next
 // state, 0x929F0B = 1 and, with an object, Msg_OpenSystem(0xD1).
 extern "C" void __cdecl InnPrompt_TitleIn(void) {
-    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
     const int y = 0x12 - 20 * static_cast<int>(B(at::kCount));
     g.title_box(0x14, y, 0x118, 0x13, colour);
     const auto count = static_cast<unsigned char>(B(at::kCount) - 1);
@@ -404,7 +407,7 @@ extern "C" void __cdecl InnNight_Message(void) {
 // Menu_DrawBlackScreen and the next state; until then, with an object, the
 // title box and message 0xA4.
 extern "C" void __cdecl InnNight_FadeOut(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         g.black();
         FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
         return;
@@ -446,7 +449,7 @@ extern "C" void __cdecl InnNight_Wait(void) {
 // Msg_OpenSystem(0xD5).
 extern "C" void __cdecl InnNight_Restore(void) {
     TitleBox();
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     g.restore(1);
     const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
     const unsigned char object = ModeStates_ShopObject;

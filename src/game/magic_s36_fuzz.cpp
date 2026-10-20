@@ -213,7 +213,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kTrail: now IntimidateTrail_Points (symbols.toml).
 // kStruck: now AuraBreath_Struck (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 // IntimidateTrail_Points as far as a trail +4 below 48 and a point index up
 // to 256 reach: 4 x ((47 << 5) + 256) + 4 bytes.
 constexpr std::uint32_t kTrailBytes = 0x1B84;
@@ -363,7 +363,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},              // Gfx_PacketNext
     {0, kPrimBytes},            // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},           // 0x903850.., Scratch_Swap at +0xC
+    {kScratch, 0x10}, // 0x903850.., Scratch_Swap at +0xC
     {BattleE2_AnimSet_addr, 4}, // the frame-offset table pointer the burst swaps
     {0x80E980, 0x200},          // Gfx_ClutStripSource row 26
     {0x812980, 0x200},          // Gfx_ClutStrip row 26
@@ -438,7 +438,7 @@ void Seed(unsigned k) {
     case kMagicBallCore_Fly: Near(sc[9], 0xF); break;
     case kMagicBallOrb_Fly:
         Near(sc[9], 0xF);
-        if (mh::Often()) mh::Mem(mh::at::kTasks + sc[4] * mh::at::kTaskStride + 2)[0] = Byte(1 + mh::Next() % 2);
+        if (mh::Often()) mh::Mem(BattleTask_Slots_addr + sc[4] * mh::at::kTaskStride + 2)[0] = Byte(1 + mh::Next() % 2);
         break;
     case kIntimidateTrail_Start:
         if (mh::Often()) {

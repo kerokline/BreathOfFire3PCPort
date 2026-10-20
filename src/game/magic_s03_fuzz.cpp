@@ -212,7 +212,7 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 
 // Set by the seed for the one function each matters to.
 unsigned g_k = kCount;                // the function being fuzzed
@@ -271,7 +271,7 @@ std::uint32_t OutEffect(const std::uint32_t* a, std::uint32_t answer) {
     answer = StirAgain(a, answer);
     if (Fuzzing(kBlitzBolt_Seek) && (mh::Noise() & 1)) {
         const unsigned i = Sc()[4];
-        unsigned char* const rec = mh::Mem(mh::at::kTarget)[0] & 0x40 ? mh::Mem(mh::at::kEnemies + (i % 8) * mh::at::kEnemyStride)
+        unsigned char* const rec = mh::Mem(mh::at::kTarget)[0] & 0x40 ? mh::Mem(Battle_Enemies_addr + (i % 8) * mh::at::kEnemyStride)
                                                                        : mh::PartyOf(Byte(i % 5));
         mh::FillBytes(rec + 0x34, 12);
     }
@@ -348,7 +348,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850.., Scratch_Swap at +0xC
+    {kScratch, 0x10},           // 0x903850.., Scratch_Swap at +0xC
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
     {0x812980, 0x200},                    // Gfx_ClutStrip row 26
 };
@@ -437,7 +437,7 @@ void Seed(unsigned k) {
         if (k == kBlitzBolt_Next && mh::Half()) {
             const unsigned i = sc[4];
             unsigned char* const rec = mh::Mem(mh::at::kTarget)[0] & 0x40
-                                           ? mh::Mem(mh::at::kEnemies + i * mh::at::kEnemyStride)
+                                           ? mh::Mem(Battle_Enemies_addr + i * mh::at::kEnemyStride)
                                            : mh::PartyOf(Byte(i));
             rec[1] = 6;
         }

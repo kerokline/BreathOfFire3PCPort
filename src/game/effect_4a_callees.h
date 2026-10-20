@@ -19,19 +19,20 @@ constexpr std::uint32_t kCounter = 0x903848;       // u8: kind 0x85 ends at 0x35
 constexpr std::uint32_t kCounterB = 0x903849;      // u8: the push count (3, 4, 5), 0xFF the end, 0xFE the stop
 constexpr std::uint32_t kCounterC = 0x90384A;      // u8: kind 0x84's presses; 0x80 the end
 constexpr std::uint32_t kCounterD = 0x90384B;      // u8: cleared with the two above
-constexpr std::uint32_t kObjectCount = 0x903850;   // u16: the object EventOp_0x places (its count word)
+inline auto& kObjectCount = SharedScratch.w_00;   // u16: the object EventOp_0x places (its count word)
+constexpr std::uint32_t kObjectCount_addr = SharedScratch_addr; // kObjectCount's address, for the raw accessors that take one
 
 // --- the chapter's cells (scenario_harness at::kStep) ---------------------
 constexpr std::uint32_t kStep = 0x8034E5;          // u8: the chapter's step (MoveScript_Var7 + 1)
 // kStepWord: now MoveScript_PartyRecords[0x66] (symbols.toml). u16: the chapter's timer word (area_w0a_callees.h kTimer)
 
 // --- the objects the kinds move ---------------------------------------------
-// kObject0X: now Sprite_Objects[0x34] (symbols.toml). Sprite_Objects + 0x34: record 0's x
-// kObject1: now Sprite_Objects[0xa4] (symbols.toml). Sprite_Objects + 0xA4: record 1
-// kObject1X: now Sprite_Objects[0xd8] (symbols.toml). record 1's +0x34
-constexpr std::uint32_t kLeaderX = 0x802D74;       // ObjTrio + 0x34: the leader's x
-// kObjTrio2: now ObjTrio[0x298] (symbols.toml). ObjTrio + 2 * 0x14C: the third member's field object
-constexpr std::uint32_t kObjTrio2X = 0x80300C;     // its +0x34
+// kObject0X: now Sprite_Objects[0].x (symbols.toml). Sprite_Objects + 0x34: record 0's x
+// kObject1: now Sprite_Objects[1] (symbols.toml). Sprite_Objects + 0xA4: record 1
+// kObject1X: now Sprite_Objects[1].x (symbols.toml). record 1's +0x34
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio + 0x34: the leader's x
+// kObjTrio2: now ObjTrio[2] (symbols.toml). ObjTrio + 2 * 0x14C: the third member's field object
+// kObjTrio2X: now ObjTrio[2].x (symbols.toml). its +0x34
 constexpr std::int32_t kTrio2Line = 0x340000;      // the x at which kinds 0x82 / 0x84 end with 0xFF (step 0x14)
 constexpr unsigned kSpriteCount = 30;              // Sprite_Objects' records (symbols.toml)
 constexpr unsigned kSpriteStride = 0xA4;

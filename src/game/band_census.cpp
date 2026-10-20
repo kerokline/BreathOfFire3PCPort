@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/wide_staging.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -295,7 +296,7 @@ bool Rect(const unsigned char* s, float& left, float& right, float& top, float& 
 // gone past them (so the byte before is one of them); 86 hands the sprite a
 // +0x18 script and stays on itself. Waits step back onto themselves while
 // their test holds: FD (Sprite_ScriptTickOnce), D9 (Field_Request 2), DA
-// (MoveScript_WaitWordDA), E9 and F9 (their tests), and an A0..AF counter op
+// (Transition_Busy), E9 and F9 (their tests), and an A0..AF counter op
 // the flow pass stopped on.
 int ScriptAt(unsigned char op, unsigned char before) {
     if (op == 0xFF || op == 0x86) return kEnd;
@@ -321,7 +322,7 @@ int ScriptOf(const unsigned char* o, unsigned area) {
 
 void Identify(const unsigned char* s, int& who, int& index) {
     const std::uint32_t a = Address(s);
-    const std::uint32_t objects = Address(Sprite_Objects), extra = Address(Sprite_ObjectsExtra), trio = Address(ObjTrio);
+    const std::uint32_t objects = Address(rv::Bytes(Sprite_Objects)), extra = Address(rv::Bytes(Sprite_ObjectsExtra)), trio = Address(rv::Bytes(ObjTrio));
     who = kOther;
     index = -1;
     if (a >= objects && a < objects + kObjects * kObjectBytes && (a - objects) % kObjectBytes == 0) {
@@ -333,7 +334,7 @@ void Identify(const unsigned char* s, int& who, int& index) {
     } else if (a >= trio && a < trio + kMembers * kMemberBytes && (a - trio) % kMemberBytes == 0) {
         who = kParty;
         index = static_cast<int>((a - trio) / kMemberBytes);
-    } else if (a == Address(Sprite_Kind2)) {
+    } else if (a == Address(rv::Bytes(&Sprite_Kind2))) {
         who = kKind2;
         index = 0;
     }
@@ -348,7 +349,7 @@ bool ScreenRect(const unsigned char* sprite, float& left, float& right, float& t
 unsigned SceneMask() {
     return (static_cast<unsigned char>(Field_ScriptFlags | Field_ScriptFlags2) & 1u) |
            ((Field_ScriptFlags & 0x100) ? 2u : 0u) | ((Field_ScriptFlags2 & 0x40) ? 4u : 0u) |
-           (Field_Request == 5 ? 8u : 0u) | (ObjTrio[1] != 1 ? 0x10u : 0u);
+           (Field_Request == 5 ? 8u : 0u) | (ObjTrio[0].state != 1 ? 0x10u : 0u);
 }
 
 Class Classify(float left, float right, float top, float bottom, unsigned columns) {

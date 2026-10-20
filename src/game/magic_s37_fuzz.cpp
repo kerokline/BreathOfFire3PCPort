@@ -245,7 +245,8 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kField: now Field_Kind2Z (symbols.toml).
 // kShiftX: now Camera_ShiftX (symbols.toml).
 // kCamera: now Camera_Angles (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kMagmaBytes = 32 * 0x84, kGeoBytes = 64 * 0x84;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr std::uint32_t kMagmaBytes = 32 * 0x84, kGeoBytes = 64 * 0x84;
 
 // Math_Ratan2's answer near the fuzzed function's threshold (MagmaBreathRecord_Fly).
 bool g_ratan_on = false;
@@ -413,7 +414,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850..
+    {kScratch, 0x10},           // 0x903850..
     {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the Run steps swap
     {MagmaBreath_Pool_addr, kMagmaBytes}, // MagmaBreath_Pool
     {GeoBreath_Pool_addr, kGeoBytes},     // GeoBreath_Pool

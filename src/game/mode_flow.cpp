@@ -18,6 +18,8 @@
 #include "game/mode_flow_callees.h"
 #include "game/widescreen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "input/sigma.h"
 #include "hook/log.h"
@@ -89,7 +91,7 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // The screen transition (0x495040..0x495800)
 // ===========================================================================
 
-// original 0x495040 (PSX 0x8014EB68): unless MoveScript_WaitWordDA is set (a
+// original 0x495040 (PSX 0x8014EB68): unless Transition_Busy is set (a
 // transition already running), the kind to the word 0x66C828 and task 2
 // started at 0x495070.
 //
@@ -97,7 +99,7 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // to the word; the wait word is tested as 16 bits; a running transition makes
 // the call a no-op (the kind is not stored).
 extern "C" void __cdecl Transition_Start(unsigned char kind) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     ModeFlow_TransitionKind = SlotByte(kind);
     g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTransitionEntry)));
 }
@@ -331,13 +333,13 @@ extern "C" void __cdecl GameMode_Start(void) {
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x4040);
     const std::uint16_t area = FieldModes_Pending;
     At(0x905B82)[0] = 0;   // Field_EdgeBits + 2
-    At(0x7E0941)[0] = 0;   // Sprite_Kind2 + 1..3
-    At(0x7E0942)[0] = 0;
-    At(0x7E0943)[0] = 0;
-    At(0x904AE5)[0] = 0;
-    At(0x904AAA)[0] = 0;
-    At(0x929EC1)[0] = 0;   // the byte after Field_MemberCount
-    At(0x9036D0)[0] = 0;
+    Sprite_Kind2.state = 0;                                 // Sprite_Kind2 + 1..3
+    Sprite_Kind2.step = 0;
+    Sprite_Kind2.state3 = 0;
+    EventBattle_Flags = 0;
+    EventBattle_Id = 0;
+    Area189_StepsSinceEvent = 0;   // the byte after Field_MemberCount
+    Area189_EventsInRow = 0;
     Game_AreaNumber = 0xFFFF;
     g.change_area(area, x, z, flags);
     const unsigned char* const clock = At(at::kClock);
@@ -371,14 +373,14 @@ extern "C" void __cdecl GameMode_Start(void) {
 extern "C" void __cdecl GameMode_Enter(void) {
     const unsigned char flags = AreaEntry_PendingFlags;
     const std::int32_t z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-    const std::int32_t x = Long(At(at::kPendingX));
+    const std::int32_t x = at::kPendingX;
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFF7);
     g.area_enter(AreaW0b_Place, x, z, flags);
     if (Field_InputFlags & 8) {
         Game_Mode = 8;
         return;
     }
-    const unsigned char kind = AreaW0c_PendingKind;
+    const unsigned char kind = Area_EnterTransition;
     if (kind == 0xFE) {
         Draw_PassFlags = 0;
     } else if (kind != 0xFF) {
@@ -409,12 +411,12 @@ extern "C" void __cdecl Field_WaitTransition(unsigned char run_argument) {
     const unsigned char run = SlotByte(run_argument);
     for (;;) {
         g.sleep(1);
-        if (MoveScript_WaitWordDA == 0 && run == 0) {
+        if (Transition_Busy == 0 && run == 0) {
             g.sleep(1);
             return;
         }
         g.field_frame();
-        if (MoveScript_WaitWordDA == 0) return;
+        if (Transition_Busy == 0) return;
     }
 }
 
@@ -621,7 +623,7 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
 // starts from. No calls.
 extern "C" void __cdecl Window_ResetAll(void) {
     for (unsigned i = 0; i < 22; ++i) {
-        unsigned char* const r = At(at::kWindowRecords + i * 0x24);
+        unsigned char* const r = At(WindowRecords_addr + i * 0x24);
         r[0] = 0;
         r[1] = 0;
         r[2] = 0;

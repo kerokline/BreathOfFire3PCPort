@@ -11,7 +11,7 @@
 // holding whatever it held) compared. The stand-ins record only what the real
 // callee reads of its arguments - the originals push bytes with stale upper
 // bytes - give back what the real callee leaves for the caller to read
-// (DamageScratch's slope byte, ax, al), and now and then disturb what the
+// (SharedScratch's slope byte, ax, al), and now and then disturb what the
 // caller reads again after the call: Sprite_Current and Field_State (each
 // swapped between two buffers), their fields, the flag bytes.
 #include <cstdint>
@@ -20,6 +20,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/event_objs_callees.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -27,11 +28,11 @@
 namespace event_objs {
 namespace {
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* At(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
@@ -119,11 +120,11 @@ void Disturb() {
 void __cdecl StubJumpSetUp() { Record(1); Disturb(); }
 void __cdecl StubJumpCamera() { Record(2); }
 void __cdecl StubJumpStart() { Record(3); }
-// 0x5725C0: the slope byte in DamageScratch is what its callers test.
+// 0x5725C0: the slope byte in SharedScratch is what its callers test.
 long __cdecl StubSlope(long x, long z, unsigned direction) {
     Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction & 0xFF);
     const std::uint32_t h = Hash();
-    At(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 24);
+    At(SharedScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 24);
     Disturb();
     return static_cast<long>(Hash(1));
 }
@@ -386,14 +387,15 @@ std::uint32_t Run(const void* fn, const Clone& c, const Args& x) {
 }
 
 // --- the state a round compares ---------------------------------------------------
-// One block from DamageScratch through the 256th actor record's equipment
+// One block from SharedScratch through the 256th actor record's equipment
 // bytes: the slope byte, Field_ScriptFlags, every record an index byte can
 // name (0x903A70 + 255 * 0xA4 + 0x18), the party list and its 256-byte reach,
 // MoveScript_FAWord, Field_InputFlags, Field_ScriptFlags2, the Field_State
 // pointer and Field_Kind2Z / X. Then Sprite_Current, MoveScript_F3Divisor and
 // Gfx_ClutStripDirty; and, for the one function each that writes them, the
 // 256 CLUTs of row 15 and 256 effect objects (a whole index byte's reach).
-constexpr std::uint32_t kBlockAt = 0x903850, kBlockEnd = 0x903A70 + 255 * kRecordSize + 0x18;
+constexpr std::uint32_t kBlockAt = SharedScratch_addr;
+constexpr std::uint32_t kBlockEnd = 0x903A70 + 255 * kRecordSize + 0x18;
 constexpr unsigned kBlock = kBlockEnd - kBlockAt, kClutBytes = 256 * 64, kEffectBytes = 256 * 0x80;
 // kGlobalsAt: now Sprite_Current (symbols.toml).
 // kEffectsAt: now Effect_Objects (symbols.toml). Effect_Objects
@@ -450,7 +452,7 @@ void RandomSprite(unsigned char* s) {
     // x and z whole (no fraction) now and then, for the cells' fraction tests.
     if (OneIn(3)) SetWord(s + 0x34, 0);
     if (OneIn(3)) SetWord(s + 0x38, 0);
-    if (OneIn(4)) Spr(s)->step_y = Next() % 5 - 2;
+    if (OneIn(4)) rv::As<records::SpriteObject>(s)->step_y = Next() % 5 - 2;
 }
 
 Args Generate(unsigned k, State& input) {
@@ -473,7 +475,7 @@ Args Generate(unsigned k, State& input) {
     if (k == kBit80 && OneIn(2)) g_field[0][0x124] = 1;
     Sprite_Current = g_sprite[0];
     Field_State = g_field[0];
-    unsigned char* const scratch = At(bof3::addr::DamageScratch);
+    unsigned char* const scratch = At(SharedScratch_addr);
     for (unsigned i = 0; i < 4; ++i) scratch[i] = static_cast<unsigned char>(OneIn(2) ? 0 : Next());
     Field_ScriptFlags = static_cast<unsigned short>(Next() & (OneIn(2) ? 0xFBFFu : 0xFFFFu));
     if (OneIn(3)) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFF7u);
@@ -487,7 +489,7 @@ Args Generate(unsigned k, State& input) {
     // The records' state and equipment bytes, the codes the tests look for
     // seeded; the party list, mostly members 0..7.
     for (unsigned n = 0; n < 256; ++n) {
-        unsigned char* const r = At(bof3::addr::CharacterRecords + n * kRecordSize);
+        unsigned char* const r = At(CharacterRecords_addr + n * kRecordSize);
         const std::uint32_t h = Next();
         r[0x10] = static_cast<unsigned char>((h & 0x5F) | (h % 3 == 0 ? 0x80 : 0) | (h % 5 == 0 ? 0x20 : 0));
         r[0x11] = static_cast<unsigned char>(h >> 8);

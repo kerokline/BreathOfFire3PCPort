@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"
 
 namespace mode_flow {
 
@@ -37,10 +38,10 @@ constexpr std::uint32_t kClock = 0x9040C8;
 // kCountdownB: now Rest3c_Byte660 (symbols.toml).
 // The area-change cells Field_ChangeArea stashes (window_task_callees.h).
 // kPendingArea: now AreaW0b_Place (symbols.toml).
-constexpr std::uint32_t kPendingX = 0x903860;
+inline auto& kPendingX = SharedScratch.d_10;
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml).
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
-// kPendingKind: now AreaW0c_PendingKind (symbols.toml).
+// kPendingKind: now Area_EnterTransition (symbols.toml).
 // kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml).
 // kMusicTrack: now Music_Track (symbols.toml).
 // kAreaTransition: now ModeFlow_AreaTransition (symbols.toml). GameMode_Field's Transition_Start kind for the area change
@@ -76,7 +77,7 @@ constexpr std::uint32_t kBootClearBytes = 0x42C * 4;
 constexpr std::uint32_t kTintMarks = 0x7E06A0;       // 16 dwords set to -1 by MoveScript_TintReset
 // kClutStripZero: now Gfx_ClutStripSource[0x1c00] (symbols.toml). the source's last 0x800 bytes, zeroed before the copy
 // Window_ResetAll's range.
-constexpr std::uint32_t kWindowRecords = 0x803160;
+// kWindowRecords: now WindowRecords (symbols.toml).
 // kWindowPass: now BossSa_WindowPass (symbols.toml).
 
 }  // namespace at

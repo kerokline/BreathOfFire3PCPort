@@ -23,16 +23,16 @@ using U = std::uint32_t;
 
 namespace at {
 
-constexpr U kRecords = 0x803160;     // 22 window records of 0x24 bytes (Window_Alloc 0x59E2D0)
+// kRecords: now WindowRecords (symbols.toml). 22 window records of 0x24 bytes (Window_Alloc 0x59E2D0)
 constexpr U kRecordsEnd = 0x803478;
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record Field_RunTaskRecords is running
-// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour (Config), a CLUT row
+// kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row
 // kZenny: now Party_Zenny (symbols.toml). dword: the party's zenny
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). u8 x 3: the party's members, in order
 // u8 per member id: its character record (the byte item_use.cpp and
-// battle_draw read; symbols.toml calls it MoveScript_EffectState, a
+// battle_draw read; symbols.toml calls it Character_IndexById, a
 // hypothesis this group does not own - docs/menu_draw_helpers.md section 6).
-// kMemberRecord: now MoveScript_EffectState (symbols.toml).
+// kMemberRecord: now Character_IndexById (symbols.toml).
 // The imm32 of MenuWin_SlideOutLeft's `mov ecx, 0xFFFFFF6A` (-150) at
 // 0x59B445: the bound Widescreen_Inject (DIV-0041) widens in place. Ours reads
 // it back, so the divergence survives the takeover.

@@ -59,7 +59,7 @@ constexpr std::uint32_t kGateway189 = 0x660B08;       // 2 x 3 bytes: area, x, z
 constexpr std::uint32_t kPendingStates = 0x660B70;    // 5 x 4 bytes: a member's state bytes +1..+4 by kind
 constexpr std::uint32_t kFormationAnims = 0x660B3C;   // BattleFormation_Anims: a byte by the formation 0x904AAC
 // Cells.
-// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox is given
+// kStyle: now Config_WindowColour (symbols.toml). u8: the window style Menu_DrawBox is given
 constexpr std::uint32_t kKindCounts = 0x9040EC;       // 32 bytes: a count by kind (kKindTotal's)
 // kRank: now FieldE1_Rank (symbols.toml). u8: the total's rank (0..12), written by FieldPanel_DrawTotal
 constexpr std::uint32_t kBlink = 0x939A28;            // u8: FieldPanel_DrawBlink draws while it is not 0
@@ -70,16 +70,18 @@ constexpr std::uint32_t kObjectFlags = 0x9040CC;      // the flag bank of the fi
 // kPartySet: now AreaW0b_PartySet (symbols.toml). u8, & 0x7F the loaded party set
 constexpr std::uint32_t kMessageWord = 0x7DEE48;      // u16: the open message's id (Msg_OpenSystem writes it)
 constexpr std::uint32_t kButtonMap = 0x903580;        // u16: a button map word of the save (input-script.md section 4)
-constexpr std::uint32_t kCellX = 0x903850;            // u16: the cell searched (x), and the save of the members' x / z
-constexpr std::uint32_t kCellZ = 0x903852;            // u16: its z
+inline auto& kCellX = SharedScratch.w_00;            // u16: the cell searched (x), and the save of the members' x / z
+constexpr std::uint32_t kCellX_addr = SharedScratch_addr; // kCellX's address, for the raw accessors that take one
+inline auto& kCellZ = SharedScratch.w_02;            // u16: its z
 // kExitArea: now AreaW0b_Place (symbols.toml). u16: the area an exit leads to
 // kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8: the exit's kind (4 here)
-constexpr std::uint32_t kExitX = 0x903860;            // s32: the exit's x (16.16)
+inline auto& kExitX = SharedScratch.d_10;            // s32: the exit's x (16.16)
+constexpr std::uint32_t kExitX_addr = SharedScratch_addr + 0x10; // kExitX's address, for the raw accessors that take one
 // kExitZ: now AreaEntry_PendingZ (symbols.toml). s32: its z
 constexpr std::uint32_t kSlotPositions = 0x7E06E0;    // 4 x (x, z) dwords: a party slot's placed position
 // kLeaderList: now Cond_Flags[0xd2] (symbols.toml). u8: the leader's id (the party list's first)
 constexpr std::uint32_t kSecondList = 0x904065;       // 3 bytes: the second party list
-// kBattleBits: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 1 the camera left alone, bit 7 the drop-in
+// kBattleBits: now EventBattle_Flags (symbols.toml). u8: bit 1 the camera left alone, bit 7 the drop-in
 constexpr std::uint32_t kFormation = 0x904AAC;        // u8: the event battle's formation
 // kDropEntry: now BossH_LeaderPick (symbols.toml). u8: Party_DropIn's entry
 // kPendingFlag: now EventLeader_PendingFlag (symbols.toml). u8: a pending jump runs (Field_PendingJump)
@@ -91,8 +93,8 @@ constexpr std::uint32_t kPools = 0x803580;            // MessagePools: the scrip
 // ObjTrio (the party's records, stride 0x14C) and Sprite_Objects (0xA4).
 constexpr std::uint32_t kObjStride = 0x14C;
 constexpr std::uint32_t kSpriteStride = 0xA4;
-constexpr std::uint32_t kLeaderX = 0x802D74;          // ObjTrio +0x34: the leader's x (16.16); +2 the whole part
-constexpr std::uint32_t kLeaderZ = 0x802D78;          // +0x38: z
-constexpr std::uint32_t kLeaderHeight = 0x802D7E;     // +0x3E: the height (s16)
+// kLeaderX: now ObjTrio[0].x / ObjTrio[0].x_whole (symbols.toml). ObjTrio +0x34: the leader's x (16.16); +2 the whole part
+// kLeaderZ: now ObjTrio[0].z / ObjTrio[0].z_whole (symbols.toml). +0x38: z
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml). +0x3E: the height (s16)
 
 }  // namespace field_e1::at

@@ -16,6 +16,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_s.h"
 #include "game/field_s_callees.h"
 #include "game/move_script_bytes.h"
@@ -247,11 +248,11 @@ void Move(std::uint32_t h) {
     case 15: B(0x803340) = static_cast<unsigned char>(v % 3); break;
     case 16: B(0x80333E) = static_cast<unsigned char>(v % 7); break;
     case 17: B(0x803362 + (v & 3)) = static_cast<unsigned char>(w); break;
-    case 18: B(Cond_Flags_addr + 0xd2 + v % 6) = static_cast<unsigned char>(w % 24); break; // MoveScript_EffectState's 24
+    case 18: B(Cond_Flags_addr + 0xd2 + v % 6) = static_cast<unsigned char>(w % 24); break; // Character_IndexById's 24
     case 19: SetL(Party_Zenny_addr, L(Party_Zenny_addr) ^ (1u << (v & 15))); break;
     case 20: {
         static const unsigned char kOffsets[] = {0xA, 0xB, 0x1D};
-        B(at::kRecords + (v % 8) * at::kRecordStride + kOffsets[w % 3]) = static_cast<unsigned char>(h >> 24);
+        B(CharacterRecords_addr + (v % 8) * at::kRecordStride + kOffsets[w % 3]) = static_cast<unsigned char>(h >> 24);
         break;
     }
     case 21: B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(v & 1); break;
@@ -285,9 +286,9 @@ std::uint32_t PartyLoad(const std::uint32_t* a, std::uint32_t answer) {
     const unsigned char* const list = Mem(Cond_Flags_addr + 0xd2 + (a[0] & 0xFF) * 3);
     const unsigned n = Field_MemberCount < 3 ? Field_MemberCount : 3;
     for (unsigned i = 0; i < n; ++i) {
-        unsigned char* const m = ObjTrio + i * at::kObjStride;
+        unsigned char* const m = rv::Bytes(&ObjTrio[i]);
         m[0x89] = list[i];
-        if (list[i] < 24) m[0x148] = MoveScript_EffectState[list[i]];
+        if (list[i] < 24) m[0x148] = Character_IndexById[list[i]];
     }
     Move(sh::Noise());
     return answer;
@@ -394,7 +395,7 @@ constexpr unsigned kFrameRow = sizeof g_callees / sizeof g_callees[0] - 1;
 // zenny, the save block's bytes with the shared list, ObjTrio with
 // Field_Members).
 const sh::Region kRegions[] = {
-    {sh::at::kWindows, sh::at::kWindowCount * sh::at::kWindowStride},   // WindowRecords 0x803160..0x803477
+    {WindowRecords_addr, sh::at::kWindowCount * sh::at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x6BC880, 0x48},                                                  // the reserve, its flags, the joined list, the cursors
     {0x903A94, 0x903F90 - 0x903A94},                                   // CharacterRecords past the style region
     {0x903584, 0x10},                                                  // Field_ConfirmButtons / Field_CancelButtons
@@ -412,11 +413,11 @@ sh::Clone g_one[1];
 
 bool Is(unsigned k, const char* name) { return std::strcmp(g_clones[k].name, name) == 0; }
 
-// A member id whose record index (MoveScript_EffectState) is one of the eight.
+// A member id whose record index (Character_IndexById) is one of the eight.
 unsigned char SafeId() {
     for (int tries = 0; tries < 16; ++tries) {
         const auto id = static_cast<unsigned char>(sh::Next() % 24);
-        if (MoveScript_EffectState[id] < 8) return id;
+        if (Character_IndexById[id] < 8) return id;
     }
     return 0;
 }
@@ -437,13 +438,13 @@ void SeedButtons() {
 void SeedParty() {
     for (unsigned i = 0; i < 6; ++i) B(Cond_Flags_addr + 0xd2 + i) = sh::Next() % 6 != 0 ? SafeId() : 0xFF;
     for (unsigned i = 0; i < 3; ++i) {
-        unsigned char* const obj = ObjTrio + i * at::kObjStride;
+        unsigned char* const obj = rv::Bytes(&ObjTrio[i]);
         obj[0x148] = static_cast<unsigned char>(sh::Next() % 8);   // Field_Members: a record index
         obj[0x89] = SafeId();
     }
     Field_MemberCount = static_cast<unsigned char>(sh::Next() % 4);
     for (unsigned r = 0; r < 8; ++r) {
-        unsigned char* const rec = Mem(at::kRecords + r * at::kRecordStride);
+        unsigned char* const rec = Mem(CharacterRecords_addr + r * at::kRecordStride);
         rec[0xB] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
         rec[0x1D] = static_cast<unsigned char>(PickOf(0, 0, 1u << (sh::Next() % 8), sh::Next()));
         rec[0xA] = static_cast<unsigned char>(PickOf(1, 10, 50, 99, sh::Next()));
@@ -510,14 +511,14 @@ void Seed(unsigned k) {
     SeedArea();
     B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     if (sh::Half()) Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ 0x40);
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     // the chapter compared with 0xE (Rest_*), the row pointer with it
     if (sh::Half()) {
         B(Cond_ByteFA_addr) = 0xE;
-        sh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * 0xE));
+        sh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * 0xE));
     }
     // the zenny at ten times a member's level (ShopResist)
-    const U level = Mem(at::kRecords + ObjTrio[(B(BattleActorCopies_ItemActor_addr) % 3) * at::kObjStride + 0x148] * at::kRecordStride)[0xA];
+    const U level = Mem(CharacterRecords_addr + ObjTrio[B(BattleActorCopies_ItemActor_addr) % 3].char_index * at::kRecordStride)[0xA];
     SetL(Party_Zenny_addr, PickOf(10 * level, 10 * level - 1, 10 * level + 1, 0, sh::Next() % 100000));
     // the dispatchers' steps inside their tables
     if (Is(k, "PartyForm_OpenStep") || Is(k, "SharedList_SortStep")) B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % 3);
@@ -530,7 +531,7 @@ void Seed(unsigned k) {
         for (unsigned i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd2 + i) = SafeId();
     if (Is(k, "PartyForm_Reload") && sh::Half()) {
         B(Cond_Flags_addr + 0xd2) = 2;
-        ObjTrio[0x89] = static_cast<unsigned char>(sh::Half() ? 2 : SafeId());
+        ObjTrio[0].char_id = static_cast<unsigned char>(sh::Half() ? 2 : SafeId());
     }
     // the item window's cursor against its category byte
     B(0x803360) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
@@ -544,7 +545,7 @@ void Args(unsigned k, std::uint32_t* a) {
         const U index = B(FieldS_Answer_addr);
         a[1] = hi | (PickOf(index + 1, index + 2, index, sh::Next()) & 0xFF);
     } else if (Is(k, "SharedList_DrawList") || Is(k, "SharedList_DrawMember")) {
-        a[0] = sh::at::kWindows + sh::at::kWindowStride * (sh::Next() % 21);
+        a[0] = WindowRecords_addr + sh::at::kWindowStride * (sh::Next() % 21);
     } else if (Is(k, "SharedList_Sort")) {
         a[0] = hi | (sh::Next() % 3);
     } else if (Is(k, "ShopResist_DrawBits")) {

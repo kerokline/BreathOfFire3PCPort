@@ -27,7 +27,9 @@
 // same code).
 #include "game/labels.h"
 #include "game/lang_layout.h"
+#include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/text_advance.h"
 #include "game/magic_s12.h"
 
@@ -80,13 +82,9 @@ constexpr std::uint32_t kStatChanged = bof3::addr::Battle_RecalcStats;   // rebo
 // kClutTo: now Gfx_ClutStrip[0x1a00] (symbols.toml).
 
 unsigned char* SC() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char* Slot(unsigned k) { return Mem(at::kTasks + (k & 0xFFu) * at::kTaskStride); }
+unsigned char* Slot(unsigned k) { return Mem(BattleTask_Slots_addr + (k & 0xFFu) * at::kTaskStride); }
 std::int32_t Ptr(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 std::uint32_t U32(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -98,12 +96,11 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // (stride 0x14C), an enemy by its index (stride 0x128) - the battle index
 // less 3, which a party index sends below the enemy records.
 unsigned char* PartyRec(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyRec(int i) { return Mem(at::kEnemies + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
-records::BattleEnemy* EnemyRecTyped(int i) { return reinterpret_cast<records::BattleEnemy*>(EnemyRec(i)); }
+unsigned char* EnemyRec(int i) { return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
 
-// The scratch words DamageScratch + k and the vertex scratch
+// The scratch words SharedScratch + k and the vertex scratch
 // Prim_VertexScratch + k (SVECTORs at +0, +8, +0x10, +0x18).
-constexpr std::uint32_t kDs = bof3::addr::DamageScratch;
+constexpr std::uint32_t kDs = SharedScratch_addr;
 // kVx: now Prim_VertexScratch (symbols.toml).
 short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
 void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }
@@ -185,8 +182,8 @@ void DrawModeCommit(unsigned tpage, unsigned layer) {
 }
 void LinkAt(unsigned dy, unsigned size) {
     const unsigned char* const sc = SC();
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y),
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
                                 static_cast<int>(dy), size);
 }
 
@@ -285,13 +282,13 @@ MS12_EXPORT void __cdecl Identify_Task(void) {
 MS12_EXPORT void __cdecl Identify_Start(void) {
     {
         unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x12));
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         tt->owner = Ptr(SC());
         t[1] = 0;
     }
     {
         unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x12));
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         tt->owner = Ptr(SC());
         t[1] = 1;
     }
@@ -305,7 +302,7 @@ MS12_EXPORT void __cdecl Identify_Start(void) {
 MS12_EXPORT void __cdecl Identify_WaitOpen(void) {
     if (SC()[0xB] != 2) return;
     unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x12));
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     unsigned char* const sc = SC();
     tt->owner = Ptr(sc);
     t[1] = 2;
@@ -355,7 +352,7 @@ MS12_EXPORT void __cdecl Identify_End(void) {
 // is below it. A kind seen before shows (+4 1); else a hit on an enemy whose
 // +0x8F is not 0 (the target read again) marks the kind and shows; else +4 0.
 MS12_EXPORT void __cdecl Identify_Roll(void) {
-    const int enemy = static_cast<int>(EnemyRecTyped(static_cast<int>(TargetByte()) - 3)->level);
+    const int enemy = static_cast<int>(rv::As<records::BattleEnemy>(EnemyRec(static_cast<int>(TargetByte()) - 3))->level);
     const int actor = PartyRec(Mem(at::kActor)[0])[0x8A];
     const int d = actor - enemy;
     int chance = 0x10;
@@ -426,7 +423,7 @@ MS12_EXPORT void __cdecl Identify_DrawEnemy(void) {
     const unsigned char index = static_cast<unsigned char>(TargetByte() - 3);
     const unsigned text1 = CharCount(Text(kText1)) & 0xFFu;   // counted here, before the record is read, as the original
     unsigned char* const rec = EnemyRec(index);
-    records::BattleEnemy* const trec = reinterpret_cast<records::BattleEnemy*>(rec);
+    records::BattleEnemy* const trec = rv::As<records::BattleEnemy>(rec);
     if (rec[0x8F] != 0) {
         DrawCentred(rec + 0x80, 0x30, NameCount());
         DrawHeadingCounted(0, kText1, 0x44, text1);
@@ -509,8 +506,8 @@ void DrawElementIcon(int x, int y, int right, unsigned i, unsigned char shade) {
     p[0x24] = u1; p[0x25] = v0;
     p[0x34] = u0; p[0x35] = v1;
     p[0x44] = u1; p[0x45] = v1;
-    SetWord(p + 0x16, (i == 1 || i == 3) ? 0x780Eu : 0x780Cu);
-    SetWord(p + 0x26, 0xF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, (i == 1 || i == 3) ? 0x780Eu : 0x780Cu);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
     MH_CALL(Gfx_CommitPrim)(2, 0x48);
 }
 
@@ -528,14 +525,14 @@ MS12_EXPORT void __cdecl Identify_DrawElements(int x, int y) {
     for (unsigned i = 0; i < 6; ++i) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetCode6C)(p);
-        SetWord(p + 0xA, static_cast<unsigned>(y));
-        SetWord(p + 0x12, static_cast<unsigned>(y));
-        SetWord(p + 0x1A, static_cast<unsigned>(y + 0xC));
-        SetWord(p + 0x22, static_cast<unsigned>(y + 0xC));
-        SetWord(p + 8, static_cast<unsigned>(x));
-        SetWord(p + 0x10, static_cast<unsigned>(right));
-        SetWord(p + 0x18, static_cast<unsigned>(x));
-        SetWord(p + 0x20, static_cast<unsigned>(right));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y0, static_cast<unsigned>(y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y1, static_cast<unsigned>(y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y2, static_cast<unsigned>(y + 0xC));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y3, static_cast<unsigned>(y + 0xC));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x0, static_cast<unsigned>(x));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x1, static_cast<unsigned>(right));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x2, static_cast<unsigned>(x));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x3, static_cast<unsigned>(right));
         unsigned shade = 0x30;
         SetDd(4, 0x30);
         if (EnemyRec(index)[kResist[i]] <= (i == 5 ? 3 : 1)) {
@@ -552,8 +549,8 @@ MS12_EXPORT void __cdecl Identify_DrawElements(int x, int y) {
         p[5] = DsByte(4);
         p[6] = DsByte(4);
         const unsigned char* const glyph = Pointer(kElementGlyphs + 4 * i);
-        SetWord(p + 0x16, (static_cast<unsigned>(glyph[0] & 0x7F) << 8) + glyph[1]);
-        SetWord(p + 0xE, MH_CALL(Gpu_GetClut)(0, 0x1E0));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->glyph, (static_cast<unsigned>(glyph[0] & 0x7F) << 8) + glyph[1]);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E0));
         p[0xC] = 0;
         p[0xD] = 0;
         p[0x14] = 0xC;
@@ -757,29 +754,29 @@ MS12_EXPORT void __cdecl Celerity_Task(void) {
 MS12_EXPORT void __cdecl Celerity_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SC()[8] = src[8];
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
-    SetLong(SC() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     SC()[0xB] = 0;
     SC()[9] = 0x10;
     Bump(SC()[1]);
     {
         unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x4A));
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         unsigned char* const sc = SC();
-        records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+        records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
         tt->owner = Ptr(sc);
         t[1] = 0;
         t[9] = 0;
         tt->x = tsc->x;
-        tt->y = tsc->y;
-        SetLong(t + 0x3C, Long(sc + 0x3C));
+        tt->z = tsc->z;
+        rv::Store(tt->height, tsc->height);
         Bump(sc[0xB]);
     }
     unsigned char spark = 0;
     for (unsigned b = 0; b < 0x20; b += 8) {
         unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x4A));
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         unsigned char* const sc = SC();
         tt->owner = Ptr(sc);
         t[1] = 1;
@@ -816,7 +813,7 @@ MS12_EXPORT void __cdecl Celerity_Apply(void) {
     for (unsigned i = 0; i < 4; ++i) {
         MH_AT(FnU, bof3::addr::Celerity_ApplyStat)(MagicFx_BuffStats[i]);
         unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x48));
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         unsigned char* const owner = SC();
         tt->owner = Ptr(owner);
         t[4] = static_cast<unsigned char>(i);
@@ -997,9 +994,9 @@ void SparkFrame(unsigned base) {
 bool SparkFly() {
     if (Frame_Counter & 1) Bump(SC()[9]);
     unsigned char* sc = SC();
-    SetLong(sc + 0x14, AddL(Long(sc + 0x14), static_cast<std::uint32_t>(Long(sc + 0x20))));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_y, AddL(rv::As<records::BattleTask>(sc)->step_y, static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_20)));
     sc = SC();
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + Word(sc + 0x14));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, rv::As<records::BattleTask>(sc)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->step_y));
     Drop(SC()[0xA]);
     return SC()[0xA] == 0;
 }
@@ -1011,8 +1008,8 @@ bool SparkFly() {
 MS12_EXPORT void __cdecl CeleritySpark_Rise(void) {
     SparkFrame(0x18);
     if (!SparkFly()) return;
-    SetLong(SC() + 0x14, -16);
-    SetLong(SC() + 0x20, 4);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, -16);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 4);
     SC()[0xA] = 8;
     Bump(SC()[2]);
 }
@@ -1035,24 +1032,24 @@ MS12_EXPORT void __cdecl CeleritySpark_Fall(void) {
 MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* sc = SC();
-    const bool wide = Long(sc + 0xC) == 4 && sc[0xA] < 5;
+    const bool wide = rv::As<records::BattleTask>(sc)->step_x == 4 && sc[0xA] < 5;
     const int r = MH_CALL(Rand)();
     DrawDisc(static_cast<unsigned>((r & 3) + (wide ? 0x40 : 0x18)));
     MH_CALL(MagicFx_PushActorMatrix)();
     Call0(bof3::addr::CeleritySpark_Draw);
     MH_CALL(Gte_PopMatrix)();
     sc = SC();
-    if (Long(sc + 0xC) < 4) {
-        SetLong(sc + 0x10, AddL(Long(sc + 0x10), 1));
+    if (rv::As<records::BattleTask>(sc)->step_x < 4) {
+        rv::Store(rv::As<records::BattleTask>(sc)->step_z, AddL(rv::As<records::BattleTask>(sc)->step_z, 1));
         sc = SC();
         if ((sc[0x10] & 7) == 0) {
-            SetLong(sc + 0xC, AddL(Long(sc + 0xC), 1));
+            rv::Store(rv::As<records::BattleTask>(sc)->step_x, AddL(rv::As<records::BattleTask>(sc)->step_x, 1));
             sc = SC();
         }
     }
     sc[9] = static_cast<unsigned char>(sc[9] + sc[0xC]);
     sc = SC();
-    if (Long(sc + 0xC) != 4) return;
+    if (rv::As<records::BattleTask>(sc)->step_x != 4) return;
     Drop(sc[0xA]);
     sc = SC();
     if (sc[0xA] != 0) return;
@@ -1060,9 +1057,9 @@ MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
         MH_CALL(Sound_PlayById)(0x101);
         sc = SC();
     }
-    SetLong(sc + 0x10, 8);
-    SetLong(SC() + 0x14, 8);
-    SetLong(SC() + 0x20, 8);
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, 8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 8);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Bump(SC()[2]);
 }
 
@@ -1073,7 +1070,7 @@ MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
 MS12_EXPORT void __cdecl CeleritySpark_Orbit(void) {
     SparkFrame(0x20);
     unsigned char* sc = SC();
-    SetLong(sc + 0x10, AddL(Long(sc + 0x10), 4));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, AddL(rv::As<records::BattleTask>(sc)->step_z, 4));
     sc = SC();
     sc[9] = static_cast<unsigned char>(sc[9] + sc[0xC]);
     sc = SC();
@@ -1082,9 +1079,9 @@ MS12_EXPORT void __cdecl CeleritySpark_Orbit(void) {
     SetDs(4, (sc[0xB] & 0x1Fu) << 7);
     SetDs(0, sc[0xA] * static_cast<unsigned>(Word(sc + 0x10)) + 0xB0u);
     int r = Sin(Ds(4));
-    Store(ScTask()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+    rv::Store(rv::Current<records::BattleTask>()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
     r = Cos(Ds(4));
-    Store(ScTask()->y, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->z, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
     Bump(SC()[0xA]);
     if (SC()[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -1164,15 +1161,15 @@ MS12_EXPORT void __cdecl CeleritySpark_Draw(void) {
     SparkRow(CeleritySpark_ColorsUp, true, depths);
     {
         const unsigned char* const sc = SC();
-        const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-        MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(tsc->x), static_cast<unsigned>(tsc->y), depths,
+        const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+        MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(tsc->x), static_cast<unsigned>(tsc->z), depths,
                                      U32(up), 4, 0x34, 2);
     }
     unsigned char* const down = Gfx_PacketNext;
     SparkRow(CeleritySpark_ColorsDown, false, depths);
     const unsigned char* const sc = SC();
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-    MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(tsc->x), static_cast<unsigned>(tsc->y), depths,
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+    MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(tsc->x), static_cast<unsigned>(tsc->z), depths,
                                  U32(down), 4, 0x34, 2);
 }
 

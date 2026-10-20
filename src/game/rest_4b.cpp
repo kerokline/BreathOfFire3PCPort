@@ -71,8 +71,8 @@ void Jump(U table, unsigned count, int index, const char* who) {
 U Member(unsigned k, const char* who) {
     if (k >= 60)
         bof3::Fatal("%s: community record %u is past the 60 at 0x9046D0; the original writes at 0x%X", who, k,
-                    static_cast<unsigned>(at::kMembers + 8 * k));
-    return at::kMembers + 8 * k;
+                    static_cast<unsigned>(Community_Records_addr + 8 * k));
+    return Community_Records_addr + 8 * k;
 }
 
 // A slot's bytes (0x9048A8 + 8 * slot, the slots 1..8 at 0x9048B0): read in
@@ -965,7 +965,7 @@ extern "C" void __cdecl CommuBoard_Confirm(void) {
             const bool same = static_cast<int>(B(slot)) == Rest4b_Pick + 4 && static_cast<int>(B(slot + 1)) == Rest4b_PickB &&
                               static_cast<int>(B(slot + 2)) == Rest4b_PickC;
             if (!same) {
-                for (U r = at::kMembers; r < at::kMembersEnd; r += at::kMemberStride) {
+                for (U r = Community_Records_addr; r < at::kMembersEnd; r += at::kMemberStride) {
                     if (B(r + 1) != arg) continue;
                     PutL(r + 4, Rest4a_Clock);
                     B(r + 2) = 0;
@@ -1042,8 +1042,8 @@ extern "C" void __cdecl CommuBoard_Confirm(void) {
 // picks: 0 for slot 0, the slot - 8 from 9, else the slot's kind (s8 slot, the
 // slot's bytes read in place).
 extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record, unsigned highlight) {
-    SH_CALL(Menu_DrawBox)(x + 4, y + 4, 0x48, 0x28, 0x81, static_cast<unsigned char>(BattleDraw_Colour));
-    SH_CALL(Menu_DrawBox)(x, y, 0x48, 0x26, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x + 4, y + 4, 0x48, 0x28, 0x81, static_cast<unsigned char>(Config_WindowColour));
+    SH_CALL(Menu_DrawBox)(x, y, 0x48, 0x26, 0x80, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(CommuBoard_DrawCardFrame)(x, y);
     const unsigned r = record & 0xFF;
     SH_CALL(Text_DrawAt)(x + 6, y + 4, 0, 5, At(at::kNames + 5 * r));
@@ -1188,7 +1188,7 @@ extern "C" void __cdecl CommuBoard_DrawBar(int x, int y, int w, unsigned row, un
 // (CommuBoard_SlotRecordXY). Then the counters: sprite 2, the s8 0x9046CA and
 // 0x9046CC printed (Crt_sprintf, Text_DrawFont12) beside the label 0x669E10.
 extern "C" void __cdecl CommuBoard_DrawPanel(void) {
-    SH_CALL(Menu_DrawBox)(0x14, 0x12, 0x118, 0x13, 0xF2, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(0x14, 0x12, 0x118, 0x13, 0xF2, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(Menu_DrawOutlineNotched)(0x16, 0x14, 0x113, 0xF, 0);
     const unsigned help = Rest4b_Help;
     if (help != 0xFFFF) {
@@ -1213,7 +1213,7 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
             SH_CALL(Gfx_CommitPrim)(1, 0x1C);
         }
     }
-    SH_CALL(Menu_DrawBox)(0x15, 0x2E, 0x114, 0xAA, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(0x15, 0x2E, 0x114, 0xAA, 0x80, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(CommuBoard_DrawPanelFrame)(0x14, 0x2D);
     SH_CALL(Menu_DrawOutlineNotched)(0x20, 0x38, 0xA8, 0x10, 1);
     const unsigned char top = SH_CALL(Commu_CountInSlot)(0);
@@ -1232,7 +1232,7 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
         const int sx = static_cast<int>(i % 4) * 52;
         SH_CALL(Menu_DrawOutlineNotched)(sx + 0x20, sy + 0x6B, 0x28, 0x28, 1);
         if (i >= B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber))) {
-            SH_CALL(Menu_DrawBox)(sx + 0x20, sy + 0x6B, 0x28, 0x28, 1, static_cast<unsigned char>(BattleDraw_Colour));
+            SH_CALL(Menu_DrawBox)(sx + 0x20, sy + 0x6B, 0x28, 0x28, 1, static_cast<unsigned char>(Config_WindowColour));
             continue;
         }
         SH_CALL(CommuBoard_DrawSprite)(sx + 0x1A, sy + 0x5B, 0);
@@ -1327,7 +1327,7 @@ extern "C" void __cdecl CommuBoard_DrawSlotLines(unsigned slot, unsigned steady)
 extern "C" unsigned char __cdecl Commu_CountInSlot(unsigned slot) {
     const unsigned char s = static_cast<unsigned char>(slot);
     unsigned char n = 0;
-    for (U r = at::kMembers; r < at::kMembersEnd; r += at::kMemberStride)
+    for (U r = Community_Records_addr; r < at::kMembersEnd; r += at::kMemberStride)
         if (B(r) != 0 && B(r + 1) == s) ++n;
     return n;
 }
@@ -1338,7 +1338,7 @@ extern "C" unsigned __cdecl Commu_NthInSlot(unsigned slot, unsigned nth) {
     const unsigned char s = static_cast<unsigned char>(slot), want = static_cast<unsigned char>(nth);
     unsigned char seen = 0;
     for (unsigned k = 0; k < 60; ++k) {
-        const U r = at::kMembers + 8 * k;
+        const U r = Community_Records_addr + 8 * k;
         if (B(r) == 0 || B(r + 1) != s) continue;
         if (seen == want) return k;
         ++seen;
@@ -1540,8 +1540,8 @@ int ListBoxWidth() {
 extern "C" void __cdecl CommuBoard_DrawListBox(int x, int y, unsigned steady) {
     const unsigned char flag = static_cast<unsigned char>(steady);
     const int h = FieldE2_LevelA * 16;
-    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 5, ListBoxWidth(), h, 0x81, static_cast<unsigned char>(BattleDraw_Colour));
-    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 5, ListBoxWidth(), h, 0x81, static_cast<unsigned char>(Config_WindowColour));
+    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(CommuBoard_DrawListFrame)(x, y - 1, static_cast<unsigned>(h));
     if (FieldE2_LevelA == 0) return;
     const unsigned char colour = static_cast<unsigned char>(flag * 7);
@@ -1594,8 +1594,8 @@ extern "C" unsigned short __cdecl CommuBoard_DrawListBoxB(int x, int y, unsigned
     const int h = B(row + 1) * 16;
     if (h + static_cast<short>(y) + 4 > 0xD8) y = 0xD4 - h;
     const unsigned char flag = static_cast<unsigned char>(steady);
-    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 6, ListBoxWidth(), h, 0x81, static_cast<unsigned char>(BattleDraw_Colour));
-    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
+    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 6, ListBoxWidth(), h, 0x81, static_cast<unsigned char>(Config_WindowColour));
+    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(CommuBoard_DrawListFrame)(x, y - 1, static_cast<unsigned>(h));
     if (B(row + 1) != 0) {
         const unsigned char colour = static_cast<unsigned char>(flag * 7);

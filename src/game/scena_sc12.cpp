@@ -26,6 +26,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc12_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -44,7 +45,6 @@ using scena_sc12::VoidFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
 unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
@@ -54,7 +54,7 @@ void SetRun(unsigned char v) { MoveScript_Var7 = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool WaitClear() { return MoveScript_WaitWordDA == 0; }
+bool WaitClear() { return Transition_Busy == 0; }
 void ScriptXor(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags ^ v); }
 void MusicCurrent(unsigned char v) { AreaW1f_MusicCurrent = v; }
 
@@ -65,7 +65,7 @@ void ClearCounters() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
 void Clr(unsigned i) { SH_CALL(Flags_Clear)(Bits(), i); }
@@ -183,7 +183,7 @@ SC12_EXPORT void __cdecl Scena12_Run(void) {
 // triggered: Scena12_Objects[object +0x86] (object, the flag bits' pointer).
 // The entry's eax is the original's answer; 0x56D6D0 does not read it.
 SC12_EXPORT void __cdecl Scena12_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena12_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena12_ObjectTrigger")))(object, bits);
@@ -216,6 +216,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_ArriveHook(int x, int /*z*/) {
 //     0xA) - counter 0 0, run 7.
 // Each area test reads Game_AreaNumber afresh.
 SC12_EXPORT unsigned char __cdecl Scena12_StepHook(int x, int z) {
+    auto* const member0 = ObjTrio;
     if (Area() == 0x86) {
         if (!Flag(1)) {
             if (x >= 0x1F8000 && x <= 0x208000 && z >= 0x248000 && z <= 0x270000) {
@@ -230,7 +231,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_StepHook(int x, int z) {
                 Set(1);
                 return 1;
             }
-        } else if (S32(at::kObjTrioY) <= 0x2000000 && x >= 0x2E0000 && x <= 0x2F8000 && z >= 0x290000 && z <= 0x2A0000) {
+        } else if (member0->height <= 0x2000000 && x >= 0x2E0000 && x <= 0x2F8000 && z >= 0x290000 && z <= 0x2A0000) {
             Set40();
             ClearCounters();
             SetStep(0x21);
@@ -289,7 +290,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_CellHook(unsigned a, unsigned b) {
 // call, is 5), run 5; 1.
 SC12_EXPORT unsigned char __cdecl Scena12_CellTalk(void) {
     Set40();
-    const unsigned char leader = ObjTrio[0x89];
+    const unsigned char leader = ObjTrio[0].char_id;
     ClearCounters();
     SetStep(0);
     if (leader == 5) SetStep(5);
@@ -396,6 +397,7 @@ namespace {
 // 0x82 / 0x83, 0x84 / 0x85) and afresh for each later one; the counter byte
 // 0x90384A afresh at each test.
 void EnterAreaBody() {
+    auto* const member0 = ObjTrio;
     unsigned area = Area();
     if (area == 0x65) {
         const unsigned c = Counter(2);
@@ -462,7 +464,7 @@ void EnterAreaBody() {
             Spawn(0, 0x77, 1);
         }
     }
-    if (Area() == 0x86 && !Flag(0x2F) && S32(at::kObjTrioZ) < 0x300000) {
+    if (Area() == 0x86 && !Flag(0x2F) && member0->x < 0x300000) {
         Set(0x2F);
         Set40();
         ClearCounters();
@@ -491,10 +493,10 @@ void EnterAreaBody() {
         if (c < 1 || c > 9) return;
         switch (c) {
         case 1:
-            if (!Flag(0x28)) Spawn(at::kEffectSlot, 0x76);
+            if (!Flag(0x28)) Spawn(at::kEffectSlot_addr, 0x76);
             break;
         case 2:
-            Spawn(at::kEffectSlot, 0x79);
+            Spawn(at::kEffectSlot_addr, 0x79);
             LoadAndPlay(0x8F);
             break;
         case 3:
@@ -513,13 +515,13 @@ void EnterAreaBody() {
             break;
         case 6:
             SetPass(0x1F);
-            Spawn(at::kEffectSlot, 0x7B);
+            Spawn(at::kEffectSlot_addr, 0x7B);
             break;
         case 7:
-            Spawn(at::kEffectSlot, 0x7B);
+            Spawn(at::kEffectSlot_addr, 0x7B);
             break;
         case 8:
-            Spawn(at::kEffectSlot, 0x7C);
+            Spawn(at::kEffectSlot_addr, 0x7C);
             break;
         default:   // 9
             LoadAndPlay(0x8B);
@@ -951,7 +953,7 @@ SC12_EXPORT void __cdecl Scena12_Run6(void) {
     case 3: {
         Cond_ByteFE = 1;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetCounter(3, slot);
         Place13(slot, -0x370, AngleY(), 0x200, 4);
@@ -1029,7 +1031,7 @@ SC12_EXPORT void __cdecl Scena12_Run6(void) {
     case 0x12: {
         if (Counter(0) != 3) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetCounter(0, 4);
         SetStep(0x13);
@@ -1204,7 +1206,7 @@ namespace {
 void Run8Greet() {
     const unsigned fd = Cond_ByteFD;
     if (fd != 2 && fd != 3) return;
-    const unsigned who = ObjTrio[0x89];
+    const unsigned who = ObjTrio[0].char_id;
     if (who < 2 || who > 8 || who == 3) return;
     const bool odd = who == 5 || who == 8;
     unsigned short id;
@@ -1331,9 +1333,10 @@ void BattleBytes() { SH_AT(KindFn, at::kBattleBytes)(0x26); }
 // original 0x561170: run 9, steps 0..2, 0xA..0x12, 0x14..0x16, 0x1E..0x22,
 // 0x2B..0x2F (a byte table over 0..0x2F, then 25 cases).
 SC12_EXPORT void __cdecl Scena12_Run9(void) {
+    auto* const member2 = &ObjTrio[2];
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (ObjTrio[0x3cf] == 3) break;
+        if (rv::Bytes(&ObjTrio[2])[0x137] == 3) break;
         SH_CALL(Party_DropIn)(0);
         SetStep(1);
         break;
@@ -1359,7 +1362,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0xB: {
         if (Counter(0) != 2) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetStep(0xC);
         Place13(slot, -0x32E, AngleY(), 0x8A, 0x28);
@@ -1369,7 +1372,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         if (Counter(0) != 6) break;
         SH_CALL(Party_DropIn)(2);
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetCounter(3, slot);
         SetStep(0xD);
@@ -1398,9 +1401,9 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     case 0x11:
         if (Counter(0) != 0xE || Field_Kind2Hold != 0) break;
-        Spawn(at::kEffectSlot, 0x82);
-        Spawn(at::kEffectSlot, 0x83);
-        Spawn(at::kEffectSlot, 0x84);
+        Spawn(at::kEffectSlot_addr, 0x82);
+        Spawn(at::kEffectSlot_addr, 0x83);
+        Spawn(at::kEffectSlot_addr, 0x84);
         SetStep(0x12);
         break;
     case 0x12: {
@@ -1443,7 +1446,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     case 0x1F:
         if (Counter(0) != 1) break;
-        Place(static_cast<int>(D(at::kMember1) + 0x30000), 0x258000);
+        Place(static_cast<int>(static_cast<std::uint32_t>(member2->x) + 0x30000), 0x258000);
         BattleBytes();
         SetStep(0x20);
         break;
@@ -1467,7 +1470,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0x22: {
         if (Counter(0) != 1) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetStep(0x2B);
         Place13(slot, -0x35A, AngleY(), 0x200, 0x14);
@@ -1481,7 +1484,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0x2C: {
         if (Counter(0) != 3) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetStep(0x2D);
         Place13(slot, AngleX(), AngleY(), 0x2B0, 0x14);

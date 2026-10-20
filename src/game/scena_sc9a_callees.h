@@ -36,8 +36,9 @@ constexpr std::uint32_t kRun = 0x8034E4;        // s8: MoveScript_Var7, which sc
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: run 11's countdown
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
-constexpr std::uint32_t kEffectSlot = 0x903850; // u8: the effect slot just taken
-// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
+inline auto& kEffectSlot = SharedScratch.b_00;  // u8: the effect slot just taken
+constexpr std::uint32_t kEffectSlot_addr = SharedScratch_addr; // kEffectSlot's address, for the raw accessors that take one
+// kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kRow6: now Cond_Flags[0x30] (symbols.toml). Cond_Flags + 0x30 (row 6), handed to Flags_Set / Clear as a literal
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Set / Clear as a literal
 constexpr std::uint32_t kSelector = 0x90412C;   // Cond_Flags + 0x19C: & 0x7F picks the call-table entries
@@ -46,7 +47,7 @@ constexpr std::uint32_t kSelector = 0x90412C;   // Cond_Flags + 0x19C: & 0x7F pi
 constexpr std::uint32_t kScriptFlags = 0x9039A2;   // u16 Field_ScriptFlags
 constexpr std::uint32_t kScriptFlags2 = 0x905BA4;  // u16 Field_ScriptFlags2: its low 3 bits tested (run 2 step 0)
 // kRequest: now Field_Request (symbols.toml). Field_Request
-// kWait: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA
+// kWait: now Transition_Busy (symbols.toml). u16 Transition_Busy
 // kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
 // kCamDist: now Camera_Distance (symbols.toml). u16 Camera_Distance
 // kMusicCurrent: now AreaW1f_MusicCurrent (symbols.toml). u8: Music_Play returns at once while its track equals it
@@ -57,11 +58,11 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kAngleY: now Camera_Angles[1] (symbols.toml). s16 Camera_Angles +2
 constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 // kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
-constexpr std::uint32_t kObjTrioX = 0x802D74;   // s32 ObjTrio + 0x34
-constexpr std::uint32_t kObjTrioZ = 0x802D78;   // s32 ObjTrio + 0x38
-constexpr std::uint32_t kObjTrioY = 0x802D7C;   // s32 ObjTrio + 0x3C
+// kObjTrioX: now ObjTrio record 0 x (records::PartyMember).
+// kObjTrioZ: now ObjTrio record 0 z (records::PartyMember).
+// kObjTrioY: now ObjTrio record 0 height (records::PartyMember).
 // kMember1Byte: now Field_Members[0x13b] (symbols.toml). u8 ObjTrio record 1 + 0x137, tested against 3
-// kMember2Byte: now ObjTrio[0x3cf] (symbols.toml). u8 ObjTrio record 2 + 0x137, tested against 2 / 3
+// kMember2Byte: now ObjTrio_addr + 0x3cf (symbols.toml). u8 ObjTrio record 2 + 0x137, tested against 2 / 3
 // kKind2Z: now Field_Kind2Z (symbols.toml). s32 Field_Kind2Z
 // kKind2X: now Field_Kind2X (symbols.toml). s32 Field_Kind2X
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). u16 MoveScript_F3Divisor

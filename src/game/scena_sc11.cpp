@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc11_callees.h"
 #include "game/scenario_harness.h"
@@ -52,16 +53,16 @@ constexpr std::uint32_t kCounter0 = 0x903848;   // the four script counter bytes
 constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter2 = 0x90384A;
 constexpr std::uint32_t kCounter3 = 0x90384B;
-constexpr std::uint32_t kSlot = 0x903850;       // the effect slot just taken
-// kFlagsPtr: now AreaW0c_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
+inline auto& kSlot = SharedScratch.b_00;       // the effect slot just taken
+// kFlagsPtr: now Chapter_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
 // kStates: now Scena11_States (symbols.toml). Scena11_States, 3 entries
 // kRuns: now Scena11_Runs (symbols.toml). Scena11_Runs, 10 entries (then Scena11_Triggers)
 // kTriggers: now Scena11_Triggers (symbols.toml). Scena11_Triggers, 15 entries
 // kRolls: now Scena11_EffectRolls (symbols.toml). Scena11_EffectRolls, 16 bytes
 // kPartyByte: now AreaW0b_PartySet (symbols.toml). & 0x7F: picks the call-table entries in area 0x65
-// kLeadByte8: now ObjTrio[8] (symbols.toml). ObjTrio member 0's +8
-// kLead89: now ObjTrio[0x89] (symbols.toml). ObjTrio member 0's +0x89
-// kLead124: now ObjTrio[0x124] (symbols.toml). ObjTrio member 0's +0x124, bit 0x40
+// kLeadByte8: now ObjTrio[0].direction (symbols.toml). ObjTrio member 0's +8
+// kLead89: now ObjTrio[0].char_id (symbols.toml). ObjTrio member 0's +0x89
+// kLead124: now ObjTrio_addr + 0x124 (symbols.toml). ObjTrio member 0's +0x124, bit 0x40
 // kMusicByte: now AreaW1f_MusicCurrent (symbols.toml). a byte the area changes set (0x7C, 0x7D, 0x92, 0xFF)
 // kByteEE0: now ModeFlow_AreaTransition (symbols.toml). set to 0xFF with one area change
 constexpr std::uint32_t kTextRecords = 0x904CE0;   // Text_Records: the item name copied in, 16 bytes
@@ -74,17 +75,16 @@ VoidFn Entry(std::uint32_t table, int index) {
     return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(
         static_cast<std::uint32_t>(Long(At(table + 4u * static_cast<std::uint32_t>(index))))));
 }
-unsigned char* Flags() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
-unsigned char* EffectRecord(unsigned slot) { return Effect_Objects + ((slot & 0xFFu) << 7); }
+unsigned char* Flags() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
+unsigned char* EffectRecord(unsigned slot) { return rv::Bytes(Effect_Objects) + ((slot & 0xFFu) << 7); }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 
 void CallA(unsigned n) { SH_CALL(Scenario_CallA)(n); }
 void CallB(unsigned n) { SH_CALL(Scenario_CallB)(n); }
@@ -113,7 +113,7 @@ void CopyName(const unsigned char* name) {
 // The slot just taken (kSlot, read back): live, `kind`, at (x, Camera_Angles[1], z),
 // +9 = `nine`.
 unsigned char* Place(unsigned char kind, std::int32_t x, std::int32_t z, unsigned char nine) {
-    unsigned char* const e = EffectRecord(B(kSlot));
+    unsigned char* const e = EffectRecord(kSlot);
     e[0] = 1;
     e[5] = kind;
     SetLong(e + 0x64, x);
@@ -126,7 +126,7 @@ unsigned char* Place(unsigned char kind, std::int32_t x, std::int32_t z, unsigne
 // Effect_FindFree into kSlot; false when none is free (0xFF).
 bool TakeSlot() {
     const unsigned char s = FindFree();
-    B(kSlot) = s;
+    kSlot = s;
     return s != 0xFF;
 }
 
@@ -309,7 +309,7 @@ SC11_EXPORT void __cdecl Scena11_Run(void) { Entry(Scena11_Runs_addr, MoveScript
 SC11_EXPORT void __cdecl Scena11_Scene1(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0: {
-        const unsigned lead = ObjTrio[8];
+        const unsigned lead = ObjTrio[0].direction;
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | 8);
         MoveScript_PartyRecords[0x65] = 1;
         if (lead == 0) SH_CALL(Party_DropIn)(4);
@@ -323,7 +323,7 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
         MoveScript_PartyRecords[0x65] = 2;
         return;
     case 2:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 3;
         return;
@@ -383,7 +383,7 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
         MoveScript_PartyRecords[0x65] = 0xD;
         return;
     case 13:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 0xE;
         return;
@@ -516,8 +516,8 @@ SC11_EXPORT void __cdecl Scena11_EffectAnimate(unsigned slot) {
     Sprite_Current[0x2A] = 0;
     Sprite_Current[0x2B] = static_cast<unsigned char>(Sprite_Current[0x2B] + 1);
     Sprite_Current[0x48] = 0;
-    SC()->step_y = 0;
-    SetLong(Sprite_Current + 0x20, -8);
+    rv::Current<records::SpriteObject>()->step_y = 0;
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_20, -8);
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5F] = 0;
@@ -539,20 +539,20 @@ SC11_EXPORT void __cdecl Scena11_EffectAnimate(unsigned slot) {
 SC11_EXPORT void __cdecl Scena11_Scene4(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0: {
-        if (ObjTrio[0x89] != 6) {
+        if (ObjTrio[0].char_id != 6) {
             MoveScript_PartyRecords[0x65] = 0x32;
             return;
         }
         if (!TakeSlot()) return;
-        unsigned char* const e = EffectRecord(B(kSlot));
+        unsigned char* const e = EffectRecord(kSlot);
         e[0] = 1;
         e[5] = 0x34;
-        Fx(e)->x = 0x250000;
-        Fx(e)->z = 0xB0000;
-        Fx(e)->height = 0x5000000;
+        rv::As<records::EffectObject>(e)->x = 0x250000;
+        rv::As<records::EffectObject>(e)->z = 0xB0000;
+        rv::As<records::EffectObject>(e)->height = 0x5000000;
         const unsigned roll = static_cast<unsigned>(SH_CALL(Rand)()) & 0xFu;
         const unsigned char kind = Scena11_EffectRolls[roll];
-        EffectRecord(B(kSlot))[1] = kind;
+        EffectRecord(kSlot)[1] = kind;
         switch (kind) {
         case 0:
         case 4:
@@ -562,7 +562,7 @@ SC11_EXPORT void __cdecl Scena11_Scene4(void) {
             MoveScript_PartyRecords[0x65] = 1;
             return;
         case 5:
-            SH_CALL(Scena11_EffectAnimate)(B(kSlot));
+            SH_CALL(Scena11_EffectAnimate)(kSlot);
             MoveScript_PartyRecords[0x65] = 5;
             return;
         default:
@@ -570,8 +570,8 @@ SC11_EXPORT void __cdecl Scena11_Scene4(void) {
         }
     }
     case 1:
-        Sprite_Current = ObjTrio;
-        Field_State = ObjTrio;
+        Sprite_Current = rv::Bytes(ObjTrio);
+        Field_State = rv::Bytes(ObjTrio);
         SH_AT(void (__cdecl*)(unsigned), kSpriteSetUp)(0);
         SH_AT(void (__cdecl*)(unsigned, unsigned), kCountDown)(1, 6);
         SH_CALL(Msg_OpenSystem)(0xD9);
@@ -600,7 +600,7 @@ SC11_EXPORT void __cdecl Scena11_Scene4(void) {
         MoveScript_PartyRecords[0x65] = 0x32;
         return;
     case 0x14:
-        if (ObjTrio[0x89] != 7) {
+        if (ObjTrio[0].char_id != 7) {
             MoveScript_PartyRecords[0x65] = 0x32;
             return;
         }
@@ -677,30 +677,30 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         return;
     case 6:
         if (TakeSlot()) {
-            unsigned char* const e = EffectRecord(B(kSlot));
+            unsigned char* const e = EffectRecord(kSlot);
             e[0] = 1;
             e[5] = 0x8C;
         }
         if (TakeSlot()) {
-            unsigned char* const e = EffectRecord(B(kSlot));
+            unsigned char* const e = EffectRecord(kSlot);
             e[0] = 1;
             e[5] = 0x8B;
         }
         MoveScript_PartyRecords[0x65] = 7;
-        Field_State = ObjTrio;
-        Sprite_Current = ObjTrio;
-        ObjTrio[0x124] = static_cast<unsigned char>(ObjTrio[0x124] | 0x40);
+        Field_State = rv::Bytes(ObjTrio);
+        Sprite_Current = rv::Bytes(ObjTrio);
+        rv::Bytes(ObjTrio)[0x124] = static_cast<unsigned char>(rv::Bytes(ObjTrio)[0x124] | 0x40);
         return;
     case 8:
-        Field_State = ObjTrio;
-        Sprite_Current = ObjTrio;
-        ObjTrio[0x124] = static_cast<unsigned char>(ObjTrio[0x124] & 0xBF);
+        Field_State = rv::Bytes(ObjTrio);
+        Sprite_Current = rv::Bytes(ObjTrio);
+        rv::Bytes(ObjTrio)[0x124] = static_cast<unsigned char>(rv::Bytes(ObjTrio)[0x124] & 0xBF);
         SH_CALL(Sound_PlayEffect)(0x201);
         SH_CALL(Music_FadeOutStop)(0x1E);
         MoveScript_PartyRecords[0x65] = 9;
         return;
     case 9: {
-        Sprite_Current = ObjTrio;
+        Sprite_Current = rv::Bytes(ObjTrio);
         const unsigned char s = FindFree();
         Sprite_Current[0xB] = s;
         unsigned char* const p = Sprite_Current;
@@ -708,16 +708,16 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         EffectRecord(p[0xB])[0] = 1;
         EffectRecord(p[0xB])[5] = 6;
         EffectRecord(p[0xB])[6] = 3;
-        Fx(EffectRecord(p[0xB]))->step_x = 0;
-        Fx(EffectRecord(p[0xB]))->step_z = 0x3A;
+        rv::As<records::EffectObject>(EffectRecord(p[0xB]))->step_x = 0;
+        rv::As<records::EffectObject>(EffectRecord(p[0xB]))->step_z = 0x3A;
         {
             unsigned char* const e = EffectRecord(p[0xB]);
-            Fx(e)->screen_x = static_cast<std::uint16_t>(Spr(p)->screen_x);
+            rv::As<records::EffectObject>(e)->screen_x = static_cast<std::uint16_t>(rv::As<records::SpriteObject>(p)->screen_x);
         }
         unsigned char* const e = EffectRecord(p[0xB]);
-        const unsigned w = static_cast<std::uint16_t>(Spr(p)->screen_y);
+        const unsigned w = static_cast<std::uint16_t>(rv::As<records::SpriteObject>(p)->screen_y);
         MoveScript_PartyRecords[0x65] = 0xA;
-        Fx(e)->screen_y = w;
+        rv::As<records::EffectObject>(e)->screen_y = w;
         return;
     }
     case 10:
@@ -743,9 +743,9 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         MoveScript_Var7 = 0;
         return;
     case 15:
-        Field_State = ObjTrio;
-        Sprite_Current = ObjTrio;
-        ObjTrio[0x124] = static_cast<unsigned char>(ObjTrio[0x124] & 0xBF);
+        Field_State = rv::Bytes(ObjTrio);
+        Sprite_Current = rv::Bytes(ObjTrio);
+        rv::Bytes(ObjTrio)[0x124] = static_cast<unsigned char>(rv::Bytes(ObjTrio)[0x124] & 0xBF);
         SH_CALL(Music_FadeOutStop)(0x1E);
         SH_CALL(Party_DropIn)(5);
         MoveScript_PartyRecords[0x65] = 0x10;
@@ -869,7 +869,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         MoveScript_PartyRecords[0x65] = 0xB;
         return;
     case 11:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Field_Request = 8;
         Draw_PassFlags = 0;
         SH_CALL(Port_DroppedCall)(1);
@@ -943,7 +943,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         SH_CALL(Transition_Start)(0xD);
         return;
     case 43:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 0x2C;
         return;
@@ -1022,7 +1022,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         if (!TakeSlot()) return;
         MoveScript_PartyRecords[0x65] = 4;
         unsigned char* const e = Place(0x31, -0x2AA, 0x200, 0xFF);
-        Fx(e)->step_x = 0;
+        rv::As<records::EffectObject>(e)->step_x = 0;
         return;
     }
     case 4:
@@ -1033,7 +1033,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
     case 6:
         if (B(kCounter0) != 4) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = B(kSlot);
+        B(kCounter3) = kSlot;
         MoveScript_PartyRecords[0x65] = 7;
         Place(0x13, -0x2EC, 0x200, 0xA);
         return;
@@ -1057,7 +1057,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         MoveScript_PartyRecords[0x65] = 0xA;
         return;
     case 10:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 0xB;
         return;
@@ -1086,13 +1086,13 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         Camera_Distance = static_cast<short>(Camera_Distance + 0xF880);
         MapView_Redraw = 2;
         if (TakeSlot()) {
-            B(kCounter3) = B(kSlot);
+            B(kCounter3) = kSlot;
             MoveScript_PartyRecords[0x65] = 0xF;
             Place(0x13, -0x3C8, 0x258, 4);
         }
         SH_CALL(MoveCmd_TestFB)(0x53, 0x1B);
         if (TakeSlot()) {
-            unsigned char* const e = EffectRecord(B(kSlot));
+            unsigned char* const e = EffectRecord(kSlot);
             e[0] = 1;
             e[5] = 0x18;
             e[1] = 0x5F;
@@ -1112,7 +1112,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         MoveScript_PartyRecords[0x65] = 0x11;
         return;
     case 17:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         B(kCounter0) = 1;
         Draw_PassFlags = 0x1F;
         MoveScript_PartyRecords[0x65] = 0x12;
@@ -1120,10 +1120,10 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
     case 18: {
         if (B(kCounter0) != 2) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = B(kSlot);
+        B(kCounter3) = kSlot;
         MoveScript_PartyRecords[0x65] = 0x13;
         unsigned char* const e = Place(0x31, -0x370, 0x258, 0x3C);
-        Fx(e)->step_x = 0x580;
+        rv::As<records::EffectObject>(e)->step_x = 0x580;
         return;
     }
     case 19:
@@ -1135,7 +1135,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
     case 20:
         if (B(kCounter0) != 4) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = B(kSlot);
+        B(kCounter3) = kSlot;
         MoveScript_PartyRecords[0x65] = 0x15;
         Place(0x13, -0x256, 0xE2, 0x3C);
         return;
@@ -1144,10 +1144,10 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         if (EffectLive(B(kCounter3))) return;
         B(kCounter3) = 0;
         if (!TakeSlot()) return;
-        B(kCounter3) = B(kSlot);
+        B(kCounter3) = kSlot;
         MoveScript_PartyRecords[0x65] = 0x16;
         unsigned char* const e = Place(0x31, -0x386, 0xE2, 0x3C);
-        Fx(e)->step_x = 0;
+        rv::As<records::EffectObject>(e)->step_x = 0;
         return;
     }
     case 22:
@@ -1198,7 +1198,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         MoveScript_PartyRecords[0x65] = 0x24;
         return;
     case 36:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         B(kCounter0) = 0;
         Draw_PassFlags = 0;
         B(kCounter2) = 2;
@@ -1261,7 +1261,7 @@ SC11_EXPORT void __cdecl Scena11_Scene9(void) {
         MoveScript_PartyRecords[0x65] = 8;
         return;
     case 8:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         SH_CALL(Msg_OpenScript)(0x3F);
         Field_Request = 2;
@@ -1365,7 +1365,7 @@ SC11_EXPORT unsigned char __cdecl Scena11_ArriveHook(long x, long) {
         MoveScript_Var7 = 1;
         return 1;
     }
-    const unsigned char lead = ObjTrio[8];
+    const unsigned char lead = ObjTrio[0].direction;
     SH_CALL(ScriptFlags_Set40)();
     MoveScript_PartyRecords[0x65] = (lead == 6 || lead == 7 || lead == 0) ? 0 : 0x32;
     MoveScript_Var7 = 1;

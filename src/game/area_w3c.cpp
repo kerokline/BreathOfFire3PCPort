@@ -21,13 +21,13 @@
 #include "game/area_harness.h"
 #include "game/area_w3c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3c::at;
 using area_harness::Mem;
@@ -46,9 +46,9 @@ unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 unsigned char* Focus() { return Ptr(AreaW1a_FocusObject_addr); }
 // Field object `index` (Sprite_Objects, 0xA4 bytes); effect record `slot`
 // (Effect_Objects, 0x80 bytes); party record `member` (ObjTrio, 0x14C bytes).
-unsigned char* ObjectAt(unsigned index) { return Sprite_Objects + index * 0xA4u; }
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
-unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
+unsigned char* ObjectAt(unsigned index) { return rv::Bytes(Sprite_Objects) + index * 0xA4u; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(Effect_Objects) + slot * at::kEffectStride; }
+unsigned char* PartyAt(unsigned member) { return rv::Bytes(&ObjTrio[member]); }
 // The choice's answer as the choices read it with movsx.
 int Answer() { return static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr)); }
 // A float stored as the originals' `mov dword` of its bits.
@@ -76,13 +76,13 @@ void PlaceRandomObject(U cells, U weights) {
     if (chosen < 8) {
         const unsigned pick = static_cast<unsigned char>(AH_CALL(Rand)() & 7);
         unsigned char* const object = ObjectAt(chosen);
-        auto* const tObject = reinterpret_cast<records::SpriteObject*>(object);
+        auto* const tObject = rv::As<records::SpriteObject>(object);
         const auto x = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2)) << 16);
         const auto z = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2 + 1)) << 16);
         tObject->x = x;
         tObject->z = z;
         const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
-        SetWord(object + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
@@ -96,7 +96,7 @@ void PlaceRandomObject(U cells, U weights) {
 // .data). Area 94's handlers' shape (area_w2c.cpp's SpawnAt).
 void SpawnAtMember(unsigned member, unsigned char kind, U args) {
     const unsigned char* const record = PartyAt(member);
-    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto* const tRecord = rv::AsConst<records::PartyMember>(record);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
     const unsigned char effect = B(args + B(Cond_Flags_addr + 0xd2 + member));
@@ -113,13 +113,13 @@ void EffectAtObject(unsigned char kind, bool clear1) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = kind;
     if (clear1) e[1] = 0;
-    tE->x = Long(Sprite_Current + 0x34);
-    tE->z = Long(Sprite_Current + 0x38);
-    tE->height = Long(Sprite_Current + 0x3C);
+    tE->x = rv::Current<records::SpriteHead>()->x;
+    tE->z = rv::Current<records::SpriteHead>()->z;
+    tE->height = rv::Current<records::SpriteHead>()->height;
 }
 
 // The patch chain the inits of areas 94 and 128 apply: from AreaMap_Header
@@ -144,7 +144,7 @@ void EffectAtCell(unsigned char kind, std::int32_t x, std::int32_t z, int b1, in
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     tE->z = z;
     const std::int32_t zz = tE->z;
     tE->x = x;
@@ -231,12 +231,12 @@ extern "C" void __cdecl Area128_ChoiceArmTail56(void) {
 // Field_State's byte +0x89 is 2, else 0x80000; +8 = 1. Sprite_Current is read
 // again for every store.
 extern "C" void __cdecl Area128_PlaceObject(void) {
-    CurSprite()->x = 0x4E8000;
-    CurSprite()->height = 0;
+    rv::Current<records::SpriteObject>()->x = 0x4E8000;
+    rv::Current<records::SpriteObject>()->height = 0;
     if (Field_State[0x89] == 2)
-        CurSprite()->z = 0x88000;
+        rv::Current<records::SpriteObject>()->z = 0x88000;
     else
-        CurSprite()->z = 0x80000;
+        rv::Current<records::SpriteObject>()->z = 0x80000;
     Sprite_Current[8] = 1;
 }
 

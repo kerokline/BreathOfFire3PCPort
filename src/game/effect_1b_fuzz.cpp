@@ -241,7 +241,7 @@ void Disturb(U h) {
     case 0: B(ObjTrio_addr + 0x4) = static_cast<unsigned char>(v & 1 ? 2 : v); break;
     case 1: B(at::kItemIds + (h >> 24) % 0x80) = static_cast<unsigned char>(v % at::kAccessoryCount); break;
     case 2: B(at::kItemCounts + (h >> 24) % 0x80) = static_cast<unsigned char>(v % 4); break;
-    case 3: B(BattleDraw_Colour_addr) = static_cast<unsigned char>(v % 16); break;
+    case 3: B(Config_WindowColour_addr) = static_cast<unsigned char>(v % 16); break;
     case 4: if (sh::InRegions(s, 0x80)) s[7] = static_cast<unsigned char>(s[7] ^ (1u << (v & 7))); break;
     case 5: if (sh::InRegions(s, 0x80)) SetLong(s + 0xC + 4 * (v & 1), static_cast<std::int32_t>(v % 12)); break;
     case 6:   // record 6's +1 is an index of kind 0x14's clone's table: for EffectKind0F_Child only
@@ -267,7 +267,7 @@ void Seed(unsigned k) {
         B(at::kItemIds + i) = static_cast<unsigned char>(sh::Next() % at::kAccessoryCount);
         if (sh::Next() % 3 == 0) B(at::kItemCounts + i) = static_cast<unsigned char>(sh::Next() % 3);
     }
-    B(BattleDraw_Colour_addr) = static_cast<unsigned char>(sh::Next() % 16);
+    B(Config_WindowColour_addr) = static_cast<unsigned char>(sh::Next() % 16);
     B(ObjTrio_addr + 0x3) = static_cast<unsigned char>(PickOf(2, 3, 4, sh::Next()));
     B(ObjTrio_addr + 0x4) = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next() % 4);
     switch (k) {

@@ -22,12 +22,13 @@
 #include "game/area_harness.h"
 #include "game/area_w2a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w2a::at;
 using area_harness::Mem;
@@ -39,12 +40,12 @@ using move_script::Word;
 unsigned char& B(std::uint32_t address) { return *Mem(address); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // Party record `member` (ObjTrio, 0x14C bytes).
-unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
+unsigned char* PartyAt(unsigned member) { return rv::Bytes(&ObjTrio[member]); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
 }
 
 // The choice answer, as every choice of the band reads it: a signed byte.
@@ -87,7 +88,7 @@ void FlagsToggle(unsigned char* bits, unsigned index) {
 // original's (a list byte of 8 or more reads the next list).
 void SpawnAtMember(unsigned member, unsigned char kind, std::uint32_t kinds) {
     const unsigned char* const record = PartyAt(member);
-    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto* const tRecord = rv::AsConst<records::PartyMember>(record);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
     const unsigned char effect = B(kinds + B(Cond_Flags_addr + 0xd2 + member));
@@ -254,7 +255,7 @@ extern "C" void __cdecl Area77_LeapStep(void) {
     if (area >= at::kDescriptorCount)
         bof3::Fatal("Area77_LeapStep: Game_AreaNumber %u past Area_Descriptors' %u", area, at::kDescriptorCount);
     const std::uint32_t descriptor = static_cast<std::uint32_t>(Long(Mem(Area_Descriptors_addr + area * 4)));
-    const unsigned position = Word(object + 0xA);
+    const unsigned position = rv::As<records::ScriptContext>(object)->position;
     const std::uint32_t scripts = static_cast<std::uint32_t>(Long(Mem(descriptor + 0x10)));
     const std::uint32_t script = static_cast<std::uint32_t>(Long(Mem(scripts + object[3] * 4u)));
     const unsigned char operand = B(script + position + 2);
@@ -267,9 +268,9 @@ extern "C" void __cdecl Area77_LeapStep(void) {
     }
     if (operand == 4) {
         const unsigned char* const cur = Sprite_Current;
-        const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+        const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
         const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground));
         AH_CALL(Sprite_SetAnimation)(0);
     }
     AddWord(MoveScript_Object + 0xA, 1);
@@ -380,7 +381,7 @@ extern "C" void __cdecl Area79_ObjectState(void) {
 // state +4 back to 0.
 extern "C" void __cdecl Area79_StateSlide(void) {
     unsigned char* s = Sprite_Current;
-    auto* tS = reinterpret_cast<records::SpriteObject*>(s);
+    auto* tS = rv::As<records::SpriteObject>(s);
     if (s[0xA] == 0) {
         s[4] = 0;
         return;
@@ -388,11 +389,11 @@ extern "C" void __cdecl Area79_StateSlide(void) {
     const auto dx = static_cast<std::uint32_t>(static_cast<int>(static_cast<signed char>(B(Area79_SlideSteps_addr + (s[0xA] & 0xFu)))));
     tS->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tS->x) + (dx << 11));
     s = Sprite_Current;
-    tS = reinterpret_cast<records::SpriteObject*>(s);
+    tS = rv::As<records::SpriteObject>(s);
     const auto dz = static_cast<std::uint32_t>(-static_cast<int>(static_cast<signed char>(B(Area79_SlideSteps_addr + (s[0xA] & 0xFu)))));
     tS->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(tS->z) + (dz << 11));
     s = Sprite_Current;
-    tS = reinterpret_cast<records::SpriteObject*>(s);
+    tS = rv::As<records::SpriteObject>(s);
     s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
     AddWord(Field_State + 0x12E, -2);
 }
@@ -436,8 +437,8 @@ extern "C" void __cdecl Area81_ChoiceMessageCounter3or4(void) { ChoiceMessageCou
 extern "C" void __cdecl Area81_SpawnEffect27AtObject(void) {
     unsigned char* const e = SpawnEffectRecord(0x27);
     if (e == nullptr) return;
-    SetLong(e + 0x34, CurSprite()->x);
-    SetLong(e + 0x38, CurSprite()->z);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(e)->x, rv::Current<records::SpriteObject>()->x);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(e)->z, rv::Current<records::SpriteObject>()->z);
 }
 
 // original 0x40F5F0 (Area81_Handlers[1]; PSX 0x801F2D14): Camera_ShiftY -
@@ -463,7 +464,7 @@ extern "C" void __cdecl Area82_SkipByPose(void) {
 
 // original 0x40F640 (Area82_Handlers[1]; PSX 0x801F55F0): the running
 // object's dword +0x70 (the margin Party_MemberAt reads, docs/area_w1c.md) 5.
-extern "C" void __cdecl Area82_SetMargin5(void) { CurSprite()->reach = 5; }
+extern "C" void __cdecl Area82_SetMargin5(void) { rv::Current<records::SpriteObject>()->reach = 5; }
 
 // original 0x40F650 (Area82_Handlers[2]; PSX 0x801F5604): Field_State's byte
 // +0x89 tested three times, read again each time: 5 the script's position on

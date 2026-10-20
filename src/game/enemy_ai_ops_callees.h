@@ -28,14 +28,14 @@ namespace at {
 // working record, PSX 0x801EB620, is +0x80 of each - sibling BATTLE_RAM.md
 // "Enemy working records"). Sprite_Current and 0x939AD8 are both the enemy
 // being run while BattleEnemy_RunAll dispatches its state.
-constexpr std::uint32_t kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemySize = 0x128;
 constexpr unsigned kEnemyCount = 8;
-constexpr std::uint32_t kEnemyCurrent = 0x939AD8;  // unsigned char*: the enemy being run (PSX 0x801EB458)
+// kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). unsigned char*: the enemy being run (PSX 0x801EB458)
 // The 48 battle-task slots, 0x84 bytes each (docs/battle_flow.md). EnemyOp_Wait
 // indexes them by the actor number Sprite_Current +5: byte +9 its bob counter,
 // dwords +0x34 / +0x38 the base the bob is added to.
-constexpr std::uint32_t kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskSize = 0x84;
 // The 32 tint records, 12 bytes each (MoveScript_TintRecords; +2..+4 r g b).
 // kTints: now MoveScript_TintRecords (symbols.toml).
@@ -45,14 +45,14 @@ constexpr std::uint32_t kTintSize = 12;
 constexpr std::uint32_t kStatBlock = 0x939F80;     // 32 bytes: the target's +0xB0.. copied in
 constexpr std::uint32_t kCommandSource = 0x939FA0; // pointer: byte +0 the actor the command is aimed at
 constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (docs/battle_flow.md: "event battle" is a guess)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8 (docs/battle_flow.md: "event battle" is a guess)
 // kTargeting: now BattleE4_Picking (symbols.toml). u8: non-zero while a target is being picked (by use here)
 constexpr std::uint32_t kPulse = 0x904AC8;         // u8: the menu cursor's pulse (Battle_PulseStep)
 constexpr std::uint32_t kActor = 0x904B34;         // u8: the acting actor
 constexpr std::uint32_t kActionKind = 0x904B35;    // u8: 1 attack, 4 ability, 5 item (sibling's command bytes)
 constexpr std::uint32_t kTarget = 0x904B44;        // u8: the target actor, or 0x40 / 0x80 / 0xC0 a side
 constexpr std::uint32_t kResultTarget = 0x904B54;  // u8 (PSX 0x80146390)
-constexpr std::uint32_t kResultSprite = 0x904B5C;  // pointer: the target's sprite
+// kResultSprite: now BattleE3_HitSprite (symbols.toml). pointer: the target's sprite
 constexpr std::uint32_t kResult = 0x904B60;        // pointer: the result record, +4 HP and +6 AP delta, +8 flags
 // kHookA: now BattleHook_End (symbols.toml). code pointers stored by EnemyOp_Begin
 // kHookB: now BattleHook_Exit (symbols.toml).

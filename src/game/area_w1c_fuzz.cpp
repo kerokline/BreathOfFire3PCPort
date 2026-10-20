@@ -16,6 +16,7 @@
 #include "game/area_w1c.h"
 #include "game/area_w1c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w1c {
@@ -225,9 +226,9 @@ std::uint32_t BlockCellEffect(const std::uint32_t* a, std::uint32_t answer) {
     auto* const x = reinterpret_cast<std::int32_t*>(static_cast<std::uintptr_t>(a[0]));
     auto* const z = reinterpret_cast<std::int32_t*>(static_cast<std::uintptr_t>(a[1]));
     const std::uint32_t n = ah::Noise();
-    *x = n & 1 ? static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(Sprite_Current + 0x34)) - 0x8000u)
+    *x = n & 1 ? static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->x) - 0x8000u)
                : static_cast<std::int32_t>(ah::Noise());
-    *z = n & 2 ? static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(Sprite_Current + 0x38)) - 0x8000u)
+    *z = n & 2 ? static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->z) - 0x8000u)
                : static_cast<std::int32_t>(ah::Noise());
     if (n & 4) {
         static const unsigned char kCounters[] = {0xA, 0x14, 0, 0xB};
@@ -237,7 +238,7 @@ std::uint32_t BlockCellEffect(const std::uint32_t* a, std::uint32_t answer) {
 }
 std::uint32_t ShiftXEffect(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) move_script::SetLong(Sprite_Current + 0x34, n & 2 ? 0x858000 : static_cast<std::int32_t>(n));
+    if (n & 1) rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, n & 2 ? 0x858000 : static_cast<std::int32_t>(n));
     return answer;
 }
 
@@ -281,19 +282,19 @@ const ah::Callee kCallees[] = {
 
 // Beyond the field frame: the effect records (slots 0..3), the active member
 // and script object pointers, the chapter row pointer, the mark, area 48's
-// two bytes, 0x9045FB, Camera_ShiftY, MoveScript_EffectState, area 52's
+// two bytes, 0x9045FB, Camera_ShiftY, Character_IndexById, area 52's
 // extra objects (.data), and the two dwords above.
 const ah::Region kRegions[] = {
     {Effect_Objects_addr, 4 * at::kEffectStride},
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {AreaW0c_AnswerMark_addr, 1},
     {AreaW1c_Count48_addr, 1},
     {(MoveScript_PartyRecords_addr + 0x10), 1},
     {AreaW1c_Byte9045FB_addr, 1},
     {Camera_ShiftY_addr, 2},
-    {MoveScript_EffectState_addr, 24},
+    {Character_IndexById_addr, 24},
     {Area52_ExtraObjects_addr, 16},
     {0, sizeof g_cells},   // g_cells, filled in at Run
 };
@@ -342,9 +343,9 @@ void Seed48(unsigned k) {
     switch (k) {
     case k48Choice: SeedAnswer(); break;
     case k48ToggleD: case k48Bump: {
-        // the leader's index inside MoveScript_EffectState, its byte 1 half the time
+        // the leader's index inside Character_IndexById, its byte 1 half the time
         if (ah::Often()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(ah::Next() % 24);
-        if (ah::Half()) B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89) % 24) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
+        if (ah::Half()) B(Character_IndexById_addr + B(ObjTrio_addr + 0x89) % 24) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
         SeedCount();
         break;
     }
@@ -562,18 +563,18 @@ void Seed52(unsigned k) {
     case k52Reset:
         // the start exactly, or one word off
         if (ah::Often()) {
-            move_script::SetLong(Sprite_Current + 0x34, 0x118000);
-            move_script::SetLong(Sprite_Current + 0x38, 0x298000);
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, 0x118000);
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, 0x298000);
             if (ah::Half()) {
-                if (ah::Half()) move_script::SetLong(Sprite_Current + 0x34, AH_PICK(0x118001, 0x117FFF, 0x10118000));
-                else move_script::SetLong(Sprite_Current + 0x38, AH_PICK(0x298001, 0x297FFF, 0x10298000));
+                if (ah::Half()) rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, AH_PICK(0x118001, 0x117FFF, 0x10118000));
+                else rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, AH_PICK(0x298001, 0x297FFF, 0x10298000));
             }
         }
         break;
     case k52MoveA: case k52MoveB:
         if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0xA, 0x14, 0xA, 0x14, 0, 9, 0xB, 0x13, 0x15));
         if (ah::Half())
-            move_script::SetLong(Sprite_Current + 0x34, k == k52MoveA ? AH_PICK(0x688000, 0x688001, 0x858000) : AH_PICK(0x668000, 0x668001, 0x858000));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, k == k52MoveA ? AH_PICK(0x688000, 0x688001, 0x858000) : AH_PICK(0x668000, 0x668001, 0x858000));
         break;
     case k52Cell:
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(5, 0, 2, 4));
@@ -586,8 +587,8 @@ void Seed52(unsigned k) {
         for (unsigned m = 0; m < 3; ++m) {
             if (!ah::Often()) continue;
             unsigned char* const record = ah::PartyOf(static_cast<unsigned char>(m));
-            move_script::SetWord(record + 0x36, Edge(rect[0], rect[2]));
-            move_script::SetWord(record + 0x3A, Edge(rect[1], rect[3]));
+            rv::Store<unsigned>(rv::As<records::PartyMember>(record)->x_whole, Edge(rect[0], rect[2]));
+            rv::Store<unsigned>(rv::As<records::PartyMember>(record)->z_whole, Edge(rect[1], rect[3]));
         }
         if (ah::Next() % 10 == 0) Field_MemberCount = 0;
         break;

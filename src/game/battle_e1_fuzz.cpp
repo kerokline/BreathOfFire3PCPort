@@ -23,6 +23,8 @@
 #include "game/battle_e1_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace battle_e1 {
@@ -215,7 +217,7 @@ const bh::DataTable kTables[] = {
 const bh::Region kRegions[] = {
     {at::kTallyText, 0x20},       // BATE's sprintf buffer; also where 0x904ABC + 0x904AB4 lands past the battle bytes
     {at::kTallyShown, 0x3C},      // the tally's counters, targets and 0x675EBE..C0
-    {MoveScript_WaitWordDA_addr, 2}, // MoveScript_WaitWordDA
+    {Transition_Busy_addr, 2}, // Transition_Busy
     {0x903B24, 0x46C},            // character records 1..7 past the engine frame's 0x903A50..0x903B24
     {BattleE1_SumA_addr, 0xC},    // 0x939A04..0x939A0F
     {bof3::addr::Text_Records, 0x40},
@@ -260,10 +262,10 @@ void SeedButtons() {
 // The character records' levels and EXP around the table's steps.
 void SeedLevels() {
     for (U r = 0; r < 8; ++r) {
-        unsigned char* const rec = Mem(at::kCharRecords + r * at::kCharSize);
+        unsigned char* const rec = Mem(CharacterRecords_addr + r * at::kCharSize);
         rec[0xA] = Byte({0, 1, 2, 10, 40, 97, 98, 99, 100});
         const U exp = bh::Often() ? bh::Next() % (bh::Half() ? 0x400u : 0x100000u) : bh::Next();
-        SetLong(rec + 0xC, static_cast<std::int32_t>(exp));
+        rv::Store<std::int32_t>(rv::As<records::CharRecord>(rec)->exp, static_cast<std::int32_t>(exp));
     }
 }
 
@@ -272,7 +274,7 @@ void Seed(unsigned k) {
     // ObjTrio by it; the originals' past 3 is described, not drawn)
     Mem(at::kPartyCount)[0] = static_cast<unsigned char>(bh::Often() ? 1 + bh::Next() % 3 : bh::Next() % 4);
     Mem(FieldS_Column_addr)[0] = static_cast<unsigned char>(bh::Next() & 0x7F); // never negative (section 7)
-    if (bh::Half()) SetWord(Mem(MoveScript_WaitWordDA_addr), 0);
+    if (bh::Half()) SetWord(Mem(Transition_Busy_addr), 0);
     switch (g_base[k].base) {
     case 0x42D7F0: {   // the tally's counter: each row and 6, the step reaching the target or not, a press
         const unsigned row = bh::Often() ? bh::Next() % 7 : bh::Next() & 0x7F;
@@ -293,15 +295,15 @@ void Seed(unsigned k) {
         Mem(at::kModeTimer)[0] = Byte({1, 1, 2, 0, 0xFF});
         break;
     case 0x42DCF0:
-        Mem(BattleE1_Win1_addr + 0xA)[0] = Byte({0, 3, 1, 2});
+        Mem(Window1_addr + 0xA)[0] = Byte({0, 3, 1, 2});
         SeedButtons();
         break;
     case 0x42DE50:
-        Mem(at::kWin0 + 0xA)[0] = Byte({0, 1, 8, 9, 10, 0x6E, 0x76, 0x77});
-        Mem(at::kWin0 + 0xB)[0] = bh::Half() ? static_cast<unsigned char>(Mem(at::kWin0 + 0xA)[0] + BH_PICK(0, 8, 9, 0xFF))
+        Mem(WindowRecords_addr + 0xA)[0] = Byte({0, 1, 8, 9, 10, 0x6E, 0x76, 0x77});
+        Mem(WindowRecords_addr + 0xB)[0] = bh::Half() ? static_cast<unsigned char>(Mem(WindowRecords_addr + 0xA)[0] + BH_PICK(0, 8, 9, 0xFF))
                                              : Byte({0, 1, 0x6E, 0x6F, 0x7E, 0x7F, 0x80});
-        Mem(at::kWin0 + 0xD)[0] = bh::Half() ? 0 : static_cast<unsigned char>(bh::Next());
-        if (bh::Half()) SetWord(Mem(at::kWin0 + 0x10), 0);
+        Mem(WindowRecords_addr + 0xD)[0] = bh::Half() ? 0 : static_cast<unsigned char>(bh::Next());
+        if (bh::Half()) SetWord(Mem(WindowRecords_addr + 0x10), 0);
         SeedButtons();
         break;
     case 0x42EDA0: case 0x42EEA0:   // the menu member and its cross size at the ends
@@ -408,10 +410,10 @@ void Disturb(U h) {
     case 0: Mem(FieldS_State_addr)[0] = b; break;
     case 1: Mem(FieldS_Step_addr)[0] = b; break;
     case 2: Mem(at::kTallyTarget + 0xC + (h >> 24) % 3 * 4)[0] = b; break;
-    case 3: Mem(FieldS_Backdrop_addr)[0] = b; break;
-    case 4: Mem(at::kWin0 + 0xA + (h >> 24) % 2)[0] = b; break;
-    case 5: Mem(BattleE1_Win1_addr + 0xA)[0] = b; break;
-    case 6: SetWord(Mem(at::kWin0 + 0x10), h & 0x1000000 ? 0 : b); break;
+    case 3: Mem(Config_Background_addr)[0] = b; break;
+    case 4: Mem(WindowRecords_addr + 0xA + (h >> 24) % 2)[0] = b; break;
+    case 5: Mem(Window1_addr + 0xA)[0] = b; break;
+    case 6: SetWord(Mem(WindowRecords_addr + 0x10), h & 0x1000000 ? 0 : b); break;
     case 7: Mem(Input_Pressed_addr + (h >> 24) % 2)[0] = b; break;
     case 8: Mem(Input_Held_addr + (h >> 24) % 2)[0] = b; break;
     case 9: Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(b % 8); break;

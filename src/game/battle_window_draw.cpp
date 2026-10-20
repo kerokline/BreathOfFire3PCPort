@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_window_draw_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -74,8 +75,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Next() { return Gfx_PacketNext; }
-unsigned char* Window(unsigned slot) { return At(at::kWindows + slot * at::kWindowStride); }
-records::WindowRecord* WindowRec(unsigned slot) { return reinterpret_cast<records::WindowRecord*>(Window(slot)); }
+unsigned char* Window(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowStride); }
 char* PrintBuf() { return reinterpret_cast<char*>(At(at::kPrintBuf)); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
 
@@ -88,7 +88,7 @@ void Put(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 // read again for each channel, as the originals do.
 void ShadeColour(unsigned char* p, unsigned row) {
     const auto entry = [row]() {
-        const std::int32_t colour = BattleDraw_Colour;
+        const std::int32_t colour = Config_WindowColour;
         return At(Gfx_ClutStripSource_addr + 0x208 + static_cast<std::uint32_t>((static_cast<std::int32_t>(row) + colour * 2) << 5));
     };
     p[4] = static_cast<unsigned char>((entry()[0] & 0x1F) << 3);
@@ -111,13 +111,13 @@ void ShadeColour(unsigned char* p, unsigned row) {
 extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
     g.window_alloc(1, 3);
     unsigned char* const w = Window(1);
-    auto* const win = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const win = rv::As<records::WindowRecord>(w);
     win->state = static_cast<unsigned char>(state);
     const unsigned size = At(at::kPartyCount)[0];
     w[0xA] = static_cast<unsigned char>(size);
     win->kind = 0;
-    win->centre_x = At(at::kStatusX + size)[0];
-    win->centre_y = 0xF0;
+    win->x = At(at::kStatusX + size)[0];
+    win->y = 0xF0;
     w[8] = 0;
     w[9] = 0;
 }
@@ -125,18 +125,18 @@ extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
 // original 0x444290 (PSX 0x801D9358): window 2, sub-kind 1, at (0x88, 0x58).
 extern "C" void __cdecl BattleWin_OpenSub1(unsigned state) {
     g.window_alloc(2, 3);
-    auto* const win = WindowRec(2);
+    auto* const win = rv::As<records::WindowRecord>(Window(2));
     win->kind = 1;
     win->state = static_cast<unsigned char>(state);
-    win->centre_x = 0x88;
-    win->centre_y = 0x58;
+    win->x = 0x88;
+    win->y = 0x58;
 }
 
 // original 0x4442C0 (PSX 0x801D93B4): window 3, sub-kind 2; its place is
 // left as it was.
 extern "C" void __cdecl BattleWin_OpenSub2(unsigned state) {
     g.window_alloc(3, 3);
-    auto* const win = WindowRec(3);
+    auto* const win = rv::As<records::WindowRecord>(Window(3));
     win->kind = 2;
     win->state = static_cast<unsigned char>(state);
 }
@@ -144,11 +144,11 @@ extern "C" void __cdecl BattleWin_OpenSub2(unsigned state) {
 // original 0x4442E0 (PSX 0x801D93F8): window 4, sub-kind 3, at (0x7C, 0x2A).
 extern "C" void __cdecl BattleWin_OpenSub3(unsigned state) {
     g.window_alloc(4, 3);
-    auto* const win = WindowRec(4);
+    auto* const win = rv::As<records::WindowRecord>(Window(4));
     win->kind = 3;
     win->state = static_cast<unsigned char>(state);
-    win->centre_x = 0x7C;
-    win->centre_y = 0x2A;
+    win->x = 0x7C;
+    win->y = 0x2A;
 }
 
 // ===========================================================================
@@ -177,16 +177,16 @@ extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value
     unsigned char* c = reinterpret_cast<unsigned char*>(PrintBuf());
     do {
         if (*c != 0x20) {
-            unsigned char* const p = Next();
+            unsigned char* const p = Next();  // a SPRT: g.set_sprt below
             *c = static_cast<unsigned char>(*c - 0x30);
-            SetWord(p + 0x16, g.get_clut(static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 4), 0x1E0));
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, g.get_clut(static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 4), 0x1E0));
             Put(p + 8, F(S16(static_cast<std::uint32_t>(px))));
             Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y))));
             p[4] = p[5] = p[6] = 0x80;
             p[0x15] = 0xD8;
             p[0x14] = static_cast<unsigned char>(*c * 6 - 0x50);
-            SetWord(p + 0x18, 6);
-            SetWord(p + 0x1A, 5);
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 6);
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 5);
             g.set_sprt(p);
             g.commit(1, 0x1C);
         }
@@ -272,9 +272,9 @@ extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour
 extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit) {
     unsigned char* p = Next();
     g.set_poly_ft4(p);
-    SetWord(p + 0x26, g.get_tpage(0, 0, 0x3C0, 0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
     const bool on = (static_cast<unsigned>(lit) & 0xFF) != 0;
-    SetWord(p + 0x16, g.get_clut(on ? 0xB0 : 0xE0, 0x1E0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(on ? 0xB0 : 0xE0, 0x1E0));
     const std::int32_t left = S16(static_cast<std::uint32_t>(x)), top = S16(static_cast<std::uint32_t>(y));
     const std::int32_t mid = left + static_cast<std::int32_t>(static_cast<unsigned>(w) & 0xFF);
     const std::int32_t bottom = top + 7;
@@ -300,8 +300,8 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
 
     p = Next();
     g.set_poly_ft4(p);
-    SetWord(p + 0x26, g.get_tpage(0, 0, 0x3C0, 0));
-    SetWord(p + 0x16, g.get_clut(0xB0, 0x1E0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(0xB0, 0x1E0));
     const std::int32_t right = mid + static_cast<std::int32_t>(static_cast<unsigned>(cap) & 0xFF);
     Put(p + 0x08, F(mid));
     Put(p + 0x0C, F(top));
@@ -335,14 +335,14 @@ extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
     const unsigned page = g.get_tpage(0, 1, 0x3C0, 0);
     g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
     g.commit(1, 0xC);
-    unsigned char* const p = Next();
+    unsigned char* const p = Next();  // a SPRT: g.set_sprt below
     p[4] = p[5] = p[6] = 0x80;
     p[0x14] = static_cast<unsigned char>(static_cast<unsigned>(cell) << 4);
-    SetWord(p + 0x18, 0x10);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x10);
     Put(p + 0x08, F(static_cast<std::int32_t>(static_cast<std::uint32_t>(x) & 0xFFFF)));
-    SetWord(p + 0x1A, 8);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 8);
     Put(p + 0x0C, F(static_cast<std::int32_t>(static_cast<std::uint32_t>(y) & 0xFFFF)));
-    SetWord(p + 0x16, 0x7800);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, 0x7800);
     p[0x15] = 0xD8;
     g.set_sprt(p);
     g.commit(1, 0x1C);
@@ -406,7 +406,7 @@ extern "C" void __cdecl BattleWin_DrawLineAdd(int x0, int y0, int x1, int y1, in
 // at a negative enemy index, before the records (0x93B674 for actor 0).
 extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
     const unsigned e = enemy & 0xFF;
-    const unsigned char kind = At(at::kEnemies + e * at::kEnemyStride + at::kEnemyKind)[0];
+    const unsigned char kind = Battle_Enemies[e].enemy_kind;
     const unsigned actor = e + 3;
     signed char found = 7;
     while (Window(5 + found)[0xA] != actor) {
@@ -417,10 +417,10 @@ extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
     signed char k = 7;
     do {
         const unsigned char* const w = Window(static_cast<unsigned>(5 + k));
-        auto* const win = reinterpret_cast<const records::WindowRecord*>(w);
+        auto* const win = rv::AsConst<records::WindowRecord>(w);
         if (win->state != 2 && win->state != 3) {
             const std::int32_t index = static_cast<std::int32_t>(w[0xA]) - 3;
-            const std::uint32_t at = at::kEnemies + at::kEnemyKind + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride));
+            const std::uint32_t at = Battle_Enemies_addr + 0x80 + at::kEnemyKind + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride));
             if (At(at)[0] == kind) return 0;
         }
         --k;
@@ -455,9 +455,9 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
     const unsigned m = mode & 0xFF;
     if (m == 1) {
         const unsigned character = At(Cond_Flags_addr + 0xd2 + (member & 0xFF))[0];
-        const unsigned record = At(MoveScript_EffectState_addr + character)[0];
+        const unsigned record = At(Character_IndexById_addr + character)[0];
         const unsigned cost = g.ap_cost((member & 0xFFFFFF00u) | record, id, 0) & 0xFF;
-        if (Word(At(at::kCharRecords + record * at::kCharStride + 0x1A)) < cost) return 0;
+        if (Word(At(CharacterRecords_addr + record * at::kCharStride + 0x1A)) < cost) return 0;
         return (rec[0x10] & 1) ? 1 : 0;
     }
     if (m != 2) return 1;
@@ -478,7 +478,7 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
         return (f[0] | f[1] | f[2] | f[3]) == 0 ? 1 : 0;
     }
     case 0x8C: return ap == 0 ? 1 : 0;
-    case 0x97: return BattleActions_EventBattle == 0x25 ? 0 : 1;
+    case 0x97: return EventBattle_Id == 0x25 ? 0 : 1;
     default: return 1;
     }
 }
@@ -525,7 +525,7 @@ extern "C" unsigned char __cdecl Skill_FlagIndex(unsigned id) {
 extern "C" unsigned char __cdecl Skill_ApCost(unsigned member, unsigned id, unsigned battle) {
     const unsigned m = member & 0xFF;
     const unsigned char* const r =
-        (battle & 0xFF) == 0 ? At(at::kCharRecords + m * at::kCharStride) : At(at::kWorking + m * at::kWorkingStride);
+        (battle & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride) : At(at::kWorking + m * at::kWorkingStride);
     const unsigned cost = At(at::kAbilities + (id & 0xFF) * at::kAbilityStride + 0x12)[0];
     const unsigned char a = r[0x16];
     if (a == 0x1A) return static_cast<unsigned char>((cost + 1) >> 1);
@@ -547,7 +547,7 @@ extern "C" unsigned char* __cdecl Char_AbilityList(unsigned member, unsigned typ
     unsigned char* r;
     if ((battle & 0xFF) == 0) {
         const unsigned character = At(Cond_Flags_addr + 0xd2 + (member & 0xFF))[0];
-        r = At(at::kCharRecords + At(MoveScript_EffectState_addr + character)[0] * at::kCharStride);
+        r = At(CharacterRecords_addr + At(Character_IndexById_addr + character)[0] * at::kCharStride);
     } else {
         r = At(at::kWorking + (member & 0xFF) * at::kWorkingStride);
     }

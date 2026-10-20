@@ -25,7 +25,7 @@
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
 // can stand recorders in for ours as for the originals' copies. No
 // divergence: each is a faithful replacement. The unchecked indexes the
-// originals make (a member id past MoveScript_EffectState's 24, a category
+// originals make (a member id past Character_IndexById's 24, a category
 // past the inventory's five, a member count above three) are reproduced;
 // where the original would fault or read its own stack frame (a CLUT colour
 // past its four, a divide by 0), ours aborts with a message (docs/scena_sx.md
@@ -37,6 +37,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
@@ -50,21 +51,21 @@ using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Party() is a party member (ObjTrio, Field_State).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::PartyMember* Party(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+// Sprite_Kind2 record. rv::As<records::PartyMember>(p) is given party members
+// (ObjTrio, Field_State).
 using move_script::SetWord;
 using move_script::Word;
 
 // CharacterRecords' record n (stride 0xA4), unchecked.
-unsigned char* Record(unsigned n) { return At(bof3::addr::CharacterRecords + n * at::kRecordStride); }
-// A member id's record: CharacterRecords[MoveScript_EffectState[id]], both
+unsigned char* Record(unsigned n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
+// A member id's record: CharacterRecords[Character_IndexById[id]], both
 // indexes a whole byte, unchecked (the original reads them the same way).
-unsigned char* MemberRecord(unsigned char id) { return Record(MoveScript_EffectState[id]); }
-unsigned char* Obj(unsigned n) { return ObjTrio + n * at::kObjStride; }
+unsigned char* MemberRecord(unsigned char id) { return Record(Character_IndexById[id]); }
+unsigned char* Obj(unsigned n) { return rv::Bytes(&ObjTrio[n]); }
 
 // A signed byte's value.
 int S8(unsigned char b) { return static_cast<signed char>(b); }
@@ -107,7 +108,7 @@ extern "C" void __cdecl Char_LevelUp(unsigned index_arg) {
     unsigned char* const rec = Record(id);
     const unsigned rows = id * 99;
     const auto* const exp_table = At(bof3::addr::Char_ExpTable);
-    const std::int32_t exp = Long(rec + 0xC);
+    const std::int32_t exp = rv::As<records::CharRecord>(rec)->exp;
     unsigned char level = 1;
     std::int32_t sum = 0;
     for (;;) {
@@ -170,8 +171,8 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
             static_cast<std::int32_t>(BossSi_CentreX), static_cast<std::int32_t>(BossSi_CentreZ), slot_arg);
         unsigned char* const s = Sprite_Current;
         unsigned char* const pos = At(at::kSlotPositions + (slot_arg & 0xFF) * 8);
-        SetLong(pos, Spr(s)->x);
-        SetLong(pos + 4, Spr(s)->z);
+        SetLong(pos, rv::As<records::SpriteObject>(s)->x);
+        SetLong(pos + 4, rv::As<records::SpriteObject>(s)->z);
         s[0x48] = 0;
         s[8] = At(bof3::addr::BattleFormation_Anims)[At(at::kFormation)[0]];
         const auto p = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(s));
@@ -198,7 +199,7 @@ extern "C" void __cdecl Party_ReloadPalettes(void) {
 // joined bit): +0x1E 0, Char_RecalcStats(record), then +0x1C = +0x2E, HP +0x18
 // = +0x20, AP +0x1A = +0x22, the state word +0x10 0 - read after the call.
 // Then, for each member i below Field_MemberCount (read once, after the
-// eight), the member's record (MoveScript_EffectState of the first list's id,
+// eight), the member's record (Character_IndexById of the first list's id,
 // unchecked) copied whole (0xA4 bytes) over ObjTrio record i +0x80. No PSX
 // twin paired; Party_RestoreAll (0x580630, the inn's) is its larger cousin.
 extern "C" void __cdecl Party_HealJoined(void) {
@@ -208,9 +209,9 @@ extern "C" void __cdecl Party_HealJoined(void) {
         rec[0x1E] = 0;
         SH_CALL(Char_RecalcStats)(rec);
         rec[0x1C] = rec[0x2E];
-        SetWord(rec + 0x18, Word(rec + 0x20));
-        SetWord(rec + 0x1A, Word(rec + 0x22));
-        SetWord(rec + 0x10, 0);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->hp, rv::As<records::CharRecord>(rec)->stats.max_hp);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->ap, rv::As<records::CharRecord>(rec)->stats.max_ap);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->status, 0);
     }
     const int n = Field_MemberCount;
     for (int i = 0; i < n; ++i)
@@ -224,7 +225,7 @@ extern "C" void __cdecl Party_HealJoined(void) {
 // - 1 (read again each time) takes the next slot's id, the next ObjTrio record
 // copied over it (0x14C bytes; Sprite_Current it) and renumbered: +5 its slot,
 // +0x26 the slot x 0x50 (a byte), +0x27 0x78 + the slot, +0x4B 0xFF, +0x148
-// MoveScript_EffectState[+0x89]. Then ObjTrio record count - 1 +0 cleared,
+// Character_IndexById[+0x89]. Then ObjTrio record count - 1 +0 cleared,
 // Member_ClearState(count - 1), and with the count read again: three -
 // 0x904060 cleared when 3 or more, two - cleared; the count one less. No PSX
 // twin paired.
@@ -258,12 +259,12 @@ extern "C" void __cdecl Party_Remove(unsigned id_arg) {
             Sprite_Current[0x26] = static_cast<unsigned char>(s * 0x50);
             Sprite_Current[0x27] = static_cast<unsigned char>(s + 0x78);
             Sprite_Current[0x4B] = 0xFF;
-            o[0x148] = MoveScript_EffectState[o[0x89]];
+            o[0x148] = Character_IndexById[o[0x89]];
         }
     }
     const unsigned char n = Field_MemberCount;
     const auto below = static_cast<unsigned char>(n - 1);
-    ObjTrio[(static_cast<int>(n) - 1) * static_cast<int>(at::kObjStride)] = 0;
+    ObjTrio[static_cast<int>(n) - 1].flags = 0;
     SH_CALL(Member_ClearState)(below);
     const unsigned char now = Field_MemberCount;
     if (now == 3) {
@@ -293,7 +294,7 @@ extern "C" void __cdecl Sprite_FlashClut(unsigned colour_arg) {
 }
 
 // original 0x537480: a member's HP (+0x18 of its record: the second
-// argument's low byte through MoveScript_EffectState, unchecked) down by the
+// argument's low byte through Character_IndexById, unchecked) down by the
 // first argument's word while it is more; else to 1 (an HP of 0 becomes 1
 // too). Then the record Field_State +0x148 names (not the member's): with HP
 // at most a quarter of +0x20 (>> 2), its state word +0x10 and Field_State's
@@ -302,14 +303,14 @@ extern "C" void __cdecl Sprite_FlashClut(unsigned colour_arg) {
 // (pairs_propagated "call").
 extern "C" std::uint32_t __cdecl Char_LoseHp(std::uint32_t amount, unsigned member_arg) {
     unsigned char* const rec = MemberRecord(static_cast<unsigned char>(member_arg));
-    const unsigned hp = Word(rec + 0x18);
+    const unsigned hp = rv::As<records::CharRecord>(rec)->hp;
     std::uint32_t took = amount;
     if (hp <= (amount & 0xFFFF)) took = hp - 1;
-    SetWord(rec + 0x18, hp - took);
+    rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->hp, hp - took);
     unsigned char* const actor = Record(Field_State[0x148]);
-    if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) {
-        SetWord(actor + 0x10, Word(actor + 0x10) | 0x2000);
-        SetWord(Field_State + 0x90, Party(Field_State)->status | 0x2000);
+    if (rv::As<records::CharRecord>(actor)->hp <= (rv::As<records::CharRecord>(actor)->stats.max_hp >> 2)) {
+        rv::Store<unsigned>(rv::As<records::CharRecord>(actor)->status, rv::As<records::CharRecord>(actor)->status | 0x2000);
+        rv::Store<unsigned>(rv::As<records::PartyMember>(Field_State)->status, rv::As<records::PartyMember>(Field_State)->status | 0x2000);
     }
     return took;
 }
@@ -344,7 +345,7 @@ extern "C" std::uint32_t __cdecl Field_CellTriggerAt(unsigned char* table, unsig
         }
         if (!hit) continue;
         const unsigned facing = r[3] & 0xF;
-        if (facing == 8 || facing == ObjTrio[8]) return i;
+        if (facing == 8 || facing == ObjTrio[0].direction) return i;
     }
     return 0xFF;
 }
@@ -392,7 +393,7 @@ extern "C" std::uint32_t __cdecl Camera_TurnToDegrees(unsigned angle_arg, unsign
 // aborts. No PSX twin paired.
 extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned frames_arg) {
     std::int32_t left = static_cast<std::int32_t>(ScenaSx_EaseLeft);
-    const unsigned char speed = Field_MoveSpeeds[Sprite_Kind2[0x84]];
+    const unsigned char speed = Field_MoveSpeeds[Sprite_Kind2.speed];
     if (left != 0) {
         const std::int32_t acc = static_cast<std::int32_t>(static_cast<std::uint32_t>(CameraTurn_Angles[2]) +
                                                            static_cast<std::uint32_t>(CameraTurn_Steps[2]));
@@ -406,7 +407,7 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
         SetWord(At(Cond_AngleFB_addr), static_cast<std::uint32_t>(Degrees(static_cast<short>(angle_arg))));
         return 0;
     }
-    const unsigned char mode = Sprite_Kind2[8];
+    const unsigned char mode = Sprite_Kind2.direction;
     const int per = mode == 2 || mode == 6 ? 4 : 8;
     const auto product = static_cast<unsigned char>(per * S8(speed));
     if (product == 0) bof3::Fatal("Camera_EaseAngleFB: 0x80 / 0 (speed byte 0x%X): the original faults", speed);
@@ -429,7 +430,7 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
 // 0x8015D438 (pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl Sprite_FindFree(void) {
     for (unsigned i = 0; i < at::kSpriteCount; ++i)
-        if (Sprite_Objects[i * at::kRecordStride] == 0) return static_cast<unsigned char>(i);
+        if (Sprite_Objects[i].flags == 0) return static_cast<unsigned char>(i);
     return 0xFF;
 }
 

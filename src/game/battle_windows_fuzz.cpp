@@ -29,6 +29,8 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_windows_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include <windows.h>
@@ -119,7 +121,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const auto byte = static_cast<unsigned char>(h >> 24);
     switch ((h >> 4) % 18) {
-    case 0: At(BattleDraw_Colour_addr)[0] = SmallRow(v); break;
+    case 0: At(Config_WindowColour_addr)[0] = SmallRow(v); break;
     case 1: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 6); break;
     case 2: At(at::kCrossSel)[0] = static_cast<unsigned char>(v % 8); break;
     case 3: At(at::kCrossGrow + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
@@ -129,8 +131,8 @@ void Disturb() {
         Member(v % 5)[kFields[(h >> 20) % 10]] = byte;
         break;
     }
-    case 6: At(at::kPartyBars + 36 * (v % 5) + (h >> 20) % 4)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
-    case 7: At(at::kEnemies + at::kEnemyStride * (v % 6) + 0xF)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 1 : byte); break;
+    case 6: At(WindowRecords_addr + 0x1df + 36 * (v % 5) + (h >> 20) % 4)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
+    case 7: At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * (v % 6) + 0xF)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 1 : byte); break;
     case 8: {
         unsigned char* const w = g_buf.windows[v % kWindows];
         w[3 + (h >> 20) % 0x10] = byte;
@@ -142,7 +144,7 @@ void Disturb() {
     case 12: At(Gfx_ClutStripSource_addr + 0x228 + 64 * (static_cast<int>(v % 12) - 2) + (h >> 20) % 2)[0] = byte; break;
     case 13: At(at::kMsgRing + 8 * ((h >> 20) % 16))[0] = byte; break;
     // the first members' extra charge byte, read again after the first line
-    case 14: At(at::kPartyBars + 36 * (v % 3) + 3)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
+    case 14: At(WindowRecords_addr + 0x1df + 36 * (v % 3) + 3)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     default: break;
     }
 }
@@ -510,7 +512,7 @@ void Fix() {
     Field_State = g_buf.objects[Next() % kObjects];
     Sprite_Current = g_buf.objects[Next() % kObjects];
     SetLong(At(BattleE4_MenuActor_addr), static_cast<std::int32_t>(Address(g_buf.objects[Next() % kObjects])));
-    At(BattleDraw_Colour_addr)[0] = SmallRow(Next());
+    At(Config_WindowColour_addr)[0] = SmallRow(Next());
     At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 6);
     for (unsigned k = 0; k < kTexts; ++k) Text(g_buf.texts[k], kTextBytes);
 }
@@ -529,7 +531,7 @@ std::uint32_t Coord() {
 }
 // A CLUT shadow word near the darker lines' clamp: components 0..3 often.
 void SeedLineColour() {
-    const int row = static_cast<signed char>(At(BattleDraw_Colour_addr)[0]);
+    const int row = static_cast<signed char>(At(Config_WindowColour_addr)[0]);
     unsigned w = Next();
     if (Often()) w = (Next() % 4) | (Next() % 4) << 5 | (Next() % 4) << 10 | (Next() & 0x8000);
     SetWord(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)), w);
@@ -572,8 +574,8 @@ Args Seed(unsigned k) {
     case kPickPose: {
         static const unsigned char kKinds[] = {5, 5, 4, 6, 0};
         At(at::kBattleKind)[0] = Often() ? kKinds[Next() % 5] : static_cast<unsigned char>(Next());
-        At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(Next() & 3);
-        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() & 0x30);
+        At(Battle_EndFlags_addr)[0] = static_cast<unsigned char>(Next() & 3);
+        At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Next() & 0x30);
         At(at::kPoseMode)[0] = static_cast<unsigned char>(Next() & 0x18);
         unsigned char* const f = Field_State;
         SeedMember(f);
@@ -582,7 +584,7 @@ Args Seed(unsigned k) {
         f[0x125] = static_cast<unsigned char>(Often() ? (Half() ? 4 : Next() % 8) : Next());
         f[0x134] = static_cast<unsigned char>(Next());
         // a skill whose flag byte tells bit 3 from its neighbours half the time
-        SetWord(f + 0x126, g_skills_n && Half() ? g_skills[Next() % g_skills_n] : Often() ? Next() % 0x140 : Next());
+        rv::Store<unsigned>(rv::As<records::PartyMember>(f)->queued_id, g_skills_n && Half() ? g_skills[Next() % g_skills_n] : Often() ? Next() % 0x140 : Next());
         break;
     }
     case kPartyStatus:
@@ -591,7 +593,7 @@ Args Seed(unsigned k) {
         for (unsigned i = 0; i < 5; ++i) {
             SeedMember(Member(i));
             Member(i)[0x91] = static_cast<unsigned char>(Next());
-            if (Half()) At(at::kPartyBars + 36 * i + 3)[0] = 0;
+            if (Half()) At(WindowRecords_addr + 0x1df + 36 * i + 3)[0] = 0;
         }
         break;
     case kCross: {
@@ -625,7 +627,7 @@ Args Seed(unsigned k) {
         args.a[1] = Coord();
         args.a[2] = Garbage(0xFF, 3 + (Often() ? Next() % 6 : Next() % 11));
         for (unsigned e = 0; e < 6; ++e)
-            At(at::kEnemies + at::kEnemyStride * e + 0xF)[0] = static_cast<unsigned char>(Half() ? 1 : Next());
+            At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * e + 0xF)[0] = static_cast<unsigned char>(Half() ? 1 : Next());
         SeedLineColour();
         break;
     case kTargetMember:

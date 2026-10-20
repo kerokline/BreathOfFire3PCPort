@@ -18,6 +18,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_3c.h"
 #include "game/effect_3c_callees.h"
 #include "game/effect_gte.h"
@@ -402,7 +403,7 @@ void Seed(unsigned k) {
     }
     case k75Mark:
         for (unsigned i = 0; i < at::kSpriteCount; ++i) {
-            unsigned char* const o = Sprite_Objects + i * at::kSpriteStride;
+            unsigned char* const o = rv::Bytes(&Sprite_Objects[i]);
             o[0] = static_cast<unsigned char>(PickOf(0, 1, 3, 0xFE, sh::Next()));
             o[6] = static_cast<unsigned char>(PickOf(6, 6, 5, 7, sh::Next()));
         }

@@ -32,6 +32,7 @@
 // are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
 // of the wave that wrote them.
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc7_callees.h"
 #include "game/scenario_harness.h"
@@ -77,7 +78,7 @@ void IncTimer() { SetWord(At(MoveScript_PartyRecords_addr + 0x66), Word(At(MoveS
 unsigned char& C0() { return Byte(at::kCounter0); }
 void IncC0() { C0() = static_cast<unsigned char>(C0() + 1); }
 void PassFlags(unsigned v) { Draw_PassFlags = static_cast<unsigned char>(v); }
-bool WaitDone() { return MoveScript_WaitWordDA == 0; }
+bool WaitDone() { return Transition_Busy == 0; }
 bool Requested() { return Field_Request == 2; }
 void Request(unsigned v) { Field_Request = static_cast<unsigned char>(v); }
 void ScriptFlagsOr(unsigned v) { Byte(at::kScriptFlags) = static_cast<unsigned char>(Byte(at::kScriptFlags) | v); }
@@ -94,11 +95,11 @@ unsigned char* ActiveMember() {
     return Field_ActiveMember;
 }
 unsigned char* Sprite(std::uint32_t k) { return At(Sprite_Objects_addr + k * at::kSpriteStride); }
-unsigned char* Record(std::uint32_t k) { return At(at::kCharRecords + k * at::kRecordStride); }
-// Chapter 8 run 11's character records: by MoveScript_EffectState [7] (a
+unsigned char* Record(std::uint32_t k) { return At(CharacterRecords_addr + k * at::kRecordStride); }
+// Chapter 8 run 11's character records: by Character_IndexById [7] (a
 // byte) and [4] (the dword at [4] read, its low byte).
-unsigned char* RecordOfMember7() { return Record(MoveScript_EffectState[7]); }
-unsigned char* RecordOfMember4() { return Record(static_cast<std::uint32_t>(Long(At(MoveScript_EffectState_addr + 4))) & 0xFF); }
+unsigned char* RecordOfMember7() { return Record(Character_IndexById[7]); }
+unsigned char* RecordOfMember4() { return Record(static_cast<std::uint32_t>(Long(At(Character_IndexById_addr + 4))) & 0xFF); }
 // The sprite 0x903804 points at, read afresh.
 unsigned char* FocusObject() {
     return reinterpret_cast<unsigned char*>(AreaW1a_FocusObject);
@@ -111,7 +112,7 @@ std::uint32_t Entry(std::uint32_t table, int index) {
 }
 
 // The flag row, the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
 void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 
@@ -179,14 +180,14 @@ void Effect13(unsigned char* e, std::int32_t a, std::int32_t b, std::int32_t c, 
 }
 // The record 0x903850 names, read back as a dword's low byte, as the
 // originals index it after the store.
-unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(Long(At(at::kSlot))) & 0xFF); }
+unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(at::kSlot.d_00) & 0xFF); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 
 }  // namespace
 
@@ -215,7 +216,7 @@ extern "C" void __cdecl Scena07_EnterArea(void) {
     if (Area() == 0x35 && !Flag(7)) {
         SH_CALL(Scenario_CallA)(1);
         DropIn(2);
-        SetWord(At(Sprite_Kind2_addr + 0x3E), 0xD80);
+        Sprite_Kind2.height_whole = 0xD80;
         SH_CALL(MapView_SetElevation)(0xD80);
     }
     if (Area() == 0x4A) {
@@ -356,7 +357,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         SH_CALL(Scenario_CallA)(0);
         ChangeArea(0xAF, 0x240000, 0x1E0000, 0x81);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(6);
         return;
     case 6:
@@ -377,7 +378,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 9:
         if (C0() != 3) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xA);
         Effect13(Slot850(), Camera_Angles[0], Camera_Angles[1], 0x31E, 0xE0);
         return;
@@ -389,7 +390,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0xB:
         if (C0() != 5) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xC);
         Effect13(Slot850(), Camera_Angles[0], Camera_Angles[1], 0x200, 0x70);
         return;
@@ -401,21 +402,21 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0xD:
         if (C0() != 0xB) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xE);
         Effect13(Slot850(), -0x35A, Camera_Angles[1], 0x48, 0x30);
         SetTimer(0x30);
         return;
     case 0xE: {
         if (C0() != 0xC) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xF);
         unsigned char* const e = Slot850();
         Live(e, 0x31);
         SetLong(e + 0x64, Camera_Angles[0]);
         SetLong(e + 0x68, Camera_Angles[1]);
         SetLong(e + 0x6C, S16(at::kPitch));
-        Fx(e)->step_x = -0x380;
+        rv::As<records::EffectObject>(e)->step_x = -0x380;
         e[9] = 0x40;
         return;
     }
@@ -448,7 +449,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0x13:
         if (C0() != 0x22) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0x14);
         Live(Slot850(), 0x38);
         return;
@@ -521,7 +522,7 @@ extern "C" void __cdecl Scena07_Scene3(void) {
         Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xFE);
         SetFlag(2);
         ChangeArea(0xAF, 0x2D8000, 0x5E0000, 0x83);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         SetStep(5);
         return;
@@ -558,8 +559,8 @@ extern "C" void __cdecl Scena07_TimedEffects(void) {
         e[0] = 1;
         e[5] = 0x18;
         e[0xB] = 0x18;
-        SetWord(e + 0x36, Word(At(rec)));
-        SetWord(e + 0x3A, Word(At(rec + 2)));
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(e)->x_whole, Word(At(rec)));
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(e)->z_whole, Word(At(rec + 2)));
         Sound(0x202 + i % 3);
     }
 }
@@ -574,22 +575,22 @@ extern "C" void __cdecl Scena07_Scene4(void) {
     switch (Step()) {
     case 0: {
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        ObjTrio[0xb] = slot;
+        rv::Bytes(ObjTrio)[0xb] = slot;
         if (slot == 0xFF) return;
         unsigned char* const e = EffectAt(slot);
-        const unsigned arg = Byte(at::kEffectArg + ObjTrio[0x89]);
+        const unsigned arg = Byte(at::kEffectArg + ObjTrio[0].char_id);
         e[0] = 1;
         e[5] = 6;
         e[6] = 1;
-        Fx(e)->step_x = 0;
-        Fx(e)->step_z = static_cast<std::int32_t>(arg);
-        Fx(e)->screen_x = Word(At(ObjTrio_addr + 0x2E));
+        rv::As<records::EffectObject>(e)->step_x = 0;
+        rv::As<records::EffectObject>(e)->step_z = static_cast<std::int32_t>(arg);
+        rv::As<records::EffectObject>(e)->screen_x = static_cast<std::uint16_t>(ObjTrio[0].screen_x);
         SetStep(1);
-        Fx(e)->screen_y = Word(At(ObjTrio_addr + 0x30));
+        rv::As<records::EffectObject>(e)->screen_y = static_cast<std::uint16_t>(ObjTrio[0].screen_y);
         return;
     }
     case 1:
-        if (EffectAt(ObjTrio[0xb])[0] & 1) return;
+        if (EffectAt(rv::Bytes(ObjTrio)[0xb])[0] & 1) return;
         C0() = 1;
         SH_CALL(Kind2_Place)(0);
         SetStep(2);
@@ -607,14 +608,14 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         return;
     case 4: {
         if (C0() != 0xA) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         unsigned char* const e = Slot850();
         SetTimer(0x8C);
         SetStep(5);
         Live(e, 0x3B);
-        Fx(e)->x = Spr(Sprite(0))->x;
-        Fx(e)->z = Spr(Sprite(0))->z;
-        Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(Sprite(0))->height) + 0x1000000u);
+        rv::As<records::EffectObject>(e)->x = rv::As<records::SpriteObject>(Sprite(0))->x;
+        rv::As<records::EffectObject>(e)->z = rv::As<records::SpriteObject>(Sprite(0))->z;
+        rv::As<records::EffectObject>(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite(0))->height) + 0x1000000u);
         return;
     }
     case 5:
@@ -622,7 +623,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
             DecTimer();
             return;
         }
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         Effect13(Slot850(), -0x33E, Camera_Angles[1], S16(at::kPitch), 0xA0);
         IncC0();
         Sound(0x205);
@@ -638,7 +639,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         SetStep(8);
         return;
     case 8:
-        if (C0() == 0xE && TakeInto(at::kSlot) != 0xFF) {
+        if (C0() == 0xE && TakeInto(at::kSlot_addr) != 0xFF) {
             SetStep(9);
             Effect13(Slot850(), -0x2AA, Camera_Angles[1], S16(at::kPitch), 0x90);
         }
@@ -734,10 +735,10 @@ extern "C" void __cdecl Scena07_ShakeCamera(void) {
 extern "C" void __cdecl Scena07_PlaceObjects(void) {
     for (unsigned i = 0; i < 14; ++i) {
         const unsigned slot = SpriteFindFree() & 0xFF;
-        SetWord(At(at::kSlot), slot);
+        at::kSlot.w_00 = slot;
         if (slot == 0xFF) continue;
         SH_CALL(EventOp_0x)(At(Scena07_PlacedObjects_addr + 0x11 * i));
-        SetWord(SpriteCurrent() + 0x3E, 0xA00);
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(SpriteCurrent())->height_whole, 0xA00);
         const unsigned char seat = Byte(at::kPlacedSeat7 + i);
         if (seat == 0) continue;
         ActiveMember()[0x81] = seat;
@@ -803,8 +804,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0xC: {
         if (C0() != 3) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(0);
-        Fx(p)->x = 0x160000;
-        Fx(p)->z = 0x3E0000;
+        rv::As<records::EffectObject>(p)->x = 0x160000;
+        rv::As<records::EffectObject>(p)->z = 0x3E0000;
         SetTimer(0xC8);
         SetStep(0xD);
         out = kDone;
@@ -823,8 +824,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0xE: {
         if (C0() != 7) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(0);
-        Fx(p)->x = 0x360000;
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->x = 0x360000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         SetTimer(0xA8);
         SetStep(0xF);
         out = kDone;
@@ -836,13 +837,13 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(2);
-        Fx(p)->step_x = 0x270000;
-        const std::int32_t x = Fx(p)->step_x;
-        Fx(p)->x = 0x390000;
-        Fx(p)->z = 0x410000;
-        Fx(p)->step_z = 0x410000;
+        rv::As<records::EffectObject>(p)->step_x = 0x270000;
+        const std::int32_t x = rv::As<records::EffectObject>(p)->step_x;
+        rv::As<records::EffectObject>(p)->x = 0x390000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->step_z = 0x410000;
         const long e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
-        Fx(p)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(e))) << 16);
+        rv::As<records::EffectObject>(p)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(e))) << 16);
         SetTimer(8);
         SetStep(0x10);
         out = kDone;
@@ -868,8 +869,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         break;
     case 0x12: {
         if (C0() != 0x13) break;
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         ScriptFlagsOr(0x80);
         PlaceParty(x, z, 0x1F);
         SH_CALL(Field_StartEventBattle)(0x1F);
@@ -880,14 +881,14 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0x14:
         SetFlag(9);
         ChangeArea(0x55, 0x258000, 0x410000, 0x82);
-        AreaW0c_PendingKind = 5;
+        Area_EnterTransition = 5;
         ModeFlow_AreaTransition = 4;
         SetStep(0x15);
         out = kDone;
         break;
     case 0x15:
         if (C0() != 0x14) break;
-        if (TakeInto(at::kSlot) == 0xFF) break;
+        if (TakeInto(at::kSlot_addr) == 0xFF) break;
         SetStep(0x16);
         Live(Slot850(), 0x46);
         out = kDone;
@@ -896,15 +897,15 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         if (C0() != 0x15) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(9);
         p[6] = 0;
-        Fx(p)->x = 0x170000;
-        Fx(p)->z = 0x3F0000;
-        Fx(p)->height = 0x5C00000;
-        Fx(p)->step_x = 0x10000;
-        Fx(p)->step_z = 0;
-        SetLong(p + 0x14, static_cast<std::int32_t>(0xFFE00000u));
-        SetLong(p + 0x18, 0x2D0000);
-        SetLong(p + 0x1C, 0x3F0000);
-        SetLong(p + 0x20, 0x3000000);
+        rv::As<records::EffectObject>(p)->x = 0x170000;
+        rv::As<records::EffectObject>(p)->z = 0x3F0000;
+        rv::As<records::EffectObject>(p)->height = 0x5C00000;
+        rv::As<records::EffectObject>(p)->step_x = 0x10000;
+        rv::As<records::EffectObject>(p)->step_z = 0;
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->step_y, static_cast<std::int32_t>(0xFFE00000u));
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_18, 0x2D0000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_1c, 0x3F0000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_20, 0x3000000);
         Sound(0x203);
         Sound(0x206);
         SetTimer(0x78);
@@ -918,16 +919,16 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(9);
-        Fx(p)->z = 0x410000;
-        SetLong(p + 0x1C, 0x410000);
+        rv::As<records::EffectObject>(p)->z = 0x410000;
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_1c, 0x410000);
         p[6] = 1;
-        Fx(p)->x = 0x2D0000;
-        Fx(p)->height = 0x3000000;
-        Fx(p)->step_x = static_cast<std::int32_t>(0xFFFF0000u);
-        Fx(p)->step_z = 0;
-        SetLong(p + 0x14, 0);
-        SetLong(p + 0x18, 0x270000);
-        SetLong(p + 0x20, 0x3000000);
+        rv::As<records::EffectObject>(p)->x = 0x2D0000;
+        rv::As<records::EffectObject>(p)->height = 0x3000000;
+        rv::As<records::EffectObject>(p)->step_x = static_cast<std::int32_t>(0xFFFF0000u);
+        rv::As<records::EffectObject>(p)->step_z = 0;
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->step_y, 0);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_18, 0x270000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_20, 0x3000000);
         SetTimer(0xA);
         SetStep(0x18);
         out = kDone;
@@ -1000,11 +1001,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0x20: {
         if (C0() != 0x1F) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(3);
-        Fx(p)->x = 0x258000;
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->x = 0x258000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(4);
-        Fx(q)->x = 0x258000;
-        Fx(q)->z = 0x410000;
+        rv::As<records::EffectObject>(q)->x = 0x258000;
+        rv::As<records::EffectObject>(q)->z = 0x410000;
         SetTimer(0x70);
         SetStep(0x21);
         out = kShake;
@@ -1016,11 +1017,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(5);
-        Fx(p)->x = 0x258000;
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->x = 0x258000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(8);
-        Fx(q)->x = 0x258000;
-        Fx(q)->z = 0x410000;
+        rv::As<records::EffectObject>(q)->x = 0x258000;
+        rv::As<records::EffectObject>(q)->z = 0x410000;
         const unsigned char c = static_cast<unsigned char>(C0() + 1);
         SetTimer(0x3C);
         C0() = c;
@@ -1044,11 +1045,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(6);
-        Fx(p)->x = 0x258000;
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->x = 0x258000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(7);
-        Fx(q)->x = 0x258000;
-        Fx(q)->z = 0x410000;
+        rv::As<records::EffectObject>(q)->x = 0x258000;
+        rv::As<records::EffectObject>(q)->z = 0x410000;
         SetTimer(0x3C);
         SetStep(0x24);
         out = kShake;
@@ -1056,14 +1057,14 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     }
     case 0x24:
         if (C0() != 0x25) break;
-        if (TakeInto(at::kSlot) == 0xFF) break;
+        if (TakeInto(at::kSlot_addr) == 0xFF) break;
         SetStep(0x25);
         Effect13(Slot850(), -0x370, Camera_Angles[1], 0xB6, 0xA8);
         out = kShake;
         break;
     case 0x25:
         if (C0() != 0x26) break;
-        if (TakeInto(at::kSlot) == 0xFF) break;
+        if (TakeInto(at::kSlot_addr) == 0xFF) break;
         SetStep(0x26);
         Effect13(Slot850(), -0x2AA, Camera_Angles[1], 0x200, 0x1E);
         out = kShake;
@@ -1132,7 +1133,7 @@ extern "C" void __cdecl Scena07_Scene7(void) {
         return;
     case 1:
         if (C0() != 0x1F) return;
-        reward(at::kCharRecords + 7 * at::kRecordStride + 0x12, 1, 0x20, at::kTextRecords, 0x94, 0x22);
+        reward(CharacterRecords_addr + 7 * at::kRecordStride + 0x12, 1, 0x20, at::kTextRecords, 0x94, 0x22);
         return;
     case 0xA:
         if (Requested()) return;
@@ -1141,7 +1142,7 @@ extern "C" void __cdecl Scena07_Scene7(void) {
         return;
     case 0xC:
         if (C0() != 0x24) return;
-        reward(at::kCharRecords + 7 * at::kRecordStride + 0x15, 2, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
+        reward(CharacterRecords_addr + 7 * at::kRecordStride + 0x15, 2, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
         return;
     case 0x14:
         SH_CALL(Msg_OpenSystem)(1);
@@ -1184,7 +1185,7 @@ void ObjectTo4(unsigned char* object, unsigned animation) {
     object[1] = 4;
     object[0x84] = 2;
     object[0x83] = static_cast<unsigned char>(animation);
-    Spr(object)->script_position = 0;
+    rv::As<records::SpriteObject>(object)->script_position = 0;
 }
 // Object handlers 3 and 4: the counters cleared, run 7 at `step`, or at 0x14
 // when chapter 6's flag `flag` is set.
@@ -1266,8 +1267,8 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
         if (!Near(zh, 0x3C, 5)) return 0;
         if (!Near(xh, 0x22, 4)) return 0;
         if (!Flag(4) || SH_CALL(Scena07_PartyHas89State2)() == 0) {
-            const unsigned char kind = ObjTrio[8];
-            Byte(at::kSlot) = kind;
+            const unsigned char kind = ObjTrio[0].direction;
+            at::kSlot.b_00 = kind;
             if (kind != 6 && kind != 5 && kind != 4) {
                 C0() = 0x10;
                 Set40();
@@ -1289,8 +1290,8 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
     }
     const unsigned area = Area();
     if (area == 0x69) {
-        const unsigned char kind = ObjTrio[8];
-        Byte(at::kSlot) = kind;
+        const unsigned char kind = ObjTrio[0].direction;
+        at::kSlot.b_00 = kind;
         if (kind == 0 || kind == 1 || kind == 2) return 0;
         if (static_cast<short>(zh) <= 0x1D) return 0;
         Set40();
@@ -1423,19 +1424,19 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
         }
     }
     if (Area() == 2 && Flag(6) && !Flag(7)) {
-        const unsigned char slot = TakeInto(at::kSlot);
+        const unsigned char slot = TakeInto(at::kSlot_addr);
         Camera_Angles[0] = 0xFDC4;
         if (slot != 0xFF) Effect13(Slot850(), -0x302, Camera_Angles[1], S16(at::kPitch), 0xFF);
     }
     if (Area() == 3 && !Flag(0xE)) {
         SH_CALL(Scenario_CallA)(3);
-        Field_Members[4] = static_cast<unsigned char>(Field_Members[4] | 0x40);
+        ObjTrio[1].flags = static_cast<unsigned char>(ObjTrio[1].flags | 0x40);
     }
     if (Area() == 0xC && !Flag(0xC) && Flag(0xB)) {
         Set40();
-        const unsigned char kind = ObjTrio[8];
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
+        const unsigned char kind = ObjTrio[0].direction;
+        const std::int32_t x = ObjTrio[0].x;
+        const std::int32_t z = ObjTrio[0].z;
         PassFlags(0);
         SetRun(8);
         SetStep(0);
@@ -1526,7 +1527,7 @@ extern "C" void __cdecl Scena08_Run(void) {
 // original 0x551590: run 1, steps 0..0xC (a jump table of 13 after it at
 // 0x5518A0): a timed music start (step 0 runs on into step 1's wait), counter
 // 0 = 1, effects of kind 0x52 on counter 4 and 7, a transition, the music
-// faded, two character records set (by MoveScript_EffectState [7] and [8])
+// faded, two character records set (by Character_IndexById [7] and [8])
 // and the change to area 0x20; again on 0x16 with flag 0; sound 0x204; on
 // 0x1D the change to area 0x20 with flag 1; the run over.
 extern "C" void __cdecl Scena08_Scene1(void) {
@@ -1546,17 +1547,17 @@ extern "C" void __cdecl Scena08_Scene1(void) {
         return;
     case 2: {
         if (C0() != 4) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
-            Fx(e)->z = 0x550000;
-            const std::int32_t z = Fx(e)->z;
-            Fx(e)->x = 0x8E0000;
-            const std::int32_t x = Fx(e)->x;
+            rv::As<records::EffectObject>(e)->z = 0x550000;
+            const std::int32_t z = rv::As<records::EffectObject>(e)->z;
+            rv::As<records::EffectObject>(e)->x = 0x8E0000;
+            const std::int32_t x = rv::As<records::EffectObject>(e)->x;
             e[0] = 1;
             e[5] = 0x52;
             e[1] = 0;
             const long h = SH_CALL(AreaMap_Elevation)(x, z);
-            Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
+            rv::As<records::EffectObject>(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
         }
         SetTimer(0x3C);
         SetStep(3);
@@ -1564,7 +1565,7 @@ extern "C" void __cdecl Scena08_Scene1(void) {
     }
     case 3:
         if (C0() != 7) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x52;
@@ -1587,12 +1588,12 @@ extern "C" void __cdecl Scena08_Scene1(void) {
     case 6: {
         if (DecTimer() != 0) return;
         SH_CALL(Music_FadeOutStop)(0xA);
-        unsigned char* const a = Record(MoveScript_EffectState[7]);
+        unsigned char* const a = Record(Character_IndexById[7]);
         a[0x09] = 7;
         a[0x58] = 0x37;
         a[0x5B] = 8;
         a[0x5C] = 0x64;
-        unsigned char* const b = Record(MoveScript_EffectState[8]);
+        unsigned char* const b = Record(Character_IndexById[8]);
         b[0x09] = 8;
         b[0x5B] = 0xC;
         SH_CALL(Scenario_CallA)(0);
@@ -1652,8 +1653,8 @@ extern "C" void __cdecl Scena08_Scene1(void) {
 extern "C" void __cdecl Scena08_Scene2(void) {
     switch (Step()) {
     case 0:
-        Sprite_ObjectsExtra[0x83] = 3;
-        Spr(At(Sprite_ObjectsExtra_addr))->script_position = 0;
+        Sprite_ObjectsExtra[0].area_script = 3;
+        Sprite_ObjectsExtra[0].script_position = 0;
         SetStep(1);
         return;
     case 1:
@@ -1688,7 +1689,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         SetLong(At(at::kCounters), 0);
         DropIn(6);
         const unsigned speed = Field_MoveSpeeds[4];
-        Kind2At(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
+        Kind2At(ObjTrio[0].x, ObjTrio[0].z);
         MoveScript_F3Divisor = speed << 3;
         SetStep(1);
         return;
@@ -1697,10 +1698,10 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         if (Field_Kind2Hold != 0) return;
         const std::int32_t z = Field_Kind2Z;
         const std::int32_t x = Field_Kind2X;
-        SetLong(At(Sprite_Kind2_addr + 0x34), x);
-        SetLong(At(Sprite_Kind2_addr + 0x38), z);
+        Sprite_Kind2.x = x;
+        Sprite_Kind2.z = z;
         const long h = SH_CALL(AreaMap_Elevation)(x, z);
-        SetWord(At(Sprite_Kind2_addr + 0x3E), static_cast<unsigned>(h));
+        Sprite_Kind2.height_whole = static_cast<unsigned>(h);
         SetElevationAt(Field_Kind2X, Field_Kind2Z);
         C0() = 1;
         SetStep(2);
@@ -1708,17 +1709,17 @@ extern "C" void __cdecl Scena08_Scene3(void) {
     }
     case 2:
         if (C0() != 5) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
-            Fx(e)->z = 0x418000;
-            const std::int32_t z = Fx(e)->z;
-            Fx(e)->x = 0x158000;
-            const std::int32_t x = Fx(e)->x;
+            rv::As<records::EffectObject>(e)->z = 0x418000;
+            const std::int32_t z = rv::As<records::EffectObject>(e)->z;
+            rv::As<records::EffectObject>(e)->x = 0x158000;
+            const std::int32_t x = rv::As<records::EffectObject>(e)->x;
             e[0] = 1;
             e[5] = 0x51;
             e[1] = 0;
             const long h = SH_CALL(AreaMap_Elevation)(x, z);
-            Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
+            rv::As<records::EffectObject>(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
         }
         SetStep(3);
         return;
@@ -1793,7 +1794,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         return;
     case 0xF:
         if (C0() != 0x23) return;
-        if (TakeInto(at::kSlot) != 0xFF) Live(Slot850(), 0x63);
+        if (TakeInto(at::kSlot_addr) != 0xFF) Live(Slot850(), 0x63);
         SetTimer(0x3C);
         SetStep(0x10);
         return;
@@ -1810,8 +1811,8 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         return;
     case 0x12:
         if (C0() != 0) return;
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), 3);
-        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), 0x10);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), 3);
+        SH_CALL(Flags_Set)(At(Gene_Bits_addr), 0x10);
         SetFlag(4);
         ScriptFlagsAnd(0xFFF7);
         Clear40();
@@ -1897,7 +1898,7 @@ extern "C" void __cdecl Scena08_Scene5(void) {
     case 1:
         if (C0() == 1) {
             ChangeArea(0x35, 0x3D8000, 0xD8000, 0x83);
-            AreaW0c_PendingKind = 0xFF;
+            Area_EnterTransition = 0xFF;
             AreaW1f_MusicCurrent = 0xFF;
             SetStep(2);
         }
@@ -1956,7 +1957,7 @@ extern "C" void __cdecl Scena08_Scene6(void) {
     }
     case 3: {
         if (EffectAt(Scena08_Kept[0xf])[0] & 1) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2053,8 +2054,8 @@ extern "C" void __cdecl Scena08_Scene7(void) {
     case 0xF:
         if (C0() != 0) return;
         FocusObject()[6] = 5;
-        Spr(FocusObject())->accel_x = 1;
-        Spr(FocusObject())->accel_z = 3;
+        rv::As<records::SpriteObject>(FocusObject())->work_18 = 1;
+        rv::As<records::SpriteObject>(FocusObject())->work_1c = 3;
         Clear40();
         SetRun(0);
         SetStep(0);
@@ -2080,11 +2081,11 @@ extern "C" void __cdecl Scena08_SpawnPair(void) {
         Sprite(static_cast<std::uint32_t>(Long(At(Scena08_Kept_addr + 0x4))))[0] = 0;
         return;
     }
-    SetWord(At(at::kSlot), Word(At(Scena08_Kept_addr + 0x4)));
+    at::kSlot.w_00 = Word(At(Scena08_Kept_addr + 0x4));
     Sprite(b)[0] = 1;
     SH_CALL(EventOp_6x)(At(Scena08_PairOps_addr));
     SH_CALL(Sprite_SetAnimationAt)(0x4C, 0);
-    SetWord(At(at::kSlot), Word(At(Scena08_Kept_addr + 0x8)));
+    at::kSlot.w_00 = Word(At(Scena08_Kept_addr + 0x8));
     SH_CALL(EventOp_6x)(At(Scena08_PairOps_addr + 0x10));
     SH_CALL(Sprite_SetAnimationAt)(0x36, 0);
 }
@@ -2103,7 +2104,7 @@ extern "C" void __cdecl Scena08_Scene8(void) {
     case 0:
         if (!WaitDone()) return;
         ChangeArea(0xB, 0x138000, 0x238000, 0x84);
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         AreaW1f_MusicCurrent = 0xFF;
         SetStep(1);
@@ -2151,7 +2152,7 @@ extern "C" void __cdecl Scena08_Scene8(void) {
         const std::int32_t x = Long(At(Scena08_Kept_addr + 0x4));
         ChangeArea(0xC, x, z, flags);
         ModeFlow_AreaTransition = 0xFF;
-        AreaW0c_PendingKind = 0xFF;
+        Area_EnterTransition = 0xFF;
         SetStep(8);
         return;
     }
@@ -2277,10 +2278,10 @@ extern "C" void __cdecl Scena08_Scene8(void) {
         Cond_Flags[0xd6] = Scena08_Kept[0xd];
         const std::int32_t x = Long(At(Scena08_Kept_addr + 0x4));
         const std::int32_t z = Long(At(Scena08_Kept_addr + 0x8));
-        SetLong(At(ObjTrio_addr + at::kMemberStride + 0x34), x);
-        SetLong(At(ObjTrio_addr + at::kMemberStride + 0x38), z);
+        ObjTrio[1].x = x;
+        ObjTrio[1].z = z;
         const long h = SH_CALL(AreaMap_Elevation)(x, z);
-        SetWord(At(ObjTrio_addr + at::kMemberStride + 0x3E), static_cast<unsigned>(h));
+        ObjTrio[1].height_whole = static_cast<unsigned>(h);
         SetRun(0);
         SetStep(0);
         return;
@@ -2327,7 +2328,7 @@ extern "C" void __cdecl Scena08_Scene9(void) {
         return;
     case 6:
         if (C0() != 5) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2364,7 +2365,7 @@ extern "C" void __cdecl Scena08_Scene10(void) {
         SetStep(0);
         return;
     case 0xA:
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xB);
         Effect13(Slot850(), -0x2EC, Camera_Angles[1], 0xB6, 0x20);
         return;
@@ -2392,13 +2393,14 @@ extern "C" void __cdecl Scena08_Scene10(void) {
 // += 10000, 0x498DE0(4), its bytes +0x12..+0x15 set, Char_RecalcStats on the
 // record, Char_HealHp(4, 0, 0) and Char_HealAp(4, 0, 0).
 extern "C" void __cdecl Scena08_SetUpRecord4(void) {
-    SetLong(At(at::kRecord4 + 0xC), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kRecord4 + 0xC))) + 0x2710u));
+    auto* const chr4 = rv::As<records::CharRecord>(At(CharacterRecords_addr) + 4 * sizeof(records::CharRecord));
+    rv::Store<std::int32_t>(chr4->exp, static_cast<std::int32_t>(static_cast<std::uint32_t>(chr4->exp) + 0x2710u));
     Call498DE0(4);
-    Byte(at::kRecord4 + 0x12) = 7;
-    Byte(at::kRecord4 + 0x13) = 0x38;
-    Byte(at::kRecord4 + 0x14) = 0x21;
-    Byte(at::kRecord4 + 0x15) = 0xE;
-    SH_CALL(Char_RecalcStats)(At(at::kRecord4));
+    chr4->weapon = 7;
+    chr4->armour[0] = 0x38;
+    chr4->armour[1] = 0x21;
+    chr4->armour[2] = 0xE;
+    SH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + 0x290));
     SH_CALL(Char_HealHp)(4, 0, 0);
     SH_CALL(Char_HealAp)(4, 0, 0);
 }
@@ -2424,16 +2426,16 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         const unsigned speed = Field_MoveSpeeds[5];
         SetStep(2);
         Field_Kind2X = 0x170000;
-        SetLong(At(Sprite_Kind2_addr + 0x34), 0x170000);
+        Sprite_Kind2.x = 0x170000;
         Field_Kind2Z = 0xF0000;
-        SetLong(At(Sprite_Kind2_addr + 0x38), 0xF0000);
+        Sprite_Kind2.z = 0xF0000;
         MoveScript_F3Divisor = speed << 3;
         return;
     }
     case 2:
         if (SH_CALL(File_LoadDone)() == 0) return;
         if (Field_Kind2Hold != 0) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2458,7 +2460,7 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         return;
     case 4:
         if (C0() != 8) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x60;
@@ -2489,7 +2491,7 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         a[0xB] = static_cast<unsigned char>(a[0xB] | 2);
         unsigned char* const b = RecordOfMember4();
         b[0xB] = static_cast<unsigned char>(b[0xB] | 2);
-        SetWord(b + 0x18, 0);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(b)->hp, 0);   // a character record (Record: CharacterRecords + n * 0xA4)
         b[0x11] = static_cast<unsigned char>(b[0x11] | 0x60);
         return;
     }
@@ -2574,8 +2576,8 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         SH_CALL(Music_Play)(0x64, 0x20);
         PassFlags(0x1F);
         Transition(1);
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         C0() = 0;
         Kind2At(x, z);
         SetElevationAt(x, z);
@@ -2717,8 +2719,8 @@ extern "C" unsigned char __cdecl Scena08_ArriveHook(int x, int z) {
         return 1;
     }
     if (Area() == 0x23 && !Flag(8) && Near(xh, 0x45, 3) && Near(zh, 0x37, 3)) {
-        const unsigned char kind = ObjTrio[8];
-        Byte(at::kSlot) = kind;
+        const unsigned char kind = ObjTrio[0].direction;
+        at::kSlot.b_00 = kind;
         if (kind != 6 && kind != 7 && kind != 0) {
             SetRun(6);
             SetStep(0);

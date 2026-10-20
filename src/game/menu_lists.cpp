@@ -44,6 +44,7 @@
 #include "game/lang_layout.h"
 #include "game/menu_lists_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/text_advance.h"
 #include "game/widescreen.h"
@@ -109,11 +110,10 @@ unsigned char* Rec() {
         *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
 }
 
-// The typed view of a window record (docs/typed-records.md; WindowRecords
+// rv::As<records::WindowRecord>(p) views a window record
+// (docs/typed-records.md; WindowRecords
 // 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
-static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -173,7 +173,7 @@ extern "C" void __cdecl FieldMenu_Open(void) {
         signed char i = 0;
         do {
             const unsigned member = At(Cond_Flags_addr + 0xd2 + static_cast<std::int32_t>(i))[0];
-            g.recalc_stats(At(at::kCharRecords + MoveScript_EffectState[member] * at::kCharRecordSize));
+            g.recalc_stats(At(CharacterRecords_addr + Character_IndexById[member] * at::kCharRecordSize));
             i = static_cast<signed char>(i + 1);
         } while (static_cast<int>(i) < Field_MemberCount);
     }
@@ -197,9 +197,11 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     }
     MenuLists_PartyChanged = 0;
     for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const r = At(at::kCharRecords + 0x10 + i * at::kCharRecordSize);
-        if (static_cast<unsigned>(Word(r + 0x10) >> 2) > Word(r + 8)) r[1] = static_cast<unsigned char>(r[1] | 0x20);
-        else SetWord(r, Word(r) & 0xDFFF);
+        unsigned char* const r = At(CharacterRecords_addr + 0x10 + i * at::kCharRecordSize);
+        // r is the character record's +0x10, its status word (records::CharRecord, CharacterRecords 0x903A70)
+        auto* const c = rv::As<records::CharRecord>(r - 0x10);
+        if (static_cast<unsigned>(c->stats.max_hp >> 2) > c->hp) r[1] = static_cast<unsigned char>(r[1] | 0x20);
+        else rv::Store<unsigned>(c->status, c->status & 0xDFFF);
     }
     static constexpr std::uint32_t kDwords[] = {0x9398B8, 0x939898, 0x9398A0, 0x9398A4, 0x9398A8, 0x939880, 0x9398AC,
                                                 0x939884, 0x9398C0, 0x939888, 0x9398C4, 0x93988C, 0x9398C8};
@@ -208,8 +210,8 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     SetWord(At(0x939890), 0);
     Byte(0x9398BC) = 0;
     Byte(0x93989C) = 0;
-    Byte(0x939892) = 0;
-    Byte(0x9398CC) = 0;
+    Rest2e_AbilityViewCursor = 0;
+    Rest2e_AbilityViewTop = 0;
     if (ScenaSc6_Load10 == 1) {
         BattleE1_Mode = 5;
         FieldS_State = 5;
@@ -253,12 +255,12 @@ extern "C" void __cdecl FieldMenu_TopBar(void) {
 // negative to 6 and right any above 6 (signed) to 0; Input_Pressed is read
 // again after the moves; the state and step bytes after each call.
 extern "C" void __cdecl FieldMenu_TopBarInput(void) {
-    g.backdrop(FieldS_Backdrop);
+    g.backdrop(Config_Background);
     const unsigned char cursor = static_cast<unsigned char>(MenuLists_Cursor);
     unsigned char* const saved = Sprite_Current;
     Byte(at::kIconWindow + 0xA) = cursor;
     const unsigned char camp = AreaW3c_CampFlag;
-    SetWord(At(MenuLists_TitleWindow_addr + 0x10), At(FieldMenu_TitleIds_addr + static_cast<std::int32_t>(static_cast<signed char>(cursor)))[0]);
+    SetWord(At(Window10_addr + 0x10), At(FieldMenu_TitleIds_addr + static_cast<std::int32_t>(static_cast<signed char>(cursor)))[0]);
     Sprite_Current = At(ObjTrio_addr);
     bool open;
     if (camp != 0) open = g.camp_cell() != 0;
@@ -316,7 +318,7 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
     std::uint16_t i = 0;
     if (Members() != 0) {
         do {
-            At(at::kMemberPanels + 3 + static_cast<std::uint32_t>(i) * at::kRecordSize)[0] = state;
+            At(WindowRecords_addr + 0x90 + 3 + static_cast<std::uint32_t>(i) * at::kRecordSize)[0] = state;
             ++i;
         } while (i < static_cast<std::uint16_t>(Members()));
     }
@@ -326,7 +328,7 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
 // original 0x589E50 (13 bytes): the backdrop alone - the top bar's step 2,
 // and a slot of the table at 0x66734C (0x667350) another screen steps
 // through.
-extern "C" void __cdecl FieldMenu_BackdropStep(void) { g.backdrop(FieldS_Backdrop); }
+extern "C" void __cdecl FieldMenu_BackdropStep(void) { g.backdrop(Config_Background); }
 
 // original 0x589E60 (PSX 0x801D2010): the top bar's windows placed, after
 // Window_ResetAll. Each member (one a Party_Count(0), asked each time) gets
@@ -344,38 +346,38 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
     unsigned char i = 0;
     if (Members() != 0) {
         do {
-            unsigned char* const r = At(at::kMemberPanels + i * at::kRecordSize);
+            unsigned char* const r = At(WindowRecords_addr + 0x90 + i * at::kRecordSize);
             r[0xA] = i;
             r[1] = 6;
             r[2] = 0;
             r[3] = 0;
             r[0] = 1;
-            Win(r)->centre_x = 0x62;
-            Win(r)->centre_y = i * 0x36u + 0x3E;
+            rv::As<records::WindowRecord>(r)->x = 0x62;
+            rv::As<records::WindowRecord>(r)->y = i * 0x36u + 0x3E;
             r[0xB] = 0;
             r[0xC] = 0;
             ++i;
         } while (i < Members());
     }
     struct Place { std::uint32_t at; unsigned char kind; std::uint16_t x, y; };
-    static constexpr Place kPlaces[] = {{MenuLists_MoneyWindow_addr, 1, 0xC8, 0x10},
-                                        {MenuLists_TimeWindow_addr, 2, 0x10, 0x10},
-                                        {MenuLists_IconWindow_addr, 3, 0x68, 0x2A},
-                                        {MenuLists_TitleWindow_addr, 4, 0x73, 0x10}};
+    static constexpr Place kPlaces[] = {{Window7_addr, 1, 0xC8, 0x10},
+                                        {Window8_addr, 2, 0x10, 0x10},
+                                        {Window9_addr, 3, 0x68, 0x2A},
+                                        {Window10_addr, 4, 0x73, 0x10}};
     for (const Place& p : kPlaces) {
         unsigned char* const r = At(p.at);
         r[1] = 6;
         r[2] = p.kind;
         r[3] = 0;
         r[0] = 1;
-        Win(r)->centre_x = p.x;
-        Win(r)->centre_y = p.y;
+        rv::As<records::WindowRecord>(r)->x = p.x;
+        rv::As<records::WindowRecord>(r)->y = p.y;
     }
     Byte(at::kIconWindow + 0xA) = 0;
     Byte(at::kIconWindow + 0xB) = 0;
     Byte(at::kIconWindow + 0xC) = 0;
-    SetWord(At(MenuLists_IconWindow_addr + 0x10), 0);
-    SetWord(At(MenuLists_TitleWindow_addr + 0x10), 0);
+    SetWord(At(Window9_addr + 0x10), 0);
+    SetWord(At(Window10_addr + 0x10), 0);
 }
 
 // original 0x589FE0: the party check as the menu closes (the top bar's
@@ -459,12 +461,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel
 // fields are read again after the calls; Gfx_PacketNext after the panel.
 extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
     const unsigned member = At(Cond_Flags_addr + 0xd2 + rec[0xB] * 3u + rec[0xA])[0];
-    const unsigned record = At(MoveScript_EffectState_addr + member)[0];
-    g.member_body(Win(rec)->centre_x, Win(rec)->centre_y, record, rec[0xC], 0);
+    const unsigned record = At(Character_IndexById_addr + member)[0];
+    g.member_body(rv::As<records::WindowRecord>(rec)->x, rv::As<records::WindowRecord>(rec)->y, record, rec[0xC], 0);
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
     g.commit(1, 0xC);
     const unsigned clut = g.get_clut(0x10, 0x1E0);
-    g.member_face(Win(rec)->centre_x + 9, Win(rec)->centre_y + 5, rec[0xA] + 3u, 0x1E, clut, 0x80);
+    g.member_face(rv::As<records::WindowRecord>(rec)->x + 9, rv::As<records::WindowRecord>(rec)->y + 5, rec[0xA] + 3u, 0x1E, clut, 0x80);
 }
 
 // original 0x599D50, kind 1: the state from 0x66B014, then Menu_DrawMoneyBox
@@ -472,7 +474,7 @@ extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
 extern "C" void __cdecl MenuList_MoneyBox(void) {
     Entry(MenuList_MoneyStates_addr, Rec()[3])();
     const unsigned char* const r = Rec();
-    g.money_box(Win(r)->centre_x, Win(r)->centre_y, 0, Party_Zenny);
+    g.money_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0, Party_Zenny);
 }
 
 // original 0x599DC0, kind 2: the state from 0x66B020, then the play-time box
@@ -480,7 +482,7 @@ extern "C" void __cdecl MenuList_MoneyBox(void) {
 extern "C" void __cdecl MenuList_TimeBox(void) {
     Entry(MenuList_TimeStates_addr, Rec()[3])();
     const unsigned char* const r = Rec();
-    g.time_box(Win(r)->centre_x, Win(r)->centre_y);
+    g.time_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
 }
 
 // original 0x599E50, kind 3 (the body is the tail jump's target 0x599E70,
@@ -509,8 +511,8 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     for (unsigned i = 0; i < 7; ++i) {
         if (i == r[0xA]) continue;
         const unsigned shade = i == 6 && r[0xC] != 0 ? 0x40 : 0x80;
-        const unsigned y = Win(r)->centre_y;
-        const unsigned x = ((i << 4) + Win(r)->centre_x) & 0xFFFF;
+        const unsigned y = rv::As<records::WindowRecord>(r)->y;
+        const unsigned x = ((i << 4) + rv::As<records::WindowRecord>(r)->x) & 0xFFFF;
         g.icon(At(FieldMenu_IconIds_addr + i)[0], x, y, 0x10, 0x10, shade);
         r = Rec();
     }
@@ -518,8 +520,8 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     const unsigned shade = sel == 6 && r[0xC] != 0 ? 0x40 : 0x80;
     const unsigned grow = Word(r + 0x10);
     const unsigned size = static_cast<unsigned char>((r[0x10] + 8) << 1);
-    const unsigned y = (Win(r)->centre_y - grow) & 0xFFFF;
-    const unsigned x = ((((sel << 4) + Win(r)->centre_x) & 0xFFFF) - grow) & 0xFFFF;
+    const unsigned y = (rv::As<records::WindowRecord>(r)->y - grow) & 0xFFFF;
+    const unsigned x = ((((sel << 4) + rv::As<records::WindowRecord>(r)->x) & 0xFFFF) - grow) & 0xFFFF;
     g.icon(At(FieldMenu_IconIds_addr + sel)[0], x, y, size, size, shade);
     r = Rec();
     r[0xB] = r[0xA];
@@ -547,18 +549,18 @@ unsigned char g_title_centre = 0;
 // width in pixels - the same number as the original's for 12-unit glyphs.
 extern "C" void __cdecl MenuList_TitleBox(void) {
     Entry(MenuList_TitleStates_addr, Rec()[3])();
-    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
+    const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = Rec();
-    g.title_box(Win(r)->centre_x, Win(r)->centre_y, 0x48, 0x13, colour);
+    g.title_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x48, 0x13, colour);
     r = Rec();
     const unsigned char* const text = g.msg(Word(r + 0x10));
     const unsigned count = g.char_count(text);
     r = Rec();
-    const unsigned y = (Win(r)->centre_y + 3u) & 0xFFFF;
+    const unsigned y = (rv::As<records::WindowRecord>(r)->y + 3u) & 0xFFFF;
     const unsigned width = g.char_count(text);
     r = Rec();
     const unsigned half = g_title_centre ? TextAdvance_Width(text) / 2 : width * 6;
-    const int x = static_cast<int>((Win(r)->centre_x - half + 0x25u) & 0xFFFF);
+    const int x = static_cast<int>((rv::As<records::WindowRecord>(r)->x - half + 0x25u) & 0xFFFF);
     g.text(x, static_cast<int>(y), 0, static_cast<int>(count), text);
 }
 
@@ -574,19 +576,19 @@ extern "C" void __cdecl MenuList_TitleBox(void) {
 namespace {
 void SlideY(int step, short bound, bool down) {
     unsigned char* const moved = Rec();
-    Win(moved)->centre_y = Win(moved)->centre_y + static_cast<unsigned>(step);
+    rv::As<records::WindowRecord>(moved)->y = rv::As<records::WindowRecord>(moved)->y + static_cast<unsigned>(step);
     unsigned char* const r = Rec();
     if (down ? S(r + 6) > bound : S(r + 6) < bound) {
-        Win(r)->centre_y = static_cast<std::uint16_t>(bound);
+        rv::As<records::WindowRecord>(r)->y = static_cast<std::uint16_t>(bound);
         Rec()[3] = 0;
     }
 }
 void SlideX(int step, short bound, bool right) {
     unsigned char* const moved = Rec();
-    Win(moved)->centre_x = Win(moved)->centre_x + static_cast<unsigned>(step);
+    rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x + static_cast<unsigned>(step);
     unsigned char* const r = Rec();
     if (right ? S(r + 4) > bound : S(r + 4) < bound) {
-        Win(r)->centre_x = static_cast<std::uint16_t>(bound);
+        rv::As<records::WindowRecord>(r)->x = static_cast<std::uint16_t>(bound);
         Rec()[3] = 0;
     }
 }

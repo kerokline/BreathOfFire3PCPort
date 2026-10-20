@@ -37,12 +37,12 @@ constexpr std::uint32_t kFieldObjectsEnd = 0x7DF3A0; // the eighth record's end
 // a direction (dwords), +0x34 / +0x38 the position (16.16), +0x134 a dword the
 // area-29 init writes, less 5, to Field_EdgeBits.
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderSteps: now ObjTrio[9] (symbols.toml).
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml).
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderEdge: now ObjTrio[0x134] (symbols.toml).
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml).
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml).
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderEdge: now ObjTrio_addr + 0x134 (symbols.toml).
 // The place the party stands on, a u16 (the plate table's and the message
 // table's key; written by the world map's frame code, read here).
 // kPlace: now AreaW0b_Place (symbols.toml).

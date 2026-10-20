@@ -21,6 +21,8 @@
 #include "game/area_harness.h"
 #include "game/area_w0c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -41,7 +43,7 @@ std::int16_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 void AddLong(unsigned char* p, std::int32_t v) { SetLong(p, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(p)) + static_cast<std::uint32_t>(v))); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(Effect_Objects) + slot * at::kEffectStride; }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours
@@ -76,11 +78,11 @@ bool SpawnFromCurrent(unsigned char kind) {
 void SpawnEffect50(std::int32_t lift, unsigned char timer) {
     if (!SpawnFromCurrent(0x50)) return;
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     EffectAt(cur[0xB])[6] = cur[8];
-    SetLong(EffectAt(cur[0xB]) + 0x34, tCur->x);
-    SetLong(EffectAt(cur[0xB]) + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) + static_cast<std::uint32_t>(lift)));
-    SetLong(EffectAt(cur[0xB]) + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->height) + 0x1000000u));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->x, tCur->x);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) + static_cast<std::uint32_t>(lift)));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->height) + 0x1000000u));
     EffectAt(cur[0xB])[9] = timer;
 }
 
@@ -89,7 +91,7 @@ void SpawnEffect50(std::int32_t lift, unsigned char timer) {
 // elevation there, as a word, in the high half.
 void SpawnAtCell(unsigned slot, std::int32_t x, std::int32_t z, unsigned char kind, bool state6) {
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     tE->z = z;
     tE->x = x;
     e[0] = 1;
@@ -305,7 +307,7 @@ extern "C" void __cdecl Area32_ChoiceLeaderAnim(void) {
     SetMessage(0xFFFF);
     if (answer != 1) return;
     unsigned char* const kept = Sprite_Current;
-    Sprite_Current = ObjTrio;
+    Sprite_Current = rv::Bytes(ObjTrio);
     AH_CALL(Sprite_SetAnimation)(0x80);
     Sprite_Current = kept;
 }
@@ -322,7 +324,7 @@ extern "C" void __cdecl Area32_RunA(void) {
 extern "C" void __cdecl Area32_ShadeStart(void) {
     AH_CALL(Sprite_ShadeFadeBegin)();
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     cur[0x5C] = 1;
     AddLong(cur + 0x34, tCur->step_x);
     cur[4] = 1;
@@ -339,7 +341,7 @@ extern "C" void __cdecl Area32_ShadeStep(void) {
     }
     AddWord(Field_State + 0x12E, -2);
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     AddLong(cur + 0x34, tCur->step_x);
 }
 
@@ -358,7 +360,7 @@ extern "C" void __cdecl Area32_TintStart(void) {
     const unsigned char tint = AH_CALL(Sprite_SetTint)(Sprite_Current, 0, 0, 0, 1);
     Field_ActiveMember[0x9F] = tint;
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     cur[0] |= 0x20;
     cur[0] &= 0xBF;
     cur[0x5C] = 1;
@@ -378,13 +380,13 @@ extern "C" void __cdecl Area32_TintStart(void) {
 // otherwise the object moves by its step and the member's +0x8A less 2.
 extern "C" void __cdecl Area32_TintStep(void) {
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* tCur = rv::As<records::SpriteObject>(cur);
     for (unsigned off = 0x5D; off <= 0x5F; ++off)
         if (static_cast<signed char>(cur[off]) < static_cast<signed char>(0xC0)) cur[off] = static_cast<unsigned char>(cur[off] + 4);
     if (cur[0x5D] == 0xC0 && cur[0x5E] == 0xC0 && cur[0x5F] == 0xC0) {
         AH_CALL(Tint_Release)(Field_ActiveMember[0x9F]);
         cur = Sprite_Current;
-        tCur = reinterpret_cast<records::SpriteObject*>(cur);
+        tCur = rv::As<records::SpriteObject>(cur);
         cur[0] &= 0xDF;
         cur[0x5C] = 0;
         cur[0x5F] = 0;
@@ -448,7 +450,7 @@ extern "C" void __cdecl Area33_Record08Run(void) {
 extern "C" void __cdecl Area33_Record08Start(void) {
     AH_CALL(Sprite_SetAnimationBank)(0x46);
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::EffectObject*>(cur);
+    auto* tCur = rv::As<records::EffectObject>(cur);
     cur[0x48] = 0;
     cur[0x24] = 0;
     cur[0x29] = 5;
@@ -471,7 +473,7 @@ extern "C" void __cdecl Area33_Record08Start(void) {
     cur[1] = static_cast<unsigned char>(cur[1] + 1);
     AH_CALL(Sprite_SetAnimation)(B(WorldMap33_Record08Anims_addr + cur[8] * 2u));
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::EffectObject*>(cur);
+    tCur = rv::As<records::EffectObject>(cur);
     cur[0x2A] = B(WorldMap33_Record08Anims_addr + 1 + cur[8] * 2u);
     AH_CALL(Sprite_UpdateScreen)();
 }
@@ -490,7 +492,7 @@ extern "C" void __cdecl Area33_Record04Run(void) {
 // WorldMap33_Record04Cells[+0xB] (x, z) set to 0xA0 (AreaMap_Bytes + z *
 // the header's width byte + x, unchecked); Sprite_SetAnimation(0); state 1.
 extern "C" void __cdecl Area33_Record04Start(void) {
-    if (B(at::kRecord0Byte9) == 9 || (Field_StatusBits & 1) != 0) {
+    if (B(CharacterRecords_addr + 0x9) == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }
@@ -531,7 +533,7 @@ extern "C" void __cdecl Area34_ChoiceTail5(void) {
     }
     if (B(AreaW0c_ChoiceAnswer_addr) == 2) return;
     if (static_cast<unsigned char>(Cond_ByteFA) != 8) return;
-    const auto row = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
+    const auto row = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
     if (AH_CALL(Flags_Test)(row, 3) != 0) return;
     B(AreaW0a_TailKind_addr) = 0;
     AH_CALL(ScriptFlags_Set40)();
@@ -617,7 +619,7 @@ extern "C" void __cdecl Area36_EffectRun(void) {
 // dwords +0x34, +0x38, +0x3C copied to the stack and handed to 0x4220D0.
 extern "C" void __cdecl Area36_EffectStep(void) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::EffectObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
     std::int32_t position[3] = {tCur->x, tCur->z, tCur->height};
     AH_AT(void (__cdecl*)(std::int32_t*), at::kPositionHook)(position);
 }
@@ -678,7 +680,7 @@ extern "C" void __cdecl Area37_ChoiceTail2E(void) {
 // 1), the pending kind 0xFE, state + 1; 1 waits for Field_Request 0, then
 // message 0xB5 and Field_Request 2, state + 1; 2 waits for Field_Request to
 // leave 2, then Transition_Start(1) and Draw_PassFlags 0x1F, state + 1; 3
-// waits for MoveScript_WaitWordDA 0, then ScriptFlags_Clear40, the tail
+// waits for Transition_Busy 0, then ScriptFlags_Clear40, the tail
 // disarmed and counter 3 = 0. The state is re-read after each call.
 extern "C" void __cdecl Area37_TailLeave(void) {
     switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
@@ -687,7 +689,7 @@ extern "C" void __cdecl Area37_TailLeave(void) {
         AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x72);
         AH_CALL(Field_ChangeArea)(0x25, 0x2C8000, 0x270000, 1);
         const auto next = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
-        B(AreaW0c_PendingKind_addr) = 0xFE;
+        B(Area_EnterTransition_addr) = 0xFE;
         B(AreaW0c_TailState_addr) = next;
         return;
     }
@@ -708,7 +710,7 @@ extern "C" void __cdecl Area37_TailLeave(void) {
         return;
     }
     case 3:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         AH_CALL(ScriptFlags_Clear40)();
         B(AreaW0a_TailKind_addr) = 0;
         B(AreaW0c_TailState_addr) = 0;

@@ -213,7 +213,7 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 // kCharmPool: now Charm_Pool (symbols.toml).
 // kTransferPool: now Transfer_Pool (symbols.toml).
 // kTransferCurrent: now TransferMote_Current (symbols.toml).
@@ -359,7 +359,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                          // Gfx_PacketNext
     {0, kPrimBytes},                        // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},        // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                       // 0x903850..0x90385F
+    {kScratch, 0x10},             // 0x903850..0x90385F
     {Charm_Pool_addr, kPoolsEnd - Charm_Pool_addr}, // Charm_Pool, Transfer_Pool, TransferMote_Current, Monopolize_Pool
     {0x80E980, 0x200},                      // Gfx_ClutStripSource row 26
     {0x812980, 0x200},                      // Gfx_ClutStrip row 26

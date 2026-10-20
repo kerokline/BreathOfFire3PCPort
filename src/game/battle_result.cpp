@@ -32,6 +32,7 @@
 #include "game/battle_result_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -77,13 +78,11 @@ std::uint32_t Dword(std::uint32_t address) { return static_cast<std::uint32_t>(L
 void SetDword(std::uint32_t address, std::uint32_t v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 void Advance(std::uint32_t address) { Byte(address) = static_cast<unsigned char>(Byte(address) + 1); }
 unsigned char* Member(unsigned slot) { return At(at::kMembers + (slot & 0xFF) * at::kMemberSize); }
-unsigned char* WindowSlot(unsigned slot) { return At(at::kWindows + slot * at::kWindowSize); }
+unsigned char* WindowSlot(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowSize); }
 // The record the window task is running, re-read wherever the original reads it.
 unsigned char* CurrentWindow() { return At(BattleWinStates_Current); }
-records::WindowRecord* WindowSlotRec(unsigned slot) { return reinterpret_cast<records::WindowRecord*>(WindowSlot(slot)); }
-records::WindowRecord* CurrentWindowRec() { return reinterpret_cast<records::WindowRecord*>(CurrentWindow()); }
-// Member() is +0x80 into the member record (0x802DC0); the record starts 0x80 before.
-records::PartyMember* MemberRec(unsigned slot) { return reinterpret_cast<records::PartyMember*>(Member(slot) - 0x80); }
+// Member() is +0x80 into the member record (0x802DC0); the record, and its
+// typed view, starts 0x80 before.
 char* Text(std::uint32_t address) { return reinterpret_cast<char*>(At(address)); }
 const char* Format(std::uint32_t address) { return reinterpret_cast<const char*>(At(address)); }
 
@@ -119,11 +118,11 @@ void RunStep(std::uint32_t table) {
 // the step's increment is a read-modify-write after PartySet_Select.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_SplitExp(void) {
     std::uint32_t share = 0;
-    if (BattleFlow_ExpTotal != 0) {
+    if (Battle_ExpTotal != 0) {
         const unsigned n = g.count_members();
-        if (n != 0) share = (BattleFlow_ExpTotal + n - 1) / n;
+        if (n != 0) share = (Battle_ExpTotal + n - 1) / n;
     }
-    BattleFlow_ExpTotal = share;
+    Battle_ExpTotal = share;
     g.crt_sprintf(Text(at::kText0), Format(at::kFormatD), share);
     const unsigned char* const msg = g.msg_system(5);
     const unsigned set = AreaW0b_PartySet & 0x7Fu;
@@ -143,9 +142,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_SplitEx
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_OpenExpWindow(void) {
     g.window_alloc(1, 4);
     const auto height = static_cast<unsigned char>((Byte(at::kPartyCount) << 4) + 4);
-    const std::uint32_t exp = BattleFlow_ExpTotal;
+    const std::uint32_t exp = Battle_ExpTotal;
     unsigned char* const w = WindowSlot(1);
-    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->kind = 4;
     window_rec->state = 0;
     w[9] = height;
@@ -172,20 +171,20 @@ extern "C" void __cdecl BattleResult_ExpWaitHeld(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_ExpTick(void) {
     std::uint32_t amount;
     if (Input_Held != 0 && g.file_load_done() != 0) {
-        amount = BattleFlow_ExpTotal;
+        amount = Battle_ExpTotal;
     } else {
         const std::uint32_t step = Dword(at::kTickStep) & 0xFFFF;
-        const std::uint32_t exp = BattleFlow_ExpTotal;
+        const std::uint32_t exp = Battle_ExpTotal;
         if (static_cast<std::int32_t>(exp - step) > 0) {
             g.add_exp(step);
-            BattleFlow_ExpTotal = BattleFlow_ExpTotal - (Dword(at::kTickStep) & 0xFFFF);
+            Battle_ExpTotal = Battle_ExpTotal - (Dword(at::kTickStep) & 0xFFFF);
             return;
         }
         amount = exp;
     }
     g.add_exp(amount);
     const auto next = static_cast<unsigned char>(BattleE4_Step4 + 1);
-    BattleFlow_ExpTotal = 0;
+    Battle_ExpTotal = 0;
     BattleE4_Step4 = next;
 }
 
@@ -221,12 +220,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_LevelUp
 // on is 0x4469D0's whole answer (a byte, zero-extended by the callee).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_FindLevelUp(void) {
     while (BossSb_Countdown < Byte(at::kPartyCount)) {
-        const unsigned index = g.roster_index(MemberRec(BossSb_Countdown)->char_id);
+        const unsigned index = g.roster_index(rv::As<records::PartyMember>(Member(BossSb_Countdown) - 0x80)->char_id);
         const auto next = static_cast<unsigned char>(BossSb_Countdown + 1);
         BattleE1_Roster = static_cast<unsigned char>(index);
         BossSb_Countdown = next;
         if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) {
-            BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 0x20);
+            Battle_EndFlags = static_cast<unsigned char>(Battle_EndFlags | 0x20);
             Advance(BattleE4_Step4_addr);
             return;
         }
@@ -272,35 +271,35 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_RewardS
 // (which reaches into the counts with the items, and past them) is sorted
 // exactly as the original does it.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(void) {
-    if ((BattleActions_BattleEnd & 0x20) != 0 && Input_Pressed == 0) return;
+    if ((Battle_EndFlags & 0x20) != 0 && Input_Pressed == 0) return;
     if (Input_Held == 0) return;
 
     for (unsigned char slot = 0; slot < Byte(at::kPartyCount); ++slot) {
-        const unsigned index = g.roster_index(MemberRec(slot)->char_id);
-        if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) g.level_up(g.roster_index(MemberRec(slot)->char_id));
+        const unsigned index = g.roster_index(rv::As<records::PartyMember>(Member(slot) - 0x80)->char_id);
+        if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) g.level_up(g.roster_index(rv::As<records::PartyMember>(Member(slot) - 0x80)->char_id));
     }
     if (g.zenny_bonus() != 0) BattleFlow_ZennyTotal = BattleFlow_ZennyTotal + (BattleFlow_ZennyTotal >> 1);
 
-    WindowSlotRec(1)->in_use = 0;
+    rv::As<records::WindowRecord>(WindowSlot(1))->in_use = 0;
     g.window_alloc(1, 4);
     const std::uint32_t zenny = BattleFlow_ZennyTotal;
-    WindowSlotRec(1)->kind = 5;
-    WindowSlotRec(1)->state = 0;
+    rv::As<records::WindowRecord>(WindowSlot(1))->kind = 5;
+    rv::As<records::WindowRecord>(WindowSlot(1))->state = 0;
     g.crt_sprintf(Text(at::kText0), Format(at::kFormatD), zenny);
     const unsigned char* const msg = g.msg_system(6);
     const std::uint32_t total = BattleFlow_ZennyTotal;
     SetDword(at::kMsgCurrent, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(msg)));
     SetTickStep(total);
 
-    if (BattleE7_DropCount != 0) {
+    if (Battle_DropCount != 0) {
         g.window_alloc(0x15, 4);
-        unsigned char n = BattleE7_DropCount;
+        unsigned char n = Battle_DropCount;
         unsigned char* const w = WindowSlot(0x15);
-        auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+        auto* const window_rec = rv::As<records::WindowRecord>(w);
         const int last = static_cast<int>(n) - 1;
         window_rec->kind = 1;
-        window_rec->centre_x = 0x14;
-        window_rec->centre_y = 0x46;
+        window_rec->x = 0x14;
+        window_rec->y = 0x46;
         w[9] = static_cast<unsigned char>((last / 2) * 13 + 0x12);
         if (n > 1) {
             unsigned char i = 0;
@@ -320,7 +319,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
                     ci[0] = static_cast<unsigned char>(ci[0] ^ cj[0]);
                     cj[0] = static_cast<unsigned char>(cj[0] ^ ci[0]);
                     ci[0] = static_cast<unsigned char>(ci[0] ^ cj[0]);
-                    n = BattleE7_DropCount;
+                    n = Battle_DropCount;
                 }
                 i = next;
             } while (static_cast<int>(i) < static_cast<int>(n) - 1);
@@ -373,7 +372,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_ZennyTi
 // the fourth argument, 0, is pushed (the PSX's), and ours reads three.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_AwardDrops(void) {
     if (g.file_load_done() == 0) return;
-    for (unsigned char i = 0; i < BattleE7_DropCount; ++i) {
+    for (unsigned char i = 0; i < Battle_DropCount; ++i) {
         const unsigned count = At(at::kDropCounts + i)[0];
         const unsigned item = At(at::kDropItems + i * 2u)[0];
         const unsigned category = At(at::kDropItems + i * 2u)[1];
@@ -396,7 +395,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_AwardDr
 // words above the table on the original's stack; ours aborts (CLAUDE.md
 // rule 4, as battle_flow's Battle_PhaseDispatch).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ExpState(void) {
-    const unsigned index = CurrentWindowRec()->state;
+    const unsigned index = rv::As<records::WindowRecord>(CurrentWindow())->state;
     if (index >= 2) bof3::Fatal("BattleResultWin_ExpState: step %u, past the two-entry table", index);
     g.exp_window[index]();
 }
@@ -435,7 +434,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
     unsigned char y = 0x2C;
     for (unsigned char slot = 0; slot < Byte(at::kPartyCount); ++slot, y = static_cast<unsigned char>(y + 0x10)) {
         unsigned char* const m = Member(slot);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m - 0x80);
+        auto* const member_rec = rv::As<records::PartyMember>(m - 0x80);
         g.text_draw_at(0x19, y, 0, 5, m);
         const unsigned level = member_rec->level;
         if (level == 0x63) {
@@ -454,7 +453,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
 // zenny): the same two-entry stack table - 0x5986F0, 0x598700 (the zenny
 // line). Ours aborts past it, as BattleResultWin_ExpState.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ZennyState(void) {
-    const unsigned index = CurrentWindowRec()->state;
+    const unsigned index = rv::As<records::WindowRecord>(CurrentWindow())->state;
     if (index >= 2) bof3::Fatal("BattleResultWin_ZennyState: step %u, past the two-entry table", index);
     g.zenny_window[index]();
 }
@@ -462,7 +461,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Zenn
 // original 0x5986F0 (no PSX twin paired): the record 0x905B84's step +3 one
 // on - both states' entry 0, the frame the window opens.
 extern "C" void __cdecl BattleResultWin_NextStep(void) {
-    auto* const window_rec = CurrentWindowRec();
+    auto* const window_rec = rv::As<records::WindowRecord>(CurrentWindow());
     window_rec->state = static_cast<unsigned char>(window_rec->state + 1);
 }
 

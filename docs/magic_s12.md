@@ -196,7 +196,7 @@ rounds each, with no harness edits; what the harness lacks is built in
   indexes its stack by +9 read again, S18's case).
 - **Tables:** the seven `.data` tables of section 4.
 - **Regions** beyond the standard ones: `Gfx_PacketNext` and the packet
-  buffer; `DamageScratch`; `Prim_VertexScratch`; `MoveScript_TintRecords`;
+  buffer; `SharedScratch`; `Prim_VertexScratch`; `MoveScript_TintRecords`;
   the CLUT strip's 0x40 bytes from and to; `0x904B50..0x904B8F` (the result
   record pointer and the ability word); `0x90465C`; the seen bits
   `0x9040A8`; `Input_Pressed`. 22,906 bytes of state in 19 regions.

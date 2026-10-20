@@ -28,22 +28,22 @@ namespace at {
 // The 48 battle-task slots, 0x84 bytes each (battle_flow_callees.h): +0
 // flags, +1 the state, +5 the parameter (which handler of the kind), +6 the
 // kind, +7 a mode, +9 a timer, +0xA a digit count, +0xB, +0x80 the owner.
-constexpr std::uint32_t kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskSize = 0x84;
 constexpr unsigned kTaskCount = 0x30;
-constexpr std::uint32_t kTaskCurrent = 0x93B8C4;  // unsigned char*: the slot being run
+// kTaskCurrent: now BattleFlow_TaskCurrent (symbols.toml). unsigned char*: the slot being run
 constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80, copied there by BattleTask_RunAll
 // The party's working records (ObjTrio, 0x14C each) and the eight enemy
 // objects (0x128 each): an actor 0..2 is a member, 3.. an enemy.
 // kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
-constexpr std::uint32_t kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemySize = 0x128;
 // The battle's globals.
 constexpr std::uint32_t kPhase = 0x904AA0;        // u8 here: the actor watch waits out phase 5, the follower ends outside 1
 constexpr std::uint32_t kRoundCount = 0x904AA2;   // u8, + 1 by the second round hook
 constexpr std::uint32_t kRoundFlags = 0x904AA8;   // dword: 0x400 the actor watch's gate, 0x800 the magic rows'
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 gates the two round hooks
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 gates the two round hooks
 constexpr std::uint32_t kTurnGate = 0x904B34;     // u8, compared with the owner's actor
 // The sprite animation set pointer (docs/sprite-pose.md): the pose task and
 // the actor watch point it at 0x8C5D80 around their state call and back at

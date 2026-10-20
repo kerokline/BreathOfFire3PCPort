@@ -10,8 +10,8 @@
 namespace effect_6a::at {
 
 // --- the leader (ObjTrio record 0) -------------------------------------------------
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34: the leader's x, 16.16
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). ObjTrio +0x38: its z, 16.16
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio +0x34: the leader's x, 16.16
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). ObjTrio +0x38: its z, 16.16
 
 // --- the variant tables, indexed by the spawn's x cell (+0x36, movsx) ---------------
 // Two bytes a variant: the cell x, z put into +0x36, +0x3A. The room is the

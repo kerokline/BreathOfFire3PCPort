@@ -22,6 +22,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_fx_tasks_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -84,14 +85,12 @@ std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinter
 // A pointer the original keeps in a dword, read afresh.
 unsigned char* PtrAt(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
 // The battle-task slot being run (0x93B8C4), and a slot's owner (+0x80).
-unsigned char* Cur() { return PtrAt(at::kTaskCurrent); }
+unsigned char* Cur() { return rv::Bytes(BattleFlow_TaskCurrent); }
 unsigned char* OwnerOf(const unsigned char* slot) { return At(static_cast<std::uint32_t>(Long(slot + 0x80))); }
 // Sprite_Current, read afresh at every use.
 unsigned char* Sc() { return Sprite_Current; }
 // The running slot is a battle task; Sprite_Current is the slot too while
 // BattleTask_RunAll runs it (docs/battle_fx_tasks.md 1).
-records::BattleTask* CurRec() { return reinterpret_cast<records::BattleTask*>(Cur()); }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sc()); }
 
 // An actor's flag dword: a member's ObjTrio +0x130, an enemy's +0x110 (its
 // low byte's bit 7 is set while a popup of its is up). As the original has
@@ -99,7 +98,7 @@ records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sc
 // original's 32-bit wrap.
 unsigned char* ActorFlagByte(unsigned actor) {
     if (actor <= 2) return At(ObjTrio_addr + 0x130 + actor * at::kMemberSize);
-    return At(at::kEnemies + 0x110 + (actor - 3u) * at::kEnemySize);
+    return At(Battle_Enemies_addr + 0x110 + (actor - 3u) * at::kEnemySize);
 }
 
 void CallIndex(const Handler* table, unsigned n, unsigned index, const char* who) {
@@ -173,12 +172,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMagicRow_Run(v
 // a word; the callees read only the byte or the word, and ours pushes the
 // same bits.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_DamagePopup(void) {
-    CallIndex(g.popup, 5, CurRec()->state, "BattleFx_DamagePopup");
+    CallIndex(g.popup, 5, rv::As<records::BattleTask>(Cur())->state, "BattleFx_DamagePopup");
     const unsigned char* const sp = Sc();
     const std::uint32_t sc = Address(sp);
     if ((sp[0] & 1) == 0) return;
     unsigned char* const t = Cur();
-    auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+    auto* const task_rec = rv::As<records::BattleTask>(t);
     const std::uint32_t ta = Address(t);
     switch (task_rec->mode) {
     case 0:
@@ -186,14 +185,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_DamagePopup
             g.rolling_digits((ta & 0xFFFFFF00u) | task_rec->clut);
             return;
         }
-        g.draw_number(static_cast<int>((sc & 0xFFFF0000u) | ((Word(t + 0x36) - 0xCu) & 0xFFFFu)),
-                      static_cast<int>(Word(t + 0x3A)), (sc & 0xFFFFFF00u) | task_rec->clut, Word(t + 0x60));
+        g.draw_number(static_cast<int>((sc & 0xFFFF0000u) | ((task_rec->x_whole - 0xCu) & 0xFFFFu)),
+                      static_cast<int>(task_rec->z_whole), (sc & 0xFFFFFF00u) | task_rec->clut, Word(t + 0x60));
         return;
     case 1:
     case 2:
     case 3:
-        g.draw_label(static_cast<int>((ta & 0xFFFF0000u) | Word(t + 0x36)),
-                     static_cast<int>((sc & 0xFFFF0000u) | Word(t + 0x3A)), task_rec->clut, 3u - task_rec->mode);
+        g.draw_label(static_cast<int>((ta & 0xFFFF0000u) | task_rec->x_whole),
+                     static_cast<int>((sc & 0xFFFF0000u) | task_rec->z_whole), task_rec->clut, 3u - task_rec->mode);
         return;
     default:
         return;
@@ -221,46 +220,46 @@ extern "C" void __cdecl BattleFx_PopupStart(void) {
     unsigned actor = o[5];
     if (actor <= 2) {
         std::uint32_t k = Word(o + 0x2C) * 4u + o[8];
-        SetWord(s + 0x36, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + k * 2)[0])) + Word(o + 0x2E));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + k * 2)[0])) + Word(o + 0x2E));
         s = Cur();
         o = OwnerOf(s);
         k = Word(o + 0x2C) * 4u + o[8];
-        SetWord(s + 0x3A, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + 1 + k * 2)[0])) + Word(o + 0x30));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + 1 + k * 2)[0])) + Word(o + 0x30));
     } else {
-        SetWord(s + 0x36, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(Battle_Enemies_addr + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x2E));
         s = Cur();
         o = OwnerOf(s);
         actor = o[5];
-        SetWord(s + 0x3A, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(Battle_Enemies_addr + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x30));
     }
     unsigned char* d = Cur();
-    records::BattleTask* task_d = reinterpret_cast<records::BattleTask*>(d);
+    records::BattleTask* task_d = rv::As<records::BattleTask>(d);
     if (d[0xB] == 1) {
-        SetWord(d + 0x3A, Word(d + 0x3A) - 9u);
+        rv::Store<unsigned>(task_d->z_whole, task_d->z_whole - 9u);
         d = Cur();
-        task_d = reinterpret_cast<records::BattleTask*>(d);
+        task_d = rv::As<records::BattleTask>(d);
     }
     const std::int32_t value = task_d->value;
     const unsigned char digits = value / 100 > 0 ? 2 : value / 10 > 0 ? 1 : 0;
     unsigned char* const flag = ActorFlagByte(OwnerOf(d)[5]);
     flag[0] = static_cast<unsigned char>(flag[0] | 0x80);
     task_d->digits = digits;
-    CurRec()->timer = 8;
-    CurRec()->digit_phase = 0;
-    CurRec()->state = static_cast<unsigned char>(CurRec()->state + 1);
+    rv::As<records::BattleTask>(Cur())->timer = 8;
+    rv::As<records::BattleTask>(Cur())->digit_phase = 0;
+    rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
 }
 
 // original 0x432DB0 (state 1): the timer +9 counts down; on the frame it is
 // found 0 (it wraps to 0xFF first) the state + 1 and the timer 4.
 extern "C" void __cdecl BattleFx_PopupHold(void) {
-    auto* const task_rec = CurRec();
+    auto* const task_rec = rv::As<records::BattleTask>(Cur());
     const unsigned char timer = task_rec->timer;
     task_rec->timer = static_cast<unsigned char>(timer - 1);
     if (timer != 0) return;
-    CurRec()->state = static_cast<unsigned char>(CurRec()->state + 1);
-    CurRec()->timer = 4;
+    rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
+    rv::As<records::BattleTask>(Cur())->timer = 4;
 }
 
 // original 0x432DE0 (state 2): the dword +0x38 + 0x40000 (y +0x3A down 4)
@@ -269,22 +268,22 @@ extern "C" void __cdecl BattleFx_PopupHold(void) {
 // +0x1C / +0x18 = the s16 y / x.
 extern "C" void __cdecl BattleFx_PopupRise(void) {
     unsigned char* s = Cur();
-    records::BattleTask* task_rec = reinterpret_cast<records::BattleTask*>(s);
-    task_rec->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->y) + 0x40000u);
+    records::BattleTask* task_rec = rv::As<records::BattleTask>(s);
+    task_rec->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->z) + 0x40000u);
     s = Cur();
-    task_rec = reinterpret_cast<records::BattleTask*>(s);
+    task_rec = rv::As<records::BattleTask>(s);
     const unsigned char timer = task_rec->timer;
     task_rec->timer = static_cast<unsigned char>(timer - 1);
     if (timer != 0) return;
-    CurRec()->state = static_cast<unsigned char>(CurRec()->state + 1);
-    CurRec()->vel_x = 0x8000;
-    CurRec()->vel_y = static_cast<std::int32_t>(0xFFFA0000u);
+    rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
+    rv::As<records::BattleTask>(Cur())->step_x = 0x8000;
+    rv::As<records::BattleTask>(Cur())->step_z = static_cast<std::int32_t>(0xFFFA0000u);
     s = Cur();
-    task_rec = reinterpret_cast<records::BattleTask*>(s);
-    task_rec->start_y = static_cast<short>(Word(s + 0x3A));
+    task_rec = rv::As<records::BattleTask>(s);
+    task_rec->work_1c = static_cast<short>(task_rec->z_whole);
     s = Cur();
-    task_rec = reinterpret_cast<records::BattleTask*>(s);
-    task_rec->start_x = static_cast<short>(Word(s + 0x36));
+    task_rec = rv::As<records::BattleTask>(s);
+    task_rec->work_18 = static_cast<short>(task_rec->x_whole);
 }
 
 // original 0x432E50 (state 3): the bounce. It ends - timer 10, state + 1 -
@@ -296,26 +295,26 @@ extern "C" void __cdecl BattleFx_PopupRise(void) {
 // re-read before the second and the third.
 extern "C" void __cdecl BattleFx_PopupBounce(void) {
     unsigned char* s = Cur();
-    records::BattleTask* task_rec = reinterpret_cast<records::BattleTask*>(s);
-    if (!(task_rec->start_y > static_cast<short>(Word(s + 0x3A))) && task_rec->start_x != static_cast<short>(Word(s + 0x36))) {
+    records::BattleTask* task_rec = rv::As<records::BattleTask>(s);
+    if (!(task_rec->work_1c > static_cast<short>(task_rec->z_whole)) && task_rec->work_18 != static_cast<short>(task_rec->x_whole)) {
         task_rec->timer = 0xA;
-        CurRec()->state = static_cast<unsigned char>(CurRec()->state + 1);
+        rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
         return;
     }
-    task_rec->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->x) + static_cast<std::uint32_t>(task_rec->vel_x));
+    task_rec->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->x) + static_cast<std::uint32_t>(task_rec->step_x));
     s = Cur();
-    task_rec = reinterpret_cast<records::BattleTask*>(s);
-    task_rec->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->y) + static_cast<std::uint32_t>(task_rec->vel_y));
+    task_rec = rv::As<records::BattleTask>(s);
+    task_rec->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->z) + static_cast<std::uint32_t>(task_rec->step_z));
     s = Cur();
-    task_rec = reinterpret_cast<records::BattleTask*>(s);
-    task_rec->vel_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->vel_y) + 0x14000u);
+    task_rec = rv::As<records::BattleTask>(s);
+    task_rec->step_z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->step_z) + 0x14000u);
 }
 
 // original 0x432EA0 (state 4): the timer as the hold's; when it was 0 the
 // owner's flag byte loses 0x80 again and the slot is freed
 // (BattleTask_FreeCurrent, tail-jumped to).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PopupEnd(void) {
-    auto* const task_rec = CurRec();
+    auto* const task_rec = rv::As<records::BattleTask>(Cur());
     const unsigned char timer = task_rec->timer;
     task_rec->timer = static_cast<unsigned char>(timer - 1);
     if (timer != 0) return;
@@ -335,7 +334,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PopupEnd(vo
 // As the original has it: the pointer is set before the index is read and
 // put back unconditionally; the index is not checked (ours aborts past 1).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseTask(void) {
-    auto* const task_rec = ScTask();
+    auto* const task_rec = rv::As<records::BattleTask>(Sc());
     BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetBattle);
     CallIndex(g.pose, 2, task_rec->state, "BattleFx_PoseTask");
     BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetField);
@@ -357,11 +356,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseStart(v
     Sc()[0x24] = 0x84;
     {
         unsigned char* const sc = Sc();
-        auto* const task_rec = reinterpret_cast<records::BattleTask*>(sc);
+        auto* const task_rec = rv::As<records::BattleTask>(sc);
         task_rec->clut = static_cast<unsigned char>(At(at::kPoseClut + sc[7])[0] - 0x50);
     }
     Sc()[0x28] = 0;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
     {
         unsigned char* const sc = Sc();
@@ -369,7 +368,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseStart(v
         if (mode == 6) sc[0x2A] = (b & 1) != 0 ? 1 : 0;
         else sc[0x2A] = b == 1 || b == 2 ? 1 : 0;
     }
-    ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+    rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
     unsigned char* const sc = Sc();
     g.set_animation(At(at::kPoseAnim + (sc[8] >> 1) + sc[7] * 2u)[0]);
     g.queue_overlay();
@@ -389,7 +388,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PosePlay(vo
 // 0x4FB070 (group CJ's magic effect).
 extern "C" void __cdecl BattleFx_StepReset(void) {
     Sc()[9] = 0;
-    ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+    rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
 }
 
 // ===========================================================================
@@ -406,7 +405,7 @@ extern "C" void __cdecl BattleFx_StepReset(void) {
 // index is not checked (ours aborts past 4).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatch(void) {
     if (At(at::kPhase)[0] == 5) return;
-    auto* const task_rec = ScTask();
+    auto* const task_rec = rv::As<records::BattleTask>(Sc());
     BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetBattle);
     CallIndex(g.watch, 5, task_rec->state, "BattleFx_ActorWatch");
     BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetField);
@@ -436,9 +435,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatchT
     } else {
         if (g.actor_is_out(arg) != 0) return;
         const unsigned now = PtrAt(at::kTaskOwner)[5];
-        if ((At(at::kEnemies + 0x92 + (now - 3u) * at::kEnemySize)[0] & 0x58) == 0) return;
+        if ((At(Battle_Enemies_addr + 0x92 + (now - 3u) * at::kEnemySize)[0] & 0x58) == 0) return;
     }
-    ScTask()->state = static_cast<unsigned char>(ScTask()->state + 1);
+    rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
 }
 
 // ===========================================================================
@@ -449,7 +448,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatchT
 // one-entry stack table, 0x433810. Any state but 0 would call through the
 // original's stack; ours aborts.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_Follow(void) {
-    CallIndex(g.follow, 1, ScTask()->state, "BattleFx_Follow");
+    CallIndex(g.follow, 1, rv::As<records::BattleTask>(Sc())->state, "BattleFx_Follow");
 }
 
 // original 0x433810 (PSX 0x800A5360 by the catalogue's pairing, not read):
@@ -470,7 +469,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_FollowOwner
                                        {0x34, 4}, {0x38, 4}, {0x3C, 4}};
     {
         const unsigned char b = PtrAt(at::kTaskOwner)[0];
-        ScTask()->flags = static_cast<unsigned char>(b | 0x20);
+        rv::As<records::BattleTask>(Sc())->flags = static_cast<unsigned char>(b | 0x20);
     }
     for (const Copy& c : kCopies) {
         const unsigned char* const o = PtrAt(at::kTaskOwner);
@@ -497,7 +496,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_FollowOwner
 //
 // As the original has it: the flag byte is read once, before the area word.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Script(void) {
-    if ((BattleActions_BattleEnd & 1) == 0) return;
+    if ((Battle_EndFlags & 1) == 0) return;
     if (AreaW2c_LastArea != 0xBD) return;
     MoveScript_Var7 = 1;
     At(MoveScript_Var7_addr + 1)[0] = 0x19;
@@ -509,7 +508,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Sc
 // state and called by 0x4317B0 (group CC's). With the same two conditions:
 // Transition_Start(4), then byte 0x904AA2 + 1 (read after the call).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Transition(void) {
-    if ((BattleActions_BattleEnd & 1) == 0) return;
+    if ((Battle_EndFlags & 1) == 0) return;
     if (AreaW2c_LastArea != 0xBD) return;
     g.transition_start(4);
     BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);

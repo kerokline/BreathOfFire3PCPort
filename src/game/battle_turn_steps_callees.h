@@ -37,15 +37,15 @@ constexpr std::uint32_t kState3 = 0x904AA3;       // u8: the result's step
 constexpr std::uint32_t kState4 = 0x904AA4;       // u8 (read as a dword and masked): the result's page
 // kCursor: now BossSb_Countdown (symbols.toml). u8: the member BattleEnd_StartMemberTask is at
 constexpr std::uint32_t kRoundFlags = 0x904AA8;   // u16; bits 2, 3 and 4 cleared here, bit 4 tested
-// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (battle_flow.md: "event battle" is a guess)
+// kEventBattle: now EventBattle_Id (symbols.toml). u8 (battle_flow.md: "event battle" is a guess)
 constexpr std::uint32_t kMembers = 0x904AB0;      // u8: the party's count
 constexpr std::uint32_t kCmdByte = 0x904AB4;      // u8, zeroed with the four below before file 0x131
 constexpr std::uint32_t kCmdKind = 0x904ABC;      // u8, set to 8
 constexpr std::uint32_t kCmdLong = 0x904ABD;      // u32, zeroed (unaligned)
 constexpr std::uint32_t kCmdWord = 0x904AC1;      // u16, zeroed (unaligned)
 // kSideMode: now BattlePhases_Initiative (symbols.toml). u8: 2 changes what the faster side gets
-// kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 and bit 1 pick the way out (|= 2 when the last enemy falls)
+// kMusicFlags: now EventBattle_Flags (symbols.toml). u8: bit 0x40 keeps the battle's music
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 and bit 1 pick the way out (|= 2 when the last enemy falls)
 // kBattleEnd2: now BattleMisc_BannerKinds (symbols.toml). u8, zeroed on the way out
 // kExtraRound: now BattlePhases_B7A (symbols.toml). u8: 1..3, the faster side's extra round; 0 none
 // kPending: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect to show
@@ -69,13 +69,15 @@ constexpr unsigned kState = 0x01, kCharId = 0x89, kStatus = 0x90, kHp = 0x98, kA
 constexpr unsigned kMaxHp = 0xA0, kMaxAp = 0xA2, kByteAE = 0xAE, kFlags2 = 0x130, kFlags = 0x134, kRecord = 0x148;
 // kPartyByte: now BossSa_WindowPass (symbols.toml). u8, zeroed as the battle's end begins
 // The enemies' objects, 0x93B960 stride 0x128; +0x114 flags (u32).
-constexpr std::uint32_t kEnemy = 0x93B960, kEnemyStride = 0x128;
+// kEnemy: now Battle_Enemies (symbols.toml).
+constexpr std::uint32_t kEnemyStride = 0x128;
 constexpr unsigned kEFlags = 0x114;
 // A second three-record array of the party's stride (0x939AE0), whose +0x134
 // loses bit 0 when a member other than character 4 gets its task.
 constexpr std::uint32_t kCopies = 0x939AE0;
 // The 48 battle-task slots, 0x84 each; +0x80 the owner.
-constexpr std::uint32_t kTasks = 0x93A000, kTaskSize = 0x84;
+// kTasks: now BattleTask_Slots (symbols.toml).
+constexpr std::uint32_t kTaskSize = 0x84;
 // Eight dwords 0x803540..0x80355C: while any is not 0 the next round waits.
 constexpr std::uint32_t kBusy = 0x803540;
 // The twelve message-window records from 0x803160 (0x24 each): byte +0x24 of
@@ -83,7 +85,8 @@ constexpr std::uint32_t kBusy = 0x803540;
 constexpr std::uint32_t kWindows = 0x803184, kWindowStride = 0x24;
 // CharacterRecords, 0xA4 each: +0xB, +0x10 status (u16), +0x18 HP (u16),
 // +0x1C, +0x1E.
-constexpr std::uint32_t kRecords = 0x903A70, kRecordStride = 0xA4;
+// kRecords: now CharacterRecords (symbols.toml).
+constexpr std::uint32_t kRecordStride = 0xA4;
 
 // The dispatch tables (symbols.toml [[data]]).
 // kRoundEndSteps: now BattleRoundEnd_Steps (symbols.toml). 3, by kState1 - 0x4302B0

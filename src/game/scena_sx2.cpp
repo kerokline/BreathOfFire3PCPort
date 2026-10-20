@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sx2_callees.h"
 #include "game/scenario_harness.h"
@@ -42,11 +43,11 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 using move_script::Word;
 
 std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
@@ -96,7 +97,7 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
 extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
     const unsigned i = SH_CALL(Effect_FindFree)();
     if (i == 0xFF) return;
-    unsigned char* const e = Effect_Objects + i * 0x80;
+    unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
     e[0] = 1;
     e[5] = 4;
     e[9] = static_cast<unsigned char>(frames);
@@ -129,20 +130,18 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
     const unsigned char a = pairs[f * 2];
     std::uint32_t zd;
     if (a != 0) {
-        SetLong(Sprite_Current + 0x34,
-                static_cast<std::int32_t>(U(Long(row)) * U(Quarter(a)) + U(x)));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(U(Long(row)) * U(Quarter(a)) + U(x)));
         const unsigned f2 = At(at::kFormation)[0];
         zd = U(Quarter(pairs[f2 * 2])) * U(Long(row + 4));
     } else {
-        SetLong(Sprite_Current + 0x34,
-                static_cast<std::int32_t>(U(x) - U(Quarter(pairs[f * 2 + 1])) * U(Long(row + 4))));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(U(x) - U(Quarter(pairs[f * 2 + 1])) * U(Long(row + 4))));
         const unsigned f2 = At(at::kFormation)[0];
         zd = U(Quarter(pairs[f2 * 2 + 1])) * U(Long(row));
     }
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(zd + U(z)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(zd + U(z)));
     unsigned char* const s = Sprite_Current;
-    const long ground = SH_CALL(MapView_GroundAt)(Spr(s)->x, Spr(s)->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<std::uint32_t>(ground));
+    const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<std::uint32_t>(ground));
 }
 
 // original 0x572620: the height layer's byte of cell (x, z) (s16s) set:
@@ -203,7 +202,7 @@ extern "C" unsigned char __cdecl Camera_TurnStepFB(unsigned angle, unsigned step
 // EffectKind2A_PushParty 0x4712E0 and 0x4849A0 pass 2 or a table byte. PSX 0x8015CC04
 // (pairs_propagated "call").
 extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
-    unsigned char* const o = ObjTrio + (member & 0xFF) * at::kObjStride;
+    unsigned char* const o = rv::Bytes(&ObjTrio[member & 0xFF]);
     o[1] = 2;
     o[2] = 8;
     o[3] = 0;
@@ -274,7 +273,7 @@ extern "C" unsigned char* __cdecl AbilityList_ForType(unsigned member, unsigned 
     static const unsigned char kLists[4] = {0x60, 0x6A, 0x74, 0x7E};
     const unsigned m = member & 0xFF;
     unsigned char* const base = (working & 0xFF) != 0 ? At(at::kWorkingRecords + m * at::kObjStride)
-                                                      : At(bof3::addr::CharacterRecords + m * at::kRecordStride);
+                                                      : At(CharacterRecords_addr + m * at::kRecordStride);
     const unsigned type = At(at::kAbilityType)[(id & 0xFF) * 24] & 3;
     return base + kLists[type];
 }

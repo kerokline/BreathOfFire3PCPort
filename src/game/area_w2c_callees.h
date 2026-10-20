@@ -38,7 +38,7 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The story flags (Flags_Set / Flags_Test's bank) and the pointer to the
 // chapter's flag row the chapters' flag calls take (docs/field-modes.md).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
-// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
+// kFlagRow: now Chapter_FlagRow (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
@@ -48,8 +48,8 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The leader's byte +8 (the pose the hooks compare) and +0x137 (a byte of
 // each member record; mode_flow_callees.h's kMemberWalk).
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeader137: now ObjTrio[0x137] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeader137: now ObjTrio_addr + 0x137 (symbols.toml).
 // The previous area (u16; mode_flow_callees.h's kLastArea): area 94's init
 // compares it with 0x79.
 constexpr std::uint32_t kLastArea = 0x802290;

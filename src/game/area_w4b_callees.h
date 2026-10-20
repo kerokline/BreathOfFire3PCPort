@@ -33,7 +33,7 @@ constexpr std::uint32_t kTailTimer = 0x9039F6;
 // slot and the input word there, area 171's step hook a count).
 constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter3 = 0x90384B;
-constexpr std::uint32_t kScratch = 0x903850;
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 // The story flags (Flags_Set / Flags_Test's bank), and a second bank area
 // 172's choice 0 tests (Cond_Flags row 14: 0x903F90 + 8 * 14).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
@@ -48,18 +48,18 @@ constexpr std::uint32_t kEntryZone = 0x905E68;
 // block no other group has read; what it holds is not read here).
 // kGateKey: now AreaW4b_GateKey (symbols.toml).
 // The leader's record (ObjTrio record 0): x +0x34, z +0x38, the pose byte +8
-// the hooks compare, +0x89 (MoveScript_EffectState's index, area_w1c), +0x137
+// the hooks compare, +0x89 (Character_IndexById's index, area_w1c), +0x137
 // (area 171's tail waits for it to be 0; field_hidden_callees.h's
 // kLeader137). Party records 1 and 2's words +0x12E (area 170's state 60
 // counts both up).
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeader89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeader89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kLeader137 = 0x802E77;
-// kParty1Word12E: now Field_Members[0x132] (symbols.toml).
-// kParty2Word12E: now ObjTrio[0x3c6] (symbols.toml).
+// kParty1Word12E: now ObjTrio (symbols.toml). record 1 +0x12E (Field_Members[0x132] until stage C4).
+// kParty2Word12E: now ObjTrio_addr + 0x3c6 (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The field record's byte +0x128 the member frames set to 2, and the byte
 // +0x149 area 172's fall indexes MoveScript_TintRecords by.
@@ -70,7 +70,7 @@ constexpr std::uint32_t kFieldStateTint = 0x149;
 constexpr std::uint32_t kTintStride = 12;
 // Sprite_Kind2 + 0x3C: the camera object's height dword (scena_sc0.cpp
 // writes it beside MapView_SetElevation the same way).
-// kKind2Height: now Sprite_Kind2[0x3c] (symbols.toml).
+// kKind2Height: now Sprite_Kind2.height (symbols.toml).
 // Camera_Angles + 2: the yaw word the effects of kind 0x13 take.
 // kCameraYaw: now Camera_Angles[1] (symbols.toml).
 // Field_MoveSpeeds + 2 and + 3 (bytes): the glide divisor is one << 3.
@@ -96,7 +96,7 @@ constexpr std::uint32_t kObjectStride = 0xA4;
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 // kInputHeld: now Input_Held (symbols.toml). Input_Held
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy
 // kKind2Hold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles
 // kMoveSpeeds: now Field_MoveSpeeds (symbols.toml). Field_MoveSpeeds

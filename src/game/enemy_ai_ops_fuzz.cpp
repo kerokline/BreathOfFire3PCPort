@@ -22,6 +22,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/enemy_ai_ops_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -36,7 +37,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + (i % at::kEnemyCount) * at::kEnemySize); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + (i % at::kEnemyCount) * at::kEnemySize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleE3_CurrentEnemy_addr)))); }
 
@@ -69,10 +70,10 @@ std::uint32_t En() { return static_cast<std::uint32_t>(Long(At(BattleE3_CurrentE
 
 // The step bytes inside the swapped block: +1 below 12, +2 below 6, +3 below 9.
 void SmallSteps(unsigned char* e, std::uint32_t h) {
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
-    enemy_rec->state[0] = static_cast<unsigned char>(h % 12);
-    enemy_rec->state[1] = static_cast<unsigned char>((h >> 4) % 6);
-    enemy_rec->state[2] = static_cast<unsigned char>((h >> 8) % 9);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
+    enemy_rec->state = static_cast<unsigned char>(h % 12);
+    enemy_rec->step = static_cast<unsigned char>((h >> 4) % 6);
+    enemy_rec->state3 = static_cast<unsigned char>((h >> 8) % 9);
 }
 unsigned Actor(std::uint32_t h) { return h % 4 == 0 ? (h >> 2) % 64 : 3 + (h >> 2) % 8; }
 
@@ -91,17 +92,17 @@ void Disturb() {
     case 3: Sprite_Current[5] = static_cast<unsigned char>(Actor(h >> 9)); break;
     case 4: Sprite_Current[7] = static_cast<unsigned char>(v % 0x40); break;
     case 5: Current()[0x92 + w % 2] = static_cast<unsigned char>(v); break;
-    case 6: reinterpret_cast<records::BattleEnemy*>(Current())->shown = static_cast<unsigned char>(v); break;
-    case 7: SetWord(Current() + 0x108, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
-    case 8: SetWord(Current() + 0x10A, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
-    case 9: SetWord(Current() + 0xA4, v % 3 == 0 ? 0 : w); break;
-    case 10: SetLong(Current() + 0x110, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
+    case 6: rv::As<records::BattleEnemy>(Current())->shown = static_cast<unsigned char>(v); break;
+    case 7: rv::Store<unsigned>(rv::As<records::BattleEnemy>(Current())->hp_change, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
+    case 8: rv::Store<unsigned>(rv::As<records::BattleEnemy>(Current())->ap_change, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
+    case 9: rv::Store<unsigned>(rv::As<records::BattleEnemy>(Current())->hp, v % 3 == 0 ? 0 : w); break;
+    case 10: rv::Store<std::int32_t>(rv::As<records::BattleEnemy>(Current())->flags_110, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 11: {
         static const unsigned kBits[] = {0x40, 0x80, 0x1000, 0x2000};
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) ^ kBits[v % 4]);
         break;
     }
-    case 12: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
+    case 12: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
     case 13: At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
     case 14: At(at::kActionKind)[0] = static_cast<unsigned char>(v % 7); break;
     case 15: SetWord(At(at::kMagicId), (w % 4) << 8 | v); break;
@@ -110,7 +111,7 @@ void Disturb() {
     case 18: SetPtr(BattleDamage_Result_addr, EnemyObj(v) + 0x104); break;
     case 19: g_target[w % kTargets] = static_cast<unsigned char>(v); break;
     case 20: Sprite_Current[8] = static_cast<unsigned char>(v % 5); break;
-    case 21: At(at::kTasks + Sprite_Current[5] * at::kTaskSize)[9] = static_cast<unsigned char>(v); break;
+    case 21: At(BattleTask_Slots_addr + Sprite_Current[5] * at::kTaskSize)[9] = static_cast<unsigned char>(v); break;
     case 22: At(at::kPulse)[0] = static_cast<unsigned char>(v); break;
     default: {
         const unsigned id = Word(At(at::kMagicId)) & 0xFF;
@@ -212,7 +213,7 @@ unsigned long __cdecl StubTurnCheck() {
     Record(16, Sc(), En());
     const std::uint32_t h = Hash();
     if (h % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(h >> 8));
-    if ((h >> 1) % 3 == 0) SetWord(Current() + 0xA4, (h >> 3) % 2 ? 0 : h >> 16);
+    if ((h >> 1) % 3 == 0) rv::Store<unsigned>(rv::As<records::BattleEnemy>(Current())->hp, (h >> 3) % 2 ? 0 : h >> 16);
     Disturb();
     return Hash();
 }
@@ -336,7 +337,7 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kTasks, 0x22A0},        // the 48 slots (an actor's slot up to 63 runs into the enemy objects), the objects
+    {BattleTask_Slots_addr, 0x22A0}, // the 48 slots (an actor's slot up to 63 runs into the enemy objects), the objects
     {0x937F88, 4},               // Sprite_Current
     {BattleE3_CurrentEnemy_addr, 4},
     {at::kStatBlock, 0x24},      // the 32 bytes copied in, the pointer 0x939FA0
@@ -381,7 +382,7 @@ void Fix() {
     SetPtr(BattleE3_CurrentEnemy_addr, Often() ? Sprite_Current : EnemyObj(Next()));
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObj(i);
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         SmallSteps(e, Next());
         enemy_rec->actor = static_cast<unsigned char>(Actor(Next()));
         e[7] = static_cast<unsigned char>(Next() % 0x40);
@@ -393,7 +394,7 @@ void Fix() {
     SetPtr(BattleDamage_Result_addr, EnemyObj(Next()) + 0x104);
     SetWord(At(at::kMagicId), (Half() ? (Next() % 4) << 8 : 0) | (Next() & 0xFF));
     At(at::kActionKind)[0] = static_cast<unsigned char>(Next() % 7);
-    if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
+    if (Half()) At(EventBattle_Id_addr)[0] = 0;
     if (Half()) At(BattleE4_Picking_addr)[0] = 0;
 }
 
@@ -401,7 +402,7 @@ void Fix() {
 void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     unsigned char* const e = Current();
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     switch (k) {
     case kStepDispatch: s[1] = static_cast<unsigned char>(Often() ? Next() % 12 : Next() % kBlockEntries); break;
     case kEnterDispatch: s[2] = static_cast<unsigned char>(Often() ? Next() % 2 : Next() % 33); break;
@@ -421,7 +422,7 @@ void Seed(unsigned k) {
         if (Often()) e[0x92] = static_cast<unsigned char>(e[0x92] | 0x20);
         if (Half()) e[0x111] = static_cast<unsigned char>(e[0x111] & ~0x10u);
         static const unsigned char kBob[] = {0, 10, 11, 12, 13, 0xF6, 0xF5, 0xF4, 0xF3, 0x7F, 0x80};
-        At(at::kTasks + s[5] * at::kTaskSize)[9] = kBob[Next() % 11];
+        At(BattleTask_Slots_addr + s[5] * at::kTaskSize)[9] = kBob[Next() % 11];
         if (Half()) s[8] = static_cast<unsigned char>(Half() ? 1 : 3);
         break;
     }
@@ -444,7 +445,7 @@ void Seed(unsigned k) {
         if (Often()) e[0x111] = static_cast<unsigned char>(e[0x111] & ~2u);
         if (Half()) SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & ~0x2000u);
         if (Half()) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 0x80);
-        if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
+        if (Half()) At(EventBattle_Id_addr)[0] = 0;
         if (Half()) SetWord(At(at::kMagicId), Next() & 0xFF);
         break;
     }

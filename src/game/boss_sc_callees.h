@@ -30,11 +30,11 @@ using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0, the harness's battle bytes) ---
 constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (0x904AA8 + 1); Amalgam's death sets bit 2
-// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle
+// kFight: now EventBattle_Id (symbols.toml). u8: the event battle
 // kFightFlags: now BossSe_Script (symbols.toml). u8: the fight's own progress bits (fights 13 / 16: which lines were shown)
 // kCount4AE2: now BossSe_RoundSlot (symbols.toml). u8: Nina's action hook decrements it once (what it counts was not read)
-// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win
-// kBattleExp: now BattleFlow_ExpTotal (symbols.toml). u32: the battle's experience sum (Battle_EnemyDefeated adds +0x96)
+// kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win
+// kBattleExp: now Battle_ExpTotal (symbols.toml). u32: the battle's experience sum (Battle_EnemyDefeated adds +0x96)
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kAction = 0x904B35;           // u8: the enemy's action pick
 constexpr U kTarget = 0x904B44;           // u8: the battle's target
@@ -47,7 +47,7 @@ constexpr U kMoveCounter = 0x903848;
 // --- the field's cells B16's hooks write --------------------------------------
 // kSaveWord: now Field_ScriptFlags (symbols.toml). u16 in the live game block (bit 7 cleared by fight 16's end hook)
 // kFieldByte131: now Music_Track (symbols.toml). u8: set to 0x31 by fight 16's end hook (what reads it was not read)
-// kMember1Flags: now Field_Members[4] (symbols.toml). u8: ObjTrio member 1's +0 (bit 0x40 set by fight 16's exit hook)
+// kMember1Flags: now ObjTrio (symbols.toml). record 1 +0, ObjTrio[1].flags (Field_Members[4] until stage C4). u8: ObjTrio member 1's +0 (bit 0x40 set by fight 16's exit hook)
 // kLeaderPick: now BossH_LeaderPick (symbols.toml). u8: 6 / 7 (Boss_SetByLeaderId's byte; boss_h_callees.h)
 // kMsgPass: now BossSa_WindowPass (symbols.toml). u8: set to 2 before each Msg_OpenScript here (the window pass byte)
 
@@ -55,14 +55,14 @@ constexpr U kMoveCounter = 0x903848;
 // kWaitTurns: now BossSc_WaitTurns (symbols.toml). u8: set to 8 or 10 by Boss16_Setup (Rand & 2), counted down
 
 // --- the name Str_CopyN copies into the banner --------------------------------
-// kBannerChar: now MoveScript_EffectState[1] (symbols.toml). u8: the character record index (0x903A70 + n * 0xA4)
-constexpr U kCharRecords = 0x903A70;      // the live character records, stride 0xA4
+// kBannerChar: now Character_IndexById[1] (symbols.toml). u8: the character record index (0x903A70 + n * 0xA4)
+// kCharRecords: now CharacterRecords (symbols.toml). the live character records, stride 0xA4
 constexpr U kCharStride = 0xA4;
 
 // --- the enemies' objects (0x93B960 + n * 0x128) -----------------------------
-constexpr U kEnemy0 = 0x93B960;
-constexpr U kEnemy1 = 0x93BA88;
-constexpr U kEnemy2 = 0x93BBB0;
+// kEnemy0: now Battle_Enemies (symbols.toml).
+// kEnemy1: now Battle_Enemies[1] (symbols.toml).
+// kEnemy2: now Battle_Enemies[2] (symbols.toml).
 constexpr U kEnemyPose = 0x58;            // u16 +0x58 and +0x5A: the pose a field actor is given back
 constexpr U kEnemyStatus = 0x92;          // u32 from +0x92: bit 0x2000 (+0x93 bit 0x20)
 constexpr U kEnemyExp = 0x96;             // u16

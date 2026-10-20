@@ -216,7 +216,7 @@ argument slots (Scena06_Leap's copies, unread by anyone). Where the original pus
   puts back. Half the time `Scena06_CellHandlers[1]` is Capcom's bare ret
   instead, so that its answer (0x56D800's al) is compared.
 - **Regions** beyond the harness's 22: the character records `0x903A70`
-  (0x520: record 7 and the members' +0xB), `MoveScript_EffectState`
+  (0x520: record 7 and the members' +0xB), `Character_IndexById`
   (0x18), the selector `0x90412C`, the byte `0x904C9F`, `0x904CD0..0x904D0F`
   (the music byte and the two `Text_Records` names), `Cond_ByteFE`,
   `0x929F0C..` (the load bytes `0x929F0F` / `0x929F10` and
@@ -225,7 +225,7 @@ argument slots (Scena06_Leap's copies, unread by anyone). Where the original pus
   `Scena06_MemberBytes` (Capcom's constant bytes, random here so that each
   byte's use is seen - control B2 stood until they were), and the leap's
   object. 37 regions, 11,794 bytes.
-- **Seed**: `MoveScript_EffectState` 0..7 (every record inside the eight);
+- **Seed**: `Character_IndexById` 0..7 (every record inside the eight);
   the areas the band tests; counter 0 at the value a step waits on (the
   table `kWaits`, read off ours: every step that waits on counter 0, paired
   two times in three), counters 1..3 (counter 3 0..19 or 0x10..0x12 for
@@ -439,7 +439,7 @@ original would jump into data or fault):
   0, which `Inventory_Add` refuses, and the run ends as if the inventory
   were full.
 - The members' records (`CharacterRecords` + 0xA4 x
-  `MoveScript_EffectState[k]`) are indexed unchecked, as SE found for
+  `Character_IndexById[k]`) are indexed unchecked, as SE found for
   `Party_AddToLists`.
 
 **Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):

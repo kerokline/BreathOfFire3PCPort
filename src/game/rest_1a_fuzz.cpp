@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/rest_1a.h"
@@ -29,9 +30,6 @@
 namespace rest_1a {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -219,11 +217,11 @@ U FxRand(const U*, U answer) {
     const U nib = n % 4 == 0 ? (n >> 4) & 0xF : kNibbles[(n >> 4) % (sizeof kNibbles / sizeof kNibbles[0])];
     return (answer & 0x7FF0u) | nib;
 }
-// MapView_SlopeAt: DamageScratch's flag byte 0 a third of the time, else not
+// MapView_SlopeAt: SharedScratch's flag byte 0 a third of the time, else not
 // 0; the slope's low word on either side of 0x40 and at the s16 limits.
 U FxSlope(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const flag = sh::Mem(bof3::addr::DamageScratch);
+    unsigned char* const flag = sh::Mem(SharedScratch_addr);
     if (sh::InRegions(flag, 1)) flag[0] = static_cast<unsigned char>(n % 3 == 0 ? 0 : (n >> 2) % 4 ? 1 : 1 + (n >> 4) % 0xFF);
     static const U kWords[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x0140, 0xFFC0, 0x1000};
     const U m = sh::Noise();
@@ -374,17 +372,17 @@ void SeedFormAction() {
     if (sh::Often()) Field_Request = 0;
     unsigned char* const r = Member(s[6]);
     r[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, sh::Next()));
-    MemberRec(r)->step_x = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
-    MemberRec(r)->step_z = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
+    rv::As<records::PartyMember>(r)->step_x = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
+    rv::As<records::PartyMember>(r)->step_z = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
     r[0x70] = static_cast<unsigned char>(sh::Half() ? 0 : PickOf(1, 0x80, sh::Next() | 1));
     const U k = r[9];
-    const U ax = static_cast<U>(MemberRec(r)->step_x) * k + static_cast<U>(MemberRec(r)->x);
-    const U az = static_cast<U>(MemberRec(r)->step_z) * k + static_cast<U>(MemberRec(r)->z);
+    const U ax = static_cast<U>(rv::As<records::PartyMember>(r)->step_x) * k + static_cast<U>(rv::As<records::PartyMember>(r)->x);
+    const U az = static_cast<U>(rv::As<records::PartyMember>(r)->step_z) * k + static_cast<U>(rv::As<records::PartyMember>(r)->z);
     static const U kD[] = {0, 1, 0x17FFF, 0x18000, 0x18001, 0x1FFFF, 0x20000, 0x20001, 0xFFFE8000u, 0xFFFE7FFFu, 0xFFFE0000u,
                            0xFFFDFFFFu, 0x80000000u};
     if (s != r) {
-        MemberRec(s)->x = static_cast<std::int32_t>(ax + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
-        MemberRec(s)->z = static_cast<std::int32_t>(az + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
+        rv::As<records::PartyMember>(s)->x = static_cast<std::int32_t>(ax + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
+        rv::As<records::PartyMember>(s)->z = static_cast<std::int32_t>(az + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
     }
     if (sh::Often()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x1C00u);
     sh::Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(sh::Next() % at::kFormActionCount | (sh::Half() ? 0x80 : 0));
@@ -395,8 +393,8 @@ void SeedJumpAir() {
     unsigned char* const s = AsMember();
     unsigned char* const r = Member(s[6]);
     if (sh::Half()) r[0x137] = 3;
-    SetWord(r + 0x3E, PickOf(0, 0x7FFF, 0x8000, 0xFF80, sh::Next()));
-    if (s != r) SetWord(s + 0x3E, HeightNear(Word(r + 0x3E)));
+    rv::As<records::PartyMember>(r)->height_whole = PickOf(0, 0x7FFF, 0x8000, 0xFF80, sh::Next());
+    if (s != r) rv::As<records::PartyMember>(s)->height_whole = HeightNear(rv::As<records::PartyMember>(r)->height_whole);
 }
 
 // A turning state: +8 at +3 half the time, +3 one of the facings compared,
@@ -502,7 +500,7 @@ void Args(unsigned k, U* a) {
 // What the functions read again after a call, moved by the group's case of the
 // harness's disturbance (from its hash only): Sprite_Current's direction,
 // state bytes, counters, pose, position and height; Field_State +0x137 /
-// +0x138; DamageScratch's flag; Field_InputFlags; Text_Records' first dword.
+// +0x138; SharedScratch's flag; Field_InputFlags; Text_Records' first dword.
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sc();
@@ -518,7 +516,7 @@ void Disturb(U h) {
         if (sh::InRegions(f + 0x137, 2)) f[0x137 + v % 2] = static_cast<unsigned char>(v >> 1);
         break;
     }
-    case 6: sh::Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 6: sh::Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 7: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (v & 1 ? 2 : 4)); break;
     case 8: s[4 + (v % 2)] = static_cast<unsigned char>(v >> 1); break;
     case 9: SetWord(s + 0x2C, v % 3); break;

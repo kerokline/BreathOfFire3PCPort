@@ -21,6 +21,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/psp_code.h"
 #include "game/rest_3g.h"
@@ -32,9 +33,6 @@
 namespace rest_3g {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -268,7 +266,7 @@ const std::uint8_t kKinds[] = {0xAC, 0xAD, 0xAE, 0xBA};
 constexpr U kItemsRegion = 48;   // draw items compared (0x90 each); AreaMapBD_BuildView keeps few cells a call
 const sh::Region kRegions[] = {
     {0x904AA0, 0x20},                       // the battle bytes: the event battle 0x904AAA, the formation 0x904AAC, 0x904AB2 / B3
-    {at::kEnemies, at::kEnemyStride * at::kEnemyCount},   // the eight enemy records
+    {Battle_Enemies_addr, at::kEnemyStride * at::kEnemyCount}, // the eight enemy records
     {Encounter_Rows_addr, 0x48},      // Encounter_Rows (8 rows of 9)
     {0x695990, 0x2A4},                      // Quake's .bss: the facing, the lift tables, the block's corner (magic_s23's region)
     {AreaW1f_MusicCurrent_addr, 4},         // the byte compared with Music_Track
@@ -294,7 +292,7 @@ void Seed(unsigned k) {
     case kACFadeIn:
     case kACFadeOut: s[9] = static_cast<unsigned char>(PickOf(1, 2, 7, 8, 9, 0, sh::Next())); break;
     case kADRise: Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0xB, 0xB, 0xA, 0xC, sh::Next())); break;
-    case kBALine: EffectRec(s)->screen_x = PickOf(0x149, 0x149, 0x14A, 0x148, 0, sh::Next()); break;
+    case kBALine: rv::As<records::EffectObject>(s)->screen_x = PickOf(0x149, 0x149, 0x14A, 0x148, 0, sh::Next()); break;
     case kWinding:
         // three screen points: small floats, often two equal, the cross product's sign either way
         for (unsigned i = 0; i < 3; ++i) {
@@ -306,7 +304,7 @@ void Seed(unsigned k) {
         break;
     case kPlaceAll: {
         // an event battle below the battle side's 24 (each names a row below 8)
-        Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(sh::Next() % 24);
+        Mem(EventBattle_Id_addr)[0] = static_cast<unsigned char>(sh::Next() % 24);
         unsigned char* const rows = Mem(Encounter_Rows_addr);
         for (unsigned i = 0; i < 0x48; ++i)
             if (sh::Half()) rows[i] = 0xFF;
@@ -322,7 +320,7 @@ void Seed(unsigned k) {
     case kBuildView: Gfx_BufferIndex = static_cast<unsigned char>(sh::Next() & 1); break;
     case kMode8Leave:
     case kMode9Leave: {
-        if (sh::Often()) MoveScript_WaitWordDA = 0;
+        if (sh::Often()) Transition_Busy = 0;
         const U t = PickOf(0xFF, 3, sh::Next());
         Mem(Music_Track_addr)[0] = static_cast<unsigned char>(t);
         Mem(AreaW1f_MusicCurrent_addr)[0] = static_cast<unsigned char>(sh::Half() ? t : sh::Next());
@@ -330,7 +328,7 @@ void Seed(unsigned k) {
     }
     case kMode9Enter:
     case kMode10Enter:
-        if (sh::Often()) MoveScript_WaitWordDA = 0;
+        if (sh::Often()) Transition_Busy = 0;
         break;
     case kMode11Frame: Field_Request = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next())); break;
     case kMode11LookEnd:
@@ -364,7 +362,7 @@ void Seed(unsigned k) {
     if (k == kFrameBD) {
         // the angles the view was drawn at: the same half the time, one word off otherwise
         unsigned char* const drawn = Mem(Camera_AnglesDrawn_addr);
-        std::memcpy(drawn, Mem(0x929EC8), 8);
+        std::memcpy(drawn, Mem(Camera_Angles_addr), 8);
         if (!sh::Half()) drawn[(sh::Next() % 3) * 2] ^= static_cast<unsigned char>(1 + sh::Next() % 0xFF);
         if (sh::Half()) MapView_Redraw = 0;
     }
@@ -407,18 +405,18 @@ void Disturb(U h) {
         if (sh::InRegions(s, 0x80)) s[9] = static_cast<unsigned char>((v & 1) ? 1 + (v >> 1) % 8 : v >> 1);
         break;
     case 1:
-        if (sh::InRegions(s, 0x80)) EffectRec(s)->screen_x = (v & 1) ? 0x149u : v >> 1;
+        if (sh::InRegions(s, 0x80)) rv::As<records::EffectObject>(s)->screen_x = (v & 1) ? 0x149u : v >> 1;
         break;
     case 2: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
     case 3: Mem(Music_Track_addr)[0] = static_cast<unsigned char>((v & 1) ? Mem(AreaW1f_MusicCurrent_addr)[0] : v >> 1); break;
     case 4: MapView_Redraw = static_cast<unsigned char>(v % 4); break;
     case 5: SetWord(Mem((v & 1) ? Camera_Angles_addr : Cond_AngleFB_addr), (v & 2) ? ((v & 1) ? 0xFD56u : 0x200u) : v >> 2); break;
-    case 6: SetLong(Mem((v & 1) ? at::kRows : at::kColumns), static_cast<std::int32_t>((v >> 1) % 6)); break;   // a walk cut short
+    case 6: SetLong(Mem((v & 1) ? at::kRows_addr : at::kColumns_addr), static_cast<std::int32_t>((v >> 1) % 6)); break; // a walk cut short
     case 7: DrawItemPool_Top = static_cast<unsigned short>((v & 1) ? 0x3FE + (v >> 1) % 4 : (v >> 1) % kItemsRegion); break;
-    case 8: SetWord(Mem((v & 1) ? at::kOriginX : at::kOriginZ), v >> 1); break;
-    case 9: Mem(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(v); break;
+    case 8: SetWord(Mem((v & 1) ? at::kOriginX_addr : at::kOriginZ_addr), v >> 1); break;
+    case 9: Mem(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(v); break;
     case 10: SetWord(Mem(Prim_VertexScratch_addr + 2 * ((v & 3) % 3)), v >> 2); break;
-    case 11: PutFloat(Mem(0x903820 + 4 * (v & 1)), static_cast<float>(static_cast<int>((v >> 1) % 1000) - 500)); break;
+    case 11: PutFloat(Mem(MapView_ScreenXY_addr + 4 * (v & 1)), static_cast<float>(static_cast<int>((v >> 1) % 1000) - 500)); break;
     default: break;
     }
 }
@@ -437,7 +435,7 @@ void CheckPspMyriaItem() {
     struct Span { U at, size; };
     static constexpr Span kSpans[] = {
         {0x7DEE80, 30 * 0xA4},                          // Sprite_Objects
-        {at::kEnemies, at::kEnemyCount * at::kEnemyStride},
+        {Battle_Enemies_addr, at::kEnemyCount * at::kEnemyStride},
         {0x8C55C8, 8 * 0x8C},                           // the area's enemy data records
         {0x904AA0, 0x160},                              // the battle's globals
         {0x904EFC, 2},                                  // Game_AreaNumber
@@ -492,11 +490,11 @@ void CheckPspMyriaItem() {
             o[0x9E] = static_cast<unsigned char>(slot);
         }
         SetWord(move_script::At(0x904EFC), (next() & 1) ? psp_code::kMyriaArea : (next() & 1) ? 197 + next() % 3 : next());
-        move_script::At(BattleActions_EventBattle_addr)[0] =
+        move_script::At(EventBattle_Id_addr)[0] =
             static_cast<unsigned char>((next() & 1) ? psp_code::kMyriaEvent : (next() & 1) ? 0x36 + next() % 3 : next());
         capture(input);
         const bool cond = Word(move_script::At(0x904EFC)) == psp_code::kMyriaArea &&
-                          move_script::At(BattleActions_EventBattle_addr)[0] == psp_code::kMyriaEvent;
+                          move_script::At(EventBattle_Id_addr)[0] == psp_code::kMyriaEvent;
 
         apply(input);
         original(slot, count, kind);

@@ -19,6 +19,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3c.h"
 #include "game/rest_3c_callees.h"
@@ -27,9 +28,6 @@
 namespace rest_3c {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
 
 namespace bh = boss_harness;
 using U = std::uint32_t;
@@ -176,7 +174,7 @@ static_assert(sizeof kAll61 / sizeof kAll61[0] == 61, "61 functions");
 // The callees the standard set lacks or records too coarsely, the regions
 // ===========================================================================
 
-bool InCharRecords(U p) { return p >= at::kCharRecords && p + at::kCharStride <= at::kCharRecords + 10 * at::kCharStride; }
+bool InCharRecords(U p) { return p >= CharacterRecords_addr && p + at::kCharStride <= CharacterRecords_addr + 10 * at::kCharStride; }
 
 // Char_RecalcStats rewrites the record the party loop then copies from (its
 // +0x12..+0x17 and +0x20..+0x3F): the stand-in notes what the caller left
@@ -212,7 +210,7 @@ U CalcEffect(const U* a, U answer) {
     if (n % 3 == 0) return answer;
     const unsigned t = a[1] & 0xFF;
     if (t > 10) return answer;
-    const unsigned hp = t < 3 ? Word(Mem(ObjTrio_addr + t * at::kPartyStride + 0x98)) : Word(Mem(at::kEnemies + (t - 3) * at::kEnemyStride + 0xA4));
+    const unsigned hp = t < 3 ? Word(Mem(ObjTrio_addr + t * at::kPartyStride + 0x98)) : Word(Mem(Battle_Enemies_addr + (t - 3) * at::kEnemyStride + 0xA4));
     static const unsigned kPick[] = {0, 1, 0xFFFFFFFFu, 0, 1};
     const unsigned k = (n >> 4) % 5;
     const unsigned v = k < 2 ? kPick[k] : hp + kPick[k];   // k 2..4: HP - 1, HP, HP + 1
@@ -260,7 +258,7 @@ const bh::Callee kCallees[] = {
 // The cells beyond the engine frame the group reads or writes.
 const bh::Region kRegions[] = {
     {0x904654, 0x10},                                                             // 0x904660 (slot 62's store)
-    {0x903B24, at::kCharRecords + 10 * at::kCharStride - 0x903B24},              // CharacterRecords past the engine region, to ten
+    {0x903B24, CharacterRecords_addr + 10 * at::kCharStride - 0x903B24},         // CharacterRecords past the engine region, to ten
 };
 
 // ===========================================================================
@@ -271,8 +269,8 @@ const bh::Clone* g_cur = nullptr;   // the Run's clones (for Seed and Disturb)
 U g_base = 0;                       // the clone the round runs
 
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
-unsigned char* EnemyObj(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
-unsigned char* CharRecord(unsigned c) { return Mem(at::kCharRecords + c * at::kCharStride); }
+unsigned char* EnemyObj(unsigned n) { return Mem(Battle_Enemies_addr + (n % 8) * at::kEnemyStride); }
+unsigned char* CharRecord(unsigned c) { return Mem(CharacterRecords_addr + c * at::kCharStride); }
 std::uint16_t Word16(std::initializer_list<U> often) {
     if (!bh::Often()) return static_cast<std::uint16_t>(bh::Next());
     const U* v = often.begin();
@@ -310,7 +308,7 @@ void Seed(unsigned k) {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
         p[0x148] = static_cast<unsigned char>(bh::Next() % 10);
-        SetWord(p + 0x98, Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100}));
+        rv::Store<std::uint32_t>(rv::As<records::PartyMember>(p)->hp, Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100}));
         p[0x134] = static_cast<unsigned char>(bh::Half() ? p[0x134] & 0xFC : p[0x134]);
         p[0x144] = static_cast<unsigned char>(bh::Next() % 4);
         p[0x145] = static_cast<unsigned char>(bh::Next() % 4);
@@ -322,15 +320,15 @@ void Seed(unsigned k) {
     for (unsigned n = 0; n < 8; ++n) {
         unsigned char* const e = EnemyObj(n);
         e[0xF0] = static_cast<unsigned char>(bh::Next() % 8);
-        EnemyRec(e)->hp = Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100});
-        EnemyRec(e)->max_hp = bh::Next() % 4 == 0 ? 0xFFFF : Word16({0, 1, 9, 10, 11, 100, 1000});
+        rv::As<records::BattleEnemy>(e)->hp = Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100});
+        rv::As<records::BattleEnemy>(e)->max_hp = bh::Next() % 4 == 0 ? 0xFFFF : Word16({0, 1, 9, 10, 11, 100, 1000});
         SetWord(Mem(at::kEnemyData + e[0xF0] * at::kEnemyDataStride + 0x24), Word16({0, 9, 10, 99, 100, 1000, 0xFFFF}));
         e[0xAA] = static_cast<unsigned char>(bh::Next() % 10);
         e[0xAE] = static_cast<unsigned char>(bh::Next() % 10);
         e[0xAB] = static_cast<unsigned char>(bh::Half() ? e[0xAB] | 1 : e[0xAB] & 0xFE);
         e[0xAF] = static_cast<unsigned char>(bh::Half() ? e[0xAF] | 1 : e[0xAF] & 0xFE);
-        EnemyRec(e)->zenny = Word16({0, 1, 0x7FFF, 0x8000, 0xFFFF});
-        EnemyRec(e)->exp = Word16({0, 1, 0x7FFF, 0x8000, 0xFFFF});
+        rv::As<records::BattleEnemy>(e)->zenny = Word16({0, 1, 0x7FFF, 0x8000, 0xFFFF});
+        rv::As<records::BattleEnemy>(e)->exp = Word16({0, 1, 0x7FFF, 0x8000, 0xFFFF});
         e[0x124] = static_cast<unsigned char>(bh::Next() % 4);
         e[0x125] = static_cast<unsigned char>(bh::Next() % 4);
         e[0x92] = static_cast<unsigned char>(bh::Half() ? e[0x92] & ~0x48 : e[0x92] | 0x48);
@@ -356,8 +354,8 @@ void Disturb(U h) {
     case 3: Mem(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(v % 12); break;
     case 4: Mem(at::kTurnOrder + v % 12)[0] = static_cast<unsigned char>(v & 0x100 ? 0xFF : (v >> 4) % 11); break;
     case 5: Mem(Rest3c_Hits_addr)[0] = static_cast<unsigned char>(v % 10); break;
-    case 6: SetWord(Member(v) + 0x98, v >> 2); break;
-    case 7: SetWord(EnemyObj(v) + 0xA4, v >> 3); break;
+    case 6: rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Member(v))->hp, v >> 2); break;
+    case 7: rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(EnemyObj(v))->hp, v >> 3); break;
     case 8: {
         unsigned char* const s = v & 1 ? Member(v >> 1) + 0x90 : EnemyObj(v >> 1) + 0x92;
         s[0] = static_cast<unsigned char>(s[0] ^ 8);

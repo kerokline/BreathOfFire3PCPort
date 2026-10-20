@@ -38,6 +38,7 @@
 #include "game/boss_harness.h"
 #include "game/labels.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -64,7 +65,6 @@ U L(U address) { return static_cast<U>(Long(At(address))); }
 unsigned char* PtrAt(U address) { return At(L(address)); }
 unsigned char* Packet() { return Gfx_PacketNext; }
 unsigned char* Member(U index) { return At(ObjTrio_addr + index * at::kMemberSize); }
-records::PartyMember* MemberRec(U index) { return reinterpret_cast<records::PartyMember*>(Member(index)); }
 unsigned short* Stat(U address) { return reinterpret_cast<unsigned short*>(At(address)); }
 unsigned Pressed() { return Input_Pressed; }
 // fild dword / fstp dword: the int to a float, nearest.
@@ -92,7 +92,7 @@ unsigned long Dispatch(const char* who, U table, unsigned index, unsigned entrie
 void Memcpy(U dst, U src, unsigned n) {
     BH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(dst)), reinterpret_cast<const char*>(At(src)), n);
 }
-void Backdrop() { BH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
+void Backdrop() { BH_CALL(Menu_DrawBackdrop)(Config_Background); }
 
 // A texture page and draw mode for the next primitives: Gpu_GetTPage(tp, abr,
 // x, y), Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, page & 0xFFFF, 0) - the fifth
@@ -109,15 +109,16 @@ void DrawMode(unsigned tp, unsigned abr, int x, int y, unsigned slot) {
 // original does - then Gfx_CommitPrim(2, 0x1C).
 void LossSprite(unsigned char shade, U xf, U yf, unsigned char u, unsigned char v, unsigned w, unsigned h) {
     unsigned char* const p = Packet();
+    auto* const sprt = rv::As<records::GpuSprt>(p);  // a SPRT: Gpu_SetSprt below starts it
     const unsigned clut = BH_CALL(Gpu_GetClut)(0, 0x1FA);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(sprt->clut, clut);
     Rgb(p, 4, shade);
-    SetLong(p + 8, static_cast<std::int32_t>(xf));
-    SetLong(p + 0xC, static_cast<std::int32_t>(yf));
+    rv::Store<float>(sprt->x, std::bit_cast<float>(static_cast<std::int32_t>(xf)));
+    rv::Store<float>(sprt->y, std::bit_cast<float>(static_cast<std::int32_t>(yf)));
     p[0x14] = u;
     p[0x15] = v;
-    SetWord(p + 0x18, w);
-    SetWord(p + 0x1A, h);
+    rv::Store<unsigned>(sprt->w, w);
+    rv::Store<unsigned>(sprt->h, h);
     BH_CALL(Gpu_SetSprt)(p);
     BH_CALL(Gfx_CommitPrim)(2, 0x1C);
 }
@@ -135,7 +136,7 @@ void GreyClut(U at_) {
 }
 
 // The party's +0x130 dword (the loss steps' and the notices' flag bits).
-U MemberFlags(U index) { return static_cast<U>(static_cast<std::int32_t>(MemberRec(index)->flags_130)); }
+U MemberFlags(U index) { return static_cast<U>(static_cast<std::int32_t>(rv::As<records::PartyMember>(Member(index))->flags_130)); }
 
 }  // namespace
 
@@ -149,7 +150,7 @@ U MemberFlags(U index) { return static_cast<U>(static_cast<std::int32_t>(MemberR
 extern "C" void __cdecl BattleExtra_TallyOpen(void) {
     Backdrop();
     BH_CALL(BattleExtra_DrawTally)(0x37, 0x37);
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BH_CALL(BattleExtra_ApplyTally)();
     const unsigned char step = FieldS_State;
     FieldS_Column = 0;
@@ -185,7 +186,7 @@ extern "C" void __cdecl BattleExtra_TallyCount(void) {
 // state 1 (0x42D750: Window_ResetAll, Game_Step + 1), steps 0; else the
 // backdrop and the tally.
 extern "C" void __cdecl BattleExtra_TallyClose(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         B(at::kModeTimer) = 0;
         BattleE1_Mode = 1;
         FieldS_State = 0;
@@ -208,7 +209,7 @@ extern "C" void __cdecl BattleExtra_TallyClose(void) {
 extern "C" void __cdecl BattleExtra_DrawTally(int x_arg, int y_arg) {
     const U x = static_cast<U>(x_arg), y = static_cast<U>(y_arg);
     const auto I = [](U v) { return static_cast<int>(v); };
-    BH_CALL(Menu_DrawBox)(I(x - 4), I(y - 8), 0xDC, 0x8C, 0xF0, static_cast<unsigned char>(BattleDraw_Colour));
+    BH_CALL(Menu_DrawBox)(I(x - 4), I(y - 8), 0xDC, 0x8C, 0xF0, static_cast<unsigned char>(Config_WindowColour));
     BH_CALL(Menu_DrawBorder)(I(x - 4), I(y - 8), 0x1A, 0x10);
     const unsigned char* const title = BH_CALL(Msg_SystemPtr)(0xE7);
     BH_CALL(Text_DrawAt)(I(x + 0x45), I(y + 6), 0, 0xFF, title);
@@ -273,20 +274,20 @@ extern "C" void __cdecl BattleExtra_DrawPlus(int x_arg, int y_arg) {
     unsigned char* p = Packet();
     BH_CALL(Gpu_SetLineF2)(p);
     BH_CALL(Gpu_SetSemiTrans)(p, 1);
-    PutFloat(p + 8, x + 5);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->x0, x + 5);
     Rgb(p, 4, 0x80);
-    PutFloat(p + 0xC, y);
-    PutFloat(p + 0x14, x + 5);
-    PutFloat(p + 0x18, y + 10);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->y0, y);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->x1, x + 5);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->y1, y + 10);
     BH_CALL(Gfx_CommitPrim)(1, 0x20);
     p = Packet();
     BH_CALL(Gpu_SetLineF2)(p);
     BH_CALL(Gpu_SetSemiTrans)(p, 1);
-    PutFloat(p + 8, x);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->x0, x);
     Rgb(p, 4, 0x80);
-    PutFloat(p + 0xC, y + 5);
-    PutFloat(p + 0x14, x + 10);
-    PutFloat(p + 0x18, y + 5);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->y0, y + 5);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->x1, x + 10);
+    rv::Store<std::int32_t>(rv::As<records::GpuLineF2>(p)->y1, y + 5);
     BH_CALL(Gfx_CommitPrim)(1, 0x20);
 }
 
@@ -316,7 +317,7 @@ extern "C" unsigned long __cdecl BattleExtra_EquipOpenDispatch(unsigned long thr
 // string (BATE.EMI's Beyd) instead of 0x669CE8's shipped Chinese name.
 extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     Backdrop();
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BH_CALL(Sound_PlayEffect)(0x102);
     BH_AT(void (__cdecl*)(), at::kEquipOpenHelper)();
     const unsigned char sub = FieldS_Step;
@@ -325,7 +326,7 @@ extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     const U name = Labels_Written(17)
         ? static_cast<U>(reinterpret_cast<std::uintptr_t>(Labels_Slot(17, 0)))
         : at::kGuestHeadIn;
-    Memcpy(at::kGuest, name, 5);
+    Memcpy(CharacterRecords_addr + 0x47c, name, 5);
 }
 
 // original 0x42DC80 (0x64ADEC[2]): the backdrop; 0x929F04 - 1, and at 0:
@@ -353,7 +354,7 @@ extern "C" void __cdecl BattleExtra_EquipRun(void) {
         bof3::Fatal("BattleExtra_EquipRun: 0x929F02 is %u, past the 2 entries of 0x64ADF8 - the original calls through "
                     "the dword after (docs/battle_e1.md section 7)",
                     sub);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(at::kEquipRunSteps + 4 * sub)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(BattleExtra_EquipRunSteps[sub]))();
     Backdrop();
 }
 
@@ -367,10 +368,10 @@ extern "C" void __cdecl BattleExtra_EquipRun(void) {
 // 0x929F02 + 1; cancel - 0x106, 0x102, windows 0..3's +3 = 1, windows 4 and
 // 21's +0 = 0, 0x929F04 = 5, 0x929F01 + 1, 0x929F02 = 0.
 extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
-    SetWord(At(at::kWin4 + 4), L(at::kWin1 + 4) + 6);
-    B(at::kWin4) = 1;
+    WindowRecords[4].x = L(at::kWin1 + 4) + 6;
+    WindowRecords[4].in_use = 1;
     const U cursor = B(at::kWin1 + 0xA);
-    SetWord(At(at::kWin4 + 6), 13 * cursor + Word(At(BattleE1_Win1_addr + 6)) + 0x57);
+    WindowRecords[4].y = 13 * cursor + WindowRecords[1].y + 0x57;
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     B(at::kWin1 + 0xB) = 0xFF;
     B(at::kWin1 + 0xD) = 1;
@@ -382,9 +383,9 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
     B(at::kWin0 + 9) = now;
     const bool second = now == 3;
     const unsigned item = B(second ? BattleE1_GuestEquipB_addr : Rest3a_GuestEquip_addr);
-    SetWord(At(BattleE1_Win2_addr + 0x10), BH_CALL(Item_HelpMessage)(second ? 2 : 1, item));
+    SetWord(At(Window2_addr + 0x10), BH_CALL(Item_HelpMessage)(second ? 2 : 1, item));
     const unsigned pressed = Pressed();
-    SetWord(At(at::kWin3 + 0x10), 0xDC);
+    SetWord(At(WindowRecords_addr + 0x6c + 0x10), 0xDC);
     if (Field_ConfirmButtons & pressed) {
         BH_CALL(Sound_PlayEffect)(0x103);
         const unsigned char top = B(at::kWin0 + 0xA);
@@ -399,12 +400,12 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
         BH_CALL(Sound_PlayEffect)(0x106);
         BH_CALL(Sound_PlayEffect)(0x102);
         const unsigned char step = FieldS_State;
-        B(at::kWin0 + 3) = 1;
+        WindowRecords[0].state = 1;
         B(at::kWin1 + 3) = 1;
         B(at::kWin2 + 3) = 1;
-        B(at::kWin3 + 3) = 1;
-        B(at::kWin4) = 0;
-        BattleE4_Above = 0;
+        WindowRecords[3].state = 1;
+        WindowRecords[4].in_use = 0;
+        WindowRecords[21].in_use = 0;
         B(at::kModeTimer) = 5;
         FieldS_State = static_cast<unsigned char>(step + 1);
         FieldS_Step = 0;
@@ -426,23 +427,23 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
 extern "C" void __cdecl BattleExtra_EquipListInput(void) {
     const U x = L(at::kWin0 + 4) + 7;
     B(at::kWin1 + 0xD) = 0;
-    SetWord(At(at::kWin4 + 4), x);
+    WindowRecords[4].x = x;
     const U scroll = B(at::kWin0 + 0xA), cursor = B(at::kWin0 + 0xB);
     const unsigned count = B(at::kWin0 + 0xD), category = B(at::kWin0 + 8);
-    SetWord(At(at::kWin4 + 6), 13 * (cursor - scroll + 2) + Word(At(at::kWin0 + 6)));
-    SetWord(At(BattleE1_Win2_addr + 0x10), BH_CALL(Item_HelpMessage)(category, count));
+    WindowRecords[4].y = 13 * (cursor - scroll + 2) + WindowRecords[0].y;
+    SetWord(At(Window2_addr + 0x10), BH_CALL(Item_HelpMessage)(category, count));
     const unsigned pressed = Pressed() & Sigma(0xF00C);
-    SetWord(At(at::kWin3 + 0x10), 0xDD);
+    SetWord(At(WindowRecords_addr + 0x6c + 0x10), 0xDD);
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(pressed);
     BH_AT(unsigned char (__cdecl*)(), at::kEquipFrameHelper)();
     auto now = B(at::kWin0 + 0xB);
     const unsigned char was = now;
     if (repeat & 0x1000) {
         if (now > 0) B(at::kWin0 + 0xB) = --now;
-        if (now < B(at::kWin0 + 0xA)) SetWord(At(at::kWin0 + 0x10), 0xF0);
+        if (now < B(at::kWin0 + 0xA)) SetWord(At(WindowRecords_addr + 0x10), 0xF0);
     } else if (repeat & 0x4000) {
         if (now < 0x7F) B(at::kWin0 + 0xB) = ++now;
-        if (!(static_cast<int>(now) < static_cast<int>(B(at::kWin0 + 0xA)) + 9)) SetWord(At(at::kWin0 + 0x10), 0x10);
+        if (!(static_cast<int>(now) < static_cast<int>(B(at::kWin0 + 0xA)) + 9)) SetWord(At(WindowRecords_addr + 0x10), 0x10);
     } else if (repeat & Sigma(4)) {
         auto top = B(at::kWin0 + 0xA);
         if (top == 0) {
@@ -476,7 +477,7 @@ extern "C" void __cdecl BattleExtra_EquipListInput(void) {
         }
     }
     if (was != now) BH_CALL(Sound_PlayEffect)(0x100);
-    if (Word(At(at::kWin0 + 0x10)) != 0) return;
+    if (Word(At(WindowRecords_addr + 0x10)) != 0) return;
     const unsigned again = Pressed();
     if (Field_ConfirmButtons & again) {
         if (B(at::kWin0 + 0xD) == 0) {
@@ -520,12 +521,12 @@ extern "C" void __cdecl BattleExtra_EquipFadeOut(void) {
 // `push 0x669CE0` at 0x42E09D, which the inject's jmp at 0x42E090 leaves in
 // place); else the backdrop.
 extern "C" void __cdecl BattleExtra_EquipLeave(void) {
-    if (MoveScript_WaitWordDA == 0) {
+    if (Transition_Busy == 0) {
         B(at::kModeTimer) = 0;
         BattleE1_Mode = 1;
         FieldS_State = 0;
         FieldS_Step = 0;
-        Memcpy(at::kGuest, BattleE1_GuestHeadOut_addr, 5);
+        Memcpy(CharacterRecords_addr + 0x47c, BattleE1_GuestHeadOut_addr, 5);
         return;
     }
     Backdrop();
@@ -554,8 +555,8 @@ extern "C" void __cdecl BattleHold_Shrink(void) {
     else
         BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
     BH_CALL(BattleWin_DrawCommandLabel)(B(at::kMenuMember));
-    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(BattleE1_Win1_addr + 4)), Word(At(BattleE1_Win1_addr + 6)));
-    BH_CALL(BattleWin_DrawCommandCross)(Word(At(BattleE1_Win2_addr + 4)), Word(At(BattleE1_Win2_addr + 6)));
+    BH_CALL(BattleWin_DrawPartyStatus)(WindowRecords[1].x, WindowRecords[1].y);
+    BH_CALL(BattleWin_DrawCommandCross)(WindowRecords[2].x, WindowRecords[2].y);
 }
 
 // original 0x42EE00 (BattleHold_Steps[1]): while Input_Held has no 0x100,
@@ -567,10 +568,10 @@ extern "C" void __cdecl BattleHold_ShowAll(void) {
     if (!(Input_Held & 0x100)) {
         B(at::kWin2 + 3) = 1;
         B(at::kWin1 + 3) = 1;
-        B(at::kWin3 + 3) = 1;
+        WindowRecords[3].state = 1;
         BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
     }
-    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(BattleE1_Win1_addr + 4)), Word(At(BattleE1_Win1_addr + 6)));
+    BH_CALL(BattleWin_DrawPartyStatus)(WindowRecords[1].x, WindowRecords[1].y);
     BH_AT(void (__cdecl*)(), at::kBe4Draw444660)();
     for (unsigned i = 0; i < 7; ++i) {
         BH_CALL(BattleWin_DrawCommandLabel)(i);
@@ -602,7 +603,7 @@ extern "C" void __cdecl BattleHold_Regrow(void) {
 // 0x904AA1 = 0x904AA2 = 0.
 extern "C" void __cdecl Cmd_AutoBattle(void) {
     const auto entries = BattleActorCopies_EntryCount;
-    B(at::kWin4 + 3) = 2;
+    WindowRecords[4].state = 2;
     if (entries > 0) {
         unsigned i = 0;
         do {
@@ -610,7 +611,7 @@ extern "C" void __cdecl Cmd_AutoBattle(void) {
             if (actor != 0xFF && !BH_CALL(Battle_ActorIsOut)(actor)) {
                 unsigned char* const m = Member(actor);
                 if (m[0x125] == 5)
-                    BH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kBe4ReturnItem)(m[0x12E], Word(m + 0x126));
+                    BH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kBe4ReturnItem)(m[0x12E], rv::As<records::PartyMember>(m)->queued_id);
             }
             i = (i + 1) & 0xFF;
         } while (static_cast<int>(i) < BattleActorCopies_EntryCount);
@@ -619,7 +620,7 @@ extern "C" void __cdecl Cmd_AutoBattle(void) {
         unsigned char i = 0;
         do {
             if (!BH_CALL(Battle_ActorIsOut)(i)) {
-                if (BattleFlow_AnimGate == 0 || (Member(i)[0x134] & 0x10)) MemberRec(i)->state[0] = 2;
+                if (BattleFlow_AnimGate == 0 || (Member(i)[0x134] & 0x10)) rv::As<records::PartyMember>(Member(i))->state = 2;
             }
             ++i;
         } while (i < B(at::kPartyCount));
@@ -647,11 +648,11 @@ extern "C" unsigned long __cdecl BattleAction_Kind3Dispatch(unsigned long throug
 // 0x904AA3 + 1.
 extern "C" void __cdecl BattleAction_Kind3Banner(void) {
     BH_CALL(Battle_ClearActingFlags)();
-    BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(PtrAt(at::kBannerText)));
+    BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(BattleE1_BannerText));
     const unsigned char actor = B(at::kActor);
-    B(at::kWin4 + 3) = 1;
+    WindowRecords[4].state = 1;
     BH_CALL(Battle_SetActorBit)(actor);
-    PtrAt(at::kActing)[1] = 9;
+    static_cast<unsigned char*>(MagicS23_ActorSprite)[1] = 9;
     BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
 }
 
@@ -685,7 +686,7 @@ extern "C" unsigned char __cdecl BattleAction_PickRandomAbility(void) {
     unsigned char* const record = PtrAt(at::kActing2);
     SetWord(At(at::kActionId), id);
     const unsigned char flags = B(bof3::addr::NameTable_Abilities + 24u * id);
-    SetWord(record + 2, id);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(record)->action_id, id);  // 0x904B40: the acting block's action record
     const bool party = B(at::kActor) <= 2;
     if (flags & 0x10) {
         if ((flags & 0x80) && !(flags & 0x40)) return 0xC0;
@@ -714,7 +715,7 @@ extern "C" void __cdecl BattleAction_AbilityNotice(void) {
         do {
             ++slot;
             BossSb_Countdown = slot;
-            const U id = Word(record + 2);
+            const U id = rv::As<records::ActionRecord>(record)->action_id;  // 0x904B40: the acting block's action record
             const bool learns = (Word(At(0x65C4DC + 24 * id)) & 0x200) != 0;
             unsigned char* const flags = At(0x802D24 + slot * at::kMemberSize);
             if (!(flags[0] & 8)) continue;
@@ -763,7 +764,7 @@ extern "C" void __cdecl BattleEnd_AwaitRestore(void) {
     unsigned char count = B(at::kPartyCount);
     for (unsigned char i = 0; i < count;) {
         unsigned char* const m = Member(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+        auto* const member_rec = rv::As<records::PartyMember>(m);
         BH_CALL(Battle_ClearStatus)(i, member_rec->status & 0xBF5Fu);
         BH_CALL(Sprite_ReleaseTint)(m);
         count = B(at::kPartyCount);
@@ -771,10 +772,10 @@ extern "C" void __cdecl BattleEnd_AwaitRestore(void) {
     }
     for (unsigned char i = 0; i < count;) {
         unsigned char* const m = Member(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+        auto* const member_rec = rv::As<records::PartyMember>(m);
         if (member_rec->flags & 1) {
             Sprite_Current = m;
-            BH_CALL(Sprite_AnimFromSet)(member_rec->animation, static_cast<std::uint16_t>(Word(m + 0x58) - 2), At(at::kAnimBuffer), 0x1800);
+            BH_CALL(Sprite_AnimFromSet)(member_rec->animation, static_cast<std::uint16_t>(member_rec->script_pos - 2), At(at::kAnimBuffer), 0x1800);
             count = B(at::kPartyCount);
         }
         ++i;
@@ -791,7 +792,7 @@ extern "C" unsigned char __cdecl BattleResult_CountExpShares(void) {
     if (B(at::kPartyCount) == 0) return 0;
     unsigned char i = 0;
     do {
-        if (!BH_CALL(Battle_ActorIsOut)(i) && !(static_cast<std::int32_t>(MemberRec(i)->flags_134) & 0x400)) ++count;
+        if (!BH_CALL(Battle_ActorIsOut)(i) && !(static_cast<std::int32_t>(rv::As<records::PartyMember>(Member(i))->flags_134) & 0x400)) ++count;
         ++i;
     } while (i < B(at::kPartyCount));
     return count;
@@ -842,7 +843,7 @@ extern "C" unsigned char __cdecl BattleResult_ZennyBonus(void) {
     unsigned char i = 0;
     do {
         if (!BH_CALL(Battle_ActorIsOut)(i)) {
-            auto* const member_rec = MemberRec(i);
+            auto* const member_rec = rv::As<records::PartyMember>(Member(i));
             if (member_rec->accessory[0] == 7 || member_rec->accessory[1] == 7) return 1;
         }
         ++i;
@@ -863,13 +864,14 @@ extern "C" unsigned char __cdecl BattleResult_ZennyBonus(void) {
 extern "C" unsigned short __cdecl Char_LevelUpGain(unsigned roster_arg, unsigned what_arg) {
     const U roster = roster_arg & 0xFF;
     const U base = roster * 99;
-    const unsigned char* const record = At(at::kCharRecords + roster * at::kCharSize);
+    const unsigned char* const record = At(CharacterRecords_addr + roster * at::kCharSize);
+    static_assert(at::kCharSize == sizeof(records::CharRecord));
     const unsigned char level = record[0xA];
     unsigned char reached = 1;
     U sum = 0;
     for (;;) {
         sum += Word(At(at::kCharExpTable + (base + reached) * 8));
-        if (static_cast<std::int32_t>(sum) > Long(record + 0xC)) break;
+        if (static_cast<std::int32_t>(sum) > rv::As<records::CharRecord>(record)->exp) break;
         ++reached;
         if (reached >= 0x63) break;
     }
@@ -920,7 +922,7 @@ extern "C" void __cdecl BattleLoss_FadeOut(void) {
 namespace {
 void LossMember(U index) {
     unsigned char* const m = Member(index);
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+    auto* const member_rec = rv::As<records::PartyMember>(m);
     Sprite_Current = m;
     BH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(member_rec->direction + 0x1C));
     const auto flags = static_cast<unsigned char>(m[0x24] | 0x80);
@@ -938,9 +940,9 @@ void LossMember(U index) {
 // is at least 1, 2, exactly 3; then 0x494E70() (the enemies' state bytes),
 // BattleTask_ClearAll, Transition_Start(0xE), 0x904AA3 + 1.
 extern "C" void __cdecl BattleLoss_ResetParty(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     const unsigned char n = B(at::kPartyCount);
-    B(at::kWin0) = 0;
+    WindowRecords[0].in_use = 0;
     if (n >= 1) {
         LossMember(0);
         if (B(at::kPartyCount) >= 2) {
@@ -960,7 +962,7 @@ extern "C" void __cdecl BattleLoss_ResetParty(void) {
 extern "C" void __cdecl BattleLoss_Show(void) {
     BH_CALL(BattleLoss_DrawBlack)();
     BH_CALL(BattleLoss_DrawPanels)(0x80);
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BattleResult_TickStep = 0x2C;
     BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
 }
@@ -996,14 +998,14 @@ extern "C" void __cdecl BattleLoss_Restart(void) {
     BH_CALL(BattleLoss_DrawBlack)();
     BH_CALL(BattleLoss_DrawPanels)(0x80);
     BH_CALL(BattleLoss_DrawCaption)(0x80);
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     BH_CALL(Sprite_ReleaseTint)(Member(0));
     BH_CALL(Sprite_ReleaseTint)(Member(1));
     BH_CALL(Sprite_ReleaseTint)(Member(2));
     BH_CALL(Window_ResetAll)();
-    B(0x904AE9) = 0;
-    B(0x904AE5) = 0;
-    B(0x904AAA) = 0;
+    BattleMisc_BannerKinds = 0;
+    EventBattle_Flags = 0;
+    EventBattle_Id = 0;
     B(0x904AA0) = 0;
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
@@ -1036,11 +1038,12 @@ extern "C" void __cdecl BattleLoss_DrawPanels(unsigned shade) {
 extern "C" void __cdecl BattleLoss_DrawBlack(void) {
     DrawMode(0, 0, 0x3C0, 0, 2);
     unsigned char* const p = Packet();
+    auto* const tile = rv::As<records::GpuTile>(p);  // a TILE: Gpu_SetTile
     BH_CALL(Gpu_SetTile)(p);
-    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));
-    SetLong(p + 0xC, 0);
-    SetLong(p + 0x14, std::bit_cast<std::int32_t>(Widescreen_FillWidth()));   // 0x43A00000 narrow
-    SetLong(p + 0x18, 0x43700000);
+    rv::Store<float>(tile->x, Widescreen_FillX());
+    rv::Store<float>(tile->y, std::bit_cast<float>(0));
+    rv::Store<float>(tile->w, Widescreen_FillWidth());   // 0x43A00000 narrow
+    rv::Store<float>(tile->h, std::bit_cast<float>(0x43700000));
     Rgb(p, 4, 0);
     BH_CALL(Gfx_CommitPrim)(2, 0x1C);
 }

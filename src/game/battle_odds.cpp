@@ -26,6 +26,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_odds_callees.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -81,7 +83,7 @@ unsigned char* Sprite() { return At(SpriteCurrent()); }
 // (word +8) of 0xFF runs forever. Otherwise the kind byte is or'ed into the
 // kinds seen, the timer counted down, and while it has not reached 0 - both
 // read through kBannerCurrent again - window record 4's +0xA gets
-// DamageScratch (the entry's index, which the dispatch stored). At 0: the
+// SharedScratch (the entry's index, which the dispatch stored). At 0: the
 // entry's active byte 0; its kind taken back out of the kinds seen (the
 // pointer read again, the kinds byte before the kind byte); then
 // BattleBanner_NoneOfKind(1), and when no kind-1 entry is left (al set)
@@ -99,11 +101,11 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
             const unsigned char kind = At(entry + 1)[0];
             BattleMisc_BannerKinds = static_cast<unsigned char>(kinds & static_cast<unsigned char>(~kind));
             const U eax = g.none_of_kind(1);
-            if (eax & 0xFF) At(kWin4State)[0] = 0;
+            if (eax & 0xFF) WindowRecords[4].state = 0;
             return eax;
         }
     }
-    BattleOdds_Win4Index = At(bof3::addr::DamageScratch)[0];
+    Window4_Index = SharedScratch.b_00;
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
 }
 
@@ -111,7 +113,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
 // differences. The kind is or'ed into the kinds seen before the timer is
 // tested, even for 0xFF; it is never taken back out; and the test is
 // NoneOfKind(4), after which window record 0's +3 = 2. While the timer runs,
-// record 0's +0xA gets DamageScratch. The word is decremented through a
+// record 0's +0xA gets SharedScratch. The word is decremented through a
 // register (only its low 16 bits stored) and the pointer read again only then;
 // at 0xFF the entry the first read found is tested, which is never 0.
 extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
@@ -126,10 +128,10 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
     if (Word(e + 8) == 0) {
         e[0] = 0;
         const U eax = g.none_of_kind(4);
-        if (eax & 0xFF) At(kWin0State)[0] = 2;
+        if (eax & 0xFF) WindowRecords[0].state = 2;
         return eax;
     }
-    BattleOdds_Win0Index = At(bof3::addr::DamageScratch)[0];
+    Window0_ParamA = SharedScratch.b_00;
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
 }
 
@@ -140,7 +142,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
 // Effect_ApplyResult). eax the record pointer.
 extern "C" unsigned long __cdecl Effect_Heal20(void) {
     const U result = BattleDamage_Result;
-    PutWord(At(result + 4), 0xFFEC);
+    rv::Store<U>(rv::As<records::ActionRecord>(At(result))->hp_change, 0xFFEC);  // the result record (records::ActionRecord)
     return result;
 }
 
@@ -156,7 +158,7 @@ extern "C" unsigned long __cdecl Effect_HalfAttack(void) {
     const U actor = At(kActing)[0];
     const U amount = g.calc_damage(actor, target, 0xFFFF);
     const U half = static_cast<std::uint16_t>(static_cast<std::int16_t>(amount) >> 1);
-    PutWord(At(BattleDamage_Result + 4), half);
+    rv::Store<U>(rv::As<records::ActionRecord>(At(BattleDamage_Result))->hp_change, half);
     return (amount & 0xFFFF0000u) | half;
 }
 

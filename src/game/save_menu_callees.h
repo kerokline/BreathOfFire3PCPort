@@ -36,7 +36,7 @@ constexpr U kRowBright = 0x6BDF90;      // u8[3]: each row's brightness
 // kErrorKind: now SaveMenu_ErrorKind (symbols.toml). u32: 1 no save found, 2 a read or checksum failure
 constexpr U kCounter = 0x929F04;        // u8: the menus' frame counter
 constexpr U kMenuFlags = 0x7DEE44;      // u8: bit 1 set once the title frame is up
-// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA, u16: a transition is running
+// kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy, u16: a transition is running
 constexpr U kPressed = 0x7E1BEC;        // Input_Pressed (read as a dword by 0x587FA0)
 constexpr U kHeld = 0x7E1BE8;           // Input_Held (read as a dword)
 constexpr U kButtons = 0x903580;        // the pad map, 0x12 bytes: menu +4, confirm +0xE, cancel +0x10
@@ -46,8 +46,8 @@ constexpr U kSavedButtons = 0x90469C;   // the pad map in the game block (block 
 constexpr U kSlot = 0x9036D4;           // u32: the load / save cursor, 0..15
 constexpr U kSlotTop = 0x8034D0;        // u32: the first of the three slots shown
 // kAnswer: now FieldS_Answer (symbols.toml). u8: Menu_YesNo's answer
-// kWindowStyle: now FieldS_Backdrop (symbols.toml). u8, 0x575690's argument (block +0x7B)
-// kWindowColor: now BattleDraw_Colour (symbols.toml). u8, the window frames' last argument (block +0x7A)
+// kWindowStyle: now Config_Background (symbols.toml). u8, 0x575690's argument (block +0x7B)
+// kWindowColor: now Config_WindowColour (symbols.toml). u8, the window frames' last argument (block +0x7A)
 constexpr U kPath = 0x904BA0;           // char[]: the save file name built with 0x664068
 constexpr U kSaveName = 0x664068;       // "BISLPS%02X.DAT"
 constexpr U kGameBlock = 0x9039E0;      // the live game block, 0x10B0 bytes (save-interchange.md)
@@ -72,11 +72,11 @@ constexpr U kSpriteCurrent = 0x937F88;  // Sprite_Current
 constexpr U kCondFlagsEnd = 0x904030;
 // 0x5885D0, the loaded game applied.
 // kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount, u8
-// kCondPointer: now AreaW0c_FlagRow (symbols.toml). u32
+// kCondPointer: now Chapter_FlagRow (symbols.toml). u32
 constexpr U kCounters = 0x903848;       // four MoveScript counters, u8
 constexpr U kPosition = 0x8034E0;       // four dwords from the block's first 16 bytes
 // 0x588800 and the growth rolls.
-constexpr U kCharRecords = 0x903A70;    // stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr U kCharStride = 0xA4;
 constexpr U kGrowthTable = 0x667248;    // 8 x {lo, hi, n}
 constexpr U kGrowthValues = 0x667260;   // u8 per roll sum
@@ -90,7 +90,7 @@ constexpr U kRowWidths[3] = {0x5888E8, 0x5888ED, 0x5888F2};   // the imm8 of 0x5
 // The save menu's slots.
 constexpr U kSummaries = 0x905BC0;      // 16 x 0x1C: the slot summaries; +0x15 the directory index or 0xFF
 constexpr U kSummaryBytes = 0x1C;
-constexpr U kDirectory = 0x929F40;      // Save_Directory, 16 x 0x18: name, size at +0x14
+// kDirectory: now Save_Directory (symbols.toml). Save_Directory, 16 x 0x18: name, size at +0x14
 constexpr U kDirectoryBytes = 0x18;
 constexpr U kListPattern = 0x65289C;    // "BISLPS??.DAT"
 constexpr U kSummaryAt = 0xCA0;         // the summary's offset in a save file

@@ -74,8 +74,8 @@ std::uint32_t Id(const void* p) {
     if (at >= pool && at < pool + sizeof g_prim) return 0x10000u + (at - pool);
     if (at >= zones && at < zones + sizeof g_zones) return 0x20000u + (at - zones);
     if (at >= lists && at < lists + sizeof g_lists) return 0x30000u + (at - lists);
-    if (at >= window_task::at::kRecords && at < window_task::at::kRecordsEnd)
-        return 0x40000u + (at - window_task::at::kRecords);
+    if (at >= WindowRecords_addr && at < window_task::at::kRecordsEnd)
+        return 0x40000u + (at - WindowRecords_addr);
     return at;
 }
 
@@ -90,7 +90,7 @@ const Watch kWatch[] = {
     {BossSa_WindowPass_addr, 0, 4},
     {AreaW1f_MusicCurrent_addr, 1, 0},
     {Music_Track_addr, 1, 0},
-    {AreaW0c_PendingKind_addr, 1, 0},
+    {Area_EnterTransition_addr, 1, 0},
     {AreaEntry_PendingFlags_addr, 1, 0},
     {AreaW0b_Place_addr, 1, 0},
     {AreaW0b_Place_addr + 1, 1, 0},
@@ -100,7 +100,7 @@ void Disturb() {
     if (h % 3 == 0) return;
     if (h % 23 == 0) {
         // the current record: a different one of the twenty-two
-        const std::uint32_t record = window_task::at::kRecords + ((h >> 8) % 22u) * 0x24u;
+        const std::uint32_t record = WindowRecords_addr + ((h >> 8) % 22u) * 0x24u;
         SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(record));
         return;
     }
@@ -410,20 +410,20 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {window_task::at::kRecords, 0x318},     // the 22 window records
+    {WindowRecords_addr, 0x318},            // the 22 window records
     {BattleWinStates_Current_addr, 4},      // the record the layer is running (a pointer: Fix sets it)
     {BossSa_WindowPass_addr, 1},
     {0x7DEE40, 0x40},                       // MsgBoxState: the list dword, set, count, cursor, placement and rows
     {AreaW0b_Place_addr, 2},
-    {AreaW0c_PendingKind_addr, 1},
-    {window_task::at::kPendingX, 4},
+    {Area_EnterTransition_addr, 1},
+    {window_task::at::kPendingX_addr, 4},
     {AreaEntry_PendingZ_addr, 4},
     {AreaEntry_PendingFlags_addr, 1},       // Gfx_BufferIndex is the byte after it: one byte, exactly
     {AreaW1f_MusicCurrent_addr, 1},
     {Music_Track_addr, 1},
     {0x66C7D8, 1},                          // Field_Request
     {0x9039A2, 2},                          // Field_ScriptFlags
-    {BattleDraw_Colour_addr, 1},
+    {Config_WindowColour_addr, 1},
     {0x904EFC, 2},                          // Game_AreaNumber
     {0x903F90, 0x108},                      // Cond_Flags
 };
@@ -470,7 +470,7 @@ bool Half() { return (Next() & 1) != 0; }
 // and give the zone lists a record that matches everything so that the
 // lookup's endless loop always ends.
 void Fix() {
-    for (std::uint32_t a = window_task::at::kRecords; a < window_task::at::kRecordsEnd; a += 0x24) {
+    for (std::uint32_t a = WindowRecords_addr; a < window_task::at::kRecordsEnd; a += 0x24) {
         unsigned char* const r = At(a);
         r[0] = static_cast<unsigned char>(Often() ? 1 + Next() % 3 : 0);
         r[1] = static_cast<unsigned char>(Next() % 9);
@@ -479,7 +479,7 @@ void Fix() {
         r[0xF] = static_cast<unsigned char>(Next() % 2 ? Next() % 3 : Next() % 5);
     }
     SetLong(At(BattleWinStates_Current_addr),
-            static_cast<std::int32_t>(window_task::at::kRecords + (Next() % 22u) * 0x24u));
+            static_cast<std::int32_t>(WindowRecords_addr + (Next() % 22u) * 0x24u));
     At(BossSa_WindowPass_addr)[0] = static_cast<unsigned char>(Next() % 4 ? Next() % 3 : Next() % 6);
     Game_AreaNumber = static_cast<std::uint16_t>(Next() % kAreas);
     // the zone lists: eight records, the last one matching everything
@@ -620,7 +620,7 @@ unsigned Byte(const State& s, std::uint32_t address) {
 void Cover(unsigned k, const State& in, const State& out) {
     switch (k) {
     case kClassify:
-        if (Byte(out, AreaW0c_PendingKind_addr) == 0xB) ++g_cover.area_kind;
+        if (Byte(out, Area_EnterTransition_addr) == 0xB) ++g_cover.area_kind;
         else ++g_cover.area_other;
         break;
     case kPickMusic: {
@@ -654,7 +654,7 @@ void Cover(unsigned k, const State& in, const State& out) {
     // the grow and shrink settle counters, read off the record they ran on
     if (k == kGrow || k == kShrink) {
         const std::uint32_t record = static_cast<std::uint32_t>(Long(in.memory + 0x318));   // kRegions[1], the current record
-        const unsigned slot = (record - window_task::at::kRecords) / 0x24u;
+        const unsigned slot = (record - WindowRecords_addr) / 0x24u;
         if (slot < 22) {
             const unsigned before = in.memory[slot * 0x24 + 3], after = out.memory[slot * 0x24 + 3];
             if (after != before) { if (k == kGrow) ++g_cover.grow_done; else ++g_cover.shrink_done; }

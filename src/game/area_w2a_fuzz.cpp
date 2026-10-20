@@ -17,6 +17,7 @@
 #include "game/area_w2a.h"
 #include "game/area_w2a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w2a {
@@ -217,7 +218,7 @@ const ah::Region kRegions[] = {
     {Effect_Objects_addr, 4 * at::kEffectStride},
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
-    {AreaW0c_FlagRow_addr, 4},
+    {Chapter_FlagRow_addr, 4},
     {Camera_ShiftY_addr, 2},
     {Cond_ByteFE_addr, 1},
     // Effect_Objects "record" 0xFF, past the 20: where a helper that took
@@ -312,7 +313,7 @@ void SeedLeap() {
     } else if (ah::Next() % 8 == 0) {
         position = ah::Next() & 0xFFFF;
     }
-    move_script::SetWord(object + 0xA, position);
+    rv::Store<unsigned>(rv::As<records::ScriptContext>(object)->position, position);
 }
 
 void Seed77(unsigned k) {

@@ -333,7 +333,7 @@ seeded projection lands the vertices near the screen.
 
 **Regions beyond the engine frame**: the work cells `0x675F48..0x675F57`,
 the party backup's tail `0x939B20..0x939EC0`, the action bits `0x904088`
-(0x20), `MoveScript_EffectState` (0x18), `Field_Slots` (0x80),
+(0x20), `Character_IndexById` (0x18), `Field_Slots` (0x80),
 `Field_Kind2Z` / `_Kind2X`, `Prim_VertexScratch` and `MapView_ScreenXY` (8
 each), `Draw_OtSlot`, and a 0x200-byte BMAGIC record of the fuzz's own; for
 `cells` also the GTE's state `0x7DE428..0x7DE7A8` (`magic_s23_fuzz`'s

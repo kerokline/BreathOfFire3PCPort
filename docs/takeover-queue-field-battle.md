@@ -62,7 +62,7 @@ the material of the cut:
 
 | Side | Run | Fns | What the catalog sees |
 |---|---|--:|---|
-| battle | `0x42D7A0..0x42E0D3` | 16 | BATE: windows, `Input_Pressed`, `MoveScript_WaitWordDA` |
+| battle | `0x42D7A0..0x42E0D3` | 16 | BATE: windows, `Input_Pressed`, `Transition_Busy` |
 | battle | `0x42ED90..0x42F070`, `0x42F5E0..0x42FF70` | 10 | the command menu's tail: `Battle_MenuSteps`, `Cmd_AutoBattle_Begin`, the ability/item action steps |
 | battle | `0x4315C0..0x432B70` | 13 | BATL_END / BATL_OVR: the result screen's remainder, `Card_CopyIconFrame2` |
 | battle | `0x433650..0x435104` | 24 | `Sprite_Current` x120, `WindowRecords` x41: the action tasks |

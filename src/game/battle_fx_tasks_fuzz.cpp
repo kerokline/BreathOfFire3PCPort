@@ -19,6 +19,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_fx_tasks_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -33,8 +34,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Slot(unsigned i) { return At(at::kTasks + i * at::kTaskSize); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + i * at::kEnemySize); }
+unsigned char* Slot(unsigned i) { return At(BattleTask_Slots_addr + i * at::kTaskSize); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + i * at::kEnemySize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char* PtrAt(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
 unsigned char* CurSlot() { return PtrAt(BattleFlow_TaskCurrent_addr); }
@@ -76,14 +77,14 @@ void Disturb() {
     case 0: Sprite_Current = AnySlot(w); break;
     case 1: SetPtr(BattleFlow_TaskCurrent_addr, AnySlot(w)); break;
     case 2: SetPtr(BattleE2_Owner_addr, AnyOwner(w)); break;
-    case 3: reinterpret_cast<records::BattleTask*>(CurSlot())->state = static_cast<unsigned char>(v % 6); break;
-    case 4: reinterpret_cast<records::BattleTask*>(CurSlot())->mode = static_cast<unsigned char>(v % 5); break;
+    case 3: rv::As<records::BattleTask>(CurSlot())->state = static_cast<unsigned char>(v % 6); break;
+    case 4: rv::As<records::BattleTask>(CurSlot())->mode = static_cast<unsigned char>(v % 5); break;
     case 5: Sprite_Current[0] = static_cast<unsigned char>(v); break;
     case 6: At(at::kPhase)[0] = static_cast<unsigned char>(v % 7); break;
     case 7: At(at::kRoundCount)[0] = static_cast<unsigned char>(v); break;
     case 8: Owner()[0] = static_cast<unsigned char>(v); break;
     case 9: Owner()[5] = static_cast<unsigned char>(v % 11); break;
-    case 10: reinterpret_cast<records::BattleTask*>(CurSlot())->clut = static_cast<unsigned char>(v); break;
+    case 10: rv::As<records::BattleTask>(CurSlot())->clut = static_cast<unsigned char>(v); break;
     case 11: SetWord(CurSlot() + 0x36 + 4 * (w % 2), h >> 16); break;
     case 12: SetLong(At(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     default: SetWord(CurSlot() + 0x60, h >> 16); break;
@@ -308,7 +309,7 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kTasks, 0x22A0},      // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
+    {BattleTask_Slots_addr, 0x22A0}, // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
     {0x937F88, 4},             // Sprite_Current
     {at::kPhase, 0xA0},        // the battle's globals to 0x904B40
     {ObjTrio_addr, 0x3E4},     // ObjTrio
@@ -351,9 +352,9 @@ void Fix() {
     SetPtr(BattleE2_Owner_addr, AnyOwner(Next()));
     for (unsigned i = 0; i < at::kTaskCount; ++i) {
         unsigned char* const t = Slot(i);
-        auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+        auto* const task_rec = rv::As<records::BattleTask>(t);
         SetPtr(Address(t + 0x80), AnyOwner(Next()));
-        task_rec->param = static_cast<unsigned char>(Next() % 11);
+        task_rec->kind = static_cast<unsigned char>(Next() % 11);
         SetWord(t + 0x2C, Next() % 8);
         task_rec->state = static_cast<unsigned char>(Next() % 5);
     }
@@ -369,12 +370,12 @@ struct Args { std::uint32_t a[4]; };
 // Each branch's boundaries, on top of the random bytes.
 void Seed(unsigned k) {
     unsigned char* const t = CurSlot();
-    auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+    auto* const task_rec = rv::As<records::BattleTask>(t);
     unsigned char* const sc = Sprite_Current;
     unsigned char* const o = Owner();
     switch (k) {
-    case kDispatch: task_rec->param = static_cast<unsigned char>(Next() % 19); break;
-    case kMagicDispatch: task_rec->param = static_cast<unsigned char>(Next() % 110); break;
+    case kDispatch: task_rec->kind = static_cast<unsigned char>(Next() % 19); break;
+    case kMagicDispatch: task_rec->kind = static_cast<unsigned char>(Next() % 110); break;
     case kMagicRow:
         sc[5] = static_cast<unsigned char>(Often() ? Next() % at::kMagicRowCount : Next() % 2 ? 0 : 150);
         if (Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ 8);
@@ -401,9 +402,9 @@ void Seed(unsigned k) {
         break;
     }
     case kPopupBounce: {
-        const int y = static_cast<short>(Word(t + 0x3A)), x = static_cast<short>(Word(t + 0x36));
-        if (Often()) task_rec->start_y = y + static_cast<int>(Next() % 3) - 1;
-        if (Often()) task_rec->start_x = x + static_cast<int>(Next() % 2);
+        const int y = static_cast<short>(task_rec->z_whole), x = static_cast<short>(task_rec->x_whole);
+        if (Often()) task_rec->work_1c = y + static_cast<int>(Next() % 3) - 1;
+        if (Often()) task_rec->work_18 = x + static_cast<int>(Next() % 2);
         break;
     }
     case kPoseTask: sc[1] = static_cast<unsigned char>(Next() % 2); break;
@@ -428,8 +429,8 @@ void Seed(unsigned k) {
             At(ObjTrio_addr + 0x91 + i * at::kMemberSize)[0] = kStatus[Next() % 8];
         }
         for (unsigned i = 0; i < 8; ++i) {
-            At(at::kEnemies + 0x92 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
-            At(at::kEnemies + 0x93 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
+            At(Battle_Enemies_addr + 0x92 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
+            At(Battle_Enemies_addr + 0x93 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
         }
         break;
     }

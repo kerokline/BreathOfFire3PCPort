@@ -94,7 +94,7 @@ tail jump to `Sprite_ScriptTick` (its `al` the answer).
 | `0x43EC50` | `BossElder_Enter` | 0x51 | `BossElder_Anims` / `BossElder_Sounds`, hook `BossElder_Hook` |
 | `0x43DF70` / `0x43E720` / `0x43ECB0` | `BossSample3_Hook` / `BossSample9_Hook` / `BossElder_Hook` | 0x10 | three `BareRet` |
 | `0x43E5C0` | `BossGaist_Hook` | 0x10 | `BareRet`, `BareRet`, `BossGaist_HookClearBit1` |
-| `0x43E5D0` | `BossGaist_HookClearBit1` | 0x24 | hook entry 2: with round-flag bit 1 (`0x904AA8`) set and `MoveScript_WaitWordDA` 0 - the bit cleared (a word `and`) and `Draw_PassFlags = 0` |
+| `0x43E5D0` | `BossGaist_HookClearBit1` | 0x24 | hook entry 2: with round-flag bit 1 (`0x904AA8`) set and `Transition_Busy` 0 - the bit cleared (a word `and`) and `Draw_PassFlags = 0` |
 | `0x43E680` | `BossTorch_Hook` | 0x10 | `BossTorch_HookTarget3`, `BareRet`, `BareRet` |
 | `0x43E690` | `BossTorch_HookTarget3` | 8 | hook entry 0 (the action pick): the target `0x904B44 = 3` (enemy 0) |
 | `0x43E840` | `BossAngler_AdvanceDispatch` | 0x12 | step 4 of kinds 43 and 50: `jmp [BossAngler_AdvanceSteps + 4 * +2]` (2) |
@@ -187,7 +187,7 @@ dispatcher's hand-on is seen where no entry reads it); the stack table of
 The group's callees: the four engine functions nobody owns (`0x446700` a
 byte, `0x437450` a word, `0x4376A0`, `0x4376F0`) and two louder stand-ins
 (section below). The group's regions: `0x669730`, `0x675F08..0x675F17`,
-`MoveScript_WaitWordDA`, `Draw_PassFlags`.
+`Transition_Busy`, `Draw_PassFlags`.
 
 | Run | Fight, kind | Clones | Rounds | Calls (the originals', this worktree) | Result |
 |---|---|--:|--:|--:|---|

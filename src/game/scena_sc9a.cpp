@@ -28,6 +28,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc9a_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -43,7 +44,6 @@ using scena_sc9a::VoidFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
 unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
@@ -54,7 +54,7 @@ void SetRun(unsigned char v) { MoveScript_Var7 = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool WaitClear() { return MoveScript_WaitWordDA == 0; }
+bool WaitClear() { return Transition_Busy == 0; }
 unsigned char FD() { return Cond_ByteFD; }
 void SetFE(unsigned char v) { Cond_ByteFE = v; }
 // Field_ScriptFlags as the originals touch it: a word or / xor / and, or its
@@ -77,7 +77,7 @@ void ClearCounters123() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
 void Clr(unsigned i) { SH_CALL(Flags_Clear)(Bits(), i); }
@@ -177,6 +177,7 @@ std::uint32_t Entry(std::uint32_t table, int index, unsigned count, const char* 
 
 // Scena09_EnterArea's body; every return leads to its state store.
 void EnterAreaBody() {
+    auto* const member0 = ObjTrio;
     // area 0x25: flag 0x2E without 0x2F - run 0xF step 0xA, the call-table
     // entries by the selector
     if (Area() == 0x25 && Flag(0x2E) && !Flag(0x2F)) {
@@ -320,11 +321,11 @@ void EnterAreaBody() {
             SetRun(7);
             SetStep(0);
             ClearCounters();
-            Spawn(at::kEffectSlot, 0x96);
-            if (S32(at::kObjTrioY) <= 0x2000000) Spawn(at::kEffectSlot, 0x95);
-        } else if (S32(at::kObjTrioY) <= 0x2000000) {
-            Spawn(at::kEffectSlot, 0x96);
-            if (S32(at::kObjTrioY) <= 0x2000000) Spawn(at::kEffectSlot, 0x95);
+            Spawn(at::kEffectSlot_addr, 0x96);
+            if (member0->height <= 0x2000000) Spawn(at::kEffectSlot_addr, 0x95);
+        } else if (member0->height <= 0x2000000) {
+            Spawn(at::kEffectSlot_addr, 0x96);
+            if (member0->height <= 0x2000000) Spawn(at::kEffectSlot_addr, 0x95);
         }
     }
     // area 0x77: nothing more unless Cond_ByteFD is 2; flag 0x3D without 0x16
@@ -374,7 +375,7 @@ SC9A_EXPORT void __cdecl Scena09_Run(void) {
 // triggered: Scena09_Objects[object +0x86] (object, the flag bits' pointer).
 // The entry's eax is the original's answer; 0x56D6D0 does not read it.
 SC9A_EXPORT void __cdecl Scena09_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena09_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena09_ObjectTrigger")))(object, bits);
@@ -493,20 +494,20 @@ SC9A_EXPORT void __cdecl Scena09_Run3(void) {
         break;
     case 3: {
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetStep(4);
-        Place13(B(at::kEffectSlot), -0x252, AngleY(), 0xA0, 0x14);
+        Place13(at::kEffectSlot, -0x252, AngleY(), 0xA0, 0x14);
         break;
     }
     case 4: {
         if (Counter(0) != 2) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetCounter(3, slot);
         SetStep(5);
-        Place13(B(at::kEffectSlot), -0x35A, AngleY(), 0x3FA, 0x8C);
+        Place13(at::kEffectSlot, -0x35A, AngleY(), 0x3FA, 0x8C);
         break;
     }
     case 5:
@@ -564,6 +565,7 @@ SC9A_EXPORT void __cdecl Scena09_Run3(void) {
 
 // original 0x5547F0: run 4.
 SC9A_EXPORT void __cdecl Scena09_Run4(void) {
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         SetStep(1);
@@ -583,7 +585,7 @@ SC9A_EXPORT void __cdecl Scena09_Run4(void) {
         // ObjTrio +0x3C at least 0x8000000: set one of flags 0x27 / 0x26 and
         // go on only when the other is set too
         const bool five = Step() == 5;
-        if (S32(at::kObjTrioY) < 0x8000000) {
+        if (member0->height < 0x8000000) {
             EndRun();
             break;
         }
@@ -610,10 +612,10 @@ SC9A_EXPORT void __cdecl Scena09_Run4(void) {
     case 0xC: {
         Kind2(3);
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetStep(0xD);
-        Place13(B(at::kEffectSlot), -0x268, AngleY(), 0x10E, 2);
+        Place13(at::kEffectSlot, -0x268, AngleY(), 0x10E, 2);
         break;
     }
     case 0xD:
@@ -719,11 +721,11 @@ SC9A_EXPORT void __cdecl Scena09_Run5(void) {
 // (x, angle Y, z) of life 4.
 void CameraHop(unsigned char next, std::int32_t x, std::int32_t z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    B(at::kEffectSlot) = slot;
+    at::kEffectSlot = slot;
     if (slot == 0xFF) return;
     SetCounter(3, slot);
     SetStep(next);
-    Place13(B(at::kEffectSlot), x, AngleY(), z, 4);
+    Place13(at::kEffectSlot, x, AngleY(), z, 4);
 }
 // Its wait for that effect (steps 0x22 / 0x2C): the record counter 3 names
 // free, counter 3 0, counter 0 1, Transition_Start(5), the pass flags, the
@@ -975,7 +977,7 @@ SC9A_EXPORT void __cdecl Scena09_Run6(void) {
 SC9A_EXPORT void __cdecl Scena09_Run7(void) {
     switch (Step()) {
     case 0:
-        if (ObjTrio[0x3cf] == 2) break;
+        if (rv::Bytes(&ObjTrio[2])[0x137] == 2) break;
         DropIn(0);
         SetStep(1);
         break;
@@ -1003,6 +1005,7 @@ SC9A_EXPORT void __cdecl Scena09_Run7(void) {
 
 // original 0x5556D0: run 8.
 SC9A_EXPORT void __cdecl Scena09_Run8(void) {
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0: Say(0x23); SetStep(0xA); break;
     case 1: Say(0x24); SetStep(0xA); break;
@@ -1057,7 +1060,7 @@ SC9A_EXPORT void __cdecl Scena09_Run8(void) {
         // each of the three members listed as 7: an effect of kind 6 at the
         // member's +0x2E / +0x30 words, its slot to the member's +0xB
         if (Counter(0) != 3) break;
-        unsigned char* member = &B(0x802D40);   // ObjTrio
+        unsigned char* member = rv::Bytes(ObjTrio);
         for (unsigned i = 0; i < 3; ++i, member += 0x14C) {
             if (B(at::kPartyList + i) != 7) continue;
             Sprite_Current = member;
@@ -1105,8 +1108,8 @@ SC9A_EXPORT void __cdecl Scena09_Run8(void) {
         SetStep(0x25);
         break;
     case 0x26:
-        Field_Kind2X = D(at::kObjTrioX);
-        Field_Kind2Z = D(at::kObjTrioZ);
+        Field_Kind2X = static_cast<std::uint32_t>(member0->x);
+        Field_Kind2Z = static_cast<std::uint32_t>(member0->z);
         MoveScript_F3Divisor = 0x20;
         SetStep(0x27);
         break;
@@ -1129,7 +1132,7 @@ SC9A_EXPORT void __cdecl Scena09_Run8(void) {
 SC9A_EXPORT void __cdecl Scena09_Run9(void) {
     switch (Step()) {
     case 0:
-        if (ObjTrio[0x3cf] == 3) break;
+        if (rv::Bytes(&ObjTrio[2])[0x137] == 3) break;
         ScriptOrByte(8);
         DropIn(5);
         Kind2(1);
@@ -1142,7 +1145,7 @@ SC9A_EXPORT void __cdecl Scena09_Run9(void) {
         break;
     case 2:
         if (Counter(0) != 0x25) break;
-        Spawn(at::kEffectSlot, 0x9A);
+        Spawn(at::kEffectSlot_addr, 0x9A);
         SetStep(3);
         break;
     case 3:
@@ -1237,6 +1240,7 @@ unsigned char Take11() {
 
 // original 0x556C40: run 11.
 SC9A_EXPORT void __cdecl Scena09_Run11(void) {
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         DropIn(2);
@@ -1324,8 +1328,8 @@ SC9A_EXPORT void __cdecl Scena09_Run11(void) {
         break;
     case 0xD:
         if (Counter(0) != 0x3B) break;
-        Field_Kind2X = D(at::kObjTrioX);
-        Field_Kind2Z = D(at::kObjTrioZ);
+        Field_Kind2X = static_cast<std::uint32_t>(member0->x);
+        Field_Kind2Z = static_cast<std::uint32_t>(member0->z);
         SH_CALL(Field_ViewReset)();
         SetStep(0xE);
         break;
@@ -1486,7 +1490,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         SetAndEnd(0x36);
         break;
     case 0x46:
-        if (Field_Members[0x13b] == 3) break;
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         Msg(0x87);
         SetRequest(2);
         SetStep(0x47);
@@ -1587,7 +1591,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         EndRun();
         break;
     case 0x6E:
-        if (Field_Members[0x13b] == 3) break;
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         Say(0x9C);
         SetStep(0x6F);
         break;
@@ -1615,7 +1619,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         SetRun(0);
         break;
     case 0x78:
-        if (Field_Members[0x13b] == 3) break;
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         SetCounter(2, 0);
         SetStep(0x79);
         DropIn(2);

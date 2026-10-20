@@ -33,7 +33,9 @@
 #include "game/magic_harness.h"
 #include "game/magic_s23_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -52,10 +54,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
 short Get(std::uint32_t address) { return static_cast<short>(Word(Mem(address))); }
@@ -69,7 +67,7 @@ std::int32_t Shl(std::int32_t a, int n) { return static_cast<std::int32_t>(stati
 void SetPointerAt(unsigned char* cell, const void* p) {
     SetLong(cell, static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p))));
 }
-unsigned char* Slot(unsigned index) { return Mem(hat::kTasks + index * hat::kTaskStride); }
+unsigned char* Slot(unsigned index) { return Mem(BattleTask_Slots_addr + index * hat::kTaskStride); }
 
 int Sin(int angle) { return MH_CALL(Math_Sin)(angle); }
 int Cos(int angle) { return MH_CALL(Math_Cos)(angle); }
@@ -118,8 +116,8 @@ void LoadMatrix(const short* angles, const short* vector) {
 // The translation the three matrices share: the task's position in map units
 // (+0x34 / +0x38 sar 9, less 0x4000) and minus half its height.
 void Position(const unsigned char* sc, int height, short* v) {
-    v[0] = static_cast<short>((Long(sc + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(sc + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((rv::As<records::SpriteHead>(sc)->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((rv::As<records::SpriteHead>(sc)->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(height / 2));
 }
 
@@ -200,7 +198,7 @@ void Opaque(unsigned char* e) {
 }
 
 long Ground(const unsigned char* at_position) {
-    return MH_CALL(AreaMap_Elevation)(Long(at_position + 0x34), Long(at_position + 0x38));
+    return MH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(at_position)->x, rv::As<records::SpriteHead>(at_position)->z);
 }
 
 // Quake_Heave's idiv by a Quake_Divisors byte: the original faults on 0.
@@ -233,9 +231,9 @@ S23_EXPORT void __cdecl Cyclone_Task(void) {
 // 0x100.
 S23_EXPORT void __cdecl Cyclone_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height);
     Sc()[9] = 0;
     Sc()[0xB] = 0;
     Bump(Sc()[1]);
@@ -289,44 +287,44 @@ S23_EXPORT void __cdecl FxFunnel_Wait(void) {
     unsigned char* const sc = Sc();
     if (sc[9] != 0) return;
     sc[8] = Owner()[8];
-    ScTask()->vel_x = 0x60000;
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x60000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(magic_s23::TurnFn, magic_s23::kTurnByFacing)(Sc());
     {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->x = Long(owner + 0x34) + ts->vel_x;
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->x = rv::As<records::SpriteHead>(owner)->x + ts->step_x;
     }
     {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->y = Long(owner + 0x38) + ts->vel_y;
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->z = rv::As<records::SpriteHead>(owner)->z + ts->step_z;
     }
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     {
         const unsigned char* const owner = Owner();
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
-        const std::int32_t dz = Long(owner + 0x38) - ts->y;
-        const std::int32_t dx = Long(owner + 0x34) - ts->x;
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
+        const std::int32_t dz = rv::As<records::SpriteHead>(owner)->z - ts->z;
+        const std::int32_t dx = rv::As<records::SpriteHead>(owner)->x - ts->x;
         const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-        SetLong(Sc() + 0x20, (heading - 0x800) & 0xFFF);
+        rv::Store(rv::Current<records::BattleTask>()->work_20, (heading - 0x800) & 0xFFF);
     }
     if (Sc()[0xB] & 1) {
         const int r = MH_CALL(Rand)();
-        Store(ScTask()->start_x, -4 - (r & 3));
+        rv::Store(rv::Current<records::BattleTask>()->work_18, -4 - (r & 3));
     } else {
         const int r = MH_CALL(Rand)();
-        Store(ScTask()->start_x, (r & 3) + 4);
+        rv::Store(rv::Current<records::BattleTask>()->work_18, (r & 3) + 4);
     }
     const int r = MH_CALL(Rand)();
-    Store(ScTask()->start_y, (r & 0x30) + 0x50);
+    rv::Store(rv::Current<records::BattleTask>()->work_1c, (r & 0x30) + 0x50);
     Sc()[0xA] = 0;
     Bump(Sc()[2]);
 }
@@ -334,8 +332,8 @@ S23_EXPORT void __cdecl FxFunnel_Wait(void) {
 // The funnel's spin: +0x20 up 0x200 for an odd +0xB, down for an even, in
 // 0..0xFFF.
 void Spin(unsigned char* sc) {
-    const std::int32_t a = Long(sc + 0x20);
-    SetLong(sc + 0x20, ((sc[0xB] & 1) ? a + 0x200 : a - 0x200) & 0xFFF);
+    const std::int32_t a = rv::As<records::BattleTask>(sc)->work_20;
+    rv::Store(rv::As<records::BattleTask>(sc)->work_20, ((sc[0xB] & 1) ? a + 0x200 : a - 0x200) & 0xFFF);
 }
 
 // original 0x4CCC90: FxFunnel_Phases[1]. Spin; 0x4FBB40 moves the funnel
@@ -344,8 +342,8 @@ void Spin(unsigned char* sc) {
 S23_EXPORT void __cdecl FxFunnel_Approach(void) {
     unsigned char* const record = TargetRecord();
     Spin(Sc());
-    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(ScTask()->start_x, 6));
-    SetLong(Sc() + 0x14, angle);
+    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(rv::Current<records::BattleTask>()->work_18, 6));
+    rv::Store(rv::Current<records::BattleTask>()->step_y, angle);
     Bump(Sc()[0xA], 4);
     if (Sc()[0xA] == 0x10) Bump(Sc()[2]);
 }
@@ -359,24 +357,24 @@ S23_EXPORT void __cdecl FxFunnel_Orbit(void) {
     Spin(Sc());
     {
         unsigned char* const sc = Sc();
-        records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
-        tsc->vel_y = Long(sc + 0x14);
+        records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
+        tsc->step_z = tsc->step_y;
     }
-    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(ScTask()->start_x, 6));
-    SetLong(Sc() + 0x14, angle);
+    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(rv::Current<records::BattleTask>()->work_18, 6));
+    rv::Store(rv::Current<records::BattleTask>()->step_y, angle);
     if (MH_CALL(MagicFx_NearSprite)(record, 0xC000) == 0) {
         {
             unsigned char* const sc = Sc();
-            records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
-            tsc->vel_y = (tsc->vel_y & 0xFFF) - (Long(sc + 0x14) & 0xFFF);
+            records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
+            tsc->step_z = (tsc->step_z & 0xFFF) - (tsc->step_y & 0xFFF);
         }
         unsigned char* sc = Sc();
-        const std::int32_t d = Long(sc + 0x10);
+        const std::int32_t d = rv::As<records::BattleTask>(sc)->step_z;
         if (d < 0) {
-            SetLong(sc + 0x10, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(d)));
+            rv::Store(rv::As<records::BattleTask>(sc)->step_z, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(d)));
             sc = Sc();
         }
-        const std::int32_t moved = Long(sc + 0x10);
+        const std::int32_t moved = rv::As<records::BattleTask>(sc)->step_z;
         if (moved <= 0x400 || moved >= 0xC00) return;
     }
     Bump(Owner()[9]);
@@ -387,20 +385,20 @@ S23_EXPORT void __cdecl FxFunnel_Orbit(void) {
 // the facing (0x446770) and added to x / z; the height +0x3E up 0x40; spin;
 // +0xA down, at 0 the owner's count +0xB down and the task freed.
 S23_EXPORT void __cdecl FxFunnel_Rise(void) {
-    ScTask()->vel_x = 0x1000;
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x1000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(magic_s23::TurnFn, magic_s23::kTurnByFacing)(Sc());
     {
         unsigned char* const sc = Sc();
-        records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
-        tsc->x = tsc->x + tsc->vel_x;
+        records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
+        tsc->x = tsc->x + tsc->step_x;
     }
     {
         unsigned char* const sc = Sc();
-        records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
-        tsc->y = tsc->y + tsc->vel_y;
+        records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
+        tsc->z = tsc->z + tsc->step_z;
     }
-    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + 0x40u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::Current<records::BattleTask>()->height_whole + 0x40u);
     Spin(Sc());
     Bump(Sc()[0xA], -1);
     if (Sc()[0xA] != 0) return;
@@ -414,7 +412,7 @@ S23_EXPORT void __cdecl FxFunnel_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const short angles[3] = {0, 0, 0};
     short v[3];
-    Position(Sc(), static_cast<short>(Word(Sc() + 0x3E)) + 0x100, v);
+    Position(Sc(), static_cast<short>(rv::Current<records::BattleTask>()->height_whole) + 0x100, v);
     LoadMatrix(angles, v);
 }
 
@@ -429,8 +427,8 @@ S23_EXPORT void __cdecl FxFunnel_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     {
         const unsigned char* const sc = Sc();
-        const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 2, 0xC);
+        const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 2, 0xC);
     }
     {
         const unsigned char* const r = Sc() + 0x1C;
@@ -440,7 +438,7 @@ S23_EXPORT void __cdecl FxFunnel_Draw(void) {
     }
     {
         const unsigned char* const sc = Sc();
-        Put(at::kW8, (Long(sc + 0x20) / 64) & 0x3F);
+        Put(at::kW8, (rv::As<records::BattleTask>(sc)->work_20 / 64) & 0x3F);
         Put(at::kW4, sc[0xA] * 12);
         Put(at::kW6, sc[0xA]);
         const int first = (Byte(at::kW8) & 0x3F) << 6;
@@ -479,8 +477,8 @@ S23_EXPORT void __cdecl FxFunnel_Draw(void) {
         Project4(prim, 8, 0x18, 0x28, 0x38);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         const unsigned char* const sc = Sc();
-        const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 2, 0x44);
+        const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 2, 0x44);
     }
 }
 
@@ -491,7 +489,7 @@ S23_EXPORT void __cdecl FxFunnel_PushGroundMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const short angles[3] = {0, 0, 0};
     const unsigned char* const sc = Sc();
-    const int height = sc[2] < 3 ? static_cast<short>(Word(sc + 0x3E)) : static_cast<short>(Ground(sc));
+    const int height = sc[2] < 3 ? static_cast<short>(rv::As<records::BattleTask>(sc)->height_whole) : static_cast<short>(Ground(sc));
     short v[3];
     Position(sc, height, v);
     LoadMatrix(angles, v);
@@ -513,7 +511,7 @@ S23_EXPORT void __cdecl FxFunnel_DrawGround(void) {
     }
     {
         const unsigned char* const sc = Sc();
-        Put(at::kW8, (Long(sc + 0x20) / 64) & 0x3F);
+        Put(at::kW8, (rv::As<records::BattleTask>(sc)->work_20 / 64) & 0x3F);
         Put(at::kW4, sc[0xA] * 2);
         const int first = (Byte(at::kW8) & 0x3F) << 6;
         Put(at::kWA, first);
@@ -679,20 +677,20 @@ S23_EXPORT void __cdecl FxSpiral_Wait(void) {
     unsigned char* const sc = Sc();
     if (sc[9] != 0) return;
     sc[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C) + 0x1800000);
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height + 0x1800000);
     {
         unsigned char* const s = Sc();
         s[0xB] = static_cast<unsigned char>((s[4] << 2) & 0x3F);
     }
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
-        ts->vel_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Word(Mem(FxSpiral_Turns_addr + 2u * s[4]))) << 8);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
+        ts->step_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Word(Mem(FxSpiral_Turns_addr + 2u * s[4]))) << 8);
     }
-    ScTask()->vel_y = 0x60;
-    SetLong(Sc() + 0x14, 0x20);
+    rv::Current<records::BattleTask>()->step_z = 0x60;
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x20);
     {
         unsigned char* const s = Sc();
         s[9] = static_cast<unsigned char>((s[4] << 2) + 1);
@@ -708,7 +706,7 @@ void Bob() {
     const int s = Sin(static_cast<int>((Frame_Counter & 0x1F) << 7));
     const unsigned char* const owner = Owner();
     unsigned char* const sc = Sc();
-    SetWord(sc + 0x3E, static_cast<unsigned>((Shl(s, 5) >> 12) + Word(owner + 0x3E) + 0x180));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, static_cast<unsigned>((Shl(s, 5) >> 12) + rv::As<records::SpriteHead>(owner)->height_whole + 0x180));
 }
 
 // original 0x4CDB30: FxSpiral_Phases[1]. Bob; +0xA up 2, at 0x10 on.
@@ -731,9 +729,9 @@ S23_EXPORT void __cdecl FxSpiral_Hold(void) {
         sc = Sc();
     }
     sc[0xB] = Byte(FxSpiral_Tilts_addr + 2u * sc[8]);
-    ScTask()->vel_y = 0x80;
-    SetLong(Sc() + 0x14, 0x80);
-    ScTask()->start_y = 0x18;
+    rv::Current<records::BattleTask>()->step_z = 0x80;
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x80);
+    rv::Current<records::BattleTask>()->work_1c = 0x18;
     Sc()[9] = 0x10;
     Bump(Sc()[2]);
 }
@@ -744,8 +742,8 @@ S23_EXPORT void __cdecl FxSpiral_Spread(void) {
     Bump(Sc()[0xB], 4);
     {
         unsigned char* const sc = Sc();
-        records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
-        tsc->vel_y = tsc->vel_y + tsc->start_y;
+        records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
+        tsc->step_z = tsc->step_z + tsc->work_1c;
     }
     Bump(Sc()[9], -1);
     if (Sc()[9] == 0) Bump(Sc()[2]);
@@ -761,13 +759,13 @@ S23_EXPORT void __cdecl FxSpiral_Fade(void) {
     }
     {
         unsigned char* const sc = Sc();
-        records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
-        tsc->start_y = tsc->start_y - 2;
+        records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
+        tsc->work_1c = tsc->work_1c - 2;
     }
     {
         unsigned char* const sc = Sc();
-        records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
-        tsc->vel_y = tsc->vel_y + tsc->start_y;
+        records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
+        tsc->step_z = tsc->step_z + tsc->work_1c;
     }
     Bump(Sc()[0xA], -1);
     if (Sc()[0xA] != 0) return;
@@ -785,7 +783,7 @@ S23_EXPORT void __cdecl FxSpiral_PushMatrix(void) {
     const short tilt = static_cast<short>(Word(sc + 0xC));
     const short angles[3] = {about_y ? static_cast<short>(0) : tilt, about_y ? tilt : static_cast<short>(0), 0};
     short v[3];
-    Position(sc, static_cast<short>(Word(sc + 0x3E)), v);
+    Position(sc, static_cast<short>(rv::As<records::BattleTask>(sc)->height_whole), v);
     LoadMatrix(angles, v);
 }
 
@@ -799,14 +797,14 @@ S23_EXPORT void __cdecl FxSpiral_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     {
         const unsigned char* const sc = Sc();
-        const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 2, 0xC);
+        const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 2, 0xC);
     }
     {
         const unsigned char* const r = Sc() + 0x10;
         const int s = Sin(0);
         const unsigned char* const sc = Sc();
-        Put(at::kR, (Imul(s, Long(sc + 0x14)) >> 12) + Word(r));
+        Put(at::kR, (Imul(s, rv::As<records::BattleTask>(sc)->step_y) >> 12) + Word(r));
         Put(at::kR2, Word(r));
         Put(at::kW4, sc[0xB]);
         const int first = (sc[0xB] & 0x3F) << 6;
@@ -821,7 +819,7 @@ S23_EXPORT void __cdecl FxSpiral_Draw(void) {
         const int s = Sin(angle);
         {
             const unsigned char* const sc = Sc();
-            const int outer = (Imul(s, Long(sc + 0x14)) >> 12) + Word(sc + 0x10);
+            const int outer = (Imul(s, rv::As<records::BattleTask>(sc)->step_y) >> 12) + Word(sc + 0x10);
             Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
             Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
             Put(at::kR, outer);
@@ -851,8 +849,8 @@ S23_EXPORT void __cdecl FxSpiral_Draw(void) {
         Project4(prim, 8, 0x18, 0x28, 0x38);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         const unsigned char* const sc = Sc();
-        const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 2, 0x44);
+        const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 2, 0x44);
     }
 }
 
@@ -893,14 +891,14 @@ S23_EXPORT void __cdecl Quake_Start(void) {
     for (unsigned i = 0; i < 3; ++i) {
         if (PartyOf(static_cast<unsigned char>(i))[0] == 0) continue;
         const long ground = Ground(Slot(i));
-        Put(at::kQuakePartyZ + 2 * i, Word(PartyOf(static_cast<unsigned char>(i)) + 0x3E) - static_cast<short>(ground));
+        Put(at::kQuakePartyZ + 2 * i, rv::As<records::PartyMember>(PartyOf(static_cast<unsigned char>(i)))->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 8; ++i) {
         if (MH_CALL(Battle_ActorIsOut)(i + 3) != 0) continue;
         const unsigned char* const slot = Slot(3 + i);
-        const records::BattleTask* const tslot = reinterpret_cast<const records::BattleTask*>(slot);
-        const std::int32_t x = tslot->x, z = tslot->y;
-        const std::uint16_t height = Word(EnemyOf(static_cast<unsigned char>(i + 3)) + 0x3E);
+        const records::BattleTask* const tslot = rv::AsConst<records::BattleTask>(slot);
+        const std::int32_t x = tslot->x, z = tslot->z;
+        const std::uint16_t height = rv::As<records::BattleEnemy>(EnemyOf(static_cast<unsigned char>(i + 3)))->height_whole;
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
         Put(at::kQuakeEnemyZ + 2 * i, height);
         Put(at::kQuakeEnemyUp + 2 * i, height - static_cast<short>(ground));
@@ -909,23 +907,23 @@ S23_EXPORT void __cdecl Quake_Start(void) {
         const unsigned char* const o = Mem(Sprite_Objects_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
-        Put(at::kQuakeSpriteZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
+        Put(at::kQuakeSpriteZ + 2 * i, rv::As<records::SpriteObject>(o)->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 4; ++i) {
         const unsigned char* const o = Mem(Sprite_ObjectsExtra_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
-        Put(at::kQuakeExtraZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
+        Put(at::kQuakeExtraZ + 2 * i, rv::As<records::SpriteObject>(o)->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 20; ++i) {
         const unsigned char* const o = Mem(Effect_Objects_addr + 0x80 * i);
         if (o[0] == 0 || o[5] != 0x17) continue;
         const long ground = Ground(o);
-        Put(at::kQuakeEffectZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
+        Put(at::kQuakeEffectZ + 2 * i, rv::As<records::EffectObject>(o)->height_whole - static_cast<short>(ground));
     }
     Walk(&Semi);
     std::memset(Mem(at::kQuakeLift), 0, 0xFF);
-    switch (Byte(BattleActions_EventBattle_addr)) {
+    switch (Byte(EventBattle_Id_addr)) {
     case 0x1C: case 0x23: case 0x2F: case 0x34: Mem(MagicS23_QuakeHover_addr)[0] = 1; break;
     default: Mem(MagicS23_QuakeHover_addr)[0] = 0; break;
     }
@@ -999,8 +997,8 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
         for (unsigned i = 0; i < 3; ++i) {
             if (PartyOf(static_cast<unsigned char>(i))[0] == 0) continue;
             const long ground = Ground(Slot(i));
-            SetWord(PartyOf(static_cast<unsigned char>(i)) + 0x3E,
-                    static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakePartyZ + 2 * i)));
+            rv::Store<unsigned>(rv::As<records::PartyMember>(PartyOf(static_cast<unsigned char>(i)))->height_whole,
+                                static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakePartyZ + 2 * i)));
         }
     } else {
         for (unsigned i = 0; i < 8; ++i) {
@@ -1010,32 +1008,32 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
                 const short kept = Get(at::kQuakeEnemyZ + 2 * i);
                 const short ground = static_cast<short>(Ground(slot));
                 if (kept > ground) {
-                    SetWord(EnemyOf(static_cast<unsigned char>(i + 3)) + 0x3E, static_cast<std::uint16_t>(kept));
+                    rv::Store<unsigned>(rv::As<records::BattleEnemy>(EnemyOf(static_cast<unsigned char>(i + 3)))->height_whole, static_cast<std::uint16_t>(kept));
                     continue;
                 }
             }
             const long ground = Ground(slot);
-            SetWord(EnemyOf(static_cast<unsigned char>(i + 3)) + 0x3E,
-                    static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEnemyUp + 2 * i)));
+            rv::Store<unsigned>(rv::As<records::BattleEnemy>(EnemyOf(static_cast<unsigned char>(i + 3)))->height_whole,
+                                static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEnemyUp + 2 * i)));
         }
     }
     for (unsigned i = 0; i < 30; ++i) {
         unsigned char* const o = Mem(Sprite_Objects_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
-        SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeSpriteZ + 2 * i)));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeSpriteZ + 2 * i)));
     }
     for (unsigned i = 0; i < 4; ++i) {
         unsigned char* const o = Mem(Sprite_ObjectsExtra_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
-        SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeExtraZ + 2 * i)));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeExtraZ + 2 * i)));
     }
     for (unsigned i = 0; i < 20; ++i) {
         unsigned char* const o = Mem(Effect_Objects_addr + 0x80 * i);
         if (o[0] == 0 || o[5] != 0x17) continue;
         const long ground = Ground(o);
-        SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEffectZ + 2 * i)));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEffectZ + 2 * i)));
     }
     const int odd = static_cast<int>(Frame_Counter & 1);
     unsigned char* const sc = Sc();
@@ -1141,9 +1139,9 @@ S23_EXPORT void __cdecl SimoonDome_Task(void) {
 // +9 and +0xA 0; on.
 S23_EXPORT void __cdecl SimoonDome_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
-    SetWord(Sc() + 0x3E, Word(src + 0x3E));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(src)->height_whole);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
     Bump(Sc()[2]);
@@ -1228,10 +1226,10 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
             Put(Prim_VertexScratch_addr + 0x18, SinOf(a, at::kW4));
             const int y = CosOf(a, at::kW4);
             const unsigned char* const sc = Sc();
-            const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+            const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
             Put(Prim_VertexScratch_addr + 0x18 + 2, y);
             const std::int32_t x = Shl(Get(Prim_VertexScratch_addr + 0x18), 9) + tsc->x;
-            const std::int32_t z = Shl(static_cast<short>(y), 9) + tsc->y;
+            const std::int32_t z = Shl(static_cast<short>(y), 9) + tsc->z;
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
             unsigned char* const prim = Gfx_PacketNext;
@@ -1239,8 +1237,8 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
             MH_CALL(Gpu_SetSemiTrans)(prim, 1);
             Project4(prim, 8, 0x1C, 0x30, 0x44);
             MH_CALL(Gte_PrimDepths4_14)(prim);
-            SetWord(prim + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-            SetWord(prim + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(prim)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(prim)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
             const unsigned char u0 = static_cast<unsigned char>(j << 3);
             const unsigned char u1 = static_cast<unsigned char>((j + 1) << 3);
             prim[0x14] = u0;
@@ -1299,7 +1297,7 @@ S23_EXPORT void __cdecl SimoonDust_Rise(void) {
 // The dust's arc: the screen y +0x30 less (+9 - 8) / 2.
 void Arc() {
     unsigned char* const sc = Sc();
-    SetWord(sc + 0x30, static_cast<unsigned>(Word(sc + 0x30) - (static_cast<int>(sc[9]) - 8) / 2));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->screen_y, static_cast<unsigned>(static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y) - (static_cast<int>(sc[9]) - 8) / 2));
 }
 
 // original 0x4CFE10: SimoonDust_Phases[2]. The screen point; the arc; +9 up,
@@ -1346,8 +1344,8 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     {
         const unsigned char* const sc = Sc();
-        const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 0, 0xC);
+        const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 0, 0xC);
     }
     unsigned char* const prim = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyGT4)(prim);
@@ -1358,8 +1356,8 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
         Put(at::kW6, sc[0xA] << 3);
         Put(at::kW8, sc[0xA] * 7);
         Put(at::kWA, sc[0xA] << 2);
-        Put(Scratch_Swap_addr, Word(sc + 0x2E));
-        Put(at::kWE, Word(sc + 0x30));
+        Put(Scratch_Swap_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
+        Put(at::kWE, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y));
     }
     static constexpr unsigned kX[4] = {8, 0x1C, 0x30, 0x44};
     static constexpr int kTurn[4] = {-0x80, 0x40, -0x40, 0};
@@ -1371,8 +1369,8 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
         const float fy = static_cast<float>(y);
         std::memcpy(prim + kX[k] + 4, &fy, sizeof fy);
     }
-    SetWord(prim + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-    SetWord(prim + 0x16, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(prim)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(prim)->clut, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
     prim[0x14] = 1;
     prim[0x15] = 1;
     prim[0x28] = 0x1F;
@@ -1387,8 +1385,8 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
         prim[6 + 0x14 * k] = Byte(at::kWA);
     }
     const unsigned char* const sc = Sc();
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
-    MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 0, 0x54);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
+    MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 0, 0x54);
 }
 
 // original 0x4D0200: SimoonFx_Types[2]. Its phase +2 through
@@ -1408,9 +1406,9 @@ S23_EXPORT void __cdecl SimoonFan_Task(void) {
 // +0xA 0; on.
 S23_EXPORT void __cdecl SimoonFan_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
     Bump(Sc()[2]);

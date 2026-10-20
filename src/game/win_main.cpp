@@ -788,7 +788,9 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
 // the slots are the loader's.
 namespace {
 
-constexpr U kImpExitProcess = 0x5C40B8, kImpTerminateProcess = 0x5C4114, kImpPostQuitMessage = 0x5C4158;
+// kImpExitProcess: now Imp_ExitProcess (symbols.toml).
+// kImpTerminateProcess: now Imp_TerminateProcess (symbols.toml).
+// kImpPostQuitMessage: now Imp_PostQuitMessage (symbols.toml).
 void (WINAPI* g_real_exit)(UINT);
 BOOL (WINAPI* g_real_terminate)(HANDLE, UINT);
 void (WINAPI* g_real_post_quit)(int);
@@ -865,9 +867,9 @@ void PatchImport(U slot, F& real, F ours) {
 
 void WinMain_Inject() {
     if (GetEnvironmentVariableA("BOF3X_EXITTRACE", nullptr, 0) > 0) {
-        PatchImport(kImpExitProcess, g_real_exit, &TracedExitProcess);
-        PatchImport(kImpTerminateProcess, g_real_terminate, &TracedTerminateProcess);
-        PatchImport(kImpPostQuitMessage, g_real_post_quit, &TracedPostQuitMessage);
+        PatchImport(Imp_ExitProcess_addr, g_real_exit, &TracedExitProcess);
+        PatchImport(Imp_TerminateProcess_addr, g_real_terminate, &TracedTerminateProcess);
+        PatchImport(Imp_PostQuitMessage_addr, g_real_post_quit, &TracedPostQuitMessage);
         PatchImport(PsxRest_ImportMessageBoxA_addr, g_real_message_box, &TracedMessageBoxA);
         if (!AddVectoredExceptionHandler(0, TracedUnhandled)) bof3::Fatal("exittrace: no vectored handler");
         bof3::Log("exittrace   ExitProcess, TerminateProcess, PostQuitMessage and MessageBoxA log their callers; "

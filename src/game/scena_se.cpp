@@ -14,7 +14,7 @@
 // can stand recorders in for ours as for the originals' copies. No
 // divergence: each is a faithful replacement. The unchecked indexes the
 // originals make (a negative placement count, a member id past
-// MoveScript_EffectState's 24) are reproduced, as event_script.cpp's
+// Character_IndexById's 24) are reproduced, as event_script.cpp's
 // placements and field_event.cpp's Party_Join reproduce them (latent
 // defects, docs/scena_se.md section 6).
 #include "game/scena_se.h"
@@ -24,6 +24,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_se_callees.h"
 #include "game/scenario_harness.h"
@@ -39,21 +40,18 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The placement count (DamageScratch, read afresh at every use as the
+// The placement count (SharedScratch, read afresh at every use as the
 // original reads the word [0x903850]) and the bank word after it.
-short Count() { return static_cast<short>(Word(At(at::kCount))); }
-unsigned char* Object(int n) { return Sprite_Objects + n * static_cast<int>(at::kObjectStride); }
+short Count() { return static_cast<std::int16_t>(at::kCount); }
+unsigned char* Object(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(at::kObjectStride); }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Obj() is a Sprite_Objects record. Fx() is an effect
-// object (Effect_Objects).
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::SpriteObject* Obj(int n) { return Spr(Object(n)); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record: Object(n) is a Sprite_Objects record.
+// rv::As<records::EffectObject>(p) is given effect objects (Effect_Objects).
 
 // A placement's x or z: the whole part from `whole`, the half (0x8000) when
 // `half` is not 0 - `neg / sbb / and 0x8000`, then `or` the whole << 16.
@@ -62,9 +60,9 @@ std::uint32_t Coordinate(unsigned char half, unsigned char whole) {
 }
 
 // A character's record +0xB (CharacterRecords, stride 0xA4) through
-// MoveScript_EffectState[id] - both indexes a whole byte, unchecked.
+// Character_IndexById[id] - both indexes a whole byte, unchecked.
 unsigned char* RecordFlags(unsigned char id) {
-    return At(bof3::addr::CharacterRecords + 0xB + MoveScript_EffectState[id] * at::kObjectStride);
+    return At(CharacterRecords_addr + 0xB + Character_IndexById[id] * at::kObjectStride);
 }
 
 }  // namespace
@@ -79,14 +77,14 @@ unsigned char* RecordFlags(unsigned char id) {
 extern "C" void __cdecl Field_StartEventBattle(unsigned id_arg) {
     const unsigned char id = static_cast<unsigned char>(id_arg);
     At(at::kScriptFlags2High)[0] = static_cast<unsigned char>(At(at::kScriptFlags2High)[0] | 0x10);
-    BattleActions_EventBattle = id;
+    EventBattle_Id = id;
     unsigned char* const leader = At(ObjTrio_addr);
     leader[1] = 5;
     const unsigned char flags = At(bof3::addr::EventBattle_Records)[id * 4u];
     leader[2] = 0;
     leader[3] = 0;
     leader[4] = 0;
-    BattleTurnSteps_MusicFlags = flags;
+    EventBattle_Flags = flags;
     BattlePhases_Initiative = 0;
 }
 
@@ -113,15 +111,15 @@ extern "C" void __cdecl Scena08_PartyJoin784(void) {
 extern "C" void __cdecl Effect_SpawnAtCell(unsigned state, unsigned x, unsigned z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect_Objects + slot * at::kEffectStride;
+    unsigned char* const e = rv::Bytes(Effect_Objects) + slot * at::kEffectStride;
     e[0] = 1;
     e[5] = at::kCellFxKind;
     e[1] = static_cast<unsigned char>(state);
-    Fx(e)->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
+    rv::As<records::EffectObject>(e)->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
     const auto zz = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
-    Fx(e)->z = zz;
-    const long ground = SH_CALL(AreaMap_Elevation)(Fx(e)->x, zz);
-    SetWord(e + 0x3E, static_cast<unsigned>(ground) + 0x100);
+    rv::As<records::EffectObject>(e)->z = zz;
+    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(e)->height_whole, static_cast<unsigned>(ground) + 0x100);
     e[0xB] = 0;
 }
 
@@ -156,25 +154,25 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     unsigned char* const o = Object(Count());
     Sprite_Current = o;
     Field_ActiveMember = o;
-    SetWord(At(at::kBank), static_cast<unsigned>(op[1]) << 8 | op[2]);
+    at::kBank = static_cast<unsigned>(op[1]) << 8 | op[2];
     SH_CALL(EventObj_Reset)();
-    SH_CALL(Sprite_SetAnimationBank)(Word(At(at::kBank)));
+    SH_CALL(Sprite_SetAnimationBank)(at::kBank);
     Sprite_Current[0] = 1;
-    SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
-    SetLong(Object(Count()) + 0x8C, SC()->x);
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
-    SetLong(Object(Count()) + 0x90, SC()->z);
-    Obj(Count())->best_score = 0;
-    const long ground = SH_CALL(AreaMap_Elevation)(SC()->x, SC()->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, rv::Current<records::SpriteObject>()->x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, rv::Current<records::SpriteObject>()->z);
+    rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
+    const long ground = SH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
     Sprite_Current[8] = static_cast<unsigned char>(op[0] & 0xF);
     Sprite_Current[6] = static_cast<unsigned char>(op[0] >> 4);
     unsigned char* const n = Object(Count());
-    Spr(n)->half_w = op[4];
-    Spr(n)->half_d = op[5];
-    Spr(n)->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
+    rv::As<records::SpriteObject>(n)->half_w = op[4];
+    rv::As<records::SpriteObject>(n)->half_d = op[5];
+    rv::As<records::SpriteObject>(n)->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
     n[0x83] = op[0x10];
     n[0x84] = op[0xB];
     n[0xA0] = 0x7F;
@@ -185,7 +183,7 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5C] = static_cast<unsigned char>(op[3] & 0xF);
     SH_CALL(EventObj_Face)();
-    SetWord(At(at::kCount), static_cast<unsigned>(Word(At(at::kCount)) + 1));
+    at::kCount = static_cast<unsigned>(at::kCount + 1);
 }
 
 // original 0x591CC0: a member into the two party lists without a sprite

@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -11,8 +12,8 @@ namespace {
 
 constexpr unsigned kObjectSize = 0xA4;
 constexpr unsigned kObjects = 30, kExtra = 4;
-static_assert(kObjectSize * kObjects == Sprite_Objects_count);
-static_assert(kObjectSize * kExtra == Sprite_ObjectsExtra_count);
+static_assert(kObjectSize * kObjects == (Sprite_Objects_count * sizeof(records::SpriteObject)));
+static_assert(kObjectSize * kExtra == (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)));
 
 // The fields of a sprite object this file reads; the rest is unread.
 constexpr unsigned kFlags = 0x00;     // u8, bit 0: in use
@@ -104,7 +105,7 @@ void Fill(unsigned char* object, unsigned likely, std::int32_t cx, std::int32_t 
 
 void SelfTest(FindFn theirs) {
     constexpr unsigned kRounds = 8000;
-    static unsigned char saved_a[Sprite_Objects_count], saved_b[Sprite_ObjectsExtra_count];
+    static unsigned char saved_a[(Sprite_Objects_count * sizeof(records::SpriteObject))], saved_b[(Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))];
     static unsigned char outside[kObjectSize];
     std::memcpy(saved_a, Sprite_Objects, sizeof saved_a);
     std::memcpy(saved_b, Sprite_ObjectsExtra, sizeof saved_b);
@@ -119,12 +120,11 @@ void SelfTest(FindFn theirs) {
         const std::int32_t cx = static_cast<std::int32_t>(Rng()), cy = static_cast<std::int32_t>(Rng());
         const std::int16_t cz = static_cast<std::int16_t>(Rng());
         const unsigned likely = 1 + Rng() % 12;   // 1: nothing leans; 12: nearly everything does
-        for (unsigned i = 0; i < kObjects; ++i) Fill(Sprite_Objects + i * kObjectSize, likely, cx, cy, cz);
-        for (unsigned i = 0; i < kExtra; ++i) Fill(Sprite_ObjectsExtra + i * kObjectSize, likely, cx, cy, cz);
+        for (unsigned i = 0; i < kObjects; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kExtra; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
 
         const unsigned where = Rng() % (kObjects + kExtra + 4);
-        unsigned char* const current = where < kObjects ? Sprite_Objects + where * kObjectSize
-                                     : where < kObjects + kExtra ? Sprite_ObjectsExtra + (where - kObjects) * kObjectSize
+        unsigned char* const current = where < kObjects ? rv::Bytes(&Sprite_Objects[where]) : where < kObjects + kExtra ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjects) * kObjectSize
                                      : outside;
         Put<std::int32_t>(current, kX, cx);
         Put<std::int32_t>(current, kY, cy);
@@ -204,13 +204,13 @@ using HandleFn = unsigned char (__cdecl*)(unsigned);
 
 void SelfTestObjectByHandle(HandleFn theirs) {
     constexpr unsigned kLayouts = 64;
-    static unsigned char saved[Sprite_Objects_count];
+    static unsigned char saved[(Sprite_Objects_count * sizeof(records::SpriteObject))];
     std::memcpy(saved, Sprite_Objects, sizeof saved);
     unsigned bad = 0, calls = 0;
     for (unsigned layout = 0; layout < kLayouts; ++layout) {
         const unsigned lean = layout % 4;   // 0: no type-0x0A objects at all
         for (unsigned i = 0; i < kObjects; ++i)
-            Sprite_Objects[i * kObjectSize + kType] =
+            Sprite_Objects[i].type =
                 lean && Rng() % 4 < lean ? 0x0A : static_cast<unsigned char>(Rng() | 1u);
         for (unsigned handle = 0; handle < 0x100; ++handle, ++calls) {
             // Noise above the byte: the original reads only the low one.
@@ -237,9 +237,9 @@ using InheritFn = void (__cdecl*)();
 
 void SelfTestInheritDrawKey(InheritFn theirs) {
     constexpr unsigned kRounds = 8000;
-    static unsigned char saved_a[Sprite_Objects_count], saved_b[Sprite_ObjectsExtra_count];
-    static unsigned char start_a[Sprite_Objects_count], start_b[Sprite_ObjectsExtra_count];
-    static unsigned char their_a[Sprite_Objects_count], their_b[Sprite_ObjectsExtra_count];
+    static unsigned char saved_a[(Sprite_Objects_count * sizeof(records::SpriteObject))], saved_b[(Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))];
+    static unsigned char start_a[(Sprite_Objects_count * sizeof(records::SpriteObject))], start_b[(Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))];
+    static unsigned char their_a[(Sprite_Objects_count * sizeof(records::SpriteObject))], their_b[(Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))];
     static unsigned char outside[kObjectSize], start_out[kObjectSize], their_out[kObjectSize];
     std::memcpy(saved_a, Sprite_Objects, sizeof saved_a);
     std::memcpy(saved_b, Sprite_ObjectsExtra, sizeof saved_b);
@@ -256,13 +256,12 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
         const std::int32_t cx = static_cast<std::int32_t>(Rng()), cy = static_cast<std::int32_t>(Rng());
         const std::int16_t cz = static_cast<std::int16_t>(Rng());
         const unsigned likely = 1 + Rng() % 12;
-        for (unsigned i = 0; i < kObjects; ++i) Fill(Sprite_Objects + i * kObjectSize, likely, cx, cy, cz);
-        for (unsigned i = 0; i < kExtra; ++i) Fill(Sprite_ObjectsExtra + i * kObjectSize, likely, cx, cy, cz);
+        for (unsigned i = 0; i < kObjects; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kExtra; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
         for (auto& b : outside) b = static_cast<unsigned char>(Rng());
 
         const unsigned where = Rng() % (kObjects + kExtra + 4);
-        unsigned char* const current = where < kObjects ? Sprite_Objects + where * kObjectSize
-                                     : where < kObjects + kExtra ? Sprite_ObjectsExtra + (where - kObjects) * kObjectSize
+        unsigned char* const current = where < kObjects ? rv::Bytes(&Sprite_Objects[where]) : where < kObjects + kExtra ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjects) * kObjectSize
                                      : outside;
         Put<std::int32_t>(current, kX, cx);
         Put<std::int32_t>(current, kY, cy);
@@ -328,9 +327,9 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
 extern "C" unsigned char __cdecl Sprite_FindNearby(void) {
     const unsigned char* const current = Sprite_Current;
     for (unsigned i = 0; i < kObjects; ++i)
-        if (Qualifies(Sprite_Objects + i * kObjectSize, current)) return static_cast<unsigned char>(i);
+        if (Qualifies(rv::Bytes(&Sprite_Objects[i]), current)) return static_cast<unsigned char>(i);
     for (unsigned i = 0; i < kExtra; ++i)
-        if (Qualifies(Sprite_ObjectsExtra + i * kObjectSize, current)) return static_cast<unsigned char>(i + kObjects);
+        if (Qualifies(rv::Bytes(&Sprite_ObjectsExtra[i]), current)) return static_cast<unsigned char>(i + kObjects);
     return 0xFF;
 }
 
@@ -409,8 +408,8 @@ namespace {
 // 30 and above into Sprite_ObjectsExtra, and no bound on either side.
 const unsigned char* ObjectByNumber(unsigned char number) {
     const int n = static_cast<signed char>(number);
-    return n >= static_cast<int>(kObjects) ? Sprite_ObjectsExtra + (n - static_cast<int>(kObjects)) * static_cast<int>(kObjectSize)
-                                           : Sprite_Objects + n * static_cast<int>(kObjectSize);
+    return n >= static_cast<int>(kObjects) ? rv::Bytes(Sprite_ObjectsExtra) + (n - static_cast<int>(kObjects)) * static_cast<int>(kObjectSize)
+                                           : rv::Bytes(Sprite_Objects) + n * static_cast<int>(kObjectSize);
 }
 
 }  // namespace

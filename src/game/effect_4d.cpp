@@ -50,6 +50,7 @@
 #include "game/effect_4d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -68,7 +69,6 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -330,7 +330,7 @@ extern "C" void __cdecl Effect_DrawScreenTintMode(unsigned blend) {
 // section 6).
 extern "C" void __cdecl EffectKind94_RedrawSprites(void) {
     unsigned char* const saved = Sprite_Current;
-    unsigned char* o = Sprite_Objects;
+    unsigned char* o = rv::Bytes(Sprite_Objects);
     for (unsigned n = 6; n != 0; --n, o += 0xA4) {
         Sprite_Current = o;
         o[0x29] = 2;
@@ -341,7 +341,7 @@ extern "C" void __cdecl EffectKind94_RedrawSprites(void) {
             bof3::Fatal("EffectKind94_RedrawSprites: Field_MemberCount is %u, past ObjTrio's three records - the original "
                         "reads and draws what follows (docs/effect_4d.md section 6)",
                         (unsigned)Field_MemberCount);
-        unsigned char* const member = ObjTrio + at::kTrioStride * m;
+        unsigned char* const member = rv::Bytes(&ObjTrio[m]);
         if (member[at::kTrioBusy] == 7) {
             Sprite_Current = member;
             member[0x29] = 2;
@@ -484,7 +484,7 @@ extern "C" void __cdecl EffectKind97_Run(void) {
 
 // original 0x48D090 (state 0): the ring's size word +0x2E 0; +9 = 8; +1 up.
 extern "C" void __cdecl EffectKind97_Start(void) {
-    SetWord(S() + 0x2E, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
     S()[9] = 8;
     Step();
 }
@@ -494,14 +494,14 @@ extern "C" void __cdecl EffectKind97_Start(void) {
 // read's).
 void Kind97Ring() {
     unsigned char* const s = S();
-    SH_CALL(EffectKind97_DrawRing)(reinterpret_cast<const long*>(s + 0x34), Word(s + 0x2E), 7);
+    SH_CALL(EffectKind97_DrawRing)(reinterpret_cast<const long*>(s + 0x34), rv::As<records::EffectWork>(s)->work_2e, 7);
 }
 
 // original 0x48D0B0 (state 1): the size +0x2E up 0x18; the ring; +9 down; at 0
 // +9 = 0x40 and +1 up.
 extern "C" void __cdecl EffectKind97_Grow(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x2E, Word(s + 0x2E) + 0x18u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_2e + 0x18u);
     Kind97Ring();
     if (CountDown()) {
         S()[9] = 0x40;
@@ -556,23 +556,23 @@ extern "C" void __cdecl EffectKind97_Burst(void) {
 }
 
 // original 0x48D220 (state 4): a spark every fourth frame; the debris; the
-// sparks moved; once MoveScript_WaitWordDA is 0: Transition_Start(9),
+// sparks moved; once Transition_Busy is 0: Transition_Start(9),
 // Draw_PassFlags 0, +1 up.
 extern "C" void __cdecl EffectKind97_Fade(void) {
     Kind97Emit();
     SH_CALL(EffectKind97_DrawDebris)();
     SH_CALL(EffectKind97_MoveSparks)();
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     SH_CALL(Transition_Start)(9);
     unsigned char* const s = S();
     Draw_PassFlags = 0;
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
-// original 0x48D270 (state 5): once MoveScript_WaitWordDA is 0, the chapter's
+// original 0x48D270 (state 5): once Transition_Busy is 0, the chapter's
 // step 0x8034E5 = 0x14 and a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind97_End(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     MoveScript_PartyRecords[0x65] = 0x14;
     SH_CALL(Effect_Release)();
 }
@@ -648,7 +648,7 @@ extern "C" void __cdecl EffectKind97_EmitSpark(void) {
         }
     if (r == nullptr) return;
     const unsigned char* const s = S();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     r[0] = 1;
     r[1] = 0;
     r[2] = 0x20;
@@ -737,9 +737,9 @@ extern "C" void __cdecl EffectKind97_DrawSpark(unsigned char* spark) {
 // _Z; 0x5A7C70 for each edge); the scale +0x28 4 + Rand & 3; +0x20, +0x22,
 // +0x24 (its angle), +0x2A (its shade) 0.
 extern "C" void __cdecl EffectKind97_DebrisInit(unsigned char* d) {
-    SetUL(d + 0, static_cast<std::uint32_t>(CurFx()->x));
-    SetUL(d + 4, static_cast<std::uint32_t>(CurFx()->z));
-    SetUL(d + 8, static_cast<std::uint32_t>(CurFx()->height));
+    SetUL(d + 0, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetUL(d + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    SetUL(d + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height));
     const U ax = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
     const U ay = (static_cast<U>(SH_CALL(Rand)()) & 0x7FFu) - 0x400u;
     const U az = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
@@ -829,7 +829,7 @@ extern "C" void __cdecl EffectKind98_Run(void) {
 // original 0x48D2B0 (state 0): the flash level +0xC 0; +9 = 0x20; +1 up;
 // Draw_PassFlags 0.
 extern "C" void __cdecl EffectKind98_Start(void) {
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     S()[9] = 0x20;
     Step();
     Draw_PassFlags = 0;
@@ -840,13 +840,13 @@ extern "C" void __cdecl EffectKind98_Start(void) {
 // +0xC and +0x10 0x100, +9 = 0x10, +1 up, Draw_PassFlags 0x1F.
 extern "C" void __cdecl EffectKind98_Flash(void) {
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0xC) + 8u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c + 8u);
     s = S();
-    SH_CALL(EffectKind98_DrawFlash)(static_cast<int>(UL(s + 0xC)));
+    SH_CALL(EffectKind98_DrawFlash)(static_cast<int>(rv::As<records::EffectWork>(s)->work_0c));
     if (!CountDown()) return;
-    SetWord(S() + 0x32, 0x140);
-    SetUL(S() + 0xC, 0x100);
-    SetUL(S() + 0x10, 0x100);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x140);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x100);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0x100);
     S()[9] = 0x10;
     Step();
     Draw_PassFlags = 0x1F;
@@ -859,7 +859,7 @@ void Kind98Project() {
     SH_CALL(Gte_PushMatrix)();
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     long point[4];
     point[0] = so->x;
     point[1] = so->z;
@@ -870,7 +870,7 @@ void Kind98Project() {
 // EffectKind98_DrawBurst(+0x32, +0xC, +0x10), Sprite_Current read once.
 void Kind98Burst() {
     const unsigned char* const s = S();
-    SH_CALL(EffectKind98_DrawBurst)(Word(s + 0x32), Word(s + 0xC), Word(s + 0x10));
+    SH_CALL(EffectKind98_DrawBurst)(rv::As<records::EffectWork>(s)->work_32, Word(s + 0xC), Word(s + 0x10));
 }
 
 // original 0x48D360 (state 2): the point projected; the rim level +0x10 down
@@ -878,7 +878,7 @@ void Kind98Burst() {
 extern "C" void __cdecl EffectKind98_Rise(void) {
     Kind98Project();
     unsigned char* const s = S();
-    SetUL(s + 0x10, UL(s + 0x10) - 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, rv::As<records::EffectWork>(s)->work_10 - 0x10u);
     Kind98Burst();
     if (CountDown()) {
         S()[9] = 0x10;
@@ -892,9 +892,9 @@ extern "C" void __cdecl EffectKind98_Rise(void) {
 extern "C" void __cdecl EffectKind98_Fall(void) {
     Kind98Project();
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0xC) - 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 0x10u);
     s = S();
-    SetWord(s + 0x32, Word(s + 0x32) + 0xFFECu);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectWork>(s)->work_32 + 0xFFECu);
     Kind98Burst();
     if (CountDown()) SH_CALL(Effect_Release)();
 }
@@ -941,8 +941,8 @@ extern "C" void __cdecl EffectKind98_DrawBurst(int radius, int centre, int rim) 
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        SetUL(prim + 8, CurFx()->screen_xf);
-        SetUL(prim + 0xC, CurFx()->screen_yf);
+        SetUL(prim + 8, rv::Current<records::EffectObject>()->screen_xf);
+        SetUL(prim + 0xC, rv::Current<records::EffectObject>()->screen_yf);
         const U a = angle & 0xFFFFu;
         std::int32_t v = static_cast<std::int32_t>(Sar(Mul(static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a))), r), 12));
         FildAdd(v, S() + 0x74, prim + 0x18);

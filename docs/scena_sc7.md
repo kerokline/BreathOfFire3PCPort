@@ -189,7 +189,7 @@ logged as `scena_sc7 (chapter 7)` / `(chapter 8)`.
   `0x903804`), `CharacterRecords` 0..7, `Text_Records +0..+0x2F`,
   `0x904CD0`, `0x904EE0`, `Music_Track`, `Cond_ByteFE`, the message id
   `0x7DEE48`, `Field_ActiveMember`, `Scena08_Kept`, `0x929F10..13`,
-  `0x9039F0..0x903A03`, `MoveScript_EffectState`, the key items, the name
+  `0x9039F0..0x903A03`, `Character_IndexById`, the key items, the name
   buffer, the chapter's object table;
 - **the seed**: the state and run inside the swapped windows; the step at
   one of the scene's cases (read off ours by the scratch `stepcmp.py`) or
@@ -202,7 +202,7 @@ logged as `scena_sc7 (chapter 7)` / `(chapter 8)`.
   `+0x89` and member 0's kind and kept slot; the pointers and indices the
   code writes through kept inside the regions (`0x903804` and
   `Field_ActiveMember` at sprite records, `Scena08_Kept +0` below 30,
-  `MoveScript_EffectState` bytes below 8); key-item bytes 4; the object's
+  `Character_IndexById` bytes below 8); key-item bytes 4; the object's
   `+0x86` inside the table; for a hook, one of its hits (an exact point or
   a cell range, with the area it is tested in), the arguments following it;
 - **the disturbance** (the group's part; from the hash only): counter 0 at
@@ -357,7 +357,7 @@ Capcom's): `Scenario_CallA` / `CallB`, `Field_StartEventBattle`,
 - **Indices unchecked into pools**: `Scena08_Scene8` step 0x1B clears
   `Sprite_Objects [Scena08_Kept +0]` and step 0x1A computes that index from
   the pointer `0x903804` (a signed division, any pointer); `Scena08_Scene1`
-  / `Scene11` index `CharacterRecords` by `MoveScript_EffectState` bytes;
+  / `Scene11` index `CharacterRecords` by `Character_IndexById` bytes;
   `Scena07_Scene4` and `Scena08_Scene6` / `8` / `10` test the effect record
   of a kept slot that may be 0xFF (a read past the pool); `Scena08_Scene4`
   reads the sprite counter 3 names. The chapter tables are indexed

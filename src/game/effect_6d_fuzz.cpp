@@ -232,7 +232,7 @@ const std::uint8_t kKinds[] = {0x18};
 const sh::Region kRegions[] = {
     {at::kTrackRing, at::kTrackEntries * at::kTrackStride + 4},   // the tracks' ring and the two heads
     {at::kBattleWord, 4},                                         // the battle dword sub-kind 0x64 scales
-    {at::kEnemyRecords, at::kEnemyStride * 2},                    // the two enemy records +0xC may point at
+    {Battle_Enemies_addr + 0x128, at::kEnemyStride * 2},          // the two enemy records +0xC may point at
     {Gfx_ClutStripSource_addr + 0x800, 2 * at::kClutWords},       // CLUT rows 4 and 5 as loaded
     {Gfx_ClutStrip_addr + 0x800, 2 * at::kClutWords},             // ... and live
 };
@@ -275,7 +275,7 @@ void Seed(unsigned k) {
         e[9] = static_cast<unsigned char>(Counter());
         e[0xA] = static_cast<unsigned char>(PickOf(0, 1, 5, 9, 0xA, 0xB, 0xC, 0xD, 0xFF, sh::Next()));
         e[0xB] = static_cast<unsigned char>(sh::Next() % at::kSub5CVariants);
-        SetLong(e + 0xC, static_cast<std::int32_t>(at::kEnemyRecords + at::kEnemyStride * (sh::Next() & 1)));
+        SetLong(e + 0xC, static_cast<std::int32_t>(Battle_Enemies_addr + 0x128 + at::kEnemyStride * (sh::Next() & 1)));
         SetLong(e + 0x38, static_cast<std::int32_t>(
                               PickOf(0x5F, 0x60, 0x61, 0x7F, 0x80, 0x81, 0xFF, 0x100, 0x101, 0, 0xFFFFFFFFu, sh::Next())));
     }
@@ -342,7 +342,7 @@ void Seed(unsigned k) {
     if (sh::Half()) Game_Mode = 5;
     if (sh::Half()) Game_Step = 5;
     for (unsigned e = 0; e < 2; ++e) {
-        unsigned char* const r = Mem(at::kEnemyRecords + at::kEnemyStride * e);
+        unsigned char* const r = Mem(Battle_Enemies_addr + 0x128 + at::kEnemyStride * e);
         static const unsigned char kPairs[][2] = {{8, 2}, {6, 1}, {6, 2}, {6, 3}, {6, 4}, {3, 1}, {8, 1}, {6, 5}};
         if (sh::Often()) {
             const unsigned p = sh::Next() % 8;

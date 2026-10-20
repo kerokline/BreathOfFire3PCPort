@@ -48,6 +48,10 @@ add_custom_command(
           --toml "${CMAKE_SOURCE_DIR}/symbols.toml" --out "${_gen_hdr}"
   DEPENDS "${CMAKE_SOURCE_DIR}/symbols.toml"
           "${CMAKE_SOURCE_DIR}/tools/gen_symbols.py"
+          "${CMAKE_SOURCE_DIR}/tools/record_sizes.py"
+          "${CMAKE_SOURCE_DIR}/src/game/records.h"
+          "${CMAKE_SOURCE_DIR}/src/game/records_effect.h"
+          "${CMAKE_SOURCE_DIR}/src/game/records_gpu.h"
   COMMENT "Generating bof3/symbols.gen.h from symbols.toml"
   VERBATIM)
 add_custom_target(bof3x_symbols DEPENDS "${_gen_hdr}")

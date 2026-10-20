@@ -67,7 +67,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
     ++g_log_n;
 }
 
-constexpr std::uint32_t kRecordsEnd = at::kCharRecords + 8 * at::kCharStride;
+constexpr std::uint32_t kRecordsEnd = CharacterRecords_addr + 8 * at::kCharStride;
 
 // Every cell below is one some function reads again after a call.
 void Disturb() {
@@ -84,7 +84,7 @@ void Disturb() {
     case 5: if (g_cur) g_cur[at::kPercent + w % 5] = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 6: At(at::kRosterBonus + w % 40)[0] = v; break;
     case 7: if (g_cur) g_cur[at::kWeapon + w % 6] = v; break;
-    case 8: At(at::kCharRecords + (w % 8) * at::kCharStride + at::kAtk + (v % 8))[0] = static_cast<unsigned char>(w); break;
+    case 8: At(CharacterRecords_addr + (w % 8) * at::kCharStride + at::kAtk + (v % 8))[0] = static_cast<unsigned char>(w); break;
     default: if (g_cur) g_cur[at::kAtk + w % 8] = v; break;
     }
 }
@@ -284,7 +284,7 @@ Region g_regions[kRegionCount];
 constexpr unsigned kRegionBytes = 0x950 + 0x600 + 0x2000 + 4 + sizeof g_packets + sizeof g_out;
 
 void MakeRegions() {
-    g_regions[0] = {at::kRosterBonus, 0x950};    // the roster bonus, DamageScratch, the eight records
+    g_regions[0] = {at::kRosterBonus, 0x950};    // the roster bonus, SharedScratch, the eight records
     g_regions[1] = {0x904000, 0x600};            // the extras 0x90412E..0x904130, the inventory lists, key items
     g_regions[2] = {at::kTextRecords, 0x2000};   // Text_Records, 256 entries
     g_regions[3] = {Address(&Gfx_PacketNext), 4};
@@ -330,7 +330,7 @@ void RandomTraits() {
 struct Args { std::uint32_t a[6]; };
 
 std::uint32_t Byte(std::uint32_t low) { return Half() ? low : Garbage(0xFF, low & 0xFF); }
-unsigned char* Rec(unsigned i) { return At(at::kCharRecords + (i % 8) * at::kCharStride); }
+unsigned char* Rec(unsigned i) { return At(CharacterRecords_addr + (i % 8) * at::kCharStride); }
 
 // A record for the passes and the recompute: one of the eight, or a stretch of
 // the first region below them that no persistent record starts at.
@@ -534,7 +534,7 @@ void Cover(unsigned k, const Args& x, const State& in, const State& out, std::ui
     ++g_cover.answers[k][a];
     switch (k) {
     case kIconK: if ((x.a[0] & 0xFF) > 20) ++g_cover.icon_past; break;
-    case kAddK: if (At(bof3::addr::DamageScratch)[0] == 1) ++g_cover.answers[k][3]; break;
+    case kAddK: if (At(SharedScratch_addr)[0] == 1) ++g_cover.answers[k][3]; break;
     case kRecalcK:
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
             if (out.log[i].what == 8) ++g_cover.roster_calls;

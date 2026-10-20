@@ -56,29 +56,29 @@ constexpr U kActorStride = 0xA4;
 // kFAWord: now MoveScript_FAWord (symbols.toml). MoveScript_FAWord (u16)
 // kDirectionSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: (dx, dz) dwords by facing
 // kPendingArea: now AreaW0b_Place (symbols.toml). u16: the pending area / the place (world map)
-constexpr U kPendingX = 0x903860;          // the pending area's cells (Field_ChangeArea's x, z)
+inline auto& kPendingX = SharedScratch.d_10;          // the pending area's cells (Field_ChangeArea's x, z)
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml).
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
 // kCell904EE0: now ModeFlow_AreaTransition (symbols.toml). zeroed with 0x937F98 = 0xC by area 104's exit cell
-// kCell937F98: now AreaW0c_PendingKind (symbols.toml).
-constexpr U kFoundX = 0x903850;            // the scratch word the step hook of area 105 stores the facing in
+// kCell937F98: now Area_EnterTransition (symbols.toml).
+inline auto& kFoundX = SharedScratch.b_00;  // the scratch word the step hook of area 105 stores the facing in
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits
 // kCondFA: now Cond_ByteFA (symbols.toml). Cond_ByteFA (s8, the chapter)
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 // kCondFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kPrevArea: now AreaW2c_LastArea (symbols.toml). u16: the area the party came from
 constexpr U kLeader = 0x802D40;            // ObjTrio + 0, the leader's record
-// kLeaderState: now ObjTrio[1] (symbols.toml). its +1 (leader state 12: area 104's controller)
-// kLeaderDir: now ObjTrio[8] (symbols.toml). its +8, the facing
-// kLeaderA: now ObjTrio[0xa] (symbols.toml). its +0xA (the charge's hold)
-// kLeaderB: now ObjTrio[0xb] (symbols.toml). its +0xB (the charge, 0..0x40)
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). its +0x34 / +0x38 / +0x3C (16.16)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderY: now ObjTrio[0x3c] (symbols.toml).
-// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high words of +0x34 / +0x38
-// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml).
-// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml). the word +0x3E
-// kLeader89: now ObjTrio[0x89] (symbols.toml). its +0x89
+// kLeaderState: now ObjTrio[0].state (symbols.toml). its +1 (leader state 12: area 104's controller)
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml). its +8, the facing
+// kLeaderA: now ObjTrio_addr + 0xa (symbols.toml). its +0xA (the charge's hold)
+// kLeaderB: now ObjTrio_addr + 0xb (symbols.toml). its +0xB (the charge, 0..0x40)
+// kLeaderX: now ObjTrio[0].x (symbols.toml). its +0x34 / +0x38 / +0x3C (16.16)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderY: now ObjTrio[0].height (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high words of +0x34 / +0x38
+// kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml).
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml). the word +0x3E
+// kLeader89: now ObjTrio[0].char_id (symbols.toml). its +0x89
 // kEffects: now Effect_Objects (symbols.toml). Effect_Objects: twenty records of 0x80
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
@@ -87,13 +87,13 @@ constexpr unsigned kEffectCount = 20;
 constexpr U kObjectStride = 0xA4;
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember (a pointer)
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object (a pointer)
-constexpr U kEffectStates = 0x66972C;      // MoveScript_EffectState: a byte per +0x89 value
+constexpr U kEffectStates = 0x66972C;      // Character_IndexById: a byte per +0x89 value
 // kDescriptors: now Area_Descriptors (symbols.toml). Area_Descriptors
 constexpr U kPacketNext = 0x7E0670;        // Gfx_PacketNext
 constexpr U kPassFlags = 0x7E0918;         // Draw_PassFlags
 constexpr U kFrameCounter = 0x937F94;      // Frame_Counter
 constexpr U kClutDirty = 0x937F90;         // Gfx_ClutStripDirty
-// kMenuColour: now BattleDraw_Colour (symbols.toml). the byte area 104's countdown hands Menu_DrawBox
+// kMenuColour: now Config_WindowColour (symbols.toml). the byte area 104's countdown hands Menu_DrawBox
 constexpr U kCountdownText = 0x904BA0;     // the countdown's text buffer (Crt_sprintf's)
 constexpr U kCountdownFormat = 0x61BC74;   // its format (data, read in place)
 // kPanelTris: now Area104_PanelTris (symbols.toml). four (x0, x1, x2, y0, y1, y2) s16 rows: the panel's triangles
@@ -136,9 +136,9 @@ constexpr U kLeaderCellX = 0x905E66;       // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). the field's button word 6
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). the leader's +9
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). its +0xC / +0x10
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). the leader's +9
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). its +0xC / +0x10
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
 
 // Area 104: WorldMap_Records record 6 (0x6539B8: +0 0x414760, +0xC 0x414A90,
 // +0x10 0x41B730 - AR3B's), WorldMap_FieldHooks entry 6 (0x662E08).

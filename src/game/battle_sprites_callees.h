@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"
 
 namespace battle_sprites {
 
@@ -20,14 +21,14 @@ namespace battle_sprites {
 namespace at {
 // kParty: now ObjTrio (symbols.toml). ObjTrio: three 0x14C-byte party records, actor 0..2
 constexpr std::uint32_t kPartyStride = 0x14C;
-constexpr std::uint32_t kEnemies = 0x93B960;        // eight 0x128-byte enemy records, actor 3..10 (index actor - 3)
+// kEnemies: now Battle_Enemies (symbols.toml). eight 0x128-byte enemy records, actor 3..10 (index actor - 3)
 constexpr std::uint32_t kEnemyStride = 0x128;
 constexpr std::uint32_t kEnemyData = 0x8C55C8;      // the loaded enemy data, 0x8C bytes per id: +0 the 12-byte name
 constexpr std::uint32_t kEnemyDataStride = 0x8C;
-constexpr std::uint32_t kEncounter = 0x939F00;      // eight 12-byte records: +0 used, +1 id, +4 x, +8 z
-constexpr std::uint32_t kPopups = 0x93A000;         // 0x84-byte records (0x435180 hands out a free one)
+// kEncounter: now Encounter_Slots (symbols.toml). eight 12-byte records: +0 used, +1 id, +4 x, +8 z
+// kPopups: now BattleTask_Slots (symbols.toml). 0x84-byte records (0x435180 hands out a free one)
 constexpr std::uint32_t kPopupStride = 0x84;
-constexpr std::uint32_t kWindows = 0x803160;        // 0x24-byte window records (0x59E2D0 claims one)
+// kWindows: now WindowRecords (symbols.toml). 0x24-byte window records (0x59E2D0 claims one)
 constexpr std::uint32_t kWindowStride = 0x24;
 // kAction: now BattleSprites_Action (symbols.toml). pointer: the current action; its u16 at +2 is the action id
 constexpr std::uint32_t kTarget = 0x904B44;         // byte: the target actor, or 0x40 / 0x80 / 0xC0 a side
@@ -35,9 +36,9 @@ constexpr std::uint32_t kActor = 0x904B34;          // byte (read as a dword by 
 constexpr std::uint32_t kAutoMode = 0x904B35;       // byte
 constexpr std::uint32_t kBattleFlags = 0x904AA8;    // dword; bit 4 of the low byte, bit 7 the critical hit
 constexpr std::uint32_t kPartyCount = 0x904AB0;     // byte
-// kPartyPick: now BattleSprites_PartyPick (symbols.toml). byte, tested against 1
+// kPartyPick: now Battle_PartyStanding (symbols.toml). byte, tested against 1
 constexpr std::uint32_t kEnemyCount = 0x904AB2;     // byte
-// kEnemyPick: now BattleE2_EnemiesLeft (symbols.toml). byte, tested against 1; = kEnemyCount after set-up
+// kEnemyPick: now Battle_EnemiesLeft (symbols.toml). byte, tested against 1; = kEnemyCount after set-up
 constexpr std::uint32_t kBoss = 0x904AAA;           // byte: 0 an ordinary encounter, else the boss handler's index
 constexpr std::uint32_t kLayout = 0x904AAC;         // byte (read as a dword): the battle layout
 // kFormation: now Cond_Flags[0xd0] (symbols.toml). byte (read as a dword): the formation, 1..4
@@ -55,7 +56,8 @@ constexpr std::uint32_t kBossHandlers = 0x656954;   // a handler per boss index,
 constexpr std::uint32_t kClutMap = 0x7E06A0;        // 4 rows x 16 cells: the owner of each clut cell, 0xFF free
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords: 32 records of 12 bytes
 constexpr std::uint32_t kTintsEnd = 0x7E0880;
-constexpr std::uint32_t kCells = 0x903850;          // DamageScratch: bytes 0 / 1 the clut map row / cell found
+inline auto& kCells = SharedScratch;  // SharedScratch: bytes 0 / 1 the clut map row / cell found
+constexpr std::uint32_t kCells_addr = SharedScratch_addr; // kCells's address, for the raw accessors that take one
 constexpr std::uint32_t kClutCount = 0x6528C4;      // bytes by the sprite's +0x28: entries / 16
 constexpr std::uint32_t kClutDivisor = 0x6528CC;    // bytes by +0x28: slots per strip row
 constexpr std::uint32_t kClutStep = 0x6528D4;       // bytes by +0x28: the column step

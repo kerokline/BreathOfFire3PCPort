@@ -21,6 +21,7 @@
 #include "game/boss_sh.h"
 #include "game/boss_sh_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 
 namespace boss_sh {
@@ -110,9 +111,9 @@ const bh::Callee kCallees[] = {
 
 // The cells beyond the harness's battle frame the 46 read or write.
 const bh::Region kRegions[] = {
-    {MoveScript_EffectState_addr + 0x4, 4}, // the byte set-up 34 compares the members' +0x148 with
+    {Character_IndexById_addr + 0x4, 4}, // the byte set-up 34 compares the members' +0x148 with
     {BossSh_Picked_addr, 0x10}, // the member set-up 34 picked (read as a dword), and the 12 bytes kind 42 points at
-    {0x66C810, 4},           // MoveScript_WaitWordDA
+    {0x66C810, 4},           // Transition_Busy
     {0x7E0918, 4},           // Draw_PassFlags
 };
 
@@ -155,7 +156,7 @@ void Disturb(U h) {
     case 1: B(BossSe_Script_addr) = static_cast<unsigned char>(v); break;
     case 2: bh::PartyOf(static_cast<unsigned char>(v % 3))[0] ^= 1; break;
     case 3: bh::PartyOf(static_cast<unsigned char>(v % 3))[0x91] ^= 0x40; break;
-    default: SetWord(Mem(0x66C810), v & 1 ? 0 : v); break;
+    default: SetWord(Mem(Transition_Busy_addr), v & 1 ? 0 : v); break;
     }
 }
 
@@ -223,9 +224,9 @@ void SeedB34(unsigned k) {
     case 0: {
         // the id byte against each member's +0x148: equal half the time, near otherwise
         const auto id = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 5, 6, 0x80, 0xFF) : bh::Next());
-        B(MoveScript_EffectState_addr + 0x4) = id;
+        B(Character_IndexById_addr + 0x4) = id;
         for (unsigned m = 0; m < 3; ++m)
-            B(Field_Members_addr + m * at::kPartyStride) = static_cast<unsigned char>(bh::Half() ? id : id ^ (1u << (bh::Next() % 8)));
+            B(ObjTrio_addr + 0x148 + m * at::kPartyStride) = static_cast<unsigned char>(bh::Half() ? id : id ^ (1u << (bh::Next() % 8)));
         if (bh::Half()) B(BossSh_Picked_addr) = static_cast<unsigned char>(BH_PICK(0, 1, 2, 7, 0xFF));
         break;
     }
@@ -249,7 +250,7 @@ void SeedB34(unsigned k) {
         break;
     }
     case 2:
-        B(BattleActions_BattleEnd_addr) = EndByte();
+        B(Battle_EndFlags_addr) = EndByte();
         SeedPicked();
         B(BossSe_Script_addr) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next() & ~2u);
         for (unsigned m = 0; m < 3; ++m) {
@@ -283,7 +284,7 @@ void SeedK41(unsigned k) {
     if (k == 3) {
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next() & ~2u);
         B(at::kFlags + 1) = static_cast<unsigned char>(bh::Next());
-        SetWord(Mem(0x66C810), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
+        SetWord(Mem(Transition_Busy_addr), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
     }
 }
 
@@ -311,7 +312,7 @@ const bh::Clone kB35[] = {
 };
 void SeedEnd(unsigned k) {
     const bh::Clone& c = g_clones[k];
-    if (c.shape == S::kEnd || c.shape == S::kEvent) B(BattleActions_BattleEnd_addr) = EndByte();
+    if (c.shape == S::kEnd || c.shape == S::kEvent) B(Battle_EndFlags_addr) = EndByte();
     if (c.shape == S::kEvent) g_code = Code(0);
 }
 
@@ -366,7 +367,7 @@ void SeedK43(unsigned k) {
     unsigned char* const s = Sprite_Current;
     switch (k) {
     case kAdvanceStart: {
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
         enemy_rec->data_id = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
         break;
     }

@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -43,10 +44,6 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void);
 MS19_EXPORT void __cdecl BarrierLine_Draw(void);
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -69,10 +66,10 @@ constexpr std::uint32_t kAbility = 0x904B80;     // u16: the id of the action be
 
 // The GTE's input vectors (four SVECTORs) and the effects' scratch words.
 // kV0: now Prim_VertexScratch (symbols.toml).
-// kV1: now Prim_VertexScratch[4] (symbols.toml).
-// kV2: now Prim_VertexScratch[8] (symbols.toml).
-// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
-constexpr std::uint32_t kRadius = 0x903850;   // s16 (dword for MAGIC086's draws)
+// kV1: now Prim_VertexScratch[1] (symbols.toml).
+// kV2: now Prim_VertexScratch[2] (symbols.toml).
+// kV3: now Prim_VertexScratch[3] (symbols.toml).
+constexpr std::uint32_t kRadius = SharedScratch_addr; // s16 (dword for MAGIC086's draws)
 constexpr std::uint32_t kHeight = 0x903852;   // s16
 constexpr std::uint32_t kAngle = 0x903854;    // s16 (dword: MAGIC086's inner radius)
 constexpr std::uint32_t kShade = 0x903856;    // u16
@@ -108,9 +105,9 @@ void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 
 unsigned char* Pool(unsigned i) { return Mem(kPool + i * kPoolStride); }
-unsigned char* Task(unsigned slot) { return Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride); }
+unsigned char* Task(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
 unsigned char* Tint(unsigned i) { return Mem(MoveScript_TintRecords_addr + 12 * i); }
-unsigned char* Enemy(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* Enemy(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* Member(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 
@@ -165,7 +162,7 @@ MS19_EXPORT void __cdecl Shield_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const slot = Pool(i);
-        records::BattleTask* const tslot = reinterpret_cast<records::BattleTask*>(slot);
+        records::BattleTask* const tslot = rv::As<records::BattleTask>(slot);
         if (!(slot[0] & 1)) continue;
         Sprite_Current = slot;
         SetLong(Mem(BattleE2_Owner_addr), static_cast<std::int32_t>(tslot->owner));
@@ -182,9 +179,9 @@ namespace {
 // The writes are in the original's order (the slot may be the effect's own).
 void SpawnAura(unsigned index, const unsigned char* record, unsigned char& order, unsigned char& delay) {
     const unsigned char slot = MH_CALL(BattleTask_Create)(1, 0x22);
-    const std::int32_t x = Long(record + 0x34);
+    const std::int32_t x = rv::As<records::SpriteHead>(record)->x;
     unsigned char* const t = Task(slot);
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     unsigned char* const cur = Sprite_Current;
     tt->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur));
     t[1] = 0;
@@ -193,8 +190,8 @@ void SpawnAura(unsigned index, const unsigned char* record, unsigned char& order
     t[0xB] = order;
     t[9] = delay;
     tt->x = x;
-    tt->y = Long(record + 0x38);
-    SetLong(t + 0x3C, Long(record + 0x3C));
+    tt->z = rv::As<records::SpriteHead>(record)->z;
+    rv::Store(tt->height, rv::As<records::SpriteHead>(record)->height);
     Bump(order);
     delay = static_cast<unsigned char>(delay + 0x10);
     Bump(cur[0xB]);
@@ -305,7 +302,7 @@ MS19_EXPORT void __cdecl ShieldAura_Rise(void) {
         const unsigned char slot = MH_CALL(ShieldSpark_Alloc)();
         if (slot != 0xFF) {
             unsigned char* const e = Pool(slot);
-            records::BattleTask* const te = reinterpret_cast<records::BattleTask*>(e);
+            records::BattleTask* const te = rv::As<records::BattleTask>(e);
             unsigned char* const aura = Sprite_Current;
             te->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(aura));
             e[1] = 0;
@@ -461,16 +458,16 @@ MS19_EXPORT void __cdecl ShieldSpark_Place(void) {
     const std::uint32_t angle = (cur[0xB] & 0x1Fu) << 7;
     Put16(kAngle, angle);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    Store(ScTask()->x, Add(MulSar(s, 176, 3), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, 176, 3), rv::As<records::SpriteHead>(Owner())->x));
     const std::int32_t c = Cos(S16(kAngle));
-    Store(ScTask()->y, Add(MulSar(c, 176, 3), Long(Owner() + 0x38)));
-    SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
-    SetLong(Sprite_Current + 0x14, 0x40);
-    SetLong(Sprite_Current + 0x20, -4);
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, 176, 3), rv::As<records::SpriteHead>(Owner())->z));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x40);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -4);
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0xC;
-    ScTask()->vel_x = 1;
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 1;
+    rv::Current<records::BattleTask>()->step_z = 0;
     Bump(Sprite_Current[2]);
 }
 
@@ -486,9 +483,9 @@ void CrystalFrame(unsigned radius) {
 // +0x14 += +0x20, then the word +0x3E (the height) += the word +0x14.
 void Lift() {
     unsigned char* const cur = Sprite_Current;
-    SetLong(cur + 0x14, Add(Long(cur + 0x14), Long(cur + 0x20)));
+    rv::Store(rv::As<records::BattleTask>(cur)->step_y, Add(rv::As<records::BattleTask>(cur)->step_y, rv::As<records::BattleTask>(cur)->work_20));
     unsigned char* const now = Sprite_Current;
-    SetWord(now + 0x3E, Word(now + 0x3E) + Word(now + 0x14));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(now)->height_whole, rv::As<records::BattleTask>(now)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(now)->step_y));
 }
 }  // namespace
 
@@ -504,8 +501,8 @@ MS19_EXPORT void __cdecl ShieldSpark_Rise(void) {
     Drop(Sprite_Current[0xA]);
     unsigned char* const cur = Sprite_Current;
     if (cur[0xA] != 0) return;
-    SetLong(cur + 0x14, -16);
-    SetLong(Sprite_Current + 0x20, 4);
+    rv::Store(rv::As<records::BattleTask>(cur)->step_y, -16);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 4);
     Sprite_Current[0xA] = 8;
     Bump(Sprite_Current[2]);
 }
@@ -533,30 +530,30 @@ MS19_EXPORT void __cdecl ShieldSpark_Fall(void) {
 MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     const unsigned char* const cur = Sprite_Current;
-    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
-    const bool wide = tcur->vel_x == 4 && cur[0xA] < 5;
+    const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
+    const bool wide = tcur->step_x == 4 && cur[0xA] < 5;
     const std::uint32_t r = static_cast<std::uint32_t>(MH_CALL(Rand)());
     CrystalFrame((r & 3) + (wide ? 0x40u : 0x18u));
     unsigned char* now = Sprite_Current;
-    if (Long(now + 0xC) < 4) {
-        SetLong(now + 0x10, Add(Long(now + 0x10), 1));
+    if (rv::As<records::BattleTask>(now)->step_x < 4) {
+        rv::Store(rv::As<records::BattleTask>(now)->step_z, Add(rv::As<records::BattleTask>(now)->step_z, 1));
         now = Sprite_Current;
         if ((now[0x10] & 7) == 0) {
-            SetLong(now + 0xC, Add(Long(now + 0xC), 1));
+            rv::Store(rv::As<records::BattleTask>(now)->step_x, Add(rv::As<records::BattleTask>(now)->step_x, 1));
             now = Sprite_Current;
         }
     }
     now[9] = static_cast<unsigned char>(now[9] + now[0xC]);
     now = Sprite_Current;
-    if (Long(now + 0xC) != 4) return;
+    if (rv::As<records::BattleTask>(now)->step_x != 4) return;
     Drop(now[0xA]);
     now = Sprite_Current;
     if (now[0xA] != 0) return;
     const unsigned char side = now[3];
     if (!(side & 0xF0)) MH_CALL(Sound_PlayById)(side & 1 ? 0x101 : 0x102);
-    ScTask()->vel_y = 8;
-    SetLong(Sprite_Current + 0x14, 8);
-    SetLong(Sprite_Current + 0x20, 8);
+    rv::Current<records::BattleTask>()->step_z = 8;
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 8);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Bump(Sprite_Current[2]);
 }
 
@@ -569,7 +566,7 @@ MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
 MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     CrystalFrame((static_cast<std::uint32_t>(MH_CALL(Rand)()) & 3) + 0x20);
-    Store(ScTask()->vel_y, Add(ScTask()->vel_y, 4));
+    rv::Store(rv::Current<records::BattleTask>()->step_z, Add(rv::Current<records::BattleTask>()->step_z, 4));
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] + Sprite_Current[0xC]);
     Sprite_Current[0xB] = static_cast<unsigned char>(Sprite_Current[0xB] + 2);
     const unsigned char* const cur = Sprite_Current;
@@ -577,9 +574,9 @@ MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     Put16(kAngle, angle);
     Put16(kRadius, static_cast<std::uint32_t>(cur[0xA]) * Word(cur + 0x10) + 0xB0);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    Store(ScTask()->x, Add(MulSar(s, S16(kRadius), 3), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, S16(kRadius), 3), rv::As<records::SpriteHead>(Owner())->x));
     const std::int32_t c = Cos(S16(kAngle));
-    Store(ScTask()->y, Add(MulSar(c, S16(kRadius), 3), Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, S16(kRadius), 3), rv::As<records::SpriteHead>(Owner())->z));
     Bump(Sprite_Current[0xA]);
     if (Sprite_Current[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -642,9 +639,9 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
     MH_CALL(Gpu_SetDrawMode)(Prim(), 0, 1, 0x15, 0);
     {
         const unsigned char* const cur = Sprite_Current;
-        const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+        const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
-                                    static_cast<unsigned long>(tcur->y), 0, 0xC);
+                                    static_cast<unsigned long>(tcur->z), 0, 0xC);
     }
     unsigned char* cur = Sprite_Current;
     unsigned char* const first = Prim();
@@ -703,17 +700,17 @@ namespace {
 void SpawnPart(unsigned char type) {
     const unsigned char slot = MH_CALL(BattleTask_Create)(1, 0x1D);
     unsigned char* const t = Task(slot);
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     const unsigned char* const cur = Sprite_Current;
-    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+    const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
     tt->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur));
     t[1] = type;
     if (type == 1) t[0xB] = 0x30;
     t[9] = 0;
     t[0xA] = 0;
     tt->x = tcur->x;
-    tt->y = tcur->y;
-    SetWord(t + 0x3E, Word(cur + 0x3E));
+    tt->z = tcur->z;
+    rv::Store<unsigned>(tt->height_whole, tcur->height_whole);
 }
 }  // namespace
 
@@ -723,9 +720,9 @@ void SpawnPart(unsigned char type) {
 // the phase on.
 MS19_EXPORT void __cdecl Barrier_Start(void) {
     const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
-    Store(ScTask()->x, Long(source + 0x34));
-    Store(ScTask()->y, Long(source + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(source + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(source)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(source)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(source)->height);
     SpawnPart(0);
     SpawnPart(1);
     MH_CALL(Sound_PlayById)(0x100);
@@ -964,11 +961,11 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
             Put16(Prim_VertexScratch_addr + 0x18 + 2, y1);
             Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
             const unsigned char* const now = Sprite_Current;
-            const records::BattleTask* const tnow = reinterpret_cast<const records::BattleTask*>(now);
+            const records::BattleTask* const tnow = rv::AsConst<records::BattleTask>(now);
             x = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(x1))) << 9),
                     tnow->x);
             z = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(y1))) << 9),
-                    tnow->y);
+                    tnow->z);
             placed = true;
             MH_CALL(Gpu_SetDrawMode)(Prim(), 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
@@ -1053,8 +1050,8 @@ MS19_EXPORT void __cdecl BarrierLine_Delay(void) {
     Drop(Sprite_Current[9]);
     unsigned char* const cur = Sprite_Current;
     if (cur[9] != 0) return;
-    SetLong(cur + 0x14, 0x20);
-    SetLong(Sprite_Current + 0x20, -1);
+    rv::Store(rv::As<records::BattleTask>(cur)->step_y, 0x20);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -1);
     Bump(Sprite_Current[2]);
 }
 
@@ -1062,10 +1059,10 @@ MS19_EXPORT void __cdecl BarrierLine_Delay(void) {
 // (a tail jump) once +0x14 is below -16 (signed).
 MS19_EXPORT void __cdecl BarrierLine_Fly(void) {
     unsigned char* const cur = Sprite_Current;
-    SetLong(cur + 0x14, Add(Long(cur + 0x14), Long(cur + 0x20)));
+    rv::Store(rv::As<records::BattleTask>(cur)->step_y, Add(rv::As<records::BattleTask>(cur)->step_y, rv::As<records::BattleTask>(cur)->work_20));
     unsigned char* const now = Sprite_Current;
-    SetWord(now + 0x3E, Word(now + 0x3E) + Word(now + 0x14));
-    if (Long(Sprite_Current + 0x14) >= -0x10) return;
+    rv::Store<unsigned>(rv::As<records::BattleTask>(now)->height_whole, rv::As<records::BattleTask>(now)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(now)->step_y));
+    if (rv::Current<records::BattleTask>()->step_y >= -0x10) return;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -1090,9 +1087,9 @@ MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
     {
         const unsigned char* const cur = Sprite_Current;
-        const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+        const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
-                                    static_cast<unsigned long>(tcur->y), 2, 0xC);
+                                    static_cast<unsigned long>(tcur->z), 2, 0xC);
     }
     unsigned char* const prim = Prim();
     MH_CALL(Gpu_SetLineG3)(prim);
@@ -1110,9 +1107,9 @@ MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     prim[0x25] = 1;
     prim[0x26] = 1;
     const unsigned char* const cur = Sprite_Current;
-    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+    const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
-                                static_cast<unsigned long>(tcur->y), 2, 0x34);
+                                static_cast<unsigned long>(tcur->z), 2, 0x34);
 }
 
 void MagicS19_Inject() {

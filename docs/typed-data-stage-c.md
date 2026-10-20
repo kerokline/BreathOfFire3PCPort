@@ -1,7 +1,8 @@
 # The typed-data round, stage C: staging
 
-**Status:** DRAFT (staged 2026-10-19 on `typed/b1` `b78726f8`, after stages A
-and B; nothing of stage C built). The round is
+**Status:** BUILT (staged 2026-10-19 on `typed/b1` `b78726f8`, after stages
+A and B; C0..C4 built 2026-10-19..20 on `typed/c`, each as run in
+[`typed-data-round.md`](typed-data-round.md) 3). The round is
 [`typed-data-round.md`](typed-data-round.md) (IDEAS I44, stages 1 and 2);
 this doc replaces its old section 4, which becomes C4 below.
 
@@ -16,8 +17,10 @@ sites they unlock. Still no behaviour change, and no ledger entry.
 
 `analysis/data_census.tsv` on `typed/b1`: **27,394 sites**, of which 10,347
 are global, 15,219 record and 1,828 raw address. The record sites B1 left
-are in the seven `analysis/typed_b1_<group>_left.tsv` files, each with its
-reason. Totals across the groups (15,228 rows, with reasons normalised;
+were in seven `analysis/typed_b1_<group>_left.tsv` files, each with its
+reason; since C0 they are rows of the one `analysis/typed_left.tsv`
+(`tools/typed_left.py`, keyed by place rather than line, `source` column
+`b1-<group>`). Totals across the groups (15,228 rows, with reasons normalised;
 counts are rows, not census sites):
 
 | Reason | Rows | What unlocks it |
@@ -33,7 +36,8 @@ counts are rows, not census sites):
 | gate | 270 | C0's `Store()` and C2's typed locals; mostly the assignment-order case below |
 | order, accessor, audit-family, other | 149 | case by case |
 
-Global sites B0 left (`analysis/typed_b0_left.tsv`): 9,135 on an address with
+Global sites B0 left (`analysis/typed_b0_left.tsv`, now `typed_left.tsv`'s
+`b0` rows): 9,135 on an address with
 no `[[data]]` entry, 685 inside an entry, 576 at another width than the
 entry, 351 on an untyped entry, 219 bound or size names.
 
@@ -124,7 +128,7 @@ A's SD did, and the B1 left-lists say which sites wait on it.
    read as `u16` in about 1,100 sites. A named view (`x_whole` and so on) in
    the head.
 5. **New structs for families `records.h` lacks**, each only as far as its
-   readers settle it: the damage scratch block `DamageScratch` (`kS`,
+   readers settle it: the damage scratch block `SharedScratch` (`kS`,
    `0x903850`, a `[[block]]` today; 1,546 magic sites), the GPU primitive
    packets at `Gfx_PacketNext`, the character records `0x903A70`, the
    community records `0x9046D0` / `0x9048B0`, the 12-byte enemy slots
@@ -163,14 +167,31 @@ as after B1, and a revert of whatever they find.
 
 ## 6. C4: the layout as one struct, and the strict rule
 
-The round doc's old section 4: `tools/gen_symbols.py` grows `GameData`, one
-struct spanning `.rdata` and `.data` from the typed entries in address order,
-named padding between, `static_assert`ed on every member's offset and the
-total size; the engine takes a `GameData*` at the image base and the macros
-become members. Then the census's stricter rule
-([`typed-data-census.md`](typed-data-census.md) 3): a raw accessor in
-`src/game` fails CI, except the sites on a committed list with a reason
-(seams, platform buffers, computed offsets).
+The round doc's old section 4, as built (round doc 3, "C4 as run"):
+
+- **Part 1:** the tables C2 asked for typed as `records::` arrays and
+  blocks (the sprite objects, the party trio, the effect objects, the
+  vertex scratch, the window and character records, the shared scratch
+  block, five new arrays), their sites converted by the gate; the scratch
+  block renamed `SharedScratch` by the owner, its module names kept as
+  typed aliases and, at address uses, as module constants (the audit and
+  its fix branch).
+- **`GameData`:** `tools/gen_symbols.py` lays the typed entries past
+  `.text` out as one struct, 0x5C4000..0x93F000, in address order with
+  named padding, its size `static_assert`ed; each member's `<Name>_addr`
+  is computed from the struct and `static_assert`ed against
+  `symbols.toml`, and the macros cast those addresses (macros through the
+  struct pointer `BOF3_GAME` changed the optimiser's code, which the gate
+  refuses). Entries that overlap an earlier one, or sit in `.text`, keep
+  their literals.
+- **The strict rule:** `tools/data_census.py --strict` in `checks.yml`
+  beside the ratchet ([`typed-data-census.md`](typed-data-census.md) 3): a
+  raw site in `src/game` fails CI unless `analysis/typed_left.tsv` lists
+  it with a reason (seams, harness and platform buffers, computed offsets,
+  pointer forms, gate refusals, the stages' recorded reasons); a stale
+  listed key fails too. The census counts every raw spelling first,
+  `B(Name_addr + k)` and `rv::Bytes(...)[k]` included (the owner,
+  2026-10-20).
 
 ## 7. Order, and what runs in parallel
 
@@ -185,10 +206,13 @@ Nothing here changes what the player sees, so no ledger entries. Two calls:
 
 1. **Merge stages A and B first** (the PR from `typed/b1`), so stage C
    branches from `main`. Recommended: stage C's diffs are easier to review
-   against a merged B.
+   against a merged B. Done: PR #94, and stage C branched from `main`
+   56d81b42.
 2. **A live smoke run at the round's end:** the headless `BOF3X_SHADOW='*'`
    self-test and one hash route, from a plain copy of `build/` as the
    install-gap round's end batch ran them on 2026-10-18
    ([`install-gap-round.md`](install-gap-round.md) 6; Defender stopped none of
    those copies). Identical machine code makes it a formality, but it is the
-   only check that runs the game.
+   only check that runs the game. Done 2026-10-20: both self-tests pass and
+   the combat route is identical to `main`'s build on every tick
+   ([`typed-data-round.md`](typed-data-round.md) 3, "The smoke run as run").

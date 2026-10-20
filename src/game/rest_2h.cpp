@@ -44,6 +44,7 @@
 #include "game/list_title.h"
 #include "game/menu_frame.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2h_callees.h"
 #include "game/scenario_harness.h"
@@ -68,9 +69,6 @@ unsigned char g_pupil_label_off = 0;
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace at = rest_2h::at;
 using U = std::uint32_t;
@@ -88,9 +86,9 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 // The current window record, re-read at every use (the originals reload
 // 0x905B84 after each call).
 unsigned char* Rec() { return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))); }
-int X(const unsigned char* w) { return WindowRec(w)->centre_x; }
-int Y(const unsigned char* w) { return WindowRec(w)->centre_y; }
-unsigned char Style() { return static_cast<unsigned char>(BattleDraw_Colour); }
+int X(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->x; }
+int Y(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->y; }
+unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
 
 // The step: the current record's +3 through a step table, called through the
 // word the table holds (the fuzz swaps the words for recorders); past the
@@ -120,7 +118,7 @@ void Slide(unsigned at_word, int by, short bound, bool below, short to) {
 
 // CharacterRecords' record n (0xA4 each), unchecked; a member id's record
 // index, 0x66972C[id] read in place (the byte is unbounded, the table is 24).
-unsigned char* Record(U n) { return At(at::kRecords + n * at::kRecordStride); }
+unsigned char* Record(U n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
 U RecordOf(U id) { return B(at::kMemberMap + (id & 0xFF)); }
 
 char* PrintBuf() { return reinterpret_cast<char*>(At(at::kPrintBuf)); }
@@ -186,7 +184,7 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
         SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtLevel), static_cast<unsigned>(rec[0xA]));
         const int pen = x7 + 0x18;
         SH_CALL(Text_DrawFont8)(pen, text_y, colour, Text(at::kPrintBuf));
-        const unsigned flags = Word(rec + 0x10);
+        const unsigned flags = rv::As<records::CharRecord>(rec)->status;
         U status = 0;
         if (flags & 0x80) {
             if (flags & 0x20) status = (Frame_Counter & 0x20) ? at::kStatusA : at::kStatusB;
@@ -201,12 +199,12 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
         int c = colour;
         if (!dim) {
             if (rec[0x11] & 0x20) c = 4;
-            if (Word(rec + 0x18) <= 1) c = 2;
+            if (rv::As<records::CharRecord>(rec)->hp <= 1) c = 2;
         }
         SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureA), static_cast<unsigned>(Word(rec + 0x18)));
         SH_CALL(Text_DrawFont8)(pen, hp_y, c, Text(at::kPrintBuf));
         c = dim ? 7 : (rec[0x1E] != 0 ? 4 : 0);
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureB), static_cast<unsigned>(Word(rec + 0x20)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureB), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.max_hp));
         SH_CALL(Text_DrawFont8)(pen, hp_y, c, Text(at::kPrintBuf));
         const int ap_y = text_y + 0x10;
         SH_CALL(Menu_DrawTile16)(x7 + 2, ap_y, 1, dim);
@@ -214,14 +212,14 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
         if (dim) {
             c = 7;
         } else {
-            const unsigned quarter = (Word(rec + 0x22) >> 2) & 0xFFFF;
-            const unsigned ap = Word(rec + 0x1A);
+            const unsigned quarter = (rv::As<records::CharRecord>(rec)->stats.max_ap >> 2) & 0xFFFF;
+            const unsigned ap = rv::As<records::CharRecord>(rec)->ap;
             if (ap <= quarter) c = 4;
             if (ap == 0) c = 2;
         }
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureA), static_cast<unsigned>(Word(rec + 0x1A)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureA), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->ap));
         SH_CALL(Text_DrawFont8)(pen, ap_y, c, Text(at::kPrintBuf));
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureB), static_cast<unsigned>(Word(rec + 0x22)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureB), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.max_ap));
         SH_CALL(Text_DrawFont8)(pen, ap_y, dim ? 7 : 0, Text(at::kPrintBuf));
         y += 0x34;
         text_y += 0x34;
@@ -256,7 +254,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_GeneWinRun(
 // 9, in place; +0xB is re-read after the lit row's calls; the title's y is
 // read before Text_CharCount and its x after.
 extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
-    const U genes = ScenaSc7_EventFlags;
+    const U genes = Gene_Bits;
     unsigned char n = 0;
     for (unsigned i = 0; i < 0x12; ++i)
         if (genes & (1u << i)) B(at::kGeneList + n++) = static_cast<unsigned char>(i + 1);
@@ -402,7 +400,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MasterListRu
 // out by the columns (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MasterWin_SlideOut(void) {
     const auto bound = Widescreen_SlideLogic(static_cast<short>(Word(At(rest_2h::g_master_bound))));
-    const auto x_read = static_cast<short>(WindowRec(Rec())->centre_x);
+    const auto x_read = static_cast<short>(rv::As<records::WindowRecord>(Rec())->x);
     Slide(4, -0x20, bound, true, bound);
     Widescreen_SlideHeld(Rec(), x_read, bound);
 }
@@ -610,7 +608,7 @@ extern "C" void __cdecl MasterWin_DrawPupils(unsigned char* w) {
     for (U k = 0; k < 8; ++k) {
         const unsigned char* const rec = Record(k);
         if (!(rec[0xB] & 1)) continue;
-        if (rec[0x1F] != Rest2h_Window1Master) continue;
+        if (rec[0x1F] != Window1_Master) continue;
         const unsigned portrait = rec[9];
         SH_CALL(MasterWin_DrawPortrait)(dx + X(w) + 4, dy + Y(w) + 5, portrait, 0);
         dx += 0x25;

@@ -15,6 +15,7 @@
 #include "game/area_w0a.h"
 #include "game/area_w0a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w0a {
@@ -195,7 +196,7 @@ void BuildRegions() {
     const ah::Region r[] = {
         {Field_ActiveMember_addr, 4},                         // Field_ActiveMember
         {MoveScript_Object_addr, 4},                          // MoveScript_Object
-        {AreaW0c_FlagRow_addr, 4},                            // the flag bank's pointer
+        {Chapter_FlagRow_addr, 4},                            // the flag bank's pointer
         {kCameraShift, 4},                                    // Camera_ShiftX, Camera_ShiftY
         {AreaW0c_AnswerMark_addr, 1},
         {Draw_PassFlags_addr, 1},                             // Draw_PassFlags
@@ -225,7 +226,7 @@ void Seed(unsigned k) {
     // every round: the three pointers some function follows, inside the state
     ah::SetPointer(Field_ActiveMember_addr, Record(ah::Next()));
     ah::SetPointer(MoveScript_Object_addr, Record(ah::Next()));
-    ah::SetPointer(AreaW0c_FlagRow_addr, ah::Mem(Cond_Flags_addr + ah::Next() % 0x1C0));
+    ah::SetPointer(Chapter_FlagRow_addr, ah::Mem(Cond_Flags_addr + ah::Next() % 0x1C0));
     // the cursor row: the rows a handler tests, its neighbours, the s8 edges
     if (ah::Often()) ah::Mem(AreaW0c_ChoiceAnswer_addr)[0] = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 3, 0xFF, 0x80, 0x7F));
     unsigned char* const cur = Sprite_Current;
@@ -250,13 +251,13 @@ void Seed(unsigned k) {
         // x around 0x1C8000 (the direction's sign, the steps' 0x8000 edges, the wrap)
         const std::uint32_t d = AH_PICK(0, 1, 0xFFFFFFFFu, 0x7FFF, 0x8000, 0x8001, 0xFFFF8001u, 0xFFFF8000u, 0xFFFF7FFFu,
                                         0x7F8000, 0x800000, 0x80000000u, 0x7FFFFFFFu, 0x80000001u, 0x10000, 0xFFFF0000u);
-        if (ah::Often()) SetLong(cur + 0x34, static_cast<std::int32_t>(0x1C8000u - d));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(0x1C8000u - d));
         break;
     }
     case 0x401940: {
         const std::uint32_t d = AH_PICK(0, 1, 0xFFFFFFFFu, 0x7FFF, 0x8000, 0x8001, 0xFFFF8001u, 0xFFFF8000u, 0xFFFF7FFFu,
                                         0x7F8000, 0x800000, 0x80000000u, 0x7FFFFFFFu, 0x80000001u, 0x10000, 0xFFFF0000u);
-        if (ah::Often()) SetLong(cur + 0x38, static_cast<std::int32_t>(0x20000u - d));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(0x20000u - d));
         break;
     }
     case 0x4019B0:

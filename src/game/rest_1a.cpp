@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/rest_1a_callees.h"
@@ -27,9 +28,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_1a::at;
 using U = std::uint32_t;
@@ -44,7 +42,7 @@ unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
 
 // ObjTrio's record i (stride 0x14C), the index unchecked as the original's.
-const unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
+const unsigned char* Member(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kMemberStride; }
 
 // Field_DirectionSteps' row for a direction (x then z), read in place with the
 // direction byte unmasked, as every reader of the table does.
@@ -93,7 +91,7 @@ void MarkObject(unsigned char found, const char* who) {
 // unchecked; ours aborts past the 20 records.
 unsigned char* EffectByAnswer(unsigned char i, const char* who) {
     if (i >= 20) bof3::Fatal("%s: effect object index 0x%X is past Effect_Objects' 20 records (its callee answers 0..19)", who, i);
-    return Effect_Objects + i * 0x80u;
+    return rv::Bytes(&Effect_Objects[i]);
 }
 
 // The party sets' cell helpers, which their callers reach by E8.
@@ -114,13 +112,13 @@ using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 // 5. Then +0xB = 0 and +2 one on - a steep slope moves +2 by two.
 void SideProbe(U row, unsigned d) {
     const unsigned char* const s = Sc();
-    const U x = static_cast<U>(MemberRec(s)->x) + static_cast<U>(L(row));
-    const U z = static_cast<U>(MemberRec(s)->z) + static_cast<U>(L(row + 4));
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(L(row));
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(L(row + 4));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (B(at::kScratchFlag) == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (at::kScratchFlag == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     unsigned char* const c = Sc();
-    if (static_cast<short>(Word(c + 0x3E)) < static_cast<short>(ground)) c[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
 }
 
 void Form0Begin() {
@@ -133,10 +131,10 @@ void Form0Begin() {
     }
     const unsigned char* const s = Sc();
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (B(at::kScratchFlag) != 0 && static_cast<short>(slope) > 0x40) {
+    if (at::kScratchFlag != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
     } else {
@@ -165,7 +163,7 @@ void Form0Resolve(CellFn pickup, const char* who) {
     if (Sc()[0xA] == 0) {
         const unsigned char* const s = Sc();
         const unsigned d = s[8];
-        const U x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
+        const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
         const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
         if (found != 0xFF) MarkObject(found, who);
@@ -276,17 +274,17 @@ extern "C" void __cdecl Member_ResumeUnlessHeld800(void) {
 // leader's. As the original has it: +6 indexes ObjTrio unchecked.
 extern "C" void __cdecl Member_FormActionState(void) {
     unsigned char stop = 0;
-    const unsigned char kind = ObjTrio[0x89];
-    if ((kind == 3 || kind == 6) && ObjTrio[1] == 0xA && ObjTrio[2] == 1) stop = 1;
+    const unsigned char kind = ObjTrio[0].char_id;
+    if ((kind == 3 || kind == 6) && ObjTrio[0].state == 0xA && ObjTrio[0].step == 1) stop = 1;
     if (Field_Request != 0) stop = 1;
     const unsigned char* const s = Sc();
     const unsigned char* const r = Member(s[6]);
     const U k = r[9];
-    const U ax = static_cast<U>(MemberRec(r)->step_x) * k + static_cast<U>(MemberRec(r)->x);
-    const U az = static_cast<U>(MemberRec(r)->step_z) * k + static_cast<U>(MemberRec(r)->z);
+    const U ax = static_cast<U>(rv::As<records::PartyMember>(r)->step_x) * k + static_cast<U>(rv::As<records::PartyMember>(r)->x);
+    const U az = static_cast<U>(rv::As<records::PartyMember>(r)->step_z) * k + static_cast<U>(rv::As<records::PartyMember>(r)->z);
     const std::int32_t reach = r[0x70] != 0 ? 0x20000 : 0x18000;
-    if (Abs32(static_cast<std::int32_t>(static_cast<U>(MemberRec(s)->x) - ax)) > reach ||
-        Abs32(static_cast<std::int32_t>(static_cast<U>(MemberRec(s)->z) - az)) > reach)
+    if (Abs32(static_cast<std::int32_t>(static_cast<U>(rv::As<records::PartyMember>(s)->x) - ax)) > reach ||
+        Abs32(static_cast<std::int32_t>(static_cast<U>(rv::As<records::PartyMember>(s)->z) - az)) > reach)
         stop = 1;
     if ((Field_ScriptFlags2 & 0x1C00) == 0 && stop == 0)
         CodeAt(Field_FormActions_addr, Field_FormActions_count, AreaW0b_PartySet & 0x7Fu, "Member_FormActionState (0x51BAA0)")();
@@ -315,14 +313,14 @@ extern "C" void __cdecl Member_JumpState(void) { CodeAt(Member_JumpSteps_addr, M
 extern "C" void __cdecl Member_JumpAir(void) {
     const unsigned char* const s = Sc();
     const unsigned char* const r = Member(s[6]);
-    const auto theirs = static_cast<short>(Word(r + 0x3E));
+    const auto theirs = static_cast<short>(rv::As<records::PartyMember>(r)->height_whole);
     unsigned char how;
     if (r[0x137] == 3) {
-        const auto mine = static_cast<short>(Word(s + 0x3E));
+        const auto mine = static_cast<short>(rv::As<records::PartyMember>(s)->height_whole);
         if (Abs32(static_cast<std::int32_t>(mine) - static_cast<std::int32_t>(theirs)) > 0x80) how = mine > theirs ? 1 : 0;
         else how = 3;
     } else {
-        how = static_cast<short>(Word(s + 0x3E)) <= theirs ? 0 : 2;
+        how = static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) <= theirs ? 0 : 2;
     }
     switch (how) {
     case 0: SH_CALL(Leader_Rise)(); break;
@@ -338,13 +336,13 @@ extern "C" void __cdecl Member_JumpAir(void) {
 // ===========================================================================
 
 // original 0x51C740: Field_FormActions[0] - PartyFormAction0_Forms 0x65F9F4 by u16 +0x2C.
-extern "C" void __cdecl PartyFormAction0_ByForm(void) { CodeAt(PartyFormAction0_Forms_addr, PartyFormAction0_Forms_count, MemberRec(Sc())->column, "PartyFormAction0_ByForm (0x51C740)")(); }
+extern "C" void __cdecl PartyFormAction0_ByForm(void) { CodeAt(PartyFormAction0_Forms_addr, PartyFormAction0_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyFormAction0_ByForm (0x51C740)")(); }
 // original 0x51C760: Field_ActionBySet[0] - PartyAction0_Forms 0x65FA00 by u16 +0x2C.
-extern "C" void __cdecl PartyAction0_ByForm(void) { CodeAt(PartyAction0_Forms_addr, PartyAction0_Forms_count, MemberRec(Sc())->column, "PartyAction0_ByForm (0x51C760)")(); }
+extern "C" void __cdecl PartyAction0_ByForm(void) { CodeAt(PartyAction0_Forms_addr, PartyAction0_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyAction0_ByForm (0x51C760)")(); }
 // original 0x51CC00: Field_FormActions[1] - 0x65FA50 by u16 +0x2C.
-extern "C" void __cdecl PartyFormAction1_ByForm(void) { CodeAt(PartyFormAction1_Forms_addr, PartyFormAction1_Forms_count, MemberRec(Sc())->column, "PartyFormAction1_ByForm (0x51CC00)")(); }
+extern "C" void __cdecl PartyFormAction1_ByForm(void) { CodeAt(PartyFormAction1_Forms_addr, PartyFormAction1_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyFormAction1_ByForm (0x51CC00)")(); }
 // original 0x51CC20: Field_ActionBySet[1] - 0x65FA5C by u16 +0x2C.
-extern "C" void __cdecl PartyAction1_ByForm(void) { CodeAt(PartyAction1_Forms_addr, PartyAction1_Forms_count, MemberRec(Sc())->column, "PartyAction1_ByForm (0x51CC20)")(); }
+extern "C" void __cdecl PartyAction1_ByForm(void) { CodeAt(PartyAction1_Forms_addr, PartyAction1_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyAction1_ByForm (0x51CC20)")(); }
 
 // original 0x51BE90: 0x65F9B4 by +2 (PartyFormAction_Form0Begin, PartyFormAction_Form0Turn, PartyAction_ScriptEnd).
 extern "C" void __cdecl PartyFormAction0_Form0(void) { CodeAt(PartyFormAction0_Form0States_addr, PartyFormAction0_Form0States_count, Sc()[2], "PartyFormAction0_Form0 (0x51BE90)")(); }
@@ -538,8 +536,8 @@ extern "C" void __cdecl PartyAction0_Form2Begin(void) {
     }
     const unsigned char* const s = Sc();
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + 2u * StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
     if ((Fs()[0x138] & 1) == 0) {
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
         if (found != 0xFF) MarkObject(found, "PartyAction0_Form2Begin (0x51C530)");
@@ -656,7 +654,7 @@ extern "C" void __cdecl PartyAction2_Form2Strike(void) {
             } else {
                 const unsigned char* const s = Sc();
                 const unsigned d = s[8];
-                const U x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
+                const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
                 const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
                 if (found != 0xFF) {
@@ -714,7 +712,7 @@ extern "C" void __cdecl PartyAction_FinishPalette(void) {
 // it: +0xB indexes Effect_Objects unchecked (a read; docs/rest_1a.md section 5).
 extern "C" void __cdecl PartyAction_WaitEffect(void) {
     unsigned char* const s = Sc();
-    const unsigned char* const e = Effect_Objects + s[0xB] * 0x80u;
+    const unsigned char* const e = rv::Bytes(Effect_Objects) + s[0xB] * 0x80u;
     if ((e[0] == 0 || e[1] == 1) && Field_Kind2Hold == 0) {
         s[0x2B] = 0;
         Fs()[0x137] = 0;

@@ -398,7 +398,7 @@ A group whose `args` writes memory has the same trap.
 - **`Party_HealJoined` and `Party_PlaceForBattle` trust the member count**:
   above 3 they write `ObjTrio` records past the three (the heal copies a
   record to `+0x80` of each). Unchecked member ids index
-  `MoveScript_EffectState` past its 24 (as `Party_Join` and SE's
+  `Character_IndexById` past its 24 (as `Party_Join` and SE's
   `Party_AddToLists` do).
 - **`Char_LevelUp` indexes `CharacterRecords` and `Char_ExpTable` by a
   whole byte** (8 members).

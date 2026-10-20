@@ -428,7 +428,7 @@ void Seed(unsigned k) {
         if (sh::Half()) B(at::kCounters + c) = static_cast<unsigned char>(sh::Next() % 8);
     if (sh::Often()) B(at::kCounters + 3) = static_cast<unsigned char>(ACode());
     if (sh::Often()) B(Field_Request_addr) = static_cast<unsigned char>(SH_PICK(0, 2, 2, 6));
-    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) SetW(Transition_Busy_addr, 0);
     if (sh::Often()) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(ASelector());
     if (sh::Often()) B(at::kMsgFlags) = static_cast<unsigned char>(B(at::kMsgFlags) | 2);
     for (unsigned i = 0; i < 3; ++i)

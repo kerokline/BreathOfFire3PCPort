@@ -74,7 +74,7 @@ when the save point was forced).
 - The save cursor `0x9036D4` and the first slot shown `0x8034D0`, as
   [`save-menu.md`](save-menu.md) §1 has them.
 - The words `0x7E01B8` / `0x7E1BE0`, `Input_AutoRepeat`'s latch and timer.
-- `0x66C810` (`MoveScript_WaitWordDA`): non-zero while a transition runs.
+- `0x66C810` (`Transition_Busy`): non-zero while a transition runs.
 - Bit 1 of the text layer's flag word `0x7DEE44`: read here as "the system
   message is done" (after `Msg_OpenSystem`); its setter was not read.
 

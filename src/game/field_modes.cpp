@@ -12,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_modes_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -62,8 +63,6 @@ namespace {
 using namespace field_modes;
 using VoidFn = void (__cdecl*)();
 
-// The typed views of these records (src/game/records.h).
-unsigned char* Bytes(records::EffectObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.
@@ -74,7 +73,7 @@ VoidFn Entry(std::uint32_t table, int index) {
 unsigned char& Step() { return MoveScript_PartyRecords[0x65]; }
 std::uint16_t Timer() { return Word(At(MoveScript_PartyRecords_addr + 0x66)); }
 void SetTimer(unsigned v) { SetWord(At(MoveScript_PartyRecords_addr + 0x66), v); }
-unsigned char* FlagBits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* FlagBits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 // The three camera angles, Camera_Angles[0..2].
 unsigned char* AngleAt(unsigned i) { return reinterpret_cast<unsigned char*>(Camera_Angles) + 2 * i; }
 short Angle(unsigned i) { return static_cast<short>(Word(AngleAt(i))); }
@@ -93,16 +92,16 @@ void Line(int x, int y, unsigned id) {
 // (the camera read after the call); +0 is set to 1.
 void PlaceEffect(int (*x)(), unsigned char mode) {
     const unsigned char slot = g.effect_alloc();
-    At(kSlot)[0] = slot;
+    kSlot.b_00 = slot;
     if (slot == 0xFF) return;
-    records::EffectObject* const e = reinterpret_cast<records::EffectObject*>(Effect_Objects + (static_cast<std::uint32_t>(At(kSlot)[0]) << 7));
+    records::EffectObject* const e = rv::As<records::EffectObject>(rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(kSlot.b_00) << 7));
     const int ex = x();
     const int ey = Angle(1);
-    e->in_use = 1;
+    e->flags = 1;
     e->kind = 0x13;
-    SetLong(Bytes(e) + 0x64, ex);
-    SetLong(Bytes(e) + 0x68, ey);
-    SetLong(Bytes(e) + 0x6C, Angle(2));
+    e->angle[0] = ex;
+    e->angle[1] = ey;
+    e->angle[2] = Angle(2);
     e->timer = mode;
 }
 
@@ -246,8 +245,8 @@ extern "C" void __cdecl Scena16_Area02(void) {
         SetWord(AngleAt(0), static_cast<unsigned>(Word(AngleAt(0))) + 0xAA);
         PlaceEffect([] { return Angle(0) - 0xAA; }, 0x40);
         g.obj_trio();
-        SetLong(At(0x802D74), 0x330000);
-        SetLong(At(0x802D78), 0x400000);
+        ObjTrio[0].x = 0x330000;
+        ObjTrio[0].z = 0x400000;
         g.flags_set(FlagBits(), 2);
         return;
     }
@@ -270,7 +269,7 @@ extern "C" void __cdecl Scena16_Run(void) { Entry(kRunTable, MoveScript_Var7)();
 // which does not return). The PSX restarts the area's music from its table
 // and sets the volume where the port stops it (docs/field-modes.md 3.4).
 extern "C" void __cdecl Scena16_End(void) {
-    if (MoveScript_WaitWordDA != 0) return;
+    if (Transition_Busy != 0) return;
     Title_BadgeOn = 0;
     Draw_PassFlags = 0;
     g.clut_restore();
@@ -296,7 +295,7 @@ extern "C" void __cdecl Scena16_End(void) {
 extern "C" void __cdecl Scena16_Scene2(void) {
     switch (Step()) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         g.transition(1);
         g.music_play(6, 8);
         At(0x9039A2)[0] |= 0x80;   // Field_ScriptFlags' low byte
@@ -304,7 +303,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         return;
     case 1:
         Line(0x82, 0x64, 0x10);
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SetTimer(0);
         ++Step();
         return;
@@ -317,7 +316,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         SetTimer(0);
         return;
     case 3:
-        if (MoveScript_WaitWordDA != 0) {
+        if (Transition_Busy != 0) {
             Line(0x82, 0x64, 0x10);
             return;
         }
@@ -335,14 +334,14 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         ++Step();
         return;
     case 5:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         g.transition(1);
         ++Step();
         return;
     case 6:
         Line(0x44, 0x50, 0x11);
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         SetTimer(0x7F);
         ++Step();
         return;
@@ -354,7 +353,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         ++Step();
         return;
     case 8:
-        if (MoveScript_WaitWordDA != 0) {
+        if (Transition_Busy != 0) {
             Line(0x44, 0x50, 0x11);
             return;
         }
@@ -374,7 +373,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
     case 11:
         if (At(kCounters + 3)[0] != 0x60) return;
         g.change_area(0x1F, 0x70000, 0x140000, 0);
-        At(0x937F98)[0] = 0xFF;
+        Area_EnterTransition = 0xFF;
         g.music_stop(0x40);
         At(kCounters + 2)[0] = 0;
         MoveScript_Var7 = 3;
@@ -394,13 +393,13 @@ namespace {
 void Scene3Tail() {
     if (MapView_FocusZ != 0x4400) return;
     const std::int32_t kind2_z = Field_Kind2Z;
-    const std::int32_t d = Long(At(0x802038));
-    SetWord(At(0x7E068A), static_cast<unsigned>(Word(At(0x7E068A))) - 0x1Eu);
+    const std::int32_t d = Sprite_ObjectsExtra[0].z;
+    MapView_Origin[1] = static_cast<short>(static_cast<unsigned>(static_cast<std::uint16_t>(MapView_Origin[1])) - 0x1Eu);
     Field_Kind2Z = static_cast<long>(static_cast<std::uint32_t>(kind2_z) - 0x1E0000u);
-    const std::int32_t e = Long(At(0x7E0978));
+    const std::int32_t e = Sprite_Kind2.z;
     MapView_FocusZ = 0x6200;
-    SetLong(At(0x802038), static_cast<std::int32_t>(static_cast<std::uint32_t>(d) - 0x1E0000u));
-    SetLong(At(0x7E0978), static_cast<std::int32_t>(static_cast<std::uint32_t>(e) - 0x1E0000u));
+    Sprite_ObjectsExtra[0].z = static_cast<std::int32_t>(static_cast<std::uint32_t>(d) - 0x1E0000u);
+    Sprite_Kind2.z = static_cast<std::int32_t>(static_cast<std::uint32_t>(e) - 0x1E0000u);
     g.view_shift();
 }
 
@@ -420,13 +419,13 @@ void Scene3Tail() {
 extern "C" void __cdecl Scena16_Scene3(void) {
     switch (Step()) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         g.transition(1);
         ++Step();
         break;
     case 1:
         Line(0x4C, 0x50, 0x02);
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         ++Step();
         SetTimer(0x7F);
         break;
@@ -438,7 +437,7 @@ extern "C" void __cdecl Scena16_Scene3(void) {
         ++Step();
         break;
     case 3:
-        if (MoveScript_WaitWordDA != 0) {
+        if (Transition_Busy != 0) {
             Line(0x4C, 0x50, 0x02);
             break;
         }
@@ -449,7 +448,7 @@ extern "C" void __cdecl Scena16_Scene3(void) {
         ++Step();
         break;
     case 4:
-        if (MoveScript_WaitWordDA != 0) break;
+        if (Transition_Busy != 0) break;
         ++Step();
         SetTimer(0);
         break;
@@ -533,7 +532,7 @@ void DistanceFromTimer(unsigned (*distance)(std::uint16_t)) {
 extern "C" void __cdecl Scena16_Scene4(void) {
     switch (Step()) {
     case 0:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         g.open_script(1);
         Field_Request = 2;
         ++Step();
@@ -555,10 +554,10 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         return;
     case 4: {
         const auto into = static_cast<std::uint16_t>(0x130u - Timer());
-        SetWord(At(kSlot), into);
+        kSlot.w_00 = into;
         if (into < 0xBF) {
             Line(0x64, 0x50, 0x03);
-            const std::uint16_t back = Word(At(kSlot));
+            const std::uint16_t back = kSlot.w_00;
             if (back < 0x20) g.clut_fade(static_cast<unsigned char>(back));
             else if (back == 0x20) g.clut_restore();
             else if (back > 0x9F) g.clut_fade(static_cast<unsigned char>(0xBF - static_cast<unsigned char>(back)));
@@ -591,7 +590,7 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         SetTimer(0);
         return;
     case 9:
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         g.transition(1);
         g.music_stop(0x20);
@@ -599,7 +598,7 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         return;
     case 10:
         Line(0x5E, 0x64, 0x04);
-        if (MoveScript_WaitWordDA != 0) return;
+        if (Transition_Busy != 0) return;
         ++Step();
         SetTimer(0x7F);
         return;
@@ -611,7 +610,7 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         ++Step();
         return;
     case 12:
-        if (MoveScript_WaitWordDA == 0) {
+        if (Transition_Busy == 0) {
             MoveScript_Var7 = 1;
             Step() = 0;
             return;

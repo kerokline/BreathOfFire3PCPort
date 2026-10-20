@@ -1,7 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-20: `main` is `84e43c32` (PRs #94..#96 merged); typed-data stage C runs in its
-own session on `typed/c`; two branches of 2026-10-20 wait for their PRs, item 0 below)
+**Status:** IN PROGRESS (2026-10-20: `main` is `61023304` (PRs #94..#96, #98 and #99 merged); the typed-data round's
+stage C is built on `typed/c` with `main` merged in and its smoke run passed, unpushed: its PR, item 0)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -16,34 +16,48 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-`main` is `84e43c32`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
+`main` is `61023304`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
 to 27,394, the machine code identical; `tools/data_census.py` the CI ratchet), the quicksave round (PR #95: F6 / F7 /
-the F5 menu, DIV-0145..0147, D322) and the quicksave's language guard (PR #96: the original Chinese against a
-translation refused before a byte is written; one translation into another kept, IDEAS I47). **Typed-data stage C**
-([`typed-data-stage-c.md`](typed-data-stage-c.md)) runs in another session on `typed/c` (C0..C3 merged there, C4
-next): leave it to that session. **2026-10-20** ([`exe-gap-round.md`](exe-gap-round.md) frames what is left of the
-disc-built image): D266's title mark from the disc (DIV-0101's `titlemark` rule), each Western release's own staff
-roll (DIV-0148, D323 - the roll differs by release, not language), the recipes regenerated with the second pairing
-pass's rows, the ten state-hash pairs re-recorded (`cn_<route>_orig3` / `_orig3b`) and every difference of ours
-against them traced to a ledgered change.
+the F5 menu, DIV-0145..0147, D322), the quicksave's language guard (PR #96: the original Chinese against a
+translation refused before a byte is written; one translation into another kept, IDEAS I47), D266 and DIV-0148
+(PR #98) and the day's docs (PR #99). **2026-10-20** ([`exe-gap-round.md`](exe-gap-round.md) frames what is left of
+the disc-built image): D266's title mark from the disc (DIV-0101's `titlemark` rule), each Western release's own
+staff roll following the language (DIV-0148, D323), the recipes regenerated with the second pairing pass's rows, the
+ten state-hash pairs re-recorded (`cn_<route>_orig3` / `_orig3b`) and every difference of ours against them traced
+to a ledgered change. **Layers built before DIV-0148 carry no roll**: rebuild a Western language (`importer.py
+build`, or `loc_build.py all --discs` for an install's `DAT\<tag>.*.DAT`) to get the release's credits. **The
+typed-data round's stage C is built on `typed/c`**
+([`typed-data-stage-c.md`](typed-data-stage-c.md); each step as run in [`typed-data-round.md`](typed-data-round.md)
+3): C0 one shared views header, C1 the types (the shared 0x80-byte `SpriteHead`, renames, views, new structs), C2 the
+sites they unlock by seven groups, C3 the module-only entries and a naming pass, C4 the tables as `records::` arrays,
+the scratch block renamed `SharedScratch` with its per-function names as typed per-file aliases (the owner's calls),
+the generated `GameData` struct (0x37B000 bytes, 2,965 members) and the strict CI rule (`data_census.py --strict`,
+27,327 exceptions). Family audits after C2 and C4, each with a fix branch. The census reads 27,389, a wider count
+(the `<Name>_addr` and `rv::Bytes` spellings now count), not a regression, every site with a reason; **the machine
+code is identical to `main`'s throughout** (`tools/codegen_same.py`, 640 objects, `0 differ` at every merge).
+Quicksave owed: the owner's play, their call on drawing F6 / F7's confirmation (logged only, as F12's is, DIV-0032),
+and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the take, the cross-reboot base, the
+hosted cross form).
 
 ## Pick up here
 
-0. **Two PRs from 2026-10-20**, both local, signed off, unpushed:
-   - **`fix/d266-title-mark`** (worktree `.claude/worktrees/d266`): `9f023100` D266 (the `titlemark` rule in
-     `tools/psp_exe.py`, the four Western rows, the recipes regenerated: `exe-imm.tsv` + 16 `immref` rows,
-     `exe-gaps.tsv` 3..5 `gap` rows fewer per build, D323 numbered), `148d875a` and `4630803a` DIV-0148: **the staff
-     roll follows the language** - a layer built from a US or PAL disc carries its release's roll as kind 17 of
-     `FIRST.DAT` (`tools/exe_roll.py`, `tools/loc_build.py`, `tools/dat.py`), `TakeChunk` hands it to
-     `Scena17_ScrollRoll` (`ScenaSc15_RollApply`); `148d875a`'s base-file route is reverted by `4630803a`.
-     `data_census.tsv` 27,406. CI's Python checks pass locally; the live checks are renders,
-     `analysis/shots/d266-title-mark-1020/` and `ending-roll-1020/` (`roll_follows_language.png`). **Layers built
-     before it carry no roll**: rebuild a Western language (`importer.py build`, or `loc_build.py all --discs` for an
-     install's `DAT\<tag>.*.DAT`) to get the release's credits.
-   - **`docs/handoff-1020`** (worktree `.claude/worktrees/handoff-1020`): [`exe-gap-round.md`](exe-gap-round.md)
-     (new), the owner's answers of the day in [`owner-review.md`](owner-review.md), the mirrored bands accepted
-     ([`ending-backdrop.md`](ending-backdrop.md)), I43's outcome, this file, [`state-hash.md`](state-hash.md) 6.
-   Merge the code branch first: the docs branch describes it as built.
+0. **The typed-data round's stage C: its PR** from `typed/c`. **The smoke run passed 2026-10-20**
+   ([`typed-data-stage-c.md`](typed-data-stage-c.md) 8 call 2; [`typed-data-round.md`](typed-data-round.md) 3, "The
+   smoke run as run"): both headless self-tests (the hosted `'*'` one's 1,086 fuzz lines all `0 MISMATCHES`) and the
+   combat route identical to `main` `b3498050`'s own build on every tick. Against the morning's references both builds
+   differ by the same seven pages at tick 3 only - not stage C's; item 3's tick-3 class, here steady. The machine code
+   is identical to `main` 61023304 object by object (#99 changed only docs). The PR: no behaviour change, no ledger entry; every non-merge commit signed off (read
+   `git log --format=%B main..typed/c` first). `main` (`b3498050`, PRs #96 and #98, then `61023304`, PR #99) is
+   merged into `typed/c` (2026-10-20; gate baseline `.claude/worktrees/typed-baseline-c2`, a build of `b3498050`,
+   0 differ; census 27,389; DIV-0148's one new raw site, `scena_sc15.cpp` RollEntry's `L(kRollLines + 4u * i)`,
+   listed `gate`: `Scena17_RollLines[i]` changes `Scena17_ScrollRoll`). The C4 audit's two calls are answered ([`owner-review.md`](owner-review.md) "2026-10-20, typed-data
+   stage C"): `kEnemyHp` renamed `kEnemyIntel` (IDEAS I49 to look again), `Save_Directory` kept at 16. **The method that held** (stage C's
+   section 1): `tools/codegen_same.py` against a baseline build after every batch, `0 differ`; after every typing
+   pass a read-only family audit by other agents, because the gate cannot see a pointer typed as the wrong struct;
+   build before calling anything done. Scratch of stage C, outside the tree: `C:\Users\kerok\c_typed` (the
+   coordinator's log `RESUME.md`, the briefs `BRIEF_*.md`, the audit reports `audit\`, the C2 groups' and C4's
+   scripts); of stages A and B: `C:\Users\kerok\b1\`, `C:\Users\kerok\v_typed\`, `C:\Users\kerok\v_pairs` and
+   `g_pairs`. The worktrees are listed under "In flight".
 
 1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
    - **Quicksaves** (DIV-0145..0147): not played yet; whether F6 / F7 get an on-screen line (logged only today, as
@@ -226,11 +240,16 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **2026-10-20's branches** (item 0): `fix/d266-title-mark` (`.claude/worktrees/d266`, its own `build/`) and
-  `docs/handoff-1020` (`.claude/worktrees/handoff-1020`). `quicksave/lang-guard` (`.claude/worktrees/lang-guard`) is
-  merged (PR #96): removable.
-- **Typed-data stage C** (another session): `typed/c` and its worktrees (`typed-baseline-c` the gate's reference);
-  scratch `C:\Users\kerok\c_typed`. Not this file's to clean.
+- **2026-10-20's branches**: `fix/d266-title-mark` (`.claude/worktrees/d266`), `docs/handoff-1020`
+  (`.claude/worktrees/handoff-1020`) and `quicksave/lang-guard` (`.claude/worktrees/lang-guard`) are merged (PRs #98,
+  #99, #96): removable.
+- **The typed-data round's stage C** (2026-10-19..20), all under `.claude/worktrees/`: `typed-c` (`typed/c`, the
+  PR's branch), `typed-baseline-c` (a detached `main` `56d81b42` build: the gate's reference until main was merged) and
+  `typed-baseline-c2` (detached `b3498050`, the gate's reference now; keep it until the PR merges), `agent-c4` (`typed/c4`, merged), `agent-c4fix` (`typed/c4-fix`, merged), `audit-c4` (detached `f56ed9a8`,
+  the C4 audit's read-only tree) and the older stage C agents' `agent-c0`, `agent-c1`, `agent-c2-<group>`,
+  `agent-c2fix`, `agent-c3e`, `agent-c3n` (branches `typed/c0`, `typed/c1`, `typed/c2-<group>`, `typed/c2-fix`,
+  `typed/c3-entries`, `typed/c3-naming`): all merged into `typed/c`; removable after the PR merges. Scratch:
+  `C:\Users\kerok\c_typed`.
 - **The merged rounds' worktrees** under `.claude/worktrees/` and the session scratchpads: the typed A/B agents
   (`typed/b1` merged as PR #94), the quicksave agents (PR #95), install-gap (PR #91), the ultrawide groups (PR #60),
   the away-day `away/1013-*` (PR #58), `worktree-agent-ae288769dd06909be` (PR #57): removable at the owner's word.

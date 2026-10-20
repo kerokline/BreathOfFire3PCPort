@@ -42,6 +42,7 @@
 #include "game/effect_2f_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -59,14 +60,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
-records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-records::SpriteObject* AsSpr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-// A setter's store through a typed field: the record's address is evaluated
-// before the value, as the setter call evaluates its arguments, and the value
-// goes through the setter's parameter type P.
-template <typename P, typename T>
-void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U SW(const unsigned char* p) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(Word(p)))); }
@@ -136,7 +129,7 @@ unsigned char* Sprite(unsigned index, const char* who) {
         bof3::Fatal("%s: Sprite_Objects index %u, past the 30 records - the original writes past the pool "
                     "(docs/effect_2f.md section 2)",
                     who, index);
-    return Sprite_Objects + index * at::kSpriteStride;
+    return rv::Bytes(&Sprite_Objects[index]);
 }
 // A Sprite_ObjectsExtra record by the dword +0x18: a Fatal past the four.
 unsigned char* Extra(U index, const char* who) {
@@ -144,7 +137,7 @@ unsigned char* Extra(U index, const char* who) {
         bof3::Fatal("%s: +0x18 is %u, past the 4 records of Sprite_ObjectsExtra - the original reads past them "
                     "(docs/effect_2f.md section 2)",
                     who, (unsigned)index);
-    return Sprite_ObjectsExtra + index * at::kSpriteStride;
+    return rv::Bytes(&Sprite_ObjectsExtra[index]);
 }
 
 // +1 up, Sprite_Current read afresh.
@@ -234,7 +227,7 @@ extern "C" void __cdecl EffectKind4F_Run(void) {
 // original 0x47B990 (EffectKind4F_States[0]): FC1's EffectKind3C_Start with the
 // op EffectKind4F_Op. Two free sprites into +3 and +4 (none: nothing, the first
 // given back when only the second fails), each marked in use; for each,
-// DamageScratch's word = its index and EventOp_0x(EffectKind4F_Op); Sprite_Current
+// SharedScratch's word = its index and EventOp_0x(EffectKind4F_Op); Sprite_Current
 // put back; the first moved by (-0x1000, +0x1000), the second by (+0x1000,
 // -0x1000), both +0 |= 0x20, +0x5C = 0, tinted (0xF, 0, 0, 1) and (0, 0, 0xF, 1);
 // +9 = 4 and +1 = 1 (Sprite_Current read again after the tints).
@@ -250,9 +243,9 @@ extern "C" void __cdecl EffectKind4F_Start(void) {
         return;
     }
     Sprite(self[4], who)[0] = 1;
-    SetWord(At(bof3::addr::DamageScratch), self[3]);
+    SharedScratch.w_00 = self[3];
     SH_CALL(EventOp_0x)(EffectKind4F_Op);
-    SetWord(At(bof3::addr::DamageScratch), self[4]);
+    SharedScratch.w_00 = self[4];
     SH_CALL(EventOp_0x)(EffectKind4F_Op);
     Sprite_Current = self;
     unsigned char* a = Sprite(self[3], who);
@@ -288,7 +281,7 @@ extern "C" void __cdecl EffectKind50_Run(void) {
 // 0, +1 up.
 extern "C" void __cdecl EffectKind50_Start(void) {
     SH_CALL(EffectKind50_ClearSpecks)();
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     NextState();
 }
 
@@ -299,7 +292,7 @@ extern "C" void __cdecl EffectKind50_Emit(void) {
     if ((Frame_Counter & 3u) == 0) SH_CALL(EffectKind50_SpawnSpeck)();
     SH_CALL(EffectKind50_MoveSpecks)();
     unsigned char* const s = S();
-    SetUL(s + 0xC, (UL(s + 0xC) + 0x80u) & 0xFFFu);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, (rv::As<records::EffectWork>(s)->work_0c + 0x80u) & 0xFFFu);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] == 0) s[1] = static_cast<unsigned char>(s[1] + 1);
 }
@@ -409,8 +402,8 @@ extern "C" void __cdecl EffectKind50_SpeckQuad(unsigned char* speck) {
     std::memcpy(prim + 0x30, screen + 8, 4);
     std::memcpy(prim + 0x20, screen + 8, 4);
     std::memcpy(prim + 0x10, screen + 8, 4);
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     prim[0x14] = 0xE0;
     prim[0x15] = 0x30;
     prim[0x25] = 0x30;
@@ -435,10 +428,10 @@ extern "C" void __cdecl EffectKind50_SpawnSpeck(void) {
     if (k == nullptr) return;
     k[0] = 1;
     k[2] = 0;
-    SetUL(k + 4, static_cast<std::uint32_t>(CurFx()->x));
-    SetUL(k + 8, static_cast<std::uint32_t>(CurFx()->z));
-    SetUL(k + 0xC, Sar(static_cast<std::uint32_t>(CurFx()->height), 8));
-    const U a = Sar(static_cast<U>(SH_CALL(Math_Sin)(I(UL(S() + 0xC)))) << 8, 12);
+    SetUL(k + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetUL(k + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    SetUL(k + 0xC, Sar(static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height), 8));
+    const U a = Sar(static_cast<U>(SH_CALL(Math_Sin)(I(rv::As<records::EffectWork>(S())->work_0c))) << 8, 12);
     const U e = (a & 0xFFFFu) + (S()[6] == 7 ? 0x800u : 0x400u);
     SetUL(k + 0x14, static_cast<U>(SH_CALL(Math_Cos)(I(e))) * 3u);
     SetUL(k + 0x18, static_cast<U>(SH_CALL(Math_Sin)(I(e))) * 3u);
@@ -473,14 +466,14 @@ void SwayStep() {
 // EffectKind51_Angles (the column starts on a random history); the sway's
 // width +0x2C = 0, the sound, +1 up.
 void Kind51Start(unsigned short sound) {
-    SetWord(S() + 0x5A, 0x20);
-    SetWord(S() + 0x32, 0);
-    SetWord(S() + 0x58, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x20);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->script_pos, 0);
     for (unsigned i = 0; i < 0x40; ++i) {
         SwayStep();
-        SH_CALL(EffectKind51_PushAngle)(Word(S() + 0x58));
+        SH_CALL(EffectKind51_PushAngle)(rv::As<records::EffectObject>(S())->script_pos);
     }
-    SetWord(S() + 0x2C, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->column, 0);
     SH_CALL(Sound_PlayEffect)(sound);
     NextState();
 }
@@ -495,8 +488,8 @@ void Kind51Grow(unsigned reload) {
     if ((s[0x5A] & 3) == 0) IncWord(s + 0x2C);
     IncWord(s + 0x32);
     DecWord(s + 0x5A);
-    if (Word(s + 0x5A) != 0) return;
-    SetWord(s + 0x5A, reload);
+    if (rv::As<records::EffectObject>(s)->frame_word != 0) return;
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->frame_word, reload);
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -506,12 +499,12 @@ void Kind51Wait() {
     SH_CALL(EffectKind51_DrawFrame)();
     SwayStep();
     if (At(at::kCounter0)[0] != 0xB) return;
-    SetWord(S() + 0x5A, 0x20);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x20);
     NextState();
 }
 
 // The ring at the half-height +0x32 (its word as the original pushes it).
-void Ring() { SH_CALL(EffectKind51_DrawRing)(Word(S() + 0x32)); }
+void Ring() { SH_CALL(EffectKind51_DrawRing)(rv::As<records::EffectWork>(S())->work_32); }
 
 }  // namespace
 
@@ -539,14 +532,14 @@ extern "C" void __cdecl EffectKind51_Shrink(void) {
     SwayStep();
     unsigned char* s = S();
     if ((s[0x5A] & 3) == 0) DecWord(s + 0x2C);
-    if (Word(s + 0x5A) == 2) {
+    if (rv::As<records::EffectObject>(s)->frame_word == 2) {
         SH_CALL(Sound_PlayEffect)(0x20C);
         s = S();
     }
     DecWord(s + 0x5A);
     s = S();
-    if (Word(s + 0x5A) != 0) return;
-    SetWord(s + 0x5A, 0x40);
+    if (rv::As<records::EffectObject>(s)->frame_word != 0) return;
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->frame_word, 0x40);
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -558,10 +551,10 @@ extern "C" void __cdecl EffectKind51_RingIn(void) {
     unsigned char* s = S();
     if ((s[0x5A] & 3) == 0) DecWord(s + 0x32);
     DecWord(s + 0x5A);
-    if (Word(S() + 0x5A) != 0) return;
+    if (rv::As<records::EffectObject>(S())->frame_word != 0) return;
     SH_CALL(Sound_PlayEffect)(0x209);
     s = S();
-    SetWord(s + 0x5A, 0x14);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->frame_word, 0x14);
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -570,9 +563,9 @@ extern "C" void __cdecl EffectKind51_RingIn(void) {
 extern "C" void __cdecl EffectKind51_RingOut(void) {
     Ring();
     unsigned char* const s = S();
-    SetWord(s + 0x32, Word(s + 0x32) + 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectWork>(s)->work_32 + 0x10u);
     DecWord(s + 0x5A);
-    if (Word(S() + 0x5A) == 0) SH_CALL(Effect_Release)();
+    if (rv::As<records::EffectObject>(S())->frame_word == 0) SH_CALL(Effect_Release)();
 }
 
 // original 0x47BE60 (state 6): Kind51Start with Sound_PlayEffect(0x202).
@@ -594,7 +587,7 @@ extern "C" void __cdecl EffectKind51_RingFade(void) {
     if ((s[0x5A] & 3) == 0) DecWord(s + 0x2C);
     DecWord(s + 0x32);
     DecWord(s + 0x5A);
-    if (Word(s + 0x5A) == 0) SH_CALL(Effect_Release)();
+    if (rv::As<records::EffectObject>(s)->frame_word == 0) SH_CALL(Effect_Release)();
 }
 
 // original 0x47BFE0 (state 10): EffectGte_LoadMapCamera; the record's point
@@ -604,11 +597,11 @@ extern "C" void __cdecl EffectKind51_RingFade(void) {
 extern "C" void __cdecl EffectKind51_Burst(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     const long point[4] = {so->x, so->z, so->height, 0};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
-    SetWord(S() + 0x32, 0x140);
-    SetWord(S() + 0x5A, 0x14);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x140);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x14);
     NextState();
     SH_CALL(EffectKind51_DrawMoves)();
     Ring();
@@ -619,9 +612,9 @@ extern "C" void __cdecl EffectKind51_Burst(void) {
 extern "C" void __cdecl EffectKind51_RingClose(void) {
     Ring();
     unsigned char* const s = S();
-    SetWord(s + 0x32, Word(s + 0x32) - 0x10u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, rv::As<records::EffectWork>(s)->work_32 - 0x10u);
     DecWord(s + 0x5A);
-    if (Word(S() + 0x5A) == 0) SH_CALL(Effect_Release)();
+    if (rv::As<records::EffectObject>(S())->frame_word == 0) SH_CALL(Effect_Release)();
 }
 
 // original 0x47C6E0 (0xF6 bytes): two draw-move primitives at the record's
@@ -664,13 +657,13 @@ extern "C" void __cdecl EffectKind51_PushAngle(unsigned angle) {
 extern "C" void __cdecl EffectKind51_DrawFrame(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     const long point[4] = {so->x, so->z, so->height, 0};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     SH_CALL(EffectKind51_DrawMoves)();
-    SH_CALL(EffectKind51_PushAngle)(Word(S() + 0x58));
+    SH_CALL(EffectKind51_PushAngle)(rv::As<records::EffectObject>(S())->script_pos);
     const unsigned char* const t = S();
-    SH_CALL(EffectKind51_DrawColumn)(Word(t + 0x32), Word(t + 0x2C));
+    SH_CALL(EffectKind51_DrawColumn)(rv::As<records::EffectWork>(t)->work_32, rv::As<records::EffectObject>(t)->column);
 }
 
 // original 0x47C870 (0x359 bytes): the column, two textured Gouraud quads a row
@@ -913,12 +906,12 @@ void SubCountDown(unsigned char reload) {
 // AreaMap_Elevation(+0x34, +0x38)'s low word << 16; +9 = 0x20, +2 up and
 // Sound_PlayEffect(0x202).
 void TrailPlace(U x, U z) {
-    CurFx()->x = x;
-    CurFx()->z = z;
+    rv::Current<records::EffectObject>()->x = x;
+    rv::Current<records::EffectObject>()->z = z;
     const unsigned char* const s = S();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
-    Store<U>(CurFx()->height, S16(static_cast<U>(ground)) << 16);
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, S16(static_cast<U>(ground)) << 16);
     S()[9] = 0x20;
     NextSub();
     SH_CALL(Sound_PlayEffect)(0x202);
@@ -941,7 +934,7 @@ extern "C" void __cdecl EffectKind52_Sparks(void) {
 // = 0x40, +2 up.
 extern "C" void __cdecl EffectKind52_SparksClear(void) {
     SH_CALL(EffectKind52_ClearSparks)();
-    SetWord(S() + 0x5A, 0x40);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x40);
     NextSub();
 }
 
@@ -949,7 +942,7 @@ extern "C" void __cdecl EffectKind52_SparksClear(void) {
 // Sound_PlayEffect(0x201); when the timer's low three bits are 0 a free spark
 // set going (0x4790F0); the sparks moved and drawn; the timer down, at 0 +2 up.
 extern "C" void __cdecl EffectKind52_SparksEmit(void) {
-    if (Word(S() + 0x5A) == 4) SH_CALL(Sound_PlayEffect)(0x201);
+    if (rv::As<records::EffectObject>(S())->frame_word == 4) SH_CALL(Sound_PlayEffect)(0x201);
     if ((S()[0x5A] & 7) == 0) {
         unsigned char* const spark = SH_CALL(EffectSpark_FindFree)();
         if (spark != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kSparkInit)(spark);
@@ -957,7 +950,7 @@ extern "C" void __cdecl EffectKind52_SparksEmit(void) {
     SH_CALL(EffectKind52_MoveSparks)();
     unsigned char* const s = S();
     DecWord(s + 0x5A);
-    if (Word(s + 0x5A) == 0) s[2] = static_cast<unsigned char>(s[2] + 1);
+    if (rv::As<records::EffectObject>(s)->frame_word == 0) s[2] = static_cast<unsigned char>(s[2] + 1);
 }
 
 // original 0x47C150 (sub-state 2): the sparks moved and drawn; once none was
@@ -986,7 +979,7 @@ extern "C" void __cdecl EffectKind52_TrailStart(void) {
 // and +2 up.
 extern "C" void __cdecl EffectKind52_TrailRise(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     so->z = static_cast<std::uint32_t>(so->z) + 0x10000u;
     SubCountDown(0x10);
 }
@@ -1004,7 +997,7 @@ extern "C" void __cdecl EffectKind52_TrailTurn(void) {
 // 0x80 and +2 up.
 extern "C" void __cdecl EffectKind52_TrailFall(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     so->z = static_cast<std::uint32_t>(so->z) + 0xFFFF0000u;
     SubCountDown(0x80);
 }
@@ -1272,7 +1265,7 @@ extern "C" void __cdecl EffectKind53_Run(void) {
 // Sprite_ObjectsExtra record the dword +0x18 names; +9 = 0, +1 = 1.
 extern "C" void __cdecl EffectKind53_Start(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x54, AsSpr(Extra(UL(s + 0x18), "EffectKind53_Start"))->frames);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->frames, rv::As<records::SpriteObject>(Extra(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18), "EffectKind53_Start"))->frames);
     s[9] = 0;
     s[1] = 1;
 }
@@ -1296,9 +1289,9 @@ extern "C" void __cdecl EffectKind53_Start(void) {
 // linked. Then the texture window (0, 0, 0x100, 0x100) at the record.
 extern "C" void __cdecl EffectKind53_Beam(void) {
     unsigned char* const self = S();
-    auto* const selfo = reinterpret_cast<records::EffectObject*>(self);
-    unsigned char* const sprite = Extra(UL(self + 0x18), "EffectKind53_Beam");
-    auto* const spriteo = reinterpret_cast<records::SpriteObject*>(sprite);
+    auto* const selfo = rv::As<records::EffectObject>(self);
+    unsigned char* const sprite = Extra(static_cast<std::uint32_t>(rv::As<records::EffectObject>(self)->work_18), "EffectKind53_Beam");
+    auto* const spriteo = rv::As<records::SpriteObject>(sprite);
     Sprite_Current = sprite;
     selfo->x = static_cast<std::uint32_t>(spriteo->x);
     selfo->z = UL(S() + 0x38);
@@ -1341,8 +1334,8 @@ extern "C" void __cdecl EffectKind53_Beam(void) {
     }
     SetUL(prim + 0x2C, y);
     Sprite_Current = self;
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     prim[0x14] = 0;
     s = S();
     prim[0x24] = 0x10;
@@ -1426,13 +1419,13 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
     const U phase = Frame_Counter & 0xFu;
     S()[0x5D] = 0;
     unsigned char* s = S();
-    U h = static_cast<std::uint32_t>(AsFx(s)->height) - (phase << 20);
-    for (unsigned steps = 0; I(UL(s + 0x14)) < I(h); ++steps) {
+    U h = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) - (phase << 20);
+    for (unsigned steps = 0; I(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y)) < I(h); ++steps) {
         if (steps == 0x100)
             bof3::Fatal("EffectKind56_Markers: the ground 0x%X is below every height the walk from 0x%X reaches - the "
                         "original loops for ever (docs/effect_2f.md section 2)",
-                        (unsigned)UL(s + 0x14), (unsigned)h);
-        SH_CALL(EffectKind56_DrawCross)(AsFx(s)->x, AsFx(s)->z, static_cast<long>(h), 1);
+                        (unsigned)static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y), (unsigned)h);
+        SH_CALL(EffectKind56_DrawCross)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z, static_cast<long>(h), 1);
         s = S();
         s[0x5D] = static_cast<unsigned char>(s[0x5D] + 0x2A);
         if (s[0x5D] > 0x80) s[0x5D] = 0x80;
@@ -1440,7 +1433,7 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
     }
     s[0x5D] = 0xFF;
     s = S();
-    SH_CALL(EffectKind56_DrawCross)(AsFx(s)->x, AsFx(s)->z, Long(s + 0x14), 0);
+    SH_CALL(EffectKind56_DrawCross)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z, rv::As<records::EffectObject>(s)->step_y, 0);
     if (At(at::kCounter3)[0] == 0xE) S()[1] = 1;
 }
 
@@ -1450,14 +1443,14 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
 // never reads.
 extern "C" void __cdecl EffectKind56_Place(void) {
     const unsigned char* const extra = At(Sprite_ObjectsExtra_addr + 0x34);
-    Store<U>(CurFx()->x, UL(extra));
-    Store<U>(CurFx()->z, UL(extra + 4));
-    Store<U>(CurFx()->height, UL(extra + 8));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(extra));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(extra + 4));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(extra + 8));
     const unsigned char* const s = S();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     MapView_HeightScale = 1;
     const long ground = SH_CALL(MapView_GroundAt)(so->x, so->z);
-    SetUL(S() + 0x14, S16(static_cast<U>(ground)) << 16);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, S16(static_cast<U>(ground)) << 16);
 }
 
 // original 0x47DAC0 (0x111 bytes): two flat lines at the packet cursor, a cross

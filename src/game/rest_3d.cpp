@@ -30,6 +30,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3d_callees.h"
 #include "hook/detour.h"
@@ -37,11 +38,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_3d::at;
 using U = std::uint32_t;
@@ -63,7 +59,7 @@ S32 S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); 
 // whatever lies there, on both sides).
 bool IsMember(U actor) { return (actor & 0xFF) <= 2; }
 U PartyAt(U actor) { return ObjTrio_addr + (actor & 0xFF) * at::kPartyStride; }
-U EnemyAt(U actor) { return at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
+U EnemyAt(U actor) { return Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
 unsigned char* Party(U actor) { return At(PartyAt(actor)); }
 unsigned char* Enemy(U actor) { return At(EnemyAt(actor)); }
 
@@ -255,7 +251,7 @@ extern "C" unsigned char __cdecl Battle_LacksArmour(unsigned actor, unsigned ite
 extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
     const bool member = IsMember(target);
     const U offset = member ? (target & 0xFF) * at::kPartyStride : ((target & 0xFF) - 3u) * at::kEnemyStride;
-    const U record = (member ? ObjTrio_addr : at::kEnemies) + offset;
+    const U record = (member ? ObjTrio_addr : Battle_Enemies_addr) + offset;
     const U word_at = record + (member ? 0x90u : 0x92u);
     const U cur = W(word_at);
     const U s = status & 0xFF;
@@ -428,9 +424,9 @@ void HpLessDefence(int divisor) {
     const bool member = IsMember(Target());
     const U v = static_cast<U>(BH_CALL(Effect_HpBasedDamage)(divisor));
     const unsigned t = Target();
-    const U def = member ? MemberRec(Party(t))->def : EnemyRec(Enemy(t))->def;
-    SetWord(Result() + 4, v - def);
-    if (S16(Word(Result() + 4)) < 0) SetWord(Result() + 4, 0);
+    const U def = member ? rv::As<records::PartyMember>(Party(t))->def : rv::As<records::BattleEnemy>(Enemy(t))->def;
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, v - def);
+    if (S16(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change)) < 0) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0);
 }
 
 }  // namespace
@@ -440,7 +436,7 @@ void HpLessDefence(int divisor) {
 extern "C" void __cdecl Effect112_HpToOne(void) {
     if ((BH_CALL(Rand)() & 1) == 0) return;
     if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) return;
-    SetWord(Result() + 4, Word(Hp(Target())) - 1u);
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, Word(Hp(Target())) - 1u);
 }
 
 // original 0x44E530 (slot 113): Effect_NoHitReaction, then the actor's flag
@@ -457,14 +453,14 @@ extern "C" void __cdecl Effect114_SkillApDamage(void) {
     Result()[8] = 2;
     const U power = AbilityStep();
     const int v = BH_CALL(Effect_SkillDamage)(Actor(), Target(), power, 1);
-    SetWord(Result() + 6, static_cast<U>(v));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->ap_change, static_cast<U>(v));
 }
 
 // original 0x44E5D0 (slot 115): the target not resisting Battle_StatusResisted20:
 // the HP delta its whole HP.
 extern "C" void __cdecl Effect115_HpToZero(void) {
     if (BH_CALL(Battle_StatusResisted20)(Actor(), Target())) return;
-    SetWord(Result() + 4, Word(Hp(Target())));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, Word(Hp(Target())));
 }
 
 // original 0x44E640 (slot 116): HpLessDefence(1).
@@ -495,17 +491,17 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
     if (!IsMember(t)) return;
     {
         unsigned char* const p = Party(t);
-        unsigned char* const c = At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride);
+        unsigned char* const c = At(CharacterRecords_addr + p[0x148] * at::kCharacterStride);
         if (c[0x1E] < 9) {
             c[0x1E] = static_cast<unsigned char>(c[0x1E] + 1);
             p[0x9E] = static_cast<unsigned char>(p[0x9E] + 1);
         }
-        BH_CALL(Char_RecalcStats)(At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride));
+        BH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + p[0x148] * at::kCharacterStride));
     }
     unsigned n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
         unsigned char* const p = Party(m);
-        const unsigned char* const c = At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride);
+        const unsigned char* const c = At(CharacterRecords_addr + p[0x148] * at::kCharacterStride);
         for (unsigned i = 0; i < 6; ++i) p[0x92 + i] = c[0x12 + i];
         for (unsigned i = 0; i < 0x20; ++i) p[0xC0 + i] = c[0x20 + i];
     }
@@ -523,7 +519,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
             m = (m + 1) & 0xFF;
         } while (m < B(at::kPartySize));
     }
-    SetWord(Result() + 4, 0u - MemberRec(Party(Target()))->max_hp);
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0u - rv::As<records::PartyMember>(Party(Target()))->max_hp);
 }
 
 // original 0x44E8B0 (slot 119): Effect_NoHitReaction; the actor's +0x134 (an
@@ -607,9 +603,9 @@ extern "C" void __cdecl Effect126_Ability4EDrainAp(void) {
 extern "C" void __cdecl Effect127_AttackDoubledKind4(void) {
     const unsigned t = Target();
     const short v = BH_CALL(Battle_CalcDamage)(Actor(), t, 0xFFFF);
-    SetWord(Result() + 4, static_cast<std::uint16_t>(v));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(v));
     if (IsMember(t)) return;
-    if (Enemy(Target())[0x8D] == 4) SetWord(Result() + 4, static_cast<U>(Word(Result() + 4)) << 1);
+    if (Enemy(Target())[0x8D] == 4) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<U>(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change)) << 1);
 }
 
 // original 0x44EBE0 (slot 128): the HP delta Battle_CalcDamage(actor, target,
@@ -617,8 +613,8 @@ extern "C" void __cdecl Effect127_AttackDoubledKind4(void) {
 // says not resisted, Effect_RollInflict(4) (a second roll).
 extern "C" void __cdecl Effect128_HalfAttackInflict4(void) {
     const short v = BH_CALL(Battle_CalcDamage)(Actor(), Target(), 0xFFFF);
-    SetWord(Result() + 4, static_cast<U>(static_cast<S32>(v) / 2));
-    if (Word(Result() + 4) == 0) return;
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<U>(static_cast<S32>(v) / 2));
+    if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change) == 0) return;
     if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) return;
     BH_CALL(Effect_RollInflict)(4);
 }

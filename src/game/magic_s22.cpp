@@ -29,7 +29,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -46,18 +48,14 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F; words or dwords by function) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -90,8 +88,8 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -129,8 +127,8 @@ void Rtp4(unsigned char* prim) {
 }
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
                                 size);
 }
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
@@ -185,7 +183,7 @@ S22_EXPORT void __cdecl Blizzard_Start(void) {
         const unsigned slot = NewTask(0x4C);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         const auto delay = static_cast<unsigned char>(BlizzardShard_Delays[i] + 1);
         tchild->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self));
         child[9] = delay;
@@ -247,14 +245,14 @@ S22_EXPORT void __cdecl BlizzardShard_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    Store(ScTask()->vel_x, Long(reinterpret_cast<const unsigned char*>(BlizzardShard_Offsets) + Sc()[4] * 8u));
-    Store(ScTask()->vel_y, Long(reinterpret_cast<const unsigned char*>(BlizzardShard_Offsets) + Sc()[4] * 8u + 4));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Long(reinterpret_cast<const unsigned char*>(BlizzardShard_Offsets) + Sc()[4] * 8u));
+    rv::Store(rv::Current<records::BattleTask>()->step_z, Long(reinterpret_cast<const unsigned char*>(BlizzardShard_Offsets) + Sc()[4] * 8u + 4));
     MH_AT(PrimFn, kTurnOffset)(Sc());
-    Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
-                                                   static_cast<std::uint32_t>(ScTask()->vel_x)));
-    Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
-                                                   static_cast<std::uint32_t>(ScTask()->vel_y)));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x) +
+                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z) +
+                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     const unsigned char* const s = Sc();
     const unsigned direction = s[8];
     if (direction <= 3) {
@@ -310,12 +308,12 @@ namespace {
 void PushTaskMatrix(bool tilt) {
     MH_CALL(Gte_PushMatrix)();
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     const short rot[4] = {tilt ? S16(s + 0x18) : short{0}, tilt ? S16(s + 0x1C) : short{0}, tilt ? short{0} : short{0x200},
                           0};
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {
@@ -373,8 +371,8 @@ S22_EXPORT void __cdecl BlizzardShard_DrawCrystal(void) {
         SetVW(0x14, 0u - SW(6));
         unsigned char* p = Gfx_PacketNext;
         const unsigned char* s = Sc();
-        std::uint32_t x = (static_cast<std::uint32_t>(static_cast<int>(VS(8))) << 9) + static_cast<std::uint32_t>(Long(s + 0x34));
-        std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(VS(0xA))) << 9) + static_cast<std::uint32_t>(Long(s + 0x38));
+        std::uint32_t x = (static_cast<std::uint32_t>(static_cast<int>(VS(8))) << 9) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x);
+        std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(VS(0xA))) << 9) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z);
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x95, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         p = Gfx_PacketNext;
@@ -416,15 +414,15 @@ S22_EXPORT void __cdecl BlizzardShard_DrawCrystal(void) {
         SetVW(0x1A, static_cast<unsigned>(Mul12(v, SS(2))));
         SetVW(0x1C, 0);
         s = Sc();
-        x = (static_cast<std::uint32_t>(static_cast<int>(VS(0x10))) << 9) + static_cast<std::uint32_t>(Long(s + 0x34));
-        z = (static_cast<std::uint32_t>(static_cast<int>(VS(0x12))) << 9) + static_cast<std::uint32_t>(Long(s + 0x38));
+        x = (static_cast<std::uint32_t>(static_cast<int>(VS(0x10))) << 9) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x);
+        z = (static_cast<std::uint32_t>(static_cast<int>(VS(0x12))) << 9) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z);
         p = Gfx_PacketNext;
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x95, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyFT4)(p);
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 0, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 0, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
         p[0x24] = static_cast<unsigned char>(u - 0x68);
         p[0x44] = static_cast<unsigned char>(u - 0x68);
         p[0x14] = u;
@@ -548,7 +546,7 @@ S22_EXPORT void __cdecl BlizzardShard_DrawRing(void) {
 
 // original 0x4C9AF0: the task to the centre of the live targets - every enemy
 // when the target byte has bit 6, else every party member - their x and z
-// (>> 9, less 0x4000) and heights summed in DamageScratch, the count at +0xC,
+// (>> 9, less 0x4000) and heights summed in SharedScratch, the count at +0xC,
 // each re-read from memory; +0x34 / +0x38 the averages (+ 0x4000) << 9, +0x3E
 // the average height. Every actor out divides by zero in the original: ours
 // aborts there (docs/magic_s22.md section 6).
@@ -570,9 +568,9 @@ S22_EXPORT void __cdecl Blizzard_CenterOnTargets(void) {
     if (SD(0xC) == 0)
         bof3::Fatal("Blizzard_CenterOnTargets: every %s is out - the original divides by zero here",
                     enemies ? "enemy" : "party member");
-    Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(SD(0) / SD(0xC) + 0x4000) << 9));
-    Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(SD(4) / SD(0xC) + 0x4000) << 9));
-    SetWord(Sc() + 0x3E, static_cast<unsigned>(SD(8) / SD(0xC)) & 0xFFFF);
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(SD(0) / SD(0xC) + 0x4000) << 9));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(SD(4) / SD(0xC) + 0x4000) << 9));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<unsigned>(SD(8) / SD(0xC)) & 0xFFFF);
 }
 
 // ===========================================================================
@@ -596,22 +594,22 @@ void StartBolts(unsigned parameter) {
         unsigned char* const self = Sc();
         const unsigned char* const r = enemies ? EnemyRecord(i) : PartyRecord(i);
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         const std::int32_t x = Long(r + 0x34), z = Long(r + 0x38);
         tchild->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self));
         child[1] = 0;
         child[3] = static_cast<unsigned char>(i);
         tchild->x = x;
-        tchild->y = z;
-        SetLong(child + 0x3C, Long(r + 0x3C));
+        tchild->z = z;
+        rv::Store(tchild->height, Long(r + 0x3C));
         child[9] = static_cast<unsigned char>(self[0xB] * 10 + 1);
         Inc(self[0xB]);
     }
     const unsigned char* const last = TaskSlot(slot);
-    const records::BattleTask* const tlast = reinterpret_cast<const records::BattleTask*>(last);
-    Store(ScTask()->x, tlast->x);
-    Store(ScTask()->y, tlast->y);
-    SetLong(Sc() + 0x3C, Long(last + 0x3C));
+    const records::BattleTask* const tlast = rv::AsConst<records::BattleTask>(last);
+    rv::Store(rv::Current<records::BattleTask>()->x, tlast->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, tlast->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, tlast->height);
     MH_CALL(Sound_PlayById)(0x100);
     Inc(Sc()[1]);
 }
@@ -636,7 +634,7 @@ void DarkenTarget(unsigned char* s) {
 
 // The four quads of one row of a bolt's band share their shading: each of the
 // twelve colour bytes (+4..+6, +0x14..+0x16, +0x24..+0x26, +0x34..+0x36) is 1,
-// DamageScratch +4's low byte or +6's. The first row's top edge (+0x24..,
+// SharedScratch +4's low byte or +6's. The first row's top edge (+0x24..,
 // +0x34..) is 1.
 enum : char { k1 = '1', kA = 'a', kB = 'b' };
 void Shade(unsigned char* p, const char (&pattern)[13], bool first_row) {
@@ -661,7 +659,7 @@ constexpr char kRow2[13] = "bba111bba111";
 constexpr char kRow3[13] = "bbaaaabbaaaa";
 constexpr char kRow4[13] = "111bba111bba";
 
-// The band's start, both spells: DamageScratch +0 the radius `radius`, +2 the
+// The band's start, both spells: SharedScratch +0 the radius `radius`, +2 the
 // angle (+0xB & mask) << shift, +4 +0xA x 15 and +6 +0xA x 2 (the shades), +0xC
 // `height` - Rand & 3; the first top point (0, sin x radius >> 12, 0); tpage
 // 0x35 sorted at the task.
@@ -739,9 +737,9 @@ S22_EXPORT void __cdecl JoltBolt_Run(void) {
     Call3(bof3::addr::JoltBolt_DrawBand, 0xC, 0x60, 0x1F);
     Call0(bof3::addr::JoltBolt_DrawArcs);
     AddB(Sc()[0xB], 0xF8);
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + 0x10u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + 0x10u);
     Call0(bof3::addr::JoltBolt_DrawFlash);
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) - 0x20u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) - 0x20u);
     Call0(bof3::addr::JoltBolt_DrawFlash);
     MH_CALL(Gte_PopMatrix)();
 }
@@ -870,10 +868,10 @@ S22_EXPORT void __cdecl JoltBolt_DrawArcs(void) {
     if (SS(8) <= 1) return;
     for (int i = 1;;) {
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         unsigned char* p = Gfx_PacketNext;
         const std::uint32_t x = static_cast<std::uint32_t>(VS(0) >> 3) + static_cast<std::uint32_t>(ts->x);
-        const std::uint32_t z = static_cast<std::uint32_t>(VS(2) >> 3) + static_cast<std::uint32_t>(ts->y);
+        const std::uint32_t z = static_cast<std::uint32_t>(VS(2) >> 3) + static_cast<std::uint32_t>(ts->z);
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0xB5, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
         p = Gfx_PacketNext;
@@ -914,7 +912,7 @@ namespace {
 
 // The flashes of 0x4CA8C0 / 0x4CB6E0 / 0x4CC7D0: eight gouraud triangles
 // round the task's screen point (+0x2E / +0x30), radius Rand & 7 plus +0xA x
-// `per`, kept in DamageScratch as a word or (`dword`) a dword and read back
+// `per`, kept in SharedScratch as a word or (`dword`) a dword and read back
 // after every call; the centre (+0xA x m0, x m0, x m1) in 8 bits, the rim 1.
 // Tpage 0x35, sorted at the task.
 void Flash(unsigned per, bool dword, unsigned m0, unsigned m1) {
@@ -997,9 +995,9 @@ S22_EXPORT void __cdecl LightningBolt_Run(void) {
     AddB(Sc()[0xB], 6);
     Call3(bof3::addr::LightningBolt_DrawBand, 0x10, 0x80, 0x1F);
     AddB(Sc()[0xB], 0xF0);
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + 0x18u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + 0x18u);
     Call0(bof3::addr::LightningBolt_DrawFlash);
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) - 0x30u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) - 0x30u);
     Call0(bof3::addr::LightningBolt_DrawFlash);
     MH_CALL(Gte_PopMatrix)();
 }
@@ -1174,15 +1172,15 @@ S22_EXPORT void __cdecl Myollnir_Task(void) {
 S22_EXPORT void __cdecl Myollnir_Start(void) {
     unsigned char* const src = Source();
     Sc()[8] = src[8];
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     MH_CALL(Sprite_ReleaseTint)(src);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(src, 0, 0, 0, 1);
     Sc()[0xA] = tint;
     const auto child = [](unsigned char kind) {
         unsigned char* const c = TaskSlot(NewTask(0xC));
-        records::BattleTask* const tc = reinterpret_cast<records::BattleTask*>(c);
+        records::BattleTask* const tc = rv::As<records::BattleTask>(c);
         tc->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Sc()));
         c[1] = kind;
         return c;
@@ -1268,9 +1266,9 @@ S22_EXPORT void __cdecl MyollnirBolt_Start(void) {
     Sc()[0xB] = static_cast<unsigned char>(r & 0xF);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Inc(Sc()[2]);
 }
 
@@ -1311,21 +1309,21 @@ S22_EXPORT void __cdecl MyollnirOrb_Run(void) {
 namespace {
 
 // The children's circle round the owner: the angle (+0xC & 0x7F) << 5 and the
-// radius in DamageScratch (dwords +4, +0), the position the owner's plus cos /
+// radius in SharedScratch (dwords +4, +0), the position the owner's plus cos /
 // sin x radius (no shift), each read back after the call before it.
 void Orbit(std::uint32_t radius) {
-    const std::uint32_t angle = (static_cast<std::uint32_t>(ScTask()->vel_x) & 0x7F) << 5;
+    const std::uint32_t angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) & 0x7F) << 5;
     SetSD(0, radius);
     SetSD(4, angle);
     int v = MH_CALL(Math_Cos)(static_cast<int>(angle));
-    Store(ScTask()->x, static_cast<std::int32_t>(MulU(v, SD(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(MulU(v, SD(0)) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
     v = MH_CALL(Math_Sin)(SD(4));
-    Store(ScTask()->y, static_cast<std::int32_t>(MulU(v, SD(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(MulU(v, SD(0)) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
 }
 // A circling child's step: +0xB up, the angle +0xC up, the circle.
 void OrbitStep(std::uint32_t radius) {
     Inc(Sc()[0xB]);
-    Store(ScTask()->vel_x, ScTask()->vel_x + 1);
+    rv::Store(rv::Current<records::BattleTask>()->step_x, rv::Current<records::BattleTask>()->step_x + 1);
     Orbit(radius);
 }
 
@@ -1336,9 +1334,9 @@ void OrbitStep(std::uint32_t radius) {
 S22_EXPORT void __cdecl MyollnirOrb_Start(void) {
     Sc()[9] = 0;
     Sc()[0xA] = 0;
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(Sc()[3] << 5));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(Sc()[3] << 5));
     Orbit(0x28);
-    SetWord(Sc() + 0x3E, Word(Owner() + 0x3E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
     Inc(Sc()[2]);
 }
 
@@ -1525,9 +1523,9 @@ S22_EXPORT void __cdecl MyollnirRing_Start(void) {
     Sc()[0xB] = static_cast<unsigned char>(r & 0xF);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
-    Store(ScTask()->vel_x, static_cast<std::int32_t>((Sc()[3] << 5) + 0x10));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>((Sc()[3] << 5) + 0x10));
     Orbit(0x18);
-    SetWord(Sc() + 0x3E, Word(Owner() + 0x3E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
     Inc(Sc()[2]);
 }
 
@@ -1580,9 +1578,9 @@ S22_EXPORT void __cdecl MyollnirRing_DrawArcs(void) {
     if (SD(0xC) <= 1) return;
     for (int i = 1;;) {
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         const std::uint32_t x = static_cast<std::uint32_t>(VS(0) >> 3) + static_cast<std::uint32_t>(ts->x);
-        const std::uint32_t z = static_cast<std::uint32_t>(VS(2) >> 3) + static_cast<std::uint32_t>(ts->y);
+        const std::uint32_t z = static_cast<std::uint32_t>(VS(2) >> 3) + static_cast<std::uint32_t>(ts->z);
         unsigned char* p = Gfx_PacketNext;
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0xB5, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);

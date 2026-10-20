@@ -28,6 +28,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc5_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -45,7 +46,6 @@ using scena_sc5::VoidFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
 unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
@@ -55,7 +55,7 @@ void SetRun(unsigned char v) { MoveScript_Var7 = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
-bool WaitClear() { return MoveScript_WaitWordDA == 0; }
+bool WaitClear() { return Transition_Busy == 0; }
 bool MsgDone() { return (B(at::kMsgFlags) & 2) == 2; }
 unsigned Sel() { return AreaW0b_PartySet & 0x7Fu; }
 void MusicCurrent(unsigned char v) { AreaW1f_MusicCurrent = v; }
@@ -73,7 +73,7 @@ void ClearCounters123() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 unsigned char* Story() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Cond_Flags_addr + 0xa0)); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
@@ -128,7 +128,8 @@ void LoadMusic(unsigned track) {
 // An event battle at the leader: 0x532ED0(ObjTrio +0x34, +0x38, kind), then
 // Field_StartEventBattle(kind) (group SE's).
 void Battle(unsigned kind) {
-    SH_AT(PlaceFn, at::kPartyPlace)(S32(at::kLeaderX), S32(at::kLeaderZ), kind);
+    auto* const member0 = ObjTrio;
+    SH_AT(PlaceFn, at::kPartyPlace)(member0->x, member0->z, kind);
     SH_CALL(Field_StartEventBattle)(kind);
 }
 
@@ -168,7 +169,7 @@ SC5_EXPORT void __cdecl Scena05_Run(void) {
 // triggered: Scena05_Objects[object +0x86] (object, the flag bits' pointer).
 // The entry's eax is the original's answer; 0x56D6D0 does not read it.
 SC5_EXPORT void __cdecl Scena05_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = AreaW0c_FlagRow;
+    const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
         Entry(Scena05_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena05_ObjectTrigger")))(object, bits);
@@ -452,8 +453,8 @@ void EnterAreaBody() {
             SetRun(0xA);
             SetStep(0);
             ClearCounters();
-            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 & 0xFE);
-            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
+            CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags & 0xFE);
+            CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags | 1);
             break;
         case 1:
             if (Flag(0x14)) break;
@@ -481,8 +482,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(7);
-            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF & 0xFE);
-            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
+            CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags & 0xFE);
+            CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags | 1);
             DropIn(4);
             break;
         case 5:
@@ -492,8 +493,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(7);
-            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF & 0xFE);
-            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
+            CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags & 0xFE);
+            CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags | 1);
             DropIn(0xF);
             break;
         default:   // 6
@@ -503,8 +504,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(5);
-            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 & 0xFE);
-            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
+            CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags & 0xFE);
+            CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags | 1);
             DropIn(0x10);
             break;
         }
@@ -1815,8 +1816,8 @@ SC5_EXPORT void __cdecl Scena05_Run20(void) {
         if (Counter(0) != 4) break;
         SetStep(5);
         Field_ActorStates[0x9f] = static_cast<unsigned char>(Field_ActorStates[0x9f] | 1);
-        ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
-        ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
+        CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags | 1);
+        CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags | 1);
         if (Sel() == 1) CallA(3);
         else if (Sel() == 2) CallA(2);
         break;

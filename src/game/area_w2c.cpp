@@ -22,12 +22,13 @@
 #include "game/area_harness.h"
 #include "game/area_w2c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 
 namespace at = area_w2c::at;
 using area_harness::Mem;
@@ -41,10 +42,10 @@ unsigned char& B(U address) { return *Mem(address); }
 // The dword at `cell` as a pointer.
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // The choice's answer as the choices read it with movsx.
 int Answer() { return static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr)); }
 // A message word of a table indexed by the signed answer (unchecked).
@@ -97,15 +98,15 @@ void SpawnInline(U record, unsigned char kind, U args, U list) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     Sprite_Current[0xB] = slot;
     unsigned char* const r = Sprite_Current;
-    auto* const tR = reinterpret_cast<records::SpriteObject*>(r);
+    auto* const tR = rv::As<records::SpriteObject>(r);
     if (r[0xB] == 0xFF) return;
     EffectAt(r[0xB])[0] = 1;
     EffectAt(r[0xB])[5] = 6;
     EffectAt(r[0xB])[6] = kind;
-    SetLong(EffectAt(r[0xB]) + 0xC, 0);
-    SetLong(EffectAt(r[0xB]) + 0x10, static_cast<signed char>(B(args + B(list))));
-    SetWord(EffectAt(r[0xB]) + 0x2E, static_cast<std::uint16_t>(tR->screen_x));
-    SetWord(EffectAt(r[0xB]) + 0x30, static_cast<std::uint16_t>(tR->screen_y));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(r[0xB]))->step_x, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(r[0xB]))->step_z, static_cast<signed char>(B(args + B(list))));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(r[0xB]))->screen_x, static_cast<std::uint16_t>(tR->screen_x));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(r[0xB]))->screen_y, static_cast<std::uint16_t>(tR->screen_y));
 }
 
 // Area 94's spawns: Effect_Spawn(kind, 0, `args`[the list byte], the record's
@@ -271,21 +272,21 @@ extern "C" void __cdecl Area91_DrawGlow(unsigned radius_word, unsigned colour_by
     const auto colour = static_cast<unsigned char>(colour_byte);
     for (int angle = 0; angle < 0x1000; angle += 0x80) {
         const int next = angle + 0x80;
-        Prim_VertexScratch[0] = 0;
-        Prim_VertexScratch[1] = 0;
-        Prim_VertexScratch[2] = 0;
-        Prim_VertexScratch[4] = static_cast<short>(MulSar(AH_CALL(Math_Cos)(angle), radius, 12));
+        Prim_VertexScratch[0].x = 0;
+        Prim_VertexScratch[0].y = 0;
+        Prim_VertexScratch[0].z = 0;
+        Prim_VertexScratch[1].x = static_cast<short>(MulSar(AH_CALL(Math_Cos)(angle), radius, 12));
         const std::int32_t sin_a = MulSar(AH_CALL(Math_Sin)(angle), radius, 12);
-        Prim_VertexScratch[6] = 0;
-        Prim_VertexScratch[5] = static_cast<short>(sin_a);
-        Prim_VertexScratch[8] = static_cast<short>(MulSar(AH_CALL(Math_Cos)(next), radius, 12));
+        Prim_VertexScratch[1].z = 0;
+        Prim_VertexScratch[1].y = static_cast<short>(sin_a);
+        Prim_VertexScratch[2].x = static_cast<short>(MulSar(AH_CALL(Math_Cos)(next), radius, 12));
         const std::int32_t sin_b = MulSar(AH_CALL(Math_Sin)(next), radius, 12);
-        Prim_VertexScratch[10] = 0;
-        Prim_VertexScratch[9] = static_cast<short>(sin_b);
+        Prim_VertexScratch[2].z = 0;
+        Prim_VertexScratch[2].y = static_cast<short>(sin_b);
         unsigned char* const prim = Gfx_PacketNext;
         AH_CALL(Gpu_SetPolyG3)(prim);
         AH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        AH_CALL(Gte_RotTransPers3)(Prim_VertexScratch, Prim_VertexScratch + 4, Prim_VertexScratch + 8,
+        AH_CALL(Gte_RotTransPers3)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<short*>(&Prim_VertexScratch[1]), reinterpret_cast<short*>(&Prim_VertexScratch[2]),
                                    reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
                                    reinterpret_cast<float*>(prim + 0x28), &depth);
         AH_CALL(Gte_PrimDepths3_10B)(prim);
@@ -311,10 +312,10 @@ extern "C" void __cdecl Area91_DrawGlow(unsigned radius_word, unsigned colour_by
 // Area91_DrawGlow(0x12C, 0xFF).
 extern "C" void __cdecl Area91_State3Place(void) {
     if (Field_Kind2Hold == 0) {
-        SetLong(Sprite_Current + 0x70, 0);
-        SetLong(Sprite_Current + 0x34, 0x1F8000);
-        SetLong(Sprite_Current + 0x38, 0x1A0000);
-        SetWord(Sprite_Current + 0x3E, 0xFF00);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->reach, 0);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, 0x1F8000);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, 0x1A0000);
+        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, 0xFF00);
         Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
         ++Sprite_Current[4];
         unsigned char* const object = Sprite_Current;
@@ -369,7 +370,7 @@ extern "C" void __cdecl Area91_State5Shrink(void) {
         object[4] = 0;
         Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
         unsigned char* const member = Field_ActiveMember;
-        auto* const tMember = reinterpret_cast<records::SpriteObject*>(member);
+        auto* const tMember = rv::As<records::SpriteObject>(member);
         tMember->script_position = tMember->script_position + 1u;
         AH_CALL(ScriptFlags_Clear40)();
         object = Sprite_Current;
@@ -405,15 +406,15 @@ extern "C" void __cdecl Area91_EffectRings(void) {
     if (Cond_ByteFE == 0) return;
     {
         unsigned char* const object = Sprite_Current;
-        auto* const tObject = reinterpret_cast<records::EffectObject*>(object);
-        Prim_VertexScratch[0] = static_cast<short>((tObject->x >> 9) - 0x4000);
-        Prim_VertexScratch[1] = static_cast<short>((tObject->z >> 9) - 0x4000);
-        Prim_VertexScratch[2] = 0x80;
+        auto* const tObject = rv::As<records::EffectObject>(object);
+        Prim_VertexScratch[0].x = static_cast<short>((tObject->x >> 9) - 0x4000);
+        Prim_VertexScratch[0].y = static_cast<short>((tObject->z >> 9) - 0x4000);
+        Prim_VertexScratch[0].z = 0x80;
     }
     long depth = 0;
-    AH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
+    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
-    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 2, 0xC);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(rv::Current<records::EffectObject>()->x), static_cast<U>(rv::Current<records::EffectObject>()->z), 2, 0xC);
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] + 4);
     std::int32_t ring = 0, inner = 0, fade = 0, colour = 0;
     do {
@@ -442,7 +443,7 @@ extern "C" void __cdecl Area91_EffectRings(void) {
             StoreFloat(prim + 0x14, AddFloat(x1, MapView_ScreenXY[0]));
             const std::int32_t y1 = MulSar(AH_CALL(Math_Cos)(angle), static_cast<U>(radius), 15);
             StoreFloat(prim + 0x18, AddFloat(y1, MapView_ScreenXY[1]));
-            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 2, 0x20);
+            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(rv::Current<records::EffectObject>()->x), static_cast<U>(rv::Current<records::EffectObject>()->z), 2, 0x20);
         }
         const std::int32_t half_radius = radius / 2;
         const float lift = static_cast<float>(half_radius);
@@ -463,14 +464,14 @@ extern "C" void __cdecl Area91_EffectRings(void) {
             const std::int32_t y = MulSar(AH_CALL(Math_Cos)(t_y), static_cast<U>(radius), 14);
             const double raised = static_cast<double>(y) + static_cast<double>(MapView_ScreenXY[1]);
             StoreFloat(prim + 0xC, static_cast<float>(raised - static_cast<double>(lift)));
-            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 2, 0x14);
+            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(rv::Current<records::EffectObject>()->x), static_cast<U>(rv::Current<records::EffectObject>()->z), 2, 0x14);
         }
         inner += 0x20;
         ++ring;
         fade += 0x10;
     } while (inner < 0x60);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
-    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 2, 0xC);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(rv::Current<records::EffectObject>()->x), static_cast<U>(rv::Current<records::EffectObject>()->z), 2, 0xC);
     if (colour == 0) Cond_ByteFE = 0;
 }
 

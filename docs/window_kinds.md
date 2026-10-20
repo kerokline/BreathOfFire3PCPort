@@ -103,7 +103,7 @@ the stride's evidence in `symbols.toml`.
   that length and the state goes to 0.
 
 All three set the gauge to 1 when it is 0 and the HP is not. The old gauge
-length passes through `DamageScratch`'s first byte `0x903850` (the relocated
+length passes through `SharedScratch`'s first byte `0x903850` (the relocated
 PSX scratchpad) and is left there - ours writes it too; a control that keeps
 it in a register is refused.
 
@@ -172,7 +172,7 @@ inside the copies (`BattleWin_BannerRun` +0xF / +0x17 / +0x22,
 +0x1A / +0x22 / +0x2A / +0x32) - an unpatched copy would run the original
 states. Each round: random bytes over the 22 window records, the current
 record pointer, the ring and its indices, `0x939F60`, the banner pool, its
-pointer and mask, `Input_Pressed` and `DamageScratch`'s byte, and over the
+pointer and mask, `Input_Pressed` and `SharedScratch`'s byte, and over the
 gauge's two records (buffers of ours at the window's and the enemy's
 offsets); then the indices put back inside their tables, the pool pointer
 inside the pool; then each branch's boundaries seeded - y at 0x12, 0xFFEA and
@@ -187,7 +187,7 @@ answers as the real one does, `Window_FreeCurrent`'s clears the record's bytes
 0, +2 and +3, and between calls a `Disturb()` writes one of ten watched bytes
 or, once in 23, repoints `0x905B84` at another record.
 
-    shadow      window_kinds self-test: 24000 rounds over 12 functions (2000 each), 18833 calls to the stand-ins, 0 MISMATCHES; the 22 window records, the current record, the message ring and its indices, 0x939F60, the banner pool, its pointer and mask, Input_Pressed, DamageScratch's byte, the gauge's two records and the stand-ins' log compared
+    shadow      window_kinds self-test: 24000 rounds over 12 functions (2000 each), 18833 calls to the stand-ins, 0 MISMATCHES; the 22 window records, the current record, the message ring and its indices, 0x939F60, the banner pool, its pointer and mask, Input_Pressed, SharedScratch's byte, the gauge's two records and the stand-ins' log compared
     shadow      window_kinds coverage: gauge max changed 651, HP clamped 130, capped at 0x37 279; to drain 342, to fill 415, settled 1243, emptied 228; drain on 1437 done 563; fill on 1091 done 909; slid in 260, banner freed 148, colour with upper bits 671; message opened 448, advanced by a button 506, by the timer 151, closed 152
 
 ### Negative controls
@@ -201,7 +201,7 @@ or, once in 23, repoints `0x905B84` at another record.
 | Track: the recomputed gauge capped at 0x38, not 0x37 | 24 |
 | Track: the cap leaves the shown HP behind | 168 |
 | Track: the max not remembered | 651 |
-| Track: the old gauge kept in a register, DamageScratch not written | 380 |
+| Track: the old gauge kept in a register, SharedScratch not written | 380 |
 | Track: the drain step an eighth, not a sixteenth | 396 |
 | Track: the fill step shifted (floor), not divided (toward zero) | 11 |
 | Track: a fall starts the fill state | 510 |

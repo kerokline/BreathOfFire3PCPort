@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_4f.h"
 #include "game/rest_4f_callees.h"
@@ -51,11 +52,6 @@ __attribute__((naked)) void R4fCellTheirs() { asm("jmp *_g_r4f_cell_copy"); }
 namespace rest_4f {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
-[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -223,7 +219,7 @@ sh::Clone g_clones[] = {
 #undef R4F_CLONE
 
 enum : unsigned {
-    MoveScript_Var7_addr, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
+    kScreenRun, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
     kPanel, kOptions, kPad, kPadRow, kCell, kExits,
     k07Draw, k07Hold, k07Fade, k08Start, k08Trace, k08Two, k08Line,
     k09Start, k09Open1, k09Open2, k09Open3, k09Open4, k09Open5, k09Open6, k09Open7, k09Open8, k09Spin, k09Blades, k09Fan,
@@ -316,7 +312,7 @@ U FxRotTransPers(const U* a, U answer) {
 U FxSound(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 2 == 0) {
-        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, BattleDraw_Colour_addr, FieldS_Backdrop_addr, FieldE2_RunDefault_addr};
+        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, Config_WindowColour_addr, Config_Background_addr, FieldE2_RunDefault_addr};
         for (unsigned i = 0; i < 5; ++i) B(kCells[i]) = static_cast<unsigned char>((n >> (2 + 2 * i)) & 3);
     }
     return answer;
@@ -410,13 +406,13 @@ void SetFloat(unsigned char* p, float f) { std::memcpy(p, &f, 4); }
 void SeedTrace(unsigned char* e) {
     const unsigned idx = sh::Next() % at::kObjectCount;
     e[6] = static_cast<unsigned char>(idx);
-    unsigned char* const o = Sprite_Objects + idx * 0xA4u;
+    unsigned char* const o = rv::Bytes(Sprite_Objects) + idx * 0xA4u;
     const U target = sh::Often() ? 0x138000u - PickOf(0, 0x8000, 0x7FFF, 0x8001, 0x10000, sh::Next() % 0xA0000)
                                  : static_cast<U>(sh::Next() % 0x200000);
-    SpriteRec(o)->z = static_cast<std::int32_t>(target);
+    rv::As<records::SpriteObject>(o)->z = static_cast<std::int32_t>(target);
     const U z = sh::Often() ? target - PickOf(0, 0x8000, 0x7FFF, 0x8001, 1, sh::Next() % 0xA0000)
                             : target + PickOf(1, 0x8000, sh::Next() % 0x40000);
-    EffectRec(e)->z = static_cast<std::int32_t>(z);
+    rv::As<records::EffectObject>(e)->z = static_cast<std::int32_t>(z);
 }
 
 void Seed(unsigned k) {
@@ -441,7 +437,7 @@ void Seed(unsigned k) {
     if (sh::Half()) Field_ConfirmButtons = static_cast<unsigned short>(PickOf(0, 0x20, 0x60, 0xA000, sh::Next()));
     if (sh::Half()) Field_CancelButtons = static_cast<unsigned short>(PickOf(0, 0x40, 0x800, sh::Next()));
     if (sh::Half()) Game_Step = static_cast<unsigned short>(PickOf(4, 5, 4, 2));
-    if (sh::Half()) MoveScript_WaitWordDA = 0;
+    if (sh::Half()) Transition_Busy = 0;
     for (U cell = ModeFlow_ConfigBytes_addr; cell <= FieldE2_RunDefault_addr; ++cell)
         if (sh::Often()) B(cell) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x7F, 0x80, 0xFF));
     switch (k) {
@@ -451,15 +447,15 @@ void Seed(unsigned k) {
     case k08Line: break;
     case k08Trace:
     case k08Two: B(at::kChapterByte4A) = static_cast<unsigned char>(PickOf(0x32, 0x34, sh::Next())); break;
-    case k09Open1: SetLong(s + 0x18, static_cast<std::int32_t>(PickOf(0x58, 0x50, 0x60, sh::Next()))); break;
-    case k09Open2: SetLong(s + 0x1C, static_cast<std::int32_t>(PickOf(0x10, 0x90, 0x20, 0xA0, sh::Next()))); break;
+    case k09Open1: rv::As<records::EffectObject>(s)->work_18 = static_cast<std::int32_t>(PickOf(0x58, 0x50, 0x60, sh::Next())); break;
+    case k09Open2: rv::As<records::EffectObject>(s)->work_1c = static_cast<std::int32_t>(PickOf(0x10, 0x90, 0x20, 0xA0, sh::Next())); break;
     case k09Open3: s[0xB] = static_cast<unsigned char>(PickOf(0x50, 0x40, sh::Next())); break;
     case k09Open4: s[8] = static_cast<unsigned char>(PickOf(0x58, 0x50, sh::Next())); break;
     case k09Open5: s[0xA] = static_cast<unsigned char>(PickOf(0x8, 0x58, 0x10, sh::Next())); break;
     case k09Open6: s[6] = static_cast<unsigned char>(PickOf(0x8, 0x58, 0x10, sh::Next())); break;
     case k09Open7: s[7] = static_cast<unsigned char>(PickOf(0x58, 0x50, sh::Next())); break;
     case k09Open8:
-        SetLong(s + 0x20, static_cast<std::int32_t>(PickOf(0x8, 0x58, 0x10, sh::Next())));
+        rv::As<records::EffectObject>(s)->work_20 = static_cast<std::int32_t>(PickOf(0x8, 0x58, 0x10, sh::Next()));
         B(at::kChapterCount) = static_cast<unsigned char>(sh::Next());
         break;
     case k09Spin:
@@ -576,7 +572,7 @@ void Disturb(U h) {
         else B(MenuLists_Cursor_addr) = CursorFor(g_current, v >> 1);
         break;
     case 4: {
-        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, BattleDraw_Colour_addr, FieldS_Backdrop_addr, FieldE2_RunDefault_addr};
+        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, Config_WindowColour_addr, Config_Background_addr, FieldE2_RunDefault_addr};
         B(kCells[v % 5]) = static_cast<unsigned char>((v >> 3) & 3);
         break;
     }

@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-20, the day's answers at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-20, the day's answers and typed-data stage C's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,20 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-20, typed-data stage C
+
+`typed/c` (`main` 61023304 merged in;
+[`typed-data-stage-c.md`](typed-data-stage-c.md), the round doc's section 3).
+No behaviour change, the machine code identical to `main` (the smoke run
+passed 2026-10-20: the round doc's section 3). The C4 audit's two names, answered
+2026-10-20 (reports A and B in `C:\Users\kerok\c_typed\audit\c4\`):
+
+- **`rest_4a`'s `kEnemyHp`**: renamed `kEnemyIntel` ("go ahead with the
+  rename"), matching `records.h`'s `BattleEnemy::intel` at `+0xBA`; no
+  behaviour change. IDEAS I49 is the later check of what the test means.
+- **`Save_Directory`'s count**: 16 kept ("I agree on the 16 save slot
+  cap"); the overrun stays D322's, bounded by DIV-0146.
 
 ## 2026-10-20, answered at the machine
 

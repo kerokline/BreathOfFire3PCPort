@@ -106,7 +106,7 @@ read in place.
   is turned one eighth back (-1, & 7); while `PartyAction_TargetAhead`
   answers 0, two on (+2) and then back (-2). The slope one step ahead
   (`MapView_SlopeAt`, the direction byte pushed in `bl` over the caller's
-  `ebx`): steep (`DamageScratch`'s flag and the low word, s16, above 0x40) -
+  `ebx`): steep (`SharedScratch`'s flag and the low word, s16, above 0x40) -
   the pose + 0x46 and `+2` one on; else `+0x2B` = 1, the side probes in
   directions 3 and 5 (the rows at `0x6697C8` / `0x6697D8` read by address;
   steep and the ground above `+0x3E`: `+0x2B` = 0), the form's sound, the pose
@@ -244,7 +244,7 @@ standard rows; masks by what each callee reads):
 | `Sprite_ObjectAt` | whole | 0xFF half the time, else 0..0x21 (its 34 objects, the edges often) |
 | `AreaMap_ByteAt` | 16 bits each | 0xF0..0xF9, 0xEF, 0, 0xFF, 0x72, or any byte |
 | `Field_EffectAhead` | - | 0xFF half the time, else 0..19 |
-| `MapView_SlopeAt` | whole, whole, the direction's byte | `DamageScratch`'s flag 0 a third of the time; the low word about 0x40 and at the s16 limits |
+| `MapView_SlopeAt` | whole, whole, the direction's byte | `SharedScratch`'s flag 0 a third of the time; the low word about 0x40 and at the s16 limits |
 | `MapView_GroundAt` | whole | the low word at, about or far from `S+0x3E` |
 | `Effect_SpawnAtCell` | state byte, x and z words | garbage |
 | `Field_GiveZenny`, `Sprite_FlashClut` | whole | garbage |
