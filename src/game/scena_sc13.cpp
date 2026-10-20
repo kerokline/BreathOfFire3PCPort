@@ -2621,7 +2621,7 @@ static void Farewell(unsigned flag, unsigned member, std::uint32_t setup) {
 // the record Character_IndexById[party list byte] names.
 static void RestoreRecords() {
     for (unsigned r = 1; r < 8; ++r) {
-        const std::uint32_t p = at::kRecords + r * at::kRecordStride;
+        const std::uint32_t p = CharacterRecords_addr + r * at::kRecordStride;
         auto* const c = rv::As<records::CharRecord>(&B(p));   // CharacterRecords 0x903A70, stride 0xA4
         if ((c->flags & 1) == 0) continue;
         c->survive = c->stats.byte_0e;

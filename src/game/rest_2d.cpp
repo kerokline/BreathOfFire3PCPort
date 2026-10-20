@@ -91,7 +91,7 @@ unsigned short MasterMessage(unsigned k) {
 unsigned char MemberAt(unsigned slot) { return (rv::Bytes(ObjTrio) + 0x148)[slot * at::kObjStride]; }
 // The member under the cursor: a CharacterRecords index.
 unsigned char CursorMember() { return MemberAt(Rest2d_Cursor); }
-U RecordOf(unsigned member) { return at::kRecords + member * at::kRecordStride; }
+U RecordOf(unsigned member) { return CharacterRecords_addr + member * at::kRecordStride; }
 
 // The name (the record's first nine bytes) into Text_Records' first slot.
 void NameToText(U record) {
@@ -325,7 +325,7 @@ extern "C" void __cdecl MasterJoin_Step5Apply(void) {
         AreaW3f_AnswerMarkD1 = 0;
         return;
     }
-    const U record = RecordChecked(at::kRecords, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
+    const U record = RecordChecked(CharacterRecords_addr, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
                                    "MasterJoin_Step5Apply");
     unsigned char* const r = At(record);
     unsigned char* const text = At(bof3::addr::Text_Records);
@@ -391,7 +391,7 @@ extern "C" void __cdecl MasterQuit_Step5Apply(void) {
         AreaW0c_AnswerMark = 6;
         return;
     }
-    const U record = RecordChecked(at::kRecords, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
+    const U record = RecordChecked(CharacterRecords_addr, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
                                    "MasterQuit_Step5Apply");
     unsigned char* const r = At(record);
     unsigned char* const text = At(bof3::addr::Text_Records);
@@ -641,7 +641,7 @@ extern "C" unsigned char __cdecl FieldAbility_Use(unsigned caster, unsigned targ
     if (answer == 1 || answer == 5) {
         const unsigned char again = SH_CALL(Skill_ApCost)(caster, ability, 0);
         const U checked = working ? RecordChecked(at::kWorking, at::kObjStride, 3, c, "the working records", "FieldAbility_Use")
-                                  : RecordChecked(at::kRecords, at::kRecordStride, 8, c, "CharacterRecords", "FieldAbility_Use");
+                                  : RecordChecked(CharacterRecords_addr, at::kRecordStride, 8, c, "CharacterRecords", "FieldAbility_Use");
         SetWord(At(checked + 0x1A), Word(At(checked + 0x1A)) - again);
     }
     return answer;

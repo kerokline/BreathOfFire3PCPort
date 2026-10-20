@@ -257,7 +257,7 @@ enum : unsigned { kRegPackets = 3, kRegItems = 7, kRegNames = 8 };
 ah::Region g_regions152[] = {
     {AreaW0b_MapMode_addr, 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2},
     {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {0, 4 * kItemBytes}, {0, sizeof g_names},
-    {at::kAreaText, 4}, {at::kFlag3A79, 1},
+    {at::kAreaText, 4}, {CharacterRecords_addr + 0x9, 1},
     {Area152_PlateAnims_addr, kFzAnimsEnd - Area152_PlateAnims_addr},
     {Area152_Cells_addr, 4 * kFzCellRecords},
     {Area152_PlaceRows_addr, kFzRowsEnd - Area152_PlaceRows_addr},
@@ -414,7 +414,7 @@ void SeedWm(unsigned k) {
         if (ah::Often()) o[6] = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0xFF, 1));
         break;
     case kRecord4MarkCell:
-        Mem(at::kFlag3A79)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 9, 8, 0x89) : ah::Next());
+        Mem(CharacterRecords_addr + 0x9)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 9, 8, 0x89) : ah::Next());
         if (ah::Often()) Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & ~1u);
         // the map's width so that any cell record lands in the block
         AreaMap_Header[0] = static_cast<unsigned char>(ah::Next() % 0x18);

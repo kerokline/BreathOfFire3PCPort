@@ -80,8 +80,8 @@ int S8(U v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
 int S16(U v) { return static_cast<short>(static_cast<unsigned short>(v)); }
 
 // CharacterRecords' record n (stride 0xA4), unchecked.
-unsigned char* Rec(U n) { return At(at::kRecords + n * at::kRecordStride); }
-U RecAddr(U n) { return at::kRecords + n * at::kRecordStride; }
+unsigned char* Rec(U n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
+U RecAddr(U n) { return CharacterRecords_addr + n * at::kRecordStride; }
 
 // A member id's record index: Character_IndexById[id], unchecked.
 U RecordOf(U id) { return Character_IndexById[id & 0xFF]; }
@@ -549,8 +549,8 @@ extern "C" void __cdecl PartyForm_Reload(void) {
         if (((flag & 0xFF) == 0 || area == 0xBB) && area != 0x85) lone = true;
     }
     if (lone) {
-        const unsigned char member = rv::As<records::CharRecord>(At(CharacterRecords_addr))->char_id;
-        std::memcpy(At(at::kLeaderName), At(at::kRecords), 0xA4);
+        const unsigned char member = CharacterRecords[0].char_id;
+        std::memcpy(At(at::kLeaderName), At(CharacterRecords_addr), 0xA4);
         ObjTrio[0].actor = 0;
         Sprite_Current = rv::Bytes(ObjTrio);
         Field_MemberCount = 1;

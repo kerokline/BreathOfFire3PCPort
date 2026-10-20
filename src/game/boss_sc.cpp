@@ -140,7 +140,7 @@ void NameBanner() {
     BH_CALL(Battle_OpenMsgWindow)();
     const unsigned n = Character_IndexById[1];
     BH_CALL(Str_CopyN)(reinterpret_cast<char*>(At(bof3::addr::Text_Records)),
-                       reinterpret_cast<const char*>(At(at::kCharRecords + n * at::kCharStride)), 8);
+                       reinterpret_cast<const char*>(At(CharacterRecords_addr + n * at::kCharStride)), 8);
     const unsigned char* const text = BH_CALL(Msg_SystemPtr)(0x25);
     BH_CALL(BattleBanner_Add)(2, 0, 0, 0x2D, reinterpret_cast<const char*>(text));
 }

@@ -199,8 +199,8 @@ const sh::DataTable kTables[] = {
 void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     switch (h % 18) {
-    case 16: B(at::kRecords + ((h >> 16) % 8) * at::kRecordStride + 0xA) = static_cast<unsigned char>(v); break;
-    case 17: SetL(at::kRecords + ((h >> 16) % 8) * at::kRecordStride + 0xC, h * 0x9E3779B1u); break;
+    case 16: B(CharacterRecords_addr + ((h >> 16) % 8) * at::kRecordStride + 0xA) = static_cast<unsigned char>(v); break;
+    case 17: SetL(CharacterRecords_addr + ((h >> 16) % 8) * at::kRecordStride + 0xC, h * 0x9E3779B1u); break;
     case 0: B(FieldS_State_addr) = static_cast<unsigned char>(v); break;
     case 1: B(FieldS_Step_addr) = static_cast<unsigned char>(v); break;
     case 2: B(at::kTimer) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) % 3); break;
@@ -382,7 +382,7 @@ void SeedMaster() {
     for (unsigned i = 0; i < 3; ++i) {
         const auto record = static_cast<unsigned char>(sh::Next() % 8);
         B(ObjTrio_addr + 0x148 + i * at::kObjStride) = record;
-        B(at::kRecords + 0x1F + record * at::kRecordStride) =
+        B(CharacterRecords_addr + 0x1F + record * at::kRecordStride) =
             static_cast<unsigned char>(all || sh::Half() ? master : PickOf(0xFF, master + 1u, sh::Next()));
     }
     // the introduction flag of the master (Flags_Test is a recorder: its row only logged)
@@ -413,7 +413,7 @@ void SeedFigure() {
 // past a quarter of its maximum; the status word's bits 7, 5 and 0x2000.
 void SeedRecords() {
     for (unsigned r = 0; r < 8; ++r) {
-        const U rec = at::kRecords + r * at::kRecordStride;
+        const U rec = CharacterRecords_addr + r * at::kRecordStride;
         SetW(rec + 0x18, PickOf(0, 1, 2, sh::Next() % 1000));
         const U max_ap = PickOf(0, 4, 100, 103, sh::Next() % 1000);
         SetW(rec + 0x22, max_ap);

@@ -760,7 +760,7 @@ extern "C" void __cdecl ShopTrade_BuySlot(void) {
         const U item = ShopStates2_Item;
         const U to = (static_cast<std::uint32_t>(ShopStates2_SlotCursor) + kind - 1) & 0xFF;
         g.equip(RecordOf(BattleActorCopies_ItemActor), to, item);
-        g.recalc(At(at::kCharRecords + RecordOf(BattleActorCopies_ItemActor) * at::kCharStride));
+        g.recalc(At(CharacterRecords_addr + RecordOf(BattleActorCopies_ItemActor) * at::kCharStride));
         StepBy(1);
         return;
     }

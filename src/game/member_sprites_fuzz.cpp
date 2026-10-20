@@ -149,7 +149,7 @@ void Disturb(std::uint32_t salt) {
     case 5: Field_ScriptFlags2 = static_cast<unsigned short>(h >> 12); break;
     case 6: Field_InputFlags = static_cast<unsigned char>(h >> 8); break;
     case 7: Field_Request = static_cast<unsigned char>((h >> 8) % 3 == 0 ? 0 : h >> 16); break;
-    case 8: At(at::kActorRecords)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
+    case 8: At(CharacterRecords_addr)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
     case 9: g_scratch[(h >> 8) % sizeof g_scratch] = static_cast<unsigned char>(h >> 24); break;
     case 10: At(FieldEvent_Object905DA0_addr)[(h >> 8) % 0xC8] = static_cast<unsigned char>(h >> 24); break;
     case 11: Cells()[(h >> 8) % 0x100] = static_cast<unsigned char>(h >> 24); break;
@@ -526,7 +526,7 @@ const Region kRegions[] = {
     {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
     {at::kCells, 0x100},
     {Address(&Field_ScriptFlags), 2},
-    {at::kActorRecords, kActors * kActorBytes},
+    {CharacterRecords_addr, kActors * kActorBytes},
     {Address(&Field_InputFlags), 6},   // Field_InputFlags, a byte, Field_ScriptFlags2, Field_InputHeld
     {Address(&Field_State), 0xD0},     // Field_State, the object at 0x905DA0
     {Address(&Field_Request), 1},

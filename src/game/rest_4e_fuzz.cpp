@@ -344,7 +344,7 @@ void Seed(unsigned k) {
     // the members: present or not (bit 0 of +0xB) - all, none, or random
     const U presence = PickOf(0, 0x7F, sh::Next(), sh::Next(), sh::Next());
     for (unsigned i = 0; i < 7; ++i) {
-        unsigned char& flags = B(kMembers + 0xA4 * i + 0xB);
+        unsigned char& flags = B(CharacterRecords_addr + 0xA4 * i + 0xB);
         flags = static_cast<unsigned char>((flags & 0xFE) | (presence >> i & 1));
     }
     // the entry (below the 60: two functions write through it), its kind and

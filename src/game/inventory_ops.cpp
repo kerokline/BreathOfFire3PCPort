@@ -653,7 +653,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             continue;
         }
         const u32 record = Character_IndexById[Cond_Flags[0xd2 + i]];
-        if (At(at::kRecords + record * at::kRecordSize)[0x38] < r) continue;
+        if (At(CharacterRecords_addr + record * at::kRecordSize)[0x38] < r) continue;
         const unsigned char e = g.effect_free();
         if (e != 0xFF) {
             unsigned char* const fx = rv::Bytes(Effect_Objects) + (static_cast<u32>(e) << 7);
@@ -704,7 +704,7 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
             Field_State = obj;
             Sprite_Current = obj;
             const u32 record = obj[0x148];
-            if (Word(At(at::kRecords + record * at::kRecordSize + 0x10)) & 0x4000) {
+            if (Word(At(CharacterRecords_addr + record * at::kRecordSize + 0x10)) & 0x4000) {
                 g.set_anim_from(obj[0x4B], 0, At(at::kAnimBuffer), 0xA00);
                 Sprite_Current[0xB] = 0;
                 continue;
@@ -827,7 +827,7 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
         rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
         Sprite_Current[0xB] = 0;
         const u32 record = Field_State[0x148];
-        if (At(at::kRecords + record * at::kRecordSize + 0x11)[0] & 0x40)
+        if (At(CharacterRecords_addr + record * at::kRecordSize + 0x11)[0] & 0x40)
             g.set_animation(static_cast<unsigned char>(Byte(at::kBattleFacing) + 0x1C));
         else
             g.set_animation(Byte(at::kBattleFacing));

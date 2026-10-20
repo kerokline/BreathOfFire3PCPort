@@ -63,7 +63,7 @@ unsigned char* Result() { return Ptr(at::kResult); }
 // (a read), the enemy's index the byte less 3 in 32 bits.
 unsigned char* Party(U member) { return At(ObjTrio_addr + member * at::kPartyStride); }
 unsigned char* Enemy(U index) { return At(Battle_Enemies_addr + index * at::kEnemyStride); }
-unsigned char* CharRecord(U character) { return At(at::kCharRecords + character * at::kCharStride); }
+unsigned char* CharRecord(U character) { return At(CharacterRecords_addr + character * at::kCharStride); }
 // ... and for a write: a Fatal past the three members or the eight enemies,
 // where the original writes on into what follows them.
 unsigned char* PartyWrite(U member, const char* who) {

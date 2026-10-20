@@ -272,7 +272,7 @@ U TaskMoving(const U* a, U answer) {
 // caller reads both after the call).
 U RosterMoving(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const rec = Mem(at::kCharRecords + at::kCharStride * (answer & 7));
+    unsigned char* const rec = Mem(CharacterRecords_addr + at::kCharStride * (answer & 7));
     if (n & 1) rec[0xA] = static_cast<unsigned char>(n >> 8);
     if (n & 2) rv::As<records::CharRecord>(rec)->exp = static_cast<std::int32_t>(n >> 4) & 0xFFFFF;
     return answer;
@@ -377,7 +377,7 @@ void Seed(unsigned k) {
         Mem(ObjTrio_addr + 0x89 + at::kObjStride * i)[0] = static_cast<unsigned char>(sh::Next() % 4 ? sh::Next() % 9 : sh::Next());
     // the levels and the EXP the next level is compared with
     for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const c = Mem(at::kCharRecords + at::kCharStride * i);
+        unsigned char* const c = Mem(CharacterRecords_addr + at::kCharStride * i);
         c[0xA] = static_cast<unsigned char>(PickOf({1, 10, 50, 98, 99, 0, 0xFF, sh::Next() % 99}));
         rv::As<records::CharRecord>(c)->exp = static_cast<std::int32_t>(PickOf({0, 1, 100, sh::Next() % 1000000, sh::Next()}));
     }

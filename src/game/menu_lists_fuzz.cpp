@@ -124,7 +124,7 @@ void Disturb() {
     case 19: B(Config_Background_addr) = static_cast<unsigned char>(v); break;
     case 20: Gfx_PacketNext = g_prim + v; break;
     case 21: B(Window9_addr + 0xC) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 22: At(at::kCharRecords + 0x10 + (w % 8) * at::kCharRecordSize)[v % 0x20] = static_cast<unsigned char>(h); break;
+    case 22: At(CharacterRecords_addr + 0x10 + (w % 8) * at::kCharRecordSize)[v % 0x20] = static_cast<unsigned char>(h); break;
     default: SetLong(At(Party_Zenny_addr), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     }
 }
@@ -478,7 +478,7 @@ Args Seed(unsigned k) {
         B(Field_MemberCount_addr) = static_cast<unsigned char>(Next() % 5);
         B(ScenaSc6_Load10_addr) = static_cast<unsigned char>(Half() ? 1 : Half() ? 0 : Next());
         for (unsigned i = 0; i < 8; ++i) {
-            unsigned char* const r = At(at::kCharRecords + 0x10 + i * at::kCharRecordSize);
+            unsigned char* const r = At(CharacterRecords_addr + 0x10 + i * at::kCharRecordSize);
             if (Often()) SetWord(r + 8, (Word(r + 0x10) >> 2) + Next() % 3 - 1);
         }
         break;

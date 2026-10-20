@@ -235,7 +235,7 @@ ah::Region g_regions16[] = {
     {0, sizeof g_names},          // g_names
     {at::kTextRecords, 0x80},     // Text_Records' first four rows
     {at::kAreaTextOffset, 4},
-    {at::kFlag3A79, 1},
+    {CharacterRecords_addr + 0x9, 1},
     {Area16_PlateAnims_addr, 0x37C}, // area 16's plate, cell, message and name tables
     {Area16_Directions_addr, 0x18}, // Area16_Directions, Area16_Record8Anims
     {Area16_DriftUV_addr, 0xC},   // Area16_DriftUV
@@ -395,7 +395,7 @@ void Seed16(unsigned k) {
         if (ah::Often()) o[6] = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0xFF, 1));
         break;
     case kRecord4MarkCell:
-        Mem(at::kFlag3A79)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 9, 8, 0x89) : ah::Next());
+        Mem(CharacterRecords_addr + 0x9)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 9, 8, 0x89) : ah::Next());
         if (ah::Often()) Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & ~1u);
         // the map's width so that any cell record lands in the block
         AreaMap_Header[0] = static_cast<unsigned char>(ah::Next() % 0x18);

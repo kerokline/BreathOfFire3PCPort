@@ -252,7 +252,7 @@ void Move(std::uint32_t h) {
     case 19: SetL(Party_Zenny_addr, L(Party_Zenny_addr) ^ (1u << (v & 15))); break;
     case 20: {
         static const unsigned char kOffsets[] = {0xA, 0xB, 0x1D};
-        B(at::kRecords + (v % 8) * at::kRecordStride + kOffsets[w % 3]) = static_cast<unsigned char>(h >> 24);
+        B(CharacterRecords_addr + (v % 8) * at::kRecordStride + kOffsets[w % 3]) = static_cast<unsigned char>(h >> 24);
         break;
     }
     case 21: B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(v & 1); break;
@@ -444,7 +444,7 @@ void SeedParty() {
     }
     Field_MemberCount = static_cast<unsigned char>(sh::Next() % 4);
     for (unsigned r = 0; r < 8; ++r) {
-        unsigned char* const rec = Mem(at::kRecords + r * at::kRecordStride);
+        unsigned char* const rec = Mem(CharacterRecords_addr + r * at::kRecordStride);
         rec[0xB] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
         rec[0x1D] = static_cast<unsigned char>(PickOf(0, 0, 1u << (sh::Next() % 8), sh::Next()));
         rec[0xA] = static_cast<unsigned char>(PickOf(1, 10, 50, 99, sh::Next()));
@@ -518,7 +518,7 @@ void Seed(unsigned k) {
         sh::SetPointer(Chapter_FlagRow_addr, Mem(Cond_Flags_addr + 8 * 0xE));
     }
     // the zenny at ten times a member's level (ShopResist)
-    const U level = Mem(at::kRecords + ObjTrio[B(BattleActorCopies_ItemActor_addr) % 3].char_index * at::kRecordStride)[0xA];
+    const U level = Mem(CharacterRecords_addr + ObjTrio[B(BattleActorCopies_ItemActor_addr) % 3].char_index * at::kRecordStride)[0xA];
     SetL(Party_Zenny_addr, PickOf(10 * level, 10 * level - 1, 10 * level + 1, 0, sh::Next() % 100000));
     // the dispatchers' steps inside their tables
     if (Is(k, "PartyForm_OpenStep") || Is(k, "SharedList_SortStep")) B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % 3);

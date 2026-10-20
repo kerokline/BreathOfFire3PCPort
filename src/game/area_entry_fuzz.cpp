@@ -195,7 +195,7 @@ const Region kRegions[] = {
     {Address(rv::Bytes(ObjTrio)), kObjBytes},
     {0x903840, 0x40},                           // Camera_Distance.. the pending x / z, the scratch lists
     {0x904060, 0x20},                           // the party list and what follows
-    {kCharacterRecords, 8 * kCharacterBytes},
+    {CharacterRecords_addr, 8 * kCharacterBytes},
     {AreaW0b_Place_addr, 2},
     {AreaEntry_PendingFlags_addr, 1},
     {Address(&Field_ScriptFlags), 2},

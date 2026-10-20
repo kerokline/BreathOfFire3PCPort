@@ -119,7 +119,7 @@ void Disturb() {
         break;
     }
     case 4: {
-        unsigned char* const r = At(at::kCharRecords + ((h >> 20) % 10) * at::kCharStride);
+        unsigned char* const r = At(CharacterRecords_addr + ((h >> 20) % 10) * at::kCharStride);
         static const unsigned kFields[] = {0x1A, 0x1B, 0x16, 0x17};
         r[kFields[(h >> 24) % 4]] = static_cast<unsigned char>(v % 3 == 0 ? v : v % 8);
         break;
@@ -274,7 +274,7 @@ unsigned char __cdecl StubApCost(unsigned member, unsigned id, unsigned battle) 
     // (only inside the regions the rounds put back: 10 records, 4 working)
     if (Hash() % 3 == 0 && (member & 0xFF) < ((battle & 0xFF) == 0 ? 10u : 4u)) {
         const unsigned m = member & 0xFF;
-        unsigned char* const r = (battle & 0xFF) == 0 ? At(at::kCharRecords + m * at::kCharStride)
+        unsigned char* const r = (battle & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride)
                                                       : At(at::kWorking + m * at::kWorkingStride);
         SetWord(r + 0x1A, (Hash() >> 8) % 21);
         ++g_log_n;   // a different stream for the answer below
@@ -382,7 +382,7 @@ const Region kRegions[] = {
     {at::kWindows, 22 * at::kWindowStride},                 // WindowRecords
     {0x7E0670, 4},                                          // Gfx_PacketNext (into our pool)
     {at::kWorking, 4 * at::kWorkingStride},                 // the party's working records
-    {at::kCharRecords, 10 * at::kCharStride},               // CharacterRecords
+    {CharacterRecords_addr, 10 * at::kCharStride},          // CharacterRecords
     {0x903A50, 0x20},                                       // the window colour 0x903A5A
     {0x904040, 0x40},                                       // the party lists 0x904062
     {0x904650, 0x20},                                       // the flag words 0x90465C, 0x904660
@@ -456,7 +456,7 @@ void Fix() {
     }
     // AP and cost bytes near each other, the accessory bytes near 0x19 / 0x1A
     for (unsigned m = 0; m < 10; ++m) {
-        unsigned char* const r = At(at::kCharRecords + m * at::kCharStride);
+        unsigned char* const r = At(CharacterRecords_addr + m * at::kCharStride);
         if (Often()) SetWord(r + 0x1A, Next() % 21);
         for (unsigned s = 0x16; s <= 0x17; ++s)
             if (Often()) r[s] = static_cast<unsigned char>(0x18 + Next() % 4);
@@ -618,7 +618,7 @@ void Cover(unsigned k, const State& in, const State& out, std::uint32_t result, 
 // live input before the passes run.
 void CoverApCost(const Args& args) {
     const unsigned m = args.a[0] & 0xFF;
-    const unsigned char* const r = (args.a[2] & 0xFF) == 0 ? At(at::kCharRecords + m * at::kCharStride)
+    const unsigned char* const r = (args.a[2] & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride)
                                                            : At(at::kWorking + m * at::kWorkingStride);
     if (r[0x16] == 0x1A || r[0x17] == 0x1A) ++g_cover.cost_half;
     else if (r[0x16] == 0x19 || r[0x17] == 0x19) ++g_cover.cost_quarter;

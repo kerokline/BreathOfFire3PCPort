@@ -79,7 +79,7 @@ unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 // The record views (game/record_views.h). The leader's states and the party's
 // set-up run on an ObjTrio record (Member above, Field_State always); the
 // Sprite_* helpers on any object, whose first 0x80 bytes are a sprite's.
-unsigned char* Actor(unsigned a) { return At(at::kActorRecords) + a * kActorBytes; }
+unsigned char* Actor(unsigned a) { return At(CharacterRecords_addr) + a * kActorBytes; }
 void Dispatch(const std::uint32_t* table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }

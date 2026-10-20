@@ -1325,7 +1325,7 @@ void Record8Place(const WorldMapTables& t) {
 // record +0xB (x, z; unchecked) set to 0xA0 - AreaMap_Bytes +
 // AreaMap_Header[0] * z + x; Sprite_SetAnimation(0) and +1 = 1.
 void Record4MarkCell(const WorldMapTables& t) {
-    if (At(at::kFlag3A79)[0] == 9 || (Field_StatusBits & 1) != 0) {
+    if (CharacterRecords[0].char_id == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }

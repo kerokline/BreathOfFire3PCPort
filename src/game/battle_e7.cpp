@@ -800,7 +800,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
     const int label_y = g_equip_labels_row ? 0x1A : 0x27;
     BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, static_cast<unsigned char>(Config_WindowColour));
-    unsigned char* const ch = At(at::kCharRecords + (member & 0xFF) * at::kCharStride);
+    unsigned char* const ch = At(CharacterRecords_addr + (member & 0xFF) * at::kCharStride);
     unsigned n = BH_CALL(Text_CharCount)(ch) & 0xFF;
     if (n > 5) n = 5;
     BH_CALL(Text_DrawAt)(xi - 6 * static_cast<int>(n) + 0x3E, yi + 7, 0, 5, ch);

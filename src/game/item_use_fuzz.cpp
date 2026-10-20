@@ -65,7 +65,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 
 unsigned char* RecordOf(unsigned id, unsigned battle) {
     const unsigned i = id & 0xFF;
-    return (battle & 0xFF) == 0 ? At(at::kCharRecords + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
+    return (battle & 0xFF) == 0 ? At(CharacterRecords_addr + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
 }
 
 // Every cell below is one some function reads again, or stores, after a call.
@@ -336,7 +336,7 @@ enum : unsigned {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kCharRecords, 8 * at::kCharStride},   // the eight persistent records
+    {CharacterRecords_addr, 8 * at::kCharStride}, // the eight persistent records
     {0x802D70, 0xAB0},                          // the leader's x / z, the working copies, the window records
     {0x7DEE40, 0x30},                           // MsgBoxState
     {0x929F00, 0x10},                           // 0x929F01, 0x929F0B

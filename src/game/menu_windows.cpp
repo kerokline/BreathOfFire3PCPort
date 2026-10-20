@@ -1135,7 +1135,7 @@ extern "C" unsigned char __cdecl Menu_ListScroll(unsigned char* top, unsigned ch
 // six names are looked up once, after the stat icon.
 extern "C" void __cdecl Menu_DrawEquipPanel(int x, int y, unsigned member) {
     g.panel(x, y, 9, 0xA);
-    const unsigned char* const record = At(at::kCharRecords + (member & 0xFF) * at::kCharStride);
+    const unsigned char* const record = At(CharacterRecords_addr + (member & 0xFF) * at::kCharStride);
     g.text_draw_at(x + 0x26, y + 7, 0, 0xFF, At(at::kEquipLabel));
     g.stat_icon(0, x + 7, y + 5, 0x10, 0x10, 0x80);
     const unsigned char* const names[6] = {
@@ -1225,7 +1225,7 @@ extern "C" void __cdecl Menu_DrawMoneyBox(int x, int y, int, unsigned value) {
 extern "C" void __cdecl Shop_DrawMemberStats(int x, int y, unsigned member, unsigned slot, unsigned item) {
     static const unsigned char kCategory[11] = {1, 2, 2, 2, 3, 0, 0, 0, 0, 3, 3};   // 0x575684 by way of 0x575674
     const unsigned m = member & 0xFF;
-    const unsigned char* const record = At(at::kCharRecords + m * at::kCharStride);
+    const unsigned char* const record = At(CharacterRecords_addr + m * at::kCharStride);
     unsigned char colour = 0;
     const unsigned s1 = (slot & 0xFF) - 1;
     const unsigned char category = s1 > 10 ? 0 : kCategory[s1];

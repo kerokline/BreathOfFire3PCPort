@@ -442,7 +442,7 @@ void Seed(unsigned k) {
     // the party and the characters: ids 0..7, the flags +0xB at bits 0 and 1
     for (unsigned i = 0; i < 6; ++i) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, sh::Next() % 8));
     for (unsigned m = 0; m < 8; ++m) {
-        unsigned char* const c = Mem(kCharacters + 0xA4 * m);
+        unsigned char* const c = Mem(CharacterRecords_addr + 0xA4 * m);
         c[9] = static_cast<unsigned char>(PickOf(m, m, m, sh::Next() % 8));
         c[0xB] = static_cast<unsigned char>(PickOf(0, 1, 1, 3, 2, sh::Next()));
     }

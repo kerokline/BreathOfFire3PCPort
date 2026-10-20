@@ -453,7 +453,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
         if (Field_State[0x138] & 1) Sprite_Current[0x29] = 4;
         {
             unsigned char* const fs = Field_State;
-            std::memcpy(fs + 0x80, At(at::kActorRecords + Character_IndexById[fs[0x89]] * at::kActorStride), at::kActorStride);
+            std::memcpy(fs + 0x80, At(CharacterRecords_addr + Character_IndexById[fs[0x89]] * at::kActorStride), at::kActorStride);
         }
         {
             unsigned char* const fs = Field_State;

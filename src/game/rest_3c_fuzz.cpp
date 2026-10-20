@@ -174,7 +174,7 @@ static_assert(sizeof kAll61 / sizeof kAll61[0] == 61, "61 functions");
 // The callees the standard set lacks or records too coarsely, the regions
 // ===========================================================================
 
-bool InCharRecords(U p) { return p >= at::kCharRecords && p + at::kCharStride <= at::kCharRecords + 10 * at::kCharStride; }
+bool InCharRecords(U p) { return p >= CharacterRecords_addr && p + at::kCharStride <= CharacterRecords_addr + 10 * at::kCharStride; }
 
 // Char_RecalcStats rewrites the record the party loop then copies from (its
 // +0x12..+0x17 and +0x20..+0x3F): the stand-in notes what the caller left
@@ -258,7 +258,7 @@ const bh::Callee kCallees[] = {
 // The cells beyond the engine frame the group reads or writes.
 const bh::Region kRegions[] = {
     {0x904654, 0x10},                                                             // 0x904660 (slot 62's store)
-    {0x903B24, at::kCharRecords + 10 * at::kCharStride - 0x903B24},              // CharacterRecords past the engine region, to ten
+    {0x903B24, CharacterRecords_addr + 10 * at::kCharStride - 0x903B24},         // CharacterRecords past the engine region, to ten
 };
 
 // ===========================================================================
@@ -270,7 +270,7 @@ U g_base = 0;                       // the clone the round runs
 
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
 unsigned char* EnemyObj(unsigned n) { return Mem(Battle_Enemies_addr + (n % 8) * at::kEnemyStride); }
-unsigned char* CharRecord(unsigned c) { return Mem(at::kCharRecords + c * at::kCharStride); }
+unsigned char* CharRecord(unsigned c) { return Mem(CharacterRecords_addr + c * at::kCharStride); }
 std::uint16_t Word16(std::initializer_list<U> often) {
     if (!bh::Often()) return static_cast<std::uint16_t>(bh::Next());
     const U* v = often.begin();

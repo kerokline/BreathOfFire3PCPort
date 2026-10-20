@@ -812,7 +812,7 @@ extern "C" void __cdecl Area189_RaiseByte1E(void) {
         unsigned char& b = B(Field_ActorStates_addr + 0xe + r * at::kCharStride);
         if (b >= 9) continue;
         b = static_cast<unsigned char>(b + 1);
-        AH_CALL(Char_RecalcStats)(Mem(at::kCharRecords + r * at::kCharStride));
+        AH_CALL(Char_RecalcStats)(Mem(CharacterRecords_addr + r * at::kCharStride));
     }
 }
 

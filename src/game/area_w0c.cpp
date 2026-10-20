@@ -492,7 +492,7 @@ extern "C" void __cdecl Area33_Record04Run(void) {
 // WorldMap33_Record04Cells[+0xB] (x, z) set to 0xA0 (AreaMap_Bytes + z *
 // the header's width byte + x, unchecked); Sprite_SetAnimation(0); state 1.
 extern "C" void __cdecl Area33_Record04Start(void) {
-    if (B(at::kRecord0Byte9) == 9 || (Field_StatusBits & 1) != 0) {
+    if (B(CharacterRecords_addr + 0x9) == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }

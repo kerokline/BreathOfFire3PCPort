@@ -295,7 +295,7 @@ std::uint32_t Move(const std::uint32_t*, std::uint32_t answer) {
 
 // 0x590C90's effect: the eight member records noted.
 std::uint32_t NoteMembers(const std::uint32_t*, std::uint32_t answer) {
-    sh::Note(sh::HashBytes(sh::Mem(at::kMemberRecords), 8 * at::kMemberStride));
+    sh::Note(sh::HashBytes(sh::Mem(CharacterRecords_addr), 8 * at::kMemberStride));
     return answer;
 }
 
@@ -384,7 +384,7 @@ const sh::Region kRegions[] = {
     {at::kChoiceBits, 4},                 // the message box's choice bits
     {AreaW1f_MusicCurrent_addr, 1},       // 0x904CD0
     {AreaW2c_LastArea_addr, 2},           // the word just past Sprite_ObjectsExtra (area 0x10)
-    {at::kMemberRecords, 8 * at::kMemberStride},   // the eight member records (Scena02_StripMember)
+    {CharacterRecords_addr, 8 * at::kMemberStride}, // the eight member records (Scena02_StripMember)
 };
 
 // --- the seed ------------------------------------------------------------------

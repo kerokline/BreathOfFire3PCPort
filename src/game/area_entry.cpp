@@ -237,7 +237,7 @@ extern "C" void __cdecl Party_SwapMembers(unsigned a, unsigned b, unsigned keep)
         g.member_sprite(record[kRecMember], slot);
         unsigned char* state = Field_State;
         const unsigned char character = Character_IndexById[state[kRecMember]];
-        const unsigned char* const from = At(kCharacterRecords + character * kCharacterBytes);
+        const unsigned char* const from = At(CharacterRecords_addr + character * kCharacterBytes);
         for (unsigned k = 0; k < kCharacterBytes; k += 4) SetLong(state + kRecCharacter + k, Long(from + k));
         state = Field_State;
         state[kRecCharacterIndex] = Character_IndexById[state[kRecMember]];

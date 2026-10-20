@@ -67,7 +67,7 @@ unsigned char* Ptr(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 // byte alone, the product wrapping as 32-bit arithmetic does.
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + (member & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
-unsigned char* CharRecord(unsigned index) { return At(at::kCharRecords + (index & 0xFF) * at::kCharStride); }
+unsigned char* CharRecord(unsigned index) { return At(CharacterRecords_addr + (index & 0xFF) * at::kCharStride); }
 unsigned char* MenuActor() { return Ptr(at::kMenuActor); }
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).

@@ -457,7 +457,7 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
         const unsigned character = At(Cond_Flags_addr + 0xd2 + (member & 0xFF))[0];
         const unsigned record = At(Character_IndexById_addr + character)[0];
         const unsigned cost = g.ap_cost((member & 0xFFFFFF00u) | record, id, 0) & 0xFF;
-        if (Word(At(at::kCharRecords + record * at::kCharStride + 0x1A)) < cost) return 0;
+        if (Word(At(CharacterRecords_addr + record * at::kCharStride + 0x1A)) < cost) return 0;
         return (rec[0x10] & 1) ? 1 : 0;
     }
     if (m != 2) return 1;
@@ -525,7 +525,7 @@ extern "C" unsigned char __cdecl Skill_FlagIndex(unsigned id) {
 extern "C" unsigned char __cdecl Skill_ApCost(unsigned member, unsigned id, unsigned battle) {
     const unsigned m = member & 0xFF;
     const unsigned char* const r =
-        (battle & 0xFF) == 0 ? At(at::kCharRecords + m * at::kCharStride) : At(at::kWorking + m * at::kWorkingStride);
+        (battle & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride) : At(at::kWorking + m * at::kWorkingStride);
     const unsigned cost = At(at::kAbilities + (id & 0xFF) * at::kAbilityStride + 0x12)[0];
     const unsigned char a = r[0x16];
     if (a == 0x1A) return static_cast<unsigned char>((cost + 1) >> 1);
@@ -547,7 +547,7 @@ extern "C" unsigned char* __cdecl Char_AbilityList(unsigned member, unsigned typ
     unsigned char* r;
     if ((battle & 0xFF) == 0) {
         const unsigned character = At(Cond_Flags_addr + 0xd2 + (member & 0xFF))[0];
-        r = At(at::kCharRecords + At(Character_IndexById_addr + character)[0] * at::kCharStride);
+        r = At(CharacterRecords_addr + At(Character_IndexById_addr + character)[0] * at::kCharStride);
     } else {
         r = At(at::kWorking + (member & 0xFF) * at::kWorkingStride);
     }

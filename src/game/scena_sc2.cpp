@@ -2462,7 +2462,7 @@ extern "C" void __cdecl Scena02_Object1A(unsigned char*, unsigned char*) {
 // 0x590C90(byte, 0, 1, 0) and then cleared. Called by Scena02_EnterArea with
 // 3 and 4; n is unchecked (section 6).
 extern "C" void __cdecl Scena02_StripMember(unsigned char member) {
-    unsigned char* p = At(at::kMemberRecords + at::kMemberStride * member + at::kMemberItems);
+    unsigned char* p = At(CharacterRecords_addr + at::kMemberStride * member + at::kMemberItems);
     for (unsigned i = 0; i < 10; ++i, ++p) {
         const unsigned char item = p[0];
         if (item == 0) continue;

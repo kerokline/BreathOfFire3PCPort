@@ -790,12 +790,12 @@ int SomeCoordinate() { return static_cast<int>(OneIn(4) ? Next() : Next() % 0x20
 void TestMemberStatus(Tally& t, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(int, int, unsigned, unsigned);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {{kCharRecords, kMembersBytes}, {kPrintBuf, 0x20}, {Config_WindowColour_addr, 1}, {at::FrameCounterAt(), 4}};
+    const Region r[] = {{CharacterRecords_addr, kMembersBytes}, {kPrintBuf, 0x20}, {Config_WindowColour_addr, 1}, {at::FrameCounterAt(), 4}};
     const int n = sizeof r / sizeof r[0];
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
         const U member = (OneIn(4) ? Next() & 0xFFFFFF00u : 0) | (OneIn(6) ? 8 + Next() % 8 : Next() % 8);
-        unsigned char* const rec = At(kCharRecords + (member & 0xFF) * kCharStride);
+        unsigned char* const rec = At(CharacterRecords_addr + (member & 0xFF) * kCharStride);
         // HP and AP on the quarter tests' edges.
         const U max_hp = Pick({0, 1, 3, 4, 5, 8, 9, 100, 999, 0xFFFF, Next() & 0xFFFF});
         const U hp = Pick({0, 1, 2, max_hp / 4, max_hp / 4 - 1, max_hp / 4 + 1, max_hp, Next() & 0xFFFF});
@@ -951,7 +951,7 @@ void SelfTest() {
     const Region all[] = {
         kScratch, kVertices, kScreen, kPacketNext, kOtSlot, kUprights, kHeaderRegion,
         {at::OriginAt(), 4}, {at::RowAt(), 2}, {at::ColumnAt(), 2}, {0x937FA0, 56 * 28 * 4},
-        {at::FrameCounterAt(), 4}, {at::CondByteFFAt(), 1}, {kCharRecords, kMembersBytes}, {kPrintBuf, 0x20},
+        {at::FrameCounterAt(), 4}, {at::CondByteFFAt(), 1}, {CharacterRecords_addr, kMembersBytes}, {kPrintBuf, 0x20},
         {Config_WindowColour_addr, 1}, {kClockHours, 4}, {at::BytesAt(), 4}, {kObjectsFrom, kObjectsBytes},
         {Sprite_Current_addr, 4}, {Field_ActiveMember_addr, 4}, {at::StatusBitsAt(), 1}, {at::ScriptFlagsAt(), 2},
     };

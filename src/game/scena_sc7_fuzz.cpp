@@ -299,7 +299,7 @@ unsigned g_n_regions = 0;
 void ListRegions(int chapter) {
     const sh::Region common[] = {
         {0x903800, 8},                     // Camera_ShiftY and the sprite pointer 0x903804
-        {at::kCharRecords, 8 * at::kRecordStride},   // CharacterRecords 0..7
+        {CharacterRecords_addr, 8 * at::kRecordStride}, // CharacterRecords 0..7
         {at::kTextRecords, 0x30},          // Text_Records +0..+0x2F
         {AreaW1f_MusicCurrent_addr, 1},
         {ModeFlow_AreaTransition_addr, 1},

@@ -420,7 +420,7 @@ const ah::Region kRegions189[] = {
     {Area189_EventsInRow_addr, 1},
     {Cond_ByteFE_addr, 1},
     {Camera_Angles_addr, 8},       // Camera_Angles[0..1], Cond_AngleFB
-    {at::kCharRecords, 8 * at::kCharStride},
+    {CharacterRecords_addr, 8 * at::kCharStride},
     {MoveScript_Object_addr, 4},
 };
 const ah::Region kRegions191[] = {
@@ -431,7 +431,7 @@ const ah::Region kRegions191[] = {
     {Area189_StepsSinceEvent_addr, 1},
     {Area189_EventsInRow_addr, 1},
     {Camera_ShiftY_addr, 6},       // the focus pointer 0x903804
-    {at::kCharRecords, 8 * at::kCharStride},
+    {CharacterRecords_addr, 8 * at::kCharStride},
     {MoveScript_Object_addr, 4},
 };
 

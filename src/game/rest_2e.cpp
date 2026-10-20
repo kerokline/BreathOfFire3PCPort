@@ -118,7 +118,7 @@ bool Cancelled(U pressed) { return (static_cast<std::uint32_t>(Field_CancelButto
 // A party member's record index: Character_IndexById[the member's id].
 UC RecordOf(U id) { return Character_IndexById[id & 0xFF]; }
 UC PartyRecord(int member) { return RecordOf(B(static_cast<U>(static_cast<int>(kParty) + member))); }
-unsigned char* Record(U index) { return At(kRecords + (index & 0xFF) * kRecordStride); }
+unsigned char* Record(U index) { return At(CharacterRecords_addr + (index & 0xFF) * kRecordStride); }
 // The low byte of 1 << n as the originals compute it (an 8-bit shl, or the low
 // byte of a 32-bit one): the count is n's low five bits.
 UC Bit8(U n) {

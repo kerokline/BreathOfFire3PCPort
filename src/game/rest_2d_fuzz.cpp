@@ -309,7 +309,7 @@ void SeedButtons() {
 // +0xA a few above or below the joining level +0x88.
 void SeedRecords(unsigned char master) {
     for (unsigned r = 0; r < 8; ++r) {
-        unsigned char* const rec = sh::Mem(at::kRecords + r * at::kRecordStride);
+        unsigned char* const rec = sh::Mem(CharacterRecords_addr + r * at::kRecordStride);
         rec[0x1F] = static_cast<unsigned char>(PickOf(master, master, 0xFF, master ^ 1, sh::Next()));
         rec[0x88] = static_cast<unsigned char>(PickOf(1, 10, 30, 99, sh::Next()));
         rec[0xA] = static_cast<unsigned char>(rec[0x88] + PickOf(0, 1, 2, 3, 4, 9, 0xFF, sh::Next()));
@@ -381,7 +381,7 @@ void Seed(unsigned k) {
     case 0x58B1C0: B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % at::kItemsState5StepCount); break;
     case 0x5873C0:   // a member gaining: the cursor's record this master's half the time, around g = 3
         if (sh::Half()) {
-            unsigned char* const rec = sh::Mem(at::kRecords + ObjTrio[B(Rest2d_Cursor_addr)].char_index * at::kRecordStride);
+            unsigned char* const rec = sh::Mem(CharacterRecords_addr + ObjTrio[B(Rest2d_Cursor_addr)].char_index * at::kRecordStride);
             rec[0x1F] = B(AreaW0c_TailSub_addr);
             rec[0xA] = static_cast<unsigned char>(rec[0x88] + PickOf(2, 3, 4, 6, 9, 0x80));
             if (sh::Half()) Field_Request = 0;
@@ -450,7 +450,7 @@ void Disturb(U h) {
     case 1: B(Rest2d_Answer_addr) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) & 1); break;
     case 2: B(Rest2d_Cursor_addr) = static_cast<unsigned char>(v % 3); break;
     case 3: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v & 1 ? 0xB + (v >> 1) % 4 : v >> 1); break;
-    case 4: sh::Mem(at::kRecords + ((v >> 2) % 8) * at::kRecordStride)[0x1F] = static_cast<unsigned char>(v & 1 ? B(AreaW0c_TailSub_addr) : v >> 2); break;
+    case 4: sh::Mem(CharacterRecords_addr + ((v >> 2) % 8) * at::kRecordStride)[0x1F] = static_cast<unsigned char>(v & 1 ? B(AreaW0c_TailSub_addr) : v >> 2); break;
     case 5: Field_Request = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
     case 6: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
     case 7: B(at::kMenuTimer) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;

@@ -256,19 +256,19 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (flags & 0x80) Field_State[0x124] = 0xA;
     if (flags & 0x20) Field_State[0x125] = 0x28;
     records::PartyMember* fs = rv::As<records::PartyMember>(Field_State);
-    U actor = at::kCharRecords + fs->char_index * at::kRecordStride;
+    U actor = CharacterRecords_addr + fs->char_index * at::kRecordStride;
     if (rv::As<records::CharRecord>(At(actor))->hp <= (rv::As<records::CharRecord>(At(actor))->stats.max_hp >> 2)) {
         rv::As<records::CharRecord>(At(actor))->status = rv::As<records::CharRecord>(At(actor))->status | 0x2000u;
         fs->status = fs->status | 0x2000u;
         fs = rv::As<records::PartyMember>(Field_State);
     }
     const U id = fs->char_index;
-    actor = at::kCharRecords + id * at::kRecordStride;
+    actor = CharacterRecords_addr + id * at::kRecordStride;
     SetW(actor + 0x10, W(actor + 0x10) | flags);
     // the member byte as the original pushes it: edx of `lea edx, [id + id * 4]` with dl the byte
     if (SH_CALL(Actor_EquipCount)(((id * 5u) & 0xFFFFFF00u) | id, 3, 8) == 0) return;
     unsigned char* const f = Field_State;
-    const U a = at::kCharRecords + f[0x148] * at::kRecordStride;
+    const U a = CharacterRecords_addr + f[0x148] * at::kRecordStride;
     rv::As<records::CharRecord>(At(a))->status = rv::As<records::CharRecord>(At(a))->status & 0xFFDFu;
     f[0x125] = 0;
 }

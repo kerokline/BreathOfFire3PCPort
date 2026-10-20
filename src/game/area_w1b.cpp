@@ -1317,7 +1317,7 @@ extern "C" void __cdecl Area45_Record4Run(void) { StateEntry("Area45_Record4Run"
 // to 0xA0 - AreaMap_Bytes + AreaMap_Header[0] * z + x; Sprite_SetAnimation(0)
 // and +1 = 1.
 extern "C" void __cdecl Area45_Record4MarkCell(void) {
-    if (At(at::kFlag3A79)[0] == 9 || (Field_StatusBits & 1) != 0) {
+    if (CharacterRecords[0].char_id == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }

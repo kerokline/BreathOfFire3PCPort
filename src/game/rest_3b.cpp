@@ -66,7 +66,7 @@ unsigned char* Result() { return Ptr(at::kResult); }
 // lands before the enemies). Neither is checked, as in the original.
 unsigned char* Party(unsigned n) { return At(ObjTrio_addr + (n & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned n) { return At(Battle_Enemies_addr + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
-unsigned char* CharRecord(unsigned roster) { return At(at::kCharRecords + (roster & 0xFF) * at::kCharStride); }
+unsigned char* CharRecord(unsigned roster) { return At(CharacterRecords_addr + (roster & 0xFF) * at::kCharStride); }
 unsigned char* AbilityRow(unsigned id) { return At(at::kAbilityRows + (id & 0xFFFF) * at::kAbilityStride); }
 
 // R3D's callees, ours, by address (named in rest_3b_callees.h).

@@ -452,7 +452,7 @@ extern "C" void __cdecl Field_LeaderSetPace(void) {
     const unsigned n = static_cast<unsigned>(g.party_count(0)) & 0xFF;
     for (unsigned i = 0; i < n; ++i) {
         const unsigned record = Character_IndexById[Cond_Flags[0xd2 + i]];
-        if (At(at::kActorRecords + 0x10)[record * at::kActorStride] & 0x80) {
+        if (At(CharacterRecords_addr + 0x10)[record * at::kActorStride] & 0x80) {
             Field_State[0x128] = 3;
             return;
         }
@@ -664,7 +664,7 @@ extern "C" unsigned char __cdecl Field_EncounterDue(void) {
 // then back to 0, and unless a member other than the leader is in state 9,
 // one Rand in two: +0x137 = 9, the pose, +9 = 2, state 6, sub-state 0.
 extern "C" unsigned char __cdecl Field_LeaderIdleTest(void) {
-    if (At(at::kActorRecords + 0x10)[Field_State[0x148] * at::kActorStride] & 0x20) return 0;
+    if (At(CharacterRecords_addr + 0x10)[Field_State[0x148] * at::kActorStride] & 0x20) return 0;
     if (Field_InputFlags & 1) return 0;
     Field_State[0x136] = static_cast<unsigned char>(Field_State[0x136] + 1);
     if (Field_State[0x136] <= 0xF0) return 0;

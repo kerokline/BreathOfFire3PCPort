@@ -79,7 +79,7 @@ unsigned AbilityWord4() { return Word(At(at::kAbilityWord4 + AbilityId() * at::k
 
 // CharacterRecords' record for a member's character byte +0x148 (unchecked, as
 // the original: a character byte, not a table index of this group's).
-unsigned char* CharRecord(unsigned character) { return At(at::kCharRecords + character * at::kCharStride); }
+unsigned char* CharRecord(unsigned character) { return At(CharacterRecords_addr + character * at::kCharStride); }
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kPartyStride); }
 // Sprite_Current is the enemy in the enemy ops, the member in the party
 // objects' states; Field_State the member (docs/battle_e3.md 1.1, 1.2).

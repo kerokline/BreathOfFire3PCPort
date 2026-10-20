@@ -1117,7 +1117,7 @@ void RunTests(unsigned rounds, unsigned only) {
                 break;
             case kIdle:
                 if (OneIn(2)) Field_State[0x136] = static_cast<unsigned char>(0xF0 + Next() % 2);
-                if (OneIn(2)) At(at::kActorRecords + 0x10)[Field_State[0x148] * at::kActorStride] &= 0xDF;
+                if (OneIn(2)) At(CharacterRecords_addr + 0x10)[Field_State[0x148] * at::kActorStride] &= 0xDF;
                 break;
             case kEffectTest:
                 if (OneIn(2)) arg = (arg & 0xFFFFFF00u) | 4;

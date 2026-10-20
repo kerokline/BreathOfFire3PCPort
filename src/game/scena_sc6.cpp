@@ -1939,7 +1939,7 @@ SC6_EXPORT void __cdecl Scena06_Run16(void) {
         return;
     case 0x01:
         if (Counter(0) != 0x1F) return;
-        Gift(1, at::kRecord7 + 0x12, 0x20, at::kTextRecords, 0x94, 0x22);
+        Gift(1, CharacterRecords_addr + 0x47c + 0x12, 0x20, at::kTextRecords, 0x94, 0x22);
         return;
     case 0x0A:
         if (Busy()) return;
@@ -1948,7 +1948,7 @@ SC6_EXPORT void __cdecl Scena06_Run16(void) {
         return;
     case 0x0C:
         if (Counter(0) != 0x24) return;
-        Gift(2, at::kRecord7 + 0x15, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
+        Gift(2, CharacterRecords_addr + 0x47c + 0x15, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
         return;
     case 0x14:
         SH_CALL(Msg_OpenSystem)(1);

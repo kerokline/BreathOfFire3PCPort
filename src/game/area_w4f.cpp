@@ -402,7 +402,7 @@ extern "C" void __cdecl Area192_Init(void) {
 // party record's +0x80 block (dword by dword, forward).
 extern "C" void __cdecl Area192_RestoreCharacters(void) {
     for (unsigned k = 0; k < at::kCharCount; ++k) {
-        unsigned char* const r = Mem(at::kCharRecords + k * at::kCharStride);
+        unsigned char* const r = Mem(CharacterRecords_addr + k * at::kCharStride);
         if ((r[0xB] & 1) == 0) continue;
         rv::Store<unsigned>(rv::As<records::CharRecord>(r)->hp, rv::As<records::CharRecord>(r)->stats.max_hp);
         rv::Store<unsigned>(rv::As<records::CharRecord>(r)->ap, rv::As<records::CharRecord>(r)->stats.max_ap);
@@ -413,7 +413,7 @@ extern "C" void __cdecl Area192_RestoreCharacters(void) {
         const unsigned char id = B(Cond_Flags_addr + 0xd2 + static_cast<U>(i));
         const unsigned char record = B(Character_IndexById_addr + id);
         unsigned char* const to = Mem(at::kParty80 + static_cast<U>(i) * at::kPartyStride);
-        const unsigned char* const from = Mem(at::kCharRecords + record * at::kCharStride);
+        const unsigned char* const from = Mem(CharacterRecords_addr + record * at::kCharStride);
         for (unsigned d = 0; d < at::kCharStride; d += 4) std::memcpy(to + d, from + d, 4);
     }
 }

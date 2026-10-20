@@ -229,7 +229,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_RecalcStats(uns
     for (unsigned bit = 0; bit < 8; ++bit)
         if (r[at::kHalveBits] & (1u << bit)) g.add_resist(r + kHalved[bit], 2);
     for (unsigned i = 0; i < 8; ++i) {
-        if (r != At(at::kCharRecords + i * at::kCharStride)) continue;
+        if (r != At(CharacterRecords_addr + i * at::kCharStride)) continue;
         for (unsigned j = 0; j < 5; ++j)
             if (r[at::kPercent + j] != 0) g.add_cap100(r + at::kPercent + j, At(at::kRosterBonus + 5 * i + j)[0]);
     }
@@ -448,7 +448,7 @@ void ComparePreview(unsigned char* record, unsigned char* copy, unsigned char* m
 // above 5 none) set to the item's low byte in the copy, the copy recomputed,
 // and the four stats compared.
 extern "C" void __cdecl Equip_PreviewSlot(unsigned id, unsigned slot, unsigned item, unsigned char* marks, unsigned short* values) {
-    unsigned char* const record = At(at::kCharRecords + (id & 0xFF) * at::kCharStride);
+    unsigned char* const record = At(CharacterRecords_addr + (id & 0xFF) * at::kCharStride);
     unsigned char copy[at::kRecordBytes];
     std::memcpy(copy, record, sizeof copy);
     if ((slot & 0xFF) <= 5) copy[at::kWeapon + (slot & 0xFF)] = static_cast<unsigned char>(item);
@@ -459,7 +459,7 @@ extern "C" void __cdecl Equip_PreviewSlot(unsigned id, unsigned slot, unsigned i
 // original 0x590AB0 (no PSX twin): the same with all six equipment bytes
 // from `set`.
 extern "C" void __cdecl Equip_PreviewSet(unsigned id, const unsigned char* set, unsigned char* marks, unsigned short* values) {
-    unsigned char* const record = At(at::kCharRecords + (id & 0xFF) * at::kCharStride);
+    unsigned char* const record = At(CharacterRecords_addr + (id & 0xFF) * at::kCharStride);
     unsigned char copy[at::kRecordBytes];
     std::memcpy(copy, record, sizeof copy);
     for (unsigned k = 0; k < 6; ++k) copy[at::kWeapon + k] = set[k];
@@ -539,7 +539,7 @@ extern "C" unsigned short __cdecl Inventory_Count(unsigned category, unsigned it
     }
     unsigned char n = 0;
     for (unsigned k = 0; k < 8; ++k) {
-        const unsigned char* const r = At(at::kCharRecords + k * at::kCharStride);
+        const unsigned char* const r = At(CharacterRecords_addr + k * at::kCharStride);
         if ((r[at::kFlags] & 1) == 0) continue;
         switch (cat) {
         case 1:

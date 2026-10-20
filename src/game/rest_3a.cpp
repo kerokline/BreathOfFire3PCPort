@@ -271,7 +271,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleExtra_EquipCom
         BH_CALL(Inventory_Add)(B(at::kCategories + i), back, 1);
         held[0] = B(at::kChosen + i);
     }
-    BH_CALL(Char_RecalcStats)(At(at::kGuest));
+    BH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + 0x47c));
 }
 
 // original 0x42E2F0 (BattleExtra_EquipListInput, each frame): window 13's
@@ -825,7 +825,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnima
 // on a whelp slot past the eight records (section 7).
 extern "C" void __cdecl NewGame_InitCharacters(void) {
     for (unsigned n = 0; n < 7; ++n) {
-        unsigned char* const record = At(at::kCharRecords + n * at::kCharSize);
+        unsigned char* const record = At(CharacterRecords_addr + n * at::kCharSize);
         std::memcpy(record, At(Char_DefaultRecords_addr + n * at::kCharSize), at::kCharSize);
         const std::int32_t level = record[0xA];
         const unsigned divisor = B(at::kLevelDivisors + 2 * n);
@@ -838,7 +838,7 @@ extern "C" void __cdecl NewGame_InitCharacters(void) {
     const unsigned slot = Char_WhelpSlot;
     if (slot >= at::kCharCount)
         bof3::Fatal("NewGame_InitCharacters: Char_WhelpSlot is %u, past the %u records - the original writes on", slot, at::kCharCount);
-    std::memcpy(At(at::kCharRecords + slot * at::kCharSize), At(at::kWhelpRecord), at::kCharSize);
+    std::memcpy(At(CharacterRecords_addr + slot * at::kCharSize), At(at::kWhelpRecord), at::kCharSize);
 }
 
 // ============================================================================

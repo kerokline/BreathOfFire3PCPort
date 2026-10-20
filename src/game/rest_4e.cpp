@@ -365,7 +365,7 @@ extern "C" unsigned __cdecl CommuName_MakeRandom(void) {
 // CharacterRecords, unbounded: the panels are the seven records'.
 extern "C" void __cdecl CommuMember_DrawPanel(int x, int y, unsigned member, unsigned editing) {
     Box(x + 3, y + 3, 0x7D, 0x2D, 0);
-    const unsigned char* const record = At(kMembers + kMemberStride * (member & 0xFF));
+    const unsigned char* const record = At(CharacterRecords_addr + kMemberStride * (member & 0xFF));
     SH_CALL(CommuMember_DrawPortrait)(x + 6, y + 2, record[9], 0);
     const unsigned char* const name = (editing & 0xFF) == 0 ? record : At(kEdit);
     SH_CALL(Text_DrawAt)(x + 0x3B, y + 0x19, 0, 5, name);
@@ -551,7 +551,7 @@ extern "C" void __cdecl CommuName_CommitMember(void) {
             bof3::Fatal("CommuName_CommitMember (0x45F5A0): CommuMember_Nth answered %u, past the seven records - "
                         "the original writes past them (docs/rest_4e.md section 7)",
                         i);
-        return At(kMembers + kMemberStride * i);
+        return At(CharacterRecords_addr + kMemberStride * i);
     };
     const unsigned char* const old = member();
     SetL(kTextRecords, Get<U>(old, 0));
@@ -638,7 +638,7 @@ extern "C" void __cdecl CommuMusic_OpenDispatch(void) {
 // row 0, the slide 4, the step + 1.
 extern "C" void __cdecl CommuMusic_Open(void) {
     for (unsigned i = 0; i < kMemberCount; ++i) {
-        const unsigned char* const record = At(kMembers + kMemberStride * i);
+        const unsigned char* const record = At(CharacterRecords_addr + kMemberStride * i);
         unsigned char* const text = At(kTextRecords + 0x20 * i);
         Put<U>(text, 0, Get<U>(record, 0));
         Put<U>(text, 4, Get<U>(record, 4));

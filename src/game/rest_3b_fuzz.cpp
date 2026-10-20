@@ -397,7 +397,7 @@ void Seed(unsigned k) {
     case 0x4468B0:   // BattleResult_AddExp: the EXP of every record near the cap
         for (unsigned r = 0; r < 8; ++r) {
             const U exp = bh::Often() ? 9999999u - BH_PICK(0, 1, 2, 100, 1000) : bh::Next() % 10000000u;
-            SetLong(Mem(at::kCharRecords + r * at::kCharStride + 0xC), static_cast<std::int32_t>(exp));
+            SetLong(Mem(CharacterRecords_addr + r * at::kCharStride + 0xC), static_cast<std::int32_t>(exp));
         }
         break;
     default:

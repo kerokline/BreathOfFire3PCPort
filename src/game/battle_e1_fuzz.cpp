@@ -262,7 +262,7 @@ void SeedButtons() {
 // The character records' levels and EXP around the table's steps.
 void SeedLevels() {
     for (U r = 0; r < 8; ++r) {
-        unsigned char* const rec = Mem(at::kCharRecords + r * at::kCharSize);
+        unsigned char* const rec = Mem(CharacterRecords_addr + r * at::kCharSize);
         rec[0xA] = Byte({0, 1, 2, 10, 40, 97, 98, 99, 100});
         const U exp = bh::Often() ? bh::Next() % (bh::Half() ? 0x400u : 0x100000u) : bh::Next();
         rv::Store<std::int32_t>(rv::As<records::CharRecord>(rec)->exp, static_cast<std::int32_t>(exp));

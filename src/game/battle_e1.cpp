@@ -326,7 +326,7 @@ extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     const U name = Labels_Written(17)
         ? static_cast<U>(reinterpret_cast<std::uintptr_t>(Labels_Slot(17, 0)))
         : at::kGuestHeadIn;
-    Memcpy(at::kGuest, name, 5);
+    Memcpy(CharacterRecords_addr + 0x47c, name, 5);
 }
 
 // original 0x42DC80 (0x64ADEC[2]): the backdrop; 0x929F04 - 1, and at 0:
@@ -526,7 +526,7 @@ extern "C" void __cdecl BattleExtra_EquipLeave(void) {
         BattleE1_Mode = 1;
         FieldS_State = 0;
         FieldS_Step = 0;
-        Memcpy(at::kGuest, BattleE1_GuestHeadOut_addr, 5);
+        Memcpy(CharacterRecords_addr + 0x47c, BattleE1_GuestHeadOut_addr, 5);
         return;
     }
     Backdrop();
@@ -864,7 +864,7 @@ extern "C" unsigned char __cdecl BattleResult_ZennyBonus(void) {
 extern "C" unsigned short __cdecl Char_LevelUpGain(unsigned roster_arg, unsigned what_arg) {
     const U roster = roster_arg & 0xFF;
     const U base = roster * 99;
-    const unsigned char* const record = At(at::kCharRecords + roster * at::kCharSize);
+    const unsigned char* const record = At(CharacterRecords_addr + roster * at::kCharSize);
     static_assert(at::kCharSize == sizeof(records::CharRecord));
     const unsigned char level = record[0xA];
     unsigned char reached = 1;

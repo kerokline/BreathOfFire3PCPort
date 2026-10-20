@@ -95,7 +95,7 @@ unsigned char* ActiveMember() {
     return Field_ActiveMember;
 }
 unsigned char* Sprite(std::uint32_t k) { return At(Sprite_Objects_addr + k * at::kSpriteStride); }
-unsigned char* Record(std::uint32_t k) { return At(at::kCharRecords + k * at::kRecordStride); }
+unsigned char* Record(std::uint32_t k) { return At(CharacterRecords_addr + k * at::kRecordStride); }
 // Chapter 8 run 11's character records: by Character_IndexById [7] (a
 // byte) and [4] (the dword at [4] read, its low byte).
 unsigned char* RecordOfMember7() { return Record(Character_IndexById[7]); }
@@ -1133,7 +1133,7 @@ extern "C" void __cdecl Scena07_Scene7(void) {
         return;
     case 1:
         if (C0() != 0x1F) return;
-        reward(at::kCharRecords + 7 * at::kRecordStride + 0x12, 1, 0x20, at::kTextRecords, 0x94, 0x22);
+        reward(CharacterRecords_addr + 7 * at::kRecordStride + 0x12, 1, 0x20, at::kTextRecords, 0x94, 0x22);
         return;
     case 0xA:
         if (Requested()) return;
@@ -1142,7 +1142,7 @@ extern "C" void __cdecl Scena07_Scene7(void) {
         return;
     case 0xC:
         if (C0() != 0x24) return;
-        reward(at::kCharRecords + 7 * at::kRecordStride + 0x15, 2, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
+        reward(CharacterRecords_addr + 7 * at::kRecordStride + 0x15, 2, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
         return;
     case 0x14:
         SH_CALL(Msg_OpenSystem)(1);
@@ -2400,7 +2400,7 @@ extern "C" void __cdecl Scena08_SetUpRecord4(void) {
     chr4->armour[0] = 0x38;
     chr4->armour[1] = 0x21;
     chr4->armour[2] = 0xE;
-    SH_CALL(Char_RecalcStats)(At(at::kRecord4));
+    SH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + 0x290));
     SH_CALL(Char_HealHp)(4, 0, 0);
     SH_CALL(Char_HealAp)(4, 0, 0);
 }

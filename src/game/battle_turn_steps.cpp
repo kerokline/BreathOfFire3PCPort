@@ -481,7 +481,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
             const unsigned char* const m = Member(i);
             auto* const member_rec = rv::AsConst<records::PartyMember>(m);
             if (m[at::kStatus + 1] & 0x40) {
-                unsigned char* const r = At(at::kRecords + member_rec->char_index * at::kRecordStride);
+                unsigned char* const r = At(CharacterRecords_addr + member_rec->char_index * at::kRecordStride);
                 auto* const char_rec = rv::As<records::CharRecord>(r);  // 0x903A70 + 0xA4 n
                 static_assert(at::kRecordStride == sizeof(records::CharRecord));
                 rv::Store<unsigned>(char_rec->hp, 1);

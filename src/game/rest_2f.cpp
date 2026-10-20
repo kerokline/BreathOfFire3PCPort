@@ -170,7 +170,7 @@ void Row(int x, U y, unsigned colour, unsigned category, unsigned id, unsigned c
 }
 
 // The member a CharacterRecords flag test is about: record Character_IndexById[id].
-unsigned char* Character(unsigned char id) { return At(kCharacters + kCharacterStride * B(kEffectState + id)); }
+unsigned char* Character(unsigned char id) { return At(CharacterRecords_addr + kCharacterStride * B(kEffectState + id)); }
 
 // DIV-0059's site, read at inject (0: not read yet - the fuzz's runs, before
 // the patch is read back, call Text_DrawAt as the original's copy does).
@@ -875,7 +875,7 @@ extern "C" void __cdecl TacticsMembers_Build(void) {
     const unsigned char count = PartyCount();
     unsigned char n = 0;
     B(Rec(12, 0xA)) = 0;
-    for (U r = kCharacters; r < kCharacters + 8 * kCharacterStride; r += kCharacterStride) {
+    for (U r = CharacterRecords_addr; r < CharacterRecords_addr + 8 * kCharacterStride; r += kCharacterStride) {
         if (!(B(r + 0xB) & 1)) continue;
         unsigned j = 0;
         while (j < count && B(r + 9) != B(kParty + j)) ++j;
@@ -1086,7 +1086,7 @@ extern "C" unsigned __cdecl Stat_AddClampedTo(unsigned short* stat, unsigned cap
 // counts the 0x80 bytes at 0x904574. Answers al.
 extern "C" unsigned char __cdecl AbilityList_CountSet(unsigned member, unsigned which, unsigned current) {
     const U m = member & 0xFF;
-    const U base = (current & 0xFF) == 0 ? kCharacters + kCharacterStride * m : kWorking + kWorkingStride * m;
+    const U base = (current & 0xFF) == 0 ? CharacterRecords_addr + kCharacterStride * m : kWorking + kWorkingStride * m;
     U p;
     unsigned n = 10;
     switch (which & 0xFF) {

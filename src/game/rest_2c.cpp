@@ -390,7 +390,7 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     const unsigned record = B(at::kMemberRecord + Cond_Flags[0xd2]);
     PutW(0x9046AC, Field_CancelButtons);
     PutW(0x903A50, 0);
-    const U name = at::kRecords + (g_summary_record0 ? 0u : record) * at::kRecordStride;   // DIV-0076
+    const U name = CharacterRecords_addr + (g_summary_record0 ? 0u : record) * at::kRecordStride; // DIV-0076
     SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(at::kSummary)), reinterpret_cast<const char*>(At(name)), 5);
     SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(0x904696)), reinterpret_cast<const char*>(At(name + 5)), 4);
     for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + 0x623 + i) = FormOf(B(at::kPartyList + i));
@@ -897,7 +897,7 @@ extern "C" void __cdecl MasterTalk_PickAsk(void) {
 // pieces: 0x664468, sixteen of 0x664494 8 apart, 0x6644A0.
 extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
     SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, static_cast<unsigned char>(Config_WindowColour));
-    const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
+    const U r = CharacterRecords_addr + (record & 0xFF) * at::kRecordStride;
     char* const buffer = reinterpret_cast<char*>(At(at::kPath));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
     const auto* const format = reinterpret_cast<const char*>(At(at::kFmtNumber));
@@ -941,7 +941,7 @@ extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
 // CLUT Gpu_GetClut(0x10, 0x1E0), shade 0x80.
 extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, unsigned slot) {
     SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(Config_WindowColour));
-    const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
+    const U r = CharacterRecords_addr + (record & 0xFF) * at::kRecordStride;
     const unsigned char id = rv::As<records::CharRecord>(At(r))->char_id;
     const unsigned shade = (B(r + 0x10) >> 6) & 2;
     SH_CALL(MasterPanel_DrawFace)(x + 0x56, y + 2, id, shade);

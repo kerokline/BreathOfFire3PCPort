@@ -156,7 +156,7 @@ extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const unsigned id = B(at::kObjTrio + 0x89 + at::kObjStride * s);
     const U arg = ((s * 5) & 0xFFFFFF00u) | id;
     const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex)(arg) & 0xFF;
-    const unsigned char* const rec = At(at::kCharRecords + at::kCharStride * r);
+    const unsigned char* const rec = At(CharacterRecords_addr + at::kCharStride * r);
     const unsigned rows = rec[0xA] + 1u;
     U sum = 0;
     for (unsigned k = 0; k < rows; ++k) sum += Word(At(at::kExpTable + 0x318 * r + 8 * k));

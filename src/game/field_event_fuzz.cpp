@@ -157,7 +157,7 @@ void Disturb(std::uint32_t salt) {
     case 9: At(Cond_Flags_addr + 0xd2)[(h >> 8) % 6] = MemberId(h >> 16); break;
     case 10: *At(AreaW0b_PartySet_addr) = static_cast<unsigned char>(h >> 8); break;
     case 11: Character_IndexById[(h >> 8) % Character_IndexById_count] = static_cast<unsigned char>(h >> 16); break;
-    case 12: At(at::kActorRecords)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
+    case 12: At(CharacterRecords_addr)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
     case 13: Game_AreaNumber = AreaChoice(h >> 8); break;
     case 14: g_scratch[(h >> 8) % sizeof g_scratch] = static_cast<unsigned char>(h >> 24); break;
     case 15: At(FieldEvent_Object905DA0_addr)[(h >> 8) % kActorBytes] = static_cast<unsigned char>(h >> 24); break;
@@ -510,7 +510,7 @@ const Region kRegions[] = {
     {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
     {at::kFindIds, 0x40},
     {Address(&Field_ScriptFlags), 2},
-    {at::kActorRecords, kActors * kActorBytes},
+    {CharacterRecords_addr, kActors * kActorBytes},
     {Cond_Flags_addr + 0xd2, 6},
     {AreaW0b_PartySet_addr, 1},
     {at::kJoinState, 9},
@@ -668,7 +668,7 @@ Args Seed(unsigned k) {
         if (Half()) Field_ScriptFlags2 &= 0x7FFF;
         if (Half()) Field_ScriptFlags &= 0xF7FF;
         static const unsigned char kWho[] = {0, 7, 9, 1};
-        At(at::kActorRecords)[9] = kWho[Next() % 4];
+        At(CharacterRecords_addr)[9] = kWho[Next() % 4];
         x.c = Half() ? x.c & ~0x80u : x.c | 0x80u;
         if (Half()) x.c &= ~0x80u;
         break;

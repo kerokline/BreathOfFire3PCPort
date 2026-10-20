@@ -410,7 +410,7 @@ const sh::Region kRegions14[] = {
     {0x903800, 8},
     {Gfx_ClutStrip_addr, at::kClutWords * 2},
     {MapView_Origin_addr, 2},
-    {at::kRecords, 8 * at::kRecordStride},
+    {CharacterRecords_addr, 8 * at::kRecordStride},
     {Character_IndexById_addr + 0x8, 1},
     {0x929F0C, 8},                // 0x929F10
     {0x92BF18, 4},                // Draw_OtSlot 0x92BF19

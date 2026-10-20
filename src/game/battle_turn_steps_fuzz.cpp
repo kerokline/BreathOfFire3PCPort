@@ -535,7 +535,7 @@ void Seed(unsigned k) {
         for (unsigned i = 0; i < 5; ++i) {
             unsigned char* const m = Member(i);
             if (Half()) m[at::kStatus + 1] ^= 0x40;
-            unsigned char* const r = At(at::kRecords + m[at::kRecord] * at::kRecordStride);
+            unsigned char* const r = At(CharacterRecords_addr + m[at::kRecord] * at::kRecordStride);
             static const unsigned kCounts[] = {0, 3, 4, 4, 5, 5, 6, 0xFF};
             if (Often()) r[0x1E] = static_cast<unsigned char>(Pick(kCounts, 8));
         }

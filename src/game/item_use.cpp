@@ -64,7 +64,7 @@ namespace {
 // working copy, the id's low byte indexes it, unchecked.
 unsigned char* CharRecord(unsigned id, unsigned battle) {
     const unsigned i = id & 0xFF;
-    return (battle & 0xFF) == 0 ? At(at::kCharRecords + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
+    return (battle & 0xFF) == 0 ? At(CharacterRecords_addr + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
 }
 
 // Either answer is a records::CharRecord: the persistent record 0x903A70 + i

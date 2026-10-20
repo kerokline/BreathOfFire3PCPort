@@ -311,7 +311,7 @@ sh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
 // --- the seed ---------------------------------------------------------------------------
 
 unsigned char* Window(unsigned k) { return Mem(at::kWindows + (k % 22) * at::kWindowStride); }
-unsigned char* Record(unsigned n) { return Mem(at::kRecords + (n % 8) * at::kRecordStride); }
+unsigned char* Record(unsigned n) { return Mem(CharacterRecords_addr + (n % 8) * at::kRecordStride); }
 unsigned char* g_window;   // the record a kCall draw is handed (a[0])
 unsigned g_self_index;
 unsigned g_k;              // the function this round fuzzes

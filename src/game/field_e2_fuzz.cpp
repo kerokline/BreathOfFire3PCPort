@@ -689,7 +689,7 @@ void Seed(unsigned k) {
     }
     case kFloor:
         for (U r = 0; r < 8; ++r) {
-            const U rec = at::kCharRecords + r * at::kRecordStride;
+            const U rec = CharacterRecords_addr + r * at::kRecordStride;
             const U max = sh::Next() % 1000;
             SetW(rec + 0x20, max);
             SetW(rec + 0x18, PickOf(0, 1, max / 4, max / 4 + 1, max, sh::Next() % 1000));

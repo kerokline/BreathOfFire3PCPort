@@ -460,7 +460,7 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     const U bl = lit ? 7u : 0u;
     U colour = bl;
     g.draw_box(x + 3, y + 3, 0x7D, 0x30, static_cast<int>(highlight), static_cast<unsigned char>(Config_WindowColour));
-    unsigned char* const record = At(kCharRecords + (member & 0xFFu) * kCharStride);
+    unsigned char* const record = At(CharacterRecords_addr + (member & 0xFFu) * kCharStride);
     const U shade = lit ? 1u : ((record[0x10] >> 6) & 2u);
     g.item_icon(x + 0x56, y + 2, static_cast<int>(record[9]), static_cast<int>(shade));
     g.text_at(x + 0x14, y + 3, static_cast<int>(colour), 5, record);
