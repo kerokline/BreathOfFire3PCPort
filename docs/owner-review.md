@@ -17,13 +17,10 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 `typed/c` (`main` 61023304 merged in;
 [`typed-data-stage-c.md`](typed-data-stage-c.md), the round doc's section 3).
-No behaviour change, the machine code identical to `main`; one thing to run
-and two names the C4 audit could not settle from the code
+No behaviour change, the machine code identical to `main` (the smoke run
+passed 2026-10-20: the round doc's section 3); two names the C4 audit could not settle from the code
 (`C:\Users\kerok\c_typed\audit\c4\`, reports A and B).
 
-- **The smoke run** (stage C's call 2): the headless `BOF3X_SHADOW='*'`
-  self-test and one state-hash route, from a plain copy of `build/`. Then
-  the PR. HANDOFF item 0.
 - **`rest_4a`'s `kEnemyHp`** (`0x93BA1A`, `rest_4a_callees.h`): an enemy
   record's `+0xBA`, which `records.h` calls `BattleEnemy::intel` (the stat
   copy's `+0xA`; `hp` is `+0xA4`). It predates C4 - C4 only respelled the

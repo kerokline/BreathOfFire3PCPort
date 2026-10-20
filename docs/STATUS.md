@@ -25,7 +25,7 @@ code's reads of Capcom's data image become named, typed accesses, with **no beha
 (`tools/data_census.py`, a CI ratchet), every global site by `tools/typed_convert.py` and the record sites by seven
 file groups, each part re-derived by an independent agent and a family audit after; raw data sites 50,943 -> 27,394.
 The PR also carried the install-gap round's second pairing pass ([`install-gap-pairs.md`](install-gap-pairs.md) 8).
-**Stage C is built on `typed/c`** (from `main` 56d81b42, `main` 61023304 merged in; unpushed, its PR after the owner's smoke run;
+**Stage C is built on `typed/c`** (from `main` 56d81b42, `main` 61023304 merged in; unpushed; the smoke run passed 2026-10-20 - both self-tests, the combat route identical to `main`'s build on every tick - its PR next;
 [`typed-data-stage-c.md`](typed-data-stage-c.md), each step as run in the round doc's section 3): C0 one shared
 views header (`src/game/record_views.h`) in place of seven dialects of per-file helpers; C1 the types (a shared
 0x80-byte `SpriteHead` the five sprite families derive from, the audits' renames, views for fields that change

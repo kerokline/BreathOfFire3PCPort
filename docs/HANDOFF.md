@@ -1,7 +1,7 @@
 # Handoff — next session
 
 **Status:** IN PROGRESS (2026-10-20: `main` is `61023304` (PRs #94..#96, #98 and #99 merged); the typed-data round's
-stage C is built on `typed/c` with `main` merged in, unpushed: the owner's smoke run, then its PR, item 0)
+stage C is built on `typed/c` with `main` merged in and its smoke run passed, unpushed: its PR, item 0)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -41,12 +41,12 @@ hosted cross form).
 
 ## Pick up here
 
-0. **The typed-data round's stage C: the owner's smoke run, then its PR** from `typed/c` (tip `2a208d56` plus the
-   coordinator's docs; [`typed-data-stage-c.md`](typed-data-stage-c.md) 8 call 2). On the owner's machine (agents may
-   not run the game here): the headless `BOF3X_SHADOW='*'` self-test and one state-hash route, both from a plain copy
-   of `build/` as the install-gap round's end batch ran them ([`install-gap-round.md`](install-gap-round.md) 6). The
-   machine code is identical to `main` 61023304 object by object (#99 changed only docs), so this is a formality, but it is the only check
-   that runs the game. Then the PR: no behaviour change, no ledger entry; every non-merge commit signed off (read
+0. **The typed-data round's stage C: its PR** from `typed/c`. **The smoke run passed 2026-10-20**
+   ([`typed-data-stage-c.md`](typed-data-stage-c.md) 8 call 2; [`typed-data-round.md`](typed-data-round.md) 3, "The
+   smoke run as run"): both headless self-tests (the hosted `'*'` one's 1,086 fuzz lines all `0 MISMATCHES`) and the
+   combat route identical to `main` `b3498050`'s own build on every tick. Against the morning's references both builds
+   differ by the same seven pages at tick 3 only - not stage C's; item 3's tick-3 class, here steady. The machine code
+   is identical to `main` 61023304 object by object (#99 changed only docs). The PR: no behaviour change, no ledger entry; every non-merge commit signed off (read
    `git log --format=%B main..typed/c` first). `main` (`b3498050`, PRs #96 and #98, then `61023304`, PR #99) is
    merged into `typed/c` (2026-10-20; gate baseline `.claude/worktrees/typed-baseline-c2`, a build of `b3498050`,
    0 differ; census 27,389; DIV-0148's one new raw site, `scena_sc15.cpp` RollEntry's `L(kRollLines + 4u * i)`,

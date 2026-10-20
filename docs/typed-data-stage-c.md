@@ -213,4 +213,6 @@ Nothing here changes what the player sees, so no ledger entries. Two calls:
    install-gap round's end batch ran them on 2026-10-18
    ([`install-gap-round.md`](install-gap-round.md) 6; Defender stopped none of
    those copies). Identical machine code makes it a formality, but it is the
-   only check that runs the game.
+   only check that runs the game. Done 2026-10-20: both self-tests pass and
+   the combat route is identical to `main`'s build on every tick
+   ([`typed-data-round.md`](typed-data-round.md) 3, "The smoke run as run").

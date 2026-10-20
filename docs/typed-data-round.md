@@ -4,8 +4,8 @@
 `typed/b1`, 50,943 raw data sites down to 27,394 with the machine code
 identical to `origin/main`, merged as PR #94; stage C, staged in
 [`typed-data-stage-c.md`](typed-data-stage-c.md), built 2026-10-19..20 on
-`typed/c` (C0..C4, section 3), machine code identical to `main` 56d81b42,
-unpushed, its PR after the owner's smoke run. The idea is
+`typed/c` (C0..C4, section 3), machine code identical to `main` (56d81b42, then
+61023304 merged in), the smoke run passed 2026-10-20, its PR next. The idea is
 [`IDEAS.md`](IDEAS.md) I44; this round is its first two stages, which change
 no behaviour. Stage 3, the relocatable image, is not staged here.)
 
@@ -803,6 +803,25 @@ count again).
 `codegen_same.py` against the baseline: 640 objects compared, 0 differ;
 `data_census.py --check` 27,390, `--strict` ok; `typed_left.py --check`
 current.
+
+### The smoke run as run (2026-10-20)
+
+Stage C's call 2, run unattended at the owner's word from `typed/c` `9eaf3e1d` (`main` `61023304` merged in): a
+plain copy of the branch's `build/` (the launcher, its dev twin, `bof3x.dll`, `bof3x.exe`) in an ini-less folder,
+root `C:\Users\kerok\bof3x-runs\typedc-smoke`, against the main checkout's `bof3\`. Defender stopped nothing.
+
+- **The hosted self-test**, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' BOF3X_LANG=original`: exit 0, `inject: 10087
+  ours`, `self-test only: done`, 1,086 fuzz lines every one `0 MISMATCHES` (the install-gap round's run had 1,085), no
+  `FATAL`. **The exe host's**, `BOF3X_SELFTEST_ONLY=1`: exit 0, no `FATAL`.
+- **The combat route with the state hash** (`BOF3X_OPT=none BOF3X_LAYERING=0`, `tools/statehash_skip.txt`, the exe
+  host, the conditions of the morning's `cn_combat_a1020`): `recipe done at recipe frame 2620`, 2,561 ticks, played
+  twice - the two runs identical on every tick. Against the morning's references (`cn_combat_orig3` / `orig3b`, and
+  main's own `a1020`) seven pages differ, at tick 3 only: five of `Gfx_VramShadow`, the page of `Snd_BufferDesc` /
+  `Music_Events`, the page of `Gfx_CurrentEnv` / `Sprite_Current`; every later tick is the same. **The control
+  settles it**: `main` `b3498050`'s own build (the gate baseline, `typed-baseline-c2`) on the same route is identical
+  to `typed/c`'s on all 2,561 ticks and shows the same seven tick-3 pages against `a1020`. So they are not stage C's;
+  they lie between the morning's runs (main at `84e43c32`) and now - PR #98's changes or the machine's state - and are
+  the tick-3 class HANDOFF's state-hash item already noted as one run in five that morning, here steady.
 
 ## 4. Stage C
 
