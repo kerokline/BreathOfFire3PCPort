@@ -16029,6 +16029,7 @@ src/game/rest_4a.cpp	FieldTrigger03	global	Row	at::kTextRow0	0	0x904ce0	-	untype
 src/game/rest_4a.cpp	FieldTrigger03	global	Row	at::kTextRow1	0	0x904d00	-	no-entry	at::kTextRow1 0x904d00 -	b0
 src/game/rest_4a.cpp	FieldTrigger03	global	Row	at::kTextRow2	0	0x904d20	-	no-entry	at::kTextRow2 0x904d20 -	b0
 src/game/rest_4a.cpp	FieldTrigger04	record	UL	object + 0x1C	0	-	param	no-struct	UL(object + 0x1C): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4a.cpp	FieldTrigger04	global	At	at::kBuildingLevels	0	0x9048ab	-	base-form	Community_Buildings +3 by a 1-based building: kBuildingLevels (0x9048AB) = Community_Buildings - 8 + 3 (rest_4a_callees.h); the base lies in Community_Records' last record (C4 audit B F1)	c4-fix
 src/game/rest_4a.cpp	FieldTrigger04	global	At	at::kShopRecords	0	0x658930	-	untyped-entry	at::kShopRecords 0x658930 Shop_Records	b0
 src/game/rest_4a_fuzz.cpp	ElevationEffect	global	Mem	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a_fuzz.cpp	-	global	-	at::kEvents	0	0x904ca0	-	no-entry	at::kEvents 0x904ca0 -	b0
@@ -16065,6 +16066,9 @@ src/game/rest_4a_fuzz.cpp	Disturb	global	-	at::kEventCount	0	0x937f80	-	name	at:
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
 src/game/rest_4b.cpp	B	record	L	table + 4 * static_cast<U>(index)	0	-	-	no-struct	L(table + 4 * static_cast<U>(index)): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	Slot	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
+src/game/rest_4b.cpp	Slot	global	-	at::kSlots	1	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
+src/game/rest_4b.cpp	Slot	global	-	at::kSlots	2	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b.cpp	StateBy	global	B	at::kFrame	0	0x937f94	-	width	at::kFrame 0x937f94 Frame_Counter	b0
 src/game/rest_4b.cpp	Column	global	PutL	at::kTextRecords	0	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4b.cpp	Column	global	PutL	at::kTextRecords	1	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
@@ -16126,16 +16130,17 @@ src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	-	at::kBars	0	0x653210	-	n
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 1	0	-	table=0x653210	no-struct	B(bars + 1): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 2	0	-	table=0x653210	no-struct	B(bars + 2): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 3	0	-	table=0x653210	no-struct	B(bars + 3): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	B	at::kSlots	0	0x9048a8	-	no-entry	at::kSlots 0x9048a8 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	B	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	-	at::kBarHighlight	0	0x652b60	-	no-entry	at::kBarHighlight 0x652b60 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 1	1	-	table=0x653210	no-struct	B(bars + 1): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 2	1	-	table=0x653210	no-struct	B(bars + 2): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 3	1	-	table=0x653210	no-struct	B(bars + 3): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	W	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kSlotIcons	0	0x652b6c	-	no-entry	at::kSlotIcons 0x652b6c -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	record	B	slot + 1	0	-	stride=0x8	no-struct	B(slot + 1): table=0x9048a8;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	record	B	slot + 1	0	-	table=0x9048a8;stride=0x8	no-struct	B(slot + 1): table=0x9048a8;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kSlotIcons	1	0x652b6c	-	no-entry	at::kSlotIcons 0x652b6c -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kTextBuffer	0	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kTextBuffer	1	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
@@ -16170,6 +16175,7 @@ src/game/rest_4b.cpp	CommuBoard_SlotHelp	record	B	slot + 1	0	-	via=Slot	no-struc
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	W	at::kSlotHelp	0	0x652c72	-	no-entry	at::kSlotHelp 0x652c72 -	b0
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	W	at::kPickHelp	0	0x652af0	-	index	at::kPickHelp 0x652af0 CommuTail26_States+0xc	b0
+src/game/rest_4b_fuzz.cpp	B	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b_fuzz.cpp	Move	record	B	SlotAt(w % 8 + 1) + (v % 3)	0	-	via=SlotAt	no-struct	B(SlotAt(w % 8 + 1) + (v % 3)): via=SlotAt, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b_fuzz.cpp	Move	record	B	Rec(w % 60) + 1 + v % 3	0	-	via=Rec	no-struct	B(Rec(w % 60) + 1 + v % 3): via=Rec, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b_fuzz.cpp	Move	global	B	at::kListCount	0	0x9046cb	-	name	at::kListCount 0x9046cb FieldE2_LevelA	b0
@@ -16419,7 +16425,7 @@ src/game/rest_4e.cpp	CommuName_CommitEntry	global	B	kEdit	0	0x675f98	-	no-entry	
 src/game/rest_4e.cpp	CommuName_CommitEntry	global	B	kEdit	1	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e.cpp	CommuMusic_Open	global	At	kTextRecords	0	0x904ce0	-	untyped-entry	kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4e.cpp	TrackIndex	global	B	kEntries	0	0x9046d0	-	no-entry	kEntries 0x9046d0 -	b0
-src/game/rest_4e.cpp	TrackIndex	global	B	kTrackCounts	0	0x9048ab	-	no-entry	kTrackCounts 0x9048ab -	b0
+src/game/rest_4e.cpp	TrackIndex	global	B	kTrackCounts	0	0x9048ab	-	base-form	Community_Buildings +3 by a 1-based kind: kTrackCounts (0x9048AB) = Community_Buildings - 8 + 3 (rest_4e.cpp kTrackCounts); the base lies in Community_Records' last record (C4 audit B F1)	c4-fix
 src/game/rest_4e.cpp	TrackIndex	global	B	kTracks	0	0x653098	-	no-entry	kTracks 0x653098 -	b0
 src/game/rest_4e.cpp	CommuMusic_Play	global	B	kTracks	0	0x653098	-	no-entry	kTracks 0x653098 -	b0
 src/game/rest_4e.cpp	CommuMusic_DrawList	global	B	kTracks	0	0x653098	-	no-entry	kTracks 0x653098 -	b0
@@ -16499,6 +16505,8 @@ src/game/rest_4e.cpp	CommuRank_DrawBackdrop	global	At	kTilesBottom	0	0x6531c0	-	
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPool	0	0x803580	-	no-entry	kPool 0x803580 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPool	1	0x803580	-	no-entry	kPool 0x803580 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPairMessages	0	0x653180	-	no-entry	kPairMessages 0x653180 -	b0
+src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kTrackCounts	0	0x9048ab	-	base-form	Community_Buildings +3 by a 1-based kind: kTrackCounts (0x9048AB) = Community_Buildings - 8 + 3 (rest_4e.cpp kTrackCounts); the base lies in Community_Records' last record (C4 audit B F1)	c4-fix
+src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kTrackCounts	1	0x9048ab	-	base-form	Community_Buildings +3 by a 1-based kind: kTrackCounts (0x9048AB) = Community_Buildings - 8 + 3 (rest_4e.cpp kTrackCounts); the base lies in Community_Records' last record (C4 audit B F1)	c4-fix
 src/game/rest_4e_fuzz.cpp	PointMessage	global	Mem	kTracks	0	0x653098	-	no-entry	kTracks 0x653098 -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	global	B	kTop	0	0x80316b	-	no-entry	kTop 0x80316b -	b0
 src/game/rest_4e_fuzz.cpp	PointMessage	record	Mem	bof3::addr::Inventory_IdLists + 4 * B(Window0_ParamA_addr)	0	-	base=Inventory_IdLists	no-struct	Mem(bof3::addr::Inventory_IdLists + 4 * B(BattleOdds_Win0Index_a): base=Inventory_IdLists, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest

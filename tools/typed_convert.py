@@ -692,6 +692,14 @@ KEEP_RAW = {
     # draw key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4
     # audit A F1, which found c0635893 had typed it Sprite_Objects[2].draw_key)
     ('src/game/effect_3d.cpp', 'Sprite_Objects', 2 * 0xA4 + 0x32): 'kObject2Turn',
+    # Community_Buildings by a 1-based slot or kind: the base, Buildings - 8
+    # (+ 3), lies in Community_Records' last record, so the table would spell
+    # these off the end of the wrong one (C4 audit B F1, d241a959)
+    ('src/game/rest_4a.cpp', 'Community_Records', 0x1DB): 'kBuildingLevels',
+    ('src/game/rest_4b.cpp', 'Community_Records', 0x1D8): 'kSlots',
+    ('src/game/rest_4b_fuzz.cpp', 'Community_Records', 0x1D8): 'kSlots',
+    ('src/game/rest_4e.cpp', 'Community_Records', 0x1DB): 'kTrackCounts',
+    ('src/game/rest_4e_fuzz.cpp', 'Community_Records', 0x1DB): 'kTrackCounts',
 }
 
 

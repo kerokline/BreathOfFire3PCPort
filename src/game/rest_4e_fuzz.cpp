@@ -356,8 +356,8 @@ void Seed(unsigned k) {
     entry[1] = static_cast<unsigned char>(kind);
     entry[2] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
     entry[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x13, 0x18, 0xF, sh::Next()));
-    for (unsigned c = 0; c < 9; ++c) B(Community_Records_addr + 0x1db + 8 * c) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x26, 0x27, sh::Next() % 40));
-    const unsigned count = B(Community_Records_addr + 0x1db + 8 * kind);
+    for (unsigned c = 0; c < 9; ++c) B(kTrackCounts + 8 * c) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x26, 0x27, sh::Next() % 40));
+    const unsigned count = B(kTrackCounts + 8 * kind);
     SetWord(Mem(CommuMusic_Track_addr), PickOf(0, 1, count, count - 1, count + 1, 39, 0xFFFF, 0xFFFE, sh::Next() % 40));
     B(CommuMusic_Slide_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xFF, sh::Next()));
     const auto row = static_cast<short>(Word(Mem(CommuMusic_Track_addr)));

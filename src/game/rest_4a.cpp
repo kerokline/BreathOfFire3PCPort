@@ -1176,7 +1176,7 @@ extern "C" unsigned char __cdecl FieldTrigger08(unsigned char* object, unsigned 
 extern "C" unsigned char __cdecl FieldTrigger09(unsigned char* object, unsigned char*) {
     const unsigned char building = Rec(object[5])[1];
     const U shop = UL(object + 0x1C);
-    At(at::kShopRecords + at::kShopStride * shop)[0] = At(Community_Records_addr + 0x1db + 8u * building)[0];
+    At(at::kShopRecords + at::kShopStride * shop)[0] = At(at::kBuildingLevels + 8u * building)[0];
     return 0;
 }
 
