@@ -917,7 +917,7 @@ extern "C" void __cdecl Area25_SpawnEffect(void) {
     At(at::kFoundSlot)[0] = slot;
     if (slot == 0xFF) return;
     const unsigned count = At(at::kEffectCount)[0];
-    unsigned char* const record = Effect_Objects + static_cast<U>(At(at::kFoundSlot)[0]) * 0x80u;
+    unsigned char* const record = rv::Bytes(Effect_Objects) + static_cast<U>(At(at::kFoundSlot)[0]) * 0x80u;
     record[0] = 1;
     record[5] = 0xB;
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(record)->work_1c, 6);
@@ -1010,7 +1010,7 @@ extern "C" void __cdecl Area26_Flag2ESet(void) { AH_CALL(Flags_Set)(FlagRow(), 0
 extern "C" void __cdecl Area26_PlaceEffect(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const record = Effect_Objects + static_cast<U>(slot) * 0x80u;
+    unsigned char* const record = rv::Bytes(Effect_Objects) + static_cast<U>(slot) * 0x80u;
     auto* const tRecord = rv::As<records::EffectObject>(record);
     tRecord->z = 0x68000;
     tRecord->x = 0x70000;

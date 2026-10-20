@@ -108,7 +108,7 @@ bool TakeEffect() {
     return slot != 0xFF;
 }
 // The record of the slot 0x903850 holds, read back as the original does.
-unsigned char* Effect() { return Effect_Objects + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
+unsigned char* Effect() { return rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
 
 // The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
 // views a
@@ -412,7 +412,7 @@ extern "C" void __cdecl Scena01_Scene03(void) {
         AimEffect(-0x2AA, 0x200, 0x14);
         return;
     case 0x15:
-        if (Effect_Objects[static_cast<std::uint32_t>(Counter(3)) << 7] != 0) return;
+        if (rv::Bytes(Effect_Objects)[static_cast<std::uint32_t>(Counter(3)) << 7] != 0) return;
         ScriptOr(8);
         Counter(3) = 0;
         Counter(0) = 0x19;
@@ -1910,7 +1910,7 @@ extern "C" void __cdecl Scena01_PlaceEffect(unsigned char n) {
     Sprite_Current[0xB] = slot;
     unsigned char* const cur = Sprite_Current;
     if (cur[0xB] == 0xFF) return;
-    auto rec = [cur] { return Effect_Objects + (static_cast<std::uint32_t>(cur[0xB]) << 7); };
+    auto rec = [cur] { return rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(cur[0xB]) << 7); };
     rec()[0] = 1;
     const unsigned char kind = static_cast<unsigned char>(n + 0x70);
     rec()[5] = 6;

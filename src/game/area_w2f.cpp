@@ -48,7 +48,7 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(Effect_Objects) + slot * at::kEffectStride; }
 // Sprite_ObjectsExtra record k (0xA4 bytes; k not checked, as the originals).
 unsigned char* Extra(unsigned k) { return Mem(Sprite_ObjectsExtra_addr + k * at::kExtraStride); }
 // Party record m (ObjTrio, 0x14C bytes; m not checked).

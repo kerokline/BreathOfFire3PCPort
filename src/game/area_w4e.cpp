@@ -266,7 +266,7 @@ extern "C" void __cdecl Area188_ClearCellsC(void) {
 extern "C" void __cdecl Area188_SpawnEffectB9(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const record = Effect_Objects + slot * at::kEffectStride;
+    unsigned char* const record = rv::Bytes(&Effect_Objects[slot]);
     record[0] = 1;
     record[5] = 0xB9;
 }
@@ -459,7 +459,7 @@ extern "C" void __cdecl Area189_LeaderProject(void) {
     CopyFloatX87(Cur() + 0x78, Mem(MapView_ScreenXY_addr + 0x4));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, 1);
     if (Test(Row14(), 9) && !Test(Row14(), 0xA)) {
-        Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] | 0x40);
+        Effect_Objects[0].flags = static_cast<unsigned char>(Effect_Objects[0].flags | 0x40);
         unsigned char* const cur = Cur();
         cur[2] = 3;
         rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_z, -0x2000);

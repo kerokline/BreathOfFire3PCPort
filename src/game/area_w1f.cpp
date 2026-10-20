@@ -48,7 +48,7 @@ void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 // Field object `index` (Sprite_Objects, 0xA4 bytes); effect record `slot`
 // (Effect_Objects, 0x80 bytes); party record `member` (ObjTrio, 0x14C bytes).
 unsigned char* ObjectAt(unsigned index) { return rv::Bytes(Sprite_Objects) + index * at::kObjectStride; }
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
 // A record's index among the field objects as the originals compute it: the
 // pointer less Sprite_Objects, divided by 0xA4 as a signed dword (imul by

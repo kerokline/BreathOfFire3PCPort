@@ -656,7 +656,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
         if (At(at::kRecords + record * at::kRecordSize)[0x38] < r) continue;
         const unsigned char e = g.effect_free();
         if (e != 0xFF) {
-            unsigned char* const fx = Effect_Objects + (static_cast<u32>(e) << 7);
+            unsigned char* const fx = rv::Bytes(Effect_Objects) + (static_cast<u32>(e) << 7);
             fx[0] = 1;
             fx[5] = 6;
             fx[6] = 1;

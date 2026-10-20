@@ -143,7 +143,7 @@ unsigned char* Record(const char* who, U index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past Effect_Objects "
                     "(docs/effect_5d.md section 7)",
                     who, (unsigned)index);
-    return Effect_Objects + at::kEffectStride * index;
+    return rv::Bytes(Effect_Objects) + at::kEffectStride * index;
 }
 
 // The x87's quad corners about a screen point: the first float less the half

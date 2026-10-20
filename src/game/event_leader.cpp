@@ -646,7 +646,7 @@ extern "C" void __cdecl Field_EncounterWait(void) {
     unsigned char* const sc = Sprite_Current;
     const unsigned char effect = sc[0xB];
     if (effect != 0xFF) {
-        if (Effect_Objects[effect * 0x80u] != 0) return;
+        if (Effect_Objects[effect].flags != 0) return;
         sc[0xB] = 0xFF;
         return;
     }

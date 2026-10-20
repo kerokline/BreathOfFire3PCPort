@@ -151,7 +151,7 @@ unsigned char* NewRecord(const char* who, unsigned index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
                     "(docs/effect_5c.md section 6)",
                     who, index);
-    return Effect_Objects + index * 0x80u;
+    return rv::Bytes(Effect_Objects) + index * 0x80u;
 }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53

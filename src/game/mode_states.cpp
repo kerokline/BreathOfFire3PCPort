@@ -113,7 +113,7 @@ bool PlaceEffect(unsigned char kind) {
     const unsigned char slot = g.effect_find();
     At(at::kEffectSlot)[0] = slot;
     if (slot == 0xFF) return false;
-    unsigned char* const e = Effect_Objects + ((static_cast<std::uint32_t>(Long(At(at::kEffectSlot))) & 0xFF) << 7);
+    unsigned char* const e = rv::Bytes(Effect_Objects) + ((static_cast<std::uint32_t>(Long(At(at::kEffectSlot))) & 0xFF) << 7);
     e[0] = 1;
     e[5] = kind;
     return true;

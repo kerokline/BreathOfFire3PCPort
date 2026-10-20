@@ -137,7 +137,7 @@ unsigned char* EffectToWrite(int index, const char* who) {
     if (index < 0 || index >= static_cast<int>(kEffectCount))
         bof3::Fatal("%s: effect object index %d is past Effect_Objects' 20 records; the original writes there unchecked", who,
                     index);
-    return Effect_Objects + index * kEffectStride;
+    return rv::Bytes(&Effect_Objects[index]);
 }
 
 // The side probe the Form0Begin shape makes inline in directions 3 and 5 (the
@@ -656,7 +656,7 @@ R1C_EXPORT void __cdecl PartyAction_WaitEffectEnd(void) {
     }
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return;
     unsigned char* const s = Sprite_Current;
-    if (Effect_Objects[static_cast<U>(s[0xB]) * kEffectStride] != 0) return;
+    if (Effect_Objects[static_cast<U>(s[0xB])].flags != 0) return;
     s[0x2B] = 0;
     Field_State[0x137] = 0;
 }

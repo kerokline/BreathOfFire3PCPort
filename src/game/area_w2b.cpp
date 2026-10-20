@@ -162,7 +162,7 @@ void SpawnEffect47(const char* who, unsigned char sub) {
     }
     const auto record = [who, o]() {
         if (o[0xB] >= 20) bof3::Fatal("%s: effect slot %u is past Effect_Objects' 20 records", who, static_cast<unsigned>(o[0xB]));
-        return Effect_Objects + o[0xB] * at::kEffectStride;
+        return rv::Bytes(&Effect_Objects[o[0xB]]);
     };
     record()[0] = 1;
     record()[5] = 0x47;

@@ -674,7 +674,7 @@ extern "C" void __cdecl EffectKind48_Run(void) { Dispatch("EffectKind48_Run", Ad
 extern "C" void __cdecl EffectKind48_Start(void) {
     unsigned char* const self = S();
     for (unsigned i = 0; i < at::kEffects; ++i) {
-        const unsigned char* const e = Effect_Objects + i * at::kEffectStride;
+        const unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
         if (e[0] != 0 && e[5] == 0x48 && e != self) {
             SH_CALL(Effect_Release)();
             return;

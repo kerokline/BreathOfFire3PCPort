@@ -5055,7 +5055,7 @@ src/game/effect_1f.cpp	ExtraSlots_PickItem	global	B	at::kExtraAccessory	0	0x9041
 src/game/effect_1f.cpp	ExtraSlots_PickItem	global	B	at::kExtraAccessory	1	0x904130	-	no-entry	at::kExtraAccessory 0x904130 -	b0
 src/game/effect_1f.cpp	ExtraSlots_PickItem	global	Label	at::kListLabelB	0	0x803628	-	no-entry	at::kListLabelB 0x803628 -	b0
 src/game/effect_1f.cpp	ExtraSlots_PickItem	global	B	at::kAccessoryIds	0	0x9042d4	-	no-entry	at::kAccessoryIds 0x9042d4 -	b0
-src/game/effect_1f.cpp	Effect_ResetFirstSeven	record	At	Key(Effect_Objects) + record * 0x80	0	-	via=Key	base-form	At(Key(Effect_Objects) + -): Key(Effect_Objects)	b1-effect
+src/game/effect_1f.cpp	Effect_ResetFirstSeven	record	At	Key(rv::Bytes(Effect_Objects)) + record * 0x80	0	-	via=Key	base-form	At(Key(Effect_Objects) + -): Key(Effect_Objects)	b1-effect
 src/game/effect_1f.cpp	FieldPanel_KindPoints	record	B	record + 0xF	0	-	-	family	B(record + 0xf): local record: no declaration read	b1-effect
 src/game/effect_1f.cpp	FieldPanel_KindPoints	record	Word	record + 0x12	0	-	-	family	Word(record + 0x12): local record: no declaration read	b1-effect
 src/game/effect_1f.cpp	FieldPanel_KindPoints	record	Word	record + 0x12	1	-	-	family	Word(record + 0x12): local record: no declaration read	b1-effect
@@ -9217,7 +9217,7 @@ src/game/field_hidden_fuzz.cpp	StubGround	record	Word	Sc() + 0x3E	0	-	via=Sc	har
 src/game/field_hidden_fuzz.cpp	StubZenny	record	At	bof3::addr::Text_Records + 4 * (1 + (h >> 4) % 2)	0	-	base=Text_Records	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	StubMsg	record	SetPtr	Sc() + 0x50	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	StubScriptStart	record	SetWord	Sc() + 0x58	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_hidden_fuzz.cpp	StubElevation	record	SetWord	Effect_Objects + i * 0x80u + 0x38	0	-	base=Effect_Objects	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/field_hidden_fuzz.cpp	StubElevation	record	SetWord	rv::Bytes(&Effect_Objects[i]) + 0x38	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	Next	record	SetPtr	m + 0x50	0	-	via=Member	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	Next	global	At	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/field_hidden_fuzz.cpp	Seed	record	SetWord	s + 0x2C	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field

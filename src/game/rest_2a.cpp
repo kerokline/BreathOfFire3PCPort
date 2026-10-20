@@ -54,18 +54,18 @@ constexpr unsigned kEffectCount = 20;
 // the pool (rest_2a::at::kEffectNone, inside Gfx_PacketPools), read in place;
 // any other byte no code of this band stores, and ours aborts.
 const unsigned char* EffectRead(unsigned index, const char* who) {
-    if (index < kEffectCount) return Effect_Objects + index * kEffectStride;
+    if (index < kEffectCount) return rv::Bytes(&Effect_Objects[index]);
     if (index == 0xFF) return At(Gfx_PacketPools_addr + 0x7560);
     bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads at 0x%X", who, index,
-                static_cast<unsigned>(Addr(Effect_Objects) + index * kEffectStride));
+                static_cast<unsigned>(Addr(rv::Bytes(Effect_Objects)) + index * kEffectStride));
     return nullptr;
 }
 // The same for a write: only 0..19 (the spawns test 0xFF first).
 unsigned char* EffectWrite(unsigned index, const char* who) {
     if (index >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes at 0x%X", who, index,
-                    static_cast<unsigned>(Addr(Effect_Objects) + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+                    static_cast<unsigned>(Addr(rv::Bytes(Effect_Objects)) + index * kEffectStride));
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // A dispatcher's `call [esp + 4 * Sprite_Current[4]]` through the table it

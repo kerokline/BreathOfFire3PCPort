@@ -254,7 +254,7 @@ void Seed(unsigned k) {
     // each sprite record's effect record in use or not, about half and half
     for (unsigned i = 0; i < 4; ++i) {
         const unsigned e = sh::SpriteRecord(i)[0xB];
-        if (e < 20) Effect_Objects[e * 0x80] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+        if (e < 20) Effect_Objects[e].flags = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
     }
     unsigned char* const s = Sprite_Current;
     if (const unsigned n = StatesOf(c.base)) s[4] = static_cast<unsigned char>(sh::Next() % n);
@@ -305,7 +305,7 @@ void Disturb(U h) {
     case 4: s[0x5D + v % 3] = static_cast<unsigned char>(v >> 2); break;
     case 5: Field_ActiveMember = sh::SpriteRecord(v); break;
     case 6: Field_ActiveMember[0xA0] = static_cast<unsigned char>(Field_ActiveMember[0xA0] ^ 0x80); break;
-    case 7: Effect_Objects[((v >> 1) % 20) * 0x80] = static_cast<unsigned char>(v & 1); break;
+    case 7: Effect_Objects[(v >> 1) % 20].flags = static_cast<unsigned char>(v & 1); break;
     case 8: Field_Request = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
     case 9: Draw_OtSlot = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 10: Records()[(v % 17) * 8 + 7] = static_cast<unsigned char>(v >> 5); break;

@@ -84,7 +84,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
     if (index >= kEffectCount)
         bof3::Fatal("%s: effect object index 0x%X is past Effect_Objects' 20 records; the original writes 0x%X unchecked", who,
                     index, static_cast<unsigned>(0x7E11E0 + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // Bit 0 of +0x80 of the object Sprite_ObjectAt found: below 0x1E Sprite_Objects,

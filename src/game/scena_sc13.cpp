@@ -1574,7 +1574,7 @@ static void EnterArea14Body() {
             }
         }
     }
-    if (Area() == 0xBD && Flag(1)) Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] | 0x40);
+    if (Area() == 0xBD && Flag(1)) Effect_Objects[0].flags = static_cast<unsigned char>(Effect_Objects[0].flags | 0x40);
     if (Area() == 0xBF) {
         if (FD() == 0 && Flag(5)) {
             if (!Flag(6)) {

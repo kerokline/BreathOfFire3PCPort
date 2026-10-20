@@ -40,7 +40,7 @@ using move_script::Word;
 unsigned char& B(std::uint32_t address) { return *Mem(address); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // Party record `member` (ObjTrio, 0x14C bytes).
 unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).

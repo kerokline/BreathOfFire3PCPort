@@ -96,7 +96,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes 0x%X "
                     "(docs/rest_1f.md section 7)",
                     who, index, static_cast<unsigned>(Effect_Objects_addr + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // The object Sprite_ObjectAt found gets bit 0 of its +0x80: 0..0x1D a
@@ -969,7 +969,7 @@ extern "C" void __cdecl LeaderPanel_S0Begin(void) {
 // one on, and +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Wait(void) {
     if (Transition_Busy != 0) return;
-    unsigned char* const record4 = Effect_Objects + 4 * kEffectStride;
+    unsigned char* const record4 = rv::Bytes(&Effect_Objects[4]);
     const unsigned char state = record4[1];
     record4[6] = 0;
     record4[1] = static_cast<unsigned char>(state + 1);
@@ -980,8 +980,8 @@ extern "C" void __cdecl LeaderPanel_S0Wait(void) {
 // record 4's state +1 is 4, record 1's state +1 one on, +2 one on (stage 1)
 // and +3 = 0.
 extern "C" void __cdecl LeaderPanel_S0End(void) {
-    if (Effect_Objects[4 * kEffectStride + 1] != 4) return;
-    ++Effect_Objects[kEffectStride + 1];
+    if (Effect_Objects[4].state != 4) return;
+    ++Effect_Objects[1].state;
     ++Sc()[2];
     Sc()[3] = 0;
 }

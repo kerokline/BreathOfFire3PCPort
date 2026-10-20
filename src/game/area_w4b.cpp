@@ -45,7 +45,7 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 void SetFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // ObjTrio record `m` (0x14C bytes; not checked, as the originals' index).
 unsigned char* PartyRecord(unsigned m) { return Mem(ObjTrio_addr + m * at::kPartyStride); }
 // The high word of a 16.16 position, as the hooks read it (a word at +2).

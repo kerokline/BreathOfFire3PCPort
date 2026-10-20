@@ -383,7 +383,7 @@ SC15_EXPORT void __cdecl Scena15_EnterArea(void) {
             }
         }
     }
-    if (Area() == 0xBD && TestAt(Cond_Flags_addr + 0x70, 1)) Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] | 0x40);
+    if (Area() == 0xBD && TestAt(Cond_Flags_addr + 0x70, 1)) Effect_Objects[0].flags = static_cast<unsigned char>(Effect_Objects[0].flags | 0x40);
     if (Area() == 0xC6) {
         if (Test(0x13)) {
             NewEffect(0xAB);

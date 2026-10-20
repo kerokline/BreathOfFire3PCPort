@@ -15,6 +15,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_0a.h"
 #include "game/rest_1f.h"
@@ -429,7 +430,7 @@ void Seed(unsigned k) {
     Field_ScriptFlags = static_cast<unsigned short>(sh::Next() % 8 == 0 ? Field_ScriptFlags | 0x400 : Field_ScriptFlags & ~0x400u);
     Field_State[0x89] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
     Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
-    unsigned char* const record4 = Effect_Objects + 4 * 0x80;
+    unsigned char* const record4 = rv::Bytes(&Effect_Objects[4]);
     record4[1] = static_cast<unsigned char>(PickOf(4, 4, 3, 5, sh::Next()));
     sh::SetRandHint(PickOf(0xD, 0xE, 0xF, 0xC, 0, 4, 6, 7, 5, 0xB, sh::Next()));
 }
@@ -467,11 +468,11 @@ void Disturb(U h) {
         break;
     }
     case 7:
-        if (g_effect < 20) Effect_Objects[g_effect * 0x80 + 8 + (v & 2)] = static_cast<unsigned char>(v >> 2);
+        if (g_effect < 20) rv::Bytes(Effect_Objects)[g_effect * 0x80 + 8 + (v & 2)] = static_cast<unsigned char>(v >> 2);
         break;
     case 8: Field_InputFlags = static_cast<unsigned char>(v); break;
     case 9: SetWord(s + 0x36 + (v & 1) * 4, v >> 1); break;
-    case 10: Effect_Objects[4 * 0x80 + 1] = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
+    case 10: Effect_Objects[4].state = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 11: SetWord(s + 0x2C, v >> 2); break;
     default: break;
     }

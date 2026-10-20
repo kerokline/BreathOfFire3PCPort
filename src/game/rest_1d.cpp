@@ -79,7 +79,7 @@ unsigned char* EffectChecked(unsigned index, const char* who) {
     if (index >= 20)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes at 0x%X", who, index,
                     static_cast<unsigned>(Effect_Objects_addr + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // Sprite_ObjectAt's object marked: +0x80 |= 1 of Sprite_Objects' record below

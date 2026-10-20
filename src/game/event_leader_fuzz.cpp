@@ -133,7 +133,7 @@ void Disturb() {
     case 16: Field_Kind2X = static_cast<long>(h * 0x2545F491u); break;
     case 17: Field_InputHeld = static_cast<unsigned short>(h >> 16); break;
     case 18: Member(w % 3)[0x5D] = static_cast<unsigned char>(v); break;
-    case 19: Effect_Objects[(w % 32) * 0x80u] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 19: Effect_Objects[w % 32].flags = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 20: {
         unsigned char* const sc = Sprite_Current;
         SetLong(sc + 0x34 + 4 * (w % 2), static_cast<std::int32_t>(h * 0x2545F491u));
@@ -668,7 +668,7 @@ Args Seed(unsigned k) {
         break;
     case kEncWait: {
         if (Half()) sc[0xB] = 0xFF;
-        if (sc[0xB] != 0xFF && Half()) Effect_Objects[sc[0xB] * 0x80u] = 0;
+        if (sc[0xB] != 0xFF && Half()) Effect_Objects[sc[0xB]].flags = 0;
         static const unsigned char kCounts[] = {0, 1, 2, 3, 3};
         Field_MemberCount = kCounts[Next() % 5];
         for (unsigned i = 1; i < 3; ++i) if (Often()) Member(i)[1] = 5;

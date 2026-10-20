@@ -76,7 +76,7 @@ VoidFn Entry(std::uint32_t table, int index) {
         static_cast<std::uint32_t>(Long(At(table + 4u * static_cast<std::uint32_t>(index))))));
 }
 unsigned char* Flags() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
-unsigned char* EffectRecord(unsigned slot) { return Effect_Objects + ((slot & 0xFFu) << 7); }
+unsigned char* EffectRecord(unsigned slot) { return rv::Bytes(Effect_Objects) + ((slot & 0xFFu) << 7); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.

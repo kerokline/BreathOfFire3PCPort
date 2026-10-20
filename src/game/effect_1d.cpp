@@ -97,7 +97,7 @@ unsigned char* NewRecord(const char* who, unsigned index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
                     "(docs/effect_1d.md section 2)",
                     who, index);
-    return Effect_Objects + index * at::kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * at::kEffectStride;
 }
 
 // Kind 0x21's frame: the arm's points built and drawn (the arm is the record +

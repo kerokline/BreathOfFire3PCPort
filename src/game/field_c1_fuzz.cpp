@@ -23,6 +23,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_c1.h"
 #include "game/field_c1_callees.h"
 #include "game/move_script_bytes.h"
@@ -159,7 +160,7 @@ template <typename... T> U PickBy(U h, T... v) {
     const U values[] = {static_cast<U>(v)...};
     return values[h % sizeof...(v)];
 }
-unsigned char* Eff(unsigned i) { return Effect_Objects + (i % at::kEffectCount) * at::kEffectStride; }
+unsigned char* Eff(unsigned i) { return rv::Bytes(&Effect_Objects[i % at::kEffectCount]); }
 
 // --- the moves ---------------------------------------------------------------------
 //

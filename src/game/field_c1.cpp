@@ -93,7 +93,7 @@ unsigned char* ExtraRec(int i, const char* who) {
 unsigned char* EffectRec(unsigned i, const char* who) {
     if (i >= at::kEffectCount)
         bof3::Fatal("%s: Effect_Objects index %u - the original writes outside the records", who, i);
-    return Effect_Objects + i * at::kEffectStride;
+    return rv::Bytes(&Effect_Objects[i]);
 }
 unsigned char* Member(int i, const char* who) {
     if (i < 0 || i >= static_cast<int>(at::kMemberCount))
@@ -1070,7 +1070,7 @@ extern "C" void __cdecl EffectKind1B_End(void) {
 // +0x4C, +0x2B = 1, its +0x29, +0x48 = 0, its point +0x34 / +0x38 and height
 // word +0x3E, the tint bytes 0; Sprite_SetAnimation(0x4E); +1 = 2.
 extern "C" void __cdecl EffectKind1B_Trail(void) {
-    const records::EffectObject* const src = rv::AsConst<records::EffectObject>(Effect_Objects + static_cast<U>(ObjTrio[0xB]) * at::kEffectStride);
+    const records::EffectObject* const src = &Effect_Objects[static_cast<U>(ObjTrio[0xB])];
     rv::As<records::EffectObject>(Cur())->flags = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->flags | 2);
     Cur()[0x24] = 1;
     rv::Store<unsigned>(rv::As<records::EffectObject>(Cur())->column, src->column);

@@ -194,7 +194,7 @@ extern "C" void __cdecl Area121_StartRun4(void) {
 extern "C" void __cdecl Area121_SpawnEffectBA(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const record = Effect_Objects + slot * at::kEffectStride;
+    unsigned char* const record = rv::Bytes(&Effect_Objects[slot]);
     record[0] = 1;
     record[5] = 0xBA;
 }
@@ -1094,7 +1094,7 @@ extern "C" void __cdecl Area121_Kind5CStart(void) {
     if (Game_AreaNumber == 0x68 && AH_CALL(KeyItem_Has)(0xA) == 0) return;
     for (U i = 0; i < 4; ++i) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
-        unsigned char* const record = Effect_Objects + slot * at::kEffectStride;
+        unsigned char* const record = rv::Bytes(&Effect_Objects[slot]);
         record[0] = 1;
         record[5] = 0x5C;
         record[1] = 3;

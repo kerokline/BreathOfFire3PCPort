@@ -789,7 +789,7 @@ extern "C" unsigned char __cdecl Field_EffectAhead(void) {
     const auto x = static_cast<int>(StepX(d) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x));
     const auto z = static_cast<int>(StepZ(d) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z));
     for (unsigned i = 0; i < 20; ++i) {
-        const unsigned char* const e = Effect_Objects + i * 0x80;
+        const unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
         if (e[0] == 0 || e[5] != 0x17) continue;
         if (g.point_in_reach(x, z, static_cast<short>(rv::Current<records::SpriteHead>()->height_whole), 0, e)) return static_cast<unsigned char>(i);
     }

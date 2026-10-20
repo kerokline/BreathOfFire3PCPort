@@ -128,7 +128,7 @@ extern "C" unsigned char __cdecl MoveScript_Group9(unsigned char* object, const 
         Sprite_Current[0xB] = n;
         SetPos(object, Pos(object) + 2u);
     } else if (op == 0x9F) {   // wait while the effect lives
-        if (Effect_Objects[Sprite_Current[0xB] * 0x80u] & 1) SetPos(object, pos - 1u);
+        if (Effect_Objects[Sprite_Current[0xB]].flags & 1) SetPos(object, pos - 1u);
     }
     return value;
 }

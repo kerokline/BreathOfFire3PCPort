@@ -91,7 +91,7 @@ void MarkObject(unsigned char found, const char* who) {
 // unchecked; ours aborts past the 20 records.
 unsigned char* EffectByAnswer(unsigned char i, const char* who) {
     if (i >= 20) bof3::Fatal("%s: effect object index 0x%X is past Effect_Objects' 20 records (its callee answers 0..19)", who, i);
-    return Effect_Objects + i * 0x80u;
+    return rv::Bytes(&Effect_Objects[i]);
 }
 
 // The party sets' cell helpers, which their callers reach by E8.
@@ -712,7 +712,7 @@ extern "C" void __cdecl PartyAction_FinishPalette(void) {
 // it: +0xB indexes Effect_Objects unchecked (a read; docs/rest_1a.md section 5).
 extern "C" void __cdecl PartyAction_WaitEffect(void) {
     unsigned char* const s = Sc();
-    const unsigned char* const e = Effect_Objects + s[0xB] * 0x80u;
+    const unsigned char* const e = rv::Bytes(Effect_Objects) + s[0xB] * 0x80u;
     if ((e[0] == 0 || e[1] == 1) && Field_Kind2Hold == 0) {
         s[0x2B] = 0;
         Fs()[0x137] = 0;

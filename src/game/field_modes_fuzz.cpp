@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_modes_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -46,7 +47,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 }
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 // The typed symbols are macros for lvalues: their addresses, taken once.
-const std::uint32_t kAngles = Addr(Camera_Angles), kEffectRecords = Addr(Effect_Objects),
+const std::uint32_t kAngles = Addr(Camera_Angles), kEffectRecords = Addr(rv::Bytes(Effect_Objects)),
                     kStripSource = Addr(Gfx_ClutStripSource), kStrip = Addr(Gfx_ClutStrip), kFocusZ = Addr(&MapView_FocusZ);
 
 // What a callee may change that its caller reads again after it: the step,

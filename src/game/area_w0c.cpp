@@ -43,7 +43,7 @@ std::int16_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 void AddLong(unsigned char* p, std::int32_t v) { SetLong(p, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(p)) + static_cast<std::uint32_t>(v))); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(Effect_Objects) + slot * at::kEffectStride; }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours

@@ -161,7 +161,7 @@ unsigned char* NewRecord(const char* who, unsigned index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
                     "(docs/effect_3a.md section 6)",
                     who, index);
-    return Effect_Objects + index * scenario_harness::at::kEffectStride;
+    return rv::Bytes(&Effect_Objects[index]);
 }
 
 unsigned char* Ray(unsigned i) { return EffectKind30_Shards + i * at::kRayStride; }

@@ -138,7 +138,7 @@ unsigned char* Spawned(unsigned char k, const char* who) {
     if (k >= at::kEffectCount)
         bof3::Fatal("%s: Effect_FindFree answered %u, and the original writes that record unchecked (past the pool)",
                     who, (unsigned)k);
-    return Effect_Objects + at::kEffectStride * k;
+    return rv::Bytes(&Effect_Objects[k]);
 }
 // A kind-0x1A record in state 0x10, as five of the states spawn it.
 unsigned char* SpawnMark(unsigned char k, const char* who) {
@@ -259,7 +259,7 @@ extern "C" void __cdecl EffectKind0F_ListClose() {
 // original 0x4674F0 (kind 0xF state 29): while record 6's +8 is 0 and its +1 is
 // 0xE, EffectKind0F_Children[+2] (a tail jump); else Effect_Release.
 extern "C" void __cdecl EffectKind0F_Child() {
-    if (Effect_Objects[0x308] == 0 && Effect_Objects[0x301] == 0xE) {
+    if (rv::Bytes(&Effect_Objects[6])[0x8] == 0 && Effect_Objects[6].state == 0xE) {
         StepAt(EffectKind0F_Children_addr, Sc()[2], at::kChildrenCount, "EffectKind0F_Child")();
         return;
     }

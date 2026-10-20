@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -74,7 +75,7 @@ unsigned Tinted(unsigned component, unsigned char tint) {
 // Sprite_Current and runs Effect_KindHandlers[+5], unbounded as the
 // original's.
 extern "C" void __cdecl Effect_RunObjects(void) {
-    unsigned char* object = Effect_Objects;
+    unsigned char* object = rv::Bytes(Effect_Objects);
     for (unsigned n = kEffects; n != 0; --n, object += kEffectBytes) {
         if (object[0] == 0) continue;
         Sprite_Current = object;
@@ -268,7 +269,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0) {
     if (g_log_n < kLog) g_log[g_log_n] = {what, Address(Sprite_Current), a};
     ++g_log_n;
 }
-unsigned char* Effect(unsigned k) { return Effect_Objects + (k % kEffects) * kEffectBytes; }
+unsigned char* Effect(unsigned k) { return rv::Bytes(&Effect_Objects[k % kEffects]); }
 unsigned char* Member(unsigned k) { return ObjTrio + (k % 5) * kMemberBytes; }
 
 // A callee may change what the caller reads again after it: which objects
@@ -345,7 +346,7 @@ Raw StubFor(std::uint32_t target) {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Effect_Objects), kEffects * kEffectBytes},
+    {Address(rv::Bytes(Effect_Objects)), kEffects * kEffectBytes},
     {Address(Field_Slots), kSlots * kSlotBytes},
     {Address(ObjTrio), kMembersSpan},
     {kTintFrom, kTintSpan},

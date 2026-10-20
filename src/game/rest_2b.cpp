@@ -30,6 +30,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_2b_callees.h"
 #include "game/scenario_harness.h"
@@ -171,7 +172,7 @@ extern "C" unsigned char __cdecl Effect_Spawn(unsigned char kind, signed char a,
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return slot;
     if (slot >= 20) bof3::Fatal("Effect_Spawn (0x57CE10): Effect_FindFree answered %u, past the 20 records", slot);
-    unsigned char* const r = Effect_Objects + 0x80u * slot;
+    unsigned char* const r = rv::Bytes(&Effect_Objects[slot]);
     r[0] = 1;
     r[5] = 6;
     r[6] = kind;
@@ -188,7 +189,7 @@ extern "C" unsigned char __cdecl Effect_SpawnAt(unsigned char kind, signed char 
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return slot;
     if (slot >= 20) bof3::Fatal("Effect_SpawnAt (0x57CE80): Effect_FindFree answered %u, past the 20 records", slot);
-    unsigned char* const r = Effect_Objects + 0x80u * slot;
+    unsigned char* const r = rv::Bytes(&Effect_Objects[slot]);
     r[0] = 1;
     r[5] = 0x19;
     r[6] = kind;

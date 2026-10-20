@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_hidden_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -96,7 +97,7 @@ void Disturb() {
     case 14: SetWord(s + 0x58, v % 4); break;
     case 15: SetWord(s + 0x2C, v % 3); break;
     case 16: SetWord(s + 0x3E, h >> 16); break;
-    case 17: if (s[0xB] < 20) Effect_Objects[s[0xB] * 0x80u] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 17: if (s[0xB] < 20) Effect_Objects[s[0xB]].flags = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 18: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (v % 2 ? 2 : 4)); break;
     case 19: SetLong(At(at::kMemberPos + (w % 6) * 4), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 20: At(at::kEnemies + (w % 8) * at::kEnemyStride)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
@@ -215,7 +216,7 @@ void __cdecl StubCopyFrames(unsigned frame, unsigned char* buffer, unsigned size
 long __cdecl StubElevation(long x, long z) {
     Record(23, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     if (Hash() % 2)
-        for (unsigned i = 0; i < 20; ++i) SetWord(Effect_Objects + i * 0x80u + 0x38, Hash() >> 16);
+        for (unsigned i = 0; i < 20; ++i) SetWord(rv::Bytes(&Effect_Objects[i]) + 0x38, Hash() >> 16);
     Disturb();
     return static_cast<long>(Hash());
 }
@@ -464,7 +465,7 @@ Args Seed(unsigned k) {
         static const unsigned char kSub[] = {0, 0, 1, 1, 1, 2, 2, 3, 0xFF};
         s[2] = kSub[Next() % 9];
         if (Half()) At(ObjTrio_addr + 0x137)[0] = 8;
-        if (Half()) Effect_Objects[s[0xB] * 0x80u] = 0;
+        if (Half()) Effect_Objects[s[0xB]].flags = 0;
         break;
     }
     case kFinish: {

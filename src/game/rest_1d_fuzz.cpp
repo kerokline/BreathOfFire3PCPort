@@ -337,7 +337,7 @@ void Seed(unsigned k) {
         break;
     case 0x521A20: {   // PartyAction_WaitEffectDone: the record in use or free, or 0xFF (read in place)
         s[0xB] = static_cast<unsigned char>(sh::Next() % 8 == 0 ? 0xFF : sh::Next() % 20);
-        if (s[0xB] < 20) Effect_Objects[s[0xB] * 0x80] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+        if (s[0xB] < 20) Effect_Objects[s[0xB]].flags = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
         break;
     }
     case 0x521200:
@@ -391,7 +391,7 @@ void Disturb(U h) {
     case 8: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (2u << (v % 2))); break;
     case 9: sh::Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 10: SetLong(sh::Mem(Field_DirectionSteps_addr) + 4 * (v % 16), static_cast<std::int32_t>(v << 6)); break;
-    case 11: Effect_Objects[((v >> 1) % 20) * 0x80] = static_cast<unsigned char>(v & 1); break;
+    case 11: Effect_Objects[(v >> 1) % 20].flags = static_cast<unsigned char>(v & 1); break;
     default: break;
     }
 }

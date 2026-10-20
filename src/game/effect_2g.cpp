@@ -922,7 +922,7 @@ extern "C" void __cdecl EffectKind5B_Start(void) {
                     "byte after them (docs/effect_2g.md section 6)",
                     slot);
     B(at::kArea75EffectSlots + slot) =
-        static_cast<unsigned char>(static_cast<std::int32_t>(AddressOf(s) - AddressOf(Effect_Objects)) >> 7);
+        static_cast<unsigned char>(static_cast<std::int32_t>(AddressOf(s) - AddressOf(rv::Bytes(Effect_Objects))) >> 7);
     s[0xA] = 0x80;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     S()[6] = 0x1E;

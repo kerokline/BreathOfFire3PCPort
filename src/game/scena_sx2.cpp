@@ -97,7 +97,7 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
 extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
     const unsigned i = SH_CALL(Effect_FindFree)();
     if (i == 0xFF) return;
-    unsigned char* const e = Effect_Objects + i * 0x80;
+    unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
     e[0] = 1;
     e[5] = 4;
     e[9] = static_cast<unsigned char>(frames);

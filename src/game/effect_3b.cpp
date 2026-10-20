@@ -166,7 +166,7 @@ unsigned char* Spawned(const char* who, U answer) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes record %u past "
                     "the pool (docs/effect_3b.md section 7)",
                     who, k, k);
-    return Effect_Objects + k * at::kEffectStride;
+    return rv::Bytes(&Effect_Objects[k]);
 }
 
 unsigned char* Parent() { return EffectKind69_Parent; }

@@ -405,7 +405,7 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     const unsigned char e = g.effect_free();
     if (e == 0xFF) return;
     const unsigned char* const s = Sprite_Current;
-    unsigned char* const o = Effect_Objects + e * 0x80u;
+    unsigned char* const o = rv::Bytes(&Effect_Objects[e]);
     o[0] = 1;
     o[5] = 0x41;
     o[8] = s[8];

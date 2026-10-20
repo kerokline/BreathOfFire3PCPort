@@ -153,7 +153,7 @@ void CaptureSprite(const char* who, bool a3) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original copies a sprite past "
                     "Effect_Objects (docs/rest_3f.md section 7)",
                     who, (unsigned)k);
-    unsigned char* const e = Effect_Objects + 0x80u * k;
+    unsigned char* const e = rv::Bytes(&Effect_Objects[k]);
     Rest3f_PixIndex = 1;
     SH_CALL(Gfx_ClearRect)(at::kCaptureX, at::kCaptureY, 0x80, 0x100);
     {

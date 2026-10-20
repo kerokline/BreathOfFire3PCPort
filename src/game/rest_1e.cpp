@@ -136,7 +136,7 @@ unsigned char* EffectAt(const char* who, int index, const char* what) {
         bof3::Fatal("%s: %s is %d, past Effect_Objects' 20 records; the original reads 0x%X unchecked "
                     "(docs/rest_1e.md section 5)",
                     who, what, index, static_cast<unsigned>(0x7E11E0 + index * static_cast<int>(kEffectStride)));
-    return Effect_Objects + index * static_cast<int>(kEffectStride);
+    return rv::Bytes(Effect_Objects) + index * static_cast<int>(kEffectStride);
 }
 
 // The point two steps ahead of Sprite_Current (read now), as the resolve and

@@ -816,7 +816,7 @@ void UseRegions(unsigned mask) {
     add(R(&g_result, sizeof g_result));
     if (mask & kObj) add(R(Object(kFirstObject), kObjects * 0xA4));
     if (mask & kExt) add(R(rv::Bytes(Sprite_ObjectsExtra), kExtras * 0xA4));
-    if (mask & kEff) add(R(Effect_Objects, 0xA00));
+    if (mask & kEff) add(R(rv::Bytes(Effect_Objects), 0xA00));
     if (mask & kAct) add(R(0x903A50, 0x5E0));                 // the run option byte and eight actor records
     if (mask & kFar)                                          // Field_ObjectInPath's answers read either way
         for (unsigned char* const o : {Object(-128), rv::Bytes(&Sprite_ObjectsExtra[0x61]), rv::Bytes(&Sprite_ObjectsExtra[0x62]),
@@ -1146,8 +1146,8 @@ void RunTests(unsigned rounds, unsigned only) {
             case kEffectAhead:
                 for (unsigned i = 0; i < 20; ++i)
                     if (OneIn(3)) {
-                        Effect_Objects[i * 0x80] = static_cast<unsigned char>(1 + Next() % 3);
-                        Effect_Objects[i * 0x80 + 5] = OneIn(4) ? 0x16 : 0x17;
+                        Effect_Objects[i].flags = static_cast<unsigned char>(1 + Next() % 3);
+                        Effect_Objects[i].kind = OneIn(4) ? 0x16 : 0x17;
                     }
                 break;
             case kCanSwap: case kSwap:

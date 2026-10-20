@@ -94,7 +94,7 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
     const unsigned char slot = g.effect_alloc();
     At(kSlot)[0] = slot;
     if (slot == 0xFF) return;
-    records::EffectObject* const e = rv::As<records::EffectObject>(Effect_Objects + (static_cast<std::uint32_t>(At(kSlot)[0]) << 7));
+    records::EffectObject* const e = rv::As<records::EffectObject>(rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(At(kSlot)[0]) << 7));
     const int ex = x();
     const int ey = Angle(1);
     e->flags = 1;

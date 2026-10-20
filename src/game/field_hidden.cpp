@@ -101,7 +101,7 @@ long StepX(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8)); }
 long StepZ(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8 + 4)); }
 long Add(long a, long b) { return static_cast<long>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b)); }
 // An effect object by its index: Effect_Objects + index * 0x80, unchecked.
-unsigned char* Effect(unsigned index) { return Effect_Objects + (index << 7); }
+unsigned char* Effect(unsigned index) { return rv::Bytes(Effect_Objects) + (index << 7); }
 
 // The record views (game/record_views.h): the member states and party actions
 // run on an ObjTrio record, Field_State is one; the Sprite_* helpers run on

@@ -3676,10 +3676,11 @@ evidence = "disasm 2026-09-22: ops 98..9D and 8C call it with the sprite's three
 pc = 0x7E11E0
 name = "Effect_Objects"
 psx = 0x80143FC4
-ctype = "unsigned char"
-count = 0xA00
+ctype = "records::EffectObject"
+count = 20
 status = "hypothesis"
 evidence = "disasm 2026-09-22: op 9F tests bit 0 of byte 0x7E11E0 + Sprite_Current[0xB] * 0x80 (PSX 0x80143FC4 + n * 0x74). Effect_RunObjects runs 20 objects of 0x80 bytes here: +0 in use, +1 the kind handler state, +5 the kind (Effect_KindHandlers), +9 a frame count, +0x64 +0x68 +0x6C three dwords (kind 0x13 its target angles). Effect_FindFree 0x589810 hands out the first free of the 20, Effect_Release clears bytes 0..4. A general pool of short-lived field objects (a scan of .text finds 266 immediate stores to byte +5 of a record, 98 different kinds, the highest 0xB0, and 9 stores of a register), of which the attract cycle runs only kind 0x13, the camera turn. docs/frame-callees.md. 20 x 0x80."
+note = "Typed (typed-data round stage C4, 2026-10-19) as records::EffectObject x20, from 0xA00 bytes: Effect_RunObjects' 20 objects of 0x80 (the evidence), the struct's size."
 
 [[func]]
 pc = 0x5795F0

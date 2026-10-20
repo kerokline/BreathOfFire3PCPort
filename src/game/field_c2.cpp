@@ -77,7 +77,7 @@ unsigned char* EffectRecord(const char* who, unsigned index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
                     "(docs/field_c2.md section 2)",
                     who, index);
-    return Effect_Objects + index * at::kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * at::kEffectStride;
 }
 
 // A new kind-0x34 record at the running one's place: +0 1, +5 0x34 (the caller

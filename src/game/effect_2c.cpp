@@ -130,7 +130,7 @@ unsigned char* NewRecord(const char* who, unsigned index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
                     "(docs/effect_2c.md section 6)",
                     who, index);
-    return Effect_Objects + index * at::kEffectStride;
+    return rv::Bytes(&Effect_Objects[index]);
 }
 
 // Kind 0x6B's column heights: 80 s16 at 0x676114 (the 0xA0 bytes its scatter

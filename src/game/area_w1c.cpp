@@ -40,7 +40,7 @@ std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_ca
 // A dword shifted right as the originals' `sar`.
 std::uint32_t Sar(std::int32_t v, unsigned n) { return static_cast<std::uint32_t>(v >> n); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(Effect_Objects) + slot * at::kEffectStride; }
 // Party record `member` (ObjTrio, 0x14C bytes).
 unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).

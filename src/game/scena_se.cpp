@@ -111,7 +111,7 @@ extern "C" void __cdecl Scena08_PartyJoin784(void) {
 extern "C" void __cdecl Effect_SpawnAtCell(unsigned state, unsigned x, unsigned z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect_Objects + slot * at::kEffectStride;
+    unsigned char* const e = rv::Bytes(Effect_Objects) + slot * at::kEffectStride;
     e[0] = 1;
     e[5] = at::kCellFxKind;
     e[1] = static_cast<unsigned char>(state);
