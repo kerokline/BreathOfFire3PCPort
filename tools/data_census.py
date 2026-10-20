@@ -627,6 +627,12 @@ GLOBAL_OFF = re.compile(r'^\s*(?:\(\s*)?(?:::)?(?:bof3::)?(?:addr::)?([A-Z]\w*)\
 HELPER_CALL = re.compile(r'^\s*(?:\(\s*)?((?:\w+::)*[A-Za-z_]\w*)\s*\(')
 # a module constant (any `k` name not reached through `at::`)
 MODULE_REF = re.compile(r'(?<![\w.>])((?:\w+::)*)(k[A-Z0-9_]\w*)\b(?!\s*[\[(.])')
+# a typed entry's address spelled <Name>_addr (gen_symbols' constant beside
+# the typed macro), bare or bof3::addr::-free: `B(ObjTrio_addr + 0x3a)`,
+# `At(SharedScratch_addr)` (stage C4 part 2: the owner counts these as raw)
+ADDR_NAME_REF = re.compile(r'(?<![\w.>:])((?:::)?)([A-Z]\w*_addr)\b')
+# a subscript of a typed record's own bytes: `rv::Bytes(&Effect_Objects[6])[0x8]`
+RV_BYTES_SUB = re.compile(r'(?<![\w.>:])((?:\w+::)*)rv::Bytes\s*\(')
 LIT = re.compile(r'^\s*\(?\s*(0[xX][0-9A-Fa-f]{6,8})[uUlL]*\b')
 STRIDE_NAME = re.compile(r'Stride')
 # calls that are not a helper returning a pointer: casts and operators
@@ -772,6 +778,25 @@ def stride_family(f, ident, line, env, at_value, syms):
     return '-'
 
 
+def in_call(text, pos):
+    """Whether pos sits inside a call's parentheses in text (`Vertex(X_addr)`
+    is the helper's record, not X_addr's global site); casts' and plain
+    parentheses do not count."""
+    depth = 0
+    for k in range(pos - 1, -1, -1):
+        c = text[k]
+        if c == ')':
+            depth += 1
+        elif c == '(':
+            if depth:
+                depth -= 1
+                continue
+            m = re.search(r'([\w>])\s*$', text[:k])
+            if m and not re.search(r'(static_cast|reinterpret_cast|const_cast)\s*<[^<>]*>\s*$', text[:k]):
+                return True
+    return False
+
+
 def scan(files, syms):
     by_rel = {f.rel: f for f in files}
     env = collect_constants(files, {**syms.names, **syms.addr_names})
@@ -886,6 +911,19 @@ def scan(files, syms):
                 sites.append((f.rel, ln, 'record', name, expr, addr, f'base={kname}',
                               '-', '-', '-', fuzz))
                 continue
+            # a typed entry's <Name>_addr: `B(ObjTrio_addr + 0x3a)`, a global
+            # site at the entry's address (the expr column holds the rest)
+            anames = [am for am in ADDR_NAME_REF.finditer(top) if am.group(2) in syms.addr_names
+                      and not in_call(top, am.start())]
+            if anames:
+                am = anames[0]
+                v = syms.addr_names[am.group(2)]
+                rest = top[am.end():].strip()
+                off = eval_expr(rest[1:], env) if rest[:1] == '+' else (0 if not rest.strip(' )') else None)
+                av = (v + off) & 0xFFFFFFFF if off is not None and top[:am.start()].strip(' (') == '' else v
+                cov, dname, ctype = syms.cover(av)
+                sites.append((f.rel, ln, 'global', name, expr, f'{av:#x}', '-', cov, dname, ctype, fuzz))
+                continue
             # a module constant outside `namespace at`: `W(kScriptPool + 2 * i)`,
             # `B(kShakeShift)`
             mods = [(mm, local_value(f, mm.group(2), env)) for mm in MODULE_REF.finditer(top)
@@ -939,6 +977,20 @@ def scan(files, syms):
                     continue
                 cov, dname, ctype = syms.cover(v)
                 sites.append((f.rel, ln, 'global', acc, name, f'{v:#x}', '-', cov, dname, ctype, fuzz))
+        # a subscript of rv::Bytes(...): a record site on the typed record
+        for m in RV_BYTES_SUB.finditer(code):
+            r = balanced_args(code, m.end() - 1)
+            if r is None:
+                continue
+            after = code[r[1]:r[1] + 3].lstrip()
+            if not after.startswith('['):
+                continue
+            ln = line_of(f.starts, m.start())
+            arg = ' '.join(','.join(r[0]).split())
+            bm = re.match(r'&?\s*([A-Za-z_]\w*)', arg)
+            fam = f'base={bm.group(1)}' if bm else '-'
+            sites.append((f.rel, ln, 'record', 'Bytes', ('rv::Bytes(' + arg + ')')[:60], '-', fam,
+                          '-', '-', '-', fuzz))
     sites.sort(key=lambda s: (s[0], s[1], s[2], s[4]))
 
     # constant map: every `namespace at` constant (scope `at`), and every other
