@@ -90,7 +90,7 @@ constexpr U kFacePairs = 0x64E4F4;        // s8 pairs .data: Escape_Begin's x / 
 constexpr U kChanceRow = 0x64E524;        // u8[6] .data: Escape_Chance's row
 constexpr U kBannerLines = 0x64E52C;      // u16 [][10] .data: BattleBanner_AddLine's message ids
 constexpr U kTileSizes = 0x64E268;        // u16 w, h by the size byte (BattleWin_DrawTile's)
-// kTint: now SharedScratch (symbols.toml). u8 r, g, b: BattleWin_DrawTileTint's colour
+inline auto& kTint = SharedScratch;  // u8 r, g, b: BattleWin_DrawTileTint's colour
 constexpr U kWakeChance = 0x64E3E8;       // u8[] .data: Battle_WakeRoll's percentage by the counter (1, 2)
 constexpr U kWakeResist = 0x64E3E0;       // u8[] .data: its second roll's table by the actor's +0xB6 / +0xC6
 

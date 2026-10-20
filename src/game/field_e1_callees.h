@@ -71,10 +71,10 @@ constexpr std::uint32_t kObjectFlags = 0x9040CC;      // the flag bank of the fi
 constexpr std::uint32_t kMessageWord = 0x7DEE48;      // u16: the open message's id (Msg_OpenSystem writes it)
 constexpr std::uint32_t kButtonMap = 0x903580;        // u16: a button map word of the save (input-script.md section 4)
 constexpr std::uint32_t kCellX = 0x903850;            // u16: the cell searched (x), and the save of the members' x / z
-constexpr std::uint32_t kCellZ = 0x903852;            // u16: its z
+inline auto& kCellZ = SharedScratch.w_02;            // u16: its z
 // kExitArea: now AreaW0b_Place (symbols.toml). u16: the area an exit leads to
 // kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8: the exit's kind (4 here)
-constexpr std::uint32_t kExitX = 0x903860;            // s32: the exit's x (16.16)
+inline auto& kExitX = SharedScratch.d_10;            // s32: the exit's x (16.16)
 // kExitZ: now AreaEntry_PendingZ (symbols.toml). s32: its z
 constexpr std::uint32_t kSlotPositions = 0x7E06E0;    // 4 x (x, z) dwords: a party slot's placed position
 // kLeaderList: now Cond_Flags[0xd2] (symbols.toml). u8: the leader's id (the party list's first)

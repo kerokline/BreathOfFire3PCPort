@@ -129,11 +129,11 @@ extern "C" void __cdecl Window_HpGaugeTrack(unsigned char* gauge, const unsigned
             drain[0] = gauge[0];
             gauge[0] = 0;
         } else {
-            SharedScratch.b_00 = gauge[0];
+            at::kScratch = gauge[0];
             const auto q = static_cast<unsigned char>(Scale(S(hp), S(max_hp)));
             gauge[0] = q;
             if (S(hp) != 0 && q == 0) gauge[0] = 1;
-            drain[0] = static_cast<unsigned char>(SharedScratch.b_00 - gauge[0]);
+            drain[0] = static_cast<unsigned char>(at::kScratch - gauge[0]);
         }
         SetWord(step, static_cast<unsigned>(drain[0] >> 4));
         kind[0] = 1;

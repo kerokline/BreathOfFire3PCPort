@@ -8071,7 +8071,7 @@ src/game/event_ops.cpp	Field_LeaderSetPace	global	Byte	kFlags2Lo	0	0x905ba4	-	wi
 src/game/event_ops.cpp	Field_LeaderStepCell	record	Word	At(Scratch_Swap_addr) + 2	0	-	via=At	no-struct	no records.h family is evidenced for this pointer (via=At)	b1-scen_ui
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	Byte	kFlags2Lo	0	0x905ba4	-	width	kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	At	at::kStepSounds	0	0x660960	-	no-entry	at::kStepSounds 0x660960 -	b0
-src/game/event_ops.cpp	Field_LeaderStepTarget	record	Word	At(at::kStepSounds) + SharedScratch.b_01 * 2u	0	-	via=At	-	-	-
+src/game/event_ops.cpp	Field_LeaderStepTarget	record	Word	At(at::kStepSounds) + at::kScratch.b_01 * 2u	0	-	via=At	-	-	-
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	Byte	kFlags2Lo	1	0x905ba4	-	width	kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	Byte	kFlags2Lo	2	0x905ba4	-	width	kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/event_ops.cpp	Field_EncounterDue	global	Byte	kFlagsLo	0	0x9039a2	-	width	kFlagsLo 0x9039a2 Field_ScriptFlags	b0

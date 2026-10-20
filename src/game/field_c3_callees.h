@@ -42,7 +42,7 @@ constexpr std::uint32_t kMenuDispatchB = bof3::addr::Shisu_ModeDispatch;      //
 constexpr std::uint32_t kTargetOffsets = 0x66978C;      // s16 by Field_State +0x89: taken off the ground at (kTargetX, kTargetZ)
 constexpr std::uint32_t kTargetX = 0x904EF4;            // s32 (16.16): the x the vertical moves test the ground at
 constexpr std::uint32_t kTargetZ = 0x904EF8;            // s32: its z
-// kSloped: now SharedScratch (symbols.toml). u8: AreaMap_Slope's "sloped" answer (SharedScratch's first byte)
+inline auto& kSloped = SharedScratch.b_00;  // u8: AreaMap_Slope's "sloped" answer (SharedScratch's first byte)
 constexpr std::uint32_t kScriptFlags2High = 0x905BA5;   // Field_ScriptFlags2's high byte: bit 1 set by the fall's area change
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 0x40 bytes a CLUT slot: Sprite_LoadPalette's source by Sprite_Current +5
 

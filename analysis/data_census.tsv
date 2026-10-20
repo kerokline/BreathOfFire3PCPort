@@ -8071,7 +8071,7 @@ site	src/game/event_ops.cpp	462	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_Scr
 site	src/game/event_ops.cpp	489	record	Word	At(Scratch_Swap_addr) + 2	-	via=At	-	-	-	0
 site	src/game/event_ops.cpp	562	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
 site	src/game/event_ops.cpp	569	global	At	at::kStepSounds	0x660960	-	none	-	-	0
-site	src/game/event_ops.cpp	569	record	Word	At(at::kStepSounds) + SharedScratch.b_01 * 2u	-	via=At	-	-	-	0
+site	src/game/event_ops.cpp	569	record	Word	At(at::kStepSounds) + at::kScratch.b_01 * 2u	-	via=At	-	-	-	0
 site	src/game/event_ops.cpp	580	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
 site	src/game/event_ops.cpp	600	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
 site	src/game/event_ops.cpp	626	global	Byte	kFlagsLo	0x9039a2	-	exact	Field_ScriptFlags	unsigned short	0
@@ -16668,7 +16668,7 @@ const	kBaseX	0x8	value	1	src/game/battle_items_callees.h:49(battle_items::at)	-	
 const	kBoxPointCount	0x8	value	1	src/game/effect_2a_callees.h:44(effect_2a::at)	-	-	-	-	at
 const	kBuildingCount	0x8	value	1	src/game/rest_4a_callees.h:66(rest_4a::at)	-	-	-	-	at
 const	kCellsSize	0x8	value	1	src/game/effect_3a_callees.h:48(effect_3a::at)	-	-	-	-	at
-const	kChapterSplit	0x8	value	1	src/game/mode_rest_callees.h:70(mode_rest::at)	-	-	-	-	at
+const	kChapterSplit	0x8	value	1	src/game/mode_rest_callees.h:71(mode_rest::at)	-	-	-	-	at
 const	kCharCount	0x8	value	2	src/game/area_w4f_callees.h:73(area_w4f::at);src/game/rest_3a_callees.h:91(rest_3a::at)	-	-	-	-	at
 const	kChipShapeCount	0x8	value	1	src/game/effect_4c_callees.h:44(effect_4c::at)	-	-	-	-	at
 const	kEncounterRows	0x8	value	1	src/game/rest_3g_callees.h:44(rest_3g::at)	-	-	-	-	at
@@ -16784,7 +16784,7 @@ const	kSub0BTileCount	0x12	value	1	src/game/effect_5b_callees.h:40(effect_5b::at
 const	kWeapon	0x12	value	1	src/game/char_stats_callees.h:22(char_stats::at)	-	-	-	-	at
 const	kActionCount	0x13	value	1	src/game/event_leader_callees.h:28(event_leader::at)	-	-	-	-	at
 const	kArmour	0x13	value	1	src/game/char_stats_callees.h:23(char_stats::at)	-	-	-	-	at
-const	kFormActionCount	0x13	value	2	src/game/field_e1_callees.h:47(field_e1::at);src/game/rest_1a_callees.h:49(rest_1a::at)	-	-	-	-	at
+const	kFormActionCount	0x13	value	2	src/game/field_e1_callees.h:47(field_e1::at);src/game/rest_1a_callees.h:50(rest_1a::at)	-	-	-	-	at
 const	kInitFlagOn	0x13	value	1	src/game/area_011_callees.h:19(area_011::at)	-	-	-	-	at
 const	kWeaponElement	0x13	value	1	src/game/battle_damage_callees.h:112(battle_damage::at)	-	-	-	-	at
 const	kArea75CellBytes	0x14	value	1	src/game/area_w1f_callees.h:165(area_w1f::at)	-	-	-	-	at
@@ -16816,7 +16816,7 @@ const	kShopStride	0x17	value	1	src/game/rest_4a_callees.h:105(rest_4a::at)	-	-	-
 const	kAbilityStride	0x18	value	7	src/game/battle_damage_callees.h:114(battle_damage::at);src/game/battle_e3_callees.h:76(battle_e3::at);src/game/battle_window_draw_callees.h:36(battle_window_draw::at);src/game/boss_sf_callees.h:61(boss_sf::at);src/game/rest_3b_callees.h:83(rest_3b::at);src/game/rest_3c_callees.h:80(rest_3c::at);src/game/rest_4a_callees.h:42(rest_4a::at)	-	-	-	-	at
 const	kAccessoryStride	0x18	value	3	src/game/char_stats_callees.h:52(char_stats::at);src/game/effect_1b_callees.h:89(effect_1b::at);src/game/game_last_callees.h:22(game_last::at)	-	-	-	-	at
 const	kActionRowStride	0x18	value	1	src/game/battle_e6_callees.h:80(battle_e6::at)	-	-	-	-	at
-const	kActionStride	0x18	value	1	src/game/battle_sprites_callees.h:49(battle_sprites::at)	-	-	-	-	at
+const	kActionStride	0x18	value	1	src/game/battle_sprites_callees.h:50(battle_sprites::at)	-	-	-	-	at
 const	kDirectoryBytes	0x18	value	1	src/game/save_menu_callees.h:94(save_menu::at)	-	-	-	-	at
 const	kDropStride	0x18	value	3	src/game/effect_2a_callees.h:57(effect_2a::at);src/game/effect_3d_callees.h:75(effect_3d::at);src/game/effect_4f_callees.h:23(effect_4f::at)	-	-	-	-	at
 const	kELevel	0x18	value	1	src/game/battle_damage_callees.h:53(battle_damage::at)	-	-	-	-	at
@@ -16883,7 +16883,7 @@ const	kKind0FRowBytes	0x24	value	1	src/game/effect_1a_callees.h:58(effect_1a::at
 const	kMemberStride	0x24	value	1	src/game/shop_states2_callees.h:65(shop_states2::at)	-	-	-	-	at
 const	kRecordSize	0x24	value	1	src/game/menu_lists_callees.h:52(menu_lists::at)	-	-	-	-	at
 const	kWindowSize	0x24	value	2	src/game/battle_phases_callees.h:87(battle_phases::at);src/game/battle_result_callees.h:66(battle_result::at)	-	-	-	-	at
-const	kWindowStride	0x24	value	9	src/game/battle_sprites_callees.h:31(battle_sprites::at);src/game/battle_turn_steps_callees.h:85(battle_turn_steps::at);src/game/battle_window_draw_callees.h:21(battle_window_draw::at);src/game/boss_harness.h:153(boss_harness::at);src/game/rest_2c_callees.h:130(rest_2c::at);src/game/rest_2d_callees.h:71(rest_2d::at);src/game/rest_2g_callees.h:15(rest_2g::at);src/game/rest_2h_callees.h:31(rest_2h::at);src/game/scenario_harness.h:103(scenario_harness::at)	-	-	-	-	at
+const	kWindowStride	0x24	value	9	src/game/battle_sprites_callees.h:32(battle_sprites::at);src/game/battle_turn_steps_callees.h:85(battle_turn_steps::at);src/game/battle_window_draw_callees.h:21(battle_window_draw::at);src/game/boss_harness.h:153(boss_harness::at);src/game/rest_2c_callees.h:130(rest_2c::at);src/game/rest_2d_callees.h:71(rest_2d::at);src/game/rest_2g_callees.h:15(rest_2g::at);src/game/rest_2h_callees.h:31(rest_2h::at);src/game/scenario_harness.h:103(scenario_harness::at)	-	-	-	-	at
 const	kArea174ScriptCount	0x25	value	1	src/game/area_w4c_callees.h:99(area_w4c::at)	-	-	-	-	at
 const	kDef	0x26	value	1	src/game/char_stats_callees.h:31(char_stats::at)	-	-	-	-	at
 const	kEAp	0x26	value	1	src/game/battle_damage_callees.h:54(battle_damage::at)	-	-	-	-	at
@@ -16964,7 +16964,7 @@ const	kMapWidth	0x60	value	1	src/game/rest_3g_callees.h:82(rest_3g::at)	-	-	-	-	
 const	kMessageCellsSize	0x60	value	1	src/game/scenario_harness.h:106(scenario_harness::at)	-	-	-	-	at
 const	kEScript	0x70	value	1	src/game/battle_damage_callees.h:60(battle_damage::at)	-	-	-	-	at
 const	kERowsDone	0x71	value	1	src/game/battle_damage_callees.h:61(battle_damage::at)	-	-	-	-	at
-const	kTripFlag	0x77	value	1	src/game/mode_rest_callees.h:43(mode_rest::at)	-	-	-	-	at
+const	kTripFlag	0x77	value	1	src/game/mode_rest_callees.h:44(mode_rest::at)	-	-	-	-	at
 const	kPLevel	0x7a	value	1	src/game/battle_damage_callees.h:25(battle_damage::at)	-	-	-	-	at
 const	kDialsSolvedFlag	0x7e	value	1	src/game/effect_3d_callees.h:58(effect_3d::at)	-	-	-	-	at
 const	kItemHalfB	0x7e	value	1	src/game/effect_5f_callees.h:66(effect_5f::at)	-	-	-	-	at
@@ -16981,7 +16981,7 @@ const	kStyleSize	0x80	value	1	src/game/scenario_harness.h:91(scenario_harness::a
 const	kHandlerCount	0x82	value	1	src/game/battle_damage_callees.h:108(battle_damage::at)	-	-	-	-	at
 const	kPWeapon	0x82	value	1	src/game/battle_damage_callees.h:27(battle_damage::at)	-	-	-	-	at
 const	kActorTaskStride	0x84	value	1	src/game/rest_3d_callees.h:46(rest_3d::at)	-	-	-	-	at
-const	kPopupStride	0x84	value	1	src/game/battle_sprites_callees.h:29(battle_sprites::at)	-	-	-	-	at
+const	kPopupStride	0x84	value	1	src/game/battle_sprites_callees.h:30(battle_sprites::at)	-	-	-	-	at
 const	kSavedPosStride	0x84	value	1	src/game/battle_setup_callees.h:73(battle_setup::at)	-	-	-	-	at
 const	kTaskSize	0x84	value	5	src/game/battle_flow_callees.h:37(battle_flow::at);src/game/battle_fx_tasks_callees.h:32(battle_fx_tasks::at);src/game/battle_obj_states_callees.h:38(battle_obj_states::at);src/game/battle_turn_steps_callees.h:80(battle_turn_steps::at);src/game/enemy_ai_ops_callees.h:39(enemy_ai_ops::at)	-	-	-	-	at
 const	kTaskStride	0x84	value	16	src/game/area_harness.h:72(area_harness::at);src/game/battle_e2_callees.h:78(battle_e2::at);src/game/battle_e3_callees.h:85(battle_e3::at);src/game/battle_e6_callees.h:70(battle_e6::at);src/game/battle_e7_callees.h:36(battle_e7::at);src/game/boss_harness.h:59(boss_harness::at);src/game/boss_sa_callees.h:56(boss_sa::at);src/game/boss_sf_callees.h:73(boss_sf::at);src/game/boss_sg_callees.h:48(boss_sg::at);src/game/boss_sh_callees.h:78(boss_sh::at);src/game/boss_si_callees.h:44(boss_si::at);src/game/boss_sj_callees.h:43(boss_sj::at);src/game/magic_fx_reached_callees.h:38(magic_fx_reached::at);src/game/magic_harness.h:38(magic_harness::at);src/game/rest_2g_callees.h:40(rest_2g::at);src/game/scenario_harness.h:139(scenario_harness::at)	-	-	-	-	at
@@ -16994,7 +16994,7 @@ const	kTrioBusy	0x89	value	1	src/game/effect_4d_callees.h:26(effect_4d::at)	-	-	
 const	kPAp	0x8a	value	1	src/game/battle_damage_callees.h:28(battle_damage::at)	-	-	-	-	at
 const	kAiScriptStride	0x8c	value	1	src/game/battle_damage_callees.h:98(battle_damage::at)	-	-	-	-	at
 const	kEShown	0x8c	value	1	src/game/battle_damage_callees.h:57(battle_damage::at)	-	-	-	-	at
-const	kEnemyDataStride	0x8c	value	7	src/game/battle_e3_callees.h:78(battle_e3::at);src/game/battle_sprites_callees.h:26(battle_sprites::at);src/game/boss_harness.h:120(boss_harness::at);src/game/boss_sf_callees.h:70(boss_sf::at);src/game/boss_si_callees.h:47(boss_si::at);src/game/boss_sj_callees.h:50(boss_sj::at);src/game/rest_3c_callees.h:79(rest_3c::at)	-	-	-	-	at
+const	kEnemyDataStride	0x8c	value	7	src/game/battle_e3_callees.h:78(battle_e3::at);src/game/battle_sprites_callees.h:27(battle_sprites::at);src/game/boss_harness.h:120(boss_harness::at);src/game/boss_sf_callees.h:70(boss_sf::at);src/game/boss_si_callees.h:47(boss_si::at);src/game/boss_sj_callees.h:50(boss_sj::at);src/game/rest_3c_callees.h:79(rest_3c::at)	-	-	-	-	at
 const	kKindStride	0x8c	value	2	src/game/field_hidden_callees.h:68(field_hidden::at);src/game/inventory_ops_callees.h:32(inventory_ops::at)	-	-	-	-	at
 const	kPSurvive	0x8c	value	1	src/game/battle_damage_callees.h:29(battle_damage::at)	-	-	-	-	at
 const	kEShown2	0x8d	value	1	src/game/battle_damage_callees.h:57(battle_damage::at)	-	-	-	-	at
@@ -17015,12 +17015,12 @@ const	kPArmour3	0x95	value	1	src/game/battle_setup_callees.h:38(battle_setup::at
 const	kEnemyExp	0x96	value	1	src/game/boss_sc_callees.h:68(boss_sc::at)	-	-	-	-	at
 const	kPAccessory	0x96	value	1	src/game/battle_setup_callees.h:39(battle_setup::at)	-	-	-	-	at
 const	kPDef	0x96	value	1	src/game/battle_damage_callees.h:31(battle_damage::at)	-	-	-	-	at
-const	kBattleTrackA	0x97	value	1	src/game/mode_rest_callees.h:71(mode_rest::at)	-	-	-	-	at
+const	kBattleTrackA	0x97	value	1	src/game/mode_rest_callees.h:72(mode_rest::at)	-	-	-	-	at
 const	kMagicRowCount	0x97	value	1	src/game/battle_fx_tasks_callees.h:61(battle_fx_tasks::at)	-	-	-	-	at
 const	kHp	0x98	value	1	src/game/battle_turn_steps_callees.h:68(battle_turn_steps::at)	-	-	-	-	at
 const	kPAgi	0x98	value	1	src/game/battle_damage_callees.h:31(battle_damage::at)	-	-	-	-	at
 const	kPHp	0x98	value	1	src/game/battle_setup_callees.h:40(battle_setup::at)	-	-	-	-	at
-const	kBattleTrackB	0x99	value	1	src/game/mode_rest_callees.h:72(mode_rest::at)	-	-	-	-	at
+const	kBattleTrackB	0x99	value	1	src/game/mode_rest_callees.h:73(mode_rest::at)	-	-	-	-	at
 const	kAp	0x9a	value	1	src/game/battle_turn_steps_callees.h:68(battle_turn_steps::at)	-	-	-	-	at
 const	kPAp	0x9a	value	1	src/game/battle_setup_callees.h:40(battle_setup::at)	-	-	-	-	at
 const	kByte9C	0x9c	value	1	src/game/battle_turn_steps_callees.h:68(battle_turn_steps::at)	-	-	-	-	at
@@ -17043,7 +17043,7 @@ const	kExtraStride	0xa4	value	2	src/game/area_w1b_callees.h:54(area_w1b::at);src
 const	kFieldObjectSize	0xa4	value	1	src/game/worldmap_area_callees.h:34(worldmap_area::at)	-	-	-	-	at
 const	kFollowerStride	0xa4	value	1	src/game/effect_6d_callees.h:32(effect_6d::at)	-	-	-	-	at
 const	kMemberStride	0xa4	value	1	src/game/scena_sc2_callees.h:49(scena_sc2::at)	-	-	-	-	at
-const	kObjectStride	0xa4	value	20	src/game/area_harness.h:50(area_harness::at);src/game/area_w1d_callees.h:72(area_w1d::at);src/game/area_w1f_callees.h:69(area_w1f::at);src/game/area_w2e_callees.h:87(area_w2e::at);src/game/area_w3b_callees.h:58(area_w3b::at);src/game/area_w3d_callees.h:95(area_w3d::at);src/game/area_w3e_callees.h:74(area_w3e::at);src/game/area_w3f_callees.h:70(area_w3f::at);src/game/area_w4b_callees.h:88(area_w4b::at);src/game/area_w4c_callees.h:65(area_w4c::at);src/game/area_w4f_callees.h:101(area_w4f::at);src/game/boss_harness.h:113(boss_harness::at);src/game/boss_sa_callees.h:61(boss_sa::at);src/game/effect_1a_callees.h:94(effect_1a::at);src/game/effect_2g_callees.h:42(effect_2g::at);src/game/field_c2_callees.h:40(field_c2::at);src/game/field_hidden_callees.h:51(field_hidden::at);src/game/rest_1a_callees.h:64(rest_1a::at);src/game/rest_1e_callees.h:27(rest_1e::at);src/game/scena_se_callees.h:29(scena_se::at)	-	-	-	-	at
+const	kObjectStride	0xa4	value	20	src/game/area_harness.h:50(area_harness::at);src/game/area_w1d_callees.h:72(area_w1d::at);src/game/area_w1f_callees.h:69(area_w1f::at);src/game/area_w2e_callees.h:87(area_w2e::at);src/game/area_w3b_callees.h:58(area_w3b::at);src/game/area_w3d_callees.h:95(area_w3d::at);src/game/area_w3e_callees.h:74(area_w3e::at);src/game/area_w3f_callees.h:70(area_w3f::at);src/game/area_w4b_callees.h:88(area_w4b::at);src/game/area_w4c_callees.h:65(area_w4c::at);src/game/area_w4f_callees.h:101(area_w4f::at);src/game/boss_harness.h:113(boss_harness::at);src/game/boss_sa_callees.h:61(boss_sa::at);src/game/effect_1a_callees.h:94(effect_1a::at);src/game/effect_2g_callees.h:42(effect_2g::at);src/game/field_c2_callees.h:40(field_c2::at);src/game/field_hidden_callees.h:51(field_hidden::at);src/game/rest_1a_callees.h:65(rest_1a::at);src/game/rest_1e_callees.h:27(rest_1e::at);src/game/scena_se_callees.h:29(scena_se::at)	-	-	-	-	at
 const	kPHoly	0xa4	value	1	src/game/battle_damage_callees.h:33(battle_damage::at)	-	-	-	-	at
 const	kRecordBytes	0xa4	value	2	src/game/char_stats_callees.h:20(char_stats::at);src/game/item_use_callees.h:40(item_use::at)	-	-	-	-	at
 const	kRecordSize	0xa4	value	1	src/game/inventory_ops_callees.h:48(inventory_ops::at)	-	-	-	-	at
@@ -17060,11 +17060,11 @@ const	kBattleSize	0xb0	value	3	src/game/area_harness.h:77(area_harness::at);src/
 const	kEMaxHp	0xb0	value	1	src/game/battle_setup_callees.h:56(battle_setup::at)	-	-	-	-	at
 const	kEAgi	0xb8	value	1	src/game/battle_setup_callees.h:56(battle_setup::at)	-	-	-	-	at
 const	kEnemySpeed	0xb8	value	1	src/game/magic_fx_reached_callees.h:56(magic_fx_reached::at)	-	-	-	-	at
-const	kTripAnyArea	0xbd	value	1	src/game/mode_rest_callees.h:33(mode_rest::at)	-	-	-	-	at
+const	kTripAnyArea	0xbd	value	1	src/game/mode_rest_callees.h:34(mode_rest::at)	-	-	-	-	at
 const	kDescriptorCount	0xc8	value	2	src/game/area_w2a_callees.h:63(area_w2a::at);src/game/area_w4d_callees.h:86(area_w4d::at)	-	-	-	-	at
 const	kSaveFlagsSize	0xc8	value	1	src/game/scenario_harness.h:95(scenario_harness::at)	-	-	-	-	at
-const	kBattleFileA	0xd2	value	1	src/game/mode_rest_callees.h:71(mode_rest::at)	-	-	-	-	at
-const	kBattleFileB	0xd3	value	1	src/game/mode_rest_callees.h:72(mode_rest::at)	-	-	-	-	at
+const	kBattleFileA	0xd2	value	1	src/game/mode_rest_callees.h:72(mode_rest::at)	-	-	-	-	at
+const	kBattleFileB	0xd3	value	1	src/game/mode_rest_callees.h:73(mode_rest::at)	-	-	-	-	at
 const	kStrikeHurtMessage	0xd9	value	1	src/game/rest_1e_callees.h:36(rest_1e::at)	-	-	-	-	at
 const	kMessagePoolsSize	0xe8	value	1	src/game/scenario_harness.h:130(scenario_harness::at)	-	-	-	-	at
 const	kBattleSize	0x100	value	1	src/game/boss_harness.h:66(boss_harness::at)	-	-	-	-	at
@@ -17094,10 +17094,10 @@ const	kECount80	0x125	value	1	src/game/battle_setup_callees.h:60(battle_setup::a
 const	kPQueuedKind	0x125	value	1	src/game/battle_setup_callees.h:45(battle_setup::at)	-	-	-	-	at
 const	kPQueuedItem	0x126	value	1	src/game/battle_setup_callees.h:46(battle_setup::at)	-	-	-	-	at
 const	kEnemySize	0x128	value	5	src/game/battle_flow_callees.h:44(battle_flow::at);src/game/battle_fx_tasks_callees.h:41(battle_fx_tasks::at);src/game/battle_phases_callees.h:77(battle_phases::at);src/game/enemy_ai_ops_callees.h:32(enemy_ai_ops::at);src/game/rest_3a_callees.h:85(rest_3a::at)	-	-	-	-	at
-const	kEnemyStride	0x128	value	29	src/game/area_harness.h:84(area_harness::at);src/game/battle_actions_callees.h:73(battle_actions::at);src/game/battle_damage_callees.h:47(battle_damage::at);src/game/battle_e2_callees.h:75(battle_e2::at);src/game/battle_e4_callees.h:31(battle_e4::at);src/game/battle_e5_callees.h:87(battle_e5::at);src/game/battle_e6_callees.h:66(battle_e6::at);src/game/battle_items_callees.h:70(battle_items::at);src/game/battle_setup_callees.h:29(battle_setup::at);src/game/battle_sprites_callees.h:24(battle_sprites::at);src/game/battle_turn_steps_callees.h:73(battle_turn_steps::at);src/game/battle_win_states_callees.h:37(battle_win_states::at);src/game/battle_window_draw_callees.h:33(battle_window_draw::at);src/game/battle_windows_callees.h:28(battle_windows::at);src/game/boss_harness.h:105(boss_harness::at);src/game/boss_sa_callees.h:58(boss_sa::at);src/game/boss_sd_callees.h:74(boss_sd::at);src/game/boss_sg_callees.h:46(boss_sg::at);src/game/boss_sh_callees.h:71(boss_sh::at);src/game/boss_sj_callees.h:40(boss_sj::at);src/game/effect_6d_callees.h:73(effect_6d::at);src/game/magic_fx_reached_callees.h:53(magic_fx_reached::at);src/game/magic_harness.h:57(magic_harness::at);src/game/rest_3b_callees.h:78(rest_3b::at);src/game/rest_3c_callees.h:74(rest_3c::at);src/game/rest_3d_callees.h:42(rest_3d::at);src/game/rest_3g_callees.h:41(rest_3g::at);src/game/rest_4a_callees.h:40(rest_4a::at);src/game/scenario_harness.h:153(scenario_harness::at)	-	-	-	-	at
+const	kEnemyStride	0x128	value	29	src/game/area_harness.h:84(area_harness::at);src/game/battle_actions_callees.h:73(battle_actions::at);src/game/battle_damage_callees.h:47(battle_damage::at);src/game/battle_e2_callees.h:75(battle_e2::at);src/game/battle_e4_callees.h:31(battle_e4::at);src/game/battle_e5_callees.h:87(battle_e5::at);src/game/battle_e6_callees.h:66(battle_e6::at);src/game/battle_items_callees.h:70(battle_items::at);src/game/battle_setup_callees.h:29(battle_setup::at);src/game/battle_sprites_callees.h:25(battle_sprites::at);src/game/battle_turn_steps_callees.h:73(battle_turn_steps::at);src/game/battle_win_states_callees.h:37(battle_win_states::at);src/game/battle_window_draw_callees.h:33(battle_window_draw::at);src/game/battle_windows_callees.h:28(battle_windows::at);src/game/boss_harness.h:105(boss_harness::at);src/game/boss_sa_callees.h:58(boss_sa::at);src/game/boss_sd_callees.h:74(boss_sd::at);src/game/boss_sg_callees.h:46(boss_sg::at);src/game/boss_sh_callees.h:71(boss_sh::at);src/game/boss_sj_callees.h:40(boss_sj::at);src/game/effect_6d_callees.h:73(effect_6d::at);src/game/magic_fx_reached_callees.h:53(magic_fx_reached::at);src/game/magic_harness.h:57(magic_harness::at);src/game/rest_3b_callees.h:78(rest_3b::at);src/game/rest_3c_callees.h:74(rest_3c::at);src/game/rest_3d_callees.h:42(rest_3d::at);src/game/rest_3g_callees.h:41(rest_3g::at);src/game/rest_4a_callees.h:40(rest_4a::at);src/game/scenario_harness.h:153(scenario_harness::at)	-	-	-	-	at
 const	kFieldStateMember	0x128	value	2	src/game/area_w3a_callees.h:44(area_w3a::at);src/game/area_w4b_callees.h:66(area_w4b::at)	-	-	-	-	at
 const	kPHpChange	0x128	value	1	src/game/battle_setup_callees.h:47(battle_setup::at)	-	-	-	-	at
-const	kCommuFile	0x12a	value	1	src/game/mode_rest_callees.h:24(mode_rest::at)	-	-	-	-	at
+const	kCommuFile	0x12a	value	1	src/game/mode_rest_callees.h:25(mode_rest::at)	-	-	-	-	at
 const	kPApChange	0x12a	value	1	src/game/battle_setup_callees.h:47(battle_setup::at)	-	-	-	-	at
 const	kPEffect	0x12c	value	1	src/game/battle_setup_callees.h:48(battle_setup::at)	-	-	-	-	at
 const	kPCounter	0x12d	value	1	src/game/battle_setup_callees.h:49(battle_setup::at)	-	-	-	-	at
@@ -17117,11 +17117,11 @@ const	kMemberFlag	0x148	value	1	src/game/effect_3a_callees.h:57(effect_3a::at)	-
 const	kRecord	0x148	value	1	src/game/battle_turn_steps_callees.h:69(battle_turn_steps::at)	-	-	-	-	at
 const	kFieldStateTint	0x149	value	1	src/game/area_w4b_callees.h:67(area_w4b::at)	-	-	-	-	at
 const	kMemberSize	0x14c	value	8	src/game/battle_e1_callees.h:124(battle_e1::at);src/game/battle_flow_callees.h:81(battle_flow::at);src/game/battle_fx_tasks_callees.h:39(battle_fx_tasks::at);src/game/battle_menu_states_callees.h:55(battle_menu_states::at);src/game/battle_obj_states_callees.h:34(battle_obj_states::at);src/game/battle_phases_callees.h:75(battle_phases::at);src/game/battle_result_callees.h:61(battle_result::at);src/game/rest_3a_callees.h:83(rest_3a::at)	-	-	-	-	at
-const	kMemberStride	0x14c	value	12	src/game/battle_win_states_callees.h:39(battle_win_states::at);src/game/effect_5d_callees.h:24(effect_5d::at);src/game/event_leader_callees.h:36(event_leader::at);src/game/event_ops_callees.h:31(event_ops::at);src/game/field_c1_callees.h:33(field_c1::at);src/game/field_c2_callees.h:37(field_c2::at);src/game/rest_1a_callees.h:66(rest_1a::at);src/game/rest_4a_callees.h:35(rest_4a::at);src/game/save_menu_callees.h:118(save_menu::at);src/game/scena_calls_callees.h:30(scena_calls::at);src/game/scena_sc3_callees.h:70(scena_sc3::at);src/game/scena_sc7_callees.h:79(scena_sc7::at)	-	-	-	-	at
+const	kMemberStride	0x14c	value	12	src/game/battle_win_states_callees.h:39(battle_win_states::at);src/game/effect_5d_callees.h:24(effect_5d::at);src/game/event_leader_callees.h:36(event_leader::at);src/game/event_ops_callees.h:31(event_ops::at);src/game/field_c1_callees.h:33(field_c1::at);src/game/field_c2_callees.h:37(field_c2::at);src/game/rest_1a_callees.h:67(rest_1a::at);src/game/rest_4a_callees.h:35(rest_4a::at);src/game/save_menu_callees.h:118(save_menu::at);src/game/scena_calls_callees.h:30(scena_calls::at);src/game/scena_sc3_callees.h:70(scena_sc3::at);src/game/scena_sc7_callees.h:79(scena_sc7::at)	-	-	-	-	at
 const	kObjStride	0x14c	value	13	src/game/effect_2a_callees.h:66(effect_2a::at);src/game/effect_4c_callees.h:26(effect_4c::at);src/game/field_e1_callees.h:92(field_e1::at);src/game/field_s_callees.h:51(field_s::at);src/game/inventory_ops_callees.h:59(inventory_ops::at);src/game/rest_2c_callees.h:93(rest_2c::at);src/game/rest_2d_callees.h:76(rest_2d::at);src/game/rest_2g_callees.h:27(rest_2g::at);src/game/scena_sc6_callees.h:84(scena_sc6::at);src/game/scena_sc9b_callees.h:60(scena_sc9b::at);src/game/scena_sx2_callees.h:31(scena_sx2::at);src/game/scena_sx_callees.h:35(scena_sx::at);src/game/scenario_harness.h:70(scenario_harness::at)	-	-	-	-	at
 const	kObjTrioStride	0x14c	value	5	src/game/effect_3a_callees.h:55(effect_3a::at);src/game/effect_3b_callees.h:58(effect_3b::at);src/game/effect_3c_callees.h:58(effect_3c::at);src/game/effect_4b_callees.h:65(effect_4b::at);src/game/effect_5f_callees.h:14(effect_5f::at)	-	-	-	-	at
 const	kObjectStride	0x14c	value	1	src/game/battle_windows_callees.h:25(battle_windows::at)	-	-	-	-	at
-const	kPartyStride	0x14c	value	45	src/game/area_harness.h:46(area_harness::at);src/game/area_w1b_callees.h:55(area_w1b::at);src/game/area_w1c_callees.h:64(area_w1c::at);src/game/area_w1e_callees.h:25(area_w1e::at);src/game/area_w1f_callees.h:66(area_w1f::at);src/game/area_w2a_callees.h:57(area_w2a::at);src/game/area_w2b_callees.h:44(area_w2b::at);src/game/area_w2c_callees.h:48(area_w2c::at);src/game/area_w2d_callees.h:62(area_w2d::at);src/game/area_w2f_callees.h:65(area_w2f::at);src/game/area_w3a_callees.h:36(area_w3a::at);src/game/area_w3b_callees.h:57(area_w3b::at);src/game/area_w3c_callees.h:50(area_w3c::at);src/game/area_w3d_callees.h:63(area_w3d::at);src/game/area_w3e_callees.h:53(area_w3e::at);src/game/area_w3f_callees.h:63(area_w3f::at);src/game/area_w3g_callees.h:46(area_w3g::at);src/game/area_w4b_callees.h:63(area_w4b::at);src/game/area_w4c_callees.h:48(area_w4c::at);src/game/area_w4f_callees.h:61(area_w4f::at);src/game/battle_actions_callees.h:71(battle_actions::at);src/game/battle_damage_callees.h:22(battle_damage::at);src/game/battle_e2_callees.h:68(battle_e2::at);src/game/battle_e3_callees.h:82(battle_e3::at);src/game/battle_e4_callees.h:29(battle_e4::at);src/game/battle_e5_callees.h:94(battle_e5::at);src/game/battle_e6_callees.h:64(battle_e6::at);src/game/battle_e7_callees.h:40(battle_e7::at);src/game/battle_items_callees.h:68(battle_items::at);src/game/battle_setup_callees.h:28(battle_setup::at);src/game/battle_sprites_callees.h:22(battle_sprites::at);src/game/battle_turn_steps_callees.h:67(battle_turn_steps::at);src/game/boss_harness.h:102(boss_harness::at);src/game/boss_sd_callees.h:73(boss_sd::at);src/game/boss_se_callees.h:79(boss_se::at);src/game/boss_sf_callees.h:78(boss_sf::at);src/game/boss_sg_callees.h:53(boss_sg::at);src/game/boss_sh_callees.h:65(boss_sh::at);src/game/boss_sj_callees.h:54(boss_sj::at);src/game/magic_fx_reached_callees.h:51(magic_fx_reached::at);src/game/magic_harness.h:55(magic_harness::at);src/game/rest_3b_callees.h:76(rest_3b::at);src/game/rest_3c_callees.h:71(rest_3c::at);src/game/rest_3d_callees.h:40(rest_3d::at);src/game/scenario_harness.h:151(scenario_harness::at)	-	-	-	-	at
+const	kPartyStride	0x14c	value	45	src/game/area_harness.h:46(area_harness::at);src/game/area_w1b_callees.h:55(area_w1b::at);src/game/area_w1c_callees.h:64(area_w1c::at);src/game/area_w1e_callees.h:25(area_w1e::at);src/game/area_w1f_callees.h:66(area_w1f::at);src/game/area_w2a_callees.h:57(area_w2a::at);src/game/area_w2b_callees.h:44(area_w2b::at);src/game/area_w2c_callees.h:48(area_w2c::at);src/game/area_w2d_callees.h:62(area_w2d::at);src/game/area_w2f_callees.h:65(area_w2f::at);src/game/area_w3a_callees.h:36(area_w3a::at);src/game/area_w3b_callees.h:57(area_w3b::at);src/game/area_w3c_callees.h:50(area_w3c::at);src/game/area_w3d_callees.h:63(area_w3d::at);src/game/area_w3e_callees.h:53(area_w3e::at);src/game/area_w3f_callees.h:63(area_w3f::at);src/game/area_w3g_callees.h:46(area_w3g::at);src/game/area_w4b_callees.h:63(area_w4b::at);src/game/area_w4c_callees.h:48(area_w4c::at);src/game/area_w4f_callees.h:61(area_w4f::at);src/game/battle_actions_callees.h:71(battle_actions::at);src/game/battle_damage_callees.h:22(battle_damage::at);src/game/battle_e2_callees.h:68(battle_e2::at);src/game/battle_e3_callees.h:82(battle_e3::at);src/game/battle_e4_callees.h:29(battle_e4::at);src/game/battle_e5_callees.h:94(battle_e5::at);src/game/battle_e6_callees.h:64(battle_e6::at);src/game/battle_e7_callees.h:40(battle_e7::at);src/game/battle_items_callees.h:68(battle_items::at);src/game/battle_setup_callees.h:28(battle_setup::at);src/game/battle_sprites_callees.h:23(battle_sprites::at);src/game/battle_turn_steps_callees.h:67(battle_turn_steps::at);src/game/boss_harness.h:102(boss_harness::at);src/game/boss_sd_callees.h:73(boss_sd::at);src/game/boss_se_callees.h:79(boss_se::at);src/game/boss_sf_callees.h:78(boss_sf::at);src/game/boss_sg_callees.h:53(boss_sg::at);src/game/boss_sh_callees.h:65(boss_sh::at);src/game/boss_sj_callees.h:54(boss_sj::at);src/game/magic_fx_reached_callees.h:51(magic_fx_reached::at);src/game/magic_harness.h:55(magic_harness::at);src/game/rest_3b_callees.h:76(rest_3b::at);src/game/rest_3c_callees.h:71(rest_3c::at);src/game/rest_3d_callees.h:40(rest_3d::at);src/game/scenario_harness.h:151(scenario_harness::at)	-	-	-	-	at
 const	kTrioStride	0x14c	value	3	src/game/effect_4d_callees.h:28(effect_4d::at);src/game/effect_5g_callees.h:15(effect_5g::at);src/game/scena_sc13_callees.h:86(scena_sc13::at)	-	-	-	-	at
 const	kWorkStride	0x14c	value	1	src/game/item_use_callees.h:32(item_use::at)	-	-	-	-	at
 const	kWorkingStride	0x14c	value	1	src/game/battle_window_draw_callees.h:41(battle_window_draw::at)	-	-	-	-	at
@@ -17148,9 +17148,9 @@ const	kSound9EOpenA	0x207	value	1	src/game/rest_3f_callees.h:64(rest_3f::at)	-	-
 const	kSound9EShutA	0x208	value	1	src/game/rest_3f_callees.h:65(rest_3f::at)	-	-	-	-	at
 const	kSoundRing	0x208	value	1	src/game/rest_3f_callees.h:67(rest_3f::at)	-	-	-	-	at
 const	kSoundPixels	0x20c	value	1	src/game/rest_3f_callees.h:66(rest_3f::at)	-	-	-	-	at
-const	kPartySetFiles	0x2c2	value	1	src/game/mode_rest_callees.h:23(mode_rest::at)	-	-	-	-	at
+const	kPartySetFiles	0x2c2	value	1	src/game/mode_rest_callees.h:24(mode_rest::at)	-	-	-	-	at
 const	kTitleFile	0x31d	value	1	src/game/shop_states2_callees.h:81(shop_states2::at)	-	-	-	-	at
-const	kMenuFile	0x31e	value	1	src/game/mode_rest_callees.h:16(mode_rest::at)	-	-	-	-	at
+const	kMenuFile	0x31e	value	1	src/game/mode_rest_callees.h:17(mode_rest::at)	-	-	-	-	at
 const	kCaptureX	0x340	value	1	src/game/rest_3f_callees.h:55(rest_3f::at)	-	-	-	-	at
 const	kBankStride	0x384	value	1	src/game/scena_sx2_callees.h:29(scena_sx2::at)	-	-	-	-	at
 const	kSpiralStride	0x4bc	value	1	src/game/effect_2b_callees.h:34(effect_2b::at)	-	-	-	-	at
@@ -17162,7 +17162,7 @@ const	kUnpackBytes	0xacc	value	1	src/game/area_w2e_callees.h:103(area_w2e::at)	-
 const	kSummaryAt	0xca0	value	1	src/game/save_menu_callees.h:96(save_menu::at)	-	-	-	-	at
 const	kStagingClear	0xd50	value	1	src/game/rest_2c_callees.h:72(rest_2c::at)	-	-	-	-	at
 const	kBlockBytes	0x10b0	value	2	src/game/rest_2c_callees.h:70(rest_2c::at);src/game/save_menu_callees.h:54(save_menu::at)	-	-	-	-	at
-const	kBootClearBytes	0x10b0	value	1	src/game/mode_flow_callees.h:68(mode_flow::at)	-	-	-	-	at
+const	kBootClearBytes	0x10b0	value	1	src/game/mode_flow_callees.h:69(mode_flow::at)	-	-	-	-	at
 const	kFileBytes	0x12b0	value	1	src/game/save_menu_callees.h:57(save_menu::at)	-	-	-	-	at
 const	kSaveSize	0x12b0	value	1	src/game/rest_2c_callees.h:64(rest_2c::at)	-	-	-	-	at
 const	kClearBytes	0x1c00	value	1	src/game/save_menu_callees.h:58(save_menu::at)	-	-	-	-	at
@@ -17175,7 +17175,7 @@ const	kClutStripSize	0x4000	value	1	src/game/effect_5a_callees.h:27(effect_5a::a
 const	kClutToLive	0x4000	value	1	src/game/area_w3f_callees.h:88(area_w3f::at)	-	-	-	-	at
 const	kHeldB	0x6000	value	1	src/game/effect_4a_callees.h:42(effect_4a::at)	-	-	-	-	at
 const	kLowered	0xfe00	value	1	src/game/effect_5a_callees.h:54(effect_5a::at)	-	-	-	-	at
-const	kAreaAskedZ	0x160000	value	1	src/game/mode_rest_callees.h:45(mode_rest::at)	-	-	-	-	at
+const	kAreaAskedZ	0x160000	value	1	src/game/mode_rest_callees.h:46(mode_rest::at)	-	-	-	-	at
 const	kTrio2Line	0x340000	value	1	src/game/effect_4a_callees.h:35(effect_4a::at)	-	-	-	-	at
 const	kExeLo	0x400000	data	1	src/hook/statehash.cpp:79(bof3::(anon))	-	-	none	-	module
 const	kImageBase	0x400000	data	1	src/hook/exe_layout.h:20(bof3::exe_layout)	-	-	none	-	module
@@ -17198,7 +17198,7 @@ const	kMenuDispatchA	0x42d710	code	1	src/game/field_c3_callees.h:30(field_c3::at
 const	kEquipOpenHelper	0x42e0e0	code	1	src/game/battle_e1_callees.h:142(battle_e1::at)	BattleExtra_EquipSetupWindows	func	-	-	at
 const	kEquipConfirmHelper	0x42e250	code	1	src/game/battle_e1_callees.h:143(battle_e1::at)	BattleExtra_EquipCommit	func	-	-	at
 const	kEquipFrameHelper	0x42e2f0	code	1	src/game/battle_e1_callees.h:144(battle_e1::at)	BattleExtra_EquipRefresh	func	-	-	at
-const	kAreaAskedX	0x430000	code	1	src/game/mode_rest_callees.h:44(mode_rest::at)	-	-	-	-	at
+const	kAreaAskedX	0x430000	code	1	src/game/mode_rest_callees.h:45(mode_rest::at)	-	-	-	-	at
 const	kStatGain	0x432170	code	1	src/game/battle_e7_callees.h:17(battle_e7::at)	Char_LevelUpGain	func	-	-	at
 const	kEnemySound	0x437450	code	3	src/game/boss_se_callees.h:114(boss_se::at);src/game/boss_sf_callees.h:92(boss_sf::at);src/game/boss_sh_callees.h:93(boss_sh::at)	Sound_PlayEffectUnlessNone	func	-	-	at
 const	kPlayCue	0x437450	code	2	src/game/battle_e2_callees.h:40(battle_e2::at);src/game/boss_sa_callees.h:91(boss_sa::at)	Sound_PlayEffectUnlessNone	func	-	-	at
@@ -17746,9 +17746,9 @@ const	kAbilityRows	0x64c1d0	data	2	src/game/battle_actions_callees.h:78(battle_a
 const	kMagicRows	0x64c2b8	data	1	src/game/battle_fx_tasks_callees.h:60(battle_fx_tasks::at)	Magic_Rows	data	exact	unsigned long	at
 const	kMyriaSlotScript	0x64dd04	data	1	src/game/boss_sf_callees.h:89(boss_sf::at)	-	-	none	-	at
 const	kEventRows	0x64ddee	data	1	src/game/rest_3g_callees.h:36(rest_3g::at)	-	-	none	-	at
-const	kEventAsset	0x64ddef	data	1	src/game/mode_rest_callees.h:64(mode_rest::at)	-	-	none	-	at
-const	kEventFile	0x64decc	data	1	src/game/mode_rest_callees.h:65(mode_rest::at)	-	-	none	-	at
-const	kEventTrack	0x64dece	data	1	src/game/mode_rest_callees.h:66(mode_rest::at)	-	-	none	-	at
+const	kEventAsset	0x64ddef	data	1	src/game/mode_rest_callees.h:65(mode_rest::at)	-	-	none	-	at
+const	kEventFile	0x64decc	data	1	src/game/mode_rest_callees.h:66(mode_rest::at)	-	-	none	-	at
+const	kEventTrack	0x64dece	data	1	src/game/mode_rest_callees.h:67(mode_rest::at)	-	-	none	-	at
 const	kStatusOffsets	0x64df70	data	1	src/game/battle_phases_callees.h:103(battle_phases::at)	BattleWin_MemberTargetOffsets	data	exact	signed char	at
 const	kMemberRowY	0x64dfc8	data	1	src/game/battle_e2_callees.h:104(battle_e2::at)	-	-	none	-	at
 const	kPartyLift	0x64dfc8	data	1	src/game/magic_s15.cpp:80((anon))	-	-	none	-	module
@@ -17820,15 +17820,15 @@ const	kRecipeStats	0x64ef00	data	1	src/game/battle_e6_callees.h:99(battle_e6::at
 const	kRecipeAbilities	0x64f028	data	1	src/game/battle_e6_callees.h:100(battle_e6::at)	-	-	none	-	at
 const	kRollOdds	0x64f0fc	data	1	src/game/battle_e6_callees.h:104(battle_e6::at)	-	-	none	-	at
 const	kRollOddsB	0x64f104	data	1	src/game/battle_e6_callees.h:105(battle_e6::at)	-	-	none	-	at
-const	kHitSounds	0x64f10c	data	1	src/game/battle_sprites_callees.h:51(battle_sprites::at)	Battle_HitSounds	data	exact	-	at
+const	kHitSounds	0x64f10c	data	1	src/game/battle_sprites_callees.h:52(battle_sprites::at)	Battle_HitSounds	data	exact	-	at
 const	kDatNames	0x64f368	data	1	src/game/save_menu_callees.h:98(save_menu::at)	Dat_FileNames	data	exact	const char *	at
 const	kAreaKinds	0x652850	data	1	src/game/rest_4a_callees.h:75(rest_4a::at)	-	-	none	-	at
 const	kDatFormat	0x652894	data	1	src/game/save_menu_callees.h:99(save_menu::at)	-	-	none	-	at
 const	kListPattern	0x65289c	data	1	src/game/save_menu_callees.h:95(save_menu::at)	-	-	none	-	at
 const	kListPattern	0x65289c	data	1	src/game/crt_rest_fuzz.cpp:496(crt_rest::(anon))	-	-	none	-	module
-const	kClutCount	0x6528c4	data	1	src/game/battle_sprites_callees.h:59(battle_sprites::at)	-	-	none	-	at
-const	kClutDivisor	0x6528cc	data	1	src/game/battle_sprites_callees.h:60(battle_sprites::at)	-	-	none	-	at
-const	kClutStep	0x6528d4	data	1	src/game/battle_sprites_callees.h:61(battle_sprites::at)	-	-	none	-	at
+const	kClutCount	0x6528c4	data	1	src/game/battle_sprites_callees.h:60(battle_sprites::at)	-	-	none	-	at
+const	kClutDivisor	0x6528cc	data	1	src/game/battle_sprites_callees.h:61(battle_sprites::at)	-	-	none	-	at
+const	kClutStep	0x6528d4	data	1	src/game/battle_sprites_callees.h:62(battle_sprites::at)	-	-	none	-	at
 const	kSlotDivisors	0x6528e4	data	1	src/game/rest_4a_callees.h:45(rest_4a::at)	-	-	none	-	at
 const	kSlotSteps	0x6528ec	data	1	src/game/rest_4a_callees.h:46(rest_4a::at)	-	-	none	-	at
 const	kBanks	0x6528f4	data	1	src/game/rest_4a_callees.h:83(rest_4a::at)	-	-	none	-	at
@@ -17990,12 +17990,12 @@ const	kSourceCells	0x6552ac	data	1	src/game/effect_4f_callees.h:27(effect_4f::at
 const	kKindHandlers	0x655350	data	1	src/game/scenario_harness.h:117(scenario_harness::at)	Effect_KindHandlers	data	exact	unsigned long	at
 const	kActKinds	0x65563c	data	1	src/game/battle_e2_callees.h:101(battle_e2::at)	-	-	none	-	at
 const	kSoundLists	0x6565bc	data	1	src/game/battle_misc_callees.h:45(battle_misc)	-	-	none	-	module
-const	kBossHandlers	0x656954	data	1	src/game/battle_sprites_callees.h:54(battle_sprites::at)	Boss_SetupTable	data	exact	unsigned long	at
+const	kBossHandlers	0x656954	data	1	src/game/battle_sprites_callees.h:55(battle_sprites::at)	Boss_SetupTable	data	exact	unsigned long	at
 const	kSetupTable	0x656954	data	1	src/game/boss_harness.h:127(boss_harness::at)	Boss_SetupTable	data	exact	unsigned long	at
-const	kNamePlaces	0x656a34	data	1	src/game/battle_sprites_callees.h:53(battle_sprites::at)	-	-	none	-	at
-const	kGameModeHandlers	0x656a44	data	1	src/game/mode_flow_callees.h:26(mode_flow::at)	GameMode_Handlers	data	exact	void *	at
-const	kFacingJitter	0x656a80	data	1	src/game/mode_rest_callees.h:37(mode_rest::at)	-	-	none	-	at
-const	kApproach	0x656aa4	data	1	src/game/mode_rest_callees.h:57(mode_rest::at)	-	-	none	-	at
+const	kNamePlaces	0x656a34	data	1	src/game/battle_sprites_callees.h:54(battle_sprites::at)	-	-	none	-	at
+const	kGameModeHandlers	0x656a44	data	1	src/game/mode_flow_callees.h:27(mode_flow::at)	GameMode_Handlers	data	exact	void *	at
+const	kFacingJitter	0x656a80	data	1	src/game/mode_rest_callees.h:38(mode_rest::at)	-	-	none	-	at
+const	kApproach	0x656aa4	data	1	src/game/mode_rest_callees.h:58(mode_rest::at)	-	-	none	-	at
 const	kBootDefaults	0x656aec	data	1	src/input/sigma.cpp:32(bof3x::input::sigma::(anon))	ModeFlow_ButtonDefaults	data	exact	unsigned long	module
 const	kIdLists	0x656b00	data	2	src/game/rest_2h_callees.h:76(rest_2h::at);src/game/shop_states2_callees.h:52(shop_states2::at)	Inventory_IdLists	data	exact	-	at
 const	kIdLists	0x656b00	data	2	src/game/rest_2e.cpp:85((anon));src/game/rest_2f.cpp:125((anon))	Inventory_IdLists	data	exact	-	module
@@ -18024,7 +18024,7 @@ const	kWeaponFlags	0x657461	data	1	src/game/game_last_callees.h:17(game_last::at
 const	kWeapons	0x657461	data	1	src/game/rest_4a_callees.h:87(rest_4a::at)	-	-	none	-	at
 const	kWeaponElement	0x657463	data	1	src/game/battle_e5_callees.h:90(battle_e5::at)	-	-	none	-	at
 const	kWeaponA	0x657464	data	1	src/game/rest_2e.cpp:89((anon))	-	-	none	-	module
-const	kHitClass	0x657465	data	1	src/game/battle_sprites_callees.h:50(battle_sprites::at)	-	-	none	-	at
+const	kHitClass	0x657465	data	1	src/game/battle_sprites_callees.h:51(battle_sprites::at)	-	-	none	-	at
 const	kWeaponB	0x657466	data	1	src/game/rest_2e.cpp:90((anon))	-	-	none	-	module
 const	kArmourTable	0x657d68	data	1	src/game/char_stats_callees.h:51(char_stats::at)	NameTable_Armour	data	exact	-	at
 const	kArmour	0x657d79	data	1	src/game/rest_4a_callees.h:88(rest_4a::at)	-	-	none	-	at
@@ -18101,7 +18101,7 @@ const	kAbilityFlags0	0x65c4d8	data	1	src/game/battle_e3_callees.h:73(battle_e3::
 const	kAbilityFlags4	0x65c4d8	data	1	src/game/boss_sf_callees.h:59(boss_sf::at)	NameTable_Abilities	data	exact	-	at
 const	kAbilityFlags8	0x65c4d8	data	1	src/game/enemy_ai_ops_callees.h:64(enemy_ai_ops::at)	NameTable_Abilities	data	exact	-	at
 const	kAbilityRows	0x65c4d8	data	1	src/game/rest_3b_callees.h:82(rest_3b::at)	NameTable_Abilities	data	exact	-	at
-const	kActions	0x65c4d8	data	1	src/game/battle_sprites_callees.h:48(battle_sprites::at)	NameTable_Abilities	data	exact	-	at
+const	kActions	0x65c4d8	data	1	src/game/battle_sprites_callees.h:49(battle_sprites::at)	NameTable_Abilities	data	exact	-	at
 const	kItemRecords	0x65c4d8	data	1	src/game/battle_actor_copies_callees.h:71(battle_actor_copies::at)	NameTable_Abilities	data	exact	-	at
 const	kAbilityType	0x65c4d9	data	1	src/game/scena_sx2_callees.h:21(scena_sx2::at)	-	-	none	-	at
 const	kActionRows	0x65c4d9	data	1	src/game/battle_e6_callees.h:79(battle_e6::at)	-	-	none	-	at
@@ -18312,7 +18312,7 @@ const	kSmallUV	0x65f5a8	data	1	src/game/world_map.cpp:438((anon))	-	-	none	-	mod
 const	kDirectionAnimations	0x65f5bc	data	1	src/game/sprite_pose.h:22(sprite_pose::at)	-	-	none	-	at
 const	kPaceTable	0x65f5dc	data	1	src/game/object_kinds.cpp:36((anon))	-	-	none	-	module
 const	kAsideRows	0x65f624	data	1	src/game/object_kinds.cpp:37((anon))	-	-	none	-	module
-const	kControlStates	0x65f99c	data	1	src/game/member_sprites_callees.h:23(member_sprites::at)	-	-	none	-	at
+const	kControlStates	0x65f99c	data	1	src/game/member_sprites_callees.h:24(member_sprites::at)	-	-	none	-	at
 const	kDirAnims	0x660340	data	1	src/game/rest_1g.cpp:113((anon))	-	-	none	-	module
 const	kS6Frames	0x660364	data	1	src/game/rest_1g.cpp:114((anon))	-	-	none	-	module
 const	kAnimationRemap	0x6608d8	data	1	src/game/field_event_callees.h:28(field_event::at)	-	-	none	-	at
@@ -18454,7 +18454,7 @@ const	kArea18Record	0x667abc	data	1	src/game/area_w0b_fuzz.cpp:443(area_w0b::(an
 const	kAreaRecords	0x668d80	data	1	src/game/area_w0b_callees.h:69(area_w0b::at)	Area_StateRecords	data	exact	unsigned long	at
 const	kBankBytes	0x6690a0	data	1	src/game/sprite_pose.h:21(sprite_pose::at)	-	-	none	-	at
 const	kCellDelta	0x66971c	data	5	src/game/area_w1a_callees.h:69(area_w1a::at);src/game/area_w2f_callees.h:77(area_w2f::at);src/game/area_w3e_callees.h:69(area_w3e::at);src/game/area_w3f_callees.h:133(area_w3f::at);src/game/event_ops_callees.h:60(event_ops::at)	-	-	none	-	at
-const	kCellOffsets	0x66971c	data	1	src/game/member_sprites_callees.h:28(member_sprites::at)	-	-	none	-	at
+const	kCellOffsets	0x66971c	data	1	src/game/member_sprites_callees.h:29(member_sprites::at)	-	-	none	-	at
 const	kCellOffsets	0x66971c	data	2	src/game/rest_1f.cpp:42((anon));src/game/rest_1f_fuzz.cpp:141(rest_1f::(anon))	-	-	none	-	module
 const	kDirPairs	0x66971c	data	1	src/game/field_e1_callees.h:54(field_e1::at)	-	-	none	-	at
 const	kF9StepsEnd	0x669720	data	1	src/game/rest_1g.cpp:116((anon))	-	-	none	-	module
@@ -18473,7 +18473,7 @@ const	kPaceHeights	0x66978c	data	1	src/game/field_e2_callees.h:46(field_e2::at)	
 const	kTargetOffsets	0x66978c	data	1	src/game/field_c3_callees.h:42(field_c3::at)	-	-	none	-	at
 const	kPaceRises	0x6697a4	data	1	src/game/field_e2_callees.h:47(field_e2::at)	-	-	none	-	at
 const	kDirectionSteps	0x6697b0	data	1	src/game/field_e2_callees.h:45(field_e2::at)	Field_DirectionSteps	data	exact	long	at
-const	kSteps	0x6697b0	data	1	src/game/rest_1a_callees.h:59(rest_1a::at)	Field_DirectionSteps	data	exact	long	at
+const	kSteps	0x6697b0	data	1	src/game/rest_1a_callees.h:60(rest_1a::at)	Field_DirectionSteps	data	exact	long	at
 const	kMoveSpeeds	0x6697f0	data	1	src/game/scena_sc6_callees.h:95(scena_sc6::at)	Field_MoveSpeeds	data	exact	unsigned char	at
 const	kMoveSpeed3	0x6697f3	data	2	src/game/area_w2d_callees.h:64(area_w2d::at);src/game/area_w3d_callees.h:47(area_w3d::at)	-	-	inside	unsigned char	at
 const	kMemberAnimations	0x669884	data	1	src/game/sprite_pose.h:17(sprite_pose::at)	-	-	none	-	at
@@ -18536,7 +18536,7 @@ const	kTradeRecords	0x66ab58	data	2	src/game/effect_1g_callees.h:26(effect_1g::a
 const	kTradeNeeds	0x66ab5a	data	1	src/game/rest_2f.cpp:124((anon))	-	-	none	-	module
 const	kTradeIndex	0x66ad10	data	2	src/game/effect_1g_callees.h:25(effect_1g::at);src/game/field_e2_callees.h:123(field_e2::at)	-	-	none	-	at
 const	kTradeKinds	0x66ad10	data	1	src/game/rest_2f.cpp:123((anon))	-	-	none	-	module
-const	kWalkPoses	0x66adbc	data	1	src/game/mode_flow_callees.h:54(mode_flow::at)	-	-	none	-	at
+const	kWalkPoses	0x66adbc	data	1	src/game/mode_flow_callees.h:55(mode_flow::at)	-	-	none	-	at
 const	kAreaKinds	0x66adc0	data	1	src/game/window_task_callees.h:52(window_task::at)	-	-	none	-	at
 const	kAreaKindsEnd	0x66add6	data	1	src/game/window_task_callees.h:53(window_task::at)	-	-	none	-	at
 const	kBoxXY	0x66add8	data	1	src/game/window_task_callees.h:37(window_task::at)	-	-	none	-	at
@@ -18740,7 +18740,7 @@ const	kFacing	0x6be070	data	2	src/game/field_hidden_callees.h:55(field_hidden::a
 const	kOrder	0x6be074	data	1	src/game/inventory_ops_callees.h:21(inventory_ops::at)	-	-	none	-	at
 const	kMembers	0x6be078	data	1	src/game/inventory_ops_callees.h:22(inventory_ops::at)	-	-	none	-	at
 const	kTradePick	0x6be08c	data	1	src/game/field_e2_callees.h:118(field_e2::at)	Effect1g_TradePick	data	exact	signed char	at
-const	kDefaultColour	0x6be090	data	1	src/game/mode_flow_callees.h:63(mode_flow::at)	-	-	none	-	at
+const	kDefaultColour	0x6be090	data	1	src/game/mode_flow_callees.h:64(mode_flow::at)	-	-	none	-	at
 const	kGeneList	0x6be0b0	data	1	src/game/rest_2h_callees.h:47(rest_2h::at)	-	-	none	-	at
 const	kUseIds	0x6be0c4	data	1	src/game/rest_2h_callees.h:78(rest_2h::at)	-	-	none	-	at
 const	kUseCounts	0x6be144	data	1	src/game/rest_2h_callees.h:79(rest_2h::at)	-	-	none	-	at
@@ -18796,7 +18796,7 @@ const	kBank7DEE44	0x7dee44	data	1	src/game/scena_sc6_callees.h:87(scena_sc6::at)
 const	kChoiceBits	0x7dee44	data	2	src/game/scena_sc1_callees.h:43(scena_sc1::at);src/game/scena_sc2_callees.h:35(scena_sc2::at)	-	-	none	-	at
 const	kFlags	0x7dee44	data	1	src/game/msgbox_callees.h:31(msgbox)	-	-	none	-	module
 const	kMenuFlags	0x7dee44	data	1	src/game/save_menu_callees.h:38(save_menu::at)	-	-	none	-	at
-const	kMessageBits	0x7dee44	data	2	src/game/effect_2a_callees.h:26(effect_2a::at);src/game/mode_rest_callees.h:48(mode_rest::at)	-	-	none	-	at
+const	kMessageBits	0x7dee44	data	2	src/game/effect_2a_callees.h:26(effect_2a::at);src/game/mode_rest_callees.h:49(mode_rest::at)	-	-	none	-	at
 const	kMsgFlags	0x7dee44	data	4	src/game/area_w3e_callees.h:21(area_w3e::at);src/game/rest_2c_callees.h:50(rest_2c::at);src/game/scena_sc5_callees.h:49(scena_sc5::at);src/game/shop_states_callees.h:57(shop_states::at)	-	-	none	-	at
 const	kCaptionIndex	0x7dee48	data	1	src/game/scena_sc13_callees.h:97(scena_sc13::at)	-	-	none	-	at
 const	kChoiceWord	0x7dee48	data	1	src/game/scena_sc1_callees.h:42(scena_sc1::at)	-	-	none	-	at
@@ -18823,7 +18823,7 @@ const	kObjects	0x7dee80	data	2	src/game/area_harness.h:49(area_harness::at);src/
 const	kSpriteObjects	0x7dee80	data	4	src/game/area_w1c_callees.h:76(area_w1c::at);src/game/area_w2f_callees.h:84(area_w2f::at);src/game/area_w3c_callees.h:72(area_w3c::at);src/game/area_w3e_callees.h:79(area_w3e::at)	Sprite_Objects	data	exact	records::SpriteObject	at
 const	kSprites	0x7dee80	data	2	src/game/scena_sc13_callees.h:61(scena_sc13::at);src/game/scenario_harness.h:72(scenario_harness::at)	Sprite_Objects	data	exact	records::SpriteObject	at
 const	kFieldActors	0x7def00	data	1	src/game/boss_sa_callees.h:60(boss_sa::at)	-	-	inside	records::SpriteObject	at
-const	kObjectFlags	0x7def00	data	1	src/game/rest_1a_callees.h:62(rest_1a::at)	-	-	inside	records::SpriteObject	at
+const	kObjectFlags	0x7def00	data	1	src/game/rest_1a_callees.h:63(rest_1a::at)	-	-	inside	records::SpriteObject	at
 const	kSpriteHold	0x7def04	data	1	src/game/rest_4a_callees.h:97(rest_4a::at)	-	-	inside	records::SpriteObject	at
 const	kObject2	0x7defc8	data	1	src/game/effect_3d_callees.h:40(effect_3d::at)	-	-	inside	records::SpriteObject	at
 const	kSprite2	0x7defc8	data	1	src/game/effect_2c_callees.h:64(effect_2c::at)	-	-	inside	records::SpriteObject	at
@@ -18833,14 +18833,14 @@ const	kRepeatLatch	0x7e01b8	data	7	src/game/battle_actor_copies_callees.h:46(bat
 const	kPacketNext	0x7e0670	data	4	src/game/area_w2e_callees.h:92(area_w2e::at);src/game/boss_harness.h:124(boss_harness::at);src/game/rest_2c_callees.h:107(rest_2c::at);src/game/scenario_harness.h:81(scenario_harness::at)	Gfx_PacketNext	data	exact	unsigned char *	at
 const	kYawCopy	0x7e0680	data	1	src/game/mode_states.cpp:82((anon))	Light_AnglesCopy	data	exact	short	module
 const	kPitchCopy	0x7e0684	data	1	src/game/mode_states.cpp:82((anon))	-	-	inside	short	module
-const	kClutMap	0x7e06a0	data	1	src/game/battle_sprites_callees.h:55(battle_sprites::at)	-	-	none	-	at
-const	kTintMarks	0x7e06a0	data	1	src/game/mode_flow_callees.h:76(mode_flow::at)	-	-	none	-	at
+const	kClutMap	0x7e06a0	data	1	src/game/battle_sprites_callees.h:56(battle_sprites::at)	-	-	none	-	at
+const	kTintMarks	0x7e06a0	data	1	src/game/mode_flow_callees.h:77(mode_flow::at)	-	-	none	-	at
 const	kMemberPos	0x7e06e0	data	2	src/game/field_hidden_callees.h:61(field_hidden::at);src/game/inventory_ops_callees.h:27(inventory_ops::at)	-	-	none	-	at
 const	kMemberPositions	0x7e06e0	data	2	src/game/battle_e2_callees.h:108(battle_e2::at);src/game/event_ops_callees.h:41(event_ops::at)	-	-	none	-	at
 const	kSlotPositions	0x7e06e0	data	2	src/game/field_e1_callees.h:79(field_e1::at);src/game/scena_sx_callees.h:29(scena_sx::at)	-	-	none	-	at
 const	kTintFrom	0x7e06f0	data	1	src/game/frame_callees.cpp:252((anon))	-	-	none	-	module
 const	kBankTable	0x7e0880	data	1	src/game/sprite_pose.h:20(sprite_pose::at)	-	-	inside	unsigned char	at
-const	kTintsEnd	0x7e0880	data	1	src/game/battle_sprites_callees.h:57(battle_sprites::at)	-	-	inside	unsigned char	at
+const	kTintsEnd	0x7e0880	data	1	src/game/battle_sprites_callees.h:58(battle_sprites::at)	-	-	inside	unsigned char	at
 const	kPassFlags	0x7e0918	data	1	src/game/area_w2e_callees.h:93(area_w2e::at)	Draw_PassFlags	data	exact	unsigned char	at
 const	kReturnX	0x7e091c	data	1	src/game/rest_3g_callees.h:67(rest_3g::at)	-	-	inside	unsigned char	at
 const	kReturnZ	0x7e0920	data	1	src/game/rest_3g_callees.h:68(rest_3g::at)	-	-	inside	unsigned char	at
@@ -18883,11 +18883,11 @@ const	kObjectsExtra	0x802000	data	1	src/game/area_harness.h:52(area_harness::at)
 const	kSpriteObjectsExtra	0x802000	data	1	src/game/area_w3d_callees.h:97(area_w3d::at)	Sprite_ObjectsExtra	data	exact	records::SpriteObject	at
 const	kSpritesExtra	0x802000	data	1	src/game/scenario_harness.h:75(scenario_harness::at)	Sprite_ObjectsExtra	data	exact	records::SpriteObject	at
 const	kModelCount	0x802054	data	1	src/game/effect_1c_callees.h:56(effect_1c::at)	-	-	inside	records::SpriteObject	at
-const	kExtraFlags	0x802080	data	1	src/game/rest_1a_callees.h:63(rest_1a::at)	-	-	inside	records::SpriteObject	at
+const	kExtraFlags	0x802080	data	1	src/game/rest_1a_callees.h:64(rest_1a::at)	-	-	inside	records::SpriteObject	at
 const	kExtra1X	0x8020d8	data	1	src/game/rest_3g_callees.h:30(rest_3g::at)	-	-	inside	records::SpriteObject	at
 const	kExtra1Z	0x8020dc	data	1	src/game/rest_3g_callees.h:31(rest_3g::at)	-	-	inside	records::SpriteObject	at
 const	kExtra1Y	0x8020e0	data	1	src/game/rest_3g_callees.h:32(rest_3g::at)	-	-	inside	records::SpriteObject	at
-const	kLastArea	0x802290	data	3	src/game/area_w2c_callees.h:55(area_w2c::at);src/game/area_w3c_callees.h:54(area_w3c::at);src/game/mode_flow_callees.h:57(mode_flow::at)	AreaW2c_LastArea	data	exact	unsigned short	at
+const	kLastArea	0x802290	data	3	src/game/area_w2c_callees.h:55(area_w2c::at);src/game/area_w3c_callees.h:54(area_w3c::at);src/game/mode_flow_callees.h:58(mode_flow::at)	AreaW2c_LastArea	data	exact	unsigned short	at
 const	kRowTails	0x8022c4	data	1	src/game/world_map_callees.h:70(world_map)	-	-	inside	unsigned long	module
 const	kLayerTails	0x802b34	data	1	src/game/effect_6c_callees.h:41(effect_6c::at)	-	-	inside	unsigned long	at
 const	kLayerLast	0x802cf4	data	1	src/game/rest_3g_callees.h:83(rest_3g::at)	-	-	inside	unsigned long	at
@@ -18919,7 +18919,7 @@ const	kMemberId	0x802dc9	data	1	src/game/area_w3g_callees.h:47(area_w3g::at)	-	-
 const	kNameIndex	0x802dc9	data	1	src/game/move_cmds_callees.h:31(move_cmds)	-	-	inside	records::PartyMember	module
 const	kLeaderZone	0x802e74	data	3	src/game/area_w1f_callees.h:64(area_w1f::at);src/game/area_w2f_callees.h:68(area_w2f::at);src/game/area_w3c_callees.h:52(area_w3c::at)	-	-	inside	records::PartyMember	at
 const	kLeader137	0x802e77	data	3	src/game/area_w2d_callees.h:61(area_w2d::at);src/game/area_w4b_callees.h:60(area_w4b::at);src/game/field_hidden_callees.h:44(field_hidden::at)	-	-	inside	records::PartyMember	at
-const	kMemberWalk	0x802e77	data	1	src/game/mode_flow_callees.h:55(mode_flow::at)	-	-	inside	records::PartyMember	at
+const	kMemberWalk	0x802e77	data	1	src/game/mode_flow_callees.h:56(mode_flow::at)	-	-	inside	records::PartyMember	at
 const	kMembers	0x802e88	data	2	src/game/rest_2c_callees.h:92(rest_2c::at);src/game/save_menu_callees.h:117(save_menu::at)	-	-	inside	records::PartyMember	at
 const	kMember1	0x802e8c	data	1	src/game/area_w1e_callees.h:23(area_w1e::at)	-	-	inside	records::PartyMember	at
 const	kMemberByte1	0x802e97	data	1	src/game/mode_tasks.cpp:32((anon))	-	-	inside	records::PartyMember	module
@@ -19047,7 +19047,7 @@ const	kExtraE1	0x80b024	data	1	src/game/area_w3b_fuzz.cpp:58(area_w3b::(anon))	-
 const	kClutStrip	0x80bcc0	data	1	src/game/effect_5d_callees.h:21(effect_5d::at)	-	-	inside	unsigned short	at
 const	kClutSourceEnd	0x80d180	data	1	src/game/area_w3f_callees.h:87(area_w3f::at)	-	-	inside	unsigned short	at
 const	kPalettes	0x80d380	data	1	src/game/scena_sx_callees.h:33(scena_sx::at)	-	-	inside	unsigned short	at
-const	kPalettes	0x80d380	data	1	src/game/area_entry_callees.h:40(area_entry)	-	-	inside	unsigned short	module
+const	kPalettes	0x80d380	data	1	src/game/area_entry_callees.h:41(area_entry)	-	-	inside	unsigned short	module
 const	kClutSource	0x80e980	data	2	src/game/magic_s24_callees.h:33(magic_s24::cell);src/game/magic_s29_callees.h:68(magic_s29::cell)	-	-	inside	unsigned short	module
 const	kClut7B	0x811440	data	1	src/game/rest_4f_callees.h:91(rest_4f::at)	-	-	inside	unsigned short	at
 const	kClut	0x812980	data	1	src/game/magic_s21.cpp:81((anon))	-	-	inside	unsigned short	module
@@ -19064,7 +19064,7 @@ const	kBankRecordsAt	0x8c3584	data	1	src/game/rest_2a_callees.h:21(rest_2a::at)	
 const	kCellMap	0x8c3d80	data	1	src/game/inventory_ops_callees.h:33(inventory_ops::at)	-	-	none	-	at
 const	kEnemyRows	0x8c5580	data	1	src/game/boss_harness.h:118(boss_harness::at)	Encounter_Rows	data	exact	unsigned char	at
 const	kRows	0x8c5580	data	1	src/game/field_hidden_callees.h:66(field_hidden::at)	Encounter_Rows	data	exact	unsigned char	at
-const	kEnemyData	0x8c55c8	data	4	src/game/battle_sprites_callees.h:25(battle_sprites::at);src/game/boss_harness.h:119(boss_harness::at);src/game/boss_sf_callees.h:69(boss_sf::at);src/game/rest_3c_callees.h:78(rest_3c::at)	-	-	none	-	at
+const	kEnemyData	0x8c55c8	data	4	src/game/battle_sprites_callees.h:26(battle_sprites::at);src/game/boss_harness.h:119(boss_harness::at);src/game/boss_sf_callees.h:69(boss_sf::at);src/game/rest_3c_callees.h:78(rest_3c::at)	-	-	none	-	at
 const	kEnemyData	0x8c55c8	data	1	src/game/boss_spawn.cpp:46((anon))	-	-	none	-	module
 const	kKinds	0x8c55c8	data	2	src/game/field_hidden_callees.h:67(field_hidden::at);src/game/inventory_ops_callees.h:31(inventory_ops::at)	-	-	none	-	at
 const	kAiScripts	0x8c5600	data	2	src/game/battle_damage_callees.h:97(battle_damage::at);src/game/battle_e5_callees.h:83(battle_e5::at)	-	-	none	-	at
@@ -19198,45 +19198,25 @@ const	kObjectCount	0x903850	data	1	src/game/effect_4a_callees.h:22(effect_4a::at
 const	kR	0x903850	data	1	src/game/magic_s29_callees.h:36(magic_s29::cell)	SharedScratch	block	exact	records::SharedScratch	module
 const	kS	0x903850	data	1	src/game/magic_s13.cpp:48((anon))	SharedScratch	block	exact	records::SharedScratch	module
 const	kScratch	0x903850	data	5	src/game/battle_misc_fuzz.cpp:87(battle_misc::(anon));src/game/battle_odds_fuzz.cpp:74(battle_odds::(anon));src/game/field_misc_fuzz.cpp:71(field_misc::(anon));src/game/magic_s24_callees.h:36(magic_s24::cell);src/game/magic_s29_callees.h:35(magic_s29::cell)	SharedScratch	block	exact	records::SharedScratch	module
-const	kScratchX	0x903850	data	1	src/game/map_field_objects_callees.h:23(map_field_objects)	SharedScratch	block	exact	records::SharedScratch	module
 const	kSlot	0x903850	data	2	src/game/scena_sc3_callees.h:28(scena_sc3::at);src/game/scena_sc7_callees.h:31(scena_sc7::at)	SharedScratch	block	exact	records::SharedScratch	at
-const	kSlot	0x903850	data	1	src/game/scena_sc11.cpp:56((anon))	SharedScratch	block	exact	records::SharedScratch	module
-const	kLinkHigh	0x903851	data	1	src/game/area_entry_callees.h:23(area_entry)	-	-	inside	records::SharedScratch	module
 const	kRecordIndex	0x903851	data	1	src/game/area_w3f_callees.h:41(area_w3f::at)	-	-	inside	records::SharedScratch	at
 const	kAngleB	0x903852	data	1	src/game/magic_c3.cpp:73((anon))	-	-	inside	records::SharedScratch	module
-const	kBank	0x903852	data	1	src/game/scena_se_callees.h:28(scena_se::at)	-	-	inside	records::SharedScratch	at
-const	kCaptionTotal	0x903852	data	1	src/game/scena_sc13_callees.h:48(scena_sc13::at)	-	-	inside	records::SharedScratch	at
-const	kCellZ	0x903852	data	1	src/game/field_e1_callees.h:74(field_e1::at)	-	-	inside	records::SharedScratch	at
 const	kHeight	0x903852	data	1	src/game/magic_s19.cpp:73((anon))	-	-	inside	records::SharedScratch	module
-const	kOriginZ	0x903852	data	1	src/game/rest_3g_callees.h:77(rest_3g::at)	-	-	inside	records::SharedScratch	at
 const	kR2	0x903852	data	1	src/game/magic_s23_callees.h:36(magic_s23::at)	-	-	inside	records::SharedScratch	at
 const	kR2	0x903852	data	2	src/game/magic_s24.cpp:100((anon));src/game/magic_s29_callees.h:37(magic_s29::cell)	-	-	inside	records::SharedScratch	module
-const	kScratch2	0x903852	data	2	src/game/event_leader_callees.h:46(event_leader::at);src/game/event_ops_callees.h:67(event_ops::at)	-	-	inside	records::SharedScratch	at
 const	kScratchBank	0x903852	data	1	src/game/map_field_objects_callees.h:26(map_field_objects)	-	-	inside	records::SharedScratch	module
 const	kShade	0x903852	data	1	src/game/magic_s06.cpp:63((anon))	-	-	inside	records::SharedScratch	module
-const	kAngle	0x903854	data	1	src/game/effect_3b_callees.h:25(effect_3b::at)	-	-	inside	records::SharedScratch	at
 const	kAngle	0x903854	data	1	src/game/magic_s19.cpp:74((anon))	-	-	inside	records::SharedScratch	module
-const	kCellX	0x903854	data	1	src/game/event_ops_callees.h:68(event_ops::at)	-	-	inside	records::SharedScratch	at
-const	kLineAngle	0x903854	data	1	src/game/rest_3f_callees.h:29(rest_3f::at)	-	-	inside	records::SharedScratch	at
-const	kPickSlot	0x903854	data	1	src/game/area_entry_callees.h:30(area_entry)	-	-	inside	records::SharedScratch	module
-const	kRows	0x903854	data	1	src/game/rest_3g_callees.h:78(rest_3g::at)	-	-	inside	records::SharedScratch	at
+const	kPickSlot	0x903854	data	1	src/game/area_entry_callees.h:31(area_entry)	-	-	inside	records::SharedScratch	module
 const	kScratchB	0x903854	data	1	src/game/magic_s17.cpp:54((anon))	-	-	inside	records::SharedScratch	module
-const	kScratchY	0x903854	data	1	src/game/map_field_objects_callees.h:24(map_field_objects)	-	-	inside	records::SharedScratch	module
 const	kW4	0x903854	data	1	src/game/magic_s23_callees.h:37(magic_s23::at)	-	-	inside	records::SharedScratch	at
 const	kW4	0x903854	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:38(magic_s29::cell)	-	-	inside	records::SharedScratch	module
-const	kCellZ	0x903856	data	1	src/game/event_ops_callees.h:69(event_ops::at)	-	-	inside	records::SharedScratch	at
 const	kShade	0x903856	data	2	src/game/magic_s17.cpp:55((anon));src/game/magic_s19.cpp:75((anon))	-	-	inside	records::SharedScratch	module
 const	kW6	0x903856	data	1	src/game/magic_s23_callees.h:38(magic_s23::at)	-	-	inside	records::SharedScratch	at
 const	kW6	0x903856	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:39(magic_s29::cell)	-	-	inside	records::SharedScratch	module
-const	kAimX	0x903858	data	1	src/game/member_sprites_callees.h:25(member_sprites::at)	-	-	inside	records::SharedScratch	at
-const	kColumns	0x903858	data	1	src/game/rest_3g_callees.h:79(rest_3g::at)	-	-	inside	records::SharedScratch	at
-const	kLineShade	0x903858	data	1	src/game/rest_3f_callees.h:30(rest_3f::at)	-	-	inside	records::SharedScratch	at
-const	kPickFree	0x903858	data	1	src/game/area_entry_callees.h:31(area_entry)	-	-	inside	records::SharedScratch	module
+const	kPickFree	0x903858	data	1	src/game/area_entry_callees.h:32(area_entry)	-	-	inside	records::SharedScratch	module
 const	kRed	0x903858	data	1	src/game/magic_s19.cpp:77((anon))	-	-	inside	records::SharedScratch	module
 const	kRgb	0x903858	data	1	src/game/magic_s17.cpp:56((anon))	-	-	inside	records::SharedScratch	module
-const	kScratchH	0x903858	data	1	src/game/map_field_objects_callees.h:25(map_field_objects)	-	-	inside	records::SharedScratch	module
-const	kShade	0x903858	data	1	src/game/effect_3b_callees.h:26(effect_3b::at)	-	-	inside	records::SharedScratch	at
-const	kTargetX	0x903858	data	2	src/game/event_leader_callees.h:47(event_leader::at);src/game/event_ops_callees.h:70(event_ops::at)	-	-	inside	records::SharedScratch	at
 const	kW8	0x903858	data	1	src/game/magic_s23_callees.h:39(magic_s23::at)	-	-	inside	records::SharedScratch	at
 const	kW8	0x903858	data	2	src/game/magic_s24.cpp:101((anon));src/game/magic_s29_callees.h:40(magic_s29::cell)	-	-	inside	records::SharedScratch	module
 const	kGreen	0x90385a	data	1	src/game/magic_s19.cpp:77((anon))	-	-	inside	records::SharedScratch	module
@@ -19246,9 +19226,7 @@ const	kFace	0x90385e	data	1	src/game/magic_s19.cpp:78((anon))	-	-	inside	unsigne
 const	kWE	0x90385e	data	1	src/game/magic_s23_callees.h:42(magic_s23::at)	-	-	inside	unsigned long	at
 const	kWE	0x90385e	data	1	src/game/magic_s24.cpp:103((anon))	-	-	inside	unsigned long	module
 const	kY	0x90385e	data	1	src/game/magic_s29_callees.h:43(magic_s29::cell)	-	-	inside	unsigned long	module
-const	kExitX	0x903860	data	3	src/game/event_leader_callees.h:51(event_leader::at);src/game/event_ops_callees.h:46(event_ops::at);src/game/field_e1_callees.h:77(field_e1::at)	-	-	inside	records::SharedScratch	at
-const	kPendingX	0x903860	data	6	src/game/area_w2e_callees.h:59(area_w2e::at);src/game/area_w3b_callees.h:81(area_w3b::at);src/game/area_w4e_callees.h:76(area_w4e::at);src/game/mode_flow_callees.h:40(mode_flow::at);src/game/mode_rest_callees.h:39(mode_rest::at);src/game/window_task_callees.h:45(window_task::at)	-	-	inside	records::SharedScratch	at
-const	kPendingX	0x903860	data	1	src/game/area_entry_callees.h:18(area_entry)	-	-	inside	records::SharedScratch	module
+const	kPendingX	0x903860	data	1	src/game/area_w4e_callees.h:76(area_w4e::at)	-	-	inside	records::SharedScratch	at
 const	kBlocks	0x903880	data	1	src/game/shell_callees.h:34(shell)	Gfx_BufferBlocks	data	exact	-	module
 const	kEnvBase	0x903880	data	1	src/game/win_main.cpp:139((anon))	Gfx_BufferBlocks	data	exact	-	module
 const	kFlagsLo	0x9039a2	data	1	src/game/field_e1_callees.h:88(field_e1::at)	Field_ScriptFlags	data	exact	unsigned short	at
@@ -19258,7 +19236,7 @@ const	kScriptFlags	0x9039a2	data	1	src/game/scena_sc0_callees.h:43(scena_sc0)	Fi
 const	kScriptFlagsLow	0x9039a2	data	1	src/game/field_e2_callees.h:50(field_e2::at)	Field_ScriptFlags	data	exact	unsigned short	at
 const	kFlagsHi	0x9039a3	data	1	src/game/event_leader_callees.h:73(event_leader::at)	-	-	inside	unsigned short	at
 const	kFlagsHi	0x9039a3	data	1	src/game/event_ops.cpp:112((anon))	-	-	inside	unsigned short	module
-const	kScriptFlags3	0x9039a3	data	1	src/game/rest_1a_callees.h:57(rest_1a::at)	-	-	inside	unsigned short	at
+const	kScriptFlags3	0x9039a3	data	1	src/game/rest_1a_callees.h:58(rest_1a::at)	-	-	inside	unsigned short	at
 const	kScriptFlagsHi	0x9039a3	data	4	src/game/rest_1d_callees.h:49(rest_1d::at);src/game/rest_2a_callees.h:28(rest_2a::at);src/game/scena_sc3_callees.h:42(scena_sc3::at);src/game/scena_sc7_callees.h:47(scena_sc7::at)	-	-	inside	unsigned short	at
 const	kScriptFlagsHigh	0x9039a3	data	4	src/game/area_w1a_callees.h:34(area_w1a::at);src/game/area_w1c_callees.h:41(area_w1c::at);src/game/area_w1d_callees.h:44(area_w1d::at);src/game/effect_3d_callees.h:34(effect_3d::at)	-	-	inside	unsigned short	at
 const	kScriptFlagsHigh	0x9039a3	data	2	src/game/rest_1b.cpp:44((anon));src/game/rest_1c.cpp:61((anon))	-	-	inside	unsigned short	module
@@ -19267,7 +19245,7 @@ const	kRemoved	0x9039c0	data	1	src/game/rest_4a_callees.h:71(rest_4a::at)	-	-	no
 const	kFrameOffsets	0x9039d8	data	1	src/game/sprite_pose.h:18(sprite_pose::at)	BattleE2_AnimSet	data	exact	unsigned long	at
 const	kFrameSet	0x9039d8	data	2	src/game/magic_c2.cpp:60((anon));src/game/magic_s17.cpp:58((anon))	BattleE2_AnimSet	data	exact	unsigned long	module
 const	kBlock	0x9039e0	data	1	src/game/rest_2c_callees.h:69(rest_2c::at)	-	-	none	-	at
-const	kBootClear	0x9039e0	data	1	src/game/mode_flow_callees.h:67(mode_flow::at)	-	-	none	-	at
+const	kBootClear	0x9039e0	data	1	src/game/mode_flow_callees.h:68(mode_flow::at)	-	-	none	-	at
 const	kGameBlock	0x9039e0	data	1	src/game/save_menu_callees.h:53(save_menu::at)	-	-	none	-	at
 const	kDrawPool	0x9039f0	data	1	src/game/scena_sc7_callees.h:72(scena_sc7::at)	ScenaSc7_DrawPool	data	exact	unsigned char	at
 const	kFzTailKind	0x9039f3	data	1	src/game/area_w3g_fuzz.cpp:58(area_w3g::(anon))	AreaW0a_TailKind	data	exact	signed char	module
@@ -19325,7 +19303,7 @@ const	kPartyOrder	0x904065	data	1	src/game/battle_e7_callees.h:69(battle_e7::at)
 const	kSecondList	0x904065	data	1	src/game/field_e1_callees.h:81(field_e1::at)	-	-	inside	unsigned char	at
 const	kSaveFlags	0x904098	data	1	src/game/scenario_harness.h:94(scenario_harness::at)	-	-	none	-	at
 const	kSeenBits	0x9040a8	data	2	src/game/magic_s12.cpp:63((anon));src/game/magic_s12_fuzz.cpp:205(magic_s12::(anon))	-	-	none	-	module
-const	kClock	0x9040c8	data	1	src/game/mode_flow_callees.h:33(mode_flow::at)	-	-	none	-	at
+const	kClock	0x9040c8	data	1	src/game/mode_flow_callees.h:34(mode_flow::at)	-	-	none	-	at
 const	kClockHours	0x9040c8	data	1	src/game/map_field_objects_callees.h:52(map_field_objects)	-	-	none	-	module
 const	kCountA	0x9040c8	data	1	src/game/rest_4a_callees.h:112(rest_4a::at)	-	-	none	-	at
 const	kPlayClock	0x9040c8	data	1	src/game/title_states.cpp:29((anon))	-	-	none	-	module
@@ -19412,7 +19390,7 @@ const	kRecordCopies	0x9048f0	data	1	src/game/rest_4a_callees.h:67(rest_4a::at)	-
 const	kSlotNames	0x9048f0	data	1	src/game/rest_4d_callees.h:72(rest_4d::at)	-	-	none	-	at
 const	kSpawnCount	0x904a90	data	1	src/game/rest_4a_callees.h:68(rest_4a::at)	Rest4b_BusyA	data	exact	unsigned char	at
 const	kBattle	0x904aa0	data	4	src/game/area_harness.h:76(area_harness::at);src/game/boss_harness.h:65(boss_harness::at);src/game/magic_harness.h:44(magic_harness::at);src/game/scenario_harness.h:143(scenario_harness::at)	-	-	none	-	at
-const	kBattleBytes	0x904aa0	data	1	src/game/mode_rest_callees.h:68(mode_rest::at)	-	-	none	-	at
+const	kBattleBytes	0x904aa0	data	1	src/game/mode_rest_callees.h:69(mode_rest::at)	-	-	none	-	at
 const	kBattleBytes	0x904aa0	data	1	src/game/mode_tasks.cpp:30((anon))	-	-	none	-	module
 const	kBattleKind	0x904aa0	data	1	src/game/battle_windows_callees.h:46(battle_windows::at)	-	-	none	-	at
 const	kPhase	0x904aa0	data	11	src/game/battle_actions_callees.h:38(battle_actions::at);src/game/battle_e4_callees.h:41(battle_e4::at);src/game/battle_flow_callees.h:49(battle_flow::at);src/game/battle_fx_tasks_callees.h:43(battle_fx_tasks::at);src/game/battle_obj_states_callees.h:40(battle_obj_states::at);src/game/battle_phases_callees.h:33(battle_phases::at);src/game/battle_turn_steps_callees.h:33(battle_turn_steps::at);src/game/boss_harness.h:67(boss_harness::at);src/game/boss_sb_callees.h:25(boss_sb::at);src/game/boss_se_callees.h:36(boss_se::at);src/game/boss_sf_callees.h:38(boss_sf::at)	-	-	none	-	at
@@ -19428,8 +19406,8 @@ const	kSubStep2	0x904aa3	data	1	src/game/boss_harness.h:175(boss_harness::at)	Ba
 const	kState4	0x904aa4	data	1	src/game/battle_turn_steps_callees.h:37(battle_turn_steps::at)	BattleE4_Step4	data	exact	unsigned char	at
 const	kStep4	0x904aa4	data	1	src/game/battle_e4_callees.h:45(battle_e4::at)	BattleE4_Step4	data	exact	unsigned char	at
 const	kSubStep3	0x904aa4	data	1	src/game/boss_harness.h:176(boss_harness::at)	BattleE4_Step4	data	exact	unsigned char	at
-const	kBattleFlags	0x904aa8	data	3	src/game/battle_damage_callees.h:71(battle_damage::at);src/game/battle_sprites_callees.h:36(battle_sprites::at);src/game/rest_4a_callees.h:27(rest_4a::at)	-	-	none	-	at
-const	kBattleWord	0x904aa8	data	1	src/game/mode_rest_callees.h:67(mode_rest::at)	-	-	none	-	at
+const	kBattleFlags	0x904aa8	data	3	src/game/battle_damage_callees.h:71(battle_damage::at);src/game/battle_sprites_callees.h:37(battle_sprites::at);src/game/rest_4a_callees.h:27(rest_4a::at)	-	-	none	-	at
+const	kBattleWord	0x904aa8	data	1	src/game/mode_rest_callees.h:68(mode_rest::at)	-	-	none	-	at
 const	kFlags	0x904aa8	data	13	src/game/area_harness.h:78(area_harness::at);src/game/battle_e1_callees.h:89(battle_e1::at);src/game/battle_e4_callees.h:46(battle_e4::at);src/game/battle_e5_callees.h:43(battle_e5::at);src/game/boss_harness.h:70(boss_harness::at);src/game/boss_se_callees.h:38(boss_se::at);src/game/boss_sh_callees.h:44(boss_sh::at);src/game/boss_si_callees.h:30(boss_si::at);src/game/boss_sj_callees.h:27(boss_sj::at);src/game/magic_fx_reached_callees.h:43(magic_fx_reached::at);src/game/magic_harness.h:46(magic_harness::at);src/game/rest_3a_callees.h:55(rest_3a::at);src/game/scenario_harness.h:145(scenario_harness::at)	-	-	none	-	at
 const	kPoseMode	0x904aa8	data	1	src/game/battle_windows_callees.h:48(battle_windows::at)	-	-	none	-	at
 const	kRoundFlags	0x904aa8	data	12	src/game/battle_actions_callees.h:40(battle_actions::at);src/game/battle_e2_callees.h:46(battle_e2::at);src/game/battle_e3_callees.h:46(battle_e3::at);src/game/battle_flow_callees.h:50(battle_flow::at);src/game/battle_fx_tasks_callees.h:45(battle_fx_tasks::at);src/game/battle_obj_states_callees.h:42(battle_obj_states::at);src/game/battle_phases_callees.h:40(battle_phases::at);src/game/battle_turn_steps_callees.h:39(battle_turn_steps::at);src/game/boss_sa_callees.h:42(boss_sa::at);src/game/boss_sf_callees.h:39(boss_sf::at);src/game/enemy_ai_ops_callees.h:47(enemy_ai_ops::at);src/game/rest_3b_callees.h:40(rest_3b::at)	-	-	none	-	at
@@ -19440,26 +19418,26 @@ const	kFxBits	0x904aa9	data	1	src/game/magic_s02.cpp:62((anon))	-	-	none	-	modul
 const	kLoadFlags	0x904aa9	data	1	src/game/battle_flow_callees.h:71(battle_flow::at)	-	-	none	-	at
 const	kRoundFlags2	0x904aa9	data	1	src/game/rest_3b_callees.h:41(rest_3b::at)	-	-	none	-	at
 const	kRoundFlagsHi	0x904aa9	data	3	src/game/boss_sc_callees.h:32(boss_sc::at);src/game/boss_sf_callees.h:40(boss_sf::at);src/game/rest_3d_callees.h:22(rest_3d::at)	-	-	none	-	at
-const	kBoss	0x904aaa	data	1	src/game/battle_sprites_callees.h:41(battle_sprites::at)	EventBattle_Id	data	exact	unsigned char	at
+const	kBoss	0x904aaa	data	1	src/game/battle_sprites_callees.h:42(battle_sprites::at)	EventBattle_Id	data	exact	unsigned char	at
 const	kFight	0x904aaa	data	4	src/game/boss_h_callees.h:26(boss_h::at);src/game/boss_harness.h:71(boss_harness::at);src/game/boss_sg_callees.h:30(boss_sg::at);src/game/boss_si_callees.h:31(boss_si::at)	EventBattle_Id	data	exact	unsigned char	at
 const	kBattleFacing	0x904aac	data	2	src/game/field_hidden_callees.h:63(field_hidden::at);src/game/inventory_ops_callees.h:49(inventory_ops::at)	-	-	none	-	at
 const	kFaceStep	0x904aac	data	1	src/game/battle_e4_callees.h:66(battle_e4::at)	-	-	none	-	at
 const	kFacing	0x904aac	data	2	src/game/battle_phases_callees.h:42(battle_phases::at);src/game/boss_sg_callees.h:31(boss_sg::at)	-	-	none	-	at
 const	kFacing	0x904aac	data	2	src/game/magic_s30.cpp:72((anon));src/game/magic_s30_fuzz.cpp:241(magic_s30::(anon))	-	-	none	-	module
 const	kFormTable	0x904aac	data	1	src/game/battle_e6_callees.h:31(battle_e6::at)	-	-	none	-	at
-const	kFormation	0x904aac	data	5	src/game/field_e1_callees.h:83(field_e1::at);src/game/mode_rest_callees.h:56(mode_rest::at);src/game/rest_3g_callees.h:39(rest_3g::at);src/game/scena_sx2_callees.h:18(scena_sx2::at);src/game/scena_sx_callees.h:28(scena_sx::at)	-	-	none	-	at
-const	kLayout	0x904aac	data	1	src/game/battle_sprites_callees.h:42(battle_sprites::at)	-	-	none	-	at
+const	kFormation	0x904aac	data	5	src/game/field_e1_callees.h:83(field_e1::at);src/game/mode_rest_callees.h:57(mode_rest::at);src/game/rest_3g_callees.h:39(rest_3g::at);src/game/scena_sx2_callees.h:18(scena_sx2::at);src/game/scena_sx_callees.h:28(scena_sx::at)	-	-	none	-	at
+const	kLayout	0x904aac	data	1	src/game/battle_sprites_callees.h:43(battle_sprites::at)	-	-	none	-	at
 const	kPoseBase	0x904aac	data	1	src/game/battle_obj_states_callees.h:43(battle_obj_states::at)	-	-	none	-	at
 const	kSideCorner	0x904aac	data	2	src/game/magic_s25.cpp:122((anon));src/game/magic_s25_fuzz.cpp:309(magic_s25::(anon))	-	-	none	-	module
 const	kTintOn	0x904aaf	data	1	src/game/battle_obj_states_callees.h:45(battle_obj_states::at)	BattleE4_Picking	data	exact	unsigned char	at
 const	kActorCount	0x904ab0	data	1	src/game/battle_phases_callees.h:45(battle_phases::at)	-	-	none	-	at
-const	kMemberCount	0x904ab0	data	1	src/game/mode_rest_callees.h:69(mode_rest::at)	-	-	none	-	at
+const	kMemberCount	0x904ab0	data	1	src/game/mode_rest_callees.h:70(mode_rest::at)	-	-	none	-	at
 const	kMembers	0x904ab0	data	1	src/game/battle_turn_steps_callees.h:41(battle_turn_steps::at)	-	-	none	-	at
-const	kPartyCount	0x904ab0	data	14	src/game/battle_actor_copies_callees.h:39(battle_actor_copies::at);src/game/battle_damage_callees.h:72(battle_damage::at);src/game/battle_e1_callees.h:90(battle_e1::at);src/game/battle_e2_callees.h:49(battle_e2::at);src/game/battle_e3_callees.h:48(battle_e3::at);src/game/battle_e4_callees.h:50(battle_e4::at);src/game/battle_e6_callees.h:29(battle_e6::at);src/game/battle_menu_states_callees.h:41(battle_menu_states::at);src/game/battle_result_callees.h:39(battle_result::at);src/game/battle_sprites_callees.h:37(battle_sprites::at);src/game/battle_window_draw_callees.h:22(battle_window_draw::at);src/game/battle_windows_callees.h:29(battle_windows::at);src/game/rest_3b_callees.h:43(rest_3b::at);src/game/rest_3c_callees.h:48(rest_3c::at)	-	-	none	-	at
+const	kPartyCount	0x904ab0	data	14	src/game/battle_actor_copies_callees.h:39(battle_actor_copies::at);src/game/battle_damage_callees.h:72(battle_damage::at);src/game/battle_e1_callees.h:90(battle_e1::at);src/game/battle_e2_callees.h:49(battle_e2::at);src/game/battle_e3_callees.h:48(battle_e3::at);src/game/battle_e4_callees.h:50(battle_e4::at);src/game/battle_e6_callees.h:29(battle_e6::at);src/game/battle_menu_states_callees.h:41(battle_menu_states::at);src/game/battle_result_callees.h:39(battle_result::at);src/game/battle_sprites_callees.h:38(battle_sprites::at);src/game/battle_window_draw_callees.h:22(battle_window_draw::at);src/game/battle_windows_callees.h:29(battle_windows::at);src/game/rest_3b_callees.h:43(rest_3b::at);src/game/rest_3c_callees.h:48(rest_3c::at)	-	-	none	-	at
 const	kPartyCount	0x904ab0	data	2	src/game/magic_s35.cpp:57((anon));src/game/magic_s35_fuzz.cpp:207(magic_s35::(anon))	-	-	none	-	module
 const	kPartySize	0x904ab0	data	1	src/game/rest_3d_callees.h:24(rest_3d::at)	-	-	none	-	at
 const	kPartySize	0x904ab1	data	1	src/game/battle_e6_callees.h:30(battle_e6::at)	Battle_PartyStanding	data	exact	unsigned char	at
-const	kEnemyCount	0x904ab2	data	1	src/game/battle_sprites_callees.h:39(battle_sprites::at)	Battle_EnemyCount	data	exact	unsigned char	at
+const	kEnemyCount	0x904ab2	data	1	src/game/battle_sprites_callees.h:40(battle_sprites::at)	Battle_EnemyCount	data	exact	unsigned char	at
 const	kEnemyTotal	0x904ab2	data	1	src/game/boss_harness.h:72(boss_harness::at)	Battle_EnemyCount	data	exact	unsigned char	at
 const	kEnemiesLeft	0x904ab3	data	1	src/game/boss_harness.h:73(boss_harness::at)	Battle_EnemiesLeft	data	exact	unsigned char	at
 const	kCmdByte	0x904ab4	data	1	src/game/battle_turn_steps_callees.h:42(battle_turn_steps::at)	-	-	none	-	at
@@ -19496,7 +19474,7 @@ const	kDropItems	0x904af4	data	3	src/game/battle_e7_callees.h:52(battle_e7::at);
 const	kDropCounts	0x904b14	data	3	src/game/battle_e7_callees.h:53(battle_e7::at);src/game/battle_flow_callees.h:62(battle_flow::at);src/game/battle_result_callees.h:45(battle_result::at)	-	-	none	-	at
 const	kActing	0x904b34	data	2	src/game/battle_damage_callees.h:82(battle_damage::at);src/game/battle_setup_callees.h:66(battle_setup::at)	-	-	none	-	at
 const	kActing	0x904b34	data	1	src/game/battle_odds_callees.h:33(battle_odds)	-	-	none	-	module
-const	kActor	0x904b34	data	25	src/game/area_harness.h:79(area_harness::at);src/game/battle_actions_callees.h:51(battle_actions::at);src/game/battle_e1_callees.h:96(battle_e1::at);src/game/battle_e2_callees.h:52(battle_e2::at);src/game/battle_e3_callees.h:53(battle_e3::at);src/game/battle_e4_callees.h:61(battle_e4::at);src/game/battle_e5_callees.h:46(battle_e5::at);src/game/battle_e6_callees.h:32(battle_e6::at);src/game/battle_sprites_callees.h:34(battle_sprites::at);src/game/boss_harness.h:76(boss_harness::at);src/game/boss_sa_callees.h:46(boss_sa::at);src/game/boss_sb_callees.h:32(boss_sb::at);src/game/boss_sc_callees.h:38(boss_sc::at);src/game/boss_se_callees.h:47(boss_se::at);src/game/boss_sg_callees.h:35(boss_sg::at);src/game/boss_sh_callees.h:48(boss_sh::at);src/game/boss_sj_callees.h:29(boss_sj::at);src/game/enemy_ai_ops_callees.h:51(enemy_ai_ops::at);src/game/magic_fx_reached_callees.h:44(magic_fx_reached::at);src/game/magic_harness.h:47(magic_harness::at);src/game/rest_3a_callees.h:57(rest_3a::at);src/game/rest_3b_callees.h:46(rest_3b::at);src/game/rest_3c_callees.h:52(rest_3c::at);src/game/rest_3d_callees.h:25(rest_3d::at);src/game/scenario_harness.h:146(scenario_harness::at)	-	-	none	-	at
+const	kActor	0x904b34	data	25	src/game/area_harness.h:79(area_harness::at);src/game/battle_actions_callees.h:51(battle_actions::at);src/game/battle_e1_callees.h:96(battle_e1::at);src/game/battle_e2_callees.h:52(battle_e2::at);src/game/battle_e3_callees.h:53(battle_e3::at);src/game/battle_e4_callees.h:61(battle_e4::at);src/game/battle_e5_callees.h:46(battle_e5::at);src/game/battle_e6_callees.h:32(battle_e6::at);src/game/battle_sprites_callees.h:35(battle_sprites::at);src/game/boss_harness.h:76(boss_harness::at);src/game/boss_sa_callees.h:46(boss_sa::at);src/game/boss_sb_callees.h:32(boss_sb::at);src/game/boss_sc_callees.h:38(boss_sc::at);src/game/boss_se_callees.h:47(boss_se::at);src/game/boss_sg_callees.h:35(boss_sg::at);src/game/boss_sh_callees.h:48(boss_sh::at);src/game/boss_sj_callees.h:29(boss_sj::at);src/game/enemy_ai_ops_callees.h:51(enemy_ai_ops::at);src/game/magic_fx_reached_callees.h:44(magic_fx_reached::at);src/game/magic_harness.h:47(magic_harness::at);src/game/rest_3a_callees.h:57(rest_3a::at);src/game/rest_3b_callees.h:46(rest_3b::at);src/game/rest_3c_callees.h:52(rest_3c::at);src/game/rest_3d_callees.h:25(rest_3d::at);src/game/scenario_harness.h:146(scenario_harness::at)	-	-	none	-	at
 const	kActorIndex	0x904b34	data	1	src/game/battle_items_callees.h:66(battle_items::at)	-	-	none	-	at
 const	kTurnGate	0x904b34	data	2	src/game/battle_flow_callees.h:63(battle_flow::at);src/game/battle_fx_tasks_callees.h:47(battle_fx_tasks::at)	-	-	none	-	at
 const	kActKind	0x904b35	data	6	src/game/battle_e2_callees.h:53(battle_e2::at);src/game/battle_e3_callees.h:54(battle_e3::at);src/game/boss_sd_callees.h:36(boss_sd::at);src/game/boss_se_callees.h:48(boss_se::at);src/game/boss_sf_callees.h:47(boss_sf::at);src/game/boss_sh_callees.h:49(boss_sh::at)	-	-	none	-	at
@@ -19505,7 +19483,7 @@ const	kActingKind	0x904b35	data	2	src/game/battle_misc_callees.h:83(battle_misc)
 const	kAction	0x904b35	data	1	src/game/boss_sc_callees.h:39(boss_sc::at)	-	-	none	-	at
 const	kActionKind	0x904b35	data	3	src/game/battle_e4_callees.h:62(battle_e4::at);src/game/boss_sa_callees.h:47(boss_sa::at);src/game/enemy_ai_ops_callees.h:52(enemy_ai_ops::at)	-	-	none	-	at
 const	kActorKind	0x904b35	data	1	src/game/magic_s19.cpp:64((anon))	-	-	none	-	module
-const	kAutoMode	0x904b35	data	2	src/game/battle_sprites_callees.h:35(battle_sprites::at);src/game/rest_4a_callees.h:28(rest_4a::at)	-	-	none	-	at
+const	kAutoMode	0x904b35	data	2	src/game/battle_sprites_callees.h:36(battle_sprites::at);src/game/rest_4a_callees.h:28(rest_4a::at)	-	-	none	-	at
 const	kCommandKind	0x904b35	data	1	src/game/boss_sb_callees.h:33(boss_sb::at)	-	-	none	-	at
 const	kCommandKind	0x904b35	data	2	src/game/magic_s18.cpp:51((anon));src/game/magic_s18_fuzz.cpp:182(magic_s18::(anon))	-	-	none	-	module
 const	kFormation	0x904b35	data	1	src/game/battle_flow_callees.h:64(battle_flow::at)	-	-	none	-	at
@@ -19517,7 +19495,7 @@ const	kAction	0x904b40	data	2	src/game/boss_sh_callees.h:50(boss_sh::at);src/gam
 const	kFlagTarget	0x904b44	data	1	src/game/battle_odds_callees.h:39(battle_odds)	-	-	none	-	module
 const	kOtherActor	0x904b44	data	1	src/game/rest_3c_callees.h:54(rest_3c::at)	-	-	none	-	at
 const	kSwingTarget	0x904b44	data	1	src/game/battle_obj_states_callees.h:47(battle_obj_states::at)	-	-	none	-	at
-const	kTarget	0x904b44	data	22	src/game/area_harness.h:80(area_harness::at);src/game/battle_actions_callees.h:51(battle_actions::at);src/game/battle_e2_callees.h:54(battle_e2::at);src/game/battle_e3_callees.h:55(battle_e3::at);src/game/battle_e4_callees.h:63(battle_e4::at);src/game/battle_e6_callees.h:34(battle_e6::at);src/game/battle_sprites_callees.h:33(battle_sprites::at);src/game/boss_h_callees.h:28(boss_h::at);src/game/boss_harness.h:77(boss_harness::at);src/game/boss_sa_callees.h:49(boss_sa::at);src/game/boss_sb_callees.h:35(boss_sb::at);src/game/boss_sc_callees.h:40(boss_sc::at);src/game/boss_se_callees.h:49(boss_se::at);src/game/boss_sf_callees.h:48(boss_sf::at);src/game/boss_sg_callees.h:36(boss_sg::at);src/game/boss_sh_callees.h:51(boss_sh::at);src/game/boss_si_callees.h:33(boss_si::at);src/game/enemy_ai_ops_callees.h:53(enemy_ai_ops::at);src/game/magic_fx_reached_callees.h:45(magic_fx_reached::at);src/game/magic_harness.h:48(magic_harness::at);src/game/rest_4a_callees.h:29(rest_4a::at);src/game/scenario_harness.h:147(scenario_harness::at)	-	-	none	-	at
+const	kTarget	0x904b44	data	22	src/game/area_harness.h:80(area_harness::at);src/game/battle_actions_callees.h:51(battle_actions::at);src/game/battle_e2_callees.h:54(battle_e2::at);src/game/battle_e3_callees.h:55(battle_e3::at);src/game/battle_e4_callees.h:63(battle_e4::at);src/game/battle_e6_callees.h:34(battle_e6::at);src/game/battle_sprites_callees.h:34(battle_sprites::at);src/game/boss_h_callees.h:28(boss_h::at);src/game/boss_harness.h:77(boss_harness::at);src/game/boss_sa_callees.h:49(boss_sa::at);src/game/boss_sb_callees.h:35(boss_sb::at);src/game/boss_sc_callees.h:40(boss_sc::at);src/game/boss_se_callees.h:49(boss_se::at);src/game/boss_sf_callees.h:48(boss_sf::at);src/game/boss_sg_callees.h:36(boss_sg::at);src/game/boss_sh_callees.h:51(boss_sh::at);src/game/boss_si_callees.h:33(boss_si::at);src/game/enemy_ai_ops_callees.h:53(enemy_ai_ops::at);src/game/magic_fx_reached_callees.h:45(magic_fx_reached::at);src/game/magic_harness.h:48(magic_harness::at);src/game/rest_4a_callees.h:29(rest_4a::at);src/game/scenario_harness.h:147(scenario_harness::at)	-	-	none	-	at
 const	kActorObject	0x904b4c	data	1	src/game/battle_odds_callees.h:36(battle_odds)	BattleOdds_ActorObject	data	exact	unsigned long	module
 const	kSource	0x904b4c	data	5	src/game/area_harness.h:81(area_harness::at);src/game/boss_harness.h:78(boss_harness::at);src/game/magic_fx_reached_callees.h:46(magic_fx_reached::at);src/game/magic_harness.h:49(magic_harness::at);src/game/scenario_harness.h:148(scenario_harness::at)	BattleOdds_ActorObject	data	exact	unsigned long	at
 const	kHitActor	0x904b54	data	1	src/game/battle_e3_callees.h:56(battle_e3::at)	-	-	none	-	at
@@ -19648,7 +19626,7 @@ const	kCameraZ	0x905e62	data	1	src/game/effect_5d_callees.h:17(effect_5d::at)	-	
 const	kFzCellZ	0x905e62	data	1	src/game/area_w3g_fuzz.cpp:724(area_w3g::(anon))	-	-	inside	long	module
 const	kKind02Word	0x905e62	data	1	src/game/rest_4f_callees.h:89(rest_4f::at)	-	-	inside	long	at
 const	kKind2ZCell	0x905e62	data	2	src/game/effect_5c_callees.h:28(effect_5c::at);src/game/effect_6d_callees.h:16(effect_6d::at)	-	-	inside	long	at
-const	kKind2ZHigh	0x905e62	data	5	src/game/effect_6c_callees.h:25(effect_6c::at);src/game/field_c1_callees.h:29(field_c1::at);src/game/mode_flow_callees.h:62(mode_flow::at);src/game/mode_rest_callees.h:59(mode_rest::at);src/game/scena_sc9b_callees.h:69(scena_sc9b::at)	-	-	inside	long	at
+const	kKind2ZHigh	0x905e62	data	5	src/game/effect_6c_callees.h:25(effect_6c::at);src/game/field_c1_callees.h:29(field_c1::at);src/game/mode_flow_callees.h:63(mode_flow::at);src/game/mode_rest_callees.h:60(mode_rest::at);src/game/scena_sc9b_callees.h:69(scena_sc9b::at)	-	-	inside	long	at
 const	kLeaderCellZ	0x905e62	data	11	src/game/area_w0b_callees.h:46(area_w0b::at);src/game/area_w1b_callees.h:106(area_w1b::at);src/game/area_w1e_callees.h:71(area_w1e::at);src/game/area_w2b_callees.h:72(area_w2b::at);src/game/area_w2e_callees.h:136(area_w2e::at);src/game/area_w3a_callees.h:55(area_w3a::at);src/game/area_w3b_callees.h:75(area_w3b::at);src/game/area_w3g_callees.h:101(area_w3g::at);src/game/area_w4a_callees.h:58(area_w4a::at);src/game/effect_6b_callees.h:27(effect_6b::at);src/game/worldmap_area_callees.h:57(worldmap_area::at)	-	-	inside	long	at
 const	kLeaderCellZ	0x905e62	data	1	src/game/world_map_callees.h:59(world_map)	-	-	inside	long	module
 const	kKind2X	0x905e64	data	3	src/game/area_w2c_callees.h:77(area_w2c::at);src/game/area_w4d_callees.h:82(area_w4d::at);src/game/scena_sc13_callees.h:74(scena_sc13::at)	Field_Kind2X	data	exact	long	at
@@ -19660,11 +19638,11 @@ const	kCameraCellX	0x905e66	data	1	src/game/magic_s23_callees.h:66(magic_s23::at
 const	kCameraX	0x905e66	data	1	src/game/effect_5d_callees.h:16(effect_5d::at)	-	-	inside	long	at
 const	kFzCellX	0x905e66	data	1	src/game/area_w3g_fuzz.cpp:724(area_w3g::(anon))	-	-	inside	long	module
 const	kKind2XCell	0x905e66	data	1	src/game/effect_6d_callees.h:17(effect_6d::at)	-	-	inside	long	at
-const	kKind2XHigh	0x905e66	data	4	src/game/effect_6c_callees.h:26(effect_6c::at);src/game/field_c1_callees.h:30(field_c1::at);src/game/mode_flow_callees.h:61(mode_flow::at);src/game/mode_rest_callees.h:60(mode_rest::at)	-	-	inside	long	at
+const	kKind2XHigh	0x905e66	data	4	src/game/effect_6c_callees.h:26(effect_6c::at);src/game/field_c1_callees.h:30(field_c1::at);src/game/mode_flow_callees.h:62(mode_flow::at);src/game/mode_rest_callees.h:61(mode_rest::at)	-	-	inside	long	at
 const	kLeaderCellX	0x905e66	data	11	src/game/area_w0b_callees.h:45(area_w0b::at);src/game/area_w1b_callees.h:105(area_w1b::at);src/game/area_w1e_callees.h:70(area_w1e::at);src/game/area_w2b_callees.h:71(area_w2b::at);src/game/area_w2e_callees.h:135(area_w2e::at);src/game/area_w3a_callees.h:54(area_w3a::at);src/game/area_w3b_callees.h:74(area_w3b::at);src/game/area_w3g_callees.h:100(area_w3g::at);src/game/area_w4a_callees.h:57(area_w4a::at);src/game/effect_6b_callees.h:28(effect_6b::at);src/game/worldmap_area_callees.h:56(worldmap_area::at)	-	-	inside	long	at
 const	kLeaderCellX	0x905e66	data	1	src/game/world_map_callees.h:58(world_map)	-	-	inside	long	module
 const	kEntryZone	0x905e68	data	3	src/game/area_w1a_callees.h:60(area_w1a::at);src/game/area_w3d_callees.h:44(area_w3d::at);src/game/area_w4b_callees.h:46(area_w4b::at)	AreaW1a_EntryZone	data	exact	unsigned char	at
-const	kLastZone	0x905e68	data	2	src/game/area_w3e_callees.h:58(area_w3e::at);src/game/mode_flow_callees.h:58(mode_flow::at)	AreaW1a_EntryZone	data	exact	unsigned char	at
+const	kLastZone	0x905e68	data	2	src/game/area_w3e_callees.h:58(area_w3e::at);src/game/mode_flow_callees.h:59(mode_flow::at)	AreaW1a_EntryZone	data	exact	unsigned char	at
 const	kItemFaceB	0x905efe	data	1	src/game/field_misc_callees.h:30(field_misc)	-	-	inside	unsigned char	module
 const	kItemFaceA	0x905f0e	data	1	src/game/field_misc_callees.h:31(field_misc)	-	-	inside	unsigned char	module
 const	kBlockEnd	0x90dde4	data	1	src/game/event_objs_fuzz.cpp:398(event_objs::(anon))	-	-	inside	unsigned char	module
@@ -19709,7 +19687,7 @@ const	kCount	0x929f04	data	1	src/game/shop_states_callees.h:25(shop_states::at)	
 const	kCountdown	0x929f04	data	1	src/game/menu_lists_callees.h:29(menu_lists::at)	-	-	none	-	at
 const	kCounter	0x929f04	data	3	src/game/rest_4f_callees.h:23(rest_4f::at);src/game/save_menu_callees.h:37(save_menu::at);src/game/shop_states2_callees.h:26(shop_states2::at)	-	-	none	-	at
 const	kListReset	0x929f04	data	1	src/game/battle_e4_callees.h:115(battle_e4::at)	-	-	none	-	at
-const	kMenuTimer	0x929f04	data	3	src/game/mode_rest_callees.h:18(mode_rest::at);src/game/rest_2d_callees.h:61(rest_2d::at);src/game/scenario_harness.h:89(scenario_harness::at)	-	-	none	-	at
+const	kMenuTimer	0x929f04	data	3	src/game/mode_rest_callees.h:19(mode_rest::at);src/game/rest_2d_callees.h:61(rest_2d::at);src/game/scenario_harness.h:89(scenario_harness::at)	-	-	none	-	at
 const	kModeTimer	0x929f04	data	1	src/game/battle_e1_callees.h:37(battle_e1::at)	-	-	none	-	at
 const	kTimer	0x929f04	data	2	src/game/field_s_callees.h:31(field_s::at);src/game/rest_2c_callees.h:40(rest_2c::at)	-	-	none	-	at
 const	kTimer	0x929f04	data	5	src/game/rest_2b.cpp:57((anon));src/game/rest_2b_fuzz.cpp:147(rest_2b::(anon));src/game/rest_2e.cpp:72((anon));src/game/rest_2f.cpp:61((anon));src/game/rest_2f_fuzz.cpp:181(rest_2f::(anon))	-	-	none	-	module
@@ -19945,28 +19923,28 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count global_sites_covered_inside	595
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
-#count at_refs_struct_or_array	271
-#count at_constant_definitions	4089
-#count at_constant_definitions_in_callees_h	3883
-#count at_constants_name_value	2856
-#count at_constants_data	1736
+#count at_refs_struct_or_array	458
+#count at_constant_definitions	4064
+#count at_constant_definitions_in_callees_h	3858
+#count at_constants_name_value	2840
+#count at_constants_data	1720
 #count at_constants_code	388
 #count at_constants_value	732
 #count at_constants_unresolved	0
 #count distinct_code_addresses	331
 #count distinct_addresses	1269
 #count max_names_one_address	14
-#count addresses_with_several_names	228
+#count addresses_with_several_names	223
 #count distinct_addresses_symbol_data	327
 #count distinct_addresses_symbol_block	5
 #count distinct_addresses_symbol_func	0
 #count distinct_addresses_symbol_data_no_ctype	34
 #count distinct_addresses_name_missing	937
 #count distinct_addresses_name_missing_inside_entry	135
-#count module_constant_definitions_data	770
+#count module_constant_definitions_data	764
 #count module_constant_files	164
-#count module_constants_name_value	608
-#count module_distinct_addresses	503
+#count module_constants_name_value	602
+#count module_distinct_addresses	501
 #count module_distinct_addresses_not_in_at	326
 #count module_distinct_addresses_not_in_at_no_data_entry	208
 #count module_distinct_addresses_not_in_at_name_missing	207

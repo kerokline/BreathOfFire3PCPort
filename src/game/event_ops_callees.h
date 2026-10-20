@@ -43,7 +43,7 @@ constexpr std::uint32_t kMemberPositions = 0x7E06E0; // x, z dwords per member, 
 // kBlockByte: now EventOps_BlockByte (symbols.toml). u8, Field_LeaderFrame counts it down (field-event.md)
 // kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8, the fourth argument of Field_ChangeArea
 // kExitArea: now AreaW0b_Place (symbols.toml). u16, the first
-constexpr std::uint32_t kExitX = 0x903860;           // dword, the second
+inline auto& kExitX = SharedScratch.d_10;           // dword, the second
 // kExitZ: now AreaEntry_PendingZ (symbols.toml). dword, the third
 // kTalkMode: now AreaW0a_TailKind (symbols.toml). u8, set to 0x37 / 0x1B by Field_LeaderCellEvent
 // kCellCycle: now AreaW0b_MapMode (symbols.toml). u8, 0..2
@@ -63,11 +63,11 @@ constexpr std::uint32_t kSwapKinds = 0x660A34;       // three bytes Party_CanSwa
 constexpr std::uint32_t kFacingPose = 0x660A38;      // u8 per Field_State +0x89
 constexpr std::uint32_t kChapterHooks = 0x662C80;    // a record pointer per chapter (Cond_ByteFA): +8 step, +0xC arrive
 // The scratch words (SharedScratch 0x903850 and after, PSX 0x1F800000).
-// kScratch: now SharedScratch (symbols.toml). u16 / u8: the count, a found cell's x, the slope flag
-constexpr std::uint32_t kScratch2 = 0x903852;        // u16: a found cell's z, the animation bank
-constexpr std::uint32_t kCellX = 0x903854;           // u16 each: the step's target cell
-constexpr std::uint32_t kCellZ = 0x903856;
-constexpr std::uint32_t kTargetX = 0x903858;         // s32 each: the step's target position
+inline auto& kScratch = SharedScratch;  // u16 / u8: the count, a found cell's x, the slope flag
+inline auto& kScratch2 = SharedScratch.w_02;        // u16: a found cell's z, the animation bank
+inline auto& kCellX = SharedScratch.w_04;           // u16 each: the step's target cell
+inline auto& kCellZ = SharedScratch.w_06;
+inline auto& kTargetX = SharedScratch.d_08;         // s32 each: the step's target position
 // kTargetZ: now Scratch_Swap (symbols.toml). Scratch_Swap
 
 }  // namespace at

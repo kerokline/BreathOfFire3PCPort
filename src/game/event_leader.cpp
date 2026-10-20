@@ -188,7 +188,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         }
         if (code == 0xAF) {
             g.leader_animation(Sprite_Current[8]);
-            g.change_area(AreaW0b_Place, SharedScratch.d_10, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
+            g.change_area(AreaW0b_Place, at::kExitX, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
             Area_EnterTransition = 0xC;
             return;
@@ -343,7 +343,7 @@ extern "C" void __cdecl Field_SwapGather(void) {
                 const std::uint32_t x = FormationX(slot, dir), z = FormationZ(slot, dir);
                 if (g.spot_free(static_cast<long>(x), static_cast<long>(z), dir, m[0x70])) {
                     unsigned char* const sc = Sprite_Current;
-                    placed = g.path_clear(SharedScratch.d_08, static_cast<std::int32_t>(Scratch_Swap), sc[0x70]) != 0;
+                    placed = g.path_clear(at::kTargetX, static_cast<std::int32_t>(Scratch_Swap), sc[0x70]) != 0;
                 }
                 if (!placed) {
                     unsigned char* const sc = Sprite_Current;
@@ -385,11 +385,11 @@ extern "C" unsigned char __cdecl Field_SpotFree(long x, long z, unsigned, unsign
     if (g.way_blocked(x, z, raised, ground)) return 0;
     const int rise = static_cast<std::int16_t>(ObjTrio[0].height_whole) - static_cast<short>(ground);
     if (std::abs(rise) > 0x40) return 0;
-    SharedScratch.d_08 = static_cast<std::int32_t>(x);
+    at::kTargetX = static_cast<std::int32_t>(x);
     Scratch_Swap = static_cast<std::int32_t>(z);
     const long at_spot = g.ground_at(x, z);
     unsigned char* const sc2 = Sprite_Current;
-    SharedScratch.w_02 = static_cast<unsigned>(at_spot);
+    at::kScratch2 = static_cast<unsigned>(at_spot);
     sc2[9] = steps;
     return 1;
 }
@@ -474,7 +474,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
             bool found = false;
             if (g.spot_free(static_cast<long>(x), static_cast<long>(z), d, raised)) {
                 unsigned char* const s = Sprite_Current;
-                found = g.path_clear(SharedScratch.d_08, static_cast<std::int32_t>(Scratch_Swap), s[0x70]) != 0;
+                found = g.path_clear(at::kTargetX, static_cast<std::int32_t>(Scratch_Swap), s[0x70]) != 0;
             }
             if (!found) {
                 unsigned char* const s = Sprite_Current;
@@ -484,7 +484,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
             unsigned char* const s = Sprite_Current;
             g.spot_free(ObjTrio[0].x, ObjTrio[0].z, s[8], s[0x70]);
         }
-        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, SharedScratch.d_08);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, at::kTargetX);
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Scratch_Swap));
         long ground;
         {
@@ -829,7 +829,7 @@ extern "C" void __cdecl Field_ExitFromCell(void) {
     const unsigned short x = rv::As<records::SpriteHead>(sc)->x_whole;
     while (!(x == r[0] && rv::As<records::SpriteHead>(sc)->z_whole == r[1])) r += 4;
     AreaW0b_Place = r[2];
-    SharedScratch.d_10 = 0xE8000;
+    at::kExitX = 0xE8000;
     AreaEntry_PendingZ = 0x410000;
     AreaEntry_PendingFlags = r[3];
 }
@@ -913,9 +913,9 @@ extern "C" unsigned char __cdecl Field_WayBlocked(long x, long z, unsigned raise
 extern "C" unsigned char __cdecl Field_WayBlocked4(long x, long z, long ground) {
     if (g.cells_block(x, z, 0)) return 1;
     const bool fx = (x & 0xFFFF) != 0, fz = (z & 0xFFFF) != 0;
-    if (fx && static_cast<short>(g.slope_at(x, z, 3)) > 0x40 && SharedScratch.b_00 != 0) return 1;
-    if (fz && static_cast<short>(g.slope_at(x, z, 5)) > 0x40 && SharedScratch.b_00 != 0) return 1;
-    if (fx && fz && static_cast<short>(g.slope_at(x, z, 4)) > 0x40 && SharedScratch.b_00 != 0) return 1;
+    if (fx && static_cast<short>(g.slope_at(x, z, 3)) > 0x40 && at::kScratch != 0) return 1;
+    if (fz && static_cast<short>(g.slope_at(x, z, 5)) > 0x40 && at::kScratch != 0) return 1;
+    if (fx && fz && static_cast<short>(g.slope_at(x, z, 4)) > 0x40 && at::kScratch != 0) return 1;
     const long here = g.ground_at(x, z);
     const int rise = static_cast<short>(here) - static_cast<short>(ground);
     if (std::abs(rise) > 0xC0) return 1;

@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"
 
 namespace battle_sprites {
 
@@ -55,7 +56,7 @@ constexpr std::uint32_t kBossHandlers = 0x656954;   // a handler per boss index,
 constexpr std::uint32_t kClutMap = 0x7E06A0;        // 4 rows x 16 cells: the owner of each clut cell, 0xFF free
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords: 32 records of 12 bytes
 constexpr std::uint32_t kTintsEnd = 0x7E0880;
-// kCells: now SharedScratch (symbols.toml). SharedScratch: bytes 0 / 1 the clut map row / cell found
+inline auto& kCells = SharedScratch;  // SharedScratch: bytes 0 / 1 the clut map row / cell found
 constexpr std::uint32_t kClutCount = 0x6528C4;      // bytes by the sprite's +0x28: entries / 16
 constexpr std::uint32_t kClutDivisor = 0x6528CC;    // bytes by +0x28: slots per strip row
 constexpr std::uint32_t kClutStep = 0x6528D4;       // bytes by +0x28: the column step

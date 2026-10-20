@@ -92,9 +92,9 @@ void Line(int x, int y, unsigned id) {
 // (the camera read after the call); +0 is set to 1.
 void PlaceEffect(int (*x)(), unsigned char mode) {
     const unsigned char slot = g.effect_alloc();
-    SharedScratch.b_00 = slot;
+    kSlot.b_00 = slot;
     if (slot == 0xFF) return;
-    records::EffectObject* const e = rv::As<records::EffectObject>(rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(SharedScratch.b_00) << 7));
+    records::EffectObject* const e = rv::As<records::EffectObject>(rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(kSlot.b_00) << 7));
     const int ex = x();
     const int ey = Angle(1);
     e->flags = 1;
@@ -554,10 +554,10 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         return;
     case 4: {
         const auto into = static_cast<std::uint16_t>(0x130u - Timer());
-        SharedScratch.w_00 = into;
+        kSlot.w_00 = into;
         if (into < 0xBF) {
             Line(0x64, 0x50, 0x03);
-            const std::uint16_t back = SharedScratch.w_00;
+            const std::uint16_t back = kSlot.w_00;
             if (back < 0x20) g.clut_fade(static_cast<unsigned char>(back));
             else if (back == 0x20) g.clut_restore();
             else if (back > 0x9F) g.clut_fade(static_cast<unsigned char>(0xBF - static_cast<unsigned char>(back)));

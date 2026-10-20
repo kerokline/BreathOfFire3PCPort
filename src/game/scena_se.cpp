@@ -154,9 +154,9 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     unsigned char* const o = Object(Count());
     Sprite_Current = o;
     Field_ActiveMember = o;
-    SharedScratch.w_02 = static_cast<unsigned>(op[1]) << 8 | op[2];
+    at::kBank = static_cast<unsigned>(op[1]) << 8 | op[2];
     SH_CALL(EventObj_Reset)();
-    SH_CALL(Sprite_SetAnimationBank)(SharedScratch.w_02);
+    SH_CALL(Sprite_SetAnimationBank)(at::kBank);
     Sprite_Current[0] = 1;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
     rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, rv::Current<records::SpriteObject>()->x);

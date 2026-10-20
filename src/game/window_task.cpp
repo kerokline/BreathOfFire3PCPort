@@ -137,7 +137,7 @@ using namespace window_task;
 // 0x80143F10..1F, the port scattered them.
 extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned flags) {
     AreaW0b_Place = static_cast<std::uint16_t>(area);
-    SharedScratch.d_10 = x;
+    at::kPendingX = x;
     AreaEntry_PendingZ = z;
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags);
     g.classify();

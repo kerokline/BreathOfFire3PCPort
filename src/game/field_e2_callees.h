@@ -41,7 +41,7 @@ constexpr std::uint32_t kTallyBits = 0x904654;       // a bit array (bit 4 at +0
 // --- the floor, the leader ---------------------------------------------------------
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords (0xA4 each)
 constexpr std::uint32_t kRecordStride = 0xA4;
-// kEffectSlot: now SharedScratch (symbols.toml). SharedScratch's byte: the slope probe's flag; the party-set ids 0x903850..52
+inline auto& kEffectSlot = SharedScratch.b_00;  // SharedScratch's byte: the slope probe's flag; the party-set ids 0x903850..52
 constexpr std::uint32_t kDirectionSteps = 0x6697B0;  // Field_DirectionSteps: 8 x (dx, dz) dwords
 constexpr std::uint32_t kPaceHeights = 0x66978C;     // s16 per actor id: the ground's offset for a hop
 constexpr std::uint32_t kPaceRises = 0x6697A4;       // u8 per actor id: a step's rise
@@ -74,7 +74,7 @@ constexpr rdata::Const kQuadWidth{0x5C41F0};       // float: its width
 // --- the party-set error screen -------------------------------------------------------
 constexpr std::uint32_t kErrorTitle = 0x660C90;      // the title line it prints
 constexpr std::uint32_t kErrorFormat = 0x660C7C;     // the three ids' format
-// kErrorIds: now SharedScratch (symbols.toml). the three ids PartySet_Find left
+inline auto& kErrorIds = SharedScratch;  // the three ids PartySet_Find left
 constexpr std::uint32_t kTextScratch = 0x904BA0;
 
 // --- the object triggers, the hooks -------------------------------------------------------

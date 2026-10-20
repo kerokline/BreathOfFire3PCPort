@@ -225,7 +225,7 @@ void ProbeSide(unsigned d) {
     const long x = Add(s->x, StepX(d));
     const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
-    if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (at::kScratch == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = g.ground_at(x, z);
     s = rv::Current<records::PartyMember>();
     if (static_cast<short>(s->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
@@ -259,7 +259,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
     const long x = Add(s->x, StepX(d));
     const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
-    if (SharedScratch.b_00 != 0 && static_cast<short>(slope) > 0x40) {
+    if (at::kScratch != 0 && static_cast<short>(slope) > 0x40) {
         g.ensure_animation(static_cast<unsigned char>(HalfTurn(rv::Current<records::PartyMember>()->direction) + 0x46));
         ++rv::Current<records::PartyMember>()->step;
     } else {

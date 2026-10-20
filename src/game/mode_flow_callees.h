@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"
 
 namespace mode_flow {
 
@@ -37,7 +38,7 @@ constexpr std::uint32_t kClock = 0x9040C8;
 // kCountdownB: now Rest3c_Byte660 (symbols.toml).
 // The area-change cells Field_ChangeArea stashes (window_task_callees.h).
 // kPendingArea: now AreaW0b_Place (symbols.toml).
-constexpr std::uint32_t kPendingX = 0x903860;
+inline auto& kPendingX = SharedScratch.d_10;
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml).
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
 // kPendingKind: now Area_EnterTransition (symbols.toml).

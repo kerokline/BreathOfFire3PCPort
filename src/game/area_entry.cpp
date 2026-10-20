@@ -79,7 +79,7 @@ found:
     unsigned char flags;
     if (Word(link + 2) != 0xFFFF) {
         AreaW0b_Place = Word(link + 2);
-        SharedScratch.d_10 = static_cast<std::int32_t>((Word(link + 4) & 0xFF80u) << 8);
+        kPendingX = static_cast<std::int32_t>((Word(link + 4) & 0xFF80u) << 8);
         AreaEntry_PendingZ = static_cast<std::int32_t>((Word(link + 6) & 0xFF80u) << 8);
         flags = link[0xA];
     } else {
@@ -89,14 +89,14 @@ found:
         for (unsigned i = 0; i < count; ++i, choice += 10)
             if (g.flags_test(Cond_Flags + choice[6] * 8u, choice[7]) != 0) break;
         AreaW0b_Place = Word(choice);
-        SharedScratch.d_10 = static_cast<std::int32_t>((Word(choice + 2) & 0xFF80u) << 8);
+        kPendingX = static_cast<std::int32_t>((Word(choice + 2) & 0xFF80u) << 8);
         AreaEntry_PendingZ = static_cast<std::int32_t>((Word(choice + 4) & 0xFF80u) << 8);
         flags = choice[8];
     }
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags & 0x8F);
-    SharedScratch.b_01 = static_cast<unsigned char>((flags >> 4) & 7);
+    kLinkHigh = static_cast<unsigned char>((flags >> 4) & 7);
     g.classify();
-    g.pick_music(static_cast<unsigned>(SharedScratch.d_10 >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
+    g.pick_music(static_cast<unsigned>(kPendingX >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
                  AreaW0b_Place);
     return 0;
 }

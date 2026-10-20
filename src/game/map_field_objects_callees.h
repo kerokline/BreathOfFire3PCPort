@@ -20,9 +20,9 @@ using U = std::uint32_t;
 // SharedScratch's first three dwords, the PSX scratchpad's 0x1F800000..: the
 // uprights' cell origin (x, y) and their base height; EventOp_8x's object
 // index (word +0) and animation bank (word +2).
-constexpr U kScratchX = 0x903850;
-constexpr U kScratchY = 0x903854;
-constexpr U kScratchH = 0x903858;
+inline auto& kScratchX = SharedScratch;
+inline auto& kScratchY = SharedScratch.d_04;
+inline auto& kScratchH = SharedScratch.d_08;
 constexpr U kScratchBank = 0x903852;
 // MapView_ScreenXY's three points: the uprights' Gte_RotTransPers3 outputs.
 constexpr U kScreen0 = 0x903820, kScreen1 = 0x903828, kScreen2 = 0x903830;

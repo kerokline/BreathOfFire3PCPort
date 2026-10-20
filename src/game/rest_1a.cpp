@@ -115,7 +115,7 @@ void SideProbe(U row, unsigned d) {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(L(row));
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(L(row + 4));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (at::kScratchFlag == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     unsigned char* const c = Sc();
     if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
@@ -134,7 +134,7 @@ void Form0Begin() {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (SharedScratch.b_00 != 0 && static_cast<short>(slope) > 0x40) {
+    if (at::kScratchFlag != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
     } else {

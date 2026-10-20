@@ -56,12 +56,12 @@ constexpr U kActorStride = 0xA4;
 // kFAWord: now MoveScript_FAWord (symbols.toml). MoveScript_FAWord (u16)
 // kDirectionSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: (dx, dz) dwords by facing
 // kPendingArea: now AreaW0b_Place (symbols.toml). u16: the pending area / the place (world map)
-constexpr U kPendingX = 0x903860;          // the pending area's cells (Field_ChangeArea's x, z)
+inline auto& kPendingX = SharedScratch.d_10;          // the pending area's cells (Field_ChangeArea's x, z)
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml).
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
 // kCell904EE0: now ModeFlow_AreaTransition (symbols.toml). zeroed with 0x937F98 = 0xC by area 104's exit cell
 // kCell937F98: now Area_EnterTransition (symbols.toml).
-// kFoundX: now SharedScratch (symbols.toml). the scratch word the step hook of area 105 stores the facing in
+inline auto& kFoundX = SharedScratch.b_00;  // the scratch word the step hook of area 105 stores the facing in
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits
 // kCondFA: now Cond_ByteFA (symbols.toml). Cond_ByteFA (s8, the chapter)
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD

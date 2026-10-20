@@ -58,7 +58,7 @@ constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler o
 constexpr U kCounter = 0x90384B;          // area 21's trade counter, 0..7
 constexpr U kScriptVar = 0x903848;        // a movement-script variable byte (the choices set it)
 constexpr U kEffectCount = 0x90384A;      // area 25: its effects' count byte (below 0x14: variant 1)
-// kFoundSlot: now SharedScratch (symbols.toml). area 25: the slot Effect_FindFree answered
+inline auto& kFoundSlot = SharedScratch.b_00;  // area 25: the slot Effect_FindFree answered
 constexpr U kFlagBase = 0x929ED0;         // the pointer Flags_Set / Flags_Clear are handed (a flag row)
 constexpr U kTextRecords = 0x904CE0;      // Text_Records: area 16's hook fills its first four rows of 0x20
 constexpr U kTextRecordsEnd = 0x904D60;

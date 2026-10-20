@@ -42,13 +42,13 @@ constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). the first 3-byte party list
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes per party slot (field-event.md)
 // The step's scratch (event_ops_callees.h's terms).
-// kScratch: now SharedScratch (symbols.toml). u8: MapView_SlopeAt's "a slope" byte
-constexpr std::uint32_t kScratch2 = 0x903852;        // u16: the found spot's ground
-constexpr std::uint32_t kTargetX = 0x903858;         // s32 each: the found spot
+inline auto& kScratch = SharedScratch.b_00;  // u8: MapView_SlopeAt's "a slope" byte
+inline auto& kScratch2 = SharedScratch.w_02;        // u16: the found spot's ground
+inline auto& kTargetX = SharedScratch.d_08;         // s32 each: the found spot
 // kTargetZ: now Scratch_Swap (symbols.toml).
 // Field_ChangeArea's arguments as the step's exits leave them (event_ops).
 // kExitArea: now AreaW0b_Place (symbols.toml). u16
-constexpr std::uint32_t kExitX = 0x903860;           // s32
+inline auto& kExitX = SharedScratch.d_10;           // s32
 // kExitZ: now AreaEntry_PendingZ (symbols.toml). s32
 // kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8
 constexpr std::uint32_t kReturnPoint = 0x904148;     // x, z dwords, the area word at +8, a byte at +0xA

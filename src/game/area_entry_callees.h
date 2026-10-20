@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"
 
 namespace area_entry {
 
@@ -15,12 +16,12 @@ namespace area_entry {
 // The pending area change Field_ChangeArea writes (PSX 0x80143F10..1C;
 // window_task_callees.h has the same four).
 // kPendingArea: now AreaW0b_Place (symbols.toml). u16
-constexpr std::uint32_t kPendingX = 0x903860;       // s32, 16.16
+inline auto& kPendingX = SharedScratch.d_10;       // s32, 16.16
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8
 // Bits 4-6 of a link's flags byte: the PSX scratchpad's 0x1F800001, which
 // the PC keeps at SharedScratch + 1. What reads it is not established.
-constexpr std::uint32_t kLinkHigh = 0x903851;
+inline auto& kLinkHigh = SharedScratch.b_01;
 // Party_DropIn's three scratch lists, the PSX scratchpad's 0x1F800000,
 // +4 and +8: per wanted position the record's +0x2C byte, per wanted
 // position the record slot found, per record a copy of the party list that

@@ -340,6 +340,11 @@ def load_sources():
 
 
 CONST_BRACE = re.compile(r'\b(?:inline\s+)?(?:static\s+)?constexpr\s+[\w:]+\s+(k\w*)\s*\{([^{},;]*)\}\s*;')
+# A typed alias in a `namespace at` (stage C4: `inline auto& kPendingX =
+# SharedScratch.d_10;`): the name is a reference to a typed global, not an
+# address, so a site spelling it is typed and resolve_at answers no value.
+REF_ALIAS = re.compile(r'\binline\s+auto\s*&\s*(k\w*)\s*=\s*[A-Za-z_]')
+_REF_ALIASES = collections.defaultdict(list)
 
 
 def collect_constants(files, sym_env):
@@ -379,6 +384,10 @@ def collect_constants(files, sym_env):
         ns = f.ns_at(pos)
         row = (name, f.locals.get(name), ns, line_of(f.starts, pos))
         (f.consts if f.in_at_namespace(pos) else f.mconsts).append(row)
+    _REF_ALIASES.clear()
+    for f in files:
+        for m in REF_ALIAS.finditer(f.code):
+            _REF_ALIASES[m.group(1)].append((f, 'REF', f.ns_at(m.start()), line_of(f.starts, m.start())))
     return globals_env
 
 
@@ -577,7 +586,7 @@ def is_at_prefix(prefix):
 def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
     """The value of `[prefix::]at::name` as seen from f at pos, and the
     candidate definitions it was picked from."""
-    cands = defs_by_name.get(name, [])
+    cands = defs_by_name.get(name, []) + _REF_ALIASES.get(name, [])
     if not cands:
         return None, []
     want_ns = None
@@ -600,6 +609,9 @@ def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
     tiers.append(cands)
     for t in tiers:
         vals = {c[1] for c in t if c[1] is not None}
+        if 'REF' in vals:
+            # a typed alias is what this name is, here: no address
+            return None, []
         if len(vals) == 1:
             return vals.pop(), t
         if len(vals) > 1:

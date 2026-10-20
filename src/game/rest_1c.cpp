@@ -54,7 +54,7 @@ using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
 // kStep3: now Field_DirectionSteps[6] (symbols.toml).
 // kStep5: now Field_DirectionSteps[0xa] (symbols.toml). rows 3 and 5, read by address
-// kSloped: now SharedScratch (symbols.toml). SharedScratch's first byte: AreaMap_Slope's "sloped" flag
+inline auto& kSloped = SharedScratch.b_00;  // SharedScratch's first byte: AreaMap_Slope's "sloped" flag
 // kObjectFlag: now Sprite_Objects[0x80] (symbols.toml). Sprite_Objects + 0x80
 // kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml). Sprite_ObjectsExtra + 0x80
 constexpr U kObjectStride = 0xA4;
@@ -116,7 +116,7 @@ unsigned char Turned(unsigned char d, unsigned base) {
 // A direction byte turned and masked: (d + n) & 7, as `add` / `sub` and `and 7`.
 void Turn(int n) { Sprite_Current[8] = static_cast<unsigned char>((Sprite_Current[8] + n) & 7); }
 
-unsigned char Sloped() { return SharedScratch.b_00; }
+unsigned char Sloped() { return kSloped; }
 
 // Bit 0 of +0x80 of the object Sprite_ObjectAt found: Sprite_Objects 0..0x1D,
 // Sprite_ObjectsExtra 0x1E..0x21 (Sprite_ObjectAt answers those or 0xFF). The

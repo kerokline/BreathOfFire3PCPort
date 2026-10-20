@@ -352,7 +352,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
     auto probe = [&](unsigned direction) {
         const U px = q.xlo | static_cast<U>(q.xhi) << 16, py = q.ylo | static_cast<U>(q.yhi) << 16;
         const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(px), static_cast<long>(py), direction);
-        return S16(static_cast<U>(slope)) > 0x40 && SharedScratch.b_00 != 0;
+        return S16(static_cast<U>(slope)) > 0x40 && at::kEffectSlot != 0;
     };
     q.yhi = static_cast<std::uint16_t>(zi);
     q.ylo = 0x8000;
@@ -662,8 +662,8 @@ extern "C" void __cdecl Leader_TurnBack(void) {
 extern "C" void __cdecl PartySet_ErrorLoop(void) {
     for (;;) {
         SH_CALL(Text_DrawFont8)(0xA0, 0x64, 0, At(at::kErrorTitle));
-        const U third = SharedScratch.b_02;
-        const U ids = static_cast<std::uint32_t>(SharedScratch.d_00);
+        const U third = at::kErrorIds.b_02;
+        const U ids = static_cast<std::uint32_t>(at::kErrorIds.d_00);
         SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextScratch)), reinterpret_cast<const char*>(At(at::kErrorFormat)),
                              ids & 0xFF, (ids >> 8) & 0xFF, third);
         SH_CALL(Text_DrawFont8)(0xA0, 0x74, 0, At(at::kTextScratch));

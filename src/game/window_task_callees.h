@@ -42,7 +42,7 @@ constexpr std::uint32_t kPlaceXY = 0x66AE10;        // MsgBox_PlacementTable, 4-
 // Field_ChangeArea's cells. The PSX keeps all of these in one block at
 // 0x80143F10..1F; the port scattered them (docs/window-task.md section 2).
 // kPendingArea: now AreaW0b_Place (symbols.toml). u16 (PSX 0x80143F10)
-constexpr std::uint32_t kPendingX = 0x903860;       // s32, 16.16 (PSX 0x80143F14)
+inline auto& kPendingX = SharedScratch.d_10;       // s32, 16.16 (PSX 0x80143F14)
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16 (PSX 0x80143F18)
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8 (PSX 0x80143F1C) - Gfx_BufferIndex is the byte after it
 // kPendingKind: now Area_EnterTransition (symbols.toml). u8 (PSX 0x80143F1D, docs/field-modes.md section 4)

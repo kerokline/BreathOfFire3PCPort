@@ -382,9 +382,9 @@ extern "C" void __cdecl Area42_Init(void) {
     }
     if (Cond_ByteFD != 1) return;
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    SharedScratch.b_00 = slot;
+    at::kFoundSlot = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = EffectAt(SharedScratch.b_00);
+    unsigned char* const e = EffectAt(at::kFoundSlot);
     auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x28;
@@ -452,9 +452,9 @@ extern "C" void __cdecl Area43_TintSettle(void) {
 // +0x3C = Sprite_Current's + 0x800000.
 extern "C" void __cdecl Area43_SpawnEffect37(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    SharedScratch.b_00 = slot;
+    at::kFoundSlot = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = EffectAt(SharedScratch.b_00);
+    unsigned char* const e = EffectAt(at::kFoundSlot);
     auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x37;

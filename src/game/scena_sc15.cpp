@@ -91,7 +91,7 @@ constexpr uint32_t kCounter0 = 0x903848;
 constexpr uint32_t kCounter1 = 0x903849;
 constexpr uint32_t kCounter2 = 0x90384A;
 constexpr uint32_t kCounter3 = 0x90384B;
-// kSlotWord: now SharedScratch (symbols.toml). u16: the event object's slot (Scena15_EventObjects)
+inline auto& kSlotWord = SharedScratch.w_00;  // u16: the event object's slot (Scena15_EventObjects)
 // kFlagRow: now Chapter_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
 // kStoryRow: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, the story flags
 // kRow14: now Cond_Flags[0x70] (symbols.toml). Cond_Flags + 0x70
@@ -981,12 +981,12 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
 SC15_EXPORT void __cdecl Scena15_EventObjects(void) {
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
-        SharedScratch.w_00 = s;
+        kSlotWord = s;
         if (s != 0xFF) SH_CALL(EventOp_0x)(At(Scena15_EventOps_addr + 0x11u * i));
     }
     for (unsigned i = 0; i < 2; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
-        SharedScratch.w_00 = s;
+        kSlotWord = s;
         if (s != 0xFF) SH_CALL(EventOp_6x)(At(Scena15_EventOps_addr + 0x38 + 0x10u * i));
     }
 }

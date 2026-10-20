@@ -373,7 +373,7 @@ extern "C" void __cdecl GameMode_Start(void) {
 extern "C" void __cdecl GameMode_Enter(void) {
     const unsigned char flags = AreaEntry_PendingFlags;
     const std::int32_t z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-    const std::int32_t x = SharedScratch.d_10;
+    const std::int32_t x = at::kPendingX;
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFF7);
     g.area_enter(AreaW0b_Place, x, z, flags);
     if (Field_InputFlags & 8) {

@@ -111,9 +111,9 @@ void SetFlag(unsigned n) { g.flags_set(Bank(), n); }
 // record indexed by the stored byte read back.
 bool PlaceEffect(unsigned char kind) {
     const unsigned char slot = g.effect_find();
-    SharedScratch.b_00 = slot;
+    at::kEffectSlot.b_00 = slot;
     if (slot == 0xFF) return false;
-    unsigned char* const e = rv::Bytes(Effect_Objects) + ((static_cast<std::uint32_t>(SharedScratch.d_00) & 0xFF) << 7);
+    unsigned char* const e = rv::Bytes(Effect_Objects) + ((static_cast<std::uint32_t>(at::kEffectSlot.d_00) & 0xFF) << 7);
     e[0] = 1;
     e[5] = kind;
     return true;
