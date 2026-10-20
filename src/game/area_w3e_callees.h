@@ -45,14 +45,14 @@ constexpr std::uint32_t kScratch850 = SharedScratch_addr;
 // frames, non-zero while moving), +0x48, +0x89, +0x137; and the records'
 // stride.
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderSteps: now ObjTrio[9] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml).
 constexpr std::uint32_t kLeader48 = 0x802D88;
-// kLeader89: now ObjTrio[0x89] (symbols.toml).
-// kLeader137: now ObjTrio[0x137] (symbols.toml).
+// kLeader89: now ObjTrio[0].char_id (symbols.toml).
+// kLeader137: now ObjTrio_addr + 0x137 (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The first of Sprite_ObjectsExtra's four, its +0x83 (area 136's init).
-// kExtra0_83: now Sprite_ObjectsExtra[0x83] (symbols.toml).
+// kExtra0_83: now Sprite_ObjectsExtra[0].area_script (symbols.toml).
 // The byte after Field_Kind2X (mode_flow_callees.h's kLastZone: Cond_ByteFD's
 // value on entry); area 136's init tests it for 1 and 4.
 constexpr std::uint32_t kLastZone = 0x905E68;

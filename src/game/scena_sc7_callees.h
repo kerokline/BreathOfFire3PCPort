@@ -78,10 +78,10 @@ constexpr std::uint32_t kTextRecords = 0x904CE0;  // Text_Records: an item's 16-
 // +0x58, +0x5B, +0x5C written or read here) and the sprite and effect pools.
 constexpr std::uint32_t kMembers = 0x802D40;
 constexpr std::uint32_t kMemberStride = 0x14C;
-// kLeaderKind: now ObjTrio[8] (symbols.toml). member 0 +8
-// kLeaderSlot: now ObjTrio[0xb] (symbols.toml). member 0 +0xB: chapter 7 run 4 keeps its effect slot here
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). member 0 +0x34
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). member 0 +0x38
+// kLeaderKind: now ObjTrio[0].direction (symbols.toml). member 0 +8
+// kLeaderSlot: now ObjTrio_addr + 0xb (symbols.toml). member 0 +0xB: chapter 7 run 4 keeps its effect slot here
+// kLeaderX: now ObjTrio[0].x (symbols.toml). member 0 +0x34
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). member 0 +0x38
 // kMember1: now Field_Members[4] (symbols.toml). member 1 +0
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords
 constexpr std::uint32_t kRecordStride = 0xA4;

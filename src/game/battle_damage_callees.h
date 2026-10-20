@@ -18,7 +18,7 @@ namespace at {
 // The party: ObjTrio 0x802D40, three objects 0x14C apart, the working record
 // (PartyWorkingRecords 0x802D50) at +0x10 of each. Offsets below are the
 // working record's, so the object's first byte is -0x10.
-// kParty: now ObjTrio[0x10] (symbols.toml).
+// kParty: now ObjTrio[0].step_z (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr int kPPresent = -0x10;     // u8, bit 0: in the battle
 constexpr int kPCureId = -0x0B;      // u8, what 0x44F4B0 is handed when a status is cured

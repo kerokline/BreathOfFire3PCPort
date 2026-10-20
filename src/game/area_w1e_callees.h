@@ -23,15 +23,15 @@ constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler o
 constexpr U kMember1 = 0x802E8C;          // ObjTrio + 0x14C
 constexpr U kMember2 = 0x802FD8;          // ObjTrio + 0x298
 constexpr U kPartyStride = 0x14C;
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: Character_IndexById's index
+// kLeaderX: now ObjTrio[0].x (symbols.toml). the leader's +0x34 / +0x38, 16.16
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderEffect: now ObjTrio[0].char_id (symbols.toml). the leader's +0x89: Character_IndexById's index
 constexpr U kPartyList = 0x904062;        // three bytes: the members' character ids, in order
 constexpr U kScratch48 = 0x903848;        // u8 scratch cells 0x903848..0x90384B (the script's)
 // kVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7
 // kVar8: now MoveScript_PartyRecords[0x65] (symbols.toml). the byte after it
-// kObject0X: now Sprite_Objects[0x34] (symbols.toml). Sprite_Objects[0] +0x34
-// kObject1X: now Sprite_Objects[0xd8] (symbols.toml). Sprite_Objects[1] +0x34
+// kObject0X: now Sprite_Objects[0].x (symbols.toml). Sprite_Objects[0] +0x34
+// kObject1X: now Sprite_Objects[1].x (symbols.toml). Sprite_Objects[1] +0x34
 constexpr U kEffectStride = 0x80;
 
 // --- area 65's tables (the world-map copy's, in its own data block
@@ -60,11 +60,11 @@ constexpr U kA65NameSetStride = 6;
 // kA65DriftSize: now Area65_DriftUV[8] (symbols.toml).
 
 // --- area 65's world-map cells (area 16's and 45's, docs/area_w0b.md) ---------
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
-// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
-// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z

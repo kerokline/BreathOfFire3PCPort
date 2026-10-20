@@ -30,9 +30,9 @@ constexpr std::uint32_t kScratchBank_addr = SharedScratch_addr + 0x2; // kScratc
 constexpr U kScreen0 = 0x903820, kScreen1 = 0x903828, kScreen2 = 0x903830;
 // Prim_VertexScratch's four vertices, 8 bytes apart.
 // kVertex0: now Prim_VertexScratch (symbols.toml).
-// kVertex1: now Prim_VertexScratch[4] (symbols.toml).
-// kVertex2: now Prim_VertexScratch[8] (symbols.toml).
-// kVertex3: now Prim_VertexScratch[0xc] (symbols.toml).
+// kVertex1: now Prim_VertexScratch[1] (symbols.toml).
+// kVertex2: now Prim_VertexScratch[2] (symbols.toml).
+// kVertex3: now Prim_VertexScratch[3] (symbols.toml).
 // The area block (AreaMap_Header): width byte +0, height byte +1, the tile
 // offset word +2, the corner dwords from +0x30 (AreaMap_Corners), the two
 // flat colours +0x1A / +0x1C (MapCell_FlatOverlay's), AreaMap_PatchBase +0x28.
@@ -68,12 +68,12 @@ constexpr U kStatusText0 = 0x66A0E8, kStatusText1 = 0x66A0F0, kColonText = 0x663
 // addresses them).
 // kObjects: now Sprite_Objects (symbols.toml).
 constexpr U kObjectStride = 0xA4;
-// kObjFlag84: now Sprite_Objects[0x84] (symbols.toml).
-// kObjWord88: now Sprite_Objects[0x88] (symbols.toml).
-// kObjX8C: now Sprite_Objects[0x8c] (symbols.toml).
-// kObjZ90: now Sprite_Objects[0x90] (symbols.toml).
-// kObj94: now Sprite_Objects[0x94] (symbols.toml).
-// kObjByteA0: now Sprite_Objects[0xa0] (symbols.toml).
+// kObjFlag84: now Sprite_Objects[0].speed (symbols.toml).
+// kObjWord88: now Sprite_Objects[0].trigger_word (symbols.toml).
+// kObjX8C: now Sprite_Objects[0].target_x (symbols.toml).
+// kObjZ90: now Sprite_Objects[0].target_z (symbols.toml).
+// kObj94: now Sprite_Objects[0].best_score (symbols.toml).
+// kObjByteA0: now Sprite_Objects[0].handler (symbols.toml).
 // Field_ActiveMember and Sprite_Current, the two pointers EventOp_8x sets.
 // kActiveMember: now Field_ActiveMember (symbols.toml).
 // kSpriteCurrent: now Sprite_Current (symbols.toml).

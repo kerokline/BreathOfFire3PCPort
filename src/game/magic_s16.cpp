@@ -54,7 +54,7 @@ constexpr std::uint32_t kSparkleStride = 0x2C;
 constexpr std::uint32_t kScratch = SharedScratch_addr; // s16 words +0 .. +0xE (SharedScratch's neighbourhood)
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12-byte records
 constexpr std::uint32_t kEnemyState = 0x93BCD9;    // what 0x4BBCE0 reads: 0x93B961 + 0x128 * 3 (docs/magic_s16.md section 6)
-// kPartyState: now ObjTrio[1] (symbols.toml). a member's +1
+// kPartyState: now ObjTrio[0].state (symbols.toml). a member's +1
 
 // A sparkle's fields (battle_items_callees.h names them for MAGIC070's pool).
 constexpr unsigned kFlags = 0, kType = 1, kPhase = 2, kShade = 3, kKind = 4, kTimer = 5, kCount = 6, kLimit = 7;

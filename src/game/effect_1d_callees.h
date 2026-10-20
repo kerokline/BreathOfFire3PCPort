@@ -25,9 +25,9 @@ constexpr std::uint32_t kRayDraw = bof3::addr::EffectKind24_DrawRay;       // 0x
 // Data.
 constexpr std::uint32_t kCounter0 = 0x903848;      // the chapters' counter byte (scenario_harness at::kCounter):
                                                    // EffectKind22_WaitArms adds 1 when its arms are done
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio record 0 (the leader) +0x34, x (16.16)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). +0x38, z
-// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml). +0x3E, the height's integer word
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio record 0 (the leader) +0x34, x (16.16)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). +0x38, z
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml). +0x3E, the height's integer word
 constexpr std::uint32_t kEffectStride = 0x80;      // Effect_Objects' records
 constexpr unsigned kEffects = 20;                  // Effect_Objects' twenty
 

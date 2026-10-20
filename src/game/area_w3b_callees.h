@@ -42,18 +42,18 @@ constexpr U kStoryFlags = 0x904030;
 // kMsgState: now AreaW0c_TailState (symbols.toml).
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).
 constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
-// kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). +9
-// kLeaderA: now ObjTrio[0xa] (symbols.toml). +0xA: effect kind 0x5C's gauge draws the blink while it is not 0
-// kLeaderB: now ObjTrio[0xb] (symbols.toml). +0xB: the charge the gauge's second row shows (0x40 - it)
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). +0xC / +0x10: the step direction (dwords)
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). +0x34 / +0x38 / +0x3C, 16.16
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderY: now ObjTrio[0x3c] (symbols.toml).
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml). the leader's +8, its facing
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). +9
+// kLeaderA: now ObjTrio_addr + 0xa (symbols.toml). +0xA: effect kind 0x5C's gauge draws the blink while it is not 0
+// kLeaderB: now ObjTrio_addr + 0xb (symbols.toml). +0xB: the charge the gauge's second row shows (0x40 - it)
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). +0xC / +0x10: the step direction (dwords)
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml). +0x34 / +0x38 / +0x3C, 16.16
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderY: now ObjTrio[0].height (symbols.toml).
 constexpr U kLeaderCellWordX = 0x802D76;  // the high word of +0x34
 constexpr U kLeaderCellWordZ = 0x802D7A;
-// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml). the word +0x3E
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml). the word +0x3E
 constexpr U kPartyStride = 0x14C;
 constexpr U kObjectStride = 0xA4;         // Sprite_Objects / Sprite_ObjectsExtra / Field_ActorStates records
 constexpr U kEffectStride = 0x80;

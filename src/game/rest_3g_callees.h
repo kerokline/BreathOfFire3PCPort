@@ -52,7 +52,7 @@ constexpr U kQuakeLast = 0x695A2C;         // u8 x 16 x 15: the lift one frame b
 // --- area 109's switch (Area_CellHooks' entry for area 0x6D) -------------------------
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flag row Flags_* are handed
 constexpr U kPatternFlags = 0x65DE60;      // the three story flag numbers (image .data, E5A's kStoryBits)
-// kLeaderFacing: now ObjTrio[8] (symbols.toml). ObjTrio +8: the leader's facing byte
+// kLeaderFacing: now ObjTrio[0].direction (symbols.toml). ObjTrio +8: the leader's facing byte
 
 // --- kind 0x18 sub-kind 0x41's two draws ------------------------------------------
 constexpr U kPanelVertices = 0x65ED30;     // 8 vertices of three bytes (x, z, lift) - two quads (image .data)

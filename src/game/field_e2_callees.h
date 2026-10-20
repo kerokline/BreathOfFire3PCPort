@@ -56,8 +56,8 @@ constexpr std::uint32_t kObject = 0x905DA0;          // the object record (0xA4)
 constexpr std::uint32_t kButtonsRun = 0x903582;      // u16: the run buttons (save data)
 constexpr std::uint32_t kButtonsLeave = 0x903586;    // u16: the buttons that leave mode 11 (save data)
 // kRunDefault: now FieldE2_RunDefault (symbols.toml). u8: the run toggle
-// kLeaderX, kLeaderZ, kLeaderY: now rv::As<records::PartyMember>(ObjTrio)->x / z / height (records.h). ObjTrio[0] +0x34 / +0x38 / +0x3C / +0x138
-// kLeaderFlags: now ObjTrio[0x138] (symbols.toml).
+// kLeaderX, kLeaderZ, kLeaderY: now ObjTrio[0].x / .z / .height (symbols.toml). ObjTrio[0] +0x34 / +0x38 / +0x3C / +0x138
+// kLeaderFlags: now ObjTrio_addr + 0x138 (symbols.toml).
 constexpr std::uint32_t kInputHeld = 0x905BA6;       // Field_InputHeld
 constexpr std::uint32_t kScriptFlags2 = 0x905BA4;    // Field_ScriptFlags2
 // kKind2Z: now Field_Kind2Z (symbols.toml). Field_Kind2Z / X

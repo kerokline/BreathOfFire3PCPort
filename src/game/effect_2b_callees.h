@@ -38,9 +38,9 @@ constexpr std::uint32_t kRingStride = 0x18;        // +0x10 width, +0x12 half-th
 constexpr std::uint32_t kRingCount = 16;           // state, +0x16 count, +0x17 shade)
 
 // Cells.
-// kExtra1Use: now Sprite_ObjectsExtra[0xa4] (symbols.toml). Sprite_ObjectsExtra[1] +0: kind 0x35's model record in use
-// kExtra1Model: now Sprite_ObjectsExtra[0xf4] (symbols.toml). Sprite_ObjectsExtra[1] +0x50: kind 0x35's model (55 faces of 0x28)
-// kLeaderPoint: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34: the leader's x, z, height (kind 0x3D's glow and rings)
+// kExtra1Use: now Sprite_ObjectsExtra[1] (symbols.toml). Sprite_ObjectsExtra[1] +0: kind 0x35's model record in use
+// kExtra1Model: now Sprite_ObjectsExtra[1].script (symbols.toml). Sprite_ObjectsExtra[1] +0x50: kind 0x35's model (55 faces of 0x28)
+// kLeaderPoint: now ObjTrio[0].x (symbols.toml). ObjTrio +0x34: the leader's x, z, height (kind 0x3D's glow and rings)
 
 // The state tables (named in symbols.toml; the fuzz lists them by address).
 // kKind2FStates: now EffectKind2F_States (symbols.toml). EffectKind2F_States, 2 (then kind 0x33's)

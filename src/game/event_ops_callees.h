@@ -29,10 +29,10 @@ namespace at {
 // The leader and the field.
 // kLeader: now ObjTrio (symbols.toml). ObjTrio: member 0, which Field_State points at
 constexpr std::uint32_t kMemberStride = 0x14C;
-// kZoneCounter: now ObjTrio[0x134] (symbols.toml). u16, ObjTrio +0x134 (field-event.md section 4)
-// kLeaderPace: now ObjTrio[0x128] (symbols.toml). u8, ObjTrio +0x128 - Field_State +0x128 read by address
-// kLeaderFlags: now ObjTrio[0x138] (symbols.toml). u8, ObjTrio +0x138
-// kLeaderZone: now ObjTrio[0x36] (symbols.toml). u16 pair: ObjTrio +0x36 / +0x3A (whole x, z)
+// kZoneCounter: now ObjTrio_addr + 0x134 (symbols.toml). u16, ObjTrio +0x134 (field-event.md section 4)
+// kLeaderPace: now ObjTrio_addr + 0x128 (symbols.toml). u8, ObjTrio +0x128 - Field_State +0x128 read by address
+// kLeaderFlags: now ObjTrio_addr + 0x138 (symbols.toml). u8, ObjTrio +0x138
+// kLeaderZone: now ObjTrio[0].x_whole (symbols.toml). u16 pair: ObjTrio +0x36 / +0x3A (whole x, z)
 // kActorRecords: now CharacterRecords (symbols.toml). stride 0xA4 (item_use_callees.h)
 constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). two 3-byte lists of member ids (field-event.md section 2)

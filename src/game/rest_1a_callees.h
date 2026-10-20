@@ -51,9 +51,9 @@ constexpr unsigned kFormActionCount = 19;
 
 // Cells read by address.
 // kPartySet: now AreaW0b_PartySet (symbols.toml). the loaded party set (& 0x7F)
-// kLeaderKind: now ObjTrio[0x89] (symbols.toml). ObjTrio +0x89 (the leader's)
-// kLeaderState: now ObjTrio[1] (symbols.toml). ObjTrio +1
-// kLeaderStep: now ObjTrio[2] (symbols.toml). ObjTrio +2
+// kLeaderKind: now ObjTrio[0].char_id (symbols.toml). ObjTrio +0x89 (the leader's)
+// kLeaderState: now ObjTrio[0].state (symbols.toml). ObjTrio +1
+// kLeaderStep: now ObjTrio[0].step (symbols.toml). ObjTrio +2
 // kCondRow1: now Cond_Flags[8] (symbols.toml). Cond_Flags + 8: the flag row Flags_Test reads (bit 0x16)
 constexpr std::uint32_t kScriptFlags3 = 0x9039A3;    // Field_ScriptFlags + 1: the u16's high byte
 inline auto& kScratchFlag = SharedScratch.b_00;  // SharedScratch's flag byte (MapView_SlopeAt's)

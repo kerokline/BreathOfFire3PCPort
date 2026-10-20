@@ -63,7 +63,7 @@ constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHoo
 // kPartyTag: now ObjTrio (symbols.toml). member 0's +0x148, ObjTrio[0].char_index (stride 0x14C; Field_Members until stage C4)
 // kParty: now ObjTrio (symbols.toml). ObjTrio
 constexpr U kPartyStride = 0x14C;
-// kPartyFlags91: now ObjTrio[0x91] (symbols.toml). member 0's +0x91 (bit 0x20 read by set-up 34's event hook)
+// kPartyFlags91: now ObjTrio_addr + 0x91 (symbols.toml). member 0's +0x91 (bit 0x20 read by set-up 34's event hook)
 
 // --- the enemies (0x93B960 + n * 0x128) ---------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running

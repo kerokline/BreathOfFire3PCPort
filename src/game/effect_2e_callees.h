@@ -71,10 +71,10 @@ constexpr std::uint32_t kSphereShades = 0x930F84; // ... a shade byte a vertex .
 // kSphereLight: now Effect2e_SphereLight (symbols.toml). ... and the light, three longs, to 0x931174
 constexpr unsigned kSphereVertCount = 0x1E2;
 constexpr unsigned kSphereQuadCount = 0x200;
-// kSprite1Point: now Sprite_Objects[0xd8] (symbols.toml). Sprite_Objects[1] +0x34 / +0x38 / +0x3C: kind 0x4A follows it
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio record 0 (the leader) +0x34, x (16.16)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). +0x38, z
-// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml). +0x3E, the height's integer word
+// kSprite1Point: now Sprite_Objects[1].x (symbols.toml). Sprite_Objects[1] +0x34 / +0x38 / +0x3C: kind 0x4A follows it
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio record 0 (the leader) +0x34, x (16.16)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). +0x38, z
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml). +0x3E, the height's integer word
 constexpr std::uint32_t kEffectStride = 0x80;     // Effect_Objects' records
 
 }  // namespace effect_2e::at

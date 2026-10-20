@@ -68,7 +68,7 @@ constexpr std::uint32_t kMemberCount2 = 0x929EC2; // u8 set 1 with it (Field_Mem
 // The party's field objects (ObjTrio, stride 0x14C) and the sprite pool.
 constexpr std::uint32_t kMembers = 0x802D40;
 constexpr std::uint32_t kMemberStride = 0x14C;
-// kLeaderKind: now ObjTrio[8] (symbols.toml). member 0 +8
+// kLeaderKind: now ObjTrio[0].direction (symbols.toml). member 0 +8
 // kSprites: now Sprite_Objects (symbols.toml). Sprite_Objects, 0xA4-byte records
 constexpr std::uint32_t kSpriteStride = 0xA4;
 // kSpriteCurrent: now Sprite_Current (symbols.toml).

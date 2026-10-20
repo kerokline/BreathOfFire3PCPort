@@ -51,37 +51,37 @@ constexpr std::uint32_t kMoveSpeed3 = 0x6697F3;
 // none; read back as a dword & 0xFF). Unnamed; no reader outside the band.
 // kEffectSlot: now AreaW3d_EffectSlot (symbols.toml).
 // Sprite_Kind2's +0x80 (0x7E0940 + 0x80): handler 3 sets its bit 3.
-// kKind2Byte80: now Sprite_Kind2[0x80] (symbols.toml).
+// kKind2Byte80: now Sprite_Kind2.context (symbols.toml).
 // The leader's record (ObjTrio): +8 its direction, words +0x2E / +0x30 (the
 // spawn's x / z), dwords +0x34 / +0x38 (the tail's glide target).
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderDir: now ObjTrio[8] (symbols.toml).
-// kLeaderX16: now ObjTrio[0x2e] (symbols.toml).
-// kLeaderZ16: now ObjTrio[0x30] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml).
+// kLeaderX16: now ObjTrio[0].screen_x (symbols.toml).
+// kLeaderZ16: now ObjTrio[0].screen_y (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Party record words +0x36 / +0x3A (the cell x / z: the dwords' high words).
-// kPartyCellX: now ObjTrio[0x36] (symbols.toml).
-// kPartyCellZ: now ObjTrio[0x3a] (symbols.toml).
+// kPartyCellX: now ObjTrio[0].x_whole (symbols.toml).
+// kPartyCellZ: now ObjTrio[0].z_whole (symbols.toml).
 // Sprite_ObjectsExtra[0] (0x802000)'s x and z dwords: the tail's camera glide
 // target.
-// kExtra0X: now Sprite_ObjectsExtra[0x34] (symbols.toml).
-// kExtra0Z: now Sprite_ObjectsExtra[0x38] (symbols.toml).
+// kExtra0X: now Sprite_ObjectsExtra[0].x (symbols.toml).
+// kExtra0Z: now Sprite_ObjectsExtra[0].z (symbols.toml).
 // Sprite_ObjectsExtra[3] (0x8021EC): the marker object. +0 (the init sets 1),
 // +9, dwords +0xC / +0x10 (a step), +0x34 / +0x38 / +0x3C (x, z, y; the
 // words +0x36 / +0x3A the cell), +0x70, +0x83 (choice 1 sets it).
-// kMarker: now Sprite_ObjectsExtra[0x1ec] (symbols.toml).
-// kMarker9: now Sprite_ObjectsExtra[0x1f5] (symbols.toml).
-// kMarkerStepX: now Sprite_ObjectsExtra[0x1f8] (symbols.toml).
-// kMarkerStepZ: now Sprite_ObjectsExtra[0x1fc] (symbols.toml).
-// kMarkerX: now Sprite_ObjectsExtra[0x220] (symbols.toml).
-// kMarkerCellX: now Sprite_ObjectsExtra[0x222] (symbols.toml).
-// kMarkerZ: now Sprite_ObjectsExtra[0x224] (symbols.toml).
-// kMarkerCellZ: now Sprite_ObjectsExtra[0x226] (symbols.toml).
-// kMarkerY: now Sprite_ObjectsExtra[0x228] (symbols.toml).
-// kMarker70: now Sprite_ObjectsExtra[0x25c] (symbols.toml).
-// kMarker83: now Sprite_ObjectsExtra[0x26f] (symbols.toml).
+// kMarker: now Sprite_ObjectsExtra[3] (symbols.toml).
+// kMarker9: now Sprite_ObjectsExtra[3].step_frames (symbols.toml).
+// kMarkerStepX: now Sprite_ObjectsExtra[3].step_x (symbols.toml).
+// kMarkerStepZ: now Sprite_ObjectsExtra[3].step_z (symbols.toml).
+// kMarkerX: now Sprite_ObjectsExtra[3].x (symbols.toml).
+// kMarkerCellX: now Sprite_ObjectsExtra[3].x_whole (symbols.toml).
+// kMarkerZ: now Sprite_ObjectsExtra[3].z (symbols.toml).
+// kMarkerCellZ: now Sprite_ObjectsExtra[3].z_whole (symbols.toml).
+// kMarkerY: now Sprite_ObjectsExtra[3].height (symbols.toml).
+// kMarker70: now Sprite_ObjectsExtra[3].reach (symbols.toml).
+// kMarker83: now Sprite_ObjectsExtra[3].area_script (symbols.toml).
 // The window pool words the message helper resets (MessagePools 0x803160's
 // +4 / +6), and the cell it points 0x905B84 at.
 constexpr std::uint32_t kPoolWords = 0x803164;

@@ -52,7 +52,7 @@ constexpr std::uint32_t kPieceCount = 27;
 constexpr std::uint32_t kDebris = 0x92C780;         // kind 0x1E: 16 debris records of 0x2C, to 0x92CA40
 // kShardCursor: now EffectKind1E_ShardCursor (symbols.toml). EffectKind1E_ShardCursor: the shard kind 0x1E's shard
                                                     // states step (a pointer)
-// kModelFaces: now Sprite_ObjectsExtra[0x50] (symbols.toml). Sprite_ObjectsExtra[0] +0x50: the model's faces (0x28 bytes each)
+// kModelFaces: now Sprite_ObjectsExtra[0].script (symbols.toml). Sprite_ObjectsExtra[0] +0x50: the model's faces (0x28 bytes each)
 constexpr std::uint32_t kModelCount = 0x802054;     // Sprite_ObjectsExtra[0] +0x54: points at the face count (a byte)
 
 }  // namespace effect_1c::at

@@ -48,7 +48,7 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // (Field_EdgeBits is set from it less 5, area_w1f's kLeaderZone).
 constexpr std::uint32_t kParty = 0x802D40;
 constexpr std::uint32_t kPartyStride = 0x14C;
-// kLeader89: now ObjTrio[0x89] (symbols.toml).
+// kLeader89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kLeaderZone = 0x802E74;
 // The previous area (u16): the inits test it (area_w2c_callees.h's kLastArea).
 constexpr std::uint32_t kLastArea = 0x802290;

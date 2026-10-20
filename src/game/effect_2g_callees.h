@@ -37,7 +37,7 @@ constexpr std::uint32_t kKind15Delays8 = 0x6547AC; // 8 bytes: a wait by Rand() 
 constexpr std::uint32_t kKind15Delays4 = 0x6547B8; // 4 bytes: a wait by Rand() & 3
 // kMember1: now ObjTrio (symbols.toml). ObjTrio record 1 (ObjTrio + 0x14C), the second member's
 // kMember1Flags: now ObjTrio (symbols.toml). its +0x124 (bit 6 held)
-// kMember1Pose: now rv::As<records::PartyMember>(ObjTrio + 0x14C)->script_pos (records.h). its +0x58 (u16, the animation)
+// kMember1Pose: now ObjTrio[1].script_pos (symbols.toml). its +0x58 (u16, the animation)
 // kMember1PoseDone: now ObjTrio (symbols.toml). its +0x4A (1 when the animation has run)
 constexpr std::uint32_t kObjectStride = 0xA4;      // Sprite_Objects' records
 constexpr unsigned kObjectCount = 30;

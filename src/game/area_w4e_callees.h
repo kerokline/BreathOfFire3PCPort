@@ -48,10 +48,10 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 // A mode byte area 188's init tests (1 or 4) and the byte +0x83 of
 // Sprite_ObjectsExtra's first record it sets.
 // kMode905E68: now AreaW1a_EntryZone (symbols.toml).
-// kExtra0Byte83: now Sprite_ObjectsExtra[0x83] (symbols.toml).
+// kExtra0Byte83: now Sprite_ObjectsExtra[0].area_script (symbols.toml).
 // The word the step-count of area 189's walk is compared with: the leader
 // record's +0x134 (ObjTrio 0x802D40 + 0x134), a pace the walk's start sets.
-// kLeaderPace: now ObjTrio[0x134] (symbols.toml).
+// kLeaderPace: now ObjTrio_addr + 0x134 (symbols.toml).
 // Area 189's walk counters: a frame word (0x1E0 and 0x3C0 mark it), the
 // byte after it counted up at 0x3C0, a byte the count adds 8 to and the
 // arrival counts down, the facing the walk's start takes (low nibble), and

@@ -22,8 +22,8 @@ namespace rest_1e::at {
 // Sprite_ObjectsExtra, 0xA4 bytes each; the states set bit 0 of the found
 // one's +0x80 (or byte [index * 0xA4 + 0x7DEF00] / [(index - 0x1E) * 0xA4 +
 // 0x802080] as the originals address them).
-// kObjectFlag: now Sprite_Objects[0x80] (symbols.toml). Sprite_Objects + 0x80
-// kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml). Sprite_ObjectsExtra + 0x80
+// kObjectFlag: now Sprite_Objects[0].context (symbols.toml). Sprite_Objects + 0x80
+// kExtraFlag: now Sprite_ObjectsExtra[0].context (symbols.toml). Sprite_ObjectsExtra + 0x80
 constexpr std::uint32_t kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 0x1E;
 constexpr unsigned kExtraCount = 4;

@@ -26,7 +26,7 @@ constexpr std::uint32_t kSaved = 0x903A10;      // u8[6]: a saved party - three 
                                                 // second party list; written and read only by this block's entries
                                                 // (after the pending area change 0x903A04..0x903A0F)
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). two 3-byte lists of member ids (field-event.md section 2), the second at +3
-// kMemberIds: now ObjTrio[0x89] (symbols.toml). ObjTrio + 0x89: a field member's character id (event-objs.md)
+// kMemberIds: now ObjTrio[0].char_id (symbols.toml). ObjTrio + 0x89: a field member's character id (event-objs.md)
 constexpr std::uint32_t kMemberStride = 0x14C;  // ObjTrio's records
 constexpr std::uint32_t kRecordStride = 0xA4;   // CharacterRecords' records: +9 a byte these set, +0xB bit 0 "in the party"
                                                 // (Party_Join sets it; char-stats.md section 2 counts it)

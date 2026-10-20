@@ -23,8 +23,8 @@ constexpr std::uint32_t kDrawMoves = bof3::addr::EffectKind18Sub17_ScrollTexture
 // kFlagRow9: now Cond_Flags[0x48] (symbols.toml). Cond_Flags row 9 (Cond_Flags + 0x48): sub-kinds 0x10 and 0x50 test it
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Cond_Flags + 0xA0): sub-kinds 0x11 and 0x12
 constexpr std::uint32_t kCounter = 0x903848;        // the chapter counter byte sub-kind 0x17 waits on and sets
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio record 0's +0x34 (x, 16.16): sub-kind 0x10's near test
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). ObjTrio record 0's +0x38 (z, 16.16)
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio record 0's +0x34 (x, 16.16): sub-kind 0x10's near test
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). ObjTrio record 0's +0x38 (z, 16.16)
 constexpr std::uint32_t kKind2ZCell = 0x905E62;     // Field_Kind2Z's high word (s16): sub-kind 0x15's corner rows
 constexpr std::uint32_t kEnemy0Bits = 0x93B9F2;     // EnemyWorkingRecords record 0's +0x12 (a dword read; bit 14 tested)
 // kEnemy1Bits: now BossH_Enemy1Status (symbols.toml). EnemyWorkingRecords record 1's +0x12 (the same)

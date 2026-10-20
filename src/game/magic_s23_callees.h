@@ -42,9 +42,9 @@ constexpr std::uint32_t kWA = 0x90385A;      // u16: the angle, or a colour
 constexpr std::uint32_t kWE = 0x90385E;      // s16: its screen y
 // Prim_VertexScratch: four SVECTORs, 8 bytes apart.
 // kV0: now Prim_VertexScratch (symbols.toml).
-// kV1: now Prim_VertexScratch[4] (symbols.toml).
-// kV2: now Prim_VertexScratch[8] (symbols.toml).
-// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
+// kV1: now Prim_VertexScratch[1] (symbols.toml).
+// kV2: now Prim_VertexScratch[2] (symbols.toml).
+// kV3: now Prim_VertexScratch[3] (symbols.toml).
 
 // kShiftY: now Camera_ShiftY (symbols.toml). Camera_ShiftY (s16)
 // kActorSprite: now MagicS23_ActorSprite (symbols.toml). unsigned char *: its +8 is the side's facing

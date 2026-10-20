@@ -84,7 +84,7 @@ constexpr std::uint32_t kRecord0 = 0x7E11E0;        // Effect_Objects record 0 (
 constexpr std::uint32_t kRecord2 = 0x7E12E0;        // record 2 (+0xC scales kind 5's height)
 constexpr std::uint32_t kRecord3 = 0x7E1360;        // record 3 (kind 0xF runs only there, or while its +1 is above 3;
                                                     // its +0x30 is the window's y the other kind-0xF records draw at)
-// kRecord5: now Effect_Objects[0x280] (symbols.toml). record 5 (+0x10's sign picks kind 5's follow animation)
+// kRecord5: now Effect_Objects[5] (symbols.toml). record 5 (+0x10's sign picks kind 5's follow animation)
 constexpr std::uint32_t kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
 // kExtras: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra, four of 0xA4
@@ -92,7 +92,7 @@ constexpr unsigned kExtraCount = 4;
 // kObjects: now Sprite_Objects (symbols.toml). Sprite_Objects, thirty of 0xA4
 constexpr unsigned kObjectCount = 30;
 constexpr std::uint32_t kObjectStride = 0xA4;
-// kLeader: now rv::As<records::PartyMember>(ObjTrio) (records.h). ObjTrio 0
+// kLeader: now ObjTrio[0] (symbols.toml). ObjTrio 0
 constexpr std::uint32_t kTextBuffer = 0x904BA0;     // the text scratch sprintf writes
 constexpr std::uint32_t kCounterByte = 0x903848;
 constexpr std::uint32_t kAccessoryA = 0x904130;     // the two accessory bytes kind 3 names (the first read as a dword)

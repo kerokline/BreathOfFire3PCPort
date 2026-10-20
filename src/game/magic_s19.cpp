@@ -66,9 +66,9 @@ constexpr std::uint32_t kAbility = 0x904B80;     // u16: the id of the action be
 
 // The GTE's input vectors (four SVECTORs) and the effects' scratch words.
 // kV0: now Prim_VertexScratch (symbols.toml).
-// kV1: now Prim_VertexScratch[4] (symbols.toml).
-// kV2: now Prim_VertexScratch[8] (symbols.toml).
-// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
+// kV1: now Prim_VertexScratch[1] (symbols.toml).
+// kV2: now Prim_VertexScratch[2] (symbols.toml).
+// kV3: now Prim_VertexScratch[3] (symbols.toml).
 constexpr std::uint32_t kRadius = SharedScratch_addr; // s16 (dword for MAGIC086's draws)
 constexpr std::uint32_t kHeight = 0x903852;   // s16
 constexpr std::uint32_t kAngle = 0x903854;    // s16 (dword: MAGIC086's inner radius)

@@ -60,9 +60,9 @@ constexpr unsigned kClutWords = 0x2000;
 constexpr std::uint32_t kTile = 0x939A00;       // u16: its low byte tested 0x62..0x66 (run 5 step 0x14)
 // kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kLoadByte: now AreaW3c_Load0F (symbols.toml). u8: tested for 1 before the ten-flag sets
-// kLeaderName: now ObjTrio[0x89] (symbols.toml). u8: ObjTrio record 0 + 0x89
+// kLeaderName: now ObjTrio[0].char_id (symbols.toml). u8: ObjTrio record 0 + 0x89
 // kMember1: now ObjTrio record 2 x (records::PartyMember; 0x80300C is record 2 + 0x34).
-// kMemberState: now ObjTrio[0x3cf] (symbols.toml). u8: tested against 3 (run 9 step 0)
+// kMemberState: now ObjTrio_addr + 0x3cf (symbols.toml). u8: tested against 3 (run 9 step 0)
 // kObjTrioZ: now ObjTrio record 0 x (records::PartyMember; the name said z, the address is +0x34).
 // kObjTrioY: now ObjTrio record 0 height (records::PartyMember).
 constexpr std::uint32_t kPartyBytes = 0x904062; // three bytes, each tested against 2, 8, 5, 4

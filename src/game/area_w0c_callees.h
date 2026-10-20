@@ -53,9 +53,9 @@ constexpr std::uint32_t kRecord0Byte9 = 0x903A79;
 // The leader's record (ObjTrio): byte +8, the step words +0x34 / +0x38, the
 // dword +0x134.
 constexpr std::uint32_t kLeader = 0x802D40;
-// kLeaderByte8: now ObjTrio[8] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderByte8: now ObjTrio[0].direction (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // Effect_Objects' stride (records of 0x80 bytes).
 constexpr std::uint32_t kEffectStride = 0x80;
 // Named cells, by address for the fuzz's regions and the one subtraction

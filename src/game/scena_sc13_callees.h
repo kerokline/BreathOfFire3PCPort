@@ -85,7 +85,7 @@ constexpr unsigned kClutWords = 0x2000;
 // kEntryByte: now ModeFlow_AreaTransition (symbols.toml). a byte the runs set 0 / 0xFF before an area change
 constexpr std::uint32_t kTrio = 0x802D40;       // ObjTrio: three records of 0x14C
 constexpr std::uint32_t kTrioStride = 0x14C;
-// kFacing: now ObjTrio[8] (symbols.toml). u8 ObjTrio record 0 + 8: the leader's facing
+// kFacing: now ObjTrio[0].direction (symbols.toml). u8 ObjTrio record 0 + 8: the leader's facing
 constexpr std::uint32_t kLeaderName = 0x802DC9; // u8 ObjTrio record 0 + 0x89: who leads
 // kTrioX: now ObjTrio record 0 x (records::PartyMember).
 // kTrioY: now ObjTrio record 0 z (records::PartyMember).

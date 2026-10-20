@@ -39,7 +39,7 @@ constexpr std::uint32_t kEffectSlot = SharedScratch_addr;
 // The scene's timer (u16, docs/field-modes.md).
 // kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml).
 // Field object 6's x (Sprite_Objects + 6 * 0xA4 + 0x34), a dword.
-// kObject6X: now Sprite_Objects[0x40c] (symbols.toml).
+// kObject6X: now Sprite_Objects[6].x (symbols.toml).
 // Text_Records, where Crt_sprintf writes the message's parameter, and the
 // format area 8's handlers 1 and 2 give it (Area08_MessageFormat).
 constexpr std::uint32_t kTextRecords = 0x904CE0;

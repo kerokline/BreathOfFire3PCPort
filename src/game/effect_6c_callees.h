@@ -15,11 +15,11 @@
 namespace effect_6c::at {
 
 // --- the leader (ObjTrio record 0) ------------------------------------------------------
-// kLeaderState: now ObjTrio[2] (symbols.toml). ObjTrio +2: 3 runs Sprite_ScriptTick (sub-kind 0x44)
-// kLeaderMoving: now rv::As<records::PartyMember>(ObjTrio)->step_y (records.h). ObjTrio +0x14, a dword: not 0 - the screen y is taken from the projection
-// kLeaderDepth: now rv::As<records::PartyMember>(ObjTrio)->screen_y (records.h). ObjTrio +0x30, a word sub-kind 0x44 reads and writes
-// kLeaderLift: now rv::As<records::PartyMember>(ObjTrio)->height_whole (records.h). ObjTrio +0x3E, an s16 (halved, negated into the vertex)
-// kLeaderAnimation: now ObjTrio[0x4b] (symbols.toml). ObjTrio +0x4B: the animation sub-kind 0x44 copies
+// kLeaderState: now ObjTrio[0].step (symbols.toml). ObjTrio +2: 3 runs Sprite_ScriptTick (sub-kind 0x44)
+// kLeaderMoving: now ObjTrio[0].step_y (symbols.toml). ObjTrio +0x14, a dword: not 0 - the screen y is taken from the projection
+// kLeaderDepth: now ObjTrio[0].screen_y (symbols.toml). ObjTrio +0x30, a word sub-kind 0x44 reads and writes
+// kLeaderLift: now ObjTrio[0].height_whole (symbols.toml). ObjTrio +0x3E, an s16 (halved, negated into the vertex)
+// kLeaderAnimation: now ObjTrio[0].animation (symbols.toml). ObjTrio +0x4B: the animation sub-kind 0x44 copies
 
 // --- the field ------------------------------------------------------------------------
 constexpr std::uint32_t kKind2ZHigh = 0x905E62;       // Field_Kind2Z's high word, an s16 cell

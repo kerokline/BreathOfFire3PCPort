@@ -57,12 +57,12 @@ constexpr std::uint32_t kMusicCurrent = 0x904CD0;
 // push toggle plays a sound by), +0x4A, +0x89, the zone counter +0x134 (areas
 // 72 / 73 set Field_EdgeBits to it less 5), the word +0x12E.
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderDir: now ObjTrio[8] (symbols.toml).
-// kLeaderSound: now ObjTrio[0x2c] (symbols.toml).
-// kLeader4A: now ObjTrio[0x4a] (symbols.toml).
-// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml).
+// kLeaderSound: now ObjTrio[0].column (symbols.toml).
+// kLeader4A: now ObjTrio[0].script_hold (symbols.toml).
+// kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kLeaderZone = 0x802E74;
-// kLeaderWord12E: now ObjTrio[0x12e] (symbols.toml).
+// kLeaderWord12E: now ObjTrio_addr + 0x12e (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Field objects (Sprite_Objects, 30 of 0xA4 bytes) and effect records
 // (Effect_Objects, 0x80 bytes).

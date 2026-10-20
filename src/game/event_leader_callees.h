@@ -34,9 +34,9 @@ constexpr std::uint32_t kEncounterAreasEnd = 0x660AB8;
 // kBlockingCells: now Field_BlockingCells (symbols.toml). cell codes that block, 0xFF-ended
 // The party (field-event.md section 2).
 constexpr std::uint32_t kMemberStride = 0x14C;
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34 / +0x38 (dwords), +0x3E (word)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio +0x34 / +0x38 (dwords), +0x3E (word)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml).
 // kActorRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). the first 3-byte party list

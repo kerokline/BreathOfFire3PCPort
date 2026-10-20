@@ -59,8 +59,8 @@ constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 // kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kObjTrio: now ObjTrio (symbols.toml). ObjTrio: records of 0x14C
 constexpr std::uint32_t kObjStride = 0x14C;
-// kLeaderByte8: now ObjTrio[8] (symbols.toml). u8 ObjTrio +0x8, tested against 4..6 / 0..2
-// kLeaderByteB: now ObjTrio[0xb] (symbols.toml). u8 ObjTrio +0xB, cleared by the area 0x79 entry
+// kLeaderByte8: now ObjTrio[0].direction (symbols.toml). u8 ObjTrio +0x8, tested against 4..6 / 0..2
+// kLeaderByteB: now ObjTrio_addr + 0xb (symbols.toml). u8 ObjTrio +0xB, cleared by the area 0x79 entry
 // kObjTrioX: now ObjTrio record 0 x (records::PartyMember).
 // kObjTrioZ: now ObjTrio record 0 z (records::PartyMember).
 constexpr unsigned kMemberKind = 0x89;          // ObjTrio record +0x89: the member's character byte

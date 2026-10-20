@@ -53,13 +53,13 @@ constexpr std::uint32_t kEntryZone = 0x905E68;
 // kLeader137). Party records 1 and 2's words +0x12E (area 170's state 60
 // counts both up).
 // kLeader: now ObjTrio (symbols.toml).
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeader89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeader89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kLeader137 = 0x802E77;
 // kParty1Word12E: now ObjTrio (symbols.toml). record 1 +0x12E (Field_Members[0x132] until stage C4).
-// kParty2Word12E: now ObjTrio[0x3c6] (symbols.toml).
+// kParty2Word12E: now ObjTrio_addr + 0x3c6 (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The field record's byte +0x128 the member frames set to 2, and the byte
 // +0x149 area 172's fall indexes MoveScript_TintRecords by.
@@ -70,7 +70,7 @@ constexpr std::uint32_t kFieldStateTint = 0x149;
 constexpr std::uint32_t kTintStride = 12;
 // Sprite_Kind2 + 0x3C: the camera object's height dword (scena_sc0.cpp
 // writes it beside MapView_SetElevation the same way).
-// kKind2Height: now Sprite_Kind2[0x3c] (symbols.toml).
+// kKind2Height: now Sprite_Kind2.height (symbols.toml).
 // Camera_Angles + 2: the yaw word the effects of kind 0x13 take.
 // kCameraYaw: now Camera_Angles[1] (symbols.toml).
 // Field_MoveSpeeds + 2 and + 3 (bytes): the glide divisor is one << 3.

@@ -140,22 +140,22 @@ unsigned char* Sc() { return Sprite_Current; }
 
 // The cells (rest_1g.cpp's).
 // kEff0Flags: now Effect_Objects (symbols.toml).
-// kEff0State: now Effect_Objects[1] (symbols.toml).
-// kEff0Depth: now Effect_Objects[7] (symbols.toml).
-// kEff0X: now Effect_Objects[0x34] (symbols.toml).
-// kEff0Z: now Effect_Objects[0x38] (symbols.toml).
-// kEff0Height: now Effect_Objects[0x3e] (symbols.toml).
-// kEff1State: now Effect_Objects[0x81] (symbols.toml).
-// kEff3State: now Effect_Objects[0x181] (symbols.toml).
-// kEff4State: now Effect_Objects[0x201] (symbols.toml).
-// kEff5Frame: now Effect_Objects[0x290] (symbols.toml).
-// kEff5Level: now Effect_Objects[0x2b0] (symbols.toml).
-// kEff6State: now Effect_Objects[0x301] (symbols.toml).
-// kEff6Dir: now Effect_Objects[0x308] (symbols.toml).
-// kEff6Page: now Effect_Objects[0x33c] (symbols.toml).
-// kEff6Shown: now Effect_Objects[0x33e] (symbols.toml).
-// kLeaderStage: now ObjTrio[2] (symbols.toml).
-// kLeaderStep: now ObjTrio[3] (symbols.toml).
+// kEff0State: now Effect_Objects[0].state (symbols.toml).
+// kEff0Depth: now Effect_Objects_addr + 0x7 (symbols.toml).
+// kEff0X: now Effect_Objects[0].x (symbols.toml).
+// kEff0Z: now Effect_Objects[0].z (symbols.toml).
+// kEff0Height: now Effect_Objects[0].height_whole (symbols.toml).
+// kEff1State: now Effect_Objects[1].state (symbols.toml).
+// kEff3State: now Effect_Objects[3].state (symbols.toml).
+// kEff4State: now Effect_Objects[4].state (symbols.toml).
+// kEff5Frame: now Effect_Objects_addr + 0x290 (symbols.toml).
+// kEff5Level: now Effect_Objects_addr + 0x2b0 (symbols.toml).
+// kEff6State: now Effect_Objects[6].state (symbols.toml).
+// kEff6Dir: now Effect_Objects_addr + 0x308 (symbols.toml).
+// kEff6Page: now Effect_Objects_addr + 0x33c (symbols.toml).
+// kEff6Shown: now Effect_Objects_addr + 0x33e (symbols.toml).
+// kLeaderStage: now ObjTrio[0].step (symbols.toml).
+// kLeaderStep: now ObjTrio[0].state3 (symbols.toml).
 // kSpriteIndex: now Effect1a_PanelObject (symbols.toml).
 // kRecordA: now Effect1a_PanelScript (symbols.toml).
 // kRecordB: now Effect1a_PanelSet (symbols.toml).

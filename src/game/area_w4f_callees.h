@@ -56,7 +56,7 @@ constexpr std::uint32_t kFlagRow = 0x929ED0;
 // The party records (ObjTrio, 0x14C each): the leader's +0x89 (0x802DC9;
 // the record k's is k * 0x14C on), and the +0x80 block (0xA4 bytes from
 // 0x802DC0) area 192's pass copies each member's character record into.
-// kLeader89: now ObjTrio[0x89] (symbols.toml).
+// kLeader89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kParty80 = 0x802DC0;
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The party list (a member id a byte, Field_MemberCount of them) and

@@ -60,10 +60,10 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 constexpr std::uint32_t kEntryZone = 0x905E68;
 // The leader's record (ObjTrio): its +8 (direction), +0x89; records 1, 2.
 constexpr std::uint32_t kLeader = 0x802D40;
-// kLeaderByte8: now ObjTrio[8] (symbols.toml).
-// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderByte8: now ObjTrio[0].direction (symbols.toml).
+// kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
 // kPartyRecord1: now ObjTrio (symbols.toml). record 1 (ObjTrio_addr + 0x14C; Field_Members[4] until stage C4).
-// kPartyRecord2: now ObjTrio[0x298] (symbols.toml).
+// kPartyRecord2: now ObjTrio[2] (symbols.toml).
 // The cell step per direction: two signed bytes (x, z), 2 bytes apart
 // (event_ops_callees.h's kCellDelta).
 constexpr std::uint32_t kCellDelta = 0x66971C;
