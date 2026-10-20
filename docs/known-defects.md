@@ -8749,4 +8749,10 @@ one contiguous run in `SCENA17.EMI#0` at the same offset on every Western
 disc, and the question is whether `Scena17_DrawLine` and the step table read
 it through offsets the PC's code fixes (the exe-gap round, section 3).
 
-**Fixed 2026-10-20** (the owner: "let western installs use their own roll"): DIV-0148. The importer writes the disc's roll to `base/exe/roll.bin` (`tools/exe_roll.py`) and `Scena17_ScrollRoll` reads its lines from there on a Western disc-built image; the US and EU disc-only installs roll their own credits to "Presented by CAPCOM" and "Fin".
+**Fixed 2026-10-20** (the owner: "let western installs use their own roll",
+then "let's have the roll track with localization"): DIV-0148. A layer built
+from a US or PAL disc carries its release's roll as kind 17
+(`tools/exe_roll.py`, `tools/loc_build.py`) and `Scena17_ScrollRoll` reads its
+lines from there, on a PC install and a disc-only one alike; the US and EU
+disc-only installs and a PC install under en-US roll their release's credits
+to "Presented by CAPCOM" and "Fin".

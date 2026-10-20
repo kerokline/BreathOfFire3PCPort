@@ -50,7 +50,6 @@
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
-#include "hook/exe_image.h"
 #include "hook/log.h"
 #include "input/sigma.h"
 
@@ -268,31 +267,32 @@ unsigned char NewEffectKept(unsigned char kind) {
 // unchecked (0xFF reads past the 20 records).
 bool KeptLive() { return (Effect(Scena15_Bytes[3])[0] & 1) != 0; }
 
-// DIVERGENCE DIV-0148: a Western release's own staff roll. A disc-built image
-// of the US or a PAL disc carries its roll beside data.bin (base\exe\roll.bin,
-// tools/exe_roll.py): the release's lines and text, which .data cannot hold
-// (its pointer words are the PC's, Scena17_RollLines included). Read once at
-// inject: the lines as addresses into our copy of the text, the -1 after them,
-// then the 15 entries the draw reads past it (Scena17_RollLines' 367 hold the
-// PC's 351, its -1 and 15 more): the release's 14 - the end card is the fifth -
-// and a 0 for the 15th, the section's next word, drawn below the screen. Empty
-// without the file: .data's table.
+// DIVERGENCE DIV-0148: the staff roll of the language played. A layer built
+// from a US or PAL disc carries its release's roll as kind 17 (FIRST.DAT,
+// tools/exe_roll.py): the lines and text, which .data cannot hold (its pointer
+// words are the PC's, Scena17_RollLines included). Taken when the chunk is
+// walked (ScenaSc15_RollApply): the lines as addresses into our copy of the
+// text, the -1 after them, then the 15 entries the draw reads past it
+// (Scena17_RollLines' 367 hold the PC's 351, its -1 and 15 more): the
+// release's 14 - the end card is the fifth - and a 0 for the 15th, the
+// section's next word, drawn below the screen. Empty without the chunk (the
+// original text, a Japanese or PSP layer): .data's table, the Japanese roll.
 constexpr char kRollMagic[8] = {'B', 'O', 'F', '3', 'X', 'R', 'L', '2'};
 constexpr uint32_t kRollMinLines = 100, kRollMaxLines = 1024, kRollMaxText = 0x4000, kRollAfter = 14, kRollAhead = 15;
 std::vector<unsigned char> g_roll_text;
 std::vector<uint32_t> g_roll_lines;
 
-void LoadRoll() {
-    std::vector<unsigned char> raw;
-    if (!bof3::ExeImage_ReadBeside("roll.bin", raw)) return;
+void LoadRoll(unsigned tag, const unsigned char* payload, unsigned size) {
+    if (tag != 1) bof3::Fatal("DIV-0148: a staff-roll chunk of tag %u (only 1 is a roll; rebuild the language)", tag);
+    const std::vector<unsigned char> raw(payload, payload + size);
     uint32_t n = 0, t = 0;
     if (raw.size() < 16 || std::memcmp(raw.data(), kRollMagic, 8) != 0)
-        bof3::Fatal("DIV-0148: base\\exe\\roll.bin is not a roll (rebuild the install)");
+        bof3::Fatal("DIV-0148: the staff-roll chunk is not a roll (rebuild the language)");
     std::memcpy(&n, raw.data() + 8, 4);
     std::memcpy(&t, raw.data() + 12, 4);
     const uint32_t words = n + kRollAfter;
     if (n < kRollMinLines || n > kRollMaxLines || t > kRollMaxText || raw.size() != 16u + 4u * words + t)
-        bof3::Fatal("DIV-0148: roll.bin holds %u lines and %u text bytes in %u bytes", n, t, (unsigned)raw.size());
+        bof3::Fatal("DIV-0148: the staff-roll chunk holds %u lines and %u text bytes in %u bytes", n, t, (unsigned)raw.size());
     g_roll_text.assign(raw.begin() + 16 + 4 * words, raw.end());
     g_roll_lines.assign(n + 1 + kRollAhead, 0);
     for (uint32_t i = 0; i < words; ++i) {
@@ -300,12 +300,12 @@ void LoadRoll() {
         std::memcpy(&w, raw.data() + 16 + 4 * i, 4);
         if (w == 0) continue;
         if (w > t || std::memchr(g_roll_text.data() + (w - 1), 0, t - (w - 1)) == nullptr)
-            bof3::Fatal("DIV-0148: roll.bin word %u starts at text offset %u with no NUL after it", i, w - 1);
+            bof3::Fatal("DIV-0148: the staff-roll chunk's word %u starts at text offset %u with no NUL after it", i, w - 1);
         g_roll_lines[i < n ? i : i + 1] =
             static_cast<uint32_t>(reinterpret_cast<std::uintptr_t>(g_roll_text.data() + (w - 1)));
     }
     g_roll_lines[n] = 0xFFFFFFFFu;
-    bof3::Log("DIV-0148: the staff roll of %s, %u lines (%u text bytes) from roll.bin", bof3::ExeImage_MappedBuild(), n, t);
+    bof3::Log("DIV-0148: the language's staff roll, %u lines (%u text bytes)", n, t);
 }
 
 // Line `i` of the roll: the release's (DIV-0148) or Scena17_RollLines[i].
@@ -2726,9 +2726,10 @@ SC15_EXPORT void __cdecl Scena19_ObjectTrigger(unsigned char* object) {
     CallObject(Scena19_Objects_addr, object, "Scena19_ObjectTrigger");
 }
 
+void ScenaSc15_RollApply(unsigned tag, const unsigned char* payload, unsigned size) { LoadRoll(tag, payload, size); }
+
 void ScenaSc15_Inject() {
     if (bof3::WantsShadow("scena_sc15")) scena_sc15::SelfTest();
-    LoadRoll();
     BOF3_INJECT(Scena15_RecordWord);
     BOF3_INJECT(Scena15_Frame);
     BOF3_INJECT(Scena15_EnterArea);

@@ -1,15 +1,18 @@
-"""The staff roll a Western PSX disc carries: base/exe/roll.bin (DIV-0148, D323).
+"""The staff roll a Western PSX disc carries: kind 17 of its language layer (DIV-0148, D323).
 
 The ending's roll is Scena17_RollLines (0x661A20: one string pointer a line, 0 a blank
 line, -1 the end) and the strings after Scena17_EndSteps. The PC's equal the Japan disc's
 SCENARIO/SCENA17.EMI#0. The US and PAL discs re-lay both (other job titles, other lines,
 345 / 293 lines against 351), so the image's map placed stretches of their text under
 the PC's pointers, a patchwork (D323). A pointer word of the image must hold the PC's
-value (exe_tables.apply_layout), so the release's own roll does not go into .data:
-the importer writes it beside data.bin and the engine's Scena17_ScrollRoll reads its
-lines from there (src/game/scena_sc15.cpp, src/hook/exe_image.h).
+value (exe_tables.apply_layout), so the release's own roll does not go into .data. It
+follows the language played (the owner, 2026-10-20): tools/loc_build.py writes it as kind
+17, tag 1, into FIRST.DAT of a layer built from a US or PAL PlayStation disc, on a PC
+install and a disc-only one alike, and the engine's Scena17_ScrollRoll reads its lines
+from that chunk (src/game/scena_sc15.cpp, ScenaSc15_RollApply). A Japanese or PSP layer
+and the original text carry none: the roll is .data's, the Japanese release's.
 
-roll.bin, little-endian:
+The chunk's payload, little-endian:
     8   magic "BOF3XRL2"
     4   lines (n), the -1 not counted
     4   text bytes (t)
@@ -26,11 +29,11 @@ an address inside the section and that ends in 0xFFFFFFFF; every non-null word m
 a NUL-terminated string inside the section. Addresses and counts only (CLAUDE.md rule 1).
 """
 
-import os
 import struct
 
 ROLL_FILE, ROLL_SECTION = "SCENARIO/SCENA17.EMI", 0
-ROLL_BUILDS = ("psx-us", "psx-eu-en", "psx-fr", "psx-de")   # the releases whose roll is not the PC's
+ROLL_EMI = "SCENA17.EMI"
+KIND, TAG = 17, 1                                           # tools/dat.py KINDS
 MAGIC = b"BOF3XRL2"
 AFTER = 14                                                  # the words after the -1 carried
 MIN_LINES, MAX_LINES, MAX_TEXT = 100, 1024, 0x4000          # the engine refuses outside these too
@@ -110,20 +113,18 @@ def parse(raw):
     return words, text
 
 
-def write(disc, bid, out):
-    """base/exe/roll.bin for a Western PSX build (ROLL_BUILDS); none for another.
-    Returns the file's path or None."""
-    path = os.path.join(out, "base", "exe", "roll.bin")
-    if bid not in ROLL_BUILDS:
-        if os.path.exists(path):
-            os.remove(path)                      # a cache rebuilt from another release keeps no stale roll
-        return None
-    import exe_twins
-    raw = roll_bytes(exe_twins.sources(disc))
-    parse(raw)
-    with open(path, "wb") as f:
-        f.write(raw)
-    return path
+def chunk(sections):
+    """The layer's (KIND, TAG, payload) from SCENA17.EMI's sections [(dest, bytes)] (loc_build's
+    module_sections): the section that holds a roll, the first if two do. Raises if none does."""
+    for i, (dest, blob) in enumerate(sections or ()):
+        try:
+            find_roll(dest, blob)
+        except SystemExit:
+            continue
+        raw = roll_bytes([(ROLL_FILE, ROLL_SECTION, dest, blob)])
+        parse(raw)
+        return KIND, TAG, raw
+    fail("%s holds no roll in any of its %d sections" % (ROLL_EMI, len(sections or ())))
 
 
 def selftest():

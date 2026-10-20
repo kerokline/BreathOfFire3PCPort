@@ -6,7 +6,6 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 
 namespace bof3 {
 
@@ -43,12 +42,6 @@ bool ExeImage_DiscMapped();
 // BOF3.exe's own (or a pc-zh image, byte-identical to it). The terms a
 // release's own table is in (D313: the fishing labels, fishing_text.cpp).
 const char* ExeImage_MappedBuild();
-
-// A file beside the mapped disc-built image's data.bin (base\exe\<name>), read
-// whole into `out`: false, `out` empty, when no disc-built image was mapped or
-// the file is absent; a read error is a Fatal. The release's own data the
-// image itself cannot hold: roll.bin, the staff roll (DIV-0148, scena_sc15.cpp).
-bool ExeImage_ReadBeside(const char* name, std::vector<unsigned char>& out);
 
 // The ranges of the disc-built image ExeImage_Source mapped, in data.toml's
 // order: [0, ExeImage_MappedRanges()), each with its class (`how`, e.g.

@@ -1493,13 +1493,10 @@ def build_from(path, bid, out):
     if bid not in rec.get("build", {}):
         fail("recipes/exe.toml has no image for %s" % bid)
     pointers = load_pointers()
-    disc = psx_disc.Disc(path)
-    img, owner, ranges, _, _ = disc_built(disc, bid, pointers, load_rebuild_refused()[bid])
+    img, owner, ranges, _, _ = disc_built(psx_disc.Disc(path), bid, pointers, load_rebuild_refused()[bid])
     h = write_exe(out, bid, path, img, rec["build"][PC]["bss_end"], ranges, owner, pointers)
     if h != rec["build"][bid]["sha256"]:
         fail("the %s image hashes %s, recipes/exe.toml says %s" % (bid, h, rec["build"][bid]["sha256"]))
-    import exe_roll   # a Western release's own staff roll, beside the image (DIV-0148)
-    exe_roll.write(disc, bid, out)
     return bid, h
 
 
@@ -1540,18 +1537,6 @@ def verify_cache(cache, info=None):
         if info is not None:
             info.append("layout %d of %d words recipes/exe-layout.tsv's targets; pointer words unfilled: %d"
                         % (len(words) - len(bad), len(words), left))
-    import exe_roll   # DIV-0148: a Western build's own roll beside the image, and no other build's
-    roll = os.path.join(d, "roll.bin")
-    if img["build"] in exe_roll.ROLL_BUILDS and not os.path.exists(roll):
-        errs.append("base/exe/roll.bin: absent from a %s image (rebuild the cache)" % img["build"])
-    elif os.path.exists(roll):
-        if img["build"] not in exe_roll.ROLL_BUILDS:
-            errs.append("base/exe/roll.bin: beside a %s image, whose roll is the PC's" % img["build"])
-        try:
-            with open(roll, "rb") as f:
-                exe_roll.parse(f.read())
-        except SystemExit as e:
-            errs.append(str(e))
     return errs
 
 
@@ -2404,8 +2389,6 @@ def cmd_check(a):
         if xs - data_words:
             errs.append("exe-rebuild.tsv: %s refuses %d words that are no data pointer" % (bid, len(xs - data_words)))
     errs += ["the rebuild rule's synthetic round trip: " + e for e in selftest_rebuild()]
-    import exe_roll
-    errs += ["the roll's synthetic section: " + e for e in exe_roll.selftest()]
     with open(PLACES, "rb") as f:
         if sha(f.read()) != rec["meta"].get("places_sha256"):
             errs.append("exe-places.tsv: not the file recipes/exe.toml was generated with")
