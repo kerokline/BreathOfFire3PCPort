@@ -61,7 +61,7 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
     if (n >= 30) return;
     Sprite_OverlayListCount = static_cast<unsigned char>(n + 1);
     Sprite_OverlayList[n] = Sprite_Current;
-    if (rv::Current<records::SpriteObject>()->flags & 8) g.dropped(0);
+    if (rv::Current<records::SpriteHead>()->flags & 8) g.dropped(0);
 }
 
 // original 0x588F20: Sprite_Current's draw key, screen position and depth,

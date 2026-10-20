@@ -520,12 +520,19 @@ coordinator accepted, a commit per letter or few, each gated `0 differ`:
 - **E** (frs F1): four, a party member's `+7` / `+6` in `field_c3.cpp` as
   raw bytes.
 - **F** (frs F2): `Sprite_ProjectA` and `Sprite_UpdateScreen` on
-  `SpriteHead`, 21 lines.
+  `SpriteHead`, 21 lines; then, at the coordinator's word, the same in
+  `Sprite_UpdateScreenA` and `Sprite_QueueOverlay` (2 more).
 - **G** (frs F3, D3): the movement interpreter's named functions on
   `SpriteHead` for their `Sprite_Current` / `Sc()` roots, 109 lines in
-  four files; `MoveCmd_OpF9`'s `Field_ActiveMember` keeps `SpriteObject`
-  (a Sprite_Objects / Sprite_ObjectsExtra record). No `Sc()` site in them
-  reads past `+0x7F`.
+  four files; then, at the coordinator's word, the rest of the interpreter
+  the same way (every other function of `move_groups.cpp`,
+  `move_script.cpp`, `move_cmds.cpp`, and `field_o.cpp` `MoveCmd_Op88*`,
+  `Op87*`, `OpDB`: 75 lines more). `Field_ActiveMember` (`Fam()`, in
+  `MoveCmd_OpF9`, `Op88*`, `Op87*`) keeps `SpriteObject`: a Sprite_Objects /
+  Sprite_ObjectsExtra record (symbols.toml), and `speed`,
+  `script_position`, `target_x` / `target_z` are that family's. No
+  `Sprite_Current` / `Sc()` site in the interpreter reads past `+0x7F`;
+  `Party_MoveMember` types no member root (its `object` is only arithmetic).
 - **H** (frs F5): two, the world map plate's cell ahead as `work_0c` /
   `work_10`.
 - **I** (bm F1): two, `Weretiger_DrawSprite`'s acting member as
@@ -535,11 +542,7 @@ coordinator accepted, a commit per letter or few, each gated `0 differ`:
 
 Left for the naming pass or C4: the misleading names on the right family
 (ea doubt 8, bm names), frs D1's window-record bytes named as other
-modules' globals, frs D2, D4, D5, D6, ea doubts 2, 3, 6, 7; and the same
-`SpriteObject`-on-`Sprite_Current` reading in the functions the audit did
-not name (the rest of `move_groups.cpp`, `move_script.cpp` and
-`move_cmds.cpp`, `field_o.cpp` `MoveCmd_Op87*` / `Op88*` /
-`OpDB`, `Sprite_UpdateScreenA`, `Sprite_QueueOverlay`).
+modules' globals, frs D2, D4, D5, D6, ea doubts 2, 3, 6, 7.
 `codegen_same.py` against the `main` build: 640 objects compared, 0
 differ; `data_census.py --check` 19,707 (19,705 committed; the sites put
 back to raw).

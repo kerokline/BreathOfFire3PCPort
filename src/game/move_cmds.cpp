@@ -46,9 +46,8 @@ unsigned char* Kind2() { return Sprite_Kind2; }
 
 // Sprite_Current may be a Sprite_Objects record or another family whose
 // first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
-// object), so only that part is named: rv::Current<records::SpriteHead>() in
-// the functions the C2 audit (frs F3) put right, SpriteObject in the rest
-// until the same fix reaches them (typed-data-round.md 3, "C2 audit as run").
+// object), so only that part is named: rv::Current<records::SpriteHead>()
+// (C2 audit frs F3; typed-data-round.md 3, "C2 audit as run").
 
 // The angle a party member turns to for a direction: Sprite_DirectionAngles,
 // read at any index as the original reads it (the table has 8).
@@ -117,7 +116,7 @@ extern "C" int __cdecl Math_Ratan2(float y, float x) {
 // and 6 turn the long way when the sprite's angle & 0xFFF is past direction
 // 3's; any direction byte indexes both tables (callers pass 0..7).
 extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char direction) {
-    records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
+    records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     std::int32_t tilt_x = static_cast<std::int32_t>(sprite->angle[0]);
     std::int32_t tilt_y = static_cast<std::int32_t>(sprite->angle[1]);
     const std::int32_t index = static_cast<std::int32_t>(Address(object) - Address(Sprite_ObjectsExtra)) / 0xA4;
@@ -128,7 +127,7 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
     if (Add(sprite->step_z, sprite->step_x) != 0) {
         const unsigned char* const step = At(Address(Field_DirectionSteps) + direction * 8u);
         const long ground = g.elevation(Add(Long(step), sprite->x), Add(Long(step + 4), sprite->z));
-        sprite = rv::Current<records::SpriteObject>();
+        sprite = rv::Current<records::SpriteHead>();
         const auto rise = static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - sprite->height_whole);
         if (direction & 2) {
             sprite->angle[0] = 0;
@@ -137,9 +136,9 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
         } else {
             const auto slope = static_cast<short>(direction == 1 ? rise : 0u - rise);
             tilt_x = g.ratan2(static_cast<float>(slope), 128.0f);
-            rv::Current<records::SpriteObject>()->angle[1] = 0;
+            rv::Current<records::SpriteHead>()->angle[1] = 0;
         }
-        sprite = rv::Current<records::SpriteObject>();
+        sprite = rv::Current<records::SpriteHead>();
     }
     const unsigned char frames = rv::Bytes(sprite)[0xA];
     if (frames == 0) {
@@ -165,8 +164,8 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
 // FUN_801A3764): Sprite_Current[3] = [1], [1] = 5. The argument is unused.
 extern "C" void __cdecl Sprite_SetPoseWait(unsigned char* context) {
     (void)context;
-    Sprite_Current[3] = rv::Current<records::SpriteObject>()->state;
-    rv::Current<records::SpriteObject>()->state = 5;
+    Sprite_Current[3] = rv::Current<records::SpriteHead>()->state;
+    rv::Current<records::SpriteHead>()->state = 5;
 }
 
 // original 0x573400: the kind-2 object's move (PSX FUN_801C6DF4), the twin of
@@ -335,7 +334,7 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
     Sprite_Current = object;
     long buffer[4] = {};
     g.attach_offset(buffer, offset);
-    const records::SpriteObject* const at = rv::Current<records::SpriteObject>();
+    const records::SpriteHead* const at = rv::Current<records::SpriteHead>();
     const std::int32_t x = Add(buffer[0], at->x);
     const std::int32_t z = Add(buffer[1], at->z);
     const std::int32_t y = Add(buffer[2], static_cast<short>(at->height_whole));
@@ -385,7 +384,7 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
 // original 0x579390: detach (PSX FUN_801ACEE0): +0x24 bit 5 cleared, and for
 // the object kind 1 +2 too.
 extern "C" void __cdecl MoveCmd_Detach(void) {
-    rv::Current<records::SpriteObject>()->draw_flags &= 0xDF;
+    rv::Current<records::SpriteHead>()->draw_flags &= 0xDF;
     if (g.object_kind() == 1) Sprite_Current[2] = 0;
 }
 
@@ -447,7 +446,7 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
     case 7: return MoveScript_Var7;
     case 8: return Cond_ByteFD;
     case 9: return Field_StatusBits & 1;
-    case 10: return rv::Current<records::SpriteObject>()->script_pos;
+    case 10: return rv::Current<records::SpriteHead>()->script_pos;
     case 11: return ObjTrio[0x89];
     case 12: return Long(At(Cond_Flags_addr + 0xa0));
     case 13: return 1;
@@ -477,7 +476,7 @@ extern "C" int __cdecl MoveScript_ObjectKind(void) {
 // As the original has it: position / 2 is compared in 16 bits; the sums wrap
 // at 16 bits.
 extern "C" unsigned short __cdecl Sprite_ScriptPeek(void) {
-    const records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+    const records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     if (sprite->script_hold != 1) return sprite->script_pos;
     const std::uint16_t position = sprite->script_pos;
     if (static_cast<std::uint16_t>(position >> 1) == sprite->script_steps) return 2;

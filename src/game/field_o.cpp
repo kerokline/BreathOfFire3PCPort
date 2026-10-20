@@ -756,11 +756,11 @@ extern "C" void __cdecl MoveCmd_Op88(void) {
 extern "C" void __cdecl MoveCmd_Op88Start(void) {
     const unsigned char n = SH_CALL(Sprite_SetTint)(Sc(), 0, 0, 0, 1);
     Fam()[0x9F] = n;
-    rv::As<records::SpriteObject>(Sc())->flags |= 0x20;
-    rv::As<records::SpriteObject>(Sc())->shade[2] = 0xC0;
-    rv::As<records::SpriteObject>(Sc())->shade[1] = 0xC0;
-    rv::As<records::SpriteObject>(Sc())->shade[0] = 0xC0;
-    rv::As<records::SpriteObject>(Sc())->draw_mode = 1;
+    rv::As<records::SpriteHead>(Sc())->flags |= 0x20;
+    rv::As<records::SpriteHead>(Sc())->shade[2] = 0xC0;
+    rv::As<records::SpriteHead>(Sc())->shade[1] = 0xC0;
+    rv::As<records::SpriteHead>(Sc())->shade[0] = 0xC0;
+    rv::As<records::SpriteHead>(Sc())->draw_mode = 1;
     rv::As<records::SpriteObject>(Fam())->script_position = rv::As<records::SpriteObject>(Fam())->script_position - 1u;
     Sc()[4] = 1;
 }
@@ -773,10 +773,10 @@ extern "C" void __cdecl MoveCmd_Op88Start(void) {
 extern "C" void __cdecl MoveCmd_Op88Fade(void) {
     for (unsigned c = 0x5D; c <= 0x5F; ++c)
         if (Sc()[c] != 0x80) Sc()[c] = static_cast<unsigned char>(Sc()[c] - 4);
-    records::SpriteObject* const sc = rv::As<records::SpriteObject>(Sc());
+    records::SpriteHead* const sc = rv::As<records::SpriteHead>(Sc());
     if (sc->shade[0] == 0x80 && sc->shade[1] == 0x80 && sc->shade[2] == 0x80) {
         SH_CALL(Tint_Release)(Fam()[0x9F]);
-        rv::As<records::SpriteObject>(Sc())->flags |= 0x40;
+        rv::As<records::SpriteHead>(Sc())->flags |= 0x40;
         Sc()[4] = 0;
         return;
     }
@@ -797,12 +797,12 @@ extern "C" void __cdecl MoveCmd_Op87(void) {
 extern "C" void __cdecl MoveCmd_Op87Start(void) {
     const unsigned char n = SH_CALL(Sprite_SetTint)(Sc(), 0, 0, 0, 1);
     Fam()[0x9F] = n;
-    rv::As<records::SpriteObject>(Sc())->flags |= 0x20;
-    rv::As<records::SpriteObject>(Sc())->flags &= 0xBF;
-    rv::As<records::SpriteObject>(Sc())->draw_mode = 1;
-    rv::As<records::SpriteObject>(Sc())->shade[2] = 0x80;
-    rv::As<records::SpriteObject>(Sc())->shade[1] = 0x80;
-    rv::As<records::SpriteObject>(Sc())->shade[0] = 0x80;
+    rv::As<records::SpriteHead>(Sc())->flags |= 0x20;
+    rv::As<records::SpriteHead>(Sc())->flags &= 0xBF;
+    rv::As<records::SpriteHead>(Sc())->draw_mode = 1;
+    rv::As<records::SpriteHead>(Sc())->shade[2] = 0x80;
+    rv::As<records::SpriteHead>(Sc())->shade[1] = 0x80;
+    rv::As<records::SpriteHead>(Sc())->shade[0] = 0x80;
     Sc()[4] = 1;
     rv::As<records::SpriteObject>(Fam())->script_position = rv::As<records::SpriteObject>(Fam())->script_position - 1u;
 }
@@ -813,14 +813,14 @@ extern "C" void __cdecl MoveCmd_Op87Start(void) {
 extern "C" void __cdecl MoveCmd_Op87Fade(void) {
     for (unsigned c = 0x5D; c <= 0x5F; ++c)
         if (Sb(Sc()[c]) < Sb(0xC0)) Sc()[c] = static_cast<unsigned char>(Sc()[c] + 4);
-    records::SpriteObject* const sc = rv::As<records::SpriteObject>(Sc());
+    records::SpriteHead* const sc = rv::As<records::SpriteHead>(Sc());
     if (sc->shade[0] == 0xC0 && sc->shade[1] == 0xC0 && sc->shade[2] == 0xC0) {
         SH_CALL(Tint_Release)(Fam()[0x9F]);
-        rv::As<records::SpriteObject>(Sc())->flags &= 0xDF;
-        rv::As<records::SpriteObject>(Sc())->draw_mode = 0;
-        rv::As<records::SpriteObject>(Sc())->shade[2] = 0;
-        rv::As<records::SpriteObject>(Sc())->shade[1] = 0;
-        rv::As<records::SpriteObject>(Sc())->shade[0] = 0;
+        rv::As<records::SpriteHead>(Sc())->flags &= 0xDF;
+        rv::As<records::SpriteHead>(Sc())->draw_mode = 0;
+        rv::As<records::SpriteHead>(Sc())->shade[2] = 0;
+        rv::As<records::SpriteHead>(Sc())->shade[1] = 0;
+        rv::As<records::SpriteHead>(Sc())->shade[0] = 0;
         Sc()[4] = 0;
         return;
     }
@@ -1004,16 +1004,16 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, s
 // Scena06_LeapAir): x and z each plus its velocity when that is above 0, then
 // rounded down to the half unit (& 0xFFFF8000).
 extern "C" void __cdecl MoveCmd_OpDB(void) {
-    records::SpriteObject* sc = rv::As<records::SpriteObject>(Sc());
+    records::SpriteHead* sc = rv::As<records::SpriteHead>(Sc());
     if (sc->step_x > 0) {
         sc->x = static_cast<std::int32_t>(static_cast<U>(sc->x) + static_cast<U>(sc->step_x));
-        sc = rv::As<records::SpriteObject>(Sc());
+        sc = rv::As<records::SpriteHead>(Sc());
     }
     sc->x = static_cast<std::int32_t>(static_cast<U>(sc->x) & 0xFFFF8000u);
-    sc = rv::As<records::SpriteObject>(Sc());
+    sc = rv::As<records::SpriteHead>(Sc());
     if (sc->step_z > 0) {
         sc->z = static_cast<std::int32_t>(static_cast<U>(sc->z) + static_cast<U>(sc->step_z));
-        sc = rv::As<records::SpriteObject>(Sc());
+        sc = rv::As<records::SpriteHead>(Sc());
     }
     sc->z = static_cast<std::int32_t>(static_cast<U>(sc->z) & 0xFFFF8000u);
 }

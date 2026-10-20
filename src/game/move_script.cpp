@@ -23,9 +23,8 @@ using AreaHandler = void (__cdecl*)();
 
 // Sprite_Current may be a Sprite_Objects record or another family whose
 // first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
-// object), so only that part is named: rv::Current<records::SpriteHead>() in
-// the functions the C2 audit (frs F3) put right, SpriteObject in the rest
-// until the same fix reaches them (typed-data-round.md 3, "C2 audit as run").
+// object), so only that part is named: rv::Current<records::SpriteHead>()
+// (C2 audit frs F3; typed-data-round.md 3, "C2 audit as run").
 using CounterOp = signed char (__cdecl*)(const unsigned char*);
 using GroupFn = unsigned char (__cdecl*)(unsigned char*, const unsigned char*, unsigned char);
 
@@ -359,7 +358,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
 // Returns al: the flow pass's value, the op's group for 0x10-0x4F, or what
 // the group handler returned.
 extern "C" unsigned char __cdecl MoveScript_Step(unsigned char* object, const unsigned char* script) {
-    const unsigned char start = rv::Current<records::SpriteObject>()->direction;
+    const unsigned char start = rv::Current<records::SpriteHead>()->direction;
     MoveScript_Object = object;
     unsigned char result = MoveScript_Flow(object, script, start);
     const std::uint16_t pos = Pos(object);

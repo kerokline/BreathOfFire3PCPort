@@ -373,7 +373,7 @@ extern "C" void __cdecl Party_ExtraFrame(void) {
 // FUN_8015B334's head) - 4 with +0x24 bit 4, 6 for a record with byte 3 bit
 // 5, else Draw_OtSlot - then its screen position (a tail jmp in the original).
 extern "C" void __cdecl Sprite_UpdateScreenA(void) {
-    records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+    records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     if (sprite->draw_flags & 0x10) sprite->ot_slot = 4;
     else sprite->ot_slot = (Record54(rv::Bytes(sprite))[3] & 0x20) ? 6 : Draw_OtSlot;
     g.project_a();
@@ -390,8 +390,9 @@ extern "C" void __cdecl Sprite_UpdateScreenA(void) {
 // does. The vertex's fourth word is 0 (DIV-0023): the original never writes
 // it, and Gte_LoadVertex carries its stale stack into Gte_Vertices[3]'s top
 // half, which nothing reads.
-// Sprite_Current is any sprite head (effects reach it as Sprite_UpdateScreenA):
-// read as SpriteHead (C2 audit frs F2).
+// Sprite_Current is any sprite head (effects reach it through
+// Sprite_UpdateScreenA): read as SpriteHead, here and in Sprite_UpdateScreenA
+// (C2 audit frs F2).
 extern "C" void __cdecl Sprite_ProjectA(void) {
     records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     const unsigned z_whole = sprite->z_frac == 0, x_whole = sprite->x_frac == 0;
