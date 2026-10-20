@@ -260,7 +260,7 @@ void Place(U dx, U dz, U height, U level) {
     so->x = Sar(rv::As<records::EffectWork>(s)->work_0c + dx, 9) - 0x4000u;
     so->z = Sar(rv::As<records::EffectWork>(s)->work_10 + dz, 9) - 0x4000u;
     so->height = height;
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, 0);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, 0x53020);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, level);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, 0);
@@ -274,7 +274,7 @@ U Speed(U v) { return Div(0x68DB8BAD, v, 12); }
 // 1 cleared too).
 void Turn() {
     unsigned char* const s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key) - Speed(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y))) & 0xFFDu);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, (static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32) - Speed(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y))) & 0xFFDu);
 }
 
 // Each time bit 11 of the angle changes (and, for the fade, the level +0x30 is
@@ -471,7 +471,7 @@ extern "C" void __cdecl EffectKind18Sub24_Fade(void) {
 extern "C" void __cdecl EffectKind18Sub24_Draw(void) {
     unsigned char* s = S();
     short pos[4] = {static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_frac)), static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z_frac)), static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_frac)), 0};
-    short angles[4] = {0, 0, static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key)), 0};
+    short angles[4] = {0, 0, static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32)), 0};
     SH_CALL(Gte_PushMatrix)();
     Matrix m;
     SH_CALL(Gte_RotTrans)(pos, m.t);
@@ -511,7 +511,7 @@ extern "C" void __cdecl EffectKind18Sub24_Draw(void) {
         s = S();
         U level;
         if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30)) > 0x40) {
-            const U cosine = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->draw_key))) + turn)));
+            const U cosine = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_32))) + turn)));
             s = S();
             level = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30))) - Sar(cosine, 7) - 0x20u;
         } else {
@@ -920,7 +920,7 @@ void StartLid(const Variants& t) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(At(t.heights + 2 * i)));
     if (t.words) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20, UL(t.words + 4 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, W(At(t.pages + 2 * i)));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, B(t.lids + i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, B(t.lids + i));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     Step();
     s = S();
@@ -955,7 +955,7 @@ int Open() {
         s[2] = static_cast<unsigned char>(s[2] + 1);
         s = S();
     }
-    return static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key) != 0 ? 0 : -1;
+    return static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32) != 0 ? 0 : -1;
 }
 // Sub-state 4 of both: +0x30 down 0x10; at 0 or below, sound 0x201 unless
 // Field_Request is set and +2 = 1.
@@ -967,7 +967,7 @@ int Close() {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x201);
         S()[2] = 1;
     }
-    return static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key) != 0 ? 0 : -1;
+    return static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32) != 0 ? 0 : -1;
 }
 
 // The lid's texture: the dword `index` of the table (entry 0 is the leaves'
@@ -1116,7 +1116,7 @@ extern "C" void __cdecl EffectKind18Sub25_Draw(int dy) {
         LinkAtRecord(dy, 0x48);
     }
     s = S();
-    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key) == 0) return;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32) == 0) return;
     unsigned char* const p = TexturedQuad();
     s = S();
     LidCorners(s);
@@ -1125,7 +1125,7 @@ extern "C" void __cdecl EffectKind18Sub25_Draw(int dy) {
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, lid);
     Project4(p);
     SH_CALL(Gte_PrimDepths4_10)(p);
-    const U texture = LidTexture("EffectKind18Sub25_Draw", at::kSub25Textures, at::kSub25TextureCount, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->draw_key)));
+    const U texture = LidTexture("EffectKind18Sub25_Draw", at::kSub25Textures, at::kSub25TextureCount, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(S())->work_32)));
     SH_CALL(Prim_SetTexture)(texture, p, 1);
     LinkAtRecord(0, 0x48);
 }
@@ -1185,12 +1185,12 @@ extern "C" void __cdecl EffectKind18Sub26_Draw(int dy) {
         LinkAtRecord(dy, 0x48);
     }
     s = S();
-    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key) == 0) return;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32) == 0) return;
     unsigned char* const p = TexturedQuad();
     LidCorners(S());
     Project4(p);
     SH_CALL(Gte_PrimDepths4_10)(p);
-    const U texture = LidTexture("EffectKind18Sub26_Draw", at::kSub26Textures, at::kSub26TextureCount, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->draw_key)));
+    const U texture = LidTexture("EffectKind18Sub26_Draw", at::kSub26Textures, at::kSub26TextureCount, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(S())->work_32)));
     SH_CALL(Prim_SetTexture)(texture, p, 1);
     LinkAtRecord(0, 0x48);
 }

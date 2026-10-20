@@ -90,19 +90,20 @@ unsigned char* PartyRecord(int slot) { return MoveScript_PartyRecords + slot * 1
 unsigned char* TintRecord(unsigned char n) { return MoveScript_TintRecords + n * 12u; }
 unsigned char* ActiveMember() { return Field_ActiveMember; }
 
-// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
-// record or another family whose first 0x80 bytes are a sprite object's (an
-// ObjTrio member, the kind-2 object), so only that part is named.
+// Sprite_Current may be a Sprite_Objects record or another family whose
+// first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
+// object), so only that part is named: rv::Current<records::SpriteHead>()
+// (C2 audit frs F3; typed-data-round.md 3, "C2 audit as run").
 
 // Ops C8 and CE: the sprite's direction one step toward a target, then its
 // facing (kind 1: the animation itself), and the op repeats.
 unsigned char TurnStep(unsigned char* object, unsigned char direction, unsigned char mode) {
-    rv::Current<records::SpriteObject>()->direction = direction;
-    if (g.kind() == 1) g.set_animation(rv::Current<records::SpriteObject>()->direction);
-    else g.face(rv::Current<records::SpriteObject>()->direction);
+    rv::Current<records::SpriteHead>()->direction = direction;
+    if (g.kind() == 1) g.set_animation(rv::Current<records::SpriteHead>()->direction);
+    else g.face(rv::Current<records::SpriteHead>()->direction);
     object[1] = mode;
     SetPos(object, Pos(object) - 1u);
-    return rv::Current<records::SpriteObject>()->direction;
+    return rv::Current<records::SpriteHead>()->direction;
 }
 
 }  // namespace
@@ -113,14 +114,14 @@ extern "C" unsigned char __cdecl MoveScript_Group9(unsigned char* object, const 
     const unsigned char* const p = script + pos;
     const unsigned char op = p[0];
     if (op >= 0x90 && op <= 0x95) {
-        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+        records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
         const unsigned char n = g.effect_spawn(static_cast<unsigned char>(op - 0x90), static_cast<signed char>(p[1]),
                                                static_cast<signed char>(p[2]), static_cast<short>(static_cast<std::uint16_t>(sprite->screen_x)),
                                                static_cast<short>(static_cast<std::uint16_t>(sprite->screen_y)));
         Sprite_Current[0xB] = n;
         SetPos(object, Pos(object) + 2u);
     } else if (op >= 0x98 && op <= 0x9D) {
-        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+        records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
         const unsigned char n = g.effect_spawn_at(static_cast<unsigned char>(op - 0x98), static_cast<signed char>(p[1]),
                                                   static_cast<signed char>(p[2]), sprite->x, sprite->z,
                                                   sprite->height);
@@ -136,7 +137,7 @@ extern "C" unsigned char __cdecl MoveScript_Group9(unsigned char* object, const 
 // sprite's direction. Returns Sprite_Current[8], not `value`.
 extern "C" unsigned char __cdecl MoveScript_Group6(unsigned char* object, const unsigned char* script, unsigned char value) {
     (void)value;
-    records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+    records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     const unsigned char d = sprite->direction;
     unsigned char animation;
     switch (script[Pos(object)]) {
@@ -151,9 +152,9 @@ extern "C" unsigned char __cdecl MoveScript_Group6(unsigned char* object, const 
     default: animation = d & 7; break;
     }
     object[0] |= 0x40;
-    rv::Current<records::SpriteObject>()->flags2 |= 8;
+    rv::Current<records::SpriteHead>()->flags2 |= 8;
     g.set_animation(animation);
-    return rv::Current<records::SpriteObject>()->direction;
+    return rv::Current<records::SpriteHead>()->direction;
 }
 
 // original 0x577280: the flow pass's 0xB0 group (PSX FUN_801AA6E4) - sound and
@@ -212,7 +213,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
     const unsigned char op = p[0];
     switch (op) {
     case 0xE1:   // E1 d t: face d, then turn toward t
-        object[5] = rv::Current<records::SpriteObject>()->direction;
+        object[5] = rv::Current<records::SpriteHead>()->direction;
         g.face(p[1]);
         SetWord(object + 8, script[Pos(object) + 2u]);
         g.turn_target(object);
@@ -222,18 +223,18 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
     case 0xE0: case 0xE3: {   // E0 t: face the way ObjTrio 0 faces, reversed; E3 t: keep facing; then turn toward t
         if (op == 0xE0) {
             object[0] |= 8;
-            object[5] = rv::Current<records::SpriteObject>()->direction;
+            object[5] = rv::Current<records::SpriteHead>()->direction;
             value = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->direction ^ 4);
             g.face(value);
         } else {
-            object[5] = rv::Current<records::SpriteObject>()->direction & 7;
+            object[5] = rv::Current<records::SpriteHead>()->direction & 7;
         }
         SetPos(object, Pos(object) + 1u);
         SetWord(object + 8, script[Pos(object)]);
         g.turn_target(object);
         const auto flags = static_cast<unsigned char>(object[0] & 0xEF);
         object[0] = flags;
-        object[0] = static_cast<unsigned char>((rv::Current<records::SpriteObject>()->flags2 & 4) ? flags & 0xDF : flags | 0x20);
+        object[0] = static_cast<unsigned char>((rv::Current<records::SpriteHead>()->flags2 & 4) ? flags & 0xDF : flags | 0x20);
         return value;
     }
     case 0xE2:
@@ -242,15 +243,15 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
         return value;
     case 0xE4:
         Scratch()[3] = 0xFF;
-        rv::Current<records::SpriteObject>()->flags2 &= 0xD7;
+        rv::Current<records::SpriteHead>()->flags2 &= 0xD7;
         object[0] &= 0xBF;
         return value;
     case 0xE5:
         Field_ScriptFlags &= 0xFEFF;
-        rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
+        rv::Current<records::SpriteHead>()->state = Sprite_Current[3];
         return value;
     case 0xE6:   // the sprite's flags cleared: the object ends
-        rv::Current<records::SpriteObject>()->flags = 0;
+        rv::Current<records::SpriteHead>()->flags = 0;
         return value;
     case 0xE7:
         SetPos(object, pos + 1u);
@@ -265,26 +266,26 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
         if (g.op_e9(object, static_cast<signed char>(p[1]), static_cast<signed char>(p[2]),
                     static_cast<unsigned short>(p[3] << 8 | p[4]), static_cast<unsigned short>(p[5] << 8 | p[6]), p[7], p[8])) {
             SetPos(object, Pos(object) - 1u);
-            return g.kind() == 2 ? rv::Current<records::SpriteObject>()->direction : 0xFF;
+            return g.kind() == 2 ? rv::Current<records::SpriteHead>()->direction : 0xFF;
         }
         SetPos(object, Pos(object) + 8u);
         return value;
     case 0xEA: {   // EA r g b a: a tint; a type-0x0A sprite keeps r g b itself
-        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+        records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
         if (sprite->type == 0x0A) {
             sprite->shade[0] = p[1];
-            rv::Current<records::SpriteObject>()->shade[1] = script[Pos(object) + 2u];
-            rv::Current<records::SpriteObject>()->shade[2] = script[Pos(object) + 3u];
+            rv::Current<records::SpriteHead>()->shade[1] = script[Pos(object) + 2u];
+            rv::Current<records::SpriteHead>()->shade[2] = script[Pos(object) + 3u];
         } else {
             g.tint(rv::Bytes(sprite), p[1], p[2], p[3], p[4]);
         }
         SetPos(object, Pos(object) + 4u);
         return value;
     }
-    case 0xEB: rv::Current<records::SpriteObject>()->flags ^= 0x40; return value;
-    case 0xEC: rv::Current<records::SpriteObject>()->flags2 ^= 4; return value;
-    case 0xED: rv::Current<records::SpriteObject>()->flags2 ^= 8; return value;
-    case 0xEE: rv::Current<records::SpriteObject>()->flags2 ^= 0x20; return value;
+    case 0xEB: rv::Current<records::SpriteHead>()->flags ^= 0x40; return value;
+    case 0xEC: rv::Current<records::SpriteHead>()->flags2 ^= 4; return value;
+    case 0xED: rv::Current<records::SpriteHead>()->flags2 ^= 8; return value;
+    case 0xEE: rv::Current<records::SpriteHead>()->flags2 ^= 0x20; return value;
     case 0xEF:   // the end of the script: context bit 8
         object[0] |= 8;
         return value;
@@ -314,7 +315,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         if (Field_Request != 3) {
             const std::uint16_t next = g.peek();
             SetWord(Scratch(), next);
-            if (rv::Current<records::SpriteObject>()->script_pos != next) {
+            if (rv::Current<records::SpriteHead>()->script_pos != next) {
                 const unsigned char* const q = script + Pos(object);
                 if (next == q[3]) g.play_by_id(static_cast<unsigned short>(q[1] << 8 | q[2]));
             }
@@ -322,11 +323,11 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         SetPos(object, Pos(object) + 4u);
         return value;
     case 0xD2:
-        rv::Current<records::SpriteObject>()->flags2 ^= 0x40;
-        rv::Current<records::SpriteObject>()->scale_mode = (rv::Current<records::SpriteObject>()->flags2 & 0x40) ? 0 : 1;
+        rv::Current<records::SpriteHead>()->flags2 ^= 0x40;
+        rv::Current<records::SpriteHead>()->scale_mode = (rv::Current<records::SpriteHead>()->flags2 & 0x40) ? 0 : 1;
         return value;
     case 0xD3:
-        rv::Current<records::SpriteObject>()->flags2 ^= 0x80;
+        rv::Current<records::SpriteHead>()->flags2 ^= 0x80;
         return value;
     case 0xD4: {   // D4 x x y y z z n: the party slot moves by x y z over n frames, or the sprite's +0x64..+0x6C
         unsigned char slot = PartySlot();
@@ -344,9 +345,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
             SetLong(r + 8, S16(script + Pos(object) + 3) / static_cast<signed char>(r[2]));
             SetLong(r + 4, S16(script + Pos(object) + 1) / static_cast<signed char>(r[2]));
         } else {
-            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[2], S16(script + Pos(object) + 5));
-            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[1], S16(script + Pos(object) + 3));
-            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[0], S16(script + Pos(object) + 1));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->angle[2], S16(script + Pos(object) + 5));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->angle[1], S16(script + Pos(object) + 3));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->angle[0], S16(script + Pos(object) + 1));
         }
         object[0] |= 8;
         SetPos(object, Pos(object) + 7u);
@@ -386,20 +387,20 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         return value;
     case 0xDB:
         g.op_db();
-        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
+        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z)));
         [[fallthrough]];
     case 0xDC:
-        g.test_fb(static_cast<short>(rv::Current<records::SpriteObject>()->x_whole), static_cast<short>(rv::Current<records::SpriteObject>()->z_whole));
+        g.test_fb(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
         return value;
     case 0xDD:
-        g.test_fc(static_cast<short>(rv::Current<records::SpriteObject>()->x_whole), static_cast<short>(rv::Current<records::SpriteObject>()->z_whole));
+        g.test_fc(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
         return value;
     case 0xDE: {   // DE n: the area's handler n, as flow op 03
         const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
         AreaHandler const* handlers;
         std::memcpy(&handlers, descriptor + 0x3C, sizeof handlers);
         handlers[p[1]]();
-        const unsigned char result = rv::Current<records::SpriteObject>()->direction;
+        const unsigned char result = rv::Current<records::SpriteHead>()->direction;
         SetPos(object, Pos(object) + 1u);
         return result;
     }
@@ -438,7 +439,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         return value;
     }
     case 0xC3: case 0xC4: {
-        rv::Current<records::SpriteObject>()->scale_mode = p[1];
+        rv::Current<records::SpriteHead>()->scale_mode = p[1];
         const std::int32_t a = Fixed88(script + Pos(object) + 2);
         (p[0] == 0xC3 ? AddLong : SubLong)(Sprite_Current + 0x40, a);
         const std::int32_t b = Fixed88(script + Pos(object) + 4);
@@ -447,35 +448,35 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         return value;
     }
     case 0xC5:
-        if (p[1] & 0x80) rv::Current<records::SpriteObject>()->flags |= 0x20;
-        else rv::Current<records::SpriteObject>()->flags &= 0xDF;
-        rv::Current<records::SpriteObject>()->draw_mode = operand(1) & 3;
+        if (p[1] & 0x80) rv::Current<records::SpriteHead>()->flags |= 0x20;
+        else rv::Current<records::SpriteHead>()->flags &= 0xDF;
+        rv::Current<records::SpriteHead>()->draw_mode = operand(1) & 3;
         SetPos(object, Pos(object) + 1u);
         return value;
     case 0xC6:
-        rv::Current<records::SpriteObject>()->shade[0] = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->shade[0] + p[1]);
-        rv::Current<records::SpriteObject>()->shade[1] = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->shade[1] + operand(2));
-        rv::Current<records::SpriteObject>()->shade[2] = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->shade[2] + operand(3));
+        rv::Current<records::SpriteHead>()->shade[0] = static_cast<unsigned char>(rv::Current<records::SpriteHead>()->shade[0] + p[1]);
+        rv::Current<records::SpriteHead>()->shade[1] = static_cast<unsigned char>(rv::Current<records::SpriteHead>()->shade[1] + operand(2));
+        rv::Current<records::SpriteHead>()->shade[2] = static_cast<unsigned char>(rv::Current<records::SpriteHead>()->shade[2] + operand(3));
         SetPos(object, Pos(object) + 3u);
         return value;
     case 0xC7: {
-        rv::Current<records::SpriteObject>()->scale_mode = 2;
+        rv::Current<records::SpriteHead>()->scale_mode = 2;
         static const unsigned kFields[] = {0x40, 0x44, 0x34, 0x38, 0x3C};
         for (unsigned i = 0; i < 5; ++i) AddLong(Sprite_Current + kFields[i], Fixed88(script + Pos(object) + 1 + 2 * i));
         SetPos(object, Pos(object) + 10u);
         return value;
     }
     case 0xC8: {   // C8 d s: turn toward direction d, one step a frame, s & 0xF to context +1
-        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+        records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
         if (sprite->direction == p[1]) {
             SetPos(object, pos + 2u);
-            return rv::Current<records::SpriteObject>()->direction;
+            return rv::Current<records::SpriteHead>()->direction;
         }
         const unsigned char s = p[2];
         return TurnStep(object, static_cast<unsigned char>((sprite->direction + ((s & 0x80) ? 1 : -1)) & 7), s & 0xF);
     }
     case 0xC9:
-        rv::Current<records::SpriteObject>()->key_class = p[1];
+        rv::Current<records::SpriteHead>()->key_class = p[1];
         SetPos(object, Pos(object) + 1u);
         return value;
     case 0xCA:
@@ -485,7 +486,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
     case 0xCB:
         g.animation_bank(static_cast<unsigned short>(p[1] << 8 | p[2]));
         g.set_animation(operand(3));
-        rv::Current<records::SpriteObject>()->flip = operand(4) & 1;
+        rv::Current<records::SpriteHead>()->flip = operand(4) & 1;
         SetPos(object, Pos(object) + 4u);
         return value;
     case 0xCC:
@@ -495,7 +496,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         g.tint_release(Sprite_Current);
         return value;
     case 0xCE: {   // turn toward ObjTrio 0's direction, reversed
-        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+        records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
         const auto target = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->direction ^ 4);
         const auto now = static_cast<unsigned char>(sprite->direction & 7);
         if (now == target) return sprite->direction;
@@ -524,9 +525,9 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         long buffer[4];
         const long* const at = g.handle_position(buffer, p[1], p[2]);
         const long x = at[0], y = at[1], z = at[2];
-        rv::Current<records::SpriteObject>()->x = x;
-        rv::Current<records::SpriteObject>()->z = y;
-        rv::Current<records::SpriteObject>()->height = z;
+        rv::Current<records::SpriteHead>()->x = x;
+        rv::Current<records::SpriteHead>()->z = y;
+        rv::Current<records::SpriteHead>()->height = z;
         SetPos(object, Pos(object) + 2u);
         return value;
     }
@@ -588,7 +589,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         if (g.stream_done() == 0) SetPos(object, Pos(object) - 1u);
         return value;
     case 0x8C: {
-        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+        records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
         const auto arg = static_cast<signed char>(MoveScript_EffectArg[MoveScript_EffectState[Field_State[0x89]]]);
         const unsigned char n = g.effect_spawn_at(static_cast<unsigned char>(p[1] - 0x90), p[1] == 0x94 ? 10 : 0, arg,
                                                   sprite->x, sprite->z, sprite->height);

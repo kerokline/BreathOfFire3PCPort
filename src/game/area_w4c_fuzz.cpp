@@ -336,7 +336,7 @@ void Seed(unsigned slice_k) {
         const U offset = ah::Half() ? ah::Next() % 0x800 : ah::Next() & 0xFFFF;
         rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, offset);
         const U script = 0x8CB580 + ah::Next() % 0x400;
-        rv::Store<std::int32_t>(rv::As<records::PartyMember>(Field_State)->flags_130, static_cast<std::int32_t>(script));
+        rv::Store<std::int32_t>(rv::As<records::MemberFieldTail>(Field_State + 0x124)->script, static_cast<std::int32_t>(script));
         if (script + offset + 2 < 0x8CB580 + 0x2000) {
             const auto b = static_cast<unsigned char>(ah::Next());
             B(script + offset + 2) = b;

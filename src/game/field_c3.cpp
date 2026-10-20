@@ -310,7 +310,7 @@ extern "C" void __cdecl FieldCore_ScriptMove(void) {
     F()[0x138] = static_cast<unsigned char>(F()[0x138] | 4);
     Run("FieldCore_ScriptMove", FieldCore_ScriptMoveSteps, FieldCore_ScriptMoveSteps_count, 3);
     records::SpriteHead* const s = rv::Current<records::SpriteHead>();
-    if (s->flags2 & 0x20) return;
+    if (rv::Bytes(s)[7] & 0x20) return;
     if (s->flags & 0x10)
         SH_CALL(Sprite_ScriptTick)();
     else
@@ -361,13 +361,13 @@ extern "C" void __cdecl FieldCore_ScriptMoveNext(void) {
         S()[2] = 0;
         S()[3] = 0;
         S()[4] = 0;
-        rv::Current<records::SpriteHead>()->flags2 = 0;
-        rv::Current<records::SpriteHead>()->type = 0;
+        rv::Bytes(rv::Current<records::SpriteHead>())[7] = 0;   // a party member here: +7, +6 raw (C2 audit frs F1)
+        rv::Bytes(rv::Current<records::SpriteHead>())[6] = 0;
         return;
     }
     records::SpriteHead* s = rv::Current<records::SpriteHead>();   // edx
     if (flags & 0x20) {
-        const unsigned char bits = s->flags2;
+        const unsigned char bits = rv::Bytes(s)[7];
         if ((bits & 4) == 0) {
             if ((bits & 8) == 0) {
                 s->direction = step;

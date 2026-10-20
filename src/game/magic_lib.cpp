@@ -408,11 +408,13 @@ MLIB_EXPORT int __cdecl MagicFx_StepAround(const unsigned char* to, int radius, 
 
 // original 0x4FBBD0: 1 when Sprite_Current is within the box of `size`
 // around the sprite `other`: x and z (NearXZ), and ((size >> 9) - other's
-// word +0x3E + ours) & 0xFFFF at most size >> 8; else 0.
+// word +0x3E + ours) & 0xFFFF at most size >> 8; else 0. Only Sprite_Current's
+// head is read (+0x34, +0x38, +0x3E), so it reads as SpriteHead, not
+// BattleTask (C2 audit bm doubt 5); MagicFx_NearPoint3D below the same.
 MLIB_EXPORT int __cdecl MagicFx_NearSprite3D(const unsigned char* other, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     if (!NearXZ(sc, U32(other + 0x34), U32(other + 0x38), size)) return 0;
-    const std::uint32_t h = ((size >> 9) - Word(other + 0x3E) + rv::As<records::BattleTask>(sc)->height_whole) & 0xFFFF;
+    const std::uint32_t h = ((size >> 9) - Word(other + 0x3E) + rv::As<records::SpriteHead>(sc)->height_whole) & 0xFFFF;
     return h <= (size >> 8) ? 1 : 0;
 }
 
@@ -426,7 +428,7 @@ MLIB_EXPORT int __cdecl MagicFx_NearSprite(const unsigned char* other, unsigned 
 MLIB_EXPORT int __cdecl MagicFx_NearPoint3D(unsigned x, unsigned z, unsigned yw, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     if (!NearXZ(sc, x, z, size)) return 0;
-    const std::uint32_t h = ((size >> 9) + rv::As<records::BattleTask>(sc)->height_whole - (yw >> 16)) & 0xFFFF;
+    const std::uint32_t h = ((size >> 9) + rv::As<records::SpriteHead>(sc)->height_whole - (yw >> 16)) & 0xFFFF;
     return h <= (size >> 8) ? 1 : 0;
 }
 

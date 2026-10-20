@@ -176,8 +176,8 @@ void DropCounter(std::uint32_t counter, int r) {
 // An effect record's dword +0xC less one.
 void DrainEffect(unsigned slot) {
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = rv::As<records::EffectObject>(e);
-    tE->step_x = tE->step_x - 1;
+    auto* const tE = rv::As<records::EffectWork>(e);   // +0xC a meter the area counts down (C2 audit ea doubt 5)
+    tE->work_0c = tE->work_0c - 1;
 }
 // |player counter - other counter|, the words as the originals subtract them.
 int CounterGap() {
@@ -545,9 +545,9 @@ extern "C" void __cdecl Area75_FlyStep(void) {
 extern "C" void __cdecl Area75_DrainEffects(void) {
     const unsigned bit = (Frame_Counter & 3) == 0 ? 1u : 0u;
     unsigned char* e = EffectAt(B(at::kOtherEffect));
-    SetLong(e + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(e + 0xC)) - bit));
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c, static_cast<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c - bit));
     e = EffectAt(B(AreaW1f_PlayerEffect_addr));
-    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(e)->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(e)->step_x) - bit));
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c, static_cast<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c - bit));
     if (B(at::kCounter0) < 0x20) AddWord(MoveScript_Object + 0xA, 0xFFFE);
 }
 

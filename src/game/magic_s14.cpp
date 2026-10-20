@@ -804,13 +804,15 @@ S14_EXPORT void __cdecl WeretigerDim_WaitOwner(void) {
 // the 4-byte entries at 0x65AC10, unchecked), shaded `shade`, at
 // Sprite_Current's screen point (+0x2E - 0x20, or - 0x28 for images 2 and 3;
 // +0x30 - 0x40); between a draw-mode packet and the sprite, both linked at
-// Sprite_Current's position.
+// Sprite_Current's position. Sprite_Current is the acting member's record
+// (Weretiger_LoadForm 0x4B4290, _FadeIn 0x4B4350 make it current): read as
+// SpriteHead, not BattleTask (C2 audit bm F1).
 S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsigned shade) {
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(2, abr & 0xFF, 0x340, 0x100);
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, tpage & 0xFFFF, 0);
     {
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
+        const records::SpriteHead* const ts = rv::AsConst<records::SpriteHead>(s);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z),
                                     0, 0xC);
     }
@@ -828,7 +830,7 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0x48);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
+    const records::SpriteHead* const ts = rv::AsConst<records::SpriteHead>(s);
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 0,
                                 0x1C);
 }

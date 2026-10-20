@@ -373,7 +373,7 @@ extern "C" void __cdecl Party_ExtraFrame(void) {
 // FUN_8015B334's head) - 4 with +0x24 bit 4, 6 for a record with byte 3 bit
 // 5, else Draw_OtSlot - then its screen position (a tail jmp in the original).
 extern "C" void __cdecl Sprite_UpdateScreenA(void) {
-    records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+    records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     if (sprite->draw_flags & 0x10) sprite->ot_slot = 4;
     else sprite->ot_slot = (Record54(rv::Bytes(sprite))[3] & 0x20) ? 6 : Draw_OtSlot;
     g.project_a();
@@ -390,25 +390,28 @@ extern "C" void __cdecl Sprite_UpdateScreenA(void) {
 // does. The vertex's fourth word is 0 (DIV-0023): the original never writes
 // it, and Gte_LoadVertex carries its stale stack into Gte_Vertices[3]'s top
 // half, which nothing reads.
+// Sprite_Current is any sprite head (effects reach it through
+// Sprite_UpdateScreenA): read as SpriteHead, here and in Sprite_UpdateScreenA
+// (C2 audit frs F2).
 extern "C" void __cdecl Sprite_ProjectA(void) {
-    records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
+    records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     const unsigned z_whole = sprite->z_frac == 0, x_whole = sprite->x_frac == 0;
     sprite->draw_key = static_cast<unsigned>(sprite->z_whole - z_whole - x_whole + sprite->x_whole -
                                                  static_cast<std::uint16_t>(MapView_Origin[1]) -
                                                  static_cast<std::uint16_t>(MapView_Origin[0]) + 2);
-    sprite = rv::Current<records::SpriteObject>();
+    sprite = rv::Current<records::SpriteHead>();
     sprite->draw_key = static_cast<unsigned>(sprite->draw_key + static_cast<signed char>(Record54(rv::Bytes(sprite))[1]));
-    sprite = rv::Current<records::SpriteObject>();
+    sprite = rv::Current<records::SpriteHead>();
     sprite->draw_key = static_cast<unsigned>(rv::Bytes(sprite)[0x32]) << 8;
     unsigned low;
-    sprite = rv::Current<records::SpriteObject>();
+    sprite = rv::Current<records::SpriteHead>();
     if (Draw_OtSlot == 4) low = static_cast<unsigned>(Long(rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
     else low = ((sprite->height_whole ^ 0xF01Fu) >> 5) & 0xFF;
     sprite->draw_key = sprite->draw_key | low;
-    sprite = rv::Current<records::SpriteObject>();
+    sprite = rv::Current<records::SpriteHead>();
     if (!(Record54(rv::Bytes(sprite))[3] & 0x10)) {
         g.inherit_key();
-        sprite = rv::Current<records::SpriteObject>();
+        sprite = rv::Current<records::SpriteHead>();
     }
     short vertex[4];
     vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
@@ -422,12 +425,12 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
     unsigned long screen[2];
     g.store_xy(screen);
     g.store_depth(reinterpret_cast<long*>(Sprite_Current + 0x60));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
-    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
-    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->screen_y, Ftol16(static_cast<std::uint32_t>(screen[1])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, Ftol16(static_cast<std::uint32_t>(screen[1])));
 
-    sprite = rv::Current<records::SpriteObject>();
+    sprite = rv::Current<records::SpriteHead>();
     const unsigned char* const margin = Sprite_ScreenMargins + ((Record54(rv::Bytes(sprite))[3] >> 3) & 1) * 4u;
     const int x = static_cast<std::int16_t>(static_cast<std::uint16_t>(sprite->screen_x)), y = static_cast<std::int16_t>(static_cast<std::uint16_t>(sprite->screen_y));
     if (x > 0x140 + margin[0] || x < -static_cast<int>(margin[1]) || y > 0xF0 + margin[2] || y < -static_cast<int>(margin[3])) {

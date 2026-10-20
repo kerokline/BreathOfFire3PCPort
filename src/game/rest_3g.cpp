@@ -220,7 +220,7 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
         rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h) + 0x800) << 16;
         rv::As<records::EffectObject>(s)->screen_x = 0x80;
         rv::As<records::EffectObject>(s)->screen_y = 0x180;
-        rv::As<records::EffectObject>(s)->draw_key = 0;
+        rv::As<records::EffectWork>(s)->work_32 = 0;
         s[9] = 8;
         s[1] = static_cast<unsigned char>(s[1] + 1);
     }
@@ -239,7 +239,7 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
     const float dx = static_cast<float>(static_cast<long double>(b[0]) - static_cast<long double>(a[0]));
     const float dy = static_cast<float>(static_cast<long double>(b[1]) - static_cast<long double>(a[1]));
     const int angle = SH_CALL(Math_Ratan2)(dy, dx);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, static_cast<U>(angle) + 0x400u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, static_cast<U>(angle) + 0x400u);
     SH_CALL(Sound_PlayEffect)(0x202);
 }
 

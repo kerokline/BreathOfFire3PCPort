@@ -61,7 +61,7 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
     if (n >= 30) return;
     Sprite_OverlayListCount = static_cast<unsigned char>(n + 1);
     Sprite_OverlayList[n] = Sprite_Current;
-    if (rv::Current<records::SpriteObject>()->flags & 8) g.dropped(0);
+    if (rv::Current<records::SpriteHead>()->flags & 8) g.dropped(0);
 }
 
 // original 0x588F20: Sprite_Current's draw key, screen position and depth,
@@ -72,8 +72,11 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
 // range is tested; the float screen point is stored as the x87 moves it and
 // truncated as the CRT's _ftol does (see Ftol16); the PSX's call for a sprite
 // with flag bit 8 is Port_DroppedCall, a bare ret, on the PC.
+// Sprite_Current is any sprite head: effect handlers call this too
+// (field_c1.cpp, field_c2.cpp, EffectKind37_Play, rest_3f CaptureSprite), so
+// it reads as SpriteHead (C2 audit frs F2).
 extern "C" void __cdecl Sprite_UpdateScreen(void) {
-    records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
+    records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     if (sprite->draw_flags & 0x80) {
         g.overlay();
         return;
@@ -84,7 +87,7 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
                                                 static_cast<std::uint16_t>(MapView_Origin[1]) -
                                                 static_cast<std::uint16_t>(MapView_Origin[0]) + 2);
     sprite->draw_key = key;
-    sprite = rv::Current<records::SpriteObject>();
+    sprite = rv::Current<records::SpriteHead>();
     const auto layer = static_cast<std::int16_t>(sprite->draw_key);
     if (layer < 0 || layer > 0x36) {   // off the map's layers: hidden
         sprite->flags |= 0x80;
@@ -95,16 +98,16 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     sprite->draw_key = static_cast<unsigned>((layer + later) & 0xFF) << 8;
     unsigned low;
     if (Draw_OtSlot == 4) {
-        sprite = rv::Current<records::SpriteObject>();
+        sprite = rv::Current<records::SpriteHead>();
         low = static_cast<unsigned>(Long(rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
     } else {
-        sprite = rv::Current<records::SpriteObject>();
+        sprite = rv::Current<records::SpriteHead>();
         low = ((sprite->height_whole ^ 0xF01Fu) >> 5) & 0xFF;
     }
     sprite->draw_key = sprite->draw_key | low;
     g.inherit_key();
 
-    sprite = rv::Current<records::SpriteObject>();
+    sprite = rv::Current<records::SpriteHead>();
     short vertex[4];
     vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
     vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
@@ -112,11 +115,11 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     unsigned long screen[2];
     long depth_cue;
     const long depth = g.project(vertex, screen, &depth_cue);
-    rv::Current<records::SpriteObject>()->depth = depth;
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
-    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
-    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->screen_y, Ftol16(static_cast<std::uint32_t>(screen[1])));
+    rv::Current<records::SpriteHead>()->depth = depth;
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, Ftol16(static_cast<std::uint32_t>(screen[1])));
 
     const unsigned char n = Sprite_DrawListCount;
     if (n >= 0x28) return;

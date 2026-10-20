@@ -709,7 +709,7 @@ extern "C" void __cdecl EffectKind2B_Run(void) {
 extern "C" void __cdecl EffectKind2B_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0x100);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x18);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x18);
     NextState();
 }
 
@@ -719,9 +719,9 @@ extern "C" void __cdecl EffectKind2B_Start(void) {
 extern "C" void __cdecl EffectKind2B_Rise(void) {
     AddWord(S() + 0x30, 0x80);
     AddWord(S() + 0x32, 0xFFFFu);
-    if (rv::As<records::EffectObject>(S())->draw_key != 0) return;
+    if (rv::As<records::EffectWork>(S())->work_32 != 0) return;
     SH_CALL(EffectShards_Clear)();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x12C);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x12C);
     NextState();
     SH_CALL(Sound_PlayEffect)(0x209);
 }
@@ -739,7 +739,7 @@ extern "C" void __cdecl EffectKind2B_Specks(void) {
 // 0x10 and +1 up.
 extern "C" void __cdecl EffectKind2B_Settle(void) {
     if (SH_CALL(EffectSpecks_Move)() != 0) return;
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x10);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_32, 0x10);
     NextState();
 }
 
@@ -748,7 +748,7 @@ extern "C" void __cdecl EffectKind2B_Settle(void) {
 extern "C" void __cdecl EffectKind2B_Shrink(void) {
     AddWord(S() + 0x2E, 0xFFF0u);
     AddWord(S() + 0x32, 0xFFFFu);
-    if (rv::As<records::EffectObject>(S())->draw_key != 0) return;
+    if (rv::As<records::EffectWork>(S())->work_32 != 0) return;
     SH_CALL(Effect_Release)();
 }
 

@@ -514,7 +514,7 @@ extern "C" void __cdecl EffectKindAE_Draw(void) {
     unsigned char* const s = S();
     alignas(4) unsigned char point[12];
     Copy12(point, s + 0x34);
-    SH_CALL(Effect_DrawEllipse)(Point(point), rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectObject>(s)->draw_key, 0xC0, 0);
+    SH_CALL(Effect_DrawEllipse)(Point(point), rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_32, 0xC0, 0);
 }
 
 // original 0x493090 (cdecl; EffectKindAE_Draw's and EffectKind20_Draw's): the

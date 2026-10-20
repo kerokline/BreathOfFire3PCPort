@@ -241,8 +241,8 @@ extern "C" void __cdecl WorldMap33_PlateRun(void) {
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
-    rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->step_x, x);
-    rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->step_z, z);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(Cur())->work_0c, x);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(Cur())->work_10, z);
     unsigned char kind;
     if (g.byte_at(x, z) == 0xA1) kind = 1;
     else if (g.byte_at(x, z) == 0xA0) kind = 2;
