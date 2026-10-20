@@ -275,6 +275,26 @@ ours run of a route that lists the saves wants it.
   was identical to ours at `4962b89`. **From `BOF3SH3` on (2026-10-10) the
   hash names those pointers by their text** (section 7), so an overlay pair
   is meant to outlive builds too; that is measured offline and owed live.
+- **The route pairs re-recorded 2026-10-20** as `cn_<route>_orig3` / `_orig3b`
+  (the conditions of the `orig2` pairs; launcher copies of `main` `84e43c32`'s
+  build; 173 ranges), the `orig2` pairs being stale on the save-slot pages
+  again. **Use these from now on.** Ours at that tip (`cn_<route>_a1020`, the
+  exe host): combat and shop identical on every tick. The others differ only
+  by ledgered changes, each shown by a hosted run of ours with the change
+  off, checked against the same pair: **DIV-0092** (field_menu,
+  dragonTransform identical with `AreaTrackFallback`; cutsceneAndNue and
+  menu_screens the same four music pages from their save's load), **the
+  button round's glyphs into VRAM** (caughFish identical with
+  `ShoulderGlyphs` alone - a bisect over 19 switches; worldMapAndAreaTransition
+  with `WorldMapLegend` alone; masterAndManillo with the six glyph switches
+  together, not with `ShoulderGlyphs` or `ButtonText` alone), and on whelpBoss
+  DIV-0092 with **DIV-0143** (`AreaKeepStoppingNone`), which leaves one page,
+  `0x6BC000` from tick 9,541: raw dumps at tick 10,000 show `Sound_Banks`'
+  buffer pointers, heap addresses of our sound code against Capcom's after the
+  battle's bank load - the `Sound_Channels` class below, for the skip list
+  with it. VRAM and sound pages at tick 3 came in one run of five (noise).
+  Scripts, checks and runs: `C:\Users\kerok\bof3x-runs\away1020`. A side
+  window opened during a Capcom-side recording pauses it (HANDOFF Traps).
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
 - **Known and not skipped:** `Sound_Channels` `0x6BC8C8` (23 DirectSound

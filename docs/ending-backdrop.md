@@ -1,8 +1,9 @@
 # The ending's backdrop: the desert scene, its two pictures, the seam and the wide picture
 
 **Status:** BUILT (2026-10-14; DIV-0127, D302). Live-checked in captures at
-the three widths; the owner's eye on the mirrored bands owed. A wider
-painting of the two pictures is the art path, not started.
+the three widths; the owner has seen the mirrored bands and accepts them as
+they are (2026-10-20, section 6). A wider painting of the two pictures is
+the art path, not started.
 
 The owner wants the ending's desert scene - the party on a dune under a
 cloud sky - as the launcher page's background, in the wide picture. Nobody
@@ -108,8 +109,9 @@ mirroring.
 
 ## 6. Open
 
-- The owner's eye on the mirrored bands (symmetry in the clouds and the
-  dunes at the edges).
+- ~~The owner's eye on the mirrored bands~~ - seen 2026-10-20 and accepted
+  as they are: "ok for ultrawide (known hack view), and it's not noticeable
+  on regular wide".
 - The sky's right 64 columns (piece 1) are Capcom's own 64 x 32 piece, not
   the strip's continuation; the dunes' last 64 columns are the picture's
   first 64. A wider painting would redo both.

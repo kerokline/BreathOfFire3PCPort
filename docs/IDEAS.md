@@ -1883,6 +1883,7 @@ differing. An install built before this is refused at start with a message
 to rebuild it (`FilledSince()`, the row `0x669868..0x669883`; the general
 form is HANDOFF "Pick up here" 11). Steps 2 to 4 open.
 _(2026-10-17) steps 2 to 4 staged_ in [`install-gap-round.md`](install-gap-round.md): RW the read watch (step 2), the fix groups by method (step 3), the strict default as the end batch's last item (step 4).
+_(2026-10-20) step 2 measured, steps 3 and 4 framed_: the read watch found only the owner's two rows read while zero ([`install-gap-reads.md`](install-gap-reads.md) 9.7), but STRICT refuses every `gap` row, read or not (52..78 per build), so the default waits on [`exe-gap-round.md`](exe-gap-round.md): every row accounted for, STRICT narrowed to rows not on a reviewed list, then on.
 
 ## I44 — The data image as typed source: the next step toward reconstructed source
 

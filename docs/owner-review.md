@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-18, the install-gap round's section added at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-20, the day's answers at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,26 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-20, answered at the machine
+
+- **The quicksave across languages**: the original Chinese against any
+  translation refused before a byte is written ("another language", PR #96,
+  [`quicksave.md`](quicksave.md) 4b); one translation into another kept,
+  IDEAS I47 to review it. Live: en-US into fr-FR loads, en-US into the
+  original and the original into en-US refused, the game playing on.
+- **The ending's mirrored bands** (DIV-0127): seen, accepted as they are -
+  "ok for ultrawide (known hack view), and it's not noticeable on regular
+  wide" ([`ending-backdrop.md`](ending-backdrop.md) 6).
+- **D266, the Western title mark**: "read the 12" - built on
+  `fix/d266-title-mark` (DIV-0101's `titlemark` rule); a US disc-only title
+  draws its TM whole (`analysis/shots/d266-title-mark-1020/`).
+- **The ending roll** (`Scena17_EndSteps`): "let western installs use their
+  own roll" - DIV-0148 on the same branch; the US and PAL discs each roll
+  their release's credits (`analysis/shots/ending-roll-1020/`). D323 was the
+  patchwork before. Then "let's have the roll track with localization": the
+  roll is the language layer's, so a PC install under en-US rolls the US
+  credits too, the original text and ja-JP the Japanese ones.
 
 ## 2026-10-18, the install-gap round
 
@@ -26,9 +46,8 @@ the doc that has the reading.
   and German layers show their discs' words for the equip and experience panel
   labels, the shared list's title, the gene list's title and kind 0x5E's menu
   title. Built and in place, the confirmation pending: [`install-gap-labels.md`](install-gap-labels.md) 8.
-- **`Title_Sprites+0xE`** (D266, the Western title mark): read in play on every
-  Western PSX title; a `twin` from `GAME.EMI#1` after your yes:
-  [`install-gap-reads.md`](install-gap-reads.md) 0, census 8.2.
+- ~~**`Title_Sprites+0xE`** (D266, the Western title mark)~~ - answered
+  2026-10-13 and built 2026-10-20 (the section above).
 - **`Encounter_SlotChance+0x1C`** (the empty save slot `0x669CCC`): read on
   every load screen of all seven installs; the staged localisation PR, its
   section 8 first: [`name-entry-restoration.md`](name-entry-restoration.md), census 8.2.
@@ -266,7 +285,7 @@ checkout's `analysis/` (never in the tree).
   reaches an enemy panel with the row, for the A/B.
 - **The US title layout, D277**: **draw the US release's three-piece notice
   on a US-built image** (a DIV).
-- **The Western title mark, D266**: **yes** - a `twin` row from the disc's
+- **The Western title mark, D266**: **yes** (built 2026-10-20) - a `twin` row from the disc's
   `GAME.EMI#1` for the width.
 - **A ja-JP layer, D280**: **yes, all of kinds 7..16** from the Japan disc
   (DIV-0015 / 0018 / 0019 / 0020 / 0064 / 0069 extended).
@@ -428,7 +447,7 @@ installs so far, never looked at for themselves.
   game values no disc carries were zero at the round's start; after the PSP
   round's IM2 and VF, PSX-US 285 ranges and 1,141 game-value bytes): the wrong effect file on a spell or
   item (`Magic_Rows`), the dragon-form sets, the equipment and experience
-  panels' numbers, the ending roll (the first two and parts of the panels' and the event battles' tables filled by rule since 2026-10-12, DIV-0101 amended). What you see decides the first item under
+  panels' numbers, the ending roll (each release's own since 2026-10-20, DIV-0148; the first two and parts of the panels' and the event battles' tables filled by rule since 2026-10-12, DIV-0101 amended). What you see decides the first item under
   "Decisions".
 - **DIV-0096, the eleven arenas as the disc's:** member 2's field sprites and
   member 1's battle sprite may differ by a part in some animations; walk and
