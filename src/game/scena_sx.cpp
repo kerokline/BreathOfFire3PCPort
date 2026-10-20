@@ -310,7 +310,7 @@ extern "C" std::uint32_t __cdecl Char_LoseHp(std::uint32_t amount, unsigned memb
     unsigned char* const actor = Record(Field_State[0x148]);
     if (rv::As<records::CharRecord>(actor)->hp <= (rv::As<records::CharRecord>(actor)->stats.max_hp >> 2)) {
         rv::Store<unsigned>(rv::As<records::CharRecord>(actor)->status, rv::As<records::CharRecord>(actor)->status | 0x2000);
-        SetWord(Field_State + 0x90, rv::As<records::PartyMember>(Field_State)->status | 0x2000);
+        rv::Store<unsigned>(rv::As<records::PartyMember>(Field_State)->status, rv::As<records::PartyMember>(Field_State)->status | 0x2000);
     }
     return took;
 }
