@@ -71,7 +71,10 @@ struct SpriteHead {
         std::uint8_t step_frames;  // +0x09 field sprite object, party member: frames left in a step / a timed move; multiplies the step in Sprite_PointInReach (sprite-draw-order 6; movement-script 1b; member-sprites 2)
         std::uint8_t timer;  // +0x09 effect object, battle task: the kind's frame counter (effect_1a.md 2.3: EffectKind07_Start sets 0xF0, _FadeIn 0xFF); the popup's (battle_fx_tasks.cpp)
     };
-    std::uint8_t digits;  // +0x0A battle task: the popup's digit count (battle_fx_tasks.cpp; battle_flow.cpp:483); per effect kind a wait (effect_1a.md 2.6 kind 5's +0xA); a field object's +0xA is unread
+    union {
+        std::uint8_t digits;  // +0x0A battle task: the popup's digit count (battle_fx_tasks.cpp; battle_flow.cpp:483)
+        std::uint8_t byte_0a;  // +0x0A every other family's: each handler's own - per effect kind a wait (effect_1a.md 2.6 kind 5's +0xA), the leader panel's hold after a full charge (area_w2e.cpp Area104_Kind5CFollow), effect 0's copy of a record's +0x10 (rest_1g.cpp LeaderPanel_EffectsStep); a field object's +0xA is unread. No one meaning: spelled raw (rv::Bytes(r)[0xa]), never by this name (C4 audit A F2; tools/typed_convert.py UNION_NAMES names +0xA for BattleTask only)
+    };
     unsigned char pad_0B[0x1];  // +0xB: a field object's Effect_Objects index for ops 9x (symbols.toml Effect_Spawn); member-sprites 2's effect-object index; an effect's spawn argument (0x5898D0) or per kind a hold; compared with 1 by the popup's PopupStart (y 9 higher). One byte, four readings, none shared
     std::int32_t step_x;  // +0x0C the step, 16.16 a frame (sprite-draw-order 6; member-sprites 2); dword, Effect_Spawn's movsx byte (symbols.toml). Per effect kind and per magic task a word of its own (B1 magic audit N2; effect_1a.md 2.5): EffectWork's work_0c for those
     std::int32_t step_z;  // +0x10 the second step (sprite-draw-order 6); per kind and per task a word of its own, as +0xC
@@ -550,7 +553,10 @@ struct EffectWork {
     std::uint16_t work_2e;  // +0x2E a word of the kind's own, read as u16 (Word / W) in 367 of the 402 union rows at +0x2E / +0x30, as s16 (SW) in 35 (a count: effect_2d.cpp kind 0x45; effect_3a.md 1.5 kind 0x68's count)
     std::uint16_t work_30;  // +0x30 likewise (kind 0x68's frame, effect_3a.md 1.5; kind 0x45's, effect_2d.cpp)
     std::uint16_t work_32;  // +0x32 likewise, where the kind does not use +0x32 as a draw key (the C2 audit, ea F1 and doubt 1, frs F4: kind 0x2B's count, 0x43's countdown, 0x45's amplitude, 0x51's and 0x98's radius, 0xAE's ellipse word and angle, 0x78's saved turn of object 2; kind 18's subs 0x0F and 0x2B a height, 0x17 a counter and a height factor, 0x24 an angle, 0x25, 0x26 and 0x39 a lid index). Kind 18's sub 0x44 draws by it as a key (Sub44_Follow stores 0x3200) and keeps draw_key
-    unsigned char pad_34[0x4C];  // +0x34..+0x7F: EffectObject's
+    unsigned char pad_34[0x8];  // +0x34..+0x3B: EffectObject's
+    std::uint16_t work_3c;  // +0x3C a word of the kind's own where the kind does not keep a height there: the choice menu's (effect 6) page word (rest_1g.cpp kEff6Page, ChoiceMenu_DataPage / _RulePage; C4 audit A F3)
+    std::uint16_t work_3e;  // +0x3E likewise: the choice menu's shown page (rest_1g.cpp kEff6Shown)
+    unsigned char pad_40[0x40];  // +0x40..+0x7F: EffectObject's
 };
 
 // ---------------------------------------------------------------------------
@@ -674,6 +680,7 @@ static_assert(offsetof(SpriteHead, layout) == 0x8, "SpriteHead::layout");
 static_assert(offsetof(SpriteHead, step_frames) == 0x9, "SpriteHead::step_frames");
 static_assert(offsetof(SpriteHead, timer) == 0x9, "SpriteHead::timer");
 static_assert(offsetof(SpriteHead, digits) == 0xA, "SpriteHead::digits");
+static_assert(offsetof(SpriteHead, byte_0a) == 0xA, "SpriteHead::byte_0a");
 static_assert(offsetof(SpriteHead, step_x) == 0xC, "SpriteHead::step_x");
 static_assert(offsetof(SpriteHead, step_z) == 0x10, "SpriteHead::step_z");
 static_assert(offsetof(SpriteHead, step_y) == 0x14, "SpriteHead::step_y");
@@ -994,6 +1001,8 @@ static_assert(offsetof(EffectWork, work_10) == 0x10, "EffectWork::work_10");
 static_assert(offsetof(EffectWork, work_2e) == 0x2E, "EffectWork::work_2e");
 static_assert(offsetof(EffectWork, work_30) == 0x30, "EffectWork::work_30");
 static_assert(offsetof(EffectWork, work_32) == 0x32, "EffectWork::work_32");
+static_assert(offsetof(EffectWork, work_3c) == 0x3C, "EffectWork::work_3c");
+static_assert(offsetof(EffectWork, work_3e) == 0x3E, "EffectWork::work_3e");
 static_assert(sizeof(EffectWork) == 0x80, "EffectWork stride");
 
 static_assert(offsetof(CharStatBlock, max_hp) == 0x0, "CharStatBlock::max_hp");

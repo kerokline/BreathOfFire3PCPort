@@ -6042,8 +6042,14 @@ src/game/effect_3d.cpp	EffectKind77_DrawCount	global	P	at::kTallyFormat	0	0x6530
 src/game/effect_3d.cpp	EffectKind77_DrawCount	global	P	at::kText	0	0x904ba0	-	no-entry	at::kText 0x904ba0 -	b0
 src/game/effect_3d.cpp	EffectKind77_DrawCount	global	B	at::kTally	0	0x939a00	-	no-entry	at::kTally 0x939a00 -	b0
 src/game/effect_3d.cpp	EffectKind77_DrawCount	global	P	at::kText	1	0x904ba0	-	no-entry	at::kText 0x904ba0 -	b0
+src/game/effect_3d.cpp	EffectKind78_Start	global	W	at::kObject2Turn	0	0x7deffa	-	audit-family	object 2's +0x32 is the kind-0x78 ring's turn word, not SpriteHead::draw_key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4 audit A F1); typed_convert KEEP_RAW	c4-fix
+src/game/effect_3d.cpp	EffectKind78_Grow	global	At	at::kObject2Turn	0	0x7deffa	-	audit-family	object 2's +0x32 is the kind-0x78 ring's turn word, not SpriteHead::draw_key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4 audit A F1); typed_convert KEEP_RAW	c4-fix
+src/game/effect_3d.cpp	EffectKind78_Grow	global	W	at::kObject2Turn	0	0x7deffa	-	audit-family	object 2's +0x32 is the kind-0x78 ring's turn word, not SpriteHead::draw_key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4 audit A F1); typed_convert KEEP_RAW	c4-fix
+src/game/effect_3d.cpp	EffectKind78_Spin	global	At	at::kObject2Turn	0	0x7deffa	-	audit-family	object 2's +0x32 is the kind-0x78 ring's turn word, not SpriteHead::draw_key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4 audit A F1); typed_convert KEEP_RAW	c4-fix
+src/game/effect_3d.cpp	EffectKind78_Spin	global	W	at::kObject2Turn	0	0x7deffa	-	audit-family	object 2's +0x32 is the kind-0x78 ring's turn word, not SpriteHead::draw_key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4 audit A F1); typed_convert KEEP_RAW	c4-fix
 src/game/effect_3d.cpp	EffectKind78_Spin	record	W	s + 0x10	0	-	via=S	width	W(s + 0x10): EffectObject 0x10 via W; the access width or position is not the field's (a half of a dword field, or a wider read)	b1-effect
 src/game/effect_3d.cpp	EffectKind78_Spin	record	W	s + 0xC	0	-	via=S	width	W(s + 0xc): EffectObject 0xc via W; the access width or position is not the field's (a half of a dword field, or a wider read)	b1-effect
+src/game/effect_3d.cpp	EffectKind78_End	global	At	at::kObject2Turn	0	0x7deffa	-	audit-family	object 2's +0x32 is the kind-0x78 ring's turn word, not SpriteHead::draw_key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4 audit A F1); typed_convert KEEP_RAW	c4-fix
 src/game/effect_3d.cpp	EffectKind7D_Start	global	-	at::kDials	0	0x675dc8	-	no-entry	at::kDials 0x675dc8 -	b0
 src/game/effect_3d.cpp	EffectKind7D_Input	global	UL	at::kInputPressed	0	0x7e1bec	-	width	at::kInputPressed 0x7e1bec Input_Pressed	b0
 src/game/effect_3d.cpp	EffectKind7D_Input	global	UL	at::kInputPressed	1	0x7e1bec	-	width	at::kInputPressed 0x7e1bec Input_Pressed	b0

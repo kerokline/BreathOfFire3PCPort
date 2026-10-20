@@ -78,8 +78,9 @@ constexpr U kEff5Frame = 0x7E1470;     // record 5 +0x10 (s32)
 constexpr U kEff5Level = 0x7E1490;     // record 5 +0x30 (a byte, and a s16)
 // kEff6State: now Effect_Objects[0x301] (symbols.toml). record 6 +1
 // kEff6Dir: now Effect_Objects[0x308] (symbols.toml). record 6 +8
-inline auto& kEff6Page = Effect_Objects[6].height_frac;    // record 6 +0x3C (u16)
-inline auto& kEff6Shown = Effect_Objects[6].height_whole;  // record 6 +0x3E (u16)
+// The choice menu's page words, its own (EffectWork), not the head's height.
+inline auto& kEff6Page = rv::As<records::EffectWork>(rv::Bytes(&Effect_Objects[6]))->work_3c;   // record 6 +0x3C (u16)
+inline auto& kEff6Shown = rv::As<records::EffectWork>(rv::Bytes(&Effect_Objects[6]))->work_3e;  // record 6 +0x3E (u16)
 
 // kLeaderStage: now ObjTrio[2] (symbols.toml). ObjTrio record 0 +2 (the leader's stage)
 // kLeaderStep: now ObjTrio[3] (symbols.toml). ObjTrio record 0 +3
@@ -645,7 +646,7 @@ extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
         if (static_cast<int>(base) + plus >= static_cast<signed char>(depth)) {
             depth = static_cast<unsigned char>(base + plus);
             rv::Bytes(Effect_Objects)[0x7] = depth;
-            Effect_Objects[0].digits = RecordB()[0x10];
+            rv::Bytes(Effect_Objects)[0xa] = RecordB()[0x10];
         }
         now = Effect1e_PressNow;
         B(kComboStep + i) = 0;
