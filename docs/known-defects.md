@@ -8717,7 +8717,7 @@ seventeenth match or an over-long name logged and not stored. Self-test:
 twenty matches, sixteen stored, the guard after the table unwritten.
 `BOF3X_ORIGINAL=SaveLists` brings the overrun back.
 
-## D323 — A Western disc-only install's staff roll is a patchwork of two releases' credits (ours, the exe image's map; open, the owner's call)
+## D323 — A Western disc-only install's staff roll is a patchwork of two releases' credits (ours, the exe image's map; fixed 2026-10-20 by DIV-0148)
 
 **Found:** 2026-10-20, rendering the ending for the owner's call on the
 roll ([`exe-gap-round.md`](exe-gap-round.md) 3): the chapter-jump save
@@ -8748,3 +8748,5 @@ every install and each release's own; for the second, the Western table is
 one contiguous run in `SCENA17.EMI#0` at the same offset on every Western
 disc, and the question is whether `Scena17_DrawLine` and the step table read
 it through offsets the PC's code fixes (the exe-gap round, section 3).
+
+**Fixed 2026-10-20** (the owner: "let western installs use their own roll"): DIV-0148. The importer writes the disc's roll to `base/exe/roll.bin` (`tools/exe_roll.py`) and `Scena17_ScrollRoll` reads its lines from there on a Western disc-built image; the US and EU disc-only installs roll their own credits to "Presented by CAPCOM" and "Fin".

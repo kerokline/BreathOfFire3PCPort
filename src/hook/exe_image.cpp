@@ -94,6 +94,7 @@ std::vector<Since> FilledSince() {
 
 // The disc-built image ExeImage_Source mapped, kept for ExeImage_CompareWithFile.
 Image g_mapped;
+std::string g_mapped_dir;   // base\exe\ of the mapped disc-built image
 bool g_disc_mapped = false;
 
 // data.toml as tools/exe_tables.py writes it: `key = value` lines in [image],
@@ -301,6 +302,7 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
         "refuses them)",
         (unsigned)va, im.build.c_str(), (unsigned)im.size);
     g_mapped = im;
+    g_mapped_dir = exe_dir;
     g_disc_mapped = true;
     return true;
 }
@@ -308,6 +310,21 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
 bool ExeImage_DiscMapped() { return g_disc_mapped; }
 
 const char* ExeImage_MappedBuild() { return g_disc_mapped ? g_mapped.build.c_str() : nullptr; }
+
+bool ExeImage_ReadBeside(const char* name, std::vector<unsigned char>& out) {
+    out.clear();
+    if (!g_disc_mapped) return false;
+    const std::string path = g_mapped_dir + name;
+    FILE* f = std::fopen(path.c_str(), "rb");
+    if (!f) return false;
+    unsigned char buf[4096];
+    std::size_t n;
+    while ((n = std::fread(buf, 1, sizeof buf, f)) > 0) out.insert(out.end(), buf, buf + n);
+    const bool bad = std::ferror(f) != 0;
+    std::fclose(f);
+    if (bad) Fatal("BOF3X_EXEIMAGE: reading %s failed", path.c_str());
+    return true;
+}
 
 int ExeImage_MappedRanges() { return g_disc_mapped ? static_cast<int>(g_mapped.ranges.size()) : 0; }
 

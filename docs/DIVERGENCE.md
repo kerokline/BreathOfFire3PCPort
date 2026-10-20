@@ -9204,3 +9204,53 @@ designed in rather than bolted on.
   `quick_menu.txt` in the proof batch.
 - **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
   replaced; without the key nothing changes).
+
+### A Western disc-only install plays its release's own staff roll
+
+- **ID:** DIV-0148
+- **Date:** 2026-10-20
+- **Subsystem:** the ending's roll (`Scena17_ScrollRoll` `0x56D110`, ours in
+  `src/game/scena_sc15.cpp`; `Scena17_RollLines` `0x661A20`); the importer's
+  `base/exe/roll.bin` (`tools/exe_roll.py`, `tools/exe_tables.py`
+  `build_from`); `src/hook/exe_image.{h,cpp}` `ExeImage_ReadBeside`
+- **Tier:** Sensible - the release the player owns (DIV-0115's stance, the
+  PlayStation's data where both exist).
+- **Original behaviour:** the PC port rolls the Japanese release's credits
+  under every language: `Scena17_RollLines` (351 lines, 173 blank) and the
+  strings after `Scena17_EndSteps` equal the Japan disc's
+  `SCENARIO/SCENA17.EMI#0`; the en-US layer and the original text roll the
+  same frames (82 of 84 shots pixel-equal, the two others the fade into
+  "Fin"). The US and PAL discs carry rolls of their own: other job titles
+  ("Engine Design" for "System Planner"), no naming contest, testing and
+  localization blocks (the US only), 345 lines on the US disc and 293 on the
+  European, French and German discs, which are byte-identical to each other.
+  A disc-only install of a Western disc drew neither: the image's pointer
+  words are the PC's, so its lines named the PC's offsets while the map had
+  placed stretches of the disc's text there (D323).
+- **New behaviour:** an install built from a US, European, French or German
+  PSX disc alone rolls that release's credits. The importer writes the disc's
+  line table, the 14 entries after its end (the "Presented by" card is the
+  fifth) and its text to `base/exe/roll.bin`; at start the engine reads it
+  beside the mapped image and `Scena17_ScrollRoll` takes its lines from it.
+  `.data` is untouched (its pointer words stay the PC's), so the state hash,
+  the image's checks and every other install are as before. A PC install, or
+  a cache with the PC's `BOF3.exe`, keeps the Japanese roll, as it keeps the
+  Japanese title (DIV-0114); so do the Japan and PSP builds (the Japan disc's
+  roll is the PC's; the PSPs' place the PC's bytes).
+- **Rationale:** the owner, 2026-10-20: "let western installs use their own
+  roll", after the renders of the PC's roll and the patchwork.
+- **Also in the PSX version?** Yes: this is each release's own roll, read
+  from the player's disc.
+- **Verification:** `tools/exe_roll.py`'s synthetic self-test (in
+  `exe_tables.py check` too); the Japan disc's roll extracted the same way
+  equals the PC's table word for word (365 of 365: the 351 lines and the 14
+  after the end, every string equal). US and EU disc-only caches rebuilt by
+  the importer (`exe_tables.verify_cache` clean: roll.bin parsed, beside a
+  Western image only); the ending (`ending17`, shots every 300 frames, scratch
+  `C:\Users\kerok\bof3x-runs\away1020`): the log line `DIV-0148: the staff
+  roll of psx-us, 345 lines` / `psx-eu-en, 293 lines`, the US roll its own
+  from "STAFF" to the producers, then "Presented by CAPCOM" held to "Fin";
+  the PC install's roll unchanged. `data_census.py --check` 27,406 sites.
+- **Reversible?** Build the install with the PC's executable, or remove
+  `base\exe\roll.bin` from the cache: the roll then reads `.data`'s table
+  (on a Western disc-only install, D323's patchwork). Not a runtime switch.
