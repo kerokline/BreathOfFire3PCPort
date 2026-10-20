@@ -32,11 +32,14 @@ against them traced to a ledgered change.
 0. **Two PRs from 2026-10-20**, both local, signed off, unpushed:
    - **`fix/d266-title-mark`** (worktree `.claude/worktrees/d266`): `9f023100` D266 (the `titlemark` rule in
      `tools/psp_exe.py`, the four Western rows, the recipes regenerated: `exe-imm.tsv` + 16 `immref` rows,
-     `exe-gaps.tsv` 3..5 `gap` rows fewer per build, D323 numbered) and `148d875a` DIV-0148 (`tools/exe_roll.py`,
-     `base/exe/roll.bin`, `ExeImage_ReadBeside`, `Scena17_ScrollRoll`; `data_census.tsv` 27,406). CI's Python
-     checks pass locally; the self-test of the build is the live renders, `analysis/shots/d266-title-mark-1020/`
-     and `ending-roll-1020/`. **An install built before it is not rebuilt by itself**: a Western disc-only cache
-     needs `importer.py build` again for its `roll.bin` (`exe_tables.verify_cache` says so).
+     `exe-gaps.tsv` 3..5 `gap` rows fewer per build, D323 numbered), `148d875a` and `4630803a` DIV-0148: **the staff
+     roll follows the language** - a layer built from a US or PAL disc carries its release's roll as kind 17 of
+     `FIRST.DAT` (`tools/exe_roll.py`, `tools/loc_build.py`, `tools/dat.py`), `TakeChunk` hands it to
+     `Scena17_ScrollRoll` (`ScenaSc15_RollApply`); `148d875a`'s base-file route is reverted by `4630803a`.
+     `data_census.tsv` 27,406. CI's Python checks pass locally; the live checks are renders,
+     `analysis/shots/d266-title-mark-1020/` and `ending-roll-1020/` (`roll_follows_language.png`). **Layers built
+     before it carry no roll**: rebuild a Western language (`importer.py build`, or `loc_build.py all --discs` for an
+     install's `DAT\<tag>.*.DAT`) to get the release's credits.
    - **`docs/handoff-1020`** (worktree `.claude/worktrees/handoff-1020`): [`exe-gap-round.md`](exe-gap-round.md)
      (new), the owner's answers of the day in [`owner-review.md`](owner-review.md), the mirrored bands accepted
      ([`ending-backdrop.md`](ending-backdrop.md)), I43's outcome, this file, [`state-hash.md`](state-hash.md) 6.
@@ -48,8 +51,6 @@ against them traced to a ledgered change.
    - **From the button round (PR #85):** record the minigame starts from `C:\Users\kerok\b_rc\saves\` with
      `BOF3X_RECORD` ([`button-routes.md`](button-routes.md) 5); the contact sheets `C:\Users\kerok\b_rc\sheets_round\`;
      `Scena19_Run0`'s R1. **From PR #81:** the stale-install prompt in a real start, the PSP-only title in play, D310.
-   - **New 2026-10-20:** whether a PC install played under en-US takes the US roll too (today the Japanese, as the
-     title, DIV-0114 / DIV-0148).
    - The ultrawide round's and the away day's looks, listens and calls (owner-review's 2026-10-14 and 2026-10-13
      sections); Peco's EXP table (item 9).
 
@@ -272,15 +273,17 @@ _One line each, with a pointer. Add when something costs more than an hour._
   `--source` wants a `.cue` / `.bin` or `.iso`, and `recipes/abc-installs.toml` names `{main}/CDImage/*.cue`. An
   extracted copy is at `D:\bof3x-runs\discs` (the seven, by Python's `zipfile`); point the tools there, or extract
   again into a root of your own.
-- **A foreground command that times out keeps running in the background** (2026-10-20): a `python -` heredoc that
-  outlived its 120 s was found later running a second, untracked copy of a bisect (how it came to run that script's
-  code is not understood), holding the launcher folder so three
+- **A script named after a standard module shadows it** (2026-10-20): a `bisect.py` in a scratch root ran whenever a
+  Python script started from that folder imported anything that imports `bisect` (Pillow does) - twice a second,
+  untracked bisect chain, racing the real one on the same launcher folder and slot 0 of `bof3\`, holding the folder so three
   queued control runs failed at once (`bof3x.log cannot be removed: a game of this launcher folder is still running`).
   Before trusting a chain's results, list `python.exe` by command line and stop strays by exact PID, letting a running
   `input_run.py` end on its own so slot 0 comes back.
-- **The ending's roll is not in `.data` on a Western disc-only install** (2026-10-20, DIV-0148): its lines come from
-  `base\exe\roll.bin`. A cache built before that has none and rolls D323's patchwork; `exe_tables.verify_cache`
-  names it.
+- **The ending's roll is not in `.data` under a Western language** (2026-10-20, DIV-0148): its lines come from the
+  layer's kind 17. A layer built before that has none and rolls the Japanese credits on a PC install, D323's
+  patchwork on a Western disc-only one. Rebuild the language.
+- **`bof3\` is the tooling's install since 2026-10-15** (the owner plays from `game\`): its slot 0 held the recipe save
+  `camping.DAT` after 2026-10-20's slot race. Recipes swap slot 0 there freely; the owner's saves are `game\`'s.
 - **A title-start recipe with no `# save` lands on CONFIG in a harness folder** (2026-10-13,
   [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md)): the recipe presses for a cursor that starts on LOAD GAME, which it
   does only when a save exists; the harness's game folders have none. Give it a save or a `--save`.

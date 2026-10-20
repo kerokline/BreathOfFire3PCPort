@@ -114,8 +114,9 @@ disc-only title draws its TM whole); D280 not built:
   western installs use their own roll" (DIV-0148, D323). The roll differs by
   release, not language (EU, FR and DE byte-identical; the US its own; the
   PC = Japan). It cannot live in `.data` (its line table is pointer words,
-  which must stay the PC's), so the importer writes `base/exe/roll.bin` and
-  the engine reads its lines from there. Its `Scena17_EndSteps` gap rows stay
+  which must stay the PC's), so a Western language layer carries it as
+  kind 17 and the engine reads its lines from there - the roll follows the
+  language, on a PC install too (the owner's second call the same day). Its `Scena17_EndSteps` gap rows stay
   in `exe-gaps.tsv` - unread on a Western image now, so section 4 C's
   "accepted unread, with the evidence" is their answer.
 - **`Area124_Weights+0x50`** (EU, DE), **the Western u16 fields of

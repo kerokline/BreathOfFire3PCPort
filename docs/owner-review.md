@@ -28,11 +28,10 @@ where the reading behind it is. Nothing here is a divergence until it is in
   draws its TM whole (`analysis/shots/d266-title-mark-1020/`).
 - **The ending roll** (`Scena17_EndSteps`): "let western installs use their
   own roll" - DIV-0148 on the same branch; the US and PAL discs each roll
-  their release's credits, a PC install the Japanese one
-  (`analysis/shots/ending-roll-1020/`). D323 was the patchwork before.
-- **Open, new:** whether a PC install played under en-US should take the US
-  roll as well (today it keeps the Japanese one, as it keeps the title,
-  DIV-0114 / DIV-0148).
+  their release's credits (`analysis/shots/ending-roll-1020/`). D323 was the
+  patchwork before. Then "let's have the roll track with localization": the
+  roll is the language layer's, so a PC install under en-US rolls the US
+  credits too, the original text and ja-JP the Japanese ones.
 
 ## 2026-10-18, the install-gap round
 
