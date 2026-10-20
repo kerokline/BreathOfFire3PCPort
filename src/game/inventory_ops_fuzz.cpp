@@ -132,7 +132,7 @@ void Disturb() {
     }
     case 15: At(Cond_Flags_addr + 0xd2 + w % 6)[0] = static_cast<unsigned char>(v % 12); break;
     case 16: SetWord(At(0x903800 + 2 * (w % 2)), v); break;   // Camera_ShiftX / ShiftY
-    case 17: SetWord(At(0x903840), v); break;                  // Camera_Distance
+    case 17: SetWord(At(Camera_Distance_addr), v); break;        // Camera_Distance
     case 18: At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(v); break;
     default: SetLong(At(0x905E60 + 4 * (w & 1)), static_cast<std::int32_t>(v)); break;   // Field_Kind2Z / X
     }

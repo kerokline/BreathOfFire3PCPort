@@ -592,7 +592,7 @@ void PlacedSite(const unsigned char* op) {
         const auto k = static_cast<std::int32_t>(Steps(s));
         rv::As<records::SpriteObject>(sprite)->x = rv::As<records::SpriteObject>(sprite)->x - k * dx;
         rv::As<records::SpriteObject>(sprite)->z = rv::As<records::SpriteObject>(sprite)->z - k * dz;
-        SetWord(sprite + 0x3E, static_cast<unsigned>(AreaMap_Elevation(rv::As<records::SpriteObject>(sprite)->x, rv::As<records::SpriteObject>(sprite)->z)));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->height_whole, static_cast<unsigned>(AreaMap_Elevation(rv::As<records::SpriteObject>(sprite)->x, rv::As<records::SpriteObject>(sprite)->z)));
         Live* l = Take(context);
         // A placement sets the object afresh: its speed is the op's, never one a stale entry would put back.
         *l = Live{};

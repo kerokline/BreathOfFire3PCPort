@@ -1255,14 +1255,14 @@ extern "C" unsigned char __cdecl Scena03_SpawnAtMember(unsigned char member) {
     const std::uint32_t m = static_cast<unsigned char>(*reinterpret_cast<const volatile unsigned char*>(&member)) * at::kMemberStride;
     auto cur = [] { return Sprite_Current; };
     cur()[0] = 1;
-    SetLong(cur() + 0x34, Long(At(ObjTrio_addr + m + 0x34)) + 0x8000);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur())->x, Long(At(ObjTrio_addr + m + 0x34)) + 0x8000);
     const std::int32_t z = Long(At(ObjTrio_addr + m + 0x38));
     rv::As<records::SpriteObject>(rec)->target_x = rv::As<records::SpriteObject>(cur())->x;
     rv::As<records::SpriteObject>(cur())->z = z;
     rv::As<records::SpriteObject>(rec)->target_z = rv::As<records::SpriteObject>(cur())->z;
     rv::As<records::SpriteObject>(rec)->best_score = 0;
     const long elevation = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(cur())->x, rv::As<records::SpriteObject>(cur())->z);
-    SetWord(cur() + 0x3E, static_cast<unsigned>(elevation));
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(cur())->height_whole, static_cast<unsigned>(elevation));
     cur()[1] = 4;
     cur()[2] = 0;
     cur()[8] = 0;

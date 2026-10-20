@@ -191,19 +191,19 @@ extern "C" void __cdecl EventOp_5x(const unsigned char* op) {
     g.reset();
     g.set_bank(Bank());
     Sprite_Current[0] = 1;
-    SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(Coordinate(op[5], op[6])));
-    SetLong(Object(Count()) + 0x8C, rv::Current<records::SpriteObject>()->x);
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(Coordinate(op[7], op[8])));
-    SetLong(Object(Count()) + 0x90, rv::Current<records::SpriteObject>()->z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[5], op[6])));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, rv::Current<records::SpriteObject>()->x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[7], op[8])));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, rv::Current<records::SpriteObject>()->z);
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
     const long elevation = g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(elevation));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[9];
     Sprite_Current[2] = op[0xB];
     Sprite_Current[8] = op[0] & 0xF;
     Sprite_Current[6] = op[0] >> 4;
-    SetLong(Sprite_Current + 0x18, op[0x10]);
-    SetLong(Sprite_Current + 0x1C, op[0x11]);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_18, op[0x10]);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_1c, op[0x11]);
     unsigned char* const n = Object(Count());
     rv::As<records::SpriteObject>(n)->half_w = op[3];
     rv::As<records::SpriteObject>(n)->half_d = op[4];
@@ -251,13 +251,13 @@ extern "C" void __cdecl EventOp_9x(const unsigned char* op) {
     g.reset();
     g.set_bank(Bank());
     Sprite_Current[0] = 1;
-    SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(Coordinate(op[4], op[5])));
-    SetLong(Object(Count()) + 0x8C, rv::Current<records::SpriteObject>()->x);
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
-    SetLong(Object(Count()) + 0x90, rv::Current<records::SpriteObject>()->z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[4], op[5])));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, rv::Current<records::SpriteObject>()->x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, rv::Current<records::SpriteObject>()->z);
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
     const long elevation = g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(elevation));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = 6;
     Sprite_Current[2] = 0;
     Sprite_Current[8] = op[0] & 0xF;
@@ -289,7 +289,7 @@ extern "C" void __cdecl EventOp_9x(const unsigned char* op) {
             sc[0] = 0;
             return;
         }
-        if (Word(sc + 0x34) == 0 && Word(sc + 0x38) == 0) g.set_cell(Word(sc + 0x36), Word(sc + 0x3A), 0x10);
+        if (rv::As<records::SpriteHead>(sc)->x_frac == 0 && rv::As<records::SpriteHead>(sc)->z_frac == 0) g.set_cell(rv::As<records::SpriteHead>(sc)->x_whole, rv::As<records::SpriteHead>(sc)->z_whole, 0x10);
         g.set_animation(1);
     } else {
         g.set_animation(0);
@@ -552,7 +552,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
                                                           DirectionInPointer(Sprite_Current)));
         g.step_cell();
         if (Byte(at::kScratch) == 0) {
-            const int rise = static_cast<short>(Word(Sprite_Current + 0x3E)) - slope;
+            const int rise = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole) - slope;
             if (std::abs(rise) > 0x80) {
                 if (!link()) Field_Request = 5;
                 MoveScript_F3Divisor = 0;
@@ -565,7 +565,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
         }
         if (slope > 0x40) {
             if (!link() && Sprite_Current == At(ObjTrio_addr)) {
-                if (g.test_fb(Word(Sprite_Current + 0x36), Word(Sprite_Current + 0x3A))) {
+                if (g.test_fb(rv::Current<records::SpriteHead>()->x_whole, rv::Current<records::SpriteHead>()->z_whole)) {
                     g.play_effect(Word(At(at::kStepSounds) + At(at::kScratch)[1] * 2u));
                     g.ensure_animation(static_cast<unsigned char>((Sprite_Current[8] >> 1) + 0x10));
                 } else {
@@ -791,7 +791,7 @@ extern "C" unsigned char __cdecl Field_EffectAhead(void) {
     for (unsigned i = 0; i < 20; ++i) {
         const unsigned char* const e = Effect_Objects + i * 0x80;
         if (e[0] == 0 || e[5] != 0x17) continue;
-        if (g.point_in_reach(x, z, static_cast<short>(Word(Sprite_Current + 0x3E)), 0, e)) return static_cast<unsigned char>(i);
+        if (g.point_in_reach(x, z, static_cast<short>(rv::Current<records::SpriteHead>()->height_whole), 0, e)) return static_cast<unsigned char>(i);
     }
     return 0xFF;
 }
@@ -818,14 +818,14 @@ extern "C" const unsigned char* __cdecl Area_PassageAhead(void) {
             unsigned x, z;
             int span;
             if (large == 0) {
-                x = Word(sc + 0x36) + static_cast<unsigned>(CellDX(d));
-                z = Word(sc + 0x3A) + static_cast<unsigned>(CellDZ(d));
-                span = (Word(sc + 0x34) == 0 && Word(sc + 0x38) == 0) ? 0 : 1;
+                x = rv::As<records::SpriteHead>(sc)->x_whole + static_cast<unsigned>(CellDX(d));
+                z = rv::As<records::SpriteHead>(sc)->z_whole + static_cast<unsigned>(CellDZ(d));
+                span = (rv::As<records::SpriteHead>(sc)->x_frac == 0 && rv::As<records::SpriteHead>(sc)->z_frac == 0) ? 0 : 1;
             } else {
                 const signed char cdx = CellDX(d), cdz = CellDZ(d);
-                x = Word(sc + 0x36) + static_cast<unsigned>(cdx == 1 ? 2 : cdx);
-                z = Word(sc + 0x3A) + static_cast<unsigned>(cdz == 1 ? 2 : cdz);
-                span = (d == 1 || d == 5) ? Word(sc + 0x34) != 0 : Word(sc + 0x38) != 0;
+                x = rv::As<records::SpriteHead>(sc)->x_whole + static_cast<unsigned>(cdx == 1 ? 2 : cdx);
+                z = rv::As<records::SpriteHead>(sc)->z_whole + static_cast<unsigned>(cdz == 1 ? 2 : cdz);
+                span = (d == 1 || d == 5) ? rv::As<records::SpriteHead>(sc)->x_frac != 0 : rv::As<records::SpriteHead>(sc)->z_frac != 0;
             }
             const bool along_z = (e[2] & 0x80) != 0;
             for (int j = 0; j <= span; ++j) {
@@ -993,7 +993,7 @@ extern "C" unsigned char __cdecl Field_ObjectInPath(long x, long z, unsigned) {
     const auto s = static_cast<signed char>(r);
     const unsigned char* const o = s < 30 ? Object(s) : Extra(s - 30);
     if (o[6] == 8 || rv::As<records::SpriteObject>(o)->trigger_word == 0xFFFF) return 0xFF;
-    const int rise = static_cast<short>(Word(o + 0x3E)) - static_cast<short>(Word(Sprite_Current + 0x3E));
+    const int rise = static_cast<short>(rv::As<records::SpriteHead>(o)->height_whole) - static_cast<short>(rv::Current<records::SpriteHead>()->height_whole);
     if (std::abs(rise) > 0x100) return 0xFF;
     return r;
 }
@@ -1032,27 +1032,27 @@ unsigned char TurnFromEven(unsigned char a, unsigned char b, unsigned char to_ab
 extern "C" unsigned char __cdecl Field_CellAroundNear(unsigned cell_arg) {
     const unsigned char cell = static_cast<unsigned char>(cell_arg);
     const unsigned char* const sc = Sprite_Current;
-    const unsigned short fx = Word(sc + 0x34);
-    if (fx != 0 && Word(sc + 0x38) != 0) return 0;
+    const unsigned short fx = rv::As<records::SpriteHead>(sc)->x_frac;
+    if (fx != 0 && rv::As<records::SpriteHead>(sc)->z_frac != 0) return 0;
     const unsigned char d = sc[8];
-    const unsigned short x = Word(sc + 0x36);
+    const unsigned short x = rv::As<records::SpriteHead>(sc)->x_whole;
     const auto ahead_x = static_cast<unsigned short>(x + CellDX(d));
-    const auto ahead_z = static_cast<unsigned short>(Word(sc + 0x3A) + CellDZ(d));
-    if (fx == 0 && Word(sc + 0x38) == 0) {
+    const auto ahead_z = static_cast<unsigned short>(rv::As<records::SpriteHead>(sc)->z_whole + CellDZ(d));
+    if (fx == 0 && rv::As<records::SpriteHead>(sc)->z_frac == 0) {
         SetW0(x);
         SetW2(ahead_z);
-        if (g.byte_at(static_cast<short>(Word(sc + 0x36)), static_cast<short>(ahead_z)) == cell) {
+        if (g.byte_at(static_cast<short>(rv::As<records::SpriteHead>(sc)->x_whole), static_cast<short>(ahead_z)) == cell) {
             const unsigned char* const s = Sprite_Current;
             SetW2(ahead_z);
-            SetW0(Word(s + 0x36));
+            SetW0(rv::As<records::SpriteHead>(s)->x_whole);
             const unsigned char e = s[8];
             if (!(e & 1)) return TurnFromEven(0, 2, 1, 5);
             return e == 1 || e == 5;
         }
-        if (g.byte_at(static_cast<short>(ahead_x), static_cast<short>(Word(Sprite_Current + 0x3A))) == cell) {
+        if (g.byte_at(static_cast<short>(ahead_x), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole)) == cell) {
             const unsigned char* const s = Sprite_Current;
             SetW0(ahead_x);
-            SetW2(Word(s + 0x3A));
+            SetW2(rv::As<records::SpriteHead>(s)->z_whole);
             const unsigned char e = s[8];
             if (!(e & 1)) return TurnFromEven(0, 6, 7, 3);
             return e == 7 || e == 3;
@@ -1061,9 +1061,9 @@ extern "C" unsigned char __cdecl Field_CellAroundNear(unsigned cell_arg) {
             const unsigned char* const s = Sprite_Current;
             if (!(s[8] & 1)) return 0;
             const unsigned char t = (s[8] + 2) & 7;
-            const auto cx = static_cast<unsigned short>(Word(s + 0x36) + CellDX(t));
+            const auto cx = static_cast<unsigned short>(rv::As<records::SpriteHead>(s)->x_whole + CellDX(t));
             SetW0(cx);
-            const auto cz = static_cast<unsigned short>(Word(s + 0x3A) + CellDZ(t));
+            const auto cz = static_cast<unsigned short>(rv::As<records::SpriteHead>(s)->z_whole + CellDZ(t));
             SetW2(cz);
             if (g.byte_at(static_cast<short>(cx), static_cast<short>(cz)) == cell) {
                 Sprite_Current[8] = t;
@@ -1072,9 +1072,9 @@ extern "C" unsigned char __cdecl Field_CellAroundNear(unsigned cell_arg) {
         }
         const unsigned char* const s = Sprite_Current;
         const unsigned char t = (s[8] - 2) & 7;
-        const auto cx = static_cast<unsigned short>(Word(s + 0x36) + CellDX(t));
+        const auto cx = static_cast<unsigned short>(rv::As<records::SpriteHead>(s)->x_whole + CellDX(t));
         SetW0(cx);
-        const auto cz = static_cast<unsigned short>(Word(s + 0x3A) + CellDZ(t));
+        const auto cz = static_cast<unsigned short>(rv::As<records::SpriteHead>(s)->z_whole + CellDZ(t));
         SetW2(cz);
         if (g.byte_at(static_cast<short>(cx), static_cast<short>(cz)) != cell) return 0;
         Sprite_Current[8] = t;
@@ -1083,7 +1083,7 @@ extern "C" unsigned char __cdecl Field_CellAroundNear(unsigned cell_arg) {
     if (fx != 0) {   // between cells on x
         if (d == 7 || d == 3) {
             SetW0(x);
-            SetW2(Word(sc + 0x3A) - 1u);
+            SetW2(rv::As<records::SpriteHead>(sc)->z_whole - 1u);
             for (int i = 0;;) {
                 if (g.byte_at(static_cast<short>(W0()), static_cast<short>(W2())) == cell) {
                     Sprite_Current[8] = 1;
@@ -1093,8 +1093,8 @@ extern "C" unsigned char __cdecl Field_CellAroundNear(unsigned cell_arg) {
                 if (++i > 1) break;
             }
             const unsigned char* const s = Sprite_Current;
-            SetW0(Word(s + 0x36));
-            SetW2(Word(s + 0x3A) + 1u);
+            SetW0(rv::As<records::SpriteHead>(s)->x_whole);
+            SetW2(rv::As<records::SpriteHead>(s)->z_whole + 1u);
             for (int i = 0;;) {
                 if (g.byte_at(static_cast<short>(W0()), static_cast<short>(W2())) == cell) {
                     Sprite_Current[8] = 5;
@@ -1120,7 +1120,7 @@ extern "C" unsigned char __cdecl Field_CellAroundNear(unsigned cell_arg) {
     // between cells on z
     if (d == 1 || d == 5) {
         SetW0(x - 1u);
-        SetW2(Word(sc + 0x3A));
+        SetW2(rv::As<records::SpriteHead>(sc)->z_whole);
         for (int i = 0;;) {
             if (g.byte_at(static_cast<short>(W0()), static_cast<short>(W2())) == cell) {
                 Sprite_Current[8] = 7;
@@ -1130,8 +1130,8 @@ extern "C" unsigned char __cdecl Field_CellAroundNear(unsigned cell_arg) {
             if (++i > 1) break;
         }
         const unsigned char* const s = Sprite_Current;
-        SetW0(Word(s + 0x36) + 1u);
-        SetW2(Word(s + 0x3A));
+        SetW0(rv::As<records::SpriteHead>(s)->x_whole + 1u);
+        SetW2(rv::As<records::SpriteHead>(s)->z_whole);
         for (int i = 0;;) {
             if (g.byte_at(static_cast<short>(W0()), static_cast<short>(W2())) == cell) {
                 Sprite_Current[8] = 3;
@@ -1143,7 +1143,7 @@ extern "C" unsigned char __cdecl Field_CellAroundNear(unsigned cell_arg) {
         }
     }
     SetW0(ahead_x);
-    SetW2(Word(sc + 0x3A));
+    SetW2(rv::As<records::SpriteHead>(sc)->z_whole);
     for (int i = 0;;) {
         if (g.byte_at(static_cast<short>(W0()), static_cast<short>(W2())) == cell) {
             const unsigned char e = Sprite_Current[8];
@@ -1195,8 +1195,8 @@ extern "C" void __cdecl Field_LeaderTalkTo(unsigned index) {
 // counter byte), bit 12 cleared, Field_ChangeArea. The button 0x90358C on
 // 0xA0 / 0xA1: 0x9039F3 = 0x1B, the pose unless bit 5, sub-state 0.
 extern "C" unsigned char __cdecl Field_LeaderCellEvent(void) {
-    const unsigned char cell = g.byte_at(static_cast<short>(Word(Sprite_Current + 0x36)),
-                                         static_cast<short>(Word(Sprite_Current + 0x3A)));
+    const unsigned char cell = g.byte_at(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole),
+                                         static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
     const unsigned char flags = Field_InputFlags;
     if (!(flags & 1)) return 0;
     const unsigned pressed = Input_Pressed;
@@ -1268,7 +1268,7 @@ extern "C" unsigned char __cdecl Field_LeaderPushObjects(void) {
         z += dz;
     }
     auto height = static_cast<short>(g.ground_at(static_cast<long>(x), static_cast<long>(z)));
-    const auto own = static_cast<short>(Word(Sprite_Current + 0x3E));
+    const auto own = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole);
     if (std::abs(static_cast<int>(own) - height) > 0x100) height = own;
     for (int i = 0; i < 30; ++i) {
         unsigned char* const o = Object(i);

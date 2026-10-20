@@ -82,8 +82,8 @@ constexpr std::uint32_t kAngle2 = 0x929ECC;     // s16 Cond_AngleFB
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). u16 MoveScript_F3Divisor
 // kObjTrio: now ObjTrio (symbols.toml). the party's three field objects, 0x14C each
 constexpr std::uint32_t kObjStride = 0x14C;
-constexpr std::uint32_t kLead34 = 0x802D74;      // s32 ObjTrio + 0x34
-constexpr std::uint32_t kLead38 = 0x802D78;      // s32 ObjTrio + 0x38
+// kLead34: now ObjTrio record 0 x (records::PartyMember).
+// kLead38: now ObjTrio record 0 z (records::PartyMember).
 constexpr std::uint32_t kBank7DEE44 = 0x7DEE44; // u8: run 12 step 8 waits for its bit 1
 constexpr std::uint32_t kCharRecords = 0x903A70;   // CharacterRecords: 8 of 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;

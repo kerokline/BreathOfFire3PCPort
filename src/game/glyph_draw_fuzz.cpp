@@ -100,7 +100,7 @@ void __cdecl StubPrimColor(unsigned r, unsigned gg, unsigned b, unsigned code, u
 int __cdecl StubGlyphTexture(unsigned glyph, unsigned clut) {
     Record(2, glyph, clut);
     const U h = Mix(3);
-    if (h % 5 == 0) PutWord(At(0x7CA960), 1);                       // the D18 overrun's store
+    if (h % 5 == 0) PutWord(At(D3d_Vertices_addr + 0x8), 1);          // the D18 overrun's store
     if (h % 7 == 0 && g_prim) g_prim[7] = static_cast<unsigned char>(h >> 8);
     return static_cast<int>(h >> 20);
 }

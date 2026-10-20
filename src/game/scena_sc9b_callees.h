@@ -60,18 +60,18 @@ constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 constexpr std::uint32_t kObjStride = 0x14C;
 // kLeaderByte8: now ObjTrio[8] (symbols.toml). u8 ObjTrio +0x8, tested against 4..6 / 0..2
 // kLeaderByteB: now ObjTrio[0xb] (symbols.toml). u8 ObjTrio +0xB, cleared by the area 0x79 entry
-constexpr std::uint32_t kObjTrioX = 0x802D74;   // s32 ObjTrio + 0x34
-constexpr std::uint32_t kObjTrioZ = 0x802D78;   // s32 ObjTrio + 0x38
+// kObjTrioX: now ObjTrio record 0 x (records::PartyMember).
+// kObjTrioZ: now ObjTrio record 0 z (records::PartyMember).
 constexpr unsigned kMemberKind = 0x89;          // ObjTrio record +0x89: the member's character byte
 constexpr unsigned kMemberState = 0x137;        // ObjTrio record +0x137: tested against 3
 // kKind2Z: now Field_Kind2Z (symbols.toml). s32 Field_Kind2Z
 // kKind2X: now Field_Kind2X (symbols.toml). s32 Field_Kind2X
 constexpr std::uint32_t kKind2ZHigh = 0x905E62; // u16: Field_Kind2Z's whole part, moved by 7
-constexpr std::uint32_t kSpriteKind2X = 0x7E0974;  // s32 Sprite_Kind2 + 0x34
-constexpr std::uint32_t kSpriteKind2Z = 0x7E0978;  // s32 Sprite_Kind2 + 0x38
-constexpr std::uint32_t kSpriteKind2Y = 0x7E097E;  // u16 Sprite_Kind2 + 0x3E
-constexpr std::uint32_t kSprite0X = 0x7DEEB4;   // s32 Sprite_Objects + 0x34
-constexpr std::uint32_t kSprite0Z = 0x7DEEB8;   // s32 Sprite_Objects + 0x38
+// kSpriteKind2X: now Sprite_Kind2 x (records::SpriteHead).
+// kSpriteKind2Z: now Sprite_Kind2 z (records::SpriteHead).
+// kSpriteKind2Y: now Sprite_Kind2 height_whole (records::SpriteHead).
+// kSprite0X: now Sprite_Objects record 0 x (records::SpriteObject).
+// kSprite0Z: now Sprite_Objects record 0 z (records::SpriteObject).
 // kSpriteCurrent: now Sprite_Current (symbols.toml). unsigned char *Sprite_Current
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). u16 MoveScript_F3Divisor
 // kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty

@@ -21,7 +21,7 @@ namespace scena_sc0 {
 // kRuns: now Scena00_Runs (symbols.toml). Scena00_Runs: 12 handlers by the s8 MoveScript_Var7
 // kObjectHooks: now Scena00_ObjectHooks (symbols.toml). Scena00_ObjectHooks: 1 handler by the object's +0x86
 constexpr std::uint32_t kShake = 0x660D20;        // Scena00_Shake: 16 s8 offsets by a 4-bit index
-constexpr std::uint32_t kStartSteps = 0x660D30;   // Scena00_StartSteps: run 6's first step by Cond_ByteFD
+// kStartSteps: now Scena00_StartSteps (symbols.toml). run 6's first step by Cond_ByteFD
 constexpr std::uint32_t kInputAnims = 0x660D38;   // Scena00_InputAnims: 16 pairs (animate?, animation) by input >> 12
 
 // --- the cells ----------------------------------------------------------------

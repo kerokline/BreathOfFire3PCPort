@@ -1104,7 +1104,7 @@ void RunTests(unsigned rounds, unsigned only) {
                 if (!OneIn(3)) Sprite_Current[0xA] = 0;
                 if (t.fn == kWalk && !OneIn(4)) {   // past the two flag tests
                     *At(0x9039A3) &= 0xFE;
-                    *At(0x905BA4) &= 0xBF;
+                    *At(Field_ScriptFlags2_addr) &= 0xBF;
                 }
                 if (t.fn == kEncounter) {   // each of the chain's tests passed more often than not
                     if (!OneIn(3)) SetWord(At(ObjTrio_addr + 0x134), 1 + Next() % 0x40);
@@ -1156,7 +1156,7 @@ void RunTests(unsigned rounds, unsigned only) {
                     if (!OneIn(3)) Member(i)[1] = 2;
                     if (!OneIn(4)) Member(i)[2] = Pick(kKinds);
                 }
-                if (OneIn(2)) { *At(0x905BA4) &= 0xE8; *At(0x9039A2) &= 0xE8; }
+                if (OneIn(2)) { *At(Field_ScriptFlags2_addr) &= 0xE8; *At(Field_ScriptFlags_addr) &= 0xE8; }
                 break;
             case kCellEvent:
                 if (OneIn(2)) *At(AreaW0b_MapMode_addr) = static_cast<unsigned char>(Next() % 4);

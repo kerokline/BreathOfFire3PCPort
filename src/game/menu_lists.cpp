@@ -198,8 +198,10 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     MenuLists_PartyChanged = 0;
     for (unsigned i = 0; i < 8; ++i) {
         unsigned char* const r = At(at::kCharRecords + 0x10 + i * at::kCharRecordSize);
-        if (static_cast<unsigned>(Word(r + 0x10) >> 2) > Word(r + 8)) r[1] = static_cast<unsigned char>(r[1] | 0x20);
-        else SetWord(r, Word(r) & 0xDFFF);
+        // r is the character record's +0x10, its status word (records::CharRecord, CharacterRecords 0x903A70)
+        auto* const c = rv::As<records::CharRecord>(r - 0x10);
+        if (static_cast<unsigned>(c->stats.max_hp >> 2) > c->hp) r[1] = static_cast<unsigned char>(r[1] | 0x20);
+        else rv::Store<unsigned>(c->status, c->status & 0xDFFF);
     }
     static constexpr std::uint32_t kDwords[] = {0x9398B8, 0x939898, 0x9398A0, 0x9398A4, 0x9398A8, 0x939880, 0x9398AC,
                                                 0x939884, 0x9398C0, 0x939888, 0x9398C4, 0x93988C, 0x9398C8};
@@ -208,8 +210,8 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     SetWord(At(0x939890), 0);
     Byte(0x9398BC) = 0;
     Byte(0x93989C) = 0;
-    Byte(0x939892) = 0;
-    Byte(0x9398CC) = 0;
+    Rest2e_AbilityViewCursor = 0;
+    Rest2e_AbilityViewTop = 0;
     if (ScenaSc6_Load10 == 1) {
         BattleE1_Mode = 5;
         FieldS_State = 5;

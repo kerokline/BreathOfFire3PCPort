@@ -26,6 +26,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc13_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -470,6 +471,7 @@ SC13_EXPORT void __cdecl Scena13_SpawnPairB(void) { SpawnPair(Scena13_EventOps_a
 // original 0x562840: run 3, steps 0..5, 0xA..0xD, 0x14..0x18 (MSVC's
 // two-level switch: the byte table 0x562CD0 of 0x19, then 16 cases).
 SC13_EXPORT void __cdecl Scena13_Run3(void) {
+    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
     switch (Step()) {
     case 0: {
         if (Counter(0) != 2) return;
@@ -527,10 +529,10 @@ SC13_EXPORT void __cdecl Scena13_Run3(void) {
     case 0xC: {
         if (Request() == 2) return;
         Field_Kind2X = 0xA0000;
-        D(at::kKind2 + 0x34) = 0xA0000;
+        kind2->x = 0xA0000;
         Field_Kind2Z = 0x620000;
-        D(at::kKind2 + 0x38) = 0x620000;
-        W(at::kKind2 + 0x3E) = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(0xA0000, 0x620000));
+        kind2->z = 0x620000;
+        kind2->height_whole = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(0xA0000, 0x620000));
         SH_CALL(Field_ViewReset)();
         Msg(0x19);
         SetRequest(2);
@@ -599,6 +601,7 @@ SC13_EXPORT void __cdecl Scena13_Run3(void) {
 // 0x563070 of 0x20, then 17 cases). Its ebx holds 0x1F from the start: step
 // 0x1E stores it to Draw_PassFlags and the step (below).
 SC13_EXPORT void __cdecl Scena13_Run4(void) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (Step()) {
     case 0:
         Say(0x12);
@@ -611,8 +614,8 @@ SC13_EXPORT void __cdecl Scena13_Run4(void) {
     case 0xA: {
         if (Counter(0) != 0x10) return;
         const unsigned char arg = B(at::kEffectArg + ObjTrio[0x89]);
-        Scena13_Slot[0] = SH_CALL(Effect_SpawnAt)(4, 5, static_cast<signed char>(arg), static_cast<long>(D(at::kTrioX)),
-                                                  static_cast<long>(D(at::kTrioY)), static_cast<long>(D(at::kTrioZ)));
+        Scena13_Slot[0] = SH_CALL(Effect_SpawnAt)(4, 5, static_cast<signed char>(arg), static_cast<long>(static_cast<std::uint32_t>(member0->x)),
+                                                  static_cast<long>(static_cast<std::uint32_t>(member0->z)), static_cast<long>(static_cast<std::uint32_t>(member0->height)));
         SetStep(0xB);
         return;
     }
@@ -728,6 +731,7 @@ SC13_EXPORT void __cdecl Scena13_ToneLevels(unsigned angle) {
 // 0x2000 (up) or 0x8000 (down) is held, the two voices following it, until
 // Input_Pressed bit 0x20; 0x4A0..0x4E0 goes on to step 0xA, anything else to 5.
 SC13_EXPORT void __cdecl Scena13_Run5(void) {
+    auto* const xobj1 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 1 * sizeof(records::SpriteObject));
     switch (Step()) {
     case 0:
         FadeOutStop(8);
@@ -736,11 +740,11 @@ SC13_EXPORT void __cdecl Scena13_Run5(void) {
         SetStep(1);
         return;
     case 1:
-        SH_CALL(Scena13_ToneLevels)(D(at::kExtra1Angle) & 0xFFF);
+        SH_CALL(Scena13_ToneLevels)(xobj1->angle[2] & 0xFFF);
         SetStep(2);
         return;
     case 2: {
-        std::uint32_t a = D(at::kExtra1Angle);
+        std::uint32_t a = xobj1->angle[2];
         W(at::kSlotWord) = static_cast<std::uint16_t>(a & 0xFFF);
         const std::uint32_t held = D(at::kInputHeld);
         bool turned = false;
@@ -752,14 +756,14 @@ SC13_EXPORT void __cdecl Scena13_Run5(void) {
             turned = true;
         }
         if (turned) {
-            D(at::kExtra1Angle) = a;
+            xobj1->angle[2] = a;
             SH_CALL(Scena13_ToneLevels)(a & 0xFFF);
         }
         if (B(at::kInputPressed) & Sigma(0x20)) SetStep(3);
         return;
     }
     case 3: {
-        const std::uint16_t a = static_cast<std::uint16_t>(D(at::kExtra1Angle) & 0xFFF);
+        const std::uint16_t a = static_cast<std::uint16_t>(xobj1->angle[2] & 0xFFF);
         W(at::kSlotWord) = a;
         SetStep(a <= 0x4E0 && a >= 0x4A0 ? 0xA : 5);
         return;
@@ -2045,22 +2049,24 @@ SC13_EXPORT void __cdecl Scena14_Run3(void) {
 // 0x56FCA0, and Sprite_ObjectsExtra record 0's +0x34 + 0x140000 with its
 // elevation +0x3E.
 SC13_EXPORT void __cdecl Scena14_ScrollView(void) {
+    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
     if (static_cast<std::uint32_t>(MapView_FocusX) != 0x77FF) return;
-    const std::uint32_t kx = D(at::kKind2 + 0x34);
+    const std::uint32_t kx = static_cast<std::uint32_t>(kind2->x);
     const std::uint32_t fx = static_cast<std::uint32_t>(Field_Kind2X);
     MapView_Origin[0] = static_cast<std::uint16_t>(static_cast<std::uint16_t>(MapView_Origin[0]) + 0x14);
-    D(at::kKind2 + 0x34) = kx + 0x140000;
+    kind2->x = kx + 0x140000;
     const std::uint32_t fz = static_cast<std::uint32_t>(Field_Kind2Z);
     MapView_FocusX = 0x63FF;
     Field_Kind2X = fx + 0x140000;
     const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(fx + 0x140000), static_cast<long>(fz));
-    W(at::kKind2 + 0x3E) = static_cast<std::uint16_t>(h);
+    kind2->height_whole = static_cast<std::uint16_t>(h);
     SH_CALL(MapView_SetElevation)(static_cast<int>(h));
     SH_AT(VoidFn, at::kViewShift)();
-    const std::uint32_t ex = D(at::kExtra0 + 0x34) + 0x140000;
-    const std::uint32_t ez = D(at::kExtra0 + 0x38);
-    D(at::kExtra0 + 0x34) = ex;
-    W(at::kExtra0 + 0x3E) = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(ex), static_cast<long>(ez)));
+    const std::uint32_t ex = static_cast<std::uint32_t>(xobj0->x) + 0x140000;
+    const std::uint32_t ez = static_cast<std::uint32_t>(xobj0->z);
+    xobj0->x = ex;
+    xobj0->height_whole = static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(ex), static_cast<long>(ez)));
 }
 static void Scroll() { SH_CALL(Scena14_ScrollView)(); }
 
@@ -2616,11 +2622,12 @@ static void Farewell(unsigned flag, unsigned member, std::uint32_t setup) {
 static void RestoreRecords() {
     for (unsigned r = 1; r < 8; ++r) {
         const std::uint32_t p = at::kRecords + r * at::kRecordStride;
-        if ((B(p + 0xB) & 1) == 0) continue;
-        B(p + 0x1C) = B(p + 0x2E);
-        W(p + 0x18) = W(p + 0x20);
-        W(p + 0x1A) = W(p + 0x22);
-        W(p + 0x10) = 0;
+        auto* const c = rv::As<records::CharRecord>(&B(p));   // CharacterRecords 0x903A70, stride 0xA4
+        if ((c->flags & 1) == 0) continue;
+        c->survive = c->stats.byte_0e;
+        c->hp = c->stats.max_hp;
+        c->ap = c->stats.max_ap;
+        c->status = 0;
     }
     const unsigned char n = Field_MemberCount;
     B(at::kSlotWord) = 1;

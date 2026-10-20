@@ -130,20 +130,18 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
     const unsigned char a = pairs[f * 2];
     std::uint32_t zd;
     if (a != 0) {
-        SetLong(Sprite_Current + 0x34,
-                static_cast<std::int32_t>(U(Long(row)) * U(Quarter(a)) + U(x)));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(U(Long(row)) * U(Quarter(a)) + U(x)));
         const unsigned f2 = At(at::kFormation)[0];
         zd = U(Quarter(pairs[f2 * 2])) * U(Long(row + 4));
     } else {
-        SetLong(Sprite_Current + 0x34,
-                static_cast<std::int32_t>(U(x) - U(Quarter(pairs[f * 2 + 1])) * U(Long(row + 4))));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(U(x) - U(Quarter(pairs[f * 2 + 1])) * U(Long(row + 4))));
         const unsigned f2 = At(at::kFormation)[0];
         zd = U(Quarter(pairs[f2 * 2 + 1])) * U(Long(row));
     }
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(zd + U(z)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(zd + U(z)));
     unsigned char* const s = Sprite_Current;
     const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<std::uint32_t>(ground));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<std::uint32_t>(ground));
 }
 
 // original 0x572620: the height layer's byte of cell (x, z) (s16s) set:

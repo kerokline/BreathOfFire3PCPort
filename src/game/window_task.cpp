@@ -367,21 +367,21 @@ extern "C" void __cdecl Window_Kind0Open(void) {
         Rec()[0xD] |= 2;
         Rec()[0xA] = 0x78;
         Rec()[0xB] = 0x36;
-        SetWord(Rec() + 4, (SideX(At(at::kBoxAltXY)[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(at::kBoxAltXY)[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
         y = At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u];
     } else {
         Rec()[0xA] = 0xC8;
         Rec()[0xB] = 0x36;
-        SetWord(Rec() + 4, (SideX(At(at::kBoxXY)[Msgbox_Placement * 2u]) + 0x64u) << 4);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(at::kBoxXY)[Msgbox_Placement * 2u]) + 0x64u) << 4);
         y = At(at::kBoxXY)[Msgbox_Placement * 2u + 1u];
     }
-    SetWord(Rec() + 6, (y + 0x1Bu) << 4);
-    SetWord(Rec() + 0x10, 0);
-    SetWord(Rec() + 0x12, 0);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (y + 0x1Bu) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height, 0);
     unsigned char* r = Rec();
-    SetWord(r + 0x14, static_cast<unsigned>((static_cast<int>(r[0xA]) << 4) / 5));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width_step, static_cast<unsigned>((static_cast<int>(r[0xA]) << 4) / 5));
     r = Rec();
-    SetWord(r + 0x16, static_cast<unsigned>((static_cast<int>(r[0xB]) << 4) / 5));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height_step, static_cast<unsigned>((static_cast<int>(r[0xB]) << 4) / 5));
     ++Rec()[3];
 }
 
@@ -391,12 +391,12 @@ extern "C" void __cdecl Window_Kind0Open(void) {
 // and 0x66. It touches neither the flag byte +0xD nor the placement code's
 // two high bits.
 extern "C" void __cdecl Window_Kind2Open(void) {
-    SetWord(Rec() + 4, (SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + 0x23u) << 4);
-    SetWord(Rec() + 6, (Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
-    SetWord(Rec() + 0x10, 0);
-    SetWord(Rec() + 0x12, 0);
-    SetWord(Rec() + 0x14, 0xE3);
-    SetWord(Rec() + 0x16, 0x66);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + 0x23u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height, 0);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width_step, 0xE3);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height_step, 0x66);
     Rec()[0xA] = 0x47;
     Rec()[0xB] = 0x20;
     ++Rec()[3];
@@ -420,7 +420,7 @@ unsigned SettledX(const unsigned char* r) {
         return SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u]
                                        : At(at::kBoxXY)[Msgbox_Placement * 2u]) << 4;
     case 1:
-        return Word(r + 0x18) << 4;
+        return rv::As<records::WindowRecord>(r)->settled_x << 4;
     default:
         return SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) << 4;
     }
@@ -431,7 +431,7 @@ unsigned SettledY(const unsigned char* r) {
         return ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u]
                                   : At(at::kBoxXY)[Msgbox_Placement * 2u + 1u]) << 4;
     case 1:
-        return Word(r + 0x1A) << 4;
+        return rv::As<records::WindowRecord>(r)->settled_y << 4;
     default:
         return Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) << 4;
     }
@@ -451,8 +451,8 @@ int HalfStep(const unsigned char* r, unsigned offset) {
 // of the registers it pushes never reaches either.
 int RecX(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->x) >> 4; }
 int RecY(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->y) >> 4; }
-int RecW(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x10)) >> 4; }
-int RecH(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x12)) >> 4; }
+int RecW(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->width) >> 4; }
+int RecH(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->height) >> 4; }
 
 }  // namespace
 
@@ -471,7 +471,7 @@ int RecH(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x1
 extern "C" void __cdecl Window_Grow(void) {
     unsigned settled = 0;
     unsigned char* r = Rec();
-    SetWord(r + 0x10, Word(r + 0x10) + Word(r + 0x14));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width, rv::As<records::WindowRecord>(r)->width + rv::As<records::WindowRecord>(r)->width_step);
     r = Rec();
     rv::As<records::WindowRecord>(r)->x = rv::As<records::WindowRecord>(r)->x - static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
@@ -479,17 +479,17 @@ extern "C" void __cdecl Window_Grow(void) {
         rv::As<records::WindowRecord>(r)->x = SettledX(r);
         r = Rec();
         settled = 1;
-        SetWord(r + 0x10, r[0xA] << 4);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width, r[0xA] << 4);
         r = Rec();
     }
-    SetWord(r + 0x12, Word(r + 0x12) + Word(r + 0x16));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height, rv::As<records::WindowRecord>(r)->height + rv::As<records::WindowRecord>(r)->height_step);
     r = Rec();
     rv::As<records::WindowRecord>(r)->y = rv::As<records::WindowRecord>(r)->y - static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
     if (RecH(r) > r[0xB]) {
         rv::As<records::WindowRecord>(r)->y = SettledY(r);
         r = Rec();
-        SetWord(r + 0x12, r[0xB] << 4);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height, r[0xB] << 4);
         r = Rec();
         ++settled;
     }
@@ -518,11 +518,11 @@ extern "C" void __cdecl Window_Grow(void) {
 extern "C" void __cdecl Window_Shrink(void) {
     unsigned settled = 0;
     unsigned char* r = Rec();
-    SetWord(r + 0x10, Word(r + 0x10) - Word(r + 0x14));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width, rv::As<records::WindowRecord>(r)->width - rv::As<records::WindowRecord>(r)->width_step);
     r = Rec();
     rv::As<records::WindowRecord>(r)->x = rv::As<records::WindowRecord>(r)->x + static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
-    if (static_cast<std::int16_t>(Word(r + 0x10)) < 0) {
+    if (static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->width) < 0) {
         const unsigned half = r[0xA] >> 1;
         unsigned place;
         switch (r[2]) {
@@ -540,14 +540,14 @@ extern "C" void __cdecl Window_Shrink(void) {
         rv::As<records::WindowRecord>(r)->x = place << 4;
         r = Rec();
         settled = 1;
-        SetWord(r + 0x10, 0);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->width, 0);
         r = Rec();
     }
-    SetWord(r + 0x12, Word(r + 0x12) - Word(r + 0x16));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height, rv::As<records::WindowRecord>(r)->height - rv::As<records::WindowRecord>(r)->height_step);
     r = Rec();
     rv::As<records::WindowRecord>(r)->y = rv::As<records::WindowRecord>(r)->y + static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
-    if (static_cast<std::int16_t>(Word(r + 0x12)) < 0) {
+    if (static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->height) < 0) {
         const unsigned half = r[0xB] >> 1;
         unsigned place;
         switch (r[2]) {
@@ -565,7 +565,7 @@ extern "C" void __cdecl Window_Shrink(void) {
         rv::As<records::WindowRecord>(r)->y = place << 4;
         r = Rec();
         ++settled;
-        SetWord(r + 0x12, 0);
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(r)->height, 0);
         r = Rec();
     }
     if (settled == 2) {
@@ -687,8 +687,8 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     // 3. the window's textured quad
     unsigned char* const quad = Gfx_PacketNext;
     g.set_poly_gt4(quad);
-    SetWord(quad + 0x2A, g.get_tpage(0, 0, 0x3C0, 0));
-    SetWord(quad + 0x16, g.get_clut(BattleDraw_Colour * 32 + 0x10, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->clut, g.get_clut(BattleDraw_Colour * 32 + 0x10, 0x1E1));
     const float fright = Flt(x + w + 1), fbottom = Flt(y + h + 1);
     PutFloat(quad + 8, fx);
     PutFloat(quad + 0xC, fy);

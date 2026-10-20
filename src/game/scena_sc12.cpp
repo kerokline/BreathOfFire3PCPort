@@ -26,6 +26,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc12_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -44,7 +45,6 @@ using scena_sc12::VoidFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
 unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
@@ -216,6 +216,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_ArriveHook(int x, int /*z*/) {
 //     0xA) - counter 0 0, run 7.
 // Each area test reads Game_AreaNumber afresh.
 SC12_EXPORT unsigned char __cdecl Scena12_StepHook(int x, int z) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     if (Area() == 0x86) {
         if (!Flag(1)) {
             if (x >= 0x1F8000 && x <= 0x208000 && z >= 0x248000 && z <= 0x270000) {
@@ -230,7 +231,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_StepHook(int x, int z) {
                 Set(1);
                 return 1;
             }
-        } else if (S32(at::kObjTrioY) <= 0x2000000 && x >= 0x2E0000 && x <= 0x2F8000 && z >= 0x290000 && z <= 0x2A0000) {
+        } else if (member0->height <= 0x2000000 && x >= 0x2E0000 && x <= 0x2F8000 && z >= 0x290000 && z <= 0x2A0000) {
             Set40();
             ClearCounters();
             SetStep(0x21);
@@ -396,6 +397,7 @@ namespace {
 // 0x82 / 0x83, 0x84 / 0x85) and afresh for each later one; the counter byte
 // 0x90384A afresh at each test.
 void EnterAreaBody() {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     unsigned area = Area();
     if (area == 0x65) {
         const unsigned c = Counter(2);
@@ -462,7 +464,7 @@ void EnterAreaBody() {
             Spawn(0, 0x77, 1);
         }
     }
-    if (Area() == 0x86 && !Flag(0x2F) && S32(at::kObjTrioZ) < 0x300000) {
+    if (Area() == 0x86 && !Flag(0x2F) && member0->x < 0x300000) {
         Set(0x2F);
         Set40();
         ClearCounters();
@@ -1331,6 +1333,7 @@ void BattleBytes() { SH_AT(KindFn, at::kBattleBytes)(0x26); }
 // original 0x561170: run 9, steps 0..2, 0xA..0x12, 0x14..0x16, 0x1E..0x22,
 // 0x2B..0x2F (a byte table over 0..0x2F, then 25 cases).
 SC12_EXPORT void __cdecl Scena12_Run9(void) {
+    auto* const member2 = rv::As<records::PartyMember>(ObjTrio + 2 * sizeof(records::PartyMember));
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (ObjTrio[0x3cf] == 3) break;
@@ -1443,7 +1446,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     case 0x1F:
         if (Counter(0) != 1) break;
-        Place(static_cast<int>(D(at::kMember1) + 0x30000), 0x258000);
+        Place(static_cast<int>(static_cast<std::uint32_t>(member2->x) + 0x30000), 0x258000);
         BattleBytes();
         SetStep(0x20);
         break;

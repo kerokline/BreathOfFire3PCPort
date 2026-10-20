@@ -538,15 +538,15 @@ extern "C" void __cdecl Menu_DrawBlackScreen(void) {
     unsigned char* const p = Packet();
     g.set_tile(p);
     g.set_semi(p, 0);
-    const U q = Addr(p);
+    auto* const t = rv::As<records::GpuTile>(p);   // a TILE: Gpu_SetTile's packet
     const float wide = static_cast<float>(Widescreen_Live());   // DIV-0041: the black covers a wide picture whole
-    PutFloat(q + 8, 0.0f - wide);   // not -wide: that is -0.0f when wide is 0
-    PutLong(q + 0xC, 0);
-    PutFloat(q + 0x14, 320.0f + 2 * wide);
-    PutFloat(q + 0x18, 240.0f);
-    PutByte(q + 4, 0);
-    PutByte(q + 5, 0);
-    PutByte(q + 6, 0);
+    t->x = 0.0f - wide;   // not -wide: that is -0.0f when wide is 0
+    t->y = 0.0f;
+    t->w = 320.0f + 2 * wide;
+    t->h = 240.0f;
+    t->r = 0;
+    t->g = 0;
+    t->b = 0;
     g.commit(1, 0x1C);
 }
 
@@ -567,7 +567,8 @@ extern "C" void __cdecl Shop_PriceRate(unsigned short* rate) {
         for (;;) {
             const U record = Byte(at::kMembers + i * at::kMemberStride);
             const U base = at::kCharRecords + record * at::kCharStride;
-            if (Byte(base + 0x16) == at::kDiscountItem || Byte(base + 0x17) == at::kDiscountItem) {
+            const auto* const c = rv::AsConst<records::CharRecord>(At(base));   // CharacterRecords 0x903A70, stride 0xA4
+            if (c->accessory[0] == at::kDiscountItem || c->accessory[1] == at::kDiscountItem) {
                 *rate = 0x50;
                 break;
             }
@@ -602,33 +603,42 @@ extern "C" unsigned __cdecl Shop_SellPrice(unsigned kind, unsigned item, unsigne
 // window records at 0x803160, 0x803184, 0x8031A8, 0x8031B2 and 0x803430 /
 // 0x803454, in the original's order.
 extern "C" void __cdecl Shop_InitWindows(void) {
-    PutByte(0x803163, 2);
-    PutByte(0x803187, 2);
-    PutByte(0x8031AA, 2);
-    PutByte(0x8031AB, 2);
+    // Window records 0, 1, 2, 20 and 21 of WindowRecords 0x803160, 0x24 apart
+    // (symbols.toml Window_Alloc): their shared bytes +0..+7 typed; record 0's
+    // +0x10 is the entry ShopStates2_Help; records 2's and 20's +0xA / +0xB are
+    // the handler's own (WindowRecord's per-handler bytes), kept raw.
+    auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    auto* const w1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 1 * sizeof(records::WindowRecord));
+    auto* const w2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * sizeof(records::WindowRecord));
+    auto* const w20 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 20 * sizeof(records::WindowRecord));
+    auto* const w21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
+    w0->state = 2;
+    w1->state = 2;
+    w2->kind = 2;
+    w2->state = 2;
     PutByte(0x8031B2, 3);
-    PutByte(0x803456, 3);
-    PutByte(0x803161, 7);
-    PutByte(0x803162, 0);
-    PutByte(0x803160, 1);
-    PutWord(0x803164, 0x14);
-    PutWord(0x803166, 0xFFEC);
-    PutWord(0x803170, 0);
-    PutByte(0x803185, 7);
-    PutByte(0x803186, 1);
-    PutByte(0x803184, 1);
-    PutWord(0x803188, 0xC6);
-    PutWord(0x80318A, 0xFFEC);
-    PutByte(0x8031A9, 7);
-    PutByte(0x8031A8, 1);
-    PutWord(0x8031AC, 0x66);
-    PutWord(0x8031AE, 0xFFEC);
+    w21->kind = 3;
+    w0->handler = 7;
+    w0->kind = 0;
+    w0->in_use = 1;
+    w0->x = 0x14;
+    w0->y = 0xFFEC;
+    ShopStates2_Help = 0;
+    w1->handler = 7;
+    w1->kind = 1;
+    w1->in_use = 1;
+    w1->x = 0xC6;
+    w1->y = 0xFFEC;
+    w2->handler = 7;
+    w2->in_use = 1;
+    w2->x = 0x66;
+    w2->y = 0xFFEC;
     PutByte(0x8031B3, 0xFF);
-    PutByte(0x803455, 7);
-    PutByte(0x803454, 0);
-    PutByte(0x803431, 7);
-    PutByte(0x803432, 4);
-    PutByte(0x803430, 0);
+    w21->handler = 7;
+    w21->in_use = 0;
+    w20->handler = 7;
+    w20->kind = 4;
+    w20->in_use = 0;
     PutByte(0x80343A, 0);
     PutByte(0x80343B, 1);
 }
@@ -701,18 +711,18 @@ extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
         g.set_draw_mode(Packet(), 0, 0, glow_page, 0);
         g.commit(1, 0xC);
         unsigned char* const p = Packet();
-        const U q = Addr(p);
+        auto* const s = rv::As<records::GpuSprt>(p);   // a SPRT: Gpu_SetSprt's packet
         g.set_sprt(p);
-        PutByte(q + 0x14, 0);
-        PutWord(q + 0x1A, 0x20);
-        PutFloat(q + 8, fx);
-        PutFloat(q + 0xC, fy);
-        PutByte(q + 0x15, r << 5);
-        PutWord(q + 0x18, width);
-        PutWord(q + 0x16, g.get_clut(0, 0x1EB));
-        PutByte(q + 4, Byte(at::kRowBright + r) << 1);
-        PutByte(q + 5, Byte(at::kRowBright + r) << 1);
-        PutByte(q + 6, Byte(at::kRowBright + r) << 1);
+        s->u = 0;
+        s->h = 0x20;
+        s->x = fx;
+        s->y = fy;
+        rv::Store<U>(s->v, r << 5);
+        rv::Store<U>(s->w, width);
+        rv::Store<U>(s->clut, g.get_clut(0, 0x1EB));
+        rv::Store<U>(s->r, Byte(at::kRowBright + r) << 1);
+        rv::Store<U>(s->g, Byte(at::kRowBright + r) << 1);
+        rv::Store<U>(s->b, Byte(at::kRowBright + r) << 1);
         g.set_semi(p, glow & 0xFF);
         g.commit(1, 0x1C);
     }
@@ -720,18 +730,18 @@ extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
     g.set_draw_mode(Packet(), 0, 0, page, 0);
     g.commit(1, 0xC);
     unsigned char* const p = Packet();
-    const U q = Addr(p);
+    auto* const s = rv::As<records::GpuSprt>(p);   // a SPRT: Gpu_SetSprt's packet
     g.set_sprt(p);
-    PutByte(q + 0x14, 0);
-    PutByte(q + 0x15, r << 5);
-    PutWord(q + 0x1A, 0x20);
-    PutFloat(q + 8, fx);
-    PutFloat(q + 0xC, fy);
-    PutWord(q + 0x18, width);
-    PutWord(q + 0x16, g.get_clut(0x20, 0x1E3));
-    PutByte(q + 4, Byte(at::kRowBright + r));
-    PutByte(q + 5, Byte(at::kRowBright + r));
-    PutByte(q + 6, Byte(at::kRowBright + r));
+    s->u = 0;
+    rv::Store<U>(s->v, r << 5);
+    s->h = 0x20;
+    s->x = fx;
+    s->y = fy;
+    rv::Store<U>(s->w, width);
+    rv::Store<U>(s->clut, g.get_clut(0x20, 0x1E3));
+    rv::Store<U>(s->r, Byte(at::kRowBright + r));
+    rv::Store<U>(s->g, Byte(at::kRowBright + r));
+    rv::Store<U>(s->b, Byte(at::kRowBright + r));
     g.set_semi(p, glow & 0xFF);
     g.commit(1, 0x1C);
 }
@@ -742,19 +752,22 @@ extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
 // 6), then Gfx_CommitPrim(slot, 0x1C) - slot the whole dword.
 extern "C" void __cdecl TitleMenu_DrawPiece(int x, int y, unsigned index, unsigned slot) {
     unsigned char* const p = Packet();
+    auto* const s = rv::As<records::GpuSprt>(p);   // a SPRT: Gpu_SetSprt's packet
     const U q = Addr(p);
     g.set_sprt(p);
-    PutByte(q + 4, 0x20);
-    PutByte(q + 5, 0x20);
-    PutByte(q + 6, 0x20);
+    s->r = 0x20;
+    s->g = 0x20;
+    s->b = 0x20;
+    // The two floats by address: typed, the compiler pairs them into one
+    // vector store (codegen_same).
     PutFloat(q + 8, static_cast<float>(static_cast<short>(x)));
     PutFloat(q + 0xC, static_cast<float>(static_cast<short>(y)));
     const U e = at::kPieces + (index & 0xFF) * 10;
-    PutByte(q + 0x14, Byte(e));
-    PutByte(q + 0x15, Byte(e + 2));
-    PutWord(q + 0x18, Word(e + 4));
-    PutWord(q + 0x1A, Word(e + 6));
-    PutWord(q + 0x16, Word(e + 8) << 6);
+    rv::Store<U>(s->u, Byte(e));
+    rv::Store<U>(s->v, Byte(e + 2));
+    rv::Store<U>(s->w, Word(e + 4));
+    rv::Store<U>(s->h, Word(e + 6));
+    rv::Store<U>(s->clut, Word(e + 8) << 6);
     g.commit(slot, 0x1C);
 }
 
@@ -799,7 +812,7 @@ void save_menu::DrawSlotsOver(int x, int y, unsigned highlight, const unsigned c
 
 extern "C" void __cdecl SaveMenu_DrawSlots(int x, int y, unsigned highlight) {
     save_menu::DrawSlotsOver(x, y, highlight, At(at::kSummaries), reinterpret_cast<const volatile U*>(At(at::kSlotTop)),
-                             reinterpret_cast<const volatile U*>(At(at::kSlot)));
+                             reinterpret_cast<const volatile U*>(At(Rest2c_Slot_addr)));
 }
 
 // ============================================================================
