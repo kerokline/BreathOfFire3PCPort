@@ -341,9 +341,9 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     window_rec->y = 0x3F;
     const unsigned char again = At(acting + 5)[0];
     WindowRecords[19].in_use = 0;
-    At(Window19_addr + 2)[0] = 0;
+    WindowRecords[0x13].kind = 0;
     BattleActorCopies_ItemActor = again;
-    At(Window19_addr + 1)[0] = 8;
+    WindowRecords[0x13].handler = 8;
 }
 
 // original 0x449E00 (PSX 0x80097F44, `return 1` there too): al = 1. Thirteen
@@ -376,8 +376,8 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
     window_rec->x = 0xFF56;
     window_rec->y = 0x3F;
     WindowRecords[19].in_use = 0;
-    At(Window19_addr + 1)[0] = 8;
-    At(Window19_addr + 2)[0] = 0;
+    WindowRecords[0x13].handler = 8;
+    WindowRecords[0x13].kind = 0;
     return 0;
 }
 

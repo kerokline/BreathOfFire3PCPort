@@ -223,7 +223,7 @@ void ExitPoseOne(unsigned tag, bool flip) {
     if (flip) Sprite_Current[0x2A] = 1;
     BH_CALL(Sprite_SetAnimation)(0);
     SetWord(Sprite_Current + 0x58, BossSb_Enemy0Pose);
-    SetWord(Sprite_Current + 0x5A, Word(At(BossSb_Enemy0Pose_addr + 2)));
+    SetWord(Sprite_Current + 0x5A, Battle_Enemies[0].frame_word);
 }
 
 // The end hook of set-ups 8, 9, 10: the win (0x904AE8 bit 1) - the movement
@@ -368,8 +368,8 @@ extern "C" void __cdecl Boss06_Exit(void) {
     PoseActor(4, Battle_Enemies_addr, BossSb_Enemy0Pose_addr, 1);
     PoseActor(5, Battle_Enemies_addr + 0x128, BossSb_Enemy1Pose_addr, 1);
     SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(BossSb_Enemy1Place));
-    SetLong(Sprite_Current + 0x38, Long(At(BossSb_Enemy1Place_addr + 4)));
-    SetLong(Sprite_Current + 0x3C, Long(At(BossSb_Enemy1Place_addr + 8)));
+    SetLong(Sprite_Current + 0x38, Battle_Enemies[1].z);
+    SetLong(Sprite_Current + 0x3C, Battle_Enemies[1].height);
 }
 
 // ===========================================================================

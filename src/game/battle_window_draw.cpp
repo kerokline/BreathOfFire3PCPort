@@ -406,7 +406,7 @@ extern "C" void __cdecl BattleWin_DrawLineAdd(int x0, int y0, int x1, int y1, in
 // at a negative enemy index, before the records (0x93B674 for actor 0).
 extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
     const unsigned e = enemy & 0xFF;
-    const unsigned char kind = At(Battle_Enemies_addr + 0x80 + e * at::kEnemyStride + at::kEnemyKind)[0];
+    const unsigned char kind = Battle_Enemies[e].enemy_kind;
     const unsigned actor = e + 3;
     signed char found = 7;
     while (Window(5 + found)[0xA] != actor) {

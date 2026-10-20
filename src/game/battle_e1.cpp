@@ -371,7 +371,7 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
     WindowRecords[4].x = L(at::kWin1 + 4) + 6;
     WindowRecords[4].in_use = 1;
     const U cursor = B(at::kWin1 + 0xA);
-    WindowRecords[4].y = 13 * cursor + Word(At(Window1_addr + 6)) + 0x57;
+    WindowRecords[4].y = 13 * cursor + WindowRecords[1].y + 0x57;
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     B(at::kWin1 + 0xB) = 0xFF;
     B(at::kWin1 + 0xD) = 1;
@@ -555,8 +555,8 @@ extern "C" void __cdecl BattleHold_Shrink(void) {
     else
         BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
     BH_CALL(BattleWin_DrawCommandLabel)(B(at::kMenuMember));
-    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(Window1_addr + 4)), Word(At(Window1_addr + 6)));
-    BH_CALL(BattleWin_DrawCommandCross)(Word(At(Window2_addr + 4)), Word(At(Window2_addr + 6)));
+    BH_CALL(BattleWin_DrawPartyStatus)(WindowRecords[1].x, WindowRecords[1].y);
+    BH_CALL(BattleWin_DrawCommandCross)(WindowRecords[2].x, WindowRecords[2].y);
 }
 
 // original 0x42EE00 (BattleHold_Steps[1]): while Input_Held has no 0x100,
@@ -571,7 +571,7 @@ extern "C" void __cdecl BattleHold_ShowAll(void) {
         WindowRecords[3].state = 1;
         BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
     }
-    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(Window1_addr + 4)), Word(At(Window1_addr + 6)));
+    BH_CALL(BattleWin_DrawPartyStatus)(WindowRecords[1].x, WindowRecords[1].y);
     BH_AT(void (__cdecl*)(), at::kBe4Draw444660)();
     for (unsigned i = 0; i < 7; ++i) {
         BH_CALL(BattleWin_DrawCommandLabel)(i);

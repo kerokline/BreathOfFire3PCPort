@@ -259,7 +259,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     auto* const list_window = rv::As<records::WindowRecord>(list);
     if (list_window->state != 0) return;
     const unsigned actor = Acting()[5];
-    auto* const hand_window = rv::As<records::WindowRecord>(At(Window19_addr));
+    auto* const hand_window = &WindowRecords[0x13];
     hand_window->in_use = 1;
     hand_window->x = static_cast<unsigned>(Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];

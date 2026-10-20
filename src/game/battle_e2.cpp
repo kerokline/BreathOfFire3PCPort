@@ -159,7 +159,7 @@ void GridPlace() {
     rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(Window21_addr + 4)) + (b % 6) * 30 + 0x13);
     s = Sprite_Current;
     b = s[0xB];
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, (b / 6) * 32 + Word(At(Window21_addr + 6)) + 0x30);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, (b / 6) * 32 + WindowRecords[0x15].y + 0x30);
 }
 
 // The animation byte of a cursor's grid: the 18 dwords of `grid` as bytes,
@@ -563,7 +563,7 @@ extern "C" void __cdecl BattleFx_GridMarkPlace(void) {
         do {
             if (At(at::kPickList + i)[0] == b) {
                 rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(Window21_addr + 4)) + i * 24u + 0x41);
-                rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
+                rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
                 return;
             }
             ++i;
@@ -586,7 +586,7 @@ extern "C" void __cdecl BattleFx_ListHand(void) {
 extern "C" void __cdecl BattleFx_ListHandStart(void) {
     MarkerLook();
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, UL(At(Window21_addr + 4)) + 0x14);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
     ++rv::Current<records::BattleTask>()->state;
     BH_CALL(Sprite_SetAnimation)(0x13);
     BH_CALL(Sprite_QueueOverlay)();
@@ -608,7 +608,7 @@ extern "C" void __cdecl BattleFx_ListHandRun(void) {
         return;
     }
     rv::Store<unsigned>(cur_task->screen_x, UL(At(Window21_addr + 4)) + 0x14);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
     BH_CALL(Sprite_QueueOverlay)();
 }
 
