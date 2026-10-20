@@ -659,7 +659,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
             SH_CALL(EffectKind18Sub44_Commit)(0x48);
         }
     }
-    const U stars = static_cast<std::uint16_t>(rv::As<records::SVector>(Vertices())[1].x);
+    const U stars = Word(Vertices() + 8);
     if (stars != 0) SH_CALL(EffectKind18Sub44_DrawStars)(static_cast<std::int16_t>(stars));
     for (U layer = 0x20, row = 0; I(layer) < 0x60; layer += 0x20, ++row) {
         SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, (layer & 0x60) | 0x95, 0);
