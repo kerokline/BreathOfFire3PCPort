@@ -336,8 +336,8 @@ extern "C" void __cdecl ChoiceMenu_DataPage(void) {
     const unsigned pressed = Input_Pressed;
     if (pressed & 0x2000) {
         Sound(0x102);
-        const U page = (W(kEff6Shown) + 1) & 0xFFFF;
-        SetW(kEff6Page, page < 0x17 ? page : 0);
+        const U page = (static_cast<std::uint32_t>(Effect_Objects[6].height_whole) + 1) & 0xFFFF;
+        Effect_Objects[6].height_frac = page < 0x17 ? page : 0;
         rv::Bytes(&Effect_Objects[6])[0x8] = 0;
         Effect_Objects[6].state = static_cast<unsigned char>(Effect_Objects[6].state + 1);
         return;
@@ -345,7 +345,7 @@ extern "C" void __cdecl ChoiceMenu_DataPage(void) {
     if (pressed & 0x8000) {
         Sound(0x102);
         const auto page = static_cast<short>(W(kEff6Shown) - 1);
-        SetW(kEff6Page, page < 0 ? 0x16u : static_cast<U>(page));
+        Effect_Objects[6].height_frac = page < 0 ? 0x16u : static_cast<U>(page);
         rv::Bytes(&Effect_Objects[6])[0x8] = 1;
         Effect_Objects[6].state = static_cast<unsigned char>(Effect_Objects[6].state + 1);
         return;
@@ -374,16 +374,16 @@ extern "C" void __cdecl ChoiceMenu_RulePage(void) {
         return;
     }
     if (pressed & 0x4000) {
-        const U page = (W(kEff6Page) + 1) & 0xFFFF;
+        const U page = (static_cast<std::uint32_t>(Effect_Objects[6].height_frac) + 1) & 0xFFFF;
         rv::Bytes(&Effect_Objects[6])[0x8] = 0xFF;
-        SetW(kEff6Page, page > 5 ? 0 : page);
+        Effect_Objects[6].height_frac = page > 5 ? 0 : page;
         return;
     }
     if (pressed & 0x1000) {
         const auto page = static_cast<short>(W(kEff6Page) - 1);
         SetW(kEff6Page, static_cast<U>(page));
         rv::Bytes(&Effect_Objects[6])[0x8] = 1;
-        if (page < 0) SetW(kEff6Page, 5);
+        if (page < 0) Effect_Objects[6].height_frac = 5;
     }
 }
 
@@ -928,8 +928,8 @@ extern "C" void __cdecl Fish_Approach(void) {
     }
     const unsigned bits = Rnd();
     unsigned char* s = S();
-    const auto dx = static_cast<std::int32_t>(static_cast<U>(L(kEff0X)) - static_cast<U>(L(s, 0x34)));
-    const auto dz = static_cast<std::int32_t>(static_cast<U>(L(kEff0Z)) - static_cast<U>(L(s, 0x38)));
+    const auto dx = static_cast<std::int32_t>(static_cast<std::uint32_t>(Effect_Objects[0].x) - static_cast<U>(L(s, 0x34)));
+    const auto dz = static_cast<std::int32_t>(static_cast<std::uint32_t>(Effect_Objects[0].z) - static_cast<U>(L(s, 0x38)));
     int way = -1;
     if (dx < 0) way = dz < 0 ? 0 : dz > 0 ? 6 : 7;
     else if (dx == 0) way = dz < 0 ? 1 : dz > 0 ? 5 : -1;
@@ -972,7 +972,7 @@ extern "C" void __cdecl Fish_Approach(void) {
     } else {
         SetL(s, 0x14, 0);
         unsigned char* const c = S();
-        const short lure = static_cast<short>(W(kEff0Height));
+        const short lure = static_cast<std::int16_t>(Effect_Objects[0].height_whole);
         const short ch = Sh(c, 0x3E);
         if (lure < ch) SetL(c, 0x14, 0xFFFFFFFEu);
         else if (lure > ch) SetL(c, 0x14, 2);
@@ -993,7 +993,7 @@ extern "C" void __cdecl Fish_Approach(void) {
                 Effect_Objects[0].state = 5;
                 SetL(kEff0StepX, 0);
                 SetL(kEff0StepY, 0);
-                SetL(kEff0StepZ, 0);
+                Effect_Objects[0].step_y = 0;
                 SetL(f, 0xC, 0);
                 SetL(S(), 0x10, 0);
                 SetL(S(), 0x14, 0);
@@ -1491,9 +1491,9 @@ extern "C" unsigned char __cdecl Fish_LureInReach(void) {
 extern "C" unsigned char __cdecl Fish_LureClose(void) {
     if (Effect_Objects[0].state != 4 || Effect1a_PanelObject != 0xFF || Effect_Objects[4].state != 0 || ObjTrio[0].step != 3) return 0;
     const unsigned char* const s = S();
-    if (Abs32(static_cast<U>(L(s, 0x34)) - static_cast<U>(L(kEff0X))) >= 0x8000) return 0;
-    if (Abs32(static_cast<U>(L(s, 0x38)) - static_cast<U>(L(kEff0Z))) >= 0x8000) return 0;
-    if (Abs32(static_cast<U>(Sh(s, 0x3E) - static_cast<short>(W(kEff0Height)))) >= 0x400) return 0;
+    if (Abs32(static_cast<U>(L(s, 0x34)) - static_cast<std::uint32_t>(Effect_Objects[0].x)) >= 0x8000) return 0;
+    if (Abs32(static_cast<U>(L(s, 0x38)) - static_cast<std::uint32_t>(Effect_Objects[0].z)) >= 0x8000) return 0;
+    if (Abs32(static_cast<U>(Sh(s, 0x3E) - static_cast<std::int16_t>(Effect_Objects[0].height_whole))) >= 0x400) return 0;
     return 1;
 }
 

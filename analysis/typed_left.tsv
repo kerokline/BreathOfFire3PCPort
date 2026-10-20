@@ -14429,16 +14429,10 @@ src/game/rest_1g.cpp	LeaderPanel_S1Box3In	global	At	kPools	0	0x803580	-	no-entry
 src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	W	kPoolWordData	0	0x803642	-	no-entry	kPoolWordData 0x803642 -	b0
 src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	At	kPools	0	0x803580	-	no-entry	kPools 0x803580 -	b0
 src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	W	kEff6Shown	0	0x7e151e	-	width	kEff6Shown 0x7e151e Effect_Objects+0x33e	b0
-src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	SetW	kEff6Page	0	0x7e151c	-	width	kEff6Page 0x7e151c Effect_Objects+0x33c	b0
-src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	W	kEff6Shown	1	0x7e151e	-	width	kEff6Shown 0x7e151e Effect_Objects+0x33e	b0
-src/game/rest_1g.cpp	ChoiceMenu_DataPage	global	SetW	kEff6Page	1	0x7e151c	-	width	kEff6Page 0x7e151c Effect_Objects+0x33c	b0
 src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	L	kPoolWordRule	0	0x803660	-	no-entry	kPoolWordRule 0x803660 -	b0
 src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	At	kPools	0	0x803580	-	no-entry	kPools 0x803580 -	b0
 src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	W	kEff6Page	0	0x7e151c	-	width	kEff6Page 0x7e151c Effect_Objects+0x33c	b0
 src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	SetW	kEff6Page	0	0x7e151c	-	width	kEff6Page 0x7e151c Effect_Objects+0x33c	b0
-src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	W	kEff6Page	1	0x7e151c	-	width	kEff6Page 0x7e151c Effect_Objects+0x33c	b0
-src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	SetW	kEff6Page	1	0x7e151c	-	width	kEff6Page 0x7e151c Effect_Objects+0x33c	b0
-src/game/rest_1g.cpp	ChoiceMenu_RulePage	global	SetW	kEff6Page	2	0x7e151c	-	width	kEff6Page 0x7e151c Effect_Objects+0x33c	b0
 src/game/rest_1g.cpp	LeaderPanel_S11Switch	global	B	kDrawMode	0	0x93985c	-	inside-entry	kDrawMode 0x93985c Effect1g_TradeState	b0
 src/game/rest_1g.cpp	LeaderPanel_S11Switch	global	B	kDrawMode	1	0x93985c	-	inside-entry	kDrawMode 0x93985c Effect1g_TradeState	b0
 src/game/rest_1g.cpp	LeaderPanel_S11Switch	global	B	kDrawMode	2	0x93985c	-	inside-entry	kDrawMode 0x93985c Effect1g_TradeState	b0
@@ -14473,12 +14467,8 @@ src/game/rest_1g.cpp	Fish_Spawn	record	SetWord	am2 + 0x9A	0	-	via=AM	union	Sprit
 src/game/rest_1g.cpp	Fish_Spawn	record	Word	AM() + 0x9C	0	-	via=AM	union	SpriteObject +0x98/+0x9A/+0x9C read as the fish's strength max / strength / size (rest_1g.md 74, 90); records.h names them half_w / half_d / counter	b1-rest
 src/game/rest_1g.cpp	Fish_Spawn	record	SetWord	am + 0x9C	2	-	via=AM	union	SpriteObject +0x98/+0x9A/+0x9C read as the fish's strength max / strength / size (rest_1g.md 74, 90); records.h names them half_w / half_d / counter	b1-rest
 src/game/rest_1g.cpp	Fish_Spawn	record	Word	am + 0x9C	3	-	via=AM	union	SpriteObject +0x98/+0x9A/+0x9C read as the fish's strength max / strength / size (rest_1g.md 74, 90); records.h names them half_w / half_d / counter	b1-rest
-src/game/rest_1g.cpp	Fish_Approach	global	L	kEff0X	0	0x7e1214	-	width	kEff0X 0x7e1214 Effect_Objects+0x34	b0
-src/game/rest_1g.cpp	Fish_Approach	global	L	kEff0Z	0	0x7e1218	-	width	kEff0Z 0x7e1218 Effect_Objects+0x38	b0
-src/game/rest_1g.cpp	Fish_Approach	global	W	kEff0Height	0	0x7e121e	-	width	kEff0Height 0x7e121e Effect_Objects+0x3e	b0
 src/game/rest_1g.cpp	Fish_Approach	global	SetL	kEff0StepX	0	0x7e11ec	-	width	kEff0StepX 0x7e11ec Effect_Objects+0xc	b0
 src/game/rest_1g.cpp	Fish_Approach	global	SetL	kEff0StepY	0	0x7e11f0	-	width	kEff0StepY 0x7e11f0 Effect_Objects+0x10	b0
-src/game/rest_1g.cpp	Fish_Approach	global	SetL	kEff0StepZ	0	0x7e11f4	-	width	kEff0StepZ 0x7e11f4 Effect_Objects+0x14	b0
 src/game/rest_1g.cpp	Fish_Hooked	global	SetL	kEff5Frame	0	0x7e1470	-	width	kEff5Frame 0x7e1470 Effect_Objects+0x290	b0
 src/game/rest_1g.cpp	Fish_Hooked	global	L	kEff5Frame	0	0x7e1470	-	width	kEff5Frame 0x7e1470 Effect_Objects+0x290	b0
 src/game/rest_1g.cpp	Fish_Hooked	global	SetL	kEff5Frame	1	0x7e1470	-	width	kEff5Frame 0x7e1470 Effect_Objects+0x290	b0
@@ -14496,9 +14486,6 @@ src/game/rest_1g.cpp	Fish_AdjustStrength	record	SetWord	am + 0x9A	2	-	via=AM	uni
 src/game/rest_1g.cpp	Fish_AdjustStrength	record	SetWord	am + 0x9A	3	-	via=AM	union	SpriteObject +0x98/+0x9A/+0x9C read as the fish's strength max / strength / size (rest_1g.md 74, 90); records.h names them half_w / half_d / counter	b1-rest
 src/game/rest_1g.cpp	Fish_Step	record	Word	s + 0x14	0	-	via=S	width	SpriteObject +0x14 w2 (Word(s + 0x14))	b1-rest
 src/game/rest_1g.cpp	Fish_Heading	record	At	at - 4	0	-	-	computed	- (At(at - 4))	b1-rest
-src/game/rest_1g.cpp	Fish_LureClose	global	L	kEff0X	0	0x7e1214	-	width	kEff0X 0x7e1214 Effect_Objects+0x34	b0
-src/game/rest_1g.cpp	Fish_LureClose	global	L	kEff0Z	0	0x7e1218	-	width	kEff0Z 0x7e1218 Effect_Objects+0x38	b0
-src/game/rest_1g.cpp	Fish_LureClose	global	W	kEff0Height	0	0x7e121e	-	width	kEff0Height 0x7e121e Effect_Objects+0x3e	b0
 src/game/rest_1g_fuzz.cpp	Mem	record	SetWord	s + 0x3E	0	-	via=Sc	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1g_fuzz.cpp	Mem	record	Word	s + 0x3E	0	-	via=Sc	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1g_fuzz.cpp	FlipStage	record	Word	am + 0x98	0	-	via=Active	union	SpriteObject +0x98/+0x9A/+0x9C read as the fish's strength max / strength / size (rest_1g.md 74, 90); records.h names them half_w / half_d / counter	b1-rest

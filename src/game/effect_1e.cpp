@@ -406,7 +406,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
     }
     bool pose = true;
     const auto ground = static_cast<short>(SH_CALL(AreaMap_Elevation)(Effect_Objects[0].x, z));
-    if (static_cast<short>(Word(At(Effect_Objects_addr + 0x3e))) <= ground) {
+    if (static_cast<std::int16_t>(Effect_Objects[0].height_whole) <= ground) {
         const unsigned r = static_cast<unsigned>(SH_CALL(Rand)()) & 0xF;
         if (static_cast<signed char>(RecordB()[0x11]) > static_cast<signed char>(r) && (Frame_Counter & 0xF) == 0) {
             const std::int32_t z2 = Effect_Objects[0].z;
@@ -422,7 +422,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             return;
         }
         const long h = SH_CALL(AreaMap_Elevation)(Effect_Objects[0].x, Effect_Objects[0].z);
-        SetWord(At(Effect_Objects_addr + 0x3e), static_cast<unsigned>(h));
+        Effect_Objects[0].height_whole = static_cast<unsigned>(h);
     }
     SH_AT(void (__cdecl*)(), at::kHoldTest)();
     SH_AT(void (__cdecl*)(), at::kEffectsStep)();

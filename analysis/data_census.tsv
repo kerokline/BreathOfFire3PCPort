@@ -14428,17 +14428,11 @@ site	src/game/rest_1g.cpp	319	global	L	kPoolWordStage1	0x803600	-	none	-	-	0
 site	src/game/rest_1g.cpp	320	global	At	kPools	0x803580	-	none	-	-	0
 site	src/game/rest_1g.cpp	334	global	W	kPoolWordData	0x803642	-	none	-	-	0
 site	src/game/rest_1g.cpp	334	global	At	kPools	0x803580	-	none	-	-	0
-site	src/game/rest_1g.cpp	339	global	W	kEff6Shown	0x7e151e	-	inside	Effect_Objects+0x33e	records::EffectObject	0
-site	src/game/rest_1g.cpp	340	global	SetW	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
 site	src/game/rest_1g.cpp	347	global	W	kEff6Shown	0x7e151e	-	inside	Effect_Objects+0x33e	records::EffectObject	0
-site	src/game/rest_1g.cpp	348	global	SetW	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
 site	src/game/rest_1g.cpp	366	global	L	kPoolWordRule	0x803660	-	none	-	-	0
 site	src/game/rest_1g.cpp	366	global	At	kPools	0x803580	-	none	-	-	0
-site	src/game/rest_1g.cpp	377	global	W	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
-site	src/game/rest_1g.cpp	379	global	SetW	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
 site	src/game/rest_1g.cpp	383	global	W	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
 site	src/game/rest_1g.cpp	384	global	SetW	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
-site	src/game/rest_1g.cpp	386	global	SetW	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
 site	src/game/rest_1g.cpp	483	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
 site	src/game/rest_1g.cpp	484	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
 site	src/game/rest_1g.cpp	485	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
@@ -14473,12 +14467,8 @@ site	src/game/rest_1g.cpp	724	record	SetWord	am2 + 0x9A	-	via=AM	-	-	-	0
 site	src/game/rest_1g.cpp	729	record	Word	AM() + 0x9C	-	via=AM	-	-	-	0
 site	src/game/rest_1g.cpp	734	record	SetWord	am + 0x9C	-	via=AM	-	-	-	0
 site	src/game/rest_1g.cpp	734	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/rest_1g.cpp	931	global	L	kEff0X	0x7e1214	-	inside	Effect_Objects+0x34	records::EffectObject	0
-site	src/game/rest_1g.cpp	932	global	L	kEff0Z	0x7e1218	-	inside	Effect_Objects+0x38	records::EffectObject	0
-site	src/game/rest_1g.cpp	975	global	W	kEff0Height	0x7e121e	-	inside	Effect_Objects+0x3e	records::EffectObject	0
 site	src/game/rest_1g.cpp	994	global	SetL	kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
 site	src/game/rest_1g.cpp	995	global	SetL	kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/rest_1g.cpp	996	global	SetL	kEff0StepZ	0x7e11f4	-	inside	Effect_Objects+0x14	records::EffectObject	0
 site	src/game/rest_1g.cpp	1049	global	SetL	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
 site	src/game/rest_1g.cpp	1086	global	L	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
 site	src/game/rest_1g.cpp	1092	global	SetL	kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
@@ -14496,9 +14486,6 @@ site	src/game/rest_1g.cpp	1376	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
 site	src/game/rest_1g.cpp	1377	record	SetWord	am + 0x9A	-	via=AM	-	-	-	0
 site	src/game/rest_1g.cpp	1410	record	Word	s + 0x14	-	via=S	-	-	-	0
 site	src/game/rest_1g.cpp	1463	record	At	at - 4	-	-	-	-	-	0
-site	src/game/rest_1g.cpp	1494	global	L	kEff0X	0x7e1214	-	inside	Effect_Objects+0x34	records::EffectObject	0
-site	src/game/rest_1g.cpp	1495	global	L	kEff0Z	0x7e1218	-	inside	Effect_Objects+0x38	records::EffectObject	0
-site	src/game/rest_1g.cpp	1496	global	W	kEff0Height	0x7e121e	-	inside	Effect_Objects+0x3e	records::EffectObject	0
 site	src/game/rest_1g_fuzz.cpp	185	record	SetWord	s + 0x3E	-	via=Sc	-	-	-	1
 site	src/game/rest_1g_fuzz.cpp	188	record	Word	s + 0x3E	-	via=Sc	-	-	-	1
 site	src/game/rest_1g_fuzz.cpp	224	record	Word	am + 0x98	-	via=Active	-	-	-	1
@@ -23219,10 +23206,10 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19683
-#count sites_global	9826
+#count sites	19670
+#count sites_global	9813
 #count sites_global_at	7814
-#count sites_global_module	2012
+#count sites_global_module	1999
 #count sites_record	8728
 #count sites_raw	1129
 #count sites_in_fuzz	4224
@@ -23238,7 +23225,7 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_family_unknown	1709
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
 #count global_sites_covered_exact	2479
-#count global_sites_covered_inside	1153
+#count global_sites_covered_inside	1140
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
 #count at_refs_struct_or_array	271
