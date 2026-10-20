@@ -102,7 +102,7 @@ U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p
 
 U SpriteCurrent() { return Long(At(at::Sprite_CurrentAt())); }
 void SetSpriteCurrent(U v) { PutLong(At(at::Sprite_CurrentAt()), v); }
-U CurrentEnemy() { return BattleE3_CurrentEnemy; }
+U CurrentEnemy() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(BattleE3_CurrentEnemy)); }
 unsigned char* Banner(U i) { return At(kBanners + i * 0xC); }
 
 // The context a slot byte names: 0x93A000 + slot * 0x84, no bound.
@@ -201,7 +201,7 @@ extern "C" void __cdecl Battle_InitActorContexts(void) {
         const U object = Battle_Enemies_addr + i * kEnemyStride;
         if (At(object)[0] & 1) {
             SetSpriteCurrent(object);
-            BattleE3_CurrentEnemy = object;
+            BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(static_cast<std::uintptr_t>(object));
             g.init_context();
         } else {
             g.alloc_context(0, 0);
@@ -319,7 +319,7 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 // then 0x80340C = 0, 0x80340E = 0, kItemActor = the actor byte read again,
 // 0x80340D = 8. In that order. The one caller (0x447469) reloads eax.
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
-    const U acting = BattleE4_MenuActor;
+    const U acting = static_cast<U>(reinterpret_cast<std::uintptr_t>(BattleE4_MenuActor));
     unsigned char* const w = At(Window16_addr);
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->in_use = 1;

@@ -55,7 +55,7 @@ using Forward = U (__cdecl*)(U);
 using RoundHighFn = U (__cdecl*)(U, U);
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 unsigned char* Owner() { return At(BattleE2_Owner); }
@@ -453,7 +453,7 @@ extern "C" void __cdecl Boss55_End(void) {
 // original 0x440830: slot 5: 0x939AD8 = enemy 0's object, then jmp
 // [BossMyriaFx_States + 4 * Sprite_Current +1] (7: states 0..6).
 extern "C" void __cdecl BossMyriaFx_Dispatch(void) {
-    BattleE3_CurrentEnemy = S(Battle_Enemies_addr);
+    BattleE3_CurrentEnemy = Battle_Enemies;
     DispatchTask("BossMyriaFx_Dispatch", AddressOf(BossMyriaFx_States), 7);
 }
 

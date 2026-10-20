@@ -58,7 +58,7 @@ using move_script::Word;
 // kPacketNext: now Gfx_PacketNext (symbols.toml).
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 unsigned char* Packet() { return Gfx_PacketNext; }
@@ -594,7 +594,7 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
         NameBanner();
         BossSc_WaitTurns = 0;
         Sprite_Current = At(Battle_Enemies_addr + 0x250);
-        BattleE3_CurrentEnemy = static_cast<std::int32_t>(Battle_Enemies_addr + 0x250);
+        BattleE3_CurrentEnemy = &Battle_Enemies[2];
         BH_CALL(Field_MemberSprite)(1, 1);
         rv::As<records::BattleEnemy>(Enemy())->anim_table = 0x64CCAC;
         Sprite_Current[0x29] = 4;

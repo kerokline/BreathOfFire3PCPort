@@ -135283,9 +135283,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x939AD8
 name = "BattleE3_CurrentEnemy"
-ctype = "unsigned long"
+ctype = "records::BattleEnemy *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 383 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x939ad8], esi at 0x43584e; mov ecx, dword ptr [0x939ad8] at 0x435868; mov dword ptr [0x939ad8], esi at 0x4358b7 and 380 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e2::kEnemyCurrent, battle_e3::kCurrentEnemy, battle_e5::kCurrentEnemy, battle_flow::kEnemyCurrent, battle_misc::kCurrentEnemy, battle_sprites::kEnemyOffsets, boss_h::kCurrentEnemy, boss_sa::kCurrentEnemy, boss_sb::kCurrentEnemy, boss_sd::kCurrentEnemy, boss_se::kCurrentEnemy, boss_sf::kCurrentEnemy, boss_sg::kCurrentEnemy, boss_sh::kCurrentEnemy, boss_si::kCurrentEnemy, boss_sj::kCurrentEnemy, enemy_ai_ops::kEnemyCurrent, rest_3a::kEnemyCurrent."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 383 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x939ad8], esi at 0x43584e; mov ecx, dword ptr [0x939ad8] at 0x435868; mov dword ptr [0x939ad8], esi at 0x4358b7 and 380 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e2::kEnemyCurrent, battle_e3::kCurrentEnemy, battle_e5::kCurrentEnemy, battle_flow::kEnemyCurrent, battle_misc::kCurrentEnemy, battle_sprites::kEnemyOffsets, boss_h::kCurrentEnemy, boss_sa::kCurrentEnemy, boss_sb::kCurrentEnemy, boss_sd::kCurrentEnemy, boss_se::kCurrentEnemy, boss_sf::kCurrentEnemy, boss_sg::kCurrentEnemy, boss_sh::kCurrentEnemy, boss_si::kCurrentEnemy, boss_sj::kCurrentEnemy, enemy_ai_ops::kEnemyCurrent, rest_3a::kEnemyCurrent. Retyped (typed-data round stage C4, 2026-10-20) from unsigned long: a pointer to the enemy object BattleEnemy_RunAll 0x435830 runs (it stores each enemy of 0x93B960 here, its evidence), one of Battle_Enemies; records.h BattleEnemy. Every store is an enemy object (battle_misc.cpp the eight, boss_sc.cpp enemy 2, boss_sj.cpp enemy 0, rest_3a.cpp an actor's enemy) and the readers read BattleEnemy fields through it (the boss files' Enemy())."
 
 [[data]]
 pc = 0x939B1C
@@ -135297,9 +135297,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x939EC4
 name = "BattleE4_MenuActor"
-ctype = "unsigned long"
+ctype = "records::PartyMember *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 50 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x939ec4], 0x802d40 at 0x42e4e9; mov dword ptr [0x939ec4], ecx at 0x42ea97; mov dword ptr [0x939ec4], eax at 0x42eb48 and 47 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kActing, battle_e4::kMenuActor, battle_e5::kMenuActor, battle_e7::kMenuActor, battle_menu_states::kActing, battle_misc::kActingActor, battle_phases::kMenuActor, battle_windows::kActor, rest_3b::kMenuActor."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 50 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x939ec4], 0x802d40 at 0x42e4e9; mov dword ptr [0x939ec4], ecx at 0x42ea97; mov dword ptr [0x939ec4], eax at 0x42eb48 and 47 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kActing, battle_e4::kMenuActor, battle_e5::kMenuActor, battle_e7::kMenuActor, battle_menu_states::kActing, battle_misc::kActingActor, battle_phases::kMenuActor, battle_windows::kActor, rest_3b::kMenuActor. Retyped (typed-data round stage C4, 2026-10-20) from unsigned long: a pointer to the party member the command menu is for - mov dword ptr [0x939ec4], 0x802d40 at 0x42e4e9 (ObjTrio, records.h PartyMember, stride 0x14C); battle_e7.cpp reads it as a PartyMember."
 
 [[data]]
 pc = 0x939F60

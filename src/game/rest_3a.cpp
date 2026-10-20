@@ -792,22 +792,22 @@ unsigned char* EnemyByActor(unsigned actor, const char* who) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnimationAs(unsigned actor, unsigned animation) {
     unsigned char* const enemy = EnemyByActor(actor, "BattleEnemy_SetAnimationAs");
     unsigned char* const sprite = Sc();
-    const U current = BattleE3_CurrentEnemy;
+    records::BattleEnemy* const current = BattleE3_CurrentEnemy;
     Sprite_Current = enemy;
-    BattleE3_CurrentEnemy = static_cast<std::int32_t>(Addr(enemy));
+    BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(enemy);
     BH_CALL(BattleEnemy_SetAnimation)(animation);
-    BattleE3_CurrentEnemy = static_cast<std::int32_t>(current);
+    BattleE3_CurrentEnemy = current;
     Sprite_Current = sprite;
 }
 
 // original 0x435A70 (PSX 0x801E2500, call-anchored): the same with 0x939AD8
 // alone (Sprite_Current untouched).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnimationOf(unsigned actor, unsigned animation) {
-    const U current = BattleE3_CurrentEnemy;
+    records::BattleEnemy* const current = BattleE3_CurrentEnemy;
     unsigned char* const enemy = EnemyByActor(actor, "BattleEnemy_SetAnimationOf");
-    BattleE3_CurrentEnemy = static_cast<std::int32_t>(Addr(enemy));
+    BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(enemy);
     BH_CALL(BattleEnemy_SetAnimation)(animation);
-    BattleE3_CurrentEnemy = static_cast<std::int32_t>(current);
+    BattleE3_CurrentEnemy = current;
 }
 
 // ============================================================================

@@ -928,7 +928,7 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
         B(at::kTarget) = BH_CALL(BattleEnemy_PickTarget)(enemy);
     }
     if (EventBattle_Id != 0) {
-        BattleE3_CurrentEnemy = Key(e);
+        BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(e);
         Sprite_Current = e;
         reinterpret_cast<boss_harness::Hook>(static_cast<std::uintptr_t>(static_cast<U>(enemy_rec->event_hook)))(0);
     }

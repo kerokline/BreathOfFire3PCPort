@@ -1425,7 +1425,7 @@ site	src/game/battle_actions_fuzz.cpp	635	global	-	at::kTarget	0x904b44	-	none	-
 site	src/game/battle_actions_fuzz.cpp	635	global	-	at::kTarget	0x904b44	-	none	-	-	1
 site	src/game/battle_actions_fuzz.cpp	652	global	-	at::kPhase	0x904aa0	-	none	-	-	1
 site	src/game/battle_actor_copies.cpp	92	global	PtrAt	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
-site	src/game/battle_actor_copies.cpp	93	global	PtrAt	at::kActing	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_actor_copies.cpp	93	global	PtrAt	at::kActing	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_actor_copies.cpp	94	global	B	at::kItemRecords	0x65c4d8	-	exact	NameTable_Abilities	-	0
 site	src/game/battle_actor_copies.cpp	155	global	B	at::kItemCursor	0x8033ac	-	inside	WindowRecords+0x24c	records::WindowRecord	0
 site	src/game/battle_actor_copies.cpp	162	global	B	at::kActorPages	0x9045fc	-	none	-	-	0
@@ -1794,7 +1794,7 @@ site	src/game/battle_e1_fuzz.cpp	420	global	Mem	at::kOldLevel	0x904b72	-	none	-	
 site	src/game/battle_e1_fuzz.cpp	422	global	Mem	at::kActionId	0x904b80	-	none	-	-	1
 site	src/game/battle_e1_fuzz.cpp	423	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_e2.cpp	62	global	PtrAt	at::kOwner	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
-site	src/game/battle_e2.cpp	63	global	PtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
+site	src/game/battle_e2.cpp	63	global	PtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
 site	src/game/battle_e2.cpp	126	record	At	table + 4 * state	-	-	-	-	-	0
 site	src/game/battle_e2.cpp	133	global	-	at::kAnimSetBattle	0x8c5d80	-	none	-	-	0
 site	src/game/battle_e2.cpp	135	global	-	at::kAnimSetField	0x8b3580	-	none	-	-	0
@@ -1920,7 +1920,7 @@ site	src/game/battle_e2_fuzz.cpp	510	global	Mem	at::kPartyCount	0x904ab0	-	none	
 site	src/game/battle_e2_fuzz.cpp	512	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_e2_fuzz.cpp	542	global	Mem	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_e2_fuzz.cpp	546	global	Mem	at::kRoundFlags	0x904aa8	-	none	-	-	1
-site	src/game/battle_e3.cpp	69	global	PtrAt	at::kCurrentEnemy	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
+site	src/game/battle_e3.cpp	69	global	PtrAt	at::kCurrentEnemy	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
 site	src/game/battle_e3.cpp	76	global	At	at::kAbility	0x904b80	-	none	-	-	0
 site	src/game/battle_e3.cpp	77	record	At	base + AbilityId() * at::kAbilityStride	-	-	-	-	-	0
 site	src/game/battle_e3.cpp	78	global	At	at::kAbilityWord4	0x65c4dc	-	none	-	-	0
@@ -2003,7 +2003,7 @@ site	src/game/battle_e3_fuzz.cpp	522	global	B	at::kActKind	0x904b35	-	none	-	-	1
 site	src/game/battle_e3_fuzz.cpp	523	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	1
 site	src/game/battle_e3_fuzz.cpp	526	global	Mem	at::kAbility	0x904b80	-	none	-	-	1
 site	src/game/battle_e3_fuzz.cpp	527	global	B	at::kPartyCount	0x904ab0	-	none	-	-	1
-site	src/game/battle_e4.cpp	71	global	Ptr	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_e4.cpp	71	global	Ptr	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_e4.cpp	74	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/battle_e4.cpp	98	record	At	table + 4 * state	-	-	-	-	-	0
 site	src/game/battle_e4.cpp	121	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
@@ -2204,7 +2204,7 @@ site	src/game/battle_e4_fuzz.cpp	366	global	M	at::kInventoryCounts	0x656b14	-	ex
 site	src/game/battle_e4_fuzz.cpp	379	global	M	at::kPreview	0x675f18	-	none	-	-	1
 site	src/game/battle_e4_fuzz.cpp	469	global	M	at::kPartyCount	0x904ab0	-	none	-	-	1
 site	src/game/battle_e5.cpp	102	global	B	at::kAiScripts	0x8c5600	-	none	-	-	0
-site	src/game/battle_e5.cpp	127	global	Ptr	at::kCurrentEnemy	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
+site	src/game/battle_e5.cpp	127	global	Ptr	at::kCurrentEnemy	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
 site	src/game/battle_e5.cpp	128	global	B	at::kActor	0x904b34	-	none	-	-	0
 site	src/game/battle_e5.cpp	129	global	B	at::kActingKind	0x904b35	-	none	-	-	0
 site	src/game/battle_e5.cpp	131	global	L	at::kAbility	0x904b80	-	none	-	-	0
@@ -2254,7 +2254,7 @@ site	src/game/battle_e5.cpp	422	raw	B	0x939EEA + i	0x939eea	-	none	-	-	0
 site	src/game/battle_e5.cpp	425	raw	B	0x939EF2	0x939ef2	-	none	-	-	0
 site	src/game/battle_e5.cpp	442	record	L	table + 4 * index	-	param	-	-	-	0
 site	src/game/battle_e5.cpp	464	global	At	at::kMsgText	0x93c2c4	-	none	-	-	0
-site	src/game/battle_e5.cpp	466	global	Ptr	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_e5.cpp	466	global	Ptr	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_e5.cpp	475	record	B	window + 3	-	param	-	-	-	0
 site	src/game/battle_e5.cpp	479	record	W	window + 0x10	-	param	-	-	-	0
 site	src/game/battle_e5.cpp	479	record	W	window + 0x12	-	param	-	-	-	0
@@ -2601,15 +2601,15 @@ site	src/game/battle_e7_fuzz.cpp	301	global	Rows	at::kGeneList	0x904608	-	none	-
 site	src/game/battle_e7_fuzz.cpp	305	global	Rows	at::kGeneList2	0x904620	-	none	-	-	1
 site	src/game/battle_e7_fuzz.cpp	308	global	Rows	at::kGeneList2	0x904620	-	none	-	-	1
 site	src/game/battle_e7_fuzz.cpp	367	global	Mem	at::kGeneList	0x904608	-	none	-	-	1
-site	src/game/battle_flow.cpp	81	global	PtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
+site	src/game/battle_flow.cpp	81	global	PtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
 site	src/game/battle_flow.cpp	95	global	-	at::kItemRows	0x64b274	-	exact	ItemMagic_RowTables	-	0
 site	src/game/battle_flow.cpp	105	global	At	at::kLoadFlags	0x904aa9	-	none	-	-	0
 site	src/game/battle_flow.cpp	105	global	At	at::kLoadFlags	0x904aa9	-	none	-	-	0
 site	src/game/battle_flow.cpp	134	global	At	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_flow.cpp	136	global	PtrAt	at::kEventHook	0x904b6c	-	exact	BattleHook_Event	unsigned long	0
 site	src/game/battle_flow.cpp	137	global	At	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_flow.cpp	225	global	SetPtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
-site	src/game/battle_flow.cpp	246	global	SetPtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
+site	src/game/battle_flow.cpp	225	global	SetPtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
+site	src/game/battle_flow.cpp	246	global	SetPtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
 site	src/game/battle_flow.cpp	303	global	At	at::kTurnGate	0x904b34	-	none	-	-	0
 site	src/game/battle_flow.cpp	304	global	At	at::kFormation	0x904b35	-	none	-	-	0
 site	src/game/battle_flow.cpp	304	global	At	at::kMagicId	0x904b80	-	none	-	-	0
@@ -2808,7 +2808,7 @@ site	src/game/battle_items_fuzz.cpp	651	record	SetLong	sc + 0x34	-	base=Sprite_C
 site	src/game/battle_items_fuzz.cpp	659	global	At	at::kActorIndex	0x904b34	-	none	-	-	1
 site	src/game/battle_items_fuzz.cpp	660	global	At	at::kActorIndex	0x904b34	-	none	-	-	1
 site	src/game/battle_menu_states.cpp	78	global	PtrAt	at::kCommandRecord	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
-site	src/game/battle_menu_states.cpp	79	global	PtrAt	at::kActing	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_menu_states.cpp	79	global	PtrAt	at::kActing	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_menu_states.cpp	84	record	At	table + 4 * i	-	-	-	-	-	0
 site	src/game/battle_menu_states.cpp	92	global	PtrAt	at::kInventoryIds	0x656b00	-	exact	Inventory_IdLists	-	0
 site	src/game/battle_menu_states.cpp	150	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
@@ -2999,14 +2999,14 @@ site	src/game/battle_odds_fuzz.cpp	442	record	At	GetLong(At(kSprite)) + 0xB	-	vi
 site	src/game/battle_odds_fuzz.cpp	452	record	At	s + 0xB	-	via=SomeObject	-	-	-	1
 site	src/game/battle_odds_fuzz.cpp	454	global	At	kFlagTarget	0x904b44	-	none	-	-	1
 site	src/game/battle_odds_fuzz.cpp	455	global	At	kRoundFlags	0x904aa8	-	none	-	-	1
-site	src/game/battle_phases.cpp	80	global	PtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_phases.cpp	80	global	PtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_phases.cpp	81	global	PtrAt	at::kMenuRecord	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/battle_phases.cpp	88	record	At	table + index * 4	-	-	-	-	-	0
 site	src/game/battle_phases.cpp	108	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_phases.cpp	109	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_phases.cpp	174	global	B	at::kActorCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_phases.cpp	181	global	B	at::kActorCount	0x904ab0	-	none	-	-	0
-site	src/game/battle_phases.cpp	183	global	SetPtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_phases.cpp	183	global	SetPtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_phases.cpp	187	global	B	at::kCommand	0x904ab4	-	none	-	-	0
 site	src/game/battle_phases.cpp	188	global	B	at::kCrossGrow	0x904abc	-	none	-	-	0
 site	src/game/battle_phases.cpp	189	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
@@ -3031,12 +3031,12 @@ site	src/game/battle_phases.cpp	348	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_phases.cpp	371	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_phases.cpp	375	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_phases.cpp	397	global	-	at::kEntryOrder	0x904ab6	-	none	-	-	0
-site	src/game/battle_phases.cpp	404	global	SetPtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_phases.cpp	404	global	SetPtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_phases.cpp	405	global	SetPtrAt	at::kMenuRecord	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/battle_phases.cpp	419	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_phases.cpp	423	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_phases.cpp	468	global	-	at::kEntryOrder	0x904ab6	-	none	-	-	0
-site	src/game/battle_phases.cpp	470	global	SetPtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_phases.cpp	470	global	SetPtrAt	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_phases.cpp	487	global	B	at::kCommand	0x904ab4	-	none	-	-	0
 site	src/game/battle_phases.cpp	494	global	B	at::kCommand	0x904ab4	-	none	-	-	0
 site	src/game/battle_phases.cpp	510	global	B	at::kCommand	0x904ab4	-	none	-	-	0
@@ -3411,7 +3411,7 @@ site	src/game/battle_windows.cpp	261	global	At	at::kPartyCount	0x904ab0	-	none	-
 site	src/game/battle_windows.cpp	262	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_windows.cpp	264	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/battle_windows.cpp	299	global	At	at::kPartyCount	0x904ab0	-	none	-	-	0
-site	src/game/battle_windows.cpp	307	global	Ptr	at::kActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/battle_windows.cpp	307	global	Ptr	at::kActor	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/battle_windows.cpp	321	global	At	at::kCrossSel	0x904ab4	-	none	-	-	0
 site	src/game/battle_windows.cpp	326	global	At	at::kCrossGrow	0x904abc	-	none	-	-	0
 site	src/game/battle_windows.cpp	328	global	At	at::kCrossArms	0x64e2ac	-	none	-	-	0
@@ -7953,7 +7953,7 @@ site	src/game/effect_6d_fuzz.cpp	354	global	Mem	at::kCounter48	0x903848	-	none	-
 site	src/game/effect_6d_fuzz.cpp	398	record	SetWord	s + 0x30	-	base=Sprite_Current	-	-	-	1
 site	src/game/effect_6d_fuzz.cpp	402	record	SetWord	s + ((v & 1) ? 0x36 : 0x3A)	-	base=Sprite_Current	-	-	-	1
 site	src/game/effect_6d_fuzz.cpp	405	record	SetLong	s + ((v & 1) ? 0x34 : 0x38)	-	base=Sprite_Current	-	-	-	1
-site	src/game/enemy_ai_ops.cpp	73	global	PtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	unsigned long	0
+site	src/game/enemy_ai_ops.cpp	73	global	PtrAt	at::kEnemyCurrent	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
 site	src/game/enemy_ai_ops.cpp	85	global	At	at::kMagicId	0x904b80	-	none	-	-	0
 site	src/game/enemy_ai_ops.cpp	85	record	At	flags + Word(At(at::kMagicId)) * 24u	-	param	-	-	-	0
 site	src/game/enemy_ai_ops.cpp	134	global	-	at::kAnimTable	0x64b078	-	none	-	-	0
@@ -13142,7 +13142,7 @@ site	src/game/rest_3b.cpp	221	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleAct
 site	src/game/rest_3b.cpp	225	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/rest_3b.cpp	226	global	B	at::kPartyCount	0x904ab0	-	none	-	-	0
 site	src/game/rest_3b.cpp	229	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
-site	src/game/rest_3b.cpp	244	global	Ptr	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	unsigned long	0
+site	src/game/rest_3b.cpp	244	global	Ptr	at::kMenuActor	0x939ec4	-	exact	BattleE4_MenuActor	records::PartyMember *	0
 site	src/game/rest_3b.cpp	334	global	Ptr	at::kCommand	0x939fa0	-	exact	BattleActorCopies_Command	unsigned long	0
 site	src/game/rest_3b.cpp	335	record	Word	c + 2	-	table=0x939fa0	-	-	-	0
 site	src/game/rest_3b.cpp	338	global	At	at::kRepeatLatch	0x7e01b8	-	none	-	-	0
@@ -19885,9 +19885,9 @@ const	kState	0x939a40	data	1	src/game/rest_4c_callees.h:43(rest_4c::at)	Rest4b_B
 const	kGeneFlags	0x939a60	data	1	src/game/battle_e5_callees.h:73(battle_e5::at)	-	-	none	-	at
 const	kGridCells	0x939a60	data	1	src/game/rest_2g_callees.h:38(rest_2g::at)	-	-	none	-	at
 const	kTurnWork	0x939a80	data	1	src/game/battle_damage_callees.h:68(battle_damage::at)	-	-	none	-	at
-const	kCurrentEnemy	0x939ad8	data	2	src/game/battle_e3_callees.h:68(battle_e3::at);src/game/battle_e5_callees.h:88(battle_e5::at)	BattleE3_CurrentEnemy	data	exact	unsigned long	at
-const	kCurrentEnemy	0x939ad8	data	1	src/game/battle_misc_callees.h:33(battle_misc)	BattleE3_CurrentEnemy	data	exact	unsigned long	module
-const	kEnemyCurrent	0x939ad8	data	4	src/game/battle_e2_callees.h:79(battle_e2::at);src/game/battle_flow_callees.h:46(battle_flow::at);src/game/boss_harness.h:108(boss_harness::at);src/game/enemy_ai_ops_callees.h:34(enemy_ai_ops::at)	BattleE3_CurrentEnemy	data	exact	unsigned long	at
+const	kCurrentEnemy	0x939ad8	data	2	src/game/battle_e3_callees.h:68(battle_e3::at);src/game/battle_e5_callees.h:88(battle_e5::at)	BattleE3_CurrentEnemy	data	exact	records::BattleEnemy *	at
+const	kCurrentEnemy	0x939ad8	data	1	src/game/battle_misc_callees.h:33(battle_misc)	BattleE3_CurrentEnemy	data	exact	records::BattleEnemy *	module
+const	kEnemyCurrent	0x939ad8	data	4	src/game/battle_e2_callees.h:79(battle_e2::at);src/game/battle_flow_callees.h:46(battle_flow::at);src/game/boss_harness.h:108(boss_harness::at);src/game/enemy_ai_ops_callees.h:34(enemy_ai_ops::at)	BattleE3_CurrentEnemy	data	exact	records::BattleEnemy *	at
 const	kBackup	0x939ae0	data	1	src/game/battle_e2_callees.h:69(battle_e2::at)	-	-	none	-	at
 const	kCopies	0x939ae0	data	1	src/game/battle_turn_steps_callees.h:76(battle_turn_steps::at)	-	-	none	-	at
 const	kPartyBackup	0x939ae0	data	1	src/game/battle_e6_callees.h:51(battle_e6::at)	-	-	none	-	at
@@ -19897,10 +19897,10 @@ const	kBackupBit40	0x939b71	data	1	src/game/battle_e2_callees.h:71(battle_e2::at
 const	kMemberB05	0x939c05	data	1	src/game/magic_s33.cpp:79((anon))	-	-	none	-	module
 const	kMemberC10	0x939c10	data	1	src/game/magic_s33.cpp:80((anon))	-	-	none	-	module
 const	kBackupFlags	0x939c14	data	1	src/game/battle_e2_callees.h:70(battle_e2::at)	-	-	none	-	at
-const	kActing	0x939ec4	data	2	src/game/battle_actor_copies_callees.h:49(battle_actor_copies::at);src/game/battle_menu_states_callees.h:52(battle_menu_states::at)	BattleE4_MenuActor	data	exact	unsigned long	at
-const	kActingActor	0x939ec4	data	1	src/game/battle_misc_callees.h:56(battle_misc)	BattleE4_MenuActor	data	exact	unsigned long	module
-const	kActor	0x939ec4	data	1	src/game/battle_windows_callees.h:34(battle_windows::at)	BattleE4_MenuActor	data	exact	unsigned long	at
-const	kMenuActor	0x939ec4	data	5	src/game/battle_e4_callees.h:69(battle_e4::at);src/game/battle_e5_callees.h:60(battle_e5::at);src/game/battle_phases_callees.h:78(battle_phases::at);src/game/boss_harness.h:161(boss_harness::at);src/game/rest_3b_callees.h:53(rest_3b::at)	BattleE4_MenuActor	data	exact	unsigned long	at
+const	kActing	0x939ec4	data	2	src/game/battle_actor_copies_callees.h:49(battle_actor_copies::at);src/game/battle_menu_states_callees.h:52(battle_menu_states::at)	BattleE4_MenuActor	data	exact	records::PartyMember *	at
+const	kActingActor	0x939ec4	data	1	src/game/battle_misc_callees.h:56(battle_misc)	BattleE4_MenuActor	data	exact	records::PartyMember *	module
+const	kActor	0x939ec4	data	1	src/game/battle_windows_callees.h:34(battle_windows::at)	BattleE4_MenuActor	data	exact	records::PartyMember *	at
+const	kMenuActor	0x939ec4	data	5	src/game/battle_e4_callees.h:69(battle_e4::at);src/game/battle_e5_callees.h:60(battle_e5::at);src/game/battle_phases_callees.h:78(battle_phases::at);src/game/boss_harness.h:161(boss_harness::at);src/game/rest_3b_callees.h:53(rest_3b::at)	BattleE4_MenuActor	data	exact	records::PartyMember *	at
 const	kStatDeltas	0x939ee0	data	1	src/game/battle_e6_callees.h:52(battle_e6::at)	-	-	none	-	at
 const	kEncounter	0x939f00	data	1	src/game/battle_sprites_callees.h:27(battle_sprites::at)	Encounter_Slots	data	exact	records::EncounterSlot	at
 const	kEnemies	0x939f00	data	2	src/game/field_hidden_callees.h:64(field_hidden::at);src/game/inventory_ops_callees.h:29(inventory_ops::at)	Encounter_Slots	data	exact	records::EncounterSlot	at

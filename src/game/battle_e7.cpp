@@ -134,7 +134,7 @@ unsigned RowCost(const unsigned char* row) {
 // 7 when the menu actor's AP (+0x9A of the member its +5 names) is below the
 // cost, else 0.
 unsigned CostColour(unsigned cost) {
-    auto* const member = rv::AsConst<records::PartyMember>(At(BattleE4_MenuActor));
+    auto* const member = static_cast<const records::PartyMember*>(BattleE4_MenuActor);
     const unsigned ap = W(At(ObjTrio_addr + 0x9a + member->actor * at::kPartyStride));
     return ap < (cost & 0xFFFF) ? 7u : 0u;
 }
@@ -320,7 +320,7 @@ extern "C" void __cdecl GeneWin_DrawGrid(void) {
     win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->x) + 0x87), static_cast<int>(static_cast<unsigned>(win->y) + 0xA), 0x30, 0x10, 0,
                           static_cast<int>(colour));
-    auto* const member = rv::AsConst<records::PartyMember>(At(BattleE4_MenuActor));
+    auto* const member = static_cast<const records::PartyMember*>(BattleE4_MenuActor);
     const unsigned text_colour = static_cast<unsigned>(member->ap) < BattleActions_ApCost ? 7u : 0u;
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
