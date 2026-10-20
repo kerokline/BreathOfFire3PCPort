@@ -114,7 +114,7 @@ constexpr std::uint32_t kFlagsLo = 0x9039A2, kFlagsHi = 0x9039A3, kFlags2Lo = 0x
 // The count and the bank word (event_script.cpp's terms).
 short Count() {
     short v;
-    std::memcpy(&v, At(SharedScratch_addr), sizeof v);
+    std::memcpy(&v, At(at::kScratch_addr), sizeof v);
     return v;
 }
 void SetCount(unsigned v) { at::kScratch.w_00 = v; }

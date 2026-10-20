@@ -228,7 +228,7 @@ unsigned char* PacketAt(unsigned k) { return g_packets + (k & 7) * 0x40; }
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
 // kMotePool: now ElemBreath_Motes (symbols.toml).
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 constexpr std::uint32_t kAbilityId = 0x904B80, kPoolBytes = 48 * 0x84, kPoolRecord255 = 0x67DE40 + 255 * 0x84;
 
 // Set by the seed for the functions they matter to.
@@ -268,7 +268,7 @@ std::uint32_t TrigEffect(const std::uint32_t*, std::uint32_t answer) {
     if (h % 4 != 0) return answer;
     const unsigned w = (h >> 4) % 24;
     const auto v = static_cast<std::uint16_t>(h >> 16);
-    if (w < 8) SetWord(mh::Mem(SharedScratch_addr + w * 2), v);
+    if (w < 8) SetWord(mh::Mem(kScratch + w * 2), v);
     else SetWord(mh::Mem(Prim_VertexScratch_addr + (w - 8) * 2), v);
     return answer;
 }
@@ -277,7 +277,7 @@ std::uint32_t TrigEffect(const std::uint32_t*, std::uint32_t answer) {
 // original's idiv never faults.
 std::uint32_t ActorIsOutEffect(const std::uint32_t* a, std::uint32_t answer) {
     const unsigned actor = a[0] & 0xFF;
-    if ((actor == 10 || actor == 2) && Long(mh::Mem(SharedScratch_addr + 4)) == 0) return answer & 0xFFFFFF00u;
+    if ((actor == 10 || actor == 2) && Long(mh::Mem(kScratch + 4)) == 0) return answer & 0xFFFFFF00u;
     return answer;
 }
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
@@ -410,7 +410,7 @@ const mh::DataTable kTables[] = {
 };
 
 mh::Region g_regions[] = {
-    {SharedScratch_addr, 0x10},
+    {kScratch, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {0, kPacketBytes},                           // g_packets (filled in at start-up)
@@ -444,8 +444,8 @@ void Disturb(std::uint32_t h) {
         // a scratch word; dword 0x903854 (DreamBreath_TargetHeight's count,
         // its divisor) only 1..8
         const unsigned k = v % 8;
-        if (k == 2 || k == 3) SetLong(mh::Mem(SharedScratch_addr + 4), static_cast<std::int32_t>(1 + v % 8));
-        else SetWord(mh::Mem(SharedScratch_addr + k * 2), word);
+        if (k == 2 || k == 3) SetLong(mh::Mem(kScratch + 4), static_cast<std::int32_t>(1 + v % 8));
+        else SetWord(mh::Mem(kScratch + k * 2), word);
         break;
     }
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;

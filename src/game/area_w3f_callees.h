@@ -37,7 +37,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The slot byte area 145's effect spawns keep at SharedScratch (0x903850)
 // and the byte after it, where area 145's handler 0 keeps a record index.
-// kSlotScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kSlotScratch = SharedScratch_addr;
 constexpr std::uint32_t kRecordIndex = 0x903851;
 // The story flags (Flags_Set / Flags_Test's bank), Cond_Flags row 13 (the
 // row area 145's cell hook tests: 0x903F90 + 8 * 13), the row pointer the
@@ -54,15 +54,15 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 // The party records (ObjTrio): the leader's byte +8 (the pose the hooks
 // compare), its word x high +0x36, the byte +0x89 of the leader and of the
 // third record.
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml).
-// kLeaderXHigh: now ObjTrio[0x36] (symbols.toml).
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeader89: now ObjTrio[0x89] (symbols.toml).
-// kMember3_89: now ObjTrio[0x321] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml).
+// kLeaderXHigh: now ObjTrio[0].x_whole (symbols.toml).
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeader89: now ObjTrio[0].char_id (symbols.toml).
+// kMember3_89: now ObjTrio[2].char_id (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The leader's record's bytes +1..+3 area 145's tail sets (0x802D41..43).
-// kLeader1: now ObjTrio[1] (symbols.toml).
+// kLeader1: now ObjTrio[0].state (symbols.toml).
 // Sprite_ObjectsExtra's first record (0x802000): its x, z, y (+0x34, +0x38,
 // +0x3C) and dword +0x6C (bits 9..10 a quarter turn); area 145's trails read
 // records 0..3 at the stride 0xA4.

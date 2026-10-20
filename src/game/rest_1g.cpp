@@ -59,30 +59,31 @@ using Handler = void (__cdecl*)();
 // Effect_Objects records 0..6 (0x7E11E0 + 0x80 n), the bytes and words the
 // stages and the fish read and write.
 // kEff0Flags: now Effect_Objects (symbols.toml). record 0 +0: bit 6 set while a fish pulls
-// kEff0State: now Effect_Objects[1] (symbols.toml). record 0 +1
-// kEff0Depth: now Effect_Objects[7] (symbols.toml). record 0 +7 (signed)
-// kEff0Byte0A: now Effect_Objects[0xa] (symbols.toml). record 0 +0xA
+// kEff0State: now Effect_Objects[0].state (symbols.toml). record 0 +1
+// kEff0Depth: now Effect_Objects_addr + 0x7 (symbols.toml). record 0 +7 (signed)
+// kEff0Byte0A: now Effect_Objects_addr + 0xa (symbols.toml). record 0 +0xA
 constexpr U kEff0StepX = 0x7E11EC;     // record 0 +0xC
 constexpr U kEff0StepY = 0x7E11F0;     // record 0 +0x10
 constexpr U kEff0StepZ = 0x7E11F4;     // record 0 +0x14
 constexpr U kEff0X = 0x7E1214;         // record 0 +0x34
 constexpr U kEff0Z = 0x7E1218;         // record 0 +0x38
 constexpr U kEff0Height = 0x7E121E;    // record 0 +0x3E (s16)
-// kEff1State: now Effect_Objects[0x81] (symbols.toml). record 1 +1
-// kEff3State: now Effect_Objects[0x181] (symbols.toml). record 3 +1
-// kEff3Mode: now Effect_Objects[0x186] (symbols.toml). record 3 +6
-// kEff3Started: now Effect_Objects[0x187] (symbols.toml). record 3 +7
-// kEff4State: now Effect_Objects[0x201] (symbols.toml). record 4 +1
-// kEff4Mode: now Effect_Objects[0x206] (symbols.toml). record 4 +6
+// kEff1State: now Effect_Objects[1].state (symbols.toml). record 1 +1
+// kEff3State: now Effect_Objects[3].state (symbols.toml). record 3 +1
+// kEff3Mode: now Effect_Objects[3].param (symbols.toml). record 3 +6
+// kEff3Started: now Effect_Objects_addr + 0x187 (symbols.toml). record 3 +7
+// kEff4State: now Effect_Objects[4].state (symbols.toml). record 4 +1
+// kEff4Mode: now Effect_Objects[4].param (symbols.toml). record 4 +6
 constexpr U kEff5Frame = 0x7E1470;     // record 5 +0x10 (s32)
 constexpr U kEff5Level = 0x7E1490;     // record 5 +0x30 (a byte, and a s16)
-// kEff6State: now Effect_Objects[0x301] (symbols.toml). record 6 +1
-// kEff6Dir: now Effect_Objects[0x308] (symbols.toml). record 6 +8
-inline auto& kEff6Page = Effect_Objects[6].height_frac;    // record 6 +0x3C (u16)
-inline auto& kEff6Shown = Effect_Objects[6].height_whole;  // record 6 +0x3E (u16)
+// kEff6State: now Effect_Objects[6].state (symbols.toml). record 6 +1
+// kEff6Dir: now Effect_Objects_addr + 0x308 (symbols.toml). record 6 +8
+// The choice menu's page words, its own (EffectWork), not the head's height.
+inline auto& kEff6Page = rv::As<records::EffectWork>(rv::Bytes(&Effect_Objects[6]))->work_3c;   // record 6 +0x3C (u16)
+inline auto& kEff6Shown = rv::As<records::EffectWork>(rv::Bytes(&Effect_Objects[6]))->work_3e;  // record 6 +0x3E (u16)
 
-// kLeaderStage: now ObjTrio[2] (symbols.toml). ObjTrio record 0 +2 (the leader's stage)
-// kLeaderStep: now ObjTrio[3] (symbols.toml). ObjTrio record 0 +3
+// kLeaderStage: now ObjTrio[0].step (symbols.toml). ObjTrio record 0 +2 (the leader's stage)
+// kLeaderStep: now ObjTrio[0].state3 (symbols.toml). ObjTrio record 0 +3
 // kSpriteIndex: now Effect1a_PanelObject (symbols.toml). u8: 0xFF none (E1E's kSpriteIndex)
 // kRecordA: now Effect1a_PanelScript (symbols.toml). pointer: a 10-byte record (the rod's: 0x66A4E8 + 10 * (0x904130 - 0x2E))
 // kRecordB: now Effect1a_PanelSet (symbols.toml). pointer: a 20-byte record (the lure's: 0x66A528 + 20 * (0x90412E - 0x1C))
@@ -645,7 +646,7 @@ extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
         if (static_cast<int>(base) + plus >= static_cast<signed char>(depth)) {
             depth = static_cast<unsigned char>(base + plus);
             rv::Bytes(Effect_Objects)[0x7] = depth;
-            Effect_Objects[0].digits = RecordB()[0x10];
+            rv::Bytes(Effect_Objects)[0xa] = RecordB()[0x10];
         }
         now = Effect1e_PressNow;
         B(kComboStep + i) = 0;

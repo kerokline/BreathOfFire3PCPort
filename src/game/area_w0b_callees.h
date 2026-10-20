@@ -29,14 +29,14 @@ using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). 16.16 position; its high words are the cell
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
-// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
-// kLeaderEdge: now ObjTrio[0x134] (symbols.toml). the leader's dword +0x134 (Field_EdgeBits = it - 5)
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml). 16.16 position; its high words are the cell
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
+// kLeaderEdge: now ObjTrio_addr + 0x134 (symbols.toml). the leader's dword +0x134 (Field_EdgeBits = it - 5)
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMsgMode: now AreaW0a_TailKind (symbols.toml). the tail kind byte (Field_ModeTailKinds' index)
 // kMsgState: now AreaW0c_TailState (symbols.toml). s8: the field hook's state

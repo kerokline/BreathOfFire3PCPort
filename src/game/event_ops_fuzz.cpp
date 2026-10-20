@@ -189,8 +189,8 @@ unsigned char __cdecl StubEffectTest(unsigned pace) {
 void __cdecl StubStepCell() {
     Record(0x1A);
     const std::uint32_t h = Hash(0x1A);
-    SetWord(At(SharedScratch_addr + 0x4), h);
-    SetWord(At(SharedScratch_addr + 0x6), h >> 16);
+    SetWord(At(at::kCellX_addr), h);
+    SetWord(At(at::kCellZ_addr), h >> 16);
 }
 unsigned char __cdecl StubCanSwap() {
     Record(0x1B);
@@ -226,8 +226,8 @@ unsigned char CellBody(unsigned id, unsigned cell) {
     Record(id, cell & 0xFF);
     const std::uint32_t h = Hash(id);
     if (h % 3 == 0) {
-        SetWord(At(SharedScratch_addr), h >> 4);
-        SetWord(At(SharedScratch_addr + 0x2), h >> 16);
+        SetWord(At(at::kScratch_addr), h >> 4);
+        SetWord(At(at::kScratch2_addr), h >> 16);
     }
     Disturb(id + 1);
     return h % 3 == 1 ? static_cast<unsigned char>(1 + (h >> 8) % 0xFF) : 0;
@@ -245,7 +245,7 @@ int HookBody(unsigned id, long x, long z) {
     Record(id, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     const std::uint32_t h = Hash(id);
     if (h % 5 == 0) {
-        move_script::SetLong(At(SharedScratch_addr + 0x8), static_cast<std::int32_t>(Hash(id + 1)));
+        move_script::SetLong(At(at::kTargetX_addr), static_cast<std::int32_t>(Hash(id + 1)));
         move_script::SetLong(At(Scratch_Swap_addr), static_cast<std::int32_t>(Hash(id + 2)));
     }
     Disturb(id + 3);
@@ -365,7 +365,7 @@ unsigned char __cdecl StubFlagsTest(const unsigned char* bits, unsigned index) {
 void __cdecl StubFlagsClear(unsigned char* bits, unsigned index) { Record(0x76, Address(bits), index); }
 // The placements' callees (event_script_fuzz.cpp's shape): the count and
 // Sprite_Current may be moved, which the ops read again.
-void SetCount(int v) { SetWord(At(SharedScratch_addr), static_cast<unsigned>(v)); }
+void SetCount(int v) { SetWord(At(at::kScratch_addr), static_cast<unsigned>(v)); }
 int PickCount(std::uint32_t h) {
     static const int kEdge[] = {29, 30, 31, 0, -1, 28};
     return h % 3 == 0 ? kEdge[(h >> 4) % 6] : static_cast<int>((h >> 8) % 34) - 2;
@@ -408,7 +408,7 @@ void Exit(unsigned salt) {
     const std::uint32_t h = Hash(salt);
     if (h % 4 == 0) return;
     SetWord(At(AreaW0b_Place_addr), h);
-    move_script::SetLong(At(SharedScratch_addr + 0x10), static_cast<std::int32_t>(Hash(salt + 1)));
+    move_script::SetLong(At(at::kExitX_addr), static_cast<std::int32_t>(Hash(salt + 1)));
     move_script::SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(Hash(salt + 2)));
     *At(AreaEntry_PendingFlags_addr) = static_cast<unsigned char>(h >> 16);
 }
@@ -468,7 +468,7 @@ unsigned char __cdecl StubStepCode() {
 long __cdecl StubSlopeAt(long x, long z, std::uint32_t direction) {
     Record(0x97, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction);
     const std::uint32_t h = Hash(0x97);
-    At(SharedScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : (h >> 8));
+    At(at::kScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : (h >> 8));
     Disturb(0x98);
     static const int kHeights[] = {0x40, 0x41, 0x3F, 0, -1, 0x7FFF, -0x8000};
     const std::uint32_t k = Hash(0x99);

@@ -71,10 +71,12 @@ constexpr std::uint32_t kObjectFlags = 0x9040CC;      // the flag bank of the fi
 constexpr std::uint32_t kMessageWord = 0x7DEE48;      // u16: the open message's id (Msg_OpenSystem writes it)
 constexpr std::uint32_t kButtonMap = 0x903580;        // u16: a button map word of the save (input-script.md section 4)
 inline auto& kCellX = SharedScratch.w_00;            // u16: the cell searched (x), and the save of the members' x / z
+constexpr std::uint32_t kCellX_addr = SharedScratch_addr; // kCellX's address, for the raw accessors that take one
 inline auto& kCellZ = SharedScratch.w_02;            // u16: its z
 // kExitArea: now AreaW0b_Place (symbols.toml). u16: the area an exit leads to
 // kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8: the exit's kind (4 here)
 inline auto& kExitX = SharedScratch.d_10;            // s32: the exit's x (16.16)
+constexpr std::uint32_t kExitX_addr = SharedScratch_addr + 0x10; // kExitX's address, for the raw accessors that take one
 // kExitZ: now AreaEntry_PendingZ (symbols.toml). s32: its z
 constexpr std::uint32_t kSlotPositions = 0x7E06E0;    // 4 x (x, z) dwords: a party slot's placed position
 // kLeaderList: now Cond_Flags[0xd2] (symbols.toml). u8: the leader's id (the party list's first)
@@ -91,8 +93,8 @@ constexpr std::uint32_t kPools = 0x803580;            // MessagePools: the scrip
 // ObjTrio (the party's records, stride 0x14C) and Sprite_Objects (0xA4).
 constexpr std::uint32_t kObjStride = 0x14C;
 constexpr std::uint32_t kSpriteStride = 0xA4;
-// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x / x_whole (records.h). ObjTrio +0x34: the leader's x (16.16); +2 the whole part
-// kLeaderZ: now rv::As<records::PartyMember>(ObjTrio)->z / z_whole (records.h). +0x38: z
-// kLeaderHeight: now rv::As<records::PartyMember>(ObjTrio)->height_whole (records.h). +0x3E: the height (s16)
+// kLeaderX: now ObjTrio[0].x / ObjTrio[0].x_whole (symbols.toml). ObjTrio +0x34: the leader's x (16.16); +2 the whole part
+// kLeaderZ: now ObjTrio[0].z / ObjTrio[0].z_whole (symbols.toml). +0x38: z
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml). +0x3E: the height (s16)
 
 }  // namespace field_e1::at

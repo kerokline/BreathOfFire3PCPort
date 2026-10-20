@@ -77,13 +77,13 @@ U Member(unsigned k, const char* who) {
 
 // A slot's bytes (0x9048A8 + 8 * slot, the slots 1..8 at 0x9048B0): read in
 // place for any slot byte, as the original reads them.
-U Slot(unsigned slot) { return Community_Records_addr + 0x1d8 + 8 * slot; }
+U Slot(unsigned slot) { return at::kSlots + 8 * slot; }
 // ... and written only for the eight (section 5).
 U SlotToWrite(unsigned slot, const char* who) {
     if (slot - 1 >= 8)
         bof3::Fatal("%s: slot %u is outside the eight at 0x9048B0; the original writes at 0x%X", who, slot,
-                    static_cast<unsigned>(Community_Records_addr + 0x1d8 + 8 * slot));
-    return Community_Records_addr + 0x1d8 + 8 * slot;
+                    static_cast<unsigned>(at::kSlots + 8 * slot));
+    return at::kSlots + 8 * slot;
 }
 
 // The field tail's state byte, moved by one as the original's inc / dec do.
@@ -1226,7 +1226,7 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
         for (unsigned j = 0; j < n; ++j)
             SH_CALL(CommuBoard_DrawSprite)(static_cast<int>(j % 5) * 8 + 0xF6, static_cast<int>(j / 5) * 7 + ry + 0x44, 1);
     }
-    U slot = Community_Records_addr + 0x1d8 + 8;
+    U slot = at::kSlots + 8;
     for (unsigned char i = 0; i < 8; ++i, slot += 8) {
         const int sy = (i >> 2) * 61;
         const int sx = static_cast<int>(i % 4) * 52;

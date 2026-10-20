@@ -213,7 +213,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 // kTrail: now IntimidateTrail_Points (symbols.toml).
 // kStruck: now AuraBreath_Struck (symbols.toml).
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 // IntimidateTrail_Points as far as a trail +4 below 48 and a point index up
 // to 256 reach: 4 x ((47 << 5) + 256) + 4 bytes.
 constexpr std::uint32_t kTrailBytes = 0x1B84;
@@ -264,7 +264,7 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
 // AuraBreath_InReach: what it reads besides its argument - the reach word
 // 0x903850 and Sprite_Current's point.
 std::uint32_t ReachEffect(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Word(mh::Mem(SharedScratch_addr)), static_cast<std::uint32_t>(Long(Sprite_Current + 0x34)),
+    mh::Note(Word(mh::Mem(kScratch)), static_cast<std::uint32_t>(Long(Sprite_Current + 0x34)),
              static_cast<std::uint32_t>(Long(Sprite_Current + 0x38)));
     return answer;
 }
@@ -363,7 +363,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},              // Gfx_PacketNext
     {0, kPrimBytes},            // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
-    {SharedScratch_addr, 0x10}, // 0x903850.., Scratch_Swap at +0xC
+    {kScratch, 0x10}, // 0x903850.., Scratch_Swap at +0xC
     {BattleE2_AnimSet_addr, 4}, // the frame-offset table pointer the burst swaps
     {0x80E980, 0x200},          // Gfx_ClutStripSource row 26
     {0x812980, 0x200},          // Gfx_ClutStrip row 26
@@ -381,7 +381,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: SetWord(mh::Mem(SharedScratch_addr + 2 * (v % 8)), h >> 16); break;
+    case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
     case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 4: SetWord(mh::Mem(IntimidateTrail_Points_addr + 2 * (v % (kTrailBytes / 2))), h >> 16); break;
     case 5: mh::Mem(AuraBreath_Struck_addr + v % 8)[0] = Byte(h >> 24); break;
@@ -483,7 +483,7 @@ void Seed(unsigned k) {
         if (!mh::Often()) break;
         unsigned char* const record = mh::EnemyOf(Byte(g_reach_enemy));
         const int reach = static_cast<int>(mh::Next() % 0x400);
-        SetWord(mh::Mem(SharedScratch_addr), static_cast<unsigned>(reach));
+        SetWord(mh::Mem(kScratch), static_cast<unsigned>(reach));
         const int d = reach - 1 + static_cast<int>(mh::Next() % 3);
         SetLong(record + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sc + 0x34)) +
                                                          (static_cast<std::uint32_t>(d) << 9)));

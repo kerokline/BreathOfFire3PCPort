@@ -659,13 +659,17 @@ class Entries:
 # name per family; the comment beside each says whose it is. A family absent
 # from an offset's row has no name there (SpriteObject +5, a party member's
 # +6: records.h "not named"), and its sites stay raw with reason `union`.
+# +0xA is the battle task's `digits` only: every other family's +0xA is its
+# handler's own (records.h SpriteHead byte_0a; C4 audit A F2).
 UNION_NAMES = {
     'records::SpriteObject': {0x6: 'type', 0x7: 'flags2', 0x8: 'direction', 0x9: 'step_frames',
                               0x32: 'draw_key', 0x60: 'depth'},
+    'records::SpriteObjectBody': {0x6: 'type', 0x7: 'flags2', 0x8: 'direction', 0x9: 'step_frames',
+                                  0x32: 'draw_key', 0x60: 'depth'},
     'records::PartyMember': {0x5: 'actor', 0x8: 'direction', 0x9: 'step_frames', 0x32: 'draw_key', 0x60: 'depth'},
     'records::BattleEnemy': {0x5: 'actor', 0x8: 'layout', 0x32: 'draw_key', 0x60: 'depth'},
     'records::EffectObject': {0x5: 'kind', 0x6: 'param', 0x9: 'timer', 0x32: 'draw_key', 0x60: 'depth'},
-    'records::BattleTask': {0x5: 'kind', 0x6: 'runner', 0x7: 'mode', 0x9: 'timer'},
+    'records::BattleTask': {0x5: 'kind', 0x6: 'runner', 0x7: 'mode', 0x9: 'timer', 0xA: 'digits'},
 }
 
 # Bytes a record's struct names for one reader only, where the site's reader
@@ -680,6 +684,24 @@ VIEW_BYTES = {
     'records::PartyMember': [(0x124, 0x140, 'view')],
     # the kinds' own words: EffectWork (records.h EffectObject)
     'records::EffectObject': [(0xC, 0x14, 'view'), (0x2E, 0x32, 'view')],
+}
+
+# Single sites no record field may type, each an audit's recorded decision:
+# (file, entry, byte offset into the entry) -> why. The field the table would
+# pick is another reader's; the site stays raw with reason `audit-family`.
+KEEP_RAW = {
+    # object 2's +0x32 is the turn the kind-0x78 ring spins it by, not the
+    # draw key (effect_3d_callees.h kObject2Turn; C2 audit ea doubt 1; C4
+    # audit A F1, which found c0635893 had typed it Sprite_Objects[2].draw_key)
+    ('src/game/effect_3d.cpp', 'Sprite_Objects', 2 * 0xA4 + 0x32): 'kObject2Turn',
+    # Community_Buildings by a 1-based slot or kind: the base, Buildings - 8
+    # (+ 3), lies in Community_Records' last record, so the table would spell
+    # these off the end of the wrong one (C4 audit B F1, d241a959)
+    ('src/game/rest_4a.cpp', 'Community_Records', 0x1DB): 'kBuildingLevels',
+    ('src/game/rest_4b.cpp', 'Community_Records', 0x1D8): 'kSlots',
+    ('src/game/rest_4b_fuzz.cpp', 'Community_Records', 0x1D8): 'kSlots',
+    ('src/game/rest_4e.cpp', 'Community_Records', 0x1DB): 'kTrackCounts',
+    ('src/game/rest_4e_fuzz.cpp', 'Community_Records', 0x1DB): 'kTrackCounts',
 }
 
 
@@ -1015,6 +1037,10 @@ class Converter:
                 arg_e = arg_s + len(args[0])
         else:
             call = None
+        if (f.rel, entry['name'], off) in KEEP_RAW:
+            # neither typed nor respelled as the entry's address: the name stays
+            site.reason = 'audit-family'
+            return site
         addr_tiers = self.addr_tiers(site, entry, off, esize)
         if call is None:
             # an address handed on as a value
@@ -1277,23 +1303,43 @@ class Converter:
                 if v is not None:
                     add = v
                 else:
+                    # `+ c + i * s`: split at the top-level '+' first, so the
+                    # index is i (stride s) and c a constant, never `(c + i) * s`
+                    # (C4 audit A doubt; no site had the shape). A '-' or a
+                    # second dynamic term is not read.
                     t0 = ce + len(m.group(1))
-                    facs = split_top(mask_casts(m.group(2)), '*')
-                    if len(facs) != 2:
+                    masked = mask_casts(m.group(2))
+                    if any(o == '-' for _, o in top_level_ops(masked)):
                         return None
-                    p0 = t0
-                    spans = []
-                    for fc in facs:
-                        spans.append((p0, p0 + len(fc)))
-                        p0 += len(fc) + 1
-                    vals = [dc.eval_expr(code[a:b], self.env(f)) for a, b in spans]
-                    if (vals[0] is None) == (vals[1] is None):
+                    terms, p0 = [], t0
+                    for tm in split_top(masked, '+'):
+                        terms.append((p0, p0 + len(tm)))
+                        p0 += len(tm) + 1
+                    for ta, tb in terms:
+                        tv = dc.eval_expr(code[ta:tb], self.env(f))
+                        if tv is not None:
+                            add += tv
+                            continue
+                        if dyn is not None:
+                            return None
+                        facs = split_top(mask_casts(code[ta:tb]), '*')
+                        if len(facs) != 2:
+                            return None
+                        p1 = ta
+                        spans = []
+                        for fc in facs:
+                            spans.append((p1, p1 + len(fc)))
+                            p1 += len(fc) + 1
+                        vals = [dc.eval_expr(code[a:b], self.env(f)) for a, b in spans]
+                        if (vals[0] is None) == (vals[1] is None):
+                            return None
+                        a, b = spans[0] if vals[0] is None else spans[1]
+                        stride = vals[1] if vals[0] is None else vals[0]
+                        a += len(code[a:b]) - len(code[a:b].lstrip())
+                        b -= len(code[a:b]) - len(code[a:b].rstrip())
+                        dyn = (a, b, stride)
+                    if dyn is None:
                         return None
-                    a, b = spans[0] if vals[0] is None else spans[1]
-                    stride = vals[1] if vals[0] is None else vals[0]
-                    a += len(code[a:b]) - len(code[a:b].lstrip())
-                    b -= len(code[a:b]) - len(code[a:b].rstrip())
-                    dyn = (a, b, stride)
             return (vst, close, ('recptr', mv.group(2), sem[2]), add, dyn, None)
         if rest.strip():
             m = re.fullmatch(r'\s*([+-])\s*(.+?)\s*', rest, re.S)
@@ -1395,6 +1441,8 @@ class Converter:
         cst = int_type(ct)
         is_ptr_entry = '*' in ct
         member = ''
+        if dyn is None and (f.rel, entry['name'], off) in KEEP_RAW:
+            return 'audit-family'
         if sem[0] == 'recptr':
             return self.record_view(site, entry, esize, off, dyn, cs, ce, sem)
         if record_sizes.size_of(ct) is not None:

@@ -30,8 +30,8 @@ constexpr std::uint32_t kPrintBuf = 0x904BA0;     // the sprintf buffer every nu
 // kMemberRecord: now Character_IndexById (symbols.toml). u8 per party entry: its record (Character_IndexById)
 // kMenuMember: now BattleActorCopies_ItemActor (symbols.toml). s8: the member the field menu is on
 constexpr std::uint32_t kYesNo = 0x929F0B;        // u8: Menu_YesNo's selection, 1 Yes
-// kLeaderX: now ObjTrio[0x36] (symbols.toml). u16: the leader's map x (ObjTrio +0x36)
-// kLeaderZ: now ObjTrio[0x3a] (symbols.toml). u16: the leader's map z (+0x3A)
+// kLeaderX: now ObjTrio[0].x_whole (symbols.toml). u16: the leader's map x (ObjTrio +0x36)
+// kLeaderZ: now ObjTrio[0].z_whole (symbols.toml). u16: the leader's map z (+0x3A)
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 64 bytes a CLUT row: entry 0 is the window's line colour
 // Named in symbols.toml, whose names are macros here (by address).
 // kFrameCounter: now Frame_Counter (symbols.toml). Frame_Counter

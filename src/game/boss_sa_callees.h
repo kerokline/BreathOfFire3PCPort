@@ -61,10 +61,10 @@ constexpr U kFieldActors = 0x7DEF00;      // Sprite_Objects + 0x80: MoveCmd_OpE9
 constexpr U kObjectStride = 0xA4;
 
 // --- the party's leader (ObjTrio + 0) ---------------------------------------
-// kLeaderTarget: now ObjTrio[0x124] (symbols.toml). +0x124 the member's target
-// kLeaderAction: now ObjTrio[0x125] (symbols.toml). +0x125 its action's kind
-// kLeaderActionId: now ObjTrio[0x126] (symbols.toml). +0x126 (u16) its action's id
-// kLeaderFlags: now ObjTrio[0x134] (symbols.toml). +0x134 (u32): bit 1
+// kLeaderTarget: now ObjTrio_addr + 0x124 (symbols.toml). +0x124 the member's target
+// kLeaderAction: now ObjTrio_addr + 0x125 (symbols.toml). +0x125 its action's kind
+// kLeaderActionId: now ObjTrio_addr + 0x126 (symbols.toml). +0x126 (u16) its action's id
+// kLeaderFlags: now ObjTrio_addr + 0x134 (symbols.toml). +0x134 (u32): bit 1
 
 // --- the literals the functions store ---------------------------------------
 // The hooks the set-ups store (BattleHook_End / _Exit / _Event), and the

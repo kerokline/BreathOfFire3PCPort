@@ -16,9 +16,9 @@ constexpr std::uint32_t kCounter = 0x903848;        // the chapter counter byte 
                                                     // (scenario_harness kCounter)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0: the story flags Flags_Test reads
 // kFlagRow50: now Cond_Flags[0x50] (symbols.toml). Cond_Flags + 0x50: the row sub-kind 0x24 sets bit 4 of
-// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). ObjTrio record 0's +0x34 (the leader's x, 16.16)
-// kLeaderZ: now rv::As<records::PartyMember>(ObjTrio)->z (records.h). ObjTrio record 0's +0x38 (z)
-// kLeaderShade: now ObjTrio[0x5d] (symbols.toml). ObjTrio record 0's +0x5D..+0x5F (sub-kind 0x3F dims them)
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio record 0's +0x34 (the leader's x, 16.16)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). ObjTrio record 0's +0x38 (z)
+// kLeaderShade: now ObjTrio[0].shade[0] (symbols.toml). ObjTrio record 0's +0x5D..+0x5F (sub-kind 0x3F dims them)
 // kClutRow4: now Gfx_ClutStripSource[0x400] (symbols.toml). Gfx_ClutStripSource + 0x800: CLUT row 4 as loaded (0x100 words)
 // kClutRow4Live: now Gfx_ClutStrip[0x400] (symbols.toml). Gfx_ClutStrip + 0x800: the row the game uploads
 constexpr unsigned kClutRowWords = 0x100;

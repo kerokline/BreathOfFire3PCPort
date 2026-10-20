@@ -60,9 +60,9 @@ constexpr std::uint32_t kPixels = 0x92EC80;        // kind 0x6B: the particles, 
 constexpr std::uint32_t kPixelStride = 0x14;
 
 // Sprite_Objects records 1 and 2 (0x7DEE80 + 0xA4 k) and their points (+0x34).
-// kSprite1Point: now rv::As<records::SpriteObject>(Sprite_Objects + 0xA4)->x (records.h).
+// kSprite1Point: now Sprite_Objects[1].x (symbols.toml).
 constexpr std::uint32_t kSprite2 = 0x7DEFC8;
-// kSprite2Point: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x (records.h).
+// kSprite2Point: now Sprite_Objects[2].x (symbols.toml).
 
 constexpr std::uint32_t kCounter = 0x903848;       // the chapters' counter byte (scenario_harness at::kCounter)
 constexpr std::uint32_t kEffectStride = 0x80;      // Effect_Objects' records

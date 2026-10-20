@@ -38,9 +38,9 @@ constexpr std::uint32_t kText = 0x904BA0;          // the text scratch Crt_sprin
 
 // --- kind 0x78: a ring about Sprite_Objects record 2 -------------------------
 constexpr std::uint32_t kObject2 = 0x7DEFC8;       // Sprite_Objects + 2 * 0xA4
-// kObject2Screen: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_x (records.h). its +0x2E, +0x30 (s16 screen x, y)
+// kObject2Screen: now Sprite_Objects[2].screen_x (symbols.toml). its +0x2E, +0x30 (s16 screen x, y)
 constexpr std::uint32_t kObject2Turn = 0x7DEFFA;   // its +0x32 (u16, the turn the ring spins it by): raw, not SpriteHead::draw_key (C2 audit ea doubt 1)
-// kObject2Point: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x (records.h). its +0x34, +0x38 (x, z)
+// kObject2Point: now Sprite_Objects[2].x (symbols.toml). its +0x34, +0x38 (x, z)
 
 // --- kind 0x7D: area 170's three dials (Area170_Tail37's case 40 spawns it) --
 constexpr std::uint32_t kDials = 0x675DC8;         // three bytes 0..8, the dials' turns
@@ -79,10 +79,10 @@ constexpr unsigned kSourceStride = 0x14;
 constexpr std::uint32_t kSourceCells = 0x654C3C;   // 16 pairs of s8: a source's cell (x, z)
 // kDropsMoving: now Effect3d_DropsMoving (symbols.toml). u16: how many drops moved this frame
 constexpr rdata::Const kOne{0x5C41B8};           // float 1.0 (effect_2c_callees.h kOne)
-// kLeaderPoint: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). ObjTrio + 0x34: the leader's x, z, height
+// kLeaderPoint: now ObjTrio[0].x (symbols.toml). ObjTrio + 0x34: the leader's x, z, height
 
 // --- kind 0x82: Sprite_Objects record 0 pushed --------------------------------
-// kObject0X: now rv::As<records::SpriteObject>(Sprite_Objects)->x (records.h). Sprite_Objects + 0x34
-// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). ObjTrio + 0x34
+// kObject0X: now Sprite_Objects[0].x (symbols.toml). Sprite_Objects + 0x34
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio + 0x34
 
 }  // namespace effect_3d::at

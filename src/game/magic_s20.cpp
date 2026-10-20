@@ -102,7 +102,7 @@ unsigned VariantCase(unsigned k) {
 
 // The effect's scratch (words 0x903850..0x90385E, Scratch_Swap among them)
 // and the vertex scratch (Prim_VertexScratch: SVECTORs 8 bytes apart).
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 // kVertex: now Prim_VertexScratch (symbols.toml).
 
 // The ability id (u16) and the actor's side byte 0x904B35 (4 for the party's
@@ -123,7 +123,7 @@ constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 // MagicFx_ApplyBuff, S32's WallOfFire_DrawDisc and WallOfFireSpark_Draw.
 using VoidFn = void (__cdecl*)();
 
-unsigned char* Scr(unsigned k) { return Mem(SharedScratch_addr + k); }
+unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
 unsigned char* Vtx(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }

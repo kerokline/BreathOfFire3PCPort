@@ -145,7 +145,7 @@ U FxFade(const U*, U answer) {
 // word up one - so a caller that reads Sprite_Current after it, not the record
 // it kept, reads another record. The op's 16 bytes are hashed (deref).
 U FxPlace(const U*, U answer) {
-    unsigned char* const count = Mem(SharedScratch_addr);
+    unsigned char* const count = Mem(at::kObjectCount_addr);
     const U n = Word(count);
     if (n < at::kSpriteCount) Sprite_Current = rv::Bytes(&Sprite_Objects[n]);
     SetWord(count, n + 1);

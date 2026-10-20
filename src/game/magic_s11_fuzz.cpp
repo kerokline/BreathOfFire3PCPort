@@ -171,7 +171,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kVertex: now Prim_VertexScratch (symbols.toml).
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 // kSanctuaryPool: now SanctuaryMote_Pool (symbols.toml).
 // kReached: now Sanctuary_Reached (symbols.toml).
 // kTornadoPool: now TornadoMote_Pool (symbols.toml).
@@ -212,7 +212,7 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
 // 0x4F5970: what it reads besides its argument - the radius word 0x903850 and
 // Sprite_Current's point.
 std::uint32_t NearEffect(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Word(mh::Mem(SharedScratch_addr)), static_cast<std::uint32_t>(Long(Sprite_Current + 0x34)),
+    mh::Note(Word(mh::Mem(kScratch)), static_cast<std::uint32_t>(Long(Sprite_Current + 0x34)),
              static_cast<std::uint32_t>(Long(Sprite_Current + 0x38)));
     return answer;
 }
@@ -316,7 +316,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                          // Gfx_PacketNext
     {0, kPrimBytes},                        // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},        // Prim_VertexScratch, four SVECTORs
-    {SharedScratch_addr, 0x10},             // 0x903850.., Scratch_Swap at +0xC
+    {kScratch, 0x10},             // 0x903850.., Scratch_Swap at +0xC
     {Field_Kind2Z_addr, 8},                 // Field_Kind2Z, Field_Kind2X
     {SanctuaryMote_Pool_addr, 0x1F00},      // SanctuaryMote_Pool, Sanctuary_Reached, TornadoMote_Pool
     {0x80E980, 0x200},                      // Gfx_ClutStripSource row 26
@@ -337,7 +337,7 @@ void Disturb(std::uint32_t h) {
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     // a scratch word; half the time the angle word 0x90385E, which Tornado_Spin,
     // the band and the mote read back after a call
-    case 2: SetWord(mh::Mem(SharedScratch_addr + (v % 2 ? 0xE : 2 * (v / 2 % 8))), h >> 16); break;
+    case 2: SetWord(mh::Mem(kScratch + (v % 2 ? 0xE : 2 * (v / 2 % 8))), h >> 16); break;
     case 3: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
     case 4: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
     case 5: {

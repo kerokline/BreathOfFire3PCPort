@@ -359,7 +359,7 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
         BH_CALL(BossMap_SetCorners)(e.cell, up ? 1 : 0);
     }
     const long ground = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
-    BossH_Enemy0Ground = static_cast<unsigned>(ground) & 0xFFFF;
+    Battle_Enemies[0].height_whole = static_cast<unsigned>(ground) & 0xFFFF;
     const long leader = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
     ObjTrio[0].height_whole = static_cast<unsigned>(leader) & 0xFFFF;
     if (rv::Bytes(ObjTrio)[0x134] & 2) BossH_CameraY = ObjTrio[0].height;

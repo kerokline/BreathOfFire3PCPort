@@ -34,17 +34,19 @@ constexpr std::uint32_t kEncounterAreasEnd = 0x660AB8;
 // kBlockingCells: now Field_BlockingCells (symbols.toml). cell codes that block, 0xFF-ended
 // The party (field-event.md section 2).
 constexpr std::uint32_t kMemberStride = 0x14C;
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34 / +0x38 (dwords), +0x3E (word)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio +0x34 / +0x38 (dwords), +0x3E (word)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml).
 // kActorRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). the first 3-byte party list
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes per party slot (field-event.md)
 // The step's scratch (event_ops_callees.h's terms).
 inline auto& kScratch = SharedScratch.b_00;  // u8: MapView_SlopeAt's "a slope" byte
+constexpr std::uint32_t kScratch_addr = SharedScratch_addr; // kScratch's address, for the raw accessors that take one
 inline auto& kScratch2 = SharedScratch.w_02;        // u16: the found spot's ground
 inline auto& kTargetX = SharedScratch.d_08;         // s32 each: the found spot
+constexpr std::uint32_t kTargetX_addr = SharedScratch_addr + 0x8; // kTargetX's address, for the raw accessors that take one
 // kTargetZ: now Scratch_Swap (symbols.toml).
 // Field_ChangeArea's arguments as the step's exits leave them (event_ops).
 // kExitArea: now AreaW0b_Place (symbols.toml). u16

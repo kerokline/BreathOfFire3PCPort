@@ -285,7 +285,7 @@ extern "C" void __cdecl Area39_Counter1Not4(void) { B(at::kCounter1) = B(Cond_Fl
 // op Area40_PlaceOp places it.
 extern "C" void __cdecl Area40_PlaceObject(void) {
     const unsigned char free = AH_AT(unsigned char (__cdecl*)(), at::kFreeObject)();
-    SetWord(Mem(SharedScratch_addr), free);
+    SetWord(Mem(at::kScratchWord), free);
     if (free == 0xFF) {
         AddWord(MoveScript_Object + 0xA, -2);
         return;
@@ -381,7 +381,7 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
         break;
     case 2:
         if (Field_Request == 0) {
-            SetWord(Mem(SharedScratch_addr), Word(Mem(Input_Held_addr)));
+            SetWord(Mem(at::kScratchWord), Word(Mem(Input_Held_addr)));
             const U held = static_cast<U>(Long(Mem(Input_Held_addr)));
             const U top = B(Area40_InputMap_addr + ((held & 0xFFFF) >> 12));
             SetWord(Mem(Input_Held_addr), top << 12 | (held & 0xFFF));

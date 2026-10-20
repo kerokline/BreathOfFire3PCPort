@@ -784,7 +784,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
         AreaW0b_Place = W(r + 2);
         AreaEntry_PendingFlags = 4;
         AreaEntry_PendingZ = static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 6)) << 16);
-        SetLong(At(SharedScratch_addr + 0x10), static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 4)) << 16));
+        SetLong(At(at::kExitX_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 4)) << 16));
         return 1;
     }
     return 0;
@@ -862,13 +862,13 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     unsigned char count = Field_MemberCount;
     const unsigned n = count;
     if (n > 0) {
-        for (unsigned i = 0; i < n; ++i) SetLong(At(SharedScratch_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->x);
-        for (unsigned j = 0; j < n; ++j) rv::As<records::PartyMember>(Member(j))->x = L(SharedScratch_addr + 4 * ListSlot(rv::As<records::PartyMember>(Member(j))->char_id, n));
-        for (unsigned i = 0; i < n; ++i) SetLong(At(SharedScratch_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->z);
+        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->x);
+        for (unsigned j = 0; j < n; ++j) rv::As<records::PartyMember>(Member(j))->x = L(at::kCellX_addr + 4 * ListSlot(rv::As<records::PartyMember>(Member(j))->char_id, n));
+        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX_addr + 4 * i), rv::As<records::PartyMember>(Member(i))->z);
         unsigned members = n;
         for (unsigned j = 0; j < members; ++j) {
             records::PartyMember* const m = rv::As<records::PartyMember>(Member(j));
-            const std::int32_t z = L(SharedScratch_addr + 4 * ListSlot(m->char_id, members));
+            const std::int32_t z = L(at::kCellX_addr + 4 * ListSlot(m->char_id, members));
             m->z = z;
             const long ground = SH_CALL(MapView_GroundAt)(m->x, z);
             count = Field_MemberCount;

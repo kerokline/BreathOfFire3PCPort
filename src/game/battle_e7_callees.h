@@ -36,7 +36,7 @@ constexpr std::uint32_t kList3OutBound = 0x599551;   // 0x143 in GeneWin_List3Sl
 constexpr std::uint32_t kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 // kMenuActor: now BattleE4_MenuActor (symbols.toml). the command menu's member (an ObjTrio record)
-// kPartyAp: now ObjTrio[0x9a] (symbols.toml). ObjTrio +0x9A (AP), stride 0x14C
+// kPartyAp: now ObjTrio[0].ap (symbols.toml). ObjTrio +0x9A (AP), stride 0x14C
 constexpr std::uint32_t kPartyStride = 0x14C;
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;

@@ -131,7 +131,7 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 Region g_all[] = {
     {kHeader, kHeaderBytes}, {kCells - 4, kCellsBytes + 4}, {kCellItems, kCellItemsBytes},
     {kDrawItems, kDrawItemsBytes}, {kClutSource, kClutBytes}, {kClutStrip, kClutBytes},
-    {kOrigin, 4},            {kViewHeads, 6},             {SharedScratch_addr, 1},
+    {kOrigin, 4},            {kViewHeads, 6},             {kScratch, 1},
     {kRedraw, 1},            {kBytesPointer, 4},          {kBufferIndex, 1},
     {kPacketNext, 4},        {kOtSlot, 1},                {kDirty, 1},
     {D3d_Vertices_addr, 0x80},       {D3d_ScaleY_addr, 8},                {Gfx_DrawTpage_addr, 4},
@@ -247,7 +247,7 @@ void __cdecl StubCheckScale() {
 U __cdecl StubSlope(U x, U y, U direction) {
     Record(10, x, y, direction, At(kHeightScale)[0]);
     const U h = Mix(10);
-    At(SharedScratch_addr)[0] = static_cast<unsigned char>(h >> 24);
+    At(kScratch)[0] = static_cast<unsigned char>(h >> 24);
     return Mix(11);
 }
 
@@ -451,7 +451,7 @@ void FuzzSteepAt(Tally& t, void* clone, unsigned rounds) {
 
 // --- MapView_SlopeAt ------------------------------------------------------------------------
 
-const Region kSlopeRegions[] = {{kHeightScale, 1}, {SharedScratch_addr, 1}};
+const Region kSlopeRegions[] = {{kHeightScale, 1}, {kScratch, 1}};
 
 void FuzzSlopeAt(Tally& t, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(U, U, U);
@@ -459,7 +459,7 @@ void FuzzSlopeAt(Tally& t, void* clone, unsigned rounds) {
         g_round = 0x300000u + r;
         const U x = Next(), y = Next(), d = Next() % 2 ? Next() % 8 : Next();
         At(kHeightScale)[0] = static_cast<unsigned char>(Next() % 3 ? Next() % 2 : Next());
-        At(SharedScratch_addr)[0] = static_cast<unsigned char>(Next());
+        At(kScratch)[0] = static_cast<unsigned char>(Next());
         Pass(t, kSlopeRegions, 2, 0xFFFFFFFFu, [&] { return reinterpret_cast<Fn>(clone)(x, y, d); },
              [&] { return As<Fn>(&MapView_SlopeAt)(x, y, d); });
     }

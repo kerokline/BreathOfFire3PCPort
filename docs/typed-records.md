@@ -295,7 +295,7 @@ own, and its comment says which.
 | `+0x07` | **no.** Field object: `flags2`. Task: the popup's draw mode | union `flags2` / `mode` |
 | `+0x08` | **not shown to agree.** Field object and member: the facing; the battle banner reads a member's and an enemy's `+8` as "a side byte" (`battle_win_states.md` 2); the enemy's writers call it the layout ^ 2 | union `direction` / `layout` |
 | `+0x09` | **no** in name: frames left in a step (the sprite step's multiplier) against the effect's and the task's own frame counter | union `step_frames` / `timer` |
-| `+0x0A` | one reader: the popup's digit count | `digits` |
+| `+0x0A` | **no**: the battle task's popup digit count; every other family's its handler's own (a kind's wait, the leader panel's hold, effect 0's copied byte) | union `digits` (BattleTask's) / `byte_0a` (spelled raw; C4 audit A F2) |
 | `+0x0B` | **no**: four readings, none shared | `pad_0B` |
 | `+0x0C`, `+0x10` | the sprite engine's step (`sprite-draw-order.md` 6; `Sprite_ClearSteps`) on all; the effect kinds and the magic tasks reuse them (section 7, `EffectWork`) | `step_x`, `step_z` |
 | `+0x14` | the third step (`Sprite_ClearSteps` clears it with the two; the field's rise); a magic task's scratch | `step_y` |
@@ -583,7 +583,8 @@ two or three rows at one offset, each naming its family.
 | `+0x08` | u8 | `layout` | battle enemy: the layout ^ 2 (Battle_SetupEnemy); 2 / 3 pick the next animation (battle_flow.md); the banner reads it as the side byte (battle_win_states.md 2), enemy_ai_ops.cpp as a mode |
 | `+0x09` | u8 | `step_frames` | field sprite object, party member: frames left in a step / a timed move; multiplies the step in Sprite_PointInReach (sprite-draw-order 6; movement-script 1b; member-sprites 2) |
 | `+0x09` | u8 | `timer` | effect object, battle task: the kind's frame counter (effect_1a.md 2.3: EffectKind07_Start sets 0xF0, _FadeIn 0xFF); the popup's (battle_fx_tasks.cpp) |
-| `+0x0A` | u8 | `digits` | battle task: the popup's digit count (battle_fx_tasks.cpp; battle_flow.cpp:483); per effect kind a wait (effect_1a.md 2.6 kind 5's +0xA); a field object's +0xA is unread |
+| `+0x0A` | u8 | `digits` | battle task: the popup's digit count (battle_fx_tasks.cpp; battle_flow.cpp:483) |
+| `+0x0A` | u8 | `byte_0a` | every other family's: each handler's own - per effect kind a wait (effect_1a.md 2.6 kind 5's +0xA), the leader panel's hold after a full charge (area_w2e.cpp Area104_Kind5CFollow), effect 0's copy of a record's +0x10 (rest_1g.cpp LeaderPanel_EffectsStep); a field object's +0xA is unread. No one meaning: spelled raw (rv::Bytes(r)[0xa]), never by this name (C4 audit A F2; tools/typed_convert.py UNION_NAMES names +0xA for BattleTask only) |
 | `+0x0C` | s32 | `step_x` | the step, 16.16 a frame (sprite-draw-order 6; member-sprites 2); dword, Effect_Spawn's movsx byte (symbols.toml). Per effect kind and per magic task a word of its own (B1 magic audit N2; effect_1a.md 2.5): EffectWork's work_0c for those |
 | `+0x10` | s32 | `step_z` | the second step (sprite-draw-order 6); per kind and per task a word of its own, as +0xC |
 | `+0x14` | s32 | `step_y` | the third step, 16.16: Sprite_ClearSteps clears +0xC, +0x10, +0x14 (field_event.cpp); the field objects' rise added to the elevation (field_o.cpp MoveCmd_OpF9; area_w1b.cpp adds +0x14 * +9 to +0x3C; move_cmds.cpp; kind2_object.cpp); a magic task's scratch dword (B1 magic audit) |
@@ -638,6 +639,8 @@ Padding:
 - a field object's Effect_Objects index for ops 9x (symbols.toml Effect_Spawn); member-sprites 2's effect-object index; an effect's spawn argument (0x5898D0) or per kind a hold; compared with 1 by the popup's PopupStart (y 9 higher). One byte, four readings, none shared
 
 ### `SpriteObject` (`0xA4` bytes, from `SpriteHead`)
+
+Since the C4 audit (A F5) its fields `+0x80..+0x9F` are declared in `SpriteObjectBody` (`0xA0` bytes, from `SpriteHead`), which `SpriteObject` extends with `handler` and `pad_A1`: `SpriteObjectBody` is `Sprite_Kind2`'s type, the kind-2 object 0x7E0940 whose `+0xA0..+0xA3` are `DrawItemPool_Free`, so `handler` cannot be spelled on it. The table lists the fields of both.
 
 | off | type | field | source |
 |---|---|---|---|
@@ -1010,9 +1013,12 @@ Padding:
 | `+0x2E` | u16 | `work_2e` | a word of the kind's own, read as u16 (Word / W) in 367 of the 402 union rows at +0x2E / +0x30, as s16 (SW) in 35 (a count: effect_2d.cpp kind 0x45; effect_3a.md 1.5 kind 0x68's count) |
 | `+0x30` | u16 | `work_30` | likewise (kind 0x68's frame, effect_3a.md 1.5; kind 0x45's, effect_2d.cpp) |
 | `+0x32` | u16 | `work_32` | likewise, where the kind does not use +0x32 as a draw key (the C2 audit, ea F1 and doubt 1, frs F4: kind 0x2B's count, 0x43's countdown, 0x45's amplitude, 0x51's and 0x98's radius, 0xAE's ellipse word and angle, 0x78's saved turn of object 2; kind 18's subs 0x0F and 0x2B a height, 0x17 a counter and a height factor, 0x24 an angle, 0x25, 0x26 and 0x39 a lid index). Kind 18's sub 0x44 draws by it as a key (Sub44_Follow stores 0x3200) and keeps draw_key |
+| `+0x3C` | u16 | `work_3c` | a word of the kind's own where the kind does not keep a height there: the choice menu's (effect 6) page word (rest_1g.cpp kEff6Page, ChoiceMenu_DataPage / _RulePage; C4 audit A F3) |
+| `+0x3E` | u16 | `work_3e` | likewise: the choice menu's shown page (rest_1g.cpp kEff6Shown) |
 
 Padding:
 
+- EffectObject's
 - EffectObject's
 - EffectObject's
 - EffectObject's

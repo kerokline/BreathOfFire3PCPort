@@ -24,7 +24,7 @@ constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;  // (matr
                                                    // (effect_3a_callees.h kMatrixVector)
 
 // --- the image's cells ---------------------------------------------------------
-// kLeaderPoint: now ObjTrio[0x34] (symbols.toml). ObjTrio + 0x34: the leader's x, z, height (three dwords)
+// kLeaderPoint: now ObjTrio[0].x (symbols.toml). ObjTrio + 0x34: the leader's x, z, height (three dwords)
 constexpr std::uint32_t kCounter = 0x903848;       // u8: the chapter's count (scenario_harness at::kCounter)
 constexpr rdata::Const kHalf{0x5C41B8};          // float (.rdata): the trail's half-width (effect_3a_callees.h kHalf)
 

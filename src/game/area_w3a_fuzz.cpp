@@ -62,7 +62,7 @@ const ah::Callee kSpawn = {"Effect_Spawn", ::bof3::addr::Effect_Spawn, KeyOf(Eff
 // docs/area_w3a.md): never the constants ours reads, so a wrong one in ours
 // shows.
 // kFzCursor: now AreaW0c_ChoiceAnswer (symbols.toml).
-// kFzLeaderDir: now ObjTrio[8] (symbols.toml).
+// kFzLeaderDir: now ObjTrio[0].direction (symbols.toml).
 // kFzPartyList: now Cond_Flags[0xd2] (symbols.toml).
 // kFzZenny: now Party_Zenny (symbols.toml).
 // kFzByte9398CF: now AreaW0c_AnswerMark (symbols.toml).

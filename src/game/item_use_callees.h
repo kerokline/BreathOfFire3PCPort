@@ -47,7 +47,7 @@ constexpr std::uint32_t kItemStride = 22;
 // ItemUse_FaerieTiara's cells.
 // kMenuState: now FieldS_State (symbols.toml). u8, set to 0xA
 constexpr std::uint32_t kTiaraCount = 0x905B61;    // u8, 0xB9 less the clear flags counted
-// kLeaderXZ: now ObjTrio[0x34] (symbols.toml). two dwords (ObjTrio +0x34 / +0x38)
+// kLeaderXZ: now ObjTrio[0].x (symbols.toml). two dwords (ObjTrio +0x34 / +0x38)
 // kReturnPoint: now AreaW2d_ReturnPoint (symbols.toml). two dwords, then the area word at 0x904150
 constexpr std::uint32_t kWaterJug = 0x90405F;      // u8, set to 0xF0
 // The message box (msgbox_callees.h names the same cells).

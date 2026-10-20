@@ -32,7 +32,7 @@ namespace at {
 
 // The effect scratch (the PC's copy of the PSX scratchpad, SharedScratch):
 // words the draws keep radii, colours and angle indices in.
-// kR: now SharedScratch (symbols.toml). s16: the outer radius (the draws), or a size (Simoon)
+constexpr std::uint32_t kR = SharedScratch_addr; // s16: the outer radius (the draws), or a size (Simoon)
 constexpr std::uint32_t kR2 = 0x903852;      // s16: the inner radius
 constexpr std::uint32_t kW4 = 0x903854;      // u16: a colour, or the next angle index
 constexpr std::uint32_t kW6 = 0x903856;      // u16: a colour, or the angle
@@ -42,9 +42,9 @@ constexpr std::uint32_t kWA = 0x90385A;      // u16: the angle, or a colour
 constexpr std::uint32_t kWE = 0x90385E;      // s16: its screen y
 // Prim_VertexScratch: four SVECTORs, 8 bytes apart.
 // kV0: now Prim_VertexScratch (symbols.toml).
-// kV1: now Prim_VertexScratch[4] (symbols.toml).
-// kV2: now Prim_VertexScratch[8] (symbols.toml).
-// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
+// kV1: now Prim_VertexScratch[1] (symbols.toml).
+// kV2: now Prim_VertexScratch[2] (symbols.toml).
+// kV3: now Prim_VertexScratch[3] (symbols.toml).
 
 // kShiftY: now Camera_ShiftY (symbols.toml). Camera_ShiftY (s16)
 // kActorSprite: now MagicS23_ActorSprite (symbols.toml). unsigned char *: its +8 is the side's facing

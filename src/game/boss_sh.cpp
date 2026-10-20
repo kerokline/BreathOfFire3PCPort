@@ -268,7 +268,7 @@ extern "C" void __cdecl Boss34_Exit(void) {
                     "section 6)");
     Sprite_Current[0x2A] = 1;
     SetWord(Sprite_Current + 0x58, BossSb_Enemy0Pose);
-    SetWord(Sprite_Current + 0x5A, BossSh_Enemy0Y);
+    SetWord(Sprite_Current + 0x5A, Battle_Enemies[0].frame_word);
 }
 
 // original 0x43E270: Boss_SetupTable[41]. The hooks: end BossHook_EndPickWay

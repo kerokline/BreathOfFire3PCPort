@@ -42,7 +42,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
-// kObjectIndex: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kObjectIndex = SharedScratch_addr;
 // The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject). Area
 // 192's and 193's pair choices write its dwords +0x18 / +0x1C.
@@ -56,7 +56,7 @@ constexpr std::uint32_t kFlagRow = 0x929ED0;
 // The party records (ObjTrio, 0x14C each): the leader's +0x89 (0x802DC9;
 // the record k's is k * 0x14C on), and the +0x80 block (0xA4 bytes from
 // 0x802DC0) area 192's pass copies each member's character record into.
-// kLeader89: now ObjTrio[0x89] (symbols.toml).
+// kLeader89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kParty80 = 0x802DC0;
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The party list (a member id a byte, Field_MemberCount of them) and

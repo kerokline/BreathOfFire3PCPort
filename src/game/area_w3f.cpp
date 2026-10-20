@@ -244,10 +244,10 @@ unsigned char TrailLeg(unsigned t, unsigned kk, unsigned back, U table1, U table
 // back as the originals do (a dword, masked).
 unsigned char SpawnSlot() {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(SharedScratch_addr) = slot;
+    B(at::kSlotScratch) = slot;
     return slot;
 }
-unsigned char* ScratchRecord() { return EffectAt(static_cast<U>(Long(Mem(SharedScratch_addr))) & 0xFF); }
+unsigned char* ScratchRecord() { return EffectAt(static_cast<U>(Long(Mem(at::kSlotScratch))) & 0xFF); }
 // Tail states 0xA and 0x14: an effect of kind 0x13, the camera turn, to the
 // three target angles +0x64 / +0x68 / +0x6C (CameraTurn_Start turns each
 // Camera_Angles[n] toward dword +0x64 + 4n over +9 frames: docs/frame-callees.md),
@@ -611,7 +611,7 @@ extern "C" void __cdecl Area145_ChoiceRun3(void) {
 // script object's +0 | 8.
 extern "C" void __cdecl Area145_PartyRecord16(void) {
     const auto index = static_cast<unsigned char>(static_cast<std::int32_t>(Key(Field_ActiveMember) - Sprite_ObjectsExtra_addr) / 0xA4);
-    B(SharedScratch_addr + 0x1) = index;
+    B(at::kRecordIndex) = index;
     unsigned char* const rec = Mem(MoveScript_PartyRecords_addr + index * 16u);
     rec[2] = 0x10;
     rec[1] = 0;

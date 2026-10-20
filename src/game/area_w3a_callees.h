@@ -30,9 +30,9 @@ using U = std::uint32_t;
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or the place hook's) state
 // kTailArg: now AreaW0c_TailSub (symbols.toml).
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
-// kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml). the leader's +8, its facing
+// kLeaderX: now ObjTrio[0].x (symbols.toml). the leader's +0x34 / +0x38, 16.16
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
 constexpr U kPartyStride = 0x14C;
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). the first party list: the members' ids, a byte each
 // kCursor: now AreaW0c_ChoiceAnswer (symbols.toml). the message box's cursor (s8): a choice's answer
@@ -44,11 +44,11 @@ constexpr U kCounter0 = 0x903848;         // MoveScript counter 0 (flow ops A0..
 constexpr U kFieldStateMember = 0x128;    // the record byte the member frames set to 2
 
 // --- the world maps' cells (area 16's, docs/area_w0b.md; as area_w2b's) --------
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
-// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
-// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 constexpr U kMapMode = 0x9045FA;          // the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z

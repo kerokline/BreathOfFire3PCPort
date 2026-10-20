@@ -45,6 +45,7 @@ constexpr std::uint32_t kTimer = 0x8034E6;      // u16: the scenes' word timer
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
 inline auto& kSlotWord = SharedScratch;  // u16: an object or effect slot, a caption's clock
+constexpr std::uint32_t kSlotWord_addr = SharedScratch_addr; // kSlotWord's address, for the raw accessors that take one
 inline auto& kCaptionTotal = SharedScratch.w_02;  // u16: a caption's length in frames, less one
 // kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Test / Set as a literal
@@ -84,7 +85,7 @@ constexpr unsigned kClutWords = 0x2000;
 // kEntryByte: now ModeFlow_AreaTransition (symbols.toml). a byte the runs set 0 / 0xFF before an area change
 constexpr std::uint32_t kTrio = 0x802D40;       // ObjTrio: three records of 0x14C
 constexpr std::uint32_t kTrioStride = 0x14C;
-// kFacing: now ObjTrio[8] (symbols.toml). u8 ObjTrio record 0 + 8: the leader's facing
+// kFacing: now ObjTrio[0].direction (symbols.toml). u8 ObjTrio record 0 + 8: the leader's facing
 constexpr std::uint32_t kLeaderName = 0x802DC9; // u8 ObjTrio record 0 + 0x89: who leads
 // kTrioX: now ObjTrio record 0 x (records::PartyMember).
 // kTrioY: now ObjTrio record 0 z (records::PartyMember).

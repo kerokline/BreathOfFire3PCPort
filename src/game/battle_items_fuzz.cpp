@@ -103,7 +103,7 @@ void Disturb() {
     case 2: Sprite_Current = g_sprites[v & 1]; break;
     case 3: Gfx_PacketNext = PrimAt(v); break;
     case 4: SetPointer(SndStream_Buffer_addr, &g_fakes[v & 1]); break;
-    case 5: SetWord(At(SharedScratch_addr + 2 * (v % 8)), h >> 16); break;
+    case 5: SetWord(At(at::kScratch + 2 * (v % 8)), h >> 16); break;
     case 6: SetWord(At(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 7: {
         static const unsigned kFields[] = {5, 6, 7, 3, 4, 8, 9, 0xA, 0xC, 0x20, 0x21, 0x22, 0x14, 0x18};
@@ -532,7 +532,7 @@ Region g_regions[] = {
     {at::kSparklePool, at::kSparkles * at::kSparkleStride},   // the pool
     {BattleItems_SparkleCurrent_addr, 4},
     {BattleE2_Owner_addr, 4},
-    {SharedScratch_addr, 0x10},
+    {at::kScratch, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {at::kSparkleOffsets, 0x104},                             // 0x65AD34..0x65AE38: the sparkles' tables, Sparkle_Types[0..3]
     {0x937F88, 0x10},                                         // Sprite_Current, Frame_Counter (0x937F94)

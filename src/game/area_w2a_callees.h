@@ -52,8 +52,8 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // The leader's record (ObjTrio): byte +8 (the pose the cell hook compares),
 // byte +0x89 (area 84's handler tests it).
 constexpr std::uint32_t kLeader = 0x802D40;
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Effect_Objects' stride (records of 0x80 bytes).
 constexpr std::uint32_t kEffectStride = 0x80;

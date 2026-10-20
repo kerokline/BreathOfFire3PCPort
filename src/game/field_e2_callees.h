@@ -42,6 +42,7 @@ constexpr std::uint32_t kTallyBits = 0x904654;       // a bit array (bit 4 at +0
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords (0xA4 each)
 constexpr std::uint32_t kRecordStride = 0xA4;
 inline auto& kEffectSlot = SharedScratch.b_00;  // SharedScratch's byte: the slope probe's flag; the party-set ids 0x903850..52
+constexpr std::uint32_t kEffectSlot_addr = SharedScratch_addr; // kEffectSlot's address, for the raw accessors that take one
 constexpr std::uint32_t kDirectionSteps = 0x6697B0;  // Field_DirectionSteps: 8 x (dx, dz) dwords
 constexpr std::uint32_t kPaceHeights = 0x66978C;     // s16 per actor id: the ground's offset for a hop
 constexpr std::uint32_t kPaceRises = 0x6697A4;       // u8 per actor id: a step's rise
@@ -55,8 +56,8 @@ constexpr std::uint32_t kObject = 0x905DA0;          // the object record (0xA4)
 constexpr std::uint32_t kButtonsRun = 0x903582;      // u16: the run buttons (save data)
 constexpr std::uint32_t kButtonsLeave = 0x903586;    // u16: the buttons that leave mode 11 (save data)
 // kRunDefault: now FieldE2_RunDefault (symbols.toml). u8: the run toggle
-// kLeaderX, kLeaderZ, kLeaderY: now rv::As<records::PartyMember>(ObjTrio)->x / z / height (records.h). ObjTrio[0] +0x34 / +0x38 / +0x3C / +0x138
-// kLeaderFlags: now ObjTrio[0x138] (symbols.toml).
+// kLeaderX, kLeaderZ, kLeaderY: now ObjTrio[0].x / .z / .height (symbols.toml). ObjTrio[0] +0x34 / +0x38 / +0x3C / +0x138
+// kLeaderFlags: now ObjTrio_addr + 0x138 (symbols.toml).
 constexpr std::uint32_t kInputHeld = 0x905BA6;       // Field_InputHeld
 constexpr std::uint32_t kScriptFlags2 = 0x905BA4;    // Field_ScriptFlags2
 // kKind2Z: now Field_Kind2Z (symbols.toml). Field_Kind2Z / X

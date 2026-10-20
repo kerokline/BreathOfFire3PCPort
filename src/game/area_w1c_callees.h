@@ -59,8 +59,8 @@ constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
 // The leader's record (ObjTrio): byte +8 (the pose the hooks compare), byte
 // +0x89 (Character_IndexById's index, op 8C).
 constexpr std::uint32_t kLeader = 0x802D40;
-// kLeaderPose: now ObjTrio[8] (symbols.toml).
-// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderPose: now ObjTrio[0].direction (symbols.toml).
+// kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Area 48's own cells: a count 0..8 its handlers step and read
 // (0x92BEE7; MapView_ElevationOffset is 0x92BEE2, five bytes before), and a

@@ -36,6 +36,7 @@ constexpr std::uint32_t kTimer = 0x8034E6;      // u16: a countdown the runs kee
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
 inline auto& kEffectSlot = SharedScratch;  // u8 (a word in Scena10_SpriteOp): the slot just taken
+constexpr std::uint32_t kEffectSlot_addr = SharedScratch_addr; // kEffectSlot's address, for the raw accessors that take one
 // kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Set / Clear as a literal
 constexpr std::uint32_t kRow657 = 0x904657;     // a row handed to Flags_Set as a literal (run 7 step 0xF)
@@ -58,8 +59,8 @@ constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 // kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kObjTrio: now ObjTrio (symbols.toml). ObjTrio: records of 0x14C
 constexpr std::uint32_t kObjStride = 0x14C;
-// kLeaderByte8: now ObjTrio[8] (symbols.toml). u8 ObjTrio +0x8, tested against 4..6 / 0..2
-// kLeaderByteB: now ObjTrio[0xb] (symbols.toml). u8 ObjTrio +0xB, cleared by the area 0x79 entry
+// kLeaderByte8: now ObjTrio[0].direction (symbols.toml). u8 ObjTrio +0x8, tested against 4..6 / 0..2
+// kLeaderByteB: now ObjTrio_addr + 0xb (symbols.toml). u8 ObjTrio +0xB, cleared by the area 0x79 entry
 // kObjTrioX: now ObjTrio record 0 x (records::PartyMember).
 // kObjTrioZ: now ObjTrio record 0 z (records::PartyMember).
 constexpr unsigned kMemberKind = 0x89;          // ObjTrio record +0x89: the member's character byte

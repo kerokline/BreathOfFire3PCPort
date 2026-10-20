@@ -25,7 +25,7 @@ constexpr std::uint32_t kVar5 = 0x90384A;
 constexpr std::uint32_t kVar6 = 0x90384B;
 // A byte the effect handlers keep their Effect_FindFree slot in (read back
 // as a dword and masked).
-// kEffectSlot: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kEffectSlot = SharedScratch_addr;
 // The field mode's tail kind (Field_ModeTailKinds 0x662CE8 by this s8) and
 // the byte beside it the tail phases read.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
@@ -39,7 +39,7 @@ constexpr std::uint32_t kVar6 = 0x90384B;
 // The scene's timer (u16, docs/field-modes.md).
 // kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml).
 // Field object 6's x (Sprite_Objects + 6 * 0xA4 + 0x34), a dword.
-// kObject6X: now Sprite_Objects[0x40c] (symbols.toml).
+// kObject6X: now Sprite_Objects[6].x (symbols.toml).
 // Text_Records, where Crt_sprintf writes the message's parameter, and the
 // format area 8's handlers 1 and 2 give it (Area08_MessageFormat).
 constexpr std::uint32_t kTextRecords = 0x904CE0;

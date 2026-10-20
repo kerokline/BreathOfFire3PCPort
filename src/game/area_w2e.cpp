@@ -893,7 +893,7 @@ extern "C" void __cdecl Area104_Kind5CFollow(void) {
         bar(0x40, 1);
         return;
     }
-    if (ObjTrio[0].digits == 0) {
+    if (rv::Bytes(ObjTrio)[0xa] == 0) {
         frame(0xDC, 0x10, 0);
         bar(0x40, 0);
         bar(static_cast<unsigned char>(0x40 - rv::Bytes(ObjTrio)[0xb]), 1);

@@ -68,17 +68,17 @@ inline auto& kFoundX = SharedScratch.b_00;  // the scratch word the step hook of
 // kCondFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kPrevArea: now AreaW2c_LastArea (symbols.toml). u16: the area the party came from
 constexpr U kLeader = 0x802D40;            // ObjTrio + 0, the leader's record
-// kLeaderState: now ObjTrio[1] (symbols.toml). its +1 (leader state 12: area 104's controller)
-// kLeaderDir: now ObjTrio[8] (symbols.toml). its +8, the facing
-// kLeaderA: now ObjTrio[0xa] (symbols.toml). its +0xA (the charge's hold)
-// kLeaderB: now ObjTrio[0xb] (symbols.toml). its +0xB (the charge, 0..0x40)
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). its +0x34 / +0x38 / +0x3C (16.16)
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
-// kLeaderY: now ObjTrio[0x3c] (symbols.toml).
-// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high words of +0x34 / +0x38
-// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml).
-// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml). the word +0x3E
-// kLeader89: now ObjTrio[0x89] (symbols.toml). its +0x89
+// kLeaderState: now ObjTrio[0].state (symbols.toml). its +1 (leader state 12: area 104's controller)
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml). its +8, the facing
+// kLeaderA: now ObjTrio_addr + 0xa (symbols.toml). its +0xA (the charge's hold)
+// kLeaderB: now ObjTrio_addr + 0xb (symbols.toml). its +0xB (the charge, 0..0x40)
+// kLeaderX: now ObjTrio[0].x (symbols.toml). its +0x34 / +0x38 / +0x3C (16.16)
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
+// kLeaderY: now ObjTrio[0].height (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high words of +0x34 / +0x38
+// kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml).
+// kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml). the word +0x3E
+// kLeader89: now ObjTrio[0].char_id (symbols.toml). its +0x89
 // kEffects: now Effect_Objects (symbols.toml). Effect_Objects: twenty records of 0x80
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
@@ -136,9 +136,9 @@ constexpr U kLeaderCellX = 0x905E66;       // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). the field's button word 6
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). the leader's +9
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). its +0xC / +0x10
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). the leader's +9
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). its +0xC / +0x10
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
 
 // Area 104: WorldMap_Records record 6 (0x6539B8: +0 0x414760, +0xC 0x414A90,
 // +0x10 0x41B730 - AR3B's), WorldMap_FieldHooks entry 6 (0x662E08).

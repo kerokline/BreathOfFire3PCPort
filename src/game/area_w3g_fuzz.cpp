@@ -54,7 +54,7 @@ constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 // The fuzz's own literal addresses (read off the exe, docs/area_w3g.md): never
 // the constants ours reads, so a wrong one in ours shows.
 // kFzCursor: now AreaW0c_ChoiceAnswer (symbols.toml).
-// kFzLeaderDir: now ObjTrio[8] (symbols.toml).
+// kFzLeaderDir: now ObjTrio[0].direction (symbols.toml).
 constexpr U kFzTailKind = 0x9039F3;
 // kFzTailState: now AreaW0c_TailState (symbols.toml).
 // kFzTailArg: now AreaW0c_TailSub (symbols.toml).
@@ -74,7 +74,7 @@ constexpr U kFzKind2Sprite = 0x7E0974;   // Sprite_Kind2 + 0x34 .. + 0x3F
 // kFzCameraDistance: now Camera_Distance (symbols.toml).
 // kFzKind2X: now Field_Kind2X (symbols.toml).
 constexpr U kFzKind2Z = 0x905E60;
-// kFzMemberId: now ObjTrio[0x89] (symbols.toml).
+// kFzMemberId: now ObjTrio[0].char_id (symbols.toml).
 // kFzSwitch: now Area148_Switch (symbols.toml).
 
 // BOF3X_AR3G_GROUP=n runs one group alone (the controls script's shortcut):
@@ -719,14 +719,14 @@ constexpr unsigned kFzAnimCount = 7, kFzRowCount = 7;
 // kFzPlace: now AreaW0b_Place (symbols.toml).
 // kFzMapMode: now AreaW0b_MapMode (symbols.toml).
 constexpr U kFzItemsHeld = 0x9040EC, kFzTextRecords = 0x904CE0;
-// kFzCellWordX: now ObjTrio[0x36] (symbols.toml).
-// kFzCellWordZ: now ObjTrio[0x3a] (symbols.toml).
+// kFzCellWordX: now ObjTrio[0].x_whole (symbols.toml).
+// kFzCellWordZ: now ObjTrio[0].z_whole (symbols.toml).
 constexpr U kFzCellX = 0x905E66, kFzCellZ = 0x905E62;
 // kFzButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml).
 // kFzPartySet: now AreaW0b_PartySet (symbols.toml).
 // kFzMapHeight: now AreaMap_Header[1] (symbols.toml).
 constexpr U kFzButtonMap0 = 0x903580;
-// kFzLeaderSteps: now ObjTrio[9] (symbols.toml).
+// kFzLeaderSteps: now ObjTrio[0].step_frames (symbols.toml).
 constexpr U kFzFlag3A79 = 0x903A79, kFzAreaText = 0x803580;
 
 enum : unsigned { kRegPackets151 = 3, kRegItems = 7, kRegNames = 8 };

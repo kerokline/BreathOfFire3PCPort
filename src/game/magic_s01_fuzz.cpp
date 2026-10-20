@@ -146,7 +146,7 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
 
@@ -266,7 +266,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},           // Gfx_PacketNext
     {0, kPrimBytes},         // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
-    {SharedScratch_addr, 0x10}, // SharedScratch: the shadow's radius words +0 / +2
+    {kScratch, 0x10}, // SharedScratch: the shadow's radius words +0 / +2
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
@@ -280,7 +280,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 6) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: SetWord(mh::Mem(SharedScratch_addr + 2 * (v % 2)), (h >> 16) % 0x100); break;
+    case 2: SetWord(mh::Mem(kScratch + 2 * (v % 2)), (h >> 16) % 0x100); break;
     case 3: {
         static const unsigned kFields[] = {9, 0xA, 0xB, 0x5D, 0x27};
         Sc()[kFields[v % 5]] = Byte(h >> 24);

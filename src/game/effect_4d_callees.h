@@ -20,8 +20,8 @@ constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;   // (mat
 constexpr std::uint32_t kCounter = 0x903848;        // the chapter counter byte kinds 0x97 and 0x9A wait on
 constexpr unsigned kKind97Cue = 0xA;                // kind 0x97's state 2 waits for it
 constexpr unsigned kKind9AEnd = 0x28;               // kind 0x9A ends at it
-// kTrio0Mode: now ObjTrio[0x137] (symbols.toml). ObjTrio record 0's +0x137 (kind 0x95's finish waits while 2)
-// kTrio2Mode: now ObjTrio[0x3cf] (symbols.toml). ObjTrio record 2's +0x137 by its address (kind 0x95's clock
+// kTrio0Mode: now ObjTrio_addr + 0x137 (symbols.toml). ObjTrio record 0's +0x137 (kind 0x95's finish waits while 2)
+// kTrio2Mode: now ObjTrio_addr + 0x3cf (symbols.toml). ObjTrio record 2's +0x137 by its address (kind 0x95's clock
                                                     // waits while 2)
 constexpr std::uint32_t kTrioBusy = 0x89;           // ObjTrio +0x89: kind 0x94 redraws a member whose byte is 7
 constexpr unsigned kTrioCount = 3;                  // ObjTrio's records of 0x14C
@@ -30,7 +30,7 @@ constexpr std::uint32_t kTrioStride = 0x14C;
 // kKind96Index: now Effect4d_Kind96Index (symbols.toml). byte: kind 0x96's index into EffectKind96_Shades (0..7)
 // kKind95Clock: now Effect4d_Kind95Clock (symbols.toml). u16: kind 0x95's clock - low byte the ticks, high byte bit 7
                                                     // a mode (40 frames a tick, else 30), bits 0..6 the frames
-// kSprite1: now Sprite_Objects[0xa4] (symbols.toml). Sprite_Objects record 1, which kind 0x9A nudges
+// kSprite1: now Sprite_Objects[1] (symbols.toml). Sprite_Objects record 1, which kind 0x9A nudges
 
 // --- the pools in EffectKind30_Shards kind 0x97 uses ---------------------------------
 constexpr unsigned kSparkCount = 8;                 // eight 0x18-byte sparks at EffectKind30_Shards

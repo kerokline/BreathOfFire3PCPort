@@ -225,7 +225,7 @@ void DeathStates() {
 // of their (+0x34, +0x38).
 void GroundWords() {
     const long e = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
-    BossH_Enemy0Ground = static_cast<unsigned>(e) & 0xFFFF;
+    Battle_Enemies[0].height_whole = static_cast<unsigned>(e) & 0xFFFF;
     const long l = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
     ObjTrio[0].height_whole = static_cast<unsigned>(l) & 0xFFFF;
 }

@@ -25,7 +25,9 @@ constexpr std::uint32_t kScriptFlags2High = 0x905BA5;  // Field_ScriptFlags2's h
 // kLeader: now ObjTrio (symbols.toml). ObjTrio's first record: +1 its state, +2..+4 its sub-state bytes
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). two 3-byte lists of member ids (field-event.md section 2)
 inline auto& kCount = SharedScratch.w_00;             // s16: the next Sprite_Objects entry a placement fills (SharedScratch)
+constexpr std::uint32_t kCount_addr = SharedScratch_addr; // kCount's address, for the raw accessors that take one
 inline auto& kBank = SharedScratch.w_02;              // u16: the animation bank a placement passes on
+constexpr std::uint32_t kBank_addr = SharedScratch_addr + 0x2; // kBank's address, for the raw accessors that take one
 constexpr std::uint32_t kObjectStride = 0xA4;          // Sprite_Objects and CharacterRecords alike
 constexpr unsigned kObjectCount = 30;                  // Sprite_Objects' entries; a count of 30 or more places nothing
 constexpr unsigned kEffectStride = 0x80;               // Effect_Objects' records

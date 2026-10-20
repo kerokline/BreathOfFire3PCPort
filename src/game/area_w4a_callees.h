@@ -44,14 +44,14 @@ constexpr U kTextRecords = 0x904CE0;      // Text_Records: area 155's choice cop
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
 constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
-// kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
+// kLeaderDir: now ObjTrio[0].direction (symbols.toml). the leader's +8, its facing
 
 // --- the world maps' cells (area 16's, docs/area_w0b.md) ----------------------
-// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
-// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
-// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0].step_x (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0].step_z (symbols.toml).
+// kLeaderX: now ObjTrio[0].x (symbols.toml). the leader's +0x34 / +0x38, 16.16
+// kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z

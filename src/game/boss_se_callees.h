@@ -78,19 +78,19 @@ constexpr U kEnemy0Flags = 0x93BA70;      // its +0x110 (u32)
 // kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
 // kMsgMode: now BossSa_WindowPass (symbols.toml). u8: set to 2 before each Msg_OpenScript here (its reader not read)
-// kMember0State1: now ObjTrio[1] (symbols.toml). member 0's +1
-// kMember0State2: now ObjTrio[2] (symbols.toml). member 0's +2
-// kMember0Hp: now ObjTrio[0x98] (symbols.toml). member 0's +0x98 (u16 HP, battle_phases.md)
-// kMember0Ap: now ObjTrio[0x9a] (symbols.toml). member 0's +0x9A (u16 AP)
-// kMember0Bc: now ObjTrio[0xbc] (symbols.toml). member 0's +0xBC
-// kMember0Ba: now ObjTrio[0xba] (symbols.toml). member 0's +0xBA
-// kMember0MaxHp: now ObjTrio[0xa0] (symbols.toml). member 0's +0xA0 (u16 max HP)
-// kMember0MaxAp: now ObjTrio[0xa2] (symbols.toml). member 0's +0xA2 (u16)
-// kMember0Target: now ObjTrio[0x124] (symbols.toml). member 0's +0x124
-// kMember0Action: now ObjTrio[0x125] (symbols.toml). member 0's +0x125 (battle_windows.md: the action)
-// kMember0Skill: now ObjTrio[0x126] (symbols.toml). member 0's +0x126 (u16: the skill)
-// kMember0Word128: now ObjTrio[0x128] (symbols.toml). member 0's +0x128 (s16; +0x128 of the member a target names)
-// kMember0Word12A: now ObjTrio[0x12a] (symbols.toml). member 0's +0x12A
+// kMember0State1: now ObjTrio[0].state (symbols.toml). member 0's +1
+// kMember0State2: now ObjTrio[0].step (symbols.toml). member 0's +2
+// kMember0Hp: now ObjTrio[0].hp (symbols.toml). member 0's +0x98 (u16 HP, battle_phases.md)
+// kMember0Ap: now ObjTrio[0].ap (symbols.toml). member 0's +0x9A (u16 AP)
+// kMember0Bc: now ObjTrio_addr + 0xbc (symbols.toml). member 0's +0xBC
+// kMember0Ba: now ObjTrio_addr + 0xba (symbols.toml). member 0's +0xBA
+// kMember0MaxHp: now ObjTrio[0].max_hp (symbols.toml). member 0's +0xA0 (u16 max HP)
+// kMember0MaxAp: now ObjTrio[0].max_ap (symbols.toml). member 0's +0xA2 (u16)
+// kMember0Target: now ObjTrio_addr + 0x124 (symbols.toml). member 0's +0x124
+// kMember0Action: now ObjTrio_addr + 0x125 (symbols.toml). member 0's +0x125 (battle_windows.md: the action)
+// kMember0Skill: now ObjTrio_addr + 0x126 (symbols.toml). member 0's +0x126 (u16: the skill)
+// kMember0Word128: now ObjTrio_addr + 0x128 (symbols.toml). member 0's +0x128 (s16; +0x128 of the member a target names)
+// kMember0Word12A: now ObjTrio_addr + 0x12a (symbols.toml). member 0's +0x12A
 
 // --- set-up 25's save of member 0's HP and AP (one byte each) -----------------
 // kSavedAp: now BossSe_SavedAp (symbols.toml). u8 (.data)

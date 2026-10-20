@@ -107,7 +107,7 @@ U RandEffect(const U*, U answer) {
     case 0: Mem(ObjTrio_addr + 0x8)[0] = static_cast<unsigned char>(n >> 8); break;
     case 1: Mem(AreaEntry_PendingFlags_addr)[0] = static_cast<unsigned char>(n >> 8); break;
     case 2: SetWord(Mem(AreaW0b_Place_addr), n >> 8); break;
-    case 3: SetLong(Mem(SharedScratch_addr + 0x10), static_cast<std::int32_t>(n)); break;
+    case 3: SetLong(Mem(at::kPendingX_addr), static_cast<std::int32_t>(n)); break;
     default: SetLong(Mem(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(n)); break;
     }
     return answer;
@@ -194,7 +194,7 @@ const sh::Region kRegions[] = {
     {0x66C7E8, 4},          // Game_Mode, Game_Step (effect mode's; not field mode's)
     {at::kMessageBits, 4},  // the message cells' 0x7DEE44
     {ModeRest_MusicWord_addr, 2}, // the word 0x7E0678
-    {SharedScratch_addr + 0x10, 4}, // the trip's destination x 0x903860
+    {at::kPendingX_addr, 4}, // the trip's destination x 0x903860
     {MenuLists_CampChosen_addr, 4}, // 0x905B60, 0x905B61
     {0x905BA8, 1},          // Draw_SortOnX
     {0x92BF19, 1},          // Draw_OtSlot

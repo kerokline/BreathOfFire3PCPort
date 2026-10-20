@@ -21,8 +21,8 @@ constexpr std::uint32_t kBankCount = 0x8C3580;
 constexpr std::uint32_t kBankRecordsAt = 0x8C3584;  // where Title_LoadTask points it
 
 // The leader (ObjTrio's first record): its direction +8 and its byte +0x30.
-// kLeaderDirection: now ObjTrio[8] (symbols.toml).
-// kLeader30: now ObjTrio[0x30] (symbols.toml).
+// kLeaderDirection: now ObjTrio[0].direction (symbols.toml).
+// kLeader30: now ObjTrio[0].screen_y (symbols.toml).
 
 // Field_ScriptFlags' high byte (bit 0: the word's 0x100).
 constexpr std::uint32_t kScriptFlagsHi = 0x9039A3;

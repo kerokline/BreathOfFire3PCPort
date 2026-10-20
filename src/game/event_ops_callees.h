@@ -29,10 +29,10 @@ namespace at {
 // The leader and the field.
 // kLeader: now ObjTrio (symbols.toml). ObjTrio: member 0, which Field_State points at
 constexpr std::uint32_t kMemberStride = 0x14C;
-// kZoneCounter: now ObjTrio[0x134] (symbols.toml). u16, ObjTrio +0x134 (field-event.md section 4)
-// kLeaderPace: now ObjTrio[0x128] (symbols.toml). u8, ObjTrio +0x128 - Field_State +0x128 read by address
-// kLeaderFlags: now ObjTrio[0x138] (symbols.toml). u8, ObjTrio +0x138
-// kLeaderZone: now ObjTrio[0x36] (symbols.toml). u16 pair: ObjTrio +0x36 / +0x3A (whole x, z)
+// kZoneCounter: now ObjTrio_addr + 0x134 (symbols.toml). u16, ObjTrio +0x134 (field-event.md section 4)
+// kLeaderPace: now ObjTrio_addr + 0x128 (symbols.toml). u8, ObjTrio +0x128 - Field_State +0x128 read by address
+// kLeaderFlags: now ObjTrio_addr + 0x138 (symbols.toml). u8, ObjTrio +0x138
+// kLeaderZone: now ObjTrio[0].x_whole (symbols.toml). u16 pair: ObjTrio +0x36 / +0x3A (whole x, z)
 // kActorRecords: now CharacterRecords (symbols.toml). stride 0xA4 (item_use_callees.h)
 constexpr std::uint32_t kActorStride = 0xA4;
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). two 3-byte lists of member ids (field-event.md section 2)
@@ -44,6 +44,7 @@ constexpr std::uint32_t kMemberPositions = 0x7E06E0; // x, z dwords per member, 
 // kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8, the fourth argument of Field_ChangeArea
 // kExitArea: now AreaW0b_Place (symbols.toml). u16, the first
 inline auto& kExitX = SharedScratch.d_10;           // dword, the second
+constexpr std::uint32_t kExitX_addr = SharedScratch_addr + 0x10; // kExitX's address, for the raw accessors that take one
 // kExitZ: now AreaEntry_PendingZ (symbols.toml). dword, the third
 // kTalkMode: now AreaW0a_TailKind (symbols.toml). u8, set to 0x37 / 0x1B by Field_LeaderCellEvent
 // kCellCycle: now AreaW0b_MapMode (symbols.toml). u8, 0..2
@@ -64,10 +65,15 @@ constexpr std::uint32_t kFacingPose = 0x660A38;      // u8 per Field_State +0x89
 constexpr std::uint32_t kChapterHooks = 0x662C80;    // a record pointer per chapter (Cond_ByteFA): +8 step, +0xC arrive
 // The scratch words (SharedScratch 0x903850 and after, PSX 0x1F800000).
 inline auto& kScratch = SharedScratch;  // u16 / u8: the count, a found cell's x, the slope flag
+constexpr std::uint32_t kScratch_addr = SharedScratch_addr; // kScratch's address, for the raw accessors that take one
 inline auto& kScratch2 = SharedScratch.w_02;        // u16: a found cell's z, the animation bank
+constexpr std::uint32_t kScratch2_addr = SharedScratch_addr + 0x2; // kScratch2's address, for the raw accessors that take one
 inline auto& kCellX = SharedScratch.w_04;           // u16 each: the step's target cell
+constexpr std::uint32_t kCellX_addr = SharedScratch_addr + 0x4; // kCellX's address, for the raw accessors that take one
 inline auto& kCellZ = SharedScratch.w_06;
+constexpr std::uint32_t kCellZ_addr = SharedScratch_addr + 0x6; // kCellZ's address, for the raw accessors that take one
 inline auto& kTargetX = SharedScratch.d_08;         // s32 each: the step's target position
+constexpr std::uint32_t kTargetX_addr = SharedScratch_addr + 0x8; // kTargetX's address, for the raw accessors that take one
 // kTargetZ: now Scratch_Swap (symbols.toml). Scratch_Swap
 
 }  // namespace at

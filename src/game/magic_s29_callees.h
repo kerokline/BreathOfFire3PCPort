@@ -45,8 +45,8 @@ constexpr std::uint32_t kY = 0x90385E;    // s16: a screen y
 // kVertices: now Prim_VertexScratch (symbols.toml).
 // kV0: now Prim_VertexScratch (symbols.toml).
 constexpr std::uint32_t kV1 = 0x9037A8;
-// kV2: now Prim_VertexScratch[8] (symbols.toml).
-// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
+// kV2: now Prim_VertexScratch[2] (symbols.toml).
+// kV3: now Prim_VertexScratch[3] (symbols.toml).
 
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 // kActorSprite: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite

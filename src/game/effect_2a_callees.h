@@ -24,9 +24,9 @@ constexpr std::uint32_t kFtol = 0x5B9550;           // the CRT's _ftol: pops st(
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Cond_Flags + 0xA0): Flags_Test's bank
 constexpr std::uint32_t kCounter0 = 0x903848;       // the chapters' counter byte (scenario_harness at::kCounter)
 constexpr std::uint32_t kMessageBits = 0x7DEE44;    // a byte of the message cells (kind 0x2D's end ORs 2 into it)
-// kObject0Point: now Sprite_Objects[0x34] (symbols.toml). Sprite_Objects[0] +0x34..+0x3C: x, z, height (16.16)
-// kObject1Point: now Sprite_Objects[0xd8] (symbols.toml). Sprite_Objects[1] +0x34..+0x3C
-// kExtra0Point: now Sprite_ObjectsExtra[0x34] (symbols.toml). Sprite_ObjectsExtra[0] +0x34..+0x3C
+// kObject0Point: now Sprite_Objects[0].x (symbols.toml). Sprite_Objects[0] +0x34..+0x3C: x, z, height (16.16)
+// kObject1Point: now Sprite_Objects[1].x (symbols.toml). Sprite_Objects[1] +0x34..+0x3C
+// kExtra0Point: now Sprite_ObjectsExtra[0].x (symbols.toml). Sprite_ObjectsExtra[0] +0x34..+0x3C
 constexpr std::uint32_t kBeamColours28 = 0x6542EC;  // kind 0x28's colours: three bytes (r, g, b) a +6 value, read in place
 constexpr std::uint32_t kPushCells28 = 0x654308;    // kind 0x28's eight x cells (bytes) of the row it pushes the party from
 constexpr std::uint32_t kBeamColours2A = 0x654328;  // kind 0x2A's colours, as kind 0x28's

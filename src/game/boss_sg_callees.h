@@ -51,8 +51,8 @@ constexpr U kTaskStride = 0x84;
 // --- the party (ObjTrio, stride 0x14C) -----------------------------------------
 // kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
-// kMember0X: now ObjTrio[0x34] (symbols.toml). member 0's +0x34 (x), read by set-up 33's end hook
-// kMember0Z: now ObjTrio[0x38] (symbols.toml). member 0's +0x38 (z)
+// kMember0X: now ObjTrio[0].x (symbols.toml). member 0's +0x34 (x), read by set-up 33's end hook
+// kMember0Z: now ObjTrio[0].z (symbols.toml). member 0's +0x38 (z)
 
 // --- other cells ------------------------------------------------------------
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step

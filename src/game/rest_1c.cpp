@@ -55,8 +55,8 @@ using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 // kStep3: now Field_DirectionSteps[6] (symbols.toml).
 // kStep5: now Field_DirectionSteps[0xa] (symbols.toml). rows 3 and 5, read by address
 inline auto& kSloped = SharedScratch.b_00;  // SharedScratch's first byte: AreaMap_Slope's "sloped" flag
-// kObjectFlag: now Sprite_Objects[0x80] (symbols.toml). Sprite_Objects + 0x80
-// kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml). Sprite_ObjectsExtra + 0x80
+// kObjectFlag: now Sprite_Objects[0].context (symbols.toml). Sprite_Objects + 0x80
+// kExtraFlag: now Sprite_ObjectsExtra[0].context (symbols.toml). Sprite_ObjectsExtra + 0x80
 constexpr U kObjectStride = 0xA4;
 constexpr U kScriptFlagsHigh = 0x9039A3;               // Field_ScriptFlags' high byte
 constexpr U kEffectStride = 0x80;

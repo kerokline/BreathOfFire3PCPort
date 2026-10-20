@@ -64,7 +64,7 @@ constexpr std::uint32_t kScriptPool = 0x803580;    // MessagePools, the script s
 constexpr std::uint32_t kPoolSelector = 0x803584;  // u32 inside the pool header: code 0x08's sub-pool
 constexpr std::uint32_t kTextRecords = 0x904CDF;   // Text_Records 0x904CE0 minus one (the tail's inc esi)
 constexpr std::uint32_t kCharRecords = 0x903A6F;   // CharacterRecords 0x903A70 minus one, stride 164
-// kNameIndex: now ObjTrio[0x89] (symbols.toml). u8, the member whose name control 0x03 substitutes
+// kNameIndex: now ObjTrio[0].char_id (symbols.toml). u8, the member whose name control 0x03 substitutes
 constexpr std::uint32_t kNameMap = 0x66972C;       // u8[], that member's record index
 constexpr std::uint32_t kSpeedTable = 0x658E94;    // u8[]: +0 held-fast, +1 normal, by the text-speed byte
 constexpr std::uint32_t kEffectTable = 0x658E98;   // 4-byte records: kind, s8 offset, u16 frames

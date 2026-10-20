@@ -619,13 +619,13 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
             s[9] = 8;
             SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[5]))));
             Animate(8);
-            Effect_Objects[5].digits = static_cast<unsigned char>(Effect_Objects[5].digits + 1);
+            rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] + 1);
         } else {
             unsigned char* const s = S();
             if (s[9] != 0) {
                 s[9] = static_cast<unsigned char>(s[9] - 1);
                 Tick();
-                Effect_Objects[5].digits = static_cast<unsigned char>(Effect_Objects[5].digits + 1);
+                rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] + 1);
             } else {
                 SetL(at::kEff5Frame, 0);
                 Effect1e_Pose = 0;
@@ -636,7 +636,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
             Pull("LeaderPanel_S4Run");
             Animate(7);
             SH_CALL(LeaderPanel_S4Pose)();
-            Effect_Objects[5].digits = static_cast<unsigned char>(Effect_Objects[5].digits + 1);
+            rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] + 1);
             PoseSound();
             return;
         }
@@ -644,7 +644,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
             SH_CALL(LeaderPanel_S4Blink)();
             SH_CALL(LeaderPanel_S4Pose)();
             Tick();
-            Effect_Objects[5].digits = static_cast<unsigned char>(Effect_Objects[5].digits + 1);
+            rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] + 1);
         }
         PoseSound();
         return;
@@ -655,7 +655,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
         SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[6]))));
         Picked("LeaderPanel_S4Run")[0x1C] = 0;
         Animate(0);
-        Effect_Objects[5].digits = static_cast<unsigned char>(Effect_Objects[5].digits - 1);
+        rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] - 1);
         PoseSound();
         return;
     }
@@ -668,7 +668,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
         SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[4]))));
         Animate(7);
         Tick();
-        Effect_Objects[5].digits = static_cast<unsigned char>(Effect_Objects[5].digits + 1);
+        rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] + 1);
         PoseSound();
         return;
     }

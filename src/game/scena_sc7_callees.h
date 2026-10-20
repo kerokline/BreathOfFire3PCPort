@@ -29,6 +29,7 @@ constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter2 = 0x90384A;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 inline auto& kSlot = SharedScratch;         // u8 (a u16 store in two places): the effect or sprite slot just taken
+constexpr std::uint32_t kSlot_addr = SharedScratch_addr; // kSlot's address, for the raw accessors that take one
 // kFlagBank: now Chapter_FlagRow (symbols.toml). unsigned char *: the flag row Flags_Test / Flags_Set are given
 // kRow6: now Cond_Flags[0x30] (symbols.toml). chapter 6's flag row, tested by two of chapter 7's object handlers
 // kRow7: now Cond_Flags[0x38] (symbols.toml). chapter 7's flag row (Cond_Flags +0x38), cleared by its start
@@ -77,10 +78,10 @@ constexpr std::uint32_t kTextRecords = 0x904CE0;  // Text_Records: an item's 16-
 // +0x58, +0x5B, +0x5C written or read here) and the sprite and effect pools.
 constexpr std::uint32_t kMembers = 0x802D40;
 constexpr std::uint32_t kMemberStride = 0x14C;
-// kLeaderKind: now ObjTrio[8] (symbols.toml). member 0 +8
-// kLeaderSlot: now ObjTrio[0xb] (symbols.toml). member 0 +0xB: chapter 7 run 4 keeps its effect slot here
-// kLeaderX: now ObjTrio[0x34] (symbols.toml). member 0 +0x34
-// kLeaderZ: now ObjTrio[0x38] (symbols.toml). member 0 +0x38
+// kLeaderKind: now ObjTrio[0].direction (symbols.toml). member 0 +8
+// kLeaderSlot: now ObjTrio_addr + 0xb (symbols.toml). member 0 +0xB: chapter 7 run 4 keeps its effect slot here
+// kLeaderX: now ObjTrio[0].x (symbols.toml). member 0 +0x34
+// kLeaderZ: now ObjTrio[0].z (symbols.toml). member 0 +0x38
 // kMember1: now Field_Members[4] (symbols.toml). member 1 +0
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords
 constexpr std::uint32_t kRecordStride = 0xA4;

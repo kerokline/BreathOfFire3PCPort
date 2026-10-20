@@ -60,9 +60,9 @@ inline auto& kSlot = SharedScratch.b_00;       // the effect slot just taken
 // kTriggers: now Scena11_Triggers (symbols.toml). Scena11_Triggers, 15 entries
 // kRolls: now Scena11_EffectRolls (symbols.toml). Scena11_EffectRolls, 16 bytes
 // kPartyByte: now AreaW0b_PartySet (symbols.toml). & 0x7F: picks the call-table entries in area 0x65
-// kLeadByte8: now ObjTrio[8] (symbols.toml). ObjTrio member 0's +8
-// kLead89: now ObjTrio[0x89] (symbols.toml). ObjTrio member 0's +0x89
-// kLead124: now ObjTrio[0x124] (symbols.toml). ObjTrio member 0's +0x124, bit 0x40
+// kLeadByte8: now ObjTrio[0].direction (symbols.toml). ObjTrio member 0's +8
+// kLead89: now ObjTrio[0].char_id (symbols.toml). ObjTrio member 0's +0x89
+// kLead124: now ObjTrio_addr + 0x124 (symbols.toml). ObjTrio member 0's +0x124, bit 0x40
 // kMusicByte: now AreaW1f_MusicCurrent (symbols.toml). a byte the area changes set (0x7C, 0x7D, 0x92, 0xFF)
 // kByteEE0: now ModeFlow_AreaTransition (symbols.toml). set to 0xFF with one area change
 constexpr std::uint32_t kTextRecords = 0x904CE0;   // Text_Records: the item name copied in, 16 bytes

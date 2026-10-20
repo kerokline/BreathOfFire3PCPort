@@ -29,9 +29,9 @@ constexpr U kAutoMode = 0x904B35;          // u8: the auto-target mode (4: by th
 constexpr U kTarget = 0x904B44;            // u8: the target the checks store
 // kForcedActor: now BattlePhases_B8B (symbols.toml). u8: the actor the auto-target check compares
 // kPartyPick: now Battle_PartyStanding (symbols.toml). u8: 1 keeps a member's pick off the party
-// kMemberAction: now ObjTrio[0x126] (symbols.toml). ObjTrio + 0x126 (u16): a member's action
-// kMemberMode: now ObjTrio[0x125] (symbols.toml). ObjTrio + 0x125 (u8): a member's auto mode
-// kMemberOdds: now ObjTrio[0x142] (symbols.toml). ObjTrio + 0x142 (s8): the odds of a party pick, by 20
+// kMemberAction: now ObjTrio_addr + 0x126 (symbols.toml). ObjTrio + 0x126 (u16): a member's action
+// kMemberMode: now ObjTrio_addr + 0x125 (symbols.toml). ObjTrio + 0x125 (u8): a member's auto mode
+// kMemberOdds: now ObjTrio[0].count_4000 (symbols.toml). ObjTrio + 0x142 (s8): the odds of a party pick, by 20
 constexpr U kMemberStride = 0x14C;
 constexpr U kEnemyHp = 0x93BA1A;           // enemy record + 0xBA (u16), records from 0x93B960, 0x128 apart
 constexpr U kEnemyStatus = 0x93B9F2;       // enemy record + 0x92 (u8): bit 5
@@ -92,8 +92,8 @@ constexpr U kOfferWords = 0x675F60;        // 3 x 3 u16 (.data, written)
 constexpr U kOfferWordsEnd = 0x675F72;
 // kSpriteBase: now Sprite_Objects (symbols.toml). Sprite_Objects
 constexpr U kSpriteStride = 0xA4;
-// kSpritePose: now Sprite_Objects[0x88] (symbols.toml). Sprite_Objects + 0x88 (u16)
-// kSpriteKind: now Sprite_Objects[6] (symbols.toml). Sprite_Objects + 6
+// kSpritePose: now Sprite_Objects[0].trigger_word (symbols.toml). Sprite_Objects + 0x88 (u16)
+// kSpriteKind: now Sprite_Objects[0].type (symbols.toml). Sprite_Objects + 6
 constexpr U kSpriteHold = 0x7DEF04;        // Sprite_Objects + 0x84
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flag row Flags_* are handed
 

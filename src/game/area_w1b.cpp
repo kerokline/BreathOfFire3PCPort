@@ -377,7 +377,7 @@ extern "C" void __cdecl Area42_Init(void) {
             if (i == 3) Area42_Rank = 2;
         }
         const auto found = static_cast<unsigned char>(AH_AT(unsigned (__cdecl*)(), area_w1b::kFreeObject)());
-        SetWord(At(SharedScratch_addr), found);
+        SetWord(At(at::kFoundSlot_addr), found);
         if (found != 0xFF) AH_CALL(EventOp_9x)(At(Area42_Placements_addr + Area42_Rank * 13u));
     }
     if (Cond_ByteFD != 1) return;

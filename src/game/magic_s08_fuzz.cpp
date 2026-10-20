@@ -253,7 +253,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kFormIndex: now BattlePhases_B89 (symbols.toml).
 // kWardPool: now WardMote_Pool (symbols.toml).
 // kTrails: now EvilEyeBeam_Trails (symbols.toml).
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 constexpr std::uint32_t kAbility = 0x904B80;
 constexpr unsigned kTrailBytes = 0x600;
 
@@ -424,7 +424,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},              // Gfx_PacketNext
     {0, kPrimBytes},            // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
-    {SharedScratch_addr, 0x10}, // 0x903850.., Scratch_Swap at +0xC
+    {kScratch, 0x10}, // 0x903850.., Scratch_Swap at +0xC
     {Field_Kind2Z_addr, 8},     // Field_Kind2Z, Field_Kind2X
     {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords
     {0x80E980, 0x200},          // Gfx_ClutStripSource row 26
@@ -445,7 +445,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: SetWord(mh::Mem(SharedScratch_addr + 2 * (v % 8)), h >> 16); break;
+    case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
     case 3: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
     case 4: mh::Mem(MoveScript_TintRecords_addr + v % 0xC00)[0] = Byte(h >> 24); break;
     case 5: PoolRecord(v)[0] = Byte(PoolRecord(v)[0] ^ 1); break;

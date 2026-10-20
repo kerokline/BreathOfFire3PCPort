@@ -43,27 +43,27 @@ constexpr std::uint32_t kPoolWord40 = 0x803640;
 constexpr std::uint32_t kPoolWord5E = 0x80365E;
 
 // Effect_Objects cells the stages drive (record n at 0x7E11E0 + 0x80 n).
-// kEff0State: now Effect_Objects[1] (symbols.toml). record 0 +1
-// kEff0Hold: now Effect_Objects[0xb] (symbols.toml). record 0 +0xB
+// kEff0State: now Effect_Objects[0].state (symbols.toml). record 0 +1
+// kEff0Hold: now Effect_Objects_addr + 0xb (symbols.toml). record 0 +0xB
 constexpr std::uint32_t kEff0StepX = 0x7E11EC;      // record 0 +0xC (s32)
 constexpr std::uint32_t kEff0StepY = 0x7E11F0;      // record 0 +0x10 (s32)
-// kEff0StepZ: now rv::As<records::EffectObject>(Effect_Objects)->step_y (records.h). record 0 +0x14 (s32)
+// kEff0StepZ: now Effect_Objects[0].step_y (symbols.toml). record 0 +0x14 (s32)
 constexpr std::uint32_t kEff0X = 0x7E1214;          // record 0 +0x34 (s32, 16.16)
-// kEff0Z: now rv::As<records::EffectObject>(Effect_Objects)->z (records.h). record 0 +0x38 (s32)
-// kEff0Height: now Effect_Objects[0x3e] (symbols.toml). record 0 +0x3E (s16)
-// kEff1State: now Effect_Objects[0x81] (symbols.toml). record 1 +1
-// kEff1Sub: now Effect_Objects[0x82] (symbols.toml). record 1 +2
-// kEff2State: now Effect_Objects[0x101] (symbols.toml). record 2 +1
-// kEff2Word: now rv::As<records::EffectObject>(Effect_Objects + 0x100)->work_18 (records.h). record 2 +0x18 (u32)
-// kEff3State: now Effect_Objects[0x181] (symbols.toml). record 3 +1
-// kEff4State: now Effect_Objects[0x201] (symbols.toml). record 4 +1
-// kEff4Mode: now Effect_Objects[0x206] (symbols.toml). record 4 +6
-// kEff5State: now Effect_Objects[0x281] (symbols.toml). record 5 +1
-// kEff5Count: now Effect_Objects[0x28a] (symbols.toml). record 5 +0xA
+// kEff0Z: now Effect_Objects[0].z (symbols.toml). record 0 +0x38 (s32)
+// kEff0Height: now Effect_Objects[0].height_whole (symbols.toml). record 0 +0x3E (s16)
+// kEff1State: now Effect_Objects[1].state (symbols.toml). record 1 +1
+// kEff1Sub: now Effect_Objects[1].step (symbols.toml). record 1 +2
+// kEff2State: now Effect_Objects[2].state (symbols.toml). record 2 +1
+// kEff2Word: now Effect_Objects[2].work_18 (symbols.toml). record 2 +0x18 (u32)
+// kEff3State: now Effect_Objects[3].state (symbols.toml). record 3 +1
+// kEff4State: now Effect_Objects[4].state (symbols.toml). record 4 +1
+// kEff4Mode: now Effect_Objects[4].param (symbols.toml). record 4 +6
+// kEff5State: now Effect_Objects[5].state (symbols.toml). record 5 +1
+// kEff5Count: now Effect_Objects_addr + 0x28a (symbols.toml). record 5 +0xA
 constexpr std::uint32_t kEff5Frame = 0x7E1470;      // record 5 +0x10 (s32)
-// kEff6State: now Effect_Objects[0x301] (symbols.toml). record 6 +1
-// kEff6Choice: now Effect_Objects[0x306] (symbols.toml). record 6 +6
-// kEff6Hold: now Effect_Objects[0x30b] (symbols.toml). record 6 +0xB
+// kEff6State: now Effect_Objects[6].state (symbols.toml). record 6 +1
+// kEff6Choice: now Effect_Objects[6].param (symbols.toml). record 6 +6
+// kEff6Hold: now Effect_Objects_addr + 0x30b (symbols.toml). record 6 +0xB
 
 // Sprite_Objects fields the stages read by kSpriteIndex (stride 0xA4, 30 records).
 constexpr std::uint32_t kSpriteStride = 0xA4;

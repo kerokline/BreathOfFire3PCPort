@@ -69,9 +69,9 @@ std::uint32_t __cdecl StubFlagsTest(const unsigned char* bits, std::uint32_t ind
 }
 // Area_ClassifyPending writes none of these; the caller reads them after it.
 void __cdecl StubClassify() {
-    Record(2, Word(At(AreaW0b_Place_addr)), static_cast<std::uint32_t>(Long(At(SharedScratch_addr + 0x10))), static_cast<std::uint32_t>(Long(At(AreaEntry_PendingZ_addr))));
+    Record(2, Word(At(AreaW0b_Place_addr)), static_cast<std::uint32_t>(Long(At(kPendingX_addr))), static_cast<std::uint32_t>(Long(At(AreaEntry_PendingZ_addr))));
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) SetLong(At(SharedScratch_addr + 0x10), static_cast<std::int32_t>(h * 7));
+    if (h % 3 == 0) SetLong(At(kPendingX_addr), static_cast<std::int32_t>(h * 7));
     if (h % 5 == 0) SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(h * 13));
     if (h % 7 == 0) SetWord(At(AreaW0b_Place_addr), h >> 9);
 }
@@ -115,7 +115,7 @@ void __cdecl StubSetUp(unsigned count, const unsigned char* list) { Record(9, co
 void __cdecl StubSwapMembers(unsigned a, unsigned b, unsigned keep) {
     Record(10, a, b & 0xFF, keep);
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) At(SharedScratch_addr + 0x4)[(h >> 4) % 4] = static_cast<unsigned char>((h >> 8) % 6);
+    if (h % 3 == 0) At(kPickSlot)[(h >> 4) % 4] = static_cast<unsigned char>((h >> 8) % 6);
     if (h % 7 == 0) Field_MemberCount = static_cast<unsigned char>((h >> 16) % 6);
 }
 // ObjTrio_SwapFields swaps the member bytes the caller reads next.
