@@ -51,7 +51,7 @@ void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p)
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // Sprite_Objects record `k` (a byte index, unchecked as the originals').
 unsigned char* ObjectAt(unsigned k) { return Mem(Sprite_Objects_addr + k * at::kObjectStride); }
 
@@ -387,7 +387,7 @@ extern "C" void __cdecl Area192_Init(void) {
     }
     for (unsigned k = 0; k < at::kPlaceOpCount; ++k) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(at::kObjectIndex), slot);
+        SetWord(Mem(SharedScratch_addr), slot);
         if (slot == 0xFF) continue;
         const U ops = static_cast<U>(Long(Mem(Area192_PlaceOps_addr + set * 4u)));
         AH_CALL(EventOp_0x)(Mem(ops + k * at::kPlaceOpStride));
@@ -402,7 +402,7 @@ extern "C" void __cdecl Area192_Init(void) {
 // party record's +0x80 block (dword by dword, forward).
 extern "C" void __cdecl Area192_RestoreCharacters(void) {
     for (unsigned k = 0; k < at::kCharCount; ++k) {
-        unsigned char* const r = Mem(at::kCharRecords + k * at::kCharStride);
+        unsigned char* const r = Mem(CharacterRecords_addr + k * at::kCharStride);
         if ((r[0xB] & 1) == 0) continue;
         rv::Store<unsigned>(rv::As<records::CharRecord>(r)->hp, rv::As<records::CharRecord>(r)->stats.max_hp);
         rv::Store<unsigned>(rv::As<records::CharRecord>(r)->ap, rv::As<records::CharRecord>(r)->stats.max_ap);
@@ -413,7 +413,7 @@ extern "C" void __cdecl Area192_RestoreCharacters(void) {
         const unsigned char id = B(Cond_Flags_addr + 0xd2 + static_cast<U>(i));
         const unsigned char record = B(Character_IndexById_addr + id);
         unsigned char* const to = Mem(at::kParty80 + static_cast<U>(i) * at::kPartyStride);
-        const unsigned char* const from = Mem(at::kCharRecords + record * at::kCharStride);
+        const unsigned char* const from = Mem(CharacterRecords_addr + record * at::kCharStride);
         for (unsigned d = 0; d < at::kCharStride; d += 4) std::memcpy(to + d, from + d, 4);
     }
 }
@@ -871,7 +871,7 @@ extern "C" void __cdecl Area198_SpawnDrops(void) {
 extern "C" void __cdecl Area198_SpawnDrop(void) {
     unsigned char* const self = Sprite_Current;
     const unsigned char slot = AH_CALL(Sprite_FindFree)();
-    SetWord(Mem(at::kObjectIndex), slot);
+    SetWord(Mem(SharedScratch_addr), slot);
     if (slot != 0xFF) {
         AH_CALL(EventOp_0x)(Mem(Area198_DropOp_addr));
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, 0);

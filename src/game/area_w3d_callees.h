@@ -35,7 +35,7 @@ constexpr std::uint32_t kTailTimer = 0x9039F6;
 // The movement script's counter 3 (MoveScript_CounterOps) and the scratch
 // word 0x903850 (a sprite slot the spawn state keeps there).
 constexpr std::uint32_t kCounter3 = 0x90384B;
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now SharedScratch (symbols.toml).
 // The story flags (Flags_Set's bank); party list 1's first byte.
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
@@ -109,7 +109,7 @@ constexpr std::uint32_t kSpriteObjectsExtra = 0x802000;   // Sprite_ObjectsExtra
 // kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
 constexpr std::uint32_t kTextRecords = 0x904CE0;     // Text_Records
 constexpr std::uint32_t kMessageFormat = 0x5E10C0;   // Area08_MessageFormat (area 8's, shared)
-constexpr std::uint32_t kMessagePools = 0x803160;    // MessagePools
+// kMessagePools: now WindowRecords (symbols.toml). MessagePools
 
 // --- area 135's .data (descriptor 0x62D940; symbols.toml [[data]]) ---
 

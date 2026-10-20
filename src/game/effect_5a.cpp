@@ -853,9 +853,9 @@ extern "C" void __cdecl EffectKind18_08_Crash(void) {
         const U n = s[9];
         const U vx = ((static_cast<U>(TS(at::kPuffStep + j)) * n + (static_cast<U>(T(at::kPuffBase + j)) << 4)) << 3) + Word(s + 0x34);
         const U vy = ((static_cast<U>(TS(at::kPuffStep + j + 1)) * n + (static_cast<U>(T(at::kPuffBase + j + 1)) << 4)) << 3) + Word(s + 0x38);
-        Prim_VertexScratch[0] = vx & 0xFFFF;
-        Prim_VertexScratch[1] = vy & 0xFFFF;
-        Prim_VertexScratch[2] = Word(s + 0x3E);
+        Prim_VertexScratch[0].x = vx & 0xFFFF;
+        Prim_VertexScratch[0].y = vy & 0xFFFF;
+        Prim_VertexScratch[0].z = Word(s + 0x3E);
         long depth;
         SH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(At(Prim_VertexScratch_addr)), reinterpret_cast<unsigned long*>(At(0x903820)), &depth);
         SH_CALL(Gte_PrimDepthFlat4_10)(p);

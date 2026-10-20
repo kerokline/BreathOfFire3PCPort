@@ -48,10 +48,10 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the draw keeps its radius in (DamageScratch's words +0 and +2)
+// The scratch the draw keeps its radius in (SharedScratch's words +0 and +2)
 // and the three SVECTORs of Prim_VertexScratch it projects; both read again
 // after every call, as the original reads them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
@@ -60,9 +60,9 @@ unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 
-short SS(unsigned k) { return static_cast<short>(Word(Mem(kS + k))); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+short SS(unsigned k) { return static_cast<short>(Word(Mem(SharedScratch_addr + k))); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
@@ -120,8 +120,8 @@ void SpawnCopy(unsigned parameter) {
     const unsigned actor = ActorByte();
     const unsigned char* const from =
         actor < 3 ? Mem(ObjTrio_addr + actor * at::kPartyStride)
-                  : Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
-    unsigned char* const task = Mem(at::kTasks + slot * at::kTaskStride);
+                  : Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
+    unsigned char* const task = Mem(BattleTask_Slots_addr + slot * at::kTaskStride);
     unsigned char* const self = Sc();
     for (unsigned k = 0; k < 0x80; k += 4) SetLong(task + k, Long(from + k));
     SetLong(task + 0x80, static_cast<std::int32_t>(Key(self)));

@@ -90,7 +90,7 @@ unsigned char* SpriteRec(const char* who, unsigned index) {
         bof3::Fatal("%s: sprite index %u is past Sprite_Objects' 30 records - the original writes past the pool "
                     "(docs/effect_2d.md section 2)",
                     who, index);
-    return Sprite_Objects + index * at::kSpriteStride;
+    return rv::Bytes(Sprite_Objects) + index * at::kSpriteStride;
 }
 
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + i * at::kSparkStride; }
@@ -558,15 +558,15 @@ extern "C" void __cdecl EffectKind46_DrawFlash(void) {
 extern "C" void __cdecl EffectKind46_RedrawSprites(void) {
     unsigned char* const saved = Sprite_Current;
     for (unsigned i = 0; i < at::kSprites; ++i) {
-        unsigned char* const o = Sprite_Objects + i * at::kSpriteStride;
+        unsigned char* const o = rv::Bytes(&Sprite_Objects[i]);
         Sprite_Current = o;
         if ((o[0] & 1) != 0) {
             o[0x29] = 5;
             SH_CALL(Sprite_UpdateScreen)();
         }
     }
-    Sprite_Current = ObjTrio;
-    ObjTrio[0x29] = 5;
+    Sprite_Current = rv::Bytes(ObjTrio);
+    ObjTrio[0].ot_slot = 5;
     SH_CALL(Sprite_UpdateScreen)();
     Sprite_Current = saved;
 }
@@ -582,7 +582,7 @@ extern "C" void __cdecl EffectKind47_Run(void) { Dispatch("EffectKind47_Run", Ad
 // only the second: the first given back), each marked in use. The model's
 // animation byte +0x4B - the leader's, or sprite object 2's when +0xB is 0 -
 // looked up among the five triples at 0x654564 (the sixth, past them, when none
-// matches). For each sprite: DamageScratch's word = its index,
+// matches). For each sprite: SharedScratch's word = its index,
 // EventOp_0x(0x654540 + 17 * +0xB), Sprite_SetAnimationAt(the triple's
 // animation, its start). Sprite_Current put back; the first moved (-0x1000,
 // +0x1000), the second (+0x1000, -0x1000), both at the leader's height, +0 |=
@@ -601,15 +601,15 @@ extern "C" void __cdecl EffectKind47_Start(void) {
         return;
     }
     SpriteRec(who, self[4])[0] = 1;
-    unsigned char model = ObjTrio[0x4B];
-    if (self[0xB] == 0) model = Sprite_Objects[0x193];
+    unsigned char model = ObjTrio[0].animation;
+    if (self[0xB] == 0) model = Sprite_Objects[2].animation;
     unsigned k = 0;
     while (k < 5 && model != At(at::kTwinAnims + 3 * k)[0]) ++k;
     const unsigned char* const triple = At(at::kTwinAnims + 3 * k);
-    SetWord(At(bof3::addr::DamageScratch), self[3]);
+    SharedScratch.w_00 = self[3];
     SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
-    SetWord(At(bof3::addr::DamageScratch), self[4]);
+    SharedScratch.w_00 = self[4];
     SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
     Sprite_Current = self;
@@ -618,7 +618,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
     SetUL(a + 0x38, UL(a + 0x38) + 0x1000u);
     unsigned char* b = SpriteRec(who, self[4]);
     SetUL(b + 0x34, UL(b + 0x34) + 0x1000u);
-    const U height = UL(ObjTrio + 0x3C);
+    const U height = UL(rv::Bytes(ObjTrio) + 0x3C);
     SetUL(b + 0x38, UL(b + 0x38) + 0xFFFFF000u);
     SetUL(b + 0x3C, height);
     SetUL(a + 0x3C, height);
@@ -639,7 +639,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
 // +0 = 0 and +1 = 2.
 extern "C" void __cdecl EffectKind47_Blink(void) {
     unsigned char* const s = S();
-    unsigned char* const model = s[0xB] != 0 ? ObjTrio : At(Sprite_Objects_addr + 0x148);
+    unsigned char* const model = s[0xB] != 0 ? rv::Bytes(ObjTrio) : At(Sprite_Objects_addr + 0x148);
     if (s[9] != 0) {
         model[0] = static_cast<unsigned char>(model[0] | 0x40);
         s[9] = static_cast<unsigned char>(s[9] - 1);
@@ -656,8 +656,8 @@ extern "C" void __cdecl EffectKind47_Blink(void) {
 // [+4] (Sprite_Current read for each; the addresses only - the callee compares,
 // it does not read the record), then Effect_Release (a tail jump).
 extern "C" void __cdecl EffectTwinSprites_Release(void) {
-    SH_CALL(Sprite_ReleaseTint)(Sprite_Objects + S()[3] * at::kSpriteStride);
-    SH_CALL(Sprite_ReleaseTint)(Sprite_Objects + S()[4] * at::kSpriteStride);
+    SH_CALL(Sprite_ReleaseTint)(rv::Bytes(&Sprite_Objects[S()[3]]));
+    SH_CALL(Sprite_ReleaseTint)(rv::Bytes(&Sprite_Objects[S()[4]]));
     SH_CALL(Effect_Release)();
 }
 
@@ -674,7 +674,7 @@ extern "C" void __cdecl EffectKind48_Run(void) { Dispatch("EffectKind48_Run", Ad
 extern "C" void __cdecl EffectKind48_Start(void) {
     unsigned char* const self = S();
     for (unsigned i = 0; i < at::kEffects; ++i) {
-        const unsigned char* const e = Effect_Objects + i * at::kEffectStride;
+        const unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
         if (e[0] != 0 && e[5] == 0x48 && e != self) {
             SH_CALL(Effect_Release)();
             return;

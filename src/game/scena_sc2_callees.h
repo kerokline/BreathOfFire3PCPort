@@ -23,7 +23,7 @@ namespace at {
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
 // kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml). u16: cleared by Scena02_EnterArea
 constexpr std::uint32_t kCounters = 0x903848;      // u8 x4: the script counters (MoveScript_CounterOps)
-constexpr std::uint32_t kEffectSlot = 0x903850;    // u8: the effect slot just taken
+inline auto& kEffectSlot = SharedScratch.b_00;  // u8: the effect slot just taken
 // kFlagBank: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag row
 // kRow2: now Cond_Flags[0x10] (symbols.toml). Cond_Flags + 8 * 2: chapter 2's row; Scena02_Start clears
                                                    // its first dword, the object hook passes it
@@ -45,7 +45,7 @@ constexpr unsigned kObjectCount = 27;
 
 // The members' records (docs/scena_sc1.md section 6): eight of 0xA4 from
 // 0x903A70; +0x7E ten bytes Scena02_StripMember hands back one by one.
-constexpr std::uint32_t kMemberRecords = 0x903A70;
+// kMemberRecords: now CharacterRecords (symbols.toml).
 constexpr std::uint32_t kMemberStride = 0xA4;
 constexpr std::uint32_t kMemberItems = 0x7E;
 

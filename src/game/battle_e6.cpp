@@ -65,7 +65,7 @@ void SetF(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 // The party's records and the enemies' objects as the originals index them:
 // unchecked (an actor past 2 reaches past the three members, as there).
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + (member & 0xFFu) * at::kPartyStride); }
-unsigned char* Enemy(unsigned index) { return At(at::kEnemies + index * at::kEnemyStride); }
+unsigned char* Enemy(unsigned index) { return At(Battle_Enemies_addr + index * at::kEnemyStride); }
 unsigned Actor() { return B(at::kActor); }
 unsigned char* Owner() { return At(BattleE2_Owner); }
 // Sprite_Current in the effect tasks is the task slot (docs/battle_e6.md 2.3).
@@ -198,8 +198,8 @@ void CheckEntries(const char* who, const unsigned char* record, unsigned first, 
 // original 0x451480 (the gene history's step table 0x64ED50, entry 6, by
 // 0x904AA4): windows 18 and 19's +3 = 4 and 2, 0x904AA3 = 3, 0x904AA4 = 2.
 extern "C" void __cdecl DragonHistory_Leave(void) {
-    Window18_State = 4;
-    Window19_State = 2;
+    WindowRecords[18].state = 4;
+    WindowRecords[19].state = 2;
     BattleE4_Step3 = 3;
     BattleE4_Step4 = 2;
 }
@@ -321,7 +321,7 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
     BackUpParty();
     unsigned char* const member = Party(Actor());
     auto* const member_rec = rv::As<records::PartyMember>(member);
-    const unsigned char* const character = At(at::kCharRecords + member_rec->char_index * at::kCharStride);
+    const unsigned char* const character = At(CharacterRecords_addr + member_rec->char_index * at::kCharStride);
     static_assert(at::kCharStride == sizeof(records::CharRecord));
     unsigned char* const sums = At(at::kMixSums);
     for (unsigned i = 0; i < 14; ++i) sums[i] = 0;
@@ -509,7 +509,7 @@ extern "C" void __cdecl DragonForm_ApplyRecipe(unsigned recipe) {
     auto* const member_rec = rv::As<records::PartyMember>(member);
     const unsigned r = recipe & 0xFF;
     const unsigned char* const row = At(at::kRecipeStats + r * 14);
-    const unsigned char* const character = At(at::kCharRecords + member_rec->char_index * at::kCharStride);
+    const unsigned char* const character = At(CharacterRecords_addr + member_rec->char_index * at::kCharStride);
     static_assert(at::kCharStride == sizeof(records::CharRecord));
     FirstStat(member, character,
               static_cast<std::uint16_t>(Percent9999(rv::As<records::CharRecord>(character)->base.max_hp, static_cast<std::int32_t>(row[0]) * 10)));
@@ -669,7 +669,7 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 0x12);
     if (slot != 0xFF) {
         unsigned char* const s = Sprite_Current;
-        unsigned char* const t = At(at::kTasks + slot * at::kTaskStride);
+        unsigned char* const t = At(BattleTask_Slots_addr + slot * at::kTaskStride);
         auto* const task_rec = rv::As<records::BattleTask>(t);
         for (U i = 0; i < 0x80; i += 4) SetL(t + i, L(s + i));
         task_rec->flags &= 0xBF;
@@ -936,7 +936,7 @@ extern "C" unsigned char __cdecl Battle_MemberListFull(unsigned member) {
 // = 1) with bit 3 and not bit 5; else 0.
 extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 1);
-    unsigned char* const t = At(at::kTasks + slot * at::kTaskStride);
+    unsigned char* const t = At(BattleTask_Slots_addr + slot * at::kTaskStride);
     auto* const task_rec = rv::As<records::BattleTask>(t);
     t[0xB] = 1;
     const unsigned who = actor & 0xFF;

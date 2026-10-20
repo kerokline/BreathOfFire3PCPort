@@ -64,10 +64,10 @@ uint32_t CodeAt(uint32_t table, int index, const char* who) {
 // as the original reads it (a dword masked to its byte).
 bool TakeSlot() {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    B(kSlot) = slot;
+    kSlot = slot;
     return slot != 0xFF;
 }
-unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<uint32_t>(B(kSlot)) << 7)); }
+unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<std::uint32_t>(kSlot) << 7)); }
 
 // The record views (game/record_views.h): rv::As<records::EffectObject>(p) is
 // given effect objects (Effect_Objects).
@@ -155,9 +155,9 @@ extern "C" void __cdecl Scena00_Start(void) {
 // 1) the pass flags 0, the flag, state 2 and run 3 and return; else
 // Party_DropIn(0) and run 9.
 extern "C" void __cdecl Scena00_EnterArea(void) {
-    auto* const obj0 = rv::As<records::SpriteObject>(Sprite_Objects + 0 * sizeof(records::SpriteObject));
-    auto* const xobj2 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 2 * sizeof(records::SpriteObject));
-    auto* const xobj3 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 3 * sizeof(records::SpriteObject));
+    auto* const obj0 = Sprite_Objects;
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
+    auto* const xobj3 = &Sprite_ObjectsExtra[3];
     if (Game_AreaNumber == 1) {
         SH_CALL(Party_DropIn)(0);
         const unsigned char n = B(kByte4A);
@@ -242,7 +242,7 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
 // flag. Else once (flag 10): the flag, Party_DropIn(0), the kind-2 object to
 // (0x260000, 0x1B8000).
 extern "C" void __cdecl Scena00_Area02(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     if (Game_AreaNumber != 2) return;
     if (SH_CALL(Flags_Test)(Row(), 2) == 0) {
         SetL(kCounter, 0);
@@ -405,8 +405,8 @@ extern "C" void __cdecl Scena00_Run2(void) {
 // sprite and the kind-2 sprite 0x1E0000 back, 0x7E068A back 0x1E, the focus
 // to 0x6200, then the view shift (a tail jump in the original).
 extern "C" void __cdecl Scena00_Run3(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
+    auto* const kind2 = &Sprite_Kind2;
+    auto* const xobj0 = Sprite_ObjectsExtra;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (B(kByte4A) != 0x30) return;
@@ -542,9 +542,9 @@ extern "C" void __cdecl Scena00_Run4(void) {
 // Scena00_Shake[frame & 15] * 4 while 0x90384A counts down; 14 shakes the
 // sprite records' +0x34 / +0x38 by the table's value << 11.
 extern "C" void __cdecl Scena00_Run5(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
-    auto* const obj2 = rv::As<records::SpriteObject>(Sprite_Objects + 2 * sizeof(records::SpriteObject));
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
+    auto* const member0 = ObjTrio;
+    auto* const obj2 = &Sprite_Objects[2];
+    auto* const xobj0 = Sprite_ObjectsExtra;
     uint32_t frame = Frame_Counter;
     if (static_cast<unsigned char>(MoveScript_PartyRecords[0x65] - 4) < 3 && (frame & 0xF) == 0) {
         const int r = SH_CALL(Rand)();
@@ -727,7 +727,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
 // and step 0 - 0xD counts before the call, 0x17 / 0x21 after); 0x32 goes to
 // area 0x1F. Every other step to 0x32 nothing.
 extern "C" void __cdecl Scena00_Run6(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     const unsigned step = MoveScript_PartyRecords[0x65];
     if (step > 0x32) return;
     switch (step) {
@@ -755,7 +755,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         Run(0);
         return;
     case 0x14:
-        if (ObjTrio[1] == 2) return;
+        if (ObjTrio[0].state == 2) return;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Party_DropIn)(4);
         SH_CALL(Flags_Set)(Row(), 8);
@@ -778,7 +778,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         return;
     }
     case 0x1E:
-        if (ObjTrio[1] == 2) return;
+        if (ObjTrio[0].state == 2) return;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Party_DropIn)(5);
         SH_CALL(Flags_Set)(Row(), 9);
@@ -811,8 +811,8 @@ extern "C" void __cdecl Scena00_Run6(void) {
 // 0x20-frame pull (distance - 0x24 a frame); music 4 on the counter 0x24;
 // area 0x1F on 0x25.
 extern "C" void __cdecl Scena00_Run7(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const kind2 = &Sprite_Kind2;
+    auto* const member0 = ObjTrio;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         B(kCounter) = 0xA;
@@ -927,7 +927,7 @@ extern "C" void __cdecl Scena00_Run9(void) {
 // coordinates, and at 0x90384A 3 after the timer area 1; the camera turned to
 // 0xF, then 0x90384A 4; at 9 script flag bit 7 cleared, area 0x19 and run 11.
 extern "C" void __cdecl Scena00_Run10(void) {
-    auto* const xobj3 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 3 * sizeof(records::SpriteObject));
+    auto* const xobj3 = &Sprite_ObjectsExtra[3];
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (TurnCamera(0x2D, 0xA) != 0) return;
@@ -970,7 +970,7 @@ extern "C" void __cdecl Scena00_Run10(void) {
 // and down / up (0x4000 / 0x1000), the sprite words 0x8021AC / 0x8021B0 by
 // 0x40 with them, then sound 0x204.
 extern "C" void __cdecl Scena00_Steer(void) {
-    auto* const xobj2 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 2 * sizeof(records::SpriteObject));
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
     move_script::SetWord(Corner("Scena00_Steer"), 0);
     if (B(kInput + 1) & 0x20) {
         SetW(L(kCorner), W(L(kCorner)) + 2u);
@@ -1000,12 +1000,12 @@ extern "C" void __cdecl Scena00_Steer(void) {
 // animating sprite 0 through Scena00_InputAnims), a random wobble of the
 // corner words, and at the end area 9 with ObjTrio 0's +0x24 bit 5 cleared.
 extern "C" void __cdecl Scena00_Run11(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
-    auto* const obj0 = rv::As<records::SpriteObject>(Sprite_Objects + 0 * sizeof(records::SpriteObject));
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
-    auto* const xobj1 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 1 * sizeof(records::SpriteObject));
-    auto* const xobj2 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 2 * sizeof(records::SpriteObject));
+    auto* const kind2 = &Sprite_Kind2;
+    auto* const member0 = ObjTrio;
+    auto* const obj0 = Sprite_Objects;
+    auto* const xobj0 = Sprite_ObjectsExtra;
+    auto* const xobj1 = &Sprite_ObjectsExtra[1];
+    auto* const xobj2 = &Sprite_ObjectsExtra[2];
     if ((B(0x937F94) & 0x1F) == 0) B(kByte4B) = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
     if (B(kByte4A) < 0x14 && static_cast<std::uint32_t>(MapView_FocusZ) == 0x5000) {
         const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = static_cast<uint32_t>(xobj0->z);
@@ -1065,7 +1065,7 @@ extern "C" void __cdecl Scena00_Run11(void) {
             const uint32_t i = (static_cast<std::uint32_t>(Input_Pressed) >> 12) << 1;
             if (B(kInputAnims + i) != 0) {
                 const unsigned char animation = B(kInputAnims + i + 1);
-                Sprite_Current = Sprite_Objects;
+                Sprite_Current = rv::Bytes(Sprite_Objects);
                 obj0->direction = animation;
                 EnsureAnimation(animation);
             }
@@ -1104,7 +1104,7 @@ extern "C" void __cdecl Scena00_Run11(void) {
         rv::Store<uint32_t>(xobj2->angle[1], S(p + 2) >= 0 ? 0x40u : 0xFFFFFFC0u);
         if ((B(0x937F94) & 3) == 0) {
             const auto animation = static_cast<unsigned char>((obj0->direction + 1) & 3);
-            Sprite_Current = Sprite_Objects;
+            Sprite_Current = rv::Bytes(Sprite_Objects);
             obj0->direction = animation;
             EnsureAnimation((p & 0xFFFFFF00u) | animation);
         }

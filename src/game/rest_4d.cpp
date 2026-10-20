@@ -918,7 +918,7 @@ extern "C" void __cdecl CommuName_MemberPanelIn(void) {
     PanelBox(slide);
     unsigned char n = 0;
     unsigned record = 0;
-    for (U flags = at::kRecordFlags; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
+    for (U flags = CharacterRecords_addr + 0xb; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
         if ((B(flags) & 1) == 0) continue;
         const int y = 0x2B + 56 * (n >> 1);
         const int x = (n & 1) == 0 ? 0x20 - 40 * Slide() : 0xA8 + 40 * Slide();
@@ -990,7 +990,7 @@ extern "C" void __cdecl CommuName_MemberPanelOut(void) {
     PanelBox(slide);
     unsigned char n = 0;
     unsigned record = 0;
-    for (U flags = at::kRecordFlags; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
+    for (U flags = CharacterRecords_addr + 0xb; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
         if ((B(flags) & 1) == 0) continue;
         if (static_cast<int>(n) != S8(at::kCursor)) {
             const int y = 0x2B + 56 * (n >> 1);
@@ -1069,11 +1069,11 @@ extern "C" void __cdecl CommuName_MemberEntryIn(void) {
     if (Rest4d_Count != 0) return;
     for (unsigned i = 0; i < 5; ++i) {
         const unsigned record = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-        if (B(at::kRecords + at::kRecordStride * record + i) == 0) {
+        if (B(CharacterRecords_addr + at::kRecordStride * record + i) == 0) {
             B(at::kName + i) = 0x20;
         } else {
             const unsigned again = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-            B(at::kName + i) = B(at::kRecords + at::kRecordStride * again + i);
+            B(at::kName + i) = B(CharacterRecords_addr + at::kRecordStride * again + i);
         }
     }
     const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
@@ -1152,7 +1152,7 @@ extern "C" void __cdecl CommuName_MemberClose(void) {
     PanelBox(slide);
     unsigned char n = 0;
     unsigned record = 0;
-    for (U flags = at::kRecordFlags; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
+    for (U flags = CharacterRecords_addr + 0xb; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
         if ((B(flags) & 1) == 0) continue;
         const int y = 0x30 + 56 * (n >> 1);
         const int x = (n & 1) == 0 ? 0x18 - 40 * Slide() : 0xA8 + 40 * Slide();
@@ -1184,7 +1184,7 @@ extern "C" void __cdecl Commu_LeaveWhenClosed(void) {
 // not 0, counted in al (the original clears al alone; callers read al).
 extern "C" unsigned char __cdecl CommuName_CountSlots(void) {
     unsigned char n = 0;
-    for (U cell = at::kSlots; cell < at::kSlotsEnd; cell += 8)
+    for (U cell = Community_Records_addr; cell < at::kSlotsEnd; cell += 8)
         if (B(cell) != 0) n = static_cast<unsigned char>(n + 1);
     return n;
 }
@@ -1194,7 +1194,7 @@ extern "C" unsigned char __cdecl CommuName_CountSlots(void) {
 extern "C" unsigned __cdecl CommuName_NthSlot(unsigned n) {
     unsigned char seen = 0;
     unsigned index = 0;
-    for (U cell = at::kSlots; cell < at::kSlotsEnd; cell += 8, ++index) {
+    for (U cell = Community_Records_addr; cell < at::kSlotsEnd; cell += 8, ++index) {
         if (B(cell) == 0) continue;
         if (seen == static_cast<unsigned char>(n)) return index;
         seen = static_cast<unsigned char>(seen + 1);

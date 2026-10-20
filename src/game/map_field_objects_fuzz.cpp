@@ -159,7 +159,7 @@ void Disturb(U salt) {
     if (h % 3 != 0) return;
     if (g_move_sprite && (h >> 4) % 3 == 0) {
         if ((h >> 6) % 2) SetDword(At(Sprite_Current_addr), SomeObject(h >> 8));
-        else SetWord(At(kScratchX), (h >> 8) % 33 - 3);
+        else SetWord(At(SharedScratch_addr), (h >> 8) % 33 - 3);
         return;
     }
     if (g_watches == 0) return;
@@ -384,10 +384,10 @@ const unsigned char* __cdecl StubSkipControl(const unsigned char* at) {
     return at + 1 + Hash(54) % 5;
 }
 void __cdecl StubObjReset() {
-    Record(29, Word(At(kScratchBank)), Dword(At(Sprite_Current_addr)));
+    Record(29, Word(At(SharedScratch_addr + 0x2)), Dword(At(Sprite_Current_addr)));
     Disturb(55);
     const U h = Hash(56);
-    if (h % 4 == 0) SetWord(At(kScratchBank), h >> 8);
+    if (h % 4 == 0) SetWord(At(SharedScratch_addr + 0x2), h >> 8);
 }
 U __cdecl StubSetBank(U bank) {
     Record(30, bank & 0xFFFFu, Dword(At(Sprite_Current_addr)));
@@ -587,7 +587,7 @@ bool Logged(const Log& log, U what, U a) {
 }
 
 // Common regions.
-const Region kScratch = {kScratchX, 0x10};
+const Region kScratch = {SharedScratch_addr, 0x10};
 const Region kVertices = {Prim_VertexScratch_addr, 0x20};
 const Region kScreen = {MapView_ScreenXY_addr, 0x18};
 Region PacketRegion() { return {Addr(g_packets), kPacketBytes}; }
@@ -610,7 +610,7 @@ void TestUprights(Tally& t, void* clone, unsigned rounds) {
     const Fn theirs = reinterpret_cast<Fn>(clone);
     const Region r[] = {kScratch, kVertices, kScreen, PacketRegion(), RecordRegion(), kPacketNext, kOtSlot, kUprights};
     const int n = sizeof r / sizeof r[0];
-    SetWatch({{kScratchX, 8}});
+    SetWatch({{SharedScratch_addr, 8}});
     g_lo_x = -80, g_hi_x = 400, g_lo_y = -20, g_hi_y = 260;
     static unsigned char real_tables[kUprightTables];
     std::memcpy(real_tables, At(0x66313C), kUprightTables);
@@ -790,12 +790,12 @@ int SomeCoordinate() { return static_cast<int>(OneIn(4) ? Next() : Next() % 0x20
 void TestMemberStatus(Tally& t, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(int, int, unsigned, unsigned);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {{kCharRecords, kMembersBytes}, {kPrintBuf, 0x20}, {Config_WindowColour_addr, 1}, {at::FrameCounterAt(), 4}};
+    const Region r[] = {{CharacterRecords_addr, kMembersBytes}, {kPrintBuf, 0x20}, {Config_WindowColour_addr, 1}, {at::FrameCounterAt(), 4}};
     const int n = sizeof r / sizeof r[0];
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
         const U member = (OneIn(4) ? Next() & 0xFFFFFF00u : 0) | (OneIn(6) ? 8 + Next() % 8 : Next() % 8);
-        unsigned char* const rec = At(kCharRecords + (member & 0xFF) * kCharStride);
+        unsigned char* const rec = At(CharacterRecords_addr + (member & 0xFF) * kCharStride);
         // HP and AP on the quarter tests' edges.
         const U max_hp = Pick({0, 1, 3, 4, 5, 8, 9, 100, 999, 0xFFFF, Next() & 0xFFFF});
         const U hp = Pick({0, 1, 2, max_hp / 4, max_hp / 4 - 1, max_hp / 4 + 1, max_hp, Next() & 0xFFFF});
@@ -898,12 +898,12 @@ void TestOp8x(Tally& t, void* clone, unsigned rounds) {
     const Fn theirs = reinterpret_cast<Fn>(clone);
     const Region r[] = {RecordRegion(), {kObjectsFrom, kObjectsBytes}, kScratch, {Sprite_Current_addr, 4}, {Field_ActiveMember_addr, 4}};
     const int n = sizeof r / sizeof r[0];
-    SetWatch({{kScratchBank, 2}, {kObjectsFrom, kObjectsBytes}});
+    SetWatch({{SharedScratch_addr + 0x2, 2}, {kObjectsFrom, kObjectsBytes}});
     g_move_sprite = true;
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
         const U index = OneIn(4) ? Pick({0x1D, 0x1E, 0x1F, 0x7FFF, 0xFFFF, 0xFFFD, 0}) : Next() % 0x1E;
-        SetWord(At(kScratchX), index);
+        SetWord(At(SharedScratch_addr), index);
         SetDword(At(Sprite_Current_addr), SomeObject(Next()));
         for (U k = 4; k <= 7; ++k)
             if (OneIn(2)) g_record[k] = 0;
@@ -951,7 +951,7 @@ void SelfTest() {
     const Region all[] = {
         kScratch, kVertices, kScreen, kPacketNext, kOtSlot, kUprights, kHeaderRegion,
         {at::OriginAt(), 4}, {at::RowAt(), 2}, {at::ColumnAt(), 2}, {0x937FA0, 56 * 28 * 4},
-        {at::FrameCounterAt(), 4}, {at::CondByteFFAt(), 1}, {kCharRecords, kMembersBytes}, {kPrintBuf, 0x20},
+        {at::FrameCounterAt(), 4}, {at::CondByteFFAt(), 1}, {CharacterRecords_addr, kMembersBytes}, {kPrintBuf, 0x20},
         {Config_WindowColour_addr, 1}, {kClockHours, 4}, {at::BytesAt(), 4}, {kObjectsFrom, kObjectsBytes},
         {Sprite_Current_addr, 4}, {Field_ActiveMember_addr, 4}, {at::StatusBitsAt(), 1}, {at::ScriptFlagsAt(), 2},
     };

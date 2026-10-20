@@ -435,10 +435,10 @@ void SeedB26(unsigned k) {
             static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0, 1, 2, 3, 0x40, 0x80, 0xC0, 4, 7) : bh::Next());
         B(at::kTarget) = target;
         for (unsigned m = 0; m < 3; ++m) SetWord(Mem(ObjTrio_addr + 0x128 + at::kPartyStride * m), static_cast<unsigned>(SignedWord()));
-        SetWord(Mem(at::kEnemy0Word108), static_cast<unsigned>(SignedWord()));
-        B(at::kEnemy0Flags) = static_cast<unsigned char>(bh::Half() ? B(at::kEnemy0Flags) | 2 : B(at::kEnemy0Flags) & ~2u);
+        SetWord(Mem(Battle_Enemies_addr + 0x108), static_cast<unsigned>(SignedWord()));
+        B(Battle_Enemies_addr + 0x110) = static_cast<unsigned char>(bh::Half() ? B(Battle_Enemies_addr + 0x110) | 2 : B(Battle_Enemies_addr + 0x110) & ~2u);
         B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2) : bh::Next());
-        B(at::kEnemy0Flag8E) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x81) : bh::Next());
+        B(Battle_Enemies_addr + 0x8e) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x81) : bh::Next());
         SetLong(Mem(at::kTurn), static_cast<std::int32_t>(bh::Often() ? BH_PICK(0x15, 0x15, 0x14, 0x16, 0x115, 0x80000015u) : bh::Next()));
         B(BossSe_Script_addr) = static_cast<unsigned char>(bh::Half() ? B(BossSe_Script_addr) | 0x20 : B(BossSe_Script_addr) & ~0x20u);
         B(at::kPhase) = static_cast<unsigned char>(bh::Often() ? 1 : bh::Next());

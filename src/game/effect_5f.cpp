@@ -109,7 +109,7 @@ U Place(const char* who, U table, unsigned count) {
 // next cell's start. The gate's test is (0x8000, 0x10000); "two cells away"
 // is its negation at (0x20000, 0x20000).
 bool Within(const unsigned char* s, bool z_axis, std::int32_t edge, std::int32_t cross) {
-    const U lx = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x), lz = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z);
+    const U lx = static_cast<std::uint32_t>(ObjTrio[0].x), lz = static_cast<std::uint32_t>(ObjTrio[0].z);
     const U x = static_cast<U>(S16(Word(s + 0x36))), z = static_cast<U>(S16(Word(s + 0x3A)));
     U along, across;
     if (z_axis) {
@@ -170,11 +170,11 @@ void GroundFixed(U low, U high) {
     e = Elevation(gx, gz);
     gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v1)->y));
     gx = GroundOf(Word(v1));
-    Prim_VertexScratch[0xa] = high - Half(e);
+    Prim_VertexScratch[2].z = high - Half(e);
     e = Elevation(gx, gz);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->z, low - Half(e));
     e = Elevation(gx, gz);
-    Prim_VertexScratch[0xe] = high - Half(e);
+    Prim_VertexScratch[3].z = high - Half(e);
 }
 
 // The same for the lifted panels (sub-kinds 0x29 and 0x2A): every height less
@@ -189,11 +189,11 @@ void GroundLifted() {
     e = Elevation(gx, gz);
     gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v1)->y));
     gx = GroundOf(Word(v1));
-    Prim_VertexScratch[0xa] = 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole;
+    Prim_VertexScratch[2].z = 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole;
     e = Elevation(gx, gz);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->z, 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole - 0x180u);
     e = Elevation(gx, gz);
-    Prim_VertexScratch[0xe] = 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole;
+    Prim_VertexScratch[3].z = 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole;
 }
 
 // Gpu_SetDrawMode(cursor, 0, 0, 0x95, 0): every draw here opens with it.
@@ -244,19 +244,19 @@ extern "C" void __cdecl EffectKind18Sub27_Draw(void) {
     if (s[8] != 0) {
         Across(2, (rv::As<records::EffectObject>(s)->z_whole << 7) - 0x3FC0u);
         const U a = (rv::As<records::EffectObject>(s)->x_whole << 7) - rv::As<records::EffectWork>(s)->work_30 - 0x3F40u;
-        Prim_VertexScratch[8] = a;
-        Prim_VertexScratch[0] = a;
+        Prim_VertexScratch[2].x = a;
+        Prim_VertexScratch[0].x = a;
         const U b = (rv::As<records::EffectObject>(s)->x_whole << 7) - rv::As<records::EffectWork>(s)->work_30 - 0x4040u;
-        Prim_VertexScratch[0xc] = b;
-        Prim_VertexScratch[4] = b;
+        Prim_VertexScratch[3].x = b;
+        Prim_VertexScratch[1].x = b;
     } else {
         Across(0, (rv::As<records::EffectObject>(s)->x_whole << 7) - 0x3FC0u);
         const U a = (rv::As<records::EffectObject>(s)->z_whole << 7) + rv::As<records::EffectWork>(s)->work_30 - 0x3F40u;
-        Prim_VertexScratch[9] = a;
-        Prim_VertexScratch[1] = a;
+        Prim_VertexScratch[2].y = a;
+        Prim_VertexScratch[0].y = a;
         const U b = (rv::As<records::EffectObject>(s)->z_whole << 7) + rv::As<records::EffectWork>(s)->work_30 - 0x4040u;
-        Prim_VertexScratch[0xd] = b;
-        Prim_VertexScratch[5] = b;
+        Prim_VertexScratch[3].y = b;
+        Prim_VertexScratch[1].y = b;
     }
     GroundFixed(0x40, 0x180);
     Project(p);
@@ -336,11 +336,11 @@ extern "C" void __cdecl EffectKind18Sub28_Draw(void) {
     unsigned char* const s = S();
     Across(0, (rv::As<records::EffectObject>(s)->x_whole << 7) - 0x3FC0u);
     const U a = (rv::As<records::EffectObject>(s)->z_whole << 7) + rv::As<records::EffectWork>(s)->work_30 - 0x3F40u;
-    Prim_VertexScratch[9] = a;
-    Prim_VertexScratch[1] = a;
+    Prim_VertexScratch[2].y = a;
+    Prim_VertexScratch[0].y = a;
     const U b = (rv::As<records::EffectObject>(s)->z_whole << 7) + rv::As<records::EffectWork>(s)->work_30 - 0x4040u;
-    Prim_VertexScratch[0xd] = b;
-    Prim_VertexScratch[5] = b;
+    Prim_VertexScratch[3].y = b;
+    Prim_VertexScratch[1].y = b;
     GroundFixed(0x40, 0x180);
     Project(p);
     SH_CALL(Prim_SetTexture)(0x1780119, p, 1);
@@ -475,7 +475,7 @@ extern "C" unsigned char __cdecl EffectKind18Sub42_MemberNear(long x, long z) {
             bof3::Fatal("EffectKind18Sub42_MemberNear: Field_MemberCount is %u, past the three ObjTrio records - the "
                         "original reads what follows them (docs/effect_5f.md section 6)",
                         (unsigned)count);
-        const unsigned char* const o = ObjTrio + at::kObjTrioStride * i;
+        const unsigned char* const o = rv::Bytes(&ObjTrio[i]);
         auto* const oo = rv::AsConst<records::PartyMember>(o);
         if (o[0] == 0) continue;
         const U t = o[9];
@@ -648,18 +648,18 @@ extern "C" void __cdecl EffectKind18Sub29_Draw(void) {
         const U d = static_cast<U>(S8(B(at::kSub29Slide + k)));
         if (s[8] != 0) {
             const U a = ((k + rv::As<records::EffectObject>(s)->x_whole) << 7) - rv::As<records::EffectWork>(s)->work_30 * d - 0x4040u;
-            Prim_VertexScratch[8] = a;
-            Prim_VertexScratch[0] = a;
+            Prim_VertexScratch[2].x = a;
+            Prim_VertexScratch[0].x = a;
             const U b = ((k + rv::As<records::EffectObject>(s)->x_whole) << 7) - rv::As<records::EffectWork>(s)->work_30 * d - 0x3FC0u;
-            Prim_VertexScratch[0xc] = b;
-            Prim_VertexScratch[4] = b;
+            Prim_VertexScratch[3].x = b;
+            Prim_VertexScratch[1].x = b;
         } else {
             const U a = ((rv::As<records::EffectObject>(s)->z_whole - k) << 7) + rv::As<records::EffectWork>(s)->work_30 * d - 0x3F40u;
-            Prim_VertexScratch[9] = a;
-            Prim_VertexScratch[1] = a;
+            Prim_VertexScratch[2].y = a;
+            Prim_VertexScratch[0].y = a;
             const U b = ((rv::As<records::EffectObject>(s)->z_whole - k) << 7) + rv::As<records::EffectWork>(s)->work_30 * d - 0x3FC0u;
-            Prim_VertexScratch[0xd] = b;
-            Prim_VertexScratch[5] = b;
+            Prim_VertexScratch[3].y = b;
+            Prim_VertexScratch[1].y = b;
         }
         GroundLifted();
         Project(p);
@@ -879,18 +879,18 @@ extern "C" void __cdecl EffectKind18Sub2A_Draw(void) {
         const U d = static_cast<U>(S8(B(at::kSub2ASlide + k)));
         if (s[8] != 0) {
             const U a = rv::As<records::EffectWork>(s)->work_30 * d + (Word(s + 0x36) << 7) - 0x3F40u;
-            Prim_VertexScratch[8] = a;
-            Prim_VertexScratch[0] = a;
+            Prim_VertexScratch[2].x = a;
+            Prim_VertexScratch[0].x = a;
             const U b = Word(s + 0x30) * d + (Word(s + 0x36) << 7) - 0x4040u;
-            Prim_VertexScratch[0xc] = b;
-            Prim_VertexScratch[4] = b;
+            Prim_VertexScratch[3].x = b;
+            Prim_VertexScratch[1].x = b;
         } else {
             const U a = Word(s + 0x30) * d + (Word(s + 0x3A) << 7) - 0x3F40u;
-            Prim_VertexScratch[9] = a;
-            Prim_VertexScratch[1] = a;
+            Prim_VertexScratch[2].y = a;
+            Prim_VertexScratch[0].y = a;
             const U b = Word(s + 0x30) * d + (Word(s + 0x3A) << 7) - 0x4040u;
-            Prim_VertexScratch[0xd] = b;
-            Prim_VertexScratch[5] = b;
+            Prim_VertexScratch[3].y = b;
+            Prim_VertexScratch[1].y = b;
         }
         GroundLifted();
         Project(p);

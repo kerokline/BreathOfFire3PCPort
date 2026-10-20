@@ -26,6 +26,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/inventory_ops_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -77,9 +78,9 @@ void Record(u32 what, u32 a = 0, u32 b = 0, u32 c = 0, u32 d = 0, u32 e = 0) {
 }
 
 constexpr unsigned kObjects = 5;   // ObjTrio and the two slots after it that Encounter_RollInitiative walks
-unsigned char* Obj(unsigned i) { return ObjTrio + at::kObjStride * i; }
-unsigned char* EnemySlot(unsigned k) { return At(at::kEnemies + at::kEnemyStride * k); }
-unsigned char* ActorRecord(unsigned i) { return At(at::kRecords + at::kRecordSize * i); }
+unsigned char* Obj(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
+unsigned char* EnemySlot(unsigned k) { return At(Encounter_Slots_addr + at::kEnemyStride * k); }
+unsigned char* ActorRecord(unsigned i) { return At(CharacterRecords_addr + at::kRecordSize * i); }
 
 // Where Sprite_Current may point: the five objects or the placement's
 // scratch sprite. Field_State: the five objects.
@@ -529,7 +530,7 @@ constexpr Region kRegionList[] = {
     {0x904AA0, 0x50},              // the battle's facing, the initiative, the battle flags
     {0x802D40, 0x680},             // ObjTrio and the two slots after it
     {0x7E11E0, 0xA00},             // Effect_Objects, 20 of them
-    {at::kRecords, 0x5F0},         // the actor records 0..8
+    {CharacterRecords_addr, 0x5F0}, // the actor records 0..8
     {Gfx_ClutStripSource_addr + 0x1e00, 0x8C0}, // the shade source and the saved copies, CLUTs 0..31
     {Gfx_ClutStrip_addr + 0x1e00, 0x800},
     {0x937F88, 0xC},               // Sprite_Current, Gfx_ClutStripDirty
@@ -801,7 +802,7 @@ void Cover(unsigned k, const Args& x, const State& in, const State& out, u32 res
     case kPlaceEnemiesK: {
         unsigned n = 0;
         for (unsigned e = 0; e < 8; ++e) {
-            const unsigned o = Offset(at::kEnemies + at::kEnemyStride * e);
+            const unsigned o = Offset(Encounter_Slots_addr + at::kEnemyStride * e);
             n += in.memory[o] != 0 && out.memory[o] == 0 ? 1u : 0u;
         }
         ++s[n < 2 ? n : 2];

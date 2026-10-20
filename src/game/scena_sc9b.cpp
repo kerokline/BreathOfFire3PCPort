@@ -82,7 +82,7 @@ void ScriptAnd(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>
 void Redraw() { MapView_Redraw = 2; }
 unsigned char* SpriteCurrent() { return Sprite_Current; }
 unsigned char MemberByte(unsigned m, unsigned offset) { return B(ObjTrio_addr + m * at::kObjStride + offset); }
-unsigned char LeaderKind() { return ObjTrio[0x89]; }
+unsigned char LeaderKind() { return ObjTrio[0].char_id; }
 
 // The four counters 0x903848..B zeroed, in that order; counters 1..3 alone.
 void ClearCounters() {
@@ -181,9 +181,9 @@ unsigned char SpawnCamera(std::int32_t x, bool x_from_angle, std::int32_t z, boo
 }
 // Kind 0x61's record: +0 = 1, +5 = 0x61, +6, +7.
 void Spawn61(unsigned char b6, unsigned char b7) {
-    const unsigned char slot = Spawn(at::kEffectSlot, 0x61);
+    const unsigned char slot = Spawn(SharedScratch_addr, 0x61);
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect(B(at::kEffectSlot));
+    unsigned char* const e = Effect(at::kEffectSlot.b_00);
     e[6] = b6;
     e[7] = b7;
 }
@@ -202,7 +202,7 @@ void Spawn5D() {
 // The kind-2 sprite moved: Field_Kind2X / Z and (with `sprite`) Sprite_Kind2's
 // +0x34 / +0x38.
 void Kind2At(std::int32_t x, std::int32_t z) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     Field_Kind2X = static_cast<std::uint32_t>(x);
     kind2->x = static_cast<std::uint32_t>(x);
     Field_Kind2Z = static_cast<std::uint32_t>(z);
@@ -307,8 +307,8 @@ unsigned char StepHook9(std::int32_t x, std::int32_t z) {
         return 1;
     }
     if (!Near(zc, 0x3C, 5) || !Near(xc, 0x22, 4)) return 0;
-    const unsigned char b = ObjTrio[8];
-    B(at::kEffectSlot) = b;
+    const unsigned char b = ObjTrio[0].direction;
+    at::kEffectSlot.b_00 = b;
     if (b == 6 || b == 5 || b == 4) return 0;
     if (LeaderKind() == 2) {
         if (Flag(0x20)) return 0;
@@ -438,7 +438,7 @@ void EnterArea10Body() {
             Camera_Distance = 0x5DC;
             Kind2(0);
         }
-        ObjTrio[0xb] = 0;
+        rv::Bytes(ObjTrio)[0xb] = 0;
     }
     if (Area() == 0x80) {
         if (FD() != 3) return;
@@ -476,7 +476,7 @@ void GreyClut() {
 
 // Run 6's body; the run then calls Scena10_Shake on every way out.
 void Run6Body() {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     const unsigned char step = Step();   // the case the jump table picked
     switch (step) {
     case 0:
@@ -1200,7 +1200,7 @@ SC9B_EXPORT void __cdecl Scena10_StartRun1(void) {
 // transitions around an area change into 0x42, the palette greyed, an area
 // change into 0x52, a ground effect, flag 6.
 SC9B_EXPORT void __cdecl Scena10_Run1(void) {
-    auto* const obj0 = rv::As<records::SpriteObject>(Sprite_Objects + 0 * sizeof(records::SpriteObject));
+    auto* const obj0 = Sprite_Objects;
     switch (Step()) {
     case 0:
         if (EffectBusy(Scena10_Slot_addr)) return;
@@ -1265,8 +1265,8 @@ SC9B_EXPORT void __cdecl Scena10_Run1(void) {
         return;
     case 0xB: {
         if (Counter(0) != 9) return;
-        if (Spawn(at::kEffectSlot, 0x20) != 0xFF) {
-            unsigned char* const e = Effect(B(at::kEffectSlot));
+        if (Spawn(SharedScratch_addr, 0x20) != 0xFF) {
+            unsigned char* const e = Effect(at::kEffectSlot.b_00);
             const std::int32_t x = obj0->x;
             const std::int32_t z = obj0->z;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = x;
@@ -1292,7 +1292,7 @@ SC9B_EXPORT void __cdecl Scena10_Run1(void) {
 // party, effects of kinds 0x68 / 0x61 / 0x62 / 0x69 / 0x64 on counts and
 // timers, two area changes into 0x62, music 0x7B, flag 8.
 SC9B_EXPORT void __cdecl Scena10_Run2(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         DropIn(0);
@@ -1314,8 +1314,8 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
     case 3: {
         if (Counter(0) != 4) return;
         if (!LoadDone()) return;
-        if (Spawn(at::kEffectSlot, 0x68) != 0xFF) {
-            unsigned char* const e = Effect(B(at::kEffectSlot));
+        if (Spawn(SharedScratch_addr, 0x68) != 0xFF) {
+            unsigned char* const e = Effect(at::kEffectSlot.b_00);
             e[1] = 0;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = 0x58000;
             *reinterpret_cast<std::int32_t*>(e + 0x38) = 0x58000;
@@ -1362,8 +1362,8 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         return;
     case 0xA: {
         if (Counter(0) != 0x10) return;
-        if (Spawn(at::kEffectSlot, 0x62) != 0xFF) {
-            unsigned char* const e = Effect(B(at::kEffectSlot));
+        if (Spawn(SharedScratch_addr, 0x62) != 0xFF) {
+            unsigned char* const e = Effect(at::kEffectSlot.b_00);
             *reinterpret_cast<std::int32_t*>(e + 0x34) = 0x380000;
             *reinterpret_cast<std::int32_t*>(e + 0x38) = 0x260000;
             *reinterpret_cast<std::int32_t*>(e + 0x3C) = 0x2800000;
@@ -1381,8 +1381,8 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         return;
     case 0xC: {
         if (Counter(0) != 0x13) return;
-        if (Spawn(at::kEffectSlot, 0x69) != 0xFF) {
-            unsigned char* const e = Effect(B(at::kEffectSlot));
+        if (Spawn(SharedScratch_addr, 0x69) != 0xFF) {
+            unsigned char* const e = Effect(at::kEffectSlot.b_00);
             const std::int32_t x = member0->x;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = x;
             const std::int32_t z = member0->z;
@@ -1428,8 +1428,8 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         return;
     case 0x13: {
         if (Counter(0) != 0x16) return;
-        if (Spawn(at::kEffectSlot, 0x64) != 0xFF) {
-            unsigned char* const e = Effect(B(at::kEffectSlot));
+        if (Spawn(SharedScratch_addr, 0x64) != 0xFF) {
+            unsigned char* const e = Effect(at::kEffectSlot.b_00);
             *reinterpret_cast<std::int32_t*>(e + 0x64) = member0->x;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = member0->x;
             *reinterpret_cast<std::int32_t*>(e + 0x68) = member0->z;
@@ -1868,8 +1868,8 @@ SC9B_EXPORT void __cdecl Scena10_Run12(void) {
         W(at::kKind2ZHigh) = static_cast<std::uint16_t>(W(at::kKind2ZHigh) + 7);
         SetFE(1);
         MoveScript_F3Divisor = static_cast<std::uint16_t>(speed << 3);
-        if (Spawn(at::kEffectSlot, 0x13) != 0xFF) {
-            unsigned char* const e = Effect(B(at::kEffectSlot));
+        if (Spawn(SharedScratch_addr, 0x13) != 0xFF) {
+            unsigned char* const e = Effect(at::kEffectSlot.b_00);
             *reinterpret_cast<std::int32_t*>(e + 0x64) = -0x3B4;
             *reinterpret_cast<std::int32_t*>(e + 0x68) = AngleY();
             *reinterpret_cast<std::int32_t*>(e + 0x6C) = 0x2A6;
@@ -1890,8 +1890,8 @@ SC9B_EXPORT void __cdecl Scena10_Run12(void) {
         const unsigned speed = Field_MoveSpeeds[3];
         W(at::kKind2ZHigh) = static_cast<std::uint16_t>(W(at::kKind2ZHigh) - 7);
         MoveScript_F3Divisor = static_cast<std::uint16_t>(speed << 3);
-        if (Spawn(at::kEffectSlot, 0x13) != 0xFF) {
-            unsigned char* const e = Effect(B(at::kEffectSlot));
+        if (Spawn(SharedScratch_addr, 0x13) != 0xFF) {
+            unsigned char* const e = Effect(at::kEffectSlot.b_00);
             *reinterpret_cast<std::int32_t*>(e + 0x64) = -0x2AA;
             *reinterpret_cast<std::int32_t*>(e + 0x68) = AngleY();
             *reinterpret_cast<std::int32_t*>(e + 0x6C) = 0x200;
@@ -1916,7 +1916,7 @@ SC9B_EXPORT void __cdecl Scena10_Run12(void) {
 // (MSVC's two-level switch): area changes into 0x78, drop-ins, message 0x3A,
 // effects 0x43 / 0x6B, event battle 0x23 at the leader, flags 0x38..0x3D.
 SC9B_EXPORT void __cdecl Scena10_Run13(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         if (Counter(0) != 4) return;
@@ -2046,7 +2046,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
 // to the word 0x903850; on one, EventOp_0x(Scena10_SpriteScript).
 SC9B_EXPORT void __cdecl Scena10_SpriteOp(void) {
     const unsigned char v = SH_AT(ByteFn, at::kSpriteFindFree)();
-    W(at::kEffectSlot) = v;
+    at::kEffectSlot.w_00 = v;
     if (v == 0xFF) return;
     SH_CALL(EventOp_0x)(reinterpret_cast<const unsigned char*>(Scena10_SpriteScript_addr));
 }
@@ -2283,8 +2283,8 @@ SC9B_EXPORT unsigned char __cdecl Scena10_StepHook(int x, int z) {
     if (Area() == 0x52) {
         if (FD() != 0) return 0;
         if (Near(zc, 0x3C, 5) && Near(xc, 0x22, 4)) {
-            const unsigned char b = ObjTrio[8];
-            B(at::kEffectSlot) = b;
+            const unsigned char b = ObjTrio[0].direction;
+            at::kEffectSlot.b_00 = b;
             if (b != 6 && b != 5 && b != 4) {
                 if (SH_CALL(Scena07_PartyHas89State2)() == 0) {
                     SetCounter(0, 0x10);
@@ -2330,8 +2330,8 @@ SC9B_EXPORT unsigned char __cdecl Scena10_StepHook(int x, int z) {
     }
     if (Area() != 0x80) return 0;
     if (FD() == 0 && Flag(0xB) && !Flag(0xE) && z == 0x118000 && Near(xc, 0x18, 5)) {
-        const unsigned char b = ObjTrio[8];
-        B(at::kEffectSlot) = b;
+        const unsigned char b = ObjTrio[0].direction;
+        at::kEffectSlot.b_00 = b;
         if (b == 0 || b == 1 || b == 2) {
             Set40();
             SetRun(4);

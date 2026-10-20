@@ -59,7 +59,7 @@ S32 S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); 
 // whatever lies there, on both sides).
 bool IsMember(U actor) { return (actor & 0xFF) <= 2; }
 U PartyAt(U actor) { return ObjTrio_addr + (actor & 0xFF) * at::kPartyStride; }
-U EnemyAt(U actor) { return at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
+U EnemyAt(U actor) { return Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
 unsigned char* Party(U actor) { return At(PartyAt(actor)); }
 unsigned char* Enemy(U actor) { return At(EnemyAt(actor)); }
 
@@ -251,7 +251,7 @@ extern "C" unsigned char __cdecl Battle_LacksArmour(unsigned actor, unsigned ite
 extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
     const bool member = IsMember(target);
     const U offset = member ? (target & 0xFF) * at::kPartyStride : ((target & 0xFF) - 3u) * at::kEnemyStride;
-    const U record = (member ? ObjTrio_addr : at::kEnemies) + offset;
+    const U record = (member ? ObjTrio_addr : Battle_Enemies_addr) + offset;
     const U word_at = record + (member ? 0x90u : 0x92u);
     const U cur = W(word_at);
     const U s = status & 0xFF;
@@ -491,17 +491,17 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
     if (!IsMember(t)) return;
     {
         unsigned char* const p = Party(t);
-        unsigned char* const c = At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride);
+        unsigned char* const c = At(CharacterRecords_addr + p[0x148] * at::kCharacterStride);
         if (c[0x1E] < 9) {
             c[0x1E] = static_cast<unsigned char>(c[0x1E] + 1);
             p[0x9E] = static_cast<unsigned char>(p[0x9E] + 1);
         }
-        BH_CALL(Char_RecalcStats)(At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride));
+        BH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + p[0x148] * at::kCharacterStride));
     }
     unsigned n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
         unsigned char* const p = Party(m);
-        const unsigned char* const c = At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride);
+        const unsigned char* const c = At(CharacterRecords_addr + p[0x148] * at::kCharacterStride);
         for (unsigned i = 0; i < 6; ++i) p[0x92 + i] = c[0x12 + i];
         for (unsigned i = 0; i < 0x20; ++i) p[0xC0 + i] = c[0x20 + i];
     }

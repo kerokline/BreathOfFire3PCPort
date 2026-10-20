@@ -140,8 +140,8 @@ void PlaceMessage(const WorldMapTables& t) {
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
-    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
+    const auto z = static_cast<std::int16_t>(ObjTrio[0].z_whole);
+    const auto x = static_cast<std::int16_t>(ObjTrio[0].x_whole);
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
@@ -150,8 +150,8 @@ void PlaceMessage(const WorldMapTables& t) {
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(t.place_messages + static_cast<U>(index * 2)))));
     } else {
-        const unsigned cx = Word(At(ObjTrio_addr + 0x36));
-        const unsigned cz = Word(At(ObjTrio_addr + 0x3a));
+        const unsigned cx = ObjTrio[0].x_whole;
+        const unsigned cz = ObjTrio[0].z_whole;
         U cell = t.cells;
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
@@ -187,9 +187,9 @@ void PlaceMessage(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U steps = ObjTrio[0].step_frames;
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
@@ -489,8 +489,8 @@ void Record8Place(const WorldMapTables& t) {
     Cur()[0x29] = 5;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dir(Cur(), 0));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dir(Cur(), 2));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     unsigned char* o = Cur();
     auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
@@ -527,7 +527,7 @@ void Record8Place(const WorldMapTables& t) {
 // record +0xB (x, z; unchecked) set to 0xA0 - AreaMap_Bytes +
 // AreaMap_Header[0] * z + x; Sprite_SetAnimation(0) and +1 = 1.
 void Record4MarkCell(const WorldMapTables& t) {
-    if (At(at::kFlag3A79)[0] == 9 || (Field_StatusBits & 1) != 0) {
+    if (CharacterRecords[0].char_id == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }
@@ -749,7 +749,7 @@ extern "C" unsigned char __cdecl Area116_StepHook(long x, long z) {
     if (AH_CALL(Flags_Test)(Bank(), 0x33) == 0) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x46) >= 3) return 0;
     if (static_cast<std::uint16_t>(High(z) - 0x33) >= 3) return 0;
-    const unsigned char pose = ObjTrio[8];
+    const unsigned char pose = ObjTrio[0].direction;
     if (pose != 0 && pose != 7 && pose != 6) return 0;
     At(at::kCounter0)[0] = 0;
     AH_CALL(Party_DropIn)(0);
@@ -999,7 +999,7 @@ void MembersFrame(const TwinTables& t) {
 unsigned char SwitchHook(const TwinTables& t, unsigned x, unsigned z) {
     const auto cx = static_cast<unsigned char>(x);
     const auto cz = static_cast<unsigned char>(z);
-    const unsigned char facing = ObjTrio[8];
+    const unsigned char facing = ObjTrio[0].direction;
     unsigned index = 0;
     for (U r = t.switches; r < t.switches_end; r += 4, ++index) {
         const unsigned char* const e = At(r);

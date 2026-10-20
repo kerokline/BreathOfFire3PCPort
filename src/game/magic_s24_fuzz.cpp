@@ -232,7 +232,7 @@ alignas(16) unsigned char g_frames[kFrameBytes];   // a mote's frame record ([+0
 
 mh::Region g_regions[] = {
     {Prim_VertexScratch_addr, 0x20},
-    {cell::kScratch, 0x10},
+    {SharedScratch_addr, 0x10},
     {0x905E60, 8},                               // Field_Kind2Z, Field_Kind2X
     {0x7E0670, 4},                               // Gfx_PacketNext
     {0, kPrimBytes},                             // g_prims (filled in at start-up)
@@ -271,7 +271,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < cell::kSparks; ++i) mh::SetPointer(Fx106_SparkPool_addr + i * cell::kSparkStride + 0x1C, AnOwner(mh::Next()));
     for (unsigned t = 0; t < 4; ++t) {
         unsigned char* const task = mh::TaskAt(t);
-        mh::SetPointer(mh::at::kTasks + t * mh::at::kTaskStride + 0x54, g_frames);
+        mh::SetPointer(BattleTask_Slots_addr + t * mh::at::kTaskStride + 0x54, g_frames);
         SetWord(task + 0x5A, mh::Next() % 0x40);
         g_frames[task[0x5A]] = static_cast<unsigned char>(mh::Next() % 7);
     }
@@ -376,7 +376,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 5) {
     case 0: Gfx_PacketNext = PrimAt(h >> 12); break;
     case 1: mh::SetPointer(Fx106_SparkCurrent_addr, SparkAt(h >> 12)); break;
-    case 2: mh::Mem(cell::kScratch + (h >> 12) % 0x10)[0] = b; break;
+    case 2: mh::Mem(SharedScratch_addr + (h >> 12) % 0x10)[0] = b; break;
     case 3: mh::Mem(Prim_VertexScratch_addr + (h >> 12) % 0x20)[0] = b; break;
     default: Spark()[(h >> 12) % 0x20] = b; break;
     }

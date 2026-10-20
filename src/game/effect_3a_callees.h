@@ -54,7 +54,7 @@ constexpr unsigned kFrameCount = 2;
 // --- the leader and the cells the states read ------------------------------------
 constexpr std::uint32_t kObjTrioStride = 0x14C;    // ObjTrio's three records
 constexpr unsigned kObjTrioCount = 3;
-constexpr std::uint32_t kMemberFlag = 0x148;       // ObjTrio record +0x148 (Field_Members' byte)
+constexpr std::uint32_t kMemberFlag = 0x148;       // ObjTrio record +0x148 (PartyMember::char_index)
 constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio + 0x34: the leader's x, z, height (three dwords)
 constexpr std::uint32_t kMessageWord = 0x7DEE48;   // u16: the message on screen (effect_2g_callees.h kMessageWord)
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter's step (scenario_harness at::kStep)

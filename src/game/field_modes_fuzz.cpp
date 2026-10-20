@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_modes_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -46,7 +47,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 }
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 // The typed symbols are macros for lvalues: their addresses, taken once.
-const std::uint32_t kAngles = Addr(Camera_Angles), kEffectRecords = Addr(Effect_Objects),
+const std::uint32_t kAngles = Addr(Camera_Angles), kEffectRecords = Addr(rv::Bytes(Effect_Objects)),
                     kStripSource = Addr(Gfx_ClutStripSource), kStrip = Addr(Gfx_ClutStrip), kFocusZ = Addr(&MapView_FocusZ);
 
 // What a callee may change that its caller reads again after it: the step,
@@ -61,7 +62,7 @@ void Disturb() {
     if (h % 6 == 0) Transition_Busy = static_cast<unsigned short>(h % 4 ? 0 : h >> 16);
     if (h % 9 == 0) Field_Request = static_cast<unsigned char>(h % 2 ? 2 : h >> 20);
     if (h % 11 == 0) At(kCounters + (h >> 5) % 4)[0] = static_cast<unsigned char>(h >> 13);
-    if (h % 8 == 0) SetWord(At(kSlot), h % 3 ? (h >> 7) % 0xC4 : h >> 15);
+    if (h % 8 == 0) SetWord(At(SharedScratch_addr), h % 3 ? (h >> 7) % 0xC4 : h >> 15);
     if (h % 10 == 0) Draw_PassFlags = static_cast<unsigned char>(h >> 18);
     if (h % 13 == 0) MoveScript_Var7 = static_cast<signed char>(h >> 11);
     if (h % 4 == 0) SetWord(At(kAngles + 2 * ((h >> 3) % 3)), h >> 17);
@@ -392,7 +393,7 @@ void Cover(unsigned k, const State& in, const State& out) {
     }
     for (unsigned i = 0; i < out.log_n && i < kLog; ++i) {
         if (out.log[i].what == 13) {
-            if (i + 1 < kLog && Byte(out, kSlot) == 0xFF) ++g_cover.no_slot;
+            if (i + 1 < kLog && Byte(out, SharedScratch_addr) == 0xFF) ++g_cover.no_slot;
             else ++g_cover.effect;
         }
         if (out.log[i].what == 21) ++g_cover.tail;

@@ -34,8 +34,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Slot(unsigned i) { return At(at::kTasks + i * at::kTaskSize); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + i * at::kEnemySize); }
+unsigned char* Slot(unsigned i) { return At(BattleTask_Slots_addr + i * at::kTaskSize); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + i * at::kEnemySize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 
 // --- the stand-ins' log ----------------------------------------------------
@@ -391,7 +391,7 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kTasks, 0x22A0},        // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
+    {BattleTask_Slots_addr, 0x22A0}, // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
     {0x937F88, 4},               // Sprite_Current
     {BattleE3_CurrentEnemy_addr, 4},
     {at::kPhase, 0x260},         // the battle's globals, the drop list, the event hook, the text; to 0x904D00

@@ -199,7 +199,7 @@ rests on this inference.
     ground at those cells. `AreaMap_Elevation`, the steepness and blocked
     tests, and any object walking there read it. `MapView_Redraw = 2`
     rebuilds the view at once, so the rebuild frames move too, which
-    changes `Scratch_Swap`, `DamageScratch`'s byte and the draw pool
+    changes `Scratch_Swap`, `SharedScratch`'s byte and the draw pool
     ([`ultrawide-rand.md`](ultrawide-rand.md) 3.3).
   - **Map bytes** (`AreaMap_Bytes`, the per-cell byte that
     `Area140_BlockedAhead` tests against `0x89`): passability, as that

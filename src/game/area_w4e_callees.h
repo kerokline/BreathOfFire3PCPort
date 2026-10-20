@@ -88,7 +88,7 @@ constexpr std::uint32_t kChangeFlags = 0x905B88;
 // The party members' actor records (CharacterRecords 0x903A70, 0xA4 each):
 // the byte +0x1E areas 189 and 191 read and raise, and the words +0x18 (the
 // one area 189 lowers) and +0x40 (its bound); seven records are walked.
-constexpr std::uint32_t kCharRecords = 0x903A70;
+// kCharRecords: now CharacterRecords (symbols.toml).
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr unsigned kCharWalked = 7;
 // kCharByte1E: now Field_ActorStates[0xe] (symbols.toml).
@@ -113,7 +113,7 @@ constexpr std::uint32_t kInputHeld = 0x7E1BE8;         // Input_Held (Input_Pres
 // kScreenXY: now MapView_ScreenXY (symbols.toml). MapView_ScreenXY (two floats)
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles; Cond_AngleFB 0x929ECC after
 // kWaitWordDA: now Transition_Busy (symbols.toml). Transition_Busy
-constexpr std::uint32_t kDamageScratch = 0x903850;     // DamageScratch (the slot word EventOp_0x reads)
+// kDamageScratch: now SharedScratch (symbols.toml). SharedScratch (the slot word EventOp_0x reads)
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 

@@ -48,7 +48,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
@@ -149,7 +149,7 @@ void ActorZero(unsigned animation) {
 
 // An enemy object by a battle index (3..10 an enemy), as the originals index
 // it: 0x93B960 + (index - 3) * 0x128, wrapping - unchecked.
-unsigned char* EnemyByIndex(unsigned index) { return At(at::kEnemies + (index - 3u) * at::kEnemyStride); }
+unsigned char* EnemyByIndex(unsigned index) { return At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride); }
 
 }  // namespace
 
@@ -381,8 +381,8 @@ extern "C" void __cdecl Boss33_End(void) {
         return;
     }
     BH_CALL(BossActor_Clear)(0);
-    const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
-    const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
+    const std::int32_t x = ObjTrio[0].x;
+    const std::int32_t z = ObjTrio[0].z;
     Field_Kind2X = x;
     Field_Kind2Z = z;
     MoveScript_PartyRecords[0x65] = 8;
@@ -473,7 +473,7 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Strike(void) {
     const unsigned n = BH_CALL(BattleTask_Create)(3, 6) & 0xFF;
     if (n != 0xFF) {
         unsigned char* const s = Sprite_Current;
-        unsigned char* const t = At(at::kTasks + n * at::kTaskStride);
+        unsigned char* const t = At(BattleTask_Slots_addr + n * at::kTaskStride);
         auto* const cur_task = rv::As<records::BattleTask>(t);
         std::memmove(t, s, 0x80);
         cur_task->flags &= 0xBF;

@@ -35,10 +35,10 @@ constexpr std::uint32_t kTimerWord = 0x8034E6;     // u16: the chapter timer (sc
 constexpr std::uint32_t kKind15Wait = 0x67625C;    // u8: kind 0x15's frame count (nothing else in the image reads it)
 constexpr std::uint32_t kKind15Delays8 = 0x6547AC; // 8 bytes: a wait by Rand() & 7
 constexpr std::uint32_t kKind15Delays4 = 0x6547B8; // 4 bytes: a wait by Rand() & 3
-// kMember1: now Field_Members[4] (symbols.toml). ObjTrio record 1 (ObjTrio + 0x14C), the second member's
-// kMember1Flags: now Field_Members[0x128] (symbols.toml). its +0x124 (bit 6 held)
+// kMember1: now ObjTrio (symbols.toml). ObjTrio record 1 (ObjTrio + 0x14C), the second member's
+// kMember1Flags: now ObjTrio (symbols.toml). its +0x124 (bit 6 held)
 // kMember1Pose: now rv::As<records::PartyMember>(ObjTrio + 0x14C)->script_pos (records.h). its +0x58 (u16, the animation)
-// kMember1PoseDone: now Field_Members[0x4e] (symbols.toml). its +0x4A (1 when the animation has run)
+// kMember1PoseDone: now ObjTrio (symbols.toml). its +0x4A (1 when the animation has run)
 constexpr std::uint32_t kObjectStride = 0xA4;      // Sprite_Objects' records
 constexpr unsigned kObjectCount = 30;
 constexpr std::uint32_t kKind55TimeFormat = 0x654830; // the seconds-and-hundredths format (field_o_callees.h kFmtTime)

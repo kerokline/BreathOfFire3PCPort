@@ -71,7 +71,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 }
 
 unsigned char* PartyAt(unsigned a) { return At(ObjTrio_addr + 0x10 + (a & 0xFF) * at::kPartyStride); }
-unsigned char* EnemyAt(unsigned a) { return At(at::kEnemy + ((a & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* EnemyAt(unsigned a) { return At(Battle_Enemies_addr + 0x80 + ((a & 0xFF) - 3) * at::kEnemyStride); }
 // PartyAt / EnemyAt point +0x10 / +0x80 into their records; their typed views
 // start at the records (PartyAt(a) - 0x10, EnemyAt(a) + at::kEObject).
 
@@ -98,7 +98,7 @@ void Disturb() {
     case 7: if (party) r[at::kPWeapon] = static_cast<unsigned char>("JLO\x13\x16"[(h >> 26) % 5]); break;
     case 8: if (party) r[at::kPCharIndex] = static_cast<unsigned char>(v & 1 ? 5 : v); else r[at::kEFamily] = v & 1 ? 4 : 1; break;
     case 9: r[party ? at::kPSurvive : at::kEHoly] = v; break;
-    case 10: At(bof3::addr::DamageScratch)[0] ^= static_cast<unsigned char>(bit); break;
+    case 10: At(SharedScratch_addr)[0] ^= static_cast<unsigned char>(bit); break;
     case 11: At(at::kBattleFlags)[0] ^= 0x80; break;
     case 12: At(Cond_Flags_addr + 0xd0)[0] = v & 1 ? 2 : v; break;
     case 13: At(at::kCuredBits + (v & 1))[0] = v; break;
@@ -184,7 +184,7 @@ int Affinity(std::uint32_t h) {
 int __cdecl StubElementAffinity(unsigned target, unsigned mask) {
     Record(7, target, mask);
     Disturb();
-    if (Hash() % 3 == 0) At(bof3::addr::DamageScratch)[0] ^= 0x20;   // read again after this call
+    if (Hash() % 3 == 0) At(SharedScratch_addr)[0] ^= 0x20;   // read again after this call
     return Affinity(Hash());
 }
 unsigned char __cdecl StubRowDone(const unsigned char* enemy, unsigned row) {
@@ -412,10 +412,10 @@ constexpr unsigned kRegionBytes = 0x4C0 + 4 + 0xC00 + 0x580 + 0xBA0 + 0x900 + si
 
 void MakeRegions() {
     g_regions[0] = {ObjTrio_addr + 0x10 - 0x10, 0x4C0}; // ObjTrio: the three party objects, to 0x8031FF (0x8031F3)
-    g_regions[1] = {bof3::addr::DamageScratch, 4};
+    g_regions[1] = {SharedScratch_addr, 4};
     g_regions[2] = {0x904000, 0xC00};                  // 0x904060, the battle state 0x904AA8..0x904B9B
     g_regions[3] = {at::kTurnWork, 0x580};             // the turn work, the damage scratch stats 0x939F86..0x939FEB
-    g_regions[4] = {at::kEnemy - 0x80, 0xBA0};         // the enemy objects and records, room for actor 11
+    g_regions[4] = {Battle_Enemies_addr + 0x80 - 0x80, 0xBA0}; // the enemy objects and records, room for actor 11
     g_regions[5] = {at::kAiScripts, 0x900};            // AI scripts 0..15
     g_regions[6] = {Address(g_bufs), sizeof g_bufs};
 }
@@ -593,7 +593,7 @@ Args Seed(unsigned k) {
         x.a[1] = ActorArg(x.actor[1]);
         x.a[2] = static_cast<std::uint32_t>(Often() ? kBases[Next() % 15] : static_cast<std::int32_t>(Next()) >> (Next() % 24));
         SeedActor(x.actor[1]);
-        At(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(Half() ? (Half() ? 0x20 : 0x01) | (Half() ? 0x20 : 0) : Next());
+        At(SharedScratch_addr)[0] = static_cast<unsigned char>(Half() ? (Half() ? 0x20 : 0x01) | (Half() ? 0x20 : 0) : Next());
         break;
     }
     case kAiK:
@@ -612,7 +612,7 @@ Args Seed(unsigned k) {
         if (Half()) At(BattleDamage_AiByteB97_addr)[0] = static_cast<unsigned char>(Next() % 2);
         break;
     case kRowDoneK: {
-        x.a[0] = Often() ? Address(EnemyAt(3 + Next() % 8) + at::kEObject) : at::kEnemy - 0x80 + Next() % 0xA00;
+        x.a[0] = Often() ? Address(EnemyAt(3 + Next() % 8) + at::kEObject) : (Battle_Enemies_addr + 0x80) - 0x80 + Next() % 0xA00;
         x.a[1] = Byte(Often() ? Next() % 10 : Next() % 40);
         break;
     }

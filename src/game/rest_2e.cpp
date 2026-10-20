@@ -78,7 +78,7 @@ constexpr U kPressed = 0x7E1BEC;       // Input_Pressed
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons
 constexpr U kParty = 0x904062;         // the party's member ids
-constexpr U kRecords = 0x903A70;       // CharacterRecords, 0xA4 each
+// kRecords: now CharacterRecords (symbols.toml). CharacterRecords, 0xA4 each
 constexpr U kRecordStride = 0xA4;
 
 // The image's tables, read in place.
@@ -118,7 +118,7 @@ bool Cancelled(U pressed) { return (static_cast<std::uint32_t>(Field_CancelButto
 // A party member's record index: Character_IndexById[the member's id].
 UC RecordOf(U id) { return Character_IndexById[id & 0xFF]; }
 UC PartyRecord(int member) { return RecordOf(B(static_cast<U>(static_cast<int>(kParty) + member))); }
-unsigned char* Record(U index) { return At(kRecords + (index & 0xFF) * kRecordStride); }
+unsigned char* Record(U index) { return At(CharacterRecords_addr + (index & 0xFF) * kRecordStride); }
 // The low byte of 1 << n as the originals compute it (an 8-bit shl, or the low
 // byte of a 32-bit one): the count is n's low five bits.
 UC Bit8(U n) {
@@ -336,7 +336,7 @@ extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
     const U x = L(0x803338) + 0x2A;
     const U y = W(0x80333A) + 7;
     SetW(0x8032FC, 0x17);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
     SetW(0x80345A, y);
     const U repeat = AutoRepeat(pressed);
@@ -393,7 +393,7 @@ extern "C" void __cdecl FieldItems_ArrangeHow(void) {
     const U x = L(0x80335C) + 5;
     const U y = (row << 4) + W(0x80335E) + 0x1A;
     SetW(0x8032FC, 0x18);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
     SetW(0x80345A, y);
     B(0x803340) = 0xFF;
@@ -445,9 +445,9 @@ extern "C" void __cdecl FieldItems_ArrangeMove(void) {
     const U x = L(0x803338) + 7;
     B(0x803364) = 0;
     SetW(0x803458, x);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
-    Window21_Y = 13u * (B(0x803340) - top + 2) + W(0x80333A);
+    WindowRecords[21].y = 13u * (B(0x803340) - top + 2) + W(0x80333A);
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x803340);
     UC cl, al;
@@ -503,7 +503,7 @@ extern "C" void __cdecl FieldItems_DiscardConfirm(void) {
     const U y = W(0x8032F2) + 5;
     U pressed = L(kPressed);
     SetW(0x8032FC, 0x1A);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
     SetW(0x80345A, y);
     if (pressed & 0xA000) {
@@ -540,9 +540,9 @@ extern "C" void __cdecl FieldItems_UseOnMember(void) {
     SH_CALL(TextRecord_Set)(0, 0x10, At(kConsumables + 22u * *id));
     const int member = BattleActorCopies_ItemActor;
     SetW(0x8032FC, 0x19);
-    Window19 = 1;
+    WindowRecords[19].in_use = 1;
     SetW(0x803410, 0xB6);
-    Window19_Y = static_cast<U>(54 * member + 0x3E);
+    WindowRecords[19].y = static_cast<U>(54 * member + 0x3E);
     const UC n = PartyCount();
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     const U repeat = AutoRepeat(pressed);
@@ -573,7 +573,7 @@ extern "C" void __cdecl FieldItems_UseOnMember(void) {
         return;
     }
     const auto state = static_cast<UC>(FieldS_State - 4);
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     B(0x803341) = 0xFF;
     FieldS_State = state;
 }
@@ -587,10 +587,10 @@ extern "C" void __cdecl FieldItems_ViewList32(void) {
     const U top = B(0x80333F);
     SetW(0x8032FC, help);
     const U x = L(0x803338) + 7;
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
-    Window21_Y = 13u * (B(0x803340) - top + 2) + W(0x80333A);
+    WindowRecords[21].y = 13u * (B(0x803340) - top + 2) + W(0x80333A);
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x803340);
     UC cl, al;
@@ -644,13 +644,13 @@ extern "C" void __cdecl FieldItems_InitWindows(void) {
     SetW(0x803346, 0);
     B(0x80340D) = 6;
     B(0x80340E) = 0xA;
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     B(0x803416) = 1;
     B(0x803417) = 1;
     B(0x803455) = 6;
     B(0x803456) = 0xE;
     B(0x803457) = 0;
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
 }
 
 // original 0x58BD40: a tail jump through FieldItems_Sorts by the argument's low
@@ -824,7 +824,7 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
     const U x = L(0x803314) + static_cast<U>(48 * c);
     SetW(0x8032FC, help);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     const U y = W(0x803316) + 4;
     SetW(0x803458, x);
     SetW(0x80345A, y);
@@ -839,7 +839,7 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
         Sound(0x104);
         B(0x80331B) = static_cast<unsigned char>(Rest2e_EquipCursor);
         const auto state = static_cast<UC>(FieldS_State + 1);
-        Window21 = 0;
+        WindowRecords[21].in_use = 0;
         FieldS_State = state;
         return;
     }
@@ -850,8 +850,8 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
     B(0x8032EF) = 1;
     B(0x803313) = 1;
     B(0x803337) = 1;
-    Window19 = 0;
-    Window21 = 0;
+    WindowRecords[19].in_use = 0;
+    WindowRecords[21].in_use = 0;
     FieldS_State = state;
     B(kTimer) = 0;
 }
@@ -861,10 +861,10 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
     Backdrop();
     const U m0 = B(0x803340);
     const U wx = W(0x8031F4);
-    Window19 = 1;
+    WindowRecords[19].in_use = 1;
     SetW(0x803410, wx);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
-    Window19_Y = 54 * m0 + 0x3E;
+    WindowRecords[19].y = 54 * m0 + 0x3E;
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x803340);
     const UC n = PartyCount();
@@ -900,7 +900,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
                 } while (k < PartyCount());
             }
             const UC m = B(0x803340);
-            Window19 = 0;
+            WindowRecords[19].in_use = 0;
             B(0x803337) = 3;
             B(0x80333E) = 0;
             B(0x80333F) = 0xFF;
@@ -938,7 +938,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 1);
     const UC m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     B(0x937F8E) = m;
     B(kTimer) = 0;
     FieldS_State = state;
@@ -987,7 +987,7 @@ extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
     const U x = L(0x803338) + 6;
     SetW(0x8032FC, help);
     const U y = 13u * B(0x80333E) + W(0x80333A) + 0x57;
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     SetW(0x80345A, y);
@@ -1020,7 +1020,7 @@ extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 5);
     B(0x803417) = 1;
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
     B(0x80333E) = 0xFF;
     B(kTimer) = 0;
     FieldS_State = state;
@@ -1056,13 +1056,13 @@ extern "C" void __cdecl FieldEquip_InitWindows(void) {
     move_script::SetLong(At(0x803354), static_cast<std::int32_t>(kPreview));
     B(0x80340D) = 6;
     B(0x80340E) = 0xA;
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     B(0x803416) = 1;
     B(0x803417) = 1;
     B(0x803455) = 6;
     B(0x803456) = 0xE;
     B(0x803457) = 0;
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
 }
 
 // original 0x58D0C0: the preview of the highest +0x16 weapon and +0x14 armour
@@ -1273,7 +1273,7 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
     B(0x8033A8) = 0;
     const U y = W(0x803316) + 4;
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
     SetW(0x80345A, y);
     B(0x80331B) = 0xFF;
@@ -1297,7 +1297,7 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
         }
         if (chosen == 3) {
             const auto state = static_cast<UC>(FieldS_State + 7);
-            Window16_State = 1;
+            WindowRecords[16].state = 1;
             B(kTimer) = 7;
             FieldS_State = state;
             FieldS_Step = 0;
@@ -1313,8 +1313,8 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
     const auto state = static_cast<UC>(FieldS_State + 6);
     B(0x8032EF) = 1;
     B(0x803313) = 1;
-    Window16_State = 1;
-    Window21 = 0;
+    WindowRecords[16].state = 1;
+    WindowRecords[21].in_use = 0;
     FieldS_State = state;
     B(kTimer) = 5;
 }
@@ -1324,17 +1324,17 @@ extern "C" void __cdecl FieldAbility_PickMember(void) {
     Backdrop();
     const UC cursor = Rest2e_AbilityCursor;
     const UC window = B(0x8031F3);
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
     B(0x8033A8) = cursor != 0 ? 3 : 1;
     const UC member = Window16_Owner;
     if (window == 0) {
         const U wx = W(0x8031F4);
-        Window19 = 1;
+        WindowRecords[19].in_use = 1;
         B(0x803417) = 1;
         SetW(0x803410, wx);
-        Window19_Y = 54u * member + W(0x8031F6);
+        WindowRecords[19].y = 54u * member + W(0x8031F6);
     } else {
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
     }
     SH_CALL(TextRecord_Set)(0, 8, Record(PartyRecord(member)));
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xF000;
@@ -1369,7 +1369,7 @@ extern "C" void __cdecl FieldAbility_PickMember(void) {
     if (!Cancelled(p)) return;
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 1);
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     FieldS_State = state;
 }
 
@@ -1380,27 +1380,27 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
     const UC member = Window16_Owner;
     if (window == 0) {
         const U wx = W(0x8031F4);
-        Window19 = 1;
+        WindowRecords[19].in_use = 1;
         B(0x803417) = 0;
         SetW(0x803410, wx);
-        Window19_Y = 54u * member + W(0x8031F6);
+        WindowRecords[19].y = 54u * member + W(0x8031F6);
     } else {
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
     }
     const UC type0 = Window16_Page;
     const unsigned char* const list = AbilityList(member, type0);
     const UC id = list[B(0x8033AC)];
     const U help = W(kAbilityHelp + 24u * id);
-    const UC busy = Window16_State;
+    const UC busy = WindowRecords[16].state;
     SetW(0x8032FC, help);
     if (busy == 0) {
         const U cur = B(0x8033AC);
         const U x = L(0x8033A4) + 7;
-        Window21 = 1;
+        WindowRecords[21].in_use = 1;
         SetW(0x803458, x);
-        Window21_Y = 13u * (cur + 2) + static_cast<std::uint32_t>(Window16_Y);
+        WindowRecords[21].y = 13u * (cur + 2) + static_cast<std::uint32_t>(WindowRecords[16].y);
     } else {
-        Window21 = 0;
+        WindowRecords[21].in_use = 0;
     }
     const U repeat = AutoRepeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     UC al, cl;
@@ -1498,9 +1498,9 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
         const UC kept = B(0x8033AC);
         B(0x8033AD) = kept;
         const auto state = static_cast<UC>(FieldS_State + 1);
-        Window16_State = 4;
-        Window21 = 1;
-        Window19 = 0;
+        WindowRecords[16].state = 4;
+        WindowRecords[21].in_use = 1;
+        WindowRecords[19].in_use = 0;
         FieldS_Column = 0;
         FieldS_State = state;
         return;
@@ -1517,16 +1517,16 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
 extern "C" void __cdecl FieldAbility_PickTarget(void) {
     Backdrop();
     const UC window = B(0x803337);
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
     if (window == 0) {
         const int t = FieldS_Column;
         const U wx = W(0x803338);
-        Window19 = 1;
+        WindowRecords[19].in_use = 1;
         B(0x803417) = 1;
         SetW(0x803410, wx);
-        Window19_Y = static_cast<U>(54 * t) + W(0x80333A);
+        WindowRecords[19].y = static_cast<U>(54 * t) + W(0x80333A);
     } else {
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
     }
     const U repeat = AutoRepeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     const UC n = PartyCount();
@@ -1552,7 +1552,7 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
     Sound(0x106);
     Sound(0x102);
     UC k = 0;
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     if (PartyCount() != 0) {
         do {
             const U o = 36u * k;
@@ -1562,7 +1562,7 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
         } while (k < PartyCount());
     }
     const auto state = static_cast<UC>(FieldS_State - 1);
-    Window16_State = 3;
+    WindowRecords[16].state = 3;
     B(0x8033AD) = 0xFF;
     FieldS_State = state;
 }
@@ -1573,9 +1573,9 @@ extern "C" void __cdecl FieldAbility_ShareConfirm(void) {
     Backdrop();
     const int answer = FieldS_Answer;
     const U x = L(0x8032F0) - static_cast<U>(36 * answer) + 0xE8;
-    Window21_Y = W(0x8032F2) + 5;
+    WindowRecords[21].y = W(0x8032F2) + 5;
     U pressed = L(kPressed);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
     SetW(0x8032FC, 0x31);
     if (pressed & 0xA000) {
@@ -1620,15 +1620,15 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
     const U wx = W(0x8031F4);
     SetW(0x8032FC, 0x17);
     SetW(0x803410, wx);
-    const U hand_y = Window16_Y;
-    Window19 = 1;
+    const U hand_y = WindowRecords[16].y;
+    WindowRecords[19].in_use = 1;
     const U x = L(0x8033A4) + 0x2A;
     B(0x803417) = 1;
-    Window19_Y = 54u * member + W(0x8031F6);
+    WindowRecords[19].y = 54u * member + W(0x8031F6);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0xF00C);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
-    Window21_Y = hand_y + 7;
+    WindowRecords[21].y = hand_y + 7;
     const U repeat = AutoRepeat(pressed);
     B(0x8033AD) = 0xFF;
     const UC n = PartyCount();
@@ -1641,10 +1641,10 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
         Sound(0x103);
         const UC three = Window16_Page == 3 ? 1 : 0;
         const auto step = static_cast<UC>(FieldS_Step + 1);
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
         B(0x8033E9) = 6;
         B(0x8033EA) = 0xF;
-        Window18 = 1;
+        WindowRecords[18].in_use = 1;
         SetW(0x8033EC, 0x28);
         SetW(0x8033EE, 0x3C);
         B(0x8033F2) = static_cast<UC>(three + 5);
@@ -1655,7 +1655,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
     if (!Cancelled(p)) return;
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 5);
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     FieldS_State = state;
 }
 
@@ -1669,7 +1669,7 @@ extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
     const U y = (row << 4) + W(0x8033EE) + 0x1A;
     SetW(0x8032FC, 0x18);
     B(0x8033F4) = 0xFF;
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetW(0x803458, x);
     SetW(0x80345A, y);
     B(0x8033AC) = 0xFF;
@@ -1707,7 +1707,7 @@ extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
     if (!Cancelled(p)) return;
     Sound(0x106);
     const auto step = static_cast<UC>(FieldS_Step - 1);
-    Window18 = 0;
+    WindowRecords[18].in_use = 0;
     FieldS_Step = step;
 }
 
@@ -1721,8 +1721,8 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
     const UC type = Window16_Page;
     B(0x8033F4) = 0;
     const UC member = Window16_Owner;
-    Window21 = 1;
-    Window21_Y = 13u * (cur + 2) + static_cast<std::uint32_t>(Window16_Y);
+    WindowRecords[21].in_use = 1;
+    WindowRecords[21].y = 13u * (cur + 2) + static_cast<std::uint32_t>(WindowRecords[16].y);
     const unsigned char* const list = AbilityList(member, type);
     const UC ability = list[B(0x8033AC)];
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
@@ -1848,8 +1848,8 @@ extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     const U x = L(0x8033C8) + 7;
     SetW(0x803458, x);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
-    Window21 = 1;
-    Window21_Y = 13u * (cur - top + 2) + W(0x8033CA);
+    WindowRecords[21].in_use = 1;
+    WindowRecords[21].y = 13u * (cur - top + 2) + W(0x8033CA);
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x8033CF);
     UC cl, al;
@@ -1860,7 +1860,7 @@ extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     if (!Cancelled(static_cast<std::uint32_t>(Input_Pressed))) return;
     Sound(0x106);
     const auto step = static_cast<UC>(FieldS_Step + 1);
-    Window21 = 0;
+    WindowRecords[21].in_use = 0;
     B(0x8033C7) = 1;
     B(kTimer) = 7;
     FieldS_Step = step;
@@ -1872,7 +1872,7 @@ extern "C" void __cdecl FieldAbility_ViewLeave(void) {
     const auto t = static_cast<UC>(B(kTimer) - 1);
     B(kTimer) = t;
     if (t != 0) return;
-    Window16_State = 2;
+    WindowRecords[16].state = 2;
     Sound(0x102);
     const auto step = static_cast<UC>(FieldS_Step + 1);
     B(kTimer) = 7;

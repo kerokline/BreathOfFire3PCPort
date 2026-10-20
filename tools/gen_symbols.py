@@ -32,6 +32,23 @@ block exists and gives its records, the entry lies inside them, and
 reads the same keys (its rule 0: an address inside a block's records is a
 field, never measured as a scalar).
 
+Record arrays (stage C4, docs/typed-data-stage-c.md 6). A `ctype` may be a
+record family of src/game/records*.h (`ctype = "records::SpriteObject"`,
+`count = 30`): the macro is then a pointer to record 0, so a site reads
+`Sprite_Objects[i].x`, and `<Name>_count` counts records, not bytes. A
+[[block]] that gives its records may carry such a `ctype` as well, which must
+be a record of exactly `record_stride` bytes (tools/record_sizes.py reads each
+struct's size from its header's static_assert): it is emitted as a typed
+array of `record_count` records (`WindowRecords[16].state`), or, with one
+record, as that record (`SharedScratch.w_0c`), with `<Name>_addr` (and
+`<Name>_count` for an array) as for a [[data]] entry. A field entry stays a
+field of its block either way. The generated header includes
+game/records.h before any macro, so a record-typed macro expands to a
+complete type wherever it is spelled, and the record headers themselves are
+read before a macro of the same name exists (the block SharedScratch and
+the struct records::SharedScratch share their name: past this header,
+`records::SharedScratch` is not spellable, and nothing in src/ spells it).
+
 The output contains addresses and names only — our work product, not game data.
 It is still generated into the build tree rather than committed, so it cannot
 drift from symbols.toml.
@@ -46,6 +63,9 @@ retirable, the typed global already naming their address. Addresses and names
 only. Nothing is removed here; stage B retires them at the sites.
 """
 import argparse, glob, os, re, sys, tomllib
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import record_sizes  # noqa: E402
 
 IDENT = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 CCS = {'__cdecl', '__stdcall', '__fastcall', '__thiscall'}
@@ -119,6 +139,10 @@ def main():
     w('#pragma once')
     w('#include <cstdint>')
     w('')
+    w('// The record families a typed entry may name (records::SpriteObject, ...),')
+    w('// read before any macro below exists (tools/gen_symbols.py, stage C4).')
+    w('#include "game/records.h"')
+    w('')
     w('namespace bof3::image {')
     w(f'inline constexpr std::uint32_t kBase = {meta["image_base"]:#x};')
     w(f'inline constexpr std::uint32_t kTimestamp = {meta["pe_timestamp"]:#x};')
@@ -143,6 +167,14 @@ def main():
             fail(f'{b["name"]}: record_stride and record_count go together')
         if b.get('record_size', 0) > b.get('record_stride', 0):
             fail(f'{b["name"]}: record_size is larger than record_stride')
+        if 'ctype' in b:
+            if 'record_stride' not in b:
+                fail(f'{b["name"]}: a [[block]] ctype needs record_stride and record_count')
+            if b.get('record_size', b['record_stride']) != b['record_stride']:
+                fail(f'{b["name"]}: a [[block]] ctype types whole records; record_size differs')
+            size = record_sizes.size_of(b['ctype'])
+            if size != b['record_stride']:
+                fail(f'{b["name"]}: ctype {b["ctype"]} is {size!r} bytes, record_stride {b["record_stride"]:#x}')
 
     def field_of(e):
         """(record, offset) of a field entry, checked against its block."""
@@ -161,6 +193,8 @@ def main():
         return rec, off
 
     for e in datas:
+        if 'ctype' in e:
+            record_sizes.size_of(e['ctype'])     # a records:: ctype names a struct, or this fails
         if 'field_offset' in e and 'field_of' not in e:
             fail(f'{e["name"]}: field_offset without field_of')
         if 'field_of' in e:
@@ -208,6 +242,22 @@ def main():
     w('')
 
     w('// --- Data. Scalars are lvalues; arrays are pointers to element 0. ---')
+    typed_blocks = []
+    for b in blocks:
+        if 'ctype' not in b:
+            continue
+        e = {'name': b['name'], 'pc': b['pc'], 'ctype': b['ctype']}
+        if b['record_count'] != 1:
+            e['count'] = b['record_count']
+        typed_blocks.append(e)
+    for e in typed_blocks:
+        w(f'// [[block]] {e["name"]}: its records as {e["ctype"]}')
+        if 'count' in e:
+            w(f'#define {e["name"]} (reinterpret_cast<{e["ctype"]} *>({e["pc"]:#x}))')
+            w(f'inline constexpr unsigned {e["name"]}_count = {e["count"]};')
+        else:
+            w(f'#define {e["name"]} (*reinterpret_cast<{e["ctype"]} *>({e["pc"]:#x}))')
+        w(f'inline constexpr std::uint32_t {e["name"]}_addr = {e["pc"]:#x};')
     for e in datas:
         if 'ctype' not in e:
             continue

@@ -17,6 +17,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/effect_4a.h"
 #include "game/effect_4a_callees.h"
 #include "game/move_script_bytes.h"
@@ -144,9 +145,9 @@ U FxFade(const U*, U answer) {
 // word up one - so a caller that reads Sprite_Current after it, not the record
 // it kept, reads another record. The op's 16 bytes are hashed (deref).
 U FxPlace(const U*, U answer) {
-    unsigned char* const count = Mem(at::kObjectCount);
+    unsigned char* const count = Mem(SharedScratch_addr);
     const U n = Word(count);
-    if (n < at::kSpriteCount) Sprite_Current = Sprite_Objects + at::kSpriteStride * n;
+    if (n < at::kSpriteCount) Sprite_Current = rv::Bytes(&Sprite_Objects[n]);
     SetWord(count, n + 1);
     return answer;
 }

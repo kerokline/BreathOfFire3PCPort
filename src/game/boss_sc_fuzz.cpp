@@ -264,8 +264,8 @@ void Seed(unsigned k) {
         Mem(BossSc_WaitTurns_addr)[0] = bh::Half() ? 0 : Byte({1, 8, 0xA, 0x80});
         Mem(at::kActor)[0] = Byte({0, 0, 0, 1, 3, 0x80});
         Mem(at::kTarget)[0] = Byte({0x40, 0x44, 0x4, 0, 0xBF, 0xC0});
-        Mem(at::kEnemy0 + at::kEnemyStatus + 1)[0] = Byte({0, 0x20, 0xDF, 0x60});
-        Mem(at::kEnemy1 + at::kEnemyStatus + 1)[0] = Byte({0, 0x20, 0xDF, 0x60});
+        Mem(Battle_Enemies_addr + at::kEnemyStatus + 1)[0] = Byte({0, 0x20, 0xDF, 0x60});
+        Mem(Battle_Enemies_addr + 0x128 + at::kEnemyStatus + 1)[0] = Byte({0, 0x20, 0xDF, 0x60});
         break;
     // --- the entrances that read the fight byte (fight 13's HP)
     case 0x439B30: case 0x439C80:
@@ -342,7 +342,7 @@ void Disturb(U h) {
     case 1: Mem(at::kMoveCounter)[0] = h & 0x1000000 ? 0x14 : b; break;
     case 2: Mem(BossSc_WaitTurns_addr)[0] = b; break;
     case 3: Mem(Character_IndexById_addr + 0x1)[0] = b; break;
-    default: Mem(Field_Members_addr + 0x4)[0] = b; break;
+    default: Mem(ObjTrio_addr + 0x14c)[0] = b; break;
     }
 }
 

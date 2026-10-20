@@ -54,18 +54,18 @@ constexpr unsigned kEffectCount = 20;
 // the pool (rest_2a::at::kEffectNone, inside Gfx_PacketPools), read in place;
 // any other byte no code of this band stores, and ours aborts.
 const unsigned char* EffectRead(unsigned index, const char* who) {
-    if (index < kEffectCount) return Effect_Objects + index * kEffectStride;
+    if (index < kEffectCount) return rv::Bytes(&Effect_Objects[index]);
     if (index == 0xFF) return At(Gfx_PacketPools_addr + 0x7560);
     bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads at 0x%X", who, index,
-                static_cast<unsigned>(Addr(Effect_Objects) + index * kEffectStride));
+                static_cast<unsigned>(Addr(rv::Bytes(Effect_Objects)) + index * kEffectStride));
     return nullptr;
 }
 // The same for a write: only 0..19 (the spawns test 0xFF first).
 unsigned char* EffectWrite(unsigned index, const char* who) {
     if (index >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes at 0x%X", who, index,
-                    static_cast<unsigned>(Addr(Effect_Objects) + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+                    static_cast<unsigned>(Addr(rv::Bytes(Effect_Objects)) + index * kEffectStride));
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // A dispatcher's `call [esp + 4 * Sprite_Current[4]]` through the table it
@@ -86,7 +86,7 @@ void Dispatch(const U* states, unsigned count, const char* who) {
 // is never 0, so the call is unconditional. It pushes eax whole, the upper
 // bytes Rand's answer; Sprite_FaceDirection reads the byte.
 void FaceAwayFromLeader() {
-    const unsigned char lead = ObjTrio[8];
+    const unsigned char lead = ObjTrio[0].direction;
     SH_CALL(Sprite_FaceDirection)(static_cast<unsigned char>((lead ^ 0xFC) & 7));
 }
 
@@ -108,7 +108,7 @@ void EndEvent(const unsigned char* s) {
 // sar 6, the sign added) - the member need not lie in the array.
 U MemberSpriteIndex() {
     const auto offset = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) -
-                                                  Addr(Sprite_Objects));
+                                                  Addr(rv::Bytes(Sprite_Objects)));
     return static_cast<U>(offset / static_cast<std::int32_t>(kSpriteStride));
 }
 
@@ -168,7 +168,7 @@ void RollBody(const Roll& r) {
 }
 
 // CharacterRecords' record n (stride 0xA4), unchecked as the originals index it.
-unsigned char* Record(unsigned n) { return At(bof3::addr::CharacterRecords + n * at::kRecordStride); }
+unsigned char* Record(unsigned n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
 
 // The states each Run builds on its stack, in the order it stores them.
 const U kStatesA[] = {bof3::addr::LinkedObjectA_Roll, bof3::addr::LinkedObject_Show2, bof3::addr::LinkedObject_Show5,
@@ -194,7 +194,7 @@ const U kStatesD[] = {bof3::addr::LinkedObjectD_Roll,        bof3::addr::LinkedO
 // left at the last live record.
 extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
     for (unsigned k = 0; k < 30; ++k) {
-        unsigned char* const rec = Sprite_Objects + k * kSpriteStride;
+        unsigned char* const rec = rv::Bytes(&Sprite_Objects[k]);
         Sprite_Current = rec;
         if (!(rec[0] & 1)) continue;
         if (rec[6] != 9) {
@@ -441,7 +441,7 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
 // / 28 (a signed division: imul by 0x92492493, add, sar 4, the sign added);
 // negative, shifted left 2 (al only). Answers al.
 extern "C" unsigned char __cdecl LinkedObject_EffectRise(void) {
-    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - ObjTrio[0x30]));
+    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - rv::Bytes(ObjTrio)[0x30]));
     const auto q = static_cast<unsigned char>(static_cast<int>(d) / 28);
     return static_cast<signed char>(q) < 0 ? static_cast<unsigned char>(q << 2) : q;
 }

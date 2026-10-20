@@ -63,6 +63,9 @@ number may only fall (docs/typed-data-census.md section 3).
 """
 import argparse, ast, collections, os, re, sys, tomllib
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import record_sizes  # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_OUT = os.path.join('analysis', 'data_census.tsv')
 EXTS = ('.cpp', '.h', '.hpp', '.cc', '.inl', '.ixx')
@@ -86,6 +89,19 @@ CTYPE_SIZE = {
     'std::uint32_t': 4, 'unsigned char': 1, 'signed char': 1, 'char': 1,
     'unsigned short': 2, 'short': 2, 'const unsigned short': 2,
 }
+
+
+
+def ctype_size(ct):
+    """An entry's element size: CTYPE_SIZE's, 4 for a pointer, a record
+    family's struct size (tools/record_sizes.py), else 0 (unsized)."""
+    if not ct:
+        return 0
+    if '*' in ct:
+        return 4
+    if ct in CTYPE_SIZE:
+        return CTYPE_SIZE[ct]
+    return record_sizes.size_of(ct) or 0
 
 
 # --------------------------------------------------------------------------
@@ -324,6 +340,11 @@ def load_sources():
 
 
 CONST_BRACE = re.compile(r'\b(?:inline\s+)?(?:static\s+)?constexpr\s+[\w:]+\s+(k\w*)\s*\{([^{},;]*)\}\s*;')
+# A typed alias in a `namespace at` (stage C4: `inline auto& kPendingX =
+# SharedScratch.d_10;`): the name is a reference to a typed global, not an
+# address, so a site spelling it is typed and resolve_at answers no value.
+REF_ALIAS = re.compile(r'\binline\s+auto\s*&\s*(k\w*)\s*=\s*[A-Za-z_]')
+_REF_ALIASES = collections.defaultdict(list)
 
 
 def collect_constants(files, sym_env):
@@ -363,6 +384,10 @@ def collect_constants(files, sym_env):
         ns = f.ns_at(pos)
         row = (name, f.locals.get(name), ns, line_of(f.starts, pos))
         (f.consts if f.in_at_namespace(pos) else f.mconsts).append(row)
+    _REF_ALIASES.clear()
+    for f in files:
+        for m in REF_ALIAS.finditer(f.code):
+            _REF_ALIASES[m.group(1)].append((f, 'REF', f.ns_at(m.start()), line_of(f.starts, m.start())))
     return globals_env
 
 
@@ -425,11 +450,21 @@ class Symbols:
             self.names.setdefault(e['name'], e['pc'])
         for e in t.get('func', []):
             self.by_pc.setdefault(e['pc'], ('func', e))
+        # <Name>_addr, which tools/gen_symbols.py emits for a typed entry or a
+        # typed block, evaluates like bof3::addr::Name in a constant's
+        # definition (stage C4: `kLineAngle = SharedScratch_addr + 4` is a
+        # data address all the same). Not a record base: `B(Name_addr + k)`
+        # is not counted (docs/typed-data-census.md 4).
+        self.addr_names = {e['name'] + '_addr': e['pc'] for e in self.data + t.get('block', []) if 'ctype' in e}
         self.extents = []
         for e in self.data:
-            size = CTYPE_SIZE.get(e.get('ctype', ''), 4 if '*' in e.get('ctype', '') else 0)
+            size = ctype_size(e.get('ctype', ''))
             if size:
                 self.extents.append((e['pc'], e['pc'] + size * max(1, e.get('count', 1)), e))
+        # a [[block]] with a record ctype (stage C4) covers its records
+        for e in t.get('block', []):
+            if 'ctype' in e:
+                self.extents.append((e['pc'], e['pc'] + ctype_size(e['ctype']) * e['record_count'], e))
         self.extents.sort(key=lambda x: x[0])
         self.n_data = len(self.data)
         self.n_ctype = sum(1 for e in self.data if 'ctype' in e)
@@ -457,7 +492,7 @@ class Symbols:
     def cover(self, v):
         """(cover, name, ctype) of the [[data]] entry covering address v."""
         hit = self.by_pc.get(v)
-        if hit and hit[0] == 'data':
+        if hit and (hit[0] == 'data' or 'ctype' in hit[1]):
             return 'exact', hit[1]['name'], hit[1].get('ctype', '-')
         best = None
         for a, b, e in self.extents:
@@ -551,7 +586,7 @@ def is_at_prefix(prefix):
 def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
     """The value of `[prefix::]at::name` as seen from f at pos, and the
     candidate definitions it was picked from."""
-    cands = defs_by_name.get(name, [])
+    cands = defs_by_name.get(name, []) + _REF_ALIASES.get(name, [])
     if not cands:
         return None, []
     want_ns = None
@@ -574,6 +609,9 @@ def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
     tiers.append(cands)
     for t in tiers:
         vals = {c[1] for c in t if c[1] is not None}
+        if 'REF' in vals:
+            # a typed alias is what this name is, here: no address
+            return None, []
         if len(vals) == 1:
             return vals.pop(), t
         if len(vals) > 1:
@@ -676,7 +714,7 @@ def stride_family(f, ident, line, env, at_value, syms):
 
 def scan(files, syms):
     by_rel = {f.rel: f for f in files}
-    env = collect_constants(files, syms.names)
+    env = collect_constants(files, {**syms.names, **syms.addr_names})
     defs_by_name = collections.defaultdict(list)
     for f in files:
         for name, value, ns, line in f.consts:

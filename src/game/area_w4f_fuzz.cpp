@@ -302,7 +302,7 @@ const ah::Callee kCallees[] = {
 #define W4F_BASE_REGIONS {at::kFocusObject, 4}, {at::kFlagRow, 4}, {at::kActiveMember, 4}, {at::kScriptObject, 4}, {at::kWaitWordDA, 2}
 const ah::Region kRegions192[] = {
     W4F_BASE_REGIONS,
-    {at::kCharRecords, at::kCharCount * at::kCharStride},
+    {CharacterRecords_addr, at::kCharCount * at::kCharStride},
     {Area189_StepsSinceEvent_addr, 1},
     {Area189_EventsInRow_addr, 1},
     {Draw_PassFlags_addr, 1},
@@ -437,7 +437,7 @@ void Seed192(unsigned k) {
         // every record around its (5, 8, 9)
         if (ah::Often()) B(Cond_Flags_addr + 0xce) = static_cast<unsigned char>(AH_PICK(4, 5, 5, 6, 7, 8, 9, 0x80, 0xFF, 0));
         for (unsigned r = 0; r < at::kCharCount; ++r)
-            if (ah::Often()) B(at::kCharRecords + r * at::kCharStride + 0x1E) = static_cast<unsigned char>(AH_PICK(3, 4, 5, 5, 6, 7, 8, 8, 9, 9, 10, 0xFF));
+            if (ah::Often()) B(CharacterRecords_addr + r * at::kCharStride + 0x1E) = static_cast<unsigned char>(AH_PICK(3, 4, 5, 5, 6, 7, 8, 8, 9, 9, 10, 0xFF));
         break;
     }
     case k192Restore:

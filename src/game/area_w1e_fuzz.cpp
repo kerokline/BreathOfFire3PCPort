@@ -254,7 +254,7 @@ ah::Region g_regions65[] = {
     {0, sizeof g_names},          // g_names
     {at::kTextRecords, 0xA0},     // Text_Records' first five rows
     {at::kAreaTextOffset, 4},
-    {at::kFlag3A79, 1},
+    {CharacterRecords_addr + 0x9, 1},
     {Area65_PlateAnims_addr, kA65Tables1Bytes}, // area 65's plate and cell tables
     {Area65_PlaceMessages_addr, kA65Tables2Bytes}, // its place messages and name sets
     {Area65_Directions_addr, 0x18}, // Area65_Directions, Area65_Record8Anims
@@ -422,7 +422,7 @@ void Seed65(unsigned k) {
         o[0] = static_cast<unsigned char>(ah::Half() ? o[0] | 0x80 : o[0] & 0x7F);
         break;
     case kRecord4MarkCell:
-        Mem(at::kFlag3A79)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 9, 8, 0x89) : ah::Next());
+        Mem(CharacterRecords_addr + 0x9)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 9, 8, 0x89) : ah::Next());
         if (ah::Often()) Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & ~1u);
         // the map's width so that any cell record lands in the block
         AreaMap_Header[0] = static_cast<unsigned char>(ah::Next() % 0x18);

@@ -76,7 +76,7 @@ unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return PtrAt(at::kCommandRecord); }
-unsigned char* Acting() { return PtrAt(at::kActing); }
+unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
 unsigned char* List() { return At(Window16_addr); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
 // the original has it - an index past the table reads the next one's.
@@ -259,7 +259,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     auto* const list_window = rv::As<records::WindowRecord>(list);
     if (list_window->state != 0) return;
     const unsigned actor = Acting()[5];
-    auto* const hand_window = rv::As<records::WindowRecord>(At(Window19_addr));
+    auto* const hand_window = &WindowRecords[0x13];
     hand_window->in_use = 1;
     hand_window->x = static_cast<unsigned>(Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];
@@ -353,7 +353,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
         above_window->y = y;
         above[0xA] = 0;
         above[0xB] = 0xFF;
-        Byte(at::kRecord4) = 0;
+        WindowRecords[4].in_use = 0;
         BattleE4_Step3 = 6;
         return;
     }

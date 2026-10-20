@@ -58,7 +58,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 unsigned char* Owner() { return At(BattleE2_Owner); }
@@ -213,7 +213,7 @@ extern "C" unsigned long __cdecl BossSample6_Hook(unsigned word) {
 extern "C" void __cdecl Boss38_Setup(void) {
     SetupOwnEnd(bof3::addr::Boss38_End);
     B(at::kTarget) = 0x40;
-    Sprite_Current = At(at::kEnemy7);
+    Sprite_Current = At(Battle_Enemies_addr + 0x818);
     BH_CALL(MagicFx_CenterOnSide)();
     const unsigned char* const s = Sprite_Current;
     const U cx = BossSi_CentreX;
@@ -436,9 +436,9 @@ extern "C" void __cdecl BossArwan_State4Fx(void) {
     if (slot >= at::kTaskCount)
         bof3::Fatal("BossArwan_State4Fx: BattleTask_Create answered slot %u, past the %u - the original stores the owner "
                     "at 0x%X (docs/boss_si.md section 6)",
-                    slot, at::kTaskCount, (unsigned)(at::kTaskOwners + at::kTaskStride * slot));
+                    slot, at::kTaskCount, (unsigned)(BattleTask_Slots_addr + 0x80 + at::kTaskStride * slot));
     unsigned char* const s = Sprite_Current;
-    SetLong(At(at::kTaskOwners + at::kTaskStride * slot), S(AddressOf(s)));
+    SetLong(At(BattleTask_Slots_addr + 0x80 + at::kTaskStride * slot), S(AddressOf(s)));
     s[2] = static_cast<unsigned char>(s[2] + 1);
 }
 
@@ -486,7 +486,7 @@ extern "C" unsigned long __cdecl BossArwanFx_Dispatch(void) {
 // +0x29 = 2, Sprite_SetAnimation(2); Sprite_Current put back.
 extern "C" void __cdecl BossArwanFx_Start(void) {
     Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
-    Sprite_Current[9] = At(at::kEnemyDataCount + at::kEnemyDataStride * B(at::kEnemy0Type))[0];
+    Sprite_Current[9] = At(at::kEnemyDataCount + at::kEnemyDataStride * Battle_Enemies[0].data_id)[0];
     Sprite_Current[0xA] = 0x2D;
     unsigned char* const task = Sprite_Current;
     Sprite_Current = Owner();

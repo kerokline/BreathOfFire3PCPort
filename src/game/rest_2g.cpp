@@ -156,7 +156,7 @@ extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const unsigned id = B(at::kObjTrio + 0x89 + at::kObjStride * s);
     const U arg = ((s * 5) & 0xFFFFFF00u) | id;
     const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex)(arg) & 0xFF;
-    const unsigned char* const rec = At(at::kCharRecords + at::kCharStride * r);
+    const unsigned char* const rec = At(CharacterRecords_addr + at::kCharStride * r);
     const unsigned rows = rec[0xA] + 1u;
     U sum = 0;
     for (unsigned k = 0; k < rows; ++k) sum += Word(At(at::kExpTable + 0x318 * r + 8 * k));
@@ -207,7 +207,7 @@ extern "C" void __cdecl GeneWin_GridOpen(void) {
             bof3::Fatal("GeneWin_GridOpen: BattleTask_Create answered slot %u, past the %u of the pool - the original "
                         "writes its +0xB / +0x4B past the pool (docs/rest_2g.md section 7)",
                         slot, at::kTaskCount);
-        unsigned char* const task = At(at::kTasks + at::kTaskStride * slot);
+        unsigned char* const task = At(BattleTask_Slots_addr + at::kTaskStride * slot);
         task[0x4B] = static_cast<unsigned char>(i);
         task[0xB] = static_cast<unsigned char>(i);
     }
@@ -500,7 +500,7 @@ extern "C" void __cdecl MenuList_SlideDownTo42(void) { Slide(6, 0x10, 0x2A, Past
 extern "C" void __cdecl MenuList_SlideLeftBesidePanel(void) {
     unsigned char* const moved = Rec();
     rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x - 0x20u;
-    const U panel = Word(At(at::kRecord4X));
+    const U panel = WindowRecords[4].x;
     unsigned char* const r = Rec();
     if (Sx(r + 4) >= static_cast<std::int32_t>(static_cast<short>(panel)) + 0x78) return;
     rv::As<records::WindowRecord>(r)->x = panel + 0x78;

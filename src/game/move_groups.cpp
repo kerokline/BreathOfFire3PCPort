@@ -83,7 +83,7 @@ std::int32_t S16(const unsigned char* at) { return static_cast<std::int16_t>(at[
 // divides the pointer's distance from Sprite_ObjectsExtra by 0xA4, truncating.
 unsigned char PartySlot() {
     const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember) -
-                                                    Address(Sprite_ObjectsExtra));
+                                                    Address(rv::Bytes(Sprite_ObjectsExtra)));
     return static_cast<unsigned char>(distance / 0xA4);
 }
 unsigned char* PartyRecord(int slot) { return MoveScript_PartyRecords + slot * 16; }
@@ -128,7 +128,7 @@ extern "C" unsigned char __cdecl MoveScript_Group9(unsigned char* object, const 
         Sprite_Current[0xB] = n;
         SetPos(object, Pos(object) + 2u);
     } else if (op == 0x9F) {   // wait while the effect lives
-        if (Effect_Objects[Sprite_Current[0xB] * 0x80u] & 1) SetPos(object, pos - 1u);
+        if (Effect_Objects[Sprite_Current[0xB]].flags & 1) SetPos(object, pos - 1u);
     }
     return value;
 }
@@ -224,7 +224,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
         if (op == 0xE0) {
             object[0] |= 8;
             object[5] = rv::Current<records::SpriteHead>()->direction;
-            value = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->direction ^ 4);
+            value = static_cast<unsigned char>(ObjTrio[0].direction ^ 4);
             g.face(value);
         } else {
             object[5] = rv::Current<records::SpriteHead>()->direction & 7;
@@ -306,9 +306,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
     switch (p[0]) {
     case 0xD0: {   // place Sprite_Kind2 at Field_Kind2X / Z and ground it
         const long z = Field_Kind2Z, x = Field_Kind2X;
-        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->x, x);
-        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->z, z);
-        rv::Store<unsigned>(rv::As<records::SpriteHead>(Sprite_Kind2)->height_whole, static_cast<unsigned>(g.elevation(x, z)));
+        rv::Store<std::int32_t>(Sprite_Kind2.x, x);
+        rv::Store<std::int32_t>(Sprite_Kind2.z, z);
+        rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(g.elevation(x, z)));
         return value;
     }
     case 0xD1:   // D1 hi lo x s: sound hi:lo when the sprite's script reaches x
@@ -497,7 +497,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         return value;
     case 0xCE: {   // turn toward ObjTrio 0's direction, reversed
         records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
-        const auto target = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->direction ^ 4);
+        const auto target = static_cast<unsigned char>(ObjTrio[0].direction ^ 4);
         const auto now = static_cast<unsigned char>(sprite->direction & 7);
         if (now == target) return sprite->direction;
         const int step = static_cast<signed char>(target - now) <= 0 ? -1 : 1;
@@ -532,7 +532,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         return value;
     }
     case 0x85: {   // the kind-2 object toward ObjTrio 0, repeating until it is there
-        const long x = Field_Kind2X, to_x = rv::As<records::PartyMember>(ObjTrio)->x, to_z = rv::As<records::PartyMember>(ObjTrio)->z, z = Field_Kind2Z;
+        const long x = Field_Kind2X, to_x = ObjTrio[0].x, to_z = ObjTrio[0].z, z = Field_Kind2Z;
         if (x == to_x && z == to_z) {
             if (Field_Kind2Hold == 0) {
                 g.set_elevation(g.elevation(x, z));
@@ -550,7 +550,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         const unsigned char steps_z = away(z, to_z);
         if (steps < steps_z) steps = steps_z;
         g.elevation(x, z);
-        const long nx = rv::As<records::PartyMember>(ObjTrio)->x, nz = rv::As<records::PartyMember>(ObjTrio)->z;
+        const long nx = ObjTrio[0].x, nz = ObjTrio[0].z;
         Field_Kind2X = nx;
         Field_Kind2Z = nz;
         const long h = g.elevation(nx, nz);
@@ -638,7 +638,7 @@ std::uint32_t Id(const void* p) {   // a pointer as the log keeps it
     const auto a = reinterpret_cast<std::uintptr_t>(p);
     if (p == g_sprite) return 1;
     if (p == g_object) return 2;
-    if (a == Address(Sprite_Kind2)) return 3;
+    if (a == Address(rv::Bytes(&Sprite_Kind2))) return 3;
     return static_cast<std::uint32_t>(a);
 }
 // A callee may move the position or turn the sprite: the handler must read them again.
@@ -818,12 +818,12 @@ const void* const kOurs[kGroupCount] = {
 // randomised every round and compared after both passes.
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Kind2), Sprite_Kind2_count},
-    {Address(ObjTrio), 0x40},
-    {Address(Sprite_ObjectsExtra), 8 * 0xA4},   // the party objects and what a slot up to 7 reaches
+    {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
+    {Address(rv::Bytes(ObjTrio)), 0x40},
+    {Address(rv::Bytes(Sprite_ObjectsExtra)), 8 * 0xA4}, // the party objects and what a slot up to 7 reaches
     {Address(MoveScript_TintRecords), MoveScript_TintRecords_count},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
-    {bof3::addr::DamageScratch - 8, 12},
+    {SharedScratch_addr - 8, 12},
     {Address(&Field_Kind2Z), 8},
     {Address(&Field_ScriptFlags), 2},
     {Address(&MoveScript_F3Divisor), 2},
@@ -833,7 +833,7 @@ const Region kRegions[] = {
     {Address(&Field_Kind2Hold), 1},
     {Address(&MapView_Elevation), 4},
 };
-constexpr unsigned kRegionBytes = Sprite_Kind2_count + 0x40 + 8 * 0xA4 + MoveScript_TintRecords_count +
+constexpr unsigned kRegionBytes = sizeof(records::SpriteObject) + 0x40 + 8 * 0xA4 + MoveScript_TintRecords_count +
                                   MoveScript_PartyRecords_count + 12 + 8 + 2 + 2 + 2 + 1 + 2 + 1 + 4;
 
 struct State {
@@ -880,7 +880,7 @@ void Seed(unsigned char op, unsigned char* p) {
     unsigned char* const sprite = g_sprite;
     switch (op) {
     case 0xC8: if (Often()) p[1] = sprite[8]; break;
-    case 0xCE: if (Often()) sprite[8] = static_cast<unsigned char>((sprite[8] & 0xF8) | ((ObjTrio[8] ^ 4) & 7)); break;
+    case 0xCE: if (Often()) sprite[8] = static_cast<unsigned char>((sprite[8] & 0xF8) | ((ObjTrio[0].direction ^ 4) & 7)); break;
     case 0xD4: if (Often()) p[7] = 0; break;
     case 0xD5: case 0xD6:
         if (Often()) {
@@ -895,10 +895,10 @@ void Seed(unsigned char op, unsigned char* p) {
     case 0x9F: if (Often()) sprite[0xB] = static_cast<unsigned char>(Next() % 2); break;
     case 0x8C: if (Often()) p[1] = 0x94; break;
     case 0x85:
-        if (Next() % 2) { Field_Kind2X = Long(ObjTrio + 0x34); Field_Kind2Z = Long(ObjTrio + 0x38); }
+        if (Next() % 2) { Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34); Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38); }
         else if (Often()) {
-            Field_Kind2X = Long(ObjTrio + 0x34) + static_cast<long>(Next() % 0x10000) - 0x8000;
-            Field_Kind2Z = Long(ObjTrio + 0x38) + static_cast<long>(Next() % 0x10000) - 0x8000;
+            Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34) + static_cast<long>(Next() % 0x10000) - 0x8000;
+            Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38) + static_cast<long>(Next() % 0x10000) - 0x8000;
         }
         if (Often()) Field_Kind2Hold = 0;
         break;
@@ -936,7 +936,7 @@ void SelfTest(void* const (&theirs)[kGroupCount]) {
         ++ops[op];
         ++per_group[k];
         SetPos(input.object, start);
-        input.current = Next() % 5 ? g_sprite : Sprite_Kind2;
+        input.current = Next() % 5 ? g_sprite : rv::Bytes(&Sprite_Kind2);
         // The party slot D4..D6 compute: every one of 0..7, so that D4's clamp
         // (above 4) and D5's bound (4 and up) are met; a few bytes into the
         // object sometimes, since the original divides, truncating. A uniform
@@ -944,7 +944,7 @@ void SelfTest(void* const (&theirs)[kGroupCount]) {
         // never above it - a control moving D4's clamp went unseen.
         {
             const unsigned slot = Next() % 8;
-            input.active = At(Address(Sprite_ObjectsExtra) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
+            input.active = At(Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slot < 7 ? Next() % 3 : 0));
         }
         input.area = static_cast<std::uint16_t>(Next() % Area_Descriptors_count);
         const auto value = static_cast<unsigned char>(Next());

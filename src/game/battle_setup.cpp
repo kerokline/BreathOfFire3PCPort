@@ -117,7 +117,7 @@ extern "C" unsigned __cdecl Battle_ActorSkipped(unsigned actor) {
 // eax it leaves (Window_Alloc's) is read by none of its 18 callers.
 extern "C" void __cdecl Battle_OpenMsgWindow() {
     g.window_alloc(0, 3);
-    auto* const window_rec = rv::As<records::WindowRecord>(At(at::kMsgWindow) - 2);
+    auto* const window_rec = rv::As<records::WindowRecord>(At(WindowRecords_addr + 0x2) - 2);
     window_rec->kind = 6;
     window_rec->state = 0;
     window_rec->x = 0x14;
@@ -139,7 +139,7 @@ extern "C" unsigned __cdecl Battle_ActorStanding(unsigned actor) {
         r = (member_rec->flags & 1) && (member_rec->status & 0x4944) == 0 ? 1 : 0;
     } else {
         offset = ((a - 3) & 0xFF) * at::kEnemyStride;
-        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(at::kEnemy + offset));
+        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(Battle_Enemies_addr + offset));
         r = (enemy_rec->flags & 1) && (enemy_rec->status & 0x4144) == 0 ? 1 : 0;
     }
     return (offset & ~0xFFu) | r;
@@ -277,7 +277,7 @@ extern "C" unsigned __cdecl Battle_ClearStatus(unsigned actor, unsigned mask) {
     unsigned s = Word(status) & ~(mask & 0x48DFu);
     if ((mask & 0x20) && (s & 0x20)) {
         s &= ~0x20u;
-        std::memcpy(o + at::kPos, At(at::kSavedPos + a * at::kSavedPosStride), 12);
+        std::memcpy(o + at::kPos, At(BattleTask_Slots_addr + 0x34 + a * at::kSavedPosStride), 12);
     }
     g.release_tint(o);
     SetWord(status, s);

@@ -34,7 +34,7 @@ namespace at {
 constexpr std::uint32_t kMemberSize = 0x14C;
 // The 48 battle-task slots (battle_flow.md): 0x441570 moves the byte +9 of
 // slot Sprite_Current +5 and reads its +0x34 / +0x38.
-constexpr std::uint32_t kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskSize = 0x84;
 // The battle's globals (PSX 0x801462E0..).
 constexpr std::uint32_t kPhase = 0x904AA0;        // u8: 1 and 5 matter to 0x441570

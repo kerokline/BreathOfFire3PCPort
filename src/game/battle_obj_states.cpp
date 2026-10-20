@@ -60,7 +60,7 @@ namespace {
 
 unsigned char* S() { return Sprite_Current; }
 unsigned char* F() { return Field_State; }
-unsigned char* Task(unsigned index) { return At(at::kTasks + index * at::kTaskSize); }
+unsigned char* Task(unsigned index) { return At(BattleTask_Slots_addr + index * at::kTaskSize); }
 // The party objects' states run on the member: Sprite_Current and Field_State are its record.
 // A code pointer out of one of the tables, called; the index is not checked
 // (a byte, as the original's).

@@ -42,7 +42,7 @@ std::int32_t Sub(std::int32_t a, std::int32_t b) {
 std::int32_t Mul(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b));
 }
-unsigned char* Kind2() { return Sprite_Kind2; }
+unsigned char* Kind2() { return rv::Bytes(&Sprite_Kind2); }
 
 // Sprite_Current may be a Sprite_Objects record or another family whose
 // first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
@@ -119,7 +119,7 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
     records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     std::int32_t tilt_x = static_cast<std::int32_t>(sprite->angle[0]);
     std::int32_t tilt_y = static_cast<std::int32_t>(sprite->angle[1]);
-    const std::int32_t index = static_cast<std::int32_t>(Address(object) - Address(Sprite_ObjectsExtra)) / 0xA4;
+    const std::int32_t index = static_cast<std::int32_t>(Address(object) - Address(rv::Bytes(Sprite_ObjectsExtra))) / 0xA4;
     signed char slot = static_cast<signed char>(index & 0xFF);
     if (slot < 0) slot = 4;
     unsigned char* const record = MoveScript_PartyRecords + slot * 16;
@@ -235,7 +235,7 @@ extern "C" void __cdecl Kind2_Place(unsigned char script) {
 // directions 2 and 6, else 0x10, divided by the speed; the velocity +0xC /
 // +0x10 = the direction's MoveCmd_F9Steps pair times the speed; then, unless
 // bit 7 of object +0, the ground where the move lands - AreaMap_Slope there,
-// or AreaMap_Elevation when the slope says the ground is sloped (DamageScratch's
+// or AreaMap_Elevation when the slope says the ground is sloped (SharedScratch's
 // byte) - and the rise to it spread over +9 frames into +0x14. Flag 0x10.
 //
 // As the original has it: the speed byte indexes the table unmasked; the
@@ -323,13 +323,13 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
     if (handle & 0x80) {
         unsigned char count = 0;
         for (unsigned char n = 0; n < 0x1E; ++n) {
-            if (Sprite_Objects[n * 0xA4u + 6] != 0x0A) continue;
+            if (Sprite_Objects[n].type != 0x0A) continue;
             if (count == (handle & 0x3F)) break;
             ++count;
         }
-        object = Sprite_Objects + count * 0xA4u;
+        object = rv::Bytes(Sprite_Objects) + count * 0xA4u;
     } else {
-        object = Sprite_ObjectsExtra + handle * 0xA4u;
+        object = rv::Bytes(Sprite_ObjectsExtra) + handle * 0xA4u;
     }
     Sprite_Current = object;
     long buffer[4] = {};
@@ -447,7 +447,7 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
     case 8: return Cond_ByteFD;
     case 9: return Field_StatusBits & 1;
     case 10: return rv::Current<records::SpriteHead>()->script_pos;
-    case 11: return ObjTrio[0x89];
+    case 11: return ObjTrio[0].char_id;
     case 12: return Long(At(Cond_Flags_addr + 0xa0));
     case 13: return 1;
     default: return 0xFF;
@@ -460,11 +460,11 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
 // As the original has it: anything else returns the pointer itself.
 extern "C" int __cdecl MoveScript_ObjectKind(void) {
     const std::uint32_t sprite = Address(Sprite_Current);
-    if (sprite == Address(Sprite_Kind2)) return 2;
-    const std::uint32_t trio = Address(ObjTrio);
+    if (sprite == Address(rv::Bytes(&Sprite_Kind2))) return 2;
+    const std::uint32_t trio = Address(rv::Bytes(ObjTrio));
     if (sprite == trio || sprite == trio + 0x14C || sprite == trio + 0x298) return 1;
-    if (sprite >= Address(Sprite_Objects) && sprite < Address(Sprite_Objects) + Sprite_Objects_count) return 0;
-    if (sprite >= Address(Sprite_ObjectsExtra) && sprite < Address(Sprite_ObjectsExtra) + Sprite_ObjectsExtra_count) return 3;
+    if (sprite >= Address(rv::Bytes(Sprite_Objects)) && sprite < Address(rv::Bytes(Sprite_Objects)) + (Sprite_Objects_count * sizeof(records::SpriteObject))) return 0;
+    if (sprite >= Address(rv::Bytes(Sprite_ObjectsExtra)) && sprite < Address(rv::Bytes(Sprite_ObjectsExtra)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))) return 3;
     return static_cast<int>(sprite);
 }
 

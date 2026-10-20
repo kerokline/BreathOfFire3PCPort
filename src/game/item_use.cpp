@@ -64,7 +64,7 @@ namespace {
 // working copy, the id's low byte indexes it, unchecked.
 unsigned char* CharRecord(unsigned id, unsigned battle) {
     const unsigned i = id & 0xFF;
-    return (battle & 0xFF) == 0 ? At(at::kCharRecords + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
+    return (battle & 0xFF) == 0 ? At(CharacterRecords_addr + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
 }
 
 // Either answer is a records::CharRecord: the persistent record 0x903A70 + i
@@ -396,10 +396,10 @@ void CommitChoice() {
 extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
     CommitChoice();
     const bool more = Word(At(at::kMessage)) != 0xFFFF;
-    Window1_State = 3;
+    WindowRecords[1].state = 3;
     if (more) {
         const unsigned char sub = ItemUse_SubState;
-        At(at::kWindow0State)[0] = 1;
+        WindowRecords[0].state = 1;
         ItemUse_ColorHigh = 0;
         ItemUse_SubState = static_cast<unsigned char>(sub + 1);
         return;
@@ -413,7 +413,7 @@ extern "C" void __cdecl MsgBox_MenuCommit(void) {
     CommitChoice();
     const unsigned char sub = ItemUse_SubState;
     ItemUse_ColorHigh = 0;
-    Window1_State = 3;
+    WindowRecords[1].state = 3;
     ItemUse_SubState = static_cast<unsigned char>(sub + 1);
 }
 

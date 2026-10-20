@@ -61,11 +61,11 @@ using move_script::SetWord;
 using move_script::Word;
 
 // CharacterRecords' record n (stride 0xA4), unchecked.
-unsigned char* Record(unsigned n) { return At(bof3::addr::CharacterRecords + n * at::kRecordStride); }
+unsigned char* Record(unsigned n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
 // A member id's record: CharacterRecords[Character_IndexById[id]], both
 // indexes a whole byte, unchecked (the original reads them the same way).
 unsigned char* MemberRecord(unsigned char id) { return Record(Character_IndexById[id]); }
-unsigned char* Obj(unsigned n) { return ObjTrio + n * at::kObjStride; }
+unsigned char* Obj(unsigned n) { return rv::Bytes(&ObjTrio[n]); }
 
 // A signed byte's value.
 int S8(unsigned char b) { return static_cast<signed char>(b); }
@@ -264,7 +264,7 @@ extern "C" void __cdecl Party_Remove(unsigned id_arg) {
     }
     const unsigned char n = Field_MemberCount;
     const auto below = static_cast<unsigned char>(n - 1);
-    ObjTrio[(static_cast<int>(n) - 1) * static_cast<int>(at::kObjStride)] = 0;
+    ObjTrio[static_cast<int>(n) - 1].flags = 0;
     SH_CALL(Member_ClearState)(below);
     const unsigned char now = Field_MemberCount;
     if (now == 3) {
@@ -345,7 +345,7 @@ extern "C" std::uint32_t __cdecl Field_CellTriggerAt(unsigned char* table, unsig
         }
         if (!hit) continue;
         const unsigned facing = r[3] & 0xF;
-        if (facing == 8 || facing == ObjTrio[8]) return i;
+        if (facing == 8 || facing == ObjTrio[0].direction) return i;
     }
     return 0xFF;
 }
@@ -393,7 +393,7 @@ extern "C" std::uint32_t __cdecl Camera_TurnToDegrees(unsigned angle_arg, unsign
 // aborts. No PSX twin paired.
 extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned frames_arg) {
     std::int32_t left = static_cast<std::int32_t>(ScenaSx_EaseLeft);
-    const unsigned char speed = Field_MoveSpeeds[Sprite_Kind2[0x84]];
+    const unsigned char speed = Field_MoveSpeeds[Sprite_Kind2.speed];
     if (left != 0) {
         const std::int32_t acc = static_cast<std::int32_t>(static_cast<std::uint32_t>(CameraTurn_Angles[2]) +
                                                            static_cast<std::uint32_t>(CameraTurn_Steps[2]));
@@ -407,7 +407,7 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
         SetWord(At(Cond_AngleFB_addr), static_cast<std::uint32_t>(Degrees(static_cast<short>(angle_arg))));
         return 0;
     }
-    const unsigned char mode = Sprite_Kind2[8];
+    const unsigned char mode = Sprite_Kind2.direction;
     const int per = mode == 2 || mode == 6 ? 4 : 8;
     const auto product = static_cast<unsigned char>(per * S8(speed));
     if (product == 0) bof3::Fatal("Camera_EaseAngleFB: 0x80 / 0 (speed byte 0x%X): the original faults", speed);
@@ -430,7 +430,7 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
 // 0x8015D438 (pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl Sprite_FindFree(void) {
     for (unsigned i = 0; i < at::kSpriteCount; ++i)
-        if (Sprite_Objects[i * at::kRecordStride] == 0) return static_cast<unsigned char>(i);
+        if (Sprite_Objects[i].flags == 0) return static_cast<unsigned char>(i);
     return 0xFF;
 }
 

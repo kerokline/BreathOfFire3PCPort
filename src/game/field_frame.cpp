@@ -231,20 +231,20 @@ extern "C" void __cdecl Field_MembersFrame(void) {
     g.pending();
     const auto held = [] { return static_cast<unsigned char>(Field_ScriptFlags2 | Field_ScriptFlags); };
     if (!(held() & 1)) {
-        Field_State = ObjTrio;
-        Sprite_Current = ObjTrio;
+        Field_State = rv::Bytes(ObjTrio);
+        Sprite_Current = rv::Bytes(ObjTrio);
         g.leader();
     }
     if (Field_MemberCount <= 1) return;
     if (!(held() & 2)) {
-        Field_State = ObjTrio + kMemberBytes;
-        Sprite_Current = ObjTrio + kMemberBytes;
+        Field_State = rv::Bytes(&ObjTrio[1]);
+        Sprite_Current = rv::Bytes(&ObjTrio[1]);
         g.member();
     }
     if (Field_MemberCount != 3) return;
     if (!(held() & 4)) {
-        Field_State = ObjTrio + 2 * kMemberBytes;
-        Sprite_Current = ObjTrio + 2 * kMemberBytes;
+        Field_State = rv::Bytes(&ObjTrio[2]);
+        Sprite_Current = rv::Bytes(&ObjTrio[2]);
         g.member();   // a tail jmp in the original
     }
 }
@@ -255,7 +255,7 @@ extern "C" void __cdecl Field_MembersFrame(void) {
 // had (and is skipped entirely under Draw_OtSlot 4); the type-0x0A test reads
 // Sprite_Current, which is the object here since nothing runs in between.
 extern "C" void __cdecl Field_ObjectsScreen(void) {
-    unsigned char* object = Sprite_Objects;
+    unsigned char* object = rv::Bytes(Sprite_Objects);
     for (unsigned n = kObjects; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         if (!(object[0] & 1)) continue;
@@ -282,7 +282,7 @@ extern "C" void __cdecl Field_ObjectsScreen(void) {
 // not reproduced.
 extern "C" void __cdecl Field_ObjectsFrame(void) {
     if (Field_ScriptFlags2 & 0x400) return;
-    unsigned char* object = Sprite_Objects;
+    unsigned char* object = rv::Bytes(Sprite_Objects);
     for (unsigned n = kObjects; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         Field_ActiveMember = object;
@@ -300,7 +300,7 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
                     if (sprite->flags2 & 2) {
                         g.face(static_cast<unsigned char>(sprite->direction & 7));
                     } else {   // turn to face ObjTrio's first member
-                        sprite->direction = static_cast<unsigned char>((ObjTrio[8] ^ 4) & 7);
+                        sprite->direction = static_cast<unsigned char>((ObjTrio[0].direction ^ 4) & 7);
                         g.face(rv::Current<records::SpriteObject>()->direction);
                     }
                     if (rv::Current<records::SpriteObject>()->state == 0x0A) object[0x85] |= 1;
@@ -339,7 +339,7 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
 // FUN_8015B148): Sprite_UpdateScreenA for each present (bit 0) and not
 // hidden by bit 6.
 extern "C" void __cdecl Party_ExtraScreens(void) {
-    unsigned char* object = Sprite_ObjectsExtra;
+    unsigned char* object = rv::Bytes(Sprite_ObjectsExtra);
     for (unsigned n = kExtra; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         const unsigned char f = object[0];
@@ -351,7 +351,7 @@ extern "C" void __cdecl Party_ExtraScreens(void) {
 // Field_ObjectsFrame's first half without the idle-long case, the scratch
 // byte, the turn target's result or anything after the handler.
 extern "C" void __cdecl Party_ExtraFrame(void) {
-    unsigned char* object = Sprite_ObjectsExtra;
+    unsigned char* object = rv::Bytes(Sprite_ObjectsExtra);
     for (unsigned n = kExtra; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         Field_ActiveMember = object;
@@ -542,9 +542,9 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0) {
 constexpr unsigned kPool = kObjects + kExtra + 3;
 unsigned char* Pool(unsigned k) {
     k %= kPool;
-    if (k < kObjects) return Sprite_Objects + k * kObjectBytes;
-    if (k < kObjects + kExtra) return Sprite_ObjectsExtra + (k - kObjects) * kObjectBytes;
-    return ObjTrio + (k - kObjects - kExtra) * kMemberBytes;
+    if (k < kObjects) return reinterpret_cast<unsigned char*>(Sprite_Objects) + k * kObjectBytes;
+    if (k < kObjects + kExtra) return reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (k - kObjects) * kObjectBytes;
+    return reinterpret_cast<unsigned char*>(ObjTrio) + (k - kObjects - kExtra) * kMemberBytes;
 }
 
 // A callee may change what the caller reads again after it: which sprite is
@@ -768,14 +768,14 @@ constexpr unsigned kSwap = 11;
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {Address(Sprite_Objects), Sprite_Objects_count},
-    {Address(Sprite_ObjectsExtra), Sprite_ObjectsExtra_count},
-    {Address(ObjTrio), ObjTrio_count},
+    {Address(rv::Bytes(Sprite_Objects)), (Sprite_Objects_count * sizeof(records::SpriteObject))},
+    {Address(rv::Bytes(Sprite_ObjectsExtra)), (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))},
+    {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
     {Address(Sprite_OverlayList), 30 * 4},
     {Address(&Sprite_OverlayListCount), 1},
     {Address(Sprite_DrawList), 40 * 4},
     {Address(&Sprite_DrawListCount), 1},
-    {bof3::addr::DamageScratch, 4},
+    {SharedScratch_addr, 4},
     {Address(&Field_ScriptFlags), 2},
     {Address(&Field_ScriptFlags2), 2},
     {Address(&Field_MemberCount), 1},
@@ -787,7 +787,7 @@ const Region kRegions[] = {
     {Address(&Draw_PassFlags), 1},
     {Address(g_records), sizeof g_records},
 };
-constexpr unsigned kRegionBytes = Sprite_Objects_count + Sprite_ObjectsExtra_count + ObjTrio_count + 120 + 1 + 160 + 1 + 4 +
+constexpr unsigned kRegionBytes = (Sprite_Objects_count * sizeof(records::SpriteObject)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)) + (ObjTrio_count * sizeof(records::PartyMember)) + 120 + 1 + 160 + 1 + 4 +
                                   2 + 2 + 1 + 2 + 2 + 4 + 1 + 1 + 1 + kRecords * 4;
 
 struct State {
@@ -870,9 +870,9 @@ BandCheck BandSelfTest(void* theirs) {
         input.state = Pool(Next());
         Apply(input);
         g_seed = Next();
-        for (unsigned i = 0; i < kObjects; ++i) SeedObject(Sprite_Objects + i * kObjectBytes);
-        for (unsigned i = 0; i < kExtra; ++i) SeedObject(Sprite_ObjectsExtra + i * kObjectBytes);
-        for (unsigned i = 0; i < 3; ++i) SeedObject(ObjTrio + i * kMemberBytes);
+        for (unsigned i = 0; i < kObjects; ++i) SeedObject(rv::Bytes(&Sprite_Objects[i]));
+        for (unsigned i = 0; i < kExtra; ++i) SeedObject(rv::Bytes(&Sprite_ObjectsExtra[i]));
+        for (unsigned i = 0; i < 3; ++i) SeedObject(rv::Bytes(&ObjTrio[i]));
         Sprite_DrawListCount = static_cast<unsigned char>(Next() % 3 ? 0x25 + Next() % 6 : Next() % 0x29);
         Draw_OtSlot = static_cast<unsigned char>(Often() ? 4 : Next() % 8);
         Capture(input);
@@ -951,9 +951,9 @@ void SelfTest(void* const (&theirs)[kCount]) {
         input.state = Pool(Next());
         Apply(input);
         g_seed = Next();
-        for (unsigned i = 0; i < kObjects; ++i) SeedObject(Sprite_Objects + i * kObjectBytes);
-        for (unsigned i = 0; i < kExtra; ++i) SeedObject(Sprite_ObjectsExtra + i * kObjectBytes);
-        for (unsigned i = 0; i < 3; ++i) SeedObject(ObjTrio + i * kMemberBytes);
+        for (unsigned i = 0; i < kObjects; ++i) SeedObject(rv::Bytes(&Sprite_Objects[i]));
+        for (unsigned i = 0; i < kExtra; ++i) SeedObject(rv::Bytes(&Sprite_ObjectsExtra[i]));
+        for (unsigned i = 0; i < 3; ++i) SeedObject(rv::Bytes(&ObjTrio[i]));
         for (unsigned i = 0; i < 30; ++i) Sprite_OverlayList[i] = Pool(Next());
         Sprite_OverlayListCount = static_cast<unsigned char>(Next() % 4 ? Next() % 31 : Next() % 3);
         Sprite_DrawListCount = static_cast<unsigned char>(Next() % 3 ? 0x25 + Next() % 6 : Next() % 0x29);

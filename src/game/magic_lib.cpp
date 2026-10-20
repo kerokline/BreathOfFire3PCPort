@@ -72,7 +72,7 @@ void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + (i - 3u) * at::kEnemyStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + (i - 3u) * at::kEnemyStride); }
 // An actor's record by the battle index, as the originals index it (0..2 the
 // party, 3.. an enemy; unchecked above).
 unsigned char* ActorRecord(unsigned i) { return i < 3 ? PartyRecord(i) : EnemyRecord(i); }
@@ -315,7 +315,7 @@ MLIB_EXPORT void __cdecl MagicFx_BuffPopup(unsigned kind, unsigned who) {
         MH_CALL(MagicFx_ApplyBuff)(stat, (target & 0x40) ? static_cast<unsigned char>(who + 3) : who);
     const unsigned char icon = applied != 0 ? static_cast<unsigned char>(kind) : 8;
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x48);
-    unsigned char* const t = Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride);
+    unsigned char* const t = Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride);
     SetLong(t + 0x80, I32(Addr(Sprite_Current)));
     t[4] = icon;
     t[9] = 1;

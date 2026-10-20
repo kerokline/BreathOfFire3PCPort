@@ -37,7 +37,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 // The scratch word the field's event ops take an object index from
 // (docs/event-ops.md); area 40 stores a free index and a button word there.
-constexpr std::uint32_t kScratchWord = 0x903850;
+// kScratchWord: now SharedScratch (symbols.toml).
 // The byte after MoveScript_Var7 (area 40's choice 0 sets it).
 constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The story flags (Flags_Set / Flags_Test's bank), the lever flags' row
@@ -62,7 +62,7 @@ constexpr std::uint32_t kEntryZone = 0x905E68;
 constexpr std::uint32_t kLeader = 0x802D40;
 // kLeaderByte8: now ObjTrio[8] (symbols.toml).
 // kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
-// kPartyRecord1: now Field_Members[4] (symbols.toml).
+// kPartyRecord1: now ObjTrio (symbols.toml). record 1 (ObjTrio_addr + 0x14C; Field_Members[4] until stage C4).
 // kPartyRecord2: now ObjTrio[0x298] (symbols.toml).
 // The cell step per direction: two signed bytes (x, z), 2 bytes apart
 // (event_ops_callees.h's kCellDelta).

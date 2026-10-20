@@ -53,8 +53,8 @@ void SetUL(U a, U v) { SetUL(At(a), v); }
 unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 
 // The community's records and buildings, and the traits table by record.
-unsigned char* Rec(U i) { return At(at::kRecords + 8u * i); }
-unsigned char* Bld(U b) { return At(at::kBuildings + 8u * b); }
+unsigned char* Rec(U i) { return At(Community_Records_addr + 8u * i); }
+unsigned char* Bld(U b) { return At(Community_Buildings_addr + 8u * b); }
 unsigned char Trait(U i, U field) { return At(at::kRecordTraits + at::kTraitStride * i + field)[0]; }
 unsigned char* Pose(U object) { return At(Sprite_Objects_addr + 0x88 + at::kSpriteStride * object); }
 unsigned char Count(U building) { return At(at::kResidentCounts + building)[0]; }
@@ -116,13 +116,13 @@ extern "C" unsigned char __cdecl Battle_AutoTargetCheck(unsigned actor) {
         return 0;
     }
     const U e = at::kEnemyStride * (static_cast<U>(a) - 3);
-    if (Word(At(at::kEnemyHp + e)) > 1 && !(At(at::kEnemyStatus + e)[0] & 0x20) && !(UL(at::kEnemyFlags + e) & 0x4000))
+    if (Word(At(Battle_Enemies_addr + 0xba + e)) > 1 && !(At(Battle_Enemies_addr + 0x92 + e)[0] & 0x20) && !(UL(at::kEnemyFlags + e) & 0x4000))
         return 1;
     if (At(at::kAutoMode)[0] != 4) {
         At(at::kTarget)[0] = forced;
         return 0;
     }
-    const unsigned char bits = At(at::kAbilityFlags + at::kAbilityStride * Word(At(at::kEnemyAbility + e)))[0];
+    const unsigned char bits = At(at::kAbilityFlags + at::kAbilityStride * Word(At(Battle_Enemies_addr + 0x106 + e)))[0];
     if (bits & 0x10) {
         if (bits & 0x80) At(at::kTarget)[0] = 0xC0;
         else At(at::kTarget)[0] = forced >= 3 ? 0x80 : 0x40;
@@ -1176,7 +1176,7 @@ extern "C" unsigned char __cdecl FieldTrigger08(unsigned char* object, unsigned 
 extern "C" unsigned char __cdecl FieldTrigger09(unsigned char* object, unsigned char*) {
     const unsigned char building = Rec(object[5])[1];
     const U shop = UL(object + 0x1C);
-    At(at::kShopRecords + at::kShopStride * shop)[0] = At(at::kBuildingLevels + 8u * building)[0];
+    At(at::kShopRecords + at::kShopStride * shop)[0] = At(Community_Records_addr + 0x1db + 8u * building)[0];
     return 0;
 }
 

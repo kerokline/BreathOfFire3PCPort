@@ -48,13 +48,13 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(Effect_Objects) + slot * at::kEffectStride; }
 // Sprite_ObjectsExtra record k (0xA4 bytes; k not checked, as the originals).
 unsigned char* Extra(unsigned k) { return Mem(Sprite_ObjectsExtra_addr + k * at::kExtraStride); }
 // Party record m (ObjTrio, 0x14C bytes; m not checked).
 unsigned char* Record(unsigned m) { return Mem(ObjTrio_addr + m * at::kPartyStride); }
 // Field object k (Sprite_Objects, 0xA4 bytes).
-unsigned char* ObjectAt(unsigned k) { return Sprite_Objects + k * 0xA4; }
+unsigned char* ObjectAt(unsigned k) { return rv::Bytes(Sprite_Objects) + k * 0xA4; }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
@@ -486,7 +486,7 @@ extern "C" void __cdecl Area108_TailPlace(void) {
     case 1:
         if (Field_Kind2Hold != 0) return;
         AH_CALL(Kind2_Place)(static_cast<unsigned char>(Extra(1)[0x83] - 1));
-        Sprite_Kind2[0x84] = 4;
+        Sprite_Kind2.speed = 4;
         B(at::kCounter3) = 1;
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
         return;
@@ -662,7 +662,7 @@ extern "C" void __cdecl Area111_AttachAtLeaderCell(void) {
     AH_CALL(MoveCmd_Attach)(object, 7, block, slot, 0x10);
     rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, position);
     Sprite_Current[8] = static_cast<unsigned char>(Extra(block)[8] & 7);
-    Sprite_Kind2[8] = Sprite_Current[8];
+    Sprite_Kind2.direction = Sprite_Current[8];
 }
 
 // original 0x417890 (area 111 +0x3C[3]; PSX 0x801F3768): counter 3 = 0x10 <<

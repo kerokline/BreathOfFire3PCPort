@@ -520,8 +520,8 @@ void SelfTestBuild(void (__cdecl* theirs)()) {
         R(MapView_Inset), R(MapView_Row), R(MapView_Column), R(Field_InputFlags), R(Cond_ByteFE), R(Cond_AngleFB),
         R(Camera_Distance), R(MapView_Origin, 4), R(&Field_Kind2Z, 8), R(MapView_BuildFlags), R(Gfx_BufferIndex),
         R(Draw_OtSlot), R(MapView_CellItems, MapView_CellItems_count), R(AreaMap_Header, 0x800),
-        R(Prim_VertexScratch, 0x20), R(MapView_CornerPtr), R(MapView_ScreenXY, 8),
-        R(At(bof3::addr::DamageScratch), 4), R(DrawItems, kItemBytes),
+        R(reinterpret_cast<short*>(Prim_VertexScratch), 0x20), R(MapView_CornerPtr), R(MapView_ScreenXY, 8),
+        R(At(SharedScratch_addr), 4), R(DrawItems, kItemBytes),
     };
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);

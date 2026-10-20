@@ -30,6 +30,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_2b_callees.h"
 #include "game/scenario_harness.h"
@@ -171,7 +172,7 @@ extern "C" unsigned char __cdecl Effect_Spawn(unsigned char kind, signed char a,
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return slot;
     if (slot >= 20) bof3::Fatal("Effect_Spawn (0x57CE10): Effect_FindFree answered %u, past the 20 records", slot);
-    unsigned char* const r = Effect_Objects + 0x80u * slot;
+    unsigned char* const r = rv::Bytes(&Effect_Objects[slot]);
     r[0] = 1;
     r[5] = 6;
     r[6] = kind;
@@ -188,7 +189,7 @@ extern "C" unsigned char __cdecl Effect_SpawnAt(unsigned char kind, signed char 
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return slot;
     if (slot >= 20) bof3::Fatal("Effect_SpawnAt (0x57CE80): Effect_FindFree answered %u, past the 20 records", slot);
-    unsigned char* const r = Effect_Objects + 0x80u * slot;
+    unsigned char* const r = rv::Bytes(&Effect_Objects[slot]);
     r[0] = 1;
     r[5] = 0x19;
     r[6] = kind;
@@ -336,10 +337,10 @@ extern "C" void __cdecl Shisu_CloseWait(void) {
     }
     const unsigned char mode = BattleE1_Mode;
     FieldS_State = 0;
-    Window1 = 0;
+    WindowRecords[1].in_use = 0;
     BattleE1_Mode = static_cast<unsigned char>(mode + 1);
-    Window2 = 0;
-    B(kWin3) = 0;
+    WindowRecords[2].in_use = 0;
+    WindowRecords[3].in_use = 0;
 }
 
 // original 0x57E160 (PSX 0x801D1018): Shisu_Modes[4] - with no show run, the
@@ -437,10 +438,10 @@ extern "C" void __cdecl Shisu_PickSide(void) {
         }
     }
     const unsigned side = Rest2b_Side;
-    B(kWin0) = 1;
+    WindowRecords[0].in_use = 1;
     const U base = L(kWin2 + 4);
-    SetW(kWin0 + 4, side * 0x30u + base);
-    SetW(kWin0 + 6, W(kWin2 + 6) + 4u);
+    WindowRecords[0].x = side * 0x30u + base;
+    WindowRecords[0].y = W(kWin2 + 6) + 4u;
     StackModels();
     Models();
 }
@@ -531,11 +532,11 @@ extern "C" void __cdecl Shisu_PickCounts(void) {
     }
     const U base = L(kWin3 + 4);
     const unsigned char c = Rest2b_Cursor;
-    B(kWin0) = 1;
-    SetW(kWin0 + 4, base + 7u);
+    WindowRecords[0].in_use = 1;
+    WindowRecords[0].x = base + 7u;
     B(kWin0 + 0xA) = c;
     B(kWin3 + 0xA) = c;
-    SetW(kWin0 + 6, (c + 2u) * 13u + W(kWin3 + 6));
+    WindowRecords[0].y = (c + 2u) * 13u + static_cast<std::uint32_t>(WindowRecords[3].y);
     StackModels();
     Models();
 }
@@ -663,42 +664,42 @@ extern "C" void __cdecl Shisu_CountItems(void) {
 // original 0x57E9F0: WindowRecords 0..3 for the screen (bytes and words as
 // stored; record 3's +0x20 the counts' address 0x9399E0).
 extern "C" void __cdecl Shisu_SetupWindows(void) {
-    B(kWin0) = 0;
-    B(kWin0 + 2) = 0;
-    SetW(kWin0 + 4, 0);
-    SetW(kWin0 + 6, 0);
+    WindowRecords[0].in_use = 0;
+    WindowRecords[0].kind = 0;
+    WindowRecords[0].x = 0;
+    WindowRecords[0].y = 0;
     SetW(kWin1 + 6, 0xFF9C);
     SetW(kWin2 + 6, 0xFF9C);
-    B(kWin0 + 1) = 1;
-    B(kWin0 + 3) = 2;
-    Window1 = 1;
+    WindowRecords[0].handler = 1;
+    WindowRecords[0].state = 2;
+    WindowRecords[1].in_use = 1;
     B(kWin1 + 1) = 1;
     B(kWin1 + 2) = 1;
     B(kWin1 + 3) = 2;
     SetW(kWin1 + 4, 0x14);
-    Window2 = 1;
+    WindowRecords[2].in_use = 1;
     B(kWin2 + 1) = 1;
     B(kWin2 + 2) = 2;
     B(kWin2 + 3) = 2;
     SetW(kWin2 + 4, 0x70);
     B(kWin2 + 0xA) = 8;
     B(kWin2 + 0xB) = 0xFF;
-    B(kWin3) = 1;
-    B(kWin3 + 1) = 1;
-    B(kWin3 + 2) = 3;
-    B(kWin3 + 3) = 2;
-    SetW(kWin3 + 4, 0xFF88);
-    SetW(kWin3 + 6, 0x3F);
+    WindowRecords[3].in_use = 1;
+    WindowRecords[3].handler = 1;
+    WindowRecords[3].kind = 3;
+    WindowRecords[3].state = 2;
+    WindowRecords[3].x = 0xFF88;
+    WindowRecords[3].y = 0x3F;
     B(kWin3 + 0xA) = 0xFF;
     SetL(kWin3 + 0x20, Rest2b_Owned_addr);
 }
 
 // original 0x57EAC0: window 0's first byte 0, windows 1..3's +3 = 1.
 extern "C" void __cdecl Shisu_CloseWindows(void) {
-    B(kWin0) = 0;
+    WindowRecords[0].in_use = 0;
     B(kWin1 + 3) = 1;
     B(kWin2 + 3) = 1;
-    B(kWin3 + 3) = 1;
+    WindowRecords[3].state = 1;
 }
 
 // original 0x57EAE0: the byte 0x904101 to a scale index - below 0x26: 9, 0x28:
@@ -895,7 +896,7 @@ extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
     const unsigned tpage = SH_CALL(Gpu_GetTPage)(0, mode & 3, 0x2C0, 0x100);
     if (count != 0) {
         const unsigned semi = (mode >> 6) & 1;
-        short* const v = Prim_VertexScratch;
+        short* const v = reinterpret_cast<short*>(Prim_VertexScratch);
         for (unsigned n = count; n != 0; --n) {
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyFT4)(p);
@@ -915,10 +916,10 @@ extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
             p[5] = Sprite_Current[0x5E];
             p[6] = Sprite_Current[0x5F];
             if (Get<const unsigned char*>(Sprite_Current, 0x54)[3] & 0x80) {
-                SH_CALL(Gte_VectorNormalS)(normal, Prim_VertexScratch);
+                SH_CALL(Gte_VectorNormalS)(normal, reinterpret_cast<short*>(Prim_VertexScratch));
                 const unsigned char* const s = Sprite_Current;
                 const unsigned char colour[4] = {s[0x5D], s[0x5E], s[0x5F], p[7]};
-                SH_CALL(Gte_NormalColor)(Prim_VertexScratch, colour, p + 4);
+                SH_CALL(Gte_NormalColor)(reinterpret_cast<short*>(Prim_VertexScratch), colour, p + 4);
             }
             Put<std::uint16_t>(p, 0x26, static_cast<std::uint16_t>(tpage));
             const int clut_x = static_cast<int>(static_cast<unsigned>(static_cast<int>(Get<short>(quad, 0))) << 4);

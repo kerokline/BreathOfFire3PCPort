@@ -318,7 +318,7 @@ constexpr mh::Region kData[] = {{0x65AE2C, 0xF4}, {0x65AF24, 0xF4}, {0x65B01C, 0
 
 alignas(16) unsigned char g_prims[0x100];
 // kPacketNext: now Gfx_PacketNext (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now SharedScratch (symbols.toml).
 constexpr std::uint32_t kEnemyState = 0x93BCD9;   // Magic073_CountReacting's (0x93B961 + 0x128 * 3)
 // kPastEnemies: now BattleWindows_MsgHead (symbols.toml).
 
@@ -404,7 +404,7 @@ void Seed(unsigned k) {
     case kWaitStep4: sc[0xB] = static_cast<unsigned char>(MH_PICK(3, 4, 5, 6, 0x85, 0)); break;
     case kCount:
         for (unsigned i = 0; i < 8; ++i)
-            if (mh::Half()) mh::Mem(kEnemyState + i * at::kEnemyStride)[0] = 6;
+            if (mh::Half()) mh::Mem(Battle_Enemies_addr + 0x379 + i * at::kEnemyStride)[0] = 6;
         for (unsigned i = 0; i < 3; ++i)
             if (mh::Half()) mh::Mem(ObjTrio_addr + 1 + i * at::kPartyStride)[0] = 6;
         break;
@@ -448,7 +448,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 4) {
     case 0: mh::SetPointer(kPools[p].current, Record(p, (h >> 16) % kPools[p].count)); break;
     case 1: Gfx_PacketNext = g_prims + ((h >> 14) & 1 ? 0 : 0x40); break;
-    case 2: move_script::SetWord(mh::Mem(kScratch + 2 * ((h >> 16) % 8)), h >> 20); break;
+    case 2: move_script::SetWord(mh::Mem(SharedScratch_addr + 2 * ((h >> 16) % 8)), h >> 20); break;
     default: {
         // through the cell only while it points into its pool: a spawn's
         // index past the pool (an alloc answering 128..254) writes over it
@@ -478,7 +478,7 @@ void CheckAnswers() {
     const bof3::CloneCall count_calls[] = {{0x16, reinterpret_cast<const void*>(&::Battle_ActorIsOut), 0x4456C0},
                                            {0x48, reinterpret_cast<const void*>(&::Battle_ActorIsOut), 0x4456C0}};
     // the bytes they read and write, kept and put back
-    const mh::Region kept_at[] = {{kPoolsLo, kPoolsHi - kPoolsLo}, {ObjTrio_addr, 3 * at::kPartyStride}, {at::kEnemies, 11 * at::kEnemyStride}};
+    const mh::Region kept_at[] = {{kPoolsLo, kPoolsHi - kPoolsLo}, {ObjTrio_addr, 3 * at::kPartyStride}, {Battle_Enemies_addr, 11 * at::kEnemyStride}};
     static unsigned char kept[kPoolsHi - kPoolsLo + 3 * 0x14C + 11 * 0x128];
     static unsigned char after_theirs[kPoolsHi - kPoolsLo];
     static unsigned char g_state_in[kPoolsHi - kPoolsLo];
@@ -495,7 +495,7 @@ void CheckAnswers() {
             if (!count && mh::Half()) Occupy(a.pool, mh::Half() ? kPools[a.pool].count : mh::Next() % kPools[a.pool].count);
             if (count)
                 for (unsigned i = 0; i < 8; ++i)
-                    if (mh::Half()) mh::Mem(kEnemyState + i * at::kEnemyStride)[0] = 6;
+                    if (mh::Half()) mh::Mem(Battle_Enemies_addr + 0x379 + i * at::kEnemyStride)[0] = 6;
             std::memcpy(g_state_in, mh::Mem(kPoolsLo), sizeof g_state_in);
             const unsigned char t = static_cast<unsigned char>(theirs());
             std::memcpy(after_theirs, mh::Mem(kPoolsLo), sizeof after_theirs);
@@ -526,7 +526,7 @@ void SelfTest() {
     g_regions[r++] = {0x7E0700, 0xC00};                       // MoveScript_TintRecords, by an unbounded +0xA
     g_regions[r++] = {Gfx_PacketNext_addr, 4};                // Gfx_PacketNext
     g_regions[r++] = {Key(g_prims), sizeof g_prims};
-    g_regions[r++] = {kScratch, 0x10};
+    g_regions[r++] = {SharedScratch_addr, 0x10};
     g_regions[r++] = {BattleWindows_MsgHead_addr, 3 * at::kEnemyStride}; // records 8..10: 0x4BBCE0's reach
     const mh::Group group = {
         "magic_s16", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],

@@ -46,9 +46,9 @@ unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 unsigned char* Focus() { return Ptr(AreaW1a_FocusObject_addr); }
 // Field object `index` (Sprite_Objects, 0xA4 bytes); effect record `slot`
 // (Effect_Objects, 0x80 bytes); party record `member` (ObjTrio, 0x14C bytes).
-unsigned char* ObjectAt(unsigned index) { return Sprite_Objects + index * 0xA4u; }
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
-unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
+unsigned char* ObjectAt(unsigned index) { return rv::Bytes(Sprite_Objects) + index * 0xA4u; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(Effect_Objects) + slot * at::kEffectStride; }
+unsigned char* PartyAt(unsigned member) { return rv::Bytes(&ObjTrio[member]); }
 // The choice's answer as the choices read it with movsx.
 int Answer() { return static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr)); }
 // A float stored as the originals' `mov dword` of its bits.

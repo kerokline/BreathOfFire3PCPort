@@ -256,7 +256,7 @@ void SeedB27(unsigned) {
     B(Battle_EndFlags_addr) = static_cast<unsigned char>(bh::Half() ? 0 : bh::Often() ? BH_PICK(1, 1, 4, 2, 5, 0x80, 0xFB, 0xFF) : bh::Next());
     if (bh::Often()) B(BossSe_Script_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 0x10, 0x20, 0x28, 0x18, 8, 1, 2, 4, 7) : bh::Next());
     if (bh::Half()) B(BossSe_Script_addr) &= 0xF7;
-    B(at::kEnemy0Status + 1) = static_cast<unsigned char>(bh::Next() % 6 ? B(at::kEnemy0Status + 1) & 0xBF : B(at::kEnemy0Status + 1) | 0x40);
+    B(Battle_Enemies_addr + 0x92 + 1) = static_cast<unsigned char>(bh::Next() % 6 ? B(Battle_Enemies_addr + 0x92 + 1) & 0xBF : B(Battle_Enemies_addr + 0x92 + 1) | 0x40);
     B(BossH_Enemy1Status_addr + 1) = static_cast<unsigned char>(bh::Next() % 6 ? B(BossH_Enemy1Status_addr + 1) & 0xBF : B(BossH_Enemy1Status_addr + 1) | 0x40);
     const unsigned cursor = bh::Often() ? bh::Next() % 12 : bh::Next() & 0xFF;
     B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(cursor);

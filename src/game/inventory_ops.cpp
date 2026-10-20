@@ -91,9 +91,9 @@ using u32 = std::uint32_t;
 unsigned char* PosX(u32 m) { return At(at::kMemberPos + 8 * m); }
 unsigned char* PosZ(u32 m) { return At(at::kMemberPos + 8 * m + 4); }
 unsigned char* Member(u32 m) { return At(at::kMembers + 4 * m); }   // +0 placed, +1 wide
-unsigned char* Enemy(u32 k) { return At(at::kEnemies + at::kEnemyStride * k); }
+unsigned char* Enemy(u32 k) { return At(Encounter_Slots_addr + at::kEnemyStride * k); }
 unsigned char* Kind(u32 kind) { return At(at::kKinds + at::kKindStride * kind); }
-unsigned char* Obj(u32 i) { return ObjTrio + at::kObjStride * i; }
+unsigned char* Obj(u32 i) { return rv::Bytes(ObjTrio) + at::kObjStride * i; }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does;
@@ -653,10 +653,10 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             continue;
         }
         const u32 record = Character_IndexById[Cond_Flags[0xd2 + i]];
-        if (At(at::kRecords + record * at::kRecordSize)[0x38] < r) continue;
+        if (At(CharacterRecords_addr + record * at::kRecordSize)[0x38] < r) continue;
         const unsigned char e = g.effect_free();
         if (e != 0xFF) {
-            unsigned char* const fx = Effect_Objects + (static_cast<u32>(e) << 7);
+            unsigned char* const fx = rv::Bytes(Effect_Objects) + (static_cast<u32>(e) << 7);
             fx[0] = 1;
             fx[5] = 6;
             fx[6] = 1;
@@ -704,7 +704,7 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
             Field_State = obj;
             Sprite_Current = obj;
             const u32 record = obj[0x148];
-            if (Word(At(at::kRecords + record * at::kRecordSize + 0x10)) & 0x4000) {
+            if (Word(At(CharacterRecords_addr + record * at::kRecordSize + 0x10)) & 0x4000) {
                 g.set_anim_from(obj[0x4B], 0, At(at::kAnimBuffer), 0xA00);
                 Sprite_Current[0xB] = 0;
                 continue;
@@ -827,7 +827,7 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
         rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
         Sprite_Current[0xB] = 0;
         const u32 record = Field_State[0x148];
-        if (At(at::kRecords + record * at::kRecordSize + 0x11)[0] & 0x40)
+        if (At(CharacterRecords_addr + record * at::kRecordSize + 0x11)[0] & 0x40)
             g.set_animation(static_cast<unsigned char>(Byte(at::kBattleFacing) + 0x1C));
         else
             g.set_animation(Byte(at::kBattleFacing));

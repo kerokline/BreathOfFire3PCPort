@@ -24,7 +24,7 @@ constexpr std::uint32_t kTradeCount = bof3::addr::ItemTrade_DrawCount;      // n
 constexpr std::uint32_t kTradeTake = bof3::addr::ItemTrade_TakeNeeds;       // no arguments: the ingredients taken (Inventory_Remove behind a test)
 
 // --- the event records (save block +0xCF0..) ----------------------------------
-constexpr std::uint32_t kPairs = 0x9046D0;           // 60 x 8 bytes: +0 in use, +1 the record it names (1-based)
+// kPairs: now Community_Records (symbols.toml). 60 x 8 bytes: +0 in use, +1 the record it names (1-based)
 constexpr std::uint32_t kPairsEnd = 0x9048B0;
 constexpr std::uint32_t kRecords = 0x9048B0;         // 8 x 8 bytes: +0 kind, +1 key, +3 counted, dword +4 the tally
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags row 0x14: the story flags
@@ -39,9 +39,9 @@ constexpr std::uint32_t kTallyBits = 0x904654;       // a bit array (bit 4 at +0
 // kBiasB: now FieldE2_BiasB (symbols.toml). u8: from the others'
 
 // --- the floor, the leader ---------------------------------------------------------
-constexpr std::uint32_t kCharRecords = 0x903A70;     // CharacterRecords (0xA4 each)
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords (0xA4 each)
 constexpr std::uint32_t kRecordStride = 0xA4;
-constexpr std::uint32_t kEffectSlot = 0x903850;      // DamageScratch's byte: the slope probe's flag; the party-set ids 0x903850..52
+inline auto& kEffectSlot = SharedScratch.b_00;  // SharedScratch's byte: the slope probe's flag; the party-set ids 0x903850..52
 constexpr std::uint32_t kDirectionSteps = 0x6697B0;  // Field_DirectionSteps: 8 x (dx, dz) dwords
 constexpr std::uint32_t kPaceHeights = 0x66978C;     // s16 per actor id: the ground's offset for a hop
 constexpr std::uint32_t kPaceRises = 0x6697A4;       // u8 per actor id: a step's rise
@@ -74,7 +74,7 @@ constexpr rdata::Const kQuadWidth{0x5C41F0};       // float: its width
 // --- the party-set error screen -------------------------------------------------------
 constexpr std::uint32_t kErrorTitle = 0x660C90;      // the title line it prints
 constexpr std::uint32_t kErrorFormat = 0x660C7C;     // the three ids' format
-constexpr std::uint32_t kErrorIds = 0x903850;        // the three ids PartySet_Find left
+inline auto& kErrorIds = SharedScratch;  // the three ids PartySet_Find left
 constexpr std::uint32_t kTextScratch = 0x904BA0;
 
 // --- the object triggers, the hooks -------------------------------------------------------

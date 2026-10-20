@@ -54,7 +54,7 @@ using move_script::Word;
 unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(static_cast<U>(Long(p)) + v)); }
 
 // A state handler read from an area's .data table in place, as the
@@ -123,8 +123,8 @@ extern "C" void __cdecl Area65_PlaceMessage(void) {
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
-    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
+    const auto z = static_cast<std::int16_t>(ObjTrio[0].z_whole);
+    const auto x = static_cast<std::int16_t>(ObjTrio[0].x_whole);
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
@@ -133,8 +133,8 @@ extern "C" void __cdecl Area65_PlaceMessage(void) {
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(Area65_PlaceMessages_addr + static_cast<U>(index * 2)))));
     } else {
-        const unsigned cx = Word(At(ObjTrio_addr + 0x36));
-        const unsigned cz = Word(At(ObjTrio_addr + 0x3a));
+        const unsigned cx = ObjTrio[0].x_whole;
+        const unsigned cz = ObjTrio[0].z_whole;
         U cell = Area65_Cells_addr;
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
@@ -174,9 +174,9 @@ extern "C" void __cdecl Area65_PlaceMessage(void) {
 // 3, else Field_ScriptFlags2 bit 12 4, else 0; then Area65_PlateStates
 // 0x604880 by +1 (read after the calls; ours aborts past its five entries).
 extern "C" void __cdecl Area65_PlateRun(void) {
-    const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U steps = ObjTrio[0].step_frames;
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
@@ -516,8 +516,8 @@ extern "C" void __cdecl Area65_Record8Place(void) {
     Cur()[0x29] = 5;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dir(Cur(), 0));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dir(Cur(), 2));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     unsigned char* o = Cur();
     auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
@@ -588,7 +588,7 @@ extern "C" void __cdecl Area65_Record4Run(void) { StateEntry("Area65_Record4Run"
 // to 0xA0 - AreaMap_Bytes + AreaMap_Header[0] * z + x; Sprite_SetAnimation(0)
 // and +1 = 1.
 extern "C" void __cdecl Area65_Record4MarkCell(void) {
-    if (At(at::kFlag3A79)[0] == 9 || (Field_StatusBits & 1) != 0) {
+    if (CharacterRecords[0].char_id == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }
@@ -854,7 +854,7 @@ extern "C" void __cdecl Area67_LeaderSpawn4(void) { MemberSpawn(0, 4, Area67_Spa
 // (Character_IndexById's index) is 6, then ScriptFlags_Set40,
 // MoveScript_Var7 = 4, the four bytes 0x903848..0x90384B and 0x8034E5 zeroed.
 extern "C" void __cdecl Area67_ResetOn6(void) {
-    const unsigned char effect = ObjTrio[0x89];
+    const unsigned char effect = ObjTrio[0].char_id;
     unsigned char* const member = Field_ActiveMember;
     const auto cleared = static_cast<unsigned char>(member[0x80] & 0xFE);
     member[0x80] = cleared;

@@ -326,7 +326,7 @@ extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     const U name = Labels_Written(17)
         ? static_cast<U>(reinterpret_cast<std::uintptr_t>(Labels_Slot(17, 0)))
         : at::kGuestHeadIn;
-    Memcpy(at::kGuest, name, 5);
+    Memcpy(CharacterRecords_addr + 0x47c, name, 5);
 }
 
 // original 0x42DC80 (0x64ADEC[2]): the backdrop; 0x929F04 - 1, and at 0:
@@ -368,10 +368,10 @@ extern "C" void __cdecl BattleExtra_EquipRun(void) {
 // 0x929F02 + 1; cancel - 0x106, 0x102, windows 0..3's +3 = 1, windows 4 and
 // 21's +0 = 0, 0x929F04 = 5, 0x929F01 + 1, 0x929F02 = 0.
 extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
-    SetWord(At(at::kWin4 + 4), L(at::kWin1 + 4) + 6);
-    B(at::kWin4) = 1;
+    WindowRecords[4].x = L(at::kWin1 + 4) + 6;
+    WindowRecords[4].in_use = 1;
     const U cursor = B(at::kWin1 + 0xA);
-    SetWord(At(at::kWin4 + 6), 13 * cursor + Word(At(Window1_addr + 6)) + 0x57);
+    WindowRecords[4].y = 13 * cursor + WindowRecords[1].y + 0x57;
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     B(at::kWin1 + 0xB) = 0xFF;
     B(at::kWin1 + 0xD) = 1;
@@ -385,7 +385,7 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
     const unsigned item = B(second ? BattleE1_GuestEquipB_addr : Rest3a_GuestEquip_addr);
     SetWord(At(Window2_addr + 0x10), BH_CALL(Item_HelpMessage)(second ? 2 : 1, item));
     const unsigned pressed = Pressed();
-    SetWord(At(at::kWin3 + 0x10), 0xDC);
+    SetWord(At(WindowRecords_addr + 0x6c + 0x10), 0xDC);
     if (Field_ConfirmButtons & pressed) {
         BH_CALL(Sound_PlayEffect)(0x103);
         const unsigned char top = B(at::kWin0 + 0xA);
@@ -400,12 +400,12 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
         BH_CALL(Sound_PlayEffect)(0x106);
         BH_CALL(Sound_PlayEffect)(0x102);
         const unsigned char step = FieldS_State;
-        B(at::kWin0 + 3) = 1;
+        WindowRecords[0].state = 1;
         B(at::kWin1 + 3) = 1;
         B(at::kWin2 + 3) = 1;
-        B(at::kWin3 + 3) = 1;
-        B(at::kWin4) = 0;
-        Window21 = 0;
+        WindowRecords[3].state = 1;
+        WindowRecords[4].in_use = 0;
+        WindowRecords[21].in_use = 0;
         B(at::kModeTimer) = 5;
         FieldS_State = static_cast<unsigned char>(step + 1);
         FieldS_Step = 0;
@@ -427,23 +427,23 @@ extern "C" void __cdecl BattleExtra_EquipSlotInput(void) {
 extern "C" void __cdecl BattleExtra_EquipListInput(void) {
     const U x = L(at::kWin0 + 4) + 7;
     B(at::kWin1 + 0xD) = 0;
-    SetWord(At(at::kWin4 + 4), x);
+    WindowRecords[4].x = x;
     const U scroll = B(at::kWin0 + 0xA), cursor = B(at::kWin0 + 0xB);
     const unsigned count = B(at::kWin0 + 0xD), category = B(at::kWin0 + 8);
-    SetWord(At(at::kWin4 + 6), 13 * (cursor - scroll + 2) + Word(At(at::kWin0 + 6)));
+    WindowRecords[4].y = 13 * (cursor - scroll + 2) + WindowRecords[0].y;
     SetWord(At(Window2_addr + 0x10), BH_CALL(Item_HelpMessage)(category, count));
     const unsigned pressed = Pressed() & Sigma(0xF00C);
-    SetWord(At(at::kWin3 + 0x10), 0xDD);
+    SetWord(At(WindowRecords_addr + 0x6c + 0x10), 0xDD);
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(pressed);
     BH_AT(unsigned char (__cdecl*)(), at::kEquipFrameHelper)();
     auto now = B(at::kWin0 + 0xB);
     const unsigned char was = now;
     if (repeat & 0x1000) {
         if (now > 0) B(at::kWin0 + 0xB) = --now;
-        if (now < B(at::kWin0 + 0xA)) SetWord(At(at::kWin0 + 0x10), 0xF0);
+        if (now < B(at::kWin0 + 0xA)) SetWord(At(WindowRecords_addr + 0x10), 0xF0);
     } else if (repeat & 0x4000) {
         if (now < 0x7F) B(at::kWin0 + 0xB) = ++now;
-        if (!(static_cast<int>(now) < static_cast<int>(B(at::kWin0 + 0xA)) + 9)) SetWord(At(at::kWin0 + 0x10), 0x10);
+        if (!(static_cast<int>(now) < static_cast<int>(B(at::kWin0 + 0xA)) + 9)) SetWord(At(WindowRecords_addr + 0x10), 0x10);
     } else if (repeat & Sigma(4)) {
         auto top = B(at::kWin0 + 0xA);
         if (top == 0) {
@@ -477,7 +477,7 @@ extern "C" void __cdecl BattleExtra_EquipListInput(void) {
         }
     }
     if (was != now) BH_CALL(Sound_PlayEffect)(0x100);
-    if (Word(At(at::kWin0 + 0x10)) != 0) return;
+    if (Word(At(WindowRecords_addr + 0x10)) != 0) return;
     const unsigned again = Pressed();
     if (Field_ConfirmButtons & again) {
         if (B(at::kWin0 + 0xD) == 0) {
@@ -526,7 +526,7 @@ extern "C" void __cdecl BattleExtra_EquipLeave(void) {
         BattleE1_Mode = 1;
         FieldS_State = 0;
         FieldS_Step = 0;
-        Memcpy(at::kGuest, BattleE1_GuestHeadOut_addr, 5);
+        Memcpy(CharacterRecords_addr + 0x47c, BattleE1_GuestHeadOut_addr, 5);
         return;
     }
     Backdrop();
@@ -555,8 +555,8 @@ extern "C" void __cdecl BattleHold_Shrink(void) {
     else
         BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
     BH_CALL(BattleWin_DrawCommandLabel)(B(at::kMenuMember));
-    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(Window1_addr + 4)), Word(At(Window1_addr + 6)));
-    BH_CALL(BattleWin_DrawCommandCross)(Word(At(Window2_addr + 4)), Word(At(Window2_addr + 6)));
+    BH_CALL(BattleWin_DrawPartyStatus)(WindowRecords[1].x, WindowRecords[1].y);
+    BH_CALL(BattleWin_DrawCommandCross)(WindowRecords[2].x, WindowRecords[2].y);
 }
 
 // original 0x42EE00 (BattleHold_Steps[1]): while Input_Held has no 0x100,
@@ -568,10 +568,10 @@ extern "C" void __cdecl BattleHold_ShowAll(void) {
     if (!(Input_Held & 0x100)) {
         B(at::kWin2 + 3) = 1;
         B(at::kWin1 + 3) = 1;
-        B(at::kWin3 + 3) = 1;
+        WindowRecords[3].state = 1;
         BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
     }
-    BH_CALL(BattleWin_DrawPartyStatus)(Word(At(Window1_addr + 4)), Word(At(Window1_addr + 6)));
+    BH_CALL(BattleWin_DrawPartyStatus)(WindowRecords[1].x, WindowRecords[1].y);
     BH_AT(void (__cdecl*)(), at::kBe4Draw444660)();
     for (unsigned i = 0; i < 7; ++i) {
         BH_CALL(BattleWin_DrawCommandLabel)(i);
@@ -603,7 +603,7 @@ extern "C" void __cdecl BattleHold_Regrow(void) {
 // 0x904AA1 = 0x904AA2 = 0.
 extern "C" void __cdecl Cmd_AutoBattle(void) {
     const auto entries = BattleActorCopies_EntryCount;
-    B(at::kWin4 + 3) = 2;
+    WindowRecords[4].state = 2;
     if (entries > 0) {
         unsigned i = 0;
         do {
@@ -650,7 +650,7 @@ extern "C" void __cdecl BattleAction_Kind3Banner(void) {
     BH_CALL(Battle_ClearActingFlags)();
     BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(BattleE1_BannerText));
     const unsigned char actor = B(at::kActor);
-    B(at::kWin4 + 3) = 1;
+    WindowRecords[4].state = 1;
     BH_CALL(Battle_SetActorBit)(actor);
     static_cast<unsigned char*>(MagicS23_ActorSprite)[1] = 9;
     BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
@@ -864,7 +864,7 @@ extern "C" unsigned char __cdecl BattleResult_ZennyBonus(void) {
 extern "C" unsigned short __cdecl Char_LevelUpGain(unsigned roster_arg, unsigned what_arg) {
     const U roster = roster_arg & 0xFF;
     const U base = roster * 99;
-    const unsigned char* const record = At(at::kCharRecords + roster * at::kCharSize);
+    const unsigned char* const record = At(CharacterRecords_addr + roster * at::kCharSize);
     static_assert(at::kCharSize == sizeof(records::CharRecord));
     const unsigned char level = record[0xA];
     unsigned char reached = 1;
@@ -942,7 +942,7 @@ void LossMember(U index) {
 extern "C" void __cdecl BattleLoss_ResetParty(void) {
     if (Transition_Busy != 0) return;
     const unsigned char n = B(at::kPartyCount);
-    B(at::kWin0) = 0;
+    WindowRecords[0].in_use = 0;
     if (n >= 1) {
         LossMember(0);
         if (B(at::kPartyCount) >= 2) {

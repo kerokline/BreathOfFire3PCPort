@@ -26,7 +26,7 @@ namespace item_use {
 
 namespace at {
 
-constexpr std::uint32_t kCharRecords = 0x903A70;   // CharacterRecords (a block), stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords (a block), stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr std::uint32_t kWorkRecords = 0x802DC0;   // member i's working copy of its character record,
 constexpr std::uint32_t kWorkStride = 0x14C;       // 0x14C apart (PartyWorkingRecords' stride)

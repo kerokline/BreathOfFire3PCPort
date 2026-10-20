@@ -236,9 +236,9 @@ extern "C" void __cdecl WorldMap33_PlaceMessage(void) {
 // stack word above them (it reads the low words); the cell is asked for up
 // to three times.
 extern "C" void __cdecl WorldMap33_PlateRun(void) {
-    const U steps = ObjTrio[9];
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
+    const U steps = ObjTrio[0].step_frames;
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::As<records::EffectWork>(Cur())->work_0c, x);

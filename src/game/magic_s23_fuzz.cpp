@@ -317,7 +317,7 @@ constexpr std::uint32_t kGteSize = 0x380;
 
 const mh::Region kRegions[] = {
     {0x903800, 4},                    // Camera_ShiftY
-    {at::kR, 0x10},                   // the effect scratch 0x903850..0x90385F
+    {SharedScratch_addr, 0x10},       // the effect scratch 0x903850..0x90385F
     {Prim_VertexScratch_addr, 0x20},  // Prim_VertexScratch
     {Gte_RampFar_addr, kGteSize},
     {0x905E40, 0x30},                 // Camera_Matrix, the view's cell words, MapView_Redraw
@@ -455,7 +455,7 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = g_prims + 4 * (v % 16); break;
-    case 1: SetWord(mh::Mem(at::kR + 2 * (v % 8)), h >> 16); break;
+    case 1: SetWord(mh::Mem(SharedScratch_addr + 2 * (v % 8)), h >> 16); break;
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 3: mh::Mem(MagicS23_QuakeHover_addr)[0] = static_cast<unsigned char>(v & 1); break;
     case 4: SetWord(mh::Mem(at::kQuakeEnemyZ + 2 * (v % 8)), h >> 16); break;

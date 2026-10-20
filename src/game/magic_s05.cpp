@@ -62,13 +62,13 @@ void AddLong(unsigned char* at, std::int32_t v) {
     SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + static_cast<std::uint32_t>(v)));
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The acting actor's record as the originals index it: a member (0x802D40,
 // stride 0x14C) at 0..2, else the enemy by index - 3 (0x93B960, stride
 // 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor <= 2) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
 }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {

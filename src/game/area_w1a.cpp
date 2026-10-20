@@ -45,7 +45,7 @@ void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p)
 void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(static_cast<U>(Long(p)) + v)); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours
@@ -174,7 +174,7 @@ extern "C" void __cdecl Area38_SetCellsC0(void) {
 
 // original 0x405410 (Area38_Handlers[2]; PSX 0x801F2C94): party-list byte
 // 0x904063, party record 1.
-extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(Cond_Flags_addr + 0xd3, Field_Members_addr + 0x4); }
+extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(Cond_Flags_addr + 0xd3, ObjTrio_addr + 0x14c); }
 
 // original 0x4054D0 (Area38_Handlers[3]; PSX 0x801F2E60): 0x904064, record 2.
 extern "C" void __cdecl Area38_SpawnEffectMember2(void) { SpawnForMember(Cond_Flags_addr + 0xd4, ObjTrio_addr + 0x298); }
@@ -285,7 +285,7 @@ extern "C" void __cdecl Area39_Counter1Not4(void) { B(at::kCounter1) = B(Cond_Fl
 // op Area40_PlaceOp places it.
 extern "C" void __cdecl Area40_PlaceObject(void) {
     const unsigned char free = AH_AT(unsigned char (__cdecl*)(), at::kFreeObject)();
-    SetWord(Mem(at::kScratchWord), free);
+    SetWord(Mem(SharedScratch_addr), free);
     if (free == 0xFF) {
         AddWord(MoveScript_Object + 0xA, -2);
         return;
@@ -381,7 +381,7 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
         break;
     case 2:
         if (Field_Request == 0) {
-            SetWord(Mem(at::kScratchWord), Word(Mem(Input_Held_addr)));
+            SetWord(Mem(SharedScratch_addr), Word(Mem(Input_Held_addr)));
             const U held = static_cast<U>(Long(Mem(Input_Held_addr)));
             const U top = B(Area40_InputMap_addr + ((held & 0xFFFF) >> 12));
             SetWord(Mem(Input_Held_addr), top << 12 | (held & 0xFFF));

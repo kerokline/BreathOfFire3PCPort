@@ -160,12 +160,12 @@ std::int32_t Angle(std::uint32_t a) { return static_cast<std::int16_t>(W(a)); }
 // false for none (0xFF).
 bool TakeSlot() {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    B(at::kEffectSlot) = slot;
+    at::kEffectSlot = slot;
     return slot != 0xFF;
 }
 // The slot byte's record: live, a kind, at (x, y, z), a life at +9.
 void Place(unsigned char kind, std::int32_t x, std::int32_t y, std::int32_t z, unsigned char life) {
-    unsigned char* const e = Effect(B(at::kEffectSlot));
+    unsigned char* const e = Effect(at::kEffectSlot);
     e[0] = 1;
     e[5] = kind;
     Put32(e + 0x64, x);
@@ -539,7 +539,7 @@ SC6_EXPORT void __cdecl Scena06_Run02(void) {
         return;
     case 10: {
         if (Busy()) return;
-        const unsigned lead = ObjTrio[8];
+        const unsigned lead = ObjTrio[0].direction;
         SetCounter(0, 0xF);
         if (lead == 2) DropIn(4);
         else if (lead == 3) DropIn(5);
@@ -561,7 +561,7 @@ SC6_EXPORT void __cdecl Scena06_Run02(void) {
     case 16:
         if (Counter(0) != 0x1A) return;
         if (!TakeSlot()) return;
-        SetCounter(1, B(at::kEffectSlot));
+        SetCounter(1, at::kEffectSlot);
         SetStep(0x11);
         Place(0x13, Camera_Angles[0], Camera_Angles[1], 0x3C, 0x3C);
         return;
@@ -604,7 +604,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         if (!TakeSlot()) return;
         SetStep(4);
         Place(0x31, Camera_Angles[0], Camera_Angles[1], 0x124, 0x5A);
-        Put32(Effect(B(at::kEffectSlot)) + 0xC, 0x700);
+        Put32(Effect(at::kEffectSlot) + 0xC, 0x700);
         return;
     }
     case 4:
@@ -685,7 +685,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
 
 // original 0x54B6C0: run 4, steps 0..7, 0xA..0xC, 0x14..0x16, 0x1E, 0x1F.
 SC6_EXPORT void __cdecl Scena06_Run04(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         Say(0xD);
@@ -819,7 +819,7 @@ SC6_EXPORT void __cdecl Scena06_Run05(void) {
 // As the original has it: step 6 moves Camera_Distance by -0x40 a frame for
 // 0x12 frames, counted in counter 3.
 SC6_EXPORT void __cdecl Scena06_Run06(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     switch (Step()) {
     case 0:
         DropIn(3);
@@ -872,7 +872,7 @@ SC6_EXPORT void __cdecl Scena06_Run06(void) {
         if (Counter(0) != 0x13) return;
         Kind2(0);
         if (!TakeSlot()) return;
-        SetCounter(3, B(at::kEffectSlot));
+        SetCounter(3, at::kEffectSlot);
         SetStep(8);
         Place(0x13, -0x2AA, Camera_Angles[1], 0x200, 0x1E);
         return;
@@ -1141,7 +1141,7 @@ namespace {
 // the second party list's Field_MemberCount bytes copied to 0x939A10, that
 // list reset to (0, 0xFF, 0xFF), the old count to 0x939A02, the count 1.
 void SortParty() {
-    unsigned char* const trio = &ObjTrio[0];
+    unsigned char* const trio = &rv::Bytes(ObjTrio)[0];
     for (unsigned i = 1; i <= 2; ++i) {
         unsigned char* const a = trio + at::kObjStride * (i - 1);
         for (unsigned j = i; j < 3; ++j) {
@@ -1834,14 +1834,14 @@ SC6_EXPORT void __cdecl Scena06_Run15(void) {
     case 0x0C:
         if (Counter(0) != 0x2D) return;
         if (!TakeSlot()) return;
-        SetCounter(3, B(at::kEffectSlot));
+        SetCounter(3, at::kEffectSlot);
         SetStep(0xD);
         Place(0x13, -0x32E, Camera_Angles[1], Angle(at::kAngle2), 0x50);
         return;
     case 0x0D:
         if (Effect(Counter(3))[0] != 0) return;
         if (!TakeSlot()) return;
-        SetCounter(3, B(at::kEffectSlot));
+        SetCounter(3, at::kEffectSlot);
         SetStep(0xE);
         Place(0x13, -0x2AA, Camera_Angles[1], Angle(at::kAngle2), 0x28);
         return;
@@ -1939,7 +1939,7 @@ SC6_EXPORT void __cdecl Scena06_Run16(void) {
         return;
     case 0x01:
         if (Counter(0) != 0x1F) return;
-        Gift(1, at::kRecord7 + 0x12, 0x20, at::kTextRecords, 0x94, 0x22);
+        Gift(1, CharacterRecords_addr + 0x47c + 0x12, 0x20, at::kTextRecords, 0x94, 0x22);
         return;
     case 0x0A:
         if (Busy()) return;
@@ -1948,7 +1948,7 @@ SC6_EXPORT void __cdecl Scena06_Run16(void) {
         return;
     case 0x0C:
         if (Counter(0) != 0x24) return;
-        Gift(2, at::kRecord7 + 0x15, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
+        Gift(2, CharacterRecords_addr + 0x47c + 0x15, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
         return;
     case 0x14:
         SH_CALL(Msg_OpenSystem)(1);

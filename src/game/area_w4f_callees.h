@@ -42,7 +42,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
-constexpr std::uint32_t kObjectIndex = 0x903850;
+// kObjectIndex: now SharedScratch (symbols.toml).
 // The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject). Area
 // 192's and 193's pair choices write its dwords +0x18 / +0x1C.
@@ -68,7 +68,7 @@ constexpr std::uint32_t kPartyStride = 0x14C;
 // ("joined", docs/field-event.md), the status word +0x10, HP +0x18, AP +0x1A,
 // max HP +0x20, max AP +0x22, and the byte +0x1E (docs/item-use.md section 2
 // calls it the max-HP scale) that area 192's talk and init compare.
-constexpr std::uint32_t kCharRecords = 0x903A70;
+// kCharRecords: now CharacterRecords (symbols.toml).
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr unsigned kCharCount = 8;
 // kChar0Byte1E: now Field_ActorStates[0xe] (symbols.toml).

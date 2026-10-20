@@ -358,7 +358,7 @@ void Seed(unsigned k) {
         s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, sh::Next()));
         if (sh::Often()) {   // the model's animation byte one of the five keys (or not)
             const unsigned char key = move_script::At(at::kTwinAnims + 3 * (sh::Next() % 5))[0];
-            ObjTrio[0x4B] = key;
+            ObjTrio[0].animation = key;
             move_script::At(Sprite_Objects_addr + 0x148)[0x4B] = sh::Half() ? key : static_cast<unsigned char>(sh::Next());
         }
         break;

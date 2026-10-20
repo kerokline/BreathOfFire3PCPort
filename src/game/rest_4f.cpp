@@ -757,7 +757,7 @@ const unsigned char* TraceObject(const char* who) {
         bof3::Fatal("%s: the object byte +6 is %u, past the thirty Sprite_Objects records - the original reads what "
                     "follows (docs/rest_4f.md section 7)",
                     who, idx);
-    return Sprite_Objects + idx * 0xA4u;
+    return rv::Bytes(&Sprite_Objects[idx]);
 }
 
 // One run of kind 8's line along z, in steps of 0x8000 (`dir` +1 or -1) from z to
@@ -1084,9 +1084,9 @@ extern "C" void __cdecl EffectKind09_DrawFan(int len, int a1, int a2, int a3) {
 extern "C" void __cdecl EffectKind0B_Start(void) {
     unsigned char* s = S();
     StF(s + 0x74, I(static_cast<U>(Rest4f_Kind0BOffset +
-                                   static_cast<std::int16_t>(W(at::kExtra0 + 0x2E)))));
+                                   Sprite_ObjectsExtra[0].screen_x)));
     StF(s + 0x78, I(static_cast<U>(static_cast<signed char>(B(at::kKind0BOffset + 1)) +
-                                   static_cast<std::int16_t>(W(at::kExtra0 + 0x30)))));
+                                   Sprite_ObjectsExtra[0].screen_y)));
     rv::As<records::EffectObject>(s)->depth_f = 0x3C23D70Au;
     s[9] = 0;
     s[6] = 0x20;
@@ -1151,12 +1151,12 @@ extern "C" void __cdecl EffectKind0B_Drop(void) {
 // byte +0x1C (x, z, and the height word +0x3E); +1 up.
 extern "C" void __cdecl EffectKind0B_Attach(void) {
     unsigned char* s = S();
-    rv::As<records::EffectObject>(s)->x = L(at::kExtra0 + 0x34);
-    rv::As<records::EffectObject>(s)->z = L(at::kExtra0 + 0x38);
-    rv::As<records::EffectObject>(s)->height = L(at::kExtra0 + 0x3C);
-    rv::As<records::EffectObject>(s)->angle[0] = L(at::kExtra0 + 0x64);
-    rv::As<records::EffectObject>(s)->angle[1] = L(at::kExtra0 + 0x68);
-    rv::As<records::EffectObject>(s)->angle[2] = L(at::kExtra0 + 0x6C);
+    rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x);
+    rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].z);
+    rv::As<records::EffectObject>(s)->height = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].height);
+    rv::As<records::EffectObject>(s)->angle[0] = Sprite_ObjectsExtra[0].angle[0];
+    rv::As<records::EffectObject>(s)->angle[1] = Sprite_ObjectsExtra[0].angle[1];
+    rv::As<records::EffectObject>(s)->angle[2] = Sprite_ObjectsExtra[0].angle[2];
     long out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, s[0x1C]);
     s = S();
@@ -1243,7 +1243,7 @@ U Hi(const void* p) { return Key(p) & 0xFFFF0000u; }
 // Palette 0x7B: entries 1..30 the leader's palette (ObjTrio 0's +0x27) with bit
 // 15 set, entries 0 and 31 zero; Gfx_ClutStripDirty is set by the callers.
 void TintPalette() {
-    const U from = Gfx_ClutStrip_addr + 2 + static_cast<std::uint32_t>(ObjTrio[0x27]) * at::kClutBytes;
+    const U from = Gfx_ClutStrip_addr + 2 + static_cast<std::uint32_t>(ObjTrio[0].clut) * at::kClutBytes;
     for (U i = 0; i < 30; ++i) SetW(at::kClut7B + 2 + 2 * i, W(from + 2 * i) | 0x8000);
     Gfx_ClutStrip[0xf60] = 0;
     Gfx_ClutStrip[0xf7f] = 0;
@@ -1269,10 +1269,10 @@ bool Above38() { return static_cast<std::int16_t>(W(at::kKind02Word)) > 0x38; }
 // the colour 0; the panel's y +0x10 0xF0; +1 up.
 extern "C" void __cdecl EffectKind02_Start(void) {
     unsigned char* const s = S();
-    s[0x25] = ObjTrio[0x25];
-    s[0x26] = ObjTrio[0x26];
-    s[0x27] = ObjTrio[0x27];
-    s[0x28] = ObjTrio[0x28];
+    s[0x25] = ObjTrio[0].tex_slot;
+    s[0x26] = ObjTrio[0].tex_row;
+    s[0x27] = ObjTrio[0].clut;
+    s[0x28] = ObjTrio[0].clut_mode;
     s[0x29] = 2;
     s[0x24] = 0x80;
     rv::As<records::EffectObject>(s)->screen_x = 0x39;
@@ -1367,19 +1367,19 @@ extern "C" void __cdecl EffectKind02_Mode1Brighten(void) {
 // +0x5A copied; Sprite_QueueOverlay (a tail jmp).
 extern "C" void __cdecl EffectKind02_CopyLeader(void) {
     unsigned char* const s = S();
-    if (ObjTrio[2] == 1) {
+    if (ObjTrio[0].step == 1) {
         s[2] = 0;
         return;
     }
     if (Above38()) s[2] = 3;
-    s[0x2A] = ObjTrio[0x2a];
-    s[0x49] = ObjTrio[0x49];
-    s[0x4A] = ObjTrio[0x4a];
-    s[0x4B] = ObjTrio[0x4b];
-    rv::As<records::EffectObject>(s)->script = L(at::kLeader + 0x50);
-    rv::As<records::EffectObject>(s)->frames = L(at::kLeader + 0x54);
-    rv::As<records::EffectObject>(s)->script_pos = W(at::kLeader + 0x58);
-    rv::As<records::EffectObject>(s)->frame_word = W(at::kLeader + 0x5A);
+    s[0x2A] = ObjTrio[0].flip;
+    s[0x49] = ObjTrio[0].script_steps;
+    s[0x4A] = ObjTrio[0].script_hold;
+    s[0x4B] = ObjTrio[0].animation;
+    rv::As<records::EffectObject>(s)->script = ObjTrio[0].script;
+    rv::As<records::EffectObject>(s)->frames = ObjTrio[0].frames;
+    rv::As<records::EffectObject>(s)->script_pos = ObjTrio[0].script_pos;
+    rv::As<records::EffectObject>(s)->frame_word = ObjTrio[0].frame_word;
     SH_CALL(Sprite_QueueOverlay)();
 }
 
@@ -1417,7 +1417,7 @@ extern "C" void __cdecl EffectKind02_Mode3Darken(void) {
 // +3 = 0; else while the word 0x905E62 is below 0x38 (s16), +2 = 1 and +3 = 0.
 extern "C" void __cdecl EffectKind02_Mode3Wait(void) {
     unsigned char* const s = S();
-    if (ObjTrio[2] == 1) {
+    if (ObjTrio[0].step == 1) {
         s[2] = 0;
         s[3] = 0;
         return;

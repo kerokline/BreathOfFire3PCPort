@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/area_entry_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -30,7 +31,7 @@ using namespace area_entry;
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
 unsigned char* Descriptor() { return Area_Descriptors[Game_AreaNumber]; }
-unsigned char* Record(unsigned slot) { return ObjTrio + slot * kRecord; }
+unsigned char* Record(unsigned slot) { return rv::Bytes(ObjTrio) + slot * kRecord; }
 
 }  // namespace
 
@@ -78,7 +79,7 @@ found:
     unsigned char flags;
     if (Word(link + 2) != 0xFFFF) {
         AreaW0b_Place = Word(link + 2);
-        SetLong(At(kPendingX), static_cast<std::int32_t>((Word(link + 4) & 0xFF80u) << 8));
+        kPendingX = static_cast<std::int32_t>((Word(link + 4) & 0xFF80u) << 8);
         AreaEntry_PendingZ = static_cast<std::int32_t>((Word(link + 6) & 0xFF80u) << 8);
         flags = link[0xA];
     } else {
@@ -88,14 +89,14 @@ found:
         for (unsigned i = 0; i < count; ++i, choice += 10)
             if (g.flags_test(Cond_Flags + choice[6] * 8u, choice[7]) != 0) break;
         AreaW0b_Place = Word(choice);
-        SetLong(At(kPendingX), static_cast<std::int32_t>((Word(choice + 2) & 0xFF80u) << 8));
+        kPendingX = static_cast<std::int32_t>((Word(choice + 2) & 0xFF80u) << 8);
         AreaEntry_PendingZ = static_cast<std::int32_t>((Word(choice + 4) & 0xFF80u) << 8);
         flags = choice[8];
     }
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags & 0x8F);
-    At(kLinkHigh)[0] = static_cast<unsigned char>((flags >> 4) & 7);
+    kLinkHigh = static_cast<unsigned char>((flags >> 4) & 7);
     g.classify();
-    g.pick_music(static_cast<unsigned>(Long(At(kPendingX)) >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
+    g.pick_music(static_cast<unsigned>(kPendingX >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
                  AreaW0b_Place);
     return 0;
 }
@@ -138,7 +139,7 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
     ++list;
     if ((header & 0xC0) == 0) {
         if (Field_MemberCount != n) return (table & 0xFFFFFF00u) | 1u;
-        for (unsigned i = 0; i < n; ++i) At(kPickFree)[i] = Cond_Flags[0xd2 + i];
+        for (unsigned i = 0; i < n; ++i) At(SharedScratch_addr + 0x8)[i] = Cond_Flags[0xd2 + i];
         for (unsigned i = 0; i < n; ++i) {
             const unsigned char wanted = list[i];
             const unsigned members = Field_MemberCount;
@@ -147,21 +148,21 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
                 while (j < members && Record(j)[kRecMember] != wanted) ++j;
                 if (j == members) return 1;
             } else {
-                while (j < members && At(kPickFree)[j] == 0xFF) ++j;
+                while (j < members && At(SharedScratch_addr + 0x8)[j] == 0xFF) ++j;
                 if (j == members) continue;
             }
-            At(kPickColumn)[i] = Record(j)[kRecColumn];
-            At(kPickSlot)[i] = static_cast<unsigned char>(j);
-            At(kPickFree)[j] = 0xFF;
+            At(SharedScratch_addr)[i] = Record(j)[kRecColumn];
+            At(SharedScratch_addr + 0x4)[i] = static_cast<unsigned char>(j);
+            At(SharedScratch_addr + 0x8)[j] = 0xFF;
         }
-        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(At(kPickSlot)[i])[kRecMember];
+        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(At(SharedScratch_addr + 0x4)[i])[kRecMember];
         for (unsigned s = 0; static_cast<int>(s) < static_cast<int>(n) - 1; ++s) {
-            const unsigned char there = At(kPickSlot)[s];
+            const unsigned char there = At(SharedScratch_addr + 0x4)[s];
             if (s == there) continue;
             g.swap_members(s, there, 0);
             for (unsigned t = s; t < n; ++t) {
-                if (At(kPickSlot)[t] == s) {
-                    At(kPickSlot)[t] = At(kPickSlot)[s];
+                if (At(SharedScratch_addr + 0x4)[t] == s) {
+                    At(SharedScratch_addr + 0x4)[t] = At(SharedScratch_addr + 0x4)[s];
                     break;
                 }
             }
@@ -195,7 +196,7 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
 // the count is a byte and not limited to the three records ObjTrio holds.
 extern "C" void __cdecl Party_SetUpMembers(unsigned count_arg, const unsigned char* list) {
     const unsigned count = count_arg & 0xFFu;
-    unsigned char* record = ObjTrio;
+    unsigned char* record = rv::Bytes(ObjTrio);
     for (unsigned i = 0; i < count; ++i, record += kRecord) {
         Sprite_Current = record;
         record[0] &= 0xDF;
@@ -236,7 +237,7 @@ extern "C" void __cdecl Party_SwapMembers(unsigned a, unsigned b, unsigned keep)
         g.member_sprite(record[kRecMember], slot);
         unsigned char* state = Field_State;
         const unsigned char character = Character_IndexById[state[kRecMember]];
-        const unsigned char* const from = At(kCharacterRecords + character * kCharacterBytes);
+        const unsigned char* const from = At(CharacterRecords_addr + character * kCharacterBytes);
         for (unsigned k = 0; k < kCharacterBytes; k += 4) SetLong(state + kRecCharacter + k, Long(from + k));
         state = Field_State;
         state[kRecCharacterIndex] = Character_IndexById[state[kRecMember]];

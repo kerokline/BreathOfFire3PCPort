@@ -45,7 +45,7 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 unsigned char* FlagRow() { return Ptr(Chapter_FlagRow_addr); }
 unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // Effect_Objects record `slot` (0x80 bytes).
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // The choice's answer as the choices read it with movsx.
 int Answer() { return static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr)); }
 // A message word of a table indexed by the signed answer (unchecked).
@@ -272,21 +272,21 @@ extern "C" void __cdecl Area91_DrawGlow(unsigned radius_word, unsigned colour_by
     const auto colour = static_cast<unsigned char>(colour_byte);
     for (int angle = 0; angle < 0x1000; angle += 0x80) {
         const int next = angle + 0x80;
-        Prim_VertexScratch[0] = 0;
-        Prim_VertexScratch[1] = 0;
-        Prim_VertexScratch[2] = 0;
-        Prim_VertexScratch[4] = static_cast<short>(MulSar(AH_CALL(Math_Cos)(angle), radius, 12));
+        Prim_VertexScratch[0].x = 0;
+        Prim_VertexScratch[0].y = 0;
+        Prim_VertexScratch[0].z = 0;
+        Prim_VertexScratch[1].x = static_cast<short>(MulSar(AH_CALL(Math_Cos)(angle), radius, 12));
         const std::int32_t sin_a = MulSar(AH_CALL(Math_Sin)(angle), radius, 12);
-        Prim_VertexScratch[6] = 0;
-        Prim_VertexScratch[5] = static_cast<short>(sin_a);
-        Prim_VertexScratch[8] = static_cast<short>(MulSar(AH_CALL(Math_Cos)(next), radius, 12));
+        Prim_VertexScratch[1].z = 0;
+        Prim_VertexScratch[1].y = static_cast<short>(sin_a);
+        Prim_VertexScratch[2].x = static_cast<short>(MulSar(AH_CALL(Math_Cos)(next), radius, 12));
         const std::int32_t sin_b = MulSar(AH_CALL(Math_Sin)(next), radius, 12);
-        Prim_VertexScratch[10] = 0;
-        Prim_VertexScratch[9] = static_cast<short>(sin_b);
+        Prim_VertexScratch[2].z = 0;
+        Prim_VertexScratch[2].y = static_cast<short>(sin_b);
         unsigned char* const prim = Gfx_PacketNext;
         AH_CALL(Gpu_SetPolyG3)(prim);
         AH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        AH_CALL(Gte_RotTransPers3)(Prim_VertexScratch, Prim_VertexScratch + 4, Prim_VertexScratch + 8,
+        AH_CALL(Gte_RotTransPers3)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<short*>(&Prim_VertexScratch[1]), reinterpret_cast<short*>(&Prim_VertexScratch[2]),
                                    reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
                                    reinterpret_cast<float*>(prim + 0x28), &depth);
         AH_CALL(Gte_PrimDepths3_10B)(prim);
@@ -407,12 +407,12 @@ extern "C" void __cdecl Area91_EffectRings(void) {
     {
         unsigned char* const object = Sprite_Current;
         auto* const tObject = rv::As<records::EffectObject>(object);
-        Prim_VertexScratch[0] = static_cast<short>((tObject->x >> 9) - 0x4000);
-        Prim_VertexScratch[1] = static_cast<short>((tObject->z >> 9) - 0x4000);
-        Prim_VertexScratch[2] = 0x80;
+        Prim_VertexScratch[0].x = static_cast<short>((tObject->x >> 9) - 0x4000);
+        Prim_VertexScratch[0].y = static_cast<short>((tObject->z >> 9) - 0x4000);
+        Prim_VertexScratch[0].z = 0x80;
     }
     long depth = 0;
-    AH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
+    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
     AH_CALL(MapView_LinkPrimAt)(static_cast<U>(rv::Current<records::EffectObject>()->x), static_cast<U>(rv::Current<records::EffectObject>()->z), 2, 0xC);
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] + 4);

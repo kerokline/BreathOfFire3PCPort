@@ -118,7 +118,7 @@ void Slide(unsigned at_word, int by, short bound, bool below, short to) {
 
 // CharacterRecords' record n (0xA4 each), unchecked; a member id's record
 // index, 0x66972C[id] read in place (the byte is unbounded, the table is 24).
-unsigned char* Record(U n) { return At(at::kRecords + n * at::kRecordStride); }
+unsigned char* Record(U n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
 U RecordOf(U id) { return B(at::kMemberMap + (id & 0xFF)); }
 
 char* PrintBuf() { return reinterpret_cast<char*>(At(at::kPrintBuf)); }

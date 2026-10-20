@@ -61,10 +61,10 @@ const unsigned char* EffectByArgument(unsigned index, const char* who) {
     if (i >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads 0x%X unchecked", who, i,
                     static_cast<unsigned>(Effect_Objects_addr + i * kEffectStride));
-    return Effect_Objects + i * kEffectStride;
+    return rv::Bytes(Effect_Objects) + i * kEffectStride;
 }
 
-const unsigned char* Member(unsigned m) { return At(Field_Members_addr + 0x4 + (m - 1) * kMemberStride); }
+const unsigned char* Member(unsigned m) { return At(ObjTrio_addr + 0x14c + (m - 1) * kMemberStride); }
 
 bool MapTarget(unsigned char b) { return b == 0xF2; }
 bool MapBlocked(unsigned char b) { return b == 0xF0 || b == 0xF1 || b == 0xF4 || b == 0xF6 || b == 0xF7; }
@@ -88,7 +88,7 @@ void SideProbe(unsigned d) {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = Sprite_Current;
     if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
@@ -157,7 +157,7 @@ extern "C" unsigned char __cdecl PartyAction_Kind30Ahead(void) {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     for (unsigned i = 0; i < kEffectCount; ++i) {
-        const unsigned char* const e = Effect_Objects + i * kEffectStride;
+        const unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
         if (e[0] == 0 || e[5] != 0x30) continue;
         if (SH_CALL(Sprite_PointInReach)(static_cast<int>(x), static_cast<int>(z),
                                          static_cast<short>(rv::As<records::PartyMember>(Sprite_Current)->height_whole), 1, e) == 0)
@@ -194,7 +194,7 @@ extern "C" unsigned char __cdecl PartyAction_BlockedAhead(void) {
 extern "C" void __cdecl Effect_SpawnAtCellHigh(unsigned state, unsigned x, unsigned z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect_Objects + slot * kEffectStride;
+    unsigned char* const e = rv::Bytes(Effect_Objects) + slot * kEffectStride;
     e[0] = 1;
     e[5] = 0x34;
     e[1] = static_cast<unsigned char>(state);

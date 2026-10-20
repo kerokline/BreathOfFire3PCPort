@@ -62,7 +62,7 @@ using PlayCueFn = void (__cdecl*)(unsigned);
 // A bit per actor with a reaction to show (docs/battle_actions.md).
 // kPending: now BattleActions_Pending (symbols.toml).
 // The task slots' owner cells: slot i's +0x80.
-constexpr std::uint32_t kSlotOwners = at::kTasks + 0x80;
+constexpr std::uint32_t kSlotOwners = BattleTask_Slots_addr + 0x80;
 
 // The state byte +1 of an actor: 6 is the reaction state
 // BattleAction_EffectWait sets on every actor flagged 0x40.

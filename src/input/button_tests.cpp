@@ -253,15 +253,15 @@ U RunS1(U16 press) {
     g_scratch[2] = 0x33;
     g_scratch[3] = 0x44;
     Sprite_Current = g_scratch;
-    Effect_Objects[0x81] = 0x55;
-    Effect_Objects[0x181] = 0x66;
+    Effect_Objects[1].state = 0x55;
+    Effect_Objects[3].state = 0x66;
     CharStats_ExtraItem = 0;
     B(0x904130) = 1;
     Effect1e_Choice = 0;
     Input_Pressed = press;
     ::LeaderPanel_S1Buttons();
-    return static_cast<U>(g_scratch[2]) | static_cast<U>(g_scratch[3]) << 8 | static_cast<std::uint32_t>(Effect_Objects[0x81]) << 16 |
-           static_cast<std::uint32_t>(Effect_Objects[0x181]) << 24;
+    return static_cast<U>(g_scratch[2]) | static_cast<U>(g_scratch[3]) << 8 | static_cast<std::uint32_t>(Effect_Objects[1].state) << 16 |
+           static_cast<std::uint32_t>(Effect_Objects[3].state) << 24;
 }
 U RunLatch(U16 press) {
     Effect1e_PressNow = 0x5A;

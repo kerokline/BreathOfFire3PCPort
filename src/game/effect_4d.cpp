@@ -330,7 +330,7 @@ extern "C" void __cdecl Effect_DrawScreenTintMode(unsigned blend) {
 // section 6).
 extern "C" void __cdecl EffectKind94_RedrawSprites(void) {
     unsigned char* const saved = Sprite_Current;
-    unsigned char* o = Sprite_Objects;
+    unsigned char* o = rv::Bytes(Sprite_Objects);
     for (unsigned n = 6; n != 0; --n, o += 0xA4) {
         Sprite_Current = o;
         o[0x29] = 2;
@@ -341,7 +341,7 @@ extern "C" void __cdecl EffectKind94_RedrawSprites(void) {
             bof3::Fatal("EffectKind94_RedrawSprites: Field_MemberCount is %u, past ObjTrio's three records - the original "
                         "reads and draws what follows (docs/effect_4d.md section 6)",
                         (unsigned)Field_MemberCount);
-        unsigned char* const member = ObjTrio + at::kTrioStride * m;
+        unsigned char* const member = rv::Bytes(&ObjTrio[m]);
         if (member[at::kTrioBusy] == 7) {
             Sprite_Current = member;
             member[0x29] = 2;

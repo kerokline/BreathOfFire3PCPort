@@ -113,11 +113,11 @@ U FxFindFree(const U*, U answer) {
     const U n = sh::Noise();
     return WithAl(answer, n % 3 == 0 ? 0xFF : (n >> 4) % 20);
 }
-// MapView_SlopeAt: DamageScratch's flag byte 0 a third of the time, else not
+// MapView_SlopeAt: SharedScratch's flag byte 0 a third of the time, else not
 // 0; the slope's low word on either side of 0x40 and at the s16 limits.
 U FxSlope(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const flag = sh::Mem(bof3::addr::DamageScratch);
+    unsigned char* const flag = sh::Mem(SharedScratch_addr);
     if (sh::InRegions(flag, 1)) flag[0] = static_cast<unsigned char>(n % 3 == 0 ? 0 : (n >> 2) % 4 ? 1 : 1 + (n >> 4) % 0xFF);
     static const U kWords[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x0140, 0xFFC0, 0x1000};
     const U m = sh::Noise();
@@ -162,7 +162,7 @@ const sh::Callee kCallees[] = {
 
 // Beyond field mode's standard regions (which hold Sprite_Current and the
 // sprite records, ObjTrio, Field_State, Field_MemberCount, Effect_Objects and
-// DamageScratch's first bytes): Field_DirectionSteps, which all seven read
+// SharedScratch's first bytes): Field_DirectionSteps, which all seven read
 // (0x524DA0 its rows 3 and 5 by address), so that the seed can put every row's
 // boundaries in. .data, restored after the run as every region is.
 const sh::Region kRegions[] = {

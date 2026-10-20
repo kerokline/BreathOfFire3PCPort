@@ -89,7 +89,7 @@ std::int32_t L(std::uint32_t address) { return Long(At(address)); }
 // (actor - 3, as a 32-bit difference - the originals' `sub eax, 3` after
 // `and eax, 0xFF`).
 unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + (actor & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned actor) { return At(Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 
 // One entry of a step table in .data, read afresh; the byte picks it and is
 // not checked (a byte past the table's count reaches the next table's
@@ -335,7 +335,7 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
     }
     if (Word(At(at::kAbility)) != 0x97) {
         const unsigned id = Word(At(at::kAbility));
-        SetB(at::kBannerShown, 1);
+        WindowRecords[4].state = 1;
         g.str_copy_n(reinterpret_cast<char*>(At(at::kNameBuf)), reinterpret_cast<const char*>(At(at::kAbilityRecords + id * 24)), 0x10);
         g.banner_add(1, 1, 0, 0x3C, reinterpret_cast<const char*>(At(at::kNameBuf)));
     }
@@ -447,7 +447,7 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
     g.banner_add(1, 1, 0, 0x1E, reinterpret_cast<const char*>(At(at::kNameBuf)));
     const unsigned sub2 = BattleE4_Step3;
     BossSb_Countdown = 0;
-    SetB(at::kBannerShown, 1);
+    WindowRecords[4].state = 1;
     BattleE4_Step3 = sub2 + 1;
 }
 
@@ -590,7 +590,7 @@ extern "C" void __cdecl BattleAction_EnemyMessages(void) {
         return;
     }
     const unsigned e = B(at::kMsgList + n * 4);
-    EnemyNameToText0(At(at::kEnemy + e * at::kEnemyStride + 0x80));
+    EnemyNameToText0(At(Battle_Enemies_addr + e * at::kEnemyStride + 0x80));
     const unsigned id = Word(At(at::kMsgList + n * 4 + 2));
     const unsigned char* const text = g.msg(id);
     g.queue_push(1, 0, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
@@ -647,7 +647,7 @@ extern "C" void __cdecl BattleAction_End(void) {
         CopyStats(a);
         const std::uint32_t text = static_cast<std::uint32_t>(L((flags & 0x8000) != 0 ? BattleActions_TextCounter_addr : BattleActions_TextMiss_addr));
         g.banner_add(1, 0, 0, 0xF, reinterpret_cast<const char*>(static_cast<std::uintptr_t>(text)));
-        SetB(at::kBannerShown, 1);
+        WindowRecords[4].state = 1;
         BattleActions_Step = 0;
         BattleE4_Step2 = 1;
     }

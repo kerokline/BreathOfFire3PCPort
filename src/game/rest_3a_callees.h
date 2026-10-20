@@ -45,7 +45,7 @@ constexpr U kWin13Dim = 0x803341;     // window 13's +0xD: 1 when Item_EquipMask
 constexpr U kPartyList = 0x904062;    // u8 x 3: the party list's first three entries
 constexpr U kChosen = 0x675EB8;       // u8 x 6: the list's choice per equipment slot (window 0 and 1's +0x20 point here)
 constexpr unsigned kChosenCount = 6;
-constexpr U kGuest = 0x903EEC;        // character record 7
+// kGuest: now CharacterRecords[7] (symbols.toml). character record 7
 constexpr U kGuestEquip = 0x903EFE;   // its +0x12..+0x17
 constexpr U kCategories = 0x64AE20;   // .data, u8 x 6: the item category of each equipment slot
 
@@ -67,7 +67,7 @@ constexpr U kTaskCurrent = 0x93B8C4;  // unsigned char *: the slot BattleTask_Ru
 constexpr U kTaskOwner = 0x93B940;    // unsigned char *: that slot's +0x80
 // kFieldState: now Field_State (symbols.toml). unsigned char *: Field_State, the member a party step runs for
 // kCameraDistance: now Camera_Distance (symbols.toml). u16 Camera_Distance
-constexpr U kTint = 0x903850;         // u8 x 3: DamageScratch, the tint's r g b BattleWin_DrawTileTint reads
+inline auto& kTint = SharedScratch;  // u8 x 3: SharedScratch, the tint's r g b BattleWin_DrawTileTint reads
 // kRedraw: now MapView_Redraw (symbols.toml). u8 MapView_Redraw
 // kBannerParty: now Rest3a_BannerParty (symbols.toml). .data: the banner string a party actor's flash shows (a pointer)
 // kBannerEnemy: now Rest3a_BannerEnemy (symbols.toml). .data: an enemy actor's
@@ -86,7 +86,7 @@ constexpr U kEnemySize = 0x128;
 // kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). unsigned char *: the enemy BattleEnemy_SetAnimation runs on
 
 // --- New Game ---
-constexpr U kCharRecords = 0x903A70;  // CharacterRecords, 8 of 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, 8 of 0xA4
 constexpr U kCharSize = 0xA4;
 constexpr unsigned kCharCount = 8;
 // kDefaultRecords: now Char_DefaultRecords (symbols.toml). Char_DefaultRecords: seven, then the whelp's at 0x64B80C

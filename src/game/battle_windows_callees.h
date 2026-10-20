@@ -31,7 +31,7 @@ constexpr std::uint32_t kCrossSel = 0x904AB4;      // u8 (read as a dword): the 
 constexpr std::uint32_t kCrossGrow = 0x904ABC;     // u8 x 5: each arm's growth; +5, +6 the two extras
 constexpr std::uint32_t kCrossExtra5 = 0x904AC1;
 constexpr std::uint32_t kCrossExtra6 = 0x904AC2;
-constexpr std::uint32_t kActor = 0x939EC4;         // the acting member's record pointer (+0x134 bit 1)
+// kActor: now BattleE4_MenuActor (symbols.toml). the acting member's record pointer (+0x134 bit 1)
 constexpr std::uint32_t kCrossArms = 0x64E2AC;     // (x, y) bytes per arm, 7 of them
 // kCommandBoxes: now Battle_CommandBoxes (symbols.toml). Battle_CommandBoxes: s16 x, y per command, stride 8
 // kCommandLabels: now Battle_CommandLabelPointers (symbols.toml). Battle_CommandLabelPointers: 7 pointers to 0x669D28 + 8 i

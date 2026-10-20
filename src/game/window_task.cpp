@@ -137,7 +137,7 @@ using namespace window_task;
 // 0x80143F10..1F, the port scattered them.
 extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned flags) {
     AreaW0b_Place = static_cast<std::uint16_t>(area);
-    SetLong(At(at::kPendingX), x);
+    at::kPendingX = x;
     AreaEntry_PendingZ = z;
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags);
     g.classify();
@@ -275,7 +275,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
     unsigned pass = BossSa_WindowPass;
     if (pass > 2) return;
     do {
-        for (std::uint32_t a = at::kRecords; a < at::kRecordsEnd; a += 0x24) {
+        for (std::uint32_t a = WindowRecords_addr; a < at::kRecordsEnd; a += 0x24) {
             unsigned char* const record = At(a);
             if (record[0] == 0) {
                 Widescreen_SlideIdle(record);
@@ -286,7 +286,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
             const unsigned handler = record[1];
             if (handler >= 9)
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
-                            static_cast<unsigned>((a - at::kRecords) / 0x24), handler);
+                            static_cast<unsigned>((a - WindowRecords_addr) / 0x24), handler);
             Widescreen_SlideBefore(record);
             g.records[handler]();
             Widescreen_SlideAfter(record);

@@ -32,13 +32,13 @@ constexpr std::uint32_t kList3OutBound = 0x599551;   // 0x143 in GeneWin_List3Sl
 // kWindowCurrent: now BattleWinStates_Current (symbols.toml). the window record a handler runs for
 // kColour: now Config_WindowColour (symbols.toml). s8: the window colour, a CLUT row
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). the CLUT shadow rows (64 bytes each)
-constexpr std::uint32_t kTasks = 0x93A000;           // BattleTask_Create's 48 slots of 0x84
+// kTasks: now BattleTask_Slots (symbols.toml). BattleTask_Create's 48 slots of 0x84
 constexpr std::uint32_t kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 // kMenuActor: now BattleE4_MenuActor (symbols.toml). the command menu's member (an ObjTrio record)
 // kPartyAp: now ObjTrio[0x9a] (symbols.toml). ObjTrio +0x9A (AP), stride 0x14C
 constexpr std::uint32_t kPartyStride = 0x14C;
-constexpr std::uint32_t kCharRecords = 0x903A70;     // CharacterRecords, stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr std::uint32_t kPrintBuf = 0x904BA0;        // the battle windows' sprintf buffer
 constexpr std::uint32_t kLevelBufs = 0x904D20;       // the level-up window's eight buffers of 0x20

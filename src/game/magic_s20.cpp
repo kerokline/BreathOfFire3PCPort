@@ -102,7 +102,7 @@ unsigned VariantCase(unsigned k) {
 
 // The effect's scratch (words 0x903850..0x90385E, Scratch_Swap among them)
 // and the vertex scratch (Prim_VertexScratch: SVECTORs 8 bytes apart).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now SharedScratch (symbols.toml).
 // kVertex: now Prim_VertexScratch (symbols.toml).
 
 // The ability id (u16) and the actor's side byte 0x904B35 (4 for the party's
@@ -123,14 +123,14 @@ constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 // MagicFx_ApplyBuff, S32's WallOfFire_DrawDisc and WallOfFireSpark_Draw.
 using VoidFn = void (__cdecl*)();
 
-unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
+unsigned char* Scr(unsigned k) { return Mem(SharedScratch_addr + k); }
 unsigned char* Vtx(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
-unsigned char* Task(unsigned index) { return Mem(at::kTasks + index * at::kTaskStride); }
+unsigned char* Task(unsigned index) { return Mem(BattleTask_Slots_addr + index * at::kTaskStride); }
 unsigned char* PoolA(unsigned index) { return Mem(kPoolA + index * kPoolStride); }
 unsigned char* PoolB(unsigned index) { return Mem(kPoolB + index * kPoolStride); }
-unsigned char* Enemy(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* Enemy(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* Member(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* Tint(unsigned i) { return Mem(0x7E0700 + i * 12); }   // MoveScript_TintRecords, unchecked
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }

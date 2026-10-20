@@ -256,7 +256,7 @@ extern "C" void __cdecl AreaMap_SlotZones(const unsigned char* entry) {
             return cx >= x0 && cx < x0 + width && cz >= z0 && cz < z0 + depth;
         };
         for (unsigned k = 0; k < 3; ++k) {
-            unsigned char* const object = ObjTrio + k * kTrioStride;
+            unsigned char* const object = rv::Bytes(&ObjTrio[k]);
             if (!inside(object + kTrioPosition)) continue;
             if (zone[0] & 1) {
                 object[kTrioFlags] |= 1;

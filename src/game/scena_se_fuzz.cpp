@@ -20,6 +20,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_se.h"
 #include "game/scena_se_callees.h"
@@ -80,7 +81,7 @@ std::uint32_t StirOp(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = sh::Noise();
     switch (n % 4) {
     case 0: g_op[(n >> 8) % 17] = static_cast<unsigned char>(n >> 16); break;
-    case 1: SetWord(sh::Mem(at::kCount), ((n >> 8) & 0xFF) % at::kObjectCount); break;
+    case 1: SetWord(sh::Mem(SharedScratch_addr), ((n >> 8) & 0xFF) % at::kObjectCount); break;
     case 2: g_op[3] = static_cast<unsigned char>(g_op[3] ^ (0x80 | ((n >> 8) & 0xF))); break;
     default: break;
     }
@@ -111,11 +112,11 @@ const sh::Region kRegions[] = {
     {Key(&Field_ScriptFlags2), 4},
     {0x904AA0, 0xB0},                                    // the battle bytes: 0x904AAA, 0x904AE4, 0x904AE5
     {Key(&Field_ActiveMember), 4},
-    {bof3::addr::CharacterRecords, kRecords * at::kObjectStride},
+    {CharacterRecords_addr, kRecords * at::kObjectStride},
     {Key(g_op), sizeof g_op},
 };
 
-unsigned char* Object(unsigned k) { return Sprite_Objects + (k % at::kObjectCount) * at::kObjectStride; }
+unsigned char* Object(unsigned k) { return rv::Bytes(&Sprite_Objects[k % at::kObjectCount]); }
 unsigned char* Mem(std::uint32_t a) { return sh::Mem(a); }
 
 // What a function reads again after a call and a caller could have moved:
@@ -125,10 +126,10 @@ unsigned char* Mem(std::uint32_t a) { return sh::Mem(a); }
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 8) & 0xFF;
     switch (h % 5) {
-    case 0: SetWord(Mem(at::kCount), v % at::kObjectCount); break;
+    case 0: SetWord(Mem(SharedScratch_addr), v % at::kObjectCount); break;
     case 1: Sprite_Current = Object(v); break;
     case 2: g_op[v % 17] = static_cast<unsigned char>(h >> 16); break;
-    case 3: SetWord(Mem(at::kBank), h >> 16); break;
+    case 3: SetWord(Mem(SharedScratch_addr + 0x2), h >> 16); break;
     default: break;
     }
 }
@@ -140,7 +141,7 @@ void Seed(unsigned k) {
     Sprite_Current = Object(sh::Next());
     Field_ActiveMember = Object(sh::Next());
     // the count: a slot, and now and then 30 or 31 (nothing placed)
-    SetWord(Mem(at::kCount), sh::Often() || k != kOp0x ? sh::Next() % at::kObjectCount : at::kObjectCount + sh::Next() % 2);
+    SetWord(Mem(SharedScratch_addr), sh::Often() || k != kOp0x ? sh::Next() % at::kObjectCount : at::kObjectCount + sh::Next() % 2);
     if (sh::Half()) g_op[3] = static_cast<unsigned char>(g_op[3] ^ 0x80);
     // the member count either side of 3
     Field_MemberCount = static_cast<unsigned char>(sh::Next() % 5);
@@ -154,7 +155,7 @@ void Seed(unsigned k) {
     }
     // the records' bit 1 (a member the search passes over) about half the time
     for (unsigned r = 0; r < kRecords; ++r) {
-        unsigned char* const f = Mem(bof3::addr::CharacterRecords + 0xB + r * at::kObjectStride);
+        unsigned char* const f = Mem(CharacterRecords_addr + 0xB + r * at::kObjectStride);
         *f = static_cast<unsigned char>(sh::Half() ? *f | 2 : *f & ~2u);
     }
     // EventObj_Face's +7 bit 3, both ways

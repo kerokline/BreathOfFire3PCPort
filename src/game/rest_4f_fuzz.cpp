@@ -406,7 +406,7 @@ void SetFloat(unsigned char* p, float f) { std::memcpy(p, &f, 4); }
 void SeedTrace(unsigned char* e) {
     const unsigned idx = sh::Next() % at::kObjectCount;
     e[6] = static_cast<unsigned char>(idx);
-    unsigned char* const o = Sprite_Objects + idx * 0xA4u;
+    unsigned char* const o = rv::Bytes(Sprite_Objects) + idx * 0xA4u;
     const U target = sh::Often() ? 0x138000u - PickOf(0, 0x8000, 0x7FFF, 0x8001, 0x10000, sh::Next() % 0xA0000)
                                  : static_cast<U>(sh::Next() % 0x200000);
     rv::As<records::SpriteObject>(o)->z = static_cast<std::int32_t>(target);

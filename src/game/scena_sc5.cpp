@@ -128,7 +128,7 @@ void LoadMusic(unsigned track) {
 // An event battle at the leader: 0x532ED0(ObjTrio +0x34, +0x38, kind), then
 // Field_StartEventBattle(kind) (group SE's).
 void Battle(unsigned kind) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     SH_AT(PlaceFn, at::kPartyPlace)(member0->x, member0->z, kind);
     SH_CALL(Field_StartEventBattle)(kind);
 }
@@ -453,8 +453,8 @@ void EnterAreaBody() {
             SetRun(0xA);
             SetStep(0);
             ClearCounters();
-            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 & 0xFE);
-            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
+            CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags & 0xFE);
+            CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags | 1);
             break;
         case 1:
             if (Flag(0x14)) break;
@@ -482,8 +482,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(7);
-            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF & 0xFE);
-            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
+            CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags & 0xFE);
+            CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags | 1);
             DropIn(4);
             break;
         case 5:
@@ -493,8 +493,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(7);
-            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF & 0xFE);
-            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
+            CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags & 0xFE);
+            CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags | 1);
             DropIn(0xF);
             break;
         default:   // 6
@@ -504,8 +504,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(5);
-            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 & 0xFE);
-            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
+            CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags & 0xFE);
+            CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags | 1);
             DropIn(0x10);
             break;
         }
@@ -1816,8 +1816,8 @@ SC5_EXPORT void __cdecl Scena05_Run20(void) {
         if (Counter(0) != 4) break;
         SetStep(5);
         Field_ActorStates[0x9f] = static_cast<unsigned char>(Field_ActorStates[0x9f] | 1);
-        ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
-        ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
+        CharacterRecords[5].flags = static_cast<unsigned char>(CharacterRecords[5].flags | 1);
+        CharacterRecords[6].flags = static_cast<unsigned char>(CharacterRecords[6].flags | 1);
         if (Sel() == 1) CallA(3);
         else if (Sel() == 2) CallA(2);
         break;

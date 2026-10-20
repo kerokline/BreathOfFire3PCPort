@@ -184,7 +184,7 @@ U HpDamageEffect(const U*, U answer) {
     if ((n & 2) == 0) return answer;
     const unsigned t = Mem(at::kTarget)[0];
     const U def = t <= 2 ? move_script::Word(Mem(ObjTrio_addr + t * at::kPartyStride + 0xA6))
-                         : move_script::Word(Mem(at::kEnemies + (t - 3) * at::kEnemyStride + 0xB6));
+                         : move_script::Word(Mem(Battle_Enemies_addr + (t - 3) * at::kEnemyStride + 0xB6));
     return (answer & 0xFFFF0000u) | ((def + (n >> 16) % 5 - 2) & 0xFFFF);
 }
 
@@ -262,7 +262,7 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
-unsigned char* EnemyN(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
+unsigned char* EnemyN(unsigned n) { return Mem(Battle_Enemies_addr + (n % 8) * at::kEnemyStride); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 // An actor 0..10: past 10 the enemy objects run off the image's end 0x93F000
 // (a fault on both sides, not a count).
@@ -295,7 +295,7 @@ void Frame() {
         SetLong(p + 0x130, static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u));
         rv::As<records::PartyMember>(p)->status = Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80});
         p[0x148] = static_cast<unsigned char>(bh::Next() % 8);
-        Mem(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride + 0x1E)[0] = Byte({0, 7, 8, 9, 10});
+        Mem(CharacterRecords_addr + p[0x148] * at::kCharacterStride + 0x1E)[0] = Byte({0, 7, 8, 9, 10});
     }
     for (unsigned n = 0; n < 8; ++n) {
         unsigned char* const e = EnemyN(n);

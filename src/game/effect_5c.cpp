@@ -151,7 +151,7 @@ unsigned char* NewRecord(const char* who, unsigned index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
                     "(docs/effect_5c.md section 6)",
                     who, index);
-    return Effect_Objects + index * 0x80u;
+    return rv::Bytes(Effect_Objects) + index * 0x80u;
 }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
@@ -446,8 +446,8 @@ namespace {
 // 0x428000 and within `zr` of z 0x3E0000 or 0x3F0000 - the originals' order of
 // tests (abs by cdq / xor / sub, signed compares).
 bool LeaderNear(U xr, U zr) {
-    const U x = UL(At(ObjTrio_addr + 0x34));
-    const U z = UL(At(ObjTrio_addr + 0x38));
+    const U x = static_cast<std::uint32_t>(ObjTrio[0].x);
+    const U z = static_cast<std::uint32_t>(ObjTrio[0].z);
     const std::int32_t dx = I(Abs(x - 0x428000u));
     if (dx <= I(xr) && I(Abs(z - 0x3E0000u)) <= I(zr)) return true;
     if (dx > I(xr)) return false;
@@ -1537,7 +1537,7 @@ extern "C" void __cdecl EffectKind18Sub17_Count(void) {
 // original 0x5039B0 (sub-state 7): the enemy wait on EnemyWorkingRecords record
 // 0 (0x93B9F2); +9 up; E5D's quads variant 1.
 extern "C" void __cdecl EffectKind18Sub17_WaitEnemy0(void) {
-    unsigned char* const s = EnemyWait(at::kEnemy0Bits);
+    unsigned char* const s = EnemyWait(Battle_Enemies_addr + 0x92);
     s[9] = static_cast<unsigned char>(s[9] + 1);
     Quads(1);
 }

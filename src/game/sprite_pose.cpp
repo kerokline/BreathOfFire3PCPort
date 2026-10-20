@@ -260,7 +260,7 @@ extern "C" void __cdecl Sprite_FaceDirection(unsigned char direction) {
 // byte +0 is 0, or 0xFF when all are in use.
 extern "C" unsigned char __cdecl Effect_FindFree(void) {
     for (unsigned i = 0; i < kEffects; ++i)
-        if (Effect_Objects[i * kEffectBytes] == 0) return static_cast<unsigned char>(i);
+        if (Effect_Objects[i].flags == 0) return static_cast<unsigned char>(i);
     return 0xFF;
 }
 
@@ -274,7 +274,7 @@ extern "C" void __cdecl Effect_Release(void) {
 // 0. As the original has it: the index is not checked against the 20 - up to
 // 255 reaches 0x7F80 bytes past the pool.
 extern "C" void __cdecl Effect_ReleaseAt(unsigned char index) {
-    unsigned char* const object = Effect_Objects + index * kEffectBytes;
+    unsigned char* const object = rv::Bytes(&Effect_Objects[index]);
     for (unsigned i = 0; i < 5; ++i) object[i] = 0;
 }
 

@@ -96,7 +96,7 @@ unsigned char* TaskSlot(const char* who, unsigned slot) {
         bof3::Fatal("%s: BattleTask_Create answered slot %u, past the %u of the pool - the original writes its +9 / "
                     "+0xA past the pool (docs/battle_e7.md section 7)",
                     who, slot, at::kTaskCount);
-    return At(at::kTasks + slot * at::kTaskStride);
+    return At(BattleTask_Slots_addr + slot * at::kTaskStride);
 }
 
 // call [esp + 4 * record +3] over a stack table of `n`: a Fatal past it (the
@@ -134,7 +134,7 @@ unsigned RowCost(const unsigned char* row) {
 // 7 when the menu actor's AP (+0x9A of the member its +5 names) is below the
 // cost, else 0.
 unsigned CostColour(unsigned cost) {
-    auto* const member = rv::AsConst<records::PartyMember>(At(BattleE4_MenuActor));
+    auto* const member = static_cast<const records::PartyMember*>(BattleE4_MenuActor);
     const unsigned ap = W(At(ObjTrio_addr + 0x9a + member->actor * at::kPartyStride));
     return ap < (cost & 0xFFFF) ? 7u : 0u;
 }
@@ -320,7 +320,7 @@ extern "C" void __cdecl GeneWin_DrawGrid(void) {
     win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->x) + 0x87), static_cast<int>(static_cast<unsigned>(win->y) + 0xA), 0x30, 0x10, 0,
                           static_cast<int>(colour));
-    auto* const member = rv::AsConst<records::PartyMember>(At(BattleE4_MenuActor));
+    auto* const member = static_cast<const records::PartyMember*>(BattleE4_MenuActor);
     const unsigned text_colour = static_cast<unsigned>(member->ap) < BattleActions_ApCost ? 7u : 0u;
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
@@ -800,7 +800,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
     const int label_y = g_equip_labels_row ? 0x1A : 0x27;
     BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, static_cast<unsigned char>(Config_WindowColour));
-    unsigned char* const ch = At(at::kCharRecords + (member & 0xFF) * at::kCharStride);
+    unsigned char* const ch = At(CharacterRecords_addr + (member & 0xFF) * at::kCharStride);
     unsigned n = BH_CALL(Text_CharCount)(ch) & 0xFF;
     if (n > 5) n = 5;
     BH_CALL(Text_DrawAt)(xi - 6 * static_cast<int>(n) + 0x3E, yi + 7, 0, 5, ch);

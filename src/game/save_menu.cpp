@@ -296,8 +296,8 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
 // BISLPS0?.DAT and the bound. Kept either way, the original's defect: no
 // _findclose (a search handle leaks per call).
 extern "C" int __cdecl Save_ListFiles(void) {
-    if (g_lists_split != 0) return save_menu::ListFiles(kSavePattern, At(at::kDirectory), true, false);
-    return save_menu::ListFiles(reinterpret_cast<const char*>(At(at::kListPattern)), At(at::kDirectory), false, false);
+    if (g_lists_split != 0) return save_menu::ListFiles(kSavePattern, At(Save_Directory_addr), true, false);
+    return save_menu::ListFiles(reinterpret_cast<const char*>(At(at::kListPattern)), At(Save_Directory_addr), false, false);
 }
 
 // 0x588DC0's body (docs/save-files.md). All sixteen summaries marked empty
@@ -342,7 +342,7 @@ bool StagedRead(const char* name, unsigned char* summary, void*) {
 // summary whatever Save_Staging held. It rebuilds from Save_Directory alone:
 // DIV-0002's re-listing in Save_WriteFile is what keeps a new save in it.
 extern "C" void __cdecl Save_ReadSummaries(void) {
-    save_menu::ReadSummaries(At(at::kDirectory), At(at::kSummaries), &StagedRead, nullptr);
+    save_menu::ReadSummaries(At(Save_Directory_addr), At(at::kSummaries), &StagedRead, nullptr);
 }
 
 void SaveLists_Arm() {
@@ -489,7 +489,7 @@ bool bof3::RunSpeed_StreamPlaying() {
 // byte.
 extern "C" void __cdecl Party_RestoreAll(unsigned full) {
     for (U i = 0; i < 8; ++i) {
-        const U record = at::kCharRecords + i * at::kCharStride;
+        const U record = CharacterRecords_addr + i * at::kCharStride;
         if ((full & 0xFF) != 0) {
             PutByte(record + 0x1E, 0);
             g.clear_status(i, 0xA0, 0);
@@ -566,7 +566,7 @@ extern "C" void __cdecl Shop_PriceRate(unsigned short* rate) {
     if (static_cast<unsigned char>(g.party_count(0)) != 0) {
         for (;;) {
             const U record = Byte(at::kMembers + i * at::kMemberStride);
-            const U base = at::kCharRecords + record * at::kCharStride;
+            const U base = CharacterRecords_addr + record * at::kCharStride;
             const auto* const c = rv::AsConst<records::CharRecord>(At(base));   // CharacterRecords 0x903A70, stride 0xA4
             if (c->accessory[0] == at::kDiscountItem || c->accessory[1] == at::kDiscountItem) {
                 *rate = 0x50;
@@ -607,11 +607,11 @@ extern "C" void __cdecl Shop_InitWindows(void) {
     // (symbols.toml Window_Alloc): their shared bytes +0..+7 typed; record 0's
     // +0x10 is the entry Window0_Arrows; records 2's and 20's +0xA / +0xB are
     // the handler's own (WindowRecord's per-handler bytes), kept raw.
-    auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
-    auto* const w1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 1 * sizeof(records::WindowRecord));
-    auto* const w2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * sizeof(records::WindowRecord));
-    auto* const w20 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 20 * sizeof(records::WindowRecord));
-    auto* const w21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
+    auto* const w0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const w1 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 1 * sizeof(records::WindowRecord));
+    auto* const w2 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 2 * sizeof(records::WindowRecord));
+    auto* const w20 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 20 * sizeof(records::WindowRecord));
+    auto* const w21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * sizeof(records::WindowRecord));
     w0->state = 2;
     w1->state = 2;
     w2->kind = 2;
@@ -649,7 +649,7 @@ extern "C" void __cdecl Shop_InitWindows(void) {
 // 0x591B60(kind, item, 1, 0), then Inventory_Add(kind, the slot's old byte,
 // read after that call, 1, 0), then the item's low byte into the slot.
 extern "C" void __cdecl Shop_Equip(unsigned record, unsigned slot, unsigned item) {
-    const U base = at::kCharRecords + (record & 0xFF) * at::kCharStride;
+    const U base = CharacterRecords_addr + (record & 0xFF) * at::kCharStride;
     U offset = 0x12, kind = 1;
     switch ((slot & 0xFF) - 1) {
     case 0: offset = 0x13; kind = 2; break;
@@ -1271,7 +1271,7 @@ extern "C" void __cdecl TitleFlow_EnterGame(void) {
     }
     for (U i = 0; i < 8; ++i) {
         g.roll_growth(i);
-        g.recalc(At(at::kCharRecords + i * at::kCharStride));
+        g.recalc(At(CharacterRecords_addr + i * at::kCharStride));
     }
     g.task_restart(at::kGameTask);
 }

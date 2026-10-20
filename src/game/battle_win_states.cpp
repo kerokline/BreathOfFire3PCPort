@@ -92,7 +92,7 @@ int S8(std::uint32_t address) { return static_cast<signed char>(At(address)[0]);
 
 // Enemy slot t's record: 0x93B9E0 + 0x128 * (t - 3), the subtraction at full
 // width (0x597320, 0x597400 - `sub eax, 3` on the zero-extended byte).
-unsigned char* Enemy(unsigned slot) { return At(at::kEnemies + at::kEnemyStride * (slot - 3u)); }
+unsigned char* Enemy(unsigned slot) { return At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * (slot - 3u)); }
 // A party member's battle object, ObjTrio 0x802D40 + 0x14C * m.
 unsigned char* Member(unsigned m) { return At(ObjTrio_addr + at::kMemberStride * m); }
 // Enemy() is +0x80 into the enemy object (EnemyWorkingRecords); the record, and
@@ -408,7 +408,7 @@ extern "C" void __cdecl BattleWin_EnemyTargetFrame() {
     unsigned char* w = Current();
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
     const std::uint32_t off = at::kEnemyStride * ((w[0xA] - 3u) & 0xFFu);
-    const std::uint32_t e = at::kEnemies + off;
+    const std::uint32_t e = Battle_Enemies_addr + 0x80 + off;
     const int dx = SideDx(At(e - 0x78)[0]);
     win->x = static_cast<unsigned>(S8(e + 0x72) + Word(At(e - 0x52)) + dx);
     const unsigned y = static_cast<unsigned>(S8(e + 0x73) + Word(At(e - 0x50)) + 0xC);

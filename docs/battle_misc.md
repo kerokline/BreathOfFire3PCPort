@@ -115,7 +115,7 @@ at `0x801EB460`.
    1. The entry becomes `0x93B8C0` before anything is tested.
    2. The entry is skipped unless it is active, on this layer, and its kind
       shares no bit with the mask. The mask is read again for each entry.
-   3. `DamageScratch` gets the entry's index. The PSX puts this index in
+   3. `SharedScratch` gets the entry's index. The PSX puts this index in
       scratchpad byte `0x1F800000`.
    4. The kind byte, read again, indexes a five-entry table that the
       original builds on its stack from immediates:

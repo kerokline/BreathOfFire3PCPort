@@ -28,7 +28,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter2 = 0x90384A;
 constexpr std::uint32_t kCounter3 = 0x90384B;
-constexpr std::uint32_t kSlot = 0x903850;         // u8 (a u16 store in two places): the effect or sprite slot just taken
+inline auto& kSlot = SharedScratch;         // u8 (a u16 store in two places): the effect or sprite slot just taken
 // kFlagBank: now Chapter_FlagRow (symbols.toml). unsigned char *: the flag row Flags_Test / Flags_Set are given
 // kRow6: now Cond_Flags[0x30] (symbols.toml). chapter 6's flag row, tested by two of chapter 7's object handlers
 // kRow7: now Cond_Flags[0x38] (symbols.toml). chapter 7's flag row (Cond_Flags +0x38), cleared by its start
@@ -82,9 +82,9 @@ constexpr std::uint32_t kMemberStride = 0x14C;
 // kLeaderX: now ObjTrio[0x34] (symbols.toml). member 0 +0x34
 // kLeaderZ: now ObjTrio[0x38] (symbols.toml). member 0 +0x38
 // kMember1: now Field_Members[4] (symbols.toml). member 1 +0
-constexpr std::uint32_t kCharRecords = 0x903A70; // CharacterRecords
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords
 constexpr std::uint32_t kRecordStride = 0xA4;
-constexpr std::uint32_t kRecord4 = 0x903D00;      // record 4, the one chapter 8 run 11 sets up (Char_RecalcStats is given it)
+// kRecord4: now CharacterRecords[4] (symbols.toml). record 4, the one chapter 8 run 11 sets up (Char_RecalcStats is given it)
 // kSprites: now Sprite_Objects (symbols.toml). Sprite_Objects, 0xA4-byte records
 constexpr std::uint32_t kSpriteStride = 0xA4;
 // kSpritesExtra: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra

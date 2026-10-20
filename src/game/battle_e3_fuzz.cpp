@@ -145,7 +145,7 @@ const bh::Callee kCallees[] = {
 // seeds keep below 10).
 const bh::Region kRegions[] = {
     {at::kAbilityFlags0, 256 * at::kAbilityStride},
-    {0x903B24, at::kCharRecords + 10 * at::kCharStride - 0x903B24},
+    {0x903B24, CharacterRecords_addr + 10 * at::kCharStride - 0x903B24},
 };
 
 // The ability id: below 256 (the records in the region), its flag bits the

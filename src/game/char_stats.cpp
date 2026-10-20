@@ -229,7 +229,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_RecalcStats(uns
     for (unsigned bit = 0; bit < 8; ++bit)
         if (r[at::kHalveBits] & (1u << bit)) g.add_resist(r + kHalved[bit], 2);
     for (unsigned i = 0; i < 8; ++i) {
-        if (r != At(at::kCharRecords + i * at::kCharStride)) continue;
+        if (r != At(CharacterRecords_addr + i * at::kCharStride)) continue;
         for (unsigned j = 0; j < 5; ++j)
             if (r[at::kPercent + j] != 0) g.add_cap100(r + at::kPercent + j, At(at::kRosterBonus + 5 * i + j)[0]);
     }
@@ -448,7 +448,7 @@ void ComparePreview(unsigned char* record, unsigned char* copy, unsigned char* m
 // above 5 none) set to the item's low byte in the copy, the copy recomputed,
 // and the four stats compared.
 extern "C" void __cdecl Equip_PreviewSlot(unsigned id, unsigned slot, unsigned item, unsigned char* marks, unsigned short* values) {
-    unsigned char* const record = At(at::kCharRecords + (id & 0xFF) * at::kCharStride);
+    unsigned char* const record = At(CharacterRecords_addr + (id & 0xFF) * at::kCharStride);
     unsigned char copy[at::kRecordBytes];
     std::memcpy(copy, record, sizeof copy);
     if ((slot & 0xFF) <= 5) copy[at::kWeapon + (slot & 0xFF)] = static_cast<unsigned char>(item);
@@ -459,7 +459,7 @@ extern "C" void __cdecl Equip_PreviewSlot(unsigned id, unsigned slot, unsigned i
 // original 0x590AB0 (no PSX twin): the same with all six equipment bytes
 // from `set`.
 extern "C" void __cdecl Equip_PreviewSet(unsigned id, const unsigned char* set, unsigned char* marks, unsigned short* values) {
-    unsigned char* const record = At(at::kCharRecords + (id & 0xFF) * at::kCharStride);
+    unsigned char* const record = At(CharacterRecords_addr + (id & 0xFF) * at::kCharStride);
     unsigned char copy[at::kRecordBytes];
     std::memcpy(copy, record, sizeof copy);
     for (unsigned k = 0; k < 6; ++k) copy[at::kWeapon + k] = set[k];
@@ -471,10 +471,10 @@ extern "C" void __cdecl Equip_PreviewSet(unsigned id, const unsigned char* set, 
 // The inventory
 
 // original 0x590BB0 (PSX 0x80165AA4): 0 for an item or count of 0 (their low
-// bytes). DamageScratch (the PSX scratchpad's first byte) 0. Outside category
+// bytes). SharedScratch (the PSX scratchpad's first byte) 0. Outside category
 // 4, an existing stack of the item takes the count: above 99 it is 99 and the
 // answer 0, else 1. Otherwise the first slot with id 0 - or, outside category
-// 4, count 0 - takes the item (and the count), DamageScratch 1, answer 1; no
+// 4, count 0 - takes the item (and the count), SharedScratch 1, answer 1; no
 // slot, 0. The category's low byte indexes the list pointers unbounded, and
 // category 4 (the key items, 32 bytes) is searched 128 long like the others,
 // as on the PSX (D34).
@@ -484,7 +484,7 @@ extern "C" unsigned char __cdecl Inventory_Add(unsigned category, unsigned item,
     const auto n = static_cast<unsigned char>(count);
     if (n == 0) return 0;
     const unsigned cat = category & 0xFF;
-    unsigned char* const scratch = At(bof3::addr::DamageScratch);
+    unsigned char* const scratch = At(SharedScratch_addr);
     scratch[0] = 0;
     if (cat != 4) {
         unsigned char* const ids = IdList(cat);
@@ -539,7 +539,7 @@ extern "C" unsigned short __cdecl Inventory_Count(unsigned category, unsigned it
     }
     unsigned char n = 0;
     for (unsigned k = 0; k < 8; ++k) {
-        const unsigned char* const r = At(at::kCharRecords + k * at::kCharStride);
+        const unsigned char* const r = At(CharacterRecords_addr + k * at::kCharStride);
         if ((r[at::kFlags] & 1) == 0) continue;
         switch (cat) {
         case 1:

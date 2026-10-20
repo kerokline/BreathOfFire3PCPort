@@ -48,11 +48,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F; words or dwords by function) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
@@ -60,12 +60,12 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(SharedScratch_addr + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(SharedScratch_addr + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -88,8 +88,8 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -546,7 +546,7 @@ S22_EXPORT void __cdecl BlizzardShard_DrawRing(void) {
 
 // original 0x4C9AF0: the task to the centre of the live targets - every enemy
 // when the target byte has bit 6, else every party member - their x and z
-// (>> 9, less 0x4000) and heights summed in DamageScratch, the count at +0xC,
+// (>> 9, less 0x4000) and heights summed in SharedScratch, the count at +0xC,
 // each re-read from memory; +0x34 / +0x38 the averages (+ 0x4000) << 9, +0x3E
 // the average height. Every actor out divides by zero in the original: ours
 // aborts there (docs/magic_s22.md section 6).
@@ -634,7 +634,7 @@ void DarkenTarget(unsigned char* s) {
 
 // The four quads of one row of a bolt's band share their shading: each of the
 // twelve colour bytes (+4..+6, +0x14..+0x16, +0x24..+0x26, +0x34..+0x36) is 1,
-// DamageScratch +4's low byte or +6's. The first row's top edge (+0x24..,
+// SharedScratch +4's low byte or +6's. The first row's top edge (+0x24..,
 // +0x34..) is 1.
 enum : char { k1 = '1', kA = 'a', kB = 'b' };
 void Shade(unsigned char* p, const char (&pattern)[13], bool first_row) {
@@ -659,7 +659,7 @@ constexpr char kRow2[13] = "bba111bba111";
 constexpr char kRow3[13] = "bbaaaabbaaaa";
 constexpr char kRow4[13] = "111bba111bba";
 
-// The band's start, both spells: DamageScratch +0 the radius `radius`, +2 the
+// The band's start, both spells: SharedScratch +0 the radius `radius`, +2 the
 // angle (+0xB & mask) << shift, +4 +0xA x 15 and +6 +0xA x 2 (the shades), +0xC
 // `height` - Rand & 3; the first top point (0, sin x radius >> 12, 0); tpage
 // 0x35 sorted at the task.
@@ -912,7 +912,7 @@ namespace {
 
 // The flashes of 0x4CA8C0 / 0x4CB6E0 / 0x4CC7D0: eight gouraud triangles
 // round the task's screen point (+0x2E / +0x30), radius Rand & 7 plus +0xA x
-// `per`, kept in DamageScratch as a word or (`dword`) a dword and read back
+// `per`, kept in SharedScratch as a word or (`dword`) a dword and read back
 // after every call; the centre (+0xA x m0, x m0, x m1) in 8 bits, the rim 1.
 // Tpage 0x35, sorted at the task.
 void Flash(unsigned per, bool dword, unsigned m0, unsigned m1) {
@@ -1309,7 +1309,7 @@ S22_EXPORT void __cdecl MyollnirOrb_Run(void) {
 namespace {
 
 // The children's circle round the owner: the angle (+0xC & 0x7F) << 5 and the
-// radius in DamageScratch (dwords +4, +0), the position the owner's plus cos /
+// radius in SharedScratch (dwords +4, +0), the position the owner's plus cos /
 // sin x radius (no shift), each read back after the call before it.
 void Orbit(std::uint32_t radius) {
     const std::uint32_t angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) & 0x7F) << 5;

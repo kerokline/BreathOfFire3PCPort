@@ -40,10 +40,10 @@ constexpr unsigned kTaskCount = 0x30;
 constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80
 // The eight enemy objects, 0x128 bytes each (the working record, PSX
 // 0x801EB620, is +0x80 of each; kinship-probe-battle-engine.md).
-constexpr std::uint32_t kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemySize = 0x128;
 constexpr unsigned kEnemyCount = 8;
-constexpr std::uint32_t kEnemyCurrent = 0x939AD8;  // unsigned char*: the enemy being run (PSX 0x801EB458)
+// kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). unsigned char*: the enemy being run (PSX 0x801EB458)
 // kEnemyStates: now BattleEnemy_States (symbols.toml). code pointers by +0x100; 0x64B088 in an event battle
 // The battle's globals (PSX 0x801462E0..).
 constexpr std::uint32_t kPhase = 0x904AA0;         // dword; its low byte picks Battle_PhaseDispatch's entry

@@ -102,11 +102,11 @@ U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p
 
 U SpriteCurrent() { return Long(At(at::Sprite_CurrentAt())); }
 void SetSpriteCurrent(U v) { PutLong(At(at::Sprite_CurrentAt()), v); }
-U CurrentEnemy() { return BattleE3_CurrentEnemy; }
+U CurrentEnemy() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(BattleE3_CurrentEnemy)); }
 unsigned char* Banner(U i) { return At(kBanners + i * 0xC); }
 
 // The context a slot byte names: 0x93A000 + slot * 0x84, no bound.
-U Context(U slot) { return kContexts + (slot & 0xFF) * kContextStride; }
+U Context(U slot) { return BattleTask_Slots_addr + (slot & 0xFF) * kContextStride; }
 
 }  // namespace
 
@@ -198,10 +198,10 @@ extern "C" void __cdecl Battle_InitActorContexts(void) {
         }
     }
     for (U i = 0; i < 8; ++i) {
-        const U object = kEnemyObjects + i * kEnemyStride;
+        const U object = Battle_Enemies_addr + i * kEnemyStride;
         if (At(object)[0] & 1) {
             SetSpriteCurrent(object);
-            BattleE3_CurrentEnemy = object;
+            BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(static_cast<std::uintptr_t>(object));
             g.init_context();
         } else {
             g.alloc_context(0, 0);
@@ -228,7 +228,7 @@ extern "C" unsigned long __cdecl Battle_SpawnActorCopies(void) {
             object = at::ObjTrioAt() + index * kPartyStride;
             if (!(At(object)[0] & 1) || (At(object + 0x134)[0] & 8)) continue;
         } else {
-            object = kEnemyObjects + (index - 3) * kEnemyStride;
+            object = Battle_Enemies_addr + (index - 3) * kEnemyStride;
             eax = g.actor_out(index);
             if ((eax & 0xFF) != 0 || (At(object + 0x114)[0] & 8)) continue;
         }
@@ -304,7 +304,7 @@ extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
 // 0x591E50 masks off. The one caller (0x447776) tests al.
 extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
     const U list = g.item_list(static_cast<unsigned char>(BattleActorCopies_ItemActor), Window16_Page, 1);
-    const U item = At(list + At(kItemWindowCursor)[0])[0];
+    const U item = At(list + At(WindowRecords_addr + 0x24c)[0])[0];
     const U high = list & 0xFFFF0000u;
     const U usable = g.item_usable(2, high | static_cast<unsigned char>(BattleActorCopies_ItemActor), high | item);
     return (usable & 0xFF) == 0;
@@ -319,7 +319,7 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 // then 0x80340C = 0, 0x80340E = 0, kItemActor = the actor byte read again,
 // 0x80340D = 8. In that order. The one caller (0x447469) reloads eax.
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
-    const U acting = BattleE4_MenuActor;
+    const U acting = static_cast<U>(reinterpret_cast<std::uintptr_t>(BattleE4_MenuActor));
     unsigned char* const w = At(Window16_addr);
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->in_use = 1;
@@ -340,10 +340,10 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     window_rec->x = 0x140;
     window_rec->y = 0x3F;
     const unsigned char again = At(acting + 5)[0];
-    Window19 = 0;
-    At(Window19_addr + 2)[0] = 0;
+    WindowRecords[19].in_use = 0;
+    WindowRecords[0x13].kind = 0;
     BattleActorCopies_ItemActor = again;
-    At(Window19_addr + 1)[0] = 8;
+    WindowRecords[0x13].handler = 8;
 }
 
 // original 0x449E00 (PSX 0x80097F44, `return 1` there too): al = 1. Thirteen
@@ -375,9 +375,9 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
     PutWord(w + 0x10, 0);
     window_rec->x = 0xFF56;
     window_rec->y = 0x3F;
-    Window19 = 0;
-    At(Window19_addr + 1)[0] = 8;
-    At(Window19_addr + 2)[0] = 0;
+    WindowRecords[19].in_use = 0;
+    WindowRecords[0x13].handler = 8;
+    WindowRecords[0x13].kind = 0;
     return 0;
 }
 
@@ -399,7 +399,7 @@ extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
 // original 0x44A5C0 (PSX 0x801DE404 BattleBanner_Dispatch): kBannerKinds = 0; for
 // layer 0 then 1, each of the 8 entries: made kBannerCurrent (every entry, before
 // any test); skipped unless active, on this layer, and its kind byte shares no
-// bit with kBannerKinds (read again for each entry); then DamageScratch = its
+// bit with kBannerKinds (read again for each entry); then SharedScratch = its
 // index (the PSX scratchpad byte) and the handler for its kind byte, read
 // again, through a five-entry table the original builds on its stack: a bare
 // ret (0x437CC0) for kinds 0, 3 and 4, 0x44A740 for kind 1, 0x44A7B0 for kind
@@ -416,7 +416,7 @@ extern "C" void __cdecl BattleBanner_Dispatch(void) {
             if (entry[0] == 0) continue;
             if (entry[3] != layer) continue;
             if (BattleMisc_BannerKinds & entry[1]) continue;
-            At(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(i);
+            SharedScratch.b_00 = static_cast<unsigned char>(i);
             const U kind = entry[1];
             if (kind >= 5) bof3::Fatal("banner entry %u has kind %u; the original's stack table holds five", i, kind);
             g.banner[kind]();

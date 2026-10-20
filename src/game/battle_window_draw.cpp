@@ -75,7 +75,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Next() { return Gfx_PacketNext; }
-unsigned char* Window(unsigned slot) { return At(at::kWindows + slot * at::kWindowStride); }
+unsigned char* Window(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowStride); }
 char* PrintBuf() { return reinterpret_cast<char*>(At(at::kPrintBuf)); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
 
@@ -406,7 +406,7 @@ extern "C" void __cdecl BattleWin_DrawLineAdd(int x0, int y0, int x1, int y1, in
 // at a negative enemy index, before the records (0x93B674 for actor 0).
 extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
     const unsigned e = enemy & 0xFF;
-    const unsigned char kind = At(at::kEnemies + e * at::kEnemyStride + at::kEnemyKind)[0];
+    const unsigned char kind = Battle_Enemies[e].enemy_kind;
     const unsigned actor = e + 3;
     signed char found = 7;
     while (Window(5 + found)[0xA] != actor) {
@@ -420,7 +420,7 @@ extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
         auto* const win = rv::AsConst<records::WindowRecord>(w);
         if (win->state != 2 && win->state != 3) {
             const std::int32_t index = static_cast<std::int32_t>(w[0xA]) - 3;
-            const std::uint32_t at = at::kEnemies + at::kEnemyKind + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride));
+            const std::uint32_t at = Battle_Enemies_addr + 0x80 + at::kEnemyKind + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride));
             if (At(at)[0] == kind) return 0;
         }
         --k;
@@ -457,7 +457,7 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
         const unsigned character = At(Cond_Flags_addr + 0xd2 + (member & 0xFF))[0];
         const unsigned record = At(Character_IndexById_addr + character)[0];
         const unsigned cost = g.ap_cost((member & 0xFFFFFF00u) | record, id, 0) & 0xFF;
-        if (Word(At(at::kCharRecords + record * at::kCharStride + 0x1A)) < cost) return 0;
+        if (Word(At(CharacterRecords_addr + record * at::kCharStride + 0x1A)) < cost) return 0;
         return (rec[0x10] & 1) ? 1 : 0;
     }
     if (m != 2) return 1;
@@ -525,7 +525,7 @@ extern "C" unsigned char __cdecl Skill_FlagIndex(unsigned id) {
 extern "C" unsigned char __cdecl Skill_ApCost(unsigned member, unsigned id, unsigned battle) {
     const unsigned m = member & 0xFF;
     const unsigned char* const r =
-        (battle & 0xFF) == 0 ? At(at::kCharRecords + m * at::kCharStride) : At(at::kWorking + m * at::kWorkingStride);
+        (battle & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride) : At(at::kWorking + m * at::kWorkingStride);
     const unsigned cost = At(at::kAbilities + (id & 0xFF) * at::kAbilityStride + 0x12)[0];
     const unsigned char a = r[0x16];
     if (a == 0x1A) return static_cast<unsigned char>((cost + 1) >> 1);
@@ -547,7 +547,7 @@ extern "C" unsigned char* __cdecl Char_AbilityList(unsigned member, unsigned typ
     unsigned char* r;
     if ((battle & 0xFF) == 0) {
         const unsigned character = At(Cond_Flags_addr + 0xd2 + (member & 0xFF))[0];
-        r = At(at::kCharRecords + At(Character_IndexById_addr + character)[0] * at::kCharStride);
+        r = At(CharacterRecords_addr + At(Character_IndexById_addr + character)[0] * at::kCharStride);
     } else {
         r = At(at::kWorking + (member & 0xFF) * at::kWorkingStride);
     }

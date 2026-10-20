@@ -228,10 +228,8 @@ unsigned char* PacketAt(unsigned k) { return g_packets + (k & 7) * 0x40; }
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
 // kKind2: now Field_Kind2Z (symbols.toml).
 // kMotePool: now ElemBreath_Motes (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850,
-                        kAbilityId = 0x904B80,
-                        kPoolBytes = 48 * 0x84,
-                        kPoolRecord255 = 0x67DE40 + 255 * 0x84;
+// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kAbilityId = 0x904B80, kPoolBytes = 48 * 0x84, kPoolRecord255 = 0x67DE40 + 255 * 0x84;
 
 // Set by the seed for the functions they matter to.
 bool g_keep_slots = false;    // the four slots' +0xB stay below 155 (BoneDartShadow_Follow / _Fade)
@@ -270,7 +268,7 @@ std::uint32_t TrigEffect(const std::uint32_t*, std::uint32_t answer) {
     if (h % 4 != 0) return answer;
     const unsigned w = (h >> 4) % 24;
     const auto v = static_cast<std::uint16_t>(h >> 16);
-    if (w < 8) SetWord(mh::Mem(kScratch + w * 2), v);
+    if (w < 8) SetWord(mh::Mem(SharedScratch_addr + w * 2), v);
     else SetWord(mh::Mem(Prim_VertexScratch_addr + (w - 8) * 2), v);
     return answer;
 }
@@ -279,7 +277,7 @@ std::uint32_t TrigEffect(const std::uint32_t*, std::uint32_t answer) {
 // original's idiv never faults.
 std::uint32_t ActorIsOutEffect(const std::uint32_t* a, std::uint32_t answer) {
     const unsigned actor = a[0] & 0xFF;
-    if ((actor == 10 || actor == 2) && Long(mh::Mem(kScratch + 4)) == 0) return answer & 0xFFFFFF00u;
+    if ((actor == 10 || actor == 2) && Long(mh::Mem(SharedScratch_addr + 4)) == 0) return answer & 0xFFFFFF00u;
     return answer;
 }
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
@@ -297,7 +295,7 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
 std::uint32_t ElevationEffect(const std::uint32_t*, std::uint32_t answer) {
     const unsigned slot = Sprite_Current[0xB];
     if (slot >= 48 || mh::Noise() % 3 != 0) return answer;
-    return (answer & 0xFFFF0000u) | move_script::Word(mh::Mem(mh::at::kTasks + slot * mh::at::kTaskStride + 0x3E));
+    return (answer & 0xFFFF0000u) | move_script::Word(mh::Mem(BattleTask_Slots_addr + slot * mh::at::kTaskStride + 0x3E));
 }
 // DreamBreath_TargetHeight writes Sprite_Current's height; its stand-in too.
 std::uint32_t HeightEffect(const std::uint32_t*, std::uint32_t answer) {
@@ -412,7 +410,7 @@ const mh::DataTable kTables[] = {
 };
 
 mh::Region g_regions[] = {
-    {kScratch, 0x10},
+    {SharedScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {0, kPacketBytes},                           // g_packets (filled in at start-up)
@@ -446,8 +444,8 @@ void Disturb(std::uint32_t h) {
         // a scratch word; dword 0x903854 (DreamBreath_TargetHeight's count,
         // its divisor) only 1..8
         const unsigned k = v % 8;
-        if (k == 2 || k == 3) SetLong(mh::Mem(kScratch + 4), static_cast<std::int32_t>(1 + v % 8));
-        else SetWord(mh::Mem(kScratch + k * 2), word);
+        if (k == 2 || k == 3) SetLong(mh::Mem(SharedScratch_addr + 4), static_cast<std::int32_t>(1 + v % 8));
+        else SetWord(mh::Mem(SharedScratch_addr + k * 2), word);
         break;
     }
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
@@ -543,7 +541,7 @@ void Seed(unsigned k) {
         // the dart's step at, below and past the one awaited - written only for
         // a slot whose +2 lies inside the compared regions (below 67)
         if (sc[0xB] < 67 && mh::Often()) {
-            unsigned char* const dart = mh::Mem(mh::at::kTasks + sc[0xB] * mh::at::kTaskStride);
+            unsigned char* const dart = mh::Mem(BattleTask_Slots_addr + sc[0xB] * mh::at::kTaskStride);
             dart[2] = Near(k == kBoneDartShadow_Follow ? 2 : 3, 1, 1);
         }
         break;

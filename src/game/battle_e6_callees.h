@@ -56,13 +56,13 @@ constexpr U kStatDeltas = 0x939EE0;       // u16 x 5 then u8 x 9: the new stats 
 // kWindow19State: now Window19_State (symbols.toml).
 
 // --- the character records: 0x903A70 + 0xA4 * a member's +0x148 ------------
-constexpr U kCharRecords = 0x903A70;
+// kCharRecords: now CharacterRecords (symbols.toml).
 constexpr U kCharStride = 0xA4;
 
 // --- the party (ObjTrio, 0x802D40 + 0x14C n) and the enemies' objects --------
 // kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
-constexpr U kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr U kEnemyStride = 0x128;
 
 // --- the battle tasks (48 of 0x84 at 0x93A000) and the running slot's owner ---

@@ -36,8 +36,8 @@ using move_script::Word;
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char& B(std::uint32_t address) { return *At(address); }
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kMemberSize); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + i * at::kEnemySize); }
-unsigned char* Window(unsigned i) { return At(at::kWindows + i * at::kWindowSize); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + i * at::kEnemySize); }
+unsigned char* Window(unsigned i) { return At(WindowRecords_addr + i * at::kWindowSize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 
 // --- the stand-ins' log ----------------------------------------------------
@@ -100,13 +100,13 @@ void Disturb() {
         break;
     case 11: SetWord(At(Input_Pressed_addr), (h >> 16) & 0xF10C); break;
     case 12: SetWord(At(Input_Held_addr), (h >> 16) & 0xF10C); break;
-    case 13: SetWord(At(at::kWindows + (w % 16) * at::kWindowSize + 4 + 2 * (v % 2)), h >> 16); break;
+    case 13: SetWord(At(WindowRecords_addr + (w % 16) * at::kWindowSize + 4 + 2 * (v % 2)), h >> 16); break;
     case 14: rv::As<records::WindowRecord>(Window(1 + w % 4))->state = static_cast<unsigned char>(v % 3); break;
     case 15: B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>(v % 9); break;
     case 16: SetWord(At(BattleResult_TickStep_addr), v % 3); break;
     case 17: Sprite_Current = v % 2 ? Member(w % 3) : EnemyObj(w % 8); break;
     case 18: B(at::kFacing) = static_cast<unsigned char>(v); break;
-    case 19: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) ^ 2); B(at::kWindows) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 19: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) ^ 2); B(WindowRecords_addr) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 20: B(Battle_PartyStanding_addr) = static_cast<unsigned char>(v); break;
     default: {
         if (v % 2) m[0x90] = static_cast<unsigned char>(m[0x90] ^ 0x20);
@@ -479,8 +479,8 @@ const Clone kClones[kCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {ObjTrio_addr, 0x3E4},                                      // ObjTrio
-    {at::kWindows, 0x240},                                      // windows 0..15
-    {at::kWindows + 0xFF * at::kWindowSize, 8},                 // window 0xFF's, which Window_Alloc's 0xFF reaches
+    {WindowRecords_addr, 0x240},                                // windows 0..15
+    {WindowRecords_addr + 0xFF * at::kWindowSize, 8},           // window 0xFF's, which Window_Alloc's 0xFF reaches
     {Gfx_ClutStripSource_addr + 0x1fe0, 0x20},
     {Gfx_ClutStrip_addr + 0x1fe0, 0x20},
     {Input_Held_addr, 8},                                       // Input_Held .. Input_Pressed
@@ -546,7 +546,7 @@ void Fix() {
 void Seed(unsigned k) {
     switch (k) {
     case kFrame:
-        if (Half()) B(at::kWindows) = 0;
+        if (Half()) B(WindowRecords_addr) = 0;
         if (Half()) B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) & ~2u);
         if (Half()) B(at::kPhase) = 5;
         break;

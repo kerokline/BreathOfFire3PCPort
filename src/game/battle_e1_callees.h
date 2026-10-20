@@ -58,7 +58,7 @@ constexpr U kEquipOpenBytes = 0x675EBE;  // u8 x 3 (0x675EBE, BF, C0): set as th
 // Character record 7 (CharacterRecords 0x903A70 + 7 * 0xA4; char-stats.md's
 // fields): the stat words the tally raises, its two equipment bytes, its
 // first five bytes (copied in from .data at the screens' ends).
-constexpr U kGuest = 0x903EEC;
+// kGuest: now CharacterRecords[7] (symbols.toml).
 // kGuestEquipA: now Rest3a_GuestEquip (symbols.toml). +0x12
 // kGuestEquipB: now BattleE1_GuestEquipB (symbols.toml). +0x15
 constexpr U kGuestHpMax = 0x903F0C;   // +0x20
@@ -75,8 +75,8 @@ constexpr U kGuestHeadIn = 0x669CE8;  // .data: 5 bytes copied into the record a
 constexpr U kWin0 = 0x803160;
 constexpr U kWin1 = 0x803184;
 constexpr U kWin2 = 0x8031A8;
-constexpr U kWin3 = 0x8031CC;
-constexpr U kWin4 = 0x8031F0;
+// kWin3: now WindowRecords[3] (symbols.toml).
+// kWin4: now WindowRecords[4] (symbols.toml).
 // kWin21: now Window21 (symbols.toml).
 
 // --- the battle engine ---

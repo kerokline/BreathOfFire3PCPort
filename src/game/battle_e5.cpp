@@ -62,7 +62,7 @@ U L(U address) { return static_cast<U>(Long(At(address))); }
 S32 S16(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + member * at::kPartyStride); }
-unsigned char* EnemyObj(unsigned n) { return At(at::kEnemies + n * at::kEnemyStride); }
+unsigned char* EnemyObj(unsigned n) { return At(Battle_Enemies_addr + n * at::kEnemyStride); }
 
 // The callees nobody owns yet, by address (battle_e5_callees.h).
 using Void0 = void (__cdecl*)();
@@ -124,7 +124,7 @@ extern "C" void __cdecl EnemyAI_SetRowDone(unsigned char* enemy, unsigned row, u
 // weapon +0x92 and its element byte (0x657463, 28 bytes a weapon) against
 // the mask's low byte. Anything else 0. al out.
 extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
-    if (static_cast<std::uint16_t>(rv::As<records::BattleEnemy>(Ptr(at::kCurrentEnemy))->hp_change) == 0) return 0;
+    if (static_cast<std::uint16_t>(BattleE3_CurrentEnemy->hp_change) == 0) return 0;
     const unsigned actor = B(at::kActor);
     const unsigned kind = B(at::kActingKind);
     if (kind == 4) {
@@ -463,7 +463,7 @@ const unsigned char* Line(unsigned id) { return BH_CALL(Msg_SystemPtr)(id); }
 void ShowLine(const unsigned char* text) {
     SetLong(At(at::kMsgText + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
 }
-unsigned char* Member() { return Ptr(at::kMenuActor); }
+unsigned char* Member() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
 void MarkMember() {
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
@@ -543,8 +543,8 @@ void TakeSlot(U slot) {
 // The list windows' opening and closing (0x4502C0 / 0x450B60, 0x450680 /
 // 0x450EF0, 0x4505A0 / 0x450DF0): see each.
 void OpenList(U slot, U window, unsigned char kind, unsigned x, unsigned line) {
-    if (Window21 & 1) return;
-    Window21 = 0;
+    if (WindowRecords[21].in_use & 1) return;
+    WindowRecords[21].in_use = 0;
     BH_CALL(Window_Alloc)(slot, 5);
     B(window + 2) = kind;
     B(window + 3) = 0;
@@ -704,12 +704,12 @@ extern "C" void __cdecl DragonCmd_MenuClose(void) {
 // windows 17 and 21's +0 zeroed, BattleBanner_ShowName(the menu actor),
 // window 4's +3 = 1, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_MenuCancel(void) {
-    if (Window21 & 1) return;
+    if (WindowRecords[21].in_use & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    Window17 = 0;
-    Window21 = 0;
+    WindowRecords[17].in_use = 0;
+    WindowRecords[21].in_use = 0;
     BH_CALL(BattleBanner_ShowName)(Member());
-    B(at::kWin4 + 3) = 1;
+    WindowRecords[4].state = 1;
     BH_CALL(LoadDatFile)(0xCF);
     NextStep();
 }
@@ -815,12 +815,12 @@ extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
 // 18, 16, 19's +0 zeroed, LoadDatFile(0xCF), then part 4's step 3 (the
 // gene grid's close and commit).
 extern "C" void __cdecl DragonCmd_SlotsClose(void) {
-    if (Window18 & 1) return;
+    if (WindowRecords[18].in_use & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    Window17 = 0;
-    Window18 = 0;
-    Window16 = 0;
-    Window19 = 0;
+    WindowRecords[17].in_use = 0;
+    WindowRecords[18].in_use = 0;
+    WindowRecords[16].in_use = 0;
+    WindowRecords[19].in_use = 0;
     BH_CALL(LoadDatFile)(0xCF);
     BattleE4_Step3 = 4;
     BattleE4_Step4 = 3;
@@ -838,7 +838,7 @@ extern "C" unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) 
 extern "C" void __cdecl DragonCmd_GenesOpen(void) {
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin17 + 3) = 2;
-    B(at::kWin4 + 3) = 1;
+    WindowRecords[4].state = 1;
     BattleE4_Step4 = step;
 }
 
@@ -885,7 +885,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
         }
         const unsigned char pick = static_cast<unsigned char>(BossSb_Countdown & 0x7F);
         B(at::kWin17 + 3) = 1;
-        B(at::kWin4 + 3) = 2;
+        WindowRecords[4].state = 2;
         BossSb_Countdown = pick;
         BattleE4_Step3 = 2;
         BattleE4_Step4 = 0;
@@ -968,12 +968,12 @@ extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
 // original 0x450A70 (0x64ED20[3]): window 21 closed: 0x447F40, windows 17, 21,
 // 16, 19's +0 zeroed, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_GenesClose(void) {
-    if (Window21 & 1) return;
+    if (WindowRecords[21].in_use & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    Window17 = 0;
-    Window21 = 0;
-    Window16 = 0;
-    Window19 = 0;
+    WindowRecords[17].in_use = 0;
+    WindowRecords[21].in_use = 0;
+    WindowRecords[16].in_use = 0;
+    WindowRecords[19].in_use = 0;
     BH_CALL(LoadDatFile)(0xCF);
     NextStep();
 }
@@ -1078,11 +1078,11 @@ extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
 // record is the one tested): 0x447F40, windows 17, 16, 19's +0 zeroed,
 // LoadDatFile(0xCF), part 4's step 3.
 extern "C" void __cdecl DragonCmd_Slots2Close(void) {
-    if (Window18 & 1) return;
+    if (WindowRecords[18].in_use & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    Window17 = 0;
-    Window16 = 0;
-    Window19 = 0;
+    WindowRecords[17].in_use = 0;
+    WindowRecords[16].in_use = 0;
+    WindowRecords[19].in_use = 0;
     BH_CALL(LoadDatFile)(0xCF);
     BattleE4_Step3 = 4;
     BattleE4_Step4 = 3;

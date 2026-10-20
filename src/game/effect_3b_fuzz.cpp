@@ -263,7 +263,7 @@ U FxLines(const U*, U answer) {
     unsigned char* const s = Sprite_Current;
     sh::Note(Key(s));
     if (sh::InRegions(s, 0x80)) sh::Note(s[0xA], s[0xB]);
-    if (sh::InRegions(Mem(at::kScale), 0x10)) sh::FillBytes(Mem(at::kScale), 0x10);
+    if (sh::InRegions(Mem(SharedScratch_addr), 0x10)) sh::FillBytes(Mem(SharedScratch_addr), 0x10);
     if (sh::InRegions(Mem(Prim_VertexScratch_addr), 6)) sh::FillBytes(Mem(Prim_VertexScratch_addr), 6);
     Advance(0x30);
     return answer;
@@ -440,9 +440,9 @@ void Disturb(U h) {
     case 1: if (here) s[0xA] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 2: if (here) s[0xB] = static_cast<unsigned char>(v); break;
     case 3: if (here) s[3] = static_cast<unsigned char>((v & 1) ? 0u : (v >> 1) % 4); break;
-    case 4: SetLong(Mem(at::kScale), static_cast<std::int32_t>(v)); break;
-    case 5: SetLong(Mem(at::kAngle), static_cast<std::int32_t>(v)); break;
-    case 6: Mem(at::kShade)[0] = static_cast<unsigned char>(v); break;
+    case 4: SetLong(Mem(SharedScratch_addr), static_cast<std::int32_t>(v)); break;
+    case 5: SetLong(Mem(SharedScratch_addr + 0x4), static_cast<std::int32_t>(v)); break;
+    case 6: Mem(SharedScratch_addr + 0x8)[0] = static_cast<unsigned char>(v); break;
     case 7: SetLong(Mem(EffectKind69_Parent_addr), static_cast<std::int32_t>(Key(Rec(v)))); break;
     case 8: SetLong(Mem(Effect3c_ShardCursor_addr), static_cast<std::int32_t>(SparkAt(v % at::kSparkCount))); break;
     case 9: Field_MemberCount = static_cast<unsigned char>(v % 4); break;

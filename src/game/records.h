@@ -629,7 +629,7 @@ struct CommunityBuilding {
 };
 
 // The PSX scratchpad 0x1F800000, relocated by the port to 0x903850
-// (symbols.toml [[block]] DamageScratch; its note: "only the one word is
+// (symbols.toml [[block]] SharedScratch; its note: "only the one word is
 // confirmed"). The magic code (1,546 sites, through each file's SB / SW /
 // SetSW / SD / SetSD) and Battle_ScaleDamage use it as the PSX compiler's
 // spill area: each function its own locals, the same offset a word in one
@@ -640,7 +640,7 @@ struct CommunityBuilding {
 // extent is the readers' (+0x18's dword); Gfx_BufferBlocks 0x903880 bounds it
 // at 0x30. Scratch_Swap 0x90385C (symbols.toml) is the dword at +0xC, and
 // the move-script counters at 0x903848 sit below it (move_script.cpp).
-struct DamageScratch {
+struct SharedScratch {
     union {
         struct {
             std::uint16_t w_00, w_02, w_04, w_06, w_08, w_0a, w_0c, w_0e,
@@ -1040,56 +1040,56 @@ static_assert(sizeof(CommunityRecord) == 8, "CommunityRecord stride");
 static_assert(offsetof(CommunityBuilding, kind) == 0x0, "CommunityBuilding::kind");
 static_assert(sizeof(CommunityBuilding) == 8, "CommunityBuilding stride");
 
-static_assert(offsetof(DamageScratch, w_00) == 0x0, "DamageScratch::w_00");
-static_assert(offsetof(DamageScratch, w_02) == 0x2, "DamageScratch::w_02");
-static_assert(offsetof(DamageScratch, w_04) == 0x4, "DamageScratch::w_04");
-static_assert(offsetof(DamageScratch, w_06) == 0x6, "DamageScratch::w_06");
-static_assert(offsetof(DamageScratch, w_08) == 0x8, "DamageScratch::w_08");
-static_assert(offsetof(DamageScratch, w_0a) == 0xA, "DamageScratch::w_0a");
-static_assert(offsetof(DamageScratch, w_0c) == 0xC, "DamageScratch::w_0c");
-static_assert(offsetof(DamageScratch, w_0e) == 0xE, "DamageScratch::w_0e");
-static_assert(offsetof(DamageScratch, w_10) == 0x10, "DamageScratch::w_10");
-static_assert(offsetof(DamageScratch, w_12) == 0x12, "DamageScratch::w_12");
-static_assert(offsetof(DamageScratch, w_14) == 0x14, "DamageScratch::w_14");
-static_assert(offsetof(DamageScratch, w_16) == 0x16, "DamageScratch::w_16");
-static_assert(offsetof(DamageScratch, w_18) == 0x18, "DamageScratch::w_18");
-static_assert(offsetof(DamageScratch, w_1a) == 0x1A, "DamageScratch::w_1a");
-static_assert(offsetof(DamageScratch, d_00) == 0x0, "DamageScratch::d_00");
-static_assert(offsetof(DamageScratch, d_04) == 0x4, "DamageScratch::d_04");
-static_assert(offsetof(DamageScratch, d_08) == 0x8, "DamageScratch::d_08");
-static_assert(offsetof(DamageScratch, d_0c) == 0xC, "DamageScratch::d_0c");
-static_assert(offsetof(DamageScratch, d_10) == 0x10, "DamageScratch::d_10");
-static_assert(offsetof(DamageScratch, d_14) == 0x14, "DamageScratch::d_14");
-static_assert(offsetof(DamageScratch, d_18) == 0x18, "DamageScratch::d_18");
-static_assert(offsetof(DamageScratch, b_00) == 0x0, "DamageScratch::b_00");
-static_assert(offsetof(DamageScratch, b_01) == 0x1, "DamageScratch::b_01");
-static_assert(offsetof(DamageScratch, b_02) == 0x2, "DamageScratch::b_02");
-static_assert(offsetof(DamageScratch, b_03) == 0x3, "DamageScratch::b_03");
-static_assert(offsetof(DamageScratch, b_04) == 0x4, "DamageScratch::b_04");
-static_assert(offsetof(DamageScratch, b_05) == 0x5, "DamageScratch::b_05");
-static_assert(offsetof(DamageScratch, b_06) == 0x6, "DamageScratch::b_06");
-static_assert(offsetof(DamageScratch, b_07) == 0x7, "DamageScratch::b_07");
-static_assert(offsetof(DamageScratch, b_08) == 0x8, "DamageScratch::b_08");
-static_assert(offsetof(DamageScratch, b_09) == 0x9, "DamageScratch::b_09");
-static_assert(offsetof(DamageScratch, b_0a) == 0xA, "DamageScratch::b_0a");
-static_assert(offsetof(DamageScratch, b_0b) == 0xB, "DamageScratch::b_0b");
-static_assert(offsetof(DamageScratch, b_0c) == 0xC, "DamageScratch::b_0c");
-static_assert(offsetof(DamageScratch, b_0d) == 0xD, "DamageScratch::b_0d");
-static_assert(offsetof(DamageScratch, b_0e) == 0xE, "DamageScratch::b_0e");
-static_assert(offsetof(DamageScratch, b_0f) == 0xF, "DamageScratch::b_0f");
-static_assert(offsetof(DamageScratch, b_10) == 0x10, "DamageScratch::b_10");
-static_assert(offsetof(DamageScratch, b_11) == 0x11, "DamageScratch::b_11");
-static_assert(offsetof(DamageScratch, b_12) == 0x12, "DamageScratch::b_12");
-static_assert(offsetof(DamageScratch, b_13) == 0x13, "DamageScratch::b_13");
-static_assert(offsetof(DamageScratch, b_14) == 0x14, "DamageScratch::b_14");
-static_assert(offsetof(DamageScratch, b_15) == 0x15, "DamageScratch::b_15");
-static_assert(offsetof(DamageScratch, b_16) == 0x16, "DamageScratch::b_16");
-static_assert(offsetof(DamageScratch, b_17) == 0x17, "DamageScratch::b_17");
-static_assert(offsetof(DamageScratch, b_18) == 0x18, "DamageScratch::b_18");
-static_assert(offsetof(DamageScratch, b_19) == 0x19, "DamageScratch::b_19");
-static_assert(offsetof(DamageScratch, b_1a) == 0x1A, "DamageScratch::b_1a");
-static_assert(offsetof(DamageScratch, b_1b) == 0x1B, "DamageScratch::b_1b");
-static_assert(sizeof(DamageScratch) == 0x1C, "DamageScratch stride");
+static_assert(offsetof(SharedScratch, w_00) == 0x0, "SharedScratch::w_00");
+static_assert(offsetof(SharedScratch, w_02) == 0x2, "SharedScratch::w_02");
+static_assert(offsetof(SharedScratch, w_04) == 0x4, "SharedScratch::w_04");
+static_assert(offsetof(SharedScratch, w_06) == 0x6, "SharedScratch::w_06");
+static_assert(offsetof(SharedScratch, w_08) == 0x8, "SharedScratch::w_08");
+static_assert(offsetof(SharedScratch, w_0a) == 0xA, "SharedScratch::w_0a");
+static_assert(offsetof(SharedScratch, w_0c) == 0xC, "SharedScratch::w_0c");
+static_assert(offsetof(SharedScratch, w_0e) == 0xE, "SharedScratch::w_0e");
+static_assert(offsetof(SharedScratch, w_10) == 0x10, "SharedScratch::w_10");
+static_assert(offsetof(SharedScratch, w_12) == 0x12, "SharedScratch::w_12");
+static_assert(offsetof(SharedScratch, w_14) == 0x14, "SharedScratch::w_14");
+static_assert(offsetof(SharedScratch, w_16) == 0x16, "SharedScratch::w_16");
+static_assert(offsetof(SharedScratch, w_18) == 0x18, "SharedScratch::w_18");
+static_assert(offsetof(SharedScratch, w_1a) == 0x1A, "SharedScratch::w_1a");
+static_assert(offsetof(SharedScratch, d_00) == 0x0, "SharedScratch::d_00");
+static_assert(offsetof(SharedScratch, d_04) == 0x4, "SharedScratch::d_04");
+static_assert(offsetof(SharedScratch, d_08) == 0x8, "SharedScratch::d_08");
+static_assert(offsetof(SharedScratch, d_0c) == 0xC, "SharedScratch::d_0c");
+static_assert(offsetof(SharedScratch, d_10) == 0x10, "SharedScratch::d_10");
+static_assert(offsetof(SharedScratch, d_14) == 0x14, "SharedScratch::d_14");
+static_assert(offsetof(SharedScratch, d_18) == 0x18, "SharedScratch::d_18");
+static_assert(offsetof(SharedScratch, b_00) == 0x0, "SharedScratch::b_00");
+static_assert(offsetof(SharedScratch, b_01) == 0x1, "SharedScratch::b_01");
+static_assert(offsetof(SharedScratch, b_02) == 0x2, "SharedScratch::b_02");
+static_assert(offsetof(SharedScratch, b_03) == 0x3, "SharedScratch::b_03");
+static_assert(offsetof(SharedScratch, b_04) == 0x4, "SharedScratch::b_04");
+static_assert(offsetof(SharedScratch, b_05) == 0x5, "SharedScratch::b_05");
+static_assert(offsetof(SharedScratch, b_06) == 0x6, "SharedScratch::b_06");
+static_assert(offsetof(SharedScratch, b_07) == 0x7, "SharedScratch::b_07");
+static_assert(offsetof(SharedScratch, b_08) == 0x8, "SharedScratch::b_08");
+static_assert(offsetof(SharedScratch, b_09) == 0x9, "SharedScratch::b_09");
+static_assert(offsetof(SharedScratch, b_0a) == 0xA, "SharedScratch::b_0a");
+static_assert(offsetof(SharedScratch, b_0b) == 0xB, "SharedScratch::b_0b");
+static_assert(offsetof(SharedScratch, b_0c) == 0xC, "SharedScratch::b_0c");
+static_assert(offsetof(SharedScratch, b_0d) == 0xD, "SharedScratch::b_0d");
+static_assert(offsetof(SharedScratch, b_0e) == 0xE, "SharedScratch::b_0e");
+static_assert(offsetof(SharedScratch, b_0f) == 0xF, "SharedScratch::b_0f");
+static_assert(offsetof(SharedScratch, b_10) == 0x10, "SharedScratch::b_10");
+static_assert(offsetof(SharedScratch, b_11) == 0x11, "SharedScratch::b_11");
+static_assert(offsetof(SharedScratch, b_12) == 0x12, "SharedScratch::b_12");
+static_assert(offsetof(SharedScratch, b_13) == 0x13, "SharedScratch::b_13");
+static_assert(offsetof(SharedScratch, b_14) == 0x14, "SharedScratch::b_14");
+static_assert(offsetof(SharedScratch, b_15) == 0x15, "SharedScratch::b_15");
+static_assert(offsetof(SharedScratch, b_16) == 0x16, "SharedScratch::b_16");
+static_assert(offsetof(SharedScratch, b_17) == 0x17, "SharedScratch::b_17");
+static_assert(offsetof(SharedScratch, b_18) == 0x18, "SharedScratch::b_18");
+static_assert(offsetof(SharedScratch, b_19) == 0x19, "SharedScratch::b_19");
+static_assert(offsetof(SharedScratch, b_1a) == 0x1A, "SharedScratch::b_1a");
+static_assert(offsetof(SharedScratch, b_1b) == 0x1B, "SharedScratch::b_1b");
+static_assert(sizeof(SharedScratch) == 0x1C, "SharedScratch stride");
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

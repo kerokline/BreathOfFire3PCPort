@@ -47,9 +47,9 @@ void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 // Field object `index` (Sprite_Objects, 0xA4 bytes); effect record `slot`
 // (Effect_Objects, 0x80 bytes); party record `member` (ObjTrio, 0x14C bytes).
-unsigned char* ObjectAt(unsigned index) { return Sprite_Objects + index * at::kObjectStride; }
-unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
-unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
+unsigned char* ObjectAt(unsigned index) { return rv::Bytes(Sprite_Objects) + index * at::kObjectStride; }
+unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
+unsigned char* PartyAt(unsigned member) { return rv::Bytes(&ObjTrio[member]); }
 // A record's index among the field objects as the originals compute it: the
 // pointer less Sprite_Objects, divided by 0xA4 as a signed dword (imul by
 // 0x63E7063F, sar 6, the sign added back): C's truncating division.
@@ -321,10 +321,10 @@ extern "C" void __cdecl Area69_GlideStep(void) { GlideStep(Area69_GlideSteps_add
 // Sound_PlayEffect(0x207).
 extern "C" void __cdecl Area71_SpawnEffect3C(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kScratch) = slot;
+    B(SharedScratch_addr) = slot;
     if (slot == 0xFF) return;
     const unsigned char member = ObjectIndex(Field_ActiveMember);
-    unsigned char* const e = EffectAt(B(at::kScratch));
+    unsigned char* const e = EffectAt(B(SharedScratch_addr));
     e[0] = 1;
     e[5] = 0x3C;
     e[0xB] = member;
@@ -335,9 +335,9 @@ extern "C" void __cdecl Area71_SpawnEffect3C(void) {
 // +0 = 1 and kind 0x25, no member, no sound.
 extern "C" void __cdecl Area71_SpawnEffect25(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kScratch) = slot;
+    B(SharedScratch_addr) = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = EffectAt(B(at::kScratch));
+    unsigned char* const e = EffectAt(B(SharedScratch_addr));
     e[0] = 1;
     e[5] = 0x25;
 }
@@ -488,7 +488,7 @@ extern "C" void __cdecl Area75_SpawnFive(void) {
     std::uint32_t op = Area75_SpawnOps_addr;
     for (unsigned char i = 0; i < 5; ++i, op += at::kArea75SpawnOpStride) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(at::kScratch), slot);
+        SetWord(Mem(SharedScratch_addr), slot);
         if (slot == 0xFF) continue;
         AH_CALL(EventOp_0x)(Mem(op));
         const std::int32_t x = tSelf->x;

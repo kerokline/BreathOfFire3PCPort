@@ -51,7 +51,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 constexpr std::uint32_t kSparkleStride = 0x2C;
-constexpr std::uint32_t kScratch = 0x903850;       // s16 words +0 .. +0xE (DamageScratch's neighbourhood)
+// kScratch: now SharedScratch (symbols.toml). s16 words +0 .. +0xE (SharedScratch's neighbourhood)
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12-byte records
 constexpr std::uint32_t kEnemyState = 0x93BCD9;    // what 0x4BBCE0 reads: 0x93B961 + 0x128 * 3 (docs/magic_s16.md section 6)
 // kPartyState: now ObjTrio[1] (symbols.toml). a member's +1
@@ -104,7 +104,7 @@ std::int32_t PtrValue(const void* p) { return static_cast<std::int32_t>(static_c
 unsigned char* Record(const Pool& p, unsigned index) { return Mem(p.pool + index * kSparkleStride); }
 unsigned char* Cur(const Pool& p) { return Pointer(p.current); }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
+unsigned char* Scr(unsigned k) { return Mem(SharedScratch_addr + k); }
 short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
 
 // `imul` then `sar 0xC`: a 32-bit product that wraps, shifted arithmetically.
@@ -120,7 +120,7 @@ void PutFloat(unsigned char* a, int v) {
 // stride 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor < 3) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
 }
 
 // ===========================================================================
@@ -509,7 +509,7 @@ void SpawnOnActors(const Pool& p, unsigned char kind, unsigned parameter) {
     do {
         if (MH_CALL(Battle_ActorIsOut)(i) == 0) {
             const unsigned char slot = MH_CALL(BattleTask_Create)(1, parameter);
-            unsigned char* const t = Mem(at::kTasks + slot * at::kTaskStride);
+            unsigned char* const t = Mem(BattleTask_Slots_addr + slot * at::kTaskStride);
             unsigned char* const sc = Sprite_Current;
             SetLong(t + 0x80, PtrValue(sc));
             t[1] = 0;
@@ -643,7 +643,7 @@ MS16_EXPORT void __cdecl ActorFx_WaitStep4(void) {
 MS16_EXPORT unsigned char __cdecl Magic073_CountReacting(void) {
     unsigned char n = 0;
     for (unsigned char i = 0; i < 8; ++i)
-        if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(kEnemyState + i * at::kEnemyStride)[0] == 6)
+        if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(Battle_Enemies_addr + 0x379 + i * at::kEnemyStride)[0] == 6)
             ++n;
     for (unsigned char i = 0; i < 3; ++i)
         if (MH_CALL(Battle_ActorIsOut)(i) == 0 && Mem(ObjTrio_addr + 0x1 + i * at::kPartyStride)[0] == 6) ++n;

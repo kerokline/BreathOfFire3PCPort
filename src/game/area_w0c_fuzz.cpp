@@ -208,7 +208,7 @@ const ah::Region kRegions[] = {
     {Chapter_FlagRow_addr, 4},
     {Area_EnterTransition_addr, 1},
     {AreaW0c_AnswerMark_addr, 1},
-    {at::kRecord0Byte9, 1},
+    {CharacterRecords_addr + 0x9, 1},
     {Transition_Busy_addr, 2},
     {Draw_PassFlags_addr, 1},
 };
@@ -310,7 +310,7 @@ void Seed33(unsigned k) {
         if (ah::Often()) Sprite_Current[6] = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0xFF));
         break;
     case k33Start04:
-        if (ah::Often()) B(at::kRecord0Byte9) = static_cast<unsigned char>(AH_PICK(9, 8, 10));
+        if (ah::Often()) B(CharacterRecords_addr + 0x9) = static_cast<unsigned char>(AH_PICK(9, 8, 10));
         if (ah::Often()) Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & ~1u);
         if (ah::Often()) Sprite_Current[0xB] = static_cast<unsigned char>(ah::Next() % 3);
         break;

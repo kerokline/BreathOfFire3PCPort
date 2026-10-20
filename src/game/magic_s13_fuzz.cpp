@@ -138,7 +138,7 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now SharedScratch (symbols.toml).
 // kPool: now SuddenDeath_Motes (symbols.toml).
 // kCell: now SuddenDeath_CurrentMote (symbols.toml).
 constexpr unsigned kMotes = 0x60, kStride = 0x20;
@@ -255,7 +255,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                   // Gfx_PacketNext
     {0, kPrimBytes},                 // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x18}, // Prim_VertexScratch, three SVECTORs
-    {kScratch, 0x10},                // DamageScratch's words
+    {SharedScratch_addr, 0x10},      // SharedScratch's words
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
@@ -273,7 +273,7 @@ void Disturb(std::uint32_t h) {
     case 0: mh::SetPointer(SuddenDeath_CurrentMote_addr, Mote(v)); break;
     case 1: Gfx_PacketNext = PrimAt(v); break;
     case 2: case 5: case 6: case 7:
-        SetWord(mh::Mem(kScratch + (v & 0x100 ? 4 * (v & 1) : 2 * (v % 8))), h >> 16);
+        SetWord(mh::Mem(SharedScratch_addr + (v & 0x100 ? 4 * (v & 1) : 2 * (v % 8))), h >> 16);
         break;
     case 3: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 12)), h >> 16); break;
     case 4: {

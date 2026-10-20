@@ -26,6 +26,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_calls.h"
 #include "game/scena_calls_callees.h"
@@ -321,13 +322,13 @@ void Move(std::uint32_t n) {
     case 3: sh::Mem(Cond_Flags_addr + 0xd2 + v % 6)[0] = Pick4(v >> 4); break;
     case 4: Character_IndexById[v % 24] = static_cast<unsigned char>((v >> 5) % 8); break;
     case 5: {
-        unsigned char* const r = sh::Mem(bof3::addr::CharacterRecords + (v % 8) * at::kRecordStride);
+        unsigned char* const r = sh::Mem(CharacterRecords_addr + (v % 8) * at::kRecordStride);
         r[0xB] = static_cast<unsigned char>(r[0xB] ^ 1);
         r[9] = static_cast<unsigned char>(v >> 4);
         break;
     }
     case 6: {
-        unsigned char* const m = ObjTrio + (v % 3) * at::kMemberStride;
+        unsigned char* const m = rv::Bytes(&ObjTrio[v % 3]);
         m[0] = static_cast<unsigned char>(m[0] ^ 1);
         break;
     }
@@ -357,7 +358,7 @@ const sh::Callee kCallees[] = {
 const sh::Region kRegions[] = {
     {0x903A14, 4},                                               // the saved second list's last two bytes, and two spare
     {Key(Character_IndexById), 24},                   // the id -> record map, seeded 0..7
-    {bof3::addr::CharacterRecords, 8 * at::kRecordStride},       // the eight records it names
+    {CharacterRecords_addr, 8 * at::kRecordStride},       // the eight records it names
 };
 
 void Disturb(std::uint32_t h) { Move(h); }

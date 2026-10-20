@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_1g.h"
 #include "game/scenario_harness.h"
@@ -469,7 +470,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < 4; ++i) SeedFish(sh::SpriteRecord(i));
     // Fish_RunAll walks all 30: each in use or not, its state below the table's 7
     for (unsigned i = 4; i < 30; ++i) {
-        unsigned char* const r = Sprite_Objects + 0xA4 * i;
+        unsigned char* const r = rv::Bytes(&Sprite_Objects[i]);
         r[0] = static_cast<unsigned char>(PickOf(0, 0, 0x21, 0xA1, 1, sh::Next()));
         r[1] = static_cast<unsigned char>(sh::Next() % 7);
     }

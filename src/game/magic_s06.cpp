@@ -60,7 +60,7 @@ constexpr std::uint32_t kAbility = 0x904B80;        // u16: the ability being ca
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetSlash = 0x8C5D80;
-constexpr std::uint32_t kShade = 0x903852;          // u16: DamageScratch +2, Magic020_DrawFade's shade
+constexpr std::uint32_t kShade = 0x903852;          // u16: SharedScratch +2, Magic020_DrawFade's shade
 // kDashOffsets: now Magic008Dash_Offsets (symbols.toml). Magic008Dash_Offsets: 3 x (dword dx, dword dz)
 constexpr unsigned kDashOffsetCount = 3;
 // kSlashAnimations: now Magic020Slash_Animations (symbols.toml). Magic020Slash_Animations: 12 bytes to the next table
@@ -86,12 +86,12 @@ void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
 void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + v)); }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The acting actor's record as the originals index it: a member below 3, else
 // the enemy by index - 3, unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
     if (actor < 3) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(at::kEnemies + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
 }
 // A battle actor's state byte +1, as the reaction steps read it.
 unsigned char ActorState(unsigned char actor) { return ActorRecord(actor)[1]; }
@@ -1001,10 +1001,10 @@ S06_EXPORT void __cdecl Magic020_DrawFade(void) {
     PutU32(p + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // kF320 narrow
     PutU32(p + 0x18, kF240);
     const unsigned grey = (static_cast<unsigned>(Sc()[9]) * 15u) & 0xFFFF;
-    SetWord(Mem(kShade), grey);
+    SetWord(Mem(SharedScratch_addr + 0x2), grey);
     p[4] = static_cast<unsigned char>(grey);
-    p[5] = Mem(kShade)[0];
-    p[6] = Mem(kShade)[0];
+    p[5] = Mem(SharedScratch_addr + 0x2)[0];
+    p[6] = Mem(SharedScratch_addr + 0x2)[0];
     MH_CALL(Gfx_CommitPrim)(2, 0x1C);
     DrawMode(0x15, 2);
 }

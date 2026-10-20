@@ -50,7 +50,7 @@ using HookFn = void (__cdecl*)(unsigned);
 using SoundFn = void (__cdecl*)(unsigned);
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
@@ -102,13 +102,13 @@ void StoreKind(U fc, U f4, U f8) {
 // +0xB0 from the word 0x903F0C, +0xD4 and +0xB4 from 0x903F10, +0xD6 and +0xB6
 // from 0x903F12 - each word and 0x939AD8 read for each store.
 void CarryStats() {
-    SetWord(Enemy() + 0xA4, BossSe_CarryHp);
-    SetWord(Enemy() + 0xD0, BossSe_CarryHp);
-    SetWord(Enemy() + 0xB0, BossSe_CarryHp);
-    SetWord(Enemy() + 0xD4, BossSe_CarryB4);
-    SetWord(Enemy() + 0xB4, BossSe_CarryB4);
-    SetWord(Enemy() + 0xD6, BossSe_CarryB6);
-    SetWord(Enemy() + 0xB6, BossSe_CarryB6);
+    SetWord(Enemy() + 0xA4, CharacterRecords[7].stats.max_hp);
+    SetWord(Enemy() + 0xD0, CharacterRecords[7].stats.max_hp);
+    SetWord(Enemy() + 0xB0, CharacterRecords[7].stats.max_hp);
+    SetWord(Enemy() + 0xD4, CharacterRecords[7].stats.atk);
+    SetWord(Enemy() + 0xB4, CharacterRecords[7].stats.atk);
+    SetWord(Enemy() + 0xD6, CharacterRecords[7].stats.def);
+    SetWord(Enemy() + 0xB6, CharacterRecords[7].stats.def);
 }
 
 // The death entry (+2 entry 4) of kinds 30, 31 and 32: Sprite_EnsureAnimation
@@ -507,16 +507,16 @@ extern "C" void __cdecl BossZig_HookHit(unsigned) { BossSe_Script |= 0x20; }
 // event Boss25_Event; 0x904AE4 = 3. In the original's order (every read of a
 // cell before its store).
 extern "C" void __cdecl Boss25_Setup(void) {
-    const unsigned char hp = ObjTrio[0x98];
-    const unsigned max_hp = Word(At(ObjTrio_addr + 0xa0));
-    const unsigned char ap = ObjTrio[0x9a];
+    const unsigned char hp = rv::Bytes(ObjTrio)[0x98];
+    const unsigned max_hp = ObjTrio[0].max_hp;
+    const unsigned char ap = rv::Bytes(ObjTrio)[0x9a];
     BossSe_SavedHp = hp;
-    const unsigned max_ap = Word(At(ObjTrio_addr + 0xa2));
+    const unsigned max_ap = ObjTrio[0].max_ap;
     StoreHooks(bof3::addr::Boss25_End, bof3::addr::Boss25_Exit, bof3::addr::Boss25_Event);
     BattlePhases_Initiative = 3;
-    SetWord(At(ObjTrio_addr + 0x98), max_hp);
+    ObjTrio[0].hp = max_hp;
     BossSe_SavedAp = ap;
-    SetWord(At(ObjTrio_addr + 0x9a), max_ap);
+    ObjTrio[0].ap = max_ap;
 }
 
 // original 0x43BF00: the event hook, by the code's low byte; al 0 on every
@@ -549,22 +549,22 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         case 1: Message(0x1B); break;
         case 2:
             BossSa_WindowPass = round;
-            ObjTrio[0x125] = 1;
+            rv::Bytes(ObjTrio)[0x125] = 1;
             BH_CALL(Msg_OpenScript)(0x1C);
             break;
         case 3: Message(0x1D); break;
         case 4:
             if (B(at::kFlags) & 0x40) break;
-            ObjTrio[0x125] = 4;
+            rv::Bytes(ObjTrio)[0x125] = 4;
             SetWord(At(ObjTrio_addr + 0x126), 0x46);
             break;
         case 5: Message(0x1E); break;
         case 6:
             if (B(at::kFlags) & 0x40) break;
             Message(0x1F);
-            ObjTrio[0x125] = 1;
-            ObjTrio[0xba] = 0x64;
-            SetWord(At(at::kEnemy0Hp), 1);
+            rv::Bytes(ObjTrio)[0x125] = 1;
+            rv::Bytes(ObjTrio)[0xba] = 0x64;
+            Battle_Enemies[0].hp = 1;
             break;
         default: break;
         }
@@ -578,14 +578,14 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         BossSe_Script = script;
     }
     if ((script & 0x10) == 0 && B(at::kPhase) == 3 && BattleActions_Step == 0) {
-        const U flags = static_cast<U>(Long(At(at::kEnemy0Flags))) | 2;
-        ObjTrio[0x124] = 3;
-        ObjTrio[0x125] = 1;
-        ObjTrio[0xbc] = 0x64;
-        ObjTrio[0xba] = 0;
-        B(at::kEnemy0Byte104) = 0;
-        SetLong(At(at::kEnemy0Flags), S(flags));
-        B(at::kEnemy0Byte105) = 2;
+        const U flags = Battle_Enemies[0].flags_110 | 2;
+        rv::Bytes(ObjTrio)[0x124] = 3;
+        rv::Bytes(ObjTrio)[0x125] = 1;
+        rv::Bytes(ObjTrio)[0xbc] = 0x64;
+        rv::Bytes(ObjTrio)[0xba] = 0;
+        Battle_Enemies[0].command = 0;
+        Battle_Enemies[0].flags_110 = S(flags);
+        Battle_Enemies[0].command_kind = 2;
         BattleDamage_TurnCount = 7;
         static constexpr unsigned char kOrder[7] = {0, 3, 0, 3, 0, 3, 0};
         for (unsigned i = 0; i < 7; ++i) B(at::kOrder + i) = kOrder[i];
@@ -598,7 +598,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         return 0;
     }
     if ((script & 2) == 0) {
-        Sprite_Current = At(at::kEnemy0);
+        Sprite_Current = At(Battle_Enemies_addr);
         BH_CALL(BattleEnemy_SetAnimation)(8);
         BossSe_Script |= 2;
         return 0;
@@ -611,20 +611,20 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
     const unsigned char round = BossSe_RoundSlot;
     unsigned char member;
     if (round == 4) {
-        member = ObjTrio[1];
+        member = ObjTrio[0].state;
         if (member == 6) {
-            if (ObjTrio[2] != 1) return 0;
+            if (ObjTrio[0].step != 1) return 0;
             SetWord(At(ObjTrio_addr + 0x128), 0);
             SetWord(At(ObjTrio_addr + 0x12a), 0);
             B(at::kActKind) = 0xFF;
             return 0;
         }
     } else if (round == 6) {
-        member = ObjTrio[1];
+        member = ObjTrio[0].state;
     } else {
         return 0;
     }
-    if (member != 2 || ObjTrio[2] != 0) return 0;
+    if (member != 2 || ObjTrio[0].step != 0) return 0;
     B(at::kFlags) |= 0x40;
     return 0;
 }
@@ -635,8 +635,8 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
 extern "C" void __cdecl Boss25_End(void) {
     const unsigned hp = BossSe_SavedHp;
     const unsigned ap = BossSe_SavedAp;
-    SetWord(At(ObjTrio_addr + 0x98), hp);
-    SetWord(At(ObjTrio_addr + 0x9a), ap);
+    ObjTrio[0].hp = hp;
+    ObjTrio[0].ap = ap;
     MoveScript_PartyRecords[0x65] = 4;
     BH_AT(Handler, at::kEndThird)();
 }
@@ -693,18 +693,18 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
             BattleE1_Count = static_cast<unsigned char>(BattleE1_Count + 1);
             return 0;
         }
-        const auto v = static_cast<std::int16_t>(Word(At(at::kEnemy0Word108)));
+        const auto v = Battle_Enemies[0].hp_change;
         if (v > 0)
             BattleE1_SumA = S(BattleE1_SumA + static_cast<U>(static_cast<std::int32_t>(v)));
         return 0;
     }
     case 1:
-        if (BossSe_RoundSlot == 1 && B(at::kEnemy0Flag8E) == 1) {
-            const U flags = static_cast<U>(Long(At(at::kEnemy0Flags))) | 2;
-            B(at::kEnemy0State1) = 2;
-            SetLong(At(at::kEnemy0Flags), S(flags));
-            B(at::kEnemy0State2) = 0;
-            B(at::kEnemy0Byte105) = 2;
+        if (BossSe_RoundSlot == 1 && Battle_Enemies[0].odds_index == 1) {
+            const U flags = Battle_Enemies[0].flags_110 | 2;
+            Battle_Enemies[0].state = 2;
+            Battle_Enemies[0].flags_110 = S(flags);
+            Battle_Enemies[0].step = 0;
+            Battle_Enemies[0].command_kind = 2;
         }
         return 0;
     case 2:

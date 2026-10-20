@@ -291,12 +291,12 @@ const mh::DataTable kTables[] = {
 };
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850;
+// kScratch: now SharedScratch (symbols.toml).
 // kInkPool: now InkInkPuff_Pool (symbols.toml).
 // kMotePool: now Magic213Mote_Pool (symbols.toml).
 constexpr std::uint32_t kPoolBytes = 64 * 0x84;
 const mh::Region kRegions[] = {
-    {kScratch, 0x10},
+    {SharedScratch_addr, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
@@ -334,7 +334,7 @@ void Disturb(std::uint32_t h) {
     const auto word = static_cast<std::uint16_t>(h >> 16);
     switch ((h >> 8) % 7) {
     case 0: mh::SetPointer(0x7E0670, PacketAt(v)); break;
-    case 1: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
+    case 1: SetWord(mh::Mem(SharedScratch_addr + (v % 8) * 2), word); break;
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: {
         static const unsigned char kCounts[] = {3, 4, 5, 6, 0x80, 0x84};

@@ -82,15 +82,15 @@ unsigned char* Object(const char* who, unsigned index) {
         bof3::Fatal("%s: Sprite_Objects index %u, past its %u records - the original writes past them "
                     "(docs/effect_4a.md section 7)",
                     who, index, at::kSpriteCount);
-    return Sprite_Objects + at::kSpriteStride * index;
+    return rv::Bytes(&Sprite_Objects[index]);
 }
 
 // Field_State the leader; true when the dword at `x` (a record's +0x34) is the
 // leader's x or past it (signed).
 bool Reached(U x) {
     const std::int32_t object_x = SL(x);
-    const std::int32_t leader_x = rv::As<records::PartyMember>(ObjTrio)->x;
-    Field_State = ObjTrio;
+    const std::int32_t leader_x = ObjTrio[0].x;
+    Field_State = rv::Bytes(ObjTrio);
     return object_x >= leader_x;
 }
 
@@ -142,7 +142,7 @@ void Again() {
 // Field_State the third member's object; its x at 0x34 cells or past it
 // (signed): true, with 0x903849 0xFF, 0x90384A / B 0 and the step 0x14.
 bool PastLine() {
-    const std::int32_t x = rv::As<records::PartyMember>(ObjTrio + 0x298)->x;
+    const std::int32_t x = ObjTrio[2].x;
     Field_State = P(ObjTrio_addr + 0x298);
     if (x < at::kTrio2Line) return false;
     B(at::kCounterB) = 0xFF;
@@ -175,13 +175,13 @@ extern "C" void __cdecl EffectKind82_Restart(void) {
 }
 
 // original 0x488090 (state 13): record 0's z + 0x4000 twice, +1 0xE, +9 8.
-extern "C" void __cdecl EffectKind82_Nudge13(void) { Nudge(Sprite_Objects, 0x38, 2, 0x4000u, 0xE, 8); }
+extern "C" void __cdecl EffectKind82_Nudge13(void) { Nudge(rv::Bytes(Sprite_Objects), 0x38, 2, 0x4000u, 0xE, 8); }
 
 // original 0x4880D0 (state 15): record 0's z - 0x4000 four times, +1 0x10, +9 8.
-extern "C" void __cdecl EffectKind82_Nudge15(void) { Nudge(Sprite_Objects, 0x38, 4, 0xFFFFC000u, 0x10, 8); }
+extern "C" void __cdecl EffectKind82_Nudge15(void) { Nudge(rv::Bytes(Sprite_Objects), 0x38, 4, 0xFFFFC000u, 0x10, 8); }
 
 // original 0x488110 (state 17): record 0's z + 0x4000 twice, +1 0x12.
-extern "C" void __cdecl EffectKind82_Nudge17(void) { Nudge(Sprite_Objects, 0x38, 2, 0x4000u, 0x12, -1); }
+extern "C" void __cdecl EffectKind82_Nudge17(void) { Nudge(rv::Bytes(Sprite_Objects), 0x38, 2, 0x4000u, 0x12, -1); }
 
 // original 0x488150 (state 18): +2 up one; +1 0x14 when it was below 0xF,
 // else 0xD.
@@ -302,11 +302,11 @@ extern "C" void __cdecl EffectKind83_Count18(void) {
 // +0x34 the leader's x less record 0's; the step 0x1E; a tail jump to
 // Effect_Release.
 extern "C" void __cdecl EffectKind83_Finish(void) {
-    const U object_x = UL(At(Sprite_Objects_addr + 0x34));
-    const U leader_x = UL(At(ObjTrio_addr + 0x34));
+    const U object_x = static_cast<std::uint32_t>(Sprite_Objects[0].x);
+    const U leader_x = static_cast<std::uint32_t>(ObjTrio[0].x);
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    Field_State = ObjTrio;
+    Field_State = rv::Bytes(ObjTrio);
     so->x = leader_x - object_x;
     MoveScript_PartyRecords[0x65] = 0x1E;
     SH_CALL(Effect_Release)();
@@ -416,8 +416,8 @@ extern "C" void __cdecl EffectKind85_ShowObjects(void) {
     Sprite_Current = Object("EffectKind85_ShowObjects", saved[6]);
     Sprite_Current[0x29] = 2;
     SH_CALL(Sprite_UpdateScreen)();
-    Sprite_Current = ObjTrio;
-    ObjTrio[0x29] = 2;
+    Sprite_Current = rv::Bytes(ObjTrio);
+    ObjTrio[0].ot_slot = 2;
     SH_CALL(Sprite_UpdateScreen)();
     Sprite_Current = saved;
 }
@@ -521,9 +521,9 @@ extern "C" void __cdecl EffectKind86_Spawn(void) {
         return;
     }
     Object(kWho, s[4])[0] = 1;
-    SetWord(At(at::kObjectCount), s[3]);
+    at::kObjectCount = s[3];
     SH_CALL(EventOp_0x)(P(at::kPlaceOp));
-    SetWord(At(at::kObjectCount), s[4]);
+    at::kObjectCount = s[4];
     SH_CALL(EventOp_0x)(P(at::kPlaceOp));
     Sprite_Current = s;
     unsigned char* const a = Object(kWho, s[3]);

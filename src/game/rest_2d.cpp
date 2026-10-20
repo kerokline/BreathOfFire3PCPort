@@ -72,7 +72,7 @@ U RecordChecked(U base, U stride, unsigned count, unsigned index, const char* ar
     return base + index * stride;
 }
 U Window(unsigned index, const char* who) {
-    return RecordChecked(at::kWindows, at::kWindowStride, at::kWindowCount, index, "WindowRecords", who);
+    return RecordChecked(WindowRecords_addr, at::kWindowStride, at::kWindowCount, index, "WindowRecords", who);
 }
 
 // --- callees by address (R2C's and R2E's, ours; named in rest_2d_callees.h) ----------------
@@ -88,10 +88,10 @@ unsigned short MasterMessage(unsigned k) {
     return static_cast<unsigned short>(Word(At(at::kMasterMessages + 2u * AreaW0c_TailSub)) + k);
 }
 // Field_Members' byte of the party slot `slot` (ObjTrio + 0x148, 0x14C apart).
-unsigned char MemberAt(unsigned slot) { return Field_Members[slot * at::kObjStride]; }
+unsigned char MemberAt(unsigned slot) { return (rv::Bytes(ObjTrio) + 0x148)[slot * at::kObjStride]; }
 // The member under the cursor: a CharacterRecords index.
 unsigned char CursorMember() { return MemberAt(Rest2d_Cursor); }
-U RecordOf(unsigned member) { return at::kRecords + member * at::kRecordStride; }
+U RecordOf(unsigned member) { return CharacterRecords_addr + member * at::kRecordStride; }
 
 // The name (the record's first nine bytes) into Text_Records' first slot.
 void NameToText(U record) {
@@ -325,7 +325,7 @@ extern "C" void __cdecl MasterJoin_Step5Apply(void) {
         AreaW3f_AnswerMarkD1 = 0;
         return;
     }
-    const U record = RecordChecked(at::kRecords, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
+    const U record = RecordChecked(CharacterRecords_addr, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
                                    "MasterJoin_Step5Apply");
     unsigned char* const r = At(record);
     unsigned char* const text = At(bof3::addr::Text_Records);
@@ -391,7 +391,7 @@ extern "C" void __cdecl MasterQuit_Step5Apply(void) {
         AreaW0c_AnswerMark = 6;
         return;
     }
-    const U record = RecordChecked(at::kRecords, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
+    const U record = RecordChecked(CharacterRecords_addr, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
                                    "MasterQuit_Step5Apply");
     unsigned char* const r = At(record);
     unsigned char* const text = At(bof3::addr::Text_Records);
@@ -547,7 +547,7 @@ extern "C" void __cdecl FieldMenu_TopBarCountdown(void) {
 // section 5) - else 1.
 extern "C" unsigned char __cdecl FieldMenu_CampAllowedCell(void) {
     const unsigned char cell =
-        static_cast<unsigned char>(SH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(ObjTrio + 0x36)), static_cast<short>(Word(ObjTrio + 0x3A))) & 0xF0);
+        static_cast<unsigned char>(SH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(rv::Bytes(ObjTrio) + 0x36)), static_cast<short>(Word(rv::Bytes(ObjTrio) + 0x3A))) & 0xF0);
     if (cell == 0xA0 || cell == 0xA1 || cell == 0xAF || cell == 0x91) return 0;
     return 1;
 }
@@ -641,7 +641,7 @@ extern "C" unsigned char __cdecl FieldAbility_Use(unsigned caster, unsigned targ
     if (answer == 1 || answer == 5) {
         const unsigned char again = SH_CALL(Skill_ApCost)(caster, ability, 0);
         const U checked = working ? RecordChecked(at::kWorking, at::kObjStride, 3, c, "the working records", "FieldAbility_Use")
-                                  : RecordChecked(at::kRecords, at::kRecordStride, 8, c, "CharacterRecords", "FieldAbility_Use");
+                                  : RecordChecked(CharacterRecords_addr, at::kRecordStride, 8, c, "CharacterRecords", "FieldAbility_Use");
         SetWord(At(checked + 0x1A), Word(At(checked + 0x1A)) - again);
     }
     return answer;
@@ -699,10 +699,10 @@ extern "C" void __cdecl FieldMenuStatus_SlideIn(void) {
 extern "C" void __cdecl FieldMenuStatus_Choose(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto c = BattleActorCopies_ItemActor;
-    Window19 = 1;
-    const U member_window = at::kWindows + at::kWindowStride * static_cast<U>(4 + c);
+    WindowRecords[19].in_use = 1;
+    const U member_window = WindowRecords_addr + at::kWindowStride * static_cast<U>(4 + c);
     SetWord(At(0x803410), rv::As<records::WindowRecord>(At(member_window))->x);
-    Window19_Y = rv::As<records::WindowRecord>(At(member_window))->y;
+    WindowRecords[19].y = rv::As<records::WindowRecord>(At(member_window))->y;
     SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(Character_IndexById[Cond_Flags[0xd2 + c]])));
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x8032FC), 0x12);
@@ -731,7 +731,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         SH_CALL(Sound_PlayEffect)(0x102);
         SH_CALL(FieldMenuStatus_DetailWindows)();
         const unsigned char state = FieldS_State;
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
         B(at::kMenuTimer) = 8;
         FieldS_State = static_cast<unsigned char>(state + 1);
     }
@@ -747,7 +747,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         }
         const unsigned char state = FieldS_State;
         B(0x8032EF) = 1;
-        Window19 = 0;
+        WindowRecords[19].in_use = 0;
         B(at::kMenuTimer) = 8;
         FieldS_State = static_cast<unsigned char>(state + 2);
     }
@@ -811,7 +811,7 @@ extern "C" void __cdecl FieldMenuStatus_PlaceWindows(void) {
         rv::As<records::WindowRecord>(At(w))->state = 2;
         rv::As<records::WindowRecord>(At(w))->in_use = 1;
         SetWord(At(w + 4), 0x140);
-        const unsigned short y = Word(At(at::kWindows + at::kWindowStride * (4u + i) + 6));
+        const unsigned short y = Word(At(WindowRecords_addr + at::kWindowStride * (4u + i) + 6));
         B(w + 0xA) = i;
         ++i;
         SetWord(At(w + 6), y);
@@ -825,7 +825,7 @@ extern "C" void __cdecl FieldMenuStatus_PlaceWindows(void) {
     SetWord(At(0x8032FC), 0);
     B(0x80340D) = 6;
     B(0x80340E) = 0xA;
-    Window19 = 0;
+    WindowRecords[19].in_use = 0;
     B(0x803416) = 0;
     B(0x803417) = 1;
 }
@@ -853,7 +853,7 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
     MemberWindowStates(5, 3, 7, 5, "FieldMenuStatus_DetailWindows");
     const unsigned char cursor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     B(0x80337F) = 2;
-    Window16_State = 2;
+    WindowRecords[16].state = 2;
     B(0x8033C7) = 2;
     B(0x80337D) = 6;
     B(0x80337E) = 6;
@@ -863,13 +863,13 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
     B(0x803386) = cursor;
     B(0x8033A1) = 6;
     B(0x8033A2) = 7;
-    Window16 = 1;
+    WindowRecords[16].in_use = 1;
     SetWord(At(0x8033A4), 0xFF9C);
-    Window16_Y = 0x78;
+    WindowRecords[16].y = 0x78;
     Window16_Owner = cursor;
     B(0x8033C5) = 6;
     B(0x8033C6) = 8;
-    Window17 = 1;
+    WindowRecords[17].in_use = 1;
     SetWord(At(0x8033C8), 0xFF9C);
     SetWord(At(0x8033CA), 0xA8);
     B(0x8033CE) = cursor;
@@ -880,7 +880,7 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
 extern "C" void __cdecl FieldMenuStatus_ListWindows(void) {
     MemberWindowStates(6, 4, 8, 6, "FieldMenuStatus_ListWindows");
     B(0x80337F) = 1;
-    Window16_State = 1;
+    WindowRecords[16].state = 1;
     B(0x8033C7) = 1;
 }
 
@@ -890,8 +890,8 @@ extern "C" void __cdecl FieldMenuStatus_ClearWindows(void) {
     B(0x803334) = 0;
     B(0x803358) = 0;
     B(0x80337C) = 0;
-    Window16 = 0;
-    Window17 = 0;
+    WindowRecords[16].in_use = 0;
+    WindowRecords[17].in_use = 0;
 }
 
 // --- the Items screen: FieldMenu_States[2] -------------------------------------------------------
@@ -946,9 +946,9 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
     const unsigned pressed = Input_Pressed;
     B(0x803340) = 0xFF;
     const unsigned short y = static_cast<unsigned short>(Word(At(0x803316)) + 4);
-    Window21 = 1;
+    WindowRecords[21].in_use = 1;
     SetWord(At(0x803458), static_cast<unsigned>(48 * category) + window_x);
-    Window21_Y = y;
+    WindowRecords[21].y = y;
     B(0x80331B) = 0xFF;
     const U held = SH_CALL(Input_AutoRepeat)(pressed & 0xA000);
     unsigned char c = static_cast<unsigned char>(Rest2d_ItemsCategory);
@@ -1011,7 +1011,7 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
         B(0x8032EF) = 1;
         B(0x803313) = 1;
         B(0x803337) = 1;
-        Window21 = 0;
+        WindowRecords[21].in_use = 0;
         B(at::kMenuTimer) = static_cast<unsigned char>(t + 5);
         FieldS_State = static_cast<unsigned char>(state + 2);
     }
@@ -1060,8 +1060,8 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
     const int row = static_cast<int>(B(0x803340)) - static_cast<int>(top) + 2;
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x803458), window_x + 7);
-    Window21 = 1;
-    Window21_Y = static_cast<unsigned>(row * 13) + Word(At(0x80333A));
+    WindowRecords[21].in_use = 1;
+    WindowRecords[21].y = static_cast<unsigned>(row * 13) + Word(At(0x80333A));
     const U held = SH_CALL(Input_AutoRepeat)(pressed & Sigma(0xF00C));
     if (held & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
@@ -1188,7 +1188,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
             const unsigned char p = B(0x803340);
             BattleActorCopies_ItemActor = 0;
             B(0x803341) = p;
-            Window21 = 0;
+            WindowRecords[21].in_use = 0;
             FieldS_State = static_cast<unsigned char>(state + 4);
             return;
         }

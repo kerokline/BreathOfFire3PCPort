@@ -45,7 +45,7 @@ template <typename... T> U PickOf(T... v) {
 unsigned char& B(U a) { return *sh::Mem(a); }
 void SetW(U a, U v) { SetWord(sh::Mem(a), v); }
 void SetL(U a, U v) { SetLong(sh::Mem(a), static_cast<std::int32_t>(v)); }
-U Win(unsigned n, unsigned off) { return at::kWindows + n * at::kWindowStride + off; }
+U Win(unsigned n, unsigned off) { return WindowRecords_addr + n * at::kWindowStride + off; }
 
 // --- the clone table (band_rows.py --group R2C --clones --harness scenario, 2026-10-04) ---
 constexpr sh::CallSite kCalls57F340[] = {{0xAF, 0x57EEF0}};
@@ -199,8 +199,8 @@ const sh::DataTable kTables[] = {
 void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     switch (h % 18) {
-    case 16: B(at::kRecords + ((h >> 16) % 8) * at::kRecordStride + 0xA) = static_cast<unsigned char>(v); break;
-    case 17: SetL(at::kRecords + ((h >> 16) % 8) * at::kRecordStride + 0xC, h * 0x9E3779B1u); break;
+    case 16: B(CharacterRecords_addr + ((h >> 16) % 8) * at::kRecordStride + 0xA) = static_cast<unsigned char>(v); break;
+    case 17: SetL(CharacterRecords_addr + ((h >> 16) % 8) * at::kRecordStride + 0xC, h * 0x9E3779B1u); break;
     case 0: B(FieldS_State_addr) = static_cast<unsigned char>(v); break;
     case 1: B(FieldS_Step_addr) = static_cast<unsigned char>(v); break;
     case 2: B(at::kTimer) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) % 3); break;
@@ -211,7 +211,7 @@ void Move(U h) {
     case 7: B(AreaW3f_AnswerMarkD1_addr) = static_cast<unsigned char>(v); break;
     case 8: B(Rest2c_TalkSlide_addr) = static_cast<unsigned char>(v % 6); break;
     case 9: B(Field_MemberCount_addr) = static_cast<unsigned char>(v % 4); break;
-    case 10: B(Field_Members_addr + (v % 3) * at::kObjStride) = static_cast<unsigned char>((v >> 2) % 8); break;
+    case 10: B(ObjTrio_addr + 0x148 + (v % 3) * at::kObjStride) = static_cast<unsigned char>((v >> 2) % 8); break;
     case 11: B(Field_Request_addr) = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
     case 12: B(Rest2c_FigureRgb_addr + v % 3) = static_cast<unsigned char>(h >> 16); break;
     case 13: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v % 18); break;
@@ -324,7 +324,7 @@ const sh::Callee kCallees[] = {
 // cursor, the camera turn's cells with Field_InputFlags, the buttons'
 // 0x90358C..0x904593).
 const sh::Region kRegions[] = {
-    {at::kWindows, 22 * at::kWindowStride},       // WindowRecords 0x803160..0x803477
+    {WindowRecords_addr, 22 * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x6BC880, 0x48},                             // the save / inn bytes, the sell flags
     {0x903580, 0xC},                              // the buttons' dwords before Field_ConfirmButtons
     {at::kBlock, 0x24},                           // the save block 0x9039E0..0x903A03 (the master byte 0x9039F5)
@@ -381,8 +381,8 @@ void SeedMaster() {
     const bool all = sh::Half();
     for (unsigned i = 0; i < 3; ++i) {
         const auto record = static_cast<unsigned char>(sh::Next() % 8);
-        B(Field_Members_addr + i * at::kObjStride) = record;
-        B(at::kRecords + 0x1F + record * at::kRecordStride) =
+        B(ObjTrio_addr + 0x148 + i * at::kObjStride) = record;
+        B(CharacterRecords_addr + 0x1F + record * at::kRecordStride) =
             static_cast<unsigned char>(all || sh::Half() ? master : PickOf(0xFF, master + 1u, sh::Next()));
     }
     // the introduction flag of the master (Flags_Test is a recorder: its row only logged)
@@ -413,7 +413,7 @@ void SeedFigure() {
 // past a quarter of its maximum; the status word's bits 7, 5 and 0x2000.
 void SeedRecords() {
     for (unsigned r = 0; r < 8; ++r) {
-        const U rec = at::kRecords + r * at::kRecordStride;
+        const U rec = CharacterRecords_addr + r * at::kRecordStride;
         SetW(rec + 0x18, PickOf(0, 1, 2, sh::Next() % 1000));
         const U max_ap = PickOf(0, 4, 100, 103, sh::Next() % 1000);
         SetW(rec + 0x22, max_ap);

@@ -52,11 +52,11 @@ constexpr U kTarget = 0x904B44;           // u8: the battle's target
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
 // kWindowPass: now BossSa_WindowPass (symbols.toml). u8: the window records' pass byte (symbols.toml, the 0x59E230 evidence)
 constexpr U kMoveVar3 = 0x903848;         // u8: MoveScript counter 0 (op A0's; the message choices' "variable 3")
-constexpr U kTaskSlots = 0x93A000;        // BattleTask_Create's slots, 0x84 bytes each
+// kTaskSlots: now BattleTask_Slots (symbols.toml). BattleTask_Create's slots, 0x84 bytes each
 constexpr U kTaskStride = 0x84;
-constexpr U kEnemies = 0x93B960;          // the enemies' objects, 0x128 bytes each
+// kEnemies: now Battle_Enemies (symbols.toml). the enemies' objects, 0x128 bytes each
 constexpr U kEnemyStride = 0x128;
-constexpr U kEnemy1 = 0x93BA88;           // enemy 1's object
+// kEnemy1: now Battle_Enemies[1] (symbols.toml). enemy 1's object
 constexpr U kFieldActors = 0x7DEF00;      // Sprite_Objects + 0x80: MoveCmd_OpE9's object for field object i (+ i * 0xA4)
 constexpr U kObjectStride = 0xA4;
 

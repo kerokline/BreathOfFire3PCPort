@@ -91,7 +91,7 @@ constexpr uint32_t kCounter0 = 0x903848;
 constexpr uint32_t kCounter1 = 0x903849;
 constexpr uint32_t kCounter2 = 0x90384A;
 constexpr uint32_t kCounter3 = 0x90384B;
-constexpr uint32_t kSlotWord = 0x903850;    // u16: the event object's slot (Scena15_EventObjects)
+inline auto& kSlotWord = SharedScratch.w_00;  // u16: the event object's slot (Scena15_EventObjects)
 // kFlagRow: now Chapter_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
 // kStoryRow: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, the story flags
 // kRow14: now Cond_Flags[0x70] (symbols.toml). Cond_Flags + 0x70
@@ -293,7 +293,7 @@ SC15_EXPORT void __cdecl Scena15_Frame(void) {
 // (Scena15_BattleSetup) or set a flag; 0xA4 and 0xA6 with Cond_ByteFD not 0,
 // and 0xAD with it not 2, go straight to state 2.
 SC15_EXPORT void __cdecl Scena15_EnterArea(void) {
-    auto* const xobj0 = rv::As<records::SpriteObject>(Sprite_ObjectsExtra + 0 * sizeof(records::SpriteObject));
+    auto* const xobj0 = Sprite_ObjectsExtra;
     if (Area() == 2 && Test(7) && !Test(8)) Draw_PassFlags = 0;
     if (Area() == 0x2D && Test(9) && !Test(0xA)) {
         Camera_Distance = 0x5DC;
@@ -383,7 +383,7 @@ SC15_EXPORT void __cdecl Scena15_EnterArea(void) {
             }
         }
     }
-    if (Area() == 0xBD && TestAt(Cond_Flags_addr + 0x70, 1)) Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] | 0x40);
+    if (Area() == 0xBD && TestAt(Cond_Flags_addr + 0x70, 1)) Effect_Objects[0].flags = static_cast<unsigned char>(Effect_Objects[0].flags | 0x40);
     if (Area() == 0xC6) {
         if (Test(0x13)) {
             NewEffect(0xAB);
@@ -981,12 +981,12 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
 SC15_EXPORT void __cdecl Scena15_EventObjects(void) {
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
-        SetW(kSlotWord, s);
+        kSlotWord = s;
         if (s != 0xFF) SH_CALL(EventOp_0x)(At(Scena15_EventOps_addr + 0x11u * i));
     }
     for (unsigned i = 0; i < 2; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
-        SetW(kSlotWord, s);
+        kSlotWord = s;
         if (s != 0xFF) SH_CALL(EventOp_6x)(At(Scena15_EventOps_addr + 0x38 + 0x10u * i));
     }
 }
@@ -1230,7 +1230,7 @@ SC15_EXPORT void __cdecl Scena15_ClutToGrey(unsigned snap) {
 // the end area 0xC7 at (0xB60000, 0x128000), Field_ScriptFlags bit 0x0800 off,
 // the run ended and Field_StatusBits |= 0x80 (0x56D6F0).
 SC15_EXPORT void __cdecl Scena15_Run6(void) {
-    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
+    auto* const kind2 = &Sprite_Kind2;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Transition_Busy != 0) break;
@@ -2587,7 +2587,7 @@ SC15_EXPORT void __cdecl Scena17_EndTask(void) {
 // 0x929EC2 1 / C3 0, 0x66C7DA 1; file 0x31B loaded a frame at a time; CLUT
 // strip rows 1 and 2 copied; Game_Step + 1; the strip dirty.
 SC15_EXPORT void __cdecl Scena17_EndReturn(void) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     SetAt(Cond_Flags_addr + 0xa0, 0x92);
     for (unsigned i = 9; i <= 0x16; ++i) ClearAt(Cond_Flags_addr + 0x78, i);
     SH_AT(VoidFn, kPartyPass)();

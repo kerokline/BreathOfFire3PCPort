@@ -34,8 +34,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Slot(unsigned i) { return At(at::kTasks + i * at::kTaskSize); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + i * at::kEnemySize); }
+unsigned char* Slot(unsigned i) { return At(BattleTask_Slots_addr + i * at::kTaskSize); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + i * at::kEnemySize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char* PtrAt(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
 unsigned char* CurSlot() { return PtrAt(BattleFlow_TaskCurrent_addr); }
@@ -309,7 +309,7 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kTasks, 0x22A0},      // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
+    {BattleTask_Slots_addr, 0x22A0}, // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
     {0x937F88, 4},             // Sprite_Current
     {at::kPhase, 0xA0},        // the battle's globals to 0x904B40
     {ObjTrio_addr, 0x3E4},     // ObjTrio
@@ -429,8 +429,8 @@ void Seed(unsigned k) {
             At(ObjTrio_addr + 0x91 + i * at::kMemberSize)[0] = kStatus[Next() % 8];
         }
         for (unsigned i = 0; i < 8; ++i) {
-            At(at::kEnemies + 0x92 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
-            At(at::kEnemies + 0x93 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
+            At(Battle_Enemies_addr + 0x92 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
+            At(Battle_Enemies_addr + 0x93 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
         }
         break;
     }

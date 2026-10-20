@@ -71,7 +71,7 @@ void Disturb() {
     const U h = Hash();
     if (h % 3 == 0) return;
     if (h % 23 == 0) {
-        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(at::kRecords + ((h >> 8) % 22u) * 0x24u));
+        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(WindowRecords_addr + ((h >> 8) % 22u) * 0x24u));
         return;
     }
     static const unsigned kField[] = {3, 4, 5, 6, 7, 0xA, 0xB, 0xC, 0x10, 0x11};
@@ -289,7 +289,7 @@ const Clone kClones[kCount] = {
 
 struct Region { U at, size; };
 const Region kRegions[] = {
-    {at::kRecords, 0x318},       // the 22 window records
+    {WindowRecords_addr, 0x318}, // the 22 window records
     {BattleWinStates_Current_addr, 4}, // the record running (Fix puts it on one of the 22)
     {Config_WindowColour_addr, 1},
     {Party_Zenny_addr, 0x10A},   // the zenny, and the party list with every byte +0xA can reach
@@ -406,7 +406,7 @@ void Cover(unsigned k, const State& in, const State& out) {
     }
     if (std::memcmp(in.memory + 0x318, out.memory + 0x318, 4) != 0) ++g_cover.repointed;
     const U record = static_cast<U>(Long(in.memory + 0x318));
-    const unsigned slot = (record - at::kRecords) / 0x24u;
+    const unsigned slot = (record - WindowRecords_addr) / 0x24u;
     if (slot < 22 && out.log_n == 0 && k != kH7 && k != kH8) {   // a slide: no call out
         if (in.memory[slot * 0x24 + 3] != 0 && out.memory[slot * 0x24 + 3] == 0) ++g_cover.stopped;
         else ++g_cover.moving;
@@ -453,7 +453,7 @@ void SelfTest() {
         std::memset(input.log, 0, sizeof input.log);
         input.log_n = 0;
         Apply(input);
-        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(at::kRecords + (Next() % 22u) * 0x24u));
+        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(WindowRecords_addr + (Next() % 22u) * 0x24u));
         Seed(k);
         g_seed = Next();
         Capture(input);

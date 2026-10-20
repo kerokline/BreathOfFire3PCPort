@@ -60,21 +60,21 @@ constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHoo
 // --- set-up 34's member pick ------------------------------------------------------
 // kPickId: now Character_IndexById[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
 // kPicked: now BossSh_Picked (symbols.toml). u8 (read once as a dword): the member whose +0x148 matched; only set-up 34 writes it
-// kPartyTag: now Field_Members (symbols.toml). member 0's +0x148 (ObjTrio stride 0x14C; symbols.toml's Field_Members)
+// kPartyTag: now ObjTrio (symbols.toml). member 0's +0x148, ObjTrio[0].char_index (stride 0x14C; Field_Members until stage C4)
 // kParty: now ObjTrio (symbols.toml). ObjTrio
 constexpr U kPartyStride = 0x14C;
 // kPartyFlags91: now ObjTrio[0x91] (symbols.toml). member 0's +0x91 (bit 0x20 read by set-up 34's event hook)
 
 // --- the enemies (0x93B960 + n * 0x128) ---------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
-constexpr U kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr U kEnemyStride = 0x128;
 // kEnemy0X: now BossSb_Enemy0Pose (symbols.toml). enemy 0's word +0x58 (set-up 34's exit copies it)
 // kEnemy0Y: now BossSh_Enemy0Y (symbols.toml). enemy 0's word +0x5A
 constexpr U kEnemyDataCount9 = 0x8C5652;  // the area's enemy data records' byte +0x8A (stride 0x8C): the count step 4 starts with
 
 // --- the effect task slots (BattleTask_Create's) -----------------------------------
-constexpr U kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 

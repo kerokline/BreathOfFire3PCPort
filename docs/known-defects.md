@@ -96,7 +96,7 @@ commit it):
   holds `0x08080000`, and **everything from `0x8E4580` to about `0x904E00` is
   one unbroken run of bytes below `0x20`** — both draw structures
   (`0x903880`, `0x903910`), the upload queue's own arrays (`0x903680`) and
-  `DamageScratch` included.
+  `SharedScratch` included.
 - `0x8E4580` is the base of a bump-allocated scratch buffer: `0x4FD230`, called
   once per logic frame from WinMain, resets the pointer `[0x929EDC]` to it, and
   `0x461FC0` / `0x462070` — the unpackers behind `Gfx_FlushUploadQueue`

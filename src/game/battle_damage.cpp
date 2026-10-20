@@ -93,7 +93,7 @@ using move_script::Word;
 // An actor byte: 0..2 the party, 3 and up the enemies. Both address the
 // working record by the byte alone, as the original does (`and eax, 0xFF`).
 unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + 0x10 + (actor & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned actor) { return At(Battle_Enemies_addr + 0x80 + ((actor & 0xFF) - 3) * at::kEnemyStride); }
 // Party(a) is +0x10 into the member record (0x802D50), Enemy(a) +0x80 into the
 // enemy object (0x93B9E0): their typed views start at the records'
 // starts, rv::As<records::PartyMember>(Party(a) - 0x10) and
@@ -368,7 +368,7 @@ extern "C" void __cdecl Battle_RemoveFromTurnOrder(unsigned actor) {
 // In 8.8 fixed point: s = base << 8; the multiplier 0x100 - (s / 256000) <<
 // 17, >> 8, at least 0xCD (205/256 - for any base under 256,000 it is 0xCD);
 // times s >> 8; times the variance Battle_DamageVarianceTable[Rand & 7]
-// (218..307 / 256) >> 8. Then, when DamageScratch's low byte has any of bits
+// (218..307 / 256) >> 8. Then, when SharedScratch's low byte has any of bits
 // 0..4 (the weapon's elements), times Battle_ElementAffinity(target, the
 // scratch word) / 100; when it has bit 5 (holy), times
 // Battle_HolyAffinityTable[the target's holy class] / 100 (the scratch read
@@ -383,11 +383,11 @@ extern "C" int __cdecl Battle_ScaleDamage(unsigned attacker, unsigned target, in
     const int roll = g.rand();
     m = Mul(m, s) >> 8;
     std::int32_t v = Mul(Long(At(bof3::addr::Battle_DamageVarianceTable + 4 * (U32(roll) & 7))), m) >> 8;
-    unsigned scratch = Word(At(bof3::addr::DamageScratch));
+    unsigned scratch = SharedScratch.w_00;
     if (scratch & 0x1F) {
         const short affinity = static_cast<short>(g.element_affinity(target, scratch));
         v = Mul(affinity, v) / 100;
-        scratch = Word(At(bof3::addr::DamageScratch));
+        scratch = SharedScratch.w_00;
     }
     if (scratch & 0x20) {
         const unsigned holy = (target & 0xFF) <= 2 ? rv::As<records::PartyMember>(Party(target) - 0x10)->holy : rv::As<records::BattleEnemy>(Enemy(target) + at::kEObject)->holy;
@@ -440,7 +440,7 @@ constexpr unsigned char kFlagRoll[8] = {50, 50, 50, 50, 60, 60, 60, 70};
 
 // original 0x445CF0 (PSX Battle_CalcDamage 0x801DC00C): an attack's damage,
 // before it is applied.
-//   1. DamageScratch = `element`'s low word; 0xFFFF means the weapon's: a
+//   1. SharedScratch = `element`'s low word; 0xFFFF means the weapon's: a
 //      party attacker's weapon element byte (NameTable_Weapons +0x13), an
 //      enemy 0.
 //   2. A charged attacker (second flags bit 6): the attack 0x939FE4 plus
@@ -466,7 +466,7 @@ constexpr unsigned char kFlagRoll[8] = {50, 50, 50, 50, 60, 60, 60, 70};
 extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, unsigned element) {
     const unsigned a = attacker & 0xFF;
     const unsigned t = target & 0xFF;
-    unsigned char* const scratch = At(bof3::addr::DamageScratch);
+    unsigned char* const scratch = At(SharedScratch_addr);
     if ((element & 0xFFFF) == 0xFFFF) {
         if (a <= 2) {
             const unsigned weapon = rv::As<records::PartyMember>(Party(a) - 0x10)->weapon;
@@ -583,7 +583,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
             v = pr->hp;
             g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
             const std::uint32_t f = U32(static_cast<std::int32_t>(pr->flags_130)) & ~0x100u;
-            At(at::kInstantKill)[0] = 1;
+            WindowRecords[4].state = 1;
             pr->flags_130 = S32(f);
         }
         const std::int32_t hp = pr->hp;
@@ -612,7 +612,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
                 v = Word(e + at::kEHp);
                 g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
                 const std::uint32_t f = U32(static_cast<std::int32_t>(er->flags_110)) & ~0x100u;
-                At(at::kInstantKill)[0] = 1;
+                WindowRecords[4].state = 1;
                 er->flags_110 = S32(f);
             }
             const std::int32_t hp = er->hp;

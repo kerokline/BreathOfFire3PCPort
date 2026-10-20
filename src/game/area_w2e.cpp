@@ -192,9 +192,9 @@ bool BoxLeaves(const unsigned char* o) {
 // bit 12 4, else 0; then the plate state table by +1 (read after the calls;
 // ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U steps = ObjTrio[0].step_frames;
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
@@ -740,7 +740,7 @@ extern "C" void __cdecl Area104_LeaderStep(void) {
     if ((Field_InputFlags & 1) != 0) {
         const auto cell = [] { return AH_CALL(AreaMap_ByteAt)(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole)); };
         if (cell() == 0xAF) {
-            AH_CALL(Field_ChangeArea)(AreaW0b_Place, Long(At(at::kPendingX)), static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
+            AH_CALL(Field_ChangeArea)(AreaW0b_Place, at::kPendingX, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
             Area_EnterTransition = 0xC;
             return;
@@ -849,7 +849,7 @@ extern "C" void __cdecl Area104_Kind5CRun(void) {
 // twenty; ours aborts), +0 = 1, kind +5 = 0x5C, +1 = 3 (the rise), +0xA = its
 // delay 0, 8, 0x10, 0x18.
 extern "C" void __cdecl Area104_Kind5CStart(void) {
-    Cur()[8] = ObjTrio[8];
+    Cur()[8] = ObjTrio[0].direction;
     const U area = Game_AreaNumber;
     if (area >= 200) bof3::Fatal("Area104_Kind5CStart: area %u is past Area_Descriptors' 200", static_cast<unsigned>(area));
     const U descriptor = static_cast<U>(Long(At(Area_Descriptors_addr + area * 4)));
@@ -880,9 +880,9 @@ extern "C" void __cdecl Area104_Kind5CStart(void) {
 // +0xB; else (holding a full charge) the frame 1 or 2 by Frame_Counter bit 1
 // and the back bar only.
 extern "C" void __cdecl Area104_Kind5CFollow(void) {
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, Word(At(ObjTrio_addr + 0x3e)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, ObjTrio[0].height_whole);
     AH_CALL(Sprite_UpdateScreenA)();
     if ((Draw_PassFlags & 0x1B) == 0) return;
     const auto frame = AH_AT(GaugeFrameFn, area_w2e::kGaugeFrame121);
@@ -893,10 +893,10 @@ extern "C" void __cdecl Area104_Kind5CFollow(void) {
         bar(0x40, 1);
         return;
     }
-    if (ObjTrio[0xa] == 0) {
+    if (ObjTrio[0].digits == 0) {
         frame(0xDC, 0x10, 0);
         bar(0x40, 0);
-        bar(static_cast<unsigned char>(0x40 - ObjTrio[0xb]), 1);
+        bar(static_cast<unsigned char>(0x40 - rv::Bytes(ObjTrio)[0xb]), 1);
         return;
     }
     frame(0xDC, 0x10, (Frame_Counter & 2) != 0 ? 1 : 2);
@@ -951,10 +951,10 @@ extern "C" void __cdecl Area104_DrawGauge(U width, U bar) {
 // (answering 0) with +8 ^ 4; both 0: the leader's facing = +8 and the follow.
 extern "C" void __cdecl Area104_Kind5CTurn(void) {
     const auto step = AH_AT(TurnStepFn, kKind5CTurnStep);
-    if (Cur()[8] != ObjTrio[8]) {
-        if (step(Cur()[8], ObjTrio[8]) != 0) return;
-        if (step(static_cast<U>(Cur()[8] ^ 4), ObjTrio[8]) != 0) return;
-        ObjTrio[8] = Cur()[8];
+    if (Cur()[8] != ObjTrio[0].direction) {
+        if (step(Cur()[8], ObjTrio[0].direction) != 0) return;
+        if (step(static_cast<U>(Cur()[8] ^ 4), ObjTrio[0].direction) != 0) return;
+        ObjTrio[0].direction = Cur()[8];
     }
     area_harness::Phase(kKind5CFollow)();
 }
@@ -985,7 +985,7 @@ extern "C" unsigned char __cdecl Area104_Kind5CTurnStep(U from, U to) {
     }
     Cur()[8] = static_cast<unsigned char>(Cur()[8] & 7);
     unsigned char* const o = Cur();
-    ObjTrio[8] = o[8];
+    ObjTrio[0].direction = o[8];
     o[9] = 8;
     area_harness::Phase(kKind5CSpin)();
     Cur()[1] = 2;
@@ -1018,9 +1018,9 @@ extern "C" void __cdecl Area104_Kind5CRise(void) {
         c[0xA] = static_cast<unsigned char>(c[0xA] - 1);
         return;
     }
-    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(c)->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
-    const auto y = static_cast<std::int32_t>(static_cast<U>(Long(At(ObjTrio_addr + 0x3c))) + 0x800000u);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(c)->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
+    const auto y = static_cast<std::int32_t>(static_cast<std::uint32_t>(ObjTrio[0].height) + 0x800000u);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, y);
     AH_AT(area_harness::Handler, area_w2e::kKind5CState4)();
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
@@ -1079,9 +1079,9 @@ extern "C" void __cdecl Area104_Tail40(void) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot != 0xFF) {
             unsigned char* const e = EffectRecord("Area104_Tail40", static_cast<signed char>(slot));
-            const U z = Word(At(ObjTrio_addr + 0x3a));
+            const U z = ObjTrio[0].z_whole;
             e[0] = static_cast<unsigned char>(e[0] + 1);
-            const U x = Word(At(ObjTrio_addr + 0x36));
+            const U x = ObjTrio[0].x_whole;
             e[5] = 0x6A;
             e[9] = 0x19;
             e[0xA] = 0;
@@ -1122,7 +1122,7 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
     if (request == 5) {
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xFFBF);
         AH_CALL(Effect_Release)();
-    } else if (request == 0 && ObjTrio[1] == 0xC) {
+    } else if (request == 0 && ObjTrio[0].state == 0xC) {
         unsigned char* const c = Cur();
         if (c[0xA] != 0) {
             c[0xA] = static_cast<unsigned char>(c[0xA] - 1);
@@ -1155,8 +1155,8 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
     area_harness::Phase(kDrawPanel)();
 
     // the ring
-    const std::int32_t dx = S16(At(ObjTrio_addr + 0x36)) - 0x25;
-    const std::int32_t dz = S16(At(ObjTrio_addr + 0x3a)) - 0x2D;
+    const std::int32_t dx = static_cast<std::int16_t>(ObjTrio[0].x_whole) - 0x25;
+    const std::int32_t dz = static_cast<std::int16_t>(ObjTrio[0].z_whole) - 0x2D;
     const std::int32_t cx = static_cast<std::int32_t>(static_cast<U>(AH_CALL(Math_Cos)(0x200)) * static_cast<U>(dx - dz)) >> 12;
     const std::int32_t sx = cx + 0xFA + Widescreen_Anchor();   // DIV-0041: with the panel (the PSP's 250 -> 282)
     const std::int32_t cz = static_cast<std::int32_t>(static_cast<U>(AH_CALL(Math_Cos)(0x200)) * static_cast<U>(dz + dx)) >> 12;
@@ -1340,8 +1340,8 @@ extern "C" void __cdecl Area105_Tail61(void) {
 extern "C" unsigned char __cdecl Area105_StepHook(U, U z) {
     if (Cond_ByteFA >= 0xA) return 0;
     if (Cond_ByteFD != 0) return 0;
-    const unsigned char facing = ObjTrio[8];
-    B(at::kFoundX) = facing;
+    const unsigned char facing = ObjTrio[0].direction;
+    at::kFoundX = facing;
     if (facing == 0 || facing == 1 || facing == 2) return 0;
     if (static_cast<std::int16_t>(z >> 16) <= 0x1D) return 0;
     Set40();
@@ -1370,7 +1370,7 @@ extern "C" void __cdecl Area105_Init(void) {
 extern "C" void __cdecl Area106_Handler0(void) {
     unsigned char* const member = Field_ActiveMember;
     member[0x80] = static_cast<unsigned char>(member[0x80] & 0xFE);
-    if (B(at::kEffectStates + ObjTrio[0x89]) != 0) return;
+    if (B(at::kEffectStates + ObjTrio[0].char_id) != 0) return;
     unsigned char* const c = Cur();
     Cond_ByteFE = 1;
     c[0] = 0;

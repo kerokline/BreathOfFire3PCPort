@@ -75,6 +75,7 @@ from capstone.x86 import X86_OP_IMM, X86_OP_MEM, X86_OP_REG, X86_REG_INVALID
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gen_symbols import module_constants  # noqa: E402
+import record_sizes  # noqa: E402
 
 GAP = (0x401000, 0x4020B0)       # area handlers outside every pc_funcs host
 IAT = (0x5C4000, 0x5C41B4)       # PE data directory 12
@@ -116,7 +117,14 @@ WNAME = {1: 'byte', 2: 'word', 4: 'dword', 8: 'qword'}
 
 
 def csize(ct):
-    return 4 if ct.endswith('*') or ct not in SIZES else SIZES[ct]
+    """An entry's element size: a pointer 4, a record family its struct's
+    (tools/record_sizes.py: `records::SpriteObject` 0xA4), else SIZES', else 4."""
+    if ct.endswith('*'):
+        return 4
+    rs = record_sizes.size_of(ct)
+    if rs is not None:
+        return rs
+    return SIZES.get(ct, 4)
 
 
 def sections(b):

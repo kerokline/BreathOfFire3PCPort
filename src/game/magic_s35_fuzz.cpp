@@ -203,7 +203,8 @@ alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
 // kVertex: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = 0x903850, kPartyCount = 0x904AB0;
+// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kPartyCount = 0x904AB0;
 // kCurePool: now CureMote_Pool (symbols.toml).
 // kCureCurrent: now CureMote_Current (symbols.toml).
 constexpr std::uint32_t kCureStride = 0x2C;
@@ -309,7 +310,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kScratch, 0x10},                     // 0x903850.., Scratch_Swap at +0xC
+    {SharedScratch_addr, 0x10},           // 0x903850.., Scratch_Swap at +0xC
     {0x7E0700, 0xC00},                    // MoveScript_TintRecords
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
     {0x812980, 0x200},                    // Gfx_ClutStrip row 26
@@ -332,7 +333,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
-    case 2: mh::Mem(kScratch + v % 16)[0] = Byte(h >> 24); break;
+    case 2: mh::Mem(SharedScratch_addr + v % 16)[0] = Byte(h >> 24); break;
     case 3: mh::SetPointer(CureMote_Current_addr, CureRecord(v)); break;
     case 4: CureRecord(v >> 4)[v % 0x28] = Byte(h >> 24); break;
     case 5: BlessRecord(v >> 4)[v % 0x80] = Byte(h >> 24); break;

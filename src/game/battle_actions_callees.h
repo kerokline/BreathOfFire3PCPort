@@ -69,7 +69,8 @@ constexpr std::uint32_t kMsgList = 0x939FBC;       // 4 bytes per message (1-bas
 // 0x93B960 stride 0x128 (actor - 3). Their enemy name records are +0x80.
 // kParty: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
-constexpr std::uint32_t kEnemy = 0x93B960, kEnemyStride = 0x128;
+// kEnemy: now Battle_Enemies (symbols.toml).
+constexpr std::uint32_t kEnemyStride = 0x128;
 // Constant tables in .data.
 // kStandOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). s8 x / y pairs by (object +8) + (char id +0x89) * 4
 constexpr std::uint32_t kAbilityRecords = 0x65C4C8;// 24 bytes per action: +0 the name, +0x10 flags, +0x14 u16, +0x15 flags

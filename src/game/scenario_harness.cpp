@@ -547,7 +547,7 @@ std::uint32_t FxSetTrans(const std::uint32_t* a, std::uint32_t answer) {
     else Note(0xFFFFFFFFu);
     return answer;
 }
-// AreaMap_Slope's "sloped" byte 0x903850 (DamageScratch's first; the effect slot
+// AreaMap_Slope's "sloped" byte 0x903850 (SharedScratch's first; the effect slot
 // region), which its callers and MapView_SlopeAt's read straight after the call
 // (FC1, FC3): 0 (flat) a third of the time, else 1.
 std::uint32_t FxSloped(const std::uint32_t*, std::uint32_t answer) {
@@ -1410,7 +1410,7 @@ unsigned char* ObjectOf(unsigned k) { return Mem(ObjTrio_addr + (k % 3) * at::kO
 unsigned char* FlagRow() { return Pointer(Chapter_FlagRow_addr); }
 unsigned char* TaskAt(unsigned k) { return SpriteRecord(k); }
 unsigned char* EnemyOf(unsigned char target) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyOf(unsigned char actor) { return ObjectOf(actor); }
 unsigned char* Script() { return g_cursor[0]; }

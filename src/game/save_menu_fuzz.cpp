@@ -275,13 +275,13 @@ int __cdecl StubVoicePlaying() {
 unsigned char __cdecl StubClearStatus(unsigned id, unsigned mask, unsigned battle) {
     Record(0x14, id & 0xFF, mask, battle);
     // The status word it would clear, to show the inn does not read it back.
-    PutByte(at::kCharRecords + (id & 7) * at::kCharStride + 0x10, Hash(0x14A));
+    PutByte(CharacterRecords_addr + (id & 7) * at::kCharStride + 0x10, Hash(0x14A));
     return static_cast<unsigned char>(Hash(0x14B));
 }
 void __cdecl StubRecalc(unsigned char* record) {
     Record(0x15, Addr(record));
     // The maxima the inn copies after it.
-    if (Addr(record) >= at::kCharRecords && Addr(record) < at::kCharRecords + 8 * at::kCharStride) {
+    if (Addr(record) >= CharacterRecords_addr && Addr(record) < CharacterRecords_addr + 8 * at::kCharStride) {
         PutWord(Addr(record) + 0x20, Hash(0x15A));
         PutWord(Addr(record) + 0x22, Hash(0x15B));
         PutByte(Addr(record) + 0x2E, Hash(0x15C));
@@ -309,8 +309,8 @@ unsigned char __cdecl StubInvRemove(unsigned kind, unsigned item, unsigned count
     Record(0x1A, kind, item, count, zero);
     // The slot byte Shop_Equip reads after it - that one half the time.
     const U h = Hash(0x1AA);
-    if (h % 2 == 0) PutByte(g_equip_target != 0 ? g_equip_target : at::kCharRecords + 0x12, h >> 24);
-    else if (h % 3 == 0) PutByte(at::kCharRecords + (h >> 8) % 16 * at::kCharStride + 0x12 + (h >> 16) % 6, h >> 24);
+    if (h % 2 == 0) PutByte(g_equip_target != 0 ? g_equip_target : CharacterRecords_addr + 0x12, h >> 24);
+    else if (h % 3 == 0) PutByte(CharacterRecords_addr + (h >> 8) % 16 * at::kCharStride + 0x12 + (h >> 16) % 6, h >> 24);
     return static_cast<unsigned char>(h);
 }
 unsigned char __cdecl StubInvAdd(unsigned kind, unsigned item, unsigned count, unsigned zero) {
@@ -910,10 +910,10 @@ Args Generate(unsigned k) {
         // Field_Members' record bytes and the two accessory slots, 0x1B sometimes.
         for (U i = 0; i < 5; ++i) {
             const U r = Next() % 4 ? Next() % 8 : Next() & 0xFF;
-            PutByte(Field_Members_addr + i * at::kMemberStride, r);
+            PutByte(ObjTrio_addr + 0x148 + i * at::kMemberStride, r);
             if (r < 16) {
-                PutByte(at::kCharRecords + r * at::kCharStride + 0x16, Pick({0x1B, 0x1A, 0x1C, Next()}));
-                PutByte(at::kCharRecords + r * at::kCharStride + 0x17, Pick({0x1B, 0x1A, 0x1C, Next()}));
+                PutByte(CharacterRecords_addr + r * at::kCharStride + 0x16, Pick({0x1B, 0x1A, 0x1C, Next()}));
+                PutByte(CharacterRecords_addr + r * at::kCharStride + 0x17, Pick({0x1B, 0x1A, 0x1C, Next()}));
             }
         }
         PutByte(ScenaSc1_ShopByteB_addr, Pick({5, 6, 7, 8, Next()}));
@@ -932,7 +932,7 @@ Args Generate(unsigned k) {
         x.a[0] = Wide(Next() % 16, 0xFF);
         x.a[1] = Wide(Next() % 8, 0xFF);
         const U slot = x.a[1] & 0xFF;
-        g_equip_target = at::kCharRecords + (x.a[0] & 0xFF) * at::kCharStride + (slot >= 1 && slot <= 5 ? 0x12 + slot : 0x12);
+        g_equip_target = CharacterRecords_addr + (x.a[0] & 0xFF) * at::kCharStride + (slot >= 1 && slot <= 5 ? 0x12 + slot : 0x12);
         break;
     }
     case kDrawRows:
@@ -965,7 +965,7 @@ Args Generate(unsigned k) {
         // Summaries present or not, directory names with hex digits and their neighbours at byte 7.
         for (U i = 0; i < 20; ++i) PutByte(at::kSummaries + i * at::kSummaryBytes + 0x15, Next() % 2 ? 0xFF : Next());
         for (U i = 0; i < 16; ++i)
-            PutByte(at::kDirectory + i * at::kDirectoryBytes + 7,
+            PutByte(Save_Directory_addr + i * at::kDirectoryBytes + 7,
                     Pick({'0', '9', 'A', 'F', 'a', 'f', '/', ':', '@', 'G', '`', 'g', Next(), '0' + Next() % 10,
                           'A' + Next() % 6}));
         x.a[2] = Pick({0, 1, Next()});

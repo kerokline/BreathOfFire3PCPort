@@ -48,8 +48,8 @@ constexpr U kTarget = 0x904B44;           // u8: the target
 // kLeaderFlags: now ObjTrio[0x134] (symbols.toml). dword +0x134: bit 1 set and cleared by the event hooks
 
 // --- the enemies' objects (0x93B960 + n * 0x128) -----------------------------
-constexpr U kEnemy0 = 0x93B960;
-constexpr U kEnemy1 = 0x93BA88;
+// kEnemy0: now Battle_Enemies (symbols.toml).
+// kEnemy1: now Battle_Enemies[1] (symbols.toml).
 constexpr U kEnemy0Hp = 0x93BA04;         // enemy 0's u16 +0xA4
 constexpr U kEnemy0B0 = 0x93BA10;         // enemy 0's u16 +0xB0
 // kEnemy1Hp: now BossSb_Enemy1Hp (symbols.toml). enemy 1's u16 +0xA4

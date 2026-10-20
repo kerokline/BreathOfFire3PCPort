@@ -40,7 +40,7 @@ using Pickup = unsigned char (__cdecl*)(unsigned, unsigned);
 
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs (x, z)
 constexpr U kCellOffsets = 0x66971C;   // two signed bytes a direction: the cell ahead
-constexpr U kCells = 0x903850;         // DamageScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
+// kCells: now SharedScratch (symbols.toml). SharedScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
 constexpr U kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 0x1E;   // Sprite_Objects; 0x1E.. Sprite_ObjectsExtra's four
 constexpr unsigned kEffectCount = 20;
@@ -53,7 +53,7 @@ constexpr U kEffectStride = 0x80;
 // kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char& Cell(unsigned i) { return At(kCells)[i & 0xFF]; }
+unsigned char& Cell(unsigned i) { return At(SharedScratch_addr)[i & 0xFF]; }
 // A Field_DirectionSteps row, read in place with the direction unmasked (the
 // originals' `shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as they do.
@@ -96,7 +96,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes 0x%X "
                     "(docs/rest_1f.md section 7)",
                     who, index, static_cast<unsigned>(Effect_Objects_addr + index * kEffectStride));
-    return Effect_Objects + index * kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * kEffectStride;
 }
 
 // The object Sprite_ObjectAt found gets bit 0 of its +0x80: 0..0x1D a
@@ -107,9 +107,9 @@ unsigned char* EffectAt(unsigned index, const char* who) {
 void MarkObject(unsigned char found, const char* who) {
     const int i = static_cast<signed char>(found);
     if (i >= 0 && i < static_cast<int>(kObjectCount))
-        Sprite_Objects[static_cast<unsigned>(i) * kObjectStride + 0x80] |= 1;
+        Sprite_Objects[static_cast<unsigned>(i)].context |= 1;
     else if (i >= static_cast<int>(kObjectCount) && i < static_cast<int>(kObjectCount) + 4)
-        Sprite_ObjectsExtra[static_cast<unsigned>(i - static_cast<int>(kObjectCount)) * kObjectStride + 0x80] |= 1;
+        Sprite_ObjectsExtra[static_cast<unsigned>(i - static_cast<int>(kObjectCount))].context |= 1;
     else
         bof3::Fatal("%s: Sprite_ObjectAt's answer 0x%02X is past Sprite_Objects' 30 and Sprite_ObjectsExtra's 4; the "
                     "original sets a bit at 0x%X (docs/rest_1f.md section 7)",
@@ -137,7 +137,7 @@ void SideProbe(unsigned d) {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     if (static_cast<short>(rv::As<records::PartyMember>(Sc())->height_whole) < static_cast<short>(ground)) Sc()[0x2B] = 0;
 }
@@ -160,7 +160,7 @@ void BeginShape() {
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(Sc() + 0x3E)));
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), Sc()[8]);
-    if (At(bof3::addr::DamageScratch)[0] != 0 && rise > 0x40) {
+    if (SharedScratch.b_00 != 0 && rise > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
     } else {
@@ -969,7 +969,7 @@ extern "C" void __cdecl LeaderPanel_S0Begin(void) {
 // one on, and +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Wait(void) {
     if (Transition_Busy != 0) return;
-    unsigned char* const record4 = Effect_Objects + 4 * kEffectStride;
+    unsigned char* const record4 = rv::Bytes(&Effect_Objects[4]);
     const unsigned char state = record4[1];
     record4[6] = 0;
     record4[1] = static_cast<unsigned char>(state + 1);
@@ -980,8 +980,8 @@ extern "C" void __cdecl LeaderPanel_S0Wait(void) {
 // record 4's state +1 is 4, record 1's state +1 one on, +2 one on (stage 1)
 // and +3 = 0.
 extern "C" void __cdecl LeaderPanel_S0End(void) {
-    if (Effect_Objects[4 * kEffectStride + 1] != 4) return;
-    ++Effect_Objects[kEffectStride + 1];
+    if (Effect_Objects[4].state != 4) return;
+    ++Effect_Objects[1].state;
     ++Sc()[2];
     Sc()[3] = 0;
 }

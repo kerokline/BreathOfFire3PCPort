@@ -53,7 +53,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 unsigned char* PointerAt(U cell) { return At(static_cast<U>(Long(At(cell)))); }
@@ -174,7 +174,7 @@ extern "C" unsigned long __cdecl BossSample3_Hook(unsigned long word) {
 extern "C" void __cdecl Boss34_Setup(void) {
     const unsigned char id = Character_IndexById[4];
     for (unsigned m = 0; m <= 2; ++m)
-        if (At(Field_Members_addr + m * at::kPartyStride)[0] == id) BossSh_Picked = static_cast<unsigned char>(m);
+        if (At(ObjTrio_addr + 0x148 + m * at::kPartyStride)[0] == id) BossSh_Picked = static_cast<unsigned char>(m);
     StoreHooks(bof3::addr::Boss34_End, bof3::addr::Boss34_Exit, bof3::addr::Boss34_Event);
 }
 
@@ -493,8 +493,8 @@ extern "C" void __cdecl BossAngler_HookSpawnFx(unsigned) {
                     "bytes to 0x93A000 + 0x84 * 0x%X, past the slots and the image (docs/boss_sh.md section 6)",
                     slot, slot);
     const std::int32_t actor = static_cast<std::int32_t>(B(at::kActor)) - 3;
-    unsigned char* const to = At(at::kTasks + at::kTaskStride * slot);
-    const unsigned char* const from = At(static_cast<U>(static_cast<std::int32_t>(at::kEnemies) + actor * static_cast<std::int32_t>(at::kEnemyStride)));
+    unsigned char* const to = At(BattleTask_Slots_addr + at::kTaskStride * slot);
+    const unsigned char* const from = At(static_cast<U>(static_cast<std::int32_t>(Battle_Enemies_addr) + actor * static_cast<std::int32_t>(at::kEnemyStride)));
     for (unsigned i = 0; i < 0x80; i += 4) {
         std::uint32_t d;
         std::memcpy(&d, from + i, 4);

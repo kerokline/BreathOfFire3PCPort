@@ -14,7 +14,7 @@
 // The event script interpreter and the flag helpers - see docs/event-script.md
 // for each function, its PSX twin and the fuzz.
 //
-// Terms. "The count" is the word at DamageScratch (0x903850; the PSX
+// Terms. "The count" is the word at SharedScratch (0x903850; the PSX
 // scratchpad's 0x1F800000): the next Sprite_Objects entry a placement fills.
 // The word after it (0x903852, PSX 0x1F800002) holds the animation bank a
 // placement passes on. Both are general scratch words, used all over the exe
@@ -58,22 +58,22 @@ std::uint32_t Dword(const unsigned char* p) {
 // The count and the bank word (see the top of the file).
 short Count() {
     short v;
-    std::memcpy(&v, At(bof3::addr::DamageScratch), sizeof v);
+    std::memcpy(&v, At(SharedScratch_addr), sizeof v);
     return v;
 }
-void SetCount(unsigned v) { SetWord(At(bof3::addr::DamageScratch), v); }
+void SetCount(unsigned v) { SharedScratch.w_00 = v; }
 unsigned short Bank() {
     unsigned short v;
-    std::memcpy(&v, At(bof3::addr::DamageScratch) + 2, sizeof v);
+    std::memcpy(&v, At(SharedScratch_addr) + 2, sizeof v);
     return v;
 }
-void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
+void SetBank(unsigned v) { SharedScratch.w_02 = v; }
 
 // Data these read that symbols.toml does not name.
 // kBlockFlags: now Field_StatusBits (symbols.toml). bit 6: ScriptFlags_Set40 / Clear40 (object_kinds.cpp)
 
-unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
-unsigned char* Extra(unsigned n) { return Sprite_ObjectsExtra + n * 0xA4u; }
+unsigned char* Object(int n) { return rv::Bytes(Sprite_Objects) + n * 0xA4; }
+unsigned char* Extra(unsigned n) { return rv::Bytes(&Sprite_ObjectsExtra[n]); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.
@@ -515,7 +515,7 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
 // original 0x57B4E0: op Cx, 2 bytes - the kind-2 object's kind is the op's
 // high nibble (always 0xC), then Kind2_Place(op[1]) (PSX FUN_801A82B8).
 extern "C" void __cdecl EventOp_Cx(const unsigned char* op) {
-    Sprite_Kind2[6] = op[0] >> 4;
+    Sprite_Kind2.type = op[0] >> 4;
     g.kind2_place(op[1]);
 }
 
@@ -567,9 +567,9 @@ extern "C" void __cdecl ScriptFlags_Set40(void) {
 
 // original 0x57C810 (PSX 0x8015CAF0): bit 6 of three objects' first byte.
 extern "C" void __cdecl ObjTrio_SetBit40(void) {
-    ObjTrio[0] |= 0x40;
-    ObjTrio[0x14C] |= 0x40;
-    ObjTrio[0x298] |= 0x40;
+    ObjTrio[0].flags |= 0x40;
+    ObjTrio[1].flags |= 0x40;
+    ObjTrio[2].flags |= 0x40;
 }
 
 void EventScript_Inject() {

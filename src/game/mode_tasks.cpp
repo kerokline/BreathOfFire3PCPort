@@ -298,9 +298,9 @@ extern "C" void __cdecl GameMode_Field(void) {
         At(kBattleBytes)[0] = 0;
         At(kBattleBytes)[1] = 0;
         At(kBattleBytes)[2] = 0;
-        ObjTrio[0xb] = 0;
-        Field_Members[0xf] = 0;
-        ObjTrio[0x2a3] = 0;
+        rv::Bytes(ObjTrio)[0xb] = 0;
+        rv::Bytes(&ObjTrio[1])[0xb] = 0;
+        rv::Bytes(&ObjTrio[2])[0xb] = 0;
         Game_Step = 0;
         Rest4a_Clock = static_cast<std::int32_t>(static_cast<std::uint32_t>(count) + 1u);
         return;

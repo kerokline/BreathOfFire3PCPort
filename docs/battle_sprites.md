@@ -108,7 +108,7 @@ record's index or 0xFF. Kinds 0..4 take 1, 16 (a row, at cell 0), 2, 4 or 8
 cells, aligned; `ClutMap_FindFree` answers the clut slot (0xC0 + row * 16 +
 cell, 0x1C + row, 0xE0 + row * 8 + cell / 2, 0x70 + row * 4 + cell / 4,
 0x38 + row * 2 + cell / 8), and both searches leave the row and cell in
-`DamageScratch` bytes 0 and 1, which `ClutMap_Mark` then writes over.
+`SharedScratch` bytes 0 and 1, which `ClutMap_Mark` then writes over.
 `Sprite_SetClutStp` turns the slot back into a `Gfx_ClutStrip` row and
 column with the tables 0x6528C4 / 0x6528CC / 0x6528D4 indexed by the kind
 (+0x28).
@@ -166,7 +166,7 @@ boss table's 24 entries pointed at 24 numbered stand-ins for the duration;
 Field_State, 0x904B40, 0x904B50 and 0x939AD8 pointed at buffers of the
 fuzz's. Compared: the party records (and over-indexed ones, and the window
 records), the globals 0x904000..0x904C00, the pop-up and enemy records, the
-clut map and 96 tint records' worth, DamageScratch, Sprite_Current and
+clut map and 96 tint records' worth, SharedScratch, Sprite_Current and
 Gfx_ClutStripDirty, the enemy data and the encounter records where read, the
 action table, the clut strip for `Sprite_SetClutStp`, the fuzz's buffers,
 the answer at the width the original defines, and the stand-ins' log (each
@@ -186,7 +186,7 @@ target byte, the acting actor, the counts, the action id, record bytes (the
 members' +0x124 after `0x591810` in particular),
 Sprite_Current and its +5 / +0x24 / +0x27 / +0x28, the member stats the
 formation re-reads, the clut scratch and cells; the two clut searches set
-DamageScratch as the real ones do, and the window claim writes its record.
+SharedScratch as the real ones do, and the window claim writes its record.
 
 **Bounded, not the functions:** a target re-read as an index stays an actor
 (a side value re-read would index 0x40.. records past `.data`, and fault in
@@ -377,7 +377,7 @@ No Capcom defect reached in play was found. Latent, kept as they are:
 - `Battle_SetupEnemy` indexes the enemy data by 16 bits of the id,
   `Battle_CopyEnemyData` by 8: ids above 0xFF would split between records.
 - `ClutMap_Mark`'s release, when `ClutMap_FindOwner` finds nothing, still
-  writes 0xFF over the cells DamageScratch last named.
+  writes 0xFF over the cells SharedScratch last named.
 - `Sprite_SetClutStp` divides by zero for a clut kind of 5 or more.
 - Every actor index is unchecked (targets 11..0x3F index enemy records past
   `.data`).

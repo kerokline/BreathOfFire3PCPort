@@ -345,7 +345,7 @@ extern "C" unsigned char __cdecl Area148_Trigger17(unsigned char*, unsigned char
 // are the argument bytes and facing the leader's +8 (the whole byte): none al
 // 0; found: ScriptFlags_Set40, tail kind 31 at the record's state (0x14), al 1.
 extern "C" unsigned char __cdecl Area148_SwitchHook(long x, long z) {
-    const unsigned char facing = ObjTrio[8];
+    const unsigned char facing = ObjTrio[0].direction;
     const auto bx = static_cast<unsigned char>(x), bz = static_cast<unsigned char>(z);
     U found = 0;
     for (U rec = Area148_Switch_addr; rec < at::kA148SwitchEnd; rec += 4, ++found) {
@@ -608,8 +608,8 @@ void DustThenAgain(int dx) {
 // Extra record 0's x (s32 +0x34) below the kind-2 x + 0x20000 (signed): its
 // +0x84 = 3.
 void MarkIfBehind() {
-    if (Long(At(Sprite_ObjectsExtra_addr + 0x34)) < static_cast<std::int32_t>(static_cast<U>(Field_Kind2X) + 0x20000u))
-        Sprite_ObjectsExtra[0x84] = 3;
+    if (Sprite_ObjectsExtra[0].x < static_cast<std::int32_t>(static_cast<U>(Field_Kind2X) + 0x20000u))
+        Sprite_ObjectsExtra[0].speed = 3;
 }
 // The map moved 0x14 cells in x (`sign` +1 or -1): Sprite_Kind2 +0x34 and
 // Field_Kind2X by 0x140000, MapView_Origin's word by 0x14, MapView_FocusX to
@@ -621,13 +621,13 @@ void ShiftMap(int sign, U focus, bool effects) {
     const U step = sign > 0 ? 0x140000u : 0xFFEC0000u;
     const U kind2x = static_cast<U>(Field_Kind2X);
     MapView_Origin[0] = static_cast<std::uint16_t>(MapView_Origin[0]) + (sign > 0 ? 0x14u : 0xFFECu);
-    SetLong(At(Sprite_Kind2_addr + 0x34), static_cast<std::int32_t>(static_cast<U>(Long(At(Sprite_Kind2_addr + 0x34))) + step));
+    Sprite_Kind2.x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_Kind2.x) + step);
     const std::int32_t x = static_cast<std::int32_t>(kind2x + step);
     const std::int32_t z = Field_Kind2Z;
     MapView_FocusX = static_cast<std::int32_t>(focus);
     Field_Kind2X = x;
     const long h = AH_CALL(AreaMap_Elevation)(x, z);
-    SetWord(At(Sprite_Kind2_addr + 0x3e), static_cast<U>(h));
+    Sprite_Kind2.height_whole = static_cast<U>(h);
     AH_CALL(MapView_SetElevation)(static_cast<int>(h));
     AH_AT(void (__cdecl*)(), area_w3g::kViewShift)();
     if (effects) {
@@ -640,10 +640,10 @@ void ShiftMap(int sign, U focus, bool effects) {
             rv::Store<unsigned>(rv::As<records::EffectObject>(e)->height_whole, static_cast<U>(eh));
         }
     }
-    const std::int32_t ex = static_cast<std::int32_t>(static_cast<U>(Long(At(Sprite_ObjectsExtra_addr + 0x34))) + step);
-    SetLong(At(Sprite_ObjectsExtra_addr + 0x34), ex);
-    const long xh = AH_CALL(AreaMap_Elevation)(ex, Long(At(Sprite_ObjectsExtra_addr + 0x38)));
-    SetWord(At(Sprite_ObjectsExtra_addr + 0x3E), static_cast<U>(xh));
+    const std::int32_t ex = static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x) + step);
+    Sprite_ObjectsExtra[0].x = ex;
+    const long xh = AH_CALL(AreaMap_Elevation)(ex, Sprite_ObjectsExtra[0].z);
+    Sprite_ObjectsExtra[0].height_whole = static_cast<U>(xh);
 }
 
 }  // namespace
@@ -659,7 +659,7 @@ extern "C" void __cdecl Area149_DustRun(void) {
 // the dust at -4 and the op again.
 extern "C" void __cdecl Area149_DustNear880(void) {
     if (Camera_Distance < 0x880) {
-        Sprite_ObjectsExtra[0x84] = 1;
+        Sprite_ObjectsExtra[0].speed = 1;
         B(at::kCounter0) = 0xA;
         AH_CALL(Sound_PlayEffect)(1);
         Cur()[4] = static_cast<unsigned char>(Cur()[4] + 1);
@@ -960,8 +960,8 @@ void PlaceMessage151(const WorldMapTables& t) {
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
-    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
+    const auto z = static_cast<std::int16_t>(ObjTrio[0].z_whole);
+    const auto x = static_cast<std::int16_t>(ObjTrio[0].x_whole);
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
@@ -999,9 +999,9 @@ void PlaceMessage151(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U steps = ObjTrio[0].step_frames;
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
@@ -1287,8 +1287,8 @@ void Record8Place(const WorldMapTables& t) {
     Cur()[0x29] = 5;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dir(Cur(), 0));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dir(Cur(), 2));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     unsigned char* o = Cur();
     auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
@@ -1325,7 +1325,7 @@ void Record8Place(const WorldMapTables& t) {
 // record +0xB (x, z; unchecked) set to 0xA0 - AreaMap_Bytes +
 // AreaMap_Header[0] * z + x; Sprite_SetAnimation(0) and +1 = 1.
 void Record4MarkCell(const WorldMapTables& t) {
-    if (At(at::kFlag3A79)[0] == 9 || (Field_StatusBits & 1) != 0) {
+    if (CharacterRecords[0].char_id == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }

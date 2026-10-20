@@ -11,6 +11,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"
 
 namespace rest_1a::at {
 
@@ -55,7 +56,7 @@ constexpr unsigned kFormActionCount = 19;
 // kLeaderStep: now ObjTrio[2] (symbols.toml). ObjTrio +2
 // kCondRow1: now Cond_Flags[8] (symbols.toml). Cond_Flags + 8: the flag row Flags_Test reads (bit 0x16)
 constexpr std::uint32_t kScriptFlags3 = 0x9039A3;    // Field_ScriptFlags + 1: the u16's high byte
-constexpr std::uint32_t kScratchFlag = 0x903850;     // DamageScratch's flag byte (MapView_SlopeAt's)
+inline auto& kScratchFlag = SharedScratch.b_00;  // SharedScratch's flag byte (MapView_SlopeAt's)
 constexpr std::uint32_t kSteps = 0x6697B0;           // Field_DirectionSteps, 8 rows of two longs
 // kSideStep3: now Field_DirectionSteps[6] (symbols.toml). its row 3, read by address
 // kSideStep5: now Field_DirectionSteps[0xa] (symbols.toml). its row 5

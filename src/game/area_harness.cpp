@@ -511,7 +511,7 @@ unsigned char* Object(unsigned k) { return Mem(Sprite_Objects_addr + (k % at::kO
 unsigned char* TaskAt(unsigned k) { return Object(k % 4); }
 unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* EnemyOf(unsigned char target) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyOf(unsigned char member) { return Mem(ObjTrio_addr + (member % at::kPartyCount) * at::kPartyStride); }
 const unsigned char* Descriptor(unsigned area) {

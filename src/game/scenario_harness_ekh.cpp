@@ -34,6 +34,7 @@
 #include <cstdlib>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -127,7 +128,7 @@ void Seed(unsigned k) {
     case kSubState: {
         // the leader within, at and past two cells of the record half the time;
         // Cond_ByteFD 0 and Cond_ByteFE equal to +0xA a third of the time each
-        unsigned char* const leader = ObjTrio;
+        unsigned char* const leader = rv::Bytes(ObjTrio);
         s[1] = 15;   // EffectKind18_States[15], 0x500930, whose +2 table holds this state
         if (sh::Half()) {
             const std::int32_t dx = static_cast<std::int32_t>(sh::Next() % 5) - 2, dz = static_cast<std::int32_t>(sh::Next() % 5) - 2;

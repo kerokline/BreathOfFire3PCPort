@@ -73,9 +73,9 @@ constexpr std::uint32_t kTextRecord0 = 0x904CE0;   // Text_Records[0], 32 bytes
 // The party's working records (ObjTrio, 0x14C each) and the enemy objects.
 // kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
-constexpr std::uint32_t kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemySize = 0x128;
-constexpr std::uint32_t kMenuActor = 0x939EC4;     // unsigned char*: the member the menu is for (PSX 0x801EBE78)
+// kMenuActor: now BattleE4_MenuActor (symbols.toml). unsigned char*: the member the menu is for (PSX 0x801EBE78)
 constexpr std::uint32_t kMenuRecord = 0x939FA0;    // unsigned char*: that member's +0x124, its command record
 // kMessageBusy: now BattleE1_MessageUp (symbols.toml). u8
 constexpr std::uint32_t kMessages = 0x939FBC;      // 4-byte records by 1..count: u8 enemy, -, u16 message
@@ -83,7 +83,7 @@ constexpr std::uint32_t kMessages = 0x939FBC;      // 4-byte records by 1..count
 constexpr std::uint32_t kC2A0 = 0x93C2A0;          // u8, zeroed with 0x93C2A1 by BattleIntro_OpenWindows
 constexpr std::uint32_t kB8E0 = 0x93B8E0;          // u8, zeroed by Battle_CommitRound
 // The window records (WindowRecords, 0x24 each).
-constexpr std::uint32_t kWindows = 0x803160;
+// kWindows: now WindowRecords (symbols.toml).
 constexpr std::uint32_t kWindowSize = 0x24;
 // 16 words copied from 0x80D560 to 0x811560 by Battle_Init.
 // kClutFrom: now Gfx_ClutStripSource[0xff0] (symbols.toml).

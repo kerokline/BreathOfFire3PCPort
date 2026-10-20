@@ -154,7 +154,7 @@ unsigned char* Member(const char* who, unsigned m) {
         bof3::Fatal("%s: member %u of Field_MemberCount %u, past ObjTrio's three records - the original writes "
                     "what follows (docs/effect_3b.md section 7)",
                     who, m, (unsigned)Field_MemberCount);
-    return ObjTrio + m * at::kObjTrioStride;
+    return rv::Bytes(&ObjTrio[m]);
 }
 
 // Effect_FindFree's record (the answer's low byte, as the originals widen it):
@@ -166,7 +166,7 @@ unsigned char* Spawned(const char* who, U answer) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes record %u past "
                     "the pool (docs/effect_3b.md section 7)",
                     who, k, k);
-    return Effect_Objects + k * at::kEffectStride;
+    return rv::Bytes(&Effect_Objects[k]);
 }
 
 unsigned char* Parent() { return EffectKind69_Parent; }
@@ -190,17 +190,17 @@ void PointVector(const unsigned char* s, short* v) {
     v[2] = static_cast<short>(-(static_cast<std::int16_t>(Word(s + 0x3E)) / 2));
 }
 
-// The orbit kind 0x69's parts 1 and 2 share: DamageScratch = radius, the angle
+// The orbit kind 0x69's parts 1 and 2 share: SharedScratch = radius, the angle
 // (+0xC & 0x7F) << 5 to 0x903854; x = cos * the scratch (re-read) + the parent's
 // x, z = sin(0x903854, re-read) * the scratch + the parent's z - no shift.
 void Orbit(U radius) {
-    SetUL(at::kScale, radius);
+    at::kScale.d_00 = radius;
     const U angle = (rv::As<records::EffectWork>(S())->work_0c & 0x7F) << 5;
-    SetUL(at::kAngle, angle);
+    at::kAngle = angle;
     const int c = SH_CALL(Math_Cos)(static_cast<int>(angle));
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, Mul(c, UL(at::kScale)) + UL(Parent() + 0x34));
-    const int n = SH_CALL(Math_Sin)(static_cast<int>(UL(at::kAngle)));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, Mul(n, UL(at::kScale)) + UL(Parent() + 0x38));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, Mul(c, static_cast<std::uint32_t>(at::kScale.d_00)) + UL(Parent() + 0x34));
+    const int n = SH_CALL(Math_Sin)(at::kAngle);
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, Mul(n, static_cast<std::uint32_t>(at::kScale.d_00)) + UL(Parent() + 0x38));
 }
 
 // A part's place: +0xB = Rand() & 0xF, +9 = +0xA = 0, +0xC = (+4 << 5) + start,
@@ -373,7 +373,7 @@ extern "C" void __cdecl EffectKind63_End(void) {
 // after each call) the same; Sprite_Current put back.
 extern "C" void __cdecl EffectKind63_RefreshSprites(void) {
     unsigned char* const saved = Sprite_Current;
-    unsigned char* o = Sprite_Objects;
+    unsigned char* o = rv::Bytes(Sprite_Objects);
     for (unsigned n = at::kSprites; n != 0; --n, o += at::kSpriteStride) {
         Sprite_Current = o;
         if ((o[0] & 1) == 0) continue;
@@ -523,10 +523,10 @@ extern "C" void __cdecl EffectKind67_Run(void) {
 // Camera_Angles + 2, +0x6C = 0xE2, +9 = 0x1E. Its own +1 is left: one a frame.
 extern "C" void __cdecl EffectKind67_SpawnKind13(void) {
     const U answer = SH_CALL(Effect_FindFree)();
-    B(at::kScale) = static_cast<unsigned char>(answer);
+    at::kScale.b_00 = static_cast<unsigned char>(answer);
     if ((answer & 0xFF) == 0xFF) return;
     const U angle = S16(static_cast<std::uint32_t>(static_cast<std::uint16_t>(Camera_Angles[1])));
-    unsigned char* const e = Spawned("EffectKind67_SpawnKind13", UL(at::kScale));
+    unsigned char* const e = Spawned("EffectKind67_SpawnKind13", static_cast<std::uint32_t>(at::kScale.d_00));
     e[0] = 1;
     e[5] = 0x13;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->angle[0], 0xFFFFFC7Au);
@@ -725,27 +725,27 @@ extern "C" void __cdecl EffectKind69_Part1Fade(void) {
 // ring's y = sin(((+0xB + i) & 0xF) << 8) * R sar 12, R = base + or - (Rand() &
 // spread) (Rand's bit 0 picks), its z = -64 i; the previous ring's y and z
 // kept. Four semi-transparent POLY_G4s a ring, offset by `width` (its low word)
-// down, then two up, then one up, shaded from 7 * +0xA (DamageScratch + 8, its
+// down, then two up, then one up, shaded from 7 * +0xA (SharedScratch + 8, its
 // low byte read again for each) and the low byte of 13 * +0xA, 1 on the first
 // ring; drawn only while the float at 0x5C41DC is below the first quad's third
-// corner's y (or unordered). DamageScratch holds R, +4 the angle; both read
+// corner's y (or unordered). SharedScratch holds R, +4 the angle; both read
 // again after the calls.
 extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, unsigned spread) {
     const unsigned char* s = S();
-    SetUL(at::kScale, 0x10);
+    at::kScale.d_00 = 0x10;
     const U first = (static_cast<U>(s[0xB]) & 0xF) << 8;
-    SetUL(at::kAngle, first);
-    SetUL(at::kShade, 7u * s[0xA]);
+    at::kAngle = first;
+    at::kShade = 7u * s[0xA];
     const unsigned char bright = static_cast<unsigned char>(13u * s[0xA]);
     const int sn0 = SH_CALL(Math_Sin)(static_cast<int>(first));
     unsigned char* const mode = Gfx_PacketNext;
-    Prim_VertexScratch[1] = Sar(Mul(sn0, UL(at::kScale)), 12);
-    Prim_VertexScratch[2] = 0;
+    Prim_VertexScratch[0].y = Sar(Mul(sn0, static_cast<std::uint32_t>(at::kScale.d_00)), 12);
+    Prim_VertexScratch[0].z = 0;
     SH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     const U d = width & 0xFFFF;
     const U d2 = (2 * width) & 0xFFFF;
-    const auto shade = [] { return B(at::kShade); };
+    const auto shade = [] { return SharedScratch.b_08; };
     const auto quad = [](unsigned char* p) {
         long depth;
         SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(Prim_VertexScratch_addr)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x8)),
@@ -762,30 +762,30 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
     };
     for (U i = 1; i < 0x12; ++i) {
         const U angle = ((static_cast<U>(S()[0xB]) + i) & 0xF) << 8;
-        SetUL(at::kAngle, angle);
+        at::kAngle = angle;
         U radius;
         if (SH_CALL(Rand)() & 1)
             radius = (static_cast<U>(SH_CALL(Rand)()) & S16(spread)) + S16(base);
         else
             radius = S16(base) - (static_cast<U>(SH_CALL(Rand)()) & S16(spread));
-        SetUL(at::kScale, radius);
-        const U y = static_cast<std::uint16_t>(Prim_VertexScratch[1]), z = static_cast<std::uint16_t>(Prim_VertexScratch[2]);
-        Prim_VertexScratch[9] = y;
-        Prim_VertexScratch[0xd] = y - d;
-        Prim_VertexScratch[8] = 0;
-        Prim_VertexScratch[0xa] = z;
-        Prim_VertexScratch[0xc] = 0;
-        Prim_VertexScratch[0xe] = z;
-        Prim_VertexScratch[0] = 0;
-        const int sn = SH_CALL(Math_Sin)(static_cast<int>(UL(at::kAngle)));
-        const U ny = Sar(Mul(sn, UL(at::kScale)), 12);
-        Prim_VertexScratch[4] = 0;
+        at::kScale.d_00 = radius;
+        const U y = static_cast<std::uint16_t>(Prim_VertexScratch[0].y), z = static_cast<std::uint16_t>(Prim_VertexScratch[0].z);
+        Prim_VertexScratch[2].y = y;
+        Prim_VertexScratch[3].y = y - d;
+        Prim_VertexScratch[2].x = 0;
+        Prim_VertexScratch[2].z = z;
+        Prim_VertexScratch[3].x = 0;
+        Prim_VertexScratch[3].z = z;
+        Prim_VertexScratch[0].x = 0;
+        const int sn = SH_CALL(Math_Sin)(at::kAngle);
+        const U ny = Sar(Mul(sn, static_cast<std::uint32_t>(at::kScale.d_00)), 12);
+        Prim_VertexScratch[1].x = 0;
         unsigned char* p = Gfx_PacketNext;
         const U nz = (0u - i) << 6;
-        Prim_VertexScratch[1] = ny;
-        Prim_VertexScratch[2] = nz;
-        Prim_VertexScratch[5] = ny - d;
-        Prim_VertexScratch[6] = nz;
+        Prim_VertexScratch[0].y = ny;
+        Prim_VertexScratch[0].z = nz;
+        Prim_VertexScratch[1].y = ny - d;
+        Prim_VertexScratch[1].z = nz;
         // the first quad: the ring between this y and the previous, `width` down
         SH_CALL(Gpu_SetPolyG4)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -930,15 +930,15 @@ extern "C" void __cdecl EffectKind69_Part2Fade(void) {
     Fade(2);
 }
 
-// original 0x483970 (called by parts 1 and 2): DamageScratch = (Rand() & 7) +
+// original 0x483970 (called by parts 1 and 2): SharedScratch = (Rand() & 7) +
 // 3 * +0xA; a draw mode (0x35, dtd 1) in slot 2; eight semi-transparent
 // POLY_G3s in slot 2 round the screen point (the s16 +0x2E, +0x30): the
 // centre shaded (+0xA << 3, +0xA << 3, 6 * +0xA), the rim points (sin a * R
 // sar 12 + x, cos a * R sar 12 + y) at a and a + 0x200 shaded 1; a = 0, 0x200 ..
-// 0xE00 (DamageScratch and Sprite_Current read again after each call).
+// 0xE00 (SharedScratch and Sprite_Current read again after each call).
 extern "C" void __cdecl EffectKind69_DrawGlow(void) {
     const U rnd = static_cast<U>(SH_CALL(Rand)());
-    SetUL(at::kScale, (rnd & 7) + 3u * S()[0xA]);
+    at::kScale.d_00 = (rnd & 7) + 3u * S()[0xA];
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     U a = 0;
@@ -948,16 +948,16 @@ extern "C" void __cdecl EffectKind69_DrawGlow(void) {
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
         Fild(S16(rv::As<records::EffectWork>(S())->work_2e), p + 8);
         Fild(S16(rv::As<records::EffectWork>(S())->work_30), p + 0xC);
-        // each answer scaled by DamageScratch read after its call
+        // each answer scaled by SharedScratch read after its call
         int t = SH_CALL(Math_Sin)(static_cast<int>(a));
-        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(rv::As<records::EffectWork>(S())->work_2e), p + 0x18);
+        Fild(Sar(Mul(t, static_cast<std::uint32_t>(at::kScale.d_00)), 12) + S16(rv::As<records::EffectWork>(S())->work_2e), p + 0x18);
         t = SH_CALL(Math_Cos)(static_cast<int>(a));
-        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(rv::As<records::EffectWork>(S())->work_30), p + 0x1C);
+        Fild(Sar(Mul(t, static_cast<std::uint32_t>(at::kScale.d_00)), 12) + S16(rv::As<records::EffectWork>(S())->work_30), p + 0x1C);
         a += 0x200;
         t = SH_CALL(Math_Sin)(static_cast<int>(a));
-        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(rv::As<records::EffectWork>(S())->work_2e), p + 0x28);
+        Fild(Sar(Mul(t, static_cast<std::uint32_t>(at::kScale.d_00)), 12) + S16(rv::As<records::EffectWork>(S())->work_2e), p + 0x28);
         t = SH_CALL(Math_Cos)(static_cast<int>(a));
-        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(rv::As<records::EffectWork>(S())->work_30), p + 0x2C);
+        Fild(Sar(Mul(t, static_cast<std::uint32_t>(at::kScale.d_00)), 12) + S16(rv::As<records::EffectWork>(S())->work_30), p + 0x2C);
         const unsigned char level = S()[0xA];
         p[4] = static_cast<unsigned char>(level << 3);
         p[5] = static_cast<unsigned char>(level << 3);

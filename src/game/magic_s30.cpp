@@ -54,7 +54,7 @@ using move_script::Word;
 // 0x903850 (words; Scratch_Swap is +0xC) and the four SVECTORs of
 // Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 // The dword the sprite children point at a sprite bank while their phase
 // runs (0x8E3580 / 0x813580), and put back to 0x8B3580 after.
@@ -79,10 +79,10 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Cur() { return Pointer(KaiserMote_Current_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -128,7 +128,7 @@ std::uint16_t Ftol16(std::uint32_t bits) {
     return static_cast<std::uint16_t>(static_cast<std::uint64_t>(static_cast<std::int64_t>(v)));
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* Mote(unsigned i) { return Mem(KaiserMote_Pool_addr + i * kMoteStride); }
 

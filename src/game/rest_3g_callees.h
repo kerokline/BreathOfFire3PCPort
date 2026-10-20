@@ -37,7 +37,7 @@ constexpr U kEventRows = 0x64DDEE;         // EventBattle_Records + 2: each reco
 // kPlaced: now Battle_EnemyCount (symbols.toml). u8: the boss actors placed so far
 // kPlacedTotal: now Battle_EnemiesLeft (symbols.toml). u8: ... copied at the end of the pass
 constexpr U kFormation = 0x904AAC;         // u8: the formation (its bit 1 flips each enemy's facing +8)
-constexpr U kEnemies = 0x93B960;           // the eight enemy records (EnemyWorkingRecords' first byte), 0x128 apart
+// kEnemies: now Battle_Enemies (symbols.toml). the eight enemy records (EnemyWorkingRecords' first byte), 0x128 apart
 constexpr U kEnemyStride = 0x128;
 constexpr unsigned kEnemyCount = 8;
 // kEncounterRowsAt: now Encounter_Rows (symbols.toml). Encounter_Rows (a data name is a macro: the address for a constexpr)
@@ -73,10 +73,10 @@ constexpr U kReturnZ = 0x7E0920;           // dword: its z
 
 // --- area 0xBD's view (AreaMap_FrameAreaBD and its build) --------------------------------
 // kAnglesDrawn: now Camera_AnglesDrawn (symbols.toml). Camera_AnglesDrawn: two dwords
-constexpr U kOriginX = 0x903850;           // s16: the build's first column (the effect slot's word too)
-constexpr U kOriginZ = 0x903852;           // s16: its first row
-constexpr U kRows = 0x903854;              // dword: the rows the build walks (0x38 or 0x2C)
-constexpr U kColumns = 0x903858;           // dword: the columns (0x1C or 0x28)
+inline auto& kOriginX = SharedScratch.w_00;  // s16: the build's first column (the effect slot's word too)
+inline auto& kOriginZ = SharedScratch.w_02;           // s16: its first row
+inline auto& kRows = SharedScratch.d_04;              // dword: the rows the build walks (0x38 or 0x2C)
+inline auto& kColumns = SharedScratch.d_08;           // dword: the columns (0x1C or 0x28)
 constexpr U kOctants = 0x65ED48;           // 8 records of 6 s8 by the camera's octant (image .data)
 constexpr U kBlocks = 0x65ED78;            // 256 bytes: the 16 x 16 block map, each byte a block's row / column nibbles
 constexpr unsigned kMapWidth = 0x60;       // cells a row of AreaMap_Corners in area 0xBD

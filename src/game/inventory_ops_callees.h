@@ -44,7 +44,7 @@ constexpr std::uint32_t kFormation = 0x904060;    // u8: the party's formation (
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). u8 x 3: the party (event_ops' list)
 // kPartyList2: now Cond_Flags[0xd5] (symbols.toml). u8 x 3: the second list the placement reads
 // kMemberRecord: now Character_IndexById (symbols.toml). u8 per member id: its actor record (symbols.toml's Character_IndexById)
-constexpr std::uint32_t kRecords = 0x903A70;      // the actor records, 0xA4 each (Field_ActorStates is +0x10)
+// kRecords: now CharacterRecords (symbols.toml). the actor records, 0xA4 each (Field_ActorStates is +0x10)
 constexpr unsigned kRecordSize = 0xA4;
 constexpr std::uint32_t kBattleFacing = 0x904AAC; // u8: kFacing, copied by 0x591F30
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: Encounter_RollInitiative's 0 / 1 / 2

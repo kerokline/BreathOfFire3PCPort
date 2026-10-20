@@ -87,7 +87,7 @@ frames = (direction 2 or 6 ? 0x20 : 0x10) / speed        (idiv)
 frames *= 2 if Field_ScriptFlags bit 12
 step   = the direction's pair at 0x6696DC * speed        (x, z)
 land   = step * frames + (+0x34, +0x38)
-ground = 0x5725C0(land, direction); if DamageScratch's byte: MapView_GroundAt(land)
+ground = 0x5725C0(land, direction); if SharedScratch's byte: MapView_GroundAt(land)
 rise   = (s16 ground - s16 +0x3E) / frames               (idiv)
 ```
 
@@ -194,7 +194,7 @@ at a recording stand-in - the calls between the 22 included, and
 same stand-ins through `event_objs::g`. No jump tables, no x87, no CRT.
 
 A round: random state with each branch's boundaries seeded, the copy, the
-same state again, ours; then compared: one block from `DamageScratch`
+same state again, ours; then compared: one block from `SharedScratch`
 through the 256th actor record's equipment bytes (`0x903850..0x90DDE4`: the
 slope byte, `Field_ScriptFlags`, every record an index byte can name, the
 party list and its 256-byte reach, `MoveScript_FAWord`, `Field_InputFlags`,
@@ -206,7 +206,7 @@ al; and, for the one function each that writes them, all 256 CLUTs of row 15
 and 256 effect objects.
 
 The stand-ins give back what the real callee leaves for the caller:
-`0x5725C0` the slope byte in `DamageScratch` (0, 1 or any), `MapView_GroundAt`
+`0x5725C0` the slope byte in `SharedScratch` (0, 1 or any), `MapView_GroundAt`
 a ground either side of the `0x80` threshold, `0x537480` a result in `ax`
 with random upper bits, `Party_Count` a count in al over random upper bits
 (0, 1..6, `0x80`, `0xFF`), `Effect_FindFree` `0xFF`, 0..19 or any byte,
@@ -323,7 +323,7 @@ would reach them - *guesses at what those are, from the bodies*.
 new entries. The callees owned elsewhere or still Capcom's are raw addresses
 in `event_objs_callees.h` - `0x5725C0` is group M's this round - and no
 entry names them. Facts for other groups: `0x5725C0` returns
-`AreaMap_Slope`'s long and leaves `DamageScratch`'s byte as the slope says
+`AreaMap_Slope`'s long and leaves `SharedScratch`'s byte as the slope says
 (its callers here test that byte straight after); `0x534C20`, `0x534DB0`,
 `0x537480`, `0x537500`, `0x5373F0` are described above for whoever takes
 them.

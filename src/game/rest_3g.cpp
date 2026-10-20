@@ -176,8 +176,8 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
 // record 2), +0x3C the ground there (AreaMap_Elevation's s16 << 16); the copy
 // +0xC..+0x14; +0x5D 0, +0x5E 0x80, +9 0x20, +1 up.
 extern "C" void __cdecl EffectKindAD_Start(void) {
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x, UL(at::kMember2X));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->z, UL(at::kMember2Z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x, static_cast<std::uint32_t>(ObjTrio[2].x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->z, static_cast<std::uint32_t>(ObjTrio[2].z));
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
     unsigned char* const s = S();
     rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
@@ -266,12 +266,12 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
     const U d2 = Sar(((0u - static_cast<U>(sin2) - three_cos) * 3u) << 13, 12);
     {
         unsigned char* const s = S();
-        rv::As<records::EffectObject>(s)->x = UL(at::kExtra1X) + d1;
-        rv::As<records::EffectObject>(s)->z = UL(at::kExtra1Z) + d2;
-        rv::As<records::EffectObject>(s)->height = UL(at::kExtra1Y) + 0x1000000u;
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, UL(at::kExtra1X) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, UL(at::kExtra1Z) + d2);
-        SetUL(s + 0x14, UL(at::kExtra1Y) + 0x1000000u);
+        rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].x) + d1;
+        rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].z) + d2;
+        rv::As<records::EffectObject>(s)->height = static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].height) + 0x1000000u;
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].x) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].z) + d2);
+        SetUL(s + 0x14, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].height) + 0x1000000u);
         SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                        0x40);
     }
@@ -346,7 +346,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
         bof3::Fatal("Battle_PlaceBossActor: count %u, past the %u enemy records - the original writes past them "
                     "(docs/rest_3g.md section 7)",
                     n, at::kEnemyCount);
-    unsigned char* const e = At(at::kEnemies + at::kEnemyStride * n);
+    unsigned char* const e = At(Battle_Enemies_addr + at::kEnemyStride * n);
     for (unsigned i = 0; i < 0x80; i += 4) SetUL(e + i, UL(actor + i));
     Sprite_Current = e;
     unsigned char* const s = S();
@@ -372,9 +372,9 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[8] = static_cast<unsigned char>(At(at::kFormation)[0] ^ 2);
     s[0x48] = 0;
     SH_CALL(Battle_CopyEnemyData)(count, kind);
-    psp_code::MyriaItem(At(at::kEnemies + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
+    psp_code::MyriaItem(At(Battle_Enemies_addr + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
-    At(at::kEnemies + at::kEnemyStride * n + 0x8F)[0] = 0;
+    At(Battle_Enemies_addr + at::kEnemyStride * n + 0x8F)[0] = 0;
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);
     Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
@@ -383,7 +383,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
 // Escape_Leave): bytes +0..+4 of the eight enemy records 0.
 extern "C" void __cdecl BattleEnemy_ClearStates(void) {
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
-        unsigned char* const e = At(at::kEnemies + at::kEnemyStride * i);
+        unsigned char* const e = At(Battle_Enemies_addr + at::kEnemyStride * i);
         for (unsigned k = 0; k < 5; ++k) e[k] = 0;
     }
 }
@@ -601,7 +601,7 @@ extern "C" int __cdecl Area109_SwitchPattern(void) {
 // each cleared, then set by its bit; Effect_HoldFlag1C(0xF); sounds 0x206,
 // 0x202; al 1. Otherwise al 0 (the rest of eax the caller's).
 extern "C" unsigned char __cdecl Area109_SwitchHook(long x, long z) {
-    if ((static_cast<U>(x) & 0xFF) != 0x1C || (static_cast<U>(z) & 0xFF) != 6 || ObjTrio[8] != 3) return 0;
+    if ((static_cast<U>(x) & 0xFF) != 0x1C || (static_cast<U>(z) & 0xFF) != 6 || ObjTrio[0].direction != 3) return 0;
     if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x1C) != 0) return 0;
     const int pattern = SH_CALL(Area109_SwitchPattern)();
     int bits = pattern % 6;
@@ -640,7 +640,7 @@ extern "C" void __cdecl EffectKind18Sub41_DrawPanels(unsigned lift, unsigned tex
             rv::As<records::SVector>(v)[k].z = 0xFFFFFC08u - static_cast<U>(b[2]) * lift;
         }
         long depth;
-        const short* const vs = Prim_VertexScratch;
+        const short* const vs = reinterpret_cast<short*>(Prim_VertexScratch);
         SH_CALL(Gte_RotTransPers4)(vs, vs + 4, vs + 8, vs + 12, reinterpret_cast<float*>(p + 8),
                                    reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                    reinterpret_cast<float*>(p + 0x38), &depth);
@@ -665,7 +665,7 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
     SH_CALL(Gfx_CommitPrim)(5, 0xC);
     unsigned char* const v = Vertices();
-    const short* const v0 = Prim_VertexScratch;
+    const short* const v0 = reinterpret_cast<short*>(Prim_VertexScratch);
     rv::As<records::SVector>(v)->z = 0xFC08;
     U radius_arg = static_cast<U>(size);
     U colour = (0x28u - static_cast<U>(size)) * 5u;
@@ -843,22 +843,22 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
     const U x0 = static_cast<U>(S8(rec[0])) - fx + 0x100u;
     const U z0 = static_cast<U>(S8(rec[3])) - fz + 0x100u;
     const U rows = 0x38u - even * 12u, columns = even * 12u + 0x1Cu;
-    SetWord(At(at::kOriginX), x0);
+    at::kOriginX = x0;
     MapView_Origin[0] = static_cast<short>(x0);
-    SetWord(At(at::kOriginZ), z0);
+    at::kOriginZ = z0;
     MapView_Origin[1] = static_cast<short>(z0);
-    SetUL(at::kRows, rows);
-    SetUL(at::kColumns, columns);
+    at::kRows = rows;
+    at::kColumns = columns;
     DrawItemPool_Top = 0;
     U row_bound = rows;
     for (U row = 0; I(row) < I(row_bound); ++row) {
-        U col_bound = row == 0 ? columns : UL(at::kColumns);
-        for (U col = 0; I(col) < I(col_bound); ++col, col_bound = UL(at::kColumns)) {
+        U col_bound = row == 0 ? columns : static_cast<std::uint32_t>(at::kColumns);
+        for (U col = 0; I(col) < I(col_bound); ++col, col_bound = static_cast<std::uint32_t>(at::kColumns)) {
             if (DrawItemPool_Top >= draw_pool::Count()) continue;   // at::kTopBoundAt: 0x400, DIV-0062's 0x800
             const U a = static_cast<U>(S8(rec[2])) * row;
-            const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8(rec[1])) * col + static_cast<U>(S16(At(at::kOriginX)));
+            const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8(rec[1])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(at::kOriginX));
             const U b = static_cast<U>(S8(rec[5])) * (row + 1u);
-            const U z = static_cast<U>(I(b) / 2) + static_cast<U>(S8(rec[4])) * col + static_cast<U>(S16(At(at::kOriginZ)));
+            const U z = static_cast<U>(I(b) / 2) + static_cast<U>(S8(rec[4])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(at::kOriginZ));
             const unsigned char block = At(at::kBlocks + ((Sar(x, 4) & 0xFu) | (z & 0xF0u)))[0];
             const U map_row = (block & 0xF0u) | (z & 0xFu);
             const U map_col = ((block & 0xFu) << 4) | (x & 0xFu);
@@ -927,7 +927,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             }
             SH_CALL(Gte_PrimDepths4_10)(item + Gfx_BufferIndex * 0x48u);
         }
-        row_bound = UL(at::kRows);
+        row_bound = static_cast<std::uint32_t>(at::kRows);
     }
 }
 

@@ -109,8 +109,8 @@ part 6, no group) and the glow.
 | 2 | `_Part0Hold` `0x482D80`: `+0xB` up, `+9` down, at 0 `+3` up | `_Part1Orbit` `0x482F30`: `+0xB` up, `+0xC` up, the orbit at 0x20; `+9` down, at 0 `+3` up | `_Part2Orbit` `0x483660`: the orbit at 0x10 |
 | 3 | `_Part0Fade` `0x482DB0`: `+0xB` up, `+0xA` down, at 0 the parent's `+0xB` up and `Effect_Release` | `_Part1Fade` `0x482FD0`: the orbit at 0x20, `+0xA` down, at 0 the same end | `_Part2Fade` `0x483700`: the orbit at 0x18, `+0xA` down 2 |
 
-The orbit: `DamageScratch` `0x903850` = the radius, `0x903854` = `(+0xC & 0x7F)
-<< 5`; x = `Math_Cos` times `DamageScratch` (read again after the call) plus
+The orbit: `SharedScratch` `0x903850` = the radius, `0x903854` = `(+0xC & 0x7F)
+<< 5`; x = `Math_Cos` times `SharedScratch` (read again after the call) plus
 the parent's x, z = `Math_Sin(0x903854)` (read again) times it plus the
 parent's z - no shift (a radius of 0x20 is two map cells in 16.16).
 
@@ -135,11 +135,11 @@ shaded from `7 * +0xA` (in `0x903858`, its low byte read again for every
 shade) and the low byte of `13 * +0xA`, all 1 on the first ring. A ring's quads
 are committed only while the float at `0x5C41DC` is below the first quad's
 third screen y (or unordered: `fcomp`'s C0). `EffectKind69_DrawGlow`
-`0x483970`: `DamageScratch` = `(Rand() & 7) + 3 * +0xA`; eight
+`0x483970`: `SharedScratch` = `(Rand() & 7) + 3 * +0xA`; eight
 semi-transparent `POLY_G3`s in slot 2 round the screen point (`+0x2E`,
 `+0x30`): the centre shaded (`+0xA << 3`, `+0xA << 3`, `6 * +0xA`), the rim
 points at `a` and `a + 0x200` (`Math_Sin` for x, `Math_Cos` for y, times
-`DamageScratch` read again after each call) shaded 1.
+`SharedScratch` read again after each call) shaded 1.
 
 ### 1.5 Kind 0x6C (`EffectKind6C_Run` `0x483BA0`)
 

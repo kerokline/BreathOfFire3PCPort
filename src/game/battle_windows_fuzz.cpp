@@ -131,8 +131,8 @@ void Disturb() {
         Member(v % 5)[kFields[(h >> 20) % 10]] = byte;
         break;
     }
-    case 6: At(at::kPartyBars + 36 * (v % 5) + (h >> 20) % 4)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
-    case 7: At(at::kEnemies + at::kEnemyStride * (v % 6) + 0xF)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 1 : byte); break;
+    case 6: At(WindowRecords_addr + 0x1df + 36 * (v % 5) + (h >> 20) % 4)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
+    case 7: At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * (v % 6) + 0xF)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 1 : byte); break;
     case 8: {
         unsigned char* const w = g_buf.windows[v % kWindows];
         w[3 + (h >> 20) % 0x10] = byte;
@@ -144,7 +144,7 @@ void Disturb() {
     case 12: At(Gfx_ClutStripSource_addr + 0x228 + 64 * (static_cast<int>(v % 12) - 2) + (h >> 20) % 2)[0] = byte; break;
     case 13: At(at::kMsgRing + 8 * ((h >> 20) % 16))[0] = byte; break;
     // the first members' extra charge byte, read again after the first line
-    case 14: At(at::kPartyBars + 36 * (v % 3) + 3)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
+    case 14: At(WindowRecords_addr + 0x1df + 36 * (v % 3) + 3)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     default: break;
     }
 }
@@ -593,7 +593,7 @@ Args Seed(unsigned k) {
         for (unsigned i = 0; i < 5; ++i) {
             SeedMember(Member(i));
             Member(i)[0x91] = static_cast<unsigned char>(Next());
-            if (Half()) At(at::kPartyBars + 36 * i + 3)[0] = 0;
+            if (Half()) At(WindowRecords_addr + 0x1df + 36 * i + 3)[0] = 0;
         }
         break;
     case kCross: {
@@ -627,7 +627,7 @@ Args Seed(unsigned k) {
         args.a[1] = Coord();
         args.a[2] = Garbage(0xFF, 3 + (Often() ? Next() % 6 : Next() % 11));
         for (unsigned e = 0; e < 6; ++e)
-            At(at::kEnemies + at::kEnemyStride * e + 0xF)[0] = static_cast<unsigned char>(Half() ? 1 : Next());
+            At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * e + 0xF)[0] = static_cast<unsigned char>(Half() ? 1 : Next());
         SeedLineColour();
         break;
     case kTargetMember:

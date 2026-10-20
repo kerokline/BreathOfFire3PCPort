@@ -90,7 +90,7 @@ std::uint32_t Id(const void* p) {
 std::uint32_t IdOf(std::uint32_t a) { return Id(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a))); }
 
 unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr)))); }
-unsigned char* Enemy(unsigned e) { return At(at::kEnemies + at::kEnemyStride * e); }
+unsigned char* Enemy(unsigned e) { return At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * e); }
 unsigned char* Member(unsigned m) { return At(ObjTrio_addr + at::kMemberStride * m); }
 unsigned char Slot(std::uint32_t v) { return static_cast<unsigned char>(g_slot_lo + v % g_slot_n); }
 
@@ -434,7 +434,7 @@ void SeedEnemy(unsigned e) {
     enemy_rec->max_hp = top;
     enemy_rec->hp = Against(top);
     enemy_rec->status = Next() & 0xFFFF;
-    At(at::kEnemies + at::kEnemyStride * e - 0x78)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next());
+    At(Battle_Enemies_addr + 0x80 + at::kEnemyStride * e - 0x78)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next());
 }
 void SeedMember(unsigned m, bool ap_top_zero_often) {
     unsigned char* const r = Member(m);

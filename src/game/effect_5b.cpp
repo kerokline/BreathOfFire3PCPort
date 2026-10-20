@@ -217,13 +217,13 @@ unsigned char* Cell(I x, I z) {
 bool GateNearXZ(I x, I z, bool along_x, I across, I along) {
     if (along_x) {
         const U row = (static_cast<U>(z + 1) << 16) | 0x8000u;
-        if (Abs(static_cast<I>(UL(At(ObjTrio_addr + 0x38)) - row)) > across) return false;
-        const I d = static_cast<I>(UL(At(ObjTrio_addr + 0x34)) - (static_cast<U>(x) << 16));
+        if (Abs(static_cast<I>(static_cast<std::uint32_t>(ObjTrio[0].z) - row)) > across) return false;
+        const I d = static_cast<I>(static_cast<std::uint32_t>(ObjTrio[0].x) - (static_cast<U>(x) << 16));
         return Abs(d) <= along || Abs(static_cast<I>(static_cast<U>(d) - 0x10000u)) <= along;
     }
     const U column = (static_cast<U>(x + 1) << 16) | 0x8000u;
-    if (Abs(static_cast<I>(UL(At(ObjTrio_addr + 0x34)) - column)) > across) return false;
-    const I d = static_cast<I>(UL(At(ObjTrio_addr + 0x38)) - (static_cast<U>(z) << 16));
+    if (Abs(static_cast<I>(static_cast<std::uint32_t>(ObjTrio[0].x) - column)) > across) return false;
+    const I d = static_cast<I>(static_cast<std::uint32_t>(ObjTrio[0].z) - (static_cast<U>(z) << 16));
     return Abs(d) <= along || Abs(static_cast<I>(static_cast<U>(d) - 0x10000u)) <= along;
 }
 bool GateNear(const unsigned char* s, I across, I along) {
@@ -233,7 +233,7 @@ bool GateNear(const unsigned char* s, I across, I along) {
 // Sub-kind 0x0E's fixed gate: the leader within `x` of 0x28000 and within `z`
 // of 0x150000 or 0x160000.
 bool Sub0ENear(I x, I z) {
-    const U lx = UL(At(ObjTrio_addr + 0x34)), lz = UL(At(ObjTrio_addr + 0x38));
+    const U lx = static_cast<std::uint32_t>(ObjTrio[0].x), lz = static_cast<std::uint32_t>(ObjTrio[0].z);
     if (Abs(static_cast<I>(lx - 0x28000u)) > x) return false;
     return Abs(static_cast<I>(lz - 0x150000u)) <= z || Abs(static_cast<I>(lz - 0x160000u)) <= z;
 }

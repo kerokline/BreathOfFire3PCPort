@@ -135,8 +135,8 @@ bool Within(U a, std::int32_t first, U b, std::int32_t second) {
     if (Abs(b) <= second) return true;
     return Abs(b - 0x10000u) <= second;
 }
-U LeaderX() { return static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x); }
-U LeaderZ() { return static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z); }
+U LeaderX() { return static_cast<std::uint32_t>(ObjTrio[0].x); }
+U LeaderZ() { return static_cast<std::uint32_t>(ObjTrio[0].z); }
 // The leader at the record's cell, z across the centre first (sub-kind 0x5E,
 // and 0x5D with +8 set), or x first (0x5D without).
 bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int32_t second) {
@@ -1122,9 +1122,9 @@ extern "C" void __cdecl EffectKind18Sub62_Ripple(void) {
             corners[at3] = static_cast<unsigned char>(corners[at3] + up13);
         }
     }
-    const long h = SH_CALL(AreaMap_Elevation)(Long(At(Sprite_ObjectsExtra_addr + 0x34)), Long(At(Sprite_ObjectsExtra_addr + 0x34 + 4)));
-    SetWord(At(Sprite_ObjectsExtra_addr + 0x3e), static_cast<U>(h));
-    SetUL(At(Sprite_ObjectsExtra_addr + 0x14), 0);
+    const long h = SH_CALL(AreaMap_Elevation)(Sprite_ObjectsExtra[0].x, Sprite_ObjectsExtra[0].z);
+    Sprite_ObjectsExtra[0].height_whole = static_cast<U>(h);
+    Sprite_ObjectsExtra[0].step_y = 0;
     MapView_Redraw = 2;
 }
 
@@ -1287,7 +1287,7 @@ extern "C" void __cdecl EffectKind18Sub64_Place(void) {
     const U v = Variant("EffectKind18Sub64_Place", s, at::kSub64Variants);
     so->x = static_cast<U>(At(at::kSub64Cells + 2 * v)[0]) << 16;
     so->z = static_cast<U>(At(at::kSub64Cells + 2 * v + 1)[0]) << 16;
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, at::kEnemyRecords + at::kEnemyStride * v);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, Battle_Enemies_addr + 0x128 + at::kEnemyStride * v);
     s[9] = 0;
     s[0xA] = 0;
     s[2] = static_cast<unsigned char>(s[2] + 1);

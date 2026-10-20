@@ -430,7 +430,7 @@ extern "C" void __cdecl Field_ObjectLinked() {
         call = sprite[6] == 4 || (Field_ActiveMember[0xA0] & 0x7F) != 0x7F;
     }
     if (call) {
-        g.area_handler(ObjTrio[0x89]);
+        g.area_handler(ObjTrio[0].char_id);
         return;
     }
     Field_ActiveMember[0x80] &= 0xFE;
@@ -449,7 +449,7 @@ extern "C" void __cdecl Field_ObjectIdleLong(unsigned char* object) {
     const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     unsigned char n = 0;
     for (; n < 4; ++n) {
-        rv::Current<records::SpriteObject>()->direction = At(kAsideRows)[n + (ObjTrio[8] & 7) * 4u];
+        rv::Current<records::SpriteObject>()->direction = At(kAsideRows)[n + (ObjTrio[0].direction & 7) * 4u];
         if (g.blocked_ahead(object)) continue;
         if (rv::Current<records::SpriteObject>()->state == 3 || Sprite_Current[3] == 3) {
             if (g.in_home(object)) break;
@@ -491,7 +491,7 @@ extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
         At(BattleE1_Mode_addr)[1] = 0;
         Game_Mode = 7;
         // (object - Sprite_Objects) / 0xA4, signed as the original's imul.
-        const auto offset = static_cast<std::int32_t>(Address(object) - Address(Sprite_Objects));
+        const auto offset = static_cast<std::int32_t>(Address(object) - Address(rv::Bytes(Sprite_Objects)));
         At(BattleE1_Mode_addr)[0xC] = static_cast<unsigned char>(offset / 0xA4);
         return;
     }
@@ -751,7 +751,7 @@ const Region kRegions[] = {
     {Address(&Field_ScriptFlags), 2},
     {AreaW1a_FocusObject_addr, 4},
     {Field_EdgeBits_addr, 1},
-    {Address(ObjTrio), 0x100},   // kLeaderDirection, kLinkArgument
+    {Address(rv::Bytes(ObjTrio)), 0x100}, // kLeaderDirection, kLinkArgument
 };
 constexpr unsigned kRegionBytes = (0x7E1300 - kObjectsLow) + 1 + 2 + 0x10 + 0x10 + 2 + 4 + 1 + 0x100;
 

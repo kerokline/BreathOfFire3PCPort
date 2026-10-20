@@ -22,7 +22,7 @@ namespace window_kinds {
 
 namespace at {
 
-constexpr std::uint32_t kRecords = 0x803160;       // 22 window records of 0x24 bytes (WindowRecords)
+// kRecords: now WindowRecords (symbols.toml). 22 window records of 0x24 bytes (WindowRecords)
 constexpr std::uint32_t kRecordsEnd = 0x803478;
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record the window layer is running
 
@@ -43,7 +43,7 @@ constexpr std::uint32_t kBannerColour = 0x93B8EA;  // kBannerPool + 0xA
 // kBannerCurrent: now BattleMisc_BannerCurrent (symbols.toml). dword: the entry BattleBanner_Dispatch last visited
 constexpr std::uint32_t kBannerMask = 0x904AE9;    // u8: the kinds BattleBanner_Dispatch has seen this frame
 
-constexpr std::uint32_t kScratch = 0x903850;       // DamageScratch's byte 0; the gauge keeps a value there
+inline auto& kScratch = SharedScratch.b_00;  // SharedScratch's byte 0; the gauge keeps a value there
 
 }  // namespace at
 

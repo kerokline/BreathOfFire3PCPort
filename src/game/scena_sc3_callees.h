@@ -25,7 +25,7 @@ constexpr std::uint32_t kState = 0x8034E2;        // s8: the chapter's state (0 
 constexpr std::uint32_t kCounters = 0x903848;     // four script counter bytes (MoveScript_CounterOps); cleared as a dword
 constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
-constexpr std::uint32_t kSlot = 0x903850;         // u8 (read back as a dword's low byte): the effect slot just taken
+inline auto& kSlot = SharedScratch;         // u8 (read back as a dword's low byte): the effect slot just taken
 // kFlagBank: now Chapter_FlagRow (symbols.toml). unsigned char *: the flag row Flags_Test / Flags_Set are given
 // kRow3: now Cond_Flags[0x18] (symbols.toml). chapter 3's flag row (Cond_Flags +0x18), cleared by its start
 // kRow3Byte2: now Cond_Flags[0x1a] (symbols.toml). its bits 0x10..0x17

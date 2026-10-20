@@ -28,14 +28,14 @@ namespace at {
 // working record, PSX 0x801EB620, is +0x80 of each - sibling BATTLE_RAM.md
 // "Enemy working records"). Sprite_Current and 0x939AD8 are both the enemy
 // being run while BattleEnemy_RunAll dispatches its state.
-constexpr std::uint32_t kEnemies = 0x93B960;
+// kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemySize = 0x128;
 constexpr unsigned kEnemyCount = 8;
-constexpr std::uint32_t kEnemyCurrent = 0x939AD8;  // unsigned char*: the enemy being run (PSX 0x801EB458)
+// kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). unsigned char*: the enemy being run (PSX 0x801EB458)
 // The 48 battle-task slots, 0x84 bytes each (docs/battle_flow.md). EnemyOp_Wait
 // indexes them by the actor number Sprite_Current +5: byte +9 its bob counter,
 // dwords +0x34 / +0x38 the base the bob is added to.
-constexpr std::uint32_t kTasks = 0x93A000;
+// kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskSize = 0x84;
 // The 32 tint records, 12 bytes each (MoveScript_TintRecords; +2..+4 r g b).
 // kTints: now MoveScript_TintRecords (symbols.toml).

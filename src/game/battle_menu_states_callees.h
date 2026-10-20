@@ -49,7 +49,7 @@ constexpr std::uint32_t kSavedList = 0x904605;
 // acting member's record (ObjTrio + 0x14C n: +1 its state, +5 its actor index,
 // +0x125 a byte).
 constexpr std::uint32_t kCommandRecord = 0x939FA0;
-constexpr std::uint32_t kActing = 0x939EC4;
+// kActing: now BattleE4_MenuActor (symbols.toml).
 // The party's records.
 // kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
@@ -66,7 +66,7 @@ constexpr std::uint32_t kRepeatLatch = 0x7E01B8;
 constexpr std::uint32_t kList = 0x8033A0;
 // kHand: now Window19 (symbols.toml).
 // kAbove: now Window21 (symbols.toml).
-constexpr std::uint32_t kRecord4 = 0x8031F0;
+// kRecord4: now WindowRecords[4] (symbols.toml).
 // The inventory lists by category: ids and counts, five pointers each
 // (0x904154 + 0x80 c and 0x904354 + 0x80 c for 0..3; docs/char-stats.md).
 constexpr std::uint32_t kInventoryIds = 0x656B00;

@@ -78,10 +78,10 @@ void SetPtrAt(std::uint32_t address, const unsigned char* p) {
 }
 // The enemy being run (0x939AD8) and the battle-task slot being run (0x93B8C4),
 // each re-read wherever the original re-reads it.
-unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 unsigned char* CurrentTask() { return PtrAt(BattleFlow_TaskCurrent_addr); }
-unsigned char* Task(unsigned index) { return At(at::kTasks + index * at::kTaskSize); }
-unsigned char* EnemyObject(unsigned index) { return At(at::kEnemies + index * at::kEnemySize); }
+unsigned char* Task(unsigned index) { return At(BattleTask_Slots_addr + index * at::kTaskSize); }
+unsigned char* EnemyObject(unsigned index) { return At(Battle_Enemies_addr + index * at::kEnemySize); }
 
 // A float's bits for a primitive's corner: the original's fild of a sign-
 // extended 16-bit value, then fstp.
@@ -222,7 +222,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(v
         if (enemy_rec->flags == 0) continue;
         const unsigned char event = EventBattle_Id;
         Sprite_Current = e;
-        SetPtrAt(at::kEnemyCurrent, e);
+        BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(e);
         if (event != 0) {
             if (enemy_rec->state != 0) reinterpret_cast<HookFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(enemy_rec->event_hook))))(2);
             const unsigned state = rv::As<records::BattleEnemy>(Enemy())->run_state;
@@ -243,7 +243,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_UpdateSc
         auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         if (enemy_rec->flags == 0) continue;
         Sprite_Current = e;
-        SetPtrAt(at::kEnemyCurrent, e);
+        BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(e);
         g.update_screen();
     }
 }

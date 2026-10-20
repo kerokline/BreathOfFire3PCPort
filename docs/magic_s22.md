@@ -145,7 +145,7 @@ rounds each. It uses the consolidated harness (HX, `ea27991`) without edits.
 
 **Regions.** It adds these to the harness's own:
 
-- DamageScratch `0x903850` and `Prim_VertexScratch` `0x9037A0`;
+- SharedScratch `0x903850` and `Prim_VertexScratch` `0x9037A0`;
 - `Gfx_PacketNext` and a 512-byte packet buffer of the fuzz's own;
 - `MoveScript_TintRecords`;
 - CLUT row 26 and its source;

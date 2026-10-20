@@ -267,7 +267,7 @@ extern "C" void __cdecl BattleWin_DrawPartyStatus(int x, int y) {
     unsigned i = 0;
     do {
         g.draw_tile_rgb(xs, y + 0xE, 9, 0, 0);
-        const unsigned char* const bars = At(at::kPartyBars + 36 * i);
+        const unsigned char* const bars = At(WindowRecords_addr + 0x1df + 36 * i);
         const unsigned char b1 = bars[2], b0 = bars[0];
         g.draw_bar(xs, y + 0xE, b0, b1, 0);
         unsigned char* const m = Member(i);
@@ -304,7 +304,7 @@ namespace {
 // acting member's +0x134 has bit 1, else 0x80.
 unsigned ArmShade(unsigned j) {
     if (j == 2 || j == 3) {
-        if (Ptr(at::kActor)[0x134] & 2) return 0x40;
+        if (reinterpret_cast<unsigned char*>(BattleE4_MenuActor)[0x134] & 2) return 0x40;
     }
     return 0x80;
 }
@@ -513,7 +513,7 @@ extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
     TargetFrame(x, y);
-    const std::uint32_t enemy = at::kEnemies + at::kEnemyStride * e;
+    const std::uint32_t enemy = Battle_Enemies_addr + 0x80 + at::kEnemyStride * e;
     EnemyGauge(x, y, enemy);
     std::uint8_t expanded[33];   // DIV-0057: the 8-unit draw is Capcom's, so pairs go in as their glyphs
     g.tiny_font(x + 4, y + 3, 0, 8, TextPairs_Expand(At(enemy), expanded, sizeof expanded));
@@ -537,7 +537,7 @@ extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
     g.draw_tile_rgb(x + 6, y + 0xB, 9, 0, 0);
     g.draw_edge(x, y, 2, 1);
     g.draw_edge(x, y + 0x13, 3, 1);
-    const std::uint32_t enemy = at::kEnemies + at::kEnemyStride * e;
+    const std::uint32_t enemy = Battle_Enemies_addr + 0x80 + at::kEnemyStride * e;
     EnemyGauge(x, y, enemy);
     std::uint8_t expanded[33];   // DIV-0057, as in BattleWin_DrawTargetEnemy
     if (static_cast<unsigned char>(g.enemy_name_shown(e)) != 0)

@@ -83,26 +83,26 @@ Handler Entry(U table, unsigned index, const char* who) {
 unsigned char* SpriteRec(int i, const char* who) {
     if (i < 0 || i >= static_cast<int>(at::kSpriteCount))
         bof3::Fatal("%s: Sprite_Objects index %d - the original writes outside the records", who, i);
-    return Sprite_Objects + static_cast<U>(i) * at::kRecordStride;
+    return rv::Bytes(Sprite_Objects) + static_cast<U>(i) * at::kRecordStride;
 }
 unsigned char* ExtraRec(int i, const char* who) {
     if (i < 0 || i >= static_cast<int>(at::kExtraCount))
         bof3::Fatal("%s: Sprite_ObjectsExtra index %d - the original writes outside the records", who, i);
-    return Sprite_ObjectsExtra + static_cast<U>(i) * at::kRecordStride;
+    return rv::Bytes(Sprite_ObjectsExtra) + static_cast<U>(i) * at::kRecordStride;
 }
 unsigned char* EffectRec(unsigned i, const char* who) {
     if (i >= at::kEffectCount)
         bof3::Fatal("%s: Effect_Objects index %u - the original writes outside the records", who, i);
-    return Effect_Objects + i * at::kEffectStride;
+    return rv::Bytes(&Effect_Objects[i]);
 }
 unsigned char* Member(int i, const char* who) {
     if (i < 0 || i >= static_cast<int>(at::kMemberCount))
         bof3::Fatal("%s: ObjTrio index %d - the original writes outside the records", who, i);
-    return ObjTrio + static_cast<U>(i) * at::kMemberStride;
+    return rv::Bytes(ObjTrio) + static_cast<U>(i) * at::kMemberStride;
 }
 // A Sprite_Objects record the original only reads, by an unchecked byte: read
 // in place wherever it lands, as the original reads it.
-unsigned char* SpriteRead(unsigned i) { return Sprite_Objects + i * at::kRecordStride; }
+unsigned char* SpriteRead(unsigned i) { return rv::Bytes(&Sprite_Objects[i]); }
 
 
 void Tick() {
@@ -333,7 +333,7 @@ extern "C" void __cdecl EffectKind32_Run(void) { Entry(AddressOf(EffectKind32_St
 // is 3 (the only bytes it reads: speed 3, no bit 7), in the direction +8;
 // then EffectKind32_Arc.
 extern "C" void __cdecl EffectKind32_Throw(void) {
-    Cur()[8] = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->direction & 7);
+    Cur()[8] = static_cast<unsigned char>(ObjTrio[0].direction & 7);
     SH_CALL(Sprite_SetAnimationBank)(0x18);
     Cur()[0x48] = 0;
     Cur()[0x24] = 0;
@@ -447,7 +447,7 @@ namespace {
 
 // The start both kinds share: two free sprites into +3 and +4 (none: nothing,
 // the first given back if only the second fails), each marked in use; for
-// each, DamageScratch's word = its index and the op run (EventOp_6x with
+// each, SharedScratch's word = its index and the op run (EventOp_6x with
 // Sprite_SetAnimationAt(0x61, 0xC) for 0x14, EventOp_0x for 0x3C);
 // Sprite_Current put back; the first moved by (dx, -dx), the second by (-dx,
 // dx), both +0 |= 0x20, +0x5C = 0, tinted (0xF, 0, 0, 1) and (0, 0, 0xF, 1);
@@ -465,14 +465,14 @@ void TwinStart(const char* who) {
     }
     SpriteRec(self[4], who)[0] = 1;
     const auto* const op = At(kKind14 ? AddressOf(EffectKind14_Op) : AddressOf(EffectKind3C_Op));
-    SetWord(At(bof3::addr::DamageScratch), self[3]);
+    SharedScratch.w_00 = self[3];
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
         SH_CALL(Sprite_SetAnimationAt)(0x61, 0xC);
     } else {
         SH_CALL(EventOp_0x)(op);
     }
-    SetWord(At(bof3::addr::DamageScratch), self[4]);
+    SharedScratch.w_00 = self[4];
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
         SH_CALL(Sprite_SetAnimationAt)(0x61, 0xC);
@@ -512,11 +512,11 @@ extern "C" void __cdecl EffectKind14_Start(void) { TwinStart<true>("EffectKind14
 extern "C" void __cdecl EffectKind14_Hold(void) {
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
     if (o->timer != 0) {
-        rv::As<records::PartyMember>(ObjTrio)->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->flags | 0x40);
+        ObjTrio[0].flags = static_cast<unsigned char>(ObjTrio[0].flags | 0x40);
         o->timer = static_cast<unsigned char>(o->timer - 1);
         return;
     }
-    rv::As<records::PartyMember>(ObjTrio)->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(ObjTrio)->flags & 0xBF);
+    ObjTrio[0].flags = static_cast<unsigned char>(ObjTrio[0].flags & 0xBF);
     SpriteRec(rv::Bytes(o)[3], "EffectKind14_Hold")[0] = 0;
     SpriteRec(rv::Bytes(o)[4], "EffectKind14_Hold")[0] = 0;
     o->state = 2;
@@ -656,7 +656,7 @@ extern "C" void __cdecl EffectKind17_Slide(void) {
         }
         o->x = static_cast<U>(o->x) + static_cast<U>(o->step_x);
         o = rv::As<records::EffectObject>(Cur());
-        dist = static_cast<U>(o->x) - static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x);
+        dist = static_cast<U>(o->x) - static_cast<U>(ObjTrio[0].x);
     } else {
         const U speed_z = static_cast<U>(o->step_z);
         o->step_z = static_cast<U>(o->work_1c) + speed_z;
@@ -668,7 +668,7 @@ extern "C" void __cdecl EffectKind17_Slide(void) {
         }
         o->z = static_cast<U>(o->z) + static_cast<U>(o->step_z);
         o = rv::As<records::EffectObject>(Cur());
-        dist = static_cast<U>(o->z) - static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z);
+        dist = static_cast<U>(o->z) - static_cast<U>(ObjTrio[0].z);
     }
     const std::int32_t far = Abs32(dist);
     if (static_cast<U>(o->work_18) == 0 && static_cast<U>(o->work_1c) == 0) {
@@ -679,8 +679,8 @@ extern "C" void __cdecl EffectKind17_Slide(void) {
     o->step_y = static_cast<U>(o->step_y) + static_cast<U>(o->work_20);
     o = rv::As<records::EffectObject>(Cur());
     o->height_whole = o->height_whole + Word(rv::Bytes(o) + 0x14);
-    if (Field_Kind2Hold == 0 && far > 0x40000 && static_cast<U>(Field_Kind2X) == static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x) &&
-        static_cast<U>(Field_Kind2Z) == static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z)) {
+    if (Field_Kind2Hold == 0 && far > 0x40000 && static_cast<U>(Field_Kind2X) == static_cast<U>(ObjTrio[0].x) &&
+        static_cast<U>(Field_Kind2Z) == static_cast<U>(ObjTrio[0].z)) {
         o = rv::As<records::EffectObject>(Cur());
         if (S32(static_cast<U>(o->step_x)) > 0) SetWord(At(at::kKind2XHigh), Word(At(at::kKind2XHigh)) + 5u);
         else if (S32(static_cast<U>(o->step_x)) < 0) SetWord(At(at::kKind2XHigh), Word(At(at::kKind2XHigh)) - 5u);
@@ -870,9 +870,9 @@ extern "C" void __cdecl EffectKind17_TakeCell(void) {
 // MoveScript_FAWord negated, MoveScript_F3Divisor 0x40, Field_Kind2Hold 1.
 extern "C" void __cdecl EffectKind17_CameraBack(void) {
     const unsigned short fa = MoveScript_FAWord;
-    Field_Kind2X = rv::As<records::PartyMember>(ObjTrio)->x;
+    Field_Kind2X = ObjTrio[0].x;
     MoveScript_FAWord = static_cast<unsigned short>(0u - fa);
-    Field_Kind2Z = rv::As<records::PartyMember>(ObjTrio)->z;
+    Field_Kind2Z = ObjTrio[0].z;
     MoveScript_F3Divisor = 0x40;
     Field_Kind2Hold = 1;
 }
@@ -945,7 +945,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAhead(void) {
 // whether the block may not stand at (x, z), 16.16. Its own cell blocked
 // (EffectKind17_CellBlocked): 1. Moving in x (+0xC not 0): on a whole cell
 // (x's low word 0) 0; else the slope at the cell's middle in x
-// (AreaMap_Slope(cell x.8000, z, +8)), and where it slopes (DamageScratch) the
+// (AreaMap_Slope(cell x.8000, z, +8)), and where it slopes (SharedScratch) the
 // ground there above the height word +0x3E: 1; moving up in x, the next cell
 // in x blocked: 1; else 0. Moving in z the same with z. The original reads
 // its arguments' high words through its own frame at +2, so the cells passed
@@ -960,7 +960,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAt(long x, long z) {
         if ((ux & 0xFFFF) == 0) return 0;
         const U mid = (cell_x << 16) | 0x8000u;
         SH_CALL(AreaMap_Slope)(S32(mid), z, rv::Bytes(o)[8]);
-        if (At(bof3::addr::DamageScratch)[0] != 0) {
+        if (SharedScratch.b_00 != 0) {
             const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(S32(mid), z)));
             if (static_cast<short>(rv::As<records::EffectObject>(Cur())->height_whole) < ground) return 1;
         }
@@ -970,7 +970,7 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAt(long x, long z) {
     if ((uz & 0xFFFF) == 0) return 0;
     const U mid = (cell_z << 16) | 0x8000u;
     SH_CALL(AreaMap_Slope)(x, S32(mid), rv::Bytes(o)[8]);
-    if (At(bof3::addr::DamageScratch)[0] != 0) {
+    if (SharedScratch.b_00 != 0) {
         const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(x, S32(mid))));
         if (static_cast<short>(rv::As<records::EffectObject>(Cur())->height_whole) < ground) return 1;
     }
@@ -1005,19 +1005,19 @@ extern "C" unsigned char __cdecl EffectKind17_CellBlocked(unsigned cell_x, unsig
 // unchecked) << 4; the range +0xA 0xA when the leader's member id (ObjTrio
 // +0x89) is 1, else 0x12; +0 |= 2; +1 up.
 extern "C" void __cdecl EffectKind1B_Start(void) {
-    Cur()[8] = rv::As<records::PartyMember>(ObjTrio)->direction;
+    Cur()[8] = ObjTrio[0].direction;
     SH_AT(void (__cdecl*)(), at::kFc2Aim)();
     Cur()[0x27] = 0x7B;
     SH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>((Cur()[8] >> 1) + 0x4A));
     SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1ec0)), 1);
-    rv::Store<U>(rv::As<records::EffectObject>(Cur())->x, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
-    rv::Store<U>(rv::As<records::EffectObject>(Cur())->z, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
-    rv::Store<unsigned>(rv::As<records::EffectObject>(Cur())->height_whole, rv::As<records::PartyMember>(ObjTrio)->height_whole + 0xC0u);
+    rv::Store<U>(rv::As<records::EffectObject>(Cur())->x, static_cast<U>(ObjTrio[0].x));
+    rv::Store<U>(rv::As<records::EffectObject>(Cur())->z, static_cast<U>(ObjTrio[0].z));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(Cur())->height_whole, ObjTrio[0].height_whole + 0xC0u);
     records::EffectObject* o = rv::As<records::EffectObject>(Cur());
     o->step_x = L(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(o)[8])) << 4;
     o = rv::As<records::EffectObject>(Cur());
     o->step_z = L(At(MoveCmd_F9Steps_addr + 4 + 8u * rv::Bytes(o)[8])) << 4;
-    Cur()[0xA] = rv::As<records::PartyMember>(ObjTrio)->char_id == 1 ? 0xA : 0x12;
+    Cur()[0xA] = ObjTrio[0].char_id == 1 ? 0xA : 0x12;
     rv::As<records::EffectObject>(Cur())->flags = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->flags | 2);
     rv::As<records::EffectObject>(Cur())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->state + 1);
 }
@@ -1070,7 +1070,7 @@ extern "C" void __cdecl EffectKind1B_End(void) {
 // +0x4C, +0x2B = 1, its +0x29, +0x48 = 0, its point +0x34 / +0x38 and height
 // word +0x3E, the tint bytes 0; Sprite_SetAnimation(0x4E); +1 = 2.
 extern "C" void __cdecl EffectKind1B_Trail(void) {
-    const records::EffectObject* const src = rv::AsConst<records::EffectObject>(Effect_Objects + static_cast<U>(ObjTrio[0xB]) * at::kEffectStride);
+    const records::EffectObject* const src = &Effect_Objects[static_cast<U>(rv::Bytes(ObjTrio)[0xb])];
     rv::As<records::EffectObject>(Cur())->flags = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->flags | 2);
     Cur()[0x24] = 1;
     rv::Store<unsigned>(rv::As<records::EffectObject>(Cur())->column, src->column);
@@ -1105,7 +1105,7 @@ extern "C" unsigned char __cdecl EffectKind1B_Hit(void) {
     }
     o = rv::As<records::EffectObject>(Cur());
     const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(o->x, o->z)));
-    if (static_cast<int>(static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->height_whole)) + 0x40 < ground) return 1;
+    if (static_cast<int>(static_cast<short>(ObjTrio[0].height_whole)) + 0x40 < ground) return 1;
     o = rv::As<records::EffectObject>(Cur());
     return SH_CALL(AreaMap_ByteAt)(S16(o->x_whole), S16(o->z_whole)) == 0x11 ? 1 : 0;
 }

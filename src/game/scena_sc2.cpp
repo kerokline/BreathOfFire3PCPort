@@ -76,7 +76,7 @@ void ScriptXor(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(
 
 // The leader's record (ObjTrio's first member): +0x34 x, +0x38 z (16.16),
 // +0x36 / +0x3A the cell words, +0x4B, +8.
-unsigned char* Leader() { return ObjTrio; }
+unsigned char* Leader() { return rv::Bytes(ObjTrio); }
 unsigned LeaderCellX() { return rv::As<records::SpriteHead>(Leader())->x_whole; }
 short LeaderCellZ() { return static_cast<short>(rv::As<records::SpriteHead>(Leader())->z_whole); }
 
@@ -112,11 +112,11 @@ void LoadMusic(unsigned track) {
 // is free.
 bool TakeEffect() {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    At(at::kEffectSlot)[0] = slot;
+    at::kEffectSlot = slot;
     return slot != 0xFF;
 }
 // The record of the slot 0x903850 holds, read back as the original does.
-unsigned char* Effect() { return Effect_Objects + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
+unsigned char* Effect() { return rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(at::kEffectSlot) << 7); }
 
 // The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
 // views a
@@ -928,7 +928,7 @@ extern "C" void __cdecl Scena02_Scene09(void) {
     case 2: {
         if (Counter(0) != 0xA2) return;
         if (!TakeEffect()) return;
-        Counter(3) = At(at::kEffectSlot)[0];
+        Counter(3) = at::kEffectSlot;
         SetStep(3);
         const int x = Camera_Angles[0];
         unsigned char* const e = Effect();
@@ -941,7 +941,7 @@ extern "C" void __cdecl Scena02_Scene09(void) {
         return;
     }
     case 3:
-        if (Effect_Objects[static_cast<std::uint32_t>(Counter(3)) << 7] != 0) return;
+        if (rv::Bytes(Effect_Objects)[static_cast<std::uint32_t>(Counter(3)) << 7] != 0) return;
         Counter(3) = 0;
         DropIn(0xA);
         SetStep(4);
@@ -1415,7 +1415,7 @@ extern "C" void __cdecl Scena02_Scene10(void) {
         SetRun(0);
         return;
     case 0xF:
-        if (Field_Members[0x13b] == 7) return;
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 7) return;
         DropIn(2);
         SetStep(0x10);
         return;
@@ -2114,7 +2114,7 @@ namespace {
 // Scena02_StartRun07.
 void Near(unsigned char n, int xlo, int xhi, int zlo, int zhi) {
     if (Cond_ByteFD != 0) return;
-    const unsigned char* const s = Sprite_Objects + 0xA4u * n;
+    const unsigned char* const s = rv::Bytes(&Sprite_Objects[n]);
     const int sx = rv::As<records::SpriteObject>(s)->x, sz = rv::As<records::SpriteObject>(s)->z;
     const int lx = rv::As<records::PartyMember>(Leader())->x, lz = rv::As<records::PartyMember>(Leader())->z;
     if (lz > Plus(sz, zhi) || lz < Plus(sz, zlo)) return;
@@ -2280,7 +2280,7 @@ void PlaceEffect(unsigned char kind, unsigned char sub) {
     Sprite_Current[0xB] = slot;
     unsigned char* const cur = Sprite_Current;
     if (cur[0xB] == 0xFF) return;
-    auto rec = [cur] { return Effect_Objects + (static_cast<std::uint32_t>(cur[0xB]) << 7); };
+    auto rec = [cur] { return rv::Bytes(Effect_Objects) + (static_cast<std::uint32_t>(cur[0xB]) << 7); };
     rec()[0] = 1;
     rec()[5] = kind;
     rec()[6] = sub;
@@ -2462,7 +2462,7 @@ extern "C" void __cdecl Scena02_Object1A(unsigned char*, unsigned char*) {
 // 0x590C90(byte, 0, 1, 0) and then cleared. Called by Scena02_EnterArea with
 // 3 and 4; n is unchecked (section 6).
 extern "C" void __cdecl Scena02_StripMember(unsigned char member) {
-    unsigned char* p = At(at::kMemberRecords + at::kMemberStride * member + at::kMemberItems);
+    unsigned char* p = At(CharacterRecords_addr + at::kMemberStride * member + at::kMemberItems);
     for (unsigned i = 0; i < 10; ++i, ++p) {
         const unsigned char item = p[0];
         if (item == 0) continue;

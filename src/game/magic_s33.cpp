@@ -50,11 +50,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
@@ -85,10 +85,10 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -110,12 +110,12 @@ std::uint32_t Shl(int v, unsigned n) { return static_cast<std::uint32_t>(v) << n
 // A signed byte widened (movsx).
 int SignedByte(unsigned char b) { return static_cast<signed char>(b); }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the party's
 // by the index, the enemy's by index - 3.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -403,13 +403,13 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         const std::int32_t z0 = tfirst->z;
         const std::int32_t cz = Long(Mem(BossSi_CentreZ_addr));
         rv::Store<unsigned>(tfirst->height_whole, U(ground) & 0xFFFF);
-        SetLong(Mem(at::kTasks + 0x34), Long(Mem(BossSi_CentreX_addr)));
+        SetLong(Mem(BattleTask_Slots_addr + 0x34), Long(Mem(BossSi_CentreX_addr)));
         const std::int32_t x0 = tfirst->x;
-        SetLong(Mem(at::kTasks + 0x38), cz);
+        SetLong(Mem(BattleTask_Slots_addr + 0x38), cz);
         const long ground0 = MH_CALL(AreaMap_Elevation)(x0, z0);
         const unsigned char was = Mem(0x904AB0)[0];
         Mem(0x904AA9)[0] |= 0x80;
-        SetLong(Mem(at::kTasks + 0x3C), static_cast<std::int32_t>(Shl(static_cast<short>(ground0), 16)));
+        SetLong(Mem(BattleTask_Slots_addr + 0x3C), static_cast<std::int32_t>(Shl(static_cast<short>(ground0), 16)));
         PartyRecord(1)[0] = 0;
         PartyRecord(2)[0] = 0;
         Mem(at::kActor)[0] = 0;
@@ -420,7 +420,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char* const m = PartyRecord(i);
         const records::PartyMember* const tm = rv::AsConst<records::PartyMember>(m);
-        unsigned char* const w = Mem(kWindowRows + i * 0x24u);
+        unsigned char* const w = Mem(WindowRecords_addr + 0x1d7 + i * 0x24u);
         if ((m[0] & 1) == 0) continue;
         MH_CALL(Window_Alloc)(i + 0xD, 3);
         const unsigned column = m[8], row = m[0x89];

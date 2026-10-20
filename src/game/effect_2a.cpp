@@ -895,9 +895,9 @@ extern "C" void __cdecl EffectKind2C_Run(void) { Dispatch("EffectKind2C_Run", Ad
 
 // The centre 0x92D380: Sprite_ObjectsExtra[0]'s x, z and height sar 8.
 static void SparkCentreFromExtra() {
-    const U h = UL(At(Sprite_ObjectsExtra_addr + 0x34 + 8));
-    const U x = UL(At(Sprite_ObjectsExtra_addr + 0x34));
-    const U z = UL(At(Sprite_ObjectsExtra_addr + 0x34 + 4));
+    const U h = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].height);
+    const U x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x);
+    const U z = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].z);
     SetUL(At(at::kSparkCentre), x);
     SetUL(At(at::kSparkCentre + 4), z);
     SetUL(At(at::kSparkCentre + 8), Sar(h, 8));
@@ -1066,9 +1066,9 @@ extern "C" void __cdecl EffectKind2E_Start(void) {
 
 // Sprite_Objects[1]'s point into a spark: x, z, height sar 8.
 static void SparkAtObject1(unsigned char* r) {
-    SetUL(r, UL(At(Sprite_Objects_addr + 0xd8)));
-    rv::Store<std::uint32_t>(rv::As<records::EffectSpark>(r)->z, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
-    rv::Store<std::uint32_t>(rv::As<records::EffectSpark>(r)->height, Sar(UL(At(Sprite_Objects_addr + 0xd8 + 8)), 8));
+    SetUL(r, static_cast<std::uint32_t>(Sprite_Objects[1].x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectSpark>(r)->z, static_cast<std::uint32_t>(Sprite_Objects[1].z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectSpark>(r)->height, Sar(static_cast<std::uint32_t>(Sprite_Objects[1].height), 8));
 }
 
 // original 0x472090 (state 1): when the frame's low three bits are 0, a free
@@ -1132,11 +1132,11 @@ extern "C" void __cdecl EffectKind2D_Start(void) {
     Effect2a_LinkZ = 0x180000;
     unsigned char* const q = S() + 0xC;
     SH_CALL(EffectGte_LoadMapCamera)();
-    long point[3] = {Long(At(Sprite_Objects_addr + 0x34)), Long(At(Sprite_Objects_addr + 0x34 + 4)), Long(At(Sprite_Objects_addr + 0x34 + 8))};
+    long point[3] = {Sprite_Objects[0].x, Sprite_Objects[0].z, Sprite_Objects[0].height};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(q));
-    point[0] = Long(At(Sprite_Objects_addr + 0xd8));
-    point[1] = Long(At(Sprite_Objects_addr + 0xd8 + 4));
-    point[2] = Long(At(Sprite_Objects_addr + 0xd8 + 8));
+    point[0] = Sprite_Objects[1].x;
+    point[1] = Sprite_Objects[1].z;
+    point[2] = Sprite_Objects[1].height;
     float other[3];
     SH_CALL(EffectGte_ProjectPoint)(point, other);
     SetF(q, X87Add(other[0], F(q)));

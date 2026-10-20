@@ -196,8 +196,10 @@ constexpr U kGrid = 0x6BDFBC, kReserve = 0x6BDFD4;
 // kCurrent: now BattleWinStates_Current (symbols.toml).
 // kListText: now MenuWindows_ListText (symbols.toml).
 // kListCursor: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr U kCharacters = 0x903A70, kListLast = 0x7DEE66, kWindows = 0x803160;
-U Rec(unsigned n, unsigned at) { return kWindows + 0x24 * n + at; }
+// kCharacters: now CharacterRecords (symbols.toml).
+// kWindows: now WindowRecords (symbols.toml).
+constexpr U kListLast = 0x7DEE66;
+U Rec(unsigned n, unsigned at) { return WindowRecords_addr + 0x24 * n + at; }
 
 // The kind-1 choices' text (a region of its own; a tail of zeros after it that
 // no one writes, so a walk past the region still ends).
@@ -313,7 +315,7 @@ const sh::DataTable kTables[] = {
 
 // Beyond field mode's standard regions.
 const sh::Region kRegions[] = {
-    {kWindows, 22 * 0x24},       // WindowRecords
+    {WindowRecords_addr, 22 * 0x24}, // WindowRecords
     {0x7DEE20, 0x60},            // the message cells: kind 1's text pointer, count, cursor, rows
     {0x6BDFB0, 0x30},            // Tactics' cells
     {0x903A94, 0x4FC},           // CharacterRecords past the style region, to Cond_Flags
@@ -442,7 +444,7 @@ void Seed(unsigned k) {
     // the party and the characters: ids 0..7, the flags +0xB at bits 0 and 1
     for (unsigned i = 0; i < 6; ++i) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, sh::Next() % 8));
     for (unsigned m = 0; m < 8; ++m) {
-        unsigned char* const c = Mem(kCharacters + 0xA4 * m);
+        unsigned char* const c = Mem(CharacterRecords_addr + 0xA4 * m);
         c[9] = static_cast<unsigned char>(PickOf(m, m, m, sh::Next() % 8));
         c[0xB] = static_cast<unsigned char>(PickOf(0, 1, 1, 3, 2, sh::Next()));
     }

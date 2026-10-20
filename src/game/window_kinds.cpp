@@ -98,7 +98,7 @@ using namespace window_kinds;
 // As the original has it: every value is re-read from memory where the
 // original re-reads it (the HP after each gauge store, the max for each
 // divide); the rise's two divides share the one max read; the old gauge
-// length passes through DamageScratch's first byte 0x903850, which is left
+// length passes through SharedScratch's first byte 0x903850, which is left
 // holding it. No bound on the max: a max HP of 0 divides by zero in both.
 extern "C" void __cdecl Window_HpGaugeTrack(unsigned char* gauge, const unsigned char* max_hp, unsigned char* max_seen,
                                             unsigned char* shown, unsigned char* hp, unsigned char* drain,
@@ -129,11 +129,11 @@ extern "C" void __cdecl Window_HpGaugeTrack(unsigned char* gauge, const unsigned
             drain[0] = gauge[0];
             gauge[0] = 0;
         } else {
-            At(at::kScratch)[0] = gauge[0];
+            at::kScratch = gauge[0];
             const auto q = static_cast<unsigned char>(Scale(S(hp), S(max_hp)));
             gauge[0] = q;
             if (S(hp) != 0 && q == 0) gauge[0] = 1;
-            drain[0] = static_cast<unsigned char>(At(at::kScratch)[0] - gauge[0]);
+            drain[0] = static_cast<unsigned char>(at::kScratch - gauge[0]);
         }
         SetWord(step, static_cast<unsigned>(drain[0] >> 4));
         kind[0] = 1;

@@ -65,8 +65,8 @@ unsigned char* Result() { return Ptr(at::kResult); }
 // (0x93B960 + 0x128 (n - 3), the difference in 32 bits - a byte below 3
 // lands before the enemies). Neither is checked, as in the original.
 unsigned char* Party(unsigned n) { return At(ObjTrio_addr + (n & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned n) { return At(at::kEnemies + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
-unsigned char* CharRecord(unsigned roster) { return At(at::kCharRecords + (roster & 0xFF) * at::kCharStride); }
+unsigned char* Enemy(unsigned n) { return At(Battle_Enemies_addr + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* CharRecord(unsigned roster) { return At(CharacterRecords_addr + (roster & 0xFF) * at::kCharStride); }
 unsigned char* AbilityRow(unsigned id) { return At(at::kAbilityRows + (id & 0xFFFF) * at::kAbilityStride); }
 
 // R3D's callees, ours, by address (named in rest_3b_callees.h).
@@ -238,10 +238,10 @@ namespace {
 void CancelHead(bool windows) {
     BH_CALL(Sound_PlayEffect)(0x106);
     if (windows) {
-        B(at::kWin3State) = 1;
-        Window2_State = 1;
+        WindowRecords[3].state = 1;
+        WindowRecords[2].state = 1;
     }
-    BH_CALL(BattleBanner_ShowName)(Ptr(at::kMenuActor));
+    BH_CALL(BattleBanner_ShowName)(reinterpret_cast<unsigned char*>(BattleE4_MenuActor));
     BattleE4_Picking = 0;
 }
 }  // namespace
@@ -270,7 +270,7 @@ namespace {
 // record 16's +3 is 0, step 1, the command and step 0, and a tail jump to
 // ItemMenu_FreeWindows.
 void CloseWait() {
-    if (Window16_State != 0) return;
+    if (WindowRecords[16].state != 0) return;
     BattleActions_Step = 1;
     BattleE4_Step2 = 0;
     BattleE4_Step3 = 0;

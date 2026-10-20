@@ -153,7 +153,7 @@ void CaptureSprite(const char* who, bool a3) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original copies a sprite past "
                     "Effect_Objects (docs/rest_3f.md section 7)",
                     who, (unsigned)k);
-    unsigned char* const e = Effect_Objects + 0x80u * k;
+    unsigned char* const e = rv::Bytes(&Effect_Objects[k]);
     Rest3f_PixIndex = 1;
     SH_CALL(Gfx_ClearRect)(at::kCaptureX, at::kCaptureY, 0x80, 0x100);
     {
@@ -430,7 +430,7 @@ extern "C" void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned un
 }
 
 // original 0x4837B0 (EffectKind69_Part2's lines; PSX twin 0x801D218C): in the
-// scratch cells (DamageScratch +0, +4, +8, Scratch_Swap) the amplitude 0x40,
+// scratch cells (SharedScratch +0, +4, +8, Scratch_Swap) the amplitude 0x40,
 // the angle ((+0xB + 2) & 0xF) << 8, the count +0xA, a shade Rand & 0x3F;
 // Prim_VertexScratch (0, Math_Sin(angle) * amplitude sar 12, 0). For each i
 // from 1 below the count (read again after every call): a draw mode (page
@@ -441,16 +441,16 @@ extern "C" void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned un
 // (next, next, 0x20), next Rand & 0x3F kept; committed 0x24 to slot 2.
 extern "C" void __cdecl EffectKind69_DrawLines(void) {
     unsigned char* s = S();
-    SetUL(At(at::kLineAmp), 0x40);
-    SetUL(At(at::kLineAngle), ((s[0xB] + 2u) & 0xFu) << 8);
+    at::kLineAmp = 0x40;
+    at::kLineAngle = ((s[0xB] + 2u) & 0xFu) << 8;
     Scratch_Swap = s[0xA];
-    SetUL(At(at::kLineShade), static_cast<U>(SH_CALL(Rand)()) & 0x3Fu);
+    SharedScratch.d_08 = static_cast<U>(SH_CALL(Rand)()) & 0x3Fu;
     unsigned char* const v = reinterpret_cast<unsigned char*>(Prim_VertexScratch);
     {
-        const U angle = UL(At(at::kLineAngle));
+        const U angle = static_cast<std::uint32_t>(at::kLineAngle);
         SetWord(v, 0);
         const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle)));
-        SetWord(v + 2, Sar(sn * UL(At(at::kLineAmp)), 12));
+        SetWord(v + 2, Sar(sn * static_cast<std::uint32_t>(at::kLineAmp), 12));
         SetWord(v + 4, 0);
     }
     if (static_cast<std::int32_t>(Scratch_Swap) <= 1) return;
@@ -461,28 +461,28 @@ extern "C" void __cdecl EffectKind69_DrawLines(void) {
         SH_CALL(Gpu_SetLineG2)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
         long depth;
-        SH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(p + 8), &depth);
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 8), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
         if ((SH_CALL(Rand)() & 1) != 0)
-            SetUL(At(at::kLineAmp), (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu) + 0x80u);
+            at::kLineAmp = (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu) + 0x80u;
         else
-            SetUL(At(at::kLineAmp), 0x80u - (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu));
+            at::kLineAmp = 0x80u - (static_cast<U>(SH_CALL(Rand)()) & 0x3Fu);
         s = S();
         const U angle = ((s[0xB] + i + 2u) & 0xFu) << 8;
         SetWord(v, 0);
-        SetUL(At(at::kLineAngle), angle);
+        at::kLineAngle = angle;
         const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle)));
-        SetWord(v + 2, Sar(sn * UL(At(at::kLineAmp)), 12));
+        SetWord(v + 2, Sar(sn * static_cast<std::uint32_t>(at::kLineAmp), 12));
         SetWord(v + 4, (0u - i) << 6);
-        SH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(p + 0x18), &depth);
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 0x18), &depth);
         SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x20));
-        p[4] = At(at::kLineShade)[0];
-        p[5] = At(at::kLineShade)[0];
+        p[4] = at::kLineShade;
+        p[5] = at::kLineShade;
         p[6] = 0x20;
         const U next = static_cast<U>(SH_CALL(Rand)()) & 0x3Fu;
-        SetUL(At(at::kLineShade), next);
+        SharedScratch.d_08 = next;
         p[0x14] = static_cast<unsigned char>(next);
-        p[0x15] = At(at::kLineShade)[0];
+        p[0x15] = at::kLineShade;
         p[0x16] = 0x20;
         SH_CALL(Gfx_CommitPrim)(2, 0x24);
         if (!(static_cast<std::int32_t>(i + 1) < static_cast<std::int32_t>(Scratch_Swap))) break;

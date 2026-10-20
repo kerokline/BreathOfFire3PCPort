@@ -228,9 +228,9 @@ extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
     Window0_Item = 0;
     Window0_Arrows = 0;
     B(0x803185) = 2;
-    Window1_Kind = 3;
-    Window1_State = 2;
-    Window1 = 1;
+    WindowRecords[1].kind = 3;
+    WindowRecords[1].state = 2;
+    WindowRecords[1].in_use = 1;
     W16(0x803188, 0xFF56);
     W16(0x80318A, 0x3E);
     B(0x803190) = 7;
@@ -238,8 +238,8 @@ extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
     B(0x80318F) = 0xFF;
     Window1_Master = 1;
     B(0x8031A9) = 2;
-    Window2_State = 2;
-    Window2 = 1;
+    WindowRecords[2].state = 2;
+    WindowRecords[2].in_use = 1;
     W16(0x8031AC, 0x14);
     W16(0x8031B8, 0);
     W16(0x8031BA, 0x118);
@@ -271,7 +271,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleExtra_EquipCom
         BH_CALL(Inventory_Add)(B(at::kCategories + i), back, 1);
         held[0] = B(at::kChosen + i);
     }
-    BH_CALL(Char_RecalcStats)(At(at::kGuest));
+    BH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + 0x47c));
 }
 
 // original 0x42E2F0 (BattleExtra_EquipListInput, each frame): window 13's
@@ -285,7 +285,7 @@ extern "C" unsigned char __cdecl BattleExtra_EquipRefresh(void) {
     const unsigned char item = Window0_Item;
     const unsigned fits = BH_CALL(Item_EquipMask)(category, item);
     const unsigned char e14 = B(at::kGuestEquip + 2);
-    const unsigned char e12 = Rest3a_GuestEquip;
+    const unsigned char e12 = CharacterRecords[7].weapon;
     B(at::kWin13Dim) = static_cast<unsigned char>(~fits & 1);
     const unsigned char e13 = B(at::kGuestEquip + 1);
     B(at::kChosen + 2) = e14;
@@ -470,9 +470,9 @@ namespace {
 // BattleWin_DrawTileTint(0, 0, 0xB).
 void TintTile() {
     const unsigned char v = Sc()[9];
-    B(at::kTint + 2) = v;
-    B(at::kTint + 1) = v;
-    B(at::kTint + 0) = v;
+    at::kTint.b_02 = v;
+    at::kTint.b_01 = v;
+    at::kTint.b_00 = v;
     BH_CALL(BattleWin_DrawTileTint)(0, 0, 0xB);
 }
 }  // namespace
@@ -782,7 +782,7 @@ unsigned char* EnemyByActor(unsigned actor, const char* who) {
         bof3::Fatal("%s: actor %u is no enemy (3..10) - the original runs BattleEnemy_SetAnimation on a record outside the "
                     "eight (docs/rest_3a.md section 7)",
                     who, actor & 0xFF);
-    return At(at::kEnemies + index * at::kEnemySize);
+    return At(Battle_Enemies_addr + index * at::kEnemySize);
 }
 }  // namespace
 
@@ -792,22 +792,22 @@ unsigned char* EnemyByActor(unsigned actor, const char* who) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnimationAs(unsigned actor, unsigned animation) {
     unsigned char* const enemy = EnemyByActor(actor, "BattleEnemy_SetAnimationAs");
     unsigned char* const sprite = Sc();
-    const U current = BattleE3_CurrentEnemy;
+    records::BattleEnemy* const current = BattleE3_CurrentEnemy;
     Sprite_Current = enemy;
-    BattleE3_CurrentEnemy = static_cast<std::int32_t>(Addr(enemy));
+    BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(enemy);
     BH_CALL(BattleEnemy_SetAnimation)(animation);
-    BattleE3_CurrentEnemy = static_cast<std::int32_t>(current);
+    BattleE3_CurrentEnemy = current;
     Sprite_Current = sprite;
 }
 
 // original 0x435A70 (PSX 0x801E2500, call-anchored): the same with 0x939AD8
 // alone (Sprite_Current untouched).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnimationOf(unsigned actor, unsigned animation) {
-    const U current = BattleE3_CurrentEnemy;
+    records::BattleEnemy* const current = BattleE3_CurrentEnemy;
     unsigned char* const enemy = EnemyByActor(actor, "BattleEnemy_SetAnimationOf");
-    BattleE3_CurrentEnemy = static_cast<std::int32_t>(Addr(enemy));
+    BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(enemy);
     BH_CALL(BattleEnemy_SetAnimation)(animation);
-    BattleE3_CurrentEnemy = static_cast<std::int32_t>(current);
+    BattleE3_CurrentEnemy = current;
 }
 
 // ============================================================================
@@ -825,7 +825,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnima
 // on a whelp slot past the eight records (section 7).
 extern "C" void __cdecl NewGame_InitCharacters(void) {
     for (unsigned n = 0; n < 7; ++n) {
-        unsigned char* const record = At(at::kCharRecords + n * at::kCharSize);
+        unsigned char* const record = At(CharacterRecords_addr + n * at::kCharSize);
         std::memcpy(record, At(Char_DefaultRecords_addr + n * at::kCharSize), at::kCharSize);
         const std::int32_t level = record[0xA];
         const unsigned divisor = B(at::kLevelDivisors + 2 * n);
@@ -838,7 +838,7 @@ extern "C" void __cdecl NewGame_InitCharacters(void) {
     const unsigned slot = Char_WhelpSlot;
     if (slot >= at::kCharCount)
         bof3::Fatal("NewGame_InitCharacters: Char_WhelpSlot is %u, past the %u records - the original writes on", slot, at::kCharCount);
-    std::memcpy(At(at::kCharRecords + slot * at::kCharSize), At(at::kWhelpRecord), at::kCharSize);
+    std::memcpy(At(CharacterRecords_addr + slot * at::kCharSize), At(at::kWhelpRecord), at::kCharSize);
 }
 
 // ============================================================================

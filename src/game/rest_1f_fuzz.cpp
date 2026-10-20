@@ -15,6 +15,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_0a.h"
 #include "game/rest_1f.h"
@@ -138,7 +139,7 @@ template <typename... T> U PickOf(T... v) {
 }
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps
 constexpr U kCellOffsets = 0x66971C;   // the cell-ahead offsets, two signed bytes a direction
-constexpr U kCells = 0x903850;         // the sloped flag and the cells 1..0xF
+// kCells: now SharedScratch (symbols.toml). the sloped flag and the cells 1..0xF
 unsigned char* Mem(U a) { return sh::Mem(a); }
 unsigned char* Sc() { return Sprite_Current; }
 
@@ -178,7 +179,7 @@ U FxGround(const U*, U answer) {
 // side of 0x40 and at the s16 limits.
 U FxSlope(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const flag = Mem(kCells);
+    unsigned char* const flag = Mem(SharedScratch_addr);
     if (sh::InRegions(flag, 1)) flag[0] = static_cast<unsigned char>(n % 3 == 0 ? 0 : (n >> 2) % 4 ? 1 : 1 + (n >> 4) % 0xFF);
     static const U kWords[] = {0x40, 0x41, 0x3F, 0, 0x7FFF, 0x8000, 0xFFFF, 0x8040, 0x0140, 0xFFC0};
     const U m = sh::Noise();
@@ -193,7 +194,7 @@ void StirClassCell() {
     const U n = sh::Noise();
     if ((n & 3) != 0) return;
     static const unsigned char kClasses[] = {0xB0, 0x70, 0x10, 0x20, 0xA0, 0xA1, 0xA2, 0xA3};
-    unsigned char* const cell = Mem(kCells + 8 + (n >> 2) % 4);
+    unsigned char* const cell = Mem(SharedScratch_addr + 8 + (n >> 2) % 4);
     if (sh::InRegions(cell, 1)) cell[0] = kClasses[(n >> 4) % 8];
 }
 // A class answer (Field_CellClass, Field_CellClass5): the values the callers
@@ -225,7 +226,7 @@ U FxTurn(const U*, U answer) {
     if ((n & 1) && sh::InRegions(s + 8, 1)) s[8] = static_cast<unsigned char>(n % 16 == 1 ? n >> 8 : (n >> 8) % 8);
     if (((n >> 16) & 3) == 0) {
         static const unsigned char kClasses[] = {0xB0, 0x70, 0x10, 0x20, 0xA0, 0xA1, 0xA2, 0xA3};
-        unsigned char* const cell = Mem(kCells + 8 + (n >> 18) % 4);
+        unsigned char* const cell = Mem(SharedScratch_addr + 8 + (n >> 18) % 4);
         if (sh::InRegions(cell, 1)) cell[0] = kClasses[(n >> 20) % 8];
     }
     return answer;
@@ -361,7 +362,7 @@ unsigned char CellValue() {
 // Field_CellClass5's rounds: half the cells a slope or the two the rules
 // single out (0x70, 0xB0), so that its three- and two-cell slope rules are met.
 void SeedCells(unsigned k) {
-    unsigned char* const c = Mem(kCells);
+    unsigned char* const c = Mem(SharedScratch_addr);
     c[0] = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
     for (unsigned i = 1; i < 16; ++i)
         c[i] = k == kCellClass5 && sh::Half() ? static_cast<unsigned char>(PickOf(0xA0, 0xA1, 0xA2, 0xA3, 0xA0, 0xA2, 0x70, 0xB0))
@@ -429,7 +430,7 @@ void Seed(unsigned k) {
     Field_ScriptFlags = static_cast<unsigned short>(sh::Next() % 8 == 0 ? Field_ScriptFlags | 0x400 : Field_ScriptFlags & ~0x400u);
     Field_State[0x89] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
     Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
-    unsigned char* const record4 = Effect_Objects + 4 * 0x80;
+    unsigned char* const record4 = rv::Bytes(&Effect_Objects[4]);
     record4[1] = static_cast<unsigned char>(PickOf(4, 4, 3, 5, sh::Next()));
     sh::SetRandHint(PickOf(0xD, 0xE, 0xF, 0xC, 0, 4, 6, 7, 5, 0xB, sh::Next()));
 }
@@ -460,18 +461,18 @@ void Disturb(U h) {
     case 2: s[7] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 3: SetWord(s + (v & 1 ? 0x34 : 0x38), v & 2 ? 0 : v >> 2); break;
     case 4: SetWord(s + 0x3E, v >> 2); break;
-    case 5: Mem(kCells)[0] = static_cast<unsigned char>(v & 1); break;
+    case 5: Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(v & 1); break;
     case 6: {
         static const unsigned char kClasses[] = {0xB0, 0x70, 0x10, 0x20, 0xA0, 0xA1, 0xA2, 0xA3};
-        Mem(kCells)[8 + v % 4] = kClasses[(v >> 2) % 8];
+        Mem(SharedScratch_addr)[8 + v % 4] = kClasses[(v >> 2) % 8];
         break;
     }
     case 7:
-        if (g_effect < 20) Effect_Objects[g_effect * 0x80 + 8 + (v & 2)] = static_cast<unsigned char>(v >> 2);
+        if (g_effect < 20) rv::Bytes(Effect_Objects)[g_effect * 0x80 + 8 + (v & 2)] = static_cast<unsigned char>(v >> 2);
         break;
     case 8: Field_InputFlags = static_cast<unsigned char>(v); break;
     case 9: SetWord(s + 0x36 + (v & 1) * 4, v >> 1); break;
-    case 10: Effect_Objects[4 * 0x80 + 1] = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
+    case 10: Effect_Objects[4].state = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 11: SetWord(s + 0x2C, v >> 2); break;
     default: break;
     }

@@ -98,7 +98,7 @@ namespace {
 
 // Actor records, indexed in 32 bits as the originals' lea chains do.
 unsigned char* Party(std::uint32_t i) { return At(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* Enemy(std::uint32_t i) { return At(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* Enemy(std::uint32_t i) { return At(Battle_Enemies_addr + i * at::kEnemyStride); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
 std::int32_t Address(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* ActionRecord(std::uint32_t action) { return At(at::kActions + action * at::kActionStride); }
@@ -377,7 +377,7 @@ extern "C" void __cdecl Formation_ApplyStatMods(void) {
 // amount or with bit 4, and 3 for zero.
 extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
     const unsigned slot = g.popup_slot(0, 1);
-    unsigned char* const rec = At(at::kPopups + (slot & 0xFFu) * at::kPopupStride);
+    unsigned char* const rec = At(BattleTask_Slots_addr + (slot & 0xFFu) * at::kPopupStride);
     auto* const popup = rv::As<records::BattleTask>(rec);
     rec[0xB] = 0;
     const unsigned char who = static_cast<unsigned char>(actor);
@@ -553,7 +553,7 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
     const unsigned slot = g.popup_slot(0, 3) & 0xFFu;
     const unsigned char actor = At(at::kActor)[0];
     const unsigned char* const block = Ptr(At(BattleSprites_HitBlock_addr));
-    unsigned char* const rec = At(at::kPopups + slot * at::kPopupStride);
+    unsigned char* const rec = At(BattleTask_Slots_addr + slot * at::kPopupStride);
     auto* const popup = rv::As<records::BattleTask>(rec);
     unsigned char* const s = Sprite_Current;
     popup->owner = Address(s);
@@ -615,7 +615,7 @@ extern "C" void __cdecl Tint_Release(unsigned char index) {
 // original 0x454DF0 (0x80197784): the body Sprite_SetTint and Tint_Release
 // share. Claim: ClutMap_FindFree(kind) and the owner written; release:
 // ClutMap_FindOwner(owner) and 0xFF written - over the cells the callee left
-// in DamageScratch bytes 0 / 1 (row, cell), read after the call: kind 0 one
+// in SharedScratch bytes 0 / 1 (row, cell), read after the call: kind 0 one
 // cell, 1 sixteen, 2 two, 3 four, 4 eight, anything else none. Answers what
 // the callee answered. Neither the row nor a run past the map's 64 cells is
 // checked; a release that found nothing still writes over the last cell the
@@ -629,7 +629,7 @@ extern "C" unsigned char __cdecl ClutMap_Mark(unsigned kind, unsigned owner, uns
         answer = g.clut_owner(owner);
         fill = 0xFF;
     }
-    unsigned char* const cells = At(at::kClutMap + At(at::kCells)[0] * 16u + At(at::kCells)[1]);
+    unsigned char* const cells = At(at::kClutMap + at::kCells.b_00 * 16u + at::kCells.b_01);
     unsigned n;
     switch (kind & 0xFF) {
     case 0: n = 1; break;
@@ -645,7 +645,7 @@ extern "C" unsigned char __cdecl ClutMap_Mark(unsigned kind, unsigned owner, uns
 
 // original 0x454F30 (0x801978BC): the first free clut cell (0xFF in the
 // 4 x 16 map) that starts a free run of the kind's size, aligned to it:
-// every free cell tried is left in DamageScratch bytes 0 / 1 (row, cell),
+// every free cell tried is left in SharedScratch bytes 0 / 1 (row, cell),
 // so a failed search leaves the last free cell there. Answers the clut slot
 // - kind 0 0xC0 + row * 16 + cell, 1 (cell 0, the whole row) 0x1C + row,
 // 2 0xE0 + row * 8 + cell / 2, 3 0x70 + row * 4 + cell / 4, 4 0x38 + row * 2
@@ -660,8 +660,8 @@ extern "C" unsigned char __cdecl ClutMap_FindFree(unsigned kind) {
     for (unsigned row = 0; row < 4; ++row)
         for (unsigned cell = 0; cell < 16; ++cell) {
             if (map[row * 16 + cell] != 0xFF) continue;
-            At(at::kCells)[1] = static_cast<unsigned char>(cell);
-            At(at::kCells)[0] = static_cast<unsigned char>(row);
+            at::kCells.b_01 = static_cast<unsigned char>(cell);
+            at::kCells.b_00 = static_cast<unsigned char>(row);
             switch (kind & 0xFF) {
             case 0: return static_cast<unsigned char>((row + 0xC) * 16 + cell);
             case 1:
@@ -683,15 +683,15 @@ extern "C" unsigned char __cdecl ClutMap_FindFree(unsigned kind) {
 }
 
 // original 0x455140 (0x80197B20): the first cell of the clut map owned by
-// `owner`, left in DamageScratch bytes 0 / 1 (row, cell); answers the owner,
+// `owner`, left in SharedScratch bytes 0 / 1 (row, cell); answers the owner,
 // or 0xFF (and the scratch untouched) when it owns none.
 extern "C" unsigned char __cdecl ClutMap_FindOwner(unsigned owner) {
     const unsigned char o = static_cast<unsigned char>(owner);
     for (unsigned row = 0; row < 4; ++row)
         for (unsigned cell = 0; cell < 16; ++cell)
             if (At(at::kClutMap)[row * 16 + cell] == o) {
-                At(at::kCells)[0] = static_cast<unsigned char>(row);
-                At(at::kCells)[1] = static_cast<unsigned char>(cell);
+                at::kCells.b_00 = static_cast<unsigned char>(row);
+                at::kCells.b_01 = static_cast<unsigned char>(cell);
                 return o;
             }
     return 0xFF;
@@ -757,7 +757,7 @@ extern "C" void __cdecl Battle_InitEnemies(void) {
     Battle_EnemyCount = 0;
     unsigned char n = 0;
     for (unsigned r = 0; r < 8; ++r) {
-        const unsigned char* const rec = At(at::kEncounter + r * 12);
+        const unsigned char* const rec = At(Encounter_Slots_addr + r * 12);
         if (!rec[0]) continue;
         g.setup_enemy(n, rec[1], Long(rec + 4), Long(rec + 8));
         ++n;
@@ -967,7 +967,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
                 if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->enemy_kind) {
                     set_count(k, count(k) - 1u);
                     g.window_open(static_cast<unsigned char>(0xC - shown), 3);
-                    unsigned char* const w = At(at::kWindows + 0x1B0 - shown * at::kWindowStride);
+                    unsigned char* const w = At(WindowRecords_addr + 0x1B0 - shown * at::kWindowStride);
                     auto* const window_rec = rv::As<records::WindowRecord>(w);
                     window_rec->kind = 4;
                     window_rec->state = 0;

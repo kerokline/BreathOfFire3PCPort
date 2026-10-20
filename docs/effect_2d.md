@@ -115,7 +115,7 @@ flags are the chapter's row (`*0x929ED0`).
   nothing; only the second: the first given back). The model - the leader,
   or sprite object 2 when `+0xB` is 0 - has its animation byte `+0x4B` looked
   up among five `(key, animation, start)` triples at `0x654564`; for each
-  sprite `DamageScratch` = its index, `EventOp_0x(0x654540 + 17 * +0xB)`,
+  sprite `SharedScratch` = its index, `EventOp_0x(0x654540 + 17 * +0xB)`,
   `Sprite_SetAnimationAt(animation, start)`. `Sprite_Current` put back; the
   two moved 0x1000 apart on each axis, at the leader's height, `+0 |= 0x20`,
   `+0x5C` 0, tinted `(0xF, 0, 0, 1)` and `(0, 0, 0xF, 1)`; `+9` 4, state 1.

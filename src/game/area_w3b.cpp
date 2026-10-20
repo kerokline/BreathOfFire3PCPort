@@ -79,7 +79,7 @@ Handler StateEntry(const char* who, const char* what, U table, unsigned count, u
 // lands on "extra record 0xE1", 0x80B0A4, inside .bss).
 unsigned char* ObjectRecord(U k) {
     k &= 0xFF;
-    return k < 0x1E ? Sprite_Objects + k * at::kObjectStride : Sprite_ObjectsExtra + (k - 0x1E) * at::kObjectStride;
+    return k < 0x1E ? rv::Bytes(&Sprite_Objects[k]) : rv::Bytes(&Sprite_ObjectsExtra[k - 0x1E]);
 }
 
 // Field_DirectionSteps' pair for a direction - a whole byte into a table of
@@ -194,7 +194,7 @@ extern "C" void __cdecl Area121_StartRun4(void) {
 extern "C" void __cdecl Area121_SpawnEffectBA(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const record = Effect_Objects + slot * at::kEffectStride;
+    unsigned char* const record = rv::Bytes(&Effect_Objects[slot]);
     record[0] = 1;
     record[5] = 0xBA;
 }
@@ -252,9 +252,9 @@ void PlaceMessage(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = ObjTrio[9];
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U steps = ObjTrio[0].step_frames;
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
@@ -552,8 +552,8 @@ void Record8Place(const WorldMapTables& t) {
     Cur()[0x29] = 5;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dir(Cur(), 0));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dir(Cur(), 2));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     unsigned char* o = Cur();
     auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
@@ -590,7 +590,7 @@ void Record8Place(const WorldMapTables& t) {
 // record +0xB (x, z; unchecked) set to 0xA0 - AreaMap_Bytes +
 // AreaMap_Header[0] * z + x; Sprite_SetAnimation(0) and +1 = 1.
 void Record4MarkCell(const WorldMapTables& t) {
-    if (At(at::kFlag3A79)[0] == 9 || (Field_StatusBits & 1) != 0) {
+    if (CharacterRecords[0].char_id == 9 || (Field_StatusBits & 1) != 0) {
         AH_CALL(Effect_Release)();
         return;
     }
@@ -989,7 +989,7 @@ extern "C" void __cdecl Area121_LeaderStep(void) {
     if ((Field_InputFlags & 1) != 0) {
         o = Cur();
         if (AH_CALL(AreaMap_ByteAt)(static_cast<short>(rv::As<records::SpriteHead>(o)->x_whole), static_cast<short>(rv::As<records::SpriteHead>(o)->z_whole)) == 0xAF) {
-            AH_CALL(Field_ChangeArea)(AreaW0b_Place, Long(At(at::kPendingX)), static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
+            AH_CALL(Field_ChangeArea)(AreaW0b_Place, at::kPendingX, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
             Area_EnterTransition = 0xC;
             return;
@@ -1079,7 +1079,7 @@ extern "C" void __cdecl Area121_Kind5CRun(void) { StateEntry("Area121", "Kind5CR
 // Ours aborts on an area number past the 200 descriptors or a null descriptor,
 // where the original would read through it.
 extern "C" void __cdecl Area121_Kind5CStart(void) {
-    Cur()[8] = ObjTrio[8];
+    Cur()[8] = ObjTrio[0].direction;
     const unsigned area = Game_AreaNumber;
     if (area >= 200) bof3::Fatal("Area121_Kind5CStart: area %u is past Area_Descriptors' 200", area);
     const unsigned char* const descriptor = Area_Descriptors[area];
@@ -1094,7 +1094,7 @@ extern "C" void __cdecl Area121_Kind5CStart(void) {
     if (Game_AreaNumber == 0x68 && AH_CALL(KeyItem_Has)(0xA) == 0) return;
     for (U i = 0; i < 4; ++i) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
-        unsigned char* const record = Effect_Objects + slot * at::kEffectStride;
+        unsigned char* const record = rv::Bytes(&Effect_Objects[slot]);
         record[0] = 1;
         record[5] = 0x5C;
         record[1] = 3;
@@ -1111,9 +1111,9 @@ extern "C" void __cdecl Area121_Kind5CStart(void) {
 // +0xA 0, n 0 and rows (0x40, 0), (0x40 - the leader's +0xB, 1); else n 1 or 2
 // by Frame_Counter bit 1 and the row (0x40, 0).
 extern "C" void __cdecl Area121_Kind5CFollow(void) {
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, Word(At(ObjTrio_addr + 0x3e)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, ObjTrio[0].height_whole);
     AH_CALL(Sprite_UpdateScreenA)();
     if ((Draw_PassFlags & 0x1B) == 0) return;
     const auto gauge = AH_AT(GaugeFn, area_w3b::kGaugeSprite);
@@ -1124,10 +1124,10 @@ extern "C" void __cdecl Area121_Kind5CFollow(void) {
         row(0x40, 1);
         return;
     }
-    if (ObjTrio[0xa] == 0) {
+    if (ObjTrio[0].digits == 0) {
         gauge(0xDC, 0x10, 0);
         row(0x40, 0);
-        row(static_cast<unsigned char>(0x40 - ObjTrio[0xb]), 1);
+        row(static_cast<unsigned char>(0x40 - rv::Bytes(ObjTrio)[0xb]), 1);
         return;
     }
     gauge(0xDC, 0x10, (Frame_Counter & 2) != 0 ? 1u : 2u);
@@ -1167,10 +1167,10 @@ extern "C" void __cdecl Area121_GaugeSprite(int x, int y, unsigned n) {
 // neither: the leader's facing = +8. Then (and when they match) a tail jump to
 // Area121_Kind5CFollow.
 extern "C" void __cdecl Area121_Kind5CFace(void) {
-    if (Cur()[8] != ObjTrio[8]) {
-        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8], ObjTrio[8]) != 0) return;
-        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8] ^ 4u, ObjTrio[8]) != 0) return;
-        ObjTrio[8] = Cur()[8];
+    if (Cur()[8] != ObjTrio[0].direction) {
+        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8], ObjTrio[0].direction) != 0) return;
+        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8] ^ 4u, ObjTrio[0].direction) != 0) return;
+        ObjTrio[0].direction = Cur()[8];
     }
     AH_AT(Handler, area_w3b::kKind5CFollow)();
 }
@@ -1201,7 +1201,7 @@ extern "C" unsigned char __cdecl Area121_Kind5CTurnStep(unsigned a, unsigned b) 
     }
     Cur()[8] = static_cast<unsigned char>(Cur()[8] & 7);
     unsigned char* const o = Cur();
-    ObjTrio[8] = o[8];
+    ObjTrio[0].direction = o[8];
     o[9] = 8;
     AH_AT(Handler, area_w3b::kKind5CTurn)();
     Cur()[1] = 2;
@@ -1233,9 +1233,9 @@ extern "C" void __cdecl Area121_RingWait(void) {
         o[0xA] = static_cast<unsigned char>(o[0xA] - 1);
         return;
     }
-    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, static_cast<std::int32_t>(static_cast<U>(Long(At(ObjTrio_addr + 0x3c))) + 0x800000u));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(ObjTrio[0].height) + 0x800000u));
     AH_AT(Handler, area_w3b::kRingRise)();
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
 }

@@ -88,7 +88,7 @@ constexpr U kReserve = 0x6BDFD4;     // the reserve's member ids
 // kFormationBits: now Cond_Flags[0xd1] (symbols.toml). which of the six cells may hold a member
 constexpr U kParty = 0x904062;       // the party's member ids (0x904065: the battle order's copy)
 constexpr U kPartyCopy = 0x904065;
-constexpr U kCharacters = 0x903A70;  // CharacterRecords: 0xA4 a member
+// kCharacters: now CharacterRecords (symbols.toml). CharacterRecords: 0xA4 a member
 constexpr U kCharacterStride = 0xA4;
 constexpr U kWorking = 0x802DC0;     // the party's working records' +0x80 (ObjTrio + 0x80), 0x14C a slot
 constexpr U kWorkingStride = 0x14C;
@@ -101,7 +101,7 @@ constexpr U kEffectState = 0x66972C; // Character_IndexById: the record of a mem
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
 // kInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags: bit 0, the members screen allowed
 // kCurrent: now BattleWinStates_Current (symbols.toml). the window record Field_RunTaskRecords runs
-constexpr U kWindows = 0x803160;     // WindowRecords
+// kWindows: now WindowRecords (symbols.toml). WindowRecords
 constexpr U kWindowStride = 0x24;
 constexpr U kPools = 0x803580;       // MessagePools
 constexpr U kPrint = 0x904BA0;       // the print buffer
@@ -140,7 +140,7 @@ U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // Window record n's byte / word at `at`.
-U Rec(unsigned n, unsigned at) { return kWindows + kWindowStride * n + at; }
+U Rec(unsigned n, unsigned at) { return WindowRecords_addr + kWindowStride * n + at; }
 // The record Field_RunTaskRecords runs, read afresh at each use.
 unsigned char* Cur() { return At(BattleWinStates_Current); }
 int Wx(const unsigned char* r) { return static_cast<int>(rv::As<records::WindowRecord>(r)->x); }
@@ -170,7 +170,7 @@ void Row(int x, U y, unsigned colour, unsigned category, unsigned id, unsigned c
 }
 
 // The member a CharacterRecords flag test is about: record Character_IndexById[id].
-unsigned char* Character(unsigned char id) { return At(kCharacters + kCharacterStride * B(kEffectState + id)); }
+unsigned char* Character(unsigned char id) { return At(CharacterRecords_addr + kCharacterStride * B(kEffectState + id)); }
 
 // DIV-0059's site, read at inject (0: not read yet - the fuzz's runs, before
 // the patch is read back, call Text_DrawAt as the original's copy does).
@@ -875,7 +875,7 @@ extern "C" void __cdecl TacticsMembers_Build(void) {
     const unsigned char count = PartyCount();
     unsigned char n = 0;
     B(Rec(12, 0xA)) = 0;
-    for (U r = kCharacters; r < kCharacters + 8 * kCharacterStride; r += kCharacterStride) {
+    for (U r = CharacterRecords_addr; r < CharacterRecords_addr + 8 * kCharacterStride; r += kCharacterStride) {
         if (!(B(r + 0xB) & 1)) continue;
         unsigned j = 0;
         while (j < count && B(r + 9) != B(kParty + j)) ++j;
@@ -1086,7 +1086,7 @@ extern "C" unsigned __cdecl Stat_AddClampedTo(unsigned short* stat, unsigned cap
 // counts the 0x80 bytes at 0x904574. Answers al.
 extern "C" unsigned char __cdecl AbilityList_CountSet(unsigned member, unsigned which, unsigned current) {
     const U m = member & 0xFF;
-    const U base = (current & 0xFF) == 0 ? kCharacters + kCharacterStride * m : kWorking + kWorkingStride * m;
+    const U base = (current & 0xFF) == 0 ? CharacterRecords_addr + kCharacterStride * m : kWorking + kWorkingStride * m;
     U p;
     unsigned n = 10;
     switch (which & 0xFF) {

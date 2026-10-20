@@ -53,7 +53,7 @@ using move_script::SetLong;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 void PutFloat(unsigned char* p, std::int32_t v) {
@@ -119,7 +119,7 @@ extern "C" void __cdecl BossHook_ExitActor0Bit40(void) { BH_CALL(BossActor_Clear
 // hook called with 0, 0x435BF5): when the leader's target byte +0x124 is 4,
 // the battle's target 0x904B44 = 5. The hook's word is not read.
 extern "C" void __cdecl BossHook_RetargetMember0(unsigned) {
-    if (ObjTrio[0x124] == 4) B(at::kTarget) = 5;
+    if (rv::Bytes(ObjTrio)[0x124] == 4) B(at::kTarget) = 5;
 }
 
 // --- the state helpers ---------------------------------------------------------------
@@ -325,7 +325,7 @@ extern "C" void __cdecl BossMap_SetCorners(unsigned cell, unsigned value) {
 // function); any other id leaves it. Called by set-ups 18..20's hooks before
 // the battle ends.
 extern "C" void __cdecl Boss_SetByLeaderId(void) {
-    switch (ObjTrio[0x89]) {
+    switch (ObjTrio[0].char_id) {
     case 0: BossH_LeaderPick = 0x2C; break;
     case 1: BossH_LeaderPick = 0x2D; break;
     case 5: BossH_LeaderPick = 0x2E; break;
@@ -344,8 +344,8 @@ extern "C" void __cdecl Boss_SetByLeaderId(void) {
 // +0x134 bit 1, 0x939B1C = its +0x3C.
 extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
     const struct { U status, object; unsigned flag, cell; } kEnemies[] = {
-        {BossH_Enemy1Status_addr, at::kEnemy1, 0x34, 1},
-        {BossH_Enemy2Status_addr, at::kEnemy2, 0x33, 0},
+        {BossH_Enemy1Status_addr, Battle_Enemies_addr + 0x128, 0x34, 1},
+        {BossH_Enemy2Status_addr, Battle_Enemies_addr + 0x250, 0x33, 0},
     };
     for (const auto& e : kEnemies) {
         const unsigned status = At(e.status)[1];   // the dword's second byte: +0x93
@@ -358,11 +358,11 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
         BH_CALL(Sprite_EnsureAnimation)(up ? 3 : 2);
         BH_CALL(BossMap_SetCorners)(e.cell, up ? 1 : 0);
     }
-    const long ground = BH_CALL(AreaMap_Elevation)(Long(At(at::kEnemy0X)), Long(At(at::kEnemy0Z)));
+    const long ground = BH_CALL(AreaMap_Elevation)(Battle_Enemies[0].x, Battle_Enemies[0].z);
     BossH_Enemy0Ground = static_cast<unsigned>(ground) & 0xFFFF;
-    const long leader = BH_CALL(AreaMap_Elevation)(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
-    move_script::SetWord(At(ObjTrio_addr + 0x3e), static_cast<unsigned>(leader) & 0xFFFF);
-    if (ObjTrio[0x134] & 2) BossH_CameraY = Long(At(ObjTrio_addr + 0x3c));
+    const long leader = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
+    ObjTrio[0].height_whole = static_cast<unsigned>(leader) & 0xFFFF;
+    if (rv::Bytes(ObjTrio)[0x134] & 2) BossH_CameraY = ObjTrio[0].height;
 }
 
 void BossH_Inject() {

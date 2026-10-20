@@ -134,7 +134,7 @@ extern "C" void __cdecl Records_CountUnpaired(unsigned key, U* counter) {
     for (U r = 0; r < 8; ++r) {
         if (B(at::kRecords + 8u * r) != 4) continue;
         if (B(at::kRecords + 1u + 8u * r) != static_cast<unsigned char>(key)) continue;
-        for (U p = at::kPairs + 1u; p < at::kPairsEnd + 1u; p += 8)
+        for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8)
             if (B(p - 1) != 0 && B(p) == r + 1u) ++named;
     }
     if (named == 0) ++*counter;
@@ -148,7 +148,7 @@ extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
         unsigned char named = 0;
         if (B(at::kRecords + 8u * r) != static_cast<unsigned char>(kind)) continue;
         if (B(at::kRecords + 3u + 8u * r) == 0) continue;
-        for (U p = at::kPairs + 1u; p < at::kPairsEnd + 1u; p += 8)
+        for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8)
             if (B(p - 1) != 0 && B(p) == r + 1u) ++named;
         if (named == 0) SetL(at::kRecords + 4u + 8u * r, L(at::kRecords + 4u + 8u * r) + 1u);
     }
@@ -183,7 +183,7 @@ extern "C" void __cdecl Field_AfterBattleTally(void) {
             }
         if (found) {
             unsigned char a = 0, b = 0;
-            for (U p = at::kPairs + 1u; p < at::kPairsEnd + 1u; p += 8) {
+            for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8) {
                 if (B(p - 1) == 0) continue;
                 if (B(p) == 0xA) ++a;
                 else if (B(p) == 0xB) ++b;
@@ -256,19 +256,19 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (flags & 0x80) Field_State[0x124] = 0xA;
     if (flags & 0x20) Field_State[0x125] = 0x28;
     records::PartyMember* fs = rv::As<records::PartyMember>(Field_State);
-    U actor = at::kCharRecords + fs->char_index * at::kRecordStride;
+    U actor = CharacterRecords_addr + fs->char_index * at::kRecordStride;
     if (rv::As<records::CharRecord>(At(actor))->hp <= (rv::As<records::CharRecord>(At(actor))->stats.max_hp >> 2)) {
         rv::As<records::CharRecord>(At(actor))->status = rv::As<records::CharRecord>(At(actor))->status | 0x2000u;
         fs->status = fs->status | 0x2000u;
         fs = rv::As<records::PartyMember>(Field_State);
     }
     const U id = fs->char_index;
-    actor = at::kCharRecords + id * at::kRecordStride;
+    actor = CharacterRecords_addr + id * at::kRecordStride;
     SetW(actor + 0x10, W(actor + 0x10) | flags);
     // the member byte as the original pushes it: edx of `lea edx, [id + id * 4]` with dl the byte
     if (SH_CALL(Actor_EquipCount)(((id * 5u) & 0xFFFFFF00u) | id, 3, 8) == 0) return;
     unsigned char* const f = Field_State;
-    const U a = at::kCharRecords + f[0x148] * at::kRecordStride;
+    const U a = CharacterRecords_addr + f[0x148] * at::kRecordStride;
     rv::As<records::CharRecord>(At(a))->status = rv::As<records::CharRecord>(At(a))->status & 0xFFDFu;
     f[0x125] = 0;
 }
@@ -332,7 +332,7 @@ extern "C" unsigned char __cdecl AreaMap_CellsNoneWide(long x, long z, unsigned 
 
 // original 0x535830: Field_WayBlocked for a raised sprite: al 1 when
 // Field_CellsBlock(x, z, 1) answers; or when a slope probe MapView_SlopeAt
-// answers above 0x40 (s16) with DamageScratch's byte 0x903850 set after it -
+// answers above 0x40 (s16) with SharedScratch's byte 0x903850 set after it -
 // the points and directions, with xi / zi the whole cells: (xi.8, zi.8) 4,
 // (xi.8, zi.0) 3, (xi.0, zi.8) 5; with no x fraction (xi-1.8, zi.0) 7,
 // (xi-1.8, zi+1.0) 7, (xi.8, zi+1.0) 7, (xi-1.0, zi.8) 1, (xi+1.0, zi.8) 1;
@@ -352,7 +352,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
     auto probe = [&](unsigned direction) {
         const U px = q.xlo | static_cast<U>(q.xhi) << 16, py = q.ylo | static_cast<U>(q.yhi) << 16;
         const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(px), static_cast<long>(py), direction);
-        return S16(static_cast<U>(slope)) > 0x40 && B(at::kEffectSlot) != 0;
+        return S16(static_cast<U>(slope)) > 0x40 && at::kEffectSlot != 0;
     };
     q.yhi = static_cast<std::uint16_t>(zi);
     q.ylo = 0x8000;
@@ -662,8 +662,8 @@ extern "C" void __cdecl Leader_TurnBack(void) {
 extern "C" void __cdecl PartySet_ErrorLoop(void) {
     for (;;) {
         SH_CALL(Text_DrawFont8)(0xA0, 0x64, 0, At(at::kErrorTitle));
-        const U third = B(at::kErrorIds + 2);
-        const U ids = L(at::kErrorIds);
+        const U third = at::kErrorIds.b_02;
+        const U ids = static_cast<std::uint32_t>(at::kErrorIds.d_00);
         SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextScratch)), reinterpret_cast<const char*>(At(at::kErrorFormat)),
                              ids & 0xFF, (ids >> 8) & 0xFF, third);
         SH_CALL(Text_DrawFont8)(0xA0, 0x74, 0, At(at::kTextScratch));
@@ -686,7 +686,7 @@ extern "C" void __cdecl Mode11_ObjectFrame(void) {
     const std::uint16_t held = Input_Held;
     const U state = B(at::kObject + 1);
     Sprite_Current = At(FieldEvent_Object905DA0_addr);
-    Field_State = ObjTrio;
+    Field_State = rv::Bytes(ObjTrio);
     Field_InputHeld = held;
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(Mode11_ObjectStates_addr, state, "Mode11_ObjectFrame")))();
 }
@@ -697,11 +697,11 @@ extern "C" void __cdecl Mode11_ObjectFrame(void) {
 // Sprite_Current read again.
 extern "C" void __cdecl Mode11_ObjectStart(void) {
     Sprite_Current[5] = 0;
-    Sprite_Current[0xB] = ObjTrio[0x138];
+    Sprite_Current[0xB] = rv::Bytes(ObjTrio)[0x138];
     Field_State[0x128] = 3;
-    rv::Store<U>(rv::Current<records::SpriteHead>()->x, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
-    rv::Store<U>(rv::Current<records::SpriteHead>()->z, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
-    rv::Store<U>(rv::Current<records::SpriteHead>()->height, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->height));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->x, static_cast<U>(ObjTrio[0].x));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->z, static_cast<U>(ObjTrio[0].z));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->height, static_cast<U>(ObjTrio[0].height));
     Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
 }
 
@@ -779,9 +779,9 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
     }
     unsigned char* const s = Sprite_Current;
     const U dir = s[8];
-    bool near = AbsDiff(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x) - L(at::kDirectionSteps + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
+    bool near = AbsDiff(static_cast<U>(ObjTrio[0].x) - L(at::kDirectionSteps + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
     if (near)
-        near = AbsDiff(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z) - L(at::kDirectionSteps + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
+        near = AbsDiff(static_cast<U>(ObjTrio[0].z) - L(at::kDirectionSteps + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
     if (!near) {
         ObjectStill(s, true);
         Sprite_Current[1] = 1;
@@ -986,7 +986,7 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     const U wobble = (counter >> 1) & 3;
     const U radius = (counter & 8) ? wobble * 2u + 0x32u : (0x1Cu - wobble) * 2u;
     const std::int32_t r = static_cast<short>(radius);
-    short* const v = Prim_VertexScratch;
+    short* const v = reinterpret_cast<short*>(Prim_VertexScratch);
     for (U a = 0; a < 0x1000; a += 0x80) {
         v[0] = 0;
         v[1] = 0;
@@ -1374,8 +1374,8 @@ extern "C" void __cdecl FieldTail_StoryWarp(void) {
             area += 0xFFFF;
             if (static_cast<std::int32_t>(flag) < 0xF6) break;
         }
-        AreaW2d_ReturnPoint = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x);
-        AreaW4d_ReturnZ = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z);
+        AreaW2d_ReturnPoint = static_cast<U>(ObjTrio[0].x);
+        AreaW4d_ReturnZ = static_cast<U>(ObjTrio[0].z);
         AreaW4d_ReturnArea = Game_AreaNumber;
         SH_CALL(Field_ChangeArea)(area, 0x430000, 0x160000, 4);
         B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) | 0x40);

@@ -33,6 +33,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/sprite_pose.h"
 #include "hook/detour.h"
@@ -208,7 +209,7 @@ using Fn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t);
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(g_sprites), sizeof g_sprites},
-    {Address(Effect_Objects), kEffectSpan},
+    {Address(rv::Bytes(Effect_Objects)), kEffectSpan},
     {Gfx_UploadQueueX_addr, kQueueSpan},
     {Gfx_UploadQueueRecord_addr, kRecordSpan},
     {Address(&Gfx_UploadQueueCount), 1},
@@ -336,11 +337,11 @@ void SeedRound() {
     for (unsigned k = 0; k < kSprites; ++k)                      // the frame entries' bytes
         for (unsigned i = 0; i < 24; ++i) g_anim[k][kEntries + Next() % 0x300] = static_cast<unsigned char>(Next());
     // The effect pool's in-use bytes: often all taken, the first free anywhere.
-    for (unsigned i = 0; i < 0x40; ++i) Effect_Objects[i * 0x80] = static_cast<unsigned char>(Next() % 4 ? Next() | 1 : 0);
+    for (unsigned i = 0; i < 0x40; ++i) Effect_Objects[i].flags = static_cast<unsigned char>(Next() % 4 ? Next() | 1 : 0);
     if (Half()) {
-        for (unsigned i = 0; i < 20; ++i) Effect_Objects[i * 0x80] = static_cast<unsigned char>(Next() | 0x10);
+        for (unsigned i = 0; i < 20; ++i) Effect_Objects[i].flags = static_cast<unsigned char>(Next() | 0x10);
         static const unsigned kOnlyFree[] = {0, 1, 18, 19};   // or none free at all
-        if (Half()) Effect_Objects[(Half() ? Pick(kOnlyFree) : Next() % 20) * 0x80] = 0;
+        if (Half()) Effect_Objects[Half() ? Pick(kOnlyFree) : Next() % 20].flags = 0;
     }
     static const unsigned char kCounts[] = {0, 1, 0x13, 0x14, 0x27, 0x28, 0x7F, 0xFE, 0xFF};
     Gfx_UploadQueueCount = Half() ? Pick(kCounts) : static_cast<unsigned char>(Next());
@@ -377,7 +378,7 @@ void Arguments(unsigned k, std::uint32_t& a, std::uint32_t& b) {
         if (Often()) Sprite_Current[0x4B] = At(at::kDirectionAnimations)[d * 2];   // already facing that way
         break;
     }
-    case kRelease: if (Often()) Sprite_Current = Effect_Objects + (Next() % 20) * 0x80; break;
+    case kRelease: if (Often()) Sprite_Current = rv::Bytes(&Effect_Objects[Next() % 20]); break;
     case kReleaseAt: a = High() | (Next() % 0x40); break;
     default: break;
     }

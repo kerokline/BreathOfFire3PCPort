@@ -59,7 +59,7 @@ constexpr U kLevelDark = 0x9046CB;         // u8: below 10
 constexpr U kLevelLit = 0x9046CC;          // u8: below 7
 // kSumA: now FieldE2_BiasA (symbols.toml). u8: kind 0xA's sum
 // kSumB: now FieldE2_BiasB (symbols.toml). u8: kind 0xB's sum
-constexpr U kRecords = 0x9046D0;           // 60 records of 8: +0 in use, +1 building (1-based) or a kind, +2, +3, +4 a clock stamp
+// kRecords: now Community_Records (symbols.toml). 60 records of 8: +0 in use, +1 building (1-based) or a kind, +2, +3, +4 a clock stamp
 constexpr U kRecordsEnd = 0x9048B0;
 constexpr unsigned kRecordCount = 60;
 constexpr U kBuildings = 0x9048B0;         // 8 records of 8: +0 the kind, +1, +2, +3 a level, +4 a clock stamp

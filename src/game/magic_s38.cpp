@@ -60,12 +60,12 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch
+// The scratch the overlays keep their working values in: SharedScratch
 // (0x903850.., Scratch_Swap at +0xC; words or dwords by function, MAGIC225's
 // burst colours at +0x10..+0x1B) and the four SVECTORs of Prim_VertexScratch
 // (0x9037A0..0x9037BF). Both are read again after every call, as the
 // originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
@@ -95,12 +95,12 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(SharedScratch_addr + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(SharedScratch_addr + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -135,12 +135,12 @@ void PutFloat(unsigned char* p, int v) {
     std::memcpy(p, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 unsigned char* PoolRecord(std::uint32_t pool, unsigned index) { return Mem(pool + index * 0x84u); }
 // The side's records as MAGIC225 walks them: the party member i, the enemy i
 // (from 0).
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyByOrder(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
+unsigned char* EnemyByOrder(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }

@@ -51,20 +51,20 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// DamageScratch's sixteen bytes (0x903850..0x90385F), words the overlays keep
+// SharedScratch's sixteen bytes (0x903850..0x90385F), words the overlays keep
 // their working values in, and Prim_VertexScratch's first two words (MAGIC124's
 // bolt keeps its moving point there). All are read again after every call, as
 // the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
 void AddSW(unsigned k, unsigned v) { SetSW(k, SW(k) + v); }
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
@@ -98,7 +98,7 @@ void DrawMode(unsigned tpage) {
     Commit(0xC);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 
 // The two pools the tasks of MAGIC123 and MAGIC124 run themselves: records of
 // the task slots' 0x84 bytes (+0 bit 0 in use, +1 the kind, +0x80 the owner).

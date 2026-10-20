@@ -216,7 +216,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_ArriveHook(int x, int /*z*/) {
 //     0xA) - counter 0 0, run 7.
 // Each area test reads Game_AreaNumber afresh.
 SC12_EXPORT unsigned char __cdecl Scena12_StepHook(int x, int z) {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     if (Area() == 0x86) {
         if (!Flag(1)) {
             if (x >= 0x1F8000 && x <= 0x208000 && z >= 0x248000 && z <= 0x270000) {
@@ -290,7 +290,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_CellHook(unsigned a, unsigned b) {
 // call, is 5), run 5; 1.
 SC12_EXPORT unsigned char __cdecl Scena12_CellTalk(void) {
     Set40();
-    const unsigned char leader = ObjTrio[0x89];
+    const unsigned char leader = ObjTrio[0].char_id;
     ClearCounters();
     SetStep(0);
     if (leader == 5) SetStep(5);
@@ -397,7 +397,7 @@ namespace {
 // 0x82 / 0x83, 0x84 / 0x85) and afresh for each later one; the counter byte
 // 0x90384A afresh at each test.
 void EnterAreaBody() {
-    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    auto* const member0 = ObjTrio;
     unsigned area = Area();
     if (area == 0x65) {
         const unsigned c = Counter(2);
@@ -493,10 +493,10 @@ void EnterAreaBody() {
         if (c < 1 || c > 9) return;
         switch (c) {
         case 1:
-            if (!Flag(0x28)) Spawn(at::kEffectSlot, 0x76);
+            if (!Flag(0x28)) Spawn(SharedScratch_addr, 0x76);
             break;
         case 2:
-            Spawn(at::kEffectSlot, 0x79);
+            Spawn(SharedScratch_addr, 0x79);
             LoadAndPlay(0x8F);
             break;
         case 3:
@@ -515,13 +515,13 @@ void EnterAreaBody() {
             break;
         case 6:
             SetPass(0x1F);
-            Spawn(at::kEffectSlot, 0x7B);
+            Spawn(SharedScratch_addr, 0x7B);
             break;
         case 7:
-            Spawn(at::kEffectSlot, 0x7B);
+            Spawn(SharedScratch_addr, 0x7B);
             break;
         case 8:
-            Spawn(at::kEffectSlot, 0x7C);
+            Spawn(SharedScratch_addr, 0x7C);
             break;
         default:   // 9
             LoadAndPlay(0x8B);
@@ -953,7 +953,7 @@ SC12_EXPORT void __cdecl Scena12_Run6(void) {
     case 3: {
         Cond_ByteFE = 1;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetCounter(3, slot);
         Place13(slot, -0x370, AngleY(), 0x200, 4);
@@ -1031,7 +1031,7 @@ SC12_EXPORT void __cdecl Scena12_Run6(void) {
     case 0x12: {
         if (Counter(0) != 3) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetCounter(0, 4);
         SetStep(0x13);
@@ -1206,7 +1206,7 @@ namespace {
 void Run8Greet() {
     const unsigned fd = Cond_ByteFD;
     if (fd != 2 && fd != 3) return;
-    const unsigned who = ObjTrio[0x89];
+    const unsigned who = ObjTrio[0].char_id;
     if (who < 2 || who > 8 || who == 3) return;
     const bool odd = who == 5 || who == 8;
     unsigned short id;
@@ -1333,10 +1333,10 @@ void BattleBytes() { SH_AT(KindFn, at::kBattleBytes)(0x26); }
 // original 0x561170: run 9, steps 0..2, 0xA..0x12, 0x14..0x16, 0x1E..0x22,
 // 0x2B..0x2F (a byte table over 0..0x2F, then 25 cases).
 SC12_EXPORT void __cdecl Scena12_Run9(void) {
-    auto* const member2 = rv::As<records::PartyMember>(ObjTrio + 2 * sizeof(records::PartyMember));
+    auto* const member2 = &ObjTrio[2];
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (ObjTrio[0x3cf] == 3) break;
+        if (rv::Bytes(&ObjTrio[2])[0x137] == 3) break;
         SH_CALL(Party_DropIn)(0);
         SetStep(1);
         break;
@@ -1362,7 +1362,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0xB: {
         if (Counter(0) != 2) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetStep(0xC);
         Place13(slot, -0x32E, AngleY(), 0x8A, 0x28);
@@ -1372,7 +1372,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         if (Counter(0) != 6) break;
         SH_CALL(Party_DropIn)(2);
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetCounter(3, slot);
         SetStep(0xD);
@@ -1401,9 +1401,9 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     case 0x11:
         if (Counter(0) != 0xE || Field_Kind2Hold != 0) break;
-        Spawn(at::kEffectSlot, 0x82);
-        Spawn(at::kEffectSlot, 0x83);
-        Spawn(at::kEffectSlot, 0x84);
+        Spawn(SharedScratch_addr, 0x82);
+        Spawn(SharedScratch_addr, 0x83);
+        Spawn(SharedScratch_addr, 0x84);
         SetStep(0x12);
         break;
     case 0x12: {
@@ -1470,7 +1470,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0x22: {
         if (Counter(0) != 1) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetStep(0x2B);
         Place13(slot, -0x35A, AngleY(), 0x200, 0x14);
@@ -1484,7 +1484,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     case 0x2C: {
         if (Counter(0) != 3) break;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        B(at::kEffectSlot) = slot;
+        at::kEffectSlot = slot;
         if (slot == 0xFF) break;
         SetStep(0x2D);
         Place13(slot, AngleX(), AngleY(), 0x2B0, 0x14);

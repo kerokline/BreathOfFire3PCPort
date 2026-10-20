@@ -1043,7 +1043,7 @@ void Fix() {
         unsigned char* const t = TaskAt(k);
         t[1] = static_cast<unsigned char>(Next() % 3);
         t[2] = static_cast<unsigned char>(Next() % 3);
-        SetPointer(at::kTasks + k * at::kTaskStride + 0x80, OwnerFor(Next()));
+        SetPointer(BattleTask_Slots_addr + k * at::kTaskStride + 0x80, OwnerFor(Next()));
     }
     for (unsigned k = 0; k < at::kEnemyCount; ++k) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(EnemyAt(k));
@@ -1115,12 +1115,12 @@ bool Often() { return Next() % 3 != 0; }
 bool Half() { return (Next() & 1) != 0; }
 std::uint32_t Pick(const std::uint32_t* v, unsigned n) { return v[Next() % n]; }
 unsigned char* Mem(std::uint32_t address) { return move_script::At(address); }
-unsigned char* EnemyAt(unsigned k) { return Mem(at::kEnemies + (k % at::kEnemyCount) * at::kEnemyStride); }
+unsigned char* EnemyAt(unsigned k) { return Mem(Battle_Enemies_addr + (k % at::kEnemyCount) * at::kEnemyStride); }
 unsigned char* EnemyOf(unsigned char target) {
-    return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
+    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyOf(unsigned char member) { return Mem(ObjTrio_addr + (member % at::kPartyCount) * at::kPartyStride); }
-unsigned char* TaskAt(unsigned k) { return Mem(at::kTasks + (k % 4) * at::kTaskStride); }
+unsigned char* TaskAt(unsigned k) { return Mem(BattleTask_Slots_addr + (k % 4) * at::kTaskStride); }
 unsigned char* Object(unsigned k) { return Mem(Sprite_Objects_addr + (k % at::kObjectCount) * at::kObjectStride); }
 unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* Packets() { return g_packets; }
@@ -1129,7 +1129,7 @@ bool InEngineBands(std::uint32_t address) {
         if (address >= b.lo && address < b.hi) return true;
     return false;
 }
-unsigned char* WindowAt(unsigned k) { return Mem(at::kWindows + (k % at::kWindowCount) * at::kWindowStride); }
+unsigned char* WindowAt(unsigned k) { return Mem(WindowRecords_addr + (k % at::kWindowCount) * at::kWindowStride); }
 unsigned char* CurrentWindow() { return Pointer(BattleWinStates_Current_addr); }
 unsigned char* TextBuffer() { return g_text; }
 std::uint32_t HookStub(std::uint32_t cell) {
@@ -1238,9 +1238,9 @@ void Run(const Group& group) {
     // the regions: one battle frame (docs/boss_harness.md section 4), then the group's
     g_region_n = 0;
     const Region standard[] = {
-        {at::kTasks, at::kTaskCount * at::kTaskStride},             // the 48 task slots
+        {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride},  // the 48 task slots
         {0x93B8C0, 0xA0},                                           // the current slot, the owner
-        {at::kEnemies, at::kEnemyCount * at::kEnemyStride + 0x80},  // the enemies' objects, their working records' tail
+        {Battle_Enemies_addr, at::kEnemyCount * at::kEnemyStride + 0x80}, // the enemies' objects, their working records' tail
         {0x937F80, 0x18},                                           // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter
         {0x939AD0, 0x50},                                           // the current enemy 0x939AD8 .. 0x939B1C
         {at::kBattle, at::kBattleSize},                             // the battle bytes and the three hooks
@@ -1259,7 +1259,7 @@ void Run(const Group& group) {
     // the engine frame's (round twelve; docs/boss_harness.md section 10.3):
     // the state three or more of BE1..BE7 touch beyond the boss frame
     const Region engine[] = {
-        {at::kWindows, at::kWindowCount * at::kWindowStride},       // WindowRecords: BE1..BE6
+        {WindowRecords_addr, at::kWindowCount * at::kWindowStride}, // WindowRecords: BE1..BE6
         {BattleWinStates_Current_addr, 4},                          // the record a window handler runs for: BE7 (every kWindow)
         {Field_State_addr, 4},                                      // Field_State: BE2, BE3, BE4
         {0x903A50, 0xD4},                                           // DrawItemPool_Top's tail, CharacterRecords' head, Field_ActorStates[0]: BE1..BE4, BE6, BE7

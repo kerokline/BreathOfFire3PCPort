@@ -32,7 +32,7 @@ constexpr unsigned kRecordSize = 0xA4;
 // --- Callees owned elsewhere (by address; ours, named by symbol) ----------
 // 0x5725C0 is group M's (field_misc.cpp, round 6): MapView_CheckHeightScale,
 // AreaMap_Slope(x, z, direction), MapView_HeightScale = 0; the slope's long
-// back and DamageScratch's first byte 1 on a slope, else 0. The direction is
+// back and SharedScratch's first byte 1 on a slope, else 0. The direction is
 // read as its low byte.
 constexpr std::uint32_t kSlopeAt = bof3::addr::MapView_SlopeAt;
 // Unread beyond their use here (none reached by the shop route):

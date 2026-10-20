@@ -37,7 +37,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + (i % at::kEnemyCount) * at::kEnemySize); }
+unsigned char* EnemyObj(unsigned i) { return At(Battle_Enemies_addr + (i % at::kEnemyCount) * at::kEnemySize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleE3_CurrentEnemy_addr)))); }
 
@@ -111,7 +111,7 @@ void Disturb() {
     case 18: SetPtr(BattleDamage_Result_addr, EnemyObj(v) + 0x104); break;
     case 19: g_target[w % kTargets] = static_cast<unsigned char>(v); break;
     case 20: Sprite_Current[8] = static_cast<unsigned char>(v % 5); break;
-    case 21: At(at::kTasks + Sprite_Current[5] * at::kTaskSize)[9] = static_cast<unsigned char>(v); break;
+    case 21: At(BattleTask_Slots_addr + Sprite_Current[5] * at::kTaskSize)[9] = static_cast<unsigned char>(v); break;
     case 22: At(at::kPulse)[0] = static_cast<unsigned char>(v); break;
     default: {
         const unsigned id = Word(At(at::kMagicId)) & 0xFF;
@@ -337,7 +337,7 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kTasks, 0x22A0},        // the 48 slots (an actor's slot up to 63 runs into the enemy objects), the objects
+    {BattleTask_Slots_addr, 0x22A0}, // the 48 slots (an actor's slot up to 63 runs into the enemy objects), the objects
     {0x937F88, 4},               // Sprite_Current
     {BattleE3_CurrentEnemy_addr, 4},
     {at::kStatBlock, 0x24},      // the 32 bytes copied in, the pointer 0x939FA0
@@ -422,7 +422,7 @@ void Seed(unsigned k) {
         if (Often()) e[0x92] = static_cast<unsigned char>(e[0x92] | 0x20);
         if (Half()) e[0x111] = static_cast<unsigned char>(e[0x111] & ~0x10u);
         static const unsigned char kBob[] = {0, 10, 11, 12, 13, 0xF6, 0xF5, 0xF4, 0xF3, 0x7F, 0x80};
-        At(at::kTasks + s[5] * at::kTaskSize)[9] = kBob[Next() % 11];
+        At(BattleTask_Slots_addr + s[5] * at::kTaskSize)[9] = kBob[Next() % 11];
         if (Half()) s[8] = static_cast<unsigned char>(Half() ? 1 : 3);
         break;
     }

@@ -101,7 +101,7 @@ std::uint32_t Hash(unsigned salt = 0) {
 
 constexpr int kFirstObject = -4, kObjects = 38;   // Sprite_Objects -4..33 (EventOp_5x / 9x may leave counts there)
 constexpr int kExtras = 8;                         // Sprite_ObjectsExtra 0..7 (Field_LeaderTalkTo reaches past 4)
-unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
+unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 unsigned char* Member(int n) { return At(ObjTrio_addr) + n * at::kMemberStride; }
 
 alignas(4) unsigned char g_script[0x40];     // an op's bytes
@@ -189,8 +189,8 @@ unsigned char __cdecl StubEffectTest(unsigned pace) {
 void __cdecl StubStepCell() {
     Record(0x1A);
     const std::uint32_t h = Hash(0x1A);
-    SetWord(At(at::kCellX), h);
-    SetWord(At(at::kCellZ), h >> 16);
+    SetWord(At(SharedScratch_addr + 0x4), h);
+    SetWord(At(SharedScratch_addr + 0x6), h >> 16);
 }
 unsigned char __cdecl StubCanSwap() {
     Record(0x1B);
@@ -226,8 +226,8 @@ unsigned char CellBody(unsigned id, unsigned cell) {
     Record(id, cell & 0xFF);
     const std::uint32_t h = Hash(id);
     if (h % 3 == 0) {
-        SetWord(At(at::kScratch), h >> 4);
-        SetWord(At(at::kScratch2), h >> 16);
+        SetWord(At(SharedScratch_addr), h >> 4);
+        SetWord(At(SharedScratch_addr + 0x2), h >> 16);
     }
     Disturb(id + 1);
     return h % 3 == 1 ? static_cast<unsigned char>(1 + (h >> 8) % 0xFF) : 0;
@@ -245,7 +245,7 @@ int HookBody(unsigned id, long x, long z) {
     Record(id, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     const std::uint32_t h = Hash(id);
     if (h % 5 == 0) {
-        move_script::SetLong(At(at::kTargetX), static_cast<std::int32_t>(Hash(id + 1)));
+        move_script::SetLong(At(SharedScratch_addr + 0x8), static_cast<std::int32_t>(Hash(id + 1)));
         move_script::SetLong(At(Scratch_Swap_addr), static_cast<std::int32_t>(Hash(id + 2)));
     }
     Disturb(id + 3);
@@ -365,7 +365,7 @@ unsigned char __cdecl StubFlagsTest(const unsigned char* bits, unsigned index) {
 void __cdecl StubFlagsClear(unsigned char* bits, unsigned index) { Record(0x76, Address(bits), index); }
 // The placements' callees (event_script_fuzz.cpp's shape): the count and
 // Sprite_Current may be moved, which the ops read again.
-void SetCount(int v) { SetWord(At(at::kScratch), static_cast<unsigned>(v)); }
+void SetCount(int v) { SetWord(At(SharedScratch_addr), static_cast<unsigned>(v)); }
 int PickCount(std::uint32_t h) {
     static const int kEdge[] = {29, 30, 31, 0, -1, 28};
     return h % 3 == 0 ? kEdge[(h >> 4) % 6] : static_cast<int>((h >> 8) % 34) - 2;
@@ -408,7 +408,7 @@ void Exit(unsigned salt) {
     const std::uint32_t h = Hash(salt);
     if (h % 4 == 0) return;
     SetWord(At(AreaW0b_Place_addr), h);
-    move_script::SetLong(At(at::kExitX), static_cast<std::int32_t>(Hash(salt + 1)));
+    move_script::SetLong(At(SharedScratch_addr + 0x10), static_cast<std::int32_t>(Hash(salt + 1)));
     move_script::SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(Hash(salt + 2)));
     *At(AreaEntry_PendingFlags_addr) = static_cast<unsigned char>(h >> 16);
 }
@@ -468,7 +468,7 @@ unsigned char __cdecl StubStepCode() {
 long __cdecl StubSlopeAt(long x, long z, std::uint32_t direction) {
     Record(0x97, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction);
     const std::uint32_t h = Hash(0x97);
-    At(at::kScratch)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : (h >> 8));
+    At(SharedScratch_addr)[0] = static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : (h >> 8));
     Disturb(0x98);
     static const int kHeights[] = {0x40, 0x41, 0x3F, 0, -1, 0x7FFF, -0x8000};
     const std::uint32_t k = Hash(0x99);
@@ -815,12 +815,12 @@ void UseRegions(unsigned mask) {
     add(R(g_list, sizeof g_list));
     add(R(&g_result, sizeof g_result));
     if (mask & kObj) add(R(Object(kFirstObject), kObjects * 0xA4));
-    if (mask & kExt) add(R(Sprite_ObjectsExtra, kExtras * 0xA4));
-    if (mask & kEff) add(R(Effect_Objects, 0xA00));
+    if (mask & kExt) add(R(rv::Bytes(Sprite_ObjectsExtra), kExtras * 0xA4));
+    if (mask & kEff) add(R(rv::Bytes(Effect_Objects), 0xA00));
     if (mask & kAct) add(R(0x903A50, 0x5E0));                 // the run option byte and eight actor records
     if (mask & kFar)                                          // Field_ObjectInPath's answers read either way
-        for (unsigned char* const o : {Object(-128), Sprite_ObjectsExtra + 97 * 0xA4, Sprite_ObjectsExtra + 98 * 0xA4,
-                                       Sprite_ObjectsExtra + 224 * 0xA4})
+        for (unsigned char* const o : {Object(-128), rv::Bytes(&Sprite_ObjectsExtra[0x61]), rv::Bytes(&Sprite_ObjectsExtra[0x62]),
+                                       rv::Bytes(&Sprite_ObjectsExtra[0xe0])})
             add(R(o, 0xA4));   // Object(-2), the other, lies in the objects' region
     unsigned total = 0;
     for (unsigned i = 0; i < g_n; ++i) total += g_r[i].size;
@@ -1117,7 +1117,7 @@ void RunTests(unsigned rounds, unsigned only) {
                 break;
             case kIdle:
                 if (OneIn(2)) Field_State[0x136] = static_cast<unsigned char>(0xF0 + Next() % 2);
-                if (OneIn(2)) At(at::kActorRecords + 0x10)[Field_State[0x148] * at::kActorStride] &= 0xDF;
+                if (OneIn(2)) At(CharacterRecords_addr + 0x10)[Field_State[0x148] * at::kActorStride] &= 0xDF;
                 break;
             case kEffectTest:
                 if (OneIn(2)) arg = (arg & 0xFFFFFF00u) | 4;
@@ -1138,16 +1138,16 @@ void RunTests(unsigned rounds, unsigned only) {
                     SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(Word(Sprite_Current + 0x3E)) + Pick(kRise)));
                 };
                 for (int i = 0; i < 30; ++i) seed_object(Object(i));
-                for (int i = 0; i < kExtras; ++i) seed_object(Sprite_ObjectsExtra + i * 0xA4);
+                for (int i = 0; i < kExtras; ++i) seed_object(rv::Bytes(&Sprite_ObjectsExtra[i]));
                 seed_object(Object(-128));
-                for (const int n : {97, 98, 224}) seed_object(Sprite_ObjectsExtra + n * 0xA4);
+                for (const int n : {97, 98, 224}) seed_object(rv::Bytes(Sprite_ObjectsExtra) + n * 0xA4);
                 break;
             }
             case kEffectAhead:
                 for (unsigned i = 0; i < 20; ++i)
                     if (OneIn(3)) {
-                        Effect_Objects[i * 0x80] = static_cast<unsigned char>(1 + Next() % 3);
-                        Effect_Objects[i * 0x80 + 5] = OneIn(4) ? 0x16 : 0x17;
+                        Effect_Objects[i].flags = static_cast<unsigned char>(1 + Next() % 3);
+                        Effect_Objects[i].kind = OneIn(4) ? 0x16 : 0x17;
                     }
                 break;
             case kCanSwap: case kSwap:

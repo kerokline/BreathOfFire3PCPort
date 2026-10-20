@@ -22,7 +22,7 @@ namespace at {
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
 // kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml). u16: the scene's timer
 constexpr std::uint32_t kCounters = 0x903848;      // u8 x4: the script counters (MoveScript_CounterOps)
-constexpr std::uint32_t kEffectSlot = 0x903850;    // u8: the effect slot just taken
+inline auto& kEffectSlot = SharedScratch.b_00;  // u8: the effect slot just taken
 // kFlagBank: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
 // kStartWord: now Cond_Flags[8] (symbols.toml). dword Scena01_Start clears; the object hook's second argument
 constexpr std::uint32_t kStoryFlags = 0x90410C;    // the story flag bits Scena01_Scene06 step 0 tests (bit 4)

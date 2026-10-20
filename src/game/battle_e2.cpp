@@ -60,14 +60,14 @@ unsigned char* PtrIn(const unsigned char* p) { return At(UL(p)); }
 unsigned char* PtrAt(U cell) { return At(UL(At(cell))); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return PtrAt(at::kOwner); }
-unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 // rv::Current<T>() is typed by who runs: a battle task slot, or the enemy an
 // enemy op runs on (docs/battle_e2.md 1.1, 1.3).
 // An enemy object and a party member by an actor's index, as the originals
 // address them (32-bit wrap: an index below its base reads below the array).
-unsigned char* EnemyObj(U index) { return At(at::kEnemies + index * at::kEnemyStride); }
+unsigned char* EnemyObj(U index) { return At(Battle_Enemies_addr + index * at::kEnemyStride); }
 unsigned char* Member(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
-unsigned char* Task(U slot) { return At(at::kTasks + slot * at::kTaskStride); }
+unsigned char* Task(U slot) { return At(BattleTask_Slots_addr + slot * at::kTaskStride); }
 
 // A party member the restore steps write through (or read from before they
 // write): the original indexes the three records by a byte it never checks;
@@ -159,7 +159,7 @@ void GridPlace() {
     rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(Window21_addr + 4)) + (b % 6) * 30 + 0x13);
     s = Sprite_Current;
     b = s[0xB];
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, (b / 6) * 32 + Word(At(Window21_addr + 6)) + 0x30);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, (b / 6) * 32 + WindowRecords[0x15].y + 0x30);
 }
 
 // The animation byte of a cursor's grid: the 18 dwords of `grid` as bytes,
@@ -359,17 +359,17 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
     auto* const cur_member = rv::As<records::PartyMember>(s);
     {
         unsigned i = cur_member->actor;
-        SetWord(At(at::kPartyValues + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->hp);
+        SetWord(At(WindowRecords_addr + 0x1e8 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->hp);
         i = cur_member->actor;
-        SetWord(At(at::kPartyValues + 2 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->ap);
+        SetWord(At(WindowRecords_addr + 0x1e8 + 2 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->ap);
         i = cur_member->actor;
         const unsigned hp = rv::As<records::PartyMember>(Rec(who, i))->hp, max_hp = rv::As<records::PartyMember>(Rec(who, i))->max_hp;
         if (max_hp == 0) bof3::Fatal("%s: member %u's max HP is 0 - the original divides by it (docs/battle_e2.md section 7)", who, i);
-        At(at::kPartyGauges + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * hp) / static_cast<std::int32_t>(max_hp));
+        At(WindowRecords_addr + 0x1df + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * hp) / static_cast<std::int32_t>(max_hp));
         i = cur_member->actor;
         const unsigned ap = rv::As<records::PartyMember>(Rec(who, i))->ap, max_ap = rv::As<records::PartyMember>(Rec(who, i))->max_ap;
         if (max_ap == 0) bof3::Fatal("%s: member %u's max AP is 0 - the original divides by it (docs/battle_e2.md section 7)", who, i);
-        At(at::kPartyGauges + 1 + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * ap) / static_cast<std::int32_t>(max_ap));
+        At(WindowRecords_addr + 0x1df + 1 + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * ap) / static_cast<std::int32_t>(max_ap));
     }
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(cur_member->direction + 4));
     BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<U>(rv::Current<records::PartyMember>()->actor) << 6))), 0);
@@ -410,7 +410,7 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
             Battle_PartyStanding = in;
         }
         Window1_ParamA = n;
-        SetWord(At(at::kWindow1X), At(at::kCountX + n)[0]);
+        WindowRecords[1].x = At(at::kCountX + n)[0];
         if (n > 1) {
             unsigned char m = 1;
             do {
@@ -525,7 +525,7 @@ extern "C" void __cdecl BattleFx_GridMarkStart(void) {
 extern "C" void __cdecl BattleFx_GridMarkRun(void) {
     static constexpr U kSteps[2] = {bof3::addr::BattleFx_GridMarkCount, bof3::addr::BattleFx_GridMarkPlace};
     CallState("BattleFx_GridMarkRun", kSteps, 2, Sprite_Current[2]);
-    if ((Window21 & 1) == 0) {
+    if ((WindowRecords[21].in_use & 1) == 0) {
         rv::Current<records::BattleTask>()->state = 2;
         Sc()[2] = 0;
         return;
@@ -563,7 +563,7 @@ extern "C" void __cdecl BattleFx_GridMarkPlace(void) {
         do {
             if (At(at::kPickList + i)[0] == b) {
                 rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(Window21_addr + 4)) + i * 24u + 0x41);
-                rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
+                rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
                 return;
             }
             ++i;
@@ -586,7 +586,7 @@ extern "C" void __cdecl BattleFx_ListHand(void) {
 extern "C" void __cdecl BattleFx_ListHandStart(void) {
     MarkerLook();
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, UL(At(Window21_addr + 4)) + 0x14);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
     ++rv::Current<records::BattleTask>()->state;
     BH_CALL(Sprite_SetAnimation)(0x13);
     BH_CALL(Sprite_QueueOverlay)();
@@ -602,13 +602,13 @@ extern "C" void __cdecl BattleFx_ListHandRun(void) {
     unsigned char* const s = Sprite_Current;
     auto* const cur_task = rv::As<records::BattleTask>(s);
     if ((cur_task->flags & 1) == 0) return;
-    if ((Window21 & 1) == 0) {
+    if ((WindowRecords[21].in_use & 1) == 0) {
         cur_task->state = 2;
         Sprite_Current[2] = 0;
         return;
     }
     rv::Store<unsigned>(cur_task->screen_x, UL(At(Window21_addr + 4)) + 0x14);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(At(Window21_addr + 6)) + 0x12);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
     BH_CALL(Sprite_QueueOverlay)();
 }
 
@@ -625,7 +625,7 @@ extern "C" void __cdecl BattleFx_ListHandPress(void) {
 // command is tapped (0x904AA6 not 0xFF); record 21 not in use: +1 on, +2 = 0.
 extern "C" void __cdecl BattleFx_ListHandWait(void) {
     if (BattleE5_GeneRow != 0xFF) Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] - 1);
-    if ((Window21 & 1) != 0) return;
+    if ((WindowRecords[21].in_use & 1) != 0) return;
     ++rv::Current<records::BattleTask>()->state;
     Sprite_Current[2] = 0;
 }
@@ -928,7 +928,7 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
         B(at::kTarget) = BH_CALL(BattleEnemy_PickTarget)(enemy);
     }
     if (EventBattle_Id != 0) {
-        BattleE3_CurrentEnemy = Key(e);
+        BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(e);
         Sprite_Current = e;
         reinterpret_cast<boss_harness::Hook>(static_cast<std::uintptr_t>(static_cast<U>(enemy_rec->event_hook)))(0);
     }

@@ -95,7 +95,7 @@ unsigned char* ActiveMember() {
     return Field_ActiveMember;
 }
 unsigned char* Sprite(std::uint32_t k) { return At(Sprite_Objects_addr + k * at::kSpriteStride); }
-unsigned char* Record(std::uint32_t k) { return At(at::kCharRecords + k * at::kRecordStride); }
+unsigned char* Record(std::uint32_t k) { return At(CharacterRecords_addr + k * at::kRecordStride); }
 // Chapter 8 run 11's character records: by Character_IndexById [7] (a
 // byte) and [4] (the dword at [4] read, its low byte).
 unsigned char* RecordOfMember7() { return Record(Character_IndexById[7]); }
@@ -180,7 +180,7 @@ void Effect13(unsigned char* e, std::int32_t a, std::int32_t b, std::int32_t c, 
 }
 // The record 0x903850 names, read back as a dword's low byte, as the
 // originals index it after the store.
-unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(Long(At(at::kSlot))) & 0xFF); }
+unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(at::kSlot.d_00) & 0xFF); }
 
 // The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
 // views a
@@ -216,7 +216,7 @@ extern "C" void __cdecl Scena07_EnterArea(void) {
     if (Area() == 0x35 && !Flag(7)) {
         SH_CALL(Scenario_CallA)(1);
         DropIn(2);
-        SetWord(At(Sprite_Kind2_addr + 0x3E), 0xD80);
+        Sprite_Kind2.height_whole = 0xD80;
         SH_CALL(MapView_SetElevation)(0xD80);
     }
     if (Area() == 0x4A) {
@@ -378,7 +378,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 9:
         if (C0() != 3) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xA);
         Effect13(Slot850(), Camera_Angles[0], Camera_Angles[1], 0x31E, 0xE0);
         return;
@@ -390,7 +390,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0xB:
         if (C0() != 5) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xC);
         Effect13(Slot850(), Camera_Angles[0], Camera_Angles[1], 0x200, 0x70);
         return;
@@ -402,14 +402,14 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0xD:
         if (C0() != 0xB) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xE);
         Effect13(Slot850(), -0x35A, Camera_Angles[1], 0x48, 0x30);
         SetTimer(0x30);
         return;
     case 0xE: {
         if (C0() != 0xC) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xF);
         unsigned char* const e = Slot850();
         Live(e, 0x31);
@@ -449,7 +449,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0x13:
         if (C0() != 0x22) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0x14);
         Live(Slot850(), 0x38);
         return;
@@ -575,22 +575,22 @@ extern "C" void __cdecl Scena07_Scene4(void) {
     switch (Step()) {
     case 0: {
         const unsigned char slot = SH_CALL(Effect_FindFree)();
-        ObjTrio[0xb] = slot;
+        rv::Bytes(ObjTrio)[0xb] = slot;
         if (slot == 0xFF) return;
         unsigned char* const e = EffectAt(slot);
-        const unsigned arg = Byte(at::kEffectArg + ObjTrio[0x89]);
+        const unsigned arg = Byte(at::kEffectArg + ObjTrio[0].char_id);
         e[0] = 1;
         e[5] = 6;
         e[6] = 1;
         rv::As<records::EffectObject>(e)->step_x = 0;
         rv::As<records::EffectObject>(e)->step_z = static_cast<std::int32_t>(arg);
-        rv::As<records::EffectObject>(e)->screen_x = Word(At(ObjTrio_addr + 0x2E));
+        rv::As<records::EffectObject>(e)->screen_x = static_cast<std::uint16_t>(ObjTrio[0].screen_x);
         SetStep(1);
-        rv::As<records::EffectObject>(e)->screen_y = Word(At(ObjTrio_addr + 0x30));
+        rv::As<records::EffectObject>(e)->screen_y = static_cast<std::uint16_t>(ObjTrio[0].screen_y);
         return;
     }
     case 1:
-        if (EffectAt(ObjTrio[0xb])[0] & 1) return;
+        if (EffectAt(rv::Bytes(ObjTrio)[0xb])[0] & 1) return;
         C0() = 1;
         SH_CALL(Kind2_Place)(0);
         SetStep(2);
@@ -608,7 +608,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         return;
     case 4: {
         if (C0() != 0xA) return;
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         unsigned char* const e = Slot850();
         SetTimer(0x8C);
         SetStep(5);
@@ -623,7 +623,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
             DecTimer();
             return;
         }
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         Effect13(Slot850(), -0x33E, Camera_Angles[1], S16(at::kPitch), 0xA0);
         IncC0();
         Sound(0x205);
@@ -639,7 +639,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         SetStep(8);
         return;
     case 8:
-        if (C0() == 0xE && TakeInto(at::kSlot) != 0xFF) {
+        if (C0() == 0xE && TakeInto(SharedScratch_addr) != 0xFF) {
             SetStep(9);
             Effect13(Slot850(), -0x2AA, Camera_Angles[1], S16(at::kPitch), 0x90);
         }
@@ -735,7 +735,7 @@ extern "C" void __cdecl Scena07_ShakeCamera(void) {
 extern "C" void __cdecl Scena07_PlaceObjects(void) {
     for (unsigned i = 0; i < 14; ++i) {
         const unsigned slot = SpriteFindFree() & 0xFF;
-        SetWord(At(at::kSlot), slot);
+        at::kSlot.w_00 = slot;
         if (slot == 0xFF) continue;
         SH_CALL(EventOp_0x)(At(Scena07_PlacedObjects_addr + 0x11 * i));
         rv::Store<unsigned>(rv::As<records::SpriteHead>(SpriteCurrent())->height_whole, 0xA00);
@@ -869,8 +869,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         break;
     case 0x12: {
         if (C0() != 0x13) break;
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         ScriptFlagsOr(0x80);
         PlaceParty(x, z, 0x1F);
         SH_CALL(Field_StartEventBattle)(0x1F);
@@ -888,7 +888,7 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         break;
     case 0x15:
         if (C0() != 0x14) break;
-        if (TakeInto(at::kSlot) == 0xFF) break;
+        if (TakeInto(SharedScratch_addr) == 0xFF) break;
         SetStep(0x16);
         Live(Slot850(), 0x46);
         out = kDone;
@@ -1057,14 +1057,14 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     }
     case 0x24:
         if (C0() != 0x25) break;
-        if (TakeInto(at::kSlot) == 0xFF) break;
+        if (TakeInto(SharedScratch_addr) == 0xFF) break;
         SetStep(0x25);
         Effect13(Slot850(), -0x370, Camera_Angles[1], 0xB6, 0xA8);
         out = kShake;
         break;
     case 0x25:
         if (C0() != 0x26) break;
-        if (TakeInto(at::kSlot) == 0xFF) break;
+        if (TakeInto(SharedScratch_addr) == 0xFF) break;
         SetStep(0x26);
         Effect13(Slot850(), -0x2AA, Camera_Angles[1], 0x200, 0x1E);
         out = kShake;
@@ -1133,7 +1133,7 @@ extern "C" void __cdecl Scena07_Scene7(void) {
         return;
     case 1:
         if (C0() != 0x1F) return;
-        reward(at::kCharRecords + 7 * at::kRecordStride + 0x12, 1, 0x20, at::kTextRecords, 0x94, 0x22);
+        reward(CharacterRecords_addr + 7 * at::kRecordStride + 0x12, 1, 0x20, at::kTextRecords, 0x94, 0x22);
         return;
     case 0xA:
         if (Requested()) return;
@@ -1142,7 +1142,7 @@ extern "C" void __cdecl Scena07_Scene7(void) {
         return;
     case 0xC:
         if (C0() != 0x24) return;
-        reward(at::kCharRecords + 7 * at::kRecordStride + 0x15, 2, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
+        reward(CharacterRecords_addr + 7 * at::kRecordStride + 0x15, 2, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
         return;
     case 0x14:
         SH_CALL(Msg_OpenSystem)(1);
@@ -1267,8 +1267,8 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
         if (!Near(zh, 0x3C, 5)) return 0;
         if (!Near(xh, 0x22, 4)) return 0;
         if (!Flag(4) || SH_CALL(Scena07_PartyHas89State2)() == 0) {
-            const unsigned char kind = ObjTrio[8];
-            Byte(at::kSlot) = kind;
+            const unsigned char kind = ObjTrio[0].direction;
+            at::kSlot.b_00 = kind;
             if (kind != 6 && kind != 5 && kind != 4) {
                 C0() = 0x10;
                 Set40();
@@ -1290,8 +1290,8 @@ extern "C" unsigned char __cdecl Scena07_StepHook(int x, int z) {
     }
     const unsigned area = Area();
     if (area == 0x69) {
-        const unsigned char kind = ObjTrio[8];
-        Byte(at::kSlot) = kind;
+        const unsigned char kind = ObjTrio[0].direction;
+        at::kSlot.b_00 = kind;
         if (kind == 0 || kind == 1 || kind == 2) return 0;
         if (static_cast<short>(zh) <= 0x1D) return 0;
         Set40();
@@ -1424,19 +1424,19 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
         }
     }
     if (Area() == 2 && Flag(6) && !Flag(7)) {
-        const unsigned char slot = TakeInto(at::kSlot);
+        const unsigned char slot = TakeInto(SharedScratch_addr);
         Camera_Angles[0] = 0xFDC4;
         if (slot != 0xFF) Effect13(Slot850(), -0x302, Camera_Angles[1], S16(at::kPitch), 0xFF);
     }
     if (Area() == 3 && !Flag(0xE)) {
         SH_CALL(Scenario_CallA)(3);
-        Field_Members[4] = static_cast<unsigned char>(Field_Members[4] | 0x40);
+        ObjTrio[1].flags = static_cast<unsigned char>(ObjTrio[1].flags | 0x40);
     }
     if (Area() == 0xC && !Flag(0xC) && Flag(0xB)) {
         Set40();
-        const unsigned char kind = ObjTrio[8];
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
+        const unsigned char kind = ObjTrio[0].direction;
+        const std::int32_t x = ObjTrio[0].x;
+        const std::int32_t z = ObjTrio[0].z;
         PassFlags(0);
         SetRun(8);
         SetStep(0);
@@ -1547,7 +1547,7 @@ extern "C" void __cdecl Scena08_Scene1(void) {
         return;
     case 2: {
         if (C0() != 4) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             rv::As<records::EffectObject>(e)->z = 0x550000;
             const std::int32_t z = rv::As<records::EffectObject>(e)->z;
@@ -1565,7 +1565,7 @@ extern "C" void __cdecl Scena08_Scene1(void) {
     }
     case 3:
         if (C0() != 7) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x52;
@@ -1653,8 +1653,8 @@ extern "C" void __cdecl Scena08_Scene1(void) {
 extern "C" void __cdecl Scena08_Scene2(void) {
     switch (Step()) {
     case 0:
-        Sprite_ObjectsExtra[0x83] = 3;
-        rv::As<records::SpriteObject>(At(Sprite_ObjectsExtra_addr))->script_position = 0;
+        Sprite_ObjectsExtra[0].area_script = 3;
+        Sprite_ObjectsExtra[0].script_position = 0;
         SetStep(1);
         return;
     case 1:
@@ -1689,7 +1689,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         SetLong(At(at::kCounters), 0);
         DropIn(6);
         const unsigned speed = Field_MoveSpeeds[4];
-        Kind2At(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
+        Kind2At(ObjTrio[0].x, ObjTrio[0].z);
         MoveScript_F3Divisor = speed << 3;
         SetStep(1);
         return;
@@ -1698,10 +1698,10 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         if (Field_Kind2Hold != 0) return;
         const std::int32_t z = Field_Kind2Z;
         const std::int32_t x = Field_Kind2X;
-        SetLong(At(Sprite_Kind2_addr + 0x34), x);
-        SetLong(At(Sprite_Kind2_addr + 0x38), z);
+        Sprite_Kind2.x = x;
+        Sprite_Kind2.z = z;
         const long h = SH_CALL(AreaMap_Elevation)(x, z);
-        SetWord(At(Sprite_Kind2_addr + 0x3E), static_cast<unsigned>(h));
+        Sprite_Kind2.height_whole = static_cast<unsigned>(h);
         SetElevationAt(Field_Kind2X, Field_Kind2Z);
         C0() = 1;
         SetStep(2);
@@ -1709,7 +1709,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
     }
     case 2:
         if (C0() != 5) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             rv::As<records::EffectObject>(e)->z = 0x418000;
             const std::int32_t z = rv::As<records::EffectObject>(e)->z;
@@ -1794,7 +1794,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         return;
     case 0xF:
         if (C0() != 0x23) return;
-        if (TakeInto(at::kSlot) != 0xFF) Live(Slot850(), 0x63);
+        if (TakeInto(SharedScratch_addr) != 0xFF) Live(Slot850(), 0x63);
         SetTimer(0x3C);
         SetStep(0x10);
         return;
@@ -1957,7 +1957,7 @@ extern "C" void __cdecl Scena08_Scene6(void) {
     }
     case 3: {
         if (EffectAt(Scena08_Kept[0xf])[0] & 1) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2081,11 +2081,11 @@ extern "C" void __cdecl Scena08_SpawnPair(void) {
         Sprite(static_cast<std::uint32_t>(Long(At(Scena08_Kept_addr + 0x4))))[0] = 0;
         return;
     }
-    SetWord(At(at::kSlot), Word(At(Scena08_Kept_addr + 0x4)));
+    at::kSlot.w_00 = Word(At(Scena08_Kept_addr + 0x4));
     Sprite(b)[0] = 1;
     SH_CALL(EventOp_6x)(At(Scena08_PairOps_addr));
     SH_CALL(Sprite_SetAnimationAt)(0x4C, 0);
-    SetWord(At(at::kSlot), Word(At(Scena08_Kept_addr + 0x8)));
+    at::kSlot.w_00 = Word(At(Scena08_Kept_addr + 0x8));
     SH_CALL(EventOp_6x)(At(Scena08_PairOps_addr + 0x10));
     SH_CALL(Sprite_SetAnimationAt)(0x36, 0);
 }
@@ -2278,10 +2278,10 @@ extern "C" void __cdecl Scena08_Scene8(void) {
         Cond_Flags[0xd6] = Scena08_Kept[0xd];
         const std::int32_t x = Long(At(Scena08_Kept_addr + 0x4));
         const std::int32_t z = Long(At(Scena08_Kept_addr + 0x8));
-        SetLong(At(ObjTrio_addr + at::kMemberStride + 0x34), x);
-        SetLong(At(ObjTrio_addr + at::kMemberStride + 0x38), z);
+        ObjTrio[1].x = x;
+        ObjTrio[1].z = z;
         const long h = SH_CALL(AreaMap_Elevation)(x, z);
-        SetWord(At(ObjTrio_addr + at::kMemberStride + 0x3E), static_cast<unsigned>(h));
+        ObjTrio[1].height_whole = static_cast<unsigned>(h);
         SetRun(0);
         SetStep(0);
         return;
@@ -2328,7 +2328,7 @@ extern "C" void __cdecl Scena08_Scene9(void) {
         return;
     case 6:
         if (C0() != 5) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2365,7 +2365,7 @@ extern "C" void __cdecl Scena08_Scene10(void) {
         SetStep(0);
         return;
     case 0xA:
-        if (TakeInto(at::kSlot) == 0xFF) return;
+        if (TakeInto(SharedScratch_addr) == 0xFF) return;
         SetStep(0xB);
         Effect13(Slot850(), -0x2EC, Camera_Angles[1], 0xB6, 0x20);
         return;
@@ -2393,14 +2393,14 @@ extern "C" void __cdecl Scena08_Scene10(void) {
 // += 10000, 0x498DE0(4), its bytes +0x12..+0x15 set, Char_RecalcStats on the
 // record, Char_HealHp(4, 0, 0) and Char_HealAp(4, 0, 0).
 extern "C" void __cdecl Scena08_SetUpRecord4(void) {
-    auto* const chr4 = rv::As<records::CharRecord>(At(bof3::addr::CharacterRecords) + 4 * sizeof(records::CharRecord));
+    auto* const chr4 = rv::As<records::CharRecord>(At(CharacterRecords_addr) + 4 * sizeof(records::CharRecord));
     rv::Store<std::int32_t>(chr4->exp, static_cast<std::int32_t>(static_cast<std::uint32_t>(chr4->exp) + 0x2710u));
     Call498DE0(4);
     chr4->weapon = 7;
     chr4->armour[0] = 0x38;
     chr4->armour[1] = 0x21;
     chr4->armour[2] = 0xE;
-    SH_CALL(Char_RecalcStats)(At(at::kRecord4));
+    SH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + 0x290));
     SH_CALL(Char_HealHp)(4, 0, 0);
     SH_CALL(Char_HealAp)(4, 0, 0);
 }
@@ -2426,16 +2426,16 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         const unsigned speed = Field_MoveSpeeds[5];
         SetStep(2);
         Field_Kind2X = 0x170000;
-        SetLong(At(Sprite_Kind2_addr + 0x34), 0x170000);
+        Sprite_Kind2.x = 0x170000;
         Field_Kind2Z = 0xF0000;
-        SetLong(At(Sprite_Kind2_addr + 0x38), 0xF0000);
+        Sprite_Kind2.z = 0xF0000;
         MoveScript_F3Divisor = speed << 3;
         return;
     }
     case 2:
         if (SH_CALL(File_LoadDone)() == 0) return;
         if (Field_Kind2Hold != 0) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2460,7 +2460,7 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         return;
     case 4:
         if (C0() != 8) return;
-        if (TakeInto(at::kSlot) != 0xFF) {
+        if (TakeInto(SharedScratch_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x60;
@@ -2576,8 +2576,8 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         SH_CALL(Music_Play)(0x64, 0x20);
         PassFlags(0x1F);
         Transition(1);
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         C0() = 0;
         Kind2At(x, z);
         SetElevationAt(x, z);
@@ -2719,8 +2719,8 @@ extern "C" unsigned char __cdecl Scena08_ArriveHook(int x, int z) {
         return 1;
     }
     if (Area() == 0x23 && !Flag(8) && Near(xh, 0x45, 3) && Near(zh, 0x37, 3)) {
-        const unsigned char kind = ObjTrio[8];
-        Byte(at::kSlot) = kind;
+        const unsigned char kind = ObjTrio[0].direction;
+        at::kSlot.b_00 = kind;
         if (kind != 6 && kind != 7 && kind != 0) {
             SetRun(6);
             SetStep(0);

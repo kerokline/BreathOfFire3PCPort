@@ -157,7 +157,7 @@ table begins one cell into its types table):
 | `HolocaustSpark_Alloc` | `0x4E43C0` | 0x57 | the first free spark, its index in al, 0xFF when full |
 
 **5a. The band.** `HolocaustBeam_Draw` keeps its working values in
-`DamageScratch`'s words (`0x903850..0x90385E`): the previous and this
+`SharedScratch`'s words (`0x903850..0x90385E`): the previous and this
 segment's half-width, their headings, their centres. For i from 1 while i
 is below `+0xA` + 1 (read again each time): the half-width 8 + sin(i x 128)
 >> 7; the centre the beam's screen point plus i steps, waved across the

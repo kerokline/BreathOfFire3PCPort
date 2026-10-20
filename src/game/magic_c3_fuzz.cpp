@@ -129,9 +129,9 @@ const mh::DataTable kTables[] = {{0x65B9C8, 3}, {0x65B9D4, 4}, {0x65B9E4, 3}};
 alignas(16) unsigned char g_packets[0x200];
 unsigned char* PacketAt(unsigned k) { return g_packets + (k & 3) * 0x40; }
 
-constexpr std::uint32_t kAngles = 0x903850;   // MAGIC111's wash: two words
+// kAngles: now SharedScratch (symbols.toml). MAGIC111's wash: two words
 const mh::Region kRegions[] = {
-    {kAngles, 4},
+    {SharedScratch_addr, 4},
     {0x7E0670, 4},   // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
 };
@@ -147,7 +147,7 @@ void Disturb(std::uint32_t h) {
     const auto word = static_cast<std::uint16_t>(h >> 16);
     switch ((h >> 8) % 5) {
     case 0: mh::SetPointer(0x7E0670, PacketAt(v)); break;
-    case 1: SetWord(mh::Mem(kAngles + (v & 1) * 2), word); break;
+    case 1: SetWord(mh::Mem(SharedScratch_addr + (v & 1) * 2), word); break;
     case 2: Sc()[9] = static_cast<unsigned char>(word); break;
     case 3: Owner()[0xB] = static_cast<unsigned char>(word & 3); break;
     default: break;

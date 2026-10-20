@@ -126,7 +126,7 @@ constexpr std::uint32_t kScaleTable = 0x663D7C;  // the scales the index reads (
 // kKind2Z: now Field_Kind2Z (symbols.toml). Field_Kind2Z
 
 // --- the windows (WindowRecords 0x803160, 0x24 each) ---------------------------------
-constexpr std::uint32_t kWindows = 0x803160;
+// kWindows: now WindowRecords (symbols.toml).
 constexpr std::uint32_t kWindowStride = 0x24;
 
 // --- callees another group of this wave owns, and the C runtime's ------------------

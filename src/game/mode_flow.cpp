@@ -333,9 +333,9 @@ extern "C" void __cdecl GameMode_Start(void) {
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x4040);
     const std::uint16_t area = FieldModes_Pending;
     At(0x905B82)[0] = 0;   // Field_EdgeBits + 2
-    rv::As<records::SpriteHead>(Sprite_Kind2)->state = 0;   // Sprite_Kind2 + 1..3
-    rv::As<records::SpriteHead>(Sprite_Kind2)->step = 0;
-    rv::As<records::SpriteHead>(Sprite_Kind2)->state3 = 0;
+    Sprite_Kind2.state = 0;                                 // Sprite_Kind2 + 1..3
+    Sprite_Kind2.step = 0;
+    Sprite_Kind2.state3 = 0;
     EventBattle_Flags = 0;
     EventBattle_Id = 0;
     Area189_StepsSinceEvent = 0;   // the byte after Field_MemberCount
@@ -373,7 +373,7 @@ extern "C" void __cdecl GameMode_Start(void) {
 extern "C" void __cdecl GameMode_Enter(void) {
     const unsigned char flags = AreaEntry_PendingFlags;
     const std::int32_t z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-    const std::int32_t x = Long(At(at::kPendingX));
+    const std::int32_t x = at::kPendingX;
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFF7);
     g.area_enter(AreaW0b_Place, x, z, flags);
     if (Field_InputFlags & 8) {
@@ -623,7 +623,7 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
 // starts from. No calls.
 extern "C" void __cdecl Window_ResetAll(void) {
     for (unsigned i = 0; i < 22; ++i) {
-        unsigned char* const r = At(at::kWindowRecords + i * 0x24);
+        unsigned char* const r = At(WindowRecords_addr + i * 0x24);
         r[0] = 0;
         r[1] = 0;
         r[2] = 0;

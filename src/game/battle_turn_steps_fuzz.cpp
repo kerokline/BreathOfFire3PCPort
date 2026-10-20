@@ -87,7 +87,7 @@ std::uint32_t Watch() {
         for (unsigned o : {0x01u, 0x98u, 0x99u, 0x9Au, 0x9Bu, 0x9Cu, 0x131u, 0x134u, 0x135u}) mix(m[o]);
     }
     for (unsigned k = 0; k < 3; ++k) mix(B(at::kCopies + k * at::kPartyStride + at::kFlags));
-    for (unsigned i = 0; i < 8; ++i) mix(B(at::kEnemy + i * at::kEnemyStride + at::kEFlags + 1));
+    for (unsigned i = 0; i < 8; ++i) mix(B(Battle_Enemies_addr + i * at::kEnemyStride + at::kEFlags + 1));
     for (unsigned k = 0; k < 12; ++k) mix(B(Window1_addr + k * at::kWindowStride));
     mix(Address(Sprite_Current));
     return h;
@@ -535,7 +535,7 @@ void Seed(unsigned k) {
         for (unsigned i = 0; i < 5; ++i) {
             unsigned char* const m = Member(i);
             if (Half()) m[at::kStatus + 1] ^= 0x40;
-            unsigned char* const r = At(at::kRecords + m[at::kRecord] * at::kRecordStride);
+            unsigned char* const r = At(CharacterRecords_addr + m[at::kRecord] * at::kRecordStride);
             static const unsigned kCounts[] = {0, 3, 4, 4, 5, 5, 6, 0xFF};
             if (Often()) r[0x1E] = static_cast<unsigned char>(Pick(kCounts, 8));
         }

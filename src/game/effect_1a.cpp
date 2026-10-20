@@ -291,7 +291,7 @@ void AttachVector(const unsigned char* o, const long* out, short* v) {
 
 // kinds 0xF's windows: ObjTrio 0's +3 at 3 or more names the option bit.
 U OptionBits() {
-    if (ObjTrio[3] < 3) return 0;
+    if (ObjTrio[0].state3 < 3) return 0;
     return 1u << (S()[6] & 31);
 }
 
@@ -348,7 +348,7 @@ extern "C" void __cdecl EffectKind1A_Run(void) { Run("EffectKind1A_Run", EffectK
 // EffectKind0F_States by +1.
 extern "C" void __cdecl EffectKind0F_Run(void) {
     unsigned char* const s = S();
-    if (Key(s) != (Effect_Objects_addr + 0x180) && Effect_Objects[0x181] <= 3) {
+    if (Key(s) != (Effect_Objects_addr + 0x180) && Effect_Objects[3].state <= 3) {
         SH_CALL(Effect_Release)();
         return;
     }
@@ -535,13 +535,13 @@ extern "C" void __cdecl EffectHud_Draw(int x, int y) {
     DrawSprite(0xE, 3, ux, uy);
     DrawSprite(0xF, 3, ux + 0x100, uy);
     signed char count = 0;
-    if (Effect_Objects[1] != 0) {
-        count = static_cast<signed char>(0x3E - Effect_Objects[0x3a]);
+    if (Effect_Objects[0].state != 0) {
+        count = static_cast<signed char>(0x3E - rv::Bytes(Effect_Objects)[0x3a]);
         if (count < 0) count = 0;
     }
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextBuffer)), reinterpret_cast<const char*>(At(Boss26Fx_CountFormat_addr)),
                          static_cast<int>(count));
-    const int colour = (count >= 0x32 && ObjTrio[2] == 4 && (Frame_Counter & 4) != 0) ? 2 : 0;
+    const int colour = (count >= 0x32 && ObjTrio[0].step == 4 && (Frame_Counter & 4) != 0) ? 2 : 0;
     SH_CALL(Text_DrawFont12)(x + 0xEE, y + 0x1A, colour, At(at::kTextBuffer));
     SH_CALL(EffectHud_DrawGauge)(x, y);
 }
@@ -558,9 +558,9 @@ extern "C" void __cdecl EffectHud_DrawGauge(int x, int y) {
     const U ux = static_cast<U>(x), uy = static_cast<U>(y);
     SH_CALL(EffectHud_Bar)(x + 0x58, y + 8, 4);
     U marker = uy;
-    if (Effect_Objects[1] != 0) {
-        const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->x)),
-                                                  static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->z)));
+    if (Effect_Objects[0].state != 0) {
+        const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(Effect_Objects[0].x)),
+                                                  static_cast<long>(static_cast<std::uint32_t>(Effect_Objects[0].z)));
         const std::int32_t lift = static_cast<std::int16_t>(h) / 32;
         marker = uy - static_cast<U>(lift);
         if (static_cast<std::int16_t>(marker) < static_cast<std::int16_t>(uy)) marker = uy;
@@ -581,8 +581,8 @@ extern "C" void __cdecl EffectHud_DrawGauge(int x, int y) {
     p[5] = 0x20;
     p[6] = 0;
     SH_CALL(Gfx_CommitPrim)(4, 0x38);
-    if (Effect_Objects[1] != 4) return;
-    const std::int16_t height = static_cast<std::int16_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->height_whole));
+    if (Effect_Objects[0].state != 4) return;
+    const std::int16_t height = static_cast<std::int16_t>(static_cast<std::uint32_t>(Effect_Objects[0].height_whole));
     if (height > 0)
         SH_CALL(EffectHud_Sprite8)(x + 0x69, 0xB4, 2);
     else
@@ -845,7 +845,7 @@ extern "C" void __cdecl EffectKind03_Fade(void) {
     DrawSprite(0x10, 2, 0x87, 0xB4);
     const std::int32_t scaled = static_cast<std::int32_t>(rv::As<records::EffectWork>(S())->work_0c * 0x60u);
     SH_CALL(EffectHud_TwoBars)(0x88, 0xCB, scaled / 255, 2);
-    if (ObjTrio[2] != 3) return;
+    if (ObjTrio[0].step != 3) return;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0xB8);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0xD1);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
@@ -862,7 +862,7 @@ extern "C" void __cdecl EffectKind03_ShowName(void) {
                                                : at::kAccessoryNames + CharStats_ExtraItem * 0x18u;
     DrawText(0x8A, 0xC8, 0, FishingText_NameCount(), name);   // DIV-0069: 12 under a Latin overlay, else 8
     const unsigned char* const set = PtrAt(at::kPanelSet);
-    const auto left = static_cast<signed char>(Effect_Objects[7] - set[0xF]);
+    const auto left = static_cast<signed char>(rv::Bytes(Effect_Objects)[0x7] - set[0xF]);
     if (left < 0) return;
     unsigned n;
     if (left > 4) {
@@ -905,8 +905,8 @@ U Row05(const char* who, unsigned row) {
 // kind-0xA record spawned (+0 1, +5 0xA) when Effect_FindFree has one; +7 =
 // the block's byte +0xF; +1 up. PSX 0x801D2108 (callers).
 extern "C" void __cdecl EffectKind05_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z) - 0x8000u);
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(ObjTrio[0].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(ObjTrio[0].z) - 0x8000u);
     unsigned char* s = S();
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(h) + 0x100);
@@ -1139,20 +1139,20 @@ extern "C" void __cdecl EffectKind0A_Start(void) {
 // +0x49..+0x4B, +0x50, +0x54, +0x58, +0x5A copied and Sprite_UpdateScreen (a
 // tail jump); else Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind0A_Follow(void) {
-    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(Effect_Objects)->height_whole)) <= 0 || Effect_Objects[1] == 0) {
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(Effect_Objects[0].height_whole)) <= 0 || Effect_Objects[0].state == 0) {
         SH_CALL(Effect_Release)();
         return;
     }
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->x));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->z));
-    S()[0x2A] = Effect_Objects[0x2a];
-    S()[0x49] = Effect_Objects[0x49];
-    S()[0x4A] = Effect_Objects[0x4a];
-    S()[0x4B] = Effect_Objects[0x4b];
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->script, rv::As<records::EffectObject>(Effect_Objects)->script);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frames, rv::As<records::EffectObject>(Effect_Objects)->frames);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->script_pos, static_cast<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->script_pos));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, static_cast<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->frame_word));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(Effect_Objects[0].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(Effect_Objects[0].z));
+    S()[0x2A] = Effect_Objects[0].flip;
+    S()[0x49] = Effect_Objects[0].script_steps;
+    S()[0x4A] = Effect_Objects[0].script_hold;
+    S()[0x4B] = Effect_Objects[0].animation;
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->script, Effect_Objects[0].script);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frames, Effect_Objects[0].frames);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->script_pos, static_cast<std::uint32_t>(Effect_Objects[0].script_pos));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, static_cast<std::uint32_t>(Effect_Objects[0].frame_word));
     SH_CALL(Sprite_UpdateScreen)();
 }
 
@@ -1263,7 +1263,7 @@ extern "C" void __cdecl EffectKind0C_Aim(void) {
     else if (arrow > 0xE4)
         arrow = 0xE4;
     SH_CALL(EffectHud_DrawArrow)(static_cast<std::uint16_t>(arrow), 0xCB, flip, 2);
-    if (ObjTrio[2] != 4) return;
+    if (ObjTrio[0].step != 4) return;
     if (Object(kWho, Effect1a_PanelObject)[4] == 3) return;
     if (arrow <= static_cast<std::int16_t>(right) && arrow >= static_cast<std::int16_t>(left)) return;
     if ((Frame_Counter & 0xF) != 0) return;
@@ -1548,7 +1548,7 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
                 c[0x4A] = 0;
                 c = S();
             }
-            if (Effect_Objects[0x181] != 7) {
+            if (Effect_Objects[3].state != 7) {
                 const unsigned char spawned = SH_CALL(Effect_FindFree)();
                 c = S();
                 if (spawned != 0xFF) {

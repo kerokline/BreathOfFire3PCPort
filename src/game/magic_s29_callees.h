@@ -30,7 +30,7 @@ namespace magic_s29 {
 
 namespace cell {
 
-// The effect scratch (DamageScratch, 0x903850..0x90385F): radii, colours, an
+// The effect scratch (SharedScratch, 0x903850..0x90385F): radii, colours, an
 // angle, and a screen point in its last dword (Scratch_Swap).
 constexpr std::uint32_t kScratch = 0x903850;
 constexpr std::uint32_t kR = 0x903850;    // s16: the outer radius

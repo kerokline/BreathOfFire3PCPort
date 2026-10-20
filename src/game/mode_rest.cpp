@@ -166,7 +166,7 @@ extern "C" void __cdecl GameMode3_Leave(void) {
         const unsigned char out = AreaW3c_CampFlag;
         MenuLists_CampChosen = 0;
         if (out == 0 && ((Field_InputFlags & 1) != 0 || Game_AreaNumber == at::kTripAnyArea)) {
-            const U x = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x), z = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z);
+            const U x = static_cast<U>(ObjTrio[0].x), z = static_cast<U>(ObjTrio[0].z);
             const unsigned area = Game_AreaNumber;
             AreaW3c_CampFlag = 1;
             AreaW2d_ReturnPoint = x;
@@ -174,9 +174,9 @@ extern "C" void __cdecl GameMode3_Leave(void) {
             AreaW4d_ReturnArea = area;
             const U r = static_cast<U>(SH_CALL(Rand)());
             AreaW3g_HealByte =
-                static_cast<unsigned char>((At(at::kFacingJitter)[r & 3] + ObjTrio[8]) & 0xF);
+                static_cast<unsigned char>((At(at::kFacingJitter)[r & 3] + ObjTrio[0].direction) & 0xF);
             const unsigned place = AreaW0b_Place;
-            const U px = UL(at::kPendingX), pz = AreaEntry_PendingZ;
+            const U px = static_cast<std::uint32_t>(at::kPendingX), pz = AreaEntry_PendingZ;
             SH_CALL(Field_ChangeArea)(place, I(px), I(pz), AreaEntry_PendingFlags);
         } else {
             AreaW3c_CampFlag = 0;
@@ -390,7 +390,7 @@ extern "C" void __cdecl GameMode5_Leave(void) {
                 const unsigned char event = EventBattle_Id;
                 if (event != 0) {
                     const unsigned char current = track;
-                    track = Area_ZoneTrack(Area_ZoneAt(ObjTrio[0x36], ObjTrio[0x3a]));
+                    track = Area_ZoneTrack(Area_ZoneAt(rv::Bytes(ObjTrio)[0x36], rv::Bytes(ObjTrio)[0x3a]));
                     AreaW1f_MusicCurrent = track;
                     bof3::Log("DIV-0092    event battle %u over: the zone's track %u from its top (the current byte held %u), no resume",
                               event, track, current);

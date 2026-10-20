@@ -150,7 +150,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Check
         }
     }
     for (unsigned i = 0; i < 2; ++i) Member(i)[at::kFlags + 1] &= 0x7F;
-    for (unsigned i = 0; i < 7; ++i) At(at::kEnemy + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
+    for (unsigned i = 0; i < 7; ++i) At(Battle_Enemies_addr + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
     SetLong(At(at::kRounds), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kRounds))) + 1));
     BattlePhases_B7A = 0;
     g.tick_counters();
@@ -324,7 +324,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_StartMembe
                     parameter = 0xC;
                 }
                 const unsigned task = g.task_create(0, parameter) & 0xFF;
-                SetLong(At(at::kTasks + task * at::kTaskSize + 0x80),
+                SetLong(At(BattleTask_Slots_addr + task * at::kTaskSize + 0x80),
                         static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Member(BossSb_Countdown))));
                 Inc(BossSb_Countdown_addr);
                 break;
@@ -481,7 +481,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
             const unsigned char* const m = Member(i);
             auto* const member_rec = rv::AsConst<records::PartyMember>(m);
             if (m[at::kStatus + 1] & 0x40) {
-                unsigned char* const r = At(at::kRecords + member_rec->char_index * at::kRecordStride);
+                unsigned char* const r = At(CharacterRecords_addr + member_rec->char_index * at::kRecordStride);
                 auto* const char_rec = rv::As<records::CharRecord>(r);  // 0x903A70 + 0xA4 n
                 static_assert(at::kRecordStride == sizeof(records::CharRecord));
                 rv::Store<unsigned>(char_rec->hp, 1);

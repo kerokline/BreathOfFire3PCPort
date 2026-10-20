@@ -10,6 +10,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/area_entry_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -21,7 +22,7 @@ namespace {
 using namespace move_script;
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Rec(unsigned slot) { return ObjTrio + slot * kRecord; }
+unsigned char* Rec(unsigned slot) { return rv::Bytes(ObjTrio) + slot * kRecord; }
 
 // --- The fuzz's own area data ------------------------------------------------
 // Four descriptors (areas 0..3), each with its own script table so that a
@@ -68,9 +69,9 @@ std::uint32_t __cdecl StubFlagsTest(const unsigned char* bits, std::uint32_t ind
 }
 // Area_ClassifyPending writes none of these; the caller reads them after it.
 void __cdecl StubClassify() {
-    Record(2, Word(At(AreaW0b_Place_addr)), static_cast<std::uint32_t>(Long(At(kPendingX))), static_cast<std::uint32_t>(Long(At(AreaEntry_PendingZ_addr))));
+    Record(2, Word(At(AreaW0b_Place_addr)), static_cast<std::uint32_t>(Long(At(SharedScratch_addr + 0x10))), static_cast<std::uint32_t>(Long(At(AreaEntry_PendingZ_addr))));
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) SetLong(At(kPendingX), static_cast<std::int32_t>(h * 7));
+    if (h % 3 == 0) SetLong(At(SharedScratch_addr + 0x10), static_cast<std::int32_t>(h * 7));
     if (h % 5 == 0) SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(h * 13));
     if (h % 7 == 0) SetWord(At(AreaW0b_Place_addr), h >> 9);
 }
@@ -114,7 +115,7 @@ void __cdecl StubSetUp(unsigned count, const unsigned char* list) { Record(9, co
 void __cdecl StubSwapMembers(unsigned a, unsigned b, unsigned keep) {
     Record(10, a, b & 0xFF, keep);
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) At(kPickSlot)[(h >> 4) % 4] = static_cast<unsigned char>((h >> 8) % 6);
+    if (h % 3 == 0) At(SharedScratch_addr + 0x4)[(h >> 4) % 4] = static_cast<unsigned char>((h >> 8) % 6);
     if (h % 7 == 0) Field_MemberCount = static_cast<unsigned char>((h >> 16) % 6);
 }
 // ObjTrio_SwapFields swaps the member bytes the caller reads next.
@@ -191,10 +192,10 @@ const void* Ours(unsigned k) {
 struct Region { std::uint32_t at, size; };
 constexpr unsigned kObjBytes = 6 * kRecord;   // ObjTrio's three records and three past them (D18's reach)
 const Region kRegions[] = {
-    {Address(ObjTrio), kObjBytes},
+    {Address(rv::Bytes(ObjTrio)), kObjBytes},
     {0x903840, 0x40},                           // Camera_Distance.. the pending x / z, the scratch lists
     {0x904060, 0x20},                           // the party list and what follows
-    {kCharacterRecords, 8 * kCharacterBytes},
+    {CharacterRecords_addr, 8 * kCharacterBytes},
     {AreaW0b_Place_addr, 2},
     {AreaEntry_PendingFlags_addr, 1},
     {Address(&Field_ScriptFlags), 2},

@@ -46,7 +46,7 @@ constexpr U kConfirm = 0x90358E;     // Field_ConfirmButtons, u16
 constexpr U kRepeatLatch = 0x7E01B8; // u16, zeroed when a pick starts (Input_AutoRepeat's)
 // The command being built and the acting actor.
 constexpr U kCommand = 0x939FA0;     // pointer: +0 the target byte, +1 a kind byte, +2 the item id (u16), +0x10 flags
-constexpr U kActing = 0x939EC4;      // pointer: the acting actor's context, +1 a state byte, +5 the actor
+// kActing: now BattleE4_MenuActor (symbols.toml). pointer: the acting actor's context, +1 a state byte, +5 the actor
 // Window record 4's byte +3 (0x803160 + 4 * 0x24 + 3), set to 2 when item
 // 0x97 is chosen; battle_damage names the same byte kInstantKill.
 constexpr U kWindow4State = 0x8031F3;

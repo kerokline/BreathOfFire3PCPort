@@ -266,7 +266,7 @@ unsigned char g_leap_object[8];
 // and Field_Kind2Hold, the byte 0x7DEE44, run 8's copy of the party list, the
 // three tables the seed writes stand-ins into, and the leap's object.
 const sh::Region kRegions[] = {
-    {at::kCharRecords, 8 * at::kCharStride},
+    {CharacterRecords_addr, 8 * at::kCharStride},
     {Character_IndexById_addr, 0x18},
     {AreaW0b_PartySet_addr, 4},
     {ScenaSc6_Byte904C9F_addr, 1},
@@ -376,8 +376,8 @@ void Seed(unsigned k) {
     if (sh::Often()) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>((sh::Next() % 8) | (sh::Half() ? 0x80 : 0));
     for (unsigned i = 0; i < 3; ++i)
         if (sh::Often()) B(at::kPartyBytes + i) = static_cast<unsigned char>(APartyByte());
-    if (sh::Half()) B(at::kRecord7 + 0x12) = static_cast<unsigned char>(SH_PICK(0, 0xFF, 1));
-    if (sh::Half()) B(at::kRecord7 + 0x15) = static_cast<unsigned char>(SH_PICK(0, 0xFF, 1));
+    if (sh::Half()) B(CharacterRecords_addr + 0x47c + 0x12) = static_cast<unsigned char>(SH_PICK(0, 0xFF, 1));
+    if (sh::Half()) B(CharacterRecords_addr + 0x47c + 0x15) = static_cast<unsigned char>(SH_PICK(0, 0xFF, 1));
     if (sh::Half()) B(ObjTrio_addr + 8) = static_cast<unsigned char>(SH_PICK(2, 3, 4, 5));
     if (sh::Half()) B(AreaW3c_Load0F_addr) = 0;
     if (sh::Half()) B(ScenaSc6_Load10_addr) = 0;
@@ -425,8 +425,8 @@ void Seed(unsigned k) {
                 for (const Wait& w : kWaits)
                     if (w.run == run && w.step == B(MoveScript_PartyRecords_addr + 0x65)) B(at::kCounters) = w.count;
             if (run == 7 && sh::Half()) {   // record 7's two equipment bytes, both set or not
-                B(at::kRecord7 + 0x12) = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFE);
-                B(at::kRecord7 + 0x15) = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFE);
+                B(CharacterRecords_addr + 0x47c + 0x12) = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFE);
+                B(CharacterRecords_addr + 0x47c + 0x15) = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFE);
             }
             if (run == 12 && sh::Half()) B(at::kBank7DEE44) = static_cast<unsigned char>(sh::Next() & 2);
             if (run == 8 && sh::Often())   // step 0's sort: the three +0x89 among a few values (ties too)
@@ -489,7 +489,7 @@ void Disturb(std::uint32_t h) {
     }
     case 3: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>((h >> 12) % 8); break;
     case 4: B(at::kPartyBytes + (h >> 12) % 3) = static_cast<unsigned char>((h >> 14) % 6); break;
-    case 5: B(at::kRecord7 + ((h >> 12) & 1 ? 0x12 : 0x15)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
+    case 5: B(CharacterRecords_addr + 0x47c + ((h >> 12) & 1 ? 0x12 : 0x15)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 6: B(((h >> 12) & 1) ? Field_Kind2Hold_addr : ((h >> 13) & 1) ? AreaW3c_Load0F_addr : ScenaSc6_Load10_addr) = static_cast<unsigned char>(v & 1); break;
     case 7: B(Effect_Objects_addr + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;
     case 8: B(at::kBank7DEE44) = static_cast<unsigned char>(v & 2); break;
@@ -506,7 +506,7 @@ void Disturb(std::uint32_t h) {
 void Settle() {
     if (g_k == kRun16) {   // record 7's two bytes, read again after Inventory_Add
         const std::uint32_t n = sh::Noise();
-        if (n & 1) B(at::kRecord7 + ((n >> 1) & 1 ? 0x12 : 0x15)) = static_cast<unsigned char>(n >> 8);
+        if (n & 1) B(CharacterRecords_addr + 0x47c + ((n >> 1) & 1 ? 0x12 : 0x15)) = static_cast<unsigned char>(n >> 8);
         return;
     }
     if (g_k != kEnterArea && g_k != kStepHook) return;

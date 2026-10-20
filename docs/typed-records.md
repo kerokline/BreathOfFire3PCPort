@@ -370,7 +370,7 @@ were then restored.
 
 An anonymous struct inside a union is a GNU extension (clang's `-Wpedantic`
 names it `-Wgnu-anonymous-struct` / `-Wnested-anon-types`); the build does
-not use `-Wpedantic`, and `-Wall -Wextra` is silent. `DamageScratch` uses the
+not use `-Wpedantic`, and `-Wall -Wextra` is silent. `SharedScratch` uses the
 same form (section 7).
 
 ## 7. The views and the new families (stage C1)
@@ -439,7 +439,7 @@ the disagreement in the comment.
   `+2` / `+3` stay padding (states, marks, or an item and its tab, by
   reader). **`CommunityBuilding`** (8; 0x9048B0, eight): `kind` only; `+1`
   is a level, a lit flag or a key by reader, `+4` a stamp or a tally.
-- **`DamageScratch`** (0x1C; 0x903850, the PSX scratchpad relocated): the
+- **`SharedScratch`** (0x1C; 0x903850, the PSX scratchpad relocated): the
   magic code uses it as the PSX compiler's spill area, so no offset has one
   meaning - the same offset is a word in one spell and a byte or a dword in
   the next. The struct is a union of three views named by offset (`w_0a`,
@@ -489,7 +489,7 @@ converted.
 | `EffectWork` | 760 | union | the kind's own words at `+0xC`, `+0x10`, `+0x2E`, `+0x30` |
 | `ActionRecord` / `MemberFieldTail` | 100 | union | the party tail `+0x124..+0x13F`; battle code: `PartyMember`'s own names are the battle meaning already |
 | `BattleWindow` / `ItemListWindow` | 65 | union | 4 more are the shop lists' bytes, which stay |
-| `DamageScratch` | 1,546 | field-missing | the magic files' `SB` / `SW` / `SD` helpers; the pointer still comes from `Mem(kS)` (the seam) |
+| `SharedScratch` | 1,546 | field-missing | the magic files' `SB` / `SW` / `SD` helpers; the pointer still comes from `Mem(kS)` (the seam) |
 | GPU packets | 754 | field-missing 224, no-struct 530 | the packet's kind is the setter the function calls on it (`Gpu_SetPolyFT4`, `Gpu_SetSprt`, ...); a pointer the function hands to two setters is two packets |
 | `SVector` | 307 | no-struct | `Vertices()` and friends |
 | `CharRecord` | 107 | no-struct | `table=0x903a70`, `CharRecord(...)`, `Record` in the scenario and item files |
@@ -498,7 +498,7 @@ converted.
 | `EncounterSlot` | about 18 | no-struct, width, field-missing | `field_hidden`, `inventory_ops`, `battle_sprites` |
 | new `base_*` stat fields (party, enemy) | 36 | field-missing | `PartyMember +0xC0..+0xCB`, `BattleEnemy +0xD0..+0xDB` |
 
-About 6,200 of the 7,982 rows, by family: magic (`DamageScratch`, the task
+About 6,200 of the 7,982 rows, by family: magic (`SharedScratch`, the task
 head), effect (`EffectWork`, the sub-pools, the packets, `SVector`), battle
 (`ActionRecord`, `BattleWindow`, the enemy's base block), field and area
 (the halves, the head), scenario and menus (`CharRecord`, `ItemListWindow`,
@@ -533,7 +533,7 @@ name.
 **For SG (C3), the entries these structs could type** (not edited by C1:
 `symbols.toml` is SG's):
 
-- `[[block]] DamageScratch` 0x903850: `records::DamageScratch`, extent 0x1C
+- `[[block]] SharedScratch` 0x903850: `records::SharedScratch`, extent 0x1C
   by its readers (0x30 at most: `Gfx_BufferBlocks` 0x903880 follows);
   `Scratch_Swap` 0x90385C is its `+0xC` dword.
 - `[[block]] CharacterRecords` 0x903A70: `records::CharRecord`, count 8.
@@ -1085,7 +1085,7 @@ Padding:
 |---|---|---|---|
 | `+0x00` | u8 | `kind` | the kind, 0 empty, else 4 + a pick (rest_4a.md; rest_4b.md; field_e2.cpp:135,149 compares it with 4 and with a kind) |
 
-### `DamageScratch` (`0x1C` bytes)
+### `SharedScratch` (`0x1C` bytes)
 
 One anonymous union of three views over the same 0x1C bytes, named by
 offset: `w_00` .. `w_1a` (u16, the `SW` / `SetSW` words), `d_00` .. `d_18`

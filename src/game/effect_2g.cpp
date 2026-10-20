@@ -90,7 +90,7 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned byte) {
 // Sprite_Objects record `index` (the effect record's +0xB), as the originals
 // compute it: unchecked where only its address is stored, checked by Object()
 // where it is read, written or animated.
-unsigned char* ObjectAddress(unsigned index) { return Sprite_Objects + index * at::kObjectStride; }
+unsigned char* ObjectAddress(unsigned index) { return rv::Bytes(&Sprite_Objects[index]); }
 unsigned char* Object(const char* who, unsigned index) {
     if (index >= at::kObjectCount)
         bof3::Fatal("%s: +0xB is %u, past the thirty Sprite_Objects records - the original reads and writes what "
@@ -383,7 +383,7 @@ extern "C" void __cdecl EffectKind18Sub20_Draw(void) {
 
 namespace {
 
-unsigned char* Member1() { return At(Field_Members_addr + 0x4); }
+unsigned char* Member1() { return At(ObjTrio_addr + 0x14c); }
 
 // Field_State and Sprite_Current to ObjTrio record 1 (the second member).
 void OnMember1() {
@@ -428,10 +428,10 @@ extern "C" void __cdecl EffectKind15_Start(void) {
 // cue 1, Sprite_Current back, +1 = 2.
 extern "C" void __cdecl EffectKind15_Begin(void) {
     if (EndedTo(9)) return;
-    const auto flags = static_cast<unsigned char>(Field_Members[0x128] | 0x40);
+    const auto flags = static_cast<unsigned char>(rv::Bytes(&ObjTrio[1])[0x124] | 0x40);
     unsigned char* const self = S();
     OnMember1();
-    Field_Members[0x128] = flags;
+    rv::Bytes(&ObjTrio[1])[0x124] = flags;
     SH_CALL(Sprite_SetAnimation)(0x10);
     B(at::kCue) = 1;
     Sprite_Current = self;
@@ -445,9 +445,9 @@ extern "C" void __cdecl EffectKind15_Begin(void) {
 extern "C" void __cdecl EffectKind15_WaitPose4(void) {
     if (EndedTo(9) || HitTaken()) return;
     unsigned char* const self = S();
-    const bool pose = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio + 0x14C)->script_pos) == 4;
+    const bool pose = static_cast<std::uint32_t>(ObjTrio[1].script_pos) == 4;
     OnMember1();
-    if (!pose || Field_Members[0x4e] != 1) return;
+    if (!pose || ObjTrio[1].script_hold != 1) return;
     const U r = static_cast<U>(SH_CALL(Rand)()) & 7u;
     Sprite_Current = self;
     B(at::kKind15Wait) = B(at::kKind15Delays8 + r);
@@ -505,10 +505,10 @@ extern "C" void __cdecl EffectKind15_Cooldown(void) {
 extern "C" void __cdecl EffectKind15_Hit(void) {
     S()[9] = 0;
     if (EndedTo(9)) return;
-    const auto flags = static_cast<unsigned char>(Field_Members[0x128] | 0x40);
+    const auto flags = static_cast<unsigned char>(rv::Bytes(&ObjTrio[1])[0x124] | 0x40);
     unsigned char* const self = S();
     OnMember1();
-    Field_Members[0x128] = flags;
+    rv::Bytes(&ObjTrio[1])[0x124] = flags;
     SH_CALL(Sound_PlayEffect)(0x20E);
     SH_CALL(Sprite_SetAnimation)(0x57);
     Sprite_Current = self;
@@ -522,9 +522,9 @@ extern "C" void __cdecl EffectKind15_Hit(void) {
 extern "C" void __cdecl EffectKind15_WaitPose8(void) {
     if (EndedTo(9)) return;
     unsigned char* const self = S();
-    const bool pose = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio + 0x14C)->script_pos) == 8;
+    const bool pose = static_cast<std::uint32_t>(ObjTrio[1].script_pos) == 8;
     OnMember1();
-    if (!pose || Field_Members[0x4e] != 1) return;
+    if (!pose || ObjTrio[1].script_hold != 1) return;
     SH_CALL(Sprite_SetAnimation)(1);
     const U r = static_cast<U>(SH_CALL(Rand)()) & 3u;
     Sprite_Current = self;
@@ -922,7 +922,7 @@ extern "C" void __cdecl EffectKind5B_Start(void) {
                     "byte after them (docs/effect_2g.md section 6)",
                     slot);
     B(at::kArea75EffectSlots + slot) =
-        static_cast<unsigned char>(static_cast<std::int32_t>(AddressOf(s) - AddressOf(Effect_Objects)) >> 7);
+        static_cast<unsigned char>(static_cast<std::int32_t>(AddressOf(s) - AddressOf(rv::Bytes(Effect_Objects))) >> 7);
     s[0xA] = 0x80;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     S()[6] = 0x1E;

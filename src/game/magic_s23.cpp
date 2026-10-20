@@ -67,7 +67,7 @@ std::int32_t Shl(std::int32_t a, int n) { return static_cast<std::int32_t>(stati
 void SetPointerAt(unsigned char* cell, const void* p) {
     SetLong(cell, static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p))));
 }
-unsigned char* Slot(unsigned index) { return Mem(hat::kTasks + index * hat::kTaskStride); }
+unsigned char* Slot(unsigned index) { return Mem(BattleTask_Slots_addr + index * hat::kTaskStride); }
 
 int Sin(int angle) { return MH_CALL(Math_Sin)(angle); }
 int Cos(int angle) { return MH_CALL(Math_Cos)(angle); }
@@ -433,47 +433,47 @@ S23_EXPORT void __cdecl FxFunnel_Draw(void) {
     {
         const unsigned char* const r = Sc() + 0x1C;
         const int s = Sin(0);
-        Put(at::kR, (Imul(s, Long(r) / 2) >> 12) + Word(r));
-        Put(at::kR2, Word(r));
+        Put(SharedScratch_addr, (Imul(s, Long(r) / 2) >> 12) + Word(r));
+        Put(SharedScratch_addr + 0x2, Word(r));
     }
     {
         const unsigned char* const sc = Sc();
-        Put(at::kW8, (rv::As<records::BattleTask>(sc)->work_20 / 64) & 0x3F);
-        Put(at::kW4, sc[0xA] * 12);
-        Put(at::kW6, sc[0xA]);
-        const int first = (Byte(at::kW8) & 0x3F) << 6;
-        Put(at::kWA, first);
-        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, at::kR));
+        Put(SharedScratch_addr + 0x8, (rv::As<records::BattleTask>(sc)->work_20 / 64) & 0x3F);
+        Put(SharedScratch_addr + 0x4, sc[0xA] * 12);
+        Put(SharedScratch_addr + 0x6, sc[0xA]);
+        const int first = (Byte(SharedScratch_addr + 0x8) & 0x3F) << 6;
+        Put(SharedScratch_addr + 0xa, first);
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, SharedScratch_addr));
     }
-    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kWA), at::kR));
-    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kWA), at::kR2));
-    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kWA), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr));
+    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr + 0x2));
+    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr + 0x2));
     for (int i = 1, angle = 0x40; angle < 0x800; ++i, angle += 0x40) {
-        const int a = ((Byte(at::kW8) + i) & 0x3F) << 6;
+        const int a = ((Byte(SharedScratch_addr + 0x8) + i) & 0x3F) << 6;
         const unsigned char* const r = Sc() + 0x1C;
-        Put(at::kWA, a);
+        Put(SharedScratch_addr + 0xa, a);
         const int s = Sin(angle);
         const int outer = (Imul(s, Long(r) / 2) >> 12) + Word(r);
         Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
         Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
-        Put(at::kR, outer);
+        Put(SharedScratch_addr, outer);
         Put(Prim_VertexScratch_addr + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(at::kWA), at::kR));
-        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kWA), at::kR));
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr));
         Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
         Put(Prim_VertexScratch_addr + 0x10, Get(Prim_VertexScratch_addr + 0x18));
         Put(Prim_VertexScratch_addr + 0x10 + 2, Get(Prim_VertexScratch_addr + 0x18 + 2));
         Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kWA), at::kR2));
-        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kWA), at::kR2));
+        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr + 0x2));
+        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr + 0x2));
         unsigned char* const prim = Gfx_PacketNext;
         Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        Shade(prim, 4, at::kW4);
-        Shade(prim, 0x14, at::kW4);
-        Shade(prim, 0x24, at::kW6);
-        Shade(prim, 0x34, at::kW6);
+        Shade(prim, 4, SharedScratch_addr + 0x4);
+        Shade(prim, 0x14, SharedScratch_addr + 0x4);
+        Shade(prim, 0x24, SharedScratch_addr + 0x6);
+        Shade(prim, 0x34, SharedScratch_addr + 0x6);
         Project4(prim, 8, 0x18, 0x28, 0x38);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         const unsigned char* const sc = Sc();
@@ -503,46 +503,46 @@ S23_EXPORT void __cdecl FxFunnel_PushGroundMatrix(void) {
 S23_EXPORT void __cdecl FxFunnel_DrawGround(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x55, 0);
     MH_CALL(Gfx_CommitPrim)(5, 0xC);
-    Put(at::kR2, Word(Sc() + 0x1C) - 0x20);
+    Put(SharedScratch_addr + 0x2, Word(Sc() + 0x1C) - 0x20);
     {
         const int s = Sin(0);
-        const short inner = Get(at::kR2);
-        Put(at::kR, (Imul(s, inner / 2) >> 12) + inner);
+        const short inner = Get(SharedScratch_addr + 0x2);
+        Put(SharedScratch_addr, (Imul(s, inner / 2) >> 12) + inner);
     }
     {
         const unsigned char* const sc = Sc();
-        Put(at::kW8, (rv::As<records::BattleTask>(sc)->work_20 / 64) & 0x3F);
-        Put(at::kW4, sc[0xA] * 2);
-        const int first = (Byte(at::kW8) & 0x3F) << 6;
-        Put(at::kWA, first);
-        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, at::kR));
+        Put(SharedScratch_addr + 0x8, (rv::As<records::BattleTask>(sc)->work_20 / 64) & 0x3F);
+        Put(SharedScratch_addr + 0x4, sc[0xA] * 2);
+        const int first = (Byte(SharedScratch_addr + 0x8) & 0x3F) << 6;
+        Put(SharedScratch_addr + 0xa, first);
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, SharedScratch_addr));
     }
-    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kWA), at::kR));
-    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kWA), at::kR2));
-    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kWA), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr));
+    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr + 0x2));
+    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr + 0x2));
     for (int i = 1, angle = 0x40; angle < 0x800; ++i, angle += 0x40) {
-        Put(at::kWA, ((Byte(at::kW8) + i) & 0x3F) << 6);
+        Put(SharedScratch_addr + 0xa, ((Byte(SharedScratch_addr + 0x8) + i) & 0x3F) << 6);
         const int s = Sin(angle);
-        const short inner = Get(at::kR2);
+        const short inner = Get(SharedScratch_addr + 0x2);
         Put(Prim_VertexScratch_addr + 4, 0);
         const int outer = (Imul(s, inner / 2) >> 12) + inner;
         Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
         Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
-        Put(at::kR, outer);
-        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(at::kWA), at::kR));
-        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kWA), at::kR));
+        Put(SharedScratch_addr, outer);
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr));
         Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
         Put(Prim_VertexScratch_addr + 0x10, Get(Prim_VertexScratch_addr + 0x18));
         Put(Prim_VertexScratch_addr + 0x10 + 2, Get(Prim_VertexScratch_addr + 0x18 + 2));
         Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kWA), at::kR2));
-        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kWA), at::kR2));
+        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr + 0x2));
+        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(SharedScratch_addr + 0xa), SharedScratch_addr + 0x2));
         unsigned char* const prim = Gfx_PacketNext;
         Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        Shade(prim, 4, at::kW4);
-        Shade(prim, 0x14, at::kW4);
+        Shade(prim, 4, SharedScratch_addr + 0x4);
+        Shade(prim, 0x14, SharedScratch_addr + 0x4);
         Shade(prim, 0x24, static_cast<unsigned char>(1));
         Shade(prim, 0x34, static_cast<unsigned char>(1));
         Project4(prim, 8, 0x18, 0x28, 0x38);
@@ -621,11 +621,11 @@ S23_EXPORT void __cdecl Typhoon_DrawFan(void) {
     {
         const int s = Sin(static_cast<int>((Frame_Counter & 0x1F) << 7));
         const unsigned char* const sc = Sc();
-        Put(at::kR, (Shl(s, 4) >> 12) + 0x80);
-        Put(at::kW8, sc[0xA] * 6);
+        Put(SharedScratch_addr, (Shl(s, 4) >> 12) + 0x80);
+        Put(SharedScratch_addr + 0x8, sc[0xA] * 6);
     }
-    Put(Prim_VertexScratch_addr + 0x10, SinOf(0, at::kR));
-    Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(0, at::kR));
+    Put(Prim_VertexScratch_addr + 0x10, SinOf(0, SharedScratch_addr));
+    Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(0, SharedScratch_addr));
     for (int angle = 0x200; angle < 0x1200; angle += 0x200) {
         unsigned char* const prim = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(prim);
@@ -635,14 +635,14 @@ S23_EXPORT void __cdecl Typhoon_DrawFan(void) {
         Put(Prim_VertexScratch_addr + 2, 0);
         Put(Prim_VertexScratch_addr + 0x8, x);
         Put(Prim_VertexScratch_addr + 0x8 + 2, y);
-        Put(Prim_VertexScratch_addr + 0x10, SinOf(angle, at::kR));
-        Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(angle, at::kR));
+        Put(Prim_VertexScratch_addr + 0x10, SinOf(angle, SharedScratch_addr));
+        Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(angle, SharedScratch_addr));
         Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
         Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
         Put(Prim_VertexScratch_addr + 4, 0);
         Project3(prim);
         MH_CALL(Gte_PrimDepths3_10B)(prim);
-        Shade(prim, 4, at::kW8);
+        Shade(prim, 4, SharedScratch_addr + 0x8);
         Shade(prim, 0x14, static_cast<unsigned char>(1));
         Shade(prim, 0x24, static_cast<unsigned char>(1));
         MH_CALL(Gfx_CommitPrim)(5, 0x34);
@@ -804,48 +804,48 @@ S23_EXPORT void __cdecl FxSpiral_Draw(void) {
         const unsigned char* const r = Sc() + 0x10;
         const int s = Sin(0);
         const unsigned char* const sc = Sc();
-        Put(at::kR, (Imul(s, rv::As<records::BattleTask>(sc)->step_y) >> 12) + Word(r));
-        Put(at::kR2, Word(r));
-        Put(at::kW4, sc[0xB]);
+        Put(SharedScratch_addr, (Imul(s, rv::As<records::BattleTask>(sc)->step_y) >> 12) + Word(r));
+        Put(SharedScratch_addr + 0x2, Word(r));
+        Put(SharedScratch_addr + 0x4, sc[0xB]);
         const int first = (sc[0xB] & 0x3F) << 6;
-        Put(at::kW6, first);
-        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, at::kR));
+        Put(SharedScratch_addr + 0x6, first);
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(first, SharedScratch_addr));
     }
-    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kW6), at::kR));
-    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kW6), at::kR2));
-    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kW6), at::kR2));
+    Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(SharedScratch_addr + 0x6), SharedScratch_addr));
+    Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(SharedScratch_addr + 0x6), SharedScratch_addr + 0x2));
+    Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(SharedScratch_addr + 0x6), SharedScratch_addr + 0x2));
     for (int i = 1, angle = 0x40; angle < 0x800; ++i, angle += 0x40) {
-        Put(at::kW6, ((Byte(at::kW4) + i) & 0x3F) << 6);
+        Put(SharedScratch_addr + 0x6, ((Byte(SharedScratch_addr + 0x4) + i) & 0x3F) << 6);
         const int s = Sin(angle);
         {
             const unsigned char* const sc = Sc();
             const int outer = (Imul(s, rv::As<records::BattleTask>(sc)->step_y) >> 12) + Word(sc + 0x10);
             Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
             Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
-            Put(at::kR, outer);
+            Put(SharedScratch_addr, outer);
         }
         Put(Prim_VertexScratch_addr + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(at::kW6), at::kR));
-        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(at::kW6), at::kR));
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(Get(SharedScratch_addr + 0x6), SharedScratch_addr));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(Get(SharedScratch_addr + 0x6), SharedScratch_addr));
         Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
         Put(Prim_VertexScratch_addr + 0x10, Get(Prim_VertexScratch_addr + 0x18));
         Put(Prim_VertexScratch_addr + 0x10 + 2, Get(Prim_VertexScratch_addr + 0x18 + 2));
         Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(at::kW6), at::kR2));
-        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(at::kW6), at::kR2));
+        Put(Prim_VertexScratch_addr + 0x18, SinOf(Get(SharedScratch_addr + 0x6), SharedScratch_addr + 0x2));
+        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(Get(SharedScratch_addr + 0x6), SharedScratch_addr + 0x2));
         unsigned char* const prim = Gfx_PacketNext;
         Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         {
             const unsigned char* const sc = Sc();
-            Put(at::kW8, angle < 0x200 ? sc[0xA] * i : sc[0xA] << 3);
-            Put(at::kWA, sc[0xA]);
+            Put(SharedScratch_addr + 0x8, angle < 0x200 ? sc[0xA] * i : sc[0xA] << 3);
+            Put(SharedScratch_addr + 0xa, sc[0xA]);
         }
-        Shade(prim, 4, at::kW8);
-        Shade(prim, 0x14, at::kW8);
-        Shade(prim, 0x24, at::kWA);
-        Shade(prim, 0x34, at::kWA);
+        Shade(prim, 4, SharedScratch_addr + 0x8);
+        Shade(prim, 0x14, SharedScratch_addr + 0x8);
+        Shade(prim, 0x24, SharedScratch_addr + 0xa);
+        Shade(prim, 0x34, SharedScratch_addr + 0xa);
         Project4(prim, 8, 0x18, 0x28, 0x38);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         const unsigned char* const sc = Sc();
@@ -1155,7 +1155,7 @@ S23_EXPORT void __cdecl SimoonDome_Grow(void) {
         MH_CALL(Battle_SetTargetFlags)(Mem(hat::kTarget)[0], 0x10);
         sc = Sc();
     }
-    Put(at::kR, sc[9] * 28);
+    Put(SharedScratch_addr, sc[9] * 28);
     Bump(sc[9]);
     if (Sc()[9] == 8) Bump(Sc()[2]);
 }
@@ -1164,7 +1164,7 @@ S23_EXPORT void __cdecl SimoonDome_Grow(void) {
 // +9 up; at +9 = 0x28 the owner's count +0xB down and the task freed.
 S23_EXPORT void __cdecl SimoonDome_Expand(void) {
     unsigned char* const sc = Sc();
-    Put(at::kR, sc[9] * 4 + 0xC0);
+    Put(SharedScratch_addr, sc[9] * 4 + 0xC0);
     Bump(sc[0xA]);
     Bump(Sc()[9]);
     if (Sc()[9] != 0x28) return;
@@ -1185,32 +1185,32 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
         const int band = 0x18 - (ring - 1);
         {
             const unsigned char* const sc = Sc();
-            Put(at::kW6, 0x81);
-            Put(at::kW8, 0x81);
+            Put(SharedScratch_addr + 0x6, 0x81);
+            Put(SharedScratch_addr + 0x8, 0x81);
             if (ring - 1 < static_cast<int>(sc[9]) - 0x10) {
                 const short d = static_cast<short>(sc[9] - ring - 0xF);
-                Put(at::kW6, d < 0x11 ? 0x81 - (d << 3) : 1);
+                Put(SharedScratch_addr + 0x6, d < 0x11 ? 0x81 - (d << 3) : 1);
             }
             if (ring < static_cast<int>(sc[9]) - 0x10) {
                 const short d = static_cast<short>(sc[9] - ring - 0x10);
-                Put(at::kW8, d);
-                Put(at::kW8, d < 0x11 ? 0x81 - (Get(at::kW8) << 3) : 1);
+                Put(SharedScratch_addr + 0x8, d);
+                Put(SharedScratch_addr + 0x8, d < 0x11 ? 0x81 - (Get(SharedScratch_addr + 0x8) << 3) : 1);
             }
         }
         const int lower = top - 0x80;
-        Put(at::kR2, CosOf(lower, at::kR));
-        Put(at::kW4, CosOf(top, at::kR));
-        Put(Prim_VertexScratch_addr + 0x8, SinOf(0, at::kR2));
-        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(0, at::kR2));
+        Put(SharedScratch_addr + 0x2, CosOf(lower, SharedScratch_addr));
+        Put(SharedScratch_addr + 0x4, CosOf(top, SharedScratch_addr));
+        Put(Prim_VertexScratch_addr + 0x8, SinOf(0, SharedScratch_addr + 0x2));
+        Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(0, SharedScratch_addr + 0x2));
         {
-            const int z = SinOf(lower, at::kR);
+            const int z = SinOf(lower, SharedScratch_addr);
             Put(Prim_VertexScratch_addr + 4, z);
             Put(Prim_VertexScratch_addr + 0x8 + 4, z);
         }
-        Put(Prim_VertexScratch_addr + 0x18, SinOf(0, at::kW4));
-        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(0, at::kW4));
+        Put(Prim_VertexScratch_addr + 0x18, SinOf(0, SharedScratch_addr + 0x4));
+        Put(Prim_VertexScratch_addr + 0x18 + 2, CosOf(0, SharedScratch_addr + 0x4));
         {
-            const int z = SinOf(top, at::kR);
+            const int z = SinOf(top, SharedScratch_addr);
             Put(Prim_VertexScratch_addr + 0x10 + 4, z);
             Put(Prim_VertexScratch_addr + 0x18 + 4, z);
         }
@@ -1219,12 +1219,12 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
         for (int j = 1, a = 0x80; a < 0x1080; ++j, a += 0x80) {
             Put(Prim_VertexScratch_addr, Get(Prim_VertexScratch_addr + 0x8));
             Put(Prim_VertexScratch_addr + 2, Get(Prim_VertexScratch_addr + 0x8 + 2));
-            Put(Prim_VertexScratch_addr + 0x8, SinOf(a, at::kR2));
-            Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(a, at::kR2));
+            Put(Prim_VertexScratch_addr + 0x8, SinOf(a, SharedScratch_addr + 0x2));
+            Put(Prim_VertexScratch_addr + 0x8 + 2, CosOf(a, SharedScratch_addr + 0x2));
             Put(Prim_VertexScratch_addr + 0x10, Get(Prim_VertexScratch_addr + 0x18));
             Put(Prim_VertexScratch_addr + 0x10 + 2, Get(Prim_VertexScratch_addr + 0x18 + 2));
-            Put(Prim_VertexScratch_addr + 0x18, SinOf(a, at::kW4));
-            const int y = CosOf(a, at::kW4);
+            Put(Prim_VertexScratch_addr + 0x18, SinOf(a, SharedScratch_addr + 0x4));
+            const int y = CosOf(a, SharedScratch_addr + 0x4);
             const unsigned char* const sc = Sc();
             const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
             Put(Prim_VertexScratch_addr + 0x18 + 2, y);
@@ -1249,10 +1249,10 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
             prim[0x50] = u1;
             prim[0x3D] = static_cast<unsigned char>((Sc()[0xA] + v_high) << 2);
             prim[0x51] = static_cast<unsigned char>((Sc()[0xA] + v_high) << 2);
-            Shade(prim, 4, at::kW8);
-            Shade(prim, 0x18, at::kW8);
-            Shade(prim, 0x2C, at::kW6);
-            Shade(prim, 0x40, at::kW6);
+            Shade(prim, 4, SharedScratch_addr + 0x8);
+            Shade(prim, 0x18, SharedScratch_addr + 0x8);
+            Shade(prim, 0x2C, SharedScratch_addr + 0x6);
+            Shade(prim, 0x40, SharedScratch_addr + 0x6);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0x54);
         }
     }
@@ -1328,7 +1328,7 @@ S23_EXPORT void __cdecl SimoonDust_Fall(void) {
 // One corner of the dust's quad: sin / cos of the angle by the size, plus
 // the screen point, as floats.
 void DustCorner(unsigned char* prim, unsigned offset, unsigned angle_of_life) {
-    const int x = SinOf(static_cast<int>(angle_of_life), at::kR) + Get(Scratch_Swap_addr);
+    const int x = SinOf(static_cast<int>(angle_of_life), SharedScratch_addr) + Get(Scratch_Swap_addr);
     const float fx = static_cast<float>(x);
     std::memcpy(prim + offset, &fx, sizeof fx);
 }
@@ -1352,10 +1352,10 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
     MH_CALL(Gpu_SetSemiTrans)(prim, 1);
     {
         const unsigned char* const sc = Sc();
-        Put(at::kR, sc[2] > 1 ? sc[9] * 2 : (static_cast<int>(sc[9]) - 8) / 4 + 0x10);
-        Put(at::kW6, sc[0xA] << 3);
-        Put(at::kW8, sc[0xA] * 7);
-        Put(at::kWA, sc[0xA] << 2);
+        Put(SharedScratch_addr, sc[2] > 1 ? sc[9] * 2 : (static_cast<int>(sc[9]) - 8) / 4 + 0x10);
+        Put(SharedScratch_addr + 0x6, sc[0xA] << 3);
+        Put(SharedScratch_addr + 0x8, sc[0xA] * 7);
+        Put(SharedScratch_addr + 0xa, sc[0xA] << 2);
         Put(Scratch_Swap_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
         Put(at::kWE, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y));
     }
@@ -1365,7 +1365,7 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
         const unsigned angle = k < 3 ? ((Sc()[9] + kTurn[k]) & 0xFF) << 4 : static_cast<unsigned>(Sc()[9]) << 4;
         DustCorner(prim, kX[k], angle);
         const unsigned again = k < 3 ? ((Sc()[9] + kTurn[k]) & 0xFF) << 4 : static_cast<unsigned>(Sc()[9]) << 4;
-        const int y = CosOf(static_cast<int>(again), at::kR) + Get(at::kWE);
+        const int y = CosOf(static_cast<int>(again), SharedScratch_addr) + Get(at::kWE);
         const float fy = static_cast<float>(y);
         std::memcpy(prim + kX[k] + 4, &fy, sizeof fy);
     }
@@ -1380,9 +1380,9 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
     prim[0x50] = 0x1F;
     prim[0x51] = 0x1F;
     for (unsigned k = 0; k < 4; ++k) {
-        prim[4 + 0x14 * k] = Byte(at::kW6);
-        prim[5 + 0x14 * k] = Byte(at::kW8);
-        prim[6 + 0x14 * k] = Byte(at::kWA);
+        prim[4 + 0x14 * k] = Byte(SharedScratch_addr + 0x6);
+        prim[5 + 0x14 * k] = Byte(SharedScratch_addr + 0x8);
+        prim[6 + 0x14 * k] = Byte(SharedScratch_addr + 0xa);
     }
     const unsigned char* const sc = Sc();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
@@ -1433,16 +1433,16 @@ S23_EXPORT void __cdecl SimoonFan_Draw(void) {
     if (sc[2] > 1) {
         const int c = Cos(0x800);
         sc = Sc();
-        Put(at::kR, Shl(Imul(c, sc[9] + 0x58), 2) >> 12);
+        Put(SharedScratch_addr, Shl(Imul(c, sc[9] + 0x58), 2) >> 12);
     } else {
         const int c = Cos(0x800);
         sc = Sc();
-        Put(at::kR, Shl(Imul(Imul(c, sc[9]), 3), 4) >> 12);
+        Put(SharedScratch_addr, Shl(Imul(Imul(c, sc[9]), 3), 4) >> 12);
     }
-    Put(at::kW6, sc[0xA] << 3);
-    Put(at::kW8, sc[0xA] * 6);
-    Put(Prim_VertexScratch_addr + 0x10, SinOf(0, at::kR));
-    Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(0, at::kR));
+    Put(SharedScratch_addr + 0x6, sc[0xA] << 3);
+    Put(SharedScratch_addr + 0x8, sc[0xA] * 6);
+    Put(Prim_VertexScratch_addr + 0x10, SinOf(0, SharedScratch_addr));
+    Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(0, SharedScratch_addr));
     Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
     Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
     Put(Prim_VertexScratch_addr + 4, 0);
@@ -1455,11 +1455,11 @@ S23_EXPORT void __cdecl SimoonFan_Draw(void) {
         Put(Prim_VertexScratch_addr + 2, 0);
         Put(Prim_VertexScratch_addr + 0x8, x);
         Put(Prim_VertexScratch_addr + 0x8 + 2, y);
-        Put(Prim_VertexScratch_addr + 0x10, SinOf(angle, at::kR));
-        Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(angle, at::kR));
-        prim[4] = Byte(at::kW8);
-        prim[5] = Byte(at::kW6);
-        prim[6] = Byte(at::kW6);
+        Put(Prim_VertexScratch_addr + 0x10, SinOf(angle, SharedScratch_addr));
+        Put(Prim_VertexScratch_addr + 0x10 + 2, CosOf(angle, SharedScratch_addr));
+        prim[4] = Byte(SharedScratch_addr + 0x8);
+        prim[5] = Byte(SharedScratch_addr + 0x6);
+        prim[6] = Byte(SharedScratch_addr + 0x6);
         Shade(prim, 0x14, static_cast<unsigned char>(0));
         Shade(prim, 0x24, static_cast<unsigned char>(0));
         Project3(prim);

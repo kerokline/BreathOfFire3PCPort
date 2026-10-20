@@ -42,7 +42,7 @@ unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
 
 // ObjTrio's record i (stride 0x14C), the index unchecked as the original's.
-const unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
+const unsigned char* Member(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kMemberStride; }
 
 // Field_DirectionSteps' row for a direction (x then z), read in place with the
 // direction byte unmasked, as every reader of the table does.
@@ -91,7 +91,7 @@ void MarkObject(unsigned char found, const char* who) {
 // unchecked; ours aborts past the 20 records.
 unsigned char* EffectByAnswer(unsigned char i, const char* who) {
     if (i >= 20) bof3::Fatal("%s: effect object index 0x%X is past Effect_Objects' 20 records (its callee answers 0..19)", who, i);
-    return Effect_Objects + i * 0x80u;
+    return rv::Bytes(&Effect_Objects[i]);
 }
 
 // The party sets' cell helpers, which their callers reach by E8.
@@ -115,7 +115,7 @@ void SideProbe(U row, unsigned d) {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(L(row));
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(L(row + 4));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (B(at::kScratchFlag) == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (at::kScratchFlag == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     unsigned char* const c = Sc();
     if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
@@ -134,7 +134,7 @@ void Form0Begin() {
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (B(at::kScratchFlag) != 0 && static_cast<short>(slope) > 0x40) {
+    if (at::kScratchFlag != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
     } else {
@@ -274,8 +274,8 @@ extern "C" void __cdecl Member_ResumeUnlessHeld800(void) {
 // leader's. As the original has it: +6 indexes ObjTrio unchecked.
 extern "C" void __cdecl Member_FormActionState(void) {
     unsigned char stop = 0;
-    const unsigned char kind = ObjTrio[0x89];
-    if ((kind == 3 || kind == 6) && ObjTrio[1] == 0xA && ObjTrio[2] == 1) stop = 1;
+    const unsigned char kind = ObjTrio[0].char_id;
+    if ((kind == 3 || kind == 6) && ObjTrio[0].state == 0xA && ObjTrio[0].step == 1) stop = 1;
     if (Field_Request != 0) stop = 1;
     const unsigned char* const s = Sc();
     const unsigned char* const r = Member(s[6]);
@@ -712,7 +712,7 @@ extern "C" void __cdecl PartyAction_FinishPalette(void) {
 // it: +0xB indexes Effect_Objects unchecked (a read; docs/rest_1a.md section 5).
 extern "C" void __cdecl PartyAction_WaitEffect(void) {
     unsigned char* const s = Sc();
-    const unsigned char* const e = Effect_Objects + s[0xB] * 0x80u;
+    const unsigned char* const e = rv::Bytes(Effect_Objects) + s[0xB] * 0x80u;
     if ((e[0] == 0 || e[1] == 1) && Field_Kind2Hold == 0) {
         s[0x2B] = 0;
         Fs()[0x137] = 0;

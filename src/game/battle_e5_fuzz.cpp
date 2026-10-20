@@ -262,7 +262,7 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     const U* v = often.begin();
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
-unsigned char* Enemy(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned n) { return Mem(Battle_Enemies_addr + (n % 8) * at::kEnemyStride); }
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
 unsigned char* Win(U window) { return Mem(window); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
@@ -309,7 +309,7 @@ void DragonFrame() {
     Slots();
     Cursor(Window18_addr, 4, 3);
     Cursor(Window19_addr, 10, 3);
-    for (U w : {at::kWin4, Window16_addr, Window17_addr, Window18_addr, Window19_addr, Window21_addr}) {
+    for (U w : {WindowRecords_addr + 0x90, Window16_addr, Window17_addr, Window18_addr, Window19_addr, Window21_addr}) {
         rv::As<records::WindowRecord>(Win(w))->in_use = static_cast<unsigned char>(bh::Half() ? rv::As<records::WindowRecord>(Win(w))->in_use & 0xFE : rv::As<records::WindowRecord>(Win(w))->in_use | 1);
         rv::As<records::WindowRecord>(Win(w))->state = Byte({0, 0, 1, 2});
     }
@@ -372,7 +372,7 @@ void Seed(unsigned k) {
             q[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 11);
             SetWord(q + 2, Word16({1, 2, 3, 2}));
         }
-        for (unsigned n = 0; n < 11; ++n) Mem(at::kEnemies + n * at::kEnemyStride + 0x8C)[0] = Byte({0, 1, 1, 2});
+        for (unsigned n = 0; n < 11; ++n) Mem(Battle_Enemies_addr + n * at::kEnemyStride + 0x8C)[0] = Byte({0, 1, 1, 2});
         break;
     }
     case 0x44C3D0:

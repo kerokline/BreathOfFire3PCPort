@@ -97,7 +97,7 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
 extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
     const unsigned i = SH_CALL(Effect_FindFree)();
     if (i == 0xFF) return;
-    unsigned char* const e = Effect_Objects + i * 0x80;
+    unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
     e[0] = 1;
     e[5] = 4;
     e[9] = static_cast<unsigned char>(frames);
@@ -202,7 +202,7 @@ extern "C" unsigned char __cdecl Camera_TurnStepFB(unsigned angle, unsigned step
 // EffectKind2A_PushParty 0x4712E0 and 0x4849A0 pass 2 or a table byte. PSX 0x8015CC04
 // (pairs_propagated "call").
 extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
-    unsigned char* const o = ObjTrio + (member & 0xFF) * at::kObjStride;
+    unsigned char* const o = rv::Bytes(&ObjTrio[member & 0xFF]);
     o[1] = 2;
     o[2] = 8;
     o[3] = 0;
@@ -273,7 +273,7 @@ extern "C" unsigned char* __cdecl AbilityList_ForType(unsigned member, unsigned 
     static const unsigned char kLists[4] = {0x60, 0x6A, 0x74, 0x7E};
     const unsigned m = member & 0xFF;
     unsigned char* const base = (working & 0xFF) != 0 ? At(at::kWorkingRecords + m * at::kObjStride)
-                                                      : At(bof3::addr::CharacterRecords + m * at::kRecordStride);
+                                                      : At(CharacterRecords_addr + m * at::kRecordStride);
     const unsigned type = At(at::kAbilityType)[(id & 0xFF) * 24] & 3;
     return base + kLists[type];
 }

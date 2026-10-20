@@ -111,8 +111,12 @@ def render(measured, carried):
              'reasons only.\n',
              '#' + '\t'.join(HDR) + '\n']
     stats = collections.Counter()
+    moved = moved_keys(measured, carried)
     for key, _ln, s in measured:
         old = carried.get(key)
+        if old is None and key in moved:
+            old = moved[key]
+            stats['carried by place'] += 1
         if old is not None:
             reason, evidence, source = old[8], old[9], old[10]
             stats['carried' if reason != '-' else 'unreviewed'] += 1
@@ -122,8 +126,38 @@ def render(measured, carried):
         row = list(key) + [s[5], s[6], reason, evidence, source]
         lines.append('\t'.join(clean(x) for x in row) + '\n')
     keys = {k for k, _, _ in measured}
-    stats['dropped'] = sum(1 for k in carried if k not in keys)
+    taken = {id(v) for v in moved.values()}
+    stats['dropped'] = sum(1 for k, v in carried.items() if k not in keys and id(v) not in taken)
     return ''.join(lines), stats
+
+
+def moved_keys(measured, carried):
+    """{new key: old row} for sites whose key changed only in `expr`: an edit
+    inside the census's 60-character expression (a renamed name, a typed
+    sub-expression) changes the key of a site that is still raw, and its
+    reason would be dropped (stage C3 carried five by hand; stage C4). Within
+    one file, function, shape, accessor and address, the new keys and the
+    gone ones are paired in order when they are as many and each pair's
+    expressions still resemble each other."""
+    keys = {k for k, _, _ in measured}
+    new = collections.defaultdict(list)
+    for k, _ln, s in measured:
+        if k not in carried:
+            new[k[:4] + (clean(s[5]),)].append(k)
+    gone = collections.defaultdict(list)
+    for k, row in carried.items():
+        if k not in keys:
+            gone[k[:4] + (row[6],)].append(row)
+    out = {}
+    for g, ks in new.items():
+        rows = gone.get(g, [])
+        if not rows or len(rows) != len(ks):
+            continue
+        rows = sorted(rows, key=lambda r: int(r[5]) if r[5].isdigit() else 0)
+        pairs = list(zip(ks, rows))
+        if all(difflib.SequenceMatcher(None, k[4], r[4]).ratio() >= 0.5 for k, r in pairs):
+            out.update(pairs)
+    return out
 
 
 def clean(x):

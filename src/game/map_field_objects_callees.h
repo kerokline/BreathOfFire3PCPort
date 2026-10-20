@@ -17,13 +17,13 @@ namespace map_field_objects {
 using U = std::uint32_t;
 
 // --- Addresses without a name ------------------------------------------------------
-// DamageScratch's first three dwords, the PSX scratchpad's 0x1F800000..: the
+// SharedScratch's first three dwords, the PSX scratchpad's 0x1F800000..: the
 // uprights' cell origin (x, y) and their base height; EventOp_8x's object
 // index (word +0) and animation bank (word +2).
-constexpr U kScratchX = 0x903850;
-constexpr U kScratchY = 0x903854;
-constexpr U kScratchH = 0x903858;
-constexpr U kScratchBank = 0x903852;
+inline auto& kScratchX = SharedScratch;
+inline auto& kScratchY = SharedScratch.d_04;
+inline auto& kScratchH = SharedScratch.d_08;
+inline auto& kScratchBank = SharedScratch.w_02;
 // MapView_ScreenXY's three points: the uprights' Gte_RotTransPers3 outputs.
 constexpr U kScreen0 = 0x903820, kScreen1 = 0x903828, kScreen2 = 0x903830;
 // Prim_VertexScratch's four vertices, 8 bytes apart.
@@ -44,7 +44,8 @@ constexpr U kFlatColour0 = 0x8CB59A, kFlatColour1 = 0x8CB59C;
 // The window colour (Config), a CLUT row: s8 (battle_windows_callees.h kColour).
 // kWindowColour: now Config_WindowColour (symbols.toml).
 // CharacterRecords, 0xA4 bytes each (battle_window_draw_callees.h).
-constexpr U kCharRecords = 0x903A70, kCharStride = 0xA4;
+// kCharRecords: now CharacterRecords (symbols.toml).
+constexpr U kCharStride = 0xA4;
 // The play clock: hours, minutes, seconds, frames (0x9040C8..0x9040CB).
 // kClockMinutes: now MapFieldObjects_ClockMinutes (symbols.toml).
 // kClockFrames: now MapFieldObjects_ClockFrames (symbols.toml).

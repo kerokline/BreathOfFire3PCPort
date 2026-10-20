@@ -62,14 +62,14 @@ constexpr U kAbilityStride = 24;
 
 // --- the enemies (0x93B960 + n * 0x128) and the running sprite ---------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running (its object)
-constexpr U kEnemies = 0x93B960;          // enemy 0's object
-constexpr U kEnemy1 = 0x93BA88;           // enemy 1's object
+// kEnemies: now Battle_Enemies (symbols.toml). enemy 0's object
+// kEnemy1: now Battle_Enemies[1] (symbols.toml). enemy 1's object
 constexpr U kEnemy0Status = 0x93B9F2;     // enemy 0's +0x92 (u32; bit 0x4000 read by set-up 27)
 // kEnemy1Status: now BossH_Enemy1Status (symbols.toml). enemy 1's +0x92 (u32)
 constexpr U kEnemyData = 0x8C55C8;        // the area's enemy data records (stride 0x8C), by the enemy's +0xF0
 constexpr U kEnemyDataStride = 0x8C;
 // kOwner: now BattleE2_Owner (symbols.toml). the running task's owner (BattleTask_RunAll: the slot's +0x80)
-constexpr U kTaskSlots = 0x93A000;        // BattleTask_Create's slots
+// kTaskSlots: now BattleTask_Slots (symbols.toml). BattleTask_Create's slots
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 

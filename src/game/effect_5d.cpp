@@ -143,7 +143,7 @@ unsigned char* Record(const char* who, U index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past Effect_Objects "
                     "(docs/effect_5d.md section 7)",
                     who, (unsigned)index);
-    return Effect_Objects + at::kEffectStride * index;
+    return rv::Bytes(Effect_Objects) + at::kEffectStride * index;
 }
 
 // The x87's quad corners about a screen point: the first float less the half
@@ -963,9 +963,9 @@ extern "C" void __cdecl EffectKind18Sub1D_Hurt(void) {
             s = S();
             continue;
         }
-        const U member = Index(kWho, S8(who), at::kMemberCount, AddressOf(ObjTrio));
+        const U member = Index(kWho, S8(who), at::kMemberCount, AddressOf(rv::Bytes(ObjTrio)));
         unsigned char* const saved = S();
-        unsigned char* const object = ObjTrio + at::kMemberStride * member;
+        unsigned char* const object = rv::Bytes(&ObjTrio[member]);
         Field_State = object;
         Sprite_Current = object;
         if (SH_CALL(Actor_EquipCount)(object[0x148], 3, 8) == 0) {

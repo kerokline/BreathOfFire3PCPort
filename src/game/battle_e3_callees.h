@@ -65,7 +65,7 @@ constexpr U kStatusOr = 0x904B98;         // u16: or-ed into the hit member's +0
 constexpr U kStatusOr2 = 0x904B9A;        // u16: zeroed at the hit
 
 // --- the rest ---
-constexpr U kCurrentEnemy = 0x939AD8;     // unsigned char *: the enemy BattleEnemy_RunAll runs
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). unsigned char *: the enemy BattleEnemy_RunAll runs
 constexpr U kStatCopy = 0x939F80;         // 32 bytes: the hit member's +0xA0.. copied here
 // kStatFlag: now BattleDamage_TargetDef (symbols.toml). u16: set to 1 under the member's +0x90 bit 11
 // kEvadeBoost: now BattleE3_EvadeBoost (symbols.toml). u8: += 25 to 100 under +0x130 bit 0
@@ -76,12 +76,12 @@ constexpr U kAbilityFlags5 = 0x65C4DD;    // its byte +5 (bit 3)
 constexpr U kAbilityStride = 24;
 constexpr U kEnemyData8B = 0x8C5653;      // the area's enemy data record +0x8B (stride 0x8C) by the enemy's +0xF0
 constexpr U kEnemyDataStride = 0x8C;
-constexpr U kCharRecords = 0x903A70;      // CharacterRecords, 0xA4 each, by a member's +0x148
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, 0xA4 each, by a member's +0x148
 constexpr U kCharStride = 0xA4;
 // kParty: now ObjTrio (symbols.toml). ObjTrio: three members of 0x14C
 constexpr U kPartyStride = 0x14C;
 constexpr unsigned kPartyMax = 3;
-constexpr U kTasks = 0x93A000;            // BattleTask_Create's 48 slots of 0x84
+// kTasks: now BattleTask_Slots (symbols.toml). BattleTask_Create's 48 slots of 0x84
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 constexpr U kSpecialOffsets = 0x6699A0;   // s8 pairs by the character +0x89 (state 10's task position)

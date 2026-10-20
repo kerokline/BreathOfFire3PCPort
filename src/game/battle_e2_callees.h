@@ -71,12 +71,13 @@ constexpr U kBackupFlags = 0x939C14;      // kBackup + 0x134
 constexpr U kBackupBit40 = 0x939B71;      // kBackup + 0x91 (bit 0x40 tested)
 
 // --- the enemies' objects (0x93B960, stride 0x128) -----------------------------
-constexpr U kEnemies = 0x93B960, kEnemyStride = 0x128;
+// kEnemies: now Battle_Enemies (symbols.toml).
+constexpr U kEnemyStride = 0x128;
 
 // --- the task slots (0x93A000, stride 0x84; +0x80 the owner) --------------------
 constexpr U kTasks = 0x93A000, kTaskStride = 0x84;
 constexpr U kOwner = 0x93B940;            // the running slot's owner (a pointer)
-constexpr U kEnemyCurrent = 0x939AD8;     // the current enemy (a pointer)
+// kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). the current enemy (a pointer)
 
 // --- the window records (WindowRecords 0x803160, stride 0x24) ------------------
 // kWindow1Count: now Window1_ParamA (symbols.toml). record 1 (0x803184) +0xA: the party count

@@ -70,10 +70,10 @@ constexpr U kAttackerAtk = 0x939FE4;      // u16: the attacker's power, read as 
 // kParty: now ObjTrio (symbols.toml). ObjTrio, stride 0x14C
 constexpr U kPartyStride = 0x14C;
 constexpr unsigned kPartyMax = 3;
-constexpr U kEnemies = 0x93B960;          // the enemies' objects, stride 0x128
+// kEnemies: now Battle_Enemies (symbols.toml). the enemies' objects, stride 0x128
 constexpr U kEnemyStride = 0x128;
 constexpr unsigned kEnemyMax = 8;
-constexpr U kCharRecords = 0x903A70;      // CharacterRecords, stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr U kCharStride = 0xA4;
 constexpr U kEnemyData = 0x8C55C8;        // the area's enemy data records, stride 0x8C (+0x24 the word slot 106 reads)
 constexpr U kEnemyDataStride = 0x8C;

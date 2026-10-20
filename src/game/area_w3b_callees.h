@@ -78,7 +78,7 @@ constexpr U kLeaderCellZ = 0x905E62;
 constexpr U kAreaText = 0x803580;         // the area's text section; the label's offset is its first dword's low word
 constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
 // kChangeFlags: now AreaEntry_PendingFlags (symbols.toml). byte: Field_ChangeArea's fourth argument on a 0xAF cell
-constexpr U kPendingX = 0x903860;         // dword: Field_ChangeArea's x (the pending area cells, docs/area_harness.md)
+inline auto& kPendingX = SharedScratch.d_10;         // dword: Field_ChangeArea's x (the pending area cells, docs/area_harness.md)
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). dword: its z
 // k904EE0: now ModeFlow_AreaTransition (symbols.toml). byte zeroed on the 0xAF cell's change of area
 // k937F98: now Area_EnterTransition (symbols.toml). byte set to 0xC on it

@@ -66,7 +66,7 @@ unsigned char* PtrAt(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 void SetPtrAt(U cell, const void* p) { SetLong(At(cell), static_cast<std::int32_t>(Key(p))); }
 unsigned char* S() { return Sprite_Current; }
 unsigned char* F() { return Field_State; }
-unsigned char* Enemy() { return PtrAt(at::kCurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 U ULong(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetULong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
@@ -79,7 +79,7 @@ unsigned AbilityWord4() { return Word(At(at::kAbilityWord4 + AbilityId() * at::k
 
 // CharacterRecords' record for a member's character byte +0x148 (unchecked, as
 // the original: a character byte, not a table index of this group's).
-unsigned char* CharRecord(unsigned character) { return At(at::kCharRecords + character * at::kCharStride); }
+unsigned char* CharRecord(unsigned character) { return At(CharacterRecords_addr + character * at::kCharStride); }
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kPartyStride); }
 // Sprite_Current is the enemy in the enemy ops, the member in the party
 // objects' states; Field_State the member (docs/battle_e3.md 1.1, 1.2).
@@ -119,7 +119,7 @@ unsigned char* TaskSlot(const char* who, unsigned n) {
         bof3::Fatal("%s: BattleTask_Create answered slot %u (all 48 taken) - the original writes at 0x93A000 + %u * 0x84, "
                     "past the pool (docs/battle_e3.md section 6)",
                     who, n, n);
-    return At(at::kTasks + n * at::kTaskStride);
+    return At(BattleTask_Slots_addr + n * at::kTaskStride);
 }
 
 // The party count 0x904AB0 as the loops over ObjTrio read it: a Fatal past its
@@ -327,7 +327,7 @@ extern "C" void __cdecl EnemyOp_LeaveEnd(void) {
     if (left == 0) Battle_EndFlags |= 2;
     BH_CALL(Sprite_ReleaseTint)(S());
     BH_CALL(Battle_ClearActorBit)(rv::As<records::BattleEnemy>(S())->actor);
-    B(at::kWindow4State) = 2;
+    WindowRecords[4].state = 2;
     BH_CALL(BattleBanner_ClearAll)();
     BH_CALL(Effect_Release)();
 }

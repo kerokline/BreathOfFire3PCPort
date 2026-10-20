@@ -128,8 +128,8 @@ void Ground(U lift) {
 // Sprite_Current's +0x34 / +0x38 = the leader's x / z (each store to the record
 // as read then).
 void AtLeader() {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(At(ObjTrio_addr + 0x34)));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(At(ObjTrio_addr + 0x38)));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(ObjTrio[0].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(ObjTrio[0].z));
 }
 
 // States 8 and 10's start: 0x6761CC = the spiral record; its point = the
@@ -572,9 +572,9 @@ extern "C" void __cdecl EffectKind4A_Run(void) {
 // (+0x34 / +0x38 / +0x3C); +0xC = 0xB4; the trail set (EffectKind4A_TrailInit);
 // +1 up.
 extern "C" void __cdecl EffectKind4A_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(At(Sprite_Objects_addr + 0xd8)));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
-    rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(At(Sprite_Objects_addr + 0xd8 + 8)));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(Sprite_Objects[1].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(Sprite_Objects[1].z));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0xB4);
     SH_CALL(EffectKind4A_TrailInit)();
     NextState();
@@ -591,9 +591,9 @@ extern "C" void __cdecl EffectKind4A_Follow(void) {
     auto* const so = rv::As<records::EffectObject>(s);
     if (rv::As<records::EffectWork>(s)->work_0c == 0xA5) Effect2e_TrailSpin = 1;
     if (SL(s + 0xC) > 0x5A) {
-        so->x = UL(At(Sprite_Objects_addr + 0xd8));
-        rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
-        rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(At(Sprite_Objects_addr + 0xd8 + 8)));
+        so->x = static_cast<std::uint32_t>(Sprite_Objects[1].x);
+        rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(Sprite_Objects[1].z));
+        rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     }
     SH_CALL(EffectKind4A_TrailStep)();
     SH_CALL(EffectKind4A_TrailDraw)();
@@ -1031,14 +1031,14 @@ extern "C" void __cdecl EffectKind4E_Run(void) {
 // +0x7C (the record read after); +9 = 0, +1 up. The original hands a fourth
 // argument, a stack slot the callee never reads.
 extern "C" void __cdecl EffectKind4E_Start(void) {
-    const U x = UL(At(ObjTrio_addr + 0x34));
-    const U z = UL(At(ObjTrio_addr + 0x38));
-    Prim_VertexScratch[0] = static_cast<short>(Sar(x, 9) - 0x4000u);
-    const std::int32_t height = static_cast<std::int16_t>(Word(At(ObjTrio_addr + 0x3e)));
-    Prim_VertexScratch[1] = static_cast<short>(Sar(z, 9) - 0x4000u);
-    Prim_VertexScratch[2] = static_cast<short>(-(height / 2));
+    const U x = static_cast<std::uint32_t>(ObjTrio[0].x);
+    const U z = static_cast<std::uint32_t>(ObjTrio[0].z);
+    Prim_VertexScratch[0].x = static_cast<short>(Sar(x, 9) - 0x4000u);
+    const std::int32_t height = static_cast<std::int16_t>(ObjTrio[0].height_whole);
+    Prim_VertexScratch[0].y = static_cast<short>(Sar(z, 9) - 0x4000u);
+    Prim_VertexScratch[0].z = static_cast<short>(-(height / 2));
     long depth = 0;
-    const long answer = SH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(S() + 0x74), &depth);
+    const long answer = SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(S() + 0x74), &depth);
     rv::Current<records::EffectObject>()->depth = static_cast<U>(answer);
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(S() + 0x7C));
     S()[9] = 0;

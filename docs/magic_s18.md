@@ -59,7 +59,7 @@ is a reading of which object each type starts at, not something seen.
 
 **`DrainOrb_Draw`** (`0x4BEF70`, 0x5AC bytes, types 0 and 1): a column of
 24 rings of eight Gouraud quads (`POLY_G4`, tpage 0x15), built in the
-scratch words `0x903850..0x90385F` (the PSX scratchpad's, `DamageScratch`)
+scratch words `0x903850..0x90385F` (the PSX scratchpad's, `SharedScratch`)
 and `Prim_VertexScratch`:
 
 - ring *n* (1..24) sits at height -40 *n*, offset in x by

@@ -70,7 +70,7 @@ std::uint32_t ULong(const unsigned char* p) { return static_cast<std::uint32_t>(
 void SetULong(unsigned char* p, std::uint32_t v) { SetLong(p, static_cast<std::int32_t>(v)); }
 
 // 0x939AD8 and Sprite_Current, each re-read wherever the original re-reads it.
-unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
 unsigned char* Sc() { return Sprite_Current; }
 // The enemy ops run on the enemy: Sprite_Current and 0x939AD8 (docs/enemy_ai_ops.md).
 
@@ -203,7 +203,7 @@ extern "C" void __cdecl EnemyOp_Wait(void) {
     if ((e[0x92] & 0x20) != 0) {
         unsigned char* const s = Sc();
         auto* const enemy_s = rv::As<records::BattleEnemy>(s);
-        const auto slot = [s] { return At(at::kTasks + s[5] * at::kTaskSize); };
+        const auto slot = [s] { return At(BattleTask_Slots_addr + s[5] * at::kTaskSize); };
         bool flip;
         if ((enemy_rec->flags_110 & 0x800) != 0) {
             slot()[9] = static_cast<unsigned char>(slot()[9] + 1);

@@ -50,11 +50,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F) and the four SVECTORs of
 // Prim_VertexScratch (0x9037A0..0x9037BF), read again after every call as the
 // originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
@@ -62,11 +62,11 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
+std::int32_t SD(unsigned k) { return Long(Mem(SharedScratch_addr + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(SharedScratch_addr + k), static_cast<std::int32_t>(v)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -86,14 +86,14 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
 // The actor record by battle index as the originals compute it - an enemy
 // (i - 3) * 0x128 from 0x93B960 when the target byte has 0x40, else a party
 // member i * 0x14C from 0x802D40 - unchecked, 32-bit arithmetic.
 unsigned char* ActorRecord(bool enemies, unsigned i) {
-    return enemies ? Mem(at::kEnemies + (i - 3u) * at::kEnemyStride) : Mem(ObjTrio_addr + i * at::kPartyStride);
+    return enemies ? Mem(Battle_Enemies_addr + (i - 3u) * at::kEnemyStride) : Mem(ObjTrio_addr + i * at::kPartyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }

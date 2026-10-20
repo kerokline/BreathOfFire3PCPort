@@ -119,7 +119,7 @@ short HeightAt(U x, U z) { return AH_AT(HeightFn, at::kHeightAt)(static_cast<lon
 // Area 189: the pending area change of its walk and exit button:
 // Field_ChangeArea(the area word, x, z, the flags byte) from the four cells.
 void ChangeToPending() {
-    AH_CALL(Field_ChangeArea)(Word(Mem(AreaW0b_Place_addr)), Long(Mem(at::kPendingX)), Long(Mem(AreaEntry_PendingZ_addr)), B(AreaEntry_PendingFlags_addr));
+    AH_CALL(Field_ChangeArea)(Word(Mem(AreaW0b_Place_addr)), Long(Mem(SharedScratch_addr + 0x10)), Long(Mem(AreaEntry_PendingZ_addr)), B(AreaEntry_PendingFlags_addr));
 }
 // The walk's facing for the next area: Area189_FacingJitter[Rand() & 3] +
 // the leader's +8, the low nibble (Sprite_Current read after Rand).
@@ -266,7 +266,7 @@ extern "C" void __cdecl Area188_ClearCellsC(void) {
 extern "C" void __cdecl Area188_SpawnEffectB9(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    unsigned char* const record = Effect_Objects + slot * at::kEffectStride;
+    unsigned char* const record = rv::Bytes(&Effect_Objects[slot]);
     record[0] = 1;
     record[5] = 0xB9;
 }
@@ -417,13 +417,13 @@ extern "C" void __cdecl Area189_LeaderStart(void) {
     std::int32_t pace = static_cast<std::int32_t>((static_cast<U>(AH_CALL(Rand)()) & 0x1F) + 0x96);
     const unsigned count = static_cast<unsigned>(AH_CALL(Party_Count)(0)) & 0xFF;
     for (unsigned i = 0; i < count; ++i) {
-        if (AH_CALL(Actor_EquipCount)(Field_Members[i * 0x14C], 3, 0x15) != 0) {
+        if (AH_CALL(Actor_EquipCount)(ObjTrio[i].char_index, 3, 0x15) != 0) {
             pace <<= 1;
             break;
         }
     }
     for (unsigned i = 0; i < count; ++i) {
-        if (AH_CALL(Actor_EquipCount)(Field_Members[i * 0x14C], 3, 0x14) != 0) {
+        if (AH_CALL(Actor_EquipCount)(ObjTrio[i].char_index, 3, 0x14) != 0) {
             pace >>= 1;
             break;
         }
@@ -449,17 +449,17 @@ extern "C" void __cdecl Area189_LeaderStart(void) {
 // word 0x8034E6 = 0x3C. Else +2 = 2.
 extern "C" void __cdecl Area189_LeaderProject(void) {
     auto scaled = [](U v) { return static_cast<short>((static_cast<std::int32_t>(((v - 1u) & 0xFFFFFFu) + 1u) >> 9) - 0x4000); };
-    Prim_VertexScratch[0] = scaled(static_cast<U>(Field_Kind2X));
-    Prim_VertexScratch[1] = scaled(static_cast<U>(Field_Kind2Z));
+    Prim_VertexScratch[0].x = scaled(static_cast<U>(Field_Kind2X));
+    Prim_VertexScratch[0].y = scaled(static_cast<U>(Field_Kind2Z));
     const auto y = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::Current<records::SpriteHead>()->height_whole));
-    Prim_VertexScratch[2] = static_cast<short>(-(y / 2));
+    Prim_VertexScratch[0].z = static_cast<short>(-(y / 2));
     long depth[2];
-    AH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth[1]);
+    AH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth[1]);
     AH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(Cur() + 0x7C));
     CopyFloatX87(Cur() + 0x78, Mem(MapView_ScreenXY_addr + 0x4));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, 1);
     if (Test(Row14(), 9) && !Test(Row14(), 0xA)) {
-        Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] | 0x40);
+        Effect_Objects[0].flags = static_cast<unsigned char>(Effect_Objects[0].flags | 0x40);
         unsigned char* const cur = Cur();
         cur[2] = 3;
         rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_z, -0x2000);
@@ -706,7 +706,7 @@ extern "C" void __cdecl Area189_StepArrive(void) {
             cur = Cur();
         }
         SetWord(Mem(AreaW0b_Place_addr), 0x7D);
-        SetLong(Mem(at::kPendingX), 0x190000);
+        SetLong(Mem(SharedScratch_addr + 0x10), 0x190000);
         SetLong(Mem(AreaEntry_PendingZ_addr), 0x190000);
         B(AreaEntry_PendingFlags_addr) = 4;
         JitterFacing();
@@ -746,7 +746,7 @@ extern "C" unsigned char __cdecl Area189_ExitButton(void) {
     B(AreaEntry_PendingFlags_addr) = 4;
     const U place = Area189_ExitPlaces_addr + e * 3;
     SetWord(Mem(AreaW0b_Place_addr), B(place));
-    SetLong(Mem(at::kPendingX), static_cast<std::int32_t>(static_cast<U>(B(place + 1)) << 16));
+    SetLong(Mem(SharedScratch_addr + 0x10), static_cast<std::int32_t>(static_cast<U>(B(place + 1)) << 16));
     SetLong(Mem(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(static_cast<U>(B(place + 2)) << 16));
     const unsigned char* const cur = Cur();
     SetLong(Mem(AreaW2d_ReturnPoint_addr), rv::As<records::SpriteHead>(cur)->x);
@@ -812,7 +812,7 @@ extern "C" void __cdecl Area189_RaiseByte1E(void) {
         unsigned char& b = B(Field_ActorStates_addr + 0xe + r * at::kCharStride);
         if (b >= 9) continue;
         b = static_cast<unsigned char>(b + 1);
-        AH_CALL(Char_RecalcStats)(Mem(at::kCharRecords + r * at::kCharStride));
+        AH_CALL(Char_RecalcStats)(Mem(CharacterRecords_addr + r * at::kCharStride));
     }
 }
 
@@ -1072,7 +1072,7 @@ extern "C" unsigned short __cdecl Area191_TalkMessageB(unsigned a, unsigned who,
 // the chapter row's flag 5, nor with story flag 0x77. Else a list k by actor
 // record 0's byte +0x1E (read first): row 14 bit 0xA clear - 2 from 9, 1 from
 // 5, else the walk count at least 5; set - 2 from 5, else the count at least
-// 5. Six times: Sprite_FindFree to the word DamageScratch; not 0xFF:
+// 5. Six times: Sprite_FindFree to the word SharedScratch; not 0xFF:
 // EventOp_0x(Area191_ObjectLists[k] + 0x11 * n).
 extern "C" void __cdecl Area191_Init(void) {
     if (Cond_ByteFA == 0xE && Test(FlagRow(), 5)) return;
@@ -1086,7 +1086,7 @@ extern "C" void __cdecl Area191_Init(void) {
     }
     for (unsigned n = 0; n < 6; ++n) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(at::kDamageScratch), slot);
+        SetWord(Mem(SharedScratch_addr), slot);
         if (slot == 0xFF) continue;
         const U list = static_cast<U>(Long(Mem(Area191_ObjectLists_addr + k * 4u)));
         AH_CALL(EventOp_0x)(Mem(list + n * at::kEventOpRecord));

@@ -101,7 +101,7 @@ long StepX(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8)); }
 long StepZ(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8 + 4)); }
 long Add(long a, long b) { return static_cast<long>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b)); }
 // An effect object by its index: Effect_Objects + index * 0x80, unchecked.
-unsigned char* Effect(unsigned index) { return Effect_Objects + (index << 7); }
+unsigned char* Effect(unsigned index) { return rv::Bytes(Effect_Objects) + (index << 7); }
 
 // The record views (game/record_views.h): the member states and party actions
 // run on an ObjTrio record, Field_State is one; the Sprite_* helpers run on
@@ -143,7 +143,7 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
     records::PartyMember* const s = rv::Current<records::PartyMember>();
     switch (s->step) {
     case 0:
-        if (ObjTrio[0x137] != 8) {
+        if (rv::Bytes(ObjTrio)[0x137] != 8) {
             s->state = 1;
             rv::Current<records::PartyMember>()->step = 0;
         }
@@ -225,7 +225,7 @@ void ProbeSide(unsigned d) {
     const long x = Add(s->x, StepX(d));
     const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
-    if (Byte(at::kScratch) == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (at::kScratch == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = g.ground_at(x, z);
     s = rv::Current<records::PartyMember>();
     if (static_cast<short>(s->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
@@ -259,7 +259,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
     const long x = Add(s->x, StepX(d));
     const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
-    if (Byte(at::kScratch) != 0 && static_cast<short>(slope) > 0x40) {
+    if (at::kScratch != 0 && static_cast<short>(slope) > 0x40) {
         g.ensure_animation(static_cast<unsigned char>(HalfTurn(rv::Current<records::PartyMember>()->direction) + 0x46));
         ++rv::Current<records::PartyMember>()->step;
     } else {
@@ -455,7 +455,7 @@ FH_EXPORT unsigned char __cdecl Encounter_PickRow(void) {
 FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
     unsigned char n = 0;
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const slot = At(at::kEnemies + k * at::kEnemyStride);
+        unsigned char* const slot = At(Encounter_Slots_addr + k * at::kEnemyStride);
         const unsigned char kind = row[k];
         slot[1] = kind;
         if (kind == 0xFF) {
@@ -525,7 +525,7 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         }
     }
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const slot = At(at::kEnemies + k * at::kEnemyStride);
+        unsigned char* const slot = At(Encounter_Slots_addr + k * at::kEnemyStride);
         const unsigned char* const kind = At(at::kKinds + slot[1] * at::kKindStride);
         if (slot[0] == 0) continue;
         if (Al(g.on_screen(Long(slot + 4), Long(slot + 8), kind[0x86], kind[0x87])) == 0) {

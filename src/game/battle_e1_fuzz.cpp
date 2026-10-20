@@ -262,7 +262,7 @@ void SeedButtons() {
 // The character records' levels and EXP around the table's steps.
 void SeedLevels() {
     for (U r = 0; r < 8; ++r) {
-        unsigned char* const rec = Mem(at::kCharRecords + r * at::kCharSize);
+        unsigned char* const rec = Mem(CharacterRecords_addr + r * at::kCharSize);
         rec[0xA] = Byte({0, 1, 2, 10, 40, 97, 98, 99, 100});
         const U exp = bh::Often() ? bh::Next() % (bh::Half() ? 0x400u : 0x100000u) : bh::Next();
         rv::Store<std::int32_t>(rv::As<records::CharRecord>(rec)->exp, static_cast<std::int32_t>(exp));
@@ -299,11 +299,11 @@ void Seed(unsigned k) {
         SeedButtons();
         break;
     case 0x42DE50:
-        Mem(at::kWin0 + 0xA)[0] = Byte({0, 1, 8, 9, 10, 0x6E, 0x76, 0x77});
-        Mem(at::kWin0 + 0xB)[0] = bh::Half() ? static_cast<unsigned char>(Mem(at::kWin0 + 0xA)[0] + BH_PICK(0, 8, 9, 0xFF))
+        Mem(WindowRecords_addr + 0xA)[0] = Byte({0, 1, 8, 9, 10, 0x6E, 0x76, 0x77});
+        Mem(WindowRecords_addr + 0xB)[0] = bh::Half() ? static_cast<unsigned char>(Mem(WindowRecords_addr + 0xA)[0] + BH_PICK(0, 8, 9, 0xFF))
                                              : Byte({0, 1, 0x6E, 0x6F, 0x7E, 0x7F, 0x80});
-        Mem(at::kWin0 + 0xD)[0] = bh::Half() ? 0 : static_cast<unsigned char>(bh::Next());
-        if (bh::Half()) SetWord(Mem(at::kWin0 + 0x10), 0);
+        Mem(WindowRecords_addr + 0xD)[0] = bh::Half() ? 0 : static_cast<unsigned char>(bh::Next());
+        if (bh::Half()) SetWord(Mem(WindowRecords_addr + 0x10), 0);
         SeedButtons();
         break;
     case 0x42EDA0: case 0x42EEA0:   // the menu member and its cross size at the ends
@@ -411,9 +411,9 @@ void Disturb(U h) {
     case 1: Mem(FieldS_Step_addr)[0] = b; break;
     case 2: Mem(at::kTallyTarget + 0xC + (h >> 24) % 3 * 4)[0] = b; break;
     case 3: Mem(Config_Background_addr)[0] = b; break;
-    case 4: Mem(at::kWin0 + 0xA + (h >> 24) % 2)[0] = b; break;
+    case 4: Mem(WindowRecords_addr + 0xA + (h >> 24) % 2)[0] = b; break;
     case 5: Mem(Window1_addr + 0xA)[0] = b; break;
-    case 6: SetWord(Mem(at::kWin0 + 0x10), h & 0x1000000 ? 0 : b); break;
+    case 6: SetWord(Mem(WindowRecords_addr + 0x10), h & 0x1000000 ? 0 : b); break;
     case 7: Mem(Input_Pressed_addr + (h >> 24) % 2)[0] = b; break;
     case 8: Mem(Input_Held_addr + (h >> 24) % 2)[0] = b; break;
     case 9: Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(b % 8); break;

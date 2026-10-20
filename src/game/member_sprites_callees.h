@@ -11,6 +11,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"
 
 namespace member_sprites {
 
@@ -21,15 +22,15 @@ using Handler = void (__cdecl*)();
 namespace at {
 // kMemberStates: now Member_States (symbols.toml). 9 handlers, by Sprite_Current +1
 constexpr std::uint32_t kControlStates = 0x65F99C;   // 2 handlers, by Sprite_Current +2
-constexpr std::uint32_t kCells = 0x903850;           // bytes: 0 the object-ahead flag, 1..5 the cell kinds, 8..10 the classes
-constexpr std::uint32_t kAimX = 0x903858;            // long: where a member's step would end (Member_StepAhead)
+// kCells: now SharedScratch (symbols.toml). bytes: 0 the object-ahead flag, 1..5 the cell kinds, 8..10 the classes
+inline auto& kAimX = SharedScratch.d_08;            // long: where a member's step would end (Member_StepAhead)
 // kAimZ: now Scratch_Swap (symbols.toml). long: the same, z (Scratch_Swap's address)
 // kDirUnits: now MoveCmd_F9Steps (symbols.toml). two longs a direction, a step's unit
 constexpr std::uint32_t kCellOffsets = 0x66971C;     // two signed bytes a direction, the cell ahead
 // kDirSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps, read past its 8 rows unchecked
 // kMoveSpeeds: now Field_MoveSpeeds (symbols.toml). Field_MoveSpeeds, read past its 6 entries unchecked
 // kObject905DA0: now FieldEvent_Object905DA0 (symbols.toml). the object Field_CellKind singles out
-constexpr std::uint32_t kActorRecords = 0x903A70;    // 0xA4 bytes each; Field_ActorStates is +0x10 of the first
+// kActorRecords: now CharacterRecords (symbols.toml). 0xA4 bytes each; Field_ActorStates is +0x10 of the first
 }  // namespace at
 
 struct Callees {

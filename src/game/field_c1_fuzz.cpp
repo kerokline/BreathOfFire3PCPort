@@ -17,12 +17,13 @@
 // AreaMap_SetByte, AreaMap_Slope's direction, MoveCmd_Move's object); answers
 // in the callee's range (Sprite_FindFree, Sprite_ObjectAt, Party_MemberAt);
 // louder stand-ins where the caller reads a cell after the call
-// (AreaMap_Slope's DamageScratch, AreaMap_Elevation near the heights compared,
+// (AreaMap_Slope's SharedScratch, AreaMap_Elevation near the heights compared,
 // AreaMap_ByteAt's tested bytes, EventOp_6x / _0x moving Sprite_Current).
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/field_c1.h"
 #include "game/field_c1_callees.h"
 #include "game/move_script_bytes.h"
@@ -159,13 +160,13 @@ template <typename... T> U PickBy(U h, T... v) {
     const U values[] = {static_cast<U>(v)...};
     return values[h % sizeof...(v)];
 }
-unsigned char* Eff(unsigned i) { return Effect_Objects + (i % at::kEffectCount) * at::kEffectStride; }
+unsigned char* Eff(unsigned i) { return rv::Bytes(&Effect_Objects[i % at::kEffectCount]); }
 
 // --- the moves ---------------------------------------------------------------------
 //
 // What the functions read again after a call: Sprite_Current's counters and
 // state (+6..+0xB), its speeds, brakes and fall (+0xC..+0x20), its position's
-// fractions, its height word, its scale; Field_Kind2Hold; DamageScratch; the
+// fractions, its height word, its scale; Field_Kind2Hold; SharedScratch; the
 // leader's height and point; the view's kind-2 point and elevation; Camera_
 // Distance. Every index byte stays inside the records it indexes.
 unsigned g_k;   // the function being fuzzed (Seed's k)
@@ -191,9 +192,9 @@ void Move(U h) {
     case 5: SetWord(o + (v & 1 ? 0x34 : 0x38), w & 1 ? 0 : w); break;
     case 6: SetWord(o + 0x3E, w); break;
     case 7: Field_Kind2Hold = static_cast<unsigned char>(v & 1); break;
-    case 8: Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
-    case 9: SetWord(ObjTrio + 0x3E, w); break;
-    case 10: Field_Kind2X = Long(ObjTrio + 0x34); Field_Kind2Z = v & 1 ? Long(ObjTrio + 0x38) : static_cast<long>(w); break;
+    case 8: Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
+    case 9: SetWord(rv::Bytes(ObjTrio) + 0x3E, w); break;
+    case 10: Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34); Field_Kind2Z = v & 1 ? Long(rv::Bytes(ObjTrio) + 0x38) : static_cast<long>(w); break;
     case 11: Camera_Distance = static_cast<short>(w); break;
     case 12: SetLong(o + 0x40, static_cast<std::int32_t>(PickBy(v, 0x1C000, 0x1FFFF, 0x20000, w << 1))); break;
     case 13: o[0xB] = static_cast<unsigned char>(w % 20); break;
@@ -216,7 +217,7 @@ std::uint32_t Ground(const std::uint32_t*, std::uint32_t answer) {
     U anchor;
     switch (n % 5) {
     case 0: anchor = sh::InRegions(o, 0x40) ? Word(o + 0x3E) : 0; break;
-    case 1: anchor = Word(ObjTrio + 0x3E) + 0x40u; break;
+    case 1: anchor = Word(rv::Bytes(ObjTrio) + 0x3E) + 0x40u; break;
     case 2: anchor = static_cast<U>(MapView_Elevation); break;
     case 3: anchor = sh::InRegions(o, 0x40) ? Word(o + 0x3E) - 0x80u : 0; break;
     default: Move(sh::Noise()); return answer;
@@ -234,10 +235,10 @@ std::uint32_t CellByte(const std::uint32_t*, std::uint32_t answer) {
     return (answer & 0xFFFFFF00u) | b;
 }
 
-// AreaMap_Slope: DamageScratch 0 (flat) or 1 (sloped), which its callers test
+// AreaMap_Slope: SharedScratch 0 (flat) or 1 (sloped), which its callers test
 // straight after the call.
 std::uint32_t Slope(const std::uint32_t*, std::uint32_t answer) {
-    Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(sh::Noise() % 3 == 0 ? 0 : 1);
+    Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(sh::Noise() % 3 == 0 ? 0 : 1);
     return answer;
 }
 
@@ -270,7 +271,7 @@ std::uint32_t FoundMember(const std::uint32_t*, std::uint32_t answer) {
 // EventOp_6x / _0x place a sprite and leave Sprite_Current on it (the starts
 // put it back): moved half the time.
 std::uint32_t Placed(const std::uint32_t*, std::uint32_t answer) {
-    sh::Note(Word(Mem(bof3::addr::DamageScratch)));   // the object index it places, which it reads
+    sh::Note(Word(Mem(SharedScratch_addr)));   // the object index it places, which it reads
     const U n = sh::Noise();
     if (n & 1) Sprite_Current = sh::SpriteRecord(n >> 1);
     return answer;
@@ -324,7 +325,7 @@ U g_cell[2];
 
 // Beyond the harness's standard and field regions (which hold Sprite_Current,
 // Sprite_Objects, Sprite_ObjectsExtra, Effect_Objects, ObjTrio, Camera_
-// Distance and DamageScratch, Field_Request, Game_AreaNumber / MoveScript_
+// Distance and SharedScratch, Field_Request, Game_AreaNumber / MoveScript_
 // FAWord, Field_Kind2Z / X, MapView_Redraw, MapView_Elevation, the menu block
 // with Field_Kind2Hold, the style byte, the packet buffer and the area block).
 const sh::Region kRegions[] = {
@@ -379,9 +380,9 @@ void Seed(unsigned k) {
     // to (the first four sprite records) get index bytes inside the records too
     for (unsigned i = 0; i < 4; ++i) SeedRecord(sh::SpriteRecord(i));
     SeedRecord(o);
-    ObjTrio[0xB] = static_cast<unsigned char>(sh::Next() % 20);
+    rv::Bytes(ObjTrio)[0xb] = static_cast<unsigned char>(sh::Next() % 20);
     if (sh::Half()) Field_Kind2Hold = 0;
-    if (sh::Half()) Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(sh::Half() ? 0 : 1);
+    if (sh::Half()) Mem(SharedScratch_addr)[0] = static_cast<unsigned char>(sh::Half() ? 0 : 1);
     switch (k) {
     case kRowLabel:
         if (sh::Half()) Mem(0x929F02)[0] = 1;
@@ -448,10 +449,10 @@ void Seed(unsigned k) {
             const std::int32_t m = static_cast<std::int32_t>(moved);
             if ((m < 0 ? -static_cast<std::int64_t>(m) : m) < 0x1000) moved = speed;
             const U at = static_cast<U>(Long(o + axis)) + moved;
-            SetLong(ObjTrio + axis, static_cast<std::int32_t>(at - PickOf(0x40000, 0x40001, 0x3FFFF, 0xFFFC0000u, 0x10000, 0x50000)));
-            if (sh::Half()) SetLong(ObjTrio + cross, static_cast<std::int32_t>(at - PickOf(0x10000, 0x50000)));
-            Field_Kind2X = Long(ObjTrio + 0x34);
-            Field_Kind2Z = Long(ObjTrio + 0x38);
+            SetLong(rv::Bytes(ObjTrio) + axis, static_cast<std::int32_t>(at - PickOf(0x40000, 0x40001, 0x3FFFF, 0xFFFC0000u, 0x10000, 0x50000)));
+            if (sh::Half()) SetLong(rv::Bytes(ObjTrio) + cross, static_cast<std::int32_t>(at - PickOf(0x10000, 0x50000)));
+            Field_Kind2X = Long(rv::Bytes(ObjTrio) + 0x34);
+            Field_Kind2Z = Long(rv::Bytes(ObjTrio) + 0x38);
         }
         if (sh::Half()) SetWord(o + 0x34, 0);
         if (sh::Half()) SetWord(o + 0x38, 0);
@@ -490,7 +491,7 @@ void Seed(unsigned k) {
         PlantCell(static_cast<short>(g_cell[0]), static_cast<short>(g_cell[1]), sh::Next() % 3 == 0);
         break;
     }
-    case k1BStart: if (sh::Half()) ObjTrio[0x89] = 1; break;
+    case k1BStart: if (sh::Half()) ObjTrio[0].char_id = 1; break;
     case k1BFly: {
         o[0xA] = static_cast<unsigned char>(PickOf(1, 2, 3, sh::Next()));
         SetLong(o + 0xC, static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000)));

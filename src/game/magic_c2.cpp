@@ -49,11 +49,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlays keep their working values in: DamageScratch's
+// The scratch the overlays keep their working values in: SharedScratch's
 // sixteen bytes (0x903850..0x90385F, words by function) and the first two
 // words of Prim_VertexScratch (0x9037A0). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = 0x903850;
+// kS: now SharedScratch (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 // The sprite frame-offset table pointer (magic_s17.cpp's kFrameSet): the
 // bones switch it to 0x8E3580 around their phase and put back 0x8B3580.
@@ -89,12 +89,12 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Caster() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(rv::As<records::BattleTask>(Pointer(BattleFlow_TaskCurrent_addr))->owner))));
 }
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 int SS(unsigned k) { return static_cast<short>(SW(k)); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 int VS(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
 
@@ -744,7 +744,7 @@ C2_EXPORT void __cdecl RottenBreathMote_Draw(void) {
     p[0x50] = 0x1F;
     p[0x51] = 0x1F;
     static constexpr unsigned kShade[12] = {4, 5, 6, 0x18, 0x19, 0x1A, 0x2C, 0x2D, 0x2E, 0x40, 0x41, 0x42};
-    for (const unsigned k : kShade) p[k] = Mem(kS + 8)[0];
+    for (const unsigned k : kShade) p[k] = Mem(SharedScratch_addr + 8)[0];
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
@@ -993,7 +993,7 @@ C2_EXPORT void __cdecl HolocaustBeam_Run(void) {
 
 namespace {
 unsigned char* EnemyRecord(int i) {
-    return Mem(static_cast<std::uint32_t>(static_cast<int>(at::kEnemies) + i * static_cast<int>(at::kEnemyStride)));
+    return Mem(static_cast<std::uint32_t>(static_cast<int>(Battle_Enemies_addr) + i * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 }  // namespace
@@ -1100,7 +1100,7 @@ unsigned char* NewG4() {
 // The angle pair's first: (the dword 0x903854 +- 0x400) & 0xFFF; its second:
 // (the word 0x903856 +- 0x400) & 0xFFF.
 int Across54(int delta) {
-    return static_cast<int>((static_cast<std::uint32_t>(Long(Mem(kS + 4))) + static_cast<std::uint32_t>(delta)) & 0xFFF);
+    return static_cast<int>((static_cast<std::uint32_t>(Long(Mem(SharedScratch_addr + 4))) + static_cast<std::uint32_t>(delta)) & 0xFFF);
 }
 int Across56(int delta) { return static_cast<int>((SW(6) + static_cast<unsigned>(delta)) & 0xFFF); }
 }  // namespace

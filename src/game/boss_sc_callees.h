@@ -47,7 +47,7 @@ constexpr U kMoveCounter = 0x903848;
 // --- the field's cells B16's hooks write --------------------------------------
 // kSaveWord: now Field_ScriptFlags (symbols.toml). u16 in the live game block (bit 7 cleared by fight 16's end hook)
 // kFieldByte131: now Music_Track (symbols.toml). u8: set to 0x31 by fight 16's end hook (what reads it was not read)
-// kMember1Flags: now Field_Members[4] (symbols.toml). u8: ObjTrio member 1's +0 (bit 0x40 set by fight 16's exit hook)
+// kMember1Flags: now ObjTrio (symbols.toml). record 1 +0, ObjTrio[1].flags (Field_Members[4] until stage C4). u8: ObjTrio member 1's +0 (bit 0x40 set by fight 16's exit hook)
 // kLeaderPick: now BossH_LeaderPick (symbols.toml). u8: 6 / 7 (Boss_SetByLeaderId's byte; boss_h_callees.h)
 // kMsgPass: now BossSa_WindowPass (symbols.toml). u8: set to 2 before each Msg_OpenScript here (the window pass byte)
 
@@ -56,13 +56,13 @@ constexpr U kMoveCounter = 0x903848;
 
 // --- the name Str_CopyN copies into the banner --------------------------------
 // kBannerChar: now Character_IndexById[1] (symbols.toml). u8: the character record index (0x903A70 + n * 0xA4)
-constexpr U kCharRecords = 0x903A70;      // the live character records, stride 0xA4
+// kCharRecords: now CharacterRecords (symbols.toml). the live character records, stride 0xA4
 constexpr U kCharStride = 0xA4;
 
 // --- the enemies' objects (0x93B960 + n * 0x128) -----------------------------
-constexpr U kEnemy0 = 0x93B960;
-constexpr U kEnemy1 = 0x93BA88;
-constexpr U kEnemy2 = 0x93BBB0;
+// kEnemy0: now Battle_Enemies (symbols.toml).
+// kEnemy1: now Battle_Enemies[1] (symbols.toml).
+// kEnemy2: now Battle_Enemies[2] (symbols.toml).
 constexpr U kEnemyPose = 0x58;            // u16 +0x58 and +0x5A: the pose a field actor is given back
 constexpr U kEnemyStatus = 0x92;          // u32 from +0x92: bit 0x2000 (+0x93 bit 0x20)
 constexpr U kEnemyExp = 0x96;             // u16

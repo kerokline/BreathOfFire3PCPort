@@ -47,7 +47,7 @@ bh::Clone Row(const char* name, U base, U size, const bh::CallSite* calls, int n
 
 // The cells outside the standard regions the group's functions write.
 const bh::Region kRegions[] = {
-    {BossH_LeaderPick_addr, 1}, {at::kScriptVar3, 1}, {at::kWindow4Flag, 1}, {Draw_PassFlags_addr, 1}, {Music_Track_addr, 1},
+    {BossH_LeaderPick_addr, 1}, {at::kScriptVar3, 1}, {WindowRecords_addr + 0x93, 1}, {Draw_PassFlags_addr, 1}, {Music_Track_addr, 1},
 };
 
 // ===========================================================================

@@ -19,7 +19,7 @@ constexpr std::uint32_t kCounter = 0x903848;       // u8: kind 0x85 ends at 0x35
 constexpr std::uint32_t kCounterB = 0x903849;      // u8: the push count (3, 4, 5), 0xFF the end, 0xFE the stop
 constexpr std::uint32_t kCounterC = 0x90384A;      // u8: kind 0x84's presses; 0x80 the end
 constexpr std::uint32_t kCounterD = 0x90384B;      // u8: cleared with the two above
-constexpr std::uint32_t kObjectCount = 0x903850;   // u16: the object EventOp_0x places (its count word)
+inline auto& kObjectCount = SharedScratch.w_00;   // u16: the object EventOp_0x places (its count word)
 
 // --- the chapter's cells (scenario_harness at::kStep) ---------------------
 constexpr std::uint32_t kStep = 0x8034E5;          // u8: the chapter's step (MoveScript_Var7 + 1)

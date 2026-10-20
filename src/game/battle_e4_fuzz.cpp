@@ -220,7 +220,7 @@ const bh::Region kRegions[] = {
     {0x904060, 0x10},                  // 0x904065..0x904067
     {Character_IndexById_addr, 0x18}, // Character_IndexById
     {at::kPreview, 8},
-    {at::kTint, 4},
+    {SharedScratch_addr, 4},
     {0x904EFC, 4},                     // MoveScript_FAWord
     {Field_Kind2Z_addr, 8},            // Field_Kind2Z, Field_Kind2X
     {at::kRepeatLatch, 4},
@@ -237,7 +237,7 @@ unsigned char Byte(std::initializer_list<U> v) {
     return static_cast<unsigned char>(v.begin()[bh::Next() % v.size()]);
 }
 U Word16(std::initializer_list<U> v) { return v.begin()[bh::Next() % v.size()]; }
-unsigned char* Enemy(unsigned actor) { return M(at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
+unsigned char* Enemy(unsigned actor) { return M(Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 
 // The cells every function's indices go through, kept inside what the
 // regions hold (docs/battle_e4.md section 5): the members' +5 (their party
@@ -375,14 +375,14 @@ void Seed(unsigned k) {
     case 0x449A00: {   // preview bytes: none, the same as worn, or another
         const unsigned member = M(Window18_addr + 0xC)[0];
         const unsigned char c = M(Character_IndexById_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
-        const unsigned char* const r = M(at::kCharRecords + c * at::kCharStride);
+        const unsigned char* const r = M(CharacterRecords_addr + c * at::kCharStride);
         for (unsigned i = 0; i < 6; ++i) M(at::kPreview + i)[0] = Byte({0, r[0x12 + i], r[0x12 + i], bh::Next()});
         break;
     }
     case 0x449C70: {   // the slot's item: none a third of the time
         const unsigned member = M(Window18_addr + 0xC)[0];
         const unsigned char c = M(Character_IndexById_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
-        unsigned char* const r = M(at::kCharRecords + c * at::kCharStride);
+        unsigned char* const r = M(CharacterRecords_addr + c * at::kCharStride);
         if (bh::Next() % 3 == 0) r[0x12 + M(Window18_addr + 0xA)[0]] = 0;
         if (bh::Next() % 4 == 0) M(Window18_addr + 0xA)[0] = 0;
         break;

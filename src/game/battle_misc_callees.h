@@ -33,12 +33,12 @@ constexpr U kCueTable = 0x64E3BC;
 constexpr U kCurrentEnemy = 0x939AD8;
 // The enemy objects: 8 of 0x128 bytes; the working record is at +0x80
 // (EnemyWorkingRecords 0x93B9E0). The party's are ObjTrio's, 3 of 0x14C.
-constexpr U kEnemyObjects = 0x93B960;
+// kEnemyObjects: now Battle_Enemies (symbols.toml).
 constexpr U kEnemyStride = 0x128;
 constexpr U kPartyStride = 0x14C;
 // The actor contexts: records of 0x84 bytes, the first 0x80 a copy of an
 // object's, +0x80 the object (PSX 0x801EC2A0, 0x78 bytes, the object at +0x74).
-constexpr U kContexts = 0x93A000;
+// kContexts: now BattleTask_Slots (symbols.toml).
 constexpr U kContextStride = 0x84;
 // The per-set sound lists: 256 pointers, each to dwords (key << 16 | id)
 // ending in -1; the id + 0x1000 is a Sound_LoadStream id.

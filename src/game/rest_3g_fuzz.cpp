@@ -266,7 +266,7 @@ const std::uint8_t kKinds[] = {0xAC, 0xAD, 0xAE, 0xBA};
 constexpr U kItemsRegion = 48;   // draw items compared (0x90 each); AreaMapBD_BuildView keeps few cells a call
 const sh::Region kRegions[] = {
     {0x904AA0, 0x20},                       // the battle bytes: the event battle 0x904AAA, the formation 0x904AAC, 0x904AB2 / B3
-    {at::kEnemies, at::kEnemyStride * at::kEnemyCount},   // the eight enemy records
+    {Battle_Enemies_addr, at::kEnemyStride * at::kEnemyCount}, // the eight enemy records
     {Encounter_Rows_addr, 0x48},      // Encounter_Rows (8 rows of 9)
     {0x695990, 0x2A4},                      // Quake's .bss: the facing, the lift tables, the block's corner (magic_s23's region)
     {AreaW1f_MusicCurrent_addr, 4},         // the byte compared with Music_Track
@@ -411,9 +411,9 @@ void Disturb(U h) {
     case 3: Mem(Music_Track_addr)[0] = static_cast<unsigned char>((v & 1) ? Mem(AreaW1f_MusicCurrent_addr)[0] : v >> 1); break;
     case 4: MapView_Redraw = static_cast<unsigned char>(v % 4); break;
     case 5: SetWord(Mem((v & 1) ? Camera_Angles_addr : Cond_AngleFB_addr), (v & 2) ? ((v & 1) ? 0xFD56u : 0x200u) : v >> 2); break;
-    case 6: SetLong(Mem((v & 1) ? at::kRows : at::kColumns), static_cast<std::int32_t>((v >> 1) % 6)); break;   // a walk cut short
+    case 6: SetLong(Mem((v & 1) ? (SharedScratch_addr + 0x4) : (SharedScratch_addr + 0x8)), static_cast<std::int32_t>((v >> 1) % 6)); break; // a walk cut short
     case 7: DrawItemPool_Top = static_cast<unsigned short>((v & 1) ? 0x3FE + (v >> 1) % 4 : (v >> 1) % kItemsRegion); break;
-    case 8: SetWord(Mem((v & 1) ? at::kOriginX : at::kOriginZ), v >> 1); break;
+    case 8: SetWord(Mem((v & 1) ? SharedScratch_addr : (SharedScratch_addr + 0x2)), v >> 1); break;
     case 9: Mem(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(v); break;
     case 10: SetWord(Mem(Prim_VertexScratch_addr + 2 * ((v & 3) % 3)), v >> 2); break;
     case 11: PutFloat(Mem(MapView_ScreenXY_addr + 4 * (v & 1)), static_cast<float>(static_cast<int>((v >> 1) % 1000) - 500)); break;
@@ -435,7 +435,7 @@ void CheckPspMyriaItem() {
     struct Span { U at, size; };
     static constexpr Span kSpans[] = {
         {0x7DEE80, 30 * 0xA4},                          // Sprite_Objects
-        {at::kEnemies, at::kEnemyCount * at::kEnemyStride},
+        {Battle_Enemies_addr, at::kEnemyCount * at::kEnemyStride},
         {0x8C55C8, 8 * 0x8C},                           // the area's enemy data records
         {0x904AA0, 0x160},                              // the battle's globals
         {0x904EFC, 2},                                  // Game_AreaNumber

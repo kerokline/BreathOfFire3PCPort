@@ -171,8 +171,8 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             break;
         case 0x0D: {   // 0D x xh z zh: place at (x.xh, z.zh) and take the ground's elevation
             if (g.kind() == 2) {
-                PlaceAndGround(Sprite_Kind2, script + Pos(object));
-                rv::Store<unsigned>(rv::As<records::SpriteHead>(Sprite_Kind2)->height_whole, static_cast<unsigned>(g.elevation(rv::As<records::SpriteHead>(Sprite_Kind2)->x, rv::As<records::SpriteHead>(Sprite_Kind2)->z)));
+                PlaceAndGround(rv::Bytes(&Sprite_Kind2), script + Pos(object));
+                rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(g.elevation(Sprite_Kind2.x, Sprite_Kind2.z)));
                 result = 0xFF;
             } else {
                 PlaceAndGround(Sprite_Current, script + Pos(object));
@@ -271,9 +271,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
                 const unsigned at = Pos(object);
                 SetWord(scratch + 2, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
                 g.move_kind2(value);
-                const std::int32_t frames = 0x80 / static_cast<std::int32_t>(MoveScript_F3Divisor) * Sprite_Kind2[0x87];
+                const std::int32_t frames = 0x80 / static_cast<std::int32_t>(MoveScript_F3Divisor) * Sprite_Kind2.move_steps;
                 const std::int32_t rise = static_cast<std::int16_t>(Word(scratch + 2)) - static_cast<std::int16_t>(Word(scratch));
-                rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->step_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rise) << 16) / frames);
+                rv::Store<std::int32_t>(Sprite_Kind2.step_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rise) << 16) / frames);
                 object[0] |= 0x40;
                 SetPos(object, Pos(object) + 4u);
             }
@@ -479,7 +479,7 @@ void __cdecl StubMoveKind2(unsigned char direction) {
     Record(3, direction);
     const std::uint32_t h = Hash();
     MoveScript_F3Divisor = static_cast<short>(1 + h % 0x80);
-    Sprite_Kind2[0x87] = static_cast<unsigned char>(1 + (h >> 8) % 255);
+    Sprite_Kind2.move_steps = static_cast<unsigned char>(1 + (h >> 8) % 255);
     if (h & 0x10000) SetWord(Scratch() + 2, h >> 17);
     Nudge(MoveScript_Object);
 }
@@ -583,7 +583,7 @@ constexpr Table kStepTables[] = {{0x64, 0x1A0, 11}, {0x327, 0x6E8, 15}};
 constexpr Table kGroupFTable = {0x2E, 0x430, 16};
 
 struct State {
-    unsigned char object[kBuf], sprite[kBuf], kind2[Sprite_Kind2_count], scratch[12];
+    unsigned char object[kBuf], sprite[kBuf], kind2[sizeof(records::SpriteObject)], scratch[12];
     short divisor;
     std::uint16_t fa_word, area;
     signed char var7;
@@ -599,7 +599,7 @@ unsigned char* ScratchLow() { return Scratch() - 8; }   // 0x903848: the counter
 void Capture(State& s) {
     std::memcpy(s.object, g_object, kBuf);
     std::memcpy(s.sprite, g_sprite, kBuf);
-    std::memcpy(s.kind2, Sprite_Kind2, sizeof s.kind2);
+    std::memcpy(s.kind2, &Sprite_Kind2, sizeof s.kind2);
     std::memcpy(s.scratch, ScratchLow(), sizeof s.scratch);
     s.divisor = MoveScript_F3Divisor; s.fa_word = MoveScript_FAWord; s.area = Game_AreaNumber;
     s.var7 = MoveScript_Var7; s.request = Field_Request;
@@ -610,7 +610,7 @@ void Capture(State& s) {
 void Apply(const State& s) {
     std::memcpy(g_object, s.object, kBuf);
     std::memcpy(g_sprite, s.sprite, kBuf);
-    std::memcpy(Sprite_Kind2, s.kind2, sizeof s.kind2);
+    std::memcpy(&Sprite_Kind2, s.kind2, sizeof s.kind2);
     std::memcpy(ScratchLow(), s.scratch, sizeof s.scratch);
     MoveScript_F3Divisor = s.divisor; MoveScript_FAWord = s.fa_word; Game_AreaNumber = s.area;
     MoveScript_Var7 = s.var7; Field_Request = s.request;
@@ -756,8 +756,8 @@ void SelfTest(unsigned char (__cdecl* theirs)(unsigned char*, const unsigned cha
         input.divisor = static_cast<short>(1 + Next() % 0x80);
         input.kind2[0x87] = static_cast<unsigned char>(1 + Next() % 255);
         input.request = static_cast<unsigned char>(Next() % 4 ? 3 : Next());
-        input.current = Next() % 4 ? g_sprite : Sprite_Kind2;
-        if (input.current == Sprite_Kind2) ++kind2_rounds;
+        input.current = Next() % 4 ? g_sprite : rv::Bytes(&Sprite_Kind2);
+        if (input.current == rv::Bytes(&Sprite_Kind2)) ++kind2_rounds;
         input.move_object = nullptr;
         g_seed = Next();
         unsigned char* const saved_descriptor = Area_Descriptors[input.area];

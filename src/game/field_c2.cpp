@@ -77,7 +77,7 @@ unsigned char* EffectRecord(const char* who, unsigned index) {
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
                     "(docs/field_c2.md section 2)",
                     who, index);
-    return Effect_Objects + index * at::kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * at::kEffectStride;
 }
 
 // A new kind-0x34 record at the running one's place: +0 1, +5 0x34 (the caller
@@ -99,8 +99,8 @@ void Touch(const char* who, int index) {
                     "outside them (docs/field_c2.md section 2)",
                     who, index);
     unsigned char* const o = index < static_cast<int>(at::kObjects)
-                                 ? Sprite_Objects + static_cast<U>(index) * at::kObjectStride
-                                 : Sprite_ObjectsExtra + static_cast<U>(index - static_cast<int>(at::kObjects)) * at::kObjectStride;
+                                 ? rv::Bytes(Sprite_Objects) + static_cast<U>(index) * at::kObjectStride
+                                 : rv::Bytes(Sprite_ObjectsExtra) + static_cast<U>(index - static_cast<int>(at::kObjects)) * at::kObjectStride;
     o[0x80] = static_cast<unsigned char>(o[0x80] | 1);
 }
 
@@ -150,7 +150,7 @@ extern "C" void __cdecl EffectKind30_Push(void) {
             SH_CALL(EffectKind30_FreeCells)();
         } else if (S()[0xB] != 0) {
             records::EffectObject* s = rv::As<records::EffectObject>(S());
-            rv::Bytes(s)[8] = ObjTrio[8];
+            rv::Bytes(s)[8] = ObjTrio[0].direction;
             s = rv::As<records::EffectObject>(S());
             s->step_x = UL(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(s)[8])) << 1;
             s = rv::As<records::EffectObject>(S());
@@ -895,12 +895,12 @@ extern "C" void __cdecl EffectKind3A_Run(void) { Run("EffectKind3A_Run", Address
 // original (a data read). No PSX twin paired.
 extern "C" void __cdecl EffectKind3A_Start(void) {
     records::EffectObject* s = rv::As<records::EffectObject>(S());
-    rv::Bytes(s)[8] = ObjTrio[8];
+    rv::Bytes(s)[8] = ObjTrio[0].direction;
     s = rv::As<records::EffectObject>(S());
-    s->x = UL(At(AddressOf(Field_DirectionSteps) + 8u * rv::Bytes(s)[8])) + UL(At(ObjTrio_addr + 0x34));
+    s->x = UL(At(AddressOf(Field_DirectionSteps) + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].x);
     s = rv::As<records::EffectObject>(S());
-    s->z = UL(At(AddressOf(Field_DirectionSteps) + 4 + 8u * rv::Bytes(s)[8])) + UL(At(ObjTrio_addr + 0x38));
-    rv::Store<unsigned>(rv::As<records::EffectObject>(S())->height_whole, Word(At(ObjTrio_addr + 0x3E)) + 0xC0u);
+    s->z = UL(At(AddressOf(Field_DirectionSteps) + 4 + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(S())->height_whole, ObjTrio[0].height_whole + 0xC0u);
     s = rv::As<records::EffectObject>(S());
     s->step_x = UL(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(s)[8])) << 4;
     s = rv::As<records::EffectObject>(S());
@@ -933,7 +933,7 @@ extern "C" void __cdecl EffectKind3A_Fly(void) {
     }
     if (SH_CALL(EffectKind3A_Hit)() != 0) {
         SH_CALL(EffectKind3A_LeaderPose)();
-        S()[0x27] = ObjTrio[0x27];
+        S()[0x27] = ObjTrio[0].clut;
         SH_CALL(Sprite_SetAnimation)(0x4A);
         SH_CALL(Sound_PlayEffect)(0x10E);
         rv::As<records::EffectObject>(S())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(S())->state + 1);
@@ -970,7 +970,7 @@ extern "C" void __cdecl EffectKind3A_Wait(void) {
 // EffectKind3A_Fly's and FC1's 0x46B7C0. PSX 0x8019FE18 (gap44).
 extern "C" void __cdecl EffectKind3A_LeaderPose(void) {
     unsigned char* const s = S();
-    const records::PartyMember* const l = rv::AsConst<records::PartyMember>(At(ObjTrio_addr));
+    const records::PartyMember* const l = &ObjTrio[0];
     s[0x24] = 1;
     rv::Store<unsigned>(rv::As<records::EffectObject>(s)->column, l->column);
     s[0x28] = 2;
@@ -1008,7 +1008,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         Touch("EffectKind3A_Hit", static_cast<signed char>(o));
         return 1;
     }
-    const int leader = SW(At(ObjTrio_addr + 0x3E));
+    const int leader = static_cast<std::int16_t>(ObjTrio[0].height_whole);
     if (leader - ground > 0x80) return 0;
     if (ground - leader > 0x100) return 1;
     s = rv::As<records::EffectObject>(S());
@@ -1071,7 +1071,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         e->height_whole = static_cast<U>(at_ground) + 0x100u;
         rv::Bytes(e)[0xB] = 0;
     }
-    ObjTrio[7] = 1;
+    rv::Bytes(ObjTrio)[0x7] = 1;
     return 1;
 }
 

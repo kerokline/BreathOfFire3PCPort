@@ -73,13 +73,13 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 // repointed - the thing these functions re-read after every call out.
 const std::uint32_t kWatch[] = {
     BattleWindows_MsgHead_addr, BattleActorCopies_QueueWrite_addr, BattleE1_MessageUp_addr, at::kBannerMask, 0x7E1BEC /* Input_Pressed */,
-    at::kMsgRing, at::kMsgRing + 1, at::kMsgRing + 8, at::kMsgRing + 9, at::kScratch,
+    at::kMsgRing, at::kMsgRing + 1, at::kMsgRing + 8, at::kMsgRing + 9, SharedScratch_addr,
 };
 void Disturb() {
     const std::uint32_t h = Hash();
     if (h % 3 == 0) return;
     if (h % 23 == 0) {
-        const std::uint32_t record = at::kRecords + ((h >> 8) % 22u) * 0x24u;
+        const std::uint32_t record = WindowRecords_addr + ((h >> 8) % 22u) * 0x24u;
         SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(record));
         return;
     }
@@ -234,7 +234,7 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kRecords, 0x318},       // the 22 window records
+    {WindowRecords_addr, 0x318}, // the 22 window records
     {BattleWinStates_Current_addr, 4}, // the record running (a pointer: Fix sets it)
     {BattleWindows_MsgHead_addr, 2}, // the ring's read and write indices
     {at::kMsgRing, 0x80},        // the ring's 16 entries
@@ -243,7 +243,7 @@ const Region kRegions[] = {
     {at::kBannerPool, 0x60},     // the banner pool's 8 entries
     {at::kBannerMask, 1},
     {0x7E1BEC, 2},               // Input_Pressed
-    {at::kScratch, 1},
+    {SharedScratch_addr, 1},
 };
 constexpr unsigned kRegionBytes = 0x318 + 4 + 2 + 0x80 + 1 + 4 + 0x60 + 1 + 2 + 1;
 
@@ -280,7 +280,7 @@ unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleWi
 
 // The indices put back inside the ring, the pool pointer inside the pool.
 void Fix() {
-    SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(at::kRecords + (Next() % 22u) * 0x24u));
+    SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(WindowRecords_addr + (Next() % 22u) * 0x24u));
     At(BattleWindows_MsgHead_addr)[0] = static_cast<unsigned char>(Next() & 0xF);
     At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>(Half() ? At(BattleWindows_MsgHead_addr)[0] : Next() & 0xF);
     SetLong(At(BattleMisc_BannerCurrent_addr), static_cast<std::int32_t>(at::kBannerPool + (Next() % 8u) * 0xCu));
@@ -398,7 +398,7 @@ bool Logged(const State& s, std::uint32_t what) {
 }
 unsigned CurrentSlot(const State& s) {
     const std::uint32_t record = static_cast<std::uint32_t>(Long(s.memory + 0x318));
-    return (record - at::kRecords) / 0x24u;
+    return (record - WindowRecords_addr) / 0x24u;
 }
 void Cover(unsigned k, const State& in, const State& out) {
     const unsigned slot = CurrentSlot(in);
@@ -524,7 +524,7 @@ void SelfTest() {
 
     bof3::Log("shadow      window_kinds self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "
               "%u MISMATCHES; the 22 window records, the current record, the message ring and its indices, 0x939F60, "
-              "the banner pool, its pointer and mask, Input_Pressed, DamageScratch's byte, the gauge's two records "
+              "the banner pool, its pointer and mask, Input_Pressed, SharedScratch's byte, the gauge's two records "
               "and the stand-ins' log compared",
               kRounds, static_cast<unsigned>(kCount), per[0], calls, bad);
     if (bad)

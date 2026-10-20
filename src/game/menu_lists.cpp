@@ -173,7 +173,7 @@ extern "C" void __cdecl FieldMenu_Open(void) {
         signed char i = 0;
         do {
             const unsigned member = At(Cond_Flags_addr + 0xd2 + static_cast<std::int32_t>(i))[0];
-            g.recalc_stats(At(at::kCharRecords + Character_IndexById[member] * at::kCharRecordSize));
+            g.recalc_stats(At(CharacterRecords_addr + Character_IndexById[member] * at::kCharRecordSize));
             i = static_cast<signed char>(i + 1);
         } while (static_cast<int>(i) < Field_MemberCount);
     }
@@ -197,7 +197,7 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     }
     MenuLists_PartyChanged = 0;
     for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const r = At(at::kCharRecords + 0x10 + i * at::kCharRecordSize);
+        unsigned char* const r = At(CharacterRecords_addr + 0x10 + i * at::kCharRecordSize);
         // r is the character record's +0x10, its status word (records::CharRecord, CharacterRecords 0x903A70)
         auto* const c = rv::As<records::CharRecord>(r - 0x10);
         if (static_cast<unsigned>(c->stats.max_hp >> 2) > c->hp) r[1] = static_cast<unsigned char>(r[1] | 0x20);
@@ -318,7 +318,7 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
     std::uint16_t i = 0;
     if (Members() != 0) {
         do {
-            At(at::kMemberPanels + 3 + static_cast<std::uint32_t>(i) * at::kRecordSize)[0] = state;
+            At(WindowRecords_addr + 0x90 + 3 + static_cast<std::uint32_t>(i) * at::kRecordSize)[0] = state;
             ++i;
         } while (i < static_cast<std::uint16_t>(Members()));
     }
@@ -346,7 +346,7 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
     unsigned char i = 0;
     if (Members() != 0) {
         do {
-            unsigned char* const r = At(at::kMemberPanels + i * at::kRecordSize);
+            unsigned char* const r = At(WindowRecords_addr + 0x90 + i * at::kRecordSize);
             r[0xA] = i;
             r[1] = 6;
             r[2] = 0;

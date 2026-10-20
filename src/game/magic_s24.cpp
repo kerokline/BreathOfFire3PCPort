@@ -75,7 +75,7 @@ inline void PutFloat(unsigned char* p, int v) {
 inline void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 inline void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 inline unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-inline unsigned char* TaskSlot(unsigned index) { return Mem(at::kTasks + (index & 0xFFu) * at::kTaskStride); }
+inline unsigned char* TaskSlot(unsigned index) { return Mem(BattleTask_Slots_addr + (index & 0xFFu) * at::kTaskStride); }
 inline unsigned char* Mote(unsigned index) { return Mem(cell::kMotePool + (index & 0xFFu) * cell::kMoteStride); }
 inline unsigned char* SparkRec(unsigned index) { return Mem(Fx106_SparkPool_addr + (index & 0xFFu) * cell::kSparkStride); }
 inline unsigned char* Spark() { return Pointer(Fx106_SparkCurrent_addr); }
@@ -95,13 +95,17 @@ void CentreOnTargets() { MH_CALL(MagicFx_CenterOnSide)(); }
 void TurnByFacing(unsigned char* task) { MH_AT(TurnFn, magic_s24::kTurnByFacing)(task); }
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 
-// The scratch words (DamageScratch): radii at +0 / +2, then colours or angles.
-constexpr std::uint32_t kR = cell::kScratch, kR2 = cell::kScratch + 2;
-constexpr std::uint32_t kW4 = cell::kScratch + 4, kW6 = cell::kScratch + 6, kW8 = cell::kScratch + 8;
+// The scratch words (SharedScratch): radii at +0 / +2, then colours or angles.
+// kR: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kR2 = SharedScratch_addr + 2;
+constexpr std::uint32_t kW4 = SharedScratch_addr + 4, kW6 = SharedScratch_addr + 6, kW8 = SharedScratch_addr + 8;
 // kWC: now Scratch_Swap (symbols.toml).
-constexpr std::uint32_t kWA = cell::kScratch + 0xA, kWE = cell::kScratch + 0xE;
+constexpr std::uint32_t kWA = SharedScratch_addr + 0xA, kWE = SharedScratch_addr + 0xE;
 // The four SVECTORs of Prim_VertexScratch, as the originals name them: a (+0), b (+8), c (+0x10), d (+0x18).
-constexpr std::uint32_t kA = Prim_VertexScratch_addr, kB = Prim_VertexScratch_addr + 8, kC = Prim_VertexScratch_addr + 0x10, kD = Prim_VertexScratch_addr + 0x18;
+// kA: now Prim_VertexScratch (symbols.toml).
+// kB: now Prim_VertexScratch[1] (symbols.toml).
+// kC: now Prim_VertexScratch[2] (symbols.toml).
+// kD: now Prim_VertexScratch[3] (symbols.toml).
 
 const short* Vec(std::uint32_t address) { return reinterpret_cast<const short*>(Mem(address)); }
 float* Xy(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*>(prim + offset); }
@@ -110,12 +114,12 @@ float* Xy(unsigned char* prim, unsigned offset) { return reinterpret_cast<float*
 // the primitive's four points, then its depth.
 void Project4(unsigned char* p) {
     long depth;
-    MH_CALL(Gte_RotTransPers4)(Vec(kA), Vec(kB), Vec(kC), Vec(kD), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), Xy(p, 0x38), &depth);
+    MH_CALL(Gte_RotTransPers4)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), Vec(Prim_VertexScratch_addr + 0x18), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), Xy(p, 0x38), &depth);
     MH_CALL(Gte_PrimDepths4_10B)(p);
 }
 void Project3(unsigned char* p) {
     long depth;
-    MH_CALL(Gte_RotTransPers3)(Vec(kA), Vec(kB), Vec(kC), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), &depth);
+    MH_CALL(Gte_RotTransPers3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10B)(p);
 }
 
@@ -307,13 +311,13 @@ S24_EXPORT void __cdecl Fx104_WhirlEnd(void) {
 // fade by +0xA, else the primitive's colour bytes left as they are.
 S24_EXPORT void __cdecl Fx104_DrawFunnel(void) {
     const unsigned char* sc = Sprite_Current;
-    Put16(kR, sc[9] * 30);
-    if (sc[2] > 1) Put16(kR, (sc[9] + 8) * 15);
+    Put16(SharedScratch_addr, sc[9] * 30);
+    if (sc[2] > 1) Put16(SharedScratch_addr, (sc[9] + 8) * 15);
     int rows = 0x18;
-    Put16(kW4, 0x18);
+    Put16(SharedScratch_addr + 0x4, 0x18);
     if (sc[2] > 1) {
         rows = 0x18 - (static_cast<int>(sc[9]) - 8) / 2;
-        Put16(kW4, rows);
+        Put16(SharedScratch_addr + 0x4, rows);
     }
     rows = static_cast<short>(rows);
     if (rows <= 0x10) return;
@@ -322,56 +326,56 @@ S24_EXPORT void __cdecl Fx104_DrawFunnel(void) {
     do {
         const int lo = top - 0x80;
         int t = Cos(lo);
-        t = Mul(t, G16(kR)) >> 12;
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
         t = Mul(t, Sin(0)) >> 12;
-        Put16(kB, t);
+        Put16(Prim_VertexScratch_addr + 0x8, t);
         t = Cos(lo);
-        t = Mul(t, G16(kR)) >> 12;
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
         t = Mul(t, Cos(0)) >> 12;
-        Put16(kB + 2, t);
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, t);
         t = Sin(lo);
-        t = Mul(t, G16(kR)) >> 12;
-        Put16(kA + 4, t);
-        Put16(kB + 4, t);
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
+        Put16(Prim_VertexScratch_addr + 4, t);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, t);
         t = Cos(top);
-        t = Mul(t, G16(kR)) >> 12;
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
         t = Mul(t, Sin(0)) >> 12;
-        Put16(kD, t);
+        Put16(Prim_VertexScratch_addr + 0x18, t);
         t = Cos(top);
-        t = Mul(t, G16(kR)) >> 12;
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
         t = Mul(t, Cos(0)) >> 12;
-        Put16(kD + 2, t);
+        Put16(Prim_VertexScratch_addr + 0x18 + 2, t);
         t = Sin(top);
-        t = Mul(t, G16(kR)) >> 12;
-        Put16(kC + 4, t);
-        Put16(kD + 4, t);
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
+        Put16(Prim_VertexScratch_addr + 0x10 + 4, t);
+        Put16(Prim_VertexScratch_addr + 0x18 + 4, t);
         int column = 1;
         for (int angle = 0x100; angle < 0x1100; angle += 0x100, ++column) {
-            Put16(kA, G16(kB));
-            Put16(kA + 2, G16(kB + 2));
+            Put16(Prim_VertexScratch_addr, G16(Prim_VertexScratch_addr + 0x8));
+            Put16(Prim_VertexScratch_addr + 2, G16(Prim_VertexScratch_addr + 0x8 + 2));
             t = Cos(lo);
-            t = Mul(t, G16(kR)) >> 12;
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
             t = Mul(t, Sin(angle)) >> 12;
-            Put16(kB, t);
+            Put16(Prim_VertexScratch_addr + 0x8, t);
             t = Cos(lo);
-            t = Mul(t, G16(kR)) >> 12;
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
             t = Mul(t, Cos(angle)) >> 12;
-            const short d0 = G16(kD), d2 = G16(kD + 2);
-            Put16(kB + 2, t);
-            Put16(kC, d0);
-            Put16(kC + 2, d2);
+            const short d0 = G16(Prim_VertexScratch_addr + 0x18), d2 = G16(Prim_VertexScratch_addr + 0x18 + 2);
+            Put16(Prim_VertexScratch_addr + 0x8 + 2, t);
+            Put16(Prim_VertexScratch_addr + 0x10, d0);
+            Put16(Prim_VertexScratch_addr + 0x10 + 2, d2);
             t = Cos(top);
-            t = Mul(t, G16(kR)) >> 12;
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
             t = Mul(t, Sin(angle)) >> 12;
-            Put16(kD, t);
+            Put16(Prim_VertexScratch_addr + 0x18, t);
             t = Cos(top);
-            t = Mul(t, G16(kR)) >> 12;
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
             t = Mul(t, Cos(angle)) >> 12;
-            const short dx = G16(kD);
+            const short dx = G16(Prim_VertexScratch_addr + 0x18);
             const unsigned char* const s = Sprite_Current;
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             unsigned char* const mode = Gfx_PacketNext;
-            Put16(kD + 2, t);
+            Put16(Prim_VertexScratch_addr + 0x18 + 2, t);
             const std::int32_t x = Add(Shl(dx, 9), ts->x);
             const std::int32_t z = Add(Shl(static_cast<short>(t), 9), ts->z);
             MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0xB5, 0);
@@ -472,32 +476,32 @@ S24_EXPORT void __cdecl Fx104_PushMatrix(void) {
 S24_EXPORT void __cdecl Fx104_DrawDisc(void) {
     int t = Cos(0x800);
     t = Mul(Mul(t, Sprite_Current[9]), 30) >> 12;
-    Put16(kR, t);
+    Put16(SharedScratch_addr, t);
     t = Sin(0);
-    Put16(kC, Mul(t, G16(kR)) >> 12);
+    Put16(Prim_VertexScratch_addr + 0x10, Mul(t, G16(SharedScratch_addr)) >> 12);
     t = Cos(0);
-    t = Mul(t, G16(kR)) >> 12;
-    Put16(kC + 2, t);
+    t = Mul(t, G16(SharedScratch_addr)) >> 12;
+    Put16(Prim_VertexScratch_addr + 0x10 + 2, t);
     short rim2 = static_cast<short>(t);
     for (int angle = 0x100; angle < 0x2100; angle += 0x100) {
-        if (angle != 0x100) rim2 = G16(kC + 2);
-        const short rim0 = G16(kC);
-        Put16(kA, 0);
-        Put16(kA + 2, 0);
-        Put16(kA + 4, 0);
-        Put16(kB, rim0);
-        Put16(kB + 2, rim2);
-        Put16(kB + 4, 0);
+        if (angle != 0x100) rim2 = G16(Prim_VertexScratch_addr + 0x10 + 2);
+        const short rim0 = G16(Prim_VertexScratch_addr + 0x10);
+        Put16(Prim_VertexScratch_addr, 0);
+        Put16(Prim_VertexScratch_addr + 2, 0);
+        Put16(Prim_VertexScratch_addr + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x8, rim0);
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, rim2);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
         t = Sin(angle);
-        Put16(kC, Mul(t, G16(kR)) >> 12);
+        Put16(Prim_VertexScratch_addr + 0x10, Mul(t, G16(SharedScratch_addr)) >> 12);
         t = Cos(angle);
-        t = Mul(t, G16(kR));
-        const short c0 = G16(kC);
+        t = Mul(t, G16(SharedScratch_addr));
+        const short c0 = G16(Prim_VertexScratch_addr + 0x10);
         const unsigned char* const s = Sprite_Current;
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        Put16(kC + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
         t >>= 12;
-        Put16(kC + 2, t);
+        Put16(Prim_VertexScratch_addr + 0x10 + 2, t);
         const std::int32_t x = Add(c0 >> 9, ts->x);
         const std::int32_t z = Add(static_cast<short>(t) >> 9, ts->z);
         DrawMode(0x35);
@@ -508,9 +512,9 @@ S24_EXPORT void __cdecl Fx104_DrawDisc(void) {
         const unsigned char* const s2 = Sprite_Current;
         if (s2[2] == 3) {
             const int v = 0x41 - (s2[0xA] << 3);
-            Put16(kW6, v);
+            Put16(SharedScratch_addr + 0x6, v);
             p[4] = static_cast<unsigned char>(v);
-            p[5] = Mem(kW6)[0];
+            p[5] = Mem(SharedScratch_addr + 0x6)[0];
         } else {
             p[4] = 0x40;
             p[5] = 0x40;
@@ -532,56 +536,56 @@ S24_EXPORT void __cdecl Fx104_DrawDisc(void) {
 S24_EXPORT void __cdecl Fx104_DrawRing(void) {
     int t = Cos(0x800);
     t = Mul(Mul(t, Sprite_Current[9] + 1), 34) >> 12;
-    Put16(kR, t);
+    Put16(SharedScratch_addr, t);
     t = Cos(0x800);
     t = Mul(Mul(t, Sprite_Current[9]), 34) >> 12;
-    Put16(kR2, t);
+    Put16(SharedScratch_addr + 0x2, t);
     t = Sin(0);
-    Put16(kB, Mul(t, G16(kR)) >> 12);
+    Put16(Prim_VertexScratch_addr + 0x8, Mul(t, G16(SharedScratch_addr)) >> 12);
     t = Cos(0);
-    Put16(kB + 2, Mul(t, G16(kR)) >> 12);
+    Put16(Prim_VertexScratch_addr + 0x8 + 2, Mul(t, G16(SharedScratch_addr)) >> 12);
     t = Sin(0);
-    Put16(kD, Mul(t, G16(kR2)) >> 12);
+    Put16(Prim_VertexScratch_addr + 0x18, Mul(t, G16(SharedScratch_addr + 0x2)) >> 12);
     t = Cos(0);
-    Put16(kD + 2, Mul(t, G16(kR2)) >> 12);
+    Put16(Prim_VertexScratch_addr + 0x18 + 2, Mul(t, G16(SharedScratch_addr + 0x2)) >> 12);
     DrawMode(0x35);
     MH_CALL(Gfx_CommitPrim)(5, 0xC);
     for (int angle = 0x100; angle < 0x2100; angle += 0x100) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        const short b0 = G16(kB), b2 = G16(kB + 2);
-        Put16(kA, b0);
-        Put16(kA + 2, b2);
-        Put16(kA + 4, 0);
+        const short b0 = G16(Prim_VertexScratch_addr + 0x8), b2 = G16(Prim_VertexScratch_addr + 0x8 + 2);
+        Put16(Prim_VertexScratch_addr, b0);
+        Put16(Prim_VertexScratch_addr + 2, b2);
+        Put16(Prim_VertexScratch_addr + 4, 0);
         t = Sin(angle);
-        Put16(kB, Mul(t, G16(kR)) >> 12);
+        Put16(Prim_VertexScratch_addr + 0x8, Mul(t, G16(SharedScratch_addr)) >> 12);
         t = Cos(angle);
-        t = Mul(t, G16(kR)) >> 12;
-        const short d2 = G16(kD + 2);
-        Put16(kB + 2, t);
-        const short d0 = G16(kD);
-        Put16(kB + 4, 0);
-        Put16(kC, d0);
-        Put16(kC + 2, d2);
-        Put16(kC + 4, 0);
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
+        const short d2 = G16(Prim_VertexScratch_addr + 0x18 + 2);
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, t);
+        const short d0 = G16(Prim_VertexScratch_addr + 0x18);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x10, d0);
+        Put16(Prim_VertexScratch_addr + 0x10 + 2, d2);
+        Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
         t = Sin(angle);
-        Put16(kD, Mul(t, G16(kR2)) >> 12);
+        Put16(Prim_VertexScratch_addr + 0x18, Mul(t, G16(SharedScratch_addr + 0x2)) >> 12);
         t = Cos(angle);
-        t = Mul(t, G16(kR2));
+        t = Mul(t, G16(SharedScratch_addr + 0x2));
         const unsigned char* const s = Sprite_Current;
-        Put16(kD + 4, 0);
-        Put16(kD + 2, t >> 12);
+        Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x18 + 2, t >> 12);
         const unsigned char size = s[9];
         if (size > 8) {
             const int v = 0x31 - (size << 1);
-            Put16(kW6, v);
+            Put16(SharedScratch_addr + 0x6, v);
             p[4] = static_cast<unsigned char>(v);
-            p[5] = Mem(kW6)[0];
-            p[6] = Mem(kW6)[0];
-            p[0x14] = Mem(kW6)[0];
-            p[0x15] = Mem(kW6)[0];
-            p[0x16] = Mem(kW6)[0];
+            p[5] = Mem(SharedScratch_addr + 0x6)[0];
+            p[6] = Mem(SharedScratch_addr + 0x6)[0];
+            p[0x14] = Mem(SharedScratch_addr + 0x6)[0];
+            p[0x15] = Mem(SharedScratch_addr + 0x6)[0];
+            p[0x16] = Mem(SharedScratch_addr + 0x6)[0];
         } else {
             p[4] = p[5] = p[6] = 0x20;
             p[0x14] = p[0x15] = p[0x16] = 0x20;
@@ -640,64 +644,64 @@ S24_EXPORT void __cdecl Fx104_BurstShrink(void) {
 // (0x400 .. 0xB00, step 0x100) of eight POLY_G4 (longitude 0x200 .. 0x1000,
 // step 0x200), draw mode 0xB5, colour +9 * 24 + 1 twice and +9 * 16 + 1.
 S24_EXPORT void __cdecl Fx104_DrawSphere(void) {
-    Put16(kR, Sprite_Current[9] << 3);
+    Put16(SharedScratch_addr, Sprite_Current[9] << 3);
     int lat = 0x400;
     int next;
     do {
         int t = Cos(lat);
-        t = Mul(t, G16(kR)) >> 12;
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
         t = Mul(t, Sin(0)) >> 12;
-        Put16(kB, t);
+        Put16(Prim_VertexScratch_addr + 0x8, t);
         t = Cos(lat);
-        t = Mul(t, G16(kR)) >> 12;
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
         t = Mul(t, Cos(0)) >> 12;
-        Put16(kB + 2, t);
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, t);
         t = Sin(lat);
-        Put16(kB + 4, Mul(t, G16(kR)) >> 12);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, Mul(t, G16(SharedScratch_addr)) >> 12);
         next = lat + 0x100;
         t = Cos(next);
-        t = Mul(t, G16(kR)) >> 12;
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
         t = Mul(t, Sin(0)) >> 12;
-        Put16(kD, t);
+        Put16(Prim_VertexScratch_addr + 0x18, t);
         t = Cos(next);
-        t = Mul(t, G16(kR)) >> 12;
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
         t = Mul(t, Cos(0)) >> 12;
-        Put16(kD + 2, t);
+        Put16(Prim_VertexScratch_addr + 0x18 + 2, t);
         t = Sin(next);
-        Put16(kD + 4, Mul(t, G16(kR)) >> 12);
+        Put16(Prim_VertexScratch_addr + 0x18 + 4, Mul(t, G16(SharedScratch_addr)) >> 12);
         for (int lon = 0x200; lon < 0x1200; lon += 0x200) {
-            const short b0 = G16(kB), b2 = G16(kB + 2), b4 = G16(kB + 4);
-            Put16(kA, b0);
-            Put16(kA + 2, b2);
-            Put16(kA + 4, b4);
+            const short b0 = G16(Prim_VertexScratch_addr + 0x8), b2 = G16(Prim_VertexScratch_addr + 0x8 + 2), b4 = G16(Prim_VertexScratch_addr + 0x8 + 4);
+            Put16(Prim_VertexScratch_addr, b0);
+            Put16(Prim_VertexScratch_addr + 2, b2);
+            Put16(Prim_VertexScratch_addr + 4, b4);
             t = Cos(lat);
-            t = Mul(t, G16(kR)) >> 12;
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
             t = Mul(t, Sin(lon)) >> 12;
-            Put16(kB, t);
+            Put16(Prim_VertexScratch_addr + 0x8, t);
             t = Cos(lat);
-            t = Mul(t, G16(kR)) >> 12;
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
             t = Mul(t, Cos(lon)) >> 12;
-            Put16(kB + 2, t);
+            Put16(Prim_VertexScratch_addr + 0x8 + 2, t);
             t = Sin(lat);
-            t = Mul(t, G16(kR)) >> 12;
-            const short d0 = G16(kD), d4 = G16(kD + 4);
-            Put16(kB + 4, t);
-            const short d2 = G16(kD + 2);
-            Put16(kC, d0);
-            Put16(kC + 2, d2);
-            Put16(kC + 4, d4);
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
+            const short d0 = G16(Prim_VertexScratch_addr + 0x18), d4 = G16(Prim_VertexScratch_addr + 0x18 + 4);
+            Put16(Prim_VertexScratch_addr + 0x8 + 4, t);
+            const short d2 = G16(Prim_VertexScratch_addr + 0x18 + 2);
+            Put16(Prim_VertexScratch_addr + 0x10, d0);
+            Put16(Prim_VertexScratch_addr + 0x10 + 2, d2);
+            Put16(Prim_VertexScratch_addr + 0x10 + 4, d4);
             t = Cos(next);
-            t = Mul(t, G16(kR)) >> 12;
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
             t = Mul(t, Sin(lon)) >> 12;
-            Put16(kD, t);
+            Put16(Prim_VertexScratch_addr + 0x18, t);
             t = Cos(next);
-            t = Mul(t, G16(kR)) >> 12;
+            t = Mul(t, G16(SharedScratch_addr)) >> 12;
             t = Mul(t, Cos(lon)) >> 12;
-            Put16(kD + 2, t);
+            Put16(Prim_VertexScratch_addr + 0x18 + 2, t);
             t = Sin(next);
-            t = Mul(t, G16(kR));
-            const short dx = G16(kD), dz = G16(kD + 2);
-            Put16(kD + 4, t >> 12);
+            t = Mul(t, G16(SharedScratch_addr));
+            const short dx = G16(Prim_VertexScratch_addr + 0x18), dz = G16(Prim_VertexScratch_addr + 0x18 + 2);
+            Put16(Prim_VertexScratch_addr + 0x18 + 4, t >> 12);
             const unsigned char* const s = Sprite_Current;
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             const std::int32_t x = Add(Shl(dx, 9), ts->x);
@@ -909,54 +913,54 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
     const std::uint32_t colours = Fx105_OrbColours_addr + 3u * sc[4];
     for (unsigned j = 0; j < 6; ++j) {
         const unsigned char c = Mem(colours + j)[0];
-        Put16(kW4 + 2 * j, c - (c >> 6) * sc[0xA]);
+        Put16(SharedScratch_addr + 0x4 + 2 * j, c - (c >> 6) * sc[0xA]);
     }
     int t = Sin(tsc->step_x);
-    Put16(kA, Shl(t, 6) >> 12);
+    Put16(Prim_VertexScratch_addr, Shl(t, 6) >> 12);
     t = Cos(rv::Current<records::BattleTask>()->step_x);
     const unsigned char* s = Sprite_Current;
-    Put16(kA + 2, Shl(t, 6) >> 12);
-    Put16(kA + 4, 0);
+    Put16(Prim_VertexScratch_addr + 2, Shl(t, 6) >> 12);
+    Put16(Prim_VertexScratch_addr + 4, 0);
     t = Sin(rv::As<records::BattleTask>(s)->step_z);
-    Put16(kB, Shl(t, 6) >> 12);
+    Put16(Prim_VertexScratch_addr + 0x8, Shl(t, 6) >> 12);
     t = Cos(rv::Current<records::BattleTask>()->step_z);
-    Put16(kB + 2, Shl(t, 6) >> 12);
-    Put16(kB + 4, 0);
+    Put16(Prim_VertexScratch_addr + 0x8 + 2, Shl(t, 6) >> 12);
+    Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
     if (Sprite_Current[9] + 1 <= 1) return;
     int step = 0x40;
     for (int band = 1; band < Sprite_Current[9] + 1; ++band, step += 0x40) {
         t = Sin(step);
-        const short a0 = G16(kA);
+        const short a0 = G16(Prim_VertexScratch_addr);
         const int dz = -(Shl(Mul(t, 3), 7) >> 12);
-        Put16(kC, a0);
-        const short b0 = G16(kB);
-        Put16(kR2, dz);
-        const short a2 = G16(kA + 2);
-        Put16(kR, (band + 1) << 6);
-        const short a4 = G16(kA + 4);
-        Put16(kC + 2, a2);
-        const short b2 = G16(kB + 2);
-        Put16(kC + 4, a4);
-        const short b4 = G16(kB + 4);
-        Put16(kD, b0);
+        Put16(Prim_VertexScratch_addr + 0x10, a0);
+        const short b0 = G16(Prim_VertexScratch_addr + 0x8);
+        Put16(SharedScratch_addr + 0x2, dz);
+        const short a2 = G16(Prim_VertexScratch_addr + 2);
+        Put16(SharedScratch_addr, (band + 1) << 6);
+        const short a4 = G16(Prim_VertexScratch_addr + 4);
+        Put16(Prim_VertexScratch_addr + 0x10 + 2, a2);
+        const short b2 = G16(Prim_VertexScratch_addr + 0x8 + 2);
+        Put16(Prim_VertexScratch_addr + 0x10 + 4, a4);
+        const short b4 = G16(Prim_VertexScratch_addr + 0x8 + 4);
+        Put16(Prim_VertexScratch_addr + 0x18, b0);
         s = Sprite_Current;
-        Put16(kD + 2, b2);
-        Put16(kD + 4, b4);
+        Put16(Prim_VertexScratch_addr + 0x18 + 2, b2);
+        Put16(Prim_VertexScratch_addr + 0x18 + 4, b4);
         t = Sin(rv::As<records::BattleTask>(s)->step_x);
-        Put16(kA, Mul(t, G16(kR)) >> 12);
+        Put16(Prim_VertexScratch_addr, Mul(t, G16(SharedScratch_addr)) >> 12);
         t = Cos(rv::Current<records::BattleTask>()->step_x);
-        t = Mul(t, G16(kR)) >> 12;
-        const short h = G16(kR2);
-        Put16(kA + 2, t);
-        Put16(kA + 4, h);
+        t = Mul(t, G16(SharedScratch_addr)) >> 12;
+        const short h = G16(SharedScratch_addr + 0x2);
+        Put16(Prim_VertexScratch_addr + 2, t);
+        Put16(Prim_VertexScratch_addr + 4, h);
         t = Sin(rv::Current<records::BattleTask>()->step_z);
-        Put16(kB, Mul(t, G16(kR)) >> 12);
+        Put16(Prim_VertexScratch_addr + 0x8, Mul(t, G16(SharedScratch_addr)) >> 12);
         t = Cos(rv::Current<records::BattleTask>()->step_z);
-        t = Mul(t, G16(kR));
-        const short ax = G16(kA), az = G16(kA + 2);
+        t = Mul(t, G16(SharedScratch_addr));
+        const short ax = G16(Prim_VertexScratch_addr), az = G16(Prim_VertexScratch_addr + 2);
         unsigned char* const mode = Gfx_PacketNext;
-        Put16(kB + 2, t >> 12);
-        Put16(kB + 4, G16(kR2));
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, t >> 12);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, G16(SharedScratch_addr + 0x2));
         s = Sprite_Current;
         const std::int32_t x = Add(Shl(ax, 9), rv::As<records::BattleTask>(s)->x);
         const std::int32_t z = Add(Shl(az, 9), rv::As<records::BattleTask>(s)->z);
@@ -965,16 +969,16 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        p[4] = Mem(kW4)[0];
-        p[5] = Mem(kW6)[0];
-        p[6] = Mem(kW8)[0];
-        p[0x14] = Mem(kWA)[0];
+        p[4] = Mem(SharedScratch_addr + 0x4)[0];
+        p[5] = Mem(SharedScratch_addr + 0x6)[0];
+        p[6] = Mem(SharedScratch_addr + 0x8)[0];
+        p[0x14] = Mem(SharedScratch_addr + 0xa)[0];
         p[0x15] = Mem(Scratch_Swap_addr)[0];
         p[0x16] = Mem(kWE)[0];
-        p[0x24] = Mem(kW4)[0];
-        p[0x25] = Mem(kW6)[0];
-        p[0x26] = Mem(kW8)[0];
-        p[0x34] = Mem(kWA)[0];
+        p[0x24] = Mem(SharedScratch_addr + 0x4)[0];
+        p[0x25] = Mem(SharedScratch_addr + 0x6)[0];
+        p[0x26] = Mem(SharedScratch_addr + 0x8)[0];
+        p[0x34] = Mem(SharedScratch_addr + 0xa)[0];
         p[0x35] = Mem(Scratch_Swap_addr)[0];
         p[0x36] = Mem(kWE)[0];
         Project4(p);
@@ -1012,15 +1016,15 @@ S24_EXPORT void __cdecl Fx105_MoteRun(void) {
 S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     int t = Sin(Sprite_Current[9] << 6);
     unsigned char* sc = Sprite_Current;
-    Put16(kR2, Shl(Mul(t, 3), 7) >> 11);
-    Put16(kR, (sc[9] + 1) << 6);
+    Put16(SharedScratch_addr + 0x2, Shl(Mul(t, 3), 7) >> 11);
+    Put16(SharedScratch_addr, (sc[9] + 1) << 6);
     t = Sin(rv::As<records::BattleTask>(sc)->step_z);
-    t = (Mul(t, G16(kR)) >> 3);
+    t = (Mul(t, G16(SharedScratch_addr)) >> 3);
     rv::Store(rv::Current<records::BattleTask>()->x, Add(t, rv::As<records::SpriteHead>(Owner())->x));
     t = Cos(rv::Current<records::BattleTask>()->step_z);
-    t = (Mul(t, G16(kR)) >> 3);
+    t = (Mul(t, G16(SharedScratch_addr)) >> 3);
     rv::Store(rv::Current<records::BattleTask>()->z, Add(t, rv::As<records::SpriteHead>(Owner())->z));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + Word(Mem(kR2)) - 0x20u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + Word(Mem(SharedScratch_addr + 0x2)) - 0x20u);
     sc = Sprite_Current;
     const long ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(sc)->x, rv::As<records::BattleTask>(sc)->z);
     rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<short>(ground));
@@ -1231,15 +1235,15 @@ S24_EXPORT void __cdecl Fx106_SparkDelay(void) {
     Drop(k[0xA]);
     k = Spark();
     if (k[0xA] != 0) return;
-    Put16(kR, ((k[4] >> 5) + 6) << 4);
+    Put16(SharedScratch_addr, ((k[4] >> 5) + 6) << 4);
     const int angle = (k[4] & 0x1F) << 7;
-    Put16(kW4, angle);
+    Put16(SharedScratch_addr + 0x4, angle);
     int t = Sin(static_cast<short>(angle));
-    SetLong(Spark() + 0x10, Add(Mul(t, G16(kR)), rv::As<records::SpriteHead>(Owner())->x));
-    t = Cos(G16(kW4));
-    SetLong(Spark() + 0x14, Add(Mul(t, G16(kR)), rv::As<records::SpriteHead>(Owner())->z));
+    SetLong(Spark() + 0x10, Add(Mul(t, G16(SharedScratch_addr)), rv::As<records::SpriteHead>(Owner())->x));
+    t = Cos(G16(SharedScratch_addr + 0x4));
+    SetLong(Spark() + 0x14, Add(Mul(t, G16(SharedScratch_addr)), rv::As<records::SpriteHead>(Owner())->z));
     SetLong(Spark() + 0x18, rv::As<records::SpriteHead>(Owner())->height);
-    SetWord(Spark() + 0xE, Word(Mem(kW4)));
+    SetWord(Spark() + 0xE, Word(Mem(SharedScratch_addr + 0x4)));
     for (unsigned c = 5; c <= 7; ++c) {
         const int r = MH_CALL(Rand)();
         Spark()[c] = static_cast<unsigned char>((r & 7) + 5);
@@ -1250,7 +1254,7 @@ S24_EXPORT void __cdecl Fx106_SparkDelay(void) {
     Spark()[0xA] = static_cast<unsigned char>((r & 3) << 3);
     r = MH_CALL(Rand)();
     Spark()[0xB] = static_cast<unsigned char>(r);
-    SetWord(Spark() + 0xC, Word(Mem(kR)));
+    SetWord(Spark() + 0xC, Word(Mem(SharedScratch_addr)));
     Bump(Spark()[2]);
 }
 
@@ -1358,43 +1362,43 @@ S24_EXPORT void __cdecl Fx106_DrawSpark(void) {
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(k + 0x10)), static_cast<unsigned long>(Long(k + 0x14)), 2,
                                 0xC);
     k = Spark();
-    Put16(kWA, k[5] * k[9]);
+    Put16(SharedScratch_addr + 0xa, k[5] * k[9]);
     Put16(Scratch_Swap_addr, k[6] * k[9]);
     Put16(kWE, k[7] * k[9]);
-    Put16(kA + 4, 0);
-    Put16(kA + 2, 0);
-    Put16(kA, 0);
+    Put16(Prim_VertexScratch_addr + 4, 0);
+    Put16(Prim_VertexScratch_addr + 2, 0);
+    Put16(Prim_VertexScratch_addr, 0);
     for (unsigned j = 0; j < 4; ++j) {
         k = Spark();
-        Put16(kR, G16(Fx106_ShardTables_addr + 2 * j));
-        Put16(kR2, G16(Fx106_ShardTables_addr + 8 + 2 * j));
-        Put16(kW4, G16(Fx106_ShardTables_addr + 0x10 + 2 * j));
+        Put16(SharedScratch_addr, G16(Fx106_ShardTables_addr + 2 * j));
+        Put16(SharedScratch_addr + 0x2, G16(Fx106_ShardTables_addr + 8 + 2 * j));
+        Put16(SharedScratch_addr + 0x4, G16(Fx106_ShardTables_addr + 0x10 + 2 * j));
         unsigned char* const p = Gfx_PacketNext;
-        Put16(kW6, G16(Fx106_ShardTables_addr + 0x18 + 2 * j));
+        Put16(SharedScratch_addr + 0x6, G16(Fx106_ShardTables_addr + 0x18 + 2 * j));
         const unsigned char tilt = Mem(Fx106_ShardTables_addr + 0x20 + j)[0];
-        Put16(kW8, ((k[0xB] + tilt) & 0xF) << 8);
+        Put16(SharedScratch_addr + 0x8, ((k[0xB] + tilt) & 0xF) << 8);
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        int t = Sin(G16(kW4));
-        Put16(kB, Mul(t, G16(kR)) >> 12);
-        t = Cos(G16(kW4));
-        Put16(kB + 2, Mul(t, G16(kR)) >> 12);
-        t = Sin(G16(kW6));
-        Put16(kC, Mul(t, G16(kR2)) >> 12);
-        t = Cos(G16(kW6));
-        Put16(kC + 2, Mul(t, G16(kR2)) >> 12);
-        t = Sin(G16(kW8));
+        int t = Sin(G16(SharedScratch_addr + 0x4));
+        Put16(Prim_VertexScratch_addr + 0x8, Mul(t, G16(SharedScratch_addr)) >> 12);
+        t = Cos(G16(SharedScratch_addr + 0x4));
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, Mul(t, G16(SharedScratch_addr)) >> 12);
+        t = Sin(G16(SharedScratch_addr + 0x6));
+        Put16(Prim_VertexScratch_addr + 0x10, Mul(t, G16(SharedScratch_addr + 0x2)) >> 12);
+        t = Cos(G16(SharedScratch_addr + 0x6));
+        Put16(Prim_VertexScratch_addr + 0x10 + 2, Mul(t, G16(SharedScratch_addr + 0x2)) >> 12);
+        t = Sin(G16(SharedScratch_addr + 0x8));
         t = Shl(t, 5) >> 12;
-        Put16(kB + 4, t);
-        Put16(kC + 4, t);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, t);
+        Put16(Prim_VertexScratch_addr + 0x10 + 4, t);
         Project3(p);
         p[4] = Mem(kWE)[0];
         p[5] = Mem(Scratch_Swap_addr)[0];
-        p[6] = Mem(kWA)[0];
-        p[0x14] = Mem(kWA)[0];
+        p[6] = Mem(SharedScratch_addr + 0xa)[0];
+        p[0x14] = Mem(SharedScratch_addr + 0xa)[0];
         p[0x15] = Mem(Scratch_Swap_addr)[0];
         p[0x16] = Mem(kWE)[0];
-        p[0x24] = Mem(kWA)[0];
+        p[0x24] = Mem(SharedScratch_addr + 0xa)[0];
         p[0x25] = Mem(Scratch_Swap_addr)[0];
         p[0x26] = Mem(kWE)[0];
         k = Spark();

@@ -389,7 +389,7 @@ const mh::Region kRegions[] = {
     {0x80F980, 0x20},     // CLUT row 2
     {0x812980, 0x200},    // CLUT row 26
     {0x9037A0, 0x20},     // Prim_VertexScratch
-    {0x903850, 0x10},     // DamageScratch: the radius, the angle, the shade and the rgb words
+    {0x903850, 0x10},     // SharedScratch: the radius, the angle, the shade and the rgb words
     {0x9039D8, 4},        // the frame-offset table pointer
     {0x904B80, 4},        // the ability id
     {0x68C0B8, 0x2100},   // ReviveMote_Pool

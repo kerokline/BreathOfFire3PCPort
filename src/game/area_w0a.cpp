@@ -157,9 +157,9 @@ extern "C" void __cdecl Area01_SpawnEffectB(void) {
     if (Mem(at::kVar5)[0] <= 6) return;
     if ((Frame_Counter & 7u) != 0) return;
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    Mem(at::kEffectSlot)[0] = slot;
+    Mem(SharedScratch_addr)[0] = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(at::kEffectSlot))));
+    unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(SharedScratch_addr))));
     e[0] = 1;
     e[5] = 0xB;
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_1c, 5);
@@ -348,10 +348,10 @@ extern "C" void __cdecl Area08_OpenMessage56(void) {
 // kept at 0x903850 and read back from it.
 extern "C" void __cdecl Area08_SpawnEffect54(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    Mem(at::kEffectSlot)[0] = slot;
+    Mem(SharedScratch_addr)[0] = slot;
     if (slot == 0xFF) return;
     const unsigned char member = ObjectIndex(Field_ActiveMember);
-    unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(at::kEffectSlot))));
+    unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(SharedScratch_addr))));
     e[0] = 1;
     e[5] = 0x54;
     e[0xB] = member;

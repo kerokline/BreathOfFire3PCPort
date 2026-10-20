@@ -41,7 +41,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The scratch the overlay keeps its working values in: DamageScratch's words
+// The scratch the overlay keeps its working values in: SharedScratch's words
 // (0x903850..0x90385F) and the three SVECTORs of Prim_VertexScratch
 // (0x9037A0..0x9037B7). Both are read again after every call, as the
 // originals read them.
@@ -58,10 +58,10 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* M() { return SuddenDeath_CurrentMote; }
 unsigned char* MoteAt(unsigned i) { return SuddenDeath_Motes + i * kMoteStride; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
@@ -75,12 +75,12 @@ std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
 // `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
 int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)) >> 12; }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3.
 unsigned char* ActorRecord(unsigned a) {
     if (a < 3) return Mem(ObjTrio_addr + a * at::kPartyStride);
-    return Mem(at::kEnemies + (a - 3) * at::kEnemyStride);
+    return Mem(Battle_Enemies_addr + (a - 3) * at::kEnemyStride);
 }
 
 unsigned RandByte() { return static_cast<unsigned>(MH_CALL(Rand)()) & 0xFFu; }
