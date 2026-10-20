@@ -92,7 +92,7 @@ std::uint16_t Ftol16(std::uint32_t bits) {
 inline unsigned char* Sc() { return Sprite_Current; }
 inline unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 inline unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-inline unsigned char* TaskSlot(unsigned index) { return Mem(at::kTasks + (index & 0xFFu) * at::kTaskStride); }
+inline unsigned char* TaskSlot(unsigned index) { return Mem(BattleTask_Slots_addr + (index & 0xFFu) * at::kTaskStride); }
 inline unsigned char* Mote(unsigned index) { return Mem(cell::kMotePool + (index & 0xFFu) * cell::kMoteStride); }
 inline unsigned char* Shade(unsigned index) { return Mem(ShadowMote_Pool_addr + (index & 0xFFu) * cell::kShadeStride); }
 inline unsigned char* Cur() { return Pointer(ShadowMote_Current_addr); }

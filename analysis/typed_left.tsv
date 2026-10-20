@@ -1960,7 +1960,6 @@ src/game/battle_e1_fuzz.cpp	Disturb	global	Mem	at::kPartyCount	0	0x904ab0	-	no-e
 src/game/battle_e2.cpp	AddressOf	global	PtrAt	at::kOwner	0	0x93b940	-	pointer-in-integer	at::kOwner 0x93b940 BattleE2_Owner	b0
 src/game/battle_e2.cpp	AddressOf	global	PtrAt	at::kEnemyCurrent	0	0x939ad8	-	pointer-in-integer	at::kEnemyCurrent 0x939ad8 BattleE3_CurrentEnemy	b0
 src/game/battle_e2.cpp	AddressOf	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
-src/game/battle_e2.cpp	AddressOf	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_e2.cpp	U	record	At	table + 4 * state	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_e2.cpp	WithBattlePoses	global	-	at::kAnimSetBattle	0	0x8c5d80	-	no-entry	at::kAnimSetBattle 0x8c5d80 -	b0
 src/game/battle_e2.cpp	WithBattlePoses	global	-	at::kAnimSetField	0	0x8b3580	-	no-entry	at::kAnimSetField 0x8b3580 -	b0
@@ -2097,7 +2096,6 @@ src/game/battle_e3.cpp	B	record	At	base + AbilityId() * at::kAbilityStride	0	-	-
 src/game/battle_e3.cpp	B	global	At	at::kAbilityWord4	0	0x65c4dc	-	no-entry	at::kAbilityWord4 0x65c4dc -	b0
 src/game/battle_e3.cpp	B	global	At	at::kCharRecords	0	0x903a70	-	no-entry	at::kCharRecords 0x903a70 -	b0
 src/game/battle_e3.cpp	B	record	At	table + 4 * index	0	-	-	family	no record family established for this pointer here (-)	b1-battle
-src/game/battle_e3.cpp	TaskSlot	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_e3.cpp	PartyCount	global	B	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_e3.cpp	ClearFormFlag	global	At	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_e3.cpp	ClearFormFlag	global	At	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
@@ -2651,9 +2649,8 @@ src/game/battle_e6.cpp	BattleFxDash_Rise	global	B	at::kFormTable	2	0x904aac	-	no
 src/game/battle_e6.cpp	BattleFxDash_Rise	global	At	at::kDashSides	1	0x64e4f4	-	no-entry	at::kDashSides 0x64e4f4 -	b0
 src/game/battle_e6.cpp	BattleFxDash_Rise	global	B	at::kFormTable	3	0x904aac	-	no-entry	at::kFormTable 0x904aac -	b0
 src/game/battle_e6.cpp	BattleFxDash_Rise	global	At	at::kDashSides	2	0x64e4f4	-	no-entry	at::kDashSides 0x64e4f4 -	b0
-src/game/battle_e6.cpp	BattleFxDash_Advance	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_e6.cpp	BattleFxDash_Advance	record	L	s + i	0	-	base=Sprite_Current	computed	BattleTask, offset i	b1-battle
-src/game/battle_e6.cpp	BattleFxDash_Advance	record	SetL	t + i	0	-	table=0x93a000;stride=0x84	computed	BattleTask, offset i	b1-battle
+src/game/battle_e6.cpp	BattleFxDash_Advance	record	SetL	t + i	0	-	stride=0x84	computed	BattleTask, offset i	b1-battle
 src/game/battle_e6.cpp	BattleFxDash_Advance	global	B	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/battle_e6.cpp	BattleFxDash_Advance	global	B	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/battle_e6.cpp	BattleFxDash_Advance	global	B	at::kTarget	2	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
@@ -2668,7 +2665,6 @@ src/game/battle_e6.cpp	Battle_MemberRollByAction	global	-	at::kRollOdds	0	0x64f0
 src/game/battle_e6.cpp	Battle_MemberRollByAction	global	-	at::kRollOddsB	0	0x64f104	-	no-entry	at::kRollOddsB 0x64f104 -	b0
 src/game/battle_e6.cpp	Battle_MemberRollByAction	record	Word	At(BattleSprites_Action) + 2	0	-	via=At	family	no record family established for this pointer here (via=At)	b1-battle
 src/game/battle_e6.cpp	Battle_MemberRollByAction	global	At	at::kActionRows	0	0x65c4d9	-	no-entry	at::kActionRows 0x65c4d9 -	b0
-src/game/battle_e6.cpp	Battle_SetApPopup	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_e6.cpp	Field_SlotStart	record	SetL	slot + 0xC	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_e6.cpp	Field_SlotStart	record	SetL	slot + 4	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_e6.cpp	MapCell_DrawTexQuads	global	At	at::kScreenXLo	0	0x5c4208	-	no-entry	at::kScreenXLo 0x5c4208 -	b0
@@ -2721,7 +2717,6 @@ src/game/battle_e6_fuzz.cpp	Disturb	global	Mem	at::kPartySize	0	0x904ab1	-	name	
 src/game/battle_e6_fuzz.cpp	PartnerMissingTest	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_e6_fuzz.cpp	PartnerMissingTest	global	Mem	at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_e6_fuzz.cpp	PartnerMissingTest	global	Mem	at::kActor	2	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/battle_e7.cpp	unsigned	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_e7.cpp	OpenTasks	record	SetWord	Win() + 0x14	0	-	via=Win	union	WindowRecord +0x14 w2	b1-battle
 src/game/battle_e7.cpp	RowCost	global	B	at::kCostTable	0	0x64ec9c	-	no-entry	at::kCostTable 0x64ec9c -	b0
 src/game/battle_e7.cpp	RowCost	global	B	at::kCostTable	1	0x64ec9c	-	no-entry	at::kCostTable 0x64ec9c -	b0
@@ -2808,7 +2803,6 @@ src/game/battle_e7_fuzz.cpp	Seed	global	Rows	at::kGeneList2	0	0x904620	-	no-entr
 src/game/battle_e7_fuzz.cpp	Seed	global	Rows	at::kGeneList2	1	0x904620	-	no-entry	at::kGeneList2 0x904620 -	b0
 src/game/battle_e7_fuzz.cpp	Disturb	global	Mem	at::kGeneList	0	0x904608	-	no-entry	at::kGeneList 0x904608 -	b0
 src/game/battle_flow.cpp	Enemy	global	PtrAt	at::kEnemyCurrent	0	0x939ad8	-	pointer-in-integer	at::kEnemyCurrent 0x939ad8 BattleE3_CurrentEnemy	b0
-src/game/battle_flow.cpp	Enemy	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_flow.cpp	Enemy	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/battle_flow.cpp	Enemy	global	-	at::kItemRows	0	0x64b274	-	untyped-entry	at::kItemRows 0x64b274 ItemMagic_RowTables	b0
 src/game/battle_flow.cpp	LoadMagicRow	global	At	at::kLoadFlags	0	0x904aa9	-	no-entry	at::kLoadFlags 0x904aa9 -	b0
@@ -2845,7 +2839,6 @@ src/game/battle_flow.cpp	__attribute__	global	At	at::kNumberFormat	0	0x64e324	-	
 src/game/battle_flow.cpp	__attribute__	global	At	at::kNumberText	0	0x904ba0	-	no-entry	at::kNumberText 0x904ba0 -	b0
 src/game/battle_flow.cpp	__attribute__	global	At	at::kNumberText	1	0x904ba0	-	no-entry	at::kNumberText 0x904ba0 -	b0
 src/game/battle_flow.cpp	__attribute__	global	At	at::kNumberText	2	0x904ba0	-	no-entry	at::kNumberText 0x904ba0 -	b0
-src/game/battle_flow_fuzz.cpp	Address	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_flow_fuzz.cpp	Address	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/battle_flow_fuzz.cpp	SlotByte	global	At	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_flow_fuzz.cpp	SlotByte	record	SetWord	e + slot	0	-	-	family	no record family established for this pointer here (-)	b1-battle
@@ -2859,7 +2852,6 @@ src/game/battle_flow_fuzz.cpp	StubHandler	global	At	at::kPhase	0	0x904aa0	-	no-e
 src/game/battle_flow_fuzz.cpp	StubRemove	global	At	at::kMagicId	0	0x904b80	-	no-entry	at::kMagicId 0x904b80 -	b0
 src/game/battle_flow_fuzz.cpp	StubDrawMode	record	SetLong	prim + 4	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_flow_fuzz.cpp	StubGetClut	global	At	at::kNumberText	0	0x904ba0	-	no-entry	at::kNumberText 0x904ba0 -	b0
-src/game/battle_flow_fuzz.cpp	-	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_flow_fuzz.cpp	-	global	-	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_flow_fuzz.cpp	-	global	-	at::kAbilityRows	0	0x64c1d0	-	untyped-entry	at::kAbilityRows 0x64c1d0 AbilityMagic_Rows	b0
 src/game/battle_flow_fuzz.cpp	Next	global	At	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
@@ -2929,7 +2921,6 @@ src/game/battle_fx_tasks.cpp	__attribute__	record	Long	o + c.offset	0	-	table=0x
 src/game/battle_fx_tasks.cpp	__attribute__	record	SetLong	sc + c.offset	0	-	via=Sc	computed	BattleTask, offset c.offset	b1-battle
 src/game/battle_fx_tasks.cpp	__attribute__	global	PtrAt	at::kTaskOwner	5	0x93b940	-	pointer-in-integer	at::kTaskOwner 0x93b940 BattleE2_Owner	b0
 src/game/battle_fx_tasks.cpp	__attribute__	global	At	at::kPhase	1	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
-src/game/battle_fx_tasks_fuzz.cpp	Address	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_fx_tasks_fuzz.cpp	Address	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/battle_fx_tasks_fuzz.cpp	Address	record	Long	slot + 0x80	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_fx_tasks_fuzz.cpp	AnySlot	global	At	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
@@ -2938,7 +2929,6 @@ src/game/battle_fx_tasks_fuzz.cpp	AnySlot	record	SetWord	CurSlot() + 0x36 + 4 * 
 src/game/battle_fx_tasks_fuzz.cpp	AnySlot	record	SetWord	CurSlot() + 0x60	0	-	via=CurSlot	width	BattleTask +0x60 w2	b1-battle
 src/game/battle_fx_tasks_fuzz.cpp	StubFree	global	At	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_fx_tasks_fuzz.cpp	StubScriptFlags	global	At	at::kRoundCount	0	0x904aa2	-	name	at::kRoundCount 0x904aa2 BattleE4_Step2	b0
-src/game/battle_fx_tasks_fuzz.cpp	-	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_fx_tasks_fuzz.cpp	-	global	-	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_fx_tasks_fuzz.cpp	Next	record	SetWord	t + 0x2C	0	-	via=Slot	family	no record family established for this pointer here (via=Slot)	b1-battle
 src/game/battle_fx_tasks_fuzz.cpp	Next	record	SetWord	e + 0x2C	0	-	via=EnemyObj	family	no record family established for this pointer here (via=EnemyObj)	b1-battle
@@ -3167,7 +3157,6 @@ src/game/battle_misc_fuzz.cpp	FuzzAi	record	PutWord	e + 0xA4	0	-	-	family	no rec
 src/game/battle_misc_fuzz.cpp	FuzzAi	global	At	kActingKind	0	0x904b35	-	no-entry	kActingKind 0x904b35 -	b0
 src/game/battle_misc_fuzz.cpp	FuzzAi	record	At	g_script + i * 16	0	-	stride=0x8c	not-record	not one of the nine records.h families (stride=0x8c)	b1-battle
 src/game/battle_misc_fuzz.cpp	FuzzScreens	record	At	kObjects + i * 0xA4	0	-	param	family	no record family established for this pointer here (param)	b1-battle
-src/game/battle_obj_states.cpp	S	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_obj_states.cpp	BattleObj_StateInit	record	SetLong	S() + o	0	-	via=S	computed	PartyMember, offset o	b1-battle
 src/game/battle_obj_states.cpp	BattleObj_StateInit	global	At	at::kPoseBase	0	0x904aac	-	no-entry	at::kPoseBase 0x904aac -	b0
 src/game/battle_obj_states.cpp	BattleObj_StateIdle	global	At	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
@@ -3195,7 +3184,6 @@ src/game/battle_obj_states.cpp	BattleObj_CastDone	global	At	at::kRoundFlags	1	0x
 src/game/battle_obj_states.cpp	BattleObj_CastDone	global	At	at::kSkillId	0	0x904b80	-	no-entry	at::kSkillId 0x904b80 -	b0
 src/game/battle_obj_states.cpp	BattleObj_CastDone	global	At	at::kSkillWord	0	0x65c4dc	-	no-entry	at::kSkillWord 0x65c4dc -	b0
 src/game/battle_obj_states.cpp	BattleObj_EndAction	global	At	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
-src/game/battle_obj_states_fuzz.cpp	Address	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_obj_states_fuzz.cpp	Who	global	At	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_obj_states_fuzz.cpp	Who	global	At	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_obj_states_fuzz.cpp	Who	global	At	at::kRoundFlags	2	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
@@ -3204,7 +3192,6 @@ src/game/battle_obj_states_fuzz.cpp	Who	global	At	at::kPhase	0	0x904aa0	-	no-ent
 src/game/battle_obj_states_fuzz.cpp	Who	global	At	at::kSkillId	0	0x904b80	-	no-entry	at::kSkillId 0x904b80 -	b0
 src/game/battle_obj_states_fuzz.cpp	Who	global	-	at::kSwingTarget	0	0x904b44	-	no-entry	at::kSwingTarget 0x904b44 -	b0
 src/game/battle_obj_states_fuzz.cpp	-	global	-	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
-src/game/battle_obj_states_fuzz.cpp	-	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_obj_states_fuzz.cpp	-	global	-	at::kAttackCount	0	0x64e04c	-	no-entry	at::kAttackCount 0x64e04c -	b0
 src/game/battle_obj_states_fuzz.cpp	-	global	-	at::kCastCount	0	0x64e0f0	-	no-entry	at::kCastCount 0x64e0f0 -	b0
 src/game/battle_obj_states_fuzz.cpp	-	global	-	at::kSkillWord	0	0x65c4dc	-	no-entry	at::kSkillWord 0x65c4dc -	b0
@@ -3426,7 +3413,6 @@ src/game/battle_setup.cpp	Battle_OpenMsgWindow	global	At	at::kMsgWindow	0	0x8031
 src/game/battle_setup.cpp	Battle_ActorStanding	global	At	at::kEnemy	0	0x93b960	-	no-entry	at::kEnemy 0x93b960 -	b0
 src/game/battle_setup.cpp	Battle_ClearActingFlags	global	At	at::kActing	0	0x904b34	-	no-entry	at::kActing 0x904b34 -	b0
 src/game/battle_setup.cpp	Battle_ClearActingFlags	global	At	at::kAbility	0	0x904b80	-	no-entry	at::kAbility 0x904b80 -	b0
-src/game/battle_setup.cpp	Battle_ClearStatus	global	At	at::kSavedPos	0	0x93a034	-	no-entry	at::kSavedPos 0x93a034 -	b0
 src/game/battle_setup.cpp	Battle_ReturnQueuedItem	global	At	at::kItemQueue	0	0x904acc	-	no-entry	at::kItemQueue 0x904acc -	b0
 src/game/battle_setup.cpp	Battle_OpeningMessage	global	At	at::kOpening	0	0x904b90	-	no-entry	at::kOpening 0x904b90 -	b0
 src/game/battle_setup.cpp	BattleStep_PartyWake40	record	SetWord	o + (party ? at::kPApChange : at::kEApChange)	0	-	via=P	family	no record family established for this pointer here (via=P)	b1-battle
@@ -3465,7 +3451,6 @@ src/game/battle_sprites.cpp	Formation_ApplyStatMods	global	At	at::kPartyCount	0	
 src/game/battle_sprites.cpp	Formation_ApplyStatMods	global	At	at::kPartyCount	1	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
 src/game/battle_sprites.cpp	Formation_ApplyStatMods	raw	At	0x802E08	0	0x802e08	-	-	-	-
 src/game/battle_sprites.cpp	Formation_ApplyStatMods	raw	At	0x802E08 + i * at::kPartyStride	0	0x802e08	-	-	-	-
-src/game/battle_sprites.cpp	Battle_SetDamagePopup	global	At	at::kPopups	0	0x93a000	-	no-entry	at::kPopups 0x93a000 -	b0
 src/game/battle_sprites.cpp	Battle_MemberAutoTarget	global	At	at::kAutoMode	0	0x904b35	-	no-entry	at::kAutoMode 0x904b35 -	b0
 src/game/battle_sprites.cpp	Battle_MemberAutoTarget	global	At	at::kAutoMode	1	0x904b35	-	no-entry	at::kAutoMode 0x904b35 -	b0
 src/game/battle_sprites.cpp	Battle_MemberAutoTarget	global	At	at::kAutoMode	2	0x904b35	-	no-entry	at::kAutoMode 0x904b35 -	b0
@@ -3475,7 +3460,6 @@ src/game/battle_sprites.cpp	Battle_PlayHitSound	global	At	at::kActor	0	0x904b34	
 src/game/battle_sprites.cpp	Battle_PlayHitSound	global	At	at::kHitClass	0	0x657465	-	no-entry	at::kHitClass 0x657465 -	b0
 src/game/battle_sprites.cpp	Battle_PlayHitSound	global	At	at::kHitSounds	0	0x64f10c	-	untyped-entry	at::kHitSounds 0x64f10c Battle_HitSounds	b0
 src/game/battle_sprites.cpp	Battle_SetHitPopup	global	At	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/battle_sprites.cpp	Battle_SetHitPopup	global	At	at::kPopups	0	0x93a000	-	no-entry	at::kPopups 0x93a000 -	b0
 src/game/battle_sprites.cpp	Battle_SetHitPopup	global	At	at::kHitClass	0	0x657465	-	no-entry	at::kHitClass 0x657465 -	b0
 src/game/battle_sprites.cpp	Battle_SetHitPopup	record	Word	s + 0x2E	0	-	base=Sprite_Current	family	no record family established for this pointer here (base=Sprite_Current)	b1-battle
 src/game/battle_sprites.cpp	Battle_SetHitPopup	record	Word	s + 0x30	0	-	base=Sprite_Current	family	no record family established for this pointer here (base=Sprite_Current)	b1-battle
@@ -3538,7 +3522,6 @@ src/game/battle_sprites_fuzz.cpp	Disturb	global	At	at::kClutMap	0	0x7e06a0	-	no-
 src/game/battle_sprites_fuzz.cpp	Handle	global	At	at::kCells	0	0x903850	-	no-entry	at::kCells 0x903850 -	b0
 src/game/battle_sprites_fuzz.cpp	Handle	global	At	at::kCells	1	0x903850	-	no-entry	at::kCells 0x903850 -	b0
 src/game/battle_sprites_fuzz.cpp	Handle	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
-src/game/battle_sprites_fuzz.cpp	-	global	-	at::kPopups	0	0x93a000	-	no-entry	at::kPopups 0x93a000 -	b0
 src/game/battle_sprites_fuzz.cpp	-	global	-	at::kCells	0	0x903850	-	no-entry	at::kCells 0x903850 -	b0
 src/game/battle_sprites_fuzz.cpp	Address	global	-	at::kEncounter	0	0x939f00	-	no-entry	at::kEncounter 0x939f00 -	b0
 src/game/battle_sprites_fuzz.cpp	Address	global	-	at::kActions	0	0x65c4d8	-	untyped-entry	at::kActions 0x65c4d8 NameTable_Abilities	b0
@@ -3583,7 +3566,6 @@ src/game/battle_turn_steps.cpp	__attribute__	global	B	at::kRoundFlags	2	0x904aa8
 src/game/battle_turn_steps.cpp	__attribute__	global	B	at::kPhase	1	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/battle_turn_steps.cpp	__attribute__	global	B	at::kMembers	0	0x904ab0	-	no-entry	at::kMembers 0x904ab0 -	b0
 src/game/battle_turn_steps.cpp	__attribute__	global	At	at::kCopies	0	0x939ae0	-	no-entry	at::kCopies 0x939ae0 -	b0
-src/game/battle_turn_steps.cpp	__attribute__	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/battle_turn_steps.cpp	__attribute__	global	B	at::kMembers	1	0x904ab0	-	no-entry	at::kMembers 0x904ab0 -	b0
 src/game/battle_turn_steps.cpp	__attribute__	global	B	at::kMembers	2	0x904ab0	-	no-entry	at::kMembers 0x904ab0 -	b0
 src/game/battle_turn_steps.cpp	__attribute__	record	Long	Member(i) + at::kFlags2	0	-	via=Member	gate	PartyMember->flags_130 typed changed the object	b1-battle
@@ -3801,14 +3783,11 @@ src/game/boss_harness.cpp	TurnEffect	record	SetLong	s + 0x10	2	-	-	family	no rec
 src/game/boss_harness.cpp	TurnEffect	record	SetLong	s + 0xC	2	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/boss_harness.cpp	Fix	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/boss_harness.cpp	Fix	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/boss_harness.cpp	Fix	global	SetPointer	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/boss_harness.cpp	Next	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/boss_harness.cpp	Next	global	Mem	at::kEnemies	1	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
-src/game/boss_harness.cpp	PartyOf	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/boss_harness.cpp	WindowAt	global	Mem	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/boss_harness.cpp	WindowAt	global	-	at::kHookEnd	0	0x904b64	-	name	at::kHookEnd 0x904b64 BattleHook_End	b0
 src/game/boss_harness.cpp	Run	record	Mem	d.at + d.stride * i	0	-	-	family	no record family established for this pointer here (-)	b1-battle
-src/game/boss_harness.cpp	Run	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/boss_harness.cpp	Run	global	-	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/boss_harness.cpp	Run	global	-	at::kBattle	0	0x904aa0	-	no-entry	at::kBattle 0x904aa0 -	b0
 src/game/boss_harness.cpp	Run	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
@@ -3839,12 +3818,11 @@ src/game/boss_sa.cpp	Boss01_Exit	record	At	a.enemy + 0x58	0	-	-	family	no record
 src/game/boss_sa.cpp	Boss01_Exit	record	SetWord	Sprite_Current + 0x5A	0	-	base=Sprite_Current	family	no record family established for this pointer here (base=Sprite_Current)	b1-battle
 src/game/boss_sa.cpp	Boss01_Exit	record	At	a.enemy + 0x5A	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/boss_sa.cpp	Boss03_Setup	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
-src/game/boss_sa.cpp	BossWeretigr_State4Fx	global	At	at::kTaskSlots	0	0x93a000	-	no-entry	at::kTaskSlots 0x93a000 -	b0
 src/game/boss_sa.cpp	BossWeretigr_State4Fx	global	B	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/boss_sa.cpp	BossWeretigr_State4Fx	global	-	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/boss_sa.cpp	BossWeretigr_State4Fx	record	At	from + i	0	-	table=0x93b960;stride=0x128	family	no record family established for this pointer here (table=0x93b960;stride=0x128)	b1-battle
-src/game/boss_sa.cpp	BossWeretigr_State4Fx	record	SetLong	task + i	0	-	table=0x93a000;stride=0x84	family	no record family established for this pointer here (table=0x93a000;stride=0x84)	b1-battle
-src/game/boss_sa.cpp	BossWeretigr_State4Fx	record	SetLong	task + 0x80	0	-	table=0x93a000;stride=0x84	family	no record family established for this pointer here (table=0x93a000;stride=0x84)	b1-battle
+src/game/boss_sa.cpp	BossWeretigr_State4Fx	record	SetLong	task + i	0	-	stride=0x84	family	no record family established for this pointer here (table=0x93a000;stride=0x84)	b1-battle
+src/game/boss_sa.cpp	BossWeretigr_State4Fx	record	SetLong	task + 0x80	0	-	stride=0x84	family	no record family established for this pointer here (table=0x93a000;stride=0x84)	b1-battle
 src/game/boss_sa.cpp	BossWeretigr_State4End	global	B	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/boss_sa_fuzz.cpp	Key	global	-	at::kMoveVar3	0	0x903848	-	no-entry	at::kMoveVar3 0x903848 -	b0
 src/game/boss_sa_fuzz.cpp	Seed01	global	Mem	bh::at::kFlags	0	0x904aa8	-	no-entry	bh::at::kFlags 0x904aa8 -	b0
@@ -4029,7 +4007,6 @@ src/game/boss_se_fuzz.cpp	SeedB26	global	Mem	at::kTurn	0	0x904b90	-	no-entry	at:
 src/game/boss_se_fuzz.cpp	SeedB26	global	B	at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
 src/game/boss_sf.cpp	B	record	At	table + 4 * index	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/boss_sf.cpp	Step	record	At	table + 4 * state	0	-	param	family	no record family established for this pointer here (param)	b1-battle
-src/game/boss_sf.cpp	TaskSlot	global	At	at::kTaskSlots	0	0x93a000	-	no-entry	at::kTaskSlots 0x93a000 -	b0
 src/game/boss_sf.cpp	EnemyDataByte	global	At	at::kEnemyData	0	0x8c55c8	-	no-entry	at::kEnemyData 0x8c55c8 -	b0
 src/game/boss_sf.cpp	AbilityByte	record	At	base + id * at::kAbilityStride	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/boss_sf.cpp	AbilityByte	record	Word	s + 0x14	0	-	base=Sprite_Current	family	no record family established for this pointer here (base=Sprite_Current)	b1-battle
@@ -4112,7 +4089,6 @@ src/game/boss_sg.cpp	BossWeretigrFx_Rise	global	At	at::kFacing	2	0x904aac	-	no-e
 src/game/boss_sg.cpp	BossWeretigrFx_Rise	global	B	at::kFacingOffsets	1	0x64e4f4	-	no-entry	at::kFacingOffsets 0x64e4f4 -	b0
 src/game/boss_sg.cpp	BossWeretigrFx_Rise	global	At	at::kFacing	3	0x904aac	-	no-entry	at::kFacing 0x904aac -	b0
 src/game/boss_sg.cpp	BossWeretigrFx_Rise	global	B	at::kFacingOffsets	2	0x64e4f4	-	no-entry	at::kFacingOffsets 0x64e4f4 -	b0
-src/game/boss_sg.cpp	BossWeretigrFx_Strike	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/boss_sg.cpp	BossWeretigrFx_Strike	global	B	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/boss_sg.cpp	BossWeretigrFx_Strike	global	B	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/boss_sg.cpp	BossWeretigrFx_Strike	global	B	at::kTarget	2	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
@@ -4157,7 +4133,6 @@ src/game/boss_sh.cpp	BossAngler_Advance	global	B	at::kTarget	0	0x904b44	-	no-ent
 src/game/boss_sh.cpp	BossAngler_RetreatEnd	global	B	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/boss_sh.cpp	BossAngler_RetreatEnd	global	B	at::kFlags	1	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/boss_sh.cpp	BossAngler_HookSpawnFx	global	B	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/boss_sh.cpp	BossAngler_HookSpawnFx	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/boss_sh.cpp	BossAngler_HookSpawnFx	global	-	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/boss_sh.cpp	BattleFx_ScriptUntilDone	global	B	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/boss_sh_fuzz.cpp	SeedB34	global	B	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -4178,8 +4153,6 @@ src/game/boss_si.cpp	Boss38_Setup	record	Long	s + 0x34	0	-	base=Sprite_Current	f
 src/game/boss_si.cpp	Boss38_Setup	record	Long	s + 0x38	0	-	base=Sprite_Current	family	no record family established for this pointer here (base=Sprite_Current)	b1-battle
 src/game/boss_si.cpp	Boss38_End	global	B	at::kScriptVar3	0	0x903848	-	no-entry	at::kScriptVar3 0x903848 -	b0
 src/game/boss_si.cpp	BossArwan_State4Fx	global	At	at::kEnemyDataCount	0	0x8c5652	-	no-entry	at::kEnemyDataCount 0x8c5652 -	b0
-src/game/boss_si.cpp	BossArwan_State4Fx	global	-	at::kTaskOwners	0	0x93a080	-	no-entry	at::kTaskOwners 0x93a080 -	b0
-src/game/boss_si.cpp	BossArwan_State4Fx	global	At	at::kTaskOwners	0	0x93a080	-	no-entry	at::kTaskOwners 0x93a080 -	b0
 src/game/boss_si.cpp	BossArwan_State5Await	global	B	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/boss_si.cpp	BossArwanFx_Start	global	B	at::kEnemy0Type	0	0x93ba50	-	no-entry	at::kEnemy0Type 0x93ba50 -	b0
 src/game/boss_si.cpp	BossArwanFx_Start	global	At	at::kEnemyDataCount	0	0x8c5652	-	no-entry	at::kEnemyDataCount 0x8c5652 -	b0
@@ -4207,9 +4180,8 @@ src/game/boss_sj.cpp	FxEnterPosed	record	SetLong	Sprite_Current + 0x3C	0	-	base=
 src/game/boss_sj.cpp	Drift	record	Long	s + scale_at	0	-	base=Sprite_Current	family	no record family established for this pointer here (base=Sprite_Current)	b1-battle
 src/game/boss_sj.cpp	BossDLord_Hook	global	B	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/boss_sj.cpp	BossDLord_Hook	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
-src/game/boss_sj.cpp	BossDLord_Hook	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/boss_sj.cpp	BossDLord_Hook	record	Long	from + i	0	-	table=0x93b960;stride=0x128	family	no record family established for this pointer here (table=0x93b960;stride=0x128)	b1-battle
-src/game/boss_sj.cpp	BossDLord_Hook	record	SetLong	to + i	0	-	table=0x93a000;stride=0x84	family	no record family established for this pointer here (table=0x93a000;stride=0x84)	b1-battle
+src/game/boss_sj.cpp	BossDLord_Hook	record	SetLong	to + i	0	-	stride=0x84	family	no record family established for this pointer here (table=0x93a000;stride=0x84)	b1-battle
 src/game/boss_sj.cpp	BossDLordFx_Start	global	B	at::kEnemy0Type	0	0x93ba50	-	no-entry	at::kEnemy0Type 0x93ba50 -	b0
 src/game/boss_sj.cpp	BossDLordFx_Start	global	At	at::kEnemyFxSize	0	0x8c5652	-	no-entry	at::kEnemyFxSize 0x8c5652 -	b0
 src/game/boss_sj.cpp	BossDLordFx_Count	global	B	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -8433,7 +8405,6 @@ src/game/enemy_ai_ops.cpp	ULong	global	PtrAt	at::kEnemyCurrent	0	0x939ad8	-	poin
 src/game/enemy_ai_ops.cpp	AbilityByte	global	At	at::kMagicId	0	0x904b80	-	no-entry	at::kMagicId 0x904b80 -	b0
 src/game/enemy_ai_ops.cpp	AbilityByte	record	At	flags + Word(At(at::kMagicId)) * 24u	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/enemy_ai_ops.cpp	EnemyOp_StepDispatch	global	-	at::kAnimTable	0	0x64b078	-	no-entry	at::kAnimTable 0x64b078 -	b0
-src/game/enemy_ai_ops.cpp	EnemyOp_Wait	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/enemy_ai_ops.cpp	EnemyOp_HighlightOn	global	PtrAt	at::kCommandSource	0	0x939fa0	-	pointer-in-integer	at::kCommandSource 0x939fa0 BattleActorCopies_Command	b0
 src/game/enemy_ai_ops.cpp	EnemyOp_HighlightPulse	global	At	at::kPulse	0	0x904ac8	-	no-entry	at::kPulse 0x904ac8 -	b0
 src/game/enemy_ai_ops.cpp	EnemyOp_HighlightPulse	global	PtrAt	at::kCommandSource	0	0x939fa0	-	pointer-in-integer	at::kCommandSource 0x939fa0 BattleActorCopies_Command	b0
@@ -8488,19 +8459,16 @@ src/game/enemy_ai_ops_fuzz.cpp	Actor	global	At	at::kActionKind	0	0x904b35	-	no-e
 src/game/enemy_ai_ops_fuzz.cpp	Actor	global	At	at::kMagicId	0	0x904b80	-	no-entry	at::kMagicId 0x904b80 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Actor	global	At	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Actor	global	At	at::kStatusAdd	0	0x904b98	-	no-entry	at::kStatusAdd 0x904b98 -	b0
-src/game/enemy_ai_ops_fuzz.cpp	Actor	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Actor	global	At	at::kPulse	0	0x904ac8	-	no-entry	at::kPulse 0x904ac8 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Actor	global	At	at::kMagicId	1	0x904b80	-	no-entry	at::kMagicId 0x904b80 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Actor	global	-	at::kAbilityFlags8	0	0x65c4d8	-	untyped-entry	at::kAbilityFlags8 0x65c4d8 NameTable_Abilities	b0
 src/game/enemy_ai_ops_fuzz.cpp	Actor	global	-	at::kAbilityFlagsD	0	0x65c4dd	-	no-entry	at::kAbilityFlagsD 0x65c4dd -	b0
 src/game/enemy_ai_ops_fuzz.cpp	StubChance70	global	At	at::kMagicId	0	0x904b80	-	no-entry	at::kMagicId 0x904b80 -	b0
-src/game/enemy_ai_ops_fuzz.cpp	-	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	-	global	-	at::kStatBlock	0	0x939f80	-	no-entry	at::kStatBlock 0x939f80 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	-	global	-	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Next	global	At	at::kMagicId	0	0x904b80	-	no-entry	at::kMagicId 0x904b80 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Next	global	At	at::kActionKind	0	0x904b35	-	no-entry	at::kActionKind 0x904b35 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Seed	record	SetLong	s + 0x40	0	-	base=Sprite_Current	family	no record family established for this pointer here (base=Sprite_Current)	b1-battle
-src/game/enemy_ai_ops_fuzz.cpp	Seed	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Seed	global	At	at::kActionKind	0	0x904b35	-	no-entry	at::kActionKind 0x904b35 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Seed	global	At	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/enemy_ai_ops_fuzz.cpp	Seed	global	At	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
@@ -9974,7 +9942,6 @@ src/game/magic_c1.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_c1.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_c1.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_c1.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_c1.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_c1.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_c1.cpp	CellCall	record	Mem	table + 4 * phase	0	-	param	computed	offset computed (table + 4 * phase)	b1-magic
 src/game/magic_c1.cpp	Magic080_Run	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -10044,7 +10011,6 @@ src/game/magic_c1_fuzz.cpp	Seed	global	Mem	mh::at::kTarget	1	0x904b44	-	no-entry
 src/game/magic_c1_fuzz.cpp	Seed	global	Mem	mh::at::kTarget	2	0x904b44	-	no-entry	mh::at::kTarget 0x904b44 -	b0
 src/game/magic_c1_fuzz.cpp	Seed	global	Mem	mh::at::kTarget	3	0x904b44	-	no-entry	mh::at::kTarget 0x904b44 -	b0
 src/game/magic_c1_fuzz.cpp	Seed	global	Mem	mh::at::kActor	0	0x904b34	-	no-entry	mh::at::kActor 0x904b34 -	b0
-src/game/magic_c2.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_c2.cpp	TaskSlot	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_c2.cpp	TaskSlot	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_c2.cpp	TaskSlot	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
@@ -10144,7 +10110,6 @@ src/game/magic_c2_fuzz.cpp	Seed	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at:
 src/game/magic_c2_fuzz.cpp	Seed	global	Mem	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_c2_fuzz.cpp	Seed	record	SetLong	sc + 0x10	0	-	via=Sc	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_c2_fuzz.cpp	Disturb	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_c3.cpp	Sc	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_c3.cpp	Magic002_Start	record	Word	source + 0x30	0	-	-	family	an actor pointer (the owner 0x93B940, the source, the caster, or party-or-enemy by index): PartyMember or BattleEnemy or a task, no one struct	b1-magic
 src/game/magic_c3.cpp	Magic002_Start	record	SetLong	ball + 0x60	0	-	via=TaskSlot	varies	BattleTask::value is the damage popup's meaning; typed-records.md section 1: +0x60 is the popup's value for the task and the depth for a sprite; a magic task is a sprite here	b1-magic
 src/game/magic_c3.cpp	DrawBall	record	Word	s + 0x60	0	-	via=Sc	varies	BattleTask::value is the damage popup's meaning; typed-records.md section 1: +0x60 is the popup's value for the task and the depth for a sprite; a magic task is a sprite here	b1-magic
@@ -10166,7 +10131,6 @@ src/game/magic_c3_fuzz.cpp	Sc	global	Mem	kAngles	0	0x903850	-	no-entry	kAngles 0
 src/game/magic_c3_fuzz.cpp	Seed	raw	SetPointer	0x7E0670	0	0x7e0670	-	-	-	-
 src/game/magic_c3_fuzz.cpp	Seed	global	Mem	mh::at::kActor	0	0x904b34	-	no-entry	mh::at::kActor 0x904b34 -	b0
 src/game/magic_c3_fuzz.cpp	Seed	record	Long	mh::Pointer(BattleFlow_TaskCurrent_addr) + 0x80	0	-	via=Pointer	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
-src/game/magic_engine.cpp	void	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_engine.cpp	void	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/magic_engine.cpp	void	global	Mem	at::kFlags	1	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/magic_engine.cpp	MagicHold_Countdown	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
@@ -10175,7 +10139,7 @@ src/game/magic_engine.cpp	MagicFx_FlagTargetEnd	global	Mem	at::kTarget	0	0x904b4
 src/game/magic_engine.cpp	HeadCracker_Windup	record	SetLong	Sprite_Current + 0xC	0	-	base=Sprite_Current	family	Sprite_Current is switched to another record (an actor or pool record) in this function; BattleTask only where it is the slot	b1-magic
 src/game/magic_engine.cpp	HeadCracker_Windup	record	Long	Sprite_Current + 0xC	0	-	base=Sprite_Current	family	Sprite_Current is switched to another record (an actor or pool record) in this function; BattleTask only where it is the slot	b1-magic
 src/game/magic_engine.cpp	HeadCracker_Windup	record	Long	Sprite_Current + 0xC	1	-	base=Sprite_Current	family	Sprite_Current is switched to another record (an actor or pool record) in this function; BattleTask only where it is the slot	b1-magic
-src/game/magic_engine.cpp	HeadCracker_Drop	record	SetPointer	kSlotOwners + (slot & 0xFF) * at::kTaskStride	0	-	-	computed	offset computed (kSlotOwners + (slot & 0xFF) * at::kTaskStride)	b1-magic
+src/game/magic_engine.cpp	HeadCracker_Drop	global	SetPointer	kSlotOwners	0	0x93a080	-	-	-	-
 src/game/magic_engine.cpp	HeadCracker_WaitTarget	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_engine.cpp	HeadCracker_WaitTarget	global	Mem	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_engine.cpp	HeadCrackerRock_Start	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
@@ -10194,7 +10158,6 @@ src/game/magic_engine_fuzz.cpp	alignas	record	SetLong	sc + 0xC	0	-	base=Sprite_C
 src/game/magic_engine_fuzz.cpp	alignas	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_engine_fuzz.cpp	alignas	record	SetWord	sc + 0x3E	0	-	base=Sprite_Current	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_engine_fuzz.cpp	alignas	record	SetLong	sc + 0x20	0	-	base=Sprite_Current	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
-src/game/magic_fx_reached.cpp	Task	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_fx_reached.cpp	Task	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_fx_reached.cpp	Party	record	At	table + 4 * index	0	-	param	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_fx_reached.cpp	FxDiscFan_Start	global	Ptr	at::kSource	0	0x904b4c	-	pointer-in-integer	at::kSource 0x904b4c BattleOdds_ActorObject	b0
@@ -10240,14 +10203,12 @@ src/game/magic_fx_reached.cpp	Sparkle_Update	global	Ptr	at::kSparkleCurrent	1	0x
 src/game/magic_fx_reached.cpp	Sparkle_Update	global	Ptr	at::kSparkleCurrent	2	0x685d90	-	pointer-in-integer	at::kSparkleCurrent 0x685d90 BattleItems_SparkleCurrent	b0
 src/game/magic_fx_reached.cpp	Sparkle_Update	global	Ptr	at::kSparkleCurrent	3	0x685d90	-	pointer-in-integer	at::kSparkleCurrent 0x685d90 BattleItems_SparkleCurrent	b0
 src/game/magic_fx_reached.cpp	FxDim_Hold	global	At	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
-src/game/magic_fx_reached_fuzz.cpp	alignas	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_fx_reached_fuzz.cpp	alignas	global	At	at::kSparklePool	0	0x684790	-	no-entry	at::kSparklePool 0x684790 -	b0
 src/game/magic_fx_reached_fuzz.cpp	OwnerFor	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_fx_reached_fuzz.cpp	OwnerFor	global	At	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_fx_reached_fuzz.cpp	Disturb	global	At	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_fx_reached_fuzz.cpp	Disturb	global	At	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_fx_reached_fuzz.cpp	Disturb	global	At	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
-src/game/magic_fx_reached_fuzz.cpp	-	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_fx_reached_fuzz.cpp	-	global	-	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/magic_fx_reached_fuzz.cpp	-	global	-	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_fx_reached_fuzz.cpp	-	global	-	at::kSparklePool	0	0x684790	-	no-entry	at::kSparklePool 0x684790 -	b0
@@ -10267,10 +10228,7 @@ src/game/magic_harness.cpp	alignas	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	a
 src/game/magic_harness.cpp	alignas	global	Mem	at::kTarget	2	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_harness.cpp	Fix	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_harness.cpp	Fix	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/magic_harness.cpp	Fix	global	SetPointer	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
-src/game/magic_harness.cpp	Next	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_harness.cpp	Next	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
-src/game/magic_harness.cpp	Run	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_harness.cpp	Run	global	-	at::kBattle	0	0x904aa0	-	no-entry	at::kBattle 0x904aa0 -	b0
 src/game/magic_harness.cpp	Run	global	-	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_lib.cpp	Bump	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
@@ -10280,8 +10238,7 @@ src/game/magic_lib.cpp	MagicFx_ApplyBuff	global	Mem	kStatsCopy	0	0x939f80	-	no-e
 src/game/magic_lib.cpp	MagicFx_ApplyBuff	record	Long	stats + i	0	-	via=EnemyRecord	computed	offset computed (stats + i)	b1-magic
 src/game/magic_lib.cpp	MagicFx_ApplyBuff	global	Mem	kResultTarget	2	0x904b54	-	no-entry	kResultTarget 0x904b54 -	b0
 src/game/magic_lib.cpp	MagicFx_BuffPopup	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/magic_lib.cpp	MagicFx_BuffPopup	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
-src/game/magic_lib.cpp	MagicFx_BuffPopup	record	SetLong	t + 0x80	0	-	table=0x93a000;stride=0x84	expr	BattleTask::owner: the local t is made inline (unsigned char* const t = Mem(at::kTasks + (slot & 0xFF) * at::kTaskStr), not by a helper the converter reads	b1-magic
+src/game/magic_lib.cpp	MagicFx_BuffPopup	record	SetLong	t + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local t is made inline (unsigned char* const t = Mem(at::kTasks + (slot & 0xFF) * at::kTaskStr), not by a helper the converter reads	b1-magic
 src/game/magic_lib.cpp	MagicFx_NearSprite3D	record	Word	other + 0x3E	0	-	-	family	a function parameter (other) whose callers pass more than one family, or that no doc fixes	b1-magic
 src/game/magic_lib.cpp	MagicFx_CenterOnSide	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_lib.cpp	BattleActor_FxSizeB	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
@@ -10307,10 +10264,9 @@ src/game/magic_s01.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s01.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s01.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s01.cpp	void	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
-src/game/magic_s01.cpp	void	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s01.cpp	void	record	Long	from + k	0	-	stride=0x14c	computed	offset computed (from + k)	b1-magic
-src/game/magic_s01.cpp	void	record	SetLong	task + k	0	-	table=0x93a000;stride=0x84	computed	offset computed (task + k)	b1-magic
-src/game/magic_s01.cpp	void	record	SetLong	task + 0x80	0	-	table=0x93a000;stride=0x84	expr	BattleTask::owner: the local task is made inline (unsigned char* const task = Mem(at::kTasks + slot * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s01.cpp	void	record	SetLong	task + k	0	-	stride=0x84	computed	offset computed (task + k)	b1-magic
+src/game/magic_s01.cpp	void	record	SetLong	task + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local task is made inline (unsigned char* const task = Mem(at::kTasks + slot * at::kTaskStride);), not by a helper the converter reads	b1-magic
 src/game/magic_s01.cpp	JumpChild_DrawShadow	record	SetSW	2	0	0x903852	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s01.cpp	JumpChild_DrawShadow	record	SetSW	0	0	0x903850	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s01.cpp	JumpChild_DrawShadow	record	SB	2	0	0x903852	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
@@ -10323,7 +10279,6 @@ src/game/magic_s01_fuzz.cpp	NearStop	record	SetLong	sc + 0x20	0	-	param	harness	
 src/game/magic_s01_fuzz.cpp	NearStop	record	SetLong	sc + 0x14	0	-	param	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s02.cpp	Sc	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_s02.cpp	Sc	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
-src/game/magic_s02.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s02.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s02.cpp	GlyphPage	record	SetWord	p + 0x26	0	-	param	family	a function parameter (p) whose callers pass more than one family, or that no doc fixes	b1-magic
 src/game/magic_s02.cpp	GlyphPage	record	SetWord	p + 0x16	0	-	param	family	a function parameter (p) whose callers pass more than one family, or that no doc fixes	b1-magic
@@ -10371,7 +10326,6 @@ src/game/magic_s03.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s03.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s03.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s03.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s03.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s03.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s03.cpp	EnemyRecord	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s03.cpp	AngleVertex	record	SetSW	8	0	0x903858	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
@@ -10441,7 +10395,6 @@ src/game/magic_s04.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s04.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s04.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s04.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s04.cpp	AddW	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s04.cpp	AddW	record	Mem	Addr(SnapSpark_Pool) + i * kPoolStride	0	-	via=Addr	computed	offset computed (Addr(SnapSpark_Pool) + i * kPoolStride)	b1-magic
 src/game/magic_s04.cpp	CellCall	record	Mem	table + 4 * phase	0	-	param	computed	offset computed (table + 4 * phase)	b1-magic
 src/game/magic_s04.cpp	ActorRecord	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
@@ -10485,7 +10438,6 @@ src/game/magic_s04_fuzz.cpp	Seed	record	Long	src + 0x3C	0	-	-	harness	start-up f
 src/game/magic_s04_fuzz.cpp	Seed	record	SetLong	sc + 0x3C	0	-	via=Sc	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s05.cpp	Sc	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_s05.cpp	Sc	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/magic_s05.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s05.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s05.cpp	SpawnImage	record	Long	src + k	0	-	via=ActorRecord	computed	offset computed (src + k)	b1-magic
 src/game/magic_s05.cpp	SpawnImage	record	SetLong	t + k	0	-	via=TaskSlot	computed	offset computed (t + k)	b1-magic
@@ -10500,7 +10452,6 @@ src/game/magic_s05_fuzz.cpp	Seed	global	Mem	mh::at::kActor	0	0x904b34	-	no-entry
 src/game/magic_s06.cpp	Sc	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_s06.cpp	Sc	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_s06.cpp	Sc	global	Mem	kAbility	0	0x904b80	-	no-entry	kAbility 0x904b80 -	b0
-src/game/magic_s06.cpp	Sc	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s06.cpp	Sc	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s06.cpp	NewTask	record	Long	from + k	0	-	via=ActorRecord	computed	offset computed (from + k)	b1-magic
 src/game/magic_s06.cpp	NewTask	record	SetLong	to + k	0	-	via=TaskSlot	computed	offset computed (to + k)	b1-magic
@@ -10521,7 +10472,6 @@ src/game/magic_s07.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s07.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s07.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s07.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s07.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s07.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s07.cpp	Bonebreak_Start	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_s07.cpp	Bonebreak_Start	record	SetLong	child + k	0	-	via=TaskSlot	computed	offset computed (child + k)	b1-magic
@@ -10636,7 +10586,6 @@ src/game/magic_s08.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s08.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s08.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s08.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s08.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s08.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s08.cpp	CellCall	record	Mem	table + 4 * phase	0	-	param	computed	offset computed (table + 4 * phase)	b1-magic
 src/game/magic_s08.cpp	Ratan2	record	Mem	pool + i * 0x84u	0	-	param	computed	offset computed (pool + i * 0x84u)	b1-magic
@@ -10764,7 +10713,6 @@ src/game/magic_s09.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s09.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s09.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s09.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s09.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s09.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s09.cpp	BoneDart_Start	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_s09.cpp	BoneDart_Start	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -10857,7 +10805,6 @@ src/game/magic_s09_fuzz.cpp	TrigEffect	global	Mem	kScratch	0	0x903850	-	no-entry
 src/game/magic_s09_fuzz.cpp	ActorIsOutEffect	global	Mem	kScratch	0	0x903850	-	no-entry	kScratch 0x903850 -	b0
 src/game/magic_s09_fuzz.cpp	TurnEffect	record	Long	task + 0x10	0	-	-	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s09_fuzz.cpp	TurnEffect	record	Long	task + 0xC	0	-	-	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
-src/game/magic_s09_fuzz.cpp	ElevationEffect	global	Mem	mh::at::kTasks	0	0x93a000	-	no-entry	mh::at::kTasks 0x93a000 -	b0
 src/game/magic_s09_fuzz.cpp	Disturb	global	Mem	kScratch	0	0x903850	-	no-entry	kScratch 0x903850 -	b0
 src/game/magic_s09_fuzz.cpp	Disturb	global	Mem	kScratch	1	0x903850	-	no-entry	kScratch 0x903850 -	b0
 src/game/magic_s09_fuzz.cpp	Disturb	global	Mem	kAbilityId	0	0x904b80	-	no-entry	kAbilityId 0x904b80 -	b0
@@ -10865,7 +10812,6 @@ src/game/magic_s09_fuzz.cpp	Near	record	Byte	at - below + mh::Next() % (below + 
 src/game/magic_s09_fuzz.cpp	Seed	global	Mem	kAbilityId	0	0x904b80	-	no-entry	kAbilityId 0x904b80 -	b0
 src/game/magic_s09_fuzz.cpp	Seed	global	Mem	mh::at::kTarget	0	0x904b44	-	no-entry	mh::at::kTarget 0x904b44 -	b0
 src/game/magic_s09_fuzz.cpp	Seed	global	Mem	mh::at::kTarget	1	0x904b44	-	no-entry	mh::at::kTarget 0x904b44 -	b0
-src/game/magic_s09_fuzz.cpp	Seed	global	Mem	mh::at::kTasks	0	0x93a000	-	no-entry	mh::at::kTasks 0x93a000 -	b0
 src/game/magic_s09_fuzz.cpp	Seed	global	Mem	mh::at::kActor	0	0x904b34	-	no-entry	mh::at::kActor 0x904b34 -	b0
 src/game/magic_s10.cpp	Sc	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_s10.cpp	Sc	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
@@ -10873,7 +10819,6 @@ src/game/magic_s10.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s10.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s10.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s10.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s10.cpp	Mul12	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s10.cpp	Mul12	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s10.cpp	EnemyByOrder	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s10.cpp	EnemyByOrder	record	Long	from + k	0	-	-	computed	offset computed (from + k)	b1-magic
@@ -10947,7 +10892,6 @@ src/game/magic_s11.cpp	void	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s11.cpp	void	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s11.cpp	void	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s11.cpp	void	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s11.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s11.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s11.cpp	NewTask	record	Mem	table + 4 * index	0	-	-	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s11.cpp	MarkDoneAndFree	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -11025,7 +10969,6 @@ src/game/magic_s11_fuzz.cpp	Near	record	Byte	before + (mh::Half() ? 1u : 0u)	0	-
 src/game/magic_s11_fuzz.cpp	SomeSprite	global	Mem	mh::at::kActor	0	0x904b34	-	no-entry	mh::at::kActor 0x904b34 -	b0
 src/game/magic_s11_fuzz.cpp	SomeSprite	global	Mem	mh::at::kActor	1	0x904b34	-	no-entry	mh::at::kActor 0x904b34 -	b0
 src/game/magic_s12.cpp	SC	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/magic_s12.cpp	SC	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s12.cpp	SC	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s12.cpp	SC	global	Mem	kDs	0	0x903850	-	no-entry	kDs 0x903850 -	b0
 src/game/magic_s12.cpp	SC	global	Mem	kDs	1	0x903850	-	no-entry	kDs 0x903850 -	b0
@@ -11078,7 +11021,6 @@ src/game/magic_s13.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s13.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s13.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s13.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s13.cpp	Sc	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s13.cpp	Sc	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s13.cpp	BurstPoint	record	SetLong	m + 0x10	0	-	via=M	field-missing	struct unknown: M; records.h has no struct for this record	b1-magic
 src/game/magic_s13.cpp	BurstPoint	record	SetLong	m + 0x14	0	-	via=M	field-missing	struct unknown: M; records.h has no struct for this record	b1-magic
@@ -11142,7 +11084,6 @@ src/game/magic_s14.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s14.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s14.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s14.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s14.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s14.cpp	CopyRecord	record	SetLong	dst + k	0	-	param	computed	offset computed (dst + k)	b1-magic
 src/game/magic_s14.cpp	CopyRecord	record	Long	src + k	0	-	param	computed	offset computed (src + k)	b1-magic
 src/game/magic_s14.cpp	Weretiger_FadeIn	raw	Mem	0x80D380 + (static_cast<std::uint32_t>(Sc()[5]) << 6)	0	0x80d380	-	-	-	-
@@ -11215,7 +11156,6 @@ src/game/magic_s15.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s15.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s15.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s15.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s15.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s15.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s15.cpp	Chill_Start	record	SetLong	child + k	0	-	via=TaskSlot	computed	offset computed (child + k)	b1-magic
 src/game/magic_s15.cpp	Chill_Start	record	Long	record + k	0	-	via=EnemyRecord	computed	offset computed (record + k)	b1-magic
@@ -11379,8 +11319,7 @@ src/game/magic_s16.cpp	Disc	record	Mem	p.colours + (c[kShade] + c[kKind] * 4u) *
 src/game/magic_s16.cpp	Walk	record	Long	s + kOwnerOf	0	-	via=Record	computed	offset computed (s + kOwnerOf)	b1-magic
 src/game/magic_s16.cpp	MakeSparkles	record	SetLong	s + kOwnerOf	0	-	via=Record	computed	offset computed (s + kOwnerOf)	b1-magic
 src/game/magic_s16.cpp	SpawnOnActors	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/magic_s16.cpp	SpawnOnActors	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
-src/game/magic_s16.cpp	SpawnOnActors	record	SetLong	t + 0x80	0	-	table=0x93a000;stride=0x84	expr	BattleTask::owner: the local t is made inline (unsigned char* const t = Mem(at::kTasks + slot * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s16.cpp	SpawnOnActors	record	SetLong	t + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local t is made inline (unsigned char* const t = Mem(at::kTasks + slot * at::kTaskStride);), not by a helper the converter reads	b1-magic
 src/game/magic_s16.cpp	CallCell	record	Mem	table + 4 * index	0	-	-	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s16.cpp	Magic073_Spawn	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
 src/game/magic_s16.cpp	Magic073_Spawn	global	Mem	at::kFlags	1	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -11394,7 +11333,6 @@ src/game/magic_s16_fuzz.cpp	CheckAnswers	global	Mem	kPoolsLo	0	0x685d98	-	no-ent
 src/game/magic_s16_fuzz.cpp	CheckAnswers	global	Mem	kPoolsLo	1	0x685d98	-	no-entry	kPoolsLo 0x685d98 -	b0
 src/game/magic_s16_fuzz.cpp	CheckAnswers	global	Mem	kPoolsLo	2	0x685d98	-	no-entry	kPoolsLo 0x685d98 -	b0
 src/game/magic_s16_fuzz.cpp	CheckAnswers	global	Mem	kPoolsLo	3	0x685d98	-	no-entry	kPoolsLo 0x685d98 -	b0
-src/game/magic_s17.cpp	void	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s17.cpp	void	record	Mem	table + 4 * index	0	-	-	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s17.cpp	Sin	global	Mem	kScratchA	0	0x903850	-	no-entry	kScratchA 0x903850 -	b0
 src/game/magic_s17.cpp	Sin	global	Mem	kScratchB	0	0x903854	-	no-entry	kScratchB 0x903854 -	b0
@@ -11446,7 +11384,6 @@ src/game/magic_s17_fuzz.cpp	SomeSprite	raw	Mem	0x68C0B8 + i * 0x84	1	0x68c0b8	-	
 src/game/magic_s17_fuzz.cpp	SomeSprite	record	SetLong	sc + 0xC	0	-	base=Sprite_Current	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s17_fuzz.cpp	Args	raw	Mem	0x9037A0 + ((h >> 12) & 0x1E)	0	0x9037a0	-	-	-	-
 src/game/magic_s17_fuzz.cpp	Args	raw	Mem	0x903850 + ((h >> 12) & 0xE)	0	0x903850	-	-	-	-
-src/game/magic_s18.cpp	void	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s18.cpp	void	global	Mem	kDs	0	0x903850	-	no-entry	kDs 0x903850 -	b0
 src/game/magic_s18.cpp	void	global	Mem	kDs	1	0x903850	-	no-entry	kDs 0x903850 -	b0
 src/game/magic_s18.cpp	Buff_Fade	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
@@ -11463,7 +11400,6 @@ src/game/magic_s18_fuzz.cpp	Seed	record	SetLong	sc + 0xC	0	-	base=Sprite_Current
 src/game/magic_s18_fuzz.cpp	Disturb	global	Mem	kActionId	0	0x904b80	-	no-entry	kActionId 0x904b80 -	b0
 src/game/magic_s18_fuzz.cpp	Disturb	global	Mem	kCommandKind	0	0x904b35	-	no-entry	kCommandKind 0x904b35 -	b0
 src/game/magic_s19.cpp	void	global	Mem	kPool	0	0x68fa78	-	no-entry	kPool 0x68fa78 -	b0
-src/game/magic_s19.cpp	void	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s19.cpp	void	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s19.cpp	void	record	Mem	table + 4 * index	0	-	-	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s19.cpp	Shield_Start	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
@@ -11533,7 +11469,6 @@ src/game/magic_s19_fuzz.cpp	Near	record	SetLong	sc + 0x20	0	-	base=Sprite_Curren
 src/game/magic_s19_fuzz.cpp	Disturb	raw	Mem	0x904B80	0	0x904b80	-	-	-	-
 src/game/magic_s19_fuzz.cpp	SelfTest	raw	Mem	0x65B404	0	0x65b404	-	-	-	-
 src/game/magic_s20.cpp	void	global	Mem	kScratch	0	0x903850	-	no-entry	kScratch 0x903850 -	b0
-src/game/magic_s20.cpp	void	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s20.cpp	void	global	Mem	kPoolA	0	0x6906d8	-	untyped-entry	kPoolA 0x6906d8 Magic087_Motes	b0
 src/game/magic_s20.cpp	void	global	Mem	kPoolB	0	0x693018	-	untyped-entry	kPoolB 0x693018 Magic092_Motes	b0
 src/game/magic_s20.cpp	void	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
@@ -11570,8 +11505,7 @@ src/game/magic_s21.cpp	Bump	global	L	at::kTarget	0	0x904b44	-	no-entry	at::kTarg
 src/game/magic_s21.cpp	CallCell	record	L	table + 4 * index	0	-	param	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s21.cpp	FlamePool_Alloc	record	Long	slot + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local slot is made inline (unsigned char* const slot = Mem(FlamePool_addr + i * at::kTaskStride);), not by a helper the converter reads	b1-magic
 src/game/magic_s21.cpp	Inferno_Start	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/magic_s21.cpp	Inferno_Start	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
-src/game/magic_s21.cpp	Inferno_Start	record	SetLong	child + 0x80	0	-	table=0x93a000;stride=0x84	expr	BattleTask::owner: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s21.cpp	Inferno_Start	record	SetLong	child + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
 src/game/magic_s21.cpp	Inferno_Start	record	SetLong	slot + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local slot is made inline (unsigned char* const slot = Mem(FlamePool_addr + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
 src/game/magic_s21.cpp	Inferno_Start	record	SetLong	slot + 0x80	1	-	stride=0x84	expr	BattleTask::owner: the local slot is made inline (unsigned char* const slot = Mem(FlamePool_addr + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
 src/game/magic_s21.cpp	Inferno_Start	record	Mem	p - 0x4000	0	-	stride=0x84	computed	offset computed (p - 0x4000)	b1-magic
@@ -11586,10 +11520,9 @@ src/game/magic_s21.cpp	Frost_Start	record	Long	src + 0x34	0	-	-	family	an actor 
 src/game/magic_s21.cpp	Frost_Start	record	Long	src + 0x38	0	-	-	family	an actor pointer (the owner 0x93B940, the source, the caster, or party-or-enemy by index): PartyMember or BattleEnemy or a task, no one struct	b1-magic
 src/game/magic_s21.cpp	Frost_Start	record	Long	src + 0x3C	0	-	-	family	an actor pointer (the owner 0x93B940, the source, the caster, or party-or-enemy by index): PartyMember or BattleEnemy or a task, no one struct	b1-magic
 src/game/magic_s21.cpp	Frost_Start	record	Word	src + 0x30	0	-	-	family	an actor pointer (the owner 0x93B940, the source, the caster, or party-or-enemy by index): PartyMember or BattleEnemy or a task, no one struct	b1-magic
-src/game/magic_s21.cpp	Frost_Start	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
-src/game/magic_s21.cpp	Frost_Start	record	SetLong	child + 0x80	0	-	table=0x93a000;stride=0x84	expr	BattleTask::owner: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
-src/game/magic_s21.cpp	Frost_Start	record	SetLong	child + 0x34	0	-	table=0x93a000;stride=0x84	expr	BattleTask::x: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
-src/game/magic_s21.cpp	Frost_Start	record	SetLong	child + 0x38	0	-	table=0x93a000;stride=0x84	expr	BattleTask::y: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s21.cpp	Frost_Start	record	SetLong	child + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s21.cpp	Frost_Start	record	SetLong	child + 0x34	0	-	stride=0x84	expr	BattleTask::x: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s21.cpp	Frost_Start	record	SetLong	child + 0x38	0	-	stride=0x84	expr	BattleTask::y: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
 src/game/magic_s21.cpp	Frost_Wait	record	Word	src + 0x30	0	-	-	family	an actor pointer (the owner 0x93B940, the source, the caster, or party-or-enemy by index): PartyMember or BattleEnemy or a task, no one struct	b1-magic
 src/game/magic_s21.cpp	Frost_Wait	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_s21.cpp	Frost_Wait	global	Mem	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
@@ -11607,10 +11540,9 @@ src/game/magic_s21.cpp	FrostRing_DrawDisc	global	L	kScratch	0	0x903850	-	no-entr
 src/game/magic_s21.cpp	FrostRing_DrawDisc	global	L	kScratch	1	0x903850	-	no-entry	kScratch 0x903850 -	b0
 src/game/magic_s21.cpp	FrostRing_DrawDisc	global	L	kScratch	2	0x903850	-	no-entry	kScratch 0x903850 -	b0
 src/game/magic_s21.cpp	FrostRing_DrawDisc	global	L	kScratch	3	0x903850	-	no-entry	kScratch 0x903850 -	b0
-src/game/magic_s21.cpp	Iceblast_Start	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
-src/game/magic_s21.cpp	Iceblast_Start	record	SetLong	child + 0x80	0	-	table=0x93a000;stride=0x84	expr	BattleTask::owner: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
-src/game/magic_s21.cpp	Iceblast_Start	record	SetLong	child + 0x34	0	-	table=0x93a000;stride=0x84	expr	BattleTask::x: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
-src/game/magic_s21.cpp	Iceblast_Start	record	SetLong	child + 0x38	0	-	table=0x93a000;stride=0x84	expr	BattleTask::y: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s21.cpp	Iceblast_Start	record	SetLong	child + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s21.cpp	Iceblast_Start	record	SetLong	child + 0x34	0	-	stride=0x84	expr	BattleTask::x: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
+src/game/magic_s21.cpp	Iceblast_Start	record	SetLong	child + 0x38	0	-	stride=0x84	expr	BattleTask::y: the local child is made inline (unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);), not by a helper the converter reads	b1-magic
 src/game/magic_s21.cpp	Iceblast_Chill	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_s21.cpp	Iceblast_End	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_s21.cpp	Iceblast_End	global	Mem	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
@@ -11643,7 +11575,6 @@ src/game/magic_s22.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s22.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s22.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s22.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s22.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s22.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s22.cpp	BlizzardShard_Launch	record	SetLong	Sc() + first	0	-	via=Sc	computed	offset computed (Sc() + first)	b1-magic
 src/game/magic_s22.cpp	BlizzardShard_Launch	record	SetLong	Sc() + second	0	-	via=Sc	computed	offset computed (Sc() + second)	b1-magic
@@ -11826,7 +11757,6 @@ src/game/magic_s22_fuzz.cpp	SetFloat	raw	SetPointer	0x7E0670	0	0x7e0670	-	-	-	-
 src/game/magic_s22_fuzz.cpp	SetFloat	record	SetLong	PacketAt(q) + 0x2C	0	-	via=PacketAt	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s22_fuzz.cpp	SetFloat	global	Mem	mh::at::kTarget	0	0x904b44	-	no-entry	mh::at::kTarget 0x904b44 -	b0
 src/game/magic_s22_fuzz.cpp	SetFloat	global	Mem	mh::at::kTarget	1	0x904b44	-	no-entry	mh::at::kTarget 0x904b44 -	b0
-src/game/magic_s23.cpp	Slot	global	Mem	hat::kTasks	0	0x93a000	-	no-entry	hat::kTasks 0x93a000 -	b0
 src/game/magic_s23.cpp	Entry	record	Mem	table + 4 * index	0	-	param	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s23.cpp	TargetRecord	global	Mem	hat::kTarget	0	0x904b44	-	-	-	-
 src/game/magic_s23.cpp	Facing	global	Mem	hat::kTarget	0	0x904b44	-	-	-	-
@@ -12018,7 +11948,6 @@ src/game/magic_s23_fuzz.cpp	Disturb	global	Mem	at::kR	0	0x903850	-	no-entry	at::
 src/game/magic_s23_fuzz.cpp	Disturb	global	Mem	at::kQuakeEnemyZ	0	0x695994	-	no-entry	at::kQuakeEnemyZ 0x695994 -	b0
 src/game/magic_s23_fuzz.cpp	Disturb	global	Mem	at::kQuakeEnemyUp	0	0x6959d0	-	no-entry	at::kQuakeEnemyUp 0x6959d0 -	b0
 src/game/magic_s23_fuzz.cpp	Disturb	global	Mem	at::kQuakeSpriteZ	0	0x6959e0	-	no-entry	at::kQuakeSpriteZ 0x6959e0 -	b0
-src/game/magic_s24.cpp	Bump	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s24.cpp	Bump	global	Mem	cell::kMotePool	0	0x695c38	-	-	-	-
 src/game/magic_s24.cpp	Bump	record	Mem	table + 4 * index	0	-	-	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s24.cpp	SpawnRingChild	record	SetPtr	t + 0x80	0	-	via=TaskSlot	accessor	SetPtr stores / reads through a file-local pointer helper (Addr / Key), left as written	b1-magic
@@ -12079,7 +12008,6 @@ src/game/magic_s24.cpp	Fx106_DrawSpark	record	Long	k + 0x10	1	-	via=Spark	field-
 src/game/magic_s24.cpp	Fx106_DrawSpark	record	Long	k + 0x14	1	-	via=Spark	field-missing	struct unknown: Spark; records.h has no struct for this record	b1-magic
 src/game/magic_s24_fuzz.cpp	PrimAt	global	Mem	cell::kMotePool	0	0x695c38	-	-	-	-
 src/game/magic_s24_fuzz.cpp	Seed	global	SetPointer	cell::kMotePool	0	0x695c38	-	-	-	-
-src/game/magic_s24_fuzz.cpp	Seed	global	SetPointer	mh::at::kTasks	0	0x93a000	-	no-entry	mh::at::kTasks 0x93a000 -	b0
 src/game/magic_s24_fuzz.cpp	Seed	record	SetWord	task + 0x5A	0	-	via=TaskAt	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s24_fuzz.cpp	Seed	global	Mem	mh::at::kTarget	0	0x904b44	-	no-entry	mh::at::kTarget 0x904b44 -	b0
 src/game/magic_s24_fuzz.cpp	Seed	record	SetLong	sc + 0x14	0	-	base=Sprite_Current	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
@@ -12089,7 +12017,6 @@ src/game/magic_s24_fuzz.cpp	Seed	record	SetWord	sc + 0x30	0	-	base=Sprite_Curren
 src/game/magic_s24_fuzz.cpp	Seed	record	SetWord	spark + 0xC	0	-	via=Spark	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s24_fuzz.cpp	Disturb	global	Mem	cell::kScratch	0	0x903850	-	no-entry	cell::kScratch 0x903850 -	b0
 src/game/magic_s25.cpp	V	global	Mem	kScratch	0	0x903850	-	no-entry	kScratch 0x903850 -	b0
-src/game/magic_s25.cpp	V	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s25.cpp	TableEntry	record	Mem	table + 4 * phase	0	-	param	computed	offset computed (table + 4 * phase)	b1-magic
 src/game/magic_s25.cpp	SpellSleep_Start	record	SetPointer	child + 0x80	0	-	via=Task	accessor	SetPointer stores / reads through a file-local pointer helper (Addr / Key), left as written	b1-magic
 src/game/magic_s25.cpp	SpellConfuse_Start	record	SetPointer	child + 0x80	0	-	via=Task	accessor	SetPointer stores / reads through a file-local pointer helper (Addr / Key), left as written	b1-magic
@@ -12166,7 +12093,6 @@ src/game/magic_s25_fuzz.cpp	Seed	record	SetWord	sc + 0x30	1	-	base=Sprite_Curren
 src/game/magic_s25_fuzz.cpp	Seed	record	SetLong	sc + 0x14	0	-	base=Sprite_Current	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s25_fuzz.cpp	Seed	record	SetLong	sc + 0x64	1	-	base=Sprite_Current	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s26.cpp	Sc	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/magic_s26.cpp	Sc	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s26.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s26.cpp	Magic114_Launch	record	SetL	child + 0x80	0	-	via=TaskSlot	accessor	SetL stores / reads through a file-local pointer helper (Addr / Key), left as written	b1-magic
 src/game/magic_s26.cpp	Magic114_End	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -12242,7 +12168,6 @@ src/game/magic_s27.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s27.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s27.cpp	Sc	record	SetSW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s27.cpp	Sc	record	SW	k	1	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
-src/game/magic_s27.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s27.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s27.cpp	SinShlW	record	SW	add	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s27.cpp	CosShlW	record	SW	add	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
@@ -12371,7 +12296,6 @@ src/game/magic_s28.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: 
 src/game/magic_s28.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s28.cpp	Sc	record	SetSW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s28.cpp	Sc	record	SW	k	1	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
-src/game/magic_s28.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s28.cpp	TaskSlot	record	Mem	pool + k * at::kTaskStride	0	-	-	computed	offset computed (pool + k * at::kTaskStride)	b1-magic
 src/game/magic_s28.cpp	CallCell	record	Mem	table + 4 * index	0	-	param	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s28.cpp	OffsetByDirection	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
@@ -12462,7 +12386,6 @@ src/game/magic_s28_fuzz.cpp	Seed	record	SetLong	sc + 0xC	0	-	via=Sc	harness	star
 src/game/magic_s28_fuzz.cpp	Seed	record	SetLong	sc + 0xC	1	-	via=Sc	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s28_fuzz.cpp	Disturb	global	Mem	kScratch	0	0x903850	-	no-entry	kScratch 0x903850 -	b0
 src/game/magic_s29.cpp	Sc	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/magic_s29.cpp	Sc	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s29.cpp	Sc	global	Mem	cell::kMotePool	0	0x69fc30	-	-	-	-
 src/game/magic_s29.cpp	Sc	record	Mem	table + 4 * index	0	-	-	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s29.cpp	LinkAtCur	record	Long	r + 0x10	0	-	via=Cur	field-missing	struct unknown: Cur; records.h has no struct for this record	b1-magic
@@ -12514,7 +12437,6 @@ src/game/magic_s30.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s30.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s30.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s30.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s30.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s30.cpp	Entry	record	Mem	table + 4 * index	0	-	param	computed	offset computed (table + 4 * index)	b1-magic
 src/game/magic_s30.cpp	VenomRing_Start	record	Mem	Addr(VenomRing_ScreenY) + 2 * Sc()[0xB]	0	-	via=Addr	computed	offset computed (Addr(VenomRing_ScreenY) + 2 * Sc()[0xB])	b1-magic
 src/game/magic_s30.cpp	VenomRing_DrawFan	record	SetSW	0	0	0x903850	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
@@ -12619,7 +12541,6 @@ src/game/magic_s31.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s31.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s31.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s31.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s31.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s31.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s31.cpp	DoomBreath_Fade	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_s31.cpp	DoomBreath_End	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -12758,7 +12679,6 @@ src/game/magic_s31_fuzz.cpp	Seed	global	Mem	mh::at::kActor	1	0x904b34	-	no-entry
 src/game/magic_s31_fuzz.cpp	Seed	record	Word	ActorRecord() + 0x30	0	-	via=ActorRecord	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s31_fuzz.cpp	Seed	record	SetLong	sc + 0x1C	0	-	via=Sc	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s32.cpp	Sc	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/magic_s32.cpp	Sc	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s32.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s32.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s32.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
@@ -12797,7 +12717,6 @@ src/game/magic_s33.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s33.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s33.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s33.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s33.cpp	Sc	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s33.cpp	Sc	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s33.cpp	Accession_Start	raw	Mem	0x8031F3	0	0x8031f3	-	-	-	-
 src/game/magic_s33.cpp	Accession_Start	global	Mem	kBannerIds	0	0x64ecb0	-	no-entry	kBannerIds 0x64ecb0 -	b0
@@ -12815,11 +12734,8 @@ src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	kMemberC10	0	0x939c10	-	no-en
 src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_s33.cpp	Accession_ApplyB	record	SetLong	first + k	0	-	via=PartyRecord	computed	offset computed (first + k)	b1-magic
 src/game/magic_s33.cpp	Accession_ApplyB	record	Long	from + k	0	-	via=PartyRecord	computed	offset computed (from + k)	b1-magic
-src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
-src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	at::kTasks	1	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s33.cpp	Accession_ApplyB	raw	Mem	0x904AB0	0	0x904ab0	-	-	-	-
 src/game/magic_s33.cpp	Accession_ApplyB	raw	Mem	0x904AA9	0	0x904aa9	-	-	-	-
-src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	at::kTasks	2	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_s33.cpp	Accession_ApplyB	raw	Mem	0x904AB0	1	0x904ab0	-	-	-	-
 src/game/magic_s33.cpp	Accession_ApplyB	global	Mem	kWindowRows	0	0x803337	-	no-entry	kWindowRows 0x803337 -	b0
@@ -12938,7 +12854,6 @@ src/game/magic_s34.cpp	Sc	global	Mem	kS	0	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s34.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s34.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s34.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s34.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s34.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s34.cpp	LinkAtCur	record	Long	r + 0x14	0	-	via=Cur	field-missing	struct unknown: Cur; records.h has no struct for this record	b1-magic
 src/game/magic_s34.cpp	LinkAtCur	record	Long	r + 0x18	0	-	via=Cur	field-missing	struct unknown: Cur; records.h has no struct for this record	b1-magic
@@ -13041,7 +12956,6 @@ src/game/magic_s35.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s35.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s35.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s35.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s35.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s35.cpp	SinSD0	record	SD	0	0	0x903850	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s35.cpp	LinkAt	record	Long	r + 0x14	0	-	via=Cur	field-missing	struct unknown: Cur; records.h has no struct for this record	b1-magic
 src/game/magic_s35.cpp	LinkAt	record	Long	r + 0x18	0	-	via=Cur	field-missing	struct unknown: Cur; records.h has no struct for this record	b1-magic
@@ -13194,7 +13108,6 @@ src/game/magic_s36.cpp	Sc	record	SW	k	0	-	base=kS	field-missing	struct unknown: 
 src/game/magic_s36.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s36.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s36.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s36.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s36.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s36.cpp	RimPair	record	SetSW	4	0	0x903854	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
 src/game/magic_s36.cpp	DiscG3	record	SB	k	0	-	base=kS	field-missing	struct unknown: kS = DamageScratch 0x903850 (symbols.toml [[block]], PSX scratchpad 0x1F800000); records.h has no struct for it	b1-magic
@@ -13315,7 +13228,6 @@ src/game/magic_s36_fuzz.cpp	FlagsEffect	raw	Mem	0x6B4A58 + ((a[0] - 3) & 7)	0	0x
 src/game/magic_s36_fuzz.cpp	Byte	global	Mem	kScratch	0	0x903850	-	no-entry	kScratch 0x903850 -	b0
 src/game/magic_s36_fuzz.cpp	Byte	record	SetWord	Sc() + f	0	-	via=Sc	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
 src/game/magic_s36_fuzz.cpp	Near	record	Byte	before + (mh::Half() ? 1u : 0u)	0	-	param	harness	start-up fuzz / harness file: accessors keep the seam (B0 harness rule)	b1-magic
-src/game/magic_s36_fuzz.cpp	Seed	global	Mem	mh::at::kTasks	0	0x93a000	-	no-entry	mh::at::kTasks 0x93a000 -	b0
 src/game/magic_s36_fuzz.cpp	Seed	global	Mem	mh::at::kActor	0	0x904b34	-	no-entry	mh::at::kActor 0x904b34 -	b0
 src/game/magic_s36_fuzz.cpp	Seed	global	Mem	mh::at::kActor	1	0x904b34	-	no-entry	mh::at::kActor 0x904b34 -	b0
 src/game/magic_s36_fuzz.cpp	Seed	global	Mem	kScratch	0	0x903850	-	no-entry	kScratch 0x903850 -	b0
@@ -13330,7 +13242,6 @@ src/game/magic_s37.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s37.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s37.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s37.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s37.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s37.cpp	WalkPool	record	Mem	pool + i * 0x84u	0	-	param	computed	offset computed (pool + i * 0x84u)	b1-magic
 src/game/magic_s37.cpp	WalkPool	record	Long	rec + 0x80	0	-	stride=0x84	expr	BattleTask::owner: the local rec is made inline (unsigned char* const rec = Mem(pool + i * 0x84u);), not by a helper the converter reads	b1-magic
 src/game/magic_s37.cpp	PoolAlloc	record	Mem	pool + i * 0x84u	0	-	param	computed	offset computed (pool + i * 0x84u)	b1-magic
@@ -13392,7 +13303,6 @@ src/game/magic_s38.cpp	Sc	global	Mem	kS	1	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s38.cpp	Sc	global	Mem	kS	2	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s38.cpp	Sc	global	Mem	kS	3	0x903850	-	no-entry	kS 0x903850 -	b0
 src/game/magic_s38.cpp	Sc	global	Mem	kS	4	0x903850	-	no-entry	kS 0x903850 -	b0
-src/game/magic_s38.cpp	TaskSlot	global	Mem	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/magic_s38.cpp	TaskSlot	record	Mem	pool + index * 0x84u	0	-	param	computed	offset computed (pool + index * 0x84u)	b1-magic
 src/game/magic_s38.cpp	TaskSlot	global	Mem	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/magic_s38.cpp	Tempest_End	global	Mem	at::kFlags	0	0x904aa8	-	no-entry	at::kFlags 0x904aa8 -	b0
@@ -15762,7 +15672,6 @@ src/game/rest_2g.cpp	BattleResultWin_ExpToNext	global	At	at::kCharRecords	0	0x90
 src/game/rest_2g.cpp	BattleResultWin_ExpToNext	global	At	at::kExpTable	0	0x658f48	-	untyped-entry	at::kExpTable 0x658f48 Char_ExpTable	b0
 src/game/rest_2g.cpp	GeneWin_GridOpen	global	At	at::kGridWords	0	0x939820	-	no-entry	at::kGridWords 0x939820 -	b0
 src/game/rest_2g.cpp	GeneWin_GridOpen	global	B	at::kGridCells	0	0x939a60	-	no-entry	at::kGridCells 0x939a60 -	b0
-src/game/rest_2g.cpp	GeneWin_GridOpen	global	At	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/rest_2g.cpp	MenuList_WideTitleBox	record	Word	r + 0x10	0	-	via=Rec	union	WindowRecord +0x10 w2 (Word(r + 0x10))	b1-rest
 src/game/rest_2g.cpp	MenuList_WideTitleBox	record	Word	r + 0x10	1	-	via=Rec	union	WindowRecord +0x10 w2 (Word(r + 0x10))	b1-rest
 src/game/rest_2g.cpp	MenuList_WideTitleBox	record	Word	r + 0x10	2	-	via=Rec	union	WindowRecord +0x10 w2 (Word(r + 0x10))	b1-rest
@@ -15784,7 +15693,6 @@ src/game/rest_2g_fuzz.cpp	Key	global	Mem	at::kWindows	0	0x803160	-	no-entry	at::
 src/game/rest_2g_fuzz.cpp	-	global	-	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/rest_2g_fuzz.cpp	-	global	-	at::kGridWords	0	0x939820	-	no-entry	at::kGridWords 0x939820 -	b0
 src/game/rest_2g_fuzz.cpp	-	global	-	at::kGridCells	0	0x939a60	-	no-entry	at::kGridCells 0x939a60 -	b0
-src/game/rest_2g_fuzz.cpp	-	global	-	at::kTasks	0	0x93a000	-	no-entry	at::kTasks 0x93a000 -	b0
 src/game/rest_2g_fuzz.cpp	Move	record	SetWord	r + 0x10	0	-	via=Current	union	WindowRecord +0x10 w2 (SetWord(r + 0x10))	b1-rest
 src/game/rest_2g_fuzz.cpp	Move	record	SetLong	r + 0x20	0	-	via=Current	pad	WindowRecord +0x20 w4: inside records.h padding (SetLong(r + 0x20))	b1-rest
 src/game/rest_2g_fuzz.cpp	Move	global	Mem	at::kGridCells	0	0x939a60	-	no-entry	at::kGridCells 0x939a60 -	b0

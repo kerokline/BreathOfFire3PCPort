@@ -99,7 +99,7 @@ int ShlSar(int v, unsigned l, unsigned r) { return static_cast<int>(static_cast<
 // `cdq / sub eax, edx / sar 1`: a signed halving toward zero.
 int Half(int v) { return (v - (v >> 31)) >> 1; }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 unsigned char* PoolRecord(unsigned i) { return Mem(Addr(SnapSpark_Pool) + i * kPoolStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }

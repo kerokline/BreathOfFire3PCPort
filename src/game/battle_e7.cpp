@@ -96,7 +96,7 @@ unsigned char* TaskSlot(const char* who, unsigned slot) {
         bof3::Fatal("%s: BattleTask_Create answered slot %u, past the %u of the pool - the original writes its +9 / "
                     "+0xA past the pool (docs/battle_e7.md section 7)",
                     who, slot, at::kTaskCount);
-    return At(at::kTasks + slot * at::kTaskStride);
+    return At(BattleTask_Slots_addr + slot * at::kTaskStride);
 }
 
 // call [esp + 4 * record +3] over a stack table of `n`: a Fatal past it (the

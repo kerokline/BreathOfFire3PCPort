@@ -116,7 +116,7 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 unsigned char* MagmaRecord(unsigned index) { return Mem(MagmaBreath_Pool_addr + index * 0x84u); }
 unsigned char* GeoRecord(unsigned index) { return Mem(GeoBreath_Pool_addr + index * 0x84u); }
 

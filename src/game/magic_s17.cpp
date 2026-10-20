@@ -92,7 +92,7 @@ using SortFn = void (__cdecl*)(std::uint32_t, std::uint32_t, long*, unsigned cha
 
 void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
-unsigned char* Task(unsigned slot) { return Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride); }
+unsigned char* Task(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
 unsigned char* Mote(unsigned i) { return Mem(ReviveMote_Pool_addr + (i & 0xFF) * kMoteStride); }
 unsigned char* Tint(unsigned i) { return Mem(MoveScript_TintRecords_addr + (i & 0xFF) * 12u); }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }

@@ -438,7 +438,7 @@ void Fix() {
         unsigned char* const t = TaskAt(k);
         t[1] = static_cast<unsigned char>(Next() % 3);
         t[2] = static_cast<unsigned char>(Next() % 3);
-        SetPointer(at::kTasks + k * at::kTaskStride + 0x80, OwnerFor(Next()));
+        SetPointer(BattleTask_Slots_addr + k * at::kTaskStride + 0x80, OwnerFor(Next()));
     }
 }
 
@@ -470,7 +470,7 @@ bool Often() { return Next() % 3 != 0; }
 bool Half() { return (Next() & 1) != 0; }
 std::uint32_t Pick(const std::uint32_t* v, unsigned n) { return v[Next() % n]; }
 unsigned char* Mem(std::uint32_t address) { return move_script::At(address); }
-unsigned char* TaskAt(unsigned k) { return Mem(at::kTasks + (k % 4) * at::kTaskStride); }
+unsigned char* TaskAt(unsigned k) { return Mem(BattleTask_Slots_addr + (k % 4) * at::kTaskStride); }
 unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* EnemyOf(unsigned char target) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
@@ -556,7 +556,7 @@ void Run(const Group& group) {
     // the regions: the standard ones, then the group's
     g_region_n = 0;
     const Region standard[] = {
-        {at::kTasks, at::kTaskCount * at::kTaskStride},
+        {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride},
         {0x93B8C0, 0xA0},                                  // the current slot, the owner, and 0x93B8E0.. (an enemy index of 2)
         {0x937F88, 0x10},                                  // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter
         {at::kBattle, at::kBattleSize},

@@ -48,7 +48,7 @@ using move_script::Word;
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 
 // `imul` (the 32-bit product wraps) then an arithmetic shift.

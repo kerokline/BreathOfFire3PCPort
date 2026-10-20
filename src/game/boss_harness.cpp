@@ -1043,7 +1043,7 @@ void Fix() {
         unsigned char* const t = TaskAt(k);
         t[1] = static_cast<unsigned char>(Next() % 3);
         t[2] = static_cast<unsigned char>(Next() % 3);
-        SetPointer(at::kTasks + k * at::kTaskStride + 0x80, OwnerFor(Next()));
+        SetPointer(BattleTask_Slots_addr + k * at::kTaskStride + 0x80, OwnerFor(Next()));
     }
     for (unsigned k = 0; k < at::kEnemyCount; ++k) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(EnemyAt(k));
@@ -1120,7 +1120,7 @@ unsigned char* EnemyOf(unsigned char target) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyOf(unsigned char member) { return Mem(ObjTrio_addr + (member % at::kPartyCount) * at::kPartyStride); }
-unsigned char* TaskAt(unsigned k) { return Mem(at::kTasks + (k % 4) * at::kTaskStride); }
+unsigned char* TaskAt(unsigned k) { return Mem(BattleTask_Slots_addr + (k % 4) * at::kTaskStride); }
 unsigned char* Object(unsigned k) { return Mem(Sprite_Objects_addr + (k % at::kObjectCount) * at::kObjectStride); }
 unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* Packets() { return g_packets; }
@@ -1238,7 +1238,7 @@ void Run(const Group& group) {
     // the regions: one battle frame (docs/boss_harness.md section 4), then the group's
     g_region_n = 0;
     const Region standard[] = {
-        {at::kTasks, at::kTaskCount * at::kTaskStride},             // the 48 task slots
+        {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride},  // the 48 task slots
         {0x93B8C0, 0xA0},                                           // the current slot, the owner
         {at::kEnemies, at::kEnemyCount * at::kEnemyStride + 0x80},  // the enemies' objects, their working records' tail
         {0x937F80, 0x18},                                           // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter

@@ -493,7 +493,7 @@ extern "C" void __cdecl BossAngler_HookSpawnFx(unsigned) {
                     "bytes to 0x93A000 + 0x84 * 0x%X, past the slots and the image (docs/boss_sh.md section 6)",
                     slot, slot);
     const std::int32_t actor = static_cast<std::int32_t>(B(at::kActor)) - 3;
-    unsigned char* const to = At(at::kTasks + at::kTaskStride * slot);
+    unsigned char* const to = At(BattleTask_Slots_addr + at::kTaskStride * slot);
     const unsigned char* const from = At(static_cast<U>(static_cast<std::int32_t>(at::kEnemies) + actor * static_cast<std::int32_t>(at::kEnemyStride)));
     for (unsigned i = 0; i < 0x80; i += 4) {
         std::uint32_t d;

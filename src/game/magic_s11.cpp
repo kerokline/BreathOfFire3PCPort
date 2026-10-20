@@ -126,7 +126,7 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
 unsigned char* SMote(unsigned i) { return Mem(SanctuaryMote_Pool_addr + (i & 0xFF) * kPoolStride); }
 unsigned char* TMote(unsigned i) { return Mem(TornadoMote_Pool_addr + (i & 0xFF) * kPoolStride); }
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }

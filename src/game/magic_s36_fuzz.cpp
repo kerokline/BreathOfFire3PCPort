@@ -438,7 +438,7 @@ void Seed(unsigned k) {
     case kMagicBallCore_Fly: Near(sc[9], 0xF); break;
     case kMagicBallOrb_Fly:
         Near(sc[9], 0xF);
-        if (mh::Often()) mh::Mem(mh::at::kTasks + sc[4] * mh::at::kTaskStride + 2)[0] = Byte(1 + mh::Next() % 2);
+        if (mh::Often()) mh::Mem(BattleTask_Slots_addr + sc[4] * mh::at::kTaskStride + 2)[0] = Byte(1 + mh::Next() % 2);
         break;
     case kIntimidateTrail_Start:
         if (mh::Often()) {

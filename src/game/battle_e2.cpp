@@ -67,7 +67,7 @@ unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
 // address them (32-bit wrap: an index below its base reads below the array).
 unsigned char* EnemyObj(U index) { return At(at::kEnemies + index * at::kEnemyStride); }
 unsigned char* Member(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
-unsigned char* Task(U slot) { return At(at::kTasks + slot * at::kTaskStride); }
+unsigned char* Task(U slot) { return At(BattleTask_Slots_addr + slot * at::kTaskStride); }
 
 // A party member the restore steps write through (or read from before they
 // write): the original indexes the three records by a byte it never checks;

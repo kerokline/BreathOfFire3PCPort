@@ -62,7 +62,7 @@ void AddLong(unsigned char* at, std::int32_t v) {
     SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + static_cast<std::uint32_t>(v)));
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The acting actor's record as the originals index it: a member (0x802D40,
 // stride 0x14C) at 0..2, else the enemy by index - 3 (0x93B960, stride
 // 0x128), unchecked.

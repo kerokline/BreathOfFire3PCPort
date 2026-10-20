@@ -377,7 +377,7 @@ extern "C" void __cdecl Formation_ApplyStatMods(void) {
 // amount or with bit 4, and 3 for zero.
 extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
     const unsigned slot = g.popup_slot(0, 1);
-    unsigned char* const rec = At(at::kPopups + (slot & 0xFFu) * at::kPopupStride);
+    unsigned char* const rec = At(BattleTask_Slots_addr + (slot & 0xFFu) * at::kPopupStride);
     auto* const popup = rv::As<records::BattleTask>(rec);
     rec[0xB] = 0;
     const unsigned char who = static_cast<unsigned char>(actor);
@@ -553,7 +553,7 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
     const unsigned slot = g.popup_slot(0, 3) & 0xFFu;
     const unsigned char actor = At(at::kActor)[0];
     const unsigned char* const block = Ptr(At(BattleSprites_HitBlock_addr));
-    unsigned char* const rec = At(at::kPopups + slot * at::kPopupStride);
+    unsigned char* const rec = At(BattleTask_Slots_addr + slot * at::kPopupStride);
     auto* const popup = rv::As<records::BattleTask>(rec);
     unsigned char* const s = Sprite_Current;
     popup->owner = Address(s);

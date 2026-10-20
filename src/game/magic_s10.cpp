@@ -107,7 +107,7 @@ std::uint32_t Mul(int a, int b) { return static_cast<std::uint32_t>(a) * static_
 // `shl n` on a dword.
 std::uint32_t Shl(int v, unsigned n) { return static_cast<std::uint32_t>(v) << n; }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 unsigned char* PoolRecord(unsigned index) { return Mem(Lavaburst_Pool_addr + index * 0x84u); }
 // The originals index the records by the battle index, unchecked: the party
 // member's by index, the enemy's by index - 3 (a party index lands below the

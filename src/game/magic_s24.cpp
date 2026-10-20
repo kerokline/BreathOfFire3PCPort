@@ -75,7 +75,7 @@ inline void PutFloat(unsigned char* p, int v) {
 inline void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 inline void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 inline unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-inline unsigned char* TaskSlot(unsigned index) { return Mem(at::kTasks + (index & 0xFFu) * at::kTaskStride); }
+inline unsigned char* TaskSlot(unsigned index) { return Mem(BattleTask_Slots_addr + (index & 0xFFu) * at::kTaskStride); }
 inline unsigned char* Mote(unsigned index) { return Mem(cell::kMotePool + (index & 0xFFu) * cell::kMoteStride); }
 inline unsigned char* SparkRec(unsigned index) { return Mem(Fx106_SparkPool_addr + (index & 0xFFu) * cell::kSparkStride); }
 inline unsigned char* Spark() { return Pointer(Fx106_SparkCurrent_addr); }

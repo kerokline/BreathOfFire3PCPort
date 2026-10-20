@@ -509,7 +509,7 @@ void SpawnOnActors(const Pool& p, unsigned char kind, unsigned parameter) {
     do {
         if (MH_CALL(Battle_ActorIsOut)(i) == 0) {
             const unsigned char slot = MH_CALL(BattleTask_Create)(1, parameter);
-            unsigned char* const t = Mem(at::kTasks + slot * at::kTaskStride);
+            unsigned char* const t = Mem(BattleTask_Slots_addr + slot * at::kTaskStride);
             unsigned char* const sc = Sprite_Current;
             SetLong(t + 0x80, PtrValue(sc));
             t[1] = 0;

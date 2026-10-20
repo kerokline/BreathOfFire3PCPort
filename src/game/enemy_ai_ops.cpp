@@ -203,7 +203,7 @@ extern "C" void __cdecl EnemyOp_Wait(void) {
     if ((e[0x92] & 0x20) != 0) {
         unsigned char* const s = Sc();
         auto* const enemy_s = rv::As<records::BattleEnemy>(s);
-        const auto slot = [s] { return At(at::kTasks + s[5] * at::kTaskSize); };
+        const auto slot = [s] { return At(BattleTask_Slots_addr + s[5] * at::kTaskSize); };
         bool flip;
         if ((enemy_rec->flags_110 & 0x800) != 0) {
             slot()[9] = static_cast<unsigned char>(slot()[9] + 1);

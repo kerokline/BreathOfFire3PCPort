@@ -106,7 +106,7 @@ U CurrentEnemy() { return BattleE3_CurrentEnemy; }
 unsigned char* Banner(U i) { return At(kBanners + i * 0xC); }
 
 // The context a slot byte names: 0x93A000 + slot * 0x84, no bound.
-U Context(U slot) { return kContexts + (slot & 0xFF) * kContextStride; }
+U Context(U slot) { return BattleTask_Slots_addr + (slot & 0xFF) * kContextStride; }
 
 }  // namespace
 

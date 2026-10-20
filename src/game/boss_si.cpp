@@ -436,9 +436,9 @@ extern "C" void __cdecl BossArwan_State4Fx(void) {
     if (slot >= at::kTaskCount)
         bof3::Fatal("BossArwan_State4Fx: BattleTask_Create answered slot %u, past the %u - the original stores the owner "
                     "at 0x%X (docs/boss_si.md section 6)",
-                    slot, at::kTaskCount, (unsigned)(at::kTaskOwners + at::kTaskStride * slot));
+                    slot, at::kTaskCount, (unsigned)(BattleTask_Slots_addr + 0x80 + at::kTaskStride * slot));
     unsigned char* const s = Sprite_Current;
-    SetLong(At(at::kTaskOwners + at::kTaskStride * slot), S(AddressOf(s)));
+    SetLong(At(BattleTask_Slots_addr + 0x80 + at::kTaskStride * slot), S(AddressOf(s)));
     s[2] = static_cast<unsigned char>(s[2] + 1);
 }
 

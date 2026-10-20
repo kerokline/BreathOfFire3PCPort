@@ -277,7 +277,7 @@ extern "C" unsigned __cdecl Battle_ClearStatus(unsigned actor, unsigned mask) {
     unsigned s = Word(status) & ~(mask & 0x48DFu);
     if ((mask & 0x20) && (s & 0x20)) {
         s &= ~0x20u;
-        std::memcpy(o + at::kPos, At(at::kSavedPos + a * at::kSavedPosStride), 12);
+        std::memcpy(o + at::kPos, At(BattleTask_Slots_addr + 0x34 + a * at::kSavedPosStride), 12);
     }
     g.release_tint(o);
     SetWord(status, s);

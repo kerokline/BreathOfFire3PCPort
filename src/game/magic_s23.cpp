@@ -67,7 +67,7 @@ std::int32_t Shl(std::int32_t a, int n) { return static_cast<std::int32_t>(stati
 void SetPointerAt(unsigned char* cell, const void* p) {
     SetLong(cell, static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p))));
 }
-unsigned char* Slot(unsigned index) { return Mem(hat::kTasks + index * hat::kTaskStride); }
+unsigned char* Slot(unsigned index) { return Mem(BattleTask_Slots_addr + index * hat::kTaskStride); }
 
 int Sin(int angle) { return MH_CALL(Math_Sin)(angle); }
 int Cos(int angle) { return MH_CALL(Math_Cos)(angle); }

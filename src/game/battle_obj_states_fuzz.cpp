@@ -34,7 +34,7 @@ using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kMemberSize); }
-unsigned char* Slot(unsigned i) { return At(at::kTasks + i * at::kTaskSize); }
+unsigned char* Slot(unsigned i) { return At(BattleTask_Slots_addr + i * at::kTaskSize); }
 unsigned char* S() { return Sprite_Current; }
 unsigned char* F() { return Field_State; }
 
@@ -322,7 +322,7 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {ObjTrio_addr, 3 * at::kMemberSize},   // ObjTrio: Sprite_Current and Field_State point here
     {at::kPhase, 0x100},                   // the battle's globals, 0x904AA0..0x904B9F
-    {at::kTasks, kTaskSlots * at::kTaskSize},
+    {BattleTask_Slots_addr, kTaskSlots * at::kTaskSize},
     {0x937F88, 4},                         // Sprite_Current
     {0x905D98, 4},                         // Field_State
     {BattleActorCopies_Command_addr, 4},

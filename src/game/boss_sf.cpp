@@ -111,7 +111,7 @@ unsigned char* TaskSlot(const char* who, unsigned n) {
         bof3::Fatal("%s: BattleTask_Create answered slot %u (all 48 taken) - the original writes at 0x93A000 + %u * 0x84, "
                     "past the pool (docs/boss_sf.md section 6)",
                     who, n, n);
-    return At(at::kTaskSlots + n * at::kTaskStride);
+    return At(BattleTask_Slots_addr + n * at::kTaskStride);
 }
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).

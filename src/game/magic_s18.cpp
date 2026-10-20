@@ -73,7 +73,7 @@ template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinte
 
 unsigned char* SC() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Slot(unsigned char k) { return Mem(at::kTasks + k * at::kTaskStride); }
+unsigned char* Slot(unsigned char k) { return Mem(BattleTask_Slots_addr + k * at::kTaskStride); }
 std::int32_t Ptr(const unsigned char* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }

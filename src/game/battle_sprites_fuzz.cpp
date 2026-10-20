@@ -408,7 +408,7 @@ struct Span { std::uint32_t at, size; unsigned region; };
 const Span kSpans[] = {
     {ObjTrio_addr, 0xFC0, kRParty},               // three party records, over-indexed ones, the window records
     {0x904000, 0xC00, kRGlobals},                 // the battle globals and the two bit sets
-    {at::kPopups, 0x3600, kRBattle},              // the pop-ups and the enemy records
+    {BattleTask_Slots_addr, 0x3600, kRBattle},    // the pop-ups and the enemy records
     {0x7E06A0, 0xD60, kRTints},                   // the clut map and the tint records (and 64 records past them)
     {at::kCells, 8, kRScratch},
     {Address(&Sprite_Current), 0xC, kRCurrent},   // Sprite_Current .. Gfx_ClutStripDirty

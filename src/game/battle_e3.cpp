@@ -119,7 +119,7 @@ unsigned char* TaskSlot(const char* who, unsigned n) {
         bof3::Fatal("%s: BattleTask_Create answered slot %u (all 48 taken) - the original writes at 0x93A000 + %u * 0x84, "
                     "past the pool (docs/battle_e3.md section 6)",
                     who, n, n);
-    return At(at::kTasks + n * at::kTaskStride);
+    return At(BattleTask_Slots_addr + n * at::kTaskStride);
 }
 
 // The party count 0x904AB0 as the loops over ObjTrio read it: a Fatal past its

@@ -524,7 +524,7 @@ extern "C" void __cdecl BossWeretigr_State4Fx(void) {
         bof3::Fatal("BossWeretigr_State4Fx: BattleTask_Create answered slot %u (all 48 taken) - the original copies into "
                     "0x93A000 + %u * 0x84, past the pool (docs/boss_sa.md section 6)",
                     n, n);
-    unsigned char* const task = At(at::kTaskSlots + n * at::kTaskStride);
+    unsigned char* const task = At(BattleTask_Slots_addr + n * at::kTaskStride);
     const U from = at::kEnemies + static_cast<U>(static_cast<std::int32_t>(B(at::kActor)) - 3) * at::kEnemyStride;
     for (U i = 0; i < 0x80; i += 4) SetLong(task + i, Long(At(from + i)));
     task[6] = 3;

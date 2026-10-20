@@ -98,7 +98,7 @@ void DrawMode(unsigned tpage) {
     Commit(0xC);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 
 // The two pools the tasks of MAGIC123 and MAGIC124 run themselves: records of
 // the task slots' 0x84 bytes (+0 bit 0 in use, +1 the kind, +0x80 the owner).

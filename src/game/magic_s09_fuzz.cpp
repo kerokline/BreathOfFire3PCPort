@@ -297,7 +297,7 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
 std::uint32_t ElevationEffect(const std::uint32_t*, std::uint32_t answer) {
     const unsigned slot = Sprite_Current[0xB];
     if (slot >= 48 || mh::Noise() % 3 != 0) return answer;
-    return (answer & 0xFFFF0000u) | move_script::Word(mh::Mem(mh::at::kTasks + slot * mh::at::kTaskStride + 0x3E));
+    return (answer & 0xFFFF0000u) | move_script::Word(mh::Mem(BattleTask_Slots_addr + slot * mh::at::kTaskStride + 0x3E));
 }
 // DreamBreath_TargetHeight writes Sprite_Current's height; its stand-in too.
 std::uint32_t HeightEffect(const std::uint32_t*, std::uint32_t answer) {
@@ -543,7 +543,7 @@ void Seed(unsigned k) {
         // the dart's step at, below and past the one awaited - written only for
         // a slot whose +2 lies inside the compared regions (below 67)
         if (sc[0xB] < 67 && mh::Often()) {
-            unsigned char* const dart = mh::Mem(mh::at::kTasks + sc[0xB] * mh::at::kTaskStride);
+            unsigned char* const dart = mh::Mem(BattleTask_Slots_addr + sc[0xB] * mh::at::kTaskStride);
             dart[2] = Near(k == kBoneDartShadow_Follow ? 2 : 3, 1, 1);
         }
         break;

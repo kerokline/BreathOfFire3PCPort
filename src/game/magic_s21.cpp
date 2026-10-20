@@ -196,7 +196,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
     for (unsigned i = 0; i < count; ++i) {
         if (MH_CALL(Battle_ActorIsOut)(enemies ? i + 3 : i) != 0) continue;
         const unsigned k = MH_CALL(BattleTask_Create)(1, 0x4D);
-        unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);
+        unsigned char* const child = Mem(BattleTask_Slots_addr + k * at::kTaskStride);
         unsigned char* const sc = Sprite_Current;
         SetLong(child + 0x80, static_cast<std::int32_t>(Addr(sc)));
         child[1] = 0;
@@ -660,7 +660,7 @@ MS21_EXPORT void __cdecl Frost_Start(void) {
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_x));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(src + 0x30) - 0x10u);
     const unsigned k = MH_CALL(BattleTask_Create)(1, 0x15);
-    unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);
+    unsigned char* const child = Mem(BattleTask_Slots_addr + k * at::kTaskStride);
     unsigned char* const sc = Sprite_Current;
     SetLong(child + 0x80, static_cast<std::int32_t>(Addr(sc)));
     child[8] = src[8];
@@ -958,7 +958,7 @@ MS21_EXPORT void __cdecl Iceblast_Start(void) {
     }
     for (unsigned i = 0; i < 12; ++i) {
         const unsigned k = MH_CALL(BattleTask_Create)(1, 0x17);
-        unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);
+        unsigned char* const child = Mem(BattleTask_Slots_addr + k * at::kTaskStride);
         const unsigned char* const sc = Sprite_Current;
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
         SetLong(child + 0x80, static_cast<std::int32_t>(Addr(sc)));

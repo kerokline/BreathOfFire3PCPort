@@ -207,7 +207,7 @@ extern "C" void __cdecl GeneWin_GridOpen(void) {
             bof3::Fatal("GeneWin_GridOpen: BattleTask_Create answered slot %u, past the %u of the pool - the original "
                         "writes its +0xB / +0x4B past the pool (docs/rest_2g.md section 7)",
                         slot, at::kTaskCount);
-        unsigned char* const task = At(at::kTasks + at::kTaskStride * slot);
+        unsigned char* const task = At(BattleTask_Slots_addr + at::kTaskStride * slot);
         task[0x4B] = static_cast<unsigned char>(i);
         task[0xB] = static_cast<unsigned char>(i);
     }

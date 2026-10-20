@@ -77,7 +77,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 constexpr unsigned kRecordBytes = 0x140;
 alignas(16) unsigned char g_records[2][kRecordBytes];
 
-unsigned char* TaskAt(unsigned k) { return At(at::kTasks + (k % 4) * at::kTaskStride); }
+unsigned char* TaskAt(unsigned k) { return At(BattleTask_Slots_addr + (k % 4) * at::kTaskStride); }
 unsigned char* SparkleAt(unsigned k) { return At(at::kSparklePool + (k % 4) * at::kSparkleStride); }
 void SetPointer(std::uint32_t cell, const void* p) { SetLong(At(cell), static_cast<std::int32_t>(Address(p))); }
 unsigned char* Pointer(std::uint32_t cell) {
@@ -433,7 +433,7 @@ const DataTable kDataTables[] = {
 
 struct Region { std::uint32_t at, size; };
 Region g_regions[] = {
-    {at::kTasks, at::kTaskCount * at::kTaskStride},             // the task slots
+    {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride},  // the task slots
     {0x93B8C0, 0xA0},                                           // 0x93B8C4 the current slot, 0x93B940 the owner, and
                                                                 // the fields an enemy index of 2 reads (0x93B8E0..)
     {0x937F88, 0x10},                                           // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter

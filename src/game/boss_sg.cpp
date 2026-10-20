@@ -473,7 +473,7 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Strike(void) {
     const unsigned n = BH_CALL(BattleTask_Create)(3, 6) & 0xFF;
     if (n != 0xFF) {
         unsigned char* const s = Sprite_Current;
-        unsigned char* const t = At(at::kTasks + n * at::kTaskStride);
+        unsigned char* const t = At(BattleTask_Slots_addr + n * at::kTaskStride);
         auto* const cur_task = rv::As<records::BattleTask>(t);
         std::memmove(t, s, 0x80);
         cur_task->flags &= 0xBF;

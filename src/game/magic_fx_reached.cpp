@@ -103,7 +103,7 @@ std::int32_t PtrValue(const unsigned char* p) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
 // A task slot by its index, unchecked as the originals index it.
-unsigned char* Task(unsigned index) { return At(at::kTasks + index * at::kTaskStride); }
+unsigned char* Task(unsigned index) { return At(BattleTask_Slots_addr + index * at::kTaskStride); }
 unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
 // An enemy by the battle index (3 and up), as the originals compute it: the
 // index's byte minus 3, times 0x128 - below the records for 0..2.

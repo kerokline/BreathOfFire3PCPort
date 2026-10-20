@@ -121,7 +121,7 @@ void SpawnCopy(unsigned parameter) {
     const unsigned char* const from =
         actor < 3 ? Mem(ObjTrio_addr + actor * at::kPartyStride)
                   : Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
-    unsigned char* const task = Mem(at::kTasks + slot * at::kTaskStride);
+    unsigned char* const task = Mem(BattleTask_Slots_addr + slot * at::kTaskStride);
     unsigned char* const self = Sc();
     for (unsigned k = 0; k < 0x80; k += 4) SetLong(task + k, Long(from + k));
     SetLong(task + 0x80, static_cast<std::int32_t>(Key(self)));

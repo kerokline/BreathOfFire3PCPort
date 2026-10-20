@@ -144,7 +144,7 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 
 // Every game region any test touches, saved once and put back at the end.
 const Region g_all[] = {
-    {BattleMisc_PulseDown_addr, 8},        {kFieldState, 4},        {kSprite, 4},           {kContexts, 0x2AC0},
+    {BattleMisc_PulseDown_addr, 8},        {kFieldState, 4},        {kSprite, 4},           {BattleTask_Slots_addr, 0x2AC0},
     {kParty, kPartyBytes},  {BattleE3_CurrentEnemy_addr, 4},      {kSoundLists, 0x400},   {BattleActions_Pending_addr, 2},
     {Window16_addr, 0x90},    {Window19_addr, 3},   {BattleWinStates_Current_addr, 4},    {BattleActorCopies_ItemActor_addr, 1},
     {BattleE4_MenuActor_addr, 4},      {kActorPages, 0x300},    {BattleActorCopies_Command_addr, 4},    {BattleMisc_PartyPages_addr, 3},
@@ -622,7 +622,7 @@ void FuzzTint(Tally& t, const void* clone, unsigned rounds) {
     }
 }
 
-U Context(U slot) { return kContexts + (slot & 0xFF) * kContextStride; }
+U Context(U slot) { return BattleTask_Slots_addr + (slot & 0xFF) * kContextStride; }
 
 // A context slot plan for the stand-in: low, low + 1, .. (span of them).
 void PlanSlots(U low, U span) {
@@ -631,13 +631,13 @@ void PlanSlots(U low, U span) {
 }
 
 void FuzzContextOne(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{kContexts, kContextBytes}, {kSprite, 4}, {kParty, kPartyBytes}, {kEnemyObjects, kEnemyBytes},
+    const Region regions[] = {{BattleTask_Slots_addr, kContextBytes}, {kSprite, 4}, {kParty, kPartyBytes}, {kEnemyObjects, kEnemyBytes},
                               {Addr(g_enemy), sizeof g_enemy}};
     g_test = kTestContextOne;
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x500000u + r;
         if (r % 16 == 0) {
-            FillRandom(kContexts, kContextBytes);
+            FillRandom(BattleTask_Slots_addr, kContextBytes);
             FillRandom(kParty, kPartyBytes);
             FillRandom(kEnemyObjects, kEnemyBytes);
             FillRandom(Addr(g_enemy), sizeof g_enemy);
@@ -650,11 +650,11 @@ void FuzzContextOne(Tally& t, const void* clone, unsigned rounds) {
         U object;
         if (Next() % 3) object = SomeObject();
         else object = Context(slot) + Pick({0x4C, 0xFFFFFFFCu, 0xFFFFFFF8u, 0x48, 0x44, 0xFFFFFFD5u, 0x40});
-        if (object + 0x40 > kContexts + kContextBytes && object >= kContexts && object < kContexts + kContextBytes)
+        if (object + 0x40 > BattleTask_Slots_addr + kContextBytes && object >= BattleTask_Slots_addr && object < BattleTask_Slots_addr + kContextBytes)
             object = SomeObject();
         PutLong(At(kSprite), object);
         Pass(t, regions, 5, 0, clone, As<const void*>(&Battle_InitActorContext), RandomEntry());
-        t.hits += object >= kContexts && object < kContexts + kContextBytes;
+        t.hits += object >= BattleTask_Slots_addr && object < BattleTask_Slots_addr + kContextBytes;
     }
     g_test = kTestNone;
 }
@@ -736,11 +736,11 @@ void FuzzCopies(Tally& t, const void* clone, unsigned rounds) {
     // The contexts through slot 82 (0x2AC0 bytes): from slot 50 a context lies
     // over the enemy objects it may be copied from, so the copy's direction
     // shows (rep movsd forward, a dword at a time).
-    const Region regions[] = {{kContexts, 0x2AC0}, {kParty, kPartyBytes}, {kSprite, 4}};
+    const Region regions[] = {{BattleTask_Slots_addr, 0x2AC0}, {kParty, kPartyBytes}, {kSprite, 4}};
     g_test = kTestCopies;
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x800000u + r;
-        if (r % 8 == 0) FillRandom(kContexts, kContextBytes);
+        if (r % 8 == 0) FillRandom(BattleTask_Slots_addr, kContextBytes);
         RandomActors(true);
         PutLong(At(kSprite), Next());
         const bool over = OneIn(4);

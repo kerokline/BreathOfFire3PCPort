@@ -298,7 +298,7 @@ extern "C" void __cdecl BossDLord_HookFx(unsigned) {
                     slot);
     const U actor = B(at::kActor);
     const unsigned char* const from = At(at::kEnemies + (actor - 3u) * at::kEnemyStride);
-    unsigned char* const to = At(at::kTasks + slot * at::kTaskStride);
+    unsigned char* const to = At(BattleTask_Slots_addr + slot * at::kTaskStride);
     for (unsigned i = 0; i < 0x80; i += 4) SetLong(to + i, Long(from + i));
     to[1] = 0;
     to[2] = 0;

@@ -84,7 +84,7 @@ constexpr std::uint32_t kStatChanged = bof3::addr::Battle_RecalcStats;   // rebo
 unsigned char* SC() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char* Slot(unsigned k) { return Mem(at::kTasks + (k & 0xFFu) * at::kTaskStride); }
+unsigned char* Slot(unsigned k) { return Mem(BattleTask_Slots_addr + (k & 0xFFu) * at::kTaskStride); }
 std::int32_t Ptr(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 std::uint32_t U32(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }

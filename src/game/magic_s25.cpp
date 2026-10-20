@@ -83,7 +83,7 @@ int Sar12(int v) { return v >> 12; }
 int Shl(int v, unsigned n) { return static_cast<int>(static_cast<std::uint32_t>(v) << n); }
 
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
-unsigned char* Task(unsigned slot) { return Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride); }
+unsigned char* Task(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
 void SetPointer(unsigned char* cell, const void* p) {
     SetLong(cell, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }

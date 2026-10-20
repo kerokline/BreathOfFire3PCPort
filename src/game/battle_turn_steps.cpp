@@ -324,7 +324,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_StartMembe
                     parameter = 0xC;
                 }
                 const unsigned task = g.task_create(0, parameter) & 0xFF;
-                SetLong(At(at::kTasks + task * at::kTaskSize + 0x80),
+                SetLong(At(BattleTask_Slots_addr + task * at::kTaskSize + 0x80),
                         static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Member(BossSb_Countdown))));
                 Inc(BossSb_Countdown_addr);
                 break;

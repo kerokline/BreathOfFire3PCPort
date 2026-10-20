@@ -110,7 +110,7 @@ std::uint32_t Shl(int v, unsigned n) { return static_cast<std::uint32_t>(v) << n
 // A signed byte widened (movsx).
 int SignedByte(unsigned char b) { return static_cast<signed char>(b); }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the party's
 // by the index, the enemy's by index - 3.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
@@ -403,13 +403,13 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         const std::int32_t z0 = tfirst->z;
         const std::int32_t cz = Long(Mem(BossSi_CentreZ_addr));
         rv::Store<unsigned>(tfirst->height_whole, U(ground) & 0xFFFF);
-        SetLong(Mem(at::kTasks + 0x34), Long(Mem(BossSi_CentreX_addr)));
+        SetLong(Mem(BattleTask_Slots_addr + 0x34), Long(Mem(BossSi_CentreX_addr)));
         const std::int32_t x0 = tfirst->x;
-        SetLong(Mem(at::kTasks + 0x38), cz);
+        SetLong(Mem(BattleTask_Slots_addr + 0x38), cz);
         const long ground0 = MH_CALL(AreaMap_Elevation)(x0, z0);
         const unsigned char was = Mem(0x904AB0)[0];
         Mem(0x904AA9)[0] |= 0x80;
-        SetLong(Mem(at::kTasks + 0x3C), static_cast<std::int32_t>(Shl(static_cast<short>(ground0), 16)));
+        SetLong(Mem(BattleTask_Slots_addr + 0x3C), static_cast<std::int32_t>(Shl(static_cast<short>(ground0), 16)));
         PartyRecord(1)[0] = 0;
         PartyRecord(2)[0] = 0;
         Mem(at::kActor)[0] = 0;

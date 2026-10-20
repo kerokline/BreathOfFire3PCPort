@@ -125,7 +125,7 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 unsigned char* PoolEntry(unsigned i) { return Mem(SuperComboHit_Pool_addr + i * kPoolStride); }
 // The originals index the records by the battle index, unchecked: a party
 // member below 3 (the target) or at most 2 (the actor), else the enemy by

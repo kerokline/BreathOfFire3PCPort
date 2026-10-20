@@ -213,7 +213,7 @@ const sh::Region kRegions[] = {
     {0x903A94, 0x903F90 - 0x903A94},                         // CharacterRecords past the style region
     {at::kGridWords, 0x24},                                  // the eighteen words GeneWin_GridOpen clears
     {at::kGridCells, 0x14},                                  // the eighteen grid cells
-    {at::kTasks, at::kTaskCount * at::kTaskStride},         // the battle task pool
+    {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride}, // the battle task pool
 };
 
 // --- the movers: what the functions read again after a call ------------------------------

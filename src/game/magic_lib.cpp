@@ -315,7 +315,7 @@ MLIB_EXPORT void __cdecl MagicFx_BuffPopup(unsigned kind, unsigned who) {
         MH_CALL(MagicFx_ApplyBuff)(stat, (target & 0x40) ? static_cast<unsigned char>(who + 3) : who);
     const unsigned char icon = applied != 0 ? static_cast<unsigned char>(kind) : 8;
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x48);
-    unsigned char* const t = Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride);
+    unsigned char* const t = Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride);
     SetLong(t + 0x80, I32(Addr(Sprite_Current)));
     t[4] = icon;
     t[9] = 1;

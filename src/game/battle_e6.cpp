@@ -669,7 +669,7 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 0x12);
     if (slot != 0xFF) {
         unsigned char* const s = Sprite_Current;
-        unsigned char* const t = At(at::kTasks + slot * at::kTaskStride);
+        unsigned char* const t = At(BattleTask_Slots_addr + slot * at::kTaskStride);
         auto* const task_rec = rv::As<records::BattleTask>(t);
         for (U i = 0; i < 0x80; i += 4) SetL(t + i, L(s + i));
         task_rec->flags &= 0xBF;
@@ -936,7 +936,7 @@ extern "C" unsigned char __cdecl Battle_MemberListFull(unsigned member) {
 // = 1) with bit 3 and not bit 5; else 0.
 extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 1);
-    unsigned char* const t = At(at::kTasks + slot * at::kTaskStride);
+    unsigned char* const t = At(BattleTask_Slots_addr + slot * at::kTaskStride);
     auto* const task_rec = rv::As<records::BattleTask>(t);
     t[0xB] = 1;
     const unsigned who = actor & 0xFF;
