@@ -621,13 +621,13 @@ void ShiftMap(int sign, U focus, bool effects) {
     const U step = sign > 0 ? 0x140000u : 0xFFEC0000u;
     const U kind2x = static_cast<U>(Field_Kind2X);
     MapView_Origin[0] = static_cast<std::uint16_t>(MapView_Origin[0]) + (sign > 0 ? 0x14u : 0xFFECu);
-    SetLong(At(Sprite_Kind2_addr + 0x34), static_cast<std::int32_t>(static_cast<U>(Long(At(Sprite_Kind2_addr + 0x34))) + step));
+    Sprite_Kind2.x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_Kind2.x) + step);
     const std::int32_t x = static_cast<std::int32_t>(kind2x + step);
     const std::int32_t z = Field_Kind2Z;
     MapView_FocusX = static_cast<std::int32_t>(focus);
     Field_Kind2X = x;
     const long h = AH_CALL(AreaMap_Elevation)(x, z);
-    SetWord(At(Sprite_Kind2_addr + 0x3e), static_cast<U>(h));
+    Sprite_Kind2.height_whole = static_cast<U>(h);
     AH_CALL(MapView_SetElevation)(static_cast<int>(h));
     AH_AT(void (__cdecl*)(), area_w3g::kViewShift)();
     if (effects) {

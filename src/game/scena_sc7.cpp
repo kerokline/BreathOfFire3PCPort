@@ -216,7 +216,7 @@ extern "C" void __cdecl Scena07_EnterArea(void) {
     if (Area() == 0x35 && !Flag(7)) {
         SH_CALL(Scenario_CallA)(1);
         DropIn(2);
-        SetWord(At(Sprite_Kind2_addr + 0x3E), 0xD80);
+        Sprite_Kind2.height_whole = 0xD80;
         SH_CALL(MapView_SetElevation)(0xD80);
     }
     if (Area() == 0x4A) {
@@ -1698,10 +1698,10 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         if (Field_Kind2Hold != 0) return;
         const std::int32_t z = Field_Kind2Z;
         const std::int32_t x = Field_Kind2X;
-        SetLong(At(Sprite_Kind2_addr + 0x34), x);
-        SetLong(At(Sprite_Kind2_addr + 0x38), z);
+        Sprite_Kind2.x = x;
+        Sprite_Kind2.z = z;
         const long h = SH_CALL(AreaMap_Elevation)(x, z);
-        SetWord(At(Sprite_Kind2_addr + 0x3E), static_cast<unsigned>(h));
+        Sprite_Kind2.height_whole = static_cast<unsigned>(h);
         SetElevationAt(Field_Kind2X, Field_Kind2Z);
         C0() = 1;
         SetStep(2);
@@ -2426,9 +2426,9 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         const unsigned speed = Field_MoveSpeeds[5];
         SetStep(2);
         Field_Kind2X = 0x170000;
-        SetLong(At(Sprite_Kind2_addr + 0x34), 0x170000);
+        Sprite_Kind2.x = 0x170000;
         Field_Kind2Z = 0xF0000;
-        SetLong(At(Sprite_Kind2_addr + 0x38), 0xF0000);
+        Sprite_Kind2.z = 0xF0000;
         MoveScript_F3Divisor = speed << 3;
         return;
     }
