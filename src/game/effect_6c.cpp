@@ -274,7 +274,7 @@ extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
     if (static_cast<std::uint32_t>(ObjTrio[0].step_y) != 0) {
         CopyQuiet(S() + 0x78, At(MapView_ScreenXY_addr + 0x4));
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, Ftol(D(at::kScreenY)));
-        SetWord(At(ObjTrio_addr + 0x30), Ftol(D(at::kScreenY)));
+        ObjTrio[0].screen_y = Ftol(D(at::kScreenY));
     } else {
         SetD(S() + 0x78, Fi(static_cast<U>(static_cast<std::int32_t>(ObjTrio[0].screen_y))));
         unsigned char* const s = S();

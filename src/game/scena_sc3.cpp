@@ -441,8 +441,8 @@ extern "C" void __cdecl Scena03_Scene3(void) {
         return;
     case 0xB: {
         if (C0() != 0xF) return;
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         PlaceParty(x, z, 0x10);
         LeaderState5(0x10);
         SetStep(0xC);
@@ -452,8 +452,8 @@ extern "C" void __cdecl Scena03_Scene3(void) {
         const unsigned char c = C0();
         if (c <= 0x13) return;
         if (c == 0x14) {
-            Field_Kind2X = Long(At(ObjTrio_addr + at::kMemberStride + 0x34));
-            Field_Kind2Z = Long(At(ObjTrio_addr + at::kMemberStride + 0x38));
+            Field_Kind2X = ObjTrio[1].x;
+            Field_Kind2Z = ObjTrio[1].z;
             MoveScript_F3Divisor = 0x20;
             SetStep(0xD);
             return;
@@ -1288,8 +1288,8 @@ namespace {
 // times 16, added to each one's +0x3E (a 16-bit add).
 void Bob(std::uint32_t table, unsigned mask) {
     const unsigned d = static_cast<unsigned>(static_cast<int>(static_cast<signed char>(Byte(table + (MoveScript_PartyRecords[0x66] & mask)))) << 4);
-    SetWord(At(ObjTrio_addr + 0x3E), Word(At(ObjTrio_addr + 0x3E)) + d);
-    SetWord(At(ObjTrio_addr + at::kMemberStride + 0x3E), Word(At(ObjTrio_addr + at::kMemberStride + 0x3E)) + d);
+    ObjTrio[0].height_whole = ObjTrio[0].height_whole + d;
+    ObjTrio[1].height_whole = ObjTrio[1].height_whole + d;
 }
 }  // namespace
 

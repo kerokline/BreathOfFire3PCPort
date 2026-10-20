@@ -8611,7 +8611,6 @@ src/game/event_ops.cpp	Field_LeaderStepTarget	global	Byte	at::kScratch	1	0x90385
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	At	at::kTargetX	3	0x903858	-	no-entry	at::kTargetX 0x903858 -	b0
 src/game/event_ops.cpp	Field_LeaderStepTarget	global	Byte	kFlags2Lo	2	0x905ba4	-	width	kFlags2Lo 0x905ba4 Field_ScriptFlags2	b0
 src/game/event_ops.cpp	Field_EncounterDue	global	Byte	kFlagsLo	0	0x9039a2	-	width	kFlagsLo 0x9039a2 Field_ScriptFlags	b0
-src/game/event_ops.cpp	Field_EncounterDue	record	Word	At(ObjTrio_addr + 0x36) + 4	0	-	via=At	no-struct	no records.h family is evidenced for this pointer (via=At)	b1-scen_ui
 src/game/event_ops.cpp	Field_EncounterDue	global	At	at::kMemberPositions	0	0x7e06e0	-	no-entry	at::kMemberPositions 0x7e06e0 -	b0
 src/game/event_ops.cpp	Field_EncounterDue	record	Long	at + 4	0	-	table=0x7e06e0;stride=0x8	no-struct	no records.h family is evidenced for this pointer (table=0x7e06e0;stride=0x8)	b1-scen_ui
 src/game/event_ops.cpp	Field_LeaderIdleTest	global	At	at::kActorRecords	0	0x903a70	-	no-entry	at::kActorRecords 0x903a70 -	b0
@@ -16326,19 +16325,13 @@ src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SW	ray + 4	1	-	-	no-struct	SW(r
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SW	ray + 2	1	-	-	no-struct	SW(ray + 2): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SW	ray + 2	2	-	-	no-struct	SW(ray + 2): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SW	ray + 6	0	-	-	no-struct	SW(ray + 6): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_3e.cpp	EffectKind24_DrawRay	global	UL	at::kLeaderX	0	0x802d74	-	width	at::kLeaderX 0x802d74 ObjTrio+0x34	b0
-src/game/rest_3e.cpp	EffectKind24_DrawRay	global	UL	at::kLeaderZ	0	0x802d78	-	width	at::kLeaderZ 0x802d78 ObjTrio+0x38	b0
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SetUL	pt + 4	0	-	-	no-struct	SetUL(pt + 4): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_3e.cpp	EffectKind24_DrawRay	global	UL	at::kLeaderY	0	0x802d7c	-	width	at::kLeaderY 0x802d7c ObjTrio+0x3c	b0
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SetUL	pt + 8	0	-	-	no-struct	SetUL(pt + 8): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	Word	ray + 6	0	-	-	no-struct	Word(ray + 6): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	Word	ray + 6	1	-	-	no-struct	Word(ray + 6): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	Word	ray + 6	2	-	-	no-struct	Word(ray + 6): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SW	ray + 8	0	-	-	no-struct	SW(ray + 8): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_3e.cpp	EffectKind24_DrawRay	global	UL	at::kLeaderX	1	0x802d74	-	width	at::kLeaderX 0x802d74 ObjTrio+0x34	b0
-src/game/rest_3e.cpp	EffectKind24_DrawRay	global	UL	at::kLeaderZ	1	0x802d78	-	width	at::kLeaderZ 0x802d78 ObjTrio+0x38	b0
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SetUL	pt + 4	1	-	-	no-struct	SetUL(pt + 4): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_3e.cpp	EffectKind24_DrawRay	global	UL	at::kLeaderY	1	0x802d7c	-	width	at::kLeaderY 0x802d7c ObjTrio+0x3c	b0
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	SetUL	pt + 8	1	-	-	no-struct	SetUL(pt + 8): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	Word	ray + 8	0	-	-	no-struct	Word(ray + 8): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3e.cpp	EffectKind24_DrawRay	record	Word	ray + 8	1	-	-	no-struct	Word(ray + 8): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -16716,8 +16709,6 @@ src/game/rest_3f_fuzz.cpp	Seed	record	SetWord	b + 4	0	-	via=Bar	no-struct	SetWor
 src/game/rest_3f_fuzz.cpp	Seed	global	At	at::kCounter	4	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
 src/game/rest_3f_fuzz.cpp	Disturb	global	At	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
 src/game/rest_3g.cpp	StepDispatch	record	UL	table + 4 * step	0	-	param	computed	param (UL(table + 4 * step))	b1-rest
-src/game/rest_3g.cpp	EffectKindAD_Start	global	UL	at::kMember2X	0	0x80300c	-	width	at::kMember2X 0x80300c ObjTrio+0x2cc	b0
-src/game/rest_3g.cpp	EffectKindAD_Start	global	UL	at::kMember2Z	0	0x803010	-	width	at::kMember2Z 0x803010 ObjTrio+0x2d0	b0
 src/game/rest_3g.cpp	EffectKindAD_Start	record	SetUL	s + 0x14	0	-	via=S	pad	EffectObject +0x14 w4: inside records.h padding (SetUL(s + 0x14))	b1-rest
 src/game/rest_3g.cpp	EffectKindAD_Rise	global	At	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
 src/game/rest_3g.cpp	EffectKindBA_Line	global	UL	at::kExtra1X	0	0x8020d8	-	width	at::kExtra1X 0x8020d8 Sprite_ObjectsExtra+0xd8	b0
@@ -17519,10 +17510,6 @@ src/game/rest_4f.cpp	Panel	record	Word	S() + 0x10	0	-	via=S	union	EffectObject +
 src/game/rest_4f.cpp	Panel	global	SetW	at::kClut7B	0	0x811440	-	gate	at::kClut7B 0x811440 Gfx_ClutStrip+0x1ec0	b0
 src/game/rest_4f.cpp	Panel	record	W	from + 2 * i	0	-	stride=0x40	no-struct	W(from + 2 * i): stride=0x40, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4f.cpp	Above38	global	W	at::kKind02Word	0	0x905e62	-	inside-entry	at::kKind02Word 0x905e62 Field_Kind2Z+0x2	b0
-src/game/rest_4f.cpp	EffectKind02_CopyLeader	global	L	at::kLeader	0	0x802d40	-	width	at::kLeader 0x802d40 ObjTrio	b0
-src/game/rest_4f.cpp	EffectKind02_CopyLeader	global	L	at::kLeader	1	0x802d40	-	width	at::kLeader 0x802d40 ObjTrio	b0
-src/game/rest_4f.cpp	EffectKind02_CopyLeader	global	W	at::kLeader	0	0x802d40	-	width	at::kLeader 0x802d40 ObjTrio	b0
-src/game/rest_4f.cpp	EffectKind02_CopyLeader	global	W	at::kLeader	1	0x802d40	-	width	at::kLeader 0x802d40 ObjTrio	b0
 src/game/rest_4f.cpp	EffectKind02_Mode3Wait	global	W	at::kKind02Word	0	0x905e62	-	inside-entry	at::kKind02Word 0x905e62 Field_Kind2Z+0x2	b0
 src/game/rest_4f_fuzz.cpp	Seed	global	B	at::kCounter	0	0x929f04	-	no-entry	at::kCounter 0x929f04 -	b0
 src/game/rest_4f_fuzz.cpp	Seed	global	B	at::kChapterByte4A	0	0x90384a	-	no-entry	at::kChapterByte4A 0x90384a -	b0
@@ -18175,9 +18162,6 @@ src/game/scena_sc13.cpp	Scena13_Run5	global	W	at::kSlotWord	1	0x903850	-	no-entr
 src/game/scena_sc13.cpp	Scena13_Run6	global	S16	at::kAngleFB	0	0x929ecc	-	width	at::kAngleFB 0x929ecc Cond_AngleFB	b0
 src/game/scena_sc13.cpp	Scena13_Run6	global	B	at::kScriptFlags	0	0x9039a2	-	width	at::kScriptFlags 0x9039a2 Field_ScriptFlags	b0
 src/game/scena_sc13.cpp	Scena13_Run6	global	B	at::kScriptFlags	1	0x9039a2	-	width	at::kScriptFlags 0x9039a2 Field_ScriptFlags	b0
-src/game/scena_sc13.cpp	Scena13_Run6	global	D	at::kTrio	0	0x802d40	-	width	at::kTrio 0x802d40 ObjTrio	b0
-src/game/scena_sc13.cpp	Scena13_Run6	global	D	at::kTrio	1	0x802d40	-	width	at::kTrio 0x802d40 ObjTrio	b0
-src/game/scena_sc13.cpp	Scena13_Run6	global	W	at::kTrio	0	0x802d40	-	width	at::kTrio 0x802d40 ObjTrio	b0
 src/game/scena_sc13.cpp	Scena13_Caption	global	W	at::kCaptionIndex	0	0x7dee48	-	no-entry	at::kCaptionIndex 0x7dee48 -	b0
 src/game/scena_sc13.cpp	Scena13_Caption	global	W	at::kCaptionTotal	0	0x903852	-	no-entry	at::kCaptionTotal 0x903852 -	b0
 src/game/scena_sc13.cpp	Scena13_Caption	global	W	at::kSlotWord	0	0x903850	-	no-entry	at::kSlotWord 0x903850 -	b0

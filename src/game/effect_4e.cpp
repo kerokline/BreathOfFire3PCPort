@@ -781,9 +781,9 @@ extern "C" void __cdecl EffectKindA0_Run(void) {
 // (ObjTrio +0x34..), its height 0x800000 more; the size +0x2E = 0; +9 = 8; +1
 // up; Sound_PlayEffect(0x20B).
 extern "C" void __cdecl EffectKindA0_Start(void) {
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[0], UL(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[1], UL(At(ObjTrio_addr + 0x34 + 4)));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], UL(At(ObjTrio_addr + 0x34 + 8)) + 0x800000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[0], static_cast<std::uint32_t>(ObjTrio[0].x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[1], static_cast<std::uint32_t>(ObjTrio[0].z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], static_cast<std::uint32_t>(ObjTrio[0].height) + 0x800000u);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
     S()[9] = 8;
     NextState();

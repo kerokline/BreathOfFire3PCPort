@@ -360,9 +360,9 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
     }
     const long ground = BH_CALL(AreaMap_Elevation)(Long(At(at::kEnemy0X)), Long(At(at::kEnemy0Z)));
     BossH_Enemy0Ground = static_cast<unsigned>(ground) & 0xFFFF;
-    const long leader = BH_CALL(AreaMap_Elevation)(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
-    move_script::SetWord(At(ObjTrio_addr + 0x3e), static_cast<unsigned>(leader) & 0xFFFF);
-    if (rv::Bytes(ObjTrio)[0x134] & 2) BossH_CameraY = Long(At(ObjTrio_addr + 0x3c));
+    const long leader = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
+    ObjTrio[0].height_whole = static_cast<unsigned>(leader) & 0xFFFF;
+    if (rv::Bytes(ObjTrio)[0x134] & 2) BossH_CameraY = ObjTrio[0].height;
 }
 
 void BossH_Inject() {

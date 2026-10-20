@@ -226,8 +226,8 @@ void DeathStates() {
 void GroundWords() {
     const long e = BH_CALL(AreaMap_Elevation)(Long(At(at::kEnemy0X)), Long(At(at::kEnemy0Z)));
     BossH_Enemy0Ground = static_cast<unsigned>(e) & 0xFFFF;
-    const long l = BH_CALL(AreaMap_Elevation)(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
-    SetWord(At(ObjTrio_addr + 0x3e), static_cast<unsigned>(l) & 0xFFFF);
+    const long l = BH_CALL(AreaMap_Elevation)(ObjTrio[0].x, ObjTrio[0].z);
+    ObjTrio[0].height_whole = static_cast<unsigned>(l) & 0xFFFF;
 }
 
 }  // namespace

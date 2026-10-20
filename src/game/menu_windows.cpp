@@ -1058,7 +1058,7 @@ extern "C" unsigned char __cdecl Item_CanUse(unsigned mode, unsigned member, uns
         if (category & 0xFF) return 0;
         if (!(At(at::kItemFlags + it * 22u)[0] & 1)) return 0;
         if (it != 0x57) return 1;
-        return g.area_byte(Word(At(ObjTrio_addr + 0x36)), Word(At(ObjTrio_addr + 0x3a))) == 0xAE ? 1 : 0;
+        return g.area_byte(ObjTrio[0].x_whole, ObjTrio[0].z_whole) == 0xAE ? 1 : 0;
     case 2: return (g.item_flags(category, item) & 2) ? 1 : 0;
     case 3: return (g.item_flags(category, item) & 8) ? 0 : 1;
     case 4: {

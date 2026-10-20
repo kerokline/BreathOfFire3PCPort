@@ -446,8 +446,8 @@ namespace {
 // 0x428000 and within `zr` of z 0x3E0000 or 0x3F0000 - the originals' order of
 // tests (abs by cdq / xor / sub, signed compares).
 bool LeaderNear(U xr, U zr) {
-    const U x = UL(At(ObjTrio_addr + 0x34));
-    const U z = UL(At(ObjTrio_addr + 0x38));
+    const U x = static_cast<std::uint32_t>(ObjTrio[0].x);
+    const U z = static_cast<std::uint32_t>(ObjTrio[0].z);
     const std::int32_t dx = I(Abs(x - 0x428000u));
     if (dx <= I(xr) && I(Abs(z - 0x3E0000u)) <= I(zr)) return true;
     if (dx > I(xr)) return false;

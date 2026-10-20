@@ -959,10 +959,10 @@ SC13_EXPORT void __cdecl Scena13_Run6(void) {
         DropIn(7);
         const unsigned char* const o = reinterpret_cast<const unsigned char*>(AreaW1a_FocusObject);
         const std::uint32_t x = *reinterpret_cast<const std::uint32_t*>(o + 0x34);
-        D(at::kTrio + 2 * at::kTrioStride + 0x34) = x;
+        ObjTrio[2].x = x;
         const std::uint32_t z = *reinterpret_cast<const std::uint32_t*>(o + 0x38);
-        D(at::kTrio + 2 * at::kTrioStride + 0x38) = z;
-        W(at::kTrio + 2 * at::kTrioStride + 0x3E) =
+        ObjTrio[2].z = z;
+        ObjTrio[2].height_whole =
             static_cast<std::uint16_t>(SH_CALL(AreaMap_Elevation)(static_cast<int>(x), static_cast<int>(z)));
         *reinterpret_cast<unsigned char*>(AreaW1a_FocusObject) = 0;
         SetStep(0x1A);

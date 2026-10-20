@@ -107,8 +107,8 @@ extern "C" void __cdecl Area16_PlaceMessage(void) {
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
-    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
+    const auto z = static_cast<std::int16_t>(ObjTrio[0].z_whole);
+    const auto x = static_cast<std::int16_t>(ObjTrio[0].x_whole);
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
@@ -117,8 +117,8 @@ extern "C" void __cdecl Area16_PlaceMessage(void) {
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(Area16_PlaceMessages_addr + static_cast<U>(index * 2)))));
     } else {
-        const unsigned cx = Word(At(ObjTrio_addr + 0x36));
-        const unsigned cz = Word(At(ObjTrio_addr + 0x3a));
+        const unsigned cx = ObjTrio[0].x_whole;
+        const unsigned cz = ObjTrio[0].z_whole;
         U cell = Area16_Cells_addr;
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
@@ -159,8 +159,8 @@ extern "C" void __cdecl Area16_PlaceMessage(void) {
 // 0x5E5F5C by +1 (read after the calls, unchecked).
 extern "C" void __cdecl Area16_PlateRun(void) {
     const U steps = ObjTrio[0].step_frames;
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
@@ -498,8 +498,8 @@ extern "C" void __cdecl Area16_Record8Place(void) {
     Cur()[0x29] = 5;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dir(Cur(), 0));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dir(Cur(), 2));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     unsigned char* o = Cur();
     auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
@@ -991,8 +991,8 @@ extern "C" void __cdecl Area26_ResetCamera(void) {
 // other than 0xFF to Sprite_Current[0xB] (read again). The member id indexes
 // the table unchecked.
 extern "C" void __cdecl Area26_SpawnEffect(void) {
-    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x30)));
-    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x2E)));
+    const auto z = ObjTrio[0].screen_y;
+    const auto x = ObjTrio[0].screen_x;
     const unsigned member = Cond_Flags[0xd2];
     Sprite_Current = At(ObjTrio_addr);
     const unsigned char kind = At(Area26_EffectKinds_addr + member)[0];

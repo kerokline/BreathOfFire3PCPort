@@ -381,8 +381,8 @@ extern "C" void __cdecl Boss33_End(void) {
         return;
     }
     BH_CALL(BossActor_Clear)(0);
-    const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
-    const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
+    const std::int32_t x = ObjTrio[0].x;
+    const std::int32_t z = ObjTrio[0].z;
     Field_Kind2X = x;
     Field_Kind2Z = z;
     MoveScript_PartyRecords[0x65] = 8;

@@ -163,8 +163,8 @@ void PlaceMessage(const WorldMapTables& t) {
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
     const U steps = ObjTrio[0].step_frames;
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
@@ -464,8 +464,8 @@ void Record8Place(const WorldMapTables& t) {
     Cur()[0x29] = 5;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dir(Cur(), 0));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dir(Cur(), 2));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     unsigned char* o = Cur();
     auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
@@ -718,8 +718,8 @@ extern "C" void __cdecl Area152_Record8Spawn(void) {
         if (slot >= at::kEffectCount)
             bof3::Fatal("Area152_Record8Spawn: Effect_FindFree's slot %u is past Effect_Objects' %u", slot, at::kEffectCount);
         unsigned char* const e = At(Effect_Objects_addr + slot * at::kEffectStride);
-        const long z = Long(At(ObjTrio_addr + 0x38));
-        const long x = Long(At(ObjTrio_addr + 0x34));
+        const long z = ObjTrio[0].z;
+        const long x = ObjTrio[0].x;
         e[0] = 1;
         e[5] = 0x16;
         e[1] = 1;

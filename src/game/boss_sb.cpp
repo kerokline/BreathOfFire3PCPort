@@ -125,7 +125,7 @@ bool LeaderCommand78() {
 }
 // Phase 3: the leader's HP 0 clears its +0x134 bit 1.
 void EventLeaderDown() {
-    if (Word(At(ObjTrio_addr + 0x98)) == 0) rv::Bytes(ObjTrio)[0x134] &= 0xFD;
+    if (ObjTrio[0].hp == 0) rv::Bytes(ObjTrio)[0x134] &= 0xFD;
 }
 // Phase 5: with 0x904AAD bit 0, the leader's command is kind 4, id 0x78, at
 // target 0x40, and the battle's command kind and target the same.

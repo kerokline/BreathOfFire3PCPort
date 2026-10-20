@@ -193,8 +193,8 @@ bool BoxLeaves(const unsigned char* o) {
 // ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
     const U steps = ObjTrio[0].step_frames;
-    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
-    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U zs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U xs = steps * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
@@ -880,9 +880,9 @@ extern "C" void __cdecl Area104_Kind5CStart(void) {
 // +0xB; else (holding a full charge) the frame 1 or 2 by Frame_Counter bit 1
 // and the back bar only.
 extern "C" void __cdecl Area104_Kind5CFollow(void) {
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, Word(At(ObjTrio_addr + 0x3e)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, ObjTrio[0].height_whole);
     AH_CALL(Sprite_UpdateScreenA)();
     if ((Draw_PassFlags & 0x1B) == 0) return;
     const auto frame = AH_AT(GaugeFrameFn, area_w2e::kGaugeFrame121);
@@ -1018,9 +1018,9 @@ extern "C" void __cdecl Area104_Kind5CRise(void) {
         c[0xA] = static_cast<unsigned char>(c[0xA] - 1);
         return;
     }
-    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(c)->x, Long(At(ObjTrio_addr + 0x34)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
-    const auto y = static_cast<std::int32_t>(static_cast<U>(Long(At(ObjTrio_addr + 0x3c))) + 0x800000u);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(c)->x, ObjTrio[0].x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
+    const auto y = static_cast<std::int32_t>(static_cast<std::uint32_t>(ObjTrio[0].height) + 0x800000u);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, y);
     AH_AT(area_harness::Handler, area_w2e::kKind5CState4)();
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
@@ -1079,9 +1079,9 @@ extern "C" void __cdecl Area104_Tail40(void) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot != 0xFF) {
             unsigned char* const e = EffectRecord("Area104_Tail40", static_cast<signed char>(slot));
-            const U z = Word(At(ObjTrio_addr + 0x3a));
+            const U z = ObjTrio[0].z_whole;
             e[0] = static_cast<unsigned char>(e[0] + 1);
-            const U x = Word(At(ObjTrio_addr + 0x36));
+            const U x = ObjTrio[0].x_whole;
             e[5] = 0x6A;
             e[9] = 0x19;
             e[0xA] = 0;
@@ -1155,8 +1155,8 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
     area_harness::Phase(kDrawPanel)();
 
     // the ring
-    const std::int32_t dx = S16(At(ObjTrio_addr + 0x36)) - 0x25;
-    const std::int32_t dz = S16(At(ObjTrio_addr + 0x3a)) - 0x2D;
+    const std::int32_t dx = static_cast<std::int16_t>(ObjTrio[0].x_whole) - 0x25;
+    const std::int32_t dz = static_cast<std::int16_t>(ObjTrio[0].z_whole) - 0x2D;
     const std::int32_t cx = static_cast<std::int32_t>(static_cast<U>(AH_CALL(Math_Cos)(0x200)) * static_cast<U>(dx - dz)) >> 12;
     const std::int32_t sx = cx + 0xFA + Widescreen_Anchor();   // DIV-0041: with the panel (the PSP's 250 -> 282)
     const std::int32_t cz = static_cast<std::int32_t>(static_cast<U>(AH_CALL(Math_Cos)(0x200)) * static_cast<U>(dz + dx)) >> 12;

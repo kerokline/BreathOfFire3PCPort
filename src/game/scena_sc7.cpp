@@ -584,9 +584,9 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         e[6] = 1;
         rv::As<records::EffectObject>(e)->step_x = 0;
         rv::As<records::EffectObject>(e)->step_z = static_cast<std::int32_t>(arg);
-        rv::As<records::EffectObject>(e)->screen_x = Word(At(ObjTrio_addr + 0x2E));
+        rv::As<records::EffectObject>(e)->screen_x = static_cast<std::uint16_t>(ObjTrio[0].screen_x);
         SetStep(1);
-        rv::As<records::EffectObject>(e)->screen_y = Word(At(ObjTrio_addr + 0x30));
+        rv::As<records::EffectObject>(e)->screen_y = static_cast<std::uint16_t>(ObjTrio[0].screen_y);
         return;
     }
     case 1:
@@ -869,8 +869,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         break;
     case 0x12: {
         if (C0() != 0x13) break;
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         ScriptFlagsOr(0x80);
         PlaceParty(x, z, 0x1F);
         SH_CALL(Field_StartEventBattle)(0x1F);
@@ -1435,8 +1435,8 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
     if (Area() == 0xC && !Flag(0xC) && Flag(0xB)) {
         Set40();
         const unsigned char kind = ObjTrio[0].direction;
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
+        const std::int32_t x = ObjTrio[0].x;
+        const std::int32_t z = ObjTrio[0].z;
         PassFlags(0);
         SetRun(8);
         SetStep(0);
@@ -1689,7 +1689,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         SetLong(At(at::kCounters), 0);
         DropIn(6);
         const unsigned speed = Field_MoveSpeeds[4];
-        Kind2At(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
+        Kind2At(ObjTrio[0].x, ObjTrio[0].z);
         MoveScript_F3Divisor = speed << 3;
         SetStep(1);
         return;
@@ -2278,10 +2278,10 @@ extern "C" void __cdecl Scena08_Scene8(void) {
         Cond_Flags[0xd6] = Scena08_Kept[0xd];
         const std::int32_t x = Long(At(Scena08_Kept_addr + 0x4));
         const std::int32_t z = Long(At(Scena08_Kept_addr + 0x8));
-        SetLong(At(ObjTrio_addr + at::kMemberStride + 0x34), x);
-        SetLong(At(ObjTrio_addr + at::kMemberStride + 0x38), z);
+        ObjTrio[1].x = x;
+        ObjTrio[1].z = z;
         const long h = SH_CALL(AreaMap_Elevation)(x, z);
-        SetWord(At(ObjTrio_addr + at::kMemberStride + 0x3E), static_cast<unsigned>(h));
+        ObjTrio[1].height_whole = static_cast<unsigned>(h);
         SetRun(0);
         SetStep(0);
         return;
@@ -2576,8 +2576,8 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         SH_CALL(Music_Play)(0x64, 0x20);
         PassFlags(0x1F);
         Transition(1);
-        const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
-        const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+        const std::int32_t z = ObjTrio[0].z;
+        const std::int32_t x = ObjTrio[0].x;
         C0() = 0;
         Kind2At(x, z);
         SetElevationAt(x, z);

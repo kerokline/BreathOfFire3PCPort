@@ -303,7 +303,7 @@ extern "C" void __cdecl EffectKind83_Count18(void) {
 // Effect_Release.
 extern "C" void __cdecl EffectKind83_Finish(void) {
     const U object_x = UL(At(Sprite_Objects_addr + 0x34));
-    const U leader_x = UL(At(ObjTrio_addr + 0x34));
+    const U leader_x = static_cast<std::uint32_t>(ObjTrio[0].x);
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
     Field_State = rv::Bytes(ObjTrio);

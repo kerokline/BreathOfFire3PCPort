@@ -508,15 +508,15 @@ extern "C" void __cdecl BossZig_HookHit(unsigned) { BossSe_Script |= 0x20; }
 // cell before its store).
 extern "C" void __cdecl Boss25_Setup(void) {
     const unsigned char hp = rv::Bytes(ObjTrio)[0x98];
-    const unsigned max_hp = Word(At(ObjTrio_addr + 0xa0));
+    const unsigned max_hp = ObjTrio[0].max_hp;
     const unsigned char ap = rv::Bytes(ObjTrio)[0x9a];
     BossSe_SavedHp = hp;
-    const unsigned max_ap = Word(At(ObjTrio_addr + 0xa2));
+    const unsigned max_ap = ObjTrio[0].max_ap;
     StoreHooks(bof3::addr::Boss25_End, bof3::addr::Boss25_Exit, bof3::addr::Boss25_Event);
     BattlePhases_Initiative = 3;
-    SetWord(At(ObjTrio_addr + 0x98), max_hp);
+    ObjTrio[0].hp = max_hp;
     BossSe_SavedAp = ap;
-    SetWord(At(ObjTrio_addr + 0x9a), max_ap);
+    ObjTrio[0].ap = max_ap;
 }
 
 // original 0x43BF00: the event hook, by the code's low byte; al 0 on every
@@ -635,8 +635,8 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
 extern "C" void __cdecl Boss25_End(void) {
     const unsigned hp = BossSe_SavedHp;
     const unsigned ap = BossSe_SavedAp;
-    SetWord(At(ObjTrio_addr + 0x98), hp);
-    SetWord(At(ObjTrio_addr + 0x9a), ap);
+    ObjTrio[0].hp = hp;
+    ObjTrio[0].ap = ap;
     MoveScript_PartyRecords[0x65] = 4;
     BH_AT(Handler, at::kEndThird)();
 }

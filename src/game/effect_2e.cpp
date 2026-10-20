@@ -128,8 +128,8 @@ void Ground(U lift) {
 // Sprite_Current's +0x34 / +0x38 = the leader's x / z (each store to the record
 // as read then).
 void AtLeader() {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(At(ObjTrio_addr + 0x34)));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(At(ObjTrio_addr + 0x38)));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(ObjTrio[0].x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(ObjTrio[0].z));
 }
 
 // States 8 and 10's start: 0x6761CC = the spiral record; its point = the
@@ -1031,10 +1031,10 @@ extern "C" void __cdecl EffectKind4E_Run(void) {
 // +0x7C (the record read after); +9 = 0, +1 up. The original hands a fourth
 // argument, a stack slot the callee never reads.
 extern "C" void __cdecl EffectKind4E_Start(void) {
-    const U x = UL(At(ObjTrio_addr + 0x34));
-    const U z = UL(At(ObjTrio_addr + 0x38));
+    const U x = static_cast<std::uint32_t>(ObjTrio[0].x);
+    const U z = static_cast<std::uint32_t>(ObjTrio[0].z);
     Prim_VertexScratch[0].x = static_cast<short>(Sar(x, 9) - 0x4000u);
-    const std::int32_t height = static_cast<std::int16_t>(Word(At(ObjTrio_addr + 0x3e)));
+    const std::int32_t height = static_cast<std::int16_t>(ObjTrio[0].height_whole);
     Prim_VertexScratch[0].y = static_cast<short>(Sar(z, 9) - 0x4000u);
     Prim_VertexScratch[0].z = static_cast<short>(-(height / 2));
     long depth = 0;

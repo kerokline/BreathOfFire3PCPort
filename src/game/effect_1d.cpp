@@ -336,10 +336,10 @@ extern "C" void __cdecl EffectKind25_Run(void) { Dispatch("EffectKind25_Run", Ad
 // _ftol to the words +0x2E and +0x30 (Sprite_Current read for each store); +9 =
 // 0, +1 up.
 extern "C" void __cdecl EffectKind25_Start(void) {
-    const U x = UL(At(ObjTrio_addr + 0x34));
-    const U z = UL(At(ObjTrio_addr + 0x38));
+    const U x = static_cast<std::uint32_t>(ObjTrio[0].x);
+    const U z = static_cast<std::uint32_t>(ObjTrio[0].z);
     Prim_VertexScratch[0].x = static_cast<short>(Sar(x, 9) - 0x4000u);
-    const std::int32_t height = static_cast<std::int16_t>(Word(At(ObjTrio_addr + 0x3e)));
+    const std::int32_t height = static_cast<std::int16_t>(ObjTrio[0].height_whole);
     Prim_VertexScratch[0].z = static_cast<short>(-(height / 2));
     Prim_VertexScratch[0].y = static_cast<short>(Sar(z, 9) - 0x4000u);
     long depth = 0;

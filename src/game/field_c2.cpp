@@ -897,10 +897,10 @@ extern "C" void __cdecl EffectKind3A_Start(void) {
     records::EffectObject* s = rv::As<records::EffectObject>(S());
     rv::Bytes(s)[8] = ObjTrio[0].direction;
     s = rv::As<records::EffectObject>(S());
-    s->x = UL(At(AddressOf(Field_DirectionSteps) + 8u * rv::Bytes(s)[8])) + UL(At(ObjTrio_addr + 0x34));
+    s->x = UL(At(AddressOf(Field_DirectionSteps) + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].x);
     s = rv::As<records::EffectObject>(S());
-    s->z = UL(At(AddressOf(Field_DirectionSteps) + 4 + 8u * rv::Bytes(s)[8])) + UL(At(ObjTrio_addr + 0x38));
-    rv::Store<unsigned>(rv::As<records::EffectObject>(S())->height_whole, Word(At(ObjTrio_addr + 0x3E)) + 0xC0u);
+    s->z = UL(At(AddressOf(Field_DirectionSteps) + 4 + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(S())->height_whole, ObjTrio[0].height_whole + 0xC0u);
     s = rv::As<records::EffectObject>(S());
     s->step_x = UL(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(s)[8])) << 4;
     s = rv::As<records::EffectObject>(S());
@@ -970,7 +970,7 @@ extern "C" void __cdecl EffectKind3A_Wait(void) {
 // EffectKind3A_Fly's and FC1's 0x46B7C0. PSX 0x8019FE18 (gap44).
 extern "C" void __cdecl EffectKind3A_LeaderPose(void) {
     unsigned char* const s = S();
-    const records::PartyMember* const l = rv::AsConst<records::PartyMember>(At(ObjTrio_addr));
+    const records::PartyMember* const l = &ObjTrio[0];
     s[0x24] = 1;
     rv::Store<unsigned>(rv::As<records::EffectObject>(s)->column, l->column);
     s[0x28] = 2;
@@ -1008,7 +1008,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         Touch("EffectKind3A_Hit", static_cast<signed char>(o));
         return 1;
     }
-    const int leader = SW(At(ObjTrio_addr + 0x3E));
+    const int leader = static_cast<std::int16_t>(ObjTrio[0].height_whole);
     if (leader - ground > 0x80) return 0;
     if (ground - leader > 0x100) return 1;
     s = rv::As<records::EffectObject>(S());

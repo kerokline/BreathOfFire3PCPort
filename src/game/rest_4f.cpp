@@ -1376,10 +1376,10 @@ extern "C" void __cdecl EffectKind02_CopyLeader(void) {
     s[0x49] = ObjTrio[0].script_steps;
     s[0x4A] = ObjTrio[0].script_hold;
     s[0x4B] = ObjTrio[0].animation;
-    rv::As<records::EffectObject>(s)->script = L(at::kLeader + 0x50);
-    rv::As<records::EffectObject>(s)->frames = L(at::kLeader + 0x54);
-    rv::As<records::EffectObject>(s)->script_pos = W(at::kLeader + 0x58);
-    rv::As<records::EffectObject>(s)->frame_word = W(at::kLeader + 0x5A);
+    rv::As<records::EffectObject>(s)->script = ObjTrio[0].script;
+    rv::As<records::EffectObject>(s)->frames = ObjTrio[0].frames;
+    rv::As<records::EffectObject>(s)->script_pos = ObjTrio[0].script_pos;
+    rv::As<records::EffectObject>(s)->frame_word = ObjTrio[0].frame_word;
     SH_CALL(Sprite_QueueOverlay)();
 }
 

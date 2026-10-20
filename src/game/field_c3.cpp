@@ -182,10 +182,10 @@ namespace {
 // order of each subtraction (the absolute values agree) and in `toward`.
 unsigned char ChaseDirection(unsigned char* object, unsigned char toward) {
     records::SpriteHead* const s = rv::Current<records::SpriteHead>();   // held for both tests and +8
-    const std::int32_t dx = Abs32(ULong(At(ObjTrio_addr + 0x34)) - static_cast<U>(s->x)) >> 16;
+    const std::int32_t dx = Abs32(static_cast<std::uint32_t>(ObjTrio[0].x) - static_cast<U>(s->x)) >> 16;
     const unsigned char direction = s->direction;
     if (static_cast<int>(SWord(object + 0x98)) > dx) {
-        const std::int32_t dz = Abs32(ULong(At(ObjTrio_addr + 0x38)) - static_cast<U>(s->z)) >> 16;
+        const std::int32_t dz = Abs32(static_cast<std::uint32_t>(ObjTrio[0].z) - static_cast<U>(s->z)) >> 16;
         if (static_cast<int>(SWord(object + 0x9A)) > dz) {
             const unsigned char best = SH_CALL(Field_ObjectBestDirection)(object, toward);
             if (best == 0xFF) {
@@ -216,8 +216,8 @@ extern "C" unsigned char __cdecl Field_ObjectAvoidDirection(unsigned char* objec
 // leader's next point, by the sum of the two distances; 0xFF for none.
 extern "C" unsigned char __cdecl Field_ObjectBestDirection(unsigned char* object, unsigned char toward) {
     const U pace = ObjTrio[0].step_frames;
-    const U point_z = pace * ULong(At(ObjTrio_addr + 0x10)) + ULong(At(ObjTrio_addr + 0x38));
-    const U point_x = pace * ULong(At(ObjTrio_addr + 0xc)) + ULong(At(ObjTrio_addr + 0x34));
+    const U point_z = pace * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    const U point_x = pace * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     records::SpriteHead* s = rv::Current<records::SpriteHead>();
     if ((s->direction & 1) == 0) s->direction = static_cast<unsigned char>(s->direction + 1);
     unsigned char best = 0xFF;

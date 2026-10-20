@@ -624,7 +624,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
 // and the answer is the last call's al.
 extern "C" unsigned char __cdecl Field_EncounterDue(void) {
     if (Byte(kFlagsLo) & 0x20) SetWord(At(ObjTrio_addr + 0x134), 0);
-    const unsigned char* const zone = g.zone_at(Word(At(ObjTrio_addr + 0x36)), Word(At(ObjTrio_addr + 0x36) + 4));
+    const unsigned char* const zone = g.zone_at(ObjTrio[0].x_whole, ObjTrio[0].z_whole);
     if (zone[4] == 0) {
         SetWord(At(ObjTrio_addr + 0x134), 0);
         return 0;

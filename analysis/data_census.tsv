@@ -8611,7 +8611,6 @@ site	src/game/event_ops.cpp	587	global	Byte	at::kScratch	0x903850	-	exact	Damage
 site	src/game/event_ops.cpp	594	global	At	at::kTargetX	0x903858	-	inside	DamageScratch+0x8	records::DamageScratch	0
 site	src/game/event_ops.cpp	600	global	Byte	kFlags2Lo	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
 site	src/game/event_ops.cpp	626	global	Byte	kFlagsLo	0x9039a2	-	exact	Field_ScriptFlags	unsigned short	0
-site	src/game/event_ops.cpp	627	record	Word	At(ObjTrio_addr + 0x36) + 4	-	via=At	-	-	-	0
 site	src/game/event_ops.cpp	654	global	At	at::kMemberPositions	0x7e06e0	-	none	-	-	0
 site	src/game/event_ops.cpp	656	record	Long	at + 4	-	table=0x7e06e0;stride=0x8	-	-	-	0
 site	src/game/event_ops.cpp	667	global	At	at::kActorRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
@@ -16326,19 +16325,13 @@ site	src/game/rest_3e.cpp	310	record	SW	ray + 4	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	311	record	SW	ray + 2	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	313	record	SW	ray + 2	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	320	record	SW	ray + 6	-	-	-	-	-	0
-site	src/game/rest_3e.cpp	321	global	UL	at::kLeaderX	0x802d74	-	inside	ObjTrio+0x34	records::PartyMember	0
-site	src/game/rest_3e.cpp	322	global	UL	at::kLeaderZ	0x802d78	-	inside	ObjTrio+0x38	records::PartyMember	0
 site	src/game/rest_3e.cpp	322	record	SetUL	pt + 4	-	-	-	-	-	0
-site	src/game/rest_3e.cpp	323	global	UL	at::kLeaderY	0x802d7c	-	inside	ObjTrio+0x3c	records::PartyMember	0
 site	src/game/rest_3e.cpp	323	record	SetUL	pt + 8	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	325	record	Word	ray + 6	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	326	record	Word	ray + 6	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	327	record	Word	ray + 6	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	328	record	SW	ray + 8	-	-	-	-	-	0
-site	src/game/rest_3e.cpp	329	global	UL	at::kLeaderX	0x802d74	-	inside	ObjTrio+0x34	records::PartyMember	0
-site	src/game/rest_3e.cpp	330	global	UL	at::kLeaderZ	0x802d78	-	inside	ObjTrio+0x38	records::PartyMember	0
 site	src/game/rest_3e.cpp	330	record	SetUL	pt + 4	-	-	-	-	-	0
-site	src/game/rest_3e.cpp	331	global	UL	at::kLeaderY	0x802d7c	-	inside	ObjTrio+0x3c	records::PartyMember	0
 site	src/game/rest_3e.cpp	331	record	SetUL	pt + 8	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	333	record	Word	ray + 8	-	-	-	-	-	0
 site	src/game/rest_3e.cpp	334	record	Word	ray + 8	-	-	-	-	-	0
@@ -16716,8 +16709,6 @@ site	src/game/rest_3f_fuzz.cpp	378	record	SetWord	b + 4	-	via=Bar	-	-	-	1
 site	src/game/rest_3f_fuzz.cpp	380	global	At	at::kCounter	0x903848	-	none	-	-	1
 site	src/game/rest_3f_fuzz.cpp	448	global	At	at::kCounter	0x903848	-	none	-	-	1
 site	src/game/rest_3g.cpp	104	record	UL	table + 4 * step	-	param	-	-	-	0
-site	src/game/rest_3g.cpp	179	global	UL	at::kMember2X	0x80300c	-	inside	ObjTrio+0x2cc	records::PartyMember	0
-site	src/game/rest_3g.cpp	180	global	UL	at::kMember2Z	0x803010	-	inside	ObjTrio+0x2d0	records::PartyMember	0
 site	src/game/rest_3g.cpp	186	record	SetUL	s + 0x14	-	via=S	-	-	-	0
 site	src/game/rest_3g.cpp	202	global	At	at::kCounter	0x903848	-	none	-	-	0
 site	src/game/rest_3g.cpp	269	global	UL	at::kExtra1X	0x8020d8	-	inside	Sprite_ObjectsExtra+0xd8	records::SpriteObject	0
@@ -17519,10 +17510,6 @@ site	src/game/rest_4f.cpp	1240	record	Word	S() + 0x10	-	via=S	-	-	-	0
 site	src/game/rest_4f.cpp	1247	global	SetW	at::kClut7B	0x811440	-	inside	Gfx_ClutStrip+0x1ec0	unsigned short	0
 site	src/game/rest_4f.cpp	1247	record	W	from + 2 * i	-	stride=0x40	-	-	-	0
 site	src/game/rest_4f.cpp	1263	global	W	at::kKind02Word	0x905e62	-	inside	Field_Kind2Z+0x2	long	0
-site	src/game/rest_4f.cpp	1379	global	L	at::kLeader	0x802d40	-	exact	ObjTrio	records::PartyMember	0
-site	src/game/rest_4f.cpp	1380	global	L	at::kLeader	0x802d40	-	exact	ObjTrio	records::PartyMember	0
-site	src/game/rest_4f.cpp	1381	global	W	at::kLeader	0x802d40	-	exact	ObjTrio	records::PartyMember	0
-site	src/game/rest_4f.cpp	1382	global	W	at::kLeader	0x802d40	-	exact	ObjTrio	records::PartyMember	0
 site	src/game/rest_4f.cpp	1425	global	W	at::kKind02Word	0x905e62	-	inside	Field_Kind2Z+0x2	long	0
 site	src/game/rest_4f_fuzz.cpp	431	global	B	at::kCounter	0x929f04	-	none	-	-	1
 site	src/game/rest_4f_fuzz.cpp	449	global	B	at::kChapterByte4A	0x90384a	-	none	-	-	1
@@ -18175,9 +18162,6 @@ site	src/game/scena_sc13.cpp	767	global	W	at::kSlotWord	0x903850	-	exact	DamageS
 site	src/game/scena_sc13.cpp	888	global	S16	at::kAngleFB	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
 site	src/game/scena_sc13.cpp	945	global	B	at::kScriptFlags	0x9039a2	-	exact	Field_ScriptFlags	unsigned short	0
 site	src/game/scena_sc13.cpp	945	global	B	at::kScriptFlags	0x9039a2	-	exact	Field_ScriptFlags	unsigned short	0
-site	src/game/scena_sc13.cpp	962	global	D	at::kTrio	0x802d40	-	exact	ObjTrio	records::PartyMember	0
-site	src/game/scena_sc13.cpp	964	global	D	at::kTrio	0x802d40	-	exact	ObjTrio	records::PartyMember	0
-site	src/game/scena_sc13.cpp	965	global	W	at::kTrio	0x802d40	-	exact	ObjTrio	records::PartyMember	0
 site	src/game/scena_sc13.cpp	1018	global	W	at::kCaptionIndex	0x7dee48	-	none	-	-	0
 site	src/game/scena_sc13.cpp	1019	global	W	at::kCaptionTotal	0x903852	-	inside	DamageScratch+0x2	records::DamageScratch	0
 site	src/game/scena_sc13.cpp	1021	global	W	at::kSlotWord	0x903850	-	exact	DamageScratch	records::DamageScratch	0
@@ -23235,11 +23219,11 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19699
-#count sites_global	9841
-#count sites_global_at	7829
+#count sites	19683
+#count sites_global	9826
+#count sites_global_at	7814
 #count sites_global_module	2012
-#count sites_record	8729
+#count sites_record	8728
 #count sites_raw	1129
 #count sites_in_fuzz	4224
 #count files_with_sites	523
@@ -23247,14 +23231,14 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_with_stride	699
 #count record_sites_with_table_or_base	3516
 #count record_sites_on_named_pointer	198
-#count record_sites_on_helper_call	678
+#count record_sites_on_helper_call	677
 #count record_sites_offset_into_constant	1546
-#count record_sites_via_helper	2431
+#count record_sites_via_helper	2430
 #count record_sites_param	661
 #count record_sites_family_unknown	1709
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	2486
-#count global_sites_covered_inside	1161
+#count global_sites_covered_exact	2479
+#count global_sites_covered_inside	1153
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0
 #count at_refs_struct_or_array	271

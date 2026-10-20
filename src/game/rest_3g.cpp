@@ -176,8 +176,8 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
 // record 2), +0x3C the ground there (AreaMap_Elevation's s16 << 16); the copy
 // +0xC..+0x14; +0x5D 0, +0x5E 0x80, +9 0x20, +1 up.
 extern "C" void __cdecl EffectKindAD_Start(void) {
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x, UL(at::kMember2X));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->z, UL(at::kMember2Z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x, static_cast<std::uint32_t>(ObjTrio[2].x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->z, static_cast<std::uint32_t>(ObjTrio[2].z));
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
     unsigned char* const s = S();
     rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
