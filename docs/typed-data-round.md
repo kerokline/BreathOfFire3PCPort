@@ -547,6 +547,77 @@ modules' globals, frs D2, D4, D5, D6, ea doubts 2, 3, 6, 7.
 differ; `data_census.py --check` 19,707 (19,705 committed; the sites put
 back to raw).
 
+### C3 naming as run (2026-10-19)
+
+The last bullet of [`typed-data-stage-c.md`](typed-data-stage-c.md)
+section 5: one agent on `typed/c3-naming` from `typed/c` eb9dac20 (C0..C2,
+the audit fixes, the regenerated analysis), alone on the tree. Renames by
+what the readers do with the bytes, each with its evidence in the entry's
+`note` (symbols.toml) or the field's comment, and in the commit; seven
+commits, each gated `0 differ`.
+
+- **Enumerators** (B0's `*_addr` spellings): six clone and stub indexes in
+  five fuzz files named after the clone or stub they index
+  (`kTargetConfirm`, `kBossEncounter`, `kFormWait`, `kSimLevelLit` /
+  `kSimLevelDark`, `kScreenRun`), clear of the `at::` constants that made
+  `typed_convert.py` take them.
+- **52 `[[data]]` entries.** Thirteen globals by their readers:
+  `Config_WindowColour` / `Config_Background` (the Config screen's rows 1
+  and 2), `Gene_Bits`, `Area189_StepsSinceEvent` / `_EventsInRow`,
+  `Area_EnterTransition` (GameMode_Enter's transition), `Chapter_FlagRow`,
+  `EventBattle_Id` / `EventBattle_Flags` (Field_StartEventBattle's id and
+  `EventBattle_Records[id] +0`), `Battle_PartyStanding`,
+  `Transition_Busy` (Transition_Start is a no-op while it is set),
+  `Character_IndexById` (char_id to the CharacterRecords index),
+  `Fish_Nibbling` (rest_1f's "pose" was one byte with one reader, the
+  fish). Five battle-wide counts whose readers all agree kept their word
+  and lost the module prefix (`Battle_EnemyCount`, `_EnemiesLeft`,
+  `_DropCount`, `_EndFlags`, `_ExpTotal`). Every `field_of =
+  "WindowRecords"` entry (34, the frs audit's D1) is now `Window<N>` (the
+  record; its scalar the `in_use` byte, its `_addr` the base the `+4` /
+  `+6` uses read from) or `Window<N>_<field>` by `WindowRecord`'s head
+  name, by the readers' word past `+7` where they agree, `_ParamA` where
+  they do not (`Window0_ParamA`, `Window1_ParamA`).
+- **Entry metadata:** `AreaMap_EntryHandlers` count 128 -> 4 (the mask's
+  reach was not the table): field_o's eight piece lists B0 had spelled
+  as `AreaMap_EntryHandlers_addr + 0xbc..0x1f4` are their constants again
+  (+9 census sites, reason `no-entry`), and the map_layers fuzz names its
+  128 stand-ins `kMaskReach`. `Field_Members` noted, not renamed: it is
+  `ObjTrio + 0x148`, record 0's `char_index` (C4's ObjTrio as
+  `PartyMember[3]`). The brief's item 4 constants were already retired by
+  C2 with notes that match their addresses (checked against the history).
+- **Fields:** `BattleEnemy::result_head` / `command` and
+  `PartyMember::queued_kind` are `ActionRecord`'s `command` /
+  `command_kind` on all three; `BattleEnemy::kind` (`+0x8C`) is
+  `enemy_kind` (compiled with the head's `kind` hidden for the pass, so no
+  use fell through to `+5`); `BattleEnemy::item_a8` / `item_ac` named out
+  of the pads (EnemyData `+0x30` / `+0x34`, Identify_DrawEnemy's item
+  words). `EffectSpark`'s comment no longer claims E3B's sparks.
+- **Head names at typed sites:** the world-map dial frame's y (`+0x2E`,
+  19 lines in the eleven `FrameSlide*` copies and `WorldMap_FrameWait`)
+  from `screen_x` to `EffectWork::work_2e`. Kind 0x13's `angle[0..2]` is
+  right (CameraTurn_Start's three target angles); `area_w3f.cpp`'s
+  `Kind13` comment and parameters were what said x / y. No new view was
+  needed.
+- **Docs:** `window-task.md` 3 and `window_task.cpp` say the record's
+  top-left, not its centre; `typed-records.md` rows follow the fields; the
+  renamed entries renamed in every doc but this one and the stage-C
+  staging doc, which keep the names they were written with.
+
+Left as they are (the hand-back lists each): the misleading non-union
+names on the right family (ea doubt 8, bm's Leech `anim_data`), `reach`
+on kind 9 (saved and restored only), `work_18` as a place id (neutral
+already), `ItemListWindow::marked` for the sell list's row, frs D2, D4,
+D5, D6, ea doubts 2, 3, 6, 7, the `Rest2b_Model*` / `Rest2c_Figure*`
+family (a struct, C4), `ScriptContext +6 / +8` (one reader, a split of the
+view), the `.rdata` float and `Imp_*` names, `Menu_PlayTimePieces`' count
+(it reaches `0x6633E0`, the wheel's first list; unmeasured here), the
+battle phase bytes whose module names disagree (`BattleE4_Step2..4`,
+`BossSe_Script`, `BossSb_Countdown`, `BattleActorCopies_EntryCount`, ...).
+`codegen_same.py` against the baseline: 640 objects compared, 0 differ;
+`data_census.py --check` 19,716 (+9, the restored constants);
+`typed_left.py --check` current.
+
 ## 4. Stage C
 
 Staged in [`typed-data-stage-c.md`](typed-data-stage-c.md): C0 the
