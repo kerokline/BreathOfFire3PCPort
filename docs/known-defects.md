@@ -7273,7 +7273,7 @@ only; not traced. The board's `"%d/%d"` page counter (`0x6531F4`, engine-own) is
 play - label group 14 was not built from PSP-EU, and `Culture` is its first slot. `convert_labels_psp`
 builds the group now; `fairyVillage` draws `Culture` on all three `eu` installs.
 
-## D266 — A Western disc-built image draws the title's mark zero wide: `Title_Sprites` entry 1's width is a gap (ours, the exe image's gaps; not fixed)
+## D266 — A Western disc-built image draws the title's mark zero wide: `Title_Sprites` entry 1's width is a gap (ours, the exe image's gaps; fixed 2026-10-20 by DIV-0101's `titlemark` rule)
 
 **Found:** the disc-data inventory, 2026-10-13
 ([`disc-data-inventory.md`](disc-data-inventory.md) 5 item 1); the policy
@@ -7288,6 +7288,12 @@ harness's `pc-title-mark` difference measures against PSX-EU, and DIV-0114's
 "New behaviour" (as corrected) says so. **Where to start:** a `twin` row
 reading the width from the disc's own `GAME.EMI#1`, as D260..D263's rows
 were made.
+
+**Fixed 2026-10-20** (the owner's call: "read the 12"): `tools/psp_exe.py`'s
+`titlemark` rule finds `Title_Sprites` in `GAME.EMI#1` by entries 0..6 and
+takes the disc's own width, 12 on all four Western discs (DIV-0101's
+amendment of that date). A US disc-only install built with it draws the TM
+whole; `exe-gaps.tsv` no longer lists the row.
 
 ## D267 — The Meteor Strike chip's four lifts are zero on every disc-built image (ours, the exe image's map; fixed 2026-10-17)
 
@@ -8710,3 +8716,35 @@ is never closed either (a leak, not fixed).
 seventeenth match or an over-long name logged and not stored. Self-test:
 twenty matches, sixteen stored, the guard after the table unwritten.
 `BOF3X_ORIGINAL=SaveLists` brings the overrun back.
+
+## D323 — A Western disc-only install's staff roll is a patchwork of two releases' credits (ours, the exe image's map; open, the owner's call)
+
+**Found:** 2026-10-20, rendering the ending for the owner's call on the
+roll ([`exe-gap-round.md`](exe-gap-round.md) 3): the chapter-jump save
+`ending17` run to "Fin" with a shot every 300 frames, on the PC install and
+on a US disc-only install (scratch `C:\Users\kerok\bof3x-runs\away1020`;
+`analysis/shots/ending-roll-1020/`, local).
+
+**Established:** the roll's text and steps are `Scena17_EndSteps` and the
+strings after it (`0x66219C..0x662AEA`, read by `Scena17_DrawLine`). The PC's
+table equals the Japan disc's `SCENARIO/SCENA17.EMI#0` byte for byte. The
+Western discs re-lay it: the job titles reworded ("Engine Design" for
+"System Planner"), the Japanese naming contest and the "Helper / Bug Checker
+/ And Thanks For All" lines gone, "Assistants", "Testing" and "Cooperation"
+added, and on the US disc a localization staff block. The region is
+byte-identical on the European, French and German discs and different on the
+US disc: the roll differs by release, not by language. The PC port shows the
+Japanese roll under every language (en-US against the original: 82 of 84
+frames pixel-equal, the other two the fade into "Fin").
+
+The map places the stretches of the US roll that happen to match the PC's
+and the rest stays a gap (zero), so a US disc-only install draws a mix:
+"Engine Design" beside "Sound Program", "Battle" with no "Planner",
+"Packag", an empty frame where the PC has the naming contest, "K I" for
+"K IWAO". The European builds have the same shape.
+
+**Where to start:** the owner's call between the PC's (Japan's) roll on
+every install and each release's own; for the second, the Western table is
+one contiguous run in `SCENA17.EMI#0` at the same offset on every Western
+disc, and the question is whether `Scena17_DrawLine` and the step table read
+it through offsets the PC's code fixes (the exe-gap round, section 3).

@@ -6915,6 +6915,33 @@ designed in rather than bolted on.
   provisional, and `BOF3X_EXEIMAGE_STRICT=1` is not the default (I43 step 4,
   not ready: the read watch is to be re-run on the merged branch, and the
   two rows read in play are the owner's).
+- Amended 2026-10-20 (D266, the owner's call of 2026-10-13, "the away day"
+  in [`owner-review.md`](owner-review.md), confirmed 2026-10-20: "read the
+  12"): one byte the Western PSX discs carry in their own value is filled
+  by a rule, `titlemark`. `Title_Sprites` (`0x653850`, 17 entries of u16 u,
+  v, w, h, clut) entry 1 is the title's mark; its width is 10 on the PC and
+  the Japanese discs (the (R)) and 12 on the US, European, French and German
+  discs (their glyph page's TM), so no segment matched and the image held 0:
+  a Western disc-only title drew no mark (D266). The rule finds the table in
+  `ETC/GAME.EMI` by entries 0..6 equal to `BOF3.exe`'s but for that byte
+  (entries 7..9 are regional too), requires the disc's byte to be 8..16, and
+  copies it - the disc's own value, the second rule after `fishpen` whose row
+  is kept although it differs from `BOF3.exe`'s. Verification: `psp_exe.py
+  recipe` over the seven discs: one `titlemark` row on each of US, EU-English,
+  FR and DE (`GAME.EMI#1`, `0x801D1C7A` on the US disc, `0x801D1C3A` on the
+  three PAL ones), "1 bytes, 1 not BOF3.exe's", each byte 12; no other row of
+  `exe-psp.tsv` moved. The regeneration (`exe_tables.py recipe`,
+  `exe_own.py measure`, `exe_tables.py gaps`) also carried in the second
+  pairing pass's rows ([`install-gap-pairs.md`](install-gap-pairs.md) 8,
+  merged with PR #94 but not regenerated then): `exe-imm.tsv` + 16 `immref`
+  rows (PSX-JP 4, every other build 2); `exe-gaps.tsv`'s `gap` rows PSX-JP 58
+  to 53, US 76 to 72, EU 75 to 71, FR 76 to 72, DE 78 to 74, PSP-JP 54 to 51,
+  PSP-EU 52 to 49, none new; `exe_tables.py check` with the seven discs 0
+  errors. Planted faults: a `titlemark` row on PSX-JP, a two-byte row and
+  another file each refused by `psp_exe.py check`; a disc byte of 40 refused
+  by the rule. Live: a US disc-only install built by this branch's importer
+  draws the TM whole at (262, 130), against the PC install's (R)
+  (`analysis/shots/d266-title-mark-1020/`, local).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -7500,7 +7527,8 @@ designed in rather than bolted on.
   the disc's title page from the disc. A Western disc's install draws **no
   mark at all** (neither the PC's (R) nor its own ™), because `Title_Sprites`
   entry 1's width (`0x65385E`) is a gap of the disc-built image (zero); once
-  that gap is filled it draws the disc's ™. A JP disc-only install places the
+  that gap is filled it draws the disc's ™. *Filled 2026-10-20* by DIV-0101's
+  `titlemark` rule (D266): a Western disc-only install draws its disc's ™. A JP disc-only install places the
   width and draws the (R), as the JP release does. A PSP-only install
   draws the PSP's own title page and `Title_Sprites` entry 10 (DIV-0103).
   A PC install, or a cache with the PC's `DAT/` among its sources, keeps the
