@@ -117,7 +117,7 @@ extern "C" unsigned __cdecl Battle_ActorSkipped(unsigned actor) {
 // eax it leaves (Window_Alloc's) is read by none of its 18 callers.
 extern "C" void __cdecl Battle_OpenMsgWindow() {
     g.window_alloc(0, 3);
-    auto* const window_rec = rv::As<records::WindowRecord>(At(WindowRecords_addr + 0x2) - 2);
+    auto* const window_rec = &WindowRecords[0];
     window_rec->kind = 6;
     window_rec->state = 0;
     window_rec->x = 0x14;
