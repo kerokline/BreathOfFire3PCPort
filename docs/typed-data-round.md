@@ -497,6 +497,53 @@ no raw site converted. The record is
   `typed_left.py --check` current after regenerating six rows whose keys
   named `->member` (their reasons carried).
 
+### C2 audit as run (2026-10-19)
+
+Three read-only family audits read C2's diff (`typed/c` acd99ccc against
+1b1701a1), one per slice: effect and area (ea), field, rest and scenario
+UI (frs), battle and magic (bm). No slice found a struct on the wrong
+record outright; they found names on the right record that the bytes do
+not mean there, and sprite-head bytes reached through a family narrower
+than the pointer. One agent on `typed/c2-fix` applied the findings the
+coordinator accepted, a commit per letter or few, each gated `0 differ`:
+
+- **A** (ea F1, doubt 1; frs F4): `EffectWork::work_32` (u16, `+0x32`)
+  added; 56 lines (63 uses) in kinds 0x2B, 0x43, 0x45, 0x51, 0x78, 0x98,
+  0xAE and kind 18's subs 0x0F, 0x17, 0x24, 0x25, 0x26, 0x39, 0x2B moved
+  off `draw_key`, the 52 of ea F1 among them; kind 0x78's three reads of
+  Sprite_Objects record 2's turn back to `W(at::kObject2Turn)`.
+  `Sub44_Follow`'s store stays `draw_key` (a real key).
+- **B** (ea F2): one site, the stars' level back to `Word(Vertices() + 8)`.
+- **C** (ea doubt 4): two, `Field_State + 0x130` as
+  `MemberFieldTail::script`.
+- **D** (ea doubt 5): three, area 75's effect meter as `EffectWork::work_0c`.
+- **E** (frs F1): four, a party member's `+7` / `+6` in `field_c3.cpp` as
+  raw bytes.
+- **F** (frs F2): `Sprite_ProjectA` and `Sprite_UpdateScreen` on
+  `SpriteHead`, 21 lines.
+- **G** (frs F3, D3): the movement interpreter's named functions on
+  `SpriteHead` for their `Sprite_Current` / `Sc()` roots, 109 lines in
+  four files; `MoveCmd_OpF9`'s `Field_ActiveMember` keeps `SpriteObject`
+  (a Sprite_Objects / Sprite_ObjectsExtra record). No `Sc()` site in them
+  reads past `+0x7F`.
+- **H** (frs F5): two, the world map plate's cell ahead as `work_0c` /
+  `work_10`.
+- **I** (bm F1): two, `Weretiger_DrawSprite`'s acting member as
+  `SpriteHead`.
+- **J** (bm doubt 5): two, `MagicFx_NearSprite3D` / `_NearPoint3D` on
+  `SpriteHead`.
+
+Left for the naming pass or C4: the misleading names on the right family
+(ea doubt 8, bm names), frs D1's window-record bytes named as other
+modules' globals, frs D2, D4, D5, D6, ea doubts 2, 3, 6, 7; and the same
+`SpriteObject`-on-`Sprite_Current` reading in the functions the audit did
+not name (the rest of `move_groups.cpp`, `move_script.cpp` and
+`move_cmds.cpp`, `field_o.cpp` `MoveCmd_Op87*` / `Op88*` /
+`OpDB`, `Sprite_UpdateScreenA`, `Sprite_QueueOverlay`).
+`codegen_same.py` against the `main` build: 640 objects compared, 0
+differ; `data_census.py --check` 19,707 (19,705 committed; the sites put
+back to raw).
+
 ## 4. Stage C
 
 Staged in [`typed-data-stage-c.md`](typed-data-stage-c.md): C0 the
