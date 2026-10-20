@@ -54,7 +54,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F) and the four SVECTORs of
 // Prim_VertexScratch (0x9037A0..0x9037BF), read again after every call as the
 // originals read them.
-// kS: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
@@ -62,11 +62,11 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
-std::int32_t SD(unsigned k) { return Long(Mem(SharedScratch_addr + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(SharedScratch_addr + k), static_cast<std::int32_t>(v)); }
-std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
-unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
+std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }

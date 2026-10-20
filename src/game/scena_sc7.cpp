@@ -378,7 +378,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 9:
         if (C0() != 3) return;
-        if (TakeInto(SharedScratch_addr) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xA);
         Effect13(Slot850(), Camera_Angles[0], Camera_Angles[1], 0x31E, 0xE0);
         return;
@@ -390,7 +390,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0xB:
         if (C0() != 5) return;
-        if (TakeInto(SharedScratch_addr) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xC);
         Effect13(Slot850(), Camera_Angles[0], Camera_Angles[1], 0x200, 0x70);
         return;
@@ -402,14 +402,14 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0xD:
         if (C0() != 0xB) return;
-        if (TakeInto(SharedScratch_addr) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xE);
         Effect13(Slot850(), -0x35A, Camera_Angles[1], 0x48, 0x30);
         SetTimer(0x30);
         return;
     case 0xE: {
         if (C0() != 0xC) return;
-        if (TakeInto(SharedScratch_addr) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xF);
         unsigned char* const e = Slot850();
         Live(e, 0x31);
@@ -449,7 +449,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         return;
     case 0x13:
         if (C0() != 0x22) return;
-        if (TakeInto(SharedScratch_addr) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0x14);
         Live(Slot850(), 0x38);
         return;
@@ -608,7 +608,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         return;
     case 4: {
         if (C0() != 0xA) return;
-        if (TakeInto(SharedScratch_addr) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         unsigned char* const e = Slot850();
         SetTimer(0x8C);
         SetStep(5);
@@ -623,7 +623,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
             DecTimer();
             return;
         }
-        if (TakeInto(SharedScratch_addr) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         Effect13(Slot850(), -0x33E, Camera_Angles[1], S16(at::kPitch), 0xA0);
         IncC0();
         Sound(0x205);
@@ -639,7 +639,7 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         SetStep(8);
         return;
     case 8:
-        if (C0() == 0xE && TakeInto(SharedScratch_addr) != 0xFF) {
+        if (C0() == 0xE && TakeInto(at::kSlot_addr) != 0xFF) {
             SetStep(9);
             Effect13(Slot850(), -0x2AA, Camera_Angles[1], S16(at::kPitch), 0x90);
         }
@@ -888,7 +888,7 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         break;
     case 0x15:
         if (C0() != 0x14) break;
-        if (TakeInto(SharedScratch_addr) == 0xFF) break;
+        if (TakeInto(at::kSlot_addr) == 0xFF) break;
         SetStep(0x16);
         Live(Slot850(), 0x46);
         out = kDone;
@@ -1057,14 +1057,14 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     }
     case 0x24:
         if (C0() != 0x25) break;
-        if (TakeInto(SharedScratch_addr) == 0xFF) break;
+        if (TakeInto(at::kSlot_addr) == 0xFF) break;
         SetStep(0x25);
         Effect13(Slot850(), -0x370, Camera_Angles[1], 0xB6, 0xA8);
         out = kShake;
         break;
     case 0x25:
         if (C0() != 0x26) break;
-        if (TakeInto(SharedScratch_addr) == 0xFF) break;
+        if (TakeInto(at::kSlot_addr) == 0xFF) break;
         SetStep(0x26);
         Effect13(Slot850(), -0x2AA, Camera_Angles[1], 0x200, 0x1E);
         out = kShake;
@@ -1424,7 +1424,7 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
         }
     }
     if (Area() == 2 && Flag(6) && !Flag(7)) {
-        const unsigned char slot = TakeInto(SharedScratch_addr);
+        const unsigned char slot = TakeInto(at::kSlot_addr);
         Camera_Angles[0] = 0xFDC4;
         if (slot != 0xFF) Effect13(Slot850(), -0x302, Camera_Angles[1], S16(at::kPitch), 0xFF);
     }
@@ -1547,7 +1547,7 @@ extern "C" void __cdecl Scena08_Scene1(void) {
         return;
     case 2: {
         if (C0() != 4) return;
-        if (TakeInto(SharedScratch_addr) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             rv::As<records::EffectObject>(e)->z = 0x550000;
             const std::int32_t z = rv::As<records::EffectObject>(e)->z;
@@ -1565,7 +1565,7 @@ extern "C" void __cdecl Scena08_Scene1(void) {
     }
     case 3:
         if (C0() != 7) return;
-        if (TakeInto(SharedScratch_addr) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x52;
@@ -1709,7 +1709,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
     }
     case 2:
         if (C0() != 5) return;
-        if (TakeInto(SharedScratch_addr) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             rv::As<records::EffectObject>(e)->z = 0x418000;
             const std::int32_t z = rv::As<records::EffectObject>(e)->z;
@@ -1794,7 +1794,7 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         return;
     case 0xF:
         if (C0() != 0x23) return;
-        if (TakeInto(SharedScratch_addr) != 0xFF) Live(Slot850(), 0x63);
+        if (TakeInto(at::kSlot_addr) != 0xFF) Live(Slot850(), 0x63);
         SetTimer(0x3C);
         SetStep(0x10);
         return;
@@ -1957,7 +1957,7 @@ extern "C" void __cdecl Scena08_Scene6(void) {
     }
     case 3: {
         if (EffectAt(Scena08_Kept[0xf])[0] & 1) return;
-        if (TakeInto(SharedScratch_addr) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2328,7 +2328,7 @@ extern "C" void __cdecl Scena08_Scene9(void) {
         return;
     case 6:
         if (C0() != 5) return;
-        if (TakeInto(SharedScratch_addr) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2365,7 +2365,7 @@ extern "C" void __cdecl Scena08_Scene10(void) {
         SetStep(0);
         return;
     case 0xA:
-        if (TakeInto(SharedScratch_addr) == 0xFF) return;
+        if (TakeInto(at::kSlot_addr) == 0xFF) return;
         SetStep(0xB);
         Effect13(Slot850(), -0x2EC, Camera_Angles[1], 0xB6, 0x20);
         return;
@@ -2435,7 +2435,7 @@ extern "C" void __cdecl Scena08_Scene11(void) {
     case 2:
         if (SH_CALL(File_LoadDone)() == 0) return;
         if (Field_Kind2Hold != 0) return;
-        if (TakeInto(SharedScratch_addr) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x5F;
@@ -2460,7 +2460,7 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         return;
     case 4:
         if (C0() != 8) return;
-        if (TakeInto(SharedScratch_addr) != 0xFF) {
+        if (TakeInto(at::kSlot_addr) != 0xFF) {
             unsigned char* const e = Slot850();
             e[0] = 1;
             e[5] = 0x60;

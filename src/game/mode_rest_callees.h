@@ -38,6 +38,7 @@ constexpr U kTripAnyArea = 0xBD;           // the area the trip may start from w
 constexpr U kFacingJitter = 0x656A80;      // s8 x 4: the facing's jitter by Rand & 3 (image .data, after GameMode3_Steps)
 // kPendingPlace: now AreaW0b_Place (symbols.toml). u16: the trip's destination area
 inline auto& kPendingX = SharedScratch.d_10;          // dword: its x
+constexpr std::uint32_t kPendingX_addr = SharedScratch_addr + 0x10; // kPendingX's address, for the raw accessors that take one
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). dword: its z
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8: its Field_ChangeArea flags
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flag row Flags_Clear is handed

@@ -32,7 +32,7 @@ namespace at {
 
 // The effect scratch (the PC's copy of the PSX scratchpad, SharedScratch):
 // words the draws keep radii, colours and angle indices in.
-// kR: now SharedScratch (symbols.toml). s16: the outer radius (the draws), or a size (Simoon)
+constexpr std::uint32_t kR = SharedScratch_addr; // s16: the outer radius (the draws), or a size (Simoon)
 constexpr std::uint32_t kR2 = 0x903852;      // s16: the inner radius
 constexpr std::uint32_t kW4 = 0x903854;      // u16: a colour, or the next angle index
 constexpr std::uint32_t kW6 = 0x903856;      // u16: a colour, or the angle

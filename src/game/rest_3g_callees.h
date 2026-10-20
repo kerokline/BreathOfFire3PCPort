@@ -74,9 +74,13 @@ constexpr U kReturnZ = 0x7E0920;           // dword: its z
 // --- area 0xBD's view (AreaMap_FrameAreaBD and its build) --------------------------------
 // kAnglesDrawn: now Camera_AnglesDrawn (symbols.toml). Camera_AnglesDrawn: two dwords
 inline auto& kOriginX = SharedScratch.w_00;  // s16: the build's first column (the effect slot's word too)
+constexpr std::uint32_t kOriginX_addr = SharedScratch_addr; // kOriginX's address, for the raw accessors that take one
 inline auto& kOriginZ = SharedScratch.w_02;           // s16: its first row
+constexpr std::uint32_t kOriginZ_addr = SharedScratch_addr + 0x2; // kOriginZ's address, for the raw accessors that take one
 inline auto& kRows = SharedScratch.d_04;              // dword: the rows the build walks (0x38 or 0x2C)
+constexpr std::uint32_t kRows_addr = SharedScratch_addr + 0x4; // kRows's address, for the raw accessors that take one
 inline auto& kColumns = SharedScratch.d_08;           // dword: the columns (0x1C or 0x28)
+constexpr std::uint32_t kColumns_addr = SharedScratch_addr + 0x8; // kColumns's address, for the raw accessors that take one
 constexpr U kOctants = 0x65ED48;           // 8 records of 6 s8 by the camera's octant (image .data)
 constexpr U kBlocks = 0x65ED78;            // 256 bytes: the 16 x 16 block map, each byte a block's row / column nibbles
 constexpr unsigned kMapWidth = 0x60;       // cells a row of AreaMap_Corners in area 0xBD

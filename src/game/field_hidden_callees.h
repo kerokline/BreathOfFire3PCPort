@@ -45,6 +45,7 @@ constexpr std::uint32_t kLeader137 = 0x802E77;
 // The scratch bytes (SharedScratch, PSX 0x1F800000): byte 0 is AreaMap_Slope's
 // "sloped" flag, left there by MapView_SlopeAt.
 inline auto& kScratch = SharedScratch.b_00;
+constexpr std::uint32_t kScratch_addr = SharedScratch_addr; // kScratch's address, for the raw accessors that take one
 // Sprite_Objects' / Sprite_ObjectsExtra's byte +0x80 (bit 0 "touched").
 // kObjectFlag: now Sprite_Objects[0x80] (symbols.toml).
 // kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml).

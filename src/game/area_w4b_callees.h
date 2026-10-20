@@ -33,7 +33,7 @@ constexpr std::uint32_t kTailTimer = 0x9039F6;
 // slot and the input word there, area 171's step hook a count).
 constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter3 = 0x90384B;
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 // The story flags (Flags_Set / Flags_Test's bank), and a second bank area
 // 172's choice 0 tests (Cond_Flags row 14: 0x903F90 + 8 * 14).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).

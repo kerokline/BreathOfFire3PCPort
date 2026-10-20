@@ -43,8 +43,10 @@ constexpr std::uint32_t kActorStride = 0xA4;
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes per party slot (field-event.md)
 // The step's scratch (event_ops_callees.h's terms).
 inline auto& kScratch = SharedScratch.b_00;  // u8: MapView_SlopeAt's "a slope" byte
+constexpr std::uint32_t kScratch_addr = SharedScratch_addr; // kScratch's address, for the raw accessors that take one
 inline auto& kScratch2 = SharedScratch.w_02;        // u16: the found spot's ground
 inline auto& kTargetX = SharedScratch.d_08;         // s32 each: the found spot
+constexpr std::uint32_t kTargetX_addr = SharedScratch_addr + 0x8; // kTargetX's address, for the raw accessors that take one
 // kTargetZ: now Scratch_Swap (symbols.toml).
 // Field_ChangeArea's arguments as the step's exits leave them (event_ops).
 // kExitArea: now AreaW0b_Place (symbols.toml). u16

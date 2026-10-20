@@ -394,9 +394,9 @@ std::uint32_t Run(const void* fn, const Clone& c, const Args& x) {
 // pointer and Field_Kind2Z / X. Then Sprite_Current, MoveScript_F3Divisor and
 // Gfx_ClutStripDirty; and, for the one function each that writes them, the
 // 256 CLUTs of row 15 and 256 effect objects (a whole index byte's reach).
-// kBlockAt: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kBlockAt = SharedScratch_addr;
 constexpr std::uint32_t kBlockEnd = 0x903A70 + 255 * kRecordSize + 0x18;
-constexpr unsigned kBlock = kBlockEnd - SharedScratch_addr, kClutBytes = 256 * 64, kEffectBytes = 256 * 0x80;
+constexpr unsigned kBlock = kBlockEnd - kBlockAt, kClutBytes = 256 * 64, kEffectBytes = 256 * 0x80;
 // kGlobalsAt: now Sprite_Current (symbols.toml).
 // kEffectsAt: now Effect_Objects (symbols.toml). Effect_Objects
 constexpr unsigned kGlobals = 12;
@@ -411,7 +411,7 @@ struct State {
     Log log;
 };
 void Capture(State& s, unsigned k) {
-    std::memcpy(s.block, At(SharedScratch_addr), kBlock);
+    std::memcpy(s.block, At(kBlockAt), kBlock);
     std::memcpy(s.globals, At(Sprite_Current_addr), kGlobals);
     if (k == kShadeBegin) std::memcpy(s.clut, At(Gfx_ClutStrip_addr + 0x1e00), kClutBytes);
     if (k == kBit80) std::memcpy(s.effects, At(Effect_Objects_addr), kEffectBytes);
@@ -420,7 +420,7 @@ void Capture(State& s, unsigned k) {
     s.log = g_log;
 }
 void Apply(const State& s, unsigned k) {
-    std::memcpy(At(SharedScratch_addr), s.block, kBlock);
+    std::memcpy(At(kBlockAt), s.block, kBlock);
     std::memcpy(At(Sprite_Current_addr), s.globals, kGlobals);
     if (k == kShadeBegin) std::memcpy(At(Gfx_ClutStrip_addr + 0x1e00), s.clut, kClutBytes);
     if (k == kBit80) std::memcpy(At(Effect_Objects_addr), s.effects, kEffectBytes);

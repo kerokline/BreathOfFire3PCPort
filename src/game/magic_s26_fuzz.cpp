@@ -148,7 +148,7 @@ constexpr mh::Answer kG = mh::Answer::kGarbage;
 
 // kVertices: now Prim_VertexScratch (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 constexpr std::uint32_t kTurn = 0x446770;
 
 // --- the group's memory ----------------------------------------------------------
@@ -302,7 +302,7 @@ const mh::Region kRegions[] = {
     {Key(g_packets), sizeof g_packets},
     {Key(g_keys), sizeof g_keys},
     {Prim_VertexScratch_addr, 0x20},                 // Prim_VertexScratch
-    {SharedScratch_addr, 0x10},                      // SharedScratch
+    {kScratch, 0x10},                      // SharedScratch
     {BattleE2_AnimSet_addr, 4},
     {0x905E60, 8},                                   // Field_Kind2Z, Field_Kind2X
     {Key(MoveScript_TintRecords), 0xC00},            // an unchecked byte index of 12-byte records
@@ -321,7 +321,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 9) {
     case 0: Gfx_PacketNext = PacketAt(v); break;
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
-    case 2: SetWord(mh::Mem(SharedScratch_addr + (v % 8) * 2), word); break;
+    case 2: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
     case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 4: {
         static const unsigned kFields[] = {0xC, 0x10, 0x14, 0x20};

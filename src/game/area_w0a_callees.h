@@ -25,7 +25,7 @@ constexpr std::uint32_t kVar5 = 0x90384A;
 constexpr std::uint32_t kVar6 = 0x90384B;
 // A byte the effect handlers keep their Effect_FindFree slot in (read back
 // as a dword and masked).
-// kEffectSlot: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kEffectSlot = SharedScratch_addr;
 // The field mode's tail kind (Field_ModeTailKinds 0x662CE8 by this s8) and
 // the byte beside it the tail phases read.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).

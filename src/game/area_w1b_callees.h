@@ -42,6 +42,7 @@ constexpr U kTailTimer = 0x9039F6;        // u16: area 42's countdown in frames 
 // kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: Character_IndexById's index
 // kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
 inline auto& kFoundSlot = SharedScratch.b_00;  // a found slot (word or byte, as each writer stores it)
+constexpr std::uint32_t kFoundSlot_addr = SharedScratch_addr; // kFoundSlot's address, for the raw accessors that take one
 // kCameraAngle1: now Camera_Angles[1] (symbols.toml). Camera_Angles[1]
 // kCameraAngle2: now Cond_AngleFB (symbols.toml). Camera_Angles[2] (Cond_AngleFB's low half)
 constexpr U kTextBuffer = 0x904BA0;       // area 42's time string, by Crt_sprintf

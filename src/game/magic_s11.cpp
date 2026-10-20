@@ -59,7 +59,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC; words by function)
 // and the four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are
 // read again after every call, as the originals read them.
-// kS: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
@@ -98,10 +98,10 @@ unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(SharedScratch_addr + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }

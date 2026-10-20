@@ -37,7 +37,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 // The scratch word the field's event ops take an object index from
 // (docs/event-ops.md); area 40 stores a free index and a button word there.
-// kScratchWord: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratchWord = SharedScratch_addr;
 // The byte after MoveScript_Var7 (area 40's choice 0 sets it).
 constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The story flags (Flags_Set / Flags_Test's bank), the lever flags' row

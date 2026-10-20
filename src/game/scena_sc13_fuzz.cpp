@@ -317,7 +317,7 @@ void SetD(std::uint32_t a, std::uint32_t v) { std::memcpy(sh::Mem(a), &v, 4); }
 // EventOp_6x runs its record on the object whose slot is in the word 0x903850,
 // which the caller writes before each call: logged with the call.
 std::uint32_t NoteSlot(const std::uint32_t*, std::uint32_t answer) {
-    sh::Note(W(SharedScratch_addr));
+    sh::Note(W(at::kSlotWord_addr));
     return answer;
 }
 // The step hook of chapter 14 counts cells whose byte is 0xA6: half the
@@ -674,7 +674,7 @@ void Disturb(std::uint32_t h) {
     case 7: B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) ^ (8u << ((h >> 16) & 1))); break;
     case 8: B(Field_MemberCount_addr) = static_cast<unsigned char>((h >> 16) % 4); break;
     case 9: SetW(AreaW2c_LastArea_addr, (h >> 16) & 1 ? 0x70 : 0x91); break;
-    case 10: SetW(SharedScratch_addr, (h >> 16) % 0x40); break;
+    case 10: SetW(at::kSlotWord_addr, (h >> 16) % 0x40); break;
     case 11: B(Field_StatusBits_addr) = static_cast<unsigned char>(B(Field_StatusBits_addr) ^ 1); break;
     default: B(ObjTrio_addr + 0x8) = static_cast<unsigned char>((h >> 16) & 1 ? 0 : 6 + ((h >> 17) & 1)); break;
     }

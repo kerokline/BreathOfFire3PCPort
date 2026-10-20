@@ -40,7 +40,7 @@ using Pickup = unsigned char (__cdecl*)(unsigned, unsigned);
 
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs (x, z)
 constexpr U kCellOffsets = 0x66971C;   // two signed bytes a direction: the cell ahead
-// kCells: now SharedScratch (symbols.toml). SharedScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
+constexpr U kCells = SharedScratch_addr; // SharedScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
 constexpr U kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 0x1E;   // Sprite_Objects; 0x1E.. Sprite_ObjectsExtra's four
 constexpr unsigned kEffectCount = 20;
@@ -53,7 +53,7 @@ constexpr U kEffectStride = 0x80;
 // kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char& Cell(unsigned i) { return At(SharedScratch_addr)[i & 0xFF]; }
+unsigned char& Cell(unsigned i) { return At(kCells)[i & 0xFF]; }
 // A Field_DirectionSteps row, read in place with the direction unmasked (the
 // originals' `shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as they do.

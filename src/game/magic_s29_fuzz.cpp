@@ -270,7 +270,7 @@ constexpr unsigned kPrimBytes = 0x100;
 alignas(16) unsigned char g_prims[kPrimBytes];   // what Gfx_PacketNext points into
 
 mh::Region g_regions[] = {
-    {SharedScratch_addr, 0x10},
+    {cell::kScratch, 0x10},
     {Prim_VertexScratch_addr, 0x20},
     {Gfx_PacketNext_addr, 4},
     {0, kPrimBytes},   // g_prims (filled in at start-up)
@@ -380,7 +380,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(h >> 12); break;
     case 1: mh::SetPointer(ShadowMote_Current_addr, ShadeAt(h >> 12)); break;
-    case 2: mh::Mem(SharedScratch_addr + (h >> 12) % 0x10)[0] = b; break;
+    case 2: mh::Mem(cell::kScratch + (h >> 12) % 0x10)[0] = b; break;
     case 3: mh::Mem(Prim_VertexScratch_addr + (h >> 12) % 0x20)[0] = b; break;
     case 4: Cur()[(h >> 12) % 0x1C] = b; break;
     case 5: MoteAt(h >> 12)[0] ^= 1; break;

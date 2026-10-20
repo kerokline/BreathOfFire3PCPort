@@ -122,14 +122,14 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 
 // Every game region any test touches, saved once and put back at the end.
 const Region g_all[] = {
-    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {SharedScratch_addr, 1},       {WindowRecords_addr, kWindowBytes},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {kScratch, 1},       {WindowRecords_addr, kWindowBytes},
     {BattleDamage_Result_addr, 4},        {kTarget, 1},     {kActing, 4},      {BattleOdds_ActorObject_addr, 4},   {kFlagTarget, 1},
     {kRoundFlags, 4},    {kSprite, 4},     {kTints, kTintBytes},
 };
 
 // Every region a function could write, the game's and the fuzz's.
 const Region g_writes[] = {
-    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60},  {BattleMisc_BannerKinds_addr, 1}, {SharedScratch_addr, 1},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60},  {BattleMisc_BannerKinds_addr, 1}, {kScratch, 1},
     {WindowRecords_addr, kWindowBytes}, {BattleDamage_Result_addr, 4}, {kRoundFlags, 4},  {BattleOdds_ActorObject_addr, 4},
     {kSprite, 4},        {kTints, kTintBytes}, {0, sizeof g_objects}, {0, sizeof g_results},
 };
@@ -330,7 +330,7 @@ void RandomBanner() {
     FillRandom(kBanners, 0x60);
     FillRandom(WindowRecords_addr, kWindowBytes);
     At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 4, 0xFF}) : Next());
-    At(SharedScratch_addr)[0] = static_cast<unsigned char>(Next());
+    At(kScratch)[0] = static_cast<unsigned char>(Next());
     const U entry = kBanners + (Next() % 8) * 0xC;
     PutLong(At(BattleMisc_BannerCurrent_addr), entry);
     At(entry + 1)[0] = static_cast<unsigned char>(Next() % 3 ? Pick({1, 2, 0, 3, 4}) : Next());

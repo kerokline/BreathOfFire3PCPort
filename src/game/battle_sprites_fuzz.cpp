@@ -132,7 +132,7 @@ void Disturb() {
         for (unsigned i = 0; i < 3; ++i) At(ObjTrio_addr + i * at::kPartyStride)[0x124] = static_cast<unsigned char>(3 + (v + i) % 8);
         break;
     case 7: SetWord(At(0x802E08 + ((h >> 20) % 3) * at::kPartyStride), h >> 16); break;
-    case 8: At(SharedScratch_addr)[(h >> 20) & 1] = static_cast<unsigned char>((h >> 20) & 1 ? v % 16 : v % 6); break;
+    case 8: At(at::kCells_addr)[(h >> 20) & 1] = static_cast<unsigned char>((h >> 20) & 1 ? v % 16 : v % 6); break;
     case 9: At(at::kClutMap)[v % 64] = static_cast<unsigned char>((h >> 20) % 3 ? 0xFF : v); break;
     case 10: {
         unsigned char* const s = Sprite_Current;
@@ -190,8 +190,8 @@ std::uint32_t Handle(unsigned id, std::uint32_t a, std::uint32_t b, std::uint32_
     case kClutFind:
     case kClutOwner:
         if (h % 4) {
-            At(SharedScratch_addr)[0] = static_cast<unsigned char>((h >> 8) % 6);
-            At(SharedScratch_addr)[1] = static_cast<unsigned char>((h >> 12) % 16);
+            At(at::kCells_addr)[0] = static_cast<unsigned char>((h >> 8) % 6);
+            At(at::kCells_addr)[1] = static_cast<unsigned char>((h >> 12) % 16);
         }
         break;
     case kWindow: {
@@ -410,7 +410,7 @@ const Span kSpans[] = {
     {0x904000, 0xC00, kRGlobals},                 // the battle globals and the two bit sets
     {BattleTask_Slots_addr, 0x3600, kRBattle},    // the pop-ups and the enemy records
     {0x7E06A0, 0xD60, kRTints},                   // the clut map and the tint records (and 64 records past them)
-    {SharedScratch_addr, 8, kRScratch},
+    {at::kCells_addr, 8, kRScratch},
     {Address(&Sprite_Current), 0xC, kRCurrent},   // Sprite_Current .. Gfx_ClutStripDirty
     {0x8C5580, 0x2680, kRData},                   // the enemy data, ids below 0x40
     {Encounter_Slots_addr, 0x60, kREncounter},
@@ -541,8 +541,8 @@ void SeedRound(unsigned regions) {
     if (Rarely())
         for (unsigned i = 0; i < 32; ++i) At(MoveScript_TintRecords_addr + i * 12)[0] |= 1; // every record taken
     SeedClutMap();
-    At(SharedScratch_addr)[0] = static_cast<unsigned char>(Next() % 6);
-    At(SharedScratch_addr)[1] = static_cast<unsigned char>(Next() % 16);
+    At(at::kCells_addr)[0] = static_cast<unsigned char>(Next() % 6);
+    At(at::kCells_addr)[1] = static_cast<unsigned char>(Next() % 16);
     Sprite_Current = PoolSprite(Next());
     if (regions & kREncounter)
         for (unsigned r = 0; r < 8; ++r) At(Encounter_Slots_addr + r * 12)[0] = static_cast<unsigned char>(Half() ? 0 : Next());

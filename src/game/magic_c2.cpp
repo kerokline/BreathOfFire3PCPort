@@ -53,7 +53,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, words by function) and the first two
 // words of Prim_VertexScratch (0x9037A0). Both are read again after every
 // call, as the originals read them.
-// kS: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 // The sprite frame-offset table pointer (magic_s17.cpp's kFrameSet): the
 // bones switch it to 0x8E3580 around their phase and put back 0x8B3580.
@@ -92,9 +92,9 @@ unsigned char* Caster() {
 unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 int SS(unsigned k) { return static_cast<short>(SW(k)); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 int VS(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
 
@@ -744,7 +744,7 @@ C2_EXPORT void __cdecl RottenBreathMote_Draw(void) {
     p[0x50] = 0x1F;
     p[0x51] = 0x1F;
     static constexpr unsigned kShade[12] = {4, 5, 6, 0x18, 0x19, 0x1A, 0x2C, 0x2D, 0x2E, 0x40, 0x41, 0x42};
-    for (const unsigned k : kShade) p[k] = Mem(SharedScratch_addr + 8)[0];
+    for (const unsigned k : kShade) p[k] = Mem(kS + 8)[0];
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
@@ -1100,7 +1100,7 @@ unsigned char* NewG4() {
 // The angle pair's first: (the dword 0x903854 +- 0x400) & 0xFFF; its second:
 // (the word 0x903856 +- 0x400) & 0xFFF.
 int Across54(int delta) {
-    return static_cast<int>((static_cast<std::uint32_t>(Long(Mem(SharedScratch_addr + 4))) + static_cast<std::uint32_t>(delta)) & 0xFFF);
+    return static_cast<int>((static_cast<std::uint32_t>(Long(Mem(kS + 4))) + static_cast<std::uint32_t>(delta)) & 0xFFF);
 }
 int Across56(int delta) { return static_cast<int>((SW(6) + static_cast<unsigned>(delta)) & 0xFFF); }
 }  // namespace

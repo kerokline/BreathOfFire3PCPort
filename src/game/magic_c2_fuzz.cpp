@@ -256,7 +256,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 // kPacketNext: now Gfx_PacketNext (symbols.toml).
 // kV: now Prim_VertexScratch (symbols.toml).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
-// kS: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kS = SharedScratch_addr;
 constexpr std::uint32_t kMotes = 0x68E1B8, kStreaks = 0x698EC0, kSparks = 0x6A2D38;
 constexpr std::uint32_t kRecord = 0x84, kStreak = 0x3C;
 
@@ -347,7 +347,7 @@ const mh::DataTable kTables[] = {{0x65B358, 2}, {0x65BC30, 5}, {0x65BC44, 4}};
 const mh::Region kRegions[] = {
     {Gfx_PacketNext_addr, 4},
     {Key(g_packets), sizeof g_packets},
-    {SharedScratch_addr, 0x10},
+    {kS, 0x10},
     {Prim_VertexScratch_addr, 4},
     {BattleE2_AnimSet_addr, 4},
     {0x903802, 2},                          // Camera_ShiftY
@@ -501,7 +501,7 @@ void Disturb(std::uint32_t h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     switch ((h >> 8) % 7) {
     case 0: mh::SetPointer(Gfx_PacketNext_addr, PacketAt(v)); break;
-    case 1: SetWord(mh::Mem(SharedScratch_addr + 2 * (v % 8)), h >> 16); break;
+    case 1: SetWord(mh::Mem(kS + 2 * (v % 8)), h >> 16); break;
     case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 2)), h >> 16); break;
     case 3:
         // half the time the streak being drawn, its points

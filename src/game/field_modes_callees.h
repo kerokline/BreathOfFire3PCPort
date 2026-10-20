@@ -31,6 +31,7 @@ constexpr std::uint32_t kStep = 0x8034E5;             // u8, the scene's step (P
 // kBadge: now Title_BadgeOn (symbols.toml). the demo's corner badge (docs/mode-tasks.md section 1)
 constexpr std::uint32_t kCounters = 0x903848;         // four script counter bytes (PSX 0x80146860; MoveScript_CounterOps)
 inline auto& kSlot = SharedScratch;  // the effect slot just taken; also a word (PSX 0x1F800000)
+constexpr std::uint32_t kSlot_addr = SharedScratch_addr; // kSlot's address, for the raw accessors that take one
 // kFlagsPtr: now Chapter_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given (PSX 0x80146868)
 // kPending: now FieldModes_Pending (symbols.toml). the pending area change, as Field_ChangeArea's arguments
 // kMusicTrack: now Music_Track (symbols.toml). the track last started, 0xFF none

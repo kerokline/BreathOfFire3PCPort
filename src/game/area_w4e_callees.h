@@ -113,7 +113,7 @@ constexpr std::uint32_t kInputHeld = 0x7E1BE8;         // Input_Held (Input_Pres
 // kScreenXY: now MapView_ScreenXY (symbols.toml). MapView_ScreenXY (two floats)
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles; Cond_AngleFB 0x929ECC after
 // kWaitWordDA: now Transition_Busy (symbols.toml). Transition_Busy
-// kDamageScratch: now SharedScratch (symbols.toml). SharedScratch (the slot word EventOp_0x reads)
+constexpr std::uint32_t kDamageScratch = SharedScratch_addr; // SharedScratch (the slot word EventOp_0x reads)
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 

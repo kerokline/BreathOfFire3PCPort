@@ -230,7 +230,7 @@ std::uint32_t FlagsTestEffect(const std::uint32_t*, std::uint32_t answer) {
 // The event ops take their object from the word 0x903850 (scena_se.cpp):
 // the value each call sees is part of what it does.
 std::uint32_t NotesObjectWord(const std::uint32_t*, std::uint32_t answer) {
-    ah::Note(Word(ah::Mem(SharedScratch_addr)));
+    ah::Note(Word(ah::Mem(at::kScratch850)));
     return answer;
 }
 

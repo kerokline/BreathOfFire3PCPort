@@ -42,7 +42,7 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
-// kObjectIndex: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kObjectIndex = SharedScratch_addr;
 // The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject). Area
 // 192's and 193's pair choices write its dwords +0x18 / +0x1C.

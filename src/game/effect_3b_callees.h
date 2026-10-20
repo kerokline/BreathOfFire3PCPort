@@ -21,9 +21,12 @@ constexpr std::uint32_t kKind69Lines = bof3::addr::EffectKind69_DrawLines;   // 
 
 // --- the scratch cells (SharedScratch 0x903850 and after: the effect code's) --------
 inline auto& kScale = SharedScratch;  // dword: a radius / scale the states multiply by (re-read
+constexpr std::uint32_t kScale_addr = SharedScratch_addr; // kScale's address, for the raw accessors that take one
                                                    // after each Math_* call); also kind 0x67's record byte
 inline auto& kAngle = SharedScratch.d_04;         // dword: the angle handed to Math_Sin (re-read for it)
+constexpr std::uint32_t kAngle_addr = SharedScratch_addr + 0x4; // kAngle's address, for the raw accessors that take one
 inline auto& kShade = SharedScratch.d_08;         // dword: kind 0x69's shade, 7 * +0xA (its low byte re-read)
+constexpr std::uint32_t kShade_addr = SharedScratch_addr + 0x8; // kShade's address, for the raw accessors that take one
 constexpr std::uint32_t kCounter = 0x903848;       // byte: the chapter counter kind 0x63 raises and waits on
 constexpr unsigned kCounterCue = 0x2B;             // kind 0x63's state 4 waits for it
 

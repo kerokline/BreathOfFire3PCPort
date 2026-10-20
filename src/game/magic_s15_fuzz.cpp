@@ -176,7 +176,7 @@ unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 // kKind2: now Field_Kind2Z (symbols.toml).
 // kTints: now MoveScript_TintRecords (symbols.toml).
 // kInput: now Input_Pressed (symbols.toml).
-// kScratch: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kScratch = SharedScratch_addr;
 constexpr std::uint32_t kEnemyLift = 0x8C564F;
 
 // Set by the seed for the one function each matters to.
@@ -341,7 +341,7 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {SharedScratch_addr, 0x10},           // 0x903850.., Scratch_Swap at +0xC
+    {kScratch, 0x10},           // 0x903850.., Scratch_Swap at +0xC
     {Field_Kind2Z_addr, 8},               // Field_Kind2Z, Field_Kind2X
     {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords
     {Input_Pressed_addr, 2},              // Input_Pressed
@@ -367,8 +367,8 @@ void Disturb(std::uint32_t h) {
     case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: {
         const unsigned k = v % 16;
-        if (k < 2) SetWord(mh::Mem(SharedScratch_addr), (h >> 16) % 0x30);
-        else mh::Mem(SharedScratch_addr + k)[0] = Byte(h >> 24);
+        if (k < 2) SetWord(mh::Mem(kScratch), (h >> 16) % 0x30);
+        else mh::Mem(kScratch + k)[0] = Byte(h >> 24);
         break;
     }
     case 3: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;

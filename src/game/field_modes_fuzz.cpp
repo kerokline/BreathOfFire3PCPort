@@ -62,7 +62,7 @@ void Disturb() {
     if (h % 6 == 0) Transition_Busy = static_cast<unsigned short>(h % 4 ? 0 : h >> 16);
     if (h % 9 == 0) Field_Request = static_cast<unsigned char>(h % 2 ? 2 : h >> 20);
     if (h % 11 == 0) At(kCounters + (h >> 5) % 4)[0] = static_cast<unsigned char>(h >> 13);
-    if (h % 8 == 0) SetWord(At(SharedScratch_addr), h % 3 ? (h >> 7) % 0xC4 : h >> 15);
+    if (h % 8 == 0) SetWord(At(kSlot_addr), h % 3 ? (h >> 7) % 0xC4 : h >> 15);
     if (h % 10 == 0) Draw_PassFlags = static_cast<unsigned char>(h >> 18);
     if (h % 13 == 0) MoveScript_Var7 = static_cast<signed char>(h >> 11);
     if (h % 4 == 0) SetWord(At(kAngles + 2 * ((h >> 3) % 3)), h >> 17);
@@ -393,7 +393,7 @@ void Cover(unsigned k, const State& in, const State& out) {
     }
     for (unsigned i = 0; i < out.log_n && i < kLog; ++i) {
         if (out.log[i].what == 13) {
-            if (i + 1 < kLog && Byte(out, SharedScratch_addr) == 0xFF) ++g_cover.no_slot;
+            if (i + 1 < kLog && Byte(out, kSlot_addr) == 0xFF) ++g_cover.no_slot;
             else ++g_cover.effect;
         }
         if (out.log[i].what == 21) ++g_cover.tail;

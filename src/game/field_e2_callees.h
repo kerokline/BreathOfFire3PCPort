@@ -42,6 +42,7 @@ constexpr std::uint32_t kTallyBits = 0x904654;       // a bit array (bit 4 at +0
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords (0xA4 each)
 constexpr std::uint32_t kRecordStride = 0xA4;
 inline auto& kEffectSlot = SharedScratch.b_00;  // SharedScratch's byte: the slope probe's flag; the party-set ids 0x903850..52
+constexpr std::uint32_t kEffectSlot_addr = SharedScratch_addr; // kEffectSlot's address, for the raw accessors that take one
 constexpr std::uint32_t kDirectionSteps = 0x6697B0;  // Field_DirectionSteps: 8 x (dx, dz) dwords
 constexpr std::uint32_t kPaceHeights = 0x66978C;     // s16 per actor id: the ground's offset for a hop
 constexpr std::uint32_t kPaceRises = 0x6697A4;       // u8 per actor id: a step's rise

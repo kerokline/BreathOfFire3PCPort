@@ -22,8 +22,9 @@ using Handler = void (__cdecl*)();
 namespace at {
 // kMemberStates: now Member_States (symbols.toml). 9 handlers, by Sprite_Current +1
 constexpr std::uint32_t kControlStates = 0x65F99C;   // 2 handlers, by Sprite_Current +2
-// kCells: now SharedScratch (symbols.toml). bytes: 0 the object-ahead flag, 1..5 the cell kinds, 8..10 the classes
+constexpr std::uint32_t kCells = SharedScratch_addr; // bytes: 0 the object-ahead flag, 1..5 the cell kinds, 8..10 the classes
 inline auto& kAimX = SharedScratch.d_08;            // long: where a member's step would end (Member_StepAhead)
+constexpr std::uint32_t kAimX_addr = SharedScratch_addr + 0x8; // kAimX's address, for the raw accessors that take one
 // kAimZ: now Scratch_Swap (symbols.toml). long: the same, z (Scratch_Swap's address)
 // kDirUnits: now MoveCmd_F9Steps (symbols.toml). two longs a direction, a step's unit
 constexpr std::uint32_t kCellOffsets = 0x66971C;     // two signed bytes a direction, the cell ahead

@@ -44,6 +44,7 @@ constexpr std::uint32_t kBannerColour = 0x93B8EA;  // kBannerPool + 0xA
 constexpr std::uint32_t kBannerMask = 0x904AE9;    // u8: the kinds BattleBanner_Dispatch has seen this frame
 
 inline auto& kScratch = SharedScratch.b_00;  // SharedScratch's byte 0; the gauge keeps a value there
+constexpr std::uint32_t kScratch_addr = SharedScratch_addr; // kScratch's address, for the raw accessors that take one
 
 }  // namespace at
 

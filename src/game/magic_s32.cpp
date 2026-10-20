@@ -51,7 +51,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F) and the SVECTORs of Prim_VertexScratch
 // (0x9037A0..). Both are read again after every call, as the originals read
 // them.
-// kS: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kS = SharedScratch_addr;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // MAGIC144's pool: 48 task-like records of 0x84 bytes (+0 bit 0 in use, +1
@@ -100,9 +100,9 @@ unsigned char* PoolRecord(unsigned i) { return Mem(WallOfFire_Pool_addr + i * kR
 unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(SharedScratch_addr + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 int SS(unsigned k) { return static_cast<short>(SW(k)); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(SharedScratch_addr + k), v & 0xFFFF); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
@@ -374,7 +374,7 @@ S32_EXPORT void __cdecl WallOfFire_DrawDisc(void) {
         SetVW(4, 0);
         Rtp3(p);
         MH_CALL(Gte_PrimDepths3_10B)(p);
-        const unsigned char shade = Mem(SharedScratch_addr + 0xE)[0];
+        const unsigned char shade = Mem(kS + 0xE)[0];
         p[4] = shade;
         p[5] = shade;
         p[6] = shade;
@@ -498,7 +498,7 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         PutFloat(p + 0x28, Add(MulSar(v, SS(0), 12), S16(Sc() + 0x2E)));
         v = Cos(a);
         PutFloat(p + 0x2C, Add(MulSar(v, SS(0), 12), S16(Sc() + 0x30)));
-        p[4] = Mem(SharedScratch_addr + 0xE)[0];
+        p[4] = Mem(kS + 0xE)[0];
         const auto fifth = static_cast<unsigned char>(SS(0xE) / 5);
         p[5] = fifth;
         p[6] = fifth;

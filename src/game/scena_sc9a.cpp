@@ -321,11 +321,11 @@ void EnterAreaBody() {
             SetRun(7);
             SetStep(0);
             ClearCounters();
-            Spawn(SharedScratch_addr, 0x96);
-            if (member0->height <= 0x2000000) Spawn(SharedScratch_addr, 0x95);
+            Spawn(at::kEffectSlot_addr, 0x96);
+            if (member0->height <= 0x2000000) Spawn(at::kEffectSlot_addr, 0x95);
         } else if (member0->height <= 0x2000000) {
-            Spawn(SharedScratch_addr, 0x96);
-            if (member0->height <= 0x2000000) Spawn(SharedScratch_addr, 0x95);
+            Spawn(at::kEffectSlot_addr, 0x96);
+            if (member0->height <= 0x2000000) Spawn(at::kEffectSlot_addr, 0x95);
         }
     }
     // area 0x77: nothing more unless Cond_ByteFD is 2; flag 0x3D without 0x16
@@ -1145,7 +1145,7 @@ SC9A_EXPORT void __cdecl Scena09_Run9(void) {
         break;
     case 2:
         if (Counter(0) != 0x25) break;
-        Spawn(SharedScratch_addr, 0x9A);
+        Spawn(at::kEffectSlot_addr, 0x9A);
         SetStep(3);
         break;
     case 3:

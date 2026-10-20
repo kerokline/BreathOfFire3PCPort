@@ -281,10 +281,10 @@ void DropIn(unsigned entry, unsigned char next) {
 // yaw, sign-extended, read after the search), +0x6C, and +9.
 void SpawnEffect13(std::int32_t a, std::int32_t c, unsigned char nine) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(SharedScratch_addr) = slot;
+    B(at::kScratch) = slot;
     if (slot == 0xFF) return;
     const std::int32_t yaw = static_cast<std::int16_t>(Word(Mem(Camera_Angles_addr + 0x2)));
-    unsigned char* const e = EffectAt(B(SharedScratch_addr));
+    unsigned char* const e = EffectAt(B(at::kScratch));
     e[0] = 1;
     e[5] = 0x13;
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], a);
@@ -578,7 +578,7 @@ extern "C" void __cdecl Area170_Tail37(void) {
         // its top nibble swapped through Area170_InputSwap
         if (Field_Request != 0) return;
         const std::uint16_t held = Word(Mem(Input_Held_addr));
-        SetWord(Mem(SharedScratch_addr), held);
+        SetWord(Mem(at::kScratch), held);
         const unsigned swapped = static_cast<unsigned>(B(Area170_InputSwap_addr + (held >> 12))) << 12;
         SetWord(Mem(Input_Held_addr), (swapped | (held & 0xFFFu)) & 0xFFFFu);
         return;
@@ -792,16 +792,16 @@ extern "C" unsigned char __cdecl Area171_StepHook(long x, long z) {
     if (Cond_ByteFD != 2) return 0;
     const unsigned char flag = AH_CALL(Flags_Test)(Story(), 0x73);
     if (flag != 0) return 0;
-    B(SharedScratch_addr) = flag;
+    B(at::kScratch) = flag;
     const auto cx = static_cast<short>(High(x));
     const auto cz = static_cast<short>(High(z));
-    if (AH_CALL(AreaMap_ByteAt)(cx, cz) == 0x89) ++B(SharedScratch_addr);
+    if (AH_CALL(AreaMap_ByteAt)(cx, cz) == 0x89) ++B(at::kScratch);
     const bool fx = (static_cast<U>(x) & 0xFFFF) != 0;
-    if (fx && AH_CALL(AreaMap_ByteAt)(static_cast<short>(cx + 1), cz) == 0x89) ++B(SharedScratch_addr);
+    if (fx && AH_CALL(AreaMap_ByteAt)(static_cast<short>(cx + 1), cz) == 0x89) ++B(at::kScratch);
     const bool fz = (static_cast<U>(z) & 0xFFFF) != 0;
-    if (fz && AH_CALL(AreaMap_ByteAt)(cx, static_cast<short>(cz + 1)) == 0x89) ++B(SharedScratch_addr);
-    if (fx && fz && AH_CALL(AreaMap_ByteAt)(static_cast<short>(cx + 1), static_cast<short>(cz + 1)) == 0x89) ++B(SharedScratch_addr);
-    if (B(SharedScratch_addr) != 0) ArmTail(0x30, 0x14);
+    if (fz && AH_CALL(AreaMap_ByteAt)(cx, static_cast<short>(cz + 1)) == 0x89) ++B(at::kScratch);
+    if (fx && fz && AH_CALL(AreaMap_ByteAt)(static_cast<short>(cx + 1), static_cast<short>(cz + 1)) == 0x89) ++B(at::kScratch);
+    if (B(at::kScratch) != 0) ArmTail(0x30, 0x14);
     return 0;
 }
 

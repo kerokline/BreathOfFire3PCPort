@@ -17,6 +17,7 @@ namespace area_entry {
 // window_task_callees.h has the same four).
 // kPendingArea: now AreaW0b_Place (symbols.toml). u16
 inline auto& kPendingX = SharedScratch.d_10;       // s32, 16.16
+constexpr std::uint32_t kPendingX_addr = SharedScratch_addr + 0x10; // kPendingX's address, for the raw accessors that take one
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8
 // Bits 4-6 of a link's flags byte: the PSX scratchpad's 0x1F800001, which
@@ -27,7 +28,7 @@ inline auto& kLinkHigh = SharedScratch.b_01;
 // position the record slot found, per record a copy of the party list that
 // is struck out (0xFF) as records are taken. Four bytes apart, so a list of
 // more than four overruns the next, as on the PSX.
-// kPickColumn: now SharedScratch (symbols.toml).
+constexpr std::uint32_t kPickColumn = SharedScratch_addr;
 constexpr std::uint32_t kPickSlot = 0x903854;
 constexpr std::uint32_t kPickFree = 0x903858;
 // The 3-byte party list (Party_Join's, move_cmds_callees.h kPartyLists).

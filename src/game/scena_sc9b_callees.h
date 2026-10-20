@@ -36,6 +36,7 @@ constexpr std::uint32_t kTimer = 0x8034E6;      // u16: a countdown the runs kee
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
 inline auto& kEffectSlot = SharedScratch;  // u8 (a word in Scena10_SpriteOp): the slot just taken
+constexpr std::uint32_t kEffectSlot_addr = SharedScratch_addr; // kEffectSlot's address, for the raw accessors that take one
 // kFlagBits: now Chapter_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Set / Clear as a literal
 constexpr std::uint32_t kRow657 = 0x904657;     // a row handed to Flags_Set as a literal (run 7 step 0xF)

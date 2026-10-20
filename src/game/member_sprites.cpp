@@ -78,7 +78,7 @@ unsigned char* Member(unsigned i) { return At(Address(rv::Bytes(ObjTrio)) + i * 
 
 // The member records' views (game/record_views.h): Sprite_Current
 // and Field_State are ObjTrio records here.
-unsigned char& Cell(unsigned i) { return At(SharedScratch_addr)[i & 0xFF]; }
+unsigned char& Cell(unsigned i) { return At(at::kCells)[i & 0xFF]; }
 std::uint32_t U(const unsigned char* at) { return static_cast<std::uint32_t>(Long(at)); }
 void Dispatch(const std::uint32_t* table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();

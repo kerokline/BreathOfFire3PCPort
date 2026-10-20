@@ -493,10 +493,10 @@ void EnterAreaBody() {
         if (c < 1 || c > 9) return;
         switch (c) {
         case 1:
-            if (!Flag(0x28)) Spawn(SharedScratch_addr, 0x76);
+            if (!Flag(0x28)) Spawn(at::kEffectSlot_addr, 0x76);
             break;
         case 2:
-            Spawn(SharedScratch_addr, 0x79);
+            Spawn(at::kEffectSlot_addr, 0x79);
             LoadAndPlay(0x8F);
             break;
         case 3:
@@ -515,13 +515,13 @@ void EnterAreaBody() {
             break;
         case 6:
             SetPass(0x1F);
-            Spawn(SharedScratch_addr, 0x7B);
+            Spawn(at::kEffectSlot_addr, 0x7B);
             break;
         case 7:
-            Spawn(SharedScratch_addr, 0x7B);
+            Spawn(at::kEffectSlot_addr, 0x7B);
             break;
         case 8:
-            Spawn(SharedScratch_addr, 0x7C);
+            Spawn(at::kEffectSlot_addr, 0x7C);
             break;
         default:   // 9
             LoadAndPlay(0x8B);
@@ -1401,9 +1401,9 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     case 0x11:
         if (Counter(0) != 0xE || Field_Kind2Hold != 0) break;
-        Spawn(SharedScratch_addr, 0x82);
-        Spawn(SharedScratch_addr, 0x83);
-        Spawn(SharedScratch_addr, 0x84);
+        Spawn(at::kEffectSlot_addr, 0x82);
+        Spawn(at::kEffectSlot_addr, 0x83);
+        Spawn(at::kEffectSlot_addr, 0x84);
         SetStep(0x12);
         break;
     case 0x12: {

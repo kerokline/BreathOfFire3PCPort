@@ -416,7 +416,7 @@ const Region kRegions[] = {
     {0x7DEE40, 0x40},                       // MsgBoxState: the list dword, set, count, cursor, placement and rows
     {AreaW0b_Place_addr, 2},
     {Area_EnterTransition_addr, 1},
-    {SharedScratch_addr + 0x10, 4},
+    {window_task::at::kPendingX_addr, 4},
     {AreaEntry_PendingZ_addr, 4},
     {AreaEntry_PendingFlags_addr, 1},       // Gfx_BufferIndex is the byte after it: one byte, exactly
     {AreaW1f_MusicCurrent_addr, 1},

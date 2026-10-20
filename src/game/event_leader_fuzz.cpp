@@ -105,8 +105,8 @@ void Disturb() {
     case 6: Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 ^ (1u << (v % 16))); break;
     case 7: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ (1u << (v % 16))); break;
     case 8: Field_Request = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 3 == 1 ? 1 : v); break;
-    case 9: SetLong(At(SharedScratch_addr + 0x8 + 4 * (w % 2)), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
-    case 10: At(SharedScratch_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 9: SetLong(At(at::kTargetX_addr + 4 * (w % 2)), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
+    case 10: At(at::kScratch_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 11: At(EventLeader_PendingCount_addr)[0] = static_cast<unsigned char>(v % 5); break;
     case 12: g_passage[4 + w % 3] = static_cast<unsigned char>(v % 4 == 0 ? 0xFF : v); break;
     case 13: {
@@ -264,7 +264,7 @@ unsigned char __cdecl StubTestFC(short x, short z) { Record(44, static_cast<std:
 // Above and below 0x40 in the low word, whatever the upper.
 long __cdecl StubSlopeAt(long x, long z, unsigned long d) {
     Record(45, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), static_cast<std::uint32_t>(d));
-    At(SharedScratch_addr)[0] = static_cast<unsigned char>(Hash() % 2 ? 0 : 1 + (Hash() >> 9) % 0xFF);
+    At(at::kScratch_addr)[0] = static_cast<unsigned char>(Hash() % 2 ? 0 : 1 + (Hash() >> 9) % 0xFF);
     Disturb();
     static const std::uint16_t kSlopes[] = {0x3F, 0x40, 0x41, 0, 0x8000, 0x7FFF, 0xFFC0};
     const std::uint32_t h = Hash();
