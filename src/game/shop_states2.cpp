@@ -116,7 +116,7 @@ void SetItemName() { g.text_set(0, 0x10, g.name_ptr(static_cast<std::uint32_t>(S
 // dword, read again after that sound.
 U YesNoFrame(U help) {
     auto* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
-    auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 0 * sizeof(records::WindowRecord)));
+    auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
     SetItemName();
     const int answer = FieldS_Answer;
     const U y = static_cast<U>(w0->y);
@@ -320,10 +320,10 @@ extern "C" void __cdecl ShopTrade_OpenWait(void) {
 // 0x803187 to 1, the counter 5, the state + 3 (close).
 extern "C" void __cdecl ShopTrade_Choice(void) {
     auto* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
-    auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 0 * sizeof(records::WindowRecord)));
-    auto* const w1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 1 * sizeof(records::WindowRecord)));
-    auto* const w2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 2 * sizeof(records::WindowRecord)));
-    auto* const w20 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 20 * sizeof(records::WindowRecord)));
+    auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    auto* const w1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 1 * sizeof(records::WindowRecord));
+    auto* const w2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * sizeof(records::WindowRecord));
+    auto* const w20 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 20 * sizeof(records::WindowRecord));
     const int choice = ShopStates2_Choice;
     ShopStates2_Help = static_cast<U>(choice + 0x46);
     BattleE4_Above = 1;
@@ -371,7 +371,7 @@ extern "C" void __cdecl ShopTrade_Choice(void) {
 // +3 2 with equipment and 3 without, +0..+2 1 7 7, +0xA 0, +0xB the rate's
 // low byte, +0x20 the list pointer; the cursor 0, the step on.
 extern "C" void __cdecl ShopTrade_BuySetup(void) {
-    auto* const w8 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords + 8 * sizeof(records::WindowRecord)));
+    auto* const w8 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords) + 8 * sizeof(records::WindowRecord));
     if (Rest2c_SellFlag != 0) {
         U i = 0;
         if (PartyCount() != 0) {
@@ -433,8 +433,8 @@ extern "C" void __cdecl ShopTrade_BuySetup(void) {
 // never faults; ours aborts where the original would fault.
 extern "C" void __cdecl ShopTrade_BuyList(void) {
     auto* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
-    auto* const w8 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords + 8 * sizeof(records::WindowRecord)));
-    auto* const w9 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 9 * sizeof(records::WindowRecord)));
+    auto* const w8 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords) + 8 * sizeof(records::WindowRecord));
+    auto* const w9 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 9 * sizeof(records::WindowRecord));
     const int row = ShopStates2_Row;
     unsigned char* list = List();
     ShopStates2_Kind = list[row * 2 + 1];
@@ -550,8 +550,8 @@ extern "C" void __cdecl ShopTrade_BuyList(void) {
 // 0x107. Cancel: sound 0x106, the step back.
 extern "C" void __cdecl ShopTrade_BuyCount(void) {
     auto* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
-    auto* const w8 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords + 8 * sizeof(records::WindowRecord)));
-    auto* const w9 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 9 * sizeof(records::WindowRecord)));
+    auto* const w8 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords) + 8 * sizeof(records::WindowRecord));
+    auto* const w9 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 9 * sizeof(records::WindowRecord));
     const U y = static_cast<U>(w8->y);
     rv::Store<U>(w9->x, static_cast<U>(w8->x));
     const U rate = Byte(at::kRate);
@@ -656,8 +656,8 @@ extern "C" void __cdecl ShopTrade_BuyAskEquip(void) {
 // As the original has it: the panels are marked while the index, as a
 // signed byte, is below Party_Count's low byte.
 extern "C" void __cdecl ShopTrade_BuyMember(void) {
-    auto* const w6 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 6 * sizeof(records::WindowRecord)));
-    auto* const w20 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 20 * sizeof(records::WindowRecord)));
+    auto* const w6 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 6 * sizeof(records::WindowRecord));
+    auto* const w20 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 20 * sizeof(records::WindowRecord));
     SetItemName();
     const int member = BattleActorCopies_ItemActor;
     ShopStates2_Help = 0x4B;
@@ -735,7 +735,7 @@ extern "C" void __cdecl ShopTrade_BuyMember(void) {
 // member and 2 for the others, the slot box +3 1, the step back.
 extern "C" void __cdecl ShopTrade_BuySlot(void) {
     auto* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
-    auto* const w6 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 6 * sizeof(records::WindowRecord)));
+    auto* const w6 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 6 * sizeof(records::WindowRecord));
     const U kind = g.icon_kind(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item)) & 0xFF;
     const U x = Long(0x80323C) + 6;
     const U slot = ShopStates2_SlotCursor;
@@ -779,7 +779,7 @@ extern "C" void __cdecl ShopTrade_BuySlot(void) {
 // the item is still held (Inventory_Count(category, item, 0)'s word) the
 // step back two (another member), else back six (the list).
 extern "C" void __cdecl ShopTrade_BuyEquipped(void) {
-    auto* const w6 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 6 * sizeof(records::WindowRecord)));
+    auto* const w6 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 6 * sizeof(records::WindowRecord));
     SetItemName();
     const U pressed = Input_Pressed;
     ShopStates2_Help = 0x4D;
@@ -801,7 +801,7 @@ extern "C" void __cdecl ShopTrade_BuyEquipped(void) {
 // tab, top, row and +9 0, the two scroll words 0, +0..+3 1 7 9 2, +0xD 0xFF,
 // +8 3 (Item_CanUse's mode); the step on.
 extern "C" void __cdecl ShopTrade_SellSetup(void) {
-    auto* const w7 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords + 7 * sizeof(records::WindowRecord)));
+    auto* const w7 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords) + 7 * sizeof(records::WindowRecord));
     rv::Store<U>(w7->x, 0x140);
     rv::Store<U>(w7->category, 0);
     rv::Store<U>(w7->top, 0);
@@ -839,8 +839,8 @@ extern "C" void __cdecl ShopTrade_SellSetup(void) {
 // 7, the step on three (to the close).
 extern "C" void __cdecl ShopTrade_SellList(void) {
     auto* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
-    auto* const w7 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords + 7 * sizeof(records::WindowRecord)));
-    auto* const w10 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 10 * sizeof(records::WindowRecord)));
+    auto* const w7 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords) + 7 * sizeof(records::WindowRecord));
+    auto* const w10 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 10 * sizeof(records::WindowRecord));
     const U tab = static_cast<U>(w7->category);
     const U row = static_cast<U>(w7->marked);
     const U item = Ids(tab)[row];
@@ -978,8 +978,8 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
 // sound 0x103, the answer 1, the step on. Cancel: sound 0x106, the step
 // back.
 extern "C" void __cdecl ShopTrade_SellCount(void) {
-    auto* const w7 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords + 7 * sizeof(records::WindowRecord)));
-    auto* const w10 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 10 * sizeof(records::WindowRecord)));
+    auto* const w7 = rv::As<records::ItemListWindow>(At(bof3::addr::WindowRecords) + 7 * sizeof(records::WindowRecord));
+    auto* const w10 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 10 * sizeof(records::WindowRecord));
     rv::Store<U>(w10->x, static_cast<U>(w7->x));
     const U top = static_cast<U>(w7->top);
     const int row = ShopStates2_Row;

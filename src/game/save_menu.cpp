@@ -607,11 +607,11 @@ extern "C" void __cdecl Shop_InitWindows(void) {
     // (symbols.toml Window_Alloc): their shared bytes +0..+7 typed; record 0's
     // +0x10 is the entry ShopStates2_Help; records 2's and 20's +0xA / +0xB are
     // the handler's own (WindowRecord's per-handler bytes), kept raw.
-    auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 0 * sizeof(records::WindowRecord)));
-    auto* const w1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 1 * sizeof(records::WindowRecord)));
-    auto* const w2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 2 * sizeof(records::WindowRecord)));
-    auto* const w20 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 20 * sizeof(records::WindowRecord)));
-    auto* const w21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords + 21 * sizeof(records::WindowRecord)));
+    auto* const w0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    auto* const w1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 1 * sizeof(records::WindowRecord));
+    auto* const w2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * sizeof(records::WindowRecord));
+    auto* const w20 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 20 * sizeof(records::WindowRecord));
+    auto* const w21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * sizeof(records::WindowRecord));
     w0->state = 2;
     w1->state = 2;
     w2->kind = 2;

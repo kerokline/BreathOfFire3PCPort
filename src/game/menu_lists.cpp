@@ -199,7 +199,7 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     for (unsigned i = 0; i < 8; ++i) {
         unsigned char* const r = At(at::kCharRecords + 0x10 + i * at::kCharRecordSize);
         // r is the character record's +0x10, its status word (records::CharRecord, CharacterRecords 0x903A70)
-        auto* const c = rv::As<records::CharRecord>(At(at::kCharRecords + i * at::kCharRecordSize));
+        auto* const c = rv::As<records::CharRecord>(r - 0x10);
         if (static_cast<unsigned>(c->stats.max_hp >> 2) > c->hp) r[1] = static_cast<unsigned char>(r[1] | 0x20);
         else rv::Store<unsigned>(c->status, c->status & 0xDFFF);
     }
