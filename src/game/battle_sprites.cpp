@@ -757,7 +757,7 @@ extern "C" void __cdecl Battle_InitEnemies(void) {
     Battle_EnemyCount = 0;
     unsigned char n = 0;
     for (unsigned r = 0; r < 8; ++r) {
-        const unsigned char* const rec = At(at::kEncounter + r * 12);
+        const unsigned char* const rec = At(Encounter_Slots_addr + r * 12);
         if (!rec[0]) continue;
         g.setup_enemy(n, rec[1], Long(rec + 4), Long(rec + 8));
         ++n;

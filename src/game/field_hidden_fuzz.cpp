@@ -100,7 +100,7 @@ void Disturb() {
     case 17: if (s[0xB] < 20) Effect_Objects[s[0xB]].flags = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 18: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (v % 2 ? 2 : 4)); break;
     case 19: SetLong(At(at::kMemberPos + (w % 6) * 4), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
-    case 20: At(at::kEnemies + (w % 8) * at::kEnemyStride)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 20: At(Encounter_Slots_addr + (w % 8) * at::kEnemyStride)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 21: SetLong(s + (v % 2 ? 0x34 : 0x38), static_cast<std::int32_t>(h * 0x2545F491u)); break;
     case 22: At(v % 2 ? Encounter_Rows_addr + 8 + (w % 8) * 9 : Encounter_SlotChance_addr + w % 8)[0] = static_cast<unsigned char>(v % 17); break;
     default: g_src[w % kSrc] = static_cast<unsigned char>(v); break;
@@ -445,7 +445,7 @@ void Fix() {
         m[5] = static_cast<unsigned char>(Next() % 4);
         if (Often()) m[0x89] = static_cast<unsigned char>(Next() % 24);
     }
-    for (unsigned k = 0; k < 8; ++k) At(at::kEnemies + k * at::kEnemyStride + 1)[0] = static_cast<unsigned char>(Next() % 0x40);
+    for (unsigned k = 0; k < 8; ++k) At(Encounter_Slots_addr + k * at::kEnemyStride + 1)[0] = static_cast<unsigned char>(Next() % 0x40);
     if (Half()) Field_Request = 0;
 }
 
@@ -535,7 +535,7 @@ Args Seed(unsigned k) {
             static const unsigned char kIds[] = {2, 6, 0, 1, 3, 5, 7};
             At(Cond_Flags_addr + 0xd5 + m)[0] = kIds[Next() % 7];
         }
-        for (unsigned e = 0; e < 8; ++e) At(at::kEnemies + e * at::kEnemyStride)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        for (unsigned e = 0; e < 8; ++e) At(Encounter_Slots_addr + e * at::kEnemyStride)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         break;
     }
     case kPickRow:

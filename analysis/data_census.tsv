@@ -3483,9 +3483,8 @@ site	src/game/battle_sprites.cpp	712	global	At	at::kClutDivisor	0x6528cc	-	none	
 site	src/game/battle_sprites.cpp	714	global	At	at::kClutStep	0x6528d4	-	none	-	-	0
 site	src/game/battle_sprites.cpp	716	global	At	at::kClutCount	0x6528c4	-	none	-	-	0
 site	src/game/battle_sprites.cpp	722	global	At	at::kClutCount	0x6528c4	-	none	-	-	0
-site	src/game/battle_sprites.cpp	760	global	At	at::kEncounter	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	0
-site	src/game/battle_sprites.cpp	762	record	Long	rec + 4	-	table=0x939f00;stride=0xc	-	-	-	0
-site	src/game/battle_sprites.cpp	762	record	Long	rec + 8	-	table=0x939f00;stride=0xc	-	-	-	0
+site	src/game/battle_sprites.cpp	762	record	Long	rec + 4	-	stride=0xc	-	-	-	0
+site	src/game/battle_sprites.cpp	762	record	Long	rec + 8	-	stride=0xc	-	-	-	0
 site	src/game/battle_sprites.cpp	808	global	At	at::kLayout	0x904aac	-	none	-	-	0
 site	src/game/battle_sprites.cpp	846	record	SetLong	dst + 4	-	via=Enemy	-	-	-	0
 site	src/game/battle_sprites.cpp	846	record	Long	src + 4	-	via=EnemyData	-	-	-	0
@@ -3523,7 +3522,6 @@ site	src/game/battle_sprites_fuzz.cpp	193	global	At	at::kCells	0x903850	-	exact	
 site	src/game/battle_sprites_fuzz.cpp	194	global	At	at::kCells	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/battle_sprites_fuzz.cpp	198	global	At	at::kWindows	0x803160	-	exact	WindowRecords	records::WindowRecord	1
 site	src/game/battle_sprites_fuzz.cpp	413	global	-	at::kCells	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/battle_sprites_fuzz.cpp	416	global	-	at::kEncounter	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	1
 site	src/game/battle_sprites_fuzz.cpp	417	global	-	at::kActions	0x65c4d8	-	exact	NameTable_Abilities	-	1
 site	src/game/battle_sprites_fuzz.cpp	465	record	SetLong	p + i	-	-	-	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	475	global	At	at::kClutMap	0x7e06a0	-	none	-	-	1
@@ -3537,7 +3535,6 @@ site	src/game/battle_sprites_fuzz.cpp	526	global	At	at::kEnemies	0x93b960	-	exac
 site	src/game/battle_sprites_fuzz.cpp	537	record	SetLong	rec + 8	-	stride=0xc	-	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	544	global	At	at::kCells	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/battle_sprites_fuzz.cpp	545	global	At	at::kCells	0x903850	-	exact	DamageScratch	records::DamageScratch	1
-site	src/game/battle_sprites_fuzz.cpp	548	global	At	at::kEncounter	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	1
 site	src/game/battle_sprites_fuzz.cpp	556	global	At	at::kEnemies	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
 site	src/game/battle_sprites_fuzz.cpp	580	global	At	at::kClutMap	0x7e06a0	-	none	-	-	1
 site	src/game/battle_sprites_fuzz.cpp	596	global	At	at::kEnemyData	0x8c55c8	-	none	-	-	1
@@ -9157,24 +9154,21 @@ site	src/game/field_hidden.cpp	348	record	At	bof3::addr::Text_Records + k	-	base
 site	src/game/field_hidden.cpp	348	record	Long	name + k	-	-	-	-	-	0
 site	src/game/field_hidden.cpp	390	record	Word	rv::Bytes(s) + 0x58	-	via=Bytes	-	-	-	0
 site	src/game/field_hidden.cpp	445	global	Byte	at::kRows	0x8c5580	-	exact	Encounter_Rows	unsigned char	0
-site	src/game/field_hidden.cpp	458	global	At	at::kEnemies	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	0
 site	src/game/field_hidden.cpp	466	global	Byte	at::kSlotChance	0x669cb0	-	exact	Encounter_SlotChance	unsigned char	0
 site	src/game/field_hidden.cpp	499	global	At	at::kScratchSprite	0x6bdff0	-	none	-	-	0
 site	src/game/field_hidden.cpp	513	global	At	at::kBattleFacing	0x904aac	-	none	-	-	0
 site	src/game/field_hidden.cpp	518	global	At	at::kMemberPos	0x7e06e0	-	none	-	-	0
 site	src/game/field_hidden.cpp	519	global	At	at::kMemberPos	0x7e06e0	-	none	-	-	0
 site	src/game/field_hidden.cpp	520	global	Byte	at::kPartyList2	0x904065	-	inside	Cond_Flags+0xd5	unsigned char	0
-site	src/game/field_hidden.cpp	528	global	At	at::kEnemies	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	0
 site	src/game/field_hidden.cpp	529	global	At	at::kKinds	0x8c55c8	-	none	-	-	0
-site	src/game/field_hidden.cpp	531	record	Long	slot + 4	-	table=0x939f00;stride=0xc	-	-	-	0
-site	src/game/field_hidden.cpp	531	record	Long	slot + 8	-	table=0x939f00;stride=0xc	-	-	-	0
+site	src/game/field_hidden.cpp	531	record	Long	slot + 4	-	stride=0xc	-	-	-	0
+site	src/game/field_hidden.cpp	531	record	Long	slot + 8	-	stride=0xc	-	-	-	0
 site	src/game/field_hidden_fuzz.cpp	89	global	At	at::kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	1
 site	src/game/field_hidden_fuzz.cpp	94	record	SetPtr	s + 0x50	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	97	record	SetWord	s + 0x58	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	98	record	SetWord	s + 0x2C	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	99	record	SetWord	s + 0x3E	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	102	global	At	at::kMemberPos	0x7e06e0	-	none	-	-	1
-site	src/game/field_hidden_fuzz.cpp	103	global	At	at::kEnemies	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	1
 site	src/game/field_hidden_fuzz.cpp	104	record	SetLong	s + (v % 2 ? 0x34 : 0x38)	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	112	record	Word	Sc() + 0x2C	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	134	global	At	at::kScratch	0x903850	-	exact	DamageScratch	records::DamageScratch	1
@@ -9184,12 +9178,10 @@ site	src/game/field_hidden_fuzz.cpp	201	record	SetPtr	Sc() + 0x50	-	via=Sc	-	-	-
 site	src/game/field_hidden_fuzz.cpp	211	record	SetWord	Sc() + 0x58	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	219	record	SetWord	rv::Bytes(&Effect_Objects[i]) + 0x38	-	via=Bytes	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	444	record	SetPtr	m + 0x50	-	via=Member	-	-	-	1
-site	src/game/field_hidden_fuzz.cpp	448	global	At	at::kEnemies	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	1
 site	src/game/field_hidden_fuzz.cpp	480	record	SetWord	s + 0x2C	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	491	record	SetLong	s + 0x34	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	492	record	SetLong	s + 0x38	-	via=Sc	-	-	-	1
 site	src/game/field_hidden_fuzz.cpp	511	record	SetWord	s + 0x58	-	via=Sc	-	-	-	1
-site	src/game/field_hidden_fuzz.cpp	538	global	At	at::kEnemies	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	1
 site	src/game/field_misc.cpp	89	record	At	at::MapView_OriginAt() + 2	-	via=MapView_OriginAt	-	-	-	0
 site	src/game/field_misc.cpp	159	record	PutLong	out + 0x08	-	param	-	-	-	0
 site	src/game/field_misc.cpp	159	record	Long	xyz + 8	-	param	-	-	-	0
@@ -9831,7 +9823,6 @@ site	src/game/glyph_draw_fuzz.cpp	350	record	GetLong	e + 4	-	stride=0x14	-	-	-	1
 site	src/game/inventory_ops.cpp	91	global	At	at::kMemberPos	0x7e06e0	-	none	-	-	0
 site	src/game/inventory_ops.cpp	92	global	At	at::kMemberPos	0x7e06e0	-	none	-	-	0
 site	src/game/inventory_ops.cpp	93	global	At	at::kMembers	0x6be078	-	none	-	-	0
-site	src/game/inventory_ops.cpp	94	global	At	at::kEnemies	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	0
 site	src/game/inventory_ops.cpp	95	global	At	at::kKinds	0x8c55c8	-	none	-	-	0
 site	src/game/inventory_ops.cpp	131	global	At	at::kCellMap	0x8c3d80	-	none	-	-	0
 site	src/game/inventory_ops.cpp	388	global	At	at::kPartyOffsets	0x6698b0	-	exact	Formation_SlotVectors	-	0
@@ -9861,7 +9852,6 @@ site	src/game/inventory_ops.cpp	761	global	At	at::kSideSteps	0x660b1c	-	exact	Ba
 site	src/game/inventory_ops.cpp	830	global	At	at::kRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/inventory_ops.cpp	831	global	Byte	at::kBattleFacing	0x904aac	-	none	-	-	0
 site	src/game/inventory_ops.cpp	833	global	Byte	at::kBattleFacing	0x904aac	-	none	-	-	0
-site	src/game/inventory_ops_fuzz.cpp	82	global	At	at::kEnemies	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	1
 site	src/game/inventory_ops_fuzz.cpp	83	global	At	at::kRecords	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/inventory_ops_fuzz.cpp	87	global	At	at::kScratchSprite	0x6bdff0	-	none	-	-	1
 site	src/game/inventory_ops_fuzz.cpp	100	global	At	at::kMemberPos	0x7e06e0	-	none	-	-	1
@@ -9890,7 +9880,6 @@ site	src/game/inventory_ops_fuzz.cpp	652	global	At	at::kCellMap	0x8c3d80	-	none	
 site	src/game/inventory_ops_fuzz.cpp	729	global	At	at::kBattleFacing	0x904aac	-	none	-	-	1
 site	src/game/inventory_ops_fuzz.cpp	729	global	At	at::kFaceTable	0x660b3c	-	exact	BattleFormation_Anims	-	1
 site	src/game/inventory_ops_fuzz.cpp	731	record	SetWord	ActorRecord(i) + 0x10	-	via=ActorRecord	-	-	-	1
-site	src/game/inventory_ops_fuzz.cpp	805	global	Offset	at::kEnemies	0x939f00	-	exact	Encounter_Slots	records::EncounterSlot	1
 site	src/game/inventory_ops_fuzz.cpp	819	record	Long	in.memory + Offset(0x937F88)	-	-	-	-	-	1
 site	src/game/inventory_ops_fuzz.cpp	858	global	At	at::kCellMap	0x8c3d80	-	none	-	-	1
 site	src/game/inventory_ops_fuzz.cpp	908	global	At	at::kCellMap	0x8c3d80	-	none	-	-	1
@@ -23115,17 +23104,17 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	19578
-#count sites_global	9722
-#count sites_global_at	7722
+#count sites	19567
+#count sites_global	9711
+#count sites_global_at	7711
 #count sites_global_module	2000
 #count sites_record	8727
 #count sites_raw	1129
-#count sites_in_fuzz	4201
+#count sites_in_fuzz	4194
 #count files_with_sites	523
 #count files_with_record_sites	470
 #count record_sites_with_stride	699
-#count record_sites_with_table_or_base	3501
+#count record_sites_with_table_or_base	3497
 #count record_sites_on_named_pointer	198
 #count record_sites_on_helper_call	677
 #count record_sites_offset_into_constant	1546
@@ -23133,7 +23122,7 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_param	661
 #count record_sites_family_unknown	1708
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	2390
+#count global_sites_covered_exact	2379
 #count global_sites_covered_inside	1138
 #count global_sites_uncovered	6194
 #count global_sites_ambiguous	0

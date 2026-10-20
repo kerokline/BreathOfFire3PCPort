@@ -79,7 +79,7 @@ void Record(u32 what, u32 a = 0, u32 b = 0, u32 c = 0, u32 d = 0, u32 e = 0) {
 
 constexpr unsigned kObjects = 5;   // ObjTrio and the two slots after it that Encounter_RollInitiative walks
 unsigned char* Obj(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
-unsigned char* EnemySlot(unsigned k) { return At(at::kEnemies + at::kEnemyStride * k); }
+unsigned char* EnemySlot(unsigned k) { return At(Encounter_Slots_addr + at::kEnemyStride * k); }
 unsigned char* ActorRecord(unsigned i) { return At(at::kRecords + at::kRecordSize * i); }
 
 // Where Sprite_Current may point: the five objects or the placement's
@@ -802,7 +802,7 @@ void Cover(unsigned k, const Args& x, const State& in, const State& out, u32 res
     case kPlaceEnemiesK: {
         unsigned n = 0;
         for (unsigned e = 0; e < 8; ++e) {
-            const unsigned o = Offset(at::kEnemies + at::kEnemyStride * e);
+            const unsigned o = Offset(Encounter_Slots_addr + at::kEnemyStride * e);
             n += in.memory[o] != 0 && out.memory[o] == 0 ? 1u : 0u;
         }
         ++s[n < 2 ? n : 2];

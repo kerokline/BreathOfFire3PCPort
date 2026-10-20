@@ -455,7 +455,7 @@ FH_EXPORT unsigned char __cdecl Encounter_PickRow(void) {
 FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
     unsigned char n = 0;
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const slot = At(at::kEnemies + k * at::kEnemyStride);
+        unsigned char* const slot = At(Encounter_Slots_addr + k * at::kEnemyStride);
         const unsigned char kind = row[k];
         slot[1] = kind;
         if (kind == 0xFF) {
@@ -525,7 +525,7 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         }
     }
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const slot = At(at::kEnemies + k * at::kEnemyStride);
+        unsigned char* const slot = At(Encounter_Slots_addr + k * at::kEnemyStride);
         const unsigned char* const kind = At(at::kKinds + slot[1] * at::kKindStride);
         if (slot[0] == 0) continue;
         if (Al(g.on_screen(Long(slot + 4), Long(slot + 8), kind[0x86], kind[0x87])) == 0) {

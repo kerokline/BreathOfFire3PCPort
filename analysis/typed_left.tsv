@@ -3483,9 +3483,8 @@ src/game/battle_sprites.cpp	Sprite_SetClutStp	global	At	at::kClutDivisor	0	0x652
 src/game/battle_sprites.cpp	Sprite_SetClutStp	global	At	at::kClutStep	0	0x6528d4	-	no-entry	at::kClutStep 0x6528d4 -	b0
 src/game/battle_sprites.cpp	Sprite_SetClutStp	global	At	at::kClutCount	0	0x6528c4	-	no-entry	at::kClutCount 0x6528c4 -	b0
 src/game/battle_sprites.cpp	Sprite_SetClutStp	global	At	at::kClutCount	1	0x6528c4	-	no-entry	at::kClutCount 0x6528c4 -	b0
-src/game/battle_sprites.cpp	Battle_InitEnemies	global	At	at::kEncounter	0	0x939f00	-	no-entry	at::kEncounter 0x939f00 -	b0
-src/game/battle_sprites.cpp	Battle_InitEnemies	record	Long	rec + 4	0	-	table=0x939f00;stride=0xc	family	no record family established for this pointer here (table=0x939f00;stride=0xc)	b1-battle
-src/game/battle_sprites.cpp	Battle_InitEnemies	record	Long	rec + 8	0	-	table=0x939f00;stride=0xc	family	no record family established for this pointer here (table=0x939f00;stride=0xc)	b1-battle
+src/game/battle_sprites.cpp	Battle_InitEnemies	record	Long	rec + 4	0	-	stride=0xc	family	no record family established for this pointer here (table=0x939f00;stride=0xc)	b1-battle
+src/game/battle_sprites.cpp	Battle_InitEnemies	record	Long	rec + 8	0	-	stride=0xc	family	no record family established for this pointer here (table=0x939f00;stride=0xc)	b1-battle
 src/game/battle_sprites.cpp	Battle_SetupEnemy	global	At	at::kLayout	0	0x904aac	-	no-entry	at::kLayout 0x904aac -	b0
 src/game/battle_sprites.cpp	Battle_CopyEnemyData	record	SetLong	dst + 4	0	-	via=Enemy	width	BattleEnemy +0x84 w4	b1-battle
 src/game/battle_sprites.cpp	Battle_CopyEnemyData	record	Long	src + 4	0	-	via=EnemyData	width	EnemyData +0x4 w4	b1-battle
@@ -3523,7 +3522,6 @@ src/game/battle_sprites_fuzz.cpp	Handle	global	At	at::kCells	0	0x903850	-	no-ent
 src/game/battle_sprites_fuzz.cpp	Handle	global	At	at::kCells	1	0x903850	-	no-entry	at::kCells 0x903850 -	b0
 src/game/battle_sprites_fuzz.cpp	Handle	global	At	at::kWindows	0	0x803160	-	no-entry	at::kWindows 0x803160 -	b0
 src/game/battle_sprites_fuzz.cpp	-	global	-	at::kCells	0	0x903850	-	no-entry	at::kCells 0x903850 -	b0
-src/game/battle_sprites_fuzz.cpp	Address	global	-	at::kEncounter	0	0x939f00	-	no-entry	at::kEncounter 0x939f00 -	b0
 src/game/battle_sprites_fuzz.cpp	Address	global	-	at::kActions	0	0x65c4d8	-	untyped-entry	at::kActions 0x65c4d8 NameTable_Abilities	b0
 src/game/battle_sprites_fuzz.cpp	Fill	record	SetLong	p + i	0	-	-	family	no record family established for this pointer here (-)	b1-battle
 src/game/battle_sprites_fuzz.cpp	SeedClutMap	global	At	at::kClutMap	0	0x7e06a0	-	no-entry	at::kClutMap 0x7e06a0 -	b0
@@ -3537,7 +3535,6 @@ src/game/battle_sprites_fuzz.cpp	SeedRound	global	At	at::kEnemies	0	0x93b960	-	n
 src/game/battle_sprites_fuzz.cpp	SeedRound	record	SetLong	rec + 8	0	-	stride=0xc	not-record	not one of the nine records.h families (stride=0xc)	b1-battle
 src/game/battle_sprites_fuzz.cpp	SeedRound	global	At	at::kCells	0	0x903850	-	no-entry	at::kCells 0x903850 -	b0
 src/game/battle_sprites_fuzz.cpp	SeedRound	global	At	at::kCells	1	0x903850	-	no-entry	at::kCells 0x903850 -	b0
-src/game/battle_sprites_fuzz.cpp	SeedRound	global	At	at::kEncounter	0	0x939f00	-	no-entry	at::kEncounter 0x939f00 -	b0
 src/game/battle_sprites_fuzz.cpp	SeedEightKinds	global	At	at::kEnemies	0	0x93b960	-	no-entry	at::kEnemies 0x93b960 -	b0
 src/game/battle_sprites_fuzz.cpp	Arguments	global	At	at::kClutMap	0	0x7e06a0	-	no-entry	at::kClutMap 0x7e06a0 -	b0
 src/game/battle_sprites_fuzz.cpp	Arguments	global	At	at::kEnemyData	0	0x8c55c8	-	no-entry	at::kEnemyData 0x8c55c8 -	b0
@@ -9157,24 +9154,21 @@ src/game/field_hidden.cpp	Field_CellPickup	record	At	bof3::addr::Text_Records + 
 src/game/field_hidden.cpp	Field_CellPickup	record	Long	name + k	0	-	-	computed	offset computed at run time: name + k	b1-field
 src/game/field_hidden.cpp	Sprite_PoseFromSet	record	Word	rv::Bytes(s) + 0x58	0	-	via=Bytes	gate	SpriteObject->script_pos: the typed read changed the object code	b1-field
 src/game/field_hidden.cpp	Encounter_PickRow	global	Byte	at::kRows	0	0x8c5580	-	index	at::kRows 0x8c5580 Encounter_Rows	b0
-src/game/field_hidden.cpp	Encounter_FillSlots	global	At	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/field_hidden.cpp	Encounter_FillSlots	global	Byte	at::kSlotChance	0	0x669cb0	-	gate	at::kSlotChance 0x669cb0 Encounter_SlotChance	b0
 src/game/field_hidden.cpp	Encounter_Place	global	At	at::kScratchSprite	0	0x6bdff0	-	no-entry	at::kScratchSprite 0x6bdff0 -	b0
 src/game/field_hidden.cpp	Encounter_Place	global	At	at::kBattleFacing	0	0x904aac	-	no-entry	at::kBattleFacing 0x904aac -	b0
 src/game/field_hidden.cpp	Encounter_Place	global	At	at::kMemberPos	0	0x7e06e0	-	no-entry	at::kMemberPos 0x7e06e0 -	b0
 src/game/field_hidden.cpp	Encounter_Place	global	At	at::kMemberPos	1	0x7e06e0	-	no-entry	at::kMemberPos 0x7e06e0 -	b0
 src/game/field_hidden.cpp	Encounter_Place	global	Byte	at::kPartyList2	0	0x904065	-	gate	at::kPartyList2 0x904065 Cond_Flags+0xd5	b0
-src/game/field_hidden.cpp	Encounter_Place	global	At	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/field_hidden.cpp	Encounter_Place	global	At	at::kKinds	0	0x8c55c8	-	no-entry	at::kKinds 0x8c55c8 -	b0
-src/game/field_hidden.cpp	Encounter_Place	record	Long	slot + 4	0	-	table=0x939f00;stride=0xc	no-family	`slot`: an encounter slot (12 bytes)	b1-field
-src/game/field_hidden.cpp	Encounter_Place	record	Long	slot + 8	0	-	table=0x939f00;stride=0xc	no-family	`slot`: an encounter slot (12 bytes)	b1-field
+src/game/field_hidden.cpp	Encounter_Place	record	Long	slot + 4	0	-	stride=0xc	no-family	`slot`: an encounter slot (12 bytes)	b1-field
+src/game/field_hidden.cpp	Encounter_Place	record	Long	slot + 8	0	-	stride=0xc	no-family	`slot`: an encounter slot (12 bytes)	b1-field
 src/game/field_hidden_fuzz.cpp	AlOf	global	At	at::kScratch	0	0x903850	-	no-entry	at::kScratch 0x903850 -	b0
 src/game/field_hidden_fuzz.cpp	AlOf	record	SetPtr	s + 0x50	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	AlOf	record	SetWord	s + 0x58	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	AlOf	record	SetWord	s + 0x2C	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	AlOf	record	SetWord	s + 0x3E	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	AlOf	global	At	at::kMemberPos	0	0x7e06e0	-	no-entry	at::kMemberPos 0x7e06e0 -	b0
-src/game/field_hidden_fuzz.cpp	AlOf	global	At	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/field_hidden_fuzz.cpp	AlOf	record	SetLong	s + (v % 2 ? 0x34 : 0x38)	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	StubHandler	record	Word	Sc() + 0x2C	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	StubSlope	global	At	at::kScratch	0	0x903850	-	no-entry	at::kScratch 0x903850 -	b0
@@ -9184,12 +9178,10 @@ src/game/field_hidden_fuzz.cpp	StubMsg	record	SetPtr	Sc() + 0x50	0	-	via=Sc	harn
 src/game/field_hidden_fuzz.cpp	StubScriptStart	record	SetWord	Sc() + 0x58	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	StubElevation	record	SetWord	rv::Bytes(&Effect_Objects[i]) + 0x38	0	-	via=Bytes	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	Next	record	SetPtr	m + 0x50	0	-	via=Member	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_hidden_fuzz.cpp	Next	global	At	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/field_hidden_fuzz.cpp	Seed	record	SetWord	s + 0x2C	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	Seed	record	SetLong	s + 0x34	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	Seed	record	SetLong	s + 0x38	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_hidden_fuzz.cpp	Seed	record	SetWord	s + 0x58	0	-	via=Sc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
-src/game/field_hidden_fuzz.cpp	Seed	global	At	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/field_misc.cpp	PutLong	record	At	at::MapView_OriginAt() + 2	0	-	via=MapView_OriginAt	no-family	`at::MapView_OriginAt()`: not shown to point at one of the nine record families	b1-field
 src/game/field_misc.cpp	Vertex	record	PutLong	out + 0x08	0	-	param	no-family	`out`: an output buffer	b1-field
 src/game/field_misc.cpp	Vertex	record	Long	xyz + 8	0	-	param	no-family	`xyz`: not shown to point at one of the nine record families	b1-field
@@ -9831,7 +9823,6 @@ src/game/glyph_draw_fuzz.cpp	FuzzLookup	record	GetLong	e + 4	0	-	stride=0x14	pla
 src/game/inventory_ops.cpp	PosX	global	At	at::kMemberPos	0	0x7e06e0	-	no-entry	at::kMemberPos 0x7e06e0 -	b0
 src/game/inventory_ops.cpp	PosX	global	At	at::kMemberPos	1	0x7e06e0	-	no-entry	at::kMemberPos 0x7e06e0 -	b0
 src/game/inventory_ops.cpp	PosX	global	At	at::kMembers	0	0x6be078	-	no-entry	at::kMembers 0x6be078 -	b0
-src/game/inventory_ops.cpp	PosX	global	At	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/inventory_ops.cpp	PosX	global	At	at::kKinds	0	0x8c55c8	-	no-entry	at::kKinds 0x8c55c8 -	b0
 src/game/inventory_ops.cpp	AreaMap_CellNibble	global	At	at::kCellMap	0	0x8c3d80	-	no-entry	at::kCellMap 0x8c3d80 -	b0
 src/game/inventory_ops.cpp	Encounter_PlaceMember	global	At	at::kPartyOffsets	0	0x6698b0	-	untyped-entry	at::kPartyOffsets 0x6698b0 Formation_SlotVectors	b0
@@ -9861,7 +9852,6 @@ src/game/inventory_ops.cpp	Encounter_PartyToPlaces	global	At	at::kSideSteps	0	0x
 src/game/inventory_ops.cpp	Encounter_PartyAtPlaces	global	At	at::kRecords	0	0x903a70	-	no-entry	at::kRecords 0x903a70 -	b0
 src/game/inventory_ops.cpp	Encounter_PartyAtPlaces	global	Byte	at::kBattleFacing	0	0x904aac	-	no-entry	at::kBattleFacing 0x904aac -	b0
 src/game/inventory_ops.cpp	Encounter_PartyAtPlaces	global	Byte	at::kBattleFacing	1	0x904aac	-	no-entry	at::kBattleFacing 0x904aac -	b0
-src/game/inventory_ops_fuzz.cpp	Obj	global	At	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/inventory_ops_fuzz.cpp	Obj	global	At	at::kRecords	0	0x903a70	-	no-entry	at::kRecords 0x903a70 -	b0
 src/game/inventory_ops_fuzz.cpp	Obj	global	At	at::kScratchSprite	0	0x6bdff0	-	no-entry	at::kScratchSprite 0x6bdff0 -	b0
 src/game/inventory_ops_fuzz.cpp	Obj	global	At	at::kMemberPos	0	0x7e06e0	-	no-entry	at::kMemberPos 0x7e06e0 -	b0
@@ -9890,7 +9880,6 @@ src/game/inventory_ops_fuzz.cpp	Seed	global	At	at::kCellMap	0	0x8c3d80	-	no-entr
 src/game/inventory_ops_fuzz.cpp	Seed	global	At	at::kBattleFacing	0	0x904aac	-	no-entry	at::kBattleFacing 0x904aac -	b0
 src/game/inventory_ops_fuzz.cpp	Seed	global	At	at::kFaceTable	0	0x660b3c	-	untyped-entry	at::kFaceTable 0x660b3c BattleFormation_Anims	b0
 src/game/inventory_ops_fuzz.cpp	Seed	record	SetWord	ActorRecord(i) + 0x10	0	-	via=ActorRecord	no-struct	the persistent character record (0x903A70 + id * 0xA4) or its working copy: not a records.h family (via=ActorRecord)	b1-scen_ui
-src/game/inventory_ops_fuzz.cpp	Cover	global	Offset	at::kEnemies	0	0x939f00	-	no-entry	at::kEnemies 0x939f00 -	b0
 src/game/inventory_ops_fuzz.cpp	Cover	record	Long	in.memory + Offset(0x937F88)	0	-	-	computed	computed offset or index (-)	b1-scen_ui
 src/game/inventory_ops_fuzz.cpp	SelfTest	global	At	at::kCellMap	0	0x8c3d80	-	no-entry	at::kCellMap 0x8c3d80 -	b0
 src/game/inventory_ops_fuzz.cpp	SelfTest	global	At	at::kCellMap	1	0x8c3d80	-	no-entry	at::kCellMap 0x8c3d80 -	b0

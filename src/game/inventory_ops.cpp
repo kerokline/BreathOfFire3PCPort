@@ -91,7 +91,7 @@ using u32 = std::uint32_t;
 unsigned char* PosX(u32 m) { return At(at::kMemberPos + 8 * m); }
 unsigned char* PosZ(u32 m) { return At(at::kMemberPos + 8 * m + 4); }
 unsigned char* Member(u32 m) { return At(at::kMembers + 4 * m); }   // +0 placed, +1 wide
-unsigned char* Enemy(u32 k) { return At(at::kEnemies + at::kEnemyStride * k); }
+unsigned char* Enemy(u32 k) { return At(Encounter_Slots_addr + at::kEnemyStride * k); }
 unsigned char* Kind(u32 kind) { return At(at::kKinds + at::kKindStride * kind); }
 unsigned char* Obj(u32 i) { return rv::Bytes(ObjTrio) + at::kObjStride * i; }
 

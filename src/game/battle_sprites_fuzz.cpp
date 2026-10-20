@@ -413,7 +413,7 @@ const Span kSpans[] = {
     {at::kCells, 8, kRScratch},
     {Address(&Sprite_Current), 0xC, kRCurrent},   // Sprite_Current .. Gfx_ClutStripDirty
     {0x8C5580, 0x2680, kRData},                   // the enemy data, ids below 0x40
-    {at::kEncounter, 0x60, kREncounter},
+    {Encounter_Slots_addr, 0x60, kREncounter},
     {at::kActions, 0x3000, kRActions},            // action ids below 0x200
     {Address(Gfx_ClutStrip), 0x20400, kRStrip},
     {Address(&g_mine), sizeof(Mine), kRMine},
@@ -545,7 +545,7 @@ void SeedRound(unsigned regions) {
     At(at::kCells)[1] = static_cast<unsigned char>(Next() % 16);
     Sprite_Current = PoolSprite(Next());
     if (regions & kREncounter)
-        for (unsigned r = 0; r < 8; ++r) At(at::kEncounter + r * 12)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
+        for (unsigned r = 0; r < 8; ++r) At(Encounter_Slots_addr + r * 12)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
 }
 
 // A round of Battle_OpenEnemyNames with eight living enemies of eight kinds:
