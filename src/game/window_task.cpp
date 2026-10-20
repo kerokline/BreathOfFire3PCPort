@@ -343,12 +343,12 @@ extern "C" void __cdecl Window_Kind2States(void) { RunState(g.kind2, "kind 2"); 
 // original 0x595520: kind 0's state 0. Takes the two high bits off the 0x0C
 // placement code into the record's flag byte +0xD - bit 7 means "do not draw
 // the frame" (flag 1), bit 6 means "the narrow box" (flag 2) - then sets the
-// box's half-size, its centre from the placement table, a zero current size,
+// box's half-size, its top-left (+4, +6) from the placement table, a zero current size,
 // and a step of a fifth of the half-size in each axis, so the box opens over
 // five frames. Then the state moves on.
 //
 // As the original has it: the placement byte is written back with the bit
-// cleared and read again for each table lookup; the centre is
+// cleared and read again for each table lookup; the top-left is
 // (table x + 0x3C) << 4 for the narrow box and (table x + 0x64) << 4 for the
 // wide one, and (table y + 0x1B) << 4 for both; the halving is an ordinary
 // signed divide by five of the half-size shifted up four. The record pointer
@@ -437,14 +437,14 @@ unsigned SettledY(const unsigned char* r) {
     }
 }
 
-// The centre's drift while an axis grows or shrinks: half the step, truncated
+// The left / top edge's drift while an axis grows or shrinks: half the step, truncated
 // toward zero, added on the shrink and subtracted on the grow, so that the
 // box stays centred on its settled position.
 int HalfStep(const unsigned char* r, unsigned offset) {
     return static_cast<int>(static_cast<std::int16_t>(Word(r + offset))) / 2;
 }
 
-// The four arguments every draw in this family is called with: the centre and
+// The four arguments every draw in this family is called with: the top-left and
 // the current size, each an arithmetic shift of the 12.4 word. Window_DrawFrame
 // and Window_DrawOutline keep only the low 16 bits of the first two and the
 // low byte of the last two, so what the original leaves in the upper halves
@@ -457,8 +457,8 @@ int RecH(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<recor
 }  // namespace
 
 // original 0x595670: state 1 of all three kinds - the box growing. Each axis
-// grows by its step and its centre moves back half a step; when the size
-// passes the settled half-size the centre snaps to the settled place and the
+// grows by its step and its left / top edge moves back half a step; when the
+// size passes the settled half-size the edge snaps to the settled place and the
 // size to the settled size. With flag 1 clear the outline is drawn at the
 // size this frame reached; when BOTH axes settled this frame the state moves
 // on - and then without a draw, since the outline is drawn before the test.
@@ -501,8 +501,8 @@ extern "C" void __cdecl Window_Grow(void) {
 }
 
 // original 0x595860: state 3 of all three kinds - the box shrinking, the
-// mirror of the grow. Each axis loses its step and its centre moves forward
-// half a step; when the size goes negative the centre snaps to the settled
+// mirror of the grow. Each axis loses its step and its edge moves forward
+// half a step; when the size goes negative the edge snaps to the settled
 // place PLUS half the box's own half-size - the box closes onto its own
 // middle, not onto its left edge - and the size to zero. When both axes are
 // done the state moves on and nothing more happens this frame; otherwise the
@@ -512,7 +512,7 @@ extern "C" void __cdecl Window_Grow(void) {
 // As the original has it: the "gone negative" test is `(s16)(size & 0xFFF0)
 // < 0`, and the mask cannot change the sign bit, so it is exactly `size < 0`;
 // the half-size is halved as an unsigned byte shift, not the signed halving
-// the centre drift uses; kind 1 takes its settled place from the 8-byte
+// the edge's drift uses; kind 1 takes its settled place from the 8-byte
 // records at 0x66ADFC by the list set 0x7DEE65, where the grow takes it from
 // the record's own +0x18 / +0x1A.
 extern "C" void __cdecl Window_Shrink(void) {
