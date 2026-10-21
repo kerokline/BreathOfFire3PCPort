@@ -756,6 +756,12 @@ install has no song 166 (the lost fight's music), so every lost fight that
 asks for it meets this path: D320. The cause there is ours (the importer
 writes `000..165`); this entry stays Capcom's latent mechanism.
 
+**Reached by the PC's own data too (2026-10-21):** "every track the game asks
+for has a file" does not hold. The five event battles whose files carry no
+music have the track word 0xFF, and `GameMode5_Load` asks for song 255, which
+has no file: the scene's song started again from its top. DIV-0149 skips the
+call there, as the PlayStation names no song (the review of PR #86).
+
 ## D25 — A track the decoder cannot open plays a fragment of the last one, for ever (latent)
 
 **Found:** reading `Music_Start` `0x5A6CC0`, `Music_CreateBuffer` `0x5A6E60`
@@ -8432,7 +8438,7 @@ plays `Music_Play(track)` with the track word of the event battle's
 words). A disc-built image filled only the file half (`pairs`, DIV-0101's
 first amendment); the track half was a `game-value` gap on all seven builds,
 so every event battle asked for song 0, and one whose file has no music of
-its own (the PC's 0xFF: the scene's music is kept) started song 0 over it.
+its own (the PC's 0xFF; see DIV-0149 for what that word does) started song 0 over it.
 
 **Where the disc has it:** nowhere as a number. The PSX's `GameMode5_Load`
 (`0x80198C94`) loads the battle file and names no song: the boss file's own

@@ -106,7 +106,7 @@ sys.path.insert(0, TOOLS)
 PSP = ("psp-jp", "psp-eu")
 PSX = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
-TRACK_NONE = 0xFF            # an event battle's track when its file has no music: Music_Play(0xFF) plays nothing
+TRACK_NONE = 0xFF            # an event battle's track when its file has no music: the scene's song plays on (DIV-0149)
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
 RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk",
          "faerie", "pspmap", "verb", "fishrec", "fishpen", "margins", "titlemark")   # widen<k>: the disc's name is k bytes

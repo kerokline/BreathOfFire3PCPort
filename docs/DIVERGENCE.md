@@ -9301,3 +9301,35 @@ designed in rather than bolted on.
 - **Reversible?** Rebuild the language without the chunk, or play the
   original text: the roll then reads `.data`'s table (on a Western disc-only
   install, D323's patchwork). Not a runtime switch.
+
+### An event battle with no music of its own leaves the scene's song playing
+
+- **ID:** DIV-0149
+- **Date:** 2026-10-21
+- **Subsystem:** music at a battle's start (`GameMode5_Load` `0x495FD0`, ours
+  in `src/game/mode_rest.cpp`)
+- **Tier:** Fidelity - the PlayStation's behaviour, heard by the owner.
+- **Original behaviour:** five event battles' files carry no music (their
+  track word in `EventBattle_Records+0xE2` is 0xFF; the miners' fight at the
+  start is one, issue #83). `GameMode5_Load` fades the scene's song out over
+  10 frames and calls `Music_Play(0xFF, 0xA)`; song 255 has no file, so
+  `Music_LoadFile` fails and `Music_Play` starts the file still loaded - the
+  scene's song - again from its top, fading in (D24's path, which the PC's
+  own data reaches here). The PlayStation's `GameMode5_Load` (`0x80198C94`)
+  names no song and the battle file brings none, so the scene's song plays
+  on.
+- **New behaviour:** when the event battle's track word is 0xFF, neither the
+  fade nor the `Music_Play` happens: the song playing goes on into the fight
+  without a break, and the log says `DIV-0149    event battle N has no music
+  of its own: track T plays on`. Every other battle is as before. The end
+  of the fight is unchanged (DIV-0092: the fanfare's stop, then the zone's
+  song).
+- **Rationale:** the owner, 2026-10-21, playing the PlayStation release on
+  an emulator: the music starts slightly before the fight and continues into
+  it without restarting. A PC-only difference is a port repair (the PSX twin
+  rule); found by the 2026-10-21 review of PR #86.
+- **Also in the PSX version?** This is the PSX's behaviour brought back.
+- **Verification:** `BOF3X_SHADOW=mode_rest` (Capcom's rule, before the
+  switch is armed): 52,000 rounds, 0 mismatches; the switch logs ON. Not yet
+  heard in the PC build.
+- **Reversible?** `BOF3X_ORIGINAL=EventBattleKeepsMusic`.

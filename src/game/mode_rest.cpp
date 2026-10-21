@@ -51,6 +51,10 @@ std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void StepUp() { Game_Step = static_cast<unsigned short>(Game_Step + 1); }
 
+// DIVERGENCE DIV-0149: 1 through PatchBytes("EventBattleKeepsMusic") in
+// ModeRest_Inject, after the self-test.
+std::uint8_t g_event_keeps_music = 0;
+
 // xor eax, eax; mov ax, [Game_Step]; jmp [table + eax * 4]: the table's
 // `entries` steps read in place (the fuzz swaps the cells for recorders); a
 // Fatal past them, where the original jumps through the dword after - for mode
@@ -296,7 +300,17 @@ extern "C" void __cdecl GameMode5_Load(void) {
     // music takes over - our DLL's state, nothing written to the game's;
     // nothing remembered with the switch off (Capcom's rule, and the fuzz).
     music_resume::Remember();
-    if (!(EventBattle_Flags & 0x40) && Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(0xA);
+    // DIVERGENCE DIV-0149: an event battle whose file has no music of its own
+    // (its track word 0xFF) leaves the scene's song playing, as the
+    // PlayStation does. Capcom's PC faded it out here and then asked for song
+    // 0xFF, which has no file, so D24's path started the old song again from
+    // its top.
+    bool keep = false;
+    if (g_event_keeps_music && EventBattle_Id != 0) {
+        const unsigned asset = At(at::kEventAsset)[EventBattle_Id * 4u];
+        keep = Word(At(at::kEventTrack + asset * 4u)) == 0xFF;
+    }
+    if (!keep && !(EventBattle_Flags & 0x40) && Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(0xA);
     unsigned track;
     const unsigned char event = EventBattle_Id;
     if (event != 0) {
@@ -311,7 +325,11 @@ extern "C" void __cdecl GameMode5_Load(void) {
         SH_CALL(LoadDatFile)(static_cast<int>(at::kBattleFileB));
         track = at::kBattleTrackB;
     }
-    SH_CALL(Music_Play)(track, 0xA);
+    if (keep)
+        bof3::Log("DIV-0149    event battle %u has no music of its own: track %u plays on", event,
+                  static_cast<unsigned>(Music_Track));
+    else
+        SH_CALL(Music_Play)(track, 0xA);
     SH_CALL(Window_ResetAll)();
     StepUp();
     BattleMisc_BannerKinds = 0;
@@ -448,6 +466,13 @@ void ModeRest_Inject() {
         bof3::PatchBytes("AreaTrackFallback",
                          static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&mode_flow::g_area_track_fallback)), was, is, 4);
         bof3::Log("DIV-0092    the field's music after a battle, and after a load of a save without a track, is the area's own (on unless the line above says OFF)");
+    }
+    {
+        // DIV-0149: after the self-test, which compared Capcom's GameMode5_Load.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("EventBattleKeepsMusic", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_event_keeps_music)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0149    an event battle with no music of its own leaves the scene's song playing (on unless the line above says OFF)");
     }
     BOF3_INJECT(GameMode3_Run);
     BOF3_INJECT(GameMode3_Enter);
