@@ -257,10 +257,22 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         // A debug register's trap: B0..B3 of DR6, after the access.
         if (static_cast<DWORD>(me) == g_dr_thread && (ctx->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS &&
             (ctx->Dr6 & 0xF)) {
+            // A slotted word on a page still guarded faulted on this same
+            // access, and the guard fault counted it: its trap-flag step is
+            // pending for that page. Then only the register's hit is counted
+            // here (the review of PR #91, 2026-10-21: reads and writes were
+            // counted twice).
+            const Pending* const stepping = PendingOf(me);
             for (int k = 0; k < g_slots; ++k) {
                 if (!(ctx->Dr6 & (3u << (2 * k)))) continue;
                 WRange& r = g_range[g_slot_range[k]];
                 InterlockedIncrement(&r.dr_hits);
+                bool counted = false;
+                if (stepping) {
+                    const int pi = FindPage(g_slot_va[k] & ~(kPage - 1));
+                    for (int j = 0; j < stepping->n && !counted; ++j) counted = stepping->page[j] == pi;
+                }
+                if (counted) continue;
                 if (ctx->Dr6 & (2u << (2 * k))) Written(r, ctx->Eip);
                 else Read(r, ctx->Eip, 2, ctx, me);
             }

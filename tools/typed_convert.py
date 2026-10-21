@@ -1774,12 +1774,16 @@ class Gate:
         return r.returncode == 0, r.stdout + r.stderr
 
     def same(self, keys):
+        # No object for the file proves nothing (codegen_same's exit 2).
+        if not keys:
+            return False
         for k in keys:
             if k not in self.base_objs:
                 return False
             if k not in self.base_cache:
-                self.base_cache[k] = self.cg.disasm(self.objdump, self.base_objs[k])
-            new = self.cg.disasm(self.objdump, self.new_objs[k])
+                self.base_cache[k] = (self.cg.disasm(self.objdump, self.base_objs[k]),
+                                      self.cg.data_dump(self.objdump, self.base_objs[k]))
+            new = (self.cg.disasm(self.objdump, self.new_objs[k]), self.cg.data_dump(self.objdump, self.new_objs[k]))
             if new != self.base_cache[k]:
                 return False
         return True
@@ -1903,8 +1907,16 @@ def retire_fields(conv, toml, dry_run=False):
             text = fh.read()
         for name, _, _ in gone:
             m = re.search(r'(?m)^\[\[data\]\]\n(?:(?!\[\[)[^\n]*\n)*?name = "' + re.escape(name) + r'"\n', text)
-            end = re.compile(r'(?m)^(\[\[|# )').search(text, m.end())
+            # To the next entry, less the comment block just above it (the next
+            # entry's, or a section's). A comment inside this entry, with its
+            # keys after it, goes with the entry: cutting at the first `# `
+            # would leave those keys on the entry before (the review of PR
+            # #100, 2026-10-21).
+            end = re.compile(r'(?m)^\[\[').search(text, m.end())
             stop = end.start() if end else len(text)
+            above = re.search(r'(?m)(?:^#[^\n]*\n(?:[ \t]*\n)*)+\Z', text[m.end():stop])
+            if above:
+                stop -= len(above.group(0))
             text = text[:m.start()] + text[stop:]
         with open(toml, 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(text)
