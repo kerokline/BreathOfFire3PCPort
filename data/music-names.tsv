@@ -191,6 +191,6 @@ MIMI01	MIMI01.DAT				file	stream 4, S_XA00.STR ch 0 from sector 435. Scena04_Sce
 WIN	WIN.DAT				file	stream 5, S_XA00.STR ch 0 from sector 563. Scena11_Scene5 (scena_sc11.cpp:744), Scena13_Run5 (scena_sc13.cpp:814)
 SIPPAI01	SIPPAI01.DAT				file	stream 6, S_XA00.STR ch 0 from sector 642. Area75_TailPresses (area_w1f.cpp:771), Scena11_Scene5 (scena_sc11.cpp:714), Scena11_Scene6 (scena_sc11.cpp:905)
 GAAN01	GAAN01.DAT				file	stream 7, S_XA00.STR ch 0 from sector 718. Scena11_Scene6 (scena_sc11.cpp:896), the one constant caller
-PURE	Pure Again				kk	stream 8, S_XA00.STR ch 1, about 269 s. The staff roll: Scena17_Roll0 0x56C6D0 (scena_sc15.cpp:2055), Scena17_Roll1 waiting on Sound_StreamDone; also CommuTail60_Stream 0x457590 (rest_4b.cpp:468) when the byte 0x939A3C is 0
+PURE	PURE.DAT			Pure Again	kk	stream 8, S_XA00.STR ch 1, about 269 s. The staff roll: Scena17_Roll0 0x56C6D0 (scena_sc15.cpp:2055), Scena17_Roll1 waiting on Sound_StreamDone; also CommuTail60_Stream 0x457590 (rest_4b.cpp:468) when the byte 0x939A3C is 0
 DRAGON	DRAGON.DAT				file	stream 9, S_XA00.STR ch 2. FieldTail_FlagMessage 0x56DE50 (field_e2.cpp:1321), the one constant caller
 KARA	KARA.DAT				file	stream 10, S_XA00.STR ch 3. No constant caller; CommuTail60_Stream 0x457590 (rest_4b.cpp:468) loads it when the byte 0x939A3C is non-zero (else PURE). Event op 0x89 (move_groups.cpp) takes any id from script bytes: not traced

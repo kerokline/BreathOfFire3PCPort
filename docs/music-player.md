@@ -87,17 +87,17 @@ launcher, and the player reads that copy. Edit the repo's file: every build refr
 - **Committing it is the owner's call of 2026-10-11.** The box's track titles are public, and the
   file holds only our mapping of titles to song numbers, no audio.
 - **Filled in by the owner on 2026-10-12.** The titles come from the collector's box, the *Breath of
-  Fire Original Soundtrack Special Box*, discs 5–7. 133 rows have a `box_title`.
+  Fire Original Soundtrack Special Box*, discs 5–7. 134 rows have a `box_title`.
 - **`source`**, as the owner set it:
 
   | `source` | Meaning | Rows |
   |---|---|--:|
-  | `ossb` | the box's own track | 57 |
-  | `game` | the faerie village's music menu, US disc (section 4.1); these rows carry box titles too | 41 |
-  | `kk` | the owner's name from listening, mostly sound effects | 30 |
+  | `ossb` | the box's own track | 56 |
+  | `game` | the faerie village's music menu, US disc (section 4.1); these rows carry box titles too | 40 |
+  | `kk` | the owner's name from listening, mostly sound effects | 31 |
   | `psf` | the zophar rip, unsourced (section 4.2) | 4 |
-  | `same-notes` | hidden | 35 |
-  | `file` | a stream's row: the name is its file's, no title yet (section 6.3) | 11 |
+  | `same-notes` | hidden | 37 |
+  | `file` | a stream's row: the name is its file's, no title yet (section 6.3) | 10 |
 
 - **`note`** holds the measurements and the clashes. The ripper's own comments are not carried over.
 
@@ -269,7 +269,9 @@ which scripts name which kind-0 id through op `0x89` was **not traced**.
 
 The catalogue's stream rows are keyed by the stream's name (`PURE`), with `name` the file's
 (`PURE.DAT`), `source` `file`, and the box columns empty: **the titles are the owner's to fill
-in.** None is guessed.
+in.** None is guessed. A title goes in `box_title`, as on any row: the Jukebox reads a stream
+row's `name` as its file's, never as a title. PURE has one, "Pure Again" (`source` `kk`); it
+first went into `name`, so the list still showed `PURE` until 2026-10-21 (the review of PR #92).
 
 ### 6.4 Checks, 2026-10-18
 
