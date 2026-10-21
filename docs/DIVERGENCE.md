@@ -5724,8 +5724,7 @@ designed in rather than bolted on.
 
 ### The importer's cache read before the install's DAT\ and SND\
 
-- **ID:** DIV-0089 (the next free number on 2026-10-10; renumber at the merge
-  if another branch has taken it)
+- **ID:** DIV-0089
 - **Date:** 2026-10-10
 - **Subsystem:** assets (`LoadDatFile` `0x454590`, ours in
   `src/game/dat_load.cpp`; `Snd_LoadBankFile` `0x454770` and
@@ -5901,8 +5900,7 @@ designed in rather than bolted on.
 
 ### The MP3 decoder is minimp3, not the library Capcom linked
 
-- **ID:** DIV-0091 (the next free number on 2026-10-10 evening; renumber at
-  the merge if another branch has taken it)
+- **ID:** DIV-0091
 - **Date:** 2026-10-10
 - **Subsystem:** music (the MP3 path: `Music_OpenDecoder` `0x5A6D60`,
   `Music_Decode` `0x5A6F30`, `Music_Release` `0x5A70A0`, `music_loops`'
@@ -5951,8 +5949,7 @@ designed in rather than bolted on.
 
 ### The field's music after a battle, and after a load of a save without a track, is the area's own
 
-- **ID:** DIV-0092 (the next free number on 2026-10-10 night; renumber at
-  the merge if another branch has taken it)
+- **ID:** DIV-0092
 - **Date:** 2026-10-10
 - **Subsystem:** the field's music (`GameMode5_Leave` `0x496150`,
   `src/game/mode_rest.cpp`; `GameMode_Start` `0x495840`,
@@ -6108,8 +6105,7 @@ designed in rather than bolted on.
 
 ### The MP3 decoder's end-of-stream count is zero, not the last frame's
 
-- **ID:** DIV-0093 (the next free number on 2026-10-11; renumber at the
-  merge if another branch has taken it)
+- **ID:** DIV-0093
 - **Date:** 2026-10-11
 - **Subsystem:** music (the MP3 path's decoder, `src/audio/mp3.cpp`
   `DecodeFrame`, behind `Music_Decode` `0x5A6F30`'s seam - DIV-0091)
@@ -6159,8 +6155,7 @@ designed in rather than bolted on.
 
 ### The game runs as our own executable
 
-- **ID:** DIV-0094 (the next free number on 2026-10-11; renumber at the
-  merge if another branch has taken it)
+- **ID:** DIV-0094
 - **Date:** 2026-10-11
 - **Subsystem:** the platform under the game: the process, its start-up and
   its loader (`bof3x.exe`, written by `tools/make_exe.py` from
@@ -6242,8 +6237,7 @@ designed in rather than bolted on.
 
 ### The executable's icon, drawn from the game's own data on the player's machine
 
-- **ID:** DIV-0095 (the next free number on 2026-10-11; renumber at the
-  merge if another branch has taken it)
+- **ID:** DIV-0095
 - **Date:** 2026-10-11
 - **Subsystem:** platform (`src/hook/exe_icon.cpp`, called from
   `Game_WinMain`'s loop, `src/game/win_main.cpp`; the launcher's move of
@@ -8335,9 +8329,9 @@ designed in rather than bolted on.
   PC install's own page is no longer left alone: its key names are painted
   over and the live buttons drawn as glyphs. The disc repaint here is
   unchanged.
-- **Reversible?** A cache built without it (the stand-in's recipe hash is the
-  disc's, checked before the repaint; the manifest records the repainted
-  body's).
+- **Reversible?** Not a runtime switch: only by building the cache with an
+  importer from before this entry (the stand-in's recipe hash is the disc's,
+  checked before the repaint; the manifest records the repainted body's).
 
 ### A PSP-only install's title logo is cut from the PSP's pages where the PSP's art lies
 
@@ -9014,8 +9008,7 @@ designed in rather than bolted on.
 
 ### An area change that keeps the track while it fades to a stop keeps none: Ryu's dream is silent, as on the PlayStation
 
-- **ID:** DIV-0143 (the next free number on 2026-10-18; renumber at the
-  merge if another branch has taken it)
+- **ID:** DIV-0143
 - **Date:** 2026-10-18
 - **Subsystem:** the area's music (`Area_PickMusic` `0x5953B0`, ours,
   `src/game/window_task.cpp`; [`known-defects.md`](known-defects.md) D318,
