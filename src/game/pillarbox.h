@@ -3,15 +3,18 @@
 //
 // In the wide modes (BOF3X_WIDE=1 426 x 240, =2 560 x 240) an area whose map
 // is narrower than the picture showed the void past its edge in the bands
-// (docs/ultrawide-culls.md section 5). Such an area is now framed as a
+// (docs/ultrawide-culls.md section 5). Three such areas are now framed as a
 // narrower picture on purpose: black bars drawn by us over the bands, the
 // picture inside them one of the three widths the port has (320, 426, 560).
-// The frame is the widest of those not wider than the area's widest screen
-// row, and never below 320: an area under 426 px is framed at 320 (areas 31,
-// 149, 186 and 198 on the shipped data), one from 426 to under 560 at 426
-// (53, 90, 98, 153, 154, 192 and 194 - so 21:9 only), every other area not at
-// all. The width is measured from the area's own map block as the game loaded
-// it (AreaMap_Header), not from a table.
+// Which areas is our choice - the owner's, made on the crafted-save captures
+// (2026-10-21, docs/narrow-pillarbox.md sections 2 and 10): 31, 90 and 198, the
+// three with real void past the frame. The others the map measurement names
+// (149, 186, 98 and the camps 53, 153, 154, 192, 194) show scenery there at
+// their own cameras and stay unframed. The width a listed area is framed at
+// is still measured from its own map block as the game loaded it
+// (AreaMap_Header), not from a table: the widest of the port's pictures not
+// wider than its widest screen row, never below 320 - 31 and 198 at 320 in
+// both wide modes, 90 at 426 (so 21:9 only).
 //
 // Draw-only: the bars are appended to the frame after the game drew it, and
 // nothing the game reads changes - the view, the culls, the ring, Rand are the
@@ -46,6 +49,17 @@ constexpr unsigned FrameColumns(unsigned widest_row) {
 // frame's, or the picture's own when the area is as wide as the picture.
 constexpr unsigned Framed(unsigned widest_row, unsigned columns) {
     return FrameColumns(widest_row) < columns ? FrameColumns(widest_row) : columns;
+}
+
+// The areas framed: the owner's choice on the crafted-save sheets (2026-10-21,
+// docs/narrow-pillarbox.md section 2) - the three whose void shows past the
+// frame. Area numbers as Game_AreaNumber holds them; not a Capcom table.
+constexpr bool Listed(unsigned area) { return area == 31 || area == 90 || area == 198; }
+
+// The columns a side visible for `area` with its widest row `widest_row` in a
+// picture of `columns` a side: Framed for a listed area, the picture otherwise.
+constexpr unsigned Visible(unsigned area, unsigned widest_row, unsigned columns) {
+    return Listed(area) ? Framed(widest_row, columns) : columns;
 }
 
 // The widest screen row of an area map block in ring columns: along each map
