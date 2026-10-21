@@ -414,9 +414,10 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                         if (draw_order::g_on)
                             draw_order::Set(draw_order::kSprite, layer, Key(Sprite_Current),
                                             static_cast<unsigned>(record[0]));
+                        if (layering::g_mode == layering::kFloor) layering::BeforeSprite();   // what it draws (layering.h)
                         g_draw();
                         if (draw_order::g_on) draw_order::Clear();
-                        // The table faerie (layering.h, known-defects D300): its table's sides again.
+                        // What it drew, kept; the table faerie's sides again (layering.h, D300).
                         if (layering::g_mode == layering::kFloor) layering::AfterSprite(Sprite_Current);
                     }
                 } else if (flags & 8) {

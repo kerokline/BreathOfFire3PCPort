@@ -256,6 +256,68 @@ unsigned g_runs_now, g_runs_before;   // runs drawn in this pass, and in the las
 Run* g_run;                           // the run being drawn, or null
 bool g_run_boxes = true;              // BOF3X_LAYERING_RECORDS=0: the proximity test alone (a control)
 
+// What each sprite drew in the last pass (amended 2026-10-21, docs/garr-fire.md):
+// the screen box of the cell sprite (code 0x84) Sprite_Draw committed for it,
+// as D3d_BuildCellTexture lays its cells out (draw_order.cpp's box for the
+// code). RunsClear tests the runs against it as well as the body box: Garr
+// seated by the camp's fire is 104 px wide, and his arm and weapon reach over
+// the fire's quads 20 px beyond the body box's side. Two generations, as the
+// runs: the pass being drawn fills g_drawn[g_pass & 1]. A sprite not drawn in
+// the last pass (culled, new, its packet skipped) has no box, and the body
+// box alone is tested, as before this amendment.
+constexpr unsigned kDrawn = 64;   // Sprite_UpdateScreen lists at most 0x28 a pass
+struct Drawn { std::uint32_t at; Box box; };
+Drawn g_drawn[2][kDrawn];
+unsigned g_drawn_n[2];
+std::uint32_t g_drawn_stamp[2];
+unsigned char* g_sprite_mark;            // Gfx_PacketNext before the sprite being drawn, or null
+bool g_sprite_boxes = true;              // BOF3X_LAYERING_SPRITEBOX=0: the body box alone (a control)
+
+const Box* DrawnBox(const unsigned char* sprite) {
+    const unsigned g = (g_pass - 1) & 1;
+    if (!g_sprite_boxes || g_drawn_stamp[g] != g_pass - 1) return nullptr;
+    for (unsigned i = 0; i < g_drawn_n[g]; ++i)
+        if (g_drawn[g][i].at == Address(sprite)) return &g_drawn[g][i].box;
+    return nullptr;
+}
+
+// The cell sprite at `prim`, just committed for `sprite`: its box kept.
+void KeepDrawn(const unsigned char* sprite, const unsigned char* prim) {
+    const unsigned first = Get<std::uint16_t>(prim + 0x18), count = Get<std::uint16_t>(prim + 0x1A);
+    if (count == 0 || count > 256) return;
+    int l = 0, r = 0, t = 0, b = 0;
+    for (unsigned i = 0; i < count; ++i) {
+        const unsigned char* const rec = SpriteCell_Table + (first + i) * 8u;
+        const int x = Get<std::int16_t>(rec), y = static_cast<signed char>(rec[2]);
+        const int w = static_cast<int>(rec[3] & 0xF) * 8, h = static_cast<int>(rec[3] >> 4) * 8;
+        if (x < l) l = x;
+        if (y < t) t = y;
+        if (x + w > r) r = x + w;
+        if (y + h > b) b = y + h;
+    }
+    const float x = Get<float>(prim + 8), y = Get<float>(prim + 0xC);
+    const float sx = Get<float>(prim + 0x10), sy = Get<float>(prim + 0x14);
+    const bool flip = (Get<std::uint16_t>(prim + 0x1E) & 0x400) != 0;
+    const Box box = {flip ? x - r * sx : x + l * sx, y + t * sy, flip ? x - l * sx : x + r * sx, y + b * sy};
+    if (!(box.x0 > -kFar && box.x1 < kFar && box.y0 > -kFar && box.y1 < kFar)) return;   // NaN included
+    const unsigned g = g_pass & 1;
+    if (g_drawn_stamp[g] != g_pass) {
+        g_drawn_stamp[g] = g_pass;
+        g_drawn_n[g] = 0;
+    }
+    for (unsigned i = 0; i < g_drawn_n[g]; ++i) {
+        if (g_drawn[g][i].at != Address(sprite)) continue;
+        Box& kept = g_drawn[g][i].box;   // drawn twice in a pass: both
+        if (box.x0 < kept.x0) kept.x0 = box.x0;
+        if (box.y0 < kept.y0) kept.y0 = box.y0;
+        if (box.x1 > kept.x1) kept.x1 = box.x1;
+        if (box.y1 > kept.y1) kept.y1 = box.y1;
+        return;
+    }
+    if (g_drawn_n[g] == kDrawn) return;
+    g_drawn[g][g_drawn_n[g]++] = {Address(sprite), box};
+}
+
 Run* FindRun(std::uint32_t at, std::uint32_t stamp, bool claim) {
     Run* const table = g_runs[stamp & 1];
     for (unsigned i = (at >> 2) * 2654435761u >> 21, n = 0; n < kRuns; ++n, i = (i + 1) & (kRuns - 1)) {
@@ -283,7 +345,8 @@ bool RunReaches(const Run& run, const Box& target) {
 
 // The runs DrawLayer_Open walks for `layer` (its row and columns, computed as
 // it computes them): false when one of them drew, in the last pass, a quad
-// that reaches `whole_box`, or was not drawn in the last pass at all.
+// that reaches `whole_box` (the body and feet, grown to what the sprite drew
+// last pass: LayerFor's reach_box), or was not drawn in the last pass at all.
 bool RunsClear(unsigned layer, const Box& whole_box) {
     if (!g_run_boxes || g_runs_before == 0) return true;   // nothing recorded: DrawLayer_Open not ours, say
     int row = MapView_Row + static_cast<int>(layer) + 1;
@@ -305,8 +368,9 @@ bool RunsClear(unsigned layer, const Box& whole_box) {
                 if (run == nullptr)
                     bof3::Log("DIV-0071      layer %u: the record run at %08X (view column %d) was not drawn last pass", layer, at, column);
                 else
-                    bof3::Log("DIV-0071      layer %u: the record run at %08X (view column %d) drew a quad over the body last "
-                              "pass (%u kept%s)", layer, at, column, run->n, run->overflow ? ", more boxed" : "");
+                    bof3::Log("DIV-0071      layer %u: the record run at %08X (view column %d) drew a quad over the sprite last "
+                              "pass (%u kept%s; the sprite's box (%g, %g)-(%g, %g))", layer, at, column, run->n,
+                              run->overflow ? ", more boxed" : "", whole_box.x0, whole_box.y0, whole_box.x1, whole_box.y1);
             }
             return false;
         }
@@ -399,6 +463,15 @@ unsigned LayerFor(unsigned index, unsigned layer) {
     }
     const Box feet_box = BoxRound(sprite, kFeetHalfWidth, kFeetAbove, kFeetBelow);
     const Box whole_box = BoxRound(sprite, kBodyHalfWidth, kBodyAbove, kFeetBelow);   // the body and the feet
+    // For the record runs: the body and the feet, and what the sprite drew
+    // last pass (DrawnBox; docs/garr-fire.md).
+    Box reach_box = whole_box;
+    if (const Box* const drawn = DrawnBox(sprite)) {
+        if (drawn->x0 < reach_box.x0) reach_box.x0 = drawn->x0;
+        if (drawn->y0 < reach_box.y0) reach_box.y0 = drawn->y0;
+        if (drawn->x1 > reach_box.x1) reach_box.x1 = drawn->x1;
+        if (drawn->y1 > reach_box.y1) reach_box.y1 = drawn->y1;
+    }
     // The same for a sprite beside a model of its own layer: moved, it would
     // leave the depth sort it shares with the model's quads.
     for (unsigned other = 0; other < Sprite_DrawListCount; ++other) {
@@ -438,7 +511,7 @@ unsigned LayerFor(unsigned index, unsigned layer) {
         }
         if (!ListClear(next, 0, feet_box, whole_box, feet, kFloorOnly)) { g_why = "the first list: not floor"; return false; }
         if (!RecordsClear(next, cell_x, cell_z)) { g_why = "a cell record nearby"; return false; }
-        if (!RunsClear(next, whole_box)) { g_why = "what a cell record drew"; return false; }
+        if (!RunsClear(next, reach_box)) { g_why = "what a cell record drew"; return false; }
         if (!ListClear(next, 2, feet_box, whole_box, feet, kNothing)) { g_why = "a frame node"; return false; }
         return true;
     };
@@ -504,6 +577,7 @@ void Arm() {
     g_rise = EnvInt("BOF3X_LAYERING_RISE", g_rise, 0, 64);
     g_log = EnvInt("BOF3X_LAYERING_LOG", 0, 0, 1) != 0;
     g_run_boxes = EnvInt("BOF3X_LAYERING_RECORDS", 1, 0, 1) != 0;
+    g_sprite_boxes = EnvInt("BOF3X_LAYERING_SPRITEBOX", 1, 0, 1) != 0;
     if (g_mode == kFloor)
         bof3::Log("DIV-0071    on: a sprite is drawn up to %d layers later, over floor only (a lowest corner up to %d "
                   "above the feet is floor)", g_ahead, g_rise);
@@ -519,6 +593,9 @@ bool Defer() {
     g_runs_before = g_runs_now;
     g_runs_now = 0;
     if (++g_pass == 0) g_pass = 1;   // past 2^32 passes: never stamp 0
+    g_drawn_stamp[g_pass & 1] = g_pass;   // the sprites this pass draws (KeepDrawn)
+    g_drawn_n[g_pass & 1] = 0;
+    g_sprite_mark = nullptr;
     g_run = nullptr;
     g_in_run = false;
     if (Draw_OtSlot != 6 || !(Draw_PassFlags & 4) || Gfx_BufferIndex > 1) return false;
@@ -582,7 +659,14 @@ void Restore() {
     g_faerie_sides_n = 0;
 }
 
+void BeforeSprite() { g_sprite_mark = Gfx_PacketNext; }
+
 void AfterSprite(const unsigned char* sprite) {
+    // What it drew, for the next pass (DrawnBox): Sprite_Draw commits one
+    // 0x20-byte cell sprite, or nothing (culled, no frame, the pool full).
+    if (g_sprite_mark != nullptr && Gfx_PacketNext == g_sprite_mark + 0x20 && g_sprite_mark[7] == 0x84)
+        KeepDrawn(sprite, g_sprite_mark);
+    g_sprite_mark = nullptr;
     if (sprite != g_faerie || g_faerie == nullptr || g_faerie_sides_n == 0) return;
     // As DrawLayer_Close draws a second list: a draw mode (texture page
     // 0x95) into slot 6, then the primitives - here copies, each 0x48 bytes,
@@ -695,6 +779,14 @@ void SnapshotSave(bof3::SnapshotWriter& w) {
             w.Put(run.y[q]);
         }
     }
+    // The sprites' boxes this pass drew (DrawnBox), read the same way.
+    const unsigned g = g_pass & 1;
+    const std::uint32_t drawn = g_drawn_stamp[g] == g_pass ? g_drawn_n[g] : 0u;
+    w.Put(drawn);
+    for (unsigned i = 0; i < drawn; ++i) {
+        w.Put(g_drawn[g][i].at);
+        w.Put(g_drawn[g][i].box);
+    }
 }
 
 void SnapshotRestore(bof3::SnapshotReader& r) {
@@ -722,6 +814,18 @@ void SnapshotRestore(bof3::SnapshotReader& r) {
     g_run = nullptr;
     g_in_run = false;
     g_pending_n = 0;
+    const std::uint32_t drawn = r.Get<std::uint32_t>();
+    if (drawn > kDrawn) bof3::Fatal("layering: a quicksave with %u sprite boxes, more than the table's %u", drawn, kDrawn);
+    g_drawn_stamp[0] = g_drawn_stamp[1] = 0;
+    g_drawn_n[0] = g_drawn_n[1] = 0;
+    const unsigned g = g_pass & 1;
+    g_drawn_stamp[g] = g_pass;
+    g_drawn_n[g] = drawn;
+    for (std::uint32_t i = 0; i < drawn; ++i) {
+        g_drawn[g][i].at = r.Get<std::uint32_t>();
+        g_drawn[g][i].box = r.Get<Box>();
+    }
+    g_sprite_mark = nullptr;
 }
 
 }  // namespace layering
