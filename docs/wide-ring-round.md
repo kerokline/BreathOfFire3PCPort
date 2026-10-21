@@ -184,6 +184,14 @@ report means merge; a usage cut resumes with a message naming the next step.
    areas and tries the three real far-camera scenes (area 167's init, area
    19's camera-out, chapter 1's scene 3); a scene no crafted save reaches
    goes to the owner by name.
+10. **After the crafted-save sheets** (group CS; [`narrow-pillarbox.md`](narrow-pillarbox.md)
+    10): **only areas 31, 90 and 198 keep the bars** - the three with real
+    void past the frame; 149, 186, 98 and the camps (53, 153, 154, 192, 194)
+    render fine at the full width and are left unframed (group PX). Area
+    194's first-visit crash under a crafted save is tested against the
+    original and our switches "just in case" (group CR). **Area 19 needs
+    nothing more:** the owner knows its only far camera as the one quick pan,
+    and the zoom the recorded route already captures (`yraallRoad`).
 
 ## 7. Side groups, beside the round (added 2026-10-21)
 
