@@ -1,6 +1,6 @@
 # The narrow areas pillarboxed (wide-ring round, side group PB)
 
-**Status:** BUILT (2026-10-21), headless checks and two routes' captures;
+**Status:** BUILT (2026-10-21), measured headless live (self-tests, the state hash, two routes' captures);
 not seen by the owner. Branch `wide-ring/pb` off `31249d0c`. Group PB of
 [`wide-ring-round.md`](wide-ring-round.md) section 7. A DIV-0041 amendment,
 drafted in section 8 (the orchestrator numbers and folds it). Scripts and
@@ -180,7 +180,62 @@ ground). Three of the eleven are seen otherwise:
 
 ## 6. Checks
 
-(Filled from the runs; section 7 of the hand-back.)
+All from `C:\Users\kerok\bof3x-runs\r_ring\PB` (`chain.py`, `logs/`,
+`summary.txt`), the branch at `0e095c08`, a launcher copy with no ini, the
+machine shared with three other groups' games the whole time (so the noise
+pages of a loaded machine are expected, `state-hash.md` 4).
+
+- **Build:** `cmake --build build`, no diagnostic.
+- **Self-test** (`BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original BOF3X_SHADOW='*'`,
+  `--game bof3 --no-config`, the dev launcher): exit 0 at `BOF3X_WIDE` unset,
+  1 and 2; `inject: 10087 ours, 0 left original`; no non-zero `MISMATCH`
+  line; `pillarbox self-test: 45 rounds, 0 mismatches; the control refused on
+  5 rows` at each width. (A first try failed on the test, not the rule: a
+  block with offset 0 and every cell set writes cell (1, 0)'s word over the
+  header's offset. The test sets interior cells only now.)
+- **State hash, the ten `cn_` routes, narrow** (`chain_sh`'s conditions:
+  `BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the committed skip list, exe host),
+  against `cn_<route>_orig3` / `_orig3b`: the same pages as main's own
+  `cn_<route>_a1020` on caughFish, cutsceneAndNue, dragonTransform,
+  field_menu, menu_screens and worldMapAndAreaTransition (the ledgered
+  DIV-0092 and button-round pages); whelpBoss a subset of a1020's; combat
+  seven pages at tick 3 only, shop and masterAndManillo the sound page
+  `0x7DE000` besides - the loaded machine's noise class. The pillarbox is
+  inert narrow by construction (`Cover` returns before reading anything;
+  `Anchor(0)` is 0).
+- **Wide against narrow:** `Rand` (the `randlog` line a frame) **equal on
+  every frame of all ten routes at 16:9 and 21:9** (2,621 to 13,182
+  frames). The differing pages are the draw-state and display pages the
+  ultrawide round lists ([`ultrawide-census-3.md`](ultrawide-census-3.md) 0):
+  `0x66B000`, `0x6BE000`, `0x7E0000`, `0x903000`, `0x905000`, `0x929000`,
+  `0x92A000`, `0x937000..0x939000`, the VRAM shadow, the sound page.
+- **The pillarbox itself, off against on** (`BOF3X_PILLARBOX=0` / unset,
+  21:9, the two routes that enter a framed area): whelpBoss (area 31) differs
+  only on VRAM-shadow, sound and `0x937000` pages at a few isolated ticks
+  from tick 3, `Rand` equal on 13,182 frames; masterAndManillo (area 90) on
+  `0x7DE000` at scattered ticks and `0x6C3000` (`Gfx_TexCache`) from tick 324
+  - and that page differs from the same tick between *any* two of the
+  route's four runs (w0 / w1, w1 / w2, w0 / w2-off, w2-off / w1), so it is
+  run to run, not the bars. `Rand` equal on 5,520 frames.
+- **Where the bars switched** (the change log lines): whelpBoss at 21:9 on at
+  frame 1650 entering area 31, off at 1861 entering area 1;
+  masterAndManillo on at 259 entering 90, off at 321 entering 45 - every
+  switch in mode 1, the area entry, inside the transition's black. The shot
+  route's capture at its switch (whelp f01580, 21:9) is black whole.
+- **Captures** (point filter, scale 2, `shots/shot_a31_w0..2`,
+  `shot_a90_w0..2`):
+  - area 31 (the lift shaft): narrow, the shaft lies within x 50..270 of
+    320; at 16:9 and 21:9 the same picture between bars at 0 and 320 -
+    nothing of the shaft cut at its own camera (pitch +0x100), so **its class
+    holds at the camera its scenes set** (the brief's question; area 186
+    has the same map and camera);
+  - area 90 (the room): 16:9 unchanged; 21:9 framed at 426 - the room sits
+    inside the frame with black around it, nothing cut at the route's focus;
+  - area 90's menus (items and config, opened there at 21:9): framed at 426 -
+    section 9 question 1;
+  - the control, area 2 at 21:9 (whelp f01560): the full 560 picture.
+- **Band census** (`BOF3X_BANDLOG` on the two shot routes at 16:9 and 21:9):
+  no row in area 31 or 90 - no sprite drawn wholly in the bands there.
 
 ## 7. Not verified
 
@@ -218,7 +273,10 @@ ground). Three of the eleven are seen otherwise:
 > 31, 90 and 53 to every area narrower than the picture). *Verification:*
 > the rule's self-test (`BOF3X_SHADOW=pillarbox`: the widest row on test
 > blocks, the frame at 0, 53 and 120 columns; the control "the narrowest
-> picture that holds the area" refused); [section 6's results]. *Owed:* the
+> picture that holds the area" refused); `Rand` equal to narrow on every frame of the ten hash routes at 16:9 and
+> 21:9, no page changed by the bars (`BOF3X_PILLARBOX=0` against on, the two
+> routes that enter areas 31 and 90); captures of areas 31 and 90 at both
+> widths. *Owed:* the
 > owner's eye on the 426 class's cropped row tips, on area 194's close
 > camera and on a framed menu.
 
