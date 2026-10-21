@@ -24,6 +24,8 @@ block from offset 0, the live copy at 0x9039E0):
 | +0x24, +0x27, +0x28, +0x2C | 0x903A04.. | the area to enter: u16 area, u8 entry flags, s32 x, s32 z (16.16, a cell is 0x10000) | `GameMode_Start` -> `Field_ChangeArea` |
 | +0x70 | | u16 checksum: the byte sum of +0..+0x10AF with this word zeroed | the load menu ("file is damaged" when wrong) |
 | +0x5B0 + 8 c | `Cond_Flags` + 8 c | chapter c's flag row (`Chapter_FlagRow`), bit n at byte n >> 3, bit n & 7 | `Flags_Test` |
+| +0x30..+0x35 | 0x903A10 | a saved party (`Scena13_SaveParty7` writes it; `party='saved'` copies it to +0x682) | chapter 13's call table A |
+| +0x682..+0x687 | 0x904062 | the two party lists, three member ids each (0xFF none) | the load's joins, `Party_Join`, 0x534030 |
 | +0x650 | `Cond_Flags` + 0xA0 | the story flags the area inits test (`Area167_Init`'s 0x8F / 0x90) | `Flags_Test` |
 
 The rest of the first 16 bytes is zeroed (as `craft.py` of group SW and
@@ -43,6 +45,8 @@ BLOCK = 0x10B0
 SUM_AT = 0x70
 CHAPTER_ROWS = 0x5B0
 STORY = 0x650
+SAVED = 0x30    # 0x903A10: a saved party, two lists of three ids (Scena13_SaveParty7)
+PARTY = 0x682   # 0x904062 / 0x904065: the two party lists the load joins from
 
 # name: donor, chapter, state, run, step, area, entry flags, x, z, chapter flags
 # set / cleared, story flags set / cleared, counters; and why, with the code
@@ -76,10 +80,31 @@ CRAFTS = {
                       'Camera_Distance 0xF200 pulled back over 0x1E frames (Scena13_EnterArea). CRASHES '
                       'on this donor (a chapter-14 save rewound): the frame after Scena13_SaveParty7 '
                       "swaps the party, Sprite_DrawPass's sort reads past Sprite_DrawList "
-                      '(docs/narrow-pillarbox.md 10)'),
+                      '(docs/narrow-pillarbox.md 10). The craft, not the code: the donor\'s one-member party '
+                      'underflows Capcom\'s Leave; cs194e / cs194f restore it (docs/area194-entry.md)'),
     'cs194b': dict(donor='adult_ryu', chapter=13, state=2, run=0, step=0, area=0xC2, flags=1,
                    x=0x130000, z=0x190000, cset=[2, 3, 4],
                    why='area 194 after its first visit (chapter 13 flags 2..4 set): the field, no scene'),
+    # Group CR (docs/area194-entry.md): cs194 crashes because the donor's party is already the one
+    # Scena13_SaveParty7 leaves (one member); run again, its three Leave calls take Field_MemberCount
+    # below zero and Capcom's 0x534030 smears the member records over Sprite_DrawListCount. These
+    # restore the party from the donor's own record of that moment (+0x30, 0x903A10, written by the
+    # same function on the owner's real arrival) before the entry runs it again.
+    'cs194e': dict(donor='adult_ryu', chapter=13, state=2, run=2, step=1, area=0xC2, flags=1,
+                   x=0x130000, z=0x190000, cclr=[2, 3, 4], party='saved',
+                   why='cs194 with the party restored: the first visit, the close camera'),
+    'cs194f': dict(donor='adult_ryu', chapter=13, state=2, run=2, step=0, area=0x9B, flags=1,
+                   x=0x28000, z=0x308000, cclr=[2, 3, 4], party='saved',
+                   why="area 155 at the step-hook cell that starts run 2 (Scena13_StepHook: x 0x28000, z "
+                       "0x30..0x31, flag 2 clear), run 2 from step 0: the scenario's own "
+                       'Field_ChangeArea(0xC2, 0x130000, 0x190000, 1) takes the party in'),
+    'cs194g': dict(donor='ending17', chapter=13, state=2, run=2, step=0, area=0x9B, flags=1,
+                   x=0x28000, z=0x308000, cclr=[2, 3, 4],
+                   why='cs194f from the chapter-17 donor (its own three-member party, as found)'),
+    'cs194p': dict(donor='adult_ryu', chapter=13, state=2, run=2, step=1, area=0xC2, flags=0x81,
+                   x=0x3C8000, z=0xB0000, cclr=[2, 3, 4],
+                   why="cs194 (party NOT restored) at run 2's other entry position (step 2's "
+                       'Field_ChangeArea(0xC2, 0x3C8000, 0xB0000, 0x81)): the position test'),
     'cs198': dict(donor='adult_ryu', chapter=15, state=2, run=6, step=0, area=0xC6, flags=0x80,
                   x=0x160000, z=0x120000, cclr=[0x13, 0x14, 0x15, 0x16],
                   why="chapter 15 run 6 from step 0, as Scena15_Run5's step 0x24 leaves it in area 198"),
@@ -128,6 +153,12 @@ def make(name, out_dir, donor_dir):
         flag(b, STORY, n, True)
     for n in c.get('sclr', []):
         flag(b, STORY, n, False)
+    if c.get('party') == 'saved':
+        # The two party lists (0x904062, 0x904065) from the saved-party record (0x903A10..15),
+        # as Scena13_SaveParty7 wrote it; refused when the record is empty.
+        if all(x in (0, 0xFF) for x in b[SAVED:SAVED + 3]):
+            sys.exit(f"{src}: no saved party at +{SAVED:#x} to restore")
+        b[PARTY:PARTY + 6] = b[SAVED:SAVED + 6]
     struct.pack_into('<H', b, SUM_AT, checksum(b))
     os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, name + '.DAT')
