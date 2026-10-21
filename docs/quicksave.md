@@ -117,7 +117,11 @@ In the game directory, beside the saves; `X` = `0`..`F`. Little-endian.
 
 **The build id** is the tag, the DLL's hash, the host and the DLL's base. The
 hash of the 64 MB DLL is taken once, at the first F6 or F7, on the own
-stack.
+stack: that frame takes the time (not a worker thread - the hosted self-test
+asks for the build id under the loader lock, where a thread cannot start).
+A second F6 / F7 before the first has run replaces it, and the log says so.
+The temporary file is flushed to the disk before the rename that makes it the
+newest.
 
 **A load checks everything before writing a byte**, and a refusal names why
 in the overlay and the log, the game untouched: not a save file (under

@@ -288,7 +288,9 @@ HMODULE OurModule() {
 
 // The launcher's version block's tag and bof3x.dll's file hash
 // (docs/releases/README.md): the build whose code the task stacks' return
-// addresses name. Hashed once, on a worker (a 64 MB file); the host and the
+// addresses name. Hashed once, at the first F6 or F7, on the game's thread (a
+// 64 MB file: that frame takes the time; not a worker, since the hosted
+// self-test calls this under the loader lock, where a thread cannot start); the host and the
 // DLL's base complete it, since a quicksave is only good in a process whose
 // code sits where the stacks say.
 const BuildId& EnsureBuild() {
@@ -567,7 +569,10 @@ bool WriteAll(const std::wstring& path, const std::vector<unsigned char>& bytes,
         return false;
     }
     DWORD wrote = 0;
-    const BOOL ok = WriteFile(f, bytes.data(), static_cast<DWORD>(bytes.size()), &wrote, nullptr);
+    BOOL ok = WriteFile(f, bytes.data(), static_cast<DWORD>(bytes.size()), &wrote, nullptr);
+    // On the disk before the rename makes it the newest: a power cut after the
+    // rename must not leave a slot of zeros (the review of PR #95).
+    if (ok) ok = FlushFileBuffers(f);
     const DWORD error = GetLastError();
     CloseHandle(f);
     if (!ok || wrote != bytes.size()) {
@@ -1105,13 +1110,22 @@ void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn r
     Log("quicksave   participant '%s' registered", tag);
 }
 
+// One request waits for the next loop point; a second before it replaces the
+// first, and the log says so (two keys inside one message drain, ~16 ms).
+static void Replacing(const char* now) {
+    if (g_request == Request::None) return;
+    Log("quicksave   %s replaces a %s not yet run", now, g_request == Request::Take ? "quicksave (F6)" : "quick-load");
+}
+
 void Snapshot_RequestTake() {
+    Replacing("a quicksave (F6)");
     g_request_slot = kFirstSlot;
     g_request = Request::Take;
 }
 
 void Snapshot_RequestLoad(unsigned slot) {
     if (slot < kFirstSlot || slot > kLastSlot) Fatal("snapshot: a load asked of slot 0x%X, outside 0x10..0x1F", slot);
+    Replacing("a quick-load");
     g_request_slot = slot;
     g_request = Request::Load;
 }
