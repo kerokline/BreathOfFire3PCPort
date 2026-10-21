@@ -83,7 +83,7 @@ launcher, and the player reads that copy. Edit the repo's file: every build refr
   - A line whose first field is not a three-digit song number, or one of the 11 stream names
     (section 6), is skipped.
   - A stream's row shows its `box_title` where set, else the stream's name: its `name` is its
-    file's (`PURE.DAT`), which the entry shows anyway. `same-notes` does not apply to a stream.
+    file's name (`PURE`), which the entry shows anyway; the row's key must be that name. `same-notes` does not apply to a stream.
 - **Committing it is the owner's call of 2026-10-11.** The box's track titles are public, and the
   file holds only our mapping of titles to song numbers, no audio.
 - **Filled in by the owner on 2026-10-12.** The titles come from the collector's box, the *Breath of
@@ -92,9 +92,9 @@ launcher, and the player reads that copy. Edit the repo's file: every build refr
 
   | `source` | Meaning | Rows |
   |---|---|--:|
-  | `ossb` | the box's own track | 56 |
+  | `ossb` | the box's own track | 57 |
   | `game` | the faerie village's music menu, US disc (section 4.1); these rows carry box titles too | 40 |
-  | `kk` | the owner's name from listening, mostly sound effects | 31 |
+  | `kk` | the owner's name from listening, mostly sound effects | 30 |
   | `psf` | the zophar rip, unsourced (section 4.2) | 4 |
   | `same-notes` | hidden | 37 |
   | `file` | a stream's row: the name is its file's, no title yet (section 6.3) | 10 |
@@ -269,11 +269,14 @@ which scripts name which kind-0 id through op `0x89` was **not traced**.
 
 ### 6.3 Names
 
-The catalogue's stream rows are keyed by the stream's name (`PURE`), with `name` the file's
-(`PURE.DAT`), `source` `file`, and the box columns empty: **the titles are the owner's to fill
-in.** None is guessed. A title goes in `box_title`, as on any row: the Jukebox reads a stream
-row's `name` as its file's, never as a title. PURE has one, "Pure Again" (`source` `kk`); it
-first went into `name`, so the list still showed `PURE` until 2026-10-21 (the review of PR #92).
+The catalogue's stream rows are keyed by the stream's name (`PURE`), with `name` the same
+(`PURE`), `source` `file`, and the box columns empty: **the titles are the owner's to fill
+in.** None is guessed. The key must be the stream's file name: the Jukebox finds a stream row
+by it, and skips any other key that is not three digits (a `STREAM08` key is not read). The
+streams are listed in stream order whatever the rows' order. A title goes in `box_title`, as on
+any row: the Jukebox reads a stream row's `name` as its file's, never as a title. PURE has one,
+"Pure Again ~Staff Roll~" (`source` `ossb`, disc 7 track 24); it first went into `name`, so the
+list still showed `PURE` until 2026-10-21 (the review of PR #92).
 
 ### 6.4 Checks, 2026-10-18
 

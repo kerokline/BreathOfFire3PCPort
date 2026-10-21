@@ -106,7 +106,7 @@
 087	Interlude	6	18	Interlude	same-notes	same notes as 044
 088	Neverending Game	5	27	Neverending Game	same-notes	088, 125 and 148 share one tune
 089	Waves and Seagulls 1				kk	
-090	Dangerous Feeling	7	5	The Touch of Danger	game	056 with its channels moved
+090	Dangerous Feeling	7	5	The Touch of Danger	same-notes	056 with its channels moved
 091	Technology	6	4	Technology	game	faerie village music menu row 12
 092	Half Asleep	5	23	Half Asleep	same-notes	same notes as 001
 093	Waves and Seagulls 2				kk	
@@ -169,7 +169,7 @@
 150	Stairs - Ending	7	22	Stairs ~Ending~	ossb	psf "Ending"
 151	Do Your Best!	5	11	Do Your Best!	ossb	151 and 153 are one file, psf "Fight!"
 152	DONDEN	5	33	DONDEN	ossb	psf "Decisive Battle"
-153	Do Your Best!	5	11	Do Your Best!	ossb	151 and 153 are one file, psf "Fight!"
+153	Do Your Best!	5	11	Do Your Best!	same-notes	151 and 153 are one file, psf "Fight!"
 154	ODORO ~Ghost Battle~	6	9	ODORO ~Ghost Battle~	ossb	psf "Ghost Battle"
 155	Battle for Tomorrow	7	8	Battle for Tomorrow	ossb	psf "Everyday Battle"
 156	Dragon Asymmetry	7	16	Dragon Asymmetry	ossb	psf "Conflict of Dragons"
@@ -183,14 +183,14 @@
 164	Tail of a Shark	6	20	Tail of a Shark	same-notes	same notes as 099
 165	Victory Dance	5	11	Victory Dance 	ossb	psf "Victory!"
 166	Like a Loser (Alternate)	5	13	Like a Loser	kk	PC file only; no PSX song
-STREAM00	OYASUMI				file	stream 0, S_XA00.STR ch 0 from sector 0. The inn: Rest_LoadJingle 0x580560 (rest_2c.cpp:304), InnNight_Jingle 0x57FC40 (shop_states.cpp:421); FieldTail_HealAndMenu 0x56DB80 (field_e2.cpp:1206); Area150_Tail58 0x423760, Area191_Tail53 0x42B7F0, Area192_Tail54 0x42BE10, Area193_Tail57 (area_w3g/w4e/w4f); 19 scenario calls: Scena01 x4, Scena02 x4, Scena03_Scene6, Scena04_Scene1, Scena05_Run8, Scena06_Run05, Scena07_Scene3, Scena08_Scene7, Scena09 x3, Scena12_Run8, Scena13_Run2
-STREAM01	AKURYOU				file	stream 1, S_XA00.STR ch 0 from sector 126. Scena02_Scene11 0x540100 (scena_sc2.cpp:1498), the one constant caller
-STREAM02	ITEM02				file	stream 2, S_XA00.STR ch 0 from sector 288. Area113_TailReward 0x418960 (area_w2f.cpp:1289), Area135_Tail18 0x41E630 (area_w3d.cpp:578), Scena03_Object5 0x544AF0, Scena06_Run10 0x54CC80, Scena06_Run15, Scena09_Run15, Scena10_Run3, Scena11_Scene6, Scena14_Run5, Scena14_Run7
-STREAM03	NAKAMA03				file	stream 3, S_XA00.STR ch 0 from sector 360. Scena03_Scene3 x2 (scena_sc3.cpp:464, 510), Scena04_Scene1 (scena_sc3.cpp:1825), Scena08_Scene11 (scena_sc7.cpp:2540), Scena09_Run2 0x554300, Scena09_Run3
-STREAM04	MIMI02				file	stream 4, S_XA00.STR ch 0 from sector 435. Scena04_Scene1 (scena_sc3.cpp:1683), the one constant caller
-STREAM05	WIN				file	stream 5, S_XA00.STR ch 0 from sector 563. Scena11_Scene5 (scena_sc11.cpp:744), Scena13_Run5 (scena_sc13.cpp:814)
-STREAM06	SIPPAI02				file	stream 6, S_XA00.STR ch 0 from sector 642. Area75_TailPresses (area_w1f.cpp:771), Scena11_Scene5 (scena_sc11.cpp:714), Scena11_Scene6 (scena_sc11.cpp:905)
-STREAM07	GAAN02				file	stream 7, S_XA00.STR ch 0 from sector 718. Scena11_Scene6 (scena_sc11.cpp:896), the one constant caller
-STREAM08	Pure Again ~Staff Roll~	7	24	Pure Again ~Staff Roll~	ossb	stream 8, S_XA00.STR ch 1, about 269 s. The staff roll: Scena17_Roll0 0x56C6D0 (scena_sc15.cpp:2055), Scena17_Roll1 waiting on Sound_StreamDone; also CommuTail60_Stream 0x457590 (rest_4b.cpp:468) when the byte 0x939A3C is 0
-STREAM09	DRAGON				file	stream 9, S_XA00.STR ch 2. FieldTail_FlagMessage 0x56DE50 (field_e2.cpp:1321), the one constant caller
-STREAM10	KARA				file	stream 10, S_XA00.STR ch 3. No constant caller; CommuTail60_Stream 0x457590 (rest_4b.cpp:468) loads it when the byte 0x939A3C is non-zero (else PURE). Event op 0x89 (move_groups.cpp) takes any id from script bytes: not traced
+OYASUMI	OYASUMI				file	stream 0, S_XA00.STR ch 0 from sector 0. The inn: Rest_LoadJingle 0x580560 (rest_2c.cpp:304), InnNight_Jingle 0x57FC40 (shop_states.cpp:421); FieldTail_HealAndMenu 0x56DB80 (field_e2.cpp:1206); Area150_Tail58 0x423760, Area191_Tail53 0x42B7F0, Area192_Tail54 0x42BE10, Area193_Tail57 (area_w3g/w4e/w4f); 19 scenario calls: Scena01 x4, Scena02 x4, Scena03_Scene6, Scena04_Scene1, Scena05_Run8, Scena06_Run05, Scena07_Scene3, Scena08_Scene7, Scena09 x3, Scena12_Run8, Scena13_Run2
+AKURYOU	AKURYOU				file	stream 1, S_XA00.STR ch 0 from sector 126. Scena02_Scene11 0x540100 (scena_sc2.cpp:1498), the one constant caller
+ITEM01	ITEM01				file	stream 2, S_XA00.STR ch 0 from sector 288. Area113_TailReward 0x418960 (area_w2f.cpp:1289), Area135_Tail18 0x41E630 (area_w3d.cpp:578), Scena03_Object5 0x544AF0, Scena06_Run10 0x54CC80, Scena06_Run15, Scena09_Run15, Scena10_Run3, Scena11_Scene6, Scena14_Run5, Scena14_Run7
+NAKAMA02	NAKAMA02				file	stream 3, S_XA00.STR ch 0 from sector 360. Scena03_Scene3 x2 (scena_sc3.cpp:464, 510), Scena04_Scene1 (scena_sc3.cpp:1825), Scena08_Scene11 (scena_sc7.cpp:2540), Scena09_Run2 0x554300, Scena09_Run3
+MIMI01	MIMI01				file	stream 4, S_XA00.STR ch 0 from sector 435. Scena04_Scene1 (scena_sc3.cpp:1683), the one constant caller
+WIN	WIN				file	stream 5, S_XA00.STR ch 0 from sector 563. Scena11_Scene5 (scena_sc11.cpp:744), Scena13_Run5 (scena_sc13.cpp:814)
+SIPPAI01	SIPPAI01				file	stream 6, S_XA00.STR ch 0 from sector 642. Area75_TailPresses (area_w1f.cpp:771), Scena11_Scene5 (scena_sc11.cpp:714), Scena11_Scene6 (scena_sc11.cpp:905)
+GAAN01	GAAN01				file	stream 7, S_XA00.STR ch 0 from sector 718. Scena11_Scene6 (scena_sc11.cpp:896), the one constant caller
+PURE	PURE	7	24	Pure Again ~Staff Roll~	ossb	stream 8, S_XA00.STR ch 1, about 269 s. The staff roll: Scena17_Roll0 0x56C6D0 (scena_sc15.cpp:2055), Scena17_Roll1 waiting on Sound_StreamDone; also CommuTail60_Stream 0x457590 (rest_4b.cpp:468) when the byte 0x939A3C is 0
+DRAGON	DRAGON				file	stream 9, S_XA00.STR ch 2. FieldTail_FlagMessage 0x56DE50 (field_e2.cpp:1321), the one constant caller
+KARA	KARA				file	stream 10, S_XA00.STR ch 3. No constant caller; CommuTail60_Stream 0x457590 (rest_4b.cpp:468) loads it when the byte 0x939A3C is non-zero (else PURE). Event op 0x89 (move_groups.cpp) takes any id from script bytes: not traced
