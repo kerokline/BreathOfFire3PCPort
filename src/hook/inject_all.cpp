@@ -4,6 +4,7 @@
 #include "render/gfx_snapshot.h"
 
 #include "game/band_census.h"
+#include "game/pillarbox.h"
 #include "hook/gapwatch.h"
 #include "game/wide_staging.h"
 #include "game/wide_rand.h"
@@ -1466,6 +1467,8 @@ void InjectAll() {
         GapWatch_SelfTest();       // itself arms in Engine_Main, after InputScript_Start
     band_census::Inject();      // BOF3X_BANDLOG, an instrument (docs/band-census.md): armed after every module's self-test,
                                 // whose stand-in sprites Sprite_UpdateScreen must not hand it; reads Widescreen_Live
+    pillarbox::Inject();        // DIV-0041 (PB, docs/narrow-pillarbox.md): the narrow areas' bars, drawn at the present - after
+                                // Widescreen_ArmFills, before which they draw nothing; the rule's self-test (BOF3X_SHADOW=pillarbox)
     d3d_lines::Arm();           // DIV-0079: the six LINE handlers draw quads of the scale's width (BOF3X_LINES) - after
                                 // every module's self-test, which all compared the original's line strip (d3d_lines.h)
     map_layers::ArmSideDup();   // DIV-0085: a side face gained at run time takes the cell's one side word (BOF3X_SIDE_DUP;

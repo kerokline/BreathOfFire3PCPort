@@ -160,6 +160,14 @@ void SetClearColor(U argb);
 Frame& CurrentFrame();
 void ResetFrame();
 
+// DIV-0041 (the narrow areas pillarboxed, game/pillarbox.h): an opaque,
+// untextured rectangle [x0, x1) x [y0, y1) appended to the frame being
+// recorded, in the draws' own coordinates (target pixels from the 320-wide
+// view's left edge - game x times D3d_ScaleX - the band's columns negative).
+// Called from the present, after the frame hash, so BOF3X_FRAMEHASH hashes
+// the game's frame as the game drew it.
+void AppendFill(float x0, float y0, float x1, float y1, U argb);
+
 // Called by the present path: Flip or Blt on the primary. Set by
 // render_d3d11.cpp at start-up. Receives the frame; must not keep pointers
 // into it past its return.

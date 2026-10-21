@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/pillarbox.h"
 #include "hook/log.h"
 #include "render/fb_grab.h"
 
@@ -423,6 +424,7 @@ void LogFrameHash() {
 
 void Present() {
     if (FrameHashOn()) LogFrameHash();
+    pillarbox::Cover();   // DIV-0041 (PB, docs/narrow-pillarbox.md): a narrow area's bars, over the frame, after its hash
     if (g_present) g_present(g_frame);
     ResetFrame();
     ReleaseDeferred();
@@ -1154,6 +1156,18 @@ void ResetFrame() {
 }
 
 void SetPresentHook(PresentFn fn) { g_present = fn; }
+
+void AppendFill(float x0, float y0, float x1, float y1, U argb) {
+    Vertex* v = AppendVertices(6);
+    const float xs[6] = {x0, x1, x0, x1, x1, x0}, ys[6] = {y0, y0, y1, y0, y1, y1};
+    for (U i = 0; i < 6; ++i) v[i] = Vertex{xs[i], ys[i], 0.0f, 1.0f, argb, 0, 0.0f, 0.0f};
+    Command c = {};
+    c.kind = Cmd::kDraw;
+    c.state.topology = 0;   // a triangle list; no texture, no blend, no test
+    c.first = static_cast<U>(v - g_frame.vertices);
+    c.count = 6;
+    AppendCommand(c);
+}
 
 void InitShim(U max_vertices, U max_commands, U arena_bytes) {
     BuildTables();

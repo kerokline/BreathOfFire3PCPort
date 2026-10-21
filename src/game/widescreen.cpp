@@ -31,6 +31,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/pillarbox.h"   // PB (docs/narrow-pillarbox.md): Widescreen_Anchor's one call
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -53,7 +54,7 @@ bool Widescreen_FillsArmed() { return g_fills_armed; }
 float Widescreen_FillX() { return 0.0f - static_cast<float>(Widescreen_Fill()); }
 float Widescreen_FillWidth() { return 320.0f + 2.0f * static_cast<float>(Widescreen_Fill()); }
 float Widescreen_FillRight(float edge) { return edge + static_cast<float>(Widescreen_Fill()); }
-int Widescreen_Anchor() { return static_cast<int>(Widescreen_Fill()); }
+int Widescreen_Anchor() { return static_cast<int>(pillarbox::Anchor(Widescreen_Fill())); }   // PB: to a framed picture's edge
 void Widescreen_BattleTile(unsigned size, int& x, int& w) {
     if (size != kWidescreenFullFrameTile) return;
     const int c = static_cast<int>(Widescreen_Fill());

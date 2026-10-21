@@ -165,6 +165,7 @@ add_library(bof3x SHARED
   src/game/object_kinds.cpp
   src/game/sprite_screen.cpp
   src/game/band_census.cpp
+  src/game/pillarbox.cpp
   src/game/wide_staging.cpp
   src/game/wide_rand.cpp
   src/game/field_frame.cpp
