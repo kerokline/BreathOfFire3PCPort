@@ -7,6 +7,7 @@
 #include "hook/gapwatch.h"
 #include "game/wide_staging.h"
 #include "game/wide_rand.h"
+#include "game/map_rim.h"
 #include "game/config_text.h"
 #include "game/rdata_consts.h"
 #include "game/dat_cache.h"
@@ -1470,6 +1471,9 @@ void InjectAll() {
                                 // every module's self-test, which all compared the original's line strip (d3d_lines.h)
     map_layers::ArmSideDup();   // DIV-0085: a side face gained at run time takes the cell's one side word (BOF3X_SIDE_DUP;
                                 // known-defects.md D239) - after every module's self-test, which all compared Capcom's read
+    map_rim::Arm();             // DIV-0041 (wide-ring, docs/wide-ring.md): the grown view ring's rim, and
+                                // BOF3X_SHADOW=map_rim's model test - after every module's self-test, which all ran
+                                // Capcom's 28 x 56 alone; before DrawPool_Grow and GfxSnapshot_Inject
     music_loops::Arm();         // the measured music loops (BOF3X_MUSIC_LOOPS; docs/bgm-comparison.md section 12) -
                                 // after every module's self-test, which all compared the original's rewind
     dat_cache::Arm();           // DIV-0089: DAT\ and SND\ from the cache where it has them (BOF3X_CACHE,

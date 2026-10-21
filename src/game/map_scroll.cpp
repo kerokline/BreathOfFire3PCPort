@@ -1,6 +1,7 @@
 #include "game/map_scroll.h"
 
 #include "game/draw_pool.h"
+#include "game/map_rim.h"
 
 #include <cstdint>
 #include <cstring>
@@ -93,6 +94,8 @@ extern "C" void __cdecl MapView_ShiftColumnPrev(void) {
         MapView_Column = static_cast<short>(MapView_Column - 1);
         OriginStep(-1, 1);
     }
+    // DIV-0041 (wide-ring): the rim follows, on the new origin (map_rim.h).
+    if (map_rim::Active()) map_rim::RimShift(map_rim::Shift::kColumnPrev);
 }
 
 // original 0x56EA30: the view one map cell on along x (PSX FUN_80153858).
@@ -112,6 +115,7 @@ extern "C" void __cdecl MapView_ShiftColumnNext(void) {
     }
     OriginStep(1, -1);
     MapView_Column = static_cast<short>(column);
+    if (map_rim::Active()) map_rim::RimShift(map_rim::Shift::kColumnNext);   // DIV-0041 (wide-ring)
 }
 
 // original 0x56EAB0: the view one map cell back along x and y - two ring rows
@@ -134,6 +138,7 @@ extern "C" void __cdecl MapView_ShiftRowsPrev(void) {
         else MapView_Row = static_cast<short>(MapView_Row - 1);
     }
     OriginStep(-1, -1);
+    if (map_rim::Active()) map_rim::RimShift(map_rim::Shift::kRowsPrev);   // DIV-0041 (wide-ring)
 }
 
 // original 0x56EB50: the view one map cell on along x and y - two ring rows
@@ -158,6 +163,7 @@ extern "C" void __cdecl MapView_ShiftRowsNext(void) {
         MapView_Row = static_cast<short>(head);
     }
     OriginStep(1, 1);
+    if (map_rim::Active()) map_rim::RimShift(map_rim::Shift::kRowsNext);   // DIV-0041 (wide-ring)
 }
 
 // original 0x571FF0: the area's cell runs placed in the view (PSX
@@ -191,6 +197,8 @@ extern "C" void __cdecl MapView_PlaceRuns(void) {
         }
         run += (Dword(run) >> 16) * 4u;
     }
+    // DIV-0041 (wide-ring): the runs that fall in the grown ring's rim.
+    if (map_rim::Active()) map_rim::RimRuns();
 }
 
 // original 0x56F670: the view set up for an area (PSX func_0x801548A4) -
@@ -273,6 +281,8 @@ extern "C" void __cdecl Field_ViewReset(void) {
             g.cell_to_map(row, column, cell);
         }
     }
+    // DIV-0041 (wide-ring): the rim filled, no items (the pool is reset next).
+    if (map_rim::Active()) map_rim::RimFill(false);
     for (unsigned i = 0; i < draw_pool::Count(); ++i) draw_pool::Free()[i] = static_cast<unsigned short>(i);   // DIV-0062: the pool's size
     DrawItemPool_Top = 1;
     MapView_Column = 0x1B;

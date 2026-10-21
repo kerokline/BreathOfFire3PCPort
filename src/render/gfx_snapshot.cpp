@@ -12,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/layering.h"
 #include "game/map_layers.h"
+#include "game/map_rim.h"
 #include "game/wide_rand.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -38,7 +39,7 @@ U Long(U address) {
 }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, 4); }
 
-constexpr U kVersion = 1;
+constexpr U kVersion = 2;   // 2: the grown view ring's rim (DIV-0041, wide-ring)
 
 // --- the display words the live process keeps ----------------------------------
 // The snapshot core keeps Gfx_WindowRect .. 0x6BEA00, Gfx_ClutRows' table,
@@ -194,11 +195,12 @@ void Save(bof3::SnapshotWriter& w) {
     w.Put(static_cast<U>(sizeof pipe));
     w.Put(pipe);
     w.Put(render::ClearColor());
-    // Ours: DIV-0071, DIV-0085, DIV-0041's two.
+    // Ours: DIV-0071, DIV-0085, DIV-0041's three.
     layering::SnapshotSave(w);
     map_layers::QuickSaveSides(w);
     Widescreen_QuickSave(w);
     wide_rand::QuickSave(w);
+    map_rim::QuickSave(w);
 }
 
 struct Tally {
@@ -293,6 +295,7 @@ void Restore(bof3::SnapshotReader& r) {
     map_layers::QuickRestoreSides(r);
     Widescreen_QuickRestore(r);
     wide_rand::QuickRestore(r);
+    map_rim::QuickRestore(r);
     Log("quicksave   GFX: %u palette rows put back (%u blocks made, %u freed), %u glyph textures built again, page and cell "
         "caches emptied, %u live objects released after the next present; pipe state, grabs forgotten, DIV-0071 / 0085 / "
         "0041 state as at the take",
