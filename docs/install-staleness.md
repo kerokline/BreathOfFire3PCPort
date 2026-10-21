@@ -56,9 +56,15 @@ cache with no measured records - any cache built before this change, which has
 The launcher (`launcher.cpp`, `sources_dialog.cpp` `SourcesCheckStale`) runs it
 before the settings, only for the install the Sources page made (the home's
 `game\` and `cache\`, no other cache named, no self-test or `--no-config`). A
-fresh answer is remembered in `build-keys\checked.txt` by the launcher's and the
-importer's sizes and write times, so an unchanged release asks nothing at the
-next start. Stale: a message box names the pieces; yes opens the Sources page,
+fresh answer is remembered in `stale-checked.txt` (the cache's root) by the
+launcher's and the importer's sizes and write times, so an unchanged release
+asks nothing at the next start. Until 2026-10-21 it was `build-keys\checked.txt`,
+and `stale()` took any `.txt` there for an old release's key: after the first
+fresh answer, every later release judged the whole install stale (the review
+of PR #81). The stamp moved out, and `stale()` ignores that name. Paths among
+a step's globals (`ROOT`, `RECIPE`, ...) are digested relative to the release
+since the same day, so a moved install no longer reads as changed; records
+written before it read as changed once. Stale: a message box names the pieces; yes opens the Sources page,
 which builds at once (`SourcesDialogRun`'s `rebuild`) and starts the game when
 done; no starts nothing. A check that cannot run is logged and the game starts.
 

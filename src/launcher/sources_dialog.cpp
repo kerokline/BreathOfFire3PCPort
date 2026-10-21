@@ -769,7 +769,7 @@ StaleCheck SourcesCheckStale() {
     const Runtime rt = FindRuntime();
     const std::wstring home = HomeDir(), cache = HomeCacheDefault();
     if (!rt.error.empty() || home.empty() || cache.empty()) return check;   // nothing to judge, or nothing to judge it by
-    const std::wstring stamp = StaleStamp(rt), remembered = cache + L"\\build-keys\\checked.txt";
+    const std::wstring stamp = StaleStamp(rt), remembered = cache + L"\\stale-checked.txt";
     if (!stamp.empty() && ReadSmall(remembered) == stamp) return check;    // judged fresh by this launcher and importer
     std::string out;
     DWORD code = 1;
