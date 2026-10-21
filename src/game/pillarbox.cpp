@@ -1,5 +1,6 @@
 // The narrow areas pillarboxed (DIV-0041, side group PB of the wide-ring
-// round; docs/narrow-pillarbox.md). See pillarbox.h.
+// round, cut to the owner's three areas by group PX; docs/narrow-pillarbox.md).
+// See pillarbox.h.
 #include "game/pillarbox.h"
 
 #include <windows.h>
@@ -61,9 +62,14 @@ unsigned WidestNow(unsigned area) {
         g_measured.off = U16(h + 2);
         g_measured.widest = WidestRow(h, HeaderBytes());
         const unsigned c = Widescreen_Live();
-        bof3::Log("pillarbox   area %u: map %u x %u, widest row %u ring columns (%u px): framed at %u columns a side of %u",
+        // A listed area is listed for its void (the owner's look at the sheets);
+        // one that measures as wide as the widest picture would get no bars at
+        // all - the list and the data disagree, so say so.
+        const bool no_void = FrameColumns(g_measured.widest) >= widescreen_rule::ColumnsForAspect(21, 9);
+        bof3::Log("pillarbox   area %u: map %u x %u, widest row %u ring columns (%u px): framed at %u columns a side of %u%s",
                   area, g_measured.w, g_measured.h, g_measured.widest, g_measured.widest * kRingColumnPx,
-                  Framed(g_measured.widest, c), c);
+                  Framed(g_measured.widest, c), c,
+                  no_void ? " - LISTED, but as wide as the 21:9 picture: no bars (list and data disagree)" : "");
     }
     return g_measured.widest;
 }
@@ -141,7 +147,7 @@ void SelfTest() {
         expect(Block(w, 40, 0, [](unsigned x, unsigned y) { return x + y == 25 && x >= 2 && x <= 22; }, buf, size, limit), 7,
                "a diagonal cut by the readable bytes");
     }
-    // The rule, at the three pictures.
+    // The width rule, at the three pictures.
     struct Row {
         unsigned widest, at0, at53, at120;
     };
@@ -153,21 +159,51 @@ void SelfTest() {
         expect(Framed(r.widest, 53), r.at53, "framed at 16:9");
         expect(Framed(r.widest, 120), r.at120, "framed at 21:9");
     }
-    // Negative control: "the narrowest picture that holds the area" frames area
-    // 53's 15 columns at 560, which the brief's class list refuses.
-    unsigned refused = 0;
+    // The list: exactly 31, 90 and 198 of every area word (0xFFFF, no area, too).
+    {
+        unsigned listed = 0;
+        for (unsigned a = 0; a <= 0xFFFF; ++a)
+            if (Listed(a)) {
+                ++listed;
+                Check(a == 31 || a == 90 || a == 198, "an area listed", a, 0);
+            }
+        expect(listed, 3, "areas listed");
+    }
+    // The rule by area, at section 1's measurements: the three listed areas
+    // framed at their measured class; the eight taken out on the owner's look
+    // at the sheets (2026-10-21) and an ordinary area (2, 30 columns) unframed.
+    struct AreaRow {
+        unsigned area, widest, at0, at53, at120;
+    };
+    const AreaRow areas[] = {{31, 8, 0, 0, 0},       {198, 5, 0, 0, 0},      {90, 15, 0, 53, 53},    {186, 8, 0, 53, 120},
+                             {149, 7, 0, 53, 120},   {98, 16, 0, 53, 120},   {53, 15, 0, 53, 120},   {153, 15, 0, 53, 120},
+                             {154, 15, 0, 53, 120},  {192, 15, 0, 53, 120},  {194, 15, 0, 53, 120},  {2, 30, 0, 53, 120}};
+    for (const AreaRow& r : areas) {
+        expect(Visible(r.area, r.widest, 0), r.at0, "visible, narrow");
+        expect(Visible(r.area, r.widest, 53), r.at53, "visible at 16:9");
+        expect(Visible(r.area, r.widest, 120), r.at120, "visible at 21:9");
+    }
+    // Negative controls; each must disagree with the area rows somewhere.
+    // PB's rule (every area by its measurement, no list) frames the eight
+    // taken out; "the narrowest picture that holds the area" frames 90's 15
+    // columns at 560.
+    unsigned refused = 0, refused_holds = 0;
     {
         auto holds = [](unsigned widest, unsigned c) {
             const unsigned px = widest * kRingColumnPx;
             const unsigned f = px <= 320u ? 0u : px <= 426u ? 53u : 120u;
             return f < c ? f : c;
         };
-        for (const Row& r : rule)
-            if (holds(r.widest, 120) != r.at120) ++refused;
+        for (const AreaRow& r : areas) {
+            if (Framed(r.widest, 53) != r.at53 || Framed(r.widest, 120) != r.at120) ++refused;
+            if ((Listed(r.area) ? holds(r.widest, 120) : 120u) != r.at120) ++refused_holds;
+        }
     }
-    if (refused == 0) bof3::Fatal("pillarbox self-test: the control (the narrowest picture that holds) was not refused");
+    if (refused == 0) bof3::Fatal("pillarbox self-test: the control (every area by its measurement) was not refused");
+    if (refused_holds == 0) bof3::Fatal("pillarbox self-test: the control (the narrowest picture that holds) was not refused");
     if (g_bad) bof3::Fatal("pillarbox self-test: %u mismatches in %u rounds", g_bad, rounds);
-    bof3::Log("shadow      pillarbox self-test: %u rounds, 0 mismatches; the control refused on %u rows", rounds, refused);
+    bof3::Log("shadow      pillarbox self-test: %u rounds, 0 mismatches; the controls refused on %u rows (no list) and %u (holds)",
+              rounds, refused, refused_holds);
 }
 
 }  // namespace
@@ -200,8 +236,8 @@ unsigned VisibleColumns() {
     const unsigned c = Widescreen_Live();
     if (!g_on || c == 0 || !Widescreen_FillsArmed() || !g_trusted) return c;
     const unsigned area = Game_AreaNumber;
-    if (area == kNoArea || Game_Mode == kBattleMode) return c;
-    return Framed(WidestNow(area), c);
+    if (area == kNoArea || Game_Mode == kBattleMode || !Listed(area)) return c;
+    return Visible(area, WidestNow(area), c);
 }
 
 unsigned Anchor(unsigned fill) {
@@ -239,7 +275,7 @@ void Inject() {
     g_on = !(n == 1 && text[0] == '0');
     g_trusted = false;
     g_epoch_area = Game_AreaNumber;
-    bof3::Log("pillarbox   DIV-0041 (PB): the narrow areas framed %s; %u columns a side",
+    bof3::Log("pillarbox   DIV-0041 (PB, PX): areas 31, 90 and 198 framed %s; %u columns a side",
               g_on ? "on" : "off (BOF3X_PILLARBOX=0)", Widescreen_Live());
 }
 

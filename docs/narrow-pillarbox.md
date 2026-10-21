@@ -1,25 +1,31 @@
 # The narrow areas pillarboxed (wide-ring round, side group PB)
 
 **Status:** BUILT (2026-10-21), measured headless live (self-tests, the state hash, two routes' captures);
-not seen by the owner. Branch `wide-ring/pb` off `31249d0c`. Group PB of
+**cut to three areas on the owner's look at the crafted-save sheets** (group
+PX, 2026-10-21, section 11; branch `wide-ring/px` off `wide-ring/round`
+`4b07b9a8`); the three-area build not seen by the owner. Branch `wide-ring/pb` off `31249d0c`. Group PB of
 [`wide-ring-round.md`](wide-ring-round.md) section 7. A DIV-0041 amendment,
 drafted in section 8 (the orchestrator numbers and folds it). Scripts and
 runs: `C:\Users\kerok\bof3x-runs\r_ring\PB` (`tools/map_extent.py`,
-`chain.py`, `logs/`, `shots/`, `sh/`).
+`chain.py`, `logs/`, `shots/`, `sh/`); PX's in `C:\Users\kerok\bof3x-runs\r_ring\PX`.
 
 ## 0. The answer
 
-- In the wide modes an area whose map is narrower than the picture is now
-  **framed as a narrower picture**: black bars drawn by us over the bands,
-  the picture inside them one of the port's three widths. **Areas 31, 149,
-  186 and 198 are framed at 320** at 16:9 and 21:9; **53, 90, 98, 153, 154,
-  192 and 194 at 426** at 21:9 and unchanged at 16:9. Every other area, and
-  4:3, is unchanged.
-- **The class is measured, not listed.** The width comes from the area's map
+- In the wide modes **areas 31, 90 and 198 are framed as a narrower
+  picture**: black bars drawn by us over the bands, the picture inside them
+  one of the port's three widths. **31 and 198 are framed at 320** at 16:9
+  and 21:9; **90 at 426** at 21:9 and unchanged at 16:9. Every other area,
+  and 4:3, is unchanged. *(As PB built it, every area narrower than the
+  picture was framed - eleven; the owner took eight out on the crafted-save
+  sheets, section 10, because at their own cameras they show scenery past
+  the frame, not void. Section 11.)*
+- **Which areas is listed; the class is measured.** The three are the
+  owner's choice (2026-10-21), named in the code as such (`Listed`), not a
+  Capcom table. The width each is framed at comes from the area's map
   block as the game loaded it (`AreaMap_Header`), by the same metric as
   [`ultrawide-culls.md`](ultrawide-culls.md) 5, at area entry. Re-derived
-  offline over all 200 `AREA*.DAT` (section 1): the same eleven areas, the
-  same two classes, no area between 10.0 and 13.4 columns.
+  offline over all 200 `AREA*.DAT` (section 1): eleven areas narrower than
+  the picture, two classes, no area between 10.0 and 13.4 columns.
 - **Draw-only.** The bars are appended to the frame at the present, after the
   frame hash; nothing the game reads changes except one thing on purpose:
   `Widescreen_Anchor` (the side message boxes, the area HUDs) anchors to the
@@ -62,7 +68,26 @@ No area has a widest row of 11 to 13 columns, so nothing is framed at 320 at
 
 ## 2. The rule
 
-`pillarbox.h:40` `FrameColumns`, `:47` `Framed`. One ring column is 32
+**Which areas (group PX, 2026-10-21): 31, 90 and 198** - `pillarbox.h:57`
+`Listed`, `:61` `Visible` (a listed area by the width rule below, any other
+area at the full picture), read in `pillarbox.cpp:239..240`. The owner's
+decision in chat on 2026-10-21, after the crafted-save sheets of section 10:
+*only the areas with real void past the frame keep the bars - 31, 90 and
+198; every other area renders fine without it.* So 149, 186, 98 and the
+camps (53, 153, 154, 192, 194) are not framed: at their own cameras they
+draw sky, wall, floor and the clearing's rim past the frame (section 10's
+table). This is a choice of ours, not a value of Capcom's; the list is three
+area numbers and nothing else.
+
+**The width a listed area is framed at** is still measured, not listed: it
+is what gives 90 a different frame at 16:9 (none - 426 is the picture) and
+21:9 (426) without a table of widths. Each listed area's measurement is
+logged at its entry (`pillarbox.cpp:56` `WidestNow`); one that measured as
+wide as the 21:9 picture - no void to frame, the list and the data
+disagreeing - says so on that line (`LISTED, but as wide as the 21:9
+picture`). An unlisted area is not measured at all.
+
+`pillarbox.h:43` `FrameColumns`, `:50` `Framed`. One ring column is 32
 screen px at the field camera (the 320 view's widest row is 10.0 columns,
 `ultrawide-culls.md` 5). The area's width is `widest x 32`. The frame is the
 widest of the three pictures (320, 426, 560 - each by
@@ -75,13 +100,19 @@ The brief said "the narrowest preset that holds the area (320 or 426)". That
 rule frames 53's class (480 px) at 560 at 21:9, which contradicts the brief's
 own list and the owner's widening. The rule above gives both of the brief's
 lists. It means **the 426 class loses the tips of its widest rows**: at
-480 px, about 27 px a side where a row that wide is on screen. The self-test
-keeps "holds" as its negative control (refused on 5 of 12 rows).
+480 px, about 27 px a side where a row that wide is on screen (of the class,
+only 90 is still framed). The self-test (`pillarbox.cpp:113` `SelfTest`)
+checks the width rule on 12 widths, the list over every area word (exactly
+31, 90 and 198), and the rule by area on 12 rows (the three listed, the
+eight taken out, and area 2); it keeps two negative controls that must each
+be refused: PB's rule with no list (every area by its measurement - refused
+on the eight taken out) and "holds" (refused on 90).
 
 ## 3. When the bars show
 
-`pillarbox.cpp:199` `VisibleColumns`, `:213` `Cover`:
+`pillarbox.cpp:235` `VisibleColumns`, `:249` `Cover`:
 
+- the area is one of the three listed (section 2);
 - the view is wide and `Widescreen_ArmFills` has run (every self-test
   compares the original's picture);
 - `BOF3X_PILLARBOX` is not `0` (the switch; default on);
@@ -89,7 +120,7 @@ keeps "holds" as its negative control (refused on 5 of 12 rows).
   the area. Every other mode in a framed area is framed: the field (2), its
   scripted frame (4), the area entry (1), the look (6, 11), the shop (7), the
   menus (3, 9, 10). The menu is the question in section 9;
-- `Game_AreaNumber` is believed (`:71` `UpdateTrust`): task slot 0 is the
+- `Game_AreaNumber` is believed (`:77` `UpdateTrust`): task slot 0 is the
   field task's and the title menu's (`TitleTask_Run` `0x588E70`), and the title
   menu runs with the area word as the demo left it - Start pressed in the
   demo inside area 31 would have framed the title menu. So the word counts
@@ -118,14 +149,14 @@ render target, so the recipe shots (`BOF3X_SHOT_DIR`) and F11 have them.
 ## 4. The anchors follow the frame
 
 `Widescreen_Anchor` (`widescreen.cpp:57`, the one call in SW's file) is now
-`pillarbox::Anchor(Widescreen_Fill())` (`pillarbox.cpp:207`): the fill
+`pillarbox::Anchor(Widescreen_Fill())` (`pillarbox.cpp:243`): the fill
 columns, or the visible columns when fewer. Its users
 (`window_task.cpp:61..74` - the side message-box placements 3..6 of kinds 0
 and 2, and their settled-x readers; `area_w2e.cpp` area 104's gauge, ring and
 panel; `area_w3b.cpp` area 121's gauge; `area_w4b.cpp` area 172's panel)
 then put a side box at the framed edge: Capcom's place in a 320-framed area,
 the 16:9 place in a 426-framed one. Only the message boxes are live in the
-eleven areas. The anchor writes a window record's x, which the wide modes
+eleven areas PB framed (and so in the three still framed). The anchor writes a window record's x, which the wide modes
 already move ([`ultrawide-census-3.md`](ultrawide-census-3.md) 0: "window x
 words and message pen x"); here it moves it back towards narrow's.
 
@@ -245,22 +276,27 @@ pages of a loaded machine are expected, `state-hash.md` 4).
   recorded route reaches them, and a chapter-jump save lands where its
   chapter's Start puts it, not in a chosen area. The class of each is the
   measurement of section 1 and the log line its first entry writes.
-- The owner's eye on everything.
+- The owner's eye on everything (and, since section 11, on the three-area build).
 
 ## 8. The DIV-0041 amendment (drafted, not numbered)
 
-> **Amended 2026-10-21 (the wide-ring round, side group PB,
-> [`narrow-pillarbox.md`](narrow-pillarbox.md)): the narrow areas framed.**
+> **Amended 2026-10-21 (the wide-ring round, side groups PB and PX,
+> [`narrow-pillarbox.md`](narrow-pillarbox.md)): three narrow areas framed.**
 > *Original behaviour:* the 4:3 picture; in the wide modes an area narrower
 > than the picture showed the void past its map's edge in the bands (eleven
-> areas, [`ultrawide-culls.md`](ultrawide-culls.md) 5). *New behaviour:* in
-> the wide modes such an area is framed as a narrower picture on purpose:
-> black bars drawn by us over the bands. The frame is the widest of the
-> port's pictures (320, 426, 560) that the area's widest screen row reaches,
-> never below 320, the row measured in ring columns of 32 px from the map
-> block the game loaded (`AreaMap_Header`), once per area entry. On the
-> shipped data that is areas 31, 149, 186 and 198 at 320 (16:9 and 21:9) and
-> 53, 90, 98, 153, 154, 192 and 194 at 426 (21:9 only). The bars are
+> areas by their maps, [`ultrawide-culls.md`](ultrawide-culls.md) 5).
+> *New behaviour:* in the wide modes **areas 31, 90 and 198** are framed as
+> a narrower picture on purpose: black bars drawn by us over the bands. The
+> three are the owner's choice, not a value of Capcom's: the areas with real
+> void past the frame. The width each is framed at is measured: the widest
+> of the port's pictures (320, 426, 560) that the area's widest screen row
+> reaches, never below 320, the row in ring columns of 32 px from the map
+> block the game loaded (`AreaMap_Header`), once per area entry - on the
+> shipped data 31 and 198 at 320 (16:9 and 21:9) and 90 at 426 (21:9 only).
+> The other eight areas the measurement names (149, 186, 98 and the camps
+> 53, 153, 154, 192, 194) are not framed: at their own cameras they draw
+> sky, wall, floor and the clearing's rim past the frame, which the
+> crafted-save captures showed (`narrow-pillarbox.md` 10). The bars are
 > appended to the frame at the present, after the frame hash
 > (`render_shim.cpp` `Present`, `pillarbox.cpp` `Cover`); they change with the
 > area number, which `Area_Enter` sets while the picture is black. Off in a
@@ -271,16 +307,19 @@ pages of a loaded machine are expected, `state-hash.md` 4).
 > columns when fewer than the fill's, so DIV-0041's side message boxes stand
 > at the framed edge. Draw-only otherwise: the view, the inset, the culls,
 > the ring and `Rand` are the wide mode's. *Why:* the owner, 2026-10-15
-> (`owner-review.md`, "a per-scene pillarbox") and 2026-10-21 (widened from
-> 31, 90 and 53 to every area narrower than the picture). *Verification:*
-> the rule's self-test (`BOF3X_SHADOW=pillarbox`: the widest row on test
-> blocks, the frame at 0, 53 and 120 columns; the control "the narrowest
-> picture that holds the area" refused); `Rand` equal to narrow on every frame of the ten hash routes at 16:9 and
-> 21:9, no page changed by the bars (`BOF3X_PILLARBOX=0` against on, the two
-> routes that enter areas 31 and 90); captures of areas 31 and 90 at both
-> widths. *Owed:* the
-> owner's eye on the 426 class's cropped row tips, on area 194's close
-> camera and on a framed menu.
+> (`owner-review.md`, "a per-scene pillarbox"); 2026-10-21 widened to every
+> area narrower than the picture, then, on the crafted-save sheets the same
+> day, cut to the three with void past the frame ("every other area renders
+> fine without it"). *Verification:* the rule's self-test
+> (`BOF3X_SHADOW=pillarbox`: the widest row on test blocks, the frame at 0,
+> 53 and 120 columns, the list over every area word, the rule by area on the
+> eleven and an ordinary area; two controls refused - every area by its
+> measurement, and "the narrowest picture that holds the area"); `Rand`
+> equal to narrow on every frame of the ten hash routes at 16:9 and 21:9;
+> no page changed by the bars (`BOF3X_PILLARBOX=0` against on, the two
+> routes that enter areas 31 and 90, PB); captures of 31, 90 and 198 framed
+> and 149, 154 and 186 unframed at 16:9 and 21:9 (PX). *Owed:* the owner's
+> eye on 90's cropped row tips at 21:9 and on a framed menu.
 
 ## 9. Questions for the owner
 
@@ -379,3 +418,72 @@ otherwise as section 5 read it: nothing placed past the frame on purpose.
 4. **Area 194's first visit:** a chapter-13 save before it, if the owner
    has one or makes one, to see the close camera and to settle whether the
    crash is the craft's or Capcom's.
+
+### 10.2 The owner's answer (2026-10-21)
+
+Questions 1..3 answered by taking the areas out: **only 31, 90 and 198 keep
+the bars** - the three with real void past the frame; 149, 186, 98 and the
+camps (53, 153, 154, 192, 194) render fine unframed. Area 194's first
+visit went to group CR. Built by group PX, section 11.
+
+## 11. Three areas framed (group PX, 2026-10-21)
+
+**Status:** BUILT, measured headless; not seen by the owner. Branch
+`wide-ring/px` off `wide-ring/round` `4b07b9a8`. Runs and scripts:
+`C:\Users\kerok\bof3x-runs\r_ring\PX` (`chain.py`, `summary.py`,
+`sheet.py`, `logs/`, `sh/`, `shots/`, `sheets/`; slots `g0..g4` / `L0..L4`:
+game directories of the root's own with junctions to `bof3\DAT`, `BGM` and
+`SND`, and ini-less launcher copies).
+
+**What changed.** `pillarbox.h:57` `Listed` (31, 90, 198: the owner's list,
+cited, not a Capcom table) and `:61` `Visible` (a listed area by the width
+rule, any other at the full picture); `pillarbox.cpp:239..240`
+`VisibleColumns` returns the picture for an unlisted area before measuring
+it. The measurement stays as the listed areas' class (it is what puts 90 at
+426 at 21:9 and leaves it alone at 16:9) and as a check: a listed area whose
+widest row reaches the 21:9 picture logs `LISTED, but as wide as the 21:9
+picture` (`pillarbox.cpp:56..74` `WidestNow`). The trust guard, the battle
+exclusion, `BOF3X_PILLARBOX=0`, the side-box anchor and the bars are
+unchanged.
+
+**Checks.**
+
+- **Build:** `cmake --build build`, no diagnostic in our files.
+- **Self-test** (`BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original BOF3X_SHADOW='*'`,
+  dev launcher, `--no-config`, an ini-less copy): launcher exit 0 at
+  `BOF3X_WIDE` unset, 1 and 2; `inject: 10087 ours, 0 left original`; every
+  `MISMATCH` line reads `0 MISMATCHES`; `pillarbox self-test: 82 rounds, 0
+  mismatches; the controls refused on 8 rows (no list) and 1 (holds)` at
+  each width.
+- **State hash, the ten `cn_` routes** at w0, w1 and w2 (`BOF3X_OPT=none`,
+  `BOF3X_LAYERING=0`, the committed skip list): **`Rand` equal to narrow on
+  every frame of all ten at 16:9 and 21:9** (1,455 to 13,182 frames). Wide
+  against narrow, the pages are PB's classes: the display and draw-state
+  pages (`0x66B000`, `0x6BE000`, `0x7E0000`, `0x7E1000`, `0x801000`,
+  `0x803000`, `0x903000`, `0x905000`, `0x929000`, `0x92A000`,
+  `0x937000..0x939000`), the sound page `0x7DE000`, `Gfx_TexCache`
+  `0x6C3000`, and VRAM-shadow pages (`0x7B9000..0x7C7000`, shop's at ticks
+  2..4 only; `0x762000..0x78E000` on menu_screens at 21:9, the class PB saw
+  on field_menu and dragonTransform). No game page. Narrow against
+  `cn_<route>_orig3` / `_orig3b`: combat exit 0; the others the pages
+  section 6 lists for them (the DIV-0092 and button-round pages, the noise
+  class of a loaded machine), plus VRAM-shadow and `0x937000` pages on
+  cutsceneAndNue, masterAndManillo, menu_screens and worldMap. Two runs
+  (cutsceneAndNue w0, w1) were first refused by `input_run`'s slot-0 guard
+  while the self-test's game was up, and re-run.
+- **Where the bars switched** (the change lines): area 31 (whelpBoss's
+  recipe) on at frame 1580, off at 1791 entering area 1, at 16:9 and 21:9;
+  area 90 (balioAndSunder_2's) on at 397 at 21:9 only (`framed at 53
+  columns a side of 53` at 16:9: no bars), off at 736; area 198 (`cs198`)
+  on at 423 at both widths. Areas 149 (`cs149`, in 149 from recipe frame
+  430), 154 and 186 (`cs154`, `cs186`, from frame 480): no change line and
+  no measurement line - unframed, unmeasured.
+- **Captures** (point filter, en-US, scale 2, this build;
+  `shots/shot_a<area>_w1|w2`): sheets `sheets\px_219.png` (21:9) and
+  `sheets\px_169.png` (16:9). 31: the shaft between bars at 0 and 320, both
+  widths. 90: the room framed at 426 at 21:9 (and its menu, f00500); at
+  16:9 the full picture. 198: the void and the floating figure, the message
+  box inside the 320 frame. 149: the bridge and the sky gradient to the 560
+  edges. 154: the camp's ground to the edges. 186: the machinery wall to
+  the left edge. The crafted saves were regenerated with `chapter_jump.py
+  make` into the PX root from the main checkout's donors.
