@@ -1,6 +1,9 @@
 # The typed-data round: staging (IDEAS I44, stages 1 and 2)
 
-**Status:** IN PROGRESS (staged 2026-10-17; stages A and B run 2026-10-19 on
+**Status:** DONE (stage C merged as PR #100, 2026-10-20: I44's stages 1
+and 2 are built; stage 3 is not staged.)
+
+(Staged 2026-10-17; stages A and B run 2026-10-19 on
 `typed/b1`, 50,943 raw data sites down to 27,394 with the machine code
 identical to `origin/main`, merged as PR #94; stage C, staged in
 [`typed-data-stage-c.md`](typed-data-stage-c.md), built 2026-10-19..20 on

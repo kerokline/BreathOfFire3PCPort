@@ -100,7 +100,12 @@ the doc that has the reading.
 `buttons/round`, its end on `buttons/round-end`
 ([`button-unification-round.md`](button-unification-round.md); DIV-0133..0141,
 D312..D315). The captures and saves are game-derived, outside the tree, under
-the harness root `C:\Users\kerok\b_rc`.
+the harness root `C:\Users\kerok\b_rc`. **That root was deleted 2026-10-21**
+(HANDOFF "Pick up here" 1): the saves and sheets named below are gone. Before
+the checks, prepare a new root under `C:\Users\kerok\bof3x-runs\` and
+regenerate them with [`button-routes.md`](button-routes.md)'s commands
+(`abc_run.py prepare --set sigma`, `sigma_saves.py`, `sigma_sheets.py`, the
+new root in place of `b_rc`).
 
 ### Decided by the owner (2026-10-17, built)
 
@@ -136,7 +141,8 @@ the harness root `C:\Users\kerok\b_rc`.
 ### To do at the machine
 
 - **Record the minigame starts** from RC's placed saves,
-  `C:\Users\kerok\b_rc\saves\`: `chop8` (the chop, area 8), `well68`
+  `C:\Users\kerok\b_rc\saves\` (deleted 2026-10-21; regenerate first, see
+  above): `chop8` (the chop, area 8), `well68`
   (the well), `rope75` (the rope pull), `tower112` (into area 112, for the
   antenna in 111), `ram121` (the ram), `dock128` (the dock's parts menu),
   `crane135` (the crane) - each with `BOF3X_RECORD`, from the load to the
@@ -146,7 +152,8 @@ the harness root `C:\Users\kerok\b_rc`.
 
 ### To look at
 
-- **The contact sheets**, `C:\Users\kerok\b_rc\sheets_round\`
+- **The contact sheets**, `C:\Users\kerok\b_rc\sheets_round\` (deleted
+  2026-10-21; regenerate first, see above)
   (`worldmap`, `fishing`, `config`, `items`): identity beside swapped, a row
   per install kind (PC, PSX-US, PSP-EU, PC + en-US). Look for: the legend's
   rows trading, the PC-only stand-ins and START, the reel label, the Config
@@ -299,8 +306,9 @@ checkout's `analysis/` (never in the tree).
   reaches an enemy panel with the row, for the A/B.
 - **The US title layout, D277**: **draw the US release's three-piece notice
   on a US-built image** (a DIV).
-- **The Western title mark, D266**: **yes** (built 2026-10-20) - a `twin` row from the disc's
-  `GAME.EMI#1` for the width.
+- **The Western title mark, D266**: **yes** (built 2026-10-20, PR #98) - the width read
+  from the disc's `GAME.EMI#1`, built as its own `titlemark` rule in
+  `tools/psp_exe.py` rather than a `twin` row.
 - **A ja-JP layer, D280**: **yes, all of kinds 7..16** from the Japan disc
   (DIV-0015 / 0018 / 0019 / 0020 / 0064 / 0069 extended).
 - **The fishing crash, D279**: **both** - kind 16 through the ja-JP layer, and

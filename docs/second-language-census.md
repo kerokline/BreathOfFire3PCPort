@@ -5,8 +5,8 @@
 below is from one run of `tools/second_language_census.py run` on a copy of
 the owner's install, unless it says otherwise; section 1 names the run.
 
-The reading-row round ([`reading-row-round.md`](reading-row-round.md), on
-`docs/reading-row-staging` until it merges) puts a half-height row above each
+The reading-row round ([`reading-row-round.md`](reading-row-round.md),
+merged with this file as PR #101 on 2026-10-20) puts a half-height row above each
 text row of the dialogue box. One use is a **second language**: the same
 message from another held language layer, re-flowed into the reading rows
 (IDEAS I50). This document answers the round's worry with numbers - when the
@@ -29,12 +29,15 @@ group SB builds from.
   and 43..46% of the Latin ones are authored with three; re-broken at word
   boundaries most Japanese ones fit in two, but **28..33% of every Latin
   main's box pages cannot**, and split whatever the second says - about
-  5,300..6,000 extra pages over the area blocks, the same with any second
-  language, Japanese included.
+  5,300..6,300 extra pages over the area blocks, the same with any second
+  language, Japanese included (6,284 the most, Japanese over German, section 4).
   If the box can hold **three text rows and two reading rows** (3 x 12 +
   2 x 6 = 48 units, the pen travel three plain rows use today, with no gap),
   98.3..100% of box pages fit with no split at 1/2 for every pair. That is a
   question for PR's box measurement and the owner (section 10, question 1).
+  **Decided 2026-10-20** (the owner, [`reading-row-round.md`](reading-row-round.md)
+  1 and 6): two text rows plus two reading rows a page, consistently, the
+  extra presses accepted; three plus two was offered and declined.
 - **Two overlays' fonts cannot be resident together as built**: the PC has
   one glyph table, and the Latin and Japanese layers both start their cells at
   glyph `0x993` and differ in every one of the 190..236 cells both ink
@@ -418,10 +421,12 @@ largest main blocks are 19,954 (Japanese, AREA185) to 23,828 bytes
   encoding (largest 39,279..47,269 bytes), 16..24 with every second glyph
   two bytes (largest 39,520..64,376, the top close to the `u16` offset
   table's 65,535): AREA039, 090, 094, 153, 154 and the faerie village 175..185.
-- So an in-band layer (the round doc's section 4 shape) fits 184 of 200
-  areas; the other 16 need the reading rows somewhere else - a side chunk
-  keyed by slot and page that the stepper reads, or a larger arena for the
-  text block - which is SB's and RR's call, not measured here.
+- So an in-band layer (the shape the round doc's section 4 drafted when
+  this was measured) fits 184 of 200 areas; the other 16 need the reading
+  rows somewhere else - a side chunk keyed by slot and page that the stepper
+  reads, or a larger arena for the text block - which is SB's and RR's call,
+  not measured here. **Decided 2026-10-20** (the owner): composed messages
+  from a side chunk, not in-band; that is section 4's contract now.
 
 ## 9. The pairing rule (draft, for SB)
 
@@ -479,7 +484,7 @@ largest main blocks are 19,954 (Japanese, AREA185) to 23,828 bytes
 **Serves badly:**
 
 - **Every Latin main, under two text rows a page**: 28..33% of box pages
-  split by the main's own third row (+5,300..6,000 pages, 28..33%), with any
+  split by the main's own third row (+5,300..6,300 pages, 28..33%), with any
   second. The 3 + 2 layout removes it (98.8..100% fit).
 - **French and German over Japanese at 2/3**: 7.1% / 7.9% of pages
   overflow, +8.7% / +9.4% pages.
@@ -499,6 +504,9 @@ largest main blocks are 19,954 (Japanese, AREA185) to 23,828 bytes
    second language; with three text rows and two reading rows (48 units, no
    gap between rows; PR's box measurement says whether the frame allows it)
    almost none do. Which layout, once PR's captures are in?
+   **Decided 2026-10-20** (the owner, in chat, on these numbers): two text
+   rows plus two reading rows, consistently, the presses accepted; three
+   plus two declined ([`reading-row-round.md`](reading-row-round.md) 6).
 2. **1/2 or 2/3** for a Latin row over Japanese (round doc call 1): 2/3 costs
    about a thousand more split pages (English over Japanese +1,639 against
    +687).

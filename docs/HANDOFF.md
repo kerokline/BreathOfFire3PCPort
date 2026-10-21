@@ -69,7 +69,7 @@ hosted cross form).
 2. **The exe-gap round** ([`exe-gap-round.md`](exe-gap-round.md), framed, not staged): what is left between a
    disc-built image and `BOF3X_EXEIMAGE_STRICT=1` as the default - 49..74 `gap` rows per build, STRICT narrowed to a
    reviewed list, D280's `ja-JP` kinds 7..15 (answered yes, not built), the owner's open rows (the empty save slot
-   first), psp-jp's read-watch coverage now that D321 is fixed. Stage 0 and D266 are done (item 0). Staging it is the
+   first), psp-jp's read-watch coverage now that D321 is fixed. Stage 0 and D266 are done (PR #98). Staging it is the
    owner's word.
 
 3. **The state hash after 2026-10-20** ([`state-hash.md`](state-hash.md) 6): **the ten route pairs re-recorded 2026-10-20** as `cn_<route>_orig3` /
@@ -271,7 +271,8 @@ Local only, gitignored, worth keeping:
   `analysis/attract/orig_a.tsv`; `analysis/memdump/clutref_*`.
 - `analysis/cache/pc-plus-us`; `bof3/DAT/<tag>.*.DAT`; `analysis/font/`; `analysis/shots/` - every capture and sheet
   sent to the owner (2026-10-20: `d266-title-mark-1020/`, `ending-roll-1020/`).
-- `CDImage/` - the owner's PSX discs (USA, Japan, Germany, France) and two PSP images, zipped. Never commit.
+- `CDImage/` - the owner's PSX discs (USA, Europe, Japan, Germany, France; also a Japanese demo disc) and two PSP
+  images, zipped. Never commit.
 
 ## Traps already paid for
 
