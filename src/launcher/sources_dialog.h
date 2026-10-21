@@ -29,7 +29,7 @@ bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run, bool rebuild = fa
 // docs/install-staleness.md): `importer.py stale --home H`, which judges each
 // piece of the cache by what it was measured to read when it was built. Run
 // once for each launcher and importer the install meets - a fresh answer is
-// remembered in <home>\cache\build-keys\checked.txt by their file sizes and
+// remembered in <home>\cache\stale-checked.txt by their file sizes and
 // times, so an unchanged release asks nothing at the next start.
 struct StaleCheck {
     bool stale = false;                  // a piece would be made differently: offer the rebuild

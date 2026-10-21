@@ -176,7 +176,7 @@ close box after the same change left the ini byte for byte.
 | Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |
 | Controls... (2026-09-24): fourteen rows, two key cells and two pad cells each - click a cell and press the key or pad input, Escape cancels, Clear empties - the face-button layout | `key.NAME=action` and `pad.NAME=action` lines in the ini; `BOF3X_KEYS` / `BOF3X_PAD` when they differ from the default | ours — DIV-0050; [`controls.md`](controls.md) §4.2. Unset, the DLL leaves the game's own key table (`BOF3.CFG` lines 3+ or its default) and uses the default pad map |
 
-| Music and Cache folder (2026-10-10, §3.1): the disc's songs or the PC's MP3s; the importer's cache, typed or Browse... | `BOF3X_MUSIC` / `BOF3X_CACHE` when not empty; `music=` / `cache=` in the ini | ours - DIV-0087, [`music-seq-engine.md`](music-seq-engine.md) 2 |
+| Music and Cache folder (2026-10-10, §3.1): the source played first - the PlayStation's, the PSP's or the PC's MP3s (DIV-0150, 2026-10-21); the importer's cache, typed or Browse... | `BOF3X_MUSIC` always, `BOF3X_CACHE` when not empty; `music=` / `cache=` in the ini | ours - DIV-0087, DIV-0150, [`music-seq-engine.md`](music-seq-engine.md) 2 |
 
 The game process inherits the launcher's environment, so the first two needed
 no new channel and **no change to the DLL at all**.
@@ -201,11 +201,18 @@ The ini's `music=`, `cache=` and `opt=` lines existed before the boxes did
 (DIV-0087, DIV-0086); the boxes write them exactly as a hand edit would, and
 **an untouched dialog writes each line back as it was read**:
 
-- **Music**: "The disc's songs where the cache has them (default)" or "The
-  PC's MP3s always". The first entry is what an empty `music=` and
-  `music=seq` both mean: it keeps whichever the ini said; moving the box from
-  the MP3s back to it writes the default, an empty `music=`. A value that is
-  neither (`music=MP3`) was already dropped to the default by `ConfigLoad`.
+- **Music** (since 2026-10-21, DIV-0150): "PlayStation Encoded", "PSP
+  Encoded" or "PC MP3s" - the source the songs and the 11 recorded streams
+  come from first, the others after it (PlayStation, PSP, PC; PSP,
+  PlayStation, PC; PC, PlayStation, PSP). A source this install lacks is
+  listed with what plays instead. The box shows what `music=` means
+  (`ConfigMusicSource`: `psx`, `psp`, `pc`; `mp3` is the PC's; an empty
+  `music=` or `seq` the PSP's when `opt=` names `psp-music`, else the
+  PlayStation's) and writes `music=` only when moved off that. The launcher
+  always hands the game a `BOF3X_MUSIC`. A value that is none of these
+  (`music=MP3`) is dropped to the default by `ConfigLoad`. Before
+  2026-10-21 the box was "The disc's songs where the cache has them" or "The
+  PC's MP3s always".
 - **Cache folder**: the `cache=` path, typed or picked with Browse...
   (`SHBrowseForFolderW`; the launcher links `shell32` and `ole32` for it).
   Trimmed as `ConfigLoad` trims a line; the ini's bytes in the ANSI code page,

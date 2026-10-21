@@ -59,6 +59,8 @@ public:
         return v;
     }
     std::size_t Left() const { return left_; }
+    // Past n bytes without copying them (a check walking a record); Fatal past the end, as Get.
+    void Skip(std::size_t n);
 
 private:
     const char* tag_;

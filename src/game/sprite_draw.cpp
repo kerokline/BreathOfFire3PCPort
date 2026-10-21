@@ -86,6 +86,10 @@ extern "C" void __cdecl Sprite_ClutWord(unsigned short* out) {
 // product is exact at any precision, so one rounding to float either way.
 namespace {
 
+// DIV-0142's capture log lines so far (the first 64 are logged); the
+// self-test's captures are not counted (reset after CaptureSelfTest).
+unsigned g_capture_logged = 0;
+
 // The cull, and the off-screen flag it leaves in bit 7 of byte 0: true when
 // the object is to be drawn. The original has one bound for both, x in
 // [-0x40, 0x180] and y in [-0x40, 0x130]. Ours moves each x end out by its
@@ -125,7 +129,8 @@ namespace {
 // as ever - against its draw offset (0, 240 x buffer) that lands the picture
 // at VRAM (0x340 + x, 0x100 + y), not on the screen, and the moved point culls
 // the object on the next frame: a one-frame capture. Amalgam's death (boss_sc
-// 0x439790), Mikba's (0x43DD30) and three effect kinds then draw from that page.
+// 0x439790), Mikba's (0x43DD30), magic_s14's images and four effect kinds (0x6B,
+// 0x61, 0xA1 / 0xA3, 0x9D) then draw from that page.
 // Capcom's PC has no such test: the sprite stays on the screen and the page
 // holds only what Gfx_ClearRect left there. Ours: the PSX's point shift, and
 // the frame composed as D3d_BuildCellTexture composes it (DrawCells' decode,
@@ -241,10 +246,9 @@ void Capture(unsigned char* object) {
         std::memset(&g_canvas[r + kCanvasOrigin][left + kCanvasOrigin], 0, static_cast<size_t>(right - left) * 2);
     const short rect[4] = {kCapX, kCapY, kCapW, kCapH};
     Gfx_InvalidateTextures(rect, 0);
-    static unsigned logged = 0;
-    if (logged < 64 && ++logged)
+    if (g_capture_logged < 64 && ++g_capture_logged)
         bof3::Log("DIV-0142    capture %u: object at (%d, %d), %u pieces, scale %.3f x %.3f%s%s, into VRAM (0x%X, 0x%X)",
-                  logged, x, y, count, sx, sy, mirror ? ", mirrored" : "", semi ? ", blended" : "", kCapX + x, kCapY + y);
+                  g_capture_logged, x, y, count, sx, sy, mirror ? ", mirrored" : "", semi ? ", blended" : "", kCapX + x, kCapY + y);
 }
 
 void Draw() {
@@ -828,6 +832,7 @@ void SpriteDraw_Inject() {
         SelfTest(reinterpret_cast<DrawFn>(draw), reinterpret_cast<ClutFn>(clut), reinterpret_cast<DrawFn>(reset),
                  reinterpret_cast<AddFn>(add));
         CaptureSelfTest();
+        g_capture_logged = 0;
         // From here on Sprite_Draw compares every live call against the clone.
         g_draw_clone = reinterpret_cast<DrawFn>(draw);
     }

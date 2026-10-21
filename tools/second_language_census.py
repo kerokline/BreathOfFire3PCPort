@@ -645,7 +645,9 @@ def text_glyph_use(blocks, fonts):
         for bid, d in blocks.items():
             if not bid.startswith("AREA") or d[lang] is None:
                 continue
-            for (o, m), (bo, bm) in zip(block_slots(d[lang]), block_slots(d["base"])):
+            slots = block_slots(d[lang])
+            base = block_slots(d["base"]) if d["base"] else [(0, b"")] * len(slots)
+            for (o, m), (bo, bm) in zip(slots, base):
                 if m[:1] == b"\0" or is_foreign(m, bm):
                     continue
                 for k, v, g in tokens(m):

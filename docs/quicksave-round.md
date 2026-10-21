@@ -2,8 +2,8 @@
 
 **Status:** BUILT (staged 2026-10-17; run 2026-10-19 on `quicksave/round`
 beside the typed-data round, the owner's call: stages A, B and C done, `main`
-with PR #94 merged in, DIV-0145..0147 and D322 numbered. Not yet played by the
-owner. The owner's design of 2026-10-17, on IDEAS I13 and I18.)
+with PR #94 merged in, DIV-0145..0147 and D322 numbered; merged as PR #95
+on 2026-10-19. Not yet played by the owner. The owner's design of 2026-10-17, on IDEAS I13 and I18.)
 
 The owner (2026-10-17): F5 opens a quicksave menu that looks like the save
 menu, so its draw functions are reused, and a quicksave is picked there to

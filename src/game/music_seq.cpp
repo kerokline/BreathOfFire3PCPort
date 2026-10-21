@@ -16,6 +16,7 @@
 #include "audio/seq.h"
 #include "audio/song.h"
 #include "bof3/symbols.gen.h"
+#include "common/cache_manifest.h"
 #include "game/dat_cache.h"
 #include "game/music_resume.h"
 #include "game/sound_callees.h"
@@ -53,10 +54,19 @@ bool FileExists(const char* path) {
 struct State {
     unsigned char armed = 0;       // BOF3X_MUSIC seq and a cache with base\bgm (or a named layer's bgm)
     char root[kRootMax + 1] = {};  // BOF3X_CACHE, no trailing separator
-    // DIV-0109: the bgm directories of the layers BOF3X_OPT names that have one
-    // (<root>\opt\<layer>\bgm), in its order; a song is looked for in the last
-    // first, then base\bgm. A song's bank is its own directory's bank\.
-    std::vector<std::string> layer_dirs;
+    // The bgm directories a song is looked for in, the first first; a song's
+    // bank is its own directory's bank\. DIV-0109: with no source chosen, the
+    // bgm directories of the layers BOF3X_OPT names that have one
+    // (<root>\opt\<layer>\bgm), the last named first, then base\bgm.
+    // DIV-0150: with one chosen, the chosen disc's songs, then the other's.
+    std::vector<std::string> dirs;
+    // DIV-0150: the source BOF3X_MUSIC chose - 0 none (seq, or unset: the order
+    // above), 'x' the PlayStation's, 'p' the PSP's, 'c' the PC's MP3s first.
+    char source = 0;
+    // DIV-0150: under a chosen source, where Sound_LoadStream's 11 kind-0
+    // streams are looked for, the first first: a cache directory, or "" for
+    // the install's SND\ (the original's own name).
+    std::vector<std::string> stream_dirs;
     bool (*exists)(const char*) = FileExists;
     // The cache song LoadFile put in Music_File (nullptr: Music_File is not one).
     const void* song_file = nullptr;
@@ -202,22 +212,39 @@ void CheckCache(const char* dir) {
 
 }  // namespace
 
+// The cache file for `track` into path and its directory into dir; false
+// when the cache has none. State::dirs in order (DIV-0109, DIV-0150).
+bool Find(unsigned track, char (&path)[kPathMax + 1], std::string& dir) {
+    if (!g_s.armed) return false;
+    for (const std::string& d : g_s.dirs) {
+        std::snprintf(path, sizeof path, "%s\\%03u.DAT", d.c_str(), track);
+        if (g_s.exists(path)) {
+            dir = d;
+            return true;
+        }
+    }
+    dir.clear();
+    return false;
+}
+
+bool Probe(unsigned track, int* size) {
+    char path[kPathMax + 1];
+    std::string dir;
+    if (!Find(track, path, dir)) return false;
+    const int handle = g.file_open(path, 0, 0);
+    if (handle == -1) bof3::Fatal("DIV-0087: %s is there but does not open", path);
+    *size = g.file_size(handle);
+    g.file_close(handle);
+    return true;
+}
+
 bool LoadFile(unsigned track) {
     if (!g_s.armed) return false;
     char path[kPathMax + 1];
-    // DIV-0109: the named layers' bgm first, the last listed first, then base\bgm
     std::string dir;
-    for (std::size_t i = g_s.layer_dirs.size(); i-- > 0 && dir.empty();) {
-        std::snprintf(path, sizeof path, "%s\\%03u.DAT", g_s.layer_dirs[i].c_str(), track);
-        if (g_s.exists(path)) dir = g_s.layer_dirs[i];
-    }
-    if (dir.empty()) {
-        dir = std::string(g_s.root) + "\\base\\bgm";
-        std::snprintf(path, sizeof path, "%s\\%03u.DAT", dir.c_str(), track);
-        if (!g_s.exists(path)) {
-            bof3::Log("DIV-0087    track %03u: not in the cache, its MP3", track);
-            return false;
-        }
+    if (!Find(track, path, dir)) {
+        bof3::Log("DIV-0087    track %03u: not in the cache, its MP3", track);
+        return false;
     }
     Objects();
     const int handle = g.file_open(path, 0, 0);
@@ -339,11 +366,84 @@ void Stop() {
     if (g_s.synth && g_s.active) g_s.synth->Stop();
 }
 
+bool PcFirst() { return g_s.armed && g_s.source == 'c'; }
+
+bool StreamPath(const char* name, char* out, std::size_t cap) {
+    if (!g_s.source || g_s.stream_dirs.empty()) return false;
+    for (const std::string& d : g_s.stream_dirs) {
+        if (d.empty()) {
+            std::snprintf(out, cap, "SND\\%s.DAT", name);
+            if (g_s.exists(out)) {
+                bof3::Log("sound       DIV-0150: stream %s from %s", name, out);
+                out[0] = 0;  // the install's: the caller formats the original's own name
+                return true;
+            }
+        } else {
+            std::snprintf(out, cap, "%s\\%s.DAT", d.c_str(), name);
+            if (g_s.exists(out)) {
+                bof3::Log("sound       DIV-0150: stream %s from %s", name, out);
+                return true;
+            }
+        }
+    }
+    // in none: the first choice's, whose failed open the caller reports (DIV-0129)
+    const std::string& d = g_s.stream_dirs.front();
+    if (d.empty()) out[0] = 0;
+    else std::snprintf(out, cap, "%s\\%s.DAT", d.c_str(), name);
+    return true;
+}
+
+namespace {
+
+// DIV-0150: the directories a chosen source puts in order, for the songs
+// (part "bgm") or the streams ("snd"): its disc's, then the other disc's; the
+// PC's MP3s are the install's, outside these lists. The PlayStation's are
+// base\ on a PlayStation base; the PSP's are base\ on a PSP base (a PSP-only
+// cache, DIV-0103), else the PSP layer of that part (DIV-0109's psp-music,
+// DIV-0110's psp-snd; recipes/suites.toml) when the cache offers it. The
+// PlayStation's streams beside a PC install are base\psx-jingles (the importer
+// keeps them out of base\snd there), so its stream directories are that, then
+// base\snd.
+std::vector<std::string> SourceDirs(const char* root, bool psp_base, bool psp_first, const char* part) {
+    const bool bgm = std::strcmp(part, "bgm") == 0;
+    const auto is_dir = [](const std::string& d) {
+        const DWORD a = GetFileAttributesA(d.c_str());
+        return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY);
+    };
+    std::vector<std::string> psx, psp;
+    const std::string base = std::string(root) + "\\base\\" + part;
+    const char* const layer = bgm ? "psp-music" : "psp-snd";
+    if (psp_base) {
+        if (is_dir(base)) psp.push_back(base);
+    } else {
+        const std::string jingles = std::string(root) + "\\base\\psx-jingles";
+        if (!bgm && is_dir(jingles)) psx.push_back(jingles);
+        if (is_dir(base)) psx.push_back(base);
+        if (dat_cache::HasLayerPart(layer, part)) psp.push_back(std::string(root) + "\\opt\\" + layer + "\\" + part);
+    }
+    std::vector<std::string> out = psp_first ? psp : psx;
+    const std::vector<std::string>& second = psp_first ? psx : psp;
+    out.insert(out.end(), second.begin(), second.end());
+    return out;
+}
+
+const char* SourceName(char source) {
+    return source == 'x' ? "the PlayStation's" : source == 'p' ? "the PSP's" : "the PC's MP3s";
+}
+
+}  // namespace
+
 void Arm() {
     char mode[8];
     const DWORD m = GetEnvironmentVariableA("BOF3X_MUSIC", mode, sizeof mode);
-    if (m >= sizeof mode || (m != 0 && std::strcmp(mode, "seq") != 0 && std::strcmp(mode, "mp3") != 0))
-        bof3::Fatal("DIV-0087: BOF3X_MUSIC must be seq or mp3");
+    // DIV-0150: psx, psp, pc choose a source; seq and mp3 (DIV-0087) as before
+    if (m >= sizeof mode || (m != 0 && std::strcmp(mode, "seq") != 0 && std::strcmp(mode, "mp3") != 0 &&
+                             std::strcmp(mode, "psx") != 0 && std::strcmp(mode, "psp") != 0 &&
+                             std::strcmp(mode, "pc") != 0))
+        bof3::Fatal("DIV-0150: BOF3X_MUSIC must be psx, psp, pc, seq or mp3");
+    const char source = m == 0 ? 0 : std::strcmp(mode, "psx") == 0 ? 'x' : std::strcmp(mode, "psp") == 0 ? 'p'
+                                                                   : std::strcmp(mode, "pc") == 0    ? 'c'
+                                                                                                      : 0;
     char root[MAX_PATH];
     const DWORD n = GetEnvironmentVariableA("BOF3X_CACHE", root, sizeof root);
     if (n >= sizeof root) bof3::Fatal("DIV-0087: BOF3X_CACHE is %lu characters", static_cast<unsigned long>(n));
@@ -374,6 +474,38 @@ void Arm() {
                         "path, or leave %s out of BOF3X_OPT", root, l.c_str(), l.c_str());
         layers.push_back(std::string(root) + "\\opt\\" + l + "\\bgm");
     }
+    if (source) {
+        // DIV-0150: the chosen source's order, BOF3X_OPT's bgm layers aside
+        const std::wstring wroot(root, root + len);
+        const bool psp_base = bof3x::ManifestPspBase(bof3x::ManifestRead(wroot));
+        const std::vector<std::string> dirs = SourceDirs(root, psp_base, source == 'p', "bgm");
+        for (const std::string& d : dirs)
+            if (d.size() + sizeof "\\bank\\" - 1 + 15 + sizeof ".DAT" - 1 > kPathMax)
+                bof3::Fatal("DIV-0150: BOF3X_CACHE=%s: the banks' paths under %s would pass MAX_PATH; a shorter cache "
+                            "path", root, d.c_str());
+        std::memcpy(g_s.root, root, len + 1);
+        g_s.source = source;
+        g_s.dirs = dirs;
+        // the streams: under the cache's data only (dat_cache configured), as SoundPath
+        g_s.stream_dirs.clear();
+        if (dat_cache::Root()) g_s.stream_dirs = SourceDirs(root, psp_base, source == 'p', "snd");
+        g_s.stream_dirs.insert(source == 'c' ? g_s.stream_dirs.begin() : g_s.stream_dirs.end(), std::string());
+        if (!dirs.empty()) {
+            Objects();
+            for (const std::string& d : dirs) CheckCache(d.c_str());
+            g_s.armed = 1;
+        }
+        std::string order = source == 'c' ? "BGM\\" : "";
+        for (const std::string& d : dirs) order += (order.empty() ? "" : ", ") + d.substr(len + 1);
+        if (source != 'c') order += (order.empty() ? "" : ", ") + std::string("BGM\\");
+        bof3::Log("DIV-0150    music from %s first (BOF3X_MUSIC=%s): songs from %s, the first that has the track",
+                  SourceName(source), mode, order.c_str());
+        std::string streams;
+        for (const std::string& d : g_s.stream_dirs)
+            streams += (streams.empty() ? "" : ", ") + (d.empty() ? std::string("SND\\") : d.substr(len + 1));
+        bof3::Log("DIV-0150    the 11 recorded streams from %s, the first that has the file", streams.c_str());
+        return;
+    }
     if (!base && layers.empty()) {
         bof3::Log("DIV-0087    BOF3X_CACHE=%s has no base\\bgm: every track plays its MP3", root);
         return;
@@ -384,7 +516,8 @@ void Arm() {
         return;
     }
     std::memcpy(g_s.root, root, len + 1);
-    g_s.layer_dirs = layers;
+    g_s.dirs.assign(layers.rbegin(), layers.rend());
+    if (base) g_s.dirs.push_back(bgm);
     Objects();
     for (const std::string& d : layers) CheckCache(d.c_str());
     if (base) CheckCache(bgm);
@@ -649,7 +782,10 @@ void SelfTest() {
     g_s.synth_bank.clear();
     g_s.bank->name.clear();
     g_s.bank_path.clear();
-    g_s.layer_dirs.clear();
+    const std::string base_dir = std::string(kTestRoot) + "\\base\\bgm";
+    g_s.dirs = {base_dir};
+    g_s.source = 0;
+    g_s.stream_dirs.clear();
 
     // 1. A looping song: loaded, started, the first half by Music_CreateBuffer
     // and five more by Music_Decode in 0x12000-byte calls; equal to one Render.
@@ -828,7 +964,7 @@ void SelfTest() {
     const std::size_t lay_song_at = files.size() - 2, lay_bank_at = files.size() - 1;
     psx::Bank lay;
     psx::LoadBank(lay_bank.data(), lay_bank.size(), &lay);
-    g_s.layer_dirs = {lay_dir};
+    g_s.dirs = {lay_dir, base_dir};
     names.clear();
     const unsigned base7_opens = files[0].opens;
     const bool layer_song = change(7, lay_song, lay) && files[lay_song_at].opens == 1 && files[lay_bank_at].opens == 1 &&
@@ -838,7 +974,36 @@ void SelfTest() {
     const bool layer_name_twin = change(11, after_big, bank) && files[2].opens == small_opens + 1 &&
                                  files[lay_bank_at].opens == 1 && g_s.song_from == "base\\bgm";
     const bool layer_under = change(10, on_big, big) && files[5].opens == big_opens + 1 && g_s.song_from == "base\\bgm";
-    g_s.layer_dirs = saved_s.layer_dirs;
+
+    // 8. DIV-0150. The PC's MP3s first: song 10's MP3 names are opened before
+    // the cache's (neither MP3 is there, so the cache's song is loaded after
+    // them). The PSP's first: the layer's song 7 over base's. The streams: the
+    // first directory with the file, the install's SND\ as "" (the caller's
+    // own name), and the first choice's path when none has it.
+    g_s.source = 'c';
+    g_s.dirs = {base_dir, lay_dir};
+    names.clear();
+    const int r10 = Music_LoadFile(10);
+    const bool pc_first = r10 == 0 && names.size() == 3 && names[0] == "BGM\\010.DAT" && names[1] == "BGM\\010N.DAT" &&
+                          names[2] == base_dir + "\\010.DAT" && Music_LoadedTrack == 10;
+    g_s.source = 'p';
+    g_s.dirs = {lay_dir, base_dir};
+    names.clear();
+    const bool psp_first = change(7, lay_song, lay) && !Opened("BGM\\007.DAT") && g_s.song_from == "opt\\lay-m\\bgm";
+    const std::vector<std::uint8_t> jingle(16, 0);
+    const std::string snd_dir = std::string(kTestRoot) + "\\base\\snd";
+    files.push_back({snd_dir + "\\ABC.DAT", &jingle, 0});
+    files.push_back({"SND\\DEF.DAT", &jingle, 0});
+    char sp[kPathMax + 1];
+    g_s.stream_dirs = {snd_dir, std::string()};
+    const bool stream_cache = StreamPath("ABC", sp, sizeof sp) && snd_dir + "\\ABC.DAT" == sp;
+    const bool stream_install = StreamPath("DEF", sp, sizeof sp) && sp[0] == 0;
+    const bool stream_none = StreamPath("GHI", sp, sizeof sp) && snd_dir + "\\GHI.DAT" == sp;
+    g_s.stream_dirs = {std::string(), snd_dir};
+    const bool stream_pc = StreamPath("DEF", sp, sizeof sp) && sp[0] == 0 && StreamPath("ABC", sp, sizeof sp) &&
+                           snd_dir + "\\ABC.DAT" == sp;
+    g_s.source = 0;
+    const bool stream_legacy = !StreamPath("ABC", sp, sizeof sp);
 
     Music_Release();
     const bool released = !Active() && !Music_Data;
@@ -859,6 +1024,9 @@ void SelfTest() {
     Music_Loops = loops;
     g_s.armed = saved_s.armed;
     std::memcpy(g_s.root, saved_s.root, sizeof g_s.root);
+    g_s.dirs = saved_s.dirs;
+    g_s.source = saved_s.source;
+    g_s.stream_dirs = saved_s.stream_dirs;
     g_s.exists = saved_s.exists;
     g_s.song_file = saved_s.song_file;
     g_s.song_size = saved_s.song_size;
@@ -890,6 +1058,14 @@ void SelfTest() {
     bof3::Log("shadow      DIV-0109 self-test: a named layer's song and its own bank played before base\\bgm's, equal to "
               "the oracle's; a base song on a bank bearing the layer bank's name read from base again; a song only "
               "base has from base");
+    if (!pc_first || !psp_first || !stream_cache || !stream_install || !stream_none || !stream_pc || !stream_legacy)
+        bof3::Fatal("DIV-0150 self-test: the PC's MP3s tried first %s; the PSP's song first %s; a stream from the cache "
+                    "%s, from the install %s, in neither %s, the install first %s, no source chosen %s",
+                    pc_first ? "ok" : "WRONG", psp_first ? "ok" : "WRONG", stream_cache ? "ok" : "WRONG",
+                    stream_install ? "ok" : "WRONG", stream_none ? "ok" : "WRONG", stream_pc ? "ok" : "WRONG",
+                    stream_legacy ? "ok" : "WRONG");
+    bof3::Log("shadow      DIV-0150 self-test: the PC's MP3 names opened before the cache's song; the PSP's song before "
+              "the PlayStation's; the streams from the first place that has the file");
     bof3::Log("shadow      DIV-0087 self-test: a synthetic looping song through Music_LoadFile / Music_Start / "
               "Music_Decode, %d samples equal to one MusicSynth::Render; the buffer volume by libsnd's law; a once-only "
               "song ended at sample %d with Music_Finished and zeros after, its bank kept; a song on a two-program "

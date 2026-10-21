@@ -756,6 +756,12 @@ install has no song 166 (the lost fight's music), so every lost fight that
 asks for it meets this path: D320. The cause there is ours (the importer
 writes `000..165`); this entry stays Capcom's latent mechanism.
 
+**Reached by the PC's own data too (2026-10-21):** "every track the game asks
+for has a file" does not hold. The five event battles whose files carry no
+music have the track word 0xFF, and `GameMode5_Load` asks for song 255, which
+has no file: the scene's song started again from its top. DIV-0149 skips the
+call there, as the PlayStation names no song (the review of PR #86).
+
 ## D25 — A track the decoder cannot open plays a fragment of the last one, for ever (latent)
 
 **Found:** reading `Music_Start` `0x5A6CC0`, `Music_CreateBuffer` `0x5A6E60`
@@ -8432,7 +8438,7 @@ plays `Music_Play(track)` with the track word of the event battle's
 words). A disc-built image filled only the file half (`pairs`, DIV-0101's
 first amendment); the track half was a `game-value` gap on all seven builds,
 so every event battle asked for song 0, and one whose file has no music of
-its own (the PC's 0xFF: the scene's music is kept) started song 0 over it.
+its own (the PC's 0xFF; see DIV-0149 for what that word does) started song 0 over it.
 
 **Where the disc has it:** nowhere as a number. The PSX's `GameMode5_Load`
 (`0x80198C94`) loads the battle file and names no song: the boss file's own
@@ -8457,6 +8463,12 @@ fight): before, frame 718 loads `BOSS007` and plays `Music_Play(0, 10)`,
 `bgm\000`; after `importer.py setup` rebuilt the image, the same frame plays
 `Music_Play(151, 10)`, `bgm\151` (bank `BGMBAT00`), and the start-up log's
 41 `EventBattle_Records` gap lines are gone. Not heard.
+
+**Amended 2026-10-21 (the owner):** the tie takes the highest song of the
+set, not the lowest, so `BOSS033` (event battle 25) plays 153, `BGMBAT02`, on
+every build: every byte of the seven `pairs` rows is now `BOF3.exe`'s. On a
+PSX base with the PSP's music layer it hears `BGMBAT02`'s recording, no longer
+`BGMBAT00`'s.
 
 ## D317 — A sprite meant to be drawn into VRAM stays on the screen, and the page it was for stays empty: Amalgam's death has no melt (the port's; fixed 2026-10-17 by DIV-0142)
 
@@ -8628,6 +8640,16 @@ without the L1 / R1 art and under `ja-JP`, `GlyphCode` draws L1 and R1 as the
 `ja-JP` font's capital `L` and `R` and no longer reads `0x66A2FC[4]` / `[5]`.
 The face buttons keep their paths. psx-jp keeps the art, the Latin installs
 keep DIV-0051's icons, and any other empty stand-in still stops the game.
+
+**Corrected 2026-10-21.** Two statements above did not hold. "psx-jp is not
+affected" was true only at the default Config: a face button in a shoulder
+slot read an empty stand-in on psx-jp and psp-jp alike (the review of PR #91,
+2026-10-21). And the Japan disc does have L1 / R1 glyphs: the font atlas's
+8 x 8 strip holds "L1 L2 R1 R2 START SELECT" on every disc, outside the 12 px
+cells the text codes reach. DIV-0138's 2026-10-21 amendment draws the
+Japanese corner wholly from the disc: the face buttons the sheet's `0x15
+08..0B`, L1 / R1 those small labels (DIV-0051's amendment, the owner's call
+over the capital L and R).
 
 - **The codes, by rule.** The `ja-JP` layer's font puts the Japan disc's
   single-byte sheet whole from `JA_AT` = `0x993`, cell `b` at `JA_AT + b`

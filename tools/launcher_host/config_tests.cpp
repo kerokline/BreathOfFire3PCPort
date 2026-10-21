@@ -173,6 +173,19 @@ void TestRoundTrip() {
     WriteAll(a, "[bof3x]\r\nmusic=MP3\r\n");
     bof3x::Config c4;
     Check(bof3x::ConfigLoad(a, c4, err) && c4.music.empty(), "music=MP3 (not a value) is the default", c4.music);
+    // DIV-0150: the three sources kept as written; the source the game is handed.
+    for (const char* v : {"psx", "psp", "pc"}) {
+        WriteAll(a, std::string("[bof3x]\r\nmusic=") + v + "\r\n");
+        bof3x::Config c5;
+        Check(bof3x::ConfigLoad(a, c5, err) && c5.music == v, "music= a DIV-0150 source kept", c5.music);
+    }
+    Check(bof3x::ConfigMusicSource("", "") == "psx", "no music=: the PlayStation's");
+    Check(bof3x::ConfigMusicSource("seq", "psp-art,area4-walls") == "psx", "music=seq: the PlayStation's");
+    Check(bof3x::ConfigMusicSource("", "psp-art,psp-music,psp-snd") == "psp",
+          "no music=, opt= naming psp-music (the old audio suite's PSP side): the PSP's");
+    Check(bof3x::ConfigMusicSource("", "psp-musical") == "psx", "  a name that only begins so is not it");
+    Check(bof3x::ConfigMusicSource("mp3", "psp-music") == "pc", "music=mp3: the PC's");
+    Check(bof3x::ConfigMusicSource("psx", "psp-music") == "psx", "a source named wins over opt=");
     DeleteFileW(a.c_str());
     DeleteFileW(b.c_str());
 }
@@ -314,6 +327,12 @@ void TestManifest() {
         "[[source]]\nbuild = \"psx-us\"\n[snd_jingles]\nbuild = \"psx-us\"\nhow = \"psx-xa-mp3\"\n");
     Check(j.snd_jingles_build == "psx-us" && j.snd_build.empty() && j.sources == std::vector<std::string>{"psx-us"},
           "[snd_jingles] build: the jingles' build, not [snd]'s, not a source", j.snd_jingles_build);
+    Check(j.snd_jingles_dir.empty(), "[snd_jingles] with no dir (before DIV-0150): empty, base/snd");
+    const bof3x::CacheManifest jd = bof3x::ManifestParse(
+        "[[source]]\nbuild = \"pc-zh\"\n[[source]]\nbuild = \"psx-us\"\n[snd_jingles]\nbuild = \"psx-us\"\n"
+        "dir = \"base/psx-jingles\"\n");
+    Check(jd.snd_jingles_dir == "base/psx-jingles", "[snd_jingles] dir (DIV-0150): beside a PC install",
+          jd.snd_jingles_dir);
     const bof3x::CacheManifest p = bof3x::ManifestParse(kManifestPspOnly);
     Check(p.base_policy == "psp" && p.exe_tables_from == std::vector<std::string>{"psp-jp"} && p.snd_build == "psp-jp" &&
               p.bgm_build == "psp-jp",
@@ -349,19 +368,16 @@ void TestSuites() {
                   std::string::npos,
               "  the reason names the PlayStation discs", Narrow(s.psx_why));
     }
-    Check(Member(Suite(v, "audio"), "psp-music").available && Member(Suite(v, "audio"), "psp-effects").available,
-          "PSP-only: the cache's songs and effects are the PSP's");
+    Check(Member(Suite(v, "audio"), "psp-effects").available, "PSP-only: the cache's effects are the PSP's");
+    // DIV-0150: the music is the Music box's, not the audio suite's.
+    bool music_member = false;
+    for (const bof3x::SuiteMemberState& m : Suite(v, "audio").members)
+        music_member = music_member || m.info->kind == bof3x::suites_gen::Kind::kBgm;
+    Check(!music_member, "DIV-0150: the audio suite has no music member");
     Check(Member(Suite(v, "data"), "psp-tables").available, "PSP-only: exe_tables_from psp-jp, the tables the PSP's");
     Check(Member(Suite(v, "data"), "psp-names-ja-JP").available && !Member(Suite(v, "data"), "psp-names-en-150").available &&
               Narrow(Member(Suite(v, "data"), "psp-names-en-150").note) == "needs psp-eu",
           "PSP-JP base: the Japanese renames the base's, the English ones need psp-eu");
-    // Before MS stage B: a PSP-only cache with no base/bgm.
-    std::string no_bgm = kManifestPspOnly;
-    no_bgm.replace(no_bgm.find("bgm = ["), no_bgm.find("]\n\n[snd]") + 2 - no_bgm.find("bgm = ["), "");
-    v = bof3x::SuitesEvaluate(Inputs(no_bgm.c_str(), {}, "", "", {}));
-    Check(!Member(Suite(v, "audio"), "psp-music").available &&
-              Narrow(Member(Suite(v, "audio"), "psp-music").note) == "no songs in this cache",
-          "PSP-only without base/bgm: the music member says so", Narrow(Member(Suite(v, "audio"), "psp-music").note));
     // An untouched page, or a choice, never edits opt= on a PSP base.
     Check(bof3x::SuitesOptEdit("", {}, v, {0, 1, 0}) == "", "PSP-only: a choice writes nothing");
 
@@ -388,8 +404,8 @@ void TestSuites() {
           "  psp-maps greyed: not built", Narrow(Member(g, "psp-maps").note));
     const bof3x::SuiteState& au = Suite(v, "audio");
     Check(au.psx_enabled && !au.psp_enabled, "all three: audio's PSP side greyed (its layers not built)");
-    Check(Narrow(Member(au, "psp-music").note) == "not in the cache (build with --opt psp-music)", "  with the reason",
-          Narrow(Member(au, "psp-music").note));
+    Check(Narrow(Member(au, "psp-effects").note) == "not in the cache (build with --opt psp-snd)", "  with the reason",
+          Narrow(Member(au, "psp-effects").note));
     Check(Narrow(au.psp_why) == "Nothing of the PSP's plays beside this base yet.", "  and the side's", Narrow(au.psp_why));
     const bof3x::SuiteState& d = Suite(v, "data");
     Check(d.psp_enabled && d.layers_on == std::vector<std::string>{"psp-names-en-150"},
@@ -448,12 +464,12 @@ void TestSuites() {
     const std::vector<std::string> tg{"psp-art", "psp-tiles", "psp-maps", "psp-music", "psp-snd", "psp-tables",
                                       "psp-names-en-150", "psp-ryu-forms"};
     v = bof3x::SuitesEvaluate(Inputs(kManifestAll, tg, "en-US", "", walls));
-    Check(Suite(v, "audio").psp_enabled && Suite(v, "audio").layers_on == std::vector<std::string>{"psp-music", "psp-snd"},
-          "TG: audio offered, its two layers");
+    Check(Suite(v, "audio").psp_enabled && Suite(v, "audio").layers_on == std::vector<std::string>{"psp-snd"},
+          "TG: audio offered, its effects layer (the music the Music box's, DIV-0150)");
     Check(Suite(v, "data").layers_on == std::vector<std::string>{"psp-tables", "psp-names-en-150", "psp-ryu-forms"},
           "TG: data offered for the tables, the renames and Ryu's forms");
     const std::string all = bof3x::SuitesOptEdit("", walls, v, {1, 1, 1});
-    Check(all == "psp-art,psp-tiles,psp-maps,psp-music,psp-snd,psp-tables,psp-names-en-150,psp-ryu-forms,area4-walls",
+    Check(all == "psp-art,psp-tiles,psp-maps,psp-snd,psp-tables,psp-names-en-150,psp-ryu-forms,area4-walls",
           "TG: every suite's PSP side, in the catalogue's order, the walls last", all);
     std::string why;
     Check(bof3x::ConfigOptValid(all, why), "  a valid opt= of nine layers (kOptMax 16 since TG)", why);
@@ -462,12 +478,12 @@ void TestSuites() {
           "  seventeen refused", why);
     Check(bof3x::SuitesOptEdit(all, walls, v, {-1, 0, -1}) ==
               "psp-art,psp-tiles,psp-maps,psp-tables,psp-names-en-150,psp-ryu-forms,area4-walls",
-          "TG: back to the PlayStation's audio removes its two layers");
+          "TG: back to the PlayStation's audio removes its layer");
     v = bof3x::SuitesEvaluate(Inputs(kManifestPspOnly, {}, "ja-JP", "", {}));
     Check(Member(Suite(v, "data"), "psp-ryu-forms").available, "TG, PSP-only: Ryu's forms the base's");
 
     // The order a written list takes: the suites' layers as recipes/suites.toml has them.
-    Check(bof3x::SuiteLayers() == std::vector<std::string>{"psp-art", "psp-tiles", "psp-maps", "psp-music", "psp-snd",
+    Check(bof3x::SuiteLayers() == std::vector<std::string>{"psp-art", "psp-tiles", "psp-maps", "psp-snd",
                                                          "psp-tables", "psp-names-en-150", "psp-names-ja-JP",
                                                          "psp-ryu-forms"},
           "SuiteLayers: the catalogue's order");

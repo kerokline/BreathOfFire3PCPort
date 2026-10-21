@@ -10,6 +10,7 @@
 // until then, and with no cache, nothing here is reached.
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace music_seq {
@@ -21,6 +22,24 @@ namespace music_seq {
 // and Music_LoadedTrack, and returns true: the MP3 names are not tried.
 // False, with nothing changed, otherwise.
 bool LoadFile(unsigned track);
+
+// DIVERGENCE DIV-0150: BOF3X_MUSIC=pc chose the PC's MP3s first: Music_LoadFile
+// tries the MP3 names before LoadFile (the discs' songs then stand in for a
+// track the install lacks). False under every other choice.
+bool PcFirst();
+
+// DIVERGENCE DIV-0150: Sound_LoadStream's kind-0 streams (the 11 recorded
+// pieces) under a chosen source (BOF3X_MUSIC psx, psp or pc): true, with
+// `out` the cache file to open, or empty for the install's SND\ (the caller
+// formats the original's own name) - the first place in the source's order
+// that has `name`, else the first choice's. False with no source chosen:
+// dat_cache::SoundPath decides, as before.
+bool StreamPath(const char* name, char* out, std::size_t cap);
+
+// The file LoadFile would read for `track`, opened for its size and closed,
+// nothing else read or changed: true and the size when the cache has it.
+// The quicksave's SOUND check (a take made under another music source).
+bool Probe(unsigned track, int* size);
 
 // Music_LoadFile's MP3 path is about to free `file` (the old Music_File): if
 // it held the cache song, that song is no longer the one loaded.
@@ -75,7 +94,10 @@ void Stop();
 void Release();
 
 // After every module's self-test: reads BOF3X_MUSIC (unset or seq: the cache's
-// song when it has one; mp3: the PC's file always; anything else is fatal) and
+// song when it has one; mp3: the PC's file always; DIV-0150's psx, psp, pc:
+// that source first - the PlayStation's then the PSP's then the PC's, the
+// PSP's then the PlayStation's then the PC's, the PC's then the PlayStation's
+// then the PSP's - for the songs and the 11 streams; anything else is fatal) and
 // BOF3X_CACHE (unset: no cache; not a directory, or too long for the file
 // layer: fatal; a directory without base\bgm: one log line, no cache).
 void Arm();

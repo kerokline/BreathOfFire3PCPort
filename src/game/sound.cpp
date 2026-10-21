@@ -181,8 +181,12 @@ int Sound_PlayEffectEax(unsigned short id) {
 // DIVERGENCE DIV-0087: first, when armed (BOF3X_CACHE, BOF3X_MUSIC), the
 // cache's base\bgm\NNN.DAT in the MP3's place (music_seq.h); not formatted,
 // opened or read otherwise.
+//
+// DIVERGENCE DIV-0150: under BOF3X_MUSIC=pc the MP3 names first, and the
+// cache's song only for a track the install lacks.
 extern "C" int __cdecl Music_LoadFile(unsigned track) {
-    if (music_seq::LoadFile(track)) return 0;  // DIV-0087
+    const bool pc_first = music_seq::PcFirst();               // DIV-0150
+    if (!pc_first && music_seq::LoadFile(track)) return 0;  // DIV-0087
     char looping[0x28], once[0x28];
     g.sprintf(looping, reinterpret_cast<const char*>(kLoopingName), track);
     g.sprintf(once, reinterpret_cast<const char*>(kOnceName), track);
@@ -190,7 +194,7 @@ extern "C" int __cdecl Music_LoadFile(unsigned track) {
     int handle = g.file_open(looping, 0, 0);
     if (handle == -1) {
         handle = g.file_open(once, 0, 0);
-        if (handle == -1) return -1;
+        if (handle == -1) return pc_first && music_seq::LoadFile(track) ? 0 : -1;  // DIV-0150
         Music_FileLoops = 0;
     }
     music_seq::Forget(Music_File);  // DIV-0087: a cache song in it is gone
@@ -1492,6 +1496,24 @@ enum : unsigned char { kMusicNone = 0, kMusicTrack = 1, kMusicOther = 2 };
 
 std::size_t HeapBlockBytes(void* block) { return _msize(block); }
 
+// The size of the file Music_LoadFile would read for `track` in this
+// process (the cache song, else BGM\NNN.DAT, else BGM\NNNN.DAT), nothing
+// read; -1 when there is none.
+int MusicFileSize(unsigned track) {
+    int size = -1;
+    const bool pc_first = music_seq::PcFirst();  // DIV-0150, as Music_LoadFile
+    if (!pc_first && music_seq::Probe(track, &size)) return size;
+    char looping[0x28], once[0x28];
+    g.sprintf(looping, reinterpret_cast<const char*>(kLoopingName), track);
+    g.sprintf(once, reinterpret_cast<const char*>(kOnceName), track);
+    int handle = g.file_open(looping, 0, 0);
+    if (handle == -1) handle = g.file_open(once, 0, 0);
+    if (handle == -1) return pc_first && music_seq::Probe(track, &size) ? size : -1;
+    size = g.file_size(handle);
+    g.file_close(handle);
+    return size;
+}
+
 // What the participant calls outside the callee table g, through pointers so
 // the self-test can stand in for them.
 struct SnapCallees {
@@ -1500,8 +1522,10 @@ struct SnapCallees {
     void (__cdecl* release)(void*);                      // SndBuf_Release
     void* (__cdecl* from_wave)(const unsigned char*);    // SndBuf_FromWave
     std::size_t (*block_bytes)(void*);                   // a Crt_malloc block's size (the toolchain's heap: crt-rest 2.6)
+    int (*music_file_size)(unsigned);                    // MusicFileSize (SnapCheck)
 };
-const SnapCallees kSnapOriginals = {SndStream_Stop, SndStream_Play, SndBuf_Release, SndBuf_FromWave, HeapBlockBytes};
+const SnapCallees kSnapOriginals = {SndStream_Stop, SndStream_Play, SndBuf_Release, SndBuf_FromWave, HeapBlockBytes,
+                                    MusicFileSize};
 SnapCallees g_snap = kSnapOriginals;
 
 // The live device and primary, read by Discard before the span is written.
@@ -1657,6 +1681,45 @@ void SnapDiscard() {
         g.free(Music_File);
     }
     g_discarded = true;
+}
+
+// The SOUND record checked before anything is written: the music file it
+// names must be the one this process reads for that track. Which file that is
+// follows the launch (BOF3X_MUSIC, the cache's layers, the install's BGM),
+// which the build check cannot see; SnapRestore's read-again would otherwise
+// stop the game after the span was written (the review of PR #95). A record
+// this check cannot walk is let through to SnapRestore's own Fatals.
+bool SnapCheck(bof3::SnapshotReader& r, std::string& why, std::string& detail) {
+    if (r.Left() < sizeof(std::uint32_t) || r.Get<std::uint32_t>() != kSnapVersion) return true;
+    for (unsigned b = 0; b < kSnapBanks; ++b) {
+        if (r.Left() < 8) return true;
+        r.Get<std::uint32_t>();
+        const std::uint32_t bytes = r.Get<std::uint32_t>();
+        if (r.Left() < bytes) return true;
+        r.Skip(bytes);
+    }
+    constexpr std::size_t kChannel = 3 + 2 * sizeof(std::uint32_t);
+    if (r.Left() < kSnapChannels * kChannel + sizeof(std::uint32_t)) return true;
+    r.Skip(kSnapChannels * kChannel);
+    const std::uint32_t stream_bytes = r.Get<std::uint32_t>();
+    constexpr std::size_t kVoice = 2 + sizeof(std::uint32_t), kFile = 1 + 3 * sizeof(std::int32_t);
+    if (r.Left() < std::size_t{stream_bytes} + kVoice + kFile) return true;
+    r.Skip(stream_bytes + kVoice);
+    const unsigned char file = r.Get<unsigned char>();
+    const std::int32_t file_size = r.Get<std::int32_t>();
+    r.Get<std::int32_t>();
+    const std::int32_t file_track = r.Get<std::int32_t>();
+    if (!file || file_track < 0) return true;
+    const int now = g_snap.music_file_size(static_cast<unsigned>(file_track));
+    if (now == file_size) return true;
+    why = "another music source";
+    char text[160];
+    std::snprintf(text, sizeof text,
+                  "track %d was a %d-byte file at the take; this game reads %s (BOF3X_MUSIC, the cache's layers or "
+                  "the install's BGM differ)",
+                  file_track, file_size, now < 0 ? "no file for it" : (std::to_string(now) + " bytes").c_str());
+    detail = text;
+    return false;
 }
 
 void SnapRestore(bof3::SnapshotReader& r) {
@@ -1850,7 +1913,7 @@ void Sound_Inject() {
     // exe host's BOF3X_SELFTEST_ONLY start, or BOF3X_SHADOW=sound hosted).
     const char* const selftest_only = std::getenv("BOF3X_SELFTEST_ONLY");
     if (bof3::IsExeHost() ? selftest_only && selftest_only[0] : bof3::WantsShadow("sound")) sound_snapshot::SelfTest();
-    bof3::Snapshot_Register("SOUND", &SnapSave, &SnapRestore, &SnapDiscard);
+    bof3::Snapshot_Register("SOUND", &SnapSave, &SnapRestore, &SnapDiscard, &SnapCheck);
 }
 
 void music_resume::SelfTest() { ResumeMp3_SelfTest(); }
@@ -2309,6 +2372,21 @@ void Music(bool playing) {
     g_resume.remembered = true, g_resume.track = 91, g_resume.sample = 12345;
     const std::uint32_t heard = 3 * kHalfSamples + 0x200, want = heard - heard % kFrameSamples;
     const std::vector<unsigned char> record = TestSave();
+    {
+        // The check before the span: the same file passes, another refuses.
+        std::string why, detail;
+        g_snap.music_file_size = [](unsigned track) { return track == 200 ? 1000 : -1; };
+        bof3::SnapshotReader same("SOUND", record.data(), record.size());
+        Check(SnapCheck(same, why, detail), "SOUND's check lets the take's own music file through");
+        g_snap.music_file_size = [](unsigned track) { return track == 200 ? 999 : -1; };
+        bof3::SnapshotReader other("SOUND", record.data(), record.size());
+        Check(!SnapCheck(other, why, detail) && why == "another music source",
+              "SOUND's check refuses a take whose music file this game reads at another size");
+        g_snap.music_file_size = [](unsigned) { return -1; };
+        bof3::SnapshotReader none("SOUND", record.data(), record.size());
+        Check(!SnapCheck(none, why, detail), "SOUND's check refuses a take whose track has no file here");
+        g_snap.music_file_size = kSnapOriginals.music_file_size;
+    }
     SpanWords take;
     take.Read();
     g_resume = Resume{};

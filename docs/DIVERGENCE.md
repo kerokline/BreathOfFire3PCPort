@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 148 entries, DIV-0001..0148, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 150 entries, DIV-0001..0150, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3178,8 +3178,40 @@ designed in rather than bolted on.
 - **Amended 2026-10-17 (the button unification round, DIV-0133):** the icon
   column is the first reader of `σ`, the one table every icon and every
   hard-coded test now asks; words 7 / 8 follow the Speak and Action lines.
+- **Amended 2026-10-21 (the owner): L1 and R1 are the disc's own small
+  labels.**
+  - *Was:* L1 and R1 composed of the dialogue capital and the 8 x 8 set's
+    serifed 1 in a 12 x 12 cell, doubled.
+  - *Now:* the font atlas's top strip packs 8 x 8 cells, "L1 L2 R1 R2 START
+    SELECT" on its third row (y 16..23); `loc_build.py` takes L1 (x 0) and R1
+    (x 16) whole and triples each to the 24 x 24 glyph (`SHOULDER_CELLS`,
+    `shoulder_glyphs`), body nibbles remapped as the shapes' are. The same
+    64 nibbles of each on all seven discs (PSX US, EU, FR, DE, JP; PSP EU,
+    JP; hashed 2026-10-21). The glyph numbers (`0xA69` / `0xA6A`) are
+    unchanged, so the Config panel, the item lists' corner (DIV-0138) and
+    the dialogue's button mentions (DIV-0140) all draw them. The `ja-JP`
+    layer gets the same two glyphs at `JA_SHOULDERS_AT` (`0xD05` / `0xD06`,
+    after its kanji sheet), so every layer but the PC's Chinese draws one
+    L1 / R1.
+  - *Why:* the owner, 2026-10-21, off renders of every disc's atlas: unify
+    the non-Chinese builds on the disc's own small L1 / R1. An 8 x 8 cell
+    scales to 24 x 24 by a whole factor, so no pixel is invented.
+  - *Verification:* the two glyphs rendered from a disc-only Latin table
+    (US disc) and a `ja-JP` table (JP disc) built by the amended
+    `loc_build.py`; not yet seen in game.
+  - *And the Japanese panel (the owner, 2026-10-21):* under `ja-JP` the
+    panel keeps the original's two cells, but its glyph cell drew the
+    stand-in behind `0x66A2FC`, which no Japanese layer writes - an empty
+    string, so no button showed. It now draws the Japan disc's own icon in
+    the same colour at the same place: circle, cross, triangle, square the
+    sheet's `0x15 08..0B` (`0x9F6..0x9F9`), L1 / R1 the small labels at
+    `0xD05` / `0xD06` (`ConfigJapaneseIcons`, armed after every self-test;
+    the draw stops loudly if the font is too short). `BOF3X_SHADOW=rest_4f`
+    (Capcom's cell, before the switch), 0 mismatches; not yet seen on a
+    Japanese install.
 - **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=ConfigController`
-  (the patches) and `Config_DrawControllerCell`.
+  (the patches) and `Config_DrawControllerCell`; the Japanese panel's icons
+  `BOF3X_ORIGINAL=ConfigJapaneseIcons`.
 
 ### The battle banner's words and its EX suffix
 
@@ -5692,8 +5724,7 @@ designed in rather than bolted on.
 
 ### The importer's cache read before the install's DAT\ and SND\
 
-- **ID:** DIV-0089 (the next free number on 2026-10-10; renumber at the merge
-  if another branch has taken it)
+- **ID:** DIV-0089
 - **Date:** 2026-10-10
 - **Subsystem:** assets (`LoadDatFile` `0x454590`, ours in
   `src/game/dat_load.cpp`; `Snd_LoadBankFile` `0x454770` and
@@ -5869,8 +5900,7 @@ designed in rather than bolted on.
 
 ### The MP3 decoder is minimp3, not the library Capcom linked
 
-- **ID:** DIV-0091 (the next free number on 2026-10-10 evening; renumber at
-  the merge if another branch has taken it)
+- **ID:** DIV-0091
 - **Date:** 2026-10-10
 - **Subsystem:** music (the MP3 path: `Music_OpenDecoder` `0x5A6D60`,
   `Music_Decode` `0x5A6F30`, `Music_Release` `0x5A70A0`, `music_loops`'
@@ -5919,8 +5949,7 @@ designed in rather than bolted on.
 
 ### The field's music after a battle, and after a load of a save without a track, is the area's own
 
-- **ID:** DIV-0092 (the next free number on 2026-10-10 night; renumber at
-  the merge if another branch has taken it)
+- **ID:** DIV-0092
 - **Date:** 2026-10-10
 - **Subsystem:** the field's music (`GameMode5_Leave` `0x496150`,
   `src/game/mode_rest.cpp`; `GameMode_Start` `0x495840`,
@@ -6076,8 +6105,7 @@ designed in rather than bolted on.
 
 ### The MP3 decoder's end-of-stream count is zero, not the last frame's
 
-- **ID:** DIV-0093 (the next free number on 2026-10-11; renumber at the
-  merge if another branch has taken it)
+- **ID:** DIV-0093
 - **Date:** 2026-10-11
 - **Subsystem:** music (the MP3 path's decoder, `src/audio/mp3.cpp`
   `DecodeFrame`, behind `Music_Decode` `0x5A6F30`'s seam - DIV-0091)
@@ -6127,8 +6155,7 @@ designed in rather than bolted on.
 
 ### The game runs as our own executable
 
-- **ID:** DIV-0094 (the next free number on 2026-10-11; renumber at the
-  merge if another branch has taken it)
+- **ID:** DIV-0094
 - **Date:** 2026-10-11
 - **Subsystem:** the platform under the game: the process, its start-up and
   its loader (`bof3x.exe`, written by `tools/make_exe.py` from
@@ -6210,8 +6237,7 @@ designed in rather than bolted on.
 
 ### The executable's icon, drawn from the game's own data on the player's machine
 
-- **ID:** DIV-0095 (the next free number on 2026-10-11; renumber at the
-  merge if another branch has taken it)
+- **ID:** DIV-0095
 - **Date:** 2026-10-11
 - **Subsystem:** platform (`src/hook/exe_icon.cpp`, called from
   `Game_WinMain`'s loop, `src/game/win_main.cpp`; the launcher's move of
@@ -6795,7 +6821,11 @@ designed in rather than bolted on.
   whose SEPs differ by 20 bytes; a PSX base with the PSP's music layer plays
   that boss `BGMBAT00`'s PSP render). The recipe's equality gate accepts
   exactly that: a track naming a song of the same byte-identical set. With the
-  PC's `.data` nothing changes. Verification: `psp_exe.py recipe`,
+  PC's `.data` nothing changes. *2026-10-21 (the owner: "have the fight use
+  BGMBAT02"):* a tie now takes the highest song of the set, so that boss
+  (`BOSS033`, event battle 25) is 153 on every build, `BOF3.exe`'s word: 164
+  of 164 bytes equal on all seven (`psp_exe.py recipe`), and a PSX base with
+  the PSP's music layer plays `BGMBAT02`'s own recording. Verification: `psp_exe.py recipe`,
   `exe_tables.py recipe`, `exe_own.py measure`, `exe_tables.py gaps` over the
   seven discs (`exe-psp.tsv`'s `pairs` rows 82 to 164 bytes; `exe-gaps.tsv`
   loses the 41 track rows per build); `psp_exe.py check` clean; the `whelpBoss` route on a scratch PSP-EU-only install under
@@ -7370,6 +7400,11 @@ designed in rather than bolted on.
   heard.**
 - **Reversible?** The audio suite's PlayStation side, or `opt=` without the
   layer.
+- **Amended 2026-10-21 (DIV-0150):** the layer is no longer the audio suite's:
+  the launcher's Music box chooses the music source, and under a chosen source
+  (`BOF3X_MUSIC` psx, psp or pc) the engine reads `opt\psp-music\bgm` by that
+  choice whether or not `opt=` names it. With `BOF3X_MUSIC` unset or `seq`,
+  this entry's rule holds as written.
 
 ### The PSP's effects, voices and jingles as a layer
 
@@ -8254,6 +8289,11 @@ designed in rather than bolted on.
 - **Reversible?** (1) `BOF3X_ORIGINAL=Sound_StreamDone` (the original's
   answer; the flag is then read by nothing). (2) a build with a PC install
   among the sources, or the 11 deleted from `base/snd/` and `SND\`.
+- **Amended 2026-10-21 (DIV-0150):** the 11 are made whenever a PSX disc and
+  ffmpeg are both there. With a PC install among the sources they go in
+  `base/psx-jingles/` (the manifest's `[snd_jingles] dir`), not `base/snd/`, so
+  nothing that chooses no music source plays them over the PC's; a PSX-only
+  build keeps them in `base/snd/` as above.
 
 ### A disc's world-map legend shows only the live button icon
 
@@ -8303,9 +8343,9 @@ designed in rather than bolted on.
   PC install's own page is no longer left alone: its key names are painted
   over and the live buttons drawn as glyphs. The disc repaint here is
   unchanged.
-- **Reversible?** A cache built without it (the stand-in's recipe hash is the
-  disc's, checked before the repaint; the manifest records the repainted
-  body's).
+- **Reversible?** Not a runtime switch: only by building the cache with an
+  importer from before this entry (the stand-in's recipe hash is the disc's,
+  checked before the repaint; the manifest records the repainted body's).
 
 ### A PSP-only install's title logo is cut from the PSP's pages where the PSP's art lies
 
@@ -8716,6 +8756,25 @@ designed in rather than bolted on.
   live, psp-jp's five item-list routes run to `recipe done`, and psx-jp's
   and psp-eu's `menu_screens` are pixel-equal to the base build's in all 60
   frames.
+- **Amended 2026-10-21 (the owner): under `ja-JP` every corner glyph is the
+  Japan disc's own.**
+  - *Was:* the face buttons under `ja-JP` read the stand-ins behind
+    `0x66A2FC`, which no Japanese layer writes, so a face button in a
+    shoulder slot (Change on circle, say) stopped the game at the first
+    item list on psx-jp and psp-jp disc-only installs, D321 again by
+    another entry (found by the 2026-10-21 review of PR #91). L1 / R1 on a
+    PSP base were the font's capital `L` / `R`.
+  - *Now:* under `ja-JP` circle, cross, triangle and square are the
+    single-byte sheet's `0x15 08..0B` (`0x9F6..0x9F9`, `button_text.h`'s
+    `kJapaneseIcons`, the glyphs D279's fishing labels and DIV-0140 already
+    draw; the owner confirmed the square at `0x15 0B` off a render of the
+    sheet, 2026-10-21), and L1 / R1 the disc's small labels at `0xD05` /
+    `0xD06` (DIV-0051's 2026-10-21 amendment). No stand-in is read under
+    `ja-JP`; the draw still stops loudly if the font is too short.
+  - *Verification:* `BOF3X_SHADOW=shoulder_glyphs,button_text`: 720 plans,
+    24 glyph codes (the six under `ja-JP` planted over empty stand-ins), 0
+    mismatches; ButtonText 180 mentions, 0 mismatches. Not yet run on a
+    Japanese install.
 - **Reversible?** `BOF3X_ORIGINAL=ShoulderGlyphs`.
 
 ### The hard-coded button tests ask the Config
@@ -8780,6 +8839,17 @@ designed in rather than bolted on.
   does, on all four installs. **Owed:** the minigames (the rope pull, the
   crane, the well, the chop, the antenna, the ram, the dock), from RC's
   placed saves; HT-2's battle, held text and music room.
+- **Amended 2026-10-21: five more sites through `σ`.** The review of PR #85
+  found tests the census missed (each at a jump target just past a `ret`):
+  the field's ability and equipment slot lists (`SharedList_PickSlot`,
+  `Equip_ChooseSlot`) and the battle's equipment slot list
+  (`BattleItemCmd_EquipSlotPick`) tested a raw triangle `0x10` before or
+  after cancel, so on a West install, where cancel is triangle, the cancel
+  button unequipped instead of backing out; `DragonCmd_StoreSource` kept the
+  first of its two triangle tests raw; and `ExtraSlots_PickItem` paged on a
+  raw L1 / R1. All now `Sigma(...)` ([`button-tests.md`](button-tests.md)
+  2.3). The identity is unchanged, so every self-test still compares
+  Capcom's code.
 - **Reversible?** `BOF3X_ORIGINAL=ButtonSigma`, DIV-0133's switch: with it
   `Sigma` is the identity and every test is the original's. There is no
   separate switch: a swapped Config with DIV-0133 off but this on would
@@ -8952,8 +9022,7 @@ designed in rather than bolted on.
 
 ### An area change that keeps the track while it fades to a stop keeps none: Ryu's dream is silent, as on the PlayStation
 
-- **ID:** DIV-0143 (the next free number on 2026-10-18; renumber at the
-  merge if another branch has taken it)
+- **ID:** DIV-0143
 - **Date:** 2026-10-18
 - **Subsystem:** the area's music (`Area_PickMusic` `0x5953B0`, ours,
   `src/game/window_task.cpp`; [`known-defects.md`](known-defects.md) D318,
@@ -9098,7 +9167,9 @@ designed in rather than bolted on.
   elsewhere, is refused with its reason and nothing is written; so is one
   taken under the original Chinese text and loaded under a translation, or
   the reverse (from 2026-10-20; before, that load ended the game in a Fatal
-  part-way through). One translation's quicksave loaded under another is
+  part-way through), and one whose music file this launch reads differently
+  - another `BOF3X_MUSIC`, cache layers or `BGM` (from 2026-10-21, the same
+  Fatal before). One translation's quicksave loaded under another is
   let through: the take's text shows until the game reloads its own
   ([`quicksave.md`](quicksave.md) 4b, IDEAS I47).
 
@@ -9261,3 +9332,109 @@ designed in rather than bolted on.
 - **Reversible?** Rebuild the language without the chunk, or play the
   original text: the roll then reads `.data`'s table (on a Western disc-only
   install, D323's patchwork). Not a runtime switch.
+
+### An event battle with no music of its own leaves the scene's song playing
+
+- **ID:** DIV-0149
+- **Date:** 2026-10-21
+- **Subsystem:** music at a battle's start (`GameMode5_Load` `0x495FD0`, ours
+  in `src/game/mode_rest.cpp`)
+- **Tier:** Intent - the PlayStation's behaviour, heard by the owner.
+- **Original behaviour:** five event battles' files carry no music (their
+  track word in `EventBattle_Records+0xE2` is 0xFF; the miners' fight at the
+  start is one, issue #83). `GameMode5_Load` fades the scene's song out over
+  10 frames and calls `Music_Play(0xFF, 0xA)`; song 255 has no file, so
+  `Music_LoadFile` fails and `Music_Play` starts the file still loaded - the
+  scene's song - again from its top, fading in (D24's path, which the PC's
+  own data reaches here). The PlayStation's `GameMode5_Load` (`0x80198C94`)
+  names no song and the battle file brings none, so the scene's song plays
+  on.
+- **New behaviour:** when the event battle's track word is 0xFF, neither the
+  fade nor the `Music_Play` happens: the song playing goes on into the fight
+  without a break, and the log says `DIV-0149    event battle N has no music
+  of its own: track T plays on`. Every other battle is as before. The end
+  of the fight is unchanged (DIV-0092: the fanfare's stop, then the zone's
+  song).
+- **Rationale:** the owner, 2026-10-21, playing the PlayStation release on
+  an emulator: the music starts slightly before the fight and continues into
+  it without restarting. A PC-only difference is a port repair (the PSX twin
+  rule); found by the 2026-10-21 review of PR #86.
+- **Also in the PSX version?** This is the PSX's behaviour brought back.
+- **Verification:** `BOF3X_SHADOW=mode_rest` (Capcom's rule, before the
+  switch is armed): 52,000 rounds, 0 mismatches; the switch logs ON. Not yet
+  heard in the PC build.
+- **Reversible?** `BOF3X_ORIGINAL=EventBattleKeepsMusic`.
+
+### The music comes from a chosen source first: the PlayStation's, the PSP's or the PC's
+
+- **ID:** DIV-0150
+- **Date:** 2026-10-21
+- **Subsystem:** music - `Music_LoadFile` `0x587A20` (ours, `src/game/sound.cpp`),
+  the sequencer's seam (`src/game/music_seq.cpp` `Arm` / `Find` / `StreamPath`),
+  `Sound_LoadStream` `0x587910`'s kind 0 (ours, `src/game/save_menu.cpp`);
+  `importer.py build` (`snd_from_psx`, `[snd_jingles] dir`); the launcher's
+  Music box (`src/launcher/config_dialog.cpp`, `config.cpp` `ConfigMusicSource`),
+  the Jukebox's PlayStation streams, and `recipes/suites.toml` (the audio
+  suite loses its music member to the Music box)
+- **Tier:** Intent - the owner's decision, 2026-10-21.
+- **Original behaviour:** the PC port plays its MP3s (`BGM\NNN.DAT`) and its
+  11 recorded streams (`SND\NAME.DAT`, the kind-0 pieces: the inn's
+  `OYASUMI`, the staff roll's `PURE`, ...). Before this entry the port's own
+  order was: a song from a PSP layer `opt=` names (DIV-0109), then the cache's
+  `base\bgm` (DIV-0087), then the MP3; `music=mp3` the MP3 alone. The
+  streams: a named layer's `snd\`, then `base\snd\`, then `SND\`
+  (DIV-0089, DIV-0110) - and a cache with a PC install among its sources had
+  no disc streams at all (DIV-0129), so the Jukebox listed the PlayStation's
+  greyed.
+- **New behaviour:** `BOF3X_MUSIC` (the ini's `music=`) names a source, and
+  the songs and the 11 streams come from the first place in that source's
+  order that has the piece:
+  - `psx`: the PlayStation's (`base\bgm`; the streams `base\psx-jingles`,
+    then `base\snd`), then the PSP's (`opt\psp-music\bgm`, `opt\psp-snd\snd`;
+    a PSP-only cache's `base\`), then the PC's (`BGM\`, `SND\`);
+  - `psp`: the PSP's, then the PlayStation's, then the PC's;
+  - `pc`: the PC's, then the PlayStation's, then the PSP's (`Music_LoadFile`
+    and the quicksave's size probe try the MP3 names first).
+  The PSP's layers are read by this choice, whether or not `opt=` names them.
+  `seq` and an unset `BOF3X_MUSIC` keep the order above as it was, and `mp3`
+  the MP3s alone. The launcher always hands the game a source: the ini's, or
+  for an empty `music=` (or `seq`) the PSP's when the layers it hands the game
+  name `psp-music` (the audio suite's PSP side before this entry), else the
+  PlayStation's; `mp3` is `pc`. Its Music box lists the three as "PlayStation
+  Encoded", "PSP Encoded" and "PC MP3s", one this install lacks saying so; an
+  untouched box writes `music=` back as read. The importer now makes the 11
+  PlayStation streams whenever a PSX disc and ffmpeg are both among the
+  sources; beside a PC install they go in `base/psx-jingles/` (so the unset
+  order above never plays them over the PC's), and the manifest's
+  `[snd_jingles] dir` says where. The game logs the order at start-up
+  (`DIV-0150    music from ... first`) and each stream as it starts.
+- **Rationale:** the owner, 2026-10-21: the Music tab's dropdown as three
+  sources, "the game can then use the chosen source for all music (when
+  available)"; with either disc chosen the other disc second and the PC
+  third, with the PC chosen the PlayStation second and the PSP third. The
+  Jukebox already played each source on its own; the PlayStation's streams
+  were missing from it on a mixed install.
+- **Also in the PSX version?** No: the PlayStation plays its own sequences
+  and XA. Which recording plays is the player's choice here; the pieces are
+  the same music, and a stream's length (`Sound_StreamDone`'s waits: the
+  inn, the staff roll) differs between sources by the encoders' padding.
+- **Verification:** `BOF3X_SHADOW=sound`: the DIV-0150 self-test (the PC's MP3
+  names opened before the cache's song; the PSP's song before the
+  PlayStation's; a stream from the cache, from the install, in neither, the
+  install first, no source chosen) and DIV-0087 / DIV-0109's, exit 0. The
+  launcher host tests: 260 checks, 0 failures (`ConfigMusicSource`,
+  `[snd_jingles] dir`, the audio suite without its music member).
+  `snd_from_psx` with the PC install and the US disc: 11 streams in
+  `base/psx-jingles/`, `base/snd/` the 880 and `VOICE00`..`04` as before.
+  `BOF3X_SHADOW=save_menu` 66,000 rounds, 0 mismatches (its fuzz drives
+  `Sound_LoadStream` before `Arm`, so no source is chosen there).
+  Live, `ending17` to the staff roll on a PC install at x8 (2026-10-21): with
+  a copy of a PC + US cache given `base/psx-jingles/`, `psx` logs `stream PURE
+  from ...\base\psx-jingles\PURE.DAT` and `pc` `SND\PURE.DAT`; on the owner's
+  cache (read only) `psp` logs `...\opt\psp-snd\snd\PURE.DAT` and its songs
+  from `opt\psp-music\bgm` first. On a PSX-US disc-only install the roll
+  played `PURE` from `base\snd` and was heard. **Not yet played with the
+  launcher's box.**
+- **Reversible?** `music=seq` in `bof3x.ini` (or `BOF3X_MUSIC=seq`) for the
+  order before this entry; the streams beside a PC install are then the
+  PC's again.

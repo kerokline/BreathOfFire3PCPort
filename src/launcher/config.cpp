@@ -180,8 +180,9 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             cfg.cache = ConfigCacheFromIni(value);   // UTF-8 (state 3); an older ini's ANSI bytes once
         } else if (key == "ffmpeg") {  // the importer's, for the PSP's music (docs/install-sources.md)
             cfg.ffmpeg = ConfigCacheFromIni(value);
-        } else if (key == "music") {  // DIV-0087
-            if (value == "seq" || value == "mp3" || value.empty()) cfg.music = value;
+        } else if (key == "music") {  // DIV-0087, DIV-0150
+            if (value == "psx" || value == "psp" || value == "pc" || value == "seq" || value == "mp3" || value.empty())
+                cfg.music = value;
         } else if (key == "filter") {
             if (value == "point") cfg.filter = Filter::kPoint;
             else if (value == "linear") cfg.filter = Filter::kLinear;
@@ -421,8 +422,14 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
         else if (const std::wstring home = HomeCacheDefault(); !home.empty())
             SetEnvironmentVariableW(L"BOF3X_CACHE", home.c_str());
     }
-    if (GetEnvironmentVariableW(L"BOF3X_MUSIC", existing, 64) == 0 && !cfg.music.empty())
-        SetEnvironmentVariableA("BOF3X_MUSIC", cfg.music.c_str());
+    // DIV-0150: always a source, the ini's or the default's by the layers the
+    // game is handed (ConfigMusicSource; BOF3X_OPT is set above)
+    if (GetEnvironmentVariableW(L"BOF3X_MUSIC", existing, 64) == 0) {
+        char opt[512];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", opt, sizeof opt);
+        SetEnvironmentVariableA("BOF3X_MUSIC",
+                                ConfigMusicSource(cfg.music, n > 0 && n < sizeof opt ? opt : cfg.opt.c_str()).c_str());
+    }
 
     if (GetEnvironmentVariableW(L"BOF3X_FILTER", existing, 64) == 0 &&
         cfg.filter == Filter::kPoint)
@@ -696,6 +703,19 @@ std::string ConfigOptEdit(const std::string& opt, const std::vector<std::string>
     for (const std::string& n : played)
         if (std::find(order.begin(), order.end(), n) == order.end()) put(n);
     return out;
+}
+
+std::string ConfigMusicSource(const std::string& music, const std::string& opt) {
+    if (music == "psx" || music == "psp" || music == "pc") return music;
+    if (music == "mp3") return "pc";
+    std::size_t at = 0;
+    while (at <= opt.size()) {
+        const std::size_t comma = opt.find(',', at);
+        const std::size_t end = comma == std::string::npos ? opt.size() : comma;
+        if (opt.compare(at, end - at, "psp-music") == 0) return "psp";
+        at = end + 1;
+    }
+    return "psx";
 }
 
 bool ConfigOptValid(const std::string& opt, std::string& why) {

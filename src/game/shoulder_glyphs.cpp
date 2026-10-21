@@ -15,6 +15,7 @@
 #include <string>
 
 #include "common/cache_manifest.h"
+#include "game/button_text.h"
 #include "game/lang_layout.h"
 #include "game/text_draw.h"
 #include "hook/detour.h"
@@ -114,13 +115,17 @@ Plan Make(unsigned id, int x, int y, const Rect& own, const Rect& r15, const Rec
 // cross, triangle, square, L1, R1, each in its colour (2, 1, 6, 5, 0, 0,
 // read off 0x461C00's pushes). Under a Latin layer the glyph is DIV-0051's
 // icon, which loc_build.py puts at ICONS_AT (0xA65 on): the same numbers as
-// config_text.cpp's kIconCircle..kIconR1. Otherwise the port's stand-in, the
-// one-byte string 0x66A2FC[k] (circled numerals and an X in the Chinese
-// font) - except L1 / R1 under `ja_letters` (D321, the owner 2026-10-18): a
-// PSP base under `ja-JP` has no L1 / R1 art, no Latin icon and no stand-in
-// (no Japanese layer writes 0x66A2FC's strings, and the Japan disc has no L1
-// / R1 glyph), so they are the `ja-JP` font's capital L and R.
-Code GlyphCode(std::uint16_t button, bool latin, bool ja_letters) {
+// config_text.cpp's kIconCircle..kIconR1. Under `ja-JP` (`ja`) it is the
+// Japan disc's own, from button_text.h's numbers: the face buttons the
+// single-byte sheet's 0x15 08..0B (circle, cross, triangle, square - the
+// owner's look at the sheet, 2026-10-21), and L1 / R1 the disc's small
+// labels loc_build.py puts at JA_SHOULDERS_AT, as the Latin layers' are (the
+// owner 2026-10-21, over D321's capital L and R; drawn only on a PSP base,
+// the others have the page art). No Japanese layer writes 0x66A2FC's
+// strings, so a remapped slot there would find them empty. Otherwise the
+// port's stand-in, the one-byte string 0x66A2FC[k] (circled numerals and an
+// X in the Chinese font).
+Code GlyphCode(std::uint16_t button, bool latin, bool ja) {
     static const std::uint16_t kOrder[6] = {0x20, 0x40, 0x10, 0x80, kL1, kR1};
     static const int kColour[6] = {2, 1, 6, 5, 0, 0};
     constexpr std::uint32_t kIconFirst = 0xA65;           // loc_build.py ICONS_AT; config_text.cpp kIconCircle
@@ -133,8 +138,9 @@ Code GlyphCode(std::uint16_t button, bool latin, bool ja_letters) {
             const std::uint32_t g = kIconFirst + static_cast<std::uint32_t>(k);
             c.text[0] = static_cast<unsigned char>(0x80 | (g >> 8));
             c.text[1] = static_cast<unsigned char>(g & 0xFF);
-        } else if (ja_letters && (button == kL1 || button == kR1)) {
-            const unsigned g = JaLetterGlyph(button == kL1 ? 'L' : 'R');
+        } else if (ja) {
+            const unsigned g = k < 4 ? button_text::kJapaneseIcons + static_cast<unsigned>(k)
+                                     : button_text::kJapaneseShoulders + static_cast<unsigned>(k - 4);
             c.text[0] = static_cast<unsigned char>(0x80 | (g >> 8));
             c.text[1] = static_cast<unsigned char>(g & 0xFF);
         } else {
@@ -150,25 +156,15 @@ Code GlyphCode(std::uint16_t button, bool latin, bool ja_letters) {
     bof3::Fatal("ShoulderGlyphs: no glyph for button 0x%04X (not one of the six)", button);
 }
 
-// tools/loc_build.py: the `ja-JP` layer's font puts the Japan disc's
-// single-byte sheet (ENDKANJI.EMI section 0) whole from JA_AT, cell b at
-// JA_AT + b for 0x17 <= b < 0x5B (ja_cell_of), and the script's capitals are
-// ASCII's codes (JA_SHARED; the sibling's docs/TEXT_ENGINE.md code table).
-unsigned JaLetterGlyph(char letter) {
-    constexpr unsigned kJaAt = 0x993;   // loc_build.py JA_AT: the shipped table's 0x993 glyphs, then the JP sheet
-    if (letter < 'A' || letter > 'Z') bof3::Fatal("ShoulderGlyphs: '%c' is not a capital the ja-JP font shares", letter);
-    return kJaAt + static_cast<unsigned>(letter);
-}
-
 Code DrawCode(std::uint16_t button) {
     const bool latin = Lang_Latin();
-    const bool ja_letters = !latin && !g_page_art && Lang_Japanese();
-    const Code c = GlyphCode(button, latin, ja_letters);
-    if (ja_letters && (button == kL1 || button == kR1)) {
+    const bool ja = !latin && Lang_Japanese();
+    const Code c = GlyphCode(button, latin, ja);
+    if (ja) {
         const unsigned g = (static_cast<unsigned>(c.text[0] & 0x7F) << 8) | c.text[1];
         const unsigned glyphs = TextDraw_GlyphCount();
         if (g >= glyphs)
-            bof3::Fatal("ShoulderGlyphs: the ja-JP letter is glyph 0x%X, the font loaded has %u glyphs (no ja-JP sheet)",
+            bof3::Fatal("ShoulderGlyphs: the ja-JP glyph is 0x%X, the font loaded has %u glyphs (no ja-JP layer)",
                         g, glyphs);
     }
     return c;
@@ -339,10 +335,10 @@ void SelfTest() {
     // The glyph codes, over stand-ins of our own planted in 0x66A2FC's six
     // entries (the shipped pointers put back after): Latin DIV-0051's six,
     // in order, two bytes; the stand-ins one byte each, as planted; and
-    // D321's branch, a PSP base under ja-JP, with L1's and R1's entries
-    // planted empty as a ja-JP image leaves them: L1 / R1 the ja-JP font's
-    // capital L / R (JA_AT + 0x4C, + 0x52), the face buttons still the
-    // planted stand-ins. A Latin layer wins over the flag.
+    // the ja-JP branch, with all six entries planted empty as a ja-JP image
+    // leaves them: the face buttons the Japan sheet's 0x15 08..0B (JA_AT +
+    // 0x63..0x66), L1 / R1 the disc's small labels (JA_SHOULDERS_AT, + 1).
+    // A Latin layer wins over the flag.
     static const std::uint16_t kOrder[6] = {0x20, 0x40, 0x10, 0x80, kL1, kR1};
     static const int kColour[6] = {2, 1, 6, 5, 0, 0};
     static const unsigned char kPlanted[6][2] = {{'b', 0}, {'c', 0}, {'d', 0}, {'e', 0}, {'f', 0}, {'g', 0}};
@@ -366,22 +362,17 @@ void SelfTest() {
         Check(a.colour == kColour[k] && b.colour == kColour[k], "a glyph colour", k, a.colour, b.colour);
         codes += 3;
     }
-    plant(4, kEmpty);
-    plant(5, kEmpty);
+    for (int k = 0; k < 6; ++k) plant(k, kEmpty);
     for (int k = 0; k < 6; ++k) {
         const Code j = GlyphCode(kOrder[k], false, true);
         Check(j.colour == kColour[k], "a ja-JP glyph colour", k, j.colour);
-        if (k < 4) {
-            Check(j.text[0] == kPlanted[k][0] && j.text[1] == 0, "a face button's stand-in under ja-JP", k, j.text[0]);
-        } else {
-            const unsigned g = (static_cast<unsigned>(j.text[0] & 0x7F) << 8) | j.text[1];
-            const unsigned want = k == 4 ? 0x9DFu : 0x9E5u;   // 0x993 + 'L', 0x993 + 'R'
-            Check((j.text[0] & 0x80) != 0 && g == want && j.text[2] == 0, "a ja-JP shoulder letter", k,
-                  static_cast<int>(g), static_cast<int>(want));
-        }
+        const unsigned g = (static_cast<unsigned>(j.text[0] & 0x7F) << 8) | j.text[1];
+        // 0x993 + 0x5B + 0x08..0x0B; 0x993 + 2 * 441, + 1
+        static const unsigned kWant[6] = {0x9F6u, 0x9F7u, 0x9F8u, 0x9F9u, 0xD05u, 0xD06u};
+        Check((j.text[0] & 0x80) != 0 && g == kWant[k] && j.text[2] == 0, "a ja-JP corner glyph", k,
+              static_cast<int>(g), static_cast<int>(kWant[k]));
         ++codes;
     }
-    Check(JaLetterGlyph('L') == 0x993u + 0x4C && JaLetterGlyph('R') == 0x993u + 0x52, "the ja-JP capitals' rule");
     for (int k = 0; k < 6; ++k) std::memcpy(entry(k), &shipped[k], 4);
     // Stand-in Configs through σ's own builder: Japan's defaults (the
     // identity), Speak <-> Action, View <-> Change, and Change on circle.
@@ -408,7 +399,7 @@ void SelfTest() {
         Check(sg::Apply(t, kL1) == s.l1 && sg::Apply(t, kR1) == s.r1, s.what, sg::Apply(t, kL1), sg::Apply(t, kR1));
     }
     bof3::Log("shadow      shoulder_glyphs self-test: %u plans rastered (%u drawn as the original), %u rectangles, "
-              "%u glyph codes (6 under ja-JP letters, D321), %u stand-in Configs; %u MISMATCHES",
+              "%u glyph codes (6 under ja-JP, D321), %u stand-in Configs; %u MISMATCHES",
               cases, originals, rects, codes, static_cast<unsigned>(sizeof kSwaps / sizeof kSwaps[0]), g_bad);
     if (g_bad) bof3::Fatal("shoulder_glyphs self-test: %u mismatches (see the log)", g_bad);
 }
@@ -432,7 +423,7 @@ void Arm() {
         how = !m.present ? "the cache has no manifest: the PC's page"
               : g_page_art ? "a PC or PSX base: L1 / R1 art"
               : !Lang_Latin() && Lang_Japanese()
-                  ? "a PSP base under ja-JP: L / R, the Config panel's glyphs, L1 / R1 the font's capital L / R (D321)"
+                  ? "a PSP base under ja-JP: L / R, the Japan sheet's glyphs, L1 / R1 the disc's small labels (D321)"
                   : "a PSP base: L / R, the Config panel's glyphs";
     }
     static const std::uint8_t was = 0, is = 1;

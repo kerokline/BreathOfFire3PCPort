@@ -1483,7 +1483,7 @@ extern "C" void __cdecl SharedList_PickSlot(void) {
         FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
         return;
     }
-    if (pressed & 0x10) {
+    if (pressed & Sigma(0x10)) {   // DIVERGENCE DIV-0139: Japan's triangle through σ (0x58491F)
         if (B(cell) != 0) {
             Sound(0x103);
             SH_CALL(AbilityList_Add)(B(cell), 0, 1, 0);
@@ -1989,7 +1989,7 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
         FieldS_State = state;
         return;
     }
-    if (pressed & 0x10) {
+    if (pressed & Sigma(0x10)) {   // DIVERGENCE DIV-0139: Japan's triangle through σ (0x58C9DE)
         if (B(0x80333E) != 0 && B(cell) != 0) {
             Sound(0x103);
             SH_CALL(Inventory_Add)(category, B(cell), 1);

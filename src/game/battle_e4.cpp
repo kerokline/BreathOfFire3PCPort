@@ -764,7 +764,7 @@ extern "C" void __cdecl BattleItemCmd_EquipSlotPick(void) {
         BattleE4_Step4 = 0;
         return;
     }
-    if (pad & 0x10) {
+    if (pad & Sigma(0x10)) {   // DIVERGENCE DIV-0139: Japan's triangle through σ (0x448EDB)
         BH_CALL(Sound_PlayEffect)(BH_CALL(BattleEquip_RemoveSlot)() != 0 ? 0x103 : 0x107);
         return;
     }

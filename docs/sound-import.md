@@ -335,7 +335,10 @@ check stand in for it until then.
    **Answered** (the owner, 2026-10-15; built 2026-10-16 as DIV-0129): the
    first way, with the player's own ffmpeg as the encoder (as the PSP's
    jingles, DIV-0106), so nothing is vendored - `xa.jingles`, written only
-   when no PC install is among the sources. Against the PC's MP3s (mono,
+   when no PC install is among the sources. **Since 2026-10-21 (DIV-0150)**
+   written whenever a PSX disc and ffmpeg are both there: beside a PC
+   install to `base/psx-jingles/`, played when the Music box chooses the
+   PlayStation's (or the chosen source lacks the piece). Against the PC's MP3s (mono,
    22.05 kHz): nine correlate at 0.954..0.999 over 20 s; `PURE` and `KARA`
    at 0.92..0.99 in 2 s windows, their offset growing by 3.5e-5 - the PC's
    own resampling drift (section 4) - so ours keep the disc's timing. Each is

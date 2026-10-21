@@ -20021,9 +20021,11 @@ src/game/mode_rest.cpp	GameMode5_Turn	global	At	at::kKind2XHigh	0	0x905e66	-	ins
 src/game/mode_rest.cpp	GameMode5_Turn	global	At	at::kKind2XHigh	1	0x905e66	-	inside-entry	at::kKind2XHigh 0x905e66 Field_Kind2X+0x2	b0
 src/game/mode_rest.cpp	GameMode5_Turn	global	UL	at::kFormation	1	0x904aac	-	no-entry	at::kFormation 0x904aac -	b0
 src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kEventAsset	0	0x64ddef	-	no-entry	at::kEventAsset 0x64ddef -	b0
-src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kEventFile	0	0x64decc	-	no-entry	at::kEventFile 0x64decc -	b0
-src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kEventAsset	1	0x64ddef	-	no-entry	at::kEventAsset 0x64ddef -	b0
 src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kEventTrack	0	0x64dece	-	no-entry	at::kEventTrack 0x64dece -	b0
+src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kEventAsset	1	0x64ddef	-	no-entry	at::kEventAsset 0x64ddef -	b0
+src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kEventFile	0	0x64decc	-	no-entry	at::kEventFile 0x64decc -	b0
+src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kEventAsset	2	0x64ddef	-	no-entry	at::kEventAsset 0x64ddef - (DIV-0149's peek at the event battle's track, the same words the original's read uses)	cleanup-1021
+src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kEventTrack	1	0x64dece	-	no-entry	at::kEventTrack 0x64dece - (DIV-0149's peek at the event battle's track, the same words the original's read uses)	cleanup-1021
 src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kBattleWord	0	0x904aa8	-	no-entry	at::kBattleWord 0x904aa8 -	b0
 src/game/mode_rest.cpp	GameMode5_Load	global	At	at::kBattleBytes	0	0x904aa0	-	no-entry	at::kBattleBytes 0x904aa0 -	b0
 src/game/mode_rest.cpp	GameMode5_Script	global	At	at::kBattleBytes	0	0x904aa0	-	no-entry	at::kBattleBytes 0x904aa0 -	b0

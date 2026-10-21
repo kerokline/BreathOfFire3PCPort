@@ -1,6 +1,13 @@
 # The install-gap round: staging
 
-**Status:** IN PROGRESS (staged 2026-10-17 against `origin/main` `8382691d`;
+**Status:** DONE (merged as PR #91, 2026-10-19). Since then: **D279 fixed
+2026-10-18** by DIV-0144 and DIV-0069's amendment
+([`known-defects.md`](known-defects.md) D279), so the crash below is
+history; **D266 fixed 2026-10-20** (the `titlemark` rule, PR #98); item 6
+(STRICT as the default) moved to [`exe-gap-round.md`](exe-gap-round.md).
+The paragraph that follows is the status as it stood on 2026-10-18.
+
+(Staged 2026-10-17 against `origin/main` `8382691d`;
 run 2026-10-18. **Stage A** (RD, PB, OT, TW, LA, RW) and **stage B as run**
 (PT, CW, FP; section 3a) are merged on `install-gap/round`, with the recipes
 regenerated over the seven discs after each tool change; the tip is `0baf26f7`.
@@ -557,6 +564,10 @@ to land on unmapped memory, which depends on where the DLL and the heap sit.
 Not measured: whether the round's base build crashes as often. D279's fix
 is still the owner's call ([`owner-review.md`](owner-review.md)). Until
 then a Japanese disc-only install cannot fish.
+_(2026-10-21) Fixed the same evening, 2026-10-18, by DIV-0144 and
+DIV-0069's amendment on `install-gap/d279` (the owner's call: both paths),
+merged with the round as PR #91 ([`known-defects.md`](known-defects.md)
+D279)._
 
 ### 6.6 What this leaves
 
@@ -564,7 +575,8 @@ then a Japanese disc-only install cannot fish.
 - **The nine stale pairs plus Nue's** (HANDOFF item 2): re-recording wants
   a quiet machine and a fixed save list. Tonight's comparison went around
   them by running Capcom's side the same hour.
-- **D279 on `psx-jp`** (6.5): every time on this build.
+- **D279 on `psx-jp`** (6.5): every time on this build. _(2026-10-21) fixed
+  2026-10-18 by DIV-0144, merged with PR #91._
 - **The roots** `g_abc` (about 7 GB of caches and installs) and `g_hash`
   are scratch. Delete them once this branch has merged.
 
@@ -578,6 +590,9 @@ localisation PR), D257, D246, D277, D256, D280, and the US button
 assignment (now the button round, [`button-unification-round.md`](button-unification-round.md)).
 What the round can do for them while the owner is away: one capture or one
 table per item, so each question in chat is answerable from a phone.
+_(2026-10-21) Since: D266 built 2026-10-20 (the `titlemark` rule) and the
+Western ending answered and built the same day (DIV-0148), both PR #98;
+the rest are tracked in [`exe-gap-round.md`](exe-gap-round.md) 3._
 
 ## 8. The brief, per group
 

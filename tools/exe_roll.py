@@ -137,6 +137,7 @@ def selftest():
     tab = len(sec)
     sec += struct.pack("<%dI" % len(words), *words) + struct.pack("<I", END)
     sec += struct.pack("<%dI" % AFTER, *([0, 0, 0, 0, base + 0x13] + [0] * (AFTER - 5))) + bytes(8)
+    raw = None
     try:
         raw = roll_bytes([(ROLL_FILE, ROLL_SECTION, base, bytes(sec))])
         got, txt = parse(raw)
@@ -153,6 +154,8 @@ def selftest():
             errs.append("roll: a word outside the section was taken as a line")
     except SystemExit:
         pass
+    if raw is None:   # the good roll was refused above; nothing to truncate
+        return errs
     trunc = bytearray(raw)[:-1]
     try:
         parse(bytes(trunc))

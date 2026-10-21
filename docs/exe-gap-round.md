@@ -62,10 +62,12 @@ ranges while zero: the owner's two (section 3).
 
 ## 2. The three blockers (install-gap-reads.md 9.7, brought up to date)
 
-1. **STRICT refuses every `gap` range, read or not.** With 52..78 per build
+1. **STRICT refuses every `gap` range, read or not.** With 49..74 per build
+   (after stage 0, section 1)
    it would refuse all seven installs at start. The step means "a new gap
    fails loudly", so the switch has to tell an accounted row from a new one.
-2. **The owner's two read rows**, D266 and the empty save slot (section 3).
+2. **The owner's two read rows**, ~~D266~~ (done 2026-10-20, section 3) and
+   the empty save slot (section 3).
 3. **Coverage.** "Not read" rests on eleven routes (19 areas, four battles);
    48 of the 88 unread rows were sampled. psp-jp stopped at five routes on
    D321's Fatal; **D321 is fixed since 2026-10-18**, so psp-jp can be
@@ -89,7 +91,10 @@ disc-only title draws its TM whole); D280 not built:
   glyph pages (DIV-0114), and a Western disc's glyph page holds the ™ at
   (u 96, v 60). The ™ is 12 wide where the PC's ® is 10, so no segment of
   the PC's table matches the disc's and the image keeps 0, which draws the
-  mark zero wide. Options for the byte:
+  mark zero wide. Options for the byte (_2026-10-20: built as option 1's
+  source but as its own `titlemark` rule in `tools/psp_exe.py`, not a
+  `twin` row - `recipes/exe-psp.tsv` carries one `titlemark` row per
+  Western build_):
   - **a `twin` row from the disc's `GAME.EMI#1`** (the owner's yes): each
     Western disc carries the whole `Title_Sprites` table at the same address
     (`titleraw.py`, [`disc-data-inventory.md`](disc-data-inventory.md) 4.1),
@@ -137,8 +142,9 @@ recipes after PR #94 (`psp_exe.py recipe`, `exe_tables.py recipe`,
 `tools/exe_scan.py` clean, section 1's table again. Expected: four new
 `immref` rows on psx-jp, two on each other build.
 
-**A - the answered owner rows.** D266's twin (small); D280's kinds 7..15
-(large, its own group or two). Each with its ledger amendment.
+**A - the answered owner rows.** ~~D266's twin (small)~~ (done 2026-10-20,
+the `titlemark` rule, section 3); D280's kinds 7..15 (large, its own group
+or two). Each with its ledger amendment.
 
 **B - placement with no owner** (the tools' reach):
 - the rows [`install-gap-pairs.md`](install-gap-pairs.md) 8.5 leaves:
@@ -179,7 +185,8 @@ C's "accepted unread" answers carry the rest.
 
 ## 5. Order and method
 
-Stage 0, then A (D266 first, D280 in parallel) and B side by side, then C
+Stage 0 (done 2026-10-20), then A (~~D266 first~~, done 2026-10-20; D280)
+and B side by side, then C
 over what is left, then E's runs on the result, then D last. The method is
 the install-gap round's: agents in worktrees by method, one merge at a time,
 `exe_scan.py` and the recipes' regeneration after every merge, the

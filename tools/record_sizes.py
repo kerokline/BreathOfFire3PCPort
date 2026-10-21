@@ -109,7 +109,9 @@ def _parse(root=ROOT):
                     continue
                 dm = re.fullmatch(r'((?:const\s+)?(?:unsigned\s+|signed\s+)?[\w:]+)\s+(.+)', decl)
                 if not dm:
-                    continue
+                    # an error here, not a guess: a member this cannot read
+                    # (a named nested struct, say) would leave its offsets wrong
+                    sys.exit(f'record_sizes: cannot read the declaration {decl!r} of {name}')
                 ty = dm.group(1)
                 for d in dm.group(2).split(','):
                     d = d.strip()

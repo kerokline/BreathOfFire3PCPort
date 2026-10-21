@@ -1,7 +1,7 @@
 # The reading-row round: furigana, and a second language, in the row above the text
 
 **Status:** STAGED 2026-10-20, not launched (branch `docs/reading-row-staging`;
-briefs in `C:\Users\kerok\r_ruby\`). **Group SL ran the same day**
+briefs in `C:\Users\kerok\bof3x-runs\r_ruby\`). **Group SL ran the same day**
 ([`second-language-census.md`](second-language-census.md), merged here) and
 the owner decided on its numbers: **two text rows plus two reading rows per
 page**, overflow accepted as extra confirm presses; and **composed messages
@@ -73,7 +73,7 @@ room to spare for the owner's eye on the gap.
 - **Messages pair across languages by slot.** `loc_build.py convert_block`
   converts a donor block slot by slot onto the PC's slot table; the US disc's
   blocks have the PC's slot counts in 288 of 288 cases
-  ([`loc-build-disc-only.md`](loc-build-disc-only.md)), French and German
+  (`convert_block`'s docstring in `tools/loc_build.py`, 2026-10-10), French and German
   point outside their blocks in 15 and 11 areas (slots that are empty on the
   PC). So "the same message in another language" is the same area block, the
   same slot - a lookup that exists today. Pages (`0x02`) and lines (`0x01`)
@@ -133,9 +133,10 @@ room to spare for the owner's eye on the gap.
 - **The second script rarely overflows; the main's third row is the cost**
   (SL, section 4): over Japanese at 1/2 size, English, French and German need
   more than two reading rows on 1 to 2 % of box pages, at 2/3 size 6 to 8 %;
-  Japanese over English and Latin over Latin under 1 %. But a Latin main's
-  three-row pages are 28 to 33 % of its box pages, and every one splits
-  under two row pairs - about 5,300 to 6,000 pages added. The owner's
+  Japanese over English and Latin over Latin under 1 %. But 28 to 33 % of
+  a Latin main's box pages split under two row pairs even with the rows
+  re-broken (its three-row pages are 43 to 46 %) - about 5,300 to 6,300
+  pages added, whatever the second. The owner's
   decision (2026-10-20): **two pairs per page, consistently**; the presses
   are accepted. Three text rows plus two reading rows was offered and
   declined.
@@ -160,7 +161,7 @@ with `BOF3X_LANG=ja-JP`, `MsgBox_Step` draws one hand-written annotated page
 (the probe's bytes in a scratch file, read at start) with the row rule:
 ruby row first, 6-unit kana on a 6-unit advance, then its 12-unit text row;
 pen y per row from a table. Captures (`BOF3X_SHOT_DIR`, the game's own
-frames, [`captures-need-the-screen-uncovered`](HANDOFF.md)): the 2 : 1 row
+frames, [`input-script.md`](input-script.md) 3, so nothing need be uncovered): the 2 : 1 row
 at three gaps between the pairs (0, 1, 2 units), under point and bilinear
 filtering (DIV-0012), at 4:3 and 16:9; and the **box's inner height**
 measured off the frame (origin `y + 6`, how far the third row's glyphs
@@ -181,10 +182,10 @@ over a PC install), one **side chunk of composed messages keyed by slot** per
 area (section 4; the text block itself is never rewritten): for every message
 whose pages take a reading, each text row preceded by its ruby row. Readings: the
 PC's own kana codes (`loc_build.py ja_encode`), SudachiPy mode C, the
-sidecar first. **The side chunk and the string shape are RR's contract** (section 4) and is
-fixed before either starts: a page-head marker no shipped page starts with,
-`<ruby row> 0x01 <text row> 0x01 ...`, half-cell gaps as `0x09`, which the
-stepper already skips. `--selftest` (no readings, no re-flow) must
+sidecar first. **The side chunk and the string shape are RR's contract**,
+fixed before either starts: section 4's, as the owner decided it on
+2026-10-20 (no page-head marker; the stepper knows an annotated page by
+its source). `--selftest` (no readings, no re-flow) must
 reproduce every message of every held Japanese block byte for byte -
 that is the acceptance test. `--lint` simulates the stepper's x over every
 ruby row. `--review FILE` writes every reading placed with its context, for
@@ -235,7 +236,7 @@ Sources page's contract ([`install-sources.md`](install-sources.md) 4).
 `kind = "reading-row"` with `base = "ja-JP"` that is FB's builder with the
 mod's `readings.toml`, writing the optional layer. The Mods tab lists mods
 with Add zip..., Remove and the greyed-by-source rule
-([`config-shows-all-options-greyed-by-source`](HANDOFF.md): a mod whose
+(every option listed, greyed when its source is missing - [`psp-only-build.md`](psp-only-build.md) 6: a mod whose
 `requires` the install lacks is shown and greyed, with the reason). The
 Settings page gets the dropdown *Row above the text*: none; each installed
 reading-row mod whose base is the language played; each other held language
@@ -317,7 +318,8 @@ section 1 before FB and RR launch:
 ## 5. Stage C: the end batch, then the owner's play
 
 1. Build, `--selftest` on every held Japanese layer, the shadow fuzz, the
-   text and menu self-tests ([`self-tests-need-a-clean-launcher-dir`](HANDOFF.md)).
+   text and menu self-tests, from an ini-less launcher copy (a play ini's options, `cheat.exp` among
+   them, fail them; [`HANDOFF.md`](HANDOFF.md) "Traps already paid for").
 2. State hash on the ten routes with no reading layer: identical to the
    `cn_<route>_orig3` references ([`state-hash.md`](state-hash.md)).
 3. Captures with `ruby-furigana-ja-JP` and one second-language pair over
@@ -325,10 +327,12 @@ section 1 before FB and RR launch:
    filter, in the contact-sheet form - plus the faerie village's minigame
    tutorials (the block's longest messages, SL; **a new recipe the owner
    records**, since no route reaches them yet); the owner's eye on every sheet (per
-   [`owner-tunes-layout-by-eye`](HANDOFF.md): their words, applied
-   literally).
+   the owner's practice: they tune layout by eye off a capture, and their
+   words are applied literally).
 4. The ledger entries numbered from the ledger's tail at merge time (the
-   away-day branch holds the next number today), one for the reading row and the
+   tail on 2026-10-21 is DIV-0148 on `main` and DIV-0149 on
+   `cleanup/miscellaneous-cleanup-tasks`; take the next free number at the
+   merge, not before), one for the reading row and the
    furigana layer, one for the second-language layer, one for the mod
    mechanism; the defects numbered; [`owner-review.md`](owner-review.md)
    gets the calls below; I21 and I50 to built; the README row; HANDOFF.
@@ -377,7 +381,7 @@ which favour a Japanese main with an English second (SL 10).
 
 ## 8. The brief, per group
 
-`C:\Users\kerok\r_ruby\BRIEF_<group>.md`, one per group (PR, FB, SL, ML;
+`C:\Users\kerok\bof3x-runs\r_ruby\BRIEF_<group>.md`, one per group (PR, FB, SL, ML;
 RR and SB when stage A's numbers are in). Each names the goal, the files it
 owns and must not touch, the docs to read first (this file; I21 and I50;
 [`msgbox.md`](msgbox.md) 3; [`dialogue-localisation.md`](dialogue-localisation.md)
@@ -387,5 +391,5 @@ for ML), its harness root under `C:\Users\kerok\bof3x-runs\<group>` (never
 another session's), the checks that mean done, and the hand-back report's
 shape. Rules 1, 4 and 7 restated. Worktrees from `main` at launch; a usage
 cut resumes with a message naming the next step; only the hand-back report
-means merge. Merge order: PR's numbers first (a doc, not code), then FB, ML,
-SL's doc; RR after FB; SB after RR and SL.
+means merge. Merge order: PR's numbers first (a doc, not code), then FB, ML;
+RR after FB; SB after RR (SL's doc merged with this file, PR #101).

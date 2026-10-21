@@ -985,37 +985,47 @@ def snd_from_psx(sources, out, reuse=None):
     snd is xa.importer_snd's (or None without a PSX disc); jingles is
     (build id, ffmpeg version, {name: sha256}, [why not]) or None.
 
-    The 11 jingles (D255, DIV-0129): with no PC install among the sources,
-    xa.jingles makes them from the same disc by the player's ffmpeg, so the
-    inn's and the camp's `OYASUMI` is there on a PSX-only install. With a PC
-    install they stay the install's own MP3s (SND/, docs/sound-import.md 7)."""
+    The 11 jingles (D255, DIV-0129, DIV-0150): xa.jingles makes them from the
+    same disc by the player's ffmpeg whenever there is one. With no PC install
+    among the sources they go in base/snd/, so the inn's and the camp's
+    `OYASUMI` is there on a PSX-only install. With one they go in
+    base/psx-jingles/, which only a chosen music source reads (BOF3X_MUSIC psx,
+    psp or pc, DIV-0150): base/snd/ would otherwise put them over the
+    install's own MP3s (SND/, docs/sound-import.md 7) wherever no source is
+    chosen. The tuple ends with that folder."""
     import shutil
     disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
     if disc is None:
         return None, None
     pc = any(isinstance(s, PcSource) for s in sources)
-    ffmpeg = None if pc else at3.find_ffmpeg()
+    ffmpeg = at3.find_ffmpeg()
     version = at3.ffmpeg_version(ffmpeg) if ffmpeg else None
     dst = os.path.join(out, "base", "snd")
+    jdir = "base/psx-jingles" if pc else "base/snd"
+    jdst = os.path.join(out, *jdir.split("/"))
     jingles = None
-    with Step(out, reuse, "snd", "snd-xa", disc.id, "pc" if pc else version or "no ffmpeg") as st:
+    with Step(out, reuse, "snd", "snd-xa", disc.id, ("pc " if pc else "") + (version or "no ffmpeg")) as st:
         src = st.previous(os.path.join("base", "snd"))
         if src:
             shutil.copytree(src, dst, dirs_exist_ok=True)
+            jsrc = st.previous(os.path.join("base", "psx-jingles")) if pc and ffmpeg else None
+            if jsrc:
+                shutil.copytree(jsrc, jdst, dirs_exist_ok=True)
             print("  base/snd  the previous cache's, made from %s the same way (not decoded again)" % disc.id)
             snd = (disc.id, len(os.listdir(dst)))
-            if not pc:
+            if ffmpeg or not pc:
                 rows = read_rows(reuse, "snd") or []
                 jingles = (disc.id, version, {r[0]: r[1] for r in rows if len(r) == 2},
-                           [r[0] for r in rows if len(r) == 1])
+                           [r[0] for r in rows if len(r) == 1], jdir)
         else:
             snd = xa.importer_snd(sources, out)
-            if not pc and ffmpeg:
-                written, skipped = xa.jingles(disc.path, dst, ffmpeg)
-                jingles = (disc.id, version, written, skipped)
+            if ffmpeg:
+                written, skipped = xa.jingles(disc.path, jdst, ffmpeg)
+                jingles = (disc.id, version, written, skipped, jdir)
             elif not pc:
                 jingles = (disc.id, None, {}, ["the 11 jingles: no ffmpeg on the PATH or in BOF3X_FFMPEG to encode "
-                                               "them; the inn's and the camp's wait ends without its jingle (DIV-0129)"])
+                                               "them; the inn's and the camp's wait ends without its jingle (DIV-0129)"],
+                           jdir)
     if jingles:
         write_rows(out, "snd", [(n, h) for n, h in sorted(jingles[2].items())] + [(w,) for w in jingles[3]])
     return snd, jingles
@@ -1150,7 +1160,8 @@ def cmd_build(a):
     for why in (psp_snd[3] if psp_snd else []):
         print("  base/snd  not written: %s" % why)
     if psx_jingles and psx_jingles[1]:
-        print("  base/snd  from %s: %d jingles (psx-xa-mp3, %s)" % (psx_jingles[0], len(psx_jingles[2]), psx_jingles[1]))
+        print("  %s  from %s: %d jingles (psx-xa-mp3, %s)" % (psx_jingles[4], psx_jingles[0], len(psx_jingles[2]),
+                                                             psx_jingles[1]))
     for why in (psx_jingles[3] if psx_jingles else []):
         print("  base/snd  not written: %s" % why)
     if bgm:
@@ -1366,11 +1377,12 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
             lines.append("  [%s, %s]," % (toml_str(name), toml_str(h)))
         lines.append("]")
     if psx_jingles and psx_jingles[2]:
-        lines += ["", "# base/snd/'s 11 jingles on a PSX-only install: the disc's S_XA00.STR clips encoded by the",
-                  "# player's ffmpeg (tools/xa.py jingles, D255 / DIV-0129); not the PC's bytes, so each file's",
-                  "# own hash. The other 880 files are the PC's bytes (recipes/pc-zh.snd.toml).", "[snd_jingles]",
+        lines += ["", "# The 11 jingles in `dir`: the disc's S_XA00.STR clips encoded by the player's ffmpeg",
+                  "# (tools/xa.py jingles, D255 / DIV-0129); not the PC's bytes, so each file's own hash. base/snd",
+                  "# on a PSX-only install; base/psx-jingles beside a PC install, read only under a chosen music",
+                  "# source (DIV-0150).", "[snd_jingles]",
                   "build = %s" % toml_str(psx_jingles[0]), 'how = "psx-xa-mp3"', "ffmpeg = %s" % toml_str(psx_jingles[1]),
-                  "files = ["]
+                  "dir = %s" % toml_str(psx_jingles[4]), "files = ["]
         for name, h in sorted(psx_jingles[2].items()):
             lines.append("  [%s, %s]," % (toml_str(name), toml_str(h)))
         lines.append("]")

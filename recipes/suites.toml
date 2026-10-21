@@ -63,19 +63,11 @@ over_psx = "layer"
 [[suite]]
 id = "audio"
 label = "Audio"
-what = "the PSP's music (its own sequences and banks) and its effects, voices and jingles (ATRAC3plus, decoded by the player's ffmpeg)"
-
-[[suite.member]]
-id = "psp-music"
-label = "music"
-kind = "bgm"
-layer = "psp-music"
-from = ["psp-jp", "psp-eu"]
-over_psx = "layer"
+what = "the PSP's effects and voices (ATRAC3plus, decoded by the player's ffmpeg); its music and jingles are the Music box's choice (DIV-0150)"
 
 [[suite.member]]
 id = "psp-effects"
-label = "effects, voices, jingles"
+label = "effects and voices"
 kind = "snd"
 layer = "psp-snd"
 from = ["psp-jp", "psp-eu"]

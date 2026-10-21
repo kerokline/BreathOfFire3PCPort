@@ -23,45 +23,45 @@
 004	Prologue	5	2	Prologue	ossb	psf "Prologue"
 005	Falling Green	5	8	Falling Green	ossb	psf "Forest"
 006	Mines 2				kk	
-007	These Little Things	5	6	Half Done is Not Done	game	faerie village music menu row 1
+007	These Little Things	5	6	What Do You Mean, "Half Done?"	game	faerie village music menu row 1
 008	Eden	5	14	Eden	game	faerie village music menu row 22
-009	30	5	27	The Game Continues	game	faerie village music menu row 7; PSF: Neverending Game
+009	30	5	27	Neverending Game	game	faerie village music menu row 7; PSF: Neverending Game
 010	Falling Green	5	8	Falling Green	same-notes	same notes as 005
 011	Take It And Run	5	21	Take It and Run	game	faerie village music menu row 2
 012	Campfire				kk	
-013	War Tiger	6	24	Weretiger - Rei's Theme	same-notes	same notes as 032
+013	War Tiger	6	24	Weretiger ~Rei's Theme~	same-notes	same notes as 032
 014	Healing	5	4	Healing	game	faerie village music menu row 3
-015	Missing	5	28	Something Lost	game	faerie village music menu row 32
+015	Missing	5	28	Missing	game	faerie village music menu row 32
 016	Can't You See Clearly Now?	5	19	Can't You See Clearly Now?	ossb	psf "Farm"
 017	Thief	5	20	Thief	game	faerie village music menu row 20
 018	Crickets				kk	
-019	Without a Care	5	5	Without a Care	ossb	psf "Casually"
+019	Casually	5	5	Casually	ossb	psf "Casually"
 020	Hack Scene	6	8	Hack Scene	ossb	psf "Panic"
-021	Without Knowing Anything	7	6	Without Knowing Anything	same-notes	same notes as 109; silent on the PSX; no PC file
+021	Unknowingly	7	6	Unknowingly	same-notes	same notes as 109; silent on the PSX; no PC file
 022	Unused Song 1				psf	
 023	Island	6	6	Island	game	faerie village music menu row 25
 024	Heavy Echo	5	15	Heavy Echo	game	faerie village music menu row 30
 025	Cutting Edge	5	32	Cutting Edge	ossb	psf "Ambushed"
 026	Cadaver	5	16	Corpse	game	faerie village music menu row 31
-027	Walking the Road	5	17	Struggling on the Way	game	faerie village music menu row 21
+027	Walking the Road	5	17	Walking the Road	game	faerie village music menu row 21
 028	Unused Song 2				psf	
 029	Encounter	7	7	Encounter	ossb	psf "Danger"
 030	Take It And Run	5	21	Take It and Run	same-notes	same notes as 011
 031	Crowing in the Night	5	22	Chickens in the Night	game	faerie village music menu row 8
-032	War Tiger	6	24	Weretiger - Rei's Theme	game	faerie village music menu row 11; 
-033	That Old House	5	24	House of Worry	same-notes	same notes as 035
+032	War Tiger	6	24	Weretiger ~Rei's Theme~	game	faerie village music menu row 11; 
+033	That Old House	5	24	That Old House	same-notes	same notes as 035
 034	Conglomerate	5	25	Conglomerate	ossb	psf "Plotting McNeils"
-035	That Old House	5	24	House of Worry	game	faerie village music menu row 23; 
+035	That Old House	5	24	That Old House	game	faerie village music menu row 23; 
 036	Magic?	6	17	Magic?	ossb	psf "Wings"
-037	Plenty of Money	5	26	Tons of Money	game	faerie village music menu row 9
+037	Plenty of Money	5	26	Plenty of Money	game	faerie village music menu row 9
 038	Owl and Crickets 1				kk	
 039	Wind 1				kk	
-040	Even The Sun's Happy	5	34	The Weather and Mood is Great on This Day	game	faerie village music menu row 5
+040	Even The Sun's Happy	5	34	The Perfect Day (Even the Sun's Happy)	game	faerie village music menu row 5
 041	Backlash	5	35	Backlash	ossb	psf "Player vs. Fish"
 042	Catch!	5	36	Catch!	ossb	psf "Fish Caught"
 043	Heavy Breaths				kk	
 044	Interlude	6	18	Interlude	ossb	psf "Ogre Road"
-045	Windy City	6	15	Wyndia, The Town Loved by the Wind	game	faerie village music menu row 24
+045	Windy City	6	15	The Lovely City of Wyndia	game	faerie village music menu row 24
 046	Wyndia Castle	6	16	Wyndia Castle	ossb	psf "Wyndia Castle"
 047	Stupidity	6	12	Stupidity	ossb	psf "Trading Dragons"
 048	My Favorite Trick	6	2	My Favorite Trick	game	faerie village music menu row 10
@@ -70,16 +70,16 @@
 051	The Champion	6	11	The Insane Warriors	game	faerie village music menu row 26; PSF: The Champion (Variation); same events as 074, another bank
 052	Island	6	6	Island	same-notes	same notes as 023
 053	Keen Pack	5	9	Keen Pack	same-notes	psf "Pursued", same notes as 84
-054	Walking Straight	5	30	An Unfulfilled Walk	same-notes	psf "Walking Straight"
+054	Unfulfilling Progress	5	30	Unfulfilling Progress	same-notes	psf "Walking Straight"
 055	Transformation	5	31	Transformation	ossb	psf "Awakening"
 056	Dangerous Feeling	7	5	The Touch of Danger	game	faerie village music menu row 33
-057	Fried Onions	6	26	Fried Onion - Peco's Theme	game	faerie village music menu row 13
+057	Fried Onions	6	26	Fried Onion ~Peco's Theme~	game	faerie village music menu row 13
 058	Join Party				same-notes	same notes as 105
 059	Termination	6	5	Termination	ossb	psf "The Mutant"
 060	The Poor Marcher	6	34	Clumsy March	game	faerie village music menu row 36
-061	The Last Scene is a Setting Sun by the Ocean	6	35	The Last Scene is a Setting Sun by the Ocean	ossb	psf "Beyd's Victory"
+061	The Last Scene - A Sunset by the Ocean	6	35	The Last Scene - A Sunset by the Ocean	ossb	psf "Beyd's Victory"
 062	Wind 2				kk	
-063	Peach Engine	6	25	Peach Engine - Momo's Theme	game	faerie village music menu row 14
+063	Peach Engine	6	25	Peach Engine ~Momo's Theme~	game	faerie village music menu row 14
 064	Intermission	7	10	Intermission	same-notes	same notes as 068
 065	Ago	6	3	A-Go	game	faerie village music menu row 18
 066	Life's A Beach	6	32	People, Cats, Birds and Sea Lice	game	faerie village music menu row 4
@@ -87,7 +87,7 @@
 068	Intermission	7	10	Intermission	ossb	psf "Maekyss Gorge"
 069	Last Man Standing	6	14	Last Man Standing	ossb	psf "Lying in Wait"
 070	Angels and Dragons	6	22	Angels and Dragons	ossb	psf "Dragon Slayer"
-071	Walking Straight	5	30	An Unfulfilled Walk	game	faerie village music menu row 6; same notes as 054
+071	Unfulfilling Progress	5	30	Unfulfilling Progress	game	faerie village music menu row 6; same notes as 054
 072	Encounter	7	7	Encounter	same-notes	same notes as 029
 073	For the Dragons	6	1	For the Dragons	ossb	psf "Tears"
 074	The Champion	6	11	The Insane Warriors	same-notes	same events as 051, another bank
@@ -97,16 +97,16 @@
 078	Cadaver	5	16	Corpse	same-notes	same notes as 026
 079	Stupidity	6	12	Stupidity	same-notes	same notes as 047
 080	Of Gods and Dragons	6	21	Anti-Historical	game	faerie village music menu row 34
-081	Walking the Road	5	17	Struggling on the Way	same-notes	same notes as 027
+081	Walking the Road	5	17	Walking the Road	same-notes	same notes as 027
 082	Flight	5	3	Escape	game	faerie village music menu row 35; same notes as 003
 083	Teleporter? Powering Up?				kk	
 084	Keen Pack	5	9	Keen Pack	ossb	psf "Pursued"
-085	In the Morning	6	23	It All Begins in the Morning - Nina's Theme	game	faerie village music menu row 15
+085	In the Morning	6	23	It All Begins in the Morning ~Nina's Theme~	game	faerie village music menu row 15
 086	Like a Loser	5	13	Like a Loser	ossb	psf "Game Over"
 087	Interlude	6	18	Interlude	same-notes	same notes as 044
-088	Neverending Game	5	27	The Game Continues	same-notes	088, 125 and 148 share one tune
+088	Neverending Game	5	27	Neverending Game	same-notes	088, 125 and 148 share one tune
 089	Waves and Seagulls 1				kk	
-090	Dangerous Feeling	7	5	The Touch of Danger	same-notes	notes match 056, channels moved
+090	Dangerous Feeling	7	5	The Touch of Danger	same-notes	056 with its channels moved
 091	Technology	6	4	Technology	game	faerie village music menu row 12
 092	Half Asleep	5	23	Half Asleep	same-notes	same notes as 001
 093	Waves and Seagulls 2				kk	
@@ -114,34 +114,34 @@
 095	Eruption?				kk	
 096	Dolphin Approach				kk	
 097	Technology	6	4	Technology	same-notes	same notes as 091
-098	Still a Chrysalis	6	19	Still a Chrysalis	ossb	psf "Sigh of the Fairy"
+098	Still a Chrysalis	6	19	Still a Chrysalis ~Sigh of the Faerie~	ossb	psf "Sigh of the Fairy"
 099	Tail of a Shark	6	20	Tail of a Shark	ossb	psf "Sea Monster"
 100	To a Distant Place	6	28	To a Distant Place	ossb	psf "Exploring the World"
 101	Hack Scene	6	8	Hack Scene	same-notes	same notes as 020
-102	Fighting Man	6	13	Fighting Man - Garr's Theme	game	faerie village music menu row 16
+102	Fighting Man	6	13	Fighting Man ~Garr's Theme~	game	faerie village music menu row 16
 103	Seemingly Idle	6	33	Seemingly Idle	ossb	psf "Unused Song 3"
 104	Healing	5	4	Healing	same-notes	same notes as 014
 105	Join Party				psf	
-106	Fighting Man (Variation)	6	13	Fighting Man - Garr's Theme	ossb	
+106	Fighting Man (Variation)	6	13	Fighting Man ~Garr's Theme~	ossb	
 107	Dead Dragon Stone	6	29	Stone of the Dead Dragon	game	faerie village music menu row 37
 108	Breath of the Decaying Dragon	6	30	Breath of the Decaying Dragon	ossb	psf "Avenging Memory"
-109	Without Knowing Anything	7	6	Without Knowing Anything	ossb	psf "Angel"
+109	Unknowingly	7	6	Unknowingly	ossb	psf "Angel"
 110	Intermission	7	10	Intermission	same-notes	same notes as 068
-111	For the Dragons (Main Theme)	7	11	For the Dragons - Main Theme	game	faerie village music menu row 38; PSF: For the Dragons
+111	For the Dragons (Main Theme)	7	11	For the Dragons ~Main Theme~	game	faerie village music menu row 38; PSF: For the Dragons
 112	Atomic Energy	7	9	Atomic Energy	ossb	psf "Atomic Power"
 113	Wind and Campfire				kk	
-114	Breaking the Mold	7	14	Breaking the Mold	ossb	psf "Faerie Village"
-115	Regret Comes from Relying on Others	5	29	Regret Comes from Relying on Others	ossb	psf "For Old Friends"
+114	Breaking the Mold	7	14	Breaking the Mold ~Sigh of the Faerie II~	ossb	psf "Faerie Village"
+115	Spoiled By Regret	5	29	Spoiled by Regret	ossb	psf "For Old Friends"
 116	Don't Say It	6	7	Nothing to Say	game	faerie village music menu row 28
-117	Escape	5	3	Escape	same-notes	same events as 003, another bank
-118	Regret Comes from Relying on Others	5	29	Regret Comes from Relying on Others	same-notes	same notes as 115
+117	Flight	5	3	Escape	same-notes	same events as 003, another bank
+118	Spoiled By Regret	5	29	Spoiled by Regret	same-notes	same notes as 115
 119	Waves and Seagulls 3				kk	
 120	Waves, Seagulls, and Wind				kk	
 121	A Light	6	31	A Light	ossb	psf "Yggdrasil"
-122	Deep Purple - Deis's Theme	6	27	Deep Purple - Deis's Theme	ossb	psf "Angry Goddess"
+122	Deep Purple ~Deis's Theme~	6	27	Deep Purple ~Deis's Theme~	ossb	psf "Angry Goddess"
 123	Sanctuary	7	12	Sanctuary	ossb	psf "Teleporters"
 124	Falling Green	5	8	Falling Green	same-notes	same notes as 005
-125	Neverending Game	5	27	The Game Continues	game	faerie village music menu row 19; 088, 125 and 148 share one tune
+125	Neverending Game	5	27	Neverending Game	game	faerie village music menu row 19; 088, 125 and 148 share one tune
 126	Revolution	5	10	Revolution	ossb	psf "Field"
 127	Revolution	5	10	Revolution	same-notes	might be same as 126?
 128	Waves and Seagulls 4				kk	
@@ -157,23 +157,23 @@
 138	Waves and Seagulls 6				kk	
 139	Turning Point	7	15	Turning Point	game	faerie village music menu row 27
 140	An Uncertain Millennium	7	18	An Uncertain Millennium	ossb	psf "Questionable Century"
-141	Opening - Opening the Gate	1	1	Opening - Opening the Gate	ossb	psf "Opening"
+141	Opening the Gate	1	1	Opening the Gate	ossb	psf "Opening"
 142	Castle in the Sky	7	19	Castle in the Sky	game	faerie village music menu row 39
 143	Waves and Seagulls 7				kk	
 144	604800sec	7	4	604800sec	ossb	psf "Cruise"
 145	Sandy Sound	7	13	Sandy Sound	ossb	psf "Desert of Death"
 146	Big Waves				kk	
 147	Waves and Seagulls 8				kk	
-148	Neverending Game	5	27	The Game Continues	same-notes	088, 125 and 148 share one tune
+148	Neverending Game	5	27	Neverending Game	same-notes	088, 125 and 148 share one tune
 149	Wind 3				kk	
-150	Stairs - Ending	7	22	Stairs - Ending	ossb	psf "Ending"
-151	Do Your Best!	5	11	Do Your Best!	ossb	151 and 153: identical files on the disc, psf "Fight!"
+150	Stairs - Ending	7	22	Stairs ~Ending~	ossb	psf "Ending"
+151	Do Your Best!	5	11	Do Your Best!	ossb	151 and 153 are one file, psf "Fight!"
 152	DONDEN	5	33	DONDEN	ossb	psf "Decisive Battle"
-153	Do Your Best!	5	11	Do Your Best!	same-notes	151 and 153: identical files on the disc, psf "Fight!"
-154	ODORO	6	9	ODORO	ossb	psf "Ghost Battle"
-155	Battle in the Coming Days	7	8	Battle in the Coming Days	ossb	psf "Everyday Battle"
+153	Do Your Best!	5	11	Do Your Best!	same-notes	151 and 153 are one file, psf "Fight!"
+154	ODORO ~Ghost Battle~	6	9	ODORO ~Ghost Battle~	ossb	psf "Ghost Battle"
+155	Battle for Tomorrow	7	8	Battle for Tomorrow	ossb	psf "Everyday Battle"
 156	Dragon Asymmetry	7	16	Dragon Asymmetry	ossb	psf "Conflict of Dragons"
-157	Self-Determination - Last Battle	7	21	Self-Determination - Last Battle	ossb	psf "Final Battle"
+157	Self-Determination - Last Battle	7	21	Self-Determination ~Last Battle~	ossb	psf "Final Battle"
 158	Mechanic Gasping?				kk	
 159	Decision				psf	
 160	Sprouds Over the Sand	7	23	Sprouds Over the Sand	ossb	psf "The End"
@@ -181,16 +181,16 @@
 162	Maternal Zone	7	20	Maternal Zone	ossb	psf "Myria"
 163	Half Asleep	5	23	Half Asleep	same-notes	same notes as 001
 164	Tail of a Shark	6	20	Tail of a Shark	same-notes	same notes as 099
-165	Victory Dance	5	12	Victory Dance	ossb	psf "Victory!"
+165	Victory Dance	5	11	Victory Dance 	ossb	psf "Victory!"
 166	Like a Loser (Alternate)	5	13	Like a Loser	kk	PC file only; no PSX song
-OYASUMI	OYASUMI.DAT				file	stream 0, S_XA00.STR ch 0 from sector 0. The inn: Rest_LoadJingle 0x580560 (rest_2c.cpp:304), InnNight_Jingle 0x57FC40 (shop_states.cpp:421); FieldTail_HealAndMenu 0x56DB80 (field_e2.cpp:1206); Area150_Tail58 0x423760, Area191_Tail53 0x42B7F0, Area192_Tail54 0x42BE10, Area193_Tail57 (area_w3g/w4e/w4f); 19 scenario calls: Scena01 x4, Scena02 x4, Scena03_Scene6, Scena04_Scene1, Scena05_Run8, Scena06_Run05, Scena07_Scene3, Scena08_Scene7, Scena09 x3, Scena12_Run8, Scena13_Run2
-AKURYOU	AKURYOU.DAT				file	stream 1, S_XA00.STR ch 0 from sector 126. Scena02_Scene11 0x540100 (scena_sc2.cpp:1498), the one constant caller
-ITEM01	ITEM01.DAT				file	stream 2, S_XA00.STR ch 0 from sector 288. Area113_TailReward 0x418960 (area_w2f.cpp:1289), Area135_Tail18 0x41E630 (area_w3d.cpp:578), Scena03_Object5 0x544AF0, Scena06_Run10 0x54CC80, Scena06_Run15, Scena09_Run15, Scena10_Run3, Scena11_Scene6, Scena14_Run5, Scena14_Run7
-NAKAMA02	NAKAMA02.DAT				file	stream 3, S_XA00.STR ch 0 from sector 360. Scena03_Scene3 x2 (scena_sc3.cpp:464, 510), Scena04_Scene1 (scena_sc3.cpp:1825), Scena08_Scene11 (scena_sc7.cpp:2540), Scena09_Run2 0x554300, Scena09_Run3
-MIMI01	MIMI01.DAT				file	stream 4, S_XA00.STR ch 0 from sector 435. Scena04_Scene1 (scena_sc3.cpp:1683), the one constant caller
-WIN	WIN.DAT				file	stream 5, S_XA00.STR ch 0 from sector 563. Scena11_Scene5 (scena_sc11.cpp:744), Scena13_Run5 (scena_sc13.cpp:814)
-SIPPAI01	SIPPAI01.DAT				file	stream 6, S_XA00.STR ch 0 from sector 642. Area75_TailPresses (area_w1f.cpp:771), Scena11_Scene5 (scena_sc11.cpp:714), Scena11_Scene6 (scena_sc11.cpp:905)
-GAAN01	GAAN01.DAT				file	stream 7, S_XA00.STR ch 0 from sector 718. Scena11_Scene6 (scena_sc11.cpp:896), the one constant caller
-PURE	Pure Again				kk	stream 8, S_XA00.STR ch 1, about 269 s. The staff roll: Scena17_Roll0 0x56C6D0 (scena_sc15.cpp:2055), Scena17_Roll1 waiting on Sound_StreamDone; also CommuTail60_Stream 0x457590 (rest_4b.cpp:468) when the byte 0x939A3C is 0
-DRAGON	DRAGON.DAT				file	stream 9, S_XA00.STR ch 2. FieldTail_FlagMessage 0x56DE50 (field_e2.cpp:1321), the one constant caller
-KARA	KARA.DAT				file	stream 10, S_XA00.STR ch 3. No constant caller; CommuTail60_Stream 0x457590 (rest_4b.cpp:468) loads it when the byte 0x939A3C is non-zero (else PURE). Event op 0x89 (move_groups.cpp) takes any id from script bytes: not traced
+OYASUMI	OYASUMI				file	stream 0, S_XA00.STR ch 0 from sector 0. The inn: Rest_LoadJingle 0x580560 (rest_2c.cpp:304), InnNight_Jingle 0x57FC40 (shop_states.cpp:421); FieldTail_HealAndMenu 0x56DB80 (field_e2.cpp:1206); Area150_Tail58 0x423760, Area191_Tail53 0x42B7F0, Area192_Tail54 0x42BE10, Area193_Tail57 (area_w3g/w4e/w4f); 19 scenario calls: Scena01 x4, Scena02 x4, Scena03_Scene6, Scena04_Scene1, Scena05_Run8, Scena06_Run05, Scena07_Scene3, Scena08_Scene7, Scena09 x3, Scena12_Run8, Scena13_Run2
+AKURYOU	AKURYOU				file	stream 1, S_XA00.STR ch 0 from sector 126. Scena02_Scene11 0x540100 (scena_sc2.cpp:1498), the one constant caller
+ITEM01	ITEM01				file	stream 2, S_XA00.STR ch 0 from sector 288. Area113_TailReward 0x418960 (area_w2f.cpp:1289), Area135_Tail18 0x41E630 (area_w3d.cpp:578), Scena03_Object5 0x544AF0, Scena06_Run10 0x54CC80, Scena06_Run15, Scena09_Run15, Scena10_Run3, Scena11_Scene6, Scena14_Run5, Scena14_Run7
+NAKAMA02	NAKAMA02				file	stream 3, S_XA00.STR ch 0 from sector 360. Scena03_Scene3 x2 (scena_sc3.cpp:464, 510), Scena04_Scene1 (scena_sc3.cpp:1825), Scena08_Scene11 (scena_sc7.cpp:2540), Scena09_Run2 0x554300, Scena09_Run3
+MIMI01	MIMI01				file	stream 4, S_XA00.STR ch 0 from sector 435. Scena04_Scene1 (scena_sc3.cpp:1683), the one constant caller
+WIN	WIN				file	stream 5, S_XA00.STR ch 0 from sector 563. Scena11_Scene5 (scena_sc11.cpp:744), Scena13_Run5 (scena_sc13.cpp:814)
+SIPPAI01	SIPPAI01				file	stream 6, S_XA00.STR ch 0 from sector 642. Area75_TailPresses (area_w1f.cpp:771), Scena11_Scene5 (scena_sc11.cpp:714), Scena11_Scene6 (scena_sc11.cpp:905)
+GAAN01	GAAN01				file	stream 7, S_XA00.STR ch 0 from sector 718. Scena11_Scene6 (scena_sc11.cpp:896), the one constant caller
+PURE	PURE	7	24	Pure Again ~Staff Roll~	ossb	stream 8, S_XA00.STR ch 1, about 269 s. The staff roll: Scena17_Roll0 0x56C6D0 (scena_sc15.cpp:2055), Scena17_Roll1 waiting on Sound_StreamDone; also CommuTail60_Stream 0x457590 (rest_4b.cpp:468) when the byte 0x939A3C is 0
+DRAGON	DRAGON				file	stream 9, S_XA00.STR ch 2. FieldTail_FlagMessage 0x56DE50 (field_e2.cpp:1321), the one constant caller
+KARA	KARA				file	stream 10, S_XA00.STR ch 3. No constant caller; CommuTail60_Stream 0x457590 (rest_4b.cpp:468) loads it when the byte 0x939A3C is non-zero (else PURE). Event op 0x89 (move_groups.cpp) takes any id from script bytes: not traced

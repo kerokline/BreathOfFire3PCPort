@@ -54,6 +54,15 @@ import tempfile
 _TOOLS = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(_TOOLS)
 
+
+def _under_root(path):
+    try:
+        root = os.path.normcase(_ROOT)
+        return os.path.commonpath([os.path.normcase(os.path.abspath(path)), root]) == root
+    except ValueError:   # another drive
+        return False
+_ROOT = os.path.dirname(_TOOLS)
+
 KEYS_DIR = "build-keys"
 RECORD_ENV = "BOF3X_STEP_RECORD"
 FORMAT = 1                      # build-keys/<step>.json's shape; another number never holds
@@ -164,6 +173,11 @@ def _canon(v, depth=0):
     (a function, a class, a module, an open file)."""
     if depth > 50:
         return None
+    if isinstance(v, str) and os.path.isabs(v) and _under_root(v):
+        # A path under the release (ROOT, RECIPE, ...) by its place in it, so a
+        # moved or renamed install is not every piece changed; the files it
+        # names are measured as data.
+        return repr(("path", os.path.relpath(os.path.abspath(v), _ROOT).replace(os.sep, "/")))
     if v is None or isinstance(v, (bool, int, float, complex, str, bytes)):
         return repr((type(v).__name__, v))
     if isinstance(v, re.Pattern):
@@ -517,7 +531,9 @@ def stale(cache):
     d = os.path.join(cache, KEYS_DIR)
     names = sorted(os.listdir(d)) if os.path.isdir(d) else []
     steps = [n[:-5] for n in names if n.endswith(".json") and not n.endswith(".rows.json")]
-    if any(r not in steps for r in REQUIRED) or any(n.endswith(".txt") for n in names):
+    # An old release's keys were <step>.txt; checked.txt is a launcher's stamp
+    # (kept here before 2026-10-21), not a key.
+    if any(r not in steps for r in REQUIRED) or any(n.endswith(".txt") and n != "checked.txt" for n in names):
         return [("cache", "built by an older release (no measured record)")]
     recs = {s: read_record(cache, s) for s in steps}
     wanted = {}

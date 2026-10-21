@@ -25,6 +25,10 @@ name = "psp-music"
 part = "bgm"
 from = ["psp-jp", "psp-eu"]
 what = "the PSP's 166 songs and the 81 banks they name, tools/ppms.py's base/bgm (docs/psp-music.md), beside a PlayStation disc's"
+# Not a suite's: the Music box's (DIV-0150, the owner, 2026-10-21) - the source
+# chosen there orders the PlayStation's, the PSP's and the PC's songs, and the
+# engine reads this layer by that choice, not through opt=.
+suite = "music"
 
 [[layer]]
 name = "psp-snd"
