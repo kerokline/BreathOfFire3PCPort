@@ -23945,9 +23945,9 @@ evidence = "read 2026-09-25: LeechShell_Task's call [0x65B1E4 + 4 * byte +2]: 0x
 pc = 0x65B200
 name = "LeechShell_Angles"
 ctype = "long"
-count = 11
+count = 10
 status = "evidence"
-evidence = "read 2026-09-25: LeechShell_Draw's angles, walked by address: longitudes at +4..+0x18 (and +0 .. +0x14 by the caps' loop), latitudes at +0x1C, +0x20, +0x24."
+evidence = "read 2026-09-25: LeechShell_Draw's angles, walked by address: longitudes at +4..+0x18 (and +0 .. +0x14 by the caps' loop), latitudes at +0x1C, +0x20, +0x24. Count 10 (was 11), 2026-10-21: 0x4BDE50's loops end at cmp edi, 0x65B228 and cmp esi, 0x65B22C (step 8 from 0x65B21C), so the last dword read is +0x24; +0x28 is LeechOrb_Phases[0] (the review of PR #94)."
 
 [[data]]
 pc = 0x65B228
@@ -62790,9 +62790,9 @@ evidence = "read 2026-09-28, group AR1E: Area67_ChoiceMessage's, unchecked. docs
 pc = 0x60705C
 name = "Area67_MessagesC"
 ctype = "unsigned short"
-count = 6
+count = 2
 status = "evidence"
-evidence = "read 2026-09-28, group AR1E: Area67_ChoiceMark5's, unchecked. docs/area_w1e.md."
+evidence = "read 2026-09-28, group AR1E: Area67_ChoiceMark5's, unchecked. docs/area_w1e.md. Count 2 (was 6), 2026-10-21: 0x40CA80 treats choices 0 and 1 as the menu's (test al, al / cmp al, 1); the words are 0x3E, 0x3F, continuing Area67_MessagesB's 0x38..0x3D, and Area68_EffectKinds4 starts 4 bytes on (the review of PR #94). The read itself is unchecked, as in the original."
 
 # Round ten group AR2A: world 2, areas 76..82 and 84, 0x40EB90..0x40F720
 # (docs/area_w2a.md). Read with capstone 2026-09-28; extents are
