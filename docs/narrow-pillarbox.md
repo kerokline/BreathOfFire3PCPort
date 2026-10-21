@@ -239,7 +239,9 @@ pages of a loaded machine are expected, `state-hash.md` 4).
 
 ## 7. Not verified
 
-- Areas 53, 98, 149, 153, 154, 186, 192, 194 and 198 were not captured: no
+- *Since captured by crafted saves, section 10* (all nine; area 194's first
+  visit excepted). As first written: areas 53, 98, 149, 153, 154, 186, 192,
+  194 and 198 were not captured: no
   recorded route reaches them, and a chapter-jump save lands where its
   chapter's Start puts it, not in a chosen area. The class of each is the
   measurement of section 1 and the log line its first entry writes.
@@ -293,3 +295,83 @@ pages of a loaded machine are expected, `state-hash.md` 4).
    area 90's 21:9 capture.
 3. **Area 194's close camera** (section 5.2): framed at 426 at 21:9 from its
    first frame. *Recommendation:* keep; 16:9 has always shown this much.
+
+## 10. The nine areas captured from crafted saves (group CS, 2026-10-21)
+
+**Status:** MEASURED headless, branch `wide-ring/cs` off `wide-ring/round`
+`862325c4`; not seen by the owner. Section 7's "not captured" answered.
+
+**How.** A chapter-jump save does land in a chosen area: the game block's
+pending area change (`+0x24` area, `+0x27` entry flags, `+0x28` / `+0x2C`
+x, z - `GameMode_Start` hands them to `Field_ChangeArea`) is in the save
+beside the chapter bytes, and `Area_Enter` runs the chapter's EnterArea for
+that area before state 2 resumes the run at the saved step. So a craft
+puts the party where the original's own `Field_ChangeArea` would, with the
+run at the step after it. `tools/chapter_jump.py` (committed) writes them
+from the owner's recipe saves: the chapter, run and step, the area and
+position, chapter flags (`Cond_Flags + 8 c`, block `+0x5B0 + 8 c`) and
+story flags (block `+0x650`), the `+0x70` checksum (the donor's checked
+first). The saves are game data and stay in the harness root
+(`C:\Users\kerok\bof3x-runs\r_ring\CS\saves`); the recipes are
+`tools/recipes/cs_<area>.txt` (ending17's load opening, shots named by
+recipe frame, the scene's state peeked with each). Runs: launcher copies
+`CS\L1..L5` in game directories of the root's own (`CS\g1..g5`, junctions to
+`bof3\DAT`, `BGM`, `SND`), `BOF3X_OPT=none`, point filter; dialogue shows in
+the PC's Chinese (no translation source in an ini-less directory). Sheets in
+`C:\Users\kerok\bof3x-runs\r_ring\CS\sheets\pb_<area>.png`: rows 4:3,
+16:9, 21:9, 21:9 with `BOF3X_PILLARBOX=0`; the shots in `CS\shots\cs_<area>_<w0|w1|w2|w2off>`.
+
+**The class, by each area's first-entry line** (`pillarbox   area A: ...
+framed at N columns a side`): 149, 186, 198 at 0 (320) at 16:9 and 21:9;
+53, 98, 153, 154, 192, 194 at 53 (426) at 21:9 and the picture at 16:9 -
+section 1's table, every one. The bars switch on in mode 1, frame 423, the
+load's entry fade.
+
+| Area | Craft (donor; what it resumes) | What the sheet shows |
+|---|---|---|
+| 53 | `ninaWalkBehindBlock`, chapter 6 run 3 step 0xB in 53 at (0x230000, 0x290000), flag 0xA set, 0xB clear: `Scena06_Run03` after its own change into 53 | **The pitch-0 turn:** step 0xC (pitch 0) is black at every width (f0450..f0500); the turn back (step 0xD, f0510..f0630) looks up past the clearing's trees into the dark. **At 21:9 the bars crop real scenery:** with `PILLARBOX=0` the trees and the grass ellipse of the clearing reach the 560 picture's edges (f0570, f0610, f0700); framed at 426 they are cut at the bars |
+| 98 | `identify`, chapter 10, no run, at `Scena10_Run2`'s entry (0x380000, 0x240000) | the dais room; off, the lit floor runs on into the bands and darkens there; framed, cut at 426. Nothing drawn on purpose past the frame |
+| 149 | `adult_ryu`, chapter 15 run 6 step 0x32 in 149 at (0x80000, 0xC0000), flag 0x16 set: `Scena15_Run6` after step 0x31 | **Cropped: a sky backdrop and the map itself.** The scene's camera is off the field yaw: the bridge runs corner to corner over a gradient sky; `Scena15_EnterArea` starts it at distance 0xD00 (peeked 0xBB0 at f0448) and zooms it to 0 by f0688. Framed at 320, both the sky and the bridge are cut at the bars at every frame; `PILLARBOX=0` shows both continuing to the 560 edges |
+| 153, 154, 192, 194 | `adult_ryu`, chapter 14 (194: chapter 13, flags 2..4 set), no run, at (0x120000, 0x180000) | camps (the same map as 53 and 90): the ground ellipse is wider than 426 - off, its dark rim reaches nearly to the 560 edges; framed, cut. No sprite past the frame |
+| 186 | `adult_ryu`, chapter 14, at `Area173_Tail38`'s entry (0x48000, 0x640000) | **Cropped: the corridor's wall.** At its own camera the machinery wall runs on to the left past 320 (off: to the 560 edge); framed, cut at the bar. The 31 / 186 check of section 6 (the shaft inside 50..270) holds for 31's view, not for this one |
+| 198 | `adult_ryu`, chapter 15 run 6 from step 0 in 198 (as `Scena15_Run5`'s step 0x24 leaves it) | the void, a floating figure, a message box: nothing past 320; the side box stands at Capcom's place framed and at the 560 place off (section 4's anchor, as designed) |
+
+**Area 194's first visit was not reached.** The craft (`cs194`: chapter 13
+run 2 step 1, flags 2..4 clear) and two others into the same entry (no run;
+run 2 from step 0 in area 153, so the run's own `Field_ChangeArea` takes
+the party in) all crash at the entry, mode 1: `Sprite_DrawPass`'s sort
+(`draw_pass.cpp:245`) reads a draw-list pointer past `Sprite_DrawList`'s 40
+(`Sprite_DrawListCount` 0x3E..0x3F; read `0x80903932`). The entry runs
+`Scena13_SaveParty7` (call table A 1: the party set swapped for set 7)
+before it. The donor is a chapter-14 save rewound to 13, and the only
+chapter-13-or-later save there is; whether the original crashes the same
+way on this state was not tested (a run with `BOF3X_ORIGINAL` over
+`Sprite_DrawPass` and the chapter-13 entry was attempted with a mangled
+variable and never started; not repeated). **The close camera (distance -0xE00 pulled back over 30 frames)
+stays unseen.** To see it: a save the owner makes in chapter 13 before
+area 194's first visit (any save in chapter 13 with flag 2 clear would do
+as a donor for `cs194`).
+
+**What this says about the metric.** Section 5.2's three unmodelled views
+were the corridor (31, 186) and the two scene cameras (194, 53); the
+captures add **149** and **186** as areas whose own camera shows map past
+the 320 frame, and the **426 camps** (53, 153, 154, 192, 194, and 98's
+room) whose drawn ground is wider than 426 - the "row tips" of section 2
+are the visible rim of the clearing, not void. Every one of the nine was
+otherwise as section 5 read it: nothing placed past the frame on purpose.
+
+### 10.1 Questions for the owner (from the captures)
+
+1. **Area 149's sky and bridge.** The framed 320 picture cuts a sky gradient
+   and the bridge across it; the scene is a far camera over the sky, not a
+   narrow room. *Recommendation:* take 149 out of the framed set (or frame
+   it by the camera, not the map); look at `sheets/pb_149.png`.
+2. **Area 186's wall.** The same: its camera shows the corridor's wall past
+   320. *Recommendation:* take 186 out, or look at it beside 31 first.
+3. **The camps at 426** (53, 153, 154, 192, 194; and 98). The bars cut the
+   clearing's rim and trees; the void PB was framing is only the far
+   corners. *Recommendation:* leave them at 560 (unframed), since what the
+   bars hide is scenery; `sheets/pb_053.png`, `pb_154.png`.
+4. **Area 194's first visit:** a chapter-13 save before it, if the owner
+   has one or makes one, to see the close camera and to settle whether the
+   crash is the craft's or Capcom's.
