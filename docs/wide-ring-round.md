@@ -164,13 +164,26 @@ report means merge; a usage cut resumes with a message naming the next step.
    ([`chapter-jump-save`](HANDOFF.md)), for the three far-camera areas and
    area 172's shade; no new owner route.
 
-## 7. Not in this round
+## 7. Side groups, beside the round (added 2026-10-21)
 
-- **D300, the faerie through the table** - decided 2026-10-15 (fix this
-  scene narrowly, an Intent DIV), not built; its own small change.
-- **The per-scene pillarbox for areas 31, 90 and 53** - decided the same day,
-  not built.
-- D293 and D294 - left at Capcom's bounds by the owner.
+The other two items of the 2026-10-15 list run as one agent each, beside
+stage A, on files of their own:
+
+- **FY, D300's faerie through the table** (`BRIEF_FY.md`): area 175's table
+  faerie only, an Intent DIV with the note to broaden it to
+  [`faerie-over-table.md`](faerie-over-table.md) 4's rule; owns `layering.*`.
+- **PB, the narrow areas pillarboxed** (`BRIEF_PB.md`): widened by the owner
+  on 2026-10-21 from areas 31, 90 and 53 to **every area narrower than the
+  picture** ([`ultrawide-culls.md`](ultrawide-culls.md) 5): 31, 149, 186, 198
+  framed at 320 in both wide modes, and 53, 90, 98, 153, 154, 192, 194 at 426
+  at 21:9. Wide modes only, draw-only. The owner's one worry - an effect or
+  anchored box drawn past an area's width - is checked and reported. Owns a
+  `pillarbox.*` of its own; one call in the frame path, which may land in
+  SW's `widescreen.cpp` (the later merge rebases).
+
+Merge them whenever they hand back; each is its own DIV (FY) or DIV-0041
+amendment (PB). Not in this round: D293 and D294, left at Capcom's bounds by
+the owner.
 
 ## 8. The brief, per group
 
