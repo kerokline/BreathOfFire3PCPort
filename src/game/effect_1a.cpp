@@ -42,6 +42,7 @@
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1313,6 +1314,7 @@ extern "C" void __cdecl EffectKind0D_SlideIn(void) {
         S()[9] = 0x1E;
         S()[1] = static_cast<unsigned char>(S()[1] + 1);
     }
+    Widescreen_SweepMark(S());   // DIV-0041 (I38): drawn mapped onto the wide picture; nothing when narrow
     SH_CALL(Sprite_QueueOverlay)();
 }
 
@@ -1322,6 +1324,7 @@ extern "C" void __cdecl EffectKind0D_Hold(void) {
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
     unsigned char* const a = S();
     if (a[9] == 0) a[1] = static_cast<unsigned char>(a[1] + 1);
+    Widescreen_SweepMark(S());   // DIV-0041 (I38): at 160, the map's fixed point
     SH_CALL(Sprite_QueueOverlay)();
 }
 
@@ -1335,6 +1338,7 @@ extern "C" void __cdecl EffectKind0D_SlideOut(void) {
         S()[1] = 0;
         return;
     }
+    Widescreen_SweepMark(S());   // DIV-0041 (I38): drawn mapped onto the wide picture; nothing when narrow
     SH_CALL(Sprite_QueueOverlay)();
 }
 

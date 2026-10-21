@@ -459,6 +459,7 @@ extern "C" void __cdecl Field_DrawFrame(void) {
     BandRestore();
     Sprite_OverlayListCount = 0;
     Sprite_DrawListCount = 0;
+    Widescreen_SweepClear();   // DIV-0041 (I38): the sweep marks go with the overlay list
 }
 
 // original 0x592F20: the overlay list, sorted by height (+0x3E, s16) and
@@ -493,7 +494,9 @@ extern "C" void __cdecl Sprite_DrawOverlays(void) {
         Sprite_Current = sprite;
         SetLong(sprite + 0x74, static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(Word(sprite + 0x2E)))));
         rv::Current<records::SpriteObject>()->screen_yf = static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(static_cast<std::uint16_t>(rv::Current<records::SpriteObject>()->screen_y))));
+        Widescreen_SweepBefore(sprite);   // DIV-0041 (I38): a marked sweep drawn at its mapped x
         g.sprite_draw();
+        Widescreen_SweepAfter(sprite);    // ... and Capcom's +0x74 put back
         ++i;
     } while (i < Sprite_OverlayListCount);
 }

@@ -185,6 +185,71 @@ int Widescreen_Anchor();
 constexpr unsigned kWidescreenFullFrameTile = 11;
 void Widescreen_BattleTile(unsigned size, int& x, int& w);
 
+// ---------------------------------------------------------------------------
+// The two edge sweeps drawn mapped (DIV-0041 amended, wide-ring round group
+// SW, IDEAS I38, docs/wide-sweeps.md). Two effects sweep across the picture
+// and end a state at a screen-x bound: effect kind 0xD's slide (EffectKind0D_*,
+// effect_1a.cpp, 0x465F30..0x466050) and area 172's growing shade
+// (Area172_EffectA5Grow 0x428240, area_w4b.cpp). Their logic x stays Capcom's
+// - the frame the record idles on and the frame the script goes on are the
+// original's - and only the x they are drawn at is mapped onto the wide
+// picture, piecewise linear, so each starts and ends past the wide edge on the
+// original's frames (c the columns a side):
+//   the slide: [160, 390] onto [160, 390 + c] and [-70, 160] onto
+//   [-70 - c, 160] - its hold at 160 fixed, the start 0x186 and the end -0x46
+//   moved out by c (the owner's map, 2026-10-15);
+//   the shade: [0, 220] onto [-c, 220 + c] and from 220 on x + c - its start
+//   moved past the wide left edge as 0 is past the narrow one, and from the
+//   panel's left edge 0xDC on the shade anchored right as the panel
+//   (PanelX, 0xDC + c) and the shade's own right edge (320 + c) already are,
+//   so the panel's reveal is on the original's frames and the bound 0x190
+//   is drawn at 400 + c.
+// c is Widescreen_Fill(): 0 during every self-test and when the view is
+// narrow, where each map is the identity and nothing below writes anything.
+// Off under BOF3X_ORIGINAL=Widescreen, as the faster slide is.
+namespace widescreen_rule {
+// x on the line from (x0, d0) to (x1, d1), rounded to the nearest (a half
+// away from (x0, d0)): exact at both ends.
+constexpr int SweepLine(int x, int x0, int d0, int x1, int d1) {
+    const long long sign = x1 > x0 ? 1 : -1;   // a positive denominator, for the rounding below
+    const long long num = sign * (x - x0) * (d1 - d0), den = sign * (x1 - x0);
+    const long long q = num >= 0 ? (num + den / 2) / den : -((-num + den / 2) / den);
+    return d0 + static_cast<int>(q);
+}
+constexpr int kSlideHold = 0xA0, kSlideStart = 0x186, kSlideEnd = -0x46;   // EffectKind0D_Start / _SlideIn / _SlideOut
+constexpr int kShadeStart = 0, kShadePanel = 0xDC, kShadeEnd = 0x190;      // Area172_EffectA5Start / PanelX / _EffectA5Grow
+constexpr int SlideMap(int x, unsigned c) {
+    const int ci = static_cast<int>(c);
+    return x >= kSlideHold ? SweepLine(x, kSlideHold, kSlideHold, kSlideStart, kSlideStart + ci)
+                           : SweepLine(x, kSlideHold, kSlideHold, kSlideEnd, kSlideEnd - ci);
+}
+constexpr int ShadeMap(int x, unsigned c) {
+    const int ci = static_cast<int>(c);
+    return x >= kShadePanel ? x + ci : SweepLine(x, kShadeStart, kShadeStart - ci, kShadePanel, kShadePanel + ci);
+}
+}  // namespace widescreen_rule
+
+// Kind 0xD: the record's x +0x2E is Capcom's; its drawn x reaches the screen
+// through +0x74, which Sprite_DrawOverlays (0x592F20, ours, field_frame.cpp)
+// writes from +0x2E just before Sprite_Draw reads it. The kind's three drawing
+// states call Widescreen_SweepMark on the record before Sprite_QueueOverlay;
+// Sprite_DrawOverlays calls _SweepBefore / _SweepAfter around each overlay's
+// draw (the mapped float in +0x74 for the draw, Capcom's put back after it), and
+// Field_DrawFrame calls _SweepClear where it empties the overlay list. Sprite_Draw
+// culls and sets the off-screen bit from +0x2E, so the bit stays Capcom's.
+void Widescreen_SweepMark(unsigned char* rec);
+void Widescreen_SweepBefore(unsigned char* sprite);
+void Widescreen_SweepAfter(unsigned char* sprite);
+void Widescreen_SweepClear();
+// Area 172's shade: the x Area172_EffectA5Grow passes Area172_DrawShade, as
+// it passes it (the word +0x2E zero-extended); the same int back when the map
+// is off, else the mapped s16 zero-extended.
+int Widescreen_SweepShadeX(int x);
+// The map's property check, at 0, 53 and 120 columns: the identity at 0, the
+// ends onto the moved ends, the fixed points, monotonic over every x the two
+// sweeps draw. Fatal on a difference. Run by Widescreen_ArmFills.
+void Widescreen_CheckSweeps();
+
 namespace bof3 {
 class SnapshotWriter;
 class SnapshotReader;
