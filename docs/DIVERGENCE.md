@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 148 entries, DIV-0001..0148, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 149 entries, DIV-0001..0149, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -9325,7 +9325,7 @@ designed in rather than bolted on.
 - **Date:** 2026-10-21
 - **Subsystem:** music at a battle's start (`GameMode5_Load` `0x495FD0`, ours
   in `src/game/mode_rest.cpp`)
-- **Tier:** Fidelity - the PlayStation's behaviour, heard by the owner.
+- **Tier:** Intent - the PlayStation's behaviour, heard by the owner.
 - **Original behaviour:** five event battles' files carry no music (their
   track word in `EventBattle_Records+0xE2` is 0xFF; the miners' fight at the
   start is one, issue #83). `GameMode5_Load` fades the scene's song out over
