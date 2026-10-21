@@ -36,6 +36,9 @@ const char* g_why = "";   // BOF3X_LAYERING_LOG: what stopped the last sprite ju
 
 constexpr unsigned kViewCells = 0x38 * 28;
 std::uint16_t g_cell_of[0x1000];   // draw item index -> view cell + 1, rebuilt each pass
+// The same for a cell's own quad and its two side triangles (the item's words
+// +0x7E and +0x8E, docs/map-layers.md): the table faerie's test (TableFaerie).
+std::uint16_t g_owner_of[0x1000];
 
 constexpr unsigned kSprites = 0x28;   // Sprite_UpdateScreen's limit on the draw list
 struct Moved { unsigned char* sprite; std::uint16_t key; };
@@ -138,25 +141,52 @@ bool IsFloor(std::uint32_t prim, int feet) {
 
 enum Need { kNothing, kFloorOnly };
 
+// The lowest and highest of a map cell's four corners.
+struct Height { int lo, hi; };
+Height CellHeight(unsigned x, unsigned z) {
+    const signed char* const c = reinterpret_cast<const signed char*>(&AreaMap_Corners) + (z * AreaMap_Header[0] + x) * 4u;
+    Height h = {c[0], c[0]};
+    for (unsigned k = 1; k < 4; ++k) {
+        if (c[k] < h.lo) h.lo = c[k];
+        if (c[k] > h.hi) h.hi = c[k];
+    }
+    return h;
+}
+
+// A draw item that is a cell's top or one of its side triangles, the cell
+// standing at exactly `height` (its lowest and highest corners).
+bool SameHeightCell(std::uint32_t prim, const Height& height) {
+    if (!InPool(prim)) return false;
+    const unsigned index = (prim - Address(draw_pool::Items())) / 0x90u;
+    if (g_owner_of[index] == 0) return false;
+    const unsigned char* const cell = MapView_CellItems + (g_owner_of[index] - 1u) * 4u;
+    const Height h = CellHeight(cell[0], cell[1]);
+    return h.lo == height.lo && h.hi == height.hi;
+}
+
 // What stops the sprite at the layer before: a primitive that reaches the
 // feet and is not floor allowed there, or one that is not floor and reaches
 // the sprite anywhere (`whole_box`, the feet and the body) - a raised cell
 // of a later layer stands in front of the sprite even where it covers only
 // the body (the owner's Nina behind a crate, 2026-10-06: the crate's top
-// reached her head, not her feet, and she was drawn through it).
-bool Stops(std::uint32_t prim, const Box& feet_box, const Box& whole_box, int feet, Need need) {
+// reached her head, not her feet, and she was drawn through it). With
+// `table` (the table faerie, the layer it stands in), the top or a side of
+// a cell as high as the one it stands inside stops nothing.
+bool Stops(std::uint32_t prim, const Box& feet_box, const Box& whole_box, int feet, Need need, const Height* table = nullptr) {
+    if (table != nullptr && SameHeightCell(prim, *table)) return false;
     if (Reaches(prim, feet_box) && !(need == kFloorOnly && IsFloor(prim, feet))) return true;
     return Reaches(prim, whole_box) && !IsFloor(prim, feet);
 }
 
 // One of a layer's three lists (0, 1, 2: the first, the second, the frame
 // nodes): false when a primitive of it stops the sprite (Stops).
-bool ListClear(unsigned layer, unsigned which, const Box& feet_box, const Box& whole_box, int feet, Need need) {
+bool ListClear(unsigned layer, unsigned which, const Box& feet_box, const Box& whole_box, int feet, Need need,
+               const Height* table = nullptr) {
     const unsigned long* const list = DrawLayers + which * 4u + (Gfx_BufferIndex + layer * 6u) * 2u;   // first, last
     std::uint32_t at = list[0];
     for (unsigned steps = 0; at != 0; ++steps) {
         if (steps == 256) return false;
-        if (Stops(at, feet_box, whole_box, feet, need)) {
+        if (Stops(at, feet_box, whole_box, feet, need, table)) {
             if (g_log && draw_order::Tagging() && InPool(at)) {
                 const unsigned index = (at - Address(draw_pool::Items())) / 0x90u;
                 const unsigned char* const cell = MapView_CellItems + (g_cell_of[index] ? g_cell_of[index] - 1u : 0u) * 4u;
@@ -289,12 +319,73 @@ Box BoxRound(const unsigned char* sprite, float half_width, float above, float b
     return {x - half_width, y - above, x + half_width, y + below};
 }
 
+// The table faerie (known-defects D300, docs/faerie-fix.md): in area 175, the
+// faerie village's room where the faeries gather after the Faerie Tiara, the
+// gold faerie stands at floor height inside the table's raised cell, and the
+// next plank's top, in its layer's second list, is drawn over its skirt.
+// Capcom's, on both platforms; the owner's decision (2026-10-15) is to fix
+// this one scene. The faerie is known by what it is, never by a screen
+// position: a field object (Sprite_Objects) of area 175 running the area's
+// movement script kTableFaerieScript (object +0x83, the index into the area
+// descriptor's +0x10 table that Field_ObjectUpdate steps,
+// docs/movement-script.md section 1b). The cell condition is
+// docs/faerie-over-table.md section 4's: its feet below its own map cell's
+// lowest corner.
+constexpr unsigned kTableArea = 175;
+constexpr unsigned kTableFaerieScript = 1;
+
+// Whether `sprite` is the table faerie standing inside its raised cell.
+// `height` gets that cell's.
+bool TableFaerie(const unsigned char* sprite, int feet, int cell_x, int cell_z, Height* height) {
+    if (Game_AreaNumber != kTableArea) return false;
+    const unsigned char* const objects = reinterpret_cast<const unsigned char*>(Sprite_Objects_addr);
+    if (sprite < objects || sprite >= objects + 30u * 0xA4u || (sprite - objects) % 0xA4u != 0) return false;
+    if (sprite[0x83] != kTableFaerieScript) return false;
+    if (cell_x <= 0 || cell_z <= 0 || cell_x >= AreaMap_Header[0] || cell_z >= AreaMap_Header[1]) return false;
+    const Height h = CellHeight(static_cast<unsigned>(cell_x), static_cast<unsigned>(cell_z));
+    if (!(feet < h.lo)) return false;
+    *height = h;
+    return true;
+}
+
+// When the faerie is drawn a layer later, its table's tops no longer cover
+// it, and neither would the sides: but the sides are what hid its shadow, a
+// piece of the same sprite at its ground point on the floor inside the table
+// (the black oval on the right plank's front, otherwise). So the side
+// triangles of its table in the second list it passed, those within reach of
+// it, are drawn again right after it (AfterSprite): copies, in the packet
+// pool, of what the list drew - opaque quads, the same pixels again.
+constexpr unsigned kFaerieSides = 8;
+constexpr std::uint32_t kPoolLimit = 0x7F1BAC;   // Gfx_PacketPools 0x7E1C00 + 0x10000 - 0x54 (draw_emit.cpp's)
+constexpr float kFaerieHalfWidth = 24.0f;   // the faerie's wings reach wider than a walking sprite's body
+const unsigned char* g_faerie;               // the table faerie drawn a layer later this pass, or null
+std::uint32_t g_faerie_sides[kFaerieSides];
+unsigned g_faerie_sides_n;
+Box g_faerie_reach;                          // their union box
+
+// Each primitive of one of a layer's lists, as ListClear walks it.
+template <typename F>
+void ForEachInList(unsigned layer, unsigned which, F&& f) {
+    const unsigned long* const list = DrawLayers + which * 4u + (Gfx_BufferIndex + layer * 6u) * 2u;   // first, last
+    std::uint32_t at = list[0];
+    for (unsigned steps = 0; at != 0 && steps < 256; ++steps) {
+        f(at);
+        if (at == list[1]) break;
+        at = Get<std::uint32_t>(Pointer(at)) & 0xFFFFFFu;
+    }
+}
+
 // The layer `sprite` (number `index` of the sorted draw list, in `layer`) is
 // drawn in.
 unsigned LayerFor(unsigned index, unsigned layer) {
     const unsigned char* const sprite = Sprite_DrawList[index];
     const float sx = Get<float>(sprite + 0x74), sy = Get<float>(sprite + 0x78);
     if (!(sx > -64.0f && sx < 1024.0f && sy > -64.0f && sy < 512.0f)) return layer;   // NaN included
+    // The feet in corner units, as the sprite's own key has them.
+    const int feet = static_cast<signed char>(Get<std::uint16_t>(sprite + 0x3E) >> 5);
+    const int cell_x = Get<std::uint16_t>(sprite + 0x36), cell_z = Get<std::uint16_t>(sprite + 0x3A);
+    Height table_height;
+    const Height* const table = TableFaerie(sprite, feet, cell_x, cell_z, &table_height) ? &table_height : nullptr;
     // A model (+0x24 bit 0x40: its quads are records, Sprite_AddDrawRecords)
     // stays in its layer. The pass sorts the records of a layer's sprites and
     // models together by depth, so a model moved out of its layer leaves that
@@ -320,35 +411,82 @@ unsigned LayerFor(unsigned index, unsigned layer) {
             return layer;
         }
     }
-    // The feet in corner units, as the sprite's own key has them.
-    const int feet = static_cast<signed char>(Get<std::uint16_t>(sprite + 0x3E) >> 5);
-    const int cell_x = Get<std::uint16_t>(sprite + 0x36), cell_z = Get<std::uint16_t>(sprite + 0x3A);
-
-    unsigned drawn_in = layer;
-    for (unsigned next = layer + 1; next < 0x37 && next <= layer + static_cast<unsigned>(g_ahead); ++next) {
-        // What the sprite would newly be drawn over: the second list and the
-        // later sprites and table items of the layer before, then this
-        // layer's first list, cell records and frame nodes.
-        if (!ListClear(next - 1, 1, feet_box, whole_box, feet, kNothing)) { g_why = "the layer before's second list"; break; }
-        bool clear = true;
-        for (unsigned other = index + 1; other < Sprite_DrawListCount && clear; ++other) {
+    // What the sprite would newly be drawn over in layer `next`: the second
+    // list and the later sprites and table items of the layer before, then
+    // this layer's first list, cell records and frame nodes. `passed`: the
+    // table faerie's table, whose tops and sides in the second list of the
+    // layer before stop nothing.
+    const auto clear_to = [&](unsigned next, const Height* passed) {
+        if (!ListClear(next - 1, 1, feet_box, whole_box, feet, kNothing, passed)) { g_why = "the layer before's second list"; return false; }
+        for (unsigned other = index + 1; other < Sprite_DrawListCount; ++other) {
             const unsigned char* const o = Sprite_DrawList[other];
             if (static_cast<unsigned>(Get<std::uint16_t>(o + 0x32) >> 8) > next - 1) break;
-            if (Overlap(BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow), whole_box)) clear = false;
+            if (Overlap(BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow), whole_box)) {
+                g_why = "a sprite or a table item of the layer before";
+                return false;
+            }
         }
-        for (unsigned item = 0; item < DrawTable_Count && clear; ++item) {
+        for (unsigned item = 0; item < DrawTable_Count; ++item) {
             const unsigned long entry = DrawTable[item];
             if ((entry >> 24) != next - 1) continue;
             const std::uint32_t prim =
                 Address(draw_pool::Items() + (Gfx_BufferIndex + (entry & 0xFFFu) * 2u) * 0x48u);
-            if (Stops(prim, feet_box, whole_box, feet, kFloorOnly)) clear = false;
+            if (Stops(prim, feet_box, whole_box, feet, kFloorOnly)) {
+                g_why = "a sprite or a table item of the layer before";
+                return false;
+            }
         }
-        if (!clear) { g_why = "a sprite or a table item of the layer before"; break; }
-        if (!ListClear(next, 0, feet_box, whole_box, feet, kFloorOnly)) { g_why = "the first list: not floor"; break; }
-        if (!RecordsClear(next, cell_x, cell_z)) { g_why = "a cell record nearby"; break; }
-        if (!RunsClear(next, whole_box)) { g_why = "what a cell record drew"; break; }
-        if (!ListClear(next, 2, feet_box, whole_box, feet, kNothing)) { g_why = "a frame node"; break; }
+        if (!ListClear(next, 0, feet_box, whole_box, feet, kFloorOnly)) { g_why = "the first list: not floor"; return false; }
+        if (!RecordsClear(next, cell_x, cell_z)) { g_why = "a cell record nearby"; return false; }
+        if (!RunsClear(next, whole_box)) { g_why = "what a cell record drew"; return false; }
+        if (!ListClear(next, 2, feet_box, whole_box, feet, kNothing)) { g_why = "a frame node"; return false; }
+        return true;
+    };
+    unsigned drawn_in = layer;
+    for (unsigned next = layer + 1; next < 0x37 && next <= layer + static_cast<unsigned>(g_ahead); ++next) {
+        if (!clear_to(next, nullptr)) break;
         drawn_in = next;
+    }
+    // The table faerie (TableFaerie), where DIV-0071 kept it in its layer:
+    // one layer later, past its own table's tops and sides, if nothing else
+    // stops it there.
+    if (table != nullptr && drawn_in == layer) {
+        const char* const why = g_why;
+        // One faerie a pass: a second object running the same script stays.
+        const bool moved = g_faerie == nullptr && layer + 1 < 0x37 && clear_to(layer + 1, table);
+        if (moved) {
+            drawn_in = layer + 1;
+            g_faerie_sides_n = 0;
+            const Box reach = BoxRound(sprite, kFaerieHalfWidth, kBodyAbove, kFeetBelow);
+            g_faerie_reach = {1e9f, 1e9f, -1e9f, -1e9f};
+            ForEachInList(layer, 1, [&](std::uint32_t prim) {
+                const unsigned item = (prim - Address(draw_pool::Items())) / 0x90u;
+                if (!InPool(prim) || g_cell_of[item] != 0 || !SameHeightCell(prim, *table) || !Reaches(prim, reach)) return;
+                if (g_faerie_sides_n == kFaerieSides) {   // more than the table can have: not moved after all
+                    drawn_in = layer;
+                    return;
+                }
+                g_faerie_sides[g_faerie_sides_n++] = prim;
+                const unsigned char* const p = Pointer(prim);
+                for (unsigned k = 0; k < 4; ++k) {
+                    const float x = Get<float>(p + kRound[k]), y = Get<float>(p + kRound[k] + 4);
+                    if (x < g_faerie_reach.x0) g_faerie_reach.x0 = x;
+                    if (x > g_faerie_reach.x1) g_faerie_reach.x1 = x;
+                    if (y < g_faerie_reach.y0) g_faerie_reach.y0 = y;
+                    if (y > g_faerie_reach.y1) g_faerie_reach.y1 = y;
+                }
+            });
+            if (drawn_in != layer) g_faerie = sprite;
+            else g_why = "more table sides than kept";
+        } else {
+            g_why = why;
+        }
+        if (g_log)
+            bof3::Log("D300 fix    frame %u: the table faerie %08X (area %u, script %u), cell %d,%d (corners %d..%d), feet %d: "
+                      "layer %u drawn in layer %u%s%s; %u table side(s) drawn again after it",
+                      static_cast<unsigned>(Frame_Counter), Address(sprite), kTableArea, kTableFaerieScript, cell_x, cell_z,
+                      table->lo, table->hi, feet, layer, drawn_in, drawn_in == layer ? "; stopped by " : "",
+                      drawn_in == layer ? g_why : "", drawn_in == layer ? 0u : g_faerie_sides_n);
     }
     if (g_log && draw_order::Tagging())
         bof3::Log("DIV-0071    frame %u: sprite %08X at (%g, %g), cell %d,%d, feet %d: layer %u drawn in layer %u; stopped by %s",
@@ -375,6 +513,8 @@ void Arm() {
 
 bool Defer() {
     g_moved_n = 0;
+    g_faerie = nullptr;
+    g_faerie_sides_n = 0;
     // A new generation of record runs: the pass about to draw fills it.
     g_runs_before = g_runs_now;
     g_runs_now = 0;
@@ -383,9 +523,18 @@ bool Defer() {
     g_in_run = false;
     if (Draw_OtSlot != 6 || !(Draw_PassFlags & 4) || Gfx_BufferIndex > 1) return false;
     std::memset(g_cell_of, 0, sizeof g_cell_of);
+    std::memset(g_owner_of, 0, sizeof g_owner_of);
     for (unsigned v = 0; v < kViewCells; ++v) {
         const unsigned index = Get<std::uint16_t>(MapView_CellItems + v * 4u + 2) & 0xFFFu;
-        if (index != 0) g_cell_of[index] = static_cast<std::uint16_t>(v + 1);
+        if (index == 0 || index >= draw_pool::Count()) continue;
+        g_cell_of[index] = static_cast<std::uint16_t>(v + 1);
+        g_owner_of[index] = static_cast<std::uint16_t>(v + 1);
+        // Its side triangles, the next cell's edge and the one below's.
+        const unsigned char* const item = draw_pool::Items() + index * 0x90u;
+        for (unsigned word : {0x7Eu, 0x8Eu}) {
+            const unsigned side = Get<std::uint16_t>(item + word);
+            if (side != 0 && side < 0x1000u && side < draw_pool::Count()) g_owner_of[side] = static_cast<std::uint16_t>(v + 1);
+        }
     }
     // Every sprite is judged against the list as the original sorted it, and
     // the keys are changed only after the last one.
@@ -394,6 +543,26 @@ bool Defer() {
     for (unsigned i = 0; i < count; ++i) {
         const unsigned layer = Get<std::uint16_t>(Sprite_DrawList[i] + 0x32) >> 8;
         layers[i] = layer < 0x37 ? LayerFor(i, layer) : layer;
+    }
+    // The table faerie's sides are drawn again right after it: anything else
+    // drawn between its own layer's second list and it that the sides reach
+    // would be covered by them where the original drew it over them - a
+    // sprite drawn into those layers. Then the faerie stays where it was.
+    for (unsigned i = 0; i < count && g_faerie != nullptr; ++i) {
+        if (Sprite_DrawList[i] != g_faerie) continue;
+        const unsigned from = Get<std::uint16_t>(Sprite_DrawList[i] + 0x32) >> 8;
+        for (unsigned j = 0; j < count; ++j) {
+            if (j == i || layers[j] <= from || layers[j] > layers[i]) continue;
+            if (!Overlap(BoxRound(Sprite_DrawList[j], kFaerieHalfWidth, kBodyAbove, kBodyBelow), g_faerie_reach)) continue;
+            if (g_log)
+                bof3::Log("D300 fix    frame %u: the table faerie %08X kept in layer %u: sprite %08X, drawn in layer %u, "
+                          "under its table's sides", static_cast<unsigned>(Frame_Counter), Address(g_faerie), from,
+                          Address(Sprite_DrawList[j]), layers[j]);
+            layers[i] = from;
+            g_faerie = nullptr;
+            g_faerie_sides_n = 0;
+            break;
+        }
     }
     for (unsigned i = 0; i < count; ++i) {
         unsigned char* const sprite = Sprite_DrawList[i];
@@ -409,6 +578,30 @@ bool Defer() {
 void Restore() {
     for (unsigned i = 0; i < g_moved_n; ++i) std::memcpy(g_moved[i].sprite + 0x32, &g_moved[i].key, 2);
     g_moved_n = 0;
+    g_faerie = nullptr;
+    g_faerie_sides_n = 0;
+}
+
+void AfterSprite(const unsigned char* sprite) {
+    if (sprite != g_faerie || g_faerie == nullptr || g_faerie_sides_n == 0) return;
+    // As DrawLayer_Close draws a second list: a draw mode (texture page
+    // 0x95) into slot 6, then the primitives - here copies, each 0x48 bytes,
+    // the draw-item record's half for this buffer. Not at all when the
+    // packet pool has no room for every one (Gfx_CommitPrim's own limit,
+    // tested once for the whole set).
+    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + kPoolLimit;
+    if (limit <= Address(Gfx_PacketNext) + 0xCu + g_faerie_sides_n * 0x48u) {
+        if (g_log) bof3::Log("D300 fix    frame %u: no room in the packet pool for the table's sides", static_cast<unsigned>(Frame_Counter));
+        g_faerie = nullptr;
+        return;
+    }
+    Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x95, 0);
+    Gfx_CommitPrim(6, 0xC);
+    for (unsigned k = 0; k < g_faerie_sides_n; ++k) {
+        std::memcpy(Gfx_PacketNext, Pointer(g_faerie_sides[k]), 0x48);
+        Gfx_CommitPrim(6, 0x48);
+    }
+    g_faerie = nullptr;   // once a pass
 }
 
 bool g_in_run = false;

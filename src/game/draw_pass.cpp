@@ -376,6 +376,8 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                                             static_cast<unsigned>(record[0]));
                         g_draw();
                         if (draw_order::g_on) draw_order::Clear();
+                        // The table faerie (layering.h, known-defects D300): its table's sides again.
+                        if (layering::g_mode == layering::kFloor) layering::AfterSprite(Sprite_Current);
                     }
                 } else if (flags & 8) {
                     unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
