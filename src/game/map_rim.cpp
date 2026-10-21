@@ -685,6 +685,34 @@ void Arm() {
         bof3::Log("DIV-0041    the grown view ring: off (BOF3X_WIDE_RING=0), Capcom's 28 x 56 at the wide picture");
         return;
     }
+    // The rim is kept and drawn by ours alone: with any of its sites left to
+    // Capcom (BOF3X_ORIGINAL), the ring stays Capcom's.
+    static const struct {
+        const char* name;
+        std::uint32_t at;
+    } kSites[] = {
+        {"MapView_ShiftColumnPrev", bof3::addr::MapView_ShiftColumnPrev},
+        {"MapView_ShiftColumnNext", bof3::addr::MapView_ShiftColumnNext},
+        {"MapView_ShiftRowsPrev", bof3::addr::MapView_ShiftRowsPrev},
+        {"MapView_ShiftRowsNext", bof3::addr::MapView_ShiftRowsNext},
+        {"MapView_PlaceRuns", bof3::addr::MapView_PlaceRuns},
+        {"Field_ViewReset", bof3::addr::Field_ViewReset},
+        {"Weretiger_ResetMapView", bof3::addr::Weretiger_ResetMapView},
+        {"MapView_FillCells", bof3::addr::MapView_FillCells},
+        {"MapView_Build", bof3::addr::MapView_Build},
+        {"DrawLayers_Reset", bof3::addr::DrawLayers_Reset},
+        {"DrawLayer_Open", bof3::addr::DrawLayer_Open},
+        {"DrawLayer_Close", bof3::addr::DrawLayer_Close},
+        {"Sprite_DrawPass", bof3::addr::Sprite_DrawPass},
+        {"MapView_ItemAt", bof3::addr::MapView_ItemAt},
+        {"MapCell_DrawFlatFaces", bof3::addr::MapCell_DrawFlatFaces},
+    };
+    for (const auto& site : kSites)
+        if (!bof3::IsEnabled(site.at)) {
+            bof3::Log("DIV-0041    the grown view ring: off (%s is left original), Capcom's 28 x 56 at the wide picture",
+                      site.name);
+            return;
+        }
     g_armed = true;
     bof3::Log("DIV-0041    the grown view ring: the draw walks the PSP's 33 x 58 (a rim of %d cells beside Capcom's "
               "28 x 56, which the game's logic keeps reading); BOF3X_WIDE_RING=0 for Capcom's ring alone", kRimCells);
