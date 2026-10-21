@@ -6821,7 +6821,11 @@ designed in rather than bolted on.
   whose SEPs differ by 20 bytes; a PSX base with the PSP's music layer plays
   that boss `BGMBAT00`'s PSP render). The recipe's equality gate accepts
   exactly that: a track naming a song of the same byte-identical set. With the
-  PC's `.data` nothing changes. Verification: `psp_exe.py recipe`,
+  PC's `.data` nothing changes. *2026-10-21 (the owner: "have the fight use
+  BGMBAT02"):* a tie now takes the highest song of the set, so that boss
+  (`BOSS033`, event battle 25) is 153 on every build, `BOF3.exe`'s word: 164
+  of 164 bytes equal on all seven (`psp_exe.py recipe`), and a PSX base with
+  the PSP's music layer plays `BGMBAT02`'s own recording. Verification: `psp_exe.py recipe`,
   `exe_tables.py recipe`, `exe_own.py measure`, `exe_tables.py gaps` over the
   seven discs (`exe-psp.tsv`'s `pairs` rows 82 to 164 bytes; `exe-gaps.tsv`
   loses the 41 track rows per build); `psp_exe.py check` clean; the `whelpBoss` route on a scratch PSP-EU-only install under

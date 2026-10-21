@@ -754,15 +754,20 @@ def event_track(disc, bid, path):
     file's bank header, SEP and bank body (docs/seq-import.md), and the PC's track is that
     file's sub-song 0 in the disc's song table - the PC's numbering is the PSX's songs
     (docs/bgm-comparison.md 6.3). A file with no SEP plays nothing of its own: TRACK_NONE,
-    the field's music kept. Several songs only when their files are byte-identical; the
-    lowest is written."""
+    the scene's music playing on (DIV-0149). Several songs only when their files are
+    byte-identical (on the PSX discs one boss file, BOSS033, matches BGMBAT00 and
+    BGMBAT02, songs 151 and 153); the highest is written. Where the two files differ -
+    the PSP discs - that boss matches BGMBAT02 (153), as the PC port has it, and on the
+    PSX's own music the two are one sound, so the choice is heard only with the PSP's
+    music layer (the owner, 2026-10-21: "have the fight use BGMBAT02"). Until then the
+    lowest was written, and a PSX base with the PSP's music played BGMBAT00's recording."""
     have = emi_music(disc, path)
     if not any(ty == 10 for ty, _ in have):
         return TRACK_NONE, (TRACK_NONE,)
     hits = [songs for k, songs in song_bundles(disc, bid).items() if k <= have]
     if len(hits) != 1:
         fail("%s: %s carries %d BGM files' music (want one)" % (bid, path, len(hits)))
-    return hits[0][0], tuple(hits[0])
+    return hits[0][-1], tuple(hits[0])
 
 
 def hole_segments(bid, lo):
@@ -1126,8 +1131,9 @@ def find_rows(disc, bid, pc, ref_srcs=None):
 
 def same_song(disc, bid, row, i, pc, srcs, elf):
     """Byte i of a pairs row differs from BOF3.exe's in a track word naming a song the disc
-    makes the same as the PC's (event_track: byte-identical BGM files - on the PSX discs one
-    boss the PC gives 153, the disc's BGMBAT02, a copy of BGMBAT00, song 151)."""
+    makes the same as the PC's (event_track: byte-identical BGM files). Since 2026-10-21
+    event_track writes the highest of such a set, which is the PC's in the one case
+    measured (BOSS033, 153), so no row has differed; kept for a disc that ties otherwise."""
     if i % 4 < 2:
         return False
     base, blob = (0, elf.img) if row["file"] == "BOOT.BIN" else srcs[(row["file"], row["section"])]

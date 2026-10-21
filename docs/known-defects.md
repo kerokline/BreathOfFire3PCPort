@@ -8464,6 +8464,12 @@ fight): before, frame 718 loads `BOSS007` and plays `Music_Play(0, 10)`,
 `Music_Play(151, 10)`, `bgm\151` (bank `BGMBAT00`), and the start-up log's
 41 `EventBattle_Records` gap lines are gone. Not heard.
 
+**Amended 2026-10-21 (the owner):** the tie takes the highest song of the
+set, not the lowest, so `BOSS033` (event battle 25) plays 153, `BGMBAT02`, on
+every build: every byte of the seven `pairs` rows is now `BOF3.exe`'s. On a
+PSX base with the PSP's music layer it hears `BGMBAT02`'s recording, no longer
+`BGMBAT00`'s.
+
 ## D317 — A sprite meant to be drawn into VRAM stays on the screen, and the page it was for stays empty: Amalgam's death has no melt (the port's; fixed 2026-10-17 by DIV-0142)
 
 **Reported:** issue #84 (2026-10-17): "The Amalgam boss does a cool
