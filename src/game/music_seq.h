@@ -22,6 +22,11 @@ namespace music_seq {
 // False, with nothing changed, otherwise.
 bool LoadFile(unsigned track);
 
+// The file LoadFile would read for `track`, opened for its size and closed,
+// nothing else read or changed: true and the size when the cache has it.
+// The quicksave's SOUND check (a take made under another music source).
+bool Probe(unsigned track, int* size);
+
 // Music_LoadFile's MP3 path is about to free `file` (the old Music_File): if
 // it held the cache song, that song is no longer the one loaded.
 void Forget(const void* file);

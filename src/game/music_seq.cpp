@@ -202,22 +202,40 @@ void CheckCache(const char* dir) {
 
 }  // namespace
 
-bool LoadFile(unsigned track) {
+// The cache file for `track` into path and its directory into dir; false
+// when the cache has none. DIV-0109: the named layers' bgm first, the last
+// listed first, then base\bgm.
+bool Find(unsigned track, char (&path)[kPathMax + 1], std::string& dir) {
     if (!g_s.armed) return false;
-    char path[kPathMax + 1];
-    // DIV-0109: the named layers' bgm first, the last listed first, then base\bgm
-    std::string dir;
+    dir.clear();
     for (std::size_t i = g_s.layer_dirs.size(); i-- > 0 && dir.empty();) {
         std::snprintf(path, sizeof path, "%s\\%03u.DAT", g_s.layer_dirs[i].c_str(), track);
         if (g_s.exists(path)) dir = g_s.layer_dirs[i];
     }
-    if (dir.empty()) {
-        dir = std::string(g_s.root) + "\\base\\bgm";
-        std::snprintf(path, sizeof path, "%s\\%03u.DAT", dir.c_str(), track);
-        if (!g_s.exists(path)) {
-            bof3::Log("DIV-0087    track %03u: not in the cache, its MP3", track);
-            return false;
-        }
+    if (!dir.empty()) return true;
+    dir = std::string(g_s.root) + "\\base\\bgm";
+    std::snprintf(path, sizeof path, "%s\\%03u.DAT", dir.c_str(), track);
+    return g_s.exists(path);
+}
+
+bool Probe(unsigned track, int* size) {
+    char path[kPathMax + 1];
+    std::string dir;
+    if (!Find(track, path, dir)) return false;
+    const int handle = g.file_open(path, 0, 0);
+    if (handle == -1) bof3::Fatal("DIV-0087: %s is there but does not open", path);
+    *size = g.file_size(handle);
+    g.file_close(handle);
+    return true;
+}
+
+bool LoadFile(unsigned track) {
+    if (!g_s.armed) return false;
+    char path[kPathMax + 1];
+    std::string dir;
+    if (!Find(track, path, dir)) {
+        bof3::Log("DIV-0087    track %03u: not in the cache, its MP3", track);
+        return false;
     }
     Objects();
     const int handle = g.file_open(path, 0, 0);

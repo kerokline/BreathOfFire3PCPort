@@ -9160,7 +9160,9 @@ designed in rather than bolted on.
   elsewhere, is refused with its reason and nothing is written; so is one
   taken under the original Chinese text and loaded under a translation, or
   the reverse (from 2026-10-20; before, that load ended the game in a Fatal
-  part-way through). One translation's quicksave loaded under another is
+  part-way through), and one whose music file this launch reads differently
+  - another `BOF3X_MUSIC`, cache layers or `BGM` (from 2026-10-21, the same
+  Fatal before). One translation's quicksave loaded under another is
   let through: the take's text shows until the game reloads its own
   ([`quicksave.md`](quicksave.md) 4b, IDEAS I47).
 

@@ -38,6 +38,14 @@ void SnapshotWriter::Put(const void* data, std::size_t n) {
     out_.insert(out_.end(), p, p + n);
 }
 
+void SnapshotReader::Skip(std::size_t n) {
+    if (n > left_)
+        Fatal("snapshot: participant '%s' skipped %u bytes where its record has %u left", tag_, static_cast<unsigned>(n),
+              static_cast<unsigned>(left_));
+    p_ += n;
+    left_ -= n;
+}
+
 void SnapshotReader::Get(void* to, std::size_t n) {
     if (n > left_)
         Fatal("snapshot: participant '%s' read %u bytes where its record has %u left", tag_, static_cast<unsigned>(n),

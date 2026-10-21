@@ -126,7 +126,7 @@ header's size, or a record past the end); another host; **another build**
 (the tag or the hash); another process (the DLL's base, or `Task_StackTop`);
 another span; **a record whose tag has no participant**; **a participant with
 no record** (rule 4: never a partial restore); **another language** (section
-4b); trailing bytes. The save half
+4b); **another music source** (section 4c); trailing bytes. The save half
 does not depend on any of it: a file refused for another build still has a
 save file's first `0x12B0` bytes, summary included, so the quick menu can
 draw it and a later "load as a plain save" needs no format change.
@@ -168,6 +168,20 @@ before, `DllCharacteristics 0x0140` and a base of `0x5C2D0000` (q_sn's
 `0x54790000` (`launcher_st`) - two directories, two bases; after,
 `DllCharacteristics 0x0100` (NX only) and `0x10000000` from both directories
 and again from a third start of the first. Not measured: across a reboot.
+
+## 4c. Another music source
+
+The music file a track reads is the start's too: `BOF3X_MUSIC` (the cache's
+sequenced songs or the MP3s, DIV-0087), the cache's layers (DIV-0109) and the
+install's own `BGM`. `SOUND`'s record names the take's music file by its
+track and size, and `SnapRestore` reads that track again and stops the game
+if the file differs - after the span is written (the review of PR #95,
+2026-10-21). Since 2026-10-21 `SOUND`'s check (`SnapCheck`) walks the record
+to that file and asks this process's size for the track, nothing read
+(`MusicFileSize`: the cache song by `music_seq::Probe`, else the MP3 names
+`Music_LoadFile` tries): another size, or no file, refuses the load as
+"another music source" before a byte is written. The self-test checks the
+same file through and a smaller one, and no file, refused.
 
 ## 4b. Another language
 
