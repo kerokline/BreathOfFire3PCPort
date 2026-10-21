@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-16; 43 entries, I1..I43 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-21; 50 entries, I1..I50 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -47,9 +47,9 @@ rule ([`README.md`](README.md)) here too.
 |---|---|---|---|---|
 | I1 | PSX ↔ PC save file interchange | tooling | MEDIUM | **PSX saves load and play on PC** (owner, 2026-09-19, [`save-interchange.md`](save-interchange.md) §4); only PC→PSX in a real PSX runtime is unchecked |
 | I2 | Selectable localisations from original discs | game behaviour | LOW | **partly built**: English from the player's US disc (DIV-0005..0009, DIV-0013..0020), `BOF3X_LANG`, the launcher's Language box; since 2026-10-10 every held disc's language from the disc (`loc_build all --discs`, DIV-0090; fr-FR, de-DE, ja-JP, en-150); widened into [`ASSET_SOURCES.md`](ASSET_SOURCES.md) |
-| I3 | Crude x86→C lifter as portability accelerator | engine | MEDIUM | **prototype built 2026-09-25**, on a synthetic corpus — [`lifter-feasibility.md`](lifter-feasibility.md); first run on `BOF3.exe` open |
+| I3 | Crude x86→C lifter as portability accelerator | engine | MEDIUM | **closed 2026-10-21** (the owner): no longer needed - every function is ours by takeover; the prototype stays in [`lifter-feasibility.md`](lifter-feasibility.md) |
 | I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
-| I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | open |
+| I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | **folded into I44** 2026-10-21 (the owner): a later step of the typed-source work, as a source-layout pass, not an idea of its own |
 | I6 | Demo/attract playback as determinism oracle | tooling | MEDIUM | **built 2026-09-19** (external sampler) — [`attract-mode.md`](attract-mode.md) §6 |
 | I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **overtaken 2026-09-23**: the owner chose MCI into the window (DIV-0035); `Fmv_Play` is ours. Stays on the list |
 | I8 | Replace the DirectDraw / `IDirect3D3` presentation layer | platform | LOW | **built 2026-09-23** (DIV-0031) — [`render-backend.md`](render-backend.md) |
@@ -57,12 +57,12 @@ rule ([`README.md`](README.md)) here too.
 | I10 | Uses for the call-trace data (seven, ranked) | tooling | MIXED | item 1 **passed 2026-09-19** — [`call-trace.md`](call-trace.md) §7; item 2 (the work queue) **built** — §9 there |
 | I11 | In-process crash reporter | tooling | HIGH | **built 2026-09-19** — [`crash-reporter.md`](crash-reporter.md) |
 | I12 | Let the game run while its window is not in front | tooling | HIGH | **built 2026-09-23** (DIV-0033) |
-| I13 | Save states: snapshot the running game, restore it | tooling | MEDIUM | open |
-| I14 | Compare what is drawn: display-list, texture, back-buffer hash | tooling | MIXED | open (the game writes its own frames since 2026-09-24, [`input-script.md`](input-script.md) §3; no hashing yet) |
-| I15 | A look toggle: clean / sharp against soft / CRT-like | look | — | **looks built** (DIV-0012, DIV-0037, DIV-0043), chosen in the launcher; only a live toggle key is missing |
+| I13 | Save states: snapshot the running game, restore it | tooling | MEDIUM | **built 2026-10-19** as the quicksave round ([`quicksave-round.md`](quicksave-round.md), PR #95, DIV-0145..0147); the all-original half not built |
+| I14 | Compare what is drawn: display-list, texture, back-buffer hash | tooling | MIXED | **overtaken 2026-10-21** (the owner): the A/B/C harness ([`abc-harness.md`](abc-harness.md)) and the state hash cover what it was for |
+| I15 | A look toggle: clean / sharp against soft / CRT-like | look | — | **sunset 2026-10-21** (the owner): the looks stay as built and chosen in the launcher; the live toggle key will not be built |
 | I16 | Exact frame pacing: the deadline in a double | platform | MEDIUM | **done 2026-09-24** (DIV-0047) |
 | I17 | Fast-forward: a shorter frame period while a key is held | game behaviour | MEDIUM | **done 2026-09-24** (DIV-0048, a toggle) |
-| I18 | F12 before shipping: disable it, or make it a true quicksave | game behaviour | HIGH / MEDIUM | open |
+| I18 | F12 before shipping: disable it, or make it a true quicksave | game behaviour | HIGH / MEDIUM | **closed** (the owner, 2026-10-17): F12 stays; the true quicksave is I13's round |
 | I19 | Screen curvature for the SatPixie look | look | HIGH | open |
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
 | I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | **staged 2026-10-20** as the reading-row round ([`reading-row-round.md`](reading-row-round.md), issue #97) with I50; its own branch and playtesting (owner, 2026-09-24) |
@@ -81,13 +81,19 @@ rule ([`README.md`](README.md)) here too.
 | I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
 | I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | built 2026-10-10 (`catchup/music-tooling`): `abort_check.h`, the suite in CI |
 | I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
-| I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | open 2026-10-12 (the owner: "I'm interested in growing the ring, let's place it as an idea for later"); measured for 21:9 2026-10-13: needed only for far cameras (known-defects D292) |
-| I38 | Draw the two edge sweeps (`EffectKind0D`'s slide, area 172's growing shade) mapped onto the wide picture, so they start and end past its edge in the original's frames ([`wide-staging.md`](wide-staging.md) 8) | display | HIGH | open 2026-10-14, from the ultrawide round: proposed, not built; the owner's call |
+| I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | **staged 2026-10-21** as RG in the wide-ring round ([`wide-ring-round.md`](wide-ring-round.md)); scheduled by the owner 2026-10-15 and not built until then |
+| I38 | Draw the two edge sweeps (`EffectKind0D`'s slide, area 172's growing shade) mapped onto the wide picture, so they start and end past its edge in the original's frames ([`wide-staging.md`](wide-staging.md) 8) | display | HIGH | **staged 2026-10-21** as SW in the wide-ring round ([`wide-ring-round.md`](wide-ring-round.md)); the mapping chosen by the owner 2026-10-15 |
 | I39 | The Identify panel's element icons shaded by how weak the enemy is, not bright / dim | display | HIGH | open 2026-10-15, the owner: an argument for it, not now |
 | I40 | Port the importer to C++ inside the launcher, so a release needs no bundled Python ([`install-sources.md`](install-sources.md) 7) | platform | MEDIUM | open 2026-10-15 (the owner: bundle Python now, port later) |
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
 | I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | **partly built** 2026-10-15: every step timed; the movie, PSX sound and language layers reused when unchanged (adding a disc 89 s, not 372); the PSP's conversions left |
 | I43 | Settle every gap of a disc-built exe image: each of the ranges where the PC's `.data` has a value and the image leaves zero (`recipes/exe-gaps.tsv`; for the EU disc 188 ranges, 2,561 bytes on `main` the day it opened) placed from a disc, filled by an engine rule, or shown never read - first by placing a region from the pointers that point into it | tooling / engine | HIGH | **step 1 built** 2026-10-16 (the owner asked), from the forest sprite of a PSX-only install: the importer places a region from the pointers into it (gap ranges EU 185 to 177, the sprite fixed); steps 2..4 open |
+| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) and the source-layout pass open |
+| I45 | Shrink the quicksave files (about 4 MB raw) | engine | HIGH | open 2026-10-17 (the owner): nothing measured |
+| I46 | A quicksave is native memory: revisit what loading one trusts | engine | HIGH | open 2026-10-19 (the owner): a note to consider again |
+| I47 | Quick-loading across translations: review the text that carries over | engine | HIGH | open 2026-10-20 (the owner): nothing measured |
+| I48 | A comment-cleanup round after the typed-data round | tooling / source | HIGH | open 2026-10-20 (the owner): not now |
+| I49 | What `Battle_AutoTargetCheck`'s `+0xBA` test means | engine | — | open 2026-10-20: the rename done, the meaning unconfirmed |
 | I50 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **staged 2026-10-20** in the reading-row round ([`reading-row-round.md`](reading-row-round.md)); from issue #97 (the owner, 2026-10-20) |
 
 ---
@@ -189,6 +195,11 @@ Run `lift_x86.py` over `BOF3.exe`'s entries on the owner's machine, output to
 `analysis/` (never committed). Its refusal report is the measure of how far
 "crude" is from the real binary (§7 there).
 
+### Outcome
+_(2026-10-21) closed by the owner: not needed - the takeover reached every
+function, so there is nothing left for a lifter to accelerate. The prototype
+and its study stay as a record._
+
 ## I4 — Stacktrace-driven work-queue harvester
 
 **Ask (2026-09-18):** generalise the caller-finding technique
@@ -201,6 +212,11 @@ Run `lift_x86.py` over `BOF3.exe`'s entries on the owner's machine, output to
 ([`SHARED_SOURCE.md`](SHARED_SOURCE.md); [`PLAN.md`](PLAN.md) §3).
 **Kind:** tooling. **Feasibility:** MEDIUM — unknown is whether block edges are
 detectable without PSX-side anchors. _To fill._
+
+**Outcome** _(2026-10-21)_: folded into [I44](#i44--the-data-image-as-typed-source-the-next-step-toward-reconstructed-source)
+by the owner. With every function ours its use is the source's layout - which
+of our files match Capcom's translation units - so it belongs to the typed
+source's later steps, not to an idea of its own.
 
 ## I6 — Demo playback as determinism oracle
 
@@ -616,6 +632,12 @@ was missed.
 
 _(2026-10-17) staged as [`quicksave-round.md`](quicksave-round.md): the owner's F5 / F6 / F7 design, full snapshots with a save block in front; the all-original half left out._
 
+**Outcome** _(2026-10-21)_: built 2026-10-19 as the quicksave round, merged
+as PR #95 (DIV-0145..0147, D322): F6 / F7 save states and the F5 load menu;
+its routes and proof in [`quicksave-routes.md`](quicksave-routes.md). Not
+yet played by the owner;
+the all-original half is not built.
+
 ## I14 — Compare what is drawn: display-list hash, texture hash, back-buffer hash
 
 **Ask (2026-09-19):** owner, when the image path's takeovers reached functions
@@ -671,6 +693,10 @@ surveyed for [`prior-art/`](prior-art/): emulator CI that replays recorded GPU
 command streams and hashes the frames (Dolphin's FifoCI, PCSX2's GS dumps),
 and exact-hash sets of accepted images triaged by people (Skia Gold).
 
+**Outcome** _(2026-10-21)_: overtaken, the owner: the A/B/C harness
+([`abc-harness.md`](abc-harness.md)) and the state hash
+([`state-hash.md`](state-hash.md)) do the comparing this was for.
+
 ## I15 — A look toggle: clean / sharp against soft / CRT-like
 
 **Asked for by the owner, 2026-09-20**, after seeing what the port's bilinear
@@ -696,6 +722,9 @@ the place to start. *Since 2026-09-24 the input path is read and ours
 ([`controls.md`](controls.md) §1, DIV-0050), and our WndProc already takes
 F1 for DIV-0048: what I15 still needs is only the live toggle key and the
 two state calls.*
+
+**Outcome** _(2026-10-21)_: sunset by the owner. The looks stay as built,
+chosen in the launcher; the live toggle key is not wanted.
 
 
 ## I16 — Exact frame pacing: the deadline in a double
@@ -1587,6 +1616,8 @@ idea, built) waits on the owner, after the far-camera scenes are seen.
 _(2026-10-12) open, for later (the owner)._
 _(2026-10-15) scheduled: the owner, "build I37 now" - the RG group, without
 waiting for a far-camera picture (D292)._
+_(2026-10-21) found not built (no PR from #62 on touches it); staged as RG in
+[`wide-ring-round.md`](wide-ring-round.md)._
 
 ## I38 — Draw the two edge sweeps mapped onto the wide picture
 
@@ -1609,6 +1640,8 @@ amendment.
 _(2026-10-14) open: the owner's call (leave, or the mapping)._
 _(2026-10-15) scheduled: the owner chose the mapping (logic's x kept, the draw
 mapped; a DIV-0041 amendment when built)._
+_(2026-10-21) found not built; staged as SW in
+[`wide-ring-round.md`](wide-ring-round.md)._
 
 ## I39 — Shade the element icons by how weak the enemy is
 
@@ -1884,7 +1917,7 @@ differing. An install built before this is refused at start with a message
 to rebuild it (`FilledSince()`, the row `0x669868..0x669883`; the general
 form is HANDOFF "Pick up here" 11). Steps 2 to 4 open.
 _(2026-10-17) steps 2 to 4 staged_ in [`install-gap-round.md`](install-gap-round.md): RW the read watch (step 2), the fix groups by method (step 3), the strict default as the end batch's last item (step 4).
-_(2026-10-20) step 2 measured, steps 3 and 4 framed_: the read watch found only the owner's two rows read while zero ([`install-gap-reads.md`](install-gap-reads.md) 9.7), but STRICT refuses every `gap` row, read or not (52..78 per build), so the default waits on [`exe-gap-round.md`](exe-gap-round.md): every row accounted for, STRICT narrowed to rows not on a reviewed list, then on.
+_(2026-10-20) step 2 measured, steps 3 and 4 framed_: the read watch found only the owner's two rows read while zero ([`install-gap-reads.md`](install-gap-reads.md) 9.7), but STRICT refuses every `gap` row, read or not (49..74 per build after stage 0's recount, `recipes/exe-gaps.tsv`), so the default waits on [`exe-gap-round.md`](exe-gap-round.md): every row accounted for, STRICT narrowed to rows not on a reviewed list, then on.
 
 ## I44 — The data image as typed source: the next step toward reconstructed source
 
@@ -1897,6 +1930,8 @@ data sites down to 27,394, machine code identical to `main`); stage C
 ([`typed-data-stage-c.md`](typed-data-stage-c.md)) built on `typed/c`, the
 machine code identical again (the typed tables, `GameData`, the strict CI
 rule; every raw site left has a reason), its PR after the owner's smoke run.
+**Status (2026-10-21):** stages 1 and 2 DONE (PR #94 2026-10-19, stage C
+PR #100 2026-10-20); stage 3, the relocatable image, open and not staged.
 **Feasibility:** HIGH for stages 1 and 2 (mechanical, no behaviour change,
 parallel by file group); MEDIUM for stage 3 (a loader change, proved by the
 state hash). **Gated on:** nothing for stage 1; stage 3 on the state hash
@@ -1974,6 +2009,12 @@ and sizes the round.
 
 ### Outcome
 _(2026-10-17) open; proposed, nothing built._ _Stages 1 and 2 staged the same day in [`typed-data-round.md`](typed-data-round.md); the measurement there splits stage 1 into globals (about 900 sites) and record fields by offset (about 6,700 sites), so the record types come first._
+_(2026-10-21) stages 1 and 2 built: the typed-data round, PRs #94 and #100
+(machine code identical to `main` throughout, `tools/codegen_same.py`);
+stage 3 open._
+_(2026-10-21) I5 folded in by the owner: recovering Capcom's translation-unit
+boundaries (from the globals' blocks and the `.text` order) as a source-layout
+pass after stage 3 - which of our files should be split or joined to match._
 
 ## I45 — Shrink the quicksave files
 
@@ -2143,7 +2184,8 @@ the two scripts stay together.
 ### What already exists
 - **Messages pair by slot.** Every language overlay is converted onto the
   PC's slot table (`loc_build.py convert_block`; the US disc's blocks have
-  the PC's slot counts in 288 of 288), so "the same message in another
+  the PC's slot counts in 288 of 288, `convert_block`'s docstring,
+  2026-10-10), so "the same message in another
   language" is the same area block and slot. Pages and lines inside a
   message do not pair; that re-flow is the work.
 - **The reading row** (I21): the ja-JP kana at 12 px are the sheet cell texel
