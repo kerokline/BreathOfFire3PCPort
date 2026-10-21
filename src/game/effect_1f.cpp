@@ -33,6 +33,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
 
 namespace {
 
@@ -40,6 +41,7 @@ using U = std::uint32_t;
 using S = std::int32_t;
 using Handler = void (__cdecl*)();
 namespace at = effect_1f::at;
+using bof3x::input::sigma::Sigma;
 
 unsigned char* At(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -286,7 +288,7 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
                 Sound(0x100);
                 SetLong(R6Address(0x10), Long(R6Address(0x10)) + 1);
             }
-        } else if (pressed & 4) {
+        } else if (pressed & Sigma(4)) {   // DIVERGENCE DIV-0139: Japan's L1 through σ (0x52AC58)
             const U old = Long(R6Address(0x38));
             const auto scrolled = static_cast<std::uint16_t>(old - 9u);
             SetWord(R6Address(0x38), scrolled);
@@ -301,7 +303,7 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
                     SetLong(R6Address(0x10), 0);
                 }
             }
-        } else if (pressed & 8) {
+        } else if (pressed & Sigma(8)) {   // DIVERGENCE DIV-0139: Japan's R1 through σ (0x52ACAA)
             const U count = Long(R6Address(0x1C));
             if (static_cast<S>(count) <= 8) {
                 if (static_cast<S>(Long(R6Address(0x10))) < static_cast<S>(count)) {

@@ -1189,7 +1189,8 @@ extern "C" void __cdecl DragonCmd_StoreSource(void) {
         NextStep();
         return;
     }
-    if (((Field_ConfirmButtons | 0x10u) & pressed & 0xFFFF) != 0) {
+    // DIVERGENCE DIV-0139: Japan's triangle through σ (0x4512EB `or cl, 0x10`)
+    if (((Field_ConfirmButtons | Sigma(0x10)) & pressed & 0xFFFF) != 0) {
         if (B(SlotOf(at::kSlots, Window18_addr) + 3) != 0xFF) {
             Sound(0x104);
             BattleE4_Step4 = 2;

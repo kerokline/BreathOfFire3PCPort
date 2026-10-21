@@ -133,6 +133,22 @@ same kind of test (`0xA000`, `0x5000`). None of them changes.
 - **The dragon lists' triangle `0x10`** (`DragonCmd_SlotsCursor`, `_StoreSource`:
   the store) is a face constant in a list this group already edits, so it is
   included. It is not in the brief's list.
+- **Four sites the census missed (the review of PR #85, 2026-10-21).** Each
+  re-tests the pad at a jump target just past a `ret`, which the census's
+  first-test pass did not follow. Fixed 2026-10-21 on
+  `cleanup/miscellaneous-cleanup-tasks`:
+
+  | Original | Function | Bits | File | What a raw test did |
+  |---|---|---|---|---|
+  | `0x5847F0` (test `0x58491F`) | `SharedList_PickSlot` | `0x10` | `field_s.cpp` | triangle removed the ability before cancel was tested |
+  | `0x58C7A0` (test `0x58C9DE`) | `Equip_ChooseSlot` | `0x10` | `field_s.cpp` | triangle unequipped before cancel was tested |
+  | `0x448DE0` (test `0x448EDB`) | `BattleItemCmd_EquipSlotPick` | `0x10` | `battle_e4.cpp` | triangle removed the slot whatever its line |
+  | `0x451290` (`or cl, 0x10` at `0x4512EB`) | `DragonCmd_StoreSource` | `0x10` | `battle_e5.cpp` | the first of its two triangle tests left raw |
+  | `0x52A8F0` (tests `0x52AC58`, `0x52ACAA`) | `ExtraSlots_PickItem` | `4`, `8` | `effect_1f.cpp` | paged the other way from every list after a View / Change swap |
+
+  On a West install cancel is triangle (DIV-0134 starts at the West's
+  words), so the two field slot lists could not be left with the cancel
+  button: it unequipped instead.
 - **The name entry: nothing to change.** The PC cut its input step to
   `BareRetZero` ([`name-entry-restoration.md`](name-entry-restoration.md) 1).
   The renamer's surviving steps (`CommuName_*`, `rest_4d.cpp`) test words 7 / 8

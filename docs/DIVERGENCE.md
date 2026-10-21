@@ -8831,6 +8831,17 @@ designed in rather than bolted on.
   does, on all four installs. **Owed:** the minigames (the rope pull, the
   crane, the well, the chop, the antenna, the ram, the dock), from RC's
   placed saves; HT-2's battle, held text and music room.
+- **Amended 2026-10-21: five more sites through `σ`.** The review of PR #85
+  found tests the census missed (each at a jump target just past a `ret`):
+  the field's ability and equipment slot lists (`SharedList_PickSlot`,
+  `Equip_ChooseSlot`) and the battle's equipment slot list
+  (`BattleItemCmd_EquipSlotPick`) tested a raw triangle `0x10` before or
+  after cancel, so on a West install, where cancel is triangle, the cancel
+  button unequipped instead of backing out; `DragonCmd_StoreSource` kept the
+  first of its two triangle tests raw; and `ExtraSlots_PickItem` paged on a
+  raw L1 / R1. All now `Sigma(...)` ([`button-tests.md`](button-tests.md)
+  2.3). The identity is unchanged, so every self-test still compares
+  Capcom's code.
 - **Reversible?** `BOF3X_ORIGINAL=ButtonSigma`, DIV-0133's switch: with it
   `Sigma` is the identity and every test is the original's. There is no
   separate switch: a swapped Config with DIV-0133 off but this on would
