@@ -90,9 +90,10 @@ struct Config {
     // changed (SuitesPspEdit).
     std::string psp;
     // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
-    // play through the sequencer, and the music source (BOF3X_MUSIC: "seq",
-    // the cache's song where it has one, or "mp3"). Empty: unset, the default
-    // (no cache; seq). The dialog's Music box and Cache folder box (since
+    // play through the sequencer, and the music source (BOF3X_MUSIC; DIV-0150:
+    // "psx", "psp" or "pc", the source played first - ConfigMusicSource; the
+    // older "seq" and "mp3" kept as written). Empty: unset, the default
+    // (no cache; the PlayStation's). The dialog's Music box and Cache folder box (since
     // 2026-10-10) write the same `music=` / `cache=` lines a hand edit does:
     // an untouched box writes back what was read.
     std::string cache;
@@ -306,6 +307,12 @@ std::string ConfigOptEdit(const std::string& opt, const std::vector<std::string>
 // them "none" or "original". On false `why` says what is wrong; the launcher
 // refuses to start rather than fall back to the default layers.
 bool ConfigOptValid(const std::string& opt, std::string& why);
+
+// DIVERGENCE DIV-0150: the music source the game is handed (BOF3X_MUSIC):
+// "psx", "psp" or "pc" as music= names it; music=mp3 is "pc"; an empty music=
+// or music=seq is "psp" when `opt` (the list the game is handed) names psp-music (the audio suite's PSP side
+// before DIV-0150 moved the music to the Music box), else "psx".
+std::string ConfigMusicSource(const std::string& music, const std::string& opt);
 
 // Whether an ini's `psp=` value (the PSP's battle rules) can be honoured, by the DLL's
 // own rule (psp_code.cpp FromEnvironment): empty (the default by the cache's

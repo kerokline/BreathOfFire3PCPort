@@ -203,7 +203,7 @@ BEGIN
     GROUPBOX        "Music", -1, 0, 0, 276, 56
     LTEXT           "&Music:", -1, 9, 17, 62, 9
     COMBOBOX        IDC_MUSIC, 77, 15, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "The songs the game plays. The Jukebox, on the title page, plays them on their own.",
+    LTEXT           "Songs and recorded streams from this source; a piece it lacks, from the next. The Jukebox plays each source on its own.",
                     -1, 9, 34, 260, 18
 END
 

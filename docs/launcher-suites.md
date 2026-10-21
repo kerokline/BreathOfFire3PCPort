@@ -218,6 +218,13 @@ order is the same five names in the same order.
 cache's songs are the PSP's (MS stage B writes `base/bgm/` from a PSP source),
 so `music=seq` plays the PSP's music with no new value.
 
+**Since 2026-10-21 (DIV-0150)** `music=` names a source - `psx`, `psp` or
+`pc` - and the music is no longer the audio suite's: `psp-music` left the
+catalogue (`recipes/psp-layers.toml` marks it `suite = "music"`, the Music
+box's), and the engine reads it by the chosen source, not through `opt=`. The
+audio suite is the PSP's effects and voices (`psp-snd`); the 11 recorded
+streams in that layer follow the Music box too.
+
 **`psp=`** carries the data suite's two `code` members (DIV-0108):
 `SuitesPspEdit` writes it on `SuitesOptEdit`'s terms, and a suite's side
 reads both lines. Unset, both switches are on for a PSP-only cache and off

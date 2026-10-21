@@ -231,7 +231,7 @@ source lists the file that lookup lands on with that source's version in play:
 | Source | File | When it is there |
 |---|---|---|
 | PC port | the game folder's `SND\NAME.DAT` | a PC install |
-| PlayStation disc | the cache's `base\snd\NAME.DAT` | the manifest's `[snd_jingles]` names a PSX build: a cache built with no PC install among its sources (DIV-0129) |
+| PlayStation disc | the cache's `base\snd\NAME.DAT`, or `base\psx-jingles\NAME.DAT` beside a PC install (the manifest's `[snd_jingles] dir`) | the manifest's `[snd_jingles]` names a PSX build: any cache built from a PSX disc with ffmpeg (DIV-0129; beside a PC install since 2026-10-21, DIV-0150) |
 | PSP disc | the cache's `opt\psp-snd\snd\NAME.DAT` (DIV-0110), or `base\snd\NAME.DAT` when `[snd] build` is a PSP build (a PSP-only cache, DIV-0106) | the manifest lists the layer (`ManifestOffersLayer`); the layer's name is the audio suite's `snd` member |
 
 All three are MP3s in the PC's form, so all play through the PC's decoder (`Mp3Stream`, no loop).
@@ -239,8 +239,10 @@ A stream a source lacks is listed **greyed with its reason** (the Config screen'
 source's radio button is greyed only when it has neither a song nor a stream it can play. The PSP
 layer is offered whether or not `opt=` names it, as the PSP's songs are (DIV-0109).
 
-`common/cache_manifest` now reads `[snd_jingles] build` (`snd_jingles_build`); nothing in the
-DLL reads it.
+`common/cache_manifest` now reads `[snd_jingles] build` (`snd_jingles_build`) and, since
+DIV-0150, `dir` (`snd_jingles_dir`); nothing in the DLL reads them. In the game, the order
+over the three sources is the Music box's (DIV-0150), and the game logs each stream's file
+as it starts (`sound       DIV-0150: stream NAME from PATH`).
 
 ### 6.2 Where the game plays each
 

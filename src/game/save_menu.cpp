@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
+#include "game/music_seq.h"
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/save_menu_callees.h"
@@ -416,8 +417,12 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     const U table = Long(at::kStreamTables + kind * 4);
     const U name = Long(table + (id & 0xFFF) * 4);
     char path[260];  // MAX_PATH
-    if (!dat_cache::SoundPath(reinterpret_cast<const char*>(At(name)), path, sizeof path))  // DIV-0089
-        g.sprintf(path, reinterpret_cast<const char*>(At(at::kStreamFormat)), reinterpret_cast<const char*>(At(name)));
+    // DIV-0150: a kind-0 stream from the chosen music source's order; else, and
+    // for the other kinds, DIV-0089's cache lookup
+    const char* const text = reinterpret_cast<const char*>(At(name));
+    const bool cache = kind == 0 && music_seq::StreamPath(text, path, sizeof path) ? path[0] != 0
+                                                                                  : dat_cache::SoundPath(text, path, sizeof path);
+    if (!cache) g.sprintf(path, reinterpret_cast<const char*>(At(at::kStreamFormat)), text);
     const int handle = g.file_open(path, 0, 0);
     if (handle == -1) {
         if (!g_stream_missing)

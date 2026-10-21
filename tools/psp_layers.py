@@ -579,8 +579,9 @@ def check(path=None):
                     errs.append("%s: no range" % where)
             except KeyError as e:
                 errs.append("%s: table or symbol %s unknown" % (where, e))
-        if l.get("suite") not in (None, "jukebox"):
-            errs.append("%s: suite %r (none, the suites.toml catalogue's, or \"jukebox\")" % (where, l.get("suite")))
+        if l.get("suite") not in (None, "jukebox", "music"):
+            errs.append("%s: suite %r (none, the suites.toml catalogue's, \"jukebox\" or \"music\")"
+                        % (where, l.get("suite")))
         if "banks" in l:
             if l.get("part") != "dat" or l["banks"] != "dropped-tone" or not isinstance(l.get("count"), int):
                 errs.append("%s: a banks layer is a dat part, rule \"dropped-tone\", with a count" % where)

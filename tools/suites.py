@@ -74,7 +74,9 @@ def check(suites=None, opt=None, fixtures=None, psp_layers=None):
     for l in _load(psp_layers or PSP_LAYERS).get("layer", []):
         layers[l["name"]] = set(l.get("from", []))
         tg[l["name"]] = "opt" if l.get("part") == "dat" else l.get("part")
-        if l.get("suite") == "jukebox":    # the Jukebox's checkbox (psp-chord-one-tone): in no suite
+        # the Jukebox's checkbox (psp-chord-one-tone), or the Music box's source
+        # (psp-music, DIV-0150): in no suite
+        if l.get("suite") in ("jukebox", "music"):
             jukebox.add(l["name"])
     if psp_layers is None:
         import psp_layers as pl
@@ -148,7 +150,7 @@ def check(suites=None, opt=None, fixtures=None, psp_layers=None):
                         errs.append("%s: layer %s already in suite %s" % (where, layer, placed[layer]))
                     placed[layer] = s.get("id")
                 if layer in jukebox:
-                    errs.append("%s: %s is the Jukebox's, not a suite's" % (where, layer))
+                    errs.append("%s: %s is the Jukebox's or the Music box's, not a suite's" % (where, layer))
                 if layer in DEFAULT_LAYERS:
                     errs.append("%s: %s is a default layer (a repair), not a suite's" % (where, layer))
     for name in layers:

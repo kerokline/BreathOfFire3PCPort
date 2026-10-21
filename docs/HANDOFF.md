@@ -278,6 +278,11 @@ Local only, gitignored, worth keeping:
 
 _One line each, with a pointer. Add when something costs more than an hour._
 
+- **The launcher always sets `BOF3X_MUSIC` since DIV-0150** (2026-10-21): an empty `music=` is `psx`, so a PC + PSX
+  cache rebuilt since then plays the disc's 11 streams from `base\psx-jingles\`, and a stream's length is what
+  `Sound_StreamDone`'s waits read. A reference run on a PC install wants `--env BOF3X_MUSIC=seq` (the old order) or a
+  re-record; caches built before DIV-0150 have no `psx-jingles` and play as before.
+
 - **Capcom's WndProc freezes an unfocused game** (2026-10-13, [`wav-dump.md`](wav-dump.md) 4a): an all-original side
   run with `--no-front` made 2,404 frames in ten minutes. Such a side wants `--original '*,-Game_Clock,-Game_WndProc'`.
   **Paid again 2026-10-20:** the state-hash pairs' Capcom side (`*,-Game_Clock`, as section 4 of

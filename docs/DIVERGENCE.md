@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 149 entries, DIV-0001..0149, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 150 entries, DIV-0001..0150, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -7400,6 +7400,11 @@ designed in rather than bolted on.
   heard.**
 - **Reversible?** The audio suite's PlayStation side, or `opt=` without the
   layer.
+- **Amended 2026-10-21 (DIV-0150):** the layer is no longer the audio suite's:
+  the launcher's Music box chooses the music source, and under a chosen source
+  (`BOF3X_MUSIC` psx, psp or pc) the engine reads `opt\psp-music\bgm` by that
+  choice whether or not `opt=` names it. With `BOF3X_MUSIC` unset or `seq`,
+  this entry's rule holds as written.
 
 ### The PSP's effects, voices and jingles as a layer
 
@@ -8284,6 +8289,11 @@ designed in rather than bolted on.
 - **Reversible?** (1) `BOF3X_ORIGINAL=Sound_StreamDone` (the original's
   answer; the flag is then read by nothing). (2) a build with a PC install
   among the sources, or the 11 deleted from `base/snd/` and `SND\`.
+- **Amended 2026-10-21 (DIV-0150):** the 11 are made whenever a PSX disc and
+  ffmpeg are both there. With a PC install among the sources they go in
+  `base/psx-jingles/` (the manifest's `[snd_jingles] dir`), not `base/snd/`, so
+  nothing that chooses no music source plays them over the PC's; a PSX-only
+  build keeps them in `base/snd/` as above.
 
 ### A disc's world-map legend shows only the live button icon
 
@@ -9354,3 +9364,77 @@ designed in rather than bolted on.
   switch is armed): 52,000 rounds, 0 mismatches; the switch logs ON. Not yet
   heard in the PC build.
 - **Reversible?** `BOF3X_ORIGINAL=EventBattleKeepsMusic`.
+
+### The music comes from a chosen source first: the PlayStation's, the PSP's or the PC's
+
+- **ID:** DIV-0150
+- **Date:** 2026-10-21
+- **Subsystem:** music - `Music_LoadFile` `0x587A20` (ours, `src/game/sound.cpp`),
+  the sequencer's seam (`src/game/music_seq.cpp` `Arm` / `Find` / `StreamPath`),
+  `Sound_LoadStream` `0x587910`'s kind 0 (ours, `src/game/save_menu.cpp`);
+  `importer.py build` (`snd_from_psx`, `[snd_jingles] dir`); the launcher's
+  Music box (`src/launcher/config_dialog.cpp`, `config.cpp` `ConfigMusicSource`),
+  the Jukebox's PlayStation streams, and `recipes/suites.toml` (the audio
+  suite loses its music member to the Music box)
+- **Tier:** Intent - the owner's decision, 2026-10-21.
+- **Original behaviour:** the PC port plays its MP3s (`BGM\NNN.DAT`) and its
+  11 recorded streams (`SND\NAME.DAT`, the kind-0 pieces: the inn's
+  `OYASUMI`, the staff roll's `PURE`, ...). Before this entry the port's own
+  order was: a song from a PSP layer `opt=` names (DIV-0109), then the cache's
+  `base\bgm` (DIV-0087), then the MP3; `music=mp3` the MP3 alone. The
+  streams: a named layer's `snd\`, then `base\snd\`, then `SND\`
+  (DIV-0089, DIV-0110) - and a cache with a PC install among its sources had
+  no disc streams at all (DIV-0129), so the Jukebox listed the PlayStation's
+  greyed.
+- **New behaviour:** `BOF3X_MUSIC` (the ini's `music=`) names a source, and
+  the songs and the 11 streams come from the first place in that source's
+  order that has the piece:
+  - `psx`: the PlayStation's (`base\bgm`; the streams `base\psx-jingles`,
+    then `base\snd`), then the PSP's (`opt\psp-music\bgm`, `opt\psp-snd\snd`;
+    a PSP-only cache's `base\`), then the PC's (`BGM\`, `SND\`);
+  - `psp`: the PSP's, then the PlayStation's, then the PC's;
+  - `pc`: the PC's, then the PlayStation's, then the PSP's (`Music_LoadFile`
+    and the quicksave's size probe try the MP3 names first).
+  The PSP's layers are read by this choice, whether or not `opt=` names them.
+  `seq` and an unset `BOF3X_MUSIC` keep the order above as it was, and `mp3`
+  the MP3s alone. The launcher always hands the game a source: the ini's, or
+  for an empty `music=` (or `seq`) the PSP's when the layers it hands the game
+  name `psp-music` (the audio suite's PSP side before this entry), else the
+  PlayStation's; `mp3` is `pc`. Its Music box lists the three as "PlayStation
+  Encoded", "PSP Encoded" and "PC MP3s", one this install lacks saying so; an
+  untouched box writes `music=` back as read. The importer now makes the 11
+  PlayStation streams whenever a PSX disc and ffmpeg are both among the
+  sources; beside a PC install they go in `base/psx-jingles/` (so the unset
+  order above never plays them over the PC's), and the manifest's
+  `[snd_jingles] dir` says where. The game logs the order at start-up
+  (`DIV-0150    music from ... first`) and each stream as it starts.
+- **Rationale:** the owner, 2026-10-21: the Music tab's dropdown as three
+  sources, "the game can then use the chosen source for all music (when
+  available)"; with either disc chosen the other disc second and the PC
+  third, with the PC chosen the PlayStation second and the PSP third. The
+  Jukebox already played each source on its own; the PlayStation's streams
+  were missing from it on a mixed install.
+- **Also in the PSX version?** No: the PlayStation plays its own sequences
+  and XA. Which recording plays is the player's choice here; the pieces are
+  the same music, and a stream's length (`Sound_StreamDone`'s waits: the
+  inn, the staff roll) differs between sources by the encoders' padding.
+- **Verification:** `BOF3X_SHADOW=sound`: the DIV-0150 self-test (the PC's MP3
+  names opened before the cache's song; the PSP's song before the
+  PlayStation's; a stream from the cache, from the install, in neither, the
+  install first, no source chosen) and DIV-0087 / DIV-0109's, exit 0. The
+  launcher host tests: 260 checks, 0 failures (`ConfigMusicSource`,
+  `[snd_jingles] dir`, the audio suite without its music member).
+  `snd_from_psx` with the PC install and the US disc: 11 streams in
+  `base/psx-jingles/`, `base/snd/` the 880 and `VOICE00`..`04` as before.
+  `BOF3X_SHADOW=save_menu` 66,000 rounds, 0 mismatches (its fuzz drives
+  `Sound_LoadStream` before `Arm`, so no source is chosen there).
+  Live, `ending17` to the staff roll on a PC install at x8 (2026-10-21): with
+  a copy of a PC + US cache given `base/psx-jingles/`, `psx` logs `stream PURE
+  from ...\base\psx-jingles\PURE.DAT` and `pc` `SND\PURE.DAT`; on the owner's
+  cache (read only) `psp` logs `...\opt\psp-snd\snd\PURE.DAT` and its songs
+  from `opt\psp-music\bgm` first. On a PSX-US disc-only install the roll
+  played `PURE` from `base\snd` and was heard. **Not yet played with the
+  launcher's box.**
+- **Reversible?** `music=seq` in `bof3x.ini` (or `BOF3X_MUSIC=seq`) for the
+  order before this entry; the streams beside a PC install are then the
+  PC's again.

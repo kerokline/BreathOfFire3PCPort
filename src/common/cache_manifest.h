@@ -12,7 +12,10 @@
 //   [build] exe_tables_from   a build id or a one-line list of them; absent: [exe] build
 //   [cache] bgm               the first row's source build (base/bgm/)
 //   [snd] build               base/snd/'s build
-//   [snd_jingles] build       the build of base/snd/'s 11 jingles on a PSX-only install (DIV-0129)
+//   [snd_jingles] build       the build of the PlayStation disc's 11 jingles (DIV-0129)
+//   [snd_jingles] dir         their folder: base/snd on a PSX-only install, base/psx-jingles
+//                             beside a PC install (DIV-0150); absent is base/snd (a cache
+//                             from before DIV-0150)
 //   [cache] opt, [psp_layers] rows
 //                             the opt/ layers the manifest lists: an opt/<layer>/
 //                             tree the manifest does not list is not offered
@@ -35,7 +38,8 @@ struct CacheManifest {
     std::vector<std::string> exe_tables_from;    // [build] exe_tables_from (a build or a list); else [exe] build
     std::string bgm_build;                       // the build of bgm's first row (base/bgm/), or ""
     std::string snd_build;                       // [snd] build (base/snd/), or ""
-    std::string snd_jingles_build;               // [snd_jingles] build (base/snd/'s jingles, DIV-0129), or ""
+    std::string snd_jingles_build;               // [snd_jingles] build (the PSX's jingles, DIV-0129), or ""
+    std::string snd_jingles_dir;                 // [snd_jingles] dir (DIV-0150), or "" (base/snd)
     std::vector<std::string> opt_layers;         // the opt/ layers listed ([cache] opt, [psp_layers] rows), distinct
     // A value the reader cannot honour, as one sentence naming the key and
     // its value; empty when none. The launcher refuses to start on it and

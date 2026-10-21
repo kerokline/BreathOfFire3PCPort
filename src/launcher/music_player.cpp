@@ -25,9 +25,10 @@
 // kind-0 files Sound_LoadStream opens, SND\<name>.DAT: the inn's jingle, the
 // staff roll's, and the rest (docs/music-player.md section 6). Each is the
 // file the game's lookup (DIV-0089, DIV-0110) lands on when that source's
-// version is the one in play: the PC's SND\, the cache's base\snd\ disc
-// jingles (DIV-0129: only a cache built with no PC install among its sources
-// has them), the psp-snd layer's opt\psp-snd\snd\ (DIV-0110) or a PSP-only
+// version is the one in play: the PC's SND\, the cache's disc jingles
+// (DIV-0129, DIV-0150: base\snd\ on a cache built with no PC install among
+// its sources, base\psx-jingles\ beside one; the manifest's [snd_jingles]
+// dir says which), the psp-snd layer's opt\psp-snd\snd\ (DIV-0110) or a PSP-only
 // cache's base\snd\ (DIV-0106). All are MP3s in the PC's form, played once
 // through the same decoder. A stream a source lacks is listed greyed, with its
 // reason (the Config screen's rule).
@@ -464,14 +465,13 @@ void ListPsp(State& s) {
     }
     if (!IsPspBuild(CacheBgmBuild(root))) {
         // DIV-0109: beside a PlayStation disc's songs, the PSP's are the music
-        // layer's tree (recipes/suites.toml's bgm member names it), the same
-        // form, played from its own bank\.
-        // One music member: tools/suites.py check refuses a second (this column
-        // lists one layer). The layer only when the manifest lists it (or there
-        // is none), as the game takes it (common/cache_manifest.h).
+        // layer's tree (recipes/psp-layers.toml's bgm layer, the Music box's
+        // since DIV-0150), the same form, played from its own bank\. The
+        // layer only when the manifest lists it (or there is none), as the
+        // game takes it (common/cache_manifest.h).
         const char* name = nullptr;
-        for (const suites_gen::MemberInfo& m : suites_gen::kMembers)
-            if (!name && m.kind == suites_gen::Kind::kBgm && m.layer) name = m.layer;
+        for (const suites_gen::LayerPart& l : suites_gen::kLayerParts)
+            if (!name && std::strcmp(l.part, "bgm") == 0) name = l.layer;
         std::wstring layer;
         for (const char* c = name ? name : ""; *c; ++c) layer += static_cast<wchar_t>(*c);
         if (name && ManifestOffersLayer(ManifestRead(root), name))
@@ -537,6 +537,11 @@ void ListStreams(State& s) {
     const std::wstring layer = PspSndLayer();
     const bool psp_base = IsPspBuild(m.snd_build);
     const bool psx_jingles = !m.snd_jingles_build.empty() && !IsPspBuild(m.snd_jingles_build);
+    std::wstring jingle_dir = L"base\\snd";  // DIV-0150: the manifest's [snd_jingles] dir
+    if (!m.snd_jingles_dir.empty()) {
+        jingle_dir.clear();
+        for (char c : m.snd_jingles_dir) jingle_dir += c == '/' ? L'\\' : static_cast<wchar_t>(c);
+    }
     const bool layer_offered =
         !root.empty() && !layer.empty() && ManifestOffersLayer(m, std::string(layer.begin(), layer.end()));
     for (unsigned id = 0; id < kStreamCount; ++id) {
@@ -554,15 +559,15 @@ void ListStreams(State& s) {
                 e.where = file;
                 e.why = L"No cache folder is set: the importer writes a disc's streams into one.";
             } else if (source == kPsx) {
-                // DIV-0129: base\snd's jingles are the disc's S_XA00.STR clips only
-                // on a cache built with no PC install among its sources
-                e.path = root + L"\\base\\snd\\" + file;
-                e.where = L"base\\snd\\" + file + L", from S_XA00.STR";
+                // DIV-0129, DIV-0150: the disc's S_XA00.STR clips, in base\snd on a
+                // PSX-only cache and base\psx-jingles beside a PC install
+                e.path = root + L"\\" + jingle_dir + L"\\" + file;
+                e.where = jingle_dir + L"\\" + file + L", from S_XA00.STR";
                 if (!psx_jingles)
-                    e.why = L"The cache holds no disc streams: the importer writes them only when no PC install is "
-                            L"among its sources (DIV-0129); with one, the PC's own play.";
+                    e.why = L"The cache holds no disc streams: it was built before they were made beside a PC "
+                            L"install, or without ffmpeg (DIV-0129, DIV-0150); build it again to have them.";
                 else if (!Exists(e.path))
-                    e.why = L"The cache's base\\snd\\ has no " + file + L".";
+                    e.why = L"The cache's " + jingle_dir + L"\\ has no " + file + L".";
             } else if (psp_base) {
                 // DIV-0106: a PSP-only cache's base\snd is the PSP's
                 e.path = root + L"\\base\\snd\\" + file;

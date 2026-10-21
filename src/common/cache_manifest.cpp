@@ -140,6 +140,8 @@ CacheManifest ManifestParse(const std::string& text) {
             if (OneString(value, s)) m.snd_build = s;
         } else if (table == "snd_jingles" && key == "build") {
             if (OneString(value, s)) m.snd_jingles_build = s;
+        } else if (table == "snd_jingles" && key == "dir") {
+            if (OneString(value, s)) m.snd_jingles_dir = s;
         }
     }
     if (!tables_given && !exe_build.empty()) m.exe_tables_from.push_back(exe_build);

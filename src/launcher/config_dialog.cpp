@@ -337,6 +337,45 @@ int Selected(HWND dlg, int id) {
     return static_cast<int>(SendMessageW(Item(dlg, id), CB_GETCURSEL, 0, 0));
 }
 
+// ---- DIV-0150: the Music box -------------------------------------------------
+//
+// The source the game plays first (music=, ConfigMusicSource), its index the
+// box's: the PlayStation's, the PSP's, the PC's MP3s. Every source is listed
+// (the Config screen's rule); one this install lacks says so, as the next in
+// its order then plays (music_seq.cpp Arm).
+const char* const kMusicSources[] = {"psx", "psp", "pc"};
+
+int MusicIndex(const std::string& source) {
+    for (int i = 0; i < 3; ++i)
+        if (source == kMusicSources[i]) return i;
+    return 0;
+}
+
+void MusicRefresh(HWND dlg, const DialogState& state) {
+    const std::wstring cache = DialogCacheRoot(dlg), data = DialogDataRoot(dlg);
+    const auto is_dir = [](const std::wstring& d) {
+        const DWORD a = GetFileAttributesW(d.c_str());
+        return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY);
+    };
+    const CacheManifest m = ManifestRead(cache);
+    const bool psp_base = ManifestPspBase(m);
+    const bool songs = !cache.empty() && is_dir(cache + L"\\base\\bgm");
+    WIN32_FIND_DATAW found;
+    const HANDLE find = FindFirstFileW((state.game_dir + L"\\BGM\\*.DAT").c_str(), &found);
+    const bool mp3s = find != INVALID_HANDLE_VALUE;
+    if (mp3s) FindClose(find);
+    const bool have[3] = {songs && !psp_base,
+                          psp_base ? songs : ConfigOptInstalled(state.game_dir, "psp-music", data, cache), mp3s};
+    const wchar_t* const names[3] = {L"PlayStation Encoded", L"PSP Encoded", L"PC MP3s"};
+    const wchar_t* const lacks[3] = {L"PlayStation Encoded - not in this cache, the PSP's then the PC's play",
+                                     L"PSP Encoded - not in this cache, the PlayStation's then the PC's play",
+                                     L"PC MP3s - no BGM\\ here, the PlayStation's then the PSP's play"};
+    const int sel = Selected(dlg, IDC_MUSIC);
+    SendMessageW(Item(dlg, IDC_MUSIC), CB_RESETCONTENT, 0, 0);
+    for (int i = 0; i < 3; ++i) AddItem(dlg, IDC_MUSIC, have[i] ? names[i] : lacks[i]);
+    Select(dlg, IDC_MUSIC, sel < 0 ? MusicIndex(ConfigMusicSource(state.cfg->music, state.cfg->opt)) : sel);
+}
+
 // ---- Pad navigation of the dialogs (the owner, 2026-09-24: from the couch) --
 //
 // Every dialog polls the pad on a timer and, when it is the active window,
@@ -456,11 +495,10 @@ void Populate(HWND dlg, DialogState& state) {
     AddItem(dlg, IDC_RENDERER, L"Software");
     Select(dlg, IDC_RENDERER, cfg.renderer ? 0 : 1);
 
-    AddItem(dlg, IDC_MUSIC, L"The disc's songs where the cache has them (default)");
-    AddItem(dlg, IDC_MUSIC, L"The PC's MP3s always");
-    Select(dlg, IDC_MUSIC, cfg.music == "mp3" ? 1 : 0);
     SetText(dlg, IDC_CACHE, ConfigFromUtf8(cfg.cache).c_str());
     CacheNote(dlg);
+    SendMessageW(Item(dlg, IDC_MUSIC), CB_RESETCONTENT, 0, 0);
+    MusicRefresh(dlg, state);  // DIV-0150
 
     // Each suite's side as opt= plays it now (an empty opt= the default
     // layers, none of which is a suite's).
@@ -490,10 +528,10 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.wide = wide == 1 || wide == 2 ? wide : 0;
     cfg.show_launcher = Checked(dlg, IDC_SHOW);
 
-    // The Music box: its first entry keeps an empty music= or a music=seq as
-    // it was; a move to it from mp3 writes the default, empty.
-    if (Selected(dlg, IDC_MUSIC) == 1) cfg.music = "mp3";
-    else if (cfg.music != "seq") cfg.music.clear();
+    // The Music box (DIV-0150): the source music= already means keeps the line
+    // as written (an empty music=, seq or mp3 too); another writes its name.
+    const int music = Selected(dlg, IDC_MUSIC);
+    if (music >= 0 && music != MusicIndex(ConfigMusicSource(cfg.music, cfg.opt))) cfg.music = kMusicSources[music];
 
     // The suites: a choice moves its layers in opt=; none chosen, opt= as read.
     // The Jukebox's chord box with them, in one edit of the line as read: a
@@ -1283,7 +1321,10 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDC_CACHE:
             if (HIWORD(wp) == EN_CHANGE) {
                 CacheNote(dlg);
-                if (state->cfg) SuitesRefresh(dlg, *state);   // another cache, another manifest
+                if (state->cfg) {
+                    SuitesRefresh(dlg, *state);   // another cache, another manifest
+                    MusicRefresh(dlg, *state);    // DIV-0150: which sources it holds
+                }
             }
             return TRUE;
         case IDC_CACHEBROWSE:

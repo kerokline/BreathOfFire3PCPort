@@ -181,8 +181,12 @@ int Sound_PlayEffectEax(unsigned short id) {
 // DIVERGENCE DIV-0087: first, when armed (BOF3X_CACHE, BOF3X_MUSIC), the
 // cache's base\bgm\NNN.DAT in the MP3's place (music_seq.h); not formatted,
 // opened or read otherwise.
+//
+// DIVERGENCE DIV-0150: under BOF3X_MUSIC=pc the MP3 names first, and the
+// cache's song only for a track the install lacks.
 extern "C" int __cdecl Music_LoadFile(unsigned track) {
-    if (music_seq::LoadFile(track)) return 0;  // DIV-0087
+    const bool pc_first = music_seq::PcFirst();               // DIV-0150
+    if (!pc_first && music_seq::LoadFile(track)) return 0;  // DIV-0087
     char looping[0x28], once[0x28];
     g.sprintf(looping, reinterpret_cast<const char*>(kLoopingName), track);
     g.sprintf(once, reinterpret_cast<const char*>(kOnceName), track);
@@ -190,7 +194,7 @@ extern "C" int __cdecl Music_LoadFile(unsigned track) {
     int handle = g.file_open(looping, 0, 0);
     if (handle == -1) {
         handle = g.file_open(once, 0, 0);
-        if (handle == -1) return -1;
+        if (handle == -1) return pc_first && music_seq::LoadFile(track) ? 0 : -1;  // DIV-0150
         Music_FileLoops = 0;
     }
     music_seq::Forget(Music_File);  // DIV-0087: a cache song in it is gone
@@ -1497,13 +1501,14 @@ std::size_t HeapBlockBytes(void* block) { return _msize(block); }
 // read; -1 when there is none.
 int MusicFileSize(unsigned track) {
     int size = -1;
-    if (music_seq::Probe(track, &size)) return size;
+    const bool pc_first = music_seq::PcFirst();  // DIV-0150, as Music_LoadFile
+    if (!pc_first && music_seq::Probe(track, &size)) return size;
     char looping[0x28], once[0x28];
     g.sprintf(looping, reinterpret_cast<const char*>(kLoopingName), track);
     g.sprintf(once, reinterpret_cast<const char*>(kOnceName), track);
     int handle = g.file_open(looping, 0, 0);
     if (handle == -1) handle = g.file_open(once, 0, 0);
-    if (handle == -1) return -1;
+    if (handle == -1) return pc_first && music_seq::Probe(track, &size) ? size : -1;
     size = g.file_size(handle);
     g.file_close(handle);
     return size;
