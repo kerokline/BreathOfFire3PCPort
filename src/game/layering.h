@@ -40,6 +40,11 @@ void Arm();   // BOF3X_LAYERING parsed; after every module's self-test
 bool Defer();
 void Restore();
 
+// The table faerie (known-defects D300, docs/faerie-fix.md): Sprite_DrawPass's,
+// mode kFloor, after each sprite it draws. For the table faerie Defer drew a
+// layer later, its table's side triangles are drawn again right after it.
+void AfterSprite(const unsigned char* sprite);
+
 // What each map cell's record run drew (docs/campfire-and-crystal.md section
 // 4). DrawLayer_Open's, mode kFloor: RunBegin before a run's first record is
 // handed to its handler, RunEnd after its last. Gfx_CommitPrim's, while
