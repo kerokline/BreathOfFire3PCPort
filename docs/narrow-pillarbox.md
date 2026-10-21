@@ -276,7 +276,7 @@ pages of a loaded machine are expected, `state-hash.md` 4).
   recorded route reaches them, and a chapter-jump save lands where its
   chapter's Start puts it, not in a chosen area. The class of each is the
   measurement of section 1 and the log line its first entry writes.
-- The owner's eye on everything.
+- The owner's eye on everything (and, since section 11, on the three-area build).
 
 ## 8. The DIV-0041 amendment (drafted, not numbered)
 
@@ -414,3 +414,72 @@ otherwise as section 5 read it: nothing placed past the frame on purpose.
 4. **Area 194's first visit:** a chapter-13 save before it, if the owner
    has one or makes one, to see the close camera and to settle whether the
    crash is the craft's or Capcom's.
+
+### 10.2 The owner's answer (2026-10-21)
+
+Questions 1..3 answered by taking the areas out: **only 31, 90 and 198 keep
+the bars** - the three with real void past the frame; 149, 186, 98 and the
+camps (53, 153, 154, 192, 194) render fine unframed. Area 194's first
+visit went to group CR. Built by group PX, section 11.
+
+## 11. Three areas framed (group PX, 2026-10-21)
+
+**Status:** BUILT, measured headless; not seen by the owner. Branch
+`wide-ring/px` off `wide-ring/round` `4b07b9a8`. Runs and scripts:
+`C:\Users\kerok\bof3x-runs\r_ring\PX` (`chain.py`, `summary.py`,
+`sheet.py`, `logs/`, `sh/`, `shots/`, `sheets/`; slots `g0..g4` / `L0..L4`:
+game directories of the root's own with junctions to `bof3\DAT`, `BGM` and
+`SND`, and ini-less launcher copies).
+
+**What changed.** `pillarbox.h:57` `Listed` (31, 90, 198: the owner's list,
+cited, not a Capcom table) and `:61` `Visible` (a listed area by the width
+rule, any other at the full picture); `pillarbox.cpp:239..240`
+`VisibleColumns` returns the picture for an unlisted area before measuring
+it. The measurement stays as the listed areas' class (it is what puts 90 at
+426 at 21:9 and leaves it alone at 16:9) and as a check: a listed area whose
+widest row reaches the 21:9 picture logs `LISTED, but as wide as the 21:9
+picture` (`pillarbox.cpp:56..74` `WidestNow`). The trust guard, the battle
+exclusion, `BOF3X_PILLARBOX=0`, the side-box anchor and the bars are
+unchanged.
+
+**Checks.**
+
+- **Build:** `cmake --build build`, no diagnostic in our files.
+- **Self-test** (`BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original BOF3X_SHADOW='*'`,
+  dev launcher, `--no-config`, an ini-less copy): launcher exit 0 at
+  `BOF3X_WIDE` unset, 1 and 2; `inject: 10087 ours, 0 left original`; every
+  `MISMATCH` line reads `0 MISMATCHES`; `pillarbox self-test: 82 rounds, 0
+  mismatches; the controls refused on 8 rows (no list) and 1 (holds)` at
+  each width.
+- **State hash, the ten `cn_` routes** at w0, w1 and w2 (`BOF3X_OPT=none`,
+  `BOF3X_LAYERING=0`, the committed skip list): **`Rand` equal to narrow on
+  every frame of all ten at 16:9 and 21:9** (1,455 to 13,182 frames). Wide
+  against narrow, the pages are PB's classes: the display and draw-state
+  pages (`0x66B000`, `0x6BE000`, `0x7E0000`, `0x7E1000`, `0x801000`,
+  `0x803000`, `0x903000`, `0x905000`, `0x929000`, `0x92A000`,
+  `0x937000..0x939000`), the sound page `0x7DE000`, `Gfx_TexCache`
+  `0x6C3000`, and VRAM-shadow pages (`0x7B9000..0x7C7000`, shop's at ticks
+  2..4 only; `0x762000..0x78E000` on menu_screens at 21:9, the class PB saw
+  on field_menu and dragonTransform). No game page. Narrow against
+  `cn_<route>_orig3` / `_orig3b`: combat exit 0; the others the pages
+  section 6 lists for them (the DIV-0092 and button-round pages, the noise
+  class of a loaded machine), plus VRAM-shadow and `0x937000` pages on
+  cutsceneAndNue, masterAndManillo, menu_screens and worldMap. Two runs
+  (cutsceneAndNue w0, w1) were first refused by `input_run`'s slot-0 guard
+  while the self-test's game was up, and re-run.
+- **Where the bars switched** (the change lines): area 31 (whelpBoss's
+  recipe) on at frame 1580, off at 1791 entering area 1, at 16:9 and 21:9;
+  area 90 (balioAndSunder_2's) on at 397 at 21:9 only (`framed at 53
+  columns a side of 53` at 16:9: no bars), off at 736; area 198 (`cs198`)
+  on at 423 at both widths. Areas 149 (`cs149`, in 149 from recipe frame
+  430), 154 and 186 (`cs154`, `cs186`, from frame 480): no change line and
+  no measurement line - unframed, unmeasured.
+- **Captures** (point filter, en-US, scale 2, this build;
+  `shots/shot_a<area>_w1|w2`): sheets `sheets\px_219.png` (21:9) and
+  `sheets\px_169.png` (16:9). 31: the shaft between bars at 0 and 320, both
+  widths. 90: the room framed at 426 at 21:9 (and its menu, f00500); at
+  16:9 the full picture. 198: the void and the floating figure, the message
+  box inside the 320 frame. 149: the bridge and the sky gradient to the 560
+  edges. 154: the camp's ground to the edges. 186: the machinery wall to
+  the left edge. The crafted saves were regenerated with `chapter_jump.py
+  make` into the PX root from the main checkout's donors.
