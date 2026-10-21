@@ -164,6 +164,27 @@ report means merge; a usage cut resumes with a message naming the next step.
    ([`chapter-jump-save`](HANDOFF.md)), for the three far-camera areas and
    area 172's shade; no new owner route.
 
+**Answered 2026-10-21, in chat, after the groups handed back:**
+
+4. **RM's section 7** ([`wide-ring-read.md`](wide-ring-read.md)): sprites in
+   the grown rows kept hidden (0..0x36); D295's rule kept, the gate decides;
+   the walk is today's plus one, `g = max(0, i + 2 - L)`; a quickload across
+   widths rebuilds the rim, never refuses.
+5. **RG:** `MapView_Redraw` = 2 after a load across widths (not RM's 1),
+   kept.
+6. **SW** ([`wide-sweeps.md`](wide-sweeps.md)): the shade's right-anchored
+   map and the banner's faster slide in the bands, both accepted off the
+   sheets.
+7. **FY** ([`faerie-fix.md`](faerie-fix.md)): the faerie's look and the
+   sides' second draw, accepted off the sheets.
+8. **PB** ([`narrow-pillarbox.md`](narrow-pillarbox.md)): menus opened in a
+   framed area stay framed; area 53 at 426; area 194's close-camera opening
+   framed at 426 - all three as PB recommended.
+9. **Captures:** an agent crafts chapter saves for PB's nine uncaptured
+   areas and tries the three real far-camera scenes (area 167's init, area
+   19's camera-out, chapter 1's scene 3); a scene no crafted save reaches
+   goes to the owner by name.
+
 ## 7. Side groups, beside the round (added 2026-10-21)
 
 The other two items of the 2026-10-15 list run as one agent each, beside
