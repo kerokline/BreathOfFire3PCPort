@@ -336,7 +336,11 @@ load's entry fade.
 | 186 | `adult_ryu`, chapter 14, at `Area173_Tail38`'s entry (0x48000, 0x640000) | **Cropped: the corridor's wall.** At its own camera the machinery wall runs on to the left past 320 (off: to the 560 edge); framed, cut at the bar. The 31 / 186 check of section 6 (the shaft inside 50..270) holds for 31's view, not for this one |
 | 198 | `adult_ryu`, chapter 15 run 6 from step 0 in 198 (as `Scena15_Run5`'s step 0x24 leaves it) | the void, a floating figure, a message box: nothing past 320; the side box stands at Capcom's place framed and at the 560 place off (section 4's anchor, as designed) |
 
-**Area 194's first visit was not reached.** The craft (`cs194`: chapter 13
+**Area 194's first visit was not reached** by CS; group CR reached it
+(`cs194f`, the party restored) and settled the crash as the craft's - the
+donor's one-member party run through `Scena13_SaveParty7` again - with
+Capcom's own code crashing the same way on it:
+[`area194-entry.md`](area194-entry.md). CS's account: the craft (`cs194`: chapter 13
 run 2 step 1, flags 2..4 clear) and two others into the same entry (no run;
 run 2 from step 0 in area 153, so the run's own `Field_ChangeArea` takes
 the party in) all crash at the entry, mode 1: `Sprite_DrawPass`'s sort
