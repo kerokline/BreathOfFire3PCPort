@@ -1437,6 +1437,7 @@ void InjectAll() {
     bof3x::input::sigma::Arm(); // DIV-0133 and DIV-0134 (docs/button-sigma.md): the Config as one permutation, words 7 / 8
                                 // as Speak's and Action's, the starting Config by source - after every module's self-test,
                                 // which all compared Capcom's stores at Boot_Task, LoadMenu_Apply and the rebind
+    ConfigText_ArmJapanese();   // DIV-0051's 2026-10-21 amendment: the Config panel's ja-JP icons, after rest_4f's fuzz
     ButtonText_Arm();           // DIV-0140 (docs/button-dialogue.md 4): the dialogue's button mentions drawn as
                                 // Sigma's button - after sigma::Arm, and after every module's self-test, which all
                                 // compared Capcom's text draws (text_draw's, msgbox's)

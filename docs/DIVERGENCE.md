@@ -3199,8 +3199,19 @@ designed in rather than bolted on.
   - *Verification:* the two glyphs rendered from a disc-only Latin table
     (US disc) and a `ja-JP` table (JP disc) built by the amended
     `loc_build.py`; not yet seen in game.
+  - *And the Japanese panel (the owner, 2026-10-21):* under `ja-JP` the
+    panel keeps the original's two cells, but its glyph cell drew the
+    stand-in behind `0x66A2FC`, which no Japanese layer writes - an empty
+    string, so no button showed. It now draws the Japan disc's own icon in
+    the same colour at the same place: circle, cross, triangle, square the
+    sheet's `0x15 08..0B` (`0x9F6..0x9F9`), L1 / R1 the small labels at
+    `0xD05` / `0xD06` (`ConfigJapaneseIcons`, armed after every self-test;
+    the draw stops loudly if the font is too short). `BOF3X_SHADOW=rest_4f`
+    (Capcom's cell, before the switch), 0 mismatches; not yet seen on a
+    Japanese install.
 - **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=ConfigController`
-  (the patches) and `Config_DrawControllerCell`.
+  (the patches) and `Config_DrawControllerCell`; the Japanese panel's icons
+  `BOF3X_ORIGINAL=ConfigJapaneseIcons`.
 
 ### The battle banner's words and its EX suffix
 

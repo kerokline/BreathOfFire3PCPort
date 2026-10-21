@@ -42,8 +42,10 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/button_text.h"
 #include "game/lang_layout.h"
 #include "game/scenario_harness.h"
+#include "game/text_draw.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -176,6 +178,9 @@ constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // Config_DrawControllerRow'
 // (0xC0000096, ecx 0xA65: known-defects D312) - so the cell draws what the
 // original draws.
 bool g_icons = false;
+// DIV-0051's 2026-10-21 amendment: 1 through PatchBytes("ConfigJapaneseIcons")
+// under a ja-JP layer (ConfigText_ArmJapanese).
+std::uint8_t g_ja_icons = 0;
 
 // The controller panel's cell, original 0x461C00 (docs/controls.md section 2;
 // disasm 2026-10-17, 0x461C00..0x461E07). cdecl (x, y, word). The original
@@ -221,8 +226,22 @@ extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int wor
     for (unsigned i = 0; i < sizeof kCells / sizeof kCells[0]; ++i) {
         const Cell& c = kCells[i];
         if (!(word & c.bit)) continue;
-        const auto* const glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
+        const auto* glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
             *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(kGlyphPointers + 4 * i))));
+        // DIV-0051's 2026-10-21 amendment: under ja-JP the stand-in behind
+        // 0x66A2FC is empty (no Japanese layer writes it); the Japan disc's
+        // own icon, in the same colour at the same place.
+        unsigned char ja[3];
+        if (g_ja_icons) {
+            const unsigned g = i < 4 ? button_text::kJapaneseIcons + i : button_text::kJapaneseShoulders + (i - 4);
+            if (g >= TextDraw_GlyphCount())
+                bof3::Fatal("ConfigJapaneseIcons: glyph 0x%X, the font loaded has %u (no ja-JP layer's icons)", g,
+                            TextDraw_GlyphCount());
+            ja[0] = static_cast<unsigned char>(0x80 | (g >> 8));
+            ja[1] = static_cast<unsigned char>(g);
+            ja[2] = 0;
+            glyph = ja;
+        }
         SH_CALL(Text_DrawAt)(x + 4, y, c.color, 3, glyph);
         SH_CALL(Text_DrawAt)(x - 0x10, y, 0, c.letter_count,
                              reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(c.letter)));
@@ -347,6 +366,15 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
 }
 
 const ConfigTextOperands& ConfigText_Operands() { return g_ops; }
+
+void ConfigText_ArmJapanese() {
+    if (Lang_Latin() || !Lang_Japanese()) return;
+    static const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("ConfigJapaneseIcons", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_ja_icons)),
+                     &was, &is, 1);
+    bof3::Log("DIV-0051    the Config panel's button cell under ja-JP: the Japan disc's icons %s",
+              g_ja_icons ? "on" : "OFF (BOF3X_ORIGINAL=ConfigJapaneseIcons)");
+}
 
 void ConfigText_Inject() {
     // The values of ours against the operands they stand for (code_bytes.h),

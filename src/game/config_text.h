@@ -15,6 +15,13 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
 // Only with BOF3X_LANG set. See config_text.cpp.
 void ConfigText_Inject();
 
+// DIVERGENCE DIV-0051 (2026-10-21 amendment): under `ja-JP` the controller
+// panel's glyph cell draws the Japan disc's own icons (button_text.h) in
+// place of 0x66A2FC's stand-ins, which no Japanese layer writes. Armed
+// (PatchBytes "ConfigJapaneseIcons") after every module's self-test, which
+// compared Capcom's cell (rest_4f's fuzz).
+void ConfigText_ArmJapanese();
+
 // What ConfigText_Inject and ConfigText_Apply put into the Config screen's
 // code (DIV-0015, DIV-0017, DIV-0026, DIV-0051), as values of ours
 // (docs/operand-store.md): our Config_DrawRowLabel (field_c1.cpp),
