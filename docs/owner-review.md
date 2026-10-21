@@ -19,7 +19,7 @@ where the reading behind it is. Nothing here is a divergence until it is in
 [`typed-data-stage-c.md`](typed-data-stage-c.md), the round doc's section 3).
 No behaviour change, the machine code identical to `main` (the smoke run
 passed 2026-10-20: the round doc's section 3). The C4 audit's two names, answered
-2026-10-20 (reports A and B in `C:\Users\kerok\c_typed\audit\c4\`):
+2026-10-20 (reports A and B in `C:\Users\kerok\bof3x-runs\c_typed\audit\c4\`):
 
 - **`rest_4a`'s `kEnemyHp`**: renamed `kEnemyIntel` ("go ahead with the
   rename"), matching `records.h`'s `BattleEnemy::intel` at `+0xBA`; no

@@ -1,7 +1,7 @@
 # The reading-row round: furigana, and a second language, in the row above the text
 
 **Status:** STAGED 2026-10-20, not launched (branch `docs/reading-row-staging`;
-briefs in `C:\Users\kerok\r_ruby\`). **Group SL ran the same day**
+briefs in `C:\Users\kerok\bof3x-runs\r_ruby\`). **Group SL ran the same day**
 ([`second-language-census.md`](second-language-census.md), merged here) and
 the owner decided on its numbers: **two text rows plus two reading rows per
 page**, overflow accepted as extra confirm presses; and **composed messages
@@ -377,7 +377,7 @@ which favour a Japanese main with an English second (SL 10).
 
 ## 8. The brief, per group
 
-`C:\Users\kerok\r_ruby\BRIEF_<group>.md`, one per group (PR, FB, SL, ML;
+`C:\Users\kerok\bof3x-runs\r_ruby\BRIEF_<group>.md`, one per group (PR, FB, SL, ML;
 RR and SB when stage A's numbers are in). Each names the goal, the files it
 owns and must not touch, the docs to read first (this file; I21 and I50;
 [`msgbox.md`](msgbox.md) 3; [`dialogue-localisation.md`](dialogue-localisation.md)

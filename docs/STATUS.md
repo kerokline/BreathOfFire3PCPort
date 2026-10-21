@@ -1,12 +1,21 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-20)
+**Status:** IN PROGRESS (2026-10-21)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
 true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
+
+**`main` is `dc921a0c`** (2026-10-21): since `61023304` it took the typed-data round's stage C (PR #100, below; no
+behaviour change, the machine code identical) and the reading-row round's staging (PR #101,
+[`reading-row-round.md`](reading-row-round.md): furigana, IDEAS I21, and a second language, I50, in a half-height row
+above each dialogue row; group SL's census [`second-language-census.md`](second-language-census.md) run and the
+owner's calls on it taken; the rest of stage A not launched). **2026-10-21, a cleanup:** every worktree but the main
+checkout removed and every branch but `main` deleted, local and on `origin` (each one found merged by `git cherry`
+first); the older harness roots in the user folder deleted by the owner, the stage C and reading-row scratch kept under
+`C:\Users\kerok\bof3x-runs\` (`c_typed`, `r_ruby`).
 
 **2026-10-20** (`fix/d266-title-mark` and `docs/handoff-1020`, merged as PRs #98 and #99): a
 Western disc-only install draws its disc's title mark (D266, DIV-0101's `titlemark` rule) and rolls its own release's
@@ -25,7 +34,7 @@ code's reads of Capcom's data image become named, typed accesses, with **no beha
 (`tools/data_census.py`, a CI ratchet), every global site by `tools/typed_convert.py` and the record sites by seven
 file groups, each part re-derived by an independent agent and a family audit after; raw data sites 50,943 -> 27,394.
 The PR also carried the install-gap round's second pairing pass ([`install-gap-pairs.md`](install-gap-pairs.md) 8).
-**Stage C is built on `typed/c`** (from `main` 56d81b42, `main` 61023304 merged in; unpushed; the smoke run passed 2026-10-20 - both self-tests, the combat route identical to `main`'s build on every tick - its PR next;
+**Stage C is on `main`** (PR #100, merged 2026-10-20 as `cc019988`; the smoke run passed the same day - both self-tests, the combat route identical to `main`'s build on every tick;
 [`typed-data-stage-c.md`](typed-data-stage-c.md), each step as run in the round doc's section 3): C0 one shared
 views header (`src/game/record_views.h`) in place of seven dialects of per-file helpers; C1 the types (a shared
 0x80-byte `SpriteHead` the five sprite families derive from, the audits' renames, views for fields that change
@@ -49,9 +58,9 @@ load screen (DIV-0145..0147); the save list is split from the quicksaves and bou
 two by-design words) and by 22 pixel-equal capture pairs over six routes, two conditions, the PC, US disc-only and
 PSP-EU installs and wide mode, in-process and across processes. Not yet played by the owner.
 
-**`main` is `61023304`** (2026-10-20: PR #96, the quicksave's language guard; PR #98, D266's title mark and DIV-0148;
+**`61023304`** (2026-10-20: PR #96, the quicksave's language guard; PR #98, D266's title mark and DIV-0148;
 PR #99, the day's docs - over `56d81b42`: the typed-data round's stages A and B, PR #94, and the quicksave round,
-PR #95); `typed/c` has it merged. Before that, `19180e63`: the button round (PR #85, below) and the event battles' own music on
+PR #95). Before that, `19180e63`: the button round (PR #85, below) and the event battles' own music on
 disc-only installs (PR #86, D316); sprites flagged for capture drawn into VRAM, restoring Amalgam's melt (PR #87, D317 /
 DIV-0142); Ryu's dream silent as on the PlayStation (PR #90, D318 / DIV-0143); the install-gap round (PR #91,
 [`install-gap-round.md`](install-gap-round.md): disc-built images from the player's discs, the read watch, D279 and

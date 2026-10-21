@@ -1,7 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-20: `main` is `61023304` (PRs #94..#96, #98 and #99 merged); the typed-data round's
-stage C is built on `typed/c` with `main` merged in and its smoke run passed, unpushed: its PR, item 0)
+**Status:** IN PROGRESS (2026-10-21: `main` is `dc921a0c` (PRs #100, typed-data stage C, and #101, the reading-row
+staging, merged); a cleanup left one worktree and one branch, `main`; nothing in flight)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -16,17 +16,21 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-`main` is `61023304`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
+`main` is `dc921a0c`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
 to 27,394, the machine code identical; `tools/data_census.py` the CI ratchet), the quicksave round (PR #95: F6 / F7 /
 the F5 menu, DIV-0145..0147, D322), the quicksave's language guard (PR #96: the original Chinese against a
 translation refused before a byte is written; one translation into another kept, IDEAS I47), D266 and DIV-0148
-(PR #98) and the day's docs (PR #99). **2026-10-20** ([`exe-gap-round.md`](exe-gap-round.md) frames what is left of
+(PR #98), the day's docs (PR #99), stage C (PR #100) and the reading-row round's staging (PR #101, item 6a).
+**2026-10-21** was a cleanup: every worktree but the main checkout removed and every branch but `main` deleted,
+local and on `origin`, each found merged by `git cherry` first; the owner deleted the older harness roots in the
+user folder (`ab*`, `b_*`, `g_*`, `q_*`, `v_*`, `b1` and the rest), so a doc naming one names a run that is gone.
+**2026-10-20** ([`exe-gap-round.md`](exe-gap-round.md) frames what is left of
 the disc-built image): D266's title mark from the disc (DIV-0101's `titlemark` rule), each Western release's own
 staff roll following the language (DIV-0148, D323), the recipes regenerated with the second pairing pass's rows, the
 ten state-hash pairs re-recorded (`cn_<route>_orig3` / `_orig3b`) and every difference of ours against them traced
 to a ledgered change. **Layers built before DIV-0148 carry no roll**: rebuild a Western language (`importer.py
 build`, or `loc_build.py all --discs` for an install's `DAT\<tag>.*.DAT`) to get the release's credits. **The
-typed-data round's stage C is built on `typed/c`**
+typed-data round's stage C is on `main`** (PR #100)
 ([`typed-data-stage-c.md`](typed-data-stage-c.md); each step as run in [`typed-data-round.md`](typed-data-round.md)
 3): C0 one shared views header, C1 the types (the shared 0x80-byte `SpriteHead`, renames, views, new structs), C2 the
 sites they unlock by seven groups, C3 the module-only entries and a naming pass, C4 the tables as `records::` arrays,
@@ -41,30 +45,24 @@ hosted cross form).
 
 ## Pick up here
 
-0. **The typed-data round's stage C: its PR** from `typed/c`. **The smoke run passed 2026-10-20**
-   ([`typed-data-stage-c.md`](typed-data-stage-c.md) 8 call 2; [`typed-data-round.md`](typed-data-round.md) 3, "The
-   smoke run as run"): both headless self-tests (the hosted `'*'` one's 1,086 fuzz lines all `0 MISMATCHES`) and the
-   combat route identical to `main` `b3498050`'s own build on every tick. Against the morning's references both builds
-   differ by the same seven pages at tick 3 only - not stage C's; item 3's tick-3 class, here steady. The machine code
-   is identical to `main` 61023304 object by object (#99 changed only docs). The PR: no behaviour change, no ledger entry; every non-merge commit signed off (read
-   `git log --format=%B main..typed/c` first). `main` (`b3498050`, PRs #96 and #98, then `61023304`, PR #99) is
-   merged into `typed/c` (2026-10-20; gate baseline `.claude/worktrees/typed-baseline-c2`, a build of `b3498050`,
-   0 differ; census 27,389; DIV-0148's one new raw site, `scena_sc15.cpp` RollEntry's `L(kRollLines + 4u * i)`,
-   listed `gate`: `Scena17_RollLines[i]` changes `Scena17_ScrollRoll`). The C4 audit's two calls are answered ([`owner-review.md`](owner-review.md) "2026-10-20, typed-data
-   stage C"): `kEnemyHp` renamed `kEnemyIntel` (IDEAS I49 to look again), `Save_Directory` kept at 16. **The method that held** (stage C's
-   section 1): `tools/codegen_same.py` against a baseline build after every batch, `0 differ`; after every typing
-   pass a read-only family audit by other agents, because the gate cannot see a pointer typed as the wrong struct;
-   build before calling anything done. Scratch of stage C, outside the tree: `C:\Users\kerok\c_typed` (the
-   coordinator's log `RESUME.md`, the briefs `BRIEF_*.md`, the audit reports `audit\`, the C2 groups' and C4's
-   scripts); of stages A and B: `C:\Users\kerok\b1\`, `C:\Users\kerok\v_typed\`, `C:\Users\kerok\v_pairs` and
-   `g_pairs`. The worktrees are listed under "In flight".
+0. **The typed-data round is done through stage C** (PR #100; [`typed-data-stage-c.md`](typed-data-stage-c.md),
+   each step as run in [`typed-data-round.md`](typed-data-round.md) 3). Next in that line is I44's stage 3, the
+   relocatable image (the round doc's section 7, not staged), and IDEAS I49 (what `Battle_AutoTargetCheck`'s `+0xBA`
+   test means, after `kEnemyHp` became `kEnemyIntel`). **The method that held** (stage C's section 1):
+   `tools/codegen_same.py` against a baseline build of the base commit after every batch, `0 differ`; after every
+   typing pass a read-only family audit by other agents, because the gate cannot see a pointer typed as the wrong
+   struct; build before calling anything done. A new typing pass builds its own baseline worktree (the old ones were
+   removed 2026-10-21). Stage C's scratch: `C:\Users\kerok\bof3x-runs\c_typed` (the coordinator's log `RESUME.md`,
+   the briefs, the audit reports `audit\`); stages A and B's scratch is deleted.
 
 1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
    - **Quicksaves** (DIV-0145..0147): not played yet; whether F6 / F7 get an on-screen line (logged only today, as
      F12's is, DIV-0032); IDEAS I47 (one translation's quicksave loaded under another) when they want it.
-   - **From the button round (PR #85):** record the minigame starts from `C:\Users\kerok\b_rc\saves\` with
-     `BOF3X_RECORD` ([`button-routes.md`](button-routes.md) 5); the contact sheets `C:\Users\kerok\b_rc\sheets_round\`;
-     `Scena19_Run0`'s R1. **From PR #81:** the stale-install prompt in a real start, the PSP-only title in play, D310.
+   - **From the button round (PR #85):** record the minigame starts with `BOF3X_RECORD`
+     ([`button-routes.md`](button-routes.md) 5) and look at the contact sheets; `Scena19_Run0`'s R1. **The root
+     `C:\Users\kerok\b_rc` that held the placed saves and the sheets was deleted 2026-10-21**: before the owner's
+     check, re-prepare a root under `C:\Users\kerok\bof3x-runs\` and regenerate them (`button-routes.md`'s commands,
+     `abc_run.py prepare --set sigma`, `sigma_saves.py`, `sigma_sheets.py`, with the new root). **From PR #81:** the stale-install prompt in a real start, the PSP-only title in play, D310.
    - The ultrawide round's and the away day's looks, listens and calls (owner-review's 2026-10-14 and 2026-10-13
      sections); Peco's EXP table (item 9).
 
@@ -108,7 +106,8 @@ hosted cross form).
    The exe-gap round needs its answer too (item 2).
 
 6a. **The reading-row round, staged 2026-10-20, not launched** ([`reading-row-round.md`](reading-row-round.md);
-   briefs `C:\Users\kerok\r_ruby\BRIEF_*.md`; issue #97): furigana (I21) and a second language (I50) in a
+   briefs `C:\Users\kerok\bof3x-runs\r_ruby\BRIEF_*.md`; issue #97; on `main` as PR #101, group SL's census
+   [`second-language-census.md`](second-language-census.md) run and the owner's calls on it taken): furigana (I21) and a second language (I50) in a
    half-height row above each text row of the dialogue box. Launch at the owner's word: the four stage-A groups
    (PR, FB, SL, ML) in worktrees from `main`, RR and SB after PR's numbers and FB's layer; the owner's six calls
    are the round doc's section 6. The string shape (section 4) is fixed before stage A starts.
@@ -203,9 +202,10 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   slot 0 on every side) or `--no-save` (slot 0 left alone); the harness refuses a recipe with no `# save` header
   unless one is given ([`abc-harness.md`](abc-harness.md) 3a). `input_run.py` removes the launcher directory's old
   `bof3x.log` before a launch (the stale `recipe done` trap, closed 2026-10-13).
-- **The harness's sets and roots** ([`abc-harness.md`](abc-harness.md) 2): `--set eu` (root `C:\Users\kerok\ab`),
-  `--set us` (`abu`), `--set jp` (`abj`), the eye batch's scratch installs (`abv`), the 2026-10-12 re-run's `abx` -
-  one agent per root.
+- **The harness's sets and roots** ([`abc-harness.md`](abc-harness.md) 2): `--set eu`, `--set us`, `--set jp`; one
+  agent per root, each session preparing its own under `C:\Users\kerok\bof3x-runs\` or `D:\bof3x-runs\` (both
+  Defender-excluded; `--root` or `BOF3X_ABC_ROOT`, the default `~\abc`). The older roots named in the round docs
+  (`ab`, `abu`, `abj`, `abv`, `abx`, `b_rc`) were deleted 2026-10-21.
 - **The state hash** ([`state-hash.md`](state-hash.md)): from an ini-less launcher copy, `BOF3X_OPT=none
   BOF3X_LAYERING=0`, `tools/statehash_skip.txt`; `python tools/input_run.py tools/recipes/R.txt --no-front --game
   <main>/bof3 --launcher <copy>/bof3x-launcher.exe` with `BOF3X_STATEHASH`, then `statehash.py check cn_R_orig2.sh
@@ -246,29 +246,19 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **2026-10-20's branches**: `fix/d266-title-mark` (`.claude/worktrees/d266`), `docs/handoff-1020`
-  (`.claude/worktrees/handoff-1020`) and `quicksave/lang-guard` (`.claude/worktrees/lang-guard`) are merged (PRs #98,
-  #99, #96): removable.
-- **The typed-data round's stage C** (2026-10-19..20), all under `.claude/worktrees/`: `typed-c` (`typed/c`, the
-  PR's branch), `typed-baseline-c` (a detached `main` `56d81b42` build: the gate's reference until main was merged) and
-  `typed-baseline-c2` (detached `b3498050`, the gate's reference now; keep it until the PR merges), `agent-c4` (`typed/c4`, merged), `agent-c4fix` (`typed/c4-fix`, merged), `audit-c4` (detached `f56ed9a8`,
-  the C4 audit's read-only tree) and the older stage C agents' `agent-c0`, `agent-c1`, `agent-c2-<group>`,
-  `agent-c2fix`, `agent-c3e`, `agent-c3n` (branches `typed/c0`, `typed/c1`, `typed/c2-<group>`, `typed/c2-fix`,
-  `typed/c3-entries`, `typed/c3-naming`): all merged into `typed/c`; removable after the PR merges. Scratch:
-  `C:\Users\kerok\c_typed`.
-- **The merged rounds' worktrees** under `.claude/worktrees/` and the session scratchpads: the typed A/B agents
-  (`typed/b1` merged as PR #94), the quicksave agents (PR #95), install-gap (PR #91), the ultrawide groups (PR #60),
-  the away-day `away/1013-*` (PR #58), `worktree-agent-ae288769dd06909be` (PR #57): removable at the owner's word.
-  Classify with `git cherry`, not an ancestry check (Traps).
+- **Nothing.** The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
+  scratch) and deleted 145 local and 65 `origin` branches; each was classified merged with `git cherry` first, not an
+  ancestry check (Traps). `main` is the only branch, local and remote.
+- **Scratch kept, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and
+  audits), `C:\Users\kerok\bof3x-runs\r_ruby` (the reading-row round's briefs, wanted at launch),
+  `C:\Users\kerok\bof3x-runs\rr_sl` (group SL's run) and `typedc-smoke` (stage C's smoke run).
 - **2026-10-20's scratch, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\away1020` (launcher copies
   `L\` (main's build) and `L2\` (the D266 branch's), the game folder `g\` hard-linked from `bof3\`, the runs, the
   checks, the chain scripts); `D:\bof3x-runs\away1020` (the US and EU disc-only caches `c_us`, `c_eu` and installs
   `g_us`, `g_eu`, built by the D266 branch); **`D:\bof3x-runs\discs`, the seven discs extracted** - `CDImage\` now
   holds them zipped, and `recipes/abc-installs.toml` still names `{main}/CDImage/*.cue` (Traps).
-- **Older scratch:** the A/B/C roots `C:\Users\kerok\ab`, `abj`, `abu`, `abv`, `abx`, `g_*`; the owner's scratch
-  disc-only installs `C:\b3g` and `C:\b3p` (built before `wmrec`: rebuild or remove); the junction
-  `C:\Users\kerok\lbl13`; `music/event-battle-restart`'s scratch worktree (session `3186ef2f`'s `evb/`, an untracked
-  `cfg.out`); `claude/ecstatic-mccarthy-t8bg37`, the owner's to delete.
+- **Older scratch:** the owner's scratch disc-only installs `C:\b3g` and `C:\b3p` (built before `wmrec`: rebuild
+  or remove). The older A/B/C roots and `lbl13` are gone (2026-10-21).
 - **Other sessions work in the main checkout**: check `git status` and the branch before a commit there, and never
   build in `build/` while its game runs.
 

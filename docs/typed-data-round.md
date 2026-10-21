@@ -394,7 +394,7 @@ No site converted and no behaviour change.
   0x10`, `Enemy(a) + at::kEObject`, `Member(slot) - 0x80`, ...), a call of
   another view (`Obj(n)` = `Spr(Object(n))`), or the store. All 488 went;
   none needed to stay. The list with each replacement is in the round's
-  scratch (`C:\Users\kerok\c_typed\c0\survey.tsv`).
+  scratch (`C:\Users\kerok\bof3x-runs\c_typed\c0\survey.tsv`).
 - **The move.** A script replaced each call with its body under the shared
   name, the arguments put in place of the parameters (`PartyRec(a)` became
   `rv::As<records::PartyMember>(Party(a) - 0x10)`), and the 1,137 inline
@@ -506,7 +506,7 @@ no raw site converted. The record is
 Seven agents, one per B1 file group, from `typed/c` `1b1701a1` (C0, C1 and
 C3's entries merged, the census and the left-list regenerated), each on its own
 branch `typed/c2-<group>` with its B1 file list and the brief
-`C:\Users\kerok\c_typed\BRIEF_C2.md`. Each converted the rows of
+`C:\Users\kerok\bof3x-runs\c_typed\BRIEF_C2.md`. Each converted the rows of
 `analysis/typed_left.tsv` in its files whose reason C1's types or C3's entries
 had removed, with the gate after every batch; merged one at a time in the
 order they handed back (battle, area, magic, rest, effect, field, scen_ui),
