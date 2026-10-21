@@ -3178,6 +3178,27 @@ designed in rather than bolted on.
 - **Amended 2026-10-17 (the button unification round, DIV-0133):** the icon
   column is the first reader of `σ`, the one table every icon and every
   hard-coded test now asks; words 7 / 8 follow the Speak and Action lines.
+- **Amended 2026-10-21 (the owner): L1 and R1 are the disc's own small
+  labels.**
+  - *Was:* L1 and R1 composed of the dialogue capital and the 8 x 8 set's
+    serifed 1 in a 12 x 12 cell, doubled.
+  - *Now:* the font atlas's top strip packs 8 x 8 cells, "L1 L2 R1 R2 START
+    SELECT" on its third row (y 16..23); `loc_build.py` takes L1 (x 0) and R1
+    (x 16) whole and triples each to the 24 x 24 glyph (`SHOULDER_CELLS`,
+    `shoulder_glyphs`), body nibbles remapped as the shapes' are. The same
+    64 nibbles of each on all seven discs (PSX US, EU, FR, DE, JP; PSP EU,
+    JP; hashed 2026-10-21). The glyph numbers (`0xA69` / `0xA6A`) are
+    unchanged, so the Config panel, the item lists' corner (DIV-0138) and
+    the dialogue's button mentions (DIV-0140) all draw them. The `ja-JP`
+    layer gets the same two glyphs at `JA_SHOULDERS_AT` (`0xD05` / `0xD06`,
+    after its kanji sheet), so every layer but the PC's Chinese draws one
+    L1 / R1.
+  - *Why:* the owner, 2026-10-21, off renders of every disc's atlas: unify
+    the non-Chinese builds on the disc's own small L1 / R1. An 8 x 8 cell
+    scales to 24 x 24 by a whole factor, so no pixel is invented.
+  - *Verification:* the two glyphs rendered from a disc-only Latin table
+    (US disc) and a `ja-JP` table (JP disc) built by the amended
+    `loc_build.py`; not yet seen in game.
 - **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=ConfigController`
   (the patches) and `Config_DrawControllerCell`.
 
@@ -8716,6 +8737,25 @@ designed in rather than bolted on.
   live, psp-jp's five item-list routes run to `recipe done`, and psx-jp's
   and psp-eu's `menu_screens` are pixel-equal to the base build's in all 60
   frames.
+- **Amended 2026-10-21 (the owner): under `ja-JP` every corner glyph is the
+  Japan disc's own.**
+  - *Was:* the face buttons under `ja-JP` read the stand-ins behind
+    `0x66A2FC`, which no Japanese layer writes, so a face button in a
+    shoulder slot (Change on circle, say) stopped the game at the first
+    item list on psx-jp and psp-jp disc-only installs, D321 again by
+    another entry (found by the 2026-10-21 review of PR #91). L1 / R1 on a
+    PSP base were the font's capital `L` / `R`.
+  - *Now:* under `ja-JP` circle, cross, triangle and square are the
+    single-byte sheet's `0x15 08..0B` (`0x9F6..0x9F9`, `button_text.h`'s
+    `kJapaneseIcons`, the glyphs D279's fishing labels and DIV-0140 already
+    draw; the owner confirmed the square at `0x15 0B` off a render of the
+    sheet, 2026-10-21), and L1 / R1 the disc's small labels at `0xD05` /
+    `0xD06` (DIV-0051's 2026-10-21 amendment). No stand-in is read under
+    `ja-JP`; the draw still stops loudly if the font is too short.
+  - *Verification:* `BOF3X_SHADOW=shoulder_glyphs,button_text`: 720 plans,
+    24 glyph codes (the six under `ja-JP` planted over empty stand-ins), 0
+    mismatches; ButtonText 180 mentions, 0 mismatches. Not yet run on a
+    Japanese install.
 - **Reversible?** `BOF3X_ORIGINAL=ShoulderGlyphs`.
 
 ### The hard-coded button tests ask the Config

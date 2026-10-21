@@ -700,7 +700,7 @@ void ButtonText_Arm() {
         g_bt.port[i] = port ? reinterpret_cast<const std::uint8_t* const*>(static_cast<std::uintptr_t>(kStandIns))[i][0]
                             : 0;
     if (!port) bof3::Log("ButtonText  this image holds no port stand-ins at 0x66A2FC (a disc-built image): a layer's "
-                         "codes only; a ja-JP shoulder draw is a blank cell");
+                         "codes only");
     g_bt.sigma = &LiveSigma;
     if (bof3::WantsShadow("button_text")) ButtonTextSelfTest();
     static const std::uint8_t was = 0, is = 1;

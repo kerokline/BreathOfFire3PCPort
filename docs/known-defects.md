@@ -8629,6 +8629,16 @@ without the L1 / R1 art and under `ja-JP`, `GlyphCode` draws L1 and R1 as the
 The face buttons keep their paths. psx-jp keeps the art, the Latin installs
 keep DIV-0051's icons, and any other empty stand-in still stops the game.
 
+**Corrected 2026-10-21.** Two statements above did not hold. "psx-jp is not
+affected" was true only at the default Config: a face button in a shoulder
+slot read an empty stand-in on psx-jp and psp-jp alike (the review of PR #91,
+2026-10-21). And the Japan disc does have L1 / R1 glyphs: the font atlas's
+8 x 8 strip holds "L1 L2 R1 R2 START SELECT" on every disc, outside the 12 px
+cells the text codes reach. DIV-0138's 2026-10-21 amendment draws the
+Japanese corner wholly from the disc: the face buttons the sheet's `0x15
+08..0B`, L1 / R1 those small labels (DIV-0051's amendment, the owner's call
+over the capital L and R).
+
 - **The codes, by rule.** The `ja-JP` layer's font puts the Japan disc's
   single-byte sheet whole from `JA_AT` = `0x993`, cell `b` at `JA_AT + b`
   (`loc_build.py` `ja_cell_of`), and the Japanese script's `0x41..0x5A` are

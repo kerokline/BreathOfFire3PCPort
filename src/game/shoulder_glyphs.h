@@ -16,12 +16,12 @@
 //   - L1 or R1, from the page's own label art (the PC's and every PSX disc's
 //     page: one L1 and one R1 cell, measured identical across the 59 pages);
 //   - a face button, or L1 / R1 on a PSP-based install (whose page has only
-//     `L` / `R`, and no L1 / R1 art anywhere on the PSP disc), the glyph the
-//     install's Config panel draws for that button: DIV-0051's icon under a
-//     Latin layer, else the port's stand-in (0x66A2FC's codes and colours);
-//   - L1 / R1 on a PSP-based install under `ja-JP` (no art, no Latin layer,
-//     and no stand-in: no Japanese layer writes 0x66A2FC's strings, D321),
-//     the `ja-JP` font's capital `L` / `R` (the owner, 2026-10-18).
+//     `L` / `R`, and no L1 / R1 page art), a font glyph: DIV-0051's icon
+//     under a Latin layer (L1 / R1 the disc's small labels from the font
+//     atlas's 8 x 8 strip, the owner 2026-10-21); under `ja-JP` the Japan
+//     disc's own (the sheet's 0x15 08..0B, and the same small L1 / R1 -
+//     no Japanese layer writes 0x66A2FC's strings, D321); else the port's
+//     stand-in (0x66A2FC's codes and colours).
 // With σ(slot) the slot's own button and the page's own art, the piece is
 // drawn exactly as the original draws it: nothing changes at the identity.
 #pragma once
@@ -63,18 +63,14 @@ Plan Make(unsigned id, int x, int y, const Rect& own, const Rect& r15, const Rec
 
 // The font glyph of `button` as the install's Config panel draws it: the
 // code bytes (NUL-ended) and the colour. `latin`: a Latin layer (DIV-0051's
-// icons). `ja_letters`: a PSP base under `ja-JP`, where L1 / R1 are the
-// `ja-JP` font's capital letters (D321) - the face buttons keep the stand-ins.
+// icons). `ja`: under `ja-JP`, the Japan disc's own glyphs - the face
+// buttons the single-byte sheet's 0x15 08..0B, L1 / R1 its small labels
+// (button_text.h's numbers); no 0x66A2FC stand-in is read.
 struct Code { unsigned char text[3]; int colour; };
-Code GlyphCode(std::uint16_t button, bool latin, bool ja_letters);
-
-// The `ja-JP` font's glyph for one of the capitals the Japanese script
-// shares with ASCII (tools/loc_build.py JA_SHARED: its codes 0x41..0x5A are
-// the capitals): the single-byte sheet's cell `letter`, at JA_AT + letter.
-unsigned JaLetterGlyph(char letter);
+Code GlyphCode(std::uint16_t button, bool latin, bool ja);
 
 // GlyphCode for the live draw: the layer and the page read from the
-// install, and a `ja-JP` letter checked against the table loaded (a font
+// install, and a `ja-JP` glyph checked against the table loaded (a font
 // without the `ja-JP` sheet stops the game: rule 4).
 Code DrawCode(std::uint16_t button);
 

@@ -26,7 +26,8 @@
 //                           (loc_build encode_char of the West's 0x80..0x83);
 //                           L1 / R1 as DIV-0051's 0xA69 / 0xA6A (ICONS_AT + 4, + 5)
 //   ja-JP's icons           0x9F6..0x9F9 (ja_cell_of 0x15 08 .. 0x15 0B);
-//                           L1 / R1 as the port's stand-ins (no JP icon exists)
+//                           L1 / R1 0xD05 / 0xD06 (JA_SHOULDERS_AT), the
+//                           disc's small labels, as the Latin layers' are
 //   the port's stand-ins    the Config cell's own set, 0x461C00's six strings
 //                           through 0x66A2FC (circle, cross, triangle, square,
 //                           L1, R1), read live by the caller
@@ -48,6 +49,7 @@ constexpr std::uint8_t kShapeColour[6] = {2, 1, 6, 5, 0, 0};
 constexpr unsigned kLatinIcons = 0x9E3;      // tools/loc_build.py: APPEND_AT + 0x80 - FIRST_CODE
 constexpr unsigned kLatinShoulders = 0xA69;  // ICONS_AT + 4 (L1), + 5 (R1): DIV-0051's
 constexpr unsigned kJapaneseIcons = 0x9F6;   // ja_cell_of(0x08, 0x15): JA_AT + 0x63
+constexpr unsigned kJapaneseShoulders = 0xD05;  // JA_SHOULDERS_AT (L1), + 1 (R1): JA_KANJI_AT + 441
 
 enum class Layer : std::uint8_t { kNone, kLatin, kJapanese };
 
@@ -86,7 +88,7 @@ inline bool IsPortStandIn(std::uint8_t b) {
 inline void GlyphOf(const Context& c, Layer family, int shape, Icon& icon) {
     unsigned g = 0;
     if (family == Layer::kLatin) g = shape < 4 ? kLatinIcons + shape : kLatinShoulders + (shape - 4);
-    else if (family == Layer::kJapanese && shape < 4) g = kJapaneseIcons + shape;
+    else if (family == Layer::kJapanese) g = shape < 4 ? kJapaneseIcons + shape : kJapaneseShoulders + (shape - 4);
     if (g) {
         icon.glyph[0] = static_cast<std::uint8_t>(0x80 | (g >> 8));
         icon.glyph[1] = static_cast<std::uint8_t>(g);

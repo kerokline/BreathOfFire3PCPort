@@ -136,12 +136,16 @@ SMALL_SPACE = SMALL_APPEND_AT + (0x93 - 0x30 + 1)   # a blank cell after it; see
 # R1. The shapes are the atlas's 12 x 12 set at y 48 (the sheet's third row,
 # after the arrows and the heart; ink segments 181..190, 193..201, 205..214,
 # 218..226, read 2026-09-24) - the owner's choice over the 8 x 8 and the
-# 8 x 12 sets, both of which the atlas also holds. L1 and R1 are composed,
-# as the PlayStation's panel reads: the dialogue set's capital (codes 0x4C,
-# 0x52) with the 8 x 8 set's serifed "1" (code 0x31) low at its right, in a
-# 12 x 12 cell. Each cell is doubled to fill the 24 x 24 glyph.
+# 8 x 12 sets, both of which the atlas also holds. Each is doubled to fill
+# the 24 x 24 glyph. L1 and R1 are the disc's own small labels: the atlas's
+# top strip packs 8 x 8 cells, "L1 L2 R1 R2 START SELECT" on its third row
+# (y 16..23), L1 at x 0 and R1 at x 16 - the same 64 nibbles on all seven
+# discs, measured 2026-10-21 - each tripled to fill the glyph. The owner,
+# 2026-10-21: every layer but the PC's Chinese draws these (they replace a
+# composed capital and serifed 1; the Japanese layer, JA_SHOULDERS_AT,
+# replaces D321's capital L and R).
 SHAPE_CELLS = ((180, 48), (192, 48), (204, 48), (216, 48))   # (x, y) of circle, cross, triangle, square
-LABEL_CAPS = (0x4C, 0x52)                                     # L, R in the dialogue set
+SHOULDER_CELLS = ((0, 16), (16, 16))                          # (x, y) of L1, R1 in the 8 x 8 strip
 ICONS_AT = SMALL_SPACE + 1                                    # circle .. square, L1, R1
 # The battle banner's two picture suffixes (DIV-0052, src/game/battle_text.cpp):
 # " EX" on an extra turn, and a second of the same shape. The PC draws them as
@@ -194,6 +198,7 @@ ext_last = EXT_FIRST - 1         # none until a donor's atlas says otherwise
 donor_ja = False
 JA_AT, JA_CELLS, JA_COLS, JA_CELL = 0x993, 441, 21, 12
 JA_KANJI_AT = JA_AT + JA_CELLS
+JA_SHOULDERS_AT = JA_KANJI_AT + JA_CELLS   # the disc's small L1, R1 (SHOULDER_CELLS), after the kanji
 JA_HANG = {0x2A: 0x2A, 0x3B: 0x3C}   # JP code -> the PC byte that hangs it
 JA_SPACE = 0xFF                      # the JP word separator, 8,389 uses: a space
 # DIV-0057, pair codes (docs/dialogue-localisation.md section 9): a JP name is
@@ -493,33 +498,11 @@ def build_table(base_table, rows, redrawn=None, mono=False, disc_only=False):
     # 14 and 15; counted 2026-09-24) where a letter's body is 1 with 7 for its
     # ramp, and the panel draws them through the button's colour index, which
     # maps 1 to that colour: every body nibble becomes 1 and 7 stays the ramp.
-    cells = [[rows[y0 + y][x0:x0 + 12] for y in range(12)] for x0, y0 in SHAPE_CELLS]
-    one = donor_cell(rows, 0x31, SMALL_CELLS_Y0, SMALL_CELL_H)
-    for code in LABEL_CAPS:
-        cap = donor_cell(rows, code)
-        ink = [x for x in range(CELL_W) if any(r[x] for r in cap)]
-        a0, a1 = min(ink), max(ink)
-        cell = [[0] * 12 for _ in range(12)]
-        for y in range(12):
-            for x in range(a0, a1 + 1):
-                cell[y][x - a0] = cap[y][x]
-        oink = [x for x in range(CELL_W) if any(r[x] for r in one)]
-        x0 = a1 - a0 + 1
-        for y in range(SMALL_CELL_H):
-            for x in range(min(oink), max(oink) + 1):
-                if x0 + x - min(oink) < 12:
-                    cell[4 + y][x0 + x - min(oink)] = one[y][x]
-        cells.append(cell)
-    for cell in cells:
-        big = [[0] * font_pc.GLYPH for _ in range(font_pc.GLYPH)]
-        for y in range(12):
-            for x in range(12):
-                v = cell[y][x]
-                v = 7 if v == 7 else (1 if v else 0)
-                for dy in range(2):
-                    for dx in range(2):
-                        big[2 * y + dy][2 * x + dx] = v
-        table += pc_glyph_from_rows(big)
+    for x0, y0 in SHAPE_CELLS:
+        table += icon_glyph([rows[y0 + y][x0:x0 + 12] for y in range(12)])
+        advances.append(PC_ADVANCE)
+    for g in shoulder_glyphs(rows):
+        table += g
         advances.append(PC_ADVANCE)
     # The suffixes' glyphs (SUFFIX_AT ..): EX from the disc, the second
     # suffix as shipped, before any painting.
@@ -3558,6 +3541,36 @@ def ja_glyph(rows, cell):
 JA_SHARED = (0x28, 0x29, 0x2C, 0x2E, 0x2F) + tuple(range(0x30, 0x3A)) + (0x3D,) + tuple(range(0x41, 0x5B))
 
 
+def icon_glyph(cell):
+    """A square cell of the atlas (12 x 12 or 8 x 8) scaled to the 24 x 24
+    glyph by nearest neighbour. The disc's icons are pre-coloured (the 8 x 8
+    circle's body is nibbles 9 and 10, the cross's 14 and 15; counted
+    2026-09-24) where a letter's body is 1 with 7 for its ramp, and the panel
+    draws them through the button's colour index, which maps 1 to that
+    colour: every body nibble becomes 1 and 7 stays the ramp."""
+    k = font_pc.GLYPH // len(cell)
+    if k * len(cell) != font_pc.GLYPH or any(len(r) != len(cell) for r in cell):
+        raise SystemExit("icon cell is %d x %d, not a square that scales to %d"
+                         % (len(cell[0]), len(cell), font_pc.GLYPH))
+    big = [[0] * font_pc.GLYPH for _ in range(font_pc.GLYPH)]
+    for y in range(font_pc.GLYPH):
+        for x in range(font_pc.GLYPH):
+            v = cell[y // k][x // k]
+            big[y][x] = 7 if v == 7 else (1 if v else 0)
+    return pc_glyph_from_rows(big)
+
+
+def shoulder_glyphs(rows):
+    """The disc's small L1 and R1 (SHOULDER_CELLS), each 8 x 8 tripled."""
+    out = []
+    for x0, y0 in SHOULDER_CELLS:
+        cell = [rows[y0 + y][x0:x0 + 8] for y in range(8)]
+        if not any(any(r) for r in cell):
+            raise SystemExit("the atlas's 8 x 8 strip has no ink at (%d, %d): not the shoulder labels" % (x0, y0))
+        out.append(icon_glyph(cell))
+    return out
+
+
 def build_table_ja(base_table, disc, disc_only=False):
     count = len(base_table) // font_pc.GLYPH_BYTES
     if count != JA_AT:
@@ -3569,6 +3582,11 @@ def build_table_ja(base_table, disc, disc_only=False):
     for rows in (single, kanji):
         for cell in range(JA_CELLS):
             table += ja_glyph(rows, cell)
+    if len(table) // font_pc.GLYPH_BYTES != JA_SHOULDERS_AT:
+        raise SystemExit("Japanese table: the sheets end at 0x%X, not JA_SHOULDERS_AT 0x%X"
+                         % (len(table) // font_pc.GLYPH_BYTES, JA_SHOULDERS_AT))
+    for g in shoulder_glyphs(single):
+        table += g
     for code, byte in JA_HANG.items():
         slot = byte - 0x26
         table[slot * font_pc.GLYPH_BYTES:(slot + 1) * font_pc.GLYPH_BYTES] = ja_glyph(single, code)
