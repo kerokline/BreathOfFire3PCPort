@@ -5,7 +5,9 @@ is the orchestrator's (the entry is drafted in section 6). Known-defects
 D300; the owner's decision of 2026-10-15: fix this scene narrowly, as an
 Intent entry, with a note to broaden it to
 [`faerie-over-table.md`](faerie-over-table.md) section 4's rule if more
-examples of the class turn up.
+examples of the class turn up. **The owner's look, 2026-10-21 (chat):** the
+before/after sheets accepted ("the faerie looks great"), the sides' second
+draw with them; not yet seen in play.
 
 What was wrong, in one line ([`faerie-over-table.md`](faerie-over-table.md)
 1-4): in area 175, the faerie village's wooden room after the Faerie Tiara,
