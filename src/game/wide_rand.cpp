@@ -6,6 +6,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/map_cells.h"
 #include "game/map_layers.h"
+#include "game/map_rim.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -100,14 +101,22 @@ namespace {
 //      frame's, call for call;
 //   3. the control: the same wide frames with band cells sent to Capcom's
 //      Rand - the 2026-10-07..13 build - must differ from narrow in some round
-//      at every lowering above 0, or the start-up is Fatal.
+//      at every lowering above 0, or the start-up is Fatal;
+//   4. DIV-0041's grown ring (wide-ring, map_rim.h): the boundary over the
+//      grown walk at 53 and 120 columns - each layer -1..0x37 a heads,
+//      original inset and input flag give, the cells handed over are the
+//      grown columns and Capcom's own, each a band cell exactly when the
+//      original's walk leaves it out, and Capcom's Rand calls are the
+//      original's cells' in the original's order - and parts 2 and 3 run again
+//      with the grown walk, frames -1..0x37 against narrow's 0..0x36.
 
 constexpr unsigned kCells = 28 * 0x38;
+constexpr unsigned kAll = kCells + map_rim::kRimCells;   // the grown walk's rim cells after Capcom's
 constexpr unsigned kAreaBytes = 0x2000 * 4;
 constexpr unsigned kLayerBytes = 0x38 * 12 * 4;
 constexpr unsigned kCellBase = 0x10;
 constexpr unsigned kRising = 0x0F;   // MapCell_Handlers' MapCell_DrawRising slot
-constexpr unsigned kMaxLog = 16384;   // above 8 x 1,568, a frame whose every cell rises
+constexpr unsigned kMaxLog = 16384;   // above 8 x 1,914, a frame whose every grown cell rises
 
 struct Saved {
     unsigned char area[kAreaBytes];
@@ -125,7 +134,7 @@ Saved g_saved;
 unsigned g_cell;
 unsigned g_capcom_log[kMaxLog];
 unsigned g_capcom_n, g_draw_only_n, g_rising_cells, g_band_cells;
-bool g_seen_band[kCells], g_seen[kCells];
+bool g_seen_band[kAll], g_seen[kAll];
 
 int __cdecl RecordingRand() {
     if (g_capcom_n < kMaxLog) g_capcom_log[g_capcom_n] = g_cell;
@@ -138,7 +147,7 @@ void __cdecl RisingStandIn(const unsigned char* record, unsigned, unsigned) {
     g_cell /= 2u;
     ++g_rising_cells;
     if (Band()) ++g_band_cells;
-    if (g_cell < kCells) {
+    if (g_cell < kAll) {
         g_seen[g_cell] = true;
         g_seen_band[g_cell] = Band();
     }
@@ -156,21 +165,53 @@ std::uint32_t Next() {
     return g_rng;
 }
 
+// The grown walk's rim positions, numbered kCells.. in grown row-major order.
+int g_rim_id[map_rim::kRows][map_rim::kColumns];
+void NumberRim() {
+    unsigned n = kCells;
+    for (int gr = 0; gr < map_rim::kRows; ++gr)
+        for (int gc = 0; gc < map_rim::kColumns; ++gc) g_rim_id[gr][gc] = map_rim::InWindow(gr, gc) ? -1 : static_cast<int>(n++);
+    if (n != kAll) bof3::Fatal("wide_rand: %u rim positions, not %u", n - kCells, kAll - kCells);
+}
+// The cell a grown position names under the current heads: Capcom's ring cell
+// in its window, else the rim's number.
+unsigned GrownId(int gr, int gc) {
+    if (g_rim_id[gr][gc] >= 0) return static_cast<unsigned>(g_rim_id[gr][gc]);
+    return static_cast<unsigned>(map_rim::RingRow(gr) * 28 + map_rim::RingColumn(gr, gc));
+}
+
 // Cell i's run: its head at dword kCellBase + 2i + 1 - 1, one record after it.
+// Capcom's 1,568 in MapView_Cells, the rim's 346 in map_rim.
 void LayCells(unsigned empty_one_in, unsigned rising_one_in) {
     auto* area = reinterpret_cast<std::uint32_t*>(AreaMap_Header);
-    for (unsigned i = 0; i < kCells; ++i) {
+    for (unsigned i = 0; i < kAll; ++i) {
         const unsigned word = 2u * i + 1u;
         area[kCellBase + word - 1] = (2u << 16) | (i & 0xFFFFu);
         const unsigned kind = rising_one_in == 0 || Next() % rising_one_in == 0 ? kRising : Next() % 77;
         area[kCellBase + word] = (kind << 24) | (1u << 16) | (Next() & 0xFFFFu);
         const bool empty = empty_one_in != 0 && Next() % empty_one_in == 0;
-        MapView_Cells[i] = static_cast<unsigned short>(empty ? 0 : word);
+        if (i < kCells) MapView_Cells[i] = static_cast<unsigned short>(empty ? 0 : word);
     }
+    for (int gr = 0; gr < map_rim::kRows; ++gr)
+        for (int gc = 0; gc < map_rim::kColumns; ++gc)
+            if (g_rim_id[gr][gc] >= 0) {
+                const unsigned i = static_cast<unsigned>(g_rim_id[gr][gc]);
+                const bool empty = empty_one_in != 0 && Next() % empty_one_in == 0;
+                map_rim::TestSetRun(gr, gc, static_cast<unsigned short>(empty ? 0 : 2u * i + 1u));
+            }
 }
 
 void Frame() {
     for (int layer = 0; layer < 0x37; ++layer) DrawLayer_Open(layer);
+}
+// The grown frame, as Sprite_DrawPass walks it under DIV-0041's grown ring.
+void GrownFrame() {
+    for (int layer = -1; layer < 0x38; ++layer) DrawLayer_Open(layer);
+}
+// The grown walk's inset for an original inset at a lowering (map_layers.cpp).
+unsigned GrownWalk(unsigned original, unsigned lowered_by) {
+    int g = static_cast<int>(original) + 2 - static_cast<int>(lowered_by);
+    return static_cast<unsigned>(g < 0 ? 0 : g > 16 ? 16 : g);
 }
 
 // The original's walk of one row, apart from Row: a set of columns.
@@ -242,6 +283,87 @@ void Boundary(unsigned c, unsigned& bad_total) {
     bad_total += bad;
 }
 
+// The original's walk of Capcom's row `layer` (0..0x36) under heads (row,
+// column), in walk order, as grown positions; empty for -1 and 0x37.
+unsigned OriginalWalk(int out[28], int inset, unsigned flag, int layer) {
+    if (layer < 0 || layer > 0x36) return 0;
+    if (flag & 1) inset = inset >= 2 ? inset - 2 : 0;
+    int row = MapView_Row + layer + 1;
+    if (row >= 0x38) row -= 0x38;
+    const int count = (14 - inset) * 2;
+    int column = MapView_Column + inset + (~row & 1);
+    if (column >= 0x1C) column -= 0x1C;
+    unsigned n = 0;
+    for (int k = 0; k < count; ++k) {
+        column = column == 0x1B ? 0 : column + 1;
+        const int view = ((column - MapView_Column - 1) % 28 + 28) % 28;
+        out[n++] = view + 2 + (layer & 1);
+    }
+    return n;
+}
+
+void GrownBoundary(unsigned c, unsigned& bad_total) {
+    const unsigned wide = widescreen_rule::InsetColumns(c);
+    unsigned cases = 0, handed = 0, band = 0, rim = 0, bad = 0, order_bad = 0;
+    static const int kLayers[] = {-1, 0, 1, 2, 0x35, 0x36, 0x37};
+    static const short kHeads[] = {0x37, 0x13, 0x00};
+    for (unsigned original = 0; original <= 14; ++original)
+        for (unsigned flag = 0; flag < 2; ++flag)
+            for (const short head : kHeads)
+                for (const int layer : kLayers)
+                    for (int view_column = 0; view_column < 28; ++view_column) {
+                        ++cases;
+                        const unsigned lowered = original >= wide ? original - wide : 0;
+                        MapView_Inset = static_cast<unsigned char>(lowered);
+                        NoteInset(original, MapView_Inset);
+                        map_rim::NoteWalk(GrownWalk(original, wide), MapView_Inset);
+                        Field_InputFlags = static_cast<unsigned char>(flag);
+                        MapView_Row = head;
+                        MapView_Column = static_cast<short>(view_column);
+                        std::memset(g_seen, 0, sizeof g_seen);
+                        std::memset(g_seen_band, 0, sizeof g_seen_band);
+                        g_capcom_n = g_draw_only_n = 0;
+                        DrawLayer_Open(layer);
+                        const int grown_row = layer + 1;
+                        // Expected: the grown columns (the PSP's walk) and today's.
+                        bool expect[map_rim::kColumns] = {};
+                        int walk = static_cast<int>(GrownWalk(original, wide));
+                        if (flag & 1) walk = walk >= 2 ? walk - 2 : 0;
+                        for (int k = 0, first = walk + ((grown_row & 1) == 0 ? 1 : 0); k < map_rim::kColumns - 2 * walk; ++k)
+                            expect[(first + k) % map_rim::kColumns] = true;
+                        int today[28], orig[28];
+                        const unsigned nt = OriginalWalk(today, static_cast<int>(lowered), flag, layer);
+                        const unsigned no = OriginalWalk(orig, static_cast<int>(original), flag, layer);
+                        for (unsigned k = 0; k < nt; ++k) expect[today[k]] = true;
+                        bool in_orig[map_rim::kColumns] = {};
+                        for (unsigned k = 0; k < no; ++k) in_orig[orig[k]] = true;
+                        unsigned row_band = 0;
+                        for (int gc = 0; gc < map_rim::kColumns; ++gc) {
+                            const unsigned id = GrownId(grown_row, gc);
+                            if (g_seen[id] != expect[gc]) ++bad;
+                            if (!g_seen[id]) continue;
+                            ++handed;
+                            if (id >= kCells) ++rim;
+                            if (g_seen_band[id] != !in_orig[gc]) ++bad;
+                            if (g_seen_band[id]) ++row_band;
+                        }
+                        band += row_band;
+                        if (g_capcom_n != 8 * no || g_draw_only_n != 8 * row_band) ++bad;
+                        // Capcom's calls in the original's order, eight a cell.
+                        for (unsigned k = 0; k < no && 8 * k + 7 < kMaxLog; ++k)
+                            for (unsigned j = 0; j < 8; ++j)
+                                if (g_capcom_log[8 * k + j] != GrownId(grown_row, orig[k])) {
+                                    ++order_bad;
+                                    break;
+                                }
+                    }
+    bof3::Log("shadow      wide_rand grown boundary at %u columns (inset lowered by %u): %u rows (original inset 0..14, "
+              "input flag, three heads, layers -1, 0, 1, 2, 0x35, 0x36, 0x37, view column), %u cells handed over (%u of "
+              "the rim), %u band cells, %u MISMATCHES, %u out of the original's order",
+              c, wide, cases, handed, rim, band, bad, order_bad);
+    bad_total += bad + order_bad;
+}
+
 struct FuzzCounts {
     unsigned rounds = 0, split_rounds = 0, band_calls = 0, mismatches = 0, control_differs = 0;
 };
@@ -268,19 +390,25 @@ void SelfTest() {
     Gfx_BufferIndex = 0;
 
     // 1. The boundary.
+    NumberRim();
     g_rng = 0x56FD2A01u;
     LayCells(0, 0);
     unsigned bad = 0;
     Boundary(0, bad);
     Boundary(53, bad);
     Boundary(120, bad);
+    // 4. The grown boundary (map_rim forced; Capcom's ring as laid).
+    map_rim::ForceForTest(true);
+    GrownBoundary(53, bad);
+    GrownBoundary(120, bad);
+    map_rim::ForceForTest(false);
 
     // 2 and 3. The fuzz and its control, at the rule's lowering for 0, 53 and
     // 120 columns and at this run's own (BOF3X_WIDE_INSET may move it).
     const unsigned live = Widescreen_InsetColumns();
     const unsigned lowerings[4] = {widescreen_rule::InsetColumns(0), widescreen_rule::InsetColumns(53),
                                    widescreen_rule::InsetColumns(120), live};
-    FuzzCounts counts[4];
+    FuzzCounts counts[4], grown_counts[4];
     static unsigned narrow_log[kMaxLog];
     constexpr unsigned kRounds = 3000;
     unsigned truncated = 0;
@@ -336,9 +464,47 @@ void SelfTest() {
                 }
             }
             g_control = false;
+            // 4. The grown walk: frames -1..0x37 against narrow's 0..0x36.
+            if (lowerings[w] == 0) continue;
+            FuzzCounts& gf = grown_counts[w];
+            ++gf.rounds;
+            map_rim::ForceForTest(true);
+            for (int control = 0; control < 2; ++control) {
+                g_control = control != 0;
+                MapView_Inset = static_cast<unsigned char>(pair.lowered);
+                NoteInset(pair.original, MapView_Inset);
+                map_rim::NoteWalk(GrownWalk(pair.original, lowerings[w]), MapView_Inset);
+                g_capcom_n = g_draw_only_n = 0;
+                GrownFrame();
+                const bool same = g_capcom_n == narrow_n &&
+                                  std::memcmp(g_capcom_log, narrow_log,
+                                              (narrow_n < kMaxLog ? narrow_n : kMaxLog) * sizeof narrow_log[0]) == 0;
+                if (control) {
+                    if (!same) ++gf.control_differs;
+                } else {
+                    gf.band_calls += g_draw_only_n;
+                    if (!same && ++gf.mismatches <= 4)
+                        bof3::Log("shadow      wide_rand grown MISMATCH: round %u, lowered by %u: inset %u -> %u, "
+                                  "Capcom's Rand %u calls against narrow's %u", round, lowerings[w], pair.original,
+                                  pair.lowered, g_capcom_n, narrow_n);
+                }
+            }
+            g_control = false;
+            map_rim::ForceForTest(false);
         }
     }
     unsigned fuzz_bad = 0, control_bad = 0;
+    for (unsigned w = 0; w < 4; ++w) {
+        if (lowerings[w] == 0) continue;
+        const FuzzCounts& f = grown_counts[w];
+        fuzz_bad += f.mismatches;
+        if (f.control_differs == 0) ++control_bad;   // every grown frame has band cells: the control must part
+        bof3::Log("shadow      wide_rand grown fuzz, inset lowered by %u%s: %u frames -1..0x37, Capcom's Rand as "
+                  "narrow's call for call in all but %u; %u draw-only calls by band cells; the control %s (%u frames "
+                  "differ from narrow)",
+                  lowerings[w], w == 3 ? " (this run's)" : w == 1 ? " (53)" : " (120)", f.rounds, f.mismatches,
+                  f.band_calls, f.control_differs ? "refused" : "NOT REFUSED", f.control_differs);
+    }
     for (unsigned w = 0; w < 4; ++w) {
         const FuzzCounts& f = counts[w];
         fuzz_bad += f.mismatches;
@@ -366,6 +532,7 @@ void SelfTest() {
     Field_InputFlags = g_saved.input_flags;
     Gfx_BufferIndex = g_saved.buffer_index;
     map_cells::SwapRand(saved_rand);
+    map_rim::TestClearRuns();
     g_seed = saved_seed;
     g_noted = false;
     g_band = false;

@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/map_rim.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -109,6 +110,9 @@ extern "C" void __cdecl DrawLayers_Reset(void) {
             std::memcpy(head + 4, &self, 4);
         }
     }
+    // DIV-0041 (wide-ring): the grown ring's layer -1 record and its table
+    // too, for every caller (AreaMapBD_BuildView's area among them).
+    if (map_rim::Active()) map_rim::ExtraReset(Gfx_BufferIndex);
 }
 
 // original 0x56F5F0. Orders the draw table by layer and then key - the high 16

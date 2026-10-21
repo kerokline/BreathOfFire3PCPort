@@ -2,6 +2,7 @@
 
 #include "game/draw_pool.h"
 #include "game/layering.h"
+#include "game/map_rim.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -257,6 +258,43 @@ void SortDrawList() {
         } while (static_cast<int>(i) < static_cast<int>(count) - 1);
     }
 }
+// DIVERGENCE DIV-0041 (wide-ring, docs/wide-ring.md): the grown ring's two
+// rows the original never draws - layer -1 before Capcom's first and Capcom's
+// row 55 (layer 0x37) after its last - terrain and frame-node primitives only.
+// No sprite is drawn at either (docs/wide-ring-read.md 3, owner's answer 1):
+// Sprite_UpdateScreen keeps hiding a sprite outside 0..0x36, and a type 0x0A
+// sprite Sprite_ProjectA leaves on the list at 0x37 stays undrawn, as on the
+// original.
+void LinkTableItem(unsigned index) {
+    const auto at = static_cast<unsigned long>(
+        reinterpret_cast<std::uintptr_t>(draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u));
+    Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at);
+    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at));
+}
+
+void GrownLayerAbove() {
+    if (!(Draw_PassFlags & 4)) return;
+    DrawLayer_Open(-1);
+    for (unsigned i = 0; i < map_rim::ExtraTableCount(); ++i) LinkTableItem(map_rim::ExtraTableItem(i));
+    DrawLayer_Close(-1);
+}
+
+void GrownLayerBelow(unsigned char item) {
+    constexpr unsigned kLayer = 0x37;
+    if (Draw_PassFlags & 4) DrawLayer_Open(static_cast<int>(kLayer));
+    if (Draw_PassFlags & 0x10) {
+        const unsigned long first = FrameNode(kLayer)[0];
+        if (first != 0) {
+            if (draw_order::g_on) draw_order::TagList(first, FrameNode(kLayer)[1], draw_order::kFrameNode, kLayer, Draw_OtSlot);
+            Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], first);
+            Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(FrameNode(kLayer)[1]));
+        }
+    }
+    for (; item < DrawTable_Count && (DrawTable[item] >> 24) == kLayer; ++item)
+        if (Draw_PassFlags & 4) LinkTableItem(DrawTable[item] & 0xFFFu);
+    if (Draw_PassFlags & 4) DrawLayer_Close(static_cast<int>(kLayer));
+}
+
 }  // namespace
 
 // original 0x593060: the field's draw-order pass, once a logic frame
@@ -284,6 +322,8 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
     Gfx_CommitPrim(6, 0xC);
 
     unsigned char sprite = 0, item = 0;   // next in the draw list, next in the draw table
+    const bool grown = map_rim::Active();   // DIV-0041 (wide-ring), above
+    if (grown) GrownLayerAbove();
     for (unsigned layer = 0; layer < 0x37; ++layer) {
         if (Draw_PassFlags & 4) g_open(static_cast<int>(layer));
         if (Draw_PassFlags & 0x10) {
@@ -393,6 +433,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
 
         if (Draw_PassFlags & 4) DrawLayer_Close(static_cast<int>(layer));
     }
+    if (grown) GrownLayerBelow(item);
     if (layering::g_mode == layering::kFloor) layering::Restore();
 }
 

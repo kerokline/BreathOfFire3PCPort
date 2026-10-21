@@ -5,6 +5,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/layering.h"
+#include "game/map_rim.h"
 #include "game/wide_rand.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -334,18 +335,152 @@ extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
 // draw-mode primitive (texture page 0x95, nothing else set) committed to slot
 // 6, then the layer's second list, if it has one, appended to the slot
 // Draw_OtSlot names. 403,315 calls.
+//
+// DIV-0041 (wide-ring): layer -1, the grown ring's row above Capcom's, is
+// map_rim's record of the same shape; Capcom's layers never go below 0.
 extern "C" void __cdecl DrawLayer_Close(int layer) {
     Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x95, 0);
     Gfx_CommitPrim(6, 0xC);
     const std::uint32_t first = static_cast<std::uint32_t>(layer) * 6u;
-    unsigned long* cell = DrawLayers + kSecondList + (Gfx_BufferIndex + first) * 2u;
+    const auto at = [&]() -> unsigned long* {
+        if (layer < 0) return map_rim::ExtraLayer() + kSecondList + Gfx_BufferIndex * 2u;
+        return DrawLayers + kSecondList + (Gfx_BufferIndex + first) * 2u;
+    };
+    unsigned long* cell = at();
     if (cell[0] == 0) return;
     if (draw_order::g_on) draw_order::TagList(cell[0], cell[1], draw_order::kList1, static_cast<unsigned>(layer), Draw_OtSlot);
     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], cell[0]);
     // The index is read again after the call, as the original reads it.
-    cell = DrawLayers + kSecondList + (Gfx_BufferIndex + first) * 2u;
+    cell = at();
     Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(cell[1]));
 }
+
+namespace {
+
+using Handler = void (__cdecl*)(unsigned char* record, unsigned b1, unsigned b0);
+
+// One map cell's run of records handed to MapCell_Handlers - DrawLayer_Open's
+// body for a non-zero word. `track` is DIV-0071's recording (mode 1 only):
+// off for the cells only DIV-0041's grown walk adds, which layering.cpp's
+// copy of the walk does not know.
+void RunCell(unsigned word, int layer, unsigned row, unsigned column, bool band, bool track) {
+    const std::uint32_t at = (word + (AreaMap_CellBase & 0xFFFFu)) * 4u;
+    unsigned char* record = AreaMap_Header + at;
+    std::uint32_t head;
+    std::memcpy(&head, record - 4, 4);
+    const unsigned b1 = (head >> 8) & 0xFF, b0 = head & 0xFF;
+    unsigned char* const end = record + (head >> 16) * 4u - 4u;
+    wide_rand::SetBand(band);
+    // DIV-0071 (layering.h): the run's drawing recorded, mode 1 only.
+    if (track && layering::g_mode == layering::kFloor) layering::RunBegin(record);
+    while (record != end) {
+        std::uint32_t dword;
+        std::memcpy(&dword, record, 4);
+        if (draw_order::g_on)
+            draw_order::Set(draw_order::kCell, static_cast<unsigned>(layer), row, column, dword >> 24, b1 << 8 | b0);
+        reinterpret_cast<Handler>(static_cast<std::uintptr_t>(MapCell_Handlers[dword >> 24]))(record, b1, b0);
+        record += record[2] * 4u;
+    }
+    if (layering::g_in_run) layering::RunEnd();
+}
+
+// The layer's first list appended to slot 6 - DrawLayer_Open's head. Layer
+// -1 (DIV-0041's grown ring only) is map_rim's record.
+void LinkFirst(int layer) {
+    const std::uint32_t first = static_cast<std::uint32_t>(layer) * 6u;
+    const auto at = [&]() -> unsigned long* {
+        if (layer < 0) return map_rim::ExtraLayer() + Gfx_BufferIndex * 2u;
+        return DrawLayers + (Gfx_BufferIndex + first) * 2u;
+    };
+    unsigned long* cell = at();
+    if (cell[0] != 0) {
+        if (draw_order::g_on) draw_order::TagList(cell[0], cell[1], draw_order::kList0, static_cast<unsigned>(layer), 6);
+        Gpu_LinkPrim(Gfx_OtPointers[6], cell[0]);
+        // The index is read again after the call, as the original reads it.
+        cell = at();
+        Gfx_OtPointers[6] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(cell[1]));
+    }
+}
+
+// Capcom's walk of layer `layer`'s row (DrawLayer_Open's, below); false when
+// it has no columns, where the original returns at once.
+bool CapcomRow(int layer) {
+    int row = MapView_Row + layer + 1;
+    if (row >= 0x38) row -= 0x38;
+    int inset = MapView_Inset;
+    if (Field_InputFlags & 1) inset = inset >= 2 ? inset - 2 : 0;
+    int column = MapView_Column + inset + (~row & 1);
+    if (column >= 0x1C) column -= 0x1C;
+    int count = (14 - inset) * 2;
+    if (count <= 0) return false;
+    // DIV-0041's random split (docs/ultrawide-rand.md): which of this row's cells the original's
+    // walk - its inset before DIV-0041 lowered it - would not reach; their
+    // handlers draw the rising squares from a generator of ours. Narrow, none.
+    const wide_rand::Row split(MapView_Inset, Field_InputFlags, row, MapView_Column);
+    const int row_base = row * 28;
+    for (; count != 0; --count) {
+        column = column == 0x1B ? 0 : column + 1;
+        const unsigned word = MapView_Cells[row_base + column];
+        if (word == 0) continue;
+        RunCell(word, layer, static_cast<unsigned>(row), static_cast<unsigned>(column), split.Band(column), true);
+    }
+    return true;
+}
+
+// DIVERGENCE DIV-0041 (wide-ring, docs/wide-ring.md): the grown ring's walk of
+// one layer, -1..0x37. The grown columns by the PSP's arithmetic (its
+// 0x101BC): the grown inset g (map_rim::Walk, less 2 with Field_InputFlags
+// bit 0), from grown column g + (1 for an even grown row), 33 - 2g columns,
+// wrapping at 33. On Capcom's layers 0..0x36 Capcom's own walk runs in the
+// middle exactly as narrow - its order, its split - and the grown columns it
+// does not take run before it (those left of it) and after it (right): every
+// one of them a band cell, outside the original's walk (which is inside
+// today's). Layers -1 and 0x37 are rows the original never walks: every cell a
+// band cell. Rim cells' words are map_rim's.
+void OpenGrown(int layer) {
+    LinkFirst(layer);
+    const int grown_row = layer + 1;
+    int walk = map_rim::Walk(MapView_Inset);
+    if (Field_InputFlags & 1) walk = walk >= 2 ? walk - 2 : 0;
+    bool grown[map_rim::kColumns] = {};
+    const int count = map_rim::kColumns - 2 * walk;
+    for (int k = 0, c = walk + ((grown_row & 1) == 0 ? 1 : 0); k < count; ++k)
+        grown[(c + k) % map_rim::kColumns] = true;
+    // Capcom's walk of this row, as grown columns: [lo, hi], contiguous.
+    int lo = map_rim::kColumns, hi = -1;
+    const bool capcom = layer >= 0 && layer < 0x37;
+    if (capcom) {
+        // CapcomRow's arithmetic, its columns turned into grown ones: view
+        // column v of Capcom's row `layer` is grown v + 2 + (layer odd).
+        int row = MapView_Row + layer + 1;
+        if (row >= 0x38) row -= 0x38;
+        int inset = MapView_Inset;
+        if (Field_InputFlags & 1) inset = inset >= 2 ? inset - 2 : 0;
+        int column = MapView_Column + inset + (~row & 1);
+        if (column >= 0x1C) column -= 0x1C;
+        for (int k = 0, n = (14 - inset) * 2; k < n; ++k) {
+            column = column == 0x1B ? 0 : column + 1;
+            const int view = ((column - MapView_Column - 1) % 0x1C + 0x1C) % 0x1C;
+            const int grown_column = view + 2 + (layer & 1);
+            lo = grown_column < lo ? grown_column : lo;
+            hi = grown_column > hi ? grown_column : hi;
+        }
+    }
+    const auto extra = [&](int grown_column) {
+        const unsigned word = map_rim::RunWord(grown_row, grown_column);
+        if (word == 0) return;
+        RunCell(word, layer, 0x100u | static_cast<unsigned>(grown_row), static_cast<unsigned>(grown_column), true, false);
+    };
+    for (int c = 0; c < map_rim::kColumns && c < lo; ++c)
+        if (grown[c]) extra(c);
+    if (capcom) CapcomRow(layer);
+    for (int c = hi + 1; c < map_rim::kColumns; ++c)
+        if (grown[c] && c > lo) extra(c);
+    wide_rand::SetBand(false);
+    if (draw_order::g_on) draw_order::Clear();
+}
+
+}  // namespace
 
 // original 0x56FD20: before a layer's sprites, in the draw-order pass - the
 // layer's first list, if it has one, appended to ordering-table slot 6, then
@@ -366,53 +501,13 @@ extern "C" void __cdecl DrawLayer_Close(int layer) {
 // not checked against the 77 handlers; a step of 0, or a run whose steps pass
 // its end, never stops.
 extern "C" void __cdecl DrawLayer_Open(int layer) {
-    const std::uint32_t first = static_cast<std::uint32_t>(layer) * 6u;
-    unsigned long* cell = DrawLayers + (Gfx_BufferIndex + first) * 2u;
-    if (cell[0] != 0) {
-        if (draw_order::g_on) draw_order::TagList(cell[0], cell[1], draw_order::kList0, static_cast<unsigned>(layer), 6);
-        Gpu_LinkPrim(Gfx_OtPointers[6], cell[0]);
-        // The index is read again after the call, as the original reads it.
-        cell = DrawLayers + (Gfx_BufferIndex + first) * 2u;
-        Gfx_OtPointers[6] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(cell[1]));
+    // DIV-0041 (wide-ring): the grown ring's walk when the view is wide.
+    if (map_rim::Active()) {
+        OpenGrown(layer);
+        return;
     }
-    int row = MapView_Row + layer + 1;
-    if (row >= 0x38) row -= 0x38;
-    int inset = MapView_Inset;
-    if (Field_InputFlags & 1) inset = inset >= 2 ? inset - 2 : 0;
-    int column = MapView_Column + inset + (~row & 1);
-    if (column >= 0x1C) column -= 0x1C;
-    int count = (14 - inset) * 2;
-    if (count <= 0) return;
-    // DIV-0041's random split (docs/ultrawide-rand.md): which of this row's cells the original's
-    // walk - its inset before DIV-0041 lowered it - would not reach; their
-    // handlers draw the rising squares from a generator of ours. Narrow, none.
-    const wide_rand::Row split(MapView_Inset, Field_InputFlags, row, MapView_Column);
-    const int row_base = row * 28;
-    using Handler = void (__cdecl*)(unsigned char* record, unsigned b1, unsigned b0);
-    for (; count != 0; --count) {
-        column = column == 0x1B ? 0 : column + 1;
-        const unsigned word = MapView_Cells[row_base + column];
-        if (word == 0) continue;
-        const std::uint32_t at = (word + (AreaMap_CellBase & 0xFFFFu)) * 4u;
-        unsigned char* record = AreaMap_Header + at;
-        std::uint32_t head;
-        std::memcpy(&head, record - 4, 4);
-        const unsigned b1 = (head >> 8) & 0xFF, b0 = head & 0xFF;
-        unsigned char* const end = record + (head >> 16) * 4u - 4u;
-        wide_rand::SetBand(split.Band(column));
-        // DIV-0071 (layering.h): the run's drawing recorded, mode 1 only.
-        if (layering::g_mode == layering::kFloor) layering::RunBegin(record);
-        while (record != end) {
-            std::uint32_t dword;
-            std::memcpy(&dword, record, 4);
-            if (draw_order::g_on)
-                draw_order::Set(draw_order::kCell, static_cast<unsigned>(layer), static_cast<unsigned>(row),
-                                static_cast<unsigned>(column), dword >> 24, b1 << 8 | b0);
-            reinterpret_cast<Handler>(static_cast<std::uintptr_t>(MapCell_Handlers[dword >> 24]))(record, b1, b0);
-            record += record[2] * 4u;
-        }
-        if (layering::g_in_run) layering::RunEnd();
-    }
+    LinkFirst(layer);
+    if (!CapcomRow(layer)) return;
     wide_rand::SetBand(false);
     if (draw_order::g_on) draw_order::Clear();
 }

@@ -36,6 +36,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/map_rim.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -367,6 +368,8 @@ extern "C" void __cdecl MapView_FillCells(void) {
             SH_CALL(MapView_CellToMap)(i, j, At(cell));
         }
     }
+    // DIV-0041 (wide-ring): the rim refilled in place, its items kept, as Capcom's.
+    if (map_rim::Active()) map_rim::RimFill(true);
     SH_CALL(MapView_PlaceRuns)();
 }
 
