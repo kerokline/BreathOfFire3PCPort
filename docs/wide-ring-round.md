@@ -192,6 +192,10 @@ report means merge; a usage cut resumes with a message naming the next step.
     original and our switches "just in case" (group CR). **Area 19 needs
     nothing more:** the owner knows its only far camera as the one quick pan,
     and the zoom the recorded route already captures (`yraallRoad`).
+11. **Area 194's crash** ([`area194-entry.md`](area194-entry.md), group CR):
+    the crafted save's, not ours - Capcom's `Leave` (`0x534030`) on an empty
+    party, unreachable in play. **No guard:** Capcom's behaviour stays; the
+    crafts restore the party (`chapter_jump.py`'s `party='saved'`).
 
 ## 7. Side groups, beside the round (added 2026-10-21)
 
