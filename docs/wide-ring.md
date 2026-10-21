@@ -433,3 +433,47 @@ it is ever seen.
    Capcom-window column a row that today's walk skipped, drawn and walked as
    band cells. Nothing is seen to change (the pool's most stays at 72 %).
    **Recommended:** keep, as decided.
+
+## 8. The real far-camera scenes, from crafted saves (group CS, 2026-10-21)
+
+**Status:** MEASURED headless, branch `wide-ring/cs` off `wide-ring/round`
+`862325c4`; answers section 7 question 1 for two of the three scenes. The
+method (`tools/chapter_jump.py`, the recipes `tools/recipes/cs_*.txt`, runs
+in `C:\Users\kerok\bof3x-runs\r_ring\CS`) is
+[`narrow-pillarbox.md`](narrow-pillarbox.md) 10's. No pokes: each camera is
+the scene's own, peeked (`Camera_Distance` `0x903840`) beside every shot.
+Sheets `CS\sheets\far_<scene>_ring.png`, rows 4:3, 16:9, 16:9
+`BOF3X_WIDE_RING=0`, 21:9, 21:9 `=0`; pixel comparisons by `CS\diff.py`.
+
+| Scene | Reached | Camera seen | Ring on against `=0` |
+|---|---|---|---|
+| **Area 167's init** (`Area167_Init`, 0x980) | yes: `cs167` - `adult_ryu`, chapter 14, area 167 at (0x280000, 0x630000), story flag 0x8F set, 0x90 clear; `Cond_ByteFD` 0 there | 0x980 from the entry (f0425) to f0485, then the tail kind 0x20 the init arms takes the party to area 168 | **identical**, all 26 shots at 16:9 and at 21:9: the bridge over a sky backdrop; the sky fills the sides and top, so no ring edge shows (`far_167_ring.png`) |
+| **Chapter 1's scene 3** (`Scena01_Scene03`, 0xA00) | yes: `cs19s3` - `yraallRoad`, chapter 1, area 19 at (0x1B0000, 0x1B8000) inside the step-hook box (flag 0x1B set, 2 and 3 clear); one step arms run 3 | zoom from 0 by 0x20 a frame, 0xA00 from f0555 to about f1180, back to 0 by f1269 | 16:9 **identical** (121 shots). 21:9: **one pixel** - the top-right corner, (1119, 4) of the 1120 x 480 target, near-black with the ring off and ground with it on, on every one of the 44 shots at 0xA00; identical everywhere else. That is the original ring's notch at this camera, and the grown ring fills it (`far_019s3_ring.png`) |
+| **Area 19's camera-out** (`Area19_CameraOut` `0x402D60`, +0xA00) | **no** | - | - |
+| also: **area 149's chapter-15 camera** (`Scena15_EnterArea`, 0xD00 zoomed in) | yes: `cs149` | 0xBB0 at f0448 down to 0 by f0688 | identical at 16:9 and 21:9 (36 shots each) - but the area is framed at 320 there (PB), so the bands are covered anyway |
+
+**Scene 3 is on a recorded route after all.** `yraallRoad.txt` (and
+`textureglitch.txt`) start before scene 3 in area 19 (chapter 1 flag 0x1B
+set, 2 clear) and walk through the box: peeked, the distance is 0xA00 on
+`yraallRoad` at recipe frames 395..588 and on `textureglitch` near 577. RG
+read the routes as not reaching it.
+
+**Why area 19's camera-out was not reached.** No scenario code calls it:
+it is handler 0 of `Area19_Handlers`, called only by a movement-script op
+(`03` / `DE`) of one of area 19's objects (`area_harness.md` 1), so which
+object and when is in `AREA019.DAT`'s scripts, not in the code. On both
+owner routes and in scene 3 the distance never passes 0xA00 (+0xA00 on top
+of scene 3's 0xA00 would read 0x1400), and scene 3's 0xA00 is its own
+absolute store after `Zoom` (run 3, step 1 -> 2 on the frame it appears).
+A call trace of `0x402D60` needs the hosted build; the run tried here hung
+at launch. **For the owner:** if a place on the Yraall road (area 19) is
+known where the camera pulls far out other than the work-site scene, a
+route through it (or a save just before it) is what would reach it;
+otherwise reading area 19's object scripts for op `03`/`DE` with handler 0
+names the trigger.
+
+**What this answers.** At the real scenes' distances (0x980, 0xA00, and
+149's 0xD00 at 16:9) Capcom's 28 x 56 ring already covered the picture but
+for one corner pixel at 21:9 in scene 3; the grown ring changes nothing else
+there. The captures RG poked (2,560 with off-axis yaws) remain the cases
+where the grown rows show.

@@ -1,0 +1,1127 @@
+# Chapter 1, scene 3 (Scena01_Scene03, area 19): the chapter-jump save cs19s3 (tools/chapter_jump.py
+# make cs19s3) puts the party inside the step-hook box of Scenario chapter 1 (mode_states.cpp: flag 0x1B
+# set, 2 clear); one step (up) arms run 3: Camera_Distance 0xA00 after a zoom, then back.
+# Wide-ring round, group CS (2026-10-21).
+# save cs19s3
+wait 53
+hold start 4
+wait 67
+hold start 6
+wait 47
+hold circle 4
+wait 54
+wait 5
+wait 4
+wait 4
+wait 5
+wait 6
+wait 5
+wait 5
+wait 27
+hold circle 5
+wait 85
+hold circle 2
+wait 80
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0468 1
+hold up 14
+wait 2
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0485 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0495 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0505 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0515 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0525 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0535 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0545 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0555 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0565 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0575 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0585 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0595 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0605 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0615 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0625 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0635 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0645 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0655 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0665 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0675 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0685 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0695 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0705 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0715 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0725 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0735 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0745 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0755 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0765 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0775 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0785 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0795 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0805 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0815 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0825 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0835 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0845 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0855 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0865 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0875 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0885 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0895 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0905 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0915 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0925 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0935 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0945 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0955 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0965 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0975 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f0985 1
+hold circle 4
+wait 4
+hold cross 4
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1007 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1017 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1027 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1037 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1047 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1057 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1067 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1077 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1087 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1097 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1107 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1117 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1127 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1137 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1147 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1157 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1167 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1177 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1187 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1197 1
+hold circle 4
+wait 4
+hold cross 4
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1219 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1229 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1239 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1249 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1259 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1269 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1279 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1289 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1299 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1309 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1319 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1329 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1339 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1349 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1359 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1369 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1379 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1389 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1399 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1409 1
+hold circle 4
+wait 4
+hold cross 4
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1431 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1441 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1451 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1461 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1471 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1481 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1491 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1501 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1511 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1521 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1531 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1541 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1551 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1561 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1571 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1581 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1591 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1601 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1611 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1621 1
+hold circle 4
+wait 4
+hold cross 4
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1643 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1653 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1663 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1673 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1683 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1693 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1703 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1713 1
+wait 9
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+shot f1723 1
+wait 9
+end
