@@ -7,7 +7,9 @@ and draw it mapped onto the wide picture, so it starts and ends past the wide
 edge on the original's frames. Both sweeps captured at 4:3, 16:9 and 21:9
 (kind 0xD from the `caughFish` route, area 172 from a chapter-jump save);
 the state hash on the eleven routes keeps narrow's `Rand` at both widths
-(section 4). Owed: the owner's eye.
+(section 4). **The owner's look, 2026-10-21 (chat), off the two sheets:** the
+shade's right-anchored map (the "Fin" reveal frame-exact) and the banner's
+faster slide in the bands (1.23x / 1.52x) both accepted; not yet seen in play.
 
 ## 1. The two sweeps, read again
 
