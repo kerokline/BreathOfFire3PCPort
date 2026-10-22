@@ -399,8 +399,43 @@ void RubyPicked(HWND dlg, DialogState& state) {
 // Mods, Extras' toggle (ruby_ui=, the owner's call 2026-10-22): the box and its
 // label shown or hidden. Display only - hidden, the box keeps its entries and
 // pick, ruby= is written back as before and the game is given it as before.
+// Hidden, every Settings control below the box moves up by its row and the
+// page's group box shortens by as much, closing the gap; shown, they move back
+// (the owner, 2026-10-22: "gives slightly more space"). kRubyRowDlu is the
+// row's pitch in launcher.rc: the box at y 40, the Look row under it at 56.
+constexpr int kRubyRowDlu = 16;
+constexpr wchar_t kRubyUpProp[] = L"bof3x.ruby_row_closed";
+
 void RubyUiShow(HWND dlg, bool on) {
-    for (int id : {IDC_RUBYLABEL, IDC_RUBY}) ShowWindow(Item(dlg, id), on ? SW_SHOW : SW_HIDE);
+    HWND box = Item(dlg, IDC_RUBY), label = Item(dlg, IDC_RUBYLABEL);
+    for (HWND h : {label, box}) ShowWindow(h, on ? SW_SHOW : SW_HIDE);
+    HWND page = GetParent(box);
+    const bool closed = GetPropW(page, kRubyUpProp) != nullptr;
+    if (closed != on) return;   // already laid out for this state
+    RECT row{0, 0, 0, kRubyRowDlu};
+    MapDialogRect(page, &row);
+    const int dy = on ? row.bottom : -row.bottom;
+    RECT b;
+    GetWindowRect(box, &b);
+    MapWindowPoints(nullptr, page, reinterpret_cast<POINT*>(&b), 2);
+    for (HWND c = GetWindow(page, GW_CHILD); c; c = GetWindow(c, GW_HWNDNEXT)) {
+        if (c == box || c == label) continue;
+        RECT r;
+        GetWindowRect(c, &r);
+        MapWindowPoints(nullptr, page, reinterpret_cast<POINT*>(&r), 2);
+        // below the box's row by where the control sat with the row open: its top
+        // past the row's middle (the Options... button sits 1 DLU above Look, and
+        // the language's note 10 DLU above the box, so neither edge will do)
+        const int open_top = r.top + (closed ? row.bottom : 0);
+        if (open_top >= b.top + row.bottom / 2)
+            SetWindowPos(c, nullptr, r.left, r.top + dy, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        else if (r.bottom > b.bottom)   // the group box around the page
+            SetWindowPos(c, nullptr, 0, 0, r.right - r.left, r.bottom - r.top + dy,
+                         SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    if (on) RemovePropW(page, kRubyUpProp);
+    else SetPropW(page, kRubyUpProp, reinterpret_cast<HANDLE>(1));
+    InvalidateRect(page, nullptr, TRUE);
 }
 
 // WM_DRAWITEM for the box: as the system draws a list, a greyed entry in the
@@ -1296,6 +1331,9 @@ INT_PTR CALLBACK PageProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
     case WM_INITDIALOG:
         return FALSE;   // the window decides the focus
+    case WM_DESTROY:
+        RemovePropW(page, kRubyUpProp);   // RubyUiShow's mark on the Settings page
+        break;
     case WM_COMMAND:
     case WM_HSCROLL:
         SendMessageW(GetParent(page), msg, wp, lp);
