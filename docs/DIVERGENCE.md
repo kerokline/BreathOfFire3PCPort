@@ -9438,3 +9438,48 @@ designed in rather than bolted on.
 - **Reversible?** `music=seq` in `bof3x.ini` (or `BOF3X_MUSIC=seq`) for the
   order before this entry; the streams beside a PC install are then the
   PC's again.
+
+### Start + Select held a second returns to the title, as on the Western discs
+
+- **ID:** DIV-0152
+- **Date:** 2026-10-21
+- **Subsystem:** the frame loop - `Game_WinMain` (ours, `src/game/win_main.cpp`,
+  `PadReset_Frame` after `Task_RunAll`), through the PC's own restart
+  (`Game_RestartFlag` `0x6BC63C`, F9's)
+- **Tier:** Intent - the owner's request, 2026-10-21 ("restore it if the pc
+  version dropped it").
+- **Original behaviour:** `BOF3.exe` has no pad reset. A linear disassembly of
+  its `.text` finds no test of the held word `Input_Held` against `0x900`
+  (Start `0x800` + Select `0x100`); the one `cmp dx, 0x900` is an area's
+  counter (`area_w4e.cpp:688`). Its one reset is the keyboard's: F9, then F9
+  again (`Game_WndProc`). The PC was built from the Japanese source, and the
+  Japanese boot EXE (`SLPS_009.90`) has no such test either: `Main_FrameLoop`
+  `0x8014AAC8` goes from the flip to `0x8014B630` with nothing between.
+- **New behaviour:** after each frame's tasks, unless paused, Start and Select
+  both held counts a frame; any frame without both starts the count again.
+  On the frame after 60 counted, the count is cleared and `Game_RestartFlag`
+  is set, which the loop reads as F9's second press: the task stack is reset
+  and task 0 created again - the title. Logged `DIV-0152    Start + Select
+  held 60 frames: back to the title at Frame_Counter N`.
+- **Rationale:** every Western PlayStation release has it. The US boot EXE
+  (`SLUS_004.22`, read 2026-10-21 from the held disc) loads the held word
+  `0x80145AA4` in `Main_FrameLoop` (`0x8014ABB8`), and when `& 0x900` is
+  `0x900` counts a byte `0x80143F44`. At 60, with the loader idle
+  (`0x80162D00`), it clears the byte, calls `0x8015CEBC` and `0x8014B33C`,
+  and creates task 0 again (`0x8014B854(0, 0x8014EA80)`); a release clears the
+  byte. The European, French and German boot EXEs (`SLES_013.04`,
+  `SLES_013.19`, `SLES_013.20`) carry the same test at `0x8014ABCC`. It is a
+  post-Japanese change the port never had, like the others in
+  `region-diff.md`. The owner remembers using it. A pad player on the PC had
+  no reset at all.
+- **Also in the PSX version?** The Western discs, yes; the Japanese disc, no.
+  The PC's loads are synchronous (`File_LoadDone` is `mov eax, 1`), so the US
+  wait for an idle loader has no counterpart. The restart is the PC's own,
+  F9's, and not a port of the US calls. One difference: F9 on the title
+  quits the program, but the pad reset on the title restarts it.
+- **Verification:** builds clean. Live, `tools/recipes/field_padreset.txt`
+  (the `adult_ryu` save to its field, Start + Select held 70 frames, then the
+  title expected) written but **not yet run**: the first try pointed at a
+  folder with no game, and the rerun is held while another session's test
+  chain uses the game.
+- **Reversible?** `BOF3X_ORIGINAL=PadReset`.

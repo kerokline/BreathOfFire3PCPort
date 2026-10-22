@@ -207,6 +207,10 @@ Verified with headless self-tests on 2026-10-12. Each exited 0 with
 4. Under `BOF3X_LANG=en` the icon column draws letters.
 5. Two layers with one UI: the panel edits the PlayStation-button layer and
    shows a static shadow of the physical one.
+6. *(Fixed 2026-10-21, DIV-0152.)* No pad reset. The Western discs return to the
+   title when Start and Select are held for 60 frames. The Japanese disc, and so the
+   port, had only F9 twice, a keyboard reset. Now Start and Select held for a second
+   do what F9's second press does (`BOF3X_ORIGINAL=PadReset` for the original).
 
 ## 4. Proposal
 
