@@ -140,3 +140,30 @@ every byte but the ones named below.
 - RR loads kind 18, repoints the box, and walks the shape above; it draws
   the marker's width and the half-cell grid.
 - ML never reads a side chunk; it lists layers by name.
+
+## 2. Row geometry, measured (PR, 2026-10-22)
+
+From [`reading-row-probe.md`](reading-row-probe.md) 4, which has the frames
+and the arithmetic. Pen y per row from the box origin `O`
+(`Msgbox_OriginY`, window y + 6), a glyph drawn at pen y + 1; ruby height
+`r` = 6 (kana, and Latin at 1/2) or 8 (Latin at 2/3). **Recommended:
+bottom-aligned**, the last text row on the plain page's third row:
+
+| Row | r = 6 | r = 8 |
+|---|---|---|
+| ruby 1 | `O + 4 - gap` | `O - gap` |
+| text 1 | `O + 10 - gap` | `O + 8 - gap` |
+| ruby 2 | `O + 22` | `O + 20` |
+| text 2 | `O + 28` | `O + 28` |
+
+The gap (0, 1 or 2) and the Latin size (1/2 or 2/3) are the owner's calls
+off the probe's sheets; the probe recommends gap 2 and leaves the size to
+the eye. Ruby glyph quads: 6 x 6 units (r = 6), 8 x 8 (Latin at 2/3), the
+whole 12-unit texture cell; the ruby pen advances the glyph's own kind-4
+advance times 1/2 or 2/3, `0x09` 6 units. At scale 2 every 6-unit reading
+glyph is its sheet cell texel for texel under both filters (probe 3).
+
+**For the coordinator (probe 8):** a Latin second language needs a space in
+a ruby row, which 1.2 does not list; the probe wrote it as a blank cell of
+the composed font carrying the donor's space advance - a glyph code, so
+inside the contract, if SB's composed font chunk carries that cell.
