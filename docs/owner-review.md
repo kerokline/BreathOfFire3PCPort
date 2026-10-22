@@ -20,14 +20,13 @@ its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md
 
 ### Decided by the owner (2026-10-22, chat)
 
-- **Call 2, furigana built in, not a mod zip** ("lets build in the furigana
-  row, that should be fine"): the readings sidecar `data/furigana/readings.toml`
-  lives in the tree, `setup` builds `ruby-furigana-ja-JP` whenever `ja-JP`
-  is held, and the dropdown *Row above the text* lists *Japanese (furigana)*
-  directly. No furigana zip is made or attached to releases. ML's mod
-  mechanism (the zip format, `tools/mods.py`, the Mods tab) stays as the
-  path for a player's own readings override list later, but nothing in the
-  round depends on it.
+- **Call 2, furigana ships as the mod zip** (first "build it in", then
+  "lets deliver it as a zip just so we can work on the first mod
+  implementation in this round"): the staged shape stands. `data/furigana/`
+  is the zip's source, `tools/make_mod.py furigana` builds it, `release.yml`
+  attaches it, the Mods tab installs it, `setup` builds
+  `ruby-furigana-ja-JP` from the installed mod. The point is the mod path
+  proven end to end in this round.
 
 ### Still open (round doc section 6)
 
