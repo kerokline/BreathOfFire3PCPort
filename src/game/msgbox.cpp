@@ -265,6 +265,9 @@ struct TextRow {
     int cells;
     short cell[kMaxGlyphs];        // the glyph's cell in its segment (-1: hung into the margin)
     short ordinal[kMaxGlyphs];     // the count that draws it (1 = the page's first glyph)
+    bool pen[kMaxGlyphs];          // drawn under the offset pen (0x0D .. 0x0E): at the effect's offset
+    bool ins_pen[kMaxSegs];        // ins_pen[k]: the k-th insert's first character under the offset pen
+    bool effect;                   // a glyph of the row is MsgBox_EffectDraw's (the pen while flag 8 is set)
     int before;                    // glyphs on the page before the row
     int first;                     // the count that draws the row's first glyph (its inserts' too),
                                    // or `before` for a row with none
@@ -278,13 +281,18 @@ struct TextRow {
 // glyph; over a segment with none, for what was drawn before it. The other
 // rule, the whole ruby row with the row's first glyph, is the one line
 // `return row.first;` here.
-int Reveal(const TextRow& row, int seg, int half) {
+// The glyph a reading waits for (Reveal's stem): its entry in cell[], or -1
+// over a segment with no glyph of its own.
+int Stem(const TextRow& row, int seg, int half) {
     const int cell = (half + 1) >> 1;
     const int from = row.seg_first[seg], n = row.seg_glyphs[seg];
     for (int i = from; i < from + n; ++i)
-        if (row.cell[i] >= cell) return row.ordinal[i];
-    if (n) return row.ordinal[from + n - 1];
-    return row.seg_before[seg];
+        if (row.cell[i] >= cell) return i;
+    return n ? from + n - 1 : -1;
+}
+int Reveal(const TextRow& row, int seg, int half) {
+    const int i = Stem(row, seg, half);
+    return i >= 0 ? row.ordinal[i] : row.seg_before[seg];
 }
 
 // A ruby glyph: Text_EmitGlyph's record (the glyph's whole 12-unit cell, the
@@ -340,10 +348,19 @@ void Emit(int x, int y, unsigned index, const unsigned char* at, unsigned clut_b
 // through g.draw_char (DIV-0006) at pen y `y` - drawing while `drawn` is
 // below `count` and measuring to the row's end either way. Returns the byte
 // that ends the row: 0x01, or the page's or message's end (0x02 0x16 0x14,
-// 0x00 outside a substitution). The offset pen (0x0D / 0x0E: the builder
-// leaves such messages plain) and a row end inside a substitution are refused.
+// 0x00 outside a substitution). A row end inside a substitution is refused.
+//
+// The offset pen (0x0D on, 0x0E off; since 2026-10-22 composed, DIV-0155 /
+// 0156): `pen` carries it from row to row of the page, as MsgBox_Step's flag
+// bit 5 does (a newline leaves it set; each page's walk starts with it off).
+// Under it a glyph is drawn as MsgBox_Step draws one: with flag 8 of 0x7DEE44
+// (effects 2 and 3) by MsgBox_EffectDraw at MsgBox_PenX / Msgbox_PenY in
+// memory - Msgbox_PenY is the row's pen y here, as the original's newline
+// leaves it - else by g.draw_char at MsgBox_PenX + the s8 0x7DEE5A and the
+// row's y + the s8 0x7DEE5B. Measured past the count, the effect draw's
+// advance is 12 + P (P the word 0x7DEE68), every other glyph's DIV-0006's.
 const unsigned char* WalkText(const unsigned char* at, int y, int count, int& drawn, unsigned char& color,
-                              TextRow& row, short& last_x) {
+                              TextRow& row, short& last_x, bool& pen) {
     unsigned char flags = 0;   // bit 0 in a substitution, as MsgBox_Step's
     const unsigned char* resume = nullptr;
     unsigned char sub_count = 0;
@@ -359,6 +376,8 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
     row.cells = 0;
     row.before = drawn;
     row.first = drawn;
+    row.effect = false;
+    Msgbox_PenY = static_cast<std::uint16_t>(y);   // MsgBox_EffectDraw's y, as MsgBox_Step's newline leaves it
     const auto begin_insert = [&](const unsigned char* code) {
         if (flags & 1) Refuse(code, "starts an insert inside an insert");
         if (row.segs == kMaxSegs) Refuse(code, "starts one insert too many for a row");
@@ -371,6 +390,7 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
         row.text[k] = at + 1;
         row.chars[k] = sub_count - 1;
         row.ins_first[k] = drawn + 1;
+        row.ins_pen[k] = pen;
     };
     const auto end_insert = [&](const unsigned char*) {
         const int k = row.segs++;
@@ -475,8 +495,11 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
                 ++at;
                 break;
             case 0x0D:
+                pen = true;
+                break;
             case 0x0E:
-                Refuse(at, "(the offset pen) in an annotated message");
+                pen = false;
+                break;
             case 0x12:
             case 0x13:
             case 0x15:
@@ -496,16 +519,29 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
                 MsgBox_PenX = pen_x;
                 hung = true;
             }
+            const bool effect = pen && (B(kFlags) & 8);
+            if (effect) row.effect = true;
             if (drawn < count) {
                 const auto clut = static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color);
-                g.draw_char(pen_x, y, clut, 1, shown);
+                if (effect) {
+                    g.effect_draw(color, shown);   // MsgBox_Step's own call: only the low nibble reaches it
+                } else if (pen) {
+                    const int x = static_cast<short>(MsgBox_PenX + Msgbox_OffsetX);
+                    const int oy = static_cast<short>(y + Msgbox_OffsetY);
+                    g.draw_char(x, oy, clut, 1, shown);
+                } else {
+                    g.draw_char(pen_x, y, clut, 1, shown);
+                }
                 pen_x = static_cast<short>(MsgBox_PenX + 12);
                 last_x = pen_x;
             } else {
                 // Measured, not drawn: the pen MsgBox_DrawChar would leave
                 // (DIV-0006's advance; the hang's draw leaves it, the + 12
-                // brings it back to the line start).
-                pen_x = static_cast<short>(pen_x + (hung ? 12 : TextAdvance_Of(shown)));
+                // brings it back to the line start), or MsgBox_EffectDraw's
+                // 12 + P.
+                pen_x = static_cast<short>(pen_x + (hung ? 12
+                                                    : effect ? 12 + static_cast<std::int16_t>(W(kEffectOff))
+                                                             : TextAdvance_Of(shown)));
             }
             MsgBox_PenX = pen_x;
             if (at[0] & 0x80) ++at;
@@ -516,6 +552,7 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
                 if (hung) seg_x -= 1;
                 row.cell[row.cells] = static_cast<short>(seg_x++);
                 row.ordinal[row.cells] = static_cast<short>(drawn);
+                row.pen[row.cells] = pen;
                 ++row.cells;
                 ++row.seg_glyphs[row.segs - 1];
             }
@@ -529,8 +566,14 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
 // characters as the walk read them (its count, a NUL ends it), colour codes
 // taken, a pair code (DIV-0057) as its two glyphs, a space advancing; all of
 // it revealed with the insert's first character. Returns its drawn width.
+// Under the offset pen it takes the effect's offset with its insert; in a row
+// MsgBox_EffectDraw draws, it is laid out and not drawn (DrawRuby).
 int DrawInsert(const TextRow& row, int k, int x, int y, int count, unsigned char color, const unsigned char* marker) {
-    const bool shown = row.ins_first[k] <= count;
+    const bool shown = row.ins_first[k] <= count && !row.effect;
+    if (row.ins_pen[k]) {
+        x += Msgbox_OffsetX;
+        y += Msgbox_OffsetY;
+    }
     int w = 0;
     const unsigned char* t = row.text[k];
     for (int left = row.chars[k]; left > 0 && t[0] != 0; --left) {
@@ -576,10 +619,19 @@ int DrawInsert(const TextRow& row, int k, int x, int y, int count, unsigned char
 // marker; one row holds one kind of marker), a glyph its cell at 1/2 on its
 // advance at 1/2, revealed by Reveal with the first glyph of its word - a run
 // of glyphs with only colour codes between them is one reading.
+//
+// The offset pen and the effect presets (2026-10-22, DIV-0155 / 0156): a
+// reading whose stem (Stem, the glyph it waits for) was drawn under the
+// offset pen is drawn at the same offset as that glyph - the s8 0x7DEE5A /
+// 0x7DEE5B the effects rock, wander and raise - so it moves with its word. A
+// row MsgBox_EffectDraw draws in (the grow and the shrink, flag 8 of
+// 0x7DEE44) shows no reading while the effect runs: the effect draw is left
+// unannotated, its glyphs a scaled cell on a moving pen the half-cell grid
+// does not follow; the readings return when the effect clears flag 8.
 void DrawRuby(const unsigned char* at, const unsigned char* end, int y, int count, unsigned char color,
               const TextRow& row) {
     const int line = MsgBox_LineX;
-    int x = 0, seg = 0, seg_x0 = 0, reveal = 0;
+    int x = 0, seg = 0, seg_x0 = 0, reveal = 0, dx = 0, dy = 0;
     bool in_run = false;
     unsigned char marker = 0;
     for (const unsigned char* p = at; p < end;) {
@@ -604,16 +656,24 @@ void DrawRuby(const unsigned char* at, const unsigned char* end, int y, int coun
             ++p;
         } else {
             // A glyph: RowEnd has let nothing else through.
-            if (!in_run) reveal = Reveal(row, seg, (x - seg_x0) / kHalfCell);
+            if (!in_run) {
+                const int half = (x - seg_x0) / kHalfCell;
+                const int stem = Stem(row, seg, half);
+                reveal = Reveal(row, seg, half);
+                const bool moved = stem >= 0 && row.pen[stem];
+                dx = moved ? static_cast<int>(Msgbox_OffsetX) : 0;
+                dy = moved ? static_cast<int>(Msgbox_OffsetY) : 0;
+            }
             in_run = true;
             int num, den;
             Scale(p, num, den);
             const int q = 12 * num / den;
-            if (reveal <= count) {
+            if (reveal <= count && !row.effect) {
                 const unsigned index = Index(p);
                 std::uint32_t pa, pb;
                 if (TextPair_Of(index, &pa, &pb)) Refuse(p, "is a pair code (DIV-0057), in a ruby row");
-                Emit(line + x, y + kRubyDy, index, p, static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color), q);
+                Emit(line + x + dx, y + kRubyDy + dy, index, p,
+                     static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color), q);
             }
             x += TextAdvance_Of(p) * num / den;
             p += (c & 0x80) ? 2 : 1;
@@ -642,6 +702,7 @@ void Step() {
     short last_x = line;
     auto last_y = origin;
     static TextRow row;   // static: the box's frame runs on a task stack
+    bool pen = false;     // the offset pen, MsgBox_Step's flag bit 5: off at each page's walk
     for (int pair = 0;; ++pair) {
         unsigned char ruby_color = color;
         const unsigned char* const end = RowEnd(at, &ruby_color);
@@ -651,7 +712,7 @@ void Step() {
         const auto ruby_y = static_cast<int>(static_cast<std::uint16_t>(origin + Rows().row_y[2 * pair]));
         unsigned char text_color = ruby_color;
         const int before = drawn;
-        const unsigned char* const stop = WalkText(end + 1, text_y, count, drawn, text_color, row, last_x);
+        const unsigned char* const stop = WalkText(end + 1, text_y, count, drawn, text_color, row, last_x, pen);
         DrawRuby(at, end, ruby_y, count, color, row);
         if (before < count || (row.first == before && before <= count)) last_y = text_y;
         color = text_color;
