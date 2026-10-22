@@ -13,7 +13,12 @@ since state 3; until 2026-10-12 this test predated that and found no dialog). Th
 read after each run. Needs a desktop session (the dialog is shown).
 docs/launcher-settings.md section 3, docs/launcher-suites.md.
 
-    python tools/launcher_host/dialog_test.py build/bof3x-launcher.exe <the install>/BOF3.exe
+    python tools/launcher_host/dialog_test.py build/bof3x-launcher.exe <the install>/BOF3.exe [--shots DIR]
+
+Since the reading-row round (docs/mods.md): the Mods tab and the Settings page's Row above the
+text box, against a home (BOF3X_HOME) whose runtime\tools holds this checkout's tools/mods.py,
+run on this Python (BOF3X_PYTHON), and mod zips mods.py's own self-test makes - no game data.
+--shots writes the Settings page and the Mods tab as the player sees them (PrintWindow).
 """
 import ctypes, os, shutil, subprocess, sys, tempfile, time
 from ctypes import wintypes as W
@@ -146,6 +151,21 @@ file = "base/exe/data.bin"
 # is listed in its manifest's [cache] opt rows above, as importer.py writes it: since the code
 # review of 2026-10-12 a layer tree the manifest does not list is not offered.
 CACHE_LAYERS = {"psp-only": [], "psx-only": [], "all": ["psp-art", "psp-tiles", "psp-names-en-150", "area4-walls"]}
+# The language layers each cache holds (loc\<tag>\dat\). A disc-only install needs one or the
+# launcher stops before the window (DIV-0102); until 2026-10-22 these caches had none and the
+# test stopped there (the reading-row round's ML found it so on main too).
+CACHE_LOC = {"psp-only": ["ja-JP"], "psx-only": ["en-US"], "all": []}
+# The reading-row round (docs/mods.md): a PC + PSX cache holding ja-JP, en-US and de-DE, and the
+# layers ruby-furigana-ja-JP (a mod's) and ruby-en-US-ja-JP (a second language's) built - each
+# listed in the manifest as tools/mods.py lists one. ruby-de-DE-ja-JP is not built.
+MANIFEST["ruby"] = MANIFEST["all"].replace("opt = [\n", "opt = [\n"
+    '  ["AREA014.DAT", "opt/ruby-furigana-ja-JP", 0, "mod:furigana@0.1.0:ja-JP", "77"],\n'
+    '  ["AREA014.DAT", "opt/ruby-en-US-ja-JP", 0, "second:en-US:ja-JP", "77"],\n')
+CACHE_LAYERS["ruby"] = CACHE_LAYERS["all"] + ["ruby-furigana-ja-JP", "ruby-en-US-ja-JP"]
+CACHE_LOC["ruby"] = ["ja-JP", "en-US", "de-DE"]
+TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+IDC_RUBY, IDC_TAB_MODS, IDC_TAB_SETTINGS = 1012, 1026, 1022
+IDC_MOD_LIST, IDC_MOD_REMOVE, IDC_MOD_PATH, IDC_MOD_ADD, IDC_MOD_STATUS, IDC_MOD_LOG = 1700, 1701, 1702, 1704, 1705, 1706
 
 SCR = tempfile.mkdtemp(prefix="bof3x_dialog_")
 L = os.path.join(SCR, "dlg", "launcher")
@@ -177,6 +197,9 @@ def setup(launcher, exe, dat, caches=()):
         for layer in CACHE_LAYERS[c]:
             os.makedirs(os.path.join(d, "opt", layer, "dat"))
             open(os.path.join(d, "opt", layer, "dat", "AREA067.DAT"), "wb").close()
+        for tag in CACHE_LOC[c]:
+            os.makedirs(os.path.join(d, "loc", tag, "dat"))
+            open(os.path.join(d, "loc", tag, "dat", "AREA000.DAT"), "wb").close()
 
 
 def find_item(dlg, i):
@@ -225,6 +248,49 @@ def suites(item):
 
 def click(item, suite, side):
     u.SendMessageW(item(IDC_SUITE0 + STRIDE * SUITES.index(suite) + side), BM_CLICK, 0, 0)
+
+
+# ---- The list box's and the combo box's strings: LB_GETTEXT and CB_GETLBTEXT are system
+# messages, marshalled across processes as WM_GETTEXT is (both boxes keep their strings,
+# LBS_HASSTRINGS / CBS_HASSTRINGS), so a local buffer is read.
+LB_GETTEXT, LB_GETCOUNT, LB_GETITEMDATA, LB_SETCURSEL = 0x189, 0x18B, 0x199, 0x186
+CB_GETLBTEXT, CB_GETITEMDATA = 0x148, 0x150
+
+
+def items(h, combo):
+    """[(text, itemdata)] of a list box or combo box in the launcher."""
+    out = []
+    for i in range(max(u.SendMessageW(h, CB_GETCOUNT if combo else LB_GETCOUNT, 0, 0), 0)):
+        b = ctypes.create_unicode_buffer(2048)
+        u.SendMessageW(h, CB_GETLBTEXT if combo else LB_GETTEXT, i, ctypes.cast(b, ctypes.c_void_p).value)
+        out.append((b.value, u.SendMessageW(h, CB_GETITEMDATA if combo else LB_GETITEMDATA, i, 0)))
+    return out
+
+
+def wait_idle(item, timeout=60):
+    """The Mods page's child finished: Add enabled again and the status no longer says it is working."""
+    t0 = time.time()
+    time.sleep(0.3)
+    while time.time() - t0 < timeout:
+        st = text(item(IDC_MOD_STATUS))
+        if u.IsWindowEnabled(item(IDC_MOD_ADD)) and not st.startswith(("Checking", "Building")):
+            time.sleep(0.3)
+            if u.IsWindowEnabled(item(IDC_MOD_ADD)):
+                return True
+        time.sleep(0.1)
+    return False
+
+
+SHOTS = None
+
+
+def shot(dlg, name):
+    if SHOTS:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import capture_page
+        os.makedirs(SHOTS, exist_ok=True)
+        time.sleep(0.5)   # the page drawn
+        capture_page.grab(dlg, os.path.join(SHOTS, name + ".png"))
 
 
 def run(ini, act, env=None):
@@ -282,7 +348,167 @@ def lines(ini):
     return {k: v for k, _, v in (l.partition("=") for l in ini.splitlines() if l and l[0] not in "#[;")}
 
 
+def mods_checks(launcher, exe, report):
+    """The reading-row round (docs/mods.md): the Mods tab and the Row above the text box."""
+    sys.path.insert(0, TOOLS)
+    import mods
+    zips = os.path.join(SCR, "zips")
+    with contextlib_quiet():
+        mods.selftest(zips)            # makes the zips (and checks them) in SCR\zips
+    setup(launcher, exe, [], ["ruby"])
+    # A home beside the launcher's own (BOF3X_HOME): runtime\tools holds mods.py and what it
+    # imports; importer.py there is only the marker the launcher finds the runtime by.
+    home = os.path.join(SCR, "home")
+    shutil.rmtree(home, ignore_errors=True)
+    rt = os.path.join(L, "runtime", "tools")
+    os.makedirs(rt)
+    for f in ("mods.py", "language_tags.py"):
+        shutil.copy(os.path.join(TOOLS, f), rt)
+    with open(os.path.join(rt, "importer.py"), "w") as f:
+        f.write("# the launcher's marker for this runtime (sources_dialog.cpp FindRuntime); never run by this test\n"
+                "raise SystemExit('dialog_test: importer.py is not part of this test')\n")
+    # The home's own cache, what mods.py builds into: the ruby cache less the mod's layer.
+    hc = os.path.join(home, "cache")
+    shutil.copytree(cache_dir("ruby"), hc)
+    shutil.rmtree(os.path.join(hc, "opt", "ruby-furigana-ja-JP"))
+    mods._manifest_rows(hc, "ruby-furigana-ja-JP", [])
+    env = {"BOF3X_HOME": home, "BOF3X_PYTHON": sys.executable}
+    seen = {}
+
+    # 1. The Mods tab: empty; a good zip added (the builder absent: refused loudly); a .DAT zip refused.
+    def act_mods(dlg, item):
+        u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
+        seen["listed"] = wait_idle(item)
+        seen["empty"] = text(item(IDC_MOD_STATUS))
+        settext(item(IDC_MOD_PATH), os.path.join(zips, "good.zip"))
+        u.SendMessageW(item(IDC_MOD_ADD), BM_CLICK, 0, 0)
+        seen["added"] = wait_idle(item)
+        seen["status_add"] = text(item(IDC_MOD_STATUS))
+        settext(item(IDC_MOD_PATH), os.path.join(zips, "holds_dat.zip"))
+        u.SendMessageW(item(IDC_MOD_ADD), BM_CLICK, 0, 0)
+        wait_idle(item)
+        seen["log"] = text(item(IDC_MOD_LOG))
+        seen["rows"] = items(item(IDC_MOD_LIST), False)
+        shot(dlg, "mods_tab_not_built")
+        u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
+        seen["ruby_original"] = items(item(IDC_RUBY), True)
+    run("[bof3x]\nopt=\ncache=\nlanguage=original\n", act_mods, env)
+    report("Mods tab, no mods: the status says so", seen.get("listed") and seen.get("empty") == "No mods installed.",
+           repr(seen.get("empty")))
+    report("  a good zip added; its build refused loudly, naming the builder",
+           "Added: Japanese (Furigana) 0.1.0" in seen.get("log", "") and "ruby_build.py" in seen.get("log", "")
+           and "not built" in seen.get("status_add", ""), "%r | %r" % (seen.get("status_add"), seen.get("log")))
+    report("  a zip holding a .DAT refused with the reason", "Not added: AREA014.DAT: game data" in seen.get("log", ""))
+    rows = seen.get("rows", [])
+    report("  listed: name, version, kind, not built - greyed",
+           len(rows) == 1 and rows[0][0].startswith("Japanese (Furigana)\t0.1.0\treading-row\tnot built") and rows[0][1] == 1,
+           repr(rows))
+    with open(os.path.join(home, "mods.toml"), encoding="utf-8") as f:
+        report("  mods.toml lists it; mods\\furigana holds its two files",
+               'id = "furigana"' in f.read() and sorted(os.listdir(os.path.join(home, "mods", "furigana")))
+               == ["mod.toml", "readings.toml"])
+    report("  the language played the Chinese: every row entry greyed",
+           all(d == 0 for _, d in seen.get("ruby_original", [])[1:]) and seen.get("ruby_original", [("", 0)])[0] == ("None", 1),
+           repr(seen.get("ruby_original")))
+
+    # The builder FB writes is not on this branch: mods.py's self-test's stand-in (one kind-18
+    # chunk) builds the layer into the home's cache, through the same step setup runs.
+    built, _ = mods.setup_step(home, hc, lambda t, quiet=False: None,
+                               builder=os.path.join(zips, "fake_builder", "ruby_build.py"))
+    report("the mod's step with a stand-in builder: ruby-furigana-ja-JP built into the home's cache",
+           built == ["ruby-furigana-ja-JP"], repr(built))
+    # 2. The box under ja-JP: None; the mod (its layer built in the cache named); English (built);
+    #    German (not built, greyed). Each choice's ruby= written.
+    langs = None
+    for pick, want in ((1, "furigana"), (2, "en-US"), (3, None), (0, "")):
+        got = {}
+
+        def act_box(dlg, item, pick=pick, got=got):
+            u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
+            got["entries"] = items(item(IDC_RUBY), True)
+            u.SendMessageW(item(IDC_RUBY), CB_SETCURSEL, pick, 0)
+            u.SendMessageW(dlg, WM_COMMAND, (CBN_SELCHANGE << 16) | IDC_RUBY, item(IDC_RUBY))
+            got["sel"] = u.SendMessageW(item(IDC_RUBY), CB_GETCURSEL, 0, 0)
+            if pick == 1:
+                shot(dlg, "settings_row_above_the_text")
+                u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
+                wait_idle(item)
+                got["rows"] = items(item(IDC_MOD_LIST), False)
+                shot(dlg, "mods_tab_built")
+        st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\nruby=\n", act_box, env)
+        e = got.get("entries", [])
+        if langs is None:
+            langs = e
+            report("ja-JP: the box lists None, the mod, English, German",
+                   [t.split(" - ")[0] for t, _ in e] == ["None", "Japanese (Furigana) (mod 0.1.0)",
+                                                         "English (US PlayStation script)", "German (PlayStation script)"]
+                   and [d for _, d in e] == [1, 1, 1, 0] and "not built" in e[3][0], repr(e))
+        line = lines(ini).get("ruby")
+        if want is None:
+            report("  German picked (greyed): not taken, ruby= stays empty", line == "" and got.get("sel") == 0,
+                   "%r %r" % (line, got.get("sel")))
+        else:
+            report("  entry %d picked: ruby=%s" % (pick, want), line == want, repr(line))
+        if pick == 1:
+            r = got.get("rows", [])
+            report("  the Mods tab with the layer built under ja-JP: built, not greyed",
+                   len(r) == 1 and "\tbuilt: choose it in Settings" in r[0][0] and r[0][1] == 0, repr(r))
+    # 3. Under en-US the mod's row is greyed with its base; the box offers it greyed too.
+    got = {}
+
+    def act_en(dlg, item):
+        u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
+        wait_idle(item)
+        got["rows"] = items(item(IDC_MOD_LIST), False)
+        shot(dlg, "mods_tab_other_language")
+        got["entries"] = items(item(IDC_RUBY), True)
+    st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=en-US\nruby=furigana\n", act_en, env)
+    r, e = got.get("rows", []), got.get("entries", [])
+    report("en-US played: the mod's row greyed, its base named", len(r) == 1 and "over ja-JP text only" in r[0][0]
+           and r[0][1] == 1, repr(r))
+    report("  the box: the mod greyed (over ja-JP only), Japanese and German not built",
+           len(e) == 4 and e[1][1] == 0 and "over ja-JP text only" in e[1][0] and e[2][1] == 0 and e[3][1] == 0, repr(e))
+    report("  ruby=furigana untouched: written back as read", lines(ini).get("ruby") == "furigana", lines(ini).get("ruby"))
+    report("  stderr: the layer not there for en-US, no row", any("ruby=furigana, but layer ruby-furigana-en-US is not there"
+                                                                  in x for x in err), " | ".join(err[-3:]))
+    # 4. Remove from the tab: the row, the folder and the layer built from it go.
+    got = {}
+
+    def act_rm(dlg, item):
+        u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
+        wait_idle(item)
+        u.SendMessageW(item(IDC_MOD_LIST), LB_SETCURSEL, 0, 0)
+        u.SendMessageW(dlg, WM_COMMAND, (1 << 16) | IDC_MOD_LIST, item(IDC_MOD_LIST))   # LBN_SELCHANGE
+        u.SendMessageW(item(IDC_MOD_REMOVE), BM_CLICK, 0, 0)
+        wait_idle(item)
+        got["rows"] = items(item(IDC_MOD_LIST), False)
+        got["entries"] = items(item(IDC_RUBY), True)
+    run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\n", act_rm, env)
+    report("Remove: the list empty, mods\\furigana and the home cache's layer gone, the box without it",
+           got.get("rows") == [] and not os.path.exists(os.path.join(home, "mods", "furigana"))
+           and not os.path.exists(os.path.join(home, "cache", "opt", "ruby-furigana-ja-JP"))
+           and not any("Furigana" in t for t, _ in got.get("entries", [])), repr(got))
+    return True
+
+
+class contextlib_quiet:
+    """stdout swallowed (mods.py's self-test prints a line a check)."""
+    def __enter__(self):
+        import io
+        self.old, sys.stdout = sys.stdout, io.StringIO()
+
+    def __exit__(self, *a):
+        out, sys.stdout = sys.stdout.getvalue(), self.old
+        if "0 failure(s)" not in out:
+            print(out)
+
+
 def main():
+    global SHOTS
+    if "--shots" in sys.argv:
+        i = sys.argv.index("--shots")
+        SHOTS = os.path.abspath(sys.argv[i + 1])
+        del sys.argv[i:i + 2]
     launcher, exe = sys.argv[1], sys.argv[2]
     ok = True
 
@@ -307,8 +533,8 @@ def main():
     report("  graphics: psp-maps (not built) greyed, art and tiles not",
            g["members"] == [("Stallion's palettes", True), ("area tiles and palettes", True), ("map bands", False)]
            and "--opt psp-maps" in g["why"], str(g["members"]) + " " + g["why"])
-    report("  audio: the PSP's greyed, its layers not built (TG's, --opt psp-music / psp-snd)",
-           a["psp"][:2] == (False, 0) and "--opt psp-music" in a["why"] and not any(m[1] for m in a["members"]), a["why"])
+    report("  audio: the PSP's greyed, its layers not built (TG's, --opt psp-snd; the music is the Music box's)",
+           a["psp"][:2] == (False, 0) and "--opt psp-snd" in a["why"] and not any(m[1] for m in a["members"]), a["why"])
     report("  data: the PSP's offered (the renames), tables and P8 greyed",
            d["psp"][0] and [m[1] for m in d["members"]] == [False, True, False, False]
            and "plays under English" in d["why"], str(d["members"]) + " " + d["why"])
@@ -341,11 +567,11 @@ def main():
     report("  language=en-US written", l["language"] == "en-US", l["language"])
     # 6. The music and cache boxes, as before; a cache typed in redraws the suites.
     def act6(dlg, item):
-        u.SendMessageW(item(IDC_MUSIC), CB_SETCURSEL, 1, 0)
+        u.SendMessageW(item(IDC_MUSIC), CB_SETCURSEL, 2, 0)   # DIV-0150: psx, psp, pc
         settext(item(IDC_CACHE), "  C:\\nowhere at all  ")
     st, ini, _ = run("[bof3x]\nopt=\ncache=%s\nmusic=\n" % C, act6)
     l = lines(ini)
-    report("music moved to the MP3s: music=mp3", l["music"] == "mp3", l["music"])
+    report("music moved to the PC's MP3s: music=pc (DIV-0150)", l["music"] == "pc", l["music"])
     report("cache typed with spaces: trimmed as a line is", l["cache"] == "C:\\nowhere at all", l["cache"])
     report("  its note: not a folder", "Not a folder" in st["after"]["cachenote"], st["after"]["cachenote"])
     report("  the suites redrawn: no manifest there", "No manifest.toml" in st["after"]["note"]
@@ -405,6 +631,8 @@ def main():
     st, ini, _ = run("[bof3x]\nopt=\n", None)
     report("  audio's PSP side names the discs and a cache",
            "in a cache named in Cache folder" in st["suites"]["audio"]["why"], st["suites"]["audio"]["why"])
+
+    mods_checks(launcher, exe, report)   # its reports count in ok
 
     shutil.rmtree(SCR, ignore_errors=True)
     print("all ok" if ok else "FAILURES")

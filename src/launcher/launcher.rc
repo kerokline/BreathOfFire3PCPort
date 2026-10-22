@@ -65,29 +65,34 @@ BEGIN
     COMBOBOX        IDC_LANGUAGE, 77, 15, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "", IDC_LANGNOTE, 77, 30, 186, 9
 
-    LTEXT           "&Look:", -1, 9, 45, 62, 9
-    COMBOBOX        IDC_FILTER, 77, 43, 132, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Options...", IDC_LOOKOPTIONS, 213, 42, 50, 14
+    // The row above the text (docs/mods.md 5): none, a reading-row mod, another
+    // held language. Owner-drawn so an entry this install cannot play is greyed.
+    LTEXT           "Row &above the text:", -1, 9, 42, 67, 9
+    COMBOBOX        IDC_RUBY, 77, 40, 186, 80, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Display:", -1, 9, 63, 62, 9
-    COMBOBOX        IDC_DISPLAY, 77, 61, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Look:", -1, 9, 58, 62, 9
+    COMBOBOX        IDC_FILTER, 77, 56, 132, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Options...", IDC_LOOKOPTIONS, 213, 55, 50, 14
 
-    LTEXT           "Re&nderer:", -1, 9, 81, 62, 9
-    COMBOBOX        IDC_RENDERER, 77, 79, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Display:", -1, 9, 74, 62, 9
+    COMBOBOX        IDC_DISPLAY, 77, 72, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "Re&nderer:", -1, 9, 90, 62, 9
+    COMBOBOX        IDC_RENDERER, 77, 88, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Only Capcom's set-up reads it; bof3x always draws with Direct3D 11.",
-                    -1, 77, 94, 216, 9
+                    -1, 77, 103, 216, 9
 
-    AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 7, 107, 250, 10
+    AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 7, 115, 250, 10
     // DIV-0041: off, 16:9 or 21:9 (wide= 0, 1, 2; docs/ultrawide-frame.md)
-    LTEXT           "&Widescreen:", -1, 9, 121, 62, 9
-    COMBOBOX        IDC_WIDE, 77, 119, 186, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX    "S&nap the picture to whole multiples of its size", IDC_SNAP, 7, 134, 268, 10
-    LTEXT           "Ticked, the window resizes in whole steps; unticked, the picture stretches to the window's height.",
-                    -1, 19, 145, 252, 18
+    LTEXT           "&Widescreen:", -1, 9, 129, 62, 9
+    COMBOBOX        IDC_WIDE, 77, 127, 186, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX    "S&nap the picture to whole multiples of its size", IDC_SNAP, 7, 142, 268, 10
+    LTEXT           "Ticked, the window resizes in whole steps; unticked, the picture stretches.",
+                    -1, 19, 153, 272, 9
 
-    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 7, 165, 200, 10
+    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 7, 166, 200, 10
     LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
-                    -1, 19, 176, 272, 9
+                    -1, 19, 177, 272, 9
 END
 
 // DIV-0050 (docs/controls.md section 4.2): the physical bindings, on two
@@ -281,16 +286,28 @@ BEGIN
     LTEXT           "", 1067, 16, 53, 244, 45
 END
 
-// The Mods tab, kept for side-loaded files - a player's own DAT and EMI files
-// over the game's (IDEAS I33, "mods as cache layers"). Nothing loads them yet.
-IDD_PAGE_MODS DIALOGEX 0, 0, 280, 52
+// The Mods tab (docs/mods.md): the player's mods, each a .zip of data files
+// checked, unpacked and built by tools/mods.py, run as the Sources page runs the
+// importer (src/launcher/sources_dialog.cpp ModsPageProc). The list is
+// owner-drawn: a mod the install cannot play is greyed, with its reason.
+IDD_PAGE_MODS DIALOGEX 0, 0, 340, 188
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Mods", -1, 0, 0, 276, 50
-    LTEXT           "Your own DAT and EMI files laid over the game's - pixel art, script, scenario - will be chosen here. Nothing loads them yet.",
-                    -1, 9, 14, 260, 27
+    GROUPBOX        "Mods", -1, 0, 0, 336, 186
+    LTEXT           "A mod adds to the game from a .zip you choose: a mod.toml and data files, never a program. Each is checked, unpacked into this install's mods folder and built from your own copies of the game. Your own DAT and EMI files over the game's - pixel art, script, scenario - will come here later.",
+                    -1, 9, 12, 320, 27
+    LISTBOX         IDC_MOD_LIST, 9, 42, 320, 50, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_BORDER | WS_TABSTOP
+    PUSHBUTTON      "&Remove", IDC_MOD_REMOVE, 279, 95, 50, 14
+
+    LTEXT           "Add a mod (a .zip):", -1, 9, 112, 200, 9
+    EDITTEXT        IDC_MOD_PATH, 9, 122, 210, 13, ES_AUTOHSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Add &zip...", IDC_MOD_BROWSE, 223, 121, 50, 14
+    PUSHBUTTON      "A&dd", IDC_MOD_ADD, 279, 121, 50, 14
+
+    LTEXT           "", IDC_MOD_STATUS, 9, 139, 320, 9, SS_ENDELLIPSIS
+    EDITTEXT        IDC_MOD_LOG, 9, 150, 320, 32, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL | WS_TABSTOP
 END
 
 // DIV-0087: the importer's cache; the Sources page (docs/install-sources.md).

@@ -688,7 +688,9 @@ def run_setup(a, h, log, progress, total):
     pc = next((r for r in rows if r["kind"] == "pc-folder"), None)
     zips = [r for r in rows if r["path"].lower().endswith(".zip")]
     langs = languages_for(rows, pc)
-    total[0] = len(zips) + 1 + (1 if pc else 0) + 1 + 1
+    import mods        # the player's mods (docs/mods.md): built after the language layers
+    mod_rows = mods.load_rows(h)
+    total[0] = len(zips) + 1 + (1 if pc else 0) + 1 + 1 + (1 if mod_rows else 0)
     game, cache = os.path.join(h, "game"), os.path.join(h, "cache")
     new_game, new_cache = game + ".new", cache + ".new"
     tmp = os.path.join(cache, "tmp")
@@ -750,6 +752,20 @@ def run_setup(a, h, log, progress, total):
                                 psp_available=True)   # every PSP layer, for the suites to offer (the owner, 2026-10-15)
         with contextlib.redirect_stdout(_Log(log, echo, on_line)), times.step("build (importer.py build)"):
             imp.cmd_build(ns)
+        if mod_rows:
+            # Each mod's layer into the new cache, after its language layers
+            # (docs/mods.md 4): a mod whose language the install lacks is said and
+            # skipped; one that cannot be built stops the setup (CLAUDE.md rule 4).
+            progress("Building the mods: %s" % ", ".join(r["name"] for r in mod_rows))
+            def say(text, quiet=False):
+                log.write(text + "\n")
+                if not quiet:
+                    progress(text, step=False)
+            try:
+                with times.step("mods (tools/mods.py)"):
+                    mods.setup_step(h, new_cache, say)
+            except mods.BuildError as e:
+                raise SetupError(str(e))
         os.makedirs(new_game)
         if pc:
             progress("Copying the PC game's files (the original folder is not changed)")

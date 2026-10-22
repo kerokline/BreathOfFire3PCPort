@@ -14,7 +14,7 @@
 #define IDD_PAGE_DATA     115
 #define IDD_PAGE_CONTROLS2 116  // the Controls tab's second sub-page
 #define IDD_PAGE_VERSIONS2 117  // Game Options: data
-#define IDD_PAGE_MODS     118   // the Mods tab, kept for side-loaded files (IDEAS I33)
+#define IDD_PAGE_MODS     118   // the Mods tab (docs/mods.md; side-loaded files later, IDEAS I33)
 #define IDR_BACKGROUND    120   // docs/images/launcherBackground.png, the title page's picture
 #define IDC_CONFIGURE   1020
 #define IDC_BACK        1021
@@ -32,6 +32,8 @@
 #define IDC_WIDE        1009
 #define IDC_SNAP        1010
 #define IDC_LOOKOPTIONS 1011
+// The row above the text (docs/mods.md 5): ruby= in bof3x.ini.
+#define IDC_RUBY        1012
 // The music (DIV-0087).
 #define IDC_MUSIC       1014
 #define IDC_CACHE       1015
@@ -133,3 +135,12 @@
 #define IDC_SO_LOG      1612
 #define IDC_SO_HOME     1613
 #define IDC_SO_BUILD    1614
+
+// The Mods tab (docs/mods.md; src/launcher/sources_dialog.cpp ModsPageProc).
+#define IDC_MOD_LIST    1700
+#define IDC_MOD_REMOVE  1701
+#define IDC_MOD_PATH    1702
+#define IDC_MOD_BROWSE  1703
+#define IDC_MOD_ADD     1704
+#define IDC_MOD_STATUS  1705
+#define IDC_MOD_LOG     1706

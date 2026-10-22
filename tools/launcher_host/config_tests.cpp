@@ -900,6 +900,99 @@ void TestHomeDefaults() {
     SetEnvironmentVariableW(L"BOF3X_HOME", nullptr);
 }
 
+// The row above the text (docs/mods.md 5): ruby= read, saved, and composed into
+// BOF3X_OPT after the ini's layers - for each choice the Settings box offers, and
+// each refusal (said on stderr, no row). The mods.toml reader the box rests on.
+void TestRuby() {
+    const std::wstring game = Temp(L"bof3x_ruby_game");
+    MakeDirs(game + L"\\DAT");
+    const std::string manifest =
+        std::string("[meta]\ntarget = \"pc-zh\"\n\n[cache]\nassets = [\n  [\"A.DAT\", 0, \"base\", \"pc-zh:chunk\", \"h\"],\n]\n") +
+        "opt = [\n  [\"AREA004.DAT\", \"opt/area4-walls\", 0, \"psx-us:copy\", \"h\"],\n"
+        "  [\"AREA014.DAT\", \"opt/ruby-furigana-ja-JP\", 0, \"mod:furigana@0.1.0:ja-JP\", \"h\"],\n"
+        "  [\"AREA014.DAT\", \"opt/ruby-en-US-ja-JP\", 0, \"second:en-US:ja-JP\", \"h\"],\n]\n";
+    const std::wstring cache = FakeCache(L"bof3x_ruby_cache",
+                                         {{"area4-walls", L"dat"}, {"ruby-furigana-ja-JP", L"dat"},
+                                          {"ruby-en-US-ja-JP", L"dat"}, {"ruby-de-DE-ja-JP", L"dat"}},
+                                         manifest.c_str());
+    for (const wchar_t* tag : {L"ja-JP", L"en-US", L"de-DE"}) {
+        MakeDirs(cache + L"\\loc\\" + tag + L"\\dat");
+        WriteAll(cache + L"\\loc\\" + tag + L"\\dat\\AREA000.DAT", "");
+    }
+    const std::wstring home = Temp(L"bof3x_ruby_home");
+    MakeDirs(home);
+    WriteAll(home + L"\\mods.toml",
+             "# test\n\n[[mod]]\nid = \"furigana\"\nname = \"Japanese (Furigana)\"\nversion = \"0.1.0\"\n"
+             "kind = \"reading-row\"\nrequires = [\"ja-JP\"]\nbase = \"ja-JP\"\nreadings = \"readings.toml\"\n\n"
+             "[[mod]]\nid = \"pinyin\"\nname = \"Caf\\u00e9 \\\"test\\\"\"\nversion = \"2.0\"\nkind = \"reading-row\"\n"
+             "requires = [\"ja-JP\", \"fr-FR\"]\nbase = \"ja-JP\"\n");
+    const std::vector<bof3x::ModInfo> mods = bof3x::ConfigModsInstalled(home);
+    Check(mods.size() == 2 && mods[0].id == "furigana" && mods[0].required == std::vector<std::string>{"ja-JP"} &&
+              mods[0].base == "ja-JP" && mods[1].name == "Caf\xc3\xa9 \"test\"" && mods[1].required.size() == 2,
+          "mods.toml: two mods, their requires, a \\u escape and a quote", mods.empty() ? "" : mods[1].name);
+    Check(bof3x::ConfigModsInstalled(Temp(L"bof3x_ruby_nohome")).empty(), "mods.toml: none without the file");
+
+    // the box under ja-JP: None, the mod (built), the second mod (needs fr-FR), English (built), German
+    // (its tree is there but the manifest does not list it: not built)
+    const std::vector<bof3x::RubyChoice> c = bof3x::ConfigRubyChoices(game, "ja-JP", cache, cache, home);
+    std::string ids;
+    for (const auto& x : c) ids += x.id + (x.why.empty() ? "+" : "-") + ",";
+    Check(ids == "+,furigana+,pinyin-,en-US+,de-DE-,", "choices under ja-JP: none, the mod, a mod lacking fr-FR, "
+          "English built, German unlisted", ids);
+    const std::vector<bof3x::RubyChoice> o = bof3x::ConfigRubyChoices(game, "", cache, cache, home);
+    bool all_greyed = o.size() == 6;
+    for (size_t i = 1; i < o.size(); ++i) all_greyed = all_greyed && !o[i].why.empty();
+    Check(all_greyed, "choices under the Chinese text: every entry but None greyed");
+
+    struct Case {
+        const char* language;
+        const char* opt;
+        const char* ruby;
+        const char* want;
+        const char* what;
+    } cases[] = {
+        {"ja-JP", "", "", "area4-walls", "ruby= empty: the ini's layers alone"},
+        {"ja-JP", "", "furigana", "area4-walls,ruby-furigana-ja-JP", "ruby=furigana under ja-JP: after the default layers"},
+        {"ja-JP", "none", "furigana", "ruby-furigana-ja-JP", "opt=none, ruby=furigana: the row alone"},
+        {"ja-JP", "", "en-US", "area4-walls,ruby-en-US-ja-JP", "ruby=en-US under ja-JP: the second language's layer"},
+        {"ja-JP", "area4-walls,ruby-furigana-ja-JP", "furigana", "area4-walls,ruby-furigana-ja-JP",
+         "opt= naming the layer already: once"},
+        {"ja-JP", "", "de-DE", "area4-walls", "ruby=de-DE, not listed in the manifest: no row"},
+        {"en-US", "", "furigana", "area4-walls", "ruby=furigana under en-US: no ruby-furigana-en-US, no row"},
+        {"original", "", "furigana", "area4-walls", "ruby=furigana under the Chinese text: no row"},
+        {"ja-JP", "", "../x", "area4-walls", "ruby= not a name: no row"},
+    };
+    bof3x::Config cfg;
+    cfg.cache = bof3x::ConfigToUtf8(cache);
+    for (const Case& k : cases) {
+        cfg.language = k.language;
+        cfg.opt = k.opt;
+        cfg.ruby = k.ruby;
+        ClearEnv();
+        bof3x::ConfigApplyEnvironment(game, cfg, false);
+        Check(Env("BOF3X_OPT") == k.want, k.what, Env("BOF3X_OPT"));
+    }
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_OPT", "psp-art");
+    cfg.language = "ja-JP";
+    cfg.ruby = "furigana";
+    bof3x::ConfigApplyEnvironment(game, cfg, false);
+    Check(Env("BOF3X_OPT") == "psp-art", "a BOF3X_OPT in the environment wins: ruby= not added");
+    ClearEnv();
+
+    // the ini: ruby= written after language=, read back as written
+    const std::wstring a = Temp(L"bof3x_ruby.ini");
+    bof3x::Config w;
+    w.ruby = "en-US";
+    Check(bof3x::ConfigSave(a, w), "save ruby=");
+    bof3x::Config r;
+    std::string err;
+    Check(bof3x::ConfigLoad(a, r, err) && r.ruby == "en-US", "ruby= read back", r.ruby);
+    Check(ReadAll(a).find("\r\nruby=en-US\r\n") != std::string::npos, "the ruby= line written");
+    bof3x::Config d;
+    Check(bof3x::ConfigSave(a, d) && ReadAll(a).find("\r\nruby=\r\n") != std::string::npos, "ruby= empty by default");
+}
+
 int main() {
     std::printf("home defaults (docs/install-sources.md)\n");
     TestHomeDefaults();
@@ -928,6 +1021,8 @@ int main() {
     TestWide();
     std::printf("cache path code page\n");
     TestCacheCodePage();
+    std::printf("the row above the text (docs/mods.md)\n");
+    TestRuby();
     std::printf("%d checks, %d failures\n", g_checks, g_failures);
     return g_failures ? 1 : 0;
 }

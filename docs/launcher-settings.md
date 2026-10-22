@@ -117,10 +117,15 @@ From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
   "Shoulders, Start and Select"; Music the song source; Game Options the
   three suites ([`launcher-suites.md`](launcher-suites.md)) as "Graphics and
   audio" and "Data", and the old Cheats dialog as "Cheats"; Data the cache
-  folder and Sources.... **Mods is kept for side-loaded files** - a
-  player's own DAT and EMI files over the game's, pixel art, script,
-  scenario (the owner, 2026-10-15; [`IDEAS.md`](IDEAS.md) I33, "mods as
-  cache layers") - and says so; nothing loads them yet. (The suites sat
+  folder and Sources.... **Mods** lists the player's mods - each a `.zip`
+  of data files, added with Add zip..., checked, unpacked and built by
+  `tools/mods.py` as the Sources page runs the importer, greyed with the
+  reason when the install cannot play it - and Remove; the first kind is the
+  reading row, chosen on Settings in **Row above the text** under Language
+  (`ruby=`, one more layer in `BOF3X_OPT`). [`mods.md`](mods.md), the
+  reading-row round, 2026-10-22. The tab was kept for side-loaded files
+  from 2026-10-15 (the owner; [`IDEAS.md`](IDEAS.md) I33, "mods as cache
+  layers"), and its sentence still says those come later. (The suites sat
   under Mods for an hour first; the owner moved them, since they choose
   between releases rather than load a player's files.) The SatPixie options, the capture,
   the Jukebox and the Sources page are still their own dialogs. Control ids
