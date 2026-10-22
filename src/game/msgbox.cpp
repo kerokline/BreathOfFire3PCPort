@@ -19,7 +19,11 @@
 // BOF3X_ORIGINAL=MsgBox_Step Capcom's body runs and draws the text as it is.
 #include "game/msgbox.h"
 
+#include <windows.h>
+
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -134,6 +138,11 @@ void Scale(const unsigned char*, int& num, int& den) {
 // block's own message.
 bool g_armed;
 bool g_told_unarmed;
+// The study key (BOF3X_RUBY_KEY, F4 by default): while set, the walk lays out
+// and reveals every reading as before but emits none of its glyphs (nor a
+// 0x13 insert's) - the page, its rows, its breaks and its count unchanged.
+bool g_hidden;
+unsigned g_key_vk;   // 0: no key
 // The last composed message opened, for the refusals below.
 unsigned g_tag, g_half, g_slot;
 
@@ -289,6 +298,7 @@ unsigned Index(const unsigned char* at) {
 void Emit(int x, int y, unsigned index, const unsigned char* at, unsigned clut_byte, int q) {
     const unsigned glyphs = TextDraw_GlyphCount();
     if (index > (glyphs ? glyphs - 1 : 0xA00u)) Refuse(at, "is a glyph past the loaded table, in a ruby row");
+    if (g_hidden) return;   // the study key: laid out, not drawn
     const std::uint8_t* const pair = reinterpret_cast<const std::uint8_t*>(bof3::addr::Text_ClipPairs) + ((clut_byte & 0xFF) >> 4) * 2;
     const int u = pair[0], v = pair[1];
     unsigned char* const p = Gfx_PacketNext;
@@ -1874,6 +1884,33 @@ void MsgBox_Inject() {
     BOF3_INJECT(Text_EmitGlyph);
     // The reading row needs the walk and the printer both ours.
     ruby::g_armed = bof3::IsEnabled(bof3::addr::MsgBox_Step) && bof3::IsEnabled(bof3::addr::MsgBox_StatePrint);
+    // The study key: BOF3X_RUBY_KEY = f1..f12 (any case; default f4) or none.
+    {
+        char key[16] = "f4";
+        const DWORD n = GetEnvironmentVariableA("BOF3X_RUBY_KEY", key, sizeof key);
+        if (n >= sizeof key) bof3::Fatal("BOF3X_RUBY_KEY is %lu characters: f1..f12 or none", n);
+        for (char* c = key; *c; ++c)
+            if (*c >= 'A' && *c <= 'Z') *c = static_cast<char>(*c - 'A' + 'a');
+        if (std::strcmp(key, "none") == 0) {
+            ruby::g_key_vk = 0;
+        } else {
+            const int f = (key[0] == 'f' && key[1] >= '1' && key[1] <= '9') ? std::atoi(key + 1) : 0;
+            char again[8];
+            std::snprintf(again, sizeof again, "f%d", f);
+            if (f < 1 || f > 12 || std::strcmp(again, key) != 0)
+                bof3::Fatal("BOF3X_RUBY_KEY is \"%s\": f1..f12 or none", key);
+            ruby::g_key_vk = static_cast<unsigned>(VK_F1 + f - 1);
+        }
+    }
+}
+
+bool MsgBox_ReadingRowKey(unsigned vk, bool repeat) {
+    if (ruby::g_key_vk == 0 || vk != ruby::g_key_vk) return false;
+    if (!repeat) {
+        ruby::g_hidden = !ruby::g_hidden;
+        bof3::Log("reading row: %s (the study key)", ruby::g_hidden ? "hidden" : "shown");
+    }
+    return true;
 }
 
 const unsigned char* MsgBox_ReadingRowSystem(unsigned id, const unsigned char* plain) {

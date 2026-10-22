@@ -25,3 +25,10 @@ unsigned MsgBox_StepRecord(const unsigned char* msg, unsigned glyphs, MsgBoxDraw
 // half (id >> 14), slot (id & 0x3FFF) of the pool's side chunk - when one is
 // loaded and the walk can draw it, else `plain`.
 const unsigned char* MsgBox_ReadingRowSystem(unsigned id, const unsigned char* plain);
+
+// The reading row's study key (docs/reading-row.md 3.5), for WM_KEYDOWN
+// (src/game/win_main.cpp): true when `vk` is the key BOF3X_RUBY_KEY names
+// (F4 by default; "none" binds nothing), which then toggles - unless
+// `repeat`, a held key's auto-repeat - whether the reading rows' glyphs are
+// drawn. The layout, the reveal and the pages are the same either way.
+bool MsgBox_ReadingRowKey(unsigned vk, bool repeat);

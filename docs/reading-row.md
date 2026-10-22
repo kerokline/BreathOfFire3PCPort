@@ -282,3 +282,19 @@ No side chunk, no change: both `DatLoad_` calls return before reading
 anything, `ruby::Annotated` is false, `SkipRow` returns its argument. The
 `msgbox` and `menu_windows` shadow fuzzes are at 0 mismatches, and the state
 hash on the routes is the record (the hand-back has the numbers).
+
+### 3.5 The study key
+
+F4 (the owner, 2026-10-22, for language study) hides and shows the reading
+rows: a DLL-side flag, "shown" at launch, toggled on the key's first
+down (a held key's repeats do nothing), effective from the next frame's
+walk. Hidden, `ruby::Emit` returns before building a primitive, so no
+reading glyph and no `0x13` insert is drawn; the walk, the row table, the
+reveal count, the pages and the arrow are exactly as shown. A message not
+from a side chunk is untouched either way. `BOF3X_RUBY_KEY` names the key:
+`f1`..`f12` in any case (default `f4`; F2, F3 and F4 are the keys Capcom's
+`Game_WndProc` leaves unbound), `none` binds nothing; anything else stops
+at start-up. The binding sits in `src/game/win_main.cpp`'s `WM_KEYDOWN`
+beside F6 / F7, after the pause's "any key resumes"; the launcher's
+`ruby_key=` line is for the merge.
+
