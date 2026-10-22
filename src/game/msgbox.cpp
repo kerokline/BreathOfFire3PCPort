@@ -89,6 +89,17 @@ void Call(void (__cdecl* const* table)(), unsigned n, unsigned index, const char
     table[index]();
 }
 
+// DIV-0158, the faster text (BOF3X_TEXT_SPEED=1, text_speed= in bof3x.ini):
+// Msg Speed's Med. prints at Fast's delays and Fast prints a page at once.
+// Slow is the original's. Off (0, the default) the printer is Capcom's.
+bool g_text_faster = false;
+
+// The most glyphs an instant page prints in one frame before it lets the
+// frame end (and goes on in the next): a message with no stop code would
+// otherwise hold the loop, as an unclosed 0x10 span does in the original
+// (docs/msgbox.md section 6). A shipped page is a few hundred at most.
+constexpr unsigned kInstantGlyphsPerFrame = 1024;
+
 }  // namespace
 
 // ===========================================================================
@@ -1067,10 +1078,20 @@ extern "C" void __cdecl MsgBox_StateDispatch(void) {
 // The reading row (docs/reading-row.md 3): outside a substitution, a ruby row
 // of an annotated message is stepped over whole (ruby::SkipRow), so the count
 // 0x7DEE59 is the text's glyphs and a reading adds no delay.
+//
+// The faster text (DIV-0158, g_text_faster): Med. takes Fast's row of the
+// speed table, and on Fast a glyph keeps the loop going instead of waiting,
+// so the frame runs on to the next code that stops it - the page's end
+// (0x00), its break (0x02), a choice (0x14), a timed wait (0x16) or a pause
+// (0x0B). Unlike flag 0x10 it never forces the keep-going flag past those,
+// so the box stops where the script stops it. The delay byte is still set
+// to Fast's, which is what 0x0B adds its 8 frames to: the script's pauses
+// last as long as they do on Fast.
 extern "C" void __cdecl MsgBox_StatePrint(void) {
     const unsigned char* at = Ptr(kAt);
     const unsigned char* resume = Ptr(kResume);
     bool again = true;
+    unsigned instant_glyphs = 0;
     do {
         if (B(kFlags) & 1) {
             const auto left = static_cast<unsigned char>(Msgbox_SubCount - 1);
@@ -1226,16 +1247,22 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 // L2 / R2 (docs/button-tests.md 3, DIV-0139).
                 const unsigned speed =
                     (static_cast<unsigned char>(Input_Held) & bof3x::input::sigma::Sigma(0x20)) ? 0 : 1;
-                const auto row = ModeFlow_ConfigBytes;
+                auto row = ModeFlow_ConfigBytes;
+                const bool instant = g_text_faster && row == 0;
+                if (g_text_faster && row == 1) row = 0;   // Med. at Fast's delays
                 Msgbox_Delay = B(static_cast<std::uint32_t>(kSpeedTable + speed + row));
                 if (L(kFlags) & 0x100u) {
                     Msgbox_Delay = 3;
                     SetB(kState, 1);
+                    again = false;
                 } else {
                     SetB(kState, 0);
-                    if (Msgbox_Delay != 0) SetB(kState, 1);
+                    // Instant: no wait, on to the next glyph this frame.
+                    if (!instant || ++instant_glyphs >= kInstantGlyphsPerFrame) {
+                        if (Msgbox_Delay != 0 && !instant) SetB(kState, 1);
+                        again = false;
+                    }
                 }
-                again = false;
             }
             Msgbox_StepCount = Msgbox_StepCount + 1;
         }
@@ -1962,6 +1989,18 @@ void MsgBox_Inject() {
                 bof3::Fatal("BOF3X_RUBY_KEY is \"%s\": f1..f12 or none", key);
             ruby::g_key_vk = static_cast<unsigned>(VK_F1 + f - 1);
         }
+    }
+    // The faster text (DIV-0158): BOF3X_TEXT_SPEED = 0 (the original's, the
+    // default) or 1. Its home is the printer, so it needs the printer ours.
+    {
+        char v[8] = "0";
+        const DWORD n = GetEnvironmentVariableA("BOF3X_TEXT_SPEED", v, sizeof v);
+        if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
+            bof3::Fatal("BOF3X_TEXT_SPEED is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
+        g_text_faster = v[0] == '1';
+        if (g_text_faster && !bof3::IsEnabled(bof3::addr::MsgBox_StatePrint))
+            bof3::Fatal("BOF3X_TEXT_SPEED=1 needs MsgBox_StatePrint ours, and it is disabled");
+        if (g_text_faster) bof3::Log("text speed: Med. at Fast, Fast a page at once (DIV-0158)");
     }
 }
 

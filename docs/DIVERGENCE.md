@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 157 entries, DIV-0001..0157, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 158 entries, DIV-0001..0158, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10096,3 +10096,47 @@ designed in rather than bolted on.
 - **Reversible?** Nothing changes without a mod and a choice: *Row above the
   text: None* (`ruby=` empty); Remove on the Mods tab takes the folder, the
   row and the layer.
+
+### The faster text: Msg Speed's Med. at Fast's pace, Fast a page at once
+
+- **ID:** DIV-0158
+- **Date:** 2026-10-22
+- **Subsystem:** the field and story message box - `MsgBox_StatePrint`
+  (`0x497B30`, `src/game/msgbox.cpp`, its glyph tail); the launcher's
+  `text_speed=` (`src/launcher/config.cpp`, `BOF3X_TEXT_SPEED`) and its box
+  on Mods, Extras (`config_dialog.cpp`, `launcher.rc`). Issue #108.
+- **Tier:** Sensible - the pace the text appears at; nothing in play changes.
+- **Original behaviour:** each glyph waits a delay from the byte table at
+  `0x658E94`, indexed by the Msg Speed option (Fast 0, Med. 1, Slow 2) plus
+  one when the Speak button is not held; the box types its text out a glyph
+  at a time at every speed. Only a script's own `0x10` / `0x11` span prints
+  at once.
+- **New behaviour:** with `text_speed=1` (off by default), Med. reads Fast's
+  entries of the table (held and not), and on Fast a glyph sets no wait: the
+  printer runs on in the same frame to the next code that stops it - the
+  end (`0x00`), a page break (`0x02`), a choice (`0x14`), a timed wait
+  (`0x16`) or a pause (`0x0B`) - so a page appears whole. Unlike flag `0x10`
+  it never forces the loop past those, so every page, prompt and choice
+  stops where the script put it. The delay byte is still set to Fast's, and
+  `0x0B` adds its 8 frames to that, so a pause the script writes into a line
+  lasts as long as it does on Fast (the owner's call, 2026-10-22: the pauses
+  stay). Slow is unchanged. At most 1,024 glyphs print in a frame; past that
+  the page goes on in the next frame, so a message with no stop code cannot
+  hold the loop (`docs/msgbox.md` section 6's unclosed-span hang).
+  `BOF3X_TEXT_SPEED` is 0 or 1; anything else stops the game at start, and 1
+  with `MsgBox_StatePrint` not ours stops it too. Battle messages are not
+  touched: they never type out (the battle ring draws each whole with
+  `Text_DrawAt`, `BattleWin_DrawMessage` `0x597ED0`) and never read Msg
+  Speed.
+- **Rationale:** a request from the discussion page (issue #108): replaying
+  players want the text as fast as they read. The original's Fast still
+  types; holding Speak helps only a little.
+- **Also in the PSX version?** The same three speeds and the same printer;
+  no instant mode.
+- **Verification:** builds; the exe host's self-test passes with the option
+  off and on, the start log names it on, `BOF3X_TEXT_SPEED=2` stops with its
+  message, and `text_speed=1` in the ini reaches the game. The hosted fuzz
+  with it off passes: msgbox's 44,000 rounds against Capcom's copy, 0
+  mismatches, and the whole `BOF3X_SHADOW='*'` run exits 0. Played by the owner
+  2026-10-22: "This is brilliant".
+- **Reversible?** Off by default; the Extras box or `text_speed=0`.

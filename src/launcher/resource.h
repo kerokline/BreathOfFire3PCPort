@@ -149,3 +149,5 @@
 // The Mods tab's Extras sub-page (IDD_PAGE_EXTRA).
 #define IDC_EXTRA_RUBY     1720   // Show Row above the text on Settings: ruby_ui=
 #define IDC_EXTRA_RUBYNOTE 1721
+#define IDC_EXTRA_TEXTSPEED 1722  // Faster text: text_speed= (DIV-0158)
+#define IDC_EXTRA_TEXTNOTE  1723
