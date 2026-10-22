@@ -67,7 +67,9 @@ BEGIN
 
     // The row above the text (docs/mods.md 5): none, a reading-row mod, another
     // held language. Owner-drawn so an entry this install cannot play is greyed.
-    LTEXT           "Row &above the text:", -1, 9, 42, 67, 9
+    // Hidden, with its label, unless Mods, Extras' toggle is on (ruby_ui=1; the
+    // owner's call, 2026-10-22) - display only, ruby= is kept and played either way.
+    LTEXT           "Row &above the text:", IDC_RUBYLABEL, 9, 42, 67, 9
     COMBOBOX        IDC_RUBY, 77, 40, 186, 80, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT           "&Look:", -1, 9, 58, 62, 9
@@ -290,24 +292,44 @@ END
 // checked, unpacked and built by tools/mods.py, run as the Sources page runs the
 // importer (src/launcher/sources_dialog.cpp ModsPageProc). The list is
 // owner-drawn: a mod the install cannot play is greyed, with its reason.
-IDD_PAGE_MODS DIALOGEX 0, 0, 340, 188
+// Since 2026-10-22 the first of the tab's two sub-pages (Data, Extras), so it
+// sits under the sub-tabs: 176 high as the Controls tab's second page, to fit
+// the 640 x 480 window there.
+IDD_PAGE_MODS DIALOGEX 0, 0, 340, 176
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Mods", -1, 0, 0, 336, 186
+    GROUPBOX        "Mods", -1, 0, 0, 336, 174
     LTEXT           "A mod adds to the game from a .zip you choose: a mod.toml and data files, never a program. Each is checked, unpacked into this install's mods folder and built from your own copies of the game. Your own DAT and EMI files over the game's - pixel art, script, scenario - will come here later.",
                     -1, 9, 12, 320, 27
-    LISTBOX         IDC_MOD_LIST, 9, 42, 320, 50, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_BORDER | WS_TABSTOP
-    PUSHBUTTON      "&Remove", IDC_MOD_REMOVE, 279, 95, 50, 14
+    LISTBOX         IDC_MOD_LIST, 9, 42, 320, 44, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_BORDER | WS_TABSTOP
+    PUSHBUTTON      "&Remove", IDC_MOD_REMOVE, 279, 89, 50, 14
 
-    LTEXT           "Add a mod (a .zip):", -1, 9, 112, 200, 9
-    EDITTEXT        IDC_MOD_PATH, 9, 122, 210, 13, ES_AUTOHSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Add &zip...", IDC_MOD_BROWSE, 223, 121, 50, 14
-    PUSHBUTTON      "A&dd", IDC_MOD_ADD, 279, 121, 50, 14
+    LTEXT           "Add a mod (a .zip):", -1, 9, 105, 200, 9
+    EDITTEXT        IDC_MOD_PATH, 9, 115, 210, 13, ES_AUTOHSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Add &zip...", IDC_MOD_BROWSE, 223, 114, 50, 14
+    PUSHBUTTON      "A&dd", IDC_MOD_ADD, 279, 114, 50, 14
 
-    LTEXT           "", IDC_MOD_STATUS, 9, 139, 320, 9, SS_ENDELLIPSIS
-    EDITTEXT        IDC_MOD_LOG, 9, 150, 320, 32, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "", IDC_MOD_STATUS, 9, 131, 320, 9, SS_ENDELLIPSIS
+    EDITTEXT        IDC_MOD_LOG, 9, 141, 320, 29, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL | WS_TABSTOP
+END
+
+// The Mods tab's second sub-page, Extras - the Mods tab's sub-row is Data (the
+// page above) and Extras (the owner's call, 2026-10-22): the home for the
+// launcher's extras, reserving the slot on the top row. Today one toggle,
+// ruby_ui= in bof3x.ini: whether Settings shows the Row above the text box.
+// Display only.
+IDD_PAGE_EXTRA DIALOGEX 0, 0, 340, 64
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Extras", -1, 0, 0, 336, 62
+    AUTOCHECKBOX    "S&how Row above the text on Settings (the second script: furigana or another language)",
+                    IDC_EXTRA_RUBY, 7, 14, 324, 10
+    LTEXT           "The row is a second line of script drawn above the game's text: a reading-row mod's readings (furigana over the Japanese) or another language this install holds. Adding a reading-row mod, such as the furigana mod, on Mods turns this on. Off, the box is only hidden: the row Settings last chose is kept and played.",
+                    IDC_EXTRA_RUBYNOTE, 19, 27, 312, 32
 END
 
 // DIV-0087: the importer's cache; the Sources page (docs/install-sources.md).

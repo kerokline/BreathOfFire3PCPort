@@ -60,5 +60,9 @@ constexpr UINT kMsgModsChanged = WM_APP + 20;
 // mod for another language is greyed with that reason. lParam: a const
 // std::string* holding the tag, empty for the port's Chinese.
 constexpr UINT kMsgModsLanguage = WM_APP + 21;
+// Sent by the Mods page to its parent after an add of a reading-row mod
+// succeeded: the window turns Mods, Extras' toggle on (ruby_ui=1) and shows
+// Settings' Row above the text box (the owner's call, 2026-10-22).
+constexpr UINT kMsgModsReadingRowAdded = WM_APP + 22;
 
 }  // namespace bof3x

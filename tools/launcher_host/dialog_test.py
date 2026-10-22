@@ -19,6 +19,8 @@ Since the reading-row round (docs/mods.md): the Mods tab and the Settings page's
 text box, against a home (BOF3X_HOME) whose runtime\tools holds this checkout's tools/mods.py,
 run on this Python (BOF3X_PYTHON), and mod zips mods.py's own self-test makes - no game data.
 --shots writes the Settings page and the Mods tab as the player sees them (PrintWindow).
+Since group LX (2026-10-22): the Mods tab's sub-row (Data, Extras) and Extras' toggle, ruby_ui=,
+which hides and shows the Row above the text box - captured on both sub-buttons and both ways.
 """
 import ctypes, os, shutil, subprocess, sys, tempfile, time
 from ctypes import wintypes as W
@@ -166,6 +168,9 @@ CACHE_LOC["ruby"] = ["ja-JP", "en-US", "de-DE"]
 TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IDC_RUBY, IDC_TAB_MODS, IDC_TAB_SETTINGS = 1012, 1026, 1022
 IDC_MOD_LIST, IDC_MOD_REMOVE, IDC_MOD_PATH, IDC_MOD_ADD, IDC_MOD_STATUS, IDC_MOD_LOG = 1700, 1701, 1702, 1704, 1705, 1706
+# The Mods tab's sub-row (Data, Extras; the owner's call, 2026-10-22) and Extras' toggle, ruby_ui=:
+# the Settings page's Row above the text box and its label hidden unless it is on.
+IDC_SUB0, IDC_RUBYLABEL, IDC_EXTRA_RUBY, IDC_EXTRA_RUBYNOTE = 1032, 1013, 1720, 1721
 
 SCR = tempfile.mkdtemp(prefix="bof3x_dialog_")
 L = os.path.join(SCR, "dlg", "launcher")
@@ -373,10 +378,13 @@ def mods_checks(launcher, exe, report):
     shutil.rmtree(os.path.join(hc, "opt", "ruby-furigana-ja-JP"))
     mods._manifest_rows(hc, "ruby-furigana-ja-JP", [])
     env = {"BOF3X_HOME": home, "BOF3X_PYTHON": sys.executable}
+    ruby_ui_checks(env, report)
     seen = {}
 
     # 1. The Mods tab: empty; a good zip added (the builder absent: refused loudly); a .DAT zip refused.
+    #    The add turns Extras' toggle on and shows the Row above the text box at once.
     def act_mods(dlg, item):
+        seen["ui_before"] = (shown(item(IDC_RUBY)), u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
         u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
         seen["listed"] = wait_idle(item)
         seen["empty"] = text(item(IDC_MOD_STATUS))
@@ -384,6 +392,8 @@ def mods_checks(launcher, exe, report):
         u.SendMessageW(item(IDC_MOD_ADD), BM_CLICK, 0, 0)
         seen["added"] = wait_idle(item)
         seen["status_add"] = text(item(IDC_MOD_STATUS))
+        seen["ui_after"] = (shown(item(IDC_RUBY)), shown(item(IDC_RUBYLABEL)),
+                            u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
         settext(item(IDC_MOD_PATH), os.path.join(zips, "holds_dat.zip"))
         u.SendMessageW(item(IDC_MOD_ADD), BM_CLICK, 0, 0)
         wait_idle(item)
@@ -392,9 +402,14 @@ def mods_checks(launcher, exe, report):
         shot(dlg, "mods_tab_not_built")
         u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
         seen["ruby_original"] = items(item(IDC_RUBY), True)
-    run("[bof3x]\nopt=\ncache=\nlanguage=original\n", act_mods, env)
+    _, ini1, _ = run("[bof3x]\nopt=\ncache=\nlanguage=original\n", act_mods, env)
     report("Mods tab, no mods: the status says so", seen.get("listed") and seen.get("empty") == "No mods installed.",
            repr(seen.get("empty")))
+    report("  no ruby_ui=, no mod installed: the toggle off, the box hidden", seen.get("ui_before") == (False, 0),
+           repr(seen.get("ui_before")))
+    report("  the reading-row mod added: the toggle on, the box and its label shown at once, ruby_ui=1",
+           seen.get("ui_after") == (True, True, 1) and lines(ini1 or "").get("ruby_ui") == "1",
+           "%r %r" % (seen.get("ui_after"), lines(ini1 or "").get("ruby_ui")))
     report("  a good zip added; its build refused loudly, naming the builder",
            "Added: Japanese (Furigana) 0.1.0" in seen.get("log", "") and "ruby_build.py" in seen.get("log", "")
            and "not built" in seen.get("status_add", ""), "%r | %r" % (seen.get("status_add"), seen.get("log")))
@@ -444,6 +459,9 @@ def mods_checks(launcher, exe, report):
                                                          "English (US PlayStation script)", "German (PlayStation script)"]
                    and [d for _, d in e] == [1, 1, 1, 0] and "not built" in e[3][0], repr(e))
         line = lines(ini).get("ruby")
+        if pick == 1:
+            report("  an ini without ruby_ui=, the mod installed: the toggle came up on (ruby_ui=1)",
+                   lines(ini).get("ruby_ui") == "1", repr(lines(ini).get("ruby_ui")))
         if want is None:
             report("  German picked (greyed): not taken, ruby= stays empty", line == "" and got.get("sel") == 0,
                    "%r %r" % (line, got.get("sel")))
@@ -462,8 +480,13 @@ def mods_checks(launcher, exe, report):
         got["rows"] = items(item(IDC_MOD_LIST), False)
         shot(dlg, "mods_tab_other_language")
         got["entries"] = items(item(IDC_RUBY), True)
-    st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=en-US\nruby=furigana\n", act_en, env)
+        got["ui"] = (shown(item(IDC_RUBY)), u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
+    # ruby_ui=0 named: kept off though the mod is installed - and ruby= still goes to the game (the stderr below)
+    st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=en-US\nruby=furigana\nruby_ui=0\n", act_en, env)
     r, e = got.get("rows", []), got.get("entries", [])
+    report("ruby_ui=0 named, the mod installed: off, the box hidden, ruby_ui=0 written back",
+           got.get("ui") == (False, 0) and lines(ini).get("ruby_ui") == "0",
+           "%r %r" % (got.get("ui"), lines(ini).get("ruby_ui")))
     report("en-US played: the mod's row greyed, its base named", len(r) == 1 and "over ja-JP text only" in r[0][0]
            and r[0][1] == 1, repr(r))
     report("  the box: the mod greyed (over ja-JP only), Japanese and German not built",
@@ -483,12 +506,83 @@ def mods_checks(launcher, exe, report):
         wait_idle(item)
         got["rows"] = items(item(IDC_MOD_LIST), False)
         got["entries"] = items(item(IDC_RUBY), True)
-    run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\n", act_rm, env)
+        got["ui"] = (shown(item(IDC_RUBY)), u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
+    _, ini, _ = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\nruby_ui=1\n", act_rm, env)
+    report("Remove leaves the toggle as it is: on, the box shown, ruby_ui=1",
+           got.get("ui") == (True, 1) and lines(ini or "").get("ruby_ui") == "1",
+           "%r %r" % (got.get("ui"), ini and lines(ini).get("ruby_ui")))
     report("Remove: the list empty, mods\\furigana and the home cache's layer gone, the box without it",
            got.get("rows") == [] and not os.path.exists(os.path.join(home, "mods", "furigana"))
            and not os.path.exists(os.path.join(home, "cache", "opt", "ruby-furigana-ja-JP"))
            and not any("Furigana" in t for t, _ in got.get("entries", [])), repr(got))
     return True
+
+
+def ruby_ui_checks(env, report):
+    """Mods' sub-row (Data, Extras) and Extras' toggle (ruby_ui=; the owner's call, 2026-10-22),
+    before any mod is installed: the box hidden and shown, ruby= kept either way, the ini's round
+    trip; and the window not grown by the sub-row over the Mods page."""
+    got = {}
+
+    def vis(item, i):
+        return bool(u.IsWindowVisible(item(i)))
+
+    def act_off(dlg, item):
+        got["settings"] = (shown(item(IDC_RUBY)), shown(item(IDC_RUBYLABEL)), shown(item(IDC_LANGUAGE)))
+        u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
+        shot(dlg, "settings_row_hidden")
+        u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
+        wait_idle(item)
+        got["subrow"] = [(text(item(IDC_SUB0 + k)), vis(item, IDC_SUB0 + k)) for k in range(3)]
+        got["data"] = (vis(item, IDC_MOD_LIST), vis(item, IDC_EXTRA_RUBY))
+        shot(dlg, "mods_data")
+        u.SendMessageW(item(IDC_SUB0 + 1), BM_CLICK, 0, 0)
+        got["extras"] = (vis(item, IDC_MOD_LIST), vis(item, IDC_EXTRA_RUBY), text(item(IDC_EXTRA_RUBY)),
+                         text(item(IDC_EXTRA_RUBYNOTE)), u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
+        shot(dlg, "mods_extras_off")
+        u.SendMessageW(item(IDC_EXTRA_RUBY), BM_CLICK, 0, 0)
+        got["on"] = (shown(item(IDC_RUBY)), shown(item(IDC_RUBYLABEL)),
+                     u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
+        shot(dlg, "mods_extras_on")
+        u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
+        got["on_settings"] = (vis(item, IDC_RUBY), vis(item, IDC_RUBYLABEL))
+        shot(dlg, "settings_row_shown")
+        u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
+        got["back"] = (vis(item, IDC_EXTRA_RUBY), vis(item, IDC_MOD_LIST))   # the tab keeps its sub-page
+    st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\nruby=en-US\n", act_off, env)
+    report("Row above the text toggle: no ruby_ui=, no mod: the box and its label hidden",
+           got.get("settings") == (False, False, True), repr(got.get("settings")))
+    report("  Mods' sub-row: Data and Extras, a third button hidden",
+           got.get("subrow") == [("Data", True), ("Extras", True), ("", False)], repr(got.get("subrow")))
+    report("  the Mods tab opens on Data: the mod list shown, the toggle not", got.get("data") == (True, False),
+           repr(got.get("data")))
+    x = got.get("extras", (None,) * 5)
+    report("  Extras: the toggle shown, unticked, the list hidden; its label and sentence",
+           x[:2] == (False, True) and x[4] == 0 and (x[2] or "").startswith("S&how Row above the text on Settings")
+           and "furigana mod" in (x[3] or "") and "turns this on" in (x[3] or ""), repr(x))
+    report("  ticked: the box and its label shown at once", got.get("on") == (True, True, 1), repr(got.get("on")))
+    report("  shown on the Settings page", got.get("on_settings") == (True, True), repr(got.get("on_settings")))
+    report("  the Mods tab comes back on the sub-page it was left on", got.get("back") == (True, False),
+           repr(got.get("back")))
+    report("  ruby_ui=1 written; ruby=en-US as read",
+           lines(ini).get("ruby_ui") == "1" and lines(ini).get("ruby") == "en-US",
+           "%r %r" % (lines(ini).get("ruby_ui"), lines(ini).get("ruby")))
+    report("  the window not grown by the sub-row (no 'a page needs' line)", not any("a page needs" in e for e in err),
+           " | ".join(err[-2:]))
+    # ruby_ui=1 read: shown and ticked; unticked: hidden, ruby_ui=0, ruby= kept (hiding clears nothing)
+    got = {}
+
+    def act_on(dlg, item):
+        got["read"] = (shown(item(IDC_RUBY)), u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
+        u.SendMessageW(item(IDC_EXTRA_RUBY), BM_CLICK, 0, 0)
+        got["off"] = (shown(item(IDC_RUBY)), shown(item(IDC_RUBYLABEL)))
+    st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\nruby=en-US\nruby_ui=1\n", act_on, env)
+    report("ruby_ui=1 read: ticked, the box shown", got.get("read") == (True, 1), repr(got.get("read")))
+    report("  unticked: hidden; ruby_ui=0 written, ruby=en-US kept",
+           got.get("off") == (False, False) and lines(ini).get("ruby_ui") == "0" and lines(ini).get("ruby") == "en-US",
+           "%r %r %r" % (got.get("off"), lines(ini).get("ruby_ui"), lines(ini).get("ruby")))
+    _, again, _ = run(ini, None, env)
+    report("  an untouched window: the ini byte for byte (ruby_ui=0 and ruby=en-US as read)", again == ini)
 
 
 class contextlib_quiet:

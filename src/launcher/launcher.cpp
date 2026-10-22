@@ -391,6 +391,9 @@ int wmain(int argc, wchar_t** argv) {
             const bool had_ini = bof3x::ConfigLoad(ini, cfg, why);
             if (!why.empty()) Die(L"%hs\n\n%ls", why.c_str(), ini.c_str());
             if (!had_ini) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
+            // An ini without ruby_ui= (older than the toggle): on when a
+            // reading-row mod is installed (docs/launcher-settings.md 2a, Extra).
+            bof3x::ConfigRubyUiDefault(cfg, bof3x::HomeDir());
             if (!bof3x::ConfigCheckEnvironmentLanguage(why)) Die(L"%hs", why.c_str());
             // No install at all - no BOF3.exe, no cache, no BOF3X_EXEIMAGE, and a
             // game folder the player did not name: the Sources page below makes
