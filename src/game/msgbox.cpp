@@ -1255,12 +1255,13 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                     Msgbox_Delay = 3;
                     SetB(kState, 1);
                     again = false;
-                } else if (instant && ++instant_glyphs < kInstantGlyphsPerFrame) {
-                    SetB(kState, 0);   // no wait: on to the next glyph this frame
                 } else {
                     SetB(kState, 0);
-                    if (Msgbox_Delay != 0 && !instant) SetB(kState, 1);
-                    again = false;
+                    // Instant: no wait, on to the next glyph this frame.
+                    if (!instant || ++instant_glyphs >= kInstantGlyphsPerFrame) {
+                        if (Msgbox_Delay != 0 && !instant) SetB(kState, 1);
+                        again = false;
+                    }
                 }
             }
             Msgbox_StepCount = Msgbox_StepCount + 1;
