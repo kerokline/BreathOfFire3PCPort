@@ -196,8 +196,10 @@ The count it is compared with is the u16 at `0x905B80`. `symbols.toml` names it
 
 The JP twins are the same instruction for instruction: the roll `0x801B4CC4`
 and the test `0x801B4EA8` (the same `mult 0x66666667`, the same gates). So
-this is Capcom's design. Which items accessories `0x14` and `0x15` are, and
-which facings 2 and 6 are on screen, were not read.
+this is Capcom's design. Accessory `0x15` is the Holy Mantle and `0x14` the
+Bell Collar (the sibling's `names/items.toml`). The Mantle's doubling wraps in
+zone 1, area 83's (D325); DIV-0153 caps it at 255. Which facings 2 and 6 are on
+screen was not read.
 
 ### `Field_PartySetUp` in full
 
