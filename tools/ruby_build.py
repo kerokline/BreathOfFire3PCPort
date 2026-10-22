@@ -27,23 +27,36 @@ second, and each reading's kana are the PC's own two-byte codes
 (loc_build.ja_encode). `--selftest` joins every message back with no
 readings and no re-flow and compares it with the layer's bytes.
 
+`second` (group SB, docs/reading-row-second.md) writes ruby-<second>-<main>:
+another held language's same slot re-flowed into the reading rows by the
+census's pairing rule (docs/second-language-census.md 9), with a composed
+font chunk in the layer's FIRST.DAT so the second's glyphs draw under the
+main's table:
+
+    python tools/ruby_build.py second --game G --lang ja-JP --over en-US [--lint FILE] [--json FILE]
+    python tools/ruby_build.py second --cache C --lang en-US --over ja-JP [--only AREA014,FIRST] [--out DIR]
+    python tools/ruby_build.py second --game G --lang ja-JP --over en-US --selftest
+
 The layer it writes is derived game text: it stays in the install's DAT\ or
 the cache (both gitignored), never in the tree (CLAUDE.md rule 1).
 """
 import argparse
 import collections
 import glob
+import json
 import os
 import re
 import struct
 import sys
 import tomllib
+from fractions import Fraction
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import dat        # noqa: E402
 import loc_build  # noqa: E402
+import language_tags  # noqa: E402
 
 DATA = os.path.join(ROOT, "data", "furigana")
 READINGS_TOML = os.path.join(DATA, "readings.toml")
@@ -60,7 +73,8 @@ SIDE_KIND = 18
 AREA_SIDE_TAG = 0x0
 AREA_TEXT_TAG = 0x0           # the kind-0 chunk read: the area's script block
 POOL_TAG = 0x4000             # FIRST.DAT's, BATTLE.DAT's (and the other pools') kind-0 chunk
-INSERT_MARK = 0x12            # in a ruby row: the drawn width of the k-th insert below
+INSERT_MARK = 0x12            # in a ruby row: skip the drawn width of the k-th insert below (furigana)
+INSERT_DRAW = 0x13            # in a ruby row: draw the k-th insert below at reading size (a second language)
 GAP = 0x09                    # in a ruby row: one half-cell, nothing drawn
 LAYER = "ruby-furigana-%s"
 
@@ -826,6 +840,1154 @@ class Source:
         return os.path.join(self.out, self.prefix_out + name)
 
 
+# ---------------------------------------------------------------- the second-language layer (group SB)
+#
+# `ruby_build.py second --lang <main> --over <second>` writes the optional text
+# layer ruby-<second>-<main>: the same slot of another held language, re-flowed
+# into the reading rows by the pairing rule of docs/second-language-census.md 9,
+# and a composed font chunk (census 7) so the second's glyphs draw under the
+# main's table. docs/reading-row-second.md is this mode's own account.
+
+# The Latin reading glyph's size: one constant until the owner picks from PR's
+# captures (reading-row-round.md 6 call 1; 1/2 or 2/3). At 1/2 an 8 x 12 letter
+# is drawn 4 x 6 units, texel for texel at the PC's 2x. The renderer (RR) draws
+# every glyph of a Latin second's ruby row on a (12 s) x (12 s) quad and moves
+# the pen by its kind-4 advance times s.
+LATIN_READING_SCALE = Fraction(1, 2)
+# A Japanese second's reading glyph: the sheet's 12 px cell on a 6-unit quad,
+# texel for texel (reading-row.md 1.2); not the owner's to pick.
+JA_READING_SCALE = Fraction(1, 2)
+ROW_UNITS = 192               # a row, text or reading: second_language_census.W, 16 cells of 12
+SECOND_LAYER = "ruby-%s-%s"   # (second, main)
+# Inserts are budgeted at the widest each can print (census 1, the sibling's
+# INSERT_WIDTH), in the main's letters: the name RR draws is the main's.
+INSERT_GLYPHS = {0x03: 5, 0x04: 5, 0x07: 8, 0x08: 11}
+JA_RELOC_AT = 0xAC0           # the Japanese cells under a Latin main: past every Latin table (census 7)
+ROUND = 0x10                  # a relocated block starts on a round index
+LATIN_CELLS = loc_build.LAST_CODE - loc_build.FIRST_CODE + 1      # the 100 dialogue cells, codes 0x30..0x93
+LATIN_SPACE_CELL = 0x64       # under a Japanese main: base + 0x64, a blank cell for the Latin space
+LATIN_EXT_CELL = 0x70         # under a Japanese main: base + 0x70 .. the accented block (FR, DE)
+EXT_CELLS = loc_build.EXT_MAX - loc_build.EXT_FIRST + 1
+GLYPH_BYTES = 288
+JA_AT_FIRST = loc_build.APPEND_AT   # the first glyph past the shipped table: where every layer's own cells start
+BLANK_GLYPH = bytes(GLYPH_BYTES)
+# DT-2's button code (docs/button-dialogue.md 1.1, 4.1): 05 (0xB0 + n) 06 05 cc G.
+BUTTON_ARG0 = 0xB0
+BUTTON_OF_BIT = {4: 2, 5: 0, 6: 1, 7: 3}      # Japan's bit index n -> circle 0, cross 1, triangle 2, square 3
+ICONS = {False: 0x9E3, True: 0x9F6}           # a Latin layer's circle .. square / ja-JP's (button_text.h)
+# Kinsoku for a Japanese re-break: glyphs that do not start a row, and that do not end one.
+NO_START = set("、。，．・：；？！ー」』）】〕…‥ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ〜")
+NO_END = set("「『（【〔")
+
+SECOND_PLAIN = (
+    "narration (a row past the box)", "narration (a page past three rows)", "own effect or offset pen",
+    "timed page needing a split", "the second has no text", "the main has no text",
+    "a glyph of the second with no cell in the composed font",
+    "a button code naming no face button",
+    "an insert of the second the text row below does not carry",
+)
+
+
+def round_up(n, k=ROUND):
+    return -(-n // k) * k
+
+
+def two_byte(g):
+    return bytes([0x80 | (g >> 8), g & 0xFF])
+
+
+def is_hang(raw):
+    return len(raw) == 1 and raw[0] in HANG
+
+
+class LayerFont:
+    """A layer's glyph table and advances: its FIRST.DAT's kind-3 and kind-4 chunks."""
+
+    def __init__(self, path):
+        blob, chunks = dat.load(path)
+        k3 = [c for c in chunks if c.kind == 3]
+        k4 = [c for c in chunks if c.kind == 4]
+        if len(k3) != 1 or len(k4) != 1:
+            raise SystemExit("%s: %d kind-3 and %d kind-4 chunks, expected one each (a language layer's font)"
+                             % (path, len(k3), len(k4)))
+        self.table = blob[k3[0].offset:k3[0].offset + k3[0].size]
+        self.adv = blob[k4[0].offset:k4[0].offset + k4[0].size]
+        self.space = k4[0].tag
+        self.count = len(self.table) // GLYPH_BYTES
+        if len(self.table) % GLYPH_BYTES or len(self.adv) != self.count:
+            raise SystemExit("%s: a table of 0x%X bytes and %d advances" % (path, len(self.table), len(self.adv)))
+
+    def cell(self, g):
+        return self.table[g * GLYPH_BYTES:(g + 1) * GLYPH_BYTES]
+
+    def inked(self, g):
+        return 0 <= g < self.count and self.cell(g) != BLANK_GLYPH
+
+
+class FontPlan:
+    """The composed font chunk (census 7, the drafted answers of its section 10):
+    the main's whole table and advances unchanged, the second's cells added past
+    it, and the map from the second's glyph codes to the composed table's.
+
+    - a Latin second over a Japanese main: the 100 dialogue cells (codes
+      0x30..0x93) at base .. base + 0x63, a blank space cell at base + 0x64, the
+      accented block (French, German) at base + 0x70 ..; base = the main's
+      table rounded up to 0x10 (0xE00 over the held ja-JP);
+    - a Japanese second over a Latin main: the 882 sheet cells (single sheet,
+      kanji sheet) at 0xAC0 + (g - 0x993), a blank space cell after them;
+    - Latin over Latin: the main's own letter shapes at the same codes, the
+      second's accented cells copied in where the main's table leaves the
+      index blank (French or German over English), a blank space cell.
+    Every glyph of a ruby row is a code of this table; the hanging bytes 0x2A
+    and 0x3C are written two-byte (reading-row.md 1.2)."""
+
+    def __init__(self, main, second, main_ja, second_ja):
+        self.main, self.second = main, second
+        self.main_ja, self.second_ja = main_ja, second_ja
+        self.table = bytearray(main.table)
+        self.adv = bytearray(main.adv)
+        self.map = {}          # second's glyph index -> composed index
+        self.single = {}       # second's single byte -> composed index
+        self.keep = not main_ja and not second_ja    # Latin over Latin: the main's codes as they are
+        self.blocks = []       # (first, last, what) for the report
+        if self.keep:
+            self.kind = "Latin over Latin: the main's letter shapes"
+            got = []
+            for g in range(JA_AT_FIRST, second.count):
+                if second.inked(g) and not main.inked(g):
+                    self.put(g, second, g)
+                    got.append(g)
+            if got:
+                self.blocks.append((got[0], got[-1], "the second's cells the main leaves blank, at their own codes"))
+        elif second_ja:
+            self.kind = "Japanese over Latin: the Japanese sheets relocated"
+            base = max(JA_RELOC_AT, round_up(main.count))
+            n = 2 * loc_build.JA_CELLS
+            for k in range(n):
+                self.put(base + k, second, loc_build.JA_AT + k)
+            for b, code in ((0x2A, 0x2A), (0x3C, 0x3B)):        # loc_build.JA_HANG: the two hangs' cells
+                self.single[b] = base + code
+            self.blocks.append((base, base + n - 1, "the single sheet and the kanji sheet, g - 0x%X + 0x%X"
+                                % (loc_build.JA_AT, base)))
+        else:
+            self.kind = "Latin over Japanese: the Latin cells relocated"
+            base = round_up(main.count)
+            for k in range(LATIN_CELLS):
+                self.put(base + k, second, loc_build.APPEND_AT + k)
+            for code, b in loc_build.ASCII_OF.items():
+                self.single[b] = base + code - loc_build.FIRST_CODE
+            self.blocks.append((base, base + LATIN_CELLS - 1, "the 100 dialogue cells, codes 0x30..0x93"))
+            ext = [k for k in range(EXT_CELLS) if second.inked(loc_build.EXT_AT + k)]
+            if ext:
+                for k in range(ext[-1] + 1):
+                    self.put(base + LATIN_EXT_CELL + k, second, loc_build.EXT_AT + k)
+                self.blocks.append((base + LATIN_EXT_CELL, base + LATIN_EXT_CELL + ext[-1],
+                                    "the accented cells, codes 0x94..0x%X" % (loc_build.EXT_FIRST + ext[-1])))
+            self.space_at = base + LATIN_SPACE_CELL
+        if not hasattr(self, "space_at"):
+            self.space_at = round_up(len(self.table) // GLYPH_BYTES)
+        self.put(self.space_at, None, None, advance=second.space)
+        self.blocks.append((self.space_at, self.space_at, "a blank cell: the second's space, advance %d" % second.space))
+        self.blocks.sort()
+        self.space_code = two_byte(self.space_at)
+        self.count = len(self.table) // GLYPH_BYTES
+        if self.count - 1 > loc_build.GLYPH_LIMIT:
+            raise SystemExit("the composed table holds %d glyphs, past DIV-0016's limit 0x%X"
+                             % (self.count, loc_build.GLYPH_LIMIT))
+
+    def put(self, at, src, g, advance=None):
+        """Glyph `g` of `src` (None: a blank) at index `at` of the composed table."""
+        n = len(self.table) // GLYPH_BYTES
+        if self.main.inked(at):
+            raise SystemExit("composed font: glyph 0x%X would overwrite the main's ink" % at)
+        while n <= at:
+            self.table += BLANK_GLYPH
+            self.adv.append(loc_build.PC_ADVANCE)
+            n += 1
+        self.table[at * GLYPH_BYTES:(at + 1) * GLYPH_BYTES] = src.cell(g) if src is not None else BLANK_GLYPH
+        self.adv[at] = src.adv[g] if src is not None else advance
+        if src is not None:
+            self.map[g] = at
+
+    def encode(self, raw, g):
+        """A glyph item of the second -> its bytes in a ruby row, or None."""
+        if len(raw) == 1:
+            b = raw[0]
+            if b in self.single:
+                return two_byte(self.single[b])
+            if self.keep:
+                return two_byte(b - 0x26) if b in HANG else raw
+            return None
+        if g in self.map:
+            return two_byte(self.map[g])
+        if self.keep and g < self.count:
+            return raw
+        return None
+
+    def glyph_of(self, code):
+        return ((code[0] & 0x7F) << 8) | code[1] if len(code) == 2 else code[0] - 0x26
+
+    def advance(self, code):
+        g = self.glyph_of(code)
+        return self.adv[g] if 0 <= g < len(self.adv) else loc_build.PC_ADVANCE
+
+    def icon(self, n):
+        """The main's own icon for DT-2's button code 0xB0 + n (the main's family, so
+        the renderer's ResolveCode reads it as this layer's; button-dialogue.md 4.1)."""
+        k = BUTTON_OF_BIT.get(n)
+        return None if k is None else two_byte(ICONS[self.main_ja] + k)
+
+    def chunks(self):
+        return [(3, 0, 0, bytes(self.table)), (4, self.main.space, 0, bytes(self.adv))]
+
+
+class Atom:
+    """One piece of the second's text in a reading row: a glyph ('g', its ruby-row
+    bytes, its colour), an insert ('ins', the control's bytes), or a button code
+    ('btn', its bytes, the colour it leaves)."""
+    __slots__ = ("kind", "out", "w", "colour", "char")
+
+    def __init__(self, kind, out, w, colour, char=None):
+        self.kind, self.out, self.w, self.colour, self.char = kind, out, w, colour, char
+
+
+class Unit:
+    """A break unit: atoms that stay on one row, the width they take, and whether
+    a space separates it from the unit before (Latin words; Japanese glyphs)."""
+    __slots__ = ("atoms", "w", "gap")
+
+    def __init__(self, atoms, w, gap):
+        self.atoms, self.w, self.gap = atoms, w, gap
+
+
+def share_out(units, weights):
+    """The units shared over pages in reading order, in proportion to each page's
+    weight (census 9 rule 3; second_language_census.share): a unit goes to the
+    page its midpoint falls in."""
+    n = len(weights)
+    if n == 1:
+        return [list(units)]
+    total = sum(weights) or 1
+    bounds, acc = [], 0
+    for w in weights:
+        acc += w
+        bounds.append(acc / total)
+    tw = sum(u.w for u in units) or 1
+    out = [[] for _ in range(n)]
+    acc, pi = 0, 0
+    for u in units:
+        mid = (acc + u.w / 2) / tw
+        while pi < n - 1 and mid > bounds[pi]:
+            pi += 1
+        out[pi].append(u)
+        acc += u.w
+    return out
+
+
+class SecondComposer:
+    """One ordered pair: compose a main message and the second's message of the
+    same slot into the reading-row shape of reading-row.md 1.2."""
+
+    def __init__(self, plan, main_ja, second_ja, main_charset, second_charset, lint=None):
+        self.plan = plan
+        self.main_ja, self.second_ja = main_ja, second_ja
+        self.mcs, self.scs = main_charset, second_charset
+        s = JA_READING_SCALE if second_ja else LATIN_READING_SCALE
+        self.scale = s
+        self.num, self.limit = s.numerator, ROW_UNITS * s.denominator   # reading widths in units x denominator
+        self.space_w = plan.second.space * self.num
+        self.letter = 12 if main_ja else 8          # the main's letter: what RR draws for an insert's name
+        self.madv, self.mspace = plan.main.adv, plan.main.space
+        self.stats = collections.Counter()
+        self.plain = collections.Counter()
+        self.lint = lint
+
+    # -- the main's rows ------------------------------------------------------
+    def mwidth(self, it):
+        """A main item's width in units (inserts at their budget)."""
+        if it[0] == "g":
+            if it[1] == b" ":
+                return self.mspace
+            g = it[2]
+            return self.madv[g] if 0 <= g < len(self.madv) else loc_build.PC_ADVANCE
+        if it[1][0] in INSERTS:
+            return INSERT_GLYPHS[it[1][0]] * self.letter
+        return 0
+
+    def row_units(self, row, inserts=False):
+        """A main row's drawn width: a first 0x2A / 0x3C hangs into the margin (msgbox.md 3)."""
+        w, first = 0, True
+        for it in row:
+            if it[0] == "c" and not (inserts and it[1][0] in INSERTS):
+                continue
+            u = self.mwidth(it)
+            if first and it[0] == "g" and is_hang(it[1]):
+                u = 0
+            first = False
+            w += u
+        return w
+
+    def rebreak_page(self, rows):
+        """A three-row page into two rows: a first row that is only an insert (the
+        speaker's name) kept as its own row when the rest re-breaks into one;
+        else all three re-broken into two (census 9 rule 4)."""
+        first = rows[0][0]
+        if (first and not any(it[0] == "g" for it in first) and any(it[0] == "c" and it[1][0] in INSERTS
+                                                                   for it in first)):
+            rest = self.rebreak(rows[1:], 1)
+            if rest is not None:
+                self.stats["pages re-broken under a kept name row"] += 1
+                return [rows[0]] + [(r, c) for r, c in self.recolour([r for r, _ in rest], rows[1][1])]
+        return self.rebreak(rows)
+
+    @staticmethod
+    def recolour(rows, c):
+        out = []
+        for r in rows:
+            out.append((r, c))
+            c = colour_after(r, c)
+        return out
+
+    def rebreak(self, rows, most=PAIRS):
+        """A three-row page re-broken at word boundaries (Latin: spaces, the authored
+        row ends becoming spaces; Japanese: between glyphs, kinsoku kept) into at
+        most two rows of ROW_UNITS, inserts at their budget; None when it does not fit.
+        Returns [(items, start colour)]; no item is dropped but one space (or the
+        authored break) where a row now ends."""
+        for items, _ in rows:
+            drawn = [it for it in items if it[0] == "g" or it[1][0] in INSERTS]
+            if not drawn or drawn[0][1] == b" ":
+                # A row that is empty or opens on a space is layout (a blank
+                # line, an indent, a signature): its rows are kept, the page splits.
+                self.stats["pages not re-broken: authored spacing"] += 1
+                return None
+        flat = []
+        for ri, (items, _) in enumerate(rows):
+            if ri:
+                flat.append(None)            # the authored break
+            flat.extend(items)
+        units = []                           # [items, width, sep items (spaces / None)]
+        if self.main_ja:
+            pend = []
+            for it in flat:
+                if it is None:
+                    continue
+                if it[0] == "c" and it[1][0] not in INSERTS:
+                    pend.append(it)
+                    continue
+                ch = self.mcs.char(it) if it[0] == "g" else None
+                cur = [pend + [it], self.mwidth(it), [], ch, ch]
+                pend = []
+                if units and ((ch and ch in NO_START) or (units[-1][4] and units[-1][4] in NO_END)):
+                    u = units[-1]
+                    u[0] += cur[0]
+                    u[1] += cur[1]
+                    u[4] = ch
+                else:
+                    units.append(cur)
+            if pend:
+                if not units:
+                    return None
+                units[-1][0] += pend
+        else:
+            sep, word = [], None
+            for it in flat:
+                if it is None or (it[0] == "g" and it[1] == b" "):
+                    if word is not None:
+                        units.append(word)
+                        word = None
+                    sep.append(it)
+                    continue
+                if word is None:
+                    word = [[], 0, sep, None, None]
+                    sep = []
+                word[0].append(it)
+                word[1] += self.mwidth(it)
+            if word is not None:
+                units.append(word)
+            trailing = [it for it in sep if it is not None]
+        out, cur, x = [], None, 0
+        for k, u in enumerate(units):
+            items, w, sep = u[0], u[1], u[2]
+            spaces = [it for it in sep if it is not None]
+            sw = 0 if self.main_ja else (len(spaces) or (1 if sep else 0)) * self.mspace
+            first = next((it for it in items if it[0] == "g"), None)
+            hang = self.mwidth(first) if first is not None and is_hang(first[1]) else 0
+            if cur is not None and x + sw + w > ROW_UNITS:
+                out.append(cur)
+                cur = None
+            if cur is None:
+                if w - hang > ROW_UNITS:
+                    return None
+                cur = list(spaces) if k == 0 else []
+                cur += items
+                x = w - hang
+            else:
+                cur += spaces if spaces else ([("g", b" ", SPACE - 0x26)] if sep else [])
+                cur += items
+                x += sw + w
+        if cur is not None:
+            if not self.main_ja:
+                cur += trailing
+            out.append(cur)
+        if len(out) > most or any(self.row_units(r, inserts=True) > ROW_UNITS for r in out):
+            return None
+        return self.recolour(out, rows[0][1])
+
+    # -- the second's text ----------------------------------------------------
+    def second_atoms(self, raw):
+        """The second's prompt as pages of atoms (its page and row breaks kept as
+        'pg' / 'br' markers), or (None, reason). Its own controls but colour,
+        the button code and the inserts are dropped (census 9 rule 8)."""
+        msg = Message(raw)
+        pages = []
+        for rows, term in msg.pages:
+            atoms, colour = [], 0                 # MsgBox_Step's colour starts at 0 on each page
+            for ri, row in enumerate(rows):
+                if ri:
+                    atoms.append("br")
+                k = 0
+                while k < len(row):
+                    it = row[k]
+                    if it[0] == "g":
+                        if it[1] == b" ":
+                            atoms.append("sp")
+                        else:
+                            code = self.plan.encode(it[1], it[2])
+                            if code is None:
+                                return None, 6
+                            ch = self.scs.char(it) if self.scs is not None else None
+                            atoms.append(Atom("g", code, self.plan.advance(code) * self.num, colour, ch))
+                    else:
+                        b = it[1][0]
+                        if b == COLOUR and len(it[1]) == 2 and BUTTON_ARG0 <= it[1][1] <= BUTTON_ARG0 + 7:
+                            # 05 Bn 06 05 cc G: one atom, the icon the main's own (button-dialogue.md 4.1)
+                            nxt = row[k + 1:k + 4]
+                            if (len(nxt) == 3 and nxt[0][0] == "c" and nxt[0][1] == bytes([COLOUR_OFF])
+                                    and nxt[1][0] == "c" and nxt[1][1][0] == COLOUR and len(nxt[1][1]) == 2
+                                    and nxt[2][0] == "g"):
+                                icon = self.plan.icon(it[1][1] - BUTTON_ARG0)
+                                if icon is None:
+                                    return None, 7
+                                cc = nxt[1][1][1]
+                                atoms.append(Atom("btn", it[1] + nxt[0][1] + nxt[1][1] + icon,
+                                                  self.plan.advance(icon) * self.num, cc))
+                                colour = cc
+                                k += 4
+                                continue
+                            colour = it[1][1]
+                        elif b == COLOUR and len(it[1]) == 2:
+                            colour = it[1][1]
+                        elif b == COLOUR_OFF:
+                            colour = 0
+                        elif b in INSERTS:
+                            atoms.append(Atom("ins", it[1], INSERT_GLYPHS[b] * self.letter * self.num, None))
+                    k += 1
+            if any(isinstance(a, Atom) for a in atoms):
+                pages.append(atoms)
+        return pages, None
+
+    def units(self, pages):
+        """Break units over the second's pages, its page and row breaks dissolved
+        (Latin: a break is a space; Japanese: nothing)."""
+        out, gap, ja = [], False, self.second_ja
+        for pi, atoms in enumerate(pages):
+            if pi and not ja:
+                gap = True
+            for a in atoms:
+                if a == "sp":
+                    gap = True
+                    continue
+                if a == "br":
+                    gap = gap or not ja
+                    continue
+                if ja:
+                    last = out[-1] if out else None
+                    if last is not None and not gap and (
+                            (a.char and a.char in NO_START)
+                            or (last.atoms[-1].char and last.atoms[-1].char in NO_END)):
+                        last.atoms.append(a)
+                        last.w += a.w
+                    else:
+                        out.append(Unit([a], a.w, gap))
+                elif out and not gap:
+                    out[-1].atoms.append(a)
+                    out[-1].w += a.w
+                else:
+                    out.append(Unit([a], a.w, gap))
+                gap = False
+        return out
+
+    def insert_rows(self, units, text_rows):
+        """{unit index: reading row} for the units that hold an insert: the k-th
+        marker of a reading row is the k-th insert of the text row below
+        (reading-row.md 1.2), so each insert of the second goes over the first
+        row, from the last one used, whose next insert is the same control.
+        None when an insert has no such row."""
+        T = [self.inserts_of(r[0]) if r else [] for r in text_rows]
+        r, p, out = 0, 0, {}
+        for k, u in enumerate(units):
+            for a in u.atoms:
+                if a.kind != "ins":
+                    continue
+                while r < len(T) and not (p < len(T[r]) and T[r][p] == a.out):
+                    r, p = r + 1, 0
+                if r == len(T) or out.get(k, r) != r:
+                    return None
+                out[k] = r
+                p += 1
+        return out
+
+    def wrap(self, units, text_rows=None):
+        """Greedy reading rows: [[(unit, space before)]]; a unit wider than a row
+        is cut at a glyph. Given the text rows below, a unit holding an insert is
+        put over the row that carries it (insert_rows), breaking early when it
+        must; when that cannot be done the plain greedy rows are returned, and
+        compose's insert check leaves the message plain."""
+        want = self.insert_rows(units, text_rows) if text_rows is not None else None
+        if want:
+            rows = self.wrap_to(units, want)
+            if rows is not None:
+                return rows
+        return self.wrap_to(units, {})
+
+    def wrap_to(self, units, want):
+        rows, cur, x = [], [], 0
+        for k, u in enumerate(units):
+            t = want.get(k)
+            if t is not None:
+                if len(rows) > t:
+                    return None
+                while len(rows) < t:
+                    rows.append(cur)
+                    cur, x = [], 0
+            sw = self.space_w if (u.gap and cur) else 0
+            if cur and x + sw + u.w > self.limit:
+                if t is not None:
+                    return None
+                rows.append(cur)
+                cur, x, sw = [], 0, 0
+            if not cur and u.w > self.limit:
+                piece, pw = [], 0
+                for a in u.atoms:
+                    if piece and pw + a.w > self.limit:
+                        rows.append([(Unit(piece, pw, False), False)])
+                        piece, pw = [], 0
+                        self.stats["second units cut across rows"] += 1
+                    piece.append(a)
+                    pw += a.w
+                u = Unit(piece, pw, False)
+            cur.append((u, sw > 0))
+            x += sw + u.w
+        if cur:
+            rows.append(cur)
+        return rows
+
+    # -- a page ---------------------------------------------------------------
+    def weight(self, rows):
+        return sum(1 for items, _ in rows for it in items if it[0] == "g" or it[1][0] in INSERTS)
+
+    def layout(self, rows, units, top=True):
+        """A main page (its rows, [(items, start colour)]) and its share of the
+        second -> sub-pages of pairs [(reading row | None, (items, start colour) | None)]
+        and the page's class. Census 9 rules 4 and 5: as authored when it fits; a
+        three-row page re-broken into two; split on overflow, never the second
+        squeezed: three authored rows as rows 1-2 and 3, two as 1 and 2, the
+        second re-shared over the parts by their glyphs."""
+        free = self.wrap(units)              # the second's own rows, inserts anywhere: its length alone
+        if len(rows) <= PAIRS:
+            R = self.wrap(units, rows)
+            if len(R) <= PAIRS:
+                return [self.pairs(rows, self.balance(units, rows, R))], "A"
+            rb = None
+        else:
+            rb = self.rebreak_page(rows)
+            if rb is not None:
+                R = self.wrap(units, rb)
+                if len(R) <= PAIRS:
+                    return [self.pairs(rb, self.balance(units, rb, R))], "B"
+        over = len(free) > PAIRS
+        cls = "C both" if over and len(rows) > PAIRS and rb is None else "C by the second" if over else (
+            "C main alone" if len(rows) > PAIRS and rb is None else "C by the inserts")
+        if top and over:
+            self.stats["second needs a third reading row"] += 1
+        if len(rows) == 1:
+            R = self.wrap(units, rows)
+            pages = []
+            for i in range(0, len(R), PAIRS):
+                part = R[i:i + PAIRS]
+                pages.append(self.pairs(rows if i == 0 else [], part))
+            return pages, cls
+        groups = [rows[:PAIRS], rows[PAIRS:]] if len(rows) > PAIRS else [rows[:1], rows[1:]]
+        shares = share_out(units, [self.weight(g) for g in groups])
+        out = []
+        for g, u in zip(groups, shares):
+            sub, _ = self.layout(g, u, False)
+            out += sub
+        return out, cls
+
+    def balance(self, units, rows, R):
+        """The second over a two-row page: shared over the two text rows by their
+        glyphs (reading order, word boundaries) when each part fits its one
+        reading row and its inserts are the row's, so each reading row stands
+        over the text it reads with; else the greedy rows R (census 9 rule 4)."""
+        if len(rows) != PAIRS or not R:
+            return R
+        parts = share_out(units, [self.weight([r]) for r in rows])
+        out = []
+        for part, row in zip(parts, rows):
+            w = self.wrap(part, [row])
+            if len(w) > 1:
+                return R
+            have = [a.out for u, _ in (w[0] if w else []) for a in u.atoms if a.kind == "ins"]
+            if have != self.inserts_of(row[0])[:len(have)]:
+                return R
+            out.append(w[0] if w else [])
+        self.stats["pages balanced over their two text rows"] += 1
+        return out
+
+    @staticmethod
+    def pairs(rows, R):
+        n = max(len(rows), len(R), 1)
+        return [(R[i] if i < len(R) else None, rows[i] if i < len(rows) else None) for i in range(n)]
+
+    # -- bytes ----------------------------------------------------------------
+    def ruby_bytes(self, rrow, walk, want):
+        """The reading row's bytes: the second's glyphs in its own colours, a space
+        cell between units, 0x12 for an insert; it starts on the walk's colour
+        `walk` and ends on `want`, the colour the text row below starts in."""
+        out, cur = bytearray(), walk
+        if rrow:
+            for u, sp in rrow:
+                if sp:
+                    out += self.plan.space_code
+                for a in u.atoms:
+                    if a.kind == "g":
+                        if a.colour != cur:
+                            out += colour_code(a.colour)
+                            cur = a.colour
+                        out += a.out
+                    elif a.kind == "ins":
+                        out.append(INSERT_DRAW)
+                    else:
+                        out += a.out
+                        cur = a.colour
+        if cur != want:
+            out += colour_code(want)
+        return bytes(out)
+
+    @staticmethod
+    def inserts_of(items):
+        return [it[1] for it in items if it[0] == "c" and it[1][0] in INSERTS]
+
+    def compose(self, main_raw, second_raw, where):
+        """The composed message, or (None, reason index) when the main stays plain.
+        The numbers count only messages that end composed."""
+        before = collections.Counter(self.stats)
+        out = self._compose(main_raw, second_raw, where)
+        if out[0] is None:
+            self.stats = before
+        return out
+
+    def _compose(self, main_raw, second_raw, where):
+        msg = Message(main_raw)
+        reason = self.plain_reason(msg)
+        if reason is not None:
+            return None, reason
+        spages, why = self.second_atoms(second_raw)
+        if spages is None:
+            return None, why
+        if not spages:
+            return None, 4
+        content = [k for k, (rows, term) in enumerate(msg.pages)
+                   if any(it[0] == "g" or it[1][0] in INSERTS for r in rows for it in r)]
+        if not content:
+            return None, 5
+        # The rows with the colour each starts in on the original walk (0 at a page's start).
+        mpages = []
+        for rows, term in msg.pages:
+            rr, c = [], 0
+            for r in rows:
+                rr.append((r, c))
+                c = colour_after(r, c)
+            mpages.append((rr, term))
+        if len(spages) == len(content):
+            per = {k: self.units([spages[i]]) for i, k in enumerate(content)}
+            self.stats["messages paired page by page"] += 1
+        else:
+            shares = share_out(self.units(spages), [self.weight(mpages[k][0]) for k in content])
+            per = dict(zip(content, shares))
+            self.stats["messages shared in proportion"] += 1
+        plan, classes = [], collections.Counter()
+        for k, (rows, term) in enumerate(mpages):
+            if len(rows) == 1 and not rows[0][0]:
+                plan.append((None, term))
+                continue
+            sub, cls = self.layout(rows, per.get(k, []))
+            if term[:1] == bytes([TIMED]) and len(sub) > 1:
+                return None, 3
+            for sp in sub:
+                for rrow, trow in sp:
+                    have = [a.out for u, _ in (rrow or []) for a in u.atoms if a.kind == "ins"]
+                    below = self.inserts_of(trow[0]) if trow else []
+                    if have != below[:len(have)]:
+                        return None, 8
+            classes[cls] += 1
+            plan.append((sub, term))
+        out = bytearray(msg.head)
+        added = 0
+        for sub, term in plan:
+            if sub is None:
+                out += term
+                continue
+            for si, sp in enumerate(sub):
+                if si:
+                    out.append(PAGE)
+                    added += 1
+                walk = 0
+                for pi, (rrow, trow) in enumerate(sp):
+                    if pi:
+                        out.append(NL)
+                    items, start = trow if trow else ([], walk)
+                    out += self.ruby_bytes(rrow, walk, start) + bytes([NL]) + Message.row_bytes(items)
+                    walk = colour_after(items, start)
+                    if trow is None:
+                        self.stats["empty text rows under a reading row"] += 1
+                    if not rrow:
+                        self.stats["empty reading rows"] += 1
+                    else:
+                        self.stats["reading rows"] += 1
+                        self.stats["insert markers"] += sum(1 for u, _ in rrow for a in u.atoms if a.kind == "ins")
+            out += term
+        out += msg.tail or b"\0"
+        composed = bytes(out)
+        for cls, n in classes.items():
+            self.stats["box pages: " + cls] += n
+        self.stats["box pages"] += sum(classes.values())
+        self.stats["pages added"] += added
+        self.check(main_raw, composed, where)
+        if self.lint is not None:
+            self.lint_message(composed, where)
+        return composed, None
+
+    def plain_reason(self, msg):
+        """Census 9 rule 2, per message (every page of a composed message is pairs,
+        reading-row.md 1.2): a row past the box, a page past three rows, the
+        offset pen or the effect preset leave the whole message plain."""
+        for rows, term in msg.pages:
+            if any(self.row_units(r) > ROW_UNITS for r in rows):
+                return 0
+            if len(rows) > BOX_ROWS:
+                return 1
+            if any(it[0] == "c" and it[1][0] in EFFECTS for r in rows for it in r):
+                return 2
+        return None
+
+    # -- checks ---------------------------------------------------------------
+    def canon(self, rows_groups):
+        """The main's text with its row and page breaks normalised: Latin, a break
+        is a space and runs of spaces are one; Japanese, a break is nothing. Empty
+        rows are dropped (an empty text row under a reading row is the layout's).
+        Each glyph carries the colour the walk draws it in."""
+        sp = (b" ", None)
+        out = []
+        for rows in rows_groups:
+            toks = []
+            for r in rows:
+                if not r:
+                    continue
+                if toks and not self.main_ja:
+                    toks.append(sp)
+                toks += r
+            if not self.main_ja:
+                toks = [t for i, t in enumerate(toks) if not (t == sp and i and toks[i - 1] == sp)]
+                while toks and toks[-1] == sp:
+                    toks.pop()
+                while toks and toks[0] == sp:
+                    toks.pop(0)
+            out.append(toks)
+        return out
+
+    @staticmethod
+    def walk_colours(rows):
+        """Rows of items -> rows of (bytes, the colour a glyph is drawn in | None),
+        the walk's colour starting at 0 (a page, MsgBox_Step)."""
+        c, out = 0, []
+        for r in rows:
+            toks = []
+            for it in r:
+                if it[0] == "c":
+                    if it[1][0] == COLOUR and len(it[1]) == 2:
+                        c = it[1][1]
+                    elif it[1][0] == COLOUR_OFF:
+                        c = 0
+                    toks.append((it[1], None))
+                else:
+                    toks.append((it[1], None if it[1] == b" " else c))
+            out.append(toks)
+        return out
+
+    def check(self, raw, composed, where):
+        """The composed message, its reading rows taken out and its breaks
+        normalised, is the original's text, every glyph in the colour the
+        original drew it in; the same head, tail and non-page terminators; every
+        page two pairs at most; a reading row holds only what 1.2 allows. Raises
+        on a difference (rule 4: never written wrong)."""
+        orig, comp = Message(raw), Message(composed)
+        if orig.head != comp.head or (orig.tail or b"\0") != comp.tail:
+            raise SystemExit("%s: the composed message's head or tail differs" % where)
+
+        def groups(m, composed_side):
+            gs, cur, terms = [], [], []
+            for rows, term in m.pages:
+                coloured = self.walk_colours(rows)
+                if composed_side and rows != [[]]:
+                    if len(rows) % 2 or len(rows) > 2 * PAIRS:
+                        raise SystemExit("%s: a composed page of %d rows" % (where, len(rows)))
+                    for k in range(0, len(rows), 2):
+                        for it in rows[k]:
+                            ok = (it[0] == "g" and not is_hang(it[1]) and it[1] != b" "
+                                  and (len(it[1]) == 2 or it[1][0] > SPACE or it[1] == bytes([INSERT_DRAW]))
+                                  or it[0] == "c" and it[1][0] in (GAP, COLOUR, COLOUR_OFF))
+                            if not ok:
+                                raise SystemExit("%s: a reading row holds %s" % (where, it[1].hex()))
+                    coloured = [coloured[k + 1] for k in range(0, len(rows), 2)]
+                cur += coloured
+                if term != bytes([PAGE]):
+                    gs.append(cur)
+                    terms.append(term)
+                    cur = []
+            gs.append(cur)
+            return gs, terms
+
+        og, ot = groups(orig, False)
+        cg, ct = groups(comp, True)
+        if ot != ct:
+            raise SystemExit("%s: the composed message's terminators differ" % where)
+        if self.canon(og) != self.canon(cg):
+            raise SystemExit("%s: the composed text rows differ from the original's" % where)
+        self.stats["messages checked"] += 1
+
+    def lint_message(self, composed, where):
+        """Walk every reading row as the renderer will (reading-row.md 1.2): each
+        glyph a code of the composed table, inked or the space cell, at its
+        advance times the reading scale; 0x12 the next insert of the text row
+        below at its budget; the row inside ROW_UNITS; no hanging first byte.
+        And every text row inside the box. (The colours are check()'s.)"""
+        bad = []
+        for rows, term in Message(composed).pages:
+            if rows == [[]]:
+                continue
+            for k in range(0, len(rows), 2):
+                ruby, text = rows[k], rows[k + 1]
+                self.stats["lint reading rows"] += 1
+                x, marks = 0, 0
+                below = self.inserts_of(text)
+                glyphs = [it for it in ruby if it[0] == "g"]
+                if glyphs and is_hang(glyphs[0][1]):
+                    bad.append("a reading row starts on a hanging byte")
+                for it in ruby:
+                    if it[0] == "c":
+                        continue
+                    if it[1] == bytes([INSERT_DRAW]):
+                        if marks >= len(below):
+                            bad.append("a marker with no insert below")
+                        else:
+                            x += INSERT_GLYPHS[below[marks][0]] * self.letter * self.num
+                        marks += 1
+                        continue
+                    g = self.plan.glyph_of(it[1])
+                    if not (0 <= g < self.plan.count) or (g != self.plan.space_at and self.plan.table[
+                            g * GLYPH_BYTES:(g + 1) * GLYPH_BYTES] == BLANK_GLYPH):
+                        bad.append("glyph 0x%X has no ink in the composed table" % g)
+                    x += self.plan.advance(it[1]) * self.num
+                if x > self.limit:
+                    bad.append("a reading row %.1f units wide" % (x / self.scale.denominator))
+                if self.row_units(text, inserts=True) > ROW_UNITS:
+                    self.stats["lint text rows past the box with inserts at their budget"] += 1
+                if self.row_units(text) > ROW_UNITS:
+                    bad.append("a text row past the box")
+        if bad:
+            self.stats["lint bad messages"] += 1
+            self.lint.append((where, bad))
+
+
+class SecondSource:
+    """Where the two text layers are read (and the shipped text, for the port's kept
+    messages) and the layer is written."""
+
+    def __init__(self, args):
+        self.main, self.over = args.lang, args.over
+        self.layer = SECOND_LAYER % (args.over, args.lang)
+        if args.game:
+            d = os.path.join(args.game, "DAT")
+            self.dirs = {t: (d, "%s." % t) for t in (args.lang, args.over)}
+            self.base = (d, "")
+            self.out = args.out or d
+            self.prefix_out = "%s." % self.layer
+        else:
+            self.dirs = {t: (os.path.join(args.cache, "loc", t, "dat"), "") for t in (args.lang, args.over)}
+            self.base = (os.path.join(args.cache, "loc", "zh-CN", "dat"), "")
+            self.out = args.out or os.path.join(args.cache, "opt", self.layer, "dat")
+            self.prefix_out = ""
+        for t, (d, p) in self.dirs.items():
+            if not os.path.isfile(os.path.join(d, p + "FIRST.DAT")):
+                raise SystemExit("%s: no %s layer here (loc_build.py builds it)" % (d, t))
+
+    def path(self, tag, name):
+        d, p = self.dirs[tag] if tag != "base" else self.base
+        return os.path.join(d, p + name)
+
+    def names(self):
+        d, p = self.dirs[self.main]
+        out = []
+        for f in sorted(glob.glob(os.path.join(d, p + "*.DAT"))):
+            name = os.path.basename(f)[len(p):]
+            if name.count(".") == 1:
+                out.append(name)
+        return out
+
+    def blocks(self, tag, name):
+        """{(side tag, half): block bytes} of one layer's file (None when it has none)."""
+        path = self.path(tag, name)
+        if not os.path.isfile(path):
+            return None
+        blob, chunks = dat.load(path)
+        out = {}
+        for c in chunks:
+            if c.kind != 0:
+                continue
+            payload = blob[c.offset:c.offset + c.size]
+            if c.tag == AREA_TEXT_TAG:
+                out[(AREA_SIDE_TAG, 0)] = payload
+            elif c.tag == POOL_TAG:
+                d0, d1 = struct.unpack_from("<II", payload, 0)
+                if not (8 <= d0 <= d1 <= len(payload)):
+                    raise SystemExit("%s: the pool's two half offsets 0x%X 0x%X do not split its 0x%X bytes"
+                                     % (path, d0, d1, len(payload)))
+                out[(POOL_TAG, 0)] = payload[d0:d1]
+                out[(POOL_TAG, 1)] = payload[d1:]
+        return out
+
+    def out_path(self, name):
+        return os.path.join(self.out, self.prefix_out + name)
+
+
+def slot_messages(block):
+    """[message bytes or None (past the block, or empty: a leading NUL)] per slot, and the offsets."""
+    n, slots = block_slots(block)
+    msgs, offs = [], []
+    for slot, off in slots:
+        if off is None or block[off] == 0:
+            msgs.append(None)
+        else:
+            msgs.append(block[off:loc_build.message_end(block, off)])
+        offs.append(off)
+    return n, msgs, offs
+
+
+def kept_pc(msg, base_msg):
+    """The port's own message, kept by a layer (second_language_census.is_foreign):
+    equal to the shipped slot, or a two-byte glyph below the appended range."""
+    if base_msg is not None and len(msg) > 1 and msg == base_msg:
+        return True
+    i, n = 0, len(msg)
+    while i < n:
+        b = msg[i]
+        if b & 0x80:
+            g = ((b & 0x7F) << 8) | (msg[i + 1] if i + 1 < n else 0)
+            if g < loc_build.APPEND_AT:
+                return True
+            i += 2
+        elif b in ARG1 or b == CHOICE:
+            i += 2 if b in ARG1 else 4
+        else:
+            i += 1
+    return False
+
+
+def write_dat(path, chunks):
+    """chunks: [(kind, tag, word3, payload)] -> one overlay, read back by dat.load."""
+    tmp = path + ".tmp"
+    with open(tmp, "wb") as f:
+        for kind, tag, half, payload in chunks:
+            f.write(struct.pack("<4I", kind, tag, len(payload), half))
+            f.write(payload)
+    dat.load(tmp)
+    os.replace(tmp, path)
+
+
+def cmd_second(args):
+    tags = language_tags.TAGS
+    for t in (args.lang, args.over):
+        language_tags.refuse_retired(t, "--lang" if t == args.lang else "--over")
+        if t not in tags:
+            raise SystemExit("%s is not a language tag the engine plays (%s)" % (t, ", ".join(tags)))
+    if args.lang == args.over:
+        raise SystemExit("--over names the main language itself")
+    src = SecondSource(args)
+    names = [n for n in src.names() if not args.only or n[:-4] in args.only]
+    if args.only and not names:
+        raise SystemExit("--only %s: no such file of %s" % (",".join(args.only), args.lang))
+    main_ja, second_ja = args.lang == "ja-JP", args.over == "ja-JP"
+    charset = Charset() if (main_ja or second_ja) else None
+
+    if args.selftest:
+        # FB's gate for this mode: with no second (empty), every main message
+        # comes back byte for byte - and every message of the second walks into
+        # items that join back, so nothing of it is lost before it is re-flowed.
+        st = collections.Counter()
+        for name in names:
+            for tag in (args.lang, args.over):
+                blocks = src.blocks(tag, name) or {}
+                for key, block in blocks.items():
+                    st["blocks"] += 1
+                    n, msgs, offs = slot_messages(block)
+                    seen = set()
+                    for slot, (m, off) in enumerate(zip(msgs, offs)):
+                        st["slots"] += 1
+                        if off is None or off in seen:
+                            continue
+                        seen.add(off)
+                        raw = block[off:loc_build.message_end(block, off)]
+                        st["messages"] += 1
+                        if Message(raw).join() != raw:
+                            st["mismatch"] += 1
+                            print("ROUND-TRIP MISMATCH %s %s %s/%d slot %d" % (tag, name, hex(key[0]), key[1], slot))
+        print("selftest: %d files of %s and %s, %d blocks, %d slots, %d messages checked, %d mismatches"
+              % (len(names), args.lang, args.over, st["blocks"], st["slots"], st["messages"], st["mismatch"]))
+        return 1 if st["mismatch"] else 0
+
+    mfont = LayerFont(src.path(args.lang, "FIRST.DAT"))
+    sfont = LayerFont(src.path(args.over, "FIRST.DAT"))
+    plan = FontPlan(mfont, sfont, main_ja, second_ja)
+    comp = SecondComposer(plan, main_ja, second_ja, charset, charset if second_ja else None,
+                          lint=[] if args.lint else None)
+    os.makedirs(src.out, exist_ok=True)
+    slots = collections.Counter()
+    totals = collections.Counter()
+    written = set()
+    longest = (0, "")
+    kinds = {"area": collections.Counter(), "pool": collections.Counter()}
+    for name in names:
+        mblocks = src.blocks(args.lang, name) or {}
+        sblocks = src.blocks(args.over, name) or {}
+        bblocks = src.blocks("base", name) or {}
+        chunks = []
+        for key, mblock in mblocks.items():
+            totals["blocks"] += 1
+            kind = "pool" if key[0] == POOL_TAG else "area"
+            before = collections.Counter(comp.stats)
+            n, mm, moffs = slot_messages(mblock)
+            sblock = sblocks.get(key)
+            if sblock is None:
+                slots["%s: the second has no such block" % kind] += sum(1 for m in mm if m is not None)
+                continue
+            sn, sm, soffs = slot_messages(sblock)
+            if sn != n:
+                totals["blocks whose slot counts differ"] += 1
+            bm = slot_messages(bblocks[key])[1] if key in bblocks else []
+            composed, memo = {}, {}
+            for slot in range(n):
+                m = mm[slot]
+                s = sm[slot] if slot < sn else None
+                b = bm[slot] if slot < len(bm) else None
+                slots[kind + ": slots"] += 1
+                if m is None:
+                    slots[kind + ": main empty (nothing to show)"] += 1
+                    continue
+                if s is None:
+                    slots[kind + ": plain, the second empty"] += 1
+                    continue
+                km, ks = kept_pc(m, b), kept_pc(s, b)
+                if km or ks:
+                    slots[kind + ": plain, the port's kept message " + (
+                        "on both sides" if km and ks else "in the main" if km else "in the second")] += 1
+                    continue
+                mk = (moffs[slot], soffs[slot])
+                if mk not in memo:
+                    memo[mk] = comp.compose(m, s, "%s %s/%d slot %d" % (name[:-4], hex(key[0]), key[1], slot))
+                    totals[kind + " distinct pairs"] += 1
+                c, why = memo[mk]
+                if c is None:
+                    slots[kind + ": plain, " + SECOND_PLAIN[why]] += 1
+                    continue
+                slots[kind + ": paired"] += 1
+                composed[slot] = c
+                if len(c) > longest[0]:
+                    longest = (len(c), "%s slot %d" % (name[:-4], slot))
+            kinds[kind].update(comp.stats - before)
+            if composed:
+                chunks.append((SIDE_KIND, key[0], key[1], side_payload(n, composed)))
+        if name == "FIRST.DAT":
+            chunks = plan.chunks() + chunks
+        if chunks:
+            path = src.out_path(name)
+            write_dat(path, chunks)
+            written.add(os.path.basename(path))
+            totals["files"] += 1
+            totals["chunks"] += len(chunks)
+            totals["bytes"] += os.path.getsize(path)
+    if not args.only and not args.out:
+        for p in glob.glob(os.path.join(src.out, src.prefix_out + "*.DAT")):
+            if os.path.basename(p) not in written:
+                os.remove(p)
+                totals["stale removed"] += 1
+
+    st = comp.stats
+    print("%s: %d files, %d chunks, %d bytes -> %s" % (src.layer, totals["files"], totals["chunks"], totals["bytes"],
+                                                      src.out))
+    print("composed font: %s; %d glyphs (the main's %d), reading scale %s"
+          % (plan.kind, plan.count, mfont.count, comp.scale))
+    for a, b, what in plan.blocks:
+        print("  0x%X..0x%X  %s" % (a, b, what))
+    for kind in ("area", "pool"):
+        keys = sorted(k for k in slots if k.startswith(kind + ":"))
+        if keys:
+            print("%s slots: %s" % (kind, "; ".join("%s %d" % (k[len(kind) + 2:], slots[k]) for k in keys)))
+    for kind in ("area", "pool"):
+        k = kinds[kind]
+        box = k["box pages"]
+        if not box:
+            continue
+        pct = lambda n: "%d (%.1f%%)" % (n, 100.0 * n / box)
+        print("%s box pages %d: as authored %s, main re-broken %s; split by the main alone %s, by the second %s, by "
+              "both %s, by the inserts' rows %s; pages added %d; the second needed a third reading row on %s"
+              % (kind, box, pct(k["box pages: A"]), pct(k["box pages: B"]), pct(k["box pages: C main alone"]),
+                 pct(k["box pages: C by the second"]), pct(k["box pages: C both"]), pct(k["box pages: C by the inserts"]),
+                 k["pages added"], pct(k["second needs a third reading row"])))
+        print("  messages paired page by page %d, shared in proportion %d; reading rows %d (empty %d), empty text "
+              "rows under a reading row %d, insert markers %d, second units cut across rows %d"
+              % (k["messages paired page by page"], k["messages shared in proportion"], k["reading rows"],
+                 k["empty reading rows"], k["empty text rows under a reading row"], k["insert markers"],
+                 k["second units cut across rows"]))
+    print("%d composed messages checked against their originals; longest %d bytes (%s)"
+          % (st["messages checked"], longest[0], longest[1]))
+    if args.json:
+        with open(args.json, "w") as f:
+            json.dump({"layer": src.layer, "font": {"kind": plan.kind, "glyphs": plan.count, "main": mfont.count,
+                                                    "blocks": [["0x%X" % a, "0x%X" % b, w] for a, b, w in plan.blocks],
+                                                    "scale": str(comp.scale)},
+                       "slots": dict(slots), "area": dict(kinds["area"]), "pool": dict(kinds["pool"]),
+                       "totals": dict(totals), "longest": list(longest)}, f, indent=1, sort_keys=True)
+    if totals["blocks whose slot counts differ"]:
+        print("blocks whose slot counts differ: %d" % totals["blocks whose slot counts differ"])
+    if totals["stale removed"]:
+        print("removed %d stale %s files" % (totals["stale removed"], src.layer))
+    if args.lint:
+        with open(args.lint, "w", encoding="utf-8") as f:
+            f.write("# ruby_build.py second --lint: reading rows the renderer would draw wrong\n\n")
+            for where, bad in comp.lint:
+                f.write("%s\n  %s\n" % (where, "\n  ".join(bad)))
+        print("lint: %d reading rows walked, %d messages with a fault (%s); %d text rows past the box only with "
+              "their inserts at the widest budget"
+              % (st["lint reading rows"], st["lint bad messages"], args.lint,
+                 st["lint text rows past the box with inserts at their budget"]))
+        if st["lint bad messages"]:
+            return 1
+    return 0
+
+
 # ---------------------------------------------------------------- the command
 
 def cmd_furigana(args):
@@ -1035,10 +2197,22 @@ def main(argv=None):
     f.add_argument("--review", metavar="FILE", help="every reading placed, with its message's text")
     f.add_argument("--ambiguous", metavar="FILE", help="every surface the lexicon reads two ways, most frequent first")
     f.add_argument("--dict", choices=["core", "full"], default="core", help="SudachiDict (default core)")
+    s = sub.add_parser("second", help="the ruby-<second>-<main> layer: another held language in the reading rows")
+    where = s.add_mutually_exclusive_group(required=True)
+    where.add_argument("--game", help="the PC install: reads DAT\\<tag>.<NAME>.DAT")
+    where.add_argument("--cache", help="an importer cache: reads loc/<tag>/dat/")
+    s.add_argument("--lang", required=True, help="the main language's tag: the text played")
+    s.add_argument("--over", required=True, help="the second language's tag: the text in the reading rows")
+    s.add_argument("--only", type=lambda v: v.split(","), help="file stems, e.g. AREA014,FIRST")
+    s.add_argument("--out", help="the directory written (default: beside the layers, see the docstring)")
+    s.add_argument("--selftest", action="store_true",
+                   help="every message of both layers' blocks must join back byte for byte")
+    s.add_argument("--lint", metavar="FILE", help="walk every reading row as the renderer will; list the faults")
+    s.add_argument("--json", metavar="FILE", help="the numbers (counts only, no text) as JSON")
     args = ap.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    return cmd_furigana(args)
+    return cmd_second(args) if args.cmd == "second" else cmd_furigana(args)
 
 
 if __name__ == "__main__":

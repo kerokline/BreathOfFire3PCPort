@@ -85,7 +85,7 @@ every byte but the ones named below.
   nothing (in a text row it stays what it is today: one byte, nothing
   drawn). A reading's first glyph starts at twice its stem's cell index.
 - **Allowed in a ruby row, and nothing else:** glyph codes, `0x09`, the
-  colour codes `0x05 nn` / `0x06`, and the insert marker below. Every
+  colour codes `0x05 nn` / `0x06`, and the two insert markers below. Every
   other control (`0x0A 0x0B 0x0C 0x0D 0x0E 0x0F 0x10 0x11 0x16`, the
   inserts `0x03 0x04 0x07 0x08`) stays in the text row exactly where the
   original had it. A ruby row never holds `0x02` or `0x14`.
@@ -105,6 +105,13 @@ every byte but the ones named below.
   a reading over an inserted name is stage B's (a per-name table built with
   the layer), not stage A's - stage A leaves the half-cells over an insert
   empty after the marker.
+- **The second-language marker is `0x13`, one byte** (added 2026-10-22 at
+  SB's merge): in a ruby row of a `ruby-<other>-<main>` layer it stands for
+  "draw the k-th insert of the text row below here, at reading size, from
+  the main's name table" - the second script shows the name, where the
+  furigana row only leaves room for it. `0x13` is unused in every held
+  layer by the same census as `0x12`. A ruby row holds `0x12` or `0x13`,
+  never both; the stepper keys on the byte, not on the layer.
 - **A pair code** (DIV-0057) in an inserted name counts two cells; the
   marker's resolved width already includes that.
 - **The hanging brackets** `0x2A` / `0x3C` are written as their two-byte
