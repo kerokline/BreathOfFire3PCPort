@@ -383,7 +383,7 @@ Box BoxRound(const unsigned char* sprite, float half_width, float above, float b
     return {x - half_width, y - above, x + half_width, y + below};
 }
 
-// The table faerie (known-defects D300, docs/faerie-fix.md): in area 175, the
+// The table faerie (DIV-0151, known-defects D300, docs/faerie-fix.md): in area 175, the
 // faerie village's room where the faeries gather after the Faerie Tiara, the
 // gold faerie stands at floor height inside the table's raised cell, and the
 // next plank's top, in its layer's second list, is drawn over its skirt.

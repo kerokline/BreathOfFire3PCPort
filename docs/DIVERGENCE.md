@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 150 entries, DIV-0001..0150, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 151 entries, DIV-0001..0151, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2649,6 +2649,152 @@ designed in rather than bolted on.
   (the scenes' edge actors), DIV-0123 (case zero) and DIV-0124 (the 21:9
   hide).
 
+  **Amended 2026-10-21 (the wide-ring round, group RG,
+  [`wide-ring.md`](wide-ring.md), [`wide-ring-read.md`](wide-ring-read.md);
+  IDEAS I37): the field's view ring grown to the PSP's 33 x 58 for the
+  draw.** *Original behaviour:* the field's view is a ring of 56 rows by 28
+  cells (`MapView_CellItems` `0x937FA0`, `MapView_Cells` `0x904F20`, the
+  heads `MapView_Row` / `_Column`, `MapView_Origin`); `MapView_Build` and the
+  draw pass walk 55 of its rows and at most 28 columns, so at the wide
+  picture a far camera (`Camera_Distance` past about 2,200, kind 0x8D's
+  pull) or an off-axis yaw over low ground runs out of cells at the
+  picture's edges (known-defects D292). *New behaviour:* when the cell inset
+  is lowered (the view wide), Capcom's ring is kept exactly and a rim of
+  ours holds the 346 cells the PSP's 58 x 33 ring has beyond it (its origin
+  Capcom's plus (-3, +2), the PSP's `Field_ViewReset` `0xE560`), kept by the
+  same four shifts, the resets, `MapView_FillCells` and `MapView_PlaceRuns`,
+  and read by the draw alone: `MapView_Build` walks grown rows -1..55 and
+  grown columns `g .. 32 - g`, `g = max(0, i + 2 - L)` (today's walk plus
+  one column); `DrawLayer_Open` walks the PSP's columns of each row round
+  Capcom's own walk, which runs unchanged inside it; `Sprite_DrawPass` draws
+  layer -1 (a record of ours) and layer 0x37 (Capcom's row 55) - terrain
+  and frame nodes, never a sprite; `MapView_ItemAt` and
+  `MapCell_DrawFlatFaces` read the rim's draw items. The logic readers of
+  the window - `MoveCmd_TestFB` / `FC`, `AreaMap_ClearCell`,
+  `Area40_TileLit`, the Quake walk - keep Capcom's 56 x 28 (the PSP grew
+  those too; its `TestFB` twin `0xEDC0` tests `s < 0x3A`, `d < 0x42`), and
+  `Sprite_UpdateScreen`'s `0..0x36` test keeps setting the off-screen flag
+  and the draw list as on the original: a sprite in the grown rows stays
+  hidden. DIV-0071's `layering.cpp` sees Capcom's window only. Every cell
+  only the grown walk hands to `MapCell_Handlers` - the rim, Capcom's row
+  55, the column it adds inside the window - is a band cell of the random
+  split, its `MapCell_DrawRising` numbers from the draw-only generator;
+  D295's rule for the patch handlers 0x24 / 0x25 is kept. The rim is a
+  record of the graphics participant; a quickload across widths rebuilds it
+  (a wide take loaded narrow gives the rim's draw items back, a narrow take
+  loaded wide fills it afresh) and asks `MapView_Redraw` 2 (both display
+  buffers' layer lists), never refuses. *Why:* the owner, 2026-10-15 (build
+  I37 now) and 2026-10-21 (the PSP's 33 x 58 at 16:9 and 21:9, Capcom's
+  28 x 56 at 4:3 byte for byte; DIV-0041's lowered inset kept; sprites in
+  the grown rows hidden; D295's rule kept; the walk today's plus one; rebuild
+  across widths, with `MapView_Redraw` 2) - widen the picture, not the
+  logic. *Scope:* kind 0x8D's first frames need more than 33 columns, so
+  D292 narrows to them (the owner accepts that). *Verification:*
+  `BOF3X_SHADOW=map_rim`, a model ring of the PSP's shape against Capcom's
+  code plus the rim over 10,040 random steps (shifts, builds, resets, origin
+  jumps with `MapView_FillCells`): every grown position's map cell and run
+  word equal, the pool's count equal to the items held, 0 mismatches, the
+  control (Capcom's `MapView_CellToMap` at the grown row) refused;
+  `wide_rand`'s grown boundary at 53 and 120 columns (every original inset,
+  the input flag, three heads, layers -1..0x37: band exactly where the
+  original's walk leaves a cell out, Capcom's `Rand` calls in the original's
+  order) and the grown fuzz (3,000 frames -1..0x37 equal to narrow's call
+  for call), 0 mismatches; every touched function's fuzz at narrow 0
+  mismatches. Live: at 4:3 the ten hash routes and `dolphinBoss` equal the
+  round base tick for tick but for the exe host's tick-3 and sound noise; at
+  16:9 and 21:9 every route keeps narrow's `Rand` on every frame and no game
+  page differs (`dolphinBoss`'s object pages part as with the ring off -
+  DIV-0122 / 0123's staging); the draw-item pool's most is 1,469 of 2,048 at
+  21:9; a quicksave loads across 4:3, 16:9 and 21:9 both ways with only
+  picture pages differing from the live run. The real far-camera scenes
+  crafted saves reach (area 167's init, chapter 1's scene 3, area 149's
+  chapter-15 camera; [`wide-ring.md`](wide-ring.md) 8) were already covered
+  by Capcom's ring but for one corner pixel at 21:9 in scene 3, which the
+  grown ring fills. **Owed:** the owner's play. **Reversible:**
+  `BOF3X_WIDE_RING=0` (Capcom's ring alone at the wide picture); narrow
+  nothing runs. Code: `src/game/map_rim.{h,cpp}` and the sites
+  [`wide-ring.md`](wide-ring.md) 1.2 lists.
+
+  **Amended 2026-10-21 (the wide-ring round, group SW,
+  [`wide-sweeps.md`](wide-sweeps.md); IDEAS I38): the two edge sweeps drawn
+  mapped.** Two effects sweep across the picture and end a state at a
+  screen-x bound ([`ultrawide-culls.md`](ultrawide-culls.md) rows 14 and
+  15): effect kind 0xD's slide (`EffectKind0D_*` `0x465F30..0x466050`, in
+  from x 390 by 30 a frame, held at 160 for 30 frames, out to -70 where the
+  record idles) and area 172's shade (`Area172_EffectA5Grow` `0x428240`, the
+  bad ending's wipe that reveals the *Fin* panel; its edge grows by 10 a
+  frame and above 400 the scenario's step goes on). In the wide modes they
+  started or vanished inside the bands; moving their bounds would change the
+  idle frame and the script's timing. *Original behaviour:* each drawn at
+  its logic x. *New behaviour:* the logic x, the idle frame and the step are
+  Capcom's; only the drawn x is mapped, by `c` columns a side - the slide
+  `[160, 390]` onto `[160, 390 + c]` and `[-70, 160]` onto `[-70 - c, 160]`,
+  the shade `[0, 220]` onto `[-c, 220 + c]` and `x + c` from 220 on
+  (anchored right with its panel, so the reveal is on the original's
+  frames). The slide's mapped float sits in the record's `+0x74` only for
+  its draw in `Sprite_DrawOverlays` (Capcom's put back after); its `+0x2E`
+  and the off-screen bit are never touched. Off until
+  `Widescreen_ArmFills`, narrow, under `BOF3X_ORIGINAL=Widescreen`, and for
+  the slide while `Sprite_DrawOverlays` or `Field_DrawFrame` is Capcom's.
+  *Why:* the owner, 2026-10-15: keep the logic's x and draw it mapped, so
+  each sweep starts and ends past the wide edge on the original's frames;
+  2026-10-21, off the two sheets: the shade's right-anchored map (the *Fin*
+  reveal frame-exact) and the banner's faster slide in the bands (1.23x at
+  16:9, 1.52x at 21:9, as the SL amendment's menu boxes) both accepted.
+  *Verification:* a start-up property check (`Widescreen_CheckSweeps`,
+  17,277 checks at 0, 53 and 120 columns); `--selftest` at 0 mismatches
+  narrow, 16:9 and 21:9, with the fuzzes of `effect_1a`, `area_w4b` and
+  `field_frame` among them; the state hash on the eleven routes at 16:9 and
+  21:9 with narrow's `Rand` on every frame and no page outside the picture
+  set differing where the slide runs (`caughFish`, `masterAndManillo`: kind
+  0xD is the fishing minigame's *READY!* banner); both sweeps captured at
+  all three widths (area 172 from a chapter-jump save). **Owed:** the
+  owner's play. **Reversible:** `BOF3X_ORIGINAL=Widescreen`.
+
+  **Amended 2026-10-21 (the wide-ring round, side groups PB and PX,
+  [`narrow-pillarbox.md`](narrow-pillarbox.md) 8 and 11): three narrow
+  areas framed.** *Original behaviour:* the 4:3 picture; in the wide modes
+  an area narrower than the picture showed the void past its map's edge in
+  the bands (eleven areas by their maps,
+  [`ultrawide-culls.md`](ultrawide-culls.md) 5). *New behaviour:* in the
+  wide modes **areas 31, 90 and 198** are framed as a narrower picture on
+  purpose: black bars drawn by us over the bands. The three are the owner's
+  choice, not a value of Capcom's: the areas with real void past the frame.
+  The width each is framed at is measured: the widest of the port's
+  pictures (320, 426, 560) that the area's widest screen row reaches, never
+  below 320, the row in ring columns of 32 px from the map block the game
+  loaded (`AreaMap_Header`), once per area entry - on the shipped data 31
+  and 198 at 320 (16:9 and 21:9) and 90 at 426 (21:9 only). The other eight
+  areas the measurement names (149, 186, 98 and the camps 53, 153, 154, 192,
+  194) are not framed: at their own cameras they draw sky, wall, floor and
+  the clearing's rim past the frame, which the crafted-save captures showed
+  ([`narrow-pillarbox.md`](narrow-pillarbox.md) 10). The bars are appended
+  to the frame at the present, after the frame hash (`render_shim.cpp`
+  `Present`, `pillarbox.cpp` `Cover`); they change with the area number,
+  which `Area_Enter` sets while the picture is black. Off in a battle
+  (`Game_Mode` 5), narrow, before `Widescreen_ArmFills`, until the area word
+  has changed since task slot 0 was last free (the title menu runs with the
+  demo's last area), and under `BOF3X_PILLARBOX=0`. A menu (the shop, BATE's
+  screens) opened in a framed area is framed too. Edge-anchored elements
+  follow the frame in: `Widescreen_Anchor` gives the visible columns when
+  fewer than the fill's, so DIV-0041's side message boxes stand at the
+  framed edge. Draw-only otherwise: the view, the inset, the culls, the ring
+  and `Rand` are the wide mode's. *Why:* the owner, 2026-10-15
+  ([`owner-review.md`](owner-review.md), "a per-scene pillarbox");
+  2026-10-21 widened to every area narrower than the picture, then, on the
+  crafted-save sheets the same day, cut to the three with void past the
+  frame ("every other area renders fine without it"); menus in a framed
+  area stay framed. *Verification:* the rule's self-test
+  (`BOF3X_SHADOW=pillarbox`, 82 rounds: the widest row on test blocks, the
+  frame at 0, 53 and 120 columns, the list over every area word, the rule by
+  area; two controls refused - every area by its measurement, and "the
+  narrowest picture that holds the area"); `Rand` equal to narrow on every
+  frame of the ten hash routes at 16:9 and 21:9; no page changed by the bars
+  (`BOF3X_PILLARBOX=0` against on, the two routes that enter areas 31 and
+  90); captures of 31, 90 and 198 framed and 149, 154 and 186 unframed at
+  16:9 and 21:9 (PX). **Owed:** the owner's play of the three framed areas
+  (the three-area build not yet seen). **Reversible:** `BOF3X_PILLARBOX=0`.
+
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
 - **ID:** DIV-0042
@@ -4715,6 +4861,47 @@ designed in rather than bolted on.
   the box round Rei and the bush: 100 of 421 frames flipping before, 0 after,
   and all 421 equal to `BOF3X_LAYERING=0` in that box (the bush in front of
   her, as Capcom draws it).
+- **Amended 2026-10-21 (the wide-ring round, group GF, the owner's "Garr
+  over fire" report; [`garr-fire.md`](garr-fire.md), known-defects D301):
+  the record test takes what the sprite drew.** The 2026-10-14 amendment
+  tested a cell record's last-pass quads against the sprite's body box, 28
+  px wide. In two camps Garr sits beside the fire, not at it: chapter 6's
+  `AREA053` camp (`cs_53.txt`) and `AREA192`'s (`cs_192.txt`, the scene the
+  owner saw). That is the same `MapCell_DrawFrames` record as D301, three
+  cells from him. His arm and weapon reach over the flames 4 to 26 px
+  beyond the body box, so the rule still moved him three layers on, over
+  the fire. `Sprite_DrawPass` now notes each sprite's committed cell sprite
+  (code `0x84`), and its box (the cells' union, as `D3d_BuildCellTexture`
+  lays them out) is kept for the next pass. The record test uses the body
+  box grown to it. Nothing else in the rule changes, and it only stops
+  moves. The quicksave's graphics record carries the boxes (version 3).
+  `BOF3X_LAYERING_SPRITEBOX=0` drops this amendment alone (the control).
+  The owner, 2026-10-21: the flames over Garr's arm and weapon, as Capcom's
+  order draws them, kept; the wider reach (the sprite's whole drawn cell
+  box, transparent corners included, stopping a move) accepted after the
+  owner's check on the PlayStation in an emulator - at a camp only Ryu is
+  controlled, he can walk behind the fire (the flames then drawn over him)
+  but not onto the pit, and the other members spawn at several spots round
+  the camp, Garr close enough to overlap the flames; a stopped move only
+  ever leaves Capcom's order, which is what the PlayStation draws at the
+  fire. Verified live, narrow:
+  - `cs_53` 41 shots and `cs_192` 4, pixel-identical to `BOF3X_LAYERING=0`
+    and to Capcom's draw pass (`BOF3X_ORIGINAL` naming its five functions);
+    `main`'s build drew Garr over the fire in 21 and 3 of them;
+  - identical to the rule before it on `vaccinationAndFireScene` 29 / 29,
+    `campingFishing` 22 / 22, `dolphinBoss` 19 / 19 (the D300 faerie) and
+    60 / 60, `ninaWalkBehindBlock` 11 / 11, `yraallRoad` 56 / 56,
+    `worldMapAndAreaTransition_ab` 35 / 35 and `field_view` 4 / 4;
+  - `eldritchGene` 58 / 59, the other shot being dialogue typing that
+    differs between runs of one build;
+  - headless `'*'` at `BOF3X_WIDE` unset, 1 and 2: exit 0, every
+    mismatch count 0;
+  - the state hash on the ten routes, narrow, against `main`: `Rand` equal
+    every frame, no game page; only the draw list's order differs, on
+    `worldMapAndAreaTransition` ticks 2,064..2,112, where the picture is
+    identical.
+
+  **Owed:** the owner's play of the two camps.
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
@@ -9438,3 +9625,58 @@ designed in rather than bolted on.
 - **Reversible?** `music=seq` in `bof3x.ini` (or `BOF3X_MUSIC=seq`) for the
   order before this entry; the streams beside a PC install are then the
   PC's again.
+
+### The table faerie in the faerie village is drawn over its table
+
+- **ID:** DIV-0151
+- **Date:** 2026-10-21
+- **Subsystem:** field draw order (`Sprite_DrawPass` `0x593060`, ours in
+  `src/game/draw_pass.cpp`; the rule in `src/game/layering.cpp`, beside
+  DIV-0071's; [`faerie-fix.md`](faerie-fix.md))
+- **Tier:** Intent - the owner's decision, 2026-10-15: a faerie the scene
+  stands on the table is drawn on the table, not through it
+- **Original behaviour:** in area 175 (the faerie village's wooden room
+  after the Faerie Tiara; `dolphinBoss.txt` recipe frames about
+  960..2,850) the gold-winged faerie at the front left of the two-plank
+  table is placed at floor height inside the left plank's raised cell. Its
+  layer is the right plank's row, and a raised cell's top is in its layer's
+  second list, drawn after the layer's sprites, so the right plank's top
+  cuts the faerie's skirt on a straight diagonal for the whole scene; the
+  plank's side triangles hide the faerie's shadow at its floor point
+  ([`faerie-over-table.md`](faerie-over-table.md) 1-3, known-defects D300).
+  Capcom's: the same with `BOF3X_LAYERING=0` and with Capcom's code; the
+  PlayStation's twins of the three deciding functions order it the same
+  way; the placing data are the disc's; the owner's PlayStation look
+  (2026-10-15) shows the same cut.
+- **New behaviour:** that faerie alone - a field object of area 175 running
+  the area's movement script 1 (object `+0x83`), whose feet stand below its
+  own map cell's lowest corner - is drawn one layer later when DIV-0071 left
+  it in its own layer, judged by DIV-0071's test with one exemption: the
+  tops and sides of cells as high as its own in the second list it stands
+  in. The side triangles of those cells within reach of it are drawn again
+  right after it (copies of their primitives, after a draw mode as
+  `DrawLayer_Close` commits), so they still hide its shadow; if any other
+  sprite would come under those copies, the faerie stays where it was.
+  `BOF3X_LAYERING_LOG=1` logs each pass it is judged (`D300 fix`).
+- **Rationale:** the scene stands the faerie on the table; the cut comes
+  from where its object is placed, not from anything meant to stand in
+  front of it. Fixed for this scene only, on the owner's word. **To be
+  broadened** to [`faerie-over-table.md`](faerie-over-table.md) section 4's
+  general rule - any sprite standing inside a raised cell drawn after its
+  layer's second list, where everything there that reaches it is a top or
+  side of cells of its own height - if more examples of the class turn up;
+  known-defects D242's gene crystal would be the second, the same class from
+  the other side.
+- **Also in the PSX version?** Yes, the same cut (above): a change to the
+  original's picture, not a port repair.
+- **Verification:** [`faerie-fix.md`](faerie-fix.md) 3-5: 19 captures at
+  4:3 and 19 at 16:9 against `main`, differing only in the faerie's box; 19
+  identical with `BOF3X_LAYERING=0`; the state hash on the ten routes,
+  narrow and at both wide widths, equal to `main`'s build up to run-to-run
+  noise, and narrow with the switch off as `cn_<route>_a1020` against the
+  `orig3` pairs; the self-tests exit 0 with no mismatch; no `D300 fix` line
+  on any of the ten routes. The owner accepted the before/after sheets
+  (2026-10-21, "the faerie looks great"), the sides' second draw with them.
+  **Not seen in play.**
+- **Reversible?** `BOF3X_LAYERING=0` (with DIV-0071); Capcom's order under
+  `BOF3X_ORIGINAL` (the pass is Capcom's).
