@@ -722,7 +722,7 @@ extern "C" unsigned char __cdecl Area104_StartOnObject121(void) {
 // 0x903860, 0x90384C, 0x905B88) (the area and flag dwords pushed with stale
 // bits above the word and byte Field_ChangeArea reads), 0x904EE0 = 0,
 // 0x937F98 = 0xC, done; 0xC0 (asked again) - Area_LinkAt(x, z). Then
-// Field_EdgeBits + 1, and + 1 more facing 2 or 6; Area104_StopMotion;
+// Field_StepCount + 1, and + 1 more facing 2 or 6; Area104_StopMotion;
 // Scenario_ArriveHook(+0x34, +0x38) not 0: +2 = 0, done. Field_Bit80Tick.
 // Unless Field_ScriptFlags bit 8 or Field_ScriptFlags2 bit 6, a held button
 // of (word 0x903582 | word 0x903580 | 0xF000) in Field_InputHeld is a tail
@@ -747,9 +747,9 @@ extern "C" void __cdecl Area104_LeaderStep(void) {
         }
         if (cell() == 0xC0) AH_CALL(Area_LinkAt)(rv::Current<records::SpriteHead>()->x_whole, rv::Current<records::SpriteHead>()->z_whole);
     }
-    Field_EdgeBits = Field_EdgeBits + 1u;
+    Field_StepCount = Field_StepCount + 1u;
     const unsigned char facing = Cur()[8];
-    if (facing == 2 || facing == 6) Field_EdgeBits = Field_EdgeBits + 1u;
+    if (facing == 2 || facing == 6) Field_StepCount = Field_StepCount + 1u;
     area_harness::Phase(kStopMotion)();
     if (AH_CALL(Scenario_ArriveHook)(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z) != 0) {
         Cur()[2] = 0;

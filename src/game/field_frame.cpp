@@ -332,7 +332,7 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
             for (unsigned i = 0; i < ticks; ++i) g.tick();
         }
     }
-    Field_EdgeBitsPrev = Field_EdgeBits;
+    Field_StepCountPrev = Field_StepCount;
 }
 
 // original 0x57B780: the four extra party objects' screen update (PSX
@@ -779,8 +779,8 @@ const Region kRegions[] = {
     {Address(&Field_ScriptFlags), 2},
     {Address(&Field_ScriptFlags2), 2},
     {Address(&Field_MemberCount), 1},
-    {Address(&Field_EdgeBits), 2},
-    {Address(&Field_EdgeBitsPrev), 2},
+    {Address(&Field_StepCount), 2},
+    {Address(&Field_StepCountPrev), 2},
     {Address(MapView_Origin), 4},
     {Address(&Draw_OtSlot), 1},
     {Address(&Draw_SortOnX), 1},

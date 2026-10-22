@@ -272,7 +272,7 @@ for the constant 0x15 in a 7-instruction window).
 
 | function | PC | PSX-JP | PSP-EU | PSP-JP | verdict |
 |---|---|---|---|---|---|
-| `Field_ZoneCounterRoll` - the counter set on entering a zone: base + min(Rand & 0x1F, limit), **doubled with accessory 0x15**, halved with 0x14 | `0x52FEB0` | `0x801B4CC4` | `0xC9DDC` | `0xCA0C8` | **same**; the zone table (7 base / limit pairs, PSX `0x801CD944`, PSP-EU `0x2ED0D0`, PSP-JP `0x2ED388`) equal; the PSP halves with `sra` where the PSX uses `srl`, on a value already masked to 8 bits: equal |
+| `Field_EncounterThresholdRoll` - the counter set on entering a zone: base + min(Rand & 0x1F, limit), **doubled with accessory 0x15**, halved with 0x14 | `0x52FEB0` | `0x801B4CC4` | `0xC9DDC` | `0xCA0C8` | **same**; the zone table (7 base / limit pairs, PSX `0x801CD944`, PSP-EU `0x2ED0D0`, PSP-JP `0x2ED388`) equal; the PSP halves with `sra` where the PSX uses `srl`, on a value already masked to 8 bits: equal |
 | the desert's counter (`AREA189`: a desert by the sibling's `places.toml` name for area 189) - (Rand & 0x1F) + 0x96, doubled with 0x15, halved with 0x14, doubled again on a flag | (area overlay) | `0x801F4DE0` | `0x26B00C` | `0x26B1D0` | **same** |
 | `Field_LeaderStepLands` - the step count: + 1, + 2 on directions 2 and 6 | `0x52E580` | `0x801B28D0..` | `0xCC2E8..` | `0xCC5D4..` | **same** |
 | `Field_EncounterDue` - the counter against the steps (7/10 of them walking) | `0x530030` | `0x801B4EA8` | `0xCCD94` | `0xCD080` | **one condition removed on the PSP** (5.3) |

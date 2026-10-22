@@ -55,7 +55,7 @@ PartySet_Load     -> PartySet_LoadFirst / _LoadSecond -> PartySet_Find -> 0x536A
                      File_LoadDone, Task_Sleep
 MapView_GroundAt  -> MapView_CheckHeightScale, AreaMap_Elevation
 Sprite_ReleaseTint-> Tint_Release
-Field_ZoneCounterRoll -> Area_ZoneAt, Rand, Party_Count, 0x535310
+Field_EncounterThresholdRoll -> Area_ZoneAt, Rand, Party_Count, 0x535310
 ```
 
 Callees that stay Capcom's and are given stand-ins in the fuzz: `0x5301F0`,
@@ -116,7 +116,7 @@ that catalogue.
 | `0x52D920` | `Field_LeaderStart` | 0x124 | 12 | state 0: `+0xC`..`+0x20` and `+6`..`+0xB` cleared, `+0x3E` grounded, `Field_State +0x128` = 3 and `+0x136`..`+0x138` = 0, `+0x4B` = 0xFF; then state 0xC (input flag 0x20), 0xD (area 0xBD) or state + 1 with the standing animation |
 | `0x52DA50` | `Field_LeaderControl` | 0x17 | 12,165 | state 1: the sub-state through `0x660954`, then `Sprite_ScriptTick` |
 | `0x52DA70` | `Field_LeaderStand` | 0x118 | 12,165 | sub-state 0: eleven tests in order, then - only while a direction is held - `0x530480`, `+7` = 0, `+0xA` = 2, `+0xB` = 0, the animation, sub-state 1 |
-| `0x52FEB0` | `Field_ZoneCounterRoll` | 0x120 | 12 | the word `ObjTrio +0x134` from the zone the leader stands in (section 4) |
+| `0x52FEB0` | `Field_EncounterThresholdRoll` | 0x120 | 12 | the word `ObjTrio +0x134` from the zone the leader stands in (section 4) |
 | `0x52FFD0` | `Area_ZoneAt` | 0x52 | 12 | the first 8-byte record of the area's list whose box holds (x, z) |
 | `0x5305B0` | `Field_LeaderAnimation` | 0x43 | 12 | `0x589330(animation)`, or with input flag 0 the pair at `0x6608D8` |
 | `0x531BB0` | `Party_Count` | 0x20 | 12 | entries before the first `0xFF` of a 3-byte party list, at most 3 |
@@ -144,7 +144,7 @@ that catalogue.
 | `0x572590` | `MapView_CheckHeightScale` | 0x2E | 24 | the scale set for the object at `0x905DA0` (its `+0xB` bit 0) or for `Field_State +0x138` bit 0 |
 | `0x454DC0` | `Sprite_ReleaseTint` | 0x2B | 18 | `Tint_Release` for each of the 32 tint records whose sprite is this one |
 
-### `Field_ZoneCounterRoll` in full
+### `Field_EncounterThresholdRoll` in full
 
 ```
 if (Field_ScriptFlags & 0x20)            { counter = 0; return; }
@@ -163,7 +163,7 @@ counter = value
 rolled here and never counted down.
 
 The count it is compared with is the u16 at `0x905B80`. `symbols.toml` names it
-`Field_EdgeBits` after an older use; its PSX twin, `0x80143F22`, is right.
+`Field_StepCount` after an older use; its PSX twin, `0x80143F22`, is right.
 
 - **The count.** `Field_LeaderStepLands` `0x52E580` adds 1 for each finished step
   (`event_leader.cpp:266-270`), and 1 more when the leader faces 2 or 6. It adds
@@ -287,7 +287,7 @@ down, not fixed (`CLAUDE.md` rule 2 and 6).
 11. `Field_PartyFirstFrame`'s member mask is `1 << i` with x86's shift (the
     count mod 32). With at most three members it can never differ, so the fuzz
     cannot tell the two apart - said here rather than claimed as checked.
-12. The original writes into its own argument slots (`Field_ZoneCounterRoll`'s
+12. The original writes into its own argument slots (`Field_EncounterThresholdRoll`'s
     `keep`, `PartySet_Find`'s three) and reads them back. Every caller drops
     the arguments immediately afterwards, so it is invisible; ours uses
     locals.
@@ -354,11 +354,11 @@ Each is a single planted change, built and run alone
 | `Sprite_ScriptTick` before the sub-state | `Field_LeaderControl` | yes | 6,000 |
 | the second "is a direction held" dropped | `Field_LeaderStand` | yes | 250 |
 | the actor index taken through `Character_IndexById` | `Field_LeaderStand` | yes | 394 |
-| `counter < base` as `counter <= base` | `Field_ZoneCounterRoll` | **no** | 0 |
-| `counter + 1 < base` | `Field_ZoneCounterRoll` | yes | 158 |
-| the base + roll sum in 16 bits | `Field_ZoneCounterRoll` | yes | 4 |
-| the doubling in 16 bits | `Field_ZoneCounterRoll` | yes | 110 |
-| the zone index cached across `Rand` | `Field_ZoneCounterRoll` | yes | 391 |
+| `counter < base` as `counter <= base` | `Field_EncounterThresholdRoll` | **no** | 0 |
+| `counter + 1 < base` | `Field_EncounterThresholdRoll` | yes | 158 |
+| the base + roll sum in 16 bits | `Field_EncounterThresholdRoll` | yes | 4 |
+| the doubling in 16 bits | `Field_EncounterThresholdRoll` | yes | 110 |
+| the zone index cached across `Rand` | `Field_EncounterThresholdRoll` | yes | 391 |
 | `x > r2` as `x >= r2` | `Area_ZoneAt` | by a fault | - |
 | `x` compared against `r3` | `Area_ZoneAt` | yes | 1,936 |
 | input bit 1 instead of bit 0 | `Field_LeaderAnimation` | yes | 3,022 |
@@ -428,7 +428,7 @@ The attract sequence presses nothing, so within this file it never reaches:
   `0x519890` are the callers.
 - **`PartySet_Select`'s modes 1 and 2** (only mode 3 and mode 0 run in the
   attract: `0x536AC0` is called twice).
-- **`Field_ZoneCounterRoll`'s roll** - the attract calls it 12 times, all in
+- **`Field_EncounterThresholdRoll`'s roll** - the attract calls it 12 times, all in
   areas where the leader stands still; the doubling and halving accessories
   are a save-file matter.
 - Areas other than the attract's: `Field_PartySetUp`'s `0xBB` and `0xBD`

@@ -201,7 +201,7 @@ section 3 does.
   bytes settle the question without it.
 - **Found on the way, not this change's (for the coordinator):** today's
   build against Capcom's `cn_cutsceneAndNue_orig2` pair differs on `0x905000`
-  (`CameraTurn_Steps`, `Field_EdgeBits`, `CameraTurn_Angles`, ...) from tick
+  (`CameraTurn_Steps`, `Field_StepCount`, `CameraTurn_Angles`, ...) from tick
   136 to the end and on the music pages (`Music_Track`, `Music_LoadedTrack`,
   `Music_File*`) over ticks 204..1,032, in both hosts, where the 2026-10-10
   run `cu1010x` was identical. The music pages may be the event-battle music

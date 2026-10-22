@@ -398,7 +398,7 @@ extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned sha
 // As the original has it: the argument's low byte only, sign-extended for
 // the Cond_Flags index, so chapters 0x80..0xFF reach below Cond_Flags; no
 // bounds check. The bytes 0x8034E1..0x8034E9 are zeroed whatever the chapter
-// (MoveScript_Var7 is 0x8034E4, Field_EdgeBitsPrev 0x8034E8). File_LoadDone
+// (MoveScript_Var7 is 0x8034E4, Field_StepCountPrev 0x8034E8). File_LoadDone
 // is asked before any frame; on the PC it is always done, so the loop body
 // never runs.
 extern "C" void __cdecl Scenario_Start(int chapter) {
@@ -683,7 +683,7 @@ const Region kRegions[] = {
     {0x7E1BEC, 4},                      // Input_Pressed, read as a dword
     {0x7E0918, 1},                      // Draw_PassFlags
     {0x937F90, 1},                      // Gfx_ClutStripDirty
-    {kScenarioBytes, 0x10},             // Cond_ByteFA .. Field_EdgeBitsPrev
+    {kScenarioBytes, 0x10},             // Cond_ByteFA .. Field_StepCountPrev
     {Chapter_FlagRow_addr, 4},
     {ScenaSc7_DrawPool_addr, 0x10},
     {0x903F90 - 0x400, 0x808},          // Cond_Flags - 0x400: every chapter's dword, the story flags,

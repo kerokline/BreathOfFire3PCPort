@@ -320,7 +320,7 @@ touching each cell. **Standard in field mode** - three or more groups:
 | Region | Groups | What, and what is put back each round |
 |---|---|---|
 | `Gfx_PacketNext` `0x7E0670` | FC1 FC2 FE1 FE2 FO | the packet cursor: into the harness's packet buffer (0x800) at `+0..0x1F0` |
-| `0x905B70` + `0x38` | FC2 FC3 FE1 FE2 FS | `CameraTurn_Steps`, `Field_EdgeBits`, `Field_InputFlags`, `Field_ScriptFlags2` `0x905BA4`, `Field_InputHeld` |
+| `0x905B70` + `0x38` | FC2 FC3 FE1 FE2 FS | `CameraTurn_Steps`, `Field_StepCount`, `Field_InputFlags`, `Field_ScriptFlags2` `0x905BA4`, `Field_InputHeld` |
 | `0x929ED4` + `0x40` | FC1 FE2 FO FS | `MapView_BuildFlags`, the menu block `0x929F00..` (mode, state `+1`, step `+2`, timer `+4`, cursor bytes), `Field_Kind2Hold` `0x929F12` |
 | `0x903A14` + `0x80` | FC1 FE1 FE2 FO FS | the window style byte `0x903A5A` (`Menu_DrawBox`'s colour), the records `0x903A70..`, `Field_ActorStates` |
 | `0x904BA0` + `0x20` | FE1 FE2 FO FS | the text scratch the name copies and `sprintf` write |

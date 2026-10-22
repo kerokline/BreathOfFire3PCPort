@@ -737,7 +737,7 @@ extern "C" void __cdecl Area19_PlaceKind2(void) { AH_CALL(Kind2_Place)(4); }
 // Area20_Weights 0x5E6C4C (byte-wide running subtraction; 8, none, when the
 // roll is past them all); the other seven get +0 = 0. The kept one goes to
 // Area20_Cells[Rand() & 7] (+0x34 = x << 16, +0x38 = z << 16, +0x3E =
-// AreaMap_Elevation(+0x34, z << 16)). Last, either way, Field_EdgeBits = the
+// AreaMap_Elevation(+0x34, z << 16)). Last, either way, Field_StepCount = the
 // low word of the leader's dword +0x134 - 5.
 extern "C" void __cdecl Area20_PickFieldObject(void) {
     unsigned roll = static_cast<unsigned>(AH_CALL(Rand)()) & 0x3F;
@@ -760,7 +760,7 @@ extern "C" void __cdecl Area20_PickFieldObject(void) {
         const long height = AH_CALL(AreaMap_Elevation)(tO->x, static_cast<long>(z));
         rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(height));
     }
-    Field_EdgeBits = static_cast<unsigned short>(Long(At(ObjTrio_addr + 0x134)) - 5);
+    Field_StepCount = static_cast<unsigned short>(Long(At(ObjTrio_addr + 0x134)) - 5);
 }
 
 // ===========================================================================

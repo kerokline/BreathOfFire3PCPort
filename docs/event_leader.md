@@ -105,7 +105,7 @@ The long ones in full, as ours has them (each `evidence` field in
   `0x7E091C`, `0x7E0920`. Then: footprint all `0xA7`, a link and
   `Field_Request` 5; none `0xA6`, the return point `0x904148`
   (`0x904152` = 0); `Field_ScriptFlags2` bit 5, a jump (`Field_JumpStart`,
-  `+9 - 1`, the step tick, `+2` = 2). Otherwise `Field_EdgeBits` + 1 (+2 on
+  `+9 - 1`, the step tick, `+2` = 2). Otherwise `Field_StepCount` + 1 (+2 on
   the diagonals 2 and 6), `Sprite_ClearSteps`, `F3Divisor` / `FAWord` 0,
   the encounter (unless on foot or `Field_ScriptFlags2 & 0x60`: pace 3,
   bit 12, state 5); pace 3; `Field_LeaderEffectTest` **with the pace saved

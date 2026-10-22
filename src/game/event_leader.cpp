@@ -149,7 +149,7 @@ extern "C" void __cdecl Field_LeaderStepping(void) {
 // asks Area_LinkAt; with bit 1, the map's edge (0x20000, or the header's size
 // less 3, on either axis, +0x70 steps on) leaves by 0x802290... Then a cell
 // all 0xA7 is a link (Field_Request 5), none 0xA6 the return point 0x904148;
-// Field_ScriptFlags2 bit 5 a jump; else Field_EdgeBits counted (twice on a
+// Field_ScriptFlags2 bit 5 a jump; else Field_StepCount counted (twice on a
 // diagonal), the steps cleared, the encounter test (Field_ScriptFlags2 bit 12,
 // state 5), the effect test with the pace from before, the chapter's arrive
 // hook (a stop), Field_Bit80Tick, and while a direction or the confirm button
@@ -265,8 +265,8 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         }
         {
             unsigned char* const s = Sprite_Current;
-            Field_EdgeBits = static_cast<unsigned short>(Field_EdgeBits + 1);
-            if (s[8] == 2 || s[8] == 6) Field_EdgeBits = static_cast<unsigned short>(Field_EdgeBits + 1);
+            Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
+            if (s[8] == 2 || s[8] == 6) Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
         }
         g.clear_steps();
         const unsigned char input2 = Field_InputFlags;

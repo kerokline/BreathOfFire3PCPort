@@ -242,7 +242,7 @@ static std::uint8_t g_mantle_cap = 0;
 // at 0x802D76 / 0x802D7A (the leader's x and z, integer part). The sum, the
 // doubling and the halving are 8-bit and wrap. Rand is called only on the
 // roll path; the zone record's byte +4 is read again after it.
-extern "C" void __cdecl Field_ZoneCounterRoll(unsigned keep) {
+extern "C" void __cdecl Field_EncounterThresholdRoll(unsigned keep) {
     unsigned char* const counter = At(ObjTrio_addr + 0x134);
     if (static_cast<unsigned char>(Field_ScriptFlags) & 0x20) {
         SetWord(counter, 0);
@@ -884,7 +884,7 @@ void FieldEvent_Inject() {
     BOF3_INJECT(Field_LeaderStart);
     BOF3_INJECT(Field_LeaderControl);
     BOF3_INJECT(Field_LeaderStand);
-    BOF3_INJECT(Field_ZoneCounterRoll);
+    BOF3_INJECT(Field_EncounterThresholdRoll);
     BOF3_INJECT(Area_ZoneAt);
     BOF3_INJECT(Field_LeaderAnimation);
     BOF3_INJECT(Party_Count);

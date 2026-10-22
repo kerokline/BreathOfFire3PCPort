@@ -51,7 +51,7 @@ constexpr U kScriptFlags2 = 0x905BA4;      // Field_ScriptFlags2's low byte
 // kButtonCharge: now Gfx_UnpackScratch[0x1f002] (symbols.toml).
 constexpr U kActorStates = 0x903A80;       // Field_ActorStates: records of 0xA4
 constexpr U kActorStride = 0xA4;
-// kEdgeBits: now Field_EdgeBits (symbols.toml). Field_EdgeBits (u16)
+// kEdgeBits: now Field_StepCount (symbols.toml). Field_StepCount (u16)
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). MoveScript_F3Divisor (u16)
 // kFAWord: now MoveScript_FAWord (symbols.toml). MoveScript_FAWord (u16)
 // kDirectionSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: (dx, dz) dwords by facing

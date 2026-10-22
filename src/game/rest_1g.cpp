@@ -102,7 +102,7 @@ constexpr U kPoolWordData = 0x803642;  // u16: MessagePools offset of the data p
 constexpr U kPoolWordRule = 0x803660;  // u16: the rule page's (read as a dword & 0xFFFF)
 constexpr U kPoolWordStage1 = 0x803600;  // u16 (read as a dword & 0xFFFF)
 constexpr U kPools = 0x803580;         // MessagePools
-// kSpot: now AreaEntry_PendingFlags (symbols.toml). u8: the fishing spot (Field_EdgeBits +8)
+// kSpot: now AreaEntry_PendingFlags (symbols.toml). u8: the fishing spot (Field_StepCount +8)
 constexpr U kDrawMode = 0x93985C;      // u8 x 4, cleared by LeaderPanel_S11Switch
 
 // Image tables (.data, read in place).

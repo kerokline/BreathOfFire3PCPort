@@ -61,7 +61,7 @@ struct Callees {
     unsigned char (__cdecl* test_5301f0)();
     unsigned char (__cdecl* tests[7])();   // 0x531950 0x530920 0x5302C0 0x530380 0x530800 0x5303E0 0x530430
     void (__cdecl* walk)();                // 0x530480
-    // Field_ZoneCounterRoll
+    // Field_EncounterThresholdRoll
     const unsigned char* (__cdecl* zone_at)(unsigned, unsigned);
     int (__cdecl* rand)();
     int (__cdecl* party_count)(unsigned);

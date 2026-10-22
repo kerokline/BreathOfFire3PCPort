@@ -101,7 +101,7 @@ worked example.
 | `0x9039A0` + `0x58` | `Field_ScriptFlags` .. the mode bytes `0x9039F2` / `0x9039F3` |
 | `Cond_Flags` `0x903F90` + `0x1D0` | the condition rows, the story flags `0x904030`, the party lists `0x904062` / `0x904065`, to `0x904160` |
 | `Game_AreaNumber` `0x904EFC` + 4 | |
-| `0x905B80` + `0x30` | `Field_EdgeBits` .. `Field_ScriptFlags2` `0x905BA4` |
+| `0x905B80` + `0x30` | `Field_StepCount` .. `Field_ScriptFlags2` `0x905BA4` |
 | `AreaMap_Bytes` / `Field_State` `0x905D94` + 8 | two pointers, put back (below) |
 | `0x905E60` + `0x10` | `MapView_Redraw` `0x905E69` |
 | `Field_MemberCount` `0x929EC0` | |

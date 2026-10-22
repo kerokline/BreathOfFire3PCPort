@@ -42,14 +42,14 @@ that write the message word are fuzzed as choices, `Area128_PlaceObject`
 
 | PC | Name | Size | Root | Shape | What |
 |---|---|--:|---|---|---|
-| `0x41C890` | `Area124_PlaceRandomObject` | `0xCB` | 124 init (PSX `0x801F2D2C`) | kInit | a `jmp` over eleven `nop`s; `Rand() & 0x3F` walked down `Area124_Weights` (8), the first it falls below chosen (none: 8); field objects 0..7 but the chosen one get `+0` = 0; the chosen one at `Area124_Cells[Rand() & 7]` (bytes `<< 16`), `+0x3E` the ground there; `Field_EdgeBits` = the leader's dword `+0x134` less 5 either way |
+| `0x41C890` | `Area124_PlaceRandomObject` | `0xCB` | 124 init (PSX `0x801F2D2C`) | kInit | a `jmp` over eleven `nop`s; `Rand() & 0x3F` walked down `Area124_Weights` (8), the first it falls below chosen (none: 8); field objects 0..7 but the chosen one get `+0` = 0; the chosen one at `Area124_Cells[Rand() & 7]` (bytes `<< 16`), `+0x3E` the ground there; `Field_StepCount` = the leader's dword `+0x134` less 5 either way |
 | `0x41C960` | `Area125_PlaceRandomObject` | `0xCB` | 125 init (PSX `0x801F362C`) | kInit | the same over `Area125_Weights` / `Area125_Cells` |
 
 Both are areas 72 and 73's init compiled again (`Area72_PlaceRandomObject`,
 [`area_w1f.md`](area_w1f.md)): instruction for instruction the same, only
 the two table addresses differ. Ours is one body over two tables. The two
 areas' tables hold the same bytes, and the eight weights sum to 64, so with
-`& 0x3F` a weight is always found: the "none" branch (only `Field_EdgeBits`
+`& 0x3F` a weight is always found: the "none" branch (only `Field_StepCount`
 set, every one of the eight objects hidden) is unreachable with the image's
 tables; it is kept.
 

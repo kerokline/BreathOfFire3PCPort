@@ -44,7 +44,7 @@ const Callees kOriginals = {
     Transition_Start, Field_WaitTransition, Area_Enter, Area_EntryWalk, MoveScript_TintReset,
     Field_SlotRelease, Field_SlotsReleaseAll, Gfx_ClutStripRestore, File_LoadDone, Gfx_ClearRect,
     Gpu_GetTPage, Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_SetTile, Gpu_SetSemiTrans,
-    Field_PartyLoad, Field_ChangeArea, Fn<void (__cdecl*)(unsigned, unsigned)>(kEntryPoint), Field_ZoneCounterRoll,
+    Field_PartyLoad, Field_ChangeArea, Fn<void (__cdecl*)(unsigned, unsigned)>(kEntryPoint), Field_EncounterThresholdRoll,
     Field_Frame, Effect_ClearAll, Music_Play, LoadDatFile, Field_PartySetUp, Area_ZoneIdAt, Field_ViewReset,
     Gte_SetColorMatrix, Scenario_Start, Area_RunPlacement, Flags_Clear, Field_ModeDispatch, Field_PartyFirstFrame,
     MoveCmd_TestFB, Fn<unsigned char (__cdecl*)(unsigned)>(kPlaceParty), Field_MembersFrame, Port_DroppedCall,
@@ -332,7 +332,7 @@ extern "C" void __cdecl GameMode_Start(void) {
     const std::int32_t x = Long(At(FieldModes_Pending_addr + 4));
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x4040);
     const std::uint16_t area = FieldModes_Pending;
-    At(0x905B82)[0] = 0;   // Field_EdgeBits + 2
+    At(0x905B82)[0] = 0;   // Field_StepCount + 2
     Sprite_Kind2.state = 0;                                 // Sprite_Kind2 + 1..3
     Sprite_Kind2.step = 0;
     Sprite_Kind2.state3 = 0;

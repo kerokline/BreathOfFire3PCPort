@@ -157,7 +157,7 @@ anything else `Transition_Start(kind)`, `Field_WaitTransition(1)`, and with
 input bit 0 the area's entry list `0x5951D0` at the leader's integer x, z.
 Then the kind `GameMode_Field` will use on the next area change
 (`0x904EE0`): `0xA` with input bit 0, `0x14` in area `0xBD`, else 0; the zone
-counter rolled (`Field_ZoneCounterRoll(1)`) except in area `0xBD`;
+counter rolled (`Field_EncounterThresholdRoll(1)`) except in area `0xBD`;
 `Field_ScriptFlags2` bit 6 off; `Field_Request` 0; mode 2.
 
 The flags reach `Area_Enter` as a byte in `al` above which the original's

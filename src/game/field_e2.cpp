@@ -155,7 +155,7 @@ extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
 }
 
 // original 0x5341E0: the tallies GameMode_Field takes on its return from a
-// battle (0x4961F2, after Field_ZoneCounterRoll). Bit 4 of 0x904654 set and
+// battle (0x4961F2, after Field_EncounterThresholdRoll). Bit 4 of 0x904654 set and
 // of 0x904657 clear: the byte 0x9045FB up by one below 0x1E. From chapter 8
 // with 0x9046CB not 0: the first clear story flag n of 0xF6..0xFF (none: on
 // to the counts); the in-use pairs at 0x9046D0 naming record 0xA and those

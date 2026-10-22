@@ -35,7 +35,7 @@ constexpr std::uint32_t kFieldObjectSize = 0xA4;
 constexpr std::uint32_t kFieldObjectsEnd = 0x7DF3A0; // the eighth record's end
 // The leader's working record (ObjTrio + 0): +9 a step count (u8), +0xC / +0x10
 // a direction (dwords), +0x34 / +0x38 the position (16.16), +0x134 a dword the
-// area-29 init writes, less 5, to Field_EdgeBits.
+// area-29 init writes, less 5, to Field_StepCount.
 // kLeader: now ObjTrio (symbols.toml).
 // kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml).
 // kLeaderDirX: now ObjTrio[0].step_x (symbols.toml).

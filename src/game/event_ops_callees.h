@@ -143,7 +143,7 @@ struct Callees {
     void (__cdecl* clear_steps)();                                 // Sprite_ClearSteps
     unsigned char (__cdecl* ensure_animation)(unsigned char);      // Sprite_EnsureAnimation
     unsigned char (__cdecl* byte_at)(short, short);                // AreaMap_ByteAt
-    void (__cdecl* zone_roll)(unsigned);                           // Field_ZoneCounterRoll
+    void (__cdecl* zone_roll)(unsigned);                           // Field_EncounterThresholdRoll
     int (__cdecl* party_count)(unsigned);                          // Party_Count
     const unsigned char* (__cdecl* zone_at)(unsigned, unsigned);   // Area_ZoneAt
     int (__cdecl* rand)();                                         // Rand, the CRT's

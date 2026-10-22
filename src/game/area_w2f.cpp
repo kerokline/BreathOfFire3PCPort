@@ -164,7 +164,7 @@ void PlaceAtCell(U table) {
 // weighted draw - Rand() & 0x3F walked down the eight weights, the first it
 // falls below chosen (none: 8); field objects 0..7 but the chosen one get +0
 // = 0; the chosen one put at one of the eight cells (Rand() & 7: x and z
-// bytes << 16), its word +0x3E the ground there; Field_EdgeBits = the
+// bytes << 16), its word +0x3E the ground there; Field_StepCount = the
 // leader's zone counter less 5 (either way).
 void PlaceRandomObject(U cells, U weights) {
     auto roll = static_cast<unsigned char>(AH_CALL(Rand)() & 0x3F);
@@ -187,7 +187,7 @@ void PlaceRandomObject(U cells, U weights) {
         const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
-    Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
+    Field_StepCount = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
 
 }  // namespace

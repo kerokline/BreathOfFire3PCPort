@@ -176,7 +176,7 @@ const sh::Callee kCallees[] = {
     {PM_OURS(Party_PlaceAtSlots), 0, {}, kPh, 0, 0},
     {PM_OURS(Party_ScriptTicks), 0, {}, kPh, 0, 0},
     {PM_OURS(Party_PlacesByList), 0, {}, kPh, 0, 0},
-    {PM_OURS(Field_ZoneCounterRoll), 1, {kAll}, kG, 0, 0},
+    {PM_OURS(Field_EncounterThresholdRoll), 1, {kAll}, kG, 0, 0},
     {PM_OURS(Field_AfterBattleTally), 0, {}, kPh, 0, 0},
     {PM_OURS(Look_PadControl), 0, {}, kPh, 0, 0},
     {PM_OURS(GameMode_LookEnd), 0, {}, kPh, 0, 0},

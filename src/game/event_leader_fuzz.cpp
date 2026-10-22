@@ -486,7 +486,7 @@ const Region kRegions[] = {
     {0x904AA8, 4},       // 0x904AAA
     {0x904CE0, 0x10},    // Text_Records
     {0x904EE0, 0x20},    // 0x904EE0, the pending walk-in, Game_AreaNumber, MoveScript_FAWord
-    {0x905B80, 0x10},    // Field_EdgeBits, the exit's kind
+    {0x905B80, 0x10},    // Field_StepCount, the exit's kind
     {0x905BA0, 8},       // Field_InputFlags, Field_ScriptFlags2, Field_InputHeld
     {0x905D98, 4},       // Field_State
     {0x905E60, 8},       // Field_Kind2Z / X
