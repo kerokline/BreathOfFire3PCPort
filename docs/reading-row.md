@@ -163,7 +163,9 @@ whole 12-unit texture cell; the ruby pen advances the glyph's own kind-4
 advance times 1/2 or 2/3, `0x09` 6 units. At scale 2 every 6-unit reading
 glyph is its sheet cell texel for texel under both filters (probe 3).
 
-**For the coordinator (probe 8):** a Latin second language needs a space in
-a ruby row, which 1.2 does not list; the probe wrote it as a blank cell of
-the composed font carrying the donor's space advance - a glyph code, so
-inside the contract, if SB's composed font chunk carries that cell.
+**Settled at PR's merge (2026-10-22):** a space in a second-language ruby
+row is the composed font's blank space cell, a glyph code carrying the
+second's space advance - `0xE64` (advance 8) for Latin over Japanese,
+`0xE40` (advance 12) for Japanese over Latin ([`reading-row-second.md`](reading-row-second.md)
+3), which SB's chunk already carries and is what the probe drew. `0x20`
+never appears in a ruby row; `0x09` is the furigana row's half-cell gap.
