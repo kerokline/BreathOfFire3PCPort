@@ -19,3 +19,9 @@ struct MsgBoxDraw {
     unsigned char glyph[2];
 };
 unsigned MsgBox_StepRecord(const unsigned char* msg, unsigned glyphs, MsgBoxDraw* out, unsigned max);
+
+// The reading row (docs/reading-row.md 3), for Msg_OpenSystem
+// (src/game/menu_windows.cpp): the composed copy of system message `id` -
+// half (id >> 14), slot (id & 0x3FFF) of the pool's side chunk - when one is
+// loaded and the walk can draw it, else `plain`.
+const unsigned char* MsgBox_ReadingRowSystem(unsigned id, const unsigned char* plain);

@@ -34,6 +34,7 @@
 #include "game/lang_layout.h"
 #include "game/list_title.h"
 #include "game/menu_verbs.h"
+#include "game/msgbox.h"
 #include "game/menu_windows_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
@@ -179,8 +180,12 @@ void PiecePage(int page_x) {
 // original 0x497710 (PSX 0x801503AC, the sibling's Msg_OpenSystem): the
 // string of system message id, as the box's base and stepper pointer, the
 // message index its low 16 bits, and MsgBox_Reset.
+//
+// The reading row (docs/reading-row.md 3): the composed copy of the message
+// when the pool's side chunk has one (MsgBox_ReadingRowSystem); none loaded,
+// the original.
 extern "C" void __cdecl Msg_OpenSystem(unsigned id) {
-    const unsigned char* const text = g.msg_system_ptr(id);
+    const unsigned char* const text = MsgBox_ReadingRowSystem(id & 0xFFFFu, g.msg_system_ptr(id));
     Msgbox_Base = Addr(text);
     MenuWindows_ListText = Addr(text);
     SetWord(At(at::kMessage), id);
