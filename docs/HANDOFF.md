@@ -127,7 +127,17 @@ hosted cross form).
    row from kind-18 side chunks - furigana from the player's `ja-JP` layer (DIV-0155, the readings shipped as the
    first mod zip, DIV-0157) or any other held language (DIV-0156, every ordered pair built by `setup`); two row
    pairs a page at pen y 2, 9, 21, 28; F4 hides the readings (`ruby_key=` / `BOF3X_RUBY_KEY`, `none` frees it);
-   chosen in the launcher's *Row above the text*. Findings D326..D330. What is next:
+   chosen in the launcher's *Row above the text*. **The afternoon's three changes, all merged:** under a layer a
+   timed box stops for a confirm press and the offset-pen / effect pages are composed, so the new game's opening
+   shows the second script (group OS; DIV-0155 / DIV-0156 amended; sheets
+   `C:\Users\kerok\bof3x-runs\rr_os\sheets\`); the dropdown is hidden unless the Mods page's *Extras*
+   sub-button's toggle (`ruby_ui=`, on by itself when a reading-row mod is added) shows it, and Settings closes the
+   gap (group LX); `setup` carries an install's saves across a re-run (D331 fixed - before it a re-run removed them
+   with the previous game folder). Findings D326..D332. What is next:
+   - **The owner's call:** the next-page arrow at a timed stop (today it is the plain end-of-message wait, no
+     arrow; drawing one is a renderer change and a DIV amendment, OS's hand-back) and D332 (English over
+     Japanese: the opening's speaker names are glyphs, not an insert, so the re-break runs a name into its speech
+     and one row reaches the frame).
    - **The owner's play** of the sheets' scenes ([`owner-review.md`](owner-review.md) 2026-10-22, "to play"): the
      dolphin fight with furigana, F4, English over Japanese, the Mods tab's install of the zip. Sheets in
      `C:\Users\kerok\bof3x-runs\rr_rr\shots\sheets\`.
@@ -147,7 +157,7 @@ hosted cross form).
    - Not reached: AREA014's scarecrow and AREA150's prompt (no route or save), the faerie village's tutorials (no
      recipe), Japanese over English on a capture; a page whose text rows are all empty draws no readings (none
      seen; a rule is the contract's call, RR's hand-back 6). Hand-backs:
-     `C:\Users\kerok\bof3x-runs\r_ruby\{fb,ml,pr,rr,sb,sl}\HANDBACK.md`.
+     `C:\Users\kerok\bof3x-runs\r_ruby\{fb,ml,pr,rr,sb,sl,os,lx}\HANDBACK.md`.
 
 7. **Work that needs no owner** (each doc's own list is the authority):
    [`exe-import-engine.md`](exe-import-engine.md) 5's remainder; [`cache-read.md`](cache-read.md) 10; the music's

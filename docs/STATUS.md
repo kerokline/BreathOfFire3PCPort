@@ -22,7 +22,11 @@ name at reading size, the Latin row at 1/2 ([`reading-row-second.md`](reading-ro
 (DIV-0157): a zip of `mod.toml` and data files, the launcher's Mods tab, *Row above the text* (`ruby=`); the
 furigana readings are the first mod, attached to releases ([`mods.md`](mods.md)). The `msgbox` and `menu_windows`
 fuzzes at 0 mismatches; with no layer the state hash differs from the base tip only by run noise, but the `orig3`
-pairs are stale at the tip for every build (D330). Findings D326..D330. **Owed:** the owner's play
+pairs are stale at the tip for every build (D330). The same afternoon: under a layer a timed box stops for a
+confirm press and the offset-pen / effect pages are composed (the opening scene now shows the row; 281 timed stops
+in the furigana layer, 10,518 messages composed; DIV-0155 / DIV-0156 amended), the dropdown hides behind the Mods
+page's *Extras* toggle (`ruby_ui=`, on with the furigana mod), and `setup` carries saves across a re-run (D331).
+Findings D326..D332. **Owed:** the owner's play
 ([`owner-review.md`](owner-review.md) 2026-10-22), the readings follow-on group (lexicon, fugashi compare, an agent
 pass; D328), SudachiPy for a player's build of the mod (not bundled: the release gate), the `orig3` pairs
 re-recorded.

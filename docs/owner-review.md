@@ -125,6 +125,14 @@ Sheets, 4:3 and 16:9, point filter, in
 `dolphin_furigana_*`. In the launcher: Language *Japanese*, *Row above the
 text* the furigana entry (or English for the second language).
 
+- **The new game's opening with stops** (`C:\Users\kerok\bof3x-runs\rr_os\sheets\opening_furigana.png`,
+  `opening_en-US_over_ja-JP.png`): every timed box holds until a press; the
+  stop is the plain end-of-message wait with no arrow - say if you want an
+  arrow there (a renderer change). D332 is on the English-over-Japanese
+  sheet: a speaker's name run into its speech, one row touching the frame.
+- **The Mods page's Data / Extras sub-row and the hidden dropdown**
+  (`C:\Users\kerok\bof3x-runs\r_ruby\lx\shots\`): the toggle off by
+  default, on when the furigana zip is added; Settings closes the gap.
 - **The dolphin fight with furigana** (`dolphin_furigana_*.png`; your
   capture scene): the coast scene's long dialogue. Look at the gap - built as
   1.5 units of clear space over and under each reading, the nearest even
