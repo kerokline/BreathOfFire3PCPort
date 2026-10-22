@@ -295,6 +295,18 @@ ours run of a route that lists the saves wants it.
   with it. VRAM and sound pages at tick 3 came in one run of five (noise).
   Scripts, checks and runs: `C:\Users\kerok\bof3x-runs\away1020`. A side
   window opened during a Capcom-side recording pauses it (HANDOFF Traps).
+- **2026-10-22: the `orig3` pairs are stale at the tip** (the reading-row
+  round, [`known-defects.md`](known-defects.md) D330). Nine of the ten routes
+  fail against them, with no reading-row layer, at
+  `localization/second-script` - and the base tip `1fb979cf`, without the
+  round's renderer, fails the same nine with the same page counts on eight,
+  and shop besides: the differences arrived before the round, with changes
+  already ledgered and PR #105's regenerated recipes. Ours against the base
+  (`statehash.py diff`) differs only on pages that also differ between two
+  runs of one build (`0x7DE000`, `0x6C3000`, the VRAM shadow and `0x937000`
+  at ticks 2..4). **Re-record the pairs at the tip before using them as a
+  gate again**; until then compare against the base tip's runs, as the round
+  did (`C:\Users\kerok\bof3x-runs\rr_rr\statehash\`).
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
 - **Known and not skipped:** `Sound_Channels` `0x6BC8C8` (23 DirectSound
