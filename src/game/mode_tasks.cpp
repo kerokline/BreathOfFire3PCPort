@@ -26,7 +26,7 @@ using move_script::Word;
 
 // GameMode_Field's bytes, unnamed (docs/mode-tasks.md section 3 has the PSX
 // twin of each).
-// kBattleCount: now Rest4a_Clock (symbols.toml). dword, +1 entering mode 5 (PSX 0x80145028)
+// kBattleCount: now Game_BattleCount (symbols.toml). dword, +1 entering mode 5 (PSX 0x80145028)
 constexpr std::uint32_t kBattleBytes = 0x904AA0;     // three bytes zeroed entering mode 5 (PSX 0x801462DC)
 constexpr std::uint32_t kMemberByte0 = 0x802D4B;     // one byte in each of three 0x14C-byte records,
 constexpr std::uint32_t kMemberByte1 = 0x802E97;     // zeroed entering mode 5 (PSX 0x80145E97,
@@ -293,7 +293,7 @@ extern "C" void __cdecl GameMode_Field(void) {
         Game_Mode = 4;
         return;
     case 3: {   // battle
-        const std::int32_t count = static_cast<std::int32_t>(Rest4a_Clock);
+        const std::int32_t count = static_cast<std::int32_t>(Game_BattleCount);
         Game_Mode = 5;
         At(kBattleBytes)[0] = 0;
         At(kBattleBytes)[1] = 0;
@@ -302,7 +302,7 @@ extern "C" void __cdecl GameMode_Field(void) {
         rv::Bytes(&ObjTrio[1])[0xb] = 0;
         rv::Bytes(&ObjTrio[2])[0xb] = 0;
         Game_Step = 0;
-        Rest4a_Clock = static_cast<std::int32_t>(static_cast<std::uint32_t>(count) + 1u);
+        Game_BattleCount = static_cast<std::int32_t>(static_cast<std::uint32_t>(count) + 1u);
         return;
     }
     case 4:

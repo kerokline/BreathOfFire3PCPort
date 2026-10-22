@@ -124,7 +124,7 @@ the conditions.
 
 - The chapter's low byte to `Cond_ByteFA`; bytes `0x8034E1..E5` and words
   `0x8034E6`, `0x8034E8` zeroed (`MoveScript_Var7` is `0x8034E4`,
-  `Field_EdgeBitsPrev` `0x8034E8`); the dword at `Cond_Flags` + 8 * chapter
+  `Field_StepCountPrev` `0x8034E8`); the dword at `Cond_Flags` + 8 * chapter
   (sign-extended) zeroed and its address stored at `0x929ED0` (PSX
   `0x80144E84` + 8 * chapter and `0x80146868`).
 - `Scenario_Load` `0x56D670`: `LoadDatFile(chapter + 0x306)`, the chapter

@@ -131,7 +131,7 @@ not read here.
 
 | PC | Name | Size | Root | Shape | What |
 |---|---|--:|---|---|---|
-| `0x417580` | `Area110_PlaceRandomObject` | `0xCB` | init (PSX `0x801F2D2C`, area 72 / 73's PSX entry too) | kInit | a `jmp` over eleven `nop`s to `0x417590`; **area 72's code** (`Area72_PlaceRandomObject`, [`area_w1f.md`](area_w1f.md)), instruction for instruction, over `Area110_Cells` / `Area110_Weights`: `Rand() & 0x3F` walked down eight weights, field objects 0..7 but the chosen one `+0` = 0, the chosen one at `Area110_Cells[Rand() & 7]` with its ground, `Field_EdgeBits` = the leader's zone counter `- 5` |
+| `0x417580` | `Area110_PlaceRandomObject` | `0xCB` | init (PSX `0x801F2D2C`, area 72 / 73's PSX entry too) | kInit | a `jmp` over eleven `nop`s to `0x417590`; **area 72's code** (`Area72_PlaceRandomObject`, [`area_w1f.md`](area_w1f.md)), instruction for instruction, over `Area110_Cells` / `Area110_Weights`: `Rand() & 0x3F` walked down eight weights, field objects 0..7 but the chosen one `+0` = 0, the chosen one at `Area110_Cells[Rand() & 7]` with its ground, `Field_StepCount` = the leader's zone counter `- 5` |
 
 Compared byte for byte against `0x40D4B0`: only the two tables' addresses
 and the `.text` targets differ. The shipped weights sum to `0x40`, so the

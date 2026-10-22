@@ -119,7 +119,7 @@ byte `0x904153`; `Camera_Distance` `0xF280`; `MapView_Redraw` 4;
 `Cond_AngleFB`'s low word `((2 - that byte, read again) & 0xF) << 8`;
 `Field_Kind2X` / `Z` the leader's x / z; `+0x3C` = the height at (x, z)
 (`0x511C10`, in ax) << 16; `Area189_ZeroSpeeds`; `+0x24`, `+0x4B` 0;
-`Field_EdgeBits` 0. **The pace**: `(Rand() & 0x1F) + 0x96`, doubled when any
+`Field_StepCount` 0. **The pace**: `(Rand() & 0x1F) + 0x96`, doubled when any
 of `Party_Count(0)`'s members answers `Actor_EquipCount(member, 3, 0x15)`,
 halved (arithmetic) when any answers `(member, 3, 0x14)`, doubled again with
 `Cond_ByteFF` 0; the word `0x802E74` (the leader record's `+0x134`) = the
@@ -148,7 +148,7 @@ at most `0xE00` - message 3 (each with request 2 and the halt); else `+9 -
 1`, `Area189_StepMove`, `+0x137` = 1, `+2` = 3. Any other answer: nothing.
 
 **The arrival** (`Area189_StepArrive`, at the end of each step):
-`Area189_ZeroSpeeds`; the frame word `0x90405C` + 1 and `Field_EdgeBits` + 1.
+`Area189_ZeroSpeeds`; the frame word `0x90405C` + 1 and `Field_StepCount` + 1.
 At `0x1E0`: the reserve `0x90405F` + 8 if not 0, `Field_StatusBits` bit 0
 and `Cond_ByteFF` cleared, message 5, request 2. At `0x3C0` (read again): the
 reserve + 8 if not 0, bit 0 and `Cond_ByteFF` set, the frame word 0, the
@@ -164,7 +164,7 @@ the x block `0x1600` or `0x1700` and the z block at most `0x1000`:
 answering (all of eax): the halt. The blocks moved one inward at the edges (x
 at most `0x900` or from `0x1F00`, z at most `0xD00` or from `0x1900`);
 `Field_Kind2X` / `Z`; `MapView_Redraw` 2. Outside `Field_ScriptFlags` bit 5
-and with `Field_EdgeBits` at the pace: the edge count 0; story flags `0x75`,
+and with `Field_StepCount` at the pace: the edge count 0; story flags `0x75`,
 `0x76`, `0x8B`, `0x8C`, `0x8D`, `0x8E` for the blocks (`0xB00`, `0xF00`),
 (`0x1500`, `0x1100`), (`0xC00`, `0x1400`), (`0x1000`, `0x1100`), (`0x1D00`,
 `0x1700`), (`0x1400`, `0x1400`); area `0x7D` at (`0x190000`, `0x190000`),

@@ -193,7 +193,7 @@ Tables: `Area19_Handlers` `0x5E6B60` (8: handlers 2..4 are area 3's
 section 1) over `Area20_Weights` `0x5E6C4C` and `Area20_Cells` `0x5E6C3C`:
 one of the first eight field objects kept by a weighted roll of `Rand() &
 0x3F`, the other seven cleared, the kept one placed at one of eight cells
-with its elevation; `Field_EdgeBits` = the leader's `+0x134` - 5. Tables:
+with its elevation; `Field_StepCount` = the leader's `+0x134` - 5. Tables:
 `Area20_Cells` (16 bytes), `Area20_Weights` (8).
 
 ## 6. Area 21 (choice handlers)

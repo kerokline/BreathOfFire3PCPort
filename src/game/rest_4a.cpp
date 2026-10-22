@@ -8,7 +8,7 @@
 //                   script's frame copies columns of a CLUT row
 //   CommuSim_*, CommuPose_*   the community's simulation (areas 175..185):
 //                   the records 0x9046D0 (60 of 8) and the buildings 0x9048B0
-//                   (8 of 8) moved on by the clock 0x904134, the event queue
+//                   (8 of 8) moved on by the battle count 0x904134, the event queue
 //                   0x904CA0, and the village's objects placed and posed
 //   FieldTrigger*   twelve entries of Field_ObjectTriggers (ids 1..11, 61)
 //
@@ -326,7 +326,7 @@ extern "C" void __cdecl CommuSim_AreaEnter(void) {
     Rest4b_BusyB = 0;
     if (n == 0) {
         for (int k = 0; k < 3; ++k) SH_CALL(CommuSim_AddRecord)();
-        const U clock = Rest4a_Clock;
+        const U clock = Game_BattleCount;
         const unsigned short area = Game_AreaNumber;
         Rest4a_ClockA = 0;
         Rest4a_StampGrow = clock;
@@ -403,7 +403,7 @@ extern "C" void __cdecl CommuSim_Population(unsigned count) {
     const int m = mood;
     const int four = static_cast<int>(4 * n);
     if (m > four) {
-        const U clock = Rest4a_Clock;
+        const U clock = Game_BattleCount;
         if (clock - Rest4a_StampShrink > 0x14) Rest4a_StampShrink = clock - 0x14;
         if (n0 >= 0x14) return;
         const U grow = Rest4a_StampGrow;
@@ -412,10 +412,10 @@ extern "C" void __cdecl CommuSim_Population(unsigned count) {
         if (k > room) k = room;
         if (k == 0) return;
         for (int j = 0; j < k && n != 0x14; ++j, ++n) SH_CALL(CommuSim_AddRecord)();
-        Rest4a_StampGrow = Rest4a_Clock;
+        Rest4a_StampGrow = Game_BattleCount;
         return;
     }
-    const U clock = Rest4a_Clock;
+    const U clock = Game_BattleCount;
     const U grow = Rest4a_StampGrow;
     if (mood != 0) {
         if (clock - grow > 0xA) Rest4a_StampGrow = clock - 0xA;
@@ -427,7 +427,7 @@ extern "C" void __cdecl CommuSim_Population(unsigned count) {
     const int k = static_cast<int>((clock - Rest4a_StampShrink) / 20u);
     if (k == 0) return;
     for (int j = 0; j < k && n != 1; ++j, --n) SH_CALL(CommuSim_RemoveRecord)();
-    Rest4a_StampShrink = Rest4a_Clock;
+    Rest4a_StampShrink = Game_BattleCount;
 }
 
 // original 0x455700 (no PSX twin paired): mood. When (clock - the mood stamp)
@@ -435,7 +435,7 @@ extern "C" void __cdecl CommuSim_Population(unsigned count) {
 // trait +0x10 and 3 (a 16-bit sum), less twice the count; times that, plus the
 // mood; below 0 the mood is 0, above 99 it is 99; the stamp is the clock.
 extern "C" void __cdecl CommuSim_Mood(unsigned count) {
-    const U clock = Rest4a_Clock;
+    const U clock = Game_BattleCount;
     const U steps = ((clock - Rest4a_StampMood) / 5u) & 0xFFFF;
     if (steps == 0) return;
     U sum = 0;
@@ -484,7 +484,7 @@ extern "C" void __cdecl CommuSim_LevelLit(void) {
     auto v = static_cast<std::int16_t>(static_cast<unsigned short>(Word(At(at::kLevelLitCosts + 2u * Rest4a_LevelLit)) - sum));
     if (v <= 0) v = 1;
     const U last = Rest4a_StampLevelLit;
-    if (Rest4a_Clock - last < static_cast<U>(static_cast<int>(v))) return;
+    if (Game_BattleCount - last < static_cast<U>(static_cast<int>(v))) return;
     const unsigned char level = Rest4a_LevelLit;
     Rest4a_StampLevelLit = last + static_cast<U>(static_cast<int>(v));
     const unsigned char n = Rest4b_BusyB;
@@ -506,7 +506,7 @@ extern "C" void __cdecl CommuSim_LevelDark(void) {
     auto v = static_cast<std::int16_t>(static_cast<unsigned short>(0x14 - sum));
     if (v <= 0) v = 1;
     const U last = Rest4a_StampLevelDark;
-    if (Rest4a_Clock - last < static_cast<U>(static_cast<int>(v))) return;
+    if (Game_BattleCount - last < static_cast<U>(static_cast<int>(v))) return;
     const unsigned char level = FieldE2_LevelA;
     if (Rest4a_LevelLit < At(at::kLevelDarkNeeds + level)[0]) return;
     Rest4a_StampLevelDark = last + static_cast<U>(static_cast<int>(v));
@@ -528,7 +528,7 @@ extern "C" void __cdecl CommuSim_TickKind5(void) {
         if (bl[0] != 5) continue;
         if (bl[3] == 0) {
             bl[3] = 1;
-            SetUL(bl + 4, Rest4a_Clock);
+            SetUL(bl + 4, Game_BattleCount);
             continue;
         }
         if (bl[3] >= 0xB) continue;
@@ -542,7 +542,7 @@ extern "C" void __cdecl CommuSim_TickKind5(void) {
         if (count == 0) continue;
         auto d = static_cast<std::int16_t>(static_cast<unsigned short>((bl[2] + 2u) * 6u - sum));
         if (d < 5) d = 5;
-        const U q = (Rest4a_Clock - UL(bl + 4)) / static_cast<U>(static_cast<int>(d));
+        const U q = (Game_BattleCount - UL(bl + 4)) / static_cast<U>(static_cast<int>(d));
         const auto cap = static_cast<std::int16_t>(Rest4a_LevelLit + 4);
         if (q == 0) continue;
         const unsigned char level = bl[3];
@@ -550,7 +550,7 @@ extern "C" void __cdecl CommuSim_TickKind5(void) {
         const auto raised = static_cast<unsigned char>(level + q);
         bl[3] = raised;
         if (static_cast<std::int16_t>(raised) > cap) bl[3] = static_cast<unsigned char>(cap);
-        SetUL(bl + 4, Rest4a_Clock);
+        SetUL(bl + 4, Game_BattleCount);
         const unsigned char n = Rest4b_BusyB;
         At(at::kEvents + 2u * n)[0] = 0;
         const unsigned char first = FirstOf(b);
@@ -578,7 +578,7 @@ extern "C" void __cdecl CommuSim_TickKind9(void) {
             if (r[0] == 0) continue;
             if (r[1] != b + 1) continue;
             const unsigned char level = Bld(b)[1];
-            if (Rest4a_Clock - rv::As<records::CommunityRecord>(r)->stamp < (level + 1u) * 6u) {
+            if (Game_BattleCount - rv::As<records::CommunityRecord>(r)->stamp < (level + 1u) * 6u) {
                 r[2] = 1;
                 continue;
             }
@@ -656,7 +656,7 @@ extern "C" void __cdecl CommuSim_TickKindD(void) {
                 if (p >= at::kPriceTiersEnd) break;
             }
             const U stamp = rv::As<records::CommunityRecord>(r)->stamp;
-            if (Rest4a_Clock - stamp < Word(At(at::kPriceTiers + 6 * tier + 2))) continue;
+            if (Game_BattleCount - stamp < Word(At(at::kPriceTiers + 6 * tier + 2))) continue;
             r[3] = static_cast<unsigned char>(status & 0xF);
             if (flags & 8) {
                 r[3] = static_cast<unsigned char>((status & 0xF) | 0x30);
@@ -699,7 +699,7 @@ extern "C" void __cdecl CommuSim_TickKindB(void) {
         const unsigned char level = bl[3];
         if (level == 0) {
             bl[3] = 5;
-            SetUL(bl + 4, Rest4a_Clock);
+            SetUL(bl + 4, Game_BattleCount);
             continue;
         }
         if (level >= At(at::kKindBCaps + (UL(at::kLevelLit) & 0xFF))[0]) continue;
@@ -710,13 +710,13 @@ extern "C" void __cdecl CommuSim_TickKindB(void) {
         const U divisor = 6u - count;
         if (divisor == 0)
             bof3::Fatal("CommuSim_TickKindB: building %u has 6 residents - the original divides by 0 (docs/rest_4a.md section 7)", (unsigned)b);
-        const U q = (Rest4a_Clock - UL(bl + 4)) / divisor;
+        const U q = (Game_BattleCount - UL(bl + 4)) / divisor;
         if ((q & 0xFFFF) == 0) continue;
         const auto raised = static_cast<unsigned char>(bl[3] + q);
         bl[3] = raised;
         const unsigned char cap = At(at::kKindBCaps + (UL(at::kLevelLit) & 0xFF))[0];
         if (raised > cap) bl[3] = cap;
-        SetUL(bl + 4, Rest4a_Clock);
+        SetUL(bl + 4, Game_BattleCount);
         const unsigned char n = Rest4b_BusyB;
         At(at::kEvents + 2u * n)[0] = 1;
         const unsigned char first = FirstOf(b);
@@ -744,7 +744,7 @@ extern "C" void __cdecl CommuSim_AddRecord(void) {
     unsigned char* const rec = Rec(r);
     rec[0] = 1;
     rec[1] = 0;
-    rv::As<records::CommunityRecord>(rec)->stamp = Rest4a_Clock;
+    rv::As<records::CommunityRecord>(rec)->stamp = Game_BattleCount;
     rec[2] = 0;
     unsigned char* const copy = At(at::kRecordCopies + 5u * r);
     SetUL(copy, UL(at::kRecordTraits + at::kTraitStride * r));
@@ -1034,7 +1034,7 @@ extern "C" void __cdecl CommuPose_Kind7(unsigned object) {
 extern "C" void __cdecl CommuPose_Kind8(unsigned record, unsigned object, unsigned building) {
     const U r = record & 0xFFu;
     Sprite_Current[6] = 1;
-    const U age = Rest4a_Clock - rv::As<records::CommunityRecord>(Rec(r))->stamp;
+    const U age = Game_BattleCount - rv::As<records::CommunityRecord>(Rec(r))->stamp;
     const U row = age < 0x14 ? 0 : (age < 0x28 ? 1 : 2);
     const U index = Count(building & 0xFFu) + 3 * row;
     SetWord(Pose(object & 0xFFu), Word(At(at::kOfferWords + 2 * index)));
@@ -1141,7 +1141,7 @@ extern "C" unsigned char __cdecl FieldTrigger01(unsigned char* object, unsigned 
 extern "C" unsigned char __cdecl FieldTrigger02(unsigned char*, unsigned char*) {
     SH_CALL(Crt_sprintf)(Row(at::kTextRow0), Format(), static_cast<U>(At(at::kCountA)[0]));
     SH_CALL(Crt_sprintf)(Row(at::kTextRow1), Format(), static_cast<std::uint32_t>(MapFieldObjects_ClockMinutes));
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow2), Format(), Rest4a_Clock);
+    SH_CALL(Crt_sprintf)(Row(at::kTextRow2), Format(), Game_BattleCount);
     SH_CALL(Crt_sprintf)(Row(at::kTextRow3), Format(), Rest4a_CountC);
     SH_CALL(Msg_OpenScript)(0x55);
     Field_Request = 2;

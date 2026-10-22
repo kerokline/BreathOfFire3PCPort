@@ -599,7 +599,7 @@ void Seed189(unsigned k) {
         if (ah::Often()) {
             // the step count on and about the pace (the arrival counts one first)
             const U pace = Word(ah::Mem(ObjTrio_addr + 0x134));
-            Field_EdgeBits = static_cast<unsigned short>(pace + AH_PICK(0xFFFE, 0xFFFF, 0, 1, 0xFFFE));
+            Field_StepCount = static_cast<unsigned short>(pace + AH_PICK(0xFFFE, 0xFFFF, 0, 1, 0xFFFE));
         }
         if (ah::Half()) Field_InputHeld = 0;
         if (ah::Half()) {
@@ -616,7 +616,7 @@ void Seed189(unsigned k) {
             Field_Request = 0;
             Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x120u);
             const U pace = Word(ah::Mem(ObjTrio_addr + 0x134));
-            Field_EdgeBits = static_cast<unsigned short>(pace + (ah::Half() ? 0xFFFFu : 0u));
+            Field_StepCount = static_cast<unsigned short>(pace + (ah::Half() ? 0xFFFFu : 0u));
         }
         break;
     }

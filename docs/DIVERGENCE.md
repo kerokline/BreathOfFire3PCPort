@@ -9680,3 +9680,112 @@ designed in rather than bolted on.
   **Not seen in play.**
 - **Reversible?** `BOF3X_LAYERING=0` (with DIV-0071); Capcom's order under
   `BOF3X_ORIGINAL` (the pass is Capcom's).
+
+### Start + Select held a second returns to the title, as on the Western discs
+
+- **ID:** DIV-0152
+- **Date:** 2026-10-21
+- **Subsystem:** the frame loop - `Game_WinMain` (ours, `src/game/win_main.cpp`,
+  `PadReset_Frame` after `Task_RunAll`), through the PC's own restart
+  (`Game_RestartFlag` `0x6BC63C`, F9's)
+- **Tier:** Intent - the owner's request, 2026-10-21 ("restore it if the pc
+  version dropped it").
+- **Original behaviour:** `BOF3.exe` has no pad reset. A linear disassembly of
+  its `.text` finds no test of the held word `Input_Held` against `0x900`
+  (Start `0x800` + Select `0x100`); the one `cmp dx, 0x900` is an area's
+  counter (`area_w4e.cpp:688`). Its one reset is the keyboard's: F9, then F9
+  again (`Game_WndProc`). The PC was built from the Japanese source, and the
+  Japanese boot EXE (`SLPS_009.90`) has no such test either: `Main_FrameLoop`
+  `0x8014AAC8` goes from the flip to `0x8014B630` with nothing between.
+- **New behaviour:** after each frame's tasks, unless paused, Start and Select
+  both held counts a frame; any frame without both starts the count again.
+  On the frame after 60 counted, the count is cleared and `Game_RestartFlag`
+  is set, which the loop reads as F9's second press: the task stack is reset
+  and task 0 created again - the title. Logged `DIV-0152    Start + Select
+  held 60 frames: back to the title at Frame_Counter N`.
+- **Rationale:** every Western PlayStation release has it. The US boot EXE
+  (`SLUS_004.22`, read 2026-10-21 from the held disc) loads the held word
+  `0x80145AA4` in `Main_FrameLoop` (`0x8014ABB8`), and when `& 0x900` is
+  `0x900` counts a byte `0x80143F44`. At 60, with the loader idle
+  (`0x80162D00`), it clears the byte, calls `0x8015CEBC` and `0x8014B33C`,
+  and creates task 0 again (`0x8014B854(0, 0x8014EA80)`); a release clears the
+  byte. The European, French and German boot EXEs (`SLES_013.04`,
+  `SLES_013.19`, `SLES_013.20`) carry the same test at `0x8014ABCC`. It is a
+  post-Japanese change the port never had, like the others in
+  `region-diff.md`. The owner remembers using it. A pad player on the PC had
+  no reset at all.
+- **Also in the PSX version?** The Western discs, yes; the Japanese disc, no.
+  The PC's loads are synchronous (`File_LoadDone` is `mov eax, 1`), so the US
+  wait for an idle loader has no counterpart. The restart is the PC's own,
+  F9's, and not a port of the US calls. One difference: F9 on the title
+  quits the program, but the pad reset on the title restarts it.
+- **Verification:** builds clean. Live, `tools/recipes/field_padreset.txt`
+  (the `adult_ryu` save to its field, Start + Select held 70 frames, then the
+  title expected) written but **not yet run**: the first try pointed at a
+  folder with no game, and the rerun is held while another session's test
+  chain uses the game.
+- **Reversible?** `BOF3X_ORIGINAL=PadReset`.
+
+### The Holy Mantle's doubled encounter threshold stops at 255 instead of wrapping
+
+- **ID:** DIV-0153
+- **Date:** 2026-10-21
+- **Subsystem:** random encounters - `Field_EncounterThresholdRoll` `0x52FEB0` (ours,
+  `src/game/field_event.cpp`); known-defects D325
+- **Tier:** Intent - the owner's decision, 2026-10-21 ("let's go ahead and make
+  that change to the cap").
+- **Original behaviour:** the threshold is the zone's base plus `Rand & 0x1F`
+  (at most the zone's limit), all in a byte. When a member wears accessory
+  `0x15`, the Holy Mantle, it is doubled with `shl bl, 1` (`0x52FF74`) and
+  wraps. Of the seven zones (`0x660A24`, base and limit pairs) only zone 1,
+  base 120 and limit 60, can pass 127. Its thresholds 120..151 become:
+  - 240..254, for a roll of 0..7 (a quarter of rolls);
+  - 0, for a roll of 8. That means no encounters until the next roll, after a
+    battle or on entering an area;
+  - 2..46, for a roll of 9..31 (seven rolls in ten), where the zone otherwise
+    needs at least 120.
+
+  Only area 83 has zone 1 in its own list (いせき2 in the developers' names,
+  rectangle x 17..78, z 45..98; `Area_StateRecords` `0x668D80`). There the
+  Mantle mostly makes fights come sooner. The JP twin `0x801B4CC4` stores the
+  same byte.
+- **New behaviour:** a doubled value that would pass 255 is 255. Zone 1 with
+  the Mantle gives 240..255; every other zone is unchanged, since doubling
+  never passes 254 there. The Bell Collar's halving (`0x14`) still follows.
+- **Rationale:** the Mantle is meant to make encounters rarer. In the one zone
+  meant to have the fewest, the wrap makes them more frequent, and players
+  have long suspected the item "does not work right" (the owner). A cap keeps
+  the threshold in its byte and the rest of the roll as it was.
+- **Also in the PSX version?** Yes, the wrap is Capcom's on every release
+  (PSX twin above; the zone table equal on PSX and PSP, `psp-stallion.md`
+  5.2). This entry changes it on the PC only.
+- **Verification:** builds clean. The cap is armed after the `field_event`
+  self-test, which still compares Capcom's roll. Not yet run live.
+- **Reversible?** `BOF3X_ORIGINAL=MantleCap`.
+
+### The round's end clears the faster-side mark from every member and enemy
+
+- **ID:** DIV-0154
+- **Date:** 2026-10-21
+- **Subsystem:** battle round end - `BattleRoundEnd_CheckFaster` `0x4302D0` (ours,
+  `src/game/battle_turn_steps.cpp`); known-defects D63
+- **Tier:** Intent - the owner's decision, 2026-10-21 ("let's clear the third
+  character's extra-round bit just for consistency").
+- **Original behaviour:** `Battle_MarkFasterSide` `0x4453C0` sets flag 0x8000
+  (+0x134 / +0x114) on members 0..2 and enemies 0..7 that outpace the other
+  side. In an extra round the two order builders admit only marked actors.
+  The round's end clears the mark with `ecx = 2` over the members and
+  `ecx = 7` over the enemies, so the third member and the eighth enemy keep
+  it, and join every later extra round of the battle whether or not they
+  still outpace anyone. The JP twin `0x801D4B08` has the same bounds.
+- **New behaviour:** the clear covers all three members and all eight enemies,
+  the setter's own bounds. A fighter joins an extra round only when it
+  qualified in the round that started it.
+- **Rationale:** the asymmetry is an off-by-one. Members 0 and 1 already lose
+  the mark each round; the third member now does too.
+- **Also in the PSX version?** Yes, Capcom's on the JP disc; this changes it on
+  the PC only.
+- **Verification:** builds clean. Armed after the `battle_turn_steps`
+  self-test, whose F7 / F8 controls still plant the full loops against
+  Capcom's and are refused. Not yet played; D63's live outline applies.
+- **Reversible?** `BOF3X_ORIGINAL=ExtraRoundClear`.

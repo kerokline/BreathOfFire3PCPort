@@ -132,7 +132,7 @@ timers, `+0x148` the actor index, `+0x89` the member. The actor record is
   `(2, 0x1F)`, each non-zero one worth `0x5373F0(1, +0x89)` - one HP up,
   bounded by the maximum. *A guess: equipment that heals as one walks.*
   `Actor_EquipCount` is the "equipment count" of
-  [`field-event.md`](field-event.md) (`Field_ZoneCounterRoll` calls it).
+  [`field-event.md`](field-event.md) (`Field_EncounterThresholdRoll` calls it).
 
 ## 4. The cells
 

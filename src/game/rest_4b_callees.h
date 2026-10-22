@@ -66,7 +66,7 @@ constexpr std::uint32_t kMemberStride = 8;
 constexpr std::uint32_t kMembersEnd = 0x9048B0;
 constexpr std::uint32_t kSlots = 0x9048A8;          // by a slot 1..8: 0x9048B0 + 8 * (slot - 1); +0 kind, +1, +2, +3, +4 a time
 constexpr std::uint32_t kNames = 0x9048F0;          // 5 bytes a record
-// kClock: now Rest4a_Clock (symbols.toml). u32: the time the records' +4 are taken from
+// kClock: now Game_BattleCount (symbols.toml). u32: the time the records' +4 are taken from
 // kSoundBankBits: now AreaW0b_PartySet (symbols.toml). bit 7 set, the low seven pick the sound bank
 // kMusicTrack: now Music_Track (symbols.toml). Music_Track
 

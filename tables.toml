@@ -954,15 +954,17 @@ cite = "menu_windows.cpp:930"
 # The ability records are framed as every reader of a name takes them: name
 # first, at 0x65C4C8. symbols.toml's NameTable_Abilities is the same bytes
 # 16 later - the parameters of id n with the name of id n + 1 - which DIV-0008
-# still writes through (symbols.toml, its note). Whether id 227 exists (a name
-# at 0x65DA10 with parameters after it) is open.
+# still writes through (symbols.toml, its note). Id 227 exists (2026-10-21): a
+# full record at 0x65DA10 (a byte copy of id 226) ending exactly at the next
+# table, Magic080_GlyphCells 0x65DA28, and tables.py locate finds all 228 in
+# every held disc build.
 [[table]]
 key = "abilities"
 symbol = "Ability_Records"
 group = "items"
 what = "an ability: name, then eight parameter bytes"
 index = "ability id"
-count = 227
+count = 228
 stride = 24
 name = { at = 0 }
 find_in = "GAME.EMI"
@@ -972,7 +974,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CB228
 status = "evidence"
-cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 8 bytes"
+cite = "tables.py locate 2026-10-21: numbers equal in all 228 records, names narrowed to 8 bytes"
 
 [[table.psx]]
 build = "psx-us"
@@ -980,7 +982,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CA70C
 status = "evidence"
-cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 12 bytes"
+cite = "tables.py locate 2026-10-21: numbers equal in all 228 records, names narrowed to 12 bytes"
 
 [[table.psx]]
 build = "psx-fr"
@@ -988,7 +990,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CA994
 status = "evidence"
-cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 12 bytes"
+cite = "tables.py locate 2026-10-21: numbers equal in all 228 records, names narrowed to 12 bytes"
 
 [[table.psx]]
 build = "psx-de"
@@ -996,7 +998,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CA990
 status = "evidence"
-cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 12 bytes"
+cite = "tables.py locate 2026-10-21: numbers equal in all 228 records, names narrowed to 12 bytes"
 
 [[table.psx]]
 build = "psx-eu-en"
@@ -1004,14 +1006,14 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CA990
 status = "evidence"
-cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 12 bytes"
+cite = "tables.py locate 2026-10-21: numbers equal in all 228 records, names narrowed to 12 bytes"
 
 [[table.psx]]
 build = "psp-jp"
 file = "BOOT.BIN"
 addr = 0x002F35A0
 status = "evidence"
-cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 8 bytes; the copy the PSP's own code reads (the renames of psp-stallion.md 3.2 are its)"
+cite = "tables.py locate 2026-10-21: numbers equal in all 228 records, names narrowed to 8 bytes; the copy the PSP's own code reads (the renames of psp-stallion.md 3.2 are its)"
 
 [[table.psx]]
 build = "psp-jp"
@@ -1019,14 +1021,14 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CB228
 status = "evidence"
-cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 8 bytes; the PSX GAME.EMI copy the PSP disc keeps beside its ELF's (region-diff.md 5)"
+cite = "tables.py locate 2026-10-21: numbers equal in all 228 records, names narrowed to 8 bytes; the PSX GAME.EMI copy the PSP disc keeps beside its ELF's (region-diff.md 5)"
 
 [[table.psx]]
 build = "psp-eu"
 file = "BOOT.BIN"
 addr = 0x002F33B0
 status = "evidence"
-cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 12 bytes"
+cite = "tables.py locate 2026-10-21: numbers equal in all 228 records, names narrowed to 12 bytes"
 
 [[table.field]]
 at = 0x10
@@ -1208,7 +1210,7 @@ index = "shop number (the shop object's +0x1C, 0x929EC3)"
 count = 50
 stride = 23
 count_status = "hypothesis"
-count_cite = "symbols.toml Shop_Records: at most 50 before ItemUse_Handlers 0x658DB0; no reader bounds the shop number"
+count_cite = "symbols.toml Shop_Records: 50 slots fill the 0x480 bytes before ItemUse_Handlers 0x658DB0 to the dword; ids 0..39 stocked, 40..49 all zero (2026-10-21); no reader bounds the shop number"
 
 [[table.psx]]
 build = "psx-jp"

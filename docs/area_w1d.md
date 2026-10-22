@@ -147,7 +147,7 @@ seventh area to name `0x40B4F0`.
 
 | PC | Name | Size | Root | Shape | What |
 |---|---|--:|---|---|---|
-| `0x40B720` | `Area63_InitPlaceObject` | `0xCB` | area 63 init (PSX `0x801F2D2C`) | kInit | a 5-byte `jmp` over eleven `nop`s (as shipped); `Rand & 0x3F` walked through `Area63_Weights` (the first weight above what is left; none: 8); byte `+0` of field objects 0..7 but that one cleared; the one (below 8) put at `Area63_Positions[Rand & 7]` (bytes << 16), `+0x3E` the elevation there; `Field_EdgeBits` = the leader's dword `+0x134` - 5 |
+| `0x40B720` | `Area63_InitPlaceObject` | `0xCB` | area 63 init (PSX `0x801F2D2C`) | kInit | a 5-byte `jmp` over eleven `nop`s (as shipped); `Rand & 0x3F` walked through `Area63_Weights` (the first weight above what is left; none: 8); byte `+0` of field objects 0..7 but that one cleared; the one (below 8) put at `Area63_Positions[Rand & 7]` (bytes << 16), `+0x3E` the elevation there; `Field_StepCount` = the leader's dword `+0x134` - 5 |
 | `0x40B7F0` | `Area64_InitPlaceObject` | `0xCB` | area 64 init (PSX `0x801F2D2C`) | kInit | the same over area 64's tables (the same bytes) |
 
 The weights are 8 bytes summing to 64, so with the image's tables one of

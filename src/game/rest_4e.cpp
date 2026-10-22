@@ -74,7 +74,7 @@ constexpr unsigned kEntryCount = 60;
 // kEntry: now AreaW0c_TailSub (symbols.toml). u8: the entry the item and track screens are for
 // kFacility: now AreaW0c_TailState (symbols.toml). u8: the facility table 0x652AE4's index (R4B's reader)
 constexpr U kTrackCounts = 0x9048AB;   // u8 at + 8 * kind: the track count of a kind (the records 0x9048B0..)
-// kEntryDword: now Rest4a_Clock (symbols.toml). u32: copied into the entry's +4 when an item is given
+// kEntryDword: now Game_BattleCount (symbols.toml). u32: copied into the entry's +4 when an item is given
 
 // The seven character records (CharacterRecords 0x903A70, 0xA4 each; +0 the
 // name, +9 the portrait, +0xB bit 0 present).
@@ -1113,7 +1113,7 @@ extern "C" void __cdecl CommuItem_Give(void) {
     SH_CALL(Inventory_Remove)(entry[3], entry[2], 1);
     unsigned char* const again = EntryRecord("CommuItem_Give (0x4603F0)");
     again[3] |= 0x10;
-    Put<U>(EntryRecord("CommuItem_Give (0x4603F0)"), 4, Rest4a_Clock);
+    Put<U>(EntryRecord("CommuItem_Give (0x4603F0)"), 4, Game_BattleCount);
     ++Rest4b_BoardState;
 }
 

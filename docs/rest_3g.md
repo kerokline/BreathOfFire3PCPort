@@ -105,7 +105,7 @@ this group's to change.
 
 | PC | Name | What |
 |---|---|---|
-| `0x496440` | `GameMode8_Enter` | the dword `0x904144` up; `Fish_Spawn`; `Transition_Start(1)`; `AreaMap_Frame`; `Field_DrawFrame`; a draw-area move of the rectangle (0, buffer * 0xF0 + 0x50, 0x40, 0x78) to (0x340, 0x100) (`Gpu_SetDrawMove`), committed at slot 5 (0x18); `GameMode8_Frame`; `Field_ScriptFlags2` bit 6 cleared, `Game_Step` up, `Field_EdgeBits` 0, `Field_Request` 0 |
+| `0x496440` | `GameMode8_Enter` | the dword `0x904144` up; `Fish_Spawn`; `Transition_Start(1)`; `AreaMap_Frame`; `Field_DrawFrame`; a draw-area move of the rectangle (0, buffer * 0xF0 + 0x50, 0x40, 0x78) to (0x340, 0x100) (`Gpu_SetDrawMove`), committed at slot 5 (0x18); `GameMode8_Frame`; `Field_ScriptFlags2` bit 6 cleared, `Game_Step` up, `Field_StepCount` 0, `Field_Request` 0 |
 | `0x4964E0` | `GameMode8_Leave` | `Field_ScriptFlags2` bit 6 set; `0x90412C` bit 7 set and `Snd_LoadBankFile` of its low seven bits + 0x2C2, waited for (`GameMode8_WaitFrame`, `Task_Sleep(1)` a try); `Music_FadeOut(0x10)` when `Music_Track` is not 0xFF and not the byte `0x904CD0`; `Transition_Start(0)` and the wait word's framed wait; `Field_ChangeArea(the word 0x802290, the dwords 0x7E091C, 0x7E0920, 4)`; `Music_FadeOutStop(0xA)` on the same test; `Game_Mode` 1, `Game_Step` 0 |
 | `0x4965D0` | `GameMode9_Enter` | `Transition_Start(2)` and its wait (`Field_LoadingFrame`, a sleep); two sleeps; `LoadDatFile(0xCB)` and its wait (a sleep a try); `Gfx_ClutStripCopyRow(1)`, `(2)`; `Game_Step` up; `Gfx_ClutStripDirty` 1 |
 | `0x4966F0` | `GameMode10_Enter` | the same instruction for instruction with the file 0x31A |

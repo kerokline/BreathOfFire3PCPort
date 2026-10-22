@@ -62,6 +62,23 @@ change. The sheets are in `C:\Users\kerok\bof3x-runs\r_ring\<group>\sheets\`
 - **Garr at the fire:** the camps of area 53 (chapter 6) and 192: his arm
   and weapon under the flames, as on the PlayStation.
 
+## 2026-10-21, docs/own-evidence-fixes
+
+Three changes the owner asked for, built and not yet played:
+
+- **DIV-0152, the pad reset.** In the field, hold Start and Select for a second.
+  It should go back to the title, as on a Western PlayStation disc, and the log
+  should show a `DIV-0152` line. The recipe `tools/recipes/field_padreset.txt`
+  does this from `adult_ryu`; it was not run, because another session's chain
+  held the game.
+- **DIV-0153, the Holy Mantle in area 83** (D325). Walk area 83 with the Mantle
+  on: fights should come rarely, about 240 or more steps (more when walking).
+  Before the change they mostly came within 2 to 46 steps.
+- **DIV-0154, the extra round** (D63). In a fight where the third member is
+  marked faster early on, and then no longer qualifies while member 1 still
+  does, the third member should not be asked for a command in the next extra
+  round. D63 has the outline.
+
 ## 2026-10-20, typed-data stage C
 
 `typed/c` (`main` 61023304 merged in;

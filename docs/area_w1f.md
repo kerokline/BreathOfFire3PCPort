@@ -89,7 +89,7 @@ body with another area's table: area 50's choices 3 and 4 name it
 
 | PC | Name | Size | Root | Shape | What |
 |---|---|--:|---|---|---|
-| `0x40D4B0` | `Area72_PlaceRandomObject` | `0xCB` | init (PSX `0x801F2D2C`) | kInit | a `jmp` over eleven `nop`s; `Rand() & 0x3F` walked down `Area72_Weights`, the first weight it falls below chosen (none: 8); field objects 0..7 but the chosen one get `+0` = 0; the chosen one at `Area72_Cells[Rand() & 7]` (bytes << 16), its `+0x3E` the ground there; `Field_EdgeBits` = the leader's zone counter `0x802E74` less 5 either way |
+| `0x40D4B0` | `Area72_PlaceRandomObject` | `0xCB` | init (PSX `0x801F2D2C`) | kInit | a `jmp` over eleven `nop`s; `Rand() & 0x3F` walked down `Area72_Weights`, the first weight it falls below chosen (none: 8); field objects 0..7 but the chosen one get `+0` = 0; the chosen one at `Area72_Cells[Rand() & 7]` (bytes << 16), its `+0x3E` the ground there; `Field_StepCount` = the leader's zone counter `0x802E74` less 5 either way |
 | `0x40D580` | `Area73_PlaceRandomObject` | `0xCB` | init (the same PSX entry) | kInit | area 72's code over `Area73_Cells` / `Area73_Weights` |
 
 The shipped weights sum to `0x40`, so with `Rand() & 0x3F` an object is

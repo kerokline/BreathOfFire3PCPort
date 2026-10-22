@@ -439,7 +439,7 @@ would meet it. Kept as Capcom had it.
 
 ## D10 — The zone counter's arithmetic is 8-bit (candidate)
 
-**Found:** reading `Field_ZoneCounterRoll` `0x52FEB0` for the takeover,
+**Found:** reading `Field_EncounterThresholdRoll` `0x52FEB0` for the takeover,
 2026-09-22 ([`field-event.md`](field-event.md) §4). **Capcom's**; unverified
 in game, and what the counter counts is itself a reading, not a measurement.
 
@@ -1576,7 +1576,7 @@ first; the rest of it was not read). Ours does the same.
 
 **Status:** latent.
 
-## D63 — The round's end leaves flag 0x8000 on the third member and the eighth enemy (latent)
+## D63 — A third member (or eighth enemy) marked as faster joins every later extra round of the battle (latent, Capcom's)
 
 **Seen:** not seen in play; found by reading the code while taking it over,
 2026-09-25, group CC ([`battle_turn_steps.md`](battle_turn_steps.md) §4).
@@ -1588,11 +1588,46 @@ enemies from `0x93BA74`: members 0 and 1, enemies 0..6. The actor loops
 beside it (`Battle_TickCounters`, `Battle_MarkFasterSide`) run 0..2 and
 3..10. **The PSX twin `0x801D4B08` has the same bounds** (`sltiu 2` from 0,
 `sltiu 0xA` from 3), so the PC inherited it. A third member or eighth enemy
-once marked keeps the mark into every later round. What reads flag 0x8000
-was not read, so whether that gives an extra action is open. Ours keeps
-it; controls F7 and F8 plant the full loops and are refused.
+once marked keeps the mark into every later round.
 
-**Status:** latent (its effect unknown).
+**What the mark does** (read 2026-10-21):
+
+- `Battle_MarkFasterSide` `0x4453C0` is its only setter. It marks a member whose
+  agility (`+0xA8`) is at least twice the standing enemies' average and at least
+  their highest (`0x4455C0`), and an enemy that outpaces the party the same way
+  (`0x445600`). It answers 1 only when some member qualified in that call.
+- On that answer the round's end starts an extra round (`0x904B7A = 1`, unless
+  the initiative byte `0x904AE4` is 2).
+- Only the two order builders read the mark, and only in an extra round:
+  `Battle_BuildEntryOrder` `0x444F40` (who is asked for a command) and
+  `Battle_BuildTurnOrder` `0x4450E0` (who acts) admit just the marked
+  (`battle_damage.cpp`'s `Gated`).
+- `Battle_Init` and the encounter set-up zero it, so nothing outlives the battle.
+
+So a third member marked once is asked for a command, and acts, in every later
+extra round of that battle, even after it no longer outpaces anyone: say the slow
+enemies have died, raising the average, while member 1 still qualifies. An extra
+round still needs some member to qualify in that round. An eighth enemy behaves
+the same, in an eight-enemy fight only. If the third member always outpaces
+anyway, nothing shows.
+
+The JP twin agrees: setter `0x801DB020`, `ori 0x8000` at `0x801DB144` (members
+to `sltiu 3`) and `0x801DB274` (enemies to `sltiu 0xB`); turn order `0x801DAAB4`
+gated on the extra-round byte. So it is Capcom's. Fixing it would be an Intent
+entry. Ours keeps it; controls F7 and F8 plant the full loops and are refused.
+
+A live check, not yet run:
+
+1. Put a member whose agility is just over twice the enemies' average in slot 3.
+2. Sample `0x80310C`, `0x904B7A` and the orders `0x904AB6` / `0x904ACC` across
+   two extra rounds.
+3. Lower slot 3's agility at `0x803080` after the first extra round. It should
+   still be entered in the second.
+
+**Status:** latent, reachable in normal play. Capcom's.
+
+**Fixed 2026-10-21** (the owner, "for consistency"): DIV-0154 clears the mark
+from all three members and all eight enemies.
 
 ## D64 — Unchecked data indices beside the dispatches (latent)
 
@@ -8798,3 +8833,48 @@ from a US or PAL disc carries its release's roll as kind 17
 lines from there, on a PC install and a disc-only one alike; the US and EU
 disc-only installs and a PC install under en-US roll their release's credits
 to "Presented by CAPCOM" and "Fin".
+
+## D324 — Enemy sound cues on programs 3..7 take their pitch from the wrong tone (Capcom's; the PC plays the intended pitch)
+
+**Seen:** not seen in play; read 2026-10-21 (`sound-import.md` 10.1).
+
+**Established:** `SE_CueSetup_Bank*` looks a program's tone block up in a four-entry table,
+`{0, 0x200, 0x400, 0}` (JP `0x80182B58`, the tone-offset table straight after it). A cue naming
+program 3 or above lands inside program 0, `program - 4` tones up. The handler takes the key
+note, fine tune, volume and pan from that slot. The volume and pan are overwritten for these
+panned cues (`SsUtSetDetVVol`, `0x17FF`). The sample, envelope and centre note come from the
+right tone, through libsnd's own addressing.
+
+On the JP disc 2,000 bank-6 records name programs 3..7, and 290 of them (566 voice words, 68
+files) play a sound. 298 of those words differ in pitch from the intended tone:
+
+| Pitch change | Words | Examples |
+|---|---|---|
+| about ±50 cents | 290 | most of the affected sounds |
+| +2.5 semitones | 4 | `ENEMY027` cue `0x60C` (Roach), `ENEMY052` `0x60C` (FireSlug) |
+| −26 semitones | 2 | `ENEMY027` `0x60D` |
+
+The same table, with the same 28 references, is in every boot EXE (JP, US, EU, FR, DE), so it is
+Capcom's. The PC's WAVs are pitched from the named tone (`tools/vag.py` matches them 901/901), so
+the port never had it. Renders of the worst cues, PC against PSX, are in
+`C:\Users\kerok\bof3x-runs\cue_pitch\wav`.
+
+**Status:** Capcom's, absent from the PC. Nothing to fix. If the effects move onto the SPU model,
+reproducing it would need its own entry.
+
+## D325 — The Holy Mantle brings encounters sooner in area 83 (Capcom's)
+
+**Seen:** the owner's long-held suspicion that the Holy Mantle "seemed to not work right";
+found by reading the code 2026-10-21.
+
+**Established:** `Field_EncounterThresholdRoll` `0x52FEB0` doubles the encounter threshold for
+accessory `0x15` in a byte (`shl bl, 1`). Zone 1 (base 120, limit 60) is the only zone whose
+threshold can pass 127. Its 120..151 wrap to 0..46: seven rolls in ten land on 2..46 steps
+instead of 120 or more, and one in 32 on 0, no encounters until the next roll. Only area 83
+(いせき2) lists zone 1 in its own records (`Area_StateRecords` `0x668D80`, x 17..78, z 45..98).
+
+`Area_ZoneAt` has no end test, so area 82's leader, on a cell its two records miss, would read
+on into area 83's list. Whether such a cell is reachable is not checked. The JP twin `0x801B4CC4`
+wraps the same way.
+
+**Fixed 2026-10-21** (the owner): DIV-0153 caps the doubled value at 255.

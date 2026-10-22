@@ -94,7 +94,7 @@ listed entry was a case label.
 Named in `symbols.toml` and used by name: `Sprite_Current`, `Field_State`,
 `Field_ActiveMember`, `Field_ScriptFlags` / `2`, `Field_InputFlags`,
 `Field_InputHeld`, `Input_Pressed`, `Field_MenuButton`, `Field_MemberCount`,
-`Field_EdgeBits`, `Field_Request`, `Field_MoveSpeeds`,
+`Field_StepCount`, `Field_Request`, `Field_MoveSpeeds`,
 `Field_DirectionSteps`, `MoveScript_F3Divisor`, `MoveScript_FAWord`,
 `Sprite_Objects`, `Sprite_ObjectsExtra`, `Effect_Objects`, `Game_AreaNumber`,
 `Area_Descriptors`, `Cond_ByteFA` (the chapter), `Cond_ByteFD`. The rest are
@@ -183,7 +183,7 @@ sound from `0x660960` and pose (+8 >> 1) + 0x10, else the pose +8, then
 
 **The tests.** `Field_EncounterDue`: the zone the leader stands in
 (`Area_ZoneAt`) must allow encounters (+4), the zone counter be set and at
-most `Field_EdgeBits` - the steps taken, counted by `0x52E580` - or 7/10 of
+most `Field_StepCount` - the steps taken, counted by `0x52E580` - or 7/10 of
 them while walking, `ObjTrio +0x138` bit 0 clear, and no member with bit 6;
 on foot the cell +9 steps on must be 0, and otherwise (bit 0 of
 `Field_InputFlags` clear) `0x591F30(4, 0)` and every member's `0x535C50` must
@@ -514,7 +514,7 @@ a stand-in in the fuzz):
 | PC | What | Why not |
 |---|---|---|
 | `0x52E110` | the leader's sub-state 2 (table `0x660954` entry 2): +0x137 = 1, +9 down, then `0x52E140` or, at 0, a tail jump to `0x52E580` | small, but its tail is `0x52E580` |
-| `0x52E580` | the step's landing: V2's object tests (`0x535270`, `0x5350C0`, `0x534A00`, `0x535120`, `0x535240`, `0x534920`, `0x534990`, `0x535390`, `0x535C50`, `0x534F10`), cells 0xAF / 0xC0, the map edge, `Field_EdgeBits` counted, the encounter test, `Scenario_ArriveHook`, `Field_LeaderWalk` again while a direction is held - 0x445 bytes | entangled with group V2's functions; the natural next takeover once V1 and V2 are merged |
+| `0x52E580` | the step's landing: V2's object tests (`0x535270`, `0x5350C0`, `0x534A00`, `0x535120`, `0x535240`, `0x534920`, `0x534990`, `0x535390`, `0x535C50`, `0x534F10`), cells 0xAF / 0xC0, the map edge, `Field_StepCount` counted, the encounter test, `Scenario_ArriveHook`, `Field_LeaderWalk` again while a direction is held - 0x445 bytes | entangled with group V2's functions; the natural next takeover once V1 and V2 are merged |
 | `0x5317F0` | the encounter's area word `0x937F82` from the table `0x660A90` | tiny; not called by anything listed but the walk |
 | `0x531820`, `0x531920`, `0x531AF0` | `Field_LeaderCellEvent`'s exits: the gateway tables `0x660AB8` / `0x660B08`, the cell list `0x660B10`, the cell's exit through `0x462AC0` | three more functions and `0x462AC0` unread |
 | `0x531120`, `0x531540` | `Field_CellAround` for a sprite with +0x70 (0x420 and 0x116 bytes) | `Field_CellAroundNear`'s twin for the large sprite, not reached by the route |

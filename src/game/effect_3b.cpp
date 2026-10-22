@@ -462,7 +462,7 @@ extern "C" void __cdecl EffectKind65_WaitRequest(void) {
 // ScriptFlags_Set40 and +1 = 2.
 extern "C" void __cdecl EffectKind65_Check(void) {
     if (Field_Request == 3) return;
-    if (Rest4a_Clock % 5 != 0) {
+    if (Game_BattleCount % 5 != 0) {
         S()[1] = 0;
         return;
     }

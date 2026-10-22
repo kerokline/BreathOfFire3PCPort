@@ -36,7 +36,7 @@ std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t
 constexpr std::uint32_t kPaceTable = 0x65F5DC;      // 7 handlers, by Sprite_Current[2], no bound
 constexpr std::uint32_t kAsideRows = 0x65F624;      // 4 directions per leader direction
 // kSteps: now Field_DirectionSteps (symbols.toml). per direction: x, z step (16.16)
-// kCounter: now Field_EdgeBits (symbols.toml). byte: a counter the loop copies...
+// kCounter: now Field_StepCount (symbols.toml). byte: a counter the loop copies...
 constexpr std::uint32_t kCounterSeen = 0x8034E8;    // ...here after each pass
 constexpr std::uint32_t kBlockFlags = 0x8034E1;     // bit 6: blocks the idle turn
 // kEncounter: now BattleE1_Mode (symbols.toml). bytes +0, +1 and +0xC: a type-5 touch
@@ -234,7 +234,7 @@ void FadeInStep() {
 // return 1; else with flags bit 1 and steps left, a move's frames.
 unsigned char PaceCounted(unsigned char* object, unsigned speed, unsigned flags, unsigned char bit, unsigned char add) {
     auto* const obj = rv::As<records::SpriteObject>(object);
-    if ((flags & 1) && ((At(Field_EdgeBits_addr)[0] ^ At(Field_EdgeBitsPrev_addr)[0]) & bit)) {
+    if ((flags & 1) && ((At(Field_StepCount_addr)[0] ^ At(Field_StepCountPrev_addr)[0]) & bit)) {
         if (obj->move_steps < 0xFA) obj->move_steps = static_cast<unsigned char>(obj->move_steps + add);
         return 1;
     }
@@ -750,7 +750,7 @@ const Region kRegions[] = {
     {0x8034E0, 0x10},   // kBlockFlags, kCounterSeen
     {Address(&Field_ScriptFlags), 2},
     {AreaW1a_FocusObject_addr, 4},
-    {Field_EdgeBits_addr, 1},
+    {Field_StepCount_addr, 1},
     {Address(rv::Bytes(ObjTrio)), 0x100}, // kLeaderDirection, kLinkArgument
 };
 constexpr unsigned kRegionBytes = (0x7E1300 - kObjectsLow) + 1 + 2 + 0x10 + 0x10 + 2 + 4 + 1 + 0x100;
@@ -874,7 +874,7 @@ unsigned char* Seed(unsigned k, State& input, unsigned& speed, unsigned& flags) 
     // Globals.
     if (Often()) Field_Request = 2;
     if (Often()) Field_StatusBits &= 0xBF;
-    if (Often()) At(Field_EdgeBits_addr)[0] = At(Field_EdgeBitsPrev_addr)[0];
+    if (Often()) At(Field_StepCount_addr)[0] = At(Field_StepCountPrev_addr)[0];
     // The talk word: none, a script, a system message, a script message.
     const unsigned talk = Next() % 4;
     SetWord(object + 0x88, talk == 0 ? 0xFFFFu : talk == 1 ? (0x8000u | Next()) : talk == 2 ? ((Next() & 0x5FFFu) | 0x2000u) : Next() & 0x5FFFu);

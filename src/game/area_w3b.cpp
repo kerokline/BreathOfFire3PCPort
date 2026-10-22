@@ -970,7 +970,7 @@ extern "C" unsigned char __cdecl Area121_StepOffObject(void) {
 // under the leader (the words +0x36 / +0x3A) by AreaMap_ByteAt: 0xAF -
 // Field_ChangeArea(the place 0x937F82, the pending x 0x903860, z 0x90384C,
 // flags 0x905B88), 0x904EE0 = 0, 0x937F98 = 0xC, done; 0xC0 (asked again) -
-// Area_LinkAt(x, z). Then Field_EdgeBits (a word) + 1, + 1 more for the
+// Area_LinkAt(x, z). Then Field_StepCount (a word) + 1, + 1 more for the
 // facings 2 and 6; 0x415640 (the halt); Scenario_ArriveHook(+0x34, +0x38)
 // answering (all of eax): +2 = 0, done. Else Field_Bit80Tick; unless
 // Field_ScriptFlags bit 8 or Field_ScriptFlags2 bit 6, Field_InputHeld with a
@@ -1001,8 +1001,8 @@ extern "C" void __cdecl Area121_LeaderStep(void) {
         }
     }
     const unsigned char facing = Cur()[8];
-    Field_EdgeBits = static_cast<unsigned short>(Field_EdgeBits + 1);
-    if (facing == 2 || facing == 6) Field_EdgeBits = static_cast<unsigned short>(Field_EdgeBits + 1);
+    Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
+    if (facing == 2 || facing == 6) Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
     AH_AT(Handler, area_w3b::kLeaderHalt104)();
     o = Cur();
     if (AH_CALL(Scenario_ArriveHook)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z) != 0) {

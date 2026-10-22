@@ -1559,7 +1559,7 @@ void Run(const Group& group) {
         // field mode's standard regions (docs/scenario_harness.md section 7.3)
         const Region field[] = {
             {Gfx_PacketNext_addr, 4},                      // Gfx_PacketNext, into the packet buffer
-            {CameraTurn_Steps_addr, at::kCameraTurnSize},  // CameraTurn_Steps, Field_EdgeBits, Field_InputFlags, Field_ScriptFlags2, Field_InputHeld
+            {CameraTurn_Steps_addr, at::kCameraTurnSize},  // CameraTurn_Steps, Field_StepCount, Field_InputFlags, Field_ScriptFlags2, Field_InputHeld
             {SaveMenu_ErrorKind_addr, at::kMenuBlockSize}, // MapView_BuildFlags, the menu block 0x929F00.., Field_Kind2Hold
             {ScenaSc9b_TallyWord_addr, at::kStyleSize},    // the window style byte 0x903A5A, the records 0x903A70.., Field_ActorStates
             {at::kTextBuffer, at::kTextBufferSize},        // the text scratch 0x904BA0

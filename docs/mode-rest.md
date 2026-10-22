@@ -188,13 +188,13 @@ DAT 0xD2 and track 0x97 below chapter 8 (`Cond_ByteFA`, s8), DAT 0xD3 and
 
 **`GameMode5_Leave`**: with `Field_Kind2Hold` 0 and `File_LoadDone` (in that
 order): `Draw_OtSlot` 6; `Field_PartyLoad(0)`; `Party_PlacesByList`;
-`Field_EdgeBits` 0; unless `0x904AE5` bit 1,
+`Field_StepCount` 0; unless `0x904AE5` bit 1,
 `MapView_SetElevation(AreaMap_Elevation(Field_Kind2X, Field_Kind2Z))`; the
 field's track again - `Music_Play(Music_Track, 0xA)` - unless `0x904AE5`
 bit 6 (read again after the elevation), `0x904AE8` bit 3 or the track 0xFF;
 (**DIV-0092**, 2026-10-10: the track is always 0xFF here after the fanfare's
 stopping fade, so the port never resumed; ours plays the area's `0x904CD0`)
-`0x904AE5` and the event battle 0; `Field_ZoneCounterRoll(0)`;
+`0x904AE5` and the event battle 0; `Field_EncounterThresholdRoll(0)`;
 `Field_AfterBattleTally`. Either way `Party_ScriptTicks` and the two frames;
 after the first branch `Game_Mode` 2, `Game_Step` 0, `Field_Request` 0.
 
@@ -265,7 +265,7 @@ whose name holds it.
   `GameMode_LookEnd` (`kPhase`); `Encounter_PartyTurn`, `_PartyToPlaces`,
   `_PartyScriptOnce` (`kFlag`: each caller keeps al in bl and tests it);
   `Menu_WaitTransition`, `Field_WaitTransition` (one byte), `PartySet_Select`
-  (two bytes, `field_event.cpp` reads both as bytes), `Field_ZoneCounterRoll`
+  (two bytes, `field_event.cpp` reads both as bytes), `Field_EncounterThresholdRoll`
   (the whole word).
 - **Effects** (re-listings of standard rows, masks unchanged): the harness's
   own disturbance reaches a group's cells on about one call in 24 - too
@@ -360,7 +360,7 @@ of 4,000 a function, first differing round):
 | 40 | `GameMode5_Place` | no step up | 4,000 (0) |
 | 41 | `GameMode5_Leave` | the elevation's x and z swapped | 895 (6) |
 | 42 | `GameMode5_Leave` | bit 2 for bit 3 | 264 (12) |
-| 43 | `GameMode5_Leave` | `Field_ZoneCounterRoll(1)` | 1,769 (6) |
+| 43 | `GameMode5_Leave` | `Field_EncounterThresholdRoll(1)` | 1,769 (6) |
 | 44 | `GameMode5_Leave` | `0x904AE5` not read again | 112 (6) |
 | 45 | `GameMode5_Leave` | `Field_Request` kept | 1,764 (6) |
 | 46 | `GameMode6_Run` | the step test inverted | 4,000 (0) |

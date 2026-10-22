@@ -64,7 +64,7 @@ constexpr std::uint32_t kByte803490 = 0x803490;
 // kLeaderZHigh: now ObjTrio[0].z_whole (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The leader's zone counter (record 0 +0x134; area_w1f_callees.h's
-// kLeaderZone): area 110's init sets Field_EdgeBits from it.
+// kLeaderZone): area 110's init sets Field_StepCount from it.
 constexpr std::uint32_t kLeaderZone = 0x802E74;
 // Sprite_ObjectsExtra's records (0xA4 bytes, four of them).
 constexpr std::uint32_t kExtraStride = 0xA4;

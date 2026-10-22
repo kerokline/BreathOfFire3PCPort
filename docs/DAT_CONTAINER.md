@@ -109,9 +109,16 @@ catalogue of porting-house changes, and it is a warning for save interchange:
 ### The 47 image differences
 
 All wholesale tile replacements (payloads are 32×32-halfword tiles; minimum diff
-2 whole tiles, 1,798 bytes — no palette tweaks). Tag decodes per the sibling's
-rule `(x/32)<<24 | (y/32)<<16 | (bytes/16K)<<8 | flag`, size field correct on
-47/47. Only **33 distinct** replacement images: one glyph atlas pasted into 13
+2 whole tiles, 1,798 bytes; no palette tweaks). The tag decodes as
+`(x/32)<<24 | (y/32)<<16 | (width in tiles)<<8 | flag`, as
+[`asset-loading-path.md`](asset-loading-path.md) reads the PC loader.
+
+Corrected 2026-10-21. This doc had used the sibling's `(bytes/16K)` for byte 1. Since bytes/16K is
+tiles / 8, that reading agrees whenever an image is eight tiles (256 rows) high, which covers
+all 47 here. Across all 593 type-3
+sections of the JP disc (the sibling's `analysis/emi_sections.json`) it fails on 20, all of
+them 3 or 4 tiles wide, for example `KAIZAR_D#1`: 24 tiles, byte 1 = 4, bytes/16K = 3. The width
+reading holds on all 593, where width divides the section's tile count. Only **33 distinct** replacement images: one glyph atlas pasted into 13
 sections, one 14-tile block pasted into 16 area pages.
 
 Against the sibling's 37 language-bearing sections

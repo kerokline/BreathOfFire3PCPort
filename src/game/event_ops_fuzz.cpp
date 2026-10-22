@@ -795,7 +795,7 @@ void UseRegions(unsigned mask) {
     add(R(ObjTrio_addr, 3 * at::kMemberStride));              // ObjTrio: the leader, Field_State
     add(R(0x903840, 0x30));                                   // the scratch words
     add(R(0x9039A0, 0x58));                                   // Field_ScriptFlags .. 0x9039F7
-    add(R(0x905B80, 0x30));                                   // Field_EdgeBits .. Field_InputHeld (a dword)
+    add(R(0x905B80, 0x30));                                   // Field_StepCount .. Field_InputHeld (a dword)
     add(R(0x937F80, 0x10));                                   // 0x937F82, Sprite_Current, MoveScript_F3Divisor
     add(R(0x903580, 0x28));                                   // the buttons .. Field_ActiveMember
     add(R(&Input_Pressed, 4));
@@ -1108,7 +1108,7 @@ void RunTests(unsigned rounds, unsigned only) {
                 }
                 if (t.fn == kEncounter) {   // each of the chain's tests passed more often than not
                     if (!OneIn(3)) SetWord(At(ObjTrio_addr + 0x134), 1 + Next() % 0x40);
-                    if (!OneIn(3)) Field_EdgeBits = static_cast<unsigned short>(OneIn(2) ? 0x40 + Next() % 0x40 : Next());
+                    if (!OneIn(3)) Field_StepCount = static_cast<unsigned short>(OneIn(2) ? 0x40 + Next() % 0x40 : Next());
                     if (!OneIn(3)) *At(ObjTrio_addr + 0x138) &= 0xFE;
                     if (!OneIn(3)) for (int i = 0; i < 3; ++i) Member(i)[0] &= 0xBF;
                     if (OneIn(2)) move_script::SetLong(At(EventOps_ScreenCounter_addr), static_cast<std::int32_t>(0xEF + Next() % 3));

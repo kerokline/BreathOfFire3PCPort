@@ -447,7 +447,7 @@ Region g_regions[] = {
     {0, 2 * kObjectBytes},                                    // g_objects (filled in at start-up)
     {Sprite_Objects_addr, at::kFieldObjectsEnd - Sprite_Objects_addr}, // the first eight Sprite_Objects
     {ObjTrio_addr, 0x138},                                    // the leader's record to +0x137
-    {0x905B80, 4},                                            // Field_EdgeBits
+    {0x905B80, 4},                                            // Field_StepCount
     {Area29_Cells_addr, 0x18},                                // Area29_Cells, Area29_Weights
     {0x9039A0, 4},                                            // Field_ScriptFlags
     {0x9039F0, 8},                                            // the place message's bytes 0x9039F3..0x9039F5

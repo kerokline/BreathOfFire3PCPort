@@ -47,7 +47,7 @@ constexpr U kSlotDivisors = 0x6528E4;      // u8 by object +0x28: the frames a C
 constexpr U kSlotSteps = 0x6528EC;         // u8 by object +0x28: the columns a frame steps (image .data)
 
 // --- the community's simulation (CommuSim_*) -------------------------------------
-// kClock: now Rest4a_Clock (symbols.toml). dword: the clock the simulation compares (GameMode_Field counts it on Field_Request 3)
+// kClock: now Game_BattleCount (symbols.toml). dword: the clock the simulation compares (GameMode_Field counts it on Field_Request 3)
 // kClockA: now Rest4a_ClockA (symbols.toml). dword: cleared at the first entry, not read here
 // kStampGrow: now Rest4a_StampGrow (symbols.toml). dword: the clock at the last growth
 // kStampShrink: now Rest4a_StampShrink (symbols.toml). dword: the clock at the last shrink

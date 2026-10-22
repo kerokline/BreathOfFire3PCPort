@@ -389,7 +389,7 @@ extern "C" void __cdecl Area189_LeaderRun(void) {
 // 0xFD12; the leader's facing +8 = the byte 0x904153; Camera_Distance 0xF280;
 // MapView_Redraw 4; Cond_AngleFB's low word ((2 - that byte, read again) &
 // 0xF) << 8; Field_Kind2X / Z the leader's x / z; +0x3C the height at (x, z)
-// (0x511C10) << 16; Area189_ZeroSpeeds; +0x24, +0x4B 0; Field_EdgeBits 0.
+// (0x511C10) << 16; Area189_ZeroSpeeds; +0x24, +0x4B 0; Field_StepCount 0.
 // The pace: (Rand() & 0x1F) + 0x96, doubled when any of Party_Count(0)'s
 // members answers Actor_EquipCount(member, 3, 0x15), halved (arithmetic)
 // when any answers (member, 3, 0x14), doubled again with Cond_ByteFF 0; the
@@ -413,7 +413,7 @@ extern "C" void __cdecl Area189_LeaderStart(void) {
     AH_CALL(Area189_ZeroSpeeds)();
     Cur()[0x24] = 0;
     Cur()[0x4B] = 0;
-    Field_EdgeBits = 0;
+    Field_StepCount = 0;
     std::int32_t pace = static_cast<std::int32_t>((static_cast<U>(AH_CALL(Rand)()) & 0x1F) + 0x96);
     const unsigned count = static_cast<unsigned>(AH_CALL(Party_Count)(0)) & 0xFF;
     for (unsigned i = 0; i < count; ++i) {
@@ -597,7 +597,7 @@ extern "C" void __cdecl Area189_StepArrive(void) {
     // and Cond_ByteFF cleared, message 5; 0x3C0 - the reserve + 8 if any, bit
     // 0 and Cond_ByteFF set, the word 0, the count + 1, message 6
     const auto frames = static_cast<std::uint16_t>(Word(Mem(Cond_Flags_addr + 0xcc)) + 1);
-    Field_EdgeBits = static_cast<unsigned short>(Field_EdgeBits + 1);
+    Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
     SetWord(Mem(Cond_Flags_addr + 0xcc), frames);
     if (frames == 0x1E0) {
         const unsigned char reserve = B(Cond_Flags_addr + 0xcf);
@@ -693,11 +693,11 @@ extern "C" void __cdecl Area189_StepArrive(void) {
     const unsigned flags = Field_ScriptFlags;
     Field_Kind2Z = rv::As<records::SpriteHead>(cur)->z;
     MapView_Redraw = 2;
-    if ((flags & 0x20) == 0 && Field_EdgeBits >= Word(Mem(ObjTrio_addr + 0x134))) {
+    if ((flags & 0x20) == 0 && Field_StepCount >= Word(Mem(ObjTrio_addr + 0x134))) {
         // the pace's steps walked: the edge count 0; a flag for each of six
         // blocks the leader stands on; area 0x7D at (0x190000, 0x190000),
         // flags 4, the facing jittered
-        Field_EdgeBits = 0;
+        Field_StepCount = 0;
         static const struct { std::int16_t x, z; unsigned char flag; } kMarks[] = {
             {0xB00, 0xF00, 0x75}, {0x1500, 0x1100, 0x76}, {0xC00, 0x1400, 0x8B}, {0x1000, 0x1100, 0x8C}, {0x1D00, 0x1700, 0x8D}, {0x1400, 0x1400, 0x8E}};
         for (const auto& m : kMarks) {

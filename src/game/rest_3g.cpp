@@ -402,7 +402,7 @@ extern "C" void __cdecl GameMode8_Run(void) {
 // Transition_Start(1); AreaMap_Frame; Field_DrawFrame; a draw-area move of the
 // rectangle (0, buffer * 0xF0 + 0x50, 0x40, 0x78) to (0x340, 0x100) committed
 // at slot 5 (0x18); GameMode8_Frame; Field_ScriptFlags2 bit 6 clear, Game_Step
-// up, Field_EdgeBits 0, Field_Request 0.
+// up, Field_StepCount 0, Field_Request 0.
 extern "C" void __cdecl GameMode8_Enter(void) {
     Rest4a_CountF = Rest4a_CountF + 1u;
     SH_CALL(Fish_Spawn)();
@@ -419,7 +419,7 @@ extern "C" void __cdecl GameMode8_Enter(void) {
     SH_CALL(GameMode8_Frame)();
     Field_ScriptFlags2 = Field_ScriptFlags2 & 0xFFBFu;
     Game_Step = static_cast<unsigned short>(Game_Step + 1);
-    Field_EdgeBits = 0;
+    Field_StepCount = 0;
     Field_Request = 0;
 }
 

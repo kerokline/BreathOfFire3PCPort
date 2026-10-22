@@ -98,7 +98,7 @@ state 2 (`MapView_Redraw` 2 each frame); 2 while `Field_Request` is 0 the word
 tail sits here); 5 counter 3 = 1, state 6; 6 `Camera_Distance` down by `0x40`
 to 0, then state 7 (`ScriptFlags_Set40`, redraw); 7 `ScriptFlags_Clear40`,
 `Field_ScriptFlags & 0xED8F`, `+0x48` 0, flag `0x66` cleared,
-`Field_ZoneCounterRoll(0)`, disarmed; 10 message 1, `Field_Request` 2, state
+`Field_EncounterThresholdRoll(0)`, disarmed; 10 message 1, `Field_Request` 2, state
 `0xB`; 11 once the message is gone, disarmed; 3, 4, 8, 9 nothing. The step
 hook, trigger 18 and the cell hook's rectangle case move it to 5 or `0xA`;
 the choice and state 0 arm it.
@@ -187,7 +187,7 @@ The five placers run under area 141 (their block's).
   `Effect_FindFree` `kByte 0xFF..0x03`; `Sprite_FindFree` `kByte 0xFF..0x1D`;
   `EventOp_6x` (Capcom's), `EventOp_0x`; `Flags_Toggle`; `Flags_Test` (`kBool`);
   `MoveCmd_TestFB`, `KeyItem_Has`, `Kind2_Place`, `Party_HealJoined`,
-  `Field_ZoneCounterRoll`, `Effect_Release`, `ScriptFlags_Set40` /
+  `Field_EncounterThresholdRoll`, `Effect_Release`, `ScriptFlags_Set40` /
   `Clear40`, `MoveCmd_Move` (Capcom's), `MoveCmd_MoveKind2`,
   `Sprite_FaceDirection`, `Sprite_SetAnimation`; the group's own
   `Area140_BlockedAhead` (`kFlag`, words), `Area140_CellHook` (bytes, the
@@ -239,7 +239,7 @@ reach was called - e.g. `Effect_Spawn` 30,000, `Field_ChangeArea` 79 (tail
 19's state 12 at counter 3 `0x28`), `Flags_Toggle` 302 / 2,037 (tail 19,
 area 139's hook), `MoveCmd_Move` 109 (area 140's handler 1 inside its
 rectangle with nothing blocking), `Effect_FindFree` 120 (area 140's cell hook
-past its flag and rectangle with `+4` set), `Field_ZoneCounterRoll` 285,
+past its flag and rectangle with `+4` set), `Field_EncounterThresholdRoll` 285,
 `Party_HealJoined` 863, `MoveCmd_MoveKind2` 2,192, the effect states
 2,096 / 1,988 / 1,916, area 142's states 3,046 / 2,954.
 
@@ -696,7 +696,7 @@ D159 (party slot 1) in [`known-defects.md`](known-defects.md).
   `AreaMap_ByteAt`, `Effect_FindFree`, `Effect_Release`, `Sprite_FindFree`,
   `EventOp_0x`, `Flags_Set` / `Clear` / `Test` / `Toggle`,
   `MoveCmd_TestFB`, `MoveCmd_MoveKind2`, `KeyItem_Has`, `Kind2_Place`,
-  `Party_HealJoined`, `Party_DropIn`, `Field_ZoneCounterRoll`,
+  `Party_HealJoined`, `Party_DropIn`, `Field_EncounterThresholdRoll`,
   `Field_ChangeArea`, `Field_ObjectBlockedAhead`, `Msg_OpenScript`,
   `Sound_PlayEffect`, `Sprite_FaceDirection`, `Sprite_SetAnimation`,
   `Sprite_SetAnimationAt`, `Sprite_ReleaseTint`, `ScriptFlags_Set40` /
