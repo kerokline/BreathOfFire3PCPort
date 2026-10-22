@@ -500,8 +500,11 @@ def _chunks(blob, name):
     while pos < len(blob):
         if pos + 16 > len(blob):
             raise BuildError("%s: a truncated chunk header at 0x%X" % (name, pos))
-        kind, tag, size, zero = struct.unpack_from("<4I", blob, pos)
-        if zero != 0 or pos + 16 + size > len(blob):
+        kind, tag, size, word3 = struct.unpack_from("<4I", blob, pos)
+        # word 3 is zero in every shipped chunk; a kind-18 side chunk carries
+        # the pool half (0 or 1) there (docs/reading-row.md 1.1, tools/dat.py).
+        ok3 = word3 == 0 or (kind == 18 and word3 == 1)
+        if not ok3 or pos + 16 + size > len(blob):
             raise BuildError("%s: a bad chunk header at 0x%X" % (name, pos))
         out.append((kind, tag, blob[pos + 16:pos + 16 + size]))
         pos += 16 + size
@@ -564,10 +567,10 @@ def build_layer(cache, layer, kind, base, readings, where, what, say, builder=No
     work = os.path.join(cache, "opt", "." + layer + ".new")
     shutil.rmtree(work, ignore_errors=True)
     os.makedirs(work)
-    # --out is the layer's folder, C/opt/<layer>/; the builder writes its dat/ there
-    # (docs/reading-row.md 1.1: cache/opt/<layer>/dat/<NAME>.DAT).
+    # --out is the directory the builder writes its DATs into: the layer's
+    # dat/ (docs/reading-row.md 1.1: cache/opt/<layer>/dat/<NAME>.DAT).
     cmd = [sys.executable, builder, k["mode"], "--cache", cache, "--lang", base, "--readings", readings,
-           "--out", work]
+           "--out", os.path.join(work, "dat")]
     say("Building %s into opt/%s" % (what, layer))
     p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     for line in (p.stdout + p.stderr).splitlines():
@@ -829,8 +832,8 @@ def selftest(keep=None):
         f.write("import argparse, os, struct\np = argparse.ArgumentParser()\np.add_argument('mode')\n"
                 "for k in ('--cache', '--lang', '--readings', '--out'): p.add_argument(k)\na = p.parse_args()\n"
                 "assert a.mode == 'furigana' and os.path.isfile(a.readings)\nbody = b'\\x01\\0\\0\\0\\0\\0\\0\\0'\n"
-                "os.makedirs(os.path.join(a.out, 'dat'))\n"
-                "open(os.path.join(a.out, 'dat', 'AREA000.DAT'), 'wb').write(struct.pack('<4I', 18, 0xC8000, len(body), 0)"
+                "os.makedirs(a.out)\n"
+                "open(os.path.join(a.out, 'AREA000.DAT'), 'wb').write(struct.pack('<4I', 18, 0, len(body), 0)"
                 " + body)\nprint('stand-in: 1 message')\n")
     done, _ = setup_step(h, cache, lambda t, quiet=False: None, builder=fake)
     with open(os.path.join(cache, "manifest.toml"), encoding="utf-8") as f:

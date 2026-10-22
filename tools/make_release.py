@@ -66,6 +66,8 @@ PROVIDES = {"numpy": "numpy", "PIL": "pillow", "capstone": "capstone"}
 NOT_BUNDLED = {
     "ahocorasick": "exe_twins.py runs()/places(): the recipe generators (exe_tables.py map/places), the owner's",
     "inventory": "seq.py cmd_verify: tools/bgm/inventory.py, which needs the sibling checkout",
+    "sudachipy": "ruby_build.py Reader: the reading-row builder's tokeniser; mods.py's setup step refuses loudly "
+                 "without it (reading-row-round.md 6, the owner's call on bundling SudachiPy and its dictionary)",
 }
 ENTRY = ("importer.py", "player_sources.py")
 

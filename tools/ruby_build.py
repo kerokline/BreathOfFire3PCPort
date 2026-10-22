@@ -862,7 +862,7 @@ def cmd_furigana(args):
         return 1 if st["mismatch"] else 0
 
     ambiguous = {} if args.ambiguous else None
-    reader = Reader(charset, load_overrides(), args.dict, ambiguous)
+    reader = Reader(charset, load_overrides(args.readings), args.dict, ambiguous)
     comp = Composer(charset, reader, lint=[] if args.lint else None, review=[] if args.review else None)
     review = open(args.review, "w", encoding="utf-8") if args.review else None
     os.makedirs(src.out, exist_ok=True)
@@ -1026,6 +1026,8 @@ def main(argv=None):
     f.add_argument("--lang", required=True, help="the main language's tag (ja-JP)")
     f.add_argument("--only", type=lambda s: s.split(","), help="file stems, e.g. AREA014,FIRST")
     f.add_argument("--out", help="the directory written (default: beside the layer, see the docstring)")
+    f.add_argument("--readings", default=READINGS_TOML, metavar="FILE",
+                   help="the readings sidecar (default data/furigana/readings.toml; a mod's, tools/mods.py)")
     f.add_argument("--selftest", action="store_true",
                    help="no readings, no re-flow: every message of every block must join back byte for byte")
     f.add_argument("--lint", metavar="FILE", help="simulate the renderer's x over every ruby row; list rows "
