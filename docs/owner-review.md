@@ -32,6 +32,21 @@ and DIV-0157 (mods); the round's findings are known-defects D326..D330.
 
 ### Still open (round doc section 6, and from stage A's hand-backs)
 
+- **The opening scene shows no second script, by rule** (found 2026-10-22
+  when the owner's first install showed nothing on a new game): the whelp
+  scene's dialogue in AREA024 is one message of eight timed pages with the
+  offset pen and an effect preset (`0x0D 0x0E 0x0F 0x16`), and the
+  builders leave such a message plain **whole** (reading-row-second.md 2;
+  134 effect messages and 409 non-box ones per pair). The next message on
+  from the scene is composed, so play past it. To annotate the plain pages
+  of a mixed message the contract needs a per-page "plain" mark, a
+  follow-on if the owner wants the opening covered.
+- **A first install needs three steps** the launcher does not say yet:
+  the game directory is `<home>\game\` after `setup` (the owner's saves
+  sat one folder up and were copied in), the furigana zip must be built
+  (`tools/make_mod.py furigana`, `buildeleaseurigana-0.1.0.zip`) and
+  added on the Mods tab, and `language=ja-JP` chosen for its entry.
+
 - **From ML:** should a mod also build into a cache named by `cache=`, or
   only the home's own (as now)? Should the dropdown's furigana entry read
   "Japanese (Furigana)" plain or with "(mod 0.1.0)"? And the one that
