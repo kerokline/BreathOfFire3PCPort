@@ -295,6 +295,9 @@ from a side chunk is untouched either way. `BOF3X_RUBY_KEY` names the key:
 `f1`..`f12` in any case (default `f4`; F2, F3 and F4 are the keys Capcom's
 `Game_WndProc` leaves unbound), `none` binds nothing; anything else stops
 at start-up. The binding sits in `src/game/win_main.cpp`'s `WM_KEYDOWN`
-beside F6 / F7, after the pause's "any key resumes"; the launcher's
-`ruby_key=` line is for the merge.
+beside F6 / F7, after the pause's "any key resumes". The launcher writes
+`ruby_key=` in `bof3x.ini` (`f4` by default, `none`, or `f1`..`f12`) and
+hands it over as `BOF3X_RUBY_KEY` unless the environment sets it
+(`src/launcher/config.cpp`, the end batch;
+[`launcher-settings.md`](launcher-settings.md) 3).
 
