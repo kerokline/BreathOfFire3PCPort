@@ -10008,6 +10008,38 @@ designed in rather than bolted on.
   played through the opening's seven timed boxes at 4:3 and 16:9, each
   held past its timer until the press (`opening_en-US_over_ja-JP.png`,
   same folder). D332 is what the captures showed of the re-break there.
+- **Amended 2026-10-22 (group NR): pages are re-flowed, rows never.** The
+  owner, off the capture of the opening where the re-break ran the name row
+  into the speech and the row reached the frame (D332): "in the original
+  script, the name gets its own row - just go ahead and do a page break
+  instead of fitting it onto one page. That leads to more pages of text,
+  but less re-flow of sentences." **What changes:** `SecondComposer.rebreak_page` /
+  `rebreak` and class B are removed, not left switchable - one rule. Every
+  authored row of the main is kept as it is; a page of three text rows is
+  two pages on `0x02` (rows 1-2, then row 3), the second shared over them
+  by the existing rule (page by page where counts match, else by glyphs)
+  and re-flowed into its own reading rows as before (their budget
+  unchanged). One routine call: when the share of a split puts an insert of
+  the second over the part whose text rows do not carry it, the boundary
+  moves to the nearest unit where each part's inserts are its own
+  (`share_split`), so fewer messages are left plain for an insert.
+  **What it costs:** pages added, area blocks, before -> after: 652 -> 4,395
+  for English over Japanese (+3,743; French and German over Japanese
+  +3,669 / +3,637), 5,018 -> 8,218 for Japanese over English, +2,315..3,522
+  under the Latin mains; area slots paired 17,389 -> 17,460 for English over
+  Japanese. Every pair's numbers in
+  [`reading-row-second.md`](reading-row-second.md) 7 (rule 4 there amended).
+  **Verification:** `check` now stops the build when a composed text row
+  is not the authored row it stands for or is wider than it - 0 re-flowed
+  rows in all 20 pairs (56,172..63,841 text rows each); `--lint` 0 faults
+  and every pair exit 0; `second --selftest` 0 mismatches (ja-JP/en-US,
+  en-US/ja-JP, en-US/fr-FR, fr-FR/de-DE); the furigana layer byte-identical
+  before and after (239 files) and its `--selftest` 0. Played under
+  `ruby-en-US-ja-JP` at 4:3, point filter, from NEW GAME: the opening's
+  seven boxes are ten stops, the three name-plus-two-row boxes each two
+  pages with the name on its own row and the arrow on the first
+  (`opening_en-US_over_ja-JP_rows_kept.png` in
+  `C:\Users\kerok\bof3x-runs\rr_nr\sheets\`).
 - **Reversible?** Off by default (*Row above the text: None*); F4 and
   `BOF3X_ORIGINAL=MsgBox_Step` as DIV-0155.
 
