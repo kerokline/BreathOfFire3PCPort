@@ -172,13 +172,30 @@ jobs:
       - name: Lay out the release zip
         run: python tools/make_release.py --version "$VERSION" --build build --out "build/release/bof3x-$TAG-win.zip"
 
+      # The furigana readings as the project's first mod (docs/mods.md; the
+      # reading-row round): a zip of mod.toml and data/furigana/readings.toml,
+      # added on the launcher's Mods tab. Made only once data/furigana/ exists
+      # (the round's group FB writes it); the mod tools' self-tests run first.
+      - name: The furigana mod zip
+        run: |
+          set -euo pipefail
+          python tools/mods.py selftest
+          python tools/make_mod.py --selftest
+          if [ -f data/furigana/readings.toml ]; then
+            ver="$(python tools/make_mod.py furigana --version-of)"
+            python tools/make_mod.py furigana --out "build/release/furigana-$ver.zip"
+            echo "MOD_ZIPS=build/release/furigana-$ver.zip" >> "$GITHUB_ENV"
+          else
+            echo "data/furigana/readings.toml is not in this commit: no furigana mod zip"
+          fi
+
       - name: Draft pre-release
         if: env.TAG != 'latest'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" \
+          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" ${MOD_ZIPS:-} \
             --draft --prerelease --verify-tag \
             --title "Breath of Fire III - bof3x $TAG" \
             --notes-file "docs/releases/$TAG.md"
@@ -203,9 +220,9 @@ jobs:
             echo "(docs/releases/README.md; the latest release's notes say more)."
           } > "$notes"
           if gh release view latest >/dev/null 2>&1; then
-            gh release upload latest "build/release/bof3x-latest-win.zip" --clobber
+            gh release upload latest "build/release/bof3x-latest-win.zip" ${MOD_ZIPS:-} --clobber
             gh release edit latest --prerelease --latest=false --title "Latest build (main)" --notes-file "$notes"
           else
-            gh release create latest "build/release/bof3x-latest-win.zip" --prerelease --latest=false \
+            gh release create latest "build/release/bof3x-latest-win.zip" ${MOD_ZIPS:-} --prerelease --latest=false \
               --verify-tag --title "Latest build (main)" --notes-file "$notes"
           fi

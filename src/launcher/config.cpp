@@ -169,6 +169,9 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
                 // DIV-0005: retired, not mapped; the launcher stops on it.
                 error = "bof3x.ini's language=" + value + " is retired; use " + use + " (DIV-0005)";
             }
+        } else if (key == "ruby") {
+            // the row above the text: kept as written; checked at start (ConfigRubyPlayable)
+            cfg.ruby = value;
         } else if (key == "opt") {
             // Kept as written, valid or not: dropping a bad value would play
             // the default layers instead, so the launcher refuses it
@@ -278,6 +281,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
         out += std::string("language=") + cfg.language + "\r\n";
     else
         out += "# language= not chosen yet: the default (the port's text, else the first language the install holds)\r\n";
+    out += "# the row above the text (docs/mods.md): empty none | a reading-row mod's id (furigana) | another\r\n";
+    out += "# held language's tag (en-US): the layer ruby-<this>-<language>, added to the layers when built\r\n";
+    out += "ruby=" + cfg.ruby + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
     out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
@@ -381,12 +387,34 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // `original` or another tag, and the DLL refuses a text layer of any
     // other language at start-up. An empty opt= means the default layers
     // installed (kOptDefault, DIV-0080's walls), opt=none none.
+    // The row above the text (docs/mods.md 5): ruby= is one more layer, after
+    // the ini's, when it is built for the language played.
     if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0) {
-        const std::string wanted = ConfigOptWanted(game_dir, cfg.opt, cache);
+        char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
+        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
+        const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
+        std::string wanted = ConfigOptWanted(game_dir, cfg.opt, cache);
+        const std::string ruby = ConfigRubyPlayable(game_dir, cfg.ruby, language, cache, music);
+        if (!ruby.empty()) {
+            size_t count = wanted.empty() ? 0 : 1, at = 0;
+            bool listed = false;
+            while (at <= wanted.size() && !wanted.empty()) {
+                const size_t end = std::min(wanted.find(',', at), wanted.size());
+                listed = listed || wanted.compare(at, end - at, ruby) == 0;
+                if (end == wanted.size()) break;
+                ++count;
+                at = end + 1;
+            }
+            if (listed) {
+                // opt= names it already: once is enough
+            } else if (count >= 16) {   // dat_load.cpp kOptMax
+                std::fprintf(stderr, "bof3x-launcher: opt= already names 16 layers, the most the game takes; the row "
+                             "above the text (%s) is left off\n", ruby.c_str());
+            } else {
+                wanted += (wanted.empty() ? "" : ",") + ruby;
+            }
+        }
         if (!wanted.empty()) {
-            char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
-            const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
-            const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
             std::string playable = ConfigOptPlayable(game_dir, wanted, language, cache, music);
             if (hosted) {
                 // The hosted build refuses a layer with an exe part at
@@ -405,6 +433,11 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
             }
             if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
         }
+    }
+
+    else if (!cfg.ruby.empty()) {
+        std::fprintf(stderr, "bof3x-launcher: BOF3X_OPT is set in the environment, so bof3x.ini's ruby=%s is not "
+                     "added to it\n", cfg.ruby.c_str());
     }
 
     // DIV-0108: the PSP's battle rules as the ini lists them; empty leaves
@@ -868,6 +901,172 @@ bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::strin
     std::fprintf(stderr, "bof3x-launcher: a disc-only install, no Chinese text: language %s, the first it holds "
                  "(DIV-0102)\n", cfg.language.c_str());
     return true;
+}
+
+// ---- Mods and the row above the text (docs/mods.md) ---------------------------
+
+namespace {
+
+// A value of mods.toml's, as tools/mods.py writes it (json.dumps): a quoted
+// string with JSON's escapes. Empty when it is not one.
+std::string TomlString(const std::string& v, size_t& at) {
+    std::string out;
+    if (at >= v.size() || v[at] != '"') return out;
+    for (++at; at < v.size() && v[at] != '"'; ++at) {
+        if (v[at] != '\\' || at + 1 >= v.size()) {
+            out += v[at];
+            continue;
+        }
+        const char e = v[++at];
+        if (e == 'n') out += '\n';
+        else if (e == 't') out += '\t';
+        else if (e == 'u' && at + 4 < v.size()) {
+            const unsigned cp = static_cast<unsigned>(std::strtoul(v.substr(at + 1, 4).c_str(), nullptr, 16));
+            at += 4;
+            const std::wstring w(1, static_cast<wchar_t>(cp));
+            out += ConfigToUtf8(w);
+        } else {
+            out += e;   // \" \\ \/
+        }
+    }
+    if (at < v.size()) ++at;   // the closing quote
+    return out;
+}
+
+bool IsTag(const std::string& s) {
+    for (const LanguageInfo& lang : kLanguages)
+        if (s == lang.code) return true;
+    return false;
+}
+
+std::wstring Wide(const std::string& s) { return ConfigFromUtf8(s); }
+
+}  // namespace
+
+std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home) {
+    std::vector<ModInfo> out;
+    std::string text;
+    if (home.empty() || !ReadWhole(home + L"\\mods.toml", text)) return out;
+    for (const std::string& raw : SplitLines(text)) {
+        const std::string line = Trim(raw);
+        if (line == "[[mod]]") {
+            out.emplace_back();
+            continue;
+        }
+        const size_t eq = line.find('=');
+        if (out.empty() || line.empty() || line[0] == '#' || eq == std::string::npos) continue;
+        const std::string key = Trim(line.substr(0, eq)), value = Trim(line.substr(eq + 1));
+        ModInfo& m = out.back();
+        size_t at = 0;
+        if (key == "requires" && !value.empty() && value[0] == '[') {
+            at = 1;
+            while (at < value.size()) {
+                while (at < value.size() && (value[at] == ' ' || value[at] == ',')) ++at;
+                if (at >= value.size() || value[at] != '"') break;
+                m.required.push_back(TomlString(value, at));
+            }
+            continue;
+        }
+        const std::string v = TomlString(value, at);
+        if (key == "id") m.id = v;
+        else if (key == "name") m.name = v;
+        else if (key == "version") m.version = v;
+        else if (key == "kind") m.kind = v;
+        else if (key == "base") m.base = v;
+    }
+    out.erase(std::remove_if(out.begin(), out.end(), [](const ModInfo& m) { return m.id.empty(); }), out.end());
+    return out;
+}
+
+std::string ConfigRubyLayer(const std::string& ruby, const std::string& language) {
+    if (ruby.empty() || language.empty() || language == kLanguageOriginal) return std::string();
+    return "ruby-" + ruby + "-" + language;
+}
+
+std::vector<RubyChoice> ConfigRubyChoices(const std::wstring& game_dir, const std::string& language,
+                                          const std::wstring& cache, const std::wstring& music,
+                                          const std::wstring& home) {
+    std::vector<RubyChoice> out;
+    out.push_back({std::string(), L"None", std::wstring()});
+    const bool chinese = language.empty() || language == kLanguageOriginal;
+    const std::vector<std::string> held = ConfigLanguagesAvailable(game_dir, cache);
+    auto built = [&](const std::string& id) {
+        const std::string layer = ConfigRubyLayer(id, language);
+        return !layer.empty() && ConfigOptInstalled(game_dir, layer.c_str(), cache, music);
+    };
+    for (const ModInfo& m : ConfigModsInstalled(home)) {
+        if (m.kind != "reading-row") continue;
+        RubyChoice c{m.id, Wide(m.name) + L" (mod " + Wide(m.version) + L")", std::wstring()};
+        std::string lack;
+        for (const std::string& t : m.required)
+            if (std::find(held.begin(), held.end(), t) == held.end()) lack += (lack.empty() ? "" : ", ") + t;
+        if (!lack.empty()) c.why = L"needs " + Wide(lack) + L" text: add that disc on Data, Sources";
+        else if (chinese || m.base != language) c.why = L"over " + Wide(m.base) + L" text only: choose that language";
+        else if (!built(m.id)) c.why = L"not built: build the install on Data, Sources";
+        out.push_back(c);
+    }
+    for (const std::string& tag : held) {
+        if (tag == language) continue;
+        RubyChoice c{tag, std::wstring(), std::wstring()};
+        for (const LanguageInfo& lang : kLanguages)
+            if (tag == lang.code) c.label = lang.label;
+        if (chinese) c.why = L"not over the Chinese text: choose another language";
+        else if (!built(tag)) c.why = L"its second-language layer is not built in this install";
+        out.push_back(c);
+    }
+    // Any other ruby-<x>-<language> layer there is (a layer of a release newer
+    // than this launcher, or one built by hand): offered under its own name.
+    if (!chinese) {
+        const std::string suffix = "-" + language;
+        std::vector<std::string> found;
+        WIN32_FIND_DATAW fd;
+        const std::wstring patterns[] = {cache.empty() ? std::wstring() : cache + L"\\opt\\ruby-*",
+                                         game_dir + L"\\DAT\\ruby-*.DAT"};
+        for (const std::wstring& pattern : patterns) {
+            if (pattern.empty()) continue;
+            HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
+            if (h == INVALID_HANDLE_VALUE) continue;
+            do {
+                std::string name = ConfigToUtf8(fd.cFileName);
+                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) name = name.substr(0, name.find('.'));
+                if (name.size() > 5 + suffix.size() && name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0)
+                    found.push_back(name.substr(5, name.size() - 5 - suffix.size()));
+            } while (FindNextFileW(h, &fd));
+            FindClose(h);
+        }
+        std::sort(found.begin(), found.end());
+        found.erase(std::unique(found.begin(), found.end()), found.end());
+        for (const std::string& id : found) {
+            if (std::any_of(out.begin(), out.end(), [&](const RubyChoice& c) { return c.id == id; }) || !built(id))
+                continue;
+            out.push_back({id, Wide(id) + L" (layer " + Wide(ConfigRubyLayer(id, language)) + L")", std::wstring()});
+        }
+    }
+    return out;
+}
+
+std::string ConfigRubyPlayable(const std::wstring& game_dir, const std::string& ruby, const std::string& language,
+                               const std::wstring& cache, const std::wstring& music) {
+    if (ruby.empty()) return std::string();
+    if (ruby.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-") != std::string::npos ||
+        ruby.front() == '-' || ruby.back() == '-') {
+        std::fprintf(stderr, "bof3x-launcher: bof3x.ini's ruby=%s is not a mod's id or a language tag; no row above "
+                     "the text\n", ruby.c_str());
+        return std::string();
+    }
+    const std::string layer = ConfigRubyLayer(ruby, language);
+    if (layer.empty()) {
+        std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for a row above the text (ruby=%s), but the Chinese "
+                     "text is played; no row above it\n", ruby.c_str());
+        return std::string();
+    }
+    if (layer.size() > 23 || !ConfigOptInstalled(game_dir, layer.c_str(), cache, music)) {   // dat_load.cpp kOptName - 1
+        std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for the row above the text ruby=%s, but layer %s is not "
+                     "there%s; playing without one\n", ruby.c_str(), layer.c_str(),
+                     IsTag(ruby) ? " (the second-language layer is not built)" : " (no such mod built for this language)");
+        return std::string();
+    }
+    return layer;
 }
 
 bool ConfigCheckEnvironmentLanguage(std::string& error) {

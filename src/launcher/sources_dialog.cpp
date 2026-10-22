@@ -40,7 +40,7 @@ namespace {
 constexpr UINT kMsgLine = WM_APP + 1;   // wParam: the job; lParam: a new std::wstring, one line
 constexpr UINT kMsgDone = WM_APP + 2;   // wParam: the job; lParam: the child's exit code
 
-enum Job : int { kNone, kList, kAdd, kRemove, kSetup };
+enum Job : int { kNone, kList, kAdd, kRemove, kSetup, kModList, kModAdd, kModBuild, kModRemove };
 
 constexpr const wchar_t* kFfmpegUrl = L"https://ffmpeg.org/download.html#build-windows";
 
@@ -437,14 +437,17 @@ void FfmpegNote(HWND dlg, const Config& cfg) {
     SetDlgItemTextW(dlg, IDC_SO_FFNOTE, note.c_str());
 }
 
-bool Start(HWND dlg, State& s, Job job, const std::wstring& args) {
-    if (!s.rt.error.empty() || s.job != kNone) return false;
-    std::wstring line = Quote(s.rt.python) + L" " + Quote(s.rt.script) + L" " + args;
-
+// Starts `script args` on the runtime's Python with no window, in `cwd`; its
+// merged output comes back to `dlg` a line at a time (kMsgLine), then its exit
+// code (kMsgDone), both tagged with `job`. False with `error` set when it
+// could not start. The Sources page's children and the Mods page's.
+bool StartChild(HWND dlg, Job job, const Runtime& rt, const std::wstring& script, const std::wstring& args,
+                const std::wstring& cwd, const std::string& ffmpeg, HANDLE& process, std::wstring& error) {
+    std::wstring line = Quote(rt.python) + L" " + Quote(script) + L" " + args;
     SECURITY_ATTRIBUTES sa{sizeof sa, nullptr, TRUE};
     HANDLE rd = nullptr, wr = nullptr;
     if (!CreatePipe(&rd, &wr, &sa, 0)) {
-        Log(dlg, L"Cannot make a pipe for the importer (error " + std::to_wstring(GetLastError()) + L").");
+        error = L"Cannot make a pipe for the importer (error " + std::to_wstring(GetLastError()) + L").";
         return false;
     }
     SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
@@ -462,23 +465,33 @@ bool Start(HWND dlg, State& s, Job job, const std::wstring& args) {
         env.Set(L"PYTHONUTF8", L"1");
         env.Set(L"PYTHONIOENCODING", L"utf-8");
         env.Set(L"PYTHONUNBUFFERED", L"1");
-        if (!s.cfg->ffmpeg.empty()) env.Set(L"BOF3X_FFMPEG", ConfigFromUtf8(s.cfg->ffmpeg));
-        ok = CreateProcessW(s.rt.python.c_str(), line.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr,
-                            s.home.c_str(), &si, &pi);
+        if (!ffmpeg.empty()) env.Set(L"BOF3X_FFMPEG", ConfigFromUtf8(ffmpeg));
+        ok = CreateProcessW(rt.python.c_str(), line.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr,
+                            cwd.c_str(), &si, &pi);
     }
     const DWORD err = GetLastError();
     CloseHandle(wr);
     if (nul != INVALID_HANDLE_VALUE) CloseHandle(nul);
     if (!ok) {
         CloseHandle(rd);
-        Log(dlg, L"Cannot start the importer: " + s.rt.python + L" (error " + std::to_wstring(err) + L").");
+        error = L"Cannot start the importer: " + rt.python + L" (error " + std::to_wstring(err) + L").";
         return false;
     }
     CloseHandle(pi.hThread);
-    s.job = job;
-    s.process = pi.hProcess;
+    process = pi.hProcess;
     HANDLE t = CreateThread(nullptr, 0, ReadChild, new Reader{dlg, job, rd, pi.hProcess}, 0, nullptr);
     if (t) CloseHandle(t);
+    return true;
+}
+
+bool Start(HWND dlg, State& s, Job job, const std::wstring& args) {
+    if (!s.rt.error.empty() || s.job != kNone) return false;
+    std::wstring error;
+    if (!StartChild(dlg, job, s.rt, s.rt.script, args, s.home, s.cfg->ffmpeg, s.process, error)) {
+        Log(dlg, error);
+        return false;
+    }
+    s.job = job;
     Greyed(dlg, s);
     return true;
 }
@@ -744,6 +757,347 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     return FALSE;
 }
 
+// ---- The Mods tab (docs/mods.md) -----------------------------------------------
+//
+// tools/mods.py beside the importer, on the same Python, one child at a time.
+// `list --json` gives one flat object a mod: id, name, version, kind,
+// requires, base, layer, state (built, not-built, needs, problem), needs,
+// problem. A mod the install cannot play is greyed in the list with its reason
+// (the owner's rule, 2026-10-10): a language it needs and the install lacks,
+// a layer not built, or a base that is not the language chosen in Settings.
+
+struct ModRow {
+    std::string id, name, version, kind, base, state, needs, problem;
+};
+
+struct ModsState {
+    Runtime rt;
+    std::wstring script, home;
+    Job job = kNone;
+    HANDLE process = nullptr;
+    bool listed = false;    // the list has been asked for once (on first showing)
+    bool changed = false;   // an add, a build or a remove ran: the window is told after the next list
+    std::string build_next; // the id an add just installed: built next
+    std::string language;   // Settings' choice (kMsgModsLanguage); empty for the Chinese
+    std::vector<ModRow> rows;
+};
+
+ModsState* GetMods(HWND page) { return reinterpret_cast<ModsState*>(GetWindowLongPtrW(page, GWLP_USERDATA)); }
+
+void ModLog(HWND page, const std::wstring& line) {
+    HWND log = GetDlgItem(page, IDC_MOD_LOG);
+    const int end = GetWindowTextLengthW(log);
+    SendMessageW(log, EM_SETSEL, end, end);
+    // the line break before a line, not after: the box ends on text, not on an empty line
+    SendMessageW(log, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(((end ? L"\r\n" : L"") + line).c_str()));
+    SendMessageW(log, EM_SCROLLCARET, 0, 0);
+}
+
+void ModStatus(HWND page, const std::wstring& text) { SetDlgItemTextW(page, IDC_MOD_STATUS, text.c_str()); }
+
+void ModsGreyed(HWND page, const ModsState& s) {
+    const bool runnable = s.job == kNone && s.rt.error.empty();
+    for (int id : {IDC_MOD_PATH, IDC_MOD_BROWSE, IDC_MOD_ADD}) EnableWindow(GetDlgItem(page, id), runnable);
+    EnableWindow(GetDlgItem(page, IDC_MOD_REMOVE),
+                 runnable && SendDlgItemMessageW(page, IDC_MOD_LIST, LB_GETCURSEL, 0, 0) != LB_ERR);
+}
+
+// A row as the list shows it: name, version, kind, state; and whether it is greyed.
+std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
+    std::wstring state;
+    greyed = true;
+    if (r.state == "built") {
+        if (r.kind == "reading-row" && r.base != s.language) {
+            state = L"built; over " + Widen(r.base) + L" text only";
+        } else {
+            state = L"built: choose it in Settings";
+            greyed = false;
+        }
+    } else if (r.state == "not-built") {
+        state = L"not built: Data, Sources..., Build";
+    } else if (r.state == "needs") {
+        state = L"needs " + Widen(r.needs) + L" text: add that disc (Data, Sources...)";
+    } else {
+        state = L"problem: " + Widen(r.problem.empty() ? std::string("unreadable") : r.problem);
+    }
+    return Widen(r.name) + L"\t" + Widen(r.version) + L"\t" + Widen(r.kind) + L"\t" + state;
+}
+
+void ModsRender(HWND page, const ModsState& s) {
+    HWND list = GetDlgItem(page, IDC_MOD_LIST);
+    const LRESULT sel = SendMessageW(list, LB_GETCURSEL, 0, 0);
+    SendMessageW(list, LB_RESETCONTENT, 0, 0);
+    for (const ModRow& r : s.rows) {
+        bool greyed = false;
+        const std::wstring text = ModRowText(s, r, greyed);
+        const LRESULT i = SendMessageW(list, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text.c_str()));
+        SendMessageW(list, LB_SETITEMDATA, static_cast<WPARAM>(i), greyed ? 1 : 0);
+    }
+    if (sel != LB_ERR && static_cast<size_t>(sel) < s.rows.size()) SendMessageW(list, LB_SETCURSEL, sel, 0);
+    ModsGreyed(page, s);
+}
+
+bool ModsStart(HWND page, ModsState& s, Job job, const std::wstring& args) {
+    if (!s.rt.error.empty() || s.job != kNone) return false;
+    std::wstring error;
+    if (!StartChild(page, job, s.rt, s.script, args, s.home, std::string(), s.process, error)) {
+        ModLog(page, error);
+        return false;
+    }
+    s.job = job;
+    ModsGreyed(page, s);
+    return true;
+}
+
+std::wstring ModsHome(const ModsState& s) { return L"--home " + Quote(s.home); }
+
+void ModsList(HWND page, ModsState& s) {
+    s.listed = true;
+    s.rows.clear();
+    ModsStart(page, s, kModList, L"list " + ModsHome(s) + L" --json");
+}
+
+void ModsAdd(HWND page, ModsState& s) {
+    wchar_t buf[MAX_PATH * 2] = {};
+    GetDlgItemTextW(page, IDC_MOD_PATH, buf, static_cast<int>(std::size(buf)));
+    std::wstring path = buf;
+    const size_t b = path.find_first_not_of(L" \t\""), e = path.find_last_not_of(L" \t\"");
+    path = b == std::wstring::npos ? std::wstring() : path.substr(b, e - b + 1);
+    if (path.empty()) {
+        ModStatus(page, L"Type or pick a mod's .zip first.");
+        return;
+    }
+    if (!IsFile(path)) {
+        ModStatus(page, L"There is no file at that path.");
+        return;
+    }
+    s.build_next.clear();
+    ModStatus(page, L"Checking the mod...");
+    ModLog(page, L"Checking " + path + L"...");
+    ModsStart(page, s, kModAdd, L"add " + Quote(path) + L" " + ModsHome(s) + L" --json");
+}
+
+void ModsBrowse(HWND page, ModsState& s) {
+    wchar_t path[MAX_PATH] = {};
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof ofn;
+    ofn.hwndOwner = page;
+    ofn.lpstrFilter = L"Mods (*.zip)\0*.zip\0All files (*.*)\0*.*\0";
+    ofn.lpstrFile = path;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrTitle = L"A mod: a .zip holding mod.toml and its data files";
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
+    if (!GetOpenFileNameW(&ofn)) return;
+    SetDlgItemTextW(page, IDC_MOD_PATH, path);
+    ModsAdd(page, s);
+}
+
+void ModsRemove(HWND page, ModsState& s) {
+    const LRESULT i = SendDlgItemMessageW(page, IDC_MOD_LIST, LB_GETCURSEL, 0, 0);
+    if (i == LB_ERR || static_cast<size_t>(i) >= s.rows.size()) return;
+    const ModRow& r = s.rows[static_cast<size_t>(i)];
+    ModLog(page, L"Removing " + Widen(r.name) + L"...");
+    ModsStart(page, s, kModRemove, L"remove " + Quote(Widen(r.id)) + L" " + ModsHome(s));
+}
+
+void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
+    const std::string line = ConfigToUtf8(wline);
+    if (job == kModList && IsJsonObject(line)) {
+        s.rows.push_back({JsonString(line, "id"), JsonString(line, "name"), JsonString(line, "version"),
+                          JsonString(line, "kind"), JsonString(line, "base"), JsonString(line, "state"),
+                          JsonString(line, "needs"), JsonString(line, "problem")});
+        return;
+    }
+    if (job == kModAdd && IsJsonObject(line)) {
+        if (JsonTrue(line, "ok")) {
+            const std::string replaced = JsonString(line, "replaced");
+            ModLog(page, L"Added: " + Widen(JsonString(line, "name")) + L" " + Widen(JsonString(line, "version")) +
+                             (replaced.empty() ? std::wstring() : L" (in place of " + Widen(replaced) + L")") + L".");
+            s.build_next = JsonString(line, "id");
+            if (JsonString(line, "state") == "needs") {
+                ModLog(page, L"It needs " + Widen(JsonString(line, "needs")) +
+                                 L" text, which this install does not hold: it is built once a disc in that language is "
+                                 L"added on Data, Sources.");
+                s.build_next.clear();
+            }
+        } else {
+            ModLog(page, L"Not added: " + Widen(JsonString(line, "problem")));
+        }
+        return;
+    }
+    if (line.compare(0, 6, "error ") == 0) {
+        ModLog(page, L"Error: " + Widen(line.substr(6)));
+        return;
+    }
+    if (!wline.empty()) ModLog(page, wline);
+}
+
+void ModsOnDone(HWND page, ModsState& s, Job job, DWORD code) {
+    CloseHandle(s.process);
+    s.process = nullptr;
+    s.job = kNone;
+    switch (job) {
+    case kModList:
+        ModsRender(page, s);
+        if (code != 0) ModLog(page, L"tools/mods.py could not read the mod list (exit " + std::to_wstring(code) + L").");
+        if (s.rows.empty()) ModStatus(page, L"No mods installed.");   // else what the last step said stays
+        if (s.changed) {
+            s.changed = false;
+            SendMessageW(GetParent(page), kMsgModsChanged, 0, 0);
+        }
+        return;
+    case kModAdd:
+        if (code == 0) {
+            s.changed = true;
+            SetDlgItemTextW(page, IDC_MOD_PATH, L"");
+            if (!s.build_next.empty()) {
+                ModStatus(page, L"Building the mod into this install...");
+                ModsStart(page, s, kModBuild, L"build " + Quote(Widen(s.build_next)) + L" " + ModsHome(s));
+                return;
+            }
+            ModStatus(page, L"Added.");
+        } else {
+            ModStatus(page, L"Nothing was added; see below.");
+        }
+        break;
+    case kModBuild:
+        ModStatus(page, code == 0   ? L"The mod is built: choose it in Settings, Row above the text."
+                        : code == 2 ? L"No install is built yet: the mod is built with it (Data, Sources...)."
+                                    : L"The mod is installed but not built; see below.");
+        break;
+    case kModRemove:
+        s.changed = true;
+        ModStatus(page, code == 0 ? L"Removed." : L"Not removed; see below.");
+        break;
+    default:
+        break;
+    }
+    ModsList(page, s);
+}
+
+void ModsDraw(const DRAWITEMSTRUCT& d) {
+    const bool selected = (d.itemState & ODS_SELECTED) != 0;
+    FillRect(d.hDC, &d.rcItem, GetSysColorBrush(selected ? COLOR_HIGHLIGHT : COLOR_WINDOW));
+    if (d.itemID == static_cast<UINT>(-1)) return;
+    const LRESULT n = SendMessageW(d.hwndItem, LB_GETTEXTLEN, d.itemID, 0);
+    if (n < 0) return;
+    std::wstring text(static_cast<size_t>(n) + 1, L'\0');
+    SendMessageW(d.hwndItem, LB_GETTEXT, d.itemID, reinterpret_cast<LPARAM>(text.data()));
+    text.resize(static_cast<size_t>(n));
+    SetBkMode(d.hDC, TRANSPARENT);
+    SetTextColor(d.hDC, GetSysColor(d.itemData ? COLOR_GRAYTEXT : selected ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
+    // the columns: name, version, kind, state - at fixed shares of the list's width
+    const int w = d.rcItem.right - d.rcItem.left;
+    INT tabs[3] = {w * 30 / 100, w * 40 / 100, w * 57 / 100};
+    const int x = d.rcItem.left + 2;
+    TabbedTextOutW(d.hDC, x, d.rcItem.top + 1, text.c_str(), static_cast<int>(text.size()), 3, tabs, x);
+    if ((d.itemState & ODS_FOCUS) && !(d.itemState & ODS_NOFOCUSRECT)) DrawFocusRect(d.hDC, &d.rcItem);
+}
+
+INT_PTR CALLBACK ModsProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+    case WM_INITDIALOG: {
+        auto* s = new ModsState;
+        SetWindowLongPtrW(page, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(s));
+        s->rt = FindRuntime();
+        s->home = HomeDir();
+        if (s->rt.error.empty()) {
+            s->script = s->rt.script.substr(0, s->rt.script.find_last_of(L"\\/")) + L"\\mods.py";
+            if (!IsFile(s->script))
+                s->rt.error = L"The mod tool is missing: there is no mods.py beside " + s->rt.script +
+                              L". Unzip the whole release, not just the launcher.";
+        }
+        if (!s->rt.error.empty()) {
+            ModStatus(page, L"Mods cannot be added: the importer cannot run.");
+            ModLog(page, s->rt.error);
+        }
+        ModsGreyed(page, *s);
+        return FALSE;   // the window decides the focus
+    }
+    case WM_SHOWWINDOW: {
+        ModsState* s = GetMods(page);
+        if (wp && s && !s->listed && s->rt.error.empty()) ModsList(page, *s);
+        break;
+    }
+    case kMsgLine: {
+        std::wstring* line = reinterpret_cast<std::wstring*>(lp);
+        if (ModsState* s = GetMods(page)) ModsOnLine(page, *s, static_cast<Job>(wp), *line);
+        delete line;
+        return TRUE;
+    }
+    case kMsgDone:
+        if (ModsState* s = GetMods(page)) ModsOnDone(page, *s, static_cast<Job>(wp), static_cast<DWORD>(lp));
+        return TRUE;
+    case kMsgModsLanguage:
+        if (ModsState* s = GetMods(page)) {
+            s->language = *reinterpret_cast<const std::string*>(lp);
+            ModsRender(page, *s);
+        }
+        return TRUE;
+    case WM_MEASUREITEM: {
+        // sent before WM_INITDIALOG: the dialog's font gives the row height
+        auto* m = reinterpret_cast<MEASUREITEMSTRUCT*>(lp);
+        if (m->CtlID != IDC_MOD_LIST) break;
+        const HDC dc = GetDC(page);
+        const HFONT font = reinterpret_cast<HFONT>(SendMessageW(page, WM_GETFONT, 0, 0));
+        const HGDIOBJ old = font ? SelectObject(dc, font) : nullptr;
+        TEXTMETRICW tm;
+        GetTextMetricsW(dc, &tm);
+        if (old) SelectObject(dc, old);
+        ReleaseDC(page, dc);
+        m->itemHeight = static_cast<UINT>(tm.tmHeight + 2);
+        SetWindowLongPtrW(page, DWLP_MSGRESULT, TRUE);
+        return TRUE;
+    }
+    case WM_DRAWITEM: {
+        auto* d = reinterpret_cast<DRAWITEMSTRUCT*>(lp);
+        if (d->CtlID != IDC_MOD_LIST) break;
+        ModsDraw(*d);
+        return TRUE;
+    }
+    case WM_COMMAND: {
+        ModsState* s = GetMods(page);
+        switch (LOWORD(wp)) {
+        case IDC_MOD_ADD:
+            if (s) ModsAdd(page, *s);
+            return TRUE;
+        case IDC_MOD_BROWSE:
+            if (s) ModsBrowse(page, *s);
+            return TRUE;
+        case IDC_MOD_REMOVE:
+            if (s) ModsRemove(page, *s);
+            return TRUE;
+        case IDC_MOD_LIST:
+            if (s && HIWORD(wp) == LBN_SELCHANGE) ModsGreyed(page, *s);
+            return TRUE;
+        case IDOK:
+        case IDCANCEL:   // Enter and Escape mean what they mean on the window
+            SendMessageW(GetParent(page), msg, wp, lp);
+            return TRUE;
+        default:
+            break;
+        }
+        break;
+    }
+    case WM_DESTROY:
+        // the window is closing with a child running: it is ended (mods.py
+        // writes a mod or a layer whole, into a new folder, then renames)
+        if (ModsState* s = GetMods(page); s && s->process) {
+            TerminateProcess(s->process, 1);
+            CloseHandle(s->process);
+            s->process = nullptr;
+        }
+        break;
+    case WM_NCDESTROY:
+        delete GetMods(page);
+        SetWindowLongPtrW(page, GWLP_USERDATA, 0);
+        break;
+    default:
+        break;
+    }
+    return FALSE;
+}
+
 }  // namespace
 
 bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run, bool rebuild) {
@@ -806,6 +1160,8 @@ StaleCheck SourcesCheckStale() {
     }
     return check;
 }
+
+INT_PTR CALLBACK ModsPageProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) { return ModsProc(page, msg, wp, lp); }
 
 bool SourcesAskRebuild(const StaleCheck& check) {
     std::wstring text =
