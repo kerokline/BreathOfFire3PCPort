@@ -5,6 +5,9 @@
 Runs in `C:\Users\kerok\bof3x-runs\r_ring\CR` (own game directories
 `g1..g4`, launcher copies `L1..L4`, the `main` baseline's binaries in `B`;
 `cap.py`, `batch.py`, `gen.py`, `summ.py`, `diff.py`, `sheet.py` there).
+**Folded 2026-10-21 (group END):** no ledger entry - no code changed; the
+owner's answer (no guard on Capcom's `Leave`) is the round doc's section 6,
+item 11.
 
 ## 0. The answer
 

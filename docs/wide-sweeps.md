@@ -10,6 +10,8 @@ the state hash on the eleven routes keeps narrow's `Rand` at both widths
 (section 4). **The owner's look, 2026-10-21 (chat), off the two sheets:** the
 shade's right-anchored map (the "Fin" reveal frame-exact) and the banner's
 faster slide in the bands (1.23x / 1.52x) both accepted; not yet seen in play.
+**Folded 2026-10-21 (group END):** section 5 is DIV-0041's 2026-10-21 sweeps
+amendment; IDEAS I38 marked built.
 
 ## 1. The two sweeps, read again
 

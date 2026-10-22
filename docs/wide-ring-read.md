@@ -15,6 +15,11 @@ round into a scratch directory, never the tree) at the twins CD1's pairing
 named (`psp_cd/pairs2.json`); `tools/pe_xref.py` for the arrays' neighbours.
 PSP offsets are `BOOT.BIN` link-time offsets, JP.
 
+**Folded 2026-10-21 (group END):** no ledger entry of its own; its plan is
+DIV-0041's 2026-10-21 ring amendment (RG, [`wide-ring.md`](wide-ring.md)),
+and its section 7's questions were answered by the owner (the round doc's
+section 6, item 4).
+
 ## 0. The answer
 
 - **No room in place** (1.2). `MapView_CellItems` ends at `0x939820` and the

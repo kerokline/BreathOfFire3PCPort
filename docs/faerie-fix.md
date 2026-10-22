@@ -7,7 +7,9 @@ Intent entry, with a note to broaden it to
 [`faerie-over-table.md`](faerie-over-table.md) section 4's rule if more
 examples of the class turn up. **The owner's look, 2026-10-21 (chat):** the
 before/after sheets accepted ("the faerie looks great"), the sides' second
-draw with them; not yet seen in play.
+draw with them; not yet seen in play. **Folded 2026-10-21 (group END):**
+section 6 A is **DIV-0151**; D300 fixed by it in
+[`known-defects.md`](known-defects.md) (6 B).
 
 What was wrong, in one line ([`faerie-over-table.md`](faerie-over-table.md)
 1-4): in area 175, the faerie village's wooden room after the Faerie Tiara,

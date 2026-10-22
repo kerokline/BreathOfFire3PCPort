@@ -4,7 +4,11 @@
 `wide-ring/round` (`83345294`, RM's read). IDEAS I37. Built to
 [`wide-ring-read.md`](wide-ring-read.md) section 6 with the owner's four
 answers to its section 7 (chat, 2026-10-21). The checks are section 4;
-the ledger text, drafted for the orchestrator, section 6.
+the ledger text, drafted for the orchestrator, section 6. **Folded
+2026-10-21 (group END):** section 6.1 is DIV-0041's 2026-10-21 ring
+amendment (with the owner's calls, `MapView_Redraw` 2 kept), section 6.2
+D292's text in [`known-defects.md`](known-defects.md); IDEAS I37 marked
+built.
 
 ## 0. The answer
 

@@ -1,7 +1,11 @@
 # Garr over the camp's fire, again (wide-ring round, group GF, 2026-10-21)
 
 **Status:** BUILT AND MEASURED (2026-10-21), on branch `wide-ring/gf`. The
-ledger text is drafted in section 6, for the orchestrator to fold.
+ledger text is drafted in section 6, for the orchestrator to fold. **Folded
+2026-10-21 (group END):** 6 A is DIV-0071's third amendment (dated
+2026-10-21, with the owner's answers: area 192's camp, the flames over the
+arm and weapon kept, the wider reach accepted on the PlayStation check);
+6 B is D301's status line.
 
 The owner's report (chat, 2026-10-21): **"Garr over fire" shows up on our
 plays but not on the original code.** Known-defects D301 - the camp's fire
