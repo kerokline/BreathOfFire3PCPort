@@ -140,3 +140,112 @@ every byte but the ones named below.
 - RR loads kind 18, repoints the box, and walks the shape above; it draws
   the marker's width and the half-cell grid.
 - ML never reads a side chunk; it lists layers by name.
+
+## 3. The renderer as built (RR, 2026-10-22)
+
+**Status:** BUILT on `reading-row/rr` (stage B, group RR); played on the
+nue, shop and inn routes under `ja-JP` with `ruby-furigana-ja-JP`, and once
+with SB's `ruby-en-US-ja-JP`; the owner has not played it. Section 2 (PR's
+numbers) is not in yet: the row table below is the staging arithmetic.
+
+### 3.1 The loader (`src/game/dat_load.cpp`)
+
+- `TakeChunk`'s `case 18` copies the payload into memory of ours
+  (`malloc`, sixteen zero bytes after it) under one of three keys: `(0, 0)`
+  the area's script block at `MessagePools + 0`, `(0x4000, 0)` and
+  `(0x4000, 1)` the system pool's halves (header word 3 is the half). It is
+  refused loudly (`Fatal`) outside a `BOF3X_OPT` layer's walk (DIV-0086 is
+  the only way one arrives), under any other key, with a slot table that
+  does not fit, an offset outside the payload, a payload not ending on a
+  NUL, or a slot count that is not the block's it lands over.
+- On landing it records the FNV-1a hash of the block's slot table (2n bytes
+  at `MessagePools + 0`, or at the pool's half wherever DIV-0007 put it).
+  A lookup whose block no longer hashes the same - a path that rewrote the
+  arena without `LoadDatFile`, a quickload into another area - logs once,
+  retires the side chunk and plays the block's own message.
+- A kind-0 chunk of the same tag retires the side chunk (the area's when a
+  new area file's text block lands, the pool's with the pool). The retired
+  copy is freed at the next retirement, so a box still open on it never
+  walks freed memory. Only AREA files carry a tag-0 kind-0 chunk (scan of
+  the held `DAT`, 2026-10-22).
+- `DatLoad_ReadingRow(tag, half, slot)` answers the composed message or
+  null; `DatLoad_ReadingRowHolds(p)` says whether `p` lies among the held
+  (or retired) composed messages. Before the first kind-18 chunk both
+  return at once.
+
+### 3.2 The repoint (which paths open a composed message)
+
+- `Msg_OpenScript(id)` (sign-extended index 0 and up) and `MsgBox_Reopen`
+  (the choice answer and the menu's next message; unsigned id) take
+  `(0, 0, slot)` from the area's side chunk.
+- `Msg_OpenSystem(id)` (`src/game/menu_windows.cpp`, one call outside this
+  group's file list) takes `(0x4000, id >> 14, id & 0x3FFF)` - the pickup
+  lines ("got the item") are system pool half 0; seen live (half 0 slots 0
+  and 2 in the shop route).
+- Not repointed: `MsgBox_State3Step`'s page restart (it takes the read
+  position, which stays inside the composed message), the battle and menu
+  readers of the pool (`Msg_SystemPtr` callers that draw through
+  `Text_DrawString`, out of scope, reading-row-round.md 7).
+- "Annotated" is the base pointer lying in a side chunk
+  (`ruby::Annotated`), so every writer of `0x7DEE4C` is covered without a
+  flag to keep in step. Both openers repoint only when `MsgBox_Step` and
+  `MsgBox_StatePrint` are ours (`bof3::IsEnabled` after the injects);
+  under `BOF3X_ORIGINAL` of either, Capcom's body would count ruby glyphs
+  and fault on `0x12` (`Text_DrawString`'s trap for glyph `0xFFEC`), so the
+  box plays the block's own message and the log says so once.
+- Each composed open is logged (`reading row: tag .. half .. slot ..
+  opened composed`).
+
+### 3.3 The walk (`src/game/msgbox.cpp`, namespace `msgbox::ruby`)
+
+- **The row table** (`kRowTable`, one per gap, `kGap` the chosen one; the
+  only place the geometry lives): pen y from `Msgbox_OriginY` of ruby 0,
+  text 0, ruby 1, text 1 = `0, 6, 18 + gap, 24 + gap`; staged at gap 1.
+  A ruby quad's top is its row's pen y + 1 (`Text_DrawAt`'s own + 1 for a
+  text glyph), `kHalfCell` 6, the scale `1/2`.
+- `MsgBox_Step` hands an annotated message to `ruby::Step` before its
+  first instruction and returns; nothing else in it changed. `Step` keeps
+  the original prologue (pen at the origin, nothing drawn at a count of 0),
+  skips a leading `0x0C nn`, then per pair: finds the ruby row's end and
+  its colour, walks the text row exactly as the original walks a row (the
+  substitutions, DIV-0140's buttons, the hang, `g.draw_char` and
+  DIV-0006) - drawing while the count allows and measuring to the row's
+  end either way - and then draws the ruby row from the measurements.
+- A ruby glyph is `Text_EmitGlyph`'s record of its whole 12-unit cell on a
+  `12 s` square quad (6 x 6 at `s = 1/2`), the page scroll's clip pair
+  `(u, v)` scaled with it, advancing its DIV-0006 advance times `s` (a
+  kana 6, a Latin letter 4); a space advances and draws nothing. `0x09`
+  is one half-cell; `0x12` advances by the k-th insert's measured width;
+  `0x13` draws the k-th insert's own characters (its substitution text,
+  its count, a pair code as its two glyphs) at the reading scale and
+  advances by that width; one row holds one kind of marker.
+- **Reveal** (`ruby::Reveal`, one function; the owner's call 3): a
+  reading - a run of glyphs with only colour codes between - appears with
+  the first glyph of its segment whose cell is at or after the cell its
+  first half-cell begins. The other rule is the one line `return
+  row.first;`. A `0x13` insert appears with the insert's first character.
+  The count `0x7DEE59` is text glyphs only: `MsgBox_StatePrint`, outside a
+  substitution, steps over a whole ruby row (`ruby::SkipRow`, found by the
+  row parity from the base) at no cost and no delay.
+- The pen left behind: the x after the last drawn text glyph and the y of
+  the last text row the walk entered, which `MsgBox_State3Arrow` places
+  the next-page arrow off. `MsgBox_State3Step` needs nothing: it never
+  reads a row, and its restart takes the read position (just past the
+  `0x02`, a ruby row's start) as the new base.
+- **Refused loudly** (rule 4, `Fatal` with tag, half, slot and the byte):
+  a byte the contract does not allow in a ruby row, a ruby row ending on a
+  page or message end with glyphs in it, a third pair on a page, the offset
+  pen `0x0D` / `0x0E` in an annotated message (the builder leaves those
+  plain), a row end inside a substitution, an insert inside an insert, a
+  marker with no insert under it, a pair code or an out-of-table glyph in a
+  ruby row, more than 15 inserts or 96 glyphs in a row.
+- Untouched: `MsgBox_EffectDraw` (never reached: the offset pen is
+  refused), choice options (`0x14`, drawn by the window code from the read
+  position, verbatim), every other text path.
+
+### 3.4 Identity with no layer
+
+No side chunk, no change: both `DatLoad_` calls return before reading
+anything, `ruby::Annotated` is false, `SkipRow` returns its argument. The
+`msgbox` and `menu_windows` shadow fuzzes are at 0 mismatches, and the state
+hash on the routes is the record (the hand-back has the numbers).

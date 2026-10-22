@@ -151,6 +151,7 @@ const unsigned char* Open(unsigned tag, unsigned half, unsigned slot, const unsi
     g_tag = tag;
     g_half = half;
     g_slot = slot;
+    bof3::Log("reading row: tag 0x%X half %u slot %u opened composed", tag, half, slot);
     return composed;
 }
 
@@ -176,7 +177,7 @@ const unsigned char* RowEnd(const unsigned char* at, unsigned char* color) {
         } else if (c == 0x06) {
             if (color) *color = 0;
             ++p;
-        } else if (c == 0x09 || c == 0x12) {
+        } else if (c == 0x09 || c == 0x12 || c == 0x13) {
             ++p;
         } else if (c & 0x80) {
             p += 2;
@@ -239,6 +240,9 @@ constexpr int kMaxSegs = 16, kMaxGlyphs = 96;
 struct TextRow {
     int segs;                      // inserts + 1
     int width[kMaxSegs];           // width[k]: the k-th insert's drawn width, k >= 1
+    const unsigned char* text[kMaxSegs];   // text[k]: its first character, as the walk reads it
+    int chars[kMaxSegs];           // chars[k]: the characters the substitution allows (8, 32, 16)
+    int ins_first[kMaxSegs];       // ins_first[k]: the count that draws its first character
     int seg_first[kMaxSegs];       // the segment's first entry in cell[] / ordinal[]
     int seg_glyphs[kMaxSegs];      // its own glyphs (an insert's are the insert's)
     int seg_before[kMaxSegs];      // glyphs drawn before it began
@@ -270,14 +274,14 @@ int Reveal(const TextRow& row, int seg, int half) {
 // A ruby glyph: Text_EmitGlyph's record (the glyph's whole 12-unit cell, the
 // texture window a flat 12 wide) on a q x q quad, the page scroll's clip pair
 // (u, v) - Text_DrawString's, by the colour byte's high nibble - scaled with
-// it. Glyph index as Text_DrawString derives it; a pair code (DIV-0057) or an
-// index past the loaded table is refused.
-void Emit(int x, int y, const unsigned char* at, unsigned clut_byte, int q) {
-    const unsigned index = (at[0] & 0x80) ? ((at[0] & 0x7Fu) << 8) + at[1] : at[0] - 0x26u;
+// it. `index` is the glyph as Text_DrawString derives it (Index); one past
+// the loaded table is refused, `at` naming the byte.
+unsigned Index(const unsigned char* at) {
+    return (at[0] & 0x80) ? ((at[0] & 0x7Fu) << 8) + at[1] : at[0] - 0x26u;
+}
+void Emit(int x, int y, unsigned index, const unsigned char* at, unsigned clut_byte, int q) {
     const unsigned glyphs = TextDraw_GlyphCount();
     if (index > (glyphs ? glyphs - 1 : 0xA00u)) Refuse(at, "is a glyph past the loaded table, in a ruby row");
-    std::uint32_t pa, pb;
-    if (TextPair_Of(index, &pa, &pb)) Refuse(at, "is a pair code (DIV-0057), in a ruby row");
     const std::uint8_t* const pair = reinterpret_cast<const std::uint8_t*>(bof3::addr::Text_ClipPairs) + ((clut_byte & 0xFF) >> 4) * 2;
     const int u = pair[0], v = pair[1];
     unsigned char* const p = Gfx_PacketNext;
@@ -340,10 +344,18 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
     row.first = drawn;
     const auto begin_insert = [&](const unsigned char* code) {
         if (flags & 1) Refuse(code, "starts an insert inside an insert");
+        if (row.segs == kMaxSegs) Refuse(code, "starts one insert too many for a row");
         insert_from = pen_x;
     };
-    const auto end_insert = [&](const unsigned char* code) {
-        if (row.segs == kMaxSegs) Refuse(code, "ends one insert too many for a row");
+    // Once a substitution's pointer and count are set: the k-th insert's text
+    // is the byte after `at` (the loop's ++at), sub_count - 1 characters.
+    const auto note_insert = [&]() {
+        const int k = row.segs;
+        row.text[k] = at + 1;
+        row.chars[k] = sub_count - 1;
+        row.ins_first[k] = drawn + 1;
+    };
+    const auto end_insert = [&](const unsigned char*) {
         const int k = row.segs++;
         row.width[k] = pen_x - insert_from;
         row.seg_first[k] = row.cells;
@@ -386,6 +398,7 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
                 const unsigned member = B(kNameMap + ObjTrio[0].char_id);
                 sub_count = 9;
                 at = At(kCharRecords + 164u * member);
+                note_insert();
                 break;
             }
             case 0x04: {
@@ -396,6 +409,7 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
                 const unsigned member = at[0];
                 sub_count = 9;
                 at = At(kCharRecords + 164u * member);
+                note_insert();
                 break;
             }
             case 0x05: {
@@ -421,6 +435,7 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
                 const unsigned record = at[0];
                 sub_count = 0x21;
                 at = At(kTextRecords + (record << 5));
+                note_insert();
                 break;
             }
             case 0x08: {
@@ -434,6 +449,7 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
                 std::uint16_t off;
                 std::memcpy(&off, pool + 2 * entry, sizeof off);
                 at = pool + off;
+                note_insert();
                 break;
             }
             case 0x0A:
@@ -491,16 +507,60 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
     }
 }
 
+// The k-th insert of the text row drawn at the reading scale from x, y - the
+// second-language marker 0x13 (reading-row.md 1.2): the substitution's own
+// characters as the walk read them (its count, a NUL ends it), colour codes
+// taken, a pair code (DIV-0057) as its two glyphs, a space advancing; all of
+// it revealed with the insert's first character. Returns its drawn width.
+int DrawInsert(const TextRow& row, int k, int x, int y, int count, unsigned char color, const unsigned char* marker) {
+    const int q = 12 * kScaleNum / kScaleDen;
+    const bool shown = row.ins_first[k] <= count;
+    int w = 0;
+    const unsigned char* t = row.text[k];
+    for (int left = row.chars[k]; left > 0 && t[0] != 0; --left) {
+        const unsigned char c = t[0];
+        if (c == 0x05) {
+            color = t[1];
+            t += 2;
+        } else if (c == 0x06) {
+            color = 0;
+            ++t;
+        } else if (c == 0x20) {
+            w += TextAdvance_Of(t) * kScaleNum / kScaleDen;
+            ++t;
+        } else if ((c & 0x80) || c > 0x16) {
+            const unsigned index = Index(t);
+            const auto clut = static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color);
+            std::uint32_t pa, pb;
+            if (TextPair_Of(index, &pa, &pb)) {
+                if (shown) {
+                    Emit(x + w, y, pa, t, clut, q);
+                    Emit(x + w + TextAdvance_OfGlyph(pa) * kScaleNum / kScaleDen, y, pb, t, clut, q);
+                }
+            } else if (shown) {
+                Emit(x + w, y, index, t, clut, q);
+            }
+            w += TextAdvance_Of(t) * kScaleNum / kScaleDen;
+            t += (c & 0x80) ? 2 : 1;
+        } else {
+            Refuse(marker, "(the second-language marker) meets a control its insert cannot draw at reading size");
+        }
+    }
+    return w;
+}
+
 // A ruby row's glyphs at pen y `y`: x in units from the line start, 0x09 a
-// half-cell, 0x12 the drawn width of the text row's next insert (k counted
-// from 1 at the row's first marker), a glyph its cell at 1/2 on the half's
-// advance, revealed by Reveal with the first glyph of its word - a run of
-// glyphs with only colour codes between them is one reading.
+// half-cell, 0x12 the drawn width of the text row's next insert, 0x13 that
+// insert drawn at the reading scale (k counted from 1 at the row's first
+// marker; one row holds one kind of marker), a glyph its cell at 1/2 on its
+// advance at 1/2, revealed by Reveal with the first glyph of its word - a run
+// of glyphs with only colour codes between them is one reading.
 void DrawRuby(const unsigned char* at, const unsigned char* end, int y, int count, unsigned char color,
               const TextRow& row) {
     const int line = MsgBox_LineX;
     int x = 0, seg = 0, seg_x0 = 0, reveal = 0;
     bool in_run = false;
+    unsigned char marker = 0;
     for (const unsigned char* p = at; p < end;) {
         const unsigned char c = p[0];
         if (c == 0x05) {
@@ -513,9 +573,11 @@ void DrawRuby(const unsigned char* at, const unsigned char* end, int y, int coun
             x += kHalfCell;
             in_run = false;
             ++p;
-        } else if (c == 0x12) {
-            if (++seg >= row.segs) Refuse(p, "(the insert marker) has no insert under it in the text row");
-            x += row.width[seg];
+        } else if (c == 0x12 || c == 0x13) {
+            if (marker && marker != c) Refuse(p, "is a second kind of insert marker in one ruby row");
+            marker = c;
+            if (++seg >= row.segs) Refuse(p, "(an insert marker) has no insert under it in the text row");
+            x += c == 0x12 ? row.width[seg] : DrawInsert(row, seg, line + x, y + kRubyDy, count, color, p);
             seg_x0 = x;
             in_run = false;
             ++p;
@@ -524,8 +586,12 @@ void DrawRuby(const unsigned char* at, const unsigned char* end, int y, int coun
             if (!in_run) reveal = Reveal(row, seg, (x - seg_x0) / kHalfCell);
             in_run = true;
             const int q = 12 * kScaleNum / kScaleDen;
-            if (c != 0x20 && reveal <= count)
-                Emit(line + x, y + kRubyDy, p, static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color), q);
+            if (c != 0x20 && reveal <= count) {
+                const unsigned index = Index(p);
+                std::uint32_t pa, pb;
+                if (TextPair_Of(index, &pa, &pb)) Refuse(p, "is a pair code (DIV-0057), in a ruby row");
+                Emit(line + x, y + kRubyDy, index, p, static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color), q);
+            }
             x += TextAdvance_Of(p) * kScaleNum / kScaleDen;
             p += (c & 0x80) ? 2 : 1;
         }
