@@ -8838,3 +8838,20 @@ the port never had it. Renders of the worst cues, PC against PSX, are in
 
 **Status:** Capcom's, absent from the PC. Nothing to fix. If the effects move onto the SPU model,
 reproducing it would need its own entry.
+
+## D325 — The Holy Mantle brings encounters sooner in area 83 (Capcom's)
+
+**Seen:** the owner's long-held suspicion that the Holy Mantle "seemed to not work right";
+found by reading the code 2026-10-21.
+
+**Established:** `Field_ZoneCounterRoll` `0x52FEB0` doubles the encounter threshold for
+accessory `0x15` in a byte (`shl bl, 1`). Zone 1 (base 120, limit 60) is the only zone whose
+threshold can pass 127. Its 120..151 wrap to 0..46: seven rolls in ten land on 2..46 steps
+instead of 120 or more, and one in 32 on 0, no encounters until the next roll. Only area 83
+(いせき2) lists zone 1 in its own records (`Area_StateRecords` `0x668D80`, x 17..78, z 45..98).
+
+`Area_ZoneAt` has no end test, so area 82's leader, on a cell its two records miss, would read
+on into area 83's list. Whether such a cell is reachable is not checked. The JP twin `0x801B4CC4`
+wraps the same way.
+
+**Fixed 2026-10-21** (the owner): DIV-0153 caps the doubled value at 255.

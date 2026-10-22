@@ -9483,3 +9483,40 @@ designed in rather than bolted on.
   folder with no game, and the rerun is held while another session's test
   chain uses the game.
 - **Reversible?** `BOF3X_ORIGINAL=PadReset`.
+
+### The Holy Mantle's doubled encounter threshold stops at 255 instead of wrapping
+
+- **ID:** DIV-0153
+- **Date:** 2026-10-21
+- **Subsystem:** random encounters - `Field_ZoneCounterRoll` `0x52FEB0` (ours,
+  `src/game/field_event.cpp`); known-defects D325
+- **Tier:** Intent - the owner's decision, 2026-10-21 ("let's go ahead and make
+  that change to the cap").
+- **Original behaviour:** the threshold is the zone's base plus `Rand & 0x1F`
+  (at most the zone's limit), all in a byte. When a member wears accessory
+  `0x15`, the Holy Mantle, it is doubled with `shl bl, 1` (`0x52FF74`) and
+  wraps. Of the seven zones (`0x660A24`, base and limit pairs) only zone 1,
+  base 120 and limit 60, can pass 127. Its thresholds 120..151 become:
+  - 240..254, for a roll of 0..7 (a quarter of rolls);
+  - 0, for a roll of 8. That means no encounters until the next roll, after a
+    battle or on entering an area;
+  - 2..46, for a roll of 9..31 (seven rolls in ten), where the zone otherwise
+    needs at least 120.
+
+  Only area 83 has zone 1 in its own list (いせき2 in the developers' names,
+  rectangle x 17..78, z 45..98; `Area_StateRecords` `0x668D80`). There the
+  Mantle mostly makes fights come sooner. The JP twin `0x801B4CC4` stores the
+  same byte.
+- **New behaviour:** a doubled value that would pass 255 is 255. Zone 1 with
+  the Mantle gives 240..255; every other zone is unchanged, since doubling
+  never passes 254 there. The Bell Collar's halving (`0x14`) still follows.
+- **Rationale:** the Mantle is meant to make encounters rarer. In the one zone
+  meant to have the fewest, the wrap makes them more frequent, and players
+  have long suspected the item "does not work right" (the owner). A cap keeps
+  the threshold in its byte and the rest of the roll as it was.
+- **Also in the PSX version?** Yes, the wrap is Capcom's on every release
+  (PSX twin above; the zone table equal on PSX and PSP, `psp-stallion.md`
+  5.2). This entry changes it on the PC only.
+- **Verification:** builds clean. The cap is armed after the `field_event`
+  self-test, which still compares Capcom's roll. Not yet run live.
+- **Reversible?** `BOF3X_ORIGINAL=MantleCap`.
