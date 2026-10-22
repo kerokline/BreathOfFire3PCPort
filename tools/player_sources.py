@@ -20,6 +20,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
 import uuid
@@ -602,6 +603,64 @@ def languages_for(rows, pc):
     return out
 
 
+def second_language_pairs(cache):
+    """Every ordered pair (second, main) of the text layers `cache` holds - a
+    loc/<tag>/dat/FIRST.DAT for a tag the engine plays - in the engine's order:
+    the second-language reading-row layers setup builds (docs/reading-row-second.md 5)."""
+    import language_tags
+    held = [t for t in language_tags.TAGS if os.path.isfile(os.path.join(cache, "loc", t, "dat", "FIRST.DAT"))]
+    return [(over, main) for main in held for over in held if over != main]
+
+
+def build_second_layers(cache, say, pairs=None):
+    """The second-language layers into `cache`: for each pair, ruby-<second>-<main>
+    built by tools/ruby_build.py second into opt/.<layer>.new/dat, swapped into
+    opt/<layer>/ and listed in the manifest's [cache] opt rows the way a mod's
+    layer is (tools/mods.py build_layer), so the launcher's Row above the text
+    offers it. A builder that fails or writes nothing raises SetupError (rule 4).
+    Returns the layers built."""
+    import mods
+    builder = os.path.join(TOOLS, "ruby_build.py")
+    if not os.path.isfile(builder):
+        raise SetupError("The second-language rows need tools/ruby_build.py, and this release does not have it.")
+    done = []
+    for over, main in (pairs if pairs is not None else second_language_pairs(cache)):
+        layer = "ruby-%s-%s" % (over, main)
+        final = os.path.join(cache, "opt", layer)
+        work = os.path.join(cache, "opt", "." + layer + ".new")
+        shutil.rmtree(work, ignore_errors=True)
+        os.makedirs(work)
+        cmd = [sys.executable, "-I", builder, "second", "--cache", cache, "--lang", main, "--over", over,
+               "--out", os.path.join(work, "dat")]
+        say("Building the %s rows over the %s text into opt/%s" % (over, main, layer), quiet=True)
+        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        for line in (p.stdout + p.stderr).splitlines():
+            say("  " + line, quiet=True)
+        dd = os.path.join(work, "dat")
+        dats = sorted(n for n in os.listdir(dd) if n.upper().endswith(".DAT")) if os.path.isdir(dd) else []
+        if p.returncode != 0 or not dats:
+            shutil.rmtree(work, ignore_errors=True)
+            last = next((l for l in reversed((p.stderr + p.stdout).splitlines()) if l.strip()), "no output")
+            raise SetupError("The second-language rows %s could not be built (exit %d, %d files): %s"
+                             % (layer, p.returncode, len(dats), last.strip()))
+        rows = []
+        for n in dats:
+            with open(os.path.join(dd, n), "rb") as f:
+                blob = f.read()
+            try:
+                chunks = mods._chunks(blob, n)
+            except mods.BuildError as e:
+                raise SetupError(str(e))
+            for i, (_, _, body) in enumerate(chunks):
+                rows.append((n, i, "ruby_build.py second:%s:%s" % (over, main), mods.sha_bytes(body)))
+        shutil.rmtree(final, ignore_errors=True)
+        os.rename(work, final)
+        mods._manifest_rows(cache, layer, rows)
+        done.append(layer)
+    say("Built %d second-language row layer(s)" % len(done))
+    return done
+
+
 def _rmtree(p):
     if os.path.lexists(p):
         shutil.rmtree(p, ignore_errors=False)
@@ -690,7 +749,8 @@ def run_setup(a, h, log, progress, total):
     langs = languages_for(rows, pc)
     import mods        # the player's mods (docs/mods.md): built after the language layers
     mod_rows = mods.load_rows(h)
-    total[0] = len(zips) + 1 + (1 if pc else 0) + 1 + 1 + (1 if mod_rows else 0)
+    seconds = len(langs) > 1     # every ordered pair of held text layers gets its reading-row layer
+    total[0] = len(zips) + 1 + (1 if pc else 0) + 1 + 1 + (1 if mod_rows else 0) + (1 if seconds else 0)
     game, cache = os.path.join(h, "game"), os.path.join(h, "cache")
     new_game, new_cache = game + ".new", cache + ".new"
     tmp = os.path.join(cache, "tmp")
@@ -766,6 +826,20 @@ def run_setup(a, h, log, progress, total):
                     mods.setup_step(h, new_cache, say)
             except mods.BuildError as e:
                 raise SetupError(str(e))
+        pairs = second_language_pairs(new_cache)
+        if pairs:
+            # The second-language reading-row layers (docs/reading-row-second.md 5):
+            # every ordered pair of held text layers, after the mods' step, so the
+            # launcher's Row above the text lists each other held language.
+            progress("Building the second-language rows: %d pairs of %s"
+                     % (len(pairs), ", ".join(sorted({m for _, m in pairs}))), step=seconds)
+
+            def say2(text, quiet=False):
+                log.write(text + "\n")
+                if not quiet:
+                    progress(text, step=False)
+            with times.step("second-language rows (ruby_build.py)"):
+                build_second_layers(new_cache, say2, pairs)
         os.makedirs(new_game)
         if pc:
             progress("Copying the PC game's files (the original folder is not changed)")
