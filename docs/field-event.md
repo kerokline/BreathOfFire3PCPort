@@ -158,10 +158,46 @@ if (any member has accessory 0x14) value >>= 1
 counter = value
 ```
 
-What the counter counts is **not established** - a step count to the next
-random encounter is the obvious reading (its callers are the field's step
-code, and the two accessories double and halve it), but nothing in game was
-checked, so it is a guess and the name says only what the code does.
+**What it is (read 2026-10-21).** The word this routine writes, `ObjTrio
++0x134` (`0x802E74`), is the threshold for the next random encounter. It is
+rolled here and never counted down.
+
+The count it is compared with is the u16 at `0x905B80`. `symbols.toml` names it
+`Field_EdgeBits` after an older use; its PSX twin, `0x80143F22`, is right.
+
+- **The count.** `Field_LeaderStepLands` `0x52E580` adds 1 for each finished step
+  (`event_leader.cpp:266-270`), and 1 more when the leader faces 2 or 6. It adds
+  nothing on a jump step (`Field_ScriptFlags2` bit 5). Areas 104, 121 and 189
+  add to it themselves.
+- **The test.** `Field_EncounterDue` `0x530030` (`event_ops.cpp:625-660`) scales
+  the count by 7/10 when walking (pace `ObjTrio +0x128` below 4), so walking
+  needs about 10/7 the steps of running. An encounter is due when the threshold
+  is not 0 and the scaled count has reached it.
+- **What must also hold:**
+  - the zone byte `+4` is not 0;
+  - `ObjTrio +0x138` bit 0 is clear (nothing in `.text` sets it by an
+    absolute store; what does is open);
+  - no member has bit 6;
+  - on the field, the formation can be placed on screen.
+
+  When these fail the count stands, and every later step tries again.
+- **Resets.** The return from a battle (`GameMode5_Leave` `0x496188`, which
+  re-rolls with `keep = 0`; `GameMode8_Enter` `0x4964C6`) zeroes the count, and
+  so does the close of the world map's encounter window (`0x52DD84`, which also
+  re-rolls). An area change does neither:
+  - the count carries over;
+  - the threshold is kept, clamped to the new zone's base when larger, and
+    re-rolled only from 0.
+
+  Areas 20, 29, 63, 64, 72, 73, 110, 124 and 125 set the count to the threshold
+  less 5 on entry.
+- **No encounters at all.** A zone base of 0, or `Field_ScriptFlags` bit `0x20`
+  (set by chapter scenes and area 42's timer), gives a zero threshold.
+
+The JP twins are the same instruction for instruction: the roll `0x801B4CC4`
+and the test `0x801B4EA8` (the same `mult 0x66666667`, the same gates). So
+this is Capcom's design. Which items accessories `0x14` and `0x15` are, and
+which facings 2 and 6 are on screen, were not read.
 
 ### `Field_PartySetUp` in full
 

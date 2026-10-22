@@ -190,8 +190,9 @@ it (`Battle_TickCounters`, `Battle_MarkFasterSide`, the one that sets the
 mark) run 0..2 and 3..10. The PSX twin `0x801D4B08` has the same bounds
 (`sltiu 2` from 0, `sltiu 0xA` from 3), so the PC inherited it. Effect: a
 third member or eighth enemy once marked keeps the mark into every later
-round. What reads flag 0x8000 was not read, so whether that gives an extra
-action is open. **Kept**; controls F7 and F8 plant the full loops and are
+round. Only the extra round's two order builders read the mark, so the
+third member joins every later extra round of the battle (D63, read
+2026-10-21). **Kept**; controls F7 and F8 plant the full loops and are
 refused (584, 589 rounds).
 
 **A full task table at the battle's end writes past the image**
