@@ -851,6 +851,7 @@ def run_setup(a, h, log, progress, total):
         with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("install (lay out game)"), \
                 Step(new_cache, None, "game-install", *langs):
             imp.cmd_install(ns)
+        carry_saves(h, game, new_game, lambda t: (log.write(t + "\n"), progress(t, step=False)))
     except BaseException:
         for p in unpacked:
             shutil.rmtree(p, ignore_errors=True)
@@ -865,6 +866,46 @@ def run_setup(a, h, log, progress, total):
         swap(h, (("game", new_game), ("cache", new_cache)))
     times.summary()
     return game, cache
+
+
+# The player's saves across a setup. `setup` lays the game out afresh in
+# game.new and swaps it in, removing the previous game folder - which held
+# the saves (BISLPS0?.DAT, the quicksaves BISLPS1?.DAT, docs/quicksave.md)
+# until 2026-10-22, when a re-run lost them (D331). The layout before
+# 2026-10-15 was the home folder itself as the game directory, so saves
+# left there are moved down too (the owner's first install of the
+# reading-row round found its saves one folder up, unlisted). A file already
+# in the new folder is never overwritten; what is left behind is said.
+SAVE_PATTERN = re.compile(r"^BISLPS[0-9A-F]{2}\.DAT$", re.IGNORECASE)
+
+
+def carry_saves(h, old_game, new_game, say):
+    """Saves from the previous game folder (copied; the folder goes at the
+    swap) and from the home folder itself (moved) into `new_game`. Returns
+    (carried, left) counts."""
+    carried, left = 0, 0
+    for where, src, move in (("the previous game folder", old_game, False), ("the home folder", h, True)):
+        if not os.path.isdir(src) or os.path.normcase(os.path.abspath(src)) == os.path.normcase(os.path.abspath(new_game)):
+            continue
+        names = sorted(n for n in os.listdir(src) if SAVE_PATTERN.match(n) and os.path.isfile(os.path.join(src, n)))
+        done, kept = [], []
+        for n in names:
+            dst = os.path.join(new_game, n)
+            if os.path.exists(dst):
+                kept.append(n)
+                continue
+            if move:
+                shutil.move(os.path.join(src, n), dst)
+            else:
+                shutil.copy2(os.path.join(src, n), dst)
+            done.append(n)
+        if done:
+            say("saves: %d %s from %s (%s)" % (len(done), "moved" if move else "carried", where, ", ".join(done)))
+        if kept:
+            say("saves: %d left in %s, the new game folder already has them (%s)" % (len(kept), where, ", ".join(kept)))
+        carried += len(done)
+        left += len(kept)
+    return carried, left
 
 
 def swap(h, pairs):

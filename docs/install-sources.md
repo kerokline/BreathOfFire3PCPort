@@ -170,7 +170,12 @@ only when everything succeeded:
 3. With a PC folder: copy `BOF3.exe`, the 742 shipped `DAT\` containers,
    `BGM\`, `SND\`, `logos.avi` and `capcom.avi` into the new game folder; the
    player's folder is only read (saves `BISLPS*.DAT` and `BOF3.CFG` are not
-   copied). A `capcom.avi` that is the shipped Indeo 5 file (`fixtures.toml`
+   copied). **The install's own saves are carried** (2026-10-22, D331):
+   before the swap, `BISLPS??.DAT` (the saves and the quicksaves) are
+   copied from the previous `H\game\` into the new one, and any left in
+   `H\` itself - the layout before 2026-10-15 played from the home folder -
+   are moved down; a file the new folder already has is left where it is,
+   and `setup.log` says what moved (`player_sources.carry_saves`). A `capcom.avi` that is the shipped Indeo 5 file (`fixtures.toml`
    `capcom_avi`) is re-encoded by DIV-0001's own command when ffmpeg is there,
    else copied as it is (the game's start test needs the file; without the
    repair it shows Windows' "video not available" field) and the progress says

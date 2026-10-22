@@ -41,10 +41,12 @@ and DIV-0157 (mods); the round's findings are known-defects D326..D330.
   from the scene is composed, so play past it. To annotate the plain pages
   of a mixed message the contract needs a per-page "plain" mark, a
   follow-on if the owner wants the opening covered.
-- **A first install needs three steps** the launcher does not say yet:
-  the game directory is `<home>\game\` after `setup` (the owner's saves
-  sat one folder up and were copied in), the furigana zip must be built
-  (`tools/make_mod.py furigana`, `buildeleaseurigana-0.1.0.zip`) and
+- **A first install needs two steps** the launcher does not say yet
+  (the saves now carry themselves: D331, `carry_saves` in `setup`, from
+  the previous game folder and from the home folder's old layout): the
+  furigana zip must be built
+  (`tools/make_mod.py furigana`, `build
+eleaseurigana-0.1.0.zip`) and
   added on the Mods tab, and `language=ja-JP` chosen for its entry.
 
 - **From ML:** should a mod also build into a cache named by `cache=`, or
