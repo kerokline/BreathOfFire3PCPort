@@ -28,8 +28,9 @@ in the furigana layer, 10,518 messages composed; DIV-0155 / DIV-0156 amended), t
 page's *Extras* toggle (`ruby_ui=`, on with the furigana mod), and `setup` carries saves across a re-run (D331); the second mode re-flows pages, never rows (authored
 breaks kept, a third row to a new page; English over Japanese adds 4,395 pages, D332 fixed).
 Findings D326..D332. **Owed:** the owner's play
-([`owner-review.md`](owner-review.md) 2026-10-22), the readings follow-on group (lexicon, fugashi compare, an agent
-pass; D328), SudachiPy for a player's build of the mod (not bundled: the release gate), the `orig3` pairs
+([`owner-review.md`](owner-review.md) 2026-10-22), the readings follow-on group (the agent pass ran 2026-10-22 -
+[`readings-audit.md`](readings-audit.md): 92.3 % of 21,207 words agree, 178 candidate rules for the owner's
+approval; the lexicon and the fugashi compare still to do; D328), SudachiPy for a player's build of the mod (not bundled: the release gate), the `orig3` pairs
 re-recorded.
 
 **The wide-ring round, 2026-10-21, merged as PR #104** (off `main` `31249d0c`, which took PR #103, a

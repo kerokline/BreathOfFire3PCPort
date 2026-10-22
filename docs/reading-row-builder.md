@@ -167,7 +167,9 @@ NUL is given one (none on the held layer).
   counts readings more than a half-cell from their stem's start (moved by a
   neighbour), which is the collision rule working, not an error.
 - `--review FILE`: per composed message, its text and every reading placed
-  (`surface(reading)`), for the proofreading pass (owner's call 4).
+  (`surface(reading)`), for the proofreading pass (owner's call 4) - the
+  input of [`readings-audit.md`](readings-audit.md)'s agent pass
+  (`tools/ruby_audit.py`, 2026-10-22).
 - `--ambiguous FILE`: every surface placed whose lexicon entry reads two or
   more ways, most frequent first, with what was printed and whether
   `readings.toml` names it.

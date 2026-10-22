@@ -146,10 +146,17 @@ hosted cross form).
    - **The gap**, only if the owner reads it otherwise in play: built as 1.5 units of clear space over and under a
      reading (the nearest even spacing to "2 and 2" on the unit grid; 2.5 / 2.5 at pitch 21 is the other even
      choice), one table, `msgbox.cpp` `kRowTable` ([`reading-row.md`](reading-row.md) 3.3, RR's hand-back 4).
-   - **The readings follow-on group** (decided 2026-10-22, owner-review): `data/furigana/lexicon.toml` from the
-     owner's machine so a player's build needs no SudachiPy; `--compare` with fugashi + UniDic; an agent pass over
-     the review list sharded by area, diffed against Sudachi, each disagreement proposed as a sidecar rule for the
-     owner to approve; derived files in the harness root only (D328).
+   - **The readings follow-on group** (decided 2026-10-22, owner-review). **The agent pass ran 2026-10-22**
+     ([`readings-audit.md`](readings-audit.md), `tools/ruby_audit.py`): 6,014 distinct messages read blind by 21
+     agents, 21,207 words diffed against the builder's, 92.3 % agree; 279 disagreement lines judged, 178 candidate
+     rules in `C:\Users\kerok\bof3x-runs\rr_audit\candidate_readings.toml` with the sheet `proposals.md` beside
+     it, each rule's reach measured. **The owner's read of the sheet is what is next**: the plain rules of its 3.1
+     go in as written, the OVERREACH bin wants narrowing (来る, 長, 実, 者, 戦, 方), the 13 owner calls a decision
+     (賢樹, 外海, 海人 ...). Found on the way: a sidecar rule keyed on a compound Sudachi splits (大武会 as 大武 +
+     会, おおたけ for だいぶかい; 34 such rules) matches no token - **a multi-token rule in the builder** is the
+     follow-on, or `--dict full` measured against the 34 first. Still to do from the group: `data/furigana/lexicon.toml`
+     from the owner's machine so a player's build needs no SudachiPy, and `--compare` with fugashi + UniDic (not
+     installed here). Derived files in the harness root only (D328).
    - **The release gate:** SudachiPy and its dictionary are not bundled (`tools/make_release.py` `NOT_BUNDLED`), so
      a player's `setup` with the furigana mod installed stops loudly until the lexicon lands or the owner decides to
      bundle (about 70 MB). Do not release the mod zip as playable before one of the two.

@@ -107,6 +107,23 @@ eleaseurigana-0.1.0.zip`) and
   and tags but gives no readings, and ships no Windows wheel.
 - **From FB:** 4,559 area pages split for a third row, each an extra
   confirm press, as accepted.
+- **The agent pass ran (2026-10-22 afternoon,
+  [`readings-audit.md`](readings-audit.md)); for the owner to decide:**
+  the sheet `C:\Users\kerok\bof3x-runs\rr_audit\proposals.md` and the
+  fragment `candidate_readings.toml` beside it - 178 candidate rules, each
+  with the proposing agent's reason and its measured reach. (a) Approve
+  the plain rules of the audit doc's 3.1 (他 ほか, 様 さま after a name,
+  金 かね, 都 みやこ, 村 むら, 身体 からだ, 明日 あした, 開く あ-) into
+  `readings.toml`. (b) The OVERREACH bin: 来る, 長, 実, 者, 戦 and both 方
+  rules are wrong as plain rules and want `next` / `prev` lists or more
+  surfaces; 石化 せっか, 前世 ぜんせ, 宝物 たからもの, 前金 まえきん are
+  right and only look wide because the pools repeat them. (c) Thirteen
+  owner calls: **賢樹** (builder たけき, agents けんじゅ; 21 placements),
+  **外海** (そとうみ / がいかい; the builder has そとめ in 20 of 45),
+  **海人**, 剣 as a lone label, 生命 as いのち, 盗人 ぬすびと / ぬすっと,
+  魚 in the chant, 大星. (d) Whether the compounds Sudachi splits (大武会
+  and 33 more, no sidecar rule can reach them) get a multi-token rule in
+  the builder or a `--dict full` measurement first.
 
 - **1, decided 2026-10-22 off PR's sheets:** the gap is **even, "2px top
   2px bottom"** - a reading's ink 2 units from the text above it and 2
