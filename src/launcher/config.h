@@ -70,6 +70,32 @@ struct Config {
     // default becomes the first language held, a named "original" is refused
     // (ConfigResolveLanguage, DIV-0102).
     bool language_named = false;
+    // The row above the text (the reading-row round, docs/mods.md 5): empty
+    // (the default) none; else the middle of the optional text layer
+    // ruby-<this>-<language played> - an installed reading-row mod's id
+    // (furigana) or another held language's tag (en-US over ja-JP). Kept as
+    // written; at start the layer is added to BOF3X_OPT when it is there
+    // (ConfigRubyPlayable), else said on stderr and no row is drawn, as for a
+    // language= whose overlay is missing.
+    std::string ruby;
+    // The reading row's study key (DIV-0155, docs/reading-row.md 3.5): the key
+    // that hides and shows the reading rows' glyphs in play, BOF3X_RUBY_KEY's
+    // value - f1..f12 as src/hook/input_script.cpp spells them, or none (the
+    // key left free). F4 by default, a key Capcom's Game_WndProc leaves
+    // unbound. Read in any case and kept lower case; any other value is
+    // dropped to the default, as filter= and music= are, since the DLL stops
+    // at start on a value it does not know (src/game/msgbox.cpp).
+    std::string ruby_key = "f4";
+    // Whether Settings shows the "Row above the text" box (the owner's call,
+    // 2026-10-22: hidden by default, shown by a toggle on the Mods tab's Extra
+    // sub-page; installing a reading-row mod there turns it on). Display only:
+    // ruby= is kept and given to the game whether the box shows or not.
+    // ruby_ui=0|1; any other value is dropped to the default, as snap= is.
+    // ruby_ui_named: the ini had a valid ruby_ui= line - without one (an
+    // older ini) ConfigRubyUiDefault turns it on when a reading-row mod is
+    // installed.
+    bool ruby_ui = false;
+    bool ruby_ui_named = false;
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
     // psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls. Built and
@@ -345,5 +371,55 @@ bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::strin
 // BOF3X_LANG is a retired bare code (en, fr, de, ja; DIV-0005): the launcher
 // stops on it before the game starts, as the DLL would at injection.
 bool ConfigCheckEnvironmentLanguage(std::string& error);
+
+// ---- Mods and the row above the text (docs/mods.md) ---------------------------
+
+// A mod as <home>\mods.toml lists it (tools/mods.py writes the file; this only
+// reads it). `base` is a reading-row mod's; empty for another kind.
+struct ModInfo {
+    std::string id, name, version, kind, base;
+    std::vector<std::string> required;   // mod.toml's requires
+};
+// The mods <home>\mods.toml lists, in its order; none when there is no file.
+std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
+
+// The start's rule for an ini without a ruby_ui= line (written before the
+// toggle existed): the toggle comes up on when <home>\mods.toml lists a
+// reading-row mod, so a player who installed the furigana mod before the box
+// was hidden still sees it. A named ruby_ui= is left as it is.
+void ConfigRubyUiDefault(Config& cfg, const std::wstring& home);
+
+// ruby_key='s value as the DLL reads BOF3X_RUBY_KEY: "none" or "f1".."f12"
+// (any case in, lower case out), or empty when `value` is neither.
+std::string ConfigRubyKey(const std::string& value);
+
+// The optional text layer a ruby= value names under `language` (a tag; empty or
+// "original" for the port's Chinese): ruby-<ruby>-<language>, or empty when
+// either is empty or the Chinese text is played.
+std::string ConfigRubyLayer(const std::string& ruby, const std::string& language);
+
+// One entry of the Settings page's "Row above the text" box: the ruby= value
+// it writes ("" for none), its label, and why it cannot be played here (empty:
+// it can). Every source-dependent entry is listed, greyed with its reason
+// (the owner's rule, 2026-10-10).
+struct RubyChoice {
+    std::string id;
+    std::wstring label, why;
+};
+// None; every installed reading-row mod (greyed unless its base is `language`
+// and its layer is built); every other held language (greyed unless its
+// second-language layer ruby-<tag>-<language> is built); then any other
+// ruby-*-<language> layer the cache or DAT\ holds. Driven by what exists:
+// <home>\mods.toml, ConfigLanguagesAvailable and the layers themselves.
+std::vector<RubyChoice> ConfigRubyChoices(const std::wstring& game_dir, const std::string& language,
+                                          const std::wstring& cache, const std::wstring& music,
+                                          const std::wstring& home);
+
+// The layer to add to BOF3X_OPT for cfg.ruby under `language` (what the game
+// is given as BOF3X_LANG), or empty: ruby= empty, or (said on stderr, no row
+// drawn) a value that is not a layer name's part, the Chinese text played, or
+// the layer not built here.
+std::string ConfigRubyPlayable(const std::wstring& game_dir, const std::string& ruby, const std::string& language,
+                               const std::wstring& cache = std::wstring(), const std::wstring& music = std::wstring());
 
 }  // namespace bof3x

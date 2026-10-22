@@ -1,7 +1,8 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-21: `main` is `31249d0c` (PR #103, a cleanup, after #100 and #101); the
-wide-ring round built on `wide-ring/round`, its end on `wide-ring/end`, PR next, nothing pushed)
+**Status:** IN PROGRESS (2026-10-22: `main` is `abf915cc` (PR #105, the recipes regenerated, after #104, the
+wide-ring round); the reading-row round built on `localization/second-script`, its end on `reading-row/end`, PR
+next, nothing pushed)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -16,8 +17,9 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**The wide-ring round is built** on `wide-ring/round` (off `main` `31249d0c`; [`STATUS.md`](STATUS.md) has the
-paragraph; item 0 below). Before it `main` was `dc921a0c`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
+**The reading-row round is built** on `localization/second-script` (off `main` `abf915cc`, its end batch on
+`reading-row/end`; [`STATUS.md`](STATUS.md) has the paragraph; item 6a below). **The wide-ring round is on `main`**
+(PR #104; item 0). Before it `main` was `dc921a0c`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
 to 27,394, the machine code identical; `tools/data_census.py` the CI ratchet), the quicksave round (PR #95: F6 / F7 /
 the F5 menu, DIV-0145..0147, D322), the quicksave's language guard (PR #96: the original Chinese against a
 translation refused before a byte is written; one translation into another kept, IDEAS I47), D266 and DIV-0148
@@ -46,8 +48,7 @@ hosted cross form).
 
 ## Pick up here
 
-0. **The wide-ring round: open the PR** from `wide-ring/end` (the round's merges, its fold and its gate; based on
-   `wide-ring/round` off `main` `31249d0c`) at the owner's word, then the owner's play of each change
+0. **The wide-ring round is merged** (PR #104); the owner's play of each change
    ([`owner-review.md`](owner-review.md) 2026-10-21: the ring at a pulled-out camera and a quickload across widths;
    the READY! banner and the *Fin* wipe; the table faerie in `dolphinBoss`; areas 31, 90, 198 framed; Garr at the
    camps of areas 53 and 192). Every call is answered (round doc section 6); the end batch's measured gate is its
@@ -66,6 +67,8 @@ hosted cross form).
    the briefs, the audit reports `audit\`); stages A and B's scratch is deleted.
 
 1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
+   - **The reading-row round** (item 6a): play of the furigana row, F4, a second language and the Mods tab's
+     install; nothing to decide unless the gap reads wrong in play.
    - **The wide-ring round** (item 0): play of the five changes; nothing to decide.
    - **Quicksaves** (DIV-0145..0147): not played yet; whether F6 / F7 get an on-screen line (logged only today, as
      F12's is, DIV-0032); IDEAS I47 (one translation's quicksave loaded under another) when they want it.
@@ -92,7 +95,9 @@ hosted cross form).
    DIV-0135 alone; masterAndManillo by the glyph set together, not by DIV-0138 or DIV-0140 alone - which one is
    open), and on whelpBoss DIV-0092 with DIV-0143 then one page, `Sound_Banks`' buffer pointers (heap addresses, raw
    dumps at tick 10,000: the `Sound_Channels` class, a skip-list candidate). A few VRAM and sound pages at tick 3
-   came in one run of five and are noise. Scripts and checks: `C:\Users\kerok\bof3x-runs\away1020`.
+   came in one run of five and are noise. Scripts and checks: `C:\Users\kerok\bof3x-runs\away1020`. **Stale at the tip since 2026-10-22**: nine routes fail
+   against them at the reading-row round's base tip (with PR #105) and at its end alike (D330); re-record before using them as a gate
+   (item 6a).
 
 4. **Open technical items, no owner needed:**
    - **The ultrawide round's own** ([`ultrawide-round.md`](ultrawide-round.md) 5b and the group docs): the six
@@ -116,12 +121,45 @@ hosted cross form).
    name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's first).
    The exe-gap round needs its answer too (item 2).
 
-6a. **The reading-row round, staged 2026-10-20, not launched** ([`reading-row-round.md`](reading-row-round.md);
-   briefs `C:\Users\kerok\bof3x-runs\r_ruby\BRIEF_*.md`; issue #97; on `main` as PR #101, group SL's census
-   [`second-language-census.md`](second-language-census.md) run and the owner's calls on it taken): furigana (I21) and a second language (I50) in a
-   half-height row above each text row of the dialogue box. Launch at the owner's word: the four stage-A groups
-   (PR, FB, SL, ML) in worktrees from `main`, RR and SB after PR's numbers and FB's layer; the owner's six calls
-   are the round doc's section 6. The string shape (section 4) is fixed before stage A starts.
+6a. **The reading-row round is built** ([`reading-row-round.md`](reading-row-round.md), status and "as built" at
+   its top; issue #97; IDEAS I21 and I50) on `localization/second-script`, the end batch's fold on
+   `reading-row/end`: **PR next** at the owner's word. The dialogue box draws an optional reading row over each text
+   row from kind-18 side chunks - furigana from the player's `ja-JP` layer (DIV-0155, the readings shipped as the
+   first mod zip, DIV-0157) or any other held language (DIV-0156, every ordered pair built by `setup`); two row
+   pairs a page at pen y 2, 9, 21, 28; F4 hides the readings (`ruby_key=` / `BOF3X_RUBY_KEY`, `none` frees it);
+   chosen in the launcher's *Row above the text*. **The afternoon's three changes, all merged:** under a layer a
+   timed box stops for a confirm press and the offset-pen / effect pages are composed, so the new game's opening
+   shows the second script (group OS; DIV-0155 / DIV-0156 amended; sheets
+   `C:\Users\kerok\bof3x-runs\rr_os\sheets\`); the dropdown is hidden unless the Mods page's *Extras*
+   sub-button's toggle (`ruby_ui=`, on by itself when a reading-row mod is added) shows it, and Settings closes the
+   gap (group LX); `setup` carries an install's saves across a re-run (D331 fixed - before it a re-run removed them
+   with the previous game folder); and the second mode re-flows pages, never rows (group NR: every authored row
+   kept, a third text row to a new page, a write-time check that no composed row is wider than its authored one,
+   D332 fixed; about 3,700 more pages on a Japanese main, the owner's trade). Findings D326..D332. What is next:
+   - **The owner's call:** the next-page arrow at a timed stop (today it is the plain end-of-message wait, no
+     arrow; drawing one is a renderer change and a DIV amendment, OS's hand-back) and D332 (English over
+     Japanese: the opening's speaker names are glyphs, not an insert, so the re-break runs a name into its speech
+     and one row reaches the frame).
+   - **The owner's play** of the sheets' scenes ([`owner-review.md`](owner-review.md) 2026-10-22, "to play"): the
+     dolphin fight with furigana, F4, English over Japanese, the Mods tab's install of the zip. Sheets in
+     `C:\Users\kerok\bof3x-runs\rr_rr\shots\sheets\`.
+   - **The gap**, only if the owner reads it otherwise in play: built as 1.5 units of clear space over and under a
+     reading (the nearest even spacing to "2 and 2" on the unit grid; 2.5 / 2.5 at pitch 21 is the other even
+     choice), one table, `msgbox.cpp` `kRowTable` ([`reading-row.md`](reading-row.md) 3.3, RR's hand-back 4).
+   - **The readings follow-on group** (decided 2026-10-22, owner-review): `data/furigana/lexicon.toml` from the
+     owner's machine so a player's build needs no SudachiPy; `--compare` with fugashi + UniDic; an agent pass over
+     the review list sharded by area, diffed against Sudachi, each disagreement proposed as a sidecar rule for the
+     owner to approve; derived files in the harness root only (D328).
+   - **The release gate:** SudachiPy and its dictionary are not bundled (`tools/make_release.py` `NOT_BUNDLED`), so
+     a player's `setup` with the furigana mod installed stops loudly until the lexicon lands or the owner decides to
+     bundle (about 70 MB). Do not release the mod zip as playable before one of the two.
+   - **Re-record the `orig3` state-hash pairs** at the tip (D330, [`state-hash.md`](state-hash.md) 6): stale for
+     every build since PR #105's recipes and the changes before it; the round's gate was ours against the base
+     tip's runs (`C:\Users\kerok\bof3x-runs\rr_rr\statehash\`).
+   - Not reached: AREA014's scarecrow and AREA150's prompt (no route or save), the faerie village's tutorials (no
+     recipe), Japanese over English on a capture; a page whose text rows are all empty draws no readings (none
+     seen; a rule is the contract's call, RR's hand-back 6). Hand-backs:
+     `C:\Users\kerok\bof3x-runs\r_ruby\{fb,ml,pr,rr,sb,sl,os,lx,nr}\HANDBACK.md`.
 
 7. **Work that needs no owner** (each doc's own list is the authority):
    [`exe-import-engine.md`](exe-import-engine.md) 5's remainder; [`cache-read.md`](cache-read.md) 10; the music's
@@ -288,6 +326,15 @@ Local only, gitignored, worth keeping:
 ## Traps already paid for
 
 _One line each, with a pointer. Add when something costs more than an hour._
+
+- **A recorded route splits pages under a reading-row layer** (2026-10-22, D329): every page the builder splits adds
+  a confirm press, so a route recorded without the layer desyncs at the first one (`dolphinBoss.txt` under
+  `ruby-furigana-ja-JP` answers the Fairy Tear prompt "no"). Routes, the state hash and the self-tests run with no
+  layer; a run with one wants its own recording or a press per split page
+  (`C:\Users\kerok\bof3x-runs\r_ruby\rr\recipes\dolphin_fix.txt`). Never change `tools/recipes/` for it.
+- **`tools/mods.py`'s chunk walker and `tools/dat.py` must agree on header word 3** (2026-10-22, commit `5ad20bb2`):
+  a kind-18 chunk carries the pool half (0 or 1) there, which `dat.py` refused before FB and `mods.py` walks on its
+  own; a change to the container's header goes into both, or a layer reads in one and is refused by the other.
 
 - **The launcher always sets `BOF3X_MUSIC` since DIV-0150** (2026-10-21): an empty `music=` is `psx`, so a PC + PSX
   cache rebuilt since then plays the disc's 11 streams from `base\psx-jingles\`, and a stream's length is what

@@ -52,7 +52,11 @@ KINDS = {0: "data", 1: "image", 2: "audio bank", 3: "kind3", 4: "advances (ours,
          14: "F9 pause lines (ours, DIV-0038)",
          15: "short labels (ours, DIV-0064)",
          16: "fishing text (ours, DIV-0069)",
-         17: "the release's staff roll (ours, DIV-0148)"}
+         17: "the release's staff roll (ours, DIV-0148)",
+         18: "reading-row side chunk (ours, docs/reading-row.md 1)"}
+# Kind 18 is the one chunk whose fourth header word is not zero: it carries
+# the pool half (0 or 1) the side chunk's slots index (docs/reading-row.md 1.1).
+WORD3 = {18: (0, 1)}
 BANK_TOC = 0x188
 BANK_SLOTS = 61
 BANK_DATA = 0x380
@@ -67,7 +71,7 @@ def parse(blob, name="<mem>"):
         if pos + 16 > len(blob):
             raise ValueError("%s: truncated chunk header at 0x%X" % (name, pos))
         kind, tag, size, zero = struct.unpack_from("<4I", blob, pos)
-        if kind not in KINDS or zero != 0 or pos + 16 + size > len(blob):
+        if kind not in KINDS or zero not in WORD3.get(kind, (0,)) or pos + 16 + size > len(blob):
             raise ValueError("%s: bad chunk header at 0x%X (kind=%d size=0x%X pad=0x%X)"
                              % (name, pos, kind, size, zero))
         chunks.append(Chunk(len(chunks), kind, tag, size, pos + 16))

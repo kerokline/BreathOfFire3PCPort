@@ -54,7 +54,11 @@ constexpr SubPage kSubPages[] = {
     {kPageGame, IDD_PAGE_VERSIONS, L"Graphics and audio"},
     {kPageGame, IDD_PAGE_VERSIONS2, L"Data"},
     {kPageGame, IDD_PAGE_GAME, L"Cheats"},
-    {kPageMods, IDD_PAGE_MODS, nullptr},   // kept for side-loaded files (IDEAS I33)
+    // The Mods tab's sub-row (the owner's call, 2026-10-22): Data, the player's
+    // mods (docs/mods.md; its own procedure, ModsPageProc), and Extras, the
+    // launcher's extras - today the Row above the text toggle (ruby_ui=).
+    {kPageMods, IDD_PAGE_MODS, L"Data"},
+    {kPageMods, IDD_PAGE_EXTRA, L"Extras"},
     {kPageData, IDD_PAGE_DATA, nullptr},
 };
 constexpr int kSubPageCount = static_cast<int>(std::size(kSubPages));
@@ -75,6 +79,12 @@ struct DialogState {
     // DIV-0102: whether "Chinese (PC script)" is offered (ConfigOriginalAvailable);
     // without it the box holds the languages alone, and its note says why.
     bool original = true;
+    // The row above the text (docs/mods.md 5): the box's entries as last shown
+    // (RubyRefresh), and the player's pick - written as ruby= only once the box
+    // was touched, so an untouched window writes ruby= back as it was read.
+    std::vector<RubyChoice> ruby;
+    std::string ruby_pick;
+    bool ruby_touched = false;
 
     // The window (section 2a): the page shown, the sub-pages, and the Controls
     // and Game Options pages' edits - written to cfg only when touched, so an
@@ -337,6 +347,117 @@ int Selected(HWND dlg, int id) {
     return static_cast<int>(SendMessageW(Item(dlg, id), CB_GETCURSEL, 0, 0));
 }
 
+// ---- The row above the text (docs/mods.md 5) -------------------------------------
+//
+// None; each installed reading-row mod; each other held language. Every entry
+// is listed and one this install cannot play is greyed with its reason (the
+// owner's rule, 2026-10-10): picking it changes nothing. Redrawn when the
+// language, the cache folder or the mods change; the Mods page is told the
+// language too, so it greys a mod for another one.
+
+void RubyRefresh(HWND dlg, DialogState& state) {
+    const std::string language = LanguageChosen(dlg, state);
+    state.ruby = ConfigRubyChoices(state.game_dir, language, DialogDataRoot(dlg), DialogCacheRoot(dlg), HomeDir());
+    const std::string want = state.ruby_touched ? state.ruby_pick : state.cfg->ruby;
+    int sel = -1;
+    for (size_t i = 0; i < state.ruby.size(); ++i)
+        if (state.ruby[i].id == want) sel = static_cast<int>(i);
+    if (sel < 0 && !want.empty()) {   // bof3x.ini's value, kept and shown as what it is
+        state.ruby.push_back({want, ConfigFromUtf8(want) + L" (bof3x.ini's ruby=)", L"not in this install for this language"});
+        sel = static_cast<int>(state.ruby.size()) - 1;
+    }
+    HWND box = Item(dlg, IDC_RUBY);
+    SendMessageW(box, CB_RESETCONTENT, 0, 0);
+    for (const RubyChoice& c : state.ruby) {
+        const std::wstring text = c.why.empty() ? c.label : c.label + L" - " + c.why;
+        const LRESULT i = SendMessageW(box, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text.c_str()));
+        SendMessageW(box, CB_SETITEMDATA, static_cast<WPARAM>(i), c.why.empty() ? 1 : 0);
+    }
+    Select(dlg, IDC_RUBY, sel < 0 ? 0 : sel);
+    if (HWND mods = SubPageOf(state, IDD_PAGE_MODS))
+        SendMessageW(mods, kMsgModsLanguage, 0, reinterpret_cast<LPARAM>(&language));
+}
+
+// A pick in the box: a greyed entry is not taken (the box goes back to what it
+// showed); another is the player's choice.
+void RubyPicked(HWND dlg, DialogState& state) {
+    const int i = Selected(dlg, IDC_RUBY);
+    if (i < 0 || static_cast<size_t>(i) >= state.ruby.size()) return;
+    if (!state.ruby[static_cast<size_t>(i)].why.empty()) {
+        const std::string want = state.ruby_touched ? state.ruby_pick : state.cfg->ruby;
+        int back = 0;
+        for (size_t k = 0; k < state.ruby.size(); ++k)
+            if (state.ruby[k].id == want) back = static_cast<int>(k);
+        Select(dlg, IDC_RUBY, back);
+        MessageBeep(MB_ICONWARNING);
+        return;
+    }
+    state.ruby_touched = true;
+    state.ruby_pick = state.ruby[static_cast<size_t>(i)].id;
+}
+
+// Mods, Extras' toggle (ruby_ui=, the owner's call 2026-10-22): the box and its
+// label shown or hidden. Display only - hidden, the box keeps its entries and
+// pick, ruby= is written back as before and the game is given it as before.
+// Hidden, every Settings control below the box moves up by its row and the
+// page's group box shortens by as much, closing the gap; shown, they move back
+// (the owner, 2026-10-22: "gives slightly more space"). kRubyRowDlu is the
+// row's pitch in launcher.rc: the box at y 40, the Look row under it at 56.
+constexpr int kRubyRowDlu = 16;
+constexpr wchar_t kRubyUpProp[] = L"bof3x.ruby_row_closed";
+
+void RubyUiShow(HWND dlg, bool on) {
+    HWND box = Item(dlg, IDC_RUBY), label = Item(dlg, IDC_RUBYLABEL);
+    for (HWND h : {label, box}) ShowWindow(h, on ? SW_SHOW : SW_HIDE);
+    HWND page = GetParent(box);
+    const bool closed = GetPropW(page, kRubyUpProp) != nullptr;
+    if (closed != on) return;   // already laid out for this state
+    RECT row{0, 0, 0, kRubyRowDlu};
+    MapDialogRect(page, &row);
+    const int dy = on ? row.bottom : -row.bottom;
+    RECT b;
+    GetWindowRect(box, &b);
+    MapWindowPoints(nullptr, page, reinterpret_cast<POINT*>(&b), 2);
+    for (HWND c = GetWindow(page, GW_CHILD); c; c = GetWindow(c, GW_HWNDNEXT)) {
+        if (c == box || c == label) continue;
+        RECT r;
+        GetWindowRect(c, &r);
+        MapWindowPoints(nullptr, page, reinterpret_cast<POINT*>(&r), 2);
+        // below the box's row by where the control sat with the row open: its top
+        // past the row's middle (the Options... button sits 1 DLU above Look, and
+        // the language's note 10 DLU above the box, so neither edge will do)
+        const int open_top = r.top + (closed ? row.bottom : 0);
+        if (open_top >= b.top + row.bottom / 2)
+            SetWindowPos(c, nullptr, r.left, r.top + dy, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        else if (r.bottom > b.bottom)   // the group box around the page
+            SetWindowPos(c, nullptr, 0, 0, r.right - r.left, r.bottom - r.top + dy,
+                         SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    if (on) RemovePropW(page, kRubyUpProp);
+    else SetPropW(page, kRubyUpProp, reinterpret_cast<HANDLE>(1));
+    InvalidateRect(page, nullptr, TRUE);
+}
+
+// WM_DRAWITEM for the box: as the system draws a list, a greyed entry in the
+// grey text colour (the Jukebox's song list does the same, music_player.cpp).
+void RubyDraw(const DRAWITEMSTRUCT& d) {
+    const bool selected = (d.itemState & ODS_SELECTED) != 0;
+    FillRect(d.hDC, &d.rcItem, GetSysColorBrush(selected ? COLOR_HIGHLIGHT : COLOR_WINDOW));
+    if (d.itemID == static_cast<UINT>(-1)) return;
+    const LRESULT n = SendMessageW(d.hwndItem, CB_GETLBTEXTLEN, d.itemID, 0);
+    if (n < 0) return;
+    std::wstring text(static_cast<size_t>(n) + 1, L'\0');
+    SendMessageW(d.hwndItem, CB_GETLBTEXT, d.itemID, reinterpret_cast<LPARAM>(text.data()));
+    text.resize(static_cast<size_t>(n));
+    SetBkMode(d.hDC, TRANSPARENT);
+    SetTextColor(d.hDC, GetSysColor(!d.itemData ? COLOR_GRAYTEXT : selected ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
+    RECT r = d.rcItem;
+    r.left += 2;
+    DrawTextW(d.hDC, text.c_str(), static_cast<int>(text.size()), &r,
+              DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+    if ((d.itemState & ODS_FOCUS) && !(d.itemState & ODS_NOFOCUSRECT)) DrawFocusRect(d.hDC, &d.rcItem);
+}
+
 // ---- DIV-0150: the Music box -------------------------------------------------
 //
 // The source the game plays first (music=, ConfigMusicSource), its index the
@@ -472,6 +593,9 @@ void Populate(HWND dlg, DialogState& state) {
         SetText(dlg, IDC_LANGNOTE, L"");
     }
     Select(dlg, IDC_LANGUAGE, selected);
+    RubyRefresh(dlg, state);   // after the language: the box's entries follow it
+    Check(dlg, IDC_EXTRA_RUBY, cfg.ruby_ui);
+    RubyUiShow(dlg, cfg.ruby_ui);
 
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
     AddItem(dlg, IDC_FILTER, L"Sharp - point");
@@ -527,6 +651,9 @@ void ReadBack(HWND dlg, const DialogState& state) {
     const int wide = Selected(dlg, IDC_WIDE);
     cfg.wide = wide == 1 || wide == 2 ? wide : 0;
     cfg.show_launcher = Checked(dlg, IDC_SHOW);
+    if (state.ruby_touched) cfg.ruby = state.ruby_pick;   // untouched: ruby= as read
+    cfg.ruby_ui = Checked(dlg, IDC_EXTRA_RUBY);
+    cfg.ruby_ui_named = true;
 
     // The Music box (DIV-0150): the source music= already means keeps the line
     // as written (an empty music=, seq or mp3 too); another writes its name.
@@ -1204,10 +1331,33 @@ INT_PTR CALLBACK PageProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
     case WM_INITDIALOG:
         return FALSE;   // the window decides the focus
+    case WM_DESTROY:
+        RemovePropW(page, kRubyUpProp);   // RubyUiShow's mark on the Settings page
+        break;
     case WM_COMMAND:
     case WM_HSCROLL:
         SendMessageW(GetParent(page), msg, wp, lp);
         return TRUE;
+    case WM_MEASUREITEM: {
+        // the owner-drawn Row above the text box; sent before WM_INITDIALOG
+        auto* m = reinterpret_cast<MEASUREITEMSTRUCT*>(lp);
+        if (m->CtlID != IDC_RUBY) break;
+        const HDC dc = GetDC(page);
+        const HFONT font = reinterpret_cast<HFONT>(SendMessageW(page, WM_GETFONT, 0, 0));
+        const HGDIOBJ old = font ? SelectObject(dc, font) : nullptr;
+        TEXTMETRICW tm;
+        GetTextMetricsW(dc, &tm);
+        if (old) SelectObject(dc, old);
+        ReleaseDC(page, dc);
+        m->itemHeight = static_cast<UINT>(tm.tmHeight + (m->itemID == static_cast<UINT>(-1) ? 4 : 2));
+        return TRUE;
+    }
+    case WM_DRAWITEM: {
+        auto* d = reinterpret_cast<DRAWITEMSTRUCT*>(lp);
+        if (d->CtlID != IDC_RUBY) break;
+        RubyDraw(*d);
+        return TRUE;
+    }
     default:
         break;
     }
@@ -1245,7 +1395,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(state));
         for (int i = 0; i < kSubPageCount; ++i) {
             state->pages[i] = CreateDialogParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(kSubPages[i].templ), dlg,
-                                                 PageProc, 0);
+                                                 kSubPages[i].templ == IDD_PAGE_MODS ? ModsPageProc : PageProc, 0);
             if (!state->pages[i]) {
                 std::fprintf(stderr, "bof3x-launcher: page %d could not be created (error %lu)\n", i, GetLastError());
                 EndDialog(dlg, -1);
@@ -1271,6 +1421,23 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         SetForegroundWindow(dlg);
         return FALSE;   // ShowPage set the focus
     }
+    case kMsgModsChanged:   // the Mods page added, built or removed one
+        if (state) RubyRefresh(dlg, *state);
+        return TRUE;
+    case kMsgModsReadingRowAdded:
+        // A reading-row mod added: Extras' toggle on and the box shown at once
+        // (the owner's call, 2026-10-22). The add is on disk already, so the
+        // toggle is kept too: into cfg, and the window saves cfg on any way out
+        // (kDialogSave from the caption's close, as after Back). A remove
+        // leaves the toggle as it is.
+        if (state) {
+            Check(dlg, IDC_EXTRA_RUBY, true);
+            RubyUiShow(dlg, true);
+            state->cfg->ruby_ui = true;
+            state->cfg->ruby_ui_named = true;
+            state->applied = true;
+        }
+        return TRUE;
     case WM_ERASEBKGND:
         if (!state) break;
         Paint(dlg, *state, reinterpret_cast<HDC>(wp));
@@ -1316,7 +1483,16 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             Back(dlg, *state);
             return TRUE;
         case IDC_LANGUAGE:
-            if (HIWORD(wp) == CBN_SELCHANGE) SuitesRefresh(dlg, *state);   // a names layer's note follows the language
+            if (HIWORD(wp) == CBN_SELCHANGE) {
+                SuitesRefresh(dlg, *state);   // a names layer's note follows the language
+                RubyRefresh(dlg, *state);     // the rows above it too
+            }
+            return TRUE;
+        case IDC_RUBY:
+            if (HIWORD(wp) == CBN_SELCHANGE) RubyPicked(dlg, *state);
+            return TRUE;
+        case IDC_EXTRA_RUBY:
+            if (HIWORD(wp) == BN_CLICKED) RubyUiShow(dlg, Checked(dlg, IDC_EXTRA_RUBY));
             return TRUE;
         case IDC_CACHE:
             if (HIWORD(wp) == EN_CHANGE) {
@@ -1324,6 +1500,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
                 if (state->cfg) {
                     SuitesRefresh(dlg, *state);   // another cache, another manifest
                     MusicRefresh(dlg, *state);    // DIV-0150: which sources it holds
+                    RubyRefresh(dlg, *state);     // which reading-row layers it holds
                 }
             }
             return TRUE;

@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -157,6 +158,10 @@ void WalkOverlay(const char* kind, const char* layer, bool cached, const char* n
 // AreaMap_Header); LoadDatFile then snapshots its side faces (DIV-0085).
 bool g_area_block_loaded;
 
+// LoadDatFile is walking a BOF3X_OPT layer (DIV-0086): the only walk a
+// reading row's kind-18 chunk may arrive by (ReadingRowTake).
+bool g_walking_opt_layer;
+
 // BOF3X_DATLOG=1: one log line per file LoadDatFile walks - the shipped file
 // (the install's DAT\NAME or the cache's), each overlay found - with the file
 // index, Frame_Counter, Game_AreaNumber, Game_Mode and the caller's return
@@ -216,9 +221,10 @@ void DatLog(const char* from, const char* path) {
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 17, which are ours (DIV-0006, DIV-0008,
+//     rejected - except kinds 4 to 18, which are ours (DIV-0006, DIV-0008,
 //     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057,
-//     DIV-0038, DIV-0064, DIV-0069, DIV-0148);
+//     DIV-0038, DIV-0064, DIV-0069, DIV-0148, and kind 18 the reading row's,
+//     docs/reading-row.md 3, taken only from an optional layer);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -251,7 +257,9 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
             bof3::Fatal("DIV-0086: DAT\\%s.%s does not fit the 0x%X-byte path buffer", g_opt[i], name,
                         static_cast<unsigned>(sizeof layer));
         Crt_sprintf(layer, "DAT\\%s.%s", g_opt[i], name);
+        g_walking_opt_layer = true;   // the reading row's kind 18 may arrive (ReadingRowTake)
         WalkOverlay("opt", g_opt[i], g_opt_cached[i], name, layer);  // DIV-0089
+        g_walking_opt_layer = false;
     }
     if (g_area_block_loaded) {
         g_area_block_loaded = false;
@@ -339,11 +347,126 @@ void WalkDatFile(const char* path) {
     g_io.free(file);
 }
 
+// --- The reading row's side chunks (kind 18; docs/reading-row.md 1.1 and 3) ---
+//
+// Three keys: (0, 0) the area's script block at MessagePools + 0, and
+// (0x4000, 0) / (0x4000, 1) the system pool's two halves (MsgPool_TakeChunk's
+// pool, DIV-0007, wherever it lives). Each holds a copy of the chunk's payload
+// (`u32 n, u32 off[n]`, then the composed messages) in memory of ours with no
+// arena limit, sixteen zero bytes after it, and the FNV-1a hash of the slot
+// table of the block it was loaded over. A kind-0 chunk of the same tag
+// retires it (the area's when a new area file's text block lands, the pool's
+// with the pool); the retired copy is freed at the next retirement, so a box
+// that was open on it never walks freed memory.
+struct ReadingRowSide {
+    std::uint32_t tag, half;
+    unsigned char* data;   // the payload, or null
+    std::uint32_t size, n, table_hash;
+    unsigned char* retired;
+    std::uint32_t retired_size, retired_n;
+};
+ReadingRowSide g_reading_row[3] = {{0, 0, nullptr, 0, 0, 0, nullptr, 0, 0},
+                                   {0x4000, 0, nullptr, 0, 0, 0, nullptr, 0, 0},
+                                   {0x4000, 1, nullptr, 0, 0, 0, nullptr, 0, 0}};
+bool g_reading_row_any;     // a side chunk was ever taken: nothing below runs until then
+constexpr std::uint32_t kReadingRowPad = 16;
+
+ReadingRowSide* ReadingRowKey(std::uint32_t tag, std::uint32_t half) {
+    for (auto& s : g_reading_row)
+        if (s.tag == tag && s.half == half) return &s;
+    return nullptr;
+}
+
+// The slot table of the block a side chunk annotates: n u16 offsets, n the
+// first offset over two (tools/ruby_build.py block_slots).
+const unsigned char* ReadingRowBlock(std::uint32_t tag, std::uint32_t half) {
+    if (tag == 0) return Arena();
+    std::uint32_t bytes = 0;
+    const std::uint8_t* pool = MsgPool_Moved(&bytes);
+    if (!pool) pool = Arena() + 0x4000;
+    std::uint32_t table;
+    std::memcpy(&table, pool + 4 * half, sizeof table);
+    return pool + table;
+}
+
+std::uint32_t ReadingRowSlots(const unsigned char* block) {
+    std::uint16_t first;
+    std::memcpy(&first, block, sizeof first);
+    return first / 2u;
+}
+
+std::uint32_t ReadingRowHash(const unsigned char* block, std::uint32_t n) {
+    std::uint32_t h = 0x811C9DC5u;
+    for (std::uint32_t i = 0; i < 2 * n; ++i) h = (h ^ block[i]) * 0x01000193u;
+    return h;
+}
+
+void ReadingRowRetire(ReadingRowSide& s) {
+    if (!s.data) return;
+    std::free(s.retired);
+    s.retired = s.data;
+    s.retired_size = s.size;
+    s.retired_n = s.n;
+    s.data = nullptr;
+    s.size = s.n = s.table_hash = 0;
+}
+
+// A kind-0 chunk of `tag` has landed: its side chunks go with the block.
+void ReadingRowDrop(std::uint32_t tag) {
+    if (!g_reading_row_any) return;
+    for (auto& s : g_reading_row)
+        if (s.tag == tag) ReadingRowRetire(s);
+}
+
+// Kind 18. Refused loudly: a chunk outside an optional layer, a tag or half
+// with no key, a payload too short for its table, an offset outside the
+// payload, a payload not ending on a NUL (every composed message ends on one,
+// reading-row.md 1.1), and a slot count that is not the block's.
+void ReadingRowTake(const ChunkHeader& h, const std::uint8_t* payload) {
+    const auto tag = static_cast<unsigned>(h.tag), half = static_cast<unsigned>(h.unread);
+    if (!g_walking_opt_layer)
+        bof3::Fatal("reading row: a kind-18 chunk (tag 0x%X) outside an optional layer (BOF3X_OPT, DIV-0086)", tag);
+    ReadingRowSide* const s = ReadingRowKey(h.tag, h.unread);
+    if (!s)
+        bof3::Fatal("reading row: kind 18 with tag 0x%X half %u - the reader keys only (0, 0), (0x4000, 0) and "
+                    "(0x4000, 1)", tag, half);
+    const auto size = static_cast<std::uint32_t>(h.size);
+    std::uint32_t n = 0;
+    if (h.size >= 4) std::memcpy(&n, payload, sizeof n);
+    if (h.size < 4 || n > (size - 4) / 4)
+        bof3::Fatal("reading row: tag 0x%X half %u: %u bytes cannot hold its slot table", tag, half, size);
+    for (std::uint32_t i = 0; i < n; ++i) {
+        std::uint32_t off;
+        std::memcpy(&off, payload + 4 + 4 * i, sizeof off);
+        if (off != 0 && (off < 4 + 4 * n || off >= size))
+            bof3::Fatal("reading row: tag 0x%X half %u slot %u: offset 0x%X outside the payload's 0x%X bytes", tag,
+                        half, i, off, size);
+    }
+    if (size > 4 + 4 * n && payload[size - 1] != 0)
+        bof3::Fatal("reading row: tag 0x%X half %u: the composed messages do not end on a NUL", tag, half);
+    const unsigned char* const block = ReadingRowBlock(h.tag, h.unread);
+    const std::uint32_t slots = ReadingRowSlots(block);
+    if (slots != n)
+        bof3::Fatal("reading row: tag 0x%X half %u has %u slots, the block it lands over %u (a layer built on "
+                    "another text layer)", tag, half, n, slots);
+    ReadingRowRetire(*s);
+    s->data = static_cast<unsigned char*>(std::malloc(size + kReadingRowPad));
+    if (!s->data) bof3::Fatal("reading row: no memory for %u bytes", size);
+    std::memcpy(s->data, payload, size);
+    std::memset(s->data + size, 0, kReadingRowPad);
+    s->size = size;
+    s->n = n;
+    s->table_hash = ReadingRowHash(block, n);
+    if (!g_reading_row_any) bof3::Log("reading row: side chunks of kind 18 taken (docs/reading-row.md 3)");
+    g_reading_row_any = true;
+}
+
 // One chunk, by its kind: the original's switch and our kinds, for the
 // install's file and the cache's walk alike.
 void TakeChunk(void*, const ChunkHeader& h, std::uint8_t* payload) {
     switch (h.kind) {
     case 0:
+        ReadingRowDrop(h.tag);  // the reading row: a side chunk goes with its block
         if (Gfx_UploadQueueCount && h.tag == 0x10000) Gfx_UploadQueueCount = 0;
         if (MsgPool_TakeChunk(h.tag, payload, static_cast<std::uint32_t>(h.size))) break;  // DIV-0007
         std::memcpy(Arena() + h.tag, payload, static_cast<std::uint32_t>(h.size));
@@ -409,12 +532,44 @@ void TakeChunk(void*, const ChunkHeader& h, std::uint8_t* payload) {
     case 17:  // DIV-0148: ours.
         ScenaSc15_RollApply(h.tag, payload, static_cast<std::uint32_t>(h.size));
         break;
+    case 18:  // the reading row (docs/reading-row.md 1.1 and 3): ours.
+        ReadingRowTake(h, payload);
+        break;
     default:
         break;
     }
 }
 
 }  // namespace
+
+const unsigned char* DatLoad_ReadingRow(std::uint32_t tag, std::uint32_t half, std::uint32_t slot) {
+    if (!g_reading_row_any) return nullptr;
+    ReadingRowSide* const s = ReadingRowKey(tag, half);
+    if (!s || !s->data || slot >= s->n) return nullptr;
+    std::uint32_t off;
+    std::memcpy(&off, s->data + 4 + 4 * slot, sizeof off);
+    if (off == 0) return nullptr;
+    const unsigned char* const block = ReadingRowBlock(tag, half);
+    if (ReadingRowSlots(block) != s->n || ReadingRowHash(block, s->n) != s->table_hash) {
+        // The block under the box is not the one the side chunk was loaded
+        // over - a path that rewrote it without LoadDatFile (a quickload into
+        // another area). Its own message is played from now on; said once.
+        bof3::Log("reading row: tag 0x%X half %u no longer matches its block; its own text plays",
+                  static_cast<unsigned>(tag), static_cast<unsigned>(half));
+        ReadingRowRetire(*s);
+        return nullptr;
+    }
+    return s->data + off;
+}
+
+bool DatLoad_ReadingRowHolds(const unsigned char* p) {
+    if (!g_reading_row_any) return false;
+    for (const auto& s : g_reading_row) {
+        if (s.data && p >= s.data + 4 + 4 * s.n && p < s.data + s.size) return true;
+        if (s.retired && p >= s.retired + 4 + 4 * s.retired_n && p < s.retired + s.retired_size) return true;
+    }
+    return false;
+}
 
 namespace {
 

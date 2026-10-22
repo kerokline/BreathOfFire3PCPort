@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-21, the wide-ring round's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-22, the reading-row round's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,167 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-22, the reading-row round (built)
+
+Built on `localization/second-script` ([`reading-row-round.md`](reading-row-round.md);
+its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md) 1).
+Ledgered as DIV-0155 (the reading row, furigana), DIV-0156 (a second language)
+and DIV-0157 (mods); the round's findings are known-defects D326..D330.
+
+### Decided by the owner (2026-10-22, chat)
+
+- **Call 2, furigana ships as the mod zip** (first "build it in", then
+  "lets deliver it as a zip just so we can work on the first mod
+  implementation in this round"): the staged shape stands. `data/furigana/`
+  is the zip's source, `tools/make_mod.py furigana` builds it, `release.yml`
+  attaches it, the Mods tab installs it, `setup` builds
+  `ruby-furigana-ja-JP` from the installed mod. The point is the mod path
+  proven end to end in this round.
+
+### Still open (round doc section 6, and from stage A's hand-backs)
+
+- **The opening scene shows no second script, by rule** (found 2026-10-22
+  when the owner's first install showed nothing on a new game): the whelp
+  scene's dialogue in AREA024 is one message of eight timed pages with the
+  offset pen and an effect preset (`0x0D 0x0E 0x0F 0x16`), and the
+  builders leave such a message plain **whole** (reading-row-second.md 2;
+  134 effect messages and 409 non-box ones per pair). The next message on
+  from the scene is composed. **Decided 2026-10-22 ("let's add an explicit
+  stop to the text; it will make the new game not comparable to before, but
+  it makes it better for study"):** under a reading-row layer a timed page
+  (`0x16`) becomes an explicit confirm stop in the composed copy, and the
+  offset-pen and effect pages are composed too; the original message is
+  untouched (the side chunk), so with no layer nothing changes. Group OS,
+  launched the same day.
+- **Pages are re-flowed, rows never** (owner, 2026-10-22, off a capture of
+  the opening where the re-break ran the name row into the speech and the
+  row reached the frame: "in the original script, the name gets its own
+  row - just go ahead and do a page break instead of fitting it onto one
+  page. That leads to more pages of text, but less re-flow of sentences"):
+  the second-language mode keeps every authored row break like the
+  furigana mode and sends a third text row to a new page; about 3,300 more
+  presses over the Japanese script, no re-broken row. Group NR, launched
+  the same day; D332 falls with it.
+- **The second-script dropdown hidden by default** (owner, 2026-10-22):
+  *Row above the text* leaves the Settings page unless a toggle shows it;
+  the toggle sits on the Mods page behind a sub-row of two buttons under
+  the top row's Mods button, *Data* (the mods list as today) and *Extras*
+  (the toggle) - "just to reserve that slot on the top row"; it turns on by
+  hand or on its own when the furigana mod is installed. Group LX, launched
+  the same day.
+- **A first install needs two steps** the launcher does not say yet
+  (the saves now carry themselves: D331, `carry_saves` in `setup`, from
+  the previous game folder and from the home folder's old layout): the
+  furigana zip must be built
+  (`tools/make_mod.py furigana`, `build
+eleaseurigana-0.1.0.zip`) and
+  added on the Mods tab, and `language=ja-JP` chosen for its entry.
+
+- **From ML:** should a mod also build into a cache named by `cache=`, or
+  only the home's own (as now)? Should the dropdown's furigana entry read
+  "Japanese (Furigana)" plain or with "(mod 0.1.0)"? And the one that
+  gates a release: **SudachiPy and its dictionary are not bundled** in the
+  release's Python, so a player's `setup` with the furigana mod installed
+  stops at the loud error until they are (about 70 MB more in the release,
+  or the builder run on the owner's machine) - `tools/make_release.py`
+  `NOT_BUNDLED` says so.
+- **Decided 2026-10-22, a follow-on group after RR lands ("lets have that
+  as a followup after RR"): the readings lexicon and the second opinion.**
+  SudachiPy stays off the player's machine: the owner's machine runs the
+  builder once and writes `data/furigana/lexicon.toml`, the sorted word
+  list (dictionary form, reading) the builder met - a dictionary excerpt
+  (SudachiDict, Apache 2.0), never ordered or keyed by slot, so no sentence
+  can be told from it (the rule 1 reading the owner took in chat); the
+  player's builder segments by longest match against it, and the owner's
+  build records every place the two segmenters disagree as a `next` /
+  `prev` rule in the sidecar. Beside it a `--compare` mode places readings
+  with fugashi + UniDic as well and writes the disagreements by surface and
+  context, most frequent first, for the owner to adjudicate into
+  `readings.toml` (call 4's proofreading, made cheap). **And a round of
+  agents** (owner, 2026-10-22): the review list sharded by area to
+  subagents that give the kana of every token of every message as
+  structured output, with a flag where the segmentation looks wrong; a
+  script diffs them against Sudachi's into the disagreement list by
+  surface and context; a second pass proposes the sidecar rule for each
+  line and the owner approves. The script goes through the API; the owner
+  is fine with that (the script is published in both languages already;
+  the rule is about the repo carrying none of Capcom's material), and every
+  derived file - shards, kana, diffs - stays in the harness root, only the
+  sidecar rules and the lexicon in the tree. Measured already:
+  Sudachi core against full differs in 253 of 27,976 messages, nearly all
+  compound width, not readings; the power kanji's on-reading (3,857
+  placements) is the pools' stat labels, the dialogue reads it the kun way
+  in 240 of 245. Suzume (libraz) was looked at and set aside: it tokenises
+  and tags but gives no readings, and ships no Windows wheel.
+- **From FB:** 4,559 area pages split for a third row, each an extra
+  confirm press, as accepted.
+
+- **1, decided 2026-10-22 off PR's sheets:** the gap is **even, "2px top
+  2px bottom"** - a reading's ink 2 units from the text above it and 2
+  units from its own text (PR's gap 2 was 4 above and 1 below; RR sets the
+  pen y that gives 2 and 2 and shows it on a capture). The Latin reading
+  row stays at **1/2**: "plenty legible", 2/3 "not worth it".
+- **F4 hides and shows the second script** (owner, 2026-10-22, for
+  language study): the ruby glyphs' emission only is suppressed, the
+  re-flow and the extra space stay; the binding is optional
+  (`BOF3X_RUBY_KEY`, default F4, `none` to free the key; `ruby_key=` in the
+  ini at the merge) because the F keys are running out - F2, F3, F4 were
+  the free ones.
+- **The capture scene** for the end batch and the owner's play: the
+  dolphin fight (`tools/recipes/dolphinBoss.txt`), "a large chunk of
+  uninterrupted text".
+- 3: a reading revealed with its word; 5: choice options plain; 6: every
+  held pair built by `setup`, all in the dropdown; 7: SL's four as SB drafted
+  them - taken as built ([`reading-row-round.md`](reading-row-round.md) 6).
+
+### To play (owed)
+
+Sheets, 4:3 and 16:9, point filter, in
+`C:\Users\kerok\bof3x-runs\rr_rr\shots\sheets\` (never in the tree):
+`furigana_*`, `study_key_F4_*`, `second_en-US_over_ja-JP_*`, `zoom_gap_*`,
+`dolphin_furigana_*`. In the launcher: Language *Japanese*, *Row above the
+text* the furigana entry (or English for the second language).
+
+- **The new game's opening with stops** (`C:\Users\kerok\bof3x-runs\rr_os\sheets\opening_furigana.png`,
+  `opening_en-US_over_ja-JP.png`): every timed box holds until a press; the
+  stop is the plain end-of-message wait with no arrow - say if you want an
+  arrow there (a renderer change). D332 is on the English-over-Japanese
+  sheet: a speaker's name run into its speech, one row touching the frame.
+- **The opening with rows kept** (`C:\Users\kerok\bof3x-runs\rr_nr\sheets\opening_en-US_over_ja-JP_rows_kept.png`):
+  the name on its own row, three of the seven boxes now two pages. One
+  thing NR noticed for your eye: on a two-row page (a name, then one line
+  of speech) the balance rule can put a few English words above the name
+  row; changing that is an amendment to the sharing rule, your call.
+- **The Mods page's Data / Extras sub-row and the hidden dropdown**
+  (`C:\Users\kerok\bof3x-runs\r_ruby\lx\shots\`): the toggle off by
+  default, on when the furigana zip is added; Settings closes the gap.
+- **The dolphin fight with furigana** (`dolphin_furigana_*.png`; your
+  capture scene): the coast scene's long dialogue. Look at the gap - built as
+  1.5 units of clear space over and under each reading, the nearest even
+  spacing to "2 and 2" on the unit grid (`zoom_gap_*.png`; 2.5 and 2.5 is the
+  other even choice, one table to change) - and at how a reading appears with
+  its word. Played by recipe, `tools/recipes/dolphinBoss.txt` needs one more
+  press under the layer (the Fairy Tear prompt's first message is a split
+  page, D329); in your own play it is just one more confirm.
+- **F4** (`study_key_F4_*.png`): hides the readings and shows them again, the
+  layout unchanged; `ruby_key=` in `bof3x.ini` moves it (`f1`..`f12`) or
+  frees it (`none`).
+- **English over Japanese** (`second_en-US_over_ja-JP_*.png`): Language
+  *Japanese*, *Row above the text* *English*; a speaker's name drawn small in
+  the English row (`0x13`). Japanese over English is not captured: worth one
+  look under Language *English*.
+- **The Mods tab's install of the zip**: Add zip... with
+  `furigana-<version>.zip` (`tools/make_mod.py furigana`), the row building
+  the layer, then the entry in *Row above the text*. The build needs
+  SudachiPy in the Python the launcher runs the tools with; the release's
+  runtime does not carry it (the release gate above), so from a release
+  folder the tab shows the loud error rather than a layer.
+- Also seen on the sheets, for your eye: the nue save's party names drawn as
+  wrong glyphs under Japanese (D326, the recipe save's, not the row's); the
+  next-page arrow on a one-pair page's lower edge (D327, the original's
+  rule); readings to proofread, for example a compound split as the
+  dictionary splits it (D328).
 
 ## 2026-10-21, the wide-ring round
 

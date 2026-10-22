@@ -117,12 +117,41 @@ From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
   "Shoulders, Start and Select"; Music the song source; Game Options the
   three suites ([`launcher-suites.md`](launcher-suites.md)) as "Graphics and
   audio" and "Data", and the old Cheats dialog as "Cheats"; Data the cache
-  folder and Sources.... **Mods is kept for side-loaded files** - a
-  player's own DAT and EMI files over the game's, pixel art, script,
-  scenario (the owner, 2026-10-15; [`IDEAS.md`](IDEAS.md) I33, "mods as
-  cache layers") - and says so; nothing loads them yet. (The suites sat
+  folder and Sources.... **Mods** lists the player's mods - each a `.zip`
+  of data files, added with Add zip..., checked, unpacked and built by
+  `tools/mods.py` as the Sources page runs the importer, greyed with the
+  reason when the install cannot play it - and Remove; the first kind is the
+  reading row, chosen on Settings in **Row above the text** under Language
+  (`ruby=`, one more layer in `BOF3X_OPT`). [`mods.md`](mods.md), the
+  reading-row round, 2026-10-22. The tab was kept for side-loaded files
+  from 2026-10-15 (the owner; [`IDEAS.md`](IDEAS.md) I33, "mods as cache
+  layers"), and its sentence still says those come later. (The suites sat
   under Mods for an hour first; the owner moved them, since they choose
-  between releases rather than load a player's files.) The SatPixie options, the capture,
+  between releases rather than load a player's files.) Since 2026-10-22
+  the Mods tab has a **sub-row of two buttons, Data and Extras** (the
+  owner: "a sub-row of buttons under the mods head button ... just to
+  reserve that slot on the top row"), made as the other tabs' sub-tabs are
+  (`kSubPages`, `IDC_SUB0` + place); the tab opens on Data and comes back
+  on the one it was left on. **Data** is the Mods page above; **Extras**
+  (`IDD_PAGE_EXTRA`) is the home for the launcher's extras, today one
+  toggle, "Show Row above the text on Settings (the second script: furigana
+  or another language)" (`IDC_EXTRA_RUBY`, `ruby_ui=`), with a sentence
+  saying what the row is and that adding a reading-row mod turns it on. The
+  toggle shows or hides Settings' **Row above the text** box and its label
+  at once; off by default, so a player without a reading-row mod never sees
+  the box. It is display only: hidden, `ruby=` is kept as it is (an
+  existing value is not cleared) and given to the game as before. An add of
+  a reading-row mod on Data that succeeds (`mods.py add` said ok, built or
+  not) turns it on and shows the box straight away (`kMsgModsReadingRowAdded`);
+  a remove leaves it as it is. At start an ini without a `ruby_ui=` line
+  (older than the toggle) comes up on when `<home>\mods.toml` lists a
+  reading-row mod (`ConfigRubyUiDefault`); a `ruby_ui=` the ini names is
+  left as it is. The Data page was made 12 dialog units shorter (176, as
+  Controls' second page) to fit under the sub-row in 640 x 480. Hidden, the
+  box gives its row back: every Settings control below it moves up by the
+  row (16 dialog units) and the page's group box shortens by as much; shown,
+  they move back down (the owner, 2026-10-22: "gives slightly more space";
+  `RubyUiShow`, checked in `dialog_test.py` by the Look box's top). The SatPixie options, the capture,
   the Jukebox and the Sources page are still their own dialogs. Control ids
   are unique across the pages, so the code finds any of them through the
   window (`Item`, `config_dialog.cpp`), and the pages forward what their
@@ -146,7 +175,12 @@ page; an Exit from there saves what they said and starts nothing
 Controls and Game Options pages are read back only once touched, so an
 untouched window still writes the bindings and cheats as they were read (an
 ini holding a multiplier over the cap of 10 is shown as 10 and kept as
-written). Start, and Enter, still mean Play from either face.
+written). Start, and Enter, still mean Play from either face. One
+exception since 2026-10-22: a reading-row mod added on Mods turns Extras'
+toggle on in what is saved too, so after an add the close box saves the
+settings as last applied plus `ruby_ui=1` (`kDialogSave`) - the mod is on
+disk already, and the box it is chosen in should not vanish with an
+unsaved window.
 
 Checked 2026-10-15, no game run, at 100 % only (this machine's scale; 200 %
 is the arithmetic, not yet seen): every tab and sub-tab captured by a scratch
@@ -177,6 +211,9 @@ close box after the same change left the ini byte for byte.
 | Controls... (2026-09-24): fourteen rows, two key cells and two pad cells each - click a cell and press the key or pad input, Escape cancels, Clear empties - the face-button layout | `key.NAME=action` and `pad.NAME=action` lines in the ini; `BOF3X_KEYS` / `BOF3X_PAD` when they differ from the default | ours — DIV-0050; [`controls.md`](controls.md) §4.2. Unset, the DLL leaves the game's own key table (`BOF3.CFG` lines 3+ or its default) and uses the default pad map |
 
 | Music and Cache folder (2026-10-10, §3.1): the source played first - the PlayStation's, the PSP's or the PC's MP3s (DIV-0150, 2026-10-21); the importer's cache, typed or Browse... | `BOF3X_MUSIC` always, `BOF3X_CACHE` when not empty; `music=` / `cache=` in the ini | ours - DIV-0087, DIV-0150, [`music-seq-engine.md`](music-seq-engine.md) 2 |
+| Row above the text (2026-10-22, Settings, under Language): None, each built reading-row mod whose base is the language played (Japanese (Furigana)), each other held language - every entry listed, greyed by source where it cannot be played | `ruby=<mod id or tag>` in the ini; at start the layer `ruby-<ruby>-<language played>` appended to `BOF3X_OPT` when it is built (said on stderr and left off otherwise; not added when `BOF3X_OPT` is set in the environment) | ours - DIV-0155, DIV-0156, DIV-0157; [`mods.md`](mods.md) 5 |
+| Show Row above the text on Settings (2026-10-22, Mods, Extras; the owner's call): whether Settings shows the Row above the text box and its label - display only | `ruby_ui=0` or `1` in the ini, **`0` by default**, always written; any other value dropped to the default (as `snap=`). Turned on by an add of a reading-row mod on Mods; an ini without the line comes up on at start when a reading-row mod is installed. Not handed to the game: `ruby=` goes over whichever it is | ours - the owner's call 2026-10-22 ([`owner-review.md`](owner-review.md)); [`mods.md`](mods.md) 5 |
+| The study key (2026-10-22; the ini only, no control): the key that hides and shows the row above the text in play | `ruby_key=` in the ini - `f1`..`f12` (any case, written lower case, as `src/hook/input_script.cpp` names them) or `none` (no key); **`f4` by default**, a value the DLL would refuse dropped to it; always handed over as `BOF3X_RUBY_KEY` unless the environment sets it | ours - DIV-0155; [`reading-row.md`](reading-row.md) 3.5 |
 
 The game process inherits the launcher's environment, so the first two needed
 no new channel and **no change to the DLL at all**.

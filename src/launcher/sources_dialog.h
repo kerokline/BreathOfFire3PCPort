@@ -43,4 +43,26 @@ StaleCheck SourcesCheckStale();
 // starts nothing (the owner's call, 2026-10-17: prompt, then rebuild).
 bool SourcesAskRebuild(const StaleCheck& check);
 
+// ---- The Mods tab (docs/mods.md) ---------------------------------------------
+//
+// Configure's Mods page (launcher.rc IDD_PAGE_MODS): the player's mods as
+// tools/mods.py lists them, Add zip... and Remove. Run as this file runs the
+// importer for the Sources page - one child at a time, its lines in the
+// page's log box: `mods.py list --home H --json`, `add ZIP --home H --json`
+// then `build ID --home H`, `remove ID --home H`. The page's own procedure,
+// given to CreateDialogParam by the window (config_dialog.cpp kSubPages).
+INT_PTR CALLBACK ModsPageProc(HWND page, UINT msg, WPARAM wp, LPARAM lp);
+
+// Sent by the Mods page to its parent when the mods changed (an add, a build,
+// a remove): the window re-reads its "Row above the text" box.
+constexpr UINT kMsgModsChanged = WM_APP + 20;
+// Sent by the window to the Mods page when the language chosen changes, so a
+// mod for another language is greyed with that reason. lParam: a const
+// std::string* holding the tag, empty for the port's Chinese.
+constexpr UINT kMsgModsLanguage = WM_APP + 21;
+// Sent by the Mods page to its parent after an add of a reading-row mod
+// succeeded: the window turns Mods, Extras' toggle on (ruby_ui=1) and shows
+// Settings' Row above the text box (the owner's call, 2026-10-22).
+constexpr UINT kMsgModsReadingRowAdded = WM_APP + 22;
+
 }  // namespace bof3x

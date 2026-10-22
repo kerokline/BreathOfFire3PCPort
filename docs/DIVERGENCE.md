@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 154 entries, DIV-0001..0154, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 157 entries, DIV-0001..0157, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -9789,3 +9789,310 @@ designed in rather than bolted on.
   self-test, whose F7 / F8 controls still plant the full loops against
   Capcom's and are refused. Not yet played; D63's live outline applies.
 - **Reversible?** `BOF3X_ORIGINAL=ExtraRoundClear`.
+
+### A reading row over the dialogue box's text: furigana from the player's Japanese layer
+
+- **ID:** DIV-0155
+- **Date:** 2026-10-22
+- **Subsystem:** the dialogue box - `MsgBox_Step` `0x497840`,
+  `MsgBox_StatePrint` `0x497B30`, `Msg_OpenScript` `0x4976D0`,
+  `MsgBox_Reopen` `0x498280` (ours, `src/game/msgbox.cpp`, namespace
+  `msgbox::ruby`) and `Msg_OpenSystem` `0x497710` (ours,
+  `src/game/menu_windows.cpp`); `LoadDatFile` `0x454590`'s kind 18 (ours,
+  `src/game/dat_load.cpp`); `Game_WndProc`'s study key
+  (`src/game/win_main.cpp`); the optional text layer `ruby-furigana-ja-JP`,
+  built on the player's machine by `tools/ruby_build.py furigana`
+  ([`reading-row.md`](reading-row.md) 1 the contract, 2 the geometry, 3 the
+  renderer; [`reading-row-builder.md`](reading-row-builder.md);
+  [`reading-row-round.md`](reading-row-round.md))
+- **Tier:** Sensible - presentation of the text played (a row of readings
+  above it), off by default; what happens in play is unchanged except that a
+  page the builder splits asks one more confirm press.
+- **Original behaviour:** the box draws one script: up to three rows of
+  12-unit glyphs a page on a 14-unit newline (`MsgBox_Step`,
+  [`msgbox.md`](msgbox.md) 3). The PC port has no readings; the Japanese
+  text (DIV-0056) prints its kanji bare. F4 does nothing (`Game_WndProc`
+  leaves F2, F3 and F4 unbound).
+- **New behaviour:** with `ruby-furigana-ja-JP` in `BOF3X_OPT` under
+  `BOF3X_LANG=ja-JP`, each area file and message pool the layer annotates
+  carries one **kind-18 side chunk** of composed messages keyed by slot (tag
+  0 for the area's script block, `0x4000` for a pool with its half in header
+  word 3); the arena's text block is never rewritten. `Msg_OpenScript`,
+  `MsgBox_Reopen` and `Msg_OpenSystem` open the composed copy of a slot that
+  has one, and the box draws it as **row pairs**: a half-height reading row
+  of the same sheet's glyphs (a 6 x 6-unit quad, the 12 px cell texel for
+  texel, two kana over one kanji cell) over each text row, at **pen y 2, 9,
+  21, 28 from the box origin**, bottom-aligned (the last text row lands where
+  the plain page's third row does, so the next-page arrow and the space under
+  it are the original's), with an **even gap**: 1.5 units of clear space over
+  and under a reading's ink at a pair pitch of 19, the nearest even spacing
+  on the unit grid to the owner's "2 and 2" ([`reading-row.md`](reading-row.md)
+  3.3, measured off the capture). **Two pairs a page**; a longer page is
+  split by the builder on a `0x02` (**4,559 area pages split**, 6 in the
+  pools, each one more confirm press). A reading appears with the first
+  glyph of its word; the typewriter counts and paces the text's glyphs
+  alone. In a reading row **`0x12`** stands for the drawn width of the k-th
+  insert of the text row below (a member name, an item record, a sub-pool
+  message), resolved at draw time. Built from the player's own `ja-JP` layer
+  with SudachiPy and `data/furigana/readings.toml` (the sibling's sidecar,
+  the owner's choices): 10,324 area messages (5,454 distinct) composed with
+  33,385 readings, none dropped; 456 left as they were (narration rows past
+  the box 265, timed three-row pages 131, offset-pen and effect pages 60).
+  Choice options, the shout draw (`MsgBox_EffectDraw`), menus, battle text
+  and every other text path are unchanged. **F4 hides and shows the
+  readings** (`BOF3X_RUBY_KEY`: `f1`..`f12` or `none`; `ruby_key=` in
+  `bof3x.ini`): the reading glyphs only; the layout, pages and arrow stay
+  exactly as shown.
+- **Rationale:** GitHub issue #97 ("Second Script", 2026-10-20) and IDEAS
+  I21 (2026-09-24): readings over the Japanese text, for players learning to
+  read it. The owner's calls: two pairs a page and the side chunk
+  (2026-10-20, on the census); the even gap, the Latin size, the reveal with
+  the word, plain options, the study key and its optional binding
+  (2026-10-22).
+- **Also in the PSX version?** No. No release has readings; the archival
+  sibling's `jp_furigana` is its own extension, done there by re-authoring
+  the script.
+- **Verification:** `ruby_build.py furigana --selftest` 41,664 messages
+  joined back byte for byte, 0 mismatches; `--lint` 51,031 reading rows, 0
+  misplaced. `BOF3X_SHADOW=msgbox` 44,000 rounds and `menu_windows` 74,000,
+  0 mismatches; `BOF3X_SHADOW=*` exit 0. The ten routes' state hash with no
+  layer against the base tip's: no page differs that does not also differ
+  between two runs of one build ([`state-hash.md`](state-hash.md), the dated
+  line of 2026-10-22). Contact sheets of the nue route's dialogue, a split
+  page, a pickup line with an inserted item, F4, and the dolphin fight, at
+  4:3 and 16:9 (`C:\Users\kerok\bof3x-runs\rr_rr\shots\sheets\`, outside the
+  tree). **Not yet played by the owner.** Its known costs and open items:
+  D326..D329.
+- **Amended 2026-10-22 (group OS): timed boxes stop, effect pages are
+  composed.** The owner, the same day, on finding the new game's opening
+  scene showed no readings (it was left plain whole as an effect message
+  of eight timed pages): "let's add an explicit stop to the text; it will
+  make the new game not comparable to before, but it makes it better for
+  study."
+  **What changes under a layer:** a timed close (`0x16 nn`, which shuts the
+  box `nn` frames after it is reached) becomes the box's stop - the
+  composed copy is the slot's message cut at its first `0x16 nn` with
+  `0x00`, the box's own end, in its place, so the box waits for a confirm
+  press where the timer was (state 2, no arrow, as every message end; a
+  three-row page before it splits on `0x02` and shows the arrow there); and
+  messages with the offset pen (`0x0D` / `0x0E`) or an effect preset
+  (`0x0F nn`) are composed, the codes kept in the text row, the walk drawing
+  them as `MsgBox_Step` does and a reading over a glyph under the pen moving
+  with it (the shake, wander and rise offsets); a row the grow / shrink
+  draw (`MsgBox_EffectDraw`, left unannotated) is drawing in shows no
+  reading until the effect ends. Measured: `0x16` ends the box (state 7,
+  window 0 to its shrink, then freed) and only the two openers,
+  `MsgBox_Reopen` and the page restart write the walk's base, so the bytes
+  after a timed close are the next slots', each composed in its own copy;
+  the new game's opening is `AREA024` slots 0..7, opened one by one
+  ([`reading-row.md`](reading-row.md) 3.6). With no layer nothing changes -
+  the original bytes and the identity gates stand; with one, the opening is
+  no longer frame-comparable to the original, which the owner accepts.
+  Under the furigana layer a timed box with no reading is composed too
+  (empty reading rows) so every timed box stops; a box of a space alone
+  that closes on its timer (`0C 81 20 16 00`, a blank beat of three
+  scenes) and narration past the box keep their timers. Numbers (area
+  blocks, the held layer): 10,518 messages composed (was 10,324), 281
+  timed closes made stops (83 with no reading), 59 effect messages
+  composed, 4,663 pages split (was 4,559); left plain only past the box
+  (62) or past three rows (202). **Verification:** `--selftest` 41,664
+  messages, 0 mismatches; `check` on every composed message; `--lint`
+  51,021 rows, 0 misplaced; `BOF3X_SHADOW=msgbox` 44,000 rounds 0
+  mismatches and `BOF3X_SHADOW=*` exit 0 with no layer; NEW GAME's opening
+  played to its last timed box under the layer at 4:3 and 16:9, every box
+  holding 72 frames past its 32-frame timer until the press and the scene
+  going on slot by slot (sheets `opening_furigana.png` and
+  `opening_no_layer.png` in `C:\Users\kerok\bof3x-runs\rr_os\sheets\`, outside the tree). Not
+  seen live: a reading over a word under the offset pen while an effect
+  moves it (the opening's shout has no kanji). Not yet played by the owner.
+- **Reversible?** Off by default: leave the layer out of `BOF3X_OPT` (the
+  launcher's *Row above the text: None*); F4 hides the readings in play;
+  `BOF3X_ORIGINAL=MsgBox_Step` (or `MsgBox_StatePrint`) disarms the repoint
+  and plays every block's own message.
+
+### A second language in the reading row
+
+- **ID:** DIV-0156
+- **Date:** 2026-10-22
+- **Subsystem:** the dialogue box, as DIV-0155 (its `0x13` marker in
+  `src/game/msgbox.cpp`); the optional text layers `ruby-<second>-<main>`,
+  built on the player's machine by `tools/ruby_build.py second`, every held
+  pair by `setup` (`tools/player_sources.py` `build_second_layers`); the
+  composed font chunk in the layer's `FIRST.DAT`
+  ([`reading-row-second.md`](reading-row-second.md);
+  [`second-language-census.md`](second-language-census.md))
+- **Tier:** Sensible - the text played shown with a second language above
+  it, off by default; pages the layout splits ask one more confirm press.
+- **Original behaviour:** the box shows one language. The engine has one
+  glyph table, every overlay's `FIRST.DAT` carries a whole one, and the
+  Latin and Japanese tables both start their cells at `0x993` (76 of the 90
+  single-byte slots and both hanging slots differ;
+  [`second-language-census.md`](second-language-census.md) 7), so two
+  languages' glyphs cannot be resident together.
+- **New behaviour:** with `ruby-<second>-<main>` in `BOF3X_OPT` (for example
+  `ruby-en-US-ja-JP`, English over the Japanese played), the same message
+  from the second layer - same block, same slot - stands in the reading rows
+  over the main's text, by DIV-0155's side chunk, row table, reveal and study
+  key. **The pairing rule** ([`reading-row-second.md`](reading-row-second.md)
+  2): pages pair in order when their counts agree, else the second's text is
+  shared over the main's pages in reading order by glyphs; the main keeps its
+  authored rows where two fit, and a three-row page is re-broken into two (a
+  speaker-name row kept as its own) or split on `0x02` - the main's breaks
+  decide, never the second's; a page whose second fits one reading row is
+  balanced over its two text rows. Left plain, whole, and counted: a message
+  with a row past the box, a page past three rows, the offset pen, a timed
+  page that would need a split, or an insert of the second the marker cannot
+  reference. **`0x13`** in a reading row draws the k-th insert of the text
+  row below at reading size, from the main's name table, so the second shows
+  the name. Latin reading rows are drawn at **1/2** (a 4 x 6-unit letter on a
+  4-unit advance), kana at 6 x 6. The layer's `FIRST.DAT` carries a
+  **composed font chunk** (kind 3 with its kind-4 advances) that replaces the
+  main's table when played: the main's kept whole and the second's cells
+  relocated above it - Latin over Japanese at `0xE00..0xE63` (space `0xE64`;
+  the French and German accented cells from `0xE70`), the 882 Japanese cells
+  at `0xAC0..0xE31` over a Latin main (space `0xE40`), and Latin over another
+  Latin main in the main's letters, with the accented block added where the
+  main is blank. Tables of 2,673..3,719 glyphs, under DIV-0016's `0x1000`.
+  **Every ordered pair of held languages** is built (20 with `ja-JP`,
+  `en-US`, `en-150`, `fr-FR`, `de-DE`): 17,155..17,825 area slots paired a
+  pair; pages added about 640..760 under a Japanese main and 5,000..5,800
+  under a Latin main (its own third rows); the second needs more than two
+  reading rows on 1.0..1.7% of pages over Japanese and almost never
+  otherwise (the per-pair table, [`reading-row-second.md`](reading-row-second.md)
+  7).
+- **Rationale:** IDEAS I50 and issue #97: one scene read in two languages at
+  once, for language study. The owner's calls: two pairs a page, overflow as
+  presses, the side chunk (2026-10-20); the Latin row at 1/2, "plenty
+  legible" (2026-10-22); every held pair offered in the launcher.
+- **Also in the PSX version?** No.
+- **Verification:** `ruby_build.py second --selftest` 0 mismatches in all 20
+  pairs (74,918..79,183 messages each); `check` on every composed message
+  (the main's text, and every main glyph in the original's colour); `--lint`
+  0 faults in all 20; an independent read-back of the 20 layers; `--cache`
+  and `--game` builds byte-identical. English over Japanese played on the nue
+  route with `0x13` drawing the speaker's name (`second_en-US_over_ja-JP_*.png`
+  in `C:\Users\kerok\bof3x-runs\rr_rr\shots\sheets\`). A page whose text rows
+  are all empty would draw no readings (the count is text glyphs only;
+  [`reading-row.md`](reading-row.md) 3) - none seen. Japanese over English is
+  not captured. **Not yet played by the owner.**
+- **Amended 2026-10-22 (group OS): timed boxes stop, effect pages are
+  composed**, by the owner's call quoted in DIV-0155's amendment and the
+  same rule:
+  **What changes under a layer:** a timed close (`0x16 nn`, which shuts the
+  box `nn` frames after it is reached) becomes the box's stop - the
+  composed copy is the slot's message cut at its first `0x16 nn` with
+  `0x00`, the box's own end, in its place, so the box waits for a confirm
+  press where the timer was (state 2, no arrow, as every message end; a
+  three-row page before it splits on `0x02` and shows the arrow there); and
+  messages with the offset pen (`0x0D` / `0x0E`) or an effect preset
+  (`0x0F nn`) are composed, the codes kept in the text row, the walk drawing
+  them as `MsgBox_Step` does and a reading over a glyph under the pen moving
+  with it (the shake, wander and rise offsets); a row the grow / shrink
+  draw (`MsgBox_EffectDraw`, left unannotated) is drawing in shows no
+  reading until the effect ends. Measured: `0x16` ends the box (state 7,
+  window 0 to its shrink, then freed) and only the two openers,
+  `MsgBox_Reopen` and the page restart write the walk's base, so the bytes
+  after a timed close are the next slots', each composed in its own copy;
+  the new game's opening is `AREA024` slots 0..7, opened one by one
+  ([`reading-row.md`](reading-row.md) 3.6). With no layer nothing changes -
+  the original bytes and the identity gates stand; with one, the opening is
+  no longer frame-comparable to the original, which the owner accepts.
+  The second's message is cut at its own first `0x16` too, so a scene of
+  timed boxes pairs box for box. The plain classes "offset pen" and "timed
+  page needing a split" are gone; a blank timed beat is counted "the main
+  has no text" (136 area slots). English over Japanese: 17,389 area slots
+  paired (was 17,332), 199 timed closes made stops, 87 effect messages
+  composed, 652 pages added (was 640); every pair's numbers in
+  [`reading-row-second.md`](reading-row-second.md) 7. **Verification:**
+  `--selftest` and `--lint` 0 in all 20 pairs; English over Japanese
+  played through the opening's seven timed boxes at 4:3 and 16:9, each
+  held past its timer until the press (`opening_en-US_over_ja-JP.png`,
+  same folder). D332 is what the captures showed of the re-break there.
+- **Amended 2026-10-22 (group NR): pages are re-flowed, rows never.** The
+  owner, off the capture of the opening where the re-break ran the name row
+  into the speech and the row reached the frame (D332): "in the original
+  script, the name gets its own row - just go ahead and do a page break
+  instead of fitting it onto one page. That leads to more pages of text,
+  but less re-flow of sentences." **What changes:** `SecondComposer.rebreak_page` /
+  `rebreak` and class B are removed, not left switchable - one rule. Every
+  authored row of the main is kept as it is; a page of three text rows is
+  two pages on `0x02` (rows 1-2, then row 3), the second shared over them
+  by the existing rule (page by page where counts match, else by glyphs)
+  and re-flowed into its own reading rows as before (their budget
+  unchanged). One routine call: when the share of a split puts an insert of
+  the second over the part whose text rows do not carry it, the boundary
+  moves to the nearest unit where each part's inserts are its own
+  (`share_split`), so fewer messages are left plain for an insert.
+  **What it costs:** pages added, area blocks, before -> after: 652 -> 4,395
+  for English over Japanese (+3,743; French and German over Japanese
+  +3,669 / +3,637), 5,018 -> 8,218 for Japanese over English, +2,315..3,522
+  under the Latin mains; area slots paired 17,389 -> 17,460 for English over
+  Japanese. Every pair's numbers in
+  [`reading-row-second.md`](reading-row-second.md) 7 (rule 4 there amended).
+  **Verification:** `check` now stops the build when a composed text row
+  is not the authored row it stands for or is wider than it - 0 re-flowed
+  rows in all 20 pairs (56,172..63,841 text rows each); `--lint` 0 faults
+  and every pair exit 0; `second --selftest` 0 mismatches (ja-JP/en-US,
+  en-US/ja-JP, en-US/fr-FR, fr-FR/de-DE); the furigana layer byte-identical
+  before and after (239 files) and its `--selftest` 0. Played under
+  `ruby-en-US-ja-JP` at 4:3, point filter, from NEW GAME: the opening's
+  seven boxes are ten stops, the three name-plus-two-row boxes each two
+  pages with the name on its own row and the arrow on the first
+  (`opening_en-US_over_ja-JP_rows_kept.png` in
+  `C:\Users\kerok\bof3x-runs\rr_nr\sheets\`).
+- **Reversible?** Off by default (*Row above the text: None*); F4 and
+  `BOF3X_ORIGINAL=MsgBox_Step` as DIV-0155.
+
+### Mods: a player's zip built into an optional layer, chosen as the row above the text
+
+- **ID:** DIV-0157
+- **Date:** 2026-10-22
+- **Subsystem:** launcher and setup - `tools/mods.py`, `tools/make_mod.py`,
+  `tools/player_sources.py` (setup's mod step), `src/launcher/config.cpp`
+  (`ruby=`, `ConfigRubyPlayable`, the layer added to `BOF3X_OPT`),
+  `src/launcher/sources_dialog.cpp` (the Mods page), `config_dialog.cpp`
+  (*Row above the text*), `.github/workflows/release.yml`
+  ([`mods.md`](mods.md), [`launcher-settings.md`](launcher-settings.md) 2a)
+- **Tier:** Sensible - which built layer is handed to the game, chosen
+  before it starts; the mechanism changes nothing in play by itself (what a
+  reading-row layer draws is DIV-0155 and DIV-0156).
+- **Original behaviour:** the port has no mods, and its launcher no way to
+  add one.
+- **New behaviour:** a **mod** is a `.zip` of `mod.toml` at its root and the
+  data files it names - never code, never game data (`.DAT` and the language
+  layers' names refused), bounded (16 members, 4 MiB a member, 8 MiB in
+  all), with a `kind` the tools know (today `reading-row`) and `requires` a
+  list of language tags. The launcher's **Mods** tab adds one (`mods.py
+  add`: checked, unpacked to `<home>\mods\<id>\`, listed in
+  `<home>\mods.toml`; the same id again replaces it), removes one, and lists
+  each, greyed with its reason when the install lacks what it requires.
+  `setup` (and an add on the tab) runs each mod's build step: for
+  `reading-row` with `base = "ja-JP"`, `tools/ruby_build.py furigana` with
+  the mod's `readings.toml`, writing the optional layer `ruby-<id>-<base>`
+  into the home's cache and its manifest; a missing builder, readings or
+  output stops setup loudly. The Settings page's dropdown **Row above the
+  text** lists None, each built reading-row mod whose base is the language
+  played, and each other held language (DIV-0156's layers), every entry
+  shown and greyed by source where it cannot be played; the choice is `ruby=`
+  in `bof3x.ini` (the mod id or language tag, so it survives a language
+  change), and the launcher appends `ruby-<ruby>-<language played>` to
+  `BOF3X_OPT` when that layer is built, else plays without one and says so on
+  stderr. The **furigana zip** (`make_mod.py furigana`, from
+  `data/furigana/`) is attached to releases by `release.yml`.
+- **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
+  as a mod zip, "just so we can work on the first mod implementation in this
+  round"; the readings can be re-issued without a release. IDEAS I21, I50
+  and I33.
+- **Also in the PSX version?** No.
+- **Verification:** `mods.py selftest`, 28 zips each refused with its
+  sentence or accepted, and the add / build / remove cycle in a temporary
+  home; `make_mod.py --selftest`; `config_tests` (`TestRuby`);
+  `dialog_test.py` 58 checks with the Mods tab and the box, captured
+  (`C:\Users\kerok\bof3x-runs\r_ruby\ml\shots\`). The setup step's build was
+  checked with a stand-in builder; the real builder run from an installed zip
+  on a player's machine needs SudachiPy, which the release does not bundle
+  (`make_release.py` `NOT_BUNDLED`; [`HANDOFF.md`](HANDOFF.md)). **Not yet
+  played by the owner.**
+- **Reversible?** Nothing changes without a mod and a choice: *Row above the
+  text: None* (`ruby=` empty); Remove on the Mods tab takes the folder, the
+  row and the layer.

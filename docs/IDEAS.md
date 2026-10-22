@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-21; 50 entries, I1..I50 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 50 entries, I1..I50 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -65,7 +65,7 @@ rule ([`README.md`](README.md)) here too.
 | I18 | F12 before shipping: disable it, or make it a true quicksave | game behaviour | HIGH / MEDIUM | **closed** (the owner, 2026-10-17): F12 stays; the true quicksave is I13's round |
 | I19 | Screen curvature for the SatPixie look | look | HIGH | open |
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
-| I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | **staged 2026-10-20** as the reading-row round ([`reading-row-round.md`](reading-row-round.md), issue #97) with I50; its own branch and playtesting (owner, 2026-09-24) |
+| I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | **built 2026-10-22** (DIV-0155; the mod zip DIV-0157) - the reading-row round ([`reading-row-round.md`](reading-row-round.md), [`reading-row.md`](reading-row.md), issue #97) with I50; the owner's play and the readings' proofreading owed |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
 | I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | **built** 2026-10-06..11 (DIV-0081 the loops, DIV-0087 the disc's music, DIV-0091 minimp3, heard); method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26). **Asked for first, 2026-10-04**: the owner wants to hear the MP3s against the sequences before the MP3 decoder's fate is decided ([`platform-layers-plan.md`](platform-layers-plan.md) section 5) |
 | I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | **built 2026-09-27..28** in round ten's first three waves - every chapter bank ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) |
@@ -94,7 +94,7 @@ rule ([`README.md`](README.md)) here too.
 | I47 | Quick-loading across translations: review the text that carries over | engine | HIGH | open 2026-10-20 (the owner): nothing measured |
 | I48 | A comment-cleanup round after the typed-data round | tooling / source | HIGH | open 2026-10-20 (the owner): not now |
 | I49 | What `Battle_AutoTargetCheck`'s `+0xBA` test means | engine | — | open 2026-10-20: the rename done, the meaning unconfirmed |
-| I50 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **staged 2026-10-20** in the reading-row round ([`reading-row-round.md`](reading-row-round.md)); from issue #97 (the owner, 2026-10-20) |
+| I50 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **built 2026-10-22** (DIV-0156) - every held pair, the reading-row round ([`reading-row-second.md`](reading-row-second.md)); from issue #97 (the owner, 2026-10-20); the owner's play owed |
 
 ---
 
@@ -962,7 +962,15 @@ A capture of one Japanese message with a hand-placed reading row, from a
 field save, to settle height and legibility before any script work.
 
 ### Outcome
-_(2026-09-24) open._
+**BUILT 2026-10-22** in the reading-row round
+([`reading-row-round.md`](reading-row-round.md)), ledgered as DIV-0155: the
+optional layer `ruby-furigana-ja-JP`, built on the player's machine by
+`tools/ruby_build.py furigana` ([`reading-row-builder.md`](reading-row-builder.md))
+into kind-18 side chunks, drawn by `MsgBox_Step` as two row pairs a page
+([`reading-row.md`](reading-row.md) 2 and 3), F4 to hide the readings; the
+readings ship as the first mod zip (DIV-0157, [`mods.md`](mods.md)). Owed:
+the owner's play, and the readings' proofreading (known-defects D328; the
+readings follow-on in [`HANDOFF.md`](HANDOFF.md)).
 
 ---
 ## I22 — Cut content: what the disc holds that play never shows
@@ -2216,4 +2224,11 @@ the two scripts stay together.
 The census (the round's group SL), before any build.
 
 ### Outcome
-_(2026-10-20) staged, not launched: [`reading-row-round.md`](reading-row-round.md)._
+**BUILT 2026-10-22** in the reading-row round, ledgered as DIV-0156: the
+optional layers `ruby-<second>-<main>`, every ordered pair of held
+languages built by `setup` (`tools/ruby_build.py second`,
+[`reading-row-second.md`](reading-row-second.md)), the census's pairing rule
+as built, a composed font chunk per layer, `0x13` drawing an inserted name at
+reading size; chosen in the launcher's *Row above the text*. Owed: the
+owner's play (English over Japanese is on the sheets; Japanese over English
+is not captured).
