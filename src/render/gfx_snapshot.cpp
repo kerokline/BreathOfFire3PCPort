@@ -39,7 +39,7 @@ U Long(U address) {
 }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, 4); }
 
-constexpr U kVersion = 2;   // 2: the grown view ring's rim (DIV-0041, wide-ring)
+constexpr U kVersion = 3;   // 2: the grown view ring's rim (DIV-0041, wide-ring); 3: DIV-0071's sprite boxes (docs/garr-fire.md)
 
 // --- the display words the live process keeps ----------------------------------
 // The snapshot core keeps Gfx_WindowRect .. 0x6BEA00, Gfx_ClutRows' table,
