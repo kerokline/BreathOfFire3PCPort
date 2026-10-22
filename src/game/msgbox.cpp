@@ -100,42 +100,32 @@ namespace ruby {
 
 // --- THE ROW TABLE: the reading row's geometry, in one place --------------
 // Pen y per row of a page, from Msgbox_OriginY (window y + 6): ruby 1, text
-// 1, ruby 2, text 2 - PR's measurement (docs/reading-row.md 2, probe 4),
-// bottom-aligned so the last text row sits on the plain page's third row
-// (O + 28): its glyph bottoms, the next-page arrow and the room under them
-// are the original page's. A glyph draws at pen y + 1. One table per ruby
-// height r (6: kana, Latin at 1/2; 8: Latin at 2/3) and per gap between one
-// pair's text row and the next pair's ruby row; kGap is the owner's call 1
-// (reading-row-round.md 6), staged at the probe's recommendation, 2. The
-// plain newline's 14 stays for every message not from a side chunk.
+// 1, ruby 2, text 2. Bottom-aligned (PR, docs/reading-row.md 2): the last
+// text row sits on the plain page's third row, O + 28, so its glyph
+// bottoms, the next-page arrow and the room under them are the original
+// page's. The owner's call 1 (2026-10-22, off PR's sheets): the gap is even,
+// "2px top 2px bottom" - a reading's ink 2 units below the text row above it
+// and 2 units above its own text row. Against PR's gap-2 table (4 above, 1
+// below) that is the ruby row one unit higher relative to its text (7, not
+// 6) and a pair pitch of 19. A glyph draws at pen y + 1. The plain newline's
+// 14 stays for every message not from a side chunk.
 struct RowTable {
     short row_y[4];
 };
-constexpr RowTable kRowTable[2][3] = {
-    {{{4, 10, 22, 28}}, {{3, 9, 22, 28}}, {{2, 8, 22, 28}}},      // r = 6: O + 4 - gap, O + 10 - gap, O + 22, O + 28
-    {{{0, 8, 20, 28}}, {{-1, 7, 20, 28}}, {{-2, 6, 20, 28}}},     // r = 8: O - gap, O + 8 - gap, O + 20, O + 28
-};
-constexpr int kGap = 2;                 // the owner's call 1, staged at the probe's 2
+constexpr RowTable kRowTable = {{2, 9, 21, 28}};
 constexpr int kRubyDy = 1;              // a ruby quad's top below its row's pen y: Text_DrawAt's own + 1
 constexpr int kHalfCell = 6;            // a ruby half-cell: 0x09's advance
-// A reading glyph is its whole 12-unit texture cell on a 12 s square quad,
-// advancing its DIV-0006 advance times s: s = 1/2 for a 12-unit glyph (a
-// kana: 6 x 6, texel for texel at the PC's 2x, probe 3), the Latin scale for
-// any other (the owner's call 1: 1/2 = 4-unit advance on a 6 x 6 quad, or
-// 2/3 = an 8 x 8 quad and r = 8 rows). Staged at 1/2.
-constexpr int kLatinNum = 1, kLatinDen = 2;
-constexpr bool kTallRuby = kLatinNum * 3 == kLatinDen * 2;   // 2/3: the r = 8 table
+// A reading glyph is its whole 12-unit texture cell on a 6 x 6 quad (scale
+// 1/2: texel for texel at the PC's 2x, probe 3), advancing its DIV-0006
+// advance times 1/2 - a kana 6, a Latin letter 4 (the owner, 2026-10-22:
+// the Latin row stays at 1/2).
+constexpr int kScaleNum = 1, kScaleDen = 2;
 constexpr int kPairs = 2;               // row pairs per page (reading-row.md 1.2)
-const RowTable& Rows() { return kRowTable[kTallRuby ? 1 : 0][kGap]; }
-// The scale of the glyph at `at`: (num, den).
-void Scale(const unsigned char* at, int& num, int& den) {
-    if (TextAdvance_Of(at) == 12) {
-        num = 1;
-        den = 2;
-    } else {
-        num = kLatinNum;
-        den = kLatinDen;
-    }
+const RowTable& Rows() { return kRowTable; }
+// The scale of the glyph at `at`: (num, den), 1/2 for every glyph.
+void Scale(const unsigned char*, int& num, int& den) {
+    num = kScaleNum;
+    den = kScaleDen;
 }
 
 // Armed by MsgBox_Inject once MsgBox_Step and MsgBox_StatePrint are both

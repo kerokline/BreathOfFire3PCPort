@@ -228,12 +228,13 @@ numbers) is not in yet: the row table below is the staging arithmetic.
 ### 3.3 The walk (`src/game/msgbox.cpp`, namespace `msgbox::ruby`)
 
 - **The row table** (`kRowTable`, the only place the geometry lives):
-  section 2's, bottom-aligned - pen y from the origin of ruby 1, text 1,
-  ruby 2, text 2 = `4 - gap, 10 - gap, 22, 28` for r = 6 and `-gap,
-  8 - gap, 20, 28` for r = 8 (taken when the Latin scale is 2/3), one row
-  per gap; `kGap` = 2, the probe's recommendation, the owner's call open.
-  A ruby quad's top is its row's pen y + 1 (`Text_DrawAt`'s own + 1 for a
-  text glyph). A one-pair page uses ruby 1 / text 1.
+  pen y from the origin of ruby 1, text 1, ruby 2, text 2 = `2, 9, 21, 28`.
+  Bottom-aligned as section 2 recommends (the last text row on the plain
+  page's third row, `O + 28`), with the owner's gap of 2026-10-22: even, a
+  reading's ink 2 units under the text row above it and 2 over its own text
+  row - the ruby row 7 units over its text row and a pair pitch of 19
+  (measured off the capture, hand-back). A glyph draws at pen y + 1; a
+  one-pair page uses ruby 1 / text 1. The Latin row stays at 1/2.
 - `MsgBox_Step` hands an annotated message to `ruby::Step` before its
   first instruction and returns; nothing else in it changed. `Step` keeps
   the original prologue (pen at the origin, nothing drawn at a count of 0),
@@ -244,9 +245,8 @@ numbers) is not in yet: the row table below is the staging arithmetic.
   end either way - and then draws the ruby row from the measurements.
 - A ruby glyph is `Text_EmitGlyph`'s record of its whole 12-unit cell on a
   `12 s` square quad, the page scroll's clip pair `(u, v)` scaled with it,
-  advancing its DIV-0006 advance times `s`: `s = 1/2` for a 12-unit glyph
-  (a kana, 6 x 6, texel for texel), the Latin scale (`kLatinNum /
-  kLatinDen`, 1/2: a 4-unit advance) for any other. A space in a ruby row
+  advancing its DIV-0006 advance times 1/2 (a kana 6 x 6 and 6, texel for
+  texel; a Latin letter 6 x 6 and 4 - the owner kept 1/2). A space in a ruby row
   is the composed font's blank cell (section 2); a `0x20` is refused. `0x09`
   is one half-cell; `0x12` advances by the k-th insert's measured width;
   `0x13` draws the k-th insert's own characters (its substitution text,
