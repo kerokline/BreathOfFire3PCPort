@@ -191,7 +191,8 @@ mark) run 0..2 and 3..10. The PSX twin `0x801D4B08` has the same bounds
 (`sltiu 2` from 0, `sltiu 0xA` from 3), so the PC inherited it. Effect: a
 third member or eighth enemy once marked keeps the mark into every later
 round. Only the extra round's two order builders read the mark, so the
-third member joins every later extra round of the battle (D63, read
+third member joins every later extra round of the battle (D63; cleared from
+all of them since DIV-0154, read
 2026-10-21). **Kept**; controls F7 and F8 plant the full loops and are
 refused (584, 589 rounds).
 

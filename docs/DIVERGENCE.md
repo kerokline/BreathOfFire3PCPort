@@ -9488,7 +9488,7 @@ designed in rather than bolted on.
 
 - **ID:** DIV-0153
 - **Date:** 2026-10-21
-- **Subsystem:** random encounters - `Field_ZoneCounterRoll` `0x52FEB0` (ours,
+- **Subsystem:** random encounters - `Field_EncounterThresholdRoll` `0x52FEB0` (ours,
   `src/game/field_event.cpp`); known-defects D325
 - **Tier:** Intent - the owner's decision, 2026-10-21 ("let's go ahead and make
   that change to the cap").
@@ -9520,3 +9520,30 @@ designed in rather than bolted on.
 - **Verification:** builds clean. The cap is armed after the `field_event`
   self-test, which still compares Capcom's roll. Not yet run live.
 - **Reversible?** `BOF3X_ORIGINAL=MantleCap`.
+
+### The round's end clears the faster-side mark from every member and enemy
+
+- **ID:** DIV-0154
+- **Date:** 2026-10-21
+- **Subsystem:** battle round end - `BattleRoundEnd_CheckFaster` `0x4302D0` (ours,
+  `src/game/battle_turn_steps.cpp`); known-defects D63
+- **Tier:** Intent - the owner's decision, 2026-10-21 ("let's clear the third
+  character's extra-round bit just for consistency").
+- **Original behaviour:** `Battle_MarkFasterSide` `0x4453C0` sets flag 0x8000
+  (+0x134 / +0x114) on members 0..2 and enemies 0..7 that outpace the other
+  side. In an extra round the two order builders admit only marked actors.
+  The round's end clears the mark with `ecx = 2` over the members and
+  `ecx = 7` over the enemies, so the third member and the eighth enemy keep
+  it, and join every later extra round of the battle whether or not they
+  still outpace anyone. The JP twin `0x801D4B08` has the same bounds.
+- **New behaviour:** the clear covers all three members and all eight enemies,
+  the setter's own bounds. A fighter joins an extra round only when it
+  qualified in the round that started it.
+- **Rationale:** the asymmetry is an off-by-one. Members 0 and 1 already lose
+  the mark each round; the third member now does too.
+- **Also in the PSX version?** Yes, Capcom's on the JP disc; this changes it on
+  the PC only.
+- **Verification:** builds clean. Armed after the `battle_turn_steps`
+  self-test, whose F7 / F8 controls still plant the full loops against
+  Capcom's and are refused. Not yet played; D63's live outline applies.
+- **Reversible?** `BOF3X_ORIGINAL=ExtraRoundClear`.

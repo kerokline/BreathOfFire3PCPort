@@ -439,7 +439,7 @@ would meet it. Kept as Capcom had it.
 
 ## D10 — The zone counter's arithmetic is 8-bit (candidate)
 
-**Found:** reading `Field_ZoneCounterRoll` `0x52FEB0` for the takeover,
+**Found:** reading `Field_EncounterThresholdRoll` `0x52FEB0` for the takeover,
 2026-09-22 ([`field-event.md`](field-event.md) §4). **Capcom's**; unverified
 in game, and what the counter counts is itself a reading, not a measurement.
 
@@ -1624,7 +1624,10 @@ A live check, not yet run:
 3. Lower slot 3's agility at `0x803080` after the first extra round. It should
    still be entered in the second.
 
-**Status:** latent, reachable in normal play. Capcom's; a change is the owner's call.
+**Status:** latent, reachable in normal play. Capcom's.
+
+**Fixed 2026-10-21** (the owner, "for consistency"): DIV-0154 clears the mark
+from all three members and all eight enemies.
 
 ## D64 — Unchecked data indices beside the dispatches (latent)
 
@@ -8844,7 +8847,7 @@ reproducing it would need its own entry.
 **Seen:** the owner's long-held suspicion that the Holy Mantle "seemed to not work right";
 found by reading the code 2026-10-21.
 
-**Established:** `Field_ZoneCounterRoll` `0x52FEB0` doubles the encounter threshold for
+**Established:** `Field_EncounterThresholdRoll` `0x52FEB0` doubles the encounter threshold for
 accessory `0x15` in a byte (`shl bl, 1`). Zone 1 (base 120, limit 60) is the only zone whose
 threshold can pass 127. Its 120..151 wrap to 0..46: seven rolls in ten land on 2..46 steps
 instead of 120 or more, and one in 32 on 0, no encounters until the next roll. Only area 83
