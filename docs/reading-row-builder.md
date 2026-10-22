@@ -165,9 +165,10 @@ Both files are game text: they go in a scratch folder, never the tree.
    Msg_OpenScript indexes". The area script block every held layer carries
    is the kind-0 chunk of tag `0x0` (arena offset 0 = `MessagePools`
    `0x803580`, what `Msg_OpenScript` indexes); `0xC8000` is the area map's
-   chunk (`AreaMap_Header`, `g_area_block_loaded`). The side chunk is
-   written with `0xC8000` as the contract fixes (`AREA_SIDE_TAG`; it is only
-   a key RR matches), the coordinator to confirm.
+   chunk (`AreaMap_Header`, `g_area_block_loaded`). **Settled at the
+   merge (2026-10-22): the contract now says tag 0** and `AREA_SIDE_TAG` is
+   `0x0`; the layer is rebuilt by `setup` so nothing written under the old
+   tag survives.
 2. **The leading `0x0C nn`** is ahead of the first ruby row (above).
 3. **Colour** in ruby rows and at a split page's start (above).
 4. **Pools past FIRST and BATTLE.** The layer carries `0x4000` pools in

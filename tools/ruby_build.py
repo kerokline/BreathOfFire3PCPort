@@ -52,13 +52,12 @@ CHARSET_TOML = os.path.join(DATA, "jp-charset.toml")
 # ---------------------------------------------------------------- the contract (docs/reading-row.md 1)
 
 SIDE_KIND = 18
-# The side chunk's tag names the block it annotates. reading-row.md 1.1 fixes
-# 0xC8000 for an area's script block; the kind-0 chunk that carries the area
-# text in every held layer is tag 0 (the arena's first bytes, 0x803580 +
-# 0 = what Msg_OpenScript indexes; 0xC8000 is AreaMap_Header's chunk). The
-# contract's number is what RR keys on, so it is the one written; the
-# discrepancy is in the hand-back and docs/reading-row-builder.md 6.
-AREA_SIDE_TAG = 0xC8000
+# The side chunk's tag names the block it annotates: the kind-0 chunk that
+# carries the area text in every held layer is tag 0 (the arena's first
+# bytes, 0x803580 + 0 = what Msg_OpenScript indexes), so the side chunk is
+# tag 0 too (reading-row.md 1.1, corrected 2026-10-22 from a staged 0xC8000,
+# which is AreaMap_Header's chunk).
+AREA_SIDE_TAG = 0x0
 AREA_TEXT_TAG = 0x0           # the kind-0 chunk read: the area's script block
 POOL_TAG = 0x4000             # FIRST.DAT's, BATTLE.DAT's (and the other pools') kind-0 chunk
 INSERT_MARK = 0x12            # in a ruby row: the drawn width of the k-th insert below

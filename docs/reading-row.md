@@ -23,8 +23,10 @@ the original loader skips any kind above 3 by its size
 ```
 0x00 u32 kind   18
 0x04 u32 tag    the tag of the kind-0 text chunk the side chunk annotates:
-                0xC8000 for an area's script block (what Msg_OpenScript
-                indexes, src/game/msgbox.cpp), 0x4000 for FIRST.DAT's and
+                0 for an area's script block (arena offset 0 = MessagePools
+                0x803580, what Msg_OpenScript indexes, src/game/msgbox.cpp;
+                corrected 2026-10-22 by FB from the staged 0xC8000, which
+                is AreaMap_Header's chunk), 0x4000 for FIRST.DAT's and
                 BATTLE.DAT's pool
 0x08 u32 size   payload bytes
 0x0C u32 half   0; for the pool tag, the pool half (0 or 1) whose slot
