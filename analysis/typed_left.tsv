@@ -19549,6 +19549,7 @@ src/game/map_layers.cpp	BuildCell	record	Word	cell + 2	1	-	param	no-family	`cell
 src/game/map_layers.cpp	BuildCell	record	SetWord	item + 0x36	1	-	via=Item	no-family	`item`: a draw-pool item	b1-field
 src/game/map_layers.cpp	BuildCell	record	Word	cell + 2	2	-	param	no-family	`cell`: an area-map cell	b1-field
 src/game/map_layers.cpp	BuildCell	record	Word	cell + 2	3	-	param	no-family	`cell`: an area-map cell	b1-field
+src/game/map_layers.cpp	BuildCell	record	Word	cell + 2	4	-	param	no-family	`cell`: an area-map cell, the draw table's key (DIV-0041's 2026-10-21 ring amendment)	wide-ring-end
 src/game/map_layers.cpp	BuildCell	record	Word	item + 0x7E	0	-	via=Item	no-family	`item`: a draw-pool item	b1-field
 src/game/map_layers.cpp	BuildCell	record	Word	item + 0x8E	0	-	via=Item	no-family	`item`: a draw-pool item	b1-field
 src/game/map_layers.cpp	BuildCell	record	Word	item + 0x8E	1	-	via=Item	no-family	`item`: a draw-pool item	b1-field
@@ -19582,6 +19583,9 @@ src/game/map_layers_fuzz.cpp	SelfTestCellTextures	record	SetWord	item + 0x7E	0	-
 src/game/map_layers_fuzz.cpp	SelfTestCellTextures	record	SetWord	item + 0x8E	0	-	stride=0x90	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/map_layers_fuzz.cpp	SelfTestCellTextures	record	Word	AreaMap_Header + (x + width * y + offset * 2) * 2	0	-	base=AreaMap_Header	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/map_layers_fuzz.cpp	SelfTestCellTextures	record	Word	item + 0x8E	0	-	stride=0x90	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
+src/game/map_rim.cpp	Build	record	Word	cell + 2	0	-	via=Cell	no-family	`cell`: an area-map cell in the rim's self-test model (DIV-0041's 2026-10-21 ring amendment)	wide-ring-end
+src/game/map_rim.cpp	Build	record	Word	cell + 2	1	-	via=Cell	no-family	`cell`: an area-map cell in the rim's self-test model (DIV-0041's 2026-10-21 ring amendment)	wide-ring-end
+src/game/map_rim.cpp	Compare	record	Word	ours + 2	0	-	via=Cell	no-family	`ours`: an area-map cell in the rim's self-test model (DIV-0041's 2026-10-21 ring amendment)	wide-ring-end
 src/game/map_scroll.cpp	Field_ViewReset	record	SetWord	quad + 0x36	0	-	via=Items;stride=0x48	no-family	`quad`: a POLY_FT4	b1-field
 src/game/map_scroll.cpp	Field_ViewReset	record	SetWord	quad + 0x46	0	-	via=Items;stride=0x48	no-family	`quad`: a POLY_FT4	b1-field
 src/game/map_scroll.cpp	Field_ViewReset	record	SetWord	angles + 4	0	-	base=Camera_Angles	no-family	`angles`: an SVECTOR	b1-field
