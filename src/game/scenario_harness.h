@@ -79,7 +79,7 @@ constexpr std::uint32_t kEffects = 0x7E11E0;        // Effect_Objects, 20 of 0x8
 // The standard regions of field mode are marked (F); the rest are the cells a
 // group lists as its own region when its functions touch them.
 constexpr std::uint32_t kPacketNext = 0x7E0670;     // Gfx_PacketNext (F): put into the harness's packet buffer
-constexpr std::uint32_t kCameraTurn = 0x905B70;     // (F) CameraTurn_Steps .. Field_EdgeBits .. Field_ScriptFlags2 0x905BA4, Field_InputHeld 0x905BA6
+constexpr std::uint32_t kCameraTurn = 0x905B70;     // (F) CameraTurn_Steps .. Field_StepCount .. Field_ScriptFlags2 0x905BA4, Field_InputHeld 0x905BA6
 constexpr std::uint32_t kCameraTurnSize = 0x38;
 constexpr std::uint32_t kMenuBlock = 0x929ED4;      // (F) MapView_BuildFlags 0x929ED8, the menu block 0x929F00..0x929F11, Field_Kind2Hold 0x929F12
 constexpr std::uint32_t kMenuBlockSize = 0x40;

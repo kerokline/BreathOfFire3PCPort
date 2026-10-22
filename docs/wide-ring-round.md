@@ -1,8 +1,10 @@
 # The wide-ring round: the field's tile ring grown, and the two sweeps drawn mapped
 
-**Status:** STAGED 2026-10-21, not launched (briefs to go in
-`C:\Users\kerok\bof3x-runs\r_ring\`); the owner's three calls answered the
-same day (section 6). The owner decided both halves on
+**Status:** DONE 2026-10-21: built, every group merged on `wide-ring/round`,
+the ledger folded and the end batch's gate measured on `wide-ring/end`
+(section 9); PR next; the owner's play owed. Staged the same day (briefs in
+`C:\Users\kerok\bof3x-runs\r_ring\`); the owner's calls answered the
+same day (section 6, items 1..12). The owner decided both halves on
 2026-10-15 ([`owner-review.md`](owner-review.md), "Decided by the owner, to
 build"): **build IDEAS I37 now** (the ring, RG, without waiting for a picture
 of a far-camera scene) and **map the two sweeps onto the wide picture**
@@ -164,6 +166,50 @@ report means merge; a usage cut resumes with a message naming the next step.
    ([`chapter-jump-save`](HANDOFF.md)), for the three far-camera areas and
    area 172's shade; no new owner route.
 
+**Answered 2026-10-21, in chat, after the groups handed back:**
+
+4. **RM's section 7** ([`wide-ring-read.md`](wide-ring-read.md)): sprites in
+   the grown rows kept hidden (0..0x36); D295's rule kept, the gate decides;
+   the walk is today's plus one, `g = max(0, i + 2 - L)`; a quickload across
+   widths rebuilds the rim, never refuses.
+5. **RG:** `MapView_Redraw` = 2 after a load across widths (not RM's 1),
+   kept.
+6. **SW** ([`wide-sweeps.md`](wide-sweeps.md)): the shade's right-anchored
+   map and the banner's faster slide in the bands, both accepted off the
+   sheets.
+7. **FY** ([`faerie-fix.md`](faerie-fix.md)): the faerie's look and the
+   sides' second draw, accepted off the sheets.
+8. **PB** ([`narrow-pillarbox.md`](narrow-pillarbox.md)): menus opened in a
+   framed area stay framed; area 53 at 426; area 194's close-camera opening
+   framed at 426 - all three as PB recommended.
+9. **Captures:** an agent crafts chapter saves for PB's nine uncaptured
+   areas and tries the three real far-camera scenes (area 167's init, area
+   19's camera-out, chapter 1's scene 3); a scene no crafted save reaches
+   goes to the owner by name.
+10. **After the crafted-save sheets** (group CS; [`narrow-pillarbox.md`](narrow-pillarbox.md)
+    10): **only areas 31, 90 and 198 keep the bars** - the three with real
+    void past the frame; 149, 186, 98 and the camps (53, 153, 154, 192, 194)
+    render fine at the full width and are left unframed (group PX). Area
+    194's first-visit crash under a crafted save is tested against the
+    original and our switches "just in case" (group CR). **Area 19 needs
+    nothing more:** the owner knows its only far camera as the one quick pan,
+    and the zoom the recorded route already captures (`yraallRoad`).
+11. **Area 194's crash** ([`area194-entry.md`](area194-entry.md), group CR):
+    the crafted save's, not ours - Capcom's `Leave` (`0x534030`) on an empty
+    party, unreachable in play. **No guard:** Capcom's behaviour stays; the
+    crafts restore the party (`chapter_jump.py`'s `party='saved'`).
+12. **Garr over the camp's fire** ([`garr-fire.md`](garr-fire.md), group
+    GF; DIV-0071's third amendment): the scene the owner saw is **area 192's
+    camp**; the flames over Garr's arm and weapon, as Capcom's order draws
+    them, kept. The wider reach (the sprite's whole drawn cell box, transparent
+    corners included, stopping a move): **accepted** after the owner's check on
+    the PlayStation in an emulator (2026-10-21): at a camp only Ryu is
+    controlled; he can walk behind the fire (the flames then drawn over him)
+    but not onto the brown pit; the other party members spawn at several
+    spots around the camp, and Garr can spawn close enough to overlap the
+    flames. A stopped move only ever leaves Capcom's order, which is what
+    the PlayStation draws at the fire.
+
 ## 7. Side groups, beside the round (added 2026-10-21)
 
 The other two items of the 2026-10-15 list run as one agent each, beside
@@ -197,3 +243,73 @@ DIV-0041, DIV-0062; [`state-hash.md`](state-hash.md); [`quicksave.md`](quicksave
 for RM and RG), its harness root under `C:\Users\kerok\bof3x-runs\r_ring\<group>`
 (never another session's), the checks that mean done, and the hand-back
 report's shape. Rules 1, 3, 4 and 7 restated.
+
+## 9. The end batch (group END, 2026-10-21)
+
+**Measured** on `wide-ring/end` (the round branch `3296c21f` plus the fold;
+the code is the round's, with one comment changed). Root
+`C:\Users\kerok\bof3x-runs\r_ring\END\` (`setup.py`, `chain.py`, `gate.py`,
+`randcmp.py`, `gate.txt`, `logs\`, `sh\`): ini-less launcher copies `L0..L4`,
+game directories `g0..g4` of the root's own (the install's loose files,
+`DAT` / `BGM` / `SND` as junctions, no saves).
+
+**The fold.** DIV-0151 (FY); DIV-0041 amended 2026-10-21 three times (RG's
+ring, SW's sweeps, PB / PX's pillarbox); DIV-0071's third amendment (GF);
+known-defects D292 narrowed, D300 fixed by DIV-0151, D301's status; IDEAS
+I37 and I38 built; [`owner-review.md`](owner-review.md) 2026-10-21. CI's
+ledger job run locally: `ledger_check.py --verbose` "151 ledger entries, 0
+error(s), 2 note(s)"; `gen_symbols.py`, `tables.py check`, `type1.py
+selftest`, `loc_build.py selftest`, `importer.py check` and `exe_own.py
+check` pass. **`data_census.py --check` and `--strict` failed on the round
+branch**: 27,395 raw sites against the committed 27,391, the four new ones
+RG's reads of an area-map cell's word +2 (`map_layers.cpp` `BuildCell`,
+`map_rim.cpp` `Build` twice and `Compare`). Listed in `typed_left.tsv` as
+no-family, as their peers are, and the census regenerated: both pass, and
+`typed_left.py --check`.
+
+**Self-tests** (`BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original BOF3X_SHADOW='*'`,
+the dev launcher, `--no-config`): launcher exit 0 at `BOF3X_WIDE` unset, 1
+and 2 (1,204, 1,003 and 942 s); `inject: 10087 ours, 0 left original`; every
+`MISMATCH` line `0 MISMATCHES` (1,089 lines at unset, 1,091 at 1 and 2), and
+no other non-zero mismatch line. Among them: `map_rim` 10,040 steps, 0;
+`pillarbox` 82 rounds, 0, the controls refused; the sweeps' map check 17,277,
+0 differences at 0, 53 and 120 columns.
+
+**State hash**, the ten `cn_` routes and `dolphinBoss` at w0, w1 and w2 (the
+`orig3` pairs' conditions: `BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the
+committed skip list, exe host, no overlay; 33 runs, every one exit 0):
+
+- **Narrow against `cn_<route>_orig3` / `_orig3b`:** combat and shop
+  identical on every tick (2,561 and 3,137), as `main`'s `a1020` runs.
+  caughFish, dragonTransform, field_menu, menu_screens and whelpBoss: the
+  same pages as `a1020` (DIV-0092's music pages, the button round's glyphs
+  into VRAM, whelpBoss's `Sound_Banks` page), nothing beyond them.
+  cutsceneAndNue, masterAndManillo and worldMapAndAreaTransition: `a1020`'s
+  pages plus `0x7BB000..0x7BF000` (VRAM shadow), `0x937000` and (two of
+  them) `0x7DE000`, each **at tick 3 only, one tick** - the tick-3 noise
+  class [`state-hash.md`](state-hash.md) 6 records ("VRAM and sound pages at
+  tick 3 came in one run of five"); main's whelpBoss `a1020` run lists the same
+  VRAM-shadow, `0x7DE000` and `0x937000` pages.
+- **Wide against narrow:** `Rand` **equal on every frame** of all eleven
+  routes at 16:9 and 21:9 (1,455 to 14,923 frames). On the ten `cn_` routes
+  **no page outside the picture set differs**: the display and draw-state
+  pages (`0x66B000`, `0x6BE000`, `0x7E0000`, `0x7E1000`, `0x801000`,
+  `0x803000`, `0x903000`, `0x905000`, `0x929000`, `0x92A000`,
+  `0x937000..0x939000`), the sound page `0x7DE000`, `Gfx_TexCache`
+  `0x6C3000` and VRAM-shadow pages - PB's and PX's classes.
+- **`dolphinBoss` wide** differs besides on nine pages: the staged objects
+  (`Sprite_Objects+0x180`, `0x7DF000`, from tick 3,235), `MapView_ScrollX` /
+  `ScenaSc5_LevelB` (`0x92B000`, 6,001..9,092), `Gfx_UnpackScratch`
+  (`0x8E4000..0x8E9000`) and `SpriteCell_Table+0x5E8` (`0x6BF000`). **Not
+  new:** bisected by `BOF3X_WIDE_RING=0` at 1 and 2, the same nine pages
+  over the same ticks, `Rand` equal to narrow on all 14,923 frames, and ring
+  on against ring off differs only on picture, draw-state and sound pages.
+  The ultrawide round's own pair (`cn_dolphinBoss_eb4cz0` / `eb4cz1`,
+  2026-10-14, before this round) differs on the same nine pages: the wide
+  modes' re-staging of the scenes' edge actors (DIV-0122 / DIV-0123), as RG
+  found.
+
+**Result: the gate passes.** No regression; nothing to bisect beyond
+`dolphinBoss`'s known pages. `tools/codegen_same.py` not run (code changed on
+purpose). **Owed:** the owner's play of each change
+([`owner-review.md`](owner-review.md) 2026-10-21).

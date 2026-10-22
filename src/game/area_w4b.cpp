@@ -1109,7 +1109,10 @@ static int PanelX() { return 0xDC + Widescreen_Anchor(); }
 // original 0x428240 (Area172_EffectStates[1]): the word +0x2E + 10; above
 // 0x190 (signed): the byte after MoveScript_Var7 + 1 and state 2. Then
 // Area172_DrawPanel(0xDC, 0xC8) and Area172_DrawShade(+0x2E, 0xC8) (the word
-// read again after the first draw). DIV-0041: the panel's x is PanelX().
+// read again after the first draw). DIV-0041: the panel's x is PanelX(); the
+// shade's x is drawn mapped onto the wide picture (Widescreen_SweepShadeX, I38:
+// its start past the wide left edge, anchored right with the panel from 0xDC
+// on), the word +0x2E and the > 0x190 test Capcom's - the same int when narrow.
 extern "C" void __cdecl Area172_EffectA5Grow(void) {
     unsigned char* const e = Sprite_Current;
     auto* const tE = rv::As<records::EffectObject>(e);
@@ -1119,7 +1122,7 @@ extern "C" void __cdecl Area172_EffectA5Grow(void) {
         e[1] = 2;
     }
     AH_CALL(Area172_DrawPanel)(PanelX(), 0xC8);
-    AH_CALL(Area172_DrawShade)(static_cast<int>(static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x)), 0xC8);
+    AH_CALL(Area172_DrawShade)(Widescreen_SweepShadeX(static_cast<int>(static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x))), 0xC8);
 }
 
 // original 0x428290 (Area172_EffectStates[2]): Area172_DrawPanel(0xDC, 0xC8);

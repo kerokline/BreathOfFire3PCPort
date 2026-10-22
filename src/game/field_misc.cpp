@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/field_misc_callees.h"
+#include "game/map_rim.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -292,10 +293,15 @@ extern "C" long __cdecl MapView_SlopeAt(long x, long y, unsigned long direction)
 // cell is outside the view's ring. The arguments are whole dwords, less
 // MapView_Origin's words sign-extended, in 32 bits (MoveCmd_TestFB's subtract
 // in 16). Returns the whole eax: the masked word, or 0.
+//
+// DIV-0041 (wide-ring): outside Capcom's window but inside the grown ring, the
+// rim's item - every caller textures, draws or allocates draw items with it
+// (docs/wide-ring-read.md 1.3).
 extern "C" unsigned long __cdecl MapView_ItemAt(long x, long y) {
-    const Ring ring = RingCell(static_cast<std::int32_t>(static_cast<U>(x) - static_cast<U>(Short(OriginX()))),
-                               static_cast<std::int32_t>(static_cast<U>(y) - static_cast<U>(Short(OriginZ()))));
-    if (!ring.inside) return 0;
+    const auto dx = static_cast<std::int32_t>(static_cast<U>(x) - static_cast<U>(Short(OriginX())));
+    const auto dz = static_cast<std::int32_t>(static_cast<U>(y) - static_cast<U>(Short(OriginZ())));
+    const Ring ring = RingCell(dx, dz);
+    if (!ring.inside) return map_rim::Active() ? map_rim::RimItemAt(dx, dz) : 0;
     return Word(At(at::MapView_CellItemsAt() + 2u + (ring.column + ring.row * 28u) * 4u)) & 0xFFF;
 }
 

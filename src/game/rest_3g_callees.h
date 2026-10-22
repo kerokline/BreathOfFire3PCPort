@@ -67,7 +67,7 @@ constexpr U kPanelVerticesEnd = 0x65ED48;
 constexpr U kReturnX = 0x7E091C;           // dword: its x
 constexpr U kReturnZ = 0x7E0920;           // dword: its z
 // kFlags2: now Field_ScriptFlags2 (symbols.toml). Field_ScriptFlags2 (u16)
-// kEdgeBits: now Field_EdgeBits (symbols.toml). Field_EdgeBits (u16)
+// kEdgeBits: now Field_StepCount (symbols.toml). Field_StepCount (u16)
 // kYaw: now Camera_Angles (symbols.toml). Camera_Angles[0] (u16)
 // kPitch: now Cond_AngleFB (symbols.toml). Cond_AngleFB (u16)
 

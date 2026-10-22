@@ -26,6 +26,7 @@
 #include "game/magic_s14.h"
 
 #include "game/draw_pool.h"
+#include "game/map_rim.h"
 
 #include <cstdint>
 #include <cstring>
@@ -890,6 +891,8 @@ S14_EXPORT void __cdecl Weretiger_ResetMapView(void) {
             MH_CALL(MapView_CellToMap)(row, col, item);
         }
     }
+    // DIV-0041 (wide-ring): the rim filled, no items (the pool is reset next).
+    if (map_rim::Active()) map_rim::RimFill(false);
     for (unsigned k = 0; k < draw_pool::Count(); ++k) draw_pool::Free()[k] = static_cast<unsigned short>(k);   // DIV-0062: the pool's size
     DrawItemPool_Top = 1;
     MapView_Column = 0x1B;

@@ -79,7 +79,7 @@ descriptor numbers in `0x667590`.
     The other seven get byte `+0 = 0`.
   - The kept object goes to one of eight cells in `Area29_Cells`, chosen by
     `Rand() & 7`. Its `+0x3E` is set from `AreaMap_Elevation`.
-  - Then `Field_EdgeBits` = the low word of (the leader's dword `+0x134`) − 5.
+  - Then `Field_StepCount` = the low word of (the leader's dword `+0x134`) − 5.
   - The weights sum to exactly 64, so the loop's "none kept" exit (index 8)
     is never taken with the shipped table.
 - **Area 33's handlers** zero map cells through `0x579F00` (group DD's cell

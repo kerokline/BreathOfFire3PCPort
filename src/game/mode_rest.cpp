@@ -364,11 +364,11 @@ extern "C" void __cdecl GameMode5_Place(void) {
 
 // original 0x496150 (GameMode5_Steps[7]; PSX 0x80198F48): with Field_Kind2Hold
 // 0 and File_LoadDone (in that order): Draw_OtSlot 6; Field_PartyLoad(0);
-// Party_PlacesByList; Field_EdgeBits 0; unless 0x904AE5 bit 1,
+// Party_PlacesByList; Field_StepCount 0; unless 0x904AE5 bit 1,
 // MapView_SetElevation(AreaMap_Elevation(Field_Kind2X, Field_Kind2Z)); the
 // field's track again (Music_Play(Music_Track, 0xA)) unless 0x904AE5 bit 6,
 // 0x904AE8 bit 3 or the track 0xFF; 0x904AE5 and the event battle 0;
-// Field_ZoneCounterRoll(0); Field_AfterBattleTally. Then, either way,
+// Field_EncounterThresholdRoll(0); Field_AfterBattleTally. Then, either way,
 // Party_ScriptTicks and the two frames; and after the first branch Game_Mode 2,
 // Game_Step 0, Field_Request 0.
 // As the original has it: 0x904AE5 is read twice, before and after the
@@ -380,7 +380,7 @@ extern "C" void __cdecl GameMode5_Leave(void) {
         SH_CALL(Field_PartyLoad)(0);
         SH_CALL(Party_PlacesByList)();
         const unsigned char flags = EventBattle_Flags;
-        Field_EdgeBits = 0;
+        Field_StepCount = 0;
         if (!(flags & 2)) {
             const long z = Field_Kind2Z, x = Field_Kind2X;
             const long height = SH_CALL(AreaMap_Elevation)(x, z);
@@ -421,7 +421,7 @@ extern "C" void __cdecl GameMode5_Leave(void) {
         music_resume::Forget();  // a remembered position is used here or not at all
         EventBattle_Flags = 0;
         EventBattle_Id = 0;
-        SH_CALL(Field_ZoneCounterRoll)(0);
+        SH_CALL(Field_EncounterThresholdRoll)(0);
         SH_CALL(Field_AfterBattleTally)();
         back = true;
     }

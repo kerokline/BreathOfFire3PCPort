@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-20, the day's answers and typed-data stage C's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-21, the wide-ring round's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,72 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-21, the wide-ring round
+
+Built on `wide-ring/round` ([`wide-ring-round.md`](wide-ring-round.md); its
+section 6 holds every call, items 1..12, all answered in chat on
+2026-10-21). Nothing is left to decide; **what is owed is play** of each
+change. The sheets are in `C:\Users\kerok\bof3x-runs\r_ring\<group>\sheets\`
+(never in the tree).
+
+### Decided by the owner (2026-10-21, built)
+
+- **The ring** (DIV-0041's 2026-10-21 RG amendment, IDEAS I37,
+  [`wide-ring.md`](wide-ring.md)): the PSP's 33 x 58 at 16:9 and 21:9,
+  Capcom's 28 x 56 at 4:3; the inset kept; the rim draw-only, sprites in
+  the grown rows hidden; D295's rule kept; the walk today's plus one; a
+  quickload across widths rebuilds the rim, `MapView_Redraw` 2. D292 narrowed
+  to kind 0x8D's first frames, the remainder accepted.
+- **The two sweeps** (DIV-0041's SW amendment, IDEAS I38,
+  [`wide-sweeps.md`](wide-sweeps.md)): the shade's right-anchored map and the
+  banner's faster slide in the bands, accepted off the sheets.
+- **The table faerie** (DIV-0151, D300, [`faerie-fix.md`](faerie-fix.md)):
+  its look and the sides' second draw, accepted off the sheets.
+- **The pillarbox** (DIV-0041's PB / PX amendment,
+  [`narrow-pillarbox.md`](narrow-pillarbox.md) 10..11): only areas 31, 90 and
+  198 framed; menus opened there stay framed; the camps, 98, 149 and 186
+  unframed.
+- **Area 194's first-visit crash** ([`area194-entry.md`](area194-entry.md)):
+  the crafted save's (Capcom's `Leave` on an empty party, unreachable in
+  play); no guard.
+- **Garr over the camp's fire** (DIV-0071's third amendment, D301,
+  [`garr-fire.md`](garr-fire.md)): area 192's camp; the flames over his arm
+  and weapon as Capcom draws them; the wider reach accepted on the owner's
+  PlayStation check.
+
+### To play (owed)
+
+- **The ring:** any field scene at 16:9 and 21:9 with the camera pulled out
+  or turned over low ground (the side edges should not notch); a quicksave
+  taken at one width and loaded at another (`BOF3X_WIDE_RING=0` for the
+  2026-10-13 picture).
+- **The sweeps:** the fishing minigame's *READY!* banner (`caughFish`) and the
+  bad ending's *Fin* wipe (area 172) at 16:9 and 21:9.
+- **The table faerie:** `dolphinBoss`, recipe frames about 960..2,850: the
+  gold faerie whole over the table, no shadow on the plank's front.
+- **The pillarbox, the three-area build:** areas 31 (the lift shaft), 90 (at
+  21:9, framed at 426; its row tips and a menu opened there) and 198 at both
+  wide widths; `BOF3X_PILLARBOX=0` for the full picture.
+- **Garr at the fire:** the camps of area 53 (chapter 6) and 192: his arm
+  and weapon under the flames, as on the PlayStation.
+
+## 2026-10-21, docs/own-evidence-fixes
+
+Three changes the owner asked for, built and not yet played:
+
+- **DIV-0152, the pad reset.** In the field, hold Start and Select for a second.
+  It should go back to the title, as on a Western PlayStation disc, and the log
+  should show a `DIV-0152` line. The recipe `tools/recipes/field_padreset.txt`
+  does this from `adult_ryu`; it was not run, because another session's chain
+  held the game.
+- **DIV-0153, the Holy Mantle in area 83** (D325). Walk area 83 with the Mantle
+  on: fights should come rarely, about 240 or more steps (more when walking).
+  Before the change they mostly came within 2 to 46 steps.
+- **DIV-0154, the extra round** (D63). In a fight where the third member is
+  marked faster early on, and then no longer qualifies while member 1 still
+  does, the third member should not be asked for a command in the next extra
+  round. D63 has the outline.
 
 ## 2026-10-20, typed-data stage C
 
@@ -222,17 +288,16 @@ Gathered at the round's fold-in ([`ultrawide-round.md`](ultrawide-round.md)
 
 ### Decided by the owner, to build (2026-10-15)
 
-- **The faerie through the table** (D300): the PlayStation cuts it the same
-  way (a let's-play frame), so Capcom's. Fix **this scene narrowly** as an
-  Intent DIV, with a note to broaden it to FY's rule
-  ([`faerie-over-table.md`](faerie-over-table.md) 4) if more examples turn up.
-- **The narrow areas** 31, 90 and 53: a **per-scene pillarbox** - framed as a
-  narrow picture on purpose rather than left as black bands.
-- **RG, the ring for far cameras** (D292): **build IDEAS I37 now**.
+- **The faerie through the table** (D300): fix this scene narrowly -
+  built 2026-10-21 as DIV-0151 (the wide-ring round, above).
+- **The narrow areas:** a per-scene pillarbox - built 2026-10-21 for areas
+  31, 90 and 198 (the wide-ring round, above).
+- **RG, the ring for far cameras** (D292): built 2026-10-21 (the wide-ring
+  round, above).
 - **The breath mote and the column's sound** (D293, D294): **leave both** at
   Capcom's bounds (struck; recorded in the defects).
-- **The two sweeps** (IDEAS I38): **map them onto the wide picture** - the
-  logic's x kept, the draw mapped (a DIV-0041 amendment).
+- **The two sweeps** (IDEAS I38): mapped onto the wide picture - built
+  2026-10-21 (the wide-ring round, above).
 - **The 14 unmovable 16:9 band sites** ([`wide-staging.md`](wide-staging.md)
   3): **a policy per kind, not site by site** - leave visible the stationary
   speakers (areas 26, 39, 94, 188), the walks that end in the band (areas 60,

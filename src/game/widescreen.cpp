@@ -31,6 +31,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/pillarbox.h"   // PB (docs/narrow-pillarbox.md): Widescreen_Anchor's one call
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -53,7 +54,7 @@ bool Widescreen_FillsArmed() { return g_fills_armed; }
 float Widescreen_FillX() { return 0.0f - static_cast<float>(Widescreen_Fill()); }
 float Widescreen_FillWidth() { return 320.0f + 2.0f * static_cast<float>(Widescreen_Fill()); }
 float Widescreen_FillRight(float edge) { return edge + static_cast<float>(Widescreen_Fill()); }
-int Widescreen_Anchor() { return static_cast<int>(Widescreen_Fill()); }
+int Widescreen_Anchor() { return static_cast<int>(pillarbox::Anchor(Widescreen_Fill())); }   // PB: to a framed picture's edge
 void Widescreen_BattleTile(unsigned size, int& x, int& w) {
     if (size != kWidescreenFullFrameTile) return;
     const int c = static_cast<int>(Widescreen_Fill());
@@ -84,6 +85,11 @@ static_assert(rule::InsetColumns(53) == 3, "the cell inset lowered by 3 at 53");
 static_assert(rule::BackdropPairs(53) == 1, "one backdrop pair a side at 53");
 static_assert(rule::RangeLo(-200.0f, 53) == -252.0f && rule::RangeHi(520.0f, 53) == 572.0f, "the wide frame range at 53");
 static_assert(rule::RangeLo(-50.0f, 53) == -102.0f && rule::RangeHi(370.0f, 53) == 422.0f, "the narrow frame range at 53");
+// The two sweeps' maps (I38): the ends moved out by the columns, the fixed points kept.
+static_assert(rule::SlideMap(390, 53) == 443 && rule::SlideMap(-70, 53) == -123 && rule::SlideMap(160, 120) == 160 &&
+                  rule::SlideMap(390, 0) == 390 && rule::SlideMap(-50, 0) == -50, "kind 0xD's slide map");
+static_assert(rule::ShadeMap(0, 53) == -53 && rule::ShadeMap(220, 53) == 273 && rule::ShadeMap(400, 120) == 520 &&
+                  rule::ShadeMap(10, 0) == 10 && rule::ShadeMap(410, 0) == 410, "area 172's shade map");
 
 float g_wide_lo = -200.0f, g_wide_hi = 520.0f;     // set by Widescreen_Inject when wide; named only once patched
 float g_narrow_lo = -50.0f, g_narrow_hi = 370.0f;
@@ -638,6 +644,174 @@ void Widescreen_ArmFills() {
                   : loop_ours         ? "on"
                                       : "off (Field_RunTaskRecords is Capcom's, which would not put Capcom's x back)",
                   g_live);
+    Widescreen_CheckSweeps();   // DIV-0041 (I38): the two sweeps' map, below
+}
+
+// ---------------------------------------------------------------------------
+// The two edge sweeps drawn mapped (widescreen.h; DIV-0041 amended, wide-ring
+// round group SW, docs/wide-sweeps.md).
+
+namespace {
+
+// Kind 0xD's records marked this frame: the record and the x +0x2E held when
+// its state queued it, so a record the frame reused or moved some other way
+// is drawn as Capcom's. Thirty entries, as the overlay list has; emptied with
+// it (Field_DrawFrame). Marks are made only while the map is on, so the table
+// stays empty through every self-test and in narrow play.
+struct SweepMark {
+    unsigned char* rec;
+    short x;
+};
+SweepMark g_sweep_marks[30];
+unsigned g_sweep_count = 0;
+// The draw in progress: the overlay whose +0x74 holds the mapped float, and
+// Capcom's float to put back.
+unsigned char* g_sweep_drawn = nullptr;
+std::uint32_t g_sweep_kept = 0;
+// Kind 0xD's half wants Sprite_DrawOverlays (which maps and puts back) and
+// Field_DrawFrame (which empties the marks) ours: set by Widescreen_CheckSweeps.
+bool g_sweep_overlays_ours = false;
+
+// The columns the sweeps map by: the fill columns (0 until Widescreen_ArmFills,
+// so 0 in every self-test, and 0 when narrow), and 0 under
+// BOF3X_ORIGINAL=Widescreen (the faster slide's switch, which the same
+// PatchBytes name sets).
+unsigned SweepColumns() { return g_slide_switch != 0 ? Widescreen_Fill() : 0; }
+unsigned MarkColumns() { return g_sweep_overlays_ours ? SweepColumns() : 0; }
+
+short Word2E(const unsigned char* rec) { return static_cast<short>(rec[0x2E] | rec[0x2F] << 8); }
+
+std::uint32_t FloatOfShort(int v) {
+    const float f = static_cast<float>(static_cast<short>(v));
+    std::uint32_t bits;
+    std::memcpy(&bits, &f, sizeof bits);
+    return bits;
+}
+
+// A log line for a sweep's first and last drawn x (the evidence a run reached
+// it), at most 32 a run.
+void SweepNote(const char* what, int x, int d, int first, int last) {
+    static unsigned logged = 0;
+    if ((x != first && x != last) || logged >= 32) return;
+    ++logged;
+    bof3::Log("DIV-0041    %s drawn mapped: logic x %d drawn at %d (%s)", what, x, d,
+              x == first ? "its first frame" : "its last frame");
+}
+
+}  // namespace
+
+void Widescreen_SweepMark(unsigned char* rec) {
+    if (MarkColumns() == 0) return;
+    for (unsigned i = 0; i < g_sweep_count; ++i)
+        if (g_sweep_marks[i].rec == rec) {
+            g_sweep_marks[i].x = Word2E(rec);
+            return;
+        }
+    if (g_sweep_count >= sizeof g_sweep_marks / sizeof g_sweep_marks[0]) return;   // the list's own limit: drawn as Capcom's
+    g_sweep_marks[g_sweep_count++] = {rec, Word2E(rec)};
+}
+
+void Widescreen_SweepBefore(unsigned char* sprite) {
+    g_sweep_drawn = nullptr;
+    const unsigned c = MarkColumns();
+    if (c == 0) return;
+    for (unsigned i = 0; i < g_sweep_count; ++i) {
+        if (g_sweep_marks[i].rec != sprite) continue;
+        const short x = Word2E(sprite);
+        if (x != g_sweep_marks[i].x) return;
+        const int d = rule::SlideMap(x, c);
+        std::memcpy(&g_sweep_kept, sprite + 0x74, 4);
+        const std::uint32_t bits = FloatOfShort(Sat16(d));
+        std::memcpy(sprite + 0x74, &bits, 4);
+        g_sweep_drawn = sprite;
+        SweepNote("kind 0xD's slide", x, d, 360, -50);
+        return;
+    }
+}
+
+void Widescreen_SweepAfter(unsigned char* sprite) {
+    if (g_sweep_drawn == nullptr) return;
+    if (g_sweep_drawn == sprite) std::memcpy(sprite + 0x74, &g_sweep_kept, 4);
+    g_sweep_drawn = nullptr;
+}
+
+void Widescreen_SweepClear() { g_sweep_count = 0; }
+
+int Widescreen_SweepShadeX(int x) {
+    const unsigned c = SweepColumns();
+    if (c == 0) return x;
+    const int d = rule::ShadeMap(static_cast<short>(x), c);
+    SweepNote("area 172's shade", static_cast<short>(x), d, 10, 410);
+    return static_cast<int>(static_cast<std::uint16_t>(Sat16(d)));
+}
+
+void Widescreen_CheckSweeps() {
+    // The slide draws 360..160 and 130..-50 (390 less 30 a frame, held at
+    // 160; idle once at -70 or less); the shade 10..410 (0 plus 10 a frame,
+    // the script on above 400). Checked over a wider sweep, by ones: the
+    // identity at 0 columns, the ends and fixed points where the rule puts
+    // them, never decreasing, and the slide never drawn nearer the centre
+    // than Capcom's x.
+    static const unsigned kColumns[] = {0, rule::ColumnsForAspect(16, 9), rule::ColumnsForAspect(21, 9)};
+    unsigned checks = 0;
+    for (int which = 0; which < 2; ++which)
+        for (const unsigned c : kColumns) {
+            const char* const what = which == 0 ? "kind 0xD's slide" : "area 172's shade";
+            const auto map = [&](int x) { return which == 0 ? rule::SlideMap(x, c) : rule::ShadeMap(x, c); };
+            const int ci = static_cast<int>(c);
+            const auto want = [&](const char* at, int x, int got, int expect) {
+                ++checks;
+                if (got != expect)
+                    bof3::Fatal("widescreen: the sweep map's check: %s at %u columns, %s x %d: %d, want %d", what, c, at, x,
+                                got, expect);
+            };
+            if (which == 0) {
+                want("the start", rule::kSlideStart, map(rule::kSlideStart), rule::kSlideStart + ci);
+                want("the end", rule::kSlideEnd, map(rule::kSlideEnd), rule::kSlideEnd - ci);
+                want("the hold", rule::kSlideHold, map(rule::kSlideHold), rule::kSlideHold);
+            } else {
+                want("the start", rule::kShadeStart, map(rule::kShadeStart), rule::kShadeStart - ci);
+                want("the panel's edge", rule::kShadePanel, map(rule::kShadePanel), rule::kShadePanel + ci);
+                want("the end", rule::kShadeEnd, map(rule::kShadeEnd), rule::kShadeEnd + ci);
+            }
+            const int lo = which == 0 ? -100 : -70, hi = which == 0 ? 420 : 430;
+            int last = -0x10000;
+            for (int x = lo; x <= hi; ++x) {
+                const int d = map(x);
+                if (c == 0) want("the identity", x, d, x);
+                if (d < last) want("monotonic", x, d, last);
+                if (which == 0 && x > rule::kSlideHold) want("outward", x, d >= x ? 1 : 0, 1);
+                if (which == 0 && x < rule::kSlideHold) want("outward", x, d <= x ? 1 : 0, 1);
+                if (which == 1 && x >= rule::kShadePanel) want("anchored", x, d, x + ci);
+                last = d;
+            }
+        }
+    // The shade's entry as wired: the same int back while the map is off
+    // (which it is here unless the view is wide and the switch on).
+    const unsigned live = SweepColumns();
+    for (int x = -0x8000; x <= 0xFFFF; x += 7) {
+        const int got = Widescreen_SweepShadeX(x);
+        const int expect =
+            live == 0 ? x : static_cast<int>(static_cast<std::uint16_t>(Sat16(rule::ShadeMap(static_cast<short>(x), live))));
+        ++checks;
+        if (got != expect) bof3::Fatal("widescreen: the sweep map's check: the shade's entry at x %d: %d, want %d", x, got, expect);
+    }
+    if (g_sweep_count != 0) bof3::Fatal("widescreen: the sweep map's check: %u kind-0xD marks before play", g_sweep_count);
+    g_sweep_overlays_ours =
+        bof3::IsEnabled(bof3::addr::Sprite_DrawOverlays) && bof3::IsEnabled(bof3::addr::Field_DrawFrame);
+    if (g_live)
+        bof3::Log("DIV-0041    the two sweeps drawn mapped: shade %s, slide %s; kind 0xD's slide [-70, 390] onto [%d, %d] "
+                  "(160 fixed), area 172's shade [0, 400] onto [%d, %d] (anchored right from 220) (the map's check: %u, 0 "
+                  "differences at 0, 53 and 120 columns)",
+                  live != 0 ? "on" : "off (BOF3X_ORIGINAL=Widescreen)",
+                  MarkColumns() != 0 ? "on"
+                  : live == 0        ? "off (BOF3X_ORIGINAL=Widescreen)"
+                                     : "off (Sprite_DrawOverlays or Field_DrawFrame is Capcom's)",
+                  rule::SlideMap(-70, g_live), rule::SlideMap(390, g_live), rule::ShadeMap(0, g_live),
+                  rule::ShadeMap(400, g_live), checks);
+    else
+        bof3::Log("DIV-0041    the two sweeps' map check: %u, 0 differences at 0, 53 and 120 columns (the view is narrow: off)",
+                  checks);
 }
 
 // The quicksave (SP-G, docs/quicksave.md, the graphics participant): the faster slide's split

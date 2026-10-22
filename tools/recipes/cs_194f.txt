@@ -1,0 +1,361 @@
+# Area 194's first visit (chapter 13 run 2): the scenario's own change from area 155 into 194, then
+# the close camera pulled back (Camera_Distance 0xF277 at f0460, 0 by f0490). The chapter-jump save
+# cs194f (tools/chapter_jump.py make cs194f), the party restored from the donor's saved-party record;
+# loaded as ending17.txt loads; shots named by recipe frame. Wide-ring round, group CR (2026-10-21;
+# docs/area194-entry.md).
+# save cs194f
+wait 53
+hold start 4
+wait 67
+hold start 6
+wait 47
+hold circle 4
+wait 54
+wait 5
+wait 4
+wait 4
+wait 5
+wait 6
+wait 5
+wait 5
+wait 27
+hold circle 5
+wait 85
+hold circle 2
+wait 12
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0400 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0405 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0410 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0415 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0420 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0425 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0430 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0435 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0440 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0445 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0450 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0455 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0460 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0465 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0470 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0475 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0480 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0485 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0490 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0495 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0500 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0505 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0510 1
+wait 4
+peek 0x904EFC u16 area
+peek 0x66C7E8 u16 mode
+peek 0x903840 u16 cam
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x929EC0 u8 members
+peek 0x904062 u8 list0
+peek 0x904063 u8 list1
+peek 0x904064 u8 list2
+peek 0x8034F0 u8 drawn
+peek 0x802D74 u32 x
+peek 0x802D78 u32 z
+shot f0515 1
+end

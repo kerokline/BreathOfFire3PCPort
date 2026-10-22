@@ -195,7 +195,7 @@ U RandEffect(const U*, U answer) {
 // group's case 1 reached the shrink's 4 times in 4,000 rounds: control C21).
 U ClockEffect(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 4 == 0) SetUL(Mem(Rest4a_Clock_addr), UL(Mem(Rest4a_Clock_addr)) + 1 + (n >> 8) % 64);
+    if (n % 4 == 0) SetUL(Mem(Game_BattleCount_addr), UL(Mem(Game_BattleCount_addr)) + 1 + (n >> 8) % 64);
     // and one in four the area moved (CommuSim_AreaEnter reads it again after its
     // three adds; the group's case 2 reached that 9 times: C16, round-14-cleanup.md
     // section 7)
@@ -320,7 +320,7 @@ unsigned char* Bld(U b) { return Mem(Community_Buildings_addr + 8 * b); }
 // clock; the counts small.
 void SeedCommunity() {
     const U clock = sh::Next() % 3 == 0 ? sh::Next() : sh::Next() % 0x400;
-    SetUL(Mem(Rest4a_Clock_addr), clock);
+    SetUL(Mem(Game_BattleCount_addr), clock);
     const auto nearClock = [clock]() { return clock - PickOf(0, 1, 4, 5, 9, 10, 11, 19, 20, 21, 39, 40, 60, 120, sh::Next() % 0x80, sh::Next()); };
     for (U s = Rest4a_StampGrow_addr; s <= Rest4a_StampLevelDark_addr; s += 4) SetUL(Mem(s), nearClock());
     unsigned used = 0;
@@ -473,7 +473,7 @@ void SeedTickD() {
     Bld(0)[0] = 0xD;
     unsigned used = 0;
     for (U i = 0; i < at::kRecordCount; ++i) used += Rec(i)[0] != 0;
-    const U clock = UL(Mem(Rest4a_Clock_addr));
+    const U clock = UL(Mem(Game_BattleCount_addr));
     for (U i = 0; i < at::kRecordCount; ++i) {
         unsigned char* const r = Rec(i);
         if (r[0] == 0) {
@@ -577,7 +577,7 @@ void Disturb(U h) {
     const U v = h >> 3;
     switch (sh::DisturbCase(h, 10)) {
     case 0: Field_Slots[16 * (v % 8) + 1] = static_cast<unsigned char>(v >> 3); break;   // Field_RunSlot's +1 after its copy
-    case 1: SetUL(Mem(Rest4a_Clock_addr), UL(Mem(Rest4a_Clock_addr)) + (v % 64)); break;  // the clock
+    case 1: SetUL(Mem(Game_BattleCount_addr), UL(Mem(Game_BattleCount_addr)) + (v % 64)); break;  // the clock
     case 2: Game_AreaNumber = static_cast<unsigned short>((v & 1) ? 0xAF + (v >> 1) % 12 : v >> 1); break;
     case 3:   // a record's +2 / +3; half the time the +3 of the first in use with a clear high nibble (TickKindD's current)
         if (v & 0x100) {

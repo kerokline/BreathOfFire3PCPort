@@ -431,7 +431,7 @@ extern "C" unsigned char __cdecl Area140_BlockedAhead(long x, long z) {
 //   6   Camera_Distance at 0: state 7; else - 0x40; ScriptFlags_Set40 and
 //       MapView_Redraw 2 either way;
 //   7   ScriptFlags_Clear40, Field_ScriptFlags & 0xED8F, the leader's +0x48
-//       = 0, Flags_Clear(story, 0x66), Field_ZoneCounterRoll(0), kind and
+//       = 0, Flags_Clear(story, 0x66), Field_EncounterThresholdRoll(0), kind and
 //       state 0;
 //   10  Msg_OpenScript(1), Field_Request 2, state 0xB;
 //   11  Field_Request not 2: ScriptFlags_Clear40, kind and state 0;
@@ -481,7 +481,7 @@ extern "C" void __cdecl Area140_Tail41(void) {
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xED8F);
         B(ObjTrio_addr + 0x48) = 0;
         AH_CALL(Flags_Clear)(StoryFlags(), 0x66);
-        AH_CALL(Field_ZoneCounterRoll)(0);
+        AH_CALL(Field_EncounterThresholdRoll)(0);
         B(AreaW0a_TailKind_addr) = 0;
         B(AreaW0c_TailState_addr) = 0;
         return;

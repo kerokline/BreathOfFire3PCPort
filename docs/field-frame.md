@@ -101,7 +101,7 @@ cleared, and then:
   indexes `Field_MoveSpeeds` by, so the animation's pace follows the move
   speed's index (what that looks like in game is unobserved).
 
-At the end `Field_EdgeBitsPrev` takes `Field_EdgeBits` - the PSX copies
+At the end `Field_StepCountPrev` takes `Field_StepCount` - the PSX copies
 `0x80143F22` to `0x80146874` there; `0x5187C0` XORs the two to find bits that
 changed.
 
@@ -160,8 +160,8 @@ callees` in `symbols.toml`), all `hypothesis`:
 
 New data: `Field_ObjectHandlers` (`0x65F5F8`, 11 entries, then data),
 `Sprite_ScreenMargins` (`0x663B28`), `Field_ScriptFlags2` (`0x905BA4`, the
-PSX `0x80146256` beside `Field_ScriptFlags`' `0x80146254`), `Field_EdgeBits`
-/ `Field_EdgeBitsPrev` (`0x905B80` / `0x8034E8`).
+PSX `0x80146256` beside `Field_ScriptFlags`' `0x80146254`), `Field_StepCount`
+/ `Field_StepCountPrev` (`0x905B80` / `0x8034E8`).
 
 **`MoveScript_SetTurnTarget` returns a value.** It returns 0 in `al` when
 context `+8` is `0xFFFF` (`0x517EAA`) and 1 after opening a message through

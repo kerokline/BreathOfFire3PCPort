@@ -381,8 +381,8 @@ Args Seed(unsigned k) {
         SeedRecord(r);
         if (k == kTraitsK) {
             RandomTraits();
-            if (Next() % 6 == 0) r[at::kTrait] = 0xFF;
-            else if (Half()) r[at::kTrait] = static_cast<unsigned char>(Next() % 8);
+            if (Next() % 6 == 0) r[at::kMaster] = 0xFF;
+            else if (Half()) r[at::kMaster] = static_cast<unsigned char>(Next() % 8);
             if (Next() % 6 == 0) g_traits[0] = 0xE;
         }
         if (k == kWeaponK && Often()) r[at::kWeapon] = kWeaponIds[Next() % sizeof kWeaponIds];

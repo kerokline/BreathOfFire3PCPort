@@ -270,6 +270,33 @@ void Overlay(const char* text) {
     else Display_TextOut(0, 0, text);
 }
 
+// DIVERGENCE DIV-0152: the Western discs' pad reset. Every US and European
+// boot EXE tests the held word for Start + Select (0x900) in its frame loop
+// (SLUS_004.22 0x8014ABB8..0x8014AC3C; the SLES 0x8014ABCC); the JP disc's,
+// which the PC was built from, has no such test, and neither has BOF3.exe.
+// Held 60 frames - a release on any frame starts the count again - with the
+// loader idle (0x80162D00), the US restarts task 0. The PC's loads are
+// synchronous (File_LoadDone is mov eax, 1), so the wait is always met; the
+// restart is the PC's own, F9's (Game_RestartFlag, read by the loop). 1
+// through PatchBytes("PadReset") in WinMain_Inject.
+std::uint8_t g_pad_reset = 0;
+unsigned g_pad_reset_held = 0;
+
+void PadReset_Frame() {
+    if ((Input_Held & 0x900) != 0x900) {
+        g_pad_reset_held = 0;
+        return;
+    }
+    if (g_pad_reset_held != 60) {
+        ++g_pad_reset_held;
+        return;
+    }
+    g_pad_reset_held = 0;
+    Game_RestartFlag = 1;
+    bof3::Log("DIV-0152    Start + Select held 60 frames: back to the title at Frame_Counter %lu",
+              static_cast<unsigned long>(Frame_Counter));
+}
+
 }  // namespace
 
 bool WinMain_InputAllowed() { return !g_loop_ours || !g_background || g_foreground; }
@@ -743,6 +770,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     // whose first five bytes jmp to our Task_RunAll (or, under
                     // BOF3X_ORIGINAL, are Capcom's). docs/task_sched.md section 5.
                     bof3::orig::Task_RunAll();
+                    if (g_pad_reset) PadReset_Frame();
                 } else if (bof3::QuickMenu_Frame()) {
                     // F5's quick menu (draft D) in place of the pause lines.
                 } else {
@@ -874,6 +902,12 @@ void WinMain_Inject() {
         if (!AddVectoredExceptionHandler(0, TracedUnhandled)) bof3::Fatal("exittrace: no vectored handler");
         bof3::Log("exittrace   ExitProcess, TerminateProcess, PostQuitMessage and MessageBoxA log their callers; "
                   "breakpoints and single steps no handler took are logged");
+    }
+    {
+        // DIV-0152: Start + Select held a second returns to the title.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("PadReset", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_pad_reset)), &was, &is, 1);
+        bof3::Log("DIV-0152    Start + Select held 60 frames returns to the title, as on the Western discs (on unless the line above says OFF)");
     }
     BOF3_INJECT(Game_WinMain);
     BOF3_INJECT(Game_WndProc);

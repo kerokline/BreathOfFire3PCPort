@@ -332,7 +332,7 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
             for (unsigned i = 0; i < ticks; ++i) g.tick();
         }
     }
-    Field_EdgeBitsPrev = Field_EdgeBits;
+    Field_StepCountPrev = Field_StepCount;
 }
 
 // original 0x57B780: the four extra party objects' screen update (PSX
@@ -459,6 +459,7 @@ extern "C" void __cdecl Field_DrawFrame(void) {
     BandRestore();
     Sprite_OverlayListCount = 0;
     Sprite_DrawListCount = 0;
+    Widescreen_SweepClear();   // DIV-0041 (I38): the sweep marks go with the overlay list
 }
 
 // original 0x592F20: the overlay list, sorted by height (+0x3E, s16) and
@@ -493,7 +494,9 @@ extern "C" void __cdecl Sprite_DrawOverlays(void) {
         Sprite_Current = sprite;
         SetLong(sprite + 0x74, static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(Word(sprite + 0x2E)))));
         rv::Current<records::SpriteObject>()->screen_yf = static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(static_cast<std::uint16_t>(rv::Current<records::SpriteObject>()->screen_y))));
+        Widescreen_SweepBefore(sprite);   // DIV-0041 (I38): a marked sweep drawn at its mapped x
         g.sprite_draw();
+        Widescreen_SweepAfter(sprite);    // ... and Capcom's +0x74 put back
         ++i;
     } while (i < Sprite_OverlayListCount);
 }
@@ -779,8 +782,8 @@ const Region kRegions[] = {
     {Address(&Field_ScriptFlags), 2},
     {Address(&Field_ScriptFlags2), 2},
     {Address(&Field_MemberCount), 1},
-    {Address(&Field_EdgeBits), 2},
-    {Address(&Field_EdgeBitsPrev), 2},
+    {Address(&Field_StepCount), 2},
+    {Address(&Field_StepCountPrev), 2},
     {Address(MapView_Origin), 4},
     {Address(&Draw_OtSlot), 1},
     {Address(&Draw_SortOnX), 1},

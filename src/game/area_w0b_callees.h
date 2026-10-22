@@ -36,7 +36,7 @@ using U = std::uint32_t;
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high word of +0x34
 // kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
-// kLeaderEdge: now ObjTrio_addr + 0x134 (symbols.toml). the leader's dword +0x134 (Field_EdgeBits = it - 5)
+// kLeaderEdge: now ObjTrio_addr + 0x134 (symbols.toml). the leader's dword +0x134 (Field_StepCount = it - 5)
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMsgMode: now AreaW0a_TailKind (symbols.toml). the tail kind byte (Field_ModeTailKinds' index)
 // kMsgState: now AreaW0c_TailState (symbols.toml). s8: the field hook's state

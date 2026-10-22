@@ -126,6 +126,12 @@ extern "C" void __cdecl BattleRoundEnd_FasterStep() {
 // and 1 and enemies 0..6 (as the original has it - neither loop reaches the
 // last of its array; section 4 of the doc), the round counted (0x904B90), the
 // extra round cleared, Battle_TickCounters, and 0x904AA1 on to the chain.
+//
+// DIVERGENCE DIV-0154: 1 through PatchBytes("ExtraRoundClear") in
+// BattleTurnSteps_Inject, after the self-test. The loops then clear the mark
+// from all three members and all eight enemies, the setter's bounds (D63).
+static std::uint8_t g_extra_round_clear = 0;
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_CheckFaster() {
     if (BattlePhases_B7A == 0 && BattleFlow_AnimGate == 0) {
         switch (g.mark_faster() & 0xFF) {
@@ -149,8 +155,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Check
             break;
         }
     }
-    for (unsigned i = 0; i < 2; ++i) Member(i)[at::kFlags + 1] &= 0x7F;
-    for (unsigned i = 0; i < 7; ++i) At(Battle_Enemies_addr + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
+    const unsigned members = g_extra_round_clear ? 3 : 2, enemies = g_extra_round_clear ? 8 : 7;
+    for (unsigned i = 0; i < members; ++i) Member(i)[at::kFlags + 1] &= 0x7F;
+    for (unsigned i = 0; i < enemies; ++i) At(Battle_Enemies_addr + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
     SetLong(At(at::kRounds), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kRounds))) + 1));
     BattlePhases_B7A = 0;
     g.tick_counters();
@@ -509,6 +516,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
 
 void BattleTurnSteps_Inject() {
     if (bof3::WantsShadow("battle_turn_steps")) battle_turn_steps::SelfTest();
+    {
+        // DIV-0154: after the self-test, which compared Capcom's bounds.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ExtraRoundClear", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_extra_round_clear)), &was, &is, 1);
+        bof3::Log("DIV-0154    the round's end clears the faster-side mark from every member and enemy (on unless the line above says OFF)");
+    }
     BOF3_INJECT(BattleRoundEnd_Step);
     BOF3_INJECT(BattleRoundEnd_FasterStep);
     BOF3_INJECT(BattleRoundEnd_CheckFaster);

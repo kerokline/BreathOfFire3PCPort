@@ -8,7 +8,22 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**`main` is `dc921a0c`** (2026-10-21): since `61023304` it took the typed-data round's stage C (PR #100, below; no
+**The wide-ring round, 2026-10-21, built on `wide-ring/round`** (off `main` `31249d0c`, which took PR #103, a
+cleanup with DIV-0149 and DIV-0150; the round's end on `wide-ring/end`; **PR next**, nothing pushed;
+[`wide-ring-round.md`](wide-ring-round.md), its section 6 every owner call, section 9 the end batch's gate). In the
+wide modes the field's draw walks the PSP's 33 x 58 view ring - Capcom's 28 x 56 kept at every width for the logic,
+a draw-only rim beside it, `BOF3X_WIDE_RING=0` the reversal (IDEAS I37, [`wide-ring.md`](wide-ring.md)); effect kind
+0xD's slide and area 172's shade are drawn mapped onto the wide picture, their logic untouched (I38,
+[`wide-sweeps.md`](wide-sweeps.md)); areas 31, 90 and 198 are pillarboxed, the owner's list
+([`narrow-pillarbox.md`](narrow-pillarbox.md)) - all three DIV-0041 amendments; area 175's table faerie is drawn over
+its table (DIV-0151, D300, [`faerie-fix.md`](faerie-fix.md)); Garr is drawn under the camp's fire in two more camps
+(DIV-0071's third amendment, D301, [`garr-fire.md`](garr-fire.md)). D292 narrows to kind 0x8D's first frames (the
+owner accepts the rest). Area 194's first-visit crash was the crafted save's, Capcom's `Leave` on an empty party; no
+guard ([`area194-entry.md`](area194-entry.md)). Crafted chapter saves (`tools/chapter_jump.py`, group CS) reached the
+far-camera scenes and the pillarboxed areas for the captures. **Owed: the owner's play of each change**
+([`owner-review.md`](owner-review.md), 2026-10-21).
+
+**`main` was `dc921a0c`** before PR #103 (2026-10-21): since `61023304` it took the typed-data round's stage C (PR #100, below; no
 behaviour change, the machine code identical) and the reading-row round's staging (PR #101,
 [`reading-row-round.md`](reading-row-round.md): furigana, IDEAS I21, and a second language, I50, in a half-height row
 above each dialogue row; group SL's census [`second-language-census.md`](second-language-census.md) run and the

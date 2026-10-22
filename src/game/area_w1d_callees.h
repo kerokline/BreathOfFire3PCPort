@@ -59,7 +59,7 @@ constexpr std::uint32_t kTextRecords = 0x904CE0;
 // MoveCmd_TestFB), +8 (the pose the step hook compares), +0x2E / +0x30 (the
 // cell words Effect_Spawn takes), +0x36 / +0x3A (the high words of x and z),
 // +0x89 (Character_IndexById's index), the dword +0x134 (areas 63 / 64
-// store it less 5 to Field_EdgeBits).
+// store it less 5 to Field_StepCount).
 // kLeader: now ObjTrio (symbols.toml).
 // kLeaderPose: now ObjTrio[0].direction (symbols.toml).
 // kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).

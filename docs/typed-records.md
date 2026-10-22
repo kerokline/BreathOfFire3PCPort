@@ -1060,7 +1060,7 @@ Padding:
 | `+0x1C` | u8 | `survive` | the working copy's +0x9C (battle_setup kPByte9C; battle_damage kPSurvive) |
 | `+0x1D` | u8 | `halving` | the halving bits, a Stat_AddResist pass per bit (char-stats.md 2 Char_RecalcStats step 4) |
 | `+0x1E` | u8 | `hp_scale` | the max-HP scale (char-stats.md 2; item-use.md 2 ItemUse_HpScaleUp, to 9) |
-| `+0x1F` | u8 | `trait` | the trait byte, 0xFF none (char-stats.md 2 Char_ApplyTraits) |
+| `+0x1F` | u8 | `master` | the master the character is apprenticed to, 0xFF none: set by MasterJoin_Step5Apply, cleared by MasterQuit_Step5Apply (rest_2d.md); its list applied by Char_ApplyTraits (char-stats.md 2) |
 | `+0x20` | CharStatBlock | `stats` | the effective block (char-stats.md 2) |
 | `+0x40` | CharStatBlock | `base` | its base copy, copied over +0x20 first by Char_RecalcStats (char-stats.md 2) |
 
@@ -1083,7 +1083,7 @@ Padding:
 |---|---|---|---|
 | `+0x00` | u8 | `in_use` | non-zero in use (every reader; CommuName_CountSlots, rest_4d.md) |
 | `+0x01` | u8 | `slot` | the building it is placed in, 1..8 (rest_4a.cpp Rec(i)[1] == building + 1; field_e2_callees.h "the record it names (1-based)"; rest_4b.md "the slot"), or a loose kind 0, 9, 0xA, 0xB (rest_4a.md) |
-| `+0x04` | u32 | `stamp` | a time from the clock 0x904134 (rest_4a.md; rest_4a.cpp:1037 age = Rest4a_Clock - +4; rest_4b.md); "a dword" (rest_4e.md) |
+| `+0x04` | u32 | `stamp` | a stamp of the battle count 0x904134 (rest_4a.md; rest_4a.cpp:1037 age = Game_BattleCount - +4; rest_4b.md); "a dword" (rest_4e.md) |
 
 ### `CommunityBuilding` (`0x8` bytes)
 

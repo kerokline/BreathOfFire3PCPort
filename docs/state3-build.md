@@ -637,7 +637,7 @@ slices' copy. 11.3's rule stands under the exe host's header: commit
    logs - loads, injects, patches, pad, music path, window - differs. By the
    recipe, the fight ends and the walk begins about tick 6660 (`hold right`,
    `up+right 71` ... after the last `circle`), so the difference at 6985 is
-   some 300 ticks into that walk, where the pages' `Field_EdgeBits`,
+   some 300 ticks into that walk, where the pages' `Field_StepCount`,
    `CameraTurn_*`, `MapView_Origin` and `Camera_Angles` say a map edge or a
    camera turn is reached - not the battle's end and not the music resume.
    **For the re-recorded pair:** record it with `BOF3X_STATEHASH_DUMP=6984,6990,7100`

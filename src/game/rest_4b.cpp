@@ -218,7 +218,7 @@ extern "C" void __cdecl CommuTail_TimedGift(void) {
         {0x4E, 0x1D, 0}, {0x51, 0x1E, 0}, {0x5B, 8, 0},    {0xC9, 0x19, 3}, {0x1F4, 0x1A, 3},
     };
     const unsigned arg = AreaW0c_TailSub;
-    const U elapsed = Rest4a_Clock - L(at::kMembers + 4 + 8 * arg);
+    const U elapsed = Game_BattleCount - L(at::kMembers + 4 + 8 * arg);
     int k = 0;
     while (k < 20 && elapsed >= kRows[k].bound) ++k;
     --k;
@@ -235,7 +235,7 @@ extern "C" void __cdecl CommuTail_TimedGift(void) {
             Field_Request = 2;
             return;
         }
-        const U clock = Rest4a_Clock;
+        const U clock = Game_BattleCount;
         PutL(Member(AreaW0c_TailSub, "CommuTail_TimedGift") + 4, clock);
     }
     StateBy(1);
@@ -284,7 +284,7 @@ extern "C" void __cdecl CommuTail_RandomGift(void) {
     if (mark == 3) {
         SH_CALL(Msg_OpenScript)(0x52);
         const unsigned a = AreaW0c_TailSub;
-        PutL(Member(a, "CommuTail_RandomGift") + 4, Rest4a_Clock);
+        PutL(Member(a, "CommuTail_RandomGift") + 4, Game_BattleCount);
         B(Member(AreaW0c_TailSub, "CommuTail_RandomGift") + 2) = 0;
         PutW(Rest4d_Pointer + 0x88, 0x51);
     } else if (mark == 2) {
@@ -314,7 +314,7 @@ extern "C" void __cdecl CommuTail_RandomGift(void) {
             const unsigned char* const name = SH_CALL(Item_NamePtr)(category, item);
             CopyName(name);
             SH_CALL(Msg_OpenScript)(0x4F);
-            const U clock = Rest4a_Clock;
+            const U clock = Game_BattleCount;
             PutL(Member(AreaW0c_TailSub, "CommuTail_RandomGift") + 4, clock);
             B(Member(AreaW0c_TailSub, "CommuTail_RandomGift") + 2) = 0;
             PutW(Rest4d_Pointer + 0x88, 0x51);
@@ -967,13 +967,13 @@ extern "C" void __cdecl CommuBoard_Confirm(void) {
             if (!same) {
                 for (U r = Community_Records_addr; r < at::kMembersEnd; r += at::kMemberStride) {
                     if (B(r + 1) != arg) continue;
-                    PutL(r + 4, Rest4a_Clock);
+                    PutL(r + 4, Game_BattleCount);
                     B(r + 2) = 0;
                     B(r + 3) = 0;
                     arg = AreaW0c_TailSub;
                 }
                 B(SlotToWrite(arg, "CommuBoard_Confirm") + 3) = 0;
-                PutL(SlotToWrite(AreaW0c_TailSub, "CommuBoard_Confirm") + 4, Rest4a_Clock);
+                PutL(SlotToWrite(AreaW0c_TailSub, "CommuBoard_Confirm") + 4, Game_BattleCount);
                 arg = AreaW0c_TailSub;
             }
             B(SlotToWrite(arg, "CommuBoard_Confirm")) = static_cast<unsigned char>(static_cast<unsigned char>(Rest4b_Pick) + 4);
@@ -1673,7 +1673,7 @@ extern "C" unsigned char __cdecl CommuBoard_PlaceRecord(unsigned back) {
     const unsigned idx = SH_CALL(Commu_NthInSlot)(arg, nth);
     const U r = Member(idx & 0xFF, "CommuBoard_PlaceRecord");
     B(r + 1) = static_cast<unsigned char>(Rest4b_Pick);
-    PutL(r + 4, Rest4a_Clock);
+    PutL(r + 4, Game_BattleCount);
     const unsigned char state = Rest4b_BoardState;
     B(r + 2) = 0;
     B(r + 3) = 0;

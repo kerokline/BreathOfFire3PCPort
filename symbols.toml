@@ -282,7 +282,7 @@ psx = 0x801CB228
 name = "Ability_Records"
 status = "evidence"
 evidence = "read 2026-09-26 from the readers, not measured: name[16] then the eight parameter bytes, 24 a record by ability id - Menu_DrawSkillRow's caller 0x59D200 passes 0x65C4C8 + 0x18 id as the name, BattleAction_AbilityCheck 0x42F680 copies 16 bytes from 0x65C4C8 + 24 id to the banner, Skill_ApCost reads + 0x12 and Skill_FlagIndex + 0x14 at this base. PSX: Skill_FlagIndex's boot twin reads 0x801CB234 + 16 id for the + 0x14 word, which puts the JP record (name[8], then the same eight bytes) at 0x801CB228. Fields: tables.toml abilities."
-note = "The same bytes as NameTable_Abilities, framed as the code reads them. Whether a 228th record (id 227, name at 0x65DA10) has parameter bytes is open: dump 0x65DA10..0x65DA2F."
+note = "The same bytes as NameTable_Abilities, framed as the code reads them. 228 records: id 227 (name at 0x65DA10) is a full record, a byte copy of id 226, ending exactly at Magic080_GlyphCells 0x65DA28 (measured 2026-10-21; tables.py locate finds 228 in every held disc build)."
 
 # --- item-adjacent tables (2026-09-26, the table catalog's research; addresses only - fields and counts in tables.toml where known) ---
 
@@ -373,7 +373,7 @@ evidence = "u16 sound ids by hit class + 7 * critical: Battle_PlayHitSound 0x454
 pc = 0x658930
 name = "Shop_Records"
 status = "evidence"
-evidence = "23-byte records by shop number (object + 0x1C, 0x929EC3): a u8 count, then (u8 category, u8 item) pairs - ShopMode_Begin 0x57F520, ShopTrade_Open 0x5818D0 (shop_states.cpp, docs/shop_states.md). Starts exactly where NameTable_Accessories ends. Count unread; at most 50 to ItemUse_Handlers."
+evidence = "23-byte records by shop number (object + 0x1C, 0x929EC3): a u8 count, then (u8 category, u8 item) pairs - ShopMode_Begin 0x57F520, ShopTrade_Open 0x5818D0 (shop_states.cpp, docs/shop_states.md). Starts exactly where NameTable_Accessories ends. Count unread by any reader. Measured 2026-10-21: the table is 0x480 bytes to ItemUse_Handlers, as on the US disc (0x801CA28C to the ability records 0x801CA70C); records 0..39 hold stock, 40..49 are all zero, and 50 x 23 = 1,150 rounded up to a dword is exactly 0x480 - so 50 slots, ten empty, fits better than 40 and 232 bytes of padding."
 
 [[data]]
 pc = 0x658F48
@@ -397,7 +397,7 @@ evidence = "u8 by roll sum: NewGame_RollGrowth 0x588AC0. Count unread; at most 5
 pc = 0x667548
 name = "Char_TraitLists"
 status = "evidence"
-evidence = "pointers by a character's trait byte (record + 0x1F; 0xFF or a null pointer none) to (kind, amount) byte pairs ended by kind 0xE, innate resistances and percentages: Char_ApplyTraits 0x590800 (char_stats.cpp, docs/char-stats.md). Count unread; at most 18 to Area_Descriptors."
+evidence = "pointers by a character's trait byte (record + 0x1F; 0xFF or a null pointer none) to (kind, amount) byte pairs ended by kind 0xE, innate resistances and percentages: Char_ApplyTraits 0x590800 (char_stats.cpp, docs/char-stats.md). Count unread; at most 18 to Area_Descriptors. 2026-10-21: the byte is the master (rest_2d.md: MasterJoin_Step5Apply sets it, MasterQuit_Step5Apply clears it to 0xFF), so these are the masters' bonus lists; the name is older."
 
 [[data]]
 pc = 0x8034F4
@@ -4371,7 +4371,7 @@ ret = "void"
 params = "void"
 impl = "src/game/field_frame.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x517490..0x517633 (419 bytes), cdecl, no arguments, one indirect call (Field_ObjectHandlers by object byte +1), every jump internal. Nothing with Field_ScriptFlags2 bit 10. Else each of the 30 Sprite_Objects with flag bit 0, as Sprite_Current and Field_ActiveMember, scratch byte 3 cleared: with no timed move (+9) and context +0x80 bit 5 - bit 4 set, MoveScript_SetTurnTarget and, when it returns non-zero and Sprite_Current +7 lacks bit 3, +0x85 = direction, a turn to face ObjTrio (+7 bit 1 clear) and Sprite_FaceDirection, +0x85 bit 0 for Sprite_Current +1 0x0A; bit 4 clear, Field_ObjectIdle. Otherwise context bit 0 Field_ObjectLinked (and nothing after); +0x9C above 0x1E with no timed move Field_ObjectIdleLong; else the handler. Then, for Sprite_Current not type 0x0A: context bit 6 a tick (Sprite_ScriptTick with flag bit 4, else Sprite_ScriptTickOnce) unless +7 bit 5; bit 3 Sprite_FaceDirection and the bit cleared; else, unless +7 bit 5, max(+0x84 - 2, 0) + 1 Sprite_ScriptTick. Finally Field_EdgeBitsPrev = Field_EdgeBits. The PSX FUN_801A16E0 term for term. Nine callers. Call trace all_b 8,846, hidden_b 12,165 calls."
+evidence = "disasm 2026-09-22, 0x517490..0x517633 (419 bytes), cdecl, no arguments, one indirect call (Field_ObjectHandlers by object byte +1), every jump internal. Nothing with Field_ScriptFlags2 bit 10. Else each of the 30 Sprite_Objects with flag bit 0, as Sprite_Current and Field_ActiveMember, scratch byte 3 cleared: with no timed move (+9) and context +0x80 bit 5 - bit 4 set, MoveScript_SetTurnTarget and, when it returns non-zero and Sprite_Current +7 lacks bit 3, +0x85 = direction, a turn to face ObjTrio (+7 bit 1 clear) and Sprite_FaceDirection, +0x85 bit 0 for Sprite_Current +1 0x0A; bit 4 clear, Field_ObjectIdle. Otherwise context bit 0 Field_ObjectLinked (and nothing after); +0x9C above 0x1E with no timed move Field_ObjectIdleLong; else the handler. Then, for Sprite_Current not type 0x0A: context bit 6 a tick (Sprite_ScriptTick with flag bit 4, else Sprite_ScriptTickOnce) unless +7 bit 5; bit 3 Sprite_FaceDirection and the bit cleared; else, unless +7 bit 5, max(+0x84 - 2, 0) + 1 Sprite_ScriptTick. Finally Field_StepCountPrev = Field_StepCount. The PSX FUN_801A16E0 term for term. Nine callers. Call trace all_b 8,846, hidden_b 12,165 calls."
 
 [[func]]
 pc = 0x57B780
@@ -4466,19 +4466,19 @@ evidence = "disasm 2026-09-22: Field_MembersFrame ORs its low byte with Field_Sc
 
 [[data]]
 pc = 0x905B80
-name = "Field_EdgeBits"
+name = "Field_StepCount"
 psx = 0x80143F22
 ctype = "unsigned short"
 status = "hypothesis"
-evidence = "disasm 2026-09-22: Field_ObjectsFrame copies it to Field_EdgeBitsPrev after the objects, as FUN_801A16E0 copies 0x80143F22 to 0x80146874; 0x5187C0 XORs the low bytes of the two and tests single bits - a change since the last pass. 16 functions use it."
+evidence = "disasm 2026-09-22: Field_ObjectsFrame copies it to Field_StepCountPrev after the objects, as FUN_801A16E0 copies 0x80143F22 to 0x80146874; 0x5187C0 XORs the low bytes of the two and tests single bits - a change since the last pass. 16 functions use it. What it counts (2026-10-21): the leader's steps toward the next random encounter - Field_LeaderStepLands adds 1 a finished step (2 when facing 2 or 6), Field_EncounterDue compares it (7/10 when walking) with the threshold at ObjTrio + 0x134, a battle's end zeroes it (docs/field-event.md). Named Field_EdgeBits until then."
 
 [[data]]
 pc = 0x8034E8
-name = "Field_EdgeBitsPrev"
+name = "Field_StepCountPrev"
 psx = 0x80146874
 ctype = "unsigned short"
 status = "hypothesis"
-evidence = "disasm 2026-09-22: written by Field_ObjectsFrame from Field_EdgeBits once per pass; read by 0x5187C0 against it. 5 functions use it."
+evidence = "disasm 2026-09-22: written by Field_ObjectsFrame from Field_StepCount once per pass; read by 0x5187C0 against it. 5 functions use it."
 
 # group A callees
 
@@ -5709,13 +5709,13 @@ impl = "src/game/field_event.cpp"
 
 [[func]]
 pc = 0x52FEB0
-name = "Field_ZoneCounterRoll"
+name = "Field_EncounterThresholdRoll"
 psx = 0x801B4CC4
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned keep"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x120 bytes: the word at 0x802E74 (ObjTrio +0x134) from the zone Area_ZoneAt(leader x, z) finds: 0 with Field_ScriptFlags bit 0x20 or a zone whose byte 0x660A24[zone * 2] is 0; kept when keep and it is non-zero and below that base; else base + min(Rand() & 0x1F, 0x660A25[zone * 2]), doubled if a member has accessory 0x15 and halved if one has 0x14 (0x535310(id, 3, n)), in 8 bits. What the counter counts is a guess (steps to an encounter?), unchecked in game. Callers 0x41F8E0 0x4959BF 0x4961EA 0x52DD8D. psx_pair call-anchored."
+evidence = "disasm 2026-09-22, 0x120 bytes: the word at 0x802E74 (ObjTrio +0x134) from the zone Area_ZoneAt(leader x, z) finds: 0 with Field_ScriptFlags bit 0x20 or a zone whose byte 0x660A24[zone * 2] is 0; kept when keep and it is non-zero and below that base; else base + min(Rand() & 0x1F, 0x660A25[zone * 2]), doubled if a member has accessory 0x15 and halved if one has 0x14 (0x535310(id, 3, n)), in 8 bits. What the counter counts is a guess (steps to an encounter?), unchecked in game. Callers 0x41F8E0 0x4959BF 0x4961EA 0x52DD8D. psx_pair call-anchored. What it is (2026-10-21): the threshold for the next random encounter, against which Field_EncounterDue compares Field_StepCount; accessory 0x15 is the Holy Mantle, 0x14 the Bell Collar; the doubling is capped at 0xFF by DIV-0153. Named Field_ZoneCounterRoll until then."
 impl = "src/game/field_event.cpp"
 
 [[func]]
@@ -5726,7 +5726,7 @@ psx_overlay = "GAME.EMI#0"
 ret = "const unsigned char *"
 params = "unsigned x, unsigned z"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x52 bytes: walks the 8-byte records at [0x668D80 + Game_AreaNumber * 4] until x in [r0, r2] and z in [r1, r3] and returns that record; no end test (a record that matches nothing loops forever). Its byte +4 is the zone Field_ZoneCounterRoll indexes by. psx_pair call-anchored."
+evidence = "disasm 2026-09-22, 0x52 bytes: walks the 8-byte records at [0x668D80 + Game_AreaNumber * 4] until x in [r0, r2] and z in [r1, r3] and returns that record; no end test (a record that matches nothing loops forever). Its byte +4 is the zone Field_EncounterThresholdRoll indexes by. psx_pair call-anchored."
 impl = "src/game/field_event.cpp"
 
 [[func]]
@@ -7579,7 +7579,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/mode_flow.cpp"
-evidence = "disasm 2026-09-22, 0xE1 bytes: Game_Mode 1. Field_ScriptFlags2 bit 3 off, Area_Enter(pending area, x, z, flags); input bit 8: mode 8; else the pending kind 0x937F98 - 0xFF nothing, 0xFE Draw_PassFlags 0, else Transition_Start(kind), Field_WaitTransition(1) and with input bit 1 the entry list 0x5951D0(Kind2 x, z); then 0x904EE0 = 0xA (input bit 1), 0x14 (area 0xBD) or 0; Field_ZoneCounterRoll(1) unless area 0xBD; bit 0x40 off, Field_Request 0, mode 2. hidden_b: 12 calls."
+evidence = "disasm 2026-09-22, 0xE1 bytes: Game_Mode 1. Field_ScriptFlags2 bit 3 off, Area_Enter(pending area, x, z, flags); input bit 8: mode 8; else the pending kind 0x937F98 - 0xFF nothing, 0xFE Draw_PassFlags 0, else Transition_Start(kind), Field_WaitTransition(1) and with input bit 1 the entry list 0x5951D0(Kind2 x, z); then 0x904EE0 = 0xA (input bit 1), 0x14 (area 0xBD) or 0; Field_EncounterThresholdRoll(1) unless area 0xBD; bit 0x40 off, Field_Request 0, mode 2. hidden_b: 12 calls."
 
 [[func]]
 pc = 0x4967F0
@@ -9758,7 +9758,7 @@ ret = "unsigned char"
 params = "unsigned member, unsigned kind, unsigned value"
 impl = "src/game/event_objs.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x535310..0x535388 (0x79 bytes), no calls: the record 0x903A70 + Character_IndexById[member byte] * 0xA4; kind byte 1: al = +0x12 == value; 2: how many of +0x13..+0x15; 3: how many of +0x16, +0x17; any other: 0. al only (the rest of eax is the caller's). PSX 0x801C48EC the same (its record base 4 lower). Callers Field_EquipTick, 0x534D6C, and Field_ZoneCounterRoll (docs/field-event.md). Shop route 561 calls."
+evidence = "disasm 2026-09-23, 0x535310..0x535388 (0x79 bytes), no calls: the record 0x903A70 + Character_IndexById[member byte] * 0xA4; kind byte 1: al = +0x12 == value; 2: how many of +0x13..+0x15; 3: how many of +0x16, +0x17; any other: 0. al only (the rest of eax is the caller's). PSX 0x801C48EC the same (its record base 4 lower). Callers Field_EquipTick, 0x534D6C, and Field_EncounterThresholdRoll (docs/field-event.md). Shop route 561 calls."
 
 [[func]]
 pc = 0x535390
@@ -9868,7 +9868,7 @@ ret = "void"
 params = "unsigned char *record"
 impl = "src/game/char_stats.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-23, 0x590800..0x59091B plus its 14-entry jump table to 0x590953 (0x154 bytes), against the PSX 0x80165290: the byte + 0x1F (0xFF none) indexes the pointer table 0x667548 (null none) of (kind, amount) byte pairs ended by kind 0xE; kinds 0..8 Stat_AddResist(record + 0x2F + kind, amount), 9..13 Stat_AddCap100(the same), above 13 skipped. Called only by Char_RecalcStats. The name is a guess at what the per-character lists are."
+evidence = "disasm 2026-09-23, 0x590800..0x59091B plus its 14-entry jump table to 0x590953 (0x154 bytes), against the PSX 0x80165290: the byte + 0x1F (0xFF none) indexes the pointer table 0x667548 (null none) of (kind, amount) byte pairs ended by kind 0xE; kinds 0..8 Stat_AddResist(record + 0x2F + kind, amount), 9..13 Stat_AddCap100(the same), above 13 skipped. Called only by Char_RecalcStats. The lists are the masters' bonuses: the byte + 0x1F is the master (2026-10-21; rest_2d.md MasterJoin_Step5Apply / MasterQuit_Step5Apply), so the name \"traits\" is older than that reading."
 
 [[func]]
 pc = 0x590960
@@ -10953,7 +10953,7 @@ ret = "unsigned char"
 params = "void"
 impl = "src/game/event_ops.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x530030..0x5301E2 (0x1B3 bytes), cdecl. The zone (Area_ZoneAt) +4, the counter ObjTrio +0x134 against Field_EdgeBits (times 7/10 walking), ObjTrio +0x138 bit 0, the word 0x929EE0, member bit 6; on foot the cell +9 steps on is 0, else 0x591F30(4, 0) with Sprite_Current put back and 0x535C50 per member. Named by its caller: Field_LeaderWalk then sets up 0x5317F0 and the exit 0x190000. Shop route: 94 calls."
+evidence = "disasm 2026-09-23, 0x530030..0x5301E2 (0x1B3 bytes), cdecl. The zone (Area_ZoneAt) +4, the counter ObjTrio +0x134 against Field_StepCount (times 7/10 walking), ObjTrio +0x138 bit 0, the word 0x929EE0, member bit 6; on foot the cell +9 steps on is 0, else 0x591F30(4, 0) with Sprite_Current put back and 0x535C50 per member. Named by its caller: Field_LeaderWalk then sets up 0x5317F0 and the exit 0x190000. Shop route: 94 calls."
 
 [[func]]
 pc = 0x5301F0
@@ -18593,7 +18593,7 @@ ret = "void"
 params = "void"
 impl = "src/game/worldmap_area.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x4037B0..0x40387A (0xCB: a five-byte jmp 0x4037C0, then the body), cdecl, no arguments: area 29's descriptor init (+0x40 of 0x5EE270, 0x667590 entry 29; Area_Enter calls it). Rand() & 0x3F against the byte chances Area29_Weights (16 12 12 8 8 4 2 2, sum 64) picks one of the first eight Sprite_Objects records (0xA4 bytes); the other seven get byte +0 = 0. The kept one: Rand() & 7 into Area29_Cells, +0x34 = x << 16, +0x38 = z << 16, +0x3E = the word of AreaMap_Elevation(+0x34, z << 16). Then Field_EdgeBits = the low word of the dword 0x802E74 (the leader's +0x134) - 5. PSX twin from the sibling's names/area_records.toml (area 29, kind init). docs/worldmap_area.md section 1."
+evidence = "disasm 2026-09-25, 0x4037B0..0x40387A (0xCB: a five-byte jmp 0x4037C0, then the body), cdecl, no arguments: area 29's descriptor init (+0x40 of 0x5EE270, 0x667590 entry 29; Area_Enter calls it). Rand() & 0x3F against the byte chances Area29_Weights (16 12 12 8 8 4 2 2, sum 64) picks one of the first eight Sprite_Objects records (0xA4 bytes); the other seven get byte +0 = 0. The kept one: Rand() & 7 into Area29_Cells, +0x34 = x << 16, +0x38 = z << 16, +0x3E = the word of AreaMap_Elevation(+0x34, z << 16). Then Field_StepCount = the low word of the dword 0x802E74 (the leader's +0x134) - 5. PSX twin from the sibling's names/area_records.toml (area 29, kind init). docs/worldmap_area.md section 1."
 
 [[func]]
 pc = 0x403CE0
@@ -19255,7 +19255,7 @@ ret = "void"
 params = "void"
 impl = "src/game/event_leader.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x52E580..0x52E9C4 (0x445 bytes, recursive descent, every jump internal), cdecl, no arguments; reached only by 0x52E129's jmp. +7 run counter (pace 4: up to 0x11; else 0); pace saved; Field_EquipTick unless Field_InputFlags bit 0; Field_Bit20Tick, Field_FloorDamage; Field_Tile89(0) / Field_Tile8A(0) / Field_TileD0 / Field_TileA4 (the last with MoveCmd_TestFB) end it; on foot: cell 0xAF -> Field_LeaderAnimation, Field_ChangeArea(0x937F82, 0x903860, 0x90384C, 0x905B88), 0x904EE0 = 0, 0x937F98 = 0xC; Field_ScriptFlags2 bit 13 -> Field_ScriptFlags |= 0x100 and stop; cell 0xC0 -> Area_LinkAt; input bit 1: the edge test (Field_DirectionSteps * +0x70 + position against 0x20000 and (AreaMap_Header[0/1] - 3) << 16) -> Sprite_EnsureAnimation, Field_ChangeArea(0x802290, 0x7E091C, 0x7E0920, 4); then AreaMap_CellsAll(.., 0xA7, 0) -> Area_LinkAt, Field_Request 5; AreaMap_CellsNone(.., 0xA6, 0) zero -> the return point 0x904148 (0x904152 = 0); Field_ScriptFlags2 bit 5 -> xor, Field_JumpStart, +9 - 1, Field_LeaderStepTick, +2 = 2; else Field_EdgeBits + 1 (+2 on directions 2 / 6), Sprite_ClearSteps, F3Divisor / FAWord 0, Field_EncounterDue (unless input bit 0 or flags2 & 0x60) -> state 5 and flags2 bit 12; pace 3, Field_LeaderEffectTest(saved pace), Scenario_ArriveHook (non-zero: stop), Field_Bit80Tick, Field_LeaderWalk while (Field_InputHeld & (0x903580 | 0xF000)) and flags bit 8 / flags2 bit 6 clear; else standing (+0x137 = 0, +2 = 1). Queue: shop, worldmap, combat."
+evidence = "disasm 2026-09-25, 0x52E580..0x52E9C4 (0x445 bytes, recursive descent, every jump internal), cdecl, no arguments; reached only by 0x52E129's jmp. +7 run counter (pace 4: up to 0x11; else 0); pace saved; Field_EquipTick unless Field_InputFlags bit 0; Field_Bit20Tick, Field_FloorDamage; Field_Tile89(0) / Field_Tile8A(0) / Field_TileD0 / Field_TileA4 (the last with MoveCmd_TestFB) end it; on foot: cell 0xAF -> Field_LeaderAnimation, Field_ChangeArea(0x937F82, 0x903860, 0x90384C, 0x905B88), 0x904EE0 = 0, 0x937F98 = 0xC; Field_ScriptFlags2 bit 13 -> Field_ScriptFlags |= 0x100 and stop; cell 0xC0 -> Area_LinkAt; input bit 1: the edge test (Field_DirectionSteps * +0x70 + position against 0x20000 and (AreaMap_Header[0/1] - 3) << 16) -> Sprite_EnsureAnimation, Field_ChangeArea(0x802290, 0x7E091C, 0x7E0920, 4); then AreaMap_CellsAll(.., 0xA7, 0) -> Area_LinkAt, Field_Request 5; AreaMap_CellsNone(.., 0xA6, 0) zero -> the return point 0x904148 (0x904152 = 0); Field_ScriptFlags2 bit 5 -> xor, Field_JumpStart, +9 - 1, Field_LeaderStepTick, +2 = 2; else Field_StepCount + 1 (+2 on directions 2 / 6), Sprite_ClearSteps, F3Divisor / FAWord 0, Field_EncounterDue (unless input bit 0 or flags2 & 0x60) -> state 5 and flags2 bit 12; pace 3, Field_LeaderEffectTest(saved pace), Scenario_ArriveHook (non-zero: stop), Field_Bit80Tick, Field_LeaderWalk while (Field_InputHeld & (0x903580 | 0xF000)) and flags bit 8 / flags2 bit 6 clear; else standing (+0x137 = 0, +2 = 1). Queue: shop, worldmap, combat."
 
 [[func]]
 pc = 0x52E9D0
@@ -54285,7 +54285,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w0b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-27, 0x402DB0..0x402E7A (0xCB), cdecl, capstone to the last instruction, group AR0B. Area 20's init (the descriptor 0x5E6C58's +0x40): a jmp 0x402DC0, then Area29_PickFieldObject 0x4037B0's body over Area20_Weights 0x5E6C4C and Area20_Cells 0x5E6C3C (Rand & 0x3F against the chances; the other seven of the first eight Sprite_Objects +0 = 0; the kept one to a cell by Rand & 7 with AreaMap_Elevation; Field_EdgeBits = the leader's +0x134 - 5). PSX twin: area 20 init. docs/area_w0b.md."
+evidence = "disasm 2026-09-27, 0x402DB0..0x402E7A (0xCB), cdecl, capstone to the last instruction, group AR0B. Area 20's init (the descriptor 0x5E6C58's +0x40): a jmp 0x402DC0, then Area29_PickFieldObject 0x4037B0's body over Area20_Weights 0x5E6C4C and Area20_Cells 0x5E6C3C (Rand & 0x3F against the chances; the other seven of the first eight Sprite_Objects +0 = 0; the kept one to a cell by Rand & 7 with AreaMap_Elevation; Field_StepCount = the leader's +0x134 - 5). PSX twin: area 20 init. docs/area_w0b.md."
 
 [[func]]
 pc = 0x402E80
@@ -64924,7 +64924,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w1d.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B720..0x40B7EA (0xcb bytes), cdecl: area 63 +0x40 init: a 5-byte jmp over 11 nops; Rand & 0x3F walked through the 8 weights Area63_Weights (the first above what is left; none: 8); byte +0 of field objects 0..7 but that one cleared; the one (if below 8) put at Area63_Positions[Rand & 7] (bytes << 16 to +0x34 / +0x38), word +0x3E = AreaMap_Elevation there; Field_EdgeBits = the leader's dword 0x802E74 - 5. PSX twin 0x801F2D2C (names/area_records.toml). docs/area_w1d.md."
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B720..0x40B7EA (0xcb bytes), cdecl: area 63 +0x40 init: a 5-byte jmp over 11 nops; Rand & 0x3F walked through the 8 weights Area63_Weights (the first above what is left; none: 8); byte +0 of field objects 0..7 but that one cleared; the one (if below 8) put at Area63_Positions[Rand & 7] (bytes << 16 to +0x34 / +0x38), word +0x3E = AreaMap_Elevation there; Field_StepCount = the leader's dword 0x802E74 - 5. PSX twin 0x801F2D2C (names/area_records.toml). docs/area_w1d.md."
 
 [[func]]
 pc = 0x40B7F0
@@ -66711,7 +66711,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w1f.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA072), 0x40D4B0..0x40D57A (0xCB bytes), cdecl: area 72 +0x40 init: a jmp over 11 nops; Rand() & 0x3F walked down Area72_Weights (8), the first it falls below chosen (none: 8); Sprite_Objects 0..7 but it get +0 = 0; the chosen one at Area72_Cells[Rand() & 7] (bytes << 16), +0x3E = AreaMap_Elevation there; Field_EdgeBits = the dword 0x802E74 less 5 either way. PSX twin: names/area_records.toml area 72 (0x801F2D2C). docs/area_w1f.md."
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA072), 0x40D4B0..0x40D57A (0xCB bytes), cdecl: area 72 +0x40 init: a jmp over 11 nops; Rand() & 0x3F walked down Area72_Weights (8), the first it falls below chosen (none: 8); Sprite_Objects 0..7 but it get +0 = 0; the chosen one at Area72_Cells[Rand() & 7] (bytes << 16), +0x3E = AreaMap_Elevation there; Field_StepCount = the dword 0x802E74 less 5 either way. PSX twin: names/area_records.toml area 72 (0x801F2D2C). docs/area_w1f.md."
 
 [[func]]
 pc = 0x40D580
@@ -68248,7 +68248,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w3c.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41C890..0x41C95A (0xCB bytes), cdecl: area 124 +0x40 init: a jmp over 11 nops; area 72s code (Area72_PlaceRandomObject) over Area124_Weights (8) and Area124_Cells (8 pairs): Rand() & 0x3F walked down the weights, the first it falls below chosen (none: 8); Sprite_Objects 0..7 but it get +0 = 0; the chosen one at Area124_Cells[Rand() & 7] (bytes << 16), +0x3E = AreaMap_Elevation there; Field_EdgeBits = the dword 0x802E74 less 5 either way. PSX twin: names/area_records.toml (0x801F2D2C). docs/area_w3c.md."
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41C890..0x41C95A (0xCB bytes), cdecl: area 124 +0x40 init: a jmp over 11 nops; area 72s code (Area72_PlaceRandomObject) over Area124_Weights (8) and Area124_Cells (8 pairs): Rand() & 0x3F walked down the weights, the first it falls below chosen (none: 8); Sprite_Objects 0..7 but it get +0 = 0; the chosen one at Area124_Cells[Rand() & 7] (bytes << 16), +0x3E = AreaMap_Elevation there; Field_StepCount = the dword 0x802E74 less 5 either way. PSX twin: names/area_records.toml (0x801F2D2C). docs/area_w3c.md."
 
 [[func]]
 pc = 0x41C960
@@ -69509,7 +69509,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w3b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0x41BF40..0x41C096 (0x157), cdecl, capstone to the last instruction, group AR3B. Area121_LeaderStates 1. Field_State +0x137 = 1; +9 counts down through Field_LeaderStepTick (a tail jump). At 0: Field_Bit20Tick, Field_FloorDamage; with Field_InputFlags bit 0 the cell (words +0x36, +0x3A) by AreaMap_ByteAt: 0xAF Field_ChangeArea(word 0x937F82, dword 0x903860, dword 0x90384C, byte 0x905B88), 0x904EE0 = 0, 0x937F98 = 0xC; 0xC0 Area_LinkAt. Field_EdgeBits + 1 (+ 2 for facings 2, 6); 0x415640; Scenario_ArriveHook(+0x34, +0x38) not 0: +2 = 0. Else Field_Bit80Tick; outside Field_ScriptFlags bit 8 / Field_ScriptFlags2 bit 6, Field_InputHeld & (word 0x903582 | word 0x903580 | 0xF000): a tail jump to Area121_LeaderControl; else +0x137 = +2 = 0. docs/area_w3b.md."
+evidence = "disasm 2026-09-28, 0x41BF40..0x41C096 (0x157), cdecl, capstone to the last instruction, group AR3B. Area121_LeaderStates 1. Field_State +0x137 = 1; +9 counts down through Field_LeaderStepTick (a tail jump). At 0: Field_Bit20Tick, Field_FloorDamage; with Field_InputFlags bit 0 the cell (words +0x36, +0x3A) by AreaMap_ByteAt: 0xAF Field_ChangeArea(word 0x937F82, dword 0x903860, dword 0x90384C, byte 0x905B88), 0x904EE0 = 0, 0x937F98 = 0xC; 0xC0 Area_LinkAt. Field_StepCount + 1 (+ 2 for facings 2, 6); 0x415640; Scenario_ArriveHook(+0x34, +0x38) not 0: +2 = 0. Else Field_Bit80Tick; outside Field_ScriptFlags bit 8 / Field_ScriptFlags2 bit 6, Field_InputHeld & (word 0x903582 | word 0x903580 | 0xF000): a tail jump to Area121_LeaderControl; else +0x137 = +2 = 0. docs/area_w3b.md."
 
 [[func]]
 pc = 0x41C0A0
@@ -70101,7 +70101,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0x4154E0..0x415636 (0x157), cdecl, capstone to the last instruction, group AR2E. Area104_LeaderStates 1: Field_State +0x137 = 1; +9 counts the step out through Field_LeaderStepTick; then the tick functions, the exit cell 0xAF (Field_ChangeArea to the pending area) and link cell 0xC0 (Area_LinkAt), Field_EdgeBits, Area104_StopMotion, Scenario_ArriveHook, Field_Bit80Tick, and a held key a tail jump to Area104_LeaderIdle. docs/area_w2e.md."
+evidence = "disasm 2026-09-28, 0x4154E0..0x415636 (0x157), cdecl, capstone to the last instruction, group AR2E. Area104_LeaderStates 1: Field_State +0x137 = 1; +9 counts the step out through Field_LeaderStepTick; then the tick functions, the exit cell 0xAF (Field_ChangeArea to the pending area) and link cell 0xC0 (Area_LinkAt), Field_StepCount, Area104_StopMotion, Scenario_ArriveHook, Field_Bit80Tick, and a held key a tail jump to Area104_LeaderIdle. docs/area_w2e.md."
 
 [[func]]
 pc = 0x415640
@@ -71522,7 +71522,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w3e.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F7C0..0x41F95F (0x1A0 bytes), cdecl: Field_ModeTailKinds 41: the signed state 0..11 through the 12-entry jump table 0x41F930 (inside the extent): party drop-in, Field_ScriptFlags | 0x1270, leader +0x48, flag 0x66; Camera_Distance to 0x680 by 0x40; while Field_Request 0 Input_Held saved to 0x903850 and its high nibble remapped by Area140_ButtonRemap; back to 0 by 0x40; disarm with Field_ZoneCounterRoll(0); message 1. docs/area_w3e.md."
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F7C0..0x41F95F (0x1A0 bytes), cdecl: Field_ModeTailKinds 41: the signed state 0..11 through the 12-entry jump table 0x41F930 (inside the extent): party drop-in, Field_ScriptFlags | 0x1270, leader +0x48, flag 0x66; Camera_Distance to 0x680 by 0x40; while Field_Request 0 Input_Held saved to 0x903850 and its high nibble remapped by Area140_ButtonRemap; back to 0 by 0x40; disarm with Field_EncounterThresholdRoll(0); message 1. docs/area_w3e.md."
 
 [[func]]
 pc = 0x41F960
@@ -72883,7 +72883,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w2f.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR2F), 0x417580..0x41764A (0xCB bytes), cdecl: area 110 +0x40: a jmp over eleven nops to 0x417590; Area72_PlaceRandomObject code over Area110_Cells / Area110_Weights (a Rand() & 0x3F weighted pick of field objects 0..7, the rest +0 0, the chosen at Area110_Cells[Rand() & 7] with its ground; Field_EdgeBits = leader +0x134 - 5). PSX twin: names/area_records.toml. docs/area_w2f.md."
+evidence = "disasm 2026-09-28 (round ten group AR2F), 0x417580..0x41764A (0xCB bytes), cdecl: area 110 +0x40: a jmp over eleven nops to 0x417590; Area72_PlaceRandomObject code over Area110_Cells / Area110_Weights (a Rand() & 0x3F weighted pick of field objects 0..7, the rest +0 0, the chosen at Area110_Cells[Rand() & 7] with its ground; Field_StepCount = leader +0x134 - 5). PSX twin: names/area_records.toml. docs/area_w2f.md."
 
 [[func]]
 pc = 0x417650
@@ -77166,7 +77166,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w4e.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42A8D0..0x42AA77 (0x1A7 bytes), cdecl: Area189_LeaderStates 0 (pairs_propagated callers 0x801F4DE0, section b880f463 = AREA189.EMI; the tool files it under area 190 by its table, whose EMI has 4 code bytes): Gte_SetGeomOffset(0xA0, 0xB9), Gte_SetGeomScreen(0x12C), Camera_Angles[0] 0xFD12, facing +8 = byte 0x904153, Camera_Distance 0xF280, MapView_Redraw 4, Cond_AngleFB low word ((2 - it) & 0xF) << 8, Field_Kind2X / Z, +0x3C = the height 0x511C10(x, z) << 16, Area189_ZeroSpeeds, +0x24 / +0x4B 0, Field_EdgeBits 0; the pace (Rand() & 0x1F) + 0x96 doubled by a member with Actor_EquipCount(m, 3, 0x15), halved by (m, 3, 0x14), doubled with Cond_ByteFF 0, to the word 0x802E74; story flags 0x75, 0x76, 0x8B..0x8E cleared; +2 + 1. 14 calls. docs/area_w4e.md."
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42A8D0..0x42AA77 (0x1A7 bytes), cdecl: Area189_LeaderStates 0 (pairs_propagated callers 0x801F4DE0, section b880f463 = AREA189.EMI; the tool files it under area 190 by its table, whose EMI has 4 code bytes): Gte_SetGeomOffset(0xA0, 0xB9), Gte_SetGeomScreen(0x12C), Camera_Angles[0] 0xFD12, facing +8 = byte 0x904153, Camera_Distance 0xF280, MapView_Redraw 4, Cond_AngleFB low word ((2 - it) & 0xF) << 8, Field_Kind2X / Z, +0x3C = the height 0x511C10(x, z) << 16, Area189_ZeroSpeeds, +0x24 / +0x4B 0, Field_StepCount 0; the pace (Rand() & 0x1F) + 0x96 doubled by a member with Actor_EquipCount(m, 3, 0x15), halved by (m, 3, 0x14), doubled with Cond_ByteFF 0, to the word 0x802E74; story flags 0x75, 0x76, 0x8B..0x8E cleared; +2 + 1. 14 calls. docs/area_w4e.md."
 
 [[func]]
 pc = 0x42AA80
@@ -77249,7 +77249,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w4e.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42AE80..0x42B2EC (0x46C bytes), cdecl: tail-jumped to by Area189_LeaderStep at +9 = 0 (callers 0x801F5600): Area189_ZeroSpeeds; the frame word 0x90405C + 1 and Field_EdgeBits + 1; at 0x1E0 message 5 (Cond_ByteFF and Field_StatusBits bit 0 cleared), at 0x3C0 message 6 (both set, the count 0x90405E + 1, the word 0); the reserve 0x90405F counted down (3 or 1), at 0 message 1; with none an event each (Rand() & 7) + 20 * Cond_ByteFF + 7 steps: the fifth Area189_RaiseByte1E, Cond_ByteFE 2, sound 0x10B, the others Area189_DrainHp, Cond_ByteFE 1, sound 0x108; with row 14 bit 4 clear the blocks x 0x1600 / 0x1700 and z at most 0x1000 Scena14_LeaveToC4; Scenario_ArriveHook; the blocks clamped to x 0xA00..0x1E00, z 0xE00..0x1800; after the pace (word 0x802E74) in steps story flags 0x75, 0x76, 0x8B..0x8E by six blocks and Field_ChangeArea(0x7D, 0x190000, 0x190000, 4) with the facing jittered; a held button goes straight on (tail jump to Area189_LeaderControl), else Area189_LeaderHalt. 26 calls. docs/area_w4e.md."
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42AE80..0x42B2EC (0x46C bytes), cdecl: tail-jumped to by Area189_LeaderStep at +9 = 0 (callers 0x801F5600): Area189_ZeroSpeeds; the frame word 0x90405C + 1 and Field_StepCount + 1; at 0x1E0 message 5 (Cond_ByteFF and Field_StatusBits bit 0 cleared), at 0x3C0 message 6 (both set, the count 0x90405E + 1, the word 0); the reserve 0x90405F counted down (3 or 1), at 0 message 1; with none an event each (Rand() & 7) + 20 * Cond_ByteFF + 7 steps: the fifth Area189_RaiseByte1E, Cond_ByteFE 2, sound 0x10B, the others Area189_DrainHp, Cond_ByteFE 1, sound 0x108; with row 14 bit 4 clear the blocks x 0x1600 / 0x1700 and z at most 0x1000 Scena14_LeaveToC4; Scenario_ArriveHook; the blocks clamped to x 0xA00..0x1E00, z 0xE00..0x1800; after the pace (word 0x802E74) in steps story flags 0x75, 0x76, 0x8B..0x8E by six blocks and Field_ChangeArea(0x7D, 0x190000, 0x190000, 4) with the facing jittered; a held button goes straight on (tail jump to Area189_LeaderControl), else Area189_LeaderHalt. 26 calls. docs/area_w4e.md."
 
 [[func]]
 pc = 0x42B2F0
@@ -90254,7 +90254,7 @@ ret = "void"
 params = "void"
 impl = "src/game/field_e2.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5341E0..0x5343BC (0x1DD bytes) cdecl, called once by GameMode_Field on its return from a battle (0x4961F2, after Field_ZoneCounterRoll): bit 4 of 0x904654 set and of 0x904657 clear - the byte 0x9045FB up below 0x1E; from chapter 8 with 0x9046CB not 0 the first clear story flag n of 0xF6..0xFF, the in-use pairs of 0x9046D0 naming 0xA and 0xB counted, the dword 0x9046B0 up and at max(5, a stack threshold - a bias byte) story flag n set; then 0x5343C0(1, 0x9046C0) below 7 at 0x9046CC, (0, 0x9046C4) below 10 at 0x9046CB, 0x534420(5) and (0xB); story flag 0xF5 set at 0x9046CC 4 or more. No PSX twin paired. docs/field_e2.md."
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5341E0..0x5343BC (0x1DD bytes) cdecl, called once by GameMode_Field on its return from a battle (0x4961F2, after Field_EncounterThresholdRoll): bit 4 of 0x904654 set and of 0x904657 clear - the byte 0x9045FB up below 0x1E; from chapter 8 with 0x9046CB not 0 the first clear story flag n of 0xF6..0xFF, the in-use pairs of 0x9046D0 naming 0xA and 0xB counted, the dword 0x9046B0 up and at max(5, a stack threshold - a bias byte) story flag n set; then 0x5343C0(1, 0x9046C0) below 7 at 0x9046CC, (0, 0x9046C4) below 10 at 0x9046CB, 0x534420(5) and (0xB); story flag 0xF5 set at 0x9046CC 4 or more. No PSX twin paired. docs/field_e2.md."
 
 [[func]]
 pc = 0x5343C0
@@ -126211,7 +126211,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_3g.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x496440..0x4964D9 (0x9A bytes): the dword 0x904144 up; Fish_Spawn, Transition_Start(1), AreaMap_Frame, Field_DrawFrame; Gpu_SetDrawMove of (0, buffer * 0xF0 + 0x50, 0x40, 0x78) to (0x340, 0x100), committed at slot 5; GameMode8_Frame; Field_ScriptFlags2 bit 6 cleared, Game_Step up, Field_EdgeBits 0, Field_Request 0. GameMode8_Steps[0]. PSX twin 0x801994E8 (callers), not read. docs/rest_3g.md."
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x496440..0x4964D9 (0x9A bytes): the dword 0x904144 up; Fish_Spawn, Transition_Start(1), AreaMap_Frame, Field_DrawFrame; Gpu_SetDrawMove of (0, buffer * 0xF0 + 0x50, 0x40, 0x78) to (0x340, 0x100), committed at slot 5; GameMode8_Frame; Field_ScriptFlags2 bit 6 cleared, Game_Step up, Field_StepCount 0, Field_Request 0. GameMode8_Steps[0]. PSX twin 0x801994E8 (callers), not read. docs/rest_3g.md."
 
 [[func]]
 pc = 0x4964E0
@@ -132006,7 +132006,7 @@ ret = "void"
 params = "void"
 impl = "src/game/mode_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05 (group PM), 0x496150..0x496226 (0xD7 bytes), 11 calls: with Field_Kind2Hold 0 and File_LoadDone: Draw_OtSlot 6, Field_PartyLoad(0), Party_PlacesByList, Field_EdgeBits 0; 0x904AE5 bit 1 clear: MapView_SetElevation(AreaMap_Elevation(Field_Kind2X, Field_Kind2Z)); Music_Play(Music_Track, 0xA) unless 0x904AE5 bit 6 (re-read), 0x904AE8 bit 3 or the track 0xFF; 0x904AE5 = 0, 0x904AAA = 0; Field_ZoneCounterRoll(0); Field_AfterBattleTally. Either way Party_ScriptTicks, Field_ObjectsFrame, Field_LoadingFrame; after the first, Game_Mode 2, Game_Step 0, Field_Request 0. GameMode5_Steps[7]. PSX 0x80198F48. docs/mode-rest.md."
+evidence = "disasm 2026-10-05 (group PM), 0x496150..0x496226 (0xD7 bytes), 11 calls: with Field_Kind2Hold 0 and File_LoadDone: Draw_OtSlot 6, Field_PartyLoad(0), Party_PlacesByList, Field_StepCount 0; 0x904AE5 bit 1 clear: MapView_SetElevation(AreaMap_Elevation(Field_Kind2X, Field_Kind2Z)); Music_Play(Music_Track, 0xA) unless 0x904AE5 bit 6 (re-read), 0x904AE8 bit 3 or the track 0xFF; 0x904AE5 = 0, 0x904AAA = 0; Field_EncounterThresholdRoll(0); Field_AfterBattleTally. Either way Party_ScriptTicks, Field_ObjectsFrame, Field_LoadingFrame; after the first, Game_Mode 2, Game_Step 0, Field_Request 0. GameMode5_Steps[7]. PSX 0x80198F48. docs/mode-rest.md."
 
 [[func]]
 pc = 0x496230
@@ -134096,10 +134096,10 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x904134
-name = "Rest4a_Clock"
+name = "Game_BattleCount"
 ctype = "unsigned long"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 30 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x904134] at 0x45549d; mov edx, dword ptr [0x904134] at 0x4555f3; mov eax, dword ptr [0x904134] at 0x45565c and 27 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: effect_3b::kKind65Count, rest_4a::kClock, rest_4b::kClock."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 30 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x904134] at 0x45549d; mov edx, dword ptr [0x904134] at 0x4555f3; mov eax, dword ptr [0x904134] at 0x45565c and 27 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: effect_3b::kKind65Count, rest_4a::kClock, rest_4b::kClock. What it counts, 2026-10-21: the one absolute write is 0x495A81, +1 when Field_Request 3 asks for a battle (mode_tasks.cpp); the other 29 operands read. So it is the battle count; the community spans timed against it count battles. Named Rest4a_Clock until then."
 
 [[data]]
 pc = 0x904138

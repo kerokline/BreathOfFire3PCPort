@@ -3392,10 +3392,10 @@ site	src/game/area_w4b.cpp	1049	global	B	at::kCounter3	0x90384b	-	none	-	-	0
 site	src/game/area_w4b.cpp	1056	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
 site	src/game/area_w4b.cpp	1059	global	B	at::kCounter3	0x90384b	-	none	-	-	0
 site	src/game/area_w4b.cpp	1075	global	B	ObjTrio_addr + 0x8	0x802d48	-	inside	ObjTrio+0x8	records::PartyMember	0
-site	src/game/area_w4b.cpp	1118	global	B	MoveScript_PartyRecords_addr + 0x65	0x8034e5	-	inside	MoveScript_PartyRecords+0x65	unsigned char	0
-site	src/game/area_w4b.cpp	1118	global	B	MoveScript_PartyRecords_addr + 0x65	0x8034e5	-	inside	MoveScript_PartyRecords+0x65	unsigned char	0
-site	src/game/area_w4b.cpp	1180	record	SetLong	p + 0x38	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/area_w4b.cpp	1181	record	SetLong	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/area_w4b.cpp	1121	global	B	MoveScript_PartyRecords_addr + 0x65	0x8034e5	-	inside	MoveScript_PartyRecords+0x65	unsigned char	0
+site	src/game/area_w4b.cpp	1121	global	B	MoveScript_PartyRecords_addr + 0x65	0x8034e5	-	inside	MoveScript_PartyRecords+0x65	unsigned char	0
+site	src/game/area_w4b.cpp	1183	record	SetLong	p + 0x38	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/area_w4b.cpp	1184	record	SetLong	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
 site	src/game/area_w4b_fuzz.cpp	181	global	Mem	Effect_Objects_addr + slot % at::kEffectCount * at::kEffectS	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	1
 site	src/game/area_w4b_fuzz.cpp	206	global	Mem	Sprite_ObjectsExtra_addr + (v >> 2) % 4 * at::kObjectStride	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	1
 site	src/game/area_w4b_fuzz.cpp	225	global	Mem	Sprite_ObjectsExtra_addr + (v >> 3) % 4 * at::kObjectStride	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	1
@@ -8340,122 +8340,122 @@ site	src/game/display_setup.cpp	286	global	PutLong	kDeviceDesc	0x7cc238	-	exact	
 site	src/game/display_setup.cpp	299	global	At	Gfx_RenderFlags_addr	0x6c3a4c	-	exact	Gfx_RenderFlags	unsigned char	0
 site	src/game/display_setup.cpp	309	global	At	Gfx_RenderFlags_addr	0x6c3a4c	-	exact	Gfx_RenderFlags	unsigned char	0
 site	src/game/display_setup.cpp	310	global	At	Dd_StageSurface_addr	0x7cc344	-	exact	Dd_StageSurface	void *	0
-site	src/game/effect_1a.cpp	85	record	L	table + 4 * state	-	-	-	-	-	0
-site	src/game/effect_1a.cpp	96	record	L	slot + index * at::kRecordSize	-	param	-	-	-	0
-site	src/game/effect_1a.cpp	110	global	At	Sprite_ObjectsExtra_addr + index * at::kObjectStride	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
-site	src/game/effect_1a.cpp	118	global	At	Sprite_Objects_addr + index * at::kObjectStride	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/effect_1a.cpp	128	global	At	Effect_Objects_addr + static_cast<U>(index) * at::kEffectStr	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
-site	src/game/effect_1a.cpp	135	global	-	at::kKind0FTexts	0x653b98	-	none	-	-	0
-site	src/game/effect_1a.cpp	155	record	B	Text(who, index) + 4	-	via=Text	-	-	-	0
-site	src/game/effect_1a.cpp	161	global	L	at::kLabelTexts	0x66a2fc	-	none	-	-	0
-site	src/game/effect_1a.cpp	168	global	-	at::kKind0FRows	0x653c04	-	none	-	-	0
-site	src/game/effect_1a.cpp	271	record	SetW	rect + 2	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	272	record	SetW	rect + 4	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	273	record	SetW	rect + 6	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	276	record	L	s + 0x34	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	276	record	L	s + 0x38	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	285	record	L	o + 0x34	-	-	-	-	-	0
-site	src/game/effect_1a.cpp	286	record	L	o + 0x38	-	-	-	-	-	0
-site	src/game/effect_1a.cpp	287	record	SW	o + 0x3E	-	-	-	-	-	0
-site	src/game/effect_1a.cpp	385	record	L	S() + 0x34	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	386	record	L	S() + 0x38	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	387	record	L	S() + 0x3C	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	399	record	SetL	p + 0x1C	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	400	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
+site	src/game/effect_1a.cpp	86	record	L	table + 4 * state	-	-	-	-	-	0
+site	src/game/effect_1a.cpp	97	record	L	slot + index * at::kRecordSize	-	param	-	-	-	0
+site	src/game/effect_1a.cpp	111	global	At	Sprite_ObjectsExtra_addr + index * at::kObjectStride	0x802000	-	exact	Sprite_ObjectsExtra	records::SpriteObject	0
+site	src/game/effect_1a.cpp	119	global	At	Sprite_Objects_addr + index * at::kObjectStride	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/effect_1a.cpp	129	global	At	Effect_Objects_addr + static_cast<U>(index) * at::kEffectStr	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
+site	src/game/effect_1a.cpp	136	global	-	at::kKind0FTexts	0x653b98	-	none	-	-	0
+site	src/game/effect_1a.cpp	156	record	B	Text(who, index) + 4	-	via=Text	-	-	-	0
+site	src/game/effect_1a.cpp	162	global	L	at::kLabelTexts	0x66a2fc	-	none	-	-	0
+site	src/game/effect_1a.cpp	169	global	-	at::kKind0FRows	0x653c04	-	none	-	-	0
+site	src/game/effect_1a.cpp	272	record	SetW	rect + 2	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	273	record	SetW	rect + 4	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	274	record	SetW	rect + 6	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	277	record	L	s + 0x34	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	277	record	L	s + 0x38	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	286	record	L	o + 0x34	-	-	-	-	-	0
+site	src/game/effect_1a.cpp	287	record	L	o + 0x38	-	-	-	-	-	0
+site	src/game/effect_1a.cpp	288	record	SW	o + 0x3E	-	-	-	-	-	0
+site	src/game/effect_1a.cpp	386	record	L	S() + 0x34	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	387	record	L	S() + 0x38	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	388	record	L	S() + 0x3C	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	400	record	SetL	p + 0x1C	-	base=Gfx_PacketNext	-	-	-	0
 site	src/game/effect_1a.cpp	401	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
 site	src/game/effect_1a.cpp	402	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
 site	src/game/effect_1a.cpp	403	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
-site	src/game/effect_1a.cpp	406	record	SetL	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	422	record	L	S() + 0x34	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	422	record	L	S() + 0x38	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	439	record	L	S() + 0x34	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	440	record	L	S() + 0x38	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	441	record	L	S() + 0x3C	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	454	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
+site	src/game/effect_1a.cpp	404	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
+site	src/game/effect_1a.cpp	407	record	SetL	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	423	record	L	S() + 0x34	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	423	record	L	S() + 0x38	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	440	record	L	S() + 0x34	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	441	record	L	S() + 0x38	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	442	record	L	S() + 0x3C	-	via=S	-	-	-	0
 site	src/game/effect_1a.cpp	455	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
-site	src/game/effect_1a.cpp	463	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
+site	src/game/effect_1a.cpp	456	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
 site	src/game/effect_1a.cpp	464	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
-site	src/game/effect_1a.cpp	483	record	L	S() + 0x34	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	483	record	L	S() + 0x38	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	512	global	At	at::kCounterByte	0x903848	-	none	-	-	0
-site	src/game/effect_1a.cpp	539	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
-site	src/game/effect_1a.cpp	542	global	At	Boss26Fx_CountFormat_addr	0x64d3ec	-	exact	Boss26Fx_CountFormat	char	0
-site	src/game/effect_1a.cpp	542	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
-site	src/game/effect_1a.cpp	545	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
-site	src/game/effect_1a.cpp	573	global	At	at::kQuadSixteen	0x5c41d0	-	none	-	-	0
-site	src/game/effect_1a.cpp	600	global	At	at::kQuadSixteen	0x5c41d0	-	none	-	-	0
-site	src/game/effect_1a.cpp	605	global	At	at::kQuadThirtyTwo	0x5c41d4	-	none	-	-	0
+site	src/game/effect_1a.cpp	465	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
+site	src/game/effect_1a.cpp	484	record	L	S() + 0x34	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	484	record	L	S() + 0x38	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	513	global	At	at::kCounterByte	0x903848	-	none	-	-	0
+site	src/game/effect_1a.cpp	540	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
+site	src/game/effect_1a.cpp	543	global	At	Boss26Fx_CountFormat_addr	0x64d3ec	-	exact	Boss26Fx_CountFormat	char	0
+site	src/game/effect_1a.cpp	543	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
+site	src/game/effect_1a.cpp	546	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
+site	src/game/effect_1a.cpp	574	global	At	at::kQuadSixteen	0x5c41d0	-	none	-	-	0
+site	src/game/effect_1a.cpp	601	global	At	at::kQuadSixteen	0x5c41d0	-	none	-	-	0
 site	src/game/effect_1a.cpp	606	global	At	at::kQuadThirtyTwo	0x5c41d4	-	none	-	-	0
-site	src/game/effect_1a.cpp	637	global	B	at::kMarkerShades	0x653af8	-	none	-	-	0
-site	src/game/effect_1a.cpp	672	global	At	at::kQuadHalf	0x5c41c8	-	none	-	-	0
+site	src/game/effect_1a.cpp	607	global	At	at::kQuadThirtyTwo	0x5c41d4	-	none	-	-	0
+site	src/game/effect_1a.cpp	638	global	B	at::kMarkerShades	0x653af8	-	none	-	-	0
 site	src/game/effect_1a.cpp	673	global	At	at::kQuadHalf	0x5c41c8	-	none	-	-	0
-site	src/game/effect_1a.cpp	686	global	At	at::kQuadHalf	0x5c41c8	-	none	-	-	0
+site	src/game/effect_1a.cpp	674	global	At	at::kQuadHalf	0x5c41c8	-	none	-	-	0
 site	src/game/effect_1a.cpp	687	global	At	at::kQuadHalf	0x5c41c8	-	none	-	-	0
-site	src/game/effect_1a.cpp	723	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
+site	src/game/effect_1a.cpp	688	global	At	at::kQuadHalf	0x5c41c8	-	none	-	-	0
 site	src/game/effect_1a.cpp	724	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
-site	src/game/effect_1a.cpp	750	record	SetW	sprite + 0x18	-	via=DrawSprite	-	-	-	0
-site	src/game/effect_1a.cpp	759	record	SetL	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	776	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
-site	src/game/effect_1a.cpp	796	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
-site	src/game/effect_1a.cpp	861	global	L	at::kAccessoryA	0x904130	-	none	-	-	0
-site	src/game/effect_1a.cpp	861	global	-	at::kAccessoryNames	0x658450	-	exact	NameTable_Accessories	-	0
+site	src/game/effect_1a.cpp	725	global	At	at::kQuadEight	0x5c41cc	-	none	-	-	0
+site	src/game/effect_1a.cpp	751	record	SetW	sprite + 0x18	-	via=DrawSprite	-	-	-	0
+site	src/game/effect_1a.cpp	760	record	SetL	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	777	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
+site	src/game/effect_1a.cpp	797	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
+site	src/game/effect_1a.cpp	862	global	L	at::kAccessoryA	0x904130	-	none	-	-	0
 site	src/game/effect_1a.cpp	862	global	-	at::kAccessoryNames	0x658450	-	exact	NameTable_Accessories	-	0
-site	src/game/effect_1a.cpp	864	global	PtrAt	at::kPanelSet	0x939a24	-	exact	Effect1a_PanelSet	unsigned long	0
-site	src/game/effect_1a.cpp	865	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
-site	src/game/effect_1a.cpp	874	global	W	at::kRecord0	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
-site	src/game/effect_1a.cpp	875	global	L	at::kRecord0	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
-site	src/game/effect_1a.cpp	913	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
-site	src/game/effect_1a.cpp	914	global	L	at::kRecord2	0x7e12e0	-	inside	Effect_Objects+0x100	records::EffectObject	0
-site	src/game/effect_1a.cpp	928	global	L	at::kKind05Rise	0x653b24	-	none	-	-	0
+site	src/game/effect_1a.cpp	863	global	-	at::kAccessoryNames	0x658450	-	exact	NameTable_Accessories	-	0
+site	src/game/effect_1a.cpp	865	global	PtrAt	at::kPanelSet	0x939a24	-	exact	Effect1a_PanelSet	unsigned long	0
+site	src/game/effect_1a.cpp	866	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
+site	src/game/effect_1a.cpp	875	global	W	at::kRecord0	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
+site	src/game/effect_1a.cpp	876	global	L	at::kRecord0	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
+site	src/game/effect_1a.cpp	914	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
+site	src/game/effect_1a.cpp	915	global	L	at::kRecord2	0x7e12e0	-	inside	Effect_Objects+0x100	records::EffectObject	0
 site	src/game/effect_1a.cpp	929	global	L	at::kKind05Rise	0x653b24	-	none	-	-	0
-site	src/game/effect_1a.cpp	944	global	PtrAt	at::kPanelSet	0x939a24	-	exact	Effect1a_PanelSet	unsigned long	0
-site	src/game/effect_1a.cpp	944	record	W	PtrAt(at::kPanelSet) + 0xC	-	via=PtrAt	-	-	-	0
-site	src/game/effect_1a.cpp	952	global	PtrAt	at::kPanelSet	0x939a24	-	exact	Effect1a_PanelSet	unsigned long	0
-site	src/game/effect_1a.cpp	988	global	L	at::kKind05Bounce	0x653b44	-	none	-	-	0
+site	src/game/effect_1a.cpp	930	global	L	at::kKind05Rise	0x653b24	-	none	-	-	0
+site	src/game/effect_1a.cpp	945	global	PtrAt	at::kPanelSet	0x939a24	-	exact	Effect1a_PanelSet	unsigned long	0
+site	src/game/effect_1a.cpp	945	record	W	PtrAt(at::kPanelSet) + 0xC	-	via=PtrAt	-	-	-	0
+site	src/game/effect_1a.cpp	953	global	PtrAt	at::kPanelSet	0x939a24	-	exact	Effect1a_PanelSet	unsigned long	0
 site	src/game/effect_1a.cpp	989	global	L	at::kKind05Bounce	0x653b44	-	none	-	-	0
-site	src/game/effect_1a.cpp	995	global	L	at::kKind05Bounce	0x653b44	-	none	-	-	0
-site	src/game/effect_1a.cpp	1038	global	PtrAt	at::kPanelSet	0x939a24	-	exact	Effect1a_PanelSet	unsigned long	0
-site	src/game/effect_1a.cpp	1105	global	At	Effect_Objects_addr + 0x280 + 0x10	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/effect_1a.cpp	1121	global	B	at::kRecord0	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
-site	src/game/effect_1a.cpp	1193	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
-site	src/game/effect_1a.cpp	1216	record	W	a + 0x10	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	1217	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
-site	src/game/effect_1a.cpp	1219	record	SW	a + 0x30	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	1231	record	SetL	p + 8	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	1232	record	SetL	p + 0x14	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	1233	record	SetL	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	1234	record	SetL	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	1239	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
-site	src/game/effect_1a.cpp	1242	record	W	a + 0x30	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	1250	record	SetL	p + 8	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	1255	record	SetL	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	1256	record	SetL	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/effect_1a.cpp	1297	global	W	at::kKind0DSounds	0x653b8c	-	none	-	-	0
-site	src/game/effect_1a.cpp	1483	record	B	Text(kWho, a[0x4B]) + 4	-	via=Text	-	-	-	0
-site	src/game/effect_1a.cpp	1485	record	B	Text(kWho, a[0x4B]) + 5	-	via=Text	-	-	-	0
-site	src/game/effect_1a.cpp	1487	record	SetL	a + 0x50	-	via=S	-	-	-	0
-site	src/game/effect_1a.cpp	1518	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
-site	src/game/effect_1a.cpp	1567	record	B	Text(kWho, a[0x4B]) + 4	-	via=Text	-	-	-	0
-site	src/game/effect_1a.cpp	1572	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
-site	src/game/effect_1a.cpp	1575	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
-site	src/game/effect_1a.cpp	1581	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
-site	src/game/effect_1a.cpp	1629	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
-site	src/game/effect_1a.cpp	1631	record	B	Text(kWho, c[0x4B]) + 4	-	via=Text	-	-	-	0
-site	src/game/effect_1a.cpp	1636	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
-site	src/game/effect_1a.cpp	1639	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
-site	src/game/effect_1a.cpp	1644	record	B	Text(kWho, a[0x4B]) + 4	-	via=Text	-	-	-	0
-site	src/game/effect_1a.cpp	1649	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
-site	src/game/effect_1a.cpp	1713	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
-site	src/game/effect_1a.cpp	1718	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
-site	src/game/effect_1a.cpp	1730	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
-site	src/game/effect_1a.cpp	1833	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
-site	src/game/effect_1a.cpp	1898	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
-site	src/game/effect_1a.cpp	2059	global	At	at::kKind0FTexts	0x653b98	-	none	-	-	0
-site	src/game/effect_1a.cpp	2062	global	At	at::kLabelTexts	0x66a2fc	-	none	-	-	0
-site	src/game/effect_1a.cpp	2071	global	At	at::kLabelTexts	0x66a2fc	-	none	-	-	0
-site	src/game/effect_1a.cpp	2088	record	SetL	object + 0x50	-	-	-	-	-	0
-site	src/game/effect_1a.cpp	2089	record	SetW	object + 0x2E	-	-	-	-	-	0
-site	src/game/effect_1a.cpp	2128	global	At	at::kLabelTexts	0x66a2fc	-	none	-	-	0
+site	src/game/effect_1a.cpp	990	global	L	at::kKind05Bounce	0x653b44	-	none	-	-	0
+site	src/game/effect_1a.cpp	996	global	L	at::kKind05Bounce	0x653b44	-	none	-	-	0
+site	src/game/effect_1a.cpp	1039	global	PtrAt	at::kPanelSet	0x939a24	-	exact	Effect1a_PanelSet	unsigned long	0
+site	src/game/effect_1a.cpp	1106	global	At	Effect_Objects_addr + 0x280 + 0x10	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/effect_1a.cpp	1122	global	B	at::kRecord0	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
+site	src/game/effect_1a.cpp	1194	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
+site	src/game/effect_1a.cpp	1217	record	W	a + 0x10	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	1218	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
+site	src/game/effect_1a.cpp	1220	record	SW	a + 0x30	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	1232	record	SetL	p + 8	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	1233	record	SetL	p + 0x14	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	1234	record	SetL	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	1235	record	SetL	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	1240	global	PtrAt	at::kPanelScript	0x939a20	-	exact	Effect1a_PanelScript	unsigned long	0
+site	src/game/effect_1a.cpp	1243	record	W	a + 0x30	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	1251	record	SetL	p + 8	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	1256	record	SetL	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	1257	record	SetL	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/effect_1a.cpp	1298	global	W	at::kKind0DSounds	0x653b8c	-	none	-	-	0
+site	src/game/effect_1a.cpp	1487	record	B	Text(kWho, a[0x4B]) + 4	-	via=Text	-	-	-	0
+site	src/game/effect_1a.cpp	1489	record	B	Text(kWho, a[0x4B]) + 5	-	via=Text	-	-	-	0
+site	src/game/effect_1a.cpp	1491	record	SetL	a + 0x50	-	via=S	-	-	-	0
+site	src/game/effect_1a.cpp	1522	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
+site	src/game/effect_1a.cpp	1571	record	B	Text(kWho, a[0x4B]) + 4	-	via=Text	-	-	-	0
+site	src/game/effect_1a.cpp	1576	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
+site	src/game/effect_1a.cpp	1579	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
+site	src/game/effect_1a.cpp	1585	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
+site	src/game/effect_1a.cpp	1633	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
+site	src/game/effect_1a.cpp	1635	record	B	Text(kWho, c[0x4B]) + 4	-	via=Text	-	-	-	0
+site	src/game/effect_1a.cpp	1640	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
+site	src/game/effect_1a.cpp	1643	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
+site	src/game/effect_1a.cpp	1648	record	B	Text(kWho, a[0x4B]) + 4	-	via=Text	-	-	-	0
+site	src/game/effect_1a.cpp	1653	global	L	at::kRecord3	0x7e1360	-	inside	Effect_Objects+0x180	records::EffectObject	0
+site	src/game/effect_1a.cpp	1717	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
+site	src/game/effect_1a.cpp	1722	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
+site	src/game/effect_1a.cpp	1734	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
+site	src/game/effect_1a.cpp	1837	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
+site	src/game/effect_1a.cpp	1902	global	B	at::kKindCounts	0x9040ec	-	none	-	-	0
+site	src/game/effect_1a.cpp	2063	global	At	at::kKind0FTexts	0x653b98	-	none	-	-	0
+site	src/game/effect_1a.cpp	2066	global	At	at::kLabelTexts	0x66a2fc	-	none	-	-	0
+site	src/game/effect_1a.cpp	2075	global	At	at::kLabelTexts	0x66a2fc	-	none	-	-	0
+site	src/game/effect_1a.cpp	2092	record	SetL	object + 0x50	-	-	-	-	-	0
+site	src/game/effect_1a.cpp	2093	record	SetW	object + 0x2E	-	-	-	-	-	0
+site	src/game/effect_1a.cpp	2132	global	At	at::kLabelTexts	0x66a2fc	-	none	-	-	0
 site	src/game/effect_1a_fuzz.cpp	315	global	P	at::kKind0FTexts	0x653b98	-	none	-	-	1
 site	src/game/effect_1a_fuzz.cpp	323	record	SetLong	s + 0x18	-	via=Rec	-	-	-	1
 site	src/game/effect_1a_fuzz.cpp	324	record	SetLong	s + 0xC	-	via=Rec	-	-	-	1
@@ -13719,17 +13719,17 @@ site	src/game/field_event_fuzz.cpp	873	global	At	Area_StateRecords_addr	0x668d80
 site	src/game/field_frame.cpp	316	record	Word	object + 0x9C	-	base=Sprite_Objects;stride=0xa4	-	-	-	0
 site	src/game/field_frame.cpp	405	record	Bytes	rv::Bytes(sprite)	-	base=sprite	-	-	-	0
 site	src/game/field_frame.cpp	408	record	Long	rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)	-	via=Bytes	-	-	-	0
-site	src/game/field_frame.cpp	494	record	Word	sprite + 0x2E	-	base=Sprite_OverlayList	-	-	-	0
-site	src/game/field_frame.cpp	494	record	SetLong	sprite + 0x74	-	base=Sprite_OverlayList	-	-	-	0
-site	src/game/field_frame.cpp	601	record	Word	Sprite_Current + 0x32	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_frame.cpp	603	record	SetWord	Sprite_Current + 0x32	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_frame.cpp	604	record	SetLong	Sprite_Current + 0x34	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_frame.cpp	660	record	Long	Sprite_Current + 0x74	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_frame.cpp	660	record	Long	Sprite_Current + 0x78	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_frame.cpp	839	record	SetWord	o + 0x3E	-	-	-	-	-	0
-site	src/game/field_frame.cpp	840	record	SetWord	o + 0x34	-	-	-	-	-	0
-site	src/game/field_frame.cpp	841	record	SetWord	o + 0x38	-	-	-	-	-	0
-site	src/game/field_frame.cpp	846	record	SetWord	o + 0x9C	-	-	-	-	-	0
+site	src/game/field_frame.cpp	495	record	Word	sprite + 0x2E	-	base=Sprite_OverlayList	-	-	-	0
+site	src/game/field_frame.cpp	495	record	SetLong	sprite + 0x74	-	base=Sprite_OverlayList	-	-	-	0
+site	src/game/field_frame.cpp	604	record	Word	Sprite_Current + 0x32	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_frame.cpp	606	record	SetWord	Sprite_Current + 0x32	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_frame.cpp	607	record	SetLong	Sprite_Current + 0x34	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_frame.cpp	663	record	Long	Sprite_Current + 0x74	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_frame.cpp	663	record	Long	Sprite_Current + 0x78	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_frame.cpp	842	record	SetWord	o + 0x3E	-	-	-	-	-	0
+site	src/game/field_frame.cpp	843	record	SetWord	o + 0x34	-	-	-	-	-	0
+site	src/game/field_frame.cpp	844	record	SetWord	o + 0x38	-	-	-	-	-	0
+site	src/game/field_frame.cpp	849	record	SetWord	o + 0x9C	-	-	-	-	-	0
 site	src/game/field_hidden.cpp	96	record	At	table + 4 * index	-	param	-	-	-	0
 site	src/game/field_hidden.cpp	100	global	At	Field_DirectionSteps_addr + d * 8	0x6697b0	-	exact	Field_DirectionSteps	long	0
 site	src/game/field_hidden.cpp	101	global	At	Field_DirectionSteps_addr + d * 8 + 4	0x6697b0	-	exact	Field_DirectionSteps	long	0
@@ -13803,47 +13803,47 @@ site	src/game/field_hidden_fuzz.cpp	654	global	At	PartyAction5_Form0States_addr 
 site	src/game/field_hidden_fuzz.cpp	655	global	At	PartyAction5_Forms_addr + 4 * i	0x65fc18	-	exact	PartyAction5_Forms	unsigned long	1
 site	src/game/field_hidden_fuzz.cpp	704	global	At	PartyAction5_Form0States_addr	0x65fbc0	-	exact	PartyAction5_Form0States	unsigned long	1
 site	src/game/field_hidden_fuzz.cpp	705	global	At	PartyAction5_Forms_addr	0x65fc18	-	exact	PartyAction5_Forms	unsigned long	1
-site	src/game/field_misc.cpp	89	record	At	at::MapView_OriginAt() + 2	-	via=MapView_OriginAt	-	-	-	0
-site	src/game/field_misc.cpp	139	global	At	D3d_Device_addr	0x7cc350	-	exact	D3d_Device	void *	0
-site	src/game/field_misc.cpp	152	global	At	D3d_Vertices_addr + i * 0x20	0x7ca958	-	exact	D3d_Vertices	unsigned long	0
-site	src/game/field_misc.cpp	153	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
-site	src/game/field_misc.cpp	159	record	PutLong	out + 0x08	-	param	-	-	-	0
-site	src/game/field_misc.cpp	159	record	Long	xyz + 8	-	param	-	-	-	0
-site	src/game/field_misc.cpp	160	global	At	kRhwNumerator	0x5c4610	-	exact	D3d_RhwNumerator	float	0
-site	src/game/field_misc.cpp	161	record	PutLong	out + 0x10	-	param	-	-	-	0
-site	src/game/field_misc.cpp	170	record	Short	x_arg - OriginX()	-	-	-	-	-	0
-site	src/game/field_misc.cpp	171	record	Short	z_arg - OriginZ()	-	-	-	-	-	0
-site	src/game/field_misc.cpp	174	record	At	at::MapView_CellsAt() + (ring.column + ring.row * 28u) * 2u	-	via=MapView_CellsAt	-	-	-	0
-site	src/game/field_misc.cpp	177	global	At	kRunHeads	0x8cb57c	-	none	-	-	0
-site	src/game/field_misc.cpp	299	record	At	at::MapView_CellItemsAt() + 2u + (ring.column + ring.row * 2	-	via=MapView_CellItemsAt	-	-	-	0
-site	src/game/field_misc.cpp	372	global	At	AreaMap_Header_addr + 0x2	0x8cb582	-	inside	AreaMap_Header+0x2	unsigned char	0
-site	src/game/field_misc.cpp	374	record	At	Header(0) + (x + width * y + offset * 2u) * 2u	-	via=Header	-	-	-	0
-site	src/game/field_misc.cpp	378	record	Long	record + static_cast<U>(c) * 4u + 4u	-	-	-	-	-	0
-site	src/game/field_misc.cpp	380	record	At	Header(0) + run * 4u	-	via=Header	-	-	-	0
-site	src/game/field_misc.cpp	389	record	At	at::ItemFaceA() + item * 0x90u	-	via=ItemFaceA	-	-	-	0
-site	src/game/field_misc.cpp	390	record	At	at::ItemFaceB() + item * 0x90u	-	via=ItemFaceB	-	-	-	0
-site	src/game/field_misc.cpp	392	record	Long	record + static_cast<U>(c) * 4u + 4u	-	-	-	-	-	0
-site	src/game/field_misc.cpp	401	record	Long	cursor + static_cast<U>(c) * 4u + 4u	-	stride=0x4	-	-	-	0
-site	src/game/field_misc.cpp	403	record	At	at::AreaMap_CornersAt() + (width * y + x) * 4u	-	via=AreaMap_CornersAt	-	-	-	0
-site	src/game/field_misc.cpp	408	record	Long	cursor + 4	-	stride=0x4	-	-	-	0
-site	src/game/field_misc.cpp	440	record	At	at::ItemFaceA() + item * 0x90u	-	via=ItemFaceA	-	-	-	0
-site	src/game/field_misc.cpp	441	record	At	at::ItemFaceB() + item * 0x90u	-	via=ItemFaceB	-	-	-	0
-site	src/game/field_misc.cpp	444	record	PutLong	packet + 8 + corner * 0xC	-	via=Gfx_PacketNextAt	-	-	-	0
-site	src/game/field_misc.cpp	444	record	Long	src + 8 + corner * 0x10	-	via=ItemHalf	-	-	-	0
-site	src/game/field_misc.cpp	445	record	PutLong	packet + 0xC + corner * 0xC	-	via=Gfx_PacketNextAt	-	-	-	0
-site	src/game/field_misc.cpp	445	record	Long	src + 0xC + corner * 0x10	-	via=ItemHalf	-	-	-	0
-site	src/game/field_misc.cpp	447	global	At	kOverlayColours	0x8cb59a	-	none	-	-	0
-site	src/game/field_misc.cpp	478	record	At	from + k * 2	-	via=Gfx_ClutStripSourceAt;stride=0x10	-	-	-	0
-site	src/game/field_misc.cpp	481	record	At	from + 0x4000 + k * 2	-	via=Gfx_ClutStripSourceAt;stride=0x10	-	-	-	0
-site	src/game/field_misc.cpp	559	record	PutLong	prim + z	-	-	-	-	-	0
-site	src/game/field_misc.cpp	565	record	PutLong	prim + z	-	param	-	-	-	0
-site	src/game/field_misc.cpp	573	record	PutLong	prim + z	-	param	-	-	-	0
-site	src/game/field_misc.cpp	584	record	PutLong	prim + 4	-	-	-	-	-	0
-site	src/game/field_misc.cpp	585	record	PutLong	prim + 8	-	-	-	-	-	0
-site	src/game/field_misc.cpp	586	record	Long	rect + 4	-	-	-	-	-	0
-site	src/game/field_misc.cpp	587	record	PutLong	prim + 0xC	-	-	-	-	-	0
-site	src/game/field_misc.cpp	588	record	PutLong	prim + 0x10	-	-	-	-	-	0
-site	src/game/field_misc.cpp	589	record	PutLong	prim + 0x14	-	-	-	-	-	0
+site	src/game/field_misc.cpp	90	record	At	at::MapView_OriginAt() + 2	-	via=MapView_OriginAt	-	-	-	0
+site	src/game/field_misc.cpp	140	global	At	D3d_Device_addr	0x7cc350	-	exact	D3d_Device	void *	0
+site	src/game/field_misc.cpp	153	global	At	D3d_Vertices_addr + i * 0x20	0x7ca958	-	exact	D3d_Vertices	unsigned long	0
+site	src/game/field_misc.cpp	154	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
+site	src/game/field_misc.cpp	160	record	PutLong	out + 0x08	-	param	-	-	-	0
+site	src/game/field_misc.cpp	160	record	Long	xyz + 8	-	param	-	-	-	0
+site	src/game/field_misc.cpp	161	global	At	kRhwNumerator	0x5c4610	-	exact	D3d_RhwNumerator	float	0
+site	src/game/field_misc.cpp	162	record	PutLong	out + 0x10	-	param	-	-	-	0
+site	src/game/field_misc.cpp	171	record	Short	x_arg - OriginX()	-	-	-	-	-	0
+site	src/game/field_misc.cpp	172	record	Short	z_arg - OriginZ()	-	-	-	-	-	0
+site	src/game/field_misc.cpp	175	record	At	at::MapView_CellsAt() + (ring.column + ring.row * 28u) * 2u	-	via=MapView_CellsAt	-	-	-	0
+site	src/game/field_misc.cpp	178	global	At	kRunHeads	0x8cb57c	-	none	-	-	0
+site	src/game/field_misc.cpp	305	record	At	at::MapView_CellItemsAt() + 2u + (ring.column + ring.row * 2	-	via=MapView_CellItemsAt	-	-	-	0
+site	src/game/field_misc.cpp	378	global	At	AreaMap_Header_addr + 0x2	0x8cb582	-	inside	AreaMap_Header+0x2	unsigned char	0
+site	src/game/field_misc.cpp	380	record	At	Header(0) + (x + width * y + offset * 2u) * 2u	-	via=Header	-	-	-	0
+site	src/game/field_misc.cpp	384	record	Long	record + static_cast<U>(c) * 4u + 4u	-	-	-	-	-	0
+site	src/game/field_misc.cpp	386	record	At	Header(0) + run * 4u	-	via=Header	-	-	-	0
+site	src/game/field_misc.cpp	395	record	At	at::ItemFaceA() + item * 0x90u	-	via=ItemFaceA	-	-	-	0
+site	src/game/field_misc.cpp	396	record	At	at::ItemFaceB() + item * 0x90u	-	via=ItemFaceB	-	-	-	0
+site	src/game/field_misc.cpp	398	record	Long	record + static_cast<U>(c) * 4u + 4u	-	-	-	-	-	0
+site	src/game/field_misc.cpp	407	record	Long	cursor + static_cast<U>(c) * 4u + 4u	-	stride=0x4	-	-	-	0
+site	src/game/field_misc.cpp	409	record	At	at::AreaMap_CornersAt() + (width * y + x) * 4u	-	via=AreaMap_CornersAt	-	-	-	0
+site	src/game/field_misc.cpp	414	record	Long	cursor + 4	-	stride=0x4	-	-	-	0
+site	src/game/field_misc.cpp	446	record	At	at::ItemFaceA() + item * 0x90u	-	via=ItemFaceA	-	-	-	0
+site	src/game/field_misc.cpp	447	record	At	at::ItemFaceB() + item * 0x90u	-	via=ItemFaceB	-	-	-	0
+site	src/game/field_misc.cpp	450	record	PutLong	packet + 8 + corner * 0xC	-	via=Gfx_PacketNextAt	-	-	-	0
+site	src/game/field_misc.cpp	450	record	Long	src + 8 + corner * 0x10	-	via=ItemHalf	-	-	-	0
+site	src/game/field_misc.cpp	451	record	PutLong	packet + 0xC + corner * 0xC	-	via=Gfx_PacketNextAt	-	-	-	0
+site	src/game/field_misc.cpp	451	record	Long	src + 0xC + corner * 0x10	-	via=ItemHalf	-	-	-	0
+site	src/game/field_misc.cpp	453	global	At	kOverlayColours	0x8cb59a	-	none	-	-	0
+site	src/game/field_misc.cpp	484	record	At	from + k * 2	-	via=Gfx_ClutStripSourceAt;stride=0x10	-	-	-	0
+site	src/game/field_misc.cpp	487	record	At	from + 0x4000 + k * 2	-	via=Gfx_ClutStripSourceAt;stride=0x10	-	-	-	0
+site	src/game/field_misc.cpp	565	record	PutLong	prim + z	-	-	-	-	-	0
+site	src/game/field_misc.cpp	571	record	PutLong	prim + z	-	param	-	-	-	0
+site	src/game/field_misc.cpp	579	record	PutLong	prim + z	-	param	-	-	-	0
+site	src/game/field_misc.cpp	590	record	PutLong	prim + 4	-	-	-	-	-	0
+site	src/game/field_misc.cpp	591	record	PutLong	prim + 8	-	-	-	-	-	0
+site	src/game/field_misc.cpp	592	record	Long	rect + 4	-	-	-	-	-	0
+site	src/game/field_misc.cpp	593	record	PutLong	prim + 0xC	-	-	-	-	-	0
+site	src/game/field_misc.cpp	594	record	PutLong	prim + 0x10	-	-	-	-	-	0
+site	src/game/field_misc.cpp	595	record	PutLong	prim + 0x14	-	-	-	-	-	0
 site	src/game/field_misc_fuzz.cpp	191	record	PutLong	p + z	-	param	-	-	-	1
 site	src/game/field_misc_fuzz.cpp	194	global	At	kPacketNext	0x7e0670	-	exact	Gfx_PacketNext	unsigned char *	1
 site	src/game/field_misc_fuzz.cpp	194	global	At	kPacketNext	0x7e0670	-	exact	Gfx_PacketNext	unsigned char *	1
@@ -16284,86 +16284,86 @@ site	src/game/magic_s13_fuzz.cpp	304	global	Pointer	BattleE2_Owner_addr	0x93b940
 site	src/game/magic_s13_fuzz.cpp	321	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_s13_fuzz.cpp	343	record	SetWord	m + 0xC	-	via=Cur	-	-	-	1
 site	src/game/magic_s13_fuzz.cpp	379	global	Mem	SuddenDeathMote_Shape_addr	0x65abc0	-	exact	SuddenDeathMote_Shape	short	1
-site	src/game/magic_s14.cpp	78	global	Pointer	BattleE2_Owner_addr	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
-site	src/game/magic_s14.cpp	79	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_s14.cpp	80	global	Mem	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/magic_s14.cpp	82	global	Mem	kS	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/magic_s14.cpp	83	record	SW	k	-	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	84	global	Mem	kS	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/magic_s14.cpp	79	global	Pointer	BattleE2_Owner_addr	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
+site	src/game/magic_s14.cpp	80	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_s14.cpp	81	global	Mem	at::kActor	0x904b34	-	none	-	-	0
+site	src/game/magic_s14.cpp	83	global	Mem	kS	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/magic_s14.cpp	84	record	SW	k	-	base=kS	-	-	-	0
 site	src/game/magic_s14.cpp	85	global	Mem	kS	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/magic_s14.cpp	87	global	Mem	Prim_VertexScratch_addr + k	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
+site	src/game/magic_s14.cpp	86	global	Mem	kS	0x903850	-	exact	SharedScratch	records::SharedScratch	0
 site	src/game/magic_s14.cpp	88	global	Mem	Prim_VertexScratch_addr + k	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
 site	src/game/magic_s14.cpp	89	global	Mem	Prim_VertexScratch_addr + k	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
-site	src/game/magic_s14.cpp	111	global	Mem	BattleTask_Slots_addr + slot * at::kTaskStride	0x93a000	-	exact	BattleTask_Slots	records::BattleTask	0
-site	src/game/magic_s14.cpp	114	global	Mem	ObjTrio_addr + i * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
-site	src/game/magic_s14.cpp	115	global	Mem	WeretigerStreak_Pool_addr + i * kPoolStride	0x683288	-	exact	WeretigerStreak_Pool	unsigned char	0
-site	src/game/magic_s14.cpp	116	global	Pointer	WeretigerStreak_Current_addr	0x684788	-	exact	WeretigerStreak_Current	unsigned char *	0
-site	src/game/magic_s14.cpp	157	record	SetLong	dst + k	-	param	-	-	-	0
-site	src/game/magic_s14.cpp	157	record	Long	src + k	-	param	-	-	-	0
-site	src/game/magic_s14.cpp	372	raw	Mem	0x80D380 + (static_cast<std::uint32_t>(Sc()[5]) << 6)	0x80d380	-	inside	Gfx_ClutStripSource+0x1e00	unsigned short	0
-site	src/game/magic_s14.cpp	427	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
-site	src/game/magic_s14.cpp	495	record	SetWord	im.child + 0x2E	-	param	-	-	-	0
-site	src/game/magic_s14.cpp	496	record	SetWord	im.child + 0x30	-	param	-	-	-	0
-site	src/game/magic_s14.cpp	574	global	Mem	WeretigerStreak_Current_addr	0x684788	-	exact	WeretigerStreak_Current	unsigned char *	0
-site	src/game/magic_s14.cpp	599	global	Mem	Frame_Counter_addr	0x937f94	-	exact	Frame_Counter	unsigned int	0
-site	src/game/magic_s14.cpp	656	record	SetWord	PoolCurrent() + 2	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	657	record	SetLong	PoolCurrent() + 0xC	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	658	record	SetLong	PoolCurrent() + 0x10	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	659	record	SetLong	PoolCurrent() + 0x14	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	660	record	SetLong	PoolCurrent() + 0x18	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	663	global	Mem	WeretigerStreak_Offsets_addr + 2u * record[8]	0x65abf8	-	exact	WeretigerStreak_Offsets	signed char	0
-site	src/game/magic_s14.cpp	664	record	SetLong	PoolCurrent() + 4	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	668	global	Mem	WeretigerStreak_Offsets_addr + 1 + 2u * record[8]	0x65abf8	-	exact	WeretigerStreak_Offsets	signed char	0
-site	src/game/magic_s14.cpp	669	record	SetLong	PoolCurrent() + 8	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	680	record	Word	r + centre	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	680	record	Long	r + off	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	695	record	Long	r + 0x14	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	695	record	SetLong	r + 0xC	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	695	record	Long	r + 0xC	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	699	record	SetLong	r + 0x10	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	699	record	Long	r + 0x10	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	699	record	Long	r + 0x18	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	703	record	SetLong	r + 0x14	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	703	record	Long	r + 0x14	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	707	record	SetLong	r + 0x18	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	707	record	Long	r + 0x18	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	723	record	Long	r + 0x10	-	via=PoolCurrent	-	-	-	0
-site	src/game/magic_s14.cpp	827	global	Mem	WeretigerImage_UV_addr + 4u * which	0x65ac10	-	exact	WeretigerImage_UV	unsigned char	0
-site	src/game/magic_s14.cpp	828	global	Mem	WeretigerImage_UV_addr + 2 + 4u * which	0x65ac10	-	exact	WeretigerImage_UV	unsigned char	0
-site	src/game/magic_s14.cpp	854	record	SetWord	half + 0x36	-	via=Items;stride=0x48	-	-	-	0
-site	src/game/magic_s14.cpp	855	record	SetWord	half + 0x46	-	via=Items;stride=0x48	-	-	-	0
-site	src/game/magic_s14.cpp	889	record	SetWord	item + 2	-	base=MapView_CellItems;stride=0x4	-	-	-	0
-site	src/game/magic_s14.cpp	1078	record	SetSW	6	0x903856	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1091	record	SetSW	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1092	record	SetSW	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1108	record	SetSW	0	0x903850	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1111	record	SetSW	6	0x903856	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1122	record	SB	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1123	record	SB	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1124	record	SB	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1127	record	SetSW	8	0x903858	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1130	record	SB	8	0x903858	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1131	record	SB	8	0x903858	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	90	global	Mem	Prim_VertexScratch_addr + k	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
+site	src/game/magic_s14.cpp	112	global	Mem	BattleTask_Slots_addr + slot * at::kTaskStride	0x93a000	-	exact	BattleTask_Slots	records::BattleTask	0
+site	src/game/magic_s14.cpp	115	global	Mem	ObjTrio_addr + i * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
+site	src/game/magic_s14.cpp	116	global	Mem	WeretigerStreak_Pool_addr + i * kPoolStride	0x683288	-	exact	WeretigerStreak_Pool	unsigned char	0
+site	src/game/magic_s14.cpp	117	global	Pointer	WeretigerStreak_Current_addr	0x684788	-	exact	WeretigerStreak_Current	unsigned char *	0
+site	src/game/magic_s14.cpp	158	record	SetLong	dst + k	-	param	-	-	-	0
+site	src/game/magic_s14.cpp	158	record	Long	src + k	-	param	-	-	-	0
+site	src/game/magic_s14.cpp	373	raw	Mem	0x80D380 + (static_cast<std::uint32_t>(Sc()[5]) << 6)	0x80d380	-	inside	Gfx_ClutStripSource+0x1e00	unsigned short	0
+site	src/game/magic_s14.cpp	428	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
+site	src/game/magic_s14.cpp	496	record	SetWord	im.child + 0x2E	-	param	-	-	-	0
+site	src/game/magic_s14.cpp	497	record	SetWord	im.child + 0x30	-	param	-	-	-	0
+site	src/game/magic_s14.cpp	575	global	Mem	WeretigerStreak_Current_addr	0x684788	-	exact	WeretigerStreak_Current	unsigned char *	0
+site	src/game/magic_s14.cpp	600	global	Mem	Frame_Counter_addr	0x937f94	-	exact	Frame_Counter	unsigned int	0
+site	src/game/magic_s14.cpp	657	record	SetWord	PoolCurrent() + 2	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	658	record	SetLong	PoolCurrent() + 0xC	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	659	record	SetLong	PoolCurrent() + 0x10	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	660	record	SetLong	PoolCurrent() + 0x14	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	661	record	SetLong	PoolCurrent() + 0x18	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	664	global	Mem	WeretigerStreak_Offsets_addr + 2u * record[8]	0x65abf8	-	exact	WeretigerStreak_Offsets	signed char	0
+site	src/game/magic_s14.cpp	665	record	SetLong	PoolCurrent() + 4	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	669	global	Mem	WeretigerStreak_Offsets_addr + 1 + 2u * record[8]	0x65abf8	-	exact	WeretigerStreak_Offsets	signed char	0
+site	src/game/magic_s14.cpp	670	record	SetLong	PoolCurrent() + 8	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	681	record	Word	r + centre	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	681	record	Long	r + off	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	696	record	Long	r + 0x14	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	696	record	SetLong	r + 0xC	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	696	record	Long	r + 0xC	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	700	record	SetLong	r + 0x10	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	700	record	Long	r + 0x10	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	700	record	Long	r + 0x18	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	704	record	SetLong	r + 0x14	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	704	record	Long	r + 0x14	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	708	record	SetLong	r + 0x18	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	708	record	Long	r + 0x18	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	724	record	Long	r + 0x10	-	via=PoolCurrent	-	-	-	0
+site	src/game/magic_s14.cpp	828	global	Mem	WeretigerImage_UV_addr + 4u * which	0x65ac10	-	exact	WeretigerImage_UV	unsigned char	0
+site	src/game/magic_s14.cpp	829	global	Mem	WeretigerImage_UV_addr + 2 + 4u * which	0x65ac10	-	exact	WeretigerImage_UV	unsigned char	0
+site	src/game/magic_s14.cpp	855	record	SetWord	half + 0x36	-	via=Items;stride=0x48	-	-	-	0
+site	src/game/magic_s14.cpp	856	record	SetWord	half + 0x46	-	via=Items;stride=0x48	-	-	-	0
+site	src/game/magic_s14.cpp	890	record	SetWord	item + 2	-	base=MapView_CellItems;stride=0x4	-	-	-	0
+site	src/game/magic_s14.cpp	1081	record	SetSW	6	0x903856	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1094	record	SetSW	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1095	record	SetSW	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1111	record	SetSW	0	0x903850	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1114	record	SetSW	6	0x903856	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1125	record	SB	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1126	record	SB	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1127	record	SB	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1130	record	SetSW	8	0x903858	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1133	record	SB	8	0x903858	base=kS	-	-	-	0
 site	src/game/magic_s14.cpp	1134	record	SB	8	0x903858	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1135	record	SB	8	0x903858	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1146	record	SetSW	6	0x903856	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1160	record	SB	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1162	record	SB	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1185	global	Mem	TsunamiRing_Phases_addr	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
-site	src/game/magic_s14.cpp	1211	global	Mem	TsunamiRing_Offsets_addr + 0xC * height	0x65ac54	-	exact	TsunamiRing_Offsets	long	0
-site	src/game/magic_s14.cpp	1215	record	Long	offset + 4	-	-	-	-	-	0
-site	src/game/magic_s14.cpp	1216	record	Long	offset + 8	-	-	-	-	-	0
-site	src/game/magic_s14.cpp	1234	global	Mem	Battle_Enemies_addr + e * at::kEnemyStride	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/magic_s14.cpp	1244	global	Mem	TsunamiRing_Phases_addr + j	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
-site	src/game/magic_s14.cpp	1260	global	Mem	TsunamiRing_Phases_addr + j	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
-site	src/game/magic_s14.cpp	1265	global	Mem	TsunamiRing_Phases_addr + j	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
-site	src/game/magic_s14.cpp	1266	record	SetSW	0	0x903850	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1267	record	SetSW	4	0x903854	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1275	record	SW	4	0x903854	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1287	global	Mem	TsunamiRing_Phases_addr + j	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
-site	src/game/magic_s14.cpp	1288	record	SetSW	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1290	record	SB	2	0x903852	base=kS	-	-	-	0
-site	src/game/magic_s14.cpp	1291	record	SB	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1137	record	SB	8	0x903858	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1138	record	SB	8	0x903858	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1149	record	SetSW	6	0x903856	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1163	record	SB	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1165	record	SB	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1188	global	Mem	TsunamiRing_Phases_addr	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
+site	src/game/magic_s14.cpp	1214	global	Mem	TsunamiRing_Offsets_addr + 0xC * height	0x65ac54	-	exact	TsunamiRing_Offsets	long	0
+site	src/game/magic_s14.cpp	1218	record	Long	offset + 4	-	-	-	-	-	0
+site	src/game/magic_s14.cpp	1219	record	Long	offset + 8	-	-	-	-	-	0
+site	src/game/magic_s14.cpp	1237	global	Mem	Battle_Enemies_addr + e * at::kEnemyStride	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
+site	src/game/magic_s14.cpp	1247	global	Mem	TsunamiRing_Phases_addr + j	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
+site	src/game/magic_s14.cpp	1263	global	Mem	TsunamiRing_Phases_addr + j	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
+site	src/game/magic_s14.cpp	1268	global	Mem	TsunamiRing_Phases_addr + j	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
+site	src/game/magic_s14.cpp	1269	record	SetSW	0	0x903850	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1270	record	SetSW	4	0x903854	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1278	record	SW	4	0x903854	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1290	global	Mem	TsunamiRing_Phases_addr + j	0x68478c	-	exact	TsunamiRing_Phases	unsigned char	0
+site	src/game/magic_s14.cpp	1291	record	SetSW	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1293	record	SB	2	0x903852	base=kS	-	-	-	0
+site	src/game/magic_s14.cpp	1294	record	SB	2	0x903852	base=kS	-	-	-	0
 site	src/game/magic_s14_fuzz.cpp	240	global	Mem	WeretigerStreak_Pool_addr + (i % kPoolCount) * kPoolStride	0x683288	-	exact	WeretigerStreak_Pool	unsigned char	1
 site	src/game/magic_s14_fuzz.cpp	395	global	Pointer	BattleE2_Owner_addr	0x93b940	-	exact	BattleE2_Owner	unsigned long	1
 site	src/game/magic_s14_fuzz.cpp	402	global	Mem	Prim_VertexScratch_addr + 2 * (v % 16)	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	1
@@ -19411,83 +19411,83 @@ site	src/game/magic_steal_fuzz.cpp	60	global	Mem	SkillSteal_RateTable_addr	0x65c
 site	src/game/magic_steal_fuzz.cpp	79	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_steal_fuzz.cpp	86	global	Mem	SkillSteal_RateTable_addr	0x65c204	-	exact	SkillSteal_RateTable	signed char	1
 site	src/game/magic_steal_fuzz.cpp	101	global	Mem	SkillSteal_RateTable_addr	0x65c204	-	exact	SkillSteal_RateTable	signed char	1
-site	src/game/map_field_objects.cpp	122	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	0
-site	src/game/map_field_objects.cpp	177	record	At	at::UprightHeightsAt() + e * 2u	-	via=UprightHeightsAt	-	-	-	0
-site	src/game/map_field_objects.cpp	195	record	Byte	at::UprightCountsAt() + e	-	via=UprightCountsAt	-	-	-	0
-site	src/game/map_field_objects.cpp	206	global	At	MapView_ScreenXY_addr	0x903820	-	exact	MapView_ScreenXY	float	0
-site	src/game/map_field_objects.cpp	206	record	SetDword	prim + 0x28	-	stride=0x48	-	-	-	0
-site	src/game/map_field_objects.cpp	207	global	At	MapView_ScreenXY_addr + 4	0x903824	-	inside	MapView_ScreenXY+0x4	float	0
-site	src/game/map_field_objects.cpp	207	record	SetDword	prim + 0x2C	-	stride=0x48	-	-	-	0
-site	src/game/map_field_objects.cpp	208	record	SetDword	prim + 0x30	-	stride=0x48	-	-	-	0
-site	src/game/map_field_objects.cpp	209	global	At	Effect6c_OffsetX_addr	0x903828	-	exact	Effect6c_OffsetX	float	0
-site	src/game/map_field_objects.cpp	209	record	SetDword	prim + 0x38	-	stride=0x48	-	-	-	0
-site	src/game/map_field_objects.cpp	210	global	At	Effect6c_OffsetX_addr + 4	0x90382c	-	exact	Effect6c_OffsetY	float	0
-site	src/game/map_field_objects.cpp	210	record	SetDword	prim + 0x3C	-	stride=0x48	-	-	-	0
-site	src/game/map_field_objects.cpp	211	record	SetDword	prim + 0x40	-	stride=0x48	-	-	-	0
-site	src/game/map_field_objects.cpp	212	record	Byte	at::UprightU02At() + e	-	via=UprightU02At	-	-	-	0
-site	src/game/map_field_objects.cpp	215	record	Byte	at::UprightU13At() + e	-	via=UprightU13At	-	-	-	0
-site	src/game/map_field_objects.cpp	218	record	Byte	at::UprightV01At() + e2 + j	-	via=UprightV01At	-	-	-	0
-site	src/game/map_field_objects.cpp	221	record	Byte	at::UprightV23At() + e2 + j	-	via=UprightV23At	-	-	-	0
-site	src/game/map_field_objects.cpp	225	record	Byte	at::UprightClutAt() + e	-	via=UprightClutAt	-	-	-	0
-site	src/game/map_field_objects.cpp	233	global	At	Prim_VertexScratch_addr + v * 8u	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
-site	src/game/map_field_objects.cpp	233	record	At	at::UprightOffsetsXAt() + k	-	via=UprightOffsetsXAt	-	-	-	0
-site	src/game/map_field_objects.cpp	234	global	At	Prim_VertexScratch_addr + v * 8u + 2	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
-site	src/game/map_field_objects.cpp	234	record	At	at::UprightOffsetsYAt() + k	-	via=UprightOffsetsYAt	-	-	-	0
-site	src/game/map_field_objects.cpp	242	record	Byte	at::UprightCountsAt() + e	-	via=UprightCountsAt	-	-	-	0
-site	src/game/map_field_objects.cpp	256	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	257	global	At	AreaMap_Corners_addr + (width * b0 + b1) * 4u	0x8cb5b0	-	exact	AreaMap_Corners	unsigned long	0
-site	src/game/map_field_objects.cpp	288	record	At	at::OriginAt() + 2	-	via=OriginAt	-	-	-	0
-site	src/game/map_field_objects.cpp	299	global	At	MapView_CellItems_addr + 0x2 + index * 4u	0x937fa0	-	exact	MapView_CellItems	unsigned char	0
-site	src/game/map_field_objects.cpp	314	global	At	AreaMap_PatchBase_addr	0x8cb5a8	-	exact	AreaMap_PatchBase	unsigned short	0
-site	src/game/map_field_objects.cpp	315	global	At	AreaMap_Header_addr + index * 4u	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	342	record	Dword	record + 4	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	343	record	Dword	record + 4	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	344	record	Word	record + 4	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	347	global	At	MapView_ScreenXY_addr	0x903820	-	exact	MapView_ScreenXY	float	0
-site	src/game/map_field_objects.cpp	354	record	Dword	record + 8	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	393	record	Dword	entry + 4	-	-	-	-	-	0
-site	src/game/map_field_objects.cpp	399	record	Dword	entry + 8	-	-	-	-	-	0
-site	src/game/map_field_objects.cpp	410	global	At	kFlatColour0	0x8cb59a	-	none	-	-	0
-site	src/game/map_field_objects.cpp	410	record	Dword	entry + 4	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	411	global	At	kFlatColour1	0x8cb59c	-	none	-	-	0
-site	src/game/map_field_objects.cpp	411	record	Dword	entry + 8	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	413	global	At	kFlatColour0	0x8cb59a	-	none	-	-	0
-site	src/game/map_field_objects.cpp	413	record	Word	entry + 4	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	414	global	At	kFlatColour1	0x8cb59c	-	none	-	-	0
-site	src/game/map_field_objects.cpp	414	record	Word	entry + 8	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	425	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	427	global	At	AreaMap_Header_addr + 0x2	0x8cb582	-	inside	AreaMap_Header+0x2	unsigned char	0
-site	src/game/map_field_objects.cpp	428	record	Dword	entry + 4 + (flag == 0 ? 4 : 0)	-	-	-	-	-	0
-site	src/game/map_field_objects.cpp	429	global	At	AreaMap_Header_addr + ((d & 0xFFu) * width + ((d >> 8) & 0xF	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	431	global	At	AreaMap_Header_addr + (static_cast<U>(half) + offset + tile)	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	463	global	At	CharacterRecords_addr + (member & 0xFFu) * kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
-site	src/game/map_field_objects.cpp	467	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	469	global	At	kFormat3d	0x64e324	-	none	-	-	0
-site	src/game/map_field_objects.cpp	489	global	At	kFormatLeft	0x6639b0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	492	global	At	kFormatRight	0x6639a8	-	none	-	-	0
-site	src/game/map_field_objects.cpp	502	global	At	kFormatLeft	0x6639b0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	504	global	At	kFormatRight	0x6639a8	-	none	-	-	0
-site	src/game/map_field_objects.cpp	506	global	At	Menu_MemberPieces_addr	0x6632c8	-	exact	Menu_MemberPieces	unsigned char	0
-site	src/game/map_field_objects.cpp	545	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	547	global	Byte	kClockHours	0x9040c8	-	none	-	-	0
-site	src/game/map_field_objects.cpp	547	global	At	kFormat02d	0x65306c	-	none	-	-	0
-site	src/game/map_field_objects.cpp	549	global	At	kFormat02d	0x65306c	-	none	-	-	0
-site	src/game/map_field_objects.cpp	552	global	At	kColonText	0x6637e0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	553	global	At	kColonText	0x6637e0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	555	global	At	Menu_PlayTimePieces_addr + 0x18	0x6633cc	-	inside	Menu_PlayTimePieces+0x18	unsigned char	0
-site	src/game/map_field_objects.cpp	558	global	At	Menu_PlayTimePieces_addr	0x6633b4	-	exact	Menu_PlayTimePieces	unsigned char	0
-site	src/game/map_field_objects.cpp	560	global	At	Menu_PlayTimePieces_addr + 0xc	0x6633c0	-	inside	Menu_PlayTimePieces+0xc	unsigned char	0
-site	src/game/map_field_objects.cpp	578	record	Byte	at::OpLengthsAt() + (c >> 4)	-	via=OpLengthsAt	-	-	-	0
-site	src/game/map_field_objects.cpp	600	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	601	record	At	S16(static_cast<U>(x)) + Dword(At(at::BytesAt())) + row	-	via=S16	-	-	-	0
-site	src/game/map_field_objects.cpp	624	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	0
-site	src/game/map_field_objects.cpp	625	global	At	Field_ActiveMember_addr	0x9035a4	-	exact	Field_ActiveMember	unsigned char *	0
-site	src/game/map_field_objects.cpp	631	global	At	Sprite_Objects_addr + 0x8c + static_cast<std::uint32_t>(stat	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	636	global	At	Sprite_Objects_addr + 0x90 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	637	global	At	Sprite_Objects_addr + 0x94 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	647	global	At	Sprite_Objects_addr + 0x88 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	648	global	At	Sprite_Objects_addr + 0x84 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	649	global	At	Sprite_Objects_addr + 0xa0 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	123	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	0
+site	src/game/map_field_objects.cpp	178	record	At	at::UprightHeightsAt() + e * 2u	-	via=UprightHeightsAt	-	-	-	0
+site	src/game/map_field_objects.cpp	196	record	Byte	at::UprightCountsAt() + e	-	via=UprightCountsAt	-	-	-	0
+site	src/game/map_field_objects.cpp	207	global	At	MapView_ScreenXY_addr	0x903820	-	exact	MapView_ScreenXY	float	0
+site	src/game/map_field_objects.cpp	207	record	SetDword	prim + 0x28	-	stride=0x48	-	-	-	0
+site	src/game/map_field_objects.cpp	208	global	At	MapView_ScreenXY_addr + 4	0x903824	-	inside	MapView_ScreenXY+0x4	float	0
+site	src/game/map_field_objects.cpp	208	record	SetDword	prim + 0x2C	-	stride=0x48	-	-	-	0
+site	src/game/map_field_objects.cpp	209	record	SetDword	prim + 0x30	-	stride=0x48	-	-	-	0
+site	src/game/map_field_objects.cpp	210	global	At	Effect6c_OffsetX_addr	0x903828	-	exact	Effect6c_OffsetX	float	0
+site	src/game/map_field_objects.cpp	210	record	SetDword	prim + 0x38	-	stride=0x48	-	-	-	0
+site	src/game/map_field_objects.cpp	211	global	At	Effect6c_OffsetX_addr + 4	0x90382c	-	exact	Effect6c_OffsetY	float	0
+site	src/game/map_field_objects.cpp	211	record	SetDword	prim + 0x3C	-	stride=0x48	-	-	-	0
+site	src/game/map_field_objects.cpp	212	record	SetDword	prim + 0x40	-	stride=0x48	-	-	-	0
+site	src/game/map_field_objects.cpp	213	record	Byte	at::UprightU02At() + e	-	via=UprightU02At	-	-	-	0
+site	src/game/map_field_objects.cpp	216	record	Byte	at::UprightU13At() + e	-	via=UprightU13At	-	-	-	0
+site	src/game/map_field_objects.cpp	219	record	Byte	at::UprightV01At() + e2 + j	-	via=UprightV01At	-	-	-	0
+site	src/game/map_field_objects.cpp	222	record	Byte	at::UprightV23At() + e2 + j	-	via=UprightV23At	-	-	-	0
+site	src/game/map_field_objects.cpp	226	record	Byte	at::UprightClutAt() + e	-	via=UprightClutAt	-	-	-	0
+site	src/game/map_field_objects.cpp	234	global	At	Prim_VertexScratch_addr + v * 8u	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
+site	src/game/map_field_objects.cpp	234	record	At	at::UprightOffsetsXAt() + k	-	via=UprightOffsetsXAt	-	-	-	0
+site	src/game/map_field_objects.cpp	235	global	At	Prim_VertexScratch_addr + v * 8u + 2	0x9037a0	-	exact	Prim_VertexScratch	records::SVector	0
+site	src/game/map_field_objects.cpp	235	record	At	at::UprightOffsetsYAt() + k	-	via=UprightOffsetsYAt	-	-	-	0
+site	src/game/map_field_objects.cpp	243	record	Byte	at::UprightCountsAt() + e	-	via=UprightCountsAt	-	-	-	0
+site	src/game/map_field_objects.cpp	257	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	258	global	At	AreaMap_Corners_addr + (width * b0 + b1) * 4u	0x8cb5b0	-	exact	AreaMap_Corners	unsigned long	0
+site	src/game/map_field_objects.cpp	291	record	At	at::OriginAt() + 2	-	via=OriginAt	-	-	-	0
+site	src/game/map_field_objects.cpp	307	global	At	MapView_CellItems_addr + 0x2 + index * 4u	0x937fa0	-	exact	MapView_CellItems	unsigned char	0
+site	src/game/map_field_objects.cpp	322	global	At	AreaMap_PatchBase_addr	0x8cb5a8	-	exact	AreaMap_PatchBase	unsigned short	0
+site	src/game/map_field_objects.cpp	323	global	At	AreaMap_Header_addr + index * 4u	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	350	record	Dword	record + 4	-	param	-	-	-	0
+site	src/game/map_field_objects.cpp	351	record	Dword	record + 4	-	param	-	-	-	0
+site	src/game/map_field_objects.cpp	352	record	Word	record + 4	-	param	-	-	-	0
+site	src/game/map_field_objects.cpp	355	global	At	MapView_ScreenXY_addr	0x903820	-	exact	MapView_ScreenXY	float	0
+site	src/game/map_field_objects.cpp	362	record	Dword	record + 8	-	param	-	-	-	0
+site	src/game/map_field_objects.cpp	401	record	Dword	entry + 4	-	-	-	-	-	0
+site	src/game/map_field_objects.cpp	407	record	Dword	entry + 8	-	-	-	-	-	0
+site	src/game/map_field_objects.cpp	418	global	At	kFlatColour0	0x8cb59a	-	none	-	-	0
+site	src/game/map_field_objects.cpp	418	record	Dword	entry + 4	-	param	-	-	-	0
+site	src/game/map_field_objects.cpp	419	global	At	kFlatColour1	0x8cb59c	-	none	-	-	0
+site	src/game/map_field_objects.cpp	419	record	Dword	entry + 8	-	param	-	-	-	0
+site	src/game/map_field_objects.cpp	421	global	At	kFlatColour0	0x8cb59a	-	none	-	-	0
+site	src/game/map_field_objects.cpp	421	record	Word	entry + 4	-	param	-	-	-	0
+site	src/game/map_field_objects.cpp	422	global	At	kFlatColour1	0x8cb59c	-	none	-	-	0
+site	src/game/map_field_objects.cpp	422	record	Word	entry + 8	-	param	-	-	-	0
+site	src/game/map_field_objects.cpp	433	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	435	global	At	AreaMap_Header_addr + 0x2	0x8cb582	-	inside	AreaMap_Header+0x2	unsigned char	0
+site	src/game/map_field_objects.cpp	436	record	Dword	entry + 4 + (flag == 0 ? 4 : 0)	-	-	-	-	-	0
+site	src/game/map_field_objects.cpp	437	global	At	AreaMap_Header_addr + ((d & 0xFFu) * width + ((d >> 8) & 0xF	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	439	global	At	AreaMap_Header_addr + (static_cast<U>(half) + offset + tile)	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	471	global	At	CharacterRecords_addr + (member & 0xFFu) * kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
+site	src/game/map_field_objects.cpp	475	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	477	global	At	kFormat3d	0x64e324	-	none	-	-	0
+site	src/game/map_field_objects.cpp	497	global	At	kFormatLeft	0x6639b0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	500	global	At	kFormatRight	0x6639a8	-	none	-	-	0
+site	src/game/map_field_objects.cpp	510	global	At	kFormatLeft	0x6639b0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	512	global	At	kFormatRight	0x6639a8	-	none	-	-	0
+site	src/game/map_field_objects.cpp	514	global	At	Menu_MemberPieces_addr	0x6632c8	-	exact	Menu_MemberPieces	unsigned char	0
+site	src/game/map_field_objects.cpp	553	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	555	global	Byte	kClockHours	0x9040c8	-	none	-	-	0
+site	src/game/map_field_objects.cpp	555	global	At	kFormat02d	0x65306c	-	none	-	-	0
+site	src/game/map_field_objects.cpp	557	global	At	kFormat02d	0x65306c	-	none	-	-	0
+site	src/game/map_field_objects.cpp	560	global	At	kColonText	0x6637e0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	561	global	At	kColonText	0x6637e0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	563	global	At	Menu_PlayTimePieces_addr + 0x18	0x6633cc	-	inside	Menu_PlayTimePieces+0x18	unsigned char	0
+site	src/game/map_field_objects.cpp	566	global	At	Menu_PlayTimePieces_addr	0x6633b4	-	exact	Menu_PlayTimePieces	unsigned char	0
+site	src/game/map_field_objects.cpp	568	global	At	Menu_PlayTimePieces_addr + 0xc	0x6633c0	-	inside	Menu_PlayTimePieces+0xc	unsigned char	0
+site	src/game/map_field_objects.cpp	586	record	Byte	at::OpLengthsAt() + (c >> 4)	-	via=OpLengthsAt	-	-	-	0
+site	src/game/map_field_objects.cpp	608	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	609	record	At	S16(static_cast<U>(x)) + Dword(At(at::BytesAt())) + row	-	via=S16	-	-	-	0
+site	src/game/map_field_objects.cpp	632	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	0
+site	src/game/map_field_objects.cpp	633	global	At	Field_ActiveMember_addr	0x9035a4	-	exact	Field_ActiveMember	unsigned char *	0
+site	src/game/map_field_objects.cpp	639	global	At	Sprite_Objects_addr + 0x8c + static_cast<std::uint32_t>(stat	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	644	global	At	Sprite_Objects_addr + 0x90 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	645	global	At	Sprite_Objects_addr + 0x94 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	655	global	At	Sprite_Objects_addr + 0x88 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	656	global	At	Sprite_Objects_addr + 0x84 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	657	global	At	Sprite_Objects_addr + 0xa0 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
 site	src/game/map_field_objects_fuzz.cpp	161	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	1
 site	src/game/map_field_objects_fuzz.cpp	162	global	At	kScratchX_addr	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/map_field_objects_fuzz.cpp	168	record	At	w.at + byte	-	-	-	-	-	1
@@ -19525,46 +19525,47 @@ site	src/game/map_field_objects_fuzz.cpp	844	global	At	MapFieldObjects_ClockFram
 site	src/game/map_field_objects_fuzz.cpp	887	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	1
 site	src/game/map_field_objects_fuzz.cpp	906	global	At	kScratchX_addr	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/map_field_objects_fuzz.cpp	907	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	1
-site	src/game/map_layers.cpp	173	record	Dword	angles + 4	-	base=Camera_Angles	-	-	-	0
-site	src/game/map_layers.cpp	174	record	Word	angles + 2	-	base=Camera_Angles	-	-	-	0
-site	src/game/map_layers.cpp	174	record	Word	angles + 4	-	base=Camera_Angles	-	-	-	0
-site	src/game/map_layers.cpp	174	record	Word	drawn + 2	-	base=Camera_AnglesDrawn	-	-	-	0
-site	src/game/map_layers.cpp	174	record	Word	drawn + 4	-	base=Camera_AnglesDrawn	-	-	-	0
-site	src/game/map_layers.cpp	177	record	SetDword	drawn + 4	-	base=Camera_AnglesDrawn	-	-	-	0
-site	src/game/map_layers.cpp	188	record	SetDword	translation + 4	-	base=Camera_Matrix	-	-	-	0
-site	src/game/map_layers.cpp	190	record	SetDword	translation + 8	-	base=Camera_Matrix	-	-	-	0
-site	src/game/map_layers.cpp	245	record	Word	cell + 2	-	param	-	-	-	0
-site	src/game/map_layers.cpp	273	record	Word	cell + 2	-	param	-	-	-	0
-site	src/game/map_layers.cpp	277	record	Word	item + 0x36	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	280	record	SetWord	item + 0x36	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	284	record	SetWord	cell + 2	-	param	-	-	-	0
-site	src/game/map_layers.cpp	286	record	Word	Item(got) + 0x7E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	286	record	Word	Item(got) + 0x8E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	292	record	Word	Item(got) + 0x7E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	293	record	Word	Item(got) + 0x8E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	314	record	SetWord	item + 0x7E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	318	record	SetWord	item + 0x8E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	320	record	SetWord	cell + 2	-	param	-	-	-	0
-site	src/game/map_layers.cpp	320	record	Word	cell + 2	-	param	-	-	-	0
-site	src/game/map_layers.cpp	321	record	SetWord	item + 0x36	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	343	record	Word	cell + 2	-	param	-	-	-	0
-site	src/game/map_layers.cpp	379	record	Word	cell + 2	-	param	-	-	-	0
-site	src/game/map_layers.cpp	396	record	Word	item + 0x7E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	397	record	Word	item + 0x8E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	400	record	Word	item + 0x8E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	425	record	Word	item + 0x8E	-	via=Item	-	-	-	0
-site	src/game/map_layers.cpp	507	record	Word	AreaMap_Header + 2	-	base=AreaMap_Header	-	-	-	0
-site	src/game/map_layers.cpp	508	record	Word	AreaMap_Header + (x + width * y + offset * 2u) * 2u	-	base=AreaMap_Header	-	-	-	0
-site	src/game/map_layers.cpp	517	record	Word	item + 0x8E	-	-	-	-	-	0
-site	src/game/map_layers.cpp	527	record	SetWord	item + 0x8E	-	-	-	-	-	0
-site	src/game/map_layers.cpp	532	record	Dword	texture - 4	-	base=AreaMap_Header;stride=0x4	-	-	-	0
-site	src/game/map_layers.cpp	538	record	Word	item + 0x7E	-	-	-	-	-	0
-site	src/game/map_layers.cpp	553	record	Dword	texture + 4	-	base=AreaMap_Header;stride=0x4	-	-	-	0
-site	src/game/map_layers.cpp	562	record	SetWord	item + 0x7E	-	-	-	-	-	0
-site	src/game/map_layers.cpp	716	record	Word	AreaMap_Header + 2	-	base=AreaMap_Header	-	-	-	0
-site	src/game/map_layers.cpp	722	record	Word	tiles + i * 2u	-	base=AreaMap_Header;stride=0x4	-	-	-	0
-site	src/game/map_layers.cpp	723	record	Word	AreaMap_Header + 4	-	base=AreaMap_Header	-	-	-	0
-site	src/game/map_layers.cpp	736	record	Word	tiles + (z * width + x) * 2u	-	base=AreaMap_Header;stride=0x4	-	-	-	0
+site	src/game/map_layers.cpp	186	record	Dword	angles + 4	-	base=Camera_Angles	-	-	-	0
+site	src/game/map_layers.cpp	187	record	Word	angles + 2	-	base=Camera_Angles	-	-	-	0
+site	src/game/map_layers.cpp	187	record	Word	angles + 4	-	base=Camera_Angles	-	-	-	0
+site	src/game/map_layers.cpp	187	record	Word	drawn + 2	-	base=Camera_AnglesDrawn	-	-	-	0
+site	src/game/map_layers.cpp	187	record	Word	drawn + 4	-	base=Camera_AnglesDrawn	-	-	-	0
+site	src/game/map_layers.cpp	190	record	SetDword	drawn + 4	-	base=Camera_AnglesDrawn	-	-	-	0
+site	src/game/map_layers.cpp	201	record	SetDword	translation + 4	-	base=Camera_Matrix	-	-	-	0
+site	src/game/map_layers.cpp	203	record	SetDword	translation + 8	-	base=Camera_Matrix	-	-	-	0
+site	src/game/map_layers.cpp	259	record	Word	cell + 2	-	param	-	-	-	0
+site	src/game/map_layers.cpp	288	record	Word	cell + 2	-	param	-	-	-	0
+site	src/game/map_layers.cpp	292	record	Word	item + 0x36	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	295	record	SetWord	item + 0x36	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	299	record	SetWord	cell + 2	-	param	-	-	-	0
+site	src/game/map_layers.cpp	301	record	Word	Item(got) + 0x7E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	301	record	Word	Item(got) + 0x8E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	307	record	Word	Item(got) + 0x7E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	308	record	Word	Item(got) + 0x8E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	329	record	SetWord	item + 0x7E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	333	record	SetWord	item + 0x8E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	335	record	SetWord	cell + 2	-	param	-	-	-	0
+site	src/game/map_layers.cpp	335	record	Word	cell + 2	-	param	-	-	-	0
+site	src/game/map_layers.cpp	336	record	SetWord	item + 0x36	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	358	record	Word	cell + 2	-	param	-	-	-	0
+site	src/game/map_layers.cpp	386	record	Word	cell + 2	-	param	-	-	-	0
+site	src/game/map_layers.cpp	399	record	Word	cell + 2	-	param	-	-	-	0
+site	src/game/map_layers.cpp	418	record	Word	item + 0x7E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	419	record	Word	item + 0x8E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	422	record	Word	item + 0x8E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	447	record	Word	item + 0x8E	-	via=Item	-	-	-	0
+site	src/game/map_layers.cpp	552	record	Word	AreaMap_Header + 2	-	base=AreaMap_Header	-	-	-	0
+site	src/game/map_layers.cpp	553	record	Word	AreaMap_Header + (x + width * y + offset * 2u) * 2u	-	base=AreaMap_Header	-	-	-	0
+site	src/game/map_layers.cpp	562	record	Word	item + 0x8E	-	-	-	-	-	0
+site	src/game/map_layers.cpp	572	record	SetWord	item + 0x8E	-	-	-	-	-	0
+site	src/game/map_layers.cpp	577	record	Dword	texture - 4	-	base=AreaMap_Header;stride=0x4	-	-	-	0
+site	src/game/map_layers.cpp	583	record	Word	item + 0x7E	-	-	-	-	-	0
+site	src/game/map_layers.cpp	598	record	Dword	texture + 4	-	base=AreaMap_Header;stride=0x4	-	-	-	0
+site	src/game/map_layers.cpp	607	record	SetWord	item + 0x7E	-	-	-	-	-	0
+site	src/game/map_layers.cpp	761	record	Word	AreaMap_Header + 2	-	base=AreaMap_Header	-	-	-	0
+site	src/game/map_layers.cpp	767	record	Word	tiles + i * 2u	-	base=AreaMap_Header;stride=0x4	-	-	-	0
+site	src/game/map_layers.cpp	768	record	Word	AreaMap_Header + 4	-	base=AreaMap_Header	-	-	-	0
+site	src/game/map_layers.cpp	781	record	Word	tiles + (z * width + x) * 2u	-	base=AreaMap_Header;stride=0x4	-	-	-	0
 site	src/game/map_layers_fuzz.cpp	196	record	SetWord	item + 0x7E	-	param	-	-	-	1
 site	src/game/map_layers_fuzz.cpp	197	record	SetWord	item + 0x8E	-	param	-	-	-	1
 site	src/game/map_layers_fuzz.cpp	237	record	Word	cell + 2	-	param	-	-	-	1
@@ -19582,19 +19583,22 @@ site	src/game/map_layers_fuzz.cpp	625	record	SetWord	item + 0x7E	-	stride=0x90	-
 site	src/game/map_layers_fuzz.cpp	626	record	SetWord	item + 0x8E	-	stride=0x90	-	-	-	1
 site	src/game/map_layers_fuzz.cpp	627	record	Word	AreaMap_Header + (x + width * y + offset * 2) * 2	-	base=AreaMap_Header	-	-	-	1
 site	src/game/map_layers_fuzz.cpp	632	record	Word	item + 0x8E	-	stride=0x90	-	-	-	1
-site	src/game/map_scroll.cpp	223	record	SetWord	quad + 0x36	-	via=Items;stride=0x48	-	-	-	0
-site	src/game/map_scroll.cpp	224	record	SetWord	quad + 0x46	-	via=Items;stride=0x48	-	-	-	0
-site	src/game/map_scroll.cpp	233	record	SetWord	angles + 4	-	base=Camera_Angles	-	-	-	0
-site	src/game/map_scroll.cpp	234	record	Dword	angles + 4	-	base=Camera_Angles	-	-	-	0
-site	src/game/map_scroll.cpp	234	record	SetDword	drawn + 4	-	base=Camera_AnglesDrawn	-	-	-	0
-site	src/game/map_scroll.cpp	238	record	SetDword	draw_pool::Items() + at	-	via=Items	-	-	-	0
-site	src/game/map_scroll.cpp	272	record	SetWord	cell + 2	-	via=Cell	-	-	-	0
-site	src/game/map_scroll.cpp	306	record	Dword	entry + 4	-	base=AreaMap_Header;stride=0x4	-	-	-	0
-site	src/game/map_scroll.cpp	315	record	Word	AreaMap_Header + 2	-	base=AreaMap_Header	-	-	-	0
-site	src/game/map_scroll.cpp	318	record	Word	AreaMap_Header + cell * 2u	-	base=AreaMap_Header	-	-	-	0
-site	src/game/map_scroll.cpp	322	record	SetDword	AreaMap_Header + slot * 4u	-	base=AreaMap_Header	-	-	-	0
-site	src/game/map_scroll.cpp	322	record	Dword	record - 8	-	stride=0xc	-	-	-	0
-site	src/game/map_scroll.cpp	328	record	Dword	entry + step * 4u + 4u	-	base=AreaMap_Header;stride=0x4	-	-	-	0
+site	src/game/map_rim.cpp	522	record	Word	cell + 2	-	via=Cell	-	-	-	0
+site	src/game/map_rim.cpp	527	record	Word	cell + 2	-	via=Cell	-	-	-	0
+site	src/game/map_rim.cpp	549	record	Word	ours + 2	-	via=Cell	-	-	-	0
+site	src/game/map_scroll.cpp	231	record	SetWord	quad + 0x36	-	via=Items;stride=0x48	-	-	-	0
+site	src/game/map_scroll.cpp	232	record	SetWord	quad + 0x46	-	via=Items;stride=0x48	-	-	-	0
+site	src/game/map_scroll.cpp	241	record	SetWord	angles + 4	-	base=Camera_Angles	-	-	-	0
+site	src/game/map_scroll.cpp	242	record	Dword	angles + 4	-	base=Camera_Angles	-	-	-	0
+site	src/game/map_scroll.cpp	242	record	SetDword	drawn + 4	-	base=Camera_AnglesDrawn	-	-	-	0
+site	src/game/map_scroll.cpp	246	record	SetDword	draw_pool::Items() + at	-	via=Items	-	-	-	0
+site	src/game/map_scroll.cpp	280	record	SetWord	cell + 2	-	via=Cell	-	-	-	0
+site	src/game/map_scroll.cpp	316	record	Dword	entry + 4	-	base=AreaMap_Header;stride=0x4	-	-	-	0
+site	src/game/map_scroll.cpp	325	record	Word	AreaMap_Header + 2	-	base=AreaMap_Header	-	-	-	0
+site	src/game/map_scroll.cpp	328	record	Word	AreaMap_Header + cell * 2u	-	base=AreaMap_Header	-	-	-	0
+site	src/game/map_scroll.cpp	332	record	SetDword	AreaMap_Header + slot * 4u	-	base=AreaMap_Header	-	-	-	0
+site	src/game/map_scroll.cpp	332	record	Dword	record - 8	-	stride=0xc	-	-	-	0
+site	src/game/map_scroll.cpp	338	record	Dword	entry + step * 4u + 4u	-	base=AreaMap_Header;stride=0x4	-	-	-	0
 site	src/game/map_scroll_fuzz.cpp	208	record	Word	cell + 2	-	param	-	-	-	1
 site	src/game/map_scroll_fuzz.cpp	210	record	SetWord	cell + 2	-	param	-	-	-	1
 site	src/game/map_scroll_fuzz.cpp	216	record	Word	out + 2	-	param	-	-	-	1
@@ -24305,149 +24309,149 @@ site	src/game/rest_4f_fuzz.cpp	567	record	SetLong	s + kOffsets[v & 7]	-	base=Spr
 site	src/game/rest_4f_fuzz.cpp	571	global	B	at::kCounter	0x929f04	-	none	-	-	1
 site	src/game/rest_4f_fuzz.cpp	572	global	B	MenuLists_Cursor_addr	0x929f05	-	exact	MenuLists_Cursor	signed char	1
 site	src/game/rest_4f_fuzz.cpp	579	global	B	at::kChapterByte4A	0x90384a	-	none	-	-	1
-site	src/game/save_menu.cpp	195	global	Long	at::kDatNames	0x64f368	-	exact	Dat_FileNames	const char *	0
-site	src/game/save_menu.cpp	203	global	At	at::kDatFormat	0x652894	-	none	-	-	0
-site	src/game/save_menu.cpp	214	record	Long	chunk + 8	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	215	record	At	chunk + 0x10	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	215	record	Long	chunk + 4	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	230	global	At	Save_Staging_addr	0x92a0e0	-	exact	Save_Staging	unsigned char	0
-site	src/game/save_menu.cpp	263	record	PutLong	base + i * 4	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	299	global	At	Save_Directory_addr	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
+site	src/game/save_menu.cpp	196	global	Long	at::kDatNames	0x64f368	-	exact	Dat_FileNames	const char *	0
+site	src/game/save_menu.cpp	204	global	At	at::kDatFormat	0x652894	-	none	-	-	0
+site	src/game/save_menu.cpp	215	record	Long	chunk + 8	-	via=Addr	-	-	-	0
+site	src/game/save_menu.cpp	216	record	At	chunk + 0x10	-	via=Addr	-	-	-	0
+site	src/game/save_menu.cpp	216	record	Long	chunk + 4	-	via=Addr	-	-	-	0
+site	src/game/save_menu.cpp	231	global	At	Save_Staging_addr	0x92a0e0	-	exact	Save_Staging	unsigned char	0
+site	src/game/save_menu.cpp	264	record	PutLong	base + i * 4	-	via=Addr	-	-	-	0
 site	src/game/save_menu.cpp	300	global	At	Save_Directory_addr	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
-site	src/game/save_menu.cpp	300	global	At	at::kListPattern	0x65289c	-	none	-	-	0
-site	src/game/save_menu.cpp	315	record	Byte	dir + n * at::kDirectoryBytes + 7	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	322	record	At	dir + n * at::kDirectoryBytes	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	334	global	Long	at::kStaging	0x92a0e0	-	exact	Save_Staging	unsigned char	0
-site	src/game/save_menu.cpp	334	record	PutLong	Addr(summary) + i * 4	-	via=Addr	-	-	-	0
-site	src/game/save_menu.cpp	345	global	At	Save_Directory_addr	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
-site	src/game/save_menu.cpp	345	global	At	at::kSummaries	0x905bc0	-	none	-	-	0
-site	src/game/save_menu.cpp	366	record	PutWord	base + i * 2	-	-	-	-	-	0
-site	src/game/save_menu.cpp	366	record	Word	base + i * 2 - 0x4000	-	-	-	-	-	0
-site	src/game/save_menu.cpp	416	global	Long	at::kStreamTables	0x6653b0	-	none	-	-	0
-site	src/game/save_menu.cpp	417	record	Long	table + (id & 0xFFF) * 4	-	table=0x6653b0;stride=0x4	-	-	-	0
-site	src/game/save_menu.cpp	420	global	At	at::kStreamFormat	0x666f9c	-	none	-	-	0
-site	src/game/save_menu.cpp	494	record	PutByte	record + 0x1E	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	496	record	PutByte	record + 0x1C	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	496	record	Byte	record + 0x2E	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	498	record	PutByte	record + 0x1D	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	500	record	Word	record + 0x20	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	500	record	Word	record + 0x22	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	501	record	PutWord	record + 0x18	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	502	record	PutWord	record + 0x1A	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	301	global	At	Save_Directory_addr	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
+site	src/game/save_menu.cpp	301	global	At	at::kListPattern	0x65289c	-	none	-	-	0
+site	src/game/save_menu.cpp	316	record	Byte	dir + n * at::kDirectoryBytes + 7	-	via=Addr	-	-	-	0
+site	src/game/save_menu.cpp	323	record	At	dir + n * at::kDirectoryBytes	-	via=Addr	-	-	-	0
+site	src/game/save_menu.cpp	335	global	Long	at::kStaging	0x92a0e0	-	exact	Save_Staging	unsigned char	0
+site	src/game/save_menu.cpp	335	record	PutLong	Addr(summary) + i * 4	-	via=Addr	-	-	-	0
+site	src/game/save_menu.cpp	346	global	At	Save_Directory_addr	0x929f40	-	exact	Save_Directory	records::SaveDirEntry	0
+site	src/game/save_menu.cpp	346	global	At	at::kSummaries	0x905bc0	-	none	-	-	0
+site	src/game/save_menu.cpp	367	record	PutWord	base + i * 2	-	-	-	-	-	0
+site	src/game/save_menu.cpp	367	record	Word	base + i * 2 - 0x4000	-	-	-	-	-	0
+site	src/game/save_menu.cpp	417	global	Long	at::kStreamTables	0x6653b0	-	none	-	-	0
+site	src/game/save_menu.cpp	418	record	Long	table + (id & 0xFFF) * 4	-	table=0x6653b0;stride=0x4	-	-	-	0
+site	src/game/save_menu.cpp	425	global	At	at::kStreamFormat	0x666f9c	-	none	-	-	0
+site	src/game/save_menu.cpp	499	record	PutByte	record + 0x1E	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	501	record	PutByte	record + 0x1C	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	501	record	Byte	record + 0x2E	-	stride=0xa4	-	-	-	0
 site	src/game/save_menu.cpp	503	record	PutByte	record + 0x1D	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	506	global	At	at::kFlagsA	0x904654	-	none	-	-	0
-site	src/game/save_menu.cpp	507	global	At	at::kFlagsB	0x904657	-	none	-	-	0
-site	src/game/save_menu.cpp	568	global	Byte	at::kMembers	0x802e88	-	inside	ObjTrio+0x148	records::PartyMember	0
-site	src/game/save_menu.cpp	610	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/save_menu.cpp	611	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/save_menu.cpp	612	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/save_menu.cpp	613	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/save_menu.cpp	614	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/save_menu.cpp	619	raw	PutByte	0x8031B2	0x8031b2	-	inside	WindowRecords+0x52	records::WindowRecord	0
-site	src/game/save_menu.cpp	636	raw	PutByte	0x8031B3	0x8031b3	-	inside	WindowRecords+0x53	records::WindowRecord	0
-site	src/game/save_menu.cpp	642	raw	PutByte	0x80343A	0x80343a	-	inside	WindowRecords+0x2da	records::WindowRecord	0
-site	src/game/save_menu.cpp	643	raw	PutByte	0x80343B	0x80343b	-	inside	WindowRecords+0x2db	records::WindowRecord	0
-site	src/game/save_menu.cpp	663	record	Byte	base + offset	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	664	record	PutByte	base + offset	-	stride=0xa4	-	-	-	0
-site	src/game/save_menu.cpp	723	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	724	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	725	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	742	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	743	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	744	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	765	global	-	at::kPieces	0x66726c	-	none	-	-	0
-site	src/game/save_menu.cpp	767	record	Byte	e + 2	-	table=0x66726c;stride=0xa	-	-	-	0
-site	src/game/save_menu.cpp	768	record	Word	e + 4	-	table=0x66726c;stride=0xa	-	-	-	0
-site	src/game/save_menu.cpp	769	record	Word	e + 6	-	table=0x66726c;stride=0xa	-	-	-	0
-site	src/game/save_menu.cpp	770	record	Word	e + 8	-	table=0x66726c;stride=0xa	-	-	-	0
-site	src/game/save_menu.cpp	814	global	At	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
-site	src/game/save_menu.cpp	814	global	At	at::kSummaries	0x905bc0	-	none	-	-	0
-site	src/game/save_menu.cpp	815	global	At	Rest2c_Slot_addr	0x9036d4	-	exact	Rest2c_Slot	unsigned long	0
-site	src/game/save_menu.cpp	843	global	Byte	at::kGrowthTable	0x667248	-	exact	NewGame_GrowthRolls	-	0
-site	src/game/save_menu.cpp	843	global	Byte	at::kGrowthTable	0x667248	-	exact	NewGame_GrowthRolls	-	0
-site	src/game/save_menu.cpp	844	global	Byte	at::kGrowthTable	0x667248	-	exact	NewGame_GrowthRolls	-	0
-site	src/game/save_menu.cpp	845	global	-	at::kGrowth	0x903640	-	none	-	-	0
-site	src/game/save_menu.cpp	846	global	Byte	at::kGrowthValues	0x667260	-	exact	NewGame_GrowthValues	-	0
-site	src/game/save_menu.cpp	846	record	PutByte	out + k	-	table=0x903640;stride=0x5	-	-	-	0
-site	src/game/save_menu.cpp	848	record	PutByte	out + k	-	table=0x903640;stride=0x5	-	-	-	0
-site	src/game/save_menu.cpp	868	global	PutLong	at::kFieldState	0x905d98	-	exact	Field_State	unsigned char *	0
-site	src/game/save_menu.cpp	869	global	PutLong	at::kSpriteCurrent	0x937f88	-	exact	Sprite_Current	unsigned char *	0
-site	src/game/save_menu.cpp	894	global	PutByte	at::kCounter	0x929f04	-	none	-	-	0
-site	src/game/save_menu.cpp	902	global	Byte	at::kCounter	0x929f04	-	none	-	-	0
-site	src/game/save_menu.cpp	903	global	PutByte	at::kCounter	0x929f04	-	none	-	-	0
-site	src/game/save_menu.cpp	910	global	PutByte	at::kMenuFlags	0x7dee44	-	none	-	-	0
-site	src/game/save_menu.cpp	910	global	Byte	at::kMenuFlags	0x7dee44	-	none	-	-	0
-site	src/game/save_menu.cpp	917	global	PutByte	at::kCounter	0x929f04	-	none	-	-	0
-site	src/game/save_menu.cpp	918	global	PutLong	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	931	global	PutByte	at::kCounter	0x929f04	-	none	-	-	0
-site	src/game/save_menu.cpp	931	global	Byte	at::kCounter	0x929f04	-	none	-	-	0
-site	src/game/save_menu.cpp	934	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	935	global	PutByte	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	937	global	Byte	at::kCounter	0x929f04	-	none	-	-	0
-site	src/game/save_menu.cpp	951	global	Byte	at::kMenuFlags	0x7dee44	-	none	-	-	0
-site	src/game/save_menu.cpp	952	global	Long	at::kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
-site	src/game/save_menu.cpp	969	global	-	at::kRowBright	0x6bdf90	-	none	-	-	0
-site	src/game/save_menu.cpp	1007	global	-	at::kCondFlagsEnd	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/save_menu.cpp	1018	global	PutLong	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
-site	src/game/save_menu.cpp	1051	global	Long	at::kSlot	0x9036d4	-	exact	Rest2c_Slot	unsigned long	0
-site	src/game/save_menu.cpp	1056	global	Long	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
-site	src/game/save_menu.cpp	1057	global	PutLong	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
+site	src/game/save_menu.cpp	505	record	Word	record + 0x20	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	505	record	Word	record + 0x22	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	506	record	PutWord	record + 0x18	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	507	record	PutWord	record + 0x1A	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	508	record	PutByte	record + 0x1D	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	511	global	At	at::kFlagsA	0x904654	-	none	-	-	0
+site	src/game/save_menu.cpp	512	global	At	at::kFlagsB	0x904657	-	none	-	-	0
+site	src/game/save_menu.cpp	573	global	Byte	at::kMembers	0x802e88	-	inside	ObjTrio+0x148	records::PartyMember	0
+site	src/game/save_menu.cpp	615	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/save_menu.cpp	616	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/save_menu.cpp	617	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/save_menu.cpp	618	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/save_menu.cpp	619	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/save_menu.cpp	624	raw	PutByte	0x8031B2	0x8031b2	-	inside	WindowRecords+0x52	records::WindowRecord	0
+site	src/game/save_menu.cpp	641	raw	PutByte	0x8031B3	0x8031b3	-	inside	WindowRecords+0x53	records::WindowRecord	0
+site	src/game/save_menu.cpp	647	raw	PutByte	0x80343A	0x80343a	-	inside	WindowRecords+0x2da	records::WindowRecord	0
+site	src/game/save_menu.cpp	648	raw	PutByte	0x80343B	0x80343b	-	inside	WindowRecords+0x2db	records::WindowRecord	0
+site	src/game/save_menu.cpp	668	record	Byte	base + offset	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	669	record	PutByte	base + offset	-	stride=0xa4	-	-	-	0
+site	src/game/save_menu.cpp	728	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	729	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	730	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	747	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	748	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	749	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	770	global	-	at::kPieces	0x66726c	-	none	-	-	0
+site	src/game/save_menu.cpp	772	record	Byte	e + 2	-	table=0x66726c;stride=0xa	-	-	-	0
+site	src/game/save_menu.cpp	773	record	Word	e + 4	-	table=0x66726c;stride=0xa	-	-	-	0
+site	src/game/save_menu.cpp	774	record	Word	e + 6	-	table=0x66726c;stride=0xa	-	-	-	0
+site	src/game/save_menu.cpp	775	record	Word	e + 8	-	table=0x66726c;stride=0xa	-	-	-	0
+site	src/game/save_menu.cpp	819	global	At	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
+site	src/game/save_menu.cpp	819	global	At	at::kSummaries	0x905bc0	-	none	-	-	0
+site	src/game/save_menu.cpp	820	global	At	Rest2c_Slot_addr	0x9036d4	-	exact	Rest2c_Slot	unsigned long	0
+site	src/game/save_menu.cpp	848	global	Byte	at::kGrowthTable	0x667248	-	exact	NewGame_GrowthRolls	-	0
+site	src/game/save_menu.cpp	848	global	Byte	at::kGrowthTable	0x667248	-	exact	NewGame_GrowthRolls	-	0
+site	src/game/save_menu.cpp	849	global	Byte	at::kGrowthTable	0x667248	-	exact	NewGame_GrowthRolls	-	0
+site	src/game/save_menu.cpp	850	global	-	at::kGrowth	0x903640	-	none	-	-	0
+site	src/game/save_menu.cpp	851	global	Byte	at::kGrowthValues	0x667260	-	exact	NewGame_GrowthValues	-	0
+site	src/game/save_menu.cpp	851	record	PutByte	out + k	-	table=0x903640;stride=0x5	-	-	-	0
+site	src/game/save_menu.cpp	853	record	PutByte	out + k	-	table=0x903640;stride=0x5	-	-	-	0
+site	src/game/save_menu.cpp	873	global	PutLong	at::kFieldState	0x905d98	-	exact	Field_State	unsigned char *	0
+site	src/game/save_menu.cpp	874	global	PutLong	at::kSpriteCurrent	0x937f88	-	exact	Sprite_Current	unsigned char *	0
+site	src/game/save_menu.cpp	899	global	PutByte	at::kCounter	0x929f04	-	none	-	-	0
+site	src/game/save_menu.cpp	907	global	Byte	at::kCounter	0x929f04	-	none	-	-	0
+site	src/game/save_menu.cpp	908	global	PutByte	at::kCounter	0x929f04	-	none	-	-	0
+site	src/game/save_menu.cpp	915	global	PutByte	at::kMenuFlags	0x7dee44	-	none	-	-	0
+site	src/game/save_menu.cpp	915	global	Byte	at::kMenuFlags	0x7dee44	-	none	-	-	0
+site	src/game/save_menu.cpp	922	global	PutByte	at::kCounter	0x929f04	-	none	-	-	0
+site	src/game/save_menu.cpp	923	global	PutLong	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	936	global	PutByte	at::kCounter	0x929f04	-	none	-	-	0
+site	src/game/save_menu.cpp	936	global	Byte	at::kCounter	0x929f04	-	none	-	-	0
+site	src/game/save_menu.cpp	939	global	Byte	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	940	global	PutByte	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	942	global	Byte	at::kCounter	0x929f04	-	none	-	-	0
+site	src/game/save_menu.cpp	956	global	Byte	at::kMenuFlags	0x7dee44	-	none	-	-	0
+site	src/game/save_menu.cpp	957	global	Long	at::kPressed	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
+site	src/game/save_menu.cpp	974	global	-	at::kRowBright	0x6bdf90	-	none	-	-	0
+site	src/game/save_menu.cpp	1012	global	-	at::kCondFlagsEnd	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/save_menu.cpp	1023	global	PutLong	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
+site	src/game/save_menu.cpp	1056	global	Long	at::kSlot	0x9036d4	-	exact	Rest2c_Slot	unsigned long	0
 site	src/game/save_menu.cpp	1061	global	Long	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
-site	src/game/save_menu.cpp	1061	global	PutLong	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
-site	src/game/save_menu.cpp	1061	global	Long	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
-site	src/game/save_menu.cpp	1069	global	Byte	at::kSummaries	0x905bc0	-	none	-	-	0
-site	src/game/save_menu.cpp	1109	global	PutLong	at::kStaging	0x92a0e0	-	exact	Save_Staging	unsigned char	0
-site	src/game/save_menu.cpp	1110	global	At	at::kPath	0x904ba0	-	none	-	-	0
-site	src/game/save_menu.cpp	1110	global	At	at::kSaveName	0x664068	-	none	-	-	0
-site	src/game/save_menu.cpp	1111	global	At	at::kPath	0x904ba0	-	none	-	-	0
-site	src/game/save_menu.cpp	1116	global	Long	at::kChecksum	0x92a150	-	inside	Save_Staging+0x70	unsigned char	0
-site	src/game/save_menu.cpp	1117	global	PutWord	at::kChecksum	0x92a150	-	inside	Save_Staging+0x70	unsigned char	0
-site	src/game/save_menu.cpp	1120	global	Byte	at::kStaging	0x92a0e0	-	exact	Save_Staging	unsigned char	0
-site	src/game/save_menu.cpp	1121	global	PutByte	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1129	global	At	at::kPath	0x904ba0	-	none	-	-	0
-site	src/game/save_menu.cpp	1164	global	PutWord	at::kGameStep	0x66c7ea	-	exact	Game_Step	unsigned short	0
-site	src/game/save_menu.cpp	1196	global	Long	at::kSavedButtons	0x90469c	-	exact	SaveMenu_SavedButtons	unsigned long	0
-site	src/game/save_menu.cpp	1196	global	Long	at::kSavedButtons	0x90469c	-	exact	SaveMenu_SavedButtons	unsigned long	0
-site	src/game/save_menu.cpp	1197	global	PutLong	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
-site	src/game/save_menu.cpp	1198	global	Word	at::kSavedButtons	0x90469c	-	exact	SaveMenu_SavedButtons	unsigned long	0
-site	src/game/save_menu.cpp	1199	global	PutLong	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
-site	src/game/save_menu.cpp	1200	global	Long	at::kSavedButtons	0x90469c	-	exact	SaveMenu_SavedButtons	unsigned long	0
-site	src/game/save_menu.cpp	1201	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1062	global	PutLong	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
+site	src/game/save_menu.cpp	1066	global	Long	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
+site	src/game/save_menu.cpp	1066	global	PutLong	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
+site	src/game/save_menu.cpp	1066	global	Long	at::kSlotTop	0x8034d0	-	inside	MoveScript_PartyRecords+0x50	unsigned char	0
+site	src/game/save_menu.cpp	1074	global	Byte	at::kSummaries	0x905bc0	-	none	-	-	0
+site	src/game/save_menu.cpp	1114	global	PutLong	at::kStaging	0x92a0e0	-	exact	Save_Staging	unsigned char	0
+site	src/game/save_menu.cpp	1115	global	At	at::kPath	0x904ba0	-	none	-	-	0
+site	src/game/save_menu.cpp	1115	global	At	at::kSaveName	0x664068	-	none	-	-	0
+site	src/game/save_menu.cpp	1116	global	At	at::kPath	0x904ba0	-	none	-	-	0
+site	src/game/save_menu.cpp	1121	global	Long	at::kChecksum	0x92a150	-	inside	Save_Staging+0x70	unsigned char	0
+site	src/game/save_menu.cpp	1122	global	PutWord	at::kChecksum	0x92a150	-	inside	Save_Staging+0x70	unsigned char	0
+site	src/game/save_menu.cpp	1125	global	Byte	at::kStaging	0x92a0e0	-	exact	Save_Staging	unsigned char	0
+site	src/game/save_menu.cpp	1126	global	PutByte	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1134	global	At	at::kPath	0x904ba0	-	none	-	-	0
+site	src/game/save_menu.cpp	1169	global	PutWord	at::kGameStep	0x66c7ea	-	exact	Game_Step	unsigned short	0
+site	src/game/save_menu.cpp	1201	global	Long	at::kSavedButtons	0x90469c	-	exact	SaveMenu_SavedButtons	unsigned long	0
+site	src/game/save_menu.cpp	1201	global	Long	at::kSavedButtons	0x90469c	-	exact	SaveMenu_SavedButtons	unsigned long	0
 site	src/game/save_menu.cpp	1202	global	PutLong	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
-site	src/game/save_menu.cpp	1203	global	PutLong	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1203	global	Word	at::kSavedButtons	0x90469c	-	exact	SaveMenu_SavedButtons	unsigned long	0
+site	src/game/save_menu.cpp	1204	global	PutLong	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1205	global	Long	at::kSavedButtons	0x90469c	-	exact	SaveMenu_SavedButtons	unsigned long	0
 site	src/game/save_menu.cpp	1206	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
-site	src/game/save_menu.cpp	1207	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
-site	src/game/save_menu.cpp	1208	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
-site	src/game/save_menu.cpp	1209	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
-site	src/game/save_menu.cpp	1210	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1207	global	PutLong	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1208	global	PutLong	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
 site	src/game/save_menu.cpp	1211	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
 site	src/game/save_menu.cpp	1212	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
 site	src/game/save_menu.cpp	1213	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
 site	src/game/save_menu.cpp	1214	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
-site	src/game/save_menu.cpp	1227	global	Long	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1227	global	Long	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1227	global	Long	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1228	global	PutLong	at::kPosition	0x8034e0	-	exact	Cond_ByteFA	signed char	0
-site	src/game/save_menu.cpp	1229	global	PutLong	at::kPosition	0x8034e0	-	exact	Cond_ByteFA	signed char	0
-site	src/game/save_menu.cpp	1230	global	Long	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1231	global	PutLong	at::kPosition	0x8034e0	-	exact	Cond_ByteFA	signed char	0
-site	src/game/save_menu.cpp	1232	global	PutLong	at::kPosition	0x8034e0	-	exact	Cond_ByteFA	signed char	0
-site	src/game/save_menu.cpp	1233	global	Byte	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1235	global	Byte	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1237	global	Byte	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1238	global	PutByte	at::kCounters	0x903848	-	none	-	-	0
-site	src/game/save_menu.cpp	1239	global	Byte	at::kGameBlock	0x9039e0	-	none	-	-	0
-site	src/game/save_menu.cpp	1240	global	PutByte	at::kCounters	0x903848	-	none	-	-	0
-site	src/game/save_menu.cpp	1241	global	PutByte	at::kCounters	0x903848	-	none	-	-	0
-site	src/game/save_menu.cpp	1242	global	PutByte	at::kCounters	0x903848	-	none	-	-	0
-site	src/game/save_menu.cpp	1249	global	Long	at::kHeld	0x7e1be8	-	exact	Input_Held	unsigned short	0
-site	src/game/save_menu.cpp	1265	global	PutByte	at::kMenuStates	0x929f02	-	exact	FieldS_Step	unsigned char	0
-site	src/game/save_menu.cpp	1266	global	PutByte	at::kMenuStates	0x929f02	-	exact	FieldS_Step	unsigned char	0
-site	src/game/save_menu.cpp	1274	global	At	CharacterRecords_addr + i * at::kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
-site	src/game/save_menu.cpp	1305	global	Long	at::kStepTable	0x6671f4	-	none	-	-	0
-site	src/game/save_menu.cpp	1313	global	Long	at::kMenuTable	0x66720c	-	none	-	-	0
-site	src/game/save_menu.cpp	1321	global	Long	at::kLoadTable	0x667228	-	none	-	-	0
-site	src/game/save_menu.cpp	1342	global	Long	at::kStreamTables	0x6653b0	-	none	-	-	0
+site	src/game/save_menu.cpp	1215	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1216	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1217	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1218	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1219	global	PutWord	at::kButtons	0x903580	-	inside	Gfx_UnpackScratch+0x1f000	unsigned char	0
+site	src/game/save_menu.cpp	1232	global	Long	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1232	global	Long	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1232	global	Long	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1233	global	PutLong	at::kPosition	0x8034e0	-	exact	Cond_ByteFA	signed char	0
+site	src/game/save_menu.cpp	1234	global	PutLong	at::kPosition	0x8034e0	-	exact	Cond_ByteFA	signed char	0
+site	src/game/save_menu.cpp	1235	global	Long	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1236	global	PutLong	at::kPosition	0x8034e0	-	exact	Cond_ByteFA	signed char	0
+site	src/game/save_menu.cpp	1237	global	PutLong	at::kPosition	0x8034e0	-	exact	Cond_ByteFA	signed char	0
+site	src/game/save_menu.cpp	1238	global	Byte	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1240	global	Byte	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1242	global	Byte	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1243	global	PutByte	at::kCounters	0x903848	-	none	-	-	0
+site	src/game/save_menu.cpp	1244	global	Byte	at::kGameBlock	0x9039e0	-	none	-	-	0
+site	src/game/save_menu.cpp	1245	global	PutByte	at::kCounters	0x903848	-	none	-	-	0
+site	src/game/save_menu.cpp	1246	global	PutByte	at::kCounters	0x903848	-	none	-	-	0
+site	src/game/save_menu.cpp	1247	global	PutByte	at::kCounters	0x903848	-	none	-	-	0
+site	src/game/save_menu.cpp	1254	global	Long	at::kHeld	0x7e1be8	-	exact	Input_Held	unsigned short	0
+site	src/game/save_menu.cpp	1270	global	PutByte	at::kMenuStates	0x929f02	-	exact	FieldS_Step	unsigned char	0
+site	src/game/save_menu.cpp	1271	global	PutByte	at::kMenuStates	0x929f02	-	exact	FieldS_Step	unsigned char	0
+site	src/game/save_menu.cpp	1279	global	At	CharacterRecords_addr + i * at::kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
+site	src/game/save_menu.cpp	1310	global	Long	at::kStepTable	0x6671f4	-	none	-	-	0
+site	src/game/save_menu.cpp	1318	global	Long	at::kMenuTable	0x66720c	-	none	-	-	0
+site	src/game/save_menu.cpp	1326	global	Long	at::kLoadTable	0x667228	-	none	-	-	0
+site	src/game/save_menu.cpp	1347	global	Long	at::kStreamTables	0x6653b0	-	none	-	-	0
 site	src/game/save_menu_fuzz.cpp	119	global	-	at::kStreamTables	0x6653b0	-	none	-	-	1
 site	src/game/save_menu_fuzz.cpp	166	global	PutByte	SaveMenu_FlowState_addr	0x6bdf86	-	exact	SaveMenu_FlowState	unsigned char	1
 site	src/game/save_menu_fuzz.cpp	167	global	PutByte	FieldS_Answer_addr	0x929f0b	-	exact	FieldS_Answer	signed char	1
@@ -26158,24 +26162,24 @@ site	src/game/scena_se_fuzz.cpp	132	global	Mem	at::kBank_addr	0x903852	-	inside	
 site	src/game/scena_se_fuzz.cpp	144	global	Mem	at::kCount_addr	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/scena_se_fuzz.cpp	150	global	Mem	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	1
 site	src/game/scena_se_fuzz.cpp	158	global	Mem	CharacterRecords_addr + 0xB + r * at::kObjectStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
-site	src/game/scena_sx.cpp	64	global	At	CharacterRecords_addr + n * at::kRecordStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
-site	src/game/scena_sx.cpp	115	record	Word	exp_table + (level + rows) * 8	-	base=Char_ExpTable	-	-	-	0
-site	src/game/scena_sx.cpp	154	global	At	at::kFormation	0x904aac	-	none	-	-	0
-site	src/game/scena_sx.cpp	173	global	At	at::kSlotPositions	0x7e06e0	-	none	-	-	0
-site	src/game/scena_sx.cpp	175	record	SetLong	pos + 4	-	table=0x7e06e0;stride=0x8	-	-	-	0
-site	src/game/scena_sx.cpp	177	global	At	at::kFormation	0x904aac	-	none	-	-	0
-site	src/game/scena_sx.cpp	194	global	At	Gfx_ClutStripSource_addr + 0x1e00 + 0x40 * i	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
-site	src/game/scena_sx.cpp	235	global	At	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
-site	src/game/scena_sx.cpp	236	global	At	Cond_Flags_addr + 0xd5	0x904065	-	inside	Cond_Flags+0xd5	unsigned char	0
-site	src/game/scena_sx.cpp	401	global	At	Cond_AngleFB_addr	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
-site	src/game/scena_sx.cpp	407	global	At	Cond_AngleFB_addr	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
-site	src/game/scena_sx.cpp	415	global	At	Cond_AngleFB_addr	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
-site	src/game/scena_sx.cpp	452	global	At	at::kAbilityShared	0x904574	-	none	-	-	0
-site	src/game/scena_sx.cpp	467	global	At	at::kKeyItems	0x904554	-	none	-	-	0
-site	src/game/scena_sx.cpp	488	record	At	bof3::addr::Inventory_IdLists + 4 * cat	-	base=Inventory_IdLists	-	-	-	0
-site	src/game/scena_sx.cpp	490	record	At	bof3::addr::Inventory_CountLists + 4 * cat	-	base=Inventory_CountLists	-	-	-	0
-site	src/game/scena_sx.cpp	494	record	At	counts + i	-	base=Inventory_CountLists	-	-	-	0
-site	src/game/scena_sx.cpp	522	global	At	Party_Zenny_addr	0x904058	-	exact	Party_Zenny	unsigned long	0
+site	src/game/scena_sx.cpp	65	global	At	CharacterRecords_addr + n * at::kRecordStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
+site	src/game/scena_sx.cpp	116	record	Word	exp_table + (level + rows) * 8	-	base=Char_ExpTable	-	-	-	0
+site	src/game/scena_sx.cpp	155	global	At	at::kFormation	0x904aac	-	none	-	-	0
+site	src/game/scena_sx.cpp	174	global	At	at::kSlotPositions	0x7e06e0	-	none	-	-	0
+site	src/game/scena_sx.cpp	176	record	SetLong	pos + 4	-	table=0x7e06e0;stride=0x8	-	-	-	0
+site	src/game/scena_sx.cpp	178	global	At	at::kFormation	0x904aac	-	none	-	-	0
+site	src/game/scena_sx.cpp	195	global	At	Gfx_ClutStripSource_addr + 0x1e00 + 0x40 * i	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
+site	src/game/scena_sx.cpp	236	global	At	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
+site	src/game/scena_sx.cpp	237	global	At	Cond_Flags_addr + 0xd5	0x904065	-	inside	Cond_Flags+0xd5	unsigned char	0
+site	src/game/scena_sx.cpp	404	global	At	Cond_AngleFB_addr	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sx.cpp	410	global	At	Cond_AngleFB_addr	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sx.cpp	418	global	At	Cond_AngleFB_addr	0x929ecc	-	exact	Cond_AngleFB	unsigned long	0
+site	src/game/scena_sx.cpp	455	global	At	at::kAbilityShared	0x904574	-	none	-	-	0
+site	src/game/scena_sx.cpp	470	global	At	at::kKeyItems	0x904554	-	none	-	-	0
+site	src/game/scena_sx.cpp	491	record	At	bof3::addr::Inventory_IdLists + 4 * cat	-	base=Inventory_IdLists	-	-	-	0
+site	src/game/scena_sx.cpp	493	record	At	bof3::addr::Inventory_CountLists + 4 * cat	-	base=Inventory_CountLists	-	-	-	0
+site	src/game/scena_sx.cpp	497	record	At	counts + i	-	base=Inventory_CountLists	-	-	-	0
+site	src/game/scena_sx.cpp	525	global	At	Party_Zenny_addr	0x904058	-	exact	Party_Zenny	unsigned long	0
 site	src/game/scena_sx2.cpp	104	global	At	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
 site	src/game/scena_sx2.cpp	128	record	At	bof3::addr::Formation_SlotVectors + (g * 3u + (slot & 0xFF))	-	base=Formation_SlotVectors	-	-	-	0
 site	src/game/scena_sx2.cpp	129	global	At	at::kFormation	0x904aac	-	none	-	-	0
@@ -26607,41 +26611,41 @@ site	src/game/shop_states_fuzz.cpp	695	global	At	ShopMode_States_addr	0x663e40	-
 site	src/game/shop_states_fuzz.cpp	696	global	At	Inn_Steps_addr	0x663f4c	-	exact	Inn_Steps	unsigned long	1
 site	src/game/sound.cpp	164	record	Dword	entry + 4	-	base=Sound_Banks;stride=0x8	-	-	-	0
 site	src/game/sound.cpp	165	record	Dword	entry + 4	-	base=Sound_Banks;stride=0x8	-	-	-	0
-site	src/game/sound.cpp	435	record	Dword	Address(wave) + 0x14 + i	-	via=Address	-	-	-	0
-site	src/game/sound.cpp	435	record	SetDword	format + i	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	436	record	SetWord	format + 0x10	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	442	record	SetDword	desc + 0x00	-	base=Snd_BufferDesc	-	-	-	0
-site	src/game/sound.cpp	443	record	SetDword	desc + 0x04	-	base=Snd_BufferDesc	-	-	-	0
-site	src/game/sound.cpp	444	record	SetDword	desc + 0x08	-	base=Snd_BufferDesc	-	-	-	0
-site	src/game/sound.cpp	445	record	SetDword	desc + 0x10	-	base=Snd_BufferDesc	-	-	-	0
-site	src/game/sound.cpp	460	record	Dword	base + 0x10	-	via=Address	-	-	-	0
-site	src/game/sound.cpp	462	record	At	base + at	-	via=Address	-	-	-	0
-site	src/game/sound.cpp	464	record	Dword	base + at + 4	-	via=Address	-	-	-	0
-site	src/game/sound.cpp	466	record	Dword	base + at + 4	-	via=Address	-	-	-	0
-site	src/game/sound.cpp	467	record	At	base + at + 8	-	via=Address	-	-	-	0
-site	src/game/sound.cpp	565	record	Dword	Dword(decoder + 0x14) + 8	-	via=Dword	-	-	-	0
-site	src/game/sound.cpp	565	record	Dword	decoder + 0x14	-	base=Music_Decoder	-	-	-	0
-site	src/game/sound.cpp	815	global	At	kIidNotify	0x5c45b8	-	none	-	-	0
-site	src/game/sound.cpp	833	record	SetWord	format + 0x00	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	834	record	SetWord	format + 0x02	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	835	record	SetDword	format + 0x04	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	836	record	SetDword	format + 0x08	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	837	record	SetWord	format + 0x0C	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	838	record	SetWord	format + 0x0E	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	839	record	SetWord	format + 0x10	-	base=Snd_WaveFormat	-	-	-	0
-site	src/game/sound.cpp	841	record	SetDword	desc + 0x00	-	base=Snd_BufferDesc	-	-	-	0
-site	src/game/sound.cpp	842	record	SetDword	desc + 0x04	-	base=Snd_BufferDesc	-	-	-	0
-site	src/game/sound.cpp	843	record	SetDword	desc + 0x08	-	base=Snd_BufferDesc	-	-	-	0
-site	src/game/sound.cpp	844	record	SetDword	desc + 0x10	-	base=Snd_BufferDesc	-	-	-	0
-site	src/game/sound.cpp	875	record	At	filled + Address(dst)	-	-	-	-	-	0
-site	src/game/sound.cpp	877	record	Dword	Dword(decoder + 0x14) + 8	-	via=Dword	-	-	-	0
-site	src/game/sound.cpp	877	record	Dword	decoder + 0x14	-	base=Music_Decoder	-	-	-	0
-site	src/game/sound.cpp	880	record	At	Address(dst) + filled	-	via=Address	-	-	-	0
-site	src/game/sound.cpp	1561	record	Dword	BankRecord(b) + kBankData	-	via=BankRecord	-	-	-	0
-site	src/game/sound.cpp	1578	record	Dword	EntryAt(b, e) + 4	-	via=EntryAt	-	-	-	0
-site	src/game/sound.cpp	1666	record	Dword	EntryAt(b, e) + 4	-	via=EntryAt	-	-	-	0
-site	src/game/sound.cpp	1767	record	SetDword	EntryAt(b, e) + 4	-	via=EntryAt	-	-	-	0
-site	src/game/sound.cpp	2215	record	Dword	EntryAt(b, e) + 4	-	via=EntryAt	-	-	-	0
+site	src/game/sound.cpp	439	record	Dword	Address(wave) + 0x14 + i	-	via=Address	-	-	-	0
+site	src/game/sound.cpp	439	record	SetDword	format + i	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	440	record	SetWord	format + 0x10	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	446	record	SetDword	desc + 0x00	-	base=Snd_BufferDesc	-	-	-	0
+site	src/game/sound.cpp	447	record	SetDword	desc + 0x04	-	base=Snd_BufferDesc	-	-	-	0
+site	src/game/sound.cpp	448	record	SetDword	desc + 0x08	-	base=Snd_BufferDesc	-	-	-	0
+site	src/game/sound.cpp	449	record	SetDword	desc + 0x10	-	base=Snd_BufferDesc	-	-	-	0
+site	src/game/sound.cpp	464	record	Dword	base + 0x10	-	via=Address	-	-	-	0
+site	src/game/sound.cpp	466	record	At	base + at	-	via=Address	-	-	-	0
+site	src/game/sound.cpp	468	record	Dword	base + at + 4	-	via=Address	-	-	-	0
+site	src/game/sound.cpp	470	record	Dword	base + at + 4	-	via=Address	-	-	-	0
+site	src/game/sound.cpp	471	record	At	base + at + 8	-	via=Address	-	-	-	0
+site	src/game/sound.cpp	569	record	Dword	Dword(decoder + 0x14) + 8	-	via=Dword	-	-	-	0
+site	src/game/sound.cpp	569	record	Dword	decoder + 0x14	-	base=Music_Decoder	-	-	-	0
+site	src/game/sound.cpp	819	global	At	kIidNotify	0x5c45b8	-	none	-	-	0
+site	src/game/sound.cpp	837	record	SetWord	format + 0x00	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	838	record	SetWord	format + 0x02	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	839	record	SetDword	format + 0x04	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	840	record	SetDword	format + 0x08	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	841	record	SetWord	format + 0x0C	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	842	record	SetWord	format + 0x0E	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	843	record	SetWord	format + 0x10	-	base=Snd_WaveFormat	-	-	-	0
+site	src/game/sound.cpp	845	record	SetDword	desc + 0x00	-	base=Snd_BufferDesc	-	-	-	0
+site	src/game/sound.cpp	846	record	SetDword	desc + 0x04	-	base=Snd_BufferDesc	-	-	-	0
+site	src/game/sound.cpp	847	record	SetDword	desc + 0x08	-	base=Snd_BufferDesc	-	-	-	0
+site	src/game/sound.cpp	848	record	SetDword	desc + 0x10	-	base=Snd_BufferDesc	-	-	-	0
+site	src/game/sound.cpp	879	record	At	filled + Address(dst)	-	-	-	-	-	0
+site	src/game/sound.cpp	881	record	Dword	Dword(decoder + 0x14) + 8	-	via=Dword	-	-	-	0
+site	src/game/sound.cpp	881	record	Dword	decoder + 0x14	-	base=Music_Decoder	-	-	-	0
+site	src/game/sound.cpp	884	record	At	Address(dst) + filled	-	via=Address	-	-	-	0
+site	src/game/sound.cpp	1566	record	Dword	BankRecord(b) + kBankData	-	via=BankRecord	-	-	-	0
+site	src/game/sound.cpp	1583	record	Dword	EntryAt(b, e) + 4	-	via=EntryAt	-	-	-	0
+site	src/game/sound.cpp	1671	record	Dword	EntryAt(b, e) + 4	-	via=EntryAt	-	-	-	0
+site	src/game/sound.cpp	1772	record	SetDword	EntryAt(b, e) + 4	-	via=EntryAt	-	-	-	0
+site	src/game/sound.cpp	2220	record	Dword	EntryAt(b, e) + 4	-	via=EntryAt	-	-	-	0
 site	src/game/sound_fuzz.cpp	335	record	Dword	Address(handles) + 4	-	via=Address	-	-	-	1
 site	src/game/sound_fuzz.cpp	373	record	SetDword	g_cue + 4 * i	-	param	-	-	-	1
 site	src/game/sound_fuzz.cpp	578	global	At	Sound_Channels_addr	0x6bc8c8	-	exact	Sound_Channels	std::uint32_t	1
@@ -27354,43 +27358,43 @@ site	src/hook/stackwatch.cpp	362	global	Long	kTaskStackTop	0x66c858	-	exact	Task
 site	src/input/button_tests.cpp	259	raw	B	0x904130	0x904130	-	none	-	-	0
 site	src/input/button_tests.cpp	300	raw	B	0x904AB4	0x904ab4	-	none	-	-	0
 site	src/input/button_tests.cpp	307	raw	B	0x904AB4	0x904ab4	-	none	-	-	0
-site	src/render/gfx_snapshot.cpp	187	record	Long	RowAt(y) + 4	-	via=RowAt	-	-	-	0
-site	src/render/gfx_snapshot.cpp	260	record	PutLong	e + 0xC	-	via=FontEntry	-	-	-	0
-site	src/render/gfx_snapshot.cpp	269	record	At	e + 0x10	-	via=FontEntry	-	-	-	0
-site	src/render/render_shim.cpp	160	record	Long	row + x * 4	-	-	-	-	-	0
-site	src/render/render_shim.cpp	182	record	PutLong	row + x * 4	-	-	-	-	-	0
-site	src/render/render_shim.cpp	191	record	Long	row + x * 4	-	-	-	-	-	0
-site	src/render/render_shim.cpp	199	record	PutLong	row + x * 4	-	-	-	-	-	0
-site	src/render/render_shim.cpp	543	record	Long	Bytes(fx) + kFxFillColor	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	551	record	Long	Bytes(fx) + kFxFillColor	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	596	record	PutLong	d + kDescFlags	-	param	-	-	-	0
-site	src/render/render_shim.cpp	597	record	PutLong	d + kDescHeight	-	param	-	-	-	0
-site	src/render/render_shim.cpp	598	record	PutLong	d + kDescWidth	-	param	-	-	-	0
-site	src/render/render_shim.cpp	599	record	PutLong	d + kDescPitch	-	param	-	-	-	0
-site	src/render/render_shim.cpp	600	record	PutLong	d + kDescSurface	-	param	-	-	-	0
-site	src/render/render_shim.cpp	602	record	PutLong	pf + kPfSize	-	-	-	-	-	0
-site	src/render/render_shim.cpp	603	record	PutLong	pf + kPfFlags	-	-	-	-	-	0
-site	src/render/render_shim.cpp	604	record	PutLong	pf + kPfBits	-	-	-	-	-	0
-site	src/render/render_shim.cpp	605	record	PutLong	pf + kPfR	-	-	-	-	-	0
-site	src/render/render_shim.cpp	606	record	PutLong	pf + kPfG	-	-	-	-	-	0
-site	src/render/render_shim.cpp	607	record	PutLong	pf + kPfB	-	-	-	-	-	0
-site	src/render/render_shim.cpp	608	record	PutLong	pf + kPfA	-	-	-	-	-	0
-site	src/render/render_shim.cpp	609	record	PutLong	d + kDescCaps	-	param	-	-	-	0
-site	src/render/render_shim.cpp	610	record	PutLong	d + kDescCaps2	-	param	-	-	-	0
-site	src/render/render_shim.cpp	697	record	Long	d + kDescFlags	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	702	record	Long	pf + kPfSize	-	-	-	-	-	0
-site	src/render/render_shim.cpp	703	record	Long	pf + kPfBits	-	-	-	-	-	0
-site	src/render/render_shim.cpp	705	record	Long	pf + kPfR	-	-	-	-	-	0
-site	src/render/render_shim.cpp	706	record	Long	pf + kPfG	-	-	-	-	-	0
-site	src/render/render_shim.cpp	707	record	Long	pf + kPfB	-	-	-	-	-	0
-site	src/render/render_shim.cpp	708	record	Long	pf + kPfA	-	-	-	-	-	0
-site	src/render/render_shim.cpp	708	record	Long	pf + kPfFlags	-	-	-	-	-	0
-site	src/render/render_shim.cpp	709	record	Long	pf + kPfFlags	-	-	-	-	-	0
+site	src/render/gfx_snapshot.cpp	188	record	Long	RowAt(y) + 4	-	via=RowAt	-	-	-	0
+site	src/render/gfx_snapshot.cpp	262	record	PutLong	e + 0xC	-	via=FontEntry	-	-	-	0
+site	src/render/gfx_snapshot.cpp	271	record	At	e + 0x10	-	via=FontEntry	-	-	-	0
+site	src/render/render_shim.cpp	161	record	Long	row + x * 4	-	-	-	-	-	0
+site	src/render/render_shim.cpp	183	record	PutLong	row + x * 4	-	-	-	-	-	0
+site	src/render/render_shim.cpp	192	record	Long	row + x * 4	-	-	-	-	-	0
+site	src/render/render_shim.cpp	200	record	PutLong	row + x * 4	-	-	-	-	-	0
+site	src/render/render_shim.cpp	545	record	Long	Bytes(fx) + kFxFillColor	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	553	record	Long	Bytes(fx) + kFxFillColor	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	598	record	PutLong	d + kDescFlags	-	param	-	-	-	0
+site	src/render/render_shim.cpp	599	record	PutLong	d + kDescHeight	-	param	-	-	-	0
+site	src/render/render_shim.cpp	600	record	PutLong	d + kDescWidth	-	param	-	-	-	0
+site	src/render/render_shim.cpp	601	record	PutLong	d + kDescPitch	-	param	-	-	-	0
+site	src/render/render_shim.cpp	602	record	PutLong	d + kDescSurface	-	param	-	-	-	0
+site	src/render/render_shim.cpp	604	record	PutLong	pf + kPfSize	-	-	-	-	-	0
+site	src/render/render_shim.cpp	605	record	PutLong	pf + kPfFlags	-	-	-	-	-	0
+site	src/render/render_shim.cpp	606	record	PutLong	pf + kPfBits	-	-	-	-	-	0
+site	src/render/render_shim.cpp	607	record	PutLong	pf + kPfR	-	-	-	-	-	0
+site	src/render/render_shim.cpp	608	record	PutLong	pf + kPfG	-	-	-	-	-	0
+site	src/render/render_shim.cpp	609	record	PutLong	pf + kPfB	-	-	-	-	-	0
+site	src/render/render_shim.cpp	610	record	PutLong	pf + kPfA	-	-	-	-	-	0
+site	src/render/render_shim.cpp	611	record	PutLong	d + kDescCaps	-	param	-	-	-	0
+site	src/render/render_shim.cpp	612	record	PutLong	d + kDescCaps2	-	param	-	-	-	0
+site	src/render/render_shim.cpp	699	record	Long	d + kDescFlags	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	704	record	Long	pf + kPfSize	-	-	-	-	-	0
+site	src/render/render_shim.cpp	705	record	Long	pf + kPfBits	-	-	-	-	-	0
+site	src/render/render_shim.cpp	707	record	Long	pf + kPfR	-	-	-	-	-	0
+site	src/render/render_shim.cpp	708	record	Long	pf + kPfG	-	-	-	-	-	0
+site	src/render/render_shim.cpp	709	record	Long	pf + kPfB	-	-	-	-	-	0
+site	src/render/render_shim.cpp	710	record	Long	pf + kPfA	-	-	-	-	-	0
 site	src/render/render_shim.cpp	710	record	Long	pf + kPfFlags	-	-	-	-	-	0
-site	src/render/render_shim.cpp	712	record	Long	d + kDescCaps	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	712	record	Long	d + kDescHeight	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	712	record	Long	d + kDescWidth	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	713	record	Long	d + kDescCaps2	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	711	record	Long	pf + kPfFlags	-	-	-	-	-	0
+site	src/render/render_shim.cpp	712	record	Long	pf + kPfFlags	-	-	-	-	-	0
+site	src/render/render_shim.cpp	714	record	Long	d + kDescCaps	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	714	record	Long	d + kDescHeight	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	714	record	Long	d + kDescWidth	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	715	record	Long	d + kDescCaps2	-	via=Bytes	-	-	-	0
 #rec	name	value	kind	n_modules	modules	symbol	symbol_kind	cover	ctype	scope
 const	kFlags	0x0	value	1	src/game/battle_items_callees.h:41(battle_items::at)	-	-	-	-	at
 const	kPresent	0x0	value	1	src/game/battle_setup_callees.h:32(battle_setup::at)	-	-	-	-	at
@@ -29550,6 +29554,7 @@ const	kModeRb	0x66bc38	data	1	src/game/shell_callees.h:19(shell)	-	-	none	-	modu
 const	kProductName	0x66c7b0	data	1	src/game/rest_2h_callees.h:109(rest_2h::at)	-	-	none	-	at
 const	kGlobals	0x66c7d0	data	1	src/game/task_sched_fuzz.cpp:228(task_sched::(anon))	Task_Records	data	exact	-	module
 const	kRecords	0x66c7d0	data	1	src/game/task_sched_fuzz.cpp:227(task_sched::(anon))	Task_Records	data	exact	-	module
+const	kTaskSlot0State	0x66c7d0	data	1	src/game/pillarbox.cpp:29(pillarbox::(anon))	Task_Records	data	exact	-	module
 const	kFieldRequest	0x66c7d8	data	1	src/game/area_harness.h:61(area_harness::at)	Field_Request	data	exact	unsigned char	at
 const	kRequest	0x66c7d8	data	1	src/game/scenario_harness.h:61(scenario_harness::at)	Field_Request	data	exact	unsigned char	at
 const	kGameMode	0x66c7e8	data	2	src/game/scenario_harness.h:131(scenario_harness::at);src/game/shop_states2_callees.h:77(shop_states2::at)	Game_Mode	data	exact	unsigned short	at
@@ -29658,7 +29663,7 @@ const	kChannelsEnd	0x6bc924	data	1	src/game/scena_sx2_callees.h:28(scena_sx2::at
 const	kChannelsEnd	0x6bc924	data	2	src/game/display_env_callees.h:40(display_env);src/game/sound_rest_callees.h:24(sound_rest)	-	-	none	-	module
 const	kStreamKind	0x6bde40	data	1	src/game/save_menu_callees.h:100(save_menu::at)	SaveMenu_StreamKind	data	exact	unsigned long	at
 const	kStreamKind	0x6bde40	data	1	src/game/sound_rest_callees.h:22(sound_rest)	SaveMenu_StreamKind	data	exact	unsigned long	module
-const	kind	0x6bde40	data	4	src/game/save_menu.cpp:414(-);src/game/save_menu.cpp:1148(-);src/game/save_menu.cpp:1367((anon));src/game/save_menu.cpp:1442((anon))	SaveMenu_StreamKind	data	exact	unsigned long	module
+const	kind	0x6bde40	data	4	src/game/save_menu.cpp:415(-);src/game/save_menu.cpp:1153(-);src/game/save_menu.cpp:1372((anon));src/game/save_menu.cpp:1447((anon))	SaveMenu_StreamKind	data	exact	unsigned long	module
 const	kTablesEnd	0x6bde64	data	1	src/game/sound_fuzz.cpp:45(sound::(anon))	-	-	none	-	module
 const	kFlowState	0x6bdf86	data	1	src/game/save_menu_callees.h:29(save_menu::at)	SaveMenu_FlowState	data	exact	unsigned char	at
 const	kRowBright	0x6bdf90	data	1	src/game/save_menu_callees.h:32(save_menu::at)	-	-	none	-	at
@@ -29809,7 +29814,7 @@ const	kEffectNone	0x7e9160	data	1	src/game/rest_2a_callees.h:37(rest_2a::at)	-	-
 const	kPoolBound	0x7f1bac	data	1	src/game/world_map_callees.h:66(world_map)	-	-	inside	unsigned char	module
 const	kPoolEnd	0x7f1bac	data	2	src/game/magic_lib.cpp:55((anon));src/game/magic_lib_fuzz.cpp:147(magic_lib::(anon))	-	-	inside	unsigned char	module
 const	kPoolLimit	0x7f1bac	data	2	src/game/effect_5c_callees.h:33(effect_5c::at);src/game/effect_6c_callees.h:40(effect_6c::at)	-	-	inside	unsigned char	at
-const	kPoolLimit	0x7f1bac	data	2	src/game/draw_emit.cpp:17((anon));src/game/sprite_records.cpp:29((anon))	-	-	inside	unsigned char	module
+const	kPoolLimit	0x7f1bac	data	3	src/game/draw_emit.cpp:18((anon));src/game/layering.cpp:423(layering::(anon));src/game/sprite_records.cpp:29((anon))	-	-	inside	unsigned char	module
 const	kObjectsExtra	0x802000	data	1	src/game/area_harness.h:52(area_harness::at)	Sprite_ObjectsExtra	data	exact	records::SpriteObject	at
 const	kSpriteObjectsExtra	0x802000	data	1	src/game/area_w3d_callees.h:97(area_w3d::at)	Sprite_ObjectsExtra	data	exact	records::SpriteObject	at
 const	kSpritesExtra	0x802000	data	1	src/game/scenario_harness.h:75(scenario_harness::at)	Sprite_ObjectsExtra	data	exact	records::SpriteObject	at
@@ -30144,7 +30149,7 @@ const	kPickColumn	0x903850	data	1	src/game/area_entry_callees.h:31(area_entry)	S
 const	kR	0x903850	data	1	src/game/magic_s23_callees.h:35(magic_s23::at)	SharedScratch	block	exact	records::SharedScratch	at
 const	kR	0x903850	data	2	src/game/magic_s24.cpp:99((anon));src/game/magic_s29_callees.h:36(magic_s29::cell)	SharedScratch	block	exact	records::SharedScratch	module
 const	kRadius	0x903850	data	1	src/game/magic_s19.cpp:72((anon))	SharedScratch	block	exact	records::SharedScratch	module
-const	kS	0x903850	data	28	src/game/magic_c1.cpp:57((anon));src/game/magic_c2.cpp:56((anon));src/game/magic_c2_fuzz.cpp:259(magic_c2::(anon));src/game/magic_s01.cpp:54((anon));src/game/magic_s03.cpp:57((anon));src/game/magic_s04.cpp:60((anon));src/game/magic_s07.cpp:57((anon));src/game/magic_s08.cpp:62((anon));src/game/magic_s09.cpp:67((anon));src/game/magic_s10.cpp:63((anon));src/game/magic_s11.cpp:62((anon));src/game/magic_s13.cpp:48((anon));src/game/magic_s14.cpp:57((anon));src/game/magic_s15.cpp:65((anon));src/game/magic_s22.cpp:55((anon));src/game/magic_s26.cpp:51((anon));src/game/magic_s27.cpp:55((anon));src/game/magic_s28.cpp:58((anon));src/game/magic_s30.cpp:57((anon));src/game/magic_s31.cpp:65((anon));src/game/magic_s32.cpp:54((anon));src/game/magic_s32_fuzz.cpp:172(magic_s32::(anon));src/game/magic_s33.cpp:57((anon));src/game/magic_s34.cpp:64((anon));src/game/magic_s35.cpp:54((anon));src/game/magic_s36.cpp:57((anon));src/game/magic_s37.cpp:65((anon));src/game/magic_s38.cpp:68((anon))	SharedScratch	block	exact	records::SharedScratch	module
+const	kS	0x903850	data	28	src/game/magic_c1.cpp:57((anon));src/game/magic_c2.cpp:56((anon));src/game/magic_c2_fuzz.cpp:259(magic_c2::(anon));src/game/magic_s01.cpp:54((anon));src/game/magic_s03.cpp:57((anon));src/game/magic_s04.cpp:60((anon));src/game/magic_s07.cpp:57((anon));src/game/magic_s08.cpp:62((anon));src/game/magic_s09.cpp:67((anon));src/game/magic_s10.cpp:63((anon));src/game/magic_s11.cpp:62((anon));src/game/magic_s13.cpp:48((anon));src/game/magic_s14.cpp:58((anon));src/game/magic_s15.cpp:65((anon));src/game/magic_s22.cpp:55((anon));src/game/magic_s26.cpp:51((anon));src/game/magic_s27.cpp:55((anon));src/game/magic_s28.cpp:58((anon));src/game/magic_s30.cpp:57((anon));src/game/magic_s31.cpp:65((anon));src/game/magic_s32.cpp:54((anon));src/game/magic_s32_fuzz.cpp:172(magic_s32::(anon));src/game/magic_s33.cpp:57((anon));src/game/magic_s34.cpp:64((anon));src/game/magic_s35.cpp:54((anon));src/game/magic_s36.cpp:57((anon));src/game/magic_s37.cpp:65((anon));src/game/magic_s38.cpp:68((anon))	SharedScratch	block	exact	records::SharedScratch	module
 const	kScale_addr	0x903850	data	1	src/game/effect_3b_callees.h:24(effect_3b::at)	SharedScratch	block	exact	records::SharedScratch	at
 const	kScratch	0x903850	data	4	src/game/area_w1f_callees.h:34(area_w1f::at);src/game/area_w3d_callees.h:38(area_w3d::at);src/game/area_w4b_callees.h:36(area_w4b::at);src/game/battle_items_callees.h:62(battle_items::at)	SharedScratch	block	exact	records::SharedScratch	at
 const	kScratch	0x903850	data	36	src/game/battle_misc_fuzz.cpp:87(battle_misc::(anon));src/game/battle_odds_fuzz.cpp:74(battle_odds::(anon));src/game/field_misc_fuzz.cpp:71(field_misc::(anon));src/game/magic_c1_fuzz.cpp:294(magic_c1::(anon));src/game/magic_s01_fuzz.cpp:149(magic_s01::(anon));src/game/magic_s03_fuzz.cpp:215(magic_s03::(anon));src/game/magic_s04_fuzz.cpp:248(magic_s04::(anon));src/game/magic_s07_fuzz.cpp:256(magic_s07::(anon));src/game/magic_s08_fuzz.cpp:256(magic_s08::(anon));src/game/magic_s09_fuzz.cpp:231(magic_s09::(anon));src/game/magic_s10_fuzz.cpp:271(magic_s10::(anon));src/game/magic_s11_fuzz.cpp:174(magic_s11::(anon));src/game/magic_s12_fuzz.cpp:204(magic_s12::(anon));src/game/magic_s13_fuzz.cpp:141(magic_s13::(anon));src/game/magic_s14_fuzz.cpp:238(magic_s14::(anon));src/game/magic_s15_fuzz.cpp:179(magic_s15::(anon));src/game/magic_s16.cpp:54((anon));src/game/magic_s16_fuzz.cpp:321(magic_s16::(anon));src/game/magic_s20.cpp:105((anon));src/game/magic_s21.cpp:71((anon));src/game/magic_s22_fuzz.cpp:275(magic_s22::(anon));src/game/magic_s24_callees.h:36(magic_s24::cell);src/game/magic_s25.cpp:73((anon));src/game/magic_s25_fuzz.cpp:308(magic_s25::(anon));src/game/magic_s26_fuzz.cpp:151(magic_s26::(anon));src/game/magic_s27_fuzz.cpp:275(magic_s27::(anon));src/game/magic_s28_fuzz.cpp:135(magic_s28::(anon));src/game/magic_s29_callees.h:35(magic_s29::cell);src/game/magic_s30_fuzz.cpp:234(magic_s30::(anon));src/game/magic_s31_fuzz.cpp:235(magic_s31::(anon));src/game/magic_s33_fuzz.cpp:246(magic_s33::(anon));src/game/magic_s34_fuzz.cpp:216(magic_s34::(anon));src/game/magic_s35_fuzz.cpp:206(magic_s35::(anon));src/game/magic_s36_fuzz.cpp:216(magic_s36::(anon));src/game/magic_s37_fuzz.cpp:248(magic_s37::(anon));src/game/magic_s38_fuzz.cpp:243(magic_s38::(anon))	SharedScratch	block	exact	records::SharedScratch	module
@@ -30592,7 +30597,7 @@ const	kCameraCells	0x905e20	data	1	src/game/scenario_harness.h:123(scenario_harn
 const	kCameraMatrix	0x905e40	data	1	src/game/field_e2_callees.h:71(field_e2::at)	Camera_Matrix	data	exact	short	at
 const	kFzKind2Z	0x905e60	data	1	src/game/area_w3g_fuzz.cpp:76(area_w3g::(anon))	Field_Kind2Z	data	exact	long	module
 const	kKind2Z	0x905e60	data	2	src/game/area_w1f_callees.h:80(area_w1f::at);src/game/area_w2c_callees.h:76(area_w2c::at)	Field_Kind2Z	data	exact	long	at
-const	kind2_z	0x905e60	data	3	src/game/field_modes.cpp:395((anon));src/game/map_scroll.cpp:231(-);src/game/mode_flow.cpp:514(-)	Field_Kind2Z	data	exact	long	module
+const	kind2_z	0x905e60	data	3	src/game/field_modes.cpp:395((anon));src/game/map_scroll.cpp:239(-);src/game/mode_flow.cpp:514(-)	Field_Kind2Z	data	exact	long	module
 const	kz	0x905e60	data	2	src/game/rest_2b.cpp:768(-);src/game/rest_2b.cpp:959(-)	Field_Kind2Z	data	exact	long	module
 const	kz2	0x905e60	data	2	src/game/rest_2b.cpp:786(-);src/game/rest_2b.cpp:965(-)	Field_Kind2Z	data	exact	long	module
 const	kCameraCellY	0x905e62	data	1	src/game/magic_s23_callees.h:67(magic_s23::at)	-	-	inside	long	at
@@ -30604,7 +30609,7 @@ const	kKind2ZHigh	0x905e62	data	5	src/game/effect_6c_callees.h:25(effect_6c::at)
 const	kLeaderCellZ	0x905e62	data	11	src/game/area_w0b_callees.h:46(area_w0b::at);src/game/area_w1b_callees.h:107(area_w1b::at);src/game/area_w1e_callees.h:71(area_w1e::at);src/game/area_w2b_callees.h:72(area_w2b::at);src/game/area_w2e_callees.h:136(area_w2e::at);src/game/area_w3a_callees.h:55(area_w3a::at);src/game/area_w3b_callees.h:75(area_w3b::at);src/game/area_w3g_callees.h:101(area_w3g::at);src/game/area_w4a_callees.h:58(area_w4a::at);src/game/effect_6b_callees.h:27(effect_6b::at);src/game/worldmap_area_callees.h:57(worldmap_area::at)	-	-	inside	long	at
 const	kLeaderCellZ	0x905e62	data	1	src/game/world_map_callees.h:59(world_map)	-	-	inside	long	module
 const	kKind2X	0x905e64	data	3	src/game/area_w2c_callees.h:77(area_w2c::at);src/game/area_w4d_callees.h:82(area_w4d::at);src/game/scena_sc13_callees.h:75(scena_sc13::at)	Field_Kind2X	data	exact	long	at
-const	kind2_x	0x905e64	data	2	src/game/map_scroll.cpp:232(-);src/game/mode_flow.cpp:514(-)	Field_Kind2X	data	exact	long	module
+const	kind2_x	0x905e64	data	2	src/game/map_scroll.cpp:240(-);src/game/mode_flow.cpp:514(-)	Field_Kind2X	data	exact	long	module
 const	kind2x	0x905e64	data	1	src/game/area_w3g.cpp:622((anon))	Field_Kind2X	data	exact	long	module
 const	kx	0x905e64	data	3	src/game/magic_s26.cpp:448(-);src/game/rest_2b.cpp:771(-);src/game/rest_2b.cpp:960(-)	Field_Kind2X	data	exact	long	module
 const	kx2	0x905e64	data	2	src/game/rest_2b.cpp:789(-);src/game/rest_2b.cpp:966(-)	Field_Kind2X	data	exact	long	module
@@ -30875,22 +30880,22 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	27391
+#count sites	27395
 #count sites_global	17238
 #count sites_global_at	7504
 #count sites_global_module	9734
-#count sites_record	9024
+#count sites_record	9028
 #count sites_raw	1129
 #count sites_in_fuzz	8907
-#count files_with_sites	532
-#count files_with_record_sites	470
+#count files_with_sites	533
+#count files_with_record_sites	471
 #count record_sites_with_stride	699
 #count record_sites_with_table_or_base	3748
 #count record_sites_on_named_pointer	198
 #count record_sites_on_helper_call	673
 #count record_sites_offset_into_constant	1546
-#count record_sites_via_helper	2426
-#count record_sites_param	661
+#count record_sites_via_helper	2429
+#count record_sites_param	662
 #count record_sites_family_unknown	1713
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
 #count global_sites_covered_exact	8664
@@ -30915,9 +30920,9 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count distinct_addresses_symbol_data_no_ctype	34
 #count distinct_addresses_name_missing	937
 #count distinct_addresses_name_missing_inside_entry	135
-#count module_constant_definitions_data	834
-#count module_constant_files	188
-#count module_constants_name_value	611
+#count module_constant_definitions_data	836
+#count module_constant_files	190
+#count module_constants_name_value	612
 #count module_distinct_addresses	500
 #count module_distinct_addresses_not_in_at	324
 #count module_distinct_addresses_not_in_at_no_data_entry	206

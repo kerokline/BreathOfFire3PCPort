@@ -16,7 +16,10 @@
 // is in the way when its map cell is within two of the sprite's, or when what
 // its run drew in the last pass reaches the sprite's body (amended
 // 2026-10-14: the camp's fire, a record three cells from Garr, drawn under
-// him; docs/campfire-and-crystal.md).
+// him; docs/campfire-and-crystal.md). That reach is tested against what the
+// sprite itself drew in the last pass as well as its body (amended
+// 2026-10-21: Garr seated two cells further from the same fire, his arm and
+// weapon over it; docs/garr-fire.md).
 //
 // It arms after InjectAll's self-tests, as DIV-0069's and DIV-0041's fills do,
 // so every fuzz compared the original's order.
@@ -40,6 +43,15 @@ void Arm();   // BOF3X_LAYERING parsed; after every module's self-test
 bool Defer();
 void Restore();
 
+// Sprite_DrawPass's, mode kFloor, round each sprite it draws. BeforeSprite
+// notes the packet pointer; AfterSprite keeps the box of the cell sprite the
+// object drew (code 0x84) for the next pass's record test (docs/garr-fire.md:
+// Garr's arm and weapon reach the camp's fire well outside the body box) and,
+// for the table faerie Defer drew a layer later (known-defects D300,
+// docs/faerie-fix.md), draws its table's side triangles again right after it.
+void BeforeSprite();
+void AfterSprite(const unsigned char* sprite);
+
 // What each map cell's record run drew (docs/campfire-and-crystal.md section
 // 4). DrawLayer_Open's, mode kFloor: RunBegin before a run's first record is
 // handed to its handler, RunEnd after its last. Gfx_CommitPrim's, while
@@ -62,7 +74,7 @@ class SnapshotReader;
 namespace layering {
 
 // The quicksave (SP-G, docs/quicksave.md, the graphics participant): the last pass's record
-// runs, which the next pass's Defer reads. In the graphics participant's record.
+// runs and sprite boxes, which the next pass's Defer reads. In the graphics participant's record.
 void SnapshotSave(bof3::SnapshotWriter& w);
 void SnapshotRestore(bof3::SnapshotReader& r);
 

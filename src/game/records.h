@@ -606,7 +606,7 @@ struct CharRecord {
     std::uint8_t survive;  // +0x1C the working copy's +0x9C (battle_setup kPByte9C; battle_damage kPSurvive)
     std::uint8_t halving;  // +0x1D the halving bits, a Stat_AddResist pass per bit (char-stats.md 2 Char_RecalcStats step 4)
     std::uint8_t hp_scale;  // +0x1E the max-HP scale (char-stats.md 2; item-use.md 2 ItemUse_HpScaleUp, to 9)
-    std::uint8_t trait;  // +0x1F the trait byte, 0xFF none (char-stats.md 2 Char_ApplyTraits)
+    std::uint8_t master;  // +0x1F the master, 0xFF none (rest_2d.md MasterJoin_Step5Apply / MasterQuit_Step5Apply; Char_ApplyTraits applies its list)
     CharStatBlock stats;  // +0x20 the effective block (char-stats.md 2)
     CharStatBlock base;  // +0x40 its base copy, copied over +0x20 first by Char_RecalcStats (char-stats.md 2)
     unsigned char pad_60[0x44];  // +0x60..+0xA3: not read by the records' readers here; save-interchange.md 2's late three-byte field is at +0x74 (carried verbatim, not understood)
@@ -632,7 +632,7 @@ struct CommunityRecord {
     std::uint8_t in_use;  // +0x00 non-zero in use (every reader; CommuName_CountSlots, rest_4d.md)
     std::uint8_t slot;  // +0x01 the building it is placed in, 1..8 (rest_4a.cpp Rec(i)[1] == building + 1; field_e2_callees.h "the record it names (1-based)"; rest_4b.md "the slot"), or a loose kind 0, 9, 0xA, 0xB (rest_4a.md)
     unsigned char pad_02[0x2];  // +2, +3: the readers disagree - "states" (rest_4a.md; rest_4a.cpp:1046 reads +2 as a state), "marks, +3 two nibbles" (rest_4b.md), "an item and its tab" (rest_4e.md)
-    std::uint32_t stamp;  // +0x04 a time from the clock 0x904134 (rest_4a.md; rest_4a.cpp:1037 age = Rest4a_Clock - +4; rest_4b.md); "a dword" (rest_4e.md)
+    std::uint32_t stamp;  // +0x04 a stamp of the battle count 0x904134 (rest_4a.md; rest_4a.cpp:1037 age = Game_BattleCount - +4; rest_4b.md); "a dword" (rest_4e.md)
 };
 
 // A community building: 0x9048B0 + 8b, eight (rest_4a.md "buildings";
@@ -1039,7 +1039,7 @@ static_assert(offsetof(CharRecord, ap) == 0x1A, "CharRecord::ap");
 static_assert(offsetof(CharRecord, survive) == 0x1C, "CharRecord::survive");
 static_assert(offsetof(CharRecord, halving) == 0x1D, "CharRecord::halving");
 static_assert(offsetof(CharRecord, hp_scale) == 0x1E, "CharRecord::hp_scale");
-static_assert(offsetof(CharRecord, trait) == 0x1F, "CharRecord::trait");
+static_assert(offsetof(CharRecord, master) == 0x1F, "CharRecord::master");
 static_assert(offsetof(CharRecord, stats) == 0x20, "CharRecord::stats");
 static_assert(offsetof(CharRecord, base) == 0x40, "CharRecord::base");
 static_assert(sizeof(CharRecord) == 0xA4, "CharRecord stride");

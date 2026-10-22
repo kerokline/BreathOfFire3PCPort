@@ -151,6 +151,7 @@ add_library(bof3x SHARED
   src/game/map_cells.cpp
   src/game/map_layers.cpp
   src/game/map_layers_fuzz.cpp
+  src/game/map_rim.cpp
   src/game/map_scroll.cpp
   src/game/map_scroll_fuzz.cpp
   src/game/sprite_draw.cpp
@@ -165,6 +166,7 @@ add_library(bof3x SHARED
   src/game/object_kinds.cpp
   src/game/sprite_screen.cpp
   src/game/band_census.cpp
+  src/game/pillarbox.cpp
   src/game/wide_staging.cpp
   src/game/wide_rand.cpp
   src/game/field_frame.cpp

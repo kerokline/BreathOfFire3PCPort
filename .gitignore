@@ -126,3 +126,7 @@ venv/
 *.webp
 !docs/images/
 !docs/images/**
+
+# Notes shared privately with us that must not be published yet: kept beside
+# docs/ on the owner's machine and moved into docs/ when their author agrees.
+docs/gitIgnored/

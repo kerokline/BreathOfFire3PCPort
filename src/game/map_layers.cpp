@@ -9,6 +9,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/map_layers_callees.h"
+#include "game/map_rim.h"
 #include "game/wide_rand.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -80,6 +81,18 @@ unsigned char* Quad(unsigned index, unsigned buffer) { return draw_pool::Items()
 // mod 3 of layer slot / 6 - the layers are six (first, last) pairs, three
 // lists by two buffers.
 unsigned long& Last(std::uint32_t slot) { return DrawLayers[slot * 2u + 1u]; }
+
+// The same by layer and list-and-buffer `sub` (list * 2 + buffer): layer -1,
+// the grown ring's row above Capcom's (DIV-0041, wide-ring), is map_rim's
+// record of the same shape; narrow no layer is below 0.
+unsigned long& LastOf(int layer, std::uint32_t sub) {
+    if (layer < 0) return map_rim::ExtraLayer()[sub * 2u + 1u];
+    return Last(static_cast<std::uint32_t>(layer) * 6u + sub);
+}
+
+// Draw-table cells added by the current build (the byte count wraps at 256):
+// for the wide build's peak log only.
+unsigned g_table_adds;
 
 unsigned long AsLong(const void* p) { return static_cast<unsigned long>(Address(p)); }
 
@@ -228,25 +241,27 @@ namespace {
 // DIV-0041's random split (docs/ultrawide-rand.md): the inset before DIV-0041's lowering is
 // noted for DrawLayer_Open, whose cells outside the original's walk draw from
 // a generator of ours; narrow the two are the same and nothing is split.
-std::uint32_t Inset() {
+std::uint32_t Inset(std::uint32_t* original = nullptr) {
     const map_layers::InsetPair pair =
         map_layers::ComputeInset(Cond_AngleFB, Camera_Distance, Field_InputFlags, Cond_ByteFE, Widescreen_InsetColumns());
     Scratch_Swap = static_cast<unsigned long>(pair.lowered);
     MapView_Inset = static_cast<unsigned char>(Scratch_Swap);
     wide_rand::NoteInset(pair.original, MapView_Inset);
+    if (original) *original = pair.original;
     return pair.lowered;
 }
 
 int Columns(std::uint32_t inset) { return static_cast<std::int32_t>((0xEu - inset) << 1); }
 
 // A side triangle's list: list 0 of layer `layer` when the cell word's `bit` is
-// set, else list 1.
-std::uint32_t SideSlot(unsigned layer, const unsigned char* cell, unsigned shift) {
-    return layer * 6u + ((~Word(cell + 2) >> shift) & 2u) + Gfx_BufferIndex;
+// set, else list 1 - as LastOf's list-and-buffer.
+std::uint32_t SideSub(const unsigned char* cell, unsigned shift) {
+    return ((~Word(cell + 2) >> shift) & 2u) + Gfx_BufferIndex;
 }
 
-// One cell of the view, drawn into layer `layer` (0..0x36).
-void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
+// One cell of the view, drawn into layer `layer` (0..0x36; under DIV-0041's
+// grown ring -1..0x37).
+void BuildCell(unsigned char* cell, int layer, int threshold) {
     if (cell[0] == 0 || cell[1] == 0) {
         g.release_cell(cell);
         MapView_BuildFlags |= 1;
@@ -301,7 +316,7 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
             static unsigned logged = 0;
             if (logged < 200) {
                 ++logged;
-                bof3::Log("map_layers: no draw item for cell %u,%u layer %u at frame %u", (unsigned)cell[0], (unsigned)cell[1],
+                bof3::Log("map_layers: no draw item for cell %u,%u layer %d at frame %u", (unsigned)cell[0], (unsigned)cell[1],
                           layer, (unsigned)Frame_Counter);
             }
             return;
@@ -343,17 +358,17 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
     const unsigned word = Word(cell + 2);
     if (word & 0x8000u) {
         if (word & 0x4000u) {   // list 0 of the layer before (layer 0 for the first)
-            const unsigned before = layer != 0 ? layer - 1 : 0;
-            g.link(reinterpret_cast<unsigned long*>(Last(before * 6u + Gfx_BufferIndex)),
+            // DIV-0041's grown ring: the first is layer -1, as the PSP's.
+            const int before = map_rim::Active() ? (layer >= 0 ? layer - 1 : -1) : (layer != 0 ? layer - 1 : 0);
+            g.link(reinterpret_cast<unsigned long*>(LastOf(before, Gfx_BufferIndex)),
                    AsLong(item + Gfx_BufferIndex * 0x48u));
-            Last(before * 6u + Gfx_BufferIndex) =AsLong(item + Gfx_BufferIndex * 0x48u);
+            LastOf(before, Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
         } else {                // list 1 of this layer
-            g.link(reinterpret_cast<unsigned long*>(Last(layer * 6u + 2u + Gfx_BufferIndex)),
+            g.link(reinterpret_cast<unsigned long*>(LastOf(layer, 2u + Gfx_BufferIndex)),
                    AsLong(item + Gfx_BufferIndex * 0x48u));
-            Last(layer * 6u + 2u + Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
+            LastOf(layer, 2u + Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
         }
-    } else if ((word & 0x4000u) &&
-               (Draw_OtSlot == 6 || (Draw_OtSlot == 4 && static_cast<int>(layer) > threshold))) {
+    } else if ((word & 0x4000u) && (Draw_OtSlot == 6 || (Draw_OtSlot == 4 && layer > threshold))) {
         // The draw table, keyed by layer and the cell's lowest corner (each
         // byte's sign flipped, so the lowest s8 is the smallest byte). Each
         // new minimum passes through SharedScratch's byte, as the original
@@ -365,22 +380,29 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
             const auto biased = static_cast<unsigned char>(c[k] ^ 0x80);
             if (*scratch > biased) *scratch = biased;
         }
-        const std::uint32_t key = ((layer << 8) | *scratch) << 16;
-        // Diagnostic only, no behaviour: the byte count wraps at 256 and the
-        // table's first entries are overwritten (the coast, 2026-09-27).
-        if (DrawTable_Count == 0xFF) {
-            static unsigned logged = 0;
-            if (logged < 100) {
-                ++logged;
-                bof3::Log("map_layers: draw table full (256) at frame %u, cell %u,%u layer %u", (unsigned)Frame_Counter,
-                          (unsigned)cell[0], (unsigned)cell[1], layer);
+        if (layer < 0) {
+            // DIV-0041's grown ring: DrawTable's key holds the layer in a byte
+            // above layer 0's, so layer -1's cells are map_rim's table.
+            map_rim::ExtraTablePush(*scratch, Word(cell + 2) & 0xFFFu);
+        } else {
+            const std::uint32_t key = ((static_cast<std::uint32_t>(layer) << 8) | *scratch) << 16;
+            // Diagnostic only, no behaviour: the byte count wraps at 256 and the
+            // table's first entries are overwritten (the coast, 2026-09-27).
+            if (DrawTable_Count == 0xFF) {
+                static unsigned logged = 0;
+                if (logged < 100) {
+                    ++logged;
+                    bof3::Log("map_layers: draw table full (256) at frame %u, cell %u,%u layer %d", (unsigned)Frame_Counter,
+                              (unsigned)cell[0], (unsigned)cell[1], layer);
+                }
             }
+            DrawTable[DrawTable_Count] = key | (Word(cell + 2) & 0xFFFu);
+            DrawTable_Count = static_cast<unsigned char>(DrawTable_Count + 1);
+            ++g_table_adds;
         }
-        DrawTable[DrawTable_Count] = key | (Word(cell + 2) & 0xFFFu);
-        DrawTable_Count = static_cast<unsigned char>(DrawTable_Count + 1);
     } else {                    // list 0 of this layer
-        g.link(reinterpret_cast<unsigned long*>(Last(layer * 6u + Gfx_BufferIndex)), AsLong(item + Gfx_BufferIndex * 0x48u));
-        Last(layer * 6u + Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
+        g.link(reinterpret_cast<unsigned long*>(LastOf(layer, Gfx_BufferIndex)), AsLong(item + Gfx_BufferIndex * 0x48u));
+        LastOf(layer, Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
     }
     {
         unsigned char* const mine = item + Gfx_BufferIndex * 0x48u;
@@ -396,7 +418,7 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
     const unsigned next_item = Word(item + 0x7E);
     if (draw_order::Tagging() && (next_item != 0 || Word(item + 0x8E) != 0)) {
         const signed char* const c = reinterpret_cast<const signed char*>(MapView_CornerPtr);
-        bof3::Log("map_layers: cell %u,%u layer %u item %u: next side %u, below side %u; corners %d %d %d %d; screen (%g, %g)",
+        bof3::Log("map_layers: cell %u,%u layer %d item %u: next side %u, below side %u; corners %d %d %d %d; screen (%g, %g)",
                   (unsigned)cell[0], (unsigned)cell[1], layer, index, next_item, Word(item + 0x8E), c[0], c[1], c[2], c[3],
                   MapView_ScreenXY[0], MapView_ScreenXY[1]);
     }
@@ -415,9 +437,9 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
         s[5] = static_cast<short>(sy0 + 0x80);
         s[6] = Height(next[2]);
         g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
-        g.link(reinterpret_cast<unsigned long*>(Last(SideSlot(layer, cell, 12))), AsLong(side));
+        g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 12))), AsLong(side));
         g.rtpt();
-        Last(SideSlot(layer, cell, 12)) = AsLong(side);
+        LastOf(layer, SideSub(cell, 12)) = AsLong(side);
         g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x38), reinterpret_cast<unsigned long*>(side + 0x28),
                     reinterpret_cast<unsigned long*>(MapView_ScreenXY));
         g.depth_f3(reinterpret_cast<float*>(side + 0x40), reinterpret_cast<float*>(side + 0x30), &unused);
@@ -438,9 +460,9 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
         s[4] = static_cast<short>(s[0] + 0x80);
         s[6] = Height(under[1]);
         g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
-        g.link(reinterpret_cast<unsigned long*>(Last(SideSlot(layer, cell, 11))), AsLong(side));
+        g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 11))), AsLong(side));
         g.rtpt();
-        Last(SideSlot(layer, cell, 11)) = AsLong(side);
+        LastOf(layer, SideSub(cell, 11)) = AsLong(side);
         g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x28), reinterpret_cast<unsigned long*>(side + 0x38),
                     reinterpret_cast<unsigned long*>(MapView_ScreenXY));
         g.depth_f3(reinterpret_cast<float*>(side + 0x30), reinterpret_cast<float*>(side + 0x40), &unused);
@@ -476,7 +498,29 @@ extern "C" void __cdecl MapView_Build(void) {
     MapView_BuildFlags &= 0xFE;
     DrawTable_Count = 0;
     const int threshold = kind2_z - origin_y - origin_x + kind2_x + 8;
-    std::uint32_t inset = Inset();
+    std::uint32_t original = 0;
+    std::uint32_t inset = Inset(&original);
+    if (map_rim::Active()) {
+        // DIVERGENCE DIV-0041 (wide-ring, docs/wide-ring.md): the PSP's grown
+        // ring, rows -1..55 (its 0..56) and grown columns g .. 32 - g, g =
+        // max(0, i + 2 - L) - today's walk plus one column, into the rim
+        // where today's would be clipped at 0 (owner's answer 3,
+        // 2026-10-21). Capcom's window cells are walked in Capcom's slots, in
+        // its order within a row (ascending column); Scratch_Swap is not
+        // re-read between cells, the walk being ours.
+        g_table_adds = 0;
+        const int lowered_by = static_cast<int>(Widescreen_InsetColumns());
+        int walk = static_cast<int>(original) + 2 - lowered_by;
+        walk = walk < 0 ? 0 : walk > 16 ? 16 : walk;
+        map_rim::NoteWalk(static_cast<unsigned>(walk), MapView_Inset);
+        for (int grown_row = 0; grown_row < map_rim::kRows - 1; ++grown_row)
+            for (int grown_column = walk; grown_column < map_rim::kColumns - walk; ++grown_column)
+                BuildCell(map_rim::Cell(grown_row, grown_column), grown_row - 1, threshold);
+        map_rim::ExtraTableSort();
+        g.sort();
+        map_rim::NoteBuildPeaks(g_table_adds);
+        return;
+    }
     int row = MapView_Row;
     for (unsigned layer = 0; layer < 0x37; ++layer) {
         row = row == 0x37 ? 0 : row + 1;
@@ -484,7 +528,8 @@ extern "C" void __cdecl MapView_Build(void) {
         if (column >= 0x1C) column -= 0x1C;
         for (int k = 0; k < Columns(inset);) {
             column = column == 0x1B ? 0 : column + 1;
-            BuildCell(MapView_CellItems + static_cast<std::uint32_t>(column + row * 28) * 4u, layer, threshold);
+            BuildCell(MapView_CellItems + static_cast<std::uint32_t>(column + row * 28) * 4u, static_cast<int>(layer),
+                      threshold);
             inset = static_cast<std::uint32_t>(Scratch_Swap);
             ++k;
         }

@@ -1,7 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-21: `main` is `dc921a0c` (PRs #100, typed-data stage C, and #101, the reading-row
-staging, merged); a cleanup left one worktree and one branch, `main`; nothing in flight)
+**Status:** IN PROGRESS (2026-10-21: `main` is `31249d0c` (PR #103, a cleanup, after #100 and #101); the
+wide-ring round built on `wide-ring/round`, its end on `wide-ring/end`, PR next, nothing pushed)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -16,7 +16,8 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-`main` is `dc921a0c`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
+**The wide-ring round is built** on `wide-ring/round` (off `main` `31249d0c`; [`STATUS.md`](STATUS.md) has the
+paragraph; item 0 below). Before it `main` was `dc921a0c`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
 to 27,394, the machine code identical; `tools/data_census.py` the CI ratchet), the quicksave round (PR #95: F6 / F7 /
 the F5 menu, DIV-0145..0147, D322), the quicksave's language guard (PR #96: the original Chinese against a
 translation refused before a byte is written; one translation into another kept, IDEAS I47), D266 and DIV-0148
@@ -45,7 +46,16 @@ hosted cross form).
 
 ## Pick up here
 
-0. **The typed-data round is done through stage C** (PR #100; [`typed-data-stage-c.md`](typed-data-stage-c.md),
+0. **The wide-ring round: open the PR** from `wide-ring/end` (the round's merges, its fold and its gate; based on
+   `wide-ring/round` off `main` `31249d0c`) at the owner's word, then the owner's play of each change
+   ([`owner-review.md`](owner-review.md) 2026-10-21: the ring at a pulled-out camera and a quickload across widths;
+   the READY! banner and the *Fin* wipe; the table faerie in `dolphinBoss`; areas 31, 90, 198 framed; Garr at the
+   camps of areas 53 and 192). Every call is answered (round doc section 6); the end batch's measured gate is its
+   section 9. Left open by design: D292's kind 0x8D first frames (accepted), area 19's camera-out (no save reaches
+   it, [`wide-ring.md`](wide-ring.md) 8), the D300 rule's broadening (when a second example is seen). The round's
+   runs: `C:\Users\kerok\bof3x-runs\r_ring\<group>`.
+
+0a. **The typed-data round is done through stage C** (PR #100; [`typed-data-stage-c.md`](typed-data-stage-c.md),
    each step as run in [`typed-data-round.md`](typed-data-round.md) 3). Next in that line is I44's stage 3, the
    relocatable image (the round doc's section 7, not staged), and IDEAS I49 (what `Battle_AutoTargetCheck`'s `+0xBA`
    test means, after `kEnemyHp` became `kEnemyIntel`). **The method that held** (stage C's section 1):
@@ -56,6 +66,7 @@ hosted cross form).
    the briefs, the audit reports `audit\`); stages A and B's scratch is deleted.
 
 1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
+   - **The wide-ring round** (item 0): play of the five changes; nothing to decide.
    - **Quicksaves** (DIV-0145..0147): not played yet; whether F6 / F7 get an on-screen line (logged only today, as
      F12's is, DIV-0032); IDEAS I47 (one translation's quicksave loaded under another) when they want it.
    - **From the button round (PR #85):** record the minigame starts with `BOF3X_RECORD`

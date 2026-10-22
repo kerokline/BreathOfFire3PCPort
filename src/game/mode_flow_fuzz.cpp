@@ -502,7 +502,7 @@ const Region kRegions[] = {
     {0x903580, 0xC0},          // the buttons, Light_Angles, Field_Slots
     {0x9036D0, 1},
     {0x903840, 0x100},         // Camera_Distance, the pending x and z, the six hold bytes
-    {0x905B80, 0x28},          // Field_EdgeBits, the pending flags, Field_InputFlags, Field_ScriptFlags2
+    {0x905B80, 0x28},          // Field_StepCount, the pending flags, Field_InputFlags, Field_ScriptFlags2
     {0x905E60, 0x10},          // Field_Kind2Z / X, the last zone, MapView_Redraw
     {0x929EC0, 0x10},          // Field_MemberCount and the byte after it, Camera_Angles, the angle word
     {0x92BF19, 1},             // Draw_OtSlot

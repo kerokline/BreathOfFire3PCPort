@@ -1,0 +1,22 @@
+# DIV-0152: the adult_ryu save loaded to its field, then Start + Select held
+# 70 frames - past the 60 the Western discs count - and the title expected.
+# The log's DIV-0152 line names the frame of the restart.
+# save adult_ryu
+wait 480
+press start
+wait 40
+press circle
+wait 60
+wait 60
+press circle
+wait 40
+press circle
+wait 60
+press circle
+until 0x66C7E8 u16 == 2 timeout 1200
+wait 120
+shot field
+hold start+select 70
+wait 600
+shot title
+end

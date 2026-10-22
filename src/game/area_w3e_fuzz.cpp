@@ -262,7 +262,7 @@ const ah::Callee kCallees[] = {
     {W3E_OURS(KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     {W3E_OURS(Kind2_Place), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {W3E_OURS(Party_HealJoined), 0, {}, ah::Answer::kGarbage, 0, 0},
-    {W3E_OURS(Field_ZoneCounterRoll), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
+    {W3E_OURS(Field_EncounterThresholdRoll), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     // the group's own, called directly
     // answers 0 or 1 (its two returns)
     {W3E_OURS(Area140_BlockedAhead), 2, {kU16, kU16}, ah::Answer::kByte, 0x00, 0x01},

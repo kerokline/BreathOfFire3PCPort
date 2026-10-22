@@ -139,7 +139,7 @@ bool BoxLeaves(const unsigned char* o) {
 // one is put at one of eight cells, Rand() & 7 into the (x, z) byte pairs at
 // 0x5EE258: +0x34 = x << 16, +0x38 = z << 16, and +0x3E the word of
 // AreaMap_Elevation(+0x34 as stored, z << 16). Last, whether or not one was
-// kept, Field_EdgeBits = the low word of (the leader's dword +0x134) - 5.
+// kept, Field_StepCount = the low word of (the leader's dword +0x134) - 5.
 //
 // As the original has it: the roll and the subtraction are byte-wide; the
 // second Rand's low byte is taken (`mov [esp + 4], al`, then & 0xFF).
@@ -163,7 +163,7 @@ extern "C" void __cdecl Area29_PickFieldObject(void) {
         const long height = g.elevation(o->x, static_cast<long>(z));
         o->height_whole = static_cast<unsigned>(height);
     }
-    Field_EdgeBits = static_cast<unsigned short>(Long(At(ObjTrio_addr + 0x134)) - 5);
+    Field_StepCount = static_cast<unsigned short>(Long(At(ObjTrio_addr + 0x134)) - 5);
 }
 
 // original 0x403CE0 (area 33's handler 0, Area33_Handlers 0x5EF4C8 - the

@@ -32,6 +32,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/map_field_objects_callees.h"
+#include "game/map_rim.h"
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
@@ -284,14 +285,21 @@ extern "C" void __cdecl MapCell_DrawDiagonalWall(const unsigned char* record, un
 // ((x' - z') / 2 + MapView_Column + 1), each wrapped by one subtraction, when 0
 // <= x' + z' < 0x38 and 0 <= x' - z' < 0x38; the item the low 12 bits of the
 // ring word +2. A non-zero one goes to MapCell_FlatOverlay(kind - 0x10, item).
+//
+// DIV-0041 (wide-ring): a cell of the grown ring's rim takes the rim's item.
 extern "C" void __cdecl MapCell_DrawFlatFaces(const unsigned char* record, unsigned b1, unsigned b0) {
     const U ox = S16(Word(At(at::OriginAt()))), oz = S16(Word(At(at::OriginAt() + 2)));
     const U dx = b1 - ox, dz = b0 - oz;
     const auto sum = static_cast<std::int32_t>(dx + dz);
+    const auto diff = static_cast<std::int32_t>(dx - dz);
+    if (map_rim::Active() && !(sum >= 0 && sum < 0x38 && diff >= 0 && diff < 0x38)) {
+        const U item = map_rim::RimItemAt(static_cast<std::int32_t>(dx), static_cast<std::int32_t>(dz));
+        if (item != 0) g.flat_overlay(static_cast<int>((Dword(record) >> 24) - 0x10u), item);
+        return;
+    }
     if (sum >= 0x38 || sum < 0) return;
     auto row = static_cast<std::int32_t>(static_cast<U>(sum) + S16(Word(At(at::RowAt()))) + 1u);
     if (row >= 0x38) row -= 0x38;
-    const auto diff = static_cast<std::int32_t>(dx - dz);
     if (diff >= 0x38 || diff < 0) return;
     auto column = static_cast<std::int32_t>(static_cast<U>(diff / 2) + S16(Word(At(at::ColumnAt()))) + 1u);
     if (column >= 0x1C) column -= 0x1C;

@@ -478,3 +478,24 @@ their reading first. The renders are no oracle here: they are of the title,
 which plays no effect. Left for the owner and the next session: read
 `SsUtKeyOnV` and the handlers' volume, then decide whether the effects move to
 the model (`owner-review.md` has no call for it yet).
+
+### 10.1 Two readings for whoever moves the effects onto the model (2026-10-21, static)
+
+- **A short program table (Capcom's, every PSX release).** `SE_CueSetup_Bank*`
+  finds a cue's tone through a four-entry program table, `{0, 0x200, 0x400, 0}`
+  (JP `0x80182B58`, US `0x801821E0`, EU/FR/DE `0x801826AC`).
+  - A cue naming program 3 or above reads past it into the tone-offset table,
+    so its key note and fine tune come from a slot inside program 0. Its volume
+    and pan come from there too, but every such cue is a panned one, and
+    `SsUtSetDetVVol` overwrites both after the key-on.
+  - Only pitch is heard: on the JP disc, 298 bank-6 voice words, most about
+    50 cents off. `vag.py` pitches from the named tone, so the PC plays the
+    intended pitch.
+  - Known-defects D324. Reproducing it on the model would need its own entry.
+- **Fine tune possibly counted twice.** The handlers pass the tone's fine-tune
+  byte as `SsUtKeyOnV`'s `fine`, and libsnd adds the same tone's fine tune
+  again. The PC applies it once.
+  - A static model puts 3,632 of the 9,970 unaffected words 40..60 cents
+    sharper on the PSX.
+  - Not yet confirmed by an SPU register read; do that before trusting it.
+  - Renders and scripts: `C:\Users\kerok\bof3x-runs\cue_pitch`.

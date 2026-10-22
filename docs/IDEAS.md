@@ -81,8 +81,8 @@ rule ([`README.md`](README.md)) here too.
 | I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
 | I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | built 2026-10-10 (`catchup/music-tooling`): `abort_check.h`, the suite in CI |
 | I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
-| I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | **staged 2026-10-21** as RG in the wide-ring round ([`wide-ring-round.md`](wide-ring-round.md)); scheduled by the owner 2026-10-15 and not built until then |
-| I38 | Draw the two edge sweeps (`EffectKind0D`'s slide, area 172's growing shade) mapped onto the wide picture, so they start and end past its edge in the original's frames ([`wide-staging.md`](wide-staging.md) 8) | display | HIGH | **staged 2026-10-21** as SW in the wide-ring round ([`wide-ring-round.md`](wide-ring-round.md)); the mapping chosen by the owner 2026-10-15 |
+| I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | **built 2026-10-21** as RG in the wide-ring round (DIV-0041's 2026-10-21 ring amendment; [`wide-ring.md`](wide-ring.md)); on `wide-ring/round`, PR next; the owner's play owed |
+| I38 | Draw the two edge sweeps (`EffectKind0D`'s slide, area 172's growing shade) mapped onto the wide picture, so they start and end past its edge in the original's frames ([`wide-staging.md`](wide-staging.md) 8) | display | HIGH | **built 2026-10-21** as SW in the wide-ring round (DIV-0041's 2026-10-21 sweeps amendment; [`wide-sweeps.md`](wide-sweeps.md)); on `wide-ring/round`, PR next; the owner's play owed |
 | I39 | The Identify panel's element icons shaded by how weak the enemy is, not bright / dim | display | HIGH | open 2026-10-15, the owner: an argument for it, not now |
 | I40 | Port the importer to C++ inside the launcher, so a release needs no bundled Python ([`install-sources.md`](install-sources.md) 7) | platform | MEDIUM | open 2026-10-15 (the owner: bundle Python now, port later) |
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
@@ -1618,6 +1618,10 @@ _(2026-10-15) scheduled: the owner, "build I37 now" - the RG group, without
 waiting for a far-camera picture (D292)._
 _(2026-10-21) found not built (no PR from #62 on touches it); staged as RG in
 [`wide-ring-round.md`](wide-ring-round.md)._
+_(2026-10-21) **built** (group RG, [`wide-ring.md`](wide-ring.md)): the PSP's
+33 x 58 at 16:9 and 21:9 as Capcom's ring plus a draw-only rim, Capcom's
+28 x 56 at 4:3; DIV-0041 amended 2026-10-21; D292 narrowed to kind 0x8D's
+first frames. On `wide-ring/round`; the owner's play owed._
 
 ## I38 — Draw the two edge sweeps mapped onto the wide picture
 
@@ -1642,6 +1646,10 @@ _(2026-10-15) scheduled: the owner chose the mapping (logic's x kept, the draw
 mapped; a DIV-0041 amendment when built)._
 _(2026-10-21) found not built; staged as SW in
 [`wide-ring-round.md`](wide-ring-round.md)._
+_(2026-10-21) **built** (group SW, [`wide-sweeps.md`](wide-sweeps.md)): the
+logic's x kept, the draw mapped; DIV-0041 amended 2026-10-21; the shade's
+right-anchored map and the faster slide accepted off the sheets. On
+`wide-ring/round`; the owner's play owed._
 
 ## I39 — Shade the element icons by how weak the enemy is
 

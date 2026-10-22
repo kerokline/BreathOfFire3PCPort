@@ -151,7 +151,7 @@ void SetCells59(unsigned row8, unsigned row9) {
 // field objects 0..7 other than that one get byte +0 = 0; the one chosen (if
 // any) is put at one of eight cells by Rand & 7 - x and z the pair's bytes
 // << 16, its word +0x3E the ground's elevation there (x read back). Either
-// way Field_EdgeBits = the leader's dword +0x134 less 5.
+// way Field_StepCount = the leader's dword +0x134 less 5.
 void PlaceOneObject(std::uint32_t positions, std::uint32_t weights) {
     auto left = static_cast<unsigned char>(AH_CALL(Rand)() & 0x3F);
     unsigned pick = 0;
@@ -173,7 +173,7 @@ void PlaceOneObject(std::uint32_t positions, std::uint32_t weights) {
         const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
-    Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
+    Field_StepCount = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
 
 }  // namespace

@@ -72,7 +72,7 @@ id; every offset is the PSX record's + 4 ([`item-use.md`](item-use.md)
 section 2). The fields read here: `+0x0B` bit 0 (counted by
 `Inventory_Count`), the equipment bytes `+0x12` (weapon), `+0x13..+0x15`
 (armour), `+0x16..+0x17` (accessories), HP `+0x18`, the halving bits
-`+0x1D`, the max-HP scale `+0x1E`, the trait byte `+0x1F`; the effective
+`+0x1D`, the max-HP scale `+0x1E`, the master `+0x1F`; the effective
 block `+0x20..+0x3F` - max HP `+0x20`, ATK `+0x24`, DEF `+0x26`, AGI `+0x28`,
 INT `+0x2A`, a word `+0x2C`, the byte `+0x2E` (`Stat_AddCap99`), nine
 resistance bytes `+0x2F..+0x37`, five percentage bytes `+0x38..+0x3C` - and
@@ -93,11 +93,19 @@ its base copy `+0x40..+0x5F`.
    non-zero byte `+0x38 + j`, the bonus the byte `0x903640 + 5 * i + j` (PSX
    `0x80148668`). A preview's copy or a battle working copy gets none.
 
-`Char_ApplyTraits` `0x590800`: the trait byte `+0x1F` (`0xFF`: none) picks
+`Char_ApplyTraits` `0x590800`: the master byte `+0x1F` (`0xFF`: none) picks
 a pointer from `0x667548` (null: none) to (kind, amount) byte pairs ended by
 kind `0xE`: kinds 0..8 `Stat_AddResist(+0x2F + kind)`, 9..13
-`Stat_AddCap100(+0x2F + kind)`, a kind above 13 skipped. What the lists
-mean is not read; the name is a guess (`hypothesis`).
+`Stat_AddCap100(+0x2F + kind)`, a kind above 13 skipped.
+
+So each list holds a master's bonuses while the character is apprenticed: resistance steps and
+percentages. Two readers show the byte is the master:
+
+- The master screens (`rest_2d.md`): `MasterJoin_Step5Apply` sets it and `MasterQuit_Step5Apply`
+  clears it to `0xFF`.
+- The field panel prints system message `0x111 +` the byte.
+
+The function and table keep their earlier names (`Char_ApplyTraits`, `Char_TraitLists`) for now.
 
 `Char_ApplyWeapon` `0x590FC0`: ATK plus the weapon's byte `+0x16`, AGI less
 its byte `+0x14` (both `Stat_AddClamped`, `NameTable_Weapons` stride 0x1C),

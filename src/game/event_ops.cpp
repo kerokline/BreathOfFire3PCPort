@@ -61,7 +61,7 @@ const Callees kOriginals = {
     Field_CellAroundNear, Field_LeaderTalkTo, Scenario_StepHook, Scenario_ArriveHook, Area_StepHook,
     Area_ArriveHook, Area_ReturnGate,
     reinterpret_cast<const ChapterHooks* const*>(static_cast<std::uintptr_t>(Scenario_Hooks_addr)),
-    Field_LeaderAnimation, Sprite_ClearSteps, Sprite_EnsureAnimation, AreaMap_ByteAt, Field_ZoneCounterRoll,
+    Field_LeaderAnimation, Sprite_ClearSteps, Sprite_EnsureAnimation, AreaMap_ByteAt, Field_EncounterThresholdRoll,
     Party_Count, Area_ZoneAt, Rand, Sound_PlayEffect, Area_LinkAt, MapView_GroundAt, Sprite_ScriptTick,
     Sprite_ObjectAt, Sprite_PointInReach, Field_ChangeArea, Flags_Test, Flags_Clear, EventObj_Reset,
     Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, Sprite_SetAnimation,
@@ -363,7 +363,7 @@ extern "C" void __cdecl Field_LeaderWalk(void) {
                 sc[6] = static_cast<unsigned char>(sc[6] - 1);
                 if (Sprite_Current[6] == 0 || g.byte_at(Whole(x), Whole(z)) != 0) {
                     Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xCFFF);
-                    Field_EdgeBits = 0;
+                    Field_StepCount = 0;
                     g.zone_roll(0);
                 }
             } else if (g.encounter_due()) {
@@ -615,7 +615,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
 // original 0x530030: an encounter due? (PSX FUN_801B4EA8). Bit 5 of
 // Field_ScriptFlags clears the zone counter ObjTrio +0x134 first; the zone
 // the leader stands in (Area_ZoneAt) must have +4, the counter must be set
-// and at most Field_EdgeBits (7/10 of it while walking, pace below 4), ObjTrio
+// and at most Field_StepCount (7/10 of it while walking, pace below 4), ObjTrio
 // +0x138 bit 0 clear, the word 0x929EE0 at most 0xF0 unless bit 0 of
 // Field_InputFlags, and no member with bit 6. Then on foot (bit 0): the cell
 // +9 steps on is 0; else 0x591F30(4, 0) - which moves Sprite_Current, put
@@ -630,7 +630,7 @@ extern "C" unsigned char __cdecl Field_EncounterDue(void) {
         return 0;
     }
     if (Word(At(ObjTrio_addr + 0x134)) == 0) return 0;
-    std::uint32_t edge = Field_EdgeBits;
+    std::uint32_t edge = Field_StepCount;
     if (rv::Bytes(ObjTrio)[0x128] < 4) edge = edge * 7 / 10;
     if (edge < Word(At(ObjTrio_addr + 0x134))) return 0;
     if (rv::Bytes(ObjTrio)[0x138] & 1) return 0;

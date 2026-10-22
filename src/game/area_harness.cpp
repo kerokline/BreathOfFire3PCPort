@@ -602,7 +602,7 @@ void Run(const Group& group) {
         {0x9039A0, 0x58},                                   // Field_ScriptFlags .. 0x9039F7 (the mode bytes)
         {Cond_Flags_addr, 0x1D0},                           // Cond_Flags, the story flags, the party lists
         {Game_AreaNumber_addr, 4},                          // Game_AreaNumber
-        {0x905B80, 0x30},                                   // Field_EdgeBits .. Field_ScriptFlags2 ..
+        {0x905B80, 0x30},                                   // Field_StepCount .. Field_ScriptFlags2 ..
         {at::kMapBytes, 8},                                 // AreaMap_Bytes, Field_State
         {0x905E60, 0x10},                                   // MapView_Redraw ..
         {at::kMemberCount, 1},                              // Field_MemberCount
