@@ -139,6 +139,11 @@ text* the furigana entry (or English for the second language).
   stop is the plain end-of-message wait with no arrow - say if you want an
   arrow there (a renderer change). D332 is on the English-over-Japanese
   sheet: a speaker's name run into its speech, one row touching the frame.
+- **The opening with rows kept** (`C:\Users\kerok\bof3x-runs\rr_nr\sheets\opening_en-US_over_ja-JP_rows_kept.png`):
+  the name on its own row, three of the seven boxes now two pages. One
+  thing NR noticed for your eye: on a two-row page (a name, then one line
+  of speech) the balance rule can put a few English words above the name
+  row; changing that is an amendment to the sharing rule, your call.
 - **The Mods page's Data / Extras sub-row and the hidden dropdown**
   (`C:\Users\kerok\bof3x-runs\r_ruby\lx\shots\`): the toggle off by
   default, on when the furigana zip is added; Settings closes the gap.

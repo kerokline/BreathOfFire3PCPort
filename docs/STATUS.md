@@ -25,7 +25,8 @@ fuzzes at 0 mismatches; with no layer the state hash differs from the base tip o
 pairs are stale at the tip for every build (D330). The same afternoon: under a layer a timed box stops for a
 confirm press and the offset-pen / effect pages are composed (the opening scene now shows the row; 281 timed stops
 in the furigana layer, 10,518 messages composed; DIV-0155 / DIV-0156 amended), the dropdown hides behind the Mods
-page's *Extras* toggle (`ruby_ui=`, on with the furigana mod), and `setup` carries saves across a re-run (D331).
+page's *Extras* toggle (`ruby_ui=`, on with the furigana mod), and `setup` carries saves across a re-run (D331); the second mode re-flows pages, never rows (authored
+breaks kept, a third row to a new page; English over Japanese adds 4,395 pages, D332 fixed).
 Findings D326..D332. **Owed:** the owner's play
 ([`owner-review.md`](owner-review.md) 2026-10-22), the readings follow-on group (lexicon, fugashi compare, an agent
 pass; D328), SudachiPy for a player's build of the mod (not bundled: the release gate), the `orig3` pairs

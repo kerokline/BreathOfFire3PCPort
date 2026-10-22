@@ -133,7 +133,9 @@ hosted cross form).
    `C:\Users\kerok\bof3x-runs\rr_os\sheets\`); the dropdown is hidden unless the Mods page's *Extras*
    sub-button's toggle (`ruby_ui=`, on by itself when a reading-row mod is added) shows it, and Settings closes the
    gap (group LX); `setup` carries an install's saves across a re-run (D331 fixed - before it a re-run removed them
-   with the previous game folder). Findings D326..D332. What is next:
+   with the previous game folder); and the second mode re-flows pages, never rows (group NR: every authored row
+   kept, a third text row to a new page, a write-time check that no composed row is wider than its authored one,
+   D332 fixed; about 3,700 more pages on a Japanese main, the owner's trade). Findings D326..D332. What is next:
    - **The owner's call:** the next-page arrow at a timed stop (today it is the plain end-of-message wait, no
      arrow; drawing one is a renderer change and a DIV amendment, OS's hand-back) and D332 (English over
      Japanese: the opening's speaker names are glyphs, not an insert, so the re-break runs a name into its speech
@@ -157,7 +159,7 @@ hosted cross form).
    - Not reached: AREA014's scarecrow and AREA150's prompt (no route or save), the faerie village's tutorials (no
      recipe), Japanese over English on a capture; a page whose text rows are all empty draws no readings (none
      seen; a rule is the contract's call, RR's hand-back 6). Hand-backs:
-     `C:\Users\kerok\bof3x-runs\r_ruby\{fb,ml,pr,rr,sb,sl,os,lx}\HANDBACK.md`.
+     `C:\Users\kerok\bof3x-runs\r_ruby\{fb,ml,pr,rr,sb,sl,os,lx,nr}\HANDBACK.md`.
 
 7. **Work that needs no owner** (each doc's own list is the authority):
    [`exe-import-engine.md`](exe-import-engine.md) 5's remainder; [`cache-read.md`](cache-read.md) 10; the music's
