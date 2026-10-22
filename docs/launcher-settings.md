@@ -147,9 +147,11 @@ From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
   (older than the toggle) comes up on when `<home>\mods.toml` lists a
   reading-row mod (`ConfigRubyUiDefault`); a `ruby_ui=` the ini names is
   left as it is. The Data page was made 12 dialog units shorter (176, as
-  Controls' second page) to fit under the sub-row in 640 x 480; hidden, the
-  box leaves its row on Settings empty rather than moving the controls
-  under it. The SatPixie options, the capture,
+  Controls' second page) to fit under the sub-row in 640 x 480. Hidden, the
+  box gives its row back: every Settings control below it moves up by the
+  row (16 dialog units) and the page's group box shortens by as much; shown,
+  they move back down (the owner, 2026-10-22: "gives slightly more space";
+  `RubyUiShow`, checked in `dialog_test.py` by the Look box's top). The SatPixie options, the capture,
   the Jukebox and the Sources page are still their own dialogs. Control ids
   are unique across the pages, so the code finds any of them through the
   window (`Item`, `config_dialog.cpp`), and the pages forward what their

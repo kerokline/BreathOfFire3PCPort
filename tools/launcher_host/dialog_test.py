@@ -38,11 +38,25 @@ u.SendMessageW.argtypes = [W.HWND, W.UINT, W.WPARAM, W.LPARAM]
 u.IsWindowVisible.argtypes = [W.HWND]
 u.IsWindowEnabled.argtypes = [W.HWND]
 u.PostMessageW.argtypes = [W.HWND, W.UINT, W.WPARAM, W.LPARAM]
+u.GetWindowRect.argtypes = [W.HWND, ctypes.POINTER(W.RECT)]
+
+
+def tops(item):
+    """Look, its Options... button, the last line (Show this window), and the language's note."""
+    return tuple(top(item(i)) for i in (IDC_FILTER, 1011, 1007, 1002))   # IDC_FILTER, IDC_LOOKOPTIONS, IDC_SHOW, IDC_LANGNOTE
+
+
+def top(h):
+    """A control's top edge on the screen: the window does not move while a run drives it."""
+    r = W.RECT()
+    u.GetWindowRect(h, ctypes.byref(r))
+    return r.top
 
 WM_COMMAND, WM_CLOSE, CB_GETCURSEL, CB_SETCURSEL, BM_GETCHECK, BM_CLICK = 0x111, 0x10, 0x147, 0x14E, 0xF0, 0xF5
 CBN_SELCHANGE = 1
 IDOK = 1
 IDC_LANGUAGE, IDC_MUSIC, IDC_CACHE, IDC_CACHENOTE, IDC_SUITENOTE = 1001, 1014, 1015, 1017, 1018
+IDC_FILTER = 1003   # the Look box: the first control under the Row above the text box
 IDC_WIDE = 1009   # DIV-0041: off, 16:9, 21:9 (wide= 0, 1, 2; docs/ultrawide-frame.md)
 CB_GETCOUNT = 0x146
 IDC_SUITE0, STRIDE, PSX, PSP, MEMBER0, WHY = 1040, 10, 1, 2, 3, 7
@@ -529,6 +543,7 @@ def ruby_ui_checks(env, report):
 
     def act_off(dlg, item):
         got["settings"] = (shown(item(IDC_RUBY)), shown(item(IDC_RUBYLABEL)), shown(item(IDC_LANGUAGE)))
+        got["look_hidden"] = (top(item(IDC_FILTER)), top(item(IDC_RUBY)))
         u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
         shot(dlg, "settings_row_hidden")
         u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
@@ -543,6 +558,7 @@ def ruby_ui_checks(env, report):
         u.SendMessageW(item(IDC_EXTRA_RUBY), BM_CLICK, 0, 0)
         got["on"] = (shown(item(IDC_RUBY)), shown(item(IDC_RUBYLABEL)),
                      u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
+        got["look_shown"] = top(item(IDC_FILTER))
         shot(dlg, "mods_extras_on")
         u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
         got["on_settings"] = (vis(item, IDC_RUBY), vis(item, IDC_RUBYLABEL))
@@ -562,6 +578,9 @@ def ruby_ui_checks(env, report):
            and "furigana mod" in (x[3] or "") and "turns this on" in (x[3] or ""), repr(x))
     report("  ticked: the box and its label shown at once", got.get("on") == (True, True, 1), repr(got.get("on")))
     report("  shown on the Settings page", got.get("on_settings") == (True, True), repr(got.get("on_settings")))
+    lh, ls = got.get("look_hidden", (0, 0)), got.get("look_shown", 0)
+    report("  hidden, the first control below (Look) sits higher - in the box's row - and moves back down shown",
+           lh[0] < ls and lh[0] == lh[1], "hidden %r (the box's top %r), shown %r" % (lh[0], lh[1], ls))
     report("  the Mods tab comes back on the sub-page it was left on", got.get("back") == (True, False),
            repr(got.get("back")))
     report("  ruby_ui=1 written; ruby=en-US as read",
@@ -574,10 +593,23 @@ def ruby_ui_checks(env, report):
 
     def act_on(dlg, item):
         got["read"] = (shown(item(IDC_RUBY)), u.SendMessageW(item(IDC_EXTRA_RUBY), BM_GETCHECK, 0, 0))
+        look = [tops(item)]
         u.SendMessageW(item(IDC_EXTRA_RUBY), BM_CLICK, 0, 0)
         got["off"] = (shown(item(IDC_RUBY)), shown(item(IDC_RUBYLABEL)))
+        look.append(tops(item))
+        for _ in range(2):   # off and on again, twice: the same two places, no drift
+            u.SendMessageW(item(IDC_EXTRA_RUBY), BM_CLICK, 0, 0)
+            look.append(tops(item))
+            u.SendMessageW(item(IDC_EXTRA_RUBY), BM_CLICK, 0, 0)
+            look.append(tops(item))
+        got["look"] = look
     st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\nruby=en-US\nruby_ui=1\n", act_on, env)
     report("ruby_ui=1 read: ticked, the box shown", got.get("read") == (True, 1), repr(got.get("read")))
+    lk = got.get("look", [0])
+    report("  Look, its Options... button and the rows under move up unticked, back ticked; the language's note stays",
+           len(lk) == 6 and all(a < b for a, b in zip(lk[1][:3], lk[0][:3])) and lk[1][3] == lk[0][3], repr(lk[:2]))
+    report("  the same two layouts each time (no drift)",
+           len(lk) == 6 and lk[1] < lk[0] and lk[0::2] == [lk[0]] * 3 and lk[1::2] == [lk[1]] * 3, repr(lk))
     report("  unticked: hidden; ruby_ui=0 written, ruby=en-US kept",
            got.get("off") == (False, False) and lines(ini).get("ruby_ui") == "0" and lines(ini).get("ruby") == "en-US",
            "%r %r %r" % (got.get("off"), lines(ini).get("ruby_ui"), lines(ini).get("ruby")))
