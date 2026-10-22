@@ -28,7 +28,19 @@ its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md
   `ruby-furigana-ja-JP` from the installed mod. The point is the mod path
   proven end to end in this round.
 
-### Still open (round doc section 6)
+### Still open (round doc section 6, and from stage A's hand-backs)
+
+- **From ML:** should a mod also build into a cache named by `cache=`, or
+  only the home's own (as now)? Should the dropdown's furigana entry read
+  "Japanese (Furigana)" plain or with "(mod 0.1.0)"? And the one that
+  gates a release: **SudachiPy and its dictionary are not bundled** in the
+  release's Python, so a player's `setup` with the furigana mod installed
+  stops at the loud error until they are (about 70 MB more in the release,
+  or the builder run on the owner's machine) - `tools/make_release.py`
+  `NOT_BUNDLED` says so.
+- **From FB:** the readings are not proofread (call 4); `--review FILE`
+  writes the list. 4,559 area pages split for a third row, each an extra
+  confirm press, as accepted.
 
 - 1: the gap between row pairs and the Latin row's size (1/2 or 2/3), off
   PR's captures when they land.
