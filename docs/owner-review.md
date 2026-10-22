@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-21, the wide-ring round's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-22, the reading-row round's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,29 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-22, the reading-row round (stage A running)
+
+Built on `localization/second-script` ([`reading-row-round.md`](reading-row-round.md);
+its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md) 1).
+
+### Decided by the owner (2026-10-22, chat)
+
+- **Call 2, furigana built in, not a mod zip** ("lets build in the furigana
+  row, that should be fine"): the readings sidecar `data/furigana/readings.toml`
+  lives in the tree, `setup` builds `ruby-furigana-ja-JP` whenever `ja-JP`
+  is held, and the dropdown *Row above the text* lists *Japanese (furigana)*
+  directly. No furigana zip is made or attached to releases. ML's mod
+  mechanism (the zip format, `tools/mods.py`, the Mods tab) stays as the
+  path for a player's own readings override list later, but nothing in the
+  round depends on it.
+
+### Still open (round doc section 6)
+
+- 1: the gap between row pairs and the Latin row's size (1/2 or 2/3), off
+  PR's captures when they land.
+- 3: reveal rule (a reading with its word, recommended). 5: choice options
+  plain. 6: the default second-language pair on `setup`. 7: SL's four.
 
 ## 2026-10-21, the wide-ring round
 
