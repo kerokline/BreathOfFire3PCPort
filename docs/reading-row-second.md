@@ -100,7 +100,7 @@ owner (the brief); each is one place in the code.
 7. **Choice blocks**: the main's `0x14` block is copied verbatim; the
    second's options are dropped.
 8. **Inserts.** The main's stay in its text rows. The second's become the
-   marker `0x12` in the reading row, which by the contract stands for the
+   marker `0x13` in the reading row, which by the contract stands for the
    k-th insert of the text row below - so the second's insert must be that
    row's k-th insert, same control, same argument. The wrap puts each
    insert of the second over the first text row (from the last one used)
@@ -172,7 +172,7 @@ has ink is kept byte for byte (checked on read-back). The largest table is
   draws 6 x 6 and advances 6. The scale is per layer (the second's tag), so
   one constant on each side keeps the two in step; the codes per pair are
   section 3's table.
-- **`0x12`** is the k-th insert of the text row below (contract 1.2), same
+- **`0x13`** is the k-th insert of the text row below (contract 1.2), same
   control and argument as the second's; this layer means **draw that
   insert's text at the reading scale** (the main's name table, the drafted
   answer), not only skip its width as the furigana layer does. The builder
@@ -216,7 +216,7 @@ the `--game` build's).
   main's text items are the original's, **every glyph in the colour the
   original drew it in**; the same head, tail and non-page terminators; at
   most two pairs a page; a reading row holds only glyph codes (no hanging
-  byte, no `0x20`), `0x12`, `05 nn`, `06`. A difference stops the build.
+  byte, no `0x20`), `0x13`, `05 nn`, `06`. A difference stops the build.
 - `--lint FILE`: walks each reading row as RR will - every code inside the
   composed table and inked (or the space cell), its width at the reading
   scale with each marker at its budget inside 192 units, no hanging first
@@ -300,7 +300,7 @@ or the round's decision, recorded here and in the hand-back for
 - Captures: the end batch's (round doc 5), once RR's renderer is in.
 - **Inserts the marker cannot reference**: 27..512 area slots a pair stay
   plain. Recovering them needs either a marker that names the insert (an
-  index after `0x12`) or the second's own name tables - a contract change,
+  index after `0x13`) or the second's own name tables - a contract change,
   the coordinator's.
 - The reading row of a choice option (none, as the round decided).
 - `importer.py verify` / `verify_opt` and `mods.py remove` do not know these

@@ -73,7 +73,8 @@ SIDE_KIND = 18
 AREA_SIDE_TAG = 0x0
 AREA_TEXT_TAG = 0x0           # the kind-0 chunk read: the area's script block
 POOL_TAG = 0x4000             # FIRST.DAT's, BATTLE.DAT's (and the other pools') kind-0 chunk
-INSERT_MARK = 0x12            # in a ruby row: the drawn width of the k-th insert below
+INSERT_MARK = 0x12            # in a ruby row: skip the drawn width of the k-th insert below (furigana)
+INSERT_DRAW = 0x13            # in a ruby row: draw the k-th insert below at reading size (a second language)
 GAP = 0x09                    # in a ruby row: one half-cell, nothing drawn
 LAYER = "ruby-furigana-%s"
 
@@ -1467,7 +1468,7 @@ class SecondComposer:
                             cur = a.colour
                         out += a.out
                     elif a.kind == "ins":
-                        out.append(INSERT_MARK)
+                        out.append(INSERT_DRAW)
                     else:
                         out += a.out
                         cur = a.colour
@@ -1646,7 +1647,7 @@ class SecondComposer:
                     for k in range(0, len(rows), 2):
                         for it in rows[k]:
                             ok = (it[0] == "g" and not is_hang(it[1]) and it[1] != b" "
-                                  and (len(it[1]) == 2 or it[1][0] > SPACE or it[1] == bytes([INSERT_MARK]))
+                                  and (len(it[1]) == 2 or it[1][0] > SPACE or it[1] == bytes([INSERT_DRAW]))
                                   or it[0] == "c" and it[1][0] in (GAP, COLOUR, COLOUR_OFF))
                             if not ok:
                                 raise SystemExit("%s: a reading row holds %s" % (where, it[1].hex()))
@@ -1688,7 +1689,7 @@ class SecondComposer:
                 for it in ruby:
                     if it[0] == "c":
                         continue
-                    if it[1] == bytes([INSERT_MARK]):
+                    if it[1] == bytes([INSERT_DRAW]):
                         if marks >= len(below):
                             bad.append("a marker with no insert below")
                         else:
