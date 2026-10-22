@@ -74,6 +74,12 @@ its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md
   units from its own text (PR's gap 2 was 4 above and 1 below; RR sets the
   pen y that gives 2 and 2 and shows it on a capture). The Latin reading
   row stays at **1/2**: "plenty legible", 2/3 "not worth it".
+- **F4 hides and shows the second script** (owner, 2026-10-22, for
+  language study): the ruby glyphs' emission only is suppressed, the
+  re-flow and the extra space stay; the binding is optional
+  (`BOF3X_RUBY_KEY`, default F4, `none` to free the key; `ruby_key=` in the
+  ini at the merge) because the F keys are running out - F2, F3, F4 were
+  the free ones.
 - **The capture scene** for the end batch and the owner's play: the
   dolphin fight (`tools/recipes/dolphinBoss.txt`), "a large chunk of
   uninterrupted text".
