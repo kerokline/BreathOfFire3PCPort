@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-21)
+**Status:** IN PROGRESS (2026-10-22)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,8 +8,27 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The wide-ring round, 2026-10-21, built on `wide-ring/round`** (off `main` `31249d0c`, which took PR #103, a
-cleanup with DIV-0149 and DIV-0150; the round's end on `wide-ring/end`; **PR next**, nothing pushed;
+**The reading-row round, 2026-10-22, built on `localization/second-script`** (off `main` `abf915cc`; the end
+batch on `reading-row/end`; **PR next**, nothing pushed; [`reading-row-round.md`](reading-row-round.md), issue #97,
+IDEAS I21 and I50 built). The dialogue box draws an optional **reading row** over each text row: composed messages
+in kind-18 side chunks keyed by slot, the arena's text never rewritten, two row pairs a page at pen y 2, 9, 21, 28
+(bottom-aligned, the owner's even gap), a reading revealed with its word, F4 hiding the readings
+(`ruby_key=`, `BOF3X_RUBY_KEY`) - [`reading-row.md`](reading-row.md). **Furigana** (DIV-0155): built on the
+player's machine from their `ja-JP` layer by `tools/ruby_build.py furigana`, 33,385 readings in 10,324 area
+messages, 0 dropped, 4,559 pages split (a confirm press each), the selftest 41,664 messages at 0 mismatches
+([`reading-row-builder.md`](reading-row-builder.md)). **A second language** (DIV-0156): every ordered pair of held
+languages, 20 with five, by the census's pairing rule, a composed font chunk per layer, `0x13` drawing an inserted
+name at reading size, the Latin row at 1/2 ([`reading-row-second.md`](reading-row-second.md)). **Mods**
+(DIV-0157): a zip of `mod.toml` and data files, the launcher's Mods tab, *Row above the text* (`ruby=`); the
+furigana readings are the first mod, attached to releases ([`mods.md`](mods.md)). The `msgbox` and `menu_windows`
+fuzzes at 0 mismatches; with no layer the state hash differs from the base tip only by run noise, but the `orig3`
+pairs are stale at the tip for every build (D330). Findings D326..D330. **Owed:** the owner's play
+([`owner-review.md`](owner-review.md) 2026-10-22), the readings follow-on group (lexicon, fugashi compare, an agent
+pass; D328), SudachiPy for a player's build of the mod (not bundled: the release gate), the `orig3` pairs
+re-recorded.
+
+**The wide-ring round, 2026-10-21, merged as PR #104** (off `main` `31249d0c`, which took PR #103, a
+cleanup with DIV-0149 and DIV-0150; then PR #105 regenerated the recipes;
 [`wide-ring-round.md`](wide-ring-round.md), its section 6 every owner call, section 9 the end batch's gate). In the
 wide modes the field's draw walks the PSP's 33 x 58 view ring - Capcom's 28 x 56 kept at every width for the logic,
 a draw-only rim beside it, `BOF3X_WIDE_RING=0` the reversal (IDEAS I37, [`wide-ring.md`](wide-ring.md)); effect kind

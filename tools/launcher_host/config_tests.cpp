@@ -625,7 +625,8 @@ std::string Env(const char* name) {
 }
 
 void ClearEnv() {
-    for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC"})
+    for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC",
+                          "BOF3X_RUBY_KEY"})
         SetEnvironmentVariableA(v, nullptr);
 }
 
@@ -991,6 +992,42 @@ void TestRuby() {
     Check(ReadAll(a).find("\r\nruby=en-US\r\n") != std::string::npos, "the ruby= line written");
     bof3x::Config d;
     Check(bof3x::ConfigSave(a, d) && ReadAll(a).find("\r\nruby=\r\n") != std::string::npos, "ruby= empty by default");
+
+    // The study key (DIV-0155, docs/reading-row.md 3.5): ruby_key= as the DLL
+    // reads BOF3X_RUBY_KEY - f1..f12 or none, any case in; f4 by default, and
+    // a value the DLL would refuse dropped to it.
+    Check(d.ruby_key == "f4" && ReadAll(a).find("\r\nruby_key=f4\r\n") != std::string::npos,
+          "ruby_key=f4 by default, written");
+    Check(bof3x::ConfigRubyKey("F12") == "f12" && bof3x::ConfigRubyKey("none") == "none" &&
+              bof3x::ConfigRubyKey("NONE") == "none" && bof3x::ConfigRubyKey("f1") == "f1",
+          "ruby_key: f1..f12 and none, any case");
+    Check(bof3x::ConfigRubyKey("f0").empty() && bof3x::ConfigRubyKey("f13").empty() &&
+              bof3x::ConfigRubyKey("f01").empty() && bof3x::ConfigRubyKey("f4 ").empty() &&
+              bof3x::ConfigRubyKey("").empty() && bof3x::ConfigRubyKey("escape").empty(),
+          "ruby_key: f0, f13, f01, a trailing space, empty and another key's name are not values");
+    struct KeyCase {
+        const char* line;
+        const char* want;
+    } keys[] = {{"ruby_key=F7", "f7"}, {"ruby_key=none", "none"}, {"ruby_key=f13", "f4"}, {"ruby_key=", "f4"}};
+    for (const KeyCase& k : keys) {
+        WriteAll(a, std::string("[bof3x]\r\n") + k.line + "\r\n");
+        bof3x::Config kc;
+        Check(bof3x::ConfigLoad(a, kc, err) && err.empty() && kc.ruby_key == k.want, k.line, kc.ruby_key);
+        Check(bof3x::ConfigSave(a, kc) &&
+                  ReadAll(a).find(std::string("\r\nruby_key=") + k.want + "\r\n") != std::string::npos,
+              "  written back as read");
+        ClearEnv();
+        bof3x::ConfigApplyEnvironment(game, kc, false);
+        Check(Env("BOF3X_RUBY_KEY") == k.want, "  handed to the game as BOF3X_RUBY_KEY", Env("BOF3X_RUBY_KEY"));
+    }
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_RUBY_KEY", "f2");
+    bof3x::Config ke;
+    ke.ruby_key = "none";
+    bof3x::ConfigApplyEnvironment(game, ke, false);
+    Check(Env("BOF3X_RUBY_KEY") == "f2", "a BOF3X_RUBY_KEY in the environment wins over ruby_key=");
+    ClearEnv();
+    DeleteFileW(a.c_str());
 }
 
 int main() {

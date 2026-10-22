@@ -1,18 +1,36 @@
 # The reading-row round: furigana, and a second language, in the row above the text
 
-**Status:** STAGED 2026-10-20, not launched (branch `docs/reading-row-staging`;
-briefs in `C:\Users\kerok\bof3x-runs\r_ruby\`). **Group SL ran the same day**
-([`second-language-census.md`](second-language-census.md), merged here) and
-the owner decided on its numbers: **two text rows plus two reading rows per
-page**, overflow accepted as extra confirm presses; and **composed messages
-delivered from a side chunk, not re-authored in the arena** (section 4). Asked for by the owner on 2026-10-20
-after GitHub issue
+**Status:** BUILT 2026-10-22 on `localization/second-script` (staged
+2026-10-20 on `docs/reading-row-staging`, PR #101; briefs and hand-backs in
+`C:\Users\kerok\bof3x-runs\r_ruby\`). Not yet played by the owner.
+
+**As built.** All six groups merged: SL's census
+([`second-language-census.md`](second-language-census.md)), PR's probe
+([`reading-row-probe.md`](reading-row-probe.md)), FB's furigana builder
+([`reading-row-builder.md`](reading-row-builder.md)), ML's mod zip, Mods tab
+and *Row above the text* ([`mods.md`](mods.md)), RR's renderer and SB's
+second-language layer ([`reading-row.md`](reading-row.md) 1..3,
+[`reading-row-second.md`](reading-row-second.md)). The dialogue box draws an
+optional reading row over each text row - kana over kanji from the player's
+`ja-JP` layer, or another held language - from kind-18 side chunks of
+composed messages, two row pairs a page at pen y 2, 9, 21, 28, F4
+(`ruby_key=`) hiding the readings. Ledgered as **DIV-0155** (the reading row
+and the furigana layer), **DIV-0156** (the second-language layer) and
+**DIV-0157** (the mod mechanism); the round's findings are known-defects
+**D326..D330**. The owner's calls of section 6 are all decided. What is owed
+is in section 5 and [`HANDOFF.md`](HANDOFF.md).
+
+**As staged** (the text below is the staging, kept as the record; the built
+answers are in the docs above): asked for by the owner on 2026-10-20 after
+GitHub issue
 [kerokline/BreathOfFire3PCPort#97](https://github.com/kerokline/BreathOfFire3PCPort/issues/97)
 ("Second Script": furigana or a second language in the rendered script, from
 a Reddit request). The furigana half is IDEAS I21 (2026-09-24, "its own
-branch and playtesting"); the second-language half is IDEAS I50. Nothing
-here is built, measured or in the ledger yet; every number below that is not
-cited is the sibling's or a guess, and says so.
+branch and playtesting"); the second-language half is IDEAS I50. The owner
+decided on SL's numbers (2026-10-20): **two text rows plus two reading rows
+per page**, overflow accepted as extra confirm presses; and **composed
+messages delivered from a side chunk, not re-authored in the arena**
+(section 4).
 
 ## 0. The shape in one paragraph
 
@@ -337,12 +355,56 @@ section 1 before FB and RR launch:
    mechanism; the defects numbered; [`owner-review.md`](owner-review.md)
    gets the calls below; I21 and I50 to built; the README row; HANDOFF.
 
+**Run (2026-10-22; the groups' hand-backs and the end batch):**
+
+- Built at the tip; `ruby_build.py furigana --selftest` 41,664 messages 0
+  mismatches and `--lint` 0 misplaced (FB); `ruby_build.py second
+  --selftest` and `--lint` clean in all 20 pairs (SB); `mods.py selftest`,
+  `make_mod.py --selftest`, `dialog_test.py` 58 checks (ML); the `msgbox`
+  (44,000 rounds) and `menu_windows` (74,000) shadow fuzzes at 0 mismatches
+  and `BOF3X_SHADOW=*` exit 0, from an ini-less launcher copy (RR);
+  `config_tests` 294 checks with the end batch's `ruby_key=`;
+  `tools/ledger_check.py` clean.
+- State hash, ten routes, no layer: **the `orig3` pairs are stale at the
+  tip** for every build - the base tip without the renderer fails the same
+  nine routes - and ours against the base differs only by run-to-run noise
+  (D330, [`state-hash.md`](state-hash.md) 6). Re-recording the pairs is owed.
+- Captures, 4:3 and 16:9, point filter, as contact sheets in
+  `C:\Users\kerok\bof3x-runs\rr_rr\shots\sheets\`: the nue route's dialogue
+  (AREA023) with furigana, a split page, a pickup line with an inserted item,
+  F4 hidden and shown, English over Japanese, the gap zoomed, and the dolphin
+  fight (the owner's capture scene) - which ran only with one press added for
+  a page the builder splits (D329).
+- **Not run:** the AREA014 scarecrow and the AREA150 desert prompt (no route
+  or save reaches them); the faerie village's tutorials (no recipe);
+  Japanese over English captured; `BOF3X_ORIGINAL=MsgBox_Step` with a layer
+  live; `dialog_test.py` after the end batch's `ruby_key=` line.
+- **Owed:** the owner's play ([`owner-review.md`](owner-review.md),
+  2026-10-22, "to play"); the readings follow-on group - the lexicon, the
+  fugashi `--compare`, the agent pass over the review list (owner-review,
+  decided 2026-10-22; D328); SudachiPy for a player's build of the mod (the
+  release gate); the `orig3` pairs re-recorded.
+
 ## 6. The owner's calls (asked here, answered in chat or `owner-review.md`)
 
 **Decided 2026-10-20 (chat, on SL's numbers):** two text rows plus two
 reading rows per page, consistently, overflow as presses; composed messages
 from a side chunk (section 4); the default pair is left to the numbers,
 which favour a Japanese main with an English second (SL 10).
+
+**All decided (2026-10-22, chat; [`owner-review.md`](owner-review.md)):**
+1 the gap **even** - "2px top 2px bottom", built as 1.5 units over and under
+a reading's ink at pitch 19, the nearest even spacing on the unit grid
+([`reading-row.md`](reading-row.md) 3.3) - and the Latin row at **1/2**;
+2 **the zip**; 3 a reading **revealed with its word**; 4 proofreading by the
+readings follow-on group (the lexicon, fugashi `--compare`, an agent pass,
+the owner adjudicating); 5 choice options **plain**; 6 **every held pair**
+built by `setup`, the dropdown showing them all; 7 SL's four as SB drafted
+them (names from the main's table at reading size, `0x13`; proportional
+sharing; non-box and offset-pen pages plain; the second in the main's letter
+shapes under a Latin main). Also decided: **F4** hides and shows the
+readings, the binding optional (`ruby_key=`, `none` frees it). The questions
+as asked:
 
 1. **The gap between row pairs** and the Latin row's size (1/2 or 2/3), off
    PR's captures. SL's numbers for the size: 2/3 overflows on 6 to 8 % of

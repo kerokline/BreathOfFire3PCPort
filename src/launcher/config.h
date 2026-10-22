@@ -78,6 +78,14 @@ struct Config {
     // (ConfigRubyPlayable), else said on stderr and no row is drawn, as for a
     // language= whose overlay is missing.
     std::string ruby;
+    // The reading row's study key (DIV-0155, docs/reading-row.md 3.5): the key
+    // that hides and shows the reading rows' glyphs in play, BOF3X_RUBY_KEY's
+    // value - f1..f12 as src/hook/input_script.cpp spells them, or none (the
+    // key left free). F4 by default, a key Capcom's Game_WndProc leaves
+    // unbound. Read in any case and kept lower case; any other value is
+    // dropped to the default, as filter= and music= are, since the DLL stops
+    // at start on a value it does not know (src/game/msgbox.cpp).
+    std::string ruby_key = "f4";
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
     // psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls. Built and
@@ -364,6 +372,10 @@ struct ModInfo {
 };
 // The mods <home>\mods.toml lists, in its order; none when there is no file.
 std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
+
+// ruby_key='s value as the DLL reads BOF3X_RUBY_KEY: "none" or "f1".."f12"
+// (any case in, lower case out), or empty when `value` is neither.
+std::string ConfigRubyKey(const std::string& value);
 
 // The optional text layer a ruby= value names under `language` (a tag; empty or
 // "original" for the port's Chinese): ruby-<ruby>-<language>, or empty when

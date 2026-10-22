@@ -172,6 +172,10 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
         } else if (key == "ruby") {
             // the row above the text: kept as written; checked at start (ConfigRubyPlayable)
             cfg.ruby = value;
+        } else if (key == "ruby_key") {
+            // the study key (DIV-0155): f1..f12 or none; anything else is the default
+            const std::string k = ConfigRubyKey(value);
+            if (!k.empty()) cfg.ruby_key = k;
         } else if (key == "opt") {
             // Kept as written, valid or not: dropping a bad value would play
             // the default layers instead, so the launcher refuses it
@@ -284,6 +288,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# the row above the text (docs/mods.md): empty none | a reading-row mod's id (furigana) | another\r\n";
     out += "# held language's tag (en-US): the layer ruby-<this>-<language>, added to the layers when built\r\n";
     out += "ruby=" + cfg.ruby + "\r\n";
+    out += "# the key that hides and shows the row above the text in play (DIV-0155): f1..f12, or none to\r\n";
+    out += "# leave every key free; f4 by default\r\n";
+    out += "ruby_key=" + cfg.ruby_key + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
     out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
@@ -439,6 +446,12 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
         std::fprintf(stderr, "bof3x-launcher: BOF3X_OPT is set in the environment, so bof3x.ini's ruby=%s is not "
                      "added to it\n", cfg.ruby.c_str());
     }
+
+    // DIV-0155: the reading row's study key, as the ini has it (f4 unless it
+    // says otherwise); the DLL reads it whether or not a reading-row layer is
+    // played, and an environment's value wins, as for the others.
+    if (GetEnvironmentVariableW(L"BOF3X_RUBY_KEY", existing, 64) == 0)
+        SetEnvironmentVariableA("BOF3X_RUBY_KEY", cfg.ruby_key.c_str());
 
     // DIV-0108: the PSP's battle rules as the ini lists them; empty leaves
     // the DLL its default (the cache's base_policy). The DLL checks the names.
@@ -976,6 +989,17 @@ std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home) {
     }
     out.erase(std::remove_if(out.begin(), out.end(), [](const ModInfo& m) { return m.id.empty(); }), out.end());
     return out;
+}
+
+std::string ConfigRubyKey(const std::string& value) {
+    std::string k;
+    for (char c : value) k += (c >= 'A' && c <= 'Z') ? static_cast<char>(c - 'A' + 'a') : c;
+    if (k == "none") return k;
+    // f1..f12 exactly as input_script.cpp's key names spell them: no leading zero, no sign
+    static const char* const kNames[] = {"f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12"};
+    for (const char* n : kNames)
+        if (k == n) return k;
+    return std::string();
 }
 
 std::string ConfigRubyLayer(const std::string& ruby, const std::string& language) {

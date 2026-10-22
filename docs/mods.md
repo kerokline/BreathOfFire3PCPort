@@ -1,13 +1,13 @@
 # Mods: a zip of data files, the Mods tab, and the row above the text
 
-**Status:** BUILT 2026-10-22 (the reading-row round, group ML; branch
-`reading-row/ml`). The mechanism is built and tested end to end with a
-stand-in builder; **the furigana layer itself is not**: its builder,
-`tools/ruby_build.py`, and its readings, `data/furigana/readings.toml`, are
-the round's group FB's and are not on this branch, so every build step here
-refuses loudly until FB merges (CLAUDE.md rule 4). Nothing here is played:
-the row above the text is drawn by group RR's renderer, stage B
-([`reading-row-round.md`](reading-row-round.md) section 3).
+**Status:** BUILT 2026-10-22 (the reading-row round, group ML; DIV-0157).
+The mechanism was built and tested end to end with a stand-in builder on
+`reading-row/ml`; on `localization/second-script` it meets FB's builder,
+`tools/ruby_build.py` (`--readings`, `--out` the `dat\` folder: commit
+`5ad20bb2`), and the row is drawn by RR's renderer (DIV-0155). The real
+builder from an installed zip needs SudachiPy, which the release does not
+bundle (section 8). Not yet played by the owner. Sections 6 and 8 below are
+as ML wrote them before FB merged.
 
 The owner's call 2 of the round (section 6 there), decided 2026-10-22 in
 chat after a brief reversal: **furigana ships as a mod zip**, the project's

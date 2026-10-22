@@ -13,10 +13,12 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
-## 2026-10-22, the reading-row round (stage A running)
+## 2026-10-22, the reading-row round (built)
 
 Built on `localization/second-script` ([`reading-row-round.md`](reading-row-round.md);
 its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md) 1).
+Ledgered as DIV-0155 (the reading row, furigana), DIV-0156 (a second language)
+and DIV-0157 (mods); the round's findings are known-defects D326..D330.
 
 ### Decided by the owner (2026-10-22, chat)
 
@@ -83,8 +85,44 @@ its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md
 - **The capture scene** for the end batch and the owner's play: the
   dolphin fight (`tools/recipes/dolphinBoss.txt`), "a large chunk of
   uninterrupted text".
-- 3: reveal rule (a reading with its word, recommended). 5: choice options
-  plain. 6: the default second-language pair on `setup`. 7: SL's four.
+- 3: a reading revealed with its word; 5: choice options plain; 6: every
+  held pair built by `setup`, all in the dropdown; 7: SL's four as SB drafted
+  them - taken as built ([`reading-row-round.md`](reading-row-round.md) 6).
+
+### To play (owed)
+
+Sheets, 4:3 and 16:9, point filter, in
+`C:\Users\kerok\bof3x-runs\rr_rr\shots\sheets\` (never in the tree):
+`furigana_*`, `study_key_F4_*`, `second_en-US_over_ja-JP_*`, `zoom_gap_*`,
+`dolphin_furigana_*`. In the launcher: Language *Japanese*, *Row above the
+text* the furigana entry (or English for the second language).
+
+- **The dolphin fight with furigana** (`dolphin_furigana_*.png`; your
+  capture scene): the coast scene's long dialogue. Look at the gap - built as
+  1.5 units of clear space over and under each reading, the nearest even
+  spacing to "2 and 2" on the unit grid (`zoom_gap_*.png`; 2.5 and 2.5 is the
+  other even choice, one table to change) - and at how a reading appears with
+  its word. Played by recipe, `tools/recipes/dolphinBoss.txt` needs one more
+  press under the layer (the Fairy Tear prompt's first message is a split
+  page, D329); in your own play it is just one more confirm.
+- **F4** (`study_key_F4_*.png`): hides the readings and shows them again, the
+  layout unchanged; `ruby_key=` in `bof3x.ini` moves it (`f1`..`f12`) or
+  frees it (`none`).
+- **English over Japanese** (`second_en-US_over_ja-JP_*.png`): Language
+  *Japanese*, *Row above the text* *English*; a speaker's name drawn small in
+  the English row (`0x13`). Japanese over English is not captured: worth one
+  look under Language *English*.
+- **The Mods tab's install of the zip**: Add zip... with
+  `furigana-<version>.zip` (`tools/make_mod.py furigana`), the row building
+  the layer, then the entry in *Row above the text*. The build needs
+  SudachiPy in the Python the launcher runs the tools with; the release's
+  runtime does not carry it (the release gate above), so from a release
+  folder the tab shows the loud error rather than a layer.
+- Also seen on the sheets, for your eye: the nue save's party names drawn as
+  wrong glyphs under Japanese (D326, the recipe save's, not the row's); the
+  next-page arrow on a one-pair page's lower edge (D327, the original's
+  rule); readings to proofread, for example a compound split as the
+  dictionary splits it (D328).
 
 ## 2026-10-21, the wide-ring round
 
