@@ -45,6 +45,15 @@ and DIV-0157 (mods); the round's findings are known-defects D326..D330.
   offset-pen and effect pages are composed too; the original message is
   untouched (the side chunk), so with no layer nothing changes. Group OS,
   launched the same day.
+- **Pages are re-flowed, rows never** (owner, 2026-10-22, off a capture of
+  the opening where the re-break ran the name row into the speech and the
+  row reached the frame: "in the original script, the name gets its own
+  row - just go ahead and do a page break instead of fitting it onto one
+  page. That leads to more pages of text, but less re-flow of sentences"):
+  the second-language mode keeps every authored row break like the
+  furigana mode and sends a third text row to a new page; about 3,300 more
+  presses over the Japanese script, no re-broken row. Group NR, launched
+  the same day; D332 falls with it.
 - **The second-script dropdown hidden by default** (owner, 2026-10-22):
   *Row above the text* leaves the Settings page unless a toggle shows it;
   the toggle sits on the Mods page behind a sub-row of two buttons under
