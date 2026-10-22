@@ -8,6 +8,9 @@ PX, 2026-10-21, section 11; branch `wide-ring/px` off `wide-ring/round`
 drafted in section 8 (the orchestrator numbers and folds it). Scripts and
 runs: `C:\Users\kerok\bof3x-runs\r_ring\PB` (`tools/map_extent.py`,
 `chain.py`, `logs/`, `shots/`, `sh/`); PX's in `C:\Users\kerok\bof3x-runs\r_ring\PX`.
+**Folded 2026-10-21 (group END):** section 8 is DIV-0041's 2026-10-21
+pillarbox amendment (areas 31, 90 and 198, as PX redrafted it; menus in a
+framed area stay framed, the owner's call).
 
 ## 0. The answer
 
