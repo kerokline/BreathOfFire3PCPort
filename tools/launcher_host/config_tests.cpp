@@ -1027,6 +1027,56 @@ void TestRuby() {
     bof3x::ConfigApplyEnvironment(game, ke, false);
     Check(Env("BOF3X_RUBY_KEY") == "f2", "a BOF3X_RUBY_KEY in the environment wins over ruby_key=");
     ClearEnv();
+
+    // The Row above the text toggle (Mods, Extras; the owner's call, 2026-10-22):
+    // ruby_ui=0|1, off by default, written always; any other value dropped to the
+    // default as snap= is. An ini without the line comes up on when a reading-row
+    // mod is installed (ConfigRubyUiDefault); a named value is left alone.
+    bof3x::Config u0;
+    Check(!u0.ruby_ui && bof3x::ConfigSave(a, u0) && ReadAll(a).find("\r\nruby_ui=0\r\n") != std::string::npos,
+          "ruby_ui=0 by default, written");
+    struct UiCase {
+        const char* line;
+        bool want, named;
+    } uis[] = {{"ruby_ui=1", true, true}, {"ruby_ui=0", false, true}, {"ruby_ui=2", false, false},
+               {"ruby_ui=yes", false, false}, {"ruby_ui=", false, false}, {"# no line", false, false}};
+    for (const UiCase& k : uis) {
+        WriteAll(a, std::string("[bof3x]\r\nruby=furigana\r\n") + k.line + "\r\n");
+        bof3x::Config uc;
+        Check(bof3x::ConfigLoad(a, uc, err) && err.empty() && uc.ruby_ui == k.want && uc.ruby_ui_named == k.named,
+              k.line, uc.ruby_ui ? "1" : "0");
+        Check(bof3x::ConfigSave(a, uc) &&
+                  ReadAll(a).find(std::string("\r\nruby_ui=") + (k.want ? "1" : "0") + "\r\n") != std::string::npos &&
+                  ReadAll(a).find("\r\nruby=furigana\r\n") != std::string::npos,
+              "  written back as read, ruby= with it");
+        // the start's rule: with the furigana mod installed, only an unnamed value turns on
+        bof3x::Config ud = uc;
+        bof3x::ConfigRubyUiDefault(ud, home);
+        Check(ud.ruby_ui == (k.named ? k.want : true), "  a reading-row mod installed: on unless named");
+        bof3x::Config un = uc;
+        bof3x::ConfigRubyUiDefault(un, Temp(L"bof3x_ruby_nohome"));
+        Check(un.ruby_ui == k.want, "  no mod installed: as read");
+    }
+    const std::wstring other = Temp(L"bof3x_ruby_home_other");
+    MakeDirs(other);
+    WriteAll(other + L"\\mods.toml", "[[mod]]\nid = \"x\"\nname = \"X\"\nversion = \"1\"\nkind = \"art\"\n");
+    bof3x::Config uo;
+    bof3x::ConfigRubyUiDefault(uo, other);
+    Check(bof3x::ConfigModsInstalled(other).size() == 1 && !uo.ruby_ui, "a mod of another kind installed: the toggle stays off");
+    // Display only: hidden (ruby_ui=0), ruby= is given to the game as when shown.
+    for (bool ui : {false, true}) {
+        bof3x::Config hc;
+        hc.cache = bof3x::ConfigToUtf8(cache);
+        hc.language = "ja-JP";
+        hc.ruby = "furigana";
+        hc.ruby_ui = ui;
+        ClearEnv();
+        bof3x::ConfigApplyEnvironment(game, hc, false);
+        Check(Env("BOF3X_OPT") == "area4-walls,ruby-furigana-ja-JP",
+              ui ? "ruby_ui=1: ruby=furigana played" : "ruby_ui=0 (the box hidden): ruby=furigana played all the same",
+              Env("BOF3X_OPT"));
+    }
+    ClearEnv();
     DeleteFileW(a.c_str());
 }
 

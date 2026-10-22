@@ -86,6 +86,16 @@ struct Config {
     // dropped to the default, as filter= and music= are, since the DLL stops
     // at start on a value it does not know (src/game/msgbox.cpp).
     std::string ruby_key = "f4";
+    // Whether Settings shows the "Row above the text" box (the owner's call,
+    // 2026-10-22: hidden by default, shown by a toggle on the Mods tab's Extra
+    // sub-page; installing a reading-row mod there turns it on). Display only:
+    // ruby= is kept and given to the game whether the box shows or not.
+    // ruby_ui=0|1; any other value is dropped to the default, as snap= is.
+    // ruby_ui_named: the ini had a valid ruby_ui= line - without one (an
+    // older ini) ConfigRubyUiDefault turns it on when a reading-row mod is
+    // installed.
+    bool ruby_ui = false;
+    bool ruby_ui_named = false;
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
     // psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls. Built and
@@ -372,6 +382,12 @@ struct ModInfo {
 };
 // The mods <home>\mods.toml lists, in its order; none when there is no file.
 std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
+
+// The start's rule for an ini without a ruby_ui= line (written before the
+// toggle existed): the toggle comes up on when <home>\mods.toml lists a
+// reading-row mod, so a player who installed the furigana mod before the box
+// was hidden still sees it. A named ruby_ui= is left as it is.
+void ConfigRubyUiDefault(Config& cfg, const std::wstring& home);
 
 // ruby_key='s value as the DLL reads BOF3X_RUBY_KEY: "none" or "f1".."f12"
 // (any case in, lower case out), or empty when `value` is neither.

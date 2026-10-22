@@ -176,6 +176,12 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             // the study key (DIV-0155): f1..f12 or none; anything else is the default
             const std::string k = ConfigRubyKey(value);
             if (!k.empty()) cfg.ruby_key = k;
+        } else if (key == "ruby_ui") {
+            // whether Settings shows the Row above the text box; display only
+            if (value == "0" || value == "1") {
+                cfg.ruby_ui = value == "1";
+                cfg.ruby_ui_named = true;
+            }
         } else if (key == "opt") {
             // Kept as written, valid or not: dropping a bad value would play
             // the default layers instead, so the launcher refuses it
@@ -291,6 +297,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# the key that hides and shows the row above the text in play (DIV-0155): f1..f12, or none to\r\n";
     out += "# leave every key free; f4 by default\r\n";
     out += "ruby_key=" + cfg.ruby_key + "\r\n";
+    out += "# 1: Settings shows the Row above the text box (Mods, Extra; turned on when a reading-row mod is\r\n";
+    out += "# added). Display only: ruby= above is given to the game either way\r\n";
+    out += std::string("ruby_ui=") + (cfg.ruby_ui ? "1" : "0") + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
     out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
@@ -1000,6 +1009,15 @@ std::string ConfigRubyKey(const std::string& value) {
     for (const char* n : kNames)
         if (k == n) return k;
     return std::string();
+}
+
+void ConfigRubyUiDefault(Config& cfg, const std::wstring& home) {
+    if (cfg.ruby_ui_named) return;
+    for (const ModInfo& m : ConfigModsInstalled(home))
+        if (m.kind == "reading-row") {
+            cfg.ruby_ui = true;
+            return;
+        }
 }
 
 std::string ConfigRubyLayer(const std::string& ruby, const std::string& language) {

@@ -136,7 +136,23 @@ the importer's Python (`FindRuntime`), one at a time, as the Sources page
 runs `importer.py`: `list --json` when the tab is first shown; `add --json`,
 then `build ID` when it was added and its language is held; `remove ID`; the
 list again after each. The window is told (`kMsgModsChanged`) and redraws
-the Settings box.
+the Settings box. Since 2026-10-22 this page is the tab's **Data** button,
+beside **Extras** on the tab's sub-row
+([`launcher-settings.md`](launcher-settings.md) 2a).
+
+**The toggle on Extras** (the owner's call, 2026-10-22: "hide the second
+script dropdown by default, and show it with a toggle"): "Show Row above the
+text on Settings (the second script: furigana or another language)",
+`ruby_ui=0|1` in `bof3x.ini`, off by default. Off, Settings hides the Row
+above the text box and its label; on, shows them. Turned on by hand, or by
+an add of a reading-row mod that succeeds (the add's own `--json` line
+names the kind; built or not, the box is where the mod is chosen); a remove
+leaves it as it is; an ini older than the toggle (no `ruby_ui=` line) comes
+up on at start when `<home>\mods.toml` lists a reading-row mod. **Display
+only**: hidden, `ruby=` keeps whatever it holds and the layer is composed
+into `BOF3X_OPT` exactly as below - a non-empty `ruby=` under a hidden box
+is not treated as none, since the owner's words were "hide the dropdown",
+and a player who hides it after choosing furigana keeps the furigana.
 
 **Row above the text** (Settings, under Language; `IDC_RUBY`): owner-drawn,
 every entry listed and the ones this install cannot play greyed with the
@@ -178,7 +194,9 @@ the DLL's 16), and `ConfigOptPlayable` then applies the DLL's own tests; a
 | `ruby=furigana`, language en-US | `ruby=furigana` (kept) | `area4-walls`; stderr: layer ruby-furigana-en-US is not there |
 
 The table is `config_tests.cpp TestRuby`'s cases; `dialog_test.py` checks the
-`ini` column through the dialog.
+`ini` column through the dialog. Every row holds with `ruby_ui=0` too
+(`TestRuby` plays `ruby=furigana` both ways; `dialog_test.py`'s en-US run
+has the box hidden and still gets the stderr line).
 
 ## 6. The release
 
@@ -207,7 +225,7 @@ repository.
   builder, tools/ruby_build.py, ...` and leaves no cache; with the stand-in
   builder the new cache holds `opt\ruby-furigana-ja-JP\` listed in its
   manifest.
-- `config_tests` (host build): 278 checks, `TestRuby` among them.
+- `config_tests` (host build): 278 checks, `TestRuby` among them (322 at group LX's end, the Extras toggle's among them).
 - `dialog_test.py`: all ok, 58 checks with the Mods tab and the box
   (section 5's table, the Mods tab's add / refusal / list / greyed rows /
   remove). It had stopped on main at the disc-only step (DIV-0102) and failed

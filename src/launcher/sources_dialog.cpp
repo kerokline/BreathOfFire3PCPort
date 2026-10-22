@@ -778,6 +778,7 @@ struct ModsState {
     bool listed = false;    // the list has been asked for once (on first showing)
     bool changed = false;   // an add, a build or a remove ran: the window is told after the next list
     std::string build_next; // the id an add just installed: built next
+    std::string added_kind; // its kind: a reading-row mod turns Extras' toggle on (kMsgModsReadingRowAdded)
     std::string language;   // Settings' choice (kMsgModsLanguage); empty for the Chinese
     std::vector<ModRow> rows;
 };
@@ -872,6 +873,7 @@ void ModsAdd(HWND page, ModsState& s) {
         return;
     }
     s.build_next.clear();
+    s.added_kind.clear();
     ModStatus(page, L"Checking the mod...");
     ModLog(page, L"Checking " + path + L"...");
     ModsStart(page, s, kModAdd, L"add " + Quote(path) + L" " + ModsHome(s) + L" --json");
@@ -914,6 +916,7 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
             ModLog(page, L"Added: " + Widen(JsonString(line, "name")) + L" " + Widen(JsonString(line, "version")) +
                              (replaced.empty() ? std::wstring() : L" (in place of " + Widen(replaced) + L")") + L".");
             s.build_next = JsonString(line, "id");
+            s.added_kind = JsonString(line, "kind");
             if (JsonString(line, "state") == "needs") {
                 ModLog(page, L"It needs " + Widen(JsonString(line, "needs")) +
                                  L" text, which this install does not hold: it is built once a disc in that language is "
@@ -950,6 +953,8 @@ void ModsOnDone(HWND page, ModsState& s, Job job, DWORD code) {
         if (code == 0) {
             s.changed = true;
             SetDlgItemTextW(page, IDC_MOD_PATH, L"");
+            // installed, built or not: Settings' Row above the text box shows (the owner's call, 2026-10-22)
+            if (s.added_kind == "reading-row") SendMessageW(GetParent(page), kMsgModsReadingRowAdded, 0, 0);
             if (!s.build_next.empty()) {
                 ModStatus(page, L"Building the mod into this install...");
                 ModsStart(page, s, kModBuild, L"build " + Quote(Widen(s.build_next)) + L" " + ModsHome(s));

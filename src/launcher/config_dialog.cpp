@@ -54,7 +54,11 @@ constexpr SubPage kSubPages[] = {
     {kPageGame, IDD_PAGE_VERSIONS, L"Graphics and audio"},
     {kPageGame, IDD_PAGE_VERSIONS2, L"Data"},
     {kPageGame, IDD_PAGE_GAME, L"Cheats"},
-    {kPageMods, IDD_PAGE_MODS, nullptr},   // the player's mods (docs/mods.md): its own procedure, ModsPageProc
+    // The Mods tab's sub-row (the owner's call, 2026-10-22): Data, the player's
+    // mods (docs/mods.md; its own procedure, ModsPageProc), and Extras, the
+    // launcher's extras - today the Row above the text toggle (ruby_ui=).
+    {kPageMods, IDD_PAGE_MODS, L"Data"},
+    {kPageMods, IDD_PAGE_EXTRA, L"Extras"},
     {kPageData, IDD_PAGE_DATA, nullptr},
 };
 constexpr int kSubPageCount = static_cast<int>(std::size(kSubPages));
@@ -392,6 +396,13 @@ void RubyPicked(HWND dlg, DialogState& state) {
     state.ruby_pick = state.ruby[static_cast<size_t>(i)].id;
 }
 
+// Mods, Extras' toggle (ruby_ui=, the owner's call 2026-10-22): the box and its
+// label shown or hidden. Display only - hidden, the box keeps its entries and
+// pick, ruby= is written back as before and the game is given it as before.
+void RubyUiShow(HWND dlg, bool on) {
+    for (int id : {IDC_RUBYLABEL, IDC_RUBY}) ShowWindow(Item(dlg, id), on ? SW_SHOW : SW_HIDE);
+}
+
 // WM_DRAWITEM for the box: as the system draws a list, a greyed entry in the
 // grey text colour (the Jukebox's song list does the same, music_player.cpp).
 void RubyDraw(const DRAWITEMSTRUCT& d) {
@@ -548,6 +559,8 @@ void Populate(HWND dlg, DialogState& state) {
     }
     Select(dlg, IDC_LANGUAGE, selected);
     RubyRefresh(dlg, state);   // after the language: the box's entries follow it
+    Check(dlg, IDC_EXTRA_RUBY, cfg.ruby_ui);
+    RubyUiShow(dlg, cfg.ruby_ui);
 
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
     AddItem(dlg, IDC_FILTER, L"Sharp - point");
@@ -604,6 +617,8 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.wide = wide == 1 || wide == 2 ? wide : 0;
     cfg.show_launcher = Checked(dlg, IDC_SHOW);
     if (state.ruby_touched) cfg.ruby = state.ruby_pick;   // untouched: ruby= as read
+    cfg.ruby_ui = Checked(dlg, IDC_EXTRA_RUBY);
+    cfg.ruby_ui_named = true;
 
     // The Music box (DIV-0150): the source music= already means keeps the line
     // as written (an empty music=, seq or mp3 too); another writes its name.
@@ -1371,6 +1386,20 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     case kMsgModsChanged:   // the Mods page added, built or removed one
         if (state) RubyRefresh(dlg, *state);
         return TRUE;
+    case kMsgModsReadingRowAdded:
+        // A reading-row mod added: Extras' toggle on and the box shown at once
+        // (the owner's call, 2026-10-22). The add is on disk already, so the
+        // toggle is kept too: into cfg, and the window saves cfg on any way out
+        // (kDialogSave from the caption's close, as after Back). A remove
+        // leaves the toggle as it is.
+        if (state) {
+            Check(dlg, IDC_EXTRA_RUBY, true);
+            RubyUiShow(dlg, true);
+            state->cfg->ruby_ui = true;
+            state->cfg->ruby_ui_named = true;
+            state->applied = true;
+        }
+        return TRUE;
     case WM_ERASEBKGND:
         if (!state) break;
         Paint(dlg, *state, reinterpret_cast<HDC>(wp));
@@ -1423,6 +1452,9 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             return TRUE;
         case IDC_RUBY:
             if (HIWORD(wp) == CBN_SELCHANGE) RubyPicked(dlg, *state);
+            return TRUE;
+        case IDC_EXTRA_RUBY:
+            if (HIWORD(wp) == BN_CLICKED) RubyUiShow(dlg, Checked(dlg, IDC_EXTRA_RUBY));
             return TRUE;
         case IDC_CACHE:
             if (HIWORD(wp) == EN_CHANGE) {
