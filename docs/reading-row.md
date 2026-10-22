@@ -4,7 +4,9 @@
 reading-row round launched; [`reading-row-round.md`](reading-row-round.md)
 section 4 is the decision, this file its exact bytes), MEASURED (section 2,
 PR) and BUILT (section 3, RR), 2026-10-22: the furigana layer is DIV-0155,
-the second-language layer DIV-0156. Not yet played by the owner.
+the second-language layer DIV-0156. Section 1.2 amended and section 3.6
+added 2026-10-22 by group OS (timed boxes stop, effect pages composed).
+Not yet played by the owner.
 
 ## 1. The side chunk and the string shape
 
@@ -122,6 +124,16 @@ every byte but the ones named below.
   its first byte to its end, and nothing precedes it in the composed
   message that did not precede it in the original. Options get no reading
   row in this round.
+- **A timed close is the box's stop** (amended 2026-10-22 by group OS, the
+  owner's call of the same day, section 3.6): a composed copy carries no
+  `0x16 nn`. `0x16` closes the box `nn` frames after it is reached and
+  nothing walks the bytes after it again, so the composed copy is the
+  box's own part - the slot's message cut at its first `0x16 nn` - with
+  `0x00`, the box's own end, in its place: the wait every message end has
+  (`MsgBox_State2Press`), then the same close. The pages after it are the
+  next slots', each composed in its own copy. The offset pen `0x0D` /
+  `0x0E` and the effect preset `0x0F nn` are composed too, kept in the text
+  row where the original has them (the rule above).
 - **No page-head marker.** The stepper knows a page is annotated because
   the message's base pointer came from a side chunk; no shipped byte
   changes meaning.
@@ -273,10 +285,12 @@ table is section 2's bottom-aligned one with the owner's gap (3.3).
   pen `0x0D` / `0x0E` in an annotated message (the builder leaves those
   plain), a row end inside a substitution, an insert inside an insert, a
   marker with no insert under it, a pair code or an out-of-table glyph in a
-  ruby row, more than 15 inserts or 96 glyphs in a row.
-- Untouched: `MsgBox_EffectDraw` (never reached: the offset pen is
-  refused), choice options (`0x14`, drawn by the window code from the read
-  position, verbatim), every other text path.
+  ruby row, more than 15 inserts or 96 glyphs in a row. (The offset pen
+  `0x0D` / `0x0E` was refused here until 2026-10-22; it is walked now,
+  section 3.6.)
+- Untouched: `MsgBox_EffectDraw` itself (called from the walk as
+  `MsgBox_Step` calls it, section 3.6), choice options (`0x14`, drawn by the
+  window code from the read position, verbatim), every other text path.
 
 ### 3.4 Identity with no layer
 
@@ -303,3 +317,72 @@ hands it over as `BOF3X_RUBY_KEY` unless the environment sets it
 (`src/launcher/config.cpp`, the end batch;
 [`launcher-settings.md`](launcher-settings.md) 3).
 
+### 3.6 Timed boxes and the offset pen (group OS, 2026-10-22)
+
+**Status:** BUILT on `reading-row/os`; captured on the new game's opening
+scene under the furigana layer and English over Japanese (the hand-back);
+not yet played by the owner. The owner's call (2026-10-22): "let's add an
+explicit stop to the text; it will make the new game not comparable to
+before, but it makes it better for study."
+
+**What a timed close is, measured.** `0x16 nn` sends `MsgBox_StatePrint`
+to state 7: `MsgBox_State7Delay` counts `nn` frames, then steps window 0 to
+its shrink (state 3) and holds the printer; `MsgBox_State2Closed` reports
+the box done once the window reaches 4, and `Window_Kind0Close` frees it.
+The only writers of the walk's base `0x7DEE4C` are `Msg_OpenScript`
+(`0x4976EA`), `Msg_OpenSystem` (`0x49771E`), `MsgBox_State3Step`
+(`0x49802A`) and `MsgBox_Reopen` (`0x4982A9`) - the five absolute operands
+at that address in `BOF3.exe`, the fifth the walk's read at `0x497859`
+(capstone over the code section, 2026-10-22; symbols.toml's typed-data
+census counts the same five) - so no byte after a `0x16 nn` is walked by
+that box again. A scene of timed boxes is one message whose slots begin
+after each `0x16 nn`: the new game's opening is `AREA024` slots 0..7, and a
+probe of NEW GAME with the box's state, slot, base and read pointer
+peeked every 6 frames (scratch recipe `probe0`, 2026-10-22) saw the script
+open slots 1, 2, ..., 7 in turn, each box reaching state 7 at its `0x16`,
+the window going 2 -> 3 -> 0, and the next `Msg_OpenScript` re-basing at
+the next slot's first byte (slot 0, the same message from one page
+earlier, was not opened on that route).
+
+**The conversion (the builder, both modes, `box_extent`).** A slot's
+composed copy is cut at its message's first `0x16 nn` (outside a choice
+block), and `0x00` - the box's own end - takes its place: one confirm
+press where the timer was, no arrow (state 2, like every message end in
+the game; the next-page arrow is state 3's and stays where a page break
+is). A three-row page before the stop splits on `0x02` as any other. Under
+the furigana layer a timed box with no reading is composed all the same
+(empty reading rows), so every timed box of a layer stops; a box of a
+space alone (`0C 81 20 16 00`, a blank beat of three area scenes) and a
+narration page past the box stay as they are, timer and all. In the second
+mode the second's message is cut at its own first `0x16` too, so a scene
+of timed boxes pairs box for box. With no layer nothing changes: the side
+chunk is the only place the conversion exists.
+
+**The offset pen in the walk (`ruby::WalkText`).** `0x0D` / `0x0E` set and
+clear a pen flag that, as `MsgBox_Step`'s flag bit 5, carries from row to
+row of a page (a newline leaves it) and starts off on each page's walk.
+Under it a text glyph is drawn exactly as `MsgBox_Step` draws one: with
+flag 8 of `0x7DEE44` (effects 2 and 3, the grow and the shrink) by
+`MsgBox_EffectDraw` at `MsgBox_PenX` / `Msgbox_PenY` in memory - the walk
+sets `Msgbox_PenY` to each text row's pen y before walking it, as the
+original's newline does - else by `g.draw_char` at `MsgBox_PenX` + the s8
+`0x7DEE5A` and the row's y + the s8 `0x7DEE5B`. Measured past the count,
+the effect draw's advance is `12 + P` (`P` the word `0x7DEE68`), every
+other glyph's DIV-0006's. `0x0F nn` is two bytes the walk steps over, as
+before; `MsgBox_StatePrint` starts the effect when the typewriter reaches
+it.
+
+**The reading row under the pen (`ruby::DrawRuby`).** A reading whose stem
+(`Stem`, the glyph its reveal waits for) was drawn under the offset pen is
+drawn at the same offset - the s8 pair the shake (effect 1), the wander (4)
+and the rise (5) move - so it moves with its word; a `0x13` insert takes
+its insert's offset the same way. A row `MsgBox_EffectDraw` draws in shows
+**no reading while the effect runs** (flag 8): the effect draw stays
+unannotated, its glyphs a growing cell on a pen that moves by `P` a glyph,
+which the half-cell grid does not follow; the readings come back when the
+effect clears flag 8 (`MsgBox_GrowStep`'s stop). The F4 key, the reveal
+count and the arrow are unchanged.
+
+**A `0x16` still in a composed message** (a layer built before this
+change): the walk ends the page on it as before and `MsgBox_StatePrint`
+plays its timer; nothing refuses it.

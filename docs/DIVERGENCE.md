@@ -9863,6 +9863,48 @@ designed in rather than bolted on.
   4:3 and 16:9 (`C:\Users\kerok\bof3x-runs\rr_rr\shots\sheets\`, outside the
   tree). **Not yet played by the owner.** Its known costs and open items:
   D326..D329.
+- **Amended 2026-10-22 (group OS): timed boxes stop, effect pages are
+  composed.** The owner, the same day, on finding the new game's opening
+  scene showed no readings (it was left plain whole as an effect message
+  of eight timed pages): "let's add an explicit stop to the text; it will
+  make the new game not comparable to before, but it makes it better for
+  study."
+  **What changes under a layer:** a timed close (`0x16 nn`, which shuts the
+  box `nn` frames after it is reached) becomes the box's stop - the
+  composed copy is the slot's message cut at its first `0x16 nn` with
+  `0x00`, the box's own end, in its place, so the box waits for a confirm
+  press where the timer was (state 2, no arrow, as every message end; a
+  three-row page before it splits on `0x02` and shows the arrow there); and
+  messages with the offset pen (`0x0D` / `0x0E`) or an effect preset
+  (`0x0F nn`) are composed, the codes kept in the text row, the walk drawing
+  them as `MsgBox_Step` does and a reading over a glyph under the pen moving
+  with it (the shake, wander and rise offsets); a row the grow / shrink
+  draw (`MsgBox_EffectDraw`, left unannotated) is drawing in shows no
+  reading until the effect ends. Measured: `0x16` ends the box (state 7,
+  window 0 to its shrink, then freed) and only the two openers,
+  `MsgBox_Reopen` and the page restart write the walk's base, so the bytes
+  after a timed close are the next slots', each composed in its own copy;
+  the new game's opening is `AREA024` slots 0..7, opened one by one
+  ([`reading-row.md`](reading-row.md) 3.6). With no layer nothing changes -
+  the original bytes and the identity gates stand; with one, the opening is
+  no longer frame-comparable to the original, which the owner accepts.
+  Under the furigana layer a timed box with no reading is composed too
+  (empty reading rows) so every timed box stops; a box of a space alone
+  that closes on its timer (`0C 81 20 16 00`, a blank beat of three
+  scenes) and narration past the box keep their timers. Numbers (area
+  blocks, the held layer): 10,518 messages composed (was 10,324), 281
+  timed closes made stops (83 with no reading), 59 effect messages
+  composed, 4,663 pages split (was 4,559); left plain only past the box
+  (62) or past three rows (202). **Verification:** `--selftest` 41,664
+  messages, 0 mismatches; `check` on every composed message; `--lint`
+  51,021 rows, 0 misplaced; `BOF3X_SHADOW=msgbox` 44,000 rounds 0
+  mismatches and `BOF3X_SHADOW=*` exit 0 with no layer; NEW GAME's opening
+  played to its last timed box under the layer at 4:3 and 16:9, every box
+  holding 72 frames past its 32-frame timer until the press and the scene
+  going on slot by slot (sheets `opening_furigana.png` and
+  `opening_no_layer.png` in `C:\Users\kerok\bof3x-runs\rr_os\sheets\`, outside the tree). Not
+  seen live: a reading over a word under the offset pen while an effect
+  moves it (the opening's shout has no kanji). Not yet played by the owner.
 - **Reversible?** Off by default: leave the layer out of `BOF3X_OPT` (the
   launcher's *Row above the text: None*); F4 hides the readings in play;
   `BOF3X_ORIGINAL=MsgBox_Step` (or `MsgBox_StatePrint`) disarms the repoint
@@ -9933,6 +9975,39 @@ designed in rather than bolted on.
   are all empty would draw no readings (the count is text glyphs only;
   [`reading-row.md`](reading-row.md) 3) - none seen. Japanese over English is
   not captured. **Not yet played by the owner.**
+- **Amended 2026-10-22 (group OS): timed boxes stop, effect pages are
+  composed**, by the owner's call quoted in DIV-0155's amendment and the
+  same rule:
+  **What changes under a layer:** a timed close (`0x16 nn`, which shuts the
+  box `nn` frames after it is reached) becomes the box's stop - the
+  composed copy is the slot's message cut at its first `0x16 nn` with
+  `0x00`, the box's own end, in its place, so the box waits for a confirm
+  press where the timer was (state 2, no arrow, as every message end; a
+  three-row page before it splits on `0x02` and shows the arrow there); and
+  messages with the offset pen (`0x0D` / `0x0E`) or an effect preset
+  (`0x0F nn`) are composed, the codes kept in the text row, the walk drawing
+  them as `MsgBox_Step` does and a reading over a glyph under the pen moving
+  with it (the shake, wander and rise offsets); a row the grow / shrink
+  draw (`MsgBox_EffectDraw`, left unannotated) is drawing in shows no
+  reading until the effect ends. Measured: `0x16` ends the box (state 7,
+  window 0 to its shrink, then freed) and only the two openers,
+  `MsgBox_Reopen` and the page restart write the walk's base, so the bytes
+  after a timed close are the next slots', each composed in its own copy;
+  the new game's opening is `AREA024` slots 0..7, opened one by one
+  ([`reading-row.md`](reading-row.md) 3.6). With no layer nothing changes -
+  the original bytes and the identity gates stand; with one, the opening is
+  no longer frame-comparable to the original, which the owner accepts.
+  The second's message is cut at its own first `0x16` too, so a scene of
+  timed boxes pairs box for box. The plain classes "offset pen" and "timed
+  page needing a split" are gone; a blank timed beat is counted "the main
+  has no text" (136 area slots). English over Japanese: 17,389 area slots
+  paired (was 17,332), 199 timed closes made stops, 87 effect messages
+  composed, 652 pages added (was 640); every pair's numbers in
+  [`reading-row-second.md`](reading-row-second.md) 7. **Verification:**
+  `--selftest` and `--lint` 0 in all 20 pairs; English over Japanese
+  played through the opening's seven timed boxes at 4:3 and 16:9, each
+  held past its timer until the press (`opening_en-US_over_ja-JP.png`,
+  same folder). D332 is what the captures showed of the re-break there.
 - **Reversible?** Off by default (*Row above the text: None*); F4 and
   `BOF3X_ORIGINAL=MsgBox_Step` as DIV-0155.
 

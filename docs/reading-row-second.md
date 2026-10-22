@@ -52,12 +52,19 @@ owner (the brief); each is one place in the code.
    the French and German out-of-block slots). A slot empty in the main has
    nothing to show.
 2. **Box pages only - per message (SB).** A main message with a row past
-   the box (192 units, glyph advances, a first `0x2A` / `0x3C` hanging), a
-   page past three rows, or the offset pen / effect preset (`0x0D 0x0E
-   0x0F`) is left plain **whole**: the stepper knows an annotated message by
-   its source and walks every page of it as pairs (reading-row.md 1.2), so
-   one plain page inside a composed message cannot be expressed. FB does the
-   same.
+   the box (192 units, glyph advances, a first `0x2A` / `0x3C` hanging) or
+   a page past three rows is left plain **whole**: the stepper knows an
+   annotated message by its source and walks every page of it as pairs
+   (reading-row.md 1.2), so one plain page inside a composed message cannot
+   be expressed. FB does the same. **Amended 2026-10-22 (group OS, the
+   owner's call):** the offset pen / effect preset (`0x0D 0x0E 0x0F`) no
+   longer leaves a message plain - its codes stay in the text row verbatim
+   and the walk draws them (reading-row.md 3.6) - and a timed close is the
+   box's stop: both sides are cut at their own first `0x16 nn`
+   (`box_extent`), the main's with `0x00` in its place, so a scene of timed
+   boxes pairs box for box. A box that draws nothing but a space and closes
+   on its timer (`0C 81 20 16 00`, three area messages, 136 slots) is left
+   as it is, counted "the main has no text".
 3. **Pages pair in order when the counts agree** (counting pages with a
    glyph or an insert); otherwise the second's text, its own page and row
    breaks dissolved (a Latin break is a space, a Japanese one nothing), is
@@ -94,9 +101,8 @@ owner (the brief); each is one place in the code.
    go two to a page, the main's row under the first and **an empty text
    row** under the others. A split page starts its walk at colour 0
    (`MsgBox_Step`'s local), so its first reading row ends on the colour the
-   original drew that row in. A split page that ends on `0x16 nn` (timed)
-   would make a self-closing page wait for a press: that message stays
-   plain, as in FB.
+   original drew that row in. (A split page ending on `0x16 nn` left the
+   message plain until 2026-10-22; a composed copy has no `0x16` now, rule 2.)
 7. **Choice blocks**: the main's `0x14` block is copied verbatim; the
    second's options are dropped.
 8. **Inserts.** The main's stay in its text rows. The second's become the
@@ -231,6 +237,38 @@ the `--game` build's).
 
 ## 7. Numbers (2026-10-22, the held layers, area blocks)
 
+**After the stop (2026-10-22, group OS, the same held layers, all 20 pairs
+rebuilt, `--lint` 0 faults in each):** the effect and timed columns are
+gone - those messages are composed - and two are added: the timed closes
+made the box's stop, and the messages with the offset pen or an effect
+preset composed. "Blank beat" is the timed box of a space alone, left as
+it is.
+
+| second over main | area slots paired | plain: inserts | plain: non-box / blank beat | plain: kept-PC | box pages | as authored | re-broken | split: main / second / both | pages added | second > 2 reading rows | empty text rows | timed stops | effect composed |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| en-US over ja-JP | 17,389 | 361 | 400 / 136 | 511 | 20,004 | 78.5% | 18.3% | 456 / 117 / 72 | 652 | 189 (0.9%) | 247 | 199 | 87 |
+| en-150 over ja-JP | 17,389 | 361 | 400 / 136 | 511 | 20,004 | 78.5% | 18.3% | 456 / 117 / 72 | 652 | 189 (0.9%) | 247 | 199 | 87 |
+| fr-FR over ja-JP | 17,346 | 389 | 388 / 136 | 538 | 19,862 | 78.4% | 18.0% | 443 / 173 / 85 | 707 | 258 (1.3%) | 319 | 190 | 87 |
+| de-DE over ja-JP | 17,393 | 370 | 391 / 136 | 507 | 19,938 | 78.4% | 17.8% | 428 / 235 / 102 | 777 | 337 (1.7%) | 367 | 199 | 87 |
+| ja-JP over en-US | 17,367 | 451 | 332 / 136 | 511 | 21,959 | 63.1% | 14.0% | 5,017 / 0 / 1 | 5,018 | 1 (0.0%) | 1 | 202 | 86 |
+| en-150 over en-US | 17,794 | 27 | 653 / 136 | 511 | 18,597 | 54.9% | 17.0% | 5,219 / 0 / 0 | 5,219 | 0 (0.0%) | 0 | 198 | 87 |
+| fr-FR over en-US | 17,660 | 131 | 641 / 136 | 553 | 18,211 | 54.9% | 17.1% | 5,103 / 3 / 2 | 5,108 | 5 (0.0%) | 21 | 191 | 87 |
+| de-DE over en-US | 17,702 | 117 | 644 / 136 | 522 | 18,290 | 55.0% | 17.1% | 5,103 / 3 / 4 | 5,111 | 7 (0.0%) | 14 | 197 | 87 |
+| ja-JP over en-150 | 17,368 | 451 | 331 / 136 | 511 | 21,961 | 63.2% | 13.9% | 5,019 / 0 / 1 | 5,020 | 1 (0.0%) | 1 | 202 | 86 |
+| en-US over en-150 | 17,795 | 27 | 652 / 136 | 511 | 18,599 | 55.0% | 16.9% | 5,221 / 0 / 0 | 5,221 | 0 (0.0%) | 0 | 198 | 87 |
+| fr-FR over en-150 | 17,661 | 131 | 640 / 136 | 553 | 18,213 | 54.9% | 17.0% | 5,105 / 3 / 2 | 5,110 | 5 (0.0%) | 21 | 191 | 87 |
+| de-DE over en-150 | 17,703 | 117 | 643 / 136 | 522 | 18,292 | 55.0% | 17.0% | 5,105 / 3 / 4 | 5,113 | 7 (0.0%) | 14 | 197 | 87 |
+| ja-JP over fr-FR | 17,239 | 495 | 389 / 136 | 538 | 21,842 | 61.3% | 15.1% | 5,149 / 0 / 2 | 5,151 | 2 (0.0%) | 0 | 194 | 88 |
+| en-US over fr-FR | 17,857 | 186 | 389 / 136 | 553 | 18,203 | 52.6% | 18.4% | 5,270 / 1 / 5 | 5,278 | 6 (0.0%) | 30 | 192 | 88 |
+| en-150 over fr-FR | 17,857 | 186 | 389 / 136 | 553 | 18,203 | 52.6% | 18.4% | 5,270 / 1 / 5 | 5,278 | 6 (0.0%) | 30 | 192 | 88 |
+| de-DE over fr-FR | 17,892 | 167 | 389 / 136 | 540 | 18,240 | 52.6% | 18.4% | 5,273 / 3 / 7 | 5,286 | 10 (0.1%) | 44 | 191 | 88 |
+| ja-JP over de-DE | 17,271 | 449 | 434 / 136 | 507 | 21,925 | 63.8% | 9.9% | 5,779 / 0 / 1 | 5,780 | 1 (0.0%) | 0 | 204 | 84 |
+| en-US over de-DE | 17,890 | 136 | 437 / 136 | 522 | 18,194 | 55.8% | 12.2% | 5,830 / 0 / 3 | 5,833 | 3 (0.0%) | 6 | 199 | 83 |
+| en-150 over de-DE | 17,890 | 136 | 437 / 136 | 522 | 18,194 | 55.8% | 12.2% | 5,830 / 0 / 3 | 5,833 | 3 (0.0%) | 6 | 199 | 83 |
+| fr-FR over de-DE | 17,873 | 141 | 434 / 136 | 540 | 18,206 | 55.8% | 12.1% | 5,838 / 1 / 3 | 5,843 | 4 (0.0%) | 19 | 193 | 83 |
+
+The table as built before the stop (SB, 2026-10-22), kept for the record:
+
 | second over main | area slots paired | plain: inserts | plain: non-box / effect / timed | plain: kept-PC | box pages | as authored | re-broken | split: main / second / both | pages added | second > 2 reading rows | empty text rows |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | en-US over ja-JP | 17,332 | 382 | 409 / 134 / 29 | 511 | 20,095 | 78.3% | 18.5% | 441 / 119 / 72 | 640 | 191 (1.0%) | 252 |
@@ -288,7 +326,8 @@ or the round's decision, recorded here and in the hand-back for
 4. **Unequal page counts** - **shared in proportion** (drafted), by glyphs,
    in reading order.
 5. **Non-box and offset-pen pages left plain** - **agreed**, and per message
-   (section 2, rule 2).
+   (section 2, rule 2). The offset-pen part was reversed by the owner on
+   2026-10-22 (rule 2's amendment): those pages are composed.
 6. **Letter shapes under a Latin main** - **the main's**, with the second's
    accented block added where the main is blank.
 7. **The default pair** - **every held pair is built** by `setup` (the

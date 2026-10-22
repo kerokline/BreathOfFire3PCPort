@@ -84,7 +84,9 @@ NL, PAGE, CHOICE, TIMED, HEAD = 0x01, 0x02, 0x14, 0x16, 0x0C
 ARG1 = loc_build.ARG1         # two-byte controls, as loc_build.message_end steps them
 INSERTS = (0x03, 0x04, 0x07, 0x08)
 COLOUR, COLOUR_OFF = 0x05, 0x06
-EFFECTS = (0x0D, 0x0E, 0x0F)  # the offset pen and the effect preset (MsgBox_EffectDraw's spans)
+EFFECTS = (0x0D, 0x0E, 0x0F)  # the offset pen and the effect preset (MsgBox_EffectDraw's spans):
+                              # composed since 2026-10-22, kept in the text row verbatim (DIV-0155 / 0156)
+STOP = 0x00                   # the box's own end: what a timed close becomes in a composed copy
 HANG = (0x2A, 0x3C)           # a first byte at the line start hangs 12 units left (0x4979A0)
 SPACE = 0x20
 
@@ -216,6 +218,43 @@ class Message:
         for rows, term in self.pages:
             out += bytes([NL]).join(self.row_bytes(r) for r in rows) + term
         return bytes(out + self.tail)
+
+
+def box_extent(raw):
+    """The bytes ONE box plays of a slot's message, and whether it closes on a timer.
+
+    `0x16 nn` (MsgBox_StatePrint's state 7, docs/msgbox.md 2) closes the box nn
+    frames after it is reached: MsgBox_State7Delay starts window 0's shrink and
+    MsgBox_State2Closed reports the box done; nothing reads the bytes after it
+    again (the only writers of the walk's base 0x7DEE4C are the two openers,
+    MsgBox_Reopen and the page restart). A scene of timed pages is one message
+    whose slots start after each `0x16 nn` - AREA024's slots 0..7 - and the script
+    opens them one by one (measured 2026-10-22, docs/reading-row.md 3.6).
+
+    Under a reading-row layer the timed close is an explicit stop (the owner,
+    2026-10-22): the composed copy is the box's own part, cut at its first
+    `0x16 nn`, with the box's own end `0x00` in its place - MsgBox_State2Press,
+    the wait every message end has, then the same close. Returns (bytes, timed);
+    a message with no `0x16` before its end or its choice block is returned whole."""
+    i, n = 0, len(raw)
+    while i < n:
+        b = raw[i]
+        if b == 0 or b == CHOICE:
+            break
+        if b == TIMED:
+            live = raw[:i] + bytes([STOP])
+            assert raw.startswith(live[:-1]) and raw[len(live) - 1] == TIMED
+            return live, True
+        i += 2 if (b & 0x80 or b in ARG1) else 1
+    return raw, False
+
+
+def shows_text(msg):
+    """Whether a message draws anything: a glyph other than the space, or an insert.
+    A box of a space alone that closes on its timer (`0C 81 20 16 00`, three
+    area slots) is a blank beat of a scene, not a page to stop on."""
+    return any(it[0] == "g" and it[1] != b" " or it[0] == "c" and it[1][0] in INSERTS
+               for rows, _ in msg.pages for r in rows for it in r)
 
 
 def row_width(row):
@@ -541,8 +580,9 @@ class RowLayout:
 
 # ---------------------------------------------------------------- one message
 
-PLAIN_REASONS = ("not Japanese", "narration (a row past the box)", "narration (a page past three rows)",
-                 "own effect or offset pen", "timed page needing a split")
+PLAIN_REASONS = ("not Japanese", "narration (a row past the box)", "narration (a page past three rows)")
+# Retired 2026-10-22 (the owner's call, DIV-0155): "own effect or offset pen" (now composed, the codes kept
+# in the text row) and "timed page needing a split" (a timed close is now the box's stop, box_extent).
 
 
 class Composer:
@@ -584,15 +624,14 @@ class Composer:
                 return 1
             if len(rows) > BOX_ROWS:
                 return 2
-            for row in rows:
-                if any(it[0] == "c" and it[1][0] in EFFECTS for it in row):
-                    return 3
-            if term[:1] == bytes([TIMED]) and len(rows) > PAIRS:
-                return 4
         return None
 
     def compose(self, raw, where):
-        """The composed message for one slot's bytes, or None when the slot keeps its own."""
+        """The composed message for one slot's bytes, or None when the slot keeps its own.
+        A timed close is composed as the box's stop (box_extent): the copy is the
+        box's own part, so it is composed even with no reading in it - under a
+        layer every timed close waits for a press."""
+        raw, timed = box_extent(raw)
         msg = Message(raw)
         reason = self.plain_reason(msg)
         # Every row's readings first: a message with none keeps its own bytes.
@@ -612,12 +651,20 @@ class Composer:
                 page_plan.append((row, c, rd))
                 c = colour_after(row, c)
             plan.append((page_plan, term))
-        if not total:
+        if not total and not (timed and shows_text(msg)):
             return None
         if reason is not None:
             self.plain[PLAIN_REASONS[reason]] += 1
             self.plain_readings[PLAIN_REASONS[reason]] += total
+            if timed:
+                self.stats["timed_left_plain"] += 1
             return None
+        if timed:
+            self.stats["timed_stops"] += 1
+            if not total:
+                self.stats["timed_stops_no_reading"] += 1
+        if any(it[0] == "c" and it[1][0] in EFFECTS for rows, _ in msg.pages for r in rows for it in r):
+            self.stats["effect_messages"] += 1
         out = bytearray(msg.head)
         placements_all, added_pages = [], 0
         for page_plan, term in plan:
@@ -880,8 +927,10 @@ NO_START = set("、。，．・：；？！ー」』）】〕…‥ぁぃぅぇ�
 NO_END = set("「『（【〔")
 
 SECOND_PLAIN = (
-    "narration (a row past the box)", "narration (a page past three rows)", "own effect or offset pen",
-    "timed page needing a split", "the second has no text", "the main has no text",
+    # 2 and 3 are retired (2026-10-22, the owner's call, DIV-0156): the offset pen and the effect preset
+    # are composed with their codes in the text row, and a timed close is the box's stop (box_extent).
+    "narration (a row past the box)", "narration (a page past three rows)", "own effect or offset pen (retired)",
+    "timed page needing a split (retired)", "the second has no text", "the main has no text",
     "a glyph of the second with no cell in the composed font",
     "a button code naming no face button",
     "an insert of the second the text row below does not carry",
@@ -1490,17 +1539,25 @@ class SecondComposer:
         return out
 
     def _compose(self, main_raw, second_raw, where):
+        # One box's part of each side (box_extent): the main's timed close becomes
+        # the box's stop, and the second is cut at its own first timed close, so a
+        # scene of timed boxes pairs box for box (the pages after belong to the
+        # next slots, which are composed in their own copies).
+        main_raw, timed = box_extent(main_raw)
+        second_raw, second_timed = box_extent(second_raw)
         msg = Message(main_raw)
         reason = self.plain_reason(msg)
         if reason is not None:
             return None, reason
+        content = [k for k, (rows, term) in enumerate(msg.pages)
+                   if any(it[0] == "g" or it[1][0] in INSERTS for r in rows for it in r)]
+        if timed and not shows_text(msg):
+            return None, 5      # a box that is only a timed beat: nothing to read, nothing to stop for
         spages, why = self.second_atoms(second_raw)
         if spages is None:
             return None, why
         if not spages:
             return None, 4
-        content = [k for k, (rows, term) in enumerate(msg.pages)
-                   if any(it[0] == "g" or it[1][0] in INSERTS for r in rows for it in r)]
         if not content:
             return None, 5
         # The rows with the colour each starts in on the original walk (0 at a page's start).
@@ -1524,8 +1581,6 @@ class SecondComposer:
                 plan.append((None, term))
                 continue
             sub, cls = self.layout(rows, per.get(k, []))
-            if term[:1] == bytes([TIMED]) and len(sub) > 1:
-                return None, 3
             for sp in sub:
                 for rrow, trow in sp:
                     have = [a.out for u, _ in (rrow or []) for a in u.atoms if a.kind == "ins"]
@@ -1565,6 +1620,14 @@ class SecondComposer:
             self.stats["box pages: " + cls] += n
         self.stats["box pages"] += sum(classes.values())
         self.stats["pages added"] += added
+        if timed:
+            self.stats["timed closes made the box's stop"] += 1
+            if not second_timed:
+                self.stats["timed in the main, not in the second"] += 1
+        elif second_timed:
+            self.stats["timed in the second, not in the main"] += 1
+        if any(it[0] == "c" and it[1][0] in EFFECTS for rows, _ in msg.pages for r in rows for it in r):
+            self.stats["messages with the offset pen or an effect preset"] += 1
         self.check(main_raw, composed, where)
         if self.lint is not None:
             self.lint_message(composed, where)
@@ -1572,15 +1635,14 @@ class SecondComposer:
 
     def plain_reason(self, msg):
         """Census 9 rule 2, per message (every page of a composed message is pairs,
-        reading-row.md 1.2): a row past the box, a page past three rows, the
-        offset pen or the effect preset leave the whole message plain."""
+        reading-row.md 1.2): a row past the box or a page past three rows leaves
+        the whole message plain. The offset pen and the effect preset no longer
+        do (2026-10-22, DIV-0156): their codes stay in the text row verbatim."""
         for rows, term in msg.pages:
             if any(self.row_units(r) > ROW_UNITS for r in rows):
                 return 0
             if len(rows) > BOX_ROWS:
                 return 1
-            if any(it[0] == "c" and it[1][0] in EFFECTS for r in rows for it in r):
-                return 2
         return None
 
     # -- checks ---------------------------------------------------------------
@@ -1961,6 +2023,10 @@ def cmd_second(args):
               % (k["messages paired page by page"], k["messages shared in proportion"], k["reading rows"],
                  k["empty reading rows"], k["empty text rows under a reading row"], k["insert markers"],
                  k["second units cut across rows"]))
+        print("  timed closes made the box's stop %d (the second not timed there %d; the second timed, the main "
+              "not %d); messages with the offset pen or an effect preset composed %d"
+              % (k["timed closes made the box's stop"], k["timed in the main, not in the second"],
+                 k["timed in the second, not in the main"], k["messages with the offset pen or an effect preset"]))
     print("%d composed messages checked against their originals; longest %d bytes (%s)"
           % (st["messages checked"], longest[0], longest[1]))
     if args.json:
@@ -2109,6 +2175,9 @@ def cmd_furigana(args):
              len(reader.override_hits), len(reader.overrides)))
     print("pages split for a third row %d (confirm presses added %d)"
           % (st["pages_split"], st["confirm_presses_added"]))
+    print("timed closes made the box's stop %d (composed for the stop alone, no reading: %d; timed but left plain: "
+          "%d); messages with the offset pen or an effect preset composed %d"
+          % (st["timed_stops"], st["timed_stops_no_reading"], st["timed_left_plain"], st["effect_messages"]))
     print("messages left plain, with the readings they would have had: %s"
           % (", ".join("%s %d (%d)" % (r, comp.plain[r], comp.plain_readings[r]) for r in PLAIN_REASONS) or "none"))
     print("longest side chunk %d bytes (%s); longest composed message %d bytes (%s); longest block with its "
@@ -2118,11 +2187,11 @@ def cmd_furigana(args):
     for kind in ("area", "pool"):
         k = kinds[kind]
         print("  %s blocks %d: messages %d (%d distinct by bytes), changed %d (%d distinct); readings placed %d, merged %d, no room %d (wall %d, "
-              "crowded %d), pulled left %d; pages split %d; plain %s"
+              "crowded %d), pulled left %d; pages split %d; timed stops %d, effect composed %d; plain %s"
               % (kind, k["blocks"], k["messages"], len(distinct[kind][0]), k["messages_changed"],
                  len(distinct[kind][1]), k["readings_placed"], k["readings_merged"],
                  k["readings_no_room"], k["no_room_wall"], k["no_room_crowded"], k["readings_pulled_left"],
-                 k["pages_split"], ", ".join("%d (%d)" % (k["plain: " + r], k["plain readings: " + r])
+                 k["pages_split"], k["timed_stops"], k["effect_messages"], ", ".join("%d (%d)" % (k["plain: " + r], k["plain readings: " + r])
                                              for r in PLAIN_REASONS)))
     if st["terminated"]:
         print("%d composed messages given the NUL their block ends without" % st["terminated"])

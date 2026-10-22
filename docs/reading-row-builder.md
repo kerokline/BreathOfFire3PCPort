@@ -99,8 +99,23 @@ had - rule 4):
 | not Japanese | a glyph below `JA_AT` (the port's own table) | nothing to read; none on the held layer |
 | narration, a row past the box | a row wider than 16 cells | `second_language_census.W` = 192 units; the full-screen path, not the box |
 | narration, a page past three rows | more than 3 rows on a page | the same, by height (the sibling's `is_box_page`) |
-| own effect or offset pen | `0x0D`, `0x0E` or `0x0F` | `MsgBox_EffectDraw` is unannotated this round (round doc 1) |
-| timed page needing a split | a 3-row page ending `0x16 nn` | a `0x02` would make a self-closing page wait for a press |
+
+**No longer plain (2026-10-22, group OS, the owner's call "let's add an
+explicit stop to the text"; DIV-0155's amendment):** the two classes "own
+effect or offset pen" (`0x0D`, `0x0E` or `0x0F`) and "timed page needing a
+split" (a three-row page ending `0x16 nn`) are composed now.
+
+- **A timed close is the box's stop** (`box_extent`). `0x16 nn` closes the
+  box and nothing walks its later bytes again ([`reading-row.md`](reading-row.md)
+  3.6 has the measurement): the composed copy is the slot's message cut at
+  its first `0x16 nn` with `0x00`, the box's own end, in its place - one
+  confirm press where the timer was. A three-row page before it splits on
+  `0x02` like any other. A timed box with no reading is composed all the
+  same (empty reading rows), so every timed box under the layer stops; a
+  box of a space alone stays timed (`shows_text`).
+- **The offset pen and the effect preset** stay in the text row verbatim,
+  as every control but colour does; the walk draws them as `MsgBox_Step`
+  does and moves a reading with its word (reading-row.md 3.6).
 
 **The ruby row.** Half-cells (6 units). A text glyph is one cell; a first
 `0x2A` / `0x3C` at the row start hangs one cell left, as `MsgBox_Step`
@@ -193,6 +208,27 @@ Selftest: 245 files, 288 blocks (200 area, 88 pool halves), 83,367 slots,
 | readings dropped for no room | 0 | 0 |
 | pages split for a third row (= confirm presses added) | 4,559 | 6 |
 | left plain: past the box / past three rows / effect / timed | 62 / 203 / 60 / 131 messages (103 / 1,006 / 158 / 1,214 readings) | 5,442 / 30 / 0 / 0 (20,298 / 118) |
+
+**After the stop (2026-10-22, group OS, the same held layer):** the effect
+and timed classes are composed (section 4).
+
+| | area blocks (200) | pool halves (88) |
+|---:|---:|---|
+| messages changed | 10,518 / 5,623 | 17,652 / 465 |
+| readings placed / merged | 33,443 / 186 | 41,912 / 136 |
+| pages split for a third row | 4,663 | 6 |
+| timed closes made the box's stop (of them with no reading) | 281 (83) | 0 |
+| timed boxes left plain (narration past the box) | 10 | 0 |
+| messages with the offset pen or an effect preset composed | 59 | 0 |
+| left plain: past the box / past three rows | 62 / 202 messages (103 / 923 readings) | 5,442 / 30 (20,298 / 118) |
+
+All 288 blocks: 28,170 messages changed (31,725 slots), all checked; 97,119
+kanji words (1,390 fewer: the pages after a timed close are no longer read
+- each is the next slot's own); 75,677 readings wanted, 75,355 placed, 322
+merged, 0 dropped; 1,718 insert markers. Lint: 51,021 ruby rows, **0
+misplaced**. Selftest unchanged: 41,664 messages, **0 mismatches** (the
+cut is part of composing, never of the round trip). Layer: 239 files, 283
+chunks.
 
 All 288 blocks: 98,509 kanji words, 0 unread, 0 unencodable; 75,612
 readings wanted, 75,297 placed, 315 merged, 0 dropped; 1,721 insert
