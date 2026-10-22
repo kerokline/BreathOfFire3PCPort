@@ -99,28 +99,44 @@ void Call(void (__cdecl* const* table)(), unsigned n, unsigned index, const char
 namespace ruby {
 
 // --- THE ROW TABLE: the reading row's geometry, in one place --------------
-// Pen y per row of a page, from Msgbox_OriginY: ruby 0, text 0, ruby 1,
-// text 1. These are the staging arithmetic (reading-row-round.md 0, I21):
-// a text row 12 units on the Japanese sheet's 24 x 24 cells, a ruby row 6,
-// a pair 18 plus the gap between one pair's text row and the next pair's
-// ruby row. PR's measurements (reading-row.md 2) replace a line here; the
-// owner's gap is kGap. The plain newline's 14 stays for every message not
-// from a side chunk.
+// Pen y per row of a page, from Msgbox_OriginY (window y + 6): ruby 1, text
+// 1, ruby 2, text 2 - PR's measurement (docs/reading-row.md 2, probe 4),
+// bottom-aligned so the last text row sits on the plain page's third row
+// (O + 28): its glyph bottoms, the next-page arrow and the room under them
+// are the original page's. A glyph draws at pen y + 1. One table per ruby
+// height r (6: kana, Latin at 1/2; 8: Latin at 2/3) and per gap between one
+// pair's text row and the next pair's ruby row; kGap is the owner's call 1
+// (reading-row-round.md 6), staged at the probe's recommendation, 2. The
+// plain newline's 14 stays for every message not from a side chunk.
 struct RowTable {
     short row_y[4];
 };
-constexpr RowTable kRowTable[3] = {
-    {{0, 6, 18, 24}},   // gap 0: 6 + 12 + 0
-    {{0, 6, 19, 25}},   // gap 1: 6 + 12 + 1
-    {{0, 6, 20, 26}},   // gap 2: 6 + 12 + 2
+constexpr RowTable kRowTable[2][3] = {
+    {{{4, 10, 22, 28}}, {{3, 9, 22, 28}}, {{2, 8, 22, 28}}},      // r = 6: O + 4 - gap, O + 10 - gap, O + 22, O + 28
+    {{{0, 8, 20, 28}}, {{-1, 7, 20, 28}}, {{-2, 6, 20, 28}}},     // r = 8: O - gap, O + 8 - gap, O + 20, O + 28
 };
-constexpr int kGap = 1;                 // the owner's call 1 (reading-row-round.md 6), staged at 1
+constexpr int kGap = 2;                 // the owner's call 1, staged at the probe's 2
 constexpr int kRubyDy = 1;              // a ruby quad's top below its row's pen y: Text_DrawAt's own + 1
-constexpr int kHalfCell = 6;            // a ruby half-cell: 0x09's advance, a kana's
-constexpr int kScaleNum = 1, kScaleDen = 2;  // a ruby glyph is its 12-unit cell at 1/2: a 6 x 6 quad
-                                             // (texel for texel at the PC's 2x), its advance halved
+constexpr int kHalfCell = 6;            // a ruby half-cell: 0x09's advance
+// A reading glyph is its whole 12-unit texture cell on a 12 s square quad,
+// advancing its DIV-0006 advance times s: s = 1/2 for a 12-unit glyph (a
+// kana: 6 x 6, texel for texel at the PC's 2x, probe 3), the Latin scale for
+// any other (the owner's call 1: 1/2 = 4-unit advance on a 6 x 6 quad, or
+// 2/3 = an 8 x 8 quad and r = 8 rows). Staged at 1/2.
+constexpr int kLatinNum = 1, kLatinDen = 2;
+constexpr bool kTallRuby = kLatinNum * 3 == kLatinDen * 2;   // 2/3: the r = 8 table
 constexpr int kPairs = 2;               // row pairs per page (reading-row.md 1.2)
-const RowTable& Rows() { return kRowTable[kGap]; }
+const RowTable& Rows() { return kRowTable[kTallRuby ? 1 : 0][kGap]; }
+// The scale of the glyph at `at`: (num, den).
+void Scale(const unsigned char* at, int& num, int& den) {
+    if (TextAdvance_Of(at) == 12) {
+        num = 1;
+        den = 2;
+    } else {
+        num = kLatinNum;
+        den = kLatinDen;
+    }
+}
 
 // Armed by MsgBox_Inject once MsgBox_Step and MsgBox_StatePrint are both
 // ours: Capcom's two (BOF3X_ORIGINAL) would count and draw a ruby row as
@@ -181,8 +197,9 @@ const unsigned char* RowEnd(const unsigned char* at, unsigned char* color) {
             ++p;
         } else if (c & 0x80) {
             p += 2;
-        } else if (c > 0x16 && c != 0x2A && c != 0x3C) {
-            ++p;   // a one-byte glyph (a Latin reading); the hanging brackets come as two-byte codes
+        } else if (c > 0x16 && c != 0x20 && c != 0x2A && c != 0x3C) {
+            ++p;   // a one-byte glyph (a Latin reading); the hanging brackets come as two-byte
+                   // codes, a space as the composed font's blank cell (reading-row.md 2)
         } else {
             Refuse(p, "is not allowed in a ruby row");
         }
@@ -513,7 +530,6 @@ const unsigned char* WalkText(const unsigned char* at, int y, int count, int& dr
 // taken, a pair code (DIV-0057) as its two glyphs, a space advancing; all of
 // it revealed with the insert's first character. Returns its drawn width.
 int DrawInsert(const TextRow& row, int k, int x, int y, int count, unsigned char color, const unsigned char* marker) {
-    const int q = 12 * kScaleNum / kScaleDen;
     const bool shown = row.ins_first[k] <= count;
     int w = 0;
     const unsigned char* t = row.text[k];
@@ -526,21 +542,26 @@ int DrawInsert(const TextRow& row, int k, int x, int y, int count, unsigned char
             color = 0;
             ++t;
         } else if (c == 0x20) {
-            w += TextAdvance_Of(t) * kScaleNum / kScaleDen;
+            int num, den;
+            Scale(t, num, den);
+            w += TextAdvance_Of(t) * num / den;
             ++t;
         } else if ((c & 0x80) || c > 0x16) {
             const unsigned index = Index(t);
             const auto clut = static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color);
+            int num, den;
+            Scale(t, num, den);
+            const int q = 12 * num / den;
             std::uint32_t pa, pb;
             if (TextPair_Of(index, &pa, &pb)) {
                 if (shown) {
                     Emit(x + w, y, pa, t, clut, q);
-                    Emit(x + w + TextAdvance_OfGlyph(pa) * kScaleNum / kScaleDen, y, pb, t, clut, q);
+                    Emit(x + w + TextAdvance_OfGlyph(pa) * num / den, y, pb, t, clut, q);
                 }
             } else if (shown) {
                 Emit(x + w, y, index, t, clut, q);
             }
-            w += TextAdvance_Of(t) * kScaleNum / kScaleDen;
+            w += TextAdvance_Of(t) * num / den;
             t += (c & 0x80) ? 2 : 1;
         } else {
             Refuse(marker, "(the second-language marker) meets a control its insert cannot draw at reading size");
@@ -585,14 +606,16 @@ void DrawRuby(const unsigned char* at, const unsigned char* end, int y, int coun
             // A glyph: RowEnd has let nothing else through.
             if (!in_run) reveal = Reveal(row, seg, (x - seg_x0) / kHalfCell);
             in_run = true;
-            const int q = 12 * kScaleNum / kScaleDen;
-            if (c != 0x20 && reveal <= count) {
+            int num, den;
+            Scale(p, num, den);
+            const int q = 12 * num / den;
+            if (reveal <= count) {
                 const unsigned index = Index(p);
                 std::uint32_t pa, pb;
                 if (TextPair_Of(index, &pa, &pb)) Refuse(p, "is a pair code (DIV-0057), in a ruby row");
                 Emit(line + x, y + kRubyDy, index, p, static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color), q);
             }
-            x += TextAdvance_Of(p) * kScaleNum / kScaleDen;
+            x += TextAdvance_Of(p) * num / den;
             p += (c & 0x80) ? 2 : 1;
         }
     }

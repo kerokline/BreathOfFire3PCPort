@@ -38,8 +38,35 @@ its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md
   stops at the loud error until they are (about 70 MB more in the release,
   or the builder run on the owner's machine) - `tools/make_release.py`
   `NOT_BUNDLED` says so.
-- **From FB:** the readings are not proofread (call 4); `--review FILE`
-  writes the list. 4,559 area pages split for a third row, each an extra
+- **Decided 2026-10-22, a follow-on group after RR lands ("lets have that
+  as a followup after RR"): the readings lexicon and the second opinion.**
+  SudachiPy stays off the player's machine: the owner's machine runs the
+  builder once and writes `data/furigana/lexicon.toml`, the sorted word
+  list (dictionary form, reading) the builder met - a dictionary excerpt
+  (SudachiDict, Apache 2.0), never ordered or keyed by slot, so no sentence
+  can be told from it (the rule 1 reading the owner took in chat); the
+  player's builder segments by longest match against it, and the owner's
+  build records every place the two segmenters disagree as a `next` /
+  `prev` rule in the sidecar. Beside it a `--compare` mode places readings
+  with fugashi + UniDic as well and writes the disagreements by surface and
+  context, most frequent first, for the owner to adjudicate into
+  `readings.toml` (call 4's proofreading, made cheap). **And a round of
+  agents** (owner, 2026-10-22): the review list sharded by area to
+  subagents that give the kana of every token of every message as
+  structured output, with a flag where the segmentation looks wrong; a
+  script diffs them against Sudachi's into the disagreement list by
+  surface and context; a second pass proposes the sidecar rule for each
+  line and the owner approves. The script goes through the API; the owner
+  is fine with that (the script is published in both languages already;
+  the rule is about the repo carrying none of Capcom's material), and every
+  derived file - shards, kana, diffs - stays in the harness root, only the
+  sidecar rules and the lexicon in the tree. Measured already:
+  Sudachi core against full differs in 253 of 27,976 messages, nearly all
+  compound width, not readings; the power kanji's on-reading (3,857
+  placements) is the pools' stat labels, the dialogue reads it the kun way
+  in 240 of 245. Suzume (libraz) was looked at and set aside: it tokenises
+  and tags but gives no readings, and ships no Windows wheel.
+- **From FB:** 4,559 area pages split for a third row, each an extra
   confirm press, as accepted.
 
 - 1: the gap between row pairs and the Latin row's size (1/2 or 2/3), off

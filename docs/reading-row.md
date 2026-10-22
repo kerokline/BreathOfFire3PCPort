@@ -141,6 +141,35 @@ every byte but the ones named below.
   the marker's width and the half-cell grid.
 - ML never reads a side chunk; it lists layers by name.
 
+## 2. Row geometry, measured (PR, 2026-10-22)
+
+From [`reading-row-probe.md`](reading-row-probe.md) 4, which has the frames
+and the arithmetic. Pen y per row from the box origin `O`
+(`Msgbox_OriginY`, window y + 6), a glyph drawn at pen y + 1; ruby height
+`r` = 6 (kana, and Latin at 1/2) or 8 (Latin at 2/3). **Recommended:
+bottom-aligned**, the last text row on the plain page's third row:
+
+| Row | r = 6 | r = 8 |
+|---|---|---|
+| ruby 1 | `O + 4 - gap` | `O - gap` |
+| text 1 | `O + 10 - gap` | `O + 8 - gap` |
+| ruby 2 | `O + 22` | `O + 20` |
+| text 2 | `O + 28` | `O + 28` |
+
+The gap (0, 1 or 2) and the Latin size (1/2 or 2/3) are the owner's calls
+off the probe's sheets; the probe recommends gap 2 and leaves the size to
+the eye. Ruby glyph quads: 6 x 6 units (r = 6), 8 x 8 (Latin at 2/3), the
+whole 12-unit texture cell; the ruby pen advances the glyph's own kind-4
+advance times 1/2 or 2/3, `0x09` 6 units. At scale 2 every 6-unit reading
+glyph is its sheet cell texel for texel under both filters (probe 3).
+
+**Settled at PR's merge (2026-10-22):** a space in a second-language ruby
+row is the composed font's blank space cell, a glyph code carrying the
+second's space advance - `0xE64` (advance 8) for Latin over Japanese,
+`0xE40` (advance 12) for Japanese over Latin ([`reading-row-second.md`](reading-row-second.md)
+3), which SB's chunk already carries and is what the probe drew. `0x20`
+never appears in a ruby row; `0x09` is the furigana row's half-cell gap.
+
 ## 3. The renderer as built (RR, 2026-10-22)
 
 **Status:** BUILT on `reading-row/rr` (stage B, group RR); played on the
@@ -198,11 +227,13 @@ numbers) is not in yet: the row table below is the staging arithmetic.
 
 ### 3.3 The walk (`src/game/msgbox.cpp`, namespace `msgbox::ruby`)
 
-- **The row table** (`kRowTable`, one per gap, `kGap` the chosen one; the
-  only place the geometry lives): pen y from `Msgbox_OriginY` of ruby 0,
-  text 0, ruby 1, text 1 = `0, 6, 18 + gap, 24 + gap`; staged at gap 1.
+- **The row table** (`kRowTable`, the only place the geometry lives):
+  section 2's, bottom-aligned - pen y from the origin of ruby 1, text 1,
+  ruby 2, text 2 = `4 - gap, 10 - gap, 22, 28` for r = 6 and `-gap,
+  8 - gap, 20, 28` for r = 8 (taken when the Latin scale is 2/3), one row
+  per gap; `kGap` = 2, the probe's recommendation, the owner's call open.
   A ruby quad's top is its row's pen y + 1 (`Text_DrawAt`'s own + 1 for a
-  text glyph), `kHalfCell` 6, the scale `1/2`.
+  text glyph). A one-pair page uses ruby 1 / text 1.
 - `MsgBox_Step` hands an annotated message to `ruby::Step` before its
   first instruction and returns; nothing else in it changed. `Step` keeps
   the original prologue (pen at the origin, nothing drawn at a count of 0),
@@ -212,9 +243,11 @@ numbers) is not in yet: the row table below is the staging arithmetic.
   DIV-0006) - drawing while the count allows and measuring to the row's
   end either way - and then draws the ruby row from the measurements.
 - A ruby glyph is `Text_EmitGlyph`'s record of its whole 12-unit cell on a
-  `12 s` square quad (6 x 6 at `s = 1/2`), the page scroll's clip pair
-  `(u, v)` scaled with it, advancing its DIV-0006 advance times `s` (a
-  kana 6, a Latin letter 4); a space advances and draws nothing. `0x09`
+  `12 s` square quad, the page scroll's clip pair `(u, v)` scaled with it,
+  advancing its DIV-0006 advance times `s`: `s = 1/2` for a 12-unit glyph
+  (a kana, 6 x 6, texel for texel), the Latin scale (`kLatinNum /
+  kLatinDen`, 1/2: a 4-unit advance) for any other. A space in a ruby row
+  is the composed font's blank cell (section 2); a `0x20` is refused. `0x09`
   is one half-cell; `0x12` advances by the k-th insert's measured width;
   `0x13` draws the k-th insert's own characters (its substitution text,
   its count, a pair code as its two glyphs) at the reading scale and
