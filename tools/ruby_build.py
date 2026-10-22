@@ -922,7 +922,7 @@ BLANK_GLYPH = bytes(GLYPH_BYTES)
 BUTTON_ARG0 = 0xB0
 BUTTON_OF_BIT = {4: 2, 5: 0, 6: 1, 7: 3}      # Japan's bit index n -> circle 0, cross 1, triangle 2, square 3
 ICONS = {False: 0x9E3, True: 0x9F6}           # a Latin layer's circle .. square / ja-JP's (button_text.h)
-# Kinsoku for a Japanese re-break: glyphs that do not start a row, and that do not end one.
+# Kinsoku for a Japanese second's reading rows (units): glyphs that do not start a row, and that do not end one.
 NO_START = set("、。，．・：；？！ー」』）】〕…‥ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ〜")
 NO_END = set("「『（【〔")
 
@@ -1176,113 +1176,6 @@ class SecondComposer:
             w += u
         return w
 
-    def rebreak_page(self, rows):
-        """A three-row page into two rows: a first row that is only an insert (the
-        speaker's name) kept as its own row when the rest re-breaks into one;
-        else all three re-broken into two (census 9 rule 4)."""
-        first = rows[0][0]
-        if (first and not any(it[0] == "g" for it in first) and any(it[0] == "c" and it[1][0] in INSERTS
-                                                                   for it in first)):
-            rest = self.rebreak(rows[1:], 1)
-            if rest is not None:
-                self.stats["pages re-broken under a kept name row"] += 1
-                return [rows[0]] + [(r, c) for r, c in self.recolour([r for r, _ in rest], rows[1][1])]
-        return self.rebreak(rows)
-
-    @staticmethod
-    def recolour(rows, c):
-        out = []
-        for r in rows:
-            out.append((r, c))
-            c = colour_after(r, c)
-        return out
-
-    def rebreak(self, rows, most=PAIRS):
-        """A three-row page re-broken at word boundaries (Latin: spaces, the authored
-        row ends becoming spaces; Japanese: between glyphs, kinsoku kept) into at
-        most two rows of ROW_UNITS, inserts at their budget; None when it does not fit.
-        Returns [(items, start colour)]; no item is dropped but one space (or the
-        authored break) where a row now ends."""
-        for items, _ in rows:
-            drawn = [it for it in items if it[0] == "g" or it[1][0] in INSERTS]
-            if not drawn or drawn[0][1] == b" ":
-                # A row that is empty or opens on a space is layout (a blank
-                # line, an indent, a signature): its rows are kept, the page splits.
-                self.stats["pages not re-broken: authored spacing"] += 1
-                return None
-        flat = []
-        for ri, (items, _) in enumerate(rows):
-            if ri:
-                flat.append(None)            # the authored break
-            flat.extend(items)
-        units = []                           # [items, width, sep items (spaces / None)]
-        if self.main_ja:
-            pend = []
-            for it in flat:
-                if it is None:
-                    continue
-                if it[0] == "c" and it[1][0] not in INSERTS:
-                    pend.append(it)
-                    continue
-                ch = self.mcs.char(it) if it[0] == "g" else None
-                cur = [pend + [it], self.mwidth(it), [], ch, ch]
-                pend = []
-                if units and ((ch and ch in NO_START) or (units[-1][4] and units[-1][4] in NO_END)):
-                    u = units[-1]
-                    u[0] += cur[0]
-                    u[1] += cur[1]
-                    u[4] = ch
-                else:
-                    units.append(cur)
-            if pend:
-                if not units:
-                    return None
-                units[-1][0] += pend
-        else:
-            sep, word = [], None
-            for it in flat:
-                if it is None or (it[0] == "g" and it[1] == b" "):
-                    if word is not None:
-                        units.append(word)
-                        word = None
-                    sep.append(it)
-                    continue
-                if word is None:
-                    word = [[], 0, sep, None, None]
-                    sep = []
-                word[0].append(it)
-                word[1] += self.mwidth(it)
-            if word is not None:
-                units.append(word)
-            trailing = [it for it in sep if it is not None]
-        out, cur, x = [], None, 0
-        for k, u in enumerate(units):
-            items, w, sep = u[0], u[1], u[2]
-            spaces = [it for it in sep if it is not None]
-            sw = 0 if self.main_ja else (len(spaces) or (1 if sep else 0)) * self.mspace
-            first = next((it for it in items if it[0] == "g"), None)
-            hang = self.mwidth(first) if first is not None and is_hang(first[1]) else 0
-            if cur is not None and x + sw + w > ROW_UNITS:
-                out.append(cur)
-                cur = None
-            if cur is None:
-                if w - hang > ROW_UNITS:
-                    return None
-                cur = list(spaces) if k == 0 else []
-                cur += items
-                x = w - hang
-            else:
-                cur += spaces if spaces else ([("g", b" ", SPACE - 0x26)] if sep else [])
-                cur += items
-                x += sw + w
-        if cur is not None:
-            if not self.main_ja:
-                cur += trailing
-            out.append(cur)
-        if len(out) > most or any(self.row_units(r, inserts=True) > ROW_UNITS for r in out):
-            return None
-        return self.recolour(out, rows[0][1])
-
     # -- the second's text ----------------------------------------------------
     def second_atoms(self, raw):
         """The second's prompt as pages of atoms (its page and row breaks kept as
@@ -1439,25 +1332,20 @@ class SecondComposer:
     def layout(self, rows, units, top=True):
         """A main page (its rows, [(items, start colour)]) and its share of the
         second -> sub-pages of pairs [(reading row | None, (items, start colour) | None)]
-        and the page's class. Census 9 rules 4 and 5: as authored when it fits; a
-        three-row page re-broken into two; split on overflow, never the second
-        squeezed: three authored rows as rows 1-2 and 3, two as 1 and 2, the
-        second re-shared over the parts by their glyphs."""
+        and the page's class. Census 9 rules 4 and 5 as amended 2026-10-22 (the
+        owner: pages are re-flowed, rows never): every authored row is kept as it
+        is, as the furigana mode keeps them; a page of one or two rows stays one
+        page when the second fits its two reading rows; else it splits on 0x02,
+        never the second squeezed: three authored rows as rows 1-2 and 3, two as
+        1 and 2, the second re-shared over the parts by their glyphs."""
         free = self.wrap(units)              # the second's own rows, inserts anywhere: its length alone
         if len(rows) <= PAIRS:
             R = self.wrap(units, rows)
             if len(R) <= PAIRS:
                 return [self.pairs(rows, self.balance(units, rows, R))], "A"
-            rb = None
-        else:
-            rb = self.rebreak_page(rows)
-            if rb is not None:
-                R = self.wrap(units, rb)
-                if len(R) <= PAIRS:
-                    return [self.pairs(rb, self.balance(units, rb, R))], "B"
-        over = len(free) > PAIRS
-        cls = "C both" if over and len(rows) > PAIRS and rb is None else "C by the second" if over else (
-            "C main alone" if len(rows) > PAIRS and rb is None else "C by the inserts")
+        over, three = len(free) > PAIRS, len(rows) > PAIRS
+        cls = "C both" if over and three else "C by the second" if over else (
+            "C main alone" if three else "C by the inserts")
         if top and over:
             self.stats["second needs a third reading row"] += 1
         if len(rows) == 1:
@@ -1468,12 +1356,38 @@ class SecondComposer:
                 pages.append(self.pairs(rows if i == 0 else [], part))
             return pages, cls
         groups = [rows[:PAIRS], rows[PAIRS:]] if len(rows) > PAIRS else [rows[:1], rows[1:]]
-        shares = share_out(units, [self.weight(g) for g in groups])
+        shares = self.share_split(units, groups)
         out = []
         for g, u in zip(groups, shares):
             sub, _ = self.layout(g, u, False)
             out += sub
         return out, cls
+
+    def inserts_fit(self, units, rows):
+        """Every insert of the second's units has a row of these text rows to stand
+        over (insert_rows), or there is none."""
+        if not any(a.kind == "ins" for u in units for a in u.atoms):
+            return True
+        return self.insert_rows(units, rows) is not None
+
+    def share_split(self, units, groups):
+        """The second shared over the two parts of a split page by their glyphs
+        (share_out); when that puts an insert of the second over a part whose text
+        rows do not carry it, the boundary moves to the nearest unit where each
+        part's inserts are its own rows' (NR, 2026-10-22), else the share stands
+        and compose's insert check leaves the message plain."""
+        shares = share_out(units, [self.weight(g) for g in groups])
+        if all(self.inserts_fit(u, g) for u, g in zip(shares, groups)):
+            return shares
+        k0 = len(shares[0])
+        for d in range(1, len(units) + 1):
+            for k in (k0 - d, k0 + d):
+                if 0 <= k <= len(units):
+                    parts = [units[:k], units[k:]]
+                    if all(self.inserts_fit(u, g) for u, g in zip(parts, groups)):
+                        self.stats["splits whose share moved to its inserts' rows"] += 1
+                        return parts
+        return shares
 
     def balance(self, units, rows, R):
         """The second over a two-row page: shared over the two text rows by their
@@ -1728,6 +1642,21 @@ class SecondComposer:
             raise SystemExit("%s: the composed message's terminators differ" % where)
         if self.canon(og) != self.canon(cg):
             raise SystemExit("%s: the composed text rows differ from the original's" % where)
+        # Rows are never re-flowed (the owner, 2026-10-22): the composed text rows,
+        # empty ones dropped, are the authored rows one for one, and none is wider
+        # than the authored row it stands for, so nothing reaches the frame that the
+        # original did not.
+        authored = [r for rows, _ in orig.pages for r in rows if r]
+        text = [rows[k + 1] for rows, _ in comp.pages if rows != [[]]
+                for k in range(0, len(rows), 2) if rows[k + 1]]
+        reflowed = sum(1 for a, t in zip(authored, text) if a != t) + abs(len(authored) - len(text))
+        self.stats["text rows re-flowed"] += reflowed
+        if reflowed:
+            raise SystemExit("%s: %d composed text rows are not the authored rows" % (where, reflowed))
+        for a, t in zip(authored, text):
+            if self.row_units(t, inserts=True) > self.row_units(a, inserts=True):
+                raise SystemExit("%s: a composed text row is wider than its authored row" % where)
+        self.stats["text rows checked as authored"] += len(text)
         self.stats["messages checked"] += 1
 
     def lint_message(self, composed, where):
@@ -2013,9 +1942,9 @@ def cmd_second(args):
         if not box:
             continue
         pct = lambda n: "%d (%.1f%%)" % (n, 100.0 * n / box)
-        print("%s box pages %d: as authored %s, main re-broken %s; split by the main alone %s, by the second %s, by "
+        print("%s box pages %d: as authored %s, main re-broken %d (text rows, check()); split by the main alone %s, by the second %s, by "
               "both %s, by the inserts' rows %s; pages added %d; the second needed a third reading row on %s"
-              % (kind, box, pct(k["box pages: A"]), pct(k["box pages: B"]), pct(k["box pages: C main alone"]),
+              % (kind, box, pct(k["box pages: A"]), k["text rows re-flowed"], pct(k["box pages: C main alone"]),
                  pct(k["box pages: C by the second"]), pct(k["box pages: C both"]), pct(k["box pages: C by the inserts"]),
                  k["pages added"], pct(k["second needs a third reading row"])))
         print("  messages paired page by page %d, shared in proportion %d; reading rows %d (empty %d), empty text "
@@ -2027,8 +1956,10 @@ def cmd_second(args):
               "not %d); messages with the offset pen or an effect preset composed %d"
               % (k["timed closes made the box's stop"], k["timed in the main, not in the second"],
                  k["timed in the second, not in the main"], k["messages with the offset pen or an effect preset"]))
-    print("%d composed messages checked against their originals; longest %d bytes (%s)"
-          % (st["messages checked"], longest[0], longest[1]))
+    print("%d composed messages checked against their originals (%d text rows, every one an authored row, "
+          "%d re-flowed); longest %d bytes (%s)"
+          % (st["messages checked"], st["text rows checked as authored"], st["text rows re-flowed"], longest[0],
+             longest[1]))
     if args.json:
         with open(args.json, "w") as f:
             json.dump({"layer": src.layer, "font": {"kind": plan.kind, "glyphs": plan.count, "main": mfont.count,

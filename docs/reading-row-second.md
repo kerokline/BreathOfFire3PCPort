@@ -7,7 +7,10 @@ owner's held layers (`C:\Users\kerok\bof3x-runs\rr_sl\DAT`, copied to
 `rr_sb`; the census's install, [`second-language-census.md`](second-language-census.md)
 1). The contract is [`reading-row.md`](reading-row.md) section 1 and is
 not changed here; the rule built is the census's section 9; the round is
-[`reading-row-round.md`](reading-row-round.md) (SB, section 3).
+[`reading-row-round.md`](reading-row-round.md) (SB, section 3). Amended
+the same day by group OS (timed stops, effect pages; section 2 rule 2) and
+group NR (**rows never re-flowed**: section 2 rule 4, the owner's call;
+section 7's first table).
 
 ## 1. What it does
 
@@ -73,19 +76,25 @@ owner (the brief); each is one place in the code.
    midpoint falls in. Units are Latin words (cut at spaces) and Japanese
    glyphs, with a small kinsoku: closing punctuation, the long-vowel bar and
    small kana cling to the glyph before, opening brackets to the glyph after.
-4. **The main keeps its authored rows when they fit**: a page of one or two
-   rows as authored (class A). A three-row page is re-broken into two
-   (class B, `rebreak_page`): at spaces for a Latin main (an authored row end
-   becomes a space; the break takes one space), between glyphs with the same
-   kinsoku for a Japanese one; inserts at their widest budget, the hang
-   honoured, every row checked against 192 units. Two refinements **(SB)**:
-   - a first row that is **only an insert - the speaker's name** (`04 nn`;
-     1,000 of the Japanese layer's three-row pages) is kept as its own row
-     when the other two re-break into one; else all three are re-broken and
-     the name runs into the text;
-   - a page with a row that is **empty or opens on a space** (a blank line,
-     an indent, a signature) is not re-broken: its spacing is layout, and the
-     page splits on its authored rows instead.
+4. **The main keeps every authored row - pages are re-flowed, rows never**
+   (amended 2026-10-22, group NR, the owner's call; the census's rule 4
+   is amended, not optioned). Every authored `0x01` of the main is kept,
+   exactly as the furigana mode keeps them
+   ([`reading-row-builder.md`](reading-row-builder.md) 4): a page of one or
+   two rows stays one page when the second fits (class A); a page of three
+   text rows becomes two pages on `0x02`, rows 1-2 and row 3 (rule 6). The
+   owner, off a capture of the opening where the re-break ran a speaker's
+   name row into the speech and the row reached the frame (D332): "in the
+   original script, the name gets its own row - just go ahead and do a page
+   break instead of fitting it onto one page. That leads to more pages of
+   text, but less re-flow of sentences." `check` now also stops the build
+   when a composed text row is not the authored row it stands for, or is
+   wider than it (section 6), so no text row can reach the frame that the
+   original did not. **Until 2026-10-22 (SB):** a three-row page was
+   re-broken into two rows (class B, `rebreak_page`) at spaces or between
+   glyphs, an insert-only name row kept, a page with authored spacing split
+   instead; 9.9..18.4% of box pages were re-broken (section 7's older
+   tables). That path is removed, not left switchable.
 5. **The second over the page.** Greedy reading rows of 192 units at the
    reading scale; when they fit in two and the page has two text rows, the
    second is then **balanced over the two text rows (SB)**: shared by the
@@ -93,11 +102,14 @@ owner (the brief); each is one place in the code.
    it reads with - used when each part fits its one row and its inserts are
    that row's, else the greedy rows stand (10,645 of the 20,095 area box
    pages of English over Japanese). The page count is unchanged by it.
-6. **Split only on overflow.** When the main does not fit two rows (three
-   authored rows that do not re-break) or the second needs a third reading
-   row, the page splits on a `0x02`: three authored rows as rows 1-2 and 3,
-   two as 1 and 2, the second re-shared over the parts by their glyphs, and
-   again while a part overflows; under a single main row the second's rows
+6. **Split only on overflow.** When the main has three authored rows or
+   the second needs a third reading row, the page splits on a `0x02`: three
+   authored rows as rows 1-2 and 3, two as 1 and 2, the second re-shared
+   over the parts by their glyphs, and again while a part overflows. When
+   that share puts an insert of the second over a part whose text rows do
+   not carry it, the boundary moves to the nearest unit where each part's
+   inserts are its own rows' (`share_split`, **(NR)**; 108..257 splits a
+   pair), else the message is left plain as rule 8 says; under a single main row the second's rows
    go two to a page, the main's row under the first and **an empty text
    row** under the others. A split page starts its walk at colour 0
    (`MsgBox_Step`'s local), so its first reading row ends on the colour the
@@ -222,7 +234,11 @@ the `--game` build's).
   main's text items are the original's, **every glyph in the colour the
   original drew it in**; the same head, tail and non-page terminators; at
   most two pairs a page; a reading row holds only glyph codes (no hanging
-  byte, no `0x20`), `0x13`, `05 nn`, `06`. A difference stops the build.
+  byte, no `0x20`), `0x13`, `05 nn`, `06`; and (2026-10-22, NR) **the
+  composed text rows, empty ones dropped, are the authored rows one for
+  one, none wider than the row it stands for** - the rows never re-flowed,
+  counted as "main re-broken" in the summary line (0 in every pair, 56,172
+  .. 63,841 area and pool text rows a pair). A difference stops the build.
 - `--lint FILE`: walks each reading row as RR will - every code inside the
   composed table and inked (or the space cell), its width at the reading
   scale with each marker at its budget inside 192 units, no hanging first
@@ -236,6 +252,44 @@ the `--game` build's).
   composed message terminated inside its chunk.
 
 ## 7. Numbers (2026-10-22, the held layers, area blocks)
+
+**Rows never re-flowed (2026-10-22, group NR, the same held layers, all 20
+pairs rebuilt, `--lint` 0 faults and `check` passed in each):** class B is
+gone - "main re-broken" is the count of composed text rows that are not
+their authored row, 0 in every pair; a three-row page is two pages. "Pages
+added" is before (the OS table below) and after. "Share moved" counts the
+splits whose second was moved to its inserts' rows (rule 6), which brings
+back messages the insert rule had left plain - also under the Latin mains,
+whose splits were already there. Plain non-box and blank beats (136) and
+kept-PC are as before. Under a Japanese main 3,637..3,743 pages are added
+(the owner's estimate, about 3,300); under a Latin main 2,315..3,522 (its
+re-broken pages, 9.9..18.4%, are now splits too). English over Japanese:
+17,460 area slots paired (was 17,389), 290 plain for an insert (361).
+
+| second over main | area slots paired | plain: inserts | plain: non-box | plain: kept-PC | box pages | as authored | main re-broken | split: main / second / both / inserts | pages added (before -> after, +) | second > 2 reading rows | empty text rows | share moved to its inserts | timed stops |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| en-US over ja-JP | 17,460 | 290 | 400 | 511 | 20,162 | 78.2% | 0 | 4,184 / 19 / 179 / 5 | 652 -> 4,395 (+3,743) | 198 (1.0%) | 258 | 144 | 199 |
+| en-150 over ja-JP | 17,460 | 290 | 400 | 511 | 20,162 | 78.2% | 0 | 4,184 / 19 / 179 / 5 | 652 -> 4,395 (+3,743) | 198 (1.0%) | 258 | 144 | 199 |
+| fr-FR over ja-JP | 17,424 | 311 | 388 | 538 | 20,035 | 78.2% | 0 | 4,093 / 35 / 236 / 4 | 707 -> 4,376 (+3,669) | 271 (1.4%) | 332 | 137 | 190 |
+| de-DE over ja-JP | 17,463 | 300 | 391 | 507 | 20,100 | 78.1% | 0 | 4,034 / 37 / 315 / 13 | 777 -> 4,414 (+3,637) | 352 (1.8%) | 399 | 140 | 199 |
+| ja-JP over en-US | 17,470 | 348 | 332 | 511 | 22,148 | 62.9% | 0 | 8,217 / 0 / 1 / 0 | 5,018 -> 8,218 (+3,200) | 1 (0.0%) | 3 | 238 | 202 |
+| en-150 over en-US | 17,821 | 0 | 653 | 511 | 18,652 | 54.9% | 0 | 8,410 / 0 / 0 / 0 | 5,219 -> 8,410 (+3,191) | 0 (0.0%) | 0 | 108 | 198 |
+| fr-FR over en-US | 17,727 | 64 | 641 | 553 | 18,430 | 54.8% | 0 | 8,331 / 3 / 2 / 0 | 5,108 -> 8,336 (+3,228) | 5 (0.0%) | 22 | 144 | 191 |
+| de-DE over en-US | 17,766 | 53 | 644 | 522 | 18,508 | 54.9% | 0 | 8,347 / 3 / 4 / 0 | 5,111 -> 8,355 (+3,244) | 7 (0.0%) | 14 | 161 | 197 |
+| ja-JP over en-150 | 17,471 | 348 | 331 | 511 | 22,150 | 62.9% | 0 | 8,208 / 0 / 1 / 0 | 5,020 -> 8,209 (+3,189) | 1 (0.0%) | 3 | 238 | 202 |
+| en-US over en-150 | 17,822 | 0 | 652 | 511 | 18,654 | 55.0% | 0 | 8,401 / 0 / 0 / 0 | 5,221 -> 8,401 (+3,180) | 0 (0.0%) | 0 | 108 | 198 |
+| fr-FR over en-150 | 17,728 | 64 | 640 | 553 | 18,432 | 54.8% | 0 | 8,322 / 3 / 2 / 0 | 5,110 -> 8,327 (+3,217) | 5 (0.0%) | 22 | 144 | 191 |
+| de-DE over en-150 | 17,767 | 53 | 643 | 522 | 18,510 | 54.9% | 0 | 8,338 / 3 / 4 / 0 | 5,113 -> 8,346 (+3,233) | 7 (0.0%) | 14 | 161 | 197 |
+| ja-JP over fr-FR | 17,377 | 357 | 389 | 538 | 22,208 | 60.9% | 0 | 8,671 / 0 / 2 / 0 | 5,151 -> 8,673 (+3,522) | 2 (0.0%) | 3 | 257 | 194 |
+| en-US over fr-FR | 17,932 | 111 | 389 | 553 | 18,453 | 52.4% | 0 | 8,774 / 0 / 6 / 0 | 5,278 -> 8,782 (+3,504) | 6 (0.0%) | 28 | 166 | 192 |
+| en-150 over fr-FR | 17,932 | 111 | 389 | 553 | 18,453 | 52.4% | 0 | 8,774 / 0 / 6 / 0 | 5,278 -> 8,782 (+3,504) | 6 (0.0%) | 28 | 166 | 192 |
+| de-DE over fr-FR | 17,963 | 96 | 389 | 540 | 18,488 | 52.5% | 0 | 8,772 / 2 / 8 / 1 | 5,286 -> 8,786 (+3,500) | 10 (0.1%) | 45 | 168 | 192 |
+| ja-JP over de-DE | 17,398 | 322 | 434 | 507 | 22,208 | 63.5% | 0 | 8,106 / 0 / 1 / 0 | 5,780 -> 8,107 (+2,327) | 1 (0.0%) | 2 | 205 | 204 |
+| en-US over de-DE | 17,967 | 59 | 437 | 522 | 18,422 | 55.6% | 0 | 8,171 / 0 / 3 / 0 | 5,833 -> 8,174 (+2,341) | 3 (0.0%) | 6 | 150 | 200 |
+| en-150 over de-DE | 17,967 | 59 | 437 | 522 | 18,422 | 55.6% | 0 | 8,171 / 0 / 3 / 0 | 5,833 -> 8,174 (+2,341) | 3 (0.0%) | 6 | 150 | 200 |
+| fr-FR over de-DE | 17,943 | 71 | 434 | 540 | 18,374 | 55.6% | 0 | 8,154 / 1 / 3 / 0 | 5,843 -> 8,158 (+2,315) | 4 (0.0%) | 19 | 129 | 193 |
+
+The table after the stop (OS), before the rows were kept, for the record:
 
 **After the stop (2026-10-22, group OS, the same held layers, all 20 pairs
 rebuilt, `--lint` 0 faults in each):** the effect and timed columns are
