@@ -200,8 +200,13 @@ report means merge; a usage cut resumes with a message naming the next step.
     GF; DIV-0071's third amendment): the scene the owner saw is **area 192's
     camp**; the flames over Garr's arm and weapon, as Capcom's order draws
     them, kept. The wider reach (the sprite's whole drawn cell box, transparent
-    corners included, stopping a move): **open** - the owner is checking how
-    close a sprite gets to a fire on the PlayStation in an emulator.
+    corners included, stopping a move): **accepted** after the owner's check on
+    the PlayStation in an emulator (2026-10-21): at a camp only Ryu is
+    controlled; he can walk behind the fire (the flames then drawn over him)
+    but not onto the brown pit; the other party members spawn at several
+    spots around the camp, and Garr can spawn close enough to overlap the
+    flames. A stopped move only ever leaves Capcom's order, which is what
+    the PlayStation draws at the fire.
 
 ## 7. Side groups, beside the round (added 2026-10-21)
 
