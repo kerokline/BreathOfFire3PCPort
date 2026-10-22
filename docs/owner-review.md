@@ -45,6 +45,10 @@ and DIV-0157 (mods); the round's findings are known-defects D326..D330.
   offset-pen and effect pages are composed too; the original message is
   untouched (the side chunk), so with no layer nothing changes. Group OS,
   launched the same day.
+- **The second-script dropdown hidden by default** (owner, 2026-10-22):
+  *Row above the text* leaves the Settings page unless a toggle on a new
+  *Extra* tab under Mods shows it; the toggle turns on by hand or on its
+  own when the furigana mod is installed. Group LX, launched the same day.
 - **A first install needs two steps** the launcher does not say yet
   (the saves now carry themselves: D331, `carry_saves` in `setup`, from
   the previous game folder and from the home folder's old layout): the
