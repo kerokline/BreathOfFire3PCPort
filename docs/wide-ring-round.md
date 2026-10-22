@@ -196,6 +196,12 @@ report means merge; a usage cut resumes with a message naming the next step.
     the crafted save's, not ours - Capcom's `Leave` (`0x534030`) on an empty
     party, unreachable in play. **No guard:** Capcom's behaviour stays; the
     crafts restore the party (`chapter_jump.py`'s `party='saved'`).
+12. **Garr over the camp's fire** ([`garr-fire.md`](garr-fire.md), group
+    GF; DIV-0071's third amendment): the scene the owner saw is **area 192's
+    camp**; the flames over Garr's arm and weapon, as Capcom's order draws
+    them, kept. The wider reach (the sprite's whole drawn cell box, transparent
+    corners included, stopping a move): **open** - the owner is checking how
+    close a sprite gets to a fire on the PlayStation in an emulator.
 
 ## 7. Side groups, beside the round (added 2026-10-21)
 
