@@ -28,7 +28,7 @@ psx-jp	0x63A34C	0x63A370	gap	game-value	Area154_ChoicePairs+0x19B8
 psx-jp	0x63FF24	0x63FF2C	gap	game-value	Area172_EffectStates+0xFF0
 psx-jp	0x649750	0x649754	gap	game-value	Area196_Keys1+0x658
 psx-jp	0x64B390	0x64B397	gap	game-value	Char_DefaultRecords
-psx-jp	0x653144	0x653150	gap	game-value	CommuMusic_CloseSteps+0x68
+psx-jp	0x653144	0x653150	gap	game-value	CommuMusic_LabelC+0x4C
 psx-jp	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psx-jp	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-jp	0x653228	0x653238	language	language	CommuRank_Modes+0xB4
@@ -100,7 +100,6 @@ psx-jp	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-jp	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-jp	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psx-jp	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-jp	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-jp	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-jp	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
 psx-jp	0x65DA98	0x65DAB8	language	language	Cursor_Hidden+0x4C
@@ -149,7 +148,7 @@ psx-jp	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psx-jp	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psx-jp	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-jp	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
-psx-jp	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
+psx-jp	0x66B71C	0x66B720	unread	unread	Display_DeviceCountLess1+0x4
 psx-jp	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psx-jp	0x66C460	0x66C464	unread	unread	Math_SinTable+0x808
 psx-jp	0x66C468	0x66C46C	unread	unread	Math_SinTable+0x810
@@ -284,7 +283,7 @@ psx-us	0x649750	0x649754	gap	game-value	Area196_Keys1+0x658
 psx-us	0x64B390	0x64B397	gap	game-value	Char_DefaultRecords
 psx-us	0x64D78E	0x64D798	gap	game-value	BossGaist_Anims+0x2
 psx-us	0x64D7A0	0x64D7A8	gap	game-value	BossTorch_Sounds
-psx-us	0x653144	0x653150	gap	game-value	CommuMusic_CloseSteps+0x68
+psx-us	0x653144	0x653150	gap	game-value	CommuMusic_LabelC+0x4C
 psx-us	0x6531F9	0x653210	language	language	CommuRank_Modes+0x85
 psx-us	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-us	0x653228	0x653238	language	language	CommuRank_Modes+0xB4
@@ -362,7 +361,6 @@ psx-us	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-us	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-us	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psx-us	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-us	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-us	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-us	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
 psx-us	0x65DA98	0x65DAB8	language	language	Cursor_Hidden+0x4C
@@ -423,7 +421,7 @@ psx-us	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psx-us	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-us	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-us	0x66B468	0x66B46E	unread	unread	MasterWin_Requirements+0x44
-psx-us	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
+psx-us	0x66B71C	0x66B720	unread	unread	Display_DeviceCountLess1+0x4
 psx-us	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psx-us	0x66C460	0x66C464	unread	unread	Math_SinTable+0x808
 psx-us	0x66C468	0x66C46C	unread	unread	Math_SinTable+0x810
@@ -559,7 +557,7 @@ psx-eu-en	0x649750	0x649754	gap	game-value	Area196_Keys1+0x658
 psx-eu-en	0x64B390	0x64B397	gap	game-value	Char_DefaultRecords
 psx-eu-en	0x64D78E	0x64D798	gap	game-value	BossGaist_Anims+0x2
 psx-eu-en	0x64D7A0	0x64D7A8	gap	game-value	BossTorch_Sounds
-psx-eu-en	0x653142	0x653150	gap	game-value	CommuMusic_CloseSteps+0x66
+psx-eu-en	0x653142	0x653150	gap	game-value	CommuMusic_LabelC+0x4A
 psx-eu-en	0x6531F9	0x653210	language	language	CommuRank_Modes+0x85
 psx-eu-en	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-eu-en	0x653228	0x653238	language	language	CommuRank_Modes+0xB4
@@ -637,7 +635,6 @@ psx-eu-en	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-eu-en	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-eu-en	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psx-eu-en	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-eu-en	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-eu-en	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-eu-en	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
 psx-eu-en	0x65DA98	0x65DAB8	language	language	Cursor_Hidden+0x4C
@@ -696,7 +693,7 @@ psx-eu-en	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psx-eu-en	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-eu-en	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-eu-en	0x66B468	0x66B46E	unread	unread	MasterWin_Requirements+0x44
-psx-eu-en	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
+psx-eu-en	0x66B71C	0x66B720	unread	unread	Display_DeviceCountLess1+0x4
 psx-eu-en	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psx-eu-en	0x66C460	0x66C464	unread	unread	Math_SinTable+0x808
 psx-eu-en	0x66C468	0x66C46C	unread	unread	Math_SinTable+0x810
@@ -831,9 +828,9 @@ psx-fr	0x649750	0x649754	gap	game-value	Area196_Keys1+0x658
 psx-fr	0x64B390	0x64B397	gap	game-value	Char_DefaultRecords
 psx-fr	0x64D78E	0x64D798	gap	game-value	BossGaist_Anims+0x2
 psx-fr	0x64D7A0	0x64D7A8	gap	game-value	BossTorch_Sounds
-psx-fr	0x653104	0x65310C	gap	game-value	CommuMusic_CloseSteps+0x28
-psx-fr	0x65311C	0x65313C	gap	game-value	CommuMusic_CloseSteps+0x40
-psx-fr	0x653142	0x653150	gap	game-value	CommuMusic_CloseSteps+0x66
+psx-fr	0x653104	0x65310C	gap	game-value	CommuMusic_LabelC+0xC
+psx-fr	0x65311C	0x65313C	gap	game-value	CommuMusic_LabelC+0x24
+psx-fr	0x653142	0x653150	gap	game-value	CommuMusic_LabelC+0x4A
 psx-fr	0x6531F9	0x653210	language	language	CommuRank_Modes+0x85
 psx-fr	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-fr	0x653228	0x653238	language	language	CommuRank_Modes+0xB4
@@ -912,7 +909,6 @@ psx-fr	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-fr	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-fr	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psx-fr	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-fr	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-fr	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-fr	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
 psx-fr	0x65DA98	0x65DAB8	language	language	Cursor_Hidden+0x4C
@@ -975,7 +971,7 @@ psx-fr	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-fr	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-fr	0x66B1F1	0x66B1F8	language	language	MenuList_GeneWinSteps+0x25
 psx-fr	0x66B468	0x66B46E	unread	unread	MasterWin_Requirements+0x44
-psx-fr	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
+psx-fr	0x66B71C	0x66B720	unread	unread	Display_DeviceCountLess1+0x4
 psx-fr	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psx-fr	0x66C460	0x66C464	unread	unread	Math_SinTable+0x808
 psx-fr	0x66C468	0x66C46C	unread	unread	Math_SinTable+0x810
@@ -1111,9 +1107,9 @@ psx-de	0x649750	0x649754	gap	game-value	Area196_Keys1+0x658
 psx-de	0x64B390	0x64B397	gap	game-value	Char_DefaultRecords
 psx-de	0x64D78E	0x64D798	gap	game-value	BossGaist_Anims+0x2
 psx-de	0x64D7A0	0x64D7A8	gap	game-value	BossTorch_Sounds
-psx-de	0x653104	0x65310C	gap	game-value	CommuMusic_CloseSteps+0x28
-psx-de	0x65311C	0x65313C	gap	game-value	CommuMusic_CloseSteps+0x40
-psx-de	0x653142	0x653150	gap	game-value	CommuMusic_CloseSteps+0x66
+psx-de	0x653104	0x65310C	gap	game-value	CommuMusic_LabelC+0xC
+psx-de	0x65311C	0x65313C	gap	game-value	CommuMusic_LabelC+0x24
+psx-de	0x653142	0x653150	gap	game-value	CommuMusic_LabelC+0x4A
 psx-de	0x6531F9	0x653210	language	language	CommuRank_Modes+0x85
 psx-de	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-de	0x653228	0x653238	language	language	CommuRank_Modes+0xB4
@@ -1192,7 +1188,6 @@ psx-de	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-de	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-de	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psx-de	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-de	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-de	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-de	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
 psx-de	0x65DA98	0x65DAB8	language	language	Cursor_Hidden+0x4C
@@ -1256,7 +1251,7 @@ psx-de	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-de	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-de	0x66B1F3	0x66B1F8	language	language	MenuList_GeneWinSteps+0x27
 psx-de	0x66B468	0x66B46E	unread	unread	MasterWin_Requirements+0x44
-psx-de	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
+psx-de	0x66B71C	0x66B720	unread	unread	Display_DeviceCountLess1+0x4
 psx-de	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psx-de	0x66C460	0x66C464	unread	unread	Math_SinTable+0x808
 psx-de	0x66C468	0x66C46C	unread	unread	Math_SinTable+0x810
@@ -1382,7 +1377,7 @@ psp-jp	0x649750	0x649754	gap	game-value	Area196_Keys1+0x658
 psp-jp	0x64B390	0x64B397	gap	game-value	Char_DefaultRecords
 psp-jp	0x64D78E	0x64D798	gap	game-value	BossGaist_Anims+0x2
 psp-jp	0x64D7A0	0x64D7A8	gap	game-value	BossTorch_Sounds
-psp-jp	0x653144	0x65314F	gap	game-value	CommuMusic_CloseSteps+0x68
+psp-jp	0x653144	0x65314F	gap	game-value	CommuMusic_LabelC+0x4C
 psp-jp	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psp-jp	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psp-jp	0x653228	0x653238	language	language	CommuRank_Modes+0xB4
@@ -1453,7 +1448,6 @@ psp-jp	0x65AAAD	0x65AAC4	gap	game-value	TornadoMote_Phases+0x15
 psp-jp	0x65B1D4	0x65B1D7	gap	game-value	ReviveHalo_MoteCounts
 psp-jp	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psp-jp	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psp-jp	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psp-jp	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psp-jp	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
 psp-jp	0x65DA98	0x65DAB8	language	language	Cursor_Hidden+0x4C
@@ -1502,7 +1496,7 @@ psp-jp	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psp-jp	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psp-jp	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psp-jp	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
-psp-jp	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
+psp-jp	0x66B71C	0x66B720	unread	unread	Display_DeviceCountLess1+0x4
 psp-jp	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psp-jp	0x66C45C	0x66C464	unread	unread	Math_SinTable+0x804
 psp-jp	0x66C468	0x66C46C	unread	unread	Math_SinTable+0x810
@@ -1633,7 +1627,7 @@ psp-eu	0x64B6C4	0x64B6CA	unread	unread	Char_DefaultRecords+0x334
 psp-eu	0x64B80C	0x64B813	gap	game-value	Char_DefaultRecords+0x47C
 psp-eu	0x64D78E	0x64D798	gap	game-value	BossGaist_Anims+0x2
 psp-eu	0x64D7A0	0x64D7A8	gap	game-value	BossTorch_Sounds
-psp-eu	0x653144	0x65314F	gap	game-value	CommuMusic_CloseSteps+0x68
+psp-eu	0x653144	0x65314F	gap	game-value	CommuMusic_LabelC+0x4C
 psp-eu	0x6531F9	0x653210	language	language	CommuRank_Modes+0x85
 psp-eu	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psp-eu	0x653228	0x653238	language	language	CommuRank_Modes+0xB4
@@ -1704,7 +1698,6 @@ psp-eu	0x65AAAD	0x65AAC4	gap	game-value	TornadoMote_Phases+0x15
 psp-eu	0x65B1D4	0x65B1D7	gap	game-value	ReviveHalo_MoteCounts
 psp-eu	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psp-eu	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psp-eu	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psp-eu	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psp-eu	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
 psp-eu	0x65DA98	0x65DAB8	language	language	Cursor_Hidden+0x4C
@@ -1750,7 +1743,7 @@ psp-eu	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psp-eu	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psp-eu	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psp-eu	0x66A420	0x66A444	language	language	Pause_LinesGame+0x8
-psp-eu	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
+psp-eu	0x66B71C	0x66B720	unread	unread	Display_DeviceCountLess1+0x4
 psp-eu	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psp-eu	0x66C45C	0x66C464	unread	unread	Math_SinTable+0x804
 psp-eu	0x66C468	0x66C46C	unread	unread	Math_SinTable+0x810
