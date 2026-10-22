@@ -1,9 +1,10 @@
 # The reading row: the side chunk and the composed message (the FB / SB / RR contract)
 
-**Status:** CONTRACT, fixed 2026-10-22 before stage A of the reading-row
-round launched ([`reading-row-round.md`](reading-row-round.md) section 4
-is the decision; this file is its exact bytes). Nothing here is built yet;
-the sections after 1 are written by the groups as they hand back.
+**Status:** CONTRACT (section 1, fixed 2026-10-22 before stage A of the
+reading-row round launched; [`reading-row-round.md`](reading-row-round.md)
+section 4 is the decision, this file its exact bytes), MEASURED (section 2,
+PR) and BUILT (section 3, RR), 2026-10-22: the furigana layer is DIV-0155,
+the second-language layer DIV-0156. Not yet played by the owner.
 
 ## 1. The side chunk and the string shape
 
@@ -172,10 +173,11 @@ never appears in a ruby row; `0x09` is the furigana row's half-cell gap.
 
 ## 3. The renderer as built (RR, 2026-10-22)
 
-**Status:** BUILT on `reading-row/rr` (stage B, group RR); played on the
-nue, shop and inn routes under `ja-JP` with `ruby-furigana-ja-JP`, and once
-with SB's `ruby-en-US-ja-JP`; the owner has not played it. Section 2 (PR's
-numbers) is not in yet: the row table below is the staging arithmetic.
+**Status:** BUILT on `reading-row/rr` (stage B, group RR), merged into
+`localization/second-script` 2026-10-22; played on the nue, shop and inn
+routes and the dolphin fight under `ja-JP` with `ruby-furigana-ja-JP`, and
+once with SB's `ruby-en-US-ja-JP`; the owner has not played it. The row
+table is section 2's bottom-aligned one with the owner's gap (3.3).
 
 ### 3.1 The loader (`src/game/dat_load.cpp`)
 
