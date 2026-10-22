@@ -96,6 +96,10 @@ struct Config {
     // installed.
     bool ruby_ui = false;
     bool ruby_ui_named = false;
+    // DIV-0158, the faster text (Mods, Extras): Msg Speed's Med. at Fast's
+    // delays and Fast a page at once. text_speed=0|1 -> BOF3X_TEXT_SPEED; any
+    // other value is dropped to the default (0, the original's), as snap= is.
+    bool text_faster = false;
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
     // psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls. Built and
