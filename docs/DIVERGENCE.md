@@ -10137,6 +10137,6 @@ designed in rather than bolted on.
   off and on, the start log names it on, `BOF3X_TEXT_SPEED=2` stops with its
   message, and `text_speed=1` in the ini reaches the game. The hosted fuzz
   with it off passes: msgbox's 44,000 rounds against Capcom's copy, 0
-  mismatches, and the whole `BOF3X_SHADOW='*'` run exits 0. **Not yet played
-  by the owner.**
+  mismatches, and the whole `BOF3X_SHADOW='*'` run exits 0. Played by the owner
+  2026-10-22: "This is brilliant".
 - **Reversible?** Off by default; the Extras box or `text_speed=0`.
