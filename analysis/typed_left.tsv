@@ -20198,6 +20198,15 @@ src/game/move_script.cpp	StubMoveKind2	record	SetWord	Scratch() + 2	0	-	via=Scra
 src/game/move_script.cpp	StubPeek	record	Word	Sprite_Current + 0x58	0	-	base=Sprite_Current	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_script.cpp	StubPeek	record	SetWord	Sprite_Current + 0x58	0	-	base=Sprite_Current	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_script_bytes.h	SetLong	global	At	SharedScratch_addr	0	0x903850	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (SharedScratch_addr - -)	c4-tc
+src/game/msgbox.cpp	WalkText	global	B	kNameMap	0	0x66972c	-	gate	kNameMap 0x66972c Character_IndexById	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	WalkText	global	At	kCharRecords	0	0x903a6f	-	no-entry	kCharRecords 0x903a6f -	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	WalkText	global	At	kCharRecords	1	0x903a6f	-	no-entry	kCharRecords 0x903a6f -	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	WalkText	global	At	kTextRecords	0	0x904cdf	-	no-entry	kTextRecords 0x904cdf -	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	WalkText	global	L	kPoolSelector	0	0x803584	-	no-entry	kPoolSelector 0x803584 -	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	WalkText	global	At	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	WalkText	global	B	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	WalkText	global	W	kEffectOff	0	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	Step	global	Ptr	kBase	0	0x7dee4c	-	pointer-in-integer	kBase 0x7dee4c Msgbox_Base	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
 src/game/msgbox.cpp	Msg_OpenScript	global	W	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/msgbox.cpp	Msg_OpenScript	global	At	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/msgbox.cpp	Msg_OpenScript	global	SetPtr	kBase	0	0x7dee4c	-	pointer-in-integer	kBase 0x7dee4c Msgbox_Base	b0
@@ -20214,6 +20223,7 @@ src/game/msgbox.cpp	MsgBox_FrameTask	global	At	WindowRecords_addr	0	0x803160	-	p
 src/game/msgbox.cpp	MsgBox_FrameTask	global	B	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_FrameTask	global	B	kFlags	1	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_Step	global	Ptr	kBase	0	0x7dee4c	-	pointer-in-integer	kBase 0x7dee4c Msgbox_Base	b0
+src/game/msgbox.cpp	MsgBox_Step	global	Ptr	kBase	1	0x7dee4c	-	pointer-in-integer	kBase 0x7dee4c Msgbox_Base	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
 src/game/msgbox.cpp	MsgBox_Step	global	B	kNameMap	0	0x66972c	-	gate	kNameMap 0x66972c Character_IndexById	b0
 src/game/msgbox.cpp	MsgBox_Step	global	At	kCharRecords	0	0x903a6f	-	no-entry	kCharRecords 0x903a6f -	b0
 src/game/msgbox.cpp	MsgBox_Step	global	At	kCharRecords	1	0x903a6f	-	no-entry	kCharRecords 0x903a6f -	b0
@@ -20228,6 +20238,8 @@ src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kFlags	0	0x7dee44	-	no-entry	kFla
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetW	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	W	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	0	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	Ptr	kBase	0	0x7dee4c	-	pointer-in-integer	kBase 0x7dee4c Msgbox_Base	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	1	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kFlags	1	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetW	kFlags	1	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	W	kFlags	1	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
@@ -20240,36 +20252,36 @@ src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kNameMap	0	0x66972c	-	gate	kNameM
 src/game/msgbox.cpp	MsgBox_StatePrint	global	At	kCharRecords	0	0x903a6f	-	no-entry	kCharRecords 0x903a6f -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kFlags	1	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kFlags	3	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
-src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	1	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	2	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kResume	1	0x7dee54	-	pointer-in-integer	kResume 0x7dee54 Msgbox_Resume	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	At	kCharRecords	1	0x903a6f	-	no-entry	kCharRecords 0x903a6f -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kFlags	2	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kFlags	4	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
-src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	2	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	3	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kResume	2	0x7dee54	-	pointer-in-integer	kResume 0x7dee54 Msgbox_Resume	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	At	kTextRecords	0	0x904cdf	-	no-entry	kTextRecords 0x904cdf -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kFlags	3	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kFlags	5	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
-src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	3	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	4	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kResume	3	0x7dee54	-	pointer-in-integer	kResume 0x7dee54 Msgbox_Resume	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	L	kPoolSelector	0	0x803584	-	no-entry	kPoolSelector 0x803584 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	At	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
-src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	4	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	5	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	6	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	Ptr	kAt	1	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	Ptr	kResume	1	0x7dee54	-	pointer-in-integer	kResume 0x7dee54 Msgbox_Resume	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kState	2	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
-src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	6	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	7	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kEffectTable	0	0x658e98	-	no-entry	kEffectTable 0x658e98 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	W	kEffectTable	0	0x658e98	-	no-entry	kEffectTable 0x658e98 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetW	kEffectOff	0	0x7dee68	-	no-entry	kEffectOff 0x7dee68 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kEffectTable	1	0x658e98	-	no-entry	kEffectTable 0x658e98 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetW	kFlags	2	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	W	kFlags	2	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
-src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	7	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	8	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
-src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kState	3	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	9	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kState	3	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	10	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kState	4	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kFlags	6	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kSpeedTable	0	0x658e94	-	no-entry	kSpeedTable 0x658e94 -	b0
@@ -20278,7 +20290,7 @@ src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kState	5	0x7dee40	-	no-entry	k
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kState	6	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	SetB	kState	7	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
 src/game/msgbox.cpp	MsgBox_StatePrint	global	B	kFlags	7	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0
-src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	10	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	b0
+src/game/msgbox.cpp	MsgBox_StatePrint	global	SetPtr	kAt	11	0x7dee50	-	pointer-in-integer	kAt 0x7dee50 MenuWindows_ListText	rr-2026-10-22 (the reading row's walk: the same global as the stepper's, reason copied from its row)
 src/game/msgbox.cpp	MsgBox_StateDelay	global	SetB	kState	0	0x7dee40	-	no-entry	kState 0x7dee40 -	b0
 src/game/msgbox.cpp	MsgBox_State2	global	At	WindowRecords_addr	0	0x803160	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (WindowRecords_addr - -)	c4-tc
 src/game/msgbox.cpp	MsgBox_State2	global	B	kFlags	0	0x7dee44	-	no-entry	kFlags 0x7dee44 -	b0

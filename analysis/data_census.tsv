@@ -6881,33 +6881,33 @@ site	src/game/battle_sprites_fuzz.cpp	768	global	At	Boss_SetupTable_addr	0x65695
 site	src/game/battle_sprites_fuzz.cpp	769	global	At	BattleE3_CurrentEnemy_addr	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	1
 site	src/game/battle_turn_steps.cpp	85	global	At	ObjTrio_addr + (i & 0xFF) * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
 site	src/game/battle_turn_steps.cpp	96	record	At	table + index * 4	-	-	-	-	-	0
-site	src/game/battle_turn_steps.cpp	153	global	At	Battle_Enemies_addr + i * at::kEnemyStride	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
-site	src/game/battle_turn_steps.cpp	154	global	At	at::kRounds	0x904b90	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	154	global	At	at::kRounds	0x904b90	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	224	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	248	raw	At	0x803500 + i * 4	0x803500	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	255	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	256	global	B	at::kWindows	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/battle_turn_steps.cpp	257	global	B	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	261	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	262	global	At	at::kCmdLong	0x904abd	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	263	global	B	at::kCmdKind	0x904abc	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	264	global	At	at::kCmdWord	0x904ac1	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	265	global	B	at::kCmdByte	0x904ab4	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	271	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	273	global	B	at::kPhase	0x904aa0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	315	global	B	at::kMembers	0x904ab0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	323	global	At	at::kCopies	0x939ae0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	327	global	At	BattleTask_Slots_addr + task * at::kTaskSize + 0x80	0x93a000	-	exact	BattleTask_Slots	records::BattleTask	0
-site	src/game/battle_turn_steps.cpp	332	global	B	at::kMembers	0x904ab0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	355	global	B	at::kMembers	0x904ab0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	357	record	Long	Member(i) + at::kFlags2	-	via=Member	-	-	-	0
-site	src/game/battle_turn_steps.cpp	359	global	At	BattleE4_Step2_addr	0x904aa2	-	exact	BattleE4_Step2	unsigned char	0
-site	src/game/battle_turn_steps.cpp	379	global	B	at::kMembers	0x904ab0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	479	global	B	at::kMembers	0x904ab0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	484	global	At	CharacterRecords_addr + member_rec->char_index * at::kRecord	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
-site	src/game/battle_turn_steps.cpp	495	global	B	at::kMembers	0x904ab0	-	none	-	-	0
-site	src/game/battle_turn_steps.cpp	501	global	B	at::kPhase	0x904aa0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	160	global	At	Battle_Enemies_addr + i * at::kEnemyStride	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
+site	src/game/battle_turn_steps.cpp	161	global	At	at::kRounds	0x904b90	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	161	global	At	at::kRounds	0x904b90	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	231	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	255	raw	At	0x803500 + i * 4	0x803500	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	262	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	263	global	B	at::kWindows	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/battle_turn_steps.cpp	264	global	B	at::kPhase	0x904aa0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	268	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	269	global	At	at::kCmdLong	0x904abd	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	270	global	B	at::kCmdKind	0x904abc	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	271	global	At	at::kCmdWord	0x904ac1	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	272	global	B	at::kCmdByte	0x904ab4	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	278	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	280	global	B	at::kPhase	0x904aa0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	322	global	B	at::kMembers	0x904ab0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	330	global	At	at::kCopies	0x939ae0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	334	global	At	BattleTask_Slots_addr + task * at::kTaskSize + 0x80	0x93a000	-	exact	BattleTask_Slots	records::BattleTask	0
+site	src/game/battle_turn_steps.cpp	339	global	B	at::kMembers	0x904ab0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	362	global	B	at::kMembers	0x904ab0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	364	record	Long	Member(i) + at::kFlags2	-	via=Member	-	-	-	0
+site	src/game/battle_turn_steps.cpp	366	global	At	BattleE4_Step2_addr	0x904aa2	-	exact	BattleE4_Step2	unsigned char	0
+site	src/game/battle_turn_steps.cpp	386	global	B	at::kMembers	0x904ab0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	486	global	B	at::kMembers	0x904ab0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	491	global	At	CharacterRecords_addr + member_rec->char_index * at::kRecord	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
+site	src/game/battle_turn_steps.cpp	502	global	B	at::kMembers	0x904ab0	-	none	-	-	0
+site	src/game/battle_turn_steps.cpp	508	global	B	at::kPhase	0x904aa0	-	none	-	-	0
 site	src/game/battle_turn_steps_fuzz.cpp	73	global	At	ObjTrio_addr + i * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	1
 site	src/game/battle_turn_steps_fuzz.cpp	89	global	B	at::kCopies	0x939ae0	-	none	-	-	1
 site	src/game/battle_turn_steps_fuzz.cpp	90	global	B	Battle_Enemies_addr + i * at::kEnemyStride + at::kEFlags + 1	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	1
@@ -10259,7 +10259,7 @@ site	src/game/effect_3b_fuzz.cpp	347	global	Mem	Effect3c_ShardCursor_addr	0x6762
 site	src/game/effect_3b_fuzz.cpp	359	record	SetLong	s + 0x18	-	base=Sprite_Current	-	-	-	1
 site	src/game/effect_3b_fuzz.cpp	362	record	SetLong	s + 0x18	-	base=Sprite_Current	-	-	-	1
 site	src/game/effect_3b_fuzz.cpp	364	global	Mem	at::kCounter	0x903848	-	none	-	-	1
-site	src/game/effect_3b_fuzz.cpp	369	global	Mem	at::kKind65Count	0x904134	-	exact	Rest4a_Clock	unsigned long	1
+site	src/game/effect_3b_fuzz.cpp	369	global	Mem	at::kKind65Count	0x904134	-	exact	Game_BattleCount	unsigned long	1
 site	src/game/effect_3b_fuzz.cpp	443	global	Mem	at::kScale_addr	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/effect_3b_fuzz.cpp	444	global	Mem	at::kAngle_addr	0x903854	-	inside	SharedScratch+0x4	records::SharedScratch	1
 site	src/game/effect_3b_fuzz.cpp	445	global	Mem	at::kShade_addr	0x903858	-	inside	SharedScratch+0x8	records::SharedScratch	1
@@ -13624,55 +13624,55 @@ site	src/game/field_event.cpp	103	global	At	EventOps_BlockByte_addr	0x905b82	-	e
 site	src/game/field_event.cpp	180	record	Bytes	rv::Bytes(state)	-	base=state	-	-	-	0
 site	src/game/field_event.cpp	207	global	At	at::kAnimationRemap	0x6608d8	-	none	-	-	0
 site	src/game/field_event.cpp	225	global	At	Area_StateRecords_addr	0x668d80	-	exact	Area_StateRecords	unsigned long	0
-site	src/game/field_event.cpp	240	global	At	ObjTrio_addr + 0x134	0x802e74	-	inside	ObjTrio+0x134	records::PartyMember	0
-site	src/game/field_event.cpp	245	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
-site	src/game/field_event.cpp	245	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
-site	src/game/field_event.cpp	246	global	At	at::kZoneBases	0x660a24	-	none	-	-	0
-site	src/game/field_event.cpp	281	global	At	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
-site	src/game/field_event.cpp	291	record	SetWord	context + 0xA	-	param	-	-	-	0
-site	src/game/field_event.cpp	320	record	Long	bank + 4	-	-	-	-	-	0
-site	src/game/field_event.cpp	323	global	At	Gfx_ClutStrip_addr + static_cast<std::uint32_t>(half) * 2u	0x80f580	-	exact	Gfx_ClutStrip	unsigned short	0
-site	src/game/field_event.cpp	324	record	Long	offsets + (index & 0xFF) * 4u	-	-	-	-	-	0
-site	src/game/field_event.cpp	363	global	At	at::kJoinState	0x9045fc	-	none	-	-	0
-site	src/game/field_event.cpp	364	global	At	at::kJoinState	0x9045fc	-	none	-	-	0
-site	src/game/field_event.cpp	365	global	At	at::kJoinState	0x9045fc	-	none	-	-	0
-site	src/game/field_event.cpp	375	record	Bytes	rv::Bytes(state)	-	base=state	-	-	-	0
-site	src/game/field_event.cpp	378	record	Bytes	rv::Bytes(state)	-	base=state	-	-	-	0
-site	src/game/field_event.cpp	386	global	At	FieldEvent_Object905DA0_addr	0x905da0	-	exact	FieldEvent_Object905DA0	unsigned char	0
-site	src/game/field_event.cpp	406	global	At	MoveScript_TintRecords_addr + 0x8 + i * 12	0x7e0700	-	exact	MoveScript_TintRecords	unsigned char	0
-site	src/game/field_event.cpp	423	global	At	MoveScript_EffectArg_addr + 0xc	0x669750	-	inside	MoveScript_EffectArg+0xc	signed char	0
-site	src/game/field_event.cpp	428	record	SetWord	Sprite_Current + 0x2C	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_event.cpp	431	record	Word	c + 0x2C	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_event.cpp	432	global	At	at::kBankTable	0x813580	-	none	-	-	0
-site	src/game/field_event.cpp	432	global	-	at::kBankTable	0x813580	-	none	-	-	0
-site	src/game/field_event.cpp	432	record	Long	At(at::kBankTable) + index * 4u	-	via=At	-	-	-	0
-site	src/game/field_event.cpp	432	record	SetLong	c + 0x4C	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_event.cpp	439	global	At	Character_IndexById_addr + 0xc	0x669738	-	inside	Character_IndexById+0xc	unsigned char	0
-site	src/game/field_event.cpp	442	record	SetLong	c + 0x70	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_event.cpp	442	record	Long	c + 0x70	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_event.cpp	446	record	SetLong	c + 0x70	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_event.cpp	446	record	Long	c + 0x70	-	base=Sprite_Current	-	-	-	0
-site	src/game/field_event.cpp	453	global	At	Gfx_ClutStripSource_addr + 0x1e00 + slot * 64u	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
-site	src/game/field_event.cpp	468	global	At	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
-site	src/game/field_event.cpp	482	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
-site	src/game/field_event.cpp	482	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
-site	src/game/field_event.cpp	506	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
-site	src/game/field_event.cpp	510	global	At	Field_PlaceOffsets_addr	0x660b40	-	exact	Field_PlaceOffsets	long	0
-site	src/game/field_event.cpp	514	record	Long	offset + 4	-	stride=0x8	-	-	-	0
-site	src/game/field_event.cpp	517	record	Long	offset + 4	-	stride=0x8	-	-	-	0
-site	src/game/field_event.cpp	551	global	At	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/field_event.cpp	558	global	At	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
-site	src/game/field_event.cpp	565	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
-site	src/game/field_event.cpp	573	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
-site	src/game/field_event.cpp	576	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
-site	src/game/field_event.cpp	609	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
-site	src/game/field_event.cpp	609	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
-site	src/game/field_event.cpp	623	global	At	Gfx_ClutStripSource_addr + 0x1e00 + rv::Current<records::Par	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
-site	src/game/field_event.cpp	700	global	At	EventLeader_PendingFlag_addr + 1	0x904ef1	-	none	-	-	0
-site	src/game/field_event.cpp	756	global	At	at::kFindIds	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/field_event.cpp	766	global	At	MoveScript_EffectArg_addr + 0xc	0x669750	-	inside	MoveScript_EffectArg+0xc	signed char	0
-site	src/game/field_event.cpp	789	global	At	MoveScript_EffectArg_addr + 0xc	0x669750	-	inside	MoveScript_EffectArg+0xc	signed char	0
-site	src/game/field_event.cpp	824	global	At	AreaW0b_PartySet_addr	0x90412c	-	exact	AreaW0b_PartySet	unsigned char	0
+site	src/game/field_event.cpp	246	global	At	ObjTrio_addr + 0x134	0x802e74	-	inside	ObjTrio+0x134	records::PartyMember	0
+site	src/game/field_event.cpp	251	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
+site	src/game/field_event.cpp	251	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
+site	src/game/field_event.cpp	252	global	At	at::kZoneBases	0x660a24	-	none	-	-	0
+site	src/game/field_event.cpp	287	global	At	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
+site	src/game/field_event.cpp	297	record	SetWord	context + 0xA	-	param	-	-	-	0
+site	src/game/field_event.cpp	326	record	Long	bank + 4	-	-	-	-	-	0
+site	src/game/field_event.cpp	329	global	At	Gfx_ClutStrip_addr + static_cast<std::uint32_t>(half) * 2u	0x80f580	-	exact	Gfx_ClutStrip	unsigned short	0
+site	src/game/field_event.cpp	330	record	Long	offsets + (index & 0xFF) * 4u	-	-	-	-	-	0
+site	src/game/field_event.cpp	369	global	At	at::kJoinState	0x9045fc	-	none	-	-	0
+site	src/game/field_event.cpp	370	global	At	at::kJoinState	0x9045fc	-	none	-	-	0
+site	src/game/field_event.cpp	371	global	At	at::kJoinState	0x9045fc	-	none	-	-	0
+site	src/game/field_event.cpp	381	record	Bytes	rv::Bytes(state)	-	base=state	-	-	-	0
+site	src/game/field_event.cpp	384	record	Bytes	rv::Bytes(state)	-	base=state	-	-	-	0
+site	src/game/field_event.cpp	392	global	At	FieldEvent_Object905DA0_addr	0x905da0	-	exact	FieldEvent_Object905DA0	unsigned char	0
+site	src/game/field_event.cpp	412	global	At	MoveScript_TintRecords_addr + 0x8 + i * 12	0x7e0700	-	exact	MoveScript_TintRecords	unsigned char	0
+site	src/game/field_event.cpp	429	global	At	MoveScript_EffectArg_addr + 0xc	0x669750	-	inside	MoveScript_EffectArg+0xc	signed char	0
+site	src/game/field_event.cpp	434	record	SetWord	Sprite_Current + 0x2C	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_event.cpp	437	record	Word	c + 0x2C	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_event.cpp	438	global	At	at::kBankTable	0x813580	-	none	-	-	0
+site	src/game/field_event.cpp	438	global	-	at::kBankTable	0x813580	-	none	-	-	0
+site	src/game/field_event.cpp	438	record	Long	At(at::kBankTable) + index * 4u	-	via=At	-	-	-	0
+site	src/game/field_event.cpp	438	record	SetLong	c + 0x4C	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_event.cpp	445	global	At	Character_IndexById_addr + 0xc	0x669738	-	inside	Character_IndexById+0xc	unsigned char	0
+site	src/game/field_event.cpp	448	record	SetLong	c + 0x70	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_event.cpp	448	record	Long	c + 0x70	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_event.cpp	452	record	SetLong	c + 0x70	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_event.cpp	452	record	Long	c + 0x70	-	base=Sprite_Current	-	-	-	0
+site	src/game/field_event.cpp	459	global	At	Gfx_ClutStripSource_addr + 0x1e00 + slot * 64u	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
+site	src/game/field_event.cpp	474	global	At	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
+site	src/game/field_event.cpp	488	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
+site	src/game/field_event.cpp	488	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
+site	src/game/field_event.cpp	512	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
+site	src/game/field_event.cpp	516	global	At	Field_PlaceOffsets_addr	0x660b40	-	exact	Field_PlaceOffsets	long	0
+site	src/game/field_event.cpp	520	record	Long	offset + 4	-	stride=0x8	-	-	-	0
+site	src/game/field_event.cpp	523	record	Long	offset + 4	-	stride=0x8	-	-	-	0
+site	src/game/field_event.cpp	557	global	At	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/field_event.cpp	564	global	At	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	0
+site	src/game/field_event.cpp	571	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
+site	src/game/field_event.cpp	579	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
+site	src/game/field_event.cpp	582	record	Bytes	rv::Bytes(ObjTrio)	-	base=ObjTrio	-	-	-	0
+site	src/game/field_event.cpp	615	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
+site	src/game/field_event.cpp	615	record	Bytes	rv::Bytes(m)	-	base=m	-	-	-	0
+site	src/game/field_event.cpp	629	global	At	Gfx_ClutStripSource_addr + 0x1e00 + rv::Current<records::Par	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
+site	src/game/field_event.cpp	706	global	At	EventLeader_PendingFlag_addr + 1	0x904ef1	-	none	-	-	0
+site	src/game/field_event.cpp	762	global	At	at::kFindIds	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/field_event.cpp	772	global	At	MoveScript_EffectArg_addr + 0xc	0x669750	-	inside	MoveScript_EffectArg+0xc	signed char	0
+site	src/game/field_event.cpp	795	global	At	MoveScript_EffectArg_addr + 0xc	0x669750	-	inside	MoveScript_EffectArg+0xc	signed char	0
+site	src/game/field_event.cpp	830	global	At	AreaW0b_PartySet_addr	0x90412c	-	exact	AreaW0b_PartySet	unsigned char	0
 site	src/game/field_event_fuzz.cpp	113	global	At	FieldEvent_Object905DA0_addr	0x905da0	-	exact	FieldEvent_Object905DA0	unsigned char	1
 site	src/game/field_event_fuzz.cpp	135	global	At	EventLeader_PendingFlag_addr	0x904ef0	-	exact	EventLeader_PendingFlag	unsigned char	1
 site	src/game/field_event_fuzz.cpp	135	global	At	EventLeader_PendingFlag_addr	0x904ef0	-	exact	EventLeader_PendingFlag	unsigned char	1
@@ -19818,76 +19818,76 @@ site	src/game/menu_lists_fuzz.cpp	651	global	SetPtr	FieldMenu_States_addr + 4 * 
 site	src/game/menu_lists_fuzz.cpp	652	global	SetPtr	MenuList_Kinds_addr + 4 * i	0x66af94	-	exact	MenuList_Kinds	unsigned long	1
 site	src/game/menu_lists_fuzz.cpp	695	global	At	FieldMenu_States_addr	0x6672b4	-	exact	FieldMenu_States	unsigned long	1
 site	src/game/menu_lists_fuzz.cpp	696	global	At	MenuList_Kinds_addr	0x66af94	-	exact	MenuList_Kinds	unsigned long	1
-site	src/game/menu_windows.cpp	133	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	0
-site	src/game/menu_windows.cpp	160	record	SetWord	r + 2	-	via=Next	-	-	-	0
-site	src/game/menu_windows.cpp	161	record	SetWord	r + 4	-	via=Next	-	-	-	0
-site	src/game/menu_windows.cpp	162	record	SetWord	r + 6	-	via=Next	-	-	-	0
-site	src/game/menu_windows.cpp	186	global	At	at::kMessage	0x7dee48	-	none	-	-	0
-site	src/game/menu_windows.cpp	195	global	At	Frame_Counter_addr	0x937f94	-	exact	Frame_Counter	unsigned int	0
-site	src/game/menu_windows.cpp	305	global	Ptr	at::kListText	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/menu_windows.cpp	309	global	Ptr	at::kCurrent	0x905b84	-	exact	BattleWinStates_Current	unsigned long	0
-site	src/game/menu_windows.cpp	310	global	At	at::kSetXY	0x66ae2c	-	none	-	-	0
-site	src/game/menu_windows.cpp	311	record	Word	xy + 4	-	table=0x66ae2c;stride=0x6	-	-	-	0
-site	src/game/menu_windows.cpp	312	record	Word	xy + 2	-	table=0x66ae2c;stride=0x6	-	-	-	0
-site	src/game/menu_windows.cpp	492	global	-	at::kPieceRects	0x663b94	-	none	-	-	0
-site	src/game/menu_windows.cpp	492	global	-	at::kPieceRectsAlt	0x663c8c	-	none	-	-	0
-site	src/game/menu_windows.cpp	705	global	At	Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
-site	src/game/menu_windows.cpp	858	global	At	at::kIconRects	0x66367c	-	none	-	-	0
-site	src/game/menu_windows.cpp	906	global	At	Input_Pressed_addr	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
-site	src/game/menu_windows.cpp	942	global	At	Menu_ButtonSets_addr	0x66383c	-	exact	Menu_ButtonSets	unsigned char	0
-site	src/game/menu_windows.cpp	959	global	Ptr	at::kVerbPointers	0x6637e4	-	exact	Menu_VerbPointers	unsigned char *	0
-site	src/game/menu_windows.cpp	997	raw	At	0x65746A + i * 28	0x65746a	-	none	-	-	0
-site	src/game/menu_windows.cpp	998	raw	At	0x657D80 + i * 26	0x657d80	-	none	-	-	0
-site	src/game/menu_windows.cpp	999	raw	At	0x658466 + i * 24	0x658466	-	none	-	-	0
-site	src/game/menu_windows.cpp	1000	raw	At	0x656B3C + i * 22	0x656b3c	-	none	-	-	0
-site	src/game/menu_windows.cpp	1011	global	At	at::kExpTable	0x658f48	-	exact	Char_ExpTable	-	0
-site	src/game/menu_windows.cpp	1012	record	Word	table + 8 * k	-	table=0x658f48;stride=0x318	-	-	-	0
-site	src/game/menu_windows.cpp	1059	global	At	at::kItemFlags	0x656b38	-	none	-	-	0
-site	src/game/menu_windows.cpp	1138	global	At	CharacterRecords_addr + (member & 0xFF) * at::kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
-site	src/game/menu_windows.cpp	1139	global	At	at::kEquipLabel	0x663668	-	none	-	-	0
-site	src/game/menu_windows.cpp	1142	raw	At	0x657450 + record[0x12] * 28u	0x657450	-	exact	NameTable_Weapons	-	0
-site	src/game/menu_windows.cpp	1142	raw	At	0x657D68 + record[0x13] * 26u	0x657d68	-	exact	NameTable_Armour	-	0
-site	src/game/menu_windows.cpp	1142	raw	At	0x657D68 + record[0x14] * 26u	0x657d68	-	exact	NameTable_Armour	-	0
-site	src/game/menu_windows.cpp	1143	raw	At	0x657D68 + record[0x15] * 26u	0x657d68	-	exact	NameTable_Armour	-	0
-site	src/game/menu_windows.cpp	1143	raw	At	0x658450 + record[0x16] * 24u	0x658450	-	exact	NameTable_Accessories	-	0
-site	src/game/menu_windows.cpp	1143	raw	At	0x658450 + record[0x17] * 24u	0x658450	-	exact	NameTable_Accessories	-	0
-site	src/game/menu_windows.cpp	1146	raw	At	0x663660	0x663660	-	exact	Equip_SlotIcons	-	0
-site	src/game/menu_windows.cpp	1161	global	At	Frame_Counter_addr	0x937f94	-	exact	Frame_Counter	unsigned int	0
-site	src/game/menu_windows.cpp	1207	global	Format	at::kFmt7d	0x64addc	-	none	-	-	0
-site	src/game/menu_windows.cpp	1209	global	At	at::kMoneyLabel	0x66a31c	-	none	-	-	0
-site	src/game/menu_windows.cpp	1210	raw	At	0x6633A8	0x6633a8	-	none	-	-	0
-site	src/game/menu_windows.cpp	1211	global	At	Menu_PlayTimePieces_addr	0x6633b4	-	exact	Menu_PlayTimePieces	unsigned char	0
-site	src/game/menu_windows.cpp	1212	global	At	Menu_PlayTimePieces_addr + 0xc	0x6633c0	-	inside	Menu_PlayTimePieces+0xc	unsigned char	0
-site	src/game/menu_windows.cpp	1228	global	At	CharacterRecords_addr + m * at::kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
-site	src/game/menu_windows.cpp	1242	global	Format	at::kFmt3d	0x64e324	-	none	-	-	0
-site	src/game/menu_windows.cpp	1251	global	Format	at::kFmt3d	0x64e324	-	none	-	-	0
-site	src/game/menu_windows.cpp	1251	record	Word	record + kStat[i]	-	stride=0xa4	-	-	-	0
-site	src/game/menu_windows.cpp	1256	global	At	at::kStatLabels	0x66a0f8	-	none	-	-	0
-site	src/game/menu_windows.cpp	1257	global	At	at::kStatLabels	0x66a0f8	-	none	-	-	0
-site	src/game/menu_windows.cpp	1258	global	At	at::kStatLabels	0x66a0f8	-	none	-	-	0
-site	src/game/menu_windows.cpp	1259	raw	At	0x663528	0x663528	-	none	-	-	0
-site	src/game/menu_windows.cpp	1295	global	At	at::kBackdropPattern	0x663920	-	none	-	-	0
-site	src/game/menu_windows.cpp	1295	global	At	at::kBackdropStart	0x66396c	-	none	-	-	0
-site	src/game/menu_windows.cpp	1306	global	At	at::kBackdropRects	0x663874	-	none	-	-	0
-site	src/game/menu_windows.cpp	1343	global	Ptr	at::kInventory	0x656b00	-	exact	Inventory_IdLists	-	0
-site	src/game/menu_windows.cpp	1344	global	Ptr	at::kCounts	0x656b14	-	exact	Inventory_CountLists	-	0
-site	src/game/menu_windows.cpp	1381	global	Ptr	at::kCategoryLabels	0x663970	-	none	-	-	0
-site	src/game/menu_windows.cpp	1391	global	Format	at::kFmt3d3d	0x6639c8	-	none	-	-	0
-site	src/game/menu_windows.cpp	1416	global	Ptr	at::kInventory	0x656b00	-	exact	Inventory_IdLists	-	0
-site	src/game/menu_windows.cpp	1427	global	At	at::kRowIcons	0x663d60	-	exact	Item_KindIcons	-	0
-site	src/game/menu_windows.cpp	1433	global	Format	at::kFmtCount	0x653ec0	-	none	-	-	0
-site	src/game/menu_windows.cpp	1526	global	Format	at::kFmt6dZ	0x66b4a0	-	none	-	-	0
-site	src/game/menu_windows.cpp	1529	global	At	at::kBuyIcons	0x66b29c	-	none	-	-	0
-site	src/game/menu_windows.cpp	1538	global	At	at::kBuyIcons	0x66b29c	-	none	-	-	0
-site	src/game/menu_windows.cpp	1594	global	At	at::kBuyDetailIcons	0x66b2ac	-	none	-	-	0
-site	src/game/menu_windows.cpp	1597	global	Format	at::kFmt7dZ	0x66b4a8	-	none	-	-	0
-site	src/game/menu_windows.cpp	1599	global	Format	at::kFmtCount	0x653ec0	-	none	-	-	0
+site	src/game/menu_windows.cpp	134	global	At	at::kPrintBuf	0x904ba0	-	none	-	-	0
+site	src/game/menu_windows.cpp	161	record	SetWord	r + 2	-	via=Next	-	-	-	0
+site	src/game/menu_windows.cpp	162	record	SetWord	r + 4	-	via=Next	-	-	-	0
+site	src/game/menu_windows.cpp	163	record	SetWord	r + 6	-	via=Next	-	-	-	0
+site	src/game/menu_windows.cpp	191	global	At	at::kMessage	0x7dee48	-	none	-	-	0
+site	src/game/menu_windows.cpp	200	global	At	Frame_Counter_addr	0x937f94	-	exact	Frame_Counter	unsigned int	0
+site	src/game/menu_windows.cpp	310	global	Ptr	at::kListText	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/menu_windows.cpp	314	global	Ptr	at::kCurrent	0x905b84	-	exact	BattleWinStates_Current	unsigned long	0
+site	src/game/menu_windows.cpp	315	global	At	at::kSetXY	0x66ae2c	-	none	-	-	0
+site	src/game/menu_windows.cpp	316	record	Word	xy + 4	-	table=0x66ae2c;stride=0x6	-	-	-	0
+site	src/game/menu_windows.cpp	317	record	Word	xy + 2	-	table=0x66ae2c;stride=0x6	-	-	-	0
+site	src/game/menu_windows.cpp	497	global	-	at::kPieceRects	0x663b94	-	none	-	-	0
+site	src/game/menu_windows.cpp	497	global	-	at::kPieceRectsAlt	0x663c8c	-	none	-	-	0
+site	src/game/menu_windows.cpp	710	global	At	Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
+site	src/game/menu_windows.cpp	863	global	At	at::kIconRects	0x66367c	-	none	-	-	0
+site	src/game/menu_windows.cpp	911	global	At	Input_Pressed_addr	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
+site	src/game/menu_windows.cpp	947	global	At	Menu_ButtonSets_addr	0x66383c	-	exact	Menu_ButtonSets	unsigned char	0
+site	src/game/menu_windows.cpp	964	global	Ptr	at::kVerbPointers	0x6637e4	-	exact	Menu_VerbPointers	unsigned char *	0
+site	src/game/menu_windows.cpp	1002	raw	At	0x65746A + i * 28	0x65746a	-	none	-	-	0
+site	src/game/menu_windows.cpp	1003	raw	At	0x657D80 + i * 26	0x657d80	-	none	-	-	0
+site	src/game/menu_windows.cpp	1004	raw	At	0x658466 + i * 24	0x658466	-	none	-	-	0
+site	src/game/menu_windows.cpp	1005	raw	At	0x656B3C + i * 22	0x656b3c	-	none	-	-	0
+site	src/game/menu_windows.cpp	1016	global	At	at::kExpTable	0x658f48	-	exact	Char_ExpTable	-	0
+site	src/game/menu_windows.cpp	1017	record	Word	table + 8 * k	-	table=0x658f48;stride=0x318	-	-	-	0
+site	src/game/menu_windows.cpp	1064	global	At	at::kItemFlags	0x656b38	-	none	-	-	0
+site	src/game/menu_windows.cpp	1143	global	At	CharacterRecords_addr + (member & 0xFF) * at::kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
+site	src/game/menu_windows.cpp	1144	global	At	at::kEquipLabel	0x663668	-	none	-	-	0
+site	src/game/menu_windows.cpp	1147	raw	At	0x657450 + record[0x12] * 28u	0x657450	-	exact	NameTable_Weapons	-	0
+site	src/game/menu_windows.cpp	1147	raw	At	0x657D68 + record[0x13] * 26u	0x657d68	-	exact	NameTable_Armour	-	0
+site	src/game/menu_windows.cpp	1147	raw	At	0x657D68 + record[0x14] * 26u	0x657d68	-	exact	NameTable_Armour	-	0
+site	src/game/menu_windows.cpp	1148	raw	At	0x657D68 + record[0x15] * 26u	0x657d68	-	exact	NameTable_Armour	-	0
+site	src/game/menu_windows.cpp	1148	raw	At	0x658450 + record[0x16] * 24u	0x658450	-	exact	NameTable_Accessories	-	0
+site	src/game/menu_windows.cpp	1148	raw	At	0x658450 + record[0x17] * 24u	0x658450	-	exact	NameTable_Accessories	-	0
+site	src/game/menu_windows.cpp	1151	raw	At	0x663660	0x663660	-	exact	Equip_SlotIcons	-	0
+site	src/game/menu_windows.cpp	1166	global	At	Frame_Counter_addr	0x937f94	-	exact	Frame_Counter	unsigned int	0
+site	src/game/menu_windows.cpp	1212	global	Format	at::kFmt7d	0x64addc	-	none	-	-	0
+site	src/game/menu_windows.cpp	1214	global	At	at::kMoneyLabel	0x66a31c	-	none	-	-	0
+site	src/game/menu_windows.cpp	1215	raw	At	0x6633A8	0x6633a8	-	none	-	-	0
+site	src/game/menu_windows.cpp	1216	global	At	Menu_PlayTimePieces_addr	0x6633b4	-	exact	Menu_PlayTimePieces	unsigned char	0
+site	src/game/menu_windows.cpp	1217	global	At	Menu_PlayTimePieces_addr + 0xc	0x6633c0	-	inside	Menu_PlayTimePieces+0xc	unsigned char	0
+site	src/game/menu_windows.cpp	1233	global	At	CharacterRecords_addr + m * at::kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
+site	src/game/menu_windows.cpp	1247	global	Format	at::kFmt3d	0x64e324	-	none	-	-	0
+site	src/game/menu_windows.cpp	1256	global	Format	at::kFmt3d	0x64e324	-	none	-	-	0
+site	src/game/menu_windows.cpp	1256	record	Word	record + kStat[i]	-	stride=0xa4	-	-	-	0
+site	src/game/menu_windows.cpp	1261	global	At	at::kStatLabels	0x66a0f8	-	none	-	-	0
+site	src/game/menu_windows.cpp	1262	global	At	at::kStatLabels	0x66a0f8	-	none	-	-	0
+site	src/game/menu_windows.cpp	1263	global	At	at::kStatLabels	0x66a0f8	-	none	-	-	0
+site	src/game/menu_windows.cpp	1264	raw	At	0x663528	0x663528	-	none	-	-	0
+site	src/game/menu_windows.cpp	1300	global	At	at::kBackdropPattern	0x663920	-	none	-	-	0
+site	src/game/menu_windows.cpp	1300	global	At	at::kBackdropStart	0x66396c	-	none	-	-	0
+site	src/game/menu_windows.cpp	1311	global	At	at::kBackdropRects	0x663874	-	none	-	-	0
+site	src/game/menu_windows.cpp	1348	global	Ptr	at::kInventory	0x656b00	-	exact	Inventory_IdLists	-	0
+site	src/game/menu_windows.cpp	1349	global	Ptr	at::kCounts	0x656b14	-	exact	Inventory_CountLists	-	0
+site	src/game/menu_windows.cpp	1386	global	Ptr	at::kCategoryLabels	0x663970	-	none	-	-	0
+site	src/game/menu_windows.cpp	1396	global	Format	at::kFmt3d3d	0x6639c8	-	none	-	-	0
+site	src/game/menu_windows.cpp	1421	global	Ptr	at::kInventory	0x656b00	-	exact	Inventory_IdLists	-	0
+site	src/game/menu_windows.cpp	1432	global	At	at::kRowIcons	0x663d60	-	exact	Item_KindIcons	-	0
+site	src/game/menu_windows.cpp	1438	global	Format	at::kFmtCount	0x653ec0	-	none	-	-	0
+site	src/game/menu_windows.cpp	1531	global	Format	at::kFmt6dZ	0x66b4a0	-	none	-	-	0
+site	src/game/menu_windows.cpp	1534	global	At	at::kBuyIcons	0x66b29c	-	none	-	-	0
+site	src/game/menu_windows.cpp	1543	global	At	at::kBuyIcons	0x66b29c	-	none	-	-	0
+site	src/game/menu_windows.cpp	1599	global	At	at::kBuyDetailIcons	0x66b2ac	-	none	-	-	0
+site	src/game/menu_windows.cpp	1602	global	Format	at::kFmt7dZ	0x66b4a8	-	none	-	-	0
 site	src/game/menu_windows.cpp	1604	global	Format	at::kFmtCount	0x653ec0	-	none	-	-	0
 site	src/game/menu_windows.cpp	1609	global	Format	at::kFmtCount	0x653ec0	-	none	-	-	0
-site	src/game/menu_windows.cpp	1625	global	At	at::kSellIcons	0x66b2c8	-	none	-	-	0
-site	src/game/menu_windows.cpp	1628	global	Format	at::kFmt6dZ	0x66b4a0	-	none	-	-	0
-site	src/game/menu_windows.cpp	1630	global	Format	at::kFmt7dZ	0x66b4a8	-	none	-	-	0
-site	src/game/menu_windows.cpp	1632	global	Format	at::kFmtCount	0x653ec0	-	none	-	-	0
+site	src/game/menu_windows.cpp	1614	global	Format	at::kFmtCount	0x653ec0	-	none	-	-	0
+site	src/game/menu_windows.cpp	1630	global	At	at::kSellIcons	0x66b2c8	-	none	-	-	0
+site	src/game/menu_windows.cpp	1633	global	Format	at::kFmt6dZ	0x66b4a0	-	none	-	-	0
+site	src/game/menu_windows.cpp	1635	global	Format	at::kFmt7dZ	0x66b4a8	-	none	-	-	0
+site	src/game/menu_windows.cpp	1637	global	Format	at::kFmtCount	0x653ec0	-	none	-	-	0
 site	src/game/menu_windows_fuzz.cpp	125	global	At	Config_WindowColour_addr	0x903a5a	-	exact	Config_WindowColour	signed char	1
 site	src/game/menu_windows_fuzz.cpp	126	global	At	FieldS_Answer_addr	0x929f0b	-	exact	FieldS_Answer	signed char	1
 site	src/game/menu_windows_fuzz.cpp	127	global	At	Input_Pressed_addr + (v & 1)	0x7e1bec	-	exact	Input_Pressed	unsigned short	1
@@ -20198,162 +20198,174 @@ site	src/game/move_script.cpp	483	record	SetWord	Scratch() + 2	-	via=Scratch	-	-
 site	src/game/move_script.cpp	530	record	Word	Sprite_Current + 0x58	-	base=Sprite_Current	-	-	-	0
 site	src/game/move_script.cpp	532	record	SetWord	Sprite_Current + 0x58	-	base=Sprite_Current	-	-	-	0
 site	src/game/move_script_bytes.h	44	global	At	SharedScratch_addr	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/msgbox.cpp	100	global	W	kScriptPool	0x803580	-	none	-	-	0
-site	src/game/msgbox.cpp	101	global	At	kScriptPool	0x803580	-	none	-	-	0
-site	src/game/msgbox.cpp	102	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
-site	src/game/msgbox.cpp	103	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	105	global	SetW	kMessage	0x7dee48	-	none	-	-	0
-site	src/game/msgbox.cpp	119	global	Ptr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	120	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	120	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	121	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	130	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	134	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	140	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	160	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	167	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	168	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	220	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
-site	src/game/msgbox.cpp	262	global	B	kNameMap	0x66972c	-	exact	Character_IndexById	unsigned char	0
-site	src/game/msgbox.cpp	264	global	At	kCharRecords	0x903a6f	-	none	-	-	0
-site	src/game/msgbox.cpp	273	global	At	kCharRecords	0x903a6f	-	none	-	-	0
-site	src/game/msgbox.cpp	300	global	At	kTextRecords	0x904cdf	-	none	-	-	0
-site	src/game/msgbox.cpp	308	global	L	kPoolSelector	0x803584	-	none	-	-	0
-site	src/game/msgbox.cpp	308	global	At	kScriptPool	0x803580	-	none	-	-	0
-site	src/game/msgbox.cpp	347	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	378	global	B	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	413	global	Ptr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	414	global	Ptr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
-site	src/game/msgbox.cpp	417	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	421	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	421	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	423	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	431	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	432	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	432	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	437	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	441	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	444	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	444	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	447	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
-site	src/game/msgbox.cpp	448	global	B	kNameMap	0x66972c	-	exact	Character_IndexById	unsigned char	0
-site	src/game/msgbox.cpp	450	global	At	kCharRecords	0x903a6f	-	none	-	-	0
-site	src/game/msgbox.cpp	454	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	454	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	458	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	459	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
-site	src/game/msgbox.cpp	462	global	At	kCharRecords	0x903a6f	-	none	-	-	0
-site	src/game/msgbox.cpp	470	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	470	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	474	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	475	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
-site	src/game/msgbox.cpp	478	global	At	kTextRecords	0x904cdf	-	none	-	-	0
-site	src/game/msgbox.cpp	482	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	482	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	485	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	486	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
-site	src/game/msgbox.cpp	488	global	L	kPoolSelector	0x803584	-	none	-	-	0
-site	src/game/msgbox.cpp	488	global	At	kScriptPool	0x803580	-	none	-	-	0
-site	src/game/msgbox.cpp	489	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	498	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	501	global	Ptr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	502	global	Ptr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
-site	src/game/msgbox.cpp	507	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	514	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	517	global	B	kEffectTable	0x658e98	-	none	-	-	0
-site	src/game/msgbox.cpp	518	global	W	kEffectTable	0x658e98	-	none	-	-	0
-site	src/game/msgbox.cpp	519	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	519	global	B	kEffectTable	0x658e98	-	none	-	-	0
-site	src/game/msgbox.cpp	524	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	524	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	529	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	532	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	536	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	542	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	543	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	560	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	567	global	B	kSpeedTable	0x658e94	-	none	-	-	0
-site	src/game/msgbox.cpp	568	global	L	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	570	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	572	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	573	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	579	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	581	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	591	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	601	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	602	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	605	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	605	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	612	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	613	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	613	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	630	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	635	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	657	global	B	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	657	global	B	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	662	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	662	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	664	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	667	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	679	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	683	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	683	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	692	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	705	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	735	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	737	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	737	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	744	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	748	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	748	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	755	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	757	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	757	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	759	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	767	global	W	kMessage	0x7dee48	-	none	-	-	0
-site	src/game/msgbox.cpp	769	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	770	global	W	kScriptPool	0x803580	-	none	-	-	0
-site	src/game/msgbox.cpp	771	global	At	kScriptPool	0x803580	-	none	-	-	0
-site	src/game/msgbox.cpp	772	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
-site	src/game/msgbox.cpp	773	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
-site	src/game/msgbox.cpp	823	global	W	kMessage	0x7dee48	-	none	-	-	0
-site	src/game/msgbox.cpp	827	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	827	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	828	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	835	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	836	global	SetB	kState	0x7dee40	-	none	-	-	0
-site	src/game/msgbox.cpp	849	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	855	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	855	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	911	global	SetB	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	911	global	B	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	926	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	927	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	930	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	931	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	935	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	935	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	936	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	972	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	976	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	985	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1002	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1002	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1015	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1064	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1075	global	B	kClipTable	0x658f00	-	none	-	-	0
-site	src/game/msgbox.cpp	1077	global	B	kClipTable	0x658f00	-	none	-	-	0
-site	src/game/msgbox.cpp	1079	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1088	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1091	global	B	kClipTable	0x658f00	-	none	-	-	0
-site	src/game/msgbox.cpp	1104	global	W	kEffectOff	0x7dee68	-	none	-	-	0
-site	src/game/msgbox.cpp	1115	global	At	WindowRecords_addr + (slot & 0xFF) * 0x24u	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/msgbox.cpp	1200	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
-site	src/game/msgbox.cpp	1201	global	W	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	1208	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
-site	src/game/msgbox.cpp	1210	global	SetW	kFlags	0x7dee44	-	none	-	-	0
-site	src/game/msgbox.cpp	1216	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
-site	src/game/msgbox.cpp	1218	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	435	global	B	kNameMap	0x66972c	-	exact	Character_IndexById	unsigned char	0
+site	src/game/msgbox.cpp	437	global	At	kCharRecords	0x903a6f	-	none	-	-	0
+site	src/game/msgbox.cpp	448	global	At	kCharRecords	0x903a6f	-	none	-	-	0
+site	src/game/msgbox.cpp	474	global	At	kTextRecords	0x904cdf	-	none	-	-	0
+site	src/game/msgbox.cpp	484	global	L	kPoolSelector	0x803584	-	none	-	-	0
+site	src/game/msgbox.cpp	484	global	At	kScriptPool	0x803580	-	none	-	-	0
+site	src/game/msgbox.cpp	522	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	543	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	692	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	744	global	W	kScriptPool	0x803580	-	none	-	-	0
+site	src/game/msgbox.cpp	745	global	At	kScriptPool	0x803580	-	none	-	-	0
+site	src/game/msgbox.cpp	747	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	748	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	750	global	SetW	kMessage	0x7dee48	-	none	-	-	0
+site	src/game/msgbox.cpp	764	global	Ptr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	765	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	765	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	766	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	775	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	779	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	785	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	805	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	812	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	813	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	869	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	874	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	916	global	B	kNameMap	0x66972c	-	exact	Character_IndexById	unsigned char	0
+site	src/game/msgbox.cpp	918	global	At	kCharRecords	0x903a6f	-	none	-	-	0
+site	src/game/msgbox.cpp	927	global	At	kCharRecords	0x903a6f	-	none	-	-	0
+site	src/game/msgbox.cpp	954	global	At	kTextRecords	0x904cdf	-	none	-	-	0
+site	src/game/msgbox.cpp	962	global	L	kPoolSelector	0x803584	-	none	-	-	0
+site	src/game/msgbox.cpp	962	global	At	kScriptPool	0x803580	-	none	-	-	0
+site	src/game/msgbox.cpp	1001	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1032	global	B	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1071	global	Ptr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1072	global	Ptr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
+site	src/game/msgbox.cpp	1075	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1079	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1079	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1081	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1083	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	1087	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1094	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1095	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1095	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1100	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1104	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1107	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1107	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1110	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
+site	src/game/msgbox.cpp	1111	global	B	kNameMap	0x66972c	-	exact	Character_IndexById	unsigned char	0
+site	src/game/msgbox.cpp	1113	global	At	kCharRecords	0x903a6f	-	none	-	-	0
+site	src/game/msgbox.cpp	1117	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1117	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1121	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1122	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
+site	src/game/msgbox.cpp	1125	global	At	kCharRecords	0x903a6f	-	none	-	-	0
+site	src/game/msgbox.cpp	1133	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1133	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1137	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1138	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
+site	src/game/msgbox.cpp	1141	global	At	kTextRecords	0x904cdf	-	none	-	-	0
+site	src/game/msgbox.cpp	1145	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1145	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1148	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1149	global	SetPtr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
+site	src/game/msgbox.cpp	1151	global	L	kPoolSelector	0x803584	-	none	-	-	0
+site	src/game/msgbox.cpp	1151	global	At	kScriptPool	0x803580	-	none	-	-	0
+site	src/game/msgbox.cpp	1152	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1161	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1164	global	Ptr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1165	global	Ptr	kResume	0x7dee54	-	exact	Msgbox_Resume	unsigned long	0
+site	src/game/msgbox.cpp	1170	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1177	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1180	global	B	kEffectTable	0x658e98	-	none	-	-	0
+site	src/game/msgbox.cpp	1181	global	W	kEffectTable	0x658e98	-	none	-	-	0
+site	src/game/msgbox.cpp	1182	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1182	global	B	kEffectTable	0x658e98	-	none	-	-	0
+site	src/game/msgbox.cpp	1187	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1187	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1192	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1195	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1199	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1205	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1206	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1223	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1230	global	B	kSpeedTable	0x658e94	-	none	-	-	0
+site	src/game/msgbox.cpp	1231	global	L	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1233	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1235	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1236	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1242	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1244	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1254	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1264	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1265	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1268	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1268	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1275	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1276	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1276	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1293	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1298	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1320	global	B	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1320	global	B	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1325	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1325	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1327	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1330	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1342	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1346	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1346	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1355	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1368	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1398	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1400	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1400	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1407	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1411	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1411	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1418	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1420	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1420	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1422	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1433	global	W	kMessage	0x7dee48	-	none	-	-	0
+site	src/game/msgbox.cpp	1435	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1436	global	W	kScriptPool	0x803580	-	none	-	-	0
+site	src/game/msgbox.cpp	1437	global	At	kScriptPool	0x803580	-	none	-	-	0
+site	src/game/msgbox.cpp	1438	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	1439	global	SetPtr	kAt	0x7dee50	-	exact	MenuWindows_ListText	unsigned long	0
+site	src/game/msgbox.cpp	1489	global	W	kMessage	0x7dee48	-	none	-	-	0
+site	src/game/msgbox.cpp	1493	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1493	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1494	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1501	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1502	global	SetB	kState	0x7dee40	-	none	-	-	0
+site	src/game/msgbox.cpp	1515	global	At	WindowRecords_addr	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1521	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1521	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1577	global	SetB	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1577	global	B	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1592	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1593	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1596	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1597	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1601	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1601	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1602	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1638	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1642	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1651	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1668	global	SetW	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1668	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1681	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1730	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1741	global	B	kClipTable	0x658f00	-	none	-	-	0
+site	src/game/msgbox.cpp	1743	global	B	kClipTable	0x658f00	-	none	-	-	0
+site	src/game/msgbox.cpp	1745	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1754	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1757	global	B	kClipTable	0x658f00	-	none	-	-	0
+site	src/game/msgbox.cpp	1770	global	W	kEffectOff	0x7dee68	-	none	-	-	0
+site	src/game/msgbox.cpp	1781	global	At	WindowRecords_addr + (slot & 0xFF) * 0x24u	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/msgbox.cpp	1866	global	Ptr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	1867	global	W	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1874	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	1876	global	SetW	kFlags	0x7dee44	-	none	-	-	0
+site	src/game/msgbox.cpp	1882	global	SetPtr	kBase	0x7dee4c	-	exact	Msgbox_Base	unsigned long	0
+site	src/game/msgbox.cpp	1884	global	SetW	kFlags	0x7dee44	-	none	-	-	0
 site	src/game/msgbox_fuzz.cpp	72	global	SetB	kState	0x7dee40	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	73	global	SetB	ItemUse_SubState_addr	0x7dee41	-	exact	ItemUse_SubState	unsigned char	1
 site	src/game/msgbox_fuzz.cpp	74	global	SetB	Msgbox_EffectKind_addr	0x7dee42	-	exact	Msgbox_EffectKind	unsigned char	1
@@ -20454,8 +20466,8 @@ site	src/game/msgbox_fuzz.cpp	880	global	At	kRecordsLow	0x903a60	-	none	-	-	1
 site	src/game/msgbox_fuzz.cpp	881	global	SetB	ObjTrio_addr + 0x89	0x802dc9	-	inside	ObjTrio+0x89	records::PartyMember	1
 site	src/game/msgbox_fuzz.cpp	882	global	SetB	ModeFlow_ConfigBytes_addr	0x903a58	-	exact	ModeFlow_ConfigBytes	signed char	1
 site	src/game/msgbox_fuzz.cpp	886	global	SetL	kPoolSelector	0x803584	-	none	-	-	1
-site	src/game/object_kinds.cpp	237	global	At	Field_EdgeBitsPrev_addr	0x8034e8	-	exact	Field_EdgeBitsPrev	unsigned short	0
-site	src/game/object_kinds.cpp	237	global	At	Field_EdgeBits_addr	0x905b80	-	exact	Field_EdgeBits	unsigned short	0
+site	src/game/object_kinds.cpp	237	global	At	Field_StepCountPrev_addr	0x8034e8	-	exact	Field_StepCountPrev	unsigned short	0
+site	src/game/object_kinds.cpp	237	global	At	Field_StepCount_addr	0x905b80	-	exact	Field_StepCount	unsigned short	0
 site	src/game/object_kinds.cpp	408	global	At	Field_DirectionSteps_addr	0x6697b0	-	exact	Field_DirectionSteps	long	0
 site	src/game/object_kinds.cpp	410	record	Long	step + 4	-	stride=0x8	-	-	-	0
 site	src/game/object_kinds.cpp	411	record	Word	object + 0x8E	-	param	-	-	-	0
@@ -20468,8 +20480,8 @@ site	src/game/object_kinds.cpp	522	record	Word	context + 8	-	param	-	-	-	0
 site	src/game/object_kinds.cpp	528	record	SetWord	context + 8	-	param	-	-	-	0
 site	src/game/object_kinds.cpp	531	global	At	AreaW1a_FocusObject_addr	0x903804	-	exact	AreaW1a_FocusObject	unsigned long	0
 site	src/game/object_kinds.cpp	843	global	At	kObjectsLow	0x7dec80	-	none	-	-	0
-site	src/game/object_kinds.cpp	877	global	At	Field_EdgeBitsPrev_addr	0x8034e8	-	exact	Field_EdgeBitsPrev	unsigned short	0
-site	src/game/object_kinds.cpp	877	global	At	Field_EdgeBits_addr	0x905b80	-	exact	Field_EdgeBits	unsigned short	0
+site	src/game/object_kinds.cpp	877	global	At	Field_StepCountPrev_addr	0x8034e8	-	exact	Field_StepCountPrev	unsigned short	0
+site	src/game/object_kinds.cpp	877	global	At	Field_StepCount_addr	0x905b80	-	exact	Field_StepCount	unsigned short	0
 site	src/game/object_kinds.cpp	880	record	SetWord	object + 0x88	-	-	-	-	-	0
 site	src/game/object_kinds.cpp	883	global	At	Field_DirectionSteps_addr	0x6697b0	-	exact	Field_DirectionSteps	long	0
 site	src/game/object_kinds.cpp	887	record	SetWord	object + 0x8E + axis * 4	-	-	-	-	-	0
@@ -21065,7 +21077,7 @@ site	src/game/rest_2c.cpp	375	global	PutL	at::kBlock	0x9039e0	-	none	-	-	0
 site	src/game/rest_2c.cpp	375	raw	L	0x8034EC	0x8034ec	-	inside	MoveScript_PartyRecords+0x6c	unsigned char	0
 site	src/game/rest_2c.cpp	376	raw	L	0x903848	0x903848	-	none	-	-	0
 site	src/game/rest_2c.cpp	377	global	PutL	at::kBlock	0x9039e0	-	none	-	-	0
-site	src/game/rest_2c.cpp	377	raw	L	0x8034E8	0x8034e8	-	exact	Field_EdgeBitsPrev	unsigned short	0
+site	src/game/rest_2c.cpp	377	raw	L	0x8034E8	0x8034e8	-	exact	Field_StepCountPrev	unsigned short	0
 site	src/game/rest_2c.cpp	378	raw	B	0x903A00	0x903a00	-	none	-	-	0
 site	src/game/rest_2c.cpp	379	raw	B	0x903A01	0x903a01	-	none	-	-	0
 site	src/game/rest_2c.cpp	380	raw	B	0x90384A	0x90384a	-	none	-	-	0
@@ -23500,8 +23512,8 @@ site	src/game/rest_4a.cpp	1178	record	UL	object + 0x1C	-	param	-	-	-	0
 site	src/game/rest_4a.cpp	1179	global	At	at::kBuildingLevels	0x9048ab	-	inside	Community_Records+0x1db	records::CommunityRecord	0
 site	src/game/rest_4a.cpp	1179	global	At	at::kShopRecords	0x658930	-	exact	Shop_Records	-	0
 site	src/game/rest_4a_fuzz.cpp	177	global	Mem	BattlePhases_B8B_addr	0x904b8b	-	exact	BattlePhases_B8B	unsigned char	1
-site	src/game/rest_4a_fuzz.cpp	198	global	Mem	Rest4a_Clock_addr	0x904134	-	exact	Rest4a_Clock	unsigned long	1
-site	src/game/rest_4a_fuzz.cpp	198	global	Mem	Rest4a_Clock_addr	0x904134	-	exact	Rest4a_Clock	unsigned long	1
+site	src/game/rest_4a_fuzz.cpp	198	global	Mem	Game_BattleCount_addr	0x904134	-	exact	Game_BattleCount	unsigned long	1
+site	src/game/rest_4a_fuzz.cpp	198	global	Mem	Game_BattleCount_addr	0x904134	-	exact	Game_BattleCount	unsigned long	1
 site	src/game/rest_4a_fuzz.cpp	216	global	Mem	Rest4a_RemovedCount_addr	0x9039a0	-	exact	Rest4a_RemovedCount	unsigned char	1
 site	src/game/rest_4a_fuzz.cpp	221	global	Mem	at::kResidentCounts	0x675f58	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	301	global	-	at::kEvents	0x904ca0	-	none	-	-	1
@@ -23511,7 +23523,7 @@ site	src/game/rest_4a_fuzz.cpp	305	global	-	at::kResidentCounts	0x675f58	-	none	
 site	src/game/rest_4a_fuzz.cpp	307	global	-	at::kShopRecords	0x658930	-	exact	Shop_Records	-	1
 site	src/game/rest_4a_fuzz.cpp	313	global	Mem	Community_Records_addr + 8 * i	0x9046d0	-	exact	Community_Records	records::CommunityRecord	1
 site	src/game/rest_4a_fuzz.cpp	314	global	Mem	Community_Buildings_addr + 8 * b	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	1
-site	src/game/rest_4a_fuzz.cpp	323	global	Mem	Rest4a_Clock_addr	0x904134	-	exact	Rest4a_Clock	unsigned long	1
+site	src/game/rest_4a_fuzz.cpp	323	global	Mem	Game_BattleCount_addr	0x904134	-	exact	Game_BattleCount	unsigned long	1
 site	src/game/rest_4a_fuzz.cpp	335	record	SetUL	r + 4	-	via=Rec	-	-	-	1
 site	src/game/rest_4a_fuzz.cpp	343	record	SetUL	bl + 4	-	via=Bld	-	-	-	1
 site	src/game/rest_4a_fuzz.cpp	356	global	Mem	Rest4b_CountA_addr	0x9046ca	-	exact	Rest4b_CountA	signed char	1
@@ -23544,13 +23556,13 @@ site	src/game/rest_4a_fuzz.cpp	457	global	Mem	at::kConsumables	0x656b38	-	none	-
 site	src/game/rest_4a_fuzz.cpp	458	global	Mem	at::kWeapons	0x657461	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	459	global	Mem	at::kArmour	0x657d79	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	460	global	Mem	at::kAccessories	0x658461	-	none	-	-	1
-site	src/game/rest_4a_fuzz.cpp	476	global	Mem	Rest4a_Clock_addr	0x904134	-	exact	Rest4a_Clock	unsigned long	1
+site	src/game/rest_4a_fuzz.cpp	476	global	Mem	Game_BattleCount_addr	0x904134	-	exact	Game_BattleCount	unsigned long	1
 site	src/game/rest_4a_fuzz.cpp	480	global	Mem	at::kRecordTraits	0x653200	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	490	record	SetUL	r + 4	-	via=Rec	-	-	-	1
 site	src/game/rest_4a_fuzz.cpp	533	global	Mem	BattlePhases_B8B_addr	0x904b8b	-	exact	BattlePhases_B8B	unsigned char	1
 site	src/game/rest_4a_fuzz.cpp	535	global	Mem	BattlePhases_B8B_addr	0x904b8b	-	exact	BattlePhases_B8B	unsigned char	1
-site	src/game/rest_4a_fuzz.cpp	580	global	Mem	Rest4a_Clock_addr	0x904134	-	exact	Rest4a_Clock	unsigned long	1
-site	src/game/rest_4a_fuzz.cpp	580	global	Mem	Rest4a_Clock_addr	0x904134	-	exact	Rest4a_Clock	unsigned long	1
+site	src/game/rest_4a_fuzz.cpp	580	global	Mem	Game_BattleCount_addr	0x904134	-	exact	Game_BattleCount	unsigned long	1
+site	src/game/rest_4a_fuzz.cpp	580	global	Mem	Game_BattleCount_addr	0x904134	-	exact	Game_BattleCount	unsigned long	1
 site	src/game/rest_4a_fuzz.cpp	594	global	-	at::kEventCount	0x937f80	-	exact	Rest4b_BusyB	unsigned char	1
 site	src/game/rest_4a_fuzz.cpp	596	global	Mem	BattlePhases_B8B_addr	0x904b8b	-	exact	BattlePhases_B8B	unsigned char	1
 site	src/game/rest_4a_fuzz.cpp	597	global	Mem	Battle_PartyStanding_addr	0x904ab1	-	exact	Battle_PartyStanding	unsigned char	1
@@ -23685,7 +23697,7 @@ site	src/game/rest_4b_fuzz.cpp	248	global	SetW	Rest4b_Help_addr	0x675f7a	-	exact
 site	src/game/rest_4b_fuzz.cpp	249	record	B	SlotAt(w % 8 + 1) + (v % 3)	-	via=SlotAt	-	-	-	1
 site	src/game/rest_4b_fuzz.cpp	250	record	B	Rec(w % 60) + 1 + v % 3	-	via=Rec	-	-	-	1
 site	src/game/rest_4b_fuzz.cpp	251	global	B	at::kListCount	0x9046cb	-	exact	FieldE2_LevelA	unsigned char	1
-site	src/game/rest_4b_fuzz.cpp	252	global	SetL	Rest4a_Clock_addr	0x904134	-	exact	Rest4a_Clock	unsigned long	1
+site	src/game/rest_4b_fuzz.cpp	252	global	SetL	Game_BattleCount_addr	0x904134	-	exact	Game_BattleCount	unsigned long	1
 site	src/game/rest_4b_fuzz.cpp	253	global	B	Rest4b_Toggle_addr + (w % 2 ? 1 : 0)	0x675f7c	-	exact	Rest4b_Toggle	unsigned char	1
 site	src/game/rest_4b_fuzz.cpp	254	global	B	Rest4b_CursorMode_addr + w % 3	0x675f74	-	exact	Rest4b_CursorMode	unsigned char	1
 site	src/game/rest_4b_fuzz.cpp	297	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	1
@@ -23738,7 +23750,7 @@ site	src/game/rest_4b_fuzz.cpp	475	global	B	Rest4b_BusyB_addr	0x937f80	-	exact	R
 site	src/game/rest_4b_fuzz.cpp	476	global	B	AreaW0b_PartySet_addr	0x90412c	-	exact	AreaW0b_PartySet	unsigned char	1
 site	src/game/rest_4b_fuzz.cpp	479	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	1
 site	src/game/rest_4b_fuzz.cpp	479	record	Mem	Rec(B(AreaW0c_TailSub_addr) % 60) + 4	-	via=Rec	-	-	-	1
-site	src/game/rest_4b_fuzz.cpp	481	global	SetL	Rest4a_Clock_addr	0x904134	-	exact	Rest4a_Clock	unsigned long	1
+site	src/game/rest_4b_fuzz.cpp	481	global	SetL	Game_BattleCount_addr	0x904134	-	exact	Game_BattleCount	unsigned long	1
 site	src/game/rest_4b_fuzz.cpp	490	record	B	d->by	-	via=DispatchOf	-	-	-	1
 site	src/game/rest_4b_fuzz.cpp	494	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	1
 site	src/game/rest_4b_fuzz.cpp	495	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	1
@@ -27788,7 +27800,7 @@ const	kObjectCount	0x1e	value	9	src/game/area_harness.h:51(area_harness::at);src
 const	kObjects	0x1e	value	1	src/game/field_c2_callees.h:41(field_c2::at)	-	-	-	-	at
 const	kSpriteCount	0x1e	value	9	src/game/effect_1b_callees.h:91(effect_1b::at);src/game/effect_1e_callees.h:70(effect_1e::at);src/game/effect_3c_callees.h:59(effect_3c::at);src/game/effect_4a_callees.h:37(effect_4a::at);src/game/effect_4b_callees.h:66(effect_4b::at);src/game/field_c1_callees.h:34(field_c1::at);src/game/scena_sx_callees.h:36(scena_sx::at);src/game/scenario_harness.h:74(scenario_harness::at);src/game/shop_states_callees.h:46(shop_states::at)	-	-	-	-	at
 const	kSprites	0x1e	value	3	src/game/effect_2d_callees.h:46(effect_2d::at);src/game/effect_2f_callees.h:38(effect_2f::at);src/game/effect_3b_callees.h:64(effect_3b::at)	-	-	-	-	at
-const	kTrait	0x1f	value	1	src/game/char_stats_callees.h:28(char_stats::at)	-	-	-	-	at
+const	kMaster	0x1f	value	1	src/game/char_stats_callees.h:28(char_stats::at)	-	-	-	-	at
 const	kChild3GridBytes	0x20	value	1	src/game/effect_1b_callees.h:54(effect_1b::at)	-	-	-	-	at
 const	kDebrisCount	0x20	value	3	src/game/effect_2e_callees.h:66(effect_2e::at);src/game/effect_3c_callees.h:41(effect_3c::at);src/game/effect_4d_callees.h:39(effect_4d::at)	-	-	-	-	at
 const	kDustStride	0x20	value	1	src/game/rest_3e_callees.h:48(rest_3e::at)	-	-	-	-	at
@@ -29054,13 +29066,13 @@ const	kAbilityFlagsD	0x65c4dd	data	1	src/game/enemy_ai_ops_callees.h:65(enemy_ai
 const	kSkillFlags	0x65c4dd	data	1	src/game/battle_windows_callees.h:50(battle_windows::at)	-	-	none	-	at
 const	kAbilityHelp	0x65c4de	data	1	src/game/rest_2e.cpp:94((anon))	-	-	none	-	module
 const	kBannerSource	0x65d008	data	1	src/game/boss_sb_callees.h:70(boss_sb::at)	-	-	none	-	at
-const	kStrSaveOk	0x65da54	data	1	src/game/win_main.cpp:88((anon))	-	-	none	-	module
-const	kStrFrameRate	0x65da5c	data	1	src/game/win_main.cpp:89((anon))	-	-	none	-	module
-const	kStrLogosAvi	0x65da6c	data	1	src/game/win_main.cpp:90((anon))	-	-	none	-	module
-const	kStrClass	0x65da84	data	1	src/game/win_main.cpp:91((anon))	-	-	none	-	module
-const	kStrIcon	0x65da8c	data	1	src/game/win_main.cpp:92((anon))	-	-	none	-	module
-const	kStrCapcomAvi	0x65dab8	data	1	src/game/win_main.cpp:103((anon))	-	-	none	-	module
-const	kStrBof3Exe	0x65dac4	data	1	src/game/win_main.cpp:104((anon))	-	-	none	-	module
+const	kStrSaveOk	0x65da54	data	1	src/game/win_main.cpp:89((anon))	-	-	none	-	module
+const	kStrFrameRate	0x65da5c	data	1	src/game/win_main.cpp:90((anon))	-	-	none	-	module
+const	kStrLogosAvi	0x65da6c	data	1	src/game/win_main.cpp:91((anon))	-	-	none	-	module
+const	kStrClass	0x65da84	data	1	src/game/win_main.cpp:92((anon))	-	-	none	-	module
+const	kStrIcon	0x65da8c	data	1	src/game/win_main.cpp:93((anon))	-	-	none	-	module
+const	kStrCapcomAvi	0x65dab8	data	1	src/game/win_main.cpp:104((anon))	-	-	none	-	module
+const	kStrBof3Exe	0x65dac4	data	1	src/game/win_main.cpp:105((anon))	-	-	none	-	module
 const	kPairFormat	0x65dad0	data	1	src/game/shell_callees.h:18(shell)	-	-	none	-	module
 const	kCfgName	0x65dad8	data	1	src/game/shell_callees.h:16(shell)	-	-	none	-	module
 const	kModeRt	0x65dae4	data	1	src/game/shell_callees.h:17(shell)	-	-	none	-	module
@@ -29937,7 +29949,7 @@ const	kVar7Step	0x8034e5	data	4	src/game/area_w1a_callees.h:42(area_w1a::at);src
 const	kTimer	0x8034e6	data	6	src/game/scena_sc13_callees.h:44(scena_sc13::at);src/game/scena_sc5_callees.h:38(scena_sc5::at);src/game/scena_sc6_callees.h:53(scena_sc6::at);src/game/scena_sc9a_callees.h:36(scena_sc9a::at);src/game/scena_sc9b_callees.h:35(scena_sc9b::at);src/game/scenario_harness.h:50(scenario_harness::at)	-	-	inside	unsigned char	at
 const	kTimer	0x8034e6	data	2	src/game/scena_sc0_callees.h:31(scena_sc0);src/game/scena_sc15.cpp:89((anon))	-	-	inside	unsigned char	module
 const	kTimerWord	0x8034e6	data	1	src/game/effect_2g_callees.h:34(effect_2g::at)	-	-	inside	unsigned char	at
-const	kCounterSeen	0x8034e8	data	1	src/game/object_kinds.cpp:40((anon))	Field_EdgeBitsPrev	data	exact	unsigned short	module
+const	kCounterSeen	0x8034e8	data	1	src/game/object_kinds.cpp:40((anon))	Field_StepCountPrev	data	exact	unsigned short	module
 const	kByteFD	0x8034f1	data	1	src/game/scenario_harness.h:51(scenario_harness::at)	Cond_ByteFD	data	exact	unsigned char	at
 const	kByteFD	0x8034f1	data	1	src/game/area_w4a_fuzz.cpp:54(area_w4a::(anon))	Cond_ByteFD	data	exact	unsigned char	module
 const	kBusy	0x803540	data	1	src/game/battle_turn_steps_callees.h:82(battle_turn_steps::at)	-	-	none	-	at
@@ -30207,7 +30219,7 @@ const	kPendingX	0x903860	data	1	src/game/area_w4e_callees.h:76(area_w4e::at)	-	-
 const	kPendingX_addr	0x903860	data	2	src/game/mode_rest_callees.h:41(mode_rest::at);src/game/window_task_callees.h:46(window_task::at)	-	-	inside	records::SharedScratch	at
 const	kPendingX_addr	0x903860	data	1	src/game/area_entry_callees.h:20(area_entry)	-	-	inside	records::SharedScratch	module
 const	kBlocks	0x903880	data	1	src/game/shell_callees.h:34(shell)	Gfx_BufferBlocks	data	exact	-	module
-const	kEnvBase	0x903880	data	1	src/game/win_main.cpp:139((anon))	Gfx_BufferBlocks	data	exact	-	module
+const	kEnvBase	0x903880	data	1	src/game/win_main.cpp:140((anon))	Gfx_BufferBlocks	data	exact	-	module
 const	kFlagsLo	0x9039a2	data	1	src/game/field_e1_callees.h:90(field_e1::at)	Field_ScriptFlags	data	exact	unsigned short	at
 const	kFlagsLo	0x9039a2	data	1	src/game/event_ops.cpp:112((anon))	Field_ScriptFlags	data	exact	unsigned short	module
 const	kScriptFlags	0x9039a2	data	10	src/game/area_w2e_callees.h:45(area_w2e::at);src/game/area_w3c_callees.h:83(area_w3c::at);src/game/scena_sc12_callees.h:47(scena_sc12::at);src/game/scena_sc13_callees.h:54(scena_sc13::at);src/game/scena_sc3_callees.h:41(scena_sc3::at);src/game/scena_sc5_callees.h:45(scena_sc5::at);src/game/scena_sc6_callees.h:64(scena_sc6::at);src/game/scena_sc7_callees.h:47(scena_sc7::at);src/game/scena_sc9a_callees.h:47(scena_sc9a::at);src/game/scena_sc9b_callees.h:45(scena_sc9b::at)	Field_ScriptFlags	data	exact	unsigned short	at
@@ -30302,7 +30314,7 @@ const	kEquipA	0x904130	data	1	src/game/effect_1b_callees.h:84(effect_1b::at)	-	-
 const	kExtraAccessory	0x904130	data	2	src/game/char_stats_callees.h:42(char_stats::at);src/game/effect_1f_callees.h:28(effect_1f::at)	-	-	none	-	at
 const	kItemA	0x904130	data	2	src/game/rest_1g.cpp:91((anon));src/game/rest_1g_fuzz.cpp:170(rest_1g::(anon))	-	-	none	-	module
 const	kMusicTrack	0x904131	data	2	src/game/area_w3c_callees.h:80(area_w3c::at);src/game/scena_sc13_callees.h:58(scena_sc13::at)	Music_Track	data	exact	unsigned char	at
-const	kKind65Count	0x904134	data	1	src/game/effect_3b_callees.h:42(effect_3b::at)	Rest4a_Clock	data	exact	unsigned long	at
+const	kKind65Count	0x904134	data	1	src/game/effect_3b_callees.h:42(effect_3b::at)	Game_BattleCount	data	exact	unsigned long	at
 const	kReturnPoint	0x904148	data	5	src/game/area_w2d_callees.h:47(area_w2d::at);src/game/area_w4d_callees.h:38(area_w4d::at);src/game/area_w4f_callees.h:87(area_w4f::at);src/game/event_leader_callees.h:56(event_leader::at);src/game/event_ops_callees.h:51(event_ops::at)	AreaW2d_ReturnPoint	data	exact	unsigned long	at
 const	kCampFlag	0x904152	data	2	src/game/area_w3c_callees.h:62(area_w3c::at);src/game/menu_lists_callees.h:40(menu_lists::at)	AreaW3c_CampFlag	data	exact	unsigned char	at
 const	kSavedCount	0x904152	data	1	src/game/area_w4e_callees.h:66(area_w4e::at)	AreaW3c_CampFlag	data	exact	unsigned char	at
@@ -30571,7 +30583,7 @@ const	kMapCells	0x904f20	data	2	src/game/field_e2_callees.h:108(field_e2::at);sr
 const	kMapCellsEnd	0x905b60	data	1	src/game/magic_s23_callees.h:75(magic_s23::at)	MenuLists_CampChosen	data	exact	unsigned char	at
 const	kTiaraCount	0x905b61	data	1	src/game/item_use_callees.h:49(item_use::at)	ModeRest_AreaAsked	data	exact	unsigned char	at
 const	kCameraTurn	0x905b70	data	1	src/game/scenario_harness.h:82(scenario_harness::at)	CameraTurn_Steps	data	exact	long	at
-const	kEdgeBits	0x905b80	data	1	src/game/area_w3c_callees.h:84(area_w3c::at)	Field_EdgeBits	data	exact	unsigned short	at
+const	kEdgeBits	0x905b80	data	1	src/game/area_w3c_callees.h:84(area_w3c::at)	Field_StepCount	data	exact	unsigned short	at
 const	kCurrent	0x905b84	data	2	src/game/battle_windows_callees.h:40(battle_windows::at);src/game/menu_windows_callees.h:52(menu_windows::at)	BattleWinStates_Current	data	exact	unsigned long	at
 const	kWindow	0x905b84	data	1	src/game/mode_states_callees.h:48(mode_states::at)	BattleWinStates_Current	data	exact	unsigned long	at
 const	kWindowCurrent	0x905b84	data	1	src/game/boss_harness.h:155(boss_harness::at)	BattleWinStates_Current	data	exact	unsigned long	at
@@ -30628,7 +30640,7 @@ const	kBlockEnd	0x90dde4	data	1	src/game/event_objs_fuzz.cpp:398(event_objs::(an
 const	kMoveScriptObject	0x929e80	data	1	src/game/scena_sc6_callees.h:97(scena_sc6::at)	MoveScript_Object	data	exact	unsigned char *	at
 const	kScriptObject	0x929e80	data	1	src/game/area_w4f_callees.h:103(area_w4f::at)	MoveScript_Object	data	exact	unsigned char *	at
 const	kGfxOtPointers	0x929ea0	data	1	src/game/shell_callees.h:32(shell)	Gfx_OtPointers	data	exact	unsigned long *	module
-const	k	0x929ec0	data	1	src/game/field_event.cpp:736(-)	Field_MemberCount	data	exact	unsigned char	module
+const	k	0x929ec0	data	1	src/game/field_event.cpp:742(-)	Field_MemberCount	data	exact	unsigned char	module
 const	kMemberCount	0x929ec0	data	1	src/game/area_harness.h:62(area_harness::at)	Field_MemberCount	data	exact	unsigned char	at
 const	kMemberCount	0x929ec0	data	1	src/game/magic_s30_fuzz.cpp:241(magic_s30::(anon))	Field_MemberCount	data	exact	unsigned char	module
 const	kFieldEC2	0x929ec2	data	1	src/game/field_e2_callees.h:95(field_e2::at)	-	-	none	-	at
@@ -30880,10 +30892,10 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	27395
-#count sites_global	17238
+#count sites	27407
+#count sites_global	17250
 #count sites_global_at	7504
-#count sites_global_module	9734
+#count sites_global_module	9746
 #count sites_record	9028
 #count sites_raw	1129
 #count sites_in_fuzz	8907
@@ -30898,9 +30910,9 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_param	662
 #count record_sites_family_unknown	1713
 #count record_strides	0x28:184 0x4:83 0xa4:62 0x8:43 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	8664
+#count global_sites_covered_exact	8669
 #count global_sites_covered_inside	2352
-#count global_sites_uncovered	6222
+#count global_sites_uncovered	6229
 #count global_sites_ambiguous	0
 #count at_refs_struct_or_array	500
 #count at_constant_definitions	4108
