@@ -50,7 +50,17 @@ its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md
   `prev` rule in the sidecar. Beside it a `--compare` mode places readings
   with fugashi + UniDic as well and writes the disagreements by surface and
   context, most frequent first, for the owner to adjudicate into
-  `readings.toml` (call 4's proofreading, made cheap). Measured already:
+  `readings.toml` (call 4's proofreading, made cheap). **And a round of
+  agents** (owner, 2026-10-22): the review list sharded by area to
+  subagents that give the kana of every token of every message as
+  structured output, with a flag where the segmentation looks wrong; a
+  script diffs them against Sudachi's into the disagreement list by
+  surface and context; a second pass proposes the sidecar rule for each
+  line and the owner approves. The script goes through the API; the owner
+  is fine with that (the script is published in both languages already;
+  the rule is about the repo carrying none of Capcom's material), and every
+  derived file - shards, kana, diffs - stays in the harness root, only the
+  sidecar rules and the lexicon in the tree. Measured already:
   Sudachi core against full differs in 253 of 27,976 messages, nearly all
   compound width, not readings; the power kanji's on-reading (3,857
   placements) is the pools' stat labels, the dialogue reads it the kun way
