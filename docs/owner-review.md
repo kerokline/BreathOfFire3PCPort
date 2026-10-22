@@ -46,9 +46,12 @@ and DIV-0157 (mods); the round's findings are known-defects D326..D330.
   untouched (the side chunk), so with no layer nothing changes. Group OS,
   launched the same day.
 - **The second-script dropdown hidden by default** (owner, 2026-10-22):
-  *Row above the text* leaves the Settings page unless a toggle on a new
-  *Extra* tab under Mods shows it; the toggle turns on by hand or on its
-  own when the furigana mod is installed. Group LX, launched the same day.
+  *Row above the text* leaves the Settings page unless a toggle shows it;
+  the toggle sits on the Mods page behind a sub-row of two buttons under
+  the top row's Mods button, *Data* (the mods list as today) and *Extras*
+  (the toggle) - "just to reserve that slot on the top row"; it turns on by
+  hand or on its own when the furigana mod is installed. Group LX, launched
+  the same day.
 - **A first install needs two steps** the launcher does not say yet
   (the saves now carry themselves: D331, `carry_saves` in `setup`, from
   the previous game folder and from the home folder's old layout): the
