@@ -69,8 +69,14 @@ its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md
 - **From FB:** 4,559 area pages split for a third row, each an extra
   confirm press, as accepted.
 
-- 1: the gap between row pairs and the Latin row's size (1/2 or 2/3), off
-  PR's captures when they land.
+- **1, decided 2026-10-22 off PR's sheets:** the gap is **even, "2px top
+  2px bottom"** - a reading's ink 2 units from the text above it and 2
+  units from its own text (PR's gap 2 was 4 above and 1 below; RR sets the
+  pen y that gives 2 and 2 and shows it on a capture). The Latin reading
+  row stays at **1/2**: "plenty legible", 2/3 "not worth it".
+- **The capture scene** for the end batch and the owner's play: the
+  dolphin fight (`tools/recipes/dolphinBoss.txt`), "a large chunk of
+  uninterrupted text".
 - 3: reveal rule (a reading with its word, recommended). 5: choice options
   plain. 6: the default second-language pair on `setup`. 7: SL's four.
 
