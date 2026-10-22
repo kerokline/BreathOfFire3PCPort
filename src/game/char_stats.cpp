@@ -242,7 +242,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_RecalcStats(uns
 // a kind above 13 is skipped. The amount's byte reaches the callee
 // zero-extended.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_ApplyTraits(unsigned char* record) {
-    const unsigned trait = record[at::kTrait];
+    const unsigned trait = record[at::kMaster];
     if (trait == 0xFF) return;
     const unsigned char* e = At(static_cast<std::uint32_t>(Long(At(at::kTraitLists + 4 * trait))));
     if (e == nullptr) return;

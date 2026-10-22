@@ -249,7 +249,7 @@ void Move(U h) {
     case 9: B(SlotAt(w % 8 + 1) + (v % 3)) = static_cast<unsigned char>(v % 3 == 1 ? (w >> 3) % 3 : (v & 4 ? 0 : 4 + (w >> 3) % 10)); break;
     case 10: B(Rec(w % 60) + 1 + v % 3) = static_cast<unsigned char>(v % 3 == 0 ? (w >> 6) % 8 + 1 : w >> 6); break;
     case 11: B(at::kListCount) = static_cast<unsigned char>(v % 7); break;
-    case 12: SetL(Rest4a_Clock_addr, h * 0x9E3779B1u); break;
+    case 12: SetL(Game_BattleCount_addr, h * 0x9E3779B1u); break;
     case 13: B(Rest4b_Toggle_addr + (w % 2 ? 1 : 0)) = static_cast<unsigned char>(v & 1); break; // the toggle or 0x675F7D
     case 14: B(Rest4b_CursorMode_addr + w % 3) = static_cast<unsigned char>(v % 5); break;
     default: break;
@@ -478,7 +478,7 @@ void SeedBoard() {
     static const U kSteps[] = {0, 1, 2, 3, 4, 7, 8, 0xB, 0x10, 0x15, 0x1A, 0x1F, 0x29, 0x33, 0x3D, 0x47, 0x4D, 0x4E, 0x51, 0x5B, 0xC9, 0x1F4};
     const U start = move_script::Long(sh::Mem(Rec(B(AreaW0c_TailSub_addr) % 60) + 4));
     const U step = kSteps[sh::Next() % (sizeof kSteps / sizeof kSteps[0])];
-    SetL(Rest4a_Clock_addr, PickOf(start + step, start + step - 1, start + step, sh::Next()));
+    SetL(Game_BattleCount_addr, PickOf(start + step, start + step - 1, start + step, sh::Next()));
 }
 
 void Seed(unsigned k) {

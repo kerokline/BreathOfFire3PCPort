@@ -25,7 +25,7 @@ constexpr unsigned kAccessory = 0x16;
 constexpr unsigned kHp = 0x18;           // u16
 constexpr unsigned kHalveBits = 0x1D;    // u8, PSX +0x19: each bit steps one resistance byte by 2
 constexpr unsigned kHpScale = 0x1E;      // u8, PSX +0x1A
-constexpr unsigned kTrait = 0x1F;        // u8, PSX +0x1B: the list of 0x667548 to apply, 0xFF none
+constexpr unsigned kMaster = 0x1F;       // u8, PSX +0x1B: the master (0xFF none), which picks the list of 0x667548
 constexpr unsigned kEffective = 0x20;    // 0x20 bytes, rebuilt from the base block at +0x40
 constexpr unsigned kMaxHp = 0x20;        // u16
 constexpr unsigned kAtk = 0x24, kDef = 0x26, kAgi = 0x28, kInt = 0x2A;   // u16 each

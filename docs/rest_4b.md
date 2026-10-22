@@ -49,7 +49,7 @@ message word, 0xFFFF none; `0x675F7C` the yes / no row; `0x675F7D`,
 `0x675F83` the open lists, 0xFF none; `0x675F84..86` the grid cursor kept;
 `0x675F78` / `0x675F81` the help and step R4C's `0x459EE0` keeps). The records
 `0x9046D0 + 8k` (k < 60): `+0` in use, `+1` the slot, `+2` / `+3` marks (`+3`
-two nibbles), `+4` a time from the clock `0x904134`. The slots `0x9048A8 + 8s`
+two nibbles), `+4` a stamp of the battle count `0x904134`. The slots `0x9048A8 + 8s`
 (s 1..8 at `0x9048B0`): `+0` the kind (0 empty, else 4 + a pick), `+1`, `+2`,
 `+3`, `+4` a time. "Help n" is `0x675F7A = n`.
 
@@ -65,11 +65,11 @@ two nibbles), `+4` a time from the clock `0x904134`. The slots `0x9048A8 + 8s`
 | `0x456E20` | `CommuTail14_End` | `[5]`: once `File_LoadDone`, `Area131_DisarmTail`, `CommuTail_RestoreFacing`, R4A's `0x456080`, tail jump R4A's `0x455950` |
 | `0x456E40` | `CommuTail_RestoreFacing` | `Sprite_Current` = the kept object; its `+8` = its `+0x85`; `Sprite_FaceDirection(+8)` |
 | `0x456E70` | `CommuTail21_Dispatch` | `Field_ModeTailKinds[21]`: through `CommuTail21_States` (5) |
-| `0x456E80` | `CommuTail_TimedGift` | 14`[6]`, 21`[0]`: the clock less the record's `+4` against a stack table of 20 `{bound, item, category}` (the last row whose bound it reaches); none: message 0x98; else the item's name into `Text_Records`, message 0x96, `Inventory_Add(category, item, 1)`: added, the record's `+4` = the clock and next; not added, the state after next. Field_Request 2 |
+| `0x456E80` | `CommuTail_TimedGift` | 14`[6]`, 21`[0]`: the battle count less the record's `+4` against a stack table of 20 `{bound, item, category}` (the last row whose bound it reaches); none: message 0x98; else the item's name into `Text_Records`, message 0x96, `Inventory_Add(category, item, 1)`: added, the record's `+4` = the battle count and next; not added, the state after next. Field_Request 2 |
 | `0x4570C0` | `CommuTail_EndAfterMessage` | 14`[7] [10]`, 23`[15]`: once Field_Request is 0, disarm, tail jump `CommuTail_RestoreFacing` |
 | `0x4570E0` | `CommuTail_Open97` | 14`[8]`: once Field_Request is 0, message 0x97, the state before, Field_Request 2 |
 | `0x457110` | `CommuTail22_Dispatch` | `Field_ModeTailKinds[22]`: through `CommuTail22_States` (2) |
-| `0x457120` | `CommuTail_RandomGift` | 14`[9]`, 22`[0]`: by the record's `+2` - 3: message 0x52, the record kept (`+4` the clock, `+2` 0, the object's word `+0x88` = 0x51); 2: `Rand & 0x7F` (at most 100) counted down a 3-row stack table `{first, step, step, -}` picked by the record's slot's level (`+1`) to a tier 1..3, `Rand & 0xF` one of the tier's 16 `{item, category}` at `0x652A10`; `Inventory_Add`: not added message 0x50, added the name, message 0x4F and the record kept. Then next, Field_Request 2 |
+| `0x457120` | `CommuTail_RandomGift` | 14`[9]`, 22`[0]`: by the record's `+2` - 3: message 0x52, the record kept (`+4` the battle count, `+2` 0, the object's word `+0x88` = 0x51); 2: `Rand & 0x7F` (at most 100) counted down a 3-row stack table `{first, step, step, -}` picked by the record's slot's level (`+1`) to a tier 1..3, `Rand & 0xF` one of the tier's 16 `{item, category}` at `0x652A10`; `Inventory_Add`: not added message 0x50, added the name, message 0x4F and the record kept. Then next, Field_Request 2 |
 | `0x4572F0` | `CommuTail23_Dispatch` | `Field_ModeTailKinds[23]`: through `CommuTail23_States` (21) |
 | `0x457300` | `CommuTail23_LoadDat` | `[0]`: `Field_ScriptFlags2 |= 7`, `LoadDatFile(0x12D` for argument 3, else `0x12C)`, next |
 | `0x457340` | `CommuTail_GameDispatch` | 23`[2]`: through `CommuTail_GameStates` by the u8 argument (16): its first four entries are R4C's / R4D's `0x459F20`, `0x45B770`, `0x45C8C0`, `0x45D040` |
@@ -101,7 +101,7 @@ two nibbles), `+4` a time from the clock `0x904134`. The slots `0x9048A8 + 8s`
 | `0x457DD0` | `CommuBoard_PickList` | Steps`[4]`, StepsB`[2]`: the first list (`0x675F7F` over `0x9046CB` rows; help `0x652AF8[row]`); confirm: the next list `0x652B44[row]` - 0xFF: R4C's `0x459EE0`; else `0x675F7E` from the slot when the row is its kind, `0x675F83` = it, help `0x652B50[it]`, next step. Cancel: the slot's help, step 0 |
 | `0x457FE0` | `CommuBoard_PickListB` | Steps`[5]`, StepsB`[3]`: the second list (`0x675F7E` over `0x652B58[2 * list]`); confirm: `0x652B59[2 * list]` - 0xFF R4C's `0x459EE0`; else `0x675F7D` from the slot, `0x675F82` = it, help 0x46, next |
 | `0x458240` | `CommuBoard_PickListC` | Steps`[6]`, StepsB`[4]`: 0x1000 / 0x4000 flips `0x675F7D`; confirm R4C's `0x459EE0`; cancel help 0x45 |
-| `0x458410` | `CommuBoard_Confirm` | Steps`[7]`, StepsB`[5]`: the yes / no row - yes: unless the slot already holds the picks, every record whose `+1` is the slot (in use or not) restarts (`+4` the clock, `+2` `+3` 0) and so does the slot; the slot takes kind `0x675F7F + 4`, `+1` the first list's row, `+2` the toggle; the grid cursor back, sound 0x104, board state - 1, help 0xB5. No, or cancel: sound 0x106, the help and step R4C's ask kept. Else 0x2000 / 0x8000 flips the row |
+| `0x458410` | `CommuBoard_Confirm` | Steps`[7]`, StepsB`[5]`: the yes / no row - yes: unless the slot already holds the picks, every record whose `+1` is the slot (in use or not) restarts (`+4` the battle count, `+2` `+3` 0) and so does the slot; the slot takes kind `0x675F7F + 4`, `+1` the first list's row, `+2` the toggle; the grid cursor back, sound 0x104, board state - 1, help 0xB5. No, or cancel: sound 0x106, the help and step R4C's ask kept. Else 0x2000 / 0x8000 flips the row |
 
 ### 1.3 The draws and helpers
 
@@ -197,7 +197,7 @@ mostly, a level 0..2); the tail's kind, state and argument; the kept object
 one of the first four sprites; the board's bytes, cursor, picks (0xFF often
 for the open lists), the help word (0x3D often), the list count, the area
 number (0xAF..0xB9 often), Field_Request, the message index (0xF9 often), the
-three busy bytes, and the clock at and beside each bound of TimedGift's table
+three busy bytes, and the battle count at and beside each bound of TimedGift's table
 from the argument's record. Per clone: RandomGift's records all in slots 1..8
 (their levels below 3, since the disturbance moves the argument); TimedGift's
 and NibbleGift's argument below 60; Confirm's argument 1..8 and the picks the
@@ -217,7 +217,7 @@ address. **The group's disturbance** (`Move`, 15 cases by
 `sh::DisturbCase(h, 15)`, every value from `h`): the tail state, the argument
 (1..8), the board state and step, the list cursor, the pick and the first
 row, the open lists, the help word, a slot's byte (kind 0 / 4..13, level
-0..2), a record's slot (1..8) or marks, the list count, the clock, the toggle
+0..2), a record's slot (1..8) or marks, the list count, the battle count, the toggle
 or `0x675F7D`, the grid cursor's bytes. It runs from the harness's disturbance
 and from most stand-ins (`Stir`).
 
@@ -288,7 +288,7 @@ after the first run.
 | C16, C17 | `CommuTail_LoadSoundBank` | + 0x2C3; the whole byte | 6,000 each |
 | C18 | `CommuTail14_End` | R4A's two swapped | 4,030 |
 | C19, C20 | `CommuTail_RestoreFacing` | +0x84; Sprite_Current not set | 5,983; 4,479 |
-| C21..C26 | `CommuTail_TimedGift` | bound + 1; row 14's category; message 0x97; one state; **case 12**: the clock read early; item / category swapped | 2,977; 180; 5,798; 2,004; 763; 5,798 |
+| C21..C26 | `CommuTail_TimedGift` | bound + 1; row 14's category; message 0x97; one state; **case 12**: the battle count read early; item / category swapped | 2,977; 180; 5,798; 2,004; 763; 5,798 |
 | C27, C28 | `_EndAfterMessage`, `_Open97` | waits on 2; the next state | 2,433; 1,215 |
 | **C30** | `CommuTail_RandomGift` | at most 99 for 100 | **0: equivalent** (99 and 100 fall in the same tier on all three rows); near variant **N01** at most 95: 230 |
 | C29, C31..C36 | `CommuTail_RandomGift` | Rand & 0xFF; a step reached; 8 pairs a tier; word 0x50; message 0x51; row 1's first; **case 1**: the argument read before Rand | 778; 397; 948; 2,430; 799; 176; 4 (thin), 133 with `RandMove` (2026-10-05) |
@@ -308,7 +308,7 @@ after the first run.
 | B29..B33 | `CommuBoard_PickList` | help + 1 row; +2 for +1; **case 7**: help from `next`; hand x; the column by slot % 4 | 1,588; 25; 24; 6,000; 18,000 (all three lists) |
 | B34..B37 | `CommuBoard_PickListB` | help 0x47; the count byte; **case 7**: the list read early; **case 6**: the row read early | 646; 287; 8 (thin), 1,057 with `ListBoxMove` (2026-10-05); 87 |
 | B38..B40 | `CommuBoard_PickListC` | help 0x44; 0x1000 only; **case 13**: the toggle read early | 1,558; 483; 165 |
-| B41..B48 | `CommuBoard_Confirm` | no +2 test; +3 kept; used only; kind + 5; +1 from the toggle; 0x2000 only; step kept; no clock | 151..867 |
+| B41..B48 | `CommuBoard_Confirm` | no +2 test; +3 kept; used only; kind + 5; +1 from the toggle; 0x2000 only; step kept; no battle count | 151..867 |
 | D01..D06 | `CommuBoard_DrawRecordCard` | 4 bytes; 64 wide; by 11; pick 9; row 1 never lit; records by 19 | 330..6,000 |
 | D07, D08, D22 | the two frames | six along; sides by 8; 32 along | 6,000 each |
 | D09..D13 | `CommuBoard_DrawBar` | 0x7F; >> 1; row 3; y + 5; width unsigned | 1,489..6,000 |

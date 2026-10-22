@@ -43,10 +43,15 @@ sibling's `names/places.toml` (dev label "kyoudoutai"); `Area179_Init` (ours,
 The community's cells (named in `rest_4a_callees.h`; none has a `symbols.toml`
 name):
 
-- the clock `0x904134` (a dword `GameMode_Field` counts on `Field_Request` 3)
-  and six stamps `0x9046B4..0x9046C4` it is compared against;
+- the battle count `0x904134` (`Game_BattleCount`, a dword `GameMode_Field` counts on
+  `Field_Request` 3), and six stamps `0x9046B4..0x9046C4` it is compared against.
+  - Every span below is counted in battles, not time.
+  - This doc and `symbols.toml` called it "the clock" until 2026-10-21.
+  - The evidence: a linear disassembly of `BOF3.exe`'s `.text` finds 30 absolute operands at
+    `0x904134`. The one write is `0x495A81`, the +1 when a battle is requested
+    (`mode_tasks.cpp`); the other 29 read it.
 - 60 records of 8 bytes at `0x9046D0`: +0 in use, +1 the building (1..8) or a
-  loose kind (0, 9, 0xA, 0xB), +2 and +3 states, +4 a clock stamp; 60 trait
+  loose kind (0, 9, 0xA, 0xB), +2 and +3 states, +4 a battle-count stamp; 60 trait
   records of 0x14 bytes at `0x653200` (image .data) by record, read at +0..+4
   and +0x10..+0x13;
 - 8 buildings of 8 bytes at `0x9048B0`: +0 the kind, +1, +2, +3 a level, +4 a
@@ -69,12 +74,12 @@ name):
 | `Battle_RandomOtherMember` | `0x454310` | (member) -> al: of members 0..2 not out and not the argument, the one at `Rand() % count` |
 | `Field_RunSlot` | `0x455300` | (index): the record's object pose against +2 picks a script from the table +4; at +1 0 the script steps (an 0xFF step leads back); `Field_SlotClutCopy`; +1 down |
 | `Field_SlotClutCopy` | `0x455380` | (slot): the frame +3 split by the object kind's divisor into a CLUT row and an offset; script byte 2 colours copied along the row; `Gfx_ClutStripDirty` |
-| `CommuSim_AreaEnter` | `0x455450` | same area as `0x802290`: place the objects only; else count the records (R4D's `0x45E6B0`), roll the offers, clear three counts; no records: three spawns and the clocks, mood 10, levels set; some: queue areas, mood, levels, population, ticks 9 / 0xD / 5 / 0xB, the sums; then place the objects |
+| `CommuSim_AreaEnter` | `0x455450` | same area as `0x802290`: place the objects only; else count the records (R4D's `0x45E6B0`), roll the offers, clear three counts; no records: three spawns and the stamps, mood 10, levels set; some: queue areas, mood, levels, population, ticks 9 / 0xD / 5 / 0xB, the sums; then place the objects |
 | `CommuSim_QueueAreas` | `0x455540` | area numbers past the area seen whose byte `0x652850[n]` is 4 or 5 queue that kind once |
-| `CommuSim_Population` | `0x4555D0` | (count): by mood against 4 x count, spawns (up to 20 records) or removals (down to 1) by the elapsed clock / 10 or / 20 |
+| `CommuSim_Population` | `0x4555D0` | (count): by mood against 4 x count, spawns (up to 20 records) or removals (down to 1) by the battles since / 10 or / 20 |
 | `CommuSim_Mood` | `0x455700` | (count): the kind-9 records' trait sum less 2 x count, times the elapsed fifths, added to the mood, clamped 0..99 |
-| `CommuSim_LevelLit` / `_LevelDark` | `0x4557A0` / `0x455870` | a level up when the elapsed clock reaches a cost less the residents' trait sum (events 7 / 6) |
-| `CommuSim_TickKind5` / `_TickKindB` | `0x455950` / `0x455DF0` | a building's level +3 raised by the elapsed clock over a divisor (events 0 / 1 with the first resident) |
+| `CommuSim_LevelLit` / `_LevelDark` | `0x4557A0` / `0x455870` | a level up when the battles since reaches a cost less the residents' trait sum (events 7 / 6) |
+| `CommuSim_TickKind5` / `_TickKindB` | `0x455950` / `0x455DF0` | a building's level +3 raised by the battles since over a divisor (events 0 / 1 with the first resident) |
 | `CommuSim_TickKind9` | `0x455AA0` | each resident of a kind-9 building: two rolls set its +2 to 1, 2 or 3 or remove it (event 2) |
 | `CommuSim_TickKindD` | `0x455BE0` | each resident of a kind-0xD building with +3 0x1n: its item's price tier and two rolls set +3 / +2 (event 3) |
 | `CommuSim_AddRecord` / `_RemoveRecord` | `0x455F40` / `0x455FF0` | a record from a random start: the first free one taken (traits copied), or the first in use (kind 9 last) dropped |
@@ -140,7 +145,7 @@ trigger's object cell, `Shop_Records`' first 50, the word `0x802290`.
 
 Seeds: the community as the simulation leaves it (up to 24 records in use and
 two always, each +1 a building or a loose kind, stamps at and about the
-ticks' boundaries from the clock, building kinds 4 / 5 / 9 / 0xB / 0xD
+ticks' boundaries from the battle count, building kinds 4 / 5 / 9 / 0xB / 0xD
 mostly, levels 0..2, no kind-0xB building with six residents, the counts
 small, the area words among 0xAF..0xBA); a `Field_Slots` record with its
 object, its four-script table and a script ending in an 0xFF step back
@@ -151,7 +156,7 @@ neighbours, odds about 5. The triggers' object is a sprite record with +5 a
 record and +0x1C a shop below 50.
 
 The group's disturbance (`Disturb`, ten cases by `sh::DisturbCase(h, 10)`,
-values from `h` only): a slot's +1, the clock, `Game_AreaNumber`, a record's
+values from `h` only): a slot's +1, the battle count, `Game_AreaNumber`, a record's
 +2 / +3, a building's level (0..2), the event or removed count, `0x904B8B`
 and `0x904AB1`, a resident count, an offer word, a record out of use. Each
 case's cell is re-read after a call by some function of the group, and a
@@ -212,11 +217,11 @@ near variant refused).**
 | C14 | the destination column + 1 | same | 3,331 |
 | C15 | the mood stamp + 1 | `CommuSim_AreaEnter` | 619 |
 | C16 | the area read before the spawns (case 2) | same | 9 |
-| C17 | the clock read before the spawns (case 1) | same | 7 |
+| C17 | the battle count read before the spawns (case 1) | same | 7 |
 | C18 | area kind 5 -> 6 | `CommuSim_QueueAreas` | 1,740 |
 | C19 | the spawn cap + 1 | `CommuSim_Population` | 95 |
-| C20 | the grow stamp the clock before the calls (case 1) | same | 13 |
-| C21 | the shrink stamp likewise | same | 4 (thin); 125 with the clock moved under the calls (2026-10-05) |
+| C20 | the grow stamp the battle count before the calls (case 1) | same | 13 |
+| C21 | the shrink stamp likewise | same | 4 (thin); 125 with the battle count moved under the calls (2026-10-05) |
 | C22 | the mood cap 99 -> 100 | `CommuSim_Mood` | 497 |
 | C23 | trait + 3 -> + 2 | same | 878 |
 | C24 | event 7 -> 8 | `CommuSim_LevelLit` | 763 |
@@ -273,7 +278,7 @@ Four changes to the fuzz, the group's rounds still 4,000 (6,000 the enemy's):
   argument 5..10, down, auto mode 4, the forced actor 3 (or 2, 4) and
   standing, the enemy's ability one whose flags byte (read in place) has bit
   4 and not bit 7. C3: **697**.
-- `CommuSim_AddRecord`'s and `_RemoveRecord`'s stand-ins move the clock on one
+- `CommuSim_AddRecord`'s and `_RemoveRecord`'s stand-ins move the battle count on one
   call in four (`ClockEffect`). C21: **125** (C20 13 to 407, C17 7 to 359).
 - `Rand`'s stand-in, while `CommuSim_TickKind9` runs, moves every building's
   level (0..2) one call in four. C29: **189**.

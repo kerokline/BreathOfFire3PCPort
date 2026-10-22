@@ -282,7 +282,7 @@ psx = 0x801CB228
 name = "Ability_Records"
 status = "evidence"
 evidence = "read 2026-09-26 from the readers, not measured: name[16] then the eight parameter bytes, 24 a record by ability id - Menu_DrawSkillRow's caller 0x59D200 passes 0x65C4C8 + 0x18 id as the name, BattleAction_AbilityCheck 0x42F680 copies 16 bytes from 0x65C4C8 + 24 id to the banner, Skill_ApCost reads + 0x12 and Skill_FlagIndex + 0x14 at this base. PSX: Skill_FlagIndex's boot twin reads 0x801CB234 + 16 id for the + 0x14 word, which puts the JP record (name[8], then the same eight bytes) at 0x801CB228. Fields: tables.toml abilities."
-note = "The same bytes as NameTable_Abilities, framed as the code reads them. Whether a 228th record (id 227, name at 0x65DA10) has parameter bytes is open: dump 0x65DA10..0x65DA2F."
+note = "The same bytes as NameTable_Abilities, framed as the code reads them. 228 records: id 227 (name at 0x65DA10) is a full record, a byte copy of id 226, ending exactly at Magic080_GlyphCells 0x65DA28 (measured 2026-10-21; tables.py locate finds 228 in every held disc build)."
 
 # --- item-adjacent tables (2026-09-26, the table catalog's research; addresses only - fields and counts in tables.toml where known) ---
 
@@ -373,7 +373,7 @@ evidence = "u16 sound ids by hit class + 7 * critical: Battle_PlayHitSound 0x454
 pc = 0x658930
 name = "Shop_Records"
 status = "evidence"
-evidence = "23-byte records by shop number (object + 0x1C, 0x929EC3): a u8 count, then (u8 category, u8 item) pairs - ShopMode_Begin 0x57F520, ShopTrade_Open 0x5818D0 (shop_states.cpp, docs/shop_states.md). Starts exactly where NameTable_Accessories ends. Count unread; at most 50 to ItemUse_Handlers."
+evidence = "23-byte records by shop number (object + 0x1C, 0x929EC3): a u8 count, then (u8 category, u8 item) pairs - ShopMode_Begin 0x57F520, ShopTrade_Open 0x5818D0 (shop_states.cpp, docs/shop_states.md). Starts exactly where NameTable_Accessories ends. Count unread by any reader. Measured 2026-10-21: the table is 0x480 bytes to ItemUse_Handlers, as on the US disc (0x801CA28C to the ability records 0x801CA70C); records 0..39 hold stock, 40..49 are all zero, and 50 x 23 = 1,150 rounded up to a dword is exactly 0x480 - so 50 slots, ten empty, fits better than 40 and 232 bytes of padding."
 
 [[data]]
 pc = 0x658F48
@@ -397,7 +397,7 @@ evidence = "u8 by roll sum: NewGame_RollGrowth 0x588AC0. Count unread; at most 5
 pc = 0x667548
 name = "Char_TraitLists"
 status = "evidence"
-evidence = "pointers by a character's trait byte (record + 0x1F; 0xFF or a null pointer none) to (kind, amount) byte pairs ended by kind 0xE, innate resistances and percentages: Char_ApplyTraits 0x590800 (char_stats.cpp, docs/char-stats.md). Count unread; at most 18 to Area_Descriptors."
+evidence = "pointers by a character's trait byte (record + 0x1F; 0xFF or a null pointer none) to (kind, amount) byte pairs ended by kind 0xE, innate resistances and percentages: Char_ApplyTraits 0x590800 (char_stats.cpp, docs/char-stats.md). Count unread; at most 18 to Area_Descriptors. 2026-10-21: the byte is the master (rest_2d.md: MasterJoin_Step5Apply sets it, MasterQuit_Step5Apply clears it to 0xFF), so these are the masters' bonus lists; the name is older."
 
 [[data]]
 pc = 0x8034F4
@@ -9868,7 +9868,7 @@ ret = "void"
 params = "unsigned char *record"
 impl = "src/game/char_stats.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-23, 0x590800..0x59091B plus its 14-entry jump table to 0x590953 (0x154 bytes), against the PSX 0x80165290: the byte + 0x1F (0xFF none) indexes the pointer table 0x667548 (null none) of (kind, amount) byte pairs ended by kind 0xE; kinds 0..8 Stat_AddResist(record + 0x2F + kind, amount), 9..13 Stat_AddCap100(the same), above 13 skipped. Called only by Char_RecalcStats. The name is a guess at what the per-character lists are."
+evidence = "disasm 2026-09-23, 0x590800..0x59091B plus its 14-entry jump table to 0x590953 (0x154 bytes), against the PSX 0x80165290: the byte + 0x1F (0xFF none) indexes the pointer table 0x667548 (null none) of (kind, amount) byte pairs ended by kind 0xE; kinds 0..8 Stat_AddResist(record + 0x2F + kind, amount), 9..13 Stat_AddCap100(the same), above 13 skipped. Called only by Char_RecalcStats. The lists are the masters' bonuses: the byte + 0x1F is the master (2026-10-21; rest_2d.md MasterJoin_Step5Apply / MasterQuit_Step5Apply), so the name \"traits\" is older than that reading."
 
 [[func]]
 pc = 0x590960
@@ -134096,10 +134096,10 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 
 [[data]]
 pc = 0x904134
-name = "Rest4a_Clock"
+name = "Game_BattleCount"
 ctype = "unsigned long"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 30 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x904134] at 0x45549d; mov edx, dword ptr [0x904134] at 0x4555f3; mov eax, dword ptr [0x904134] at 0x45565c and 27 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: effect_3b::kKind65Count, rest_4a::kClock, rest_4b::kClock."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 30 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x904134] at 0x45549d; mov edx, dword ptr [0x904134] at 0x4555f3; mov eax, dword ptr [0x904134] at 0x45565c and 27 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: effect_3b::kKind65Count, rest_4a::kClock, rest_4b::kClock. What it counts, 2026-10-21: the one absolute write is 0x495A81, +1 when Field_Request 3 asks for a battle (mode_tasks.cpp); the other 29 operands read. So it is the battle count; the community spans timed against it count battles. Named Rest4a_Clock until then."
 
 [[data]]
 pc = 0x904138
