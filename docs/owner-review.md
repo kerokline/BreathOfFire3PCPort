@@ -38,9 +38,13 @@ and DIV-0157 (mods); the round's findings are known-defects D326..D330.
   offset pen and an effect preset (`0x0D 0x0E 0x0F 0x16`), and the
   builders leave such a message plain **whole** (reading-row-second.md 2;
   134 effect messages and 409 non-box ones per pair). The next message on
-  from the scene is composed, so play past it. To annotate the plain pages
-  of a mixed message the contract needs a per-page "plain" mark, a
-  follow-on if the owner wants the opening covered.
+  from the scene is composed. **Decided 2026-10-22 ("let's add an explicit
+  stop to the text; it will make the new game not comparable to before, but
+  it makes it better for study"):** under a reading-row layer a timed page
+  (`0x16`) becomes an explicit confirm stop in the composed copy, and the
+  offset-pen and effect pages are composed too; the original message is
+  untouched (the side chunk), so with no layer nothing changes. Group OS,
+  launched the same day.
 - **A first install needs two steps** the launcher does not say yet
   (the saves now carry themselves: D331, `carry_saves` in `setup`, from
   the previous game folder and from the home folder's old layout): the
