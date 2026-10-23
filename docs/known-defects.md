@@ -9311,14 +9311,23 @@ identical) against the PC's `0x446430`.
 the answer is the low sixteen bits of `damage >> 8`, sign-extended. The PC
 ends with `sar eax, 8` (`0x44652C`) and answers the whole value; ours does
 the same. The two agree below 32,768. Above it the PlayStation's answer wraps
-negative where the PC's stays positive; the one caller,
-`Battle_CalcDamage` `0x4462B0`, narrows to sixteen bits later (`unsigned
-short d`), but between the two it passes the value through the hit
-functions at full width, so a raw scaled damage of 32,768 or more could hit
-differently. Whether any attack reaches that before the 9,999 cap is a game
-fact, not measured.
+negative where the PC's stays positive. The one caller is
+`Battle_BaseDamage` `0x4462B0` (the only `call 0x446430`, at `0x4463CF`),
+which answers the value whole to `Battle_CalcDamage` `0x445CF0` (its two
+calls, `0x445E1B` and `0x44603D`; nothing else in `.text` calls either).
 
-**Status:** latent; the port's; a candidate for the owner's word.
+**Moot (fix wave 1023, group BT, 2026-10-23):** every reader downstream
+uses only the low sixteen bits, which the two answers share. In
+`Battle_CalcDamage`: the weapon doubling (`add edi, edi`) keeps them; the hit
+functions `0x446110` / `0x4461B0` answer the amount as `mov ax, word ptr
+[esp+4]` (`0x4461A8`) or 0; the status tests are `test di, di`; the flag-bit-1
+roll reads `movsx eax, di` (`0x446013`); the second `Battle_BaseDamage` call
+is read as `movsx eax, ax` (`0x446042`); and from step 7 the amount is a word
+clamped to +-9,999. So no damage, hit or miss can differ, and no repair was
+built (DIV-0161 went to D336 instead). Whether an attack can reach 32,768 is
+moot with it.
+
+**Status:** moot; the port's; not repaired (nothing a player could see).
 
 ## D336 — Two battle draws take their coordinates unsigned: a negative x or y lands near 65,536 (the port's; latent)
 
@@ -9331,10 +9340,16 @@ words identical) against the PC's `0x444C40` (the battle window cell) and
 height) as signed halfwords. The PC masks each with `0xFFFF` before `fild`
 (`0x599A6E..0x599A81`, and the same shape in `0x444C40`), so a negative
 coordinate becomes a float near 65,536 and the primitive falls off-screen
-where the PlayStation draws it clipped. Ours keeps the PC's conversion. No
-caller passing a negative coordinate is known; not measured.
+where the PlayStation draws it clipped. The cell's callers (`0x442FA0`,
+`0x443F60`) are not known to pass a negative coordinate. The cursor box is
+drawn by `GeneWin_DrawList` (`0x5990E0`) at the window's x + 5, and that draw
+runs on every frame of the gene list's slide-in and slide-out (`0x599020`,
+`0x599050`, x to -0xA5): if the box is up then (step 6, not sub-step 5), the
+PC drops it while x + 5 is below 0, where the PlayStation slides it out with
+the list. Not seen.
 
-**Status:** latent; the port's.
+**Status:** fixed by DIV-0161 (`BOF3X_ORIGINAL=BattleDrawSigned` for the
+original), fix wave 1023; the port's.
 
 ## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard)
 
@@ -9361,12 +9376,15 @@ measured.
 **Established:** the PlayStation draws the hand at `answer * 0x22 + 0xD5`
 with `answer` a `u16`. The PC reads the dword at `0x904B74` (`0x4511F2`)
 while its writers store a word (`0x451042`, `0x4511EA`, and the level-up
-banner's `0x431C70`, whose `sprintf` at `0x431C77` reads the dword too). The
-hand lands elsewhere only if the halfword at `0x904B76` is not 0; no writer
-of that halfword is known, so it is the `.data` tail's 0. Ours reads as the
-PC does.
+banner's `0x431C70`, whose `sprintf` at `0x431C77` reads the dword too, but
+masks it with `0xFFFF` at `0x431C7C`, so it reads the word). The hand lands
+elsewhere only if the halfword at `0x904B76` is not 0; no instruction in
+`.text` names `0x904B74..0x904B77` but the six above (a scan, 2026-10-23), so
+it is the `.data` tail's 0.
 
-**Status:** latent; the port's; invisible unless `0x904B76` gains a writer.
+**Status:** fixed by DIV-0162 (`BOF3X_ORIGINAL=StoreAskWord`), fix wave 1023:
+the hand reads the word; the level-up reader needed nothing. The port's;
+invisible either way unless `0x904B76` gains a writer.
 
 ## D339 — Four propagated PlayStation pairs are unrelated functions, and two twin citations were swapped (tooling; the citations fixed 2026-10-23)
 

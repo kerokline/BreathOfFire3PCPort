@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 160 entries, DIV-0001..0160, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 163 entries, DIV-0001..0163, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10295,3 +10295,106 @@ designed in rather than bolted on.
   and only under our backend (`InitShim` has run): under `BOF3X_ORIGINAL=Display_Setup`, Capcom's DirectX 6
   objects would read alpha clear as transparent, so the converters keep Capcom's rule there.
   `BOF3X_STPVIEW=1` (diagnostic) draws the texels the plane marks in magenta.
+
+### Two battle draws take their coordinates signed: a box or cell partly off the left or top edge clips
+
+- **ID:** DIV-0161
+- **Date:** 2026-10-23
+- **Subsystem:** the battle draws - `BattleWin_DrawCell16` (`0x444C40`,
+  `src/game/battle_window_draw.cpp`) and `GeneWin_DrawCursorBox` (`0x599A00`,
+  `src/game/battle_e7.cpp`); [`known-defects.md`](known-defects.md) D336
+- **Tier:** Sensible - a draw repair; nothing in play changes.
+- **Original behaviour:** both mask their coordinates with `0xFFFF` before
+  `fild` (`0x599A6E..0x599A81`, the same shape in `0x444C40`), so a negative
+  x or y becomes a float near 65,536 and the primitive lands off-screen. The
+  cursor box masks its width and height the same way and adds them in 32
+  bits. Ours kept that (both modules' fuzzes compare it with Capcom's copy).
+- **New behaviour:** each vertex is the PlayStation's signed halfword: the
+  cell's x and y sign-extended from 16 bits; the box's x, y, x + w - 1 and
+  y + h - 1 each cut to 16 bits and sign-extended. For coordinates from 0 to
+  32,767 nothing changes. Below 0 the cell or the box draws clipped at the
+  screen's edge, where it vanished.
+- **Rationale:** the PlayStation stores these as signed vertex halfwords
+  (the cursor box: the JP disc's `sh` of x, y and y + h - 1 at
+  `0x800AEEF4..0x800AEF08`, US `0x800B1F04`; the cell: `sh` into +8 / +0xA,
+  US `0x801DA078`); the PC's mask is the port's conversion, not a choice.
+  Reach: the gene list's draw `GeneWin_DrawList` (`0x5990E0`) puts the box
+  at the window's x + 5 and runs on every frame of the list's slide-in and
+  slide-out (`0x599020` / `0x599050`, x down to -0xA5, and further in the
+  wide view under DIV-0041's slide), so if the box is drawn then (step 6,
+  not sub-step 5) the PC drops it for the frames where x + 5 is below 0 and
+  the PlayStation slides it out with the list. The cell's callers
+  (`0x442FA0`, `0x443F60`) are not known to pass a negative coordinate. Not
+  seen in play either way.
+- **Also in the PSX version?** No: the PlayStation draws them clipped; this
+  restores that.
+- **Verification:** builds; `BOF3X_SHADOW='*'` self-tests exit 0 (the
+  `battle_window_draw` and `battle_e7` fuzzes run before the switch is armed,
+  so they still compare Capcom's unsigned reading; neither sees the signed
+  path, which differs only for a coordinate of 0x8000 or more). Not seen in
+  play.
+- **Reversible?** `BOF3X_ORIGINAL=BattleDrawSigned` (both functions; one
+  switch byte in each module).
+
+### The dragon store prompt's hand reads its answer as the word every writer stores
+
+- **ID:** DIV-0162
+- **Date:** 2026-10-23
+- **Subsystem:** battle - `DragonCmd_StoreAsk` (`0x451160`,
+  `src/game/battle_e5.cpp`); [`known-defects.md`](known-defects.md) D338
+- **Tier:** Sensible - a latent read-width repair; nothing a player sees
+  changes today.
+- **Original behaviour:** the hand's x is `0xD5 + 0x22 * answer` with the
+  answer the dword at `0x904B74` (`0x4511F2`), where every writer stores a
+  word (`0x451042`, `0x4511EA`, `0x431C70`). The level-up notice's
+  `sprintf` reads the dword too (`0x431C77`) but masks it with `0xFFFF`
+  (`0x431C7C`), so it already reads the word and is not touched.
+- **New behaviour:** the hand reads the word. The two readings differ only
+  when the halfword `0x904B76` is not 0; no instruction in the exe names
+  `0x904B74..0x904B77` but the six above (a scan of `.text` for the
+  addresses, 2026-10-23), so it is 0 in every run we know of, and nothing a
+  player sees changes.
+- **Rationale:** the PlayStation (US `0x800A632C`, JP `0x800A332C`) reads the
+  answer as a `u16`; the PC's dword read is the port's. Cheap insurance
+  against a stray write making the hand jump off its two choices.
+- **Also in the PSX version?** No: the PlayStation reads the halfword.
+- **Verification:** builds; `BOF3X_SHADOW='*'` self-tests exit 0 (the
+  `battle_e5` fuzz runs before the switch is armed, so it still compares
+  Capcom's dword read).
+- **Reversible?** `BOF3X_ORIGINAL=StoreAskWord`.
+
+### A battle's start clears the target-pick flag, as the US disc
+
+- **ID:** DIV-0163
+- **Date:** 2026-10-23
+- **Subsystem:** battle - `Battle_Init` (`0x42E4A0`,
+  `src/game/battle_phases.cpp`); the flag `BattleE4_Picking` (`0x904AAF`);
+  [`known-defects.md`](known-defects.md) D349
+- **Tier:** Sensible - a Capcom fix the PC port never received; nothing in
+  play changes when the last battle ended normally.
+- **Original behaviour:** `Battle_Init` resets the battle's globals
+  (`0x904AA5..0x904B97`, one by one) but not `0x904AAF`, the flag the
+  command steps set while a target is being chosen (`0x446FF0`, `0x447840`,
+  `0x447F40`, `0x450510`, the item and skill picks) and clear on confirm or
+  cancel. The JP disc's `Battle_Init` (`0x801D1228`) lacks the clear too.
+- **New behaviour:** the flag is cleared with its neighbours, as the US
+  disc's `Battle_Init` (`BATTLE.EMI#3 0x801D1228`) does (US `0x801462EF`, the
+  JP's `0x801462EB`).
+- **Rationale:** a battle that starts with the flag set shows a target
+  highlight nobody is picking: the member or enemy whose actor byte the
+  stale command target holds (or the whole side, bit 0x40 / 0x80) pulses
+  with the cursor's tint (`BattleObj_IdleTintOn` `0x4417A0`, the enemies'
+  idle highlight), and the enemy gauge windows step on as if chosen
+  (`BattleWin_EnemyGaugeFrame` `0x5974C0`), until the first pick clears it.
+  Capcom fixed it between the JP and the US builds. How a battle can end
+  with the flag still 1 on the PC was not found by reading: every pick
+  clears it on confirm and cancel, a battle cannot end during command entry,
+  and a quickload (DIV-0145..0147) restores the byte with the rest of the
+  snapshot. The US disc's re-entry is likely its soft reset, which the PC
+  does not have. So the repair is expected to change nothing in normal play.
+- **Also in the PSX version?** The JP disc: the same as the PC. The US disc:
+  cleared, as here.
+- **Verification:** builds; `BOF3X_SHADOW='*'` self-tests exit 0 (the
+  `battle_phases` fuzz runs before the switch is armed, so it still compares
+  Capcom's resets).
+- **Reversible?** `BOF3X_ORIGINAL=BattleInitPickClear`.
