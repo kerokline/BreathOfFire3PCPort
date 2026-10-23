@@ -9813,7 +9813,7 @@ at all 21 reset sites could also clear one meant to survive (a list cursor).
 **Status:** Capcom's; open: a repair wants a state-hash comparison over the
 routes first.
 
-## D353 — `symbols.toml`'s PlayStation addresses for `Field_Kind2X` / `Field_Kind2Z` and `Field_ScriptFlags2` may name the wrong words (tooling; open, to be settled against both discs)
+## D353 — `symbols.toml`'s PlayStation addresses for `Field_Kind2X` / `Field_Kind2Z` and `Field_ScriptFlags2` differ from the US disc's by four bytes (tooling; settled 2026-10-23: region drift, the fields are right)
 
 **Seen:** 2026-10-23, group SP of the sound-layer round, reading the US disc
 for op `D0` and the field mode's case 5.
@@ -9830,6 +9830,9 @@ and the US build's `.data` drifts from the JP's by a few bytes in places, so
 this is either a four-byte region drift the field does not record or a slip
 in the 2026-09-22 reading. Not yet read on the JP disc.
 
-**Status:** open; tooling only (the PC addresses are measured and unchanged).
-Settle by reading op `D0` and case 5 on the JP disc; if the JP agrees with
-the US, correct the three `psx` fields and `kind2-object.md` 1.
+**Status:** settled the same evening by the twins-remainder agent on the JP
+disc: op `D0` (JP `0x801AC5F4`) passes `0x80149304` / `0x80149308` and field
+case 5 (JP `0x80198444`) sets `0x40` in `0x80146256` - the `psx` fields are
+the JP's and are right; the US build's words sit four bytes later. Region
+drift, not a slip; nothing to change. A reader of the US disc must add 4 for
+these three (and, by the same drift, for their neighbours in that block).
