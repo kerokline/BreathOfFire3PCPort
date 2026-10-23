@@ -198,7 +198,16 @@ extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
 // As the original has it: the table pointer and Sprite_Current re-read
 // before each store; kBankBytes indexed by the whole 16-bit bank, unchecked.
 // The PSX re-reads the count each turn and stores the bank byte over the
-// whole of +0x70 (its AND before is dead); the PC keeps +0x70's upper bytes.
+// whole of +0x70 (its AND before is dead; US 0x8014DD3C, JP 0x8014DC30); the
+// PC keeps +0x70's upper bytes (`and esi, 0xFFFFFF00` at 0x58962D, then the
+// byte ORed in).
+//
+// DIVERGENCE DIV-0165 (known-defects D341): 1 through
+// PatchBytes("SpriteReachWord") in SpritePose_Inject, after the self-test.
+// The bank byte is then stored zero-extended over the whole dword +0x70, as
+// the PSX does.
+static std::uint8_t g_reach_word = 0;
+
 extern "C" unsigned char __cdecl Sprite_SetAnimationBank(unsigned short bank) {
     const unsigned count = static_cast<std::uint32_t>(Long(At(at::kBankCount))) & 0xFFu;
     const unsigned char* const table = Ptr(at::kBankTable);
@@ -215,7 +224,8 @@ extern "C" unsigned char __cdecl Sprite_SetAnimationBank(unsigned short bank) {
     rv::Current<records::SpriteObject>()->column = column;
     rv::Current<records::SpriteObject>()->reach = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(rv::Current<records::SpriteObject>()->reach)) & 0xFFFFFF00u);
     unsigned char* sprite = Sprite_Current;
-    sprite[0x70] = static_cast<unsigned char>(sprite[0x70] | At(at::kBankBytes)[bank * 2u]);
+    if (g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sprite)->reach, At(at::kBankBytes)[bank * 2u]);
+    else sprite[0x70] = static_cast<unsigned char>(sprite[0x70] | At(at::kBankBytes)[bank * 2u]);
     const unsigned char second = At(at::kBankBytes)[bank * 2u + 1];
     rv::Current<records::SpriteObject>()->key_class = second;
     return 0;
@@ -285,6 +295,12 @@ extern "C" void __cdecl Effect_ClearAll(void) {
 
 void SpritePose_Inject() {
     if (bof3::WantsShadow("sprite_pose")) sprite_pose::SelfTest();
+    {
+        // DIV-0165: after the self-test, which compared Capcom's masked store.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SpriteReachWord", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_reach_word)), &was, &is, 1);
+        bof3::Log("DIV-0165    the bank setter stores the sprite's reach byte as a whole dword +0x70 (on unless the line above says OFF)");
+    }
     BOF3_INJECT(Sprite_SetAnimation);
     BOF3_INJECT(Sprite_SetAnimationAt);
     BOF3_INJECT(Sprite_EnsureAnimation);

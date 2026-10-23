@@ -9463,10 +9463,16 @@ the PC stores one byte (`mov byte ptr [eax + 0x70], dl` at `0x57B245`). The
 bank setter does the same: the PlayStation stores the bank byte over the
 whole `u32`, the PC `and`s the word with `0xFFFFFF00` (`0x58962D`) and `or`s
 the byte in, keeping bits 8..31. Ours does as the PC. The two agree unless
-something reads `+0x71..+0x73`, or `+0x70` as a word, after either write; no
-such reader is known.
+something reads `+0x71..+0x73`, or `+0x70` as a word, after either write.
+One such reader exists (fix wave 1023, a `.text` operand scan): area 51's
+`Area51_MemberAtObject` (`0x409CE6`) pushes the whole dword as
+`Party_MemberAt`'s margin; the other 31 dword reads mask it. No PC writer of
+non-zero upper bytes was found, so the difference is not expected in play.
+A third store keeping the upper bytes, `0x533C64..0x533C87`, is not paired
+and stays Capcom's.
 
-**Status:** latent; the port's.
+**Status:** fixed by DIV-0165 (`BOF3X_ORIGINAL=SpriteReachWord`), 2026-10-23;
+latent before; the port's.
 
 ## D342 — `MoveScript_ObjectKind` answers the pointer itself for an object outside every array, where the PlayStation answers 0 or 3 (the port's; latent)
 

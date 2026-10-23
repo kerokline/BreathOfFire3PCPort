@@ -10295,3 +10295,33 @@ designed in rather than bolted on.
   and only under our backend (`InitShim` has run): under `BOF3X_ORIGINAL=Display_Setup`, Capcom's DirectX 6
   objects would read alpha clear as transparent, so the converters keep Capcom's rule there.
   `BOF3X_STPVIEW=1` (diagnostic) draws the texels the plane marks in magenta.
+
+### The two sprite reach stores write the whole dword `+0x70`, as the PlayStation does
+
+- **ID:** DIV-0165
+- **Date:** 2026-10-23
+- **Subsystem:** field - `EventOp_Bx` (`0x57B130`, `src/game/event_script.cpp`) and
+  `Sprite_SetAnimationBank` (`0x589590`, `src/game/sprite_pose.cpp`); [`known-defects.md`](known-defects.md) D341
+- **Tier:** Sensible - a port repair with no known effect today; it removes a state the PlayStation
+  cannot reach.
+- **Original behaviour:** the event op that places an extra object stores byte 2 of the object's shared block
+  into `+0x70` as one byte (`mov byte ptr [eax + 0x70], dl` at `0x57B245`); the bank setter `and`s the dword
+  with `0xFFFFFF00` (`0x58962D`) and `or`s the bank byte in. Both keep `+0x71..+0x73`; `EventObj_Reset`
+  (`0x579E30`) does not clear them. The PlayStation stores the byte as a whole word in both (US `GAME.EMI#0`
+  `0x801A6C98` / JP `0x801A7CA0`; US exe `0x8014DD3C` / JP `0x8014DC30`).
+- **New behaviour:** both store the byte zero-extended over the dword, so `+0x71..+0x73` are 0 after either.
+- **Rationale:** the PSX twin rule. One reader takes `+0x70` as a whole dword: area 51's handler
+  `Area51_MemberAtObject` (`0x409CE6`, `mov ecx, dword ptr [eax + 0x70]` pushed unmasked) hands it to
+  `Party_MemberAt` as the margin, which `Sprite_PointInReach` adds to the reach; a stale upper byte would widen
+  the reach 256 steps at a time. A scan of `.text` (2026-10-23, every `[reg + 0x70]` operand wider than a
+  byte and every `[reg + 0x71..0x73]`) found no other: of the other dword reads, 31 mask with `0xFF` or use
+  only `al` / `dl`, and three are read-modify-writes that keep the upper bytes - the bank setter's own
+  (`0x58962A`) and a third byte store at `0x533C64..0x533C87` (it clears the low byte and `or`s in 0 or 1;
+  its PSX twin is not read, so it is left as Capcom's). Every whole-dword writer stores a small constant
+  (`0x40F645` 5, `0x412326` 0, `0x42B6D4` 1). No PC writer of non-zero upper bytes is known, so no change is expected in
+  play.
+- **Also in the PSX version?** The PlayStation stores the whole word; this matches it.
+- **Verification:** builds; the start-up fuzzes (`event_script`, `sprite_pose`) compare Capcom's byte stores
+  with the switch off, and `BOF3X_SHADOW='*'` exits 0 with it armed after them. The repaired branch is not
+  exercised by a fuzz: it differs from Capcom's copy only in the three upper bytes.
+- **Reversible?** `BOF3X_ORIGINAL=SpriteReachWord` (both stores).
