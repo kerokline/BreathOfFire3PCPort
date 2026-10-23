@@ -10350,3 +10350,25 @@ designed in rather than bolted on.
   recorded routes keep their frames; the slide-out has not been looked at (the owner's eye: the shop's member
   panel sliding out, and a gene choice sliding in or out).
 - **Reversible?** `BOF3X_ORIGINAL=MenuSignedXY`.
+
+### Message 0xFA's gene name is terminated after its 8-byte copy
+
+- **ID:** DIV-0167
+- **Date:** 2026-10-23
+- **Subsystem:** field / text - `FieldTail_FlagMessage` (`0x56DE50`, `src/game/field_e2.cpp`); known-defects
+  D351
+- **Tier:** Sensible - a restoration of the US disc's fix.
+- **Original behaviour:** when a dragon gene is found, its bit in `0x904650` is set and its name (system message
+  `0x4172` + n) is copied into `Text_Records` (`0x904CE0`) by `strncpy(buf, name, 8)` (`push 8` ... `call
+  0x5B9450`, `0x56DED1..0x56DEE2`) for message 0xFA. A name of 8 bytes or more - four two-byte glyphs, or eight
+  letters under a Latin layer - is left unterminated, and the message prints on into whatever an earlier user
+  of that 32-byte record left at `+8`.
+- **New behaviour:** the byte at `+8` is 0 after the copy, as on the US disc. A shorter name was already
+  padded with zeros by `strncpy`, so its message is unchanged.
+- **Rationale:** Capcom fixed it between the Japanese and the US PlayStation builds: the US `GAME.EMI#0`
+  `0x801A83DC` adds one `sb $zero` to the buffer + 8 after the copy; the JP (`0x801A93E4`) and the PC lack it.
+  The localisation layers make names of that length common.
+- **Also in the PSX version?** The US disc terminates; the JP does not.
+- **Verification:** builds; the `field_e2` fuzz compares Capcom's unterminated copy before the switch is
+  armed, and `BOF3X_SHADOW='*'` exits 0. Not seen in play: no recorded route finds a gene.
+- **Reversible?** `BOF3X_ORIGINAL=GeneNameNul`.
