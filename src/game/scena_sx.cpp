@@ -276,7 +276,7 @@ extern "C" void __cdecl Party_Remove(unsigned id_arg) {
     Field_MemberCount = static_cast<unsigned char>(now - 1);
 }
 
-// original 0x534DB0: Sprite_Current's CLUT row (+0x27) one colour: words 1..31
+// original 0x534DB0 (PSX 0x801C4084): Sprite_Current's CLUT row (+0x27) one colour: words 1..31
 // of Gfx_ClutStrip row +0x27 = colour c of {0x0010, 0x4010, 0x0210, 0x4000}
 // (c the argument's low byte; the original keeps the four on its stack and
 // reads its own frame for c of 4 or more - ours aborts), Gfx_ClutStripDirty
@@ -294,7 +294,7 @@ extern "C" void __cdecl Sprite_FlashClut(unsigned colour_arg) {
     Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] | 8);
 }
 
-// original 0x537480: a member's HP (+0x18 of its record: the second
+// original 0x537480 (PSX 0x80168AB4): a member's HP (+0x18 of its record: the second
 // argument's low byte through Character_IndexById, unchecked) down by the
 // first argument's word while it is more; else to 1 (an HP of 0 becomes 1
 // too). Then the record Field_State +0x148 names (not the member's): with HP
@@ -428,7 +428,7 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
     return 1;
 }
 
-// original 0x57CD90: the first Sprite_Objects record (of 30) whose +0 is 0,
+// original 0x57CD90 (PSX 0x8015D438): the first Sprite_Objects record (of 30) whose +0 is 0,
 // al its index; none, al 0xFF (the rest of eax is the caller's). PSX twin
 // 0x8015D438 (pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl Sprite_FindFree(void) {
@@ -463,7 +463,7 @@ extern "C" unsigned char __cdecl AbilityList_Add(unsigned id_arg, unsigned membe
     return 0;
 }
 
-// original 0x591900: a key item (the argument's low byte) into the first 0
+// original 0x591900 (PSX 0x80166B10): a key item (the argument's low byte) into the first 0
 // byte of the 32-byte key-item list 0x904554, al 1; full, al 0. PSX twin
 // 0x80166B10 (pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl KeyItem_Add(unsigned item) {
@@ -506,7 +506,7 @@ extern "C" unsigned char __cdecl Inventory_Remove(unsigned category, unsigned it
     return 0;
 }
 
-// original 0x591BC0: the party's zenny (Party_Zenny, u32) down by the
+// original 0x591BC0 (PSX 0x80166FCC): the party's zenny (Party_Zenny, u32) down by the
 // argument when it has at least that much, al 1; else al 0 (the rest of eax
 // the argument's). PSX Zenny_Sub 0x80166FCC (the sibling's name;
 // pairs_propagated "gap15").
@@ -517,7 +517,7 @@ extern "C" unsigned char __cdecl Zenny_Sub(std::uint32_t amount) {
     return 1;
 }
 
-// original 0x591BE0: the party's zenny up by the argument (u32, wrapping),
+// original 0x591BE0 (PSX 0x80166FFC): the party's zenny up by the argument (u32, wrapping),
 // and 0x904138 too when the second argument's byte is 0; then above
 // 9,999,999 it is 9,999,999 and al 0, else al 1. PSX Zenny_Add 0x80166FFC
 // (the sibling's name; pairs_propagated "call-anchored").

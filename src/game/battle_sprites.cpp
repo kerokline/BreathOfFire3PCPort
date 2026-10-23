@@ -285,7 +285,7 @@ extern "C" unsigned char __cdecl Battle_PickFlag8Member(void) {
     return 1;
 }
 
-// original 0x453A10 (0x800A76E0): 0 if member `i` is out, lacks flag bit 0,
+// original 0x453A10 (0x800A76E0; PSX 0x800A76E0): 0 if member `i` is out, lacks flag bit 0,
 // its byte +0x124 is not the acting actor, or 0x453AC0 says so; else a coin
 // flip, 1 on an even Rand (the signed remainder's low byte tested).
 extern "C" unsigned char __cdecl Battle_MemberCoinFlip(unsigned i) {
@@ -574,7 +574,7 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
     rec[8] = Party(s[5])[8];
 }
 
-// original 0x454CC0 (GAME.EMI 0x8019751C): takes the first free of the 32
+// original 0x454CC0 (GAME.EMI 0x8019751C; PSX 0x8019751C): takes the first free of the 32
 // tint records (MoveScript_TintRecords, 12 bytes: +0 bit 0 in use), 0xFF when
 // none is: +0 = (a << 1) + 0x41 as a byte, with bit 7 when the sprite's +0x28
 // is 0 and its +0x24 bit 2 is clear; +6 = ClutMap_Mark(+0x28, index, 1) - the
@@ -599,7 +599,7 @@ extern "C" unsigned char __cdecl Sprite_SetTint(unsigned char* sprite, unsigned 
     return static_cast<unsigned char>(i);
 }
 
-// original 0x454D60 (0x80197670): releases tint record `index` (unchecked)
+// original 0x454D60 (0x80197670; PSX 0x80197670): releases tint record `index` (unchecked)
 // if in use: bit 7 clears bit 2 of the sprite's +0x24, +0 = 0, the sprite's
 // +0x27 back from +1, and its clut cells freed (ClutMap_Mark(+5, index, 0)).
 extern "C" void __cdecl Tint_Release(unsigned char index) {
@@ -612,7 +612,7 @@ extern "C" void __cdecl Tint_Release(unsigned char index) {
     g.clut_mark(rec[5], index, 0);
 }
 
-// original 0x454DF0 (0x80197784): the body Sprite_SetTint and Tint_Release
+// original 0x454DF0 (0x80197784; PSX 0x80197784): the body Sprite_SetTint and Tint_Release
 // share. Claim: ClutMap_FindFree(kind) and the owner written; release:
 // ClutMap_FindOwner(owner) and 0xFF written - over the cells the callee left
 // in SharedScratch bytes 0 / 1 (row, cell), read after the call: kind 0 one
@@ -643,7 +643,7 @@ extern "C" unsigned char __cdecl ClutMap_Mark(unsigned kind, unsigned owner, uns
     return answer;
 }
 
-// original 0x454F30 (0x801978BC): the first free clut cell (0xFF in the
+// original 0x454F30 (0x801978BC; PSX 0x801978BC): the first free clut cell (0xFF in the
 // 4 x 16 map) that starts a free run of the kind's size, aligned to it:
 // every free cell tried is left in SharedScratch bytes 0 / 1 (row, cell),
 // so a failed search leaves the last free cell there. Answers the clut slot
@@ -682,7 +682,7 @@ extern "C" unsigned char __cdecl ClutMap_FindFree(unsigned kind) {
     return 0xFF;
 }
 
-// original 0x455140 (0x80197B20): the first cell of the clut map owned by
+// original 0x455140 (0x80197B20; PSX 0x80197B20): the first cell of the clut map owned by
 // `owner`, left in SharedScratch bytes 0 / 1 (row, cell); answers the owner,
 // or 0xFF (and the scratch untouched) when it owns none.
 extern "C" unsigned char __cdecl ClutMap_FindOwner(unsigned owner) {
@@ -697,7 +697,7 @@ extern "C" unsigned char __cdecl ClutMap_FindOwner(unsigned owner) {
     return 0xFF;
 }
 
-// original 0x4551A0 (GAME.EMI 0x80197B9C, term for term): sets bit 15 - the
+// original 0x4551A0 (GAME.EMI 0x80197B9C, term for term; PSX 0x80197B9C): sets bit 15 - the
 // PlayStation's semi-transparency bit - on entries 1.. of the current sprite's
 // clut in Gfx_ClutStrip, and Gfx_ClutStripDirty. The sprite's +0x27 (the
 // clut slot) divided by the table 0x6528CC at its +0x28 (the clut kind)
@@ -1018,14 +1018,14 @@ extern "C" void __cdecl Battle_SetEnemyOffset(unsigned slot, unsigned id) {
     }
 }
 
-// original 0x588F00 (0x8014D154): Sprite_Current +0x29 = Draw_OtSlot, then
+// original 0x588F00 (0x8014D154; PSX 0x8014D154): Sprite_Current +0x29 = Draw_OtSlot, then
 // (a tail jump) Sprite_UpdateScreen.
 extern "C" void __cdecl Sprite_UpdateScreenSlot(void) {
     Sprite_Current[0x29] = Draw_OtSlot;
     g.update_screen();
 }
 
-// original 0x587900: Sound_PlayEffect(id). Ops BC, BD and D1 push more
+// original 0x587900 (PSX 0x8015E210): Sound_PlayEffect(id). Ops BC, BD and D1 push more
 // arguments; only the first is read.
 extern "C" void __cdecl Sound_PlayById(unsigned short id) {
     g.play_effect(id);

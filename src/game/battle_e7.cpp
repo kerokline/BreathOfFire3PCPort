@@ -264,7 +264,7 @@ extern "C" void __cdecl BattleResultWin_DrawDrops(void) {
 // 0x5989B0 / 0x5989F0, kinds 1..4 the stack dispatchers below)
 // ===========================================================================
 
-// original 0x598BE0: a frame of 8-pixel pieces at (x, y), `cols` by `rows`
+// original 0x598BE0 (PSX 0x800AD61C): a frame of 8-pixel pieces at (x, y), `cols` by `rows`
 // cells (bytes), over page (0x340, 0x100): piece 0x25 inside (cells 1..cols-2
 // by 1..rows-2), 0x24 / 0x28 along the top and bottom (cells 2..cols-3),
 // 0x2A / 0x2B down the left and right (rows 2..rows-3), and the corners
@@ -290,7 +290,7 @@ extern "C" void __cdecl GeneWin_DrawFrame(U x, U y, U cols_arg, U rows_arg) {
     BH_CALL(Menu_DrawPiece)(xr, yb, 0x29, 1);
 }
 
-// original 0x598A30: the gene grid window (kind 0's two slide states call it
+// original 0x598A30 (PSX 0x800AD3C0): the gene grid window (kind 0's two slide states call it
 // before they move the record): its frame at (+4, +6), +8 by +9 cells; three
 // boxes in the window colour - (+4 + 6, +6 + 0x21) sized (+8 * 8 - 0xF, +9 *
 // 8 - 0x27), (+4 + 0x36, +6 + 6) 0x48 by 0x18, (+4 + 0x87, +6 + 0xA) 0x30 by
@@ -371,7 +371,7 @@ extern "C" void __cdecl GeneWin_DrawChoices(U x, U y) {
     BH_CALL(Menu_DrawHand)(static_cast<int>(x + 48 * (choice & 0x7F)), static_cast<int>(y + 4), 0);
 }
 
-// original 0x598DF0: the choice box's open state: +4 = 0x5A, +6 = -0x17, +3
+// original 0x598DF0 (PSX 0x800AD954): the choice box's open state: +4 = 0x5A, +6 = -0x17, +3
 // + 1.
 extern "C" void __cdecl GeneWin_ChoiceOpen(void) {
     rv::As<records::WindowRecord>(Win())->x = 0x5A;
@@ -379,7 +379,7 @@ extern "C" void __cdecl GeneWin_ChoiceOpen(void) {
     ++rv::As<records::WindowRecord>(Win())->state;
 }
 
-// original 0x598E10: the box slides down: +6 (signed) to 0x29 by 0x10, then
+// original 0x598E10 (PSX 0x800AD97C): the box slides down: +6 (signed) to 0x29 by 0x10, then
 // its draw at (+4, +6).
 extern "C" void __cdecl GeneWin_ChoiceSlideIn(void) {
     auto* const win = rv::As<records::WindowRecord>(Win());
@@ -389,7 +389,7 @@ extern "C" void __cdecl GeneWin_ChoiceSlideIn(void) {
     BH_CALL(GeneWin_DrawChoices)(static_cast<unsigned>(win2->x), static_cast<unsigned>(win2->y));
 }
 
-// original 0x598E50: the box slides up: +6 (signed) to -0x17 by 0x10, then
+// original 0x598E50 (PSX 0x800AD9D8): the box slides up: +6 (signed) to -0x17 by 0x10, then
 // its draw.
 extern "C" void __cdecl GeneWin_ChoiceSlideOut(void) {
     auto* const win = rv::As<records::WindowRecord>(Win());
@@ -399,7 +399,7 @@ extern "C" void __cdecl GeneWin_ChoiceSlideOut(void) {
     BH_CALL(GeneWin_DrawChoices)(static_cast<unsigned>(win2->x), static_cast<unsigned>(win2->y));
 }
 
-// original 0x598DC0: kind 1 of 0x598890, the choice box: its stack table by
+// original 0x598DC0 (PSX 0x800AD8F4): kind 1 of 0x598890, the choice box: its stack table by
 // the record's +3 - GeneWin_ChoiceOpen, _ChoiceSlideIn, _ChoiceSlideOut.
 extern "C" void __cdecl GeneWin_ChoiceStates(void) {
     static const U kStates[3] = {bof3::addr::GeneWin_ChoiceOpen, bof3::addr::GeneWin_ChoiceSlideIn,
@@ -434,7 +434,7 @@ extern "C" void __cdecl GeneWin_DrawListFrame(U x, U y, U, U, U title) {
     BH_CALL(Menu_DrawPiece)(xi + 0x80, yi, 0x33, 1);
 }
 
-// original 0x599910: a form's icon at (s16 x, s16 y): page (0x340, 0x100)
+// original 0x599910 (PSX 0x800AECDC): a form's icon at (s16 x, s16 y): page (0x340, 0x100)
 // under abr 1; a SPRT of 0x28 by 0x18 from cell v = 0x66AF70[form] - u (v %
 // 6) * 40, v (v / 6) * 24 - in CLUT (v * 16, 0x1FA), shade 0x80.
 extern "C" void __cdecl GeneWin_DrawFormIcon(U x, U y, U form) {
@@ -454,7 +454,7 @@ extern "C" void __cdecl GeneWin_DrawFormIcon(U x, U y, U form) {
     BH_CALL(Gfx_CommitPrim)(1, 0x1C);
 }
 
-// original 0x599A00: the cursor box at (x, y), w by h (words): a LINE_F3
+// original 0x599A00 (PSX 0x800AEE34): the cursor box at (x, y), w by h (words): a LINE_F3
 // (x, y), (x, y), (x, y + h - 1) and a LINE_F4 (x, y), (x + w - 1, y), (x + w
 // - 1, y + h - 1), (x, y + h - 1), both in one colour - the brightness 0xFF,
 // or with `flash` a pulse of Frame_Counter (bit 3 set: ((c & 6) << 5) +
@@ -621,7 +621,7 @@ extern "C" void __cdecl GeneWin_DrawList2(void) {
     BH_CALL(Menu_DrawHand)(static_cast<int>(static_cast<unsigned>(win->x) + 7), static_cast<int>(((W(rec + 0x10) + 1) << 5) + static_cast<unsigned>(win->y)), 0);
 }
 
-// original 0x598FA0: the first list's open state: nine tasks (0, 0xD), each
+// original 0x598FA0 (PSX 0x800ADC7C): the first list's open state: nine tasks (0, 0xD), each
 // slot's +9 / +0xA its row and column 0..2; the record's +0x14 = 6, +8 =
 // 0x10, +9 = 0x11, +3 + 1.
 extern "C" void __cdecl GeneWin_ListOpen(void) {
@@ -631,7 +631,7 @@ extern "C" void __cdecl GeneWin_ListOpen(void) {
     ++rv::As<records::WindowRecord>(Win())->state;
 }
 
-// original 0x599020: the list slides right to +4 = 0x5B by 0x20, after its
+// original 0x599020 (PSX 0x800ADD4C): the list slides right to +4 = 0x5B by 0x20, after its
 // draw.
 extern "C" void __cdecl GeneWin_ListSlideIn(void) {
     BH_CALL(GeneWin_DrawList)();
@@ -640,7 +640,7 @@ extern "C" void __cdecl GeneWin_ListSlideIn(void) {
     win->x = v >= 0x5B ? 0x5Bu : static_cast<unsigned>(v + 0x20);
 }
 
-// original 0x599050: the list slides left by 0x20, after its draw; at +4 <=
+// original 0x599050 (PSX 0x800ADD94): the list slides left by 0x20, after its draw; at +4 <=
 // -0xA5 (signed) the window is freed instead (a tail jump). The bound is the
 // operand as widescreen.cpp holds it. DIVERGENCE DIV-0041 (amended 2026-10-13,
 // the faster slide): decided by Capcom's bound at every width; in the wide
@@ -661,7 +661,7 @@ extern "C" void __cdecl GeneWin_ListSlideOut(void) {
     win->x = static_cast<unsigned>(v - 0x20);
 }
 
-// original 0x599080: after the draw, +4 moves left by 0x20 while above 0x11
+// original 0x599080 (PSX 0x800ADDEC): after the draw, +4 moves left by 0x20 while above 0x11
 // (signed), and is held at 0x11 (the record re-read after a move).
 extern "C" void __cdecl GeneWin_ListShiftLeft(void) {
     BH_CALL(GeneWin_DrawList)();
@@ -674,7 +674,7 @@ extern "C" void __cdecl GeneWin_ListShiftLeft(void) {
     if (S16(static_cast<unsigned>(win->x)) < 0x11) win->x = 0x11;
 }
 
-// original 0x5990B0: the same to the right, to 0x5B.
+// original 0x5990B0 (PSX 0x800ADE58): the same to the right, to 0x5B.
 extern "C" void __cdecl GeneWin_ListShiftRight(void) {
     BH_CALL(GeneWin_DrawList)();
     records::WindowRecord* win = rv::As<records::WindowRecord>(Win());
@@ -686,7 +686,7 @@ extern "C" void __cdecl GeneWin_ListShiftRight(void) {
     if (S16(static_cast<unsigned>(win->x)) > 0x5B) win->x = 0x5B;
 }
 
-// original 0x598F60: kind 2 of 0x598890, the first list: its stack table by
+// original 0x598F60 (PSX 0x800ADC0C): kind 2 of 0x598890, the first list: its stack table by
 // the record's +3 - GeneWin_ListOpen, _ListSlideIn, _ListSlideOut,
 // _ListShiftLeft, _ListShiftRight.
 extern "C" void __cdecl GeneWin_ListStates(void) {
@@ -696,7 +696,7 @@ extern "C" void __cdecl GeneWin_ListStates(void) {
     StackDispatch("GeneWin_ListStates", kStates, 5);
 }
 
-// original 0x599390: kind 3's open state: nine tasks (0, 0xE); +0x14 = 0xC,
+// original 0x599390 (PSX 0x800AE314): kind 3's open state: nine tasks (0, 0xE); +0x14 = 0xC,
 // +8 = 0x18, +9 = 0x11, +3 + 1.
 extern "C" void __cdecl GeneWin_List2Open(void) {
     OpenTasks("GeneWin_List2Open", 0xE, 0xC);
@@ -705,7 +705,7 @@ extern "C" void __cdecl GeneWin_List2Open(void) {
     ++rv::As<records::WindowRecord>(Win())->state;
 }
 
-// original 0x599410: after the second list's draw, +4 moves left to 0x5B by
+// original 0x599410 (PSX 0x800AE3E4): after the second list's draw, +4 moves left to 0x5B by
 // 0x20.
 extern "C" void __cdecl GeneWin_List2SlideIn(void) {
     BH_CALL(GeneWin_DrawList2)();
@@ -714,7 +714,7 @@ extern "C" void __cdecl GeneWin_List2SlideIn(void) {
     win->x = v <= 0x5B ? 0x5Bu : static_cast<unsigned>(v - 0x20);
 }
 
-// original 0x599440: after the draw, right by 0x20; at +4 >= 0x15B the
+// original 0x599440 (PSX 0x800AE42C): after the draw, right by 0x20; at +4 >= 0x15B the
 // window is freed instead (DIV-0041's operand; the faster slide as above).
 extern "C" void __cdecl GeneWin_List2SlideOut(void) {
     const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kList2OutBound));
@@ -730,7 +730,7 @@ extern "C" void __cdecl GeneWin_List2SlideOut(void) {
     win->x = static_cast<unsigned>(v + 0x20);
 }
 
-// original 0x599360: kind 3 of 0x598890: GeneWin_List2Open, _List2SlideIn,
+// original 0x599360 (PSX 0x800AE2B4): kind 3 of 0x598890: GeneWin_List2Open, _List2SlideIn,
 // _List2SlideOut by the record's +3.
 extern "C" void __cdecl GeneWin_List2States(void) {
     static const U kStates[3] = {bof3::addr::GeneWin_List2Open, bof3::addr::GeneWin_List2SlideIn,
@@ -738,14 +738,14 @@ extern "C" void __cdecl GeneWin_List2States(void) {
     StackDispatch("GeneWin_List2States", kStates, 3);
 }
 
-// original 0x5994A0: kind 4's open state: nine tasks (0, 0xE); +0x14 = 0xC,
+// original 0x5994A0 (PSX 0x800AE4E4): kind 4's open state: nine tasks (0, 0xE); +0x14 = 0xC,
 // +3 + 1 (+8 / +9 left as they are).
 extern "C" void __cdecl GeneWin_List3Open(void) {
     OpenTasks("GeneWin_List3Open", 0xE, 0xC);
     ++rv::As<records::WindowRecord>(Win())->state;
 }
 
-// original 0x599510: after the second list's draw, +4 moves left by 0x20
+// original 0x599510 (PSX 0x800AE58C): after the second list's draw, +4 moves left by 0x20
 // while above 0xA3, held at 0xA3.
 extern "C" void __cdecl GeneWin_List3SlideIn(void) {
     BH_CALL(GeneWin_DrawList2)();
@@ -758,7 +758,7 @@ extern "C" void __cdecl GeneWin_List3SlideIn(void) {
     if (S16(static_cast<unsigned>(win->x)) < 0xA3) win->x = 0xA3;
 }
 
-// original 0x599540: after the draw, right by 0x20; at +4 >= 0x143 the
+// original 0x599540 (PSX 0x800AE5F8): after the draw, right by 0x20; at +4 >= 0x143 the
 // window is freed instead (DIV-0041's operand; the faster slide as above).
 extern "C" void __cdecl GeneWin_List3SlideOut(void) {
     const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kList3OutBound));
@@ -774,7 +774,7 @@ extern "C" void __cdecl GeneWin_List3SlideOut(void) {
     win->x = static_cast<unsigned>(v + 0x20);
 }
 
-// original 0x599470: kind 4 of 0x598890: GeneWin_List3Open, _List3SlideIn,
+// original 0x599470 (PSX 0x800AE484): kind 4 of 0x598890: GeneWin_List3Open, _List3SlideIn,
 // _List3SlideOut by the record's +3.
 extern "C" void __cdecl GeneWin_List3States(void) {
     static const U kStates[3] = {bof3::addr::GeneWin_List3Open, bof3::addr::GeneWin_List3SlideIn,

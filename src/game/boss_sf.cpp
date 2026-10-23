@@ -742,7 +742,7 @@ extern "C" unsigned char __cdecl BossMyria_State7Count(void) {
     return BH_CALL(BattleEnemy_ScriptTickOnce)();
 }
 
-// original 0x4404F0: state 7 step 2 - when BattleEnemy_ScriptTickOnce answers,
+// original 0x4404F0 (PSX 0x801E4C84): state 7 step 2 - when BattleEnemy_ScriptTickOnce answers,
 // +1 up by one (state 8) and +2 = 0.
 extern "C" void __cdecl BossMyria_State7End(void) {
     if (BH_CALL(BattleEnemy_ScriptTickOnce)() == 0) return;
@@ -759,7 +759,7 @@ extern "C" void __cdecl BossMyria_State8Dispatch(void) {
     if (cur_enemy->state == 8 && cur_enemy->step <= 2) BH_CALL(BossMyria_State8Check)();
 }
 
-// original 0x440540: state 8 step 0 - BattleEnemy_ScriptTickOnce (its al not
+// original 0x440540 (PSX 0x801E4D28): state 8 step 0 - BattleEnemy_ScriptTickOnce (its al not
 // read), +2 up by one.
 extern "C" void __cdecl BossMyria_State8Tick(void) {
     BH_CALL(BattleEnemy_ScriptTickOnce)();

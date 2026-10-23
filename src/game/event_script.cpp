@@ -433,7 +433,7 @@ extern "C" void __cdecl EventOp_1x(const unsigned char* op) { Place(op, false); 
 // op[0x10] to object +0x83, op[0x11] / op[0x12] to +0x18 / +0x1C as dwords.
 extern "C" void __cdecl EventOp_2x(const unsigned char* op) { Place(op, true); }
 
-// original 0x57B100: a party record's four bytes, in the order +1 +2 +3 +0
+// original 0x57B100 (PSX 0x801A5B88): a party record's four bytes, in the order +1 +2 +3 +0
 // (PSX FUN_801A5B88). Callers push the index with the register's other bits.
 extern "C" void __cdecl PartyRecord_Clear(unsigned index) {
     unsigned char* const r = MoveScript_PartyRecords + (index & 0xFFu) * 16u;
@@ -460,7 +460,7 @@ extern "C" void __cdecl Sprite_InitFromEntry(unsigned char* entry) {
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->angle[2], Sprite_DirectionAngles[Sprite_Current[8]]);
 }
 
-// original 0x57B130: op Bx, 14 bytes - places Sprite_ObjectsExtra[op[0xB]]
+// original 0x57B130 (PSX 0x801A7CA0): op Bx, 14 bytes - places Sprite_ObjectsExtra[op[0xB]]
 // (PSX FUN_801A7CA0). op[1..4] x and z, op[5] +1, op[6] the speed index,
 // op[7] +2, op[8] the flags, op[9] the descriptor +8 entry, op[0xA] object
 // +0x83, op[0xC]:op[0xD] word +0x88; op[0]'s nibbles the direction and the
@@ -556,7 +556,7 @@ extern "C" unsigned char __cdecl EventCond_ByteFA(const unsigned char** at) {
     return static_cast<unsigned char>(Cond_ByteFA) == **at;
 }
 
-// original 0x57C1C0: condition 2 - flag `operand` of row EventScript_FlagBank
+// original 0x57C1C0 (PSX 0x8015C05C): condition 2 - flag `operand` of row EventScript_FlagBank
 // (its low byte) of Cond_Flags (PSX 0x8015C05C).
 extern "C" unsigned char __cdecl EventCond_Flag(const unsigned char** at) {
     return g.flags_test(Cond_Flags + (EventScript_FlagBank & 0xFFu) * 8u, **at);

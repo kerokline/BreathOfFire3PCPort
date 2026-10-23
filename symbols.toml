@@ -94353,12 +94353,13 @@ evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind27_Run 0x46FEE
 [[func]]
 pc = 0x528CD0
 name = "LeaderPanel_S1Choose"
-psx = 0x801DA068
+psx = 0x801DA1E8
+psx_overlay = "AREA030.EMI#4"
 ret = "void"
 params = "void"
 impl = "src/game/effect_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x528CD0..0x528D97 (0xC8 bytes): LeaderPanel_Stage1Steps[5] (0x66022C, dispatched by 0x5289A0, not in the cut); FieldPanel_DrawBox3(0x6C, 0x56); Input_Pressed 0x5000 toggles +6 (Sound_PlayEffect 0x100), 0x60 moves +3 up (0x40 sets +6, sound 0x106, else 0x103); Menu_DrawHand(0x70, 0x82 - 16 * +6), FieldPanel_DrawShade, 0x469750(0x14, 0x12, 0x118, 0x13, 0), Text_DrawAt(0x1D, 0x15) of MessagePools + the word 0x803600. PSX twin 0x801DA068 (analysis/pairs_propagated.json, callers; an AREA overlay's copy, unnamed in the sibling), a hypothesis, not read. docs/effect_1e.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x528CD0..0x528D97 (0xC8 bytes): LeaderPanel_Stage1Steps[5] (0x66022C, dispatched by 0x5289A0, not in the cut); FieldPanel_DrawBox3(0x6C, 0x56); Input_Pressed 0x5000 toggles +6 (Sound_PlayEffect 0x100), 0x60 moves +3 up (0x40 sets +6, sound 0x106, else 0x103); Menu_DrawHand(0x70, 0x82 - 16 * +6), FieldPanel_DrawShade, 0x469750(0x14, 0x12, 0x118, 0x13, 0), Text_DrawAt(0x1D, 0x15) of MessagePools + the word 0x803600. PSX twin 0x801DA1E8 (AREA030.EMI#4; the US disc's 0x801DA168): read beside ours 2026-10-23 (tools/twin_bundles.py, docs/twin-pairs-check.md) - the same calls, sounds and box; 0x801DA068, the hypothesis before, is the function ahead of it. docs/effect_1e.md."
 
 [[func]]
 pc = 0x528DA0
@@ -94572,12 +94573,13 @@ evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last in
 [[func]]
 pc = 0x5295F0
 name = "LeaderPanel_S4Run"
-psx = 0x801DB03C
+psx = 0x801DB1C0
+psx_overlay = "AREA030.EMI#4"
 ret = "void"
 params = "void"
 impl = "src/game/effect_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x5295F0..0x529854 (0x265 bytes): LeaderPanel_Stage4Steps[2]; 0x6BC71C = 0x6BC71D; record 0 z >= 0x3E8000: records 4 / 1 +6 / +1 = 4, 0 +1 = 0, 5 +1 = 0, 4 +1 = 1, 3 +1 = 7, the picked sprite record +1 = 6, sound 0x203, track 0x2A, animation 0xA, +3 = 3; else by Input_Held / Input_Pressed 0xC000, 0x3000, 0x20: the pose 0x6BC71D, record 5 +0x10 from the s8 +4..+7 of the record 0x939A20 points at, +9, record 5 +0xA, the picked record +0x1C (moved by 0xFE less the record +3, or LeaderPanel_S4Blink), LeaderPanel_S4Pose, animations 0, 7, 8, Sprite_ScriptTick; every way 0x52B1B0. PSX twin 0x801DB03C (analysis/pairs_propagated.json, callers; an AREA overlay's copy, unnamed in the sibling), a hypothesis, not read. docs/effect_1e.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x5295F0..0x529854 (0x265 bytes): LeaderPanel_Stage4Steps[2]; 0x6BC71C = 0x6BC71D; record 0 z >= 0x3E8000: records 4 / 1 +6 / +1 = 4, 0 +1 = 0, 5 +1 = 0, 4 +1 = 1, 3 +1 = 7, the picked sprite record +1 = 6, sound 0x203, track 0x2A, animation 0xA, +3 = 3; else by Input_Held / Input_Pressed 0xC000, 0x3000, 0x20: the pose 0x6BC71D, record 5 +0x10 from the s8 +4..+7 of the record 0x939A20 points at, +9, record 5 +0xA, the picked record +0x1C (moved by 0xFE less the record +3, or LeaderPanel_S4Blink), LeaderPanel_S4Pose, animations 0, 7, 8, Sprite_ScriptTick; every way 0x52B1B0. PSX twin 0x801DB1C0 (AREA030.EMI#4; the US disc's 0x801DB140): read beside ours 2026-10-23 (tools/twin_bundles.py, docs/twin-pairs-check.md) - the same calls, sounds and box; 0x801DB03C, the hypothesis before, is the function ahead of it. docs/effect_1e.md."
 
 [[func]]
 pc = 0x529860

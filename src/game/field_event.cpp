@@ -304,7 +304,7 @@ extern "C" void __cdecl ScriptContext_Reset(unsigned char* context) {
     context[4] = 3;
 }
 
-// original 0x536650: Sprite_Current's dwords +0xC, +0x10, +0x14 cleared. The
+// original 0x536650 (PSX 0x801C6790): Sprite_Current's dwords +0xC, +0x10, +0x14 cleared. The
 // original returns with eax 0, which none of the 14 call sites reads (checked
 // 2026-09-22); ours does not promise it.
 extern "C" void __cdecl Sprite_ClearSteps(void) {

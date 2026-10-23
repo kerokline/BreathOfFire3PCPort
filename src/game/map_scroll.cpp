@@ -118,7 +118,7 @@ extern "C" void __cdecl MapView_ShiftColumnNext(void) {
     if (map_rim::Active()) map_rim::RimShift(map_rim::Shift::kColumnNext);   // DIV-0041 (wide-ring)
 }
 
-// original 0x56EAB0: the view one map cell back along x and y - two ring rows
+// original 0x56EAB0 (PSX 0x80153950): the view one map cell back along x and y - two ring rows
 // (PSX FUN_80153950). Twice: the slot at the head row is refilled with view
 // row -2, then -3, and the head steps back onto it.
 //
@@ -141,7 +141,7 @@ extern "C" void __cdecl MapView_ShiftRowsPrev(void) {
     if (map_rim::Active()) map_rim::RimShift(map_rim::Shift::kRowsPrev);   // DIV-0041 (wide-ring)
 }
 
-// original 0x56EB50: the view one map cell on along x and y - two ring rows
+// original 0x56EB50 (PSX 0x80153A6C): the view one map cell on along x and y - two ring rows
 // (PSX FUN_80153A6C). Twice: the head row advances and its slot is refilled
 // with view row 0x38, then 0x39.
 //
@@ -369,7 +369,7 @@ extern "C" void __cdecl AreaMap_SetupEntries(void) {
     }
 }
 
-// original 0x5717B0: every palette cycle of the area header put at its frame
+// original 0x5717B0 (PSX 0x80158B60): every palette cycle of the area header put at its frame
 // at once (PSX FUN_80158B60). The entries from AreaMap_EntryBase, as
 // AreaMap_HeaderPass walks them; one whose top byte is exactly 0x80 - kind 0,
 // AreaMap_ClutCycle's, with bit 7 - takes f = Frame_Counter mod its low byte,

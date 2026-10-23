@@ -353,7 +353,7 @@ extern "C" unsigned char __cdecl Sprite_PointInReach(int x, int y, short z, int 
     return 1;
 }
 
-// original 0x57C0A0. The object number an attachment handle names - the byte
+// original 0x57C0A0 (PSX 0x8015BEE4). The object number an attachment handle names - the byte
 // the movement-script command F8 07 stores at +0x18 - in Sprite_FindNearby's
 // numbering: without bit 7, (handle & 0x3F) + 30, one of Sprite_ObjectsExtra;
 // with it, handle & 0x3F.

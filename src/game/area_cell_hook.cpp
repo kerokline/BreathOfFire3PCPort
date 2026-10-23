@@ -1,4 +1,4 @@
-// original 0x56E670, Area_CellHook: the per-area table at 0x662F28 (group
+// original 0x56E670 (PSX 0x801A9CB4), Area_CellHook: the per-area table at 0x662F28 (group
 // ART names it and its layout) read for Game_AreaNumber. docs/area_harness.md
 // section 8. A faithful replacement: no DIVERGENCE.md entry is owed.
 #include "game/area_cell_hook.h"

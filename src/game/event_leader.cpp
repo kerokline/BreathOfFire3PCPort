@@ -124,7 +124,7 @@ void SetShade(unsigned char* m, unsigned char v) {
 
 // --- the leader's step ------------------------------------------------------------
 
-// original 0x52E110: the leader's sub-state 2 (Field_LeaderControl's table
+// original 0x52E110 (PSX 0x801B1D98): the leader's sub-state 2 (Field_LeaderControl's table
 // 0x660954 entry 2) - Field_State +0x137 = 1; with steps left in +9, one fewer
 // and Field_LeaderStepTick; at 0, where the step lands. Both are tail jumps.
 extern "C" void __cdecl Field_LeaderStepping(void) {
@@ -139,7 +139,7 @@ extern "C" void __cdecl Field_LeaderStepping(void) {
     g.step_tick();
 }
 
-// original 0x52E580: where a step lands - reached only by 0x52E110's tail
+// original 0x52E580 (PSX 0x801B2464): where a step lands - reached only by 0x52E110's tail
 // jump, in no list (event-ops.md section 11). The run counter +7 (up to 0x11
 // while running, else 0); unless on foot the equipment tick; the two actor
 // ticks and the floor; the four turn tiles, any one ending it (0xA4 with
@@ -306,7 +306,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
 
 // --- state 3: the party swap -----------------------------------------------------
 
-// original 0x52E9D0: the leader's state 3 (Field_LeaderSwapTest sets it) - a
+// original 0x52E9D0 (PSX 0x801B2AE0): the leader's state 3 (Field_LeaderSwapTest sets it) - a
 // tail jump through the five sub-states at 0x660968 by Sprite_Current +2.
 extern "C" void __cdecl Field_SwapState(void) { Table(Field_SwapSteps_addr)[Sprite_Current[2]](); }
 
@@ -573,7 +573,7 @@ extern "C" void __cdecl Field_SwapSpinIn(void) {
     ObjTrio[0].step = static_cast<unsigned char>(ObjTrio[0].step + 1);
 }
 
-// original 0x52F350: sub-state 4 - once Field_Kind2Hold is 0: Field_ScriptFlags2
+// original 0x52F350 (PSX 0x801B3948): sub-state 4 - once Field_Kind2Hold is 0: Field_ScriptFlags2
 // bit 10 (Field_LeaderSwapTest's) cleared, the view's elevation to the
 // leader's height, state 1 sub-state 0.
 extern "C" void __cdecl Field_SwapEnd(void) {
@@ -587,17 +587,17 @@ extern "C" void __cdecl Field_SwapEnd(void) {
 
 // --- state 4: the menu --------------------------------------------------------
 
-// original 0x52F390: state 4 (Field_LeaderMenuTest sets it) - a tail jump
+// original 0x52F390 (PSX 0x801B39B4): state 4 (Field_LeaderMenuTest sets it) - a tail jump
 // through 0x66097C's two sub-states.
 extern "C" void __cdecl Field_MenuState(void) { Table(Field_MenuSteps_addr)[Sprite_Current[2]](); }
 
-// original 0x52F3B0: sub-state 0 - sub-state 1 and Field_Request 1 (the menu).
+// original 0x52F3B0 (PSX 0x801B39F8): sub-state 0 - sub-state 1 and Field_Request 1 (the menu).
 extern "C" void __cdecl Field_MenuOpen(void) {
     Sprite_Current[2] = 1;
     Field_Request = 1;
 }
 
-// original 0x52F3D0: sub-state 1 - while Field_Request is 1 nothing; then
+// original 0x52F3D0 (PSX 0x801B3A18): sub-state 1 - while Field_Request is 1 nothing; then
 // Field_ScriptFlags2 bit 11 (Field_LeaderMenuTest's) cleared, state 1 sub-state 0.
 extern "C" void __cdecl Field_MenuWait(void) {
     if (Field_Request == 1) return;
@@ -609,11 +609,11 @@ extern "C" void __cdecl Field_MenuWait(void) {
 
 // --- state 5: the encounter ----------------------------------------------------
 
-// original 0x52F400: state 5 (Field_LeaderStepLands sets it when
+// original 0x52F400 (PSX 0x801B3A68): state 5 (Field_LeaderStepLands sets it when
 // Field_EncounterDue) - a tail jump through 0x660984's two sub-states.
 extern "C" void __cdecl Field_EncounterState(void) { Table(Field_EncounterSteps_addr)[Sprite_Current[2]](); }
 
-// original 0x52F420: sub-state 0 - outside an event battle (0x904AAA 0),
+// original 0x52F420 (PSX 0x801B3AAC): sub-state 0 - outside an event battle (0x904AAA 0),
 // Encounter_RollInitiative; in one, every member after the leader cleared
 // and put in state 5, and +0xB = 0xFF. Then sub-state 1.
 // As the original has it: the member count is read again after each clear.
@@ -637,7 +637,7 @@ extern "C" void __cdecl Field_EncounterStart(void) {
     Sprite_Current[2] = 1;
 }
 
-// original 0x52F490: sub-state 1 - with an effect object in +0xB, wait for it
+// original 0x52F490 (PSX 0x801B3B64): sub-state 1 - with an effect object in +0xB, wait for it
 // to end (Effect_Objects[+0xB] +0 zero), then +0xB = 0xFF; with none, wait
 // for member 1 (and member 2, with three) to be in state 5; then +0xB = 0,
 // Field_ScriptFlags2 bit 12 cleared and Field_Request 3.
@@ -662,14 +662,14 @@ extern "C" void __cdecl Field_EncounterWait(void) {
 
 // --- state 7: a passage's content ------------------------------------------------
 
-// original 0x52F5E0: state 7 (Field_LeaderTalkTest sets it on a passage) -
+// original 0x52F5E0 (PSX 0x801B3D88): state 7 (Field_LeaderTalkTest sets it on a passage) -
 // one of 0x66098C's four sub-states, then Sprite_ScriptTick (a tail jump).
 extern "C" void __cdecl Field_PassageState(void) {
     Table(Field_PassageSteps_addr)[Sprite_Current[2]]();
     g.script_tick();
 }
 
-// original 0x52F600: sub-state 0 - the passage faced (Area_PassageAhead); the
+// original 0x52F600 (PSX 0x801B3DD4): sub-state 0 - the passage faced (Area_PassageAhead); the
 // standing pose on foot, else the reaching one ((+8 >> 1) + 0x10); then by
 // the entry's word +4 and kind +6: bit 15 clear or kind 0xFF, the system
 // message 0 and sub-state 1; kind 0 the system message and kind 1 the
@@ -725,7 +725,7 @@ extern "C" void __cdecl Field_PassageOpen(void) {
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
 }
 
-// original 0x52F760: sub-state 1 - once Field_Request is 0, the passage's
+// original 0x52F760 (PSX 0x801B3FC0): sub-state 1 - once Field_Request is 0, the passage's
 // content: its flag (+4, in 0x90410C) already set, system message 1; kind
 // 0xFF zenny (+5 * 40, 0x5307C0) with the count 0x90413C and the flag (unless
 // 0xFF) and sound 0x106; else the item (category +6, id +5): its name to
@@ -764,7 +764,7 @@ extern "C" void __cdecl Field_PassageTake(void) {
     sc[2] = 2;
 }
 
-// original 0x52F8A0: sub-state 2 - once Field_Request is 0, the standing pose
+// original 0x52F8A0 (PSX 0x801B4154): sub-state 2 - once Field_Request is 0, the standing pose
 // (Field_LeaderAnimation on foot, else Sprite_EnsureAnimation) and state 1.
 extern "C" void __cdecl Field_PassageEnd(void) {
     if (Field_Request != 0) return;
@@ -776,7 +776,7 @@ extern "C" void __cdecl Field_PassageEnd(void) {
 
 // --- state 10: the action by party set ------------------------------------------
 
-// original 0x52FB60: state 10 (Field_LeaderCheckTest and
+// original 0x52FB60 (PSX 0x801B4688): state 10 (Field_LeaderCheckTest and
 // Field_LeaderEffectTest set it) - the handler at 0x6609D0 for the loaded
 // party set (0x90412C & 0x7F); then, when it left Field_State +0x137 at 0,
 // the pose, member 0 cleared and state 1.
@@ -834,7 +834,7 @@ extern "C" void __cdecl Field_ExitFromCell(void) {
     AreaEntry_PendingFlags = r[3];
 }
 
-// original 0x533780: the pending jump's entry 0 (0x660B60, Field_PendingJump
+// original 0x533780 (PSX 0x801C1AAC): the pending jump's entry 0 (0x660B60, Field_PendingJump
 // jumps to it while 0x904EF0 is set; Area_Enter 0x533710 sets it) - the party
 // walking in. First frame (0x904EF2 = 0): the leader's +0 bit 6 and state
 // cleared, +0x138 bit 1 cleared, the count 1. Later, once the leader is a
@@ -896,7 +896,7 @@ extern "C" void __cdecl Field_PendingWalkIn(void) {
 
 // --- the way blocked -------------------------------------------------------------
 
-// original 0x535610: whether the way to (x, z) is blocked for a sprite of
+// original 0x535610 (PSX 0x801C4E38): whether the way to (x, z) is blocked for a sprite of
 // ground height `ground` - 0x535830 (a raised sprite's) when the byte
 // `raised` is set, else Field_WayBlocked4. Their al.
 extern "C" unsigned char __cdecl Field_WayBlocked(long x, long z, unsigned raised, long ground) {

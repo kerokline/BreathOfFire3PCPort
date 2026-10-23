@@ -167,7 +167,7 @@ int Sound_PlayEffectEax(unsigned short id) {
     return 0;
 }
 
-// original 0x587A20: reads BGM track `track` whole into Music_File. Both names
+// original 0x587A20 (PSX 0x801625AC): reads BGM track `track` whole into Music_File. Both names
 // are formatted first: the plain one (the track loops) and the N one (it
 // plays once); Music_FileLoops is 1 before the plain one is tried and 0 only
 // when the N one opened (docs/asset-loading-path.md section 1a).
@@ -299,7 +299,7 @@ void KeyOffEffectVoices() {
 }
 }  // namespace sound
 
-// original 0x587B40: fades the music to nothing over `frames` of Sound_Tick,
+// original 0x587B40 (PSX 0x801626C0): fades the music to nothing over `frames` of Sound_Tick,
 // then stops it. x87 as the original: the step is -(volume / frames) with
 // frames loaded as a 64-bit integer whose high half is 0 - unsigned, where
 // Music_FadeIn divides by it signed - rounded at the control word's precision,
@@ -322,7 +322,7 @@ int Music_FadeOutStopEax(int frames) {
     return frames;
 }
 
-// original 0x587BA0: fades the music up to 127 over `frames`: the step is
+// original 0x587BA0 (PSX 0x8015DE8C): fades the music up to 127 over `frames`: the step is
 // (127.0 - volume) / frames with frames a signed dword (fidiv), x87 as the
 // original. A fade in never stops the music. eax is frames.
 int Music_FadeInEax(int frames) {

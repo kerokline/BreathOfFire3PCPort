@@ -156,7 +156,7 @@ void ClearFormFlag() {
 // The enemy ops: EnemyOp_Steps entries 7 (the cast), 8 (its end), 9 (the leave)
 // ===========================================================================
 
-// original 0x437030: EnemyOp_Steps[7] - jmp [EnemyOp_CastSubs + 4 * +2] (3:
+// original 0x437030 (PSX 0x801E4A40): EnemyOp_Steps[7] - jmp [EnemyOp_CastSubs + 4 * +2] (3:
 // EnemyOp_CastStart, EnemyOp_CastCue, BossMyria_State7End).
 extern "C" unsigned __cdecl EnemyOp_CastDispatch(unsigned passed) {
     return Dispatch("EnemyOp_CastDispatch", AddressOf(EnemyOp_CastSubs), 3, 2, passed);
@@ -193,7 +193,7 @@ extern "C" unsigned char __cdecl EnemyOp_CastStart(void) {
     return BH_CALL(BattleEnemy_ScriptTickOnce)();
 }
 
-// original 0x437120: the cast's step 1 - +9, when not 0, down by one; at 0 the
+// original 0x437120 (PSX 0x801E4BCC): the cast's step 1 - +9, when not 0, down by one; at 0 the
 // cue: in an event battle Sound_PlayEffectUnlessNone(the word +2 of 0x939AD8's
 // +0xF8 table), else Sound_PlayEffect(0x601 + 2 * its +0xF0), then +2 up by one
 // (Sprite_Current read again). Both end in a tail jump to
@@ -215,7 +215,7 @@ extern "C" unsigned char __cdecl EnemyOp_CastCue(void) {
     return BH_CALL(BattleEnemy_ScriptTickOnce)();
 }
 
-// original 0x437180: EnemyOp_Steps[8] - call [EnemyOp_CastDoneSubs + 4 * +2]
+// original 0x437180 (PSX 0x801E4CDC): EnemyOp_Steps[8] - call [EnemyOp_CastDoneSubs + 4 * +2]
 // (3: BossMyria_State8Tick, EnemyOp_CastDoneCost, EnemyOp_CastDoneTickUnless),
 // then a tail jump to EnemyOp_CastDoneCheck.
 extern "C" void __cdecl EnemyOp_CastDoneDispatch(void) {
@@ -255,13 +255,13 @@ extern "C" void __cdecl EnemyOp_CastDoneCheck(void) {
     if (B(at::kRoundFlags) & 4) BH_CALL(EnemyOp_EndAction)();
 }
 
-// original 0x437240: EnemyOp_Steps[9] - jmp [EnemyOp_LeaveSubs + 4 * +2] (3:
+// original 0x437240 (PSX 0x801E4EA4): EnemyOp_Steps[9] - jmp [EnemyOp_LeaveSubs + 4 * +2] (3:
 // EnemyOp_LeaveStart, EnemyOp_LeaveStep, EnemyOp_LeaveEnd).
 extern "C" unsigned __cdecl EnemyOp_LeaveDispatch(unsigned passed) {
     return Dispatch("EnemyOp_LeaveDispatch", AddressOf(EnemyOp_LeaveSubs), 3, 2, passed);
 }
 
-// original 0x437260: the leave's step 0 - the velocity +0x18 = -0x1000, +0x1C =
+// original 0x437260 (PSX 0x801E4EE8): the leave's step 0 - the velocity +0x18 = -0x1000, +0x1C =
 // 0, turned by the pose (0x4467C0, BE4's); the pose's bit 1 flipped; +0xC /
 // +0x10 = 0; +9 = 0x10, +0xA = 8; BattleEnemy_SetAnimation(0); the tint
 // Sprite_SetTint(Sprite_Current, -4, -4, -4, 1); +0 |= 0x20; +0x5C = 2, the
@@ -288,7 +288,7 @@ extern "C" void __cdecl EnemyOp_LeaveStart(void) {
     rv::As<records::BattleEnemy>(S())->step += 1;
 }
 
-// original 0x437320: the leave's step 1 - +9, when not 0, down by one (a wait);
+// original 0x437320 (PSX 0x801E5000): the leave's step 1 - +9, when not 0, down by one (a wait);
 // at 0, +0xA down by one; at 0, +2 up by one; else the colour +0x5D..+0x5F each
 // down by 0x10, the velocity +0xC / +0x10 up by +0x18 / +0x1C, the position
 // +0x34 / +0x38 up by it, and a tail jump to BattleEnemy_ScriptTick. (eax on
@@ -314,7 +314,7 @@ extern "C" void __cdecl EnemyOp_LeaveStep(void) {
     BH_CALL(BattleEnemy_ScriptTick)();
 }
 
-// original 0x4373C0: the leave's step 2 (also BossNina_WalkSteps[2]) -
+// original 0x4373C0 (PSX 0x801E511C): the leave's step 2 (also BossNina_WalkSteps[2]) -
 // Battle_RemoveFromTurnOrder(+5); the enemies left 0x904AB3 down by one, and at
 // 0 0x904AE8 |= 2 (the win); Sprite_ReleaseTint(Sprite_Current);
 // Battle_ClearActorBit(+5); window record 4's +3 (0x8031F3) = 2;
@@ -332,7 +332,7 @@ extern "C" void __cdecl EnemyOp_LeaveEnd(void) {
     BH_CALL(Effect_Release)();
 }
 
-// original 0x437450 (sound): Sound_PlayEffect(sound) unless its low word is
+// original 0x437450 (sound; PSX 0x801E5230): Sound_PlayEffect(sound) unless its low word is
 // 0xFFFF (the whole dword handed on; Sound_PlayEffect reads the word). An
 // enemy state's or an actor's cue (twelve callers, eleven of them ours).
 extern "C" void __cdecl Sound_PlayEffectUnlessNone(unsigned sound) {
@@ -375,11 +375,11 @@ extern "C" unsigned __cdecl Fixed_HighRoundUp(unsigned value, unsigned sign) {
 // The party objects: state 6, the hit taken
 // ===========================================================================
 
-// original 0x441A10: BattleObj_StateTable[6] - jmp [BattleObj_HitSubs + 4 * +2]
+// original 0x441A10 (PSX 0x801DFB90): BattleObj_StateTable[6] - jmp [BattleObj_HitSubs + 4 * +2]
 // (6: the entry twice, the receive, the step, the fall, the HP change).
 extern "C" void __cdecl BattleObj_StateHit(void) { Run("BattleObj_StateHit", AddressOf(BattleObj_HitSubs), 6, 2); }
 
-// original 0x441A30: BattleObj_HitSubs[0] and [2] - Field_State +0x12F =
+// original 0x441A30 (PSX 0x801DFBD4): BattleObj_HitSubs[0] and [2] - Field_State +0x12F =
 // Sprite_Current +0x4B, the word +0x140 = its word +0x58; +4 = 0, +2 = 1.
 extern "C" void __cdecl BattleObj_HitEnter(void) {
     F()[0x12F] = rv::As<records::PartyMember>(S())->animation;
@@ -388,7 +388,7 @@ extern "C" void __cdecl BattleObj_HitEnter(void) {
     rv::As<records::PartyMember>(S())->step = 1;
 }
 
-// original 0x441A70: BattleObj_HitSubs[1] - jmp [BattleObj_HitReceiveSubs + 4 *
+// original 0x441A70 (PSX 0x801DFC24): BattleObj_HitSubs[1] - jmp [BattleObj_HitReceiveSubs + 4 *
 // +3] (3: BattleObj_HitReceive, _HitWaitPose, _HitEnd).
 extern "C" void __cdecl BattleObj_HitReceiveDispatch(void) {
     Run("BattleObj_HitReceiveDispatch", AddressOf(BattleObj_HitReceiveSubs), 3, 3);
@@ -528,7 +528,7 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
     rv::As<records::PartyMember>(S())->state3 += 1;
 }
 
-// original 0x441D50: BattleObj_HitReceiveSubs[1] and BattleObj_HpSubs[1] -
+// original 0x441D50 (PSX 0x801E0140): BattleObj_HitReceiveSubs[1] and BattleObj_HpSubs[1] -
 // when Sprite_ScriptTickOnce answers, +3 up by one and, unless Field_State
 // +0x90 bit 2, a tail jump to BattleObj_PickPose.
 extern "C" void __cdecl BattleObj_HitWaitPose(void) {
@@ -577,13 +577,13 @@ extern "C" void __cdecl BattleObj_HitEnd(void) {
     rv::As<records::PartyMember>(S())->state3 = 0;
 }
 
-// original 0x441EB0: BattleObj_HitSubs[3] - jmp [BattleObj_HitStepSubs + 4 * +3]
+// original 0x441EB0 (PSX 0x801E0400): BattleObj_HitSubs[3] - jmp [BattleObj_HitStepSubs + 4 * +3]
 // (5: _HitStepStart, _HitStepOut, _HitStepBack, _HitStepPose, BattleObj_HitEnd).
 extern "C" void __cdecl BattleObj_HitStepDispatch(void) {
     Run("BattleObj_HitStepDispatch", AddressOf(BattleObj_HitStepSubs), 5, 3);
 }
 
-// original 0x441ED0: the step's start - with Field_State +0x91 bit 6, +3 = 2
+// original 0x441ED0 (PSX 0x801E0444): the step's start - with Field_State +0x91 bit 6, +3 = 2
 // and +0xA = 0; else the word +0x128 = 0, the velocity +0xC = 0, +0x10 =
 // -0x2000 turned by the pose (0x446770, BE4's), +0xA = 4,
 // BattleObj_ScriptTickOnce, Sound_PlayById(0x205), +3 up by one.
@@ -604,7 +604,7 @@ extern "C" void __cdecl BattleObj_HitStepStart(void) {
     rv::As<records::PartyMember>(S())->state3 += 1;
 }
 
-// original 0x441F50: the step out - +0xA down by one; at 0, +0xA = 4 and +3 up
+// original 0x441F50 (PSX 0x801E04E8): the step out - +0xA down by one; at 0, +0xA = 4 and +3 up
 // by one; the position +0x34 / +0x38 up by the velocity; a tail jump to
 // BattleObj_ScriptTickOnce.
 extern "C" void __cdecl BattleObj_HitStepOut(void) {
@@ -619,7 +619,7 @@ extern "C" void __cdecl BattleObj_HitStepOut(void) {
     BH_CALL(BattleObj_ScriptTickOnce)();
 }
 
-// original 0x441FA0: the step back - +0xA not 0: the position down by the
+// original 0x441FA0 (PSX 0x801E0580): the step back - +0xA not 0: the position down by the
 // velocity, +0xA down by one, BattleObj_ScriptTickOnce. At 0: with Field_State
 // +0x12C bit 4, Battle_SetDamagePopup(its word +0x128, +5) and +3 up by one;
 // else BattleTask_Create(0, 1) - the slot's owner +0x80 = Sprite_Current, its
@@ -649,7 +649,7 @@ extern "C" void __cdecl BattleObj_HitStepBack(void) {
     owner_rec->state3 += 1;
 }
 
-// original 0x442050: the step's pose - +3 up by one; unless Field_State +0x90
+// original 0x442050 (PSX 0x801E0680): the step's pose - +3 up by one; unless Field_State +0x90
 // bit 2, a tail jump to BattleObj_PickPose.
 extern "C" void __cdecl BattleObj_HitStepPose(void) {
     rv::As<records::PartyMember>(S())->state3 += 1;
@@ -763,7 +763,7 @@ extern "C" void __cdecl BattleParty_RecalcStats(void) {
     } while (member < B(at::kPartyCount));
 }
 
-// original 0x442420: al 0 if any in-use member (+0 bit 0) of the three is up -
+// original 0x442420 (PSX 0x801E0DA0): al 0 if any in-use member (+0 bit 0) of the three is up -
 // its +0x90 has neither bit 2 nor 14, or its +0x130 bit 2 or +0x134 bit 1 is
 // set, or with +0x90 bit 14 its +0x96 or +0x97 is 0x18 or its +0x95 0x43 (the
 // states BattleObj_Fall revives from); else 1 (the party is down). The upper
@@ -782,7 +782,7 @@ extern "C" unsigned char __cdecl BattleParty_AllDown(void) {
     return 1;
 }
 
-// original 0x4424A0: BattleObj_FallSubs[1], the revive - +9 down by one; at 0:
+// original 0x4424A0 (PSX 0x801E0EA0): BattleObj_FallSubs[1], the revive - +9 down by one; at 0:
 // Field_State +0x90 &= ~0x4000, +0x130 &= ~4, the word +0x98 = 1, +0x9C
 // halved; BattleTask_Create(0, 1) - its owner Sprite_Current, +7 = 1, +0x27 =
 // 6; Sprite_SetAnimation(+8 + 4); Sound_PlayById(0x206); unless 0x904AE9,
@@ -813,7 +813,7 @@ extern "C" void __cdecl BattleObj_Revive(void) {
     BH_CALL(BattleObj_ScriptTick)();
 }
 
-// original 0x4425A0: BattleObj_FallSubs[2] - Battle_ClearActorBit(+5);
+// original 0x4425A0 (PSX 0x801E0FE4): BattleObj_FallSubs[2] - Battle_ClearActorBit(+5);
 // Field_State +0x130's low byte &= 0x0F and its bit 9 cleared; +1..+3 = 3, 0, 0
 // (standing again).
 extern "C" void __cdecl BattleObj_ReviveEnd(void) {
@@ -868,13 +868,13 @@ extern "C" void __cdecl BattleObj_ReviveByEquip(void) {
     BH_CALL(BattleObj_ScriptTick)();
 }
 
-// original 0x442740: BattleObj_FallSubs[4] - jmp [BattleObj_FallTaskSubs + 4 *
+// original 0x442740 (PSX 0x801E122C): BattleObj_FallSubs[4] - jmp [BattleObj_FallTaskSubs + 4 *
 // +4] (2: _FallTaskStart, _FallTaskWait).
 extern "C" void __cdecl BattleObj_FallTaskDispatch(void) {
     Run("BattleObj_FallTaskDispatch", AddressOf(BattleObj_FallTaskSubs), 2, 4);
 }
 
-// original 0x442760: nothing while any member below the party count 0x904AB0
+// original 0x442760 (PSX 0x801E1270): nothing while any member below the party count 0x904AB0
 // has +0x130 bit 13; else Field_State +0x130 |= 0x2000, BattleTask_Create(0,
 // 0xB for the character +0x89 at 4, else 0xC) - its owner Sprite_Current - and
 // +4 up by one.
@@ -891,7 +891,7 @@ extern "C" void __cdecl BattleObj_FallTaskStart(void) {
     member_s->state4 += 1;
 }
 
-// original 0x442800: nothing while Field_State +0x130 has bit 13 (the task
+// original 0x442800 (PSX 0x801E134C): nothing while Field_State +0x130 has bit 13 (the task
 // clears it); then +0x130 &= ~0x70 and ~0x200, Battle_ClearActorBit(+5), +1..+4
 // = 2, 0, 0, 0.
 extern "C" void __cdecl BattleObj_FallTaskWait(void) {
@@ -911,11 +911,11 @@ extern "C" void __cdecl BattleObj_FallTaskWait(void) {
 // State 6's HP change (+2 = 5)
 // ===========================================================================
 
-// original 0x442870: BattleObj_HitSubs[5] - jmp [BattleObj_HpSubs + 4 * +3] (3:
+// original 0x442870 (PSX 0x801E13E4): BattleObj_HitSubs[5] - jmp [BattleObj_HpSubs + 4 * +3] (3:
 // _HpApply, BattleObj_HitWaitPose, _HpEnd).
 extern "C" void __cdecl BattleObj_HpDispatch(void) { Run("BattleObj_HpDispatch", AddressOf(BattleObj_HpSubs), 3, 3); }
 
-// original 0x442890: the change applied - with the word +0x98 (HP) at or below
+// original 0x442890 (PSX 0x801E1428): the change applied - with the word +0x98 (HP) at or below
 // the s16 +0x128 (signed compare): +0x90 = 0x4000, +0x98 = 0,
 // Battle_PlayActorCue(1); else Battle_PlayActorCue(0) for +0x128 not negative,
 // Sound_PlayById(0x206) for negative, +0x98 -= +0x128, and at most +0xA0.
@@ -953,7 +953,7 @@ extern "C" void __cdecl BattleObj_HpApply(void) {
     rv::As<records::PartyMember>(S())->state3 += 1;
 }
 
-// original 0x442980: BattleObj_HpSubs[2] - BattleObj_ScriptTick; with
+// original 0x442980 (PSX 0x801E1560): BattleObj_HpSubs[2] - BattleObj_ScriptTick; with
 // Field_State +0x91 bit 6, +1..+3 = 6, 4, 0 (the fall); else
 // Battle_ClearActorBit(+5) and +1..+3 = 3, 0, 0.
 extern "C" void __cdecl BattleObj_HpEnd(void) {
@@ -976,15 +976,15 @@ extern "C" void __cdecl BattleObj_HpEnd(void) {
 // States 8 (sub-state 3), 10, 11 and 26
 // ===========================================================================
 
-// original 0x442C40: BattleObj_CastDoneSubs[3] - a tail jump to
+// original 0x442C40 (PSX 0x801E1A68): BattleObj_CastDoneSubs[3] - a tail jump to
 // BattleObj_ScriptTick (its answer dropped by BattleObj_StateCastDone's call).
 extern "C" void __cdecl BattleObj_CastDoneScript(void) { BH_CALL(BattleObj_ScriptTick)(); }
 
-// original 0x442C70: BattleObj_StateTable[10] - jmp [BattleObj_State10Subs + 4
+// original 0x442C70 (PSX 0x801E1AE8): BattleObj_StateTable[10] - jmp [BattleObj_State10Subs + 4
 // * +2] (2: _State10Task, _State10End).
 extern "C" void __cdecl BattleObj_State10(void) { Run("BattleObj_State10", AddressOf(BattleObj_State10Subs), 2, 2); }
 
-// original 0x442C90: BattleTask_Create(0, 5); the slot's words +0x2E / +0x30 =
+// original 0x442C90 (PSX 0x801E1B2C): BattleTask_Create(0, 5); the slot's words +0x2E / +0x30 =
 // Sprite_Current's +0x2E / +0x30 less the s8 pair at 0x6699A0 + 2 * the
 // character Field_State +0x89 (each read again); +2 up by one.
 extern "C" void __cdecl BattleObj_State10Task(void) {
@@ -996,13 +996,13 @@ extern "C" void __cdecl BattleObj_State10Task(void) {
     rv::As<records::PartyMember>(S())->step += 1;
 }
 
-// original 0x442D10: +1 = 2, +2 = 0.
+// original 0x442D10 (PSX 0x801E1BDC): +1 = 2, +2 = 0.
 extern "C" void __cdecl BattleObj_State10End(void) {
     rv::As<records::PartyMember>(S())->state = 2;
     rv::As<records::PartyMember>(S())->step = 0;
 }
 
-// original 0x442D30: BattleObj_StateTable[11] - BattleObj_HitPose; then by
+// original 0x442D30 (PSX 0x801E1BFC): BattleObj_StateTable[11] - BattleObj_HitPose; then by
 // Field_State +0x130: bit 4 a tail jump to BattleObj_ScriptTick, else bit 5 to
 // BattleObj_ScriptTickOnce.
 extern "C" void __cdecl BattleObj_State11(void) {
@@ -1014,7 +1014,7 @@ extern "C" void __cdecl BattleObj_State11(void) {
         BH_CALL(BattleObj_ScriptTickOnce)();
 }
 
-// original 0x441510 (in no start list; after BattleObj_PickPose's switch
+// original 0x441510 (PSX 0x801DF300; in no start list; after BattleObj_PickPose's switch
 // table): Sprite_EnsureAnimation(+8 + 0x34) with Field_State +0x91 bit 3, else
 // (+8 + 0x10). Called by BattleObj_HitReceive and BattleObj_State11.
 extern "C" void __cdecl BattleObj_HitPose(void) {
@@ -1024,12 +1024,12 @@ extern "C" void __cdecl BattleObj_HitPose(void) {
         BH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(rv::As<records::PartyMember>(S())->direction + 0x10));
 }
 
-// original 0x442E40: BattleObj_StateTable[26] (the special attack: state 4's
+// original 0x442E40 (PSX 0x801E1E00): BattleObj_StateTable[26] (the special attack: state 4's
 // jump under +0x134 bit 0, and the character table's twelfth entry) - jmp
 // [BattleObj_SpecialSubs + 4 * +2] (3).
 extern "C" void __cdecl BattleObj_StateSpecial(void) { Run("BattleObj_StateSpecial", AddressOf(BattleObj_SpecialSubs), 3, 2); }
 
-// original 0x442E60: BattleTask_Create(0, 0xF); the slot's first 0x80 bytes
+// original 0x442E60 (PSX 0x801E1E44): BattleTask_Create(0, 0xF); the slot's first 0x80 bytes
 // copied from the acting member 0x904B34's object, then its +6 = 0, +5 = 0xF,
 // +1..+4 = 0, +0xB = the slot, the owner +0x80 = Sprite_Current; Sprite_Current
 // +0 |= 0x40, +9 = +0xA = 0x10, +2 up by one.
@@ -1059,7 +1059,7 @@ extern "C" void __cdecl BattleObj_SpecialStart(void) {
     rv::As<records::PartyMember>(S())->step += 1;
 }
 
-// original 0x442F10: +9 down by one; at 0 the cue - 3 when
+// original 0x442F10 (PSX 0x801E1FA8): +9 down by one; at 0 the cue - 3 when
 // Battle_RollPendingFlag answers, else Rand() % 100 (signed) below the member's
 // +0xBA (read after Rand) sets 0x904AA8 bit 7 and cue 3, otherwise cue 2 -
 // then cue 4, +2 up by one. BattleObj_SwingCue without its leading tick (the
@@ -1084,7 +1084,7 @@ extern "C" void __cdecl BattleObj_SpecialCue(void) {
     rv::As<records::PartyMember>(S())->step += 1;
 }
 
-// original 0x442F80: once Sprite_Current +0 has lost bit 6 (the task clears
+// original 0x442F80 (PSX 0x801E20A4): once Sprite_Current +0 has lost bit 6 (the task clears
 // it), 0x904AA8 |= 4 and a tail jump to BattleObj_EndAction.
 extern "C" void __cdecl BattleObj_SpecialWait(void) {
     if (rv::As<records::PartyMember>(S())->flags & 0x40) return;

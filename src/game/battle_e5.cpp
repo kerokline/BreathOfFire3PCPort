@@ -365,7 +365,7 @@ extern "C" void __cdecl Effect_DrainAp(void) {
     DrainActor(kDrainAp);
 }
 
-// original 0x44CCA0 (Effect_Handlers slot 38): Rand & 0x7F below 0x20 (a
+// original 0x44CCA0 (Effect_Handlers slot 38; PSX 0x8009BEE0): Rand & 0x7F below 0x20 (a
 // quarter): the round flags |= 0x80 and the HP delta Battle_CalcDamage(actor,
 // target, 0xFFFF). Else a miss: the result's +8 = 1, Battle_SetDamagePopup(0,
 // target), then a tail jump to 0x44FB30.
@@ -387,7 +387,7 @@ extern "C" void __cdecl Effect_QuarterAttack(void) {
 // The transformation's stats
 // ===========================================================================
 
-// original 0x44FDE0 (called by 0x442310 (BE3), 0x449A00 / 0x449C70 (BE4),
+// original 0x44FDE0 (PSX 0x800A13C0; called by 0x442310 (BE3), 0x449A00 / 0x449C70 (BE4),
 // 0x44D450, 0x44DFD0, 0x44E720): for each party member whose +0x134 has bit
 // 1, the transformation's block 0x939EE0.. over its stats. With c the
 // member's +0x9E: c +0x22 and +2 = w0 - (c[0] * w0 + 5) / 10 (w0 the signed
@@ -577,12 +577,12 @@ void BackToMenu(U window) {
 
 // --- part 0 (0x904AA3 0): the load --------------------------------------------
 
-// original 0x44FF10 (0x64ECCC[0]): jmp [0x64ECE8 + 4 * 0x904AA4], two steps.
+// original 0x44FF10 (0x64ECCC[0]; PSX 0x800A162C): jmp [0x64ECE8 + 4 * 0x904AA4], two steps.
 extern "C" unsigned long __cdecl DragonCmd_LoadDispatch(unsigned long through) {
     return Dispatch("DragonCmd_LoadDispatch", DragonCmd_LoadSteps_addr, 2, through);
 }
 
-// original 0x44FF30 (0x64ECE8[0]): window 16's +3 zero: LoadDatFile(0xCC) and
+// original 0x44FF30 (0x64ECE8[0]; PSX 0x800A1668): window 16's +3 zero: LoadDatFile(0xCC) and
 // the next step; else nothing.
 extern "C" void __cdecl DragonCmd_LoadStart(void) {
     if (B(at::kWin16 + 3) != 0) return;
@@ -590,7 +590,7 @@ extern "C" void __cdecl DragonCmd_LoadStart(void) {
     NextStep();
 }
 
-// original 0x44FF60 (0x64ECE8[1]; not in the cut): File_LoadDone: the CLUT
+// original 0x44FF60 (0x64ECE8[1]; not in the cut; PSX 0x800A16AC): File_LoadDone: the CLUT
 // rows 0x1A and 0x1B copied, Gfx_ClutStripDirty + 1, the next part (0x904AA3
 // + 1, 0x904AA4 = 0).
 extern "C" void __cdecl DragonCmd_LoadWait(void) {
@@ -606,7 +606,7 @@ extern "C" void __cdecl DragonCmd_LoadWait(void) {
 
 // --- part 1: the opening ---------------------------------------------------------
 
-// original 0x44FFA0 (0x64ECCC[1]): window 21 (the menu: kind 5, +2 / +3 0, at
+// original 0x44FFA0 (0x64ECCC[1]; PSX 0x800A1714): window 21 (the menu: kind 5, +2 / +3 0, at
 // 0x142, 0x3F, +0xA 0) and window 17 (+2 1, +3 0) claimed; sound 0x102; the
 // 18 gene bits of 0x904650 spread into 0x939A60; Input_AutoRepeat's latch,
 // 0x904AA6, 0x904AA7, the words 0x904B72 / 0x904B74, 0x904B87, 0x904B78 zeroed
@@ -640,12 +640,12 @@ extern "C" void __cdecl DragonCmd_Open(void) {
 
 // --- part 2: the menu --------------------------------------------------------------
 
-// original 0x450070 (0x64ECCC[2]): jmp [0x64ECF0 + 4 * 0x904AA4], five steps.
+// original 0x450070 (0x64ECCC[2]; PSX 0x800A1868): jmp [0x64ECF0 + 4 * 0x904AA4], five steps.
 extern "C" unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
     return Dispatch("DragonCmd_MenuDispatch", DragonCmd_MenuSteps_addr, 5, through);
 }
 
-// original 0x450090 (0x64ECF0[0]): the menu's line 0x42 + 0x904AA5 shown;
+// original 0x450090 (0x64ECF0[0]; PSX 0x800A18A4): the menu's line 0x42 + 0x904AA5 shown;
 // the repeat keys of 0xE000; cancel: sound 0x106, two steps on (the close);
 // confirm: sound 0x104, the next step (the pick); else 0x2000 / 0x8000 move
 // the line down / up (sound 0x101 each), 0x4000 picks line 1 at once (sound
@@ -684,7 +684,7 @@ extern "C" void __cdecl DragonCmd_MenuInput(void) {
     else if (pick > 2) BossSb_Countdown = 0;
 }
 
-// original 0x4501B0 (0x64ECF0[1]): the line picked - 0x904AA5 |= 0x80, the
+// original 0x4501B0 (0x64ECF0[1]; PSX 0x800A1A38): the line picked - 0x904AA5 |= 0x80, the
 // part 3 + the line (0x904AA3), 0x904AA4 and 0x904AA6 zeroed.
 extern "C" void __cdecl DragonCmd_MenuPick(void) {
     const unsigned char pick = BossSb_Countdown;
@@ -694,13 +694,13 @@ extern "C" void __cdecl DragonCmd_MenuPick(void) {
     BattleE5_GeneRow = 0;
 }
 
-// original 0x4501E0 (0x64ECF0[2]): window 21's +3 = 2 (closing), the next step.
+// original 0x4501E0 (0x64ECF0[2]; PSX 0x800A1A70): window 21's +3 = 2 (closing), the next step.
 extern "C" void __cdecl DragonCmd_MenuClose(void) {
     CloseList(Window21_addr);
     NextStep();
 }
 
-// original 0x450200 (0x64ECF0[3]): window 21 closed (+0 bit 0 clear): 0x447F40,
+// original 0x450200 (0x64ECF0[3]; PSX 0x800A1A94): window 21 closed (+0 bit 0 clear): 0x447F40,
 // windows 17 and 21's +0 zeroed, BattleBanner_ShowName(the menu actor),
 // window 4's +3 = 1, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_MenuCancel(void) {
@@ -714,7 +714,7 @@ extern "C" void __cdecl DragonCmd_MenuCancel(void) {
     NextStep();
 }
 
-// original 0x450250 (0x64ECF0[4]; not in the cut): File_LoadDone: CLUT row
+// original 0x450250 (0x64ECF0[4]; not in the cut; PSX 0x800A1B1C): File_LoadDone: CLUT row
 // 0x1B copied, Gfx_ClutStripDirty = 1, the command step 0x904AA2 and the part
 // 0x904AA3 = 1, 0x904AA4 = 0.
 extern "C" void __cdecl DragonCmd_MenuCancelLoad(void) {
@@ -728,12 +728,12 @@ extern "C" void __cdecl DragonCmd_MenuCancelLoad(void) {
 
 // --- part 3: the first list (0x904608, window 18) --------------------------------------
 
-// original 0x450280 (0x64ECCC[3]): jmp [0x64ED04 + 4 * 0x904AA4], seven steps.
+// original 0x450280 (0x64ECCC[3]; PSX 0x800A1B70): jmp [0x64ED04 + 4 * 0x904AA4], seven steps.
 extern "C" unsigned long __cdecl DragonCmd_SlotsDispatch(unsigned long through) {
     return Dispatch("DragonCmd_SlotsDispatch", DragonCmd_SlotsSteps_addr, 7, through);
 }
 
-// original 0x4502A0 (0x64ED04[0]): window 21's +3 = 2, +0xA = 0; the next step.
+// original 0x4502A0 (0x64ED04[0]; PSX 0x800A1BAC): window 21's +3 = 2, +0xA = 0; the next step.
 extern "C" void __cdecl DragonCmd_SlotsCloseMenu(void) {
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin21 + 3) = 2;
@@ -741,7 +741,7 @@ extern "C" void __cdecl DragonCmd_SlotsCloseMenu(void) {
     BattleE4_Step4 = step;
 }
 
-// original 0x4502C0 (0x64ED04[1]): window 21 closed: its +0 zeroed, window 18
+// original 0x4502C0 (0x64ED04[1]; PSX 0x800A1BD8): window 21 closed: its +0 zeroed, window 18
 // claimed (kind 5; +2 2, +3 0, at 0xFF5B, 0x3F, its cursor 0, 0), line 0x59,
 // 0x904AA5 |= 0x80, the next step.
 extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, Window18_addr, 2, 0xFF5B, 0x59); }
@@ -783,11 +783,11 @@ extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
     MoveCursor(Window18_addr, keys, 5, 3);
 }
 
-// original 0x450510 (called by DragonCmd_SlotsCursor): the first list's slot
+// original 0x450510 (called by DragonCmd_SlotsCursor; PSX 0x800A1F40): the first list's slot
 // at the cursor priced against the member's AP (Affordable). al out.
 extern "C" unsigned char __cdecl DragonCmd_SlotAffordable(void) { return Affordable(SlotOf(at::kSlots, Window18_addr)); }
 
-// original 0x4505A0 (0x64ED04[3]): window 21 claimed again (+2 / +3 0, at
+// original 0x4505A0 (0x64ED04[3]; PSX 0x800A2020): window 21 claimed again (+2 / +3 0, at
 // 0x142, 0x3F), window 18's +3 = 2, the next step.
 extern "C" void __cdecl DragonCmd_SlotsCancel(void) {
     ReopenMenu(0x142);
@@ -796,11 +796,11 @@ extern "C" void __cdecl DragonCmd_SlotsCancel(void) {
     BattleE4_Step4 = step;
 }
 
-// original 0x4505E0 (0x64ED04[4]): window 18 closed: back to the menu (part 2,
+// original 0x4505E0 (0x64ED04[4]; PSX 0x800A2088): window 18 closed: back to the menu (part 2,
 // step 0, 0x904AA5's bit 7 cleared).
 extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(Window18_addr); }
 
-// original 0x450610 (0x64ED04[5]): the slot at the cursor taken (TakeSlot),
+// original 0x450610 (0x64ED04[5]; PSX 0x800A20CC): the slot at the cursor taken (TakeSlot),
 // 0x4525B0, window 18's +3 = 2, the member's +0x134 |= 4, the next step.
 extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
     TakeSlot(SlotOf(at::kSlots, Window18_addr));
@@ -811,7 +811,7 @@ extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
     NextStep();
 }
 
-// original 0x450680 (0x64ED04[6]): window 18 closed: 0x447F40, windows 17,
+// original 0x450680 (0x64ED04[6]; PSX 0x800A21AC): window 18 closed: 0x447F40, windows 17,
 // 18, 16, 19's +0 zeroed, LoadDatFile(0xCF), then part 4's step 3 (the
 // gene grid's close and commit).
 extern "C" void __cdecl DragonCmd_SlotsClose(void) {
@@ -828,12 +828,12 @@ extern "C" void __cdecl DragonCmd_SlotsClose(void) {
 
 // --- part 4: the gene grid ------------------------------------------------------------
 
-// original 0x4506C0 (0x64ECCC[4]): jmp [0x64ED20 + 4 * 0x904AA4], five steps.
+// original 0x4506C0 (0x64ECCC[4]; PSX 0x800A222C): jmp [0x64ED20 + 4 * 0x904AA4], five steps.
 extern "C" unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) {
     return Dispatch("DragonCmd_GenesDispatch", DragonCmd_GenesSteps_addr, 5, through);
 }
 
-// original 0x4506E0 (0x64ED20[0]): window 17's +3 = 2, window 4's +3 = 1, the
+// original 0x4506E0 (0x64ED20[0]; PSX 0x800A2268): window 17's +3 = 2, window 4's +3 = 1, the
 // next step.
 extern "C" void __cdecl DragonCmd_GenesOpen(void) {
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
@@ -955,7 +955,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
     }
 }
 
-// original 0x450A30 (0x64ED20[2]): sound 0x104, window 21's +3 = 2, the
+// original 0x450A30 (0x64ED20[2]; PSX 0x800A2784): sound 0x104, window 21's +3 = 2, the
 // member's +0x134 |= 4, the next step.
 extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
     Sound(0x104);
@@ -965,7 +965,7 @@ extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
     NextStep();
 }
 
-// original 0x450A70 (0x64ED20[3]): window 21 closed: 0x447F40, windows 17, 21,
+// original 0x450A70 (0x64ED20[3]; PSX 0x800A27DC): window 21 closed: 0x447F40, windows 17, 21,
 // 16, 19's +0 zeroed, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_GenesClose(void) {
     if (WindowRecords[21].in_use & 1) return;
@@ -978,7 +978,7 @@ extern "C" void __cdecl DragonCmd_GenesClose(void) {
     NextStep();
 }
 
-// original 0x450AB0 (0x64ED20[4]): File_LoadDone: CLUT row 0x1B copied; the
+// original 0x450AB0 (0x64ED20[4]; PSX 0x800A285C): File_LoadDone: CLUT row 0x1B copied; the
 // command record 0x939FA0's +1 = 4, Gfx_ClutStripDirty = 1, 0x904AAF = 0, the
 // menu actor's +1 = 2, 0x904AC3 + 1, the phase's step 0x904AA1 = 1 and
 // 0x904AA2..AA4 zeroed, the message window's last line's +1 byte = 1.
@@ -1002,12 +1002,12 @@ extern "C" void __cdecl DragonCmd_Commit(void) {
 
 // --- part 5: the second list (0x904620, window 19) ------------------------------------
 
-// original 0x450B20 (0x64ECCC[5]): jmp [0x64ED34 + 4 * 0x904AA4], seven steps.
+// original 0x450B20 (0x64ECCC[5]; PSX 0x800A2914): jmp [0x64ED34 + 4 * 0x904AA4], seven steps.
 extern "C" unsigned long __cdecl DragonCmd_Slots2Dispatch(unsigned long through) {
     return Dispatch("DragonCmd_Slots2Dispatch", DragonCmd_Slots2Steps_addr, 7, through);
 }
 
-// original 0x450B40 (0x64ED34[0]): window 21's +3 = 2, +0xA = 1; the next step.
+// original 0x450B40 (0x64ED34[0]; PSX 0x800A2950): window 21's +3 = 2, +0xA = 1; the next step.
 extern "C" void __cdecl DragonCmd_Slots2CloseMenu(void) {
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin21 + 3) = 2;
@@ -1015,11 +1015,11 @@ extern "C" void __cdecl DragonCmd_Slots2CloseMenu(void) {
     BattleE4_Step4 = step;
 }
 
-// original 0x450B60 (0x64ED34[1]): as DragonCmd_SlotsOpen for window 19 (slot
+// original 0x450B60 (0x64ED34[1]; PSX 0x800A2980): as DragonCmd_SlotsOpen for window 19 (slot
 // 0x13; +2 3, at 0x15B) and line 0x63.
 extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, Window19_addr, 3, 0x15B, 0x63); }
 
-// original 0x450BE0 (0x64ED34[2]): the second list's cursor, once window 19's
+// original 0x450BE0 (0x64ED34[2]; PSX 0x800A2A4C): the second list's cursor, once window 19's
 // x is 0x5B: as DragonCmd_SlotsCursor without the bit-0x10 branch - cancel:
 // sound 0x106, the next step; confirm: DragonCmd_Slot2Affordable - sound
 // 0x104, step 5 - else sound 0x107; the cursor in twelve slots (a + b below
@@ -1044,11 +1044,11 @@ extern "C" void __cdecl DragonCmd_Slots2Cursor(void) {
     MoveCursor(Window19_addr, keys, 0xB, 9);
 }
 
-// original 0x450D60 (called by DragonCmd_Slots2Cursor): the second list's
+// original 0x450D60 (called by DragonCmd_Slots2Cursor; PSX 0x800A2C68): the second list's
 // slot at the cursor priced against the member's AP. al out.
 extern "C" unsigned char __cdecl DragonCmd_Slot2Affordable(void) { return Affordable(SlotOf(at::kSlots2, Window19_addr)); }
 
-// original 0x450DF0 (0x64ED34[3]): window 21 claimed again (at 0xFF42, 0x3F,
+// original 0x450DF0 (0x64ED34[3]; PSX 0x800A2D48): window 21 claimed again (at 0xFF42, 0x3F,
 // +0xA 1), window 19's +3 = 2, the next step.
 extern "C" void __cdecl DragonCmd_Slots2Cancel(void) {
     ReopenMenu(0xFF42);
@@ -1058,10 +1058,10 @@ extern "C" void __cdecl DragonCmd_Slots2Cancel(void) {
     BattleE4_Step4 = step;
 }
 
-// original 0x450E40 (0x64ED34[4]): window 19 closed: back to the menu.
+// original 0x450E40 (0x64ED34[4]; PSX 0x800A2DBC): window 19 closed: back to the menu.
 extern "C" void __cdecl DragonCmd_Slots2Back(void) { BackToMenu(Window19_addr); }
 
-// original 0x450E70 (0x64ED34[5]): the second list's slot taken (TakeSlot),
+// original 0x450E70 (0x64ED34[5]; PSX 0x800A2E00): the second list's slot taken (TakeSlot),
 // 0x4525B0, sound 0x104, window 19's +3 = 2, the member's +0x134 |= 4, the
 // next step.
 extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
@@ -1074,7 +1074,7 @@ extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
     NextStep();
 }
 
-// original 0x450EF0 (0x64ED34[6]): window 18 closed (sic: the first list's
+// original 0x450EF0 (0x64ED34[6]; PSX 0x800A2EE8): window 18 closed (sic: the first list's
 // record is the one tested): 0x447F40, windows 17, 16, 19's +0 zeroed,
 // LoadDatFile(0xCF), part 4's step 3.
 extern "C" void __cdecl DragonCmd_Slots2Close(void) {
@@ -1090,13 +1090,13 @@ extern "C" void __cdecl DragonCmd_Slots2Close(void) {
 
 // --- part 6: the store (a first-list slot into the second list) --------------------------
 
-// original 0x450F30 (0x64ECCC[6]): jmp [0x64ED50 + 4 * 0x904AA4], seven steps
+// original 0x450F30 (0x64ECCC[6]; PSX 0x800A2F58): jmp [0x64ED50 + 4 * 0x904AA4], seven steps
 // (the last, 0x451480, BE6's).
 extern "C" unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
     return Dispatch("DragonCmd_StoreDispatch", DragonCmd_StoreSteps_addr, 7, through);
 }
 
-// original 0x450F50 (0x64ED50[0]): window 18's +3 = 3, window 19 claimed
+// original 0x450F50 (0x64ED50[0]; PSX 0x800A2F94): window 18's +3 = 3, window 19 claimed
 // (slot 0x13: +3 0, its cursor 0, 0, +2 4, at 0x15B, 0x3F), the next step.
 extern "C" void __cdecl DragonCmd_StoreOpen(void) {
     B(at::kWin18 + 3) = 3;
@@ -1111,12 +1111,12 @@ extern "C" void __cdecl DragonCmd_StoreOpen(void) {
     BattleE4_Step4 = step;
 }
 
-// original 0x450FA0 (0x64ED50[1]): window 19's x 0xA3: the next step.
+// original 0x450FA0 (0x64ED50[1]; PSX 0x800A3010): window 19's x 0xA3: the next step.
 extern "C" void __cdecl DragonCmd_StoreWait(void) {
     if (W(at::kWin19 + 4) == 0xA3) NextStep();
 }
 
-// original 0x450FC0 (0x64ED50[2]): the destination's cursor: line 0x61; the
+// original 0x450FC0 (0x64ED50[2]; PSX 0x800A3044): the destination's cursor: line 0x61; the
 // repeat keys of 0x500C; cancel: sound 0x106, step 5; confirm: step 4 for an
 // empty second-list slot, else the prompt's answer 0x904B74 = 0 and step 3,
 // sound 0x104 - and the cursor still moves; the cursor in twelve slots.
@@ -1141,7 +1141,7 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
     MoveCursor(Window19_addr, keys, 0xB, 9);
 }
 
-// original 0x451160 (0x64ED50[3]): the overwrite prompt: line 0x62; the
+// original 0x451160 (0x64ED50[3]; PSX 0x800A3294): the overwrite prompt: line 0x62; the
 // repeat keys of 0xA000; cancel, or confirm on answer 1: sound 0x106, a step
 // back; confirm on 0: sound 0x104, the next step; else a repeat key flips the
 // answer (0x904B74 ^= 1); the hand at 0xD5 + 0x22 * answer (the dword), 0x18.
@@ -1178,7 +1178,7 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
     BH_CALL(Menu_DrawHand)(static_cast<int>(answer * 0x22 + 0xD5), 0x18, 0);
 }
 
-// original 0x451220 (0x64ED50[4]): the first list's slot at its cursor copied
+// original 0x451220 (0x64ED50[4]; PSX 0x800A33F0): the first list's slot at its cursor copied
 // into the second list's at its cursor, byte by byte (each read before its
 // write, as the original), the next step.
 extern "C" void __cdecl DragonCmd_StoreCopy(void) {

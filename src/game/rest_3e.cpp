@@ -182,7 +182,7 @@ extern "C" void __cdecl EffectKind41_DrawNumber(int x, int y, int /*unused*/, un
     } while (*c != 0);
 }
 
-// original 0x46D710 (Area135_SpawnCopy calls it; FC2's EffectKind30_Push does
+// original 0x46D710 (PSX 0x801A0764; Area135_SpawnCopy calls it; FC2's EffectKind30_Push does
 // the same): the byte *(+0x54), signed, times 0x28 bytes copied from *(+0x50)
 // to 0x8C5D80 one at a time, +0x50 stepped each byte (Sprite_Current read each
 // time); +0x50 = 0x8C5D80; EffectKind30_ShardsInit, EffectKind30_SparksInit;
@@ -203,7 +203,7 @@ extern "C" void __cdecl EffectShards_LoadModel(void) {
     S()[9] = 0x10;
 }
 
-// original 0x46D770 (Area135_SpawnCountdown calls it): EffectKind30_ShardsStep,
+// original 0x46D770 (Area135_SpawnCountdown calls it; PSX 0x801A0820): EffectKind30_ShardsStep,
 // then a tail jump to EffectKind30_SparksDraw.
 extern "C" void __cdecl EffectShards_Step(void) {
     SH_CALL(EffectKind30_ShardsStep)();

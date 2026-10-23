@@ -131,7 +131,7 @@ template <typename... T> void Sprintf(U format, T... v) {
 // The menu panels
 // =============================================================================
 
-// original 0x5738A0: a character record's four stats and its trait line (the
+// original 0x5738A0 (PSX 0x801D86D8): a character record's four stats and its trait line (the
 // field menu's panel list, 0x59A065; record the party slot's EffectState id).
 // Menu_DrawBox at (x + 5, y + 3), 0x94 x 0x2D; the four labels of 0x66A0F8
 // (8 bytes apart) at (x + 0xB | x + 0x53, y + 8 | y + 0x15) through
@@ -314,7 +314,7 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
     SH_CALL(Menu_DrawPieces)(x, y, Text(at::kWheelPiecesC), 0);
 }
 
-// original 0x574400: one 16 x 8 SPRT of the menu page (CLUT 0x7800, v 0xD8, u
+// original 0x574400 (PSX 0x801D9FC0): one 16 x 8 SPRT of the menu page (CLUT 0x7800, v 0xD8, u
 // the argument << 4), grey 0x80 or dimmed to 0x10, semi-transparent, after a
 // draw mode (texture page 0x2F). Callers: the shop's 0x581300 (FS, three
 // sites) and the field menu's 0x59AA80 (three).
@@ -640,7 +640,7 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
 // The movement script's ops
 // =============================================================================
 
-// original 0x578FA0: op F9 a b (MoveScript_GroupF 0x57798A repeats the op
+// original 0x578FA0 (PSX 0x801AD33C): op F9 a b (MoveScript_GroupF 0x57798A repeats the op
 // while eax is not 0). The step per frame is 0x6696DC's (x, z) pair by the
 // facing Sprite_Current +8 times the speed Field_MoveSpeeds[Field_ActiveMember
 // +0x84]; the height +0x3E from AreaMap_Elevation. With the acceleration pair
@@ -827,7 +827,7 @@ extern "C" void __cdecl MoveCmd_Op87Fade(void) {
     rv::As<records::SpriteObject>(Fam())->script_position = rv::As<records::SpriteObject>(Fam())->script_position - 1u;
 }
 
-// original 0x57C8E0: op E9 (MoveScript_GroupE 0x5775B9; the bosses' end moves
+// original 0x57C8E0 (PSX 0x8015CC54): op E9 (MoveScript_GroupE 0x5775B9; the bosses' end moves
 // BossNue_EndMove / BossWeretigr_EndMove): its seven words handed on to the
 // state Sprite_Current +4 picks from 0x663B84, its eax the answer (the op
 // repeats while al is not 0).
@@ -849,7 +849,7 @@ unsigned char StepFrames(const unsigned char* object, const char* who) {
 
 }  // namespace
 
-// original 0x57C920: op E9's state 0 - the jump's start. The speed
+// original 0x57C920 (PSX 0x8015CCC4): op E9's state 0 - the jump's start. The speed
 // Field_MoveSpeeds[object +4]; 0 answers al 0 at once. Else +9 0; the steps
 // +0xB max(|a|, |b|) less 1 (0 for none); the frames +0xA 16 / speed; the
 // rise +0x14 c << 8; then the kind-2 object (MoveScript_ObjectKind 2) takes
@@ -893,7 +893,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Start(unsigned char* object, signed
     return 1;
 }
 
-// original 0x57CA80: op E9's state 1 - the jump in the air. The velocity into
+// original 0x57CA80 (PSX 0x8015CF30): op E9's state 1 - the jump in the air. The velocity into
 // x / z, the rise's high part (+0x14 >> 8) into the height +0x3E, the fall d
 // into the rise, the frames less 1; the ground from AreaMap_Elevation: falling
 // (+0x14 below 0) and below the ground, the height is the ground and with f
@@ -983,7 +983,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed
     return 0;
 }
 
-// original 0x57CCE0: op E9's state 3 - the fall after the last step: the
+// original 0x57CCE0 (PSX 0x8015D330): op E9's state 3 - the fall after the last step: the
 // rise into the height and d into the rise; below the ground the height is
 // the ground, state 0 and al 0; else al 1.
 extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, signed char, unsigned short, unsigned short d,
@@ -1000,7 +1000,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, s
     return 1;
 }
 
-// original 0x57CD40: op DB (MoveScript_GroupD 0x577F20; MoveCmd_OpE9Arc;
+// original 0x57CD40 (PSX 0x8015D3BC): op DB (MoveScript_GroupD 0x577F20; MoveCmd_OpE9Arc;
 // Scena06_LeapAir): x and z each plus its velocity when that is above 0, then
 // rounded down to the half unit (& 0xFFFF8000).
 extern "C" void __cdecl MoveCmd_OpDB(void) {
@@ -1022,7 +1022,7 @@ extern "C" void __cdecl MoveCmd_OpDB(void) {
 // The event script
 // =============================================================================
 
-// original 0x579CA0: an F0 / F1 skipped (EventScript_SkipControl's F0 / F1,
+// original 0x579CA0 (PSX 0x801A57A0): an F0 / F1 skipped (EventScript_SkipControl's F0 / F1,
 // the event_script.cpp table's skip_if): `at` is ON the F0 / F1; three bytes
 // on, then by EventScript_OpLengths and EventScript_SkipControl (for F0..FC)
 // to the FE of its depth - an FD on the way is stepped over - and one past it.
@@ -1170,7 +1170,7 @@ extern "C" void __cdecl EventOp_7x(const unsigned char* op) {
     BumpCount();
 }
 
-// original 0x57AD10: op 6x, 16 bytes (handler 6; also the scene code's
+// original 0x57AD10 (PSX 0x801A75A8): op 6x, 16 bytes (handler 6; also the scene code's
 // placers - Area141_*, Scena08_SpawnPair, Scena13_SpawnPair*, Scena15's, FC1's
 // 0x46A600) - a party member's sprite: Field_MemberSprite(op[1], op[0xF]) in
 // place of the bank; op[2] / op[3] +0x98 / +0x9A, op[4..7] x and z, op[8] +1,
@@ -1265,46 +1265,46 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
 // --- the conditions (EventScript_Conditions entries; each handed the script
 //     position, its operand at **at, al the answer) ---
 
-// original 0x57C1A0: condition 1 - Game_AreaNumber (a word) equals the operand.
+// original 0x57C1A0 (PSX 0x8015C034): condition 1 - Game_AreaNumber (a word) equals the operand.
 extern "C" unsigned char __cdecl EventCond_Area(const unsigned char** at) { return Game_AreaNumber == **at; }
-// original 0x57C3E0: condition 3 - the script counter 0x903848 equals it.
+// original 0x57C3E0 (PSX 0x8015C37C): condition 3 - the script counter 0x903848 equals it.
 extern "C" unsigned char __cdecl EventCond_Counter0(const unsigned char** at) { return At(0x903848)[0] == **at; }
-// original 0x57C400 / 0x57C420 / 0x57C440: conditions 4..6 - counters 1..3.
+// original 0x57C400 (PSX 0x8015C3A4) / 0x57C420 / 0x57C440: conditions 4..6 - counters 1..3.
 extern "C" unsigned char __cdecl EventCond_Counter1(const unsigned char** at) { return At(0x903849)[0] == **at; }
 extern "C" unsigned char __cdecl EventCond_Counter2(const unsigned char** at) { return At(0x90384A)[0] == **at; }
 extern "C" unsigned char __cdecl EventCond_Counter3(const unsigned char** at) { return At(0x90384B)[0] == **at; }
-// original 0x57C1F0: condition 7 - MoveScript_Var7 (the chapter's run byte) equals it.
+// original 0x57C1F0 (PSX 0x8015C098): condition 7 - MoveScript_Var7 (the chapter's run byte) equals it.
 extern "C" unsigned char __cdecl EventCond_Run(const unsigned char** at) {
     return static_cast<unsigned char>(MoveScript_Var7) == **at;
 }
-// original 0x57C230: condition 9 - Field_StatusBits' bit 0, or its
+// original 0x57C230 (PSX 0x8015C0E8): condition 9 - Field_StatusBits' bit 0, or its
 // complement's unless the operand is 1.
 extern "C" unsigned char __cdecl EventCond_Status1(const unsigned char** at) {
     const auto bits = static_cast<unsigned char>(Field_StatusBits);
     return static_cast<unsigned char>((**at == 1 ? bits : static_cast<unsigned char>(~bits)) & 1);
 }
-// original 0x57C250: condition 11 - the leader's member id (ObjTrio +0x89)
+// original 0x57C250 (PSX 0x8015C12C): condition 11 - the leader's member id (ObjTrio +0x89)
 // equals it.
 extern "C" unsigned char __cdecl EventCond_LeaderId(const unsigned char** at) { return ObjTrio[0].char_id == **at; }
-// original 0x57C270: condition 12 - story flag `operand` (Flags_Test of
+// original 0x57C270 (PSX 0x8015C154): condition 12 - story flag `operand` (Flags_Test of
 // 0x904030); the answer is Flags_Test's eax.
 extern "C" unsigned char __cdecl EventCond_StoryFlag(const unsigned char** at) {
     return SH_CALL(Flags_Test)(At(0x904030), **at);
 }
-// original 0x57C290: condition 13 - KeyItem_Has(operand).
+// original 0x57C290 (PSX 0x8015C188): condition 13 - KeyItem_Has(operand).
 extern "C" unsigned char __cdecl EventCond_KeyItem(const unsigned char** at) { return SH_CALL(KeyItem_Has)(**at); }
-// original 0x57C2B0: condition 14 - Cond_ByteFA (unsigned) at most the operand.
+// original 0x57C2B0 (PSX 0x8015C1B4): condition 14 - Cond_ByteFA (unsigned) at most the operand.
 extern "C" unsigned char __cdecl EventCond_ChapterAtMost(const unsigned char** at) {
     return static_cast<unsigned char>(Cond_ByteFA) <= **at;
 }
-// original 0x57C2D0: condition 15 - bit 0 of CharacterRecords[operand] +0xB.
+// original 0x57C2D0 (PSX 0x8015C1E0): condition 15 - bit 0 of CharacterRecords[operand] +0xB.
 // As the original has it: the operand is a whole byte into the eight records.
 extern "C" unsigned char __cdecl EventCond_RecordBit0(const unsigned char** at) { return Record(**at)[0xB] & 1; }
-// original 0x57C2F0: condition 16 - bit `operand` of the gene flags 0x904650
+// original 0x57C2F0 (PSX 0x8015C22C): condition 16 - bit `operand` of the gene flags 0x904650
 // (Flags_Test; the dword's 18 bits, battle_e5.md).
 extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { return SH_CALL(Flags_Test)(At(Gene_Bits_addr), **at); }
 
-// original 0x57C7E0 (MoveScript_Flow 0x57701D, Scena03_Scene5 0x5438DC): bit 6
+// original 0x57C7E0 (MoveScript_Flow 0x57701D, Scena03_Scene5 0x5438DC; PSX 0x8015CAA8): bit 6
 // of the three party objects' first byte cleared - ObjTrio_SetBit40's inverse.
 extern "C" void __cdecl ObjTrio_ClearBit40(void) {
     ObjTrio[0].flags &= 0xBF;

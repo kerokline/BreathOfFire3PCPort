@@ -230,7 +230,7 @@ extern "C" void __cdecl EventOp_Dx(const unsigned char* op) {
     SetWord(Field_ActiveMember + 0x88, static_cast<unsigned>(op[2]) << 8 | op[3]);
 }
 
-// original 0x57B530: op 9x, 13 bytes - places Sprite_Objects[count] as an
+// original 0x57B530 (PSX 0x801A8338): op 9x, 13 bytes - places Sprite_Objects[count] as an
 // object of state 6 (PSX FUN_801A8338, store for store). op[1]:op[2] the
 // bank, op[3] bit 7 sets +0 bit 0x20 and its low nibble is +0x5C, op[4..7] x
 // and z, op[8] +5, op[9]:op[0xA] the dword +0x18, op[0xB] the flags, op[0xC]
@@ -466,7 +466,7 @@ extern "C" void __cdecl Field_LeaderSetPace(void) {
     Field_State[0x128] = 4;
 }
 
-// original 0x52E140: one step's movement (0x536670, group V2's), then the
+// original 0x52E140 (PSX 0x801B1DF4): one step's movement (0x536670, group V2's), then the
 // sprite's script tick while running (PSX FUN_801B1DF4). The original's al is
 // the tick's answer, or Field_State's low byte.
 extern "C" unsigned char __cdecl Field_LeaderStepTick(void) {
@@ -700,7 +700,7 @@ extern "C" unsigned char __cdecl Field_LeaderSwapTest(void) {
     return 1;
 }
 
-// original 0x530320: whether the party may swap (called only by
+// original 0x530320 (PSX 0x801B65B8): whether the party may swap (called only by
 // Field_LeaderSwapTest; pointer-less, found by that call) - not under bits
 // 0..2 of either flags byte, and no member after the leader in state 2 whose
 // +2 is none of the three bytes at 0x660A34.
@@ -778,7 +778,7 @@ extern "C" unsigned char __cdecl Field_LeaderDirection(void) {
     return 1;
 }
 
-// original 0x530530: the first Effect_Objects record in use, of kind 0x17,
+// original 0x530530 (PSX 0x801B6ADC): the first Effect_Objects record in use, of kind 0x17,
 // that the point one Field_DirectionSteps ahead is in reach of - its index, or
 // 0xFF. Pointer-less and in no list; called by Field_LeaderEffectTest and ten
 // other sites (0x51D32E..0x524A9E, E8 scan).

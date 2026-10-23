@@ -520,7 +520,7 @@ extern "C" void __cdecl EffectKind07_FadeIn(void) {
 // E1B's kinds (docs/effect_1a.md section 2.4)
 // ===========================================================================
 
-// original 0x464BA0 (called by kind 2's states EffectKind02_SlideIn, _Body, _SlideOut):
+// original 0x464BA0 (called by kind 2's states EffectKind02_SlideIn, _Body, _SlideOut; PSX 0x801D159C):
 // the draw mode (5, 3), panel sprite 0xD at (x + 0x18, y + 8); the draw mode
 // (0, 3), sprites 0xE at (x, y) and 0xF at (x + 0x100, y); the count 0x3E -
 // record 0's +0x3A (0 when negative or when record 0's +1 is 0) printed
@@ -547,7 +547,7 @@ extern "C" void __cdecl EffectHud_Draw(int x, int y) {
     SH_CALL(EffectHud_DrawGauge)(x, y);
 }
 
-// original 0x464C70 (EffectHud_Draw's): EffectHud_Bar(x + 0x58, y + 8, 4);
+// original 0x464C70 (EffectHud_Draw's; PSX 0x801D195C): EffectHud_Bar(x + 0x58, y + 8, 4);
 // the marker's y: y less record 0's elevation (AreaMap_Elevation at its +0x34
 // / +0x38, s16, / 32 toward zero) when record 0's +1 is set, never above y
 // (compared as s16); EffectHud_Marker(x + 0x59, that, 4); a POLY_F4 at the
@@ -590,7 +590,7 @@ extern "C" void __cdecl EffectHud_DrawGauge(int x, int y) {
         SH_CALL(EffectHud_Sprite8)(x + 0x69, 0xB4 - height / 32, 2);
 }
 
-// original 0x464DA0: a POLY_G4 at the cursor, (s16 x, s16 y) to (x + 16.0, y
+// original 0x464DA0 (PSX 0x801D1744): a POLY_G4 at the cursor, (s16 x, s16 y) to (x + 16.0, y
 // + 32.0) - floats -, the top corners (0x64, 0x64, 0x80), the bottom (0, 0,
 // 0x50), committed to `slot` (0x44). PSX 0x801D1744 (call-anchored).
 extern "C" void __cdecl EffectHud_Bar(int x, int y, unsigned slot) {
@@ -620,7 +620,7 @@ extern "C" void __cdecl EffectHud_Bar(int x, int y, unsigned slot) {
     SH_CALL(Gfx_CommitPrim)(slot, 0x44);
 }
 
-// original 0x464E40: the draw mode (0, slot); a SPRT_16 at the cursor at
+// original 0x464E40 (PSX 0x801D1818): the draw mode (0, slot); a SPRT_16 at the cursor at
 // (s16 x, s16 y) - floats -, shade 0x80, CLUT 0x7A40, u the byte of 0x653AF8
 // by (Frame_Counter >> 3) & 3, v 0x48; committed to `slot` (0x18). PSX
 // 0x801D1818 (call-anchored).
@@ -639,7 +639,7 @@ extern "C" void __cdecl EffectHud_Marker(int x, int y, unsigned slot) {
     SH_CALL(Gfx_CommitPrim)(slot, 0x18);
 }
 
-// original 0x464EC0: a SPRT_8 at the cursor at (s16 x, s16 y), shade 0x80,
+// original 0x464EC0 (PSX 0x801D18CC): a SPRT_8 at the cursor at (s16 x, s16 y), shade 0x80,
 // CLUT 0x7A40, u 0xB8, v 0x48; committed to `slot` (0x18). PSX 0x801D18CC.
 extern "C" void __cdecl EffectHud_Sprite8(int x, int y, unsigned slot) {
     unsigned char* const p = Gfx_PacketNext;
@@ -655,7 +655,7 @@ extern "C" void __cdecl EffectHud_Sprite8(int x, int y, unsigned slot) {
     SH_CALL(Gfx_CommitPrim)(slot, 0x18);
 }
 
-// original 0x465120 (EffectKind03_Fade's and E1B's 0x4678C0's): two POLY_G4s
+// original 0x465120 (EffectKind03_Fade's and E1B's 0x4678C0's; PSX 0x801D1B88): two POLY_G4s
 // from s16 x to s16 x + s16 w: the first over (s16 y, y + 4.0), black to (0,
 // 0x80, 0) at the bottom; the second over (y + 4, y + 8.0), (0, 0x80, 0) at the
 // top to black; each committed to `slot` (0x44). PSX 0x801D1B88.
@@ -692,7 +692,7 @@ extern "C" void __cdecl EffectHud_TwoBars(int x, int y, int w, unsigned slot) {
     SH_CALL(Gfx_CommitPrim)(slot, 0x44);
 }
 
-// original 0x4652D0 (EffectKind03_ShowName's and E1B's 0x467E10's): the draw
+// original 0x4652D0 (EffectKind03_ShowName's and E1B's 0x467E10's; PSX 0x801D2030): the draw
 // mode (0, slot); panel sprites 0x17 at (x, y) and 0x17 + the byte `n` at (x +
 // 0x28, y). PSX 0x801D2030.
 extern "C" void __cdecl EffectHud_DrawCount(int x, int y, unsigned slot, unsigned n) {
@@ -739,7 +739,7 @@ extern "C" void __cdecl EffectHud_DrawArrow(int x, int y, unsigned flip, unsigne
     SH_CALL(Gfx_CommitPrim)(slot, 0x48);
 }
 
-// original 0x465E50 (EffectKind0C_Aim's and E1B's): the draw mode (0, slot);
+// original 0x465E50 (EffectKind0C_Aim's and E1B's; PSX 0x801D3240): the draw mode (0, slot);
 // panel sprite 0x1C at (x, y), its word +0x18 = the byte `width` and u +0x14
 // += the byte `shade`; when the byte `blink` is set and Frame_Counter's bit 3
 // is not: the draw mode (6, 2), a TILE at the cursor, half-transparent (1), at
@@ -770,7 +770,7 @@ extern "C" void __cdecl EffectHud_DrawMark(int x, int y, unsigned width, unsigne
 // Kind 3 (EffectKind03_States: BareRet, _Start, _Fade, _ShowName)
 // ===========================================================================
 
-// original 0x464F40 (EffectKind03_States[1]): +0x18 = the first byte of the
+// original 0x464F40 (EffectKind03_States[1]; PSX 0x801D1B54): +0x18 = the first byte of the
 // parameters 0x939A20 points at (the fade's step), +0xC, +0x10, +0x1C = 0, +1
 // up. PSX 0x801D1B54 (table-anchored).
 extern "C" void __cdecl EffectKind03_Start(void) {
@@ -782,7 +782,7 @@ extern "C" void __cdecl EffectKind03_Start(void) {
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
-// original 0x464F80 (EffectKind03_States[2]): the level +0xC stepped by the
+// original 0x464F80 (EffectKind03_States[2]; PSX 0x801D1CF0): the level +0xC stepped by the
 // parameters' mode byte [1] - 0: +0xC += +0x18, bouncing off 0xFF and 0 by
 // negating +0x18; 1: +0xC += +0x18 to 0xFF, then back to 0; 2: +0x10 += +0x18
 // (a negative +0x10 that reaches 0 or more becomes -1), +0xC += +0x10,
@@ -954,7 +954,7 @@ extern "C" void __cdecl EffectKind05_Start(void) {
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
-// original 0x465540 (EffectKind05_States[2]): Field_Kind2Z the target +0x10
+// original 0x465540 (EffectKind05_States[2]; PSX 0x801D23F0): Field_Kind2Z the target +0x10
 // clamped; at the target (z +0x38 equal to it): Sound_PlayEffect(0x201), the
 // rise and its step +0x14 / +0x20, the height +0x3C, +9 and +0xA cleared, and
 // unless Field_Kind2Hold, +0x10 0, MoveScript_F3Divisor 0 and +1 up;
@@ -1010,7 +1010,7 @@ extern "C" void __cdecl EffectKind05_Rise(void) {
     SH_CALL(Sprite_UpdateScreen)();
 }
 
-// original 0x4656A0 (EffectKind05_States[3]): when Sprite_ScriptTickOnce
+// original 0x4656A0 (EffectKind05_States[3]; PSX 0x801D25EC): when Sprite_ScriptTickOnce
 // answers non-zero, Sprite_SetAnimation(3) and +1 up; Sprite_UpdateScreen (a
 // tail jump). PSX 0x801D25EC (table-anchored).
 extern "C" void __cdecl EffectKind05_Land(void) {
@@ -1021,7 +1021,7 @@ extern "C" void __cdecl EffectKind05_Land(void) {
     SH_CALL(Sprite_UpdateScreen)();
 }
 
-// original 0x4656C0 (EffectKind05_States[4]): the wait +0xA counted down; at
+// original 0x4656C0 (EffectKind05_States[4]; PSX 0x801D2644): the wait +0xA counted down; at
 // 0, while +7 is above the block's signed +0xF, +0xA = the block's +0x10 and
 // +7 down. x += +0xC, z += +0x10, +0x14 += +0x20, the height +0x3C += +0x14.
 // A height above 0 with no step +0x20 and +0xB set: the rise 0x40000, the step
@@ -1348,7 +1348,7 @@ extern "C" void __cdecl EffectKind0D_SlideOut(void) {
 // _LineFade): a message window at y +0x30 and the lines it types
 // ===========================================================================
 
-// original 0x4660B0 (EffectKind0F_States[1]): the window's y +0x30 = -0x19,
+// original 0x4660B0 (EffectKind0F_States[1]; PSX 0x801D364C): the window's y +0x30 = -0x19,
 // +7 0, +1 up. PSX 0x801D364C.
 extern "C" void __cdecl EffectKind0F_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0xFFE7);
@@ -1356,7 +1356,7 @@ extern "C" void __cdecl EffectKind0F_Start(void) {
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
-// original 0x4660D0 (EffectKind0F_States[2]): +0x30 += 8, held at 0x12 (s16)
+// original 0x4660D0 (EffectKind0F_States[2]; PSX 0x801D3680): +0x30 += 8, held at 0x12 (s16)
 // with +1 up; the window 0x469750(0x14, +0x30, 0x118, 0x13, 0). PSX 0x801D3680.
 extern "C" void __cdecl EffectKind0F_Open(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30) + 8);
@@ -1370,7 +1370,7 @@ extern "C" void __cdecl EffectKind0F_Open(void) {
     WindowBox(0x14, Hi(Key(a)) | static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_30), 0x118, 0x13, 0);
 }
 
-// original 0x466120 (EffectKind0F_States[3]): with the spawn byte of 0x653C04's
+// original 0x466120 (EffectKind0F_States[3]; PSX 0x801D36F4): with the spawn byte of 0x653C04's
 // row +6 set, a kind-0xF record spawned at state 8 with +6 copied (+0x4A,
 // +0xB 0) when Effect_FindFree has one, and +1 = 6; else +0x4B = the row's
 // first text and +1 up. The window at y 0x12. PSX 0x801D36F4.
@@ -1397,7 +1397,7 @@ extern "C" void __cdecl EffectKind0F_Choose(void) {
     WindowBox(0x14, 0x12, 0x118, 0x13, 0);
 }
 
-// original 0x4661B0 (EffectKind0F_States[4]): the window at 0x12; the text
+// original 0x4661B0 (EffectKind0F_States[4]; PSX 0x801D3820): the window at 0x12; the text
 // +0x4B names drawn whole at (0x1D, 0x14). PSX 0x801D3820.
 extern "C" void __cdecl EffectKind0F_Title(void) {
     WindowBox(0x14, 0x12, 0x118, 0x13, 0);
@@ -1405,7 +1405,7 @@ extern "C" void __cdecl EffectKind0F_Title(void) {
     DrawText(0x1D, 0x14, 0, StringCount(text), text);
 }
 
-// original 0x466200 (EffectKind0F_States[5]): EffectKind0F_Close; the text
+// original 0x466200 (EffectKind0F_States[5]; PSX 0x801D3894): EffectKind0F_Close; the text
 // +0x4B names drawn whole at (0x1D, +0x30 + 2). PSX 0x801D3894.
 extern "C" void __cdecl EffectKind0F_TitleClose(void) {
     SH_CALL(EffectKind0F_Close)();
@@ -1417,7 +1417,7 @@ extern "C" void __cdecl EffectKind0F_TitleClose(void) {
 // original 0x466240 (EffectKind0F_States[6]): the window at 0x12. PSX 0x801D3904.
 extern "C" void __cdecl EffectKind0F_Frame(void) { WindowBox(0x14, 0x12, 0x118, 0x13, 0); }
 
-// original 0x466260 (EffectKind0F_States[7], and _TitleClose's): +0x30 -= 8;
+// original 0x466260 (EffectKind0F_States[7], and _TitleClose's; PSX 0x801D3934): +0x30 -= 8;
 // below -0x19 (s16) +1 = 1 when +7 is set, else 0; the window at +0x30. PSX
 // 0x801D3934.
 extern "C" void __cdecl EffectKind0F_Close(void) {
@@ -1749,7 +1749,7 @@ void PanelTail() {
 }
 }  // namespace
 
-// original 0x4667C0 (EffectKind1A_States[1]): +8, +6 0; +7 0x80; +9 4; +0xA 0;
+// original 0x4667C0 (EffectKind1A_States[1]; PSX 0x801D4300): +8, +6 0; +7 0x80; +9 4; +0xA 0;
 // x, z, the height, +0xC, +0x10 0; +0xB 0; the word +0x2C 0xFFFF; +1 up. PSX
 // 0x801D4300.
 extern "C" void __cdecl EffectKind1A_Start(void) {
@@ -1768,7 +1768,7 @@ extern "C" void __cdecl EffectKind1A_Start(void) {
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
-// original 0x466840 (EffectKind1A_States[2]): +9 down; at 0 +0xB = 1 and +1
+// original 0x466840 (EffectKind1A_States[2]; PSX 0x801D4394): +9 down; at 0 +0xB = 1 and +1
 // up (to 4 when +7 has bit 0). The window sliding in by +9 (its y 0x12 - 16 *
 // +9, the option boxes at 0x58 + 45 * +9 with none set) until +0xB, then in
 // place with ObjTrio 0's option bit; the member rows at 0x10 - 45 * +9; item
@@ -1787,7 +1787,7 @@ extern "C" void __cdecl EffectKind1A_Open(void) {
     WindowAndLists();
 }
 
-// original 0x466950 (EffectKind1A_States[3]): the window at 0x12, the option
+// original 0x466950 (EffectKind1A_States[3]; PSX 0x801D458C): the window at 0x12, the option
 // boxes with ObjTrio 0's option bit, the member rows at 0x10, item list A at
 // 0xA4. PSX 0x801D458C.
 extern "C" void __cdecl EffectKind1A_ItemsA(void) {
@@ -1797,7 +1797,7 @@ extern "C" void __cdecl EffectKind1A_ItemsA(void) {
     ItemListA(0xA4, 0x40);
 }
 
-// original 0x4669B0 (EffectKind1A_States[4]): as _ItemsA with item list B.
+// original 0x4669B0 (EffectKind1A_States[4]; PSX 0x801D4614): as _ItemsA with item list B.
 // PSX 0x801D4614.
 extern "C" void __cdecl EffectKind1A_ItemsB(void) {
     WindowBox(0x14, 0x12, 0x118, 0x13, 0);
@@ -1806,7 +1806,7 @@ extern "C" void __cdecl EffectKind1A_ItemsB(void) {
     ItemListB(0xA4, 0x40);
 }
 
-// original 0x466A10 (EffectKind1A_States[5]): +9 up and the window and lists
+// original 0x466A10 (EffectKind1A_States[5]; PSX 0x801D469C): +9 up and the window and lists
 // as _Open's; at +9 4: +1 = 0 without +0xB, else +1 up when +6 is 1, 0xC when
 // it is 2. PSX 0x801D469C.
 extern "C" void __cdecl EffectKind1A_Close(void) {
@@ -1824,7 +1824,7 @@ extern "C" void __cdecl EffectKind1A_Close(void) {
         a[1] = 0xC;
 }
 
-// original 0x466B30 (EffectKind1A_States[6]): the word +0x3E walks 0..0x1F
+// original 0x466B30 (EffectKind1A_States[6]; PSX 0x801D48A0): the word +0x3E walks 0..0x1F
 // from 0 to the first kind whose count byte 0x9040EC is set - +0x3C = 1 when
 // none is (the walk back at 0); the window at 0x12, the option boxes; +9 = 4,
 // +1 up. PSX 0x801D48A0.
@@ -1852,7 +1852,7 @@ extern "C" void __cdecl EffectKind1A_FindKind(void) {
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
-// original 0x466BE0 (EffectKind1A_States[7]): +9 down; the panel sliding in by
+// original 0x466BE0 (EffectKind1A_States[7]; PSX 0x801D49A0): +9 down; the panel sliding in by
 // it: the header at (-80 * +9, 0x4E), the kind icon at (0x80 + 48 * +9,
 // 0x5B) and its row by +9, the total at (0xB0, 0x9C + 30 * +9), the message
 // 0xFFFF at (8, 0x94 + 30 * +9); the window at 0x12 and the option boxes; +1
@@ -1870,7 +1870,7 @@ extern "C" void __cdecl EffectKind1A_PanelIn(void) {
     if (a[9] == 0) a[1] = static_cast<unsigned char>(a[1] + 1);
 }
 
-// original 0x466D30 (EffectKind1A_States[8]): the panel in place - header, the
+// original 0x466D30 (EffectKind1A_States[8]; PSX 0x801D4B7C): the panel in place - header, the
 // kind's row at 0, its icon at (0x80, 0x5B), its message (the word +0x3E) at
 // (8, 0x94) - or 0xFF / 0xFFFF without a count; the total, the title, the
 // window and the option boxes. PSX 0x801D4B7C.
@@ -1907,7 +1907,7 @@ void PanelSlide(int delta, bool minus_when_eight_clear) {
 }
 }  // namespace
 
-// original 0x466E10 (EffectKind1A_States[9]): +9 up; the panel's header and
+// original 0x466E10 (EffectKind1A_States[9]; PSX 0x801D4CA0): +9 up; the panel's header and
 // row, the icon at 0x80 - 48 * +9 (+8 clear) or 0x80 + 48 * +9, the total, the
 // message 0xFFFF, the title, the window and option boxes; at +9 4 the word
 // +0x3E = +0x3C and +1 up. PSX 0x801D4CA0.
@@ -1919,7 +1919,7 @@ extern "C" void __cdecl EffectKind1A_PanelNext(void) {
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
-// original 0x466F70 (EffectKind1A_States[10]): +9 down; as _PanelNext with the
+// original 0x466F70 (EffectKind1A_States[10]; PSX 0x801D4E8C): +9 down; as _PanelNext with the
 // icon's sign the other way; at +9 0 +1 = 8. PSX 0x801D4E8C.
 extern "C" void __cdecl EffectKind1A_PanelBack(void) {
     PanelSlide(-1, false);
@@ -1927,7 +1927,7 @@ extern "C" void __cdecl EffectKind1A_PanelBack(void) {
     if (a[9] == 0) a[1] = 8;
 }
 
-// original 0x4670C0 (EffectKind1A_States[11]): the window and option boxes
+// original 0x4670C0 (EffectKind1A_States[11]; PSX 0x801D5064): the window and option boxes
 // sliding by +9 as _Open's (in place once +0xB); +9 up; the panel sliding out
 // by it as _PanelIn's; at +9 4: +1 = 0 without +0xB, 2 when +6 is 0, up when
 // it is 2. PSX 0x801D5064.
@@ -1959,7 +1959,7 @@ extern "C" void __cdecl EffectKind1A_PanelOut(void) {
         a[1] = static_cast<unsigned char>(a[1] + 1);
 }
 
-// original 0x467270 (EffectKind1A_States[12]): the window at 0x12 and the
+// original 0x467270 (EffectKind1A_States[12]; PSX 0x801D52F0): the window at 0x12 and the
 // option boxes; +8 0; the height, +0x14, +0x20 0; +0xA 0; +9 4; +1 up. PSX
 // 0x801D52F0.
 extern "C" void __cdecl EffectKind1A_Reset(void) {

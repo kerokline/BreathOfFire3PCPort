@@ -107,7 +107,7 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
 
 }  // namespace
 
-// original 0x56D690: slot 0 of the current chapter's vtable, then the tail
+// original 0x56D690 (PSX 0x801A8834): slot 0 of the current chapter's vtable, then the tail
 // dispatcher (PSX thunk 0x801A8834, which calls slot 0 and 0x801A8BF8).
 // As the original has it: the chapter Cond_ByteFA is signed and unchecked;
 // the table is read afresh; the tail is a jump, here a call.
@@ -126,7 +126,7 @@ extern "C" void __cdecl Field_ModeTail(void) { Entry(kTailTable, SaveMenu_NewGam
 // 0x801A8CB4 on 0x801448E7); entry 0 is a bare ret. Unchecked.
 extern "C" void __cdecl Field_ModeTailRun(void) { Entry(Field_ModeTailKinds_addr, AreaW0a_TailKind)(); }
 
-// original 0x5341A0: entry (n & 0xFF) of the current chapter's call table
+// original 0x5341A0 (PSX 0x801C2DE8): entry (n & 0xFF) of the current chapter's call table
 // (0x660B84[chapter], PSX Scenario_CallA 0x801C2DE8 through 0x801CDC4C).
 // Kept a tail jump: the entries take the caller's arguments where they lie,
 // and 153 call sites push anything from one argument to several (cleaned up

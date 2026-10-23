@@ -985,7 +985,7 @@ extern "C" void __cdecl Menu_DrawButtonRow(int x, int y, int set, int sel, int) 
     } while (i < sets[s5]);
 }
 
-// original 0x57D800: the characters in text to its NUL - a byte with bit 7 and
+// original 0x57D800 (PSX 0x801B020C): the characters in text to its NUL - a byte with bit 7 and
 // the byte after it are one - looking at no more than 16 bytes (the count of
 // bytes may step from 15 to 17 over a two-byte character).
 extern "C" unsigned char __cdecl Text_CharCount(const unsigned char* text) {

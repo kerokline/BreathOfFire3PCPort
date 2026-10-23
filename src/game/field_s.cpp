@@ -209,7 +209,7 @@ std::uint32_t field_s::FrameCallTarget() { return MenuFrame_Draw(); }
 // (Rest_States 0x663FB8, ShopMode_States[10]'s)
 // ===========================================================================
 
-// original 0x57FF80: FieldSave_States[3] (docs/shop_states.md section 1). The
+// original 0x57FF80 (PSX 0x801D50D0): FieldSave_States[3] (docs/shop_states.md section 1). The
 // title box (0x14, 0x12, 0x118, 0x13, style), message 0x9F at (0x1C, 0x16), the
 // slots at (0x20, 0x30) unlit, then Menu_YesNo: on an answer, with 0x929F0B
 // (yes) sound 0x104 and the step up one (state 4, the write), else sound 0x106
@@ -319,13 +319,13 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
 // The party formation (PartyForm_States 0x66409C, ShopMode_States[6]'s)
 // ===========================================================================
 
-// original 0x580A50: PartyForm_States[0], a tail jump through
+// original 0x580A50 (PSX 0x801DE17C): PartyForm_States[0], a tail jump through
 // PartyForm_OpenSteps 0x6640AC by the step byte, unchecked.
 extern "C" void __cdecl PartyForm_OpenStep(void) {
     [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(PartyForm_OpenSteps_addr, FieldS_Step, "PartyForm_OpenStep"))();
 }
 
-// original 0x580A60: PartyForm_OpenSteps[0]. The reserve 0x6BC894: every
+// original 0x580A60 (PSX 0x801DE1B8): PartyForm_OpenSteps[0]. The reserve 0x6BC894: every
 // record of the eight whose +0xB bit 0 is set and whose +9 is not among the
 // party list's first Party_Count(0) ids, in order, its count to 0x6BC897
 // (cleared first). Then the flag pairs from 0x6BC88C: the party's first bytes
@@ -375,7 +375,7 @@ extern "C" void __cdecl PartyForm_Setup(void) {
     SH_CALL(Transition_Start)(2);
 }
 
-// original 0x580B80: PartyForm_OpenSteps[1]. The transition over:
+// original 0x580B80 (PSX 0x801DE380): PartyForm_OpenSteps[1]. The transition over:
 // Transition_Start(3) and the step up one.
 extern "C" void __cdecl PartyForm_FadeWait(void) {
     if (Transition_Busy != 0) return;
@@ -383,7 +383,7 @@ extern "C" void __cdecl PartyForm_FadeWait(void) {
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
-// original 0x580BB0: PartyForm_OpenSteps[2]. The screen drawn; the transition
+// original 0x580BB0 (PSX 0x801DE3C4): PartyForm_OpenSteps[2]. The screen drawn; the transition
 // over: step 0 and the state up two (to the choosing).
 extern "C" void __cdecl PartyForm_OpenWait(void) {
     SH_CALL(PartyForm_Draw)();
@@ -393,7 +393,7 @@ extern "C" void __cdecl PartyForm_OpenWait(void) {
     FieldS_State = static_cast<unsigned char>(state + 2);
 }
 
-// original 0x580BE0: PartyForm_States[1]. The backdrop (kind 0x903A5B, in eax
+// original 0x580BE0 (PSX 0x801DE414): PartyForm_States[1]. The backdrop (kind 0x903A5B, in eax
 // over the entry's upper bytes; Menu_DrawBackdrop reads its byte), the screen
 // at the slide's offset, the counter down one; at 0 the counter 3 and the
 // state up one.
@@ -495,13 +495,13 @@ extern "C" void __cdecl PartyForm_Choose(void) {
     SH_CALL(Transition_Start)(2);
 }
 
-// original 0x580E80: PartyForm_States[3], a tail jump through
+// original 0x580E80 (PSX 0x801DE808): PartyForm_States[3], a tail jump through
 // PartyForm_LeaveSteps 0x6640B8 by the step byte, unchecked.
 extern "C" void __cdecl PartyForm_LeaveStep(void) {
     [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(PartyForm_LeaveSteps_addr, FieldS_Step, "PartyForm_LeaveStep"))();
 }
 
-// original 0x580E90: PartyForm_LeaveSteps[0]. While the transition runs, a
+// original 0x580E90 (PSX 0x801DE844): PartyForm_LeaveSteps[0]. While the transition runs, a
 // tail jump to PartyForm_Draw; then the black screen, the counter 2 and the
 // step up one.
 extern "C" void __cdecl PartyForm_LeaveFade(void) {
@@ -514,7 +514,7 @@ extern "C" void __cdecl PartyForm_LeaveFade(void) {
     FieldS_Step = static_cast<unsigned char>(step + 1);
 }
 
-// original 0x580EC0: PartyForm_LeaveSteps[1]. The black screen, the counter
+// original 0x580EC0 (PSX 0x801DE8A0): PartyForm_LeaveSteps[1]. The black screen, the counter
 // down one; at 0 the step up one.
 extern "C" void __cdecl PartyForm_LeaveBlack(void) {
     SH_CALL(Menu_DrawBlackScreen)();
@@ -629,7 +629,7 @@ extern "C" void __cdecl PartyForm_Reload(void) {
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
-// original 0x5811B0: PartyForm_LeaveSteps[3]. The transition over: the
+// original 0x5811B0 (PSX 0x801DED14): PartyForm_LeaveSteps[3]. The transition over: the
 // counter 0, the mode 1 (the field), state and step 0, 0x929F0F 1.
 extern "C" void __cdecl PartyForm_End(void) {
     if (Transition_Busy != 0) return;
@@ -640,7 +640,7 @@ extern "C" void __cdecl PartyForm_End(void) {
     AreaW3c_Load0F = 1;
 }
 
-// original 0x5811E0: the formation screen at the slide's offset (the counter
+// original 0x5811E0 (PSX 0x801DED58): the formation screen at the slide's offset (the counter
 // t): for each member k below Party_Count(0) (asked once), its status panel
 // Menu_DrawMemberStatus(0x11 - 40 t, 54 k + 0x3E, record of id 0x904062[k],
 // its +0xB bit 1) and its number (k + 1, "%d"-like 0x5E10C0) in the 8 px font
@@ -1007,7 +1007,7 @@ extern "C" void __cdecl ShopResist_PickBit(void) {
     }
 }
 
-// original 0x583BE0: ShopResist_States[3], "buy?". The members, message 0x6D,
+// original 0x583BE0 (PSX 0x801D7970): ShopResist_States[3], "buy?". The members, message 0x6D,
 // the bits with the chosen one lit, the cursor box, Menu_YesNo: on yes
 // (0x929F0B) message 0xC, counter 0x3C, the zenny less ten times the level
 // (unchecked: PickBit asked), the state up two (the grant); on no sound 0x106
@@ -1033,7 +1033,7 @@ extern "C" void __cdecl ShopResist_Confirm(void) {
     FieldS_State = static_cast<unsigned char>(FieldS_State - 2);
 }
 
-// original 0x583CD0: ShopResist_States[4], sliding out. The members sliding,
+// original 0x583CD0 (PSX 0x801D7AF4): ShopResist_States[4], sliding out. The members sliding,
 // the bits at (32 t + 0x98, 0x3F); the counter up one; at 7 the counter 0, the
 // mode 1 (the field), state and step 0.
 extern "C" void __cdecl ShopResist_Close(void) {
@@ -1048,7 +1048,7 @@ extern "C" void __cdecl ShopResist_Close(void) {
     FieldS_Step = 0;
 }
 
-// original 0x583D30: ShopResist_States[5], the grant. The bits with the chosen
+// original 0x583D30 (PSX 0x801D7B84): ShopResist_States[5], the grant. The bits with the chosen
 // one lit, the members, the cursor box; the messages from 0x929F0B to 0xF
 // (ShopResist_Message); done, the member's +0x1D = 1 << bit (the byte shift of
 // the s8 bit, its count masked to five bits: 8 and up give 0),
@@ -1065,7 +1065,7 @@ extern "C" void __cdecl ShopResist_Grant(void) {
     FieldS_State = static_cast<unsigned char>(FieldS_State - 4);
 }
 
-// original 0x583DE0: ShopResist_States[6], the farewell. The bits, the
+// original 0x583DE0 (PSX 0x801D7CD8): ShopResist_States[6], the farewell. The bits, the
 // members; the messages to 0x10; done, the counter 0 and the state down two
 // (the slide out).
 extern "C" void __cdecl ShopResist_Farewell(void) {
@@ -1077,7 +1077,7 @@ extern "C" void __cdecl ShopResist_Farewell(void) {
     FieldS_State = static_cast<unsigned char>(state - 2);
 }
 
-// original 0x583E30: ShopResist_States[7], a notice (the record refused, the
+// original 0x583E30 (PSX 0x801D7D58): ShopResist_States[7], a notice (the record refused, the
 // zenny short). The bits, the members, the cursor box blinking; the messages
 // to 0x929F0F (a byte); done, the state down six (the member).
 extern "C" void __cdecl ShopResist_Notice(void) {
@@ -1123,7 +1123,7 @@ extern "C" void __cdecl ShopResist_DrawBits(unsigned member, int x, int y, unsig
     }
 }
 
-// original 0x584010: the resistance shop's members: the title box (0x14,
+// original 0x584010 (PSX 0x801D8054): the resistance shop's members: the title box (0x14,
 // 0x10 - 10 s, 0x118, 0x13, style) where s is the counter when `sliding`, else
 // 0; for each member k below Party_Count(0) (asked after each) its panel
 // (0x11 - 32 s, 54 k + 0x3E, its record, lit when the record's +0x1D is not 0);
@@ -1146,7 +1146,7 @@ extern "C" void __cdecl ShopResist_DrawMembers(unsigned sliding) {
     SH_CALL(Menu_DrawMoneyBox)(32 * s + 0xB4, 0x26, 0, Party_Zenny);
 }
 
-// original 0x584120: one message of a run - system message 0x63 + *index at
+// original 0x584120 (PSX 0x801D81B8): one message of a run - system message 0x63 + *index at
 // (0x1C, 0x14) - held until the counter runs down or any pad bit is pressed;
 // then the counter 0x3C and *index up one; answers 1 when that reached `end`'s
 // byte, else 0.
@@ -1171,7 +1171,7 @@ extern "C" unsigned char __cdecl ShopResist_Message(unsigned char* index, unsign
 // used up (SharedList_UseItem).
 // ===========================================================================
 
-// original 0x584190: SharedList_States[0]. The set-up, the choice 0, the
+// original 0x584190 (PSX 0x801DF8A8): SharedList_States[0]. The set-up, the choice 0, the
 // state up one.
 extern "C" void __cdecl SharedList_Begin(void) {
     SH_CALL(SharedList_Setup)();
@@ -1290,7 +1290,7 @@ extern "C" void __cdecl SharedList_Menu(void) {
     FieldS_State = 4;
 }
 
-// original 0x584460: SharedList_States[2], a tail jump through
+// original 0x584460 (PSX 0x801DFCAC): SharedList_States[2], a tail jump through
 // SharedList_MoveSteps 0x664268 by the step byte, unchecked.
 extern "C" void __cdecl SharedList_MoveStep(void) {
     [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(SharedList_MoveSteps_addr, FieldS_Step, "SharedList_MoveStep"))();
@@ -1345,7 +1345,7 @@ extern "C" void __cdecl SharedList_UseItem(void) {
     FieldS_State = static_cast<unsigned char>(FieldS_State - 1);
 }
 
-// original 0x5845E0: SharedList_MoveSteps[1], and ShopMode_States[9]'s step
+// original 0x5845E0 (PSX 0x801DFF24): SharedList_MoveSteps[1], and ShopMode_States[9]'s step
 // table 0x6641B0 [0]: the counter down one; at 0 the step up one.
 extern "C" void __cdecl Menu_StepAfterTimer(void) {
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
@@ -1548,13 +1548,13 @@ extern "C" void __cdecl SharedList_PickShared(void) {
     FieldS_Step = static_cast<unsigned char>(FieldS_Step - 1);
 }
 
-// original 0x584BB0: SharedList_States[3], a tail jump through
+// original 0x584BB0 (PSX 0x801E0814): SharedList_States[3], a tail jump through
 // SharedList_SortSteps 0x66427C by the step byte, unchecked.
 extern "C" void __cdecl SharedList_SortStep(void) {
     [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(SharedList_SortSteps_addr, FieldS_Step, "SharedList_SortStep"))();
 }
 
-// original 0x584BC0: SharedList_SortSteps[0]: the counter down one; at 0
+// original 0x584BC0 (PSX 0x801E0850): SharedList_SortSteps[0]: the counter down one; at 0
 // window 6 (0x803214) open - kind 7, +2 0xE, +0xA 0, +0xB 0xFF, at (0xC8,
 // 0x3F) - and the step up one.
 extern "C" void __cdecl SharedList_SortOpen(void) {
@@ -1573,7 +1573,7 @@ extern "C" void __cdecl SharedList_SortOpen(void) {
     FieldS_Step = static_cast<unsigned char>(step + 1);
 }
 
-// original 0x584C10: SharedList_SortSteps[1], window 6's three rows (+0xA).
+// original 0x584C10 (PSX 0x801E08DC): SharedList_SortSteps[1], window 6's three rows (+0xA).
 // The help word 0x18, the hand at (its x + 5, its y + 16 row + 0x1A). The
 // repeat of 0x5000: 0x1000 up (sound 0x101; below 0, s8, to 2), 0x4000 down
 // (past 2 to 0). Confirm: sound 0x103; row 0 - +0xB 0 and the step up one
@@ -1837,7 +1837,7 @@ extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
     for (int i = 0; i < 16; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 8, w->y + 0xA0, 6, 1);
 }
 
-// original 0x5857E0: a tail jump through SharedList_Sorts 0x664298 by the
+// original 0x5857E0 (PSX 0x801E1A58): a tail jump through SharedList_Sorts 0x664298 by the
 // argument's byte, unchecked (the argument stays on the stack for the entry,
 // which reads none): 0 compacts, 1 sorts up, 2 down.
 extern "C" void __cdecl SharedList_Sort(unsigned how) {
@@ -1886,7 +1886,7 @@ extern "C" void __cdecl SharedList_SortCostUp(void) {
     SortShared([](unsigned char a, unsigned char b) { return a > b; });
 }
 
-// original 0x585940: window kind handler (called by 0x59C260 with x, y): the
+// original 0x585940 (PSX 0x801E1D38): window kind handler (called by 0x59C260 with x, y): the
 // count of item 0x58 of category 0 - the box (x + 3, y + 3, 0x55, 0x10, 0,
 // style), the label 0x66A118 at (x + 4, y + 4), the count (Inventory_Count(0,
 // 0x58, 0), a word) in the 12 px font at (x + 0x34, y + 4); the piece lists

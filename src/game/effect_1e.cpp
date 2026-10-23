@@ -153,7 +153,7 @@ void PanelHead(const char* who) {
 // Stage 1 (LeaderPanel_Stage1Steps 0x66022C, dispatched by 0x5289A0, not ours)
 // ===========================================================================
 
-// original 0x528CD0 (PSX twin 0x801DA068): LeaderPanel_Stage1Steps[5] - box 3
+// original 0x528CD0 (PSX 0x801DA1E8): LeaderPanel_Stage1Steps[5] - box 3
 // at (0x6C, 0x56); up / down (0x5000) toggle +6 with sound 0x100; 0x60
 // pressed: 0x40 sets +6 (sound 0x106), else sound 0x103, +3 up; the hand by
 // +6, the shade, the prompt box and its message.
@@ -586,7 +586,7 @@ extern "C" void __cdecl LeaderPanel_S4Blink(void) {
     p[0x1C] = static_cast<unsigned char>((Frame_Counter & bits) != 0 ? 0 : 0xFF);
 }
 
-// original 0x5295F0 (PSX twin 0x801DB03C): LeaderPanel_Stage4Steps[2] - the
+// original 0x5295F0 (PSX 0x801DB1C0): LeaderPanel_Stage4Steps[2] - the
 // pull: record 0's z at 0x3E8000 or more lands it (records 4, 1 at 4, the
 // picked record's +1 = 6, sound 0x203, track 0x2A, animation 0xA, +3 = 3);
 // else by the pad - 0xC000 held (pressed: pose 2, +9 = 8, the frame from the

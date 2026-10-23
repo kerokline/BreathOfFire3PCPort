@@ -206,12 +206,21 @@ def main():
     # A takeover's marker: `// original 0xPC (... PSX 0xJP ...)`. The PSX address is not always
     # right after the paren (`(area 98 +0x34[5]; PSX 0x801F5B50)`, `(+0x3C[10], PSX ...)`,
     # `0x56C130: chapter 17's vtable slot 0 (PSX ...)`), so take the first on the marker's line.
-    rx = re.compile(r'//\s*original\s+0x([0-9A-Fa-f]{6})\b[^\n]*?\bPSX\s+0x(80[0-9A-Fa-f]{6})')
+    # `PSX twin 0x...`, `PSX <its name> 0x...` and `PSX FUN_80......` are the same citation;
+    # a marker line whose comment wraps between `PSX` and the address is read across the wrap.
+    rx = re.compile(r'//\s*original\s+0x([0-9A-Fa-f]{6})\b[^\n]*?\bPSX\s+(?:twin\s+)?(?:[A-Za-z_]\w*\s+)?(?:0x|[A-Za-z][A-Za-z_]*_)(80[0-9A-Fa-f]{6})')
+    wrap_head = re.compile(r'//\s*original\s+0x[0-9A-Fa-f]{6}\b.*?\bPSX(?:\s+twin)?(?:\s+[A-Za-z_]\w*)?\s*$')
+    wrap_tail = re.compile(r'\s*//\s*(?:twin\s+)?(?:[A-Za-z_]\w*\s+)?(?:0x|[A-Za-z][A-Za-z_]*_)(80[0-9A-Fa-f]{6})\b')
     for path in glob.glob(os.path.join(a.repo, 'src', '**', '*.cpp'), recursive=True) + \
             glob.glob(os.path.join(a.repo, 'src', '**', '*.h'), recursive=True):
         rel = os.path.relpath(path, a.repo).replace(chr(92), chr(47))
         area = None
-        for ln, line in enumerate(open(path, encoding='utf-8', errors='replace'), 1):
+        lines = open(path, encoding='utf-8', errors='replace').read().split('\n')
+        for ln, line in enumerate(lines, 1):
+            if not rx.search(line) and wrap_head.search(line) and ln < len(lines):
+                mt = wrap_tail.match(lines[ln])
+                if mt:
+                    line = line.rstrip() + ' 0x' + mt.group(1)
             # The area files head each area's block with `// ---- area N (`, and a marker may say
             # `(area 98 ...)` itself; the area decides which AREAnnn overlay the twin lives in.
             ma = re.match(r'//\s*-{3,}\s*area\s+(\d+)\b', line, re.I)
@@ -219,14 +228,24 @@ def main():
                 area = int(ma.group(1))
             m = rx.search(line)
             if m:
-                mb = re.search(r'\(area\s+(\d+)\b', line)
-                where = ('AREA%03d.EMI' % int(mb.group(1))) if mb else (('AREA%03d.EMI' % area) if area is not None else None)
+                # `(area 98`, `in AREA075` or a name `Area34_...` on the line names the area too.
+                mb = re.search(r'\(area\s+(\d+)\b|\bAREA(\d{3})\b|\bArea(\d+)_', line)
+                mb = next((int(g) for g in mb.groups() if g), None) if mb else None
+                where = ('AREA%03d.EMI' % mb) if mb is not None else (('AREA%03d.EMI' % area) if area is not None else None)
                 pc_rows.append((int(m.group(1), 16), int(m.group(2), 16), 'src:%s:%d' % (rel, ln), where))
     md5s = {hashlib.md5(d).hexdigest(): (nm, i) for (nm, i), (b, d) in jp_sections.items()}
     for p in json.load(open(os.path.join(a.repo, 'analysis', 'pairs_propagated.json'))):
         sec = p['section']
         where = 'boot' if sec == 'boot' else md5s.get(sec)
         pc_rows.append((p['pc'], p['psx'], 'pairs:%s:%s' % (p['how'], where if where else sec[:8]), where))
+    # The overlays each PC function's propagated pairs resolve to: a citation whose JP address
+    # several overlays share keeps the ones its function's pairs agree on, when they name any.
+    pair_targets = collections.defaultdict(set)
+    for pc, jp, how, where in pc_rows:
+        if how.startswith('pairs:') and where:
+            for t, us, k, nm, st in jp_to_us.get(jp, []):
+                if (TARGETS[t][0] in ('EXE', 'GAME.EMI')) if where == 'boot' else TARGETS[t] == where:
+                    pair_targets[pc].add(t)
     seen = set()
     with open(os.path.join(a.out, 'pc_map.tsv'), 'w') as f:
         f.write('pc\tjp\tus\ttarget\tkind\tname\tstatus\thow\n')
@@ -253,6 +272,8 @@ def main():
                 # A citation from an area file: an AREAnnn twin must be that area's own overlay;
                 # twins in the shared overlays (GAME, the executable) stay.
                 hits = [h for h in hits if not TARGETS[h[0]][0].startswith('AREA') or TARGETS[h[0]][0] == where]
+            if how.startswith('src:') and len({h[0] for h in hits}) > 1:
+                hits = [h for h in hits if h[0] in pair_targets.get(pc, ())] or hits
             if hits:
                 for t, us, k, nm, st in hits:
                     f.write('0x%06X\t0x%08X\t0x%08X\t%s\t%s\t%s\t%s\t%s\n' % (pc, jp, us, t, k, nm, st, how))

@@ -203,7 +203,7 @@ void Place(unsigned char b29, unsigned char b2A, unsigned x, unsigned y) {
 
 // --- kind 0xF: the list states -------------------------------------------------------
 
-// original 0x4672F0 (kind 0xF state 26): the window (0x14, 0x12, 0x118, 0x13, 0),
+// original 0x4672F0 (kind 0xF state 26; PSX 0x801D53B4): the window (0x14, 0x12, 0x118, 0x13, 0),
 // the toggles at (0x58, 0x28), +9 - 1, the list at (0x27, 60 * +9 + 0x40) - the
 // y built on the record pointer's upper half (movzx ax), which only its low 16
 // bits carry on; at +9 = 0 a kind-0x1A record in state 0x10, sub-state the
@@ -223,7 +223,7 @@ extern "C" void __cdecl EffectKind0F_ListOpen() {
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
-// original 0x4673B0 (kind 0xF state 27): the window, the toggles and the list at
+// original 0x4673B0 (kind 0xF state 27; PSX 0x801D5514): the window, the toggles and the list at
 // rest (0x27, 0x40).
 extern "C" void __cdecl EffectKind0F_ListShow() {
     SH_CALL(Panel_DrawWindow)(0x14, 0x12, 0x118, 0x13, 0);
@@ -231,7 +231,7 @@ extern "C" void __cdecl EffectKind0F_ListShow() {
     SH_CALL(EffectKind0F_DrawMessageList)(0x27, 0x40);
 }
 
-// original 0x467400 (kind 0xF state 28): +9 + 1. With +0xB 0 the window rises
+// original 0x467400 (kind 0xF state 28; PSX 0x801D5590): +9 + 1. With +0xB 0 the window rises
 // (y 0x12 - 16 * +9, on the pointer's upper half as in state 26) and the
 // toggles slide right (x 45 * +9 + 0x58 over a callee's eax: its low 16 bits),
 // all unlit; else both at rest and lit. The list slides down (60 * +9 + 0x40,
@@ -256,7 +256,7 @@ extern "C" void __cdecl EffectKind0F_ListClose() {
     else if (s[6] == 1) s[1] = 6;
 }
 
-// original 0x4674F0 (kind 0xF state 29): while record 6's +8 is 0 and its +1 is
+// original 0x4674F0 (kind 0xF state 29; PSX 0x801D5710): while record 6's +8 is 0 and its +1 is
 // 0xE, EffectKind0F_Children[+2] (a tail jump); else Effect_Release.
 extern "C" void __cdecl EffectKind0F_Child() {
     if (rv::Bytes(&Effect_Objects[6])[0x8] == 0 && Effect_Objects[6].state == 0xE) {
@@ -289,7 +289,7 @@ extern "C" void __cdecl EffectKind0F_Child5() {
 
 // --- sub-kind 0 (EffectKind0F_Child0Steps) --------------------------------------------
 
-// original 0x467540: two kind-0x1A records in state 0x10, +3 = 2 and 4 (each
+// original 0x467540 (PSX 0x801D57CC): two kind-0x1A records in state 0x10, +3 = 2 and 4 (each
 // only if Effect_FindFree found one); bank 0x47, placed at (0x5E, 0xBA), +9 =
 // +0xA = 0; +3 + 1.
 extern "C" void __cdecl EffectKind0F_Child0Start() {
@@ -305,7 +305,7 @@ extern "C" void __cdecl EffectKind0F_Child0Start() {
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
 
-// original 0x467630: +9 0: the next record of the script 0x653CCC (+0xA; an
+// original 0x467630 (PSX 0x801D5974): +9 0: the next record of the script 0x653CCC (+0xA; an
 // animation of 0xFF goes to record `frames` first): Sprite_SetAnimation, +9 its
 // frames, +0xA + 1; else +9 - 1 and Sprite_ScriptTick. Then Sprite_QueueOverlay.
 extern "C" void __cdecl EffectKind0F_Child0Animate() {
@@ -326,7 +326,7 @@ extern "C" void __cdecl EffectKind0F_Child0Animate() {
     SH_CALL(Sprite_QueueOverlay)();
 }
 
-// original 0x4676A0: bank 0x21, placed at (0xA2, 0xBA) with +0x2A 1; +6, +9,
+// original 0x4676A0 (PSX 0x801D5A64): bank 0x21, placed at (0xA2, 0xBA) with +0x2A 1; +6, +9,
 // +0xA 0, dword +0xC 0, dword +0x18 4; Sprite_SetAnimation(0); +3 + 1.
 extern "C" void __cdecl EffectKind0F_Child0Second() {
     SH_CALL(Sprite_SetAnimationBank)(0x21);
@@ -342,13 +342,13 @@ extern "C" void __cdecl EffectKind0F_Child0Second() {
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
 
-// original 0x467750: Sprite_ScriptTick, then Sprite_QueueOverlay (a tail jump).
+// original 0x467750 (PSX 0x801D5B64): Sprite_ScriptTick, then Sprite_QueueOverlay (a tail jump).
 extern "C" void __cdecl EffectKind0F_Child0Tick() {
     SH_CALL(Sprite_ScriptTick)();
     SH_CALL(Sprite_QueueOverlay)();
 }
 
-// original 0x467760: bank 0x47, placed at (0xE8, 0xBA), +9 = +0xA = 0,
+// original 0x467760 (PSX 0x801D5B8C): bank 0x47, placed at (0xE8, 0xBA), +9 = +0xA = 0,
 // Sprite_SetAnimation(0xA), +3 - 1.
 extern "C" void __cdecl EffectKind0F_Child0Back() {
     SH_CALL(Sprite_SetAnimationBank)(0x47);
@@ -363,7 +363,7 @@ extern "C" void __cdecl EffectKind0F_Child0Back() {
 
 // --- sub-kind 1 --------------------------------------------------------------------
 
-// original 0x467810: bank 0x47, placed at (0xEC, 0xA2); +6, +9, +0xA 0, dword
+// original 0x467810 (PSX 0x801D5CA8): bank 0x47, placed at (0xEC, 0xA2); +6, +9, +0xA 0, dword
 // +0xC 0, dword +0x18 4; +3 + 1.
 extern "C" void __cdecl EffectKind0F_Child1Start() {
     SH_CALL(Sprite_SetAnimationBank)(0x47);
@@ -377,7 +377,7 @@ extern "C" void __cdecl EffectKind0F_Child1Start() {
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
 
-// original 0x4678C0: the script 0x653CEC of (animation, frames, mode) as
+// original 0x4678C0 (PSX 0x801D5DA4): the script 0x653CEC of (animation, frames, mode) as
 // sub-kind 0's (an animation of 0xFF goes to record `frames` and zeroes +0xC,
 // +6 and sets +0x18 4); Sprite_QueueOverlay; the draw mode (0, 1) and sprites
 // 0x15, 0x16, 0x10. The current record's mode (the one before +0xA): 0 bounces
@@ -433,7 +433,7 @@ extern "C" void __cdecl EffectKind0F_Child1Meter() {
 
 // --- sub-kind 2 --------------------------------------------------------------------
 
-// original 0x467A80: bank 0x47, placed at (0xE8, 0xBA), +6 = +9 = +0xA = 0; +3 + 1.
+// original 0x467A80 (PSX 0x801D6060): bank 0x47, placed at (0xE8, 0xBA), +6 = +9 = +0xA = 0; +3 + 1.
 extern "C" void __cdecl EffectKind0F_Child2Start() {
     SH_CALL(Sprite_SetAnimationBank)(0x47);
     Place(1, 0, 0xE8, 0xBA);
@@ -444,7 +444,7 @@ extern "C" void __cdecl EffectKind0F_Child2Start() {
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
 
-// original 0x467B10: the script 0x653D08 of (animation, frames, step) - an
+// original 0x467B10 (PSX 0x801D6144): the script 0x653D08 of (animation, frames, step) - an
 // animation of 0 goes to record `frames` and zeroes +6; a record whose step is
 // 0x50 spawns a kind-0x1A record in state 0x10, +2 = +3 = 2, placed at (0xE8,
 // 0x9E), from Effect_FindFree unchecked. Sprite_QueueOverlay. Every fourth frame
@@ -493,7 +493,7 @@ extern "C" void __cdecl EffectKind0F_Child2Gauge() {
     if (at_(3 * s[0xA] - 1) != 0) Call3(at::kE1aGaugeMark, 0xF4, ((ScKey() & 0xFFFF0000u) | s[6]) + 0x68u, 1);
 }
 
-// original 0x467CA0: bank 0x2B; +0x24 0x80, +0x29 = +0x2A = 0, +0x48 2, dwords
+// original 0x467CA0 (PSX 0x801D6430): bank 0x2B; +0x24 0x80, +0x29 = +0x2A = 0, +0x48 2, dwords
 // +0x40 = +0x44 = 0x8000, the tint bytes 0, +9 0x40, +6 0;
 // Sprite_SetAnimation(3); +3 + 1.
 extern "C" void __cdecl EffectKind0F_Child2Fade() {
@@ -513,7 +513,7 @@ extern "C" void __cdecl EffectKind0F_Child2Fade() {
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
 
-// original 0x467D30: +9 - 1; at 0 Effect_Release, else with bit 3 of +9
+// original 0x467D30 (PSX 0x801D6504): +9 - 1; at 0 Effect_Release, else with bit 3 of +9
 // Sprite_QueueOverlay (both tail jumps).
 extern "C" void __cdecl EffectKind0F_Child2Blink() {
     unsigned char* s = Sc();
@@ -525,7 +525,7 @@ extern "C" void __cdecl EffectKind0F_Child2Blink() {
 
 // --- sub-kind 3 --------------------------------------------------------------------
 
-// original 0x467D80: bank 0x47, placed at (0xCA, 0xBA), +9 = +0xA = +0xB = 0;
+// original 0x467D80 (PSX 0x801D65B4): bank 0x47, placed at (0xCA, 0xBA), +9 = +0xA = +0xB = 0;
 // +3 + 1, then Sprite_SetAnimation(3).
 extern "C" void __cdecl EffectKind0F_Child3Start() {
     SH_CALL(Sprite_SetAnimationBank)(0x47);
@@ -603,7 +603,7 @@ extern "C" void __cdecl EffectKind0F_Child3Grid() {
 
 // --- sub-kinds 4 and 5 -------------------------------------------------------------
 
-// original 0x468040: bank 0x47, placed at (0xF0, 0xBA); +6 = +9 = +0xA = 0,
+// original 0x468040 (PSX 0x801D6A74): bank 0x47, placed at (0xF0, 0xBA); +6 = +9 = +0xA = 0,
 // dwords +0xC = +0x10 = 0x6A, +0x4B 0xFF; +3 + 1. Also called by
 // EffectKind0F_Child5Start.
 extern "C" void __cdecl EffectKind0F_Child4Start() {
@@ -689,13 +689,13 @@ extern "C" void __cdecl EffectKind0F_DrawCursorPanel(unsigned down) {
     Call4(at::kE1aMarker, Word(Sc() + 0x10), 0xB3, (down & 0xFF) == 0 ? 0u : 1u, 1);
 }
 
-// original 0x468340: EffectKind0F_Child4Start, then +0xB = 0x37.
+// original 0x468340 (PSX 0x801D6F50): EffectKind0F_Child4Start, then +0xB = 0x37.
 extern "C" void __cdecl EffectKind0F_Child5Start() {
     SH_CALL(EffectKind0F_Child4Start)();
     Sc()[0xB] = 0x37;
 }
 
-// original 0x468350: the move script 0x653DAC as sub-kind 4's (going back to
+// original 0x468350 (PSX 0x801D6F7C): the move script 0x653DAC as sub-kind 4's (going back to
 // record `frames` also sets +0xB 0x37 and the cursor to (0x6A, 0x6A)); a record
 // of animation 9 spawns a kind-0x1A record in state 0x10, +2 = +3 = 2, at
 // (0xF2, 0x9E), when Effect_FindFree finds one. The cursor moved; the panel
@@ -836,7 +836,7 @@ extern "C" void __cdecl EffectKind0F_DrawMessageList(int x, int y) {
     SH_CALL(Text_DrawFont8)(x + 0xCA, y + 0x92, 0, Text(at::kPrint));
 }
 
-// original 0x468840 (x, y): the draw mode (9, 1); the top edge (sprite 0x25, 23
+// original 0x468840 (x, y; PSX 0x801D77CC): the draw mode (9, 1); the top edge (sprite 0x25, 23
 // of 0x26 every 8 from x + 0x20, 0x27, 0x28), the two side quads (0x78 high,
 // edges 0 and 1), the bottom edge (0x2A, 23 of 0x2B from x + 8, 0x2C, three
 // 0x2D, 0x2E, 0x2F) at y + 0x90.
@@ -936,7 +936,7 @@ extern "C" void __cdecl EffectKind0F_DrawToggles(int x, int y, unsigned bits) {
     }
 }
 
-// original 0x468BB0 (x, y, lit): a box (x + 2, y + 2, 0x28, 0x10); the draw mode
+// original 0x468BB0 (x, y, lit; PSX 0x801D7E34): a box (x + 2, y + 2, 0x28, 0x10); the draw mode
 // (8, 1); sprites 4 * lit + 0x1D at (x, y), + 0x1E at (x, y + 0x10), four of +
 // 0x1F from x + 8 and (lit + 8) * 4 at x + 0x28, all byte ids.
 extern "C" void __cdecl EffectKind0F_DrawToggle(int x, int y, unsigned lit) {
@@ -1010,7 +1010,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
     DrawHeading(0, x + 0x35, y + 7, 3, EffectKind0F_PanelTitles_addr);
 }
 
-// original 0x468E50 (x, y, height): a POLY_FT4 (the cursor read once, before
+// original 0x468E50 (x, y, height; PSX 0x801D82F4): a POLY_FT4 (the cursor read once, before
 // Gpu_SetPolyFT4): tpage 0x7887, CLUT word 0x1D; corners (x, y), (x + 8, y), (x,
 // y + height), (x + 8, y + height) as floats (x, y s16, height a byte); u 0x58,
 // 0x60, v 0x9A, 0x9E; shade 0x80; committed (1, 0x48).
@@ -1210,7 +1210,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemFrame(int x, int y) {
 
 // --- the window (FE2's trade screen and the kinds' panels) --------------------------
 
-// original 0x469750 (x, y, w, h, colour): the bevel (x, y, w, h), then the edges
+// original 0x469750 (x, y, w, h, colour; PSX 0x801D9580): the bevel (x, y, w, h), then the edges
 // (x + 2, y + 2, w - 5, h - 5, colour).
 extern "C" void __cdecl Panel_DrawWindow(int x, int y, int w, int h, unsigned colour) {
     SH_CALL(Panel_DrawWindowBevel)(x, y, w, h);

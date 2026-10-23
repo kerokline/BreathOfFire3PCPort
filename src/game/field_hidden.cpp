@@ -394,7 +394,7 @@ FH_EXPORT void __cdecl Sprite_PoseFromSet(unsigned animation, unsigned char* set
     g.script_start(0);
 }
 
-// original 0x5891C0: Sprite_CopyFrames(animation, buffer, size), +0x4B = the
+// original 0x5891C0 (PSX 0x8014D558): Sprite_CopyFrames(animation, buffer, size), +0x4B = the
 // animation, Sprite_ScriptStart(position) - the dword as given.
 FH_EXPORT void __cdecl Sprite_AnimFromSet(unsigned animation, unsigned position, unsigned char* buffer, unsigned size) {
     g.copy_frames(animation, buffer, size);
@@ -433,7 +433,7 @@ FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
 // The encounter placement's driver
 // ===========================================================================
 
-// original 0x592570: an encounter row by weight - (Rand & 0xF) + 1 against
+// original 0x592570 (PSX 0x801C7A74): an encounter row by weight - (Rand & 0xF) + 1 against
 // the running byte sum of the eight rows' weights (Encounter_Rows +8, 9 bytes
 // a row): the first row whose sum reaches it, else 0.
 //
@@ -448,7 +448,7 @@ FH_EXPORT unsigned char __cdecl Encounter_PickRow(void) {
     return 0;
 }
 
-// original 0x5925A0: the eight enemy slots from a row. Slot k's kind +1 =
+// original 0x5925A0 (PSX 0x801C7AE4): the eight enemy slots from a row. Slot k's kind +1 =
 // row[k]; it is active (+0 = 1) when that is not 0xFF and (Rand & 0xF) + 1
 // is at most Encounter_SlotChance[k] (read after the draw), else +0 = 0.
 // Answers the slots made active.
@@ -473,7 +473,7 @@ FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
     return n;
 }
 
-// original 0x591F30 (one call site, Field_EncounterDue's 0x53013C, as
+// original 0x591F30 (PSX 0x801C70D8; one call site, Field_EncounterDue's 0x53013C, as
 // (4, 0)): an encounter placed on the field map. Sprite_Current = the scratch sprite 0x6BDFF0; the facing byte
 // 0x6BE070 = the first argument's low byte, or at 4 and above the facing one
 // on (& 3). Unless the second argument's low byte is set, the fight's centre

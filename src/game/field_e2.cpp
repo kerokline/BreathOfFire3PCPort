@@ -111,7 +111,7 @@ void FollowAndTick(unsigned char* s) {
 // The event script's rest
 // ============================================================================
 
-// original 0x5341C0: entry (n & 0xFF) of the current chapter's call table B
+// original 0x5341C0 (PSX 0x801C2E34): entry (n & 0xFF) of the current chapter's call table B
 // (Scenario_CallBTables 0x660BD4[Cond_ByteFA], PSX 0x801C2E34), reached with
 // the caller's arguments in place. Scenario_CallA's shape (field_modes.cpp):
 // a tail jump, because the entries take anything from nothing to several
@@ -209,7 +209,7 @@ extern "C" void __cdecl Field_AfterBattleTally(void) {
         SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0xF5);
 }
 
-// original 0x534480: Field_LeaderStates[14] and the members' 0x65F960[14]:
+// original 0x534480 (PSX 0x801C32D0): Field_LeaderStates[14] and the members' 0x65F960[14]:
 // unless Field_Request is 9, state +1 = 1. Else the facing +8 toward the
 // mode-11 object (0x905DA0's +0x34 / +0x38) by the signs of dx, dz: (-,-) 0,
 // (+,+) 4, (-,+) 6, (-,0) 7, (0,+) 5, (0,-) 1, (+,-) 2, (+,0) 3, (0,0) kept;
@@ -232,7 +232,7 @@ extern "C" void __cdecl Field_FaceMode11Object(void) {
     Ensure(Sprite_Current[8]);
 }
 
-// original 0x534C20: the floor's damage of kind k (0..8; Field_FloorDamage's
+// original 0x534C20 (PSX 0x801C3E2C): the floor's damage of kind k (0..8; Field_FloorDamage's
 // cell code - 0x80). A 27-byte table on the stack, three bytes a kind:
 // Char_LoseHp(t0, Field_State +0x89) - HP by 4, 8, 16, 32, 2 for kinds 0..4 -
 // and 0x537500(t1, +0x89) - AP by 4, 8, 32 for kinds 6..8 -, then the flags
@@ -426,7 +426,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
 // and reads it again after every call, as the originals do.
 // ============================================================================
 
-// original 0x535FC0: Sprite_EnsureAnimation(0x3C) facing 7, else (0x3D).
+// original 0x535FC0 (PSX 0x801C5D14): Sprite_EnsureAnimation(0x3C) facing 7, else (0x3D).
 extern "C" void __cdecl Leader_Pose3C(void) { Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3C : 0x3D); }
 
 // The hop's set-up, 0x535FE0 and 0x5363C0 alike: Field_State +0x128 = +0x70
@@ -446,13 +446,13 @@ void HopSetUp() {
 }
 }  // namespace
 
-// original 0x535FE0: the hop's set-up (HopSetUp), +9 - 1.
+// original 0x535FE0 (PSX 0x801C5D50): the hop's set-up (HopSetUp), +9 - 1.
 extern "C" void __cdecl Leader_HopStart(void) {
     HopSetUp();
     rv::Current<records::PartyMember>()->step_frames = static_cast<unsigned char>(rv::Current<records::PartyMember>()->step_frames - 1);
 }
 
-// original 0x5363C0: nothing (al 0) until Sprite_ScriptTickOnce answers; then
+// original 0x5363C0 (PSX 0x801C6394): nothing (al 0) until Sprite_ScriptTickOnce answers; then
 // the hop's set-up, +9 - 1 and al 1.
 extern "C" unsigned char __cdecl Leader_HopStartAfterTick(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return 0;
@@ -461,7 +461,7 @@ extern "C" unsigned char __cdecl Leader_HopStartAfterTick(void) {
     return 1;
 }
 
-// original 0x536050: the hop in flight. +9 at 0: Sprite_EnsureAnimation(+8)
+// original 0x536050 (PSX 0x801C5E0C): the hop in flight. +9 at 0: Sprite_EnsureAnimation(+8)
 // (the record read on entry), +0xA = 4, Sprite_ScriptTick, al 1. Else +9 - 1,
 // Sprite_ApplyVelocity, and at +9 == +0xA (half way) the member slot's CLUT
 // word 0x8113BE + +5 * 0x40 = 0 with Gfx_ClutStripDirty; Sprite_ScriptTick,
@@ -485,7 +485,7 @@ extern "C" unsigned char __cdecl Leader_HopFlight(void) {
     return 0;
 }
 
-// original 0x5360C0: +0xA - 1; at 0: Sprite_EnsureAnimation(0x37 facing 3,
+// original 0x5360C0 (PSX 0x801C5EBC): +0xA - 1; at 0: Sprite_EnsureAnimation(0x37 facing 3,
 // else 0x34), the facing +8 ^= 4, al 1. Else Sprite_EnsureAnimation(7 - +0xA
 // facing 3, else +0xA + 1), +9 = 1, al 0.
 extern "C" unsigned char __cdecl Leader_HopPose(void) {
@@ -502,7 +502,7 @@ extern "C" unsigned char __cdecl Leader_HopPose(void) {
     return 0;
 }
 
-// original 0x536130: nothing (al 0) until Sprite_ScriptTickOnce answers; then
+// original 0x536130 (PSX 0x801C5F80): nothing (al 0) until Sprite_ScriptTickOnce answers; then
 // Sprite_EnsureAnimation(0x3E facing 7, else 0x3F), al 1.
 extern "C" unsigned char __cdecl Leader_Pose3E(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return 0;
@@ -510,7 +510,7 @@ extern "C" unsigned char __cdecl Leader_Pose3E(void) {
     return 1;
 }
 
-// original 0x536170: a step up. The point ahead (Field_DirectionSteps[+8] *
+// original 0x536170 (PSX 0x801C5FD8): a step up. The point ahead (Field_DirectionSteps[+8] *
 // (+0x70 + 2) from +0x34 / +0x38) and the ground there (MapView_GroundAt)
 // less the actor's offset (the s16 0x66978C[Field_State +0x89], the actor as
 // read on entry): with the height +0x3E (as read on entry, s16) above it, the
@@ -540,7 +540,7 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
     return result;
 }
 
-// original 0x536290: the member slot's CLUT word 0x8113BE + +5 * 0x40 = 0 with
+// original 0x536290 (PSX 0x801C61A8): the member slot's CLUT word 0x8113BE + +5 * 0x40 = 0 with
 // Gfx_ClutStripDirty, then Sprite_EnsureAnimation(0x37 facing 7, else 0x34).
 extern "C" void __cdecl Leader_Pose34(void) {
     records::PartyMember* const s = rv::Current<records::PartyMember>();
@@ -549,7 +549,7 @@ extern "C" void __cdecl Leader_Pose34(void) {
     Ensure(s->direction == 7 ? 0x37 : 0x34);
 }
 
-// original 0x5362D0: a step down. The point ahead as Leader_StepUp's and the
+// original 0x5362D0 (PSX 0x801C6204): a step down. The point ahead as Leader_StepUp's and the
 // ground there: with the height +0x3E (as read on entry) below it (s16), the
 // height + the rise 0x6697A4[Field_State +0x89 read after the call] into the
 // cell read on entry, al 0; else the ground again into +0x3E of
@@ -574,7 +574,7 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
     return result;
 }
 
-// original 0x536440: the hop's fall. +9 (the record read on entry) at 0:
+// original 0x536440 (PSX 0x801C646C): the hop's fall. +9 (the record read on entry) at 0:
 // Sprite_EnsureAnimation(+8), Sprite_ClearSteps, Field_State +0x137 = 0, the
 // states +1 = 1, +2 = +3 = +4 = 0, al 1. Else +9 - 1, Sprite_ApplyVelocity,
 // at +9 == +0xA the member's palette (Sprite_LoadPalette(0x80D380 + +5 *
@@ -599,7 +599,7 @@ extern "C" unsigned char __cdecl Leader_HopFall(void) {
     return 0;
 }
 
-// original 0x5364D0: the height +0x3E up 0x10; the ground ahead (as
+// original 0x5364D0 (PSX 0x801C6550): the height +0x3E up 0x10; the ground ahead (as
 // Leader_StepUp's point) less the offset of Field_State +0x89: with the
 // height at or above it (s16), the state +2 = 3. Then a tail jump to
 // Sprite_ScriptTick, whose al it answers.
@@ -614,7 +614,7 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
     return SH_CALL(Sprite_ScriptTick)();
 }
 
-// original 0x536550: the height +0x3E down 0x10; with the ground under
+// original 0x536550 (PSX 0x801C6618): the height +0x3E down 0x10; with the ground under
 // (+0x34, +0x38) above it (s16): +0x3E = the ground, Sprite_SetAnimation(+8),
 // the member's palette, Field_State +0x137 = 0, the states +1 = 1, +2 = 0.
 // Then a tail jump to Sprite_ScriptTick, whose al it answers.
@@ -634,7 +634,7 @@ extern "C" unsigned char __cdecl Leader_Sink(void) {
     return SH_CALL(Sprite_ScriptTick)();
 }
 
-// original 0x5365D0: the facing +8 ^= 4, Sprite_EnsureAnimation(0x3A facing
+// original 0x5365D0 (PSX 0x801C66DC): the facing +8 ^= 4, Sprite_EnsureAnimation(0x3A facing
 // 3, else 0x3B), the member's palette, Sprite_ClearSteps, +0x20 = -8, the
 // states +1 = 2, +2 = 3, +3 = 3.
 extern "C" void __cdecl Leader_TurnBack(void) {
@@ -652,7 +652,7 @@ extern "C" void __cdecl Leader_TurnBack(void) {
 // The party-set error screen
 // ============================================================================
 
-// original 0x536A60: PartySet_Find's end when no row holds the three ids -
+// original 0x536A60 (PSX 0x8016776C): PartySet_Find's end when no row holds the three ids -
 // never returns: every frame the title line (0x660C90) at (0xA0, 0x64) and
 // the three ids PartySet_Find left at 0x903850..0x903852, formatted by the
 // string at 0x660C7C into the text scratch 0x904BA0, at (0xA0, 0x74) - both
@@ -676,7 +676,7 @@ extern "C" void __cdecl PartySet_ErrorLoop(void) {
 // runs Mode11_ObjectFrame then 0x5172C0 each frame: docs/mode-tasks.md)
 // ============================================================================
 
-// original 0x536B60: Field_InputHeld = the word Input_Held, Sprite_Current =
+// original 0x536B60 (PSX 0x80167CBC): Field_InputHeld = the word Input_Held, Sprite_Current =
 // the object 0x905DA0, Field_State = ObjTrio's first record, then a jump
 // through Mode11_ObjectStates 0x660C2C by its state +1 (4 entries,
 // unchecked: past them ours aborts where the original jumps into data).
@@ -1026,7 +1026,7 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
 // The object triggers and the cell hook
 // ============================================================================
 
-// original 0x56E020: Field_ObjectTriggers' entry for the object's +0x86 (the
+// original 0x56E020 (PSX 0x801A96D4): Field_ObjectTriggers' entry for the object's +0x86 (the
 // table read from 0x662E1C: entry n is Field_ObjectTriggers[n - 1], entry 0
 // WorldMap_FieldHooks' last), called with (object, the story flags
 // 0x904030). Past the table ours aborts where the original calls data.
@@ -1036,7 +1036,7 @@ extern "C" void __cdecl Field_ObjectTriggerByKind(unsigned char* object) {
     reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, At(Cond_Flags_addr + 0xa0));
 }
 
-// original 0x56D6B0: with the object's +0x89 bit 6, Field_ObjectTriggerByKind
+// original 0x56D6B0 (PSX 0x801A8880): with the object's +0x89 bit 6, Field_ObjectTriggerByKind
 // (object); else the chapter's vtable slot 1 (Scenario_Hooks[Cond_ByteFA]
 // +4) with the object. Then +0x86 = 0xFF. Called by Field_ObjectIdle when
 // +0x86 is not 0xFF, and by FE1's 0x52F8F0. PSX twin 0x801A8880 (call, a
@@ -1052,7 +1052,7 @@ extern "C" void __cdecl Field_ObjectTrigger(unsigned char* object) {
     object[0x86] = 0xFF;
 }
 
-// original 0x56D7A0: the cell a leader faces, (x, z): the chapter's vtable
+// original 0x56D7A0 (PSX 0x801A8A3C): the cell a leader faces, (x, z): the chapter's vtable
 // slot 4 (Scenario_Hooks[Cond_ByteFA] +0x10), when it is not 0, with (x, z);
 // its al not negative (movsx) answers 1. Else Area_CellHook(x, z), whose eax
 // it answers. Sprite_Current, read on entry, is put back on both paths.
@@ -1583,7 +1583,7 @@ extern "C" void __cdecl MapCell_DrawSpinning(const unsigned char* record, unsign
     } while (at != record[2]);
 }
 
-// original 0x5728D0: a map cell's byte cleared and its drawn records
+// original 0x5728D0 (PSX 0x80155E74): a map cell's byte cleared and its drawn records
 // retyped. AreaMap_Bytes[x + z * width] = 0 (s16 x and z, the header's width
 // byte). Then the cell in the view: c = x + 1 - MapView_Origin's x, r = z -
 // its z (s16s); with c + r in 0..0x37 and c - r in 0..0x37, the row (c + r +
@@ -1652,7 +1652,7 @@ unsigned char TradeLacks(unsigned k, unsigned quantity) {
 const unsigned char* Pool(U word_cell) { return At(bof3::addr::MessagePools + (L(word_cell) & 0xFFFF)); }
 }  // namespace
 
-// original 0x593960 (ItemTrade_States[0]): the open step (ItemTrade_OpenSteps
+// original 0x593960 (ItemTrade_States[0]; PSX 0x800F5048): the open step (ItemTrade_OpenSteps
 // 0x66A47C by 0x93985E, past its two ours aborts only where the table runs
 // into what is not code), then the frame 0x469750(0x14, 0x12, 0x118, 0x13, 0),
 // the list 0x594410(0), 0x5947D0 and a tail jump to 0x5942C0.
@@ -1664,7 +1664,7 @@ extern "C" void __cdecl ItemTrade_Open(void) {
     SH_AT(void (__cdecl*)(), at::kTradeFrame)();
 }
 
-// original 0x5939A0 (ItemTrade_OpenSteps[0]): Transition_Start(1), the pick
+// original 0x5939A0 (ItemTrade_OpenSteps[0]; PSX 0x800F50B4): Transition_Start(1), the pick
 // 0x6BE08C = 0, the quantity 0x6BE08E = 1, the row count 0x6BE08D = 0x594790's
 // al, the step up.
 extern "C" void __cdecl ItemTrade_OpenStart(void) {
@@ -1675,7 +1675,7 @@ extern "C" void __cdecl ItemTrade_OpenStart(void) {
     Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep + 1);
 }
 
-// original 0x5939D0 (ItemTrade_OpenSteps[1]): once Transition_Busy is
+// original 0x5939D0 (ItemTrade_OpenSteps[1]; PSX 0x800F510C): once Transition_Busy is
 // 0, the state 0x93985C = 1 and the step 0.
 extern "C" void __cdecl ItemTrade_OpenWait(void) {
     if (Transition_Busy != 0) return;
@@ -1683,7 +1683,7 @@ extern "C" void __cdecl ItemTrade_OpenWait(void) {
     Effect1g_TradeStep = 0;
 }
 
-// original 0x5939F0 (ItemTrade_States[1]): the run step (ItemTrade_RunSteps
+// original 0x5939F0 (ItemTrade_States[1]; PSX 0x800F5138): the run step (ItemTrade_RunSteps
 // 0x66A484 by 0x93985E: pick, count, confirm, and 0x594060's message), then
 // 0x5942C0, 0x5947D0 and, with the pick's bits 6 and 7 clear, the hand at
 // (0x1A, 0x51 + 13 * the s8 pick).
@@ -1696,7 +1696,7 @@ extern "C" void __cdecl ItemTrade_Run(void) {
     SH_CALL(Menu_DrawHand)(0x1A, static_cast<int>(13u * static_cast<U>(S8(pick)) + 0x51u), 0);
 }
 
-// original 0x593A30 (ItemTrade_RunSteps[0]): the pick. Up and down
+// original 0x593A30 (ItemTrade_RunSteps[0]; PSX 0x800F51BC): the pick. Up and down
 // (Input_AutoRepeat of the pressed word's 0x5000) move it, wrapping at the
 // row count, with sound 0x100. Confirm: 0x594700(pick, 1) answering (an
 // ingredient short) - sound 0x107; else the two Inventory_Count of the
@@ -1755,7 +1755,7 @@ extern "C" void __cdecl ItemTrade_PickItem(void) {
     TradeList(0);
 }
 
-// original 0x593C60 (ItemTrade_RunSteps[1]): the count. Input_AutoRepeat of
+// original 0x593C60 (ItemTrade_RunSteps[1]; PSX 0x800F550C): the count. Input_AutoRepeat of
 // the pressed word's 0xF000: 0x2000 +1, 0x1000 +10, 0x4000 -10, 0x8000 -1
 // (a byte), the quantity 0x6BE08E held to 1..99 (s8); lowered while
 // 0x594700(pick & 0xF, quantity) answers; lowered while it plus the item's

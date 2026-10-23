@@ -125,10 +125,10 @@ extern "C" __attribute__((disable_tail_calls)) unsigned char __cdecl ItemUse_Dis
 // ===========================================================================
 // The 33 handlers, in table order (ItemUse_Handlers entry in brackets)
 
-// original 0x496CC0 [0]: no field effect.
+// original 0x496CC0 (PSX 0x801E7E34) [0]: no field effect.
 extern "C" unsigned char __cdecl ItemUse_None(unsigned, unsigned) { return 2; }
 
-// original 0x496CD0 [1], 0x496CF0 [2], 0x496D10 [3], 0x496D30 [4] (0 is a
+// original 0x496CD0 (PSX 0x801E7E3C) [1], 0x496CF0 [2], 0x496D10 [3], 0x496D30 [4] (0 is a
 // full heal), 0x4973D0 [23], 0x4973F0 [25], 0x4975D0 [31]: Char_HealHp by a
 // constant.
 extern "C" unsigned char __cdecl ItemUse_HealHp20(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 0x14, battle)); }
@@ -139,21 +139,21 @@ extern "C" unsigned char __cdecl ItemUse_HealHp1(unsigned id, unsigned battle) {
 extern "C" unsigned char __cdecl ItemUse_HealHp80(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 0x50, battle)); }
 extern "C" unsigned char __cdecl ItemUse_HealHp5(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 5, battle)); }
 
-// original 0x496DD0 [6], 0x496DF0 [7], 0x497590 [29], 0x4975B0 [24, 30]:
+// original 0x496DD0 (PSX 0x801E7FA0) [6], 0x496DF0 [7], 0x497590 [29], 0x4975B0 [24, 30]:
 // Char_HealAp by a constant.
 extern "C" unsigned char __cdecl ItemUse_HealAp20(unsigned id, unsigned battle) { return UsedOr3(g.heal_ap(id, 0x14, battle)); }
 extern "C" unsigned char __cdecl ItemUse_HealAp100(unsigned id, unsigned battle) { return UsedOr3(g.heal_ap(id, 0x64, battle)); }
 extern "C" unsigned char __cdecl ItemUse_HealAp40(unsigned id, unsigned battle) { return UsedOr3(g.heal_ap(id, 0x28, battle)); }
 extern "C" unsigned char __cdecl ItemUse_HealAp5(unsigned id, unsigned battle) { return UsedOr3(g.heal_ap(id, 5, battle)); }
 
-// original 0x496EA0 [9], 0x496ED0 [10], 0x496EF0 [11], 0x496F20 [12]:
+// original 0x496EA0 (PSX 0x801E8120) [9], 0x496ED0 [10], 0x496EF0 [11], 0x496F20 [12]:
 // Char_ClearStatus by a constant mask.
 extern "C" unsigned char __cdecl ItemUse_Cure80(unsigned id, unsigned battle) { return UsedOr3(g.clear_status(id, 0x80, battle)); }
 extern "C" unsigned char __cdecl ItemUse_Cure08(unsigned id, unsigned battle) { return UsedOr3(g.clear_status(id, 8, battle)); }
 extern "C" unsigned char __cdecl ItemUse_Cure100(unsigned id, unsigned battle) { return UsedOr3(g.clear_status(id, 0x100, battle)); }
 extern "C" unsigned char __cdecl ItemUse_CureA0(unsigned id, unsigned battle) { return UsedOr3(g.clear_status(id, 0xA0, battle)); }
 
-// original 0x496D50 [5], 0x497410 [26], 0x497490 [27]: Char_HealHp for each
+// original 0x496D50 (PSX 0x801E7F0C) [5], 0x497410 [26], 0x497490 [27]: Char_HealHp for each
 // party member; 0x497510 [28]: Char_ClearStatus(0x80) for each.
 extern "C" unsigned char __cdecl ItemUse_PartyHealHp100(unsigned id, unsigned battle) {
     return UsedOr3(PartyWalk(id, [battle](unsigned m) { return g.heal_hp(m, 0x64, battle); }));
@@ -168,7 +168,7 @@ extern "C" unsigned char __cdecl ItemUse_PartyCure80(unsigned id, unsigned battl
     return UsedOr3(PartyWalk(id, [battle](unsigned m) { return g.clear_status(m, 0x80, battle); }));
 }
 
-// original 0x496FB0 [14]: for each member Char_ClearStatus(0xA0) then a full
+// original 0x496FB0 (PSX 0x801E8278) [14]: for each member Char_ClearStatus(0xA0) then a full
 // Char_HealHp, every answer ORed.
 extern "C" unsigned char __cdecl ItemUse_PartyRestore(unsigned id, unsigned battle) {
     return UsedOr3(PartyWalk(id, [battle](unsigned m) {
@@ -177,7 +177,7 @@ extern "C" unsigned char __cdecl ItemUse_PartyRestore(unsigned id, unsigned batt
     }));
 }
 
-// original 0x496E10 [8]: 5 HP; then, with a bit of 0xA0 in the status byte
+// original 0x496E10 (PSX 0x801E8008) [8]: 5 HP; then, with a bit of 0xA0 in the status byte
 // (read after the heal), the item counts as used and a 30 % roll clears 0xA0.
 // As the original has it: the roll is Rand() % 100 by signed division, and
 // "used" does not depend on it.
@@ -190,7 +190,7 @@ extern "C" unsigned char __cdecl ItemUse_HealHp5Cure(unsigned id, unsigned battl
     return UsedOr3(r);
 }
 
-// original 0x496F50 [13]: HP 1, then Char_ClearStatus(0x4000). As the
+// original 0x496F50 (PSX 0x801E81F0) [13]: HP 1, then Char_ClearStatus(0x4000). As the
 // original has it (and the PSX): the HP is set before the status is tested,
 // so on a member without 0x4000 the HP is 1 and the answer is 3 - D21, kept.
 extern "C" unsigned char __cdecl ItemUse_Revive(unsigned id, unsigned battle) {
@@ -198,7 +198,7 @@ extern "C" unsigned char __cdecl ItemUse_Revive(unsigned id, unsigned battle) {
     return UsedOr3(g.clear_status(id, 0x4000, battle));
 }
 
-// original 0x497040 [15], 0x4970B0 [16]: Stat_AddCap999 on a base stat and its
+// original 0x497040 (PSX 0x801E832C) [15], 0x4970B0 [16]: Stat_AddCap999 on a base stat and its
 // effective copy 0x20 below.
 extern "C" unsigned char __cdecl ItemUse_MaxHpUp(unsigned id, unsigned battle) {
     unsigned char* const r = CharRecord(id, battle);
@@ -211,7 +211,7 @@ extern "C" unsigned char __cdecl ItemUse_MaxApUp(unsigned id, unsigned battle) {
     return UsedOr4(base, g.add_cap999(reinterpret_cast<unsigned short*>(r + 0x22), 1));
 }
 
-// original 0x497120 [17], 0x497190 [18], 0x497200 [19], 0x497270 [20]:
+// original 0x497120 (PSX 0x801E8464) [17], 0x497190 [18], 0x497200 [19], 0x497270 [20]:
 // Stat_AddClamped on a base stat and its effective copy, each answer's low
 // byte kept. As the original has it: Stat_AddClamped answers 0 unless it
 // clamped, so these answer 4 for any stat below 999 - "used" either way.
@@ -228,14 +228,14 @@ extern "C" unsigned char __cdecl ItemUse_DefUp(unsigned id, unsigned battle) { r
 extern "C" unsigned char __cdecl ItemUse_AgiUp(unsigned id, unsigned battle) { return ClampedUp(id, battle, 0x48); }
 extern "C" unsigned char __cdecl ItemUse_IntUp(unsigned id, unsigned battle) { return ClampedUp(id, battle, 0x4A); }
 
-// original 0x4972E0 [21]: Stat_AddCap99 on the byte +0x4E and its copy +0x2E.
+// original 0x4972E0 (PSX 0x801E86D4) [21]: Stat_AddCap99 on the byte +0x4E and its copy +0x2E.
 extern "C" unsigned char __cdecl ItemUse_Stat2EUp(unsigned id, unsigned battle) {
     unsigned char* const r = CharRecord(id, battle);
     const unsigned char base = g.add_cap99(r + 0x4E, 1);
     return UsedOr4(base, g.add_cap99(r + 0x2E, 1));
 }
 
-// original 0x497350 [22]: 3 at full HP; else the max-HP scale byte + 1 while
+// original 0x497350 (PSX 0x801E8770) [22]: 3 at full HP; else the max-HP scale byte + 1 while
 // below 9, the stats recomputed and HP filled to the new max; at 9, HP filled
 // if below max, else 3 (HP above max).
 extern "C" unsigned char __cdecl ItemUse_HpScaleUp(unsigned id, unsigned battle) {
@@ -257,7 +257,7 @@ extern "C" unsigned char __cdecl ItemUse_HpScaleUp(unsigned id, unsigned battle)
     return 3;
 }
 
-// original 0x4975F0 [32]: gives the Faerie Tiara (0x57) back, moves the
+// original 0x4975F0 (PSX 0x801E8B20) [32]: gives the Faerie Tiara (0x57) back, moves the
 // menu on, counts the clear story flags from 0xFF down to the first set one
 // (at most ten) off 0xB9, and keeps the leader's position and the area. The
 // arguments are not read; Inventory_Add gets a fourth 0 it does not read.
@@ -278,7 +278,7 @@ extern "C" unsigned char __cdecl ItemUse_FaerieTiara(unsigned, unsigned) {
     return 0;
 }
 
-// original 0x497670 [33].
+// original 0x497670 (PSX 0x801E8C08) [33].
 extern "C" unsigned char __cdecl ItemUse_WaterJug(unsigned, unsigned) {
     Cond_Flags[0xcf] = 0xF0;
     return 0;
