@@ -345,6 +345,17 @@ extern "C" void __cdecl Window_Kind2List() {
 // As the original has it: the middle quads' bottom v is h's low byte where
 // the ends' is (y + h)'s - the texture's rows are out of phase with the ends
 // when y is not a multiple of 16 (D39, docs/known-defects.md).
+//
+// DIVERGENCE DIV-0166 (known-defects D348): the original takes x and y as
+// unsigned words (`and esi, 0xffff` / `and eax, 0xffff` at 0x57D009 /
+// 0x57D00F before the `fild`), so a box slid past the left or top edge is
+// placed 65,536 pixels away and its fill vanishes while Menu_DrawPiece's
+// frame (`movsx`) still draws. The PSX (0x801AF3F0) stores into signed
+// vertex halfwords and the GPU clips. With g_signed_xy (1 through
+// PatchBytes("MenuSignedXY") in MenuWindows_Inject, after the self-test) x
+// and y are sign-extended words; w and h stay unsigned, as on both.
+static std::uint8_t g_signed_xy = 0;
+
 extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int colour) {
     const auto kind = static_cast<unsigned char>(flags & 0xF);
     const unsigned char shade = kind == 1 ? 0x48 : 0xAC;
@@ -359,7 +370,8 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         clut_x += 0x10;
     }
     p[6] = p[5] = p[4] = shade;
-    const std::int32_t xs = U16(static_cast<std::uint32_t>(x)), ys = U16(static_cast<std::uint32_t>(y));
+    const std::int32_t xs = g_signed_xy ? S16(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x));
+    const std::int32_t ys = g_signed_xy ? S16(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y));
     const auto xb = static_cast<unsigned char>(x), yb = static_cast<unsigned char>(y);
     p[0x14] = xb;
     p[0x15] = yb;
@@ -664,6 +676,10 @@ extern "C" void __cdecl Gpu_SetSprt8(unsigned char* prim) {
 // (x, y) of cell (icon + 7) * 8 (a byte) in row 0xF8, CLUT word 0x780E for
 // icons 1, 3 and 15 and 0x780C for the rest, shade 0x40 when dim, else 0x80;
 // after a draw mode of page 0xF.
+//
+// DIVERGENCE DIV-0166 (known-defects D348): x and y unsigned words in the
+// original (`and 0xffff` at 0x57D3A0 / 0x57D3BB), signed halfwords on the
+// PSX (0x801AFA80); sign-extended with g_signed_xy, as Menu_DrawBox.
 extern "C" void __cdecl Menu_DrawIcon8(int x, int y, int icon, int dim) {
     g.draw_mode(Next(), 0, 0, 0xF, 0);
     g.commit(1, 0xC);
@@ -671,8 +687,8 @@ extern "C" void __cdecl Menu_DrawIcon8(int x, int y, int icon, int dim) {
     g.set_sprt8(p);
     const unsigned char shade = (dim & 0xFF) ? 0x40 : 0x80;
     p[4] = p[5] = p[6] = shade;
-    Put(p + 8, F(U16(static_cast<std::uint32_t>(x))));
-    Put(p + 0xC, F(U16(static_cast<std::uint32_t>(y))));
+    Put(p + 8, F(g_signed_xy ? S16(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x))));
+    Put(p + 0xC, F(g_signed_xy ? S16(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y))));
     p[0x15] = 0xF8;
     p[0x14] = static_cast<unsigned char>((icon + 7) << 3);
     const unsigned i = static_cast<unsigned>(icon) & 0xFF;
@@ -1653,6 +1669,12 @@ void MenuWindows_Inject() {
               g.yes_no_line == kOriginals.yes_no_line ? "original" : "YesNo_Line", g_yes_no_div ? "moved" : "original");
 
     if (bof3::WantsShadow("menu_windows")) SelfTest();
+    {
+        // DIV-0166: after the self-test, which compared Capcom's unsigned words.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("MenuSignedXY", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_signed_xy)), &was, &is, 1);
+        bof3::Log("DIV-0166    Menu_DrawBox and Menu_DrawIcon8 take x and y as signed words (on unless the line above says OFF)");
+    }
 
     BOF3_INJECT(Msg_OpenSystem);
     BOF3_INJECT(MsgBox_DrawArrow);

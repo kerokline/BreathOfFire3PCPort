@@ -10325,3 +10325,28 @@ designed in rather than bolted on.
   with the switch off, and `BOF3X_SHADOW='*'` exits 0 with it armed after them. The repaired branch is not
   exercised by a fuzz: it differs from Capcom's copy only in the three upper bytes.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteReachWord` (both stores).
+
+### The menu box and the 8 x 8 icon take x and y as signed words
+
+- **ID:** DIV-0166
+- **Date:** 2026-10-23
+- **Subsystem:** menu - `Menu_DrawBox` (`0x57CF60`) and `Menu_DrawIcon8` (`0x57D360`),
+  `src/game/menu_windows.cpp`; known-defects D348
+- **Tier:** Sensible - what a box slid off the left or top edge shows.
+- **Original behaviour:** both take x and y as unsigned words before the `fild` (`and 0xffff` at `0x57D009` /
+  `0x57D00F` and `0x57D3A0` / `0x57D3BB`), where `Menu_DrawPiece` (`0x57D860`) uses `movsx`. A box slid past
+  the left edge - `MenuWin_SlideOutLeft` (`0x59B440`) runs x down to -150, and `Shop_DrawMemberStats`
+  (`0x575430`) draws `Menu_DrawBox(x + 3, ...)`; `GeneWin_ChoiceSlideIn` / `Out` (`0x598E10` / `0x598E50`) run y
+  through -7 for `GeneWin_DrawChoices` (`0x598E90`) - is placed about 65,536 pixels away: its fill vanishes on
+  those frames while the frame pieces round it still draw.
+- **New behaviour:** x and y are the low 16 bits sign-extended; the fill slides off with its frame and is
+  clipped at the edge. w and h stay unsigned, as on both machines. In the wide modes a box sliding left
+  through the band (DIV-0041's faster slide) now shows its fill there too.
+- **Rationale:** the PSX twin rule: the PlayStation's draw (`0x801AF3F0`, icon `0x801AFA80`) stores into signed
+  vertex halfwords and the GPU clips.
+- **Also in the PSX version?** The PlayStation draws the fill to the edge; this restores that.
+- **Verification:** builds; the `menu_windows` fuzz compares the unsigned words against Capcom's copy before the
+  switch is armed, and `BOF3X_SHADOW='*'` exits 0. A draw only - no state, timer or input changes - so the
+  recorded routes keep their frames; the slide-out has not been looked at (the owner's eye: the shop's member
+  panel sliding out, and a gene choice sliding in or out).
+- **Reversible?** `BOF3X_ORIGINAL=MenuSignedXY`.
