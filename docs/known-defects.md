@@ -9811,3 +9811,24 @@ at all 21 reset sites could also clear one meant to survive (a list cursor).
 
 **Status:** Capcom's; open: a repair wants a state-hash comparison over the
 routes first.
+
+## D353 — `symbols.toml`'s PlayStation addresses for `Field_Kind2X` / `Field_Kind2Z` and `Field_ScriptFlags2` may name the wrong words (tooling; open, to be settled against both discs)
+
+**Seen:** 2026-10-23, group SP of the sound-layer round, reading the US disc
+for op `D0` and the field mode's case 5.
+
+**Established:** `symbols.toml` gives `Field_Kind2X` `psx = 0x80149304` and
+`Field_Kind2Z` `psx = 0x80149308` (the 2026-09-22 evidence; `kind2-object.md`
+1 says the same), and `Field_ScriptFlags2` `psx = 0x80146256`. On the US disc
+op `D0` (`GAME.EMI#0` US `0x801AB5F4`) passes `0x80149308` as x and
+`0x8014930C` as z; the field mode's case 5 (US `0x80197444`) sets `0x40` in
+`0x8014625A` where the PC sets `0x905BA4` (`Field_ScriptFlags2`), and the
+twins US `0x801B2B6C` / PC `0x52F490` both clear `0x1000` there. The `psx`
+fields are read as the JP disc's by convention (the propagated pairs are JP),
+and the US build's `.data` drifts from the JP's by a few bytes in places, so
+this is either a four-byte region drift the field does not record or a slip
+in the 2026-09-22 reading. Not yet read on the JP disc.
+
+**Status:** open; tooling only (the PC addresses are measured and unchanged).
+Settle by reading op `D0` and case 5 on the JP disc; if the JP agrees with
+the US, correct the three `psx` fields and `kind2-object.md` 1.
