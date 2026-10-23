@@ -34,6 +34,7 @@
 #include "game/records.h"
 #include "game/scena_sc1_callees.h"
 #include "game/scenario_harness.h"
+#include "game/sound_sp.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -982,7 +983,10 @@ extern "C" void __cdecl Scena01_Scene09(void) {
             for (short x = 0x3D; x <= 0x3F; ++x) {
                 if (LeaderWord(0x36) != x) continue;
                 SetStep(0x1E);
-                SH_CALL(Sound_PlayById)(0x1206);   // pushed with 0x50, 0x50, which it does not read
+                // pushed with 0x50, 0x50, which it does not read. DIVERGENCE DIV-0173: the PlayStation's
+                // 0x8015D7C8(0x1206, 0x50, 0x50) (SCENA01.EMI), level-table entry 0x50 on both sides: 0.
+                if (sound_sp::Routed()) sound_sp::PlayLevel(0x1206, 0x50, 0x50);
+                else SH_CALL(Sound_PlayById)(0x1206);
                 Set40();
             }
         }

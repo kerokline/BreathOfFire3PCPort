@@ -10633,3 +10633,52 @@ designed in rather than bolted on.
   branches. `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard. No game
   memory is written: the state hash cannot see it.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteVoicePosition`.
+
+### The field's level cues play at their level, and the distance-gated ones only near their object
+
+- **ID:** DIV-0173
+- **Date:** 2026-10-23
+- **Subsystem:** the movement script's ops `BC`, `BD` (`MoveScript_GroupB` `0x577280`) and `D1`
+  (`MoveScript_GroupD` `0x577BD0`, `src/game/move_groups.cpp`), `Scena01_Scene09` (`0x53B5F0`,
+  `src/game/scena_sc1.cpp`), `sound_sp::PlayLevel` / `PlayNear` (`src/game/sound_sp.cpp`);
+  [`known-defects.md`](known-defects.md) D345
+- **Tier:** Sensible - a port repair; the PlayStation does it, the port's sound layer dropped it.
+- **Original behaviour:** each calls `Sound_PlayById(cue, ...)`, which plays the cue flat and reads none of the
+  rest: `BC c1 c2 l r` pushes the levels l and r, `BD c1 c2 n` and `D1 c1 c2 x n` an object n, the scenario's three
+  calls (the leader on cells 0x3D..0x3F) `0x50, 0x50`.
+- **New behaviour:** `BC` and the scenario's three play the cue at the level table's entries l (left) and r
+  (right); `BD` and `D1` play it only when the leader's cell (`ObjTrio` 0's `+0x36` / `+0x3A`) is within 22 of
+  object n's (`Sprite_Objects[n]`, both axes, inclusive), at the level of the innermost of the six rings it is in
+  (22 and 18: entry 0x40; 12: 0x31; 8: 0x21; 6: 0x11; 2: 4), and not at all outside 22. The table (US `0x80182288`,
+  82 words) is taken as its rule - entry 0 0x3FFF, 1..64 down 0x100 each from 0x3FFF, 65..81 down 0x10 each from
+  0xFF to 0 - which 78 entries are; entries 11, 27, 43 and 59 hold 0x200 more on the disc and no shipped call reads
+  them; an entry past 81 (the PlayStation reads its code pointers there) or an object past 29 is fatal. A level is
+  heard against 0x17FF - the level SndQueueCue gives such a cue otherwise, the PC's flat play - and never above it
+  (DirectSound cannot raise a buffer), the louder side as the volume and the difference as the pan; the buffers get
+  theirs back at their next flat play, as under DIV-0172. **To the ear:** area 9's (the sibling's `places.toml`:
+  Cedar Woods) `+0x10` script 6 plays `0x1202` hard left (left 0x18FF, at its level; right 0x01FF, -21.6 dB). Areas
+  3 and 8's (Cedar Woods) `D1` sounds `0x1200`, from objects 3 and 6, are silent until the leader is within 22 cells,
+  then about -23.6 dB, -3.5 dB from 12 and at their level from 8. The scenario's sound `0x1206` in
+  `Scena01_Scene09` (step 0x1A, the leader on cells 0x3D..0x3F with z at most 0x2A) is now silent: entry 0x50 is 0
+  on both sides; the cue is still played, at -10000, so the channels it would stop are stopped as before. No shipped
+  script has `BD`.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D345): `BC` calls US `0x8015D7C8` (JP
+  `0x8015E1B8`) with `(c1:c2, l, r)`, `SCENA01.EMI` the same with `(0x1206, 0x50, 0x50)` three times, `BD` and `D1`
+  (`GAME.EMI#0` US `0x801A98F4`, `0x801AA568`) US `0x8015D820` (JP `0x8015E210`) with `(c1:c2, n)`; the jal scan of
+  the US disc finds no other caller of either. The first sets SndQueueCue's volume cells (US `0x8018B3D8` /
+  `0x8018B3DC`) from the table and queues the cue; the second tests the six rings against the leader record
+  (`0x80145E90`, the PC's `ObjTrio` 0, as `MoveScript_ObjectKind`'s twins show) and object n (`0x80146888` + n x
+  0x98, the PC's `Sprite_Objects`), setting the cells and queueing the cue for each ring it is inside - the same
+  voices keyed again in one frame, one onset at the innermost ring's level. SndQueueCue (US `0x8015DF18`) applies
+  the cells (`SsUtSetDetVVol`) to a cue whose bank entry has bit 7 of its byte 1 - every cue of the area bank (bank
+  2) in the four areas' `AREAnnn.EMI` section 1 - and resets them to 0x17FF first unless the cue id has bits 12..15,
+  which every one of these calls passes (0x12xx).
+- **Also in the PSX version?** Yes: this is the PlayStation's step, on what the PC can reach.
+- **Verification:** builds; `BOF3X_SHADOW=sound_sp` (2026-10-23) checks the table rule at the entries the shipped
+  calls read, `BC`'s pan (-2160), the scenario's silence, a flat play after a level play, and the rings (23 cells
+  off on either axis: nothing; 20: entry 0x40; 10: 0x31; 5 and 1: the buffer's level): 0 mismatches.
+  `move_groups`' and `scena_sc1`'s fuzzes run before the switch is armed and do not reach the new branches.
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard; no recorded route is
+  known to reach areas 3, 8 or 9 or that scenario step. The state hash sees it only where a `BD` / `D1` is gated
+  out: the cue is not played, so `Sound_Channels` keeps what the cue would have stopped or started.
+- **Reversible?** `BOF3X_ORIGINAL=SoundLevelGate`.

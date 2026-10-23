@@ -195,12 +195,14 @@ extern "C" void __cdecl MoveScript_GroupB(unsigned char* object, const unsigned 
         g.fade_out(p[4]);
         SetPos(object, Pos(object) + 4u);
         break;
-    case 0xBC:
-        g.play_by_id(static_cast<unsigned short>(p[1] << 8 | p[2]));
+    case 0xBC:   // DIVERGENCE DIV-0173: the PlayStation's 0x8015D7C8(b1:b2, b3, b4) - the level table's b3 / b4
+        if (sound_sp::Routed()) sound_sp::PlayLevel(static_cast<unsigned short>(p[1] << 8 | p[2]), p[3], p[4]);
+        else g.play_by_id(static_cast<unsigned short>(p[1] << 8 | p[2]));
         SetPos(object, Pos(object) + 4u);
         break;
-    case 0xBD:
-        g.play_by_id(static_cast<unsigned short>(p[1] << 8 | p[2]));
+    case 0xBD:   // DIVERGENCE DIV-0173: the PlayStation's 0x8015D820(b1:b2, b3) - only near object b3
+        if (sound_sp::Routed()) sound_sp::PlayNear(static_cast<unsigned short>(p[1] << 8 | p[2]), p[3]);
+        else g.play_by_id(static_cast<unsigned short>(p[1] << 8 | p[2]));
         SetPos(object, Pos(object) + 3u);
         break;
     default:   // B6, B7, BF: nothing
@@ -319,7 +321,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
             SetWord(Scratch(), next);
             if (rv::Current<records::SpriteHead>()->script_pos != next) {
                 const unsigned char* const q = script + Pos(object);
-                if (next == q[3]) g.play_by_id(static_cast<unsigned short>(q[1] << 8 | q[2]));
+                // DIVERGENCE DIV-0173: the PlayStation's 0x8015D820(hi:lo, s) (GAME.EMI US 0x801AA568).
+                if (next == q[3] && sound_sp::Routed()) sound_sp::PlayNear(static_cast<unsigned short>(q[1] << 8 | q[2]), q[4]);
+                else if (next == q[3]) g.play_by_id(static_cast<unsigned short>(q[1] << 8 | q[2]));
             }
         }
         SetPos(object, Pos(object) + 4u);
