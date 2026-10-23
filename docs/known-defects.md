@@ -9592,8 +9592,9 @@ PlayStation's two calls do. Verified on both music paths: the song stops at
 83.25 s and comes back at 91.09 s, where it stopped. `recipe done` is on the
 same frame.
 
-**Status:** latent; the port's sound layer (D337 and D345 are of the same
-class); the owner's ear.
+**Status:** the port's; fixed by DIV-0169 (`BOF3X_ORIGINAL=InnNightPause`); not heard by the
+owner. The silence after the night (the town stays mute until an area with another track) is
+the same defect and the same fix.
 
 ## D344 — `FieldSave_Confirm` skips the PlayStation's two-frame message step before the write (the port's; cosmetic)
 
