@@ -1,7 +1,7 @@
 # Handoff — next session
 
 **Status:** IN PROGRESS (2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
-and 2 built on `render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
+to 3 built on `render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
 `reading-row/end`)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
@@ -56,8 +56,11 @@ hosted cross form).
    bit 15 clear there too, so the text is Capcom's port as the rope is (section 4). Before step 3: census the routes it
    did not reach (section 5). **Step 2 is built** ([`stp-blend.md`](stp-blend.md), DIV-0160, D334): bit 15
    rides in the A1R5G5B5 textures as alpha clear on a colour, plus a one-byte plane per GPU texture at `t2`;
-   no pixel changes (73 shots identical on / off), `BOF3X_STPVIEW=1` shows the plane. **Next, step 3**: the
-   draw by texel (two passes or dual-source blending, `stp-blend.md` 3). Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
+   no pixel changes (73 shots identical on / off), `BOF3X_STPVIEW=1` shows the plane. **Step 3 is built**:
+   dual-source blending draws a blended draw's bit-15 texels with its own factors and the rest opaque
+   (`StpBlend`); the rope at (81, 62, 25) against the twin's (72, 56, 24), the page-15 text in its palette
+   colour, nothing else moved on four routes (`stp-blend.md` 5); D334 fixed. **Left:** the owner's play
+   (owner-review 2026-10-23), the census on the routes it did not reach, then a PR. Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
    `ropeAndAmalgam`), recipe frame ~300, the McNeil rooftop (area 28): the rope over the black sky draws at about a
    quarter of its PSX brightness (median (20, 16, 6) against the twin's (72, 56, 24)).
    **Established** (runs in `C:\Users\kerok\bof3x-runs\amalgam_111`, the twin's in `C:\Users\kerok\bof3x-runs\rope_psx`):
@@ -337,7 +340,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   `C:\Users\kerok\bof3x-runs\amalgam_111` (also the A/B/C root `C:\Users\kerok\bof3x-runs\abc111`, set `us`, built
   with the discs at `D:\bof3x-runs\discs` through a scratch copy of `abc-installs.toml`) and Capcom's-code runs in
   `C:\Users\kerok\bof3x-runs\amalgam_111_orig`.
-- **`render/stp-blend`** (rebased onto `main` `147c6ae1` after PR #112 merged): item 00, steps 1 and 2 built; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
+- **`render/stp-blend`** (rebased onto `main` `147c6ae1` after PR #112 merged): item 00, steps 1 to 3 built; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
 - The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
   scratch) and deleted 145 local and 65 `origin` branches; each was classified merged with `git cherry` first, not an
   ancestry check (Traps). `main` is the only branch, local and remote.

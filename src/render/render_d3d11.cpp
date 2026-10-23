@@ -43,6 +43,8 @@ void (*g_rescale_hook)(U);
 
 ID3D11VertexShader* g_vs;
 ID3D11PixelShader* g_ps;
+ID3D11PixelShader* g_ps_stp;     // DIV-0160 step 3: PS plus the per-pixel blend factors (dual-source)
+ID3D11BlendState* g_blend_stp;   // SRC1_ALPHA / SRC1_COLOR: the factors PSStp writes
 ID3D11InputLayout* g_layout;
 ID3D11VertexShader* g_present_vs;
 ID3D11PixelShader* g_present_ps;
@@ -145,7 +147,8 @@ template <class T> void Release(T*& p) {
 
 const char kSceneShader[] = R"(
 cbuffer FrameConstants : register(b0) { float2 target_size; float2 view_pad; };
-cbuffer DrawConstants : register(b1) { uint flags; uint alpha_ref; uint alpha_func; uint draw_pad; float4 grab0; float4 grab1; };
+cbuffer DrawConstants : register(b1) { uint flags; uint alpha_ref; uint alpha_func; uint draw_pad; float4 grab0; float4 grab1;
+                                        uint src_blend; uint dst_blend; uint2 draw_pad2; };
 Texture2D tex : register(t0);
 Texture2D grab : register(t1);
 Texture2D stp_plane : register(t2);
@@ -163,8 +166,17 @@ PSIn VS(VSIn i) {
     o.uv = i.uv;
     return o;
 }
-float4 PS(PSIn i) : SV_Target {
+// `blended`: DIV-0160 - false where the nearest texel is drawn (the colour
+// texture's alpha there) and its colour has the PlayStation's bit 15 clear
+// (the plane bound at t2 says 0); true otherwise - a bit-15 texel, a
+// transparent one (an edge under bilinear filtering keeps the draw's own
+// blend, as before), and always when no plane is bound. `cover`: the share
+// of the pixel the texture covers - its filtered alpha under alpha modulate,
+// else 1 - which is what an opaque draw's SRCALPHA would read at an edge.
+float4 Shade(PSIn i, out bool blended, out float cover) {
     float4 c = i.diffuse;
+    blended = true;
+    cover = 1.0;
     if (flags & 1u) {
         float4 t = tex.Sample(smp, i.uv);
         // DIV-0125: where the texel lies in a frame-buffer grab, the
@@ -180,16 +192,18 @@ float4 PS(PSIn i) : SV_Target {
         }
         if ((flags & 2u) && t.a < 0.5) discard;
         c.rgb *= t.rgb;
-        if (flags & 4u) c.a *= t.a;
-        // BOF3X_STPVIEW, diagnostic: a texel whose colour has the
-        // PlayStation's bit 15 (DIV-0160's plane, nearest texel) is magenta.
-        if (flags & 64u) {
-            uint w, h;
-            stp_plane.GetDimensions(w, h);
-            if (w > 0u) {
-                int2 p = min(int2(saturate(i.uv) * float2(w, h)), int2(w - 1u, h - 1u));
-                if (stp_plane.Load(int3(p, 0)).r > 0.5) c.rgb = float3(1.0, 0.0, 1.0);
-            }
+        if (flags & 4u) {
+            c.a *= t.a;
+            cover = t.a;
+        }
+        uint w, h;
+        stp_plane.GetDimensions(w, h);
+        if (w > 0u) {
+            int2 p = min(int2(saturate(i.uv) * float2(w, h)), int2(w - 1u, h - 1u));
+            const bool stp = stp_plane.Load(int3(p, 0)).r > 0.5;
+            blended = stp || tex.Load(int3(p, 0)).a < 0.5;
+            // BOF3X_STPVIEW, diagnostic: a bit-15 texel is magenta.
+            if ((flags & 64u) && stp) c.rgb = float3(1.0, 0.0, 1.0);
         }
     }
     if (flags & 8u) c.rgb += i.specular.rgb;
@@ -206,6 +220,43 @@ float4 PS(PSIn i) : SV_Target {
         if (!keep) discard;
     }
     return c;
+}
+float4 PS(PSIn i) : SV_Target {
+    bool blended;
+    float cover;
+    return Shade(i, blended, cover);
+}
+// DIV-0160 step 3, under the blend state SRC1_ALPHA / SRC1_COLOR: f.a is the
+// source factor and f.rgb the destination's. A bit-15 texel takes the draw's
+// own D3DBLEND factors (the same values the fixed blend would use, from the
+// clamped source colour); any other drawn texel `cover` and 1 - `cover` -
+// opaque, as the PlayStation draws it, with the edge an opaque draw gets. Only the factors the draw can use reach here
+// (render_d3d11.cpp StpFactors): source ZERO, ONE, SRCALPHA, INVSRCALPHA;
+// destination those and SRCCOLOR, INVSRCCOLOR.
+float SourceFactor(uint e, float4 s) {
+    if (e == 1u) return 0.0;
+    if (e == 5u) return s.a;
+    if (e == 6u) return 1.0 - s.a;
+    return 1.0;
+}
+float3 DestFactor(uint e, float4 s) {
+    if (e == 1u) return float3(0.0, 0.0, 0.0);
+    if (e == 3u) return s.rgb;
+    if (e == 4u) return 1.0 - s.rgb;
+    if (e == 5u) return float3(s.a, s.a, s.a);
+    if (e == 6u) return float3(1.0 - s.a, 1.0 - s.a, 1.0 - s.a);
+    return float3(1.0, 1.0, 1.0);
+}
+struct PSOutStp { float4 c : SV_Target0; float4 f : SV_Target1; };
+PSOutStp PSStp(PSIn i) {
+    bool blended;
+    float cover;
+    PSOutStp o;
+    o.c = Shade(i, blended, cover);
+    const float4 s = saturate(o.c);
+    const float k = saturate(cover);
+    o.f = blended ? float4(DestFactor(dst_blend, s), SourceFactor(src_blend, s)) : float4(1.0 - k, 1.0 - k, 1.0 - k, k);
+    return o;
 }
 )";
 
@@ -551,11 +602,25 @@ void Grab(const Command& c) {
 // One Draw call in state `s`. The flag word is kSceneShader's `flags`: 1
 // textured, 2 colour-key discard, 4 alpha modulate, 8 specular, 16 alpha
 // test (`func` a D3DCMP value; 8, ALWAYS, keeps every pixel).
+// DIV-0160 step 3: the D3DBLEND pairs PSStp can express - a source factor that
+// is one number for all three channels and a destination factor that reads
+// only the source. Capcom's D3d_SetBlend uses four: 5 / 6, 2 / 2, 1 / 4, 5 / 2.
+bool StpFactors(U src, U dst) {
+    const bool src_ok = src == 1 || src == 2 || src == 5 || src == 6;
+    const bool dst_ok = dst >= 1 && dst <= 6;
+    return src_ok && dst_ok;
+}
+
+// kSceneShader's DrawConstants; g_cb_draw is made at its size.
+struct DrawConstants {
+    U flags, ref, func, pad;
+    float grab0[4], grab1[4];
+    U src_blend, dst_blend, pad2[2];   // DIV-0160 step 3: the draw's D3DBLEND pair, for PSStp
+};
+static_assert(sizeof(DrawConstants) % 16 == 0, "a constant buffer is a whole number of 16-byte registers");
+
 void Draw(const PipeState& s, U first, U count) {
-    struct {
-        U flags, ref, func, pad;
-        float grab0[4], grab1[4];
-    } c = {};
+    DrawConstants c = {};
     if (s.texture) c.flags |= 1;
     if (s.texture && s.color_key) c.flags |= 2;
     if (s.alpha_modulate) c.flags |= 4;
@@ -578,8 +643,16 @@ void Draw(const PipeState& s, U first, U count) {
         c.grab1[0] = s.grab_size[0];
         c.grab1[1] = s.grab_size[1];
     }
-    PutConstants(g_cb_draw, &c, sizeof c);
     GpuTexture* bound = s.texture ? Bind(s.texture) : nullptr;
+    // DIV-0160 step 3: a blended draw of a texture that carries bit 15 blends
+    // only its bit-15 texels. Not a draw inside a DIV-0125 grab: the grab's
+    // texels are the picture's, whose bit 15 the plane does not hold.
+    const bool by_texel = StpBlend() && bound && bound->stp_srv && s.blend_enable && !(c.flags & 32) &&
+                          StpFactors(s.src_blend, s.dst_blend);
+    c.src_blend = s.src_blend;
+    c.dst_blend = s.dst_blend;
+    PutConstants(g_cb_draw, &c, sizeof c);
+    g_ctx->PSSetShader(by_texel ? g_ps_stp : g_ps, nullptr, 0);
     ID3D11ShaderResourceView* srv = bound ? bound->srv : nullptr;
     ID3D11ShaderResourceView* stp_srv = bound ? bound->stp_srv : nullptr;   // DIV-0160's plane, null if none
     g_ctx->PSSetShaderResources(0, 1, &srv);
@@ -590,7 +663,7 @@ void Draw(const PipeState& s, U first, U count) {
     ID3D11SamplerState* sampler = s.point_filter ? g_sampler_point : g_sampler_linear;
     g_ctx->PSSetSamplers(0, 1, &sampler);
     const float factor[4] = {0, 0, 0, 0};
-    g_ctx->OMSetBlendState(BlendFor(s.blend_enable, s.src_blend, s.dst_blend), factor, 0xFFFFFFFF);
+    g_ctx->OMSetBlendState(by_texel ? g_blend_stp : BlendFor(s.blend_enable, s.src_blend, s.dst_blend), factor, 0xFFFFFFFF);
     g_ctx->IASetPrimitiveTopology(s.topology == 0 ? D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
                                   : s.topology == 1 ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST
                                                     : D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
@@ -788,6 +861,24 @@ void InitOnFiber(const Options& options) {
     ID3DBlob* ps = Compile(kSceneShader, "PS", "ps_4_0");
     Check(g_device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &g_vs), "CreateVertexShader");
     Check(g_device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, &g_ps), "CreatePixelShader");
+    {
+        // DIV-0160 step 3: the draw by texel. Dual-source blending is core
+        // from feature level 10_0, the lowest this device is made at.
+        ID3DBlob* ps_stp = Compile(kSceneShader, "PSStp", "ps_4_0");
+        Check(g_device->CreatePixelShader(ps_stp->GetBufferPointer(), ps_stp->GetBufferSize(), nullptr, &g_ps_stp),
+              "CreatePixelShader (PSStp)");
+        ps_stp->Release();
+        D3D11_BLEND_DESC b = {};
+        b.RenderTarget[0].BlendEnable = TRUE;
+        b.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC1_ALPHA;
+        b.RenderTarget[0].DestBlend = D3D11_BLEND_SRC1_COLOR;
+        b.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+        b.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;   // the alpha channel as BlendFor writes it
+        b.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+        b.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        b.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        Check(g_device->CreateBlendState(&b, &g_blend_stp), "CreateBlendState (bit 15)");
+    }
     const D3D11_INPUT_ELEMENT_DESC layout[] = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"COLOR", 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -813,7 +904,7 @@ void InitOnFiber(const Options& options) {
     vb.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Check(g_device->CreateBuffer(&vb, nullptr, &g_vertices), "CreateBuffer (vertices)");
     g_cb_frame = MakeConstants(16);
-    g_cb_draw = MakeConstants(48);
+    g_cb_draw = MakeConstants(sizeof(DrawConstants));
     g_sampler_point = MakeSampler(true, false);
     g_sampler_linear = MakeSampler(false, false);
     g_sampler_present_point = MakeSampler(true, true);

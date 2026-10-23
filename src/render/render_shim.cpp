@@ -1053,6 +1053,8 @@ void BuildTables() {
 
 std::uint32_t g_stp_texels = 0;   // DIV-0160; 1 through PatchBytes("StpTexels") in TexPage_Inject
 bool StpTexels() { return g_stp_texels != 0 && g_frame.commands != nullptr; }
+std::uint32_t g_stp_blend = 0;    // DIV-0160 step 3; 1 through PatchBytes("StpBlend") in TexPage_Inject
+bool StpBlend() { return g_stp_blend != 0 && StpTexels(); }
 
 void* DirectDrawObject() {
     BuildTables();

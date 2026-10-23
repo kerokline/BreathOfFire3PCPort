@@ -1,8 +1,9 @@
 # The bit-15 round: semi-transparent primitives blend only the texels with bit 15
 
 **Status:** IN PROGRESS (2026-10-23: step 1, the census, done ([`stp-census.md`](stp-census.md)); step 2, bit 15
-carried into the textures, built as DIV-0160 and changing no pixel; step 3, the draw by texel, next). Branch
-`render/stp-blend`. The defect is [`known-defects.md`](known-defects.md) D334.
+carried into the textures, built as DIV-0160, no pixel changed; step 3, the draw by texel, built and verified
+(sections 3 and 5). Left: the owner's eye on the rope and some effects in play, and the census on the routes it
+did not reach). Branch `render/stp-blend`. The defect is [`known-defects.md`](known-defects.md) D334.
 
 ## 1. What the round restores
 
@@ -66,12 +67,39 @@ runs before the game draws, so none was seen.
 **Diagnostic:** `BOF3X_STPVIEW=1` draws every texel the plane marks in magenta (`flags & 64` in the scene
 shader).
 
-## 3. Step 3: the draw (not built)
+## 3. Step 3: the draw by texel (built)
 
-To decide: two passes (the primitive's opaque texels with the blend off, then its bit-15 texels with the blend
-on, each discarding the other), or one pass with dual-source blending (the shader outputs a per-pixel blend
-factor). The census found no primitive mixing the two kinds, so a per-primitive choice would match on its routes,
-but it would not be the PlayStation's rule.
+One pass, dual-source blending (core from feature level 10_0, the lowest the backend makes its device at). A
+draw is drawn by texel when all of these hold: the switch `StpBlend` is on, its texture carries a plane (section
+2), the blend is enabled, it is not a DIV-0125 grab draw, and its D3DBLEND pair is one `PSStp` can express
+(`StpFactors`). That means a source factor that is one number for all channels (ZERO, ONE, SRCALPHA, INVSRCALPHA)
+and a destination factor that reads only the source (those and SRCCOLOR, INVSRCCOLOR). Capcom's `D3d_SetBlend`
+uses four pairs, all expressible: 5 / 6, 2 / 2, 1 / 4, 5 / 2. Such a draw runs `PSStp` under the blend state
+`SRC1_ALPHA` / `SRC1_COLOR`. Its second output carries the source factor in alpha and the destination factor in
+colour, per pixel:
+
+- **A bit-15 texel, or a transparent one:** the draw's own factors, computed from the clamped source colour as
+  the fixed blend computes them. It looks as before, but for rounding: under bilinear filtering 13 pixels of a
+  frame of Amalgam's fight differ by one level.
+- **Any other drawn texel:** `cover` and 1 - `cover`, opaque as the PlayStation draws it. `cover` is the
+  texture's filtered alpha under alpha modulate, else 1, which is what an opaque draw's SRCALPHA reads at an
+  edge. Under point filtering that is 1 and 0.
+
+The texel is the nearest one to the pixel (the plane and the colour texture's alpha read by `Load`). A
+transparent nearest texel keeps the draw's own blend. Without that, a bilinear edge (whose filtered alpha
+passes the colour-key test) was drawn as an opaque texel and every sprite lost its soft edge. That was the first
+build's fault; the bilinear A/B found it.
+
+A non-semi-transparent draw is drawn by texel too: Capcom's opaque mode is 5 / 6 with alpha 1, so its factors
+come out the same either way.
+
+Not drawn by texel: a grab draw. The grab's texels are the frame's picture, and the plane holds the page's bit
+15, not the picture's. What the PlayStation does with bit 15 of a picture moved into a texture page is not
+measured. Nor is any other D3DBLEND pair, though none other was seen.
+
+The first build of step 3 grew the draw's constant buffer to 64 bytes but made it at 48, so `PSStp` read the
+blend pair as 0 / 0 (ONE / ONE) and the copy wrote past the mapped buffer: shadows and dark polygons vanished,
+sprites turned additive, and the owner saw them flicker. The buffer is now made at `sizeof(DrawConstants)`.
 
 ## 4. Verification of step 2
 
@@ -99,3 +127,28 @@ Root `C:\Users\kerok\bof3x-runs\stp_census` (`ab.sh`, `ab_<route>_<on|off|view>`
   polygon in Amalgam's fight are marked. The HUD text and the damage numbers are not, as the census and the
   twin say. The view marks bit-15 texels in every textured draw, opaque primitives included, where the bit
   changes nothing (the stairs' edges on the rooftop). Every boss shot has marked pixels (2,330 to 35,456).
+
+## 5. Verification of step 3
+
+Root `C:\Users\kerok\bof3x-runs\stp_census` (`s3*.sh`, `ab_<route>_s3*`); the final shader throughout. Each A/B is
+`--host bof3` against step 2's frames, which are Capcom's draw.
+
+- **The rope.** `rope_ab`, point filtering: 15 of 17 shots are identical, and the two that differ (recipe frames
+  300 and 340) change only the rope: 669 and 441 pixels. The rope's median goes from (20, 16, 6) to
+  (81, 62, 25), against the twin's (72, 56, 24). The twin's figure is the handoff's, over its own pixel set
+  under the sibling's renderer, so a tenth either way is within the method. The knot where it meets the roof
+  shows. Amalgam's fight (13 shots, the melt, shadows, the windows) is identical.
+- **The text.** `combat` 3 of 13 shots differ, `bossAndFlash` 3 of 21, `dragonTransform` 8 of 22. Every
+  differing box is text on page 15: the load screen's slot labels, item counts, the EXP lines, AP and skill
+  numbers, the HP pop-up. Each draws in its palette colour instead of brighter on its backing. Nothing else
+  moves: no effect, shadow or sprite.
+- **Off.** `BOF3X_ORIGINAL=StpBlend` on `rope_ab`: 17 of 17 shots identical to step 2.
+- **Bilinear** (`BOF3X_FILTER=linear`, `rope_ab`, on against `StpBlend` off): the rope's two shots, and 13
+  pixels off by one level in a frame of Amalgam's fight (the shader's factor against the fixed blend's
+  rounding). The first build's hard sprite edges (section 3) are gone.
+- **Self-tests:** `BOF3X_SHADOW=gfx_clut,tex_page,d3d_draw` headless, exit 0, `StpTexels` and `StpBlend` ON.
+- **The owner** (2026-10-23, watching the runs): saw the first build's flicker, which section 3 explains and
+  the fix removed; on the fixed build, the text "looks much closer to original now to my eye".
+
+Not reached: the census's missing routes ([`stp-census.md`](stp-census.md) 5); a draw with a D3DBLEND pair other
+than Capcom's four; a grab draw's bit 15 on the PlayStation.

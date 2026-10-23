@@ -13,6 +13,20 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-10-23, the bit-15 round (built)
+
+On `render/stp-blend` ([`stp-blend.md`](stp-blend.md); DIV-0160, D334): a semi-transparent primitive blends
+only its texels with the PlayStation's bit 15 and draws the rest opaque.
+
+- **Seen by the owner (2026-10-23, chat):** the text "looks much closer to original now to my eye".
+- **To play:** the McNeil rooftop (area 28, save `ropeAndAmalgam`): the rope over the sky should read as a
+  rope, about as bright as on the PlayStation. Then a few effects under both filters (`BOF3X_FILTER=point`
+  and the default bilinear): Amalgam's melt, a boss flash, the dragon transformation, shadows and the
+  windows' translucent backings. Look for anything that turned solid that should not have, or a hard ring
+  at a sprite's edge.
+- **Nothing to decide** unless something reads wrong. `BOF3X_ORIGINAL=StpBlend` shows Capcom's draw for a
+  side by side.
+
 ## 2026-10-22, the reading-row round (built)
 
 Built on `localization/second-script` ([`reading-row-round.md`](reading-row-round.md);

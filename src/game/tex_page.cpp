@@ -478,10 +478,16 @@ void TexPage_Inject() {
         // tex_page fuzzes, and only with DIV-0159: without it a direct-colour
         // texel has alpha clear on a colour, which DIV-0160 reads as drawn.
         if (direct) {
-            bof3::PatchBytes("StpTexels",
-                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&render::g_stp_texels)), was, is, 4);
+            const bool texels = bof3::PatchBytes(
+                "StpTexels", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&render::g_stp_texels)), was, is, 4);
             bof3::Log("DIV-0160    the textures carry the PlayStation's bit 15 (alpha clear on a colour), under our "
-                      "backend; drawn as before (on unless the line above says OFF)");
+                      "backend (on unless the line above says OFF)");
+            if (texels) {
+                bof3::PatchBytes("StpBlend",
+                                 static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&render::g_stp_blend)), was, is, 4);
+                bof3::Log("DIV-0160    a semi-transparent primitive blends only its bit-15 texels, the others opaque "
+                          "(on unless the line above says OFF)");
+            }
         } else {
             bof3::Log("DIV-0160    off: it needs DIV-0159 (DirectOpaque)");
         }

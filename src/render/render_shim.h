@@ -201,6 +201,11 @@ Surface* const* AllSurfaces(U* n);
 // alpha-clear texel is transparent, so there the converters keep Capcom's rule.
 extern std::uint32_t g_stp_texels;
 bool StpTexels();
+// Step 3: a blended draw of a texture that carries bit 15 blends only its
+// bit-15 texels and draws the others opaque (render_d3d11.cpp, PSStp). The
+// switch StpBlend, armed with StpTexels; nothing without it.
+extern std::uint32_t g_stp_blend;
+bool StpBlend();
 
 // --- the frame-buffer grab (DIV-0125, fb_grab.h) ---------------------------
 // Each does nothing unless the backend is the one recording frames

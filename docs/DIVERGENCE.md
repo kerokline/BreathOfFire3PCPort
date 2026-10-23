@@ -10199,7 +10199,7 @@ designed in rather than bolted on.
 ### Semi-transparent primitives blend only the texels with bit 15 (the bit-15 round)
 
 - **ID:** DIV-0160
-- **Date:** 2026-10-23 (step 2 of the round; the draw is step 3)
+- **Date:** 2026-10-23 (steps 2 and 3 of the round)
 - **Subsystem:** the texel converters `Gfx_ConvertRow` (`0x59EBB0`, `src/game/gfx_clut.cpp`) and
   `Tex_Convert16` (`0x5A9D2F`, `src/game/tex_page.cpp`); the backend's texture upload
   (`src/render/render_d3d11.cpp` `Convert`, `PutStp`) and `ReadPixel` (`src/render/render_shim.cpp`);
@@ -10214,15 +10214,21 @@ designed in rather than bolted on.
   A1R5G5B5 combination Capcom's converters never write - a colour with bit 15 set converts to that colour with
   alpha clear (forced to 1 if it would round to 0, as before); a colour with it clear keeps the alpha bit; 0
   stays 0, transparent. The backend reads alpha clear on a colour as a drawn texel, as before, and uploads a
-  one-byte plane beside each such texture, 255 where bit 15 is set. **Nothing is drawn differently yet**: the
-  colour texture is byte for byte what it was. Step 3 draws by the plane.
+  one-byte plane beside each such texture, 255 where bit 15 is set; the colour texture is byte for byte what it
+  was. **Step 3, the draw:** a blended draw of such a texture runs a second pixel shader under dual-source
+  blending (`PSStp`, `SRC1_ALPHA` / `SRC1_COLOR`): a bit-15 texel, or a transparent one, takes the draw's own
+  D3DBLEND factors, as before; any other drawn texel is drawn opaque (its coverage and one less it, so a
+  bilinear edge stays soft). Not a DIV-0125 grab draw, and only the factor pairs the shader can express (all
+  four Capcom's `D3d_SetBlend` uses). Seen: the rope at its PlayStation brightness, and the text on page 15
+  in its palette colour, no longer added to the window under it.
 - **Rationale:** HANDOFF item 00, agreed with the owner 2026-10-23; the census (`stp-census.md`) sized it.
-- **Also in the PSX version?** The PlayStation draws by bit 15; this restores that (at step 3).
+- **Also in the PSX version?** The PlayStation draws by bit 15; this restores that.
 - **Verification** (2026-10-23, [`stp-blend.md`](stp-blend.md) 4): the `gfx_clut` self-test checks the rule
   against Capcom's copy (74,752 bit-15 cells, 0 mismatches) and `BOF3X_SHADOW='*'` passes; 73 shots over
   four routes are pixel-identical on and off; `BOF3X_STPVIEW` leaves the rope unmarked and marks the melt,
   the shadows and the windows' backings.
-- **Reversible?** `BOF3X_ORIGINAL=StpTexels`. Armed after the start-up fuzzes, only with DIV-0159
+- **Reversible?** `BOF3X_ORIGINAL=StpBlend` draws as Capcom's port (the textures still carry the bit; the
+  frames are then identical to step 2's); `BOF3X_ORIGINAL=StpTexels` turns both off. Armed after the start-up fuzzes, only with DIV-0159
   (`DirectOpaque`: without it a direct-colour texel has alpha clear on a colour, which this reads as drawn),
   and only under our backend (`InitShim` has run): under `BOF3X_ORIGINAL=Display_Setup`, Capcom's DirectX 6
   objects would read alpha clear as transparent, so the converters keep Capcom's rule there.
