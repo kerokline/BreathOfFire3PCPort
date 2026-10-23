@@ -10578,3 +10578,58 @@ designed in rather than bolted on.
   `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard; not run on a route.
   The state hash sees it where a route reaches a B8: `Music_Track`, `Music_Volume`, the fade and the stream.
 - **Reversible?** `BOF3X_ORIGINAL=MoveB8Restart`.
+
+### Sound_PlayById's voices follow their sprite: volume and pan by its place
+
+- **ID:** DIV-0172
+- **Date:** 2026-10-23
+- **Subsystem:** the sound layer - `Sound_PlayById` (`0x587900`, `src/game/battle_sprites.cpp`), the sprite's screen
+  update `Sprite_UpdateScreen` (`0x588F20`) and `Sprite_QueueOverlay` (`0x5890E0`, `src/game/sprite_screen.cpp`),
+  `Sound_PlayEffect` (`0x587740`, `src/game/sound.cpp`) and `sound_sp` (`src/game/sound_sp.cpp`);
+  [`known-defects.md`](known-defects.md) D345
+- **Tier:** Sensible - a port repair; the PlayStation does it, the port's sound layer dropped it.
+- **Original behaviour:** `Sound_PlayById(id)` plays the cue flat (`Sound_PlayEffect(id)`) and reads none of its
+  other arguments. The screen update's call for a sprite with bit 3 of `+0` is `Port_DroppedCall`, a bare `ret`,
+  and nothing on the PC sets that bit for a sound (a scan of `.text` for `or byte ptr [reg], 8` finds one writer,
+  of a script context, in `Area145_ChoiceRun3`). Every effect plays centred at its buffer's level.
+- **New behaviour:** `Sound_PlayById` plays the cue as before and remembers each buffer it played under
+  `Sprite_Current`, DLL-side (the PlayStation's bit 3 and its `+0x70` voice word are not written: no PC reader).
+  Each frame that sprite goes onto the draw list or the overlay list, every remembered buffer still playing gets the
+  PlayStation's volume pair as a DirectSound volume and pan; a buffer that has stopped gets back the volume and pan
+  it had and is forgotten. The pair (US `0x80161454`, read to its `jr $ra`): with bit 0x1000 of
+  `Field_ScriptFlags2` (`0x905BA4`, the PlayStation's `0x8014625A`: the twins US `0x801B2B6C` / PC `0x52F490` both
+  clear that bit there), by the screen point - both sides 44 (y + 64), 0 above y -64, full from y 0x131, and a pan
+  of (x + 40) / 4 percent; otherwise by the distance d from the kind-2 object (the camera focus, `Field_Kind2X` /
+  `Z`), both sides 0x37FF - (d / 16) x 10 with d in 16ths of a cell, and the side away from the sprite less
+  |x - 160| / 480 of it. Under the options' Mono (`0x903A59`, the PlayStation's `0x80144951`) no pan. On the PC
+  each law's loudest (0x3FFF, 0x37FF) is the buffer's own level and the rest that much quieter (amplitude,
+  2000 log10), the louder side as the volume and the difference as the pan. A bank entry's buffer is shared by
+  every cue that names the voice, so the next `Sound_PlayEffect` of a changed buffer puts its volume and pan back
+  first - unless something else set it meanwhile (Scena13's `Sound_SetCueVolume`), which is then left alone. A
+  second play by the same sprite adds its buffers, as the PlayStation ORs the voice numbers in. **To the ear:** an
+  effect played through `Sound_PlayById` by a sprite that is drawn by those two functions moves across the stereo
+  field with the sprite: on the field, the far side up to about 3.5 dB down at the screen's edge, and a fall with
+  distance too gentle to hear on any map (0.6 dB at 100 cells); with bit 0x1000 (set by `Field_LeaderWalk` and two
+  others), louder lower on the screen and panned fully at its edges. The PlayStation's callers (a jal scan of the
+  US disc: 503 calls in 176 overlays) are the battle engine (`BATTLE.EMI` / `BATTLE2.EMI`, 6 each), the boss
+  overlays (6 or 7 each), 117 spell overlays and eleven areas (75, 145, 175..185 - the faerie village). Whether a
+  battle's objects are drawn through these two functions on the PC is not measured; where they are not, nothing
+  changes in battle.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D345): the PlayStation's `Sound_PlayById`
+  is three functions the port folded into one; US `0x8015D71C` (JP `0x8015E10C`) - every caller but four - queues
+  the cue, packs the keyed voice numbers into the sprite's `+0x70` (bits 8, 13, 18, 23) and sets bit 3 of its `+0`;
+  `Sprite_QueueOverlay`'s twin US `0x8014D4E0` and the screen update call `0x80161454` for such a sprite, which sets
+  those voices' volume (`SpuSetVoiceAttr`) until `SpuGetKeyStatus` finds each one off. The levels are relative
+  because the PC's flat play is the only level it has; the PlayStation's own is the bank's, or SndQueueCue's 0x17FF.
+  libgte's `SquareRoot0` there is table-based; ours is the exact floor, a unit apart at most.
+- **Also in the PSX version?** Yes: this is the PlayStation's positional sound, on the PC's buffers.
+- **Verification:** builds; `BOF3X_SHADOW=sound_sp` (2026-10-23) checks both laws at points worked by hand from the
+  US disc's instructions (screen (0, 0): left 2534, right 281; mono; above y -64; the bottom right; on the focus;
+  160 px either side: 9557; 32 cells off: 14015) and the bookkeeping on fake DirectSound buffers (two remembered of a
+  cue with a stop and an empty word, the update's volume and pan, another sprite's update leaving them, a stopped
+  buffer restored, a flat play taking one back, the law on a buffer with a level of its own, a level set meanwhile
+  left alone): 0 mismatches; a planted pan sign error was refused by 3 checks. `battle_sprites`', `sprite_screen`'s
+  and `sound`'s fuzzes run before the switch is armed (Capcom's behaviour, unchanged) and do not reach the new
+  branches. `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard. No game
+  memory is written: the state hash cannot see it.
+- **Reversible?** `BOF3X_ORIGINAL=SpriteVoicePosition`.

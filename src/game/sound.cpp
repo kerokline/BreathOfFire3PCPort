@@ -32,6 +32,7 @@
 #include "game/music_seq.h"
 #include "game/save_menu.h"
 #include "game/sound_callees.h"
+#include "game/sound_sp.h"
 #include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
@@ -161,6 +162,8 @@ int Sound_PlayEffectEax(unsigned short id) {
         void* const playing = reinterpret_cast<void*>(Sound_Channels[channel]);
         if (playing) g.sndbuf_stop(playing);
         const std::uint32_t entry = Address(Sound_Banks) + base + kVoices + voice * 8;
+        // DIVERGENCE DIV-0172 / DIV-0173: a buffer sound_sp changed gets its level back first (sound_sp.h).
+        if (sound_sp::Routed()) sound_sp::BeforePlay(reinterpret_cast<void*>(Dword(entry + 4)));
         g.sndbuf_play(Dword(entry) | loops, reinterpret_cast<void*>(Dword(entry + 4)), word >> 16);
         Sound_Channels[channel] = loops ? Dword(entry + 4) : 0;
     }

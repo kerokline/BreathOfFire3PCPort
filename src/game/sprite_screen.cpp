@@ -12,6 +12,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/sound_sp.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -62,6 +63,7 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
     Sprite_OverlayListCount = static_cast<unsigned char>(n + 1);
     Sprite_OverlayList[n] = Sprite_Current;
     if (rv::Current<records::SpriteHead>()->flags & 8) g.dropped(0);
+    if (sound_sp::g_position) sound_sp::UpdatePositional();   // DIVERGENCE DIV-0172 (PSX US 0x80161454)
 }
 
 // original 0x588F20: Sprite_Current's draw key, screen position and depth,
@@ -128,6 +130,7 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     Sprite_DrawList[n] = drawn;
     band_census::Seen(drawn);   // BOF3X_BANDLOG, an instrument: reads only (band_census.h)
     if (drawn[0] & 8) g.dropped(0);
+    if (sound_sp::g_position) sound_sp::UpdatePositional();   // DIVERGENCE DIV-0172 (PSX US 0x80161454)
 }
 
 namespace {
