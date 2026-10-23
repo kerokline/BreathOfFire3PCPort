@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 168 entries, DIV-0001..0168, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 169 entries, DIV-0001..0169, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10534,3 +10534,86 @@ designed in rather than bolted on.
   every compared byte unchanged, no call out, eax the selection; 0 mismatches. `BOF3X_SELFTEST_ONLY=1
   BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not seen on a route.
 - **Reversible?** `BOF3X_ORIGINAL=MusicPlayRefusesNone`.
+
+### The inn's night halts the area's song as the fade starts and resumes it where it stopped, as the PlayStation does
+
+- **ID:** DIV-0169
+- **Date:** 2026-10-23
+- **Subsystem:** the inn's night (`InnNight_Message` `0x57FB70`, `InnNight_Restore` `0x57FCB0`,
+  `src/game/shop_states.cpp`; the hooks in `src/game/sound_in.cpp`; `music_resume::Heard` in
+  `src/game/sound.cpp`; [`known-defects.md`](known-defects.md) D343,
+  [`sound-layer-round.md`](sound-layer-round.md) group IN)
+- **Tier:** Sensible - a port repair the PlayStation shows.
+- **Original behaviour:** measured on `shop.txt` (save `town`, the PC's MP3s, `BOF3X_MUSIC_LOG=1`, the WAV
+  dump; 2026-10-23). The town's song (track 0) plays on through the night's fade-out. At f2512 the jingle
+  (`SND\OYASUMI`, kind 0) goes through `Sound_LoadStream` `0x587910` into `Music_Start`, which releases the
+  town's stream. The jingle is a once-only stream, and `Music_Pump` stops it at its end (f2714). After that
+  no music call runs to the recipe's end (f3157). `Music_Track` still holds 0, so `Area_Enter`'s
+  `Music_Play(0, 8)` is a no-op. By reading, the town stays silent until an area with another track. The
+  sequenced path (`BOF3X_MUSIC=seq`, the cache's song) logs the same calls and is just as silent. Earlier
+  readings said "the town's song is heard again by 99 s". That came from [`wav-dump.md`](wav-dump.md) 4c,
+  whose 99 s is the *picture* returning; the sound there is the message's and the save menu's effects.
+- **New behaviour:** two calls, each inside a frame the night already has.
+  - **Nightfall.** At night 0's end, after `Transition_Start(0)`, the song heard is taken: its track, and its
+    sample folded into the first pass and loop, as DIV-0092's resume takes it. This is DLL state only. The
+    ring is then halted with `Sound_StopMusic` (`Music_Halt`: DirectSound's Stop, no fade). Nothing is taken
+    or halted when no song plays.
+  - **The jingle** plays as before.
+  - **Morning.** At the end of the restore state, after `Party_RestoreAll(1)`, the answer byte, the repeat
+    latch and the message, the song is started again. This happens only when `Music_Track` and
+    `Music_LoadedTrack` are still the taken track. The stream is rebuilt from `Music_File` with the taken
+    sample pending (`music_resume::Pend`, then `Music_Start`, whose resume fast-forwards: the MP3 decoded
+    from the top and dropped, or the sequenced song's `FastForward`). It plays at the game's own
+    `Music_Volume` (the jingle's `Music_SetVolume(127)` never stored it), with no fade.
+  - A jingle that cannot be opened (D255 on a disc-only install, DIV-0129) leaves the halted ring in place.
+    The morning rebuilds it the same way.
+
+  **To the ear**, on `shop.txt` (save `town`, the inn in the starting town):
+  - The town's song now stops dead as the screen starts to fade (f2495, 83.25 s in the dump). Before, it
+    played 0.55 s longer and was cut by the jingle.
+  - The jingle is unchanged.
+  - The town's song comes back at f2730 (91.09 s), as the fade-in ends and the morning message opens. It
+    picks up where it stopped and plays on.
+  - Before, the town was silent from the jingle's end to the recipe's end and beyond.
+- **Rationale:** the PSX twin rule. The PlayStation's night state 0 (US `SHOP.EMI#0`, the pause at
+  `0x801D41EC`) tests SEP slots 0..3 on its last frame, after `Transition_Start(0)`. It records each answer at
+  `0x801E6100 + 2i` and `SsSepPause`s each slot that plays. Its restore state (US `0x801D446C`, JP
+  `0x801D447C`, every masked word identical) ends with `SsSepReplay(0, i)` for each slot recorded as playing.
+  That call comes last, after the message. The PC port moved the jingle from the XA stream onto the music's
+  own ring and dropped both calls, so the song it paused on the PlayStation is lost on the PC.
+- **Also in the PSX version?** Yes: this is what the PlayStation does. One difference remains: the
+  PlayStation's jingle plays beside the paused sequence, so the sequence keeps its voices. Ours rebuilds the
+  stream at the sample. On the sequenced path the reverb's tail starts empty
+  ([`music-seq-engine.md`](music-seq-engine.md) 8). On the MP3 path the restart lands on an MP3 frame's
+  start, up to 26 ms early; 59 ms early was measured, which is that frame plus the cursor's granularity.
+- **Verification:**
+  - `shop.txt` from the group's own root (`--no-front`, `BOF3X_OPT=none`, `BOF3X_MUSIC_LOG=1`, the WAV dump),
+    before and after on the PC's MP3s: `recipe done at recipe frame 3157` on both.
+    - The music log after: `heard track 0 at sample 3197952` and `nightfall: track 0 halted` at f2495;
+      the jingle's `Music_Start` at f2512 and its stop at f2714 as before; `Music_Start(.., 1576542, 1)`,
+      `resume track 0 at sample 3197952` and `morning: track 0 resumed` at f2730.
+    - `tools/wav_diff.py`: the first difference is at 83.0 s, and 16 windows differ, 83..84 s and
+      91..105 s. The halt shortens the song before the jingle, and the song is present from 91.09 s where
+      the original is silent. Everything else is sample-equal.
+    - The resumed audio matches the original's song at 83.19 s (normalised correlation 1.000), against a
+      halt at 83.25 s.
+  - The same on the sequenced path (`BOF3X_CACHE` = the `pc-plus-us` cache, `BOF3X_MUSIC=seq`): the song
+    is ours with the switch and hosted with `BOF3X_ORIGINAL=InnNightPause`, and the log reads `patch OFF
+    InnNightPause` on that side. The same calls on the same frames, and the resume at the exact heard
+    sample (3198574). The match is 0.998, the reverb starting empty. `recipe done` at 3157 on both.
+  - The cache here has no `psx-jingles`, so DIV-0150's disc stream was not run. Its kind-0 stream reaches
+    the same `Music_Start`. A missing jingle (DIV-0129) was not run either.
+  - `BOF3X_SHADOW=shop_states,sound_in`: the shop_states fuzz (40,000 rounds, switch off) 0 mismatches. The
+    DIV-0169 self-test drives both hooks against recorders for the five calls out: switch off, a song
+    halted and resumed once, a silent night, another track, another file, the track stopped. 9 checks, 0
+    mismatches.
+  - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0: 1,092 `MISMATCHES`
+    counts, all 0, `inject: 10087 ours`.
+  - Not heard by the owner.
+- **State:** DLL state only (`sound_in.cpp`'s taken song, `music_resume`'s pending sample); nothing new in
+  game memory. The morning's `Music_Start`, which the original does not make, writes the music globals it
+  always writes: `Music_Data`, `Music_Decoder`, `Music_Buffer`, `Music_Notify`, `Music_Events`, `Music_Loops`
+  (1 where the jingle left 0) and `Music_Finished` (0 where the jingle's end left 1). It also writes the
+  decoder's staging and heap. A quicksave taken between nightfall and morning does not carry the taken
+  song, so a load into that span ends the night as the PC did.
+- **Reversible?** `BOF3X_ORIGINAL=InnNightPause`.
