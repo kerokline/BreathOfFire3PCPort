@@ -9351,7 +9351,7 @@ the list. Not seen.
 **Status:** fixed by DIV-0161 (`BOF3X_ORIGINAL=BattleDrawSigned` for the
 original), fix wave 1023; the port's.
 
-## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard)
+## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard; fixed by DIV-0167 for the looping voices)
 
 **Seen:** not heard; found 2026-10-23 by reading the US PlayStation's
 `0x801D3E80` (JP `0x801D3E60`, words identical) against the PC's `0x42FD20`
@@ -9365,7 +9365,21 @@ voices there either. Whether the previous action's sound can still be
 playing at that moment, and so runs on under the next effect's, is not
 measured.
 
-**Status:** latent; the port's; a listen for the owner.
+**The PC's equivalent** (2026-10-23, group SN of the fix wave): the
+PlayStation's loop is `SsUtKeyOffV` (`0x8016F10C`) for `s0 = 0x10..0x17`
+(JP `0x801D3E68..0x801D3E84`; US `0x801D3E88..`, the same words but the
+call's target `0x8016E794`), and voices 16..23 are every voice `SE_Play`
+keys. The PC's cue words keep the voice in bits 8-12, the shipped banks name
+only 16..23 (`sound.md` section 1), and `Sound_PlayEffect` files voice `v`
+under channel `v` (less 23 from 23 on): channels 16..22 and 0. A channel
+holds a buffer only for a looping voice; a one-shot's buffer is the bank
+entry's and is not remembered anywhere a stop could find it.
+
+**Status:** fixed by DIV-0167 (switch `EffectKeyOff`) for what the PC can
+reach: the looping voices on those channels are stopped and forgotten at
+the PlayStation's point. A one-shot still sounding plays to its end, where
+the PlayStation's key-off would release it; left as the PC's. Not heard; a
+listen for the owner.
 
 ## D338 — `DragonCmd_StoreAsk` reads the prompt's answer as a dword that every writer stores as a word (the port's; latent)
 
@@ -9528,6 +9542,30 @@ the replay (its calls are the title box, the transition test,
 does as the PC. What is heard through an inn stay on each machine is a game
 fact, not measured.
 
+**Read again** (2026-10-23, group SN of the fix wave, the US disc's
+`SHOP.EMI#0` disassembled): the pause is night state 0's end - on the
+counter's last frame, after `Transition_Start(0)` (`0x8014ECAC`), a loop
+over slots 0..3 stores `0x8016B344(0, i)` (a playing test) at `0x801E6100 +
+2i` and calls `0x8016B968(0, i)` (`SsSepPause`) for each that plays. Night 2
+plays the jingle through `0x801636A0(0, 1)` (the XA stream, beside the
+paused sequence), night 3 waits on `0x80163EA0`. The replay, `0x8016BB6C(0,
+i)` for each slot recorded as playing, comes **last** in the restore state,
+after `Party_RestoreAll(1)` (`0x801D68D0`), the answer byte, the repeat
+latch and the message - not before them as the paragraph above has it. So
+on the PlayStation the area's song stops as the screen starts to fade and
+resumes where it stopped once the fade in has finished.
+
+The PC differs in more than the two calls: its jingle (`OYASUMI`, kind 0)
+plays through `Music_Start` on the music's own stream (`Sound_LoadStream`
+`0x587910`), which releases the area's stream, so there is nothing left to
+pause; `Music_Track` stays the area's track, so a later `Music_Play` of it
+does nothing. Yet the town's song is heard again after the night
+([`wav-dump.md`](wav-dump.md) 4c, 99 s on `shop.txt`), by a path not read.
+A pause / resume repair needs that path first, or the song could start
+twice. **Not built** in the fix wave: the next step is
+`BOF3X_MUSIC_LOG=1` on `shop.txt` (the route reaches the inn at recipe frame
+2647), which names every music call through the night and after.
+
 **Status:** latent; the port's sound layer (D337 and D345 are of the same
 class); the owner's ear.
 
@@ -9574,7 +9612,7 @@ not known.
 
 **Status:** latent; the port's sound layer; the owner's ear.
 
-## D346 — `Music_Play(0xFF)` is not refused, where the PlayStation's twins return on 0xFF (the port's; latent)
+## D346 — `Music_Play(0xFF)` is not refused, where the PlayStation's twins return on 0xFF (the port's; latent; fixed by DIV-0168)
 
 **Seen:** not seen in play; found 2026-10-23 by reading the US PlayStation's
 executable `0x80161B24` and `0x80161C20` (JP `0x80162514` / `0x80162610`,
@@ -9587,7 +9625,18 @@ restarts the previous file through `0x587BA0`. Ours does as the PC. No
 caller is known to pass 0xFF; the area pick's 0xFF goes through
 `Area_Enter`'s own test.
 
-**Status:** latent; the port's.
+**The test's width** (2026-10-23, group SN, read on the JP disc's
+executable): both twins mask the selection to its low byte first (`andi
+0xFF; beq 0xFF` at `0x80162530` and `0x80162630`). The callers that pass a
+value rather than a constant: `Area_Enter` (tests 0xFF itself), the scenario
+steps' `Music_Play(Music_Track, 8)` (a no-op for 0xFF either way, the track
+equals the byte), and the movement script's `B4` / `BE` (`MoveScript_GroupB`
+`0x577280`), which pass a script byte unchecked - the one way a 0xFF could
+arrive. (`0x587BA0` in the paragraph above is the fade in that follows the
+restart; the restart is `Music_Start` of what `Music_File` still holds,
+looping, `Music_LoadFile` finding no file 255.)
+
+**Status:** fixed by DIV-0168 (switch `MusicPlayRefusesNone`); latent.
 
 ## D347 — The port's stop is a ten-frame fade where the PlayStation cuts (the port's sound layer; the owner's ear)
 

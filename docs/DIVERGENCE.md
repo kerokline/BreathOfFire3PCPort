@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 163 entries, DIV-0001..0163, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 168 entries, DIV-0001..0168, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10474,3 +10474,63 @@ designed in rather than bolted on.
 - **Verification:** builds; the `field_e2` fuzz compares Capcom's unterminated copy before the switch is
   armed, and `BOF3X_SHADOW='*'` exits 0. Not seen in play: no recorded route finds a gene.
 - **Reversible?** `BOF3X_ORIGINAL=GeneNameNul`.
+### A battle action's effect stops the sound-effect loops the last one left, as the PlayStation's key-off does
+
+- **ID:** DIV-0167
+- **Date:** 2026-10-23
+- **Subsystem:** the battle action's effect preload - `BattleAction_EffectPreload` (`0x42FD20`,
+  `src/game/battle_actions.cpp`) - and the sound layer's channels (`Sound_Channels` `0x6BC8C8`,
+  `sound::KeyOffEffectVoices`, `src/game/sound.cpp`; [`sound.md`](sound.md), [`known-defects.md`](known-defects.md)
+  D337)
+- **Tier:** Sensible - a port repair; the PlayStation does it, the port's sound layer dropped it.
+- **Original behaviour:** at the start of each action's effect the preload resolves the ability or item row and
+  starts the effect file's load; nothing touches the sound. A looping effect voice the previous action started
+  and did not stop (a cue's `0xFF` voice) keeps sounding until a later cue on the same channel stops it.
+- **New behaviour:** first, the voices the PlayStation keys off there - 16..23, every voice its `SE_Play` uses -
+  on the PC's channels: a cue word's voice `v` is filed under channel `v`, less 23 from 23 on, so channels
+  16..22 and 0. Each of those that remembers a buffer has it stopped and forgotten, exactly as a cue's `0xFF`
+  voice does. The PC remembers only looping voices' buffers (a one-shot's buffer is the bank entry's, shared
+  by every cue that names it), so a one-shot still ringing plays to its end where the PlayStation would
+  release it: left as the PC's. Then the preload as before. **To the ear:** a looping battle sound left
+  running by one action stops when the next action's effect begins; nothing else changes. Whether any action
+  leaves one running is not measured.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D337): `SsUtKeyOffV` (`0x8016F10C`)
+  for voices 0x10..0x17 at JP `0x801D3E68..0x801D3E84` (US `0x801D3E88..`, the same words but the call's
+  target), before the row is resolved.
+- **Also in the PSX version?** Yes: this is the PlayStation's step, on what the PC can reach.
+- **Verification:** `BOF3X_SHADOW=sound`'s fuzz, after its rounds against Capcom's copies, runs
+  `KeyOffEffectVoices` 2,000 times on randomised channels and banks with a recording stop: the stops come in
+  voice order, one per remembered buffer of channels 16..22 and 0, those words cleared, every other channel,
+  bank and device byte unchanged; 0 mismatches. `battle_actions`' own fuzz runs before the switch is armed
+  (Capcom's preload, unchanged). `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits
+  0. Not heard; not run on a route (a battle route under `BOF3X_MUSIC_LOG` does not log effects). The state
+  hash sees it: `Sound_Channels` is in `.data`, so a battle where a loop was remembered at an action's start
+  differs from the reference there.
+- **Reversible?** `BOF3X_ORIGINAL=EffectKeyOff`.
+
+### Music_Play refuses track 0xFF, as the PlayStation's twins do
+
+- **ID:** DIV-0168
+- **Date:** 2026-10-23
+- **Subsystem:** the music command - `Music_Play` (`0x587AE0`, `src/game/sound.cpp`; [`sound.md`](sound.md),
+  [`known-defects.md`](known-defects.md) D346)
+- **Tier:** Sensible - a port repair; latent.
+- **Original behaviour:** `Music_Play(0xFF, frames)` while a track plays stores 0xFF as the track (nothing
+  playing, as far as the game's thirty readers of `Music_Track` can see), fails to load a file 255, and
+  restarts the stream from the top of whatever `Music_File` still holds - looping, at volume 0, fading in. So
+  the last song plays again from its beginning while the game believes none is playing.
+- **New behaviour:** a selection whose low byte is 0xFF does nothing and answers the selection, as both
+  PlayStation twins do (`andi 0xFF; beq 0xFF` at JP `0x80162530` and `0x80162630`, US `0x80161B24` /
+  `0x80161C20` the same words). The test follows DIV-0028's completion of a stopping fade, which only brings
+  the state to what Capcom's already was. Every other selection is as before. **To the ear:** nothing on any
+  path read; the only callers that can pass a 0xFF are the movement script's `B4` / `BE` with a script byte
+  of 0xFF (`MoveScript_GroupB` `0x577280`), where the song would no longer restart from the top. `Area_Enter`
+  tests 0xFF itself, and the scenario steps' `Music_Play(Music_Track, 8)` was a no-op for 0xFF already.
+  DIV-0092 and DIV-0143 never pass 0xFF to it (both test first) and are unchanged.
+- **Rationale:** the PSX twin rule.
+- **Also in the PSX version?** Yes: this is what the PlayStation does.
+- **Verification:** `BOF3X_SHADOW=sound`'s fuzz runs Capcom's copy against ours with the switch off (46,000
+  rounds), then ours with it on: 2,000 rounds of `Music_Play` with a low byte 0xFF on randomised music state,
+  every compared byte unchanged, no call out, eax the selection; 0 mismatches. `BOF3X_SELFTEST_ONLY=1
+  BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not seen on a route.
+- **Reversible?** `BOF3X_ORIGINAL=MusicPlayRefusesNone`.

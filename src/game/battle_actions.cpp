@@ -24,6 +24,7 @@
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/psp_code.h"
+#include "game/sound.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -520,7 +521,18 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
 //
 // As the original has it: the ability row is indexed by the whole word
 // (Magic_LoadForAbility uses its low byte); neither index is checked.
+//
+// DIVERGENCE DIV-0167: the PlayStation first keys off voices 16..23
+// (`SsUtKeyOffV` 0x8016F10C for s0 = 0x10..0x17, JP 0x801D3E68..0x801D3E84;
+// US 0x801D3E88.., the same words but the call's target), cutting what the
+// previous action's effect still sounds; the PC has no such step. With the
+// switch (PatchBytes("EffectKeyOff") in BattleActions_Inject, after the
+// self-test), the same point stops those voices' channels
+// (sound::KeyOffEffectVoices, game/sound.h).
+static std::uint8_t g_effect_key_off = 0;
+
 extern "C" void __cdecl BattleAction_EffectPreload(void) {
+    if (g_effect_key_off) sound::KeyOffEffectVoices();  // DIV-0167
     const unsigned kind = B(at::kActor + at::kBKind);
     bool has_file = false;
     if (kind == 4) {
@@ -658,6 +670,12 @@ extern "C" void __cdecl BattleAction_End(void) {
 
 void BattleActions_Inject() {
     if (bof3::WantsShadow("battle_actions")) battle_actions::SelfTest();
+    {
+        // DIV-0167: after the self-test, which compared Capcom's preload.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("EffectKeyOff", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_effect_key_off)), &was, &is, 1);
+        bof3::Log("DIV-0167    a battle action's effect stops the sound-effect channels the last one left (on unless the line above says OFF)");
+    }
     BOF3_INJECT(Battle_ActionPhase);
     BOF3_INJECT(BattleAction_BeginStep);
     BOF3_INJECT(Battle_BeginAction);
