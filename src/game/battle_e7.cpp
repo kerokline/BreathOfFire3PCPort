@@ -460,6 +460,18 @@ extern "C" void __cdecl GeneWin_DrawFormIcon(U x, U y, U form) {
 // or with `flash` a pulse of Frame_Counter (bit 3 set: ((c & 6) << 5) +
 // 0x3F; else ((~c & 6) << 5) + 0x3F) - in the channels `sides` bits 0..2 name
 // (bit 0 the prim's +6, bit 1 its +5, bit 2 its +4), 0 in the others.
+//
+// As the original has it: x, y, w and h are masked with 0xFFFF before `fild`
+// (0x599A6E..0x599A81), so a coordinate below 0 lands at 65,536 less it. The
+// PlayStation (US 0x800B1F04, JP 0x800AEF04: `sh` of x, y and y + h - 1 into
+// the LINE's vertex halfwords at 0x800AEEF4..0x800AEF08) keeps them signed.
+//
+// DIVERGENCE DIV-0161: 1 through PatchBytes("BattleDrawSigned") in
+// BattleE7_Inject, after the self-test. Each vertex is then the PlayStation's
+// signed halfword - x, y, x + w - 1 and y + h - 1 each cut to 16 bits and
+// sign-extended - so a box partly off the left or top edge clips (D336).
+static std::uint8_t g_cursor_box_signed = 0;
+
 extern "C" void __cdecl GeneWin_DrawCursorBox(U x, U y, U w, U h, U flash, U sides) {
     unsigned bright = 0xFF;
     if (flash & 0xFF) {
@@ -468,9 +480,15 @@ extern "C" void __cdecl GeneWin_DrawCursorBox(U x, U y, U w, U h, U flash, U sid
     }
     unsigned char ch[3];
     for (unsigned i = 0; i < 3; ++i) ch[i] = static_cast<unsigned char>((sides & (1u << i)) ? bright : 0);
-    const std::int32_t xs = static_cast<std::int32_t>(x & 0xFFFF), ys = static_cast<std::int32_t>(y & 0xFFFF);
-    const std::int32_t yb = static_cast<std::int32_t>(h & 0xFFFF) + ys - 1;
-    const std::int32_t xr = static_cast<std::int32_t>(w & 0xFFFF) + xs - 1;
+    std::int32_t xs = static_cast<std::int32_t>(x & 0xFFFF), ys = static_cast<std::int32_t>(y & 0xFFFF);
+    std::int32_t yb = static_cast<std::int32_t>(h & 0xFFFF) + ys - 1;
+    std::int32_t xr = static_cast<std::int32_t>(w & 0xFFFF) + xs - 1;
+    if (g_cursor_box_signed) {
+        xs = static_cast<std::int16_t>(x);
+        ys = static_cast<std::int16_t>(y);
+        yb = static_cast<std::int16_t>(y + h - 1);
+        xr = static_cast<std::int16_t>(x + w - 1);
+    }
     unsigned char* p = Gfx_PacketNext;
     BH_CALL(Gpu_SetLineF3)(p);
     PutFloat(p + 8, xs);
@@ -898,6 +916,13 @@ void BattleE7_Inject() {
         bof3::PatchBytes("BattleEquipLabelsRow", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_equip_labels_row)),
                          &was, &is, 1);
         bof3::Log("DIV-0065    the battle equip window's stat labels beside their values");
+    }
+    {
+        // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleDrawSigned", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_cursor_box_signed)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0161    the gene list's cursor box takes its corners signed, as the PlayStation (on unless the line above says OFF)");
     }
     BOF3_INJECT(BattleResultWin_DrawLevelUp);
     BOF3_INJECT(BattleResultWin_DrawFrame);

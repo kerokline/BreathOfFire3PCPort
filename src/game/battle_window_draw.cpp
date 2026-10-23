@@ -330,7 +330,15 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
 // As the original has it: x and y are taken unsigned (`and 0xFFFF`, then
 // `fild`), where the other helpers here sign-extend - a coordinate below 0
 // lands at 65,536 less it. The PlayStation stores the halfwords, where the two
-// readings are the same.
+// readings are the same (US 0x801DA078; on the JP disc the tail at 0x801DA048
+// stores x and y with `sh` into the SPRT's signed vertex halfwords +8, +0xA).
+//
+// DIVERGENCE DIV-0161: 1 through PatchBytes("BattleDrawSigned") in
+// BattleWindowDraw_Inject, after the self-test. x and y are then read as the
+// PlayStation stores them, signed halfwords, so a coordinate below 0 clips at
+// the screen's left or top edge (D336).
+static std::uint8_t g_draw_signed = 0;
+
 extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
     const unsigned page = g.get_tpage(0, 1, 0x3C0, 0);
     g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
@@ -339,9 +347,11 @@ extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
     p[4] = p[5] = p[6] = 0x80;
     p[0x14] = static_cast<unsigned char>(static_cast<unsigned>(cell) << 4);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x10);
-    Put(p + 0x08, F(static_cast<std::int32_t>(static_cast<std::uint32_t>(x) & 0xFFFF)));
+    const std::int32_t xs = g_draw_signed ? S16(static_cast<std::uint32_t>(x)) : static_cast<std::int32_t>(static_cast<std::uint32_t>(x) & 0xFFFF);
+    const std::int32_t ys = g_draw_signed ? S16(static_cast<std::uint32_t>(y)) : static_cast<std::int32_t>(static_cast<std::uint32_t>(y) & 0xFFFF);
+    Put(p + 0x08, F(xs));
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 8);
-    Put(p + 0x0C, F(static_cast<std::int32_t>(static_cast<std::uint32_t>(y) & 0xFFFF)));
+    Put(p + 0x0C, F(ys));
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, 0x7800);
     p[0x15] = 0xD8;
     g.set_sprt(p);
@@ -564,6 +574,12 @@ extern "C" unsigned char* __cdecl Char_AbilityList(unsigned member, unsigned typ
 void BattleWindowDraw_Inject() {
     g = kOriginals;
     if (bof3::WantsShadow("battle_window_draw")) SelfTest();
+    {
+        // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleDrawSigned", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_draw_signed)), &was, &is, 1);
+        bof3::Log("DIV-0161    the battle strip cell takes its x and y signed, as the PlayStation (on unless the line above says OFF)");
+    }
 
     BOF3_INJECT(BattleWin_OpenStatus);
     BOF3_INJECT(BattleWin_OpenSub1);
