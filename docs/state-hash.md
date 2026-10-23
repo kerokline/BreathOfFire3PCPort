@@ -307,6 +307,23 @@ ours run of a route that lists the saves wants it.
   at ticks 2..4). **Re-record the pairs at the tip before using them as a
   gate again**; until then compare against the base tip's runs, as the round
   did (`C:\Users\kerok\bof3x-runs\rr_rr\statehash\`).
+- **The route pairs re-recorded 2026-10-23** as `cn_<route>_orig4` /
+  `_orig4b` at `main` `b13eb30a` (the `orig3` conditions, the skip list with
+  `Sound_Channels`), answering D330. **Use these from now on.** The pairs agree
+  with each other on every page but scattered sound and VRAM ticks (combat and
+  cutsceneAndNue 7 pages, the rest none). Ours at that tip (`cn_<route>_m1023`,
+  the exe host): shop identical; the rest only ledgered changes, the
+  2026-10-20 signatures plus **DIV-0154** on combat (member 2's working
+  `+0x124` bit 0x8000 over ticks 1,663..2,315, from raw dumps at 1,700 and
+  2,000). Combat with `ExtraRoundClear` off and cutsceneAndNue with
+  `AreaTrackFallback` off are identical on every tick (hosted). The exe host's
+  cutsceneAndNue run also had `Snd_Device` / `Snd_Primary` / `Music_Events` /
+  `Music_Notify` 0x300 off Capcom's from tick 1 (DirectSound heap pointers;
+  gone in a hosted run and in the wave's run): a skip-list candidate of
+  `Sound_Channels`' class. Fix wave 1023 (`cn_<route>_w1023`, DIV-0161..0168):
+  every route the same pages as `m1023`, three of them after a repeat
+  (whelpBoss, the world map and masterAndManillo had sound-page spans on a
+  slow first run). Scripts and checks: `C:\Users\kerok\bof3x-runs\sh1023`.
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
 - **Known and not skipped:** `Sound_Channels` `0x6BC8C8` (23 DirectSound

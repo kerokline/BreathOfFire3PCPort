@@ -9229,10 +9229,9 @@ and shop's own second base run wandering on 13 pages. So the round changes
 no game state with no layer (DIV-0155's identity), and the references no
 longer measure the tip.
 
-**Status:** open; the `orig3` pairs want re-recording at the tip (Capcom's
-side pauses when another window opens, and wants the owner's save list, so it
-is a batch of its own). [`state-hash.md`](state-hash.md) 6 carries the dated
-line.
+**Status:** fixed 2026-10-23: the pairs re-recorded as `cn_<route>_orig4` /
+`_orig4b` at `main` `b13eb30a`, ours at that tip differing only by ledgered
+changes. [`state-hash.md`](state-hash.md) 6 carries the dated line.
 
 ## D333 — A 15-bit direct-colour page draws nothing: every texel is discarded, so Amalgam's melt is still missing after DIV-0142 (Capcom's; fixed 2026-10-23 by DIV-0159)
 

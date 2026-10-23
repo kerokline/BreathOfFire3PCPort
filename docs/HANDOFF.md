@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-23: the PlayStation verdict pass and the battle twin-diff, PR #115, then the twin-diff over every other matched target, D340..D347, PR #116, item 0b; 2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
+**Status:** IN PROGRESS (2026-10-23 evening: the `orig4` state-hash pairs, the second twin-diff step and fix wave 1023 on `fix/1023-wave`, DIV-0161..0168, D348..D352, item 000; 2026-10-23: the PlayStation verdict pass and the battle twin-diff, PR #115, then the twin-diff over every other matched target, D340..D347, PR #116, item 0b; 2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
 to 3 built on `render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
 `reading-row/end`)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
@@ -46,6 +46,26 @@ and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the t
 hosted cross form).
 
 ## Pick up here
+
+000. **Fix wave 1023 is built** on `fix/1023-wave` (off `main` `b13eb30a`; branches `fix/1023-bt`, `-fm`, `-sn`
+   merged, unpushed): eight repairs of port defects and of Capcom's JP-build defects the US build fixed, each on
+   by default with a `BOF3X_ORIGINAL` switch - DIV-0161 `BattleDrawSigned` (D336), 0162 `StoreAskWord` (D338),
+   0163 `BattleInitPickClear` (D349), 0164 `SpriteReachWord` (D341), 0165 `MenuSignedXY` (D348), 0166
+   `GeneNameNul` (D351), 0167 `EffectKeyOff` (D337), 0168 `MusicPlayRefusesNone` (D346). Found moot on reading:
+   D335 (every reader takes the low 16 bits, where both machines agree) and D342 (every caller tests 1 or 2).
+   Self-tests `'*'` exit 0; the ten routes against the new `orig4` pairs show only the pre-wave signatures
+   ([`state-hash.md`](state-hash.md) 6). **Owed:** the owner's eye on DIV-0165 (a shop's member box sliding out
+   left keeps its fill); a PR at the owner's word. **Held, each with its reason in its entry:** D350 (the Scena16
+   caption's wait is in the attract demo: measure on the attract run first), D352 (the window reset's full
+   clear: a state-hash comparison first), D343 (the inn night: `shop.txt` with `BOF3X_MUSIC_LOG=1` near recipe
+   frame 2647 to find how the town song returns), D340, D344 (two frames before a save write shift the
+   recipes), D345, D347. **The second twin-diff step** (private notes, a third party's decompilation read):
+   `D:/bof3x-runs/frost/records_audit/REPORT.md` (115 asserted PSX record members, 113 placed, every shift the
+   known drift; naming items N1, N2, N4, N5 for a typing pass) and `D:/bof3x-runs/frost/region_census/REPORT.md`
+   (the 128 US-vs-JP functions: item-record growth, 8-px text, the soft reset, the button swap; **the PC already
+   carries two US fixes** - the shop exit at area 0x5C and the item handback on a cancel - so its source postdates
+   the JP disc's build and "the PC follows the JP" is not to be assumed per function). Brief and groups:
+   `C:\Users\kerok\bof3x-runs\fw1023\`; runs `C:\Users\kerok\bof3x-runs\sh1023`.
 
 00. **The bit-15 round: semi-transparent primitives blend only texels with bit 15** (branch `render/stp-blend`, off
    `main` `9a4cda2e`). **Step 1, the census, is done** ([`stp-census.md`](stp-census.md), `BOF3X_STPCENSUS`): five
@@ -121,10 +141,10 @@ hosted cross form).
    pause and resume, a skipped save message, three empty positional-sound hooks, `Music_Play(0xFF)`, the
    ten-frame fade where the PSX cuts), D34's remove side, D339's longer list, DIV-0030 / 0027 / 0057 / 0092's
    PlayStation lines answered or corrected (`0x8015DDF4` is `SsSepStop`, not a restart), two citations and
-   `region_twin_map.py` fixed (any `PSX 0x...` on a marker's line; a pair matches its own overlay only). Next in
-   that line: the typed-record offsets against the twins' records, and
-   the 128 US functions that differ from the JP by five or more words (the code half `region-diff.md` 4.3 never
-   read). Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
+   `region_twin_map.py` fixed (any `PSX 0x...` on a marker's line; a pair matches its own overlay only). Both next
+   steps (the typed-record offsets and the 128 US-vs-JP functions) ran 2026-10-23 evening (item 000). Left in
+   that line: the 193 mapped PC functions with a matched twin and no marker, and re-running `psx_pair.py
+   propagate` with `us_jp.tsv` as the check. Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
 
 1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
    - **The reading-row round** (item 6a): play of the furigana row, F4, a second language and the Mods tab's
@@ -155,7 +175,7 @@ hosted cross form).
    DIV-0135 alone; masterAndManillo by the glyph set together, not by DIV-0138 or DIV-0140 alone - which one is
    open), and on whelpBoss DIV-0092 with DIV-0143 then one page, `Sound_Banks`' buffer pointers (heap addresses, raw
    dumps at tick 10,000: the `Sound_Channels` class, a skip-list candidate). A few VRAM and sound pages at tick 3
-   came in one run of five and are noise. Scripts and checks: `C:\Users\kerok\bof3x-runs\away1020`. **Stale at the tip since 2026-10-22**: nine routes fail
+   came in one run of five and are noise. Scripts and checks: `C:\Users\kerok\bof3x-runs\away1020`. **Superseded 2026-10-23 by the `orig4` pairs** (item 000). Before that, stale at the tip since 2026-10-22: nine routes fail
    against them at the reading-row round's base tip (with PR #105) and at its end alike (D330); re-record before using them as a gate
    (item 6a).
 
@@ -220,9 +240,8 @@ hosted cross form).
    - **The release gate:** SudachiPy and its dictionary are not bundled (`tools/make_release.py` `NOT_BUNDLED`), so
      a player's `setup` with the furigana mod installed stops loudly until the lexicon lands or the owner decides to
      bundle (about 70 MB). Do not release the mod zip as playable before one of the two.
-   - **Re-record the `orig3` state-hash pairs** at the tip (D330, [`state-hash.md`](state-hash.md) 6): stale for
-     every build since PR #105's recipes and the changes before it; the round's gate was ours against the base
-     tip's runs (`C:\Users\kerok\bof3x-runs\rr_rr\statehash\`).
+   - **The state-hash pairs** (D330): re-recorded 2026-10-23 as `orig4` (item 000); the round's own gate was
+     ours against the base tip's runs (`C:\Users\kerok\bof3x-runs\rr_rr\statehash\`).
    - Not reached: AREA014's scarecrow and AREA150's prompt (no route or save), the faerie village's tutorials (no
      recipe), Japanese over English on a capture; a page whose text rows are all empty draws no readings (none
      seen; a rule is the contract's call, RR's hand-back 6). Hand-backs:
