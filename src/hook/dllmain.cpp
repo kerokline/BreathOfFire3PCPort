@@ -25,6 +25,7 @@
 #include "hook/exe_image.h"
 #include "hook/gapwatch.h"
 #include "hook/draw_order.h"
+#include "hook/stp_census.h"
 #include "hook/host.h"
 #include "hook/inject_all.h"
 #include "hook/input_script.h"
@@ -67,6 +68,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::InputScript_Start();
         bof3::GapWatch_Start(module);   // BOF3X_GAPWATCH: refused here, the exe host's alone (gapwatch.h)
         draw_order::Start();
+        stp_census::Start();
     } else if (reason == DLL_PROCESS_DETACH) {
         bof3::Log("bof3x detaching");
         // Our streams are still open here: ExitProcess detaches this DLL

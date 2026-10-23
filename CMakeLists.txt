@@ -114,6 +114,7 @@ add_library(bof3x SHARED
   src/hook/stallwatch.cpp
   src/hook/snapshot.cpp
   src/hook/draw_order.cpp
+  src/hook/stp_census.cpp
   src/hook/crash.cpp
   src/hook/log.cpp
   src/hook/inject_all.cpp

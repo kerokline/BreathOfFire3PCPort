@@ -12,6 +12,7 @@
 #include "hook/code_bytes.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
+#include "hook/stp_census.h"
 #include "render/render_shim.h"
 
 namespace d3d_list {
@@ -144,6 +145,7 @@ void Dispatch(U p, bool software) {
     if (index > (software ? 0xD0u : 0xD4u)) return;
     const U entry = Entry(index, software);
     if (entry < kHandlers) {
+        if (stp_census::g_on && !software) stp_census::Note(p);   // BOF3X_STPCENSUS, diagnostic only: reads, draws nothing
         (software ? g.soft : g.d3d)[entry](At(p));
         return;
     }
@@ -200,6 +202,7 @@ void Gfx_DrawOTag(unsigned long* ot) {
     }
     const bool software = (Gfx_RenderFlags & 1) != 0;
     if (!software) Scene(0x24);
+    if (stp_census::g_on && !software) stp_census::Frame();
     U node = static_cast<U>(reinterpret_cast<std::uintptr_t>(ot));
     while (Long(node) != 0xFFFFFFFFu) {
         U p = Long(node);
