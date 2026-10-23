@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 158 entries, DIV-0001..0158, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 159 entries, DIV-0001..0159, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -9204,6 +9204,12 @@ designed in rather than bolted on.
   - `'*'` headless, narrow and at `BOF3X_WIDE` 1 and 2.
   - Not seen in play: no recipe reaches Amalgam (area 28) or Mikba, and the
     owner's eye is the measure.
+  - **Amended 2026-10-23:** first reached in play by the owner's route
+    `ropeAndAmalgam.txt` (issue #111): the capture runs (one line, object at
+    (50, 65) into VRAM (0x372, 0x141)), but the melt still drew nothing. A
+    second defect, Capcom's, came after it: a direct-colour page's texels all
+    have alpha 0 and are discarded (D333). DIV-0159 fixes that; with both,
+    the melt plays.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
 
@@ -10140,3 +10146,52 @@ designed in rather than bolted on.
   mismatches, and the whole `BOF3X_SHADOW='*'` run exits 0. Played by the owner
   2026-10-22: "This is brilliant".
 - **Reversible?** Off by default; the Extras box or `text_speed=0`.
+
+### A direct-colour page's texels are opaque but for 0: Amalgam's melt draws
+
+- **ID:** DIV-0159
+- **Date:** 2026-10-23
+- **Subsystem:** the page textures - `Tex_Convert16` (`0x5A9D2F`, ours,
+  `src/game/tex_page.cpp`; [`tex-page.md`](tex-page.md);
+  [`known-defects.md`](known-defects.md) D333, issue #111)
+- **Tier:** Intent - a restoration. A 15-bit texture page on the
+  PlayStation draws every non-zero cell; the code that draws from one (the
+  melt after DIV-0142's capture) plainly expects that.
+- **Original behaviour:** `Tex_Convert16` packs each cell's red, green and
+  blue and never adds `Gfx_PixelFormat`'s opaque bits (dword 7), as
+  `Gfx_ConvertRow` does for palettes. The page format is A1R5G5B5, opaque
+  bits `0x8000` (Capcom's set-up prefers it, and the port's backend makes
+  the same choice), so every texel of a direct-colour page has alpha 0 and
+  the colour-keyed draw discards it. Amalgam's melt draws nothing, and the
+  boss vanishes on the frame of the capture; so do Mikba's death,
+  Weretiger's form and effect kind 0x9D's pulse and glow (D333). Capcom's
+  build, given a filled page, shows the same (D333).
+- **New behaviour:** `Gfx_ConvertRow`'s rule in `Tex_Convert16`: a cell
+  that packs non-zero takes the opaque bits, a non-zero cell that packs to
+  0 becomes 1 plus the opaque bits, and a cell of 0 stays 0, transparent as
+  on the PlayStation. Bit 15 of a cell is still not read (D333's drawers do
+  not need it). Under a format with no opaque bits nothing changes. A
+  texel inside a DIV-0125 grab is the grab's, as before.
+- **Rationale:** a player's report (issue #111) after DIV-0142, and the PSX
+  twin rule: the PlayStation draws these pages.
+- **Also in the PSX version?** The PlayStation draws them; this restores
+  that.
+- **Verification** (2026-10-23, `ropeAndAmalgam.txt`, recipe frames
+  7600..7780, shots every 3):
+  - On: the melt plays - the streaks rise over the boss's skulls and fall
+    away by frame 7714, as on the owner's PSX capture.
+    `BOF3X_ORIGINAL=DirectOpaque`: the boss is gone from the capture's
+    frame, as before.
+  - `BOF3X_SHADOW=tex_page` (the fuzz against Capcom's copy, run before the
+    switch is armed): `Tex_Convert16` 1,000 rounds, the builders 4,000
+    each, no mismatch.
+  - `ending17.txt` (the ending's frozen frame, a direct-colour drawer behind
+    a DIV-0125 grab): all 162 shots identical on and off. With the grab
+    off (`BOF3X_FBGRAB=0`) the frame now shows the font sheets that page
+    holds, read as 15-bit, at its right edge where before it drew nothing;
+    a debugging setting only.
+  - Not seen: Mikba's death, Weretiger and kind 0x9D (no route reaches
+    them). Kind 0x9D's page is not cleared first (D333), so it will draw
+    what that page holds; the owner's look when a route gets there.
+- **Reversible?** `BOF3X_ORIGINAL=DirectOpaque`, or
+  `BOF3X_ORIGINAL=Tex_Convert16`.

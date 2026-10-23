@@ -52,7 +52,10 @@ What the attract sequence reaches (the per-caller counts): only the Direct3D
 path of both builders, only palettized textures - the build's 4-bit and 8-bit
 converter sites `0x5A0427` (44) and `0x5A0400` (63), the refresh's `0x5A07C2`
 (2,198) and `0x5A079F` (1,284). **Neither builder's software path nor any
-direct-colour texture is reached**, so `Tex_Convert16` runs only in the fuzz.
+direct-colour texture is reached**, so `Tex_Convert16` runs only in the fuzz
+there. Later routes reach it: Amalgam's death (`ropeAndAmalgam.txt`), the
+ending's frozen frame (`ending17.txt`) and Depress (`depress.txt`); the last
+two sample a DIV-0125 grab over most of their texels (2026-10-22, issue #111).
 `Dd_CreateTextureSurface` is reached from the build (107), the cell texture
 `0x5A36D5` (94) and the glyph texture `0x5A2DA3` (23); `Dd_InitSurfaceDesc`
 mostly from the glyph builder (6,005 at `0x5A2CEC`).
@@ -161,8 +164,12 @@ there has not been measured (section 8).
   is dropped, and a cell of 0 - transparent on the PSX - is packed like any
   other: unlike `Gfx_ConvertRow`'s palettes, which keep 0 as 0 and force other
   cells opaque (`symbols.toml`), a direct-colour texture has no transparent
-  texel. Not an entry of its own: nothing the attract sequence draws is
-  direct-colour (section 1).
+  texel - under a page format without alpha bits. Under one with them (the
+  port's backend: A1R5G5B5, opaque bits `0x8000`) it is the other way round:
+  no texel has the alpha bit, so a colour-keyed draw discards every one.
+  DIV-0159 (issue #111, D333) gives `Tex_Convert16` `Gfx_ConvertRow`'s rule:
+  0 stays 0, every other cell is opaque. Not an entry of its own: nothing the
+  attract sequence draws is direct-colour (section 1).
 
 The destination is 16 bits a texel, or 32 when `Gfx_PixelFormat` byte `+3`
 (`0x7DED63`) is 4 - read once on entry by all three (`cmp byte [0x7DED63], 4`;
