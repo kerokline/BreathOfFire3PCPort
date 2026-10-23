@@ -153,7 +153,8 @@ U Channel(U raw, U mask) {
     return (v << (8 - bits)) | (v >> (2 * bits > 8 ? 2 * bits - 8 : 0));
 }
 // A pixel as 32-bit A8R8G8B8, whatever the surface's format: alpha 255 unless
-// the surface has an alpha mask and the pixel's is clear.
+// the surface has an alpha mask and the pixel's is clear - and, under
+// DIV-0160, its colour 0 too (alpha clear on a colour is bit 15 set, drawn).
 U ReadPixel(const Surface* s, U x, U y) {
     const unsigned char* row = s->pixels + y * s->pitch;
     U raw;
@@ -164,7 +165,8 @@ U ReadPixel(const Surface* s, U x, U y) {
         std::memcpy(&v, row + x * 2, 2);
         raw = v;
     }
-    const U a = (s->pf_amask && !(raw & s->pf_amask)) ? 0 : 0xFF;
+    const bool blended = StpTexels() && (raw & (s->pf_rmask | s->pf_gmask | s->pf_bmask)) != 0;   // DIV-0160
+    const U a = (s->pf_amask && !(raw & s->pf_amask) && !blended) ? 0 : 0xFF;
     return (a << 24) | (Channel(raw, s->pf_rmask) << 16) | (Channel(raw, s->pf_gmask) << 8) | Channel(raw, s->pf_bmask);
 }
 // The top bits of an 8-bit channel placed under `mask`.
@@ -1048,6 +1050,11 @@ void BuildTables() {
 }  // namespace
 
 // --- the public face --------------------------------------------------------------------
+
+std::uint32_t g_stp_texels = 0;   // DIV-0160; 1 through PatchBytes("StpTexels") in TexPage_Inject
+bool StpTexels() { return g_stp_texels != 0 && g_frame.commands != nullptr; }
+std::uint32_t g_stp_blend = 0;    // DIV-0160 step 3; 1 through PatchBytes("StpBlend") in TexPage_Inject
+bool StpBlend() { return g_stp_blend != 0 && StpTexels(); }
 
 void* DirectDrawObject() {
     BuildTables();

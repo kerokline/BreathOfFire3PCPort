@@ -37,6 +37,7 @@
 #include "hook/crash.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
+#include "hook/stp_census.h"
 #include "hook/exe_icon.h"
 #include "hook/exe_image.h"
 #include "hook/exe_layout.h"
@@ -464,6 +465,7 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     InputScript_Start();
     GapWatch_Start(module);   // BOF3X_GAPWATCH: after the recipe has read its addresses (gapwatch.h)
     draw_order::Start();
+    stp_census::Start();
     SetUnhandledExceptionFilter(Unhandled);
     char* const line = PastProgramName(command_line);
     Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
