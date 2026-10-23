@@ -137,6 +137,11 @@ lines it was proposed for. Two very different things are in that bin:
   会. Entered in `readings.toml`; it applies once the builder has the
   multi-token rule (3.2). The fandom FAQ's "Daimukai" is the other
   on-reading, uncited.
+- **盗人: ぬすっと (decided 2026-10-23).** The setting book's kana index
+  writes the bat monster ぬすっとこうもり; the owner took that reading for
+  the word in speech (12 dialogue lines, all casual; the monster's own name
+  is not in the dialogue blocks, so no reading row ever shows it). A plain
+  rule; measured to reach exactly those 12 placements.
 
 - **賢樹** (21 placements): the builder's たけき is a name reading; the
   agents say けんじゅ. The great tree's reading in this game - the owner
