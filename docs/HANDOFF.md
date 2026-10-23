@@ -1,9 +1,8 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-23: the PlayStation verdict pass and the battle twin-diff on `audit/frost-twins`, then the twin-diff over every other matched target, D340..D347, on `claude/dazzling-dewdney-372847`, local, item 0b; 2026-10-22: `main` is `abf915cc` (PR #105, the recipes regenerated, after #104, the
-wide-ring round); the reading-row round built on `localization/second-script`, its end on `reading-row/end`, PR
-next, nothing pushed)
-
+**Status:** IN PROGRESS (2026-10-23: the PlayStation verdict pass and the battle twin-diff, PR #115, then the twin-diff over every other matched target, D340..D347, PR #116, item 0b; 2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
+to 3 built on `render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
+`reading-row/end`)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -47,6 +46,47 @@ and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the t
 hosted cross form).
 
 ## Pick up here
+
+00. **The bit-15 round: semi-transparent primitives blend only texels with bit 15** (branch `render/stp-blend`, off
+   `main` `9a4cda2e`). **Step 1, the census, is done** ([`stp-census.md`](stp-census.md), `BOF3X_STPCENSUS`): five
+   routes, 123,467 semi-transparent textured draws, 34,858 the PSX would draw opaque - the rope and the page-15 text
+   palettes (CLUTs `7800` / `7807`, additive, on dark backings) and nothing else; **no primitive mixes the two
+   kinds**; modes 0 and 2, every GT4 and every cell sprite unchanged. CLUT row 480 measured on the twin's savestates:
+   bit 15 clear there too, so the text is Capcom's port as the rope is (section 4). Before step 3: census the routes it
+   did not reach (section 5). **Step 2 is built** ([`stp-blend.md`](stp-blend.md), DIV-0160, D334): bit 15
+   rides in the A1R5G5B5 textures as alpha clear on a colour, plus a one-byte plane per GPU texture at `t2`;
+   no pixel changes (73 shots identical on / off), `BOF3X_STPVIEW=1` shows the plane. **Step 3 is built**:
+   dual-source blending draws a blended draw's bit-15 texels with its own factors and the rest opaque
+   (`StpBlend`); the rope at (81, 62, 25) against the twin's (72, 56, 24), the page-15 text in its palette
+   colour, nothing else moved on four routes (`stp-blend.md` 5); D334 fixed. The owner's playthrough
+   confirmed both fixes (2026-10-23); **PR open** from `render/stp-blend`. Left, unscheduled: the census on the
+   routes it did not reach (`stp-census.md` 5). Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
+   `ropeAndAmalgam`), recipe frame ~300, the McNeil rooftop (area 28): the rope over the black sky draws at about a
+   quarter of its PSX brightness (median (20, 16, 6) against the twin's (72, 56, 24)).
+   **Established** (runs in `C:\Users\kerok\bof3x-runs\amalgam_111`, the twin's in `C:\Users\kerok\bof3x-runs\rope_psx`):
+   - The rope is 12 map-cell quads, records at cell (0x27, 0x16..0x21), condition `0x0216`, texture word
+     `0xF360B0DD`, drawn by `MapCell_DrawQuads` `0x570020` (PSX `0x80156ABC`). Both machines draw them as `0x2E`
+     (semi-transparent), colour `0x60`, blend mode 3 (background + a quarter of the texel). Flag `0x16` and the map
+     patch at (0x27, 0x15) come from `Scena02_EnterArea` area 0x1C (`src/game/scena_sc2.cpp`).
+   - The PSX (the sibling's runtime, `gpu_frame_27440.json`): the rope's CLUT (48, 483) entries 1..7 have bit 15
+     clear, so the GPU draws them opaque and the blend never applies.
+   - The PC: `Gfx_ConvertRow` (`0x59EBB0`, `src/game/gfx_clut.cpp`) drops bit 15, and `D3d_SetBlend` (`0x59FCA0`,
+     `src/game/d3d_draw.cpp`) blends the whole primitive. The US PSX disc's data in our engine draws the same dim
+     rope, so the data is not the cause. Capcom's port, then: a DIV, not a data fix.
+
+   **The plan** (agreed with the owner 2026-10-23; a round of its own because it changes every semi-transparent
+   textured draw):
+   1. A census: log every semi-transparent textured primitive whose texels include bit-15-clear ones, over several
+      routes (attract, combat, an effects route, `ropeAndAmalgam`), to size the change before building it.
+   2. Carry bit 15 into the textures: the palette path (`Gfx_ConvertRow`) and the direct-colour path
+      (`Tex_Convert16`, which DIV-0159 / PR #112 makes opaque but for 0). The A1R5G5B5 page format has one alpha
+      bit, already transparency, so this likely wants a 32-bit page format in the backend with three alpha levels
+      (transparent, solid, blended) - `render/render_shim.cpp` `CreateSurface`, `render_d3d11.cpp` `Convert` and the
+      pixel shader.
+   3. Draw by texel: for a semi-transparent textured primitive, bit-15-clear texels opaque, bit-15 texels blended
+      (two passes, or dual-source blending in the D3D11 backend).
+   4. A DIV entry and a switch, the existing fuzzes (`tex_page`, `d3d_draw`, `gfx_clut`), A/B frames on the census
+      routes, then the owner's eye on the rope and a few effects.
 
 0. **The wide-ring round is merged** (PR #104); the owner's play of each change
    ([`owner-review.md`](owner-review.md) 2026-10-21: the ring at a pulled-out camera and a quickload across widths;
@@ -322,7 +362,13 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **Nothing.** The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
+- **PR #112 merged** 2026-10-23 (`main` `147c6ae1`; branch `111-amalgam-death`, issue #111): D333 / DIV-0159, a direct-colour page's texels opaque
+  but for 0, so Amalgam's melt draws; the owner's `ropeAndAmalgam.txt` route. Its runs:
+  `C:\Users\kerok\bof3x-runs\amalgam_111` (also the A/B/C root `C:\Users\kerok\bof3x-runs\abc111`, set `us`, built
+  with the discs at `D:\bof3x-runs\discs` through a scratch copy of `abc-installs.toml`) and Capcom's-code runs in
+  `C:\Users\kerok\bof3x-runs\amalgam_111_orig`.
+- **`render/stp-blend`** (rebased onto `main` `147c6ae1` after PR #112 merged): item 00, steps 1 to 3 built and played, PR open; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
+- The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
   scratch) and deleted 145 local and 65 `origin` branches; each was classified merged with `git cherry` first, not an
   ancestry check (Traps). `main` is the only branch, local and remote.
 - **Scratch kept, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and
@@ -353,6 +399,13 @@ Local only, gitignored, worth keeping:
 ## Traps already paid for
 
 _One line each, with a pointer. Add when something costs more than an hour._
+
+- **A scratch copy of a recipe loses its save** (2026-10-23): `recipe_shots.py` output made from a recipe with no
+  `# save` header loads whatever slot 0 holds; `input_run` says `slot 0: left alone` in its first line. A rope
+  measurement ran an hour in the owner's whelpBoss area before it was caught. Check that line, or pass `--save`.
+- **The release launcher refuses the A/B switches** (2026-10-23): `BOF3X_ORIGINAL` / `BOF3X_SHADOW` want
+  `bof3x-launcher-dev.exe` **and** `--host bof3`; with the release launcher it shows a modal dialog on the owner's
+  screen and the run waits.
 
 - **A recorded route splits pages under a reading-row layer** (2026-10-22, D329): every page the builder splits adds
   a confirm press, so a route recorded without the layer desyncs at the first one (`dolphinBoss.txt` under

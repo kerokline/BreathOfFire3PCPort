@@ -242,6 +242,19 @@ struct GpuCellSprite {
     std::uint16_t flags;  // +0x1E the colour's and the blend's tpage; bit 0x400 flips x
 };
 
+// A cell of a cell sprite, 8 bytes, at SpriteCell_Table + index * 8
+// (SpriteCell_Add, sprite-draw-order.md 14; D3d_BuildCellTexture's loop,
+// tex_cells.cpp DrawCells): its place in the composed texture, its size, and
+// where its texels lie in VRAM.
+struct SpriteCell {
+    std::int16_t x;  // +0x00 left, from the composed texture's centre
+    std::int8_t y;  // +0x02 top
+    std::uint8_t size;  // +0x03 w = low nibble * 8, h = high nibble * 8
+    std::uint16_t tpage;  // +0x04 bits 0..3 the page column, 4 the row, 7..8 the colour mode (0 4-bit), 9 mirrored
+    std::uint8_t u;  // +0x06 in texels
+    std::uint8_t v;  // +0x07
+};
+
 // The draw-mode packet, code 0xE8 (Gpu_SetDrawMode, psx_gpu.cpp:
 // 0xE8000000 | tpage at +4, dfe / dtd in bits 0 / 1 of +6, the texture
 // window +8; the walk's case 21, d3d-draw.md 2). Its head is a word and a
@@ -439,6 +452,14 @@ static_assert(offsetof(GpuCellSprite, count) == 0x1A, "GpuCellSprite::count");
 static_assert(offsetof(GpuCellSprite, clut) == 0x1C, "GpuCellSprite::clut");
 static_assert(offsetof(GpuCellSprite, flags) == 0x1E, "GpuCellSprite::flags");
 static_assert(sizeof(GpuCellSprite) == 0x20, "GpuCellSprite stride");
+
+static_assert(offsetof(SpriteCell, x) == 0x0, "SpriteCell::x");
+static_assert(offsetof(SpriteCell, y) == 0x2, "SpriteCell::y");
+static_assert(offsetof(SpriteCell, size) == 0x3, "SpriteCell::size");
+static_assert(offsetof(SpriteCell, tpage) == 0x4, "SpriteCell::tpage");
+static_assert(offsetof(SpriteCell, u) == 0x6, "SpriteCell::u");
+static_assert(offsetof(SpriteCell, v) == 0x7, "SpriteCell::v");
+static_assert(sizeof(SpriteCell) == 8, "SpriteCell stride");
 
 static_assert(offsetof(GpuDrawMode, link) == 0x0, "GpuDrawMode::link");
 static_assert(offsetof(GpuDrawMode, tpage) == 0x4, "GpuDrawMode::tpage");
