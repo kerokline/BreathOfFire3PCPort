@@ -15,7 +15,7 @@ effects and fades.** Four entries name it:
 
 | Defect | Where | The PlayStation | The PC |
 |---|---|---|---|
-| D343 | the inn night, `InnNight_*` `0x57FBE0..0x57FCB0` | pauses the four SEP slots as the fade starts and replays them, at their position, after the restore's message | plays the jingle over the area's released stream; the song comes back by a path not yet read |
+| D343 | the inn night, `InnNight_*` `0x57FBE0..0x57FCB0` | pauses the four SEP slots as the fade starts and replays them, at their position, after the restore's message | plays the jingle over the area's released stream and the song never returns: `Music_Track` still names it, so every later `Music_Play` of it is a no-op (measured by IN to `shop.txt`'s end) |
 | D345 | three hooks: movement op `B8`, `Sprite_QueueOverlay`'s bit-3 update, `Sound_PlayById` | a sequence stopped / set / replayed; a voice's volume and pan by the sprite's position; a level table and a distance-gated repeat | a bare `ret`, a bare `ret`, `Sound_PlayEffect(arg0)` |
 | D347 | every `Music_FadeOutStop(0xA)` whose twin is `SsSepStop` | cuts | fades ten frames, then stops |
 | D337 | `BattleAction_EffectPreload`'s key-off | releases voices 16..23 | DIV-0167 stops the loops; a one-shot plays on |
