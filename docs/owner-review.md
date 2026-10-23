@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-22, the reading-row round's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-23, the battle twin-diff's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,29 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-23, the battle twin-diff against the PlayStation
+
+377 battle takeovers read beside the US PlayStation's matched twins
+(`known-defects.md` D335..D339): 353 the same, 11 differences the ledger
+already names, 6 the port's. Three want the owner's word; none is built.
+
+- **D335, the scaled damage's width.** The PlayStation keeps a signed 16-bit
+  scaled damage (`sll 8; sra 16`); the port answers the full value, and the
+  caller narrows it later. They part only when a raw scaled hit reaches
+  32,768 before the 9,999 cap. The owner's call: is that reachable (a Kaiser
+  or late-game hit), and if so should ours take the PlayStation's wrap
+  (a restoration) or the port's full value? Nothing to see at the machine
+  until a hit that large is found.
+- **D337, the effect preload's voice cut.** The PlayStation keys off voices
+  16..23 as an action's effect starts to load; the port does not. Listen
+  for: a long sound of one action (a spell's tail) still playing under the
+  next action's effect. If heard, a cut at `BattleAction_EffectPreload`
+  `0x42FD20` is a restoration for the ledger.
+- **The grown command icons' texture column** (`0x4434C0`): 32 pixels apart
+  on the port, 24 on both PlayStation discs. Not a defect if the port's own
+  icon page is laid out 32 apart; one look at the icons in a dragon fight
+  settles it (every icon the right picture, none cut).
 
 ## 2026-10-22, the reading-row round (built)
 

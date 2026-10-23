@@ -244,10 +244,14 @@ designed in rather than bolted on.
   `0x5A7420` reporting a failed `fopen` as success (since fixed, DIV-0003), and
   `Save_ListFiles` not bounding its table at 16 — a separate entry when it is
   touched.
-- **Also in the PSX version?** Unknown. The listing and the per-slot files are
-  porting-house code — the PlayStation reads the memory card's directory —
-  so a port bug is the likelier reading, but nobody has checked whether the
-  PSX menu refreshes after a write. Sibling-side question.
+- **Also in the PSX version?** No - the port's (read 2026-10-23). The
+  PlayStation lists the card's directory with `firstfile` / `nextfile` at its
+  card check (US `START.EMI#9` `0x801EFCA8`, called from `SHOP.EMI#0`
+  `0x801D6F00` whenever the card status is 0) and, when it builds a save,
+  writes the new slot's summary into its slot table and grows the count (US
+  `0x801D69E0` -> `0x801D6CE4`), so a new save shows at once. The stale
+  `Save_Directory` and the per-slot files are porting-house code. Not traced:
+  which state of the save screen runs the card check on each opening.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Save_WriteFile` runs Capcom's function
   instead ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle; there is
   no config system yet.
@@ -1186,10 +1190,13 @@ designed in rather than bolted on.
 - **Not covered:** an indexed read of `+0x12`, or a dword read at `+0x10`
   whose top half is used, in code the attract run does not reach. None was
   looked for beyond the GTE's own globals.
-- **Also in the PSX version?** Unknown; not looked up. libgte's `MulMatrix0`
-  by its documented shape stores nine halfwords and leaves the padding
-  alone, which would make both the 2001 port's stale word and our zero
-  divergences from it.
+- **Also in the PSX version?** No - the port's (read 2026-10-23). The
+  PlayStation's product is libgte `MulMatrix2` (JP `0x80179630`, US
+  `0x80178CB8`, in place), and its last store is `swc2 $11, 0x10($a1)`: a word
+  of GTE register IR3, whose upper half is element [2][2]'s sign extension. So
+  bytes 18..19 are `0000`, or `FFFF` when m[2][2] < 0 - deterministic, never
+  stale stack. Ours agrees whenever m[2][2] >= 0. (The libgte guess above,
+  nine halfwords and the padding left alone, is not what this binary does.)
 - **Verification:** start-up fuzz against the original, 29,856 rounds, 0
   mismatches outside the padding and ours zero in it every time
   ([`psx-library-layer.md`](psx-library-layer.md) §4.1); a 3-minute oracle
@@ -1284,7 +1291,14 @@ designed in rather than bolted on.
   match the matrix product.
 - **Not covered:** a read of those halves by code outside the image (none
   exists in ours).
-- **Also in the PSX version?** Unknown; not looked up.
+- **Also in the PSX version?** Yes, in the source (read 2026-10-23). The
+  twins (US `0x80156000` for `MapCell_DrawQuads`, `0x8015707C`, `0x80157358`;
+  JP `0x8015B394` for `Sprite_ProjectA`) write vx, vy and vz and never the
+  pad: JP `0x80156ABC` stores `0x10`, `0x12`, `0x14($sp)` and loads the vector
+  with `lwc2 $0` / `lwc2 $1` with `0x16($sp)` unwritten. On the hardware the
+  GTE's VZ register is 16 bits wide and drops the pad, so only the PC's
+  dword-wide register image receives it. `MapCell_DrawFrames` and
+  `Mode11_ObjectDraw` not read.
 - **Verification:** start-up fuzz against the original's whole call tree,
   `BOF3X_SHADOW=map_cells`: 24,000 rounds, 0 mismatches outside the padding,
   which differed 16,740 times with ours zero every time
@@ -1336,9 +1350,12 @@ designed in rather than bolted on.
   0 and 1.
 - **Not covered:** a sub-state set to 4 or more by code outside the two
   functions - unmeasured in game.
-- **Also in the PSX version?** Unknown: the pairing names `0x801A459C` /
-  `0x801A47DC` as the twins, but the sibling's Ghidra output has no function
-  there and neither body was read (object-kinds.md section 1).
+- **Also in the PSX version?** Yes - Capcom's (read 2026-10-23). JP
+  `0x801A459C` / `0x801A47DC` (US `0x801A3594` / `0x801A37D4`, GAME.EMI#0)
+  index two adjacent two-entry tables (JP `0x801C942C`, `0x801C9434`) by `+4`
+  with no bound, and their cases set `+4` only to 0 and 1, as the PC's do.
+  Past the tables the PlayStation reaches a data word (`0x12131011`), not
+  another function's cases.
 - **Verification:** the start-up fuzz, `BOF3X_SHADOW=object_kinds`, seeds
   sub-states 0..3 only; controls in object-kinds.md.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Field_ObjectFadeOut,Field_ObjectFadeIn`.
@@ -4355,8 +4372,11 @@ designed in rather than bolted on.
 - **Rationale:** the owner, 2026-09-30, from the equip window in a fight:
   "str shows up next to defense, def next to intelligence". A label
   belongs to its own value; the field's panel shows where Capcom put it.
-- **Also in the PSX version?** Not read: `0x59D640` has no PSX twin in
-  the pairs, and the sibling has no name for the battle equip window.
+- **Also in the PSX version?** No - the port's (read 2026-10-23). The
+  PlayStation's equip window (JP `0x800B025C`, US `0x800B3324`, BATTLE.EMI#15)
+  draws the four labels in a loop at `y + 0x1A + 13 k` (`addiu $s0, $s2,
+  0x1a`), beside their own values at `y + 0x1C + 13 k`; the PC's `0x27` is the
+  port's slip, and ours now does what the PlayStation does.
 - **Verification:** `BOF3X_SHADOW='*'` headless: 0 mismatches (the flag is
   set after the fuzz). Live: the recipe above on ours, English, frames 540
   and 720 - `Pwr Def Int Agl` each beside its value, the fourth inside the
@@ -4463,8 +4483,13 @@ designed in rather than bolted on.
   (`EffectKind64_DrawSpark` `0x4820C0`, `EffectKind68_DrawMote` `0x481CC0`,
   read 2026-10-03): a flat disc at the point's depth, which a zero (a divide
   by zero in the renderer) would not be.
-- **Also in the PSX version?** Not read: `0x481740` has no PSX twin in the
-  pairs.
+- **Also in the PSX version?** No - the port's (read 2026-10-23). The
+  PlayStation's glow is JP `0x801F46EC` in AREA098.EMI#13 (the function before
+  the mote's twin `0x801F4BC0`; found by its shape - draw mode `0x2C0` /
+  `0x100`, 32 `POLY_G3`s with a black rim). Its packets carry screen x and y
+  only, ordered by the OT slot, and every word is written, the rim's from
+  locals set before the loop. The stale rim depth exists only in the port's
+  depth-carrying vertex format.
 - **Verification:** `BOF3X_SHADOW=effect_3a` headless: the fuzz compares
   every byte of the packet but those two dwords of the glow's triangles
   (its `Gfx_CommitPrim` stand-in copies `+0x10` over them on both sides
@@ -4928,8 +4953,12 @@ designed in rather than bolted on.
 - **Rationale:** a stack word the function never writes cannot be
   reproduced, only replaced (DIV-0023's and DIV-0068's class). x0 is the
   base the near corners already use and the only x the function computes.
-- **Also in the PSX version?** Not read; the pairs give `0x801F38F0`, an
-  AREA overlay copy.
+- **Also in the PSX version?** No - the port's (read 2026-10-23). The twin is
+  JP `0x801F39BC` in AREA167.EMI#13 (the pairs' `0x801F38F0` is the function
+  before it; found by the one window on the disc holding `0x4EC0`, `0x3FC0`,
+  `0xB00`, `0x95` and `0xA00`). It keeps x0 in a written local (`sw $v0,
+  0x30($sp)`) and puts v0 / v2 at `x0 + 0xA00 k - b`, v1 / v3 at `x0 + 0xA00 k
+  + b`, as ours now does.
 - **Verification:** `BOF3X_SHADOW=effect_5f` headless: the fuzz levels
   those x words on both sides and compares every other byte, 0 mismatches
   ([`effect_5f.md`](effect_5f.md) sections 4 and 7). Not seen live: no
@@ -4959,8 +4988,13 @@ designed in rather than bolted on.
   `Gte_NormalColor`, whose result the port throws away (the colour in is
   copied over it, `src/game/psx_gte_transform.cpp`), so nothing drawn or
   decided depends on the bytes; zero is the value that says so.
-- **Also in the PSX version?** Not read; the cut pairs the screen's rows
-  with the SHISU overlay.
+- **Also in the PSX version?** Yes - Capcom's (read 2026-10-23). The
+  PlayStation twin (JP `0x801D2308`, SHISU.EMI#0) also hands `SetLightMatrix`
+  (JP `0x80179980`, five words into the GTE) a stack matrix at `0x78($sp)` of
+  which the direction routine (JP `0x8015BC9C`, US `0x8015B2AC`) writes three
+  shorts, so rows 2..3 are stale there too; it loads 20 bytes, not 32, and the
+  hardware's `NormalColorCol` (JP `0x80179B54`) then reads all three rows.
+  Whether the colour matrix cancels the stale rows was not read.
 - **Verification:** `BOF3X_SHADOW=rest_2b` headless: the fuzz compares the
   matrix's first row and levels the rest, 0 mismatches
   ([`rest_2b.md`](rest_2b.md) section 7, L1). Not seen live: no recorded
@@ -5005,7 +5039,13 @@ designed in rather than bolted on.
   Capcom's defect and is kept: a bound on the list would change which enemy
   is picked in fights the original plays deterministically, and that is the
   owner's to ask for, not this entry's.
-- **Also in the PSX version?** Not read.
+- **Also in the PSX version?** No (read 2026-10-23): the PlayStation keeps the
+  list in eight bytes, so eight standing enemies never overflow it - US
+  `BATTLE.EMI#15` `0x800A955C`, JP `0x800A64BC`, every masked instruction
+  word identical. The four-byte list is the port's; the overflow is the
+  port's defect, not Capcom's PlayStation one. (The same read found the
+  member picker's and the enemy picker's twins cited swapped in
+  `rest_4a.cpp`; corrected the same day.)
 - **Verification:** `BOF3X_SHADOW=rest_4a` headless: the fuzz's
   `Battle_ActorIsOut` stand-in zeroes those bytes on the original's side
   and every answer is compared, 0 mismatches; control C6 (one of the bytes
@@ -5078,9 +5118,12 @@ designed in rather than bolted on.
 - **Rationale:** the owner's decision, 2026-10-05: "always pull the name and
   level of Ryu's character" - record 0 is the character the game's level
   field already describes, so the name follows it rather than the other way.
-- **Also in the PSX version?** Not read: the PlayStation's save summary is a
-  different structure ([`save-interchange.md`](save-interchange.md)); whether
-  its block builder mixes the two is not established.
+- **Also in the PSX version?** No - the port's (read 2026-10-23). The
+  PlayStation's builder (JP `0x801D69F0`, US `0x801D69E0`, SHOP.EMI#0) copies
+  the name from record 0 (`strncpy` of 5 from `0x801448D4 + 0x90`, the
+  character records' base) and the level from the same record (`lbu 6($s3)`):
+  one character, whoever leads, with no leader lookup and no second copy. The
+  leader-indexed name is the port's; ours now does what the PlayStation does.
 - **Verification:** `BOF3X_SHADOW=rest_2c` headless compares Capcom's
   `Save_BuildBlock` with the switch off (the switch is set after the
   self-test, as DIV-0075's), 0 mismatches. **Seen live by the owner,

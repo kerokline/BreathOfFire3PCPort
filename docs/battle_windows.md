@@ -69,7 +69,7 @@ three window-kind handlers `0x597A80`, `0x597BD0`, `0x597C10` that
 
 **PSX twins read:** `0x4434C0` against `0x801D7CE0` (the same seven CLUT
 bytes 8 9 8 9 8 8 8, copied there from `0x801D0C64`, indexed by `a0 & 0xFF`
-without a bound, u = k << 5 .. + 0x18, v 0xE0 .. 0xF8); `0x441180` against
+without a bound, v 0xE0 .. 0xF8 - but u = k * 0x18 there against the PC's k << 5: the port laid its icon page out 32 apart, read again 2026-10-23 against the US and JP words, both x24); `0x441180` against
 `0x801DEDA0` (the same gate, fields +0x80 / +0x128 there); `0x4411E0`
 against `0x801DEE70` (the same table jump, `jalr` through `0x801EB094`);
 `0x4412B0`'s first block against `0x801DEFA0` (the same kind-5 test, the same
