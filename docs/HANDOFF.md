@@ -49,7 +49,12 @@ hosted cross form).
 ## Pick up here
 
 00. **The bit-15 round: semi-transparent primitives blend only texels with bit 15** (branch `render/stp-blend`, off
-   `main` `9a4cda2e`, nothing built yet). Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
+   `main` `9a4cda2e`). **Step 1, the census, is done** ([`stp-census.md`](stp-census.md), `BOF3X_STPCENSUS`): five
+   routes, 123,467 semi-transparent textured draws, 34,858 the PSX would draw opaque - the rope and the page-15 text
+   palettes (CLUTs `7800` / `7807`, additive, on dark backings) and nothing else; **no primitive mixes the two
+   kinds**; modes 0 and 2, every GT4 and every cell sprite unchanged. CLUT row 480 measured on the twin's savestates:
+   bit 15 clear there too, so the text is Capcom's port as the rope is (section 4). Before step 3: census the routes it
+   did not reach (section 5). Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
    `ropeAndAmalgam`), recipe frame ~300, the McNeil rooftop (area 28): the rope over the black sky draws at about a
    quarter of its PSX brightness (median (20, 16, 6) against the twin's (72, 56, 24)).
    **Established** (runs in `C:\Users\kerok\bof3x-runs\amalgam_111`, the twin's in `C:\Users\kerok\bof3x-runs\rope_psx`):
@@ -329,7 +334,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   `C:\Users\kerok\bof3x-runs\amalgam_111` (also the A/B/C root `C:\Users\kerok\bof3x-runs\abc111`, set `us`, built
   with the discs at `D:\bof3x-runs\discs` through a scratch copy of `abc-installs.toml`) and Capcom's-code runs in
   `C:\Users\kerok\bof3x-runs\amalgam_111_orig`.
-- **`render/stp-blend`**: item 00, nothing on it yet.
+- **`render/stp-blend`**: item 00, step 1 (the census) built and run; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
 - The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
   scratch) and deleted 145 local and 65 `origin` branches; each was classified merged with `git cherry` first, not an
   ancestry check (Traps). `main` is the only branch, local and remote.
