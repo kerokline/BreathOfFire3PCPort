@@ -10226,7 +10226,8 @@ designed in rather than bolted on.
 - **Verification** (2026-10-23, [`stp-blend.md`](stp-blend.md) 4): the `gfx_clut` self-test checks the rule
   against Capcom's copy (74,752 bit-15 cells, 0 mismatches) and `BOF3X_SHADOW='*'` passes; 73 shots over
   four routes are pixel-identical on and off; `BOF3X_STPVIEW` leaves the rope unmarked and marks the melt,
-  the shadows and the windows' backings.
+  the shadows and the windows' backings. The owner's playthrough the same day confirmed the rope and the
+  text.
 - **Reversible?** `BOF3X_ORIGINAL=StpBlend` draws as Capcom's port (the textures still carry the bit; the
   frames are then identical to step 2's); `BOF3X_ORIGINAL=StpTexels` turns both off. Armed after the start-up fuzzes, only with DIV-0159
   (`DirectOpaque`: without it a direct-colour texel has alpha clear on a colour, which this reads as drawn),

@@ -1,9 +1,8 @@
 # The bit-15 round: semi-transparent primitives blend only the texels with bit 15
 
-**Status:** IN PROGRESS (2026-10-23: step 1, the census, done ([`stp-census.md`](stp-census.md)); step 2, bit 15
-carried into the textures, built as DIV-0160, no pixel changed; step 3, the draw by texel, built and verified
-(sections 3 and 5). Left: the owner's eye on the rope and some effects in play, and the census on the routes it
-did not reach). Branch `render/stp-blend`. The defect is [`known-defects.md`](known-defects.md) D334.
+**Status:** STABLE (2026-10-23: step 1, the census, done ([`stp-census.md`](stp-census.md)); step 2, bit 15
+carried into the textures, built as DIV-0160, no pixel changed; step 3, the draw by texel, built, verified
+(sections 3 and 5) and played by the owner. Left, unscheduled: the census on the routes it did not reach). Branch `render/stp-blend`. The defect is [`known-defects.md`](known-defects.md) D334.
 
 ## 1. What the round restores
 
@@ -148,7 +147,8 @@ Root `C:\Users\kerok\bof3x-runs\stp_census` (`s3*.sh`, `ab_<route>_s3*`); the fi
   rounding). The first build's hard sprite edges (section 3) are gone.
 - **Self-tests:** `BOF3X_SHADOW=gfx_clut,tex_page,d3d_draw` headless, exit 0, `StpTexels` and `StpBlend` ON.
 - **The owner** (2026-10-23, watching the runs): saw the first build's flicker, which section 3 explains and
-  the fix removed; on the fixed build, the text "looks much closer to original now to my eye".
+  the fix removed; on the fixed build, the text "looks much closer to original now to my eye". Then a quick
+  playthrough of the committed branch: "confirmed both the fixes" (the rope and the text).
 
 Not reached: the census's missing routes ([`stp-census.md`](stp-census.md) 5); a draw with a D3DBLEND pair other
 than Capcom's four; a grab draw's bit 15 on the PlayStation.

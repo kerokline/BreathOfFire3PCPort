@@ -59,8 +59,9 @@ hosted cross form).
    no pixel changes (73 shots identical on / off), `BOF3X_STPVIEW=1` shows the plane. **Step 3 is built**:
    dual-source blending draws a blended draw's bit-15 texels with its own factors and the rest opaque
    (`StpBlend`); the rope at (81, 62, 25) against the twin's (72, 56, 24), the page-15 text in its palette
-   colour, nothing else moved on four routes (`stp-blend.md` 5); D334 fixed. **Left:** the owner's play
-   (owner-review 2026-10-23), the census on the routes it did not reach, then a PR. Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
+   colour, nothing else moved on four routes (`stp-blend.md` 5); D334 fixed. The owner's playthrough
+   confirmed both fixes (2026-10-23); **PR open** from `render/stp-blend`. Left, unscheduled: the census on the
+   routes it did not reach (`stp-census.md` 5). Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
    `ropeAndAmalgam`), recipe frame ~300, the McNeil rooftop (area 28): the rope over the black sky draws at about a
    quarter of its PSX brightness (median (20, 16, 6) against the twin's (72, 56, 24)).
    **Established** (runs in `C:\Users\kerok\bof3x-runs\amalgam_111`, the twin's in `C:\Users\kerok\bof3x-runs\rope_psx`):
@@ -340,7 +341,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   `C:\Users\kerok\bof3x-runs\amalgam_111` (also the A/B/C root `C:\Users\kerok\bof3x-runs\abc111`, set `us`, built
   with the discs at `D:\bof3x-runs\discs` through a scratch copy of `abc-installs.toml`) and Capcom's-code runs in
   `C:\Users\kerok\bof3x-runs\amalgam_111_orig`.
-- **`render/stp-blend`** (rebased onto `main` `147c6ae1` after PR #112 merged): item 00, steps 1 to 3 built; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
+- **`render/stp-blend`** (rebased onto `main` `147c6ae1` after PR #112 merged): item 00, steps 1 to 3 built and played, PR open; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
 - The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
   scratch) and deleted 145 local and 65 `origin` branches; each was classified merged with `git cherry` first, not an
   ancestry check (Traps). `main` is the only branch, local and remote.
