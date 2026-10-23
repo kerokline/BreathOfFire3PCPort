@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
+**Status:** IN PROGRESS (2026-10-23: the PlayStation verdict pass and the battle twin-diff, PR #115, item 0b; 2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
 to 3 built on `render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
 `reading-row/end`)
 
@@ -106,6 +106,20 @@ hosted cross form).
    struct; build before calling anything done. A new typing pass builds its own baseline worktree (the old ones were
    removed 2026-10-21). Stage C's scratch: `C:\Users\kerok\bof3x-runs\c_typed` (the coordinator's log `RESUME.md`,
    the briefs, the audit reports `audit\`); stages A and B's scratch is deleted.
+
+0b. **The PlayStation verdict pass and the battle twin-diff** (2026-10-23, `audit/frost-twins`, headless, local):
+   `tools/region_twin_map.py` maps the US disc's function starts onto the JP overlays by masked instruction words
+   (4,131 of 4,397 exact) and onto the PC through our `(PSX 0x...)` citations and the propagated pairs;
+   `tools/twin_bundles.py` puts a takeover beside its twin for reading. With it: every ledger line that said
+   Unknown or Not read is answered (seven the port's, three Capcom's), the 21 known-defects left for the owner
+   carry a **PlayStation** paragraph (D102 / D103's reach, D187's count, D221's tag and one D238 item the
+   port's), and 377 battle takeovers read beside their twins gave D335..D339 (the scaled damage's width, two
+   unsigned coordinate reads, the effect preload's missing voice cut, a dword read, four wrong propagated pairs)
+   and the owner's three calls ([`owner-review.md`](owner-review.md) 2026-10-23). The dragon AP drain's halving
+   is confirmed on the PlayStation. Next in that line: the same read over game/00, start, shop, area030 and the
+   boot exe (about 30 agent-reads of 65 functions), the typed-record offsets against the twins' records, and
+   the 128 US functions that differ from the JP by five or more words (the code half `region-diff.md` 4.3 never
+   read). Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
 
 1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
    - **The reading-row round** (item 6a): play of the furigana row, F4, a second language and the Mods tab's

@@ -80,8 +80,9 @@ however the compares are spelt.
 | Question | Twin | Verdict |
 |---|---|---|
 | `FieldMenu_CampAllowedCell` `0x589FB0` masks the cell before comparing with `0xA1`, `0xAF`, `0x91`, so `0x91` cells (bridges, a harbour: 91 cells on nine world maps) allow the camp | `0x801D21C4`, START / STATUS.EMI, called from `0x801D1B94` beside the camp flag `0x80145046` | **Capcom's**: `andi 0xF0` first, then the three tests on the masked byte ([`rest_2d.md`](rest_2d.md) L1) |
+| 2026-10-23, in one batch: the ten ledger entries whose line said Unknown or Not read (DIV-0002, 0021, 0023, 0024, 0065, 0068, 0072, 0073, 0074, 0076) and the 21 known-defects left for the owner (D43, D51, D67, D87, D99, D102, D103, D129, D166, D167, D168, D181, D184, D187, D194, D203, D221, D222, D224, D225, D238) | found through `tools/region_twin_map.py` (the US function starts mapped onto the JP overlays by masked words, then onto the PC through our citations and the propagated pairs) where the overlay was in its targets, else by section 1's method in the JP overlays | ten DIV lines: seven the port's, three Capcom's; the defects: fifteen Capcom's outright, D102 / D103's reach, D187's count, D221's session-long tag and one D238 item the port's; each entry carries a **PlayStation** paragraph. The battle twin-diff that followed (377 takeovers against their twins): `known-defects.md` D335..D339 |
 
-Open and suited to it: debt 3's `PartyAction_WaitEffectDone` reading inside
+Open and suited to it (the 2026-10-23 batch took DIV-0076 and every "for the owner" entry of rounds nine to thirteen): debt 3's `PartyAction_WaitEffectDone` reading inside
 `Gfx_PacketPools` ([`rest_1d.md`](rest_1d.md) L1); DIV-0076's "Also in the
 PSX version?" (the save summary's name against its level); PH's question
 whether FT3 / GT3 share the sprite handlers' far-edge slip

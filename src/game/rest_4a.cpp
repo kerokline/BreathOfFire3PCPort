@@ -136,7 +136,7 @@ extern "C" unsigned char __cdecl Battle_AutoTargetCheck(unsigned actor) {
     return 0;
 }
 
-// original 0x452EB0 (PSX 0x800A64BC, call-anchored): of members 0..2, those
+// original 0x452EB0 (PSX 0x800A6408, call-anchored; the two twins were cited swapped until 2026-10-23): of members 0..2, those
 // Battle_ActorIsOut rules in, the one at Rand() % their count. The count is
 // not tested (0 divides by zero: ours aborts); the CRT's Rand is 0..0x7FFF
 // (a negative answer would read below the list: ours aborts).
@@ -152,7 +152,7 @@ extern "C" unsigned char __cdecl Battle_RandomLiveMember(void) {
     return list[k];
 }
 
-// original 0x452F10 (PSX 0x800A6408, call-anchored): of enemies 3..10, those
+// original 0x452F10 (PSX 0x800A64BC, call-anchored; the two twins were cited swapped until 2026-10-23): of enemies 3..10, those
 // Battle_ActorIsOut rules in, the one at Rand() % their count - in a list of
 // four bytes. The original keeps the list at esp + 4 of its frame, the count
 // in the dword after it and the loop byte in the dword after that, so a fifth
