@@ -16091,12 +16091,13 @@ evidence = "disasm 2026-09-25, 0x4337F0..0x433809 (0x1A bytes), cdecl: a 1-entry
 [[func]]
 pc = 0x433810
 name = "BattleFx_FollowOwner"
-psx = 0x800A5360
+psx = 0x801E722C
+psx_overlay = "BATTLE.EMI#3"
 ret = "void"
 params = "void"
 impl = "src/game/battle_fx_tasks.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x433810..0x433969 (0x15A bytes), cdecl: from dword 0x93B940 to Sprite_Current, both re-read for each: +0 or 0x20, +0x48, dwords +0x40 +0x44, words +0x58 +0x5A, +0x4B +0x4A +0x49, dwords +0x4C +0x50 +0x54, +0x27 +0x28 +0x2A, dwords +0x34 +0x38 +0x3C; Sprite_UpdateScreen; call BattleTask_FreeCurrent when the owner's bit 0 is clear; `jmp BattleTask_FreeCurrent` when byte 0x904AA0 is not 1. State 0 of BattleFx_Follow (immediate at 0x4337FD). PSX twin by the catalogue's pairing (not read). Combat route: jumped to."
+evidence = "disasm 2026-09-25, 0x433810..0x433969 (0x15A bytes), cdecl: from dword 0x93B940 to Sprite_Current, both re-read for each: +0 or 0x20, +0x48, dwords +0x40 +0x44, words +0x58 +0x5A, +0x4B +0x4A +0x49, dwords +0x4C +0x50 +0x54, +0x27 +0x28 +0x2A, dwords +0x34 +0x38 +0x3C; Sprite_UpdateScreen; call BattleTask_FreeCurrent when the owner's bit 0 is clear; `jmp BattleTask_FreeCurrent` when byte 0x904AA0 is not 1. State 0 of BattleFx_Follow (immediate at 0x4337FD). PSX twin JP 0x801E722C (BATTLE.EMI#3), read 2026-10-23: the same copies in the same order; the pairing's 0x800A5360 is not it (docs/twin-pairs-check.md). Combat route: jumped to."
 
 [[func]]
 pc = 0x437720
@@ -20232,12 +20233,12 @@ evidence = "disasm 2026-09-25, 0x571A30..0x571A6E (0x3F bytes), cdecl, no calls:
 [[func]]
 pc = 0x571A70
 name = "AreaMap_SetupTexture"
-psx = 0x80158EE4
+psx = 0x80158EBC
 ret = "void"
 params = "const unsigned char *entry"
 impl = "src/game/map_field_objects.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x571A70..0x571AE0 (0x71 bytes), cdecl, no calls: AreaMap_SetupHandlers entry 2. Dword +4 (Cond_ByteFF set) or +8 into the area's texture run at dword (height * width + 1) / 2 (cdq; sar) + offset + tile of AreaMap_Header, tile the header word (byte 0 * width + byte 1 + offset * 2) of dword +0 - MapView_CellTextures' address. PSX FUN_80158EE4 (gap4 pair). World-map route."
+evidence = "disasm 2026-09-25, 0x571A70..0x571AE0 (0x71 bytes), cdecl, no calls: AreaMap_SetupHandlers entry 2. Dword +4 (Cond_ByteFF set) or +8 into the area's texture run at dword (height * width + 1) / 2 (cdq; sar) + offset + tile of AreaMap_Header, tile the header word (byte 0 * width + byte 1 + offset * 2) of dword +0 - MapView_CellTextures' address. PSX 0x80158EBC, read 2026-10-23 (the gap4 pair's 0x80158EE4 is inside it, past the scheduled header loads; docs/twin-pairs-check.md). World-map route."
 
 [[func]]
 pc = 0x573560
@@ -88277,12 +88278,12 @@ name = "BattleEnemy_PickTarget"
 psx = 0x801E2A0C
 psx_overlay = "BATTLE.EMI#3"
 psx_status = "hypothesis"
-psx_evidence = "exe_imm.py pair 2026-10-18, order: between 0x4358D0 and 0x436090 (constants 1.00) (docs/install-gap-pairs.md)"
+psx_evidence = "exe_imm.py pair 2026-10-18, order: between 0x4358D0 and 0x436090 (constants 1.00) (docs/install-gap-pairs.md); its shape agrees, 2026-10-23: kinds 1 and 4, bits 0 and 4 of +0x90, the side codes 0x80 / 0x40 and 0x20"
 ret = "unsigned char"
 params = "unsigned enemy"
 impl = "src/game/battle_e2.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435CF0..0x435E03 (0x114 bytes): by 0x904B35: 1: enemy +0x90 bit 0 BattleEnemy_OtherEnemy (0xFF: Battle_RandomMember), bit 4 Battle_MemberLowestHp, else Battle_RandomMember; 4: by the byte NameTable_Abilities[+0x106 x 24] (0x10: a side code 0xC0 / 0x80 / 0x40; no 0x40: enemy + 3; 0x20 with +0x90 bit 0: BattleEnemy_OtherOrMember; no 0x20 without bit 0: Battle_EnemyLowestHp; else +0x90 bit 4 Battle_MemberLowestHp / Battle_RandomMember); other: enemy +5. PSX twin 0x801E28CC (call-anchored; not read). dragonTransform frame 1,702. docs/battle_e2.md."
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435CF0..0x435E03 (0x114 bytes): by 0x904B35: 1: enemy +0x90 bit 0 BattleEnemy_OtherEnemy (0xFF: Battle_RandomMember), bit 4 Battle_MemberLowestHp, else Battle_RandomMember; 4: by the byte NameTable_Abilities[+0x106 x 24] (0x10: a side code 0xC0 / 0x80 / 0x40; no 0x40: enemy + 3; 0x20 with +0x90 bit 0: BattleEnemy_OtherOrMember; no 0x20 without bit 0: Battle_EnemyLowestHp; else +0x90 bit 4 Battle_MemberLowestHp / Battle_RandomMember); other: enemy +5. Not the pairing's 0x801E28CC (call-anchored), a chooser between two pickers (docs/twin-pairs-check.md). dragonTransform frame 1,702. docs/battle_e2.md."
 
 [[func]]
 pc = 0x435E10

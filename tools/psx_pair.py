@@ -5,6 +5,9 @@
     python tools/psx_pair.py tables    -> analysis/table_matches.json
     python tools/psx_pair.py fill      -> analysis/area_pairs_filled.json
     python tools/psx_pair.py propagate -> analysis/pairs_propagated.json
+    python tools/psx_pair.py check --usjp us_jp.tsv --twins pc_map.tsv --x <discs> [--reads ...] [--retire]
+                                       -> the propagated pairs a US-to-JP map contradicts
+                                          (docs/twin-pairs-check.md)
 
 `areas`: the boot EXE's 200-entry area descriptor table (0x801802EC) has a PC
 twin at 0x667590 (docs/attract-remaining.md section 5). Each descriptor's +0x3C
@@ -643,6 +646,130 @@ def cmd_tables(a):
     json.dump(rows, open(a.out or 'analysis/table_matches.json', 'w'), indent=0)
 
 
+def cmd_check(a):
+    """Check the propagated pairs against a second, independent pairing: a US
+    decompilation's function boundaries mapped onto the JP disc (us_jp.tsv, from
+    tools/region_twin_map.py), the twin map built with it (pc_map.tsv, whose
+    `src:` rows are our own citations) and, with --reads, the verdicts of twin
+    reads made from that map (tools/twin_bundles.py). A pair is flagged when
+
+      not-a-start   its JP address lies strictly inside a function the map
+                    placed exactly (the middle or tail of another function);
+      cites-other   our own citation gives the PC function a different JP twin
+                    in the same overlay, and the two bodies differ;
+      read-mispair  a twin read called it a mispair, and the twin read was the
+                    pair's own overlay's function (a read made against another
+                    overlay's function at the same address says nothing of it).
+
+    --keep PC:JP holds a pair that a hand check found right against a read.
+
+    Pairs in overlays the map has not got are counted 'unchecked'. With --retire
+    the flagged pairs are dropped from --pairs (written back in place)."""
+    import csv, glob, hashlib, os, re, sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import region_twin_map as rtm
+    pairs = json.load(open(a.pairs))
+    sec, md5_target = {}, {}
+    for target, (name, idx) in rtm.TARGETS.items():
+        try:
+            base, data = rtm.section(a.x, 'jp', name, idx)
+        except (OSError, SystemExit):
+            continue
+        sec[target] = (base, data)
+        md5_target[hashlib.md5(data).hexdigest()] = target
+    # Only the map's 'exact' rows are boundaries: every masked word of the US function
+    # was found there, so the JP function's start and length are both certain. The
+    # 'gap' rows are placed by their neighbours and decide nothing.
+    exact = collections.defaultdict(list)
+    for r in csv.DictReader(open(a.usjp), delimiter='\t'):
+        if r['jp'] and r['target'] in sec and r['status'].startswith('exact'):
+            exact[r['target']].append((int(r['jp'], 16), int(r['size'])))
+    for t in exact:
+        exact[t].sort()
+
+    def inside_exact(t, x):
+        """The start of the exact function x lies strictly inside, or None."""
+        i = bisect.bisect_right(exact[t], (x, 1 << 30)) - 1
+        if i >= 0 and exact[t][i][0] < x < exact[t][i][0] + exact[t][i][1]:
+            return exact[t][i][0]
+        return None
+
+    def masked(t, x):
+        """The masked words of the exact function starting at x (None if x starts none)."""
+        i = bisect.bisect_left(exact[t], (x, 0))
+        if i < len(exact[t]) and exact[t][i][0] == x:
+            base, data = sec[t]
+            return rtm.mask_words(data[x - base:x - base + exact[t][i][1]])
+        return None
+
+    EXE, GAME = 'exe/slus_004_22', 'emi/etc/game/00'
+
+    def target_of(section, x):
+        if section == 'boot':   # the sibling's boot image: the executable and GAME.EMI section 0
+            return next((t for t in (EXE, GAME)
+                         if t in sec and sec[t][0] <= x < sec[t][0] + len(sec[t][1])), None)
+        return md5_target.get(section)
+
+    cites = collections.defaultdict(set)
+    for r in csv.DictReader(open(a.twins), delimiter='\t'):
+        if r['how'].startswith('src:') and r['target'] in sec:
+            cites[int(r['pc'], 16)].add((r['target'], int(r['jp'], 16)))
+
+    # Twin reads: a 'mispair' verdict names the bundle; the bundle's Twin lines say
+    # which JP function, in which overlay, through which pairing was read.
+    misread = set()
+    twin_rx = re.compile(r'^Twin: JP (0x[0-9A-Fa-f]+) -> US (0x[0-9A-Fa-f]+) \(([^,]+), [^;]*; '
+                         r'pairing (.*), map status \S+\)$', re.M)
+    for d in a.reads:
+        for f in glob.glob(os.path.join(d, 'results_*.tsv')):
+            for r in csv.DictReader(open(f, encoding='utf-8'), delimiter='\t'):
+                if (r.get('verdict') or '').strip() != 'mispair':
+                    continue
+                b = os.path.join(d, r['bundle'].strip())
+                b = b if b.endswith('.md') else b + '.md'
+                if not os.path.exists(b):
+                    continue
+                for jp, us, t, how in twin_rx.findall(open(b, encoding='utf-8').read()):
+                    if how.startswith('pairs:') and int(us, 16) == int(r['us'], 16):
+                        misread.add((int(r['pc'], 16), int(jp, 16), t))
+
+    keep = {tuple(int(v, 16) for v in k.split(':')) for k in a.keep}
+    flagged, counts = [], collections.Counter()
+    for p in pairs:
+        x, y = p['psx'], p['pc']
+        t = target_of(p['section'], x)
+        if not t or not exact.get(t):
+            counts['unchecked'] += 1
+            continue
+        if (y, x) in keep:
+            counts['held'] += 1
+            continue
+        why = []
+        host = inside_exact(t, x)
+        if host is not None:
+            why.append('not-a-start (inside 0x%08X)' % host)
+        # A second JP twin in the same overlay is no contradiction when the two
+        # bodies are one function compiled twice (equal masked words).
+        cited = {jx for tt, jx in cites.get(y, ()) if tt == t}
+        other = {jx for jx in cited if jx != x and (masked(t, jx) is None or masked(t, jx) != masked(t, x))}
+        if other and x not in cited:
+            why.append('cites-other 0x%08X' % min(other))
+        if (y, x, t) in misread:
+            why.append('read-mispair')
+        counts['flagged' if why else 'held'] += 1
+        if why:
+            flagged.append((p, t, why))
+    print('%d propagated pairs: %d checked, %d held, %d flagged; %d unchecked (overlay not in the map)'
+          % (len(pairs), counts['held'] + counts['flagged'], counts['held'], counts['flagged'], counts['unchecked']))
+    for p, t, why in sorted(flagged, key=lambda f: (f[0]['pc'], f[0]['psx'])):
+        print('  0x%06X  JP 0x%08X  %-26s %-14s %s' % (p['pc'], p['psx'], t, p['how'], '; '.join(why)))
+    if a.retire:
+        drop = {(p['section'], p['psx'], p['pc']) for p, _, _ in flagged}
+        kept = [p for p in pairs if (p['section'], p['psx'], p['pc']) not in drop]
+        json.dump(kept, open(a.pairs, 'w'), indent=0)
+        print('retired %d pairs; %d left in %s' % (len(pairs) - len(kept), len(kept), a.pairs))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('--exe', default='bof3/BOF3.exe')
@@ -661,6 +788,16 @@ def main():
     p.add_argument('--symbols', default='symbols.toml')
     p.set_defaults(fn=cmd_propagate)
     sub.add_parser('tables').set_defaults(fn=cmd_tables)
+    p = sub.add_parser('check')
+    p.add_argument('--pairs', default='analysis/pairs_propagated.json')
+    p.add_argument('--usjp', required=True, help="region_twin_map.py's us_jp.tsv")
+    p.add_argument('--twins', required=True, help="region_twin_map.py's pc_map.tsv")
+    p.add_argument('--x', required=True, help='the dir holding jp/, the JP disc files region_twin_map.py read')
+    p.add_argument('--reads', nargs='*', default=[],
+                   help='twin-read dirs: tools/twin_bundles.py bundles beside results_*.tsv verdict rows')
+    p.add_argument('--keep', nargs='*', default=[], help='PC:JP pairs (hex) a hand check holds')
+    p.add_argument('--retire', action='store_true', help='drop the flagged pairs from --pairs, in place')
+    p.set_defaults(fn=cmd_check)
     a = ap.parse_args()
     a.fn(a)
 
