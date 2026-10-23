@@ -9526,7 +9526,7 @@ range checks; on the PC it would read `< 0x802000`.
 **Status:** moot, not repaired (no reader tells 0, 3 and the pointer
 apart); the port's.
 
-## D343 — The inn's night neither pauses nor resumes the sound sequences, where the PlayStation pauses four and replays them (the port's sound layer; not heard)
+## D343 — The inn's night neither pauses nor resumes the sound sequences, where the PlayStation pauses four and replays them (the port's sound layer; fixed by DIV-0169, not yet heard)
 
 **Seen:** not heard; found 2026-10-23 by reading the US PlayStation's
 `SHOP.EMI#0` `0x801D446C` (JP `0x801D447C`, every masked word identical)
@@ -9564,6 +9564,25 @@ A pause / resume repair needs that path first, or the song could start
 twice. **Not built** in the fix wave: the next step is
 `BOF3X_MUSIC_LOG=1` on `shop.txt` (the route reaches the inn at recipe frame
 2647), which names every music call through the night and after.
+
+**Measured and fixed** (2026-10-23, the sound-layer round's group IN,
+[`DIVERGENCE.md`](DIVERGENCE.md) DIV-0169). On `shop.txt` under
+`BOF3X_MUSIC_LOG=1`, with the WAV dump, the jingle's `Music_Start` comes at f2512
+(the recipe has changed since 2647) and the pump's `Music_Stop` at its end at
+f2714. After that no music call runs to the recipe's end at f3157, on the PC's
+MP3s or on the cache's sequenced song. **Nothing brings the town's song back.**
+The sound at 99 s that the paragraph above calls the song is the message's and
+the save menu's effects, short bursts with digital silence between. The 99 s in
+[`wav-dump.md`](wav-dump.md) 4c is the picture returning. So the PC's night
+loses the area's song until an area with another track (by reading:
+`Music_Track` stays the town's, and `Area_Enter`'s `Music_Play` of it is a
+no-op). There was no restart to suppress.
+
+DIV-0169 halts the song at night 0's end, after `Transition_Start(0)`, and
+starts it again at the taken sample last in the restore state, as the
+PlayStation's two calls do. Verified on both music paths: the song stops at
+83.25 s and comes back at 91.09 s, where it stopped. `recipe done` is on the
+same frame.
 
 **Status:** latent; the port's sound layer (D337 and D345 are of the same
 class); the owner's ear.

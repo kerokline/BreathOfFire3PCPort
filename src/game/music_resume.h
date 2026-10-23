@@ -43,8 +43,15 @@ bool Arm(unsigned track);
 void Forget();
 
 // The self-tests' way in: `sample` of `track` pending for the next
-// Music_Start, as Arm leaves it.
+// Music_Start, as Arm leaves it. DIV-0169's resume (sound_in.cpp) uses it too.
 void Pend(unsigned track, unsigned sample);
+
+// DIV-0169 (sound_in.h): the song heard now, whatever DIV-0092's switch says -
+// Remember's reading without storing it. True, with Music_Track and the
+// sample folded into the song's first pass and loop, when the stream is the
+// BGM file Music_Play started for that track and its buffer plays (a
+// once-only track that has ended does not); false otherwise. Reads only.
+bool Heard(unsigned* track, unsigned* sample);
 
 // BOF3X_SHADOW=sound: the ring's heard position and Remember's gate; the MP3
 // path's resume against the stream from the top (a stand-in decoder, a

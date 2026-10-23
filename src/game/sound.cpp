@@ -1130,6 +1130,20 @@ void Pend(unsigned track, unsigned sample) {
     g_resume.pending_sample = sample;
 }
 
+bool Heard(unsigned* track_out, unsigned* sample_out) {
+    const unsigned track = Music_Track;
+    void* const buffer = Music_Buffer;
+    if (track == 0xFF || !buffer || !g_ring.track_stream || g_ring.track != static_cast<int>(track)) return false;
+    if (!Playing(buffer, 0)) return false;
+    std::uint32_t heard = 0, folded = 0;
+    if (!HeardFolded(buffer, static_cast<std::uint32_t>(Music_FileSize), &heard, &folded)) return false;
+    *track_out = track;
+    *sample_out = folded;
+    MUSIC_LOG("heard track %u at sample %u (heard %u; %u written, the ring %u samples ahead)", Frame_Counter, track,
+              folded, heard, g_ring.written, g_ring.written - heard);
+    return true;
+}
+
 }  // namespace music_resume
 
 // DIV-0028's switch and its check. Under BOF3X_SHADOW=sound (after the fuzz,
