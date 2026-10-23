@@ -142,6 +142,18 @@ lines it was proposed for. Two very different things are in that bin:
   the word in speech (12 dialogue lines, all casual; the monster's own name
   is not in the dialogue blocks, so no reading row ever shows it). A plain
   rule; measured to reach exactly those 12 placements.
+- **The rest of the owner's calls (2026-10-23), each measured by a build
+  against the previous one:** 賢樹 = けんじゅ (21 placements; the fandom
+  wiki's Kenju agrees; SudachiDict's たけき is a given name); 外海 =
+  がいかい, one reading for the one place (45: the 25 そとうみ and 20 そとめ
+  the dictionary had chosen by context); 大星 = おおぼし (『北の大星』, 4);
+  魚 = うお in the fishing chant only, by `prev` (AREA113, 4 placements;
+  さかな everywhere else - the chant's first 魚 opens a row, where `prev`
+  sees nothing and `next` は is any fish's, so it stays さかな until the
+  builder's `prev` can look across a row break, a follow-on beside the
+  multi-token rule); 生命 = いのち in one threat, by `next` で (AREA079
+  and its copy; `prev` could not key it either, the word opens a row);
+  剣 as a lone label stays けん (the builder's, no rule). Still open: 海人.
 
 - **賢樹** (21 placements): the builder's たけき is a name reading; the
   agents say けんじゅ. The great tree's reading in this game - the owner

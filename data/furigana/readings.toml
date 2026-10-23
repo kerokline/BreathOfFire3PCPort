@@ -123,3 +123,31 @@ note = "the Contest of Champions (漢羅狂烈大武会); the owner's call, 2026
 surface = "盗人"
 reading = "ぬすっと"
 note = "the owner's call, 2026-10-23, after the readings audit: SudachiDict's ぬすびと is the literary form; the setting book's index has ぬすっとこうもり"
+
+# The owner's calls of 2026-10-23 on the readings audit's list (docs/readings-audit.md 3.4).
+[[reading]]
+surface = "賢樹"
+reading = "けんじゅ"
+note = "the great tree (Yggdrasil); SudachiDict's たけき is a given name; the fandom wiki's romaji is Kenju; the owner, 2026-10-23"
+
+[[reading]]
+surface = "外海"
+reading = "がいかい"
+note = "the Outer Sea; SudachiDict gave そとめ, そとうみ and がいかい by context; one reading, the owner's, 2026-10-23"
+
+[[reading]]
+surface = "大星"
+reading = "おおぼし"
+note = "『北の大星』, the desert's north star; rendaku; the owner, 2026-10-23"
+
+[[reading]]
+surface = "魚"
+reading = "うお"
+prev = ["我が祖たる ", "我が祖たる", "いとの先に ", "いとの先に"]
+note = "the fishing chant (AREA113) only; the dictionary's さかな stands everywhere else; the owner, 2026-10-23. The chant's first 魚 opens a row (心ひそかに／魚はまた), where prev sees nothing and next (は) is any fish's: it stays さかな until prev can look across a row break"
+
+[[reading]]
+surface = "生命"
+reading = "いのち"
+next = ["で"]
+note = "a stylistic ruby in one threat (AREA079); 生命力 and the rest keep せいめい; the owner, 2026-10-23"

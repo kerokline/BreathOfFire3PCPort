@@ -129,7 +129,12 @@ eleaseurigana-0.1.0.zip`) and
   effective with the multi-token rule). The setting book's kana index also
   gives ぬすっとこうもり for the bat, a data point for the 盗人 call -
   **taken: 盗人 = ぬすっと (2026-10-23)**, a plain rule over its 12 dialogue
-  lines. The other eleven calls the owner is hunting sources for.
+  lines. **Then (2026-10-23, chat): 賢樹 けんじゅ, 外海 がいかい for all
+  45, 大星 おおぼし, 魚 うお in the chant, 生命 いのち in the one threat, 剣
+  stays けん** - all in `readings.toml`, each build-measured (audit doc 3.4).
+  Left of the thirteen: 海人. Found on the way: `prev` cannot see across a
+  row break, so a word that opens a row cannot be keyed on the row above
+  (the chant's first 魚); a builder follow-on beside the multi-token rule.
 
 - **1, decided 2026-10-22 off PR's sheets:** the gap is **even, "2px top
   2px bottom"** - a reading's ink 2 units from the text above it and 2
