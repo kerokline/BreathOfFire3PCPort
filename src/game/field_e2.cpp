@@ -1331,8 +1331,9 @@ extern "C" void __cdecl FieldTail_FlagMessage(void) {
         if (Field_Request == 2) return;
         SH_CALL(Flags_Set)(At(Gene_Bits_addr), AreaW0c_TailSub);
         const unsigned char* const text = SH_CALL(Msg_SystemPtr)(AreaW0c_TailSub + 0x4172u);
-        SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(at::kTextRecords)), reinterpret_cast<const char*>(text), 8);
-        if (g_name_nul) At(at::kTextRecords)[8] = 0;
+        char* const name = reinterpret_cast<char*>(At(at::kTextRecords));
+        SH_CALL(Crt_strncpy)(name, reinterpret_cast<const char*>(text), 8);
+        if (g_name_nul) name[8] = 0;
         SH_CALL(Msg_OpenSystem)(0xFA);
         Field_Request = 2;
         SH_CALL(Sound_StopMusic)();

@@ -224,8 +224,9 @@ extern "C" unsigned char __cdecl Sprite_SetAnimationBank(unsigned short bank) {
     rv::Current<records::SpriteObject>()->column = column;
     rv::Current<records::SpriteObject>()->reach = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(rv::Current<records::SpriteObject>()->reach)) & 0xFFFFFF00u);
     unsigned char* sprite = Sprite_Current;
-    if (g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sprite)->reach, At(at::kBankBytes)[bank * 2u]);
-    else sprite[0x70] = static_cast<unsigned char>(sprite[0x70] | At(at::kBankBytes)[bank * 2u]);
+    const unsigned char first = At(at::kBankBytes)[bank * 2u];
+    if (g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sprite)->reach, first);
+    else sprite[0x70] = static_cast<unsigned char>(sprite[0x70] | first);
     const unsigned char second = At(at::kBankBytes)[bank * 2u + 1];
     rv::Current<records::SpriteObject>()->key_class = second;
     return 0;

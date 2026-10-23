@@ -1173,7 +1173,8 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
         return;
     }
     if (keys & 0xA000) SetW(at::kAsk, W(at::kAsk) ^ 1u);
-    const U answer = g_store_ask_word ? W(at::kAsk) : L(at::kAsk);
+    const U ask = L(at::kAsk);
+    const U answer = g_store_ask_word ? (ask & 0xFFFFu) : ask;
     BH_CALL(Menu_DrawHand)(static_cast<int>(answer * 0x22 + 0xD5), 0x18, 0);
 }
 
