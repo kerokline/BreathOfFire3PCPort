@@ -15,6 +15,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/sound.h"
 #include "game/sound_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -810,6 +811,75 @@ std::uint32_t Run(const void* fn, unsigned k, const Args& x) {
     }
 }
 
+// The two repairs this module carries, each with its switch set (the rounds
+// above ran with both off, against Capcom's copies): ours alone, against what
+// the repair says it does, on the same randomised state.
+//   DIV-0173: Music_Play of a selection whose low byte is 0xFF changes
+//     nothing - no call out, every compared byte as it was - and answers the
+//     selection.
+//   DIV-0171: KeyOffEffectVoices stops, in voice order 16..23, each buffer
+//     that channels 16..22 and 0 remember and clears those words; no other
+//     channel, bank byte or device byte changes, and nothing else is called.
+std::uint32_t g_keyoff_stops[8];
+unsigned g_keyoff_n;
+void __cdecl KeyOffStop(void* buffer) {
+    if (g_keyoff_n < 8) g_keyoff_stops[g_keyoff_n] = Address(buffer);
+    ++g_keyoff_n;
+}
+
+unsigned RepairChecks(unsigned rounds) {
+    static State input, out, want;
+    unsigned bad = 0;
+    const std::uint8_t refuses_saved = g_play_refuses_none;
+    for (unsigned round = 0; round < rounds; ++round) {
+        Args x = Generate(kPlay, input);
+        x.a[0] = (Next() % 3 ? Next() & 0xFFFFFF00u : 0u) | 0xFFu;
+        if (round % 4 == 0) Music_Track = static_cast<unsigned char>(Next() % 2 ? 0xFF : Next());
+        Capture(input);
+        Apply(input);
+        g_play_refuses_none = 1;
+        const std::uint32_t result = Run(Ours(kPlay), kPlay, x);
+        g_play_refuses_none = refuses_saved;
+        Capture(out);
+        want = input;
+        want.control = out.control;
+        if (result != x.a[0] || std::memcmp(&want, &out, sizeof out) != 0) {
+            if (++bad <= 6)
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0173 round %u, Music_Play(%08X) answered %08X, %u calls",
+                          round, x.a[0], result, out.log_n);
+        }
+    }
+    const auto stop_saved = g.sndbuf_stop;
+    g.sndbuf_stop = KeyOffStop;
+    for (unsigned round = 0; round < rounds; ++round) {
+        Generate(kSndStop, input);
+        Capture(input);
+        Apply(input);
+        g_keyoff_n = 0;
+        KeyOffEffectVoices();
+        Capture(out);
+        want = input;
+        want.control = out.control;
+        std::uint32_t stops[8];
+        unsigned n = 0;
+        for (std::uint32_t voice = 16; voice <= 23; ++voice) {
+            const std::uint32_t channel = voice >= 0x17 ? voice - 0x17 : voice;
+            std::uint32_t word;
+            std::memcpy(&word, want.tables + channel * 4, 4);
+            if (word == 0) continue;
+            stops[n++] = word;
+            std::memset(want.tables + channel * 4, 0, 4);
+        }
+        if (g_keyoff_n != n || std::memcmp(stops, g_keyoff_stops, n * 4) != 0 || std::memcmp(&want, &out, sizeof out) != 0) {
+            if (++bad <= 12)
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0171 round %u, %u stops for %u remembered", round,
+                          g_keyoff_n, n);
+        }
+    }
+    g.sndbuf_stop = stop_saved;
+    return bad;
+}
+
 void PatchImport(void* copy, const ImportOperand& op) {
     auto* code = static_cast<unsigned char*>(copy);
     std::uint32_t disp;
@@ -865,11 +935,16 @@ void SelfTest() {
                           kClones[k].name, theirs.result, ours.result, theirs.log_n, ours.log_n);
         }
     }
+    constexpr unsigned kRepairRounds = 2000;
+    const unsigned repair_bad = RepairChecks(kRepairRounds);
     g = kOriginals;
     Apply(saved);
     SetControlWord(cw_saved);
     bof3::Log("shadow      sound self-test: %u rounds (%u per function, %u functions), %u calls to the stand-ins, %u MISMATCHES",
               kRounds, kPerFunction, (unsigned)kCount, calls, bad);
+    bof3::Log("shadow      sound self-test: DIV-0173's refusal and DIV-0171's key-off, %u rounds each with the switch set, "
+              "%u MISMATCHES", kRepairRounds, repair_bad);
+    if (repair_bad) bof3::Fatal("the sound layer's repairs differ from what they say in %u of %u rounds", repair_bad, 2 * kRepairRounds);
     for (unsigned k = 0; k < kCount; ++k)
         if (bad_per[k]) bof3::Log("shadow      sound self-test: %s %u of %u rounds differ", kClones[k].name, bad_per[k], kPerFunction);
     if (bad) bof3::Fatal("the sound layer differs from the original in %u of %u self-test rounds", bad, kRounds);

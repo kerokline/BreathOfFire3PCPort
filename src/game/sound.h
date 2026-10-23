@@ -5,6 +5,8 @@
 // Capcom's. docs/sound.md.
 #pragma once
 
+#include <cstdint>
+
 void Sound_Inject();
 
 namespace sound {
@@ -20,5 +22,16 @@ void DuckMusic(int frames);
 // a fade over `frames` back to the volume DuckMusic found; with no duck
 // outstanding, Music_FadeIn's fade to 127.
 void UnduckMusic(int frames);
+
+// DIVERGENCE DIV-0171: the PlayStation's key-off of its sound-effect voices
+// 16..23, on the PC's channels (16..22 and 0, by Sound_PlayEffect's wrap):
+// every buffer those channels remember is stopped and forgotten. Called by
+// BattleAction_EffectPreload under its switch; it touches only
+// Sound_Channels and those buffers' play (through Callees::sndbuf_stop).
+void KeyOffEffectVoices();
+
+// DIV-0173's switch (sound.cpp): Music_Play refuses a selection whose low
+// byte is 0xFF. 0 at build; sound_fuzz.cpp sets it for its own check only.
+extern std::uint8_t g_play_refuses_none;
 
 }  // namespace sound

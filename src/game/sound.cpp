@@ -237,17 +237,35 @@ void FinishStoppingFade() {
 }
 }  // namespace sound
 
-// original 0x587AE0: starts BGM track `track`, fading in over `frames`.
+// DIVERGENCE DIV-0173: 1 through PatchBytes("MusicPlayRefusesNone") at the
+// end of Sound_Inject, after every self-test there (they compare Capcom's
+// Music_Play).
+namespace sound {
+std::uint8_t g_play_refuses_none = 0;
+}
+
+// original 0x587AE0 (PSX 0x80161B24 and 0x80161C20; JP 0x80162514 and
+// 0x80162610): starts BGM track `track`, fading in over `frames`.
 // Nothing if it is the track playing (Music_Track, the whole argument against
 // the byte); else the byte is set, the file loaded unless Music_File already
 // holds it, the volume set to 0 and the stream started from the top, and the
 // fade begun.
 // As the original has it: a track above 0xFF never equals the byte and is
 // stored truncated; eax is the track when nothing was done, else the fade's
-// (frames).
+// (frames). Track 0xFF while a track plays is stored (nothing playing, as far
+// as the game can see) and the stream restarted from the top of whatever
+// Music_File still holds - Music_LoadFile finds no file 255 and leaves it
+// (known-defects D346, D24).
+//
+// DIVERGENCE DIV-0173: with the switch, a selection whose low byte is 0xFF
+// does nothing (eax the track), as both PlayStation twins do (`andi 0xFF;
+// beq 0xFF` at JP 0x80162530 / 0x80162630, the US words the same). The test
+// comes after DIV-0028's completion of a stopping fade, which only models what
+// Capcom's own state would already be.
 int Music_PlayEax(unsigned int track, int frames) {
     MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
     sound::FinishStoppingFade();  // DIV-0028
+    if (sound::g_play_refuses_none && (track & 0xFF) == 0xFF) return static_cast<int>(track);  // DIV-0173
     if (track == Music_Track) return static_cast<int>(track);
     const std::uint32_t loaded = static_cast<std::uint32_t>(Music_LoadedTrack);
     Music_Track = static_cast<unsigned char>(track);
@@ -257,6 +275,29 @@ int Music_PlayEax(unsigned int track, int frames) {
     g.music_start(Music_File, static_cast<unsigned>(Music_FileSize), Music_FileLoops);
     return g.music_fade_in(frames);
 }
+
+// DIVERGENCE DIV-0171: the PlayStation's SsUtKeyOffV on voices 16..23 at the
+// start of a battle action's effect (BattleAction_EffectPreload; US
+// 0x801D3E80, JP 0x801D3E60), on the PC's channels. A cue word names its
+// voice in bits 8-12, and the shipped banks name only 16..23, the
+// PlayStation's sound-effect voices (docs/sound.md section 1);
+// Sound_PlayEffect files voice v under channel v, less 23 from 23 on - so
+// channels 16..22 and 0. Each of those that remembers a buffer has it stopped
+// and forgotten, as a cue's 0xFF voice does. The PC remembers only a looping
+// voice's buffer (a one-shot's is the bank entry's, shared by every cue that
+// names it), so a one-shot still sounding plays to its end where the
+// PlayStation's key-off would release it.
+namespace sound {
+void KeyOffEffectVoices() {
+    for (std::uint32_t voice = 16; voice <= 23; ++voice) {
+        const std::uint32_t channel = voice >= 0x17 ? voice - 0x17 : voice;
+        void* const playing = reinterpret_cast<void*>(Sound_Channels[channel]);
+        if (!playing) continue;
+        g.sndbuf_stop(playing);
+        Sound_Channels[channel] = 0;
+    }
+}
+}  // namespace sound
 
 // original 0x587B40: fades the music to nothing over `frames` of Sound_Tick,
 // then stops it. x87 as the original: the step is -(volume / frames) with
@@ -1914,6 +1955,12 @@ void Sound_Inject() {
     const char* const selftest_only = std::getenv("BOF3X_SELFTEST_ONLY");
     if (bof3::IsExeHost() ? selftest_only && selftest_only[0] : bof3::WantsShadow("sound")) sound_snapshot::SelfTest();
     bof3::Snapshot_Register("SOUND", &SnapSave, &SnapRestore, &SnapDiscard, &SnapCheck);
+    {
+        // DIV-0173: after every self-test above, which ran Capcom's rule.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("MusicPlayRefusesNone", Address(&sound::g_play_refuses_none), &was, &is, 1);
+        bof3::Log("DIV-0173    Music_Play refuses track 0xFF, as the PlayStation does (on unless the line above says OFF)");
+    }
 }
 
 void music_resume::SelfTest() { ResumeMp3_SelfTest(); }
