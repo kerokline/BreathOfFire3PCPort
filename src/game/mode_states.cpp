@@ -326,7 +326,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Field_LoadingFrame(v
     g.draw_frame();
 }
 
-// original 0x5172F0 (no PSX twin paired): the field menu's frame (mode 3's
+// original 0x5172F0 (PSX 0x8019A368): the field menu's frame (mode 3's
 // step 1, GameMode_Handlers' neighbour 0x656A74 entry 1) - Field_ModeDispatch,
 // the menu's state dispatch 0x589970 (group DH's), then a tail jump to
 // Field_RunTaskRecords.

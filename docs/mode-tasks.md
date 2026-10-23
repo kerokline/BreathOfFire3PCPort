@@ -152,7 +152,7 @@ on the byte `Field_Request`:
 | 2 | 4 | | same |
 | 3 | 5 (battle) | zero `0x904AA0..A2` and one byte in each of three records (`0x802D4B`, `0x802E97`, `0x802FE3`, `0x14C` apart), step 0, the dword `0x904134` + 1 | same (`0x801462DC..DE`, `0x80145E97` / `FD7` / `6117`, `0x80145028`) |
 | 4 | 6 | | same |
-| 5 | 1 (area change) | `0x905BA4 |= 0x40`; unless the track byte `0x904131` is `0xFF` or equals the area's `0x904CD0`, `Music_FadeOut(0x10)`; unless `0x904EE0` is `0xFF`, `Transition_Start(it)`, `Field_WaitTransition(0)`; then the same test again and `Music_FadeOutStop(10)`. The track byte is re-read after each call | the PSX starts the next area's music from a table (`0x8015DEE8`, `0x8015DDF4`) where the port fades |
+| 5 | 1 (area change) | `0x905BA4 |= 0x40`; unless the track byte `0x904131` is `0xFF` or equals the area's `0x904CD0`, `Music_FadeOut(0x10)`; unless `0x904EE0` is `0xFF`, `Transition_Start(it)`, `Field_WaitTransition(0)`; then the same test again and `Music_FadeOutStop(10)`. The track byte is re-read after each call | the same shape (read 2026-10-23 against the US `0x80197378`): the PSX fades the song through `SsSepSetDecrescendo` (`0x8015DEE8`; 100 over 16) and, after the transition, cuts it with `SsSepStop` (`0x8015DDF4`), where the port fades over 16 frames and then `Music_FadeOutStop(10)` - a ten-frame fade where the PSX cuts, D347 |
 | 6 | 7 | menu block `0x929F00` = 6, 0, 0, `+0xC` = `0xFF`, step 0 | same (`0x8014864C..`) |
 | 7 / 8 | 9 / 10 | step 0, menu block `+0..+2` = 0 | same |
 | 9 | 11 | `0x905DA0` = 1, then four zeros | same (`0x80146268..6C`) |

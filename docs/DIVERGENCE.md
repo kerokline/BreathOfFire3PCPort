@@ -1487,7 +1487,11 @@ designed in rather than bolted on.
   layout (whose hand on No covers "es"), but the Chinese build's look - the
   hand beside each word, touching neither.
 - **Also in the PSX version?** The US disc moved the stops too (the recomp's
-  hand tips at about 246 and 277 units); its code is unread.
+  hand tips at about 246 and 277 units); its code is unread. Read 2026-10-23:
+  the chooser's hand sits one row lower on the US disc under the dragon
+  panel's question - `0xB6 + 12 * row` at US `0x801DC224` against `0xAA` on
+  the JP (`0x801DC2A4`) and the PC (`0x529FA0`), the US question being one
+  row longer; the row-counting flag gives `0xB6` for a two-row question.
 - **Verification:** the re-spacing at start-up (`BOF3X_SHADOW=yes_no_layout`,
   both line shapes). **Confirmed in game by the owner, 2026-09-23**, at an
   inn's save: "looked right". All four prompts change together.
@@ -1700,7 +1704,13 @@ designed in rather than bolted on.
   (and a pattern of zero-height rectangles would commit more than a real
   kind); ours commits none, so the frame's packet use differs for such a
   save. Every kind past 8 but 16, 64 and 255 is unseen.
-- **Also in the PSX version?** The twin `0x801DBCBC` was not read.
+- **Also in the PSX version?** Yes, the same shape (read 2026-10-23 against
+  the US twin `0x801DBD24`, SHOP.EMI#0, every masked word of the JP
+  `0x801DBCBC` identical): the PlayStation picks its CLUT from a four-entry
+  array on its own stack by the unbounded kind byte, and its tile pattern's
+  start from a four-entry table (`0x801E5B1C[kind]`), so a kind of 4 or more
+  reads its stack frame there too; what that drew on a console was not
+  measured.
 - **Verification:** `analysis/validate_ab26b.sh` step 2, Capcom's function
   against ours with the pixel DIVs off on both sides: kinds 0..4 and 6..255
   identical, 5 not (the speckle above).
@@ -3688,7 +3698,11 @@ designed in rather than bolted on.
   break byte-based widths and leave 3 enemy names over) and over widening
   records (which moves every later field).
 - **Also in the PSX version?** No. The names are the JP release's and they
-  look the same; storing two glyphs in one code is ours.
+  look the same; storing two glyphs in one code is ours. The PlayStation's
+  own character counter (JP `0x801B020C`, US `0x801AF20C`; read 2026-10-23)
+  treats codes 0x12 and 0x13 as two-byte and stops at 8 characters on the JP
+  disc, 12 on the US; the PC's (`0x57D800`) treats any byte with bit 7 as
+  two-byte and stops at 16 - each release's encoding, not a port change.
 - **Verification:** 2026-09-24.
   - **Census** (docs/dialogue-localisation.md section 9): every item and
     ability name reaches `Text_DrawAt`, the text records or a banner copy,
@@ -6197,10 +6211,13 @@ designed in rather than bolted on.
      the field came back silent until the next area change (**confirmed by
      the owner's ear on Capcom's code, 2026-10-10 night**: "capcom also
      failed to restart the area music after combat"). The PSX ends a
-     fight by playing the area's song again from its table
-     ([`known-defects.md`](known-defects.md) D241 cites `0x80162610`; the same
-     rewrite as `Scena16_End`'s, [`field-modes.md`](field-modes.md) 4, where
-     the PSX restarts the area's track from `0x8015DDF4`).
+     fight by resuming the song it paused at the fight's start: the twin
+     `0x80198F48` (JP; US `0x80197F48`, read 2026-10-23) copies the 1,376
+     saved words back and `SsSepReplay`s the sequence
+     ([`known-defects.md`](known-defects.md) D241 cites `0x80162610`; an
+     earlier reading here said the track was restarted from its table
+     through `0x8015DDF4`, which is `SsSepStop` - see
+     [`field-modes.md`](field-modes.md) 4 and D347).
   2. **After a load.** `GameMode_Start`, for a loaded game (the play clock
      not zero), overwrites the area's track `0x904CD0` - which
      `Field_ChangeArea` has just chosen from the area's zone - with the
@@ -6267,10 +6284,11 @@ designed in rather than bolted on.
   left off, not restart." DIV-0092 as first built restarted the song from
   the top (frame 2838 of the owner's route log), which the owner heard as
   wrong.
-- **Also in the PSX version?** Case 1 no - the PSX restarts the area's song
-  at a battle's end (not read in its overlay here: the main executable has
-  `nop`s at the twin's address `0x80198F48`; the claim rests on D241's and
-  `field-modes.md`'s readings). Case 2 cannot happen there. **Heard on the
+- **Also in the PSX version?** Case 1 no - the PSX resumes the area's song
+  at a battle's end (read 2026-10-23 in GAME.EMI#0: the twin `0x80198F48`,
+  US `0x80197F48`, restores the saved sequence words and `SsSepReplay`s the
+  paused sequence - a resume, where Capcom's PC replays the track from its
+  top). Case 2 cannot happen there. **Heard on the
   PlayStation, 2026-10-11 night (the owner, mednafen, the `cutsceneAndNue`
   route's save converted with `save_convert.py pc2psx` into a copy of their
   US card):** the area's music starts on that load there too - the load

@@ -1,9 +1,8 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-23: the PlayStation verdict pass and the battle twin-diff, PR #115, item 0b; 2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
+**Status:** IN PROGRESS (2026-10-23: the PlayStation verdict pass and the battle twin-diff, PR #115, then the twin-diff over every other matched target, D340..D347, PR #116, item 0b; 2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
 to 3 built on `render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
 `reading-row/end`)
-
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -116,8 +115,14 @@ hosted cross form).
    port's), and 377 battle takeovers read beside their twins gave D335..D339 (the scaled damage's width, two
    unsigned coordinate reads, the effect preload's missing voice cut, a dword read, four wrong propagated pairs)
    and the owner's three calls ([`owner-review.md`](owner-review.md) 2026-10-23). The dragon AP drain's halving
-   is confirmed on the PlayStation. Next in that line: the same read over game/00, start, shop, area030 and the
-   boot exe (about 30 agent-reads of 65 functions), the typed-record offsets against the twins' records, and
+   is confirmed on the PlayStation. **Later the same day** the read ran over the remaining targets (game/00,
+   start, shop, area030, the scenario and area overlays, the boot exe: 955 bundles, fifteen agent-reads) and
+   gave D340..D347 (a fishing-panel offset, two `+0x70` writes, an object-kind pointer, the inn night's lost
+   pause and resume, a skipped save message, three empty positional-sound hooks, `Music_Play(0xFF)`, the
+   ten-frame fade where the PSX cuts), D34's remove side, D339's longer list, DIV-0030 / 0027 / 0057 / 0092's
+   PlayStation lines answered or corrected (`0x8015DDF4` is `SsSepStop`, not a restart), two citations and
+   `region_twin_map.py` fixed (any `PSX 0x...` on a marker's line; a pair matches its own overlay only). Next in
+   that line: the typed-record offsets against the twins' records, and
    the 128 US functions that differ from the JP by five or more words (the code half `region-diff.md` 4.3 never
    read). Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
 
