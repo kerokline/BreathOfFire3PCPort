@@ -955,13 +955,13 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed
                                                    unsigned short d, unsigned char, unsigned char f) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(Sc())->height_whole, rv::As<records::SpriteHead>(Sc())->height_whole + static_cast<U>(rv::As<records::SpriteHead>(Sc())->step_y >> 8));
     rv::As<records::SpriteHead>(Sc())->step_y = static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(Sc())->step_y) + static_cast<U>(static_cast<short>(d)));
-    SH_CALL(MapView_SetElevation)(Sprite_Kind2.height_whole);
+    SH_CALL(MapView_SetElevation)(static_cast<std::uint16_t>(Sprite_Kind2.height_whole));
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
     const long ground = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     records::SpriteHead* sc = rv::As<records::SpriteHead>(Sc());
     if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(sc->height_whole)) {
         sc->height_whole = static_cast<U>(ground);
-        SH_CALL(MapView_SetElevation)(rv::As<records::SpriteHead>(Sc())->height_whole);
+        SH_CALL(MapView_SetElevation)(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->height_whole));
         if (f & 2) Sc()[4] = 0;
         sc = rv::As<records::SpriteHead>(Sc());
     }
@@ -978,7 +978,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed
     sc->x = Field_Kind2X;
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sc())->z, Field_Kind2Z);
     rv::Store<unsigned>(rv::As<records::SpriteHead>(Sc())->height_whole, static_cast<U>(ground));
-    SH_CALL(MapView_SetElevation)(rv::As<records::SpriteHead>(Sc())->height_whole);
+    SH_CALL(MapView_SetElevation)(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->height_whole));
     Sc()[4] = 0;
     return 0;
 }

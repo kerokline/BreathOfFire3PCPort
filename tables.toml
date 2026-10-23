@@ -1104,10 +1104,10 @@ cite = "battle_actor_copies.cpp:475-476"
 [[table.field]]
 at = 0x11
 type = "u8"
-name = "order_kind"
-meaning = "turn-order class: 0 gives +4 agility, 1 or 3 +2 (Battle_BuildTurnOrder 0x4450E0)"
-status = "hypothesis"
-cite = "battle_damage.cpp:222-225, 252-254 (read; 'class' is the reading)"
+name = "skill_class"
+meaning = "the skill's class byte: Battle_BuildTurnOrder 0x4450E0 compares the whole byte - 0 gives +4 agility, 1 or 3 +2; Battle_MemberRollByAction 0x453910 takes its high nibble as the row of the learning odds 0x64F0FC / 0x64F104, the odds of joining the learned list (Battle_SettleFlag8 0x453B10). Was order_kind (records audit N4)"
+status = "evidence"
+cite = "battle_damage.cpp:267-271; battle_e6.cpp:903-906 (kActionRows 0x65C4D9 = Ability_Records + 0x11)"
 
 [[table.field]]
 at = 0x12

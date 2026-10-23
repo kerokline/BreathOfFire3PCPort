@@ -782,7 +782,7 @@ extern "C" void __cdecl Area135_Init(void) {
 // aborts.
 extern "C" void __cdecl Area135_FallTo(unsigned height) {
     unsigned char* cur = Sprite_Current;
-    const auto d = static_cast<std::int32_t>(static_cast<short>(static_cast<unsigned short>(height - rv::As<records::SpriteHead>(cur)->height_whole)));
+    const auto d = static_cast<std::int32_t>(static_cast<short>(static_cast<unsigned short>(height - static_cast<std::uint16_t>(rv::As<records::SpriteHead>(cur)->height_whole))));
     std::int32_t steps = d / 128;
     if (steps < 0) steps = -steps;
     cur[9] = static_cast<unsigned char>(static_cast<unsigned>(steps) << 4);
@@ -791,7 +791,7 @@ extern "C" void __cdecl Area135_FallTo(unsigned height) {
     if (divisor == 0)
         bof3::Fatal("Area135_FallTo: the fall's frame count +9 is 0 (height %u against +0x3E %u, a difference of %d): "
                     "the original divides by it and faults",
-                    height & 0xFFFF, static_cast<unsigned>(rv::As<records::SpriteHead>(cur)->height_whole), static_cast<int>(d));
+                    height & 0xFFFF, static_cast<unsigned>(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(cur)->height_whole)), static_cast<int>(d));
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_y, d / divisor);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, 0);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, 0);

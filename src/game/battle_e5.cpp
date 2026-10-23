@@ -214,7 +214,7 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
         break;
     }
     case 5:
-        if (row[2] & 2) enemy_rec->steal_row = row[3];
+        if (row[2] & 2) enemy_rec->drop0_row = row[3];
         if (row[2] & 1) enemy[0xAE] = row[3];
         break;
     case 6:

@@ -580,7 +580,7 @@ extern "C" void __cdecl Field_SwapEnd(void) {
     if (Field_Kind2Hold != 0) return;
     unsigned char* const sc = Sprite_Current;
     Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFBFF);
-    g.set_elevation(static_cast<int>(rv::As<records::SpriteHead>(sc)->height_whole));
+    g.set_elevation(static_cast<int>(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->height_whole)));
     Sprite_Current[1] = 1;
     Sprite_Current[2] = 0;
 }
@@ -920,7 +920,7 @@ extern "C" unsigned char __cdecl Field_WayBlocked4(long x, long z, long ground) 
     const int rise = static_cast<short>(here) - static_cast<short>(ground);
     if (std::abs(rise) > 0xC0) return 1;
     unsigned char* const sc = Sprite_Current;
-    const unsigned short height = rv::As<records::SpriteHead>(sc)->height_whole;
+    const unsigned short height = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->height_whole);
     rv::Store<unsigned>(rv::As<records::SpriteHead>(sc)->height_whole, static_cast<unsigned>(ground));
     const unsigned char object = g.object_at(x, z, 0);
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, height);

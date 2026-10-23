@@ -111,7 +111,7 @@ constexpr std::uint32_t kElementTable = 0x64E95C;   // s16 per affinity class (B
 constexpr std::uint32_t kHealTable = 0x64E99C;      // s16 per holy class (Effect_HealAmount)
 constexpr std::uint32_t kWeaponElement = 0x13;      // NameTable_Weapons record +0x13
 constexpr unsigned kWeaponStride = 0x1C;
-constexpr unsigned kAbilityStride = 0x18;           // NameTable_Abilities: +1 order kind, +3 heal power, +4 element mask
+constexpr unsigned kAbilityStride = 0x18;           // NameTable_Abilities: +1 skill class, +3 heal power, +4 element mask
 
 }  // namespace at
 

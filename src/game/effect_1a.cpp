@@ -583,7 +583,7 @@ extern "C" void __cdecl EffectHud_DrawGauge(int x, int y) {
     p[6] = 0;
     SH_CALL(Gfx_CommitPrim)(4, 0x38);
     if (Effect_Objects[0].state != 4) return;
-    const std::int16_t height = static_cast<std::int16_t>(static_cast<std::uint32_t>(Effect_Objects[0].height_whole));
+    const std::int16_t height = static_cast<std::int16_t>(static_cast<std::uint32_t>(static_cast<std::uint16_t>(Effect_Objects[0].height_whole)));
     if (height > 0)
         SH_CALL(EffectHud_Sprite8)(x + 0x69, 0xB4, 2);
     else
@@ -1833,7 +1833,7 @@ extern "C" void __cdecl EffectKind1A_FindKind(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_frac, 0);
     unsigned char* a = S();
     for (;;) {
-        const U kind = static_cast<std::uint32_t>(rv::As<records::EffectObject>(a)->height_whole);
+        const U kind = static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::EffectObject>(a)->height_whole));
         if (B(at::kKindCounts + static_cast<U>(static_cast<std::int16_t>(kind))) != 0) break;
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->height_whole, kind + 1);
         a = S();
@@ -1841,7 +1841,7 @@ extern "C" void __cdecl EffectKind1A_FindKind(void) {
             rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->height_whole, 0);
             a = S();
         }
-        if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(a)->height_whole) == 0) {
+        if (static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::EffectObject>(a)->height_whole)) == 0) {
             rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->height_frac, 1);
             break;
         }
@@ -1877,7 +1877,7 @@ extern "C" void __cdecl EffectKind1A_PanelIn(void) {
 extern "C" void __cdecl EffectKind1A_Panel(void) {
     if (PanelRow()) {
         SH_CALL(FieldPanel_DrawKindIcon)(0x80, 0x5B, S()[0x3E]);
-        SH_CALL(FieldPanel_DrawMessage)(8, 0x94, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole));
+        SH_CALL(FieldPanel_DrawMessage)(8, 0x94, static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::EffectObject>(S())->height_whole)));
     } else {
         SH_CALL(FieldPanel_DrawKindIcon)(0x80, 0x5B, 0xFF);
         SH_CALL(FieldPanel_DrawMessage)(8, 0x94, 0xFFFF);
