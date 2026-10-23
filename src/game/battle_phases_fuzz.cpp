@@ -880,6 +880,7 @@ void SelfTest() {
 
 void BattlePhases_Inject() {
     if (bof3::WantsShadow("battle_phases")) battle_phases::SelfTest();
+    BattlePhases_ArmPickClear();  // DIV-0163: after the self-test, which compared Capcom's resets
     BOF3_INJECT(Battle_Frame);
     BOF3_INJECT(BattleStart_Dispatch);
     BOF3_INJECT(Battle_Init);

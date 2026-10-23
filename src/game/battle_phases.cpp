@@ -169,6 +169,24 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleStart_Dispatch
 // As the original has it: the actor passed to Battle_ActorIsOut is a byte
 // in a dword whose upper bytes are the caller's ecx; Battle_ActorIsOut reads
 // the byte.
+//
+// As the original has it, and the JP disc: step 2 leaves the target-pick
+// flag BattleE4_Picking (0x904AAF) as the last battle left it. The US disc's
+// Battle_Init (BATTLE.EMI#3 0x801D1228) adds its clear (US 0x801462EF, the
+// JP's 0x801462EB) among the same resets.
+//
+// DIVERGENCE DIV-0163: 1 through PatchBytes("BattleInitPickClear") in
+// BattlePhases_Inject, after the self-test. Step 2 then clears the flag
+// with its neighbours, as the US disc does (D349), so a battle cannot start
+// with a target highlighted that nobody is picking.
+static std::uint8_t g_init_pick_clear = 0;
+
+void BattlePhases_ArmPickClear() {
+    const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("BattleInitPickClear", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_init_pick_clear)), &was, &is, 1);
+    bof3::Log("DIV-0163    a battle's start clears the target-pick flag, as the US disc (on unless the line above says OFF)");
+}
+
 extern "C" void __cdecl Battle_Init(void) {
     g.banner_clear_all();
     const unsigned count = B(at::kActorCount);
@@ -203,6 +221,7 @@ extern "C" void __cdecl Battle_Init(void) {
     BattleDamage_AiByteB97 = 0;
     BattlePhases_B89 = 0;
     MoveScript_FAWord = 0;
+    if (g_init_pick_clear) BattleE4_Picking = 0;
     g.init_encounter_kind();
     g.task_clear_all();
     g.init_actor_contexts();
