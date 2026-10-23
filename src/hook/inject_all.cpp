@@ -97,6 +97,7 @@
 #include "game/item_use.h"
 #include "game/sound.h"
 #include "game/sound_rest.h"
+#include "game/sound_sp.h"
 #include "game/d3d_draw.h"
 #include "game/d3d_rest.h"
 #include "game/display_env.h"
@@ -1485,6 +1486,9 @@ void InjectAll() {
                                 // which all compared Capcom's decoder (audio/mp3.h)
     music_seq::Arm();           // DIV-0087: the cache's songs through the sequencer (BOF3X_CACHE, BOF3X_MUSIC) - after
                                 // every module's self-test, which all compared the MP3 path
+    sound_sp::Arm();            // DIV-0171..0173 (the sound-layer round's SP, sound_sp.h): its self-test
+                                // (BOF3X_SHADOW=sound_sp), then the three switches - after every module's self-test,
+                                // which all compared the PC's B8, Sound_PlayById, screen update and level calls
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     GfxSnapshot_Inject();       // the quicksave round's SP-G (render/gfx_snapshot.h): the graphics participant and

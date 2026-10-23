@@ -13,6 +13,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/sound_sp.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -177,8 +178,9 @@ extern "C" void __cdecl MoveScript_GroupB(unsigned char* object, const unsigned 
         g.fade_out_stop(8);
         SetPos(object, Pos(object) + 1u);
         break;
-    case 0xB8:
-        g.op_b8(p[2]);
+    case 0xB8:   // DIVERGENCE DIV-0171: the PlayStation's 0x8015D300(b1, b2, b3, b3) - the song restarted at b3
+        if (sound_sp::g_b8) sound_sp::OpB8(p[1], p[2], p[3]);
+        else g.op_b8(p[2]);
         SetPos(object, Pos(object) + 3u);
         break;
     case 0xB9:

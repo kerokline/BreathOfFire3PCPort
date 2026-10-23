@@ -10534,3 +10534,47 @@ designed in rather than bolted on.
   every compared byte unchanged, no call out, eax the selection; 0 mismatches. `BOF3X_SELFTEST_ONLY=1
   BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not seen on a route.
 - **Reversible?** `BOF3X_ORIGINAL=MusicPlayRefusesNone`.
+
+### The movement script's op B8 restarts the song from its top at the script's level
+
+- **ID:** DIV-0171
+- **Date:** 2026-10-23
+- **Subsystem:** the movement script's sound group - `MoveScript_GroupB` (`0x577280`, `src/game/move_groups.cpp`)
+  and `sound_sp::OpB8` (`src/game/sound_sp.cpp`); [`known-defects.md`](known-defects.md) D345,
+  [`movement-script.md`](movement-script.md) 1a
+- **Tier:** Sensible - a port repair; the PlayStation does it, the port's sound layer dropped it.
+- **Original behaviour:** `B8 b1 b2 b3` calls `Port_DroppedCall` (`0x4DF820`, a bare `ret` shared by 25 call
+  sites) with b2 and steps the cursor over its three operands. Nothing is heard.
+- **New behaviour:** b1 is ignored (every group is the one sequence player: the PlayStation's access table US
+  `0x80148FC0` is sixteen zeros). b2 must be 0 - the PC's music file holds one song, the PlayStation's SEP up to
+  four - and anything else is fatal (no shipped script asks for another). The song `Music_File` holds starts again
+  from its top at once, at b3 of 100 as the PC's 0..127 (b3 x 127 / 100), with no fade and any fade in progress
+  dropped; at level 0 instead while the options byte `0x903A5C` is set (the PlayStation's gate `0x80144954`, which
+  no code on the US disc was found to set; the PC's two writers are the start-up and the Config screen's defaults);
+  nothing when no song is loaded.
+  `Music_Track`, if it was 0xFF (a stopped song), becomes the loaded track again - the PlayStation's stop leaves its
+  selection alone, so a later `Music_Play` of the same track does nothing on both. **To the ear:** the two shipped
+  B8s, both `B8 00 00 64` - area 142's (the developers' `せらぴしんそう`) `+0x18` script 2 and area 174's
+  (`OーBARD 8`) `+0x10` script 35, the second just after a wait on a file load - now start the area's song again
+  from its beginning, at full level, the moment the script reaches them. Where the song had stopped before, it
+  comes back there; where it was still playing, it is cut and starts over. Which of the two each scene does, and
+  whether a song loaded just before (area 174's wait) was already fading in on the PC, is not known: no recorded
+  route reaches either area.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D345): `B8` calls US `0x8015D300` (JP
+  `0x8015DCF0`) as `(b1, b2, b3, b3)` - `SsSepStop(access[b1], b2)`; unless the gate is set, the stream cells
+  `0x8018B418` / `41A` to `0x1FFF` and `SsSepSetVol(access[b1], b2, b3, b3)`, else `SsSepSetVol(.., 0, 0)`;
+  `SsSepPlay(access[b1], b2, 1, 1)`. `Music_Play`'s twin US `0x80161C20` starts every track through this same
+  function at level 0 and then fades in to 100, so b3 100 is the song's own level. The sequence is the loaded
+  file's: the track table US `0x80181EB8` gives every track group 0 and a sequence 0..3 of its file, so
+  `B8 .. 00 ..` is the loaded track itself only when that track is its file's sequence 0 - which the zone tracks of
+  both areas are (`Area_StateRecords`: 0x50, 0x6F, 0x8E, all sequence 0). A scene that had loaded another file's
+  sequence 1..3 would hear a different song on the PlayStation; the PC cannot name it. The stream cells are the
+  PlayStation's, with no PC counterpart: not carried.
+- **Also in the PSX version?** Yes: this is the PlayStation's step, on what the PC can reach.
+- **Verification:** builds; `BOF3X_SHADOW=sound_sp` (2026-10-23) runs `OpB8` on stand-ins worked from the US
+  disc's instructions: a stopped song with a fade running - level 127, `Music_Start` of the file, the fade dropped,
+  the track back; under the gate level 0 and the track kept; with no file nothing; 0 mismatches. `move_groups`' own
+  fuzz runs before the switch is armed (Capcom's `B8`, unchanged) and does not reach the new branch.
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard; not run on a route.
+  The state hash sees it where a route reaches a B8: `Music_Track`, `Music_Volume`, the fade and the stream.
+- **Reversible?** `BOF3X_ORIGINAL=MoveB8Restart`.
