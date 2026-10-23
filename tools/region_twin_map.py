@@ -203,26 +203,56 @@ def main():
         if jp and st.startswith(('exact', 'gap-same')):
             jp_to_us.setdefault(jp, []).append((t, us, k, nm, st))
     pc_rows = []
-    rx = re.compile(r'0x([0-9A-Fa-f]{6}) \(PSX 0x(80[0-9A-Fa-f]{6})')
+    # A takeover's marker: `// original 0xPC (... PSX 0xJP ...)`. The PSX address is not always
+    # right after the paren (`(area 98 +0x34[5]; PSX 0x801F5B50)`, `(+0x3C[10], PSX ...)`,
+    # `0x56C130: chapter 17's vtable slot 0 (PSX ...)`), so take the first on the marker's line.
+    rx = re.compile(r'//\s*original\s+0x([0-9A-Fa-f]{6})\b[^\n]*?\bPSX\s+0x(80[0-9A-Fa-f]{6})')
     for path in glob.glob(os.path.join(a.repo, 'src', '**', '*.cpp'), recursive=True) + \
             glob.glob(os.path.join(a.repo, 'src', '**', '*.h'), recursive=True):
-        rel = os.path.relpath(path, a.repo).replace('\\', '/')
+        rel = os.path.relpath(path, a.repo).replace(chr(92), chr(47))
+        area = None
         for ln, line in enumerate(open(path, encoding='utf-8', errors='replace'), 1):
-            for m in rx.finditer(line):
-                pc_rows.append((int(m.group(1), 16), int(m.group(2), 16), 'src:%s:%d' % (rel, ln)))
+            # The area files head each area's block with `// ---- area N (`, and a marker may say
+            # `(area 98 ...)` itself; the area decides which AREAnnn overlay the twin lives in.
+            ma = re.match(r'//\s*-{3,}\s*area\s+(\d+)\b', line, re.I)
+            if ma:
+                area = int(ma.group(1))
+            m = rx.search(line)
+            if m:
+                mb = re.search(r'\(area\s+(\d+)\b', line)
+                where = ('AREA%03d.EMI' % int(mb.group(1))) if mb else (('AREA%03d.EMI' % area) if area is not None else None)
+                pc_rows.append((int(m.group(1), 16), int(m.group(2), 16), 'src:%s:%d' % (rel, ln), where))
     md5s = {hashlib.md5(d).hexdigest(): (nm, i) for (nm, i), (b, d) in jp_sections.items()}
     for p in json.load(open(os.path.join(a.repo, 'analysis', 'pairs_propagated.json'))):
         sec = p['section']
         where = 'boot' if sec == 'boot' else md5s.get(sec)
-        pc_rows.append((p['pc'], p['psx'], 'pairs:%s:%s' % (p['how'], where if where else sec[:8])))
+        pc_rows.append((p['pc'], p['psx'], 'pairs:%s:%s' % (p['how'], where if where else sec[:8]), where))
     seen = set()
     with open(os.path.join(a.out, 'pc_map.tsv'), 'w') as f:
         f.write('pc\tjp\tus\ttarget\tkind\tname\tstatus\thow\n')
-        for pc, jp, how in sorted(pc_rows):
+        for pc, jp, how, where in sorted(pc_rows, key=lambda r: r[:3]):
             if (pc, jp, how.split(':')[0]) in seen:
                 continue
             seen.add((pc, jp, how.split(':')[0]))
             hits = jp_to_us.get(jp, [])
+            # A propagated pair was found in one JP section. The area overlays put a different
+            # function at the same address in every area, so a pair from AREA016 may only match
+            # the US AREA016 target; a pair from a section the decompilation has not got (an
+            # unresolved md5) matches nothing. The boot block ('boot') is the executable and GAME.EMI.
+            if how.startswith('pairs:'):
+                sec = how.rsplit(':', 1)[1]
+                if sec == 'boot':
+                    # The sibling's boot image holds the executable and the resident field
+                    # overlay (GAME.EMI section 0) together.
+                    hits = [h for h in hits if TARGETS[h[0]][0] in ('EXE', 'GAME.EMI')]
+                elif where:
+                    hits = [h for h in hits if TARGETS[h[0]] == where]
+                else:
+                    hits = []
+            elif where:
+                # A citation from an area file: an AREAnnn twin must be that area's own overlay;
+                # twins in the shared overlays (GAME, the executable) stay.
+                hits = [h for h in hits if not TARGETS[h[0]][0].startswith('AREA') or TARGETS[h[0]][0] == where]
             if hits:
                 for t, us, k, nm, st in hits:
                     f.write('0x%06X\t0x%08X\t0x%08X\t%s\t%s\t%s\t%s\t%s\n' % (pc, jp, us, t, k, nm, st, how))

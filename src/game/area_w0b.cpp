@@ -976,7 +976,7 @@ extern "C" void __cdecl Area26_GiveItem(void) {
     AH_CALL(Flags_Set)(FlagRow(), 0x33);
 }
 
-// original 0x403310 (choice 13, handler 11; PSX 0x801F32C8): Camera_ShiftY =
+// original 0x403310 (choice 13, handler 11; PSX 0x801F3290): Camera_ShiftY =
 // 0, MapView_Redraw = 2, Music_FadeOutStop(0xA).
 extern "C" void __cdecl Area26_ResetCamera(void) {
     Camera_ShiftY = 0;
@@ -984,7 +984,7 @@ extern "C" void __cdecl Area26_ResetCamera(void) {
     AH_CALL(Music_FadeOutStop)(0xA);
 }
 
-// original 0x403330 (choice 14, handler 12; PSX 0x801F3348): as
+// original 0x403330 (choice 14, handler 12; PSX 0x801F32C8): as
 // Area11_SpawnEffect with its own table - the leader's words +0x2E / +0x30
 // read, Sprite_Current made the leader, Effect_Spawn(1, 0,
 // Area26_EffectKinds[the first party list's first member], x, z); an answer

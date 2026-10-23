@@ -153,7 +153,9 @@ words unmoved (C5). Chapter 16's table (`0x65F8C0`): `0x519890`, `0x437CC0`.
 All kept - faithful takeover of the port:
 
 - **The music.** `Scena16_End` stops the music over 10 frames where the PSX
-  restarts the area's track from its table (`0x8015DDF4`) and sets the
+  cuts it at once (`0x8015DDF4` is `SsSepStop`, read 2026-10-23 against the
+  US `0x8015D404`; an earlier reading here called it a restart from the
+  track table, which it is not - D347) and sets the
   volume (`0x8016CA38(0x7F, 0x7F)`); scene 2's step 0 and step 2 drop the
   PSX's volume calls (`0x8016CA38(0, 0)`, then `(timer, timer)` - a fade-in
   in step with the caption's timer); `Music_Play` takes two arguments where
