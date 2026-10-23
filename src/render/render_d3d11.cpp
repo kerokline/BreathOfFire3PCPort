@@ -71,6 +71,11 @@ struct GpuTexture {
     ID3D11Texture2D* texture;
     ID3D11ShaderResourceView* srv;
     U width, height;
+    // DIV-0160: one byte a texel, 255 where the texel's colour has the
+    // PlayStation's bit 15 (render_shim.h StpTexels); made on the first
+    // upload that carries one.
+    ID3D11Texture2D* stp;
+    ID3D11ShaderResourceView* stp_srv;
 };
 
 // DIV-0125 (fb_grab.h): a frame-buffer grab's texture, at the scale it
@@ -86,6 +91,10 @@ GrabSlot g_grab_slots[fb_grab::kSlots];
 
 unsigned char* g_scratch;   // a texture's pixels converted to B8G8R8A8
 U g_scratch_bytes;
+unsigned char* g_scratch_stp;   // DIV-0160: the same texture's bit-15 plane, one byte a texel
+U g_scratch_stp_bytes;
+bool g_scratch_has_stp;         // Convert's last: the surface carries bit 15 (its plane is in g_scratch_stp)
+bool g_stp_view;                // BOF3X_STPVIEW, diagnostic: draw bit-15 texels magenta
 
 DWORD g_main_thread;
 
@@ -139,6 +148,7 @@ cbuffer FrameConstants : register(b0) { float2 target_size; float2 view_pad; };
 cbuffer DrawConstants : register(b1) { uint flags; uint alpha_ref; uint alpha_func; uint draw_pad; float4 grab0; float4 grab1; };
 Texture2D tex : register(t0);
 Texture2D grab : register(t1);
+Texture2D stp_plane : register(t2);
 SamplerState smp : register(s0);
 SamplerState grab_smp : register(s1);
 struct VSIn { float4 pos : POSITION; float4 diffuse : COLOR0; float4 specular : COLOR1; float2 uv : TEXCOORD0; };
@@ -171,6 +181,16 @@ float4 PS(PSIn i) : SV_Target {
         if ((flags & 2u) && t.a < 0.5) discard;
         c.rgb *= t.rgb;
         if (flags & 4u) c.a *= t.a;
+        // BOF3X_STPVIEW, diagnostic: a texel whose colour has the
+        // PlayStation's bit 15 (DIV-0160's plane, nearest texel) is magenta.
+        if (flags & 64u) {
+            uint w, h;
+            stp_plane.GetDimensions(w, h);
+            if (w > 0u) {
+                int2 p = min(int2(saturate(i.uv) * float2(w, h)), int2(w - 1u, h - 1u));
+                if (stp_plane.Load(int3(p, 0)).r > 0.5) c.rgb = float3(1.0, 0.0, 1.0);
+            }
+        }
     }
     if (flags & 8u) c.rgb += i.specular.rgb;
     if (flags & 16u) {
@@ -341,7 +361,11 @@ U Channel(U raw, U mask, U shift, U bits) {
 
 // Converts `pixels` (the surface's format) to B8G8R8A8 in the scratch buffer:
 // alpha 0 for a texel whose alpha bit is clear (a format with alpha) or that
-// equals the colour key `keyed` / `key`; 255 otherwise.
+// equals the colour key `keyed` / `key`; 255 otherwise. DIV-0160: while the
+// textures carry bit 15 (render_shim.h StpTexels), a texel with its alpha bit
+// clear and a non-zero colour is a colour with bit 15 set - alpha 255 here, as
+// any drawn texel, and 255 in the bit-15 plane g_scratch_stp
+// (g_scratch_has_stp); alpha clear and colour 0 is transparent.
 const unsigned char* Convert(const Surface* s, const unsigned char* pixels, bool keyed, U key) {
     const U bytes = s->width * s->height * 4;
     if (bytes > g_scratch_bytes) {
@@ -350,6 +374,14 @@ const unsigned char* Convert(const Surface* s, const unsigned char* pixels, bool
         if (!g_scratch) bof3::Fatal("render: out of memory converting a %u x %u texture", s->width, s->height);
         g_scratch_bytes = bytes;
     }
+    g_scratch_has_stp = s->pf_amask != 0 && StpTexels();
+    if (g_scratch_has_stp && bytes / 4 > g_scratch_stp_bytes) {
+        if (g_scratch_stp) HeapFree(GetProcessHeap(), 0, g_scratch_stp);
+        g_scratch_stp = static_cast<unsigned char*>(HeapAlloc(GetProcessHeap(), 0, bytes / 4));
+        if (!g_scratch_stp) bof3::Fatal("render: out of memory converting a %u x %u texture", s->width, s->height);
+        g_scratch_stp_bytes = bytes / 4;
+    }
+    const U colour_mask = s->pf_rmask | s->pf_gmask | s->pf_bmask;
     U rs, rb, gs, gb, bs, bb;
     MaskBits(s->pf_rmask, &rs, &rb);
     MaskBits(s->pf_gmask, &gs, &gb);
@@ -368,7 +400,12 @@ const unsigned char* Convert(const Surface* s, const unsigned char* pixels, bool
                 raw = p;
             }
             U a = 0xFF;
-            if (s->pf_amask && !(raw & s->pf_amask)) a = 0;
+            unsigned char stp = 0;
+            if (s->pf_amask && !(raw & s->pf_amask)) {
+                if (g_scratch_has_stp && (raw & colour_mask) != 0) stp = 0xFF;   // DIV-0160: bit 15 set
+                else a = 0;
+            }
+            if (g_scratch_has_stp) g_scratch_stp[y * s->width + x] = stp;
             if (keyed && ((raw ^ key) & raw_mask) == 0) a = 0;
             const U v = (a << 24) | (Channel(raw, s->pf_rmask, rs, rb) << 16) | (Channel(raw, s->pf_gmask, gs, gb) << 8) |
                         Channel(raw, s->pf_bmask, bs, bb);
@@ -381,6 +418,8 @@ const unsigned char* Convert(const Surface* s, const unsigned char* pixels, bool
 GpuTexture* GpuOf(Surface* s) {
     auto* g = static_cast<GpuTexture*>(s->gpu);
     if (g && (g->width != s->width || g->height != s->height)) {
+        Release(g->stp_srv);
+        Release(g->stp);
         Release(g->srv);
         Release(g->texture);
         HeapFree(GetProcessHeap(), 0, g);
@@ -409,6 +448,26 @@ GpuTexture* GpuOf(Surface* s) {
     return g;
 }
 
+// DIV-0160: uploads Convert's bit-15 plane, making the plane's texture on the
+// first upload that carries one.
+void PutStp(GpuTexture* g, const Surface* s) {
+    if (!g_scratch_has_stp) return;
+    if (!g->stp) {
+        D3D11_TEXTURE2D_DESC d = {};
+        d.Width = s->width;
+        d.Height = s->height;
+        d.MipLevels = 1;
+        d.ArraySize = 1;
+        d.Format = DXGI_FORMAT_R8_UNORM;
+        d.SampleDesc.Count = 1;
+        d.Usage = D3D11_USAGE_DEFAULT;
+        d.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        Check(g_device->CreateTexture2D(&d, nullptr, &g->stp), "CreateTexture2D (bit 15)");
+        Check(g_device->CreateShaderResourceView(g->stp, nullptr, &g->stp_srv), "CreateShaderResourceView (bit 15)");
+    }
+    g_ctx->UpdateSubresource(g->stp, 0, nullptr, g_scratch_stp, s->width, 0);
+}
+
 // Makes the GPU texture hold what `version` sees.
 GpuTexture* Bind(TexVersion* version) {
     Surface* s = version->surface;
@@ -419,9 +478,11 @@ GpuTexture* Bind(TexVersion* version) {
         // A snapshot: what the surface held when the draw was recorded.
         g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, version->pixels, version->has_color_key, version->color_key),
                                s->width * 4, 0);
+        PutStp(g, s);
         s->dirty = s->pixels != nullptr;   // the live pixels come next, if there are any
     } else if (s->dirty) {
         g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, s->pixels, s->has_color_key, s->color_key), s->width * 4, 0);
+        PutStp(g, s);
         s->dirty = false;
     }
     return g;
@@ -500,6 +561,7 @@ void Draw(const PipeState& s, U first, U count) {
     if (s.alpha_modulate) c.flags |= 4;
     if (s.specular) c.flags |= 8;
     if (s.alpha_test) c.flags |= 16;
+    if (g_stp_view && s.texture) c.flags |= 64;
     c.ref = s.alpha_ref;
     c.func = s.alpha_func;
     // DIV-0125: a draw of a page that holds a grab samples the grab's
@@ -517,8 +579,11 @@ void Draw(const PipeState& s, U first, U count) {
         c.grab1[1] = s.grab_size[1];
     }
     PutConstants(g_cb_draw, &c, sizeof c);
-    ID3D11ShaderResourceView* srv = s.texture ? Bind(s.texture)->srv : nullptr;
+    GpuTexture* bound = s.texture ? Bind(s.texture) : nullptr;
+    ID3D11ShaderResourceView* srv = bound ? bound->srv : nullptr;
+    ID3D11ShaderResourceView* stp_srv = bound ? bound->stp_srv : nullptr;   // DIV-0160's plane, null if none
     g_ctx->PSSetShaderResources(0, 1, &srv);
+    g_ctx->PSSetShaderResources(2, 1, &stp_srv);
     g_ctx->PSSetShaderResources(1, 1, &grab_srv);
     ID3D11SamplerState* grab_sampler = s.point_filter ? g_sampler_present_point : g_sampler_present_linear;
     g_ctx->PSSetSamplers(1, 1, &grab_sampler);
@@ -685,6 +750,7 @@ void InitOnFiber(const Options& options) {
     D3D_FEATURE_LEVEL got;
     UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
     if (GetEnvironmentVariableA("BOF3X_D3D_DEBUG", nullptr, 0) > 0) flags |= D3D11_CREATE_DEVICE_DEBUG;
+    g_stp_view = GetEnvironmentVariableA("BOF3X_STPVIEW", nullptr, 0) > 0;   // diagnostic (DIV-0160's plane)
     HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels, 3,
                                                D3D11_SDK_VERSION, &sd, &g_swap, &g_device, &got, &g_ctx);
     if (FAILED(hr) && (flags & D3D11_CREATE_DEVICE_DEBUG)) {
@@ -945,6 +1011,8 @@ void SweepReleased() {
         Surface* s = all[i];
         if (s->refs == 0 && s->gpu) {
             auto* g = static_cast<GpuTexture*>(s->gpu);
+            Release(g->stp_srv);
+            Release(g->stp);
             Release(g->srv);
             Release(g->texture);
             HeapFree(GetProcessHeap(), 0, g);

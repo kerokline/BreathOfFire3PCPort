@@ -1,7 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-23: PR #112, Amalgam's melt (DIV-0159), open; the bit-15 round staged on
-`render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
+**Status:** IN PROGRESS (2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
+and 2 built on `render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
 `reading-row/end`)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
@@ -54,7 +54,10 @@ hosted cross form).
    palettes (CLUTs `7800` / `7807`, additive, on dark backings) and nothing else; **no primitive mixes the two
    kinds**; modes 0 and 2, every GT4 and every cell sprite unchanged. CLUT row 480 measured on the twin's savestates:
    bit 15 clear there too, so the text is Capcom's port as the rope is (section 4). Before step 3: census the routes it
-   did not reach (section 5). Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
+   did not reach (section 5). **Step 2 is built** ([`stp-blend.md`](stp-blend.md), DIV-0160, D334): bit 15
+   rides in the A1R5G5B5 textures as alpha clear on a colour, plus a one-byte plane per GPU texture at `t2`;
+   no pixel changes (73 shots identical on / off), `BOF3X_STPVIEW=1` shows the plane. **Next, step 3**: the
+   draw by texel (two passes or dual-source blending, `stp-blend.md` 3). Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
    `ropeAndAmalgam`), recipe frame ~300, the McNeil rooftop (area 28): the rope over the black sky draws at about a
    quarter of its PSX brightness (median (20, 16, 6) against the twin's (72, 56, 24)).
    **Established** (runs in `C:\Users\kerok\bof3x-runs\amalgam_111`, the twin's in `C:\Users\kerok\bof3x-runs\rope_psx`):
@@ -73,7 +76,7 @@ hosted cross form).
    1. A census: log every semi-transparent textured primitive whose texels include bit-15-clear ones, over several
       routes (attract, combat, an effects route, `ropeAndAmalgam`), to size the change before building it.
    2. Carry bit 15 into the textures: the palette path (`Gfx_ConvertRow`) and the direct-colour path
-      (`Tex_Convert16`, which DIV-0159 / PR #112 now makes opaque but for 0). The A1R5G5B5 page format has one alpha
+      (`Tex_Convert16`, which DIV-0159 / PR #112 makes opaque but for 0). The A1R5G5B5 page format has one alpha
       bit, already transparency, so this likely wants a 32-bit page format in the backend with three alpha levels
       (transparent, solid, blended) - `render/render_shim.cpp` `CreateSurface`, `render_d3d11.cpp` `Convert` and the
       pixel shader.
@@ -329,12 +332,12 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **PR #112 open** (branch `111-amalgam-death`, issue #111): D333 / DIV-0159, a direct-colour page's texels opaque
+- **PR #112 merged** 2026-10-23 (`main` `147c6ae1`; branch `111-amalgam-death`, issue #111): D333 / DIV-0159, a direct-colour page's texels opaque
   but for 0, so Amalgam's melt draws; the owner's `ropeAndAmalgam.txt` route. Its runs:
   `C:\Users\kerok\bof3x-runs\amalgam_111` (also the A/B/C root `C:\Users\kerok\bof3x-runs\abc111`, set `us`, built
   with the discs at `D:\bof3x-runs\discs` through a scratch copy of `abc-installs.toml`) and Capcom's-code runs in
   `C:\Users\kerok\bof3x-runs\amalgam_111_orig`.
-- **`render/stp-blend`**: item 00, step 1 (the census) built and run; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
+- **`render/stp-blend`** (rebased onto `main` `147c6ae1` after PR #112 merged): item 00, steps 1 and 2 built; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
 - The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
   scratch) and deleted 145 local and 65 `origin` branches; each was classified merged with `git cherry` first, not an
   ancestry check (Traps). `main` is the only branch, local and remote.

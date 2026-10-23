@@ -6,6 +6,7 @@
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "render/render_shim.h"
 
 // The converted-palette cache. The PSX game keeps its CLUTs as rows of cells in
 // VRAM; the port converts a VRAM row to the display's pixel format on demand,
@@ -39,6 +40,8 @@ std::uint16_t* ShadowCell(int x, int y) { return Gfx_VramShadow + ((y << 10) + x
 // x86 shr takes its count modulo 32; say so rather than leave it to the compiler.
 std::uint32_t Shr(std::uint32_t v, std::uint32_t count) { return v >> (count & 31); }
 
+bool g_stp_test = false;   // the self-test's: DIV-0160's rule without the backend
+
 }  // namespace
 
 // original 0x59EBB0. Converts w cells of VRAM row y, from x, into the row's
@@ -49,6 +52,13 @@ std::uint32_t Shr(std::uint32_t v, std::uint32_t count) { return v >> (count & 3
 // PSX meaning carried over: cell 0 is transparent and stays 0, and any other
 // cell that the display format would round to 0 is forced to 1, so that it
 // stays opaque.
+//
+// DIVERGENCE DIV-0160 (docs/stp-blend.md): Capcom's gives every non-zero cell
+// the opaque bits, so bit 15 - which on the PlayStation picks the texels a
+// semi-transparent primitive blends - is lost. While the textures carry it
+// (render::StpTexels), a cell with bit 15 set gets no opaque bits: its colour
+// with alpha clear, still forced to 1 if it would round to 0, so it is never
+// read as transparent (render_shim.h). Cells without bit 15 are unchanged.
 extern "C" void __cdecl Gfx_ConvertRow(int x, int y, int w) {
     ClutRow& row = Rows()[y];
     if (row.pixels == nullptr) row.pixels = Crt_malloc(0x1000);
@@ -56,13 +66,15 @@ extern "C" void __cdecl Gfx_ConvertRow(int x, int y, int w) {
     const PixelFormat& f = Format();
     auto* out = static_cast<std::uint8_t*>(row.pixels) + (x << (f.bytes_per_pixel >> 1));
     const std::uint16_t* src = ShadowCell(x, y);
+    const bool stp = g_stp_test || render::StpTexels();   // DIV-0160
     for (int n = 0; n < w; ++n) {
         const std::uint32_t v = src[n];
         std::uint32_t p = (Shr((v & 0x3E0) << 14, f.g_shift) & f.g_mask) |
                           (Shr((v & 0x1F) << 19, f.r_shift) & f.r_mask) |
                           (Shr((v & 0x7C00) << 9, f.b_shift) & f.b_mask);
-        if (p != 0) p |= f.opaque_bits;
-        else if (v != 0) p = 1 | f.opaque_bits;
+        const std::uint32_t opaque = stp && (v & 0x8000) ? 0 : f.opaque_bits;
+        if (p != 0) p |= opaque;
+        else if (v != 0) p = 1 | opaque;
         if (f.bytes_per_pixel == 2) {
             const auto p16 = static_cast<std::uint16_t>(p);
             std::memcpy(out, &p16, 2);
@@ -208,6 +220,43 @@ void SelfTest(ConvertRowFn their_convert, LoadFn their_load, ClutFn their_clut) 
             Rows()[y0 + i] = {0, nullptr};
         }
     }
+    // DIV-0160: Gfx_ConvertRow with bit 15 carried is Capcom's, less the
+    // opaque bits on every converted cell whose source has bit 15 set.
+    unsigned stp_bad = 0, stp_cells = 0;
+    for (unsigned round = 0; round < 600; ++round) {
+        *format = formats[round % 3];
+        const int y0 = RngIn(0, 512 - kRows);
+        for (auto& c : g_shadow_in[0])
+            c = Rng() % 4 == 0 ? (Rng() % 2 ? 0 : 0x8000) : static_cast<std::uint16_t>(Rng() % 7 == 0 ? Rng() & 0x8421 : Rng());
+        const int x = RngIn(0, 1023), w = RngIn(0, 1024 - x);
+        for (int pass = 0; pass < 2; ++pass) {
+            PutState(y0);
+            std::memcpy(ShadowCell(0, y0), g_shadow_in[0], sizeof g_shadow_in[0]);
+            g_stp_test = pass == 1;
+            (pass ? &Gfx_ConvertRow : their_convert)(x, y0, w);
+            g_stp_test = false;
+            if (pass == 0) std::memcpy(g_buffers_theirs[0], g_buffers[0], sizeof g_buffers_theirs[0]);
+        }
+        const unsigned bpp = format->bytes_per_pixel;
+        for (int n = 0; n < w; ++n) {
+            std::uint32_t theirs = 0, ours = 0;
+            std::memcpy(&theirs, g_buffers_theirs[0] + (x + n) * bpp, bpp);
+            std::memcpy(&ours, g_buffers[0] + (x + n) * bpp, bpp);
+            const std::uint16_t v = g_shadow_in[0][x + n];
+            const std::uint32_t want = (v & 0x8000) ? theirs & ~format->opaque_bits : theirs;
+            if (v & 0x8000) ++stp_cells;
+            if (ours != want && ++stp_bad <= 8)
+                bof3::Log("shadow      gfx_clut DIV-0160 MISMATCH round %u: format %u, cell %d = 0x%04X, ours 0x%X, want 0x%X",
+                          round, round % 3, x + n, v, ours, want);
+        }
+        for (int i = 0; i < kRows; ++i) {
+            std::memset(ShadowCell(0, y0 + i), 0, sizeof g_shadow_in[i]);
+            Rows()[y0 + i] = {0, nullptr};
+        }
+    }
+    bof3::Log("shadow      gfx_clut DIV-0160 self-test: 600 rows, %u cells with bit 15, %u MISMATCHES", stp_cells, stp_bad);
+    if (stp_bad) bof3::Fatal("gfx_clut: DIV-0160's rule differs in %u cells", stp_bad);
+
     std::memset(format, 0, sizeof *format);
     bof3::Log("shadow      gfx_clut self-test: %u rounds (%u Gfx_ConvertRow, %u Gfx_LoadImageIfChanged with "
               "%u rows copied and %u skipped, %u Gfx_ClutPixels), 3 pixel formats, %u MISMATCHES; "

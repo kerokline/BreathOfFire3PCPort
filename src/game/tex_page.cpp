@@ -27,6 +27,7 @@
 #include "game/tex_page_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "render/render_shim.h"
 
 namespace tex_page {
 
@@ -194,10 +195,15 @@ void Tex_Convert8(void* dst, const void* src, const void* clut, int w, int h, in
 // Ours, with g_direct_opaque set: Gfx_ConvertRow's rule - a texel that packs
 // non-zero takes the opaque bits, a non-zero cell that packs to 0 becomes
 // 1 | opaque bits, and a cell of 0 stays 0, transparent as on the PSX.
+//
+// DIVERGENCE DIV-0160 (docs/stp-blend.md): while the textures carry bit 15
+// (render::StpTexels, armed only with DIV-0159), a cell with bit 15 set takes
+// no opaque bits - its colour with alpha clear, as Gfx_ConvertRow writes it.
 void Tex_Convert16(void* dst, const void* src, int w, int h, int pitch) {
     const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
     const Packer pack;
     const U opaque = g_direct_opaque != 0 ? static_cast<U>(Gfx_PixelFormat[7]) : 0;
+    const bool stp = render::StpTexels();   // DIV-0160
     auto* d = static_cast<unsigned char*>(dst);
     U total = 0x100;
     do {
@@ -215,8 +221,9 @@ void Tex_Convert16(void* dst, const void* src, int w, int h, int pitch) {
                     const U v = Word(p);
                     U texel = pack((v & 0x1F) << 19, (v & 0x3E0) << 14, (v & 0x7C00) << 9);
                     if (g_direct_opaque != 0) {   // DIV-0159
-                        if (texel != 0) texel |= opaque;
-                        else if (v != 0) texel = 1 | opaque;
+                        const U bits = stp && (v & 0x8000) ? 0 : opaque;   // DIV-0160
+                        if (texel != 0) texel |= bits;
+                        else if (v != 0) texel = 1 | bits;
                     }
                     if (wide) {
                         PutLong(d, texel);
@@ -463,10 +470,21 @@ void TexPage_Inject() {
     {
         // DIV-0159: armed after the fuzz, which compares Capcom's rule.
         const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
-        bof3::PatchBytes("DirectOpaque",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_direct_opaque)), was, is, 4);
+        const bool direct = bof3::PatchBytes(
+            "DirectOpaque", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_direct_opaque)), was, is, 4);
         bof3::Log("DIV-0159    a direct-colour page's texels are opaque but for 0, as Gfx_ConvertRow's are (on unless "
                   "the line above says OFF)");
+        // DIV-0160: the textures carry bit 15 - armed after the gfx_clut and
+        // tex_page fuzzes, and only with DIV-0159: without it a direct-colour
+        // texel has alpha clear on a colour, which DIV-0160 reads as drawn.
+        if (direct) {
+            bof3::PatchBytes("StpTexels",
+                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&render::g_stp_texels)), was, is, 4);
+            bof3::Log("DIV-0160    the textures carry the PlayStation's bit 15 (alpha clear on a colour), under our "
+                      "backend; drawn as before (on unless the line above says OFF)");
+        } else {
+            bof3::Log("DIV-0160    off: it needs DIV-0159 (DirectOpaque)");
+        }
     }
     BOF3_INJECT(Dd_InitSurfaceDesc);
     BOF3_INJECT(Dd_CreatePlainSurface);

@@ -189,6 +189,19 @@ void BeforeWrite(Surface* s);
 // `gpu` still to be freed by the GPU side).
 Surface* const* AllSurfaces(U* n);
 
+// --- bit 15 in the textures (DIV-0160, docs/stp-blend.md) ------------------
+// The PlayStation's semi-transparency bit, carried in the A1R5G5B5 textures
+// the game builds, in the one combination Capcom's converters never write:
+// alpha set - a colour with bit 15 clear (drawn opaque by a semi-transparent
+// primitive); alpha clear and colour 0 - transparent; alpha clear and colour
+// non-zero - a colour with bit 15 set (blended). The converters
+// (Gfx_ConvertRow, Tex_Convert16) write it only while StpTexels(): the switch
+// armed (StpTexels, after the start-up fuzzes, by TexPage_Inject) and the
+// backend ours (InitShim has run). Under Capcom's DirectX 6 objects an
+// alpha-clear texel is transparent, so there the converters keep Capcom's rule.
+extern std::uint32_t g_stp_texels;
+bool StpTexels();
+
 // --- the frame-buffer grab (DIV-0125, fb_grab.h) ---------------------------
 // Each does nothing unless the backend is the one recording frames
 // (InitShim has run) and BOF3X_FBGRAB is not 0, so Capcom's DirectX 6 path
