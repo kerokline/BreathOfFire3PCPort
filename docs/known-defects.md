@@ -9637,7 +9637,7 @@ looping, `Music_LoadFile` finding no file 255.)
 
 **Status:** fixed by DIV-0168 (switch `MusicPlayRefusesNone`); latent.
 
-## D347 — The port's stop is a ten-frame fade where the PlayStation cuts (the port's sound layer; the owner's ear)
+## D347 — The port's stop is a ten-frame fade where the PlayStation cuts (the port's sound layer; the owner's ear; fixed by DIV-0174)
 
 **Seen:** heard in part - D318's reading named the PlayStation's immediate
 stop in Ryu's dream; found as a class 2026-10-23 by reading the US
@@ -9656,8 +9656,21 @@ is otherwise the same shape - the PlayStation fades through
 DIV-0092) called `0x8015DDF4` a restart of the area's track from its table;
 it is the stop, and those lines are corrected. Ours does as the PC.
 
-**Status:** the port's sound layer; cosmetic; the owner's ear decides whether
-the cut is wanted back (a switch would be DIV-0132's shape).
+**The class** (2026-10-23, the sound-layer round, group ST): every one of
+`Music_FadeOutStop`'s 131 PC call sites (a rel32 scan) read beside its twin.
+`Music_FadeOutStop`'s own twin, JP `0x801626C0` (US `0x80161CD0`), is itself a
+stop: `0x8015DF44` sets the decrescendo and calls `SsSepStop` at once
+([`libsnd-reading.md`](libsnd-reading.md) 5.2). Every site pairs with that, with
+the plain stop `0x8015DDF4` or with the stop of every SEP `0x8015DFC8` (the
+battle's). None pairs with the decrescendo alone (JP `0x8015DEE8`, US
+`0x8015D4F8`), which lines up instead with the PC's `Music_FadeOut`. The site-by-site table is in DIV-0174. The fade the
+class hears today is DIV-0028's: Capcom's own per-spin step made it near a cut
+(D26).
+
+**Status:** the port's sound layer; fixed by DIV-0174 (`BOF3X_ORIGINAL=StopCuts`),
+on by default and flagged: the owner's ear decides whether the cut stays. With
+it, DIV-0143's knock-on (the bedroom's song fading 27 frames into Ryu's dream)
+is gone.
 
 ## D348 — `Menu_DrawBox` and `Menu_DrawIcon8` take x and y unsigned: a box slid past the left or top edge draws its frame without its fill (the port's; fixed by DIV-0165)
 

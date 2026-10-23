@@ -17,6 +17,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/sound.h"
 #include "game/sound_callees.h"
+#include "game/sound_st.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -880,6 +881,46 @@ unsigned RepairChecks(unsigned rounds) {
     return bad;
 }
 
+// The sound-layer round's (sound_st.h), with its switch set, the same way.
+//   DIV-0174: Music_FadeOutStop with StopCuts against itself without it, on
+//     the same randomised state: every compared byte, the calls out and eax
+//     the same, and exactly one Music_Stop more when frames is above 0.
+unsigned g_cut_stops;
+void __cdecl CutCountStop() { ++g_cut_stops; }
+
+unsigned SoundLayerRoundChecks(unsigned rounds) {
+    static State input, out, want;
+    unsigned bad = 0;
+    const auto music_stop_saved = g.music_stop;
+    const std::uint8_t cuts_saved = sound_st::g_stop_cuts;
+
+    g.music_stop = CutCountStop;
+    for (unsigned round = 0; round < rounds; ++round) {
+        const Args x = Generate(kFadeOutStop, input);
+        Capture(input);
+        std::uint32_t result[2];
+        unsigned stops[2];
+        for (unsigned pass = 0; pass < 2; ++pass) {
+            Apply(input);
+            sound_st::g_stop_cuts = static_cast<std::uint8_t>(pass);
+            g_cut_stops = 0;
+            result[pass] = Run(Ours(kFadeOutStop), kFadeOutStop, x);
+            stops[pass] = g_cut_stops;
+            Capture(pass ? out : want);
+        }
+        sound_st::g_stop_cuts = cuts_saved;
+        want.control = out.control;
+        const unsigned cut = static_cast<int>(x.a[0]) > 0 ? 1u : 0u;
+        if (result[0] != result[1] || stops[1] != stops[0] + cut || std::memcmp(&want, &out, sizeof out) != 0) {
+            if (++bad <= 6)
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0174 round %u, Music_FadeOutStop(%d), %u / %u stops", round,
+                          static_cast<int>(x.a[0]), stops[0], stops[1]);
+        }
+    }
+    g.music_stop = music_stop_saved;
+    return bad;
+}
+
 void PatchImport(void* copy, const ImportOperand& op) {
     auto* code = static_cast<unsigned char*>(copy);
     std::uint32_t disp;
@@ -937,6 +978,7 @@ void SelfTest() {
     }
     constexpr unsigned kRepairRounds = 2000;
     const unsigned repair_bad = RepairChecks(kRepairRounds);
+    const unsigned round_bad = SoundLayerRoundChecks(kRepairRounds);
     g = kOriginals;
     Apply(saved);
     SetControlWord(cw_saved);
@@ -945,6 +987,8 @@ void SelfTest() {
     bof3::Log("shadow      sound self-test: DIV-0168's refusal and DIV-0167's key-off, %u rounds each with the switch set, "
               "%u MISMATCHES", kRepairRounds, repair_bad);
     if (repair_bad) bof3::Fatal("the sound layer's repairs differ from what they say in %u of %u rounds", repair_bad, 2 * kRepairRounds);
+    bof3::Log("shadow      sound self-test: DIV-0174's cut, %u rounds with the switch set, %u MISMATCHES", kRepairRounds, round_bad);
+    if (round_bad) bof3::Fatal("the sound-layer round's repair differs from what it says in %u checks", round_bad);
     for (unsigned k = 0; k < kCount; ++k)
         if (bad_per[k]) bof3::Log("shadow      sound self-test: %s %u of %u rounds differ", kClones[k].name, bad_per[k], kPerFunction);
     if (bad) bof3::Fatal("the sound layer differs from the original in %u of %u self-test rounds", bad, kRounds);
