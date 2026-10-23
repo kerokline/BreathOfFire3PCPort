@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 157 entries, DIV-0001..0157, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 159 entries, DIV-0001..0159, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -9204,6 +9204,12 @@ designed in rather than bolted on.
   - `'*'` headless, narrow and at `BOF3X_WIDE` 1 and 2.
   - Not seen in play: no recipe reaches Amalgam (area 28) or Mikba, and the
     owner's eye is the measure.
+  - **Amended 2026-10-23:** first reached in play by the owner's route
+    `ropeAndAmalgam.txt` (issue #111): the capture runs (one line, object at
+    (50, 65) into VRAM (0x372, 0x141)), but the melt still drew nothing. A
+    second defect, Capcom's, came after it: a direct-colour page's texels all
+    have alpha 0 and are discarded (D333). DIV-0159 fixes that; with both,
+    the melt plays.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
 
@@ -10096,3 +10102,96 @@ designed in rather than bolted on.
 - **Reversible?** Nothing changes without a mod and a choice: *Row above the
   text: None* (`ruby=` empty); Remove on the Mods tab takes the folder, the
   row and the layer.
+
+### The faster text: Msg Speed's Med. at Fast's pace, Fast a page at once
+
+- **ID:** DIV-0158
+- **Date:** 2026-10-22
+- **Subsystem:** the field and story message box - `MsgBox_StatePrint`
+  (`0x497B30`, `src/game/msgbox.cpp`, its glyph tail); the launcher's
+  `text_speed=` (`src/launcher/config.cpp`, `BOF3X_TEXT_SPEED`) and its box
+  on Mods, Extras (`config_dialog.cpp`, `launcher.rc`). Issue #108.
+- **Tier:** Sensible - the pace the text appears at; nothing in play changes.
+- **Original behaviour:** each glyph waits a delay from the byte table at
+  `0x658E94`, indexed by the Msg Speed option (Fast 0, Med. 1, Slow 2) plus
+  one when the Speak button is not held; the box types its text out a glyph
+  at a time at every speed. Only a script's own `0x10` / `0x11` span prints
+  at once.
+- **New behaviour:** with `text_speed=1` (off by default), Med. reads Fast's
+  entries of the table (held and not), and on Fast a glyph sets no wait: the
+  printer runs on in the same frame to the next code that stops it - the
+  end (`0x00`), a page break (`0x02`), a choice (`0x14`), a timed wait
+  (`0x16`) or a pause (`0x0B`) - so a page appears whole. Unlike flag `0x10`
+  it never forces the loop past those, so every page, prompt and choice
+  stops where the script put it. The delay byte is still set to Fast's, and
+  `0x0B` adds its 8 frames to that, so a pause the script writes into a line
+  lasts as long as it does on Fast (the owner's call, 2026-10-22: the pauses
+  stay). Slow is unchanged. At most 1,024 glyphs print in a frame; past that
+  the page goes on in the next frame, so a message with no stop code cannot
+  hold the loop (`docs/msgbox.md` section 6's unclosed-span hang).
+  `BOF3X_TEXT_SPEED` is 0 or 1; anything else stops the game at start, and 1
+  with `MsgBox_StatePrint` not ours stops it too. Battle messages are not
+  touched: they never type out (the battle ring draws each whole with
+  `Text_DrawAt`, `BattleWin_DrawMessage` `0x597ED0`) and never read Msg
+  Speed.
+- **Rationale:** a request from the discussion page (issue #108): replaying
+  players want the text as fast as they read. The original's Fast still
+  types; holding Speak helps only a little.
+- **Also in the PSX version?** The same three speeds and the same printer;
+  no instant mode.
+- **Verification:** builds; the exe host's self-test passes with the option
+  off and on, the start log names it on, `BOF3X_TEXT_SPEED=2` stops with its
+  message, and `text_speed=1` in the ini reaches the game. The hosted fuzz
+  with it off passes: msgbox's 44,000 rounds against Capcom's copy, 0
+  mismatches, and the whole `BOF3X_SHADOW='*'` run exits 0. Played by the owner
+  2026-10-22: "This is brilliant".
+- **Reversible?** Off by default; the Extras box or `text_speed=0`.
+
+### A direct-colour page's texels are opaque but for 0: Amalgam's melt draws
+
+- **ID:** DIV-0159
+- **Date:** 2026-10-23
+- **Subsystem:** the page textures - `Tex_Convert16` (`0x5A9D2F`, ours,
+  `src/game/tex_page.cpp`; [`tex-page.md`](tex-page.md);
+  [`known-defects.md`](known-defects.md) D333, issue #111)
+- **Tier:** Intent - a restoration. A 15-bit texture page on the
+  PlayStation draws every non-zero cell; the code that draws from one (the
+  melt after DIV-0142's capture) plainly expects that.
+- **Original behaviour:** `Tex_Convert16` packs each cell's red, green and
+  blue and never adds `Gfx_PixelFormat`'s opaque bits (dword 7), as
+  `Gfx_ConvertRow` does for palettes. The page format is A1R5G5B5, opaque
+  bits `0x8000` (Capcom's set-up prefers it, and the port's backend makes
+  the same choice), so every texel of a direct-colour page has alpha 0 and
+  the colour-keyed draw discards it. Amalgam's melt draws nothing, and the
+  boss vanishes on the frame of the capture; so do Mikba's death,
+  Weretiger's form and effect kind 0x9D's pulse and glow (D333). Capcom's
+  build, given a filled page, shows the same (D333).
+- **New behaviour:** `Gfx_ConvertRow`'s rule in `Tex_Convert16`: a cell
+  that packs non-zero takes the opaque bits, a non-zero cell that packs to
+  0 becomes 1 plus the opaque bits, and a cell of 0 stays 0, transparent as
+  on the PlayStation. Bit 15 of a cell is still not read (D333's drawers do
+  not need it). Under a format with no opaque bits nothing changes. A
+  texel inside a DIV-0125 grab is the grab's, as before.
+- **Rationale:** a player's report (issue #111) after DIV-0142, and the PSX
+  twin rule: the PlayStation draws these pages.
+- **Also in the PSX version?** The PlayStation draws them; this restores
+  that.
+- **Verification** (2026-10-23, `ropeAndAmalgam.txt`, recipe frames
+  7600..7780, shots every 3):
+  - On: the melt plays - the streaks rise over the boss's skulls and fall
+    away by frame 7714, as on the owner's PSX capture.
+    `BOF3X_ORIGINAL=DirectOpaque`: the boss is gone from the capture's
+    frame, as before.
+  - `BOF3X_SHADOW=tex_page` (the fuzz against Capcom's copy, run before the
+    switch is armed): `Tex_Convert16` 1,000 rounds, the builders 4,000
+    each, no mismatch.
+  - `ending17.txt` (the ending's frozen frame, a direct-colour drawer behind
+    a DIV-0125 grab): all 162 shots identical on and off. With the grab
+    off (`BOF3X_FBGRAB=0`) the frame now shows the font sheets that page
+    holds, read as 15-bit, at its right edge where before it drew nothing;
+    a debugging setting only.
+  - Not seen: Mikba's death, Weretiger and kind 0x9D (no route reaches
+    them). Kind 0x9D's page is not cleared first (D333), so it will draw
+    what that page holds; the owner's look when a route gets there.
+- **Reversible?** `BOF3X_ORIGINAL=DirectOpaque`, or
+  `BOF3X_ORIGINAL=Tex_Convert16`.

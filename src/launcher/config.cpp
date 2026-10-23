@@ -241,6 +241,9 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             else if (name == "scanroll") sp.scanroll = v > 0.5f;
             else if (name == "overscan_crop") sp.overscan = v > 0.5f;
             else if (name == "shadow_mask") { if (in(0.0f, 2.0f)) sp.mask = static_cast<int>(v + 0.5f); }
+        } else if (key == "text_speed") {
+            if (value == "0") cfg.text_faster = false;
+            else if (value == "1") cfg.text_faster = true;
         } else if (key == "snap") {
             if (value == "0") cfg.snap = false;
             else if (value == "1") cfg.snap = true;
@@ -300,6 +303,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# 1: Settings shows the Row above the text box (Mods, Extra; turned on when a reading-row mod is\r\n";
     out += "# added). Display only: ruby= above is given to the game either way\r\n";
     out += std::string("ruby_ui=") + (cfg.ruby_ui ? "1" : "0") + "\r\n";
+    out += "# 1: Msg Speed's Med. plays at Fast and Fast prints each page at once (DIV-0158, Mods, Extras)\r\n";
+    out += "# | 0 the original's three speeds\r\n";
+    out += std::string("text_speed=") + (cfg.text_faster ? "1" : "0") + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
     out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
@@ -501,6 +507,9 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
         if (!line.empty()) line.pop_back();   // the trailing comma
         SetEnvironmentVariableA("BOF3X_SATPIXIE", line.c_str());
     }
+
+    if (GetEnvironmentVariableW(L"BOF3X_TEXT_SPEED", existing, 64) == 0 && cfg.text_faster)
+        SetEnvironmentVariableW(L"BOF3X_TEXT_SPEED", L"1");
 
     if (GetEnvironmentVariableW(L"BOF3X_SNAP", existing, 64) == 0 && !cfg.snap)
         SetEnvironmentVariableW(L"BOF3X_SNAP", L"0");

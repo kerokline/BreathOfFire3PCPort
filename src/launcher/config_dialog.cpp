@@ -596,6 +596,7 @@ void Populate(HWND dlg, DialogState& state) {
     RubyRefresh(dlg, state);   // after the language: the box's entries follow it
     Check(dlg, IDC_EXTRA_RUBY, cfg.ruby_ui);
     RubyUiShow(dlg, cfg.ruby_ui);
+    Check(dlg, IDC_EXTRA_TEXTSPEED, cfg.text_faster);
 
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
     AddItem(dlg, IDC_FILTER, L"Sharp - point");
@@ -654,6 +655,7 @@ void ReadBack(HWND dlg, const DialogState& state) {
     if (state.ruby_touched) cfg.ruby = state.ruby_pick;   // untouched: ruby= as read
     cfg.ruby_ui = Checked(dlg, IDC_EXTRA_RUBY);
     cfg.ruby_ui_named = true;
+    cfg.text_faster = Checked(dlg, IDC_EXTRA_TEXTSPEED);
 
     // The Music box (DIV-0150): the source music= already means keeps the line
     // as written (an empty music=, seq or mp3 too); another writes its name.

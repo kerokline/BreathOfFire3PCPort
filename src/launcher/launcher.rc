@@ -319,17 +319,21 @@ END
 // page above) and Extras (the owner's call, 2026-10-22): the home for the
 // launcher's extras, reserving the slot on the top row. Today one toggle,
 // ruby_ui= in bof3x.ini: whether Settings shows the Row above the text box.
-// Display only.
-IDD_PAGE_EXTRA DIALOGEX 0, 0, 340, 64
+// Display only. And text_speed=, the faster text (DIV-0158).
+IDD_PAGE_EXTRA DIALOGEX 0, 0, 340, 100
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Extras", -1, 0, 0, 336, 62
+    GROUPBOX        "Extras", -1, 0, 0, 336, 98
     AUTOCHECKBOX    "S&how Row above the text on Settings (the second script: furigana or another language)",
                     IDC_EXTRA_RUBY, 7, 14, 324, 10
     LTEXT           "The row is a second line of script drawn above the game's text: a reading-row mod's readings (furigana over the Japanese) or another language this install holds. Adding a reading-row mod, such as the furigana mod, on Mods turns this on. Off, the box is only hidden: the row Settings last chose is kept and played.",
                     IDC_EXTRA_RUBYNOTE, 19, 27, 312, 32
+    AUTOCHECKBOX    "&Faster text: Msg Speed's Med. plays at Fast, and Fast prints each page at once",
+                    IDC_EXTRA_TEXTSPEED, 7, 63, 324, 10
+    LTEXT           "For the field's and the story's text boxes; battle messages already appear whole. The pauses the script writes into a line are kept, and Slow is unchanged.",
+                    IDC_EXTRA_TEXTNOTE, 19, 76, 312, 18
 END
 
 // DIV-0087: the importer's cache; the Sources page (docs/install-sources.md).
