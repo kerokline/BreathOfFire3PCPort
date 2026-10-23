@@ -10607,7 +10607,8 @@ designed in rather than bolted on.
     DIV-0169 self-test drives both hooks against recorders for the five calls out: switch off, a song
     halted and resumed once, a silent night, another track, another file, the track stopped. 9 checks, 0
     mismatches.
-  - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy: see the hand-back.
+  - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0: 1,092 `MISMATCHES`
+    counts, all 0, `inject: 10087 ours`.
   - Not heard by the owner.
 - **State:** DLL state only (`sound_in.cpp`'s taken song, `music_resume`'s pending sample); nothing new in
   game memory. The morning's `Music_Start`, which the original does not make, writes the music globals it
