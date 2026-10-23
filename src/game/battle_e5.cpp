@@ -1145,6 +1145,19 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
 // repeat keys of 0xA000; cancel, or confirm on answer 1: sound 0x106, a step
 // back; confirm on 0: sound 0x104, the next step; else a repeat key flips the
 // answer (0x904B74 ^= 1); the hand at 0xD5 + 0x22 * answer (the dword), 0x18.
+//
+// As the original has it: the hand reads the dword at 0x904B74 (0x4511F2)
+// where every writer stores a word (0x451042, 0x4511EA, 0x431C70); the
+// PlayStation (US 0x800A632C, JP 0x800A332C) reads the answer as a u16. The
+// level-up notice's other reader (0x431C77) masks its dword with 0xFFFF, so
+// this is the only one that can see the halfword 0x904B76.
+//
+// DIVERGENCE DIV-0162: 1 through PatchBytes("StoreAskWord") in
+// BattleE5_Inject, after the self-test. The hand then reads the word, as the
+// PlayStation; the two differ only when 0x904B76 is not 0, which no
+// instruction of the exe names (D338).
+static std::uint8_t g_store_ask_word = 0;
+
 extern "C" void __cdecl DragonCmd_StoreAsk(void) {
     ShowLine(Line(0x62));
     const U keys = Repeat(0xA000);
@@ -1160,7 +1173,7 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
         return;
     }
     if (keys & 0xA000) SetW(at::kAsk, W(at::kAsk) ^ 1u);
-    const U answer = L(at::kAsk);
+    const U answer = g_store_ask_word ? W(at::kAsk) : L(at::kAsk);
     BH_CALL(Menu_DrawHand)(static_cast<int>(answer * 0x22 + 0xD5), 0x18, 0);
 }
 
@@ -1214,6 +1227,12 @@ extern "C" void __cdecl DragonCmd_StoreSource(void) {
 
 void BattleE5_Inject() {
     if (bof3::WantsShadow("battle_e5")) battle_e5::SelfTest();
+    {
+        // DIV-0162: after the self-test, which compared Capcom's dword read.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("StoreAskWord", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_store_ask_word)), &was, &is, 1);
+        bof3::Log("DIV-0162    the dragon store prompt's hand reads its answer as the word every writer stores (on unless the line above says OFF)");
+    }
     BOF3_INJECT(EnemyAI_OtherRowsDone);
     BOF3_INJECT(EnemyAI_SetRowDone);
     BOF3_INJECT(EnemyAI_CondElement);
