@@ -883,10 +883,10 @@ unsigned RepairChecks(unsigned rounds) {
 
 // The sound-layer round's two (sound_st.h), each with its switch set, the
 // same way.
-//   DIV-0174: Music_FadeOutStop with StopCuts against itself without it, on
+//   DIV-0173: Music_FadeOutStop with StopCuts against itself without it, on
 //     the same randomised state: every compared byte, the calls out and eax
 //     the same, and exactly one Music_Stop more when frames is above 0.
-//   DIV-0175: Sound_PlayEffect with OneShotKeyOff against itself without it:
+//   DIV-0174: Sound_PlayEffect with OneShotKeyOff against itself without it:
 //     every compared byte, the calls out and eax the same (the remembering is
 //     the DLL's alone). KeyOffOneShots on randomised remembered one-shots and
 //     state: in voice order 16..23, one stop for each channel's one-shot whose
@@ -929,7 +929,7 @@ unsigned SoundLayerRoundChecks(unsigned rounds) {
         const unsigned cut = static_cast<int>(x.a[0]) > 0 ? 1u : 0u;
         if (result[0] != result[1] || stops[1] != stops[0] + cut || std::memcmp(&want, &out, sizeof out) != 0) {
             if (++bad <= 6)
-                bof3::Log("shadow      sound self-test MISMATCH: DIV-0174 round %u, Music_FadeOutStop(%d), %u / %u stops", round,
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0173 round %u, Music_FadeOutStop(%d), %u / %u stops", round,
                           static_cast<int>(x.a[0]), stops[0], stops[1]);
         }
     }
@@ -949,7 +949,7 @@ unsigned SoundLayerRoundChecks(unsigned rounds) {
         want.control = out.control;
         if (result[0] != result[1] || std::memcmp(&want, &out, sizeof out) != 0) {
             if (++bad <= 12)
-                bof3::Log("shadow      sound self-test MISMATCH: DIV-0175 round %u, Sound_PlayEffect(%04X)", round,
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0174 round %u, Sound_PlayEffect(%04X)", round,
                           static_cast<unsigned>(x.a[0] & 0xFFFF));
         }
     }
@@ -998,7 +998,7 @@ unsigned SoundLayerRoundChecks(unsigned rounds) {
             table_ok = table_ok && sound_st::g_one_shots[c].entry == shots[c].entry && sound_st::g_one_shots[c].buffer == shots[c].buffer;
         if (!table_ok || g_keyoff_n != n || std::memcmp(stops, g_keyoff_stops, n * 4) != 0 || std::memcmp(&want, &out, sizeof out) != 0) {
             if (++bad <= 18)
-                bof3::Log("shadow      sound self-test MISMATCH: DIV-0175 key-off round %u, %u stops for %u", round, g_keyoff_n, n);
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0174 key-off round %u, %u stops for %u", round, g_keyoff_n, n);
         }
     }
 
@@ -1040,7 +1040,7 @@ unsigned SoundLayerRoundChecks(unsigned rounds) {
                                  sound_st::g_one_shots[16].entry == 0 && sound_st::g_one_shots[0].entry == 0 && Sound_Channels[17] == b4;
             if (!noted || !stopped) {
                 ++bad;
-                bof3::Log("shadow      sound self-test MISMATCH: DIV-0175 end to end, variant %d: noted %d, %u stops", variant,
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0174 end to end, variant %d: noted %d, %u stops", variant,
                           noted ? 1 : 0, g_keyoff_n);
             }
             SetDword(entry2 + 4, b2);
@@ -1119,7 +1119,7 @@ void SelfTest() {
     bof3::Log("shadow      sound self-test: DIV-0168's refusal and DIV-0167's key-off, %u rounds each with the switch set, "
               "%u MISMATCHES", kRepairRounds, repair_bad);
     if (repair_bad) bof3::Fatal("the sound layer's repairs differ from what they say in %u of %u rounds", repair_bad, 2 * kRepairRounds);
-    bof3::Log("shadow      sound self-test: DIV-0174's cut and DIV-0175's one-shot key-off with the switch set - %u rounds "
+    bof3::Log("shadow      sound self-test: DIV-0173's cut and DIV-0174's one-shot key-off with the switch set - %u rounds "
               "of the cut, %u of the remembering, %u of the key-off, and the key-off end to end - %u MISMATCHES",
               kRepairRounds, kRepairRounds, kRepairRounds, round_bad);
     if (round_bad) bof3::Fatal("the sound-layer round's repairs differ from what they say in %u checks", round_bad);

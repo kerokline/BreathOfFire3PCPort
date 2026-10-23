@@ -33,6 +33,7 @@
 #include "game/save_menu.h"
 #include "game/sound_callees.h"
 #include "game/sound_st.h"
+#include "game/sound_sp.h"
 #include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
@@ -162,9 +163,11 @@ int Sound_PlayEffectEax(unsigned short id) {
         void* const playing = reinterpret_cast<void*>(Sound_Channels[channel]);
         if (playing) g.sndbuf_stop(playing);
         const std::uint32_t entry = Address(Sound_Banks) + base + kVoices + voice * 8;
+        // DIVERGENCE DIV-0171 / DIV-0172: a buffer sound_sp changed gets its level back first (sound_sp.h).
+        if (sound_sp::Routed()) sound_sp::BeforePlay(reinterpret_cast<void*>(Dword(entry + 4)));
         g.sndbuf_play(Dword(entry) | loops, reinterpret_cast<void*>(Dword(entry + 4)), word >> 16);
         Sound_Channels[channel] = loops ? Dword(entry + 4) : 0;
-        if (!loops) sound_st::NoteOneShot(channel, entry);  // DIV-0175: DLL-side, nothing without its switch
+        if (!loops) sound_st::NoteOneShot(channel, entry);  // DIV-0174: DLL-side, nothing without its switch
     }
     return 0;
 }
@@ -307,7 +310,7 @@ void KeyOffEffectVoices() {
 // half is 0 - unsigned, where Music_FadeIn divides by it signed - rounded at
 // the control word's precision, then stored as a float. eax is frames.
 //
-// DIVERGENCE DIV-0174: with the switch and frames above 0, the stream is then
+// DIVERGENCE DIV-0173: with the switch and frames above 0, the stream is then
 // stopped at once (sound_st::CutStop), as the PlayStation's twin does: its
 // decrescendo is followed by SsSepStop in the same call (0x8015DF44, US
 // 0x8015D554). Every word above is still written as Capcom's, so the game sees
@@ -327,7 +330,7 @@ int Music_FadeOutStopEax(int frames) {
         : "st");
     Music_FadeCount = frames;
     sound::g_stop_unseen = sound::g_fade_per_frame && frames != 0;  // DIV-0028: the first tick marks it stopped
-    if (sound_st::g_stop_cuts && frames > 0) sound_st::CutStop(frames);  // DIV-0174
+    if (sound_st::g_stop_cuts && frames > 0) sound_st::CutStop(frames);  // DIV-0173
     return frames;
 }
 
@@ -1984,7 +1987,7 @@ void Sound_Inject() {
         bof3::PatchBytes("MusicPlayRefusesNone", Address(&sound::g_play_refuses_none), &was, &is, 1);
         bof3::Log("DIV-0168    Music_Play refuses track 0xFF, as the PlayStation does (on unless the line above says OFF)");
     }
-    sound_st::ArmStopCuts();  // DIV-0174: after every self-test above, which ran Capcom's fade
+    sound_st::ArmStopCuts();  // DIV-0173: after every self-test above, which ran Capcom's fade
 }
 
 void music_resume::SelfTest() { ResumeMp3_SelfTest(); }

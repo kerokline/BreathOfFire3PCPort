@@ -9350,7 +9350,7 @@ the list. Not seen.
 **Status:** fixed by DIV-0161 (`BOF3X_ORIGINAL=BattleDrawSigned` for the
 original), fix wave 1023; the port's.
 
-## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard; fixed by DIV-0167 for the looping voices and DIV-0175 for the one-shots)
+## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard; fixed by DIV-0167 for the looping voices and DIV-0174 for the one-shots)
 
 **Seen:** not heard; found 2026-10-23 by reading the US PlayStation's
 `0x801D3E80` (JP `0x801D3E60`, words identical) against the PC's `0x42FD20`
@@ -9381,7 +9381,7 @@ the PlayStation's key-off would release it; left as the PC's. Not heard; a
 listen for the owner.
 
 **The one-shots** (2026-10-23, the sound-layer round, group ST): fixed by
-DIV-0175 (`BOF3X_ORIGINAL=OneShotKeyOff`). `Sound_PlayEffect` now remembers,
+DIV-0174 (`BOF3X_ORIGINAL=OneShotKeyOff`). `Sound_PlayEffect` now remembers,
 DLL-side, the voice entry and buffer each channel last played as a one-shot.
 The preload stops each one still held by its entry and not by a looping
 channel. A one-shot followed on its channel by another is not remembered: the
@@ -9636,7 +9636,37 @@ Ours does as the PC in all three. These are the port's replacement of the
 PlayStation's positional sound by flat effects; which scenes used `B8` is
 not known.
 
-**Status:** latent; the port's sound layer; the owner's ear.
+**Read again** (2026-10-23, the sound-layer round's group SP, the US disc's
+executable and `GAME.EMI#0` disassembled; [`DIVERGENCE.md`](DIVERGENCE.md)
+DIV-0170..0173):
+- `B8`'s `0x8015D300(b1, b2, b3, b3)` is the music's own start: every group
+  is SEP access 0 (US `0x80148FC0`, sixteen zeros), b2 a sequence of the
+  loaded song file (the track table US `0x80181EB8`: every track group 0,
+  sequence 0..3 of its file), b3 the level - stopped, set (0 under the gate
+  `0x80144954`, never found set) and played from its top, no fade.
+  `Music_Play`'s twin starts its tracks through it at level 0. Two shipped
+  scripts use it (`tools/movement_scan.py`'s decode): `B8 00 00 64` in area
+  142's `+0x18` script 2 and area 174's `+0x10` script 35.
+- `0x80161454` takes no index: it updates the voices packed in the
+  scratchpad work record's (`Sprite_Current`'s) `+0x70` bits 8..27, by the
+  screen point under bit 0x1000 of `0x8014625A` (the PC's
+  `Field_ScriptFlags2` `0x905BA4`) and by the distance from the kind-2
+  object otherwise, panned by screen x unless the options' Mono; a voice
+  keyed off is dropped from the word, and bit 3 cleared when none is left.
+  The bit and the word are set by `0x8015D71C`, the first of the three, so
+  on the PC, whose `Sound_PlayById` does neither, the bit-3 path is never
+  taken.
+- The PC's `Sound_PlayById` stands for all three: `0x8015D71C` at every call
+  site but four (a jal scan of the US disc: 503 calls in 176 overlays),
+  `0x8015D7C8` from op `BC` and `SCENA01.EMI`'s three, `0x8015D820` from ops
+  `BD` and `D1`.
+
+**Status:** fixed by DIV-0170 (`B8`, switch `MoveB8Restart`), DIV-0171 (the
+positional voice, `SpriteVoicePosition`) and DIV-0172 (the level and the
+distance gate, `SoundLevelGate`), 2026-10-23; what the PC's records cannot
+carry (the `+0x70` word and bit 3, `B8`'s sequences 1..3, the CD mix cells)
+is not built, each named in its entry; the port's sound layer; the owner's
+ear.
 
 ## D346 — `Music_Play(0xFF)` is not refused, where the PlayStation's twins return on 0xFF (the port's; latent; fixed by DIV-0168)
 
@@ -9664,7 +9694,7 @@ looping, `Music_LoadFile` finding no file 255.)
 
 **Status:** fixed by DIV-0168 (switch `MusicPlayRefusesNone`); latent.
 
-## D347 — The port's stop is a ten-frame fade where the PlayStation cuts (the port's sound layer; the owner's ear; fixed by DIV-0174)
+## D347 — The port's stop is a ten-frame fade where the PlayStation cuts (the port's sound layer; the owner's ear; fixed by DIV-0173)
 
 **Seen:** heard in part - D318's reading named the PlayStation's immediate
 stop in Ryu's dream; found as a class 2026-10-23 by reading the US
@@ -9690,11 +9720,11 @@ stop: `0x8015DF44` sets the decrescendo and calls `SsSepStop` at once
 ([`libsnd-reading.md`](libsnd-reading.md) 5.2). Every site pairs with that, with
 the plain stop `0x8015DDF4` or with the stop of every SEP `0x8015DFC8` (the
 battle's). None pairs with the decrescendo alone (JP `0x8015DEE8`, US
-`0x8015D4F8`), which lines up instead with the PC's `Music_FadeOut`. The site-by-site table is in DIV-0174. The fade the
+`0x8015D4F8`), which lines up instead with the PC's `Music_FadeOut`. The site-by-site table is in DIV-0173. The fade the
 class hears today is DIV-0028's: Capcom's own per-spin step made it near a cut
 (D26).
 
-**Status:** the port's sound layer; fixed by DIV-0174 (`BOF3X_ORIGINAL=StopCuts`),
+**Status:** the port's sound layer; fixed by DIV-0173 (`BOF3X_ORIGINAL=StopCuts`),
 on by default and flagged: the owner's ear decides whether the cut stays. With
 it, DIV-0143's knock-on (the bedroom's song fading 27 frames into Ryu's dream)
 is gone.

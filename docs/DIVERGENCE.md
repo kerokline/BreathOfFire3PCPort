@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 171 entries, DIV-0001..0175 (0170..0173 reserved to the sound-layer round's open groups), DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 174 entries, DIV-0001..0174, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10617,9 +10617,158 @@ designed in rather than bolted on.
   decoder's staging and heap. A quicksave taken between nightfall and morning does not carry the taken
   song, so a load into that span ends the night as the PC did.
 - **Reversible?** `BOF3X_ORIGINAL=InnNightPause`.
+
+### The movement script's op B8 restarts the song from its top at the script's level
+
+- **ID:** DIV-0170
+- **Date:** 2026-10-23
+- **Subsystem:** the movement script's sound group - `MoveScript_GroupB` (`0x577280`, `src/game/move_groups.cpp`)
+  and `sound_sp::OpB8` (`src/game/sound_sp.cpp`); [`known-defects.md`](known-defects.md) D345,
+  [`movement-script.md`](movement-script.md) 1a
+- **Tier:** Sensible - a port repair; the PlayStation does it, the port's sound layer dropped it.
+- **Original behaviour:** `B8 b1 b2 b3` calls `Port_DroppedCall` (`0x4DF820`, a bare `ret` shared by 25 call
+  sites) with b2 and steps the cursor over its three operands. Nothing is heard.
+- **New behaviour:** b1 is ignored (every group is the one sequence player: the PlayStation's access table US
+  `0x80148FC0` is sixteen zeros). b2 must be 0 - the PC's music file holds one song, the PlayStation's SEP up to
+  four - and anything else is fatal (no shipped script asks for another). The song `Music_File` holds starts again
+  from its top at once, at b3 of 100 as the PC's 0..127 (b3 x 127 / 100), with no fade and any fade in progress
+  dropped; at level 0 instead while the options byte `0x903A5C` is set (the PlayStation's gate `0x80144954`, which
+  no code on the US disc was found to set; the PC's two writers are the start-up and the Config screen's defaults);
+  nothing when no song is loaded.
+  `Music_Track`, if it was 0xFF (a stopped song), becomes the loaded track again - the PlayStation's stop leaves its
+  selection alone, so a later `Music_Play` of the same track does nothing on both. **To the ear:** the two shipped
+  B8s, both `B8 00 00 64` - area 142's (the developers' `せらぴしんそう`) `+0x18` script 2 and area 174's
+  (`OーBARD 8`) `+0x10` script 35, the second just after a wait on a file load - now start the area's song again
+  from its beginning, at full level, the moment the script reaches them. Where the song had stopped before, it
+  comes back there; where it was still playing, it is cut and starts over. Which of the two each scene does, and
+  whether a song loaded just before (area 174's wait) was already fading in on the PC, is not known: no recorded
+  route reaches either area.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D345): `B8` calls US `0x8015D300` (JP
+  `0x8015DCF0`) as `(b1, b2, b3, b3)` - `SsSepStop(access[b1], b2)`; unless the gate is set, the stream cells
+  `0x8018B418` / `41A` to `0x1FFF` and `SsSepSetVol(access[b1], b2, b3, b3)`, else `SsSepSetVol(.., 0, 0)`;
+  `SsSepPlay(access[b1], b2, 1, 1)`. `Music_Play`'s twin US `0x80161C20` starts every track through this same
+  function at level 0 and then fades in to 100, so b3 100 is the song's own level. The sequence is the loaded
+  file's: the track table US `0x80181EB8` gives every track group 0 and a sequence 0..3 of its file, so
+  `B8 .. 00 ..` is the loaded track itself only when that track is its file's sequence 0 - which the zone tracks of
+  both areas are (`Area_StateRecords`: 0x50, 0x6F, 0x8E, all sequence 0). A scene that had loaded another file's
+  sequence 1..3 would hear a different song on the PlayStation; the PC cannot name it. The stream cells are the
+  PlayStation's, with no PC counterpart: not carried.
+- **Also in the PSX version?** Yes: this is the PlayStation's step, on what the PC can reach.
+- **Verification:** builds; `BOF3X_SHADOW=sound_sp` (2026-10-23) runs `OpB8` on stand-ins worked from the US
+  disc's instructions: a stopped song with a fade running - level 127, `Music_Start` of the file, the fade dropped,
+  the track back; under the gate level 0 and the track kept; with no file nothing; 0 mismatches. `move_groups`' own
+  fuzz runs before the switch is armed (Capcom's `B8`, unchanged) and does not reach the new branch.
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard; not run on a route.
+  The state hash sees it where a route reaches a B8: `Music_Track`, `Music_Volume`, the fade and the stream.
+- **Reversible?** `BOF3X_ORIGINAL=MoveB8Restart`.
+
+### Sound_PlayById's voices follow their sprite: volume and pan by its place
+
+- **ID:** DIV-0171
+- **Date:** 2026-10-23
+- **Subsystem:** the sound layer - `Sound_PlayById` (`0x587900`, `src/game/battle_sprites.cpp`), the sprite's screen
+  update `Sprite_UpdateScreen` (`0x588F20`) and `Sprite_QueueOverlay` (`0x5890E0`, `src/game/sprite_screen.cpp`),
+  `Sound_PlayEffect` (`0x587740`, `src/game/sound.cpp`) and `sound_sp` (`src/game/sound_sp.cpp`);
+  [`known-defects.md`](known-defects.md) D345
+- **Tier:** Sensible - a port repair; the PlayStation does it, the port's sound layer dropped it.
+- **Original behaviour:** `Sound_PlayById(id)` plays the cue flat (`Sound_PlayEffect(id)`) and reads none of its
+  other arguments. The screen update's call for a sprite with bit 3 of `+0` is `Port_DroppedCall`, a bare `ret`,
+  and nothing on the PC sets that bit for a sound (a scan of `.text` for `or byte ptr [reg], 8` finds one writer,
+  of a script context, in `Area145_ChoiceRun3`). Every effect plays centred at its buffer's level.
+- **New behaviour:** `Sound_PlayById` plays the cue as before and remembers each buffer it played under
+  `Sprite_Current`, DLL-side (the PlayStation's bit 3 and its `+0x70` voice word are not written: no PC reader).
+  Each frame that sprite goes onto the draw list or the overlay list, every remembered buffer still playing gets the
+  PlayStation's volume pair as a DirectSound volume and pan; a buffer that has stopped gets back the volume and pan
+  it had and is forgotten. The pair (US `0x80161454`, read to its `jr $ra`): with bit 0x1000 of
+  `Field_ScriptFlags2` (`0x905BA4`, the PlayStation's `0x8014625A`: the twins US `0x801B2B6C` / PC `0x52F490` both
+  clear that bit there), by the screen point - both sides 44 (y + 64), 0 above y -64, full from y 0x131, and a pan
+  of (x + 40) / 4 percent; otherwise by the distance d from the kind-2 object (the camera focus, `Field_Kind2X` /
+  `Z`), both sides 0x37FF - (d / 16) x 10 with d in 16ths of a cell, and the side away from the sprite less
+  |x - 160| / 480 of it. Under the options' Mono (`0x903A59`, the PlayStation's `0x80144951`) no pan. On the PC
+  each law's loudest (0x3FFF, 0x37FF) is the buffer's own level and the rest that much quieter (amplitude,
+  2000 log10), the louder side as the volume and the difference as the pan. A bank entry's buffer is shared by
+  every cue that names the voice, so the next `Sound_PlayEffect` of a changed buffer puts its volume and pan back
+  first - unless something else set it meanwhile (Scena13's `Sound_SetCueVolume`), which is then left alone. A
+  second play by the same sprite adds its buffers, as the PlayStation ORs the voice numbers in. **To the ear:** an
+  effect played through `Sound_PlayById` by a sprite that is drawn by those two functions moves across the stereo
+  field with the sprite: on the field, the far side up to about 3.5 dB down at the screen's edge, and a fall with
+  distance too gentle to hear on any map (0.6 dB at 100 cells); with bit 0x1000 (set by `Field_LeaderWalk` and two
+  others), louder lower on the screen and panned fully at its edges. The PlayStation's callers (a jal scan of the
+  US disc: 503 calls in 176 overlays) are the battle engine (`BATTLE.EMI` / `BATTLE2.EMI`, 6 each), the boss
+  overlays (6 or 7 each), 117 spell overlays and eleven areas (75, 145, 175..185 - the faerie village). Whether a
+  battle's objects are drawn through these two functions on the PC is not measured; where they are not, nothing
+  changes in battle.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D345): the PlayStation's `Sound_PlayById`
+  is three functions the port folded into one; US `0x8015D71C` (JP `0x8015E10C`) - every caller but four - queues
+  the cue, packs the keyed voice numbers into the sprite's `+0x70` (bits 8, 13, 18, 23) and sets bit 3 of its `+0`;
+  `Sprite_QueueOverlay`'s twin US `0x8014D4E0` and the screen update call `0x80161454` for such a sprite, which sets
+  those voices' volume (`SpuSetVoiceAttr`) until `SpuGetKeyStatus` finds each one off. The levels are relative
+  because the PC's flat play is the only level it has; the PlayStation's own is the bank's, or SndQueueCue's 0x17FF.
+  libgte's `SquareRoot0` there is table-based; ours is the exact floor, a unit apart at most.
+- **Also in the PSX version?** Yes: this is the PlayStation's positional sound, on the PC's buffers.
+- **Verification:** builds; `BOF3X_SHADOW=sound_sp` (2026-10-23) checks both laws at points worked by hand from the
+  US disc's instructions (screen (0, 0): left 2534, right 281; mono; above y -64; the bottom right; on the focus;
+  160 px either side: 9557; 32 cells off: 14015) and the bookkeeping on fake DirectSound buffers (two remembered of a
+  cue with a stop and an empty word, the update's volume and pan, another sprite's update leaving them, a stopped
+  buffer restored, a flat play taking one back, the law on a buffer with a level of its own, a level set meanwhile
+  left alone): 0 mismatches; a planted pan sign error was refused by 3 checks. `battle_sprites`', `sprite_screen`'s
+  and `sound`'s fuzzes run before the switch is armed (Capcom's behaviour, unchanged) and do not reach the new
+  branches. `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard. No game
+  memory is written: the state hash cannot see it.
+- **Reversible?** `BOF3X_ORIGINAL=SpriteVoicePosition`.
+
+### The field's level cues play at their level, and the distance-gated ones only near their object
+
+- **ID:** DIV-0172
+- **Date:** 2026-10-23
+- **Subsystem:** the movement script's ops `BC`, `BD` (`MoveScript_GroupB` `0x577280`) and `D1`
+  (`MoveScript_GroupD` `0x577BD0`, `src/game/move_groups.cpp`), `Scena01_Scene09` (`0x53B5F0`,
+  `src/game/scena_sc1.cpp`), `sound_sp::PlayLevel` / `PlayNear` (`src/game/sound_sp.cpp`);
+  [`known-defects.md`](known-defects.md) D345
+- **Tier:** Sensible - a port repair; the PlayStation does it, the port's sound layer dropped it.
+- **Original behaviour:** each calls `Sound_PlayById(cue, ...)`, which plays the cue flat and reads none of the
+  rest: `BC c1 c2 l r` pushes the levels l and r, `BD c1 c2 n` and `D1 c1 c2 x n` an object n, the scenario's three
+  calls (the leader on cells 0x3D..0x3F) `0x50, 0x50`.
+- **New behaviour:** `BC` and the scenario's three play the cue at the level table's entries l (left) and r
+  (right); `BD` and `D1` play it only when the leader's cell (`ObjTrio` 0's `+0x36` / `+0x3A`) is within 22 of
+  object n's (`Sprite_Objects[n]`, both axes, inclusive), at the level of the innermost of the six rings it is in
+  (22 and 18: entry 0x40; 12: 0x31; 8: 0x21; 6: 0x11; 2: 4), and not at all outside 22. The table (US `0x80182288`,
+  82 words) is taken as its rule - entry 0 0x3FFF, 1..64 down 0x100 each from 0x3FFF, 65..81 down 0x10 each from
+  0xFF to 0 - which 78 entries are; entries 11, 27, 43 and 59 hold 0x200 more on the disc and no shipped call reads
+  them; an entry past 81 (the PlayStation reads its code pointers there) or an object past 29 is fatal. A level is
+  heard against 0x17FF - the level SndQueueCue gives such a cue otherwise, the PC's flat play - and never above it
+  (DirectSound cannot raise a buffer), the louder side as the volume and the difference as the pan; the buffers get
+  theirs back at their next flat play, as under DIV-0171. **To the ear:** area 9's (the sibling's `places.toml`:
+  Cedar Woods) `+0x10` script 6 plays `0x1202` hard left (left 0x18FF, at its level; right 0x01FF, -21.6 dB). Areas
+  3 and 8's (Cedar Woods) `D1` sounds `0x1200`, from objects 3 and 6, are silent until the leader is within 22 cells,
+  then about -23.6 dB, -3.5 dB from 12 and at their level from 8. The scenario's sound `0x1206` in
+  `Scena01_Scene09` (step 0x1A, the leader on cells 0x3D..0x3F with z at most 0x2A) is now silent: entry 0x50 is 0
+  on both sides; the cue is still played, at -10000, so the channels it would stop are stopped as before. No shipped
+  script has `BD`.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D345): `BC` calls US `0x8015D7C8` (JP
+  `0x8015E1B8`) with `(c1:c2, l, r)`, `SCENA01.EMI` the same with `(0x1206, 0x50, 0x50)` three times, `BD` and `D1`
+  (`GAME.EMI#0` US `0x801A98F4`, `0x801AA568`) US `0x8015D820` (JP `0x8015E210`) with `(c1:c2, n)`; the jal scan of
+  the US disc finds no other caller of either. The first sets SndQueueCue's volume cells (US `0x8018B3D8` /
+  `0x8018B3DC`) from the table and queues the cue; the second tests the six rings against the leader record
+  (`0x80145E90`, the PC's `ObjTrio` 0, as `MoveScript_ObjectKind`'s twins show) and object n (`0x80146888` + n x
+  0x98, the PC's `Sprite_Objects`), setting the cells and queueing the cue for each ring it is inside - the same
+  voices keyed again in one frame, one onset at the innermost ring's level. SndQueueCue (US `0x8015DF18`) applies
+  the cells (`SsUtSetDetVVol`) to a cue whose bank entry has bit 7 of its byte 1 - every cue of the area bank (bank
+  2) in the four areas' `AREAnnn.EMI` section 1 - and resets them to 0x17FF first unless the cue id has bits 12..15,
+  which every one of these calls passes (0x12xx).
+- **Also in the PSX version?** Yes: this is the PlayStation's step, on what the PC can reach.
+- **Verification:** builds; `BOF3X_SHADOW=sound_sp` (2026-10-23) checks the table rule at the entries the shipped
+  calls read, `BC`'s pan (-2160), the scenario's silence, a flat play after a level play, and the rings (23 cells
+  off on either axis: nothing; 20: entry 0x40; 10: 0x31; 5 and 1: the buffer's level): 0 mismatches.
+  `move_groups`' and `scena_sc1`'s fuzzes run before the switch is armed and do not reach the new branches.
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard; no recorded route is
+  known to reach areas 3, 8 or 9 or that scenario step. The state hash sees it only where a `BD` / `D1` is gated
+  out: the cue is not played, so `Sound_Channels` keeps what the cue would have stopped or started.
+- **Reversible?** `BOF3X_ORIGINAL=SoundLevelGate`.
+
 ### A music stop cuts the song, as the PlayStation's SsSepStop does, instead of fading it out
 
-- **ID:** DIV-0174
+- **ID:** DIV-0173
 - **Date:** 2026-10-23
 - **Subsystem:** the music's stop - `Music_FadeOutStop` (`0x587B40`, `src/game/sound.cpp`) and `sound_st::CutStop`
   (`src/game/sound_st.cpp`); [`sound.md`](sound.md), [`libsnd-reading.md`](libsnd-reading.md) 5.2,
@@ -10705,13 +10854,13 @@ designed in rather than bolted on.
   when frames is above 0; 0 mismatches. The game-memory words written are unchanged, so the state hash sees
   nothing new (the stream's staging buffer and `Music_Finished`, which follow the stream's own timing, are in
   its noise list already). `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0
-  (with DIV-0175 beside it). Not heard; not run on a route (headless group). The end batch's WAV dump of `whelpBoss.txt`
+  (with DIV-0174 beside it). Not heard; not run on a route (headless group). The end batch's WAV dump of `whelpBoss.txt`
   should show the bedroom's song ending at f10821 and nothing after it until track 7.
 - **Reversible?** `BOF3X_ORIGINAL=StopCuts` (DIV-0028's fade), or `BOF3X_ORIGINAL=Music_FadeOutStop`.
 
 ### A battle action's effect also stops the one-shot sound effects the last one left sounding, as the PlayStation's key-off does
 
-- **ID:** DIV-0175
+- **ID:** DIV-0174
 - **Date:** 2026-10-23
 - **Subsystem:** the battle action's effect preload - `BattleAction_EffectPreload` (`0x42FD20`,
   `src/game/battle_actions.cpp`) - and the sound effects (`Sound_PlayEffect` `0x587740`, `src/game/sound.cpp`;
@@ -10755,7 +10904,7 @@ designed in rather than bolted on.
   - 0 mismatches.
   - `battle_actions`' fuzz runs before the switch is armed (Capcom's preload, unchanged).
   - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Negative control: with
-    the entry check removed (and DIV-0174's stop) the fuzz is refused, exit 3.
+    the entry check removed (and DIV-0173's stop) the fuzz is refused, exit 3.
   - Nothing is written to game memory, so the state hash sees nothing.
   - Not heard; not run on a route.
 - **Reversible?** `BOF3X_ORIGINAL=OneShotKeyOff`, independently of `BOF3X_ORIGINAL=EffectKeyOff` (DIV-0167).

@@ -132,7 +132,11 @@ PSX twin; the rest is the same code:
   / `BA` / `BB` volume ramps, `BC` / `BD` sound `b1:b2` with the rest of
   their operands unread.
 - **`B8` does nothing on the PC**: it calls `0x4DF820`, a bare `ret`, where
-  the PSX calls `0x8015DCF0(b1, b2, b3, b3)`. What that did is unread.
+  the PSX calls `0x8015DCF0(b1, b2, b3, b3)` (JP; US `0x8015D300`): sequence
+  b2 of the loaded song file stopped, set to level b3 and played again from
+  its top - read 2026-10-23 (the sound-layer round's SP); two shipped
+  scripts use it, both `B8 00 00 64` (areas 142 and 174). Restored by
+  DIV-0170; `BC` / `BD` and `D1`'s level and distance gate by DIV-0172.
 - **`8A` does nothing on the PC** but skip its operands; the PSX calls
   `0x80164A10(b1:b2, 1)` there - the neighbour of `89`'s stream call.
 - The PC's effect records are `0x80` bytes (`Effect_Objects`), the PSX's

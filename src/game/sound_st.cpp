@@ -1,6 +1,6 @@
-// The sound-layer round's group ST: DIV-0174 (StopCuts) and DIV-0175
+// The sound-layer round's group ST: DIV-0173 (StopCuts) and DIV-0174
 // (OneShotKeyOff). sound_st.h says what each does; docs/DIVERGENCE.md has the
-// entries, and DIV-0174's the table of every Music_FadeOutStop call site read
+// entries, and DIV-0173's the table of every Music_FadeOutStop call site read
 // beside its PlayStation twin.
 #include "game/sound_st.h"
 
@@ -28,7 +28,7 @@ std::uint32_t Dword(std::uint32_t address) {
 }  // namespace
 
 // ---------------------------------------------------------------------------
-// DIVERGENCE DIV-0174: the PlayStation's stop where the port fades.
+// DIVERGENCE DIV-0173: the PlayStation's stop where the port fades.
 //
 // Music_FadeOutStop (original 0x587B40) is the twin of the JP disc's
 // 0x801626C0 (US 0x80161CD0): the selection's SEP through 0x8015DF44 (US
@@ -50,12 +50,12 @@ void CutStop(int frames) {
 void ArmStopCuts() {
     const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("StopCuts", Address(&g_stop_cuts), &was, &is, 1);
-    bof3::Log("DIV-0174    a music stop cuts the song, as the PlayStation's SsSepStop does, instead of fading it "
+    bof3::Log("DIV-0173    a music stop cuts the song, as the PlayStation's SsSepStop does, instead of fading it "
               "(on unless the line above says OFF)");
 }
 
 // ---------------------------------------------------------------------------
-// DIVERGENCE DIV-0175: the PlayStation's key-off reaching a one-shot.
+// DIVERGENCE DIV-0174: the PlayStation's key-off reaching a one-shot.
 //
 // BattleAction_EffectPreload's twin keys off voices 0x10..0x17 (SsUtKeyOffV
 // 0x8016F10C, JP 0x801D3E68..0x801D3E84; US 0x801D3E88..), whatever each is
@@ -67,7 +67,7 @@ OneShot g_one_shots[kChannels] = {};
 
 void NoteOneShot(std::uint32_t channel, std::uint32_t entry) {
     if (!g_one_shot_key_off) return;
-    if (channel >= kChannels) bof3::Fatal("DIV-0175: Sound_PlayEffect filed a voice under channel %u", static_cast<unsigned>(channel));
+    if (channel >= kChannels) bof3::Fatal("DIV-0174: Sound_PlayEffect filed a voice under channel %u", static_cast<unsigned>(channel));
     g_one_shots[channel] = {entry, Dword(entry + 4)};
 }
 
@@ -87,7 +87,7 @@ void KeyOffOneShots() {
 void ArmOneShotKeyOff() {
     const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("OneShotKeyOff", Address(&g_one_shot_key_off), &was, &is, 1);
-    bof3::Log("DIV-0175    a battle action's effect stops the one-shot sound effects the last one left sounding "
+    bof3::Log("DIV-0174    a battle action's effect stops the one-shot sound effects the last one left sounding "
               "(on unless the line above says OFF)");
 }
 

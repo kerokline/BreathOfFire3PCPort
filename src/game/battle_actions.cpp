@@ -531,7 +531,7 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
 // self-test), the same point stops those voices' channels
 // (sound::KeyOffEffectVoices, game/sound.h).
 //
-// DIVERGENCE DIV-0175: the same key-off reaching a one-shot - the buffer each
+// DIVERGENCE DIV-0174: the same key-off reaching a one-shot - the buffer each
 // of those channels last played without a loop, remembered DLL-side by
 // Sound_PlayEffect - under its own switch (PatchBytes("OneShotKeyOff"), after
 // the self-test as above; sound_st::KeyOffOneShots, game/sound_st.h), so the
@@ -540,7 +540,7 @@ static std::uint8_t g_effect_key_off = 0;
 
 extern "C" void __cdecl BattleAction_EffectPreload(void) {
     if (g_effect_key_off) sound::KeyOffEffectVoices();  // DIV-0167
-    if (sound_st::g_one_shot_key_off) sound_st::KeyOffOneShots();  // DIV-0175
+    if (sound_st::g_one_shot_key_off) sound_st::KeyOffOneShots();  // DIV-0174
     const unsigned kind = B(at::kActor + at::kBKind);
     bool has_file = false;
     if (kind == 4) {
@@ -684,7 +684,7 @@ void BattleActions_Inject() {
         bof3::PatchBytes("EffectKeyOff", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_effect_key_off)), &was, &is, 1);
         bof3::Log("DIV-0167    a battle action's effect stops the sound-effect channels the last one left (on unless the line above says OFF)");
     }
-    sound_st::ArmOneShotKeyOff();  // DIV-0175: after the self-test, which compared Capcom's preload
+    sound_st::ArmOneShotKeyOff();  // DIV-0174: after the self-test, which compared Capcom's preload
     BOF3_INJECT(Battle_ActionPhase);
     BOF3_INJECT(BattleAction_BeginStep);
     BOF3_INJECT(Battle_BeginAction);

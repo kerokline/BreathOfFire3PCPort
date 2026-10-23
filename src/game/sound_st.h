@@ -2,12 +2,12 @@
 // of the port's DirectSound layer where the PlayStation cuts sound the port
 // lets run on.
 //
-//   DIV-0174 (StopCuts): Music_FadeOutStop's twin on both PlayStation discs is
+//   DIV-0173 (StopCuts): Music_FadeOutStop's twin on both PlayStation discs is
 //   a stop (SsSepStop, the voices released at once), at every one of its 131
 //   call sites; the port fades. With the switch, the stream is stopped at the
 //   call; every word the game can read is left as Capcom's fade leaves it.
 //
-//   DIV-0175 (OneShotKeyOff): the PlayStation's SsUtKeyOffV on voices 16..23
+//   DIV-0174 (OneShotKeyOff): the PlayStation's SsUtKeyOffV on voices 16..23
 //   at a battle action's effect preload releases a one-shot effect still
 //   sounding, which DIV-0167 (looping voices only) cannot reach. With the
 //   switch, the buffer each effect channel last played as a one-shot is
@@ -21,7 +21,7 @@
 
 namespace sound_st {
 
-// DIVERGENCE DIV-0174: 1 through PatchBytes("StopCuts") at the end of
+// DIVERGENCE DIV-0173: 1 through PatchBytes("StopCuts") at the end of
 // Sound_Inject, after every self-test there (they compare Capcom's fade).
 extern std::uint8_t g_stop_cuts;
 
@@ -36,7 +36,7 @@ void CutStop(int frames);
 // Sound_Inject's end: the switch armed (BOF3X_ORIGINAL=StopCuts leaves it).
 void ArmStopCuts();
 
-// DIVERGENCE DIV-0175: 1 through PatchBytes("OneShotKeyOff") in
+// DIVERGENCE DIV-0174: 1 through PatchBytes("OneShotKeyOff") in
 // BattleActions_Inject, after its self-test (it compares Capcom's preload).
 extern std::uint8_t g_one_shot_key_off;
 

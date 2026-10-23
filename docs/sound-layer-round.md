@@ -30,8 +30,8 @@ built on, flagged.
 ## 1. The groups
 
 Briefs: `C:\Users\kerok\bof3x-runs\sl1023\brief_common.md` and `groups.md`
-(game-derived scratch, not in the tree). DIV reservations: IN 0169..0170,
-SP 0171..0173, ST 0174..0175, HM 0176..0177; new defects numbered at merge
+(game-derived scratch, not in the tree). DIV reservations: IN 0169 (0170 spare, folded at merge),
+SP 0170..0172, ST 0173..0174, HM 0175..0176; new defects numbered at merge
 from D353. The twin-diff remainder (HANDOFF item 0b: the 193 unmarked
 twins, `psx_pair.py propagate` checked against `us_jp.tsv`, the records
 audit's naming items) runs beside the round on `audit/twins-remainder`, its
@@ -41,7 +41,7 @@ own PR - tooling and a typing pass under `codegen_same.py`, no behaviour.
 |---|---|---|---|---|
 | IN | `sound/in` | D343 | the area's song halted at the night's fade and resumed at its position after the restore's message; measured first on `shop.txt` with `BOF3X_MUSIC_LOG=1` to find the path that brings the song back today | one live run, `--no-front`, its own root |
 | SP | `sound/sp` | D345 | op `B8`, the bit-3 voice update (volume and pan by position on the voice's buffer), `Sound_PlayById`'s level and distance gate - each a DIV, each reported instead of built where the PC's records cannot carry it | headless |
-| HM | `sound/hm` | D340, D344, D350, D352 | the held measurements: D350 on the attract run (built as DIV-0176 only if the wait never adds a frame), D352's full clear under a switch against the `orig4` pairs (DIV-0177 if nothing downstream moves), D344's reach over the recipes (a plan, the owner's call), D340's capture beside the disc's | live, after IN; its own root |
+| HM | `sound/hm` | D340, D344, D350, D352 | the held measurements: D350 on the attract run (built as DIV-0175 only if the wait never adds a frame), D352's full clear under a switch against the `orig4` pairs (DIV-0176 if nothing downstream moves), D344's reach over the recipes (a plan, the owner's call), D340's capture beside the disc's | live, after IN; its own root |
 | ST | `sound/st` | D347, D337 | `StopCuts`: every `Music_FadeOutStop` caller read beside its twin, cut where the twin is `SsSepStop`, the fade kept where it is `SsSepSetDecrescendo`; the one-shot key-off remembered DLL-side per effect channel | headless |
 
 **Rules the groups share** (the common brief): no logic frame added or
