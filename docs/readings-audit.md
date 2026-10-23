@@ -126,6 +126,18 @@ lines it was proposed for. Two very different things are in that bin:
 
 ### 3.4 The owner's calls (verdict `owner`, 13 lines)
 
+- **大武会: だいぶかい (decided 2026-10-23).** Looked for and not found in
+  any Capcom text: the script writes it in kanji only, the setting book
+  (公式設定資料集) covers the childhood chapter and its kana index has no
+  entry, the Taiwanese guide's tournament page brackets the Japanese in
+  kanji. 漢羅 かんら and 狂烈 きょうれつ agree everywhere (the fandom wiki's
+  Stallion skill 漢羅狂烈波 too). 武 has two on-readings, kan-on ブ and
+  go-on ム (武者); the owner chose ブ as the norm of martial compounds
+  (武道会). SudachiPy's おおたけかい is the surname 大武 (kun たけ) plus
+  会. Entered in `readings.toml`; it applies once the builder has the
+  multi-token rule (3.2). The fandom FAQ's "Daimukai" is the other
+  on-reading, uncited.
+
 - **賢樹** (21 placements): the builder's たけき is a name reading; the
   agents say けんじゅ. The great tree's reading in this game - the owner
   decides; neither side is the dictionary.

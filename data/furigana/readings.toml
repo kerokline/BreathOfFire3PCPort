@@ -104,3 +104,14 @@ surface = "薬"
 reading = "ぐすり"
 prev = ["気つけ"]
 note = "気つけ薬 = 気付け薬 (きつけぐすり), rendaku"
+
+# Decided by the owner (2026-10-23) after the readings audit (docs/readings-audit.md 3.4):
+# the tournament's 武 is unattested in any Capcom text found (the script, the setting
+# book, the Taiwanese guide); both on-readings are possible and kan-on ブ is the norm
+# of martial compounds (武道会), so だいぶかい. SudachiPy splits the word (大武 + 会,
+# おおたけ + かい, the surname), so this entry takes effect only once the builder
+# matches a surface across tokens (the multi-token rule, readings-audit.md 3.2).
+[[reading]]
+surface = "大武会"
+reading = "だいぶかい"
+note = "the Contest of Champions (漢羅狂烈大武会); the owner's call, 2026-10-23: kan-on ブ as in 武道会; needs the multi-token rule to apply"

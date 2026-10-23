@@ -123,7 +123,11 @@ eleaseurigana-0.1.0.zip`) and
   **海人**, 剣 as a lone label, 生命 as いのち, 盗人 ぬすびと / ぬすっと,
   魚 in the chant, 大星. (d) Whether the compounds Sudachi splits (大武会
   and 33 more, no sidecar rule can reach them) get a multi-token rule in
-  the builder or a `--dict full` measurement first.
+  the builder or a `--dict full` measurement first. **Decided 2026-10-23:
+  大武会 = だいぶかい** (unattested in the setting book, the Taiwanese
+  guide or the script; kan-on ブ as in 武道会; entered in `readings.toml`,
+  effective with the multi-token rule). The setting book's kana index also
+  gives ぬすっとこうもり for the bat, a data point for the 盗人 call.
 
 - **1, decided 2026-10-22 off PR's sheets:** the gap is **even, "2px top
   2px bottom"** - a reading's ink 2 units from the text above it and 2
