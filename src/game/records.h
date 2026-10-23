@@ -201,7 +201,7 @@ struct PartyMember : SpriteHead {
     std::uint16_t ap;  // +0x9A record +0x1A
     std::uint8_t survive;  // +0x9C record +0x1C, set from +0xAE (battle_setup kPByte9C); the overkill a kill leaves the flag below (battle_damage kPSurvive)
     unsigned char pad_9D[0x1];  // +0x9D: record +0x1D (CharRecord::halving); no member reader names it
-    std::uint8_t hp_scale;  // +0x9E record +0x1E, CharRecord::hp_scale: BattleForm_ApplyStats multiplies the form's HP word by it (battle_e5.cpp:403; char-stats.md 2)
+    std::uint8_t hp_scale;  // +0x9E record +0x1E, CharRecord::hp_scale: BattleForm_ApplyStats sets the HP to w0 - (scale * w0 + 5) / 10 of the form's word w0 (battle_e5.cpp:409-410; char-stats.md 2)
     unsigned char pad_9F[0x1];  // +0x9F: record +0x1F (CharRecord::master); no member reader names it
     std::uint16_t max_hp;  // +0xA0 record +0x20 (battle_setup kPMaxHp)
     std::uint16_t max_ap;  // +0xA2 record +0x22
@@ -214,7 +214,7 @@ struct PartyMember : SpriteHead {
     std::uint8_t elements[5];  // +0xAF affinity classes, fire .. wind (battle_damage kPElements)
     std::uint8_t holy;  // +0xB4 holy affinity class (battle_damage kPHoly)
     unsigned char pad_B5[0x5];  // +0xB5..+0xB9: the rest of the character record's effective block: +0xB5..+0xB7 the rest of the nine resistance bytes, +0xB8 / +0xB9 the first two of the five percentage bytes +0xB8..+0xBC (char-stats.md 2); not named here
-    std::uint8_t crit_chance;  // +0xBA record +0x3A, a percentage: Rand() % 100 below it gives the swing cue 3 and sets 0x904AA8 bit 7 (BattleObj_SwingCue, BattleObj_SpecialCue: battle_obj_states.cpp:290, battle_e3.cpp:1075), the bit Battle_CalcDamage doubles the damage by (battle_damage.cpp:546); raised by 0x1E and capped at 100 with +0xBB (battle_e6.cpp:877)
+    std::uint8_t crit_chance;  // +0xBA record +0x3A, a percentage: Rand() % 100 below it gives the swing cue 3 and sets 0x904AA8 bit 7 (BattleObj_SwingCue, BattleObj_SpecialCue: battle_obj_states.cpp:290, battle_e3.cpp:1075), the bit by which Battle_CalcDamage makes the damage 2v + plain / 4, never 0 (battle_damage.cpp:546-554), and which EnemyOp_RollBit80Task 0x4376F0 sets for an enemy; raised by 0x1E and capped at 100 with +0xBB (battle_e6.cpp:877)
     unsigned char pad_BB[0x5];  // +0xBB..+0xBF: the last three percentage bytes (+0xBB raised with +0xBA, battle_e6.cpp:876) and two more of the block; not named here
     std::uint16_t base_max_hp;  // +0xC0 record +0x40, the base copy of +0xA0 (char-stats.md 2; item-use.md 2; battle_e5.cpp:405-425)
     std::uint16_t base_max_ap;  // +0xC2 record +0x42
@@ -222,8 +222,8 @@ struct PartyMember : SpriteHead {
     std::uint16_t base_def;  // +0xC6 record +0x46
     std::uint16_t base_agi;  // +0xC8 record +0x48
     std::uint16_t base_intel;  // +0xCA record +0x4A
-    unsigned char pad_CC[0x32];  // +0xCC..+0xFD: the rest of the base block (record +0x4C..+0x5F) and record +0x60..+0x7D (CharRecord); not named here
-    std::uint8_t learned[10];  // +0xFE record +0x7E..+0x87, a ten-entry list: Battle_MemberListFull 0x453AC0 answers 1 when no entry is 0, and Battle_MemberRollByAction 0x453910 refuses the roll on an enemy's action then (battle_e6.cpp:902, 927; PSX 0x800A77E4)
+    unsigned char pad_CC[0x14];  // +0xCC..+0xDF: the rest of the base block (record +0x4C..+0x5F); not named here
+    std::uint8_t ability_lists[4][10];  // +0xE0 record +0x60..+0x87, four ten-byte ability lists by type: AbilityList_ForType 0x591EC0 picks +0xE0 / +0xEA / +0xF4 / +0xFE by the ability's +0x11 & 3 (0x591F01; scena_sx2.cpp:264-272; PSX 0x80167514) and AbilityList_Add 0x590C90 files an id there; Battle_MemberListFull 0x453AC0 answers 1 when list 3 has no 0 entry, and Battle_MemberRollByAction 0x453910 refuses its roll then (battle_e6.cpp:902, 927; PSX 0x800A77E4)
     unsigned char pad_108[0x1C];  // +0x108..+0x123: record +0x88..+0xA3 (CharRecord); not named here
     std::uint8_t command;  // +0x124 battle: the command auto-battle gives (docs/battle_e4.md); field: the script context's first byte (area_entry_callees.h kRecContext). ActionRecord::command / MemberFieldTail::context
     std::uint8_t command_kind;  // +0x125 ActionRecord::command_kind (was queued_kind; C3 naming): 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand)
@@ -807,7 +807,7 @@ static_assert(offsetof(PartyMember, base_atk) == 0xC4, "PartyMember::base_atk");
 static_assert(offsetof(PartyMember, base_def) == 0xC6, "PartyMember::base_def");
 static_assert(offsetof(PartyMember, base_agi) == 0xC8, "PartyMember::base_agi");
 static_assert(offsetof(PartyMember, base_intel) == 0xCA, "PartyMember::base_intel");
-static_assert(offsetof(PartyMember, learned) == 0xFE, "PartyMember::learned");
+static_assert(offsetof(PartyMember, ability_lists) == 0xE0, "PartyMember::ability_lists");
 static_assert(offsetof(PartyMember, command) == 0x124, "PartyMember::command");
 static_assert(offsetof(PartyMember, command_kind) == 0x125, "PartyMember::command_kind");
 static_assert(offsetof(PartyMember, queued_id) == 0x126, "PartyMember::queued_id");
