@@ -7,3 +7,7 @@
 #pragma once
 
 void BattlePhases_Inject();
+
+// DIV-0163 (D349): arms Battle_Init's clear of the target-pick flag. Called
+// by BattlePhases_Inject after its self-test, which compares Capcom's.
+void BattlePhases_ArmPickClear();

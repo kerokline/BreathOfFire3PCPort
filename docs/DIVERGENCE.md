@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 160 entries, DIV-0001..0160, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 168 entries, DIV-0001..0168, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10295,3 +10295,242 @@ designed in rather than bolted on.
   and only under our backend (`InitShim` has run): under `BOF3X_ORIGINAL=Display_Setup`, Capcom's DirectX 6
   objects would read alpha clear as transparent, so the converters keep Capcom's rule there.
   `BOF3X_STPVIEW=1` (diagnostic) draws the texels the plane marks in magenta.
+
+### Two battle draws take their coordinates signed: a box or cell partly off the left or top edge clips
+
+- **ID:** DIV-0161
+- **Date:** 2026-10-23
+- **Subsystem:** the battle draws - `BattleWin_DrawCell16` (`0x444C40`,
+  `src/game/battle_window_draw.cpp`) and `GeneWin_DrawCursorBox` (`0x599A00`,
+  `src/game/battle_e7.cpp`); [`known-defects.md`](known-defects.md) D336
+- **Tier:** Sensible - a draw repair; nothing in play changes.
+- **Original behaviour:** both mask their coordinates with `0xFFFF` before
+  `fild` (`0x599A6E..0x599A81`, the same shape in `0x444C40`), so a negative
+  x or y becomes a float near 65,536 and the primitive lands off-screen. The
+  cursor box masks its width and height the same way and adds them in 32
+  bits. Ours kept that (both modules' fuzzes compare it with Capcom's copy).
+- **New behaviour:** each vertex is the PlayStation's signed halfword: the
+  cell's x and y sign-extended from 16 bits; the box's x, y, x + w - 1 and
+  y + h - 1 each cut to 16 bits and sign-extended. For coordinates from 0 to
+  32,767 nothing changes. Below 0 the cell or the box draws clipped at the
+  screen's edge, where it vanished.
+- **Rationale:** the PlayStation stores these as signed vertex halfwords
+  (the cursor box: the JP disc's `sh` of x, y and y + h - 1 at
+  `0x800AEEF4..0x800AEF08`, US `0x800B1F04`; the cell: `sh` into +8 / +0xA,
+  US `0x801DA078`); the PC's mask is the port's conversion, not a choice.
+  Reach: the gene list's draw `GeneWin_DrawList` (`0x5990E0`) puts the box
+  at the window's x + 5 and runs on every frame of the list's slide-in and
+  slide-out (`0x599020` / `0x599050`, x down to -0xA5, and further in the
+  wide view under DIV-0041's slide), so if the box is drawn then (step 6,
+  not sub-step 5) the PC drops it for the frames where x + 5 is below 0 and
+  the PlayStation slides it out with the list. The cell's callers
+  (`0x442FA0`, `0x443F60`) are not known to pass a negative coordinate. Not
+  seen in play either way.
+- **Also in the PSX version?** No: the PlayStation draws them clipped; this
+  restores that.
+- **Verification:** builds; `BOF3X_SHADOW='*'` self-tests exit 0 (the
+  `battle_window_draw` and `battle_e7` fuzzes run before the switch is armed,
+  so they still compare Capcom's unsigned reading; neither sees the signed
+  path, which differs only for a coordinate of 0x8000 or more). Not seen in
+  play.
+- **Reversible?** `BOF3X_ORIGINAL=BattleDrawSigned` (both functions; one
+  switch byte in each module).
+
+### The dragon store prompt's hand reads its answer as the word every writer stores
+
+- **ID:** DIV-0162
+- **Date:** 2026-10-23
+- **Subsystem:** battle - `DragonCmd_StoreAsk` (`0x451160`,
+  `src/game/battle_e5.cpp`); [`known-defects.md`](known-defects.md) D338
+- **Tier:** Sensible - a latent read-width repair; nothing a player sees
+  changes today.
+- **Original behaviour:** the hand's x is `0xD5 + 0x22 * answer` with the
+  answer the dword at `0x904B74` (`0x4511F2`), where every writer stores a
+  word (`0x451042`, `0x4511EA`, `0x431C70`). The level-up notice's
+  `sprintf` reads the dword too (`0x431C77`) but masks it with `0xFFFF`
+  (`0x431C7C`), so it already reads the word and is not touched.
+- **New behaviour:** the hand reads the word. The two readings differ only
+  when the halfword `0x904B76` is not 0; no instruction in the exe names
+  `0x904B74..0x904B77` but the six above (a scan of `.text` for the
+  addresses, 2026-10-23), so it is 0 in every run we know of, and nothing a
+  player sees changes.
+- **Rationale:** the PlayStation (US `0x800A632C`, JP `0x800A332C`) reads the
+  answer as a `u16`; the PC's dword read is the port's. Cheap insurance
+  against a stray write making the hand jump off its two choices.
+- **Also in the PSX version?** No: the PlayStation reads the halfword.
+- **Verification:** builds; `BOF3X_SHADOW='*'` self-tests exit 0 (the
+  `battle_e5` fuzz runs before the switch is armed, so it still compares
+  Capcom's dword read).
+- **Reversible?** `BOF3X_ORIGINAL=StoreAskWord`.
+
+### A battle's start clears the target-pick flag, as the US disc
+
+- **ID:** DIV-0163
+- **Date:** 2026-10-23
+- **Subsystem:** battle - `Battle_Init` (`0x42E4A0`,
+  `src/game/battle_phases.cpp`); the flag `BattleE4_Picking` (`0x904AAF`);
+  [`known-defects.md`](known-defects.md) D349
+- **Tier:** Sensible - a Capcom fix the PC port never received; nothing in
+  play changes when the last battle ended normally.
+- **Original behaviour:** `Battle_Init` resets the battle's globals
+  (`0x904AA5..0x904B97`, one by one) but not `0x904AAF`, the flag the
+  command steps set while a target is being chosen (`0x446FF0`, `0x447840`,
+  `0x447F40`, `0x450510`, the item and skill picks) and clear on confirm or
+  cancel. The JP disc's `Battle_Init` (`0x801D1228`) lacks the clear too.
+- **New behaviour:** the flag is cleared with its neighbours, as the US
+  disc's `Battle_Init` (`BATTLE.EMI#3 0x801D1228`) does (US `0x801462EF`, the
+  JP's `0x801462EB`).
+- **Rationale:** a battle that starts with the flag set shows a target
+  highlight nobody is picking: the member or enemy whose actor byte the
+  stale command target holds (or the whole side, bit 0x40 / 0x80) pulses
+  with the cursor's tint (`BattleObj_IdleTintOn` `0x4417A0`, the enemies'
+  idle highlight), and the enemy gauge windows step on as if chosen
+  (`BattleWin_EnemyGaugeFrame` `0x5974C0`), until the first pick clears it.
+  Capcom fixed it between the JP and the US builds. How a battle can end
+  with the flag still 1 on the PC was not found by reading: every pick
+  clears it on confirm and cancel, a battle cannot end during command entry,
+  and a quickload (DIV-0145..0147) restores the byte with the rest of the
+  snapshot. The US disc's re-entry is likely its soft reset, which the PC
+  does not have. So the repair is expected to change nothing in normal play.
+- **Also in the PSX version?** The JP disc: the same as the PC. The US disc:
+  cleared, as here.
+- **Verification:** builds; `BOF3X_SHADOW='*'` self-tests exit 0 (the
+  `battle_phases` fuzz runs before the switch is armed, so it still compares
+  Capcom's resets).
+- **Reversible?** `BOF3X_ORIGINAL=BattleInitPickClear`.
+### The two sprite reach stores write the whole dword `+0x70`, as the PlayStation does
+
+- **ID:** DIV-0164
+- **Date:** 2026-10-23
+- **Subsystem:** field - `EventOp_Bx` (`0x57B130`, `src/game/event_script.cpp`) and
+  `Sprite_SetAnimationBank` (`0x589590`, `src/game/sprite_pose.cpp`); [`known-defects.md`](known-defects.md) D341
+- **Tier:** Sensible - a port repair with no known effect today; it removes a state the PlayStation
+  cannot reach.
+- **Original behaviour:** the event op that places an extra object stores byte 2 of the object's shared block
+  into `+0x70` as one byte (`mov byte ptr [eax + 0x70], dl` at `0x57B245`); the bank setter `and`s the dword
+  with `0xFFFFFF00` (`0x58962D`) and `or`s the bank byte in. Both keep `+0x71..+0x73`; `EventObj_Reset`
+  (`0x579E30`) does not clear them. The PlayStation stores the byte as a whole word in both (US `GAME.EMI#0`
+  `0x801A6C98` / JP `0x801A7CA0`; US exe `0x8014DD3C` / JP `0x8014DC30`).
+- **New behaviour:** both store the byte zero-extended over the dword, so `+0x71..+0x73` are 0 after either.
+- **Rationale:** the PSX twin rule. One reader takes `+0x70` as a whole dword: area 51's handler
+  `Area51_MemberAtObject` (`0x409CE6`, `mov ecx, dword ptr [eax + 0x70]` pushed unmasked) hands it to
+  `Party_MemberAt` as the margin, which `Sprite_PointInReach` adds to the reach; a stale upper byte would widen
+  the reach 256 steps at a time. A scan of `.text` (2026-10-23, every `[reg + 0x70]` operand wider than a
+  byte and every `[reg + 0x71..0x73]`) found no other: of the other dword reads, 31 mask with `0xFF` or use
+  only `al` / `dl`, and three are read-modify-writes that keep the upper bytes - the bank setter's own
+  (`0x58962A`) and a third byte store at `0x533C64..0x533C87` (it clears the low byte and `or`s in 0 or 1;
+  its PSX twin is not read, so it is left as Capcom's). Every whole-dword writer stores a small constant
+  (`0x40F645` 5, `0x412326` 0, `0x42B6D4` 1). No PC writer of non-zero upper bytes is known, so no change is expected in
+  play.
+- **Also in the PSX version?** The PlayStation stores the whole word; this matches it.
+- **Verification:** builds; the start-up fuzzes (`event_script`, `sprite_pose`) compare Capcom's byte stores
+  with the switch off, and `BOF3X_SHADOW='*'` exits 0 with it armed after them. The repaired branch is not
+  exercised by a fuzz: it differs from Capcom's copy only in the three upper bytes.
+- **Reversible?** `BOF3X_ORIGINAL=SpriteReachWord` (both stores).
+
+### The menu box and the 8 x 8 icon take x and y as signed words
+
+- **ID:** DIV-0165
+- **Date:** 2026-10-23
+- **Subsystem:** menu - `Menu_DrawBox` (`0x57CF60`) and `Menu_DrawIcon8` (`0x57D360`),
+  `src/game/menu_windows.cpp`; known-defects D348
+- **Tier:** Sensible - what a box slid off the left or top edge shows.
+- **Original behaviour:** both take x and y as unsigned words before the `fild` (`and 0xffff` at `0x57D009` /
+  `0x57D00F` and `0x57D3A0` / `0x57D3BB`), where `Menu_DrawPiece` (`0x57D860`) uses `movsx`. A box slid past
+  the left edge - `MenuWin_SlideOutLeft` (`0x59B440`) runs x down to -150, and `Shop_DrawMemberStats`
+  (`0x575430`) draws `Menu_DrawBox(x + 3, ...)`; `GeneWin_ChoiceSlideIn` / `Out` (`0x598E10` / `0x598E50`) run y
+  through -7 for `GeneWin_DrawChoices` (`0x598E90`) - is placed about 65,536 pixels away: its fill vanishes on
+  those frames while the frame pieces round it still draw.
+- **New behaviour:** x and y are the low 16 bits sign-extended; the fill slides off with its frame and is
+  clipped at the edge. w and h stay unsigned, as on both machines. In the wide modes a box sliding left
+  through the band (DIV-0041's faster slide) now shows its fill there too.
+- **Rationale:** the PSX twin rule: the PlayStation's draw (`0x801AF3F0`, icon `0x801AFA80`) stores into signed
+  vertex halfwords and the GPU clips.
+- **Also in the PSX version?** The PlayStation draws the fill to the edge; this restores that.
+- **Verification:** builds; the `menu_windows` fuzz compares the unsigned words against Capcom's copy before the
+  switch is armed, and `BOF3X_SHADOW='*'` exits 0. A draw only - no state, timer or input changes - so the
+  recorded routes keep their frames. The owner looked at the shops in play, 2026-10-23: "Shops look great". A
+  gene choice sliding in or out has not been looked at.
+- **Reversible?** `BOF3X_ORIGINAL=MenuSignedXY`.
+
+### Message 0xFA's gene name is terminated after its 8-byte copy
+
+- **ID:** DIV-0166
+- **Date:** 2026-10-23
+- **Subsystem:** field / text - `FieldTail_FlagMessage` (`0x56DE50`, `src/game/field_e2.cpp`); known-defects
+  D351
+- **Tier:** Sensible - a restoration of the US disc's fix.
+- **Original behaviour:** when a dragon gene is found, its bit in `0x904650` is set and its name (system message
+  `0x4172` + n) is copied into `Text_Records` (`0x904CE0`) by `strncpy(buf, name, 8)` (`push 8` ... `call
+  0x5B9450`, `0x56DED1..0x56DEE2`) for message 0xFA. A name of 8 bytes or more - four two-byte glyphs, or eight
+  letters under a Latin layer - is left unterminated, and the message prints on into whatever an earlier user
+  of that 32-byte record left at `+8`.
+- **New behaviour:** the byte at `+8` is 0 after the copy, as on the US disc. A shorter name was already
+  padded with zeros by `strncpy`, so its message is unchanged.
+- **Rationale:** Capcom fixed it between the Japanese and the US PlayStation builds: the US `GAME.EMI#0`
+  `0x801A83DC` adds one `sb $zero` to the buffer + 8 after the copy; the JP (`0x801A93E4`) and the PC lack it.
+  The localisation layers make names of that length common.
+- **Also in the PSX version?** The US disc terminates; the JP does not.
+- **Verification:** builds; the `field_e2` fuzz compares Capcom's unterminated copy before the switch is
+  armed, and `BOF3X_SHADOW='*'` exits 0. Not seen in play: no recorded route finds a gene.
+- **Reversible?** `BOF3X_ORIGINAL=GeneNameNul`.
+### A battle action's effect stops the sound-effect loops the last one left, as the PlayStation's key-off does
+
+- **ID:** DIV-0167
+- **Date:** 2026-10-23
+- **Subsystem:** the battle action's effect preload - `BattleAction_EffectPreload` (`0x42FD20`,
+  `src/game/battle_actions.cpp`) - and the sound layer's channels (`Sound_Channels` `0x6BC8C8`,
+  `sound::KeyOffEffectVoices`, `src/game/sound.cpp`; [`sound.md`](sound.md), [`known-defects.md`](known-defects.md)
+  D337)
+- **Tier:** Sensible - a port repair; the PlayStation does it, the port's sound layer dropped it.
+- **Original behaviour:** at the start of each action's effect the preload resolves the ability or item row and
+  starts the effect file's load; nothing touches the sound. A looping effect voice the previous action started
+  and did not stop (a cue's `0xFF` voice) keeps sounding until a later cue on the same channel stops it.
+- **New behaviour:** first, the voices the PlayStation keys off there - 16..23, every voice its `SE_Play` uses -
+  on the PC's channels: a cue word's voice `v` is filed under channel `v`, less 23 from 23 on, so channels
+  16..22 and 0. Each of those that remembers a buffer has it stopped and forgotten, exactly as a cue's `0xFF`
+  voice does. The PC remembers only looping voices' buffers (a one-shot's buffer is the bank entry's, shared
+  by every cue that names it), so a one-shot still ringing plays to its end where the PlayStation would
+  release it: left as the PC's. Then the preload as before. **To the ear:** a looping battle sound left
+  running by one action stops when the next action's effect begins; nothing else changes. Whether any action
+  leaves one running is not measured.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D337): `SsUtKeyOffV` (`0x8016F10C`)
+  for voices 0x10..0x17 at JP `0x801D3E68..0x801D3E84` (US `0x801D3E88..`, the same words but the call's
+  target), before the row is resolved.
+- **Also in the PSX version?** Yes: this is the PlayStation's step, on what the PC can reach.
+- **Verification:** `BOF3X_SHADOW=sound`'s fuzz, after its rounds against Capcom's copies, runs
+  `KeyOffEffectVoices` 2,000 times on randomised channels and banks with a recording stop: the stops come in
+  voice order, one per remembered buffer of channels 16..22 and 0, those words cleared, every other channel,
+  bank and device byte unchanged; 0 mismatches. `battle_actions`' own fuzz runs before the switch is armed
+  (Capcom's preload, unchanged). `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits
+  0. Not heard; not run on a route (a battle route under `BOF3X_MUSIC_LOG` does not log effects). The state
+  hash sees it: `Sound_Channels` is in `.data`, so a battle where a loop was remembered at an action's start
+  differs from the reference there.
+- **Reversible?** `BOF3X_ORIGINAL=EffectKeyOff`.
+
+### Music_Play refuses track 0xFF, as the PlayStation's twins do
+
+- **ID:** DIV-0168
+- **Date:** 2026-10-23
+- **Subsystem:** the music command - `Music_Play` (`0x587AE0`, `src/game/sound.cpp`; [`sound.md`](sound.md),
+  [`known-defects.md`](known-defects.md) D346)
+- **Tier:** Sensible - a port repair; latent.
+- **Original behaviour:** `Music_Play(0xFF, frames)` while a track plays stores 0xFF as the track (nothing
+  playing, as far as the game's thirty readers of `Music_Track` can see), fails to load a file 255, and
+  restarts the stream from the top of whatever `Music_File` still holds - looping, at volume 0, fading in. So
+  the last song plays again from its beginning while the game believes none is playing.
+- **New behaviour:** a selection whose low byte is 0xFF does nothing and answers the selection, as both
+  PlayStation twins do (`andi 0xFF; beq 0xFF` at JP `0x80162530` and `0x80162630`, US `0x80161B24` /
+  `0x80161C20` the same words). The test follows DIV-0028's completion of a stopping fade, which only brings
+  the state to what Capcom's already was. Every other selection is as before. **To the ear:** nothing on any
+  path read; the only callers that can pass a 0xFF are the movement script's `B4` / `BE` with a script byte
+  of 0xFF (`MoveScript_GroupB` `0x577280`), where the song would no longer restart from the top. `Area_Enter`
+  tests 0xFF itself, and the scenario steps' `Music_Play(Music_Track, 8)` was a no-op for 0xFF already.
+  DIV-0092 and DIV-0143 never pass 0xFF to it (both test first) and are unchanged.
+- **Rationale:** the PSX twin rule.
+- **Also in the PSX version?** Yes: this is what the PlayStation does.
+- **Verification:** `BOF3X_SHADOW=sound`'s fuzz runs Capcom's copy against ours with the switch off (46,000
+  rounds), then ours with it on: 2,000 rounds of `Music_Play` with a low byte 0xFF on randomised music state,
+  every compared byte unchanged, no call out, eax the selection; 0 mismatches. `BOF3X_SELFTEST_ONLY=1
+  BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not seen on a route.
+- **Reversible?** `BOF3X_ORIGINAL=MusicPlayRefusesNone`.
