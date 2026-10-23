@@ -132,7 +132,7 @@ eleaseurigana-0.1.0.zip`) and
   lines. **Then (2026-10-23, chat): 賢樹 けんじゅ, 外海 がいかい for all
   45, 大星 おおぼし, 魚 うお in the chant, 生命 いのち in the one threat, 剣
   stays けん** - all in `readings.toml`, each build-measured (audit doc 3.4).
-  Left of the thirteen: 海人. Found on the way: `prev` cannot see across a
+  海人 かいじん closed the thirteen. Found on the way: `prev` cannot see across a
   row break, so a word that opens a row cannot be keyed on the row above
   (the chant's first 魚); a builder follow-on beside the multi-token rule.
 

@@ -151,3 +151,8 @@ surface = "生命"
 reading = "いのち"
 next = ["で"]
 note = "a stylistic ruby in one threat (AREA079); 生命力 and the rest keep せいめい; the owner, 2026-10-23"
+
+[[reading]]
+surface = "海人"
+reading = "かいじん"
+note = "the sea people (わしら海人の血); SudachiDict's かいにん; the owner, 2026-10-23"

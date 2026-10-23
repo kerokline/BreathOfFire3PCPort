@@ -153,7 +153,8 @@ lines it was proposed for. Two very different things are in that bin:
   builder's `prev` can look across a row break, a follow-on beside the
   multi-token rule); 生命 = いのち in one threat, by `next` で (AREA079
   and its copy; `prev` could not key it either, the word opens a row);
-  剣 as a lone label stays けん (the builder's, no rule). Still open: 海人.
+  剣 as a lone label stays けん (the builder's, no rule); 海人 = かいじん
+  (1). All thirteen decided.
 
 - **賢樹** (21 placements): the builder's たけき is a name reading; the
   agents say けんじゅ. The great tree's reading in this game - the owner
