@@ -9,6 +9,8 @@
 #include <tuple>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
+#include "game/records_gpu.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
 
@@ -24,21 +26,6 @@ unsigned g_frames_changed = 0;   // of them, frames with a draw holding a bit-15
 bool g_frame_changed = false;
 
 const unsigned char* At(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
-unsigned Word(std::uint32_t a) {
-    std::uint16_t v;
-    std::memcpy(&v, At(a), sizeof v);
-    return v;
-}
-float Float(std::uint32_t a) {
-    float v;
-    std::memcpy(&v, At(a), sizeof v);
-    return v;
-}
-short Short(std::uint32_t a) {
-    std::int16_t v;
-    std::memcpy(&v, At(a), sizeof v);
-    return v;
-}
 unsigned Cell(unsigned x, unsigned y) { return Gfx_VramShadow[((y & 511u) << 10) + (x & 1023u)]; }
 
 unsigned Now() {
@@ -100,12 +87,12 @@ void SamplePage(unsigned tpage, unsigned clut, unsigned u0, unsigned v0, unsigne
 void SampleCells(unsigned first, unsigned count, unsigned clut, Count* c) {
     const unsigned cx = (clut & 0x3F) << 4, cy = (clut >> 6) & 511;
     for (unsigned n = 0; n < count && n < 4096; ++n) {
-        const std::uint32_t r = SpriteCell_Table_addr + (first + n) * 8;
-        const unsigned tpage = Word(r + 4);
+        const auto* r = rv::As<records::SpriteCell>(SpriteCell_Table + (first + n) * 8);
+        const unsigned tpage = r->tpage;
         const unsigned mode = (tpage & 0x180) ? 1 : 0;
         const unsigned px = (tpage & 0xF) * 64, py = (tpage & 0x10) * 16;
-        const unsigned u = At(r + 6)[0], v = At(r + 7)[0];
-        const unsigned w = (At(r + 3)[0] & 0xFu) << 3, h = (At(r + 3)[0] >> 1) & 0x78u;
+        const unsigned u = r->u, v = r->v;
+        const unsigned w = (r->size & 0xFu) << 3, h = (static_cast<unsigned>(r->size) >> 1) & 0x78u;
         for (unsigned y = 0; y < h; ++y)
             for (unsigned x = 0; x < w; ++x) c->Add(Texel(px, py, mode, cx, cy, u + x, v + y));
     }
@@ -143,15 +130,17 @@ void Frame() {
 }
 
 void Note(std::uint32_t p) {
-    const unsigned code = At(p + 7)[0];
+    const unsigned char* const prim = At(p);
+    const unsigned code = rv::As<records::GpuPrimHead>(prim)->code;
     if ((code & 6) != 6) return;   // semi-transparent and textured only
     const unsigned kind = code & 0xFC;
     unsigned tpage = 0, clut = 0, u0 = 255, v0 = 255, u1 = 0, v1 = 0;
     int kx = 0, ky = 0, kw = 0, kh = 0;
     Count c;
-    auto corners = [&](unsigned n, std::uint32_t uv, unsigned stride) {
+    // The box of n corners' (u, v), [u0, u1) x [v0, v1).
+    auto corners = [&](unsigned n, const std::uint8_t* const* us, const std::uint8_t* const* vs) {
         for (unsigned i = 0; i < n; ++i) {
-            const unsigned u = At(uv + i * stride)[0], v = At(uv + i * stride + 1)[0];
+            const unsigned u = *us[i], v = *vs[i];
             if (u < u0) u0 = u;
             if (u > u1) u1 = u;
             if (v < v0) v0 = v;
@@ -161,40 +150,52 @@ void Note(std::uint32_t p) {
         if (v1 == v0) ++v1;
     };
     switch (kind) {
-    case 0x24: case 0x2C:   // FT3, FT4: corners of 0x10 from +8, (u, v) +0xC in each
-        corners(kind == 0x24 ? 3 : 4, p + 0x14, 0x10);
-        clut = Word(p + 0x16);
-        tpage = Word(p + 0x26);
-        break;
-    case 0x34: case 0x3C:   // GT3, GT4: corners of 0x14 from +4, (u, v) +0x10 in each
-        corners(kind == 0x34 ? 3 : 4, p + 0x14, 0x14);
-        clut = Word(p + 0x16);
-        tpage = Word(p + 0x2A);
-        break;
-    case 0x64: case 0x74: case 0x7C: {   // SPRT, SPRT_8, SPRT_16: the draw mode's tpage
-        const unsigned w = kind == 0x64 ? Word(p + 0x18) : kind == 0x74 ? 8 : 16;
-        const unsigned h = kind == 0x64 ? Word(p + 0x1A) : w;
-        u0 = At(p + 0x14)[0];
-        v0 = At(p + 0x15)[0];
-        u1 = u0 + (w > 256 ? 256 : w);
-        v1 = v0 + (h > 256 ? 256 : h);
-        clut = Word(p + 0x16);
-        tpage = Word(Gfx_DrawTpage_addr);
+    case 0x24: case 0x2C: {   // FT3, FT4 (an FT3's three corners lie as an FT4's first three: D3d_DrawPolyFT3)
+        const auto* q = rv::As<records::GpuPolyFT4>(prim);
+        const std::uint8_t* us[4] = {&q->u0, &q->u1, &q->u2, &q->u3};
+        const std::uint8_t* vs[4] = {&q->v0, &q->v1, &q->v2, &q->v3};
+        corners(kind == 0x24 ? 3 : 4, us, vs);
+        clut = q->clut;
+        tpage = q->tpage;
         break;
     }
-    case 0x84:   // the port's cell sprite: its records, one CLUT, the flags word as the tpage
-        clut = Word(p + 0x1C);
-        tpage = Word(p + 0x1E);
-        SampleCells(Word(p + 0x18), Word(p + 0x1A), clut, &c);
+    case 0x34: case 0x3C: {   // GT3, GT4 (likewise: D3d_DrawPolyGT3)
+        const auto* q = rv::As<records::GpuPolyGT4>(prim);
+        const std::uint8_t* us[4] = {&q->u0, &q->u1, &q->u2, &q->u3};
+        const std::uint8_t* vs[4] = {&q->v0, &q->v1, &q->v2, &q->v3};
+        corners(kind == 0x34 ? 3 : 4, us, vs);
+        clut = q->clut;
+        tpage = q->tpage;
         break;
+    }
+    case 0x64: case 0x74: case 0x7C: {   // SPRT, SPRT_8, SPRT_16: the draw mode's tpage
+        const auto* q = rv::As<records::GpuSprt>(prim);
+        const unsigned w = kind == 0x64 ? q->w : kind == 0x74 ? 8 : 16;
+        const unsigned h = kind == 0x64 ? q->h : w;
+        u0 = q->u;
+        v0 = q->v;
+        u1 = u0 + (w > 256 ? 256 : w);
+        v1 = v0 + (h > 256 ? 256 : h);
+        clut = q->clut;
+        tpage = Gfx_DrawTpage;
+        break;
+    }
+    case 0x84: {   // the port's cell sprite: its records, one CLUT, the flags word as the tpage
+        const auto* q = rv::As<records::GpuCellSprite>(prim);
+        clut = q->clut;
+        tpage = q->flags;
+        SampleCells(q->first, q->count, clut, &c);
+        break;
+    }
     default:   // the glyph 0x6C draws unblended; nothing else is textured
         return;
     }
     if (kind != 0x84) {
-        kx = Short(Gfx_TexCacheKey_addr);
-        ky = Short(Gfx_TexCacheKey_addr + 2);
-        kw = Short(Gfx_TexCacheKey_addr + 4);
-        kh = Short(Gfx_TexCacheKey_addr + 6);
+        // Gfx_TexCacheKey: s16 x, y, w, h in two dwords (d3d_list.cpp DrawMode).
+        kx = static_cast<std::int16_t>(Gfx_TexCacheKey[0] & 0xFFFF);
+        ky = static_cast<std::int16_t>(Gfx_TexCacheKey[0] >> 16);
+        kw = static_cast<std::int16_t>(Gfx_TexCacheKey[1] & 0xFFFF);
+        kh = static_cast<std::int16_t>(Gfx_TexCacheKey[1] >> 16);
         SamplePage(tpage, clut, u0, v0, u1, v1, kx, ky, kw, kh, &c);
     }
     if (((tpage >> 7) & 3) >= 2 && kind != 0x84) clut = 0;   // direct colour: no CLUT
@@ -219,7 +220,8 @@ void Note(std::uint32_t p) {
     else ++r.clear;
     if (c.opaque) g_frame_changed = true;
     // Every textured kind has its first corner's float x, y at +8 and +0xC.
-    const float x = Float(p + 8), y = Float(p + 0xC);
+    const auto* corner = rv::As<records::GpuSprt>(prim);   // x +8, y +0xC, as every kind above lays them
+    const float x = corner->x, y = corner->y;
     if (x < r.x0) r.x0 = x;
     if (y < r.y0) r.y0 = y;
     if (x > r.x1) r.x1 = x;

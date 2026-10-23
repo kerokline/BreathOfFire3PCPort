@@ -10210,7 +10210,7 @@ designed in rather than bolted on.
 - **Original behaviour:** every non-zero texel converts with the page format's opaque bits, whatever its bit
   15, and a semi-transparent primitive blends every texel it draws by its tpage's mode. The rooftop rope
   (area 28) draws at a quarter of its brightness; text on page 15 is added to what is under it (D334).
-- **New behaviour, as built so far (step 2):** under our backend the textures carry bit 15 in the one
+- **New behaviour:** step 2 - under our backend the textures carry bit 15 in the one
   A1R5G5B5 combination Capcom's converters never write - a colour with bit 15 set converts to that colour with
   alpha clear (forced to 1 if it would round to 0, as before); a colour with it clear keeps the alpha bit; 0
   stays 0, transparent. The backend reads alpha clear on a colour as a drawn texel, as before, and uploads a
