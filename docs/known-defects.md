@@ -9485,9 +9485,15 @@ against the PC's `0x57C840`.
 array. For a pointer in none of them the PlayStation answers `work <
 D_80147A58 ? 0 : 3`; the PC falls to `0x57C891` with `eax` still the pointer
 (`cmp eax, 0x802000; jb 0x57c891`). Ours does as the PC. Whether any caller
-hands it such a pointer is not known.
+hands it such a pointer is not known. It does not matter (fix wave 1023): all
+nineteen call sites (`0x4090E8` .. `0x57C9B4`, every `call 0x57C840` in
+`.text`; no pointer to it in the image) compare the answer with 1 or 2 only,
+and the pointer, 0 and 3 all fail both; `0x577AFB` stores `al` only on the
+equal branch. The JP twin's test is `work < 0x80147A54 ? 0 : 3` with no
+range checks; on the PC it would read `< 0x802000`.
 
-**Status:** latent; the port's.
+**Status:** moot, not repaired (no reader tells 0, 3 and the pointer
+apart); the port's.
 
 ## D343 — The inn's night neither pauses nor resumes the sound sequences, where the PlayStation pauses four and replays them (the port's sound layer; not heard)
 
