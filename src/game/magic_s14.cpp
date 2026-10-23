@@ -801,7 +801,7 @@ S14_EXPORT void __cdecl WeretigerDim_WaitOwner(void) {
 }
 
 // original 0x4B5240: one semi-transparent 0x50 x 0x48 sprite of the form's
-// sheet (tpage 0x340 / 0x100, 4-bit, blend `abr`), image `image` (u, v from
+// sheet (tpage 0x340 / 0x100, 15-bit direct colour, blend `abr`), image `image` (u, v from
 // the 4-byte entries at 0x65AC10, unchecked), shaded `shade`, at
 // Sprite_Current's screen point (+0x2E - 0x20, or - 0x28 for images 2 and 3;
 // +0x30 - 0x40); between a draw-mode packet and the sprite, both linked at

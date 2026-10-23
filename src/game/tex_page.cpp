@@ -1,7 +1,7 @@
 // The page textures and the DirectDraw surface helpers, read to the last
 // instruction with capstone against bof3/BOF3.exe (docs/tex-page.md). All are
 // the PC port's own: the PlayStation sampled VRAM on its GPU, so there is no
-// PSX twin. Faithful: no divergence.
+// PSX twin. Faithful, but for DIV-0159 in Tex_Convert16.
 //
 //   Dd_InitSurfaceDesc       0x59F840..0x59F85E (0x1F)
 //   Dd_CreatePlainSurface    0x59F860..0x59F8FF (0xA0)
@@ -37,6 +37,7 @@ const Callees kOriginals = {
     Gfx_ClutPixels,
 };
 Callees g = kOriginals;
+std::uint32_t g_direct_opaque = 0;   // DIV-0159; 1 through PatchBytes("DirectOpaque") in TexPage_Inject
 
 namespace {
 
@@ -184,9 +185,19 @@ void Tex_Convert8(void* dst, const void* src, const void* clut, int w, int h, in
 // the PSX - is packed like any other (Gfx_ConvertRow's palettes keep it 0 and
 // force other cells opaque; this does neither). The texel loop is a `loop`:
 // it stops only when the count reaches exactly 0.
+//
+// DIVERGENCE DIV-0159 (issue #111, known-defects D333): Capcom's never sets
+// Gfx_PixelFormat's opaque bits (dword 7). Under a page format with an alpha
+// bit - ours is A1R5G5B5, opaque bits 0x8000 - every texel of a direct-colour
+// page then has alpha 0 and the colour-key discard drops it, so Amalgam's melt
+// (DIV-0142's capture, drawn from (0x340, 0x100) in 15-bit) draws nothing.
+// Ours, with g_direct_opaque set: Gfx_ConvertRow's rule - a texel that packs
+// non-zero takes the opaque bits, a non-zero cell that packs to 0 becomes
+// 1 | opaque bits, and a cell of 0 stays 0, transparent as on the PSX.
 void Tex_Convert16(void* dst, const void* src, int w, int h, int pitch) {
     const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
     const Packer pack;
+    const U opaque = g_direct_opaque != 0 ? static_cast<U>(Gfx_PixelFormat[7]) : 0;
     auto* d = static_cast<unsigned char*>(dst);
     U total = 0x100;
     do {
@@ -202,7 +213,11 @@ void Tex_Convert16(void* dst, const void* src, int w, int h, int pitch) {
                 across -= static_cast<U>(w);
                 do {
                     const U v = Word(p);
-                    const U texel = pack((v & 0x1F) << 19, (v & 0x3E0) << 14, (v & 0x7C00) << 9);
+                    U texel = pack((v & 0x1F) << 19, (v & 0x3E0) << 14, (v & 0x7C00) << 9);
+                    if (g_direct_opaque != 0) {   // DIV-0159
+                        if (texel != 0) texel |= opaque;
+                        else if (v != 0) texel = 1 | opaque;
+                    }
                     if (wide) {
                         PutLong(d, texel);
                         d += 4;
@@ -445,6 +460,14 @@ void D3d_RefreshPageTexture(int page, int slot) {
 
 void TexPage_Inject() {
     if (bof3::WantsShadow("tex_page")) tex_page::SelfTest();
+    {
+        // DIV-0159: armed after the fuzz, which compares Capcom's rule.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("DirectOpaque",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_direct_opaque)), was, is, 4);
+        bof3::Log("DIV-0159    a direct-colour page's texels are opaque but for 0, as Gfx_ConvertRow's are (on unless "
+                  "the line above says OFF)");
+    }
     BOF3_INJECT(Dd_InitSurfaceDesc);
     BOF3_INJECT(Dd_CreatePlainSurface);
     BOF3_INJECT(Dd_CreateTextureSurface);
