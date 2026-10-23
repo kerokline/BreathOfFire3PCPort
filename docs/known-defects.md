@@ -9481,10 +9481,16 @@ the PC stores one byte (`mov byte ptr [eax + 0x70], dl` at `0x57B245`). The
 bank setter does the same: the PlayStation stores the bank byte over the
 whole `u32`, the PC `and`s the word with `0xFFFFFF00` (`0x58962D`) and `or`s
 the byte in, keeping bits 8..31. Ours does as the PC. The two agree unless
-something reads `+0x71..+0x73`, or `+0x70` as a word, after either write; no
-such reader is known.
+something reads `+0x71..+0x73`, or `+0x70` as a word, after either write.
+One such reader exists (fix wave 1023, a `.text` operand scan): area 51's
+`Area51_MemberAtObject` (`0x409CE6`) pushes the whole dword as
+`Party_MemberAt`'s margin; the other 31 dword reads mask it. No PC writer of
+non-zero upper bytes was found, so the difference is not expected in play.
+A third store keeping the upper bytes, `0x533C64..0x533C87`, is not paired
+and stays Capcom's.
 
-**Status:** latent; the port's.
+**Status:** fixed by DIV-0164 (`BOF3X_ORIGINAL=SpriteReachWord`), 2026-10-23;
+latent before; the port's.
 
 ## D342 — `MoveScript_ObjectKind` answers the pointer itself for an object outside every array, where the PlayStation answers 0 or 3 (the port's; latent)
 
@@ -9497,9 +9503,15 @@ against the PC's `0x57C840`.
 array. For a pointer in none of them the PlayStation answers `work <
 D_80147A58 ? 0 : 3`; the PC falls to `0x57C891` with `eax` still the pointer
 (`cmp eax, 0x802000; jb 0x57c891`). Ours does as the PC. Whether any caller
-hands it such a pointer is not known.
+hands it such a pointer is not known. It does not matter (fix wave 1023): all
+nineteen call sites (`0x4090E8` .. `0x57C9B4`, every `call 0x57C840` in
+`.text`; no pointer to it in the image) compare the answer with 1 or 2 only,
+and the pointer, 0 and 3 all fail both; `0x577AFB` stores `al` only on the
+equal branch. The JP twin's test is `work < 0x80147A54 ? 0 : 3` with no
+range checks; on the PC it would read `< 0x802000`.
 
-**Status:** latent; the port's.
+**Status:** moot, not repaired (no reader tells 0, 3 and the pointer
+apart); the port's.
 
 ## D343 — The inn's night neither pauses nor resumes the sound sequences, where the PlayStation pauses four and replays them (the port's sound layer; not heard)
 

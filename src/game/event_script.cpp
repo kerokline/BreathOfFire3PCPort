@@ -468,7 +468,15 @@ extern "C" void __cdecl Sprite_InitFromEntry(unsigned char* entry) {
 // As the original has it: op[0xB] is not checked against the four extra
 // objects (the shipped scripts use 0..3); the descriptor is Game_AreaNumber's
 // with no check either; +0x70 takes byte 2 of whatever +0x54 holds after
-// Sprite_InitFromEntry - the PSX stores it as a word.
+// Sprite_InitFromEntry (`mov byte ptr [eax + 0x70], dl` at 0x57B245) - the
+// PSX stores it as a word (US GAME.EMI#0 0x801A6C98, JP 0x801A7CA0).
+//
+// DIVERGENCE DIV-0164 (known-defects D341): 1 through
+// PatchBytes("SpriteReachWord") in EventScript_Inject, after the self-test.
+// The byte is then stored zero-extended over the whole dword +0x70, as the
+// PSX does, so +0x71..+0x73 are 0. EventObj_Reset does not clear them.
+static std::uint8_t g_reach_word = 0;
+
 extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
     unsigned char* table;
@@ -496,7 +504,8 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
         unsigned char* const sc = Sprite_Current;
         unsigned char* source;
         std::memcpy(&source, sc + 0x54, sizeof source);
-        sc[0x70] = source[2];
+        if (g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sc)->reach, source[2]);
+        else sc[0x70] = source[2];
     }
     rv::As<records::SpriteObject>(Extra(op[0xB]))->best_score = 0;
     rv::As<records::SpriteObject>(Extra(op[0xB]))->target_z = 0;
@@ -574,6 +583,12 @@ extern "C" void __cdecl ObjTrio_SetBit40(void) {
 
 void EventScript_Inject() {
     if (bof3::WantsShadow("event_script")) event_script::SelfTest();
+    {
+        // DIV-0164: after the self-test, which compared Capcom's byte store.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SpriteReachWord", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_reach_word)), &was, &is, 1);
+        bof3::Log("DIV-0164    op Bx stores the extra object's reach byte as a whole dword +0x70 (on unless the line above says OFF)");
+    }
     BOF3_INJECT(Area_RunPlacement);
     BOF3_INJECT(EventScript_Run);
     BOF3_INJECT(EventScript_Control);

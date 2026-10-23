@@ -10398,3 +10398,79 @@ designed in rather than bolted on.
   `battle_phases` fuzz runs before the switch is armed, so it still compares
   Capcom's resets).
 - **Reversible?** `BOF3X_ORIGINAL=BattleInitPickClear`.
+### The two sprite reach stores write the whole dword `+0x70`, as the PlayStation does
+
+- **ID:** DIV-0164
+- **Date:** 2026-10-23
+- **Subsystem:** field - `EventOp_Bx` (`0x57B130`, `src/game/event_script.cpp`) and
+  `Sprite_SetAnimationBank` (`0x589590`, `src/game/sprite_pose.cpp`); [`known-defects.md`](known-defects.md) D341
+- **Tier:** Sensible - a port repair with no known effect today; it removes a state the PlayStation
+  cannot reach.
+- **Original behaviour:** the event op that places an extra object stores byte 2 of the object's shared block
+  into `+0x70` as one byte (`mov byte ptr [eax + 0x70], dl` at `0x57B245`); the bank setter `and`s the dword
+  with `0xFFFFFF00` (`0x58962D`) and `or`s the bank byte in. Both keep `+0x71..+0x73`; `EventObj_Reset`
+  (`0x579E30`) does not clear them. The PlayStation stores the byte as a whole word in both (US `GAME.EMI#0`
+  `0x801A6C98` / JP `0x801A7CA0`; US exe `0x8014DD3C` / JP `0x8014DC30`).
+- **New behaviour:** both store the byte zero-extended over the dword, so `+0x71..+0x73` are 0 after either.
+- **Rationale:** the PSX twin rule. One reader takes `+0x70` as a whole dword: area 51's handler
+  `Area51_MemberAtObject` (`0x409CE6`, `mov ecx, dword ptr [eax + 0x70]` pushed unmasked) hands it to
+  `Party_MemberAt` as the margin, which `Sprite_PointInReach` adds to the reach; a stale upper byte would widen
+  the reach 256 steps at a time. A scan of `.text` (2026-10-23, every `[reg + 0x70]` operand wider than a
+  byte and every `[reg + 0x71..0x73]`) found no other: of the other dword reads, 31 mask with `0xFF` or use
+  only `al` / `dl`, and three are read-modify-writes that keep the upper bytes - the bank setter's own
+  (`0x58962A`) and a third byte store at `0x533C64..0x533C87` (it clears the low byte and `or`s in 0 or 1;
+  its PSX twin is not read, so it is left as Capcom's). Every whole-dword writer stores a small constant
+  (`0x40F645` 5, `0x412326` 0, `0x42B6D4` 1). No PC writer of non-zero upper bytes is known, so no change is expected in
+  play.
+- **Also in the PSX version?** The PlayStation stores the whole word; this matches it.
+- **Verification:** builds; the start-up fuzzes (`event_script`, `sprite_pose`) compare Capcom's byte stores
+  with the switch off, and `BOF3X_SHADOW='*'` exits 0 with it armed after them. The repaired branch is not
+  exercised by a fuzz: it differs from Capcom's copy only in the three upper bytes.
+- **Reversible?** `BOF3X_ORIGINAL=SpriteReachWord` (both stores).
+
+### The menu box and the 8 x 8 icon take x and y as signed words
+
+- **ID:** DIV-0165
+- **Date:** 2026-10-23
+- **Subsystem:** menu - `Menu_DrawBox` (`0x57CF60`) and `Menu_DrawIcon8` (`0x57D360`),
+  `src/game/menu_windows.cpp`; known-defects D348
+- **Tier:** Sensible - what a box slid off the left or top edge shows.
+- **Original behaviour:** both take x and y as unsigned words before the `fild` (`and 0xffff` at `0x57D009` /
+  `0x57D00F` and `0x57D3A0` / `0x57D3BB`), where `Menu_DrawPiece` (`0x57D860`) uses `movsx`. A box slid past
+  the left edge - `MenuWin_SlideOutLeft` (`0x59B440`) runs x down to -150, and `Shop_DrawMemberStats`
+  (`0x575430`) draws `Menu_DrawBox(x + 3, ...)`; `GeneWin_ChoiceSlideIn` / `Out` (`0x598E10` / `0x598E50`) run y
+  through -7 for `GeneWin_DrawChoices` (`0x598E90`) - is placed about 65,536 pixels away: its fill vanishes on
+  those frames while the frame pieces round it still draw.
+- **New behaviour:** x and y are the low 16 bits sign-extended; the fill slides off with its frame and is
+  clipped at the edge. w and h stay unsigned, as on both machines. In the wide modes a box sliding left
+  through the band (DIV-0041's faster slide) now shows its fill there too.
+- **Rationale:** the PSX twin rule: the PlayStation's draw (`0x801AF3F0`, icon `0x801AFA80`) stores into signed
+  vertex halfwords and the GPU clips.
+- **Also in the PSX version?** The PlayStation draws the fill to the edge; this restores that.
+- **Verification:** builds; the `menu_windows` fuzz compares the unsigned words against Capcom's copy before the
+  switch is armed, and `BOF3X_SHADOW='*'` exits 0. A draw only - no state, timer or input changes - so the
+  recorded routes keep their frames; the slide-out has not been looked at (the owner's eye: the shop's member
+  panel sliding out, and a gene choice sliding in or out).
+- **Reversible?** `BOF3X_ORIGINAL=MenuSignedXY`.
+
+### Message 0xFA's gene name is terminated after its 8-byte copy
+
+- **ID:** DIV-0166
+- **Date:** 2026-10-23
+- **Subsystem:** field / text - `FieldTail_FlagMessage` (`0x56DE50`, `src/game/field_e2.cpp`); known-defects
+  D351
+- **Tier:** Sensible - a restoration of the US disc's fix.
+- **Original behaviour:** when a dragon gene is found, its bit in `0x904650` is set and its name (system message
+  `0x4172` + n) is copied into `Text_Records` (`0x904CE0`) by `strncpy(buf, name, 8)` (`push 8` ... `call
+  0x5B9450`, `0x56DED1..0x56DEE2`) for message 0xFA. A name of 8 bytes or more - four two-byte glyphs, or eight
+  letters under a Latin layer - is left unterminated, and the message prints on into whatever an earlier user
+  of that 32-byte record left at `+8`.
+- **New behaviour:** the byte at `+8` is 0 after the copy, as on the US disc. A shorter name was already
+  padded with zeros by `strncpy`, so its message is unchanged.
+- **Rationale:** Capcom fixed it between the Japanese and the US PlayStation builds: the US `GAME.EMI#0`
+  `0x801A83DC` adds one `sb $zero` to the buffer + 8 after the copy; the JP (`0x801A93E4`) and the PC lack it.
+  The localisation layers make names of that length common.
+- **Also in the PSX version?** The US disc terminates; the JP does not.
+- **Verification:** builds; the `field_e2` fuzz compares Capcom's unterminated copy before the switch is
+  armed, and `BOF3X_SHADOW='*'` exits 0. Not seen in play: no recorded route finds a gene.
+- **Reversible?** `BOF3X_ORIGINAL=GeneNameNul`.
