@@ -10622,7 +10622,58 @@ designed in rather than bolted on.
   itself without it: every compared byte, the calls out and eax the same, and exactly one more `Music_Stop`
   when frames is above 0; 0 mismatches. The game-memory words written are unchanged, so the state hash sees
   nothing new (the stream's staging buffer and `Music_Finished`, which follow the stream's own timing, are in
-  its noise list already). `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy: see the
-  round doc. Not heard; not run on a route (headless group). The end batch's WAV dump of `whelpBoss.txt`
+  its noise list already). `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0
+  (with DIV-0175 beside it). Not heard; not run on a route (headless group). The end batch's WAV dump of `whelpBoss.txt`
   should show the bedroom's song ending at f10821 and nothing after it until track 7.
 - **Reversible?** `BOF3X_ORIGINAL=StopCuts` (DIV-0028's fade), or `BOF3X_ORIGINAL=Music_FadeOutStop`.
+
+### A battle action's effect also stops the one-shot sound effects the last one left sounding, as the PlayStation's key-off does
+
+- **ID:** DIV-0175
+- **Date:** 2026-10-23
+- **Subsystem:** the battle action's effect preload - `BattleAction_EffectPreload` (`0x42FD20`,
+  `src/game/battle_actions.cpp`) - and the sound effects (`Sound_PlayEffect` `0x587740`, `src/game/sound.cpp`;
+  `sound_st::NoteOneShot` / `KeyOffOneShots`, `src/game/sound_st.cpp`; [`sound.md`](sound.md),
+  [`known-defects.md`](known-defects.md) D337)
+- **Tier:** Sensible - a port repair; DIV-0167's remainder.
+- **Original behaviour:** Capcom's preload touches no sound. DIV-0167 (ours, on by default) stops what the
+  effect channels 16..22 and 0 remember at the preload, which is only looping voices. A one-shot voice plays its bank entry's buffer, which every
+  cue naming that voice shares, and `Sound_PlayEffect` remembers it nowhere. So a one-shot still sounding when
+  the next action's effect starts plays to its end.
+- **New behaviour:**
+  - `Sound_PlayEffect` remembers, for each channel a one-shot voice plays on, the voice entry and the buffer
+    that entry held just after the play. This is the DLL's own table, written only with the switch on; the
+    last one-shot on a channel replaces the one before.
+  - At the preload, right after DIV-0167's step, the one-shot each of channels 16..22 and 0 remembers is
+    forgotten, in voice order 16..23.
+  - Its buffer is stopped (`SndBuf_Stop`: only if it is playing) when two things hold. Its entry must still
+    hold that buffer: a bank reloaded since has released it, and the check keeps a released buffer from being
+    touched. And no channel of `Sound_Channels` may hold it: a loop on that buffer is DIV-0167's.
+  - **To the ear:** in battle, a sound effect of one action still ringing when the next action's effect
+    begins is cut there. Before, it played out under the new effect. Which actions' effects last that long is
+    not measured. The end batch's WAV dump of `combat.txt` before and after is the measurement; this group
+    is headless.
+  - What the change cannot reach: a one-shot on a channel that played another one-shot after it. The PC lets
+    two cues on one channel sound together, where the PlayStation's voice could not; the older is not
+    remembered.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D337). The PlayStation calls
+  `SsUtKeyOffV` (`0x8016F10C`) for voices 0x10..0x17 at JP `0x801D3E68..0x801D3E84` (US `0x801D3E88..`).
+  The key-off releases whatever each voice sounds, one-shot or loop.
+- **Also in the PSX version?** Yes: this is the PlayStation's step, on what the PC can reach.
+- **Verification:** `BOF3X_SHADOW=sound`'s fuzz checks it with the switch set, after its rounds against
+  Capcom's copies:
+  - 2,000 rounds of `Sound_PlayEffect` against itself without the switch: every compared byte, the calls out
+    and eax the same.
+  - 2,000 rounds of `KeyOffOneShots` on randomised remembered one-shots, entries and channels: the stops in
+    voice order exactly where the entry still holds the buffer and no channel does; those eight channels
+    forgotten and the other fifteen kept; no compared byte changed.
+  - One cue end to end: two one-shots (channels 16 and 23, filed as 0) and a loop (17) remembered as such;
+    the one-shots stopped in voice order and the loop left. A reloaded entry and a looping holder each spare
+    their one-shot.
+  - 0 mismatches.
+  - `battle_actions`' fuzz runs before the switch is armed (Capcom's preload, unchanged).
+  - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Negative control: with
+    the entry check removed (and DIV-0174's stop) the fuzz is refused, exit 3.
+  - Nothing is written to game memory, so the state hash sees nothing.
+  - Not heard; not run on a route.
+- **Reversible?** `BOF3X_ORIGINAL=OneShotKeyOff`, independently of `BOF3X_ORIGINAL=EffectKeyOff` (DIV-0167).

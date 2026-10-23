@@ -164,6 +164,7 @@ int Sound_PlayEffectEax(unsigned short id) {
         const std::uint32_t entry = Address(Sound_Banks) + base + kVoices + voice * 8;
         g.sndbuf_play(Dword(entry) | loops, reinterpret_cast<void*>(Dword(entry + 4)), word >> 16);
         Sound_Channels[channel] = loops ? Dword(entry + 4) : 0;
+        if (!loops) sound_st::NoteOneShot(channel, entry);  // DIV-0175: DLL-side, nothing without its switch
     }
     return 0;
 }

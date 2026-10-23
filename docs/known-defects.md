@@ -9350,7 +9350,7 @@ the list. Not seen.
 **Status:** fixed by DIV-0161 (`BOF3X_ORIGINAL=BattleDrawSigned` for the
 original), fix wave 1023; the port's.
 
-## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard; fixed by DIV-0167 for the looping voices)
+## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard; fixed by DIV-0167 for the looping voices and DIV-0175 for the one-shots)
 
 **Seen:** not heard; found 2026-10-23 by reading the US PlayStation's
 `0x801D3E80` (JP `0x801D3E60`, words identical) against the PC's `0x42FD20`
@@ -9379,6 +9379,14 @@ reach: the looping voices on those channels are stopped and forgotten at
 the PlayStation's point. A one-shot still sounding plays to its end, where
 the PlayStation's key-off would release it; left as the PC's. Not heard; a
 listen for the owner.
+
+**The one-shots** (2026-10-23, the sound-layer round, group ST): fixed by
+DIV-0175 (`BOF3X_ORIGINAL=OneShotKeyOff`). `Sound_PlayEffect` now remembers,
+DLL-side, the voice entry and buffer each channel last played as a one-shot.
+The preload stops each one still held by its entry and not by a looping
+channel. A one-shot followed on its channel by another is not remembered: the
+PC sounds both, where the PlayStation's voice could not. Which actions leave
+one sounding is not measured; the WAV dump of `combat.txt` is the measurement.
 
 ## D338 — `DragonCmd_StoreAsk` reads the prompt's answer as a dword that every writer stores as a word (the port's; latent)
 

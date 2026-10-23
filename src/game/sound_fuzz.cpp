@@ -881,18 +881,34 @@ unsigned RepairChecks(unsigned rounds) {
     return bad;
 }
 
-// The sound-layer round's (sound_st.h), with its switch set, the same way.
+// The sound-layer round's two (sound_st.h), each with its switch set, the
+// same way.
 //   DIV-0174: Music_FadeOutStop with StopCuts against itself without it, on
 //     the same randomised state: every compared byte, the calls out and eax
 //     the same, and exactly one Music_Stop more when frames is above 0.
+//   DIV-0175: Sound_PlayEffect with OneShotKeyOff against itself without it:
+//     every compared byte, the calls out and eax the same (the remembering is
+//     the DLL's alone). KeyOffOneShots on randomised remembered one-shots and
+//     state: in voice order 16..23, one stop for each channel's one-shot whose
+//     entry still holds its buffer and no channel of Sound_Channels holds;
+//     those eight channels forgotten, the other fifteen kept, no compared byte
+//     changed, nothing else called. And one cue end to end with quiet
+//     stand-ins: two one-shots and a loop remembered as such, the one-shots
+//     stopped in voice order and the loop left to DIV-0167; then a reloaded
+//     entry and a looping holder each spare their one-shot.
 unsigned g_cut_stops;
 void __cdecl CutCountStop() { ++g_cut_stops; }
+void __cdecl QuietPlay(std::uint32_t, void*, unsigned) {}
 
 unsigned SoundLayerRoundChecks(unsigned rounds) {
     static State input, out, want;
     unsigned bad = 0;
     const auto music_stop_saved = g.music_stop;
-    const std::uint8_t cuts_saved = sound_st::g_stop_cuts;
+    const auto stop_saved = g.sndbuf_stop;
+    const auto play_saved = g.sndbuf_play;
+    const std::uint8_t cuts_saved = sound_st::g_stop_cuts, shots_saved = sound_st::g_one_shot_key_off;
+    sound_st::OneShot shots_kept[sound_st::kChannels];
+    std::memcpy(shots_kept, sound_st::g_one_shots, sizeof shots_kept);
 
     g.music_stop = CutCountStop;
     for (unsigned round = 0; round < rounds; ++round) {
@@ -918,6 +934,122 @@ unsigned SoundLayerRoundChecks(unsigned rounds) {
         }
     }
     g.music_stop = music_stop_saved;
+
+    for (unsigned round = 0; round < rounds; ++round) {
+        const Args x = Generate(kPlayEffect, input);
+        Capture(input);
+        std::uint32_t result[2];
+        for (unsigned pass = 0; pass < 2; ++pass) {
+            Apply(input);
+            sound_st::g_one_shot_key_off = static_cast<std::uint8_t>(pass);
+            result[pass] = Run(Ours(kPlayEffect), kPlayEffect, x);
+            Capture(pass ? out : want);
+        }
+        sound_st::g_one_shot_key_off = shots_saved;
+        want.control = out.control;
+        if (result[0] != result[1] || std::memcmp(&want, &out, sizeof out) != 0) {
+            if (++bad <= 12)
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0175 round %u, Sound_PlayEffect(%04X)", round,
+                          static_cast<unsigned>(x.a[0] & 0xFFFF));
+        }
+    }
+
+    g.sndbuf_stop = KeyOffStop;
+    for (unsigned round = 0; round < rounds; ++round) {
+        Generate(kSndStop, input);
+        sound_st::OneShot shots[sound_st::kChannels];
+        for (auto& shot : shots) {
+            shot = {0, 0};
+            if (Next() % 3 == 0) continue;
+            const std::uint32_t entry = Address(Sound_Banks) + (Next() % 6) * kBankBytes + kVoices + (Next() % 64) * 8;
+            const std::uint32_t buffer = Next() % 6 ? Address(AnyBuffer(Next())) : Next() % 2 ? 0 : Next();
+            shot = {entry, buffer};
+            if (Next() % 4) SetDword(entry + 4, buffer);
+            if (Next() % 5 == 0) Sound_Channels[Next() % sound_st::kChannels] = buffer;
+        }
+        Capture(input);
+        Apply(input);
+        std::memcpy(sound_st::g_one_shots, shots, sizeof shots);
+        g_keyoff_n = 0;
+        sound_st::KeyOffOneShots();
+        Capture(out);
+        want = input;
+        want.control = out.control;
+        std::uint32_t stops[8];
+        unsigned n = 0;
+        for (std::uint32_t voice = 16; voice <= 23; ++voice) {
+            const std::uint32_t channel = voice >= 0x17 ? voice - 0x17 : voice;
+            const sound_st::OneShot shot = shots[channel];
+            shots[channel] = {0, 0};
+            if (shot.entry == 0 || shot.buffer == 0) continue;
+            std::uint32_t live;
+            std::memcpy(&live, want.tables + (shot.entry + 4 - Sound_Channels_addr), 4);
+            if (live != shot.buffer) continue;
+            bool held = false;
+            for (unsigned c = 0; c < sound_st::kChannels; ++c) {
+                std::uint32_t word;
+                std::memcpy(&word, want.tables + c * 4, 4);
+                held = held || word == shot.buffer;
+            }
+            if (!held) stops[n++] = shot.buffer;
+        }
+        bool table_ok = true;
+        for (unsigned c = 0; c < sound_st::kChannels; ++c)
+            table_ok = table_ok && sound_st::g_one_shots[c].entry == shots[c].entry && sound_st::g_one_shots[c].buffer == shots[c].buffer;
+        if (!table_ok || g_keyoff_n != n || std::memcmp(stops, g_keyoff_stops, n * 4) != 0 || std::memcmp(&want, &out, sizeof out) != 0) {
+            if (++bad <= 18)
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0175 key-off round %u, %u stops for %u", round, g_keyoff_n, n);
+        }
+    }
+
+    // End to end: bank 1, cue 0 - voice 2 on channel 16 and voice 3 on
+    // channel 23 (filed as 0) once, voice 4 on channel 17 looping.
+    {
+        Generate(kSndStop, input);
+        g.sndbuf_play = QuietPlay;
+        const std::uint32_t cue = Address(Sound_Banks);
+        const std::uint32_t entry2 = cue + kVoices + 2 * 8, entry3 = cue + kVoices + 3 * 8, entry4 = cue + kVoices + 4 * 8;
+        const std::uint32_t b2 = Address(&g_buffers[1]), b3 = Address(&g_buffers[2]), b4 = Address(&g_buffers[3]);
+        for (unsigned c = 0; c < sound_st::kChannels; ++c) Sound_Channels[c] = 0;
+        SetDword(cue + 0, 0x56220000u | 16u << 8 | 2u);
+        SetDword(cue + 4, 0x56220000u | 23u << 8 | 3u);
+        SetDword(cue + 8, 0x56228000u | 17u << 8 | 4u);
+        SetDword(cue + 12, 0);
+        SetDword(entry2, 1);
+        SetDword(entry2 + 4, b2);
+        SetDword(entry3, 1);
+        SetDword(entry3 + 4, b3);
+        SetDword(entry4, 1);
+        SetDword(entry4 + 4, b4);
+        for (int variant = 0; variant < 3; ++variant) {
+            std::memset(sound_st::g_one_shots, 0, sizeof sound_st::g_one_shots);
+            Sound_Channels[17] = 0;
+            sound_st::g_one_shot_key_off = 1;
+            Sound_PlayEffectEax(0x100);
+            sound_st::g_one_shot_key_off = shots_saved;
+            const bool noted = sound_st::g_one_shots[16].entry == entry2 && sound_st::g_one_shots[16].buffer == b2 &&
+                               sound_st::g_one_shots[0].entry == entry3 && sound_st::g_one_shots[0].buffer == b3 &&
+                               sound_st::g_one_shots[17].entry == 0 && Sound_Channels[17] == b4;
+            if (variant == 1) SetDword(entry2 + 4, b4);  // the bank reloaded since: entry 2 holds another buffer
+            if (variant == 2) Sound_Channels[5] = b3;    // b3 looping on some channel: DIV-0167's to stop
+            g_keyoff_n = 0;
+            sound_st::KeyOffOneShots();
+            const std::uint32_t first = variant == 0 ? b2 : variant == 1 ? b3 : b2;
+            const unsigned want_n = variant == 0 ? 2u : 1u;
+            const bool stopped = g_keyoff_n == want_n && g_keyoff_stops[0] == first && (want_n < 2 || g_keyoff_stops[1] == b3) &&
+                                 sound_st::g_one_shots[16].entry == 0 && sound_st::g_one_shots[0].entry == 0 && Sound_Channels[17] == b4;
+            if (!noted || !stopped) {
+                ++bad;
+                bof3::Log("shadow      sound self-test MISMATCH: DIV-0175 end to end, variant %d: noted %d, %u stops", variant,
+                          noted ? 1 : 0, g_keyoff_n);
+            }
+            SetDword(entry2 + 4, b2);
+            Sound_Channels[5] = 0;
+        }
+        g.sndbuf_play = play_saved;
+    }
+    g.sndbuf_stop = stop_saved;
+    std::memcpy(sound_st::g_one_shots, shots_kept, sizeof shots_kept);
     return bad;
 }
 
@@ -987,8 +1119,10 @@ void SelfTest() {
     bof3::Log("shadow      sound self-test: DIV-0168's refusal and DIV-0167's key-off, %u rounds each with the switch set, "
               "%u MISMATCHES", kRepairRounds, repair_bad);
     if (repair_bad) bof3::Fatal("the sound layer's repairs differ from what they say in %u of %u rounds", repair_bad, 2 * kRepairRounds);
-    bof3::Log("shadow      sound self-test: DIV-0174's cut, %u rounds with the switch set, %u MISMATCHES", kRepairRounds, round_bad);
-    if (round_bad) bof3::Fatal("the sound-layer round's repair differs from what it says in %u checks", round_bad);
+    bof3::Log("shadow      sound self-test: DIV-0174's cut and DIV-0175's one-shot key-off with the switch set - %u rounds "
+              "of the cut, %u of the remembering, %u of the key-off, and the key-off end to end - %u MISMATCHES",
+              kRepairRounds, kRepairRounds, kRepairRounds, round_bad);
+    if (round_bad) bof3::Fatal("the sound-layer round's repairs differ from what they say in %u checks", round_bad);
     for (unsigned k = 0; k < kCount; ++k)
         if (bad_per[k]) bof3::Log("shadow      sound self-test: %s %u of %u rounds differ", kClones[k].name, bad_per[k], kPerFunction);
     if (bad) bof3::Fatal("the sound layer differs from the original in %u of %u self-test rounds", bad, kRounds);
