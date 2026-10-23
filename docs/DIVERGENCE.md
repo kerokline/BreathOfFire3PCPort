@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 169 entries, DIV-0001..0169, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 171 entries, DIV-0001..0175 (0170..0173 reserved to the sound-layer round's open groups), DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10617,3 +10617,145 @@ designed in rather than bolted on.
   decoder's staging and heap. A quicksave taken between nightfall and morning does not carry the taken
   song, so a load into that span ends the night as the PC did.
 - **Reversible?** `BOF3X_ORIGINAL=InnNightPause`.
+### A music stop cuts the song, as the PlayStation's SsSepStop does, instead of fading it out
+
+- **ID:** DIV-0174
+- **Date:** 2026-10-23
+- **Subsystem:** the music's stop - `Music_FadeOutStop` (`0x587B40`, `src/game/sound.cpp`) and `sound_st::CutStop`
+  (`src/game/sound_st.cpp`); [`sound.md`](sound.md), [`libsnd-reading.md`](libsnd-reading.md) 5.2,
+  [`known-defects.md`](known-defects.md) D347
+- **Tier:** Sensible - a port repair (the PlayStation stops; the port's sound layer fades). **Flagged: the owner
+  said D347 is their ear's call.** The round builds it on; the owner's listen may switch it off.
+- **Original behaviour:** `Music_FadeOutStop(frames)` sets a stopping fade that `Sound_Tick` steps. In Capcom's
+  port a step is taken per spin of the frame wait, so the fade is over within the frame - near a cut
+  ([`known-defects.md`](known-defects.md) D26). Under DIV-0028 (ours, on by default) a step is taken once per
+  logic frame, so the song fades for `frames` logic frames and then stops: 10 at most sites (a third of a
+  second), 8, 30 (one second), 32 and 64 (two seconds) at the others.
+- **New behaviour:** after the same body, with `frames` above 0, the stream is stopped at once: `Music_Stop`,
+  which on the sequenced path (DIV-0087) also stops the synth (its `SsSepStop`). Every word the game can read
+  is written as before - `Music_FadeStops`, `Music_FadeCount`, `Music_FadeStep`, `Music_Volume`. `Music_Track`
+  still goes to 0xFF at the first `Sound_Tick`, and the fade still steps and ends with its own `Music_Stop`,
+  which finds nothing playing. A later command acts as it did. So the game sees the fade it always saw, and
+  only the sound changes. With `frames` 0 or negative nothing is cut: Capcom's fade never ends then.
+  **To the ear:**
+  - Every music stop now cuts where it faded. Most are the scenario chapters' stops (99 of the 131 sites,
+    chapters 0..17); others are the end of a battle (`BattleEnd_ExitHook`: the victory music cut at the
+    field's return), the title's and the attract demo's stops (the demo's 64- and 32-frame fades are now
+    cuts), the faerie village's music changes, and the area scripts below.
+  - Ryu's dream (`whelpBoss.txt`, D318): the bedroom's song is cut at its stop (f10821). It no longer fades
+    over the 27 frames DIV-0143's knock-on left. DIV-0143 is still needed: without it `Area_Enter` would play
+    the kept track again.
+  - Unchanged to the ear wherever a `Music_Play` of another track follows in the same frame. Its
+    `Music_Start` replaced the stream at once already: the battle start (`GameMode5_Load`), the win and loss
+    fanfares and `Area104_Tail40`.
+  - Nearly unchanged where a `Music_FadeOut` ran first: the area change (`GameMode_Field` case 5),
+    `GameMode8_Leave` and area 75's tail. Their `Music_FadeOut` is the PlayStation's decrescendo and stays,
+    and the cut comes after it, once the transition is done. One exception: an area change with no
+    transition makes both calls in one frame. There the song faded over 10 frames before; now it is cut.
+  - Where the same frame cancels the stop with a `Music_FadeOut` (DIV-0143's knock-on), the song stays
+    stopped. On the PC it would have played on at nothing. The PlayStation's stop is final too.
+  - Known edge: a `Sound_ResumeAll` inside a cut's fade window plays the rest of the fade from where it was
+    cut, as the build without the cut would.
+- **Rationale:** the PSX twin rule ([`psx-twin-check.md`](psx-twin-check.md)).
+  - `Music_FadeOutStop`'s own twin is the JP disc's `0x801626C0` (US `0x80161CD0`). It calls `0x8015DF44`
+    (US `0x8015D554`), which sets `SsSepSetDecrescendo` (JP `0x8016B9CC`, US `0x8016B054`) and calls
+    `SsSepStop` (JP `0x8016E03C`, US `0x8016D6C4`) at once. The voices are released before the decrescendo
+    can be heard ([`libsnd-reading.md`](libsnd-reading.md) 5.2).
+  - Every one of the PC function's 131 call sites (a rel32 scan of `.text`) pairs with that, with the plain
+    stop `0x8015DDF4` (US `0x8015D404`) or with the stop of every SEP `0x8015DFC8`. None pairs with the
+    decrescendo alone (`0x8015DEE8`, US `0x8015D4F8`). Its sites line up, overlay by overlay, with the PC's
+    33 `Music_FadeOut` calls (to one site).
+  - So the class is the function, and one switch covers it.
+  - Read from the bytes of both discs (capstone, every EMI code section and the executables): the counts per
+    overlay are the same on the US disc and the JP disc.
+
+  | PC call site (frames) | JP twin | Twin's call | Verdict |
+  |---|---|---|---|
+  | `Area26_ResetCamera` `0x403310` (0xA) | `AREA026.EMI#13` `0x801F3290` (US `0x801F3280`) | stop | cut |
+  | `Area39_FadeOutMusic` `0x405750` (0x1E) | `AREA039#13` `0x801F2F68`, `AREA130#13` `0x801F378C` | decrescendo to 4 over 30 + stop | cut |
+  | `Area67_MusicFade10` `0x40CE10` (0xA) | `AREA019` `0x801F2D6C`, `AREA007` `0x801F2EFC`, `AREA130` `0x801F373C`, `AREA067#14` `0x801F4478` | stop | cut |
+  | `Area75_TailPresses` `0x40DB90` state 0x20 (0xA) | `AREA075#13` `0x801F37F4` | stop (its decrescendo 100 / 32 is state 0x1F's `Music_FadeOut(0x20)`) | cut |
+  | `Area104_Tail40` `0x415BE0` (0xA) | `AREA104#14` `0x801F5E4C` | stop | cut |
+  | `BattleEnd_WinBegin` `0x4314C0`, `BattleEnd_LossBanner` `0x431550`, `BattleEnd_ExitHook` `0x4317B0` (10) | `BATTLE.EMI#3`, the calls at `0x801D6D0C`, `0x801D6E08`, `0x801D7248`, each behind the same 0x40 flag test as the PC's | every SEP stopped (`0x8015DFC8`); the first two then play SEP sub 1 / 2 | cut |
+  | the faerie village's nine: `0x457590`, `0x459F40`, `0x45AF00`, `0x45B790`, `0x45C3A0`, `0x45C900`, `0x45CDF0`, `0x45F830`, `0x45F9A0` (10) | `COMMU02.EMI#8` (six), `COMMU03#6` (two), `COMMU00#0` and `AREA175..185#14` `0x801F2394` | stop, nine of nine; no decrescendo in these overlays | cut |
+  | `Title_StateDemo` `0x462370` (8); `Title_StopMusic` `0x4624D0` (0xA) | `GAME.EMI#1` `0x801D0F08`; `0x801D1184` | fade-stop 100 / 8; stop | cut |
+  | `EffectKind45_Start` `0x4771D0` (0xA); `EffectKind55_Finish` `0x47EB30` (0xA, one site a branch) | `AREA077#14` `0x801F2C48`; `AREA008#13` `0x801F3BB4` | stop | cut |
+  | `GameMode_Field` `0x4959F0` case 5; `GameMode5_Load` `0x495FD0`; `GameMode8_Leave` `0x4964E0` (0xA) | `GAME.EMI#0` `0x80198378`; `0x80198C94`; `0x801995C8` | stop (the decrescendos 100 / 16 before two of them are the `Music_FadeOut(0x10)` calls) | cut |
+  | area 30's block (also areas 89, 129): `0x5295A0`, `0x5295F0`, `0x52A0A0`, `0x52A2B0`, `0x52A310` (0xA) | `AREA030.EMI#4` `0x801DB03C`, `0x801DB1C0`, `0x801DC2D0`, `0x801DC654`, `0x801DC710` | stop | cut |
+  | `MoveScript_GroupB` `0x577280`, two ops (8, 0xA) | `GAME.EMI#0` `0x801AA6E4` | fade-stop 100 / 8; stop | cut |
+  | chapter 0 (2 sites: 0x40, 0x20) | `SCENA00.EMI` | fade-stops over 64 and 32 | cut |
+  | chapter 1 (16, three in `Scena01_EnterArea`) | `SCENA01` | 12 stops, 3 decrescendo-stops | cut |
+  | chapter 2 (13) | `SCENA02` | 11 stops (two places stop two SEP subs), 4 decrescendo-stops | cut |
+  | chapters 3, 4, 7 (5, 4, 5) | `SCENA03`, `04`, `07` | fade-stops 100 / 8 and 2 stops in chapter 4 (their 7 decrescendos are the 7 `Music_FadeOut` calls) | cut |
+  | chapter 5, 6 (5, 7) | `SCENA05`, `06` | 4 + 5 stops, 1 + 2 decrescendo-stops | cut |
+  | chapter 8 (7) | `SCENA08` | 2 stops, 5 fade-stops (100 / 32 three times, 100 / 8 twice); its 4 decrescendos are the 4 `Music_FadeOut` | cut |
+  | chapters 9, 11 (4, 6; all 0x1E) | `SCENA09`, `SCENA11` | decrescendo to 4 over 30 + stop | cut |
+  | chapter 10 (3: 4, 1, 0xA) | `SCENA10` | fade-stops 100 / 4 and 100 / 1, a stop | cut |
+  | chapters 12, 13, 14, 15, 17 (4, 6, 3, 4, 2) | `SCENA12..15`, `SCENA17` | stops, fade-stops, decrescendo-stops; every decrescendo alone is a `Music_FadeOut` | cut |
+  | chapter 16, the attract demo: `Scena16_End` `0x56B570` (0xA), `0x56B5D0` (0x40), `0x56BCC0` (0x20) | `SCENA16` `0x801F7188`, `0x801F7238`, `0x801F7CC4` | stop; fade-stops 80 / 64 and 110 / 32 | cut |
+
+  The PC's frame counts are the twins' decrescendo frames (`4, 30` is 0x1E; `100, 64` is 0x40), or the
+  port's 10 where the twin stops plainly. Per chapter the PC's sites and the twin's stops agree in count, to
+  a site or two where one PlayStation call stops two SEP subs or one PC function calls from two branches.
+- **Also in the PSX version?** Yes: this is the PlayStation's stop. Note that the decrescendo the PlayStation
+  sets first is never heard either.
+- **Verification:** `BOF3X_SHADOW=sound`'s fuzz runs Capcom's copy against ours with the switch off (46,000
+  rounds), then 2,000 rounds of `Music_FadeOutStop` on randomised music state with the switch set against
+  itself without it: every compared byte, the calls out and eax the same, and exactly one more `Music_Stop`
+  when frames is above 0; 0 mismatches. The game-memory words written are unchanged, so the state hash sees
+  nothing new (the stream's staging buffer and `Music_Finished`, which follow the stream's own timing, are in
+  its noise list already). `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0
+  (with DIV-0175 beside it). Not heard; not run on a route (headless group). The end batch's WAV dump of `whelpBoss.txt`
+  should show the bedroom's song ending at f10821 and nothing after it until track 7.
+- **Reversible?** `BOF3X_ORIGINAL=StopCuts` (DIV-0028's fade), or `BOF3X_ORIGINAL=Music_FadeOutStop`.
+
+### A battle action's effect also stops the one-shot sound effects the last one left sounding, as the PlayStation's key-off does
+
+- **ID:** DIV-0175
+- **Date:** 2026-10-23
+- **Subsystem:** the battle action's effect preload - `BattleAction_EffectPreload` (`0x42FD20`,
+  `src/game/battle_actions.cpp`) - and the sound effects (`Sound_PlayEffect` `0x587740`, `src/game/sound.cpp`;
+  `sound_st::NoteOneShot` / `KeyOffOneShots`, `src/game/sound_st.cpp`; [`sound.md`](sound.md),
+  [`known-defects.md`](known-defects.md) D337)
+- **Tier:** Sensible - a port repair; DIV-0167's remainder.
+- **Original behaviour:** Capcom's preload touches no sound. DIV-0167 (ours, on by default) stops what the
+  effect channels 16..22 and 0 remember at the preload, which is only looping voices. A one-shot voice plays its bank entry's buffer, which every
+  cue naming that voice shares, and `Sound_PlayEffect` remembers it nowhere. So a one-shot still sounding when
+  the next action's effect starts plays to its end.
+- **New behaviour:**
+  - `Sound_PlayEffect` remembers, for each channel a one-shot voice plays on, the voice entry and the buffer
+    that entry held just after the play. This is the DLL's own table, written only with the switch on; the
+    last one-shot on a channel replaces the one before.
+  - At the preload, right after DIV-0167's step, the one-shot each of channels 16..22 and 0 remembers is
+    forgotten, in voice order 16..23.
+  - Its buffer is stopped (`SndBuf_Stop`: only if it is playing) when two things hold. Its entry must still
+    hold that buffer: a bank reloaded since has released it, and the check keeps a released buffer from being
+    touched. And no channel of `Sound_Channels` may hold it: a loop on that buffer is DIV-0167's.
+  - **To the ear:** in battle, a sound effect of one action still ringing when the next action's effect
+    begins is cut there. Before, it played out under the new effect. Which actions' effects last that long is
+    not measured. The end batch's WAV dump of `combat.txt` before and after is the measurement; this group
+    is headless.
+  - What the change cannot reach: a one-shot on a channel that played another one-shot after it. The PC lets
+    two cues on one channel sound together, where the PlayStation's voice could not; the older is not
+    remembered.
+- **Rationale:** the PSX twin rule ([`known-defects.md`](known-defects.md) D337). The PlayStation calls
+  `SsUtKeyOffV` (`0x8016F10C`) for voices 0x10..0x17 at JP `0x801D3E68..0x801D3E84` (US `0x801D3E88..`).
+  The key-off releases whatever each voice sounds, one-shot or loop.
+- **Also in the PSX version?** Yes: this is the PlayStation's step, on what the PC can reach.
+- **Verification:** `BOF3X_SHADOW=sound`'s fuzz checks it with the switch set, after its rounds against
+  Capcom's copies:
+  - 2,000 rounds of `Sound_PlayEffect` against itself without the switch: every compared byte, the calls out
+    and eax the same.
+  - 2,000 rounds of `KeyOffOneShots` on randomised remembered one-shots, entries and channels: the stops in
+    voice order exactly where the entry still holds the buffer and no channel does; those eight channels
+    forgotten and the other fifteen kept; no compared byte changed.
+  - One cue end to end: two one-shots (channels 16 and 23, filed as 0) and a loop (17) remembered as such;
+    the one-shots stopped in voice order and the loop left. A reloaded entry and a looping holder each spare
+    their one-shot.
+  - 0 mismatches.
+  - `battle_actions`' fuzz runs before the switch is armed (Capcom's preload, unchanged).
+  - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Negative control: with
+    the entry check removed (and DIV-0174's stop) the fuzz is refused, exit 3.
+  - Nothing is written to game memory, so the state hash sees nothing.
+  - Not heard; not run on a route.
+- **Reversible?** `BOF3X_ORIGINAL=OneShotKeyOff`, independently of `BOF3X_ORIGINAL=EffectKeyOff` (DIV-0167).

@@ -222,6 +222,7 @@ add_library(bof3x SHARED
   src/game/sound_rest.cpp
   src/game/sound_in.cpp
   src/game/sound_rest_fuzz.cpp
+  src/game/sound_st.cpp
   src/game/game_last.cpp src/game/game_last_fuzz.cpp
   src/game/d3d_draw.cpp
   src/game/d3d_lines.cpp
