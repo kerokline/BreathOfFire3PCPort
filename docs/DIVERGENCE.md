@@ -10449,8 +10449,8 @@ designed in rather than bolted on.
 - **Also in the PSX version?** The PlayStation draws the fill to the edge; this restores that.
 - **Verification:** builds; the `menu_windows` fuzz compares the unsigned words against Capcom's copy before the
   switch is armed, and `BOF3X_SHADOW='*'` exits 0. A draw only - no state, timer or input changes - so the
-  recorded routes keep their frames; the slide-out has not been looked at (the owner's eye: the shop's member
-  panel sliding out, and a gene choice sliding in or out).
+  recorded routes keep their frames. The owner looked at the shops in play, 2026-10-23: "Shops look great". A
+  gene choice sliding in or out has not been looked at.
 - **Reversible?** `BOF3X_ORIGINAL=MenuSignedXY`.
 
 ### Message 0xFA's gene name is terminated after its 8-byte copy

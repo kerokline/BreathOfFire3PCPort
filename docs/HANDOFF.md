@@ -54,8 +54,8 @@ hosted cross form).
    `GeneNameNul` (D351), 0167 `EffectKeyOff` (D337), 0168 `MusicPlayRefusesNone` (D346). Found moot on reading:
    D335 (every reader takes the low 16 bits, where both machines agree) and D342 (every caller tests 1 or 2).
    Self-tests `'*'` exit 0; the ten routes against the new `orig4` pairs show only the pre-wave signatures
-   ([`state-hash.md`](state-hash.md) 6). **Owed:** the owner's eye on DIV-0165 (a shop's member box sliding out
-   left keeps its fill); a PR at the owner's word. **Held, each with its reason in its entry:** D350 (the Scena16
+   ([`state-hash.md`](state-hash.md) 6). The owner confirmed DIV-0165 on the shops in play ("Shops look
+   great"); PR #117 is open. **Held, each with its reason in its entry:** D350 (the Scena16
    caption's wait is in the attract demo: measure on the attract run first), D352 (the window reset's full
    clear: a state-hash comparison first), D343 (the inn night: `shop.txt` with `BOF3X_MUSIC_LOG=1` near recipe
    frame 2647 to find how the town song returns), D340, D344 (two frames before a save write shift the

@@ -9676,7 +9676,7 @@ a float near 65,536 and fell off-screen, so the frame pieces drew without the
 fill on the slide's last frames.
 
 **Status:** the port's; fixed by DIV-0165 (`BOF3X_ORIGINAL=MenuSignedXY`); the
-owner's look owed on a shop's slide-out.
+owner confirmed the shops in play (2026-10-23).
 
 ## D349 — `Battle_Init` leaves the target-pick flag set from the last battle (Capcom's, fixed in the US build; latent; fixed by DIV-0163)
 
