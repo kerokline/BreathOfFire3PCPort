@@ -13,7 +13,7 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 Sunder animation `0x10`, 24 frames and then a hold on the standing frame, over two thousand frames before
 the player reaches the top. One byte of the script now asks for the bank's unused looping cut `0x0F` (the same
 steps, no end jump, a puddle in every frame), so he keeps going until the scene starts. Self-tests exit 0;
-seen in the patched build; the owner's eye and the on-by-default call owed ([`owner-review.md`](owner-review.md)).
+seen in the patched build and by the owner (the cut at the scene's hands-down pose kept, on by default); PR open.
 
 **The sound-layer round, 2026-10-23 evening, built on `sound/round`** (off `main` `300ce67f`, unpushed;
 [`sound-layer-round.md`](sound-layer-round.md)). The twin-diff of 2026-10-23 (PRs #115, #116; fix wave 1023, PR #117)

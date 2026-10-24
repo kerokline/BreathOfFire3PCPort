@@ -13,17 +13,6 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
-## 2026-10-24, the Sunder loop (built on `cut/sunder-loop`, not played)
-
-- **Sunder at the top of Mt. Myrneg** (DIV-0176, `SunderLoop`; the save `balioAndSunder_2`, walk to the
-  top): he now relieves himself at the cliff edge over and over - the stream, a puddle, a pause - until
-  Ryu's arrival starts the scene, where before he stood still on the animation's last frame. This is
-  Capcom's own unused looping cut of the animation (`0x0F`), not the once-and-hold one (`0x10`) re-run.
-  **To look for:** that the loop reads as meant; and that during the surprise mark over his head he keeps
-  going (the original stood still there) - if that reads wrong, say so and the loop can end at the effect
-  instead. Sheets: `analysis/shots/sunder-loop-1024/`. **Your call:** on by default (as built), or opt-in,
-  since TCRF flags the scene; `BOF3X_ORIGINAL=SunderLoop` is the original either way.
-
 ## 2026-10-23 evening, the sound-layer round (built on `sound/round`, not heard)
 
 The PlayStation's positional sound, pause and cuts back in the port's DirectSound layer

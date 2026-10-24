@@ -10979,7 +10979,10 @@ designed in rather than bolted on.
   the looping cut and shipped the once-and-hold one. This uses the disc's own data for the loop rather than
   re-triggering `0x10` from code, so the frames, the holds and the puddle are the animator's. During the
   surprise effect he keeps going (caught in the act) where the original stood still; the owner's eye decides
-  whether that reads right.
+  whether that reads right. **The owner's call (2026-10-24, the sheets of the patched build through the
+  scene): the loop runs through the surprise mark and ends on the frame the script gives him the hands-down
+  pose (recipe frame 3,296), a hard cut; that is right as it is, and it stays on by default.** A hand-over
+  to the once-cut's tail (the stream thinning, the hands dropping) was offered and declined.
 - **What changes to the eye:** only Sunder at the mountain top before the scene. Nothing to the ear.
 - **Also in the PSX version?** Yes - the area's scripts are the section's bytes, which came across unchanged
   ([`movement-script.md`](movement-script.md) 3; the placement script byte-identical to the disc's,
