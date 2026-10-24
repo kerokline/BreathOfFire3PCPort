@@ -1,12 +1,28 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-22)
+**Status:** IN PROGRESS (2026-10-23 night)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
 true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
+
+**The sound-layer round, 2026-10-23 evening, built on `sound/round`** (off `main` `300ce67f`, unpushed;
+[`sound-layer-round.md`](sound-layer-round.md)). The twin-diff of 2026-10-23 (PRs #115, #116; fix wave 1023, PR #117)
+left one class of port defect: the DirectSound layer had replaced the PlayStation's positional sound, pause and cuts
+with flat effects and fades. Four groups put them back, each on by default with a `BOF3X_ORIGINAL` switch
+(DIV-0169..0175): the inn's night halts the town's song and resumes it where it stopped after the morning's message
+(D343 - the PC's song had never returned), op `B8`'s song restart, voices panned by their sprite's place, the level
+table and the distance gate, cuts where every one of the 131 `Music_FadeOutStop` sites pairs with a PlayStation
+stop (D347, the owner's ear's call), the one-shot key-off, and D352's window reset. Held with measurements for the
+owner: D350 (34..58 frames on the Western attract), D344 (two recipes save), D340. Found on the way: D353 (region
+drift, settled) and D354 (a DSOUND crash at a bank reload, fixed the same night). The gate: self-tests exit 0, the
+ten-route state hash shows only the pages the entries predict, the WAV dumps the changes they describe (the fixed
+build's last re-runs were still running at the write). **Nothing heard by the owner** ([`owner-review.md`](owner-review.md)).
+Beside it, `audit/twins-remainder`: 497 twin markers, 38 wrong propagated pairs retired by a `us_jp.tsv` check
+([`twin-pairs-check.md`](twin-pairs-check.md), D339 amended), and the records audit's typing pass with `codegen_same`
+0 differ, audited.
 
 **The reading-row round, 2026-10-22, built on `localization/second-script`** (off `main` `abf915cc`; the end
 batch on `reading-row/end`; **PR next**, nothing pushed; [`reading-row-round.md`](reading-row-round.md), issue #97,
