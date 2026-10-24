@@ -8085,6 +8085,15 @@ designed in rather than bolted on.
   box, the two draws on row `0x12`, the strings loaded between them, the
   `sltiu` or `beq` on the turn); `BOSS027.EMI` holds the same routine and
   words on every disc.
+- **Amended 2026-10-24 (issue 133):** under the overlay the count is drawn
+  through `Text_DrawAt` in colour 4, not `Text_DrawFont12`. The disc's count
+  draw (US `0x8014FF0C`, called at `0x800C30D4`) is not its 12 px numerals:
+  it takes the dialogue font's 8 x 12 cells (code - `0x30`, 31 a row from
+  v `0x48` of page `0x2F`) in CLUT `0x7800 | 4` and moves the pen 8 a digit -
+  the cells the overlay already imports. With the 12 px numerals the two
+  digits at `0x70` reached `0x88` and ran under the words at `0x80`. Seen
+  in game: the owner's `preBeyd` recipe under en-US, `20turns left` as the
+  US disc draws it.
 - **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
   section 7 (2026-10-13).
 - **Also in the PSX version?** The words, places and test are each disc's
