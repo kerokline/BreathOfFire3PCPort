@@ -53,6 +53,11 @@ void Pend(unsigned track, unsigned sample);
 // once-only track that has ended does not); false otherwise. Reads only.
 bool Heard(unsigned* track, unsigned* sample);
 
+// DIV-0177 (sound_in.h): as Heard, but a halted ring counts too - the stream
+// is still the BGM file Music_Play started for Music_Track, stopped
+// (Music_Halt) or playing, its position kept; *playing says which. Reads only.
+bool Kept(unsigned* track, unsigned* sample, bool* playing);
+
 // BOF3X_SHADOW=sound: the ring's heard position and Remember's gate; the MP3
 // path's resume against the stream from the top (a stand-in decoder, a
 // looping track's fold, a measured loop's fold, a once-only track past its
