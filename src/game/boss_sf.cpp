@@ -278,7 +278,11 @@ extern "C" void __cdecl Boss26Fx_Wait(void) {
 // the value, '>' at least it, 'n' none) and the value. US BOSS025.EMI
 // 0x800C3088: the box (0x6B, 0x10), "%2d" of 0x15 - turn at (0x70, 0x12),
 // `turns left` at (0x80, 0x12); French: the words at 0x70, the count at
-// 0x94 between them.
+// 0x94 between them. The disc draws the count through 0x8014FF0C, which
+// takes the dialogue font's 8 x 12 cells (code - 0x30, 31 a row from v 0x48
+// of page 0x2F) in CLUT 0x7800 | 4 and moves the pen 8 - so ours draws it
+// with Text_DrawAt in colour 4, the overlay's copy of those cells, and not
+// the 12 px numerals, whose two digits ran into the words (issue 133).
 extern "C" void __cdecl Boss26Fx_DrawCount(void) {
     BH_CALL(BattleWin_DrawMediumBox)(0x6B, 0x10);
     if (Labels_Written(18)) {
@@ -286,7 +290,7 @@ extern "C" void __cdecl Boss26Fx_DrawCount(void) {
         const U turn = static_cast<U>(Long(At(at::kTurn)));
         const auto left = static_cast<std::int32_t>(0x15u - turn);   // x86's wrap
         BH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextRow1)), reinterpret_cast<const char*>(At(Boss26Fx_CountFormat_addr)), left);
-        BH_CALL(Text_DrawFont12)(layout[0], 0x12, 4, At(at::kTextRow1));
+        BH_CALL(Text_DrawAt)(layout[0], 0x12, 4, 0xFF, At(at::kTextRow1));
         const bool singular = (layout[2] == '=' && turn == layout[3]) || (layout[2] == '>' && turn >= layout[3]);
         BH_CALL(Text_DrawAt)(layout[1], 0x12, 0, 0xFF, Labels_Slot(18, singular ? 1 : 0));
     } else {
