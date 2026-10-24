@@ -133,8 +133,12 @@ PlayStation addresses, never the decompilation" held in every file.
   fade never sounded, and no one-shot of the route rang long enough for the key-off to cut.
 - **The whelpBoss windows at 0.1 s:** 34.4..34.6 s (+0.3..0.5 dB), 38.6..38.7 s (+11, +71 dB), 184.7 s
   (+2.2 dB), 345.2..345.3 s (+7, +76 dB) - the two large ones are a sound present on the after side, not a
-  pan's few dB. Attribution runs (`end_batch3.py`, `end_batch4.py`: the pan off; every switch of the round
-  off as the control against before; the level gate off): PENDING.
+  pan's few dB. **Attributed by switch** (one whelpBoss run each, `--original <switch>`, diffed at 0.1 s;
+  `end_batch3.py`..`5.py`): with **every switch of the round off** the run is identical to before in all
+  4,400 windows - so none of it is run noise and the hosted host does not matter; `SpriteVoicePosition`
+  off removes 34.4..34.6 s (DIV-0171's pan, ±0.3..0.5 dB); `SoundLevelGate` off removes 184.7 s (DIV-0172,
+  -2.2 dB); the two large windows, 38.6..38.7 s and 345.2..345.3 s, remain with both off and so belong to
+  `StopCuts` or `OneShotKeyOff`: PENDING (the last two runs).
 
 ## 6. Left
 
