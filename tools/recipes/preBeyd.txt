@@ -1,0 +1,140 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# save preBeyd
+wait 24
+hold start 5
+wait 57
+hold start 7
+wait 19
+hold start 4
+wait 37
+hold circle 3
+wait 41
+hold circle 4
+wait 8
+hold circle 4
+wait 74
+hold up+left 10
+hold left 1
+wait 11
+hold right 12
+wait 14
+hold down 8
+hold right 3
+wait 2
+hold circle 5
+wait 14
+hold circle 5
+wait 24
+hold circle 4
+wait 57
+hold circle 5
+wait 30
+hold down 3
+wait 3
+hold circle 4
+wait 43
+hold circle 6
+wait 59
+hold circle 5
+wait 30
+hold down 3
+wait 5
+hold circle 6
+wait 29
+hold circle 5
+wait 60
+hold circle 6
+wait 64
+hold circle 5
+wait 98
+hold circle 5
+wait 148
+hold circle 5
+wait 61
+hold circle 5
+wait 62
+hold circle 4
+wait 67
+hold circle 3
+wait 12
+hold circle 5
+wait 46
+hold circle 5
+wait 43
+hold triangle 5
+wait 41
+hold triangle 7
+wait 12
+hold cross 5
+wait 36
+hold circle 5
+wait 33
+hold down 3
+wait 33
+hold circle 4
+wait 11
+hold down 3
+wait 22
+hold circle 5
+wait 33
+hold down 5
+wait 25
+hold up 4
+wait 22
+hold circle 7
+wait 19
+hold cross 6
+wait 139
+hold circle 3
+wait 73
+hold circle 2
+wait 66
+hold right 1
+hold up+right 10
+wait 5
+hold circle 6
+wait 35
+hold circle 4
+wait 39
+hold down 5
+wait 8
+hold down 4
+wait 16
+hold down 4
+wait 20
+hold down 4
+wait 13
+hold up 4
+wait 11
+hold up 4
+wait 9
+hold circle 6
+wait 38
+hold circle 5
+wait 629
+hold circle 1
+wait 17
+hold circle 5
+wait 13
+hold circle 6
+wait 6
+hold circle 4
+wait 9
+hold circle 5
+wait 23
+hold circle 4
+wait 507
+hold circle 1
+wait 57
+hold circle 5
+wait 114
+hold circle 5
+wait 57
+hold circle 6
+wait 86
+hold circle 4
+wait 77
+hold circle 2
+wait 207
