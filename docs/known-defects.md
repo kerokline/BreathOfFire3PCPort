@@ -9931,3 +9931,24 @@ case 5 (JP `0x80198444`) sets `0x40` in `0x80146256` - the `psx` fields are
 the JP's and are right; the US build's words sit four bytes later. Region
 drift, not a slip; nothing to change. A reader of the US disc must add 4 for
 these three (and, by the same drift, for their neighbours in that block).
+
+## D354 — The positional voice table kept a buffer across a sound-bank reload and crashed in DSOUND.dll at a battle's end (ours, DIV-0171; found and fixed 2026-10-23 evening)
+
+**Seen:** the sound-layer round's end batch, the first combat-route run of the
+merged build: `FATAL: an exception nobody handled: 0xC0000005 at DSOUND.dll+0x2DF88`
+at tick 1,332, right after `DAT\BATL_RET.DAT` and `DAT\COMN_SE.DAT` opened
+(the battle's end), the stack `sound_sp::UpdatePositional` <- `Sprite_UpdateScreen`
+<- `AreaMap_Frame` <- `Battle_Frame`.
+
+**Established:** `Snd_LoadBank` `0x587CD0` releases every buffer of the bank
+it replaces before making the new ones; DIV-0171's voice table (`sound_sp.cpp`)
+still held one of them under its sprite, and the next frame's `GetStatus` on
+the released object wrote into DirectSound's freed memory. DIV-0174's
+one-shot table had the same hole in principle: its guard re-reads the bank
+entry, which cannot tell a new buffer made at the released one's address from
+the old. The group's headless fuzzes never reload a bank, so neither saw it.
+
+**Status:** ours; fixed the same evening (`5e85d91a`): `Snd_LoadBank` tells
+both tables by address before each release (`sound_sp::Released`,
+`sound_st::Released`), and the remembered volume and pan die with the buffer.
+Re-run of the end batch after it.
