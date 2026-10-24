@@ -98,8 +98,8 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
 
     // The base's own version of a member that lives outside opt/: present, or why not.
     auto base_note = [&](const std::string& build, const wchar_t* what) -> std::wstring {
-        if (build.empty()) return std::wstring(L"no ") + what + L" in this cache";
-        if (!IsRole(build, Role::kPsp)) return std::wstring(L"this cache's ") + what + L" are " + Wide(build) + L"'s";
+        if (build.empty()) return std::wstring(L"the cache has no ") + what;
+        if (!IsRole(build, Role::kPsp)) return std::wstring(L"the cache has ") + Wide(build) + L" " + what;
         return std::wstring();
     };
 
@@ -129,7 +129,7 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
                 // only the evidence that the player has the PSP's version.
                 ms.available = have;
                 if (!have) ms.note = L"needs " + OrList(from);
-                else if (psp_base && !Contains(codes_played, m.code)) ms.note = L"off in bof3x.ini's psp=";
+                else if (psp_base && !Contains(codes_played, m.code)) ms.note = L"off in bof3x.ini (psp=)";
                 if (have && !psp_base) s.codes_on.push_back(m.code);
                 any_from = any_from || have;
             } else if (psp_base) {
@@ -143,8 +143,8 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
                     std::string psp;
                     for (const std::string& b : man.exe_tables_from)
                         if (IsRole(b, Role::kPsp)) psp = b;
-                    note = man.exe_tables_from.empty() ? L"no exe tables in this cache"
-                           : psp.empty()               ? L"this cache's tables are " + OrList(man.exe_tables_from) + L"'s"
+                    note = man.exe_tables_from.empty() ? L"the cache has no program tables"
+                           : psp.empty()               ? L"the cache has " + OrList(man.exe_tables_from) + L" tables"
                                                        : std::wstring();
                 }
                 ms.available = note.empty();
@@ -166,7 +166,7 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
                     // region (SamePrimaryLanguage, the DLL's test): named so.
                     const char* tag = LayerLanguage(m.layer);
                     if (tag && !SamePrimaryLanguage(in.language.c_str(), tag))
-                        ms.note = L"plays under " + LanguageName(tag) + L" text only";
+                        ms.note = L"only with " + LanguageName(tag) + L" text";
                     s.layers_on.push_back(m.layer);
                 }
             }
@@ -186,15 +186,15 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
         } else if (psp_base) {
             s.side = SuiteSide::kPsp;
             s.psp_enabled = true;
-            s.psx_why = any_psx ? std::wstring(L"The PlayStation's version over a PSP base is not built yet.")
-                                : L"The PlayStation's version needs a PlayStation disc (" + OrList(psx_discs) + L").";
+            s.psx_why = any_psx ? std::wstring(L"A PSP install cannot use the PlayStation version yet.")
+                                : L"The PlayStation version needs a PlayStation disc (" + OrList(psx_discs) + L").";
         } else {
             s.psx_enabled = true;
             s.psp_enabled = !s.layers_on.empty() || !s.codes_on.empty();
             if (!s.psp_enabled)
-                s.psp_why = !any_from ? L"The PSP's version needs a PSP disc (" + OrList(wanted_discs) + L")" +
-                                            (man.present ? L"." : L" in a cache named in Cache folder.")
-                                      : std::wstring(L"Nothing of the PSP's plays beside this base yet.");
+                s.psp_why = !any_from ? L"The PSP version needs a PSP disc (" + OrList(wanted_discs) + L")" +
+                                            (man.present ? L"." : L" in the cache folder.")
+                                      : std::wstring(L"This install cannot use the PSP version yet.");
         }
         out.push_back(s);
     }
@@ -218,11 +218,11 @@ ChordState ChordEvaluate(const CacheManifest& man, bool installed, const std::st
     } else if (installed) {
         c.enabled = true;   // with no manifest an installed layer is its own evidence, as the suites take it
     } else if (!man.present) {
-        c.why = L"Needs a cache built with a PSP disc (" + OrList(psp) + L") in Cache folder.";
+        c.why = L"Needs a PSP disc (" + OrList(psp) + L") in the cache folder.";
     } else if (!have) {
-        c.why = L"Needs a PSP disc (" + OrList(psp) + L") among the cache's sources.";
+        c.why = L"Needs a PSP disc (" + OrList(psp) + L") in the sources of the cache.";
     } else {
-        c.why = L"Not in this cache: build it again (the importer writes it whenever a PSP disc is a source).";
+        c.why = L"Not in this cache. Build the install again (Data, Sources).";
     }
     return c;
 }

@@ -203,7 +203,7 @@ close box after the same change left the ini byte for byte.
 | Language: "Chinese (PC script)", then every overlay language whose `DAT\<tag>.*` files exist - `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP` in that order (BCP 47 tags since 2026-10-08, `fixtures.toml`'s per build; the bare `en`, `fr`, `de`, `ja` from 2026-09-27 before, English only before that) | `BOF3X_LANG=<tag>` in the child's environment; `language=<tag>` in the ini | ours — DIV-0005, DIV-0054, DIV-0056, [`dialogue-localisation.md`](dialogue-localisation.md) |
 | Look (was "Texture filter"): Smooth, Sharp, SatPixie - three entries (`config_dialog.cpp`; four until 2026-09-27, when our own CRT look, DIV-0037, was withdrawn) | `BOF3X_FILTER=point` for Sharp and SatPixie; `screen=` in the ini (`screen=crt` from an older ini reads as `satpixie`) | ours — DIV-0012 |
 | Display (fullscreen/windowed) | line 1 of `<game>\BOF3.CFG` | **the original's own input**, `Cfg_Load` `0x4FD030` |
-| Renderer | line 2 of `BOF3.CFG` | the original's, same reader |
+| Renderer (no box since 2026-10-24, issue 124; `renderer=` in the ini is kept and written as read) | line 2 of `BOF3.CFG` | the original's, same reader |
 | Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
 | Snap (2026-09-23) | `BOF3X_SNAP=0` when off | ours — DIV-0042: whole multiples, or the picture fitted to the window's height; the window is resized instead of sized here |
 | Widescreen (2026-09-23) | `BOF3X_WIDE=1` when on | ours — DIV-0041 |
@@ -414,7 +414,7 @@ show_launcher=1            # 0 starts the game straight away
 
 (The five-key example this replaced was the 2026-09-20 file.)
 
-The dialog's **"Show this window every time"** box clears `show_launcher`;
+The dialog's **"Show this window at start"** box (until 2026-10-24 "Show this window every time") clears `show_launcher`;
 `--config` is the way back, and the dialog says so on its face. Closing the
 window, or pressing Exit, starts nothing and saves nothing - unless Back has
 applied Configure's pages first (section 2a).
@@ -490,7 +490,10 @@ the cache folder it may have changed. A PC install is unchanged.
   reads the line (`BOF3X_ORIGINAL=Display_Setup`); ours always draws with
   Direct3D 11 (DIV-0031). The owner's `bof3x.ini` said `renderer=0` on
   2026-09-23, so any all-original run since it was set has drawn with
-  Capcom's software renderer.
+  Capcom's software renderer. **2026-10-24 (issue 124): the box is gone** -
+  both values draw with Direct3D 11 in play, so it offered no choice. The ini
+  keeps `renderer=` (read, written back, and line 2 of `BOF3.CFG`), so an
+  all-original reference run still pins it in a scratch ini.
 - **Audio, input, key bindings.** No mechanism yet. Lines 3+ of `BOF3.CFG` are
   the obvious candidate for bindings and are still unread. *Since 2026-09-24
   input and key bindings are offered - the Controls dialog, §3 (DIV-0050);

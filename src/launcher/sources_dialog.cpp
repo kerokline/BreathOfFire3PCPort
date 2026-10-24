@@ -102,11 +102,11 @@ Runtime FindRuntime() {
         }
     }
     if (rt.script.empty())
-        rt.error = L"The importer is missing: there is no runtime\\tools\\importer.py beside the launcher. "
-                   L"Unzip the whole release, not just the launcher.";
+        rt.error = L"The importer is missing (runtime\\tools\\importer.py). "
+                   L"Extract all files of the release, not only the launcher.";
     else if (rt.python.empty() || !IsFile(rt.python))
-        rt.error = L"The importer's Python is missing (" + (rt.python.empty() ? std::wstring(L"none on PATH") : rt.python) +
-                   L"). Unzip the whole release, not just the launcher.";
+        rt.error = L"The importer cannot find Python (" + (rt.python.empty() ? std::wstring(L"none on PATH") : rt.python) +
+                   L"). Extract all files of the release, not only the launcher.";
     return rt;
 }
 
@@ -433,7 +433,7 @@ void FfmpegNote(HWND dlg, const Config& cfg) {
     else if (const DWORD n = SearchPathW(nullptr, L"ffmpeg.exe", nullptr, MAX_PATH, found, nullptr); n > 0 && n < MAX_PATH)
         note = L"ffmpeg: " + std::wstring(found, n) + L" (on PATH)";
     else
-        note = L"ffmpeg not found. Only a PSP disc's music needs it; without it that music is left out.";
+        note = L"ffmpeg was not found. Only PSP disc music needs it. Without ffmpeg, the install has no PSP music.";
     SetDlgItemTextW(dlg, IDC_SO_FFNOTE, note.c_str());
 }
 
@@ -529,7 +529,7 @@ void OnLine(HWND dlg, State& s, Job job, const std::wstring& wline) {
         s.added = s.added || ok;
         if (ok) Log(dlg, L"Recognised: " + label + L" (" + path + L").");
         else Log(dlg, L"Not added: " + path + L": " +
-                      (problem.empty() ? std::wstring(L"not a release this project knows.") : problem));
+                      (problem.empty() ? std::wstring(L"this release is not known.") : problem));
         return;
     }
     if (job == kSetup && line.compare(0, 9, "progress ") == 0) {
@@ -571,10 +571,10 @@ void OnDone(HWND dlg, State& s, Job job, DWORD code) {
             StartSetup(dlg, s);   // added: the install is rebuilt with it at once
             return;
         }
-        Status(dlg, L"Nothing was added; see below.");
+        Status(dlg, L"Nothing was added. See the log below.");
         break;
     case kRemove:
-        Status(dlg, code == 0 ? L"Removed. Build the install again for it to take effect." : L"Not removed; see below.");
+        Status(dlg, code == 0 ? L"Removed. Build the install again to apply the change." : L"Not removed. See the log below.");
         StartList(dlg, s);
         return;
     case kSetup:
@@ -585,14 +585,14 @@ void OnDone(HWND dlg, State& s, Job job, DWORD code) {
             Status(dlg, L"The install is ready.");
             Log(dlg, L"The install is ready.");
             if (!s.cfg->cache.empty())
-                Log(dlg, L"Note: your settings name another cache folder (cache=); empty the Cache folder box in "
-                         L"Settings to use this install's own.");
+                Log(dlg, L"Note: your settings use a different cache folder (cache=). To use the cache of this install, "
+                         L"clear the Cache folder box on the Data tab.");
             if (s.first_run || s.rebuild) {   // nothing else to do here: on to the settings, or the game
                 EndDialog(dlg, 1);
                 return;
             }
         } else {
-            Status(dlg, L"The build failed; the install as it was is unchanged.");
+            Status(dlg, L"The build failed. The install did not change.");
         }
         StartList(dlg, s);
         return;
@@ -611,7 +611,7 @@ void PickFile(HWND dlg) {
                       L"All files (*.*)\0*.*\0";
     ofn.lpstrFile = path;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrTitle = L"A disc image, a .zip of one, or the PC game's BOF3.exe";
+    ofn.lpstrTitle = L"Select a disc image, a .zip of a disc image, or BOF3.exe of the PC game";
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
     if (GetOpenFileNameW(&ofn)) SetDlgItemTextW(dlg, IDC_SO_PATH, path);
 }
@@ -620,8 +620,8 @@ void PickFolder(HWND dlg) {
     const HRESULT co = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     BROWSEINFOW bi{};
     bi.hwndOwner = dlg;
-    bi.lpszTitle = L"The PC game's folder (the one holding BOF3.exe and DAT), or a folder of disc images: "
-                   L"each one that matches a known release is added";
+    bi.lpszTitle = L"Select the PC game folder (with BOF3.exe and DAT) or a folder of disc images. "
+                   L"The importer adds each known release";
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     if (PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi)) {
         wchar_t path[MAX_PATH];
@@ -651,15 +651,15 @@ void Add(HWND dlg, State& s) {
     std::wstring path = Text(dlg, IDC_SO_PATH);
     while (path.size() > 3 && (path.back() == L'\\' || path.back() == L'/')) path.pop_back();
     if (path.empty()) {
-        Status(dlg, L"Type or pick a path first.");
+        Status(dlg, L"Type or select a path first.");
         return;
     }
     if (GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES) {
-        Status(dlg, L"There is nothing at that path.");
+        Status(dlg, L"Nothing is at that path.");
         return;
     }
     s.added = false;
-    Status(dlg, L"Checking against the known releases (a disc takes a minute; a folder, a minute a disc)...");
+    Status(dlg, L"Checking the copy (approximately 1 minute for each disc)...");
     Log(dlg, L"Checking " + path + L"...");
     Start(dlg, s, kAdd, L"sources " + HomeArg(s) + L" add " + Quote(path) + L" --json");
 }
@@ -677,14 +677,14 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(s));
         SetDlgItemTextW(dlg, IDC_SO_INTRO,
                         s->rebuild
-                            ? L"This install was built by an older release. It is rebuilt from the copies of the game "
-                              L"below; the pieces this release would make the same way are kept, not made again."
+                            ? L"An older release built this install. The importer will build it again from the copies of the "
+                              L"game below. It keeps the parts that do not change."
                         : s->first_run
-                            ? L"No install was found. Add your own copy of the game to make one: the PC game's folder, "
-                              L"a PlayStation disc image (.cue/.bin, or a .zip of it) or a PSP .iso. Each is checked "
-                              L"against the known releases before anything is built."
-                            : L"The copies of the game this install is built from. Adding one checks it against the "
-                              L"known releases and rebuilds the install with it.");
+                            ? L"No install was found. To make one, add your copy of the game: the PC game folder, "
+                              L"a PlayStation disc image (.cue/.bin or .zip) or a PSP .iso. The importer checks "
+                              L"each copy before it builds."
+                            : L"These are the copies of the game that this install uses. When you add a copy, the importer "
+                              L"checks it and builds the install again.");
         SetDlgItemTextW(dlg, IDC_SO_HOME, (L"Install folder: " + s->home).c_str());
         FfmpegNote(dlg, *s->cfg);
         if (!s->rt.error.empty()) {
@@ -739,7 +739,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             if (s.job == kNone) {
                 EndDialog(dlg, s.built ? 1 : 0);
             } else if (MessageBoxW(dlg,
-                                   s.job == kSetup ? L"Stop the build? The install as it was is kept."
+                                   s.job == kSetup ? L"Stop the build? The install does not change."
                                                    : L"Stop the importer?",
                                    L"Sources", MB_YESNO | MB_ICONQUESTION) == IDYES && s.process) {
                 s.closing = true;
@@ -809,15 +809,15 @@ std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
     greyed = true;
     if (r.state == "built") {
         if (r.kind == "reading-row" && r.base != s.language) {
-            state = L"built; over " + Widen(r.base) + L" text only";
+            state = L"built; only with " + Widen(r.base) + L" text";
         } else {
-            state = L"built: choose it in Settings";
+            state = L"built: select it in Settings";
             greyed = false;
         }
     } else if (r.state == "not-built") {
-        state = L"not built: Data, Sources..., Build";
+        state = L"not built: Data, Sources, Build the install";
     } else if (r.state == "needs") {
-        state = L"needs " + Widen(r.needs) + L" text: add that disc (Data, Sources...)";
+        state = L"needs " + Widen(r.needs) + L" text: add that disc on Data, Sources";
     } else {
         state = L"problem: " + Widen(r.problem.empty() ? std::string("unreadable") : r.problem);
     }
@@ -865,11 +865,11 @@ void ModsAdd(HWND page, ModsState& s) {
     const size_t b = path.find_first_not_of(L" \t\""), e = path.find_last_not_of(L" \t\"");
     path = b == std::wstring::npos ? std::wstring() : path.substr(b, e - b + 1);
     if (path.empty()) {
-        ModStatus(page, L"Type or pick a mod's .zip first.");
+        ModStatus(page, L"Type or select the path of a .zip file first.");
         return;
     }
     if (!IsFile(path)) {
-        ModStatus(page, L"There is no file at that path.");
+        ModStatus(page, L"No file is at that path.");
         return;
     }
     s.build_next.clear();
@@ -887,7 +887,7 @@ void ModsBrowse(HWND page, ModsState& s) {
     ofn.lpstrFilter = L"Mods (*.zip)\0*.zip\0All files (*.*)\0*.*\0";
     ofn.lpstrFile = path;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrTitle = L"A mod: a .zip holding mod.toml and its data files";
+    ofn.lpstrTitle = L"Select a mod (a .zip with a mod.toml and data files)";
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
     if (!GetOpenFileNameW(&ofn)) return;
     SetDlgItemTextW(page, IDC_MOD_PATH, path);
@@ -914,13 +914,13 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
         if (JsonTrue(line, "ok")) {
             const std::string replaced = JsonString(line, "replaced");
             ModLog(page, L"Added: " + Widen(JsonString(line, "name")) + L" " + Widen(JsonString(line, "version")) +
-                             (replaced.empty() ? std::wstring() : L" (in place of " + Widen(replaced) + L")") + L".");
+                             (replaced.empty() ? std::wstring() : L" (replaces " + Widen(replaced) + L")") + L".");
             s.build_next = JsonString(line, "id");
             s.added_kind = JsonString(line, "kind");
             if (JsonString(line, "state") == "needs") {
                 ModLog(page, L"It needs " + Widen(JsonString(line, "needs")) +
-                                 L" text, which this install does not hold: it is built once a disc in that language is "
-                                 L"added on Data, Sources.");
+                                 L" text. This install does not have it. Add a disc in that language on Data, Sources. "
+                                 L"Then the mod builds.");
                 s.build_next.clear();
             }
         } else {
@@ -942,8 +942,8 @@ void ModsOnDone(HWND page, ModsState& s, Job job, DWORD code) {
     switch (job) {
     case kModList:
         ModsRender(page, s);
-        if (code != 0) ModLog(page, L"tools/mods.py could not read the mod list (exit " + std::to_wstring(code) + L").");
-        if (s.rows.empty()) ModStatus(page, L"No mods installed.");   // else what the last step said stays
+        if (code != 0) ModLog(page, L"Cannot read the mod list (tools/mods.py exit " + std::to_wstring(code) + L").");
+        if (s.rows.empty()) ModStatus(page, L"No mods are installed.");   // else what the last step said stays
         if (s.changed) {
             s.changed = false;
             SendMessageW(GetParent(page), kMsgModsChanged, 0, 0);
@@ -956,23 +956,23 @@ void ModsOnDone(HWND page, ModsState& s, Job job, DWORD code) {
             // installed, built or not: Settings' Row above the text box shows (the owner's call, 2026-10-22)
             if (s.added_kind == "reading-row") SendMessageW(GetParent(page), kMsgModsReadingRowAdded, 0, 0);
             if (!s.build_next.empty()) {
-                ModStatus(page, L"Building the mod into this install...");
+                ModStatus(page, L"Building the mod...");
                 ModsStart(page, s, kModBuild, L"build " + Quote(Widen(s.build_next)) + L" " + ModsHome(s));
                 return;
             }
             ModStatus(page, L"Added.");
         } else {
-            ModStatus(page, L"Nothing was added; see below.");
+            ModStatus(page, L"Nothing was added. See the log below.");
         }
         break;
     case kModBuild:
-        ModStatus(page, code == 0   ? L"The mod is built: choose it in Settings, Row above the text."
-                        : code == 2 ? L"No install is built yet: the mod is built with it (Data, Sources...)."
-                                    : L"The mod is installed but not built; see below.");
+        ModStatus(page, code == 0   ? L"The mod is ready. Select it in Settings, Row above the text."
+                        : code == 2 ? L"No install is built yet. The mod builds with the install (Data, Sources)."
+                                    : L"The mod is installed but not built. See the log below.");
         break;
     case kModRemove:
         s.changed = true;
-        ModStatus(page, code == 0 ? L"Removed." : L"Not removed; see below.");
+        ModStatus(page, code == 0 ? L"Removed." : L"Not removed. See the log below.");
         break;
     default:
         break;
@@ -1009,11 +1009,11 @@ INT_PTR CALLBACK ModsProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
         if (s->rt.error.empty()) {
             s->script = s->rt.script.substr(0, s->rt.script.find_last_of(L"\\/")) + L"\\mods.py";
             if (!IsFile(s->script))
-                s->rt.error = L"The mod tool is missing: there is no mods.py beside " + s->rt.script +
-                              L". Unzip the whole release, not just the launcher.";
+                s->rt.error = L"The mod tool is missing (no mods.py next to " + s->rt.script +
+                              L"). Extract all files of the release, not only the launcher.";
         }
         if (!s->rt.error.empty()) {
-            ModStatus(page, L"Mods cannot be added: the importer cannot run.");
+            ModStatus(page, L"You cannot add mods: the importer cannot run.");
             ModLog(page, s->rt.error);
         }
         ModsGreyed(page, *s);
@@ -1133,7 +1133,7 @@ StaleCheck SourcesCheckStale() {
     std::string out;
     DWORD code = 1;
     if (!RunCapture(rt, L"stale --home " + Quote(home), home, 120000, out, code)) {
-        check.error = L"The importer could not check this install against the release (it did not finish).";
+        check.error = L"The importer cannot check this install (it did not finish).";
         return check;
     }
     // `stale <step>\t<reason>` a piece, then `stale N` (exit 1); `fresh` (0); `none` (2).
@@ -1160,7 +1160,7 @@ StaleCheck SourcesCheckStale() {
     } else if (code == 1 && !check.pieces.empty()) {
         check.stale = true;
     } else if (code != 2) {
-        check.error = L"The importer could not check this install against the release (exit " + std::to_wstring(code) +
+        check.error = L"The importer cannot check this install (exit " + std::to_wstring(code) +
                       L"):\n" + ConfigFromUtf8(out.substr(0, 600));
     }
     return check;
@@ -1170,7 +1170,7 @@ INT_PTR CALLBACK ModsPageProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) { retur
 
 bool SourcesAskRebuild(const StaleCheck& check) {
     std::wstring text =
-        L"This install was built by an older release, and this release would make some of it differently:\n\n";
+        L"An older release built this install. This release makes these parts differently:\n\n";
     size_t shown = 0;
     for (const std::wstring& piece : check.pieces) {
         if (++shown > 12) {
@@ -1179,8 +1179,8 @@ bool SourcesAskRebuild(const StaleCheck& check) {
         }
         text += L"  - " + piece + L"\n";
     }
-    text += L"\nRebuild it now from your copies of the game? The pieces that have not changed are kept, so this "
-            L"is usually quicker than the first build.\n\nNo starts nothing; the install is left as it is.";
+    text += L"\nBuild it again now from your copies of the game? The importer keeps the parts that did not change, "
+            L"so this is usually faster than the first build.\n\nNo: the game does not start, and the install does not change.";
     return MessageBoxW(nullptr, text.c_str(), L"Breath of Fire III - the install is out of date",
                        MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND) == IDYES;
 }

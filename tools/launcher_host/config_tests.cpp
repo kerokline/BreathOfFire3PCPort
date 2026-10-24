@@ -406,15 +406,15 @@ void TestSuites() {
     Check(au.psx_enabled && !au.psp_enabled, "all three: audio's PSP side greyed (its layers not built)");
     Check(Narrow(Member(au, "psp-effects").note) == "not in the cache (build with --opt psp-snd)", "  with the reason",
           Narrow(Member(au, "psp-effects").note));
-    Check(Narrow(au.psp_why) == "Nothing of the PSP's plays beside this base yet.", "  and the side's", Narrow(au.psp_why));
+    Check(Narrow(au.psp_why) == "This install cannot use the PSP version yet.", "  and the side's", Narrow(au.psp_why));
     const bof3x::SuiteState& d = Suite(v, "data");
     Check(d.psp_enabled && d.layers_on == std::vector<std::string>{"psp-names-en-150"},
           "all three: data offered for the English renames alone");
     Check(!Member(d, "psp-tables").available && !Member(d, "psp-ryu-forms").available &&
               Narrow(Member(d, "psp-ryu-forms").note) == "not in the cache (build with --opt psp-ryu-forms)",
           "  the tables and Ryu's forms greyed: not built", Narrow(Member(d, "psp-ryu-forms").note));
-    Check(Narrow(Member(d, "psp-names-en-150").note) == "plays under English text only",
-          "  the renames say they play under English text only", Narrow(Member(d, "psp-names-en-150").note));
+    Check(Narrow(Member(d, "psp-names-en-150").note) == "only with English text",
+          "  the renames say they play only with English text", Narrow(Member(d, "psp-names-en-150").note));
     Check(Narrow(Member(d, "psp-names-ja-JP").note) == "not in the cache (build with --opt psp-names-ja-JP)",
           "  the Japanese renames: not built");
     // The ini: untouched, the PSP's graphics, the PSP's data, back to the PlayStation's.
@@ -451,7 +451,7 @@ void TestSuites() {
     Check(Suite(v, "graphics").psp_enabled && Suite(v, "graphics").layers_on == std::vector<std::string>{"psp-art"},
           "no cache, psp-art in DAT\\: graphics offered for it");
     Check(!Suite(v, "audio").psp_enabled &&
-              Narrow(Suite(v, "audio").psp_why).find("in a cache named in Cache folder") != std::string::npos,
+              Narrow(Suite(v, "audio").psp_why).find("in the cache folder") != std::string::npos,
           "no cache: audio's PSP side names the PSP discs and the cache", Narrow(Suite(v, "audio").psp_why));
 
     // 5. A manifest the page cannot read: every side greyed with the reason.
@@ -497,13 +497,13 @@ void TestChord() {
     c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestAll), true, "psp-chord-one-tone,area4-walls", walls);
     Check(c.enabled && c.checked, "chord: opt= names it: checked");
     c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestAll), false, "", walls);
-    Check(!c.enabled && Narrow(c.why).find("build it again") != std::string::npos, "chord: a PSP source, not built",
+    Check(!c.enabled && Narrow(c.why).find("Build the install again") != std::string::npos, "chord: a PSP source, not built",
           Narrow(c.why));
     c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestPsxOnly), false, "", walls);
     Check(!c.enabled && Narrow(c.why).find("Needs a PSP disc (psp-jp or psp-eu)") != std::string::npos,
           "chord: PSX-only greyed, naming the PSP discs", Narrow(c.why));
     c = bof3x::ChordEvaluate(bof3x::CacheManifest{}, false, "", walls);
-    Check(!c.enabled && Narrow(c.why).find("Cache folder") != std::string::npos, "chord: no cache", Narrow(c.why));
+    Check(!c.enabled && Narrow(c.why).find("cache folder") != std::string::npos, "chord: no cache", Narrow(c.why));
     c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestPspOnly), true, "none", {});
     Check(c.enabled && !c.checked, "chord: PSP-only, opt=none: offered, off");
     using Boxes = std::vector<std::pair<std::string, bool>>;
@@ -534,7 +534,7 @@ void TestCodeMembers() {
     bof3x::SuiteInputs off = Inputs(kManifestPspOnly, {}, "ja-JP", "", {});
     off.psp = "none";
     v = bof3x::SuitesEvaluate(off);
-    Check(Narrow(Member(Suite(v, "data"), "psp-duel-loss").note) == "off in bof3x.ini's psp=",
+    Check(Narrow(Member(Suite(v, "data"), "psp-duel-loss").note) == "off in bof3x.ini (psp=)",
           "PSP-only with psp=none: the members say they are off", Narrow(Member(Suite(v, "data"), "psp-duel-loss").note));
 
     // PSX-only: greyed, naming the PSP discs; the PSP side stays greyed.

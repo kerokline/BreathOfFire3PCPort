@@ -440,16 +440,16 @@ void ListCacheSongs(State& s, const std::wstring& dir, int source) {
 void ListPsx(State& s) {
     const std::wstring root = CacheMusicRoot(s.cache);
     if (root.empty()) {
-        s.why[kPsx] = L"No cache folder is set: the importer writes the disc's songs into one (docs/seq-import.md).";
+        s.why[kPsx] = L"No cache folder is set. The importer puts the disc songs into a cache folder.";
         return;
     }
     if (IsPspBuild(CacheBgmBuild(root))) {
-        s.why[kPsx] = L"The cache's songs are the PSP disc's: build the cache with a PlayStation disc for these.";
+        s.why[kPsx] = L"The cache has the PSP songs. For these songs, build the cache with a PlayStation disc.";
         return;
     }
     ListCacheSongs(s, root + L"\\base\\bgm\\", kPsx);
     if (s.songs[kPsx].empty())
-        s.why[kPsx] = L"The cache folder holds no songs (base\\bgm\\): run tools/seq.py with a PlayStation disc.";
+        s.why[kPsx] = L"The cache folder has no songs (base\\bgm\\). Add a PlayStation disc on Data, Sources.";
 }
 
 void ListPsp(State& s) {
@@ -460,7 +460,7 @@ void ListPsp(State& s) {
     // base\bgm: with a PlayStation disc among the sources it is the disc's.
     const std::wstring root = CacheMusicRoot(s.cache);
     if (root.empty()) {
-        s.why[kPsp] = L"No cache folder is set: the importer writes a PSP disc's songs into one (docs/psp-music.md).";
+        s.why[kPsp] = L"No cache folder is set. The importer puts the PSP disc songs into a cache folder.";
         return;
     }
     if (!IsPspBuild(CacheBgmBuild(root))) {
@@ -477,12 +477,12 @@ void ListPsp(State& s) {
         if (name && ManifestOffersLayer(ManifestRead(root), name))
             ListCacheSongs(s, root + L"\\opt\\" + layer + L"\\bgm\\", kPsp);
         if (s.songs[kPsp].empty())
-            s.why[kPsp] = L"The cache's songs are not the PSP disc's: a cache built from a PSP disc alone holds them, "
-                          L"or one built with --opt " + layer + L" beside a PlayStation disc (docs/psp-music.md).";
+            s.why[kPsp] = L"The cache does not have the PSP songs. Build it from a PSP disc only, "
+                          L"or with --opt " + layer + L" and a PlayStation disc.";
         return;
     }
     ListCacheSongs(s, root + L"\\base\\bgm\\", kPsp);
-    if (s.songs[kPsp].empty()) s.why[kPsp] = L"The cache's manifest names the PSP's songs, but base\\bgm\\ holds none.";
+    if (s.songs[kPsp].empty()) s.why[kPsp] = L"The cache manifest lists the PSP songs, but base\\bgm\\ has no songs.";
 }
 
 void ListPc(State& s) {
@@ -557,15 +557,15 @@ void ListStreams(State& s) {
                 if (!Exists(e.path)) e.why = L"The game folder has no SND\\" + file + L".";
             } else if (root.empty()) {
                 e.where = file;
-                e.why = L"No cache folder is set: the importer writes a disc's streams into one.";
+                e.why = L"No cache folder is set. The importer puts the disc streams into a cache folder.";
             } else if (source == kPsx) {
                 // DIV-0129, DIV-0150: the disc's S_XA00.STR clips, in base\snd on a
                 // PSX-only cache and base\psx-jingles beside a PC install
                 e.path = root + L"\\" + jingle_dir + L"\\" + file;
                 e.where = jingle_dir + L"\\" + file + L", from S_XA00.STR";
                 if (!psx_jingles)
-                    e.why = L"The cache holds no disc streams: it was built before they were made beside a PC "
-                            L"install, or without ffmpeg (DIV-0129, DIV-0150); build it again to have them.";
+                    e.why = L"The cache has no disc streams. It is from an older release, or it was built without "
+                            L"ffmpeg. Build the install again.";
                 else if (!Exists(e.path))
                     e.why = L"The cache's " + jingle_dir + L"\\ has no " + file + L".";
             } else if (psp_base) {
@@ -579,7 +579,7 @@ void ListStreams(State& s) {
                 e.where = L"opt\\" + layer + L"\\snd\\" + file;
                 if (!layer_offered || !Exists(e.path))
                     e.why = L"The cache has no " + layer + L" layer holding " + file +
-                            L": a cache built from a PSP disc alone, or with --opt " + layer + L", has it.";
+                            L". Build the cache from a PSP disc only, or with --opt " + layer + L".";
             }
             s.songs[source].push_back(e);
         }
@@ -725,7 +725,7 @@ void Play(HWND dlg, State& s) {
         // greyed: nothing to play; a song that was playing stops
         s.out.Set(nullptr);
         s.playing = false;
-        std::swprintf(text, 1024, L"%ls is not on the %ls here: %ls", kStreams[e->number], kSourceInfo[s.source].label,
+        std::swprintf(text, 1024, L"%ls is not in the %ls source: %ls", kStreams[e->number], kSourceInfo[s.source].label,
                       e->why.c_str());
         Status(dlg, text);
         return;
@@ -741,13 +741,13 @@ void Play(HWND dlg, State& s) {
     } else if (s.source == kPsx || s.source == kPsp) {
         // both are the cache's base\bgm in the PlayStation's form (docs/psp-music.md)
         stream.reset(new SeqStream(e->path, e->bank_dir));   // the song's own directory's bank (DIV-0109)
-        how = e->loops ? L"looping as the disc's song does" : L"once, as in the game";
+        how = e->loops ? L"looping as on the disc" : L"once, as in the game";
     } else {
         auto* mp3 = new Mp3Stream(e->path, e->number, e->loops);
         stream.reset(mp3);
         how = !e->loops ? L"once, as in the game"
               : mp3->Measured() ? L"looping at its measured points (DIV-0081)"
-                                : L"looping from the file's start, as the port does";
+                                : L"looping from the start, as in the PC port";
     }
     s.out.Set(std::move(stream));
     SetCursor(was);
@@ -812,8 +812,8 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         CheckDlgButton(dlg, IDC_MP_CHORD, s->chord.checked ? BST_CHECKED : BST_UNCHECKED);
         EnableWindow(GetDlgItem(dlg, IDC_MP_CHORD), s->chord.enabled && s->chord_choice);
         SetDlgItemTextW(dlg, IDC_MP_CHORD_NOTE,
-                        s->chord.enabled ? L"Off: the chord's second tone restored, as the PlayStation plays it. "
-                                           L"Written to opt= on Play."
+                        s->chord.enabled ? L"Off: two tones, as on the PlayStation. "
+                                           L"The launcher saves this when you click Play."
                                          : s->chord.why.c_str());
         SetTimer(dlg, kEndTimer, 250, nullptr);
         return TRUE;

@@ -417,7 +417,7 @@ def mods_checks(launcher, exe, report):
         u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
         seen["ruby_original"] = items(item(IDC_RUBY), True)
     _, ini1, _ = run("[bof3x]\nopt=\ncache=\nlanguage=original\n", act_mods, env)
-    report("Mods tab, no mods: the status says so", seen.get("listed") and seen.get("empty") == "No mods installed.",
+    report("Mods tab, no mods: the status says so", seen.get("listed") and seen.get("empty") == "No mods are installed.",
            repr(seen.get("empty")))
     report("  no ruby_ui=, no mod installed: the toggle off, the box hidden", seen.get("ui_before") == (False, 0),
            repr(seen.get("ui_before")))
@@ -484,7 +484,7 @@ def mods_checks(launcher, exe, report):
         if pick == 1:
             r = got.get("rows", [])
             report("  the Mods tab with the layer built under ja-JP: built, not greyed",
-                   len(r) == 1 and "\tbuilt: choose it in Settings" in r[0][0] and r[0][1] == 0, repr(r))
+                   len(r) == 1 and "\tbuilt: select it in Settings" in r[0][0] and r[0][1] == 0, repr(r))
     # 3. Under en-US the mod's row is greyed with its base; the box offers it greyed too.
     got = {}
 
@@ -501,10 +501,10 @@ def mods_checks(launcher, exe, report):
     report("ruby_ui=0 named, the mod installed: off, the box hidden, ruby_ui=0 written back",
            got.get("ui") == (False, 0) and lines(ini).get("ruby_ui") == "0",
            "%r %r" % (got.get("ui"), lines(ini).get("ruby_ui")))
-    report("en-US played: the mod's row greyed, its base named", len(r) == 1 and "over ja-JP text only" in r[0][0]
+    report("en-US played: the mod's row greyed, its base named", len(r) == 1 and "only with ja-JP text" in r[0][0]
            and r[0][1] == 1, repr(r))
     report("  the box: the mod greyed (over ja-JP only), Japanese and German not built",
-           len(e) == 4 and e[1][1] == 0 and "over ja-JP text only" in e[1][0] and e[2][1] == 0 and e[3][1] == 0, repr(e))
+           len(e) == 4 and e[1][1] == 0 and "only with ja-JP text" in e[1][0] and e[2][1] == 0 and e[3][1] == 0, repr(e))
     report("  ruby=furigana untouched: written back as read", lines(ini).get("ruby") == "furigana", lines(ini).get("ruby"))
     report("  stderr: the layer not there for en-US, no row", any("ruby=furigana, but layer ruby-furigana-en-US is not there"
                                                                   in x for x in err), " | ".join(err[-3:]))
@@ -574,8 +574,8 @@ def ruby_ui_checks(env, report):
            repr(got.get("data")))
     x = got.get("extras", (None,) * 5)
     report("  Extras: the toggle shown, unticked, the list hidden; its label and sentence",
-           x[:2] == (False, True) and x[4] == 0 and (x[2] or "").startswith("S&how Row above the text on Settings")
-           and "furigana mod" in (x[3] or "") and "turns this on" in (x[3] or ""), repr(x))
+           x[:2] == (False, True) and x[4] == 0 and (x[2] or "").startswith("S&how the Row above the text box on Settings")
+           and "furigana mod" in (x[3] or "") and "this box turns on" in (x[3] or ""), repr(x))
     report("  ticked: the box and its label shown at once", got.get("on") == (True, True, 1), repr(got.get("on")))
     report("  shown on the Settings page", got.get("on_settings") == (True, True), repr(got.get("on_settings")))
     lh, ls = got.get("look_hidden", (0, 0)), got.get("look_shown", 0)
@@ -651,11 +651,11 @@ def main():
     st, again, err = run(first, None)
     report("PC+PSX+PSP untouched: the ini byte-identical", again == first)
     report("  music=seq shown as the default entry", st["music"] == 0, str(st["music"]))
-    report("  the note: the PlayStation's base, the cache's builds",
-           "base is the PlayStation's" in st["note"] and "psp-eu, psp-jp" in st["note"], st["note"])
+    report("  the note: the PlayStation's base (the builds are on Data, Sources since issue 124)",
+           "uses PlayStation data" in st["note"], st["note"])
     g, a, d = (st["suites"][s] for s in SUITES)
     report("  graphics: the PlayStation's checked, the PSP's offered",
-           g["psx"][:2] == (True, 1) and g["psp"][:2] == (True, 0) and "the base" in g["psx"][2], str(g["psx"]) + str(g["psp"]))
+           g["psx"][:2] == (True, 1) and g["psp"][:2] == (True, 0) and "(base)" in g["psx"][2], str(g["psx"]) + str(g["psp"]))
     report("  graphics: psp-maps (not built) greyed, art and tiles not",
            g["members"] == [("Stallion's palettes", True), ("area tiles and palettes", True), ("map bands", False)]
            and "--opt psp-maps" in g["why"], str(g["members"]) + " " + g["why"])
@@ -663,7 +663,7 @@ def main():
            a["psp"][:2] == (False, 0) and "--opt psp-snd" in a["why"] and not any(m[1] for m in a["members"]), a["why"])
     report("  data: the PSP's offered (the renames), tables and P8 greyed",
            d["psp"][0] and [m[1] for m in d["members"]] == [False, True, False, False]
-           and "plays under English" in d["why"], str(d["members"]) + " " + d["why"])
+           and "only with English" in d["why"], str(d["members"]) + " " + d["why"])
     # 2. The PSP's graphics over an empty opt=: its two layers, the walls kept.
     st, ini, _ = run("[bof3x]\nopt=\ncache=%s\n" % C, lambda dlg, item: click(item, "graphics", PSP))
     report("the PSP's graphics: opt=psp-art,psp-tiles,area4-walls", lines(ini)["opt"] == "psp-art,psp-tiles,area4-walls",
@@ -677,7 +677,7 @@ def main():
     st, ini, _ = run("[bof3x]\nopt=psp-art,area4-walls\ncache=%s\n" % C, None)
     gs = st["suites"]["graphics"]
     report("opt=psp-art alone: neither radio, the reason says kept",
-           gs["psx"][1] == 0 and gs["psp"][1] == 0 and "kept as written" in gs["why"], gs["why"])
+           gs["psx"][1] == 0 and gs["psp"][1] == 0 and "Select a version to change it" in gs["why"], gs["why"])
     report("  untouched: opt= byte for byte", lines(ini)["opt"] == "psp-art,area4-walls", lines(ini)["opt"])
     # 5. English chosen and the PSP's data: the renames, and their note gone.
     def act5(dlg, item):
@@ -688,7 +688,7 @@ def main():
     st, ini, _ = run("[bof3x]\nopt=none\ncache=%s\n" % C, act5)
     l = lines(ini)
     report("en-US and the PSP's data over opt=none: psp-names-en-150", l["opt"] == "psp-names-en-150", l["opt"])
-    report("  the renames' language note gone under en-US", "plays under" not in st["after"]["suites"]["data"]["why"],
+    report("  the renames' language note gone under en-US", "only with" not in st["after"]["suites"]["data"]["why"],
            st["after"]["suites"]["data"]["why"])
     report("  language=en-US written", l["language"] == "en-US", l["language"])
     # 6. The music and cache boxes, as before; a cache typed in redraws the suites.
@@ -699,8 +699,8 @@ def main():
     l = lines(ini)
     report("music moved to the PC's MP3s: music=pc (DIV-0150)", l["music"] == "pc", l["music"])
     report("cache typed with spaces: trimmed as a line is", l["cache"] == "C:\\nowhere at all", l["cache"])
-    report("  its note: not a folder", "Not a folder" in st["after"]["cachenote"], st["after"]["cachenote"])
-    report("  the suites redrawn: no manifest there", "No manifest.toml" in st["after"]["note"]
+    report("  its note: not a folder", "not a folder" in st["after"]["cachenote"], st["after"]["cachenote"])
+    report("  the suites redrawn: no manifest there", "no manifest.toml" in st["after"]["note"]
            and not st["after"]["suites"]["graphics"]["psp"][0], st["after"]["note"])
     report("  opt= untouched", l["opt"] == "", l["opt"])
     # 6b. The Widescreen box (DIV-0041): three entries, wide= shown and written back; 21:9 chosen.
@@ -730,14 +730,14 @@ def main():
     st, ini, err = run("[bof3x]\nopt=\ncache=%s\n" % cache_dir("psx-only"), None)
     report("PSX-only install: the dialog opens without BOF3.exe", st is not None)
     report("  every PSP side greyed, the PlayStation's the base",
-           all(s["psp"][:2] == (False, 0) and s["psx"][:2] == (True, 1) and "the base" in s["psx"][2]
+           all(s["psp"][:2] == (False, 0) and s["psx"][:2] == (True, 1) and "(base)" in s["psx"][2]
                for s in st["suites"].values()))
     report("  the launcher took .data from the cache", any("a disc-built install" in e for e in err), " | ".join(err[-2:]))
     st, ini, err = run("[bof3x]\nopt=\ncache=%s\n" % cache_dir("psp-only"),
                        lambda dlg, item: [click(item, s, PSX) for s in SUITES] + [click(item, "data", PSP)])
-    report("PSP-only install: the note says the PSP's base", "base is the PSP's" in st["note"], st["note"])
+    report("PSP-only install: the note says the PSP's base", "uses PSP data" in st["note"], st["note"])
     report("  every suite the PSP's, checked and enabled, the PlayStation's greyed",
-           all(s["psp"][:2] == (True, 1) and "the base" in s["psp"][2] and s["psx"][:2] == (False, 0)
+           all(s["psp"][:2] == (True, 1) and "(base)" in s["psp"][2] and s["psx"][:2] == (False, 0)
                for s in st["suites"].values()))
     report("  the reason names the PlayStation discs",
            all("needs a PlayStation disc (psx-jp, psx-us, psx-fr, psx-de or psx-eu-en)" in s["why"]
@@ -750,13 +750,13 @@ def main():
     # ---- A PC install with no cache, psp-art installed in DAT\ (the PSP extras' path).
     setup(launcher, exe, ["psp-art.AREA067.DAT", "area4-walls.AREA004.DAT"])
     st, ini, _ = run("[bof3x]\nopt=\n", lambda dlg, item: click(item, "graphics", PSP))
-    report("no cache: the note says so", "No cache named" in st["note"], st["note"])
+    report("no cache: the note says so", "No cache folder is set" in st["note"], st["note"])
     report("  graphics offered for the installed psp-art", st["suites"]["graphics"]["psp"][0]
            and st["suites"]["graphics"]["members"][0] == ("Stallion's palettes", True))
     report("  the PSP's graphics: opt=psp-art,area4-walls", lines(ini)["opt"] == "psp-art,area4-walls", lines(ini)["opt"])
     st, ini, _ = run("[bof3x]\nopt=\n", None)
     report("  audio's PSP side names the discs and a cache",
-           "in a cache named in Cache folder" in st["suites"]["audio"]["why"], st["suites"]["audio"]["why"])
+           "in the cache folder" in st["suites"]["audio"]["why"], st["suites"]["audio"]["why"])
 
     mods_checks(launcher, exe, report)   # its reports count in ok
 
