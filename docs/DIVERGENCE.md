@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 174 entries, DIV-0001..0174, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 175 entries, DIV-0001..0175, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10908,3 +10908,42 @@ designed in rather than bolted on.
   - Nothing is written to game memory, so the state hash sees nothing.
   - Not heard; not run on a route.
 - **Reversible?** `BOF3X_ORIGINAL=OneShotKeyOff`, independently of `BOF3X_ORIGINAL=EffectKeyOff` (DIV-0167).
+
+### The window reset clears every field of a window record but the last four bytes, as the US disc
+
+- **ID:** DIV-0175
+- **Date:** 2026-10-23
+- **Subsystem:** windows - `Window_ResetAll` (`0x59E330`, `src/game/mode_flow.cpp`); `WindowRecords`
+  (`0x803160`, 22 records of 0x24 bytes); [`known-defects.md`](known-defects.md) D352
+- **Tier:** Sensible - a Capcom fix the PC port never received.
+- **Original behaviour:** the reset, called from 21 sites (the field's mode changes, the shops, the battle's
+  start and end), zeroes five bytes of each record - in use, handler, kind, state and pass (`+0..+3`, `+0xF`) -
+  and the pass the walk starts from. Every other field keeps what the record's last window left, and a new window
+  that reads a field before writing it reads that. The JP executable's reset (PSX `0x8015990C`) is the same.
+- **New behaviour:** the reset zeroes `+0..+0x1F` of every record, as the US executable's (PSX `0x80158E50`: the
+  bytes `+0..+3`, `+8..+0xF`, the words `+4`, `+6` and the eight words `+0x10..+0x1E`); `+0x20..+0x23` are kept
+  on both.
+- **Rationale:** two stale reads were found. `+0xD` bit 0 (no outline) is read by window kinds 1 and 2 in
+  `Window_Grow` / `Window_Shrink`, which never write it: the shop route leaves `0xFF` there in record 7 (from
+  a list window, whose `+0xD` is its cursor), so the next grow or shrink window given record 7 would open
+  without its outline. And `+0xC` (the item list's marked index) is read on a list window's first frame before
+  its set-up writes it: on `shop.txt` record 8's list drew its first frame (tick 1,574) with the last list's
+  marked index 1 instead of 0 - one frame's draw, 0x130 bytes more of packets, gone the next frame. Capcom
+  changed the reset between the JP and the US builds.
+- **What changes to the eye:** at most a frame: a list window's first frame no longer marks the previous list's
+  entry, and a growing or shrinking box no longer loses its outline after a list or battle window used its
+  record. Nothing to the ear.
+- **Also in the PSX version?** The JP disc: five fields, as the PC. The US disc: `+0..+0x1F`, as here.
+- **Verification:** builds; `BOF3X_SHADOW='*'` self-tests exit 0 from an ini-less launcher copy (the
+  `mode_flow` fuzz compares Capcom's five-field reset before the switch is armed; it cannot compare the
+  repaired path, which differs from Capcom's by design). The state hash, hosted, `BOF3X_OPT=none
+  BOF3X_LAYERING=0`, against the `orig4` pairs and against the same build with `BOF3X_ORIGINAL=WindowResetFull`:
+  the attract sequence (no layer) differs from `attract_r14_orig*` on the window records' page alone, ticks
+  6,833..7,074; `shop` (x1) is identical with the switch off and differs with it on only on that page (ticks
+  1,206..3,136) and, for one or two ticks at 1,574, on the packet pool and the draw lists (above);
+  `cutsceneAndNue`, `dragonTransform`, `whelpBoss` and `worldMapAndAreaTransition` differ between on and off on
+  that page alone (raw dumps: every differing byte in a record not in use, but the shop's record 8), and the
+  other five routes not at all. No later page and no `Rand` moved. Game memory written differently: only the
+  freed records' bytes in `WindowRecords`, so the state hash shows `0x803000` on six of the ten routes and the
+  attract with the switch on - the signature of this entry.
+- **Reversible?** `BOF3X_ORIGINAL=WindowResetFull`.

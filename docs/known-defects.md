@@ -9488,6 +9488,28 @@ agree with both discs.
 beside the Japanese disc's would show whether the port's shift was a
 correction for its own art or a slip.
 
+**Measured 2026-10-23 (the sound-layer round, group HM):** the JP disc's
+words re-read (`AREA030.EMI` section 4, `0x801D6EC8..0x801D6EF8`: `(0x7B,
+0x5C, 0, 1)` and `(0x7C, 0x69, 0x20, 0, 1, 0)`, as above). The PC capture:
+`caughFish.txt` under `en-US` with a frame every 10 (`BOF3X_SHOT_EVERY=10`,
+388 frames, scratch `C:/Users/kerok/bof3x-runs/sl1023/hm/out/caughFish_shots`,
+sheets `hm/sheet_fish_*.png`). Neither the arrow (`EffectHud_DrawArrow`
+`0x465D90`, 16 x 8 at x - 8) nor the mark (`EffectHud_DrawMark` `0x465E50`,
+sprite 0x1C) appears at either the PC's or the JP's places in any frame: the
+route casts, reels and visits the gear tab, but `EffectKind0F_Child4Move` is
+one of six child sub-kinds the fishing list's state 29 runs (which screen
+opens child 4 was not read - perhaps a tab the route skips), and the route
+never draws it. So
+the capture that would answer this is not on any recorded route. The disc's
+side was not attempted: the sibling's runtime runs the JP disc, but it has
+no savestate near a fishing spot and the PC-to-PSX save direction is
+unproven (`save-interchange.md`), so a route there is a hand-driven session
+of more than an hour. **Next step:** a short owner recording of the fishing
+screen's other tabs (or a `seek` recipe off `caughFish`'s gear menu at frame
+~1,870) with `BOF3X_CALLTRACE` confirming `0x4680F0` runs, then the PC frame
+with the two anchors marked; the disc's frame only if the PC's shows the
+marker or bar off its art.
+
 ## D341 — Two sprite-record writes to `+0x70` keep bytes `+0x71..+0x73`, where the PlayStation stores a whole word and zeroes them (the port's; latent)
 
 **Seen:** not seen in play; found 2026-10-23 by reading the US PlayStation's
@@ -9610,7 +9632,35 @@ at `0x57FFE3`); the write step (`FieldSave_Write`, `0x580010`) shows message
 a write that, on the PC, is a file write rather than a card write. Ours does
 as the PC.
 
-**Status:** latent; the port's; cosmetic.
+**Measured 2026-10-23 (the sound-layer round, group HM):** which recipes a
+repair would move. A scratch build logged `FieldSave_Begin` (the save menu
+opened), the "yes" in `FieldSave_Confirm` and an answer to the inn's
+`InnNight_AskSave`, and every distinct recipe in `tools/recipes/` was played
+at `--speed 8` with its header's language (52 recipes; left out as copies of
+these: the `_ab`, `_sw` and `quick_*` variants, the three other `sigma_*`
+site routes, the `cs_*` chapter jumps, `attract_cycle` and `title_timeline`;
+scratch in `C:/Users/kerok/bof3x-runs/sl1023/hm/out/*_d344*`). Two confirm a
+save: `balioAndSunder_2` (yes at recipe frame 21,726, slot 6, area 41; 108
+frames before the recipe ends) and `sigma_swap` (yes at 3,788, slot 7, area
+7; its shots from `f03810` on and the button round's state-hash references
+on four install kinds come after it). Three open the save menu and leave
+without saving, which the repair does not touch: `shop` (frame 2,974, the
+inn), `cutsceneAndNue` and `nueRandomEncounter` (6,984, area 23). No route
+answers the inn's own save prompt.
+
+**The plan, if the owner wants the two frames:** the repair is a step of two
+frames between the yes and the write (message 0x99, then the write step), so
+every recorded input after the yes lands two frames early. Neither recipe
+can be re-timed by `tools/recipe_shots.py`, which only puts a shot in place
+of a frame and never inserts one (HANDOFF's "Shot lines are frames"). The
+route fix is `wait 2` inserted after the yes frame (3,788 / 21,726) by a
+tool step, not by hand - an `--insert FRAME N` mode for `recipe_shots.py` -
+then `sigma_swap`'s shots after 3,788 and its references on the four
+installs re-recorded; `balioAndSunder_2` needs its replay checked to the
+end. Nothing else moves.
+
+**Status:** latent; the port's; cosmetic; not built - the owner's call
+whether two frames on every field save are worth re-timing those two routes.
 
 ## D345 — Three positional-sound hooks are empty on the PC: the movement op `B8`, the overlay queue's bit-3 voice update, and `Sound_PlayById`'s level and distance handling (the port's sound layer; not heard)
 
@@ -9781,8 +9831,26 @@ recipe and the attract state-hash run pass through it; whether counter 4 can be
 raised while message 2 is open was not shown from the scripts, and longer
 translated text makes it likelier.
 
-**Status:** Capcom's (the JP build's); open: a repair would be measured on
-the attract run first, since a wait that adds frames shifts the recording.
+**Measured 2026-10-23 (the sound-layer round, group HM):** a scratch log at
+step 3 on every frame counter 4 is up, on the attract run (`attract_run.py
+--no-front`, `BOF3X_OPT=none`, hosted; scratch in
+`C:/Users/kerok/bof3x-runs/sl1023/hm/out/attract_*`). With no language layer
+message 2 is already closed (`Field_Request` 0) on the frame counter 4 is
+raised, on all four passes of a 12-minute run (frames 4,177, 9,699, 15,221,
+20,743); under `ja-JP` the same (frame 4,195). Under the Western layers it is
+still open: `en-US` frames 4,372..4,405 (34 frames), `fr-FR` 4,372..4,411
+(40), `de-DE` 4,382..4,439 (58) - the longer text keeps the box up after the
+script has moved the counter on. So the US disc's wait would add 34 to 58
+frames to every pass of the attract under a Western layer, moving the
+caption, the camera pull and everything after them; with no layer and under
+`ja-JP` it adds none. Under the Western layers today the caption starts while
+message 2 still shows - the overlap the US build removed.
+
+**Status:** Capcom's (the JP build's); open, **not built** (2026-10-23): the
+repair adds frames under every Western layer, so it is the owner's call -
+build it (the switch name `Scena16CaptionWait` was reserved for it; its DIV number went to D352's repair, the ledger keeping no gaps)
+with the attract references re-recorded under the layers it changes, or
+leave the overlap.
 
 ## D351 — Message 0xFA's gene name is not terminated after its 8-byte copy (Capcom's, fixed in the US build; fixed by DIV-0166)
 
@@ -9798,7 +9866,7 @@ ran into what follows the buffer.
 **Status:** Capcom's (the JP build's), fixed in the US build; fixed here by
 DIV-0166 (`BOF3X_ORIGINAL=GeneNameNul`).
 
-## D352 — `Window_ResetAll` clears five fields of each window record where the US build clears all (Capcom's, changed in the US build; open)
+## D352 — `Window_ResetAll` clears five fields of each window record where the US build clears all but the last four bytes (Capcom's, changed in the US build; fixed by DIV-0175)
 
 **Seen:** not seen; found 2026-10-23 by the region census.
 
@@ -9810,8 +9878,23 @@ in `Window_Grow` / `Window_Shrink` and never written by them, so an item list
 or a battle window can leave it set for the next window. Clearing every field
 at all 21 reset sites could also clear one meant to survive (a list cursor).
 
-**Status:** Capcom's; open: a repair wants a state-hash comparison over the
-routes first.
+**Measured 2026-10-23 (the sound-layer round, group HM):** the US reset
+(PSX `0x80158E50`) zeroes `+0..+0x1F` of each record - not all 0x24 bytes:
+`+0x20..+0x23` are kept. Built under a switch and run on the attract and
+the ten state-hash routes against the `orig4` pairs and against the same
+build with the switch off (hosted, `BOF3X_OPT=none BOF3X_LAYERING=0`;
+scratch in `C:/Users/kerok/bof3x-runs/sl1023/hm/`): the only page that
+moves is the window records' (`0x803000`) on the attract and on six routes,
+every differing byte in a record not in use, except `shop.txt`'s record 8 at
+tick 1,574, a list window drawing its first frame with the last list's
+marked index (`+0xC`, 1 instead of 0) - one frame's draw, the packet pool
+and draw lists for one or two ticks, then identical. No later page, no
+`Rand`. The `+0xD` case is real too: the shop route leaves `0xFF` in record
+7's `+0xD`, which a later grow or shrink window in record 7 would read as
+"no outline"; no route was seen to reach it.
+
+**Status:** Capcom's (the JP build's), fixed in the US build; fixed here by
+DIV-0175 (`BOF3X_ORIGINAL=WindowResetFull`).
 
 ## D353 — `symbols.toml`'s PlayStation addresses for `Field_Kind2X` / `Field_Kind2Z` and `Field_ScriptFlags2` differ from the US disc's by four bytes (tooling; settled 2026-10-23: region drift, the fields are right)
 
