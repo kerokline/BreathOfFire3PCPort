@@ -26,7 +26,9 @@ No game data here or in the code: build ids, layer names and counts only
 
 The settings dialog (`IDD_CONFIG`, `src/launcher/launcher.rc`) is wider: the
 left column is unchanged (Settings, Music), and the right column is the group
-"Versions: the PlayStation's or the PSP's". It holds a note and then one block
+"Versions: the PlayStation's or the PSP's" ("PlayStation or PSP version" since
+2026-10-24, issue 124, when every launcher string was rewritten in ASD-STE100
+style). It holds a note and then one block
 per suite:
 
 - **The note** says what the cache's base is and which builds it was made

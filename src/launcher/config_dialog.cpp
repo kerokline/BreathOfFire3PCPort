@@ -155,21 +155,21 @@ void CacheNote(HWND dlg) {
     w = b == std::wstring::npos ? std::wstring() : w.substr(b, e - b + 1);   // ConfigLoad trims
     const wchar_t* note = L"";
     if (w.empty()) {
-        note = HomeCacheDefault().empty() ? L"No cache: the PC's MP3s play."
-                                          : L"Empty: this install's own cache (cache\\ in the install folder).";
+        note = HomeCacheDefault().empty() ? L"No cache folder: the game plays the PC MP3 music."
+                                          : L"Empty: the game uses the cache\\ folder of this install.";
     } else {
         while (w.size() > 1 && (w.back() == L'\\' || w.back() == L'/')) w.pop_back();
         const std::string a = ConfigToUtf8(w);
         const DWORD at = GetFileAttributesW(w.c_str());
         if (at == INVALID_FILE_ATTRIBUTES || !(at & FILE_ATTRIBUTE_DIRECTORY))
-            note = L"Not a folder: the game will stop at start-up.";
+            note = L"This is not a folder. The game cannot start.";
         else if (a.size() > MAX_PATH - 1 - (sizeof "\\base\\bgm\\bank\\" - 1 + 15 + sizeof ".DAT" - 1))
-            note = L"Over 226 bytes as UTF-8: the game will stop at start-up.";
+            note = L"The path is too long (more than 226 bytes as UTF-8). The game cannot start.";
         else {
             const DWORD bg = GetFileAttributesW((w + L"\\base\\bgm").c_str());
             note = bg != INVALID_FILE_ATTRIBUTES && (bg & FILE_ATTRIBUTE_DIRECTORY)
-                       ? L"Holds base\\bgm: the disc's songs play where it has them."
-                       : L"No base\\bgm in it: the PC's MP3s play.";
+                       ? L"Has base\\bgm: the game plays the disc music."
+                       : L"No base\\bgm: the game plays the PC MP3 music.";
         }
     }
     SetText(dlg, IDC_CACHENOTE, note);
@@ -179,7 +179,7 @@ void BrowseCache(HWND dlg) {
     const HRESULT co = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     BROWSEINFOW bi{};
     bi.hwndOwner = dlg;
-    bi.lpszTitle = L"The importer's cache folder (the one holding base and manifest.toml)";
+    bi.lpszTitle = L"Select the cache folder (it contains base and manifest.toml)";
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     if (PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi)) {
         wchar_t path[MAX_PATH];
@@ -262,17 +262,15 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
 
     std::wstring note;
     if (!in.manifest.error.empty()) {
-        note = WideAscii(in.manifest.error) + L": the suites cannot be offered.";
+        note = WideAscii(in.manifest.error) + L": these options are not available.";
     } else if (!in.manifest.present) {
-        note = cache.empty() ? L"No cache named: the PSP's versions need one. Layers installed in DAT\\ still count."
-                             : L"No manifest.toml in the cache folder (tools/importer.py build writes one).";
+        note = cache.empty() ? L"No cache folder is set. The PSP versions need one (Data tab)."
+                             : L"The cache folder has no manifest.toml. Build the install again (Data, Sources).";
     } else {
-        std::wstring from;
-        for (size_t i = 0; i < in.manifest.sources.size(); ++i)
-            from += (i ? L", " : L"") + WideAscii(in.manifest.sources[i]);
-        note = std::wstring(in.manifest.base_policy == "psp" ? L"This install's base is the PSP's"
-                                                             : L"This install's base is the PlayStation's") +
-               L"; the cache is built from " + (from.empty() ? std::wstring(L"no source") : from) + L".";
+        // the sources themselves are listed on Data, Sources
+        note = std::wstring(in.manifest.base_policy == "psp" ? L"This install uses PSP data."
+                                                             : L"This install uses PlayStation data.") +
+               L" Select a version for each group. The items under a group are what the PSP version changes.";
     }
     SetText(dlg, IDC_SUITENOTE, note.c_str());
 
@@ -280,8 +278,8 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
         const SuiteState& s = state.suites[i];
         const int base = IDC_SUITE0 + kSuiteStride * static_cast<int>(i);
         SetText(dlg, base + kSuiteLabel, (std::wstring(s.info->label) + L":").c_str());
-        SetText(dlg, base + kSuitePsx, s.psp_base ? L"PlayStation" : L"PlayStation (the base)");
-        SetText(dlg, base + kSuitePsp, s.psp_base ? L"PSP (the base)" : L"PSP");
+        SetText(dlg, base + kSuitePsx, s.psp_base ? L"PlayStation" : L"PlayStation (base)");
+        SetText(dlg, base + kSuitePsp, s.psp_base ? L"PSP (base)" : L"PSP");
         Enable(dlg, base + kSuitePsx, s.psx_enabled);
         Enable(dlg, base + kSuitePsp, s.psp_enabled);
         int& choice = state.choice[i];
@@ -314,7 +312,7 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
         std::wstring why;
         if (!s.psx_enabled && !s.psx_why.empty()) why += s.psx_why + L" ";
         if (!s.psp_enabled && !s.psp_why.empty() && s.psp_why != s.psx_why) why += s.psp_why + L" ";
-        if (shown < 0) why += L"bof3x.ini's opt= and psp= play part of this suite: kept as written until a version is chosen. ";
+        if (shown < 0) why += L"bof3x.ini (opt=, psp=) sets part of this group. Select a version to change it. ";
         for (const auto& [n, who] : notes) why += who + L": " + n + L". ";
         if (!why.empty()) why.pop_back();
         SetText(dlg, base + kSuiteWhy, why.c_str());
@@ -487,10 +485,10 @@ void MusicRefresh(HWND dlg, const DialogState& state) {
     if (mp3s) FindClose(find);
     const bool have[3] = {songs && !psp_base,
                           psp_base ? songs : ConfigOptInstalled(state.game_dir, "psp-music", data, cache), mp3s};
-    const wchar_t* const names[3] = {L"PlayStation Encoded", L"PSP Encoded", L"PC MP3s"};
-    const wchar_t* const lacks[3] = {L"PlayStation Encoded - not in this cache, the PSP's then the PC's play",
-                                     L"PSP Encoded - not in this cache, the PlayStation's then the PC's play",
-                                     L"PC MP3s - no BGM\\ here, the PlayStation's then the PSP's play"};
+    const wchar_t* const names[3] = {L"PlayStation", L"PSP", L"PC (MP3)"};
+    const wchar_t* const lacks[3] = {L"PlayStation - not in the cache (plays PSP, then PC)",
+                                     L"PSP - not in the cache (plays PlayStation, then PC)",
+                                     L"PC (MP3) - no BGM\\ folder (plays PlayStation, then PSP)"};
     const int sel = Selected(dlg, IDC_MUSIC);
     SendMessageW(Item(dlg, IDC_MUSIC), CB_RESETCONTENT, 0, 0);
     for (int i = 0; i < 3; ++i) AddItem(dlg, IDC_MUSIC, have[i] ? names[i] : lacks[i]);
@@ -583,12 +581,12 @@ void Populate(HWND dlg, DialogState& state) {
     if (!state.original) {
         // DIV-0102: a disc-only install has no Chinese text to offer.
         SetText(dlg, IDC_LANGNOTE, state.languages.empty()
-                                       ? L"No Chinese (PC only), no layer: importer.py --lang."
-                                       : L"Chinese (PC script): the PC install's only.");
+                                       ? L"Chinese is only in the PC version. No other language is built (importer.py --lang)."
+                                       : L"Chinese (PC script) is only in the PC version.");
     } else if (state.languages.empty()) {
         // Offering an option that cannot work is worse than explaining why it
         // is missing. The overlays are built, not shipped.
-        SetText(dlg, IDC_LANGNOTE, L"No DAT\\<lang>.* overlays; build them with tools/loc_build.py.");
+        SetText(dlg, IDC_LANGNOTE, L"No language files in DAT\\. Build them with tools/loc_build.py.");
     } else {
         SetText(dlg, IDC_LANGNOTE, L"");
     }
@@ -599,26 +597,23 @@ void Populate(HWND dlg, DialogState& state) {
     Check(dlg, IDC_EXTRA_TEXTSPEED, cfg.text_faster);
 
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
-    AddItem(dlg, IDC_FILTER, L"Sharp - point");
-    AddItem(dlg, IDC_FILTER, L"CRT - SatPixie (newpixie fork, MIT)");
+    AddItem(dlg, IDC_FILTER, L"Sharp - point (no blur)");
+    AddItem(dlg, IDC_FILTER, L"CRT effect (SatPixie)");
     Select(dlg, IDC_FILTER, cfg.satpixie ? 2 : cfg.filter == Filter::kPoint ? 1 : 0);
     Enable(dlg, IDC_LOOKOPTIONS, cfg.satpixie);
 
-    AddItem(dlg, IDC_DISPLAY, L"Fullscreen - borderless window");
-    AddItem(dlg, IDC_DISPLAY, L"Windowed - resizable, F8 toggles");
+    AddItem(dlg, IDC_DISPLAY, L"Full screen (F8 changes to a window)");
+    AddItem(dlg, IDC_DISPLAY, L"Window (F8 changes to full screen)");
     Select(dlg, IDC_DISPLAY, cfg.display == Display::kWindowed ? 1 : 0);
     Check(dlg, IDC_BACKGROUND, cfg.background);
     // DIV-0041: the picture's width, the box's index the ini's wide= (0, 1, 2).
-    AddItem(dlg, IDC_WIDE, L"Off - 320 x 240, the original's 4:3");
-    AddItem(dlg, IDC_WIDE, L"16:9 - 426 x 240, 53 columns a side");
-    AddItem(dlg, IDC_WIDE, L"21:9 - 560 x 240, 120 columns a side");
+    AddItem(dlg, IDC_WIDE, L"Off - 4:3, 320 x 240 (original)");
+    AddItem(dlg, IDC_WIDE, L"16:9 - 426 x 240");
+    AddItem(dlg, IDC_WIDE, L"21:9 - 560 x 240");
     Select(dlg, IDC_WIDE, cfg.wide == 1 || cfg.wide == 2 ? cfg.wide : 0);
 
     Check(dlg, IDC_SNAP, cfg.snap);
 
-    AddItem(dlg, IDC_RENDERER, L"Direct3D (default)");
-    AddItem(dlg, IDC_RENDERER, L"Software");
-    Select(dlg, IDC_RENDERER, cfg.renderer ? 0 : 1);
 
     SetText(dlg, IDC_CACHE, ConfigFromUtf8(cfg.cache).c_str());
     CacheNote(dlg);
@@ -646,7 +641,6 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.filter = look >= 1 ? Filter::kPoint : Filter::kLinear;
     cfg.satpixie = look == 2;
     cfg.display = Selected(dlg, IDC_DISPLAY) == 1 ? Display::kWindowed : Display::kFullscreen;
-    cfg.renderer = Selected(dlg, IDC_RENDERER) == 1 ? 0 : 1;
     cfg.snap = Checked(dlg, IDC_SNAP);
     cfg.background = Checked(dlg, IDC_BACKGROUND);
     const int wide = Selected(dlg, IDC_WIDE);
@@ -947,9 +941,9 @@ void ControlsRefresh(HWND dlg, const Cells& c) {
 void ControlsPopulate(HWND dlg, const Cells& c) {
     ControlsRefresh(dlg, c);
     SendMessageW(Item(dlg, IDC_CT_LAYOUT), CB_RESETCONTENT, 0, 0);
-    AddItem(dlg, IDC_CT_LAYOUT, L"By position - the lower button confirms (Xbox, PlayStation)");
-    AddItem(dlg, IDC_CT_LAYOUT, L"Nintendo - the pairs swapped, the right button confirms");
-    AddItem(dlg, IDC_CT_LAYOUT, L"Automatic - from the pad's own labels");
+    AddItem(dlg, IDC_CT_LAYOUT, L"Position - the bottom button accepts (Xbox, PlayStation)");
+    AddItem(dlg, IDC_CT_LAYOUT, L"Nintendo - the right button accepts");
+    AddItem(dlg, IDC_CT_LAYOUT, L"Automatic - use the labels on the pad");
     Select(dlg, IDC_CT_LAYOUT, static_cast<int>(c.layout));
 }
 
@@ -996,7 +990,7 @@ INT_PTR CALLBACK CaptureProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         auto* c = reinterpret_cast<Capture*>(lp);
         c->dlg = dlg;
         g_capture = c;
-        std::wstring prompt = std::wstring(L"Press a key or a pad input for ") + c->what + L".";
+        std::wstring prompt = std::wstring(L"Press a key or a pad button for ") + c->what + L".";
         SetDlgItemTextW(dlg, IDC_CP_PROMPT, prompt.c_str());
         // What is held now is not the answer: a button that opened this dialog
         // through the pad navigation is still down.

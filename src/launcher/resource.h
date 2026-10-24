@@ -27,7 +27,7 @@
 #define IDC_FILTER      1003
 #define IDC_DISPLAY     1004
 #define IDC_RESOLUTION  1005
-#define IDC_RENDERER    1006
+#define IDC_RENDERER    1006    // retired 2026-10-24 (issue 124): no box; kept so the id is not reused
 #define IDC_SHOW        1007
 #define IDC_BACKGROUND  1008
 #define IDC_WIDE        1009

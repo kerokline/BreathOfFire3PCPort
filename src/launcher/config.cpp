@@ -1052,7 +1052,7 @@ std::vector<RubyChoice> ConfigRubyChoices(const std::wstring& game_dir, const st
         for (const std::string& t : m.required)
             if (std::find(held.begin(), held.end(), t) == held.end()) lack += (lack.empty() ? "" : ", ") + t;
         if (!lack.empty()) c.why = L"needs " + Wide(lack) + L" text: add that disc on Data, Sources";
-        else if (chinese || m.base != language) c.why = L"over " + Wide(m.base) + L" text only: choose that language";
+        else if (chinese || m.base != language) c.why = L"only with " + Wide(m.base) + L" text: select that language";
         else if (!built(m.id)) c.why = L"not built: build the install on Data, Sources";
         out.push_back(c);
     }
@@ -1061,8 +1061,8 @@ std::vector<RubyChoice> ConfigRubyChoices(const std::wstring& game_dir, const st
         RubyChoice c{tag, std::wstring(), std::wstring()};
         for (const LanguageInfo& lang : kLanguages)
             if (tag == lang.code) c.label = lang.label;
-        if (chinese) c.why = L"not over the Chinese text: choose another language";
-        else if (!built(tag)) c.why = L"its second-language layer is not built in this install";
+        if (chinese) c.why = L"not with Chinese text: select a different language";
+        else if (!built(tag)) c.why = L"not built in this install";
         out.push_back(c);
     }
     // Any other ruby-<x>-<language> layer there is (a layer of a release newer
