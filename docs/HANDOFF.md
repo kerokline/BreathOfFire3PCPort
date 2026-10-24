@@ -55,8 +55,12 @@ hosted cross form).
    owner's `maekyssGorge` recipe leaves area 62 on the rebuilt scratch image (`D:of3x-runs\i130`). **A player's
    install needs the rebuild**: the staleness prompt names `exe`. **Left:** areas 89 and 129 (the fishing spots'
    `Field_InputFlags` byte, `Game_Mode` 8) and 134 keep a descriptor hole - a rule through the PSX descriptor table
-   would place every descriptor; the same save loads into area 62 on the PC install and into camp area 90 on the
-   disc-built one with every gap filled and with a JP-disc image, so not the exe image: cause not found (the owner's draft replies in the session scratchpad).
+   would place every descriptor; **next to track:** the same save - made at the camp diary, not an F12 save - loads into area 62 on the PC
+   install and into camp area 90, then the world map, on the disc-built one, with every gap filled and with a
+   JP-disc image, so not the exe image; the owner's thought (2026-10-24): the area-read logic of a load may differ
+   between releases (the US disc's data against the PC's JP-form). Start from the scratch install's `fix2_run.log`
+   against `gameof3x.log` in the session scratchpad `i130`, then the save's area word and what reads it on each
+   install (the owner's draft replies are there too).
 
 00000. **The Sunder loop is built** on `cut/sunder-loop` (off `main` `2f55de72`, worktree
    `C:\Users\kerok\bof3x-runs\sunder1024\wt`, unpushed; DIV-0176 `SunderLoop`; [`cut-content.md`](cut-content.md) 4): the

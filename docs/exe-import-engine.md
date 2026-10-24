@@ -970,11 +970,11 @@ on the old install names `exe` as stale, so the launcher's prompt
 ([`install-staleness.md`](install-staleness.md)) brings a player the rebuild;
 no `FilledSince` row was added.
 
-**Not the image:** the owner's save loads into area 62 on the PC install and
+**Not the image:** the owner's save (made at the camp diary, not an F12 save) loads into area 62 on the PC install and
 into camp area 90, then the world map, on the disc-built one - unchanged with
 every `gap`, `unread` and `language` range filled from the PC's bytes and with
 a JP-disc image, so the cause is in the install's data or layers, not here;
-open.
+open - the owner's thought: a load's area-read logic may differ between releases (HANDOFF item 000000).
 
 **Left.** Three descriptor holes stay on every PlayStation build, where no
 pointer in the region has a placed target (the region's only data pointers
