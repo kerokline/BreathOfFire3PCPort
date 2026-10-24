@@ -1,6 +1,6 @@
 # Cut content: what the disc holds that play never shows
 
-**Status:** DRAFT (2026-09-25) - a map from a third-party list to our tables; nothing here is seen in game yet
+**Status:** IN PROGRESS (2026-10-24: the Sunder loop built, section 4; 2026-09-25: a map from a third-party list to our tables)
 
 The Cutting Room Floor's Breath of Fire III page lists what the PlayStation
 release carries and never shows: skills, an item, music, narration, text, a
@@ -28,7 +28,7 @@ What to take from the page, in the owner's words, and what each wants:
 | **Unused music and audio** | three unused songs, found when the music was ripped; five Japanese narration clips of the prologue, `BIN/SCE_XA/VOICE.STR` on the JP and US discs | not looked at on the PC. The port's music is `BGM/` (166 files); whether the three songs came across, and whether any `VOICE.STR` did, is unread |
 | **Unused text** | lines in eleven places (Cedar Woods, the burning hut, Yraall Road, Syn City, Mt. Glaus, McNeil Manor, Ogre Road, Mt. Myrneg, the Dump, Wyndia's basement, Parch), a Faerie Village minigame's script, camp lines, the chicken coop's chickens, a demo-disc message | the area scripts are in the `DAT` message pools this repo already decodes (`loc_build.py`, [`dialogue-localisation.md`](dialogue-localisation.md)); an id reached by no script op is the lead |
 | **The whelp's portrait** | a menu portrait for the whelp, never shown because the menu is off until Rei and Teepo equip you; the portrait's whelp is blue, the field's green | the owner will try to reach the menu with an F12 save; whether the PC build has the portrait at all is unread |
-| **Sunder's animation on Mt. Myrneg** | an animation that plays on entering the area and lasts about four seconds, over before the player can reach the place where Sunder is on screen; seen only with a walk-through-walls cheat | the owner's proposal: **make it loop**, so a player arriving normally sees it. A divergence, for when that area is taken over (§4) |
+| **Sunder's animation on Mt. Myrneg** | an animation that plays on entering the area and lasts about four seconds, over before the player can reach the place where Sunder is on screen; seen only with a walk-through-walls cheat | **built, DIV-0176** (2026-10-24): the script asks for Capcom's unused looping cut of the same animation (§4) |
 
 The page also lists an unused item ("THE MOCHI", cures a petrification that
 does not exist), places behind walls with items in them (McNeil's safes,
@@ -126,25 +126,43 @@ harness, fuzz-only. This page gives it three things:
    measured), row 128 has three unbounded waits on the target's reaction
    state (a freeze candidate). Neither is taken yet.
 
-## 4. The Sunder loop, as a divergence to come
+## 4. The Sunder loop - built as DIV-0176 (2026-10-24)
 
 TCRF's account: the animation starts when the area is entered and ends in
 about four seconds, before the player can reach it; it fits Sunder's line
-when spoken to before the cutscene that removes him. The owner wants it to
-loop, so it is seen. When the area's code is ours:
+when spoken to before the cutscene that removes him. The owner wanted it to
+loop, so it is seen. Read 2026-10-24 in the exe and in the running game:
 
-- find the animation's start in the area's entry (Mt. Myrneg's area number
-  is in the area table; the object and its animation are the movement
-  script's, [`movement-script.md`](movement-script.md));
-- make it repeat while Sunder is in the area, and stop where the cutscene
-  removes him;
-- a DIVERGENCE entry: what the original did (plays once, unseen), what this
-  does (repeats), why (the owner: the scene was meant to be seen).
+- Mt. Myrneg is area 51 (`AREA051.EMI`; the sibling's `names/places.toml`).
+  Its placement script (`tools/event_scan.py --area 51`) puts the bank-0x44
+  object on the top of the mountain with movement script 3 of the
+  descriptor's `+0x10` array (`0x5FD000` in `.data`), whose first op is
+  `0E 10 01 01`: animation `0x10`, flip 1, the loop flag set (sprite flags bit
+  4, so `Field_ObjectsFrame` ticks it with `Sprite_ScriptTick`, which wraps
+  at the end). Then `A1 0A`, a wait on counter 0 until the scene reaches him.
+- Animation `0x10` of that bank, read from the arena of the running game
+  (`0x8B5AFE`): 25 steps, 4 ticks a frame through frames 0..23 (137 ticks
+  of hold in all), and a 25th step that is a jump back to step 24, which
+  holds frame 23 for ever - so the wrap never comes and the sprite stands on
+  its last frame. **Animation `0x0F` (`0x8B54A8`) is the same 24 steps with
+  the same holds and no jump**: Capcom's looping cut of the same scene, with
+  its own frame table (a puddle on the ground in every frame, a pause between
+  streams). No shipped script uses it.
+- Seen (recipe `balioAndSunder_2`, the top at frame ~3,160; the test game's
+  sprite re-pointed from outside, `peek51.py` / `poke51.py` in session
+  8cd177c3's scratchpad): `0x10` replayed is the stream, tailing off, then
+  the standing frame; `0x0F` is the stream, the puddle, the pause, again.
 
-Nothing is built. The owner judges it by eye. TCRF flags the scene as not
-safe for work, so whether the loop is on by default or opt-in is the
-owner's call.
-
+**Built:** the one byte at `0x5FD001` (`0x10`) reads `0x0F` -
+`bof3::PatchBytes("SunderLoop")` in `AreaW1c_Inject`
+(`src/game/area_w1c.cpp`), the same in both hosts, `BOF3X_ORIGINAL=SunderLoop`
+for the original. The loop ends where Capcom's script moves on: at counter
+`0x0A` it spawns the surprise effect, waits for it, and the walk op `48`
+gives the sprite its facing animation. On the PlayStation the section's
+bytes are the same (the event and movement scripts came across unchanged,
+[`movement-script.md`](movement-script.md) 3), so this is Capcom's choice
+changed, not a port repair. Whether it is on by default is the owner's call;
+it is on, as every Sensible entry.
 ## 5. Regenerating §2
 
 The mapping is a few lines of Python over `bof3/BOF3.exe`'s `Magic_Rows`

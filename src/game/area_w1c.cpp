@@ -1075,6 +1075,18 @@ void AreaW1c_Inject() {
     BOF3_INJECT(Area51_PlaceAtMember);
     BOF3_INJECT(Area51_ChoiceMessage);
     BOF3_INJECT(Area51_TintBackdrop);
+    {
+        // DIVERGENCE DIV-0176: Sunder's animation at Mt. Myrneg's entry (area
+        // 51, the +0x10 movement script 3 of the bank-0x44 object) is the
+        // looping cut 0x0F, not the once-and-hold cut 0x10 - the script's
+        // first op, `0E 10 01 01` at 0x5FD000 in BOF3.exe's .data, asks for
+        // 0x0F. One byte; the original in both hosts under
+        // BOF3X_ORIGINAL=SunderLoop. docs/cut-content.md 4.
+        static const std::uint8_t was = 0x10, is = 0x0F;
+        const bool on = bof3::PatchBytes("SunderLoop", 0x5FD001, &was, &is, 1);
+        bof3::Log("DIV-0176    Sunder's animation at Mt. Myrneg's entry loops (0x0F) until the scene reaches him: %s",
+                  on ? "on" : "off");
+    }
     BOF3_INJECT(Area52_StashBlock);
     BOF3_INJECT(Area52_ShiftBlockZ);
     BOF3_INJECT(Area52_ResetBlock);
