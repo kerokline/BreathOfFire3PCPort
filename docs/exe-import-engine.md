@@ -899,6 +899,101 @@ records; the rebuilt `abg\c_psxeu`, exit 0, `inject: 10088 ours`. The
 general form, an image stamped with its recipes' version: HANDOFF, "Pick up
 here" 11.
 
+### 7.8 Places on a vote tie (2026-10-24, issue 130)
+
+**Why.** ScrubOasis, on a disc-built install (the US PlayStation disc as
+base, the European PSP disc after it, no PC game), could not leave the house
+near Maekyss Gorge (issue 130) and could not enter Mt. Zublo's cave (issue
+134). Both areas' exits are `Area_LinkAt`'s links, bounded by the descriptor's
+`+0x30` ([`area-entry.md`](area-entry.md)): area 62's holds 2 on the PC, three
+links, and the disc-built image held 0, one link. The range `0x604210..0x60421C`
+sat in `exe-gaps.tsv` as **`unread`**, which the image zeroes without a log
+line: the engine reads it as `Area_Descriptors[n] + 0x30`, and `exe_own.py`'s
+reader search sees neither a name, an instruction nor a pointer word reaching
+that segment (the pointer word reaches the descriptor's start, `0x6041E0`, in
+the segment before it). Area 97's descriptor had the same hole from `+0x24`
+(`Area96_Handlers+0x154`), areas 162 and 163's from `+0x24` as `game-value`
+rows (`Area154_ChoicePairs+0x18C8`, `+0x19B8`).
+
+**The cause**, read against the US disc (`WORLD01/AREA062.EMI#13`): the PC
+inserted one zero word after area 62's one-entry handler table, so
+`0x6041CC..0x604224` holds three data pointers before the inserted word at
+one displacement from the overlay (`0x801F2EB8`) and three after it at another
+(`0x801F2EC8`, four bytes less). `find_places` counted the votes 3 to 3 and,
+by the tie rule written for shared code pointers, placed nothing; no byte
+window keyed the region (`top` was not empty, and no code pointer frames a
+window), and section 7.7's incoming pointer is `Area_Descriptors[62]`, which
+no disc places.
+
+**The rule.** A tie between **data-pointer** votes is a region the port relaid
+by a word inside it: every tied place is tried, in a fixed order (file,
+section, displacement), and the stretches that pass `stretches`' byte check are
+kept where they do not overlap one already kept. A tie between code-pointer
+votes stays refused. The check is the one every place passes (two keys, or one
+key and 16 equal bytes), so a wrong tied place places nothing.
+
+**Before and after** (`exe.toml`; `exe-gaps.tsv`'s `gap` rows / bytes, then its
+`unread` rows / bytes), on `fix/issue-130-descriptor-places` off `main` `f472072a`:
+
+| Build | places | identical | placed_differ | gap rows / bytes | unread rows / bytes |
+|---|---|---|---|---|---|
+| `psx-jp` | 207 to 215 | 615,282 to 615,286 | 3,151, unchanged | 53 / 639 to 51 / 567 | 110 / 37,344 to 108 / 37,296 |
+| `psx-us` | 221 to 229 | 614,726 to 614,730 | 3,194, unchanged | 72 / 1,155 to 70 / 1,084 | 111 / 37,353 to 109 / 37,305 |
+| `psx-eu-en` | 220 to 243 | 614,663 to 614,733 | 3,191, unchanged | 71 / 1,245 to 71 / 1,093 | 111 / 37,353 to 109 / 37,305 |
+| `psx-fr` | 219 to 242 | 614,595 to 614,665 | 3,193, unchanged | 72 / 1,278 to 72 / 1,128 | 112 / 37,361 to 110 / 37,313 |
+| `psx-de` | 219 to 242 | 614,586 to 614,656 | 3,192, unchanged | 74 / 1,297 to 74 / 1,145 | 112 / 37,361 to 110 / 37,313 |
+| `psp-jp` | 261 to 268 | 613,044, unchanged | 3,398, unchanged | 51 / 532, unchanged | 107 / 37,276, unchanged |
+| `psp-eu` | 265 to 268 | 613,035, unchanged | 3,378, unchanged | 49 / 501, unchanged | 111 / 37,303, unchanged |
+
+`placed_differ` is unchanged on every build: no tied place puts a byte other
+than the PC's. On every PlayStation build the four descriptor rows leave
+`exe-gaps.tsv` (areas 62, 97, 162, 163: `0x6041E0..0x604224`,
+`0x617E58..0x617E9C`, `0x63A238..0x63A27C`, `0x63A328..0x63A36C`, each from its
+area's `EMI#13`), and on the three Western builds `Scena17_EndSteps`' three
+rows narrow to five smaller ones. The PSP builds already had the four
+descriptors from `BOOT.BIN` (section 7.7), so their gaps do not move; their
+three new places are elsewhere. A single-disc `recipe` run is not the seven-disc
+one: `exe-pointers.tsv`'s number-or-pointer vote over the discs differs, and
+with it a few rows' `keys`.
+
+**Checks.** The seven discs through `exe_tables.py recipe`, `exe_own.py
+measure`, `exe_tables.py gaps`; then `exe_tables.py check`, `psp_exe.py check`,
+`importer.py check`, `tables.py check`, `ledger_check.py`: 0 errors each. A
+scratch install built as ScrubOasis's (`importer.py setup`, the US cue and the
+European PSP iso, `D:\bof3x-runs\i130\home`): the owner's recipe
+`maekyssGorge` (its save `tools/recipe_saves/maekyssGorge.DAT`) on the image
+before the fix ends inside the house with no area change out of 62; on the
+image rebuilt from the new recipe (`exe_tables.py build`) the same inputs leave
+area 62 for the world map (area 45) three times. The exe host's self-test on
+the rebuilt image: exit 0, `inject: 10088 ours`. `importer.py stale --home`
+on the old install names `exe` as stale, so the launcher's prompt
+([`install-staleness.md`](install-staleness.md)) brings a player the rebuild;
+no `FilledSince` row was added.
+
+**Not the image:** the owner's save (made at the camp diary, not an F12 save) loads into area 62 on the PC install and
+into camp area 90, then the world map, on the disc-built one - unchanged with
+every `gap`, `unread` and `language` range filled from the PC's bytes and with
+a JP-disc image, so the cause is in the install's data or layers, not here;
+open - the owner's thought: a load's area-read logic may differ between releases (HANDOFF item 000000).
+
+**Left.** Three descriptor holes stay on every PlayStation build, where no
+pointer in the region has a placed target (the region's only data pointers
+point at the area's own tables, which a generic 107-byte `run` of
+`WORLD00/AREA030.EMI#3` placed): area 89's and 129's `+0x30` word
+(`0x6130E8..0x6130FC`, `0x627B38..0x627B50`; the fishing spots: their link
+count is 0 on the PC too - the owner, 2026-10-24: a fishing spot has no
+entrance or exit, it is its own screen - so the hole costs only the
+`Field_InputFlags` byte `+0x32`, 8, on which `GameMode_Enter` takes
+`Game_Mode` 8, the fishing screen; what a disc-built install does at a
+fishing spot is **not seen in play**), and area 134's `+0x48`
+(`0x62C168..0x62C175`). The JP-disc image makes no difference to the
+save-load question in the next paragraph. The general
+place for a descriptor is its PSX twin through the PSX `Area_Descriptors`
+table (`0x801802EC`, each entry an overlay address inside the area's own
+`EMI#13`), a rule rather than a vote; not built. The `unread` class hides
+such holes: a read through a pointer plus an offset is not a reader the
+measurement sees, and the image logs nothing for the class.
+
 ## For the other files
 
 Not edited here (the coordinator folds them in):

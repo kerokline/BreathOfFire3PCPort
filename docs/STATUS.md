@@ -8,6 +8,13 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**Issues 130 and 134, 2026-10-24, fixed on `fix/issue-130-descriptor-places`** (off `main` `f472072a`, unpushed;
+[`exe-import-engine.md`](exe-import-engine.md) 7.8): a disc-built install lost the exits of the house near Maekyss
+Gorge and the cave entrances at Mt. Zublo because the importer never placed those areas' descriptors - the port
+relaid them by one word, the pointer votes tied, and the link-count word was zero and classed `unread`. Tied
+data-pointer places are now tried one by one; four descriptors placed on every PlayStation build, three holes left
+(the two fishing spots and the Freighter). A player's install must be rebuilt (the launcher's staleness prompt).
+
 **The Sunder loop, 2026-10-24, built on `cut/sunder-loop`** (off `main` `2f55de72`, unpushed; DIV-0176
 `SunderLoop`; [`cut-content.md`](cut-content.md) 4, IDEAS I22): at Mt. Myrneg's entry area 51's script gave
 Sunder animation `0x10`, 24 frames and then a hold on the standing frame, over two thousand frames before
