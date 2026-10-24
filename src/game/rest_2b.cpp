@@ -163,7 +163,7 @@ extern "C" unsigned char __cdecl Field_TriggerCounterF0(unsigned char* object, u
     return 0;
 }
 
-// original 0x57CE10: an effect record of kind 6 - Effect_FindFree's slot n;
+// original 0x57CE10 (PSX 0x8015D508): an effect record of kind 6 - Effect_FindFree's slot n;
 // none (0xFF): nothing. Else record n: +0 = 1, +5 = 6, +6 = kind, +0xC / +0x10
 // = a / b sign-extended to dwords, +0x2E / +0x30 = the words x / z. al = n.
 // Effect_FindFree answers 0..19 or 0xFF; past 19 ours aborts where the
@@ -183,7 +183,7 @@ extern "C" unsigned char __cdecl Effect_Spawn(unsigned char kind, signed char a,
     return slot;
 }
 
-// original 0x57CE80: Effect_Spawn's sibling of kind 0x19 - the same record
+// original 0x57CE80 (PSX 0x8015D5F0): Effect_Spawn's sibling of kind 0x19 - the same record
 // with +5 = 0x19 and the dwords x, y, z at +0x34, +0x38, +0x3C.
 extern "C" unsigned char __cdecl Effect_SpawnAt(unsigned char kind, signed char a, signed char b, long x, long y, long z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();

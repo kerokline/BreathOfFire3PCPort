@@ -86,7 +86,7 @@ extern "C" short* __cdecl Gte_RotMatrixYXZ(const short* angles, short* matrix) {
     return matrix;
 }
 
-// original 0x57C070: an object's rotation composed with the camera's, in
+// original 0x57C070 (PSX 0x8015BEA0): an object's rotation composed with the camera's, in
 // place, then the whole matrix - that rotation, the object's own translation -
 // loaded into the GTE.
 extern "C" void __cdecl Camera_LoadMatrix(short* matrix) {

@@ -58,7 +58,7 @@ map_cells::RandFn map_cells::SwapRand(RandFn rand) {
     return was;
 }
 
-// original 0x56FF00: a record's condition. The high byte of the u16 `code`
+// original 0x56FF00 (PSX 0x80156938): a record's condition. The high byte of the u16 `code`
 // is the kind, the low byte its operand:
 //   0x00..0x1F   bit (operand) of Cond_Flags + 8 * kind
 //   0x20..0x3F   the same bit of row kind & 0x1F, complemented

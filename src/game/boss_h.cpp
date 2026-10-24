@@ -84,7 +84,7 @@ const unsigned char* KindColour(unsigned kind) { return At(AddressOf(BossTorast_
 
 // --- the fillers -----------------------------------------------------------------
 
-// original 0x437CC0: a bare ret. Boss_SetupTable[0], every hook slot a set-up
+// original 0x437CC0 (PSX 0x801F3414): a bare ret. Boss_SetupTable[0], every hook slot a set-up
 // leaves empty, and 455 references engine-wide (the effect dispatchers' slot
 // 0, the kinds' tables, field tables).
 extern "C" void __cdecl BareRet(void) {}

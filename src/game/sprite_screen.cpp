@@ -55,7 +55,7 @@ std::uint16_t Ftol16(std::uint32_t bits) {
 
 }  // namespace
 
-// original 0x5890E0: a sprite with +0x24 bit 7 goes onto the overlay list, not
+// original 0x5890E0 (PSX 0x8014D3D4): a sprite with +0x24 bit 7 goes onto the overlay list, not
 // the draw list (PSX FUN_8014D3D4).
 extern "C" void __cdecl Sprite_QueueOverlay(void) {
     const unsigned char n = Sprite_OverlayListCount;

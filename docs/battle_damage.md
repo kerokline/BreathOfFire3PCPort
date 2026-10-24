@@ -174,7 +174,7 @@ Two amounts the handlers call:
   (`+0x98`), highest first, into `0x904AB6` (count `0x904AC3`) - the order
   commands are entered in.
 - `Battle_BuildTurnOrder`: party value = agility + bonus x percent / 100,
-  the bonus 4 / 2 / 1 for an ability of order kind 0 / 1 or 3 / an item, the
+  the bonus 4 / 2 / 1 for an ability of skill class 0 / 1 or 3 / an item, the
   percent `{100, 125, 150, 200, 250}` by level class; enemy value = agility
   `+0x38` + a signed jitter from sixteen per level class by `Rand & 15`.
   Sorted highest first into `0x904ACC` (count `0x904AE3`, cursor

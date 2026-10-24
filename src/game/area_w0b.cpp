@@ -928,7 +928,7 @@ extern "C" void __cdecl Area25_SpawnEffect(void) {
 // Area 26
 // ===========================================================================
 
-// original 0x403180 (area 26's choice 0, the descriptor 0x5EC5A0's +0x34):
+// original 0x403180 (area 26's choice 0, the descriptor 0x5EC5A0's +0x34; PSX 0x801F300C):
 // message = Area26_Messages 0x5EC5E4 by the s8 choice (unchecked); the
 // variable 0xBE (choice 0) or 0xBF (1).
 extern "C" void __cdecl Area26_ChoiceMessage(void) {
@@ -938,7 +938,7 @@ extern "C" void __cdecl Area26_ChoiceMessage(void) {
     else if (choice == 1) At(at::kScriptVar)[0] = 0xBF;
 }
 
-// original 0x4031B0 (area 26's choice 1): no message; the variable 8 or 0xF.
+// original 0x4031B0 (area 26's choice 1; PSX 0x801F305C): no message; the variable 8 or 0xF.
 extern "C" void __cdecl Area26_ChoiceSetVar(void) { ChoiceSetVar(8, 0xF); }
 
 namespace {
@@ -1003,7 +1003,7 @@ extern "C" void __cdecl Area26_SpawnEffect(void) {
 // original 0x403380 (choice 15, handler 13; PSX 0x801F3370): Flags_Set 0x2E.
 extern "C" void __cdecl Area26_Flag2ESet(void) { AH_CALL(Flags_Set)(FlagRow(), 0x2E); }
 
-// original 0x4033A0 (choice 16, handler 14): Effect_FindFree; a slot (not
+// original 0x4033A0 (choice 16, handler 14; PSX 0x801F3370): Effect_FindFree; a slot (not
 // 0xFF): its Effect_Objects record +0x38 = 0x68000, +0x34 = 0x70000, +0 = 1,
 // +5 = 0x33, then +0x3C = AreaMap_Elevation(0x70000, 0x68000) as a signed
 // word << 16.

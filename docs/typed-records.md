@@ -188,11 +188,10 @@ was applied. Items 1, 2, 4 and 5 below are settled by it.
      `area_w0c.md` `Area32_TintStart`) and `+0xA1` (written by
      `field_objects.cpp`).
    - The party's sprite bytes `+0x2A` / `+0x2B` and `+0x5C..+0x5F` (written
-     on entry); `+0x9E` the max-HP scale (`battle_e5.cpp:403`); `+0xB5..+0xB7`
-     the rest of the resistance bytes, `+0xBA` a percentage byte
-     (`battle_e3.cpp:1040`) and the base stat block at `+0xC0`
-     (`battle_e5.cpp:405-425`); `+0x136` / `+0x137`, inside `flags_134` by
-     design (section 1).
+     on entry); `+0xB5..+0xB7` the rest of the resistance bytes and the
+     base stat block at `+0xC0` (`battle_e5.cpp:405-425`); `+0x136` / `+0x137`, inside `flags_134` by
+     design (section 1). (`+0x9E`, `+0xBA` and `+0xE0..+0x107` were named by
+     the records audit, 2026-10-23.)
    - The effect object's `+3`, `+4`, `+0xB` (a spawn argument, per kind a
      hold), `+0x32` (draw key) and `+0x64..+0x6C` (angles): no effect reader
      confirmed for this family.
@@ -367,6 +366,18 @@ reads became `static_cast<std::int16_t>(s->z_whole)` and `x_whole`. Full
 build, `codegen_same.py`: 640 objects, 0 differ - the member is the same
 16-bit load and store, and a signed read is the cast of it. The two files
 were then restored.
+
+**`height_whole` is `s16` since 2026-10-23** (the records audit's N1: the
+elevation `Sprite_ObjectMatrix` 0x4FBD10 reads as `-(s16 +0x3E / 2)`, and
+104 of the 169 non-store read lines already cast it signed). The retype alone
+changed 9 objects (a compare with `0xF600` folded to false, the
+`MapView_SetElevation` arguments and the kind-panel index sign-extended). The
+22 reads there are wrapped in `static_cast<std::uint16_t>(o->height_whole)`,
+which reproduces the old u16 member's code; the original's instructions at
+those sites are 16-bit loads pushed with the upper bits left as they were,
+16-bit arithmetic and 16-bit `==` / `!=` - none is a `movzx` or an
+`and 0xFFFF` - and one (0x464D4E, `test ax, ax; jle`) is signed, its cast
+redundant. `codegen_same.py` reads 643 objects, 0 differ. `x_whole` and `z_whole` stay `u16`.
 
 An anonymous struct inside a union is a GNU extension (clang's `-Wpedantic`
 names it `-Wgnu-anonymous-struct` / `-Wnested-anon-types`); the build does
@@ -555,7 +566,9 @@ name.
 
 The header's comments hold the same text; since C1 these tables are written
 from the three headers by a script (the C1 scratch's `gen_tables.py`), so
-they cannot drift from them. The section names are abbreviated:
+they cannot drift from them. (The records audit's rows, 2026-10-23, were
+edited by hand in that pass and then re-synced from the header's comments.)
+The section names are abbreviated:
 "sprite-draw-order 14" is [`sprite-draw-order.md`](sprite-draw-order.md)
 section 14, "battle_setup kPHp" is the constant in `battle_setup_callees.h`,
 and so on. A struct "from `SpriteHead`" has `SpriteHead`'s table for its
@@ -612,7 +625,7 @@ two or three rows at one offset, each naming its family.
 | `+0x3A` | u16 | `z_whole` | z's whole part, the cell (member-sprites 2) |
 | `+0x3C` | s32 | `height` | the pass's third sort key (sprite-draw-order 2); the third dword of the 12-byte point at +0x34 (battle_setup_callees.h kPos; effect_3a_callees.h kLeaderPoint) |
 | `+0x3C` | u16 | `height_frac` | the height's fraction |
-| `+0x3E` | u16 | `height_whole` | the height's whole part: the elevation Sprite_ObjectMatrix reads as s16 (sprite-draw-order 12), the ground (member-sprites 2; Battle_SetupEnemy), the u16 the spawn 0x5898D0 writes (symbols.toml) |
+| `+0x3E` | s16 | `height_whole` | the height's whole part, s16: the elevation Sprite_ObjectMatrix 0x4FBD10 reads as s16 (sprite-draw-order 12; u16 until the records audit, 2026-10-23), the ground (member-sprites 2; Battle_SetupEnemy), the u16 the spawn 0x5898D0 writes (symbols.toml) |
 | `+0x40` | s32 | `scale_x` | 16.16 (sprite-draw-order 12, 14) |
 | `+0x44` | s32 | `scale_y` | 16.16 (sprite-draw-order 14) |
 | `+0x48` | u8 | `scale_mode` | 1: scale by depth; 0: 1.0 (sprite-draw-order 12, 14) |
@@ -676,10 +689,12 @@ Padding:
 | `+0x8A` | u8 | `level` | record +0x0A (battle_damage_callees.h kPLevel, working +0x7A) |
 | `+0x90` | u16 | `status` | record +0x10 (battle_setup kPStatus; battle_damage kPStatus) |
 | `+0x92` | u8 | `weapon` | record +0x12 (battle_setup kPWeapon) |
+| `+0x93` | u8[3] | `armour` | record +0x13..+0x15, CharRecord::armour (char-stats.md 2 Char_ApplyArmour); +0x95 tested for 0x43 by BattleParty_AllDown and cleared before BattleParty_RecalcStats (battle_e3.cpp:780, 845; battle_setup kPArmour3) |
 | `+0x96` | u8[2] | `accessory` | record +0x16 / +0x17 (battle_setup kPAccessory) |
 | `+0x98` | u16 | `hp` | record +0x18 (battle_setup kPHp; battle_damage kPHp) |
 | `+0x9A` | u16 | `ap` | record +0x1A |
 | `+0x9C` | u8 | `survive` | record +0x1C, set from +0xAE (battle_setup kPByte9C); the overkill a kill leaves the flag below (battle_damage kPSurvive) |
+| `+0x9E` | u8 | `hp_scale` | record +0x1E, CharRecord::hp_scale: BattleForm_ApplyStats sets the HP to w0 - (scale * w0 + 5) / 10 of the form's word w0 (battle_e5.cpp:409-410; char-stats.md 2) |
 | `+0xA0` | u16 | `max_hp` | record +0x20 (battle_setup kPMaxHp) |
 | `+0xA2` | u16 | `max_ap` | record +0x22 |
 | `+0xA4` | u16 | `atk` | record +0x24 (char-stats.md 2; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4); battle_e5.cpp:408; the stat copy's +4, battle_damage kAttackerAtk) |
@@ -689,12 +704,14 @@ Padding:
 | `+0xAE` | u8 | `byte_ae` | record +0x2E, copied to +0x9C (battle_setup kPByteAE) |
 | `+0xAF` | u8[5] | `elements` | affinity classes, fire .. wind (battle_damage kPElements) |
 | `+0xB4` | u8 | `holy` | holy affinity class (battle_damage kPHoly) |
+| `+0xBA` | u8 | `crit_chance` | record +0x3A, a percentage: Rand() % 100 below it gives the swing cue 3 and sets 0x904AA8 bit 7 (BattleObj_SwingCue, BattleObj_SpecialCue: battle_obj_states.cpp:290, battle_e3.cpp:1075), the bit by which Battle_CalcDamage makes the damage 2v + plain / 4, never 0 (battle_damage.cpp:546-554), and which EnemyOp_RollBit80Task 0x4376F0 sets for an enemy; raised by 0x1E and capped at 100 with +0xBB (battle_e6.cpp:877) |
 | `+0xC0` | u16 | `base_max_hp` | record +0x40, the base copy of +0xA0 (char-stats.md 2; item-use.md 2; battle_e5.cpp:405-425) |
 | `+0xC2` | u16 | `base_max_ap` | record +0x42 |
 | `+0xC4` | u16 | `base_atk` | record +0x44 |
 | `+0xC6` | u16 | `base_def` | record +0x46 |
 | `+0xC8` | u16 | `base_agi` | record +0x48 |
 | `+0xCA` | u16 | `base_intel` | record +0x4A |
+| `+0xE0` | u8[4][10] | `ability_lists` | record +0x60..+0x87, four ten-byte ability lists by type: AbilityList_ForType 0x591EC0 picks +0xE0 / +0xEA / +0xF4 / +0xFE by the ability's +0x11 & 3 (0x591F01; scena_sx2.cpp:264-272; PSX 0x80167514) and AbilityList_Add 0x590C90 files an id there; Battle_MemberListFull 0x453AC0 answers 1 when list 3 has no 0 entry, and Battle_MemberRollByAction 0x453910 refuses its roll then (battle_e6.cpp:902, 927; PSX 0x800A77E4) |
 | `+0x124` | u8 | `command` | battle: the command auto-battle gives (docs/battle_e4.md); field: the script context's first byte (area_entry_callees.h kRecContext). ActionRecord::command / MemberFieldTail::context |
 | `+0x125` | u8 | `command_kind` | ActionRecord::command_kind (was queued_kind; C3 naming): 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand) |
 | `+0x126` | u16 | `queued_id` | category << 8 / id, or the ability id (battle_setup kPQueuedItem; battle_damage kPCommandId) |
@@ -720,11 +737,13 @@ Padding:
 
 - the character record's name (+0..+8, CharRecord::name)
 - character record +0x0B..+0x0F; +0x8B bit 0 "joined" per char-stats.md, no member reader addresses it; +0x8C the experience (CharRecord::exp)
-- armour (battle_setup kPArmour3 names only +0x95)
-- record +0x1D..+0x1F; +0x9E the max-HP scale (battle_e5.cpp:403; char-stats.md 2), not named here
+- +0x9D: record +0x1D (CharRecord::halving); no member reader names it
+- +0x9F: record +0x1F (CharRecord::master); no member reader names it
 - record +0x2C, +0x2D; not named
-- the rest of the character record's effective block: +0xB5..+0xB7 the rest of the nine resistance bytes, +0xB8..+0xBC the five percentage bytes (+0xBA one, battle_e3.cpp:1040; char-stats.md 2); not named here
-- the rest of the base block (record +0x4C..+0x5F) and record +0x60..+0xA3 (CharRecord); not named here
+- +0xB5..+0xB9: the rest of the character record's effective block: +0xB5..+0xB7 the rest of the nine resistance bytes, +0xB8 / +0xB9 the first two of the five percentage bytes +0xB8..+0xBC (char-stats.md 2); not named here
+- +0xBB..+0xBF: the last three percentage bytes (+0xBB raised with +0xBA, battle_e6.cpp:876) and two more of the block; not named here
+- +0xCC..+0xDF: the rest of the base block (record +0x4C..+0x5F); not named here
+- +0x108..+0x123: record +0x88..+0xA3 (CharRecord); not named here
 - zeroed with +0x138 in battle; not named
 - unread
 - unread
@@ -751,9 +770,10 @@ No members of its own: every byte is `SpriteHead`'s.
 | `+0x9C` | u8[8] | `abilities` | EnemyData +0x1C (Battle_CopyEnemyData) |
 | `+0xA4` | u16 | `hp` | (battle_setup kEHp; battle_damage kEHp) |
 | `+0xA6` | u16 | `ap` | (battle_damage kEAp) |
-| `+0xA8` | u16 | `item_a8` | EnemyData +0x30's low word (Battle_CopyEnemyData): an item word, Identify_DrawEnemy hands it to Identify_DrawItem (magic_s12.cpp:448) (C3 naming) |
-| `+0xAA` | u8 | `steal_row` | the steal-rate row, SkillSteal_RateTable[+0xAA], unbounded (magic_steal.cpp SkillSteal_Roll; magic_steal.md) |
-| `+0xAC` | u16 | `item_ac` | EnemyData +0x34's low word: the second item word Identify_DrawEnemy hands to Identify_DrawItem (magic_s12.cpp:450) (C3 naming) |
+| `+0xA8` | u16 | `drop0_item` | drop 0's item, EnemyData +0x30 (Battle_CopyEnemyData): Battle_RollDrops 0x437580 rolls it, SkillSteal_Roll 0x4F5140 steals it, Identify_DrawEnemy hands it to Identify_DrawItem (magic_s12.cpp:448). Was item_a8 (C3 naming) |
+| `+0xAA` | u8 | `drop0_row` | drop 0's chance row: Battle_RollDrops' {0, 0, 1, 3, 7, 0x1F, 0x7F, 0xFF}[+0xAA] (battle_flow.cpp; 0x4375CA esi 0xA8 + 2), SkillSteal_RateTable[+0xAA] for the steal (magic_steal.cpp; magic_steal.md); set by AI op 5 (battle_e5.cpp:216). Was steal_row (records audit N2) |
+| `+0xAC` | u16 | `drop1_item` | drop 1's item, EnemyData +0x34: Battle_RollDrops' second, Identify_DrawEnemy's second item word (magic_s12.cpp:450). Was item_ac (C3 naming) |
+| `+0xAE` | u8 | `drop1_row` | drop 1's chance row: Battle_RollDrops' class byte for +0xAC (0x4375CA, the second pass esi 0xAC + 2); set by AI op 5 (battle_e5.cpp:217); raised with +0xAA once by the marker bit of +0xAF (rest_3c.md Effect_EnemyRaiseAAAE) (records audit N2) |
 | `+0xB0` | u16 | `max_hp` | (battle_setup kEMaxHp) |
 | `+0xB2` | u16 | `max_ap` | (battle_damage kEMaxAp) |
 | `+0xB4` | u16 | `atk` | the stat copy's +4 (battle_damage kAttackerAtk; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4)) |
@@ -793,7 +813,7 @@ No members of its own: every byte is `SpriteHead`'s.
 Padding:
 
 - +0xAB: the rest of the EnemyData +0x30 dword; its marker bit raises +0xAA once (rest_3c.md Effect_EnemyRaiseAAAE); not named
-- +0xAE, +0xAF: the rest of the EnemyData +0x34 dword; +0xAE raised with +0xAA, each once by the marker bits of +0xAB / +0xAF (rest_3c.md Effect_EnemyRaiseAAAE); not named
+- +0xAF: the rest of the EnemyData +0x34 dword; its marker bit raises +0xAE once (rest_3c.md Effect_EnemyRaiseAAAE); not named
 - the stat copy's +0xC..+0xE; not named
 - the rest of the stat block copy (+0xC5..+0xC7 the last resistance bytes, Battle_CopyEnemyData; +0xC8.. the percentage bytes as the character record's +0x38..); not named
 - the rest of the base copy (+0xDF.. the resistance bytes, Battle_CopyEnemyData); not named
@@ -820,6 +840,10 @@ Padding:
 | `+0x24` | u16 | `hp` | (enemy_ai.py) |
 | `+0x26` | u16 | `ap` |  |
 | `+0x28` | u16[4] | `stats` | names hypotheses (enemy_ai.py) |
+| `+0x30` | u16 | `drop0_item` | to BattleEnemy::drop0_item (+0xA8), copied with +0x32 / +0x33 as one dword (Battle_CopyEnemyData) |
+| `+0x32` | u8 | `drop0_row` | to BattleEnemy::drop0_row (+0xAA) |
+| `+0x34` | u16 | `drop1_item` | to BattleEnemy::drop1_item (+0xAC), likewise |
+| `+0x36` | u8 | `drop1_row` | to BattleEnemy::drop1_row (+0xAE) |
 | `+0x38` | u8[64] | `ai_rows` | four rows of 16 bytes (enemy_ai_data.md 1; enemy_ai.py) |
 | `+0x78` | s8[4] | `place` | x / z offsets by side, copied or negated to BattleEnemy +0xF2 / +0xF3 (Battle_SetEnemyOffset, battle_sprites.cpp:997-1007) |
 | `+0x7C` | u8[9] | `resist` | to BattleEnemy +0xDF.. and +0xBF.. (Battle_CopyEnemyData) |
@@ -834,7 +858,8 @@ Padding:
 Padding:
 
 - unread
-- two dwords copied to BattleEnemy +0xA8 / +0xAC, unnamed
+- +0x33: to BattleEnemy +0xAB with the dword; not named
+- +0x37: to BattleEnemy +0xAF with the dword; not named
 
 ### `BattleTask` (`0x84` bytes, from `SpriteHead`)
 

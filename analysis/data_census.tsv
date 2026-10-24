@@ -4849,28 +4849,28 @@ site	src/game/battle_e2.cpp	752	global	At	Cond_Flags_addr + 0xd0	0x904060	-	insi
 site	src/game/battle_e2.cpp	752	record	At	weights + (UL(At(Cond_Flags_addr + 0xd0)) & 0xFF) * n + m	-	table=0x64b18c	-	-	-	0
 site	src/game/battle_e2.cpp	759	global	At	Cond_Flags_addr + 0xd0	0x904060	-	inside	Cond_Flags+0xd0	unsigned char	0
 site	src/game/battle_e2.cpp	759	record	At	weights + (UL(At(Cond_Flags_addr + 0xd0)) & 0xFF) * n + m	-	table=0x64b18c	-	-	-	0
-site	src/game/battle_e2.cpp	825	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	840	global	At	at::kAbilities	0x65c4d8	-	exact	NameTable_Abilities	-	0
-site	src/game/battle_e2.cpp	866	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/battle_e2.cpp	891	global	At	at::kActKinds	0x65563c	-	none	-	-	0
-site	src/game/battle_e2.cpp	892	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	893	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_e2.cpp	895	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	900	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	903	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	907	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	911	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	915	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	919	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	925	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	928	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/battle_e2.cpp	935	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/battle_e2.cpp	937	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	939	global	B	at::kActKind	0x904b35	-	none	-	-	0
-site	src/game/battle_e2.cpp	1005	global	At	at::kEnemyDataCount	0x8c5652	-	none	-	-	0
-site	src/game/battle_e2.cpp	1045	global	B	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/battle_e2.cpp	1047	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
-site	src/game/battle_e2.cpp	1047	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
+site	src/game/battle_e2.cpp	826	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	841	global	At	at::kAbilities	0x65c4d8	-	exact	NameTable_Abilities	-	0
+site	src/game/battle_e2.cpp	867	global	B	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/battle_e2.cpp	892	global	At	at::kActKinds	0x65563c	-	none	-	-	0
+site	src/game/battle_e2.cpp	893	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	894	global	At	at::kRoundFlags	0x904aa8	-	none	-	-	0
+site	src/game/battle_e2.cpp	896	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	901	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	904	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	908	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	912	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	916	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	920	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	926	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	929	global	B	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/battle_e2.cpp	936	global	B	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/battle_e2.cpp	938	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	940	global	B	at::kActKind	0x904b35	-	none	-	-	0
+site	src/game/battle_e2.cpp	1006	global	At	at::kEnemyDataCount	0x8c5652	-	none	-	-	0
+site	src/game/battle_e2.cpp	1046	global	B	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/battle_e2.cpp	1048	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
+site	src/game/battle_e2.cpp	1048	global	B	at::kRoundFlags	0x904aa8	-	none	-	-	0
 site	src/game/battle_e2_fuzz.cpp	219	record	Long	s + 0x10	-	-	-	-	-	1
 site	src/game/battle_e2_fuzz.cpp	219	record	Long	s + 0xC	-	-	-	-	-	1
 site	src/game/battle_e2_fuzz.cpp	221	record	SetLong	s + 0x10	-	-	-	-	-	1
@@ -19455,39 +19455,39 @@ site	src/game/map_field_objects.cpp	421	global	At	kFlatColour0	0x8cb59a	-	none	-
 site	src/game/map_field_objects.cpp	421	record	Word	entry + 4	-	param	-	-	-	0
 site	src/game/map_field_objects.cpp	422	global	At	kFlatColour1	0x8cb59c	-	none	-	-	0
 site	src/game/map_field_objects.cpp	422	record	Word	entry + 8	-	param	-	-	-	0
-site	src/game/map_field_objects.cpp	433	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	435	global	At	AreaMap_Header_addr + 0x2	0x8cb582	-	inside	AreaMap_Header+0x2	unsigned char	0
-site	src/game/map_field_objects.cpp	436	record	Dword	entry + 4 + (flag == 0 ? 4 : 0)	-	-	-	-	-	0
-site	src/game/map_field_objects.cpp	437	global	At	AreaMap_Header_addr + ((d & 0xFFu) * width + ((d >> 8) & 0xF	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	439	global	At	AreaMap_Header_addr + (static_cast<U>(half) + offset + tile)	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	471	global	At	CharacterRecords_addr + (member & 0xFFu) * kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
-site	src/game/map_field_objects.cpp	475	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	477	global	At	kFormat3d	0x64e324	-	none	-	-	0
-site	src/game/map_field_objects.cpp	497	global	At	kFormatLeft	0x6639b0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	500	global	At	kFormatRight	0x6639a8	-	none	-	-	0
-site	src/game/map_field_objects.cpp	510	global	At	kFormatLeft	0x6639b0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	512	global	At	kFormatRight	0x6639a8	-	none	-	-	0
-site	src/game/map_field_objects.cpp	514	global	At	Menu_MemberPieces_addr	0x6632c8	-	exact	Menu_MemberPieces	unsigned char	0
-site	src/game/map_field_objects.cpp	553	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	555	global	Byte	kClockHours	0x9040c8	-	none	-	-	0
-site	src/game/map_field_objects.cpp	555	global	At	kFormat02d	0x65306c	-	none	-	-	0
-site	src/game/map_field_objects.cpp	557	global	At	kFormat02d	0x65306c	-	none	-	-	0
-site	src/game/map_field_objects.cpp	560	global	At	kColonText	0x6637e0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	434	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	436	global	At	AreaMap_Header_addr + 0x2	0x8cb582	-	inside	AreaMap_Header+0x2	unsigned char	0
+site	src/game/map_field_objects.cpp	437	record	Dword	entry + 4 + (flag == 0 ? 4 : 0)	-	-	-	-	-	0
+site	src/game/map_field_objects.cpp	438	global	At	AreaMap_Header_addr + ((d & 0xFFu) * width + ((d >> 8) & 0xF	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	440	global	At	AreaMap_Header_addr + (static_cast<U>(half) + offset + tile)	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	472	global	At	CharacterRecords_addr + (member & 0xFFu) * kCharStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
+site	src/game/map_field_objects.cpp	476	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	478	global	At	kFormat3d	0x64e324	-	none	-	-	0
+site	src/game/map_field_objects.cpp	498	global	At	kFormatLeft	0x6639b0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	501	global	At	kFormatRight	0x6639a8	-	none	-	-	0
+site	src/game/map_field_objects.cpp	511	global	At	kFormatLeft	0x6639b0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	513	global	At	kFormatRight	0x6639a8	-	none	-	-	0
+site	src/game/map_field_objects.cpp	515	global	At	Menu_MemberPieces_addr	0x6632c8	-	exact	Menu_MemberPieces	unsigned char	0
+site	src/game/map_field_objects.cpp	554	global	At	kPrintBuf	0x904ba0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	556	global	Byte	kClockHours	0x9040c8	-	none	-	-	0
+site	src/game/map_field_objects.cpp	556	global	At	kFormat02d	0x65306c	-	none	-	-	0
+site	src/game/map_field_objects.cpp	558	global	At	kFormat02d	0x65306c	-	none	-	-	0
 site	src/game/map_field_objects.cpp	561	global	At	kColonText	0x6637e0	-	none	-	-	0
-site	src/game/map_field_objects.cpp	563	global	At	Menu_PlayTimePieces_addr + 0x18	0x6633cc	-	inside	Menu_PlayTimePieces+0x18	unsigned char	0
-site	src/game/map_field_objects.cpp	566	global	At	Menu_PlayTimePieces_addr	0x6633b4	-	exact	Menu_PlayTimePieces	unsigned char	0
-site	src/game/map_field_objects.cpp	568	global	At	Menu_PlayTimePieces_addr + 0xc	0x6633c0	-	inside	Menu_PlayTimePieces+0xc	unsigned char	0
-site	src/game/map_field_objects.cpp	586	record	Byte	at::OpLengthsAt() + (c >> 4)	-	via=OpLengthsAt	-	-	-	0
-site	src/game/map_field_objects.cpp	608	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
-site	src/game/map_field_objects.cpp	609	record	At	S16(static_cast<U>(x)) + Dword(At(at::BytesAt())) + row	-	via=S16	-	-	-	0
-site	src/game/map_field_objects.cpp	632	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	0
-site	src/game/map_field_objects.cpp	633	global	At	Field_ActiveMember_addr	0x9035a4	-	exact	Field_ActiveMember	unsigned char *	0
-site	src/game/map_field_objects.cpp	639	global	At	Sprite_Objects_addr + 0x8c + static_cast<std::uint32_t>(stat	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	644	global	At	Sprite_Objects_addr + 0x90 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	645	global	At	Sprite_Objects_addr + 0x94 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	655	global	At	Sprite_Objects_addr + 0x88 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	656	global	At	Sprite_Objects_addr + 0x84 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/map_field_objects.cpp	657	global	At	Sprite_Objects_addr + 0xa0 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	562	global	At	kColonText	0x6637e0	-	none	-	-	0
+site	src/game/map_field_objects.cpp	564	global	At	Menu_PlayTimePieces_addr + 0x18	0x6633cc	-	inside	Menu_PlayTimePieces+0x18	unsigned char	0
+site	src/game/map_field_objects.cpp	567	global	At	Menu_PlayTimePieces_addr	0x6633b4	-	exact	Menu_PlayTimePieces	unsigned char	0
+site	src/game/map_field_objects.cpp	569	global	At	Menu_PlayTimePieces_addr + 0xc	0x6633c0	-	inside	Menu_PlayTimePieces+0xc	unsigned char	0
+site	src/game/map_field_objects.cpp	587	record	Byte	at::OpLengthsAt() + (c >> 4)	-	via=OpLengthsAt	-	-	-	0
+site	src/game/map_field_objects.cpp	609	global	At	AreaMap_Header_addr	0x8cb580	-	exact	AreaMap_Header	unsigned char	0
+site	src/game/map_field_objects.cpp	610	record	At	S16(static_cast<U>(x)) + Dword(At(at::BytesAt())) + row	-	via=S16	-	-	-	0
+site	src/game/map_field_objects.cpp	633	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	0
+site	src/game/map_field_objects.cpp	634	global	At	Field_ActiveMember_addr	0x9035a4	-	exact	Field_ActiveMember	unsigned char *	0
+site	src/game/map_field_objects.cpp	640	global	At	Sprite_Objects_addr + 0x8c + static_cast<std::uint32_t>(stat	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	645	global	At	Sprite_Objects_addr + 0x90 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	646	global	At	Sprite_Objects_addr + 0x94 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	656	global	At	Sprite_Objects_addr + 0x88 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	657	global	At	Sprite_Objects_addr + 0x84 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/map_field_objects.cpp	658	global	At	Sprite_Objects_addr + 0xa0 + n	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
 site	src/game/map_field_objects_fuzz.cpp	161	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	1
 site	src/game/map_field_objects_fuzz.cpp	162	global	At	kScratchX_addr	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/map_field_objects_fuzz.cpp	168	record	At	w.at + byte	-	-	-	-	-	1
@@ -30962,7 +30962,7 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count stride_definitions	445
 #count stride_names	92
 #count stride_values	34
-#count static_assert_offsetof_sizeof	748
+#count static_assert_offsetof_sizeof	757
 #count symbols_data	3248
 #count symbols_data_ctype	3164
 #count symbols_data_count	2415

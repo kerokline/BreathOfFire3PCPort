@@ -646,7 +646,7 @@ extern "C" const unsigned char* __cdecl WorldMap_ExitRecords(void) {
 // _FadeIn are 0 and 1)
 // ===========================================================================
 
-// original 0x462F10 (cdecl (semi)): a draw mode (0, 0, page 0xDD, 0) committed
+// original 0x462F10 (cdecl (semi); PSX 0x801F7134): a draw mode (0, 0, page 0xDD, 0) committed
 // (+0x29, 0xC); a SPRT at (32.0, 32.0), u 0, v 0x20, CLUT word 0x7A80, w 0x100,
 // h 0x6E8, the colour +0x5D..+0x5F, Gpu_SetShadeTex 0, semi-transparency the
 // argument's byte; committed (+0x29, 0x1C). PSX twin 0x801F7134 (a SCENA
@@ -1166,7 +1166,7 @@ extern "C" void __cdecl EffectKind0B_Attach(void) {
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
-// original 0x464140 (EffectKind0B_States[4]): the height word +0x3E up 0x20; the
+// original 0x464140 (EffectKind0B_States[4]; PSX 0x801F8AB8): the height word +0x3E up 0x20; the
 // point (+0x34, +0x38, +0x3C) projected into +0x74 (EffectGte_ProjectPoint); at
 // +0x5D 0 Effect_Release; else the colour down 4, +6 up one when +9 & 7 is 0, the
 // quad drawn. PSX twin 0x801F8AB8 (a SCENA overlay).
@@ -1182,7 +1182,7 @@ extern "C" void __cdecl EffectKind0B_Follow(void) {
     SH_CALL(EffectKind0B_DrawQuad)();
 }
 
-// original 0x4641D0 (void, Sprite_Current): a POLY_FT4 square of side +6 centred
+// original 0x4641D0 (void, Sprite_Current; PSX 0x801F8BCC): a POLY_FT4 square of side +6 centred
 // on +0x74 / +0x78 less h = +6 >> 1 (x87: (x - h), (x - h) + side), the colour
 // +0x5D..+0x5F, the depth +0x7C on each corner (copied through the FPU), u / v
 // (0xE0, 0x30)-(0xFF, 0x50), Gpu_GetClut(0xA0, 0x1E3), Gpu_GetTPage(0, 1, 0x2C0,

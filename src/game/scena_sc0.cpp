@@ -143,7 +143,7 @@ extern "C" void __cdecl Scena00_Start(void) {
     MoveScript_PartyRecords[0x62] = 1;
 }
 
-// original 0x537FE0: state 1, the set-up of the area just entered, then state
+// original 0x537FE0 (PSX 0x801F92DC): state 1, the set-up of the area just entered, then state
 // 2. Area 1: Party_DropIn(0); with 0x90384A 0 a kind-0x10 effect, the camera's
 // third angle back 0x155 and (unless 0x90384A is 3, read again after the
 // effect) 0x90384A and the step 0; with 0x90384A 3 the angle on 0x155 and
@@ -235,7 +235,7 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
     MoveScript_PartyRecords[0x62] = 2;
 }
 
-// original 0x5381E0: area 2's set-up. Once (flag 2): the counter dword 0,
+// original 0x5381E0 (PSX 0x801F9644): area 2's set-up. Once (flag 2): the counter dword 0,
 // elevation 0x300, Kind2_Place(0), the first camera angle on 0xAA, a
 // kind-0x13 effect at (that angle - 0xAA, the second, the third) mode 0x40,
 // ObjTrio_SetBit40, ObjTrio 0's +0x34 / +0x38 to (0x330000, 0x400000), the
@@ -264,7 +264,7 @@ extern "C" void __cdecl Scena00_Area02(void) {
     Field_Kind2Z = 0x1B8000;
 }
 
-// original 0x538300: area 0x18's set-up by Cond_ByteFD (a five-entry jump
+// original 0x538300 (PSX 0x801F9868): area 0x18's set-up by Cond_ByteFD (a five-entry jump
 // table, 0..4): 0 - the counter 0 and, unless flag 6, run 8 step 0; 1 -
 // unless flag 3 (then the CLUT rows copied, ClutStrip dirty, and Party_DropIn(1)
 // with the pass flags 0x1F and the counter 0 unless flag 5, else script flag

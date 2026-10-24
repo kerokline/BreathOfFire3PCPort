@@ -229,7 +229,7 @@ extern "C" void __cdecl Kind2_Place(unsigned char script) {
     k2[3] = 0;
 }
 
-// original 0x578C10: a step's move of Sprite_Current toward `direction`
+// original 0x578C10 (PSX 0x801ACBA8): a step's move of Sprite_Current toward `direction`
 // (PSX FUN_801ACBA8), the twin of MoveCmd_MoveKind2 for every other object:
 // speed = Field_MoveSpeeds[object +4]; the frame count +9 = 0x20 for
 // directions 2 and 6, else 0x10, divided by the speed; the velocity +0xC /

@@ -133,7 +133,7 @@ void DrawNumber(const unsigned char* s) {
 // (0x46BB50 FC1's, then these three)
 // ===========================================================================
 
-// original 0x46BBF0: kind 0x30's state 1, waiting to be pushed. Game_Mode 1:
+// original 0x46BBF0 (PSX 0x8019DCC0): kind 0x30's state 1, waiting to be pushed. Game_Mode 1:
 // nothing but the draw. Else Field_Request 5: EffectKind30_FreeCells, then the
 // draw. Else with +0xB set: +8 the leader's facing 0x802D48, the step +0xC /
 // +0x10 twice the facing's unit (0x6696DC / 0x6696E0 rows, the byte
@@ -185,7 +185,7 @@ extern "C" void __cdecl EffectKind30_Push(void) {
     if (Field_Request != 3) SH_CALL(Sprite_UpdateScreenA)();
 }
 
-// original 0x46BD10: kind 0x30's state 2, sliding. +9 down; x / z moved by the
+// original 0x46BD10 (PSX 0x8019DEE4): kind 0x30's state 2, sliding. +9 down; x / z moved by the
 // step +0xC / +0x10. At +9 0: in area 0x54 story flag 0x36 set when it rests
 // at exactly (0x118000, 0x4A8000), cleared anywhere else; EffectKind30_
 // ClaimCells, +0xB 0, +1 back to 1. Then Sprite_UpdateScreenA (a tail jump).
@@ -212,7 +212,7 @@ extern "C" void __cdecl EffectKind30_Slide(void) {
     SH_CALL(Sprite_UpdateScreenA)();
 }
 
-// original 0x46BDA0: kind 0x30's state 3, shattering. +9 down; not yet 0:
+// original 0x46BDA0 (PSX 0x8019DFD4): kind 0x30's state 3, shattering. +9 down; not yet 0:
 // EffectKind30_ShardsStep, _SparksDraw, Sprite_UpdateScreenA (a tail jump).
 // At 0: in area 0x92 story flag 0x44 set; Effect_Release (a tail jump).
 // PSX 0x8019DFD4 (gap67).
@@ -229,7 +229,7 @@ extern "C" void __cdecl EffectKind30_Shatter(void) {
     SH_CALL(Effect_Release)();
 }
 
-// original 0x46BDF0: whether the way to (x, z) is blocked - al 1 or 0 (the
+// original 0x46BDF0 (PSX 0x8019E05C): whether the way to (x, z) is blocked - al 1 or 0 (the
 // rest of eax left). Sprite_ObjectAt(x, z, 1): an object there is touched
 // (+0x80 bit 0; the answer taken unsigned) and the test goes on. Then the four
 // cells from (x >> 16, z >> 16), in the order (0, 0), (1, 0), (0, 1), (1, 1):
@@ -257,7 +257,7 @@ extern "C" unsigned char __cdecl EffectKind30_WayBlocked(long x, long z) {
     return (h1 != h0 || h2 != h0 || h3 != h0) ? 1 : 0;
 }
 
-// original 0x46BF40: whether the area byte of cell (x, z) (AreaMap_ByteAt, 16
+// original 0x46BF40 (PSX 0x8019E214): whether the area byte of cell (x, z) (AreaMap_ByteAt, 16
 // bits each) blocks - al 0 for 0, 0xC0, 0x20 and the rows 0x80..0x8F and
 // 0xA0..0xAF, else 1 (the rest of eax AreaMap_ByteAt's). Called by
 // EffectKind30_WayBlocked. PSX 0x8019E214 (gap67).
@@ -269,7 +269,7 @@ extern "C" unsigned char __cdecl EffectKind30_CellSolid(unsigned x, unsigned z) 
     return 1;
 }
 
-// original 0x46BF80: the cells the object rests on claimed - its cell (x, z)
+// original 0x46BF80 (PSX 0x8019E278): the cells the object rests on claimed - its cell (x, z)
 // the high words, and (x + 1, z), (x, z + 1), (x + 1, z + 1) where x's / z's
 // fraction (word +0x34 / +0x38) is not 0: each AreaMap_SetHeight(cell, 0x10),
 // its old area byte (AreaMap_ByteAt) into byte 0, 1, 2, 3 of the dword +0x14
@@ -317,7 +317,7 @@ extern "C" void __cdecl EffectKind30_ClaimCells(void) {
     }
 }
 
-// original 0x46C100: EffectKind30_ClaimCells undone - the same cells, each
+// original 0x46C100 (PSX 0x8019E4C4): EffectKind30_ClaimCells undone - the same cells, each
 // AreaMap_SetHeight(cell, 0) and AreaMap_SetByte(cell, byte 0 / 1 / 2 / 3 of
 // the dword +0x14, read after the height call). EffectKind30_Push's.
 // PSX 0x8019E4C4 (gap67).
@@ -346,7 +346,7 @@ extern "C" void __cdecl EffectKind30_FreeCells(void) {
     }
 }
 
-// original 0x46C200: the shards set up from the model *(+0x50) (read once):
+// original 0x46C200 (PSX 0x8019E650): the shards set up from the model *(+0x50) (read once):
 // for each of its 24 faces of 0x28 bytes (four vertices of three s16 at +2,
 // +8, +0xE, +0x14), shard i (EffectKind30_Shards + 0x38 i) gets the centre
 // (+0, +2, +4: each axis' four s16 summed as ints, >> 2), the four vertices
@@ -379,7 +379,7 @@ extern "C" void __cdecl EffectKind30_ShardsInit(void) {
     }
 }
 
-// original 0x46C310: the shards a frame on - each: +0xC up by 2 (a fall), the
+// original 0x46C310 (PSX 0x8019E808): the shards a frame on - each: +0xC up by 2 (a fall), the
 // centre moved by the velocity (+0 by +8, +4 by the new +0xC, +2 by +0xA, all
 // 16-bit), then EffectKind30_ShardTumble(the shard, face i of the model
 // *(+0x50), read once). EffectKind30_Shatter's and the engine's 0x46D770.
@@ -397,7 +397,7 @@ extern "C" void __cdecl EffectKind30_ShardsStep(void) {
     }
 }
 
-// original 0x46C360: one shard turned to new angles and its face rebuilt. Under
+// original 0x46C360 (PSX 0x8019E8C8): one shard turned to new angles and its face rebuilt. Under
 // Gte_PushMatrix / Gte_PopMatrix: the angles +0x10 / +0x12 / +0x14 each Rand
 // & 0xFC0; Gte_RotMatrix of them into a stack MATRIX, its translation zero,
 // Gte_SetTransMatrix and Gte_SetRotMatrix of it; each of the four relative
@@ -532,11 +532,11 @@ extern "C" void __cdecl EffectKind30_SparkQuad(const long* point, unsigned size,
 // 4 * +1], 6 entries (the five below and FC1's 0x46A310). No PSX twin paired.
 extern "C" void __cdecl EffectKind34_Run(void) { Run("EffectKind34_Run", AddressOf(EffectKind34_Variants), 6, 1); }
 
-// original 0x46C750: variant 0 - jmp [EffectKind34_V0States + 4 * +2], 4
+// original 0x46C750 (PSX 0x8019EE18): variant 0 - jmp [EffectKind34_V0States + 4 * +2], 4
 // entries. PSX 0x8019EE18 (table-anchored).
 extern "C" void __cdecl EffectKind34_V0Run(void) { Run("EffectKind34_V0Run", AddressOf(EffectKind34_V0States), 4, 2); }
 
-// original 0x46C770: variant 0's state 0, a burst: ten times Effect_FindFree
+// original 0x46C770 (PSX 0x8019EE5C): variant 0's state 0, a burst: ten times Effect_FindFree
 // and, for each record it gives, +0 1, +5 0x34, +2 2 (variant 0 at state 2:
 // the +1 a released record keeps, 0), +6 the count 0..9, x / z / height from
 // Sprite_Current (read after each find); then Sound_PlayEffect(0x10C) and, with
@@ -565,14 +565,14 @@ extern "C" void __cdecl EffectKind34_V0Burst(void) {
     s->step = static_cast<unsigned char>(s->step + 1);
 }
 
-// original 0x46C810: variant 0's state 1: Camera_Distance 0, Effect_Release (a
+// original 0x46C810 (PSX 0x8019EF94): variant 0's state 1: Camera_Distance 0, Effect_Release (a
 // tail jump). PSX 0x8019EF94 (table-anchored).
 extern "C" void __cdecl EffectKind34_V0BurstEnd(void) {
     Camera_Distance = 0;
     SH_CALL(Effect_Release)();
 }
 
-// original 0x46C820: variant 0's state 2, a piece of debris set up.
+// original 0x46C820 (PSX 0x8019EFBC): variant 0's state 2, a piece of debris set up.
 // Sprite_SetAnimationBank(0x212 when Game_AreaNumber is one of the nine bytes
 // EffectKind34_V0Areas, else 0x1B); al not 0 - Effect_Release (a tail jump).
 // Else the height word +0x3E up Rand & 0x7F (through the pointer taken before
@@ -642,7 +642,7 @@ extern "C" void __cdecl EffectKind34_V0DebrisStart(void) {
     s->step = static_cast<unsigned char>(s->step + 1);
 }
 
-// original 0x46C980: variant 0's state 3, the debris flying: x, z, height
+// original 0x46C980 (PSX 0x8019F1A8): variant 0's state 3, the debris flying: x, z, height
 // dwords by +0xC, +0x10, +0x14; Sprite_ScriptTick; +9 counting down with a
 // draw (Sprite_UpdateScreenSlot) each frame, then +0xA down with a draw on odd
 // Frame_Counter only; both 0: Effect_Release. PSX 0x8019F1A8 (table-anchored).
@@ -668,7 +668,7 @@ extern "C" void __cdecl EffectKind34_V0DebrisFly(void) {
     SH_CALL(Effect_Release)();
 }
 
-// original 0x46C9F0: variant 1 - jmp [EffectKind34_V1States + 4 * +2], 2
+// original 0x46C9F0 (PSX 0x8019F26C): variant 1 - jmp [EffectKind34_V1States + 4 * +2], 2
 // entries. PSX 0x8019F26C (table-anchored).
 extern "C" void __cdecl EffectKind34_V1Run(void) { Run("EffectKind34_V1Run", AddressOf(EffectKind34_V1States), 2, 2); }
 
@@ -688,7 +688,7 @@ void ClearTints(unsigned char* s) {
     s[0x5F] = 0;
 }
 
-// original 0x46CA10: variant 1's state 0: the piece bank (0x18), the rise
+// original 0x46CA10 (PSX 0x8019F2B0): variant 1's state 0: the piece bank (0x18), the rise
 // +0x14 0x40, the pull +0x20 -8, +0x5D..+0x5F 0, Sprite_SetAnimation(8), +2 up.
 // Spawned by EffectKind3A_Hit. PSX 0x8019F2B0 (gap74).
 extern "C" void __cdecl EffectKind34_V1Start(void) {
@@ -701,7 +701,7 @@ extern "C" void __cdecl EffectKind34_V1Start(void) {
     rv::As<records::EffectObject>(S())->step = static_cast<unsigned char>(rv::As<records::EffectObject>(S())->step + 1);
 }
 
-// original 0x46CA90: variant 1's state 1: +0x14 += +0x20, the height word
+// original 0x46CA90 (PSX 0x8019F374): variant 1's state 1: +0x14 += +0x20, the height word
 // +0x3E += +0x14's low word; Sprite_ScriptTick; the ground AreaMap_Elevation(x,
 // z). The height at or below it (s16): Effect_Release; more than 0x100 above:
 // drawn (Sprite_UpdateScreenSlot); else drawn on odd Frame_Counter. PSX
@@ -726,11 +726,11 @@ extern "C" void __cdecl EffectKind34_V1Fall(void) {
     if ((Frame_Counter & 1) != 0) SH_CALL(Sprite_UpdateScreenSlot)();
 }
 
-// original 0x46CB00: variant 2 - jmp [EffectKind34_V2States + 4 * +2], 4
+// original 0x46CB00 (PSX 0x8019F42C): variant 2 - jmp [EffectKind34_V2States + 4 * +2], 4
 // entries. PSX 0x8019F42C (table-anchored).
 extern "C" void __cdecl EffectKind34_V2Run(void) { Run("EffectKind34_V2Run", AddressOf(EffectKind34_V2States), 4, 2); }
 
-// original 0x46CB20: variant 2's state 0: +9 0, +0xA 5 (pieces to make), +2 up.
+// original 0x46CB20 (PSX 0x8019F470): variant 2's state 0: +9 0, +0xA 5 (pieces to make), +2 up.
 // PSX 0x8019F470 (gap74).
 extern "C" void __cdecl EffectKind34_V2Start(void) {
     records::EffectObject* const s = rv::As<records::EffectObject>(S());
@@ -739,7 +739,7 @@ extern "C" void __cdecl EffectKind34_V2Start(void) {
     s->step = static_cast<unsigned char>(s->step + 1);
 }
 
-// original 0x46CB40: variant 2's state 1, a spawner: +9 up; at 4 it is 0 again
+// original 0x46CB40 (PSX 0x8019F4B0): variant 2's state 1, a spawner: +9 up; at 4 it is 0 again
 // and Effect_FindFree's record (if any) becomes a kind-0x34 piece of variant 2
 // at state 2 (+0 1, +5 0x34, +1 2, +2 2) at Sprite_Current's place (read after
 // the find), and +0xA down; at 0, Effect_Release. PSX 0x8019F4B0 (gap74).
@@ -763,7 +763,7 @@ extern "C" void __cdecl EffectKind34_V2Spawn(void) {
     if (S()[0xA] == 0) SH_CALL(Effect_Release)();
 }
 
-// original 0x46CBD0: variant 2's state 2, a piece set up: the piece bank; x and
+// original 0x46CBD0 (PSX 0x8019F5DC): variant 2's state 2, a piece set up: the piece bank; x and
 // z dwords up Rand & 0xFFFF each (through the pointer taken before the call);
 // +0x14 0, +0x20 -8; animation 0xB + (Rand & 3, at most 2); +0x5D..+0x5F 0
 // (after the draw); +2 up. PSX 0x8019F5DC (gap74).
@@ -788,7 +788,7 @@ extern "C" void __cdecl EffectKind34_V2PieceStart(void) {
     rv::As<records::EffectObject>(S())->step = static_cast<unsigned char>(rv::As<records::EffectObject>(S())->step + 1);
 }
 
-// original 0x46CCA0: variant 2's state 3: Sprite_ScriptTick first, then as
+// original 0x46CCA0 (PSX 0x8019F700): variant 2's state 3: Sprite_ScriptTick first, then as
 // EffectKind34_V1Fall's move; the height at or below the ground (s16):
 // Effect_Release, else drawn. PSX 0x8019F700 (gap74).
 extern "C" void __cdecl EffectKind34_V2PieceFall(void) {
@@ -805,11 +805,11 @@ extern "C" void __cdecl EffectKind34_V2PieceFall(void) {
         SH_CALL(Sprite_UpdateScreenSlot)();
 }
 
-// original 0x46CCF0: variant 3 - jmp [EffectKind34_V3States + 4 * +2], 2
+// original 0x46CCF0 (PSX 0x8019F788): variant 3 - jmp [EffectKind34_V3States + 4 * +2], 2
 // entries. PSX 0x8019F788 (table-anchored).
 extern "C" void __cdecl EffectKind34_V3Run(void) { Run("EffectKind34_V3Run", AddressOf(EffectKind34_V3States), 2, 2); }
 
-// original 0x46CD10: variant 3's state 0: the piece bank, +0x14 0, +0x20 -8,
+// original 0x46CD10 (PSX 0x8019F7CC): variant 3's state 0: the piece bank, +0x14 0, +0x20 -8,
 // +0x5D..+0x5F 0, Sprite_SetAnimation(9), +2 up. PSX 0x8019F7CC (gap74).
 extern "C" void __cdecl EffectKind34_V3Start(void) {
     PieceBank();
@@ -821,7 +821,7 @@ extern "C" void __cdecl EffectKind34_V3Start(void) {
     rv::As<records::EffectObject>(S())->step = static_cast<unsigned char>(rv::As<records::EffectObject>(S())->step + 1);
 }
 
-// original 0x46CD90: variant 3's state 1: EffectKind34_V1Fall's move, then
+// original 0x46CD90 (PSX 0x8019F88C): variant 3's state 1: EffectKind34_V1Fall's move, then
 // Sprite_ScriptTick; the height at or above the ground (s16): drawn, else
 // Effect_Release. PSX 0x8019F88C (gap74).
 extern "C" void __cdecl EffectKind34_V3Fall(void) {
@@ -838,7 +838,7 @@ extern "C" void __cdecl EffectKind34_V3Fall(void) {
         SH_CALL(Effect_Release)();
 }
 
-// original 0x46CDE0: variant 4 - jmp [EffectKind34_V4States + 4 * +2], 2
+// original 0x46CDE0 (PSX 0x8019F920): variant 4 - jmp [EffectKind34_V4States + 4 * +2], 2
 // entries. PSX 0x8019F920 (table-anchored).
 extern "C" void __cdecl EffectKind34_V4Run(void) { Run("EffectKind34_V4Run", AddressOf(EffectKind34_V4States), 2, 2); }
 
@@ -911,7 +911,7 @@ extern "C" void __cdecl EffectKind3A_Start(void) {
     s->state = static_cast<unsigned char>(s->state + 1);
 }
 
-// original 0x46CFC0: kind 0x3A's state 1, flying: x / z by the step; the tile
+// original 0x46CFC0 (PSX 0x8019FC28): kind 0x3A's state 1, flying: x / z by the step; the tile
 // word of the area block at the cell (s16 z times the width byte, plus s16 x,
 // plus twice the header's offset word, words from AreaMap_Header) 0 -
 // Effect_Release (a tail jump). EffectKind3A_Hit: a hit - EffectKind3A_
@@ -944,7 +944,7 @@ extern "C" void __cdecl EffectKind3A_Fly(void) {
     if (S()[0xA] == 0) SH_CALL(Effect_Release)();
 }
 
-// original 0x46D080: kind 0x3A's state 2, the landed pose playing out. With
+// original 0x46D080 (PSX 0x8019FD48): kind 0x3A's state 2, the landed pose playing out. With
 // Field_Request set: nothing while +0xB is 0; else Sprite_ScriptTickOnce (al
 // set: +0xB 1) and a draw (Sprite_UpdateScreenSlot) while +0xB is 2. With
 // Field_Request 0: Sprite_ScriptTickOnce; al set or +0xB set - Effect_Release,
@@ -963,7 +963,7 @@ extern "C" void __cdecl EffectKind3A_Wait(void) {
     SH_CALL(Sprite_UpdateScreenSlot)();
 }
 
-// original 0x46D0E0: Sprite_Current drawn with the leader's graphics: +0x24 1,
+// original 0x46D0E0 (PSX 0x8019FE18): Sprite_Current drawn with the leader's graphics: +0x24 1,
 // +0x2C the leader's word +0x2C (0x802D6C), +0x28 2, +0x4C its dword +0x4C
 // (0x802D8C), +0x2B 1, +0x29 its +0x29 (0x802D69), +0x70 0, +0x25 0x1D, +0x26
 // 0, +0x5D..+0x5F 0, +0x5C 0, +0x48 0. eax is left 0; no caller reads it.

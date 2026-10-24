@@ -16091,12 +16091,13 @@ evidence = "disasm 2026-09-25, 0x4337F0..0x433809 (0x1A bytes), cdecl: a 1-entry
 [[func]]
 pc = 0x433810
 name = "BattleFx_FollowOwner"
-psx = 0x800A5360
+psx = 0x801E722C
+psx_overlay = "BATTLE.EMI#3"
 ret = "void"
 params = "void"
 impl = "src/game/battle_fx_tasks.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x433810..0x433969 (0x15A bytes), cdecl: from dword 0x93B940 to Sprite_Current, both re-read for each: +0 or 0x20, +0x48, dwords +0x40 +0x44, words +0x58 +0x5A, +0x4B +0x4A +0x49, dwords +0x4C +0x50 +0x54, +0x27 +0x28 +0x2A, dwords +0x34 +0x38 +0x3C; Sprite_UpdateScreen; call BattleTask_FreeCurrent when the owner's bit 0 is clear; `jmp BattleTask_FreeCurrent` when byte 0x904AA0 is not 1. State 0 of BattleFx_Follow (immediate at 0x4337FD). PSX twin by the catalogue's pairing (not read). Combat route: jumped to."
+evidence = "disasm 2026-09-25, 0x433810..0x433969 (0x15A bytes), cdecl: from dword 0x93B940 to Sprite_Current, both re-read for each: +0 or 0x20, +0x48, dwords +0x40 +0x44, words +0x58 +0x5A, +0x4B +0x4A +0x49, dwords +0x4C +0x50 +0x54, +0x27 +0x28 +0x2A, dwords +0x34 +0x38 +0x3C; Sprite_UpdateScreen; call BattleTask_FreeCurrent when the owner's bit 0 is clear; `jmp BattleTask_FreeCurrent` when byte 0x904AA0 is not 1. State 0 of BattleFx_Follow (immediate at 0x4337FD). PSX twin JP 0x801E722C (BATTLE.EMI#3), read 2026-10-23: the same copies in the same order; the pairing's 0x800A5360 is not it (docs/twin-pairs-check.md). Combat route: jumped to."
 
 [[func]]
 pc = 0x437720
@@ -20232,12 +20233,12 @@ evidence = "disasm 2026-09-25, 0x571A30..0x571A6E (0x3F bytes), cdecl, no calls:
 [[func]]
 pc = 0x571A70
 name = "AreaMap_SetupTexture"
-psx = 0x80158EE4
+psx = 0x80158EBC
 ret = "void"
 params = "const unsigned char *entry"
 impl = "src/game/map_field_objects.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x571A70..0x571AE0 (0x71 bytes), cdecl, no calls: AreaMap_SetupHandlers entry 2. Dword +4 (Cond_ByteFF set) or +8 into the area's texture run at dword (height * width + 1) / 2 (cdq; sar) + offset + tile of AreaMap_Header, tile the header word (byte 0 * width + byte 1 + offset * 2) of dword +0 - MapView_CellTextures' address. PSX FUN_80158EE4 (gap4 pair). World-map route."
+evidence = "disasm 2026-09-25, 0x571A70..0x571AE0 (0x71 bytes), cdecl, no calls: AreaMap_SetupHandlers entry 2. Dword +4 (Cond_ByteFF set) or +8 into the area's texture run at dword (height * width + 1) / 2 (cdq; sar) + offset + tile of AreaMap_Header, tile the header word (byte 0 * width + byte 1 + offset * 2) of dword +0 - MapView_CellTextures' address. PSX 0x80158EBC, read 2026-10-23 (the gap4 pair's 0x80158EE4 is inside it, past the scheduled header loads; docs/twin-pairs-check.md). World-map route."
 
 [[func]]
 pc = 0x573560
@@ -88277,12 +88278,12 @@ name = "BattleEnemy_PickTarget"
 psx = 0x801E2A0C
 psx_overlay = "BATTLE.EMI#3"
 psx_status = "hypothesis"
-psx_evidence = "exe_imm.py pair 2026-10-18, order: between 0x4358D0 and 0x436090 (constants 1.00) (docs/install-gap-pairs.md)"
+psx_evidence = "exe_imm.py pair 2026-10-18, order: between 0x4358D0 and 0x436090 (constants 1.00) (docs/install-gap-pairs.md); its shape agrees, 2026-10-23: kinds 1 and 4, bits 0 and 4 of +0x90, the side codes 0x80 / 0x40 and 0x20"
 ret = "unsigned char"
 params = "unsigned enemy"
 impl = "src/game/battle_e2.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435CF0..0x435E03 (0x114 bytes): by 0x904B35: 1: enemy +0x90 bit 0 BattleEnemy_OtherEnemy (0xFF: Battle_RandomMember), bit 4 Battle_MemberLowestHp, else Battle_RandomMember; 4: by the byte NameTable_Abilities[+0x106 x 24] (0x10: a side code 0xC0 / 0x80 / 0x40; no 0x40: enemy + 3; 0x20 with +0x90 bit 0: BattleEnemy_OtherOrMember; no 0x20 without bit 0: Battle_EnemyLowestHp; else +0x90 bit 4 Battle_MemberLowestHp / Battle_RandomMember); other: enemy +5. PSX twin 0x801E28CC (call-anchored; not read). dragonTransform frame 1,702. docs/battle_e2.md."
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435CF0..0x435E03 (0x114 bytes): by 0x904B35: 1: enemy +0x90 bit 0 BattleEnemy_OtherEnemy (0xFF: Battle_RandomMember), bit 4 Battle_MemberLowestHp, else Battle_RandomMember; 4: by the byte NameTable_Abilities[+0x106 x 24] (0x10: a side code 0xC0 / 0x80 / 0x40; no 0x40: enemy + 3; 0x20 with +0x90 bit 0: BattleEnemy_OtherOrMember; no 0x20 without bit 0: Battle_EnemyLowestHp; else +0x90 bit 4 Battle_MemberLowestHp / Battle_RandomMember); other: enemy +5. Not the pairing's 0x801E28CC (call-anchored), a chooser between two pickers (docs/twin-pairs-check.md). dragonTransform frame 1,702. docs/battle_e2.md."
 
 [[func]]
 pc = 0x435E10
@@ -94353,12 +94354,13 @@ evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind27_Run 0x46FEE
 [[func]]
 pc = 0x528CD0
 name = "LeaderPanel_S1Choose"
-psx = 0x801DA068
+psx = 0x801DA1E8
+psx_overlay = "AREA030.EMI#4"
 ret = "void"
 params = "void"
 impl = "src/game/effect_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x528CD0..0x528D97 (0xC8 bytes): LeaderPanel_Stage1Steps[5] (0x66022C, dispatched by 0x5289A0, not in the cut); FieldPanel_DrawBox3(0x6C, 0x56); Input_Pressed 0x5000 toggles +6 (Sound_PlayEffect 0x100), 0x60 moves +3 up (0x40 sets +6, sound 0x106, else 0x103); Menu_DrawHand(0x70, 0x82 - 16 * +6), FieldPanel_DrawShade, 0x469750(0x14, 0x12, 0x118, 0x13, 0), Text_DrawAt(0x1D, 0x15) of MessagePools + the word 0x803600. PSX twin 0x801DA068 (analysis/pairs_propagated.json, callers; an AREA overlay's copy, unnamed in the sibling), a hypothesis, not read. docs/effect_1e.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x528CD0..0x528D97 (0xC8 bytes): LeaderPanel_Stage1Steps[5] (0x66022C, dispatched by 0x5289A0, not in the cut); FieldPanel_DrawBox3(0x6C, 0x56); Input_Pressed 0x5000 toggles +6 (Sound_PlayEffect 0x100), 0x60 moves +3 up (0x40 sets +6, sound 0x106, else 0x103); Menu_DrawHand(0x70, 0x82 - 16 * +6), FieldPanel_DrawShade, 0x469750(0x14, 0x12, 0x118, 0x13, 0), Text_DrawAt(0x1D, 0x15) of MessagePools + the word 0x803600. PSX twin 0x801DA1E8 (AREA030.EMI#4; the US disc's 0x801DA168): read beside ours 2026-10-23 (tools/twin_bundles.py, docs/twin-pairs-check.md) - the same calls, sounds and box; 0x801DA068, the hypothesis before, is the function ahead of it. docs/effect_1e.md."
 
 [[func]]
 pc = 0x528DA0
@@ -94572,12 +94574,13 @@ evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last in
 [[func]]
 pc = 0x5295F0
 name = "LeaderPanel_S4Run"
-psx = 0x801DB03C
+psx = 0x801DB1C0
+psx_overlay = "AREA030.EMI#4"
 ret = "void"
 params = "void"
 impl = "src/game/effect_1e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x5295F0..0x529854 (0x265 bytes): LeaderPanel_Stage4Steps[2]; 0x6BC71C = 0x6BC71D; record 0 z >= 0x3E8000: records 4 / 1 +6 / +1 = 4, 0 +1 = 0, 5 +1 = 0, 4 +1 = 1, 3 +1 = 7, the picked sprite record +1 = 6, sound 0x203, track 0x2A, animation 0xA, +3 = 3; else by Input_Held / Input_Pressed 0xC000, 0x3000, 0x20: the pose 0x6BC71D, record 5 +0x10 from the s8 +4..+7 of the record 0x939A20 points at, +9, record 5 +0xA, the picked record +0x1C (moved by 0xFE less the record +3, or LeaderPanel_S4Blink), LeaderPanel_S4Pose, animations 0, 7, 8, Sprite_ScriptTick; every way 0x52B1B0. PSX twin 0x801DB03C (analysis/pairs_propagated.json, callers; an AREA overlay's copy, unnamed in the sibling), a hypothesis, not read. docs/effect_1e.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1E, capstone to the last instruction), 0x5295F0..0x529854 (0x265 bytes): LeaderPanel_Stage4Steps[2]; 0x6BC71C = 0x6BC71D; record 0 z >= 0x3E8000: records 4 / 1 +6 / +1 = 4, 0 +1 = 0, 5 +1 = 0, 4 +1 = 1, 3 +1 = 7, the picked sprite record +1 = 6, sound 0x203, track 0x2A, animation 0xA, +3 = 3; else by Input_Held / Input_Pressed 0xC000, 0x3000, 0x20: the pose 0x6BC71D, record 5 +0x10 from the s8 +4..+7 of the record 0x939A20 points at, +9, record 5 +0xA, the picked record +0x1C (moved by 0xFE less the record +3, or LeaderPanel_S4Blink), LeaderPanel_S4Pose, animations 0, 7, 8, Sprite_ScriptTick; every way 0x52B1B0. PSX twin 0x801DB1C0 (AREA030.EMI#4; the US disc's 0x801DB140): read beside ours 2026-10-23 (tools/twin_bundles.py, docs/twin-pairs-check.md) - the same calls, sounds and box; 0x801DB03C, the hypothesis before, is the function ahead of it. docs/effect_1e.md."
 
 [[func]]
 pc = 0x529860

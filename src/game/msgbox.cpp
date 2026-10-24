@@ -1814,7 +1814,7 @@ extern "C" unsigned __cdecl Window_Alloc(unsigned slot, unsigned kind) {
     return slot;
 }
 
-// original 0x516B30. The port's general text draw, 341 callers: it plants the
+// original 0x516B30 (PSX 0x8014F6BC). The port's general text draw, 341 callers: it plants the
 // pen and hands the string to Text_DrawString.
 //
 // As the original has it: x is taken as a WORD and stored to both the pen and

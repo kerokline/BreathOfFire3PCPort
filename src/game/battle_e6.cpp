@@ -195,7 +195,7 @@ void CheckEntries(const char* who, const unsigned char* record, unsigned first, 
 // The transformation
 // ============================================================================
 
-// original 0x451480 (the gene history's step table 0x64ED50, entry 6, by
+// original 0x451480 (PSX 0x800A37D8; the gene history's step table 0x64ED50, entry 6, by
 // 0x904AA4): windows 18 and 19's +3 = 4 and 2, 0x904AA3 = 3, 0x904AA4 = 2.
 extern "C" void __cdecl DragonHistory_Leave(void) {
     WindowRecords[18].state = 4;
@@ -262,7 +262,7 @@ extern "C" void __cdecl DragonForm_Transform(void) {
     BH_CALL(Battle_RecalcStats)(who);
 }
 
-// original 0x451670: the first recipe 0..10 whose three genes the actor holds
+// original 0x451670 (PSX 0x800A3B94): the first recipe 0..10 whose three genes the actor holds
 // (DragonForm_RecipeSlotHeld for each), its group code (0x64ED6C) into
 // 0x675F57, the recipe the answer; at 6, DragonForm_TryPartyRecipe first -
 // its answer when not 0, else recipe 6 is skipped. 0xFF for none.
@@ -284,7 +284,7 @@ extern "C" unsigned char __cdecl DragonForm_FindRecipe(void) {
     }
 }
 
-// original 0x4516F0: recipe `recipe`'s gene `slot` (0x64ED78 + 3 recipe +
+// original 0x4516F0 (PSX 0x800A3C60): recipe `recipe`'s gene `slot` (0x64ED78 + 3 recipe +
 // slot): 1 when it is 0xFF (any) or among the chosen genes, else 0.
 extern "C" unsigned char __cdecl DragonForm_RecipeSlotHeld(unsigned recipe, unsigned slot) {
     const unsigned char gene = At(at::kRecipeGenes)[(recipe & 0xFF) * 3 + (slot & 0xFF)];
@@ -295,7 +295,7 @@ extern "C" unsigned char __cdecl DragonForm_RecipeSlotHeld(unsigned recipe, unsi
     return 0;
 }
 
-// original 0x451750: when a chosen gene is 0x10 and the party's size byte
+// original 0x451750 (PSX 0x800A3CEC): when a chosen gene is 0x10 and the party's size byte
 // 0x904AB1 (read once) is 3, DragonForm_PartyRecipe's answer; else 0.
 extern "C" unsigned char __cdecl DragonForm_TryPartyRecipe(void) {
     const unsigned count = BattleE5_GeneCount;
@@ -393,7 +393,7 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
     BH_CALL(DragonForm_MixAbilities)();
 }
 
-// original 0x451C50: 0x64EEAC's step by a signed sum + 2, held to 0..4.
+// original 0x451C50 (PSX 0x800A45B0): 0x64EEAC's step by a signed sum + 2, held to 0..4.
 extern "C" unsigned char __cdecl DragonForm_StatShift(unsigned sum) {
     std::int32_t i = S8(static_cast<unsigned char>(sum + 2));
     if (i < 0) i = 0;
@@ -414,7 +414,7 @@ void MixByte(unsigned char* record, unsigned at, U cell, unsigned char v) {
 }
 }  // namespace
 
-// original 0x451C80: the actor's nine form bytes (+0xCF .. +0xD7, mirrored
+// original 0x451C80 (PSX 0x800A45FC): the actor's nine form bytes (+0xCF .. +0xD7, mirrored
 // at +0xAF .., kept at 0x939EEA ..): sums 0, 1, 2 through 0x64EEB4, 2, 2, sum
 // 4 through 0x64EEBE, 2, sum 3 through 0x64EEB9 twice - each by the sum + 2
 // held to 0..4. Answers 0.
@@ -433,7 +433,7 @@ extern "C" unsigned char __cdecl DragonForm_SetMixBytes(unsigned s0, unsigned s1
     return 0;
 }
 
-// original 0x451DA0: the mixed form's abilities into the actor's list
+// original 0x451DA0 (PSX 0x800A4820): the mixed form's abilities into the actor's list
 // (+0xF4, ten bytes): the form code's three of 0x64EEC4 to the first 0, then
 // DragonForm_AddAbilityRow by the sums - 0 (and 5, 14 by sums 9 and 3), 1
 // (6), 2 (7), 3 (8), 4 (9), 12, 11, 13 - then 0xD9 and zeros.
@@ -474,7 +474,7 @@ extern "C" void __cdecl DragonForm_MixAbilities(void) {
     EndAbilities(list, count);
 }
 
-// original 0x451FE0: row `row`'s three abilities (0x64EED0 + 3 row) added to
+// original 0x451FE0 (PSX 0x800A4AA8): row `row`'s three abilities (0x64EED0 + 3 row) added to
 // the actor's list at `count` (a 0 ends the row; one already there skipped;
 // at 9 the answer is 9), the new count the answer.
 extern "C" unsigned char __cdecl DragonForm_AddAbilityRow(unsigned row, unsigned count) {
@@ -536,7 +536,7 @@ extern "C" void __cdecl DragonForm_ApplyRecipe(unsigned recipe) {
     EndAbilities(list, n);
 }
 
-// original 0x4523C0: the other members' +0x89 bytes (not the actor, not out
+// original 0x4523C0 (PSX 0x800A4FC4): the other members' +0x89 bytes (not the actor, not out
 // by Battle_ActorIsOut), the first two as a pair tried both ways round: 1 or
 // 8 with 2 or 6 - gene 7 held ? 0xC : 0xB; 2 with 4 or 5 - 0; 4 with 5, 8 or
 // 1 - gene 5 ? 0x12 : 0x11; 5 with 8, 1 or 6 - gene 0xD ? 0x14 : 0x13; 6 with
@@ -590,7 +590,7 @@ extern "C" unsigned char __cdecl DragonGenes_Held(unsigned gene) {
     return 0;
 }
 
-// original 0x4525B0 (called by BE5's Dragon run steps 0x44FFA0, 0x450610,
+// original 0x4525B0 (PSX 0x800A5260; called by BE5's Dragon run steps 0x44FFA0, 0x450610,
 // 0x450700, 0x450E70): 0x904B78 = the chosen genes' costs (0x64EC9C) summed,
 // a byte, stored after each.
 extern "C" void __cdecl DragonGenes_SumCost(void) {
@@ -798,7 +798,7 @@ extern "C" unsigned char __cdecl BattleFxTrail_Start(void) {
 // Stats, rolls, pop-ups
 // ============================================================================
 
-// original 0x453300: an actor's stats rebuilt from the buffs. A member (0..2):
+// original 0x453300 (PSX 0x800A6B30): an actor's stats rebuilt from the buffs. A member (0..2):
 // Battle_RecalcMemberStats(its record + 0x80, actor). An enemy (actor - 3):
 // four words +0xB4.. = 0x446F20(+0xD4.., the s8 buff +0x118.. * 2 + 100),
 // four bytes +0xC9.. = 0x446F80(+0xE9.., +0x11C.. likewise), eight bytes
@@ -836,7 +836,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
     if (static_cast<U>(enemy_rec->flags_114) & 0x2000) enemy_rec->elements[0] = 0;
 }
 
-// original 0x453560: a member's stats rebuilt: `view` (its record + 0x80)
+// original 0x453560 (PSX 0x800A6F1C): a member's stats rebuilt: `view` (its record + 0x80)
 // four words +0x24.. = 0x446F20(+0x44.., the member's s8 buff +0x138.. * 2 +
 // 100), four bytes +0x39.. = 0x446F80(+0x59.., +0x13C..), eight bytes +0x2F..
 // from +0x4F.. (not +0x36); then on the member's record: +0x134 bit 0 and bit
@@ -912,14 +912,14 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     return (static_cast<unsigned>(roll % static_cast<int>(odds)) & 0xFF) == 0 ? 1 : 0;
 }
 
-// original 0x453A90: bit (action & 31) of the dword 0x904088 + 4 (action >> 5)
+// original 0x453A90 (PSX 0x800A77B4): bit (action & 31) of the dword 0x904088 + 4 (action >> 5)
 // set: 1, else 0 (the action's low byte).
 extern "C" unsigned char __cdecl Battle_ActionBitSet(unsigned action) {
     const unsigned a = action & 0xFF;
     return (L(At(Cond_Flags_addr + 0xf8 + (a >> 5) * 4)) >> (a & 31)) & 1 ? 1 : 0;
 }
 
-// original 0x453AC0: 1 when every one of the member's ten bytes +0xFE.. is
+// original 0x453AC0 (PSX 0x800A77E4): 1 when every one of the member's ten bytes +0xFE.. is
 // not 0, else 0.
 extern "C" unsigned char __cdecl Battle_MemberListFull(unsigned member) {
     const unsigned char* const r = Party(member);
@@ -972,14 +972,14 @@ extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
 // Field_Slots (round eleven's debts)
 // ============================================================================
 
-// original 0x454A80: every Field_Slots record (8 of 0x10) whose +0xC is
+// original 0x454A80 (PSX 0x8014E3B0): every Field_Slots record (8 of 0x10) whose +0xC is
 // `object` released (Field_SlotRelease).
 extern "C" void __cdecl Field_SlotsReleaseOwner(const unsigned char* object) {
     for (unsigned i = 0; i < 8; ++i)
         if (L(At(Field_Slots_addr + 0xC + 0x10 * i)) == Addr(object)) BH_CALL(Field_SlotRelease)(i);
 }
 
-// original 0x455290: the first Field_Slots record without +0 bit 0 taken:
+// original 0x455290 (PSX 0x80197CF0): the first Field_Slots record without +0 bit 0 taken:
 // +0 = 1, +0xC = `object`, +4 = `script`, +2 = 0xFF, +3 = the object's
 // +0x27; its index the answer, 0xFF when none is free.
 extern "C" unsigned char __cdecl Field_SlotStart(unsigned char* object, unsigned script) {

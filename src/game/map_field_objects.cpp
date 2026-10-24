@@ -423,7 +423,8 @@ extern "C" void __cdecl AreaMap_SetupFlatColours(const unsigned char* entry) {
     }
 }
 
-// original 0x571A70 (PSX 0x80158EE4, gap4): entry 2, a texture of the area's
+// original 0x571A70 (PSX 0x80158EBC, not the pairing's 0x80158EE4 inside it):
+// entry 2, a texture of the area's
 // run replaced - dword +4 when Cond_ByteFF is set, else +8 - at (height *
 // width + 1) / 2 + offset + tile of the block, tile the word of map (x = byte
 // 1, y = byte 0) as MapView_CellTextures reads it (word y * width + x + offset

@@ -84,7 +84,7 @@ bool HasState20(unsigned member) {
 
 }  // namespace
 
-// original 0x531BD0. The field's copy of the held buttons - with bits 12-13
+// original 0x531BD0 (PSX 0x801BEBBC). The field's copy of the held buttons - with bits 12-13
 // and 14-15 changing places while a member's state byte has bit 0x20. Which
 // members count is Field_InputFlags bit 0: set, any of them; clear, the first,
 // whatever the count says.

@@ -380,7 +380,7 @@ extern "C" unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
     return Key(after);
 }
 
-// original 0x52CDF0: Sprite_UpdateScreenScaled on each of the 30 Sprite_Objects
+// original 0x52CDF0 (PSX 0x801E0A0C): Sprite_UpdateScreenScaled on each of the 30 Sprite_Objects
 // records whose +0 is not 0, each made Sprite_Current first; Sprite_Current is
 // not put back.
 extern "C" void __cdecl Sprite_UpdateAllScaled(void) {
@@ -393,7 +393,7 @@ extern "C" void __cdecl Sprite_UpdateAllScaled(void) {
     }
 }
 
-// original 0x52CE20: bytes +1..+4 of Effect_Objects records 0..6 to 0, in that
+// original 0x52CE20 (PSX 0x801E0A88): bytes +1..+4 of Effect_Objects records 0..6 to 0, in that
 // order record by record; Effect_ReleaseAt(7) .. (19); record 2 +1 = 2.
 extern "C" void __cdecl Effect_ResetFirstSeven(void) {
     for (U record = 0; record <= 6; ++record) {
@@ -445,11 +445,11 @@ extern "C" void __cdecl GameMode8_Frame(void) {
     SH_CALL(Field_DrawFrame)();
 }
 
-// original 0x52CF30: game mode 8's step 3, a tail jump to 0x593950 (the item
+// original 0x52CF30 (PSX 0x801E0C78): game mode 8's step 3, a tail jump to 0x593950 (the item
 // trade's dispatcher by the byte 0x93985C).
 extern "C" void __cdecl GameMode8_TradeStep(void) { SH_AT(void (__cdecl*)(), at::kTradeDispatch)(); }
 
-// original 0x52CF40: the frame game mode 8's step 2 draws while it waits.
+// original 0x52CF40 (PSX 0x801E0C98): the frame game mode 8's step 2 draws while it waits.
 extern "C" void __cdecl GameMode8_WaitFrame(void) {
     SH_CALL(AreaMap_Frame)();
     SH_CALL(Party_UpdateScreens)();
