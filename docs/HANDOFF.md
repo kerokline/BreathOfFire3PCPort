@@ -1,6 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
+**Status:** IN PROGRESS (2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
+2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
 item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
 PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
@@ -46,6 +47,20 @@ and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the t
 hosted cross form).
 
 ## Pick up here
+
+000000. **Issue #121, the lift scene stalling on instant text - not reproduced yet**
+   ([`issue-121-lift-stall.md`](issue-121-lift-stall.md)). ScrubOasis freezes in area 99's lift scene (chapter 3
+   run 7) with `text_speed=1` and Msg Speed Fast, on the 10/22 build and on `5a4637f2`; Medium gets through. Ruled
+   out here, each with per-frame traces of the scene counter: three builds (today's, the 10/22 `9a4cda2e`, alpha.4 +
+   DIV-0158), four installs including his (US PSX + PSP-EU), Fast and Medium, four press rhythms, his ini. The one
+   Fast-only difference found: Sunder's shout's grow effect outlives its box. **Next:** his save from before the
+   console and keyboard-or-pad (asked on the issue); rerun with layering on and at x1; read what the event script's
+   message waits sample. The route `genmelAndLift` needs its hand-added F1 (doc section 3). Instruments under
+   `C:\Users\kerok\bof3x-runs\i121x`. **PR #129** (2026-10-24, open, the owner's listen before merge) fixes #118
+   (D355) and #120 (DIV-0177, D356); the owner's `game\` folder runs that build. Local branches from the same
+   session: `tools/recorder-fkeys` (the recorder writes F1..F11 and a pause's keys as `key KEY 0`, built and
+   tested by a record-and-replay at the title, **uncommitted** in worktree `i121x\wt`) and `test/alpha4-fasttext`
+   (a test build only, not for merge).
 
 00000. **The Sunder loop is built** on `cut/sunder-loop` (off `main` `2f55de72`, worktree
    `C:\Users\kerok\bof3x-runs\sunder1024\wt`, unpushed; DIV-0176 `SunderLoop`; [`cut-content.md`](cut-content.md) 4): the
