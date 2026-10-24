@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-23, the battle twin-diff's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-23 evening, the sound-layer round's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,49 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-23 evening, the sound-layer round (built on `sound/round`, not heard)
+
+The PlayStation's positional sound, pause and cuts back in the port's DirectSound layer
+([`sound-layer-round.md`](sound-layer-round.md); DIV-0169..0175, each `BOF3X_ORIGINAL=<switch>` for the PC's
+behaviour). Nothing of it has been heard. **To listen for**, each from a `game\` build of the branch:
+
+- **The inn's night** (DIV-0169, `InnNightPause`; any inn, the starting town's on `shop.txt`): the town's
+  song stops dead as the screen starts to fade, the jingle plays, and the song comes back *where it
+  stopped* as the morning message opens. Before, the song ran half a second into the jingle and the town
+  was silent for good afterwards (D343 - the measurement found the song never returned).
+- **The cuts** (DIV-0173, `StopCuts`; **your call**, D347): wherever the PlayStation stops a song, the port
+  faded it over ten frames; now it cuts. Heard most at the end of a fight (the battle song's end before the
+  victory music), the title's stop, the attract demo's stops, scenario chapter changes, and Ryu's dream
+  (the bedroom's song now cuts at its stop instead of DIV-0143's 27-frame fade). An area change still fades
+  (its own `Music_FadeOut` runs first). If the cut sounds wrong anywhere, `BOF3X_ORIGINAL=StopCuts` is the
+  PC's fade; say which scene.
+- **A voice that follows its sprite** (DIV-0171, `SpriteVoicePosition`): field and battle sound effects pan
+  by where their sprite is on screen, up to about 3.5 dB down on the far side at the edge. In battles, boss
+  fights, spell effects and areas 75, 145, 175..185 (the faerie village). Listen on headphones for a hit or
+  a spell on the left panning left.
+- **The levels and the distance gate** (DIV-0172, `SoundLevelGate`; **one call**): area 9's op `BC` plays
+  sound `0x1202` hard left; in areas 3 and 8 the `D1` sounds of objects 3 and 6 are silent beyond 22 cells
+  and quiet within. **And in `Scena01_Scene09` (the leader on cells 0x3D..0x3F) sound `0x1206` is now
+  silent**: the PlayStation's level for it is 0 on both discs, so this is what the PlayStation plays - but
+  if you remember a sound there and miss it, say so and the gate gets an exception.
+- **Op `B8`** (DIV-0170, `MoveB8Restart`): two scripts only, area 142 and area 174 - the area's song restarts
+  from its beginning at that script point, as on the PlayStation. No route reaches either; a visit tells.
+- **The one-shot key-off** (DIV-0174, `OneShotKeyOff`): in a fight, a long effect of one action still ringing
+  when the next action's effect begins is cut there (DIV-0167 did this for loops only). The end batch's
+  `combat.txt` WAV diff names the frames.
+- **D352's window reset** (DIV-0175, `WindowResetFull`): nothing to hear; at most one frame on a list's
+  first draw in a shop.
+
+**Two decisions the measurements left you:**
+
+- **D350** (the attract demo's caption, Capcom's JP bug the US fixed): the US disc's wait would add 34 (en-US),
+  40 (fr-FR) or 58 (de-DE) frames to every Western attract pass, nothing on the Chinese or Japanese. Build it
+  (and re-record the Western attract references) or leave the JP timing?
+- **D344** (the PlayStation shows "saving" two frames before a field save's write): two recipes answer a field
+  save's yes - `balioAndSunder_2` (frame 21,726, slot 6) and `sigma_swap` (frame 3,788, slot 7, with the
+  button round's references after it). Building it means an `--insert` step in `recipe_shots.py` and
+  re-recording those. Worth two frames on every save?
 
 ## 2026-10-23, the battle twin-diff against the PlayStation
 

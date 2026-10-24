@@ -9467,6 +9467,18 @@ citations mapped). The rest are the pairs file's or ours:
   moves x and y where ours moves z, so the area032 effect is a relative of
   kind 0x86, not its twin; no verdict.
 
+**Amended 2026-10-23 evening** ([`twin-pairs-check.md`](twin-pairs-check.md)
+4, the `psx_pair.py check` mode run against `us_jp.tsv`): the four
+first-round pairs are two wrong and two right - `0x433810` and `0x435CF0`
+are retired (`0x433810` cites `0x801E722C` now); `0x45BFA0` and `0x52D140`
+were read against BATTLE section 3's function at the same address, not their
+own overlay (COMMU02, AREA030), and against those they are
+`CommuHitBlow_Lost` and `FieldPanel_DrawKindRow` exactly. Seven of the
+second-round "unrelated bodies" (`0x42EF50`, `0x42FAF0`, `0x4363E0`,
+`0x441550`, `0x442080`, `0x445640`, `0x581ED0`) are the same artefact and
+stand; the check retires the rest it can reach (38 pairs in all; 3,292
+left). The paragraphs above overstate by that much.
+
 ## D340 — The fishing panel's cast marker and range bar sit 3 and 19 pixels right of the Japanese disc's (the port's; cosmetic, not seen)
 
 **Seen:** not seen in play; found 2026-10-23 by reading the US PlayStation's
