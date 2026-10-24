@@ -9777,7 +9777,7 @@ message 2 still shows - the overlap the US build removed.
 
 **Status:** Capcom's (the JP build's); open, **not built** (2026-10-23): the
 repair adds frames under every Western layer, so it is the owner's call -
-build it (DIV-0175 and the switch `Scena16CaptionWait` were reserved for it)
+build it (the switch name `Scena16CaptionWait` was reserved for it; its DIV number went to D352's repair, the ledger keeping no gaps)
 with the attract references re-recorded under the layers it changes, or
 leave the overlap.
 
@@ -9795,7 +9795,7 @@ ran into what follows the buffer.
 **Status:** Capcom's (the JP build's), fixed in the US build; fixed here by
 DIV-0166 (`BOF3X_ORIGINAL=GeneNameNul`).
 
-## D352 — `Window_ResetAll` clears five fields of each window record where the US build clears all (Capcom's, changed in the US build; open)
+## D352 — `Window_ResetAll` clears five fields of each window record where the US build clears all but the last four bytes (Capcom's, changed in the US build; fixed by DIV-0175)
 
 **Seen:** not seen; found 2026-10-23 by the region census.
 
@@ -9807,5 +9807,20 @@ in `Window_Grow` / `Window_Shrink` and never written by them, so an item list
 or a battle window can leave it set for the next window. Clearing every field
 at all 21 reset sites could also clear one meant to survive (a list cursor).
 
-**Status:** Capcom's; open: a repair wants a state-hash comparison over the
-routes first.
+**Measured 2026-10-23 (the sound-layer round, group HM):** the US reset
+(PSX `0x80158E50`) zeroes `+0..+0x1F` of each record - not all 0x24 bytes:
+`+0x20..+0x23` are kept. Built under a switch and run on the attract and
+the ten state-hash routes against the `orig4` pairs and against the same
+build with the switch off (hosted, `BOF3X_OPT=none BOF3X_LAYERING=0`;
+scratch in `C:/Users/kerok/bof3x-runs/sl1023/hm/`): the only page that
+moves is the window records' (`0x803000`) on the attract and on six routes,
+every differing byte in a record not in use, except `shop.txt`'s record 8 at
+tick 1,574, a list window drawing its first frame with the last list's
+marked index (`+0xC`, 1 instead of 0) - one frame's draw, the packet pool
+and draw lists for one or two ticks, then identical. No later page, no
+`Rand`. The `+0xD` case is real too: the shop route leaves `0xFF` in record
+7's `+0xD`, which a later grow or shrink window in record 7 would read as
+"no outline"; no route was seen to reach it.
+
+**Status:** Capcom's (the JP build's), fixed in the US build; fixed here by
+DIV-0175 (`BOF3X_ORIGINAL=WindowResetFull`).

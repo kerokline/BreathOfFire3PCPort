@@ -618,12 +618,30 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
     }
 }
 
-// original 0x59E330 (PSX 0x8015990C): every window record's in-use, handler,
-// kind, state and pass bytes (+0..+3, +0xF) zeroed, and the pass the walk
-// starts from. No calls.
+// original 0x59E330 (PSX 0x8015990C, the JP executable): every window
+// record's in-use, handler, kind, state and pass bytes (+0..+3, +0xF)
+// zeroed, and the pass the walk starts from. No calls.
+//
+// As the original has it, and the JP disc: the other fields keep what the
+// last window left, and one is read before any write - +0xD bit 0 (no
+// frame), which Window_Grow / Window_Shrink read for kinds 1 and 2 and never
+// set, so a list or battle window that set it leaves the next window
+// frameless. The US executable's reset (PSX 0x80158E50) zeroes +0..+0x1F of
+// every record - the bytes, the words +4 / +6 and the eight words +0x10..
+// +0x1E - and leaves +0x20..+0x23, as here.
+//
+// DIVERGENCE DIV-0175 (known-defects D352): 1 through
+// PatchBytes("WindowResetFull") in ModeFlow_Inject, after the self-test,
+// which compared Capcom's five-field reset.
+static std::uint8_t g_reset_full = 0;
+
 extern "C" void __cdecl Window_ResetAll(void) {
     for (unsigned i = 0; i < 22; ++i) {
         unsigned char* const r = At(WindowRecords_addr + i * 0x24);
+        if (g_reset_full) {
+            std::memset(r, 0, 0x20);
+            continue;
+        }
         r[0] = 0;
         r[1] = 0;
         r[2] = 0;
@@ -743,6 +761,12 @@ extern "C" void __cdecl Gfx_ClearRect(int x, int y, int w, int h) {
 
 void ModeFlow_Inject() {
     if (bof3::WantsShadow("mode_flow")) mode_flow::SelfTest();
+    {
+        // DIV-0175: after the self-test, which compared Capcom's five-field reset.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("WindowResetFull", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_reset_full)), &was, &is, 1);
+        bof3::Log("DIV-0175    the window reset clears +0..+0x1F of every record, as the US disc (on unless the line above says OFF)");
+    }
     BOF3_INJECT(Transition_Start);
     BOF3_INJECT(Transition_Task);
     BOF3_INJECT(Transition_Kind00);
