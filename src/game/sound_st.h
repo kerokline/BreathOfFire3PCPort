@@ -61,6 +61,8 @@ void NoteOneShot(std::uint32_t channel, std::uint32_t entry);
 // since has released it - and no channel of Sound_Channels holds it, since a
 // looping voice is DIV-0167's to stop.
 void KeyOffOneShots();
+// Snd_LoadBank is releasing a bank entry's buffer: forget any one-shot filed on it.
+void Released(std::uint32_t buffer);
 
 // BattleActions_Inject, after its self-test: the switch armed.
 void ArmOneShotKeyOff();

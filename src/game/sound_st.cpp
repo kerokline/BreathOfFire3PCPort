@@ -84,6 +84,15 @@ void KeyOffOneShots() {
     }
 }
 
+// Before Snd_LoadBank (display_env.cpp) releases a buffer: the entry check in
+// KeyOffOneShots cannot tell a new buffer made at the released one's address
+// from the old, so the slot is cleared here, by address, while it still holds
+// the old one (found 2026-10-23 on the combat route's end, COMN_SE reloaded).
+void Released(std::uint32_t buffer) {
+    for (unsigned c = 0; c < kChannels; ++c)
+        if (g_one_shots[c].buffer == buffer) g_one_shots[c] = {0, 0};
+}
+
 void ArmOneShotKeyOff() {
     const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("OneShotKeyOff", Address(&g_one_shot_key_off), &was, &is, 1);

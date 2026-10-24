@@ -200,6 +200,19 @@ void BeforePlay(void* buffer) {
     Put(v, Clamp(v->saved_volume + g_pending.volume, -10000, 0), Clamp(v->saved_pan + g_pending.pan, -10000, 10000));
 }
 
+// --- A bank reload ---------------------------------------------------------
+// Snd_LoadBank (display_env.cpp, original 0x587CD0) releases every buffer of
+// the bank it replaces before it makes the new ones. A voice remembered here
+// for such a buffer must be dropped without a call on it: the first run of
+// the combat route after this module was built crashed in DSOUND.dll at the
+// battle's end (COMN_SE reloaded, then UpdatePositional's GetStatus on the
+// released buffer; 2026-10-23). The remembered volume and pan die with the
+// buffer; the new one is made at its own level. Called before the release,
+// by its address, so a new buffer made at the same address is a new voice.
+void Released(void* buffer) {
+    while (Voice* v = Find(buffer)) Forget(v);
+}
+
 // --- DIVERGENCE DIV-0171: the voice that follows its sprite ---------------
 // PSX US 0x8015D71C (JP 0x8015E10C): the cue queued, then the voice numbers it
 // keyed packed into the work record's +0x70 (bits 8, 13, 18, 23) and bit 3 of

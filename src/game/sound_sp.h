@@ -42,6 +42,8 @@ void UpdatePositional();
 // buffer whose volume or pan this module changed gets back what it had; a
 // level play in progress (PlayLevel, PlayNear) puts its own on it instead.
 void BeforePlay(void* buffer);
+// Snd_LoadBank is releasing this bank entry's buffer: forget it, touching nothing.
+void Released(void* buffer);
 
 // DIV-0172 (falls back to the PC's flat Sound_PlayEffect with the switch
 // off): the PlayStation's 0x8015D7C8 (op BC and Scena01_Scene09's three
