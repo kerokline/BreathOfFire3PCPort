@@ -118,15 +118,23 @@ PlayStation addresses, never the decompilation" held in every file.
   masterAndManillo three run-noise pages fewer; shop six pages, all predicted - `0x803000` from tick 1,206,
   the four one-tick draw pages at 1,574..1,575 (DIV-0175's one frame) and `0x7DE000` from 2,731 (DIV-0169's
   morning `Music_Start`: the music globals its entry names). **combat and dragonTransform crashed on the
-  first run** (D354) and were re-run on the fixed build: see below.
+  first run** (D354, tick 1,332 and mid-fight) and were re-run on the fixed build (`chain_sh2.py`, the
+  `sl1023b` runs): combat the full 2,561 ticks with its one page `0x803000` at 1,663..2,315 exactly as the
+  pre-round signature has it; dragonTransform the full 4,289 ticks with `0x803000` the one new page. So on
+  all ten routes the round adds `0x803000` (DIV-0175) where a window is reset, shop's `0x7DE000` (DIV-0169),
+  and nothing else; DIV-0170..0174 keep no state the hash can see, as designed.
 - **WAV dumps** before (`main`'s behaviour, the fix wave's launcher) and after, `tools/wav_diff.py`:
   `shop` first difference at 83.0 s, 16 windows, the before side at -120 dBFS from 91 s where the after
   side has the town's song (DIV-0169, as IN measured); `whelpBoss` four windows (34, 38, 184, 345 s) each a
   fraction of a dB and none at a `StopCuts` line (f115, 1157, 2642, 7057, 8846, 10346, 10363: at each the
   volume was already 0 from the `Music_FadeOut` before it, so the cut and the fade are the same audio),
-  attributed by a run with `SpriteVoicePosition` off: see below; `combat` re-run on the fixed build: see
-  below.
-- **Re-runs on the fixed build** (`end_batch2.py`, `end_batch3.py`): PENDING.
+  attribution below); `combat` (re-run on the fixed build) **no window differs**, at 1 s or at 0.1 s: its
+  four `StopCuts` lines (f175, 426, 2501, 2619) all fall where a new track starts in the same frame, so the
+  fade never sounded, and no one-shot of the route rang long enough for the key-off to cut.
+- **The whelpBoss windows at 0.1 s:** 34.4..34.6 s (+0.3..0.5 dB), 38.6..38.7 s (+11, +71 dB), 184.7 s
+  (+2.2 dB), 345.2..345.3 s (+7, +76 dB) - the two large ones are a sound present on the after side, not a
+  pan's few dB. Attribution runs (`end_batch3.py`, `end_batch4.py`: the pan off; every switch of the round
+  off as the control against before; the level gate off): PENDING.
 
 ## 6. Left
 
