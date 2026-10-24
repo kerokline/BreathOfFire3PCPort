@@ -9480,6 +9480,28 @@ agree with both discs.
 beside the Japanese disc's would show whether the port's shift was a
 correction for its own art or a slip.
 
+**Measured 2026-10-23 (the sound-layer round, group HM):** the JP disc's
+words re-read (`AREA030.EMI` section 4, `0x801D6EC8..0x801D6EF8`: `(0x7B,
+0x5C, 0, 1)` and `(0x7C, 0x69, 0x20, 0, 1, 0)`, as above). The PC capture:
+`caughFish.txt` under `en-US` with a frame every 10 (`BOF3X_SHOT_EVERY=10`,
+388 frames, scratch `C:/Users/kerok/bof3x-runs/sl1023/hm/out/caughFish_shots`,
+sheets `hm/sheet_fish_*.png`). Neither the arrow (`EffectHud_DrawArrow`
+`0x465D90`, 16 x 8 at x - 8) nor the mark (`EffectHud_DrawMark` `0x465E50`,
+sprite 0x1C) appears at either the PC's or the JP's places in any frame: the
+route casts, reels and visits the gear tab, but `EffectKind0F_Child4Move` is
+one of six child sub-kinds the fishing list's state 29 runs (which screen
+opens child 4 was not read - perhaps a tab the route skips), and the route
+never draws it. So
+the capture that would answer this is not on any recorded route. The disc's
+side was not attempted: the sibling's runtime runs the JP disc, but it has
+no savestate near a fishing spot and the PC-to-PSX save direction is
+unproven (`save-interchange.md`), so a route there is a hand-driven session
+of more than an hour. **Next step:** a short owner recording of the fishing
+screen's other tabs (or a `seek` recipe off `caughFish`'s gear menu at frame
+~1,870) with `BOF3X_CALLTRACE` confirming `0x4680F0` runs, then the PC frame
+with the two anchors marked; the disc's frame only if the PC's shows the
+marker or bar off its art.
+
 ## D341 — Two sprite-record writes to `+0x70` keep bytes `+0x71..+0x73`, where the PlayStation stores a whole word and zeroes them (the port's; latent)
 
 **Seen:** not seen in play; found 2026-10-23 by reading the US PlayStation's
