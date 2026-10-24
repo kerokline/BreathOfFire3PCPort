@@ -118,6 +118,12 @@ may be exactly right here — **provided it is in the ledger.**
 - Project status lives in `docs/STATUS.md`; next actions in `docs/HANDOFF.md`;
   unscheduled proposals in `docs/IDEAS.md`. This file changes only when the
   *rules or shape* of the repo change.
+- **Non-game player-facing text is written in ASD-STE100 Simplified Technical
+  English**: the launcher, its dialogs and messages, and any other text a
+  player reads outside the game - short sentences, active voice, one word for one
+  meaning, labels that say what the control does (issue 124). **Never the
+  game's own text**: scripts, dialogue, menus, item and place names and their
+  translations keep their own voice and are not rewritten under this rule.
 - **Evidence over assertion.** A claim about the binary cites the measurement
   that produced it. This is inherited from the sibling and survives the
   archival/living split intact — the living project still needs to know what is
