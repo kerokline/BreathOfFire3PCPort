@@ -960,7 +960,7 @@ with it a few rows' `keys`.
 measure`, `exe_tables.py gaps`; then `exe_tables.py check`, `psp_exe.py check`,
 `importer.py check`, `tables.py check`, `ledger_check.py`: 0 errors each. A
 scratch install built as ScrubOasis's (`importer.py setup`, the US cue and the
-European PSP iso, `D:of3x-runs\i130\home`): the owner's recipe
+European PSP iso, `D:\bof3x-runs\i130\home`): the owner's recipe
 `maekyssGorge` (its save `tools/recipe_saves/maekyssGorge.DAT`) on the image
 before the fix ends inside the house with no area change out of 62; on the
 image rebuilt from the new recipe (`exe_tables.py build`) the same inputs leave

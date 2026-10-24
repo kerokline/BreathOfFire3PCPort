@@ -53,14 +53,14 @@ hosted cross form).
    descriptor whose region the port relaid by a word (the pointer votes tied), so areas 62, 97, 162 and 163's link
    counts were zero in a disc-built image and `unread` in `exe-gaps.tsv`, which the image zeroes unlogged. Tied
    data-pointer places are now each tried; the recipes regenerated over the seven discs, checks 0 errors, the
-   owner's `maekyssGorge` recipe leaves area 62 on the rebuilt scratch image (`D:of3x-runs\i130`). **A player's
+   owner's `maekyssGorge` recipe leaves area 62 on the rebuilt scratch image (`D:\bof3x-runs\i130`). **A player's
    install needs the rebuild**: the staleness prompt names `exe`. **Left:** areas 89 and 129 (the fishing spots'
    `Field_InputFlags` byte, `Game_Mode` 8) and 134 keep a descriptor hole - a rule through the PSX descriptor table
    would place every descriptor; **next to track:** the same save - made at the camp diary, not an F12 save - loads into area 62 on the PC
    install and into camp area 90, then the world map, on the disc-built one, with every gap filled and with a
    JP-disc image, so not the exe image; the owner's thought (2026-10-24): the area-read logic of a load may differ
    between releases (the US disc's data against the PC's JP-form). Start from the scratch install's `fix2_run.log`
-   against `gameof3x.log` in the session scratchpad `i130`, then the save's area word and what reads it on each
+   against `game\bof3x.log` in the session scratchpad `i130`, then the save's area word and what reads it on each
    install (the owner's draft replies are there too).
 
 000000. **Issue #121, the lift scene stalling on instant text - reproduced and fixed, unpushed**
