@@ -100,6 +100,17 @@ bool g_text_faster = false;
 // (docs/msgbox.md section 6). A shipped page is a few hundred at most.
 constexpr unsigned kInstantGlyphsPerFrame = 1024;
 
+// The pacing floor (DIV-0158's amendment, issue 121): the glyphs an instant
+// page has printed since its last stop code. On the original's Fast a glyph
+// is a frame, so a page of N glyphs cannot reach its stop code - and a press
+// cannot close it - before N frames; area 99's lift waits on exact script
+// counts the dialogue advances, and three pages closed faster than that
+// leave it waiting for ever (docs/issue-121-lift-stall.md). At the stop
+// code the printer first waits these frames out (state 1), then takes the
+// code: the page is read at once and closes no earlier than it could on
+// Fast. Reset with the box.
+unsigned g_instant_page = 0;
+
 }  // namespace
 
 // ===========================================================================
@@ -793,6 +804,7 @@ extern "C" void __cdecl MsgBox_Reset(void) {
     }
     Msgbox_Delay = 0;
     Msgbox_StepCount = 0;
+    g_instant_page = 0;   // DIV-0158's pacing floor starts over with the box
     SetW(kEffectOff, 0);
     ItemUse_ColorHigh = 0;
     g.window_alloc(0, 0);
@@ -1087,6 +1099,13 @@ extern "C" void __cdecl MsgBox_StateDispatch(void) {
 // so the box stops where the script stops it. The delay byte is still set
 // to Fast's, which is what 0x0B adds its 8 frames to: the script's pauses
 // last as long as they do on Fast.
+//
+// The pacing floor (DIV-0158's amendment, g_instant_page): when the instant
+// page reaches its stop code with glyphs printed, the code is left where it
+// is and state 1 counts a frame per glyph first - the frames Fast would have
+// spent printing them - so the page's end, break, choice, wait or pause is
+// reached, and a press can close the page, no earlier than on Fast. A stop
+// code inside a 0x10 span is the original's instant case and takes none.
 extern "C" void __cdecl MsgBox_StatePrint(void) {
     const unsigned char* at = Ptr(kAt);
     const unsigned char* resume = Ptr(kResume);
@@ -1109,6 +1128,17 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
         }
         const unsigned char c = at[0];
         bool glyph = c > 0x16;
+        if (!glyph && g_instant_page != 0 && (B(kFlags) & 0x10) == 0) {
+            // DIV-0158's pacing floor: the stop code waits for the frames
+            // Fast would have printed the page in. kAt already points at it.
+            const bool stop = c == 0x00 ? (B(kFlags) & 1) == 0 : (c == 0x02 || c == 0x0B || c == 0x14 || c == 0x16);
+            if (stop) {
+                Msgbox_Delay = static_cast<unsigned char>(g_instant_page > 0xFF ? 0xFF : g_instant_page);
+                g_instant_page = 0;
+                SetB(kState, 1);
+                return;
+            }
+        }
         if (!glyph) {
             switch (c) {
             case 0x00:
@@ -1257,7 +1287,9 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                     again = false;
                 } else {
                     SetB(kState, 0);
-                    // Instant: no wait, on to the next glyph this frame.
+                    // Instant: no wait, on to the next glyph this frame; the
+                    // glyph is owed a frame at the page's stop code.
+                    if (instant) ++g_instant_page;
                     if (!instant || ++instant_glyphs >= kInstantGlyphsPerFrame) {
                         if (Msgbox_Delay != 0 && !instant) SetB(kState, 1);
                         again = false;

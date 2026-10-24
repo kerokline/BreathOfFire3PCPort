@@ -48,15 +48,19 @@ hosted cross form).
 
 ## Pick up here
 
-000000. **Issue #121, the lift scene stalling on instant text - not reproduced yet**
-   ([`issue-121-lift-stall.md`](issue-121-lift-stall.md)). ScrubOasis freezes in area 99's lift scene (chapter 3
-   run 7) with `text_speed=1` and Msg Speed Fast, on the 10/22 build and on `5a4637f2`; Medium gets through. Ruled
-   out here, each with per-frame traces of the scene counter: three builds (today's, the 10/22 `9a4cda2e`, alpha.4 +
-   DIV-0158), four installs including his (US PSX + PSP-EU), Fast and Medium, four press rhythms, his ini. The one
-   Fast-only difference found: Sunder's shout's grow effect outlives its box. **Next:** his save from before the
-   console and keyboard-or-pad (asked on the issue); rerun with layering on and at x1; read what the event script's
-   message waits sample. The route `genmelAndLift` needs its hand-added F1 (doc section 3). Instruments under
-   `C:\Users\kerok\bof3x-runs\i121x`. **PR #129** (2026-10-24, open, the owner's listen before merge) fixes #118
+000000. **Issue #121, the lift scene stalling on instant text - reproduced and fixed, unpushed**
+   ([`issue-121-lift-stall.md`](issue-121-lift-stall.md), branch `fix/issue-121-pacing-floor` off PR #129's).
+   ScrubOasis froze in area 99's lift scene (chapter 3 run 7) with `text_speed=1` and Msg Speed Fast. Reproduced
+   on the owner's `liftScene` recording with a one-frame mash and with random stick taps: the lift (the kind-2
+   object) waits on exact script counts with `A1`, and three pages closed faster than Fast can print them leave
+   `C0` past the 0xB it waits for (D357, Capcom's script race, latent until DIV-0158's instant page). Fixed by
+   DIV-0158's amendment, the pacing floor: an instant page is read at once but closes no earlier than Fast's
+   would. The same session fixed the console flash the reporter and the owner both saw wrong (D358, DIV-0178):
+   the port's `Gte_ApplyMatrixLV` wraps its 32-bit products where the PlayStation's splits the vector, so the
+   15-unit beams folded over the horizon; now they rise as on the PSX. **Owed:** the owner's play with the floor
+   (does instant text still feel instant?) and a look at the flash, and the reporter's confirmation on the next
+   build. Instruments under `C:\Users\kerok\bof3x-runs\i121y` (the earlier ones in
+   `i121x`). **PR #129** (2026-10-24, open, the owner's listen before merge) fixes #118
    (D355) and #120 (DIV-0177, D356); the owner's `game\` folder runs that build. Local branches from the same
    session: `tools/recorder-fkeys` (the recorder writes F1..F11 and a pause's keys as `key KEY 0`, built and
    tested by a record-and-replay at the title, **uncommitted** in worktree `i121x\wt`) and `test/alpha4-fasttext`
