@@ -137,8 +137,12 @@ PlayStation addresses, never the decompilation" held in every file.
   `end_batch3.py`..`5.py`): with **every switch of the round off** the run is identical to before in all
   4,400 windows - so none of it is run noise and the hosted host does not matter; `SpriteVoicePosition`
   off removes 34.4..34.6 s (DIV-0171's pan, ±0.3..0.5 dB); `SoundLevelGate` off removes 184.7 s (DIV-0172,
-  -2.2 dB); the two large windows, 38.6..38.7 s and 345.2..345.3 s, remain with both off and so belong to
-  `StopCuts` or `OneShotKeyOff`: PENDING (the last two runs).
+  -2.2 dB); `StopCuts` off removes the two large windows, 38.6..38.7 s and 345.2..345.3 s. Read with the run's
+  frame rate (the music log ends at f12,071 in a 439 s dump, about 30 frames a wall second) they are the cuts
+  themselves: f1,157 (track 4's stop) and f10,346 / 10,363 (the bedroom's track 14 before the dream,
+  DIV-0143's knock-on), and `wav_diff`'s delta is before minus after, so +71 / +76 dB there is the after
+  side **silent where the fade's 0.17 s tail was** - the cut, exactly. The `OneShotKeyOff` run: PENDING
+  (expected to differ nowhere: no one-shot of the route rings into the next action).
 
 ## 6. Left
 
