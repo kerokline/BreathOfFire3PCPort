@@ -9350,7 +9350,7 @@ the list. Not seen.
 **Status:** fixed by DIV-0161 (`BOF3X_ORIGINAL=BattleDrawSigned` for the
 original), fix wave 1023; the port's.
 
-## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard; fixed by DIV-0167 for the looping voices)
+## D337 — The action effect's preload does not key off voices 16..23, where the PlayStation does (the port's sound layer; not heard; fixed by DIV-0167 for the looping voices and DIV-0174 for the one-shots)
 
 **Seen:** not heard; found 2026-10-23 by reading the US PlayStation's
 `0x801D3E80` (JP `0x801D3E60`, words identical) against the PC's `0x42FD20`
@@ -9379,6 +9379,14 @@ reach: the looping voices on those channels are stopped and forgotten at
 the PlayStation's point. A one-shot still sounding plays to its end, where
 the PlayStation's key-off would release it; left as the PC's. Not heard; a
 listen for the owner.
+
+**The one-shots** (2026-10-23, the sound-layer round, group ST): fixed by
+DIV-0174 (`BOF3X_ORIGINAL=OneShotKeyOff`). `Sound_PlayEffect` now remembers,
+DLL-side, the voice entry and buffer each channel last played as a one-shot.
+The preload stops each one still held by its entry and not by a looping
+channel. A one-shot followed on its channel by another is not remembered: the
+PC sounds both, where the PlayStation's voice could not. Which actions leave
+one sounding is not measured; the WAV dump of `combat.txt` is the measurement.
 
 ## D338 — `DragonCmd_StoreAsk` reads the prompt's answer as a dword that every writer stores as a word (the port's; latent)
 
@@ -9459,6 +9467,18 @@ citations mapped). The rest are the pairs file's or ours:
   moves x and y where ours moves z, so the area032 effect is a relative of
   kind 0x86, not its twin; no verdict.
 
+**Amended 2026-10-23 evening** ([`twin-pairs-check.md`](twin-pairs-check.md)
+4, the `psx_pair.py check` mode run against `us_jp.tsv`): the four
+first-round pairs are two wrong and two right - `0x433810` and `0x435CF0`
+are retired (`0x433810` cites `0x801E722C` now); `0x45BFA0` and `0x52D140`
+were read against BATTLE section 3's function at the same address, not their
+own overlay (COMMU02, AREA030), and against those they are
+`CommuHitBlow_Lost` and `FieldPanel_DrawKindRow` exactly. Seven of the
+second-round "unrelated bodies" (`0x42EF50`, `0x42FAF0`, `0x4363E0`,
+`0x441550`, `0x442080`, `0x445640`, `0x581ED0`) are the same artefact and
+stand; the check retires the rest it can reach (38 pairs in all; 3,292
+left). The paragraphs above overstate by that much.
+
 ## D340 — The fishing panel's cast marker and range bar sit 3 and 19 pixels right of the Japanese disc's (the port's; cosmetic, not seen)
 
 **Seen:** not seen in play; found 2026-10-23 by reading the US PlayStation's
@@ -9479,6 +9499,28 @@ agree with both discs.
 **Status:** latent; the port's; cosmetic. A capture of the fishing panel
 beside the Japanese disc's would show whether the port's shift was a
 correction for its own art or a slip.
+
+**Measured 2026-10-23 (the sound-layer round, group HM):** the JP disc's
+words re-read (`AREA030.EMI` section 4, `0x801D6EC8..0x801D6EF8`: `(0x7B,
+0x5C, 0, 1)` and `(0x7C, 0x69, 0x20, 0, 1, 0)`, as above). The PC capture:
+`caughFish.txt` under `en-US` with a frame every 10 (`BOF3X_SHOT_EVERY=10`,
+388 frames, scratch `C:/Users/kerok/bof3x-runs/sl1023/hm/out/caughFish_shots`,
+sheets `hm/sheet_fish_*.png`). Neither the arrow (`EffectHud_DrawArrow`
+`0x465D90`, 16 x 8 at x - 8) nor the mark (`EffectHud_DrawMark` `0x465E50`,
+sprite 0x1C) appears at either the PC's or the JP's places in any frame: the
+route casts, reels and visits the gear tab, but `EffectKind0F_Child4Move` is
+one of six child sub-kinds the fishing list's state 29 runs (which screen
+opens child 4 was not read - perhaps a tab the route skips), and the route
+never draws it. So
+the capture that would answer this is not on any recorded route. The disc's
+side was not attempted: the sibling's runtime runs the JP disc, but it has
+no savestate near a fishing spot and the PC-to-PSX save direction is
+unproven (`save-interchange.md`), so a route there is a hand-driven session
+of more than an hour. **Next step:** a short owner recording of the fishing
+screen's other tabs (or a `seek` recipe off `caughFish`'s gear menu at frame
+~1,870) with `BOF3X_CALLTRACE` confirming `0x4680F0` runs, then the PC frame
+with the two anchors marked; the disc's frame only if the PC's shows the
+marker or bar off its art.
 
 ## D341 — Two sprite-record writes to `+0x70` keep bytes `+0x71..+0x73`, where the PlayStation stores a whole word and zeroes them (the port's; latent)
 
@@ -9526,7 +9568,7 @@ range checks; on the PC it would read `< 0x802000`.
 **Status:** moot, not repaired (no reader tells 0, 3 and the pointer
 apart); the port's.
 
-## D343 — The inn's night neither pauses nor resumes the sound sequences, where the PlayStation pauses four and replays them (the port's sound layer; not heard)
+## D343 — The inn's night neither pauses nor resumes the sound sequences, where the PlayStation pauses four and replays them (the port's sound layer; fixed by DIV-0169, not yet heard)
 
 **Seen:** not heard; found 2026-10-23 by reading the US PlayStation's
 `SHOP.EMI#0` `0x801D446C` (JP `0x801D447C`, every masked word identical)
@@ -9565,8 +9607,28 @@ twice. **Not built** in the fix wave: the next step is
 `BOF3X_MUSIC_LOG=1` on `shop.txt` (the route reaches the inn at recipe frame
 2647), which names every music call through the night and after.
 
-**Status:** latent; the port's sound layer (D337 and D345 are of the same
-class); the owner's ear.
+**Measured and fixed** (2026-10-23, the sound-layer round's group IN,
+[`DIVERGENCE.md`](DIVERGENCE.md) DIV-0169). On `shop.txt` under
+`BOF3X_MUSIC_LOG=1`, with the WAV dump, the jingle's `Music_Start` comes at f2512
+(the recipe has changed since 2647) and the pump's `Music_Stop` at its end at
+f2714. After that no music call runs to the recipe's end at f3157, on the PC's
+MP3s or on the cache's sequenced song. **Nothing brings the town's song back.**
+The sound at 99 s that the paragraph above calls the song is the message's and
+the save menu's effects, short bursts with digital silence between. The 99 s in
+[`wav-dump.md`](wav-dump.md) 4c is the picture returning. So the PC's night
+loses the area's song until an area with another track (by reading:
+`Music_Track` stays the town's, and `Area_Enter`'s `Music_Play` of it is a
+no-op). There was no restart to suppress.
+
+DIV-0169 halts the song at night 0's end, after `Transition_Start(0)`, and
+starts it again at the taken sample last in the restore state, as the
+PlayStation's two calls do. Verified on both music paths: the song stops at
+83.25 s and comes back at 91.09 s, where it stopped. `recipe done` is on the
+same frame.
+
+**Status:** the port's; fixed by DIV-0169 (`BOF3X_ORIGINAL=InnNightPause`); not heard by the
+owner. The silence after the night (the town stays mute until an area with another track) is
+the same defect and the same fix.
 
 ## D344 — `FieldSave_Confirm` skips the PlayStation's two-frame message step before the write (the port's; cosmetic)
 
@@ -9582,7 +9644,35 @@ at `0x57FFE3`); the write step (`FieldSave_Write`, `0x580010`) shows message
 a write that, on the PC, is a file write rather than a card write. Ours does
 as the PC.
 
-**Status:** latent; the port's; cosmetic.
+**Measured 2026-10-23 (the sound-layer round, group HM):** which recipes a
+repair would move. A scratch build logged `FieldSave_Begin` (the save menu
+opened), the "yes" in `FieldSave_Confirm` and an answer to the inn's
+`InnNight_AskSave`, and every distinct recipe in `tools/recipes/` was played
+at `--speed 8` with its header's language (52 recipes; left out as copies of
+these: the `_ab`, `_sw` and `quick_*` variants, the three other `sigma_*`
+site routes, the `cs_*` chapter jumps, `attract_cycle` and `title_timeline`;
+scratch in `C:/Users/kerok/bof3x-runs/sl1023/hm/out/*_d344*`). Two confirm a
+save: `balioAndSunder_2` (yes at recipe frame 21,726, slot 6, area 41; 108
+frames before the recipe ends) and `sigma_swap` (yes at 3,788, slot 7, area
+7; its shots from `f03810` on and the button round's state-hash references
+on four install kinds come after it). Three open the save menu and leave
+without saving, which the repair does not touch: `shop` (frame 2,974, the
+inn), `cutsceneAndNue` and `nueRandomEncounter` (6,984, area 23). No route
+answers the inn's own save prompt.
+
+**The plan, if the owner wants the two frames:** the repair is a step of two
+frames between the yes and the write (message 0x99, then the write step), so
+every recorded input after the yes lands two frames early. Neither recipe
+can be re-timed by `tools/recipe_shots.py`, which only puts a shot in place
+of a frame and never inserts one (HANDOFF's "Shot lines are frames"). The
+route fix is `wait 2` inserted after the yes frame (3,788 / 21,726) by a
+tool step, not by hand - an `--insert FRAME N` mode for `recipe_shots.py` -
+then `sigma_swap`'s shots after 3,788 and its references on the four
+installs re-recorded; `balioAndSunder_2` needs its replay checked to the
+end. Nothing else moves.
+
+**Status:** latent; the port's; cosmetic; not built - the owner's call
+whether two frames on every field save are worth re-timing those two routes.
 
 ## D345 — Three positional-sound hooks are empty on the PC: the movement op `B8`, the overlay queue's bit-3 voice update, and `Sound_PlayById`'s level and distance handling (the port's sound layer; not heard)
 
@@ -9609,7 +9699,37 @@ Ours does as the PC in all three. These are the port's replacement of the
 PlayStation's positional sound by flat effects; which scenes used `B8` is
 not known.
 
-**Status:** latent; the port's sound layer; the owner's ear.
+**Read again** (2026-10-23, the sound-layer round's group SP, the US disc's
+executable and `GAME.EMI#0` disassembled; [`DIVERGENCE.md`](DIVERGENCE.md)
+DIV-0170..0173):
+- `B8`'s `0x8015D300(b1, b2, b3, b3)` is the music's own start: every group
+  is SEP access 0 (US `0x80148FC0`, sixteen zeros), b2 a sequence of the
+  loaded song file (the track table US `0x80181EB8`: every track group 0,
+  sequence 0..3 of its file), b3 the level - stopped, set (0 under the gate
+  `0x80144954`, never found set) and played from its top, no fade.
+  `Music_Play`'s twin starts its tracks through it at level 0. Two shipped
+  scripts use it (`tools/movement_scan.py`'s decode): `B8 00 00 64` in area
+  142's `+0x18` script 2 and area 174's `+0x10` script 35.
+- `0x80161454` takes no index: it updates the voices packed in the
+  scratchpad work record's (`Sprite_Current`'s) `+0x70` bits 8..27, by the
+  screen point under bit 0x1000 of `0x8014625A` (the PC's
+  `Field_ScriptFlags2` `0x905BA4`) and by the distance from the kind-2
+  object otherwise, panned by screen x unless the options' Mono; a voice
+  keyed off is dropped from the word, and bit 3 cleared when none is left.
+  The bit and the word are set by `0x8015D71C`, the first of the three, so
+  on the PC, whose `Sound_PlayById` does neither, the bit-3 path is never
+  taken.
+- The PC's `Sound_PlayById` stands for all three: `0x8015D71C` at every call
+  site but four (a jal scan of the US disc: 503 calls in 176 overlays),
+  `0x8015D7C8` from op `BC` and `SCENA01.EMI`'s three, `0x8015D820` from ops
+  `BD` and `D1`.
+
+**Status:** fixed by DIV-0170 (`B8`, switch `MoveB8Restart`), DIV-0171 (the
+positional voice, `SpriteVoicePosition`) and DIV-0172 (the level and the
+distance gate, `SoundLevelGate`), 2026-10-23; what the PC's records cannot
+carry (the `+0x70` word and bit 3, `B8`'s sequences 1..3, the CD mix cells)
+is not built, each named in its entry; the port's sound layer; the owner's
+ear.
 
 ## D346 — `Music_Play(0xFF)` is not refused, where the PlayStation's twins return on 0xFF (the port's; latent; fixed by DIV-0168)
 
@@ -9637,7 +9757,7 @@ looping, `Music_LoadFile` finding no file 255.)
 
 **Status:** fixed by DIV-0168 (switch `MusicPlayRefusesNone`); latent.
 
-## D347 — The port's stop is a ten-frame fade where the PlayStation cuts (the port's sound layer; the owner's ear)
+## D347 — The port's stop is a ten-frame fade where the PlayStation cuts (the port's sound layer; the owner's ear; fixed by DIV-0173)
 
 **Seen:** heard in part - D318's reading named the PlayStation's immediate
 stop in Ryu's dream; found as a class 2026-10-23 by reading the US
@@ -9656,8 +9776,21 @@ is otherwise the same shape - the PlayStation fades through
 DIV-0092) called `0x8015DDF4` a restart of the area's track from its table;
 it is the stop, and those lines are corrected. Ours does as the PC.
 
-**Status:** the port's sound layer; cosmetic; the owner's ear decides whether
-the cut is wanted back (a switch would be DIV-0132's shape).
+**The class** (2026-10-23, the sound-layer round, group ST): every one of
+`Music_FadeOutStop`'s 131 PC call sites (a rel32 scan) read beside its twin.
+`Music_FadeOutStop`'s own twin, JP `0x801626C0` (US `0x80161CD0`), is itself a
+stop: `0x8015DF44` sets the decrescendo and calls `SsSepStop` at once
+([`libsnd-reading.md`](libsnd-reading.md) 5.2). Every site pairs with that, with
+the plain stop `0x8015DDF4` or with the stop of every SEP `0x8015DFC8` (the
+battle's). None pairs with the decrescendo alone (JP `0x8015DEE8`, US
+`0x8015D4F8`), which lines up instead with the PC's `Music_FadeOut`. The site-by-site table is in DIV-0173. The fade the
+class hears today is DIV-0028's: Capcom's own per-spin step made it near a cut
+(D26).
+
+**Status:** the port's sound layer; fixed by DIV-0173 (`BOF3X_ORIGINAL=StopCuts`),
+on by default and flagged: the owner's ear decides whether the cut stays. With
+it, DIV-0143's knock-on (the bedroom's song fading 27 frames into Ryu's dream)
+is gone.
 
 ## D348 — `Menu_DrawBox` and `Menu_DrawIcon8` take x and y unsigned: a box slid past the left or top edge draws its frame without its fill (the port's; fixed by DIV-0165)
 
@@ -9710,8 +9843,26 @@ recipe and the attract state-hash run pass through it; whether counter 4 can be
 raised while message 2 is open was not shown from the scripts, and longer
 translated text makes it likelier.
 
-**Status:** Capcom's (the JP build's); open: a repair would be measured on
-the attract run first, since a wait that adds frames shifts the recording.
+**Measured 2026-10-23 (the sound-layer round, group HM):** a scratch log at
+step 3 on every frame counter 4 is up, on the attract run (`attract_run.py
+--no-front`, `BOF3X_OPT=none`, hosted; scratch in
+`C:/Users/kerok/bof3x-runs/sl1023/hm/out/attract_*`). With no language layer
+message 2 is already closed (`Field_Request` 0) on the frame counter 4 is
+raised, on all four passes of a 12-minute run (frames 4,177, 9,699, 15,221,
+20,743); under `ja-JP` the same (frame 4,195). Under the Western layers it is
+still open: `en-US` frames 4,372..4,405 (34 frames), `fr-FR` 4,372..4,411
+(40), `de-DE` 4,382..4,439 (58) - the longer text keeps the box up after the
+script has moved the counter on. So the US disc's wait would add 34 to 58
+frames to every pass of the attract under a Western layer, moving the
+caption, the camera pull and everything after them; with no layer and under
+`ja-JP` it adds none. Under the Western layers today the caption starts while
+message 2 still shows - the overlap the US build removed.
+
+**Status:** Capcom's (the JP build's); open, **not built** (2026-10-23): the
+repair adds frames under every Western layer, so it is the owner's call -
+build it (the switch name `Scena16CaptionWait` was reserved for it; its DIV number went to D352's repair, the ledger keeping no gaps)
+with the attract references re-recorded under the layers it changes, or
+leave the overlap.
 
 ## D351 — Message 0xFA's gene name is not terminated after its 8-byte copy (Capcom's, fixed in the US build; fixed by DIV-0166)
 
@@ -9727,7 +9878,7 @@ ran into what follows the buffer.
 **Status:** Capcom's (the JP build's), fixed in the US build; fixed here by
 DIV-0166 (`BOF3X_ORIGINAL=GeneNameNul`).
 
-## D352 — `Window_ResetAll` clears five fields of each window record where the US build clears all (Capcom's, changed in the US build; open)
+## D352 — `Window_ResetAll` clears five fields of each window record where the US build clears all but the last four bytes (Capcom's, changed in the US build; fixed by DIV-0175)
 
 **Seen:** not seen; found 2026-10-23 by the region census.
 
@@ -9739,5 +9890,65 @@ in `Window_Grow` / `Window_Shrink` and never written by them, so an item list
 or a battle window can leave it set for the next window. Clearing every field
 at all 21 reset sites could also clear one meant to survive (a list cursor).
 
-**Status:** Capcom's; open: a repair wants a state-hash comparison over the
-routes first.
+**Measured 2026-10-23 (the sound-layer round, group HM):** the US reset
+(PSX `0x80158E50`) zeroes `+0..+0x1F` of each record - not all 0x24 bytes:
+`+0x20..+0x23` are kept. Built under a switch and run on the attract and
+the ten state-hash routes against the `orig4` pairs and against the same
+build with the switch off (hosted, `BOF3X_OPT=none BOF3X_LAYERING=0`;
+scratch in `C:/Users/kerok/bof3x-runs/sl1023/hm/`): the only page that
+moves is the window records' (`0x803000`) on the attract and on six routes,
+every differing byte in a record not in use, except `shop.txt`'s record 8 at
+tick 1,574, a list window drawing its first frame with the last list's
+marked index (`+0xC`, 1 instead of 0) - one frame's draw, the packet pool
+and draw lists for one or two ticks, then identical. No later page, no
+`Rand`. The `+0xD` case is real too: the shop route leaves `0xFF` in record
+7's `+0xD`, which a later grow or shrink window in record 7 would read as
+"no outline"; no route was seen to reach it.
+
+**Status:** Capcom's (the JP build's), fixed in the US build; fixed here by
+DIV-0175 (`BOF3X_ORIGINAL=WindowResetFull`).
+
+## D353 — `symbols.toml`'s PlayStation addresses for `Field_Kind2X` / `Field_Kind2Z` and `Field_ScriptFlags2` differ from the US disc's by four bytes (tooling; settled 2026-10-23: region drift, the fields are right)
+
+**Seen:** 2026-10-23, group SP of the sound-layer round, reading the US disc
+for op `D0` and the field mode's case 5.
+
+**Established:** `symbols.toml` gives `Field_Kind2X` `psx = 0x80149304` and
+`Field_Kind2Z` `psx = 0x80149308` (the 2026-09-22 evidence; `kind2-object.md`
+1 says the same), and `Field_ScriptFlags2` `psx = 0x80146256`. On the US disc
+op `D0` (`GAME.EMI#0` US `0x801AB5F4`) passes `0x80149308` as x and
+`0x8014930C` as z; the field mode's case 5 (US `0x80197444`) sets `0x40` in
+`0x8014625A` where the PC sets `0x905BA4` (`Field_ScriptFlags2`), and the
+twins US `0x801B2B6C` / PC `0x52F490` both clear `0x1000` there. The `psx`
+fields are read as the JP disc's by convention (the propagated pairs are JP),
+and the US build's `.data` drifts from the JP's by a few bytes in places, so
+this is either a four-byte region drift the field does not record or a slip
+in the 2026-09-22 reading. Not yet read on the JP disc.
+
+**Status:** settled the same evening by the twins-remainder agent on the JP
+disc: op `D0` (JP `0x801AC5F4`) passes `0x80149304` / `0x80149308` and field
+case 5 (JP `0x80198444`) sets `0x40` in `0x80146256` - the `psx` fields are
+the JP's and are right; the US build's words sit four bytes later. Region
+drift, not a slip; nothing to change. A reader of the US disc must add 4 for
+these three (and, by the same drift, for their neighbours in that block).
+
+## D354 — The positional voice table kept a buffer across a sound-bank reload and crashed in DSOUND.dll at a battle's end (ours, DIV-0171; found and fixed 2026-10-23 evening)
+
+**Seen:** the sound-layer round's end batch, the first combat-route run of the
+merged build: `FATAL: an exception nobody handled: 0xC0000005 at DSOUND.dll+0x2DF88`
+at tick 1,332, right after `DAT\BATL_RET.DAT` and `DAT\COMN_SE.DAT` opened
+(the battle's end), the stack `sound_sp::UpdatePositional` <- `Sprite_UpdateScreen`
+<- `AreaMap_Frame` <- `Battle_Frame`.
+
+**Established:** `Snd_LoadBank` `0x587CD0` releases every buffer of the bank
+it replaces before making the new ones; DIV-0171's voice table (`sound_sp.cpp`)
+still held one of them under its sprite, and the next frame's `GetStatus` on
+the released object wrote into DirectSound's freed memory. DIV-0174's
+one-shot table had the same hole in principle: its guard re-reads the bank
+entry, which cannot tell a new buffer made at the released one's address from
+the old. The group's headless fuzzes never reload a bank, so neither saw it.
+
+**Status:** ours; fixed the same evening (`5e85d91a`): `Snd_LoadBank` tells
+both tables by address before each release (`sound_sp::Released`,
+`sound_st::Released`), and the remembered volume and pan die with the buffer.
+Re-run of the end batch after it.

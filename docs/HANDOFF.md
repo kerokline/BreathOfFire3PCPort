@@ -1,8 +1,8 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-23 evening: the `orig4` state-hash pairs, the second twin-diff step and fix wave 1023 on `fix/1023-wave`, DIV-0161..0168, D348..D352, item 000; 2026-10-23: the PlayStation verdict pass and the battle twin-diff, PR #115, then the twin-diff over every other matched target, D340..D347, PR #116, item 0b; 2026-10-23: PR #112, Amalgam's melt (DIV-0159), merged; the bit-15 round's steps 1
-to 3 built on `render/stp-blend`, item 00. 2026-10-22: the reading-row round built on `localization/second-script`, its end on
-`reading-row/end`)
+**Status:** IN PROGRESS (2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
+item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
+PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -46,6 +46,29 @@ and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the t
 hosted cross form).
 
 ## Pick up here
+
+0000. **The sound-layer round is built** on `sound/round` (off `main` `300ce67f`; the four group branches `sound/in`,
+   `-sp`, `-st`, `-hm` merged one at a time, unpushed; [`sound-layer-round.md`](sound-layer-round.md) sections 4..6):
+   the PlayStation's positional sound, pause and cuts back in the port's DirectSound layer, each on by default with a
+   `BOF3X_ORIGINAL` switch - DIV-0169 `InnNightPause` (D343; the inn's song halted at the fade and resumed at its
+   position after the morning's message - the PC's song had never returned), 0170 `MoveB8Restart` (op `B8`, areas 142
+   and 174), 0171 `SpriteVoicePosition` (voices panned by their sprite), 0172 `SoundLevelGate` (the level table and
+   `D1`'s distance gate; `Scena01_Scene09`'s `0x1206` now silent, the PlayStation's level 0 - the owner's call), 0173
+   `StopCuts` (D347: all 131 `Music_FadeOutStop` sites pair with a PlayStation stop, so the port's ten-frame fade is a
+   cut - **the owner's ear decides**), 0174 `OneShotKeyOff` (D337's remainder), 0175 `WindowResetFull` (D352, the US's
+   `+0..+0x1F` clear). **Held with measurements:** D350 (the US wait adds 34 / 40 / 58 frames to the en / fr / de attract
+   pass - the owner's call), D344 (two recipes answer a field save's yes: `balioAndSunder_2`, `sigma_swap`; an
+   `--insert` step and re-recordings if wanted), D340 (`caughFish` never draws the panel's marker). D353 settled (region
+   drift), D354 found and fixed (the merged build's first combat run crashed in DSOUND at a bank reload; both DLL-side
+   buffer tables are now told before `Snd_LoadBank` releases). **The gate** (round doc 5): self-tests exit 0 at every
+   step; the state hash on the ten routes shows only the pages the DIVs predict (`0x803000` for DIV-0175, shop's
+   `0x7DE000` for DIV-0169); WAV diffs on shop (the song back from 91 s), combat (no window differs: its cuts fall where a new track
+   starts) and whelpBoss (four windows, each attributed to its switch by one run with that switch off: the pan, the
+   level gate, and the two cuts' missing fade tails; with every switch off the dump equals the original to the
+   sample). Runs and diffs in `C:\Users\kerok\bof3x-runs\sl1023\merge\` (`end_batch*.out`, `wav\`). **Nothing heard**: the listens and the two calls are at the top of
+   [`owner-review.md`](owner-review.md). PR at the owner's word; the twins branch (item 0b) is a second PR. Briefs and
+   runs: `C:\Users\kerok\bof3x-runs\sl1023\` (`brief_common.md`, `groups.md`, `wt_<g>` worktrees, `merge\` the launcher copies, checks,
+   `wav\`).
 
 000. **Fix wave 1023 is built** on `fix/1023-wave` (off `main` `b13eb30a`; branches `fix/1023-bt`, `-fm`, `-sn`
    merged, unpushed): eight repairs of port defects and of Capcom's JP-build defects the US build fixed, each on
@@ -142,9 +165,17 @@ hosted cross form).
    ten-frame fade where the PSX cuts), D34's remove side, D339's longer list, DIV-0030 / 0027 / 0057 / 0092's
    PlayStation lines answered or corrected (`0x8015DDF4` is `SsSepStop`, not a restart), two citations and
    `region_twin_map.py` fixed (any `PSX 0x...` on a marker's line; a pair matches its own overlay only). Both next
-   steps (the typed-record offsets and the 128 US-vs-JP functions) ran 2026-10-23 evening (item 000). Left in
-   that line: the 193 mapped PC functions with a matched twin and no marker, and re-running `psx_pair.py
-   propagate` with `us_jp.tsv` as the check. Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
+   steps (the typed-record offsets and the 128 US-vs-JP functions) ran 2026-10-23 evening (item 000). **The remainder ran 2026-10-23
+   night** on `audit/twins-remainder` (worktree `C:\Users\kerok\bof3x-runs\tw1023\wt`, four signed commits, tip `051e9346`, unpushed; its
+   own PR): the "193" was 752 under the old reader - `region_twin_map.py` now reads every citation form and 497 markers
+   were added (19 withheld with reasons, [`twin-pairs-check.md`](twin-pairs-check.md)); `psx_pair.py check` flags
+   propagated pairs the `us_jp.tsv` map contradicts and retired 38 (3,292 left; D339 amended: two of its four were
+   right, read against the wrong overlay) - **a fresh `propagate` brings them back: run `check --retire` after it**;
+   the records audit's N1 / N2 / N4 / N5 typing pass (`height_whole` s16, the enemy drops, `skill_class`,
+   `PartyMember`'s armour / hp scale / crit chance / four ability lists) with `codegen_same.py` 0 differ against
+   `main`'s build, audited read-only by a second agent and its five findings fixed. The main checkout's
+   `analysis/pairs_propagated.json` is the retired set. `docs/effect_1e.md` and `install-gap-pairs.md` still cite
+   `0x801DA068` (the function before the twin). Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
 
 1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
    - **The reading-row round** (item 6a): play of the furigana row, F4, a second language and the Mods tab's
@@ -386,7 +417,11 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   `C:\Users\kerok\bof3x-runs\amalgam_111` (also the A/B/C root `C:\Users\kerok\bof3x-runs\abc111`, set `us`, built
   with the discs at `D:\bof3x-runs\discs` through a scratch copy of `abc-installs.toml`) and Capcom's-code runs in
   `C:\Users\kerok\bof3x-runs\amalgam_111_orig`.
-- **`render/stp-blend`** (rebased onto `main` `147c6ae1` after PR #112 merged): item 00, steps 1 to 3 built and played, PR open; runs in `C:\Users\kerok\bof3x-runs\stp_census`.
+- **`sound/round`** (item 0000) and **`audit/twins-remainder`** (item 0b), both unpushed, 2026-10-23 night; the main
+  checkout sits on `sound/round`. Worktrees: `C:\Users\kerok\bof3x-runs\sl1023\wt_{in,sp,st,hm}` and `C:\Users\kerok\bof3x-runs\tw1023\wt` (its `base`
+  removed). The merged branches `fix/1023-*`, `audit/frost-twins`, `111-amalgam-death`, `localization/second-script`,
+  `render/stp-blend` and the rest are still local: `git cherry` then delete (Traps).
+- **`render/stp-blend`**: merged as PR #114 (2026-10-23); runs in `C:\Users\kerok\bof3x-runs\stp_census`.
 - The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
   scratch) and deleted 145 local and 65 `origin` branches; each was classified merged with `git cherry` first, not an
   ancestry check (Traps). `main` is the only branch, local and remote.
@@ -419,6 +454,17 @@ Local only, gitignored, worth keeping:
 
 _One line each, with a pointer. Add when something costs more than an hour._
 
+- **A DLL-side table that holds a DirectSound buffer must be told before `Snd_LoadBank` releases it** (2026-10-23,
+  D354): a bank reload at a battle's end freed a buffer DIV-0171's voice table still held, and the next frame's
+  `GetStatus` crashed inside DSOUND.dll. Re-reading the bank entry is not a guard (a new buffer can land at the old
+  address): `Snd_LoadBank` calls `sound_sp::Released` / `sound_st::Released` by address. The groups' headless fuzzes
+  never reload a bank, so only the live route found it.
+- **A detached end-batch chain cannot be stopped from an agent session** (2026-10-23 night): the process kill was
+  refused, so a chain running a build later found wrong ran to its end (an hour of crashing routes). Give a chain a
+  stop file it checks between runs, or run the routes one `input_run` at a time from the session.
+- **One DIV number a group does not use shifts every later group's** (2026-10-23): the ledger allows no gap, so IN's
+  unused 0170 renumbered SP's and ST's entries down by one at merge and HM's reservation with them; their commit
+  messages carry the old numbers (the merge commits say so). Reserve exactly what a group will use, or number at merge.
 - **A scratch copy of a recipe loses its save** (2026-10-23): `recipe_shots.py` output made from a recipe with no
   `# save` header loads whatever slot 0 holds; `input_run` says `slot 0: left alone` in its first line. A rope
   measurement ran an hour in the owner's whelpBoss area before it was caught. Check that line, or pass `--save`.

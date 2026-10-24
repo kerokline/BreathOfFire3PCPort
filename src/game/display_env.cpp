@@ -18,6 +18,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/display_env_callees.h"
+#include "game/sound_sp.h"
+#include "game/sound_st.h"
 #include "hook/detour.h"
 
 namespace display_env {
@@ -246,6 +248,8 @@ void Snd_LoadBank(unsigned bank, const void* payload, unsigned size) {
             const U entry = record + kVoices + 4 + i * 8;
             const U buffer = Long(entry);
             if (buffer == 0) continue;
+            sound_sp::Released(At(buffer));   // DIV-0171 / 0172's remembered voices (ours; nothing of Capcom's)
+            sound_st::Released(buffer);       // DIV-0174's remembered one-shots
             g.release(At(buffer));
             const U now = Long(entry);
             for (U c = Sound_Channels_addr; c < kChannelsEnd; c += 4)

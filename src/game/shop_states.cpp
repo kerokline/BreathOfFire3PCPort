@@ -26,8 +26,10 @@
 // 0x5818B0), 3 the inn (Inn_Dispatch, here), 4 the way out (ShopMode_End,
 // which is also state 1), 5..10 the overlay's other machines (Capcom's).
 //
-// Faithful: no divergence. Every call out goes through shop_states::g, so the
-// start-up fuzz can stand recorders in for the callees. The four dispatchers
+// Faithful but for DIV-0169 (the night's pause and resume of the area's song,
+// sound_in.h; two calls, each after the original's last). Every call out
+// goes through shop_states::g, so the start-up fuzz can stand recorders in
+// for the callees. The four dispatchers
 // jump, as the originals do ([[clang::musttail]]); every other function has
 // disable_tail_calls. None of the five tables' indices is checked, in the
 // original or here: an index past a table reads the next table's entries, and
@@ -40,6 +42,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
 #include "game/shop_states_callees.h"
+#include "game/sound_in.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -391,8 +394,13 @@ extern "C" void __cdecl InnPrompt_ChoicesOut(void) {
 // The inn: step 2, the night (InnNight_States)
 // ===========================================================================
 
-// original 0x57FB70, night 0: the title box and, with an object, message
-// 0xA4; counter - 1, at 0 the next state and Transition_Start(0), the fade out.
+// original 0x57FB70 (PSX: the state holding US 0x801D41EC), night 0: the title box and,
+// with an object, message 0xA4; counter - 1, at 0 the next state and
+// Transition_Start(0), the fade out.
+//
+// DIVERGENCE DIV-0169: then, with the switch, the area's song halted where it
+// is - the PlayStation's SsSepPause of each SEP slot playing, after its
+// Transition_Start(0) on the same frame (sound_in.h).
 extern "C" void __cdecl InnNight_Message(void) {
     TitleBox();
     if (!NoObject()) Message(0xA4);
@@ -401,6 +409,7 @@ extern "C" void __cdecl InnNight_Message(void) {
     if (count != 0) return;
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
     g.transition(0);
+    sound_in::NightFalls();  // DIV-0169
 }
 
 // original 0x57FBE0, night 1: once the transition is over (0x66C810 zero)
@@ -443,10 +452,15 @@ extern "C" void __cdecl InnNight_Wait(void) {
     g.transition(1);
 }
 
-// original 0x57FCB0 (PSX 0x801D447C), night 4: the title box; once the
-// transition is over, Party_RestoreAll(1), the next state, 0x929F0B = 1,
-// Input_AutoRepeat's latch and timer cleared and, with an object,
-// Msg_OpenSystem(0xD5).
+// original 0x57FCB0 (PSX JP 0x801D447C, US 0x801D446C), night 4: the title
+// box; once the transition is over, Party_RestoreAll(1), the next state,
+// 0x929F0B = 1, Input_AutoRepeat's latch and timer cleared and, with an
+// object, Msg_OpenSystem(0xD5).
+//
+// DIVERGENCE DIV-0169: then, with the switch, the song halted at nightfall
+// started again at its position - the PlayStation's SsSepReplay(0, i) for
+// each slot recorded as playing, last in this state (US 0x801D446C's tail,
+// after the message), which the PC's port left out (sound_in.h).
 extern "C" void __cdecl InnNight_Restore(void) {
     TitleBox();
     if (Transition_Busy != 0) return;
@@ -458,6 +472,7 @@ extern "C" void __cdecl InnNight_Restore(void) {
     PutWord(at::kRepeatLatch, 0);
     ItemUse_RepeatTimer = 0;
     if (object != 0xFF) g.open_system(0xD5);
+    sound_in::MorningComes();  // DIV-0169
 }
 
 // original 0x57FD20, night 5: the title box. With an object, the next state
@@ -627,4 +642,5 @@ void ShopStates_Inject() {
     BOF3_INJECT(FieldSave_Choose);
     BOF3_INJECT(FieldSave_SlotsOut);
     BOF3_INJECT(FieldSave_End);
+    sound_in::Inject();  // DIV-0169: after the fuzz above, which ran Capcom's night
 }

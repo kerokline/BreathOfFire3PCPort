@@ -36,6 +36,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/sound_sp.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1027,7 +1028,20 @@ extern "C" void __cdecl Sprite_UpdateScreenSlot(void) {
 
 // original 0x587900 (PSX 0x8015E210): Sound_PlayEffect(id). Ops BC, BD and D1 push more
 // arguments; only the first is read.
+//
+// The PlayStation has three here (US 0x8015D71C / 0x8015D7C8 / 0x8015D820;
+// JP 0x8015E10C / 0x8015E1B8 / 0x8015E210); the port folded them into one.
+// Every caller but four is the first's (a jal scan of the US disc: 503 calls
+// in 176 overlays; 0x8015D7C8 only from op BC and SCENA01's three, 0x8015D820
+// only from ops BD and D1), and those four are ours and call sound_sp's
+// level plays under DIV-0172 (move_groups.cpp, scena_sc1.cpp).
+// DIVERGENCE DIV-0171: with the switch, the first's play: the cue follows
+// Sprite_Current (sound_sp.h).
 extern "C" void __cdecl Sound_PlayById(unsigned short id) {
+    if (sound_sp::g_position) {
+        sound_sp::PlayPositional(id);
+        return;
+    }
     g.play_effect(id);
 }
 

@@ -32,6 +32,8 @@
 #include "game/music_seq.h"
 #include "game/save_menu.h"
 #include "game/sound_callees.h"
+#include "game/sound_st.h"
+#include "game/sound_sp.h"
 #include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
@@ -161,8 +163,11 @@ int Sound_PlayEffectEax(unsigned short id) {
         void* const playing = reinterpret_cast<void*>(Sound_Channels[channel]);
         if (playing) g.sndbuf_stop(playing);
         const std::uint32_t entry = Address(Sound_Banks) + base + kVoices + voice * 8;
+        // DIVERGENCE DIV-0171 / DIV-0172: a buffer sound_sp changed gets its level back first (sound_sp.h).
+        if (sound_sp::Routed()) sound_sp::BeforePlay(reinterpret_cast<void*>(Dword(entry + 4)));
         g.sndbuf_play(Dword(entry) | loops, reinterpret_cast<void*>(Dword(entry + 4)), word >> 16);
         Sound_Channels[channel] = loops ? Dword(entry + 4) : 0;
+        if (!loops) sound_st::NoteOneShot(channel, entry);  // DIV-0174: DLL-side, nothing without its switch
     }
     return 0;
 }
@@ -299,11 +304,17 @@ void KeyOffEffectVoices() {
 }
 }  // namespace sound
 
-// original 0x587B40 (PSX 0x801626C0): fades the music to nothing over `frames` of Sound_Tick,
-// then stops it. x87 as the original: the step is -(volume / frames) with
-// frames loaded as a 64-bit integer whose high half is 0 - unsigned, where
-// Music_FadeIn divides by it signed - rounded at the control word's precision,
-// then stored as a float. eax is frames.
+// original 0x587B40 (PSX 0x801626C0, US 0x80161CD0): fades the music to
+// nothing over `frames` of Sound_Tick, then stops it. x87 as the original: the
+// step is -(volume / frames) with frames loaded as a 64-bit integer whose high
+// half is 0 - unsigned, where Music_FadeIn divides by it signed - rounded at
+// the control word's precision, then stored as a float. eax is frames.
+//
+// DIVERGENCE DIV-0173: with the switch and frames above 0, the stream is then
+// stopped at once (sound_st::CutStop), as the PlayStation's twin does: its
+// decrescendo is followed by SsSepStop in the same call (0x8015DF44, US
+// 0x8015D554). Every word above is still written as Capcom's, so the game sees
+// the fade it always saw; only the sound ends now instead of `frames` later.
 int Music_FadeOutStopEax(int frames) {
     MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
     sound::FinishStoppingFade();  // DIV-0028
@@ -319,6 +330,7 @@ int Music_FadeOutStopEax(int frames) {
         : "st");
     Music_FadeCount = frames;
     sound::g_stop_unseen = sound::g_fade_per_frame && frames != 0;  // DIV-0028: the first tick marks it stopped
+    if (sound_st::g_stop_cuts && frames > 0) sound_st::CutStop(frames);  // DIV-0173
     return frames;
 }
 
@@ -1128,6 +1140,20 @@ void Pend(unsigned track, unsigned sample) {
     g_resume.pending = true;
     g_resume.pending_track = track;
     g_resume.pending_sample = sample;
+}
+
+bool Heard(unsigned* track_out, unsigned* sample_out) {
+    const unsigned track = Music_Track;
+    void* const buffer = Music_Buffer;
+    if (track == 0xFF || !buffer || !g_ring.track_stream || g_ring.track != static_cast<int>(track)) return false;
+    if (!Playing(buffer, 0)) return false;
+    std::uint32_t heard = 0, folded = 0;
+    if (!HeardFolded(buffer, static_cast<std::uint32_t>(Music_FileSize), &heard, &folded)) return false;
+    *track_out = track;
+    *sample_out = folded;
+    MUSIC_LOG("heard track %u at sample %u (heard %u; %u written, the ring %u samples ahead)", Frame_Counter, track,
+              folded, heard, g_ring.written, g_ring.written - heard);
+    return true;
 }
 
 }  // namespace music_resume
@@ -1961,6 +1987,7 @@ void Sound_Inject() {
         bof3::PatchBytes("MusicPlayRefusesNone", Address(&sound::g_play_refuses_none), &was, &is, 1);
         bof3::Log("DIV-0168    Music_Play refuses track 0xFF, as the PlayStation does (on unless the line above says OFF)");
     }
+    sound_st::ArmStopCuts();  // DIV-0173: after every self-test above, which ran Capcom's fade
 }
 
 void music_resume::SelfTest() { ResumeMp3_SelfTest(); }
