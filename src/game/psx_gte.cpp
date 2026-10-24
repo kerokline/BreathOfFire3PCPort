@@ -117,9 +117,39 @@ extern "C" void __cdecl Gte_ApplyMatrix(const short* matrix, const short* vector
     out[2] = row[2];
 }
 
+namespace psx_gte {
+// DIV-0178 (docs/issue-121-lift-stall.md 8): 1 through
+// PatchBytes("ApplyMatrixLVExact") in PsxGte_Inject, after the fuzz, which
+// runs Capcom's wrapping products. While 0 Gte_ApplyMatrixLV is the port's;
+// set, its products are exact, as the PlayStation's libgte computes them.
+std::uint32_t g_lv_exact = 0;
+}  // namespace psx_gte
+
 // original 0x5A7CF0: the same with a VECTOR in - 32-bit components, so here the
 // products wrap too. libgte ApplyMatrixLV.
+//
+// DIV-0178: the PlayStation's ApplyMatrixLV (SLPS 0x80179390, Psy-Q
+// MTX_004.OBJ) splits each component into v >> 15 and v & 0x7FFF, runs the
+// high parts through MVMVA unshifted and the low parts shifted by 12, and
+// sums them (high << 3): the exact (m . v) >> 12 of a 64-bit product. The
+// port multiplies in 32 bits, so a component past 8 units (0x80000) against
+// a matrix entry of 0x1000 wraps negative - area 99's console flash, whose
+// arms are 15 units long, folds over the horizon at the frame a product
+// crosses 2^31 (issue #121's second report, known-defects D358). With the
+// switch armed the product is 64-bit; the shift and the stores are the same.
 extern "C" void __cdecl Gte_ApplyMatrixLV(const short* matrix, const long* vector, long* out) {
+    if (psx_gte::g_lv_exact) {
+        const std::int64_t x = vector[0], y = vector[1], z = vector[2];
+        std::int32_t row[3];
+        for (int r = 0; r < 3; ++r) {
+            const std::int64_t sum = matrix[3 * r] * x + matrix[3 * r + 1] * y + matrix[3 * r + 2] * z;
+            row[r] = static_cast<std::int32_t>(sum >> 12);
+        }
+        out[0] = row[0];
+        out[1] = row[1];
+        out[2] = row[2];
+        return;
+    }
     const std::uint32_t x = static_cast<std::uint32_t>(vector[0]), y = static_cast<std::uint32_t>(vector[1]),
                         z = static_cast<std::uint32_t>(vector[2]);
     std::int32_t row[3];
@@ -249,6 +279,13 @@ void PsxGte_Inject() {
                 bof3::CloneOriginal(e.name, e.original, e.size, e.call_at ? &call : nullptr, e.call_at ? 1 : 0));
         }
         SelfTest(entries, sizeof entries / sizeof entries[0]);
+    }
+    {
+        // DIV-0178: armed after the fuzz above, which sees Capcom's wrapping products.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("ApplyMatrixLVExact",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&psx_gte::g_lv_exact)), was, is, 4);
+        bof3::Log("DIV-0178    Gte_ApplyMatrixLV's products are exact, as the PlayStation's libgte computes them (on unless the line above says OFF)");
     }
     BOF3_INJECT(Gte_ApplyMatrix);
     BOF3_INJECT(Gte_SetRotMatrix);
