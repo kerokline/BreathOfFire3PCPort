@@ -9710,8 +9710,26 @@ recipe and the attract state-hash run pass through it; whether counter 4 can be
 raised while message 2 is open was not shown from the scripts, and longer
 translated text makes it likelier.
 
-**Status:** Capcom's (the JP build's); open: a repair would be measured on
-the attract run first, since a wait that adds frames shifts the recording.
+**Measured 2026-10-23 (the sound-layer round, group HM):** a scratch log at
+step 3 on every frame counter 4 is up, on the attract run (`attract_run.py
+--no-front`, `BOF3X_OPT=none`, hosted; scratch in
+`C:/Users/kerok/bof3x-runs/sl1023/hm/out/attract_*`). With no language layer
+message 2 is already closed (`Field_Request` 0) on the frame counter 4 is
+raised, on all four passes of a 12-minute run (frames 4,177, 9,699, 15,221,
+20,743); under `ja-JP` the same (frame 4,195). Under the Western layers it is
+still open: `en-US` frames 4,372..4,405 (34 frames), `fr-FR` 4,372..4,411
+(40), `de-DE` 4,382..4,439 (58) - the longer text keeps the box up after the
+script has moved the counter on. So the US disc's wait would add 34 to 58
+frames to every pass of the attract under a Western layer, moving the
+caption, the camera pull and everything after them; with no layer and under
+`ja-JP` it adds none. Under the Western layers today the caption starts while
+message 2 still shows - the overlap the US build removed.
+
+**Status:** Capcom's (the JP build's); open, **not built** (2026-10-23): the
+repair adds frames under every Western layer, so it is the owner's call -
+build it (DIV-0175 and the switch `Scena16CaptionWait` were reserved for it)
+with the attract references re-recorded under the layers it changes, or
+leave the overlap.
 
 ## D351 — Message 0xFA's gene name is not terminated after its 8-byte copy (Capcom's, fixed in the US build; fixed by DIV-0166)
 
