@@ -32,6 +32,7 @@
 #include "game/music_seq.h"
 #include "game/save_menu.h"
 #include "game/sound_callees.h"
+#include "game/sound_in.h"
 #include "game/sound_st.h"
 #include "game/sound_sp.h"
 #include "hook/detour.h"
@@ -445,6 +446,7 @@ void UnduckMusic(int frames) {
 // a stopping fade never stopped the music (known-defects.md D241).
 extern "C" void __cdecl Sound_Tick(void) {
     g.music_pump();
+    sound_in::JingleFrame();  // DIV-0177: once a logic frame, the jingle's end and its song's resume
     if (Music_FadeCount == 0) return;
     if (sound::g_fade_per_frame) {
         if (sound::g_stop_unseen) {
@@ -1153,6 +1155,21 @@ bool Heard(unsigned* track_out, unsigned* sample_out) {
     *sample_out = folded;
     MUSIC_LOG("heard track %u at sample %u (heard %u; %u written, the ring %u samples ahead)", Frame_Counter, track,
               folded, heard, g_ring.written, g_ring.written - heard);
+    return true;
+}
+
+bool Kept(unsigned* track_out, unsigned* sample_out, bool* playing_out) {
+    const unsigned track = Music_Track;
+    void* const buffer = Music_Buffer;
+    if (track == 0xFF || !buffer || !g_ring.track_stream || g_ring.track != static_cast<int>(track)) return false;
+    std::uint32_t heard = 0, folded = 0;
+    if (!HeardFolded(buffer, static_cast<std::uint32_t>(Music_FileSize), &heard, &folded)) return false;
+    const bool playing = Playing(buffer, 0);
+    *track_out = track;
+    *sample_out = folded;
+    *playing_out = playing;
+    MUSIC_LOG("kept track %u at sample %u, %s (heard %u; %u written)", Frame_Counter, track, folded,
+              playing ? "playing" : "halted", heard, g_ring.written);
     return true;
 }
 

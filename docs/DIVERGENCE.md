@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 176 entries, DIV-0001..0176, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 177 entries, DIV-0001..0177, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10994,3 +10994,63 @@ designed in rather than bolted on.
   that page from its first tick - the signature of this entry; the `combat` run against the `orig4` pair:
   two pages over 2,561 ticks, `0x5FD000` on every tick (this entry) and `0x803000` on 653 (DIV-0175's window records, already on `main`), nothing else; the references disagree on 7 pages of noise (`C:/Users/kerok/bof3x-runs/sunder1024/sh/check_combat.txt`).
 - **Reversible?** `BOF3X_ORIGINAL=SunderLoop`.
+
+### The area's song comes back after a jingle
+
+- **ID:** DIV-0177
+- **Date:** 2026-10-24
+- **Subsystem:** music - `Sound_LoadStream` `0x587910` and `Sound_StreamDone` `0x587A00` (ours,
+  `src/game/save_menu.cpp`), `Music_Resume` `0x5A7080` (ours, `src/game/sound_rest.cpp`), `Sound_Tick`
+  `0x587C70` (ours, `src/game/sound.cpp`), `music_resume::Kept` (`sound.cpp`), `sound_in::StreamLoads` /
+  `JingleStarts` / `JingleResume` / `JingleFrame` / `JingleOver` (`src/game/sound_in.cpp`, beside DIV-0169's
+  night); [`known-defects.md`](known-defects.md) D356, issue #120
+- **Tier:** Intent - a restoration (the PlayStation's song plays on under its jingles); the owner's call (2026-10-24):
+  "have the music resume after the flier - we'll file that as a restoration".
+- **Original behaviour:** the PC plays the 11 kind-0 jingles (`OYASUMI` .. `KARA`; `ITEM01` when an item is
+  handed over, `DRAGON` at a dragon gene) through `Music_Start` on the music's one ring, which releases the
+  area's song. Most sites bracket the jingle - `Sound_StopMusic` (`Music_Halt`: the song stopped, its
+  position kept), `Sound_LoadStream`, the wait on `Sound_StreamDone`, `Sound_ResumeAll` (`Music_Resume`) - so
+  Capcom meant the song to come back, but `Music_Resume` plays whatever the ring holds: the spent jingle,
+  which the pump stops again. `Music_Track` still names the song, so every later `Music_Play` of it is the
+  "already loaded" no-op and the area is silent until one with another track. Measured 2026-10-24 on
+  `genmelAndLift` through the Flier (`BOF3X_MUSIC_LOG`): `Music_Halt` and `ITEM01`'s `Music_Start` at f5719,
+  the jingle's end and `Music_Resume` at f5947, the pump's stop again at f5997, no song after; a WAV dump
+  silent from the jingle's end, the same with Capcom's 35 sound functions hosted (D356). A few sites
+  (`area_w1f.cpp`, `area_w3g.cpp`, one in `area_w4f.cpp`) play a jingle without the halt.
+- **New behaviour:** as a kind-0 jingle starts (its file open, before a dropped fade's `Music_Stop` and the
+  jingle's `Music_Start`), the song on the ring is taken (`music_resume::Kept`: track and sample, folded into
+  its pass, halted or playing). **A halted song** is started again when the game's own `Music_Resume` comes
+  and the jingle has ended, in place of the `Play` on the jingle's buffer - the scene's timing is Capcom's,
+  and `Sound_StreamDone` is unchanged. **A song still playing** is started again the first logic frame
+  `Sound_Tick` finds the jingle stopped (`Music_IsPlaying`), and from then until the next stream
+  `Sound_StreamDone` answers 1 for kind 0, so a wait on the jingle ends as before and never waits on the
+  song. Either way the restart is DIV-0169's morning - `music_resume::Pend` (DIV-0092's fast-forward), then
+  `Music_Start` from `Music_File` at the game's `Music_Volume` - and only while the game still holds that
+  track (`Music_Track`, `Music_LoadedTrack`, `Music_File`): other music, a stop, or a fade the jingle dropped
+  mean no resume. Nothing is taken while DIV-0169's night holds the song (its morning resumes it), with no
+  song on the ring, or with the switch off. All of it is the DLL's own state: no game word changes, and a
+  quicksave made mid-jingle carries none of it (its load leaves the area silent, as before).
+- **To the ear:** after `ITEM01`, `DRAGON` and the other jingles, the area's song comes back where it was cut,
+  with no fade, instead of silence.
+- **Rationale:** the PSX twin rule ([`psx-twin-check.md`](psx-twin-check.md)). The PlayStation's stream
+  start (JP `0x80164090`) sets up the XA stream and calls its set-up (`0x80164134`) and the CD library
+  (`0x80176454`, `0x80175FF8`) only - none of the sequence wrappers (`SsSepPause` / `SsSepReplay`
+  `0x80162710` / `0x80162764`, the stop `0x801626C0`) - so the song keeps playing under the jingle. The PC
+  has one music ring, so the song comes back after the jingle rather than under it; the port's own bracket
+  shows Capcom meant it back. Playing the jingle on a buffer of its own (the kind-1 path's `SndStream_Play`)
+  would give the PlayStation's overlap and is left as the alternative.
+- **Also in the PSX version?** No - the PlayStation never loses the song (above). The PC port's.
+- **Verification:** builds (worktree `fix/flier-music-skill-count` off `main` `5a4637f2`).
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` hosted from a launcher copy of the first build exits 0, every module
+  0 mismatches; after the bracket rework `BOF3X_SHADOW='sound,sound_in,shop_states,save_menu,sound_rest'` exits
+  0: sound 46,000 rounds, `save_menu` 66,000, `sound_rest` 27,000 (Capcom's `Music_Resume` against ours with
+  the switch 0), DIV-0169's 9 checks, and DIV-0177's own 16 traces and 12 answers (off; halted: kept, Capcom's
+  `Play` while the jingle sounds, resumed once after; playing: asked once a frame, resumed once, over until
+  the next stream; nothing on the ring, another track, the track stopped, the inn's night). Live, the
+  `genmelAndLift` route to recipe frame 6,150 on a PC + US install (`BOF3X_MUSIC_LOG`): f5719 `Music_Halt`,
+  `kept track 52 at sample 3053926, halted`, the jingle; f5947 the jingle's end and `Music_Resume`: `track 52
+  started again at sample 3053926`; the scene moves on at f5954, as in the owner's recording (Capcom's wait,
+  unchanged). The WAV dump: the song back at -16..-22 dBFS after the jingle, where the build without it is
+  silent to the end; a 2-second quiet stretch before the jingle in the x2 dump is not attributed. Not heard
+  by the owner; the playing case (no bracket) is covered by the self-test only.
+- **Reversible?** `BOF3X_ORIGINAL=JingleResume`.

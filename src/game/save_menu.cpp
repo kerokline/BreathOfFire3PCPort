@@ -39,6 +39,7 @@
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/save_menu_callees.h"
+#include "game/sound_in.h"
 #include "game/title_menu.h"
 #include "game/widescreen.h"
 #include "input/sigma.h"
@@ -405,6 +406,13 @@ extern "C" int __cdecl SaveMenu_MusicPlayingBody(U ecx) {
 // 1 meanwhile - the original's wait went on asking about the area's song,
 // which the failed load never stopped, so the inn and the camp hung on an
 // install without the jingle (D255).
+//
+// DIVERGENCE DIV-0177 (sound_in.h): any stream forgets the last jingle's
+// song; a kind-0 one, its file open, takes the song on the ring, halted or
+// playing - before the dropped fade's Music_Stop and the jingle's
+// Music_Start - to be started again at the game's Music_Resume (halted) or
+// at the jingle's end (playing). DLL state only; with the switch off (the
+// fuzz runs before it is armed) nothing but the forgetting.
 namespace {
 bool g_stream_missing = false;
 }
@@ -412,6 +420,7 @@ void save_menu::StreamMissingClear() { g_stream_missing = false; }
 bool save_menu::StreamMissing() { return g_stream_missing; }                  // the quicksave (sound.cpp)
 void save_menu::SetStreamMissing(bool missing) { g_stream_missing = missing; }
 extern "C" void __cdecl Sound_LoadStream(unsigned id) {
+    sound_in::StreamLoads();  // DIV-0177
     const U kind = id >> 12;
     SaveMenu_StreamKind = kind;
     const U table = Long(at::kStreamTables + kind * 4);
@@ -442,6 +451,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
         bof3::RunSpeed_StreamStarted();
         return;
     }
+    sound_in::JingleStarts();  // DIV-0177: the song heard, before the stop below and the jingle's start
     if (static_cast<std::uint32_t>(Music_FadeCount) != 0) {
         Music_FadeCount = 0;
         g.music_stop();
@@ -458,9 +468,12 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
 // the inn wait on it.
 //
 // DIVERGENCE DIV-0129: 1 while the last stream's file could not be opened.
+// DIVERGENCE DIV-0177: 1 for a kind-0 jingle once its song has been started
+// again - the music ring plays the song now, not the jingle.
 extern "C" int __cdecl Sound_StreamDone(void) {
     if (g_stream_missing) return 1;  // DIV-0129
     if (SaveMenu_StreamKind != 0) return g.voice_playing() ^ 1;
+    if (sound_in::JingleOver()) return 1;  // DIV-0177
     return g.music_playing() ^ 1;
 }
 

@@ -15,9 +15,14 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/sound_callees.h"
+#include "game/sound_in.h"
 #include "game/sound_rest_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+
+namespace sound {
+bool MusicLogOn();  // sound.cpp: BOF3X_MUSIC_LOG
+}
 
 using sound::ComCall;
 using sound::ComCreate;
@@ -129,6 +134,7 @@ extern "C" void __cdecl SndBuf_SetVolume(void* buffer, int level) {
 // else GetStatus's, or Stop's when it played; Music_Buffer read again for
 // Stop.
 extern "C" int __cdecl SoundRest_HaltBody(std::uint32_t ecx) {
+    if (sound::MusicLogOn()) bof3::Log("music_log   f%u Music_Halt track %u", Frame_Counter, static_cast<unsigned>(Music_Track));
     void* const buffer = Music_Buffer;
     if (buffer == nullptr) return 0;
     unsigned long status = ecx;
@@ -140,7 +146,14 @@ extern "C" int __cdecl SoundRest_HaltBody(std::uint32_t ecx) {
 
 // original 0x5A7080: the music played again, looping, from where it stopped
 // (Play(0, 0, DSBPLAY_LOOPING); no rewind). eax Play's, or 0 without a buffer.
+//
+// DIVERGENCE DIV-0177 (sound_in.h): after a jingle the game had bracketed with
+// Sound_StopMusic, the song taken at the jingle's start is started again
+// instead (eax 0, DS_OK) - the ring holds the spent jingle, which Capcom's
+// Play would replay. With the switch off, or no such song, Capcom's.
 extern "C" int __cdecl Music_Resume(void) {
+    if (sound::MusicLogOn()) bof3::Log("music_log   f%u Music_Resume track %u", Frame_Counter, static_cast<unsigned>(Music_Track));
+    if (sound_in::JingleResume()) return 0;  // DIV-0177
     void* const buffer = Music_Buffer;
     if (buffer == nullptr) return 0;
     return static_cast<int>(Method<ComPlay>(buffer, sound::kPlay)(buffer, 0, 0, kLooping));
