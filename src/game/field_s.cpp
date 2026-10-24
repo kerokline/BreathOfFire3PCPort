@@ -1735,7 +1735,11 @@ extern "C" void __cdecl SharedList_Setup(void) {
 // the window argument's stack slot; the kinds go out as the flag index over
 // a stack dword's upper bytes, the second lit row's colour likewise
 // (Menu_DrawSkillRow reads the byte, six bits of the colour); an extra 0x80
-// is pushed before 0x591AC0's three and popped with the next calls'.
+// is pushed before 0x591AC0's three and popped with the next calls'. That
+// 0x80 is Crt_sprintf's argument after the count: the format 0x6639C8 is
+// "%3d/%3d", and its second number reads it - "n/128". Ours passes it
+// (known-defects.md D355: until 2026-10-24 ours passed the count alone and
+// the second number was whatever our stack held, "0/144" or a negative).
 extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     auto* const w = rv::As<records::WindowRecord>(window);
     const int wx = static_cast<int>(w->x);
@@ -1771,7 +1775,7 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     const unsigned char length = SH_CALL(Text_CharCount)(Text(at::kListTitle));
     SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + w->x, title_y, 0, 0x10, Text(at::kListTitle));
     const U count = SH_AT(U (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListCount)(0, 0xFF, 0) & 0xFF;
-    SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtCount), count);
+    SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtCount), count, 0x80u);  // D355: the stray push, the total
     DrawFont8(w->x + 0x55, w->y + 0x92, 0);
     SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(at::kPiecesA), 1);
     SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(at::kPiecesB), 1);
