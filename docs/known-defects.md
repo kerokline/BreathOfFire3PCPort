@@ -9604,7 +9604,35 @@ at `0x57FFE3`); the write step (`FieldSave_Write`, `0x580010`) shows message
 a write that, on the PC, is a file write rather than a card write. Ours does
 as the PC.
 
-**Status:** latent; the port's; cosmetic.
+**Measured 2026-10-23 (the sound-layer round, group HM):** which recipes a
+repair would move. A scratch build logged `FieldSave_Begin` (the save menu
+opened), the "yes" in `FieldSave_Confirm` and an answer to the inn's
+`InnNight_AskSave`, and every distinct recipe in `tools/recipes/` was played
+at `--speed 8` with its header's language (52 recipes; left out as copies of
+these: the `_ab`, `_sw` and `quick_*` variants, the three other `sigma_*`
+site routes, the `cs_*` chapter jumps, `attract_cycle` and `title_timeline`;
+scratch in `C:/Users/kerok/bof3x-runs/sl1023/hm/out/*_d344*`). Two confirm a
+save: `balioAndSunder_2` (yes at recipe frame 21,726, slot 6, area 41; 108
+frames before the recipe ends) and `sigma_swap` (yes at 3,788, slot 7, area
+7; its shots from `f03810` on and the button round's state-hash references
+on four install kinds come after it). Three open the save menu and leave
+without saving, which the repair does not touch: `shop` (frame 2,974, the
+inn), `cutsceneAndNue` and `nueRandomEncounter` (6,984, area 23). No route
+answers the inn's own save prompt.
+
+**The plan, if the owner wants the two frames:** the repair is a step of two
+frames between the yes and the write (message 0x99, then the write step), so
+every recorded input after the yes lands two frames early. Neither recipe
+can be re-timed by `tools/recipe_shots.py`, which only puts a shot in place
+of a frame and never inserts one (HANDOFF's "Shot lines are frames"). The
+route fix is `wait 2` inserted after the yes frame (3,788 / 21,726) by a
+tool step, not by hand - an `--insert FRAME N` mode for `recipe_shots.py` -
+then `sigma_swap`'s shots after 3,788 and its references on the four
+installs re-recorded; `balioAndSunder_2` needs its replay checked to the
+end. Nothing else moves.
+
+**Status:** latent; the port's; cosmetic; not built - the owner's call
+whether two frames on every field save are worth re-timing those two routes.
 
 ## D345 — Three positional-sound hooks are empty on the PC: the movement op `B8`, the overlay queue's bit-3 voice update, and `Sound_PlayById`'s level and distance handling (the port's sound layer; not heard)
 
