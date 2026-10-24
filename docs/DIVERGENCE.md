@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 175 entries, DIV-0001..0175, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 176 entries, DIV-0001..0176, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10947,3 +10947,50 @@ designed in rather than bolted on.
   freed records' bytes in `WindowRecords`, so the state hash shows `0x803000` on six of the ten routes and the
   attract with the switch on - the signature of this entry.
 - **Reversible?** `BOF3X_ORIGINAL=WindowResetFull`.
+
+### Sunder's animation at Mt. Myrneg's entry loops until the scene reaches him
+
+- **ID:** DIV-0176
+- **Date:** 2026-10-24
+- **Subsystem:** field - area 51's movement script 3 (`0x5FD000` in `.data`, the bank-0x44 object the
+  placement script puts on the mountain top); `AreaW1c_Inject` (`src/game/area_w1c.cpp`);
+  [`cut-content.md`](cut-content.md) 4; IDEAS I22
+- **Tier:** Sensible - the scene plays as designed and is never seen; this makes it visible without changing
+  what happens in play.
+- **Original behaviour:** on entering Mt. Myrneg (area 51; the recipe `balioAndSunder_2`, area entry at
+  about recipe frame 920) the script's first op `0E 10 01 01` gives Sunder animation `0x10` with the loop flag
+  set, then `A1 0A` parks him on a counter wait until the scene reaches him (recipe frame ~3,240, two
+  thousand frames after the player arrives at the top at ~3,120). Animation `0x10` of that bank (read from
+  the running game's arena, `0x8B5AFE`) is 25 steps: frames 0..23 at 4 ticks each (137 ticks of hold, about
+  four seconds), then a step that jumps back to the one before, holding frame 23 - the standing frame - for
+  ever, so `Sprite_ScriptTick`'s wrap never comes and the loop flag has nothing to loop. The player sees him
+  standing by the tree, back turned; the animation (The Cutting Room Floor's page lists it as seen only with
+  a walk-through-walls cheat) is over before the top is in view. The same bank holds **animation `0x0F`**
+  (`0x8B54A8`): the same 24 steps with the same holds and no jump, a looping cut of the same scene with its
+  own frame table (a puddle on the ground in every frame, a pause between streams), used by no shipped
+  script. Seen 2026-10-24 by re-pointing the test game's sprite at each from outside the process
+  (`analysis/shots/sunder-loop-1024/anim_10_replayed_original.png`, `anim_0F_poked.png`).
+- **New behaviour:** the script's first op asks for `0x0F`: one byte, `0x5FD001` `0x10` -> `0x0F`
+  (`bof3::PatchBytes("SunderLoop")`, a `.data` byte, written in both hosts). The animation loops from area
+  entry until Capcom's script moves on at counter `0x0A` - the surprise effect, its wait, and the walk op
+  `48`, which gives the sprite its facing animation. `analysis/shots/sunder-loop-1024/loop_0F_patched_build.png`:
+  the patched build at the top, recipe frames 3,160..3,340, a shot every four frames.
+- **Rationale:** the owner's ask (2026-09-25, IDEAS I22): the scene was meant to be seen, and Capcom built
+  the looping cut and shipped the once-and-hold one. This uses the disc's own data for the loop rather than
+  re-triggering `0x10` from code, so the frames, the holds and the puddle are the animator's. During the
+  surprise effect he keeps going (caught in the act) where the original stood still; the owner's eye decides
+  whether that reads right. **The owner's call (2026-10-24, the sheets of the patched build through the
+  scene): the loop runs through the surprise mark and ends on the frame the script gives him the hands-down
+  pose (recipe frame 3,296), a hard cut; that is right as it is, and it stays on by default.** A hand-over
+  to the once-cut's tail (the stream thinning, the hands dropping) was offered and declined.
+- **What changes to the eye:** only Sunder at the mountain top before the scene. Nothing to the ear.
+- **Also in the PSX version?** Yes - the area's scripts are the section's bytes, which came across unchanged
+  ([`movement-script.md`](movement-script.md) 3; the placement script byte-identical to the disc's,
+  [`event-script.md`](event-script.md)). Capcom's choice, not a port defect.
+- **Verification:** builds (worktree `cut/sunder-loop` off `main` `2f55de72`); the log says `patch ON
+  SunderLoop 1 bytes at 0x005FD001`. `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy
+  of the build exits 0 (`inject: 10087 ours`, every module 0 mismatches; no fuzz reads the script bytes).
+  The live run above. The state hash: the patched byte is on `.data` page `0x5FD000`, so every route reports
+  that page from its first tick - the signature of this entry; the `combat` run against the `orig4` pair:
+  two pages over 2,561 ticks, `0x5FD000` on every tick (this entry) and `0x803000` on 653 (DIV-0175's window records, already on `main`), nothing else; the references disagree on 7 pages of noise (`C:/Users/kerok/bof3x-runs/sunder1024/sh/check_combat.txt`).
+- **Reversible?** `BOF3X_ORIGINAL=SunderLoop`.

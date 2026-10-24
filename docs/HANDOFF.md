@@ -47,6 +47,15 @@ hosted cross form).
 
 ## Pick up here
 
+00000. **The Sunder loop is built** on `cut/sunder-loop` (off `main` `2f55de72`, worktree
+   `C:\Users\kerok\bof3x-runs\sunder1024\wt`, unpushed; DIV-0176 `SunderLoop`; [`cut-content.md`](cut-content.md) 4): the
+   one byte at `0x5FD001` of area 51's movement script 3 asks for Capcom's unused looping cut `0x0F` of
+   Sunder's animation instead of the once-and-hold `0x10`, so he keeps going at the mountain top until the
+   scene reaches him. Self-tests exit 0; seen in the patched build at the top
+   (`analysis/shots/sunder-loop-1024/`); **the owner looked (2026-10-24): the hard cut at the hands-down pose is
+   right, on by default; PR opened.** Runs and the live readers (`peek51.py`,
+   `poke51.py`) in `C:\Users\kerok\bof3x-runs\sunder1024`.
+
 0000. **The sound-layer round is built** on `sound/round` (off `main` `300ce67f`; the four group branches `sound/in`,
    `-sp`, `-st`, `-hm` merged one at a time, unpushed; [`sound-layer-round.md`](sound-layer-round.md) sections 4..6):
    the PlayStation's positional sound, pause and cuts back in the port's DirectSound layer, each on by default with a

@@ -8,6 +8,13 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The Sunder loop, 2026-10-24, built on `cut/sunder-loop`** (off `main` `2f55de72`, unpushed; DIV-0176
+`SunderLoop`; [`cut-content.md`](cut-content.md) 4, IDEAS I22): at Mt. Myrneg's entry area 51's script gave
+Sunder animation `0x10`, 24 frames and then a hold on the standing frame, over two thousand frames before
+the player reaches the top. One byte of the script now asks for the bank's unused looping cut `0x0F` (the same
+steps, no end jump, a puddle in every frame), so he keeps going until the scene starts. Self-tests exit 0;
+seen in the patched build and by the owner (the cut at the scene's hands-down pose kept, on by default); PR open.
+
 **The sound-layer round, 2026-10-23 evening, built on `sound/round`** (off `main` `300ce67f`, unpushed;
 [`sound-layer-round.md`](sound-layer-round.md)). The twin-diff of 2026-10-23 (PRs #115, #116; fix wave 1023, PR #117)
 left one class of port defect: the DirectSound layer had replaced the PlayStation's positional sound, pause and cuts
