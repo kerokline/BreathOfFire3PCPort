@@ -47,6 +47,17 @@ hosted cross form).
 
 ## Pick up here
 
+000000. **Issues 130 and 134 (a disc-built install's missing exits) are fixed** on `fix/issue-130-descriptor-places`
+   (off `main` `f472072a`, unpushed; [`exe-import-engine.md`](exe-import-engine.md) 7.8): the importer placed no area
+   descriptor whose region the port relaid by a word (the pointer votes tied), so areas 62, 97, 162 and 163's link
+   counts were zero in a disc-built image and `unread` in `exe-gaps.tsv`, which the image zeroes unlogged. Tied
+   data-pointer places are now each tried; the recipes regenerated over the seven discs, checks 0 errors, the
+   owner's `maekyssGorge` recipe leaves area 62 on the rebuilt scratch image (`D:of3x-runs\i130`). **A player's
+   install needs the rebuild**: the staleness prompt names `exe`. **Left:** areas 89 and 129 (the fishing spots'
+   `Field_InputFlags` byte, `Game_Mode` 8) and 134 keep a descriptor hole - a rule through the PSX descriptor table
+   would place every descriptor; the same save loads into area 62 on the PC install and into camp area 90 on the
+   disc-built one with every gap filled and with a JP-disc image, so not the exe image: cause not found (the owner's draft replies in the session scratchpad).
+
 00000. **The Sunder loop is built** on `cut/sunder-loop` (off `main` `2f55de72`, worktree
    `C:\Users\kerok\bof3x-runs\sunder1024\wt`, unpushed; DIV-0176 `SunderLoop`; [`cut-content.md`](cut-content.md) 4): the
    one byte at `0x5FD001` of area 51's movement script 3 asks for Capcom's unused looping cut `0x0F` of

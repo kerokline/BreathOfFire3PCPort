@@ -960,10 +960,25 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                             votes[cls[a]][k, h - a] += 1
             # the data pointers' place when they have one: a code pointer of a
             # resident or much-shared function votes for many places
-            top = (votes["data"] or votes["text"] or collections.Counter()).most_common(2)
+            counted = votes["data"] or votes["text"] or collections.Counter()
+            top = counted.most_common()
             got = []
-            if top and not (len(top) > 1 and top[1][1] == top[0][1]):
-                got = stretches(lo, hi, top[0][0], None)
+            if top:
+                # Data-pointer votes that tie are a region the port relaid by a word
+                # inside it (area 62's handler table and descriptor, 0x6041CC..0x604224:
+                # three pointers before the inserted word vote one displacement, three
+                # after it the other - issue 130, the descriptor's link count left zero):
+                # every tied place is tried, in a fixed order, and the stretches that
+                # pass are kept where they do not overlap one already kept. A tie
+                # between code-pointer votes stays refused: a resident or much-shared
+                # function votes for many places.
+                best = top[0][1]
+                tied = sorted((place for place, n in top if n == best), key=lambda q: (q[0][0], q[0][1] or 0, q[1]))
+                if len(tied) == 1 or votes["data"]:
+                    for place in tied:
+                        for r in stretches(lo, hi, place, None):
+                            if not any(r["pc"] < g["pc_end"] and g["pc"] < r["pc_end"] for g in got):
+                                got.append(r)
             if not got:
                 # no key, or none that places: a 16-byte window of numbers found once in the
                 # files the neighbours come from - any window when no pointer keys the region
