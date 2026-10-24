@@ -3881,16 +3881,29 @@ designed in rather than bolted on.
   patched to 1 at inject under the name `BattleBannerCentre`. DIV-0058 and
   DIV-0059's fix, in the battle.
 - **Rationale:** as DIV-0018.
-- **Also in the PSX version?** The US disc's own draw centres its own font;
-  not checked how.
+- **Amended 2026-10-24 (issue 127):** the same flag raises the draw's
+  character cap by half: `Text_DrawAt`'s count, 0x12 wide and 8 narrow, is
+  27 and 12. The room for 8 glyphs of 12 units holds 12 letters of 8 (the
+  owner's rule). The original's cap cut the narrow banner of the flash,
+  `BattleFxFlash_Banner` `0x432FC0` (`BattleBanner_Add(1, 0, 0, ..)`, b2 0),
+  to "Lucky St" (owner's screenshot, issue 127). The centring measured all
+  12 letters but only 8 were drawn, so the text was also left of centre.
+  "Instant Kill" (`0x669E04`, the same narrow kind) was cut the same way.
+  The US release took another route: its twin `0x801E9538` (212 bytes;
+  the JP's `0x801E9470` is 332) never reads +2 and always draws the medium
+  box at x - 0x10, count 0x12, the text at x + 0x26 - 4 n. Here the small
+  box stays, as the owner chose.
+- **Also in the PSX version?** The US disc's draw has no narrow banner (see
+  the amendment); it centres at 4 units a letter.
 - **Verification:** the battle_win_states shadow self-test (the fuzz runs
   before the patch): 57,000 rounds over 19 functions, 0 mismatches. The
   `combat_ab` recipe with and without `BOF3X_ORIGINAL=BattleBannerCentre`:
   22 of 43 frames differ, every one within the banner band (y 46..57);
   "Green Apple", "Pilfer" and "Teepo EX" on the box's middle in the
-  side-by-side. The owner's eye owed.
+  side-by-side. The owner's eye owed. **Amendment:** owed: a Lucky Strike
+  or an Instant Kill seen in game.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=BattleBannerCentre`
-  keeps the overlay and the original's x.
+  keeps the overlay, the original's x and its character cap.
 
 ### The draw-item pool doubled: cells the wide view keeps ran it dry
 

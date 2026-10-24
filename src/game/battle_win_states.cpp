@@ -324,6 +324,9 @@ extern "C" void __cdecl BattleWin_LabelFrame() {
 // owner's "Green Apple" and "Flare" left of centre, 2026-09-27. 0 until
 // BattleWinStates_Inject patches it to 1 under the name BattleBannerCentre,
 // so BOF3X_ORIGINAL=BattleBannerCentre and the fuzz keep the original's x.
+// The same flag lets the text run to half again the characters (amended for
+// issue 127): the room for 8 glyphs of 12 units holds 12 letters of 8, and
+// "Lucky Strike" and "Instant Kill", 12 each, drew as "Lucky St".
 unsigned char g_banner_centre = 0;
 
 namespace {
@@ -332,6 +335,13 @@ namespace {
 unsigned BannerTextX(unsigned x, unsigned n, bool wide, const unsigned char* text) {
     if (!g_banner_centre) return wide ? x - 6 * n + 0x26 : x + 6 * (6 - n);
     return x + (wide ? 0x26u : 0x24u) - TextAdvance_Width(text) / 2;
+}
+
+// Characters Text_DrawAt may draw: 0x12 wide, 8 narrow; under DIV-0061 times
+// 3 / 2, 12-unit glyphs counted as 8-unit letters (27, 12).
+int BannerTextCount(bool wide) {
+    const int glyphs = wide ? 0x12 : 8;
+    return g_banner_centre ? glyphs * 3 / 2 : glyphs;
 }
 }  // namespace
 
@@ -359,7 +369,7 @@ extern "C" void __cdecl BattleWin_BannerFrame() {
     const unsigned colour = (o & ~0xFFu) | At(at::kBanners + 0xA + o)[0];
     const unsigned ty = static_cast<std::uint16_t>(win->y + 3);
     const unsigned tx = static_cast<std::uint16_t>(BannerTextX(win->x, n, wide, text(o)));
-    g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), wide ? 0x12 : 8, text(o));
+    g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), BannerTextCount(wide), text(o));
 }
 
 // ===========================================================================
