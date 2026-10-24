@@ -62,10 +62,10 @@ hosted cross form).
    drift), D354 found and fixed (the merged build's first combat run crashed in DSOUND at a bank reload; both DLL-side
    buffer tables are now told before `Snd_LoadBank` releases). **The gate** (round doc 5): self-tests exit 0 at every
    step; the state hash on the ten routes shows only the pages the DIVs predict (`0x803000` for DIV-0175, shop's
-   `0x7DE000` for DIV-0169); WAV diffs on shop (the song back from 91 s) and whelpBoss (four sub-dB windows, a pan
-   attribution run queued); **combat and dragonTransform re-run on the fixed build and the whelpBoss attribution were
-   still running when this was written** - read `C:\Users\kerok\bof3x-runs\sl1023\merge\end_batch2.out` and `end_batch3.out` first and
-   finish round doc 5. **Nothing heard**: the listens and the two calls are at the top of
+   `0x7DE000` for DIV-0169); WAV diffs on shop (the song back from 91 s), combat (no window differs: its cuts fall where a new track
+   starts) and whelpBoss (four windows, each attributed to its switch by one run with that switch off: the pan, the
+   level gate, and the two cuts' missing fade tails; with every switch off the dump equals the original to the
+   sample). Runs and diffs in `C:\Users\kerok\bof3x-runs\sl1023\merge\` (`end_batch*.out`, `wav\`). **Nothing heard**: the listens and the two calls are at the top of
    [`owner-review.md`](owner-review.md). PR at the owner's word; the twins branch (item 0b) is a second PR. Briefs and
    runs: `C:\Users\kerok\bof3x-runs\sl1023\` (`brief_common.md`, `groups.md`, `wt_<g>` worktrees, `merge\` the launcher copies, checks,
    `wav\`).

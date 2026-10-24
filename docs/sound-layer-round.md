@@ -2,7 +2,7 @@
 
 **Status:** BUILT (2026-10-23 evening, `sound/round` off `main` `300ce67f`; the four groups merged
 one at a time, DIV-0169..0175, D353 and D354; the end batch's state hash and WAV dumps in section 5,
-its last runs re-made on the fixed build; **not heard by the owner** - the listens and two calls in
+its last runs re-made on the fixed build and every WAV difference attributed to its entry; **not heard by the owner** - the listens and two calls in
 [`owner-review.md`](owner-review.md); PR at the owner's word). Sections 0..3 are the staging as written;
 4 and 5 are what was built and measured.
 
@@ -141,8 +141,9 @@ PlayStation addresses, never the decompilation" held in every file.
   frame rate (the music log ends at f12,071 in a 439 s dump, about 30 frames a wall second) they are the cuts
   themselves: f1,157 (track 4's stop) and f10,346 / 10,363 (the bedroom's track 14 before the dream,
   DIV-0143's knock-on), and `wav_diff`'s delta is before minus after, so +71 / +76 dB there is the after
-  side **silent where the fade's 0.17 s tail was** - the cut, exactly. The `OneShotKeyOff` run: PENDING
-  (expected to differ nowhere: no one-shot of the route rings into the next action).
+  side **silent where the fade's 0.17 s tail was** - the cut, exactly. `OneShotKeyOff` off differs nowhere:
+  no one-shot of the route rings into the next action. So every window of every dump is one a ledger entry
+  predicts, and the route with every switch off is the original to the sample.
 
 ## 6. Left
 

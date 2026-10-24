@@ -18,8 +18,8 @@ table and the distance gate, cuts where every one of the 131 `Music_FadeOutStop`
 stop (D347, the owner's ear's call), the one-shot key-off, and D352's window reset. Held with measurements for the
 owner: D350 (34..58 frames on the Western attract), D344 (two recipes save), D340. Found on the way: D353 (region
 drift, settled) and D354 (a DSOUND crash at a bank reload, fixed the same night). The gate: self-tests exit 0, the
-ten-route state hash shows only the pages the entries predict, the WAV dumps the changes they describe (the fixed
-build's last re-runs were still running at the write). **Nothing heard by the owner** ([`owner-review.md`](owner-review.md)).
+ten-route state hash shows only the pages the entries predict, the WAV dumps the changes they describe, every differing window attributed to its entry by a run with
+that switch off. **Nothing heard by the owner** ([`owner-review.md`](owner-review.md)).
 Beside it, `audit/twins-remainder`: 497 twin markers, 38 wrong propagated pairs retired by a `us_jp.tsv` check
 ([`twin-pairs-check.md`](twin-pairs-check.md), D339 amended), and the records audit's typing pass with `codegen_same`
 0 differ, audited.
