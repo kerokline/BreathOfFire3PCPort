@@ -291,7 +291,7 @@ extern "C" void __cdecl Transition_Kind20(void) {
 // The field task (0x495800) and its modes 0 and 1
 // ===========================================================================
 
-// original 0x495800: task 0's body for a game - the demo (Title_StateStartDemo)
+// original 0x495800 (PSX 0x80198068): task 0's body for a game - the demo (Title_StateStartDemo)
 // and every started or loaded game (PSX GAME.EMI section 0 0x80198068). Mode
 // and step 0, the task's private words and every window record cleared; then
 // for ever: the handler of GameMode_Handlers[Game_Mode], the play clock, a
@@ -420,7 +420,7 @@ extern "C" void __cdecl Field_WaitTransition(unsigned char run_argument) {
     }
 }
 
-// original 0x496870: the play clock and two countdowns, once a frame from
+// original 0x496870 (PSX 0x80199CAC): the play clock and two countdowns, once a frame from
 // Field_Task (PSX 0x80199CAC, gap pairing - the same code). Unless
 // Field_Request is 9: the clock's frames count to 30, seconds and minutes to
 // 60, hours to 99, and at 99:59:59 it stops; then each countdown ticks.

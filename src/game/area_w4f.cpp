@@ -758,7 +758,7 @@ extern "C" void __cdecl Area198_SinkFade(void) {
             c = Sprite_Current;
         }
     }
-    if (rv::As<records::SpriteObject>(c)->height_whole == 0xF600) B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
+    if (static_cast<std::uint16_t>(rv::As<records::SpriteObject>(c)->height_whole) == 0xF600) B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
     if (static_cast<std::int16_t>(rv::As<records::SpriteObject>(c)->height_whole) > static_cast<std::int16_t>(0xF380)) {
         ScriptStep(-2);
         return;

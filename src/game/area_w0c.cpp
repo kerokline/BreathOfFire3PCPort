@@ -201,7 +201,7 @@ unsigned char TriggerTail4(unsigned char sub) {
 // last two), two mode-tail phases.
 // ===========================================================================
 
-// original 0x403400 (Area27_Choices[0]): message 0xFFFF; an answer with bit
+// original 0x403400 (Area27_Choices[0]; PSX 0x801F35E0): message 0xFFFF; an answer with bit
 // 0 clear arms the mode tail kind 1 (Area27_TailDropIn1) at state 0.
 extern "C" void __cdecl Area27_ChoiceTail1(void) {
     const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
@@ -211,7 +211,7 @@ extern "C" void __cdecl Area27_ChoiceTail1(void) {
     B(AreaW0c_TailState_addr) = 0;
 }
 
-// original 0x403430 (Area27_Choices[1]): the same for tail kind 2.
+// original 0x403430 (Area27_Choices[1]; PSX 0x801F3618): the same for tail kind 2.
 extern "C" void __cdecl Area27_ChoiceTail2(void) {
     const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     SetMessage(0xFFFF);
@@ -220,7 +220,7 @@ extern "C" void __cdecl Area27_ChoiceTail2(void) {
     B(AreaW0c_TailState_addr) = 0;
 }
 
-// original 0x403460 (Area27_Choices[2]): message 0xFFFF; answer 0 sets
+// original 0x403460 (Area27_Choices[2]; PSX 0x801F3650): message 0xFFFF; answer 0 sets
 // counter 0 to 5, answer 1 to 6, any other nothing.
 extern "C" void __cdecl Area27_ChoiceCounter5or6(void) {
     const signed char answer = Answer();
@@ -229,7 +229,7 @@ extern "C" void __cdecl Area27_ChoiceCounter5or6(void) {
     else if (answer == 1) B(at::kCounter0) = 6;
 }
 
-// original 0x403490 (Area27_Choices[3]): answer 0: 0x5B, 1: 0x5A.
+// original 0x403490 (Area27_Choices[3]; PSX 0x801F3690): answer 0: 0x5B, 1: 0x5A.
 extern "C" void __cdecl Area27_ChoiceCounter5Bor5A(void) {
     const signed char answer = Answer();
     SetMessage(0xFFFF);
@@ -299,7 +299,7 @@ extern "C" void __cdecl Area28_SpawnEffect40(void) {
 // two two-state machines through Area32_StatesA / Area32_StatesB.
 // ===========================================================================
 
-// original 0x403880 (Area32_Choices[0]): message 0xFFFF; answer 1 plays
+// original 0x403880 (Area32_Choices[0]; PSX 0x801F363C): message 0xFFFF; answer 1 plays
 // animation 0x80 on the leader (Sprite_Current made ObjTrio for the call,
 // then put back).
 extern "C" void __cdecl Area32_ChoiceLeaderAnim(void) {
@@ -318,7 +318,7 @@ extern "C" void __cdecl Area32_RunA(void) {
     StateEntry("Area32_RunA", Area32_StatesA_addr, at::kArea32States, Sprite_Current[4])();
 }
 
-// original 0x4038E0 (Area32_StatesA[0]): Sprite_ShadeFadeBegin; the object's
+// original 0x4038E0 (Area32_StatesA[0]; PSX 0x801F3728): Sprite_ShadeFadeBegin; the object's
 // +0x5C = 1, its x +0x34 moved by its step +0xC, state 1; the leader's word
 // +0x12E less 2.
 extern "C" void __cdecl Area32_ShadeStart(void) {
@@ -331,7 +331,7 @@ extern "C" void __cdecl Area32_ShadeStart(void) {
     AddWord(Field_State + 0x12E, -2);
 }
 
-// original 0x403920 (Area32_StatesA[1]): Sprite_ShadeLower(8); while it
+// original 0x403920 (Area32_StatesA[1]; PSX 0x801F378C): Sprite_ShadeLower(8); while it
 // answers 0, the leader's +0x12E less 2 and the object moved by its step;
 // once it answers, state 0.
 extern "C" void __cdecl Area32_ShadeStep(void) {
@@ -351,7 +351,7 @@ extern "C" void __cdecl Area32_RunB(void) {
     StateEntry("Area32_RunB", Area32_StatesB_addr, at::kArea32States, Sprite_Current[4])();
 }
 
-// original 0x403980 (Area32_StatesB[0]): Sprite_SetTint(the object, 0, 0,
+// original 0x403980 (Area32_StatesB[0]; PSX 0x801F3844): Sprite_SetTint(the object, 0, 0,
 // 0, 1)'s slot to the active member's +0x9F; the object's +0 bit 0x20 set
 // and 0x40 cleared, +0x5C = 1, the tint bytes +0x5F / +0x5E / +0x5D = 0x80,
 // step +0xC = 0x2000 and x +0x34 moved by it, state 1; the active member's
@@ -373,7 +373,7 @@ extern "C" void __cdecl Area32_TintStart(void) {
     AddWord(Field_ActiveMember + 0x8A, -2);
 }
 
-// original 0x403A20 (Area32_StatesB[1]): each tint byte +0x5D, +0x5E, +0x5F
+// original 0x403A20 (Area32_StatesB[1]; PSX 0x801F3920): each tint byte +0x5D, +0x5E, +0x5F
 // below 0xC0 as a signed byte gains 4; when all three are exactly 0xC0,
 // Tint_Release(the active member's +0x9F), the object's bit 0x20 cleared,
 // +0x5C and the tint bytes 0, state 0, the active member's +0x84 = 2;

@@ -125,7 +125,7 @@ bool PlaceEffect(unsigned char kind) {
 // The look-around mode (Game_Mode 6) and its camera
 // ===========================================================================
 
-// original 0x496A00 (no PSX twin paired): mode 6's step 0, and mode 11's
+// original 0x496A00 (no PSX twin paired; PSX 0x80199F1C): mode 6's step 0, and mode 11's
 // step 1. While none of the buttons of the map word 0x903586 is held in
 // Input_Held, the look ends: the pitch word above 0x200 leaves the turn byte
 // 0x66C7D9 0, below it sets it 1 (equal leaves it), and the step moves on.
@@ -167,7 +167,7 @@ extern "C" void __cdecl Look_PadControl(void) {
     }
 }
 
-// original 0x496AD0 (no PSX twin paired): one frame of the camera's way back
+// original 0x496AD0 (no PSX twin paired; PSX 0x8019A0D0): one frame of the camera's way back
 // from a look - yaw 22 down to 0xFD56 (below it, snapped there), and the
 // pitch word 22 towards 0x200, down with the turn byte 0x66C7D9 at 0 and up
 // otherwise, snapped to 0x200 once there or past it; each word with its
@@ -227,7 +227,7 @@ extern "C" void __cdecl GameMode_LookEnd(void) {
 // 8's first step, GameMode8_Enter 0x496440, the word after the table.
 extern "C" void __cdecl GameMode_Shop(void) { Entry(GameMode_ShopSteps_addr, Game_Step)(); }
 
-// original 0x4962A0 (no PSX twin paired): the shop's step 0. The object the
+// original 0x4962A0 (no PSX twin paired; PSX 0x80199270): the shop's step 0. The object the
 // shop was opened on is the s8 0x929F0C (Field_ObjectIdle sets it with
 // Game_Mode 7). When it is an object and its dword +0x18 is 9, there is no
 // shop: back to mode 2 at once - the object turned to face +0x85 unless its
@@ -268,7 +268,7 @@ extern "C" void __cdecl Shop_Open(void) {
     Game_Step = static_cast<unsigned short>(Game_Step + 1);
 }
 
-// original 0x517300 (no PSX twin paired): the shop's step 1, once a frame -
+// original 0x517300 (no PSX twin paired; PSX 0x8019A398): the shop's step 1, once a frame -
 // the field drawn without its objects' logic (AreaMap_Frame,
 // Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen,
 // Effect_RunObjects, Field_DrawFrame, Field_RunTaskRecords), then a tail
@@ -284,7 +284,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Frame(void) {
     g.shop_states();
 }
 
-// original 0x496390 (no PSX twin paired): the shop's step 2. The party
+// original 0x496390 (no PSX twin paired; PSX 0x801993D8): the shop's step 2. The party
 // combination byte 0x90412C gets bit 7, and the sound bank 0x2C2 + its low
 // seven bits is loaded (the area's own, which the shop's file replaced) with
 // the framed wait; with Field_InputFlags bit 4, DAT 0x12A too, with its wait,
@@ -336,7 +336,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_Frame(void) {
     g.task_records();
 }
 
-// original 0x496830 (no PSX twin paired): Field_WaitTransition with the menu's
+// original 0x496830 (no PSX twin paired; PSX 0x80199C38): Field_WaitTransition with the menu's
 // frame - called by mode 3's steps 0 and 2 after Transition_Start(3) / (2).
 // Loop: a frame's sleep; with Transition_Busy 0 and `run` 0, one more
 // sleep and return; else Menu_Frame, and return once the word is 0.
@@ -866,7 +866,7 @@ extern "C" unsigned char __cdecl Scena01_StepHook(int x, int z) {
 // The window cursor
 // ===========================================================================
 
-// original 0x5960D0 (no PSX twin paired): the window kind 2's cursor, a tail
+// original 0x5960D0 (no PSX twin paired; PSX 0x8015ABC8): the window kind 2's cursor, a tail
 // jump from its state 2 (0x595C44) - Menu_DrawHand at the window 0x905B84's
 // x + 4 and at its y plus the list set's first row and the row stride times
 // the cursor's row: record 0x7DEE65 of the 6-byte table 0x66AE2C (+2 the

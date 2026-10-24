@@ -95,7 +95,7 @@ void SelfTestSort(VoidFn theirs) {
 
 }  // namespace
 
-// original 0x56F5B0. Empties two of each layer's three draw lists, for the
+// original 0x56F5B0 (PSX 0x80154780). Empties two of each layer's three draw lists, for the
 // display buffer being built: first = null, last = the head itself, so that
 // the first append lands in `first` through `last` like any other.
 //
@@ -115,7 +115,7 @@ extern "C" void __cdecl DrawLayers_Reset(void) {
     if (map_rim::Active()) map_rim::ExtraReset(Gfx_BufferIndex);
 }
 
-// original 0x56F5F0. Orders the draw table by layer and then key - the high 16
+// original 0x56F5F0 (PSX 0x801547F0). Orders the draw table by layer and then key - the high 16
 // bits of each entry - for 0x593060 to merge with the sprite list.
 //
 // As the original has it: an exchange sort, each entry against every later

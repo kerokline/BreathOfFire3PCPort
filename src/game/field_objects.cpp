@@ -181,7 +181,7 @@ extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
     }
 }
 
-// original 0x5197F0: the velocity op D4 left in the party slot's record
+// original 0x5197F0 (PSX 0x801A4D24): the velocity op D4 left in the party slot's record
 // (PSX FUN_801A4D24). Its argument is unused.
 extern "C" void __cdecl Party_ApplyRecord(unsigned char* context) {
     (void)context;

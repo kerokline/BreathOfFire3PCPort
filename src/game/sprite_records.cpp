@@ -33,7 +33,7 @@ const unsigned char* ObjectData() { return Get<const unsigned char*>(Sprite_Curr
 
 }  // namespace
 
-// original 0x57BFF0: the current object's matrix. The position - x and y in
+// original 0x57BFF0 (PSX 0x8015BE00): the current object's matrix. The position - x and y in
 // 1/512ths less 0x4000, z the negated half of the s16 at +0x3E, toward zero -
 // through the current GTE matrix into the translation; the low words of
 // +0x64, +0x68, +0x6C as the rotation's angles.
@@ -50,7 +50,7 @@ extern "C" short* __cdecl Sprite_ObjectMatrix(short* matrix) {
     return Gte_RotMatrix(angles, matrix);
 }
 
-// original 0x57BED0: the light's direction in the object's frame, to out[0..2]
+// original 0x57BED0 (PSX 0x8015BC9C): the light's direction in the object's frame, to out[0..2]
 // - the first row of the light matrix. (0, 0, Light_Angles[3]) turned by the
 // light's angles, then by the object's rotation "transposed" - IN PLACE, and
 // Gte_TransposeMatrix in place is not a transpose: the upper triangle is
@@ -81,7 +81,7 @@ extern "C" void __cdecl Light_ObjectDirection(short* out, const long* angles) {
     Gte_PopMatrix();
 }
 
-// original 0x57BAE0: the current object's quads as primitives and records.
+// original 0x57BAE0 (PSX 0x8015B6F0): the current object's quads as primitives and records.
 // Returns the count's low byte; the one caller keeps al only.
 //
 // Kept from the original, deliberately:

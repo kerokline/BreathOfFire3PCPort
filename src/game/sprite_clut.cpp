@@ -77,7 +77,7 @@ void SelfTest(RestoreFn theirs) {
 
 }  // namespace
 
-// original 0x534E50. If the field state says one is wanted: puts the current
+// original 0x534E50 (PSX 0x801C414C). If the field state says one is wanted: puts the current
 // sprite object's CLUT back as it was loaded - entries 1 to 31, entry 0 is
 // left - marks the strip for upload, and clears the request.
 extern "C" void __cdecl Sprite_RestoreClut(void) {

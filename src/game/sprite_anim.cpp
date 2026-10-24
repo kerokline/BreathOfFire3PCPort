@@ -130,7 +130,7 @@ void SelfTest(const Originals& theirs) {
 
 }  // namespace
 
-// original 0x589350. Begins the script kScript points at, from byte `position`
+// original 0x589350 (PSX 0x8014D804). Begins the script kScript points at, from byte `position`
 // of its steps: reads the step count out of the header, moves kScript past the
 // header, finds the frame words behind the last step, and takes the first step.
 //
@@ -147,7 +147,7 @@ extern "C" void __cdecl Sprite_ScriptStart(unsigned short position) {
     Sprite_ScriptStep();
 }
 
-// original 0x5893A0. One tick of a script that repeats: counts the hold down,
+// original 0x5893A0 (PSX 0x8014D86C). One tick of a script that repeats: counts the hold down,
 // and when it runs out takes the next step - from the top again after the last
 // one. Returns 1 when it wrapped round or followed a jump, else 0.
 extern "C" unsigned char __cdecl Sprite_ScriptTick(void) {
@@ -162,7 +162,7 @@ extern "C" unsigned char __cdecl Sprite_ScriptTick(void) {
     return NextStep(object, position);
 }
 
-// original 0x589410. One tick of a script that plays once: as above, but past
+// original 0x589410 (PSX 0x8014D9E0). One tick of a script that plays once: as above, but past
 // the last step it takes no step - it sets the hold back to 1, so that every
 // later tick lands here again - and returns 1.
 extern "C" unsigned char __cdecl Sprite_ScriptTickOnce(void) {
@@ -176,7 +176,7 @@ extern "C" unsigned char __cdecl Sprite_ScriptTickOnce(void) {
     return NextStep(object, position);
 }
 
-// original 0x589470. Takes the step at kPosition: its first byte is the hold,
+// original 0x589470 (PSX 0x8014DA8C). Takes the step at kPosition: its first byte is the hold,
 // its second picks the frame word. An object with no script is left alone.
 //
 // As the original has it: the position is 16 bits and wraps, between the two

@@ -809,8 +809,9 @@ extern "C" unsigned char __cdecl BattleEnemy_OtherEnemy(unsigned enemy) {
     return BH_CALL(Battle_RandomEnemy)((enemy + 3) & 0xFF);
 }
 
-// original 0x435CF0 (PSX 0x801E28CC, call-anchored): the target of enemy
-// `enemy` (its low byte) by the action kind 0x904B35. Kind 1: with the
+// original 0x435CF0 (its PSX twin by shape JP 0x801E2A0C, not the pairing's
+// 0x801E28CC): the target of enemy `enemy` (its low byte) by the action kind
+// 0x904B35. Kind 1: with the
 // enemy's flag word +0x90 bit 0 another enemy (BattleEnemy_OtherEnemy, a
 // member when that answers 0xFF), bit 4 the weakest member, else a random
 // member. Kind 4: by the ability's (+0x106, NameTable_Abilities) flag byte:

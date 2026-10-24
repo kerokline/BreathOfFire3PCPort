@@ -888,7 +888,7 @@ extern "C" void __cdecl MasterTalk_PickAsk(void) {
 // The panels
 // ===========================================================================
 
-// original 0x585BE0: the stats box of record r (its byte; 0x903A70 + 0xA4 r,
+// original 0x585BE0 (PSX 0x801D144C): the stats box of record r (its byte; 0x903A70 + 0xA4 r,
 // read in place for any byte): Menu_DrawBox(x + 5, y + 3, 0x94, 0x2D, 0, the
 // window colour); the four labels (DIV-0064's slots, read where they lie) with
 // their words +0x24, +0x26, +0x2A, +0x28 through the number format in the 8

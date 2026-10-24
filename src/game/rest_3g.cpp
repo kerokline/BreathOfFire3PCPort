@@ -285,7 +285,7 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
 // A screen triangle's winding
 // ===========================================================================
 
-// original 0x4941B0 (cdecl; EffectKind44_RingCone, EyeBeam_DrawCylinder and
+// original 0x4941B0 (PSX 0x801B0F88; cdecl; EffectKind44_RingCone, EyeBeam_DrawCylinder and
 // Shisu_DrawModel test its ax): the z of (b - a) x (c - b) of three screen
 // points, (c.y - b.y)(b.x - a.x) - (b.y - a.y)(c.x - b.x) on x87, through a
 // tail jump to _ftol (truncated; edx:eax, eax answered).
@@ -379,7 +379,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
 
-// original 0x494E70 (BattleEnd_Finish, BattleLoss_ResetParty, BattleLoss_Restart,
+// original 0x494E70 (PSX 0x800A9EB0; BattleEnd_Finish, BattleLoss_ResetParty, BattleLoss_Restart,
 // Escape_Leave): bytes +0..+4 of the eight enemy records 0.
 extern "C" void __cdecl BattleEnemy_ClearStates(void) {
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
@@ -398,7 +398,7 @@ extern "C" void __cdecl GameMode8_Run(void) {
     StepDispatch("GameMode8_Run", AddressOf(GameMode8_Steps), GameMode8_Steps_count);
 }
 
-// original 0x496440 (GameMode8_Steps[0]): the dword 0x904144 up; Fish_Spawn;
+// original 0x496440 (GameMode8_Steps[0]; PSX 0x801994E8): the dword 0x904144 up; Fish_Spawn;
 // Transition_Start(1); AreaMap_Frame; Field_DrawFrame; a draw-area move of the
 // rectangle (0, buffer * 0xF0 + 0x50, 0x40, 0x78) to (0x340, 0x100) committed
 // at slot 5 (0x18); GameMode8_Frame; Field_ScriptFlags2 bit 6 clear, Game_Step
@@ -437,7 +437,7 @@ void LoadBank() {
 }
 }  // namespace
 
-// original 0x4964E0 (GameMode8_Steps[2]): Field_ScriptFlags2 bit 6 set; the
+// original 0x4964E0 (GameMode8_Steps[2]; PSX 0x801995C8): Field_ScriptFlags2 bit 6 set; the
 // sound bank (0x90412C) and its framed wait (GameMode8_WaitFrame, a sleep);
 // Music_FadeOut(0x10) if the track changes; Transition_Start(0) and its framed
 // wait on the wait word; Field_ChangeArea(the word 0x802290, the dwords
@@ -491,10 +491,10 @@ void MenuModeEnter(int file) {
 }
 }  // namespace
 
-// original 0x4965D0 (GameMode9_Steps[0]): the file 0xCB.
+// original 0x4965D0 (GameMode9_Steps[0]; PSX 0x80199780): the file 0xCB.
 extern "C" void __cdecl GameMode9_Enter(void) { MenuModeEnter(0xCB); }
 
-// original 0x496660 (GameMode9_Steps[2] and GameMode10_Steps[2]): two sleeps;
+// original 0x496660 (GameMode9_Steps[2] and GameMode10_Steps[2]; PSX 0x8019983C): two sleeps;
 // the sound bank (0x90412C) loaded, not waited for; Transition_Start(3) and its
 // framed wait (Field_LoadingFrame); Game_Mode 2, Game_Step 0, Field_Request 0;
 // a tail jump to Field_Frame.
@@ -516,7 +516,7 @@ extern "C" void __cdecl GameMode10_Run(void) {
     StepDispatch("GameMode10_Run", AddressOf(GameMode10_Steps), GameMode10_Steps_count);
 }
 
-// original 0x4966F0 (GameMode10_Steps[0]): the file 0x31A.
+// original 0x4966F0 (GameMode10_Steps[0]; PSX 0x80199940): the file 0x31A.
 extern "C" void __cdecl GameMode10_Enter(void) { MenuModeEnter(0x31A); }
 
 // original 0x496780 (GameMode_Handlers[11]): jmp [GameMode11_Steps + Game_Step
@@ -525,7 +525,7 @@ extern "C" void __cdecl GameMode11_Run(void) {
     StepDispatch("GameMode11_Run", AddressOf(GameMode11_Steps), GameMode11_Steps_count);
 }
 
-// original 0x496790 (GameMode11_Steps[0]): Mode11_ObjectFrame, Mode11_FieldFrame;
+// original 0x496790 (GameMode11_Steps[0]; PSX 0x80199B00): Mode11_ObjectFrame, Mode11_FieldFrame;
 // with Field_Request 0, Game_Mode 2.
 extern "C" void __cdecl GameMode11_Frame(void) {
     SH_CALL(Mode11_ObjectFrame)();
@@ -533,14 +533,14 @@ extern "C" void __cdecl GameMode11_Frame(void) {
     if (Field_Request == 0) Game_Mode = 2;
 }
 
-// original 0x4967B0 (GameMode11_Steps[1]): Look_PadControl; a tail jump to
+// original 0x4967B0 (GameMode11_Steps[1]; PSX 0x80199B44): Look_PadControl; a tail jump to
 // Mode11_FieldFrame.
 extern "C" void __cdecl GameMode11_Look(void) {
     SH_CALL(Look_PadControl)();
     SH_CALL(Mode11_FieldFrame)();
 }
 
-// original 0x4967C0 (GameMode11_Steps[2]): Look_Return, Mode11_FieldFrame; with
+// original 0x4967C0 (GameMode11_Steps[2]; PSX 0x80199B6C): Look_Return, Mode11_FieldFrame; with
 // the yaw word back at 0xFD56 and the pitch word at 0x200, Game_Step 0.
 extern "C" void __cdecl GameMode11_LookEnd(void) {
     SH_CALL(Look_Return)();

@@ -536,13 +536,13 @@ extern "C" void __cdecl BattleExtra_EquipLeave(void) {
 // The command menu: the held-button steps and auto battle
 // ============================================================================
 
-// original 0x42ED90 (Battle_InputSteps[3]): by 0x904AA2 through
+// original 0x42ED90 (Battle_InputSteps[3]; PSX 0x801D22A4): by 0x904AA2 through
 // BattleHold_Steps 0x64AE48 (3).
 extern "C" unsigned long __cdecl BattleHold_Dispatch(unsigned long through) {
     return Dispatch("BattleHold_Dispatch", BattleHold_Steps_addr, BattleE4_Step2, 3, through);
 }
 
-// original 0x42EDA0 (BattleHold_Steps[0]): the menu member's cross size
+// original 0x42EDA0 (BattleHold_Steps[0]; PSX 0x801D22E0): the menu member's cross size
 // 0x904ABC[0x904AB4] down by 2 while above 0, else 0x904AA2 + 1; then its
 // command label, the party status at window 1's (x, y) and the command cross
 // at window 2's. The original pushes the words in whole registers
@@ -559,7 +559,7 @@ extern "C" void __cdecl BattleHold_Shrink(void) {
     BH_CALL(BattleWin_DrawCommandCross)(WindowRecords[2].x, WindowRecords[2].y);
 }
 
-// original 0x42EE00 (BattleHold_Steps[1]): while Input_Held has no 0x100,
+// original 0x42EE00 (BattleHold_Steps[1]; PSX 0x801D2384): while Input_Held has no 0x100,
 // windows 2, 1 and 3's +3 = 1 and 0x904AA2 + 1; then the party status,
 // BE4's 0x444660(), and all seven command labels with their icons
 // (Menu_DrawIcon(i, 0x88 + 0x64E2AC[2i], 0x58 + 0x64E2AD[2i], 0x10, 0x10,
@@ -579,7 +579,7 @@ extern "C" void __cdecl BattleHold_ShowAll(void) {
     }
 }
 
-// original 0x42EEA0 (BattleHold_Steps[2]): the menu member's cross size up by
+// original 0x42EEA0 (BattleHold_Steps[2]; PSX 0x801D2478): the menu member's cross size up by
 // 4 while below 8, else 0x904AA1 = 2 (BattleMenu_CommandSelect) and
 // 0x904AA2 = 0.
 extern "C" void __cdecl BattleHold_Regrow(void) {
@@ -635,14 +635,14 @@ extern "C" void __cdecl Cmd_AutoBattle(void) {
 // Action kind 3, the random pick, the ability notice
 // ============================================================================
 
-// original 0x42F5E0 (BattleAction_KindSteps[3]): by 0x904AA3 through
+// original 0x42F5E0 (BattleAction_KindSteps[3]; PSX 0x801D31B8): by 0x904AA3 through
 // BattleAction_Kind3Steps 0x64AEB4 (5: the two below, then
 // BattleAction_AbilitySteps' three).
 extern "C" unsigned long __cdecl BattleAction_Kind3Dispatch(unsigned long through) {
     return Dispatch("BattleAction_Kind3Dispatch", BattleAction_Kind3Steps_addr, BattleE4_Step3, 5, through);
 }
 
-// original 0x42F5F0 (Kind3Steps[0]): Battle_ClearActingFlags;
+// original 0x42F5F0 (Kind3Steps[0]; PSX 0x801D31F4): Battle_ClearActingFlags;
 // BattleBanner_Add(1, 0, 0, 0x1E, the string 0x669E08 points at); window 4's
 // +3 = 1; Battle_SetActorBit(0x904B34); the acting sprite's +1 = 9;
 // 0x904AA3 + 1.
@@ -656,7 +656,7 @@ extern "C" void __cdecl BattleAction_Kind3Banner(void) {
     BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
 }
 
-// original 0x42F640 (Kind3Steps[1]): once the word 0x904B82 is 0, round
+// original 0x42F640 (Kind3Steps[1]; PSX 0x801D3278): once the word 0x904B82 is 0, round
 // flags |= 4, 0x904AA1 = 3, 0x904AA2 = 0x904AA3 = 0.
 extern "C" void __cdecl BattleAction_Kind3Wait(void) {
     if (BattleActions_Pending != 0) return;
@@ -744,7 +744,7 @@ extern "C" void __cdecl BattleAction_AbilityNotice(void) {
 // The end and the result
 // ============================================================================
 
-// original 0x4315C0 (0x64AF7C[2], the third way out's steps by 0x904AA2):
+// original 0x4315C0 (0x64AF7C[2], the third way out's steps by 0x904AA2; PSX 0x801D6EF8):
 // nothing while a member (of 0x904AB0, read once) has 0x2000 in its +0x130;
 // back a step (0x904AA2 - 1) while 0x904AA5 is short of the count; then
 // Port_DroppedCall(0); each member Battle_ClearStatus(i, word +0x90 &

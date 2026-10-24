@@ -149,13 +149,13 @@ extern "C" void __cdecl Mode11_FieldFrame(void) {
     SH_CALL(Field_DrawFrame)();
 }
 
-// original 0x517330: mode 8's step 5 (0x656AB8[5]).
+// original 0x517330 (PSX 0x8019A3F0): mode 8's step 5 (0x656AB8[5]).
 extern "C" void __cdecl Mode8_Step5(void) {
     SH_AT(void (__cdecl*)(), at::kMenuDispatchA)();
     SH_CALL(Field_RunTaskRecords)();
 }
 
-// original 0x517340: mode 8's step 8 (0x656AB8[8]).
+// original 0x517340 (PSX 0x8019A418): mode 8's step 8 (0x656AB8[8]).
 extern "C" void __cdecl Mode8_Step8(void) {
     SH_AT(void (__cdecl*)(), at::kMenuDispatchB)();
     SH_CALL(Field_RunTaskRecords)();

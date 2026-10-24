@@ -205,7 +205,7 @@ extern "C" void __cdecl MasterScreen_PickMember(unsigned message, unsigned appre
     DrawMasterScreen(message, 1, &PickLine);
 }
 
-// original 0x586B90 (0x163 bytes): a cursor's frame - a LINE_F3 (x + 4, y),
+// original 0x586B90 (0x163 bytes; PSX 0x801D1CC8): a cursor's frame - a LINE_F3 (x + 4, y),
 // (x, y + 4), (x, y + h - 1) and a LINE_F4 (x + 4, y), (x + w - 1, y), (x + w -
 // 1, y + h - 1), (x, y + h - 1), the four words' low halves as floats. Its
 // colour: a byte c - 0xFF, or with `blink`'s low byte set ((Frame_Counter & 8 ?

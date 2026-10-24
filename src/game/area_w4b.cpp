@@ -922,7 +922,7 @@ extern "C" void __cdecl Area172_FallStep(void) {
         o[0x5F] = static_cast<unsigned char>(o[0x5F] + 4);
     }
     SetLong(Mem(Sprite_Kind2_addr + 0x3c), tO->height);
-    AH_CALL(MapView_SetElevation)(static_cast<int>(rv::As<records::SpriteObject>(o)->height_whole));
+    AH_CALL(MapView_SetElevation)(static_cast<int>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(o)->height_whole)));
 }
 
 // original 0x427DF0 (area 172 +0x3C[3] = +0x34[4]; PSX 0x801F471C):

@@ -236,7 +236,7 @@ extern "C" void __cdecl Battle_BuildEntryOrder() {
 // Battle_ActorCanAct gets a value in 0x939A80 (s16 value, u16 actor):
 //   - a party member its agility (+0x98) plus a command bonus times the
 //     percentage of its level class (0x64E328, row 1) / 100: the bonus 4 for
-//     an ability of order kind 0 (NameTable_Abilities +1), 2 for kind 1 or 3,
+//     an ability of skill class 0 (NameTable_Abilities +1), 2 for class 1 or 3,
 //     1 for an item, else 0 - 16-bit arithmetic, the product truncated to a
 //     word and divided signed;
 //   - an enemy its agility (+0x38) plus a signed byte of 0x64E334, sixteen

@@ -196,7 +196,7 @@ extern "C" void __cdecl Config_DrawRowLabel(int x, int y, unsigned row, unsigned
 // Effect kinds 6 and 0x19: two ticks of kind 6's, kind 0x19's run and tick
 // ============================================================================
 
-// original 0x469D10 (EffectKind06_Ticks[5], EffectKind19_Ticks[5]): the
+// original 0x469D10 (EffectKind06_Ticks[5], EffectKind19_Ticks[5]; PSX 0x8019B638): the
 // script stepped once; +1 up when it ended (al not 0); then a tail jump to
 // Sprite_QueueOverlay for the kind +5 == 6, else Sprite_UpdateScreen.
 extern "C" void __cdecl EffectKind06_PlayOnce(void) {
@@ -205,7 +205,7 @@ extern "C" void __cdecl EffectKind06_PlayOnce(void) {
     else SH_CALL(Sprite_UpdateScreen)();
 }
 
-// original 0x469D40 (EffectKind06_Ticks[3], EffectKind19_Ticks[3]): +9 down;
+// original 0x469D40 (EffectKind06_Ticks[3], EffectKind19_Ticks[3]; PSX 0x8019B6B4): +9 down;
 // at 0 +1 up and nothing more. Else the tint bytes +0x5D, +0x5E, +0x5F each
 // plus 0xFA (six down, in 8 bits), Sprite_ScriptTick, then by the kind +5 ==
 // 6: on odd +9 the word +0x30 up, tail Sprite_QueueOverlay; else on odd +9
@@ -233,12 +233,12 @@ extern "C" void __cdecl EffectKind06_Fade(void) {
     }
 }
 
-// original 0x469DE0 (Effect_KindHandlers[0x19]): a tail jump through
+// original 0x469DE0 (Effect_KindHandlers[0x19]; PSX 0x8019B80C): a tail jump through
 // EffectKind19_States 0x653EF4 by +1 - EffectKind06_Start, EffectKind19_Tick,
 // EffectKind06_End.
 extern "C" void __cdecl EffectKind19_Run(void) { Entry(AddressOf(EffectKind19_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind19_Run")(); }
 
-// original 0x469E00 (EffectKind19_States[1]): EffectKind19_Ticks 0x653F00 by
+// original 0x469E00 (EffectKind19_States[1]; PSX 0x8019B850): EffectKind19_Ticks 0x653F00 by
 // the variant +6 (kind 6's ticks again: _Blink for 0, 1, 2, 4, _Fade for 3,
 // _PlayOnce for 5), then the words +0x2E += +0xC and +0x30 -= +0x10 - kind
 // 6's tick with a drift.
@@ -254,7 +254,7 @@ extern "C" void __cdecl EffectKind19_Tick(void) {
 // Kind 4: Effect_HoldFlag1C's countdown
 // ============================================================================
 
-// original 0x469FB0 (Effect_KindHandlers[4]; Effect_HoldFlag1C spawns it with
+// original 0x469FB0 (PSX 0x8019BB64; Effect_KindHandlers[4]; Effect_HoldFlag1C spawns it with
 // +9 its frames): +9 down while not 0; at 0 Flags_Clear(0x904030, 0x1C) and a
 // tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind04_HoldTick(void) {
@@ -272,14 +272,14 @@ extern "C" void __cdecl EffectKind04_HoldTick(void) {
 // Kind 0x31: the camera turn with a zoom
 // ============================================================================
 
-// original 0x46A020 (Effect_KindHandlers[0x31]): CameraZoom_States 0x653F24
+// original 0x46A020 (Effect_KindHandlers[0x31]; PSX 0x8019BC3C): CameraZoom_States 0x653F24
 // by +1, then MapView_Redraw = 2 (as Effect_CameraTurn's).
 extern "C" void __cdecl EffectKind31_Run(void) {
     Entry(AddressOf(CameraZoom_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind31_Run")();
     MapView_Redraw = 2;
 }
 
-// original 0x46A040 (CameraZoom_States[0]): CameraTurn_Start, then the
+// original 0x46A040 (CameraZoom_States[0]; PSX 0x8019BC8C): CameraTurn_Start, then the
 // distance's step +0x10 = ((dword +0xC - s16 Camera_Distance) << 16) / +9
 // (idiv by the unsigned byte; a +9 of 0 divides by zero - CameraTurn_Start
 // divides by it first; ours aborts).
@@ -292,7 +292,7 @@ extern "C" void __cdecl CameraZoom_Start(void) {
     o->step_z = S32(num) / static_cast<std::int32_t>(frames);
 }
 
-// original 0x46A070 (CameraZoom_States[1]): CameraTurn_Step, then
+// original 0x46A070 (CameraZoom_States[1]; PSX 0x8019BCFC): CameraTurn_Step, then
 // Camera_Distance = ((s16 distance << 16) + +0x10) >> 16 (arithmetic), held
 // at the target +0xC once past it - below it for a falling step, above it for
 // a rising one (the new distance sign-extended against the dword).
@@ -310,7 +310,7 @@ extern "C" void __cdecl CameraZoom_Step(void) {
     }
 }
 
-// original 0x46A0C0 (CameraZoom_States[2]): Camera_Distance = the word +0xC,
+// original 0x46A0C0 (CameraZoom_States[2]; PSX 0x8019BD78): Camera_Distance = the word +0xC,
 // then a tail jump to CameraTurn_End.
 extern "C" void __cdecl CameraZoom_End(void) {
     Camera_Distance = static_cast<short>(Word(Cur() + 0xC));
@@ -321,11 +321,11 @@ extern "C" void __cdecl CameraZoom_End(void) {
 // Kind 0x32: a thing thrown from a sprite, bouncing
 // ============================================================================
 
-// original 0x46A0E0 (Effect_KindHandlers[0x32]): a tail jump through
+// original 0x46A0E0 (Effect_KindHandlers[0x32]; PSX 0x8019BDAC): a tail jump through
 // EffectKind32_States 0x653F30 by +1.
 extern "C" void __cdecl EffectKind32_Run(void) { Entry(AddressOf(EffectKind32_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind32_Run")(); }
 
-// original 0x46A100 (EffectKind32_States[0]): +8 = the leader's facing
+// original 0x46A100 (EffectKind32_States[0]; PSX 0x8019BDF0): +8 = the leader's facing
 // (ObjTrio +8) & 7; Sprite_SetAnimationBank(0x18); +0x48, +0x24, +0x2A = 0;
 // Sprite_SetAnimation(8); the position +0x34 / +0x38 / +0x3C that of
 // Sprite_Objects[+6] (the byte unchecked, read in place); the tint bytes
@@ -351,7 +351,7 @@ extern "C" void __cdecl EffectKind32_Throw(void) {
     SH_CALL(EffectKind32_Arc)();
 }
 
-// original 0x46A1E0 (EffectKind32_States[1]; also called by _Throw): the
+// original 0x46A1E0 (EffectKind32_States[1]; also called by _Throw; PSX 0x8019BF24): the
 // ground AreaMap_Elevation(+0x34, +0x38); at or above the height word +0x3E
 // (signed), or with +0 bit 7, or in state 0, a hop - the rise +0x14 and fall
 // +0x20 from EffectKind32_Hops[+2] (the byte unchecked, read in place), +1
@@ -379,7 +379,7 @@ extern "C" void __cdecl EffectKind32_Arc(void) {
     Tick();
 }
 
-// original 0x46A290 (EffectKind32_States[2]): the ground under +0x34 / +0x38;
+// original 0x46A290 (EffectKind32_States[2]; PSX 0x8019C02C): the ground under +0x34 / +0x38;
 // unless it lies within 0x80 below the height word +0x3E (ground <= height <
 // ground + 0x80) with +0 bit 7 clear, +1 up and Sound_PlayEffect(0x106). Then
 // +0x3C += +0x14, +0x14 -= +0x20 (no step across), Sprite_ScriptTick,
@@ -400,7 +400,7 @@ extern "C" void __cdecl EffectKind32_Settle(void) {
     Tick();
 }
 
-// original 0x46A310 (49 cells of the effect kinds' state tables, among them
+// original 0x46A310 (PSX 0x8019C0F4; 49 cells of the effect kinds' state tables, among them
 // EffectKind32_States[3], EffectKind37_States[2], EffectKind18_States'):
 // a tail jump to Effect_Release.
 extern "C" void __cdecl Effect_StateRelease(void) { SH_CALL(Effect_Release)(); }
@@ -548,7 +548,7 @@ extern "C" void __cdecl EffectKind3C_Hold(void) {
 // Kind 0x17: a block pushed along the map
 // ============================================================================
 
-// original 0x46ABD0 (EffectKind17_States[0]): Sprite_SetAnimationBank(+0xB);
+// original 0x46ABD0 (EffectKind17_States[0]; PSX 0x8019C3B0): Sprite_SetAnimationBank(+0xB);
 // EffectKind17_TakeCell (+0xB becomes the map byte under it); +0x29 = 6,
 // +0x48 = 1, +0x24, +0x2A, +0x5D..+0x5F 0; the dwords +0xC..+0x20 0; +7 and
 // +0xA 0; Sprite_SetAnimation(0); +1 up.
@@ -570,7 +570,7 @@ extern "C" void __cdecl EffectKind17_Start(void) {
     rv::As<records::EffectObject>(Cur())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->state + 1);
 }
 
-// original 0x46AC90 (EffectKind17_States[1]): with Game_Mode 1 only
+// original 0x46AC90 (EffectKind17_States[1]; PSX 0x8019C4A8): with Game_Mode 1 only
 // Sprite_UpdateScreenSlot. With no push (+0xA 0): the saved map byte +0xB
 // put back at the cell (+0x36, +0x3A) when Field_Request is 5; then the
 // update. Pushed: EffectKind17_BlockedAhead - blocked, the byte put back, +9
@@ -734,7 +734,7 @@ extern "C" void __cdecl EffectKind17_Slide(void) {
     Tick();
 }
 
-// original 0x46B100 (EffectKind17_States[3]): the last stretch to a cell
+// original 0x46B100 (EffectKind17_States[3]; PSX 0x8019CBAC): the last stretch to a cell
 // edge. The start's x, z kept. With a target +0x18: along x when +0xC is not
 // 0 (else z with +0x10 / +0x38) the position plus the speed, held at the
 // target (and the target 0) once past it in the speed's direction. The
@@ -813,7 +813,7 @@ extern "C" void __cdecl EffectKind17_Settle(void) {
     Tick();
 }
 
-// original 0x46B2C0 (EffectKind17_States[4]): +0x48 = 2, the scales +0x40 and
+// original 0x46B2C0 (EffectKind17_States[4]; PSX 0x8019CE30): +0x48 = 2, the scales +0x40 and
 // +0x44 up 0x4000; +9 down while not 0 and Field_Kind2Hold is 0. Below a
 // scale of 2.0 (+0x40 < 0x20000) a tail jump to Sprite_UpdateScreenSlot; at
 // it, with the hold 0 and +9 0, EffectKind17_CameraBack and a tail jump to
@@ -838,7 +838,7 @@ extern "C" void __cdecl EffectKind17_Grow(void) {
     SH_CALL(Effect_Release)();
 }
 
-// original 0x46B340 (EffectKind17_States[5]): +9 down while not 0; with the
+// original 0x46B340 (EffectKind17_States[5]; PSX 0x8019CF04): +9 down while not 0; with the
 // hold 0 and +9 0, +1 = 1 and EffectKind17_CameraBack. Sprite_ScriptTick,
 // tail Sprite_UpdateScreenSlot.
 extern "C" void __cdecl EffectKind17_Rest(void) {
@@ -854,7 +854,7 @@ extern "C" void __cdecl EffectKind17_Rest(void) {
     Tick();
 }
 
-// original 0x46B380 (E8 from _Start and _Settle): +0xB = AreaMap_ByteAt(the
+// original 0x46B380 (E8 from _Start and _Settle; PSX 0x8019CF80): +0xB = AreaMap_ByteAt(the
 // cell +0x36, +0x3A), then AreaMap_SetByte(the cell, 0x10) - the block's
 // cell marked, what was there kept.
 extern "C" void __cdecl EffectKind17_TakeCell(void) {
@@ -865,7 +865,7 @@ extern "C" void __cdecl EffectKind17_TakeCell(void) {
     SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(o)->x_whole, rv::As<records::EffectObject>(o)->z_whole, 0x10);
 }
 
-// original 0x46B3C0 (E8 from _Grow and _Rest): the view's kind-2 point back
+// original 0x46B3C0 (E8 from _Grow and _Rest; PSX 0x8019CFDC): the view's kind-2 point back
 // on the leader (ObjTrio +0x34 / +0x38 into Field_Kind2X / Z),
 // MoveScript_FAWord negated, MoveScript_F3Divisor 0x40, Field_Kind2Hold 1.
 extern "C" void __cdecl EffectKind17_CameraBack(void) {
@@ -877,7 +877,7 @@ extern "C" void __cdecl EffectKind17_CameraBack(void) {
     Field_Kind2Hold = 1;
 }
 
-// original 0x46B400 (E8 from _Slide and _Settle): Sprite_ObjectAt(+0x34,
+// original 0x46B400 (E8 from _Slide and _Settle; PSX 0x8019D030): Sprite_ObjectAt(+0x34,
 // +0x38, 0) found one - its +0x80 bit 0 set - or Party_MemberAt found a
 // member other than the leader - its +2 = 1 (the leader, 0, nothing set):
 // +1 = 4, Sprite_ScriptTick, Sprite_UpdateScreenSlot, al 1. Neither: al 0.
@@ -998,7 +998,7 @@ extern "C" unsigned char __cdecl EffectKind17_CellBlocked(unsigned cell_x, unsig
 // Kind 0x1B: a shot along the leader's facing, with a trail
 // ============================================================================
 
-// original 0x46B7C0 (EffectKind1B_States[0]): +8 = the leader's facing; 0x46D0E0
+// original 0x46B7C0 (EffectKind1B_States[0]; PSX 0x8019D66C): +8 = the leader's facing; 0x46D0E0
 // (FC2's); +0x27 = 0x7B; Sprite_SetAnimation((+8 >> 1) + 0x4A, a byte);
 // Sprite_LoadPalette(0x80D440, 1); at the leader's point, 0xC0 above its
 // height word; the speeds +0xC / +0x10 the direction's unit (0x6696DC[+8],
@@ -1022,7 +1022,7 @@ extern "C" void __cdecl EffectKind1B_Start(void) {
     rv::As<records::EffectObject>(Cur())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->state + 1);
 }
 
-// original 0x46B8A0 (EffectKind1B_States[1]): the point plus the speeds; the
+// original 0x46B8A0 (EffectKind1B_States[1]; PSX 0x8019D79C): the point plus the speeds; the
 // range +0xA down. At 0, or over a cell with no floor word: animation 0x4E
 // and +1 up. EffectKind1B_Hit: animation 0x4F and +1 up. Else on an even
 // range a free effect (Effect_FindFree) becomes a trail - +0 = 1, kind 0x1B,
@@ -1057,14 +1057,14 @@ extern "C" void __cdecl EffectKind1B_Fly(void) {
     Tick();
 }
 
-// original 0x46B980 (EffectKind1B_States[2]): Sprite_ScriptTickOnce; ended, a
+// original 0x46B980 (EffectKind1B_States[2]; PSX 0x8019D918): Sprite_ScriptTickOnce; ended, a
 // tail jump to Effect_Release, else to Sprite_UpdateScreen.
 extern "C" void __cdecl EffectKind1B_End(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)()) SH_CALL(Effect_Release)();
     else SH_CALL(Sprite_UpdateScreen)();
 }
 
-// original 0x46B9A0 (EffectKind1B_States[3], a trail _Fly spawns): the source
+// original 0x46B9A0 (EffectKind1B_States[3], a trail _Fly spawns; PSX 0x8019D95C): the source
 // Effect_Objects[the leader's +0xB] (unchecked, read in place); +0 |= 2, +0x24
 // = 1, its word +0x2C, +0x27 = 0x7B, +0x28 = 2, +0x25 = 0x1D, +0x26 = 0, its
 // +0x4C, +0x2B = 1, its +0x29, +0x48 = 0, its point +0x34 / +0x38 and height
@@ -1093,7 +1093,7 @@ extern "C" void __cdecl EffectKind1B_Trail(void) {
     rv::As<records::EffectObject>(Cur())->state = 2;
 }
 
-// original 0x46BA90 (E8 from _Fly): an object at the point (Sprite_ObjectAt,
+// original 0x46BA90 (E8 from _Fly; PSX 0x8019DABC): an object at the point (Sprite_ObjectAt,
 // its +0x80 bit 0 set): 1. The ground there more than 0x40 above the
 // leader's height word: 1. Else whether the map byte of the cell is 0x11.
 extern "C" unsigned char __cdecl EffectKind1B_Hit(void) {
@@ -1114,11 +1114,11 @@ extern "C" unsigned char __cdecl EffectKind1B_Hit(void) {
 // Kind 0x30
 // ============================================================================
 
-// original 0x46BB30 (Effect_KindHandlers[0x30]): a tail jump through
+// original 0x46BB30 (Effect_KindHandlers[0x30]; PSX 0x8019DB9C): a tail jump through
 // EffectKind30_States 0x653FE4 by +1.
 extern "C" void __cdecl EffectKind30_Run(void) { Entry(AddressOf(EffectKind30_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind30_Run")(); }
 
-// original 0x46BB50 (EffectKind30_States[0]): +8 = 1;
+// original 0x46BB50 (EffectKind30_States[0]; PSX 0x8019DBE0): +8 = 1;
 // Sprite_InitFromEntry(the area's entry list (Area_Descriptors[Game_AreaNumber]
 // +8, unchecked, read in place) + 8 * +0xB); +0x70 = 1; the tint bytes
 // +0x5D..+0x5F 0x80; +0xC, +0x10, +0x14, +9 0; 0x46BF80 (FC2's); +0xB = 0, +1

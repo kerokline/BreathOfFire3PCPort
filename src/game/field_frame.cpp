@@ -203,7 +203,7 @@ extern "C" void __cdecl Field_Frame(void) {
     g.draw();   // a tail jmp in the original
 }
 
-// original 0x517240: the same frame with the area's mode dispatch and the
+// original 0x517240 (PSX 0x8019A230): the same frame with the area's mode dispatch and the
 // task records first (PSX FUN_8019A230, call for call).
 extern "C" void __cdecl Field_FrameScripted(void) {
     g.mode_dispatch();

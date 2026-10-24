@@ -86,7 +86,7 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
 
 }  // namespace
 
-// original 0x469FE0: Effect_FindFree; with a record (al not 0xFF), its +0 1
+// original 0x469FE0 (PSX 0x8019BBB8): Effect_FindFree; with a record (al not 0xFF), its +0 1
 // (in use), +5 4 (the kind: Effect_KindHandlers[4] = 0x469FB0 EffectKind04_HoldTick, which counts
 // +9 down a frame and at 0 clears story flag 0x1C and releases the record),
 // +9 the argument's low byte (the frames); then Flags_Set(0x904030, 0x1C).
@@ -144,7 +144,7 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<std::uint32_t>(ground));
 }
 
-// original 0x572620: the height layer's byte of cell (x, z) (s16s) set:
+// original 0x572620 (PSX 0x80155AF4): the height layer's byte of cell (x, z) (s16s) set:
 // AreaMap_Header[(AreaMap_Header's dword & 0xFF) * z + AreaMap_HeightBase * 4
 // + x] = the value's low byte - AreaMap_Elevation's layer (the width byte
 // times z, the base a u16), 32-bit sums, unbounded. eax is left the row
@@ -157,7 +157,7 @@ extern "C" void __cdecl AreaMap_SetHeight(unsigned x, unsigned z, unsigned value
     AreaMap_Header[row + U(static_cast<short>(x))] = static_cast<unsigned char>(value);
 }
 
-// original 0x57C160: bit (index & 7) of bits[(index & 0xFF) >> 3] toggled -
+// original 0x57C160 (PSX 0x8015BFE4): bit (index & 7) of bits[(index & 0xFF) >> 3] toggled -
 // Flags_Set's and Flags_Clear's xor sibling (the PSX Flag_Toggle 0x8015BFE4,
 // the sibling's name, confirmed there; pairs_propagated "call"). eax is left
 // the byte's address; no caller reads it.
@@ -195,7 +195,7 @@ extern "C" unsigned char __cdecl Camera_TurnStepFB(unsigned angle, unsigned step
     return TurnStep(Cond_AngleFB_addr, Light_Angles_addr + 0x4, Light_AnglesCopy_addr + 0x4, -0x200, angle, step);
 }
 
-// original 0x57C8A0: party member m's field object (ObjTrio + m * 0x14C, m
+// original 0x57C8A0 (PSX 0x8015CC04): party member m's field object (ObjTrio + m * 0x14C, m
 // the first argument's low byte, unchecked): state +1 2, sub-state +2 8, +3 0,
 // +0xB the second argument's low byte - Field_TileTurn's state 2 / 8 for a
 // member by index. Area 51 passes 1; areas 148, EffectKind28_PushParty 0x4703F0,
@@ -209,7 +209,7 @@ extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
     o[0xB] = static_cast<unsigned char>(value);
 }
 
-// original 0x587860: each of the 23 Sound_Channels dwords (to 0x6BC924) not 0:
+// original 0x587860 (PSX 0x8015D8AC): each of the 23 Sound_Channels dwords (to 0x6BC924) not 0:
 // SndBuf_Stop(it), then the dword 0 (after the call). Sound_PauseAll 0x587C30
 // walks the same dwords but keeps them (and stops the stream and the music).
 // The loss screen's BattleLoss_Restart 0x432750 (BE1's), chapter 15's
@@ -245,7 +245,7 @@ extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
     }
 }
 
-// original 0x591920: the first of the 32 key-item bytes (0x904554) equal to
+// original 0x591920 (PSX 0x80166B54): the first of the 32 key-item bytes (0x904554) equal to
 // the argument's low byte cleared, al 1; none, al 0 (the rest of eax the
 // list's address bits either way). An item of 0 clears the first empty slot
 // and answers 1. KeyItem_Add's opposite; chapter 13's Scena13_Run3 takes

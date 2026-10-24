@@ -191,7 +191,7 @@ extern "C" void __cdecl Kind2_Script(void) {
     }
     // A timed move began: its first frame of elevation, then state 1.
     rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->step_y));
-    g.set_elevation(rv::As<records::SpriteHead>(k)->height_whole);
+    g.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
     k[2] = 1;
 }
 
@@ -208,7 +208,7 @@ extern "C" void __cdecl Kind2_Move(void) {
     unsigned char* const k = rv::Bytes(&Sprite_Kind2);
     if (Field_Kind2Hold != 0) {
         rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->step_y));
-        g.set_elevation(rv::As<records::SpriteHead>(k)->height_whole);
+        g.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
         return;
     }
     if (!(k[0x80] & 0x40)) g.set_elevation(static_cast<int>(g.elevation(Field_Kind2X, Field_Kind2Z)));
@@ -239,7 +239,7 @@ extern "C" void __cdecl Kind2_Travel(void) {
         const std::int32_t slope = rv::As<records::SpriteObject>(k)->step_y;
         if (slope == 0) return;
         rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(slope));
-        g.set_elevation(rv::As<records::SpriteHead>(k)->height_whole);
+        g.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
         return;
     }
     g.set_elevation(static_cast<int>(g.elevation(Field_Kind2X, Field_Kind2Z)));

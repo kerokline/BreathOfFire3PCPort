@@ -133,7 +133,7 @@ bool ScriptFlag8() { return ((B(at::kFlags2Lo) | B(at::kFlagsLo)) & 8) != 0; }
 
 // --- the panel draws (callers 0x466BE0..0x4670C0, 0x528A90..0x52A420: Capcom's) ----
 
-// original 0x52D080: the draw mode (0, 1); panel sprites 0 at (x + 8, y) and
+// original 0x52D080 (PSX 0x801E0F28): the draw mode (0, 1); panel sprites 0 at (x + 8, y) and
 // 1 at (x + 0x108, y).
 extern "C" void __cdecl FieldPanel_DrawHeader(int x, int y) {
     DrawMode(0, 1);
@@ -141,7 +141,7 @@ extern "C" void __cdecl FieldPanel_DrawHeader(int x, int y) {
     DrawSprite(1, 1, x + 0x108, y);
 }
 
-// original 0x52D0C0: the draw mode (1, 1), panel sprite 2 at (x, y); unless
+// original 0x52D0C0 (PSX 0x801E0FA4): the draw mode (1, 1), panel sprite 2 at (x, y); unless
 // the kind is 0xFF, the primitive's CLUT word +0x16 = ((kind >> 4) + 0x1EB) <<
 // 6 | (kind & 0xF), u +0x14 = (kind & 3) << 6, v +0x15 = (kind >> 2) * 0x28
 // (a byte).
@@ -229,7 +229,7 @@ extern "C" void __cdecl FieldPanel_DrawTotal(int x, int y) {
     Text(x + 0x3D, y + 9, 0, 5, Key(text));
 }
 
-// original 0x52D560: the draw mode (3, 1), sprite 0xC at (x, y); unless the
+// original 0x52D560 (PSX 0x801E1684): the draw mode (3, 1), sprite 0xC at (x, y); unless the
 // id's word is 0xFFFF, the script pool's message `id` at (x + 0xA, y + 8).
 extern "C" void __cdecl FieldPanel_DrawMessage(int x, int y, unsigned id) {
     DrawMode(3, 1);
@@ -239,7 +239,7 @@ extern "C" void __cdecl FieldPanel_DrawMessage(int x, int y, unsigned id) {
     Text(x + 0xA, y + 8, 0, 0xFF, PoolText(at::kPools + message * 2u));
 }
 
-// original 0x52D5C0: the draw mode (4, 2); a tile at the packet cursor - its
+// original 0x52D5C0 (PSX 0x801E1734): the draw mode (4, 2); a tile at the packet cursor - its
 // colour 0x20 0x20 0x20, (0, 0), 320.0 x 240.0 (floats) -, half-transparent
 // (mode 1), committed to slot 2 (0x1C bytes).
 extern "C" void __cdecl FieldPanel_DrawShade(void) {
@@ -351,7 +351,7 @@ extern "C" unsigned char __cdecl Field_PathClear(long x, long z, unsigned raised
     return 1;
 }
 
-// original 0x52F4F0: leader state 6 - with Field_InputHeld not 0, Field_State
+// original 0x52F4F0 (PSX 0x801B3C30): leader state 6 - with Field_InputHeld not 0, Field_State
 // +0x137 = 0; else the handler of 0x660A44 for the loaded party set (0x90412C
 // & 0x7F; 19 entries, unchecked). Then, once +0x137 is 0: the pose +8, +9 =
 // 0, member 0 cleared, state 1, +0xB = 0, Field_LeaderStand (a tail jump).
@@ -371,14 +371,14 @@ extern "C" void __cdecl Field_FormActionState(void) {
     SH_CALL(Field_LeaderStand)();
 }
 
-// original 0x52F5C0: a party action's step (48 cells of the PartyAction run
+// original 0x52F5C0 (PSX 0x801B3D4C): a party action's step (48 cells of the PartyAction run
 // tables 0x65F998..): Sprite_ScriptTickOnce, and when it answers not 0,
 // Field_State +0x137 = 0 (the action done).
 extern "C" void __cdecl PartyAction_ScriptEnd(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)() != 0) Fs()[0x137] = 0;
 }
 
-// original 0x52F8F0: passage step 3 (Field_PassageSteps[3]) - unless
+// original 0x52F8F0 (PSX 0x801B41E8): passage step 3 (Field_PassageSteps[3]) - unless
 // Field_Request is 2: an object record on the stack (0xA4 bytes, only +0x86
 // and +0x88 written: Field_State +0x12A and the word +0x12C), handed to
 // Field_ObjectTrigger unless +0x86 is 0xFF; step 2.
@@ -395,19 +395,19 @@ extern "C" void __cdecl Field_PassageTrigger(void) {
     rv::As<records::PartyMember>(Sc())->step = 2;
 }
 
-// original 0x52F950: leader state 8, the jump - jmp Field_JumpSteps[+2].
+// original 0x52F950 (PSX 0x801B4258): leader state 8, the jump - jmp Field_JumpSteps[+2].
 extern "C" void __cdecl Field_JumpState(void) { CodeAt(Field_JumpSteps_addr, rv::As<records::PartyMember>(Sc())->step, "Field_JumpState")(); }
 
-// original 0x52F970: jump step 0 - 0x535FC0 (the first pose), step 2.
+// original 0x52F970 (PSX 0x801B429C): jump step 0 - 0x535FC0 (the first pose), step 2.
 extern "C" void __cdecl Field_JumpBegin(void) {
     Fe2(at::kJumpPose);
     rv::As<records::PartyMember>(Sc())->step = 2;
 }
 
-// original 0x52F980: jump step 1 - jmp Field_JumpOutSteps[+3].
+// original 0x52F980 (PSX 0x801B42C8): jump step 1 - jmp Field_JumpOutSteps[+3].
 extern "C" void __cdecl Field_JumpOut(void) { CodeAt(Field_JumpOutSteps_addr, rv::As<records::PartyMember>(Sc())->state3, "Field_JumpOut")(); }
 
-// original 0x52F9A0: jump-out 0 - 0x535FE0 (Field_JumpSetUp's caller); with
+// original 0x52F9A0 (PSX 0x801B430C): jump-out 0 - 0x535FE0 (Field_JumpSetUp's caller); with
 // +5 0 and neither script flag's bit 3, Field_JumpCamera; +3 = 1.
 extern "C" void __cdecl Field_JumpOut0(void) {
     Fe2(at::kJumpSetUp);
@@ -415,7 +415,7 @@ extern "C" void __cdecl Field_JumpOut0(void) {
     rv::As<records::PartyMember>(Sc())->state3 = 1;
 }
 
-// original 0x52F9E0 / 0x52FA00 / 0x52FA20: jump-out 1..3 - FE2's step, and
+// original 0x52F9E0 (PSX 0x801B4380) / 0x52FA00 / 0x52FA20: jump-out 1..3 - FE2's step, and
 // when it answers al not 0, +3 one on.
 extern "C" void __cdecl Field_JumpOut1(void) {
     if (Fe2Al(at::kJumpOut1)) rv::As<records::PartyMember>(Sc())->state3 = 2;
@@ -427,14 +427,14 @@ extern "C" void __cdecl Field_JumpOut3(void) {
     if (Fe2Al(at::kJumpOut3)) rv::As<records::PartyMember>(Sc())->state3 = 4;
 }
 
-// original 0x52FA40: jump-out 4 - 0x536170; when al: step 2, +3 = 0.
+// original 0x52FA40 (PSX 0x801B4434): jump-out 4 - 0x536170; when al: step 2, +3 = 0.
 extern "C" void __cdecl Field_JumpOut4(void) {
     if (!Fe2Al(at::kJumpOut4)) return;
     rv::As<records::PartyMember>(Sc())->step = 2;
     rv::As<records::PartyMember>(Sc())->state3 = 0;
 }
 
-// original 0x52FA60: jump step 2 - by Field_InputHeld: bit 12 0x5364D0, else
+// original 0x52FA60 (PSX 0x801B4480): jump step 2 - by Field_InputHeld: bit 12 0x5364D0, else
 // bit 14 0x536550, else any bit of the button map word 0x903580 0x5365D0; then
 // unless a script flag's bit 3, MapView_SetElevation(+0x3E) and
 // Field_JumpCamera (a tail jump).
@@ -448,21 +448,21 @@ extern "C" void __cdecl Field_JumpAir(void) {
     SH_CALL(Field_JumpCamera)();
 }
 
-// original 0x52FAC0: jump step 3 - jmp Field_JumpInSteps[+3].
+// original 0x52FAC0 (PSX 0x801B4538): jump step 3 - jmp Field_JumpInSteps[+3].
 extern "C" void __cdecl Field_JumpIn(void) { CodeAt(Field_JumpInSteps_addr, rv::As<records::PartyMember>(Sc())->state3, "Field_JumpIn")(); }
 
-// original 0x52FAE0: jump-in 0 - 0x536290, +3 = 1.
+// original 0x52FAE0 (PSX 0x801B457C): jump-in 0 - 0x536290, +3 = 1.
 extern "C" void __cdecl Field_JumpIn0(void) {
     Fe2(at::kJumpIn0);
     rv::As<records::PartyMember>(Sc())->state3 = 1;
 }
 
-// original 0x52FAF0: jump-in 1 - 0x5362D0; when al, +3 = 2.
+// original 0x52FAF0 (PSX 0x801B45A8): jump-in 1 - 0x5362D0; when al, +3 = 2.
 extern "C" void __cdecl Field_JumpIn1(void) {
     if (Fe2Al(at::kJumpIn1)) rv::As<records::PartyMember>(Sc())->state3 = 2;
 }
 
-// original 0x52FB10: jump-in 2 - 0x5363C0; when al: with +5 0 and neither
+// original 0x52FB10 (PSX 0x801B45E4): jump-in 2 - 0x5363C0; when al: with +5 0 and neither
 // script flag's bit 3, Field_JumpCamera; +3 = 3.
 extern "C" void __cdecl Field_JumpIn2(void) {
     if (!Fe2Al(at::kJumpIn2)) return;
@@ -470,10 +470,10 @@ extern "C" void __cdecl Field_JumpIn2(void) {
     rv::As<records::PartyMember>(Sc())->state3 = 3;
 }
 
-// original 0x52FB50: jump-in 3 - a tail jump to 0x536440.
+// original 0x52FB50 (PSX 0x801B4668): jump-in 3 - a tail jump to 0x536440.
 extern "C" void __cdecl Field_JumpIn3(void) { Fe2(at::kJumpIn3); }
 
-// original 0x52FBB0: leader state 11 - the step of Field_ContentSteps[+2],
+// original 0x52FBB0 (PSX 0x801B4714): leader state 11 - the step of Field_ContentSteps[+2],
 // then Sprite_ScriptTick (a tail jump).
 extern "C" void __cdecl Field_ContentState(void) {
     CodeAt(Field_ContentSteps_addr, rv::As<records::PartyMember>(Sc())->step, "Field_ContentState")();
@@ -535,7 +535,7 @@ extern "C" void __cdecl Field_ContentTake(void) {
     sc->step = static_cast<unsigned char>(sc->step + 1);
 }
 
-// original 0x52FD90: content step 1 - once Field_Request is 0: after system
+// original 0x52FD90 (PSX 0x801B4A34): content step 1 - once Field_Request is 0: after system
 // message 3 (the message word 0x7DEE48), the object back to animation 0
 // unless its +0xB bit 0; else bit 0 removes the object (+0 = 0), or with its
 // +0x34 and +0x38 fractions 0 its cell (+0x36, +0x3A) becomes 0x10
@@ -569,7 +569,7 @@ extern "C" void __cdecl Field_ContentEnd(void) {
     rv::As<records::PartyMember>(Sc())->step = 0;
 }
 
-// original 0x52FE90: leader state 12 - in area 0x68 Area104_LeaderRun, else
+// original 0x52FE90 (PSX 0x801B4BF4): leader state 12 - in area 0x68 Area104_LeaderRun, else
 // Area121_LeaderRun (tail jumps).
 extern "C" void __cdecl Field_AreaRunState(void) {
     if (Game_AreaNumber == 0x68) SH_CALL(Area104_LeaderRun)();
@@ -898,7 +898,7 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     } while (++i < Field_MemberCount);
 }
 
-// original 0x533690: the leader placed at (x, z) facing `direction` - alone,
+// original 0x533690 (PSX 0x801C1904): the leader placed at (x, z) facing `direction` - alone,
 // there; with others, set off by twice the step of 0x660B40 for direction >>
 // 1 (thrice when its +0x70), and once more when any member after it has its
 // +0x70. Called by Field_PartySetUp with Field_ScriptFlags bit 11.
@@ -932,17 +932,17 @@ extern "C" void __cdecl Field_LeaderPlaceOffset(long x, long z, unsigned directi
 
 // --- the pending jump's members (Field_PendingJumps 1..3) ---------------------------
 
-// original 0x5338B0: pending jump 1 - the member at 0x904EF2 released with
+// original 0x5338B0 (PSX 0x801C1CD4): pending jump 1 - the member at 0x904EF2 released with
 // kind 2 when its facing +8 is 5 or 3, else kind 3.
 extern "C" void __cdecl Field_PendingJumpTurn(void) {
     const unsigned char f = Member(EventLeader_PendingCount)[8];
     SH_CALL(Field_PendingRelease)(f == 5 || f == 3 ? 2 : 3);
 }
 
-// original 0x5338F0: pending jump 2 - released with kind 4.
+// original 0x5338F0 (PSX 0x801C1D2C): pending jump 2 - released with kind 4.
 extern "C" void __cdecl Field_PendingJumpKind4(void) { SH_CALL(Field_PendingRelease)(4); }
 
-// original 0x533900: pending jump 3 - when Field_PendingNext makes a member
+// original 0x533900 (PSX 0x801C1D4C): pending jump 3 - when Field_PendingNext makes a member
 // current: its pose 0x3A (facing 3) or 0x3B, +0 bit 6 cleared, its height +0x3E
 // the ground plus 0x7D0, Sprite_ClearSteps, +0x20 = -8, state 2 / 3 / 3, and
 // Field_State +0x138 bit 1 cleared.
@@ -960,7 +960,7 @@ extern "C" void __cdecl Field_PendingDrop(void) {
     Fs()[0x138] = static_cast<unsigned char>(Fs()[0x138] & 0xFD);
 }
 
-// original 0x5339A0: the next member of the pending jump - with 0x904EF2 at n
+// original 0x5339A0 (PSX 0x801C1E40): the next member of the pending jump - with 0x904EF2 at n
 // not 0, only once member n - 1 is in state 1 (else al 0); at n 1 bit 3 of
 // Field_ScriptFlags2 cleared and, with one member, bit 9 too and the jump over
 // (0x904EF0 = 0, al 0); bit n (mod 32) cleared. Then member n current
@@ -993,7 +993,7 @@ extern "C" unsigned char __cdecl Field_PendingNext(void) {
     return 1;
 }
 
-// original 0x533A50: the member at 0x904EF2 (n) released - unless its bit n
+// original 0x533A50 (PSX 0x801C1F94): the member at 0x904EF2 (n) released - unless its bit n
 // of Field_ScriptFlags (read once) is set, its +0 bit 6 cleared, its state
 // bytes +1..+4 the kind's record of 0x660B70 and +0x138 bit 1 cleared. With n
 // not 0 it waits (al 0) until bit n or bit n - 1 is set or member n - 1 is in

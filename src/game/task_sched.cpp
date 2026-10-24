@@ -158,7 +158,7 @@ extern "C" __attribute__((naked)) void __cdecl Task_Sleep(int) {
         "jmp _Task_BackToScheduler");
 }
 
-// original 0x5A9976: the current task starts again at `entry` on the next
+// original 0x5A9976 (PSX 0x8014B848): the current task starts again at `entry` on the next
 // frame: state 2 (the sleep word untouched), a fresh stack computed as
 // Task_Create does from the record offset (>> 5 is the slot), the entry
 // above the six dwords; then the landing - it never returns. ebx is left the

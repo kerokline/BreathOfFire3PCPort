@@ -146,7 +146,7 @@ void SelfTestReleaseCell(ReleaseCellFn theirs) {
 
 }  // namespace
 
-// original 0x56FBD0. The next free draw-item index, or 0 for none: index 0 is
+// original 0x56FBD0 (PSX 0x80155028). The next free draw-item index, or 0 for none: index 0 is
 // never in play, the pool starts with top = 1.
 //
 // As the original has it: top wraps from 0x3FF to 0, and 0 reads as "none
@@ -159,7 +159,7 @@ extern "C" unsigned short __cdecl DrawItemPool_Alloc(void) {
     return index;
 }
 
-// original 0x56FC70. Gives an index back.
+// original 0x56FC70 (PSX 0x80155120). Gives an index back.
 //
 // As the original has it: no check that the pool is not already full - with
 // top == 1 this stores at entry 0, with top == 0 at entry 0x3FF - and the new
@@ -172,7 +172,7 @@ extern "C" unsigned __cdecl DrawItemPool_Release(unsigned short index) {
     return top;
 }
 
-// original 0x56FC00. Gives back everything a cell of the view holds: its own
+// original 0x56FC00 (PSX 0x80155070). Gives back everything a cell of the view holds: its own
 // draw item, and the two further items that one may own (the words at +0x7E
 // and +0x8E of it). The hottest function of the attract run - 863,659 calls -
 // because the view's 1,568 cells are all put through it whenever the view is

@@ -115,7 +115,7 @@ struct SpriteHead {
         std::int32_t height;  // +0x3C the pass's third sort key (sprite-draw-order 2); the third dword of the 12-byte point at +0x34 (battle_setup_callees.h kPos; effect_3a_callees.h kLeaderPoint)
         struct {
             std::uint16_t height_frac;  // +0x3C the height's fraction
-            std::uint16_t height_whole;  // +0x3E the height's whole part: the elevation Sprite_ObjectMatrix reads as s16 (sprite-draw-order 12), the ground (member-sprites 2; Battle_SetupEnemy), the u16 the spawn 0x5898D0 writes (symbols.toml)
+            std::int16_t height_whole;  // +0x3E the height's whole part, s16: the elevation Sprite_ObjectMatrix 0x4FBD10 reads as s16 (sprite-draw-order 12; u16 until the records audit, 2026-10-23), the ground (member-sprites 2; Battle_SetupEnemy), the u16 the spawn 0x5898D0 writes (symbols.toml)
         };
     };
     std::int32_t scale_x;  // +0x40 16.16 (sprite-draw-order 12, 14)
@@ -195,12 +195,14 @@ struct PartyMember : SpriteHead {
     unsigned char pad_8B[0x5];  // +0x8B..+0x8F: character record +0x0B..+0x0F; +0x8B bit 0 "joined" per char-stats.md, no member reader addresses it; +0x8C the experience (CharRecord::exp)
     std::uint16_t status;  // +0x90 record +0x10 (battle_setup kPStatus; battle_damage kPStatus)
     std::uint8_t weapon;  // +0x92 record +0x12 (battle_setup kPWeapon)
-    unsigned char pad_93[0x3];  // +0x93..+0x95: armour (battle_setup kPArmour3 names only +0x95)
+    std::uint8_t armour[3];  // +0x93 record +0x13..+0x15, CharRecord::armour (char-stats.md 2 Char_ApplyArmour); +0x95 tested for 0x43 by BattleParty_AllDown and cleared before BattleParty_RecalcStats (battle_e3.cpp:780, 845; battle_setup kPArmour3)
     std::uint8_t accessory[2];  // +0x96 record +0x16 / +0x17 (battle_setup kPAccessory)
     std::uint16_t hp;  // +0x98 record +0x18 (battle_setup kPHp; battle_damage kPHp)
     std::uint16_t ap;  // +0x9A record +0x1A
     std::uint8_t survive;  // +0x9C record +0x1C, set from +0xAE (battle_setup kPByte9C); the overkill a kill leaves the flag below (battle_damage kPSurvive)
-    unsigned char pad_9D[0x3];  // +0x9D..+0x9F: record +0x1D..+0x1F; +0x9E the max-HP scale (battle_e5.cpp:403; char-stats.md 2), not named here
+    unsigned char pad_9D[0x1];  // +0x9D: record +0x1D (CharRecord::halving); no member reader names it
+    std::uint8_t hp_scale;  // +0x9E record +0x1E, CharRecord::hp_scale: BattleForm_ApplyStats sets the HP to w0 - (scale * w0 + 5) / 10 of the form's word w0 (battle_e5.cpp:409-410; char-stats.md 2)
+    unsigned char pad_9F[0x1];  // +0x9F: record +0x1F (CharRecord::master); no member reader names it
     std::uint16_t max_hp;  // +0xA0 record +0x20 (battle_setup kPMaxHp)
     std::uint16_t max_ap;  // +0xA2 record +0x22
     std::uint16_t atk;  // +0xA4 record +0x24 (char-stats.md 2; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4); battle_e5.cpp:408; the stat copy's +4, battle_damage kAttackerAtk)
@@ -211,14 +213,18 @@ struct PartyMember : SpriteHead {
     std::uint8_t byte_ae;  // +0xAE record +0x2E, copied to +0x9C (battle_setup kPByteAE)
     std::uint8_t elements[5];  // +0xAF affinity classes, fire .. wind (battle_damage kPElements)
     std::uint8_t holy;  // +0xB4 holy affinity class (battle_damage kPHoly)
-    unsigned char pad_B5[0xB];  // +0xB5..+0xBF: the rest of the character record's effective block: +0xB5..+0xB7 the rest of the nine resistance bytes, +0xB8..+0xBC the five percentage bytes (+0xBA one, battle_e3.cpp:1040; char-stats.md 2); not named here
+    unsigned char pad_B5[0x5];  // +0xB5..+0xB9: the rest of the character record's effective block: +0xB5..+0xB7 the rest of the nine resistance bytes, +0xB8 / +0xB9 the first two of the five percentage bytes +0xB8..+0xBC (char-stats.md 2); not named here
+    std::uint8_t crit_chance;  // +0xBA record +0x3A, a percentage: Rand() % 100 below it gives the swing cue 3 and sets 0x904AA8 bit 7 (BattleObj_SwingCue, BattleObj_SpecialCue: battle_obj_states.cpp:290, battle_e3.cpp:1075), the bit by which Battle_CalcDamage makes the damage 2v + plain / 4, never 0 (battle_damage.cpp:546-554), and which EnemyOp_RollBit80Task 0x4376F0 sets for an enemy; raised by 0x1E and capped at 100 with +0xBB (battle_e6.cpp:877)
+    unsigned char pad_BB[0x5];  // +0xBB..+0xBF: the last three percentage bytes (+0xBB raised with +0xBA, battle_e6.cpp:876) and two more of the block; not named here
     std::uint16_t base_max_hp;  // +0xC0 record +0x40, the base copy of +0xA0 (char-stats.md 2; item-use.md 2; battle_e5.cpp:405-425)
     std::uint16_t base_max_ap;  // +0xC2 record +0x42
     std::uint16_t base_atk;  // +0xC4 record +0x44
     std::uint16_t base_def;  // +0xC6 record +0x46
     std::uint16_t base_agi;  // +0xC8 record +0x48
     std::uint16_t base_intel;  // +0xCA record +0x4A
-    unsigned char pad_CC[0x58];  // +0xCC..+0x123: the rest of the base block (record +0x4C..+0x5F) and record +0x60..+0xA3 (CharRecord); not named here
+    unsigned char pad_CC[0x14];  // +0xCC..+0xDF: the rest of the base block (record +0x4C..+0x5F); not named here
+    std::uint8_t ability_lists[4][10];  // +0xE0 record +0x60..+0x87, four ten-byte ability lists by type: AbilityList_ForType 0x591EC0 picks +0xE0 / +0xEA / +0xF4 / +0xFE by the ability's +0x11 & 3 (0x591F01; scena_sx2.cpp:264-272; PSX 0x80167514) and AbilityList_Add 0x590C90 files an id there; Battle_MemberListFull 0x453AC0 answers 1 when list 3 has no 0 entry, and Battle_MemberRollByAction 0x453910 refuses its roll then (battle_e6.cpp:902, 927; PSX 0x800A77E4)
+    unsigned char pad_108[0x1C];  // +0x108..+0x123: record +0x88..+0xA3 (CharRecord); not named here
     std::uint8_t command;  // +0x124 battle: the command auto-battle gives (docs/battle_e4.md); field: the script context's first byte (area_entry_callees.h kRecContext). ActionRecord::command / MemberFieldTail::context
     std::uint8_t command_kind;  // +0x125 ActionRecord::command_kind (was queued_kind; C3 naming): 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand)
     std::uint16_t queued_id;  // +0x126 category << 8 | id, or the ability id (battle_setup kPQueuedItem; battle_damage kPCommandId)
@@ -273,11 +279,12 @@ struct BattleEnemy : SpriteHead {
     std::uint8_t abilities[8];  // +0x9C EnemyData +0x1C (Battle_CopyEnemyData)
     std::uint16_t hp;  // +0xA4 (battle_setup kEHp; battle_damage kEHp)
     std::uint16_t ap;  // +0xA6 (battle_damage kEAp)
-    std::uint16_t item_a8;  // +0xA8 EnemyData +0x30's low word (Battle_CopyEnemyData): an item word, Identify_DrawEnemy hands it to Identify_DrawItem (magic_s12.cpp:448) (C3 naming)
-    std::uint8_t steal_row;  // +0xAA the steal-rate row, SkillSteal_RateTable[+0xAA], unbounded (magic_steal.cpp SkillSteal_Roll; magic_steal.md)
+    std::uint16_t drop0_item;  // +0xA8 drop 0's item, EnemyData +0x30 (Battle_CopyEnemyData): Battle_RollDrops 0x437580 rolls it, SkillSteal_Roll 0x4F5140 steals it, Identify_DrawEnemy hands it to Identify_DrawItem (magic_s12.cpp:448). Was item_a8 (C3 naming)
+    std::uint8_t drop0_row;  // +0xAA drop 0's chance row: Battle_RollDrops' {0, 0, 1, 3, 7, 0x1F, 0x7F, 0xFF}[+0xAA] (battle_flow.cpp; 0x4375CA esi 0xA8 + 2), SkillSteal_RateTable[+0xAA] for the steal (magic_steal.cpp; magic_steal.md); set by AI op 5 (battle_e5.cpp:216). Was steal_row (records audit N2)
     unsigned char pad_AB[0x1];  // +0xAB: the rest of the EnemyData +0x30 dword; its marker bit raises +0xAA once (rest_3c.md Effect_EnemyRaiseAAAE); not named
-    std::uint16_t item_ac;  // +0xAC EnemyData +0x34's low word: the second item word Identify_DrawEnemy hands to Identify_DrawItem (magic_s12.cpp:450) (C3 naming)
-    unsigned char pad_AE[0x2];  // +0xAE, +0xAF: the rest of the EnemyData +0x34 dword; +0xAE raised with +0xAA, each once by the marker bits of +0xAB / +0xAF (rest_3c.md Effect_EnemyRaiseAAAE); not named
+    std::uint16_t drop1_item;  // +0xAC drop 1's item, EnemyData +0x34: Battle_RollDrops' second, Identify_DrawEnemy's second item word (magic_s12.cpp:450). Was item_ac (C3 naming)
+    std::uint8_t drop1_row;  // +0xAE drop 1's chance row: Battle_RollDrops' class byte for +0xAC (0x4375CA, the second pass esi 0xAC + 2); set by AI op 5 (battle_e5.cpp:217); raised with +0xAA once by the marker bit of +0xAF (rest_3c.md Effect_EnemyRaiseAAAE) (records audit N2)
+    unsigned char pad_AF[0x1];  // +0xAF: the rest of the EnemyData +0x34 dword; its marker bit raises +0xAE once (rest_3c.md Effect_EnemyRaiseAAAE); not named
     std::uint16_t max_hp;  // +0xB0 (battle_setup kEMaxHp)
     std::uint16_t max_ap;  // +0xB2 (battle_damage kEMaxAp)
     std::uint16_t atk;  // +0xB4 the stat copy's +4 (battle_damage kAttackerAtk; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4))
@@ -343,7 +350,12 @@ struct EnemyData {
     std::uint16_t hp;  // +0x24 (enemy_ai.py)
     std::uint16_t ap;  // +0x26
     std::uint16_t stats[4];  // +0x28 names hypotheses (enemy_ai.py)
-    unsigned char pad_30[0x8];  // +0x30..+0x37: two dwords copied to BattleEnemy +0xA8 / +0xAC, unnamed
+    std::uint16_t drop0_item;  // +0x30 to BattleEnemy::drop0_item (+0xA8), copied with +0x32 / +0x33 as one dword (Battle_CopyEnemyData)
+    std::uint8_t drop0_row;  // +0x32 to BattleEnemy::drop0_row (+0xAA)
+    unsigned char pad_33[0x1];  // +0x33: to BattleEnemy +0xAB with the dword; not named
+    std::uint16_t drop1_item;  // +0x34 to BattleEnemy::drop1_item (+0xAC), likewise
+    std::uint8_t drop1_row;  // +0x36 to BattleEnemy::drop1_row (+0xAE)
+    unsigned char pad_37[0x1];  // +0x37: to BattleEnemy +0xAF with the dword; not named
     std::uint8_t ai_rows[0x40];  // +0x38 four rows of 16 bytes (enemy_ai_data.md 1; enemy_ai.py)
     std::int8_t place[4];  // +0x78 x / z offsets by side, copied or negated to BattleEnemy +0xF2 / +0xF3 (Battle_SetEnemyOffset, battle_sprites.cpp:997-1007)
     std::uint8_t resist[9];  // +0x7C to BattleEnemy +0xDF.. and +0xBF.. (Battle_CopyEnemyData)
@@ -773,10 +785,12 @@ static_assert(offsetof(PartyMember, char_id) == 0x89, "PartyMember::char_id");
 static_assert(offsetof(PartyMember, level) == 0x8A, "PartyMember::level");
 static_assert(offsetof(PartyMember, status) == 0x90, "PartyMember::status");
 static_assert(offsetof(PartyMember, weapon) == 0x92, "PartyMember::weapon");
+static_assert(offsetof(PartyMember, armour) == 0x93, "PartyMember::armour");
 static_assert(offsetof(PartyMember, accessory) == 0x96, "PartyMember::accessory");
 static_assert(offsetof(PartyMember, hp) == 0x98, "PartyMember::hp");
 static_assert(offsetof(PartyMember, ap) == 0x9A, "PartyMember::ap");
 static_assert(offsetof(PartyMember, survive) == 0x9C, "PartyMember::survive");
+static_assert(offsetof(PartyMember, hp_scale) == 0x9E, "PartyMember::hp_scale");
 static_assert(offsetof(PartyMember, max_hp) == 0xA0, "PartyMember::max_hp");
 static_assert(offsetof(PartyMember, max_ap) == 0xA2, "PartyMember::max_ap");
 static_assert(offsetof(PartyMember, atk) == 0xA4, "PartyMember::atk");
@@ -786,12 +800,14 @@ static_assert(offsetof(PartyMember, intel) == 0xAA, "PartyMember::intel");
 static_assert(offsetof(PartyMember, byte_ae) == 0xAE, "PartyMember::byte_ae");
 static_assert(offsetof(PartyMember, elements) == 0xAF, "PartyMember::elements");
 static_assert(offsetof(PartyMember, holy) == 0xB4, "PartyMember::holy");
+static_assert(offsetof(PartyMember, crit_chance) == 0xBA, "PartyMember::crit_chance");
 static_assert(offsetof(PartyMember, base_max_hp) == 0xC0, "PartyMember::base_max_hp");
 static_assert(offsetof(PartyMember, base_max_ap) == 0xC2, "PartyMember::base_max_ap");
 static_assert(offsetof(PartyMember, base_atk) == 0xC4, "PartyMember::base_atk");
 static_assert(offsetof(PartyMember, base_def) == 0xC6, "PartyMember::base_def");
 static_assert(offsetof(PartyMember, base_agi) == 0xC8, "PartyMember::base_agi");
 static_assert(offsetof(PartyMember, base_intel) == 0xCA, "PartyMember::base_intel");
+static_assert(offsetof(PartyMember, ability_lists) == 0xE0, "PartyMember::ability_lists");
 static_assert(offsetof(PartyMember, command) == 0x124, "PartyMember::command");
 static_assert(offsetof(PartyMember, command_kind) == 0x125, "PartyMember::command_kind");
 static_assert(offsetof(PartyMember, queued_id) == 0x126, "PartyMember::queued_id");
@@ -830,9 +846,10 @@ static_assert(offsetof(BattleEnemy, bank) == 0x9A, "BattleEnemy::bank");
 static_assert(offsetof(BattleEnemy, abilities) == 0x9C, "BattleEnemy::abilities");
 static_assert(offsetof(BattleEnemy, hp) == 0xA4, "BattleEnemy::hp");
 static_assert(offsetof(BattleEnemy, ap) == 0xA6, "BattleEnemy::ap");
-static_assert(offsetof(BattleEnemy, item_a8) == 0xA8, "BattleEnemy::item_a8");
-static_assert(offsetof(BattleEnemy, steal_row) == 0xAA, "BattleEnemy::steal_row");
-static_assert(offsetof(BattleEnemy, item_ac) == 0xAC, "BattleEnemy::item_ac");
+static_assert(offsetof(BattleEnemy, drop0_item) == 0xA8, "BattleEnemy::drop0_item");
+static_assert(offsetof(BattleEnemy, drop0_row) == 0xAA, "BattleEnemy::drop0_row");
+static_assert(offsetof(BattleEnemy, drop1_item) == 0xAC, "BattleEnemy::drop1_item");
+static_assert(offsetof(BattleEnemy, drop1_row) == 0xAE, "BattleEnemy::drop1_row");
 static_assert(offsetof(BattleEnemy, max_hp) == 0xB0, "BattleEnemy::max_hp");
 static_assert(offsetof(BattleEnemy, max_ap) == 0xB2, "BattleEnemy::max_ap");
 static_assert(offsetof(BattleEnemy, atk) == 0xB4, "BattleEnemy::atk");
@@ -879,6 +896,10 @@ static_assert(offsetof(EnemyData, zenny) == 0x14, "EnemyData::zenny");
 static_assert(offsetof(EnemyData, exp) == 0x16, "EnemyData::exp");
 static_assert(offsetof(EnemyData, level) == 0x18, "EnemyData::level");
 static_assert(offsetof(EnemyData, bank) == 0x1A, "EnemyData::bank");
+static_assert(offsetof(EnemyData, drop0_item) == 0x30, "EnemyData::drop0_item");
+static_assert(offsetof(EnemyData, drop0_row) == 0x32, "EnemyData::drop0_row");
+static_assert(offsetof(EnemyData, drop1_item) == 0x34, "EnemyData::drop1_item");
+static_assert(offsetof(EnemyData, drop1_row) == 0x36, "EnemyData::drop1_row");
 static_assert(offsetof(EnemyData, abilities) == 0x1C, "EnemyData::abilities");
 static_assert(offsetof(EnemyData, hp) == 0x24, "EnemyData::hp");
 static_assert(offsetof(EnemyData, ap) == 0x26, "EnemyData::ap");

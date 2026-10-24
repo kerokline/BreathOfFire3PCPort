@@ -266,7 +266,7 @@ extern "C" void __cdecl CommuTail22_Dispatch(void) {
     Jump(CommuTail22_States_addr, 2, AreaW0c_TailState, "CommuTail22_Dispatch");
 }
 
-// original 0x457120: CommuTail14_States[9], CommuTail22_States[0]: by the
+// original 0x457120 (PSX 0x801F1BB8): CommuTail14_States[9], CommuTail22_States[0]: by the
 // record 0x9039F5's +2. 3: message 0x52, the record's +4 = the clock, +2 = 0,
 // the kept object's word +0x88 = 0x51. 2: a gift drawn - Rand & 0x7F (at most
 // 100) less the first byte of the row of a stack table of three {first, two

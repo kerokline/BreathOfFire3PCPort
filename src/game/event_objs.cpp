@@ -307,7 +307,7 @@ extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, u
             direction = static_cast<unsigned char>(((s[8] ^ 0xFC) + i) & 7);
             const long x = Add(rv::As<records::SpriteObject>(s)->x, Mul(Field_DirectionSteps[direction * 2], 2));
             const long z = Add(rv::As<records::SpriteObject>(s)->z, Mul(Field_DirectionSteps[direction * 2 + 1], 2));
-            if (!g.turn_probe(x, z, 0, rv::As<records::SpriteHead>(s)->height_whole)) break;
+            if (!g.turn_probe(x, z, 0, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(s)->height_whole))) break;
             if (++i >= 8) break;
         }
         Sprite_Current[8] = static_cast<unsigned char>(direction ^ 4);

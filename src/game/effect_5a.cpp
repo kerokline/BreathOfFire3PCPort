@@ -501,7 +501,7 @@ extern "C" void __cdecl EffectKind18_1A_Draw(void) {
     SH_CALL(Gpu_SetPolyFT4)(p);
     SH_CALL(Gpu_SetShadeTex)(p, 0);
     s = S();
-    const U h = rv::As<records::EffectObject>(s)->height_whole;
+    const U h = static_cast<std::uint16_t>(rv::As<records::EffectObject>(s)->height_whole);
     Vertex(0, x - 0x40, z - 0x30, h - 0x30);
     Vertex(1, x + 0xC0, z - 0x30, h - 0x30);
     Vertex(2, x - 0x40, z + 0x30, h + 0x30);
@@ -616,7 +616,7 @@ extern "C" void __cdecl EffectKind18_06_SetMap(void) {
         return at::kRects + 4u * static_cast<U>(Index(kWho, SW(s + 0x36), at::kSets6, at::kRects));
     };
     unsigned char* s = S();
-    const unsigned char value = rv::As<records::EffectObject>(s)->height_whole != at::kLowered ? 0x21 : 0;
+    const unsigned char value = static_cast<std::uint16_t>(rv::As<records::EffectObject>(s)->height_whole) != at::kLowered ? 0x21 : 0;
     U r = rect(s);
     for (U x = T(r); x < T(r + 2); ++x) {
         for (U z = T(r + 1); z < T(r + 3);) {
@@ -665,12 +665,12 @@ extern "C" void __cdecl EffectKind18_06_Draw(void) {
         for (unsigned k = 0; k < 4; ++k) {
             const U vx = a - static_cast<U>(TS(shape + 3 * k) << 7);
             const U vy = b - static_cast<U>(TS(shape + 3 * k + 1) << 7);
-            const U vz = static_cast<U>(TS(shape + 3 * k + 2) << 7) + rv::As<records::EffectObject>(S())->height_whole;
+            const U vz = static_cast<U>(TS(shape + 3 * k + 2) << 7) + static_cast<std::uint16_t>(rv::As<records::EffectObject>(S())->height_whole);
             Vertex(k, vx, vy, vz);
         }
         Project4(p);
         SH_CALL(Prim_SetTexture)(TL(part + 4), p, 1);
-        const U raised = rv::As<records::EffectObject>(S())->height_whole != at::kLowered ? 1 : 0;
+        const U raised = static_cast<std::uint16_t>(rv::As<records::EffectObject>(S())->height_whole) != at::kLowered ? 1 : 0;
         const U dy = T(at::kDy6 + (w0 & 0xFF) * 2 + raised);
         SH_CALL(MapView_LinkPrimAt)((w0 >> 8) & 0xFF0000, w0 & 0xFF0000, static_cast<int>(dy), 0x48);
     }
@@ -934,7 +934,7 @@ extern "C" void __cdecl EffectKind18_09_Pattern(void) {
         S()[2] = static_cast<unsigned char>(again);
         unsigned char* const s = S();
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(at::kHeights9 + 2 * static_cast<U>(Index(kWho, s[2], at::kPatterns, at::kHeights9)))));
-        const unsigned char value = rv::As<records::EffectObject>(S())->height_whole != 0xFF80 ? 0x10 : 0;
+        const unsigned char value = static_cast<std::uint16_t>(rv::As<records::EffectObject>(S())->height_whole) != 0xFF80 ? 0x10 : 0;
         for (U z = 3; z < 7; ++z)
             for (U x = 0x42; x < 0x45; ++x) {
                 const U w = AreaMap_Header[0];

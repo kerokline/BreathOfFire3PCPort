@@ -324,7 +324,7 @@ extern "C" void __cdecl Area08_SetCells(void) {
     SetCells(kCells, 3);
 }
 
-// original 0x401540 / 0x401570 (area 8's handlers 1 / 2 and choices 2 / 3;
+// original 0x401540 (PSX 0x801F4394) / 0x401570 (area 8's handlers 1 / 2 and choices 2 / 3;
 // PSX 0x801F4394 / 0x801F43E0): Crt_sprintf(Text_Records,
 // Area08_MessageFormat, variable 6 & 0x7F), then Msg_OpenScript 0x54 / 0x56
 // and Field_Request 2; the second then Music_Play(0xA, 8).
@@ -374,7 +374,7 @@ extern "C" void __cdecl Area08_CameraShiftXLess(void) {
 extern "C" void __cdecl Area08_Object6XMore(void) { SetLong(Mem(Sprite_Objects_addr + 0x40c), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(Sprite_Objects_addr + 0x40c))) + 0x800u)); }
 extern "C" void __cdecl Area08_Object6XLess(void) { SetLong(Mem(Sprite_Objects_addr + 0x40c), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(Sprite_Objects_addr + 0x40c))) - 0x800u)); }
 
-// original 0x401640 (area 8's handler 12 and choice 13, area 3's handler 0;
+// original 0x401640 (PSX 0x801F4634; area 8's handler 12 and choice 13, area 3's handler 0;
 // PSX 0x801F4634 as area 8's, 0x801F2D30 as area 3's): the four cells
 // Area03_SetCells sets, cleared.
 extern "C" void __cdecl Area08_ClearCells(void) {

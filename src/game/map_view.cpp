@@ -169,7 +169,7 @@ void SelfTestSetElevation(SetElevationFn theirs) {
 
 }  // namespace
 
-// original 0x56F910. Which map cell the view's cell (row, col) shows, as two
+// original 0x56F910 (PSX 0x80154C7C). Which map cell the view's cell (row, col) shows, as two
 // bytes to out - or 0, 0 for none. The view is isometric: going down a row
 // moves half a cell in x and in y, going along a column one cell in x and
 // back one in y.
@@ -196,13 +196,13 @@ extern "C" void __cdecl MapView_CellToMap(int row, int col, unsigned char* out) 
     out[1] = 0;
 }
 
-// original 0x536700. The area map's byte for a cell. No bounds check; the
+// original 0x536700 (PSX 0x80167628). The area map's byte for a cell. No bounds check; the
 // arguments are 16 bits, signed.
 extern "C" unsigned char __cdecl AreaMap_ByteAt(short x, short y) {
     return AreaMap_Bytes[x + y * static_cast<int>(AreaMap_Header[0])];
 }
 
-// original 0x5725F0. Sets the view's elevation and asks for a redraw; unless
+// original 0x5725F0 (PSX 0x80155A94). Sets the view's elevation and asks for a redraw; unless
 // the area's header word +0x1E is set, the offset moves by two for every unit
 // the elevation changed.
 //

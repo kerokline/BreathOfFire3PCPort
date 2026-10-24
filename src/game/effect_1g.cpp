@@ -161,7 +161,7 @@ effect_1g::BackdropSpan effect_1g::ItemTrade_BackdropSpan(unsigned quad, unsigne
 // The states
 // ============================================================================
 
-// original 0x594060 (ItemTrade_RunSteps[3], hidden in Sprite_ClutWord's
+// original 0x594060 (PSX 0x800F5AE0; ItemTrade_RunSteps[3], hidden in Sprite_ClutWord's
 // catalog extent; PSX twin 0x800F5AE0): the step ItemTrade_PickItem sets when
 // the item held is 99 or more. The frame; then with a confirm or cancel button
 // pressed: the quantity 1 (before the sound), sound 0x106, the step 0, the
@@ -184,7 +184,7 @@ extern "C" void __cdecl ItemTrade_FullMessage(void) {
     SH_CALL(ItemTrade_DrawCount)();
 }
 
-// original 0x5940F0 (ItemTrade_States[2], hidden in Sprite_ClutWord's catalog
+// original 0x5940F0 (PSX 0x800F5BAC; ItemTrade_States[2], hidden in Sprite_ClutWord's catalog
 // extent; PSX twin 0x800F5BAC): the leave state - a tail jump through
 // ItemTrade_LeaveSteps 0x66A494 by the step byte 0x93985E, unbounded, as the
 // original (past the two entries ours aborts where the table runs into bytes).

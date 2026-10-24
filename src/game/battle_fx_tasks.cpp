@@ -451,7 +451,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_Follow(void
     CallIndex(g.follow, 1, rv::As<records::BattleTask>(Sc())->state, "BattleFx_Follow");
 }
 
-// original 0x433810 (PSX 0x800A5360 by the catalogue's pairing, not read):
+// original 0x433810 (PSX 0x801E722C; not 0x800A5360, the pairing's guess):
 // Sprite_Current takes its owner's (0x93B940) place and look - byte +0 with
 // 0x20 added, then +0x48, the dwords +0x40 / +0x44, the words +0x58 / +0x5A,
 // the bytes +0x4B / +0x4A / +0x49, the dwords +0x4C / +0x50 / +0x54, the

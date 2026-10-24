@@ -268,7 +268,7 @@ extern "C" void __cdecl Title_DrawLogo(void) {
     g.set_c(-6, 0x1C, flag_a, static_cast<unsigned char>(Title_LogoShadeA));
 }
 
-// original 0x4959F0: Game_Mode 2, the field (PSX GAME.EMI section 0,
+// original 0x4959F0 (PSX 0x80198378): Game_Mode 2, the field (PSX GAME.EMI section 0,
 // FUN_80198378): the event script and the field's frame, then whatever
 // Field_Request asks for becomes the next mode.
 //
