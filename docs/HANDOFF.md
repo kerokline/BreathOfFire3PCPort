@@ -1,6 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
+**Status:** IN PROGRESS (2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
+2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
 item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
 PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
@@ -47,7 +48,7 @@ hosted cross form).
 
 ## Pick up here
 
-000000. **Issues 130 and 134 (a disc-built install's missing exits) are fixed** on `fix/issue-130-descriptor-places`
+0000000. **Issues 130 and 134 (a disc-built install's missing exits) are fixed** on `fix/issue-130-descriptor-places`
    (off `main` `f472072a`, unpushed; [`exe-import-engine.md`](exe-import-engine.md) 7.8): the importer placed no area
    descriptor whose region the port relaid by a word (the pointer votes tied), so areas 62, 97, 162 and 163's link
    counts were zero in a disc-built image and `unread` in `exe-gaps.tsv`, which the image zeroes unlogged. Tied
@@ -61,6 +62,24 @@ hosted cross form).
    between releases (the US disc's data against the PC's JP-form). Start from the scratch install's `fix2_run.log`
    against `gameof3x.log` in the session scratchpad `i130`, then the save's area word and what reads it on each
    install (the owner's draft replies are there too).
+
+000000. **Issue #121, the lift scene stalling on instant text - reproduced and fixed, unpushed**
+   ([`issue-121-lift-stall.md`](issue-121-lift-stall.md), branch `fix/issue-121-pacing-floor` off PR #129's).
+   ScrubOasis froze in area 99's lift scene (chapter 3 run 7) with `text_speed=1` and Msg Speed Fast. Reproduced
+   on the owner's `liftScene` recording with a one-frame mash and with random stick taps: the lift (the kind-2
+   object) waits on exact script counts with `A1`, and three pages closed faster than Fast can print them leave
+   `C0` past the 0xB it waits for (D357, Capcom's script race, latent until DIV-0158's instant page). Fixed by
+   DIV-0158's amendment, the pacing floor: an instant page is read at once but closes no earlier than Fast's
+   would. The same session fixed the console flash the reporter and the owner both saw wrong (D358, DIV-0178):
+   the port's `Gte_ApplyMatrixLV` wraps its 32-bit products where the PlayStation's splits the vector, so the
+   15-unit beams folded over the horizon; now they rise as on the PSX. **Owed:** the owner's play with the floor
+   (does instant text still feel instant?) and a look at the flash, and the reporter's confirmation on the next
+   build. Instruments under `C:\Users\kerok\bof3x-runs\i121y` (the earlier ones in
+   `i121x`). **PR #129** (2026-10-24, open, the owner's listen before merge) fixes #118
+   (D355) and #120 (DIV-0177, D356); the owner's `game\` folder runs that build. Local branches from the same
+   session: `tools/recorder-fkeys` (the recorder writes F1..F11 and a pause's keys as `key KEY 0`, built and
+   tested by a record-and-replay at the title, **uncommitted** in worktree `i121x\wt`) and `test/alpha4-fasttext`
+   (a test build only, not for merge).
 
 00000. **The Sunder loop is built** on `cut/sunder-loop` (off `main` `2f55de72`, worktree
    `C:\Users\kerok\bof3x-runs\sunder1024\wt`, unpushed; DIV-0176 `SunderLoop`; [`cut-content.md`](cut-content.md) 4): the

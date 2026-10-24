@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 177 entries, DIV-0001..0177, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 178 entries, DIV-0001..0178, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10220,6 +10220,45 @@ designed in rather than bolted on.
   mismatches, and the whole `BOF3X_SHADOW='*'` run exits 0. Played by the owner
   2026-10-22: "This is brilliant".
 - **Reversible?** Off by default; the Extras box or `text_speed=0`.
+- **Amended 2026-10-24 - the pacing floor (issue #121,
+  [`known-defects.md`](known-defects.md) D357,
+  [`issue-121-lift-stall.md`](issue-121-lift-stall.md)):** an instant page
+  closes no earlier than it could on the original's Fast. On Fast a glyph is
+  a frame (`0x658E94` row 0 is 0, 0 whether Speak is held or not), so a page
+  of N glyphs reaches its stop code - and can take the press that closes it -
+  N frames after it starts; the instant page reached it in one. Area 99's
+  lift scene is scripted against that pace: the lift (the kind-2 object,
+  script `+0x1C` 0) waits for exact counts the dialogue steps, and three
+  pages closed in a hundred frames instead of two hundred leave it waiting
+  for ever (D357; the reporter's freeze, reproduced on the owner's
+  `liftScene` recording with a one-frame mash and with random stick taps).
+  Now `MsgBox_StatePrint` counts the glyphs an instant page prints
+  (`g_instant_page`, reset with the box) and, at the page's stop code - its
+  end `0x00` outside a substitution, a break `0x02`, a pause `0x0B`, a choice
+  `0x14` or a timed wait `0x16` - leaves the code where it is and goes to
+  state 1 for that many frames (at most 255) first; then state 0 takes the
+  code as before. The page is drawn whole from its first frame (the step
+  count already holds every glyph), the next-page arrow, the choice and the
+  close come when Fast's would. A stop code inside a script's own `0x10`
+  span takes no floor: that is the original's instant case. Med. is not
+  touched (it already prints at Fast's pace). What the player keeps: the
+  page to read at once instead of watching it type; what they lose: closing
+  a page in under the time Fast would have typed it - which is also the
+  time every scene was scripted against. Verification 2026-10-24
+  (`C:\Users\kerok\bof3x-runs\i121y`, the reporter's install, instant text,
+  Fast, layering on, x1): without the floor the mash and the stick-tap
+  routes stall at `C0` 0x12 (the lift stuck on `A1 0B`) and the owner's
+  recording, its x2 replay and its Medium replay complete; with it the mash
+  completes the scene (`C0` to 0x30, run 7 ended), the trace showing each
+  instant page held in state 1 for its glyph count before its break or
+  close. A route recorded on instant text before the floor no longer
+  replays 1:1 (a press inside the floor is not an edge the box sees, and a
+  recording does not press again): the owner's `liftScene` and
+  `genmelAndLift` recordings fall behind their own presses, as a recording
+  would on any pacing change; routes recorded with `text_speed=0` are
+  untouched. `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` with
+  `BOF3X_TEXT_SPEED` 0 and 1: both exit 0 (the floor is off in the fuzz,
+  which compares Capcom's printer with the option off).
 
 ### A direct-colour page's texels are opaque but for 0: Amalgam's melt draws
 
@@ -11067,3 +11106,60 @@ designed in rather than bolted on.
   silent to the end; a 2-second quiet stretch before the jingle in the x2 dump is not attributed. Not heard
   by the owner; the playing case (no bracket) is covered by the self-test only.
 - **Reversible?** `BOF3X_ORIGINAL=JingleResume`.
+
+### `Gte_ApplyMatrixLV`'s products are exact: the console flash rises instead of folding over
+
+- **ID:** DIV-0178
+- **Date:** 2026-10-24
+- **Subsystem:** the GTE layer - `Gte_ApplyMatrixLV` (`0x5A7CF0`, ours,
+  `src/game/psx_gte.cpp`; libgte `ApplyMatrixLV`); seen through effect
+  kind 0x21's arms (`EffectKind21_ArmPoints` `0x46F570`,
+  `src/game/rest_3e.cpp`), area 99's console flash
+  ([`issue-121-lift-stall.md`](issue-121-lift-stall.md) 8,
+  [`known-defects.md`](known-defects.md) D358). Issue #121's second report.
+- **Tier:** Intent - a restoration. The PlayStation computes the product
+  exactly; the port's wraps.
+- **Original behaviour:** the port's `ApplyMatrixLV` multiplies each 4.12
+  matrix entry by the vector's 32-bit component in 32 bits and shifts the
+  wrapped sum right by 12 (symbols.toml's reading, 2026-09-20: "the
+  products wrap in 32 bits"). The PlayStation's (SLPS `0x80179390`, Psy-Q
+  `MTX_004.OBJ`, read with capstone 2026-10-24) splits each component into
+  `v >> 15` and `v & 0x7FFF` (sign handled), runs the high parts through
+  MVMVA unshifted and the low parts shifted by 12, shifts the high results
+  left by 3 and sums: the exact `(m . v) >> 12` of a 64-bit product, for
+  any component below 2^30. A component past 8 units (`0x80000`) against
+  a matrix entry of 0x1000 is where the port's product crosses 2^31 and
+  turns negative. The console flash's five arms are 15 units long
+  (`cos x 15 << 4`): their points' heights go +3163 at recipe frame 2502
+  to -699 at 2508 of the owner's `liftScene` recording (the arm record's
+  words peeked each frame, `C:\Users\kerok\bof3x-runs\i121y\campeek`),
+  so on the PC the arms fold over the horizon part way through their rise
+  and point down - the reporter's "upside down" and the owner's "flips up
+  and down" - where the PlayStation's rise to vertical and narrow, as the
+  owner's PSX stills show. Capcom's PC does the same (the arm functions
+  hosted, `rays_orig2`).
+- **New behaviour:** a switch (`psx_gte::g_lv_exact`, `PatchBytes
+  "ApplyMatrixLVExact"` in `PsxGte_Inject`, after the fuzz) makes the
+  three products 64-bit; the shift, the stores and the order are the same.
+  Every result that did not wrap is unchanged to the bit (a floor of a
+  multiple of 2^15 plus a remainder is the sum of the floors). Only the
+  callers whose components exceed 2^19 ever see a difference: of the
+  takeover's own, `EffectKind21_ArmPoints`; the light vectors
+  (`Gte_NormalColor`, `sprite_records.cpp`) stay within 16 bits.
+- **Rationale:** the PSX twin rule: the PlayStation's library computes
+  the product exactly, by design (the split exists for that), and the
+  effect was authored against it.
+- **Also in the PSX version?** The PlayStation is the reference; this
+  restores its arithmetic.
+- **Verification:** `BOF3X_SHADOW=psx_gte`'s fuzz runs before the switch
+  is armed and compares Capcom's wrapping products with ours wrapping; the
+  live capture (`rays_fix`, the `liftScene` save with a press every 40
+  frames, shots every 6, recipe frames 2700..2880): the five beams rise
+  from the platform, fan wide, narrow upward into one vertical beam and
+  fold - the owner's PlayStation stills frame for frame in shape; nothing
+  crosses the horizon. `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=psx_gte,effect_gte,psx_gte_matrix,psx_gte_transform`
+  on the build: exit 0, `psx_gte` 24,000 rounds 0 mismatches, `effect_gte`
+  80,000 rounds 0 mismatches, the DIV-0178 line logged.
+- **Reversible?** `BOF3X_ORIGINAL=ApplyMatrixLVExact` keeps the port's
+  wrapping products with ours running; `BOF3X_ORIGINAL=Gte_ApplyMatrixLV`
+  runs Capcom's.
