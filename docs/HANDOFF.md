@@ -53,11 +53,16 @@ hosted cross form).
    us-disc` (a scratch `--installs` with `discs` at `D:/bof3x-runs/discs`), about 43 minutes an install at
    `--speed 4`. Root `C:\Users\kerok\bof3x-runs\everydoor`; its `old\` worktree (at `b0fef7a2`) and
    `c_uspsp_old` are scratch for section 5 - `git worktree remove` it when the branch merges. The direct form,
-   not a walk (section 3 lists what that cannot see). **Open:** (a) area 135's doors 135.8, .14, .17 and .19
-   crash in our DLL (`+0xA5E52`, a read of address 3) on both installs, and 11 doors leave `Field_Request` at 5
-   or 2 past 1,800 frames - this crafted state's, or a defect a walk would reach: not read; (b) other donors (a
-   chapter 1 save) for the indirect links' other alternatives, and the `eu` set's installs; (c) a walking form,
-   which wants each area's walkable cells.
+   not a walk (section 3 lists what that cannot see). **Done 2026-10-25 on `fix/area-135-door-crash`** (off
+   `harness/build-diff-prevention`, root `C:\Users\kerok\bof3x-runs\door135`): area 135's four crashes were
+   Capcom's port reading address 3 through the never-placed marker, reachable by a save loaded in zones 4/6/7 -
+   fixed as DIV-0180 (section 4a); the eleven stuck doors are event areas (section 4b's table, with the owner's
+   account), and the sweep taps confirm while a change stays pending (`--confirm`, default `circle`). **Open:**
+   (a) the owner's eye on the marker when a save starts in zone 6 or 7 (DIV-0180 places it at its zone-4 start);
+   (b) the owner's saves for area 54 (the rocket route) and area 104 (key item 0xA), and their reading of area
+   122; (c) a whole-sweep re-run with the taps (only six areas were); (d) other donors (a chapter 1 save) for the
+   indirect links' other alternatives, and the `eu` set's installs (their confirm button is cross: `--confirm`
+   and the preamble both); (e) a walking form, which wants each area's walkable cells.
 
 0000000000. **The static data diff is built** on `tools/data-diff-gate` (off `main` `48511747`, merged with the every-door sweep on `harness/build-diff-prevention`, unpushed;
    [`data-diff.md`](data-diff.md)): `tools/data_diff.py run` decodes the area families and every `tables.toml`

@@ -4,7 +4,8 @@
 // to its last instruction with capstone (2026-09-28) and taken through the
 // area harness (area_harness.h). docs/area_w3d.md.
 //
-// Every one is a faithful replacement: no DIVERGENCE.md entry is owed. Reads
+// Every one is a faithful replacement but one: Area135_Init's DIV-0180 (the
+// marker placed when it is to be shown and was never placed). Reads
 // by an unchecked index into .data are kept (they stay in .data); where the
 // original jumps through a pointer read past what its dispatcher's table
 // reaches, divides by a byte that can be 0, or writes through an index past
@@ -747,18 +748,44 @@ extern "C" void __cdecl Area135_Tail18(void) {
 // the byte 0x8034B0 |= 1. Zone (as last read) 4, 6 or 7: the marker's +0 = 1.
 // Zone 0: Effect_FindFree; a slot: +0 = 1, kind +5 = 0x53, dwords +0x18 = 0,
 // +0x1C = 6; counter 3 = 0.
+//
+// DIVERGENCE DIV-0180 (1 through PatchBytes("Area135MarkerPlaced") in
+// AreaW3d_Inject, after the self-test): the marker (Sprite_ObjectsExtra[3])
+// is placed only by the zone-1 branch's op Bx, and kept in .bss across the
+// area's own reloads; zones 4, 6 and 7 only set its +0 again. Arrived in one
+// of them with the marker never placed in this process - a save made there
+// (F12 writes one anywhere in the field) loaded after a launch - the
+// original shows an object whose record pointer +0x54 is 0, and the next
+// field frame's Sprite_UpdateScreenA (0x57B830) reads address 3: an access
+// violation in Capcom's port as in ours (the PlayStation's read of 3 is RAM
+// and does not fault). With the switch on, an unplaced marker (+0x54 0) is
+// placed first by the zone-1 branch itself, as a player entering zone 4 from
+// zone 1 has it.
+static std::uint8_t g_place_marker = 0;
+
+namespace {
+void PlaceMarker(unsigned char& zone) {
+    AH_CALL(EventOp_Bx)(Mem(Area135_InitOp_addr));
+    AH_CALL(Flags_Clear)(Mem(Cond_Flags_addr + 0xa0), 0xC);
+    zone = Cond_ByteFD;
+    B(AreaW0c_TailSub_addr) = 0;
+}
+bool MarkerUnplaced() { return D(Sprite_ObjectsExtra_addr + 0x1ec + 0x54) == 0; }
+}  // namespace
+
 extern "C" void __cdecl Area135_Init(void) {
     unsigned char zone = Cond_ByteFD;
     if (zone == 4) {
-        if (B(AreaW1a_EntryZone_addr) == 1) {
-            AH_CALL(EventOp_Bx)(Mem(Area135_InitOp_addr));
-            AH_CALL(Flags_Clear)(Mem(Cond_Flags_addr + 0xa0), 0xC);
-            zone = Cond_ByteFD;
-            B(AreaW0c_TailSub_addr) = 0;
-        }
+        if (B(AreaW1a_EntryZone_addr) == 1) PlaceMarker(zone);
         B(MoveScript_PartyRecords_addr + 0x30) = static_cast<unsigned char>(B(MoveScript_PartyRecords_addr + 0x30) | 1);
     }
-    if (zone == 4 || zone == 6 || zone == 7) B(Sprite_ObjectsExtra_addr + 0x1ec) = 1;
+    if (zone == 4 || zone == 6 || zone == 7) {
+        if (g_place_marker && MarkerUnplaced()) {
+            bof3::Log("DIV-0180    area 135 zone %u: the marker was never placed; placed as from zone 1", static_cast<unsigned>(zone));
+            PlaceMarker(zone);
+        }
+        if (zone == 4 || zone == 6 || zone == 7) B(Sprite_ObjectsExtra_addr + 0x1ec) = 1;
+    }
     if (zone != 0) return;
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot != 0xFF) {
@@ -941,6 +968,12 @@ extern "C" void __cdecl Area135_OpenMessage(unsigned id) {
 
 void AreaW3d_Inject() {
     if (bof3::WantsShadow("area_w3d")) area_w3d::SelfTest();
+    {
+        // DIV-0180: after the self-test, which compared Capcom's init.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("Area135MarkerPlaced", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_place_marker)), &was, &is, 1);
+        bof3::Log("DIV-0180    area 135 places its marker before showing it when it was never placed (on unless the line above says OFF)");
+    }
     BOF3_INJECT(Area135_ChoiceStartTail);
     BOF3_INJECT(Area135_ChoiceCount);
     BOF3_INJECT(Area135_ChoiceStartTail14);
