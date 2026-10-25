@@ -4954,6 +4954,40 @@ designed in rather than bolted on.
     identical.
 
   **Owed:** the owner's play of the two camps.
+- **Amended 2026-10-25 (GitHub issue #132, a player; known-defects D359):
+  the later-sprite test takes what both sprites drew.** At the vaccination
+  scene's camp (`AREA053`, `vaccinationAndFireScene.txt` frames about
+  1,300..3,000) Garr (object `0x7DEE80`, screen point 169, 121) and Ryu
+  (`0x802D40`, 118, 137) share layer 25, Ryu after him. The rule drew Garr
+  in layer 27 (`BOF3X_LAYERING_LOG`, frames 1,373..1,377: stopped only at
+  layer 28, "by what a cell record drew", the fire), so his spear's
+  blade was drawn over Ryu's head, where Capcom's order puts Ryu's head over
+  the blade. The test against a later sprite of the layer passed compared
+  two 28 px body boxes, 23 px apart; the spear lies between them. It now
+  grows each side's box to the sprite's cell sprite of the last pass (the
+  2026-10-21 amendment's `DrawnBox`, shared as `Reach` in `layering.cpp`), so
+  Garr stays in layer 25. Nothing else in the rule changes, and it only
+  stops moves. `BOF3X_LAYERING_SPRITEBOX=0` drops this with the 10-21
+  amendment (the control). Verified live, narrow, en-US, the PC install,
+  layering on, the build before (`c0ba3b64`) against this one, a frame
+  every 10 (`tools/abc_run.py`, root `D:\bof3x-runs\lay141`):
+  - `vaccinationAndFireScene` 187 of 330 frames changed; in each, the
+    changed box equals `BOF3X_LAYERING=0`; frame 1,378 whole equals it;
+  - `dolphinBoss` 1 of 1,492 changed, the box equal to the switch off;
+  - identical: `ninaWalkBehindBlock` 71, `cs_53` 141, `cs_192` 64,
+    `yraallRoad` 499, `worldMapAndAreaTransition_ab` 249, `field_view` 144
+    and `worldmap_sliver` 127 (both played under en-US here);
+  - `campingFishing` 3 of 536: the run before parted a frame early at a
+    mode change (tick 2,820, mode 7 against 2), and the fixed run is within
+    108 px of the switch off over the whole frame there; `eldritchGene` 5 of
+    354, the dialogue box's typing, which differs between runs of one build;
+  - the same scene on the PC, the US PlayStation disc alone and the US disc
+    with the European PSP disc (the player's install) at 16:9 before the
+    fix: identical to one another, all with the blade over Ryu;
+  - headless `BOF3X_SHADOW='*'` (narrow): exit 0, 1,098 self-test lines,
+    every mismatch count 0, 10,087 ours (the rule arms after the self-tests).
+
+  **Owed:** the owner's look at the camp.
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
