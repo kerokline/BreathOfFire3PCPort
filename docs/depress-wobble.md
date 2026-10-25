@@ -316,7 +316,11 @@ resolution. It is on by default; `BOF3X_FBGRAB=0` is Capcom's port.
     y. It also passes the window `w x h` that the 256 texels tile, the
     same arithmetic as `D3d_BuildPageTexture`'s source.
   - A textured draw whose page meets a live grab is tagged with the grab's
-    slot and the offsets.
+    slot and the offsets - since 2026-10-25 with up to two grabs, the two
+    most recent that meet the page (`Registry::FindAll`, `kDrawGrabs`;
+    `PipeState::grab_slot2`): kind 0x51's column moves the left and right
+    halves of the frame under it into one page and textures each half's
+    quads from its own copy (DIV-0125's amendment; issue #142).
   - Under Capcom's DirectX 6 objects the note does nothing. It checks the
     texture's table is ours.
 - **Replay** (`src/render/render_d3d11.cpp`).

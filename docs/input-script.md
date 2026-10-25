@@ -289,6 +289,12 @@ logged as its hold starts and nothing waits. With `BOF3X_ORIGINAL=Game_Clock`
 the freeze still works, but the pause is replayed unrendered afterwards, and
 the log says so.
 
+**`BOF3X_EFFECTLOG=1`** (2026-10-25, instrumentation, no ledger entry): every `Effect_Spawn` /
+`Effect_SpawnAt` and every effect object's first run - kind, parameter, slot and frame - as
+`effect` lines in `bof3x.log` (`src/game/rest_2b.cpp`, `frame_callees.cpp`); it is how the
+dragon-zombie scene's puddle was traced to kind 0x51 (DIV-0125's amendment). The first-call
+tracer cannot see our own code, so this is the scene-effect census.
+
 **The game writes its own captures** (2026-09-24; since 2026-10-12 also `BOF3X_SHOT_EVERY=N` with `BOF3X_SHOT_DIR`: a `t<FRAME>.bmp` every N recipe frames, logged `input frame tNNNNNN saved mode M area A`, no input or frame moved - [`abc-harness.md`](abc-harness.md) 3). `input_run.py` sets
 `BOF3X_SHOT_DIR` to its `--out` directory, and at each shot the DLL writes
 `NAME.bmp` there itself - the render target read back through a staging

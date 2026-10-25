@@ -27,6 +27,7 @@
 #include "game/rest_2b.h"
 
 #include <cstdint>
+#include <windows.h>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -168,8 +169,21 @@ extern "C" unsigned char __cdecl Field_TriggerCounterF0(unsigned char* object, u
 // = a / b sign-extended to dwords, +0x2E / +0x30 = the words x / z. al = n.
 // Effect_FindFree answers 0..19 or 0xFF; past 19 ours aborts where the
 // original would write past Effect_Objects.
+// BOF3X_EFFECTLOG=1 logs every spawn (instrumentation; docs/input-script.md).
+static bool EffectLogOn() {
+    static int on = -1;
+    if (on < 0) {
+        char v[8];
+        on = GetEnvironmentVariableA("BOF3X_EFFECTLOG", v, sizeof v) != 0 && v[0] == '1';
+    }
+    return on == 1;
+}
+
 extern "C" unsigned char __cdecl Effect_Spawn(unsigned char kind, signed char a, signed char b, short x, short z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
+    if (EffectLogOn())
+        bof3::Log("effect      spawn kind 0x%02X a %d b %d x %d z %d slot %u frame %lu", kind, a, b, x, z, slot,
+                  static_cast<unsigned long>(Frame_Counter));
     if (slot == 0xFF) return slot;
     if (slot >= 20) bof3::Fatal("Effect_Spawn (0x57CE10): Effect_FindFree answered %u, past the 20 records", slot);
     unsigned char* const r = rv::Bytes(&Effect_Objects[slot]);
@@ -187,6 +201,9 @@ extern "C" unsigned char __cdecl Effect_Spawn(unsigned char kind, signed char a,
 // with +5 = 0x19 and the dwords x, y, z at +0x34, +0x38, +0x3C.
 extern "C" unsigned char __cdecl Effect_SpawnAt(unsigned char kind, signed char a, signed char b, long x, long y, long z) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
+    if (EffectLogOn())
+        bof3::Log("effect      spawnAt kind 0x%02X a %d b %d x %ld y %ld z %ld slot %u frame %lu", kind, a, b, x, y, z,
+                  slot, static_cast<unsigned long>(Frame_Counter));
     if (slot == 0xFF) return slot;
     if (slot >= 20) bof3::Fatal("Effect_SpawnAt (0x57CE80): Effect_FindFree answered %u, past the 20 records", slot);
     unsigned char* const r = rv::Bytes(&Effect_Objects[slot]);

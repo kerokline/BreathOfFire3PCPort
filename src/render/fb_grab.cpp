@@ -80,6 +80,39 @@ int Registry::Find(const Rect& area, Rect* dst) const {
     return best;
 }
 
+int Registry::FindAll(const Rect& area, int* slots, Rect* dsts, int max) const {
+    int found = 0;
+    for (;;) {
+        int best = -1;
+        for (int i = 0; i < kSlots; ++i) {
+            const Entry& e = entries_[i];
+            if (!e.live || !Meets(e.dst, area)) continue;
+            bool taken = false;
+            for (int k = 0; k < found && k < max; ++k) taken |= slots[k] == i;
+            if (taken) continue;
+            if (best < 0 || e.order > entries_[best].order) best = i;
+        }
+        if (best < 0) return found;
+        if (found < max) {
+            slots[found] = best;
+            dsts[found] = entries_[best].dst;
+            ++found;
+            continue;
+        }
+        // Past `max`: the count of the rest, unlisted (the listed ones are
+        // the `max` most recent).
+        int rest = 0;
+        for (int i = 0; i < kSlots; ++i) {
+            const Entry& e = entries_[i];
+            if (!e.live || !Meets(e.dst, area)) continue;
+            bool taken = false;
+            for (int k = 0; k < max; ++k) taken |= slots[k] == i;
+            if (!taken) ++rest;
+        }
+        return found + rest;
+    }
+}
+
 int Registry::Live() const {
     int n = 0;
     for (const Entry& e : entries_) n += e.live ? 1 : 0;
@@ -197,6 +230,32 @@ void SelfTest() {
             } else {
                 Rect got = {};
                 const int slot = reg.Find(r, &got);
+                {   // FindAll: every live grab that meets, most recent first
+                    int slots[kSlots];
+                    Rect dsts[kSlots];
+                    const int count = reg.FindAll(r, slots, dsts, kSlots);
+                    int want_n = 0, last_idx = -1;
+                    bool ordered = true;
+                    for (int i = 0; i < n; ++i)
+                        if (model[i].live && ModelMeets(model[i].r, r)) ++want_n;
+                    Expect(count == want_n, "find all: the count", count, want_n);
+                    for (int k = 0; k < count && k < kSlots; ++k) {
+                        int idx = -1;
+                        for (int i = n - 1; i >= 0; --i)
+                            if (model[i].live && model[i].r.x == dsts[k].x && model[i].r.y == dsts[k].y &&
+                                model[i].r.w == dsts[k].w && model[i].r.h == dsts[k].h) {
+                                idx = i;
+                                break;
+                            }
+                        if (idx < 0 || (last_idx >= 0 && idx > last_idx)) ordered = false;
+                        last_idx = idx;
+                    }
+                    Expect(ordered, "find all: most recent first", r.x, r.y, r.w, r.h);
+                    if (count > 0) Expect(slots[0] == slot, "find all: the first is Find's", slots[0], slot);
+                    int two[2];
+                    Rect two_r[2];
+                    Expect(reg.FindAll(r, two, two_r, 2) == count, "find all: the count past max", count);
+                }
                 int want = -1;
                 for (int i = n - 1; i >= 0; --i)
                     if (model[i].live && ModelMeets(model[i].r, r)) {
@@ -230,6 +289,21 @@ void SelfTest() {
         Expect(a == b && reg.Live() == 1, "a re-grab reuses its slot");
         Expect(reg.Find({0x340, 0x100, 256, 256}, &got) == b && got.w == 168, "the page texture finds it");
         Expect(reg.Find({0x300, 0x100, 64, 256}, &got) < 0, "the page to the left does not");
+    }
+    // Fixed: kind 0x51's column - two grabs of 0x40 x 0x80 at (0x340, 0x100)
+    // and (0x340, 0x180), both inside the page at (0x340, 0x100); the page's
+    // draw finds both, the later first (DIV-0125, amended 2026-10-25).
+    {
+        Registry reg;
+        const int a = reg.Record({0x340, 0x100, 0x40, 0x80});
+        const int b = reg.Record({0x340, 0x180, 0x40, 0x80});
+        int slots[kDrawGrabs] = {-1, -1};
+        Rect dsts[kDrawGrabs] = {};
+        const int count = reg.FindAll({0x340, 0x100, 256, 256}, slots, dsts, kDrawGrabs);
+        Expect(count == 2 && slots[0] == b && slots[1] == a && dsts[0].y == 0x180 && dsts[1].y == 0x100,
+               "kind 0x51's two grabs in one page", count, slots[0], slots[1]);
+        Expect(reg.FindAll({0x340, 0x180, 256, 256}, slots, dsts, kDrawGrabs) == 1 && slots[0] == b,
+               "the page below meets only the second");
     }
     bof3::Log("shadow      fb_grab self-test: 20000 display rounds (%u in a buffer), 200 registry runs of 200 operations "
               "(%u finds, %u that found a grab, %u refused full), %u FAILURES",

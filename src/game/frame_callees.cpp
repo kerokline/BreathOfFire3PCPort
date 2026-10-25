@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <windows.h>
 #include <cstring>
 #include <utility>
 
@@ -76,8 +77,16 @@ unsigned Tinted(unsigned component, unsigned char tint) {
 // original's.
 extern "C" void __cdecl Effect_RunObjects(void) {
     unsigned char* object = rv::Bytes(Effect_Objects);
+    static int log_on = -1;
+    if (log_on < 0) {
+        char v[8];
+        log_on = GetEnvironmentVariableA("BOF3X_EFFECTLOG", v, sizeof v) != 0 && v[0] == '1';
+    }
     for (unsigned n = kEffects; n != 0; --n, object += kEffectBytes) {
         if (object[0] == 0) continue;
+        if (log_on == 1 && object[1] == 0)
+            bof3::Log("effect      run slot %u handler 0x%02X param 0x%02X +9 %u frame %lu", kEffects - n, object[5],
+                      object[6], object[9], static_cast<unsigned long>(Frame_Counter));
         Sprite_Current = object;
         Handler(Effect_KindHandlers[object[5]])();
     }

@@ -1,12 +1,22 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-23 night)
+**Status:** IN PROGRESS (2026-10-25)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
 true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
+
+**Issue #142, 2026-10-25, fixed on `fix/issue-142-grab-pairs`** (off `main` `c0ba3b64`, unpushed; DIV-0125
+amended): Dauna Mine's dragon-zombie scene drew its puddle as a thin half-blob and its two discs as half-discs.
+Effect kind 0x51 copies the left and right halves of the frame under it into one texture page and textures a
+quad pair per scanline from the two copies; the frame-buffer grab tagged a draw with one grab, the page's most
+recent, so the left quads sampled nothing. A draw now carries two grabs, and the grab's edge test has half a
+cell of slack (a one-pixel seam at the join). Self-tests exit 0; the owner's `minecartToZombieDragon` replay
+matches their PlayStation frames. Open from the same session: Ryu facing the camera and turning during the
+dialogue (deterministic, from the scene's own animation ops), and the reporter's cart (issue #143, the leader
+was Ryu at the failed push; the route pushes twice on both installs) - [`HANDOFF.md`](HANDOFF.md) item 00000000.
 
 **Issues 130 and 134, 2026-10-24, fixed on `fix/issue-130-descriptor-places`** (off `main` `f472072a`, unpushed;
 [`exe-import-engine.md`](exe-import-engine.md) 7.8): a disc-built install lost the exits of the house near Maekyss
