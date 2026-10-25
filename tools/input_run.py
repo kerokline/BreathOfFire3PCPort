@@ -80,6 +80,14 @@ def game_window(pid):
     return found[0] if found else None
 
 
+def shown(path):
+    """path for a log line: relative to the checkout when on its drive (relpath raises across drives)."""
+    try:
+        return os.path.relpath(path, ROOT)
+    except ValueError:
+        return path
+
+
 def grab(path):
     # The game writes the frame itself when BOF3X_SHOT_DIR is set (input_script
     # SaveShot -> render::SaveFrame): the target as drawn, whatever covers the
@@ -95,7 +103,7 @@ def grab(path):
             im.convert('RGB').save(path)
             size = im.size
         os.remove(bmp)
-        print(f'  saved {os.path.relpath(path, ROOT)} ({size[0]}x{size[1]}, from the game)')
+        print(f'  saved {shown(path)} ({size[0]}x{size[1]}, from the game)')
         return
     pid = game_pid()
     hwnd = pid and game_window(pid)
@@ -107,7 +115,7 @@ def grab(path):
     pt = w.POINT(0, 0)
     u.ClientToScreen(hwnd, ctypes.byref(pt))
     ImageGrab.grab(bbox=(pt.x, pt.y, pt.x + r.right, pt.y + r.bottom), all_screens=True).save(path)
-    print(f'  saved {os.path.relpath(path, ROOT)} ({r.right}x{r.bottom})')
+    print(f'  saved {shown(path)} ({r.right}x{r.bottom})')
 
 
 def release(pid):
