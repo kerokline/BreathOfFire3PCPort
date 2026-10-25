@@ -8,6 +8,16 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**Area 135's crash, 2026-10-25, fixed on `fix/area-135-door-crash`** (off `harness/build-diff-prevention`,
+unpushed; DIV-0180; [`door-sweep.md`](door-sweep.md) 4a): the sweep's four crashing doors were a defect of Capcom's
+PC port that a save reaches - area 135's init shows its marker (`Sprite_ObjectsExtra[3]`) in zones 4, 6 and 7 but
+places it only on an entry from zone 1, so a save made in those zones, loaded after a launch, read address 3 through
+the null record (`0x57B844` in Capcom's code, `field_frame.cpp:378` in ours). The init now places an unplaced marker
+by the zone-1 steps first. The eleven stuck doors are event areas' messages and scripts (4b); the sweep now taps
+the confirm button while a change stays pending (`--confirm`) and lists which doors took taps or were moved by an
+event. Re-run over areas 54, 92, 104, 121, 122, 135 on both `us-disc` installs: no door differs, all 23 of area 135
+arrive. Owed: the owner's eye on the marker when a save starts in zone 6 or 7.
+
 **The every-door sweep, 2026-10-25, built on `harness/every-door`** (off `main` `48511747`, unpushed;
 [`door-sweep.md`](door-sweep.md)): `tools/door_sweep.py` takes every link of every area on two installs - the
 recipe steps `goto` (`Field_ChangeArea`) and `door` (`Area_LinkAt` + `Field_Request` 5, the leader's own two calls

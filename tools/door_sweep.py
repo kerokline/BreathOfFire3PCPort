@@ -245,12 +245,30 @@ def craft_save(donor_dir, donor, out_dir, area, x, z, flags):
     return name, chapter
 
 
-def write_recipe(path, steps, save, first, settle, settle_src, dump):
+# A change still pending (Field_Request not 0) `confirm_after` frames after a
+# goto or a door is, in the cases measured (door-sweep.md 4b), an area's message
+# waiting for a press (mode 4): the confirm button is then tapped every
+# CONFIRM_EVERY frames until the request is 0, up to the 1,800 frames the
+# plain wait allowed. The report lists the doors whose change took taps.
+CONFIRM_HOLD, CONFIRM_EVERY = 4, 30
+
+
+def wait_change(fh, confirm, confirm_after):
+    if not confirm:
+        fh.write(f'until {FIELD_REQUEST:#x} u8 == 0 timeout 1800\n')
+        return
+    fh.write(f'wait {confirm_after}\n')
+    fh.write(f'seek {confirm} {FIELD_REQUEST:#x} u8 == 0 max {1800 // CONFIRM_EVERY}\n')
+
+
+def write_recipe(path, steps, save, first, settle, settle_src, dump, confirm=None, confirm_after=60):
     with open(path, 'w', newline='\n') as fh:
         fh.write('# Written by tools/door_sweep.py (docs/door-sweep.md): a crafted save in the first\n'
                  '# link\'s area, then goto / door / peek per link. Harness steps; not a player\'s route.\n')
         fh.write(f'# save {save}\n')
         fh.write(PREAMBLE)
+        if confirm:
+            fh.write(f'set hold {CONFIRM_HOLD}\nset gap {CONFIRM_EVERY - CONFIRM_HOLD}\n')
         if dump:
             fh.write('links\n')
         here = first
@@ -259,11 +277,11 @@ def write_recipe(path, steps, save, first, settle, settle_src, dump):
             if here != s['area']:
                 ex, ez, ef = s['entry']
                 fh.write(f'goto {s["area"]} {ex:#x} {ez:#x} {ef:#x}\n')
-                fh.write(f'until {FIELD_REQUEST:#x} u8 == 0 timeout 1800\n')
+                wait_change(fh, confirm, confirm_after)
                 fh.write(f'wait {settle_src}\n')
             fh.write(f'peek {GAME_AREA:#x} u16 src_area\n')
             fh.write(f'door {s["cx"]} {s["cz"]}\n')
-            fh.write(f'until {FIELD_REQUEST:#x} u8 == 0 timeout 1800\n')
+            wait_change(fh, confirm, confirm_after)
             fh.write(f'wait {settle}\n')
             fh.write(f'peek {GAME_AREA:#x} u16 arr_area\n')
             fh.write(f'peek {GAME_MODE:#x} u16 arr_mode\n')
@@ -282,6 +300,7 @@ MARK = re.compile(r'mark (door|done) (\d+\.\d+) recipe frame')
 PEEK = re.compile(r'peek (\w+) = 0x([0-9A-F]+) ')
 DOOR = re.compile(r'door (\d+),(\d+) in area (\d+): (?:to area (\d+) x 0x([0-9A-F]+) z 0x([0-9A-F]+) flags 0x([0-9A-F]+) track (\d+)|no link)')
 ENDED = re.compile(r'(done|FAILED) at recipe frame')
+SEEK = re.compile(r'line \d+: seek met after (\d+) presses')
 
 
 def parse_steps(log):
@@ -302,6 +321,11 @@ def parse_steps(log):
         m = PEEK.match(t)
         if m:
             row[m[1]] = int(m[2], 16)
+            continue
+        m = SEEK.match(t)
+        if m:
+            if int(m[1]):
+                row['taps'] = row.get('taps', 0) + int(m[1])
             continue
         m = DOOR.match(t)
         if m:
@@ -339,7 +363,8 @@ def run_install(cfg, i, plan, a, odir):
         cdir = os.path.join(odir, f'chunk{chunk:03}')
         os.makedirs(cdir)
         recipe = os.path.join(cdir, 'doors.txt')
-        write_recipe(recipe, steps, save, first['area'], a.settle, a.settle_src, links is None)
+        write_recipe(recipe, steps, save, first['area'], a.settle, a.settle_src, links is None,
+                     None if a.confirm == 'none' else a.confirm, a.confirm_after)
         print(f'{i["name"]}: chunk {chunk}, {len(steps)} doors from {first["key"]} (save {save}, chapter {chapter})')
         ra = SimpleNamespace(every=1000000, statehash=False, statehash_skip=None, speed=a.speed, wide='0',
                              minutes=a.minutes, save_args=['--save', save], route=recipe)
@@ -358,8 +383,9 @@ def run_install(cfg, i, plan, a, odir):
             results[k] = r
         if stuck is not None and stuck not in results:
             text = open(os.path.join(cdir, 'run', '_run.txt'), encoding='utf-8', errors='replace').read()
-            why = 'FATAL' if 'FATAL' in text else ('timed out' if 'timed out' in open(log, encoding='utf-8',
-                                                                                      errors='replace').read() else meta['status'])
+            body = open(log, encoding='utf-8', errors='replace').read()
+            why = 'FATAL' if 'FATAL' in text else ('timed out' if 'timed out' in body else
+                                                    'confirm taps gave up' if 'gave up after' in body else meta['status'])
             results[stuck] = {'key': stuck, 'failed': why, 'chunk': chunk}
             print(f'  {stuck}: did not finish ({why}); resumed after it')
         elif steps and not rows:
@@ -475,6 +501,7 @@ def write_report(path, cfg, installs, a, diffs, static, data, plan, shadowed):
     lines = [f'# Door sweep: set {a.set}', '',
              f'Written by `tools/door_sweep.py` on {time.strftime("%Y-%m-%d %H:%M")} (docs/door-sweep.md). '
              f'Direct form: `goto` the area, `door` = Area_LinkAt + Field_Request 5, peeks after {a.settle} frames. '
+             f'{"No confirm taps" if a.confirm == "none" else f"A change still pending after {a.confirm_after} frames: `{a.confirm}` tapped every {CONFIRM_EVERY} frames"}. '
              f'Donor save `{a.donor}`. Reference: `{ref["name"]}`.', '',
              '| Install | links in the image | doors driven | failed |', '|---|---|---|---|']
     for i in installs:
@@ -503,6 +530,24 @@ def write_report(path, cfg, installs, a, diffs, static, data, plan, shadowed):
         lines.append('None: every area\'s link list and alternatives read the same.')
     for s in static:
         lines.append(f'- {s["key"]} ({s["pair"]}{"" if s["driven"] else ", not driven"}): {s["ref"]} | **{s["other"]}**')
+    lines += ['', '## 4. Doors not driven, and doors whose change took confirm taps', '']
+    for i in installs:
+        _, steps = data[i['name']]
+        order = sorted(steps, key=lambda k: tuple(map(int, k.split('.'))))
+        failed = [f'{k} ({steps[k]["failed"]})' for k in order if 'failed' in steps[k]]
+        tapped = [f'{k} ({steps[k]["taps"]})' for k in order if steps[k].get('taps')]
+        # finished, but not the door asked: the party was not in the door's area
+        # when it was asked, or did not arrive where the link made pending
+        elsewhere = [f'{k} (asked in {steps[k].get("src_area")})' for k in order
+                     if 'failed' not in steps[k] and steps[k].get('src_area') != int(k.split('.')[0])]
+        short = [f'{k} (pending {steps[k]["door"]["to"]}, in {steps[k].get("arr_area")} mode {steps[k].get("arr_mode")})'
+                 for k in order if 'failed' not in steps[k] and steps[k].get('door')
+                 and steps[k].get('src_area') == int(k.split('.')[0])
+                 and (steps[k].get('arr_area') != steps[k]['door']['to'] or steps[k].get('arr_mode') != 2)]
+        lines.append(f'- `{i["name"]}`: not driven: {", ".join(failed) or "none"}; '
+                     f'taps (count): {", ".join(tapped) or "none"}; '
+                     f'asked outside its area: {", ".join(elsewhere) or "none"}; '
+                     f'not arrived in the field of the pending area: {", ".join(short) or "none"}')
     with open(path, 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(lines) + '\n')
 
@@ -523,6 +568,9 @@ def main():
     ap.add_argument('--donors', default=None, help='where the donor is (default the main checkout\'s tools/recipe_saves)')
     ap.add_argument('--settle', type=int, default=60, help='frames after an arrival before the peeks')
     ap.add_argument('--settle-src', type=int, default=20, help='frames after a goto before the door')
+    ap.add_argument('--confirm', default='circle',
+                    help='the button tapped while a change stays pending (an area\'s message); none: the plain wait')
+    ap.add_argument('--confirm-after', type=int, default=60, help='frames a change may take before the taps start')
     ap.add_argument('--chunk', type=int, default=400, help='doors per launch at most')
     ap.add_argument('--speed', type=int, default=4)
     ap.add_argument('--minutes', type=float, default=60.0, help='per launch, before input_run gives up')
