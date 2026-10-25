@@ -75,6 +75,7 @@ environment; a `[set.NAME]` lists installs in column order. Shipped:
 |---|---|---|---|
 | `eu` (default) | `pc-en150`: a copy of the PC install, the cache's `en-150` layer (cache from the PC's `DAT\`, `BOF3.exe` and the European disc) | `psx-eu`: the European PSX disc alone, `install --base` | `psp-eu`: the PSP-EU disc alone, `install --base` |
 | `us` | `pc-enus`: the PC copy with an `en-US` cache (PC + US disc) | `psx-us`: the US disc alone | - |
+| `us-disc` | `pc-enus` | `psx-us-psp`: the US disc as base with the PSP-EU disc after it, the players' shape (issues 130, 134, 139; [`door-sweep.md`](door-sweep.md) 2) | - |
 | `jp` | `pc-jajp`: the PC copy with a `ja-JP` cache (PC + the Japan disc) | `psx-jp`: the Japan disc alone | `psp-jp`: the PSP-JP disc alone ([`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md)) |
 
 Kinds: `pc` copies the PC install (`BOF3.exe`, `DAT\`, `SND\`, `BGM\`, the

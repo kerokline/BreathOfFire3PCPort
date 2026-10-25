@@ -41,6 +41,10 @@ installs = ["pc-en150", "psx-eu", "psp-eu"]
 what = "en-US: the PC install against the US PSX disc alone"
 installs = ["pc-enus", "psx-us"]
 
+[set.us-disc]
+what = "en-US, the players' shape: the PC install against an install built from the US PSX disc with the PSP-EU disc after it, no PC game (issues 130, 134, 139; docs/door-sweep.md)"
+installs = ["pc-enus", "psx-us-psp"]
+
 [set.jp]
 what = "ja-JP, the one language all three builds carry natively: the PC install with the Japan disc's layer, the Japan PSX disc alone, the PSP-JP disc alone"
 installs = ["pc-jajp", "psx-jp", "psp-jp"]
@@ -102,6 +106,18 @@ build_lang = ["en-US"]
 lang = "en-US"
 exeimage = true
 traits = ["psx", "en-US"]
+
+[[install]]
+name = "psx-us-psp"
+what = "the US PSX disc as base with the PSP-EU disc after it (install --base), as `importer.py setup` orders a player's two discs; under the harness's BOF3X_OPT=none the PSP's optional layers are off, as a player's defaults have them"
+kind = "base"
+game = "{root}/g_uspsp"
+cache = "{root}/c_uspsp"
+build = ["{discs}/Breath of Fire III (USA).cue", "{discs}/Breath of Fire III (PSP) (Europe).iso"]
+build_lang = ["en-US"]
+lang = "en-US"
+exeimage = true
+traits = ["psx", "psp-source", "en-US"]
 
 [[install]]
 name = "pc-jajp"

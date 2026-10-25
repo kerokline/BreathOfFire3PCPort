@@ -48,7 +48,18 @@ hosted cross form).
 
 ## Pick up here
 
-0000000000. **The static data diff is built** on `tools/data-diff-gate` (off `main` `48511747`, unpushed;
+00000000000. **The every-door sweep is built** on `harness/every-door` (off `main` `48511747`, merged with the data diff on `harness/build-diff-prevention`, unpushed;
+   [`door-sweep.md`](door-sweep.md)). Run: `abc_run.py prepare --set us-disc`, then `door_sweep.py run --set
+   us-disc` (a scratch `--installs` with `discs` at `D:/bof3x-runs/discs`), about 43 minutes an install at
+   `--speed 4`. Root `C:\Users\kerok\bof3x-runs\everydoor`; its `old\` worktree (at `b0fef7a2`) and
+   `c_uspsp_old` are scratch for section 5 - `git worktree remove` it when the branch merges. The direct form,
+   not a walk (section 3 lists what that cannot see). **Open:** (a) area 135's doors 135.8, .14, .17 and .19
+   crash in our DLL (`+0xA5E52`, a read of address 3) on both installs, and 11 doors leave `Field_Request` at 5
+   or 2 past 1,800 frames - this crafted state's, or a defect a walk would reach: not read; (b) other donors (a
+   chapter 1 save) for the indirect links' other alternatives, and the `eu` set's installs; (c) a walking form,
+   which wants each area's walkable cells.
+
+0000000000. **The static data diff is built** on `tools/data-diff-gate` (off `main` `48511747`, merged with the every-door sweep on `harness/build-diff-prevention`, unpushed;
    [`data-diff.md`](data-diff.md)): `tools/data_diff.py run` decodes the area families and every `tables.toml`
    table from the PC's `.data` and each disc-built image; `check` (CI) holds `recipes/data-diff.tsv` against
    `recipes/data-known.toml` and `recipes/exe.toml`'s image hashes, so **any recipe regeneration now needs a
