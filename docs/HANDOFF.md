@@ -48,6 +48,16 @@ hosted cross form).
 
 ## Pick up here
 
+00000000. **Issue 139 (a disc-built install's Deis's temple exit to area 0) is fixed** on `fix/issue-139-neighbour-places`
+   (off `main` `c0ba3b64`, unpushed; [`exe-import-engine.md`](exe-import-engine.md) 7.9): the exit's first
+   alternative was a `gap` zeroed in the image, the disc's bytes a word away from where either neighbour put them;
+   `find_places` now tries each placed neighbour's displacement and its word shifts on every unplaced run once the
+   keys are done. Recipes regenerated over the seven discs, checks 0 errors, the `i130` image rebuilt and the owner's
+   `deisCave` recipe leaves the temple for Mt. Zublo as the PC does. **A player's install needs the rebuild**
+   (`importer.py stale` names `exe`). **Left:** 60 gap rows on `psx-us` (757 bytes; `Scena17_EndSteps`, `Equip*`,
+   area 89's `+0x30`, `Area121_BandHeights`) are bytes no disc has at a neighbour's displacement; the PSX
+   descriptor-table rule of 7.8 is still the way to area 89's and 129's holes; PR at the owner's word.
+
 0000000. **Issues 130 and 134 (a disc-built install's missing exits) are fixed** on `fix/issue-130-descriptor-places`
    (off `main` `f472072a`, unpushed; [`exe-import-engine.md`](exe-import-engine.md) 7.8): the importer placed no area
    descriptor whose region the port relaid by a word (the pointer votes tied), so areas 62, 97, 162 and 163's link

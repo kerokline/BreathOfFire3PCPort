@@ -8,6 +8,14 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**Issue 139, 2026-10-24, fixed on `fix/issue-139-neighbour-places`** (off `main` `c0ba3b64`, unpushed;
+[`exe-import-engine.md`](exe-import-engine.md) 7.9): a disc-built install's Deis's temple exit led to area 0 at
+(0, 0) - McNeil Village, off the map - because the first exit alternative's eight bytes were a `gap` the image
+zeroes, though the disc carries them between two placed runs whose displacements differ by the port's inserted
+word. The importer now tries every unplaced run at its placed neighbours' displacements (and shifted by one or two
+words), placing what agrees byte for byte; 10 to 20 gap rows close per build, no placed byte moves, the audit of
+the rest is the rule itself. A player's install must be rebuilt (the launcher's staleness prompt).
+
 **Issues 130 and 134, 2026-10-24, fixed on `fix/issue-130-descriptor-places`** (off `main` `f472072a`, unpushed;
 [`exe-import-engine.md`](exe-import-engine.md) 7.8): a disc-built install lost the exits of the house near Maekyss
 Gorge and the cave entrances at Mt. Zublo because the importer never placed those areas' descriptors - the port
