@@ -994,6 +994,99 @@ table (`0x801802EC`, each entry an overlay address inside the area's own
 such holes: a read through a pointer plus an offset is not a reader the
 measurement sees, and the image logs nothing for the class.
 
+### 7.9 Places at a neighbour's displacement (2026-10-24, issue 139)
+
+**Why.** ScrubOasis, on the same disc-built install as issue 130 (the US
+PlayStation disc as base, the European PSP disc after it), walked into Deis's
+temple from Mt. Zublo and came out in McNeil Village, off the map, with its
+music. The owner's `deisCave` recipe (its save `tools/recipe_saves/deisCave.DAT`,
+not in the repository) replayed on the `i130` install: `AREA098.DAT` opens with
+song 67, then `AREA000.DAT` with song 2 - the temple, then area 0 at (0, 0); on
+the PC install the same inputs open songs 67, 54 and 19 - the temple, Mt. Zublo
+(area 97) and the world map. The link lists and the descriptors of all 200
+areas are byte for byte the PC's in the disc-built image (a scratch walk of
+`Area_Descriptors` through both, and against the US disc's own table at
+`0x8017F974`), so this was not 7.8's hole. Area 98's one link is indirect
+([`area-entry.md`](area-entry.md): `+2` `0xFFFF`), its alternatives a list of
+10-byte entries at `0x617EB0`: the first to area 195 (the volcano) when its
+condition holds, the second to area 97. The first entry's bytes `0x617EB0..0x617EB8`
+sat in `exe-gaps.tsv` as `gap` `game-value Area96_Handlers+0x184` on every build,
+"no disc carries it", and the image zeroes a gap: the entry read as area 0 at
+(0, 0) with a condition on flag byte 0 bit 0, which holds.
+
+**The cause.** The US disc carries the eight bytes at `0x801F5FD4` in
+`WORLD02/AREA098.EMI#13`, between two places the image already had
+(`0x617EA0..0x617EAC` and `0x617EBC..0x617EC8`, psp_exe's `:twin` runs). The
+port inserted a zero word before the entry (`0x617EAC`) and another after the
+list (`0x617ECC`), so the two neighbours' displacements differ by a word, and
+no rule reached the run: no pointer in it (one key short for 7.3's check), the
+pointer to it at `0x617EC8` a layout word (not a `map`/`table`/`place` word, so
+7.7's incoming rule does not see it), and eight bytes too few for 7.4's 16-byte
+window.
+
+**The rule.** Once the keyed rounds place nothing more, every unplaced run is
+tried at each placed neighbour's displacement - the stretch ending at its
+start and the one starting at its end, of a file the disc has (`map`,
+`table`, a plain `place` or a `:twin` run; not an owning-function row, whose
+address is not linear) - and at that displacement shifted by one and two words
+either way, for the port's inserted or dropped words. A stretch that agrees
+byte for byte (`stretches` with `plain`: a wild pointer word ends it), four
+bytes with two of them non-zero or more, is placed with the neighbour as its
+one key. The rule runs after the keys so that a keyed place is never
+pre-empted: no row of the previous recipe moved. A placed stretch is by
+construction the PC's bytes, so `placed_differ` cannot move.
+
+**Before and after** (`exe.toml`; `exe-gaps.tsv`'s `gap` rows / bytes, then its
+`unread` rows / bytes), on `fix/issue-139-neighbour-places` off `main` `c0ba3b64`:
+
+| Build | places | identical | placed_differ | gap rows / bytes | unread rows / bytes |
+|---|---|---|---|---|---|
+| `psx-jp` | 215 to 310 | 615,286 to 615,401 | 3,151, unchanged | 51 / 567 to 33 / 374 | 108 / 37,296 to 107 / 37,285 |
+| `psx-us` | 229 to 336 | 614,730 to 614,945 | 3,194, unchanged | 70 / 1,084 to 60 / 757 | 109 / 37,305 to 108 / 37,294 |
+| `psx-eu-en` | 243 to 346 | 614,733 to 614,918 | 3,191, unchanged | 71 / 1,093 to 61 / 796 | 109 / 37,305 to 108 / 37,294 |
+| `psx-fr` | 242 to 346 | 614,665 to 614,861 | 3,193, unchanged | 72 / 1,128 to 64 / 835 | 110 / 37,313 to 108 / 37,294 |
+| `psx-de` | 242 to 347 | 614,656 to 614,854 | 3,192, unchanged | 74 / 1,145 to 65 / 843 | 110 / 37,313 to 108 / 37,294 |
+| `psp-jp` | 268 to 465 | 613,044 to 613,180 | 3,398, unchanged | 51 / 532 to 31 / 336 | 107 / 37,276 to 106 / 37,265 |
+| `psp-eu` | 268 to 455 | 613,035 to 613,163 | 3,378, unchanged | 49 / 501 to 29 / 302 | 111 / 37,303 to 110 / 37,292 |
+
+On `psx-us` the rows that leave `exe-gaps.tsv` (some as narrower rows), each a
+game value the disc carried all along: area 98's alternative
+(`0x617EAF..0x617EB8`, placed on all seven builds from `AREA098.EMI#13` at
+`0x801F5FD3`, 9 bytes, the next `:twin` run's displacement); `Area115_Directions`
+and `Area115_Record8Anims`; `Area104_PlateAnims`, `Area121_Record8Anims`,
+`Area135_EffectKinds` (area 134's `+0x48`, 7.8's third hole),
+`Area141_CellEntries+0x7C`, `Area172_EffectStates+0xFF0`, `Area196_Keys1+0x658`;
+the `DriftUV` rows of areas 65, 87, 88 and 115; `BossTorch_Sounds`,
+`AuraBreathDome_Height`, `EffectKind18Sub37_States+0x10` and `Sub38`'s,
+`GameMode3_Steps+0xC`, `Scena03_Bob4` and `Bob2`, and nine `Scena17_EndSteps`
+rows narrowed to the bytes no disc has. None of these was seen in play before
+this; what each would have done zeroed is not established, except the
+alternative's exit.
+
+**Checks.** The seven discs through `exe_tables.py recipe`, `psp_exe.py
+recipe`, `exe_tables.py recipe`, `exe_own.py measure` (its `--analysis` the
+checkout's, `analysis/pc_xref.json` being ignored by git), `exe_tables.py
+gaps`; then `exe_tables.py check`, `psp_exe.py check`, `importer.py check`,
+`tables.py check`, `ledger_check.py`: 0 errors each; of the previous recipe's
+place rows none is gone (898 added). The `i130` install's image rebuilt
+(`exe_tables.py build`, 215 bytes changed, `verify` 0 problems): the
+`deisCave` recipe now opens `AREA098.DAT`, `AREA097.DAT` and `AREA087.DAT`
+with songs 67, 54 and 19 - the PC's sequence. As in 7.8 no `FilledSince` row
+was added: `importer.py stale` names `exe` on an install built before this,
+and the launcher's prompt brings a player the rebuild.
+
+**Left.** The gap rows that remain on a PlayStation build are the bytes no
+disc holds at any neighbour's displacement: on `psx-us` 60 rows, 757 bytes,
+25 of them `Scena17_EndSteps`', 10 `Equip*`, and two areas' - `Area88_DriftUV+0x78`
+(area 89's `+0x30`, the fishing spot, 7.8) and `Area121_BandHeights`; area 129's
+`+0x30` stays `unread` (`Area128_Handlers+0xBC`). The audit that found this -
+every `gap` / `unread` range read from the disc at its neighbours'
+displacements and compared with the PC's bytes - is what the rule now does on
+every recipe run, so it needs no separate script; the remaining rows are its
+residue. The descriptor-table rule 7.8 names (a descriptor's place from the
+PSX `Area_Descriptors` table, `0x8017F974` on the US disc) is still not
+built, and would place area 89's and 129's holes.
+
 ## For the other files
 
 Not edited here (the coordinator folds them in):
