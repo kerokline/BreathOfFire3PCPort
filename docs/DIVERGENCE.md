@@ -8361,6 +8361,28 @@ designed in rather than bolted on.
   ending's frame copy are unseen (no recipe reaches them).
 - **Reversible?** `BOF3X_FBGRAB=0`. Also `BOF3X_ORIGINAL=Gfx_DrawOTag` (no grab
   recorded) or `D3d_BindTexture` (no draw tagged).
+- **Amended 2026-10-25 (issue #142, the owner's `minecartToZombieDragon` recipe):** a
+  draw samples up to **two** grabs of its page, the two most recent that meet it
+  (`fb_grab::Registry::FindAll`, `kDrawGrabs`; `PipeState` `grab_slot2`, the shader's
+  second grab on `t3`, flag 128). As built, a draw was tagged with one grab, the most
+  recent to meet its page - and kind 0x51's column (Dauna Mine's dragon-zombie scene,
+  the puddle that spreads into the pool and the circle that closes on the way out)
+  is two moves into one page: the left half of the frame under it to `(0x340, 0x100)`
+  and the right half to `(0x340, 0x180)`, each `0x40 x 0x80`, then a row of two
+  textured quads per scanline, the left one reading the first copy (u `0x40 - w ..
+  0x40`, v `+0x40`) and the right one the second (v `-0x40`). The page took only the
+  second grab, so the left quads sampled the shadow - nothing - and the puddle was
+  half a blob with a thin pale edge, and each disc a half-disc with a straight left
+  side (the reporter's "rainbow outline"; the owner's captures 2026-10-24). Now both
+  halves show: the wobbling blue-and-red puddle and the full circle, as the owner's
+  PlayStation frames of the scene. The grab's edge test also gained half a cell of
+  slack: a quad ending exactly on a grab's last column sampled the page at its edge
+  pixel, a one-pixel seam down the middle. **Verification:** `BOF3X_SHADOW=fb_grab`
+  checks `FindAll` against the model list (every grab that meets, most recent first,
+  the count past `max`) and kind 0x51's fixed pair, 0 failures; the recipe replayed
+  (`analysis/shots` of 2026-10-25: frames 2760, 3300, 3360, 6060) against the
+  owner's PlayStation frames. A one-grab frame hashes as before (`BOF3X_FRAMEHASH`
+  puts the second grab only when set).
 
 ### The debris matrix is the GTE's identity: the lighthouse's rays come back
 

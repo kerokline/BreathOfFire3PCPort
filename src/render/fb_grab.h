@@ -50,6 +50,11 @@ public:
     // The most recent live grab whose rectangle meets `area`: its slot, and
     // its rectangle in *dst. -1 when none.
     int Find(const Rect& area, Rect* dst) const;
+    // Every live grab whose rectangle meets `area`, most recent first, up to
+    // `max` of them: their slots and rectangles; the count found (all of
+    // them, even past `max`). Kind 0x51's column textures from two grabs in
+    // one page (DIV-0125, amended 2026-10-25).
+    int FindAll(const Rect& area, int* slots, Rect* dsts, int max) const;
     int Live() const;
 
 private:
@@ -63,6 +68,9 @@ private:
 };
 
 bool Meets(const Rect& a, const Rect& b);
+
+// A draw samples at most this many grabs of its page (render_shim.h PipeState).
+constexpr int kDrawGrabs = 2;
 
 // BOF3X_SHADOW=fb_grab: property checks of the above. Fatal on a failure.
 void SelfTest();

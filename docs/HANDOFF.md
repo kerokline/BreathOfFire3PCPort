@@ -48,6 +48,34 @@ hosted cross form).
 
 ## Pick up here
 
+000000000. **Issue #142 (Dauna Mine's dragon-zombie puddle and circle, half drawn) is fixed** on
+   `fix/issue-142-grab-pairs` (off `main` `c0ba3b64`, PR #145; DIV-0125 amended): the owner's
+   `minecartToZombieDragon` recipe (save in `tools/recipe_saves/`, the first route to reach effect kind
+   0x51) showed the puddle as a thin half-blob with a pale edge and each disc as a half-disc with a
+   straight left side. Kind 0x51 moves the left and right halves of the frame under it into one
+   texture page and textures a quad pair per scanline from the two copies; a draw was tagged with
+   only the most recent grab of its page, so the left quads sampled nothing. Now a draw carries two
+   grabs (`fb_grab::Registry::FindAll`, `PipeState::grab_slot2`, the shader's `t3`), and the grab's
+   edge test has half a cell of slack (a one-pixel seam at the join). Self-tests exit 0 (`'*'` from
+   a clean copy, `inject: 10087 ours`); the replay's frames 2760 / 3300 / 3360 / 6060 match the
+   owner's PlayStation frames (`analysis/shots/issue-142-1025/`, before and after). **Found on the
+   way:** `BOF3X_EFFECTLOG=1` (the spawn / first-run census of effect objects, `input-script.md`);
+   the hosted all-original replay (`--original '*,-Game_Clock'`) of this route crashes at frame 742
+   with the build's launcher and shows only the logo window with the dev launcher - the original
+   side of a scene A/B is not available on this route. **Open:** (a) the owner's "Ryu keeps turning
+   around" in the dialogue - real, deterministic (every run identical, the same `Rand` count each
+   frame): the scene script sets the leader's animation from one site (`SetAnimationAt` 7, then
+   51 / 7 / 43 bursts at the dialogue beats, logged at frames 4012..4033, 4166, 4349) and he faces
+   away at ~4540..4700 and ~4940 from the animation's own frames; `AREA108` is byte-identical on
+   every disc (region-diff.md's census), so the JP PlayStation should show the same - but the
+   owner's US let's-play frames keep Ryu facing Garr. Not settled: a JP-disc look, or the US's
+   main-exe difference in the pose path, decides it. (b) Issue #143 (the mine cart): the owner's
+   route pushes the cart twice on both the PC install and the disc-built `i130` install; the
+   reporter's screenshot shows **Ryu** at the cart with Ryu's own line ("Maybe Garr would be able
+   to push it..."), so the leader was Ryu at the failed push - `Field_LeaderEffectTest` only pushes
+   for member kinds 3 and 6 (`Field_State +0x89`) at a run. What swapped the leader back after the
+   first push is not found; no swap and no reset is in the route. Ask the reporter whether Garr
+   was in front, or whether a battle, menu or save came between the pushes.
 00000000. **Issue 139 (a disc-built install's Deis's temple exit to area 0) is fixed** on `fix/issue-139-neighbour-places`
    (off `main` `c0ba3b64`, unpushed; [`exe-import-engine.md`](exe-import-engine.md) 7.9): the exit's first
    alternative was a `gap` zeroed in the image, the disc's bytes a word away from where either neighbour put them;

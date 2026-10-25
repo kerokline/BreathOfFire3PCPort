@@ -99,6 +99,10 @@ struct PipeState {
     // texels tile, grab_size the grab's cells.
     U grab_slot;
     float grab_off[2], grab_tile[2], grab_size[2];
+    // A second grab of the same page (kind 0x51's column: its left and right
+    // halves are two moves into one page; fb_grab::kDrawGrabs). 0 when none.
+    U grab_slot2;
+    float grab_off2[2], grab_size2[2];
 };
 
 struct Command {

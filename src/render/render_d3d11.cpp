@@ -148,10 +148,11 @@ template <class T> void Release(T*& p) {
 const char kSceneShader[] = R"(
 cbuffer FrameConstants : register(b0) { float2 target_size; float2 view_pad; };
 cbuffer DrawConstants : register(b1) { uint flags; uint alpha_ref; uint alpha_func; uint draw_pad; float4 grab0; float4 grab1;
-                                        uint src_blend; uint dst_blend; uint2 draw_pad2; };
+                                        uint src_blend; uint dst_blend; uint2 draw_pad2; float4 grab2; float4 grab3; };
 Texture2D tex : register(t0);
 Texture2D grab : register(t1);
 Texture2D stp_plane : register(t2);
+Texture2D grab_b : register(t3);
 SamplerState smp : register(s0);
 SamplerState grab_smp : register(s1);
 struct VSIn { float4 pos : POSITION; float4 diffuse : COLOR0; float4 specular : COLOR1; float2 uv : TEXCOORD0; };
@@ -183,10 +184,26 @@ float4 Shade(PSIn i, out bool blended, out float cover) {
         // grab's picture (window resolution); black is transparent, as a
         // 15-bit 0 is on the PlayStation. grab0: the page's origin less the
         // grab's, and the window the 256 texels tile; grab1: the grab's cells.
+        // The test keeps half a cell of slack at the grab's edges: a quad whose
+        // texels end exactly at the grab's last column samples that column at
+        // its edge pixel (the PlayStation never reads a quad's far edge), and
+        // without the slack that pixel fell through to the page - a pale seam
+        // down the middle of kind 0x51's column (2026-10-25).
+        bool grabbed = false;
         if (flags & 32u) {
             float2 cell = fmod(i.uv * 256.0, grab0.zw) + grab0.xy;
-            if (all(cell >= 0.0) && all(cell < grab1.xy)) {
+            if (all(cell >= -0.5) && all(cell < grab1.xy + 0.5)) {
                 float4 g = grab.SampleLevel(grab_smp, cell / grab1.xy, 0);
+                t = float4(g.rgb, any(g.rgb > 0.0) ? 1.0 : 0.0);
+                grabbed = true;
+            }
+        }
+        // A second grab of the same page (kind 0x51's column, DIV-0125 amended):
+        // grab2 its origin offset (the window is grab0.zw), grab3 its cells.
+        if ((flags & 128u) && !grabbed) {
+            float2 cell = fmod(i.uv * 256.0, grab0.zw) + grab2.xy;
+            if (all(cell >= -0.5) && all(cell < grab3.xy + 0.5)) {
+                float4 g = grab_b.SampleLevel(grab_smp, cell / grab3.xy, 0);
                 t = float4(g.rgb, any(g.rgb > 0.0) ? 1.0 : 0.0);
             }
         }
@@ -550,7 +567,10 @@ bool SameState(const PipeState& a, const PipeState& b) {
            a.grab_slot == b.grab_slot &&
            (a.grab_slot == 0 || (a.grab_off[0] == b.grab_off[0] && a.grab_off[1] == b.grab_off[1] &&
                                  a.grab_tile[0] == b.grab_tile[0] && a.grab_tile[1] == b.grab_tile[1] &&
-                                 a.grab_size[0] == b.grab_size[0] && a.grab_size[1] == b.grab_size[1]));
+                                 a.grab_size[0] == b.grab_size[0] && a.grab_size[1] == b.grab_size[1])) &&
+           a.grab_slot2 == b.grab_slot2 &&
+           (a.grab_slot2 == 0 || (a.grab_off2[0] == b.grab_off2[0] && a.grab_off2[1] == b.grab_off2[1] &&
+                                  a.grab_size2[0] == b.grab_size2[0] && a.grab_size2[1] == b.grab_size2[1]));
 }
 
 // DIV-0125: copies the picture's (x, y, w, h), in game pixels, from the
@@ -616,6 +636,7 @@ struct DrawConstants {
     U flags, ref, func, pad;
     float grab0[4], grab1[4];
     U src_blend, dst_blend, pad2[2];   // DIV-0160 step 3: the draw's D3DBLEND pair, for PSStp
+    float grab2[4], grab3[4];          // DIV-0125 amended: the page's second grab (flag 128)
 };
 static_assert(sizeof(DrawConstants) % 16 == 0, "a constant buffer is a whole number of 16-byte registers");
 
@@ -633,6 +654,7 @@ void Draw(const PipeState& s, U first, U count) {
     // texture there. A slot whose grab has not been copied yet (none in any
     // frame so far) has no texture and the draw keeps the page's own texels.
     ID3D11ShaderResourceView* grab_srv = nullptr;
+    ID3D11ShaderResourceView* grab_srv2 = nullptr;
     if (s.texture && s.grab_slot && g_grab_slots[s.grab_slot - 1].srv) {
         c.flags |= 32;
         grab_srv = g_grab_slots[s.grab_slot - 1].srv;
@@ -643,11 +665,21 @@ void Draw(const PipeState& s, U first, U count) {
         c.grab1[0] = s.grab_size[0];
         c.grab1[1] = s.grab_size[1];
     }
+    if (s.texture && s.grab_slot2 && g_grab_slots[s.grab_slot2 - 1].srv) {   // the page's second grab
+        c.flags |= 128;
+        grab_srv2 = g_grab_slots[s.grab_slot2 - 1].srv;
+        c.grab0[2] = s.grab_tile[0];
+        c.grab0[3] = s.grab_tile[1];
+        c.grab2[0] = s.grab_off2[0];
+        c.grab2[1] = s.grab_off2[1];
+        c.grab3[0] = s.grab_size2[0];
+        c.grab3[1] = s.grab_size2[1];
+    }
     GpuTexture* bound = s.texture ? Bind(s.texture) : nullptr;
     // DIV-0160 step 3: a blended draw of a texture that carries bit 15 blends
     // only its bit-15 texels. Not a draw inside a DIV-0125 grab: the grab's
     // texels are the picture's, whose bit 15 the plane does not hold.
-    const bool by_texel = StpBlend() && bound && bound->stp_srv && s.blend_enable && !(c.flags & 32) &&
+    const bool by_texel = StpBlend() && bound && bound->stp_srv && s.blend_enable && !(c.flags & (32 | 128)) &&
                           StpFactors(s.src_blend, s.dst_blend);
     c.src_blend = s.src_blend;
     c.dst_blend = s.dst_blend;
@@ -658,6 +690,7 @@ void Draw(const PipeState& s, U first, U count) {
     g_ctx->PSSetShaderResources(0, 1, &srv);
     g_ctx->PSSetShaderResources(2, 1, &stp_srv);
     g_ctx->PSSetShaderResources(1, 1, &grab_srv);
+    g_ctx->PSSetShaderResources(3, 1, &grab_srv2);
     ID3D11SamplerState* grab_sampler = s.point_filter ? g_sampler_present_point : g_sampler_present_linear;
     g_ctx->PSSetSamplers(1, 1, &grab_sampler);
     ID3D11SamplerState* sampler = s.point_filter ? g_sampler_point : g_sampler_linear;

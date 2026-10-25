@@ -394,6 +394,11 @@ void LogWalkHash(U first, U end, U tag) {
             f.Put(st.grab_tile);
             f.Put(st.grab_size);
         }
+        if (st.grab_slot2) {   // only when set: a one-grab frame hashes as before
+            f.Put(st.grab_slot2);
+            f.Put(st.grab_off2);
+            f.Put(st.grab_size2);
+        }
         f.Put(st.texture != nullptr);
         if (st.texture) {
             U k = 0;
@@ -452,21 +457,41 @@ fb_grab::Registry g_grabs;
 
 bool GrabActive() { return g_frame.commands != nullptr && fb_grab::Enabled(); }
 
-// A textured draw: when its texture is a direct-colour page and a live grab
-// lies inside the page's texels, the draw samples the grab's slot there.
+// A textured draw: when its texture is a direct-colour page and live grabs
+// lie inside the page's texels, the draw samples their slots there - the two
+// most recent (fb_grab::kDrawGrabs; kind 0x51's column is two moves into one
+// page, DIV-0125 amended 2026-10-25). A page meeting more than two is logged
+// once and draws the two most recent.
 void GrabFor(PipeState& s) {
     const Surface* t = s.texture->surface;
     if (!t->direct_page || g_grabs.Live() == 0) return;
-    fb_grab::Rect dst = {};
-    const int slot = g_grabs.Find({t->page_x, t->page_y, t->tile_w, t->tile_h}, &dst);
-    if (slot < 0) return;
-    s.grab_slot = static_cast<U>(slot) + 1;
-    s.grab_off[0] = static_cast<float>(t->page_x - dst.x);
-    s.grab_off[1] = static_cast<float>(t->page_y - dst.y);
+    static_assert(fb_grab::kDrawGrabs == 2, "PipeState carries two grabs");
+    int slots[fb_grab::kDrawGrabs] = {-1, -1};
+    fb_grab::Rect dst[fb_grab::kDrawGrabs] = {};
+    const int found = g_grabs.FindAll({t->page_x, t->page_y, t->tile_w, t->tile_h}, slots, dst, fb_grab::kDrawGrabs);
+    if (found <= 0) return;
+    s.grab_slot = static_cast<U>(slots[0]) + 1;
+    s.grab_off[0] = static_cast<float>(t->page_x - dst[0].x);
+    s.grab_off[1] = static_cast<float>(t->page_y - dst[0].y);
     s.grab_tile[0] = static_cast<float>(t->tile_w);
     s.grab_tile[1] = static_cast<float>(t->tile_h);
-    s.grab_size[0] = static_cast<float>(dst.w);
-    s.grab_size[1] = static_cast<float>(dst.h);
+    s.grab_size[0] = static_cast<float>(dst[0].w);
+    s.grab_size[1] = static_cast<float>(dst[0].h);
+    if (found >= 2) {
+        s.grab_slot2 = static_cast<U>(slots[1]) + 1;
+        s.grab_off2[0] = static_cast<float>(t->page_x - dst[1].x);
+        s.grab_off2[1] = static_cast<float>(t->page_y - dst[1].y);
+        s.grab_size2[0] = static_cast<float>(dst[1].w);
+        s.grab_size2[1] = static_cast<float>(dst[1].h);
+    }
+    if (found > fb_grab::kDrawGrabs) {
+        static bool logged;
+        if (!logged) {
+            logged = true;
+            bof3::Log("fb_grab     a page at (%d, %d) meets %d live grabs; a draw samples the %d most recent", t->page_x,
+                      t->page_y, found, fb_grab::kDrawGrabs);
+        }
+    }
 }
 
 Vertex* AppendVertices(U n) {
@@ -1291,6 +1316,9 @@ PipeState PipeForSnapshot() {
     std::memset(s.grab_off, 0, sizeof s.grab_off);
     std::memset(s.grab_tile, 0, sizeof s.grab_tile);
     std::memset(s.grab_size, 0, sizeof s.grab_size);
+    s.grab_slot2 = 0;
+    std::memset(s.grab_off2, 0, sizeof s.grab_off2);
+    std::memset(s.grab_size2, 0, sizeof s.grab_size2);
     return s;
 }
 
@@ -1298,6 +1326,7 @@ void RestorePipe(const PipeState& state, U clear_color) {
     g_state = state;
     g_state.texture = nullptr;
     g_state.grab_slot = 0;
+    g_state.grab_slot2 = 0;
     g_clear_color = clear_color;
 }
 
