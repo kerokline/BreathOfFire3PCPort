@@ -100,6 +100,10 @@ struct Config {
     // delays and Fast a page at once. text_speed=0|1 -> BOF3X_TEXT_SPEED; any
     // other value is dropped to the default (0, the original's), as snap= is.
     bool text_faster = false;
+    // DIV-0179 (Mods, Extras): an enemy's skill the party can still learn has
+    // its battle banner in blue. unlearned_blue=0|1 -> BOF3X_UNLEARNED_BLUE;
+    // any other value is dropped to the default (0, the original's white).
+    bool unlearned_blue = false;
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
     // psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls. Built and

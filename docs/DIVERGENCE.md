@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 178 entries, DIV-0001..0178, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 179 entries, DIV-0001..0179, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -11194,3 +11194,56 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=ApplyMatrixLVExact` keeps the port's
   wrapping products with ours running; `BOF3X_ORIGINAL=Gte_ApplyMatrixLV`
   runs Capcom's.
+
+### The name of an enemy's skill the party can still learn shows in blue
+
+- **ID:** DIV-0179
+- **Date:** 2026-10-24
+- **Subsystem:** the battle's ability banner - `BattleAction_AbilityCheck`
+  (`0x42F680`, ours, `src/game/battle_actions.cpp` `UnlearnedBlue`); drawn by
+  `BattleWin_BannerRun` (`0x597C70`, `src/game/window_kinds.cpp`). The
+  launcher's `unlearned_blue=` (`src/launcher/config.cpp`,
+  `BOF3X_UNLEARNED_BLUE`) and its box on Mods, Extras (`config_dialog.cpp`,
+  `launcher.rc`). A request from the discussion board.
+- **Tier:** Sensible - a choice, off by default. What happens in play is
+  unchanged; only the colour of one name.
+- **Original behaviour:** the ability step copies the ability's name (its
+  24-byte record at `0x65C4C8`) to `0x904EA0` and shows it as a kind-1
+  banner (`BattleBanner_Add(1, 1, 0, 0x3C, ...)`). The banner window draws
+  the text through `Text_DrawAt` in the colour byte `+0xA` of its pool entry
+  (`0x93B8E0 + 0xC n`), which `FillBanner` always sets to 0: every skill
+  name is white, whoever uses it and whether or not it can be learnt.
+- **New behaviour:** with `unlearned_blue=1`, after that banner is added
+  its colour byte is set to 3 when all of these hold: the actor is an enemy
+  (`0x904B34` >= 3); the ability can be learnt (its record's u16 `+0x14`
+  bit `0x200`, the bit `BattleAction_AbilityNotice` and
+  `Battle_SettleFlag8` test); and the party does not know it
+  (`Battle_ActionBitSet` `0x453A90` answers 0: the party-wide set at
+  `0x904088`, by the id's low byte, that an Examine success and the
+  masters' grants fill and that `Battle_MemberRollByAction` tests before
+  its roll). Colour 3 is the sky-blue row of the text CLUT strip
+  (`FIRST.DAT` kind 0, tag `0x8000`, row 3, read from the player's data
+  2026-10-24). Nothing else changes: menus, the party's own skills, the
+  item banner, the scripted event banners (`Boss07_Event`, `NameBanner`,
+  `Accession_Start`) and every other banner keep colour 0. A full banner
+  pool (`BattleBanner_Add`'s 0x15) writes nothing.
+  `BOF3X_UNLEARNED_BLUE` is 0 or 1; anything else stops the game at start,
+  and 1 with `BattleAction_AbilityCheck` not ours stops it too.
+- **Rationale:** a request from the discussion board, endorsed by the
+  owner (2026-10-24): a player can see at the moment of the cast that a
+  skill is still there to learn with Examine.
+- **Also in the PSX version?** No; this is an option of this project.
+- **Verification:** builds (worktree `feature/unlearned-blue` off `main`
+  `c0ba3b64`). `BOF3X_SELFTEST_ONLY=1
+  BOF3X_SHADOW='battle_actions,battle_e1,battle_misc,battle_e6,window_kinds'`
+  from an ini-less launcher copy exits 0 with the option off and on
+  (`battle_actions` 23,000 rounds, 0 mismatches; the switch is read after
+  the self-test, which compares the banner with it off), and `=2` stops
+  with its message. Live: the `dolphinBoss` route on a PC + US install
+  (en-US, `unlearned_blue=1`): the boss's Tsunami (id 0x42, learnable, not
+  known on that save; recipe frame 12346) shows in blue, its Intimidate
+  (id 0xAD, learnable, already known; frame 12013) and the party's skills
+  stay white; the captures `f12366` / `f12036` in
+  `C:\Users\kerok\bof3x-runs\blue1024\shots`. Seen by the owner
+  2026-10-24: "That looked great to me".
+- **Reversible?** Off by default; the Extras box or `unlearned_blue=0`.

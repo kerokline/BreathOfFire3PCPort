@@ -873,11 +873,14 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     if o % 4 == 0:
                         hits[k, w].append(base + o)
                     o = blob.find(pat, o + 1)
-        def stretches(lo, hi, place, win, target=None):
+        def stretches(lo, hi, place, win, target=None, plain=False):
             """The stretches of [lo, hi) at `place` (section, displacement) that
             disagree nowhere and are keyed enough to place (step 3). `target`: a
             PC address a pointer from outside the region names the place of
-            (section 7.7); a stretch holding its word and 8 equal bytes places."""
+            (section 7.7); a stretch holding its word and 8 equal bytes places.
+            `plain`: the place is a placed neighbour's displacement (section 7.9);
+            a stretch places on agreement alone, every byte compared equal (a wild
+            pointer word ends it), four bytes or more."""
             (k, delta), out = place, []
             base, blob = srcs[k]
             res = []
@@ -911,6 +914,8 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                         res.append((w == tw and code) if tw is not None else None if code_word(w, psp) else False)
                     else:
                         res.append(None)
+            if plain:
+                res = [bool(v) for v in res]
             s0 = 0
             for i2, v in enumerate(res + [False]):
                 if v is not False:
@@ -918,9 +923,11 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                 if i2 > s0:
                     a0, a1 = lo + s0, lo + i2
                     eq = sum(1 for v2 in res[s0:i2] if v2)
+                    nz = sum(1 for a, v2 in zip(range(a0, a1), res[s0:i2]) if v2 and pc[a - DATA_LO])
                     nk = sum(1 for a in range(a0 + (-a0 % 4), a1 - 3, 4) if a in keys)
                     if nk >= 2 or (nk >= 1 and eq >= 16) or (win is not None and a0 <= win and win + 16 <= a1 and eq >= 24) \
-                            or (target is not None and a0 <= target and target + 4 <= a1 and eq >= 8):
+                            or (target is not None and a0 <= target and target + 4 <= a1 and eq >= 8) \
+                            or (plain and eq >= 4 and nz >= 2):
                         out.append({"pc": a0, "pc_end": a1, "file": k[0], "section": k[1],
                                     "addr": a0 + delta, "agree": eq, "keys": nk})
                 s0 = i2 + 1
@@ -1007,6 +1014,41 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                         got.append(r)
             new += got
         if not new:
+            # The port's relaid words (section 7.9, issue 139). Once the keys place
+            # nothing more, what is left unplaced is tried at each placed neighbour's
+            # displacement - the stretch ending at `lo` and the one starting at `hi`,
+            # of a file the disc has - and at that displacement shifted by one and
+            # two words either way, since the port inserted or dropped words inside
+            # the run; a stretch that agrees byte for byte, four bytes with two of
+            # them non-zero or more, is placed with the neighbour as its one key.
+            # Area 98's first exit alternative (0x617EB0..0x617EB8, after the port's
+            # inserted zero word, with a second inserted word before the map segment
+            # that follows) was such a run: no pointer in it, the pointer to it a
+            # layout word, too short for a window; zeroed, the temple's exit led to
+            # area 0 at (0, 0). After the keys so that a keyed place is never
+            # pre-empted by a neighbour's.
+            for lo, hi in regions:
+                got = []
+                for x in (lo - 1, hi):
+                    if not DATA_LO <= x < DATA_HI or owner[x - DATA_LO] is None:
+                        continue
+                    rlo, _, how, where, addr = ranges[owner[x - DATA_LO]]
+                    # a `place` is linear unless an owning-function row's (`:imm`,
+                    # `:immref`); psp_exe's `:twin` runs are verbatim at their address
+                    if how not in ("map", "table", "place") or (":" in where and not where.endswith(":twin")):
+                        continue
+                    f, _, s = where.partition("#")
+                    s = s.partition(":")[0]
+                    k = (f, int(s) if s else None)
+                    if k not in srcs:
+                        continue
+                    for shift in (0, -4, 4, -8, 8):
+                        for r in stretches(lo, hi, (k, addr - rlo + shift), None, plain=True):
+                            if not any(r["pc"] < g["pc_end"] and g["pc"] < r["pc_end"] for g in got):
+                                r["keys"] += 1
+                                got.append(r)
+                new += got
+        if not new:
             break
         rows = sorted(rows + new, key=lambda r: r["pc"])
     return rows
@@ -1053,7 +1095,8 @@ def write_places(places):
                 "# section 3): [pc, pc_end) is the build's `file` / `section` from `addr` on, as in\n"
                 "# exe_maps/; `agree` bytes compared equal (numbers equal, data pointers the target's\n"
                 "# address in the build), `keys` data pointers voted for the place (in it, or placed\n"
-                "# pointers into it, section 7.7); `keys` 0 is a place a 16-byte window of numbers found\n"
+                "# pointers into it, section 7.7; a placed neighbour whose displacement the bytes agree\n"
+                "# at, section 7.9); `keys` 0 is a place a 16-byte window of numbers found\n"
                 "# once in a neighbour's file (section 7.4), at least 24 bytes agreeing. Addresses and\n"
                 "# counts only (CLAUDE.md rule 1).\n")
         f.write("\t".join(PLACE_COLS) + "\n")

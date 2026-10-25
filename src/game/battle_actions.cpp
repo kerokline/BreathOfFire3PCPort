@@ -12,8 +12,10 @@
 // that the start-up fuzz can stand recorders in for them - for ours and for
 // the originals' copies alike. The step tables are read in .data, afresh at
 // each dispatch, as the originals read them. Everything here is a faithful
-// replacement.
+// replacement, but for DIV-0179's opt-in banner colour (UnlearnedBlue).
 #include "game/battle_actions.h"
+
+#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -144,6 +146,31 @@ void SystemBanner(unsigned id) {
     g.open_msg_window();
     const unsigned char* const text = g.msg(id);
     g.banner_add(2, 0, 0, 0x2D, reinterpret_cast<const char*>(text));
+}
+
+// DIVERGENCE DIV-0179, the unlearned skill in blue (BOF3X_UNLEARNED_BLUE=1,
+// unlearned_blue= in bof3x.ini; off by default). The banner pool 0x93B8E0, 8
+// entries of 0xC: +0xA is the text colour BattleWin_BannerRun 0x597C70 hands
+// Text_DrawAt, which FillBanner always sets to 0. Colour 3 is the sky-blue
+// row of FIRST.DAT's text CLUT strip (kind 0, tag 0x8000).
+bool g_unlearned_blue = false;
+constexpr std::uint32_t kBannerPool = 0x93B8E0;
+constexpr unsigned kBannerColour = 0xA, kBlue = 3;
+
+// After BattleAction_AbilityCheck's banner (`entry` BattleBanner_Add's eax,
+// the entry's offset, or 0x15 when every entry was taken or there is no
+// banner; `actor` and `id` the step's own reads): the name in blue when the
+// actor is an enemy, the ability can be learnt (its record's u16 +0x14 bit
+// 0x200, the bit BattleAction_AbilityNotice and Battle_SettleFlag8 test) and
+// the party has not learnt it (Battle_ActionBitSet 0x453A90, the set 0x904088
+// that Examine and the masters fill, by the id's low byte, as
+// Battle_MemberRollByAction asks it).
+void UnlearnedBlue(unsigned long entry, unsigned actor, unsigned id) {
+    if (!g_unlearned_blue || entry % 0xC != 0) return;
+    if (actor <= 2) return;
+    if ((Word(At(at::kAbilityRecords + id * 24 + 0x14)) & 0x200) == 0) return;
+    if (Battle_ActionBitSet(id & 0xFF) != 0) return;
+    SetB(kBannerPool + entry + kBannerColour, kBlue);
 }
 
 // The enemy's name record (+0x80, 12 bytes) into Text_Records[0], zeroed first.
@@ -335,13 +362,17 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         BattleE4_Step2 = 0;
         return;
     }
+    unsigned long banner = 0x15;   // DIV-0179: no banner, as BattleBanner_Add's "every entry taken"
+    unsigned named = 0;
     if (Word(At(at::kAbility)) != 0x97) {
         const unsigned id = Word(At(at::kAbility));
         WindowRecords[4].state = 1;
         g.str_copy_n(reinterpret_cast<char*>(At(at::kNameBuf)), reinterpret_cast<const char*>(At(at::kAbilityRecords + id * 24)), 0x10);
-        g.banner_add(1, 1, 0, 0x3C, reinterpret_cast<const char*>(At(at::kNameBuf)));
+        banner = g.banner_add(1, 1, 0, 0x3C, reinterpret_cast<const char*>(At(at::kNameBuf)));
+        named = id;
     }
     const unsigned a = B(at::kActor);
+    UnlearnedBlue(banner, a, named);
     const Standing s = ActorStanding(a);
     if ((s.status & 0x10) != 0 && (At(at::kAbilityRecords + Word(At(at::kAbility)) * 24u + 0x15)[0] & 4) != 0) {
         SystemBanner(0x37);
@@ -708,4 +739,17 @@ void BattleActions_Inject() {
     BOF3_INJECT(BattleAction_AfterSettle);
     BOF3_INJECT(BattleAction_EnemyMessages);
     BOF3_INJECT(BattleAction_End);
+    // DIV-0179: BOF3X_UNLEARNED_BLUE = 0 (the original's white, the default)
+    // or 1; read after the self-test, which compared the banner with it off,
+    // and after the injects, so that IsEnabled sees the check ours.
+    {
+        char v[8] = "0";
+        const DWORD n = GetEnvironmentVariableA("BOF3X_UNLEARNED_BLUE", v, sizeof v);
+        if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
+            bof3::Fatal("BOF3X_UNLEARNED_BLUE is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
+        g_unlearned_blue = v[0] == '1';
+        if (g_unlearned_blue && !bof3::IsEnabled(bof3::addr::BattleAction_AbilityCheck))
+            bof3::Fatal("BOF3X_UNLEARNED_BLUE=1 needs BattleAction_AbilityCheck ours, and it is disabled");
+        if (g_unlearned_blue) bof3::Log("DIV-0179    an enemy's skill the party can still learn has its name in blue");
+    }
 }

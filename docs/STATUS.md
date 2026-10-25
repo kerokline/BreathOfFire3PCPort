@@ -8,7 +8,7 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**Issue #142, 2026-10-25, fixed on `fix/issue-142-grab-pairs`** (off `main` `c0ba3b64`, unpushed; DIV-0125
+**Issue #142, 2026-10-25, fixed on `fix/issue-142-grab-pairs`** (off `main` `c0ba3b64`, PR #145; DIV-0125
 amended): Dauna Mine's dragon-zombie scene drew its puddle as a thin half-blob and its two discs as half-discs.
 Effect kind 0x51 copies the left and right halves of the frame under it into one texture page and textures a
 quad pair per scanline from the two copies; the frame-buffer grab tagged a draw with one grab, the page's most
@@ -17,6 +17,13 @@ cell of slack (a one-pixel seam at the join). Self-tests exit 0; the owner's `mi
 matches their PlayStation frames. Open from the same session: Ryu facing the camera and turning during the
 dialogue (deterministic, from the scene's own animation ops), and the reporter's cart (issue #143, the leader
 was Ryu at the failed push; the route pushes twice on both installs) - [`HANDOFF.md`](HANDOFF.md) item 00000000.
+**Issue 139, 2026-10-24, fixed on `fix/issue-139-neighbour-places`** (off `main` `c0ba3b64`, unpushed;
+[`exe-import-engine.md`](exe-import-engine.md) 7.9): a disc-built install's Deis's temple exit led to area 0 at
+(0, 0) - McNeil Village, off the map - because the first exit alternative's eight bytes were a `gap` the image
+zeroes, though the disc carries them between two placed runs whose displacements differ by the port's inserted
+word. The importer now tries every unplaced run at its placed neighbours' displacements (and shifted by one or two
+words), placing what agrees byte for byte; 10 to 20 gap rows close per build, no placed byte moves, the audit of
+the rest is the rule itself. A player's install must be rebuilt (the launcher's staleness prompt).
 
 **Issues 130 and 134, 2026-10-24, fixed on `fix/issue-130-descriptor-places`** (off `main` `f472072a`, unpushed;
 [`exe-import-engine.md`](exe-import-engine.md) 7.8): a disc-built install lost the exits of the house near Maekyss
