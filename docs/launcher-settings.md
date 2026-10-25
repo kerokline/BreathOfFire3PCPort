@@ -133,14 +133,17 @@ From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
   reserve that slot on the top row"), made as the other tabs' sub-tabs are
   (`kSubPages`, `IDC_SUB0` + place); the tab opens on Data and comes back
   on the one it was left on. **Data** is the Mods page above; **Extras**
-  (`IDD_PAGE_EXTRA`) is the home for the launcher's extras, today two
+  (`IDD_PAGE_EXTRA`) is the home for the launcher's extras, today three
   toggles: "Show Row above the text on Settings (the second script: furigana
   or another language)" (`IDC_EXTRA_RUBY`, `ruby_ui=`), with a sentence
   saying what the row is and that adding a reading-row mod turns it on; and
   "Faster text" (`IDC_EXTRA_TEXTSPEED`, `text_speed=` -> `BOF3X_TEXT_SPEED`,
   DIV-0158, 2026-10-22): Msg Speed's Med. at Fast's pace and Fast a page at
-  once, off by default (the page grew from 64 to 100 units for it). The
-  toggle shows or hides Settings' **Row above the text** box and its label
+  once, off by default (the page grew from 64 to 100 units for it); and
+  "Show the name of a skill that you can learn in blue"
+  (`IDC_EXTRA_LEARNBLUE`, `unlearned_blue=` -> `BOF3X_UNLEARNED_BLUE`,
+  DIV-0179, 2026-10-24), off by default (the page grew to 132 units). The
+  Row toggle shows or hides Settings' **Row above the text** box and its label
   at once; off by default, so a player without a reading-row mod never sees
   the box. It is display only: hidden, `ruby=` is kept as it is (an
   existing value is not cleared) and given to the game as before. An add of
