@@ -383,6 +383,17 @@ Box BoxRound(const unsigned char* sprite, float half_width, float above, float b
     return {x - half_width, y - above, x + half_width, y + below};
 }
 
+// `box` grown to what `sprite` drew in the last pass (DrawnBox), when it was drawn.
+Box Reach(const unsigned char* sprite, Box box) {
+    if (const Box* const drawn = DrawnBox(sprite)) {
+        if (drawn->x0 < box.x0) box.x0 = drawn->x0;
+        if (drawn->y0 < box.y0) box.y0 = drawn->y0;
+        if (drawn->x1 > box.x1) box.x1 = drawn->x1;
+        if (drawn->y1 > box.y1) box.y1 = drawn->y1;
+    }
+    return box;
+}
+
 // The table faerie (DIV-0151, known-defects D300, docs/faerie-fix.md): in area 175, the
 // faerie village's room where the faeries gather after the Faerie Tiara, the
 // gold faerie stands at floor height inside the table's raised cell, and the
@@ -463,15 +474,9 @@ unsigned LayerFor(unsigned index, unsigned layer) {
     }
     const Box feet_box = BoxRound(sprite, kFeetHalfWidth, kFeetAbove, kFeetBelow);
     const Box whole_box = BoxRound(sprite, kBodyHalfWidth, kBodyAbove, kFeetBelow);   // the body and the feet
-    // For the record runs: the body and the feet, and what the sprite drew
-    // last pass (DrawnBox; docs/garr-fire.md).
-    Box reach_box = whole_box;
-    if (const Box* const drawn = DrawnBox(sprite)) {
-        if (drawn->x0 < reach_box.x0) reach_box.x0 = drawn->x0;
-        if (drawn->y0 < reach_box.y0) reach_box.y0 = drawn->y0;
-        if (drawn->x1 > reach_box.x1) reach_box.x1 = drawn->x1;
-        if (drawn->y1 > reach_box.y1) reach_box.y1 = drawn->y1;
-    }
+    // For the record runs and the later sprites: the body and the feet, and
+    // what the sprite drew last pass (DrawnBox; docs/garr-fire.md).
+    const Box reach_box = Reach(sprite, whole_box);
     // The same for a sprite beside a model of its own layer: moved, it would
     // leave the depth sort it shares with the model's quads.
     for (unsigned other = 0; other < Sprite_DrawListCount; ++other) {
@@ -494,7 +499,9 @@ unsigned LayerFor(unsigned index, unsigned layer) {
         for (unsigned other = index + 1; other < Sprite_DrawListCount; ++other) {
             const unsigned char* const o = Sprite_DrawList[other];
             if (static_cast<unsigned>(Get<std::uint16_t>(o + 0x32) >> 8) > next - 1) break;
-            if (Overlap(BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow), whole_box)) {
+            // Each side grown to what it drew (issue 132): Garr's spear over
+            // Ryu at the camp is 23 px clear of both body boxes.
+            if (Overlap(Reach(o, BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow)), reach_box)) {
                 g_why = "a sprite or a table item of the layer before";
                 return false;
             }
