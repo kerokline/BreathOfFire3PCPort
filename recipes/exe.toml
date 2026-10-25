@@ -5,7 +5,7 @@
 # zero, and where not). Hashes and counts only (CLAUDE.md rule 1).
 
 [meta]
-generated = "2026-10-24"
+generated = "2026-10-25"
 va = 0x5DA000
 size = 638976
 pointers = "exe-pointers.tsv"
@@ -15,7 +15,7 @@ pointer_words = 18831
 rebuild = "exe-rebuild.tsv"
 rebuild_sha256 = "4fcbd12a56b210d9b9a22d1e0ad5304b36207cf1c0dcc3b677aef5e63364174b"
 places = "exe-places.tsv"
-places_sha256 = "73ce7f324a0badd9e10bc07eb11e30f5c61e58655e6aa516b418fe511bc80a96"
+places_sha256 = "4ebfdd0cd7a84d1c28b9223cc5d1dcc7292ee70c560cc7c81ff2c0302172205d"
 psp = "exe-psp.tsv"
 psp_sha256 = "14fa0af06f8759c741cd99354122449601a5d2ab5fdedf6587fbd723a1169992"
 imm = "exe-imm.tsv"
@@ -150,17 +150,17 @@ rebuild_word_unplaced = 1980
 identical = 614854
 
 [build.psp-jp]
-sha256 = "3f3018fdbd5cb20aac44c8200eeb7b8c99c4ca6127660052bf20ca292321f059"
-ranges = 9605
-places = 465
+sha256 = "66dee6edd13a3a6b01ded035a3e20adedd94a66b7a5745c9689b459325982d50"
+ranges = 9606
+places = 466
 imm_rows = 7
-placed_by_pointer = 7545
-placed_equal = 495740
+placed_by_pointer = 7554
+placed_equal = 495749
 placed_differ = 3398
 pointer_pc_zero = 0
 pointer_pc_nonzero = 0
-none_pc_zero = 38136
-none_pc_nonzero = 5485
+none_pc_zero = 38128
+none_pc_nonzero = 5484
 own_pc_zero = 3980
 own_pc_nonzero = 16913
 rebuilt_equal = 18096
@@ -171,20 +171,20 @@ rebuild_refused = 134
 rebuild_ambiguous = 92
 rebuild_target_unplaced = 3124
 rebuild_word_unplaced = 2077
-identical = 613180
+identical = 613181
 
 [build.psp-eu]
-sha256 = "e01da3985686a57b4a27df5a2ca8e670021469f9a60da23f4cb2237a3b128501"
-ranges = 9612
-places = 455
+sha256 = "d39fdafd06e9e5c467f566e9130e8af78a1f089afd6abb84bc26a7688776a24c"
+ranges = 9613
+places = 456
 imm_rows = 7
-placed_by_pointer = 7656
-placed_equal = 495699
+placed_by_pointer = 7665
+placed_equal = 495708
 placed_differ = 3378
 pointer_pc_zero = 0
 pointer_pc_nonzero = 0
-none_pc_zero = 38148
-none_pc_nonzero = 5505
+none_pc_zero = 38140
+none_pc_nonzero = 5504
 own_pc_zero = 3992
 own_pc_nonzero = 16930
 rebuilt_equal = 18136
@@ -195,4 +195,4 @@ rebuild_refused = 127
 rebuild_ambiguous = 102
 rebuild_target_unplaced = 3126
 rebuild_word_unplaced = 2062
-identical = 613163
+identical = 613164

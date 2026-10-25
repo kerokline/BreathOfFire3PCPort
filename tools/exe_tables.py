@@ -880,7 +880,10 @@ def find_places(pc, disc, bid, pointers, rounds=8):
             (section 7.7); a stretch holding its word and 8 equal bytes places.
             `plain`: the place is a placed neighbour's displacement (section 7.9);
             a stretch places on agreement alone, every byte compared equal (a wild
-            pointer word ends it), four bytes or more."""
+            pointer word ends it), four bytes or more, two of them non-zero - or
+            one when the stretch is the whole unplaced run but its pointer words,
+            closing it from neighbour to neighbour (section 7.10, area 6's link
+            count on the PSP)."""
             (k, delta), out = place, []
             base, blob = srcs[k]
             res = []
@@ -916,6 +919,10 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                         res.append(None)
             if plain:
                 res = [bool(v) for v in res]
+
+            def closes(a0, a1):
+                # the stretch is the whole run but its pointer words (section 7.10)
+                return all(cls.get(a - (a - DATA_LO) % 4) for a in list(range(lo, a0)) + list(range(a1, hi)))
             s0 = 0
             for i2, v in enumerate(res + [False]):
                 if v is not False:
@@ -927,7 +934,7 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     nk = sum(1 for a in range(a0 + (-a0 % 4), a1 - 3, 4) if a in keys)
                     if nk >= 2 or (nk >= 1 and eq >= 16) or (win is not None and a0 <= win and win + 16 <= a1 and eq >= 24) \
                             or (target is not None and a0 <= target and target + 4 <= a1 and eq >= 8) \
-                            or (plain and eq >= 4 and nz >= 2):
+                            or (plain and eq >= 4 and (nz >= 2 or (nz >= 1 and closes(a0, a1)))):
                         out.append({"pc": a0, "pc_end": a1, "file": k[0], "section": k[1],
                                     "addr": a0 + delta, "agree": eq, "keys": nk})
                 s0 = i2 + 1

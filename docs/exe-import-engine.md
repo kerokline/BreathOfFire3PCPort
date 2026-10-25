@@ -1087,6 +1087,27 @@ residue. The descriptor-table rule 7.8 names (a descriptor's place from the
 PSX `Area_Descriptors` table, `0x8017F974` on the US disc) is still not
 built, and would place area 89's and 129's holes.
 
+### 7.10 A one-byte run closed at a neighbour's displacement (2026-10-25, the data diff)
+
+**Why.** [`data-diff.md`](data-diff.md)'s first run found area 6's descriptor
+link index zero on both PSP-built images: `0x5DFD34..0x5DFD3D` (`+0x2C..+0x3C`)
+unplaced and classed `language` in `exe-gaps.tsv` (`Area05_MessagesB+0x648`:
+`exe_own.py`'s symbol-name rule reaching into the descriptor after it), so the
+area's second link - indirect, three alternatives - was unreachable.
+`BOOT.BIN` carries the nine bytes at the displacement of the place before them
+(`psp-jp` `0x003008D0`, `psp-eu` `0x00300A90`), byte for byte the PC's; 7.9's
+rule refused them for holding one non-zero byte, not two.
+
+**The rule.** A neighbour-displacement stretch with one non-zero byte is
+placed when it closes its run: every byte of the unplaced run outside it is a
+pointer word (here the `+0x28` layout word). Nothing else changed: over the
+seven discs one place row added on each PSP build, the two `language` gap rows
+gone, no other row of any recipe file moved, `placed_differ` unchanged
+(`exe_tables.py recipe`, `psp_exe.py recipe`, `exe_tables.py recipe`,
+`exe_own.py measure`, `exe_tables.py gaps`; the checks 0 errors). A PSP-built
+install needs the rebuild (`importer.py stale` names `exe`); what area 6's
+second link did on one before is not seen in play.
+
 ## For the other files
 
 Not edited here (the coordinator folds them in):

@@ -1286,7 +1286,6 @@ psx-de	0x675284	0x675520	unread	unread	Task_StackTop+0x8A2C
 psx-de	0x6755D4	0x6755E0	unread	unread	Task_StackTop+0x8D7C
 psx-de	0x675608	0x675610	unread	unread	Task_StackTop+0x8DB0
 psx-de	0x675614	0x675980	unread	unread	Task_StackTop+0x8DBC
-psp-jp	0x5DFD34	0x5DFD3D	language	language	Area05_MessagesB+0x648
 psp-jp	0x5E1ABA	0x5E1AC0	language	language	Area08_MessageFormat+0x9FA
 psp-jp	0x5E1AC4	0x5E1AC8	language	language	Area08_MessageFormat+0xA04
 psp-jp	0x624721	0x624723	gap	game-value	Area121_BandHeights+0x1
@@ -1514,7 +1513,6 @@ psp-jp	0x675284	0x675520	unread	unread	Task_StackTop+0x8A2C
 psp-jp	0x6755D4	0x6755E0	unread	unread	Task_StackTop+0x8D7C
 psp-jp	0x675608	0x675610	unread	unread	Task_StackTop+0x8DB0
 psp-jp	0x675614	0x675980	unread	unread	Task_StackTop+0x8DBC
-psp-eu	0x5DFD34	0x5DFD3D	language	language	Area05_MessagesB+0x648
 psp-eu	0x5E1ABA	0x5E1AC0	language	language	Area08_MessageFormat+0x9FA
 psp-eu	0x5E1AC4	0x5E1AC8	language	language	Area08_MessageFormat+0xA04
 psp-eu	0x624721	0x624723	gap	game-value	Area121_BandHeights+0x1
