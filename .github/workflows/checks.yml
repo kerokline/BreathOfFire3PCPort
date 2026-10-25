@@ -15,6 +15,11 @@
 #                           and exe_tables.py check
 #   tools/exe_own.py check  exe_own.cpp's regions well-formed, its generated
 #                           name lists equal to recipes/pc-zh*.toml's
+#   tools/data_diff.py      recipes/data-diff.tsv (the disc-built images'
+#     check                 decoded tables against the PC's, docs/data-diff.md):
+#                           every row listed in recipes/data-known.toml, no
+#                           entry stale, made from recipes/exe.toml's images
+#                           and today's views; the decoders' self-test
 #   tools/data_census.py    the raw data accesses in src/ (global by at::
 #     --check               or module constant, record by pointer + offset,
 #                           raw address)
@@ -73,6 +78,9 @@ jobs:
 
       - name: The engine's own .data regions and their names against the recipes (no game data)
         run: python tools/exe_own.py check
+
+      - name: The disc-built image's data diff, every row known, made from today's recipe (no game data)
+        run: python tools/data_diff.py check
 
       - name: The typed-data census's raw site count may not rise (no game data)
         run: python tools/data_census.py --check
