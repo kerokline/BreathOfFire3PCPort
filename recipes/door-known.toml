@@ -1,0 +1,22 @@
+# Known differences for the every-door sweep (tools/door_sweep.py,
+# docs/door-sweep.md), in the style of recipes/abc-known.toml. Each entry ties
+# a door whose arrival area or music may differ between two installs to the
+# ledger entry (or the finding) that makes the difference intended. The rule
+# of the file is abc-known's: **when in doubt, unexplained** - a rule names
+# the narrowest areas, links and fields it can, and a door no rule matches is
+# listed first in the report.
+#
+# Keys (all optional; every one given must hold):
+#   id, ledger, what     the entry's name, its DIV / D number, one sentence
+#   installs = [...]     the other side's install name (the reference is the set's first)
+#   pair_trait = "psp"   one side has the trait (recipes/abc-installs.toml) and the other not
+#   areas = [n, ...]     the source area of the door
+#   links = ["a.i", ...] the door, as area.link
+#   fields = [...]       which comparison: "link" (what Area_LinkAt made pending),
+#                        "area" (where the party arrived), "music" (the track
+#                        playing and the one Area_PickMusic chose), "source"
+#                        (the area the door was taken in), "run" (one side
+#                        did not finish the door)
+#
+# No entry yet: the first sweep (2026-10-25, docs/door-sweep.md 5) found no
+# difference that a ledger entry makes intended.

@@ -54,6 +54,24 @@
 //                           experiment's tool: a recipe with a poke is not a
 //                           player's route, and says so in its log.
 //   mark TEXT               log the text
+//   links                   log every area's link list (Area_Descriptors[0..199]
+//                           +0x20 / +0x30, the alternatives of an indirect link
+//                           from +0x24 / +0x28) as the image holds it: the
+//                           every-door sweep's map (tools/door_sweep.py,
+//                           docs/door-sweep.md). Reads only.
+//   door X Z                the area's link at cell (X, Z) taken as a door is:
+//                           Area_LinkAt(X, Z) through the original's entry,
+//                           then Field_Request 5 when it found one - the two
+//                           calls Field_LeaderStepLands makes on a link cell -
+//                           with the pending area, its cells and flags and the
+//                           track Area_PickMusic chose logged. No link: logged,
+//                           nothing requested. A harness's step: no player
+//                           reaches the area change this way.
+//   goto AREA X Z FLAGS     Field_ChangeArea(AREA, X, Z, FLAGS) through the
+//                           original's entry (X, Z 16.16): the funnel a
+//                           crafted save's load and every scripted change go
+//                           through - to stand the party in an area. Likewise
+//                           a harness's step.
 //   hold KEY N              a keyboard key (f1..f12, escape, enter, space, or a
 //                           virtual-key number) held N frames: WM_KEYDOWN posted
 //                           to the game window as the step starts, WM_KEYUP as
@@ -94,7 +112,7 @@ namespace bof3 {
 void RandCountFrame();   // below, outside the anonymous namespace
 namespace {
 
-enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Music, Mark, Key, Quit, End };
+enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Music, Mark, Key, Quit, End, Links, Door, Goto };
 enum class Op { Eq, Ne, Any, None };
 
 struct Step {
@@ -108,6 +126,7 @@ struct Step {
     unsigned width = 0;    // 1, 2, 4
     Op op = Op::Eq;
     std::uint32_t value = 0;
+    std::uint32_t arg[4] = {};   // door X Z, goto AREA X Z FLAGS
     std::string text;
 };
 
@@ -359,6 +378,20 @@ void Load(const char* path) {
             st.text = t[1];
             st.n = t.size() == 3 ? Number(line, t[2]) : 1;
             if (st.n == 0) ParseError(line, "a key is held one frame or more, not", t[2]);
+        } else if (w == "links") {
+            need(1, 1);
+            st.kind = Kind::Links;
+        } else if (w == "door") {
+            need(3, 3);
+            st.kind = Kind::Door;
+            st.arg[0] = Number(line, t[1]);
+            st.arg[1] = Number(line, t[2]);
+            if (st.arg[0] > 0xFF || st.arg[1] > 0xFF) ParseError(line, "a door's cell is 0..255 each way, not", s);
+        } else if (w == "goto") {
+            need(5, 5);
+            st.kind = Kind::Goto;
+            for (int k = 0; k < 4; ++k) st.arg[k] = Number(line, t[k + 1]);
+            if (st.arg[0] > 0xFFFF || st.arg[3] > 0xFF) ParseError(line, "goto AREA (a word) X Z FLAGS (a byte), got", s);
         } else if (w == "quit") {
             if (t.size() != 1 && t.size() != 3) ParseError(line, "quit [timeout N], got", s);
             st.kind = Kind::Quit;
@@ -451,6 +484,80 @@ void SaveTimed() {
     if (clock) GameClock_Resume();
     Log("input       frame %s %s mode %u area %u (Frame_Counter %u)", name, ok ? "saved" : "NOT saved",
         (unsigned)Game_Mode, (unsigned)Game_AreaNumber, g_last_frame);
+}
+
+// `links`: every area's link list as the image holds it (docs/area-entry.md
+// section 1 has the layout), one log line a link and one an alternative - the
+// map tools/door_sweep.py plans its doors from and compares between installs.
+// Reads only, every pointer checked before it is followed (a disc-built
+// image's hole reads as 0 and is logged as such, not followed).
+constexpr std::uint32_t kPendingXAddr = 0x903860;   // Field_ChangeArea's x (window_task kPendingX, SharedScratch +0x10)
+
+bool Readable(std::uint32_t a, std::uint32_t n) {
+    if (a < 0x10000 || n == 0) return false;
+    MEMORY_BASIC_INFORMATION mi{};
+    if (!VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a)), &mi, sizeof mi)) return false;
+    if (mi.State != MEM_COMMIT || (mi.Protect & (PAGE_NOACCESS | PAGE_GUARD))) return false;
+    return a + n <= reinterpret_cast<std::uintptr_t>(mi.BaseAddress) + mi.RegionSize;
+}
+
+void LogLinks() {
+    unsigned areas = 0, total = 0;
+    for (unsigned area = 0; area < 200; ++area) {
+        const std::uint32_t d = Read(Area_Descriptors_addr + area * 4, 4);
+        if (!Readable(d, 0x44)) {
+            Log("input       links area %u: no descriptor (0x%08X)", area, (unsigned)d);
+            continue;
+        }
+        const std::uint32_t list = Read(d + 0x20, 4);
+        const unsigned last = Read(d + 0x30, 1);
+        if (list == 0) {
+            Log("input       links area %u: no list (last %u)", area, last);
+            continue;
+        }
+        if (!Readable(list, (last + 1) * 12)) {
+            Log("input       links area %u: list 0x%08X not readable (last %u)", area, (unsigned)list, last);
+            continue;
+        }
+        ++areas;
+        total += last + 1;
+        Log("input       links area %u: %u links", area, last + 1);
+        for (unsigned i = 0; i <= last; ++i) {
+            const std::uint32_t l = list + i * 12;
+            const unsigned x = Read(l, 1), z = Read(l + 1, 1), cells = Read(l + 9, 1);
+            const bool along_z = Read(l + 8, 1) != 0;
+            const unsigned to = Read(l + 2, 2);
+            if (to != 0xFFFF) {
+                Log("input       link %u.%u cells %u,%u %c%u -> area %u x 0x%04X z 0x%04X flags 0x%02X", area, i, x, z,
+                    along_z ? 'z' : 'x', cells, to, (unsigned)Read(l + 4, 2), (unsigned)Read(l + 6, 2),
+                    (unsigned)Read(l + 0xA, 1));
+                continue;
+            }
+            const unsigned index = Read(l + 4, 2);
+            const std::uint32_t ptrs = Read(d + 0x24, 4), counts = Read(d + 0x28, 4);
+            if (!Readable(ptrs, (index + 1) * 4) || !Readable(counts, index + 1)) {
+                Log("input       link %u.%u cells %u,%u %c%u -> list %u: tables not readable (0x%08X, 0x%08X)", area, i, x,
+                    z, along_z ? 'z' : 'x', cells, index, (unsigned)ptrs, (unsigned)counts);
+                continue;
+            }
+            const unsigned count = Read(counts + index, 1);
+            const std::uint32_t alts = Read(ptrs + index * 4, 4);
+            Log("input       link %u.%u cells %u,%u %c%u -> list %u, %u alternatives and the default", area, i, x, z,
+                along_z ? 'z' : 'x', cells, index, count);
+            if (!Readable(alts, (count + 1) * 10)) {
+                Log("input       alt %u.%u: list 0x%08X not readable", area, i, (unsigned)alts);
+                continue;
+            }
+            for (unsigned k = 0; k <= count; ++k) {
+                const std::uint32_t c = alts + k * 10;
+                Log("input       alt %u.%u.%u area %u x 0x%04X z 0x%04X row %u bit %u flags 0x%02X%s", area, i, k,
+                    (unsigned)Read(c, 2), (unsigned)Read(c + 2, 2), (unsigned)Read(c + 4, 2), (unsigned)Read(c + 6, 1),
+                    (unsigned)Read(c + 7, 1), (unsigned)Read(c + 8, 1), k == count ? " (default)" : "");
+            }
+        }
+    }
+    Log("input       links: %u areas with a list, %u links; recipe frame %u", areas, total, g_frame);
+    LogFlush();
 }
 
 unsigned short g_step_buttons = 0;   // the current Press/Hold step's, read as it starts
@@ -575,6 +682,37 @@ unsigned short NextWord() {
             continue;
         case Kind::Mark:
             Log("input       mark %s recipe frame %u", s.text.c_str(), g_frame);
+            Advance();
+            continue;
+        case Kind::Links:
+            LogLinks();
+            Advance();
+            continue;
+        case Kind::Door: {
+            // Through the original's entry, as Field_LeaderStepLands calls it
+            // (0x52E580: Area_LinkAt of the leader's cell, then Field_Request 5).
+            const unsigned area = Game_AreaNumber;
+            const unsigned char none = bof3::orig::Area_LinkAt(s.arg[0], s.arg[1]);
+            if (none & 1) {
+                Log("input       door %u,%u in area %u: no link, nothing requested; recipe frame %u", (unsigned)s.arg[0],
+                    (unsigned)s.arg[1], area, g_frame);
+            } else {
+                Field_Request = 5;
+                Log("input       door %u,%u in area %u: to area %u x 0x%X z 0x%X flags 0x%02X track %u; recipe frame %u",
+                    (unsigned)s.arg[0], (unsigned)s.arg[1], area, (unsigned)AreaW0b_Place,
+                    (unsigned)Read(kPendingXAddr, 4), (unsigned)Read(AreaEntry_PendingZ_addr, 4),
+                    (unsigned)Read(AreaEntry_PendingFlags_addr, 1), (unsigned)Read(AreaW1f_MusicCurrent_addr, 1), g_frame);
+            }
+            LogFlush();
+            Advance();
+            continue;
+        }
+        case Kind::Goto:
+            Log("input       goto area %u x 0x%X z 0x%X flags 0x%02X from area %u; recipe frame %u", (unsigned)s.arg[0],
+                (unsigned)s.arg[1], (unsigned)s.arg[2], (unsigned)s.arg[3], (unsigned)Game_AreaNumber, g_frame);
+            bof3::orig::Field_ChangeArea(s.arg[0], static_cast<int>(s.arg[1]), static_cast<int>(s.arg[2]), s.arg[3]);
+            Log("input       goto: track %u; recipe frame %u", (unsigned)Read(AreaW1f_MusicCurrent_addr, 1), g_frame);
+            LogFlush();
             Advance();
             continue;
         case Kind::Key: {
@@ -963,6 +1101,9 @@ bool ShotSoon() {
         case Kind::Poke:
         case Kind::Music:
         case Kind::Mark:
+        case Kind::Links:
+        case Kind::Door:
+        case Kind::Goto:
             break;   // no frame of their own
         default:
             return false;

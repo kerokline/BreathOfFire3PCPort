@@ -48,6 +48,16 @@ hosted cross form).
 
 ## Pick up here
 
+0000000000. **The every-door sweep is built** on `harness/every-door` (off `main` `48511747`, unpushed;
+   [`door-sweep.md`](door-sweep.md)). Run: `abc_run.py prepare --set us-disc`, then `door_sweep.py run --set
+   us-disc` (a scratch `--installs` with `discs` at `D:/bof3x-runs/discs`), about 43 minutes an install at
+   `--speed 4`. Root `C:\Users\kerok\bof3x-runs\everydoor`; its `old\` worktree (at `b0fef7a2`) and
+   `c_uspsp_old` are scratch for section 5 - `git worktree remove` it when the branch merges. The direct form,
+   not a walk (section 3 lists what that cannot see). **Open:** (a) area 135's doors 135.8, .14, .17 and .19
+   crash in our DLL (`+0xA5E52`, a read of address 3) on both installs, and 11 doors leave `Field_Request` at 5
+   or 2 past 1,800 frames - this crafted state's, or a defect a walk would reach: not read; (b) other donors (a
+   chapter 1 save) for the indirect links' other alternatives, and the `eu` set's installs; (c) a walking form,
+   which wants each area's walkable cells.
 000000000. **Issue #142 (Dauna Mine's dragon-zombie puddle and circle, half drawn) is fixed** on
    `fix/issue-142-grab-pairs` (off `main` `c0ba3b64`, PR #145; DIV-0125 amended): the owner's
    `minecartToZombieDragon` recipe (save in `tools/recipe_saves/`, the first route to reach effect kind

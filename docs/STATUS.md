@@ -8,6 +8,15 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The every-door sweep, 2026-10-25, built on `harness/every-door`** (off `main` `48511747`, unpushed;
+[`door-sweep.md`](door-sweep.md)): `tools/door_sweep.py` takes every link of every area on two installs - the
+recipe steps `goto` (`Field_ChangeArea`) and `door` (`Area_LinkAt` + `Field_Request` 5, the leader's own two calls
+on a link cell), harness-only, from crafted saves - and compares the arrival area and music; `set.us-disc` is the
+players' US + PSP-EU shape. On the current image the PC and the disc-built install agree on all 1,520 doors driven
+(1,535 planned in 188 areas, the same 15 failing on both) and on all 1,542 links; on the image of `b0fef7a2` (before
+PR #136) it lists 12 doors, all unexplained: 62.1-2 (issue 130), 97.1-2 (issue 134), 98.0 to area 0 with song 2
+(issue 139), 162.1-4 and 163.1-3 - each a port repair already on `main`.
+
 **Issue #142, 2026-10-25, fixed on `fix/issue-142-grab-pairs`** (off `main` `c0ba3b64`, PR #145; DIV-0125
 amended): Dauna Mine's dragon-zombie scene drew its puddle as a thin half-blob and its two discs as half-discs.
 Effect kind 0x51 copies the left and right halves of the frame under it into one texture page and textures a
