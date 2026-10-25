@@ -8,6 +8,14 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The static data diff, 2026-10-25, built on `tools/data-diff-gate`** (off `main` `48511747`, unpushed;
+[`data-diff.md`](data-diff.md)): `tools/data_diff.py` decodes the area descriptors, links, zones, music sets and
+every `tables.toml` table from the PC's `.data` and each disc-built image, and fails on a hole or a release
+difference `recipes/data-known.toml` does not list; `check` runs in CI with no game data. On the pre-PR-136 recipe it
+flags areas 62, 97, 162, 163 and 98's alternative; on `main` it found area 6's link index zero on both PSP-built
+images (fixed in the importer, [`exe-import-engine.md`](exe-import-engine.md) 7.10; a PSP-built install needs the
+rebuild) and leaves the fishing spots' `+0x32` byte (89, 129) as the one listed hole.
+
 **Issue #142, 2026-10-25, fixed on `fix/issue-142-grab-pairs`** (off `main` `c0ba3b64`, PR #145; DIV-0125
 amended): Dauna Mine's dragon-zombie scene drew its puddle as a thin half-blob and its two discs as half-discs.
 Effect kind 0x51 copies the left and right halves of the frame under it into one texture page and textures a

@@ -48,6 +48,18 @@ hosted cross form).
 
 ## Pick up here
 
+0000000000. **The static data diff is built** on `tools/data-diff-gate` (off `main` `48511747`, unpushed;
+   [`data-diff.md`](data-diff.md)): `tools/data_diff.py run` decodes the area families and every `tables.toml`
+   table from the PC's `.data` and each disc-built image; `check` (CI) holds `recipes/data-diff.tsv` against
+   `recipes/data-known.toml` and `recipes/exe.toml`'s image hashes, so **any recipe regeneration now needs a
+   `data_diff.py run` with the seven discs** (section 5 of the doc) before CI passes. Found and fixed: area 6's
+   link index on both PSP-built images (`exe-import-engine.md` 7.10; a PSP-built install needs the rebuild).
+   **Open hole, listed** (`fishing-spot-input-flags`): areas 89 and 129's descriptor `+0x32` byte on the five
+   PlayStation builds - build the PSX descriptor-table rule (a descriptor's place through the PSX
+   `Area_Descriptors` table, `0x801802EC` JP / `0x8017F974` US, each entry in the area's own `EMI#13`;
+   7.8 *Left*) and drop the entry. **Also seen:** `exe_own.py`'s symbol-name `language` rule classes bytes up
+   to the next symbol, so an unnamed table after a `*Messages` symbol reads as language (area 6's descriptor was
+   one) - worth a pass over `exe-gaps.tsv`'s `language` rows that are not text. PR at the owner's word.
 000000000. **Issue #142 (Dauna Mine's dragon-zombie puddle and circle, half drawn) is fixed** on
    `fix/issue-142-grab-pairs` (off `main` `c0ba3b64`, PR #145; DIV-0125 amended): the owner's
    `minecartToZombieDragon` recipe (save in `tools/recipe_saves/`, the first route to reach effect kind
