@@ -316,13 +316,14 @@ END
 // page above) and Extras (the owner's call, 2026-10-22): the home for the
 // launcher's extras, reserving the slot on the top row. Today one toggle,
 // ruby_ui= in bof3x.ini: whether Settings shows the Row above the text box.
-// Display only. And text_speed=, the faster text (DIV-0158).
-IDD_PAGE_EXTRA DIALOGEX 0, 0, 340, 100
+// Display only. And text_speed=, the faster text (DIV-0158); unlearned_blue=,
+// an enemy's skill the party can still learn named in blue (DIV-0179).
+IDD_PAGE_EXTRA DIALOGEX 0, 0, 340, 132
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Extras", -1, 0, 0, 336, 98
+    GROUPBOX        "Extras", -1, 0, 0, 336, 130
     AUTOCHECKBOX    "S&how the Row above the text box on Settings (furigana or a second language)",
                     IDC_EXTRA_RUBY, 7, 14, 324, 10
     LTEXT           "The row is a second line of text above the game text: furigana from a mod, or a different language of this install. When you add a furigana mod, this box turns on. Off: only the box is hidden. The game still shows the row that you selected.",
@@ -331,6 +332,10 @@ BEGIN
                     IDC_EXTRA_TEXTSPEED, 7, 63, 324, 10
     LTEXT           "For text boxes outside battle. Battle messages already show at once. The pauses in the text stay. Slow does not change.",
                     IDC_EXTRA_TEXTNOTE, 19, 76, 312, 18
+    AUTOCHECKBOX    "Show the name of a skill that you can &learn in blue",
+                    IDC_EXTRA_LEARNBLUE, 7, 97, 324, 10
+    LTEXT           "In battle only. When an enemy uses a skill that the party can learn and does not know, the name of the skill shows in blue. Menus do not change.",
+                    IDC_EXTRA_LEARNNOTE, 19, 110, 312, 18
 END
 
 // DIV-0087: the importer's cache; the Sources page (docs/install-sources.md).

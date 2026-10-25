@@ -151,3 +151,5 @@
 #define IDC_EXTRA_RUBYNOTE 1721
 #define IDC_EXTRA_TEXTSPEED 1722  // Faster text: text_speed= (DIV-0158)
 #define IDC_EXTRA_TEXTNOTE  1723
+#define IDC_EXTRA_LEARNBLUE 1724  // A skill to learn in blue: unlearned_blue= (DIV-0179)
+#define IDC_EXTRA_LEARNNOTE 1725

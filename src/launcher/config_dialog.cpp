@@ -595,6 +595,7 @@ void Populate(HWND dlg, DialogState& state) {
     Check(dlg, IDC_EXTRA_RUBY, cfg.ruby_ui);
     RubyUiShow(dlg, cfg.ruby_ui);
     Check(dlg, IDC_EXTRA_TEXTSPEED, cfg.text_faster);
+    Check(dlg, IDC_EXTRA_LEARNBLUE, cfg.unlearned_blue);
 
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
     AddItem(dlg, IDC_FILTER, L"Sharp - point (no blur)");
@@ -650,6 +651,7 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.ruby_ui = Checked(dlg, IDC_EXTRA_RUBY);
     cfg.ruby_ui_named = true;
     cfg.text_faster = Checked(dlg, IDC_EXTRA_TEXTSPEED);
+    cfg.unlearned_blue = Checked(dlg, IDC_EXTRA_LEARNBLUE);
 
     // The Music box (DIV-0150): the source music= already means keeps the line
     // as written (an empty music=, seq or mp3 too); another writes its name.
