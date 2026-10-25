@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 179 entries, DIV-0001..0179, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 180 entries, DIV-0001..0180, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -11281,3 +11281,68 @@ designed in rather than bolted on.
   `C:\Users\kerok\bof3x-runs\blue1024\shots`. Seen by the owner
   2026-10-24: "That looked great to me".
 - **Reversible?** Off by default; the Extras box or `unlearned_blue=0`.
+
+### Area 135's marker is placed before it is shown: a save loaded there no longer crashes
+
+- **ID:** DIV-0180
+- **Date:** 2026-10-25
+- **Subsystem:** field - area 135's init (`Area135_Init` `0x41EB40`, ours,
+  `src/game/area_w3d.cpp`; [`area_w3d.md`](area_w3d.md) 1); the crash is
+  in `Sprite_UpdateScreenA` (`0x57B830`) from `Party_ExtraScreens`
+  (`0x57B780`) in `Field_Frame`. Found by the every-door sweep
+  ([`door-sweep.md`](door-sweep.md) 4a).
+- **Tier:** Intent - a port repair. The PC faults where the PlayStation
+  reads RAM.
+- **Original behaviour:** area 135's "marker" is `Sprite_ObjectsExtra[3]`
+  (`0x8021EC`). Only the init's zone-4 branch for an entry from zone 1
+  (`AreaW1a_EntryZone` `0x905E68` = 1) places it, by op Bx from
+  `Area135_InitOp` (`0x62DA8C`, whose object byte `+0xB` is 3, read
+  2026-10-25); the object then stays in `.bss` across the area's reloads,
+  the area entry clearing only its byte `+0`, and the init sets `+0` = 1
+  again in zones 4, 6 and 7 (`Cond_ByteFD`). Arrived in zone 4, 6 or 7 with
+  the marker never placed in this process, the init shows an object whose
+  record pointer `+0x54` is 0, and the next field frame reads `[0 + 3]`.
+  Measured: a crafted save standing in area 135 at the arrival cells of
+  links 8, 14, 17 and 19 (zones 7, 4, 4 and 6), loaded after a launch -
+  the shape of an F12 save (`Save_QuickWrite`, which writes the field's
+  state anywhere, DIV-0145's "Original behaviour") made there - stops with
+  an access violation reading address 3: in ours at `bof3x.dll+0xA5E52`
+  (`field_frame.cpp:378`) and, with `BOF3X_ORIGINAL=Area135_Init,
+  Sprite_UpdateScreenA,Party_ExtraScreens,Field_Frame,Field_WaitTransition`
+  on the hosted build, in Capcom's at `0x57B844` (`test byte [ecx+3], 0x20`,
+  `ecx` 0). The marker in the crash dump: `+0` 1, `+0x80` 0x10, everything
+  else 0. Cells of zones 8 and 9 load. A walk from zone 8 into zone 4 by
+  link 17, without passing zone 1 first in the process, is the same state
+  (reasoned from the init, not walked).
+- **New behaviour:** in zones 4, 6 and 7, when the marker's `+0x54` is 0
+  (never placed since the launch), the init first runs the zone-1 branch's
+  own steps - op Bx from `Area135_InitOp`, story flag `0xC` cleared, the
+  zone read again, the tail's sub byte 0 - then sets `+0` as before; one log
+  line `DIV-0180 area 135 zone N: the marker was never placed`. A placed
+  marker (any non-zero `+0x54`) is left as the original leaves it.
+- **Rationale:** the marker is meant to exist whenever the init shows it;
+  the PC port turned a garbage read into a crash a player reaches by
+  loading a save. The zone-1 branch is the game's own start of the
+  marker's state, so the repair invents no position or flag: the marker
+  stands where entering from zone 1 puts it (cell (20, 85), in zone 4),
+  and flag `0xC` starts clear as it does there. Not seen: whether the
+  marker's sequences play sensibly from that start when the party is in
+  zone 6 or 7 (no route reaches area 135; the owner's eye is owed). Not
+  touched: a marker slot another area's placement filled (non-zero `+0x54`
+  of another record) is shown as the original shows it.
+- **Also in the PSX version?** The same code shape (PSX init `0x801F5A44`,
+  the sibling's `names/area_records.toml`), but a read of address 3 on the
+  PlayStation is main RAM and does not fault, so the marker would be drawn
+  from whatever bytes are there - reasoned from the R3000's memory map, not
+  measured on the PSX. The PC's fault is the port's.
+- **Verification:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w3d` from an
+  ini-less launcher copy: exit 0, 276,000 rounds over 46 functions, 0
+  mismatches (the switch is set after the self-test). The four crafted
+  loads: the DIV-0180 line, zones 7 / 4 / 4 / 6, mode 2, the marker at
+  (0x140000, 0x550000) with record `0x62D8A0`, no crash; the same load of
+  link 8's cell with `BOF3X_ORIGINAL=Area135MarkerPlaced` crashes as
+  before. The every-door sweep over area 135 on `pc-enus` and
+  `psx-us-psp` ([`door-sweep.md`](door-sweep.md) 4a). Root
+  `C:\Users\kerok\bof3x-runs\door135`.
+- **Reversible?** `BOF3X_ORIGINAL=Area135MarkerPlaced` (the original's
+  init, crash included); `BOF3X_ORIGINAL=Area135_Init` runs Capcom's.
