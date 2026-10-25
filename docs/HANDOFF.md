@@ -48,6 +48,34 @@ hosted cross form).
 
 ## Pick up here
 
+00000000000. **The every-door sweep is built** on `harness/every-door` (off `main` `48511747`, merged with the data diff on `harness/build-diff-prevention`, unpushed;
+   [`door-sweep.md`](door-sweep.md)). Run: `abc_run.py prepare --set us-disc`, then `door_sweep.py run --set
+   us-disc` (a scratch `--installs` with `discs` at `D:/bof3x-runs/discs`), about 43 minutes an install at
+   `--speed 4`. Root `C:\Users\kerok\bof3x-runs\everydoor`; its `old\` worktree (at `b0fef7a2`) and
+   `c_uspsp_old` are scratch for section 5 - `git worktree remove` it when the branch merges. The direct form,
+   not a walk (section 3 lists what that cannot see). **Done 2026-10-25 on `fix/area-135-door-crash`** (off
+   `harness/build-diff-prevention`, root `C:\Users\kerok\bof3x-runs\door135`): area 135's four crashes were
+   Capcom's port reading address 3 through the never-placed marker, reachable by a save loaded in zones 4/6/7 -
+   fixed as DIV-0180 (section 4a); the eleven stuck doors are event areas (section 4b's table, with the owner's
+   account), and the sweep taps confirm while a change stays pending (`--confirm`, default `circle`). **Open:**
+   (a) the owner's eye on the marker when a save starts in zone 6 or 7 (DIV-0180 places it at its zone-4 start);
+   (b) the owner's saves for area 54 (the rocket route) and area 104 (key item 0xA), and their reading of area
+   122; (c) a whole-sweep re-run with the taps (only six areas were); (d) other donors (a chapter 1 save) for the
+   indirect links' other alternatives, and the `eu` set's installs (their confirm button is cross: `--confirm`
+   and the preamble both); (e) a walking form, which wants each area's walkable cells.
+
+0000000000. **The static data diff is built** on `tools/data-diff-gate` (off `main` `48511747`, merged with the every-door sweep on `harness/build-diff-prevention`, unpushed;
+   [`data-diff.md`](data-diff.md)): `tools/data_diff.py run` decodes the area families and every `tables.toml`
+   table from the PC's `.data` and each disc-built image; `check` (CI) holds `recipes/data-diff.tsv` against
+   `recipes/data-known.toml` and `recipes/exe.toml`'s image hashes, so **any recipe regeneration now needs a
+   `data_diff.py run` with the seven discs** (section 5 of the doc) before CI passes. Found and fixed: area 6's
+   link index on both PSP-built images (`exe-import-engine.md` 7.10; a PSP-built install needs the rebuild).
+   **Open hole, listed** (`fishing-spot-input-flags`): areas 89 and 129's descriptor `+0x32` byte on the five
+   PlayStation builds - build the PSX descriptor-table rule (a descriptor's place through the PSX
+   `Area_Descriptors` table, `0x801802EC` JP / `0x8017F974` US, each entry in the area's own `EMI#13`;
+   7.8 *Left*) and drop the entry. **Also seen:** `exe_own.py`'s symbol-name `language` rule classes bytes up
+   to the next symbol, so an unnamed table after a `*Messages` symbol reads as language (area 6's descriptor was
+   one) - worth a pass over `exe-gaps.tsv`'s `language` rows that are not text. PR at the owner's word.
 000000000. **Issue #142 (Dauna Mine's dragon-zombie puddle and circle, half drawn) is fixed** on
    `fix/issue-142-grab-pairs` (off `main` `c0ba3b64`, PR #145; DIV-0125 amended): the owner's
    `minecartToZombieDragon` recipe (save in `tools/recipe_saves/`, the first route to reach effect kind

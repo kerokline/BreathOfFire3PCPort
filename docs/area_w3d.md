@@ -4,8 +4,13 @@
 (`src/game/area_w3d.cpp`, shadow name `area_w3d`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` for area
 135: 0 mismatches in 276,000 rounds (in this worktree); 334 controls planted, 326 refused by a count, 7 by a fault, 1 equivalent (its variant refused)
-(section 4). Fuzz only: no recorded route reaches the band (section 5). No
-divergence; where the original jumps through a pointer past what its
+(section 4). Fuzz only: no recorded route reaches the band (section 5). One
+divergence, DIV-0180 (2026-10-25): in zones 4, 6 and 7 the init places the
+marker by the zone-1 branch's own steps when it was never placed since the
+launch, where the original shows an object with a null record and the PC
+faults reading address 3 - a save loaded there crashed
+([`door-sweep.md`](door-sweep.md) 4a); the fuzz compares the original init,
+the switch is set after it. Where the original jumps through a pointer past what its
 dispatcher reaches, divides by a byte that can be 0, or writes through an
 index past the 30 field objects or the 20 effect records, ours aborts with a
 message (section 6).
@@ -85,7 +90,7 @@ less 2 (the op runs again next frame).
 | `0x41E580` | `Area135_CellHook` | `0x5C` | the cell hook (`0x662F5C`) | kHook | the first of `Area135_CellEntries`' two whose x and z bytes are the cell's and whose direction nibble equals the leader's direction byte (the whole byte): `ScriptFlags_Set40`, tail state the entry's, kind `0x12`, al 1; none: al 0 |
 | `0x41E5E0` | `Area135_StepHook` | `0x4A` | `Area_StepHook` (`0x56E162`) | kHook | zone 4, 6 or 7, story flag `0xC` and `Area135_NearMarker(x, z)`: `Party_DropIn(0)`, al 1; else al 0 |
 | `0x41E630` | `Area135_Tail18` | `0x504` | tail kind 18 | kTail | section 1.1 |
-| `0x41EB40` | `Area135_Init` | `0x99` | `+0x40` init (PSX `0x801F5A44`) | kInit | zone 4: entered from zone 1 (`0x905E68`): `EventOp_Bx(Area135_InitOp)`, flag `0xC` cleared, the zone read again, the sub byte 0; `0x8034B0 \|= 1`. The zone (as last read) 4, 6 or 7: the marker's `+0` = 1. Zone 0: `Effect_FindFree`, a slot `+0` = 1, kind `+5` = `0x53`, `+0x18` = 0, `+0x1C` = 6; counter 3 = 0 |
+| `0x41EB40` | `Area135_Init` | `0x99` | `+0x40` init (PSX `0x801F5A44`) | kInit | zone 4: entered from zone 1 (`0x905E68`): `EventOp_Bx(Area135_InitOp)`, flag `0xC` cleared, the zone read again, the sub byte 0; `0x8034B0 \|= 1`. The zone (as last read) 4, 6 or 7: the marker's `+0` = 1 (DIV-0180: first placed by the zone-1 steps when its `+0x54` is 0). Zone 0: `Effect_FindFree`, a slot `+0` = 1, kind `+5` = `0x53`, `+0x18` = 0, `+0x1C` = 6; counter 3 = 0 |
 | `0x41EBE0` | `Area135_FallTo` | `0x54` | called by handlers 9, 10 | kCallee | `(height)`: d = s16(height - word `+0x3E`); `+9` = `(\|d / 128\| << 4)` as a byte (C's truncating division); `+0x14` = d / `+9` (`idiv`); `+0x10`, `+0xC` = 0 |
 | `0x41EC40` | `Area135_ObjectAtCell` | `0x68` | called by handlers 9, 14, `Area135_CountQueue` | kCallee | `(x, z)`: the first field object 0..29 in use (`+0` bit 0), not `Sprite_Current` (read at entry), kind `+6` = `0xA`, at exactly (x, z): al its index; else `0xFF` |
 | `0x41ECB0` | `Area135_CountQueue` | `0x3B` | called by the queue states | kCallee | `Area135_ObjectAtCell(0x208000, 0xC8000 + n << 17)` for n 0..3 until one is empty: al n (0..4) |

@@ -8,6 +8,33 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**Area 135's crash, 2026-10-25, fixed on `fix/area-135-door-crash`** (off `harness/build-diff-prevention`,
+unpushed; DIV-0180; [`door-sweep.md`](door-sweep.md) 4a): the sweep's four crashing doors were a defect of Capcom's
+PC port that a save reaches - area 135's init shows its marker (`Sprite_ObjectsExtra[3]`) in zones 4, 6 and 7 but
+places it only on an entry from zone 1, so a save made in those zones, loaded after a launch, read address 3 through
+the null record (`0x57B844` in Capcom's code, `field_frame.cpp:378` in ours). The init now places an unplaced marker
+by the zone-1 steps first. The eleven stuck doors are event areas' messages and scripts (4b); the sweep now taps
+the confirm button while a change stays pending (`--confirm`) and lists which doors took taps or were moved by an
+event. Re-run over areas 54, 92, 104, 121, 122, 135 on both `us-disc` installs: no door differs, all 23 of area 135
+arrive. Owed: the owner's eye on the marker when a save starts in zone 6 or 7.
+
+**The every-door sweep, 2026-10-25, built on `harness/every-door`** (off `main` `48511747`, unpushed;
+[`door-sweep.md`](door-sweep.md)): `tools/door_sweep.py` takes every link of every area on two installs - the
+recipe steps `goto` (`Field_ChangeArea`) and `door` (`Area_LinkAt` + `Field_Request` 5, the leader's own two calls
+on a link cell), harness-only, from crafted saves - and compares the arrival area and music; `set.us-disc` is the
+players' US + PSP-EU shape. On the current image the PC and the disc-built install agree on all 1,520 doors driven
+(1,535 planned in 188 areas, the same 15 failing on both) and on all 1,542 links; on the image of `b0fef7a2` (before
+PR #136) it lists 12 doors, all unexplained: 62.1-2 (issue 130), 97.1-2 (issue 134), 98.0 to area 0 with song 2
+(issue 139), 162.1-4 and 163.1-3 - each a port repair already on `main`.
+
+**The static data diff, 2026-10-25, built on `tools/data-diff-gate`** (off `main` `48511747`, unpushed;
+[`data-diff.md`](data-diff.md)): `tools/data_diff.py` decodes the area descriptors, links, zones, music sets and
+every `tables.toml` table from the PC's `.data` and each disc-built image, and fails on a hole or a release
+difference `recipes/data-known.toml` does not list; `check` runs in CI with no game data. On the pre-PR-136 recipe it
+flags areas 62, 97, 162, 163 and 98's alternative; on `main` it found area 6's link index zero on both PSP-built
+images (fixed in the importer, [`exe-import-engine.md`](exe-import-engine.md) 7.10; a PSP-built install needs the
+rebuild) and leaves the fishing spots' `+0x32` byte (89, 129) as the one listed hole.
+
 **Issue #142, 2026-10-25, fixed on `fix/issue-142-grab-pairs`** (off `main` `c0ba3b64`, PR #145; DIV-0125
 amended): Dauna Mine's dragon-zombie scene drew its puddle as a thin half-blob and its two discs as half-discs.
 Effect kind 0x51 copies the left and right halves of the frame under it into one texture page and textures a
