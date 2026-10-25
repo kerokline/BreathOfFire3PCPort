@@ -4008,6 +4008,8 @@ src/game/battle_actions.cpp	SetEnemyBlock	record	At	block + at::kBX	0	-	param	fa
 src/game/battle_actions.cpp	SetEnemyBlock	record	At	block + at::kBY	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_actions.cpp	SetEnemyBlock	record	At	block + at::kBZ	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_actions.cpp	CopyStats	global	At	at::kStats	0	0x939fe0	-	no-entry	at::kStats 0x939fe0 -	b0
+src/game/battle_actions.cpp	UnlearnedBlue	global	At	at::kAbilityRecords	0	0x65c4c8	-	untyped-entry	at::kAbilityRecords 0x65c4c8 Ability_Records (DIV-0179: the record's learnable bit, as BattleAction_AbilityCheck's own sites)	div-0179
+src/game/battle_actions.cpp	UnlearnedBlue	global	SetB	kBannerPool	0	0x93b8e0	-	no-entry	kBannerPool 0x93b8e0 - (DIV-0179: a banner pool entry's colour byte +0xA; the pool has no [[data]] entry, as in battle_misc.cpp and window_kinds.cpp)	div-0179
 src/game/battle_actions.cpp	EnemyNameToText0	global	At	at::kText0	0	0x904ce0	-	untyped-entry	at::kText0 0x904ce0 Text_Records	b0
 src/game/battle_actions.cpp	EnemyNameToText0	global	At	at::kText0	1	0x904ce0	-	untyped-entry	at::kText0 0x904ce0 Text_Records	b0
 src/game/battle_actions.cpp	Battle_ActionPhase	global	At	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0

@@ -158,16 +158,16 @@ constexpr std::uint32_t kBannerPool = 0x93B8E0;
 constexpr unsigned kBannerColour = 0xA, kBlue = 3;
 
 // After BattleAction_AbilityCheck's banner (`entry` BattleBanner_Add's eax,
-// the entry's offset, or 0x15 when every entry was taken): the name in blue
-// when the actor is an enemy, the ability can be learnt (its record's u16
-// +0x14 bit 0x200, the bit BattleAction_AbilityNotice and Battle_SettleFlag8
-// test) and the party has not learnt it (Battle_ActionBitSet 0x453A90, the
-// set 0x904088 that Examine and the masters fill, by the id's low byte, as
+// the entry's offset, or 0x15 when every entry was taken or there is no
+// banner; `actor` and `id` the step's own reads): the name in blue when the
+// actor is an enemy, the ability can be learnt (its record's u16 +0x14 bit
+// 0x200, the bit BattleAction_AbilityNotice and Battle_SettleFlag8 test) and
+// the party has not learnt it (Battle_ActionBitSet 0x453A90, the set 0x904088
+// that Examine and the masters fill, by the id's low byte, as
 // Battle_MemberRollByAction asks it).
-void UnlearnedBlue(unsigned long entry) {
+void UnlearnedBlue(unsigned long entry, unsigned actor, unsigned id) {
     if (!g_unlearned_blue || entry % 0xC != 0) return;
-    if (B(at::kActor) <= 2) return;
-    const unsigned id = Word(At(at::kAbility));
+    if (actor <= 2) return;
     if ((Word(At(at::kAbilityRecords + id * 24 + 0x14)) & 0x200) == 0) return;
     if (Battle_ActionBitSet(id & 0xFF) != 0) return;
     SetB(kBannerPool + entry + kBannerColour, kBlue);
@@ -362,13 +362,17 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         BattleE4_Step2 = 0;
         return;
     }
+    unsigned long banner = 0x15;   // DIV-0179: no banner, as BattleBanner_Add's "every entry taken"
+    unsigned named = 0;
     if (Word(At(at::kAbility)) != 0x97) {
         const unsigned id = Word(At(at::kAbility));
         WindowRecords[4].state = 1;
         g.str_copy_n(reinterpret_cast<char*>(At(at::kNameBuf)), reinterpret_cast<const char*>(At(at::kAbilityRecords + id * 24)), 0x10);
-        UnlearnedBlue(g.banner_add(1, 1, 0, 0x3C, reinterpret_cast<const char*>(At(at::kNameBuf))));
+        banner = g.banner_add(1, 1, 0, 0x3C, reinterpret_cast<const char*>(At(at::kNameBuf)));
+        named = id;
     }
     const unsigned a = B(at::kActor);
+    UnlearnedBlue(banner, a, named);
     const Standing s = ActorStanding(a);
     if ((s.status & 0x10) != 0 && (At(at::kAbilityRecords + Word(At(at::kAbility)) * 24u + 0x15)[0] & 4) != 0) {
         SystemBanner(0x37);
