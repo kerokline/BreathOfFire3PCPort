@@ -770,7 +770,7 @@ void PlaceMarker(unsigned char& zone) {
     zone = Cond_ByteFD;
     B(AreaW0c_TailSub_addr) = 0;
 }
-bool MarkerUnplaced() { return D(Sprite_ObjectsExtra_addr + 0x1ec + 0x54) == 0; }
+bool MarkerUnplaced() { return Sprite_ObjectsExtra[3].frames == 0; }   // the marker's record pointer, +0x54 of the 0xA4-byte object
 }  // namespace
 
 extern "C" void __cdecl Area135_Init(void) {
