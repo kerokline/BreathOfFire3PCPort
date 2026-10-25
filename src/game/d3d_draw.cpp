@@ -27,6 +27,7 @@
 #include "game/d3d_lines.h"
 
 #include <cstdint>
+#include <windows.h>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -477,6 +478,69 @@ long D3d_DrawCellSprite(const unsigned char* prim) {
 // stack slot of the `count` argument, so when no entry qualifies - all 128 used
 // this frame - the "victim" is `count` itself, and the build, the counter and
 // the in-use word land at D3d_CellTexCache + count * 0x28, past the table.
+
+// ---------------------------------------------------------------------------
+// DIV-0181: cell textures follow VRAM uploads. The port's cell
+// texture cache (D3d_CellTexture) keys an entry on the cell records and the
+// CLUT and refreshes it only when the CLUT row's generation moves - never when
+// the VRAM under the cells is rewritten, so a sprite whose image changes while
+// its frame's parts stay the same keeps drawing the old composition. Here each
+// built entry records the VRAM footprint of its cells, and an upload that
+// overlaps it frees the entry (D3d_FreeCellTexture), so the next draw rebuilds
+// it from the new VRAM. BOF3X_ORIGINAL=CellTextureVram keeps the port's.
+// BOF3X_POSELOG=1 logs builds and frees (the facing investigation).
+void D3d_FreeCellTexture(int slot);
+namespace {
+std::uint8_t g_cell_vram = 0;   // 1 through PatchBytes("CellTextureVram") in D3dDraw_Inject
+struct CellFoot { int valid, x0, y0, x1, y1; };   // halfword columns, rows; inclusive
+CellFoot g_cell_foot[128];
+bool PoseLogOn() {
+    static int on = -1;
+    if (on < 0) { char v[8]; on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
+    return on == 1;
+}
+void NoteCellFoot(U slot, unsigned first, unsigned count) {
+    if (slot >= 128) return;
+    CellFoot f{0, 0, 0, 0, 0};
+    for (unsigned k = 0; k < count; ++k) {
+        const unsigned char* r = At(SpriteCell_Table_addr + (first + k) * 8u);
+        const unsigned size = r[3], tpage = Word(r + 4), u = r[6], v = r[7];
+        const bool four_bit = (tpage & 0x180) == 0;
+        const int w_tex = static_cast<int>(size & 0xF) * 8, h = static_cast<int>(size >> 4) * 8;
+        const int x0 = static_cast<int>((tpage & 0xF) * 64u) + (four_bit ? static_cast<int>(u) / 4 : static_cast<int>(u) / 2);
+        const int x1 = x0 + (four_bit ? w_tex / 4 : w_tex / 2) - 1;
+        const int y0 = static_cast<int>((tpage & 0x10) << 4) + static_cast<int>(v);
+        const int y1 = y0 + h - 1;
+        if (!f.valid) { f = CellFoot{1, x0, y0, x1, y1}; continue; }
+        if (x0 < f.x0) f.x0 = x0;
+        if (y0 < f.y0) f.y0 = y0;
+        if (x1 > f.x1) f.x1 = x1;
+        if (y1 > f.y1) f.y1 = y1;
+    }
+    g_cell_foot[slot] = f;
+    if (PoseLogOn() && f.valid)
+        bof3::Log("poselog     frame %lu cell build entry %u cells %u..+%u foot %d,%d..%d,%d", static_cast<unsigned long>(Frame_Counter),
+                  static_cast<unsigned>(slot), first, count, f.x0, f.y0, f.x1, f.y1);
+}
+}  // namespace
+
+void D3dDraw_CellsShadowWritten(int x, int y, int w, int h) {
+    if (!g_cell_vram) return;
+    const int x1 = x + w - 1, y1 = y + h - 1;
+    for (U i = 0; i < kCellEntries; ++i) {
+        CellFoot& f = g_cell_foot[i];
+        if (!f.valid) continue;
+        if (f.x1 < x || f.x0 > x1 || f.y1 < y || f.y0 > y1) continue;
+        if (Long(At(D3d_CellTexCache_addr + i * kCellEntry)) != 0) {
+            if (PoseLogOn())
+                bof3::Log("poselog     frame %lu cell free entry %u (upload %d,%d %dx%d over foot %d,%d..%d,%d)", static_cast<unsigned long>(Frame_Counter),
+                          static_cast<unsigned>(i), x, y, w, h, f.x0, f.y0, f.x1, f.y1);
+            D3d_FreeCellTexture(static_cast<int>(i));
+        }
+        f.valid = 0;
+    }
+}
+
 int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flags) {
     U best = 0xFFFF;
     U victim = count;
@@ -485,6 +549,7 @@ int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flag
         const unsigned char* e = At(D3d_CellTexCache_addr + i * kCellEntry);
         if (Long(e) == 0) {
             g.cell_build(static_cast<int>(i), first, count, clut, flags & 0x800);
+            NoteCellFoot(i, first, count);
             goto used;
         }
         if (Word(e + 0x12) == count && Word(e + 0x10) == clut) {
@@ -514,6 +579,7 @@ int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flag
         }
     }
     g.cell_build(static_cast<int>(i), first, count, clut, flags & 0x800);
+    NoteCellFoot(i, first, count);
 used:
     const unsigned char render_flags = Gfx_RenderFlags;
     unsigned char* e = At(D3d_CellTexCache_addr + i * kCellEntry);
@@ -529,6 +595,14 @@ void D3dDraw_Inject() {
         d3d_list::SelfTest();
     }
     if (bof3::WantsShadow("fb_grab")) render::fb_grab::SelfTest();   // DIV-0125
+    {
+        // DIV-0181: cell textures follow VRAM uploads. After the self-tests, whose
+        // fuzzed builds noted footprints over fake entries: those are forgotten here.
+        std::memset(g_cell_foot, 0, sizeof g_cell_foot);
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("CellTextureVram", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_cell_vram)), &was, &is, 1);
+        bof3::Log("DIV-0181    a cell texture is rebuilt after an upload over its cells (on unless the line above says OFF)");
+    }
     d3d_list::Operands();   // Gfx_DrawOTag's byte tables, ours, against the code's (docs/operand-store.md)
     BOF3_INJECT(Gfx_DrawOTag);
     BOF3_INJECT(D3d_PrimColor);

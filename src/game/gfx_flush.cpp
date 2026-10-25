@@ -7,6 +7,8 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+#include <windows.h>
+
 // The two things WinMain's loop does to VRAM on a RENDERED frame, before the
 // draw (docs/call-trace.md section 6): game logic only queues and marks.
 
@@ -36,6 +38,14 @@ extern "C" void __cdecl Gfx_FlushUploadQueue(void) {
         std::memcpy(&rect[2], record, 4);
         std::uint32_t kind;
         std::memcpy(&kind, record + 4, 4);
+        {   // BOF3X_POSELOG=1: every upload (the facing investigation, issue #142's side thread)
+            static int on = -1;
+            if (on < 0) { char v[8]; on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
+            if (on == 1)
+                bof3::Log("poselog     frame %lu upload %u/%u at %d,%d size %dx%d kind %lu record %08lX", static_cast<unsigned long>(Frame_Counter),
+                          static_cast<unsigned>(i), static_cast<unsigned>(Gfx_UploadQueueCount), rect[0], rect[1], rect[2], rect[3],
+                          static_cast<unsigned long>(kind), static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(record)));
+        }
         if (kind == 1) Gfx_UploadPacked5(record + 8, rect);
         else if (kind == 2) Gfx_UploadLzss(record + 8, rect);
         else Gfx_LoadImage(rect, record + 8);

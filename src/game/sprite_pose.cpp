@@ -30,6 +30,8 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+#include <windows.h>
+
 namespace sprite_pose {
 
 using namespace move_script;
@@ -90,7 +92,30 @@ extern "C" void __cdecl Sprite_SetAnimation(unsigned char animation) {
 // Sprite_Current is re-read wherever the original re-reads it, so a callee
 // that moves it moves the rest of this. `start` is passed on as 16 bits, which
 // is what Sprite_ScriptStart reads of the dword the original pushes.
+
+// BOF3X_POSELOG=1: instrumentation for the facing investigation (issue #142's side thread) - every
+// Sprite_SetAnimationAt and Sprite_SetFrameQueueUpload on a party member's sprite (ObjTrio) logged.
+static bool PoseLogOn() {
+    static int on = -1;
+    if (on < 0) {
+        char v[8];
+        on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1';
+    }
+    return on == 1;
+}
+static void PoseLog(const char* what, const void* object, unsigned a, unsigned b) {
+    const std::uintptr_t o = reinterpret_cast<std::uintptr_t>(object);
+    if (o < 0x802D40u || o >= 0x802D40u + 3u * 0x14Cu) return;
+    const unsigned char* const s = static_cast<const unsigned char*>(object);
+    std::uint32_t anim_data, script;
+    std::memcpy(&anim_data, s + 0x4C, 4);
+    std::memcpy(&script, s + 0x50, 4);
+    bof3::Log("poselog     frame %lu %s trio %u a %u b %u | flags %02X type %u facing %u draw %02X slot %u row %u flip %u col %u anim %u data %08X script %08X",
+              static_cast<unsigned long>(Frame_Counter), what, static_cast<unsigned>((o - 0x802D40u) / 0x14Cu), a, b,
+              s[0], s[6], s[8], s[0x24], s[0x25], s[0x26], s[0x2A], s[0x2C], s[0x4B], anim_data, script);
+}
 extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned short start) {
+    if (PoseLogOn()) PoseLog("SetAnimationAt in ", Sprite_Current, animation, start);
     if (animation & 0x80) {
         records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
         if (!(sprite->draw_flags & 2)) {
@@ -121,6 +146,7 @@ extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned 
         sprite->animation = animation;
     }
     records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+    if (PoseLogOn()) PoseLog("SetAnimationAt mid", sprite, animation, start);
     if (sprite->draw_flags & 1) {
         g.queue_upload(sprite->animation);
         g.script_start(start);
@@ -181,6 +207,7 @@ extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
         SetLong(At(Gfx_UploadQueueRecord_addr + count * 4u), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(image)));
         Gfx_UploadQueueCount = static_cast<unsigned char>(Gfx_UploadQueueCount + 1);
     }
+    if (PoseLogOn()) PoseLog("QueueUpload entry ", sprite, frame, entry[0] | entry[1] << 8 | entry[2] << 16);
     sprite->flip = entry[2];
     unsigned char* const script = Offset(words, Word(words + entry[1] * 2u));
     rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(script));

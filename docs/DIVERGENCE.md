@@ -11346,3 +11346,76 @@ designed in rather than bolted on.
   `C:\Users\kerok\bof3x-runs\door135`.
 - **Reversible?** `BOF3X_ORIGINAL=Area135MarkerPlaced` (the original's
   init, crash included); `BOF3X_ORIGINAL=Area135_Init` runs Capcom's.
+
+### A cell texture is rebuilt after an upload over its cells: a sprite no longer keeps the previous image's composition
+
+- **ID:** DIV-0181
+- **Date:** 2026-10-25
+- **Subsystem:** render - the port's cell-texture cache (`D3d_CellTexture`
+  `0x5A3160`, ours, `src/game/d3d_draw.cpp`; `D3d_BuildCellTexture` /
+  `D3d_FreeCellTexture`, `src/game/tex_cells.cpp`;
+  [`tex-cells.md`](tex-cells.md) 2-3) and the VRAM shadow's write path
+  (`Gfx_InvalidateTextures` `0x59E700`, ours, `src/game/gfx_texcache.cpp`).
+  Found on issue #142's side thread: the owner's "Ryu keeps turning around"
+  in the Dauna Mine dragon-zombie exchange (`minecartToZombieDragon`), and
+  "other times too".
+- **Tier:** Intent - a port repair. The PlayStation's GPU samples VRAM at
+  every draw; the port composes a sprite's cells into a cached texture and
+  did not notice when the VRAM under them changed.
+- **Original behaviour:** a code-0x84 sprite (every field sprite drawn from
+  `SpriteCell` records) is drawn from a texture `D3d_CellTexture` finds by
+  the cell count, the CLUT and the 32-bit sum of the records' bytes (x, y,
+  size, tpage, u, v); a hit is refreshed only when the CLUT row's generation
+  moved, never when VRAM at the cells' (tpage, u, v) was rewritten. A party
+  member's frame scripts upload their image to the member's texture slot
+  (`Sprite_SetFrameQueueUpload`, [`sprite-pose.md`](sprite-pose.md) 1) and
+  name parts by (u, v) in that slot, and the banks lay the same parts over
+  several images (in `PL27A` bank 1 - adult Ryu - the standing direction-7
+  entry 7 and the four gesture entries 27 / 35 / 43 / 51 share image 3 and
+  body cells u 0 and 0x20, differing only in the head cell: `arena_render.py`'s
+  reading of the bank, 2026-10-25). So once a part set has been composed
+  with one image in the slot, every later draw of the same parts - after
+  any number of uploads of another image - draws that old composition.
+  Measured on the owner's route at speed 8: with the pose log
+  (`BOF3X_POSELOG=1`, [`input-script.md`](input-script.md)) the uploads at
+  frames 4507..4772 are all image 3 (record `0x845B9C`, 128 x 16 halfwords
+  at (320, 80)), the entries `(3, 17, 0)` for animation 7 and `(3, 15, 0)`
+  for 27, yet the frames show Ryu's face at animation 7 (4420, 4800, 5060)
+  and his back at 27 / 35 (4540, 4940); the bank's entries 7, 27 and 35 all
+  draw the back-right view; the US-disc install (`D:\bof3x-runs\i130`)
+  draws the same frames, so it is not the data. With the log on the cell
+  cache, every one of those draws was a hit on entry 2 (the same bytes at
+  cells 155..166), built earlier with another image under it.
+- **New behaviour:** each built cell-texture entry records the VRAM
+  footprint of its cells (halfword columns and rows from the records'
+  tpage, u, v and size; `NoteCellFoot`), and every write of the VRAM shadow
+  (`Gfx_InvalidateTextures`, which every upload passes through since
+  DIV-0125) frees the entries whose footprint it overlaps
+  (`D3dDraw_CellsShadowWritten` -> `D3d_FreeCellTexture`), so the next draw
+  composes them again from the new VRAM. Nothing else of the cache changes:
+  hits, victims and the CLUT refresh are the port's.
+- **Rationale:** the PlayStation never showed a stale composition - its GPU
+  read VRAM at the draw - so a sprite's look there follows the last upload,
+  which is what the bank's data and the scene's scripts intend (Ryu stands
+  with his back-right to the camera, facing Garr up-right, through the
+  whole exchange: the direction-7 entries of his bank, and the PlayStation
+  let's-play footage of the scene as far as a 140-px crop of a YouTube
+  player can show). The port's cache was a speed-up that forgot one of its
+  inputs. Cost: one scan of 128 entries per upload and a rebuild of the
+  freed entries at their next draw - on the owner's route 1,232 frees in
+  8,107 frames.
+- **Also in the PSX version?** No: the cache is the port's own
+  ([`tex-cells.md`](tex-cells.md): no PSX twin). The script op that asks for
+  the animations (`0E`, `MoveScript_Flow`), `Sprite_SetAnimationAt` and
+  `Sprite_SetFrameQueueUpload` are the same on the JP and US discs
+  (`D:\bof3x-runs\frost\map\pc_map.tsv`, status `exact`; the US `case 14`
+  read in `func_801A8F94.c`).
+- **Verification:** the route replayed with the switch on: Ryu's back-right
+  view at 4420 / 4540 / 4800 / 4940 / 5060 where before it was face / back /
+  face / back / face; the log shows a free and a rebuild of entry 2 at every
+  upload (4505 .. 4948). Self-tests: [`HANDOFF.md`](HANDOFF.md) item
+  000000000 (a), the run of 2026-10-25 evening. Not yet: the owner's eye on
+  the scene and on the other places they saw a turn; the state hash (a
+  render-only change, nothing of the game's state is touched).
+- **Reversible?** `BOF3X_ORIGINAL=CellTextureVram` keeps the port's cache
+  (the stale compositions included).
