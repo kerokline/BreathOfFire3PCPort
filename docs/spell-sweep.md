@@ -2,8 +2,10 @@
 
 **Status:** MEASURED (2026-10-26: built and run - the three sides on the
 PC install, the member and enemy sides on a disc-built install before and
-after the twin-read placements, sections 4 to 7; open: Howling on the disc
-install, the Super Combo text row, the owner's eye). The owner's idea the
+after the twin-read placements, sections 4 to 7; the enemy side's Howling
+failure explained and the enemy side re-run on both installs the same
+evening, sections 6.2 and 6.3; open: the Super Combo text row, the owner's
+eye). The owner's idea the
 same day: "a
 harness where an enemy casts all the spells and abilities in the game, and
 the party has infinite life, just to check the render / functionality of
@@ -92,7 +94,19 @@ id; its action-kind row (`0x65563C[+0x8E]`, four 2-bit kinds chosen by
 - an ability - while the flag word `+0x90` has bit 0x20 (Gooey's 0xE0 has
 it; the sweep sets it anyway). The three crosses Defend; the enemy's turn
 plays the ability at its own target choice (`BattleEnemy_PickTarget` by the
-kind). This is how the 30 enemy-only abilities are reached: a member casting
+kind). Three more pokes and one change of step came from the Howling case
+(section 6.2, 2026-10-26 evening): the EX round's gate `0x904B7A` is cleared
+at the cross (the route's three members outpace Gooey every round, so
+`Battle_MarkFasterSide` gave the party every other round alone and Gooey
+cast on half the rounds of the first runs); the members Defend by a `seek
+right` with a two-frame hold and four-frame gap (right tapped twice within
+eight frames chooses the command the cross points at,
+`BattleMenu_CommandSelect`'s tap rule), one seek for however many crosses
+the round has, since a cast's status takes members out of the next round's
+cross; and after the shots each member's low status byte (`+0x90`) is poked
+to 0, so a sleep (0x20, Howling's and Bone Dance's) does not leave the fight
+running by itself through the wake rolls - the high byte keeps Ovum's egg
+(0x800), which has its own five rounds. This is how the 30 enemy-only abilities are reached: a member casting
 one hits a path Capcom's code never took - Nue Stomp (id 1) from a member
 calls `BattleEnemy_SetAnimationOf` with the member's actor, which the
 original runs on a record outside the eight enemies and ours aborts
@@ -225,9 +239,15 @@ through. **47 done, 1 failed** of 48 after the re-runs; two things in it:
   the same. The sweep reached it from an ordinary battle, as predicted;
   nothing new, now seen.
 
-The enemy's command kind (`+0x105`) peeked after the shots reads 0 on
-every id - the record is cleared by then; the peek is in the wrong place
-and says nothing.
+The enemy's command kind (`+0x105`) peeked after the shots read 0 on
+every id - the record is cleared by then (`EnemyOp_CastDoneCost`); the peek
+was in the wrong place and said nothing. Since 2026-10-26 evening the enemy
+side waits, once the input phase ends, for `+0x105` to read 4
+(`BattleEnemy_PickAction` writes it at the enemy's turn, after the members'
+Defends, 21 frames later in this fight) and peeks the kind and the ability
+there, before the shots; a timeout of that wait (300 frames) is "the enemy
+did not cast", which the first runs could not tell from a cast. The shots
+therefore start at the pick, about 20 frames later than before.
 
 ## 6. The disc-built run with the gap watch
 
@@ -302,6 +322,71 @@ disc runs show nothing yet - so the PC is not a frame-exact reference for
 this one; the two disc runs are.) `Effect1b_ToggleText+0xE` (Super Combo's
 "GO!!") is still read while zero: the `language` row stands, for a layer
 entry.
+
+**Howling: explained** (2026-10-26 evening, D391 in
+[`known-defects.md`](known-defects.md); nothing of the port's or Capcom's).
+Three things of the harness's, read off the two logs and then off a probe
+recipe with a peek set after every step (`C:/Users/kerok/bof3x-runs/ss1026/howl/probe*`):
+
+1. **Gooey cast on every other round.** After each of its casts the EX-round
+   byte `0x904B7A` was set (`Battle_MarkFasterSide`: the route's three
+   members outpace Gooey) and `Battle_BuildTurnOrder` admitted only the
+   marked members (`battle_damage.cpp`'s `Gated`): the turn order read
+   `02 01 00 FF` where a casting round's reads `02 01 00 03`. The datlog
+   shows it as every second round loading no `MAGICnnn.DAT`. So half the
+   enemy-side `done` rows of sections 5 and 6 had cast nothing - which half
+   depended on the chunk's parity: on the PC's second run Ovum (52) fell on
+   an EX round and Howling (54) on a casting one; on the disc runs the other
+   way round. The PC "passed" Howling because it cast it after an uncast
+   Ovum; the disc "failed" it because it had cast Ovum the round before.
+2. **Ovum's egg took Rei out of the cross.** Ovum's target gets status
+   0x800 (`BattleStep_Restore800` lifts it after five rounds: HP and AP to
+   the maximum, `Battle_ClearStatus`); `Battle_BuildEntryOrder` leaves such a
+   member out, so the round after had two crosses, not three. The recipe's
+   third Defend block then pressed into the *next* round's first cross, and
+   its `until 0x904AA0 != 1` waited for the input phase to end while the
+   game waited at the second cross for a press that never came: "the input
+   phase never ends after the three Defends", 900 frames. The sound banks
+   "loading during the Defends" were the commit's `BATL_SE.DAT`
+   (`Battle_CommitRound`'s `load_dat(0xD1)`) one Defend early.
+3. **Howling itself puts Ryu and Teepo to sleep** (status `+0x90` 0x20, the
+   bit `BattleInput_NextMember` skips; Bone Dance sets the same), so once it
+   is really cast the party has no cross until `BattleStep_PartyWake20`'s
+   roll clears it - 750 frames on the probe, four rounds of Gooey casting
+   Howling again, longer than the 480-frame wait after the shots. The PC's
+   second run woke them the next round.
+
+The fix is the harness's (section 1.2): the EX-round byte cleared at the
+cross, one `seek right` Defend for however many crosses the round has, the
+party's low status byte cleared after the shots, and the cast confirmed by
+the pick (section 5's peek). With it Ovum, Howling and Bone Dance cast in
+one chunk on both installs, each with its `MAGICnnn.DAT` load and a kind-4
+peek, and Howling draws on the disc install as on the PC (the members
+stretched tall, the egg with them). The whole enemy side was re-run on
+both installs after the change (section 6.3).
+
+### 6.3 The enemy side re-run with the fix (2026-10-26 evening)
+
+The enemy side (48 ids: the 30 enemy-only, the 11 unused, the 7 unlabelled)
+run again on the US-disc + PSP-EU install (`abc_run.py prepare --set us-disc
+--only psx-us-psp`, root `C:/Users/kerok/bof3x-runs/ss1026/howl`, the main
+checkout's importer at 5bd84b98) and on the PC install, from one ini-less
+launcher copy, chunks of ten at speed 4, about seven minutes a side. **Both
+installs read the same row for row: 47 done, 1 failed** - Paralyzer (139),
+the known crash of row 123 ([`magic_engine.md`](magic_engine.md) 6) - with
+Nue Stomp (1) stalling the fight as before (section 5) and Chlorine (9) and
+Syphon (142) re-run after them. The difference from the first runs is what
+`done` now means: **every one of the 48 ids was picked by Gooey** (the
+`enemy0_command_kind = 0x4` peek before the shots, 48 on each install, each
+with its `MAGICnnn.DAT` load in the datlog), where the first runs had cast
+on every other round. Howling (54): `done` on both, 219 recipe frames, the
+members stretched tall on the disc install's shots as on the PC's.
+
+The gap watch over the disc run's seven chunks (`gapwatch.py report`,
+16,200 latches): 3 of 255 ranges read, 1 before any write - the empty save
+slot (`Encounter_SlotChance+0x1C`, the known owner's call) - and
+`Battle_CommandLabels` and `Task_StackTop` as every run before. No `gap`
+row is read by any enemy-only skill now that each of them is really cast.
 
 ## 7. Items (`--side item`)
 
