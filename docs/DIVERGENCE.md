@@ -7296,6 +7296,33 @@ designed in rather than bolted on.
   by the rule. Live: a US disc-only install built by this branch's importer
   draws the TM whole at (262, 130), against the PC install's (R)
   (`analysis/shots/d266-title-mark-1020/`, local).
+- Amended 2026-10-26 (the effect, boss and scene gap rows read by hand,
+  [`exe-immediate-places.md`](exe-immediate-places.md) 7; a worktree off
+  `main` `25d12620`, not played): the `immref` placement kind's rule grew
+  three ways, each one a shape a disc keeps the PC's bytes in. (1) The
+  twin of a reader is taken from several body matches in a file when one of
+  them is at psx-jp's own address (`build_twins`; the boss `*_Enter`
+  template, `BossGaist_Anims+0x2` on the six builds that lacked it). (2) A
+  reader whose operand lies up to eight bytes below a region that starts at
+  its own data symbol reads that symbol, the index the x86 compiler folded
+  into the operand (`AirRaidImage_Bounce`'s `[idx*2 + 0x65A696]` against the
+  twin's `addiu -1`; `AirRaidImage_ShadeSteps`). (3) A row ends at its
+  reader symbol's declared `ctype x count` extent where the twin's bytes
+  differ past it, the bytes beyond being another symbol's
+  (`WardMote_Tilts`, `short[4]`, then MAGIC044's two shorts), and the
+  whole-region floor of issue 149 also passes a region that ends with its
+  section at three compared bytes, two non-zero (`Area121_BandHeights`,
+  `00 78 C8` at `AREA121.EMI#14`'s end). With 32 `symbols.toml` pairings
+  read by hand (the kind-0x18 sub-programs `Sub2E` / `Sub30` / `Sub31` moved
+  to AREA158 / 161 / 162 by their state bytes), twelve gap rows place from
+  the player's disc: `gap` rows PSX-JP 31 to 21, US 58 to 48, EU 59 to 49,
+  FR 62 to 52, DE 63 to 52, PSP-JP 29 to 22, PSP-EU 27 to 21; one row new
+  on every build (`WardMote_Tilts+0x8`, the MAGIC044 bytes no PC operand
+  names); `placed_differ` unchanged; `exe_tables.py check` with the seven
+  discs 0 errors. The Western `EffectKind66_States` and `Rest3e_Windows`
+  fields are confirmed regional (the Western discs hold other values) and
+  stay the owner's call; `TornadoMote_Phases+0x10` is the Identify panel's
+  English labels, a language row.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

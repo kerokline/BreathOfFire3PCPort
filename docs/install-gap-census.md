@@ -630,6 +630,47 @@ nothing in `BOF3.exe` reads (LA 2.3).
   D280's.
 - The JP builds' `0x653200`, `0x669CE8` and `0x66A098` (D280).
 
+**FIXED 2026-10-26, by hand** ([`exe-immediate-places.md`](exe-immediate-places.md)
+7; a worktree off `main` `25d12620`, recipes regenerated and checked there, not
+played). Each remaining spell / effect / boss / scene `game-value` row was read
+at its PSX twin with capstone: every Capcom value among them is on the disc
+verbatim at the address the twin's own `lui` pair forms, and the rows were
+unplaced only because their readers had no twin or the wrong one (the kind-0x18
+sub-program files were off by one: `Sub2E` is AREA158's, `Sub30` AREA161's,
+`Sub31` AREA162's). Placed as `immref`: `BossGaist_Anims+0x2` (the six builds
+that lacked it, by `build_twins` taking the body hit at psx-jp's own address),
+`EffectKind18Sub2E` / `Sub30` / `Sub31_States+0x14`, `Sub45_States+0xC`,
+`Sub21_States+0x8` (through `EffectKind18Sub52_Draw`, AREA142's copy of the
+sign table), `Area121_BandHeights` (PSX 5; a section-tail floor of three
+compared bytes, two non-zero), `Scena02_EffectX`, `AirRaidImage_ShadeSteps`
+(PSX 5; the index-fold shape, the reader's operand two bytes below the symbol),
+`LinkedObjectD_Amounts` (all but PSP-EU, whose `GAME.EMI` pair addresses other
+bytes), `ReviveHalo_MoteCounts` (PSX 5), `WardMote_Tilts` (the row ends at the
+symbol's `short[4]` extent; the four bytes after, `02 00 06 00`, are MAGIC044's
+and stay a gap as `WardMote_Tilts+0x8`, no reader). `gap` rows / bytes / PC
+non-zero: psx-jp 31 / 367 / 192 -> 21 / 299 / 147, psx-us 58 / 750 / 539 ->
+48 / 680 / 494, psx-eu-en 59 / 789 / 569 -> 49 / 723 / 528, psx-fr 62 / 828 /
+596 -> 52 / 758 / 551, psx-de 63 / 836 / 602 -> 52 / 758 / 551, psp-jp 29 /
+330 / 180 -> 22 / 270 / 141, psp-eu 27 / 296 / 156 -> 21 / 240 / 119;
+`placed_differ` unchanged; `check` 0 errors.
+
+**Read, nowhere on the disc in the PC's shape (2026-10-26, the same doc's 7.4):**
+
+- `EffectKind66_States+0x18` / `+0x20` / `+0x28` and `Rest3e_Windows+0x14` /
+  `+0x18` / `+0x1C` (Western PSX): the Western discs hold other values at the
+  twins' addresses (`AREA135.EMI#14 0x801F6230`: `0x10C / 0x111 / 0x111` for
+  the PC's `0xD4 / 0xD9 / 0xD9`; `SCENA10.EMI#0 0x801FE7CC`: `0x81 / 0x6C /
+  0x70` US and DE, `0x81 / 0x54 / 0x98` FR, for the PC's `0x82 / 0x18 /
+  0x10E`), the JP disc and PSP-EU the PC's. Regional values; **OWNER CALL**
+  (item 11's class).
+- `TornadoMote_Phases+0x10`: the Identify panel's ASCII labels `WEAK` / `EXP`
+  / `ITEM` / `POINT`, which `MAGIC060.EMI#0 0x801F0B64` holds in English on
+  US / EU-en, French on FR (`OBJET`), German on DE (`EP`, `OBJEKT`), and not
+  at all on JP. A `language` row by nature, for LA's layer; only `EXP` has a
+  PC reader (`Identify_DrawMember` / `_DrawEnemy`, unpaired).
+- `Area121_BandHeights+0x1` on the PSPs: two bytes, under every floor.
+
+The list as it stood before that pass (the statuses above supersede it):
 **NEEDS FIX - P3, still** (none seen read in play by RW's routes, RW 5). FP's
 reach is 38 of the 63 stage-B rows with a twinned reader, against 10 before it
 (FP 5).
