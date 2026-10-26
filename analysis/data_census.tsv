@@ -2430,169 +2430,169 @@ site	src/game/area_w3c_fuzz.cpp	572	global	SetPointer	AreaW1a_FocusObject_addr	0
 site	src/game/area_w3c_fuzz.cpp	573	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	1
 site	src/game/area_w3c_fuzz.cpp	574	global	B	Cond_Flags_addr + 0xd2	0x904062	-	inside	Cond_Flags+0xd2	unsigned char	1
 site	src/game/area_w3c_fuzz.cpp	594	global	B	Cond_Flags_addr + 0xd2 + (v % 3)	0x903f90	-	exact	Cond_Flags	unsigned char	1
-site	src/game/area_w3d.cpp	48	global	Mem	at::kMessage	0x7dee48	-	none	-	-	0
-site	src/game/area_w3d.cpp	64	global	Mem	Sprite_Objects_addr + index * at::kObjectStride	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/area_w3d.cpp	74	global	Mem	Effect_Objects_addr + slot * at::kEffectStride	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
-site	src/game/area_w3d.cpp	88	record	D	table + state * 4	-	-	-	-	-	0
-site	src/game/area_w3d.cpp	96	record	Word	cur + 0x14	-	base=Sprite_Current	-	-	-	0
-site	src/game/area_w3d.cpp	106	record	Word	cur + word	-	base=Sprite_Current	-	-	-	0
-site	src/game/area_w3d.cpp	107	global	B	Input_Held_addr	0x7e1be8	-	exact	Input_Held	unsigned short	0
-site	src/game/area_w3d.cpp	119	global	D	MapView_Elevation_addr	0x929f1c	-	exact	MapView_Elevation	long	0
-site	src/game/area_w3d.cpp	120	global	B	MapView_Redraw_addr	0x905e69	-	exact	MapView_Redraw	unsigned char	0
-site	src/game/area_w3d.cpp	121	global	SetD	MapView_Elevation_addr	0x929f1c	-	exact	MapView_Elevation	long	0
-site	src/game/area_w3d.cpp	129	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
-site	src/game/area_w3d.cpp	130	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	133	global	B	Field_MoveSpeeds_addr + 0x3	0x6697f3	-	inside	Field_MoveSpeeds+0x3	unsigned char	0
-site	src/game/area_w3d.cpp	144	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
-site	src/game/area_w3d.cpp	148	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
-site	src/game/area_w3d.cpp	149	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	156	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
-site	src/game/area_w3d.cpp	158	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	159	global	Mem	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/area_w3d.cpp	160	global	Mem	at::kMessageFormat	0x5e10c0	-	exact	Area08_MessageFormat	-	0
-site	src/game/area_w3d.cpp	161	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
-site	src/game/area_w3d.cpp	161	global	B	Sprite_ObjectsExtra_addr + 0x26f	0x80226f	-	inside	Sprite_ObjectsExtra+0x26f	records::SpriteObject	0
-site	src/game/area_w3d.cpp	169	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
-site	src/game/area_w3d.cpp	173	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
-site	src/game/area_w3d.cpp	174	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	176	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
-site	src/game/area_w3d.cpp	178	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
-site	src/game/area_w3d.cpp	190	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
-site	src/game/area_w3d.cpp	193	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/area_w3d.cpp	195	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/area_w3d.cpp	205	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/area_w3d.cpp	206	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	221	record	B	table + exit * 2u + 1	-	base=Cond_ByteFD	-	-	-	0
-site	src/game/area_w3d.cpp	222	record	B	table + exit * 2u	-	base=Cond_ByteFD	-	-	-	0
-site	src/game/area_w3d.cpp	224	global	B	Sprite_Kind2_addr + 0x80	0x7e09c0	-	inside	Sprite_Kind2+0x80	records::SpriteObjectBody	0
-site	src/game/area_w3d.cpp	224	global	B	Sprite_Kind2_addr + 0x80	0x7e09c0	-	inside	Sprite_Kind2+0x80	records::SpriteObjectBody	0
-site	src/game/area_w3d.cpp	238	global	Mem	Area135_Routes_addr + i * at::kArea135RouteStride	0x62d994	-	exact	Area135_Routes	unsigned char	0
-site	src/game/area_w3d.cpp	239	global	Mem	Sprite_ObjectsExtra_addr + 0x222	0x802222	-	inside	Sprite_ObjectsExtra+0x222	records::SpriteObject	0
-site	src/game/area_w3d.cpp	240	global	Mem	Sprite_ObjectsExtra_addr + 0x226	0x802226	-	inside	Sprite_ObjectsExtra+0x226	records::SpriteObject	0
-site	src/game/area_w3d.cpp	244	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	256	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
-site	src/game/area_w3d.cpp	257	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
-site	src/game/area_w3d.cpp	258	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
-site	src/game/area_w3d.cpp	267	global	Mem	Sprite_Kind2_addr	0x7e0940	-	exact	Sprite_Kind2	records::SpriteObjectBody	0
-site	src/game/area_w3d.cpp	268	global	D	Sprite_ObjectsExtra_addr + 0x220	0x802220	-	inside	Sprite_ObjectsExtra+0x220	records::SpriteObject	0
-site	src/game/area_w3d.cpp	269	global	D	Sprite_ObjectsExtra_addr + 0x224	0x802224	-	inside	Sprite_ObjectsExtra+0x224	records::SpriteObject	0
-site	src/game/area_w3d.cpp	270	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
-site	src/game/area_w3d.cpp	271	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
-site	src/game/area_w3d.cpp	272	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
-site	src/game/area_w3d.cpp	275	global	D	Sprite_ObjectsExtra_addr + 0x220	0x802220	-	inside	Sprite_ObjectsExtra+0x220	records::SpriteObject	0
-site	src/game/area_w3d.cpp	276	global	D	Sprite_ObjectsExtra_addr + 0x224	0x802224	-	inside	Sprite_ObjectsExtra+0x224	records::SpriteObject	0
-site	src/game/area_w3d.cpp	277	global	D	Sprite_ObjectsExtra_addr + 0x228	0x802228	-	inside	Sprite_ObjectsExtra+0x228	records::SpriteObject	0
-site	src/game/area_w3d.cpp	288	global	B	ObjTrio_addr + 0x8	0x802d48	-	inside	ObjTrio+0x8	records::PartyMember	0
-site	src/game/area_w3d.cpp	321	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	357	global	B	Area135_JumpCells_addr + k * 2	0x62da04	-	exact	Area135_JumpCells	unsigned char	0
-site	src/game/area_w3d.cpp	358	global	B	Area135_JumpCells_addr + k * 2 + 1	0x62da04	-	exact	Area135_JumpCells	unsigned char	0
-site	src/game/area_w3d.cpp	406	global	B	Area135_QueueCells_addr + n	0x62da14	-	exact	Area135_QueueCells	unsigned char	0
-site	src/game/area_w3d.cpp	487	global	Mem	at::kScratch	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/area_w3d.cpp	492	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	493	global	Mem	Area135_SpawnOps_addr + sub * at::kArea135SpawnOpStride	0x62da50	-	exact	Area135_SpawnOps	unsigned char	0
-site	src/game/area_w3d.cpp	527	global	Mem	ObjTrio_addr + 0x30	0x802d70	-	inside	ObjTrio+0x30	records::PartyMember	0
-site	src/game/area_w3d.cpp	528	global	Mem	ObjTrio_addr + 0x2e	0x802d6e	-	inside	ObjTrio+0x2e	records::PartyMember	0
-site	src/game/area_w3d.cpp	529	global	B	Cond_Flags_addr + 0xd3	0x904063	-	inside	Cond_Flags+0xd3	unsigned char	0
-site	src/game/area_w3d.cpp	531	global	B	Area135_EffectKinds_addr + list	0x62c168	-	exact	Area135_EffectKinds	unsigned char	0
-site	src/game/area_w3d.cpp	546	global	B	ObjTrio_addr + 0x8	0x802d48	-	inside	ObjTrio+0x8	records::PartyMember	0
-site	src/game/area_w3d.cpp	548	global	-	at::kArea135CellEntriesEnd	0x62da8d	-	none	-	-	0
-site	src/game/area_w3d.cpp	549	global	Mem	Area135_CellEntries_addr + i * 4	0x62da84	-	exact	Area135_CellEntries	unsigned char	0
-site	src/game/area_w3d.cpp	554	global	B	Area135_CellEntries_addr + i * 4 + 3	0x62da84	-	exact	Area135_CellEntries	unsigned char	0
-site	src/game/area_w3d.cpp	554	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	555	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
-site	src/game/area_w3d.cpp	565	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/area_w3d.cpp	576	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	586	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	598	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	601	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/area_w3d.cpp	603	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
-site	src/game/area_w3d.cpp	604	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	607	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
-site	src/game/area_w3d.cpp	611	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
-site	src/game/area_w3d.cpp	611	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
-site	src/game/area_w3d.cpp	614	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/area_w3d.cpp	615	global	Mem	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/area_w3d.cpp	616	global	Mem	at::kMessageFormat	0x5e10c0	-	exact	Area08_MessageFormat	-	0
-site	src/game/area_w3d.cpp	617	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	621	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/area_w3d.cpp	624	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	633	global	Mem	MoveScript_FAWord_addr	0x904efe	-	exact	MoveScript_FAWord	unsigned short	0
-site	src/game/area_w3d.cpp	634	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	637	global	B	Field_Kind2Hold_addr	0x929f12	-	exact	Field_Kind2Hold	unsigned char	0
-site	src/game/area_w3d.cpp	639	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
-site	src/game/area_w3d.cpp	641	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	643	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
-site	src/game/area_w3d.cpp	647	global	B	Input_Held_addr	0x7e1be8	-	exact	Input_Held	unsigned short	0
-site	src/game/area_w3d.cpp	649	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
-site	src/game/area_w3d.cpp	651	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	652	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	656	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	659	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
-site	src/game/area_w3d.cpp	660	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	665	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	665	global	B	Input_Pressed_addr	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
-site	src/game/area_w3d.cpp	668	global	B	Input_Held_addr	0x7e1be8	-	exact	Input_Held	unsigned short	0
-site	src/game/area_w3d.cpp	670	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
-site	src/game/area_w3d.cpp	672	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	673	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	677	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	678	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	679	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
-site	src/game/area_w3d.cpp	683	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	684	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	687	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	690	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	700	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	701	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	702	global	B	AreaW3d_Area135MapFlags_addr	0x62d883	-	exact	AreaW3d_Area135MapFlags	unsigned char	0
-site	src/game/area_w3d.cpp	702	global	B	AreaW3d_Area135MapFlags_addr	0x62d883	-	exact	AreaW3d_Area135MapFlags	unsigned char	0
-site	src/game/area_w3d.cpp	706	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	707	global	B	AreaW3d_Area135MapFlags_addr	0x62d883	-	exact	AreaW3d_Area135MapFlags	unsigned char	0
-site	src/game/area_w3d.cpp	708	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	712	global	B	AreaW3d_Area135MapFlags_addr	0x62d883	-	exact	AreaW3d_Area135MapFlags	unsigned char	0
-site	src/game/area_w3d.cpp	714	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	719	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	720	global	D	ObjTrio_addr + 0x34	0x802d74	-	inside	ObjTrio+0x34	records::PartyMember	0
-site	src/game/area_w3d.cpp	721	global	D	ObjTrio_addr + 0x38	0x802d78	-	inside	ObjTrio+0x38	records::PartyMember	0
-site	src/game/area_w3d.cpp	723	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
-site	src/game/area_w3d.cpp	724	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
-site	src/game/area_w3d.cpp	725	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
-site	src/game/area_w3d.cpp	726	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
-site	src/game/area_w3d.cpp	727	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	732	global	B	Field_Kind2Hold_addr	0x929f12	-	exact	Field_Kind2Hold	unsigned char	0
-site	src/game/area_w3d.cpp	734	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	735	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
-site	src/game/area_w3d.cpp	736	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
-site	src/game/area_w3d.cpp	737	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	753	global	B	AreaW1a_EntryZone_addr	0x905e68	-	exact	AreaW1a_EntryZone	unsigned char	0
-site	src/game/area_w3d.cpp	754	global	Mem	Area135_InitOp_addr	0x62da8c	-	exact	Area135_InitOp	unsigned char	0
-site	src/game/area_w3d.cpp	755	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
-site	src/game/area_w3d.cpp	757	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/area_w3d.cpp	759	global	B	MoveScript_PartyRecords_addr + 0x30	0x8034b0	-	inside	MoveScript_PartyRecords+0x30	unsigned char	0
-site	src/game/area_w3d.cpp	759	global	B	MoveScript_PartyRecords_addr + 0x30	0x8034b0	-	inside	MoveScript_PartyRecords+0x30	unsigned char	0
-site	src/game/area_w3d.cpp	761	global	B	Sprite_ObjectsExtra_addr + 0x1ec	0x8021ec	-	inside	Sprite_ObjectsExtra+0x1ec	records::SpriteObject	0
-site	src/game/area_w3d.cpp	771	global	B	at::kCounter3	0x90384b	-	none	-	-	0
-site	src/game/area_w3d.cpp	806	global	Mem	Sprite_Objects_addr + i * at::kObjectStride	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
-site	src/game/area_w3d.cpp	886	global	Mem	Sprite_ObjectsExtra_addr + 0x25c	0x80225c	-	inside	Sprite_ObjectsExtra+0x25c	records::SpriteObject	0
-site	src/game/area_w3d.cpp	888	global	B	Sprite_ObjectsExtra_addr + 0x1f5	0x8021f5	-	inside	Sprite_ObjectsExtra+0x1f5	records::SpriteObject	0
-site	src/game/area_w3d.cpp	890	global	D	Sprite_ObjectsExtra_addr + 0x1f8	0x8021f8	-	inside	Sprite_ObjectsExtra+0x1f8	records::SpriteObject	0
-site	src/game/area_w3d.cpp	890	global	D	Sprite_ObjectsExtra_addr + 0x220	0x802220	-	inside	Sprite_ObjectsExtra+0x220	records::SpriteObject	0
-site	src/game/area_w3d.cpp	894	global	D	Sprite_ObjectsExtra_addr + 0x1fc	0x8021fc	-	inside	Sprite_ObjectsExtra+0x1fc	records::SpriteObject	0
-site	src/game/area_w3d.cpp	894	global	D	Sprite_ObjectsExtra_addr + 0x224	0x802224	-	inside	Sprite_ObjectsExtra+0x224	records::SpriteObject	0
-site	src/game/area_w3d.cpp	907	global	Mem	ObjTrio_addr + 0x36 + i * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
-site	src/game/area_w3d.cpp	909	global	Mem	ObjTrio_addr + 0x3a + i * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
-site	src/game/area_w3d.cpp	920	global	D	Sprite_ObjectsExtra_addr + 0x38	0x802038	-	inside	Sprite_ObjectsExtra+0x38	records::SpriteObject	0
-site	src/game/area_w3d.cpp	921	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
-site	src/game/area_w3d.cpp	922	global	D	Sprite_ObjectsExtra_addr + 0x34	0x802034	-	inside	Sprite_ObjectsExtra+0x34	records::SpriteObject	0
-site	src/game/area_w3d.cpp	923	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
-site	src/game/area_w3d.cpp	924	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
-site	src/game/area_w3d.cpp	927	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
-site	src/game/area_w3d.cpp	927	global	D	Sprite_ObjectsExtra_addr + 0x34	0x802034	-	inside	Sprite_ObjectsExtra+0x34	records::SpriteObject	0
-site	src/game/area_w3d.cpp	928	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
-site	src/game/area_w3d.cpp	928	global	D	Sprite_ObjectsExtra_addr + 0x38	0x802038	-	inside	Sprite_ObjectsExtra+0x38	records::SpriteObject	0
-site	src/game/area_w3d.cpp	936	global	SetD	BattleWinStates_Current_addr	0x905b84	-	exact	BattleWinStates_Current	unsigned long	0
-site	src/game/area_w3d.cpp	938	global	Mem	WindowRecords_addr + 0x4	0x803164	-	inside	WindowRecords+0x4	records::WindowRecord	0
-site	src/game/area_w3d.cpp	939	global	Mem	WindowRecords_addr + 0x4 + 2	0x803166	-	inside	WindowRecords+0x6	records::WindowRecord	0
+site	src/game/area_w3d.cpp	49	global	Mem	at::kMessage	0x7dee48	-	none	-	-	0
+site	src/game/area_w3d.cpp	65	global	Mem	Sprite_Objects_addr + index * at::kObjectStride	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/area_w3d.cpp	75	global	Mem	Effect_Objects_addr + slot * at::kEffectStride	0x7e11e0	-	exact	Effect_Objects	records::EffectObject	0
+site	src/game/area_w3d.cpp	89	record	D	table + state * 4	-	-	-	-	-	0
+site	src/game/area_w3d.cpp	97	record	Word	cur + 0x14	-	base=Sprite_Current	-	-	-	0
+site	src/game/area_w3d.cpp	107	record	Word	cur + word	-	base=Sprite_Current	-	-	-	0
+site	src/game/area_w3d.cpp	108	global	B	Input_Held_addr	0x7e1be8	-	exact	Input_Held	unsigned short	0
+site	src/game/area_w3d.cpp	120	global	D	MapView_Elevation_addr	0x929f1c	-	exact	MapView_Elevation	long	0
+site	src/game/area_w3d.cpp	121	global	B	MapView_Redraw_addr	0x905e69	-	exact	MapView_Redraw	unsigned char	0
+site	src/game/area_w3d.cpp	122	global	SetD	MapView_Elevation_addr	0x929f1c	-	exact	MapView_Elevation	long	0
+site	src/game/area_w3d.cpp	130	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
+site	src/game/area_w3d.cpp	131	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	134	global	B	Field_MoveSpeeds_addr + 0x3	0x6697f3	-	inside	Field_MoveSpeeds+0x3	unsigned char	0
+site	src/game/area_w3d.cpp	145	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
+site	src/game/area_w3d.cpp	149	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
+site	src/game/area_w3d.cpp	150	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	157	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
+site	src/game/area_w3d.cpp	159	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	160	global	Mem	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/area_w3d.cpp	161	global	Mem	at::kMessageFormat	0x5e10c0	-	exact	Area08_MessageFormat	-	0
+site	src/game/area_w3d.cpp	162	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
+site	src/game/area_w3d.cpp	162	global	B	Sprite_ObjectsExtra_addr + 0x26f	0x80226f	-	inside	Sprite_ObjectsExtra+0x26f	records::SpriteObject	0
+site	src/game/area_w3d.cpp	170	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
+site	src/game/area_w3d.cpp	174	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
+site	src/game/area_w3d.cpp	175	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	177	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
+site	src/game/area_w3d.cpp	179	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
+site	src/game/area_w3d.cpp	191	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	0
+site	src/game/area_w3d.cpp	194	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/area_w3d.cpp	196	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/area_w3d.cpp	206	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/area_w3d.cpp	207	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	222	record	B	table + exit * 2u + 1	-	base=Cond_ByteFD	-	-	-	0
+site	src/game/area_w3d.cpp	223	record	B	table + exit * 2u	-	base=Cond_ByteFD	-	-	-	0
+site	src/game/area_w3d.cpp	225	global	B	Sprite_Kind2_addr + 0x80	0x7e09c0	-	inside	Sprite_Kind2+0x80	records::SpriteObjectBody	0
+site	src/game/area_w3d.cpp	225	global	B	Sprite_Kind2_addr + 0x80	0x7e09c0	-	inside	Sprite_Kind2+0x80	records::SpriteObjectBody	0
+site	src/game/area_w3d.cpp	239	global	Mem	Area135_Routes_addr + i * at::kArea135RouteStride	0x62d994	-	exact	Area135_Routes	unsigned char	0
+site	src/game/area_w3d.cpp	240	global	Mem	Sprite_ObjectsExtra_addr + 0x222	0x802222	-	inside	Sprite_ObjectsExtra+0x222	records::SpriteObject	0
+site	src/game/area_w3d.cpp	241	global	Mem	Sprite_ObjectsExtra_addr + 0x226	0x802226	-	inside	Sprite_ObjectsExtra+0x226	records::SpriteObject	0
+site	src/game/area_w3d.cpp	245	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	257	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
+site	src/game/area_w3d.cpp	258	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
+site	src/game/area_w3d.cpp	259	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
+site	src/game/area_w3d.cpp	268	global	Mem	Sprite_Kind2_addr	0x7e0940	-	exact	Sprite_Kind2	records::SpriteObjectBody	0
+site	src/game/area_w3d.cpp	269	global	D	Sprite_ObjectsExtra_addr + 0x220	0x802220	-	inside	Sprite_ObjectsExtra+0x220	records::SpriteObject	0
+site	src/game/area_w3d.cpp	270	global	D	Sprite_ObjectsExtra_addr + 0x224	0x802224	-	inside	Sprite_ObjectsExtra+0x224	records::SpriteObject	0
+site	src/game/area_w3d.cpp	271	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
+site	src/game/area_w3d.cpp	272	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
+site	src/game/area_w3d.cpp	273	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
+site	src/game/area_w3d.cpp	276	global	D	Sprite_ObjectsExtra_addr + 0x220	0x802220	-	inside	Sprite_ObjectsExtra+0x220	records::SpriteObject	0
+site	src/game/area_w3d.cpp	277	global	D	Sprite_ObjectsExtra_addr + 0x224	0x802224	-	inside	Sprite_ObjectsExtra+0x224	records::SpriteObject	0
+site	src/game/area_w3d.cpp	278	global	D	Sprite_ObjectsExtra_addr + 0x228	0x802228	-	inside	Sprite_ObjectsExtra+0x228	records::SpriteObject	0
+site	src/game/area_w3d.cpp	289	global	B	ObjTrio_addr + 0x8	0x802d48	-	inside	ObjTrio+0x8	records::PartyMember	0
+site	src/game/area_w3d.cpp	322	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	358	global	B	Area135_JumpCells_addr + k * 2	0x62da04	-	exact	Area135_JumpCells	unsigned char	0
+site	src/game/area_w3d.cpp	359	global	B	Area135_JumpCells_addr + k * 2 + 1	0x62da04	-	exact	Area135_JumpCells	unsigned char	0
+site	src/game/area_w3d.cpp	407	global	B	Area135_QueueCells_addr + n	0x62da14	-	exact	Area135_QueueCells	unsigned char	0
+site	src/game/area_w3d.cpp	488	global	Mem	at::kScratch	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/area_w3d.cpp	493	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	494	global	Mem	Area135_SpawnOps_addr + sub * at::kArea135SpawnOpStride	0x62da50	-	exact	Area135_SpawnOps	unsigned char	0
+site	src/game/area_w3d.cpp	528	global	Mem	ObjTrio_addr + 0x30	0x802d70	-	inside	ObjTrio+0x30	records::PartyMember	0
+site	src/game/area_w3d.cpp	529	global	Mem	ObjTrio_addr + 0x2e	0x802d6e	-	inside	ObjTrio+0x2e	records::PartyMember	0
+site	src/game/area_w3d.cpp	530	global	B	Cond_Flags_addr + 0xd3	0x904063	-	inside	Cond_Flags+0xd3	unsigned char	0
+site	src/game/area_w3d.cpp	532	global	B	Area135_EffectKinds_addr + list	0x62c168	-	exact	Area135_EffectKinds	unsigned char	0
+site	src/game/area_w3d.cpp	547	global	B	ObjTrio_addr + 0x8	0x802d48	-	inside	ObjTrio+0x8	records::PartyMember	0
+site	src/game/area_w3d.cpp	549	global	-	at::kArea135CellEntriesEnd	0x62da8d	-	none	-	-	0
+site	src/game/area_w3d.cpp	550	global	Mem	Area135_CellEntries_addr + i * 4	0x62da84	-	exact	Area135_CellEntries	unsigned char	0
+site	src/game/area_w3d.cpp	555	global	B	Area135_CellEntries_addr + i * 4 + 3	0x62da84	-	exact	Area135_CellEntries	unsigned char	0
+site	src/game/area_w3d.cpp	555	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	556	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
+site	src/game/area_w3d.cpp	566	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/area_w3d.cpp	577	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	587	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	599	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	602	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/area_w3d.cpp	604	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
+site	src/game/area_w3d.cpp	605	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	608	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
+site	src/game/area_w3d.cpp	612	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
+site	src/game/area_w3d.cpp	612	global	Mem	at::kTailTimer	0x9039f6	-	none	-	-	0
+site	src/game/area_w3d.cpp	615	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/area_w3d.cpp	616	global	Mem	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/area_w3d.cpp	617	global	Mem	at::kMessageFormat	0x5e10c0	-	exact	Area08_MessageFormat	-	0
+site	src/game/area_w3d.cpp	618	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	622	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/area_w3d.cpp	625	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	634	global	Mem	MoveScript_FAWord_addr	0x904efe	-	exact	MoveScript_FAWord	unsigned short	0
+site	src/game/area_w3d.cpp	635	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	638	global	B	Field_Kind2Hold_addr	0x929f12	-	exact	Field_Kind2Hold	unsigned char	0
+site	src/game/area_w3d.cpp	640	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
+site	src/game/area_w3d.cpp	642	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	644	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
+site	src/game/area_w3d.cpp	648	global	B	Input_Held_addr	0x7e1be8	-	exact	Input_Held	unsigned short	0
+site	src/game/area_w3d.cpp	650	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
+site	src/game/area_w3d.cpp	652	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	653	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	657	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	660	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
+site	src/game/area_w3d.cpp	661	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	666	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	666	global	B	Input_Pressed_addr	0x7e1bec	-	exact	Input_Pressed	unsigned short	0
+site	src/game/area_w3d.cpp	669	global	B	Input_Held_addr	0x7e1be8	-	exact	Input_Held	unsigned short	0
+site	src/game/area_w3d.cpp	671	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
+site	src/game/area_w3d.cpp	673	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	674	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	678	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	679	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	680	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
+site	src/game/area_w3d.cpp	684	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	685	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	688	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	691	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	701	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	702	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	703	global	B	AreaW3d_Area135MapFlags_addr	0x62d883	-	exact	AreaW3d_Area135MapFlags	unsigned char	0
+site	src/game/area_w3d.cpp	703	global	B	AreaW3d_Area135MapFlags_addr	0x62d883	-	exact	AreaW3d_Area135MapFlags	unsigned char	0
+site	src/game/area_w3d.cpp	707	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	708	global	B	AreaW3d_Area135MapFlags_addr	0x62d883	-	exact	AreaW3d_Area135MapFlags	unsigned char	0
+site	src/game/area_w3d.cpp	709	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	713	global	B	AreaW3d_Area135MapFlags_addr	0x62d883	-	exact	AreaW3d_Area135MapFlags	unsigned char	0
+site	src/game/area_w3d.cpp	715	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	720	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	721	global	D	ObjTrio_addr + 0x34	0x802d74	-	inside	ObjTrio+0x34	records::PartyMember	0
+site	src/game/area_w3d.cpp	722	global	D	ObjTrio_addr + 0x38	0x802d78	-	inside	ObjTrio+0x38	records::PartyMember	0
+site	src/game/area_w3d.cpp	724	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
+site	src/game/area_w3d.cpp	725	global	B	AreaW3d_EffectSlot_addr	0x675cc0	-	exact	AreaW3d_EffectSlot	unsigned char	0
+site	src/game/area_w3d.cpp	726	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
+site	src/game/area_w3d.cpp	727	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
+site	src/game/area_w3d.cpp	728	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	733	global	B	Field_Kind2Hold_addr	0x929f12	-	exact	Field_Kind2Hold	unsigned char	0
+site	src/game/area_w3d.cpp	735	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	736	global	B	AreaW0a_TailKind_addr	0x9039f3	-	exact	AreaW0a_TailKind	signed char	0
+site	src/game/area_w3d.cpp	737	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	0
+site	src/game/area_w3d.cpp	738	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	768	global	Mem	Area135_InitOp_addr	0x62da8c	-	exact	Area135_InitOp	unsigned char	0
+site	src/game/area_w3d.cpp	769	global	Mem	Cond_Flags_addr + 0xa0	0x904030	-	inside	Cond_Flags+0xa0	unsigned char	0
+site	src/game/area_w3d.cpp	771	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/area_w3d.cpp	779	global	B	AreaW1a_EntryZone_addr	0x905e68	-	exact	AreaW1a_EntryZone	unsigned char	0
+site	src/game/area_w3d.cpp	780	global	B	MoveScript_PartyRecords_addr + 0x30	0x8034b0	-	inside	MoveScript_PartyRecords+0x30	unsigned char	0
+site	src/game/area_w3d.cpp	780	global	B	MoveScript_PartyRecords_addr + 0x30	0x8034b0	-	inside	MoveScript_PartyRecords+0x30	unsigned char	0
+site	src/game/area_w3d.cpp	787	global	B	Sprite_ObjectsExtra_addr + 0x1ec	0x8021ec	-	inside	Sprite_ObjectsExtra+0x1ec	records::SpriteObject	0
+site	src/game/area_w3d.cpp	798	global	B	at::kCounter3	0x90384b	-	none	-	-	0
+site	src/game/area_w3d.cpp	833	global	Mem	Sprite_Objects_addr + i * at::kObjectStride	0x7dee80	-	exact	Sprite_Objects	records::SpriteObject	0
+site	src/game/area_w3d.cpp	913	global	Mem	Sprite_ObjectsExtra_addr + 0x25c	0x80225c	-	inside	Sprite_ObjectsExtra+0x25c	records::SpriteObject	0
+site	src/game/area_w3d.cpp	915	global	B	Sprite_ObjectsExtra_addr + 0x1f5	0x8021f5	-	inside	Sprite_ObjectsExtra+0x1f5	records::SpriteObject	0
+site	src/game/area_w3d.cpp	917	global	D	Sprite_ObjectsExtra_addr + 0x1f8	0x8021f8	-	inside	Sprite_ObjectsExtra+0x1f8	records::SpriteObject	0
+site	src/game/area_w3d.cpp	917	global	D	Sprite_ObjectsExtra_addr + 0x220	0x802220	-	inside	Sprite_ObjectsExtra+0x220	records::SpriteObject	0
+site	src/game/area_w3d.cpp	921	global	D	Sprite_ObjectsExtra_addr + 0x1fc	0x8021fc	-	inside	Sprite_ObjectsExtra+0x1fc	records::SpriteObject	0
+site	src/game/area_w3d.cpp	921	global	D	Sprite_ObjectsExtra_addr + 0x224	0x802224	-	inside	Sprite_ObjectsExtra+0x224	records::SpriteObject	0
+site	src/game/area_w3d.cpp	934	global	Mem	ObjTrio_addr + 0x36 + i * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
+site	src/game/area_w3d.cpp	936	global	Mem	ObjTrio_addr + 0x3a + i * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
+site	src/game/area_w3d.cpp	947	global	D	Sprite_ObjectsExtra_addr + 0x38	0x802038	-	inside	Sprite_ObjectsExtra+0x38	records::SpriteObject	0
+site	src/game/area_w3d.cpp	948	global	Mem	MoveScript_F3Divisor_addr	0x937f8c	-	exact	MoveScript_F3Divisor	short	0
+site	src/game/area_w3d.cpp	949	global	D	Sprite_ObjectsExtra_addr + 0x34	0x802034	-	inside	Sprite_ObjectsExtra+0x34	records::SpriteObject	0
+site	src/game/area_w3d.cpp	950	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
+site	src/game/area_w3d.cpp	951	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
+site	src/game/area_w3d.cpp	954	global	SetD	Field_Kind2X_addr	0x905e64	-	exact	Field_Kind2X	long	0
+site	src/game/area_w3d.cpp	954	global	D	Sprite_ObjectsExtra_addr + 0x34	0x802034	-	inside	Sprite_ObjectsExtra+0x34	records::SpriteObject	0
+site	src/game/area_w3d.cpp	955	global	SetD	Field_Kind2Z_addr	0x905e60	-	exact	Field_Kind2Z	long	0
+site	src/game/area_w3d.cpp	955	global	D	Sprite_ObjectsExtra_addr + 0x38	0x802038	-	inside	Sprite_ObjectsExtra+0x38	records::SpriteObject	0
+site	src/game/area_w3d.cpp	963	global	SetD	BattleWinStates_Current_addr	0x905b84	-	exact	BattleWinStates_Current	unsigned long	0
+site	src/game/area_w3d.cpp	965	global	Mem	WindowRecords_addr + 0x4	0x803164	-	inside	WindowRecords+0x4	records::WindowRecord	0
+site	src/game/area_w3d.cpp	966	global	Mem	WindowRecords_addr + 0x4 + 2	0x803166	-	inside	WindowRecords+0x6	records::WindowRecord	0
 site	src/game/area_w3d_fuzz.cpp	165	global	SetPointer	MoveScript_Object_addr	0x929e80	-	exact	MoveScript_Object	unsigned char *	1
 site	src/game/area_w3d_fuzz.cpp	178	global	B	AreaW0c_ChoiceAnswer_addr	0x7dee67	-	exact	AreaW0c_ChoiceAnswer	signed char	1
 site	src/game/area_w3d_fuzz.cpp	199	global	B	at::kCounter3	0x90384b	-	none	-	-	1
@@ -7943,72 +7943,75 @@ site	src/game/char_stats_fuzz.cpp	512	global	At	at::kInvIds	0x656b00	-	exact	Inv
 site	src/game/char_stats_fuzz.cpp	537	global	At	SharedScratch_addr	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/char_stats_fuzz.cpp	581	global	At	at::kTraitLists	0x667548	-	exact	Char_TraitLists	-	1
 site	src/game/char_stats_fuzz.cpp	632	global	At	at::kTraitLists	0x667548	-	exact	Char_TraitLists	-	1
-site	src/game/d3d_draw.cpp	147	global	At	D3d_Device_addr	0x7cc350	-	exact	D3d_Device	void *	0
-site	src/game/d3d_draw.cpp	171	global	At	D3d_Vertices_addr + i * 0x20	0x7ca958	-	exact	D3d_Vertices	unsigned long	0
-site	src/game/d3d_draw.cpp	178	record	PutLong	out + 0x08	-	param	-	-	-	0
-site	src/game/d3d_draw.cpp	178	record	Long	xyz + 8	-	param	-	-	-	0
-site	src/game/d3d_draw.cpp	253	global	At	D3d_ShadeModeCache_addr	0x6c3a44	-	exact	D3d_ShadeModeCache	unsigned long	0
-site	src/game/d3d_draw.cpp	276	global	At	Gfx_TexCache_addr + static_cast<U>(page * 32 + slot) * 0x18	0x6c3f40	-	exact	Gfx_TexCache	unsigned char	0
-site	src/game/d3d_draw.cpp	278	record	Long	e + 0x14	-	stride=0x20	-	-	-	0
-site	src/game/d3d_draw.cpp	291	global	At	Gfx_TexCacheKey_addr	0x7ded0c	-	exact	Gfx_TexCacheKey	unsigned long	0
-site	src/game/d3d_draw.cpp	293	record	Short	key + 2	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	293	record	Short	key + 4	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	294	record	Short	key + 6	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	310	record	Word	prim + 0x26	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	314	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	315	record	PutLong	out + 0x14	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	318	record	Word	prim + 0x16	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	318	record	Word	prim + 0x26	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	148	global	At	D3d_Device_addr	0x7cc350	-	exact	D3d_Device	void *	0
+site	src/game/d3d_draw.cpp	172	global	At	D3d_Vertices_addr + i * 0x20	0x7ca958	-	exact	D3d_Vertices	unsigned long	0
+site	src/game/d3d_draw.cpp	179	record	PutLong	out + 0x08	-	param	-	-	-	0
+site	src/game/d3d_draw.cpp	179	record	Long	xyz + 8	-	param	-	-	-	0
+site	src/game/d3d_draw.cpp	254	global	At	D3d_ShadeModeCache_addr	0x6c3a44	-	exact	D3d_ShadeModeCache	unsigned long	0
+site	src/game/d3d_draw.cpp	277	global	At	Gfx_TexCache_addr + static_cast<U>(page * 32 + slot) * 0x18	0x6c3f40	-	exact	Gfx_TexCache	unsigned char	0
+site	src/game/d3d_draw.cpp	279	record	Long	e + 0x14	-	stride=0x20	-	-	-	0
+site	src/game/d3d_draw.cpp	292	global	At	Gfx_TexCacheKey_addr	0x7ded0c	-	exact	Gfx_TexCacheKey	unsigned long	0
+site	src/game/d3d_draw.cpp	294	record	Short	key + 2	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	294	record	Short	key + 4	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	295	record	Short	key + 6	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	311	record	Word	prim + 0x26	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	315	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	316	record	PutLong	out + 0x14	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	319	record	Word	prim + 0x16	-	-	-	-	-	0
 site	src/game/d3d_draw.cpp	319	record	Word	prim + 0x26	-	-	-	-	-	0
 site	src/game/d3d_draw.cpp	320	record	Word	prim + 0x26	-	-	-	-	-	0
 site	src/game/d3d_draw.cpp	321	record	Word	prim + 0x26	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	334	record	Word	prim + 0x2A	-	param	-	-	-	0
-site	src/game/d3d_draw.cpp	340	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	341	record	PutLong	out + 0x14	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	344	record	Word	prim + 0x16	-	param	-	-	-	0
-site	src/game/d3d_draw.cpp	344	record	Word	prim + 0x2A	-	param	-	-	-	0
-site	src/game/d3d_draw.cpp	347	record	Word	prim + 0x2A	-	param	-	-	-	0
-site	src/game/d3d_draw.cpp	358	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
-site	src/game/d3d_draw.cpp	364	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	369	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
-site	src/game/d3d_draw.cpp	389	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
-site	src/game/d3d_draw.cpp	406	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	411	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
-site	src/game/d3d_draw.cpp	428	record	Word	prim + 0x1E	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	429	record	Word	prim + 0x18	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	429	record	Word	prim + 0x1A	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	429	record	Word	prim + 0x1C	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	322	record	Word	prim + 0x26	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	335	record	Word	prim + 0x2A	-	param	-	-	-	0
+site	src/game/d3d_draw.cpp	341	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	342	record	PutLong	out + 0x14	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	345	record	Word	prim + 0x16	-	param	-	-	-	0
+site	src/game/d3d_draw.cpp	345	record	Word	prim + 0x2A	-	param	-	-	-	0
+site	src/game/d3d_draw.cpp	348	record	Word	prim + 0x2A	-	param	-	-	-	0
+site	src/game/d3d_draw.cpp	359	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
+site	src/game/d3d_draw.cpp	365	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	370	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
+site	src/game/d3d_draw.cpp	390	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
+site	src/game/d3d_draw.cpp	407	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	412	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	0
 site	src/game/d3d_draw.cpp	429	record	Word	prim + 0x1E	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	430	global	At	D3d_CellTexCache_addr + static_cast<U>(index) * kCellEntry	0x7cae38	-	exact	D3d_CellTexCache	unsigned char	0
-site	src/game/d3d_draw.cpp	433	record	Short	e + 8	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	434	record	Short	e + 0xA	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	435	record	Short	e + 0xC	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	436	record	Short	e + 0xE	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	438	record	Word	e + 0	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	438	record	Word	e + 2	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	439	record	Word	e + 4	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	439	record	Word	e + 6	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	448	record	PutLong	out + 0x08	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	449	record	PutLong	out + 0x0C	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	450	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	451	record	PutLong	out + 0x14	-	via=Vertex	-	-	-	0
-site	src/game/d3d_draw.cpp	456	record	Word	prim + 0x1E	-	-	-	-	-	0
-site	src/game/d3d_draw.cpp	485	global	At	D3d_CellTexCache_addr + i * kCellEntry	0x7cae38	-	exact	D3d_CellTexCache	unsigned char	0
-site	src/game/d3d_draw.cpp	490	record	Word	e + 0x10	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	490	record	Word	e + 0x12	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	493	global	At	SpriteCell_Table_addr + first * 8 + k	0x6bea18	-	exact	SpriteCell_Table	unsigned char	0
-site	src/game/d3d_draw.cpp	494	record	Long	e + 0x18	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	495	global	At	Gfx_ClutRows_addr + (clut >> 6) * 8	0x6c2a40	-	exact	Gfx_ClutRows	unsigned long	0
-site	src/game/d3d_draw.cpp	495	record	Word	e + 0x14	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	495	record	Long	e + 0x1C	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	500	record	Word	e + 0x14	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	500	record	Word	e + 0x16	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	501	record	Word	e + 0x16	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	519	global	At	D3d_CellTexCache_addr + i * kCellEntry	0x7cae38	-	exact	D3d_CellTexCache	unsigned char	0
-site	src/game/d3d_draw.cpp	520	record	PutWord	e + 0x16	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	520	record	Word	e + 0x16	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	521	record	PutWord	e + 0x14	-	stride=0x28	-	-	-	0
-site	src/game/d3d_draw.cpp	522	record	Long	e + 0x24	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	430	record	Word	prim + 0x18	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	430	record	Word	prim + 0x1A	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	430	record	Word	prim + 0x1C	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	430	record	Word	prim + 0x1E	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	431	global	At	D3d_CellTexCache_addr + static_cast<U>(index) * kCellEntry	0x7cae38	-	exact	D3d_CellTexCache	unsigned char	0
+site	src/game/d3d_draw.cpp	434	record	Short	e + 8	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	435	record	Short	e + 0xA	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	436	record	Short	e + 0xC	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	437	record	Short	e + 0xE	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	439	record	Word	e + 0	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	439	record	Word	e + 2	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	440	record	Word	e + 4	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	440	record	Word	e + 6	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	449	record	PutLong	out + 0x08	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	450	record	PutLong	out + 0x0C	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	451	record	PutLong	out + 0x10	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	452	record	PutLong	out + 0x14	-	via=Vertex	-	-	-	0
+site	src/game/d3d_draw.cpp	457	record	Word	prim + 0x1E	-	-	-	-	-	0
+site	src/game/d3d_draw.cpp	506	global	At	SpriteCell_Table_addr + (first + k) * 8u	0x6bea18	-	exact	SpriteCell_Table	unsigned char	0
+site	src/game/d3d_draw.cpp	507	record	Word	r + 4	-	stride=0x8	-	-	-	0
+site	src/game/d3d_draw.cpp	534	global	At	D3d_CellTexCache_addr + i * kCellEntry	0x7cae38	-	exact	D3d_CellTexCache	unsigned char	0
+site	src/game/d3d_draw.cpp	549	global	At	D3d_CellTexCache_addr + i * kCellEntry	0x7cae38	-	exact	D3d_CellTexCache	unsigned char	0
+site	src/game/d3d_draw.cpp	555	record	Word	e + 0x10	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	555	record	Word	e + 0x12	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	558	global	At	SpriteCell_Table_addr + first * 8 + k	0x6bea18	-	exact	SpriteCell_Table	unsigned char	0
+site	src/game/d3d_draw.cpp	559	record	Long	e + 0x18	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	560	global	At	Gfx_ClutRows_addr + (clut >> 6) * 8	0x6c2a40	-	exact	Gfx_ClutRows	unsigned long	0
+site	src/game/d3d_draw.cpp	560	record	Word	e + 0x14	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	560	record	Long	e + 0x1C	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	565	record	Word	e + 0x14	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	565	record	Word	e + 0x16	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	566	record	Word	e + 0x16	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	585	global	At	D3d_CellTexCache_addr + i * kCellEntry	0x7cae38	-	exact	D3d_CellTexCache	unsigned char	0
+site	src/game/d3d_draw.cpp	586	record	PutWord	e + 0x16	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	586	record	Word	e + 0x16	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	587	record	PutWord	e + 0x14	-	stride=0x28	-	-	-	0
+site	src/game/d3d_draw.cpp	588	record	Long	e + 0x24	-	stride=0x28	-	-	-	0
 site	src/game/d3d_draw_fuzz.cpp	142	global	At	D3d_Vertices_addr	0x7ca958	-	exact	D3d_Vertices	unsigned long	1
 site	src/game/d3d_draw_fuzz.cpp	143	global	At	D3d_ScaleY_addr	0x7c9f48	-	exact	D3d_ScaleY	float	1
 site	src/game/d3d_draw_fuzz.cpp	144	global	At	Gfx_DrawTpage_addr	0x7ded14	-	exact	Gfx_DrawTpage	unsigned short	1
@@ -14507,14 +14510,14 @@ site	src/game/fishing_text.cpp	522	global	Byte	kLinePens	0x653c00	-	none	-	-	0
 site	src/game/fishing_text.cpp	523	global	Byte	kLinePens	0x653c00	-	none	-	-	0
 site	src/game/fishing_text.cpp	523	global	Byte	kLinePens	0x653c00	-	none	-	-	0
 site	src/game/fishing_text.cpp	523	global	Byte	kLinePens	0x653c00	-	none	-	-	0
-site	src/game/frame_callees.cpp	108	record	Long	object + at	-	base=Sprite_Current	-	-	-	0
-site	src/game/frame_callees.cpp	146	record	Word	object + 0x64	-	base=Sprite_Current	-	-	-	0
-site	src/game/frame_callees.cpp	147	record	Word	object + 0x68	-	base=Sprite_Current	-	-	-	0
-site	src/game/frame_callees.cpp	148	record	Word	object + 0x6C	-	base=Sprite_Current	-	-	-	0
-site	src/game/frame_callees.cpp	215	record	Long	record + 8	-	base=MoveScript_TintRecords;stride=0xc	-	-	-	0
-site	src/game/frame_callees.cpp	217	record	Long	record + 8	-	base=MoveScript_TintRecords;stride=0xc	-	-	-	0
-site	src/game/frame_callees.cpp	423	record	SetLong	o + 0x64 + 4 * i	-	param	-	-	-	0
-site	src/game/frame_callees.cpp	459	record	SetLong	r + 8	-	param	-	-	-	0
+site	src/game/frame_callees.cpp	117	record	Long	object + at	-	base=Sprite_Current	-	-	-	0
+site	src/game/frame_callees.cpp	155	record	Word	object + 0x64	-	base=Sprite_Current	-	-	-	0
+site	src/game/frame_callees.cpp	156	record	Word	object + 0x68	-	base=Sprite_Current	-	-	-	0
+site	src/game/frame_callees.cpp	157	record	Word	object + 0x6C	-	base=Sprite_Current	-	-	-	0
+site	src/game/frame_callees.cpp	224	record	Long	record + 8	-	base=MoveScript_TintRecords;stride=0xc	-	-	-	0
+site	src/game/frame_callees.cpp	226	record	Long	record + 8	-	base=MoveScript_TintRecords;stride=0xc	-	-	-	0
+site	src/game/frame_callees.cpp	432	record	SetLong	o + 0x64 + 4 * i	-	param	-	-	-	0
+site	src/game/frame_callees.cpp	468	record	SetLong	r + 8	-	param	-	-	-	0
 site	src/game/game_last.cpp	50	global	At	at::kWeaponFlags	0x657461	-	none	-	-	0
 site	src/game/game_last.cpp	51	global	At	at::kArmourFlags	0x657d79	-	none	-	-	0
 site	src/game/game_last.cpp	52	global	At	at::kAccessoryFlags	0x658461	-	none	-	-	0
@@ -20902,98 +20905,98 @@ site	src/game/rest_2a_fuzz.cpp	232	record	SetWord	r + 0x18	-	param	-	-	-	1
 site	src/game/rest_2a_fuzz.cpp	233	record	SetWord	r + 0x1A	-	param	-	-	-	1
 site	src/game/rest_2a_fuzz.cpp	246	global	Mem	CharacterRecords_addr + i * at::kRecordStride	0x903a70	-	exact	CharacterRecords	records::CharRecord	1
 site	src/game/rest_2a_fuzz.cpp	304	record	SetLong	s + 0x34 + 4 * (v % 3)	-	base=Sprite_Current	-	-	-	1
-site	src/game/rest_2b.cpp	162	global	B	kTriggerCounter	0x903848	-	none	-	-	0
-site	src/game/rest_2b.cpp	240	global	At	Gfx_ClutStripSource_addr + 0x228 + static_cast<U>(row * 64)	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
-site	src/game/rest_2b.cpp	280	global	B	kGiven	0x9399e4	-	exact	Rest2b_Given	unsigned char	0
-site	src/game/rest_2b.cpp	311	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	357	global	B	kGiven	0x9399e4	-	exact	Rest2b_Given	unsigned char	0
-site	src/game/rest_2b.cpp	362	global	B	kCounterB	0x90384b	-	none	-	-	0
-site	src/game/rest_2b.cpp	364	global	B	kCounterB	0x90384b	-	none	-	-	0
-site	src/game/rest_2b.cpp	402	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	406	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	412	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	431	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	442	global	L	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	444	global	W	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	462	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	465	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	471	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
-site	src/game/rest_2b.cpp	533	global	L	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	537	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
-site	src/game/rest_2b.cpp	538	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	574	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	574	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	577	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	578	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	580	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	582	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	584	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	585	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	586	global	B	kTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2b.cpp	592	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	592	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	594	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	595	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	595	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	596	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	596	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	599	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	606	global	B	kTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2b.cpp	610	global	B	kTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2b.cpp	613	global	B	kTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2b.cpp	616	global	B	kTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2b.cpp	625	global	B	kTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2b.cpp	626	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	626	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	628	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	629	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	629	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	630	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	630	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	633	global	B	kSavedB	0x6bc878	-	none	-	-	0
-site	src/game/rest_2b.cpp	636	global	B	kTimer	0x929f04	-	none	-	-	0
-site	src/game/rest_2b.cpp	638	global	B	kSavedA	0x6bc87c	-	none	-	-	0
-site	src/game/rest_2b.cpp	641	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	644	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	660	global	B	kOwned	0x9399e0	-	exact	Rest2b_Owned	unsigned char	0
-site	src/game/rest_2b.cpp	671	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/rest_2b.cpp	672	global	SetW	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	676	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/rest_2b.cpp	677	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/rest_2b.cpp	678	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/rest_2b.cpp	679	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/rest_2b.cpp	681	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	682	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	683	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	684	global	SetW	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	685	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	686	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	693	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	694	global	SetL	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
-site	src/game/rest_2b.cpp	700	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
-site	src/game/rest_2b.cpp	701	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
-site	src/game/rest_2b.cpp	769	global	SetL	kModelB	0x939960	-	none	-	-	0
-site	src/game/rest_2b.cpp	770	global	SetL	kModelB	0x939960	-	none	-	-	0
-site	src/game/rest_2b.cpp	770	record	L	file + 4	-	base=Rest2b_ModelFile	-	-	-	0
-site	src/game/rest_2b.cpp	773	global	B	kModelB	0x939960	-	none	-	-	0
-site	src/game/rest_2b.cpp	775	global	SetL	kModelB	0x939960	-	none	-	-	0
-site	src/game/rest_2b.cpp	776	global	SetL	kModelB	0x939960	-	none	-	-	0
-site	src/game/rest_2b.cpp	781	global	SetL	kModelB	0x939960	-	none	-	-	0
-site	src/game/rest_2b.cpp	782	global	SetL	kModelB	0x939960	-	none	-	-	0
-site	src/game/rest_2b.cpp	787	global	SetL	kModelA	0x9398e0	-	none	-	-	0
-site	src/game/rest_2b.cpp	788	global	SetL	kModelA	0x9398e0	-	none	-	-	0
-site	src/game/rest_2b.cpp	788	record	L	file2 + 8 + 4	-	base=Rest2b_ModelFile	-	-	-	0
-site	src/game/rest_2b.cpp	791	global	B	kModelA	0x9398e0	-	none	-	-	0
-site	src/game/rest_2b.cpp	792	global	SetL	kModelA	0x9398e0	-	none	-	-	0
-site	src/game/rest_2b.cpp	793	global	SetL	kModelA	0x9398e0	-	none	-	-	0
-site	src/game/rest_2b.cpp	794	global	SetL	kModelA	0x9398e0	-	none	-	-	0
-site	src/game/rest_2b.cpp	797	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	798	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
-site	src/game/rest_2b.cpp	799	global	SetL	kModelA	0x9398e0	-	none	-	-	0
-site	src/game/rest_2b.cpp	800	global	SetL	kModelA	0x9398e0	-	none	-	-	0
-site	src/game/rest_2b.cpp	848	global	At	kModelB	0x939960	-	none	-	-	0
-site	src/game/rest_2b.cpp	912	global	At	kOffsetX	0x5c4278	-	exact	Rest2b_ModelOffsetX	float	0
-site	src/game/rest_2b.cpp	913	global	At	kOffsetY	0x5c4274	-	exact	Rest2b_ModelOffsetY	float	0
+site	src/game/rest_2b.cpp	163	global	B	kTriggerCounter	0x903848	-	none	-	-	0
+site	src/game/rest_2b.cpp	257	global	At	Gfx_ClutStripSource_addr + 0x228 + static_cast<U>(row * 64)	0x80b580	-	exact	Gfx_ClutStripSource	unsigned short	0
+site	src/game/rest_2b.cpp	297	global	B	kGiven	0x9399e4	-	exact	Rest2b_Given	unsigned char	0
+site	src/game/rest_2b.cpp	328	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
+site	src/game/rest_2b.cpp	374	global	B	kGiven	0x9399e4	-	exact	Rest2b_Given	unsigned char	0
+site	src/game/rest_2b.cpp	379	global	B	kCounterB	0x90384b	-	none	-	-	0
+site	src/game/rest_2b.cpp	381	global	B	kCounterB	0x90384b	-	none	-	-	0
+site	src/game/rest_2b.cpp	419	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
+site	src/game/rest_2b.cpp	423	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
+site	src/game/rest_2b.cpp	429	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
+site	src/game/rest_2b.cpp	448	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
+site	src/game/rest_2b.cpp	459	global	L	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	461	global	W	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	479	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
+site	src/game/rest_2b.cpp	482	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
+site	src/game/rest_2b.cpp	488	global	SetW	kMessage	0x803194	-	inside	WindowRecords+0x34	records::WindowRecord	0
+site	src/game/rest_2b.cpp	550	global	L	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
+site	src/game/rest_2b.cpp	554	global	B	kWin0	0x803160	-	exact	WindowRecords	records::WindowRecord	0
+site	src/game/rest_2b.cpp	555	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
+site	src/game/rest_2b.cpp	591	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	591	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	594	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	595	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	597	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	599	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	601	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	602	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	603	global	B	kTimer	0x929f04	-	none	-	-	0
+site	src/game/rest_2b.cpp	609	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	609	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	611	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	612	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	612	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	613	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	613	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	616	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	623	global	B	kTimer	0x929f04	-	none	-	-	0
+site	src/game/rest_2b.cpp	627	global	B	kTimer	0x929f04	-	none	-	-	0
+site	src/game/rest_2b.cpp	630	global	B	kTimer	0x929f04	-	none	-	-	0
+site	src/game/rest_2b.cpp	633	global	B	kTimer	0x929f04	-	none	-	-	0
+site	src/game/rest_2b.cpp	642	global	B	kTimer	0x929f04	-	none	-	-	0
+site	src/game/rest_2b.cpp	643	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	643	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	645	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	646	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	646	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	647	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	647	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	650	global	B	kSavedB	0x6bc878	-	none	-	-	0
+site	src/game/rest_2b.cpp	653	global	B	kTimer	0x929f04	-	none	-	-	0
+site	src/game/rest_2b.cpp	655	global	B	kSavedA	0x6bc87c	-	none	-	-	0
+site	src/game/rest_2b.cpp	658	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	661	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	677	global	B	kOwned	0x9399e0	-	exact	Rest2b_Owned	unsigned char	0
+site	src/game/rest_2b.cpp	688	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	689	global	SetW	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	693	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	694	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	695	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	696	global	SetW	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	698	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	699	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	700	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	701	global	SetW	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	702	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	703	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	710	global	B	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
+site	src/game/rest_2b.cpp	711	global	SetL	kWin3	0x8031cc	-	inside	WindowRecords+0x6c	records::WindowRecord	0
+site	src/game/rest_2b.cpp	717	global	B	kWin1	0x803184	-	exact	Window1	unsigned char	0
+site	src/game/rest_2b.cpp	718	global	B	kWin2	0x8031a8	-	exact	Window2	unsigned char	0
+site	src/game/rest_2b.cpp	786	global	SetL	kModelB	0x939960	-	none	-	-	0
+site	src/game/rest_2b.cpp	787	global	SetL	kModelB	0x939960	-	none	-	-	0
+site	src/game/rest_2b.cpp	787	record	L	file + 4	-	base=Rest2b_ModelFile	-	-	-	0
+site	src/game/rest_2b.cpp	790	global	B	kModelB	0x939960	-	none	-	-	0
+site	src/game/rest_2b.cpp	792	global	SetL	kModelB	0x939960	-	none	-	-	0
+site	src/game/rest_2b.cpp	793	global	SetL	kModelB	0x939960	-	none	-	-	0
+site	src/game/rest_2b.cpp	798	global	SetL	kModelB	0x939960	-	none	-	-	0
+site	src/game/rest_2b.cpp	799	global	SetL	kModelB	0x939960	-	none	-	-	0
+site	src/game/rest_2b.cpp	804	global	SetL	kModelA	0x9398e0	-	none	-	-	0
+site	src/game/rest_2b.cpp	805	global	SetL	kModelA	0x9398e0	-	none	-	-	0
+site	src/game/rest_2b.cpp	805	record	L	file2 + 8 + 4	-	base=Rest2b_ModelFile	-	-	-	0
+site	src/game/rest_2b.cpp	808	global	B	kModelA	0x9398e0	-	none	-	-	0
+site	src/game/rest_2b.cpp	809	global	SetL	kModelA	0x9398e0	-	none	-	-	0
+site	src/game/rest_2b.cpp	810	global	SetL	kModelA	0x9398e0	-	none	-	-	0
+site	src/game/rest_2b.cpp	811	global	SetL	kModelA	0x9398e0	-	none	-	-	0
+site	src/game/rest_2b.cpp	814	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	815	global	B	kAColour	0x93993d	-	exact	Rest2c_FigureRgb	unsigned char	0
+site	src/game/rest_2b.cpp	816	global	SetL	kModelA	0x9398e0	-	none	-	-	0
+site	src/game/rest_2b.cpp	817	global	SetL	kModelA	0x9398e0	-	none	-	-	0
+site	src/game/rest_2b.cpp	865	global	At	kModelB	0x939960	-	none	-	-	0
+site	src/game/rest_2b.cpp	929	global	At	kOffsetX	0x5c4278	-	exact	Rest2b_ModelOffsetX	float	0
+site	src/game/rest_2b.cpp	930	global	At	kOffsetY	0x5c4274	-	exact	Rest2b_ModelOffsetY	float	0
 site	src/game/rest_2b_fuzz.cpp	195	global	Mem	Rest2b_Score_addr	0x9399fc	-	exact	Rest2b_Score	unsigned long	1
 site	src/game/rest_2b_fuzz.cpp	203	global	Mem	Rest2b_ModelBY_addr	0x93999c	-	exact	Rest2b_ModelBY	unsigned long	1
 site	src/game/rest_2b_fuzz.cpp	215	global	Pointer	Gfx_PacketNext_addr	0x7e0670	-	exact	Gfx_PacketNext	unsigned char *	1
@@ -26717,31 +26720,31 @@ site	src/game/sound_sp.cpp	287	record	Long	sprite + 0x38	-	param	-	-	-	0
 site	src/game/sound_sp.cpp	382	record	At	p.objects + index * 0xA4	-	-	-	-	-	0
 site	src/game/sound_st.cpp	71	record	Dword	entry + 4	-	-	-	-	-	0
 site	src/game/sound_st.cpp	79	record	Dword	shot.entry + 4	-	-	-	-	-	0
-site	src/game/sprite_pose.cpp	106	global	Ptr	at::kMemberAnimations	0x669884	-	none	-	-	0
-site	src/game/sprite_pose.cpp	116	record	Bytes	rv::Bytes(sprite)	-	base=sprite	-	-	-	0
-site	src/game/sprite_pose.cpp	129	global	Ptr	at::kFrameOffsets	0x9039d8	-	exact	BattleE2_AnimSet	unsigned long	0
-site	src/game/sprite_pose.cpp	130	record	Long	offsets + sprite->column * 4u	-	table=0x9039d8	-	-	-	0
-site	src/game/sprite_pose.cpp	131	record	Word	table + sprite->animation * 2u	-	via=Offset;stride=0x4	-	-	-	0
-site	src/game/sprite_pose.cpp	167	record	Long	data + 0xC	-	-	-	-	-	0
-site	src/game/sprite_pose.cpp	169	record	Long	data + 8	-	-	-	-	-	0
-site	src/game/sprite_pose.cpp	174	global	At	Gfx_UploadQueueX_addr + count * 2u	0x903680	-	exact	Gfx_UploadQueueX	unsigned short	0
-site	src/game/sprite_pose.cpp	175	global	At	Gfx_UploadQueueY_addr + count * 2u	0x9036a8	-	exact	Gfx_UploadQueueY	unsigned short	0
-site	src/game/sprite_pose.cpp	177	global	At	Gfx_UploadQueueX_addr + count * 2u	0x903680	-	exact	Gfx_UploadQueueX	unsigned short	0
-site	src/game/sprite_pose.cpp	178	global	At	Gfx_UploadQueueY_addr + count * 2u	0x9036a8	-	exact	Gfx_UploadQueueY	unsigned short	0
-site	src/game/sprite_pose.cpp	180	record	Long	images + entry[0] * 4u	-	via=Offset	-	-	-	0
-site	src/game/sprite_pose.cpp	181	global	At	Gfx_UploadQueueRecord_addr + count * 4u	0x92bf20	-	exact	Gfx_UploadQueueRecord	const unsigned char *	0
-site	src/game/sprite_pose.cpp	185	record	Word	words + entry[1] * 2u	-	via=Offset	-	-	-	0
-site	src/game/sprite_pose.cpp	212	global	At	at::kBankCount	0x8c3580	-	none	-	-	0
-site	src/game/sprite_pose.cpp	213	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
-site	src/game/sprite_pose.cpp	217	record	Word	table + i * 8u	-	table=0x7e0880	-	-	-	0
-site	src/game/sprite_pose.cpp	220	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
-site	src/game/sprite_pose.cpp	221	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
-site	src/game/sprite_pose.cpp	222	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
-site	src/game/sprite_pose.cpp	223	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
-site	src/game/sprite_pose.cpp	227	global	At	at::kBankBytes	0x6690a0	-	none	-	-	0
-site	src/game/sprite_pose.cpp	230	global	At	at::kBankBytes	0x6690a0	-	none	-	-	0
-site	src/game/sprite_pose.cpp	255	global	At	at::kDirectionAnimations	0x65f5bc	-	none	-	-	0
-site	src/game/sprite_pose.cpp	257	global	At	at::kDirectionAnimations	0x65f5bc	-	none	-	-	0
+site	src/game/sprite_pose.cpp	131	global	Ptr	at::kMemberAnimations	0x669884	-	none	-	-	0
+site	src/game/sprite_pose.cpp	141	record	Bytes	rv::Bytes(sprite)	-	base=sprite	-	-	-	0
+site	src/game/sprite_pose.cpp	155	global	Ptr	at::kFrameOffsets	0x9039d8	-	exact	BattleE2_AnimSet	unsigned long	0
+site	src/game/sprite_pose.cpp	156	record	Long	offsets + sprite->column * 4u	-	table=0x9039d8	-	-	-	0
+site	src/game/sprite_pose.cpp	157	record	Word	table + sprite->animation * 2u	-	via=Offset;stride=0x4	-	-	-	0
+site	src/game/sprite_pose.cpp	193	record	Long	data + 0xC	-	-	-	-	-	0
+site	src/game/sprite_pose.cpp	195	record	Long	data + 8	-	-	-	-	-	0
+site	src/game/sprite_pose.cpp	200	global	At	Gfx_UploadQueueX_addr + count * 2u	0x903680	-	exact	Gfx_UploadQueueX	unsigned short	0
+site	src/game/sprite_pose.cpp	201	global	At	Gfx_UploadQueueY_addr + count * 2u	0x9036a8	-	exact	Gfx_UploadQueueY	unsigned short	0
+site	src/game/sprite_pose.cpp	203	global	At	Gfx_UploadQueueX_addr + count * 2u	0x903680	-	exact	Gfx_UploadQueueX	unsigned short	0
+site	src/game/sprite_pose.cpp	204	global	At	Gfx_UploadQueueY_addr + count * 2u	0x9036a8	-	exact	Gfx_UploadQueueY	unsigned short	0
+site	src/game/sprite_pose.cpp	206	record	Long	images + entry[0] * 4u	-	via=Offset	-	-	-	0
+site	src/game/sprite_pose.cpp	207	global	At	Gfx_UploadQueueRecord_addr + count * 4u	0x92bf20	-	exact	Gfx_UploadQueueRecord	const unsigned char *	0
+site	src/game/sprite_pose.cpp	212	record	Word	words + entry[1] * 2u	-	via=Offset	-	-	-	0
+site	src/game/sprite_pose.cpp	239	global	At	at::kBankCount	0x8c3580	-	none	-	-	0
+site	src/game/sprite_pose.cpp	240	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
+site	src/game/sprite_pose.cpp	244	record	Word	table + i * 8u	-	table=0x7e0880	-	-	-	0
+site	src/game/sprite_pose.cpp	247	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
+site	src/game/sprite_pose.cpp	248	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
+site	src/game/sprite_pose.cpp	249	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
+site	src/game/sprite_pose.cpp	250	global	Ptr	at::kBankTable	0x7e0880	-	inside	MoveScript_TintRecords+0x180	unsigned char	0
+site	src/game/sprite_pose.cpp	254	global	At	at::kBankBytes	0x6690a0	-	none	-	-	0
+site	src/game/sprite_pose.cpp	257	global	At	at::kBankBytes	0x6690a0	-	none	-	-	0
+site	src/game/sprite_pose.cpp	282	global	At	at::kDirectionAnimations	0x65f5bc	-	none	-	-	0
+site	src/game/sprite_pose.cpp	284	global	At	at::kDirectionAnimations	0x65f5bc	-	none	-	-	0
 site	src/game/sprite_pose_fuzz.cpp	97	record	SetWord	s + 0x2C	-	base=Sprite_Current	-	-	-	1
 site	src/game/sprite_pose_fuzz.cpp	99	record	SetLong	s + 0x64	-	base=Sprite_Current	-	-	-	1
 site	src/game/sprite_pose_fuzz.cpp	249	global	At	MoveScript_EffectArg_addr + 0xc	0x669750	-	inside	MoveScript_EffectArg+0xc	signed char	1
@@ -27400,36 +27403,36 @@ site	src/render/render_shim.cpp	162	record	Long	row + x * 4	-	-	-	-	-	0
 site	src/render/render_shim.cpp	185	record	PutLong	row + x * 4	-	-	-	-	-	0
 site	src/render/render_shim.cpp	194	record	Long	row + x * 4	-	-	-	-	-	0
 site	src/render/render_shim.cpp	202	record	PutLong	row + x * 4	-	-	-	-	-	0
-site	src/render/render_shim.cpp	547	record	Long	Bytes(fx) + kFxFillColor	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	555	record	Long	Bytes(fx) + kFxFillColor	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	600	record	PutLong	d + kDescFlags	-	param	-	-	-	0
-site	src/render/render_shim.cpp	601	record	PutLong	d + kDescHeight	-	param	-	-	-	0
-site	src/render/render_shim.cpp	602	record	PutLong	d + kDescWidth	-	param	-	-	-	0
-site	src/render/render_shim.cpp	603	record	PutLong	d + kDescPitch	-	param	-	-	-	0
-site	src/render/render_shim.cpp	604	record	PutLong	d + kDescSurface	-	param	-	-	-	0
-site	src/render/render_shim.cpp	606	record	PutLong	pf + kPfSize	-	-	-	-	-	0
-site	src/render/render_shim.cpp	607	record	PutLong	pf + kPfFlags	-	-	-	-	-	0
-site	src/render/render_shim.cpp	608	record	PutLong	pf + kPfBits	-	-	-	-	-	0
-site	src/render/render_shim.cpp	609	record	PutLong	pf + kPfR	-	-	-	-	-	0
-site	src/render/render_shim.cpp	610	record	PutLong	pf + kPfG	-	-	-	-	-	0
-site	src/render/render_shim.cpp	611	record	PutLong	pf + kPfB	-	-	-	-	-	0
-site	src/render/render_shim.cpp	612	record	PutLong	pf + kPfA	-	-	-	-	-	0
-site	src/render/render_shim.cpp	613	record	PutLong	d + kDescCaps	-	param	-	-	-	0
-site	src/render/render_shim.cpp	614	record	PutLong	d + kDescCaps2	-	param	-	-	-	0
-site	src/render/render_shim.cpp	701	record	Long	d + kDescFlags	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	706	record	Long	pf + kPfSize	-	-	-	-	-	0
-site	src/render/render_shim.cpp	707	record	Long	pf + kPfBits	-	-	-	-	-	0
-site	src/render/render_shim.cpp	709	record	Long	pf + kPfR	-	-	-	-	-	0
-site	src/render/render_shim.cpp	710	record	Long	pf + kPfG	-	-	-	-	-	0
-site	src/render/render_shim.cpp	711	record	Long	pf + kPfB	-	-	-	-	-	0
-site	src/render/render_shim.cpp	712	record	Long	pf + kPfA	-	-	-	-	-	0
-site	src/render/render_shim.cpp	712	record	Long	pf + kPfFlags	-	-	-	-	-	0
-site	src/render/render_shim.cpp	713	record	Long	pf + kPfFlags	-	-	-	-	-	0
-site	src/render/render_shim.cpp	714	record	Long	pf + kPfFlags	-	-	-	-	-	0
-site	src/render/render_shim.cpp	716	record	Long	d + kDescCaps	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	716	record	Long	d + kDescHeight	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	716	record	Long	d + kDescWidth	-	via=Bytes	-	-	-	0
-site	src/render/render_shim.cpp	717	record	Long	d + kDescCaps2	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	572	record	Long	Bytes(fx) + kFxFillColor	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	580	record	Long	Bytes(fx) + kFxFillColor	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	625	record	PutLong	d + kDescFlags	-	param	-	-	-	0
+site	src/render/render_shim.cpp	626	record	PutLong	d + kDescHeight	-	param	-	-	-	0
+site	src/render/render_shim.cpp	627	record	PutLong	d + kDescWidth	-	param	-	-	-	0
+site	src/render/render_shim.cpp	628	record	PutLong	d + kDescPitch	-	param	-	-	-	0
+site	src/render/render_shim.cpp	629	record	PutLong	d + kDescSurface	-	param	-	-	-	0
+site	src/render/render_shim.cpp	631	record	PutLong	pf + kPfSize	-	-	-	-	-	0
+site	src/render/render_shim.cpp	632	record	PutLong	pf + kPfFlags	-	-	-	-	-	0
+site	src/render/render_shim.cpp	633	record	PutLong	pf + kPfBits	-	-	-	-	-	0
+site	src/render/render_shim.cpp	634	record	PutLong	pf + kPfR	-	-	-	-	-	0
+site	src/render/render_shim.cpp	635	record	PutLong	pf + kPfG	-	-	-	-	-	0
+site	src/render/render_shim.cpp	636	record	PutLong	pf + kPfB	-	-	-	-	-	0
+site	src/render/render_shim.cpp	637	record	PutLong	pf + kPfA	-	-	-	-	-	0
+site	src/render/render_shim.cpp	638	record	PutLong	d + kDescCaps	-	param	-	-	-	0
+site	src/render/render_shim.cpp	639	record	PutLong	d + kDescCaps2	-	param	-	-	-	0
+site	src/render/render_shim.cpp	726	record	Long	d + kDescFlags	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	731	record	Long	pf + kPfSize	-	-	-	-	-	0
+site	src/render/render_shim.cpp	732	record	Long	pf + kPfBits	-	-	-	-	-	0
+site	src/render/render_shim.cpp	734	record	Long	pf + kPfR	-	-	-	-	-	0
+site	src/render/render_shim.cpp	735	record	Long	pf + kPfG	-	-	-	-	-	0
+site	src/render/render_shim.cpp	736	record	Long	pf + kPfB	-	-	-	-	-	0
+site	src/render/render_shim.cpp	737	record	Long	pf + kPfA	-	-	-	-	-	0
+site	src/render/render_shim.cpp	737	record	Long	pf + kPfFlags	-	-	-	-	-	0
+site	src/render/render_shim.cpp	738	record	Long	pf + kPfFlags	-	-	-	-	-	0
+site	src/render/render_shim.cpp	739	record	Long	pf + kPfFlags	-	-	-	-	-	0
+site	src/render/render_shim.cpp	741	record	Long	d + kDescCaps	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	741	record	Long	d + kDescHeight	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	741	record	Long	d + kDescWidth	-	via=Bytes	-	-	-	0
+site	src/render/render_shim.cpp	742	record	Long	d + kDescCaps2	-	via=Bytes	-	-	-	0
 #rec	name	value	kind	n_modules	modules	symbol	symbol_kind	cover	ctype	scope
 const	kFlags	0x0	value	1	src/game/battle_items_callees.h:41(battle_items::at)	-	-	-	-	at
 const	kPresent	0x0	value	1	src/game/battle_setup_callees.h:32(battle_setup::at)	-	-	-	-	at
@@ -28596,8 +28599,8 @@ const	kEightyNine	0x5c4248	data	1	src/game/effect_6c_callees.h:76(effect_6c::at)
 const	kNinety	0x5c424c	data	1	src/game/effect_6c_callees.h:77(effect_6c::at)	-	-	none	-	at
 const	kPieceScale	0x5c4250	data	1	src/game/effect_6c_callees.h:74(effect_6c::at)	-	-	none	-	at
 const	kQuadLift	0x5c4254	data	1	src/game/field_e2_callees.h:72(field_e2::at)	-	-	none	-	at
-const	kOffsetY	0x5c4274	data	1	src/game/rest_2b.cpp:110((anon))	Rest2b_ModelOffsetY	data	exact	float	module
-const	kOffsetX	0x5c4278	data	1	src/game/rest_2b.cpp:109((anon))	Rest2b_ModelOffsetX	data	exact	float	module
+const	kOffsetY	0x5c4274	data	1	src/game/rest_2b.cpp:111((anon))	Rest2b_ModelOffsetY	data	exact	float	module
+const	kOffsetX	0x5c4278	data	1	src/game/rest_2b.cpp:110((anon))	Rest2b_ModelOffsetX	data	exact	float	module
 const	k127At	0x5c427c	data	1	src/game/sound_callees.h:32(sound)	Sound_FullVolume	data	exact	float	module
 const	kTexture2Iid	0x5c4488	data	1	src/game/tex_page_callees.h:28(tex_page)	-	-	none	-	module
 const	kIidNotify	0x5c45b8	data	1	src/game/sound_callees.h:27(sound)	-	-	none	-	module
@@ -29682,8 +29685,8 @@ const	kListIds	0x6bc760	data	1	src/game/field_o_callees.h:25(field_o::at)	-	-	no
 const	kListCounts	0x6bc7e0	data	1	src/game/field_o_callees.h:26(field_o::at)	-	-	none	-	at
 const	kWheelFrame	0x6bc860	data	1	src/game/field_o_callees.h:28(field_o::at)	-	-	none	-	at
 const	kSaved	0x6bc878	data	1	src/game/rest_2b_fuzz.cpp:163(rest_2b::(anon))	-	-	none	-	module
-const	kSavedB	0x6bc878	data	1	src/game/rest_2b.cpp:90((anon))	-	-	none	-	module
-const	kSavedA	0x6bc87c	data	1	src/game/rest_2b.cpp:91((anon))	-	-	none	-	module
+const	kSavedB	0x6bc878	data	1	src/game/rest_2b.cpp:91((anon))	-	-	none	-	module
+const	kSavedA	0x6bc87c	data	1	src/game/rest_2b.cpp:92((anon))	-	-	none	-	module
 const	kSaveBack	0x6bc880	data	1	src/game/shop_states_callees.h:67(shop_states::at)	Rest2c_SaveBack	data	exact	unsigned char	at
 const	kReserveFlags	0x6bc88c	data	1	src/game/field_s_callees.h:59(field_s::at)	-	-	none	-	at
 const	kReserve	0x6bc894	data	1	src/game/field_s_callees.h:57(field_s::at)	-	-	none	-	at
@@ -29811,7 +29814,7 @@ const	kTintMarks	0x7e06a0	data	1	src/game/mode_flow_callees.h:77(mode_flow::at)	
 const	kMemberPos	0x7e06e0	data	2	src/game/field_hidden_callees.h:62(field_hidden::at);src/game/inventory_ops_callees.h:27(inventory_ops::at)	-	-	none	-	at
 const	kMemberPositions	0x7e06e0	data	2	src/game/battle_e2_callees.h:108(battle_e2::at);src/game/event_ops_callees.h:41(event_ops::at)	-	-	none	-	at
 const	kSlotPositions	0x7e06e0	data	2	src/game/field_e1_callees.h:81(field_e1::at);src/game/scena_sx_callees.h:29(scena_sx::at)	-	-	none	-	at
-const	kTintFrom	0x7e06f0	data	1	src/game/frame_callees.cpp:252((anon))	-	-	none	-	module
+const	kTintFrom	0x7e06f0	data	1	src/game/frame_callees.cpp:261((anon))	-	-	none	-	module
 const	kBankTable	0x7e0880	data	1	src/game/sprite_pose.h:20(sprite_pose::at)	-	-	inside	unsigned char	at
 const	kTintsEnd	0x7e0880	data	1	src/game/battle_sprites_callees.h:58(battle_sprites::at)	-	-	inside	unsigned char	at
 const	kPassFlags	0x7e0918	data	1	src/game/area_w2e_callees.h:93(area_w2e::at)	Draw_PassFlags	data	exact	unsigned char	at
@@ -29849,7 +29852,7 @@ const	kEffectNone	0x7e9160	data	1	src/game/rest_2a_callees.h:37(rest_2a::at)	-	-
 const	kPoolBound	0x7f1bac	data	1	src/game/world_map_callees.h:66(world_map)	-	-	inside	unsigned char	module
 const	kPoolEnd	0x7f1bac	data	2	src/game/magic_lib.cpp:55((anon));src/game/magic_lib_fuzz.cpp:147(magic_lib::(anon))	-	-	inside	unsigned char	module
 const	kPoolLimit	0x7f1bac	data	2	src/game/effect_5c_callees.h:33(effect_5c::at);src/game/effect_6c_callees.h:40(effect_6c::at)	-	-	inside	unsigned char	at
-const	kPoolLimit	0x7f1bac	data	3	src/game/draw_emit.cpp:18((anon));src/game/layering.cpp:423(layering::(anon));src/game/sprite_records.cpp:29((anon))	-	-	inside	unsigned char	module
+const	kPoolLimit	0x7f1bac	data	3	src/game/draw_emit.cpp:18((anon));src/game/layering.cpp:434(layering::(anon));src/game/sprite_records.cpp:29((anon))	-	-	inside	unsigned char	module
 const	kObjectsExtra	0x802000	data	1	src/game/area_harness.h:52(area_harness::at)	Sprite_ObjectsExtra	data	exact	records::SpriteObject	at
 const	kSpriteObjectsExtra	0x802000	data	1	src/game/area_w3d_callees.h:97(area_w3d::at)	Sprite_ObjectsExtra	data	exact	records::SpriteObject	at
 const	kSpritesExtra	0x802000	data	1	src/game/scenario_harness.h:75(scenario_harness::at)	Sprite_ObjectsExtra	data	exact	records::SpriteObject	at
@@ -29899,7 +29902,7 @@ const	kMemberByte2	0x802fe3	data	1	src/game/mode_tasks.cpp:33((anon))	-	-	inside
 const	kMember2X	0x80300c	data	1	src/game/rest_3g_callees.h:27(rest_3g::at)	-	-	inside	records::PartyMember	at
 const	kMember2Z	0x803010	data	1	src/game/rest_3g_callees.h:28(rest_3g::at)	-	-	inside	records::PartyMember	at
 const	kWin0	0x803160	data	1	src/game/battle_e1_callees.h:75(battle_e1::at)	WindowRecords	block	exact	records::WindowRecord	at
-const	kWin0	0x803160	data	2	src/game/rest_2b.cpp:104((anon));src/game/rest_4e.cpp:96((anon))	WindowRecords	block	exact	records::WindowRecord	module
+const	kWin0	0x803160	data	2	src/game/rest_2b.cpp:105((anon));src/game/rest_4e.cpp:96((anon))	WindowRecords	block	exact	records::WindowRecord	module
 const	kWindows	0x803160	data	3	src/game/boss_harness.h:152(boss_harness::at);src/game/rest_3a_callees.h:39(rest_3a::at);src/game/scenario_harness.h:102(scenario_harness::at)	WindowRecords	block	exact	records::WindowRecord	at
 const	kMsgWindow	0x803162	data	1	src/game/battle_setup_callees.h:74(battle_setup::at)	-	-	inside	records::WindowRecord	at
 const	kWin0State	0x803163	data	1	src/game/battle_odds_callees.h:25(battle_odds)	-	-	inside	records::WindowRecord	module
@@ -29910,13 +29913,13 @@ const	kPoolWords	0x803164	data	1	src/game/area_w3d_callees.h:87(area_w3d::at)	-	
 const	kTop	0x80316b	data	2	src/game/rest_4e.cpp:99((anon));src/game/rest_4e_fuzz.cpp:196(rest_4e::(anon))	-	-	inside	records::WindowRecord	module
 const	kScroll	0x803172	data	2	src/game/rest_4e.cpp:102((anon));src/game/rest_4e_fuzz.cpp:196(rest_4e::(anon))	-	-	inside	records::WindowRecord	module
 const	kWin1	0x803184	data	1	src/game/battle_e1_callees.h:76(battle_e1::at)	Window1	data	exact	unsigned char	at
-const	kWin1	0x803184	data	2	src/game/rest_2b.cpp:104((anon));src/game/rest_4e.cpp:96((anon))	Window1	data	exact	unsigned char	module
+const	kWin1	0x803184	data	2	src/game/rest_2b.cpp:105((anon));src/game/rest_4e.cpp:96((anon))	Window1	data	exact	unsigned char	module
 const	kWindows	0x803184	data	1	src/game/battle_turn_steps_callees.h:85(battle_turn_steps::at)	Window1	data	exact	unsigned char	at
 const	kWindow1X	0x803188	data	1	src/game/battle_e2_callees.h:84(battle_e2::at)	-	-	inside	records::WindowRecord	at
-const	kMessage	0x803194	data	1	src/game/rest_2b.cpp:105((anon))	-	-	inside	records::WindowRecord	module
+const	kMessage	0x803194	data	1	src/game/rest_2b.cpp:106((anon))	-	-	inside	records::WindowRecord	module
 const	kWin2	0x8031a8	data	1	src/game/battle_e1_callees.h:77(battle_e1::at)	Window2	data	exact	unsigned char	at
-const	kWin2	0x8031a8	data	1	src/game/rest_2b.cpp:104((anon))	Window2	data	exact	unsigned char	module
-const	kWin3	0x8031cc	data	1	src/game/rest_2b.cpp:104((anon))	-	-	inside	records::WindowRecord	module
+const	kWin2	0x8031a8	data	1	src/game/rest_2b.cpp:105((anon))	Window2	data	exact	unsigned char	module
+const	kWin3	0x8031cc	data	1	src/game/rest_2b.cpp:105((anon))	-	-	inside	records::WindowRecord	module
 const	kWin3State	0x8031cf	data	1	src/game/rest_3b_callees.h:68(rest_3b::at)	-	-	inside	records::WindowRecord	at
 const	kBannerShown	0x8031f3	data	1	src/game/battle_actions_callees.h:61(battle_actions::at)	-	-	inside	records::WindowRecord	at
 const	kInstantKill	0x8031f3	data	1	src/game/battle_damage_callees.h:93(battle_damage::at)	-	-	inside	records::WindowRecord	at
@@ -30128,7 +30131,7 @@ const	kScriptVar	0x903848	data	1	src/game/area_w0b_callees.h:59(area_w0b::at)	-	
 const	kScriptVar3	0x903848	data	6	src/game/area_w3b_callees.h:60(area_w3b::at);src/game/boss_sb_callees.h:63(boss_sb::at);src/game/boss_se_callees.h:108(boss_se::at);src/game/boss_sf_callees.h:82(boss_sf::at);src/game/boss_si_callees.h:50(boss_si::at);src/game/boss_sj_callees.h:57(boss_sj::at)	-	-	none	-	at
 const	kStepLimit	0x903848	data	1	src/game/area_w4c_callees.h:40(area_w4c::at)	-	-	none	-	at
 const	kSysCounter	0x903848	data	1	src/game/item_use_callees.h:63(item_use::at)	-	-	none	-	at
-const	kTriggerCounter	0x903848	data	1	src/game/rest_2b.cpp:101((anon))	-	-	none	-	module
+const	kTriggerCounter	0x903848	data	1	src/game/rest_2b.cpp:102((anon))	-	-	none	-	module
 const	kVar3	0x903848	data	1	src/game/area_w0a_callees.h:23(area_w0a::at)	-	-	none	-	at
 const	kCount2	0x903849	data	1	src/game/scena_sc0_callees.h:35(scena_sc0)	-	-	none	-	module
 const	kCounter1	0x903849	data	11	src/game/area_w0c_callees.h:35(area_w0c::at);src/game/area_w1a_callees.h:37(area_w1a::at);src/game/area_w1c_callees.h:34(area_w1c::at);src/game/area_w2a_callees.h:37(area_w2a::at);src/game/area_w2c_callees.h:32(area_w2c::at);src/game/area_w2d_callees.h:34(area_w2d::at);src/game/area_w2f_callees.h:35(area_w2f::at);src/game/area_w3c_callees.h:31(area_w3c::at);src/game/area_w4f_callees.h:42(area_w4f::at);src/game/scena_sc3_callees.h:27(scena_sc3::at);src/game/scena_sc7_callees.h:28(scena_sc7::at)	-	-	none	-	at
@@ -30154,7 +30157,7 @@ const	kCounter	0x90384b	data	1	src/game/area_w0b_callees.h:58(area_w0b::at)	-	-	
 const	kCounter3	0x90384b	data	19	src/game/area_w0c_callees.h:37(area_w0c::at);src/game/area_w1c_callees.h:36(area_w1c::at);src/game/area_w1d_callees.h:37(area_w1d::at);src/game/area_w1f_callees.h:32(area_w1f::at);src/game/area_w2a_callees.h:39(area_w2a::at);src/game/area_w2c_callees.h:34(area_w2c::at);src/game/area_w2d_callees.h:35(area_w2d::at);src/game/area_w2f_callees.h:36(area_w2f::at);src/game/area_w3c_callees.h:33(area_w3c::at);src/game/area_w3d_callees.h:37(area_w3d::at);src/game/area_w3e_callees.h:33(area_w3e::at);src/game/area_w3f_callees.h:36(area_w3f::at);src/game/area_w4b_callees.h:35(area_w4b::at);src/game/area_w4c_callees.h:37(area_w4c::at);src/game/area_w4d_callees.h:30(area_w4d::at);src/game/area_w4e_callees.h:33(area_w4e::at);src/game/area_w4f_callees.h:43(area_w4f::at);src/game/effect_2f_callees.h:28(effect_2f::at);src/game/scena_sc7_callees.h:30(scena_sc7::at)	-	-	none	-	at
 const	kCounter3	0x90384b	data	3	src/game/scena_sc11.cpp:55((anon));src/game/scena_sc15.cpp:95((anon));src/game/scena_sc15_fuzz.cpp:63(scena_sc15::(anon))	-	-	none	-	module
 const	kCounterB	0x90384b	data	1	src/game/field_e2_callees.h:91(field_e2::at)	-	-	none	-	at
-const	kCounterB	0x90384b	data	1	src/game/rest_2b.cpp:99((anon))	-	-	none	-	module
+const	kCounterB	0x90384b	data	1	src/game/rest_2b.cpp:100((anon))	-	-	none	-	module
 const	kCounterD	0x90384b	data	1	src/game/effect_4a_callees.h:21(effect_4a::at)	-	-	none	-	at
 const	kFzScriptVar	0x90384b	data	1	src/game/area_w3g_fuzz.cpp:62(area_w3g::(anon))	-	-	none	-	module
 const	kScore	0x90384b	data	1	src/game/effect_2g_callees.h:33(effect_2g::at)	-	-	none	-	at
@@ -30239,6 +30242,7 @@ const	kWE	0x90385e	data	1	src/game/magic_s24.cpp:102((anon))	-	-	inside	unsigned
 const	kY	0x90385e	data	1	src/game/magic_s29_callees.h:43(magic_s29::cell)	-	-	inside	unsigned long	module
 const	kExitX_addr	0x903860	data	2	src/game/event_ops_callees.h:47(event_ops::at);src/game/field_e1_callees.h:79(field_e1::at)	-	-	inside	records::SharedScratch	at
 const	kPendingX	0x903860	data	1	src/game/area_w4e_callees.h:76(area_w4e::at)	-	-	inside	records::SharedScratch	at
+const	kPendingXAddr	0x903860	data	1	src/hook/input_script.cpp:494(bof3::(anon))	-	-	inside	records::SharedScratch	module
 const	kPendingX_addr	0x903860	data	2	src/game/mode_rest_callees.h:41(mode_rest::at);src/game/window_task_callees.h:46(window_task::at)	-	-	inside	records::SharedScratch	at
 const	kPendingX_addr	0x903860	data	1	src/game/area_entry_callees.h:20(area_entry)	-	-	inside	records::SharedScratch	module
 const	kBlocks	0x903880	data	1	src/game/shell_callees.h:34(shell)	Gfx_BufferBlocks	data	exact	-	module
@@ -30633,8 +30637,8 @@ const	kCameraMatrix	0x905e40	data	1	src/game/field_e2_callees.h:71(field_e2::at)
 const	kFzKind2Z	0x905e60	data	1	src/game/area_w3g_fuzz.cpp:76(area_w3g::(anon))	Field_Kind2Z	data	exact	long	module
 const	kKind2Z	0x905e60	data	2	src/game/area_w1f_callees.h:80(area_w1f::at);src/game/area_w2c_callees.h:76(area_w2c::at)	Field_Kind2Z	data	exact	long	at
 const	kind2_z	0x905e60	data	3	src/game/field_modes.cpp:395((anon));src/game/map_scroll.cpp:239(-);src/game/mode_flow.cpp:514(-)	Field_Kind2Z	data	exact	long	module
-const	kz	0x905e60	data	2	src/game/rest_2b.cpp:768(-);src/game/rest_2b.cpp:959(-)	Field_Kind2Z	data	exact	long	module
-const	kz2	0x905e60	data	2	src/game/rest_2b.cpp:786(-);src/game/rest_2b.cpp:965(-)	Field_Kind2Z	data	exact	long	module
+const	kz	0x905e60	data	2	src/game/rest_2b.cpp:785(-);src/game/rest_2b.cpp:976(-)	Field_Kind2Z	data	exact	long	module
+const	kz2	0x905e60	data	2	src/game/rest_2b.cpp:803(-);src/game/rest_2b.cpp:982(-)	Field_Kind2Z	data	exact	long	module
 const	kCameraCellY	0x905e62	data	1	src/game/magic_s23_callees.h:67(magic_s23::at)	-	-	inside	long	at
 const	kCameraZ	0x905e62	data	1	src/game/effect_5d_callees.h:17(effect_5d::at)	-	-	inside	long	at
 const	kFzCellZ	0x905e62	data	1	src/game/area_w3g_fuzz.cpp:724(area_w3g::(anon))	-	-	inside	long	module
@@ -30646,8 +30650,8 @@ const	kLeaderCellZ	0x905e62	data	1	src/game/world_map_callees.h:59(world_map)	-	
 const	kKind2X	0x905e64	data	3	src/game/area_w2c_callees.h:77(area_w2c::at);src/game/area_w4d_callees.h:82(area_w4d::at);src/game/scena_sc13_callees.h:75(scena_sc13::at)	Field_Kind2X	data	exact	long	at
 const	kind2_x	0x905e64	data	2	src/game/map_scroll.cpp:240(-);src/game/mode_flow.cpp:514(-)	Field_Kind2X	data	exact	long	module
 const	kind2x	0x905e64	data	1	src/game/area_w3g.cpp:622((anon))	Field_Kind2X	data	exact	long	module
-const	kx	0x905e64	data	3	src/game/magic_s26.cpp:448(-);src/game/rest_2b.cpp:771(-);src/game/rest_2b.cpp:960(-)	Field_Kind2X	data	exact	long	module
-const	kx2	0x905e64	data	2	src/game/rest_2b.cpp:789(-);src/game/rest_2b.cpp:966(-)	Field_Kind2X	data	exact	long	module
+const	kx	0x905e64	data	3	src/game/magic_s26.cpp:448(-);src/game/rest_2b.cpp:788(-);src/game/rest_2b.cpp:977(-)	Field_Kind2X	data	exact	long	module
+const	kx2	0x905e64	data	2	src/game/rest_2b.cpp:806(-);src/game/rest_2b.cpp:983(-)	Field_Kind2X	data	exact	long	module
 const	kCameraCellX	0x905e66	data	1	src/game/magic_s23_callees.h:66(magic_s23::at)	-	-	inside	long	at
 const	kCameraX	0x905e66	data	1	src/game/effect_5d_callees.h:16(effect_5d::at)	-	-	inside	long	at
 const	kFzCellX	0x905e66	data	1	src/game/area_w3g_fuzz.cpp:724(area_w3g::(anon))	-	-	inside	long	module
@@ -30704,7 +30708,7 @@ const	kListReset	0x929f04	data	1	src/game/battle_e4_callees.h:116(battle_e4::at)
 const	kMenuTimer	0x929f04	data	3	src/game/mode_rest_callees.h:19(mode_rest::at);src/game/rest_2d_callees.h:61(rest_2d::at);src/game/scenario_harness.h:89(scenario_harness::at)	-	-	none	-	at
 const	kModeTimer	0x929f04	data	1	src/game/battle_e1_callees.h:37(battle_e1::at)	-	-	none	-	at
 const	kTimer	0x929f04	data	2	src/game/field_s_callees.h:31(field_s::at);src/game/rest_2c_callees.h:40(rest_2c::at)	-	-	none	-	at
-const	kTimer	0x929f04	data	5	src/game/rest_2b.cpp:57((anon));src/game/rest_2b_fuzz.cpp:147(rest_2b::(anon));src/game/rest_2e.cpp:72((anon));src/game/rest_2f.cpp:61((anon));src/game/rest_2f_fuzz.cpp:181(rest_2f::(anon))	-	-	none	-	module
+const	kTimer	0x929f04	data	5	src/game/rest_2b.cpp:58((anon));src/game/rest_2b_fuzz.cpp:147(rest_2b::(anon));src/game/rest_2e.cpp:72((anon));src/game/rest_2f.cpp:61((anon));src/game/rest_2f_fuzz.cpp:181(rest_2f::(anon))	-	-	none	-	module
 const	kItemActor	0x929f06	data	1	src/game/battle_misc_callees.h:55(battle_misc)	BattleActorCopies_ItemActor	data	exact	signed char	module
 const	kMember	0x929f06	data	1	src/game/shop_states2_callees.h:28(shop_states2::at)	BattleActorCopies_ItemActor	data	exact	signed char	at
 const	kColumn	0x929f08	data	1	src/game/field_s_callees.h:34(field_s::at)	FieldS_Column	data	exact	signed char	at
@@ -30779,12 +30783,12 @@ const	kAbilityCursors	0x9398c0	data	1	src/game/rest_2e.cpp:102((anon))	-	-	none	
 const	kPortrait4	0x9398c0	data	1	src/game/rest_2f.cpp:109((anon))	-	-	none	-	module
 const	kState	0x9398cf	data	1	src/game/rest_2d_callees.h:52(rest_2d::at)	AreaW0c_AnswerMark	data	exact	unsigned char	at
 const	kFigure	0x9398e0	data	1	src/game/rest_2c_callees.h:115(rest_2c::at)	-	-	none	-	at
-const	kModelA	0x9398e0	data	2	src/game/rest_2b.cpp:77((anon));src/game/rest_2b_fuzz.cpp:155(rest_2b::(anon))	-	-	none	-	module
-const	kAColour	0x93993d	data	1	src/game/rest_2b.cpp:83((anon))	Rest2c_FigureRgb	data	exact	unsigned char	module
+const	kModelA	0x9398e0	data	2	src/game/rest_2b.cpp:78((anon));src/game/rest_2b_fuzz.cpp:155(rest_2b::(anon))	-	-	none	-	module
+const	kAColour	0x93993d	data	1	src/game/rest_2b.cpp:84((anon))	Rest2c_FigureRgb	data	exact	unsigned char	module
 const	kFigureRgb	0x93993d	data	1	src/game/rest_2c_callees.h:119(rest_2c::at)	Rest2c_FigureRgb	data	exact	unsigned char	at
-const	kModelB	0x939960	data	2	src/game/rest_2b.cpp:78((anon));src/game/rest_2b_fuzz.cpp:155(rest_2b::(anon))	-	-	none	-	module
-const	kOwned	0x9399e0	data	1	src/game/rest_2b.cpp:60((anon))	Rest2b_Owned	data	exact	unsigned char	module
-const	kGiven	0x9399e4	data	1	src/game/rest_2b.cpp:61((anon))	Rest2b_Given	data	exact	unsigned char	module
+const	kModelB	0x939960	data	2	src/game/rest_2b.cpp:79((anon));src/game/rest_2b_fuzz.cpp:155(rest_2b::(anon))	-	-	none	-	module
+const	kOwned	0x9399e0	data	1	src/game/rest_2b.cpp:61((anon))	Rest2b_Owned	data	exact	unsigned char	module
+const	kGiven	0x9399e4	data	1	src/game/rest_2b.cpp:62((anon))	Rest2b_Given	data	exact	unsigned char	module
 const	kPanelCells	0x939a00	data	1	src/game/scenario_harness.h:132(scenario_harness::at)	-	-	none	-	at
 const	kTally	0x939a00	data	1	src/game/effect_3d_callees.h:29(effect_3d::at)	-	-	none	-	at
 const	kTile	0x939a00	data	2	src/game/area_w3e_callees.h:64(area_w3e::at);src/game/scena_sc12_callees.h:60(scena_sc12::at)	-	-	none	-	at
@@ -30916,16 +30920,16 @@ const	kEPresent	0xffffff80	value	1	src/game/battle_damage_callees.h:49(battle_da
 const	kECureId	0xffffff85	value	1	src/game/battle_damage_callees.h:50(battle_damage::at)	-	-	-	-	at
 const	kPPresent	0xfffffff0	value	1	src/game/battle_damage_callees.h:23(battle_damage::at)	-	-	-	-	at
 const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_damage::at)	-	-	-	-	at
-#count sites	27430
-#count sites_global	17255
+#count sites	27433
+#count sites_global	17257
 #count sites_global_at	7505
-#count sites_global_module	9750
-#count sites_record	9046
+#count sites_global_module	9752
+#count sites_record	9047
 #count sites_raw	1129
 #count sites_in_fuzz	8917
 #count files_with_sites	535
 #count files_with_record_sites	473
-#count record_sites_with_stride	707
+#count record_sites_with_stride	708
 #count record_sites_with_table_or_base	3754
 #count record_sites_on_named_pointer	198
 #count record_sites_on_helper_call	673
@@ -30933,8 +30937,8 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count record_sites_via_helper	2429
 #count record_sites_param	664
 #count record_sites_family_unknown	1717
-#count record_strides	0x28:184 0x4:83 0xa4:62 0x8:49 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
-#count global_sites_covered_exact	8670
+#count record_strides	0x28:184 0x4:83 0xa4:62 0x8:50 0x18:31 0x20:31 0x84:29 0x38:29 0x1c:28 0xc:23 0x14:22 0x14c:19
+#count global_sites_covered_exact	8672
 #count global_sites_covered_inside	2352
 #count global_sites_uncovered	6233
 #count global_sites_ambiguous	0
@@ -30956,9 +30960,9 @@ const	kPCureId	0xfffffff5	value	1	src/game/battle_damage_callees.h:24(battle_dam
 #count distinct_addresses_symbol_data_no_ctype	34
 #count distinct_addresses_name_missing	937
 #count distinct_addresses_name_missing_inside_entry	135
-#count module_constant_definitions_data	837
-#count module_constant_files	191
-#count module_constants_name_value	613
+#count module_constant_definitions_data	838
+#count module_constant_files	192
+#count module_constants_name_value	614
 #count module_distinct_addresses	500
 #count module_distinct_addresses_not_in_at	324
 #count module_distinct_addresses_not_in_at_no_data_entry	206
