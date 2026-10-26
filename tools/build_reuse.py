@@ -70,8 +70,11 @@ FORMAT = 1                      # build-keys/<step>.json's shape; another number
 # What the tools read relative to ROOT (tools/make_release.py ships these as
 # runtime data; measured 2026-10-15 by an audit hook on every open() under ROOT
 # during setups, docs/install-sources.md section 6). Directories whole.
+# data/furigana: the reading-row builder's character table and readings
+# (tools/ruby_build.py), read by setup's second-language and mod steps since
+# the reading-row round; listed 2026-10-25 when those steps were measured.
 SHIPPED_DATA = ["fixtures.toml", "fixtures", "recipes", "symbols.toml", "tables.toml", "exe_maps",
-                "src/hook/exe_own.cpp"]
+                "src/hook/exe_own.cpp", "data/furigana"]
 
 # The module-level memos of the setup's tools, emptied at each step's start:
 # (module, global, its empty value). `lint` finds one missing.
@@ -215,18 +218,29 @@ def _globals_here(wanted):
     return out
 
 
+_globals_memo = {}      # (module, name): digest - a module's source does not change during a run
+
+
 def _globals(wanted):
     """_globals_here in a fresh interpreter: the values as the modules define
-    them, not as a build has filled them."""
+    them, not as a build has filled them. Each value is asked for once per
+    run: a setup judges and records some forty steps, and each fresh
+    interpreter costs about half a second."""
     if not wanted:
         return {}
-    env = dict(os.environ)
-    env.pop(RECORD_ENV, None)
-    r = subprocess.run([sys.executable, os.path.abspath(__file__), "globals"], input=json.dumps(wanted),
-                       capture_output=True, text=True, env=env)
-    if r.returncode:
-        raise RuntimeError("build_reuse globals failed:\n%s%s" % (r.stdout, r.stderr))
-    return json.loads(r.stdout)
+    missing = {m: [n for n in names if (m, n) not in _globals_memo] for m, names in wanted.items()}
+    missing = {m: names for m, names in missing.items() if names}
+    if missing:
+        env = dict(os.environ)
+        env.pop(RECORD_ENV, None)
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "globals"], input=json.dumps(missing),
+                           capture_output=True, text=True, env=env)
+        if r.returncode:
+            raise RuntimeError("build_reuse globals failed:\n%s%s" % (r.stdout, r.stderr))
+        for m, row in json.loads(r.stdout).items():
+            for n, h in row.items():
+                _globals_memo[(m, n)] = h
+    return {m: {n: _globals_memo[(m, n)] for n in names} for m, names in wanted.items()}
 
 
 def _data_globals(mods):
@@ -404,7 +418,7 @@ class Step:
         with Step(out, reuse, "snd", disc.id, version) as st:
             src = st.previous(os.path.join("base", "snd"))
             if src:
-                ...copy it...            # the previous record is kept
+                ...take() it...          # the previous record is kept
             else:
                 ...build it...           # what ran and what was read is recorded
 
@@ -420,13 +434,16 @@ class Step:
     def __enter__(self):
         if _rec.on:
             raise RuntimeError("build_reuse.Step %s inside another step" % self.name)
-        fd, self.child = tempfile.mkstemp(prefix="bof3x-step-", suffix=".jsonl")
-        os.close(fd)
+        self._open_child()
         self._env = os.environ.get(RECORD_ENV)
         os.environ[RECORD_ENV] = self.child
         _reset_memos()
         _rec.start()
         return self
+
+    def _open_child(self):
+        fd, self.child = tempfile.mkstemp(prefix="bof3x-step-", suffix=".jsonl")
+        os.close(fd)
 
     def previous(self, rel=None):
         """The previous cache's `rel` folder (or True with no `rel`) when its
@@ -449,6 +466,16 @@ class Step:
             os.environ.pop(RECORD_ENV, None)
         else:
             os.environ[RECORD_ENV] = self._env
+        self._children(code, data, mods)
+        if kind is not None:
+            return False
+        self._write(code, data, mods)
+        return False
+
+    def _children(self, code, data, mods):
+        """The child runs' records added to code, data and mods; the record
+        file removed. Returns how many runs there were."""
+        runs = 0
         try:
             with open(self.child, encoding="utf-8") as fh:
                 for line in fh:
@@ -456,17 +483,94 @@ class Step:
                     code |= {tuple(x) for x in got["code"]}
                     data |= set(got["data"])
                     mods |= set(got["modules"])
+                    runs += 1
         except (OSError, ValueError):
             pass
         os.remove(self.child)
-        if kind is not None:
-            return False
+        return runs
+
+    def _write(self, code, data, mods):
         rec = dict(self.adopted, inputs=self.inputs) if self.adopted else _record(code, data, mods, self.inputs)
         os.makedirs(os.path.join(self.out, KEYS_DIR), exist_ok=True)
         with open(os.path.join(self.out, KEYS_DIR, self.name + ".json"), "w", encoding="utf-8", newline="\n") as fh:
             json.dump(rec, fh, indent=1, sort_keys=True)
             fh.write("\n")
+
+
+class ChildStep(Step):
+    """A step whose piece one child Python makes - a builder run as
+    subprocess.run(cmd, env=st.env()) - so only the child's run is recorded.
+    It starts no recorder in this process, so several can be open at once,
+    from threads: setup builds its second-language layers side by side this
+    way. The builder must import build_reuse (ruby_build.py does, first). A
+    child that recorded nothing - a stand-in builder, one that does not
+    import it - leaves no record, so the piece is built again next time: a
+    record of no code would hold for every release."""
+
+    def __enter__(self):
+        self._open_child()
+        return self
+
+    def env(self):
+        """The child's environment: this process's, and this step's record file."""
+        return dict(os.environ, **{RECORD_ENV: self.child})
+
+    def __exit__(self, kind, value, tb):
+        code, data, mods = set(), set(), set()
+        runs = self._children(code, data, mods)
+        if kind is not None:
+            return False
+        if self.adopted or runs:
+            self._write(code, data, mods)
+        else:
+            try:
+                os.remove(os.path.join(self.out, KEYS_DIR, self.name + ".json"))
+            except OSError:
+                pass
         return False
+
+
+def take(src, dst):
+    """The previous cache's piece `src` (a file, or a folder whole) into the
+    new cache at `dst`, each file hard-linked rather than copied: setup swaps
+    the new cache in and deletes the previous one, so the link is all that is
+    left. A file already at `dst` is replaced. Where a link cannot be made
+    (another volume, a file system without them) the file is copied.
+
+    A taken file is shared with the previous cache until the swap, so nothing
+    may write into it in place afterwards (open(..., "wb") on it would change
+    the previous cache too, which a failed setup keeps): replace it - remove,
+    then write - as every step does today (docs/install-staleness.md 5)."""
+    import shutil
+    if os.path.isfile(src):
+        pairs = [(src, dst)]
+    else:
+        pairs = []
+        for root, dirs, files in os.walk(src):
+            rel = os.path.relpath(root, src)
+            os.makedirs(os.path.join(dst, rel) if rel != "." else dst, exist_ok=True)
+            pairs += [(os.path.join(root, f), os.path.join(dst, rel, f) if rel != "." else os.path.join(dst, f))
+                      for f in files]
+    for a, b in pairs:
+        if os.path.lexists(b):
+            os.remove(b)
+        try:
+            os.link(a, b)
+        except OSError:
+            shutil.copy2(a, b)
+
+
+def packages(prefix):
+    """The installed third-party packages whose name starts with `prefix`,
+    with their versions: an input for the code build_reuse does not measure
+    (the reading-row builder's SudachiPy and its dictionary)."""
+    from importlib import metadata
+    got = set()
+    for d in metadata.distributions():
+        name = (d.metadata["Name"] or "").lower().replace("_", "-")
+        if name.startswith(prefix):
+            got.add("%s=%s" % (name, d.version))
+    return ";".join(sorted(got)) or "no " + prefix
 
 
 def _child_start():

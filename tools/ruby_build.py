@@ -54,6 +54,7 @@ from fractions import Fraction
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
+import build_reuse  # noqa: E402,F401  (first: run by setup, records this run into its step)
 import dat        # noqa: E402
 import loc_build  # noqa: E402
 import language_tags  # noqa: E402
