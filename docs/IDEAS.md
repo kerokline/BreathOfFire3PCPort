@@ -95,6 +95,7 @@ rule ([`README.md`](README.md)) here too.
 | I48 | A comment-cleanup round after the typed-data round | tooling / source | HIGH | open 2026-10-20 (the owner): not now |
 | I49 | What `Battle_AutoTargetCheck`'s `+0xBA` test means | engine | — | open 2026-10-20: the rename done, the meaning unconfirmed |
 | I50 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **built 2026-10-22** (DIV-0156) - every held pair, the reading-row round ([`reading-row-second.md`](reading-row-second.md)); from issue #97 (the owner, 2026-10-20); the owner's play owed |
+| I51 | Revisit the battle command labels: the up command's window is `BattleItem_*` in the source though it is the ability list, the item command is `BattleItemCmd_*`, and the in-game command names of the cross were never checked against the dispatch names | source / naming | LOW | open 2026-10-26 (the owner): found while building the spell sweep ([`spell-sweep.md`](spell-sweep.md)) |
 
 ---
 
@@ -2232,3 +2233,10 @@ as built, a composed font chunk per layer, `0x13` drawing an inserted name at
 reading size; chosen in the launcher's *Row above the text*. Owed: the
 owner's play (English over Japanese is on the sheets; Japanese over English
 is not captured).
+
+## I51 — Revisit the battle command labels
+
+**Ask (2026-10-26, the owner):** make a note to revisit the combat labels.
+**Kind:** source / naming. **Feasibility:** LOW effort; a renaming pass, no behaviour.
+
+What was found while building the spell sweep ([`spell-sweep.md`](spell-sweep.md)): the command cross's up command (`Battle_MenuSteps[1]`, `0x447430`) opens the **ability** window, but its functions are named `BattleItem_Dispatch` .. `BattleItem_Confirm` (`battle_actor_copies.cpp`, [`battle_actor_copies.md`](battle_actor_copies.md); the names were called hypotheses there); the down command (`0x448180`) is the item command, named `BattleItemCmd_*` ([`battle_menu_states.md`](battle_menu_states.md)); [`button-tests.md`](button-tests.md) says the in-game names of rows 1 and 2 were not checked. The pass: confirm each `Battle_MenuSteps` entry's command by playing it (the owner's shots, or the sweep's `shot` of each window), rename in `symbols.toml` and the sources (`gen_symbols.py`), carry the old names in the docs' tables as the catalog's. Addresses stay; only names move (CLAUDE.md rule 3).
