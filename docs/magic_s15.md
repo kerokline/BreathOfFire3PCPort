@@ -73,13 +73,37 @@ like in play has not been measured.
     one of the system messages 0x3C..0x40, queued with
     `BattleQueue_Push(1, 0x3C, text)`. Then +0xB gets one bit for each of six
     record bytes (+0xBF, +0xC0, +0xC1, +0xC3, +0xC2 at most 1; +0xC4 at most
-    3) of any enemy not out. What the words and bytes mean (HP, levels,
-    elements?) is not measured.
+    3) of any enemy not out.
+  - What the words and bytes are (read 2026-10-26 from `records.h`, the
+    sweep's peeks and the sibling's `names/enemies.toml`; the spell sweep's
+    Foretell question, [`spell-sweep.md`](spell-sweep.md) 4): the member's
+    +0x98 / +0xA0 are HP / max HP (the working record's +0x18 / +0x20), the
+    enemy's +0xA4 / +0xB0 the same, so each actor's step is an HP-ratio
+    band; +0x8A and the enemy's +0x98 are levels, so the band is the
+    party's mean level less the enemies'; `Foretell_Bias` + 7 + (members -
+    enemies) is `{8, 4, 0, -2, -4, -6, -8, -8, -10, -12, 0, 0}` at +0..+11;
+    the level band's top is 0x82 above +20 and 5 at -20 or below. The six
+    bytes are the enemy's resistance classes - +0xBF fire, +0xC0 ice, +0xC1
+    lightning, +0xC2 earth, +0xC3 wind (`BattleEnemy::elements`; a class at
+    most 1 is 300 % or 200 % damage) and +0xC4 holy (`BattleEnemy::holy`;
+    at most 3 is above neutral) - so a bit is an element the enemy is weak
+    to. The messages 0x3C..0x40 are the five grades "Great luck", "Good
+    luck", "Fair luck.", "Bad luck.", "Terrible luck." each followed by
+    "Lucky color:" and a space, padded so the colon lands at one column;
+    the US disc's and the en-US overlay's bytes are the same words (the US
+    `BATTLE.EMI` pool at `0x8001A000` against `en-US.BATTLE.DAT`'s
+    `0x4000` chunk, slots 0x3C..0x40), and "Terrible luck." has no space
+    before "Lucky" on either. The colour is never a word: it is the tiles.
   - `_Pause` waits 4 frames; `_Show` draws the six bits as coloured 8 x 12
-    tiles (`Foretell_DrawTiles`, colours from `Foretell_TileColours`; a grey
-    tile when none is set) until a button is pressed (`Input_Pressed`);
+    tiles (`Foretell_DrawTiles`, colours from `Foretell_TileColours`: red,
+    blue, yellow, green, orange, white for fire, ice, lightning, wind,
+    earth, holy; a grey 0x60 tile when none is set) at x 0xE8, right after
+    the message's colon, until a button is pressed (`Input_Pressed`);
     `_End` waits for the message window to close (`0x939F60`), sliding the
-    tiles up by 8 a frame, then ends the effect.
+    tiles up by 8 a frame, then ends the effect. Seen live 2026-10-26 (the
+    spell sweep's Gooey, no weakness: one grey tile; fire and holy poked
+    weak: a red and a white one), the same frames under all fourteen
+    functions original (`BOF3X_ORIGINAL`) - [`spell-sweep.md`](spell-sweep.md) 4.
 - **Influence (MAGIC069)**:
   - `Influence_Task`: `Influence_Start`, then MAGIC222's `BattleFx_Finish`.
   - `Influence_Start` takes the source sprite's screen point, makes six
