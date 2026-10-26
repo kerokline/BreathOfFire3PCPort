@@ -25,8 +25,16 @@ void InputScript_Stop();
 
 // WinMain's loop while Game_Paused (F9), where Capcom's loop called nothing:
 // no device latch, no pad words; a playing recipe advances one step per
-// frame with its words dropped, so a recipe can time a pause.
+// frame with its words dropped, so a recipe can time a pause. While
+// BOF3X_RECORD records, each paused frame is written as a waited one.
 void InputScript_PausedLatch();
+
+// Game_WndProc's WM_KEYDOWN, before anything else reads the key: while
+// BOF3X_RECORD records, a press of F1..F11, or of any key while the game is
+// paused (any key ends a pause), is written as `key KEY 0` ahead of the frame
+// whose message pass took it - the step a replay posts at that same point.
+// F12 is the recorder's shot, read from the key bytes as before.
+void InputScript_RecordKey(unsigned vk, long lparam);
 
 // The quick menu (quick_menu.cpp, the quicksave round's QM), which reads a
 // pad while paused: true while a recipe plays, with this frame's word (the

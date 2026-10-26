@@ -437,6 +437,7 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         }
         return 0;
     case WM_KEYDOWN: {
+        bof3::InputScript_RecordKey(static_cast<unsigned>(wparam), static_cast<long>(lparam));   // BOF3X_RECORD only
         // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5
         // opens the quick menu, pausing; while it is open every key is its own.
         if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<long>(lparam))) return 0;

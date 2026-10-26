@@ -271,7 +271,7 @@ One step per line; `#` starts a comment; buttons join with `+`
 | `links` | log every area's link list as the running image holds it (`Area_Descriptors[0..199]` `+0x20` / `+0x30`, an indirect link's alternatives from `+0x24` / `+0x28`, [`area-entry.md`](area-entry.md) 1): `input link A.I cells X,Z zN -> area D x .. z .. flags ..`, every pointer checked before it is followed. Reads only (2026-10-25, [`door-sweep.md`](door-sweep.md)) |
 | `door X Z` | a **harness** step: `Area_LinkAt(X, Z)` through the original's entry and, when it found a link, `Field_Request = 5` - the two calls `Field_LeaderStepLands` makes on a link cell - logging the pending area, cells, flags and the track `Area_PickMusic` chose (`input door X,Z in area A: to area ...`, or `no link`). No player reaches an area change this way; a recipe with one is not a route ([`door-sweep.md`](door-sweep.md)) |
 | `goto AREA X Z FLAGS` | a **harness** step: `Field_ChangeArea(AREA, X, Z, FLAGS)` (X, Z 16.16) through the original's entry - the funnel a save's load and every scripted change use - to stand the party in an area ([`door-sweep.md`](door-sweep.md)) |
-| `hold KEY N` / `key KEY [N]` | a **keyboard** key - `f1`..`f12`, `escape`, `enter`, `space`, or a virtual-key number - held N frames (`key` alone: one): `WM_KEYDOWN` posted to the game window as the step starts, `WM_KEYUP` as it ends, the press as `Game_WndProc` sees a player's (2026-10-11). The recorder writes pad words only, so a route's F9 presses are added by hand in the owner's form, `hold f9 4` / `wait 42`. While the game is paused (F9) WinMain skips the latch; the recipe still advances a step per frame (`InputScript_PausedLatch`, its pad words dropped), so `hold f9 4` / `wait 42` / `hold f9 4` is a pause of 46 frames |
+| `hold KEY N` / `key KEY [N]` | a **keyboard** key - `f1`..`f12`, `escape`, `enter`, `space`, or a virtual-key number - held N frames (`key` alone: one): `WM_KEYDOWN` posted to the game window as the step starts, `WM_KEYUP` as it ends, the press as `Game_WndProc` sees a player's (2026-10-11). `key KEY 0` (2026-10-24) posts the press and its release and costs no frame: the frame's pad word is the next step's. The recorder writes F1..F11, and any key that ends a pause, in that form (section 5a); routes recorded before then have their F-keys added by hand, in the owner's form `hold f9 4` / `wait 42`. While the game is paused (F9) WinMain skips the latch; the recipe still advances a step per frame (`InputScript_PausedLatch`, its pad words dropped), so `hold f9 4` / `wait 42` / `hold f9 4` is a pause of 46 frames |
 | `quit [timeout N]` | the game is expected to exit now (F9 twice on the title): the process ending with this step current - or with a key step current whose next step past waits, peeks and marks is `quit`, since F9's second press quits on its key-down - logs `done` from `DllMain`'s detach; N frames (default 600) without an exit FAIL the recipe. An exit with any other step current logs `FAILED` with the line. `input_run.py` reads the log once more after the process is gone, so the detach's line is seen |
 | `end` | stop |
 
@@ -404,11 +404,30 @@ at `0x7DE828`, DIK `0x58` - `GetAsyncKeyState` saw nothing on the first
 recording) writes a one-frame `shot` in place of its frame.
 `tools/recipe_shots.py` adds shots every N frames to a recording after the
 fact, again without moving a frame. Record in the language you will play back
-in: text timing differs. **Keyboard keys are not recorded** - F9 goes to
-`Game_WndProc` as a window message, not through the pad latch - and the
-recorder does not run while the game is paused, so a played route's F9
-presses show as a shorter wait; they go in by hand as `hold f9 4` / `wait 42`
-(section 3; `f9ExitMode.txt` is the first).
+in: text timing differs.
+
+**Function keys (2026-10-24).** F1..F11, and any key that ends a pause, are
+recorded too, as `key KEY 0` (a key with no name as its virtual-key number,
+`key 0x0D 0`): `Game_WndProc`'s `WM_KEYDOWN` hands each first press (not the
+keyboard's auto-repeat) to `InputScript_RecordKey` before anything else reads
+it. The press reached the window procedure in the message pass after the
+frame's latch, and a replay's `key KEY 0` posts it in the latch that reads the
+step and costs no frame, so the recorder writes the line ahead of that frame:
+the frame comes off the open run and is counted again after the line, and a
+direction held across the press keeps every frame. While the game is paused
+(F9, the quick menu) the recorder counts each frame as a waited one, as a
+replay steps through a pause, and the key that ends the pause closes it. A
+pad key mapped to the keyboard (`key.Enter=start`) is in the pad word, so only
+while paused is it a key line. Limits: the quick menu's own pad reads are not
+recorded (its keys are); a key pressed on an F12 shot frame lands one frame
+later on replay, the shot's line being written already. Before this, keyboard
+keys were not recorded - **routes recorded before 2026-10-24 have their F-keys
+added by hand**: F1 as `key f1` at the frame the log's `DIV-0048 speed x2 (F1)
+at Frame_Counter N` names (recipe frame N + 1, a frame taken from a `wait`),
+F9 as `hold f9 4` / `wait 42` (section 3; `f9ExitMode.txt` is the first).
+`genmelAndLift.txt` (2026-10-24) was recorded at x2 from frame 317 and
+replays at x1 without its F1: the Flier's jingle, which the scene waits out
+in wall time, ends 120 frames early and the route parts from there.
 
 The first recording is the owner's `shop.txt`, from save 3: the item shop
 (buy, sell), a found Molotov, the weapon shop with equipping, walking and

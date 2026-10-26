@@ -76,10 +76,14 @@
 //                           virtual-key number) held N frames: WM_KEYDOWN posted
 //                           to the game window as the step starts, WM_KEYUP as
 //                           it ends - a player's press as Game_WndProc sees it.
-//                           `key KEY` is the same held one frame. The recorder
-//                           (BOF3X_RECORD) writes pad words only, so a played
-//                           route's F9 presses are added by hand: the owner's
-//                           `hold f9 4` / `wait 42`.
+//                           `key KEY` is the same held one frame; `key KEY 0`
+//                           posts the press and its release and costs no
+//                           frame, so the frame's pad word is the next step's.
+//                           The recorder (BOF3X_RECORD) writes F1..F11, and any
+//                           key that ends a pause, as `key KEY 0` (a key with no
+//                           name as its virtual-key number); routes recorded
+//                           before 2026-10-24 have their F-keys added by hand
+//                           (the owner's `hold f9 4` / `wait 42`).
 //                           While the game is paused (F9) WinMain skips the
 //                           latch; the recipe still advances a step per frame
 //                           through InputScript_PausedLatch, its pad words
@@ -376,8 +380,7 @@ void Load(const char* path) {
             st.kind = Kind::Key;
             st.value = VirtualKey(line, t[1]);
             st.text = t[1];
-            st.n = t.size() == 3 ? Number(line, t[2]) : 1;
-            if (st.n == 0) ParseError(line, "a key is held one frame or more, not", t[2]);
+            st.n = t.size() == 3 ? Number(line, t[2]) : 1;   // 0: down and up, no frame (the recorder's)
         } else if (w == "links") {
             need(1, 1);
             st.kind = Kind::Links;
@@ -719,7 +722,8 @@ unsigned short NextWord() {
             // A press as the player's reaches Game_WndProc: WM_KEYDOWN posted
             // as the step starts (the loop's next PeekMessage dispatches it,
             // before this frame runs), WM_KEYUP with the transition bits as
-            // the hold ends. The step costs its N frames, like a pad hold.
+            // the hold ends. The step costs its N frames, like a pad hold;
+            // N 0 posts both now and goes on to the next step in this frame.
             HWND hwnd = static_cast<HWND>(Game_Hwnd);
             if (!hwnd) Fatal("BOF3X_INPUT line %d: key %s before the game window exists", s.line, s.text.c_str());
             if (g_t == 0) {
@@ -867,6 +871,45 @@ void Record(unsigned short word) {
     ++g_run;
 }
 
+// A key the recorder keeps (InputScript_RecordKey). Game_WndProc took it in
+// the message pass after this frame's latch; a replay's `key KEY 0` posts it
+// in the latch that reads the step, and the same pass dispatches it - so the
+// line goes ahead of the frame just counted, which comes off the open run and
+// is counted again after the line. After an F12 shot frame the shot's line
+// is already written, and the key lands a frame later on replay.
+void RecordKey(unsigned vk) {
+    const bool took = g_run > 0;
+    if (took) {
+        --g_run;
+        FlushRun();
+    }
+    const char* name = nullptr;
+    for (const Key& k : kKeys)
+        if (k.vk == vk) name = k.name;
+    if (name) std::fprintf(g_rec, "key %s 0", name);
+    else std::fprintf(g_rec, "key 0x%02X 0", vk);
+    std::fprintf(g_rec, "   # recipe frame %u%s\n", g_frame ? g_frame - 1 : 0u, Game_Paused ? ", paused" : "");
+    std::fflush(g_rec);
+    if (took) g_run = 1;
+    Log("input       record: key %s (vk 0x%02X) at recipe frame %u%s", name ? name : "-", vk, g_frame ? g_frame - 1 : 0u,
+        Game_Paused ? ", paused" : "");
+}
+
+// The recorder while Game_Paused: no device latch, no pad word (WinMain's
+// paused branch); each new frame is written as a waited one, which is what a
+// replay's InputScript_PausedLatch steps through (its words dropped).
+void RecordPausedFrame() {
+    const std::uint32_t frame = Frame_Counter;
+    if (g_seen_frame && frame == g_last_frame) return;
+    g_seen_frame = true;
+    g_last_frame = frame;
+    if (g_run && g_run_word != 0) FlushRun();
+    g_run_word = 0;
+    ++g_run;
+    ++g_frame;
+    RandCountFrame();
+}
+
 void __cdecl RecordingLatch() {
     DeviceLatch();
     const std::uint32_t frame = Frame_Counter;
@@ -897,10 +940,11 @@ void RecordStart(const char* path) {
     std::fprintf(g_rec,
                  "# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from\n"
                  "# recipe frame 0. BOF3X_LANG=%s BOF3X_FILTER=%s - play it back with the same\n"
-                 "# language, since text timing differs between them. F12 wrote the shots.\n",
+                 "# language, since text timing differs between them. F12 wrote the shots;\n"
+                 "# F1..F11, and any key that ended a pause, are `key KEY 0` steps.\n",
                  lang, filter);
     std::fflush(g_rec);
-    Log("input       recording the pad to %s (F12 = shot)", path);
+    Log("input       recording the pad to %s (F12 = shot, F1..F11 = key)", path);
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
     constexpr std::uint32_t kInputLatch = bof3::addr::Input_Latch;
     RetargetCall("InputRecord", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch), true);
@@ -991,6 +1035,10 @@ void InputScript_Stop() {
 // through a pause), its words dropped: that is what lets a recipe time the
 // pause between two `key f9`.
 void InputScript_PausedLatch() {
+    if (g_rec) {
+        RecordPausedFrame();
+        return;
+    }
     if (!g_scripted || !g_active) return;
     const std::uint32_t frame = Frame_Counter;
     if (!g_seen_frame || frame != g_last_frame) {
@@ -1001,6 +1049,14 @@ void InputScript_PausedLatch() {
         ++g_frame;
         RandCountFrame();
     }
+}
+
+void InputScript_RecordKey(unsigned vk, long lparam) {
+    if (!g_rec) return;
+    if (lparam & (1L << 30)) return;   // the keyboard's auto-repeat: the key was already down
+    if (vk == VK_F12) return;          // the shot, read from the key bytes (Record)
+    if ((vk < VK_F1 || vk > VK_F11) && !Game_Paused) return;   // a mapped pad key is in the pad word
+    RecordKey(vk);
 }
 
 bool InputScript_PausedWord(unsigned short* word) {
